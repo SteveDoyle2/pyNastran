@@ -72,7 +72,7 @@ import n2y
 #      on, until data block is read in.
 
 
-def expanddof(ids, pvgrids):
+def expand_dof(ids, pvgrids):
     """
     Expands vector of ids to [id, dof].
 
@@ -96,7 +96,7 @@ def expanddof(ids, pvgrids):
     >>> import op2
     >>> ids = [1, 2, 3, 4]
     >>> pvgrids = [True, False, False, True]
-    >>> expanddof(ids, pvgrids)
+    >>> expand_dof(ids, pvgrids)
     array([[1, 1],
            [1, 2],
            [1, 3],
@@ -134,7 +134,7 @@ class OP2(object):
         self._fileh = None
         self._CodeFuncs = None
         if isinstance(filename, str):
-            self._op2open(filename)
+            self._op2_open(filename)
 
     def __del__(self):
         if self._fileh:
@@ -196,7 +196,7 @@ class OP2(object):
             }
         return self._CodeFuncs
 
-    def _op2open(self, filename):
+    def _op2_open(self, filename):
         """
         Open op2 file in correct endian mode.
 
@@ -283,26 +283,26 @@ class OP2(object):
         self._rowsCutoff = 3000
         self._int32str = self._endian + 'i4'
         self._int32stru = self._endian + '%di'
-        self._rdop2header()
+        self._read_op2_header()
         self._postheaderpos = self._fileh.tell()
         self.directory(verbose=False)
 
-    def _getkey(self):
+    def _get_key(self):
         """Reads [reclen, key, endrec] triplet and returns key."""
         self._fileh.read(4)
         key = self._Str.unpack(self._fileh.read(self._ibytes))[0]
         self._fileh.read(4)
         return key
 
-    def _skipkey(self, n):
+    def _skip_key(self, n):
         """Skips `n` key triplets ([reclen, key, endrec])."""
         self._fileh.read(n*(8+self._ibytes))
 
-    def _rdop2header(self):
+    def _read_op2_header(self):
         """
         Returns Nastran output2 header label (or 'no header').
         """
-        key = self._getkey()
+        key = self._get_key()
         if key != 3:
             self._fileh.seek(0)
             self._date = self._nastheader = self._label = None
@@ -314,20 +314,20 @@ class OP2(object):
         self._date = struct.unpack(frm, self._fileh.read(bytes))
         # self._date = np.fromfile(self._fileh, self._intstr, key)
         self._fileh.read(4)  # endrec
-        self._getkey()
+        self._get_key()
 
         reclen = self._Str4.unpack(self._fileh.read(4))[0]
         self._nastheader = self._fileh.read(reclen).decode()
         self._fileh.read(4)  # endrec
-        self._getkey()
+        self._get_key()
 
         reclen = self._Str4.unpack(self._fileh.read(4))[0]
         self._label = self._fileh.read(reclen).decode().\
             strip().replace(' ', '')
         self._fileh.read(4)  # endrec
-        self._skipkey(2)
+        self._skip_key(2)
 
-    def _validname(self, bstr):
+    def _valid_name(self, bstr):
         """
         Returns a valid variable name from the byte string `bstr`.
         """
@@ -337,7 +337,7 @@ class OP2(object):
             return ''.join(chr(c) for c in bstr if (
                 47 < c < 58 or 64 < c < 91 or c == 95 or 96 < c < 123))
 
-    def _rdop2eot(self):
+    def _read_op2_end_of_table(self):
         """Read Nastran output2 end-of-table marker.
 
         Returns
@@ -358,7 +358,7 @@ class OP2(object):
             return 1, 0
         return 0, key
 
-    def _rdop2nt(self):
+    def _read_op2_name_trailer(self):
         """Read Nastran output2 datablock name and trailer.
 
         Returns
@@ -373,7 +373,7 @@ class OP2(object):
 
         All outputs will be None for end-of-file.
         """
-        eot, key = self._rdop2eot()
+        eot, key = self._read_op2_end_of_table()
         if key == 0:
             # print('return None, None, None')
             return None, None, None
@@ -381,10 +381,10 @@ class OP2(object):
         reclen = self._Str4.unpack(self._fileh.read(4))[0]
         db_binary_name = self._fileh.read(reclen)
         # print('db_binary_name = %r' % db_binary_name)
-        db_name = self._validname(db_binary_name)
+        db_name = self._valid_name(db_binary_name)
         self._fileh.read(4)  # endrec
-        self._getkey()
-        key = self._getkey()
+        self._get_key()
+        key = self._get_key()
 
         self._fileh.read(4)  # reclen
         frm = self._intstru % key
@@ -396,22 +396,22 @@ class OP2(object):
         trailer = struct.unpack(frm, self._fileh.read(nbytes))
         # trailer = np.fromfile(self._fileh, self._intstr, key)
         self._fileh.read(4)  # endrec
-        self._skipkey(4)
+        self._skip_key(4)
 
         reclen = self._Str4.unpack(self._fileh.read(4))[0]
-        db_name2 = self._validname(self._fileh.read(reclen))
+        db_name2 = self._valid_name(self._fileh.read(reclen))
         self._fileh.read(4)  # endrec
 
-        self._skipkey(2)
-        rec_type = self._getkey()
+        self._skip_key(2)
+        rec_type = self._get_key()
         return db_name, trailer, rec_type
 
-    def rdop2matrix(self, trailer):
+    def read_op2_matrix(self, trailer):
         """
         Read and return Nastran op2 matrix at current file position.
 
         It is assumed that the name has already been read in via
-        :func:`rdop2nt`.
+        :func:`_read_op2_name_trailer`.
 
         The size of the matrix is read from trailer:
              rows = trailer[2]
@@ -428,7 +428,7 @@ class OP2(object):
         while dtype > 0:  # read in matrix columns
             # key is number of elements in next record (row # followed
             # by key-1 real numbers)
-            key = self._getkey()
+            key = self._get_key()
             # read column
             while key > 0:
                 reclen = self._Str4.unpack(self._fileh.read(4))[0]
@@ -441,21 +441,21 @@ class OP2(object):
                     matrix[r:r+n, col] = np.fromfile(
                         self._fileh, np.float64, n)
                 self._fileh.read(4)  # endrec
-                key = self._getkey()
+                key = self._get_key()
             col += 1
-            self._getkey()
-            dtype = self._getkey()
-        self._rdop2eot()
+            self._get_key()
+            dtype = self._get_key()
+        self._read_op2_end_of_table()
         if self._swap:
             matrix = matrix.byteswap()
         return matrix
 
-    def skipop2matrix(self, trailer):
+    def skip_op2_matrix(self, trailer):
         """
         Skip Nastran op2 matrix at current position.
 
         It is assumed that the name has already been read in via
-        :func:`rdop2nt`.
+        :func:`_read_op2_name_trailer`.
 
         The size of the matrix is read from trailer:
              rows = trailer[2]
@@ -465,20 +465,20 @@ class OP2(object):
         while dtype > 0:  # read in matrix columns
             # key is number of elements in next record (row # followed
             # by key-1 real numbers)
-            key = self._getkey()
+            key = self._get_key()
             # skip column
             while key > 0:
                 reclen = self._Str4.unpack(self._fileh.read(4))[0]
                 self._fileh.seek(reclen, 1)
                 self._fileh.read(4)  # endrec
-                key = self._getkey()
-            self._getkey()
-            dtype = self._getkey()
-        self._rdop2eot()
+                key = self._get_key()
+            self._get_key()
+            dtype = self._get_key()
+        self._read_op2_end_of_table()
 
-    def skipop2table(self):
+    def skip_op2_table(self):
         """Skip over Nastran output2 table."""
-        eot, key = self._rdop2eot()
+        eot, key = self._read_op2_end_of_table()
         if key == 0:
             return
         while key > 0:
@@ -487,10 +487,10 @@ class OP2(object):
                 self._fileh.seek(8+reclen, 1)
                 key = self._Str.unpack(self._fileh.read(self._ibytes))[0]
                 self._fileh.read(4)  # endrec
-            self._skipkey(2)
-            eot, key = self._rdop2eot()
+            self._skip_key(2)
+            eot, key = self._read_op2_end_of_table()
 
-    def rdop2mats(self):
+    def read_op2_matrices(self):
         """Read all matrices from Nastran output2 file.
 
         Returns dictionary containing all matrices in the op2 file:
@@ -501,17 +501,17 @@ class OP2(object):
         self._fileh.seek(self._postheaderpos)
         mats = {}
         while 1:
-            name, trailer, rectype = self._rdop2nt()
+            name, trailer, rectype = self._read_op2_name_trailer()
             if name is None:
                 break
             if rectype > 0:
                 print("Reading matrix {}...".format(name))
-                mats[name] = self.rdop2matrix(trailer)
+                mats[name] = self.read_op2_matrix(trailer)
             else:
-                self.skipop2table()
+                self.skip_op2_table()
         return mats
 
-    def prtdir(self):
+    def print_data_block_directory(self):
         """
         Prints op2 data block directory.  See also :func:`directory`.
         """
@@ -520,7 +520,7 @@ class OP2(object):
         for s in self.dblist:
             print(s)
 
-    def directory(self, verbose=True, redo=False):
+    def directory(self, verbose=True, redo=False): # TODO: _read_op2_name_trailer
         """
         Return list of data block names in op2 file.
 
@@ -560,8 +560,8 @@ class OP2(object):
             o2 = op2.OP2('mds.op2')
             fpos = o2.dbnames['KAA'][0][0][0]
             o2._fileh.seek(fpos)
-            name, trailer, rectype = o2._rdop2nt()
-            kaa = o2.rdop2matrix(trailer)
+            name, trailer, rectype = o2._read_op2_name_trailer()
+            kaa = o2.read_op2_matrix(trailer)
 
         This routine also sets self.dbnames = dbnames.
         """
@@ -572,15 +572,15 @@ class OP2(object):
         self._fileh.seek(self._postheaderpos)
         pos = self._postheaderpos
         while 1:
-            name, trailer, dbtype = self._rdop2nt()
+            name, trailer, dbtype = self._read_op2_name_trailer()
             if name is None:
                 break
             if dbtype > 0:
-                self.skipop2matrix(trailer)
+                self.skip_op2_matrix(trailer)
                 size = [trailer[2], trailer[1]]
                 s = 'Matrix {:8}'.format(name)
             else:
-                self.skipop2table()
+                self.skip_op2_table()
                 size = [0, 0]
                 s = 'Table  {:8}'.format(name)
             cur = self._fileh.tell()
@@ -597,10 +597,10 @@ class OP2(object):
         self.dbnames = dbnames
         self.dblist = dblist
         if verbose:
-            self.prtdir()
+            self.print_data_block_directory()
         return dbnames, dblist
 
-    def rdop2dynamics(self):
+    def read_op2_dynamics(self):
         """
         Reads the TLOAD data from a DYNAMICS datablock.
 
@@ -608,7 +608,7 @@ class OP2(object):
         TLOADs.  TLOAD ids are in first row; other data in matrix may
         not be useful.
         """
-        key = self._getkey()
+        key = self._get_key()
         if self._ibytes == 4:
             header_Str = struct.Struct(self._endian + 'iii')
             hbytes = 12
@@ -635,9 +635,9 @@ class OP2(object):
                 else:
                     self._fileh.seek((key-3)*self._ibytes, 1)
                 self._fileh.read(4)  # endrec
-                key = self._getkey()
-            self._skipkey(2)
-            eot, key = self._rdop2eot()
+                key = self._get_key()
+            self._skip_key(2)
+            eot, key = self._read_op2_end_of_table()
 
         if np.any(data):
             L = len(data)
@@ -678,21 +678,21 @@ class OP2(object):
             data = np.reshape(data, (rows, -1), order='F')
         return data
 
-    def rdop2tload(self):
+    def read_op2_tload(self):
         """
         Returns the TLOAD data from an op2 file.
 
         This routine scans the op2 file for the DYNAMICS datablock and
-        then calls :func:`rdop2dynamics` to read the data.
+        then calls :func:`read_op2_dynamics` to read the data.
         """
         if len(self.dbnames) == 0:
             self.directory(verbose=False)
         fpos = self.dbnames['DYNAMICS'][0][0][0]
         self._fileh.seek(fpos)
-        name, trailer, dbtype = self._rdop2nt()
-        return self.rdop2dynamics()
+        name, trailer, dbtype = self._read_op2_name_trailer()
+        return self.read_op2_dynamics()
 
-    def rdop2record(self, form=None, N=0):
+    def read_op2_record(self, form=None, N=0):
         """
         Read Nastran output2 data record.
 
@@ -714,7 +714,7 @@ class OP2(object):
         This routine will read in a 'super' record if the data spans
         more than one logical record.
         """
-        key = self._getkey()
+        key = self._get_key()
         f = self._fileh
         if not form or form == 'int':
             frm = self._intstr
@@ -738,8 +738,8 @@ class OP2(object):
                 reclen = self._Str4.unpack(f.read(4))[0]
                 data += f.read(reclen)
                 f.read(4)  # endrec
-                key = self._getkey()
-            self._skipkey(2)
+                key = self._get_key()
+            self._skip_key(2)
             return data
         else:
             raise ValueError("form must be one of:  None, 'int', "
@@ -760,7 +760,7 @@ class OP2(object):
                     data[i:i+n] = np.fromfile(f, frm, n)
                 i += n
                 f.read(4)  # endrec
-                key = self._getkey()
+                key = self._get_key()
         else:
             data = np.zeros(0, dtype=frm)
             while key > 0:
@@ -774,22 +774,22 @@ class OP2(object):
                     cur = np.fromfile(f, frm, n)
                 data = np.hstack((data, cur))
                 f.read(4)  # endrec
-                key = self._getkey()
-        self._skipkey(2)
+                key = self._get_key()
+        self._skip_key(2)
         return data
 
-    def skipop2record(self):
+    def skip_op2_record(self):
         """
         Skip over Nastran output2 data record (or super-record).
         """
-        key = self._getkey()
+        key = self._get_key()
         while key > 0:
             reclen = self._Str4.unpack(self._fileh.read(4))[0]
             self._fileh.seek(reclen+4, 1)
-            key = self._getkey()
-        self._skipkey(2)
+            key = self._get_key()
+        self._skip_key(2)
 
-    def rdop2tabheaders(self, name):
+    def read_op2_table_headers(self, name):
         """
         Read op2 table headers and echo them to the screen.
 
@@ -805,11 +805,11 @@ class OP2(object):
             o2 = op2.OP2('modes.op2')
             fpos = o2.dbnames['GEOM1S'][-1][0][0]
             o2._fileh.seek(fpos)
-            name, trailer, dbtype = o2._rdop2nt()
-            o2.rdop2tabheaders('GEOM1S')
+            name, trailer, dbtype = o2._read_op2_name_trailer()
+            o2.read_op2_table_headers('GEOM1S')
 
         """
-        key = self._getkey()
+        key = self._get_key()
         print("{} Headers:".format(name))
         Frm = struct.Struct(self._intstru % 3)
         eot = 0
@@ -820,9 +820,9 @@ class OP2(object):
                 print(np.hstack((head, reclen)))
                 self._fileh.seek((key-3)*self._ibytes, 1)
                 self._fileh.read(4)
-                key = self._getkey()
-            self._skipkey(2)
-            eot, key = self._rdop2eot()
+                key = self._get_key()
+            self._skip_key(2)
+            eot, key = self._read_op2_end_of_table()
 
     def _check_code(self, item_code, funcs, vals, name):
         """
@@ -889,7 +889,7 @@ class OP2(object):
                                  format(func))
         return True
 
-    def _rdop2ougv1(self, name):
+    def _read_op2_ougv1(self, name):
         """
         Read op2 OUGV1 mode shape data block.
 
@@ -922,7 +922,7 @@ class OP2(object):
             i4_Str = struct.Struct(self._endian + 'qqqq')
             i4_bytes = 32
         pos = self._fileh.tell()
-        key = self._getkey()
+        key = self._get_key()
         lam = np.zeros(1, float)
         ougv1 = None
         J = 0
@@ -957,7 +957,7 @@ class OP2(object):
                                     [[1], [7], [0, 2]], 'TCODE')
             if not (achk and tchk):
                 self._fileh.seek(pos)
-                self.skipop2table()
+                self.skip_op2_table()
                 return
             self._fileh.read(self._ibytes)  # mode bytes
             lam[J] = float2_Str.unpack(self._fileh.read(8))[0]
@@ -973,13 +973,13 @@ class OP2(object):
                 # - process DOF information on first column only
                 # - there are 8 elements per node:
                 #   id*10, type, x, y, z, rx, ry, rz
-                data = self.rdop2record('bytes')  # 1st column
+                data = self.read_op2_record('bytes')  # 1st column
                 n = len(data) // iif6_bytes
                 print('iif6_int =', iif6_int)  # int32
                 data = np.fromstring(data, iif6_int)
                 data1 = (data.reshape(n, 8))[:, :2]
                 pvgrids = data1[:, 1] == 1
-                dof = expanddof(data1[:, 0] // 10, pvgrids)
+                dof = expand_dof(data1[:, 0] // 10, pvgrids)
                 # form partition vector for modeshape data:
                 V = np.zeros((n, 8), bool)
                 V[:, 2] = True          # all nodes have 'x'
@@ -990,14 +990,14 @@ class OP2(object):
                 data.dtype = np.float32  # reinterpret as floats
                 ougv1 = data[V].reshape(-1, 1)
             else:
-                data = self.rdop2record('single', V.shape[0])
+                data = self.read_op2_record('single', V.shape[0])
                 ougv1[:, J] = data[V]
             J += 1
             # print('Finished reading mode {0:3d}, Frequency ={1:6.2f}'.format(J, np.sqrt(lam[J-1])/(2*np.pi)))
-            eot, key = self._rdop2eot()
+            eot, key = self._read_op2_end_of_table()
         return {'ougv1': ougv1, 'lambda': lam, 'dof': dof}
 
-    def _rdop2emap(self, nas, nse, trailer):
+    def _read_op2_emap(self, nas, nse, trailer):
         """
         Read Nastran output2 EMAP data block.
 
@@ -1012,15 +1012,15 @@ class OP2(object):
 
         Fills in the dnids member of nas.
 
-        See :func:`rdn2cop2`.
+        See :func:`read_nas2cam_op2`.
         """
         words4bits = trailer[4]
-        data1 = self.rdop2record()
+        data1 = self.read_op2_record()
         # [se bitpos proc_order dnse bitpos_dnse prim_se se_type]
         data1 = np.reshape(data1[:7*nse], (-1, 7))
 
         # read 2nd record:
-        key = self._getkey()
+        key = self._get_key()
         data2 = np.zeros(0, dtype='u4')
         frm = self._endian + 'u4'
         frmu = self._endian + '%dI'
@@ -1037,11 +1037,11 @@ class OP2(object):
                 cur = np.fromfile(self._fileh, frm, mult*key)
             data2 = np.hstack((data2, cur))
             self._fileh.read(4)  # endrec
-            key = self._getkey()
+            key = self._get_key()
         if self._ibytes == 8:
             data2 = np.reshape(data2, (4, -1))
             data2 = data2[[0, 3], :].flatten()
-        self._skipkey(2)
+        self._skip_key(2)
 
         # [ grid_id [bitmap] ]
         data2 = np.reshape(data2, (-1, words4bits))
@@ -1059,10 +1059,10 @@ class OP2(object):
             grids = data2[connected, 0]
             nas['dnids'][se] = grids
         for j in range(nse):  # = 1 to nse:
-            self.skipop2record()
-        self._getkey()
+            self.skip_op2_record()
+        self._get_key()
 
-    def _rdop2bgpdt(self):
+    def _read_op2_bgpdt(self):
         """
         Read record 1 of the Nastran output2 BGPDT data block.
 
@@ -1094,7 +1094,7 @@ class OP2(object):
             wpg = 9   # words per grid
             wpd = 1   # words per double
         rfrm = self._endian + '%dd'
-        key = self._getkey()
+        key = self._get_key()
 
         datarec = []
         ileft = 0     # remaining left over
@@ -1159,11 +1159,11 @@ class OP2(object):
                     ileft = 6-n
                     dleft = 3
             self._fileh.read(4)  # endrec
-            key = self._getkey()
-        self._skipkey(2)
+            key = self._get_key()
+        self._skip_key(2)
         return datarec
 
-    def _rdop2bgpdt68(self):
+    def _read_op2_bgpdt68(self):
         """
         Read record 1 of the Nastran output2 BGPDT68 data block.
 
@@ -1182,7 +1182,7 @@ class OP2(object):
         wpg = 4  # words per grid
         wpd = 1  # words per single
         rfrm = self._endian + '%df'
-        key = self._getkey()
+        key = self._get_key()
 
         datarec = []
         ileft = 0     # remaining left over
@@ -1235,11 +1235,11 @@ class OP2(object):
                         datarec[i] = struct.unpack(rfrm % n,
                                                    self._fileh.read(4*n))
             self._fileh.read(4)  # endrec
-            key = self._getkey()
-        self._skipkey(2)
+            key = self._get_key()
+        self._skip_key(2)
         return datarec
 
-    def _rdop2cstm(self):
+    def _read_op2_cstm(self):
         """
         Read Nastran output2 CSTM data block.
 
@@ -1254,11 +1254,11 @@ class OP2(object):
         T is transformation from local to basic for the coordinate
         system.
 
-        See :func:`rdn2cop2`.
+        See :func:`read_nas2cam_op2`.
         """
-        cstm_rec1 = self.rdop2record()
-        cstm_rec2 = self.rdop2record('double')
-        self._rdop2eot()
+        cstm_rec1 = self.read_op2_record()
+        cstm_rec2 = self.read_op2_record('double')
+        self._read_op2_end_of_table()
 
         # assemble coordinate system table
         length = len(cstm_rec1)
@@ -1272,7 +1272,7 @@ class OP2(object):
             cstm[i, 2:] = cstm_rec2[j+pv-1]  # -1 for 0 offset
         return cstm
 
-    def _rdop2cstm68(self):
+    def _read_op2_cstm68(self):
         """
         Read record 1 of Nastran output2 CSTM68 data block.
 
@@ -1289,7 +1289,7 @@ class OP2(object):
         Sbytes = 4*14
         wpg = 14   # words per grid
         wpd = 1    # words per single
-        key = self._getkey()
+        key = self._get_key()
         rfrm = self._endian + '%df'
         datarec = []
         ileft = 0    # integers to read that are left over
@@ -1353,12 +1353,12 @@ class OP2(object):
                     ileft = 2-n
                     dleft = 12
             self._fileh.read(4)  # endrec
-            key = self._getkey()
-        self._skipkey(2)
-        self._rdop2eot()
+            key = self._get_key()
+        self._skip_key(2)
+        self._read_op2_end_of_table()
         return datarec
 
-    def _rdop2geom1cord2(self):
+    def _read_op2_geom1_cord2(self):
         if self._ibytes == 4:
             header_Str = struct.Struct(self._endian + 'iii')
             cord2_Str = struct.Struct(self._endian + '4i9f')
@@ -1383,7 +1383,7 @@ class OP2(object):
         cord2 = np.zeros((0, 13))
         sebulk = np.zeros((1, 8))
         selist = np.array([[0, 0]], int)
-        key = self._getkey()
+        key = self._get_key()
         eot = 0
         # data = np.zeros(0, dtype=self._intstr)
         while not eot:
@@ -1420,25 +1420,25 @@ class OP2(object):
                 else:
                     self._fileh.seek((key-3)*self._ibytes, 1)
                 self._fileh.read(4)  # endrec
-                key = self._getkey()
-            self._skipkey(2)
-            eot, key = self._rdop2eot()
+                key = self._get_key()
+            self._skip_key(2)
+            eot, key = self._read_op2_end_of_table()
         cord2 = np.delete(cord2, 2, axis=1)
         return n2y.build_coords(cord2), sebulk, selist
 
-    def _rdop2selist(self):
+    def _read_op2_selist(self):
         """
-        Read SLIST data block and return `selist` for :func:`rdn2cop2`.
+        Read SLIST data block and return `selist` for :func:`read_nas2cam_op2`.
 
-        See :func:`rdn2cop2`.
+        See :func:`read_nas2cam_op2`.
         """
-        slist = self.rdop2record()
+        slist = self.read_op2_record()
         slist[1::7] = 0
-        self.skipop2record()
-        self._rdop2eot()
+        self.skip_op2_record()
+        self._read_op2_end_of_table()
         return np.vstack((slist[::7], slist[4::7])).T
 
-    def _rdop2uset(self):
+    def _read_op2_uset(self):
         """
         Read the USET data block.
 
@@ -1446,42 +1446,42 @@ class OP2(object):
 
         See :func:`rdn2cop2`.
         """
-        uset = self.rdop2record('uint')
+        uset = self.read_op2_record('uint')
         # clear the 2nd bit for all S-set:
         sset = 0 != (uset & n2y.mkusetmask("s"))
         if any(sset):
             uset[sset] = uset[sset] & ~2
-        self._rdop2eot()
+        self._read_op2_end_of_table()
         return uset
 
-    def _rdop2eqexin(self):
+    def _read_op2_eqexin(self):
         """
         Read the EQEXIN data block.
 
         Returns (EQEXIN1, EQEXIN) tuple.
 
-        See :func:`rdn2cop2`.
+        See :func:`read_nas2cam_op2`.
         """
-        eqexin1 = self.rdop2record()
-        eqexin = self.rdop2record()
-        self._rdop2eot()
+        eqexin1 = self.read_op2_record()
+        eqexin = self.read_op2_record()
+        self._read_op2_end_of_table()
         return eqexin1, eqexin
 
     def _proc_bgpdt(self, eqexin1, eqexin, ver68=False, bgpdtin=None):
         """
-        Reads and processes the BGPDT data block for :func:`rdn2cop2`
-        and :func:`rdpostop2`.
+        Reads and processes the BGPDT data block for :func:`read_nas2cam_op2`
+        and :func:`read_post_op2`.
 
         Returns (bgpdt, dof, doftype, nid, upids)
 
-        See :func:`rdn2cop2`, :func:`rdpostop2`.
+        See :func:`read_nas2cam_op2`, :func:`read_post_op2`.
         """
         if ver68:
             bgpdt_rec1 = bgpdtin
         else:
-            bgpdt_rec1 = self._rdop2bgpdt()
-            self.rdop2record()
-            self.skipop2table()
+            bgpdt_rec1 = self._read_op2_bgpdt()
+            self.read_op2_record()
+            self.skip_op2_table()
 
         # assemble coordinates table
         # bgpdt: [x, y, z, cid]
@@ -1508,15 +1508,15 @@ class OP2(object):
             upids = bgpdt_rec1[:, 5].astype(int)
         return bgpdt, dof, doftype, nid, upids
 
-    def _buildUset(self, se, dof, doftype, nid, uset, bgpdt,
-                   cstm=None, cstm2=None):
+    def _build_Uset(self, se, dof, doftype, nid, uset, bgpdt,
+                    cstm=None, cstm2=None):
         """
         Builds the 6-column uset table for :func:`rdn2cop2` and
         :func:`rdpostop2`.
 
         Returns: (uset, cstm, cstm2).
 
-        See :func:`rdn2cop2`.
+        See :func:`read_nas2cam_op2`.
         """
         # Fill in all dof use -1 as default and set dof as
         # appropriate ... make it big enough for grids (6 cols).
@@ -1579,9 +1579,9 @@ class OP2(object):
                 cstm2[int(row[0])] = m
         return uset, cstm, cstm2
 
-    def _rdop2maps(self):
+    def _read_op2_maps(self):
         """
-        Reads and returns the MAPS information for :func:`rdn2cop2`.
+        Reads and returns the MAPS information for :func:`read_nas2cam_op2`.
         """
         if self._ibytes == 4:
             id_Str = struct.Struct(self._endian + 'id')
@@ -1592,18 +1592,18 @@ class OP2(object):
         key = 1
         maps = np.zeros((0, 2))
         while key:
-            key = self._getkey()  # 2 (1 integer, 1 double)
+            key = self._get_key()  # 2 (1 integer, 1 double)
             self._fileh.read(4)  # reclen 12 or 16 bytes
             curmap = id_Str.unpack(self._fileh.read(id_bytes))
             maps = np.vstack((maps, curmap))
             self._fileh.read(4)  # endrec
-            self._skipkey(2)  # 1st key is mystery negative
-            key = self._getkey()  # 1 if cont, 0 if done
-        self._getkey()
+            self._skip_key(2)  # 1st key is mystery negative
+            key = self._get_key()  # 1 if cont, 0 if done
+        self._get_key()
         maps[:, 0] -= 1
         return maps
 
-    def _rdop2drm(self):
+    def _read_op2_drm(self):
         """
         Read Nastran output2 DRM data block (table).
 
@@ -1638,12 +1638,12 @@ class OP2(object):
             rfrm = self._endian + 'f4'
             rfrmu = self._endian + '%df'
             rsize = 4
-        u1 = self.rdop2record()
+        u1 = self.read_op2_record()
         elemtype = u1[1]
         elemid = u1[2]
         ir_Str, ir_bytes, ints_rec2 = getStr(0, elemtype, None, None)
         nwords = u1[9]
-        key = self._getkey()
+        key = self._get_key()
         block = 7*4+3*self._ibytes
 
         # determine records/column by scanning first column:
@@ -1688,7 +1688,7 @@ class OP2(object):
                 fp.seek(self._ibytes*L, 1)
                 drmrow += L
             fp.seek(block, 1)
-            key = self._getkey()
+            key = self._get_key()
             if key > 0:
                 fp.read(4)   # reclen
                 if key < self._rowsCutoff:
@@ -1710,7 +1710,7 @@ class OP2(object):
                     raise RuntimeError('u1[9] != nwords ... should it?')
                 # nwords = u1[9]
                 fp.seek(block, 1)
-                key = self._getkey()
+                key = self._get_key()
 
         drmrows = drmrow
         iddof = iddof[:drmrows]
@@ -1738,7 +1738,7 @@ class OP2(object):
                         drm[drmrow:drmrow+L, drmcol] = np.fromfile(fp, rfrm, L)
                     drmrow += L
                 fp.seek(block, 1)
-                key = self._getkey()
+                key = self._get_key()
                 if key > 0:
                     fp.read(4)   # reclen
                     if key < self._rowsCutoff:
@@ -1749,11 +1749,11 @@ class OP2(object):
                 else:
                     break
                 fp.seek(block, 1)
-                key = self._getkey()
+                key = self._get_key()
             drmcol += 1
         return drm[:, :drmcol], iddof
 
-    def rddrm2op2(self, verbose=False):
+    def read_drm2op2(self, verbose=False):
         """
         Read op2 file output by DRM2 DMAP.
 
@@ -1784,40 +1784,40 @@ class OP2(object):
         drmkeys = {}
         self.verbose = verbose
         while 1:
-            name, trailer, rectype = self._rdop2nt()
+            name, trailer, rectype = self._read_op2_name_trailer()
             if name is None:
                 break
             if rectype > 0:
                 if verbose:
                     print("Skipping matrix %r..." % name)
-                self.skipop2matrix(trailer)
+                self.skip_op2_matrix(trailer)
                 # matrix = self.rdop2matrix(trailer)
             elif len(name) > 2 and name.find('TO') == 0:
                 if verbose:
                     print("Reading %r..." % name)
                 # self.skipop2table()
                 # skip record 1
-                self.rdop2record()
+                self.read_op2_record()
                 # record 2 contains directory
                 # - starting at 10: type, id, number, row, 0
-                info = self.rdop2record()[10:]
+                info = self.read_op2_record()[10:]
                 drmkeys[name.lower()] = (info.reshape(-1, 5).T)[:-1]
-                self._rdop2eot()
+                self._read_op2_end_of_table()
             elif len(name) > 4 and name[:4] == 'XYCD':
                 if verbose:
                     print("Reading %r..." % name)
                 # record 1 contains order of request info
-                drmkeys['dr'] = self.rdop2record()
+                drmkeys['dr'] = self.read_op2_record()
                 # record 2 contains sorted list
-                drmkeys['drs'] = self.rdop2record().reshape(-1, 6).T
-                self._rdop2eot()
+                drmkeys['drs'] = self.read_op2_record().reshape(-1, 6).T
+                self._read_op2_end_of_table()
             else:
                 if verbose:
                     print("Skipping table %r..." % name)
-                self.skipop2table()
+                self.skip_op2_table()
         return drmkeys
 
-    def rdn2cop2(self):
+    def read_nas2cam_op2(self):
         """
         Read Nastran output2 file written by DMAP NAS2CAM; usually
         called by :func:`rdnas2cam`.
@@ -1968,50 +1968,50 @@ class OP2(object):
                'upids': {}}
         self._fileh.seek(self._postheaderpos)
         # read datablock (slist) header record:
-        name, trailer, dbtype = self._rdop2nt()
+        name, trailer, dbtype = self._read_op2_name_trailer()
         if dbtype > 0:
-            selist = np.hstack((self.rdop2matrix(trailer), [[0]]))
+            selist = np.hstack((self.read_op2_matrix(trailer), [[0]]))
             selist = selist.astype(int)
-            name, trailer, dbtype = self._rdop2nt()
+            name, trailer, dbtype = self._read_op2_name_trailer()
         else:
-            selist = self._rdop2selist()
+            selist = self._read_op2_selist()
             nse = np.size(selist, 0)
-            name, trailer, dbtype = self._rdop2nt()
+            name, trailer, dbtype = self._read_op2_name_trailer()
             if name == "EMAP":
-                self._rdop2emap(nas, nse, trailer)
-                name, trailer, dbtype = self._rdop2nt()
+                self._read_op2_emap(nas, nse, trailer)
+                name, trailer, dbtype = self._read_op2_name_trailer()
 
         # read uset and eqexins tables and do some processing:
         for se in selist[:, 0]:
             if not name:
                 break
-            uset = self._rdop2uset()
-            name, trailer, dbtype = self._rdop2nt()
-            eqexin1, eqexin = self._rdop2eqexin()
-            name, trailer, dbtype = self._rdop2nt()
+            uset = self._read_op2_uset()
+            name, trailer, dbtype = self._read_op2_name_trailer()
+            eqexin1, eqexin = self._read_op2_eqexin()
+            name, trailer, dbtype = self._read_op2_name_trailer()
             if name == "CSTMS":
-                cstm = np.vstack((bc, self._rdop2cstm()))
-                name, trailer, dbtype = self._rdop2nt()
+                cstm = np.vstack((bc, self._read_op2_cstm()))
+                name, trailer, dbtype = self._read_op2_name_trailer()
             else:
                 cstm = bc
             bgpdt, dof, doftype, nid, upids = self._proc_bgpdt(eqexin1, eqexin)
             nas['upids'][se] = upids
-            Uset, cstm, cstm2 = self._buildUset(se, dof, doftype, nid,
-                                                uset, bgpdt, cstm, None)
+            Uset, cstm, cstm2 = self._build_Uset(se, dof, doftype, nid,
+                                                 uset, bgpdt, cstm, None)
             nas['uset'][se] = Uset
             nas['cstm'][se] = cstm
             nas['cstm2'][se] = cstm2
-            name, trailer, dbtype = self._rdop2nt()
+            name, trailer, dbtype = self._read_op2_name_trailer()
             if name == "MAPS":
-                nas['maps'][se] = self._rdop2maps()
-                name, trailer, dbtype = self._rdop2nt()
+                nas['maps'][se] = self._read_op2_maps()
+                name, trailer, dbtype = self._read_op2_name_trailer()
             else:
                 nas['maps'][se] = []
         nas['selist'] = selist
         return nas
 
 
-def rdnas2cam(op2file='nas2cam', op4file=None):
+def read_nas2cam(op2file='nas2cam', op4file=None):
     """
     Read op2/op4 data written by the DMAP NAS2CAM.
 
@@ -2719,7 +2719,7 @@ def get_drm(drminfo, otm, drms, drmkeys, dr, desc):
                                                            DOF[j])
 
 
-def procdrm12(op2file, op4file=None, dosort=True):
+def proccess_drm1_drm2(op2file, op4file=None, dosort=True):
     """
     Process op2/op4 file2 output from DRM1/DRM2 DMAPs to form data
     recovery matrices.
@@ -2787,7 +2787,7 @@ def procdrm12(op2file, op4file=None, dosort=True):
     Example usage::
 
         import op2
-        otm = op2.procdrm12('drm2')
+        otm = op2.proccess_drm1_drm2('drm2')
 
     """
     if not op4file:
@@ -2799,8 +2799,8 @@ def procdrm12(op2file, op4file=None, dosort=True):
     drms = o4.dctload(op4file)
 
     with OP2(op2file) as o2:
-        drmkeys = o2.rddrm2op2()
-    N = drmkeys['drs'].shape[1]
+        drm_keys = o2.rddrm2op2()
+    N = drm_keys['drs'].shape[1]
 
     # drs format:
     # 6 elements per recovery item:
@@ -2842,7 +2842,7 @@ def procdrm12(op2file, op4file=None, dosort=True):
 
     if not dosort:
         # reshape dr:
-        dr = drmkeys['dr']
+        dr = drm_keys['dr']
         r = np.nonzero(dr == dr[0])[0]
         r = np.hstack((r, len(dr)))
         n = len(r) - 1
@@ -2871,10 +2871,10 @@ def procdrm12(op2file, op4file=None, dosort=True):
                     J += 3
                 J += 4  # jump over [-1,-1,-1,#]
     else:
-        DR = drmkeys['drs'][1:4]  # use sorted version
+        DR = drm_keys['drs'][1:4]  # use sorted version
 
     desc = get_dof_descs()
-    drminfo = {
+    drm_info = {
         1: ('DTM', 'oug', 'acce'),
         3: ('ATM', 'ougv1', 'acce'),
         4: ('SPCF', 'oqg', 'spcf'),
@@ -2888,21 +2888,21 @@ def procdrm12(op2file, op4file=None, dosort=True):
         if pv.size > 0:
             if np.any(drtype == types):
                 print('Processing "{}" requests...'.format(Vreq[drtype-1]))
-                get_drm(drminfo[drtype], otm, drms,
-                        drmkeys, DR[:, pv], desc)
+                get_drm(drm_info[drtype], otm, drms,
+                        drm_keys, DR[:, pv], desc)
             else:
                 print('Skipping %r requests.  Needs to be added '
-                      'to procdrm12().' % Vreq[drtype-1])
+                      'to proccess_drm1_drm2().' % Vreq[drtype-1])
     return otm
 
 
-def rdpostop2(op2file, verbose=False, getougv1=False):
+def read_post_op2(op2_filename, verbose=False, getougv1=False):
     """
     Reads PARAM,POST,-1 op2 file and returns dictionary of data.
 
     Parameters
     ----------
-    op2file : string
+    op2_filename : string
         Name of op2 file.
     verbose : bool
         If true, echo names of tables and matrices to screen
@@ -2929,7 +2929,7 @@ def rdpostop2(op2file, verbose=False, getougv1=False):
         matrices.
     """
     # read op2 file:
-    with OP2(op2file) as o2:
+    with OP2(op2_filename) as o2:
         mats = {}
         selist = uset = cstm2 = None
         se = 0
@@ -2942,7 +2942,7 @@ def rdpostop2(op2file, verbose=False, getougv1=False):
         Uset = None
         cstm = None
         while 1:
-            name, trailer, dbtype = o2._rdop2nt()
+            name, trailer, dbtype = o2._read_op2_name_trailer()
             # print('name = %r' % name)
             # print('trailer = %s' % str(trailer))
             # print('dbtype = %r' % dbtype)
@@ -2955,13 +2955,13 @@ def rdpostop2(op2file, verbose=False, getougv1=False):
                     print("Reading matrix {0}...".format(name))
                 if name not in mats:
                     mats[name] = []
-                mats[name] += [o2.rdop2matrix(trailer)]
+                mats[name] += [o2.read_op2_matrix(trailer)]
             else:
                 if name.find('BGPDT') == 0:
                     if verbose:
                         print("Reading table {0}...".format(name))
-                    bgpdt_rec1 = o2._rdop2bgpdt68()
-                    o2.skipop2table()
+                    bgpdt_rec1 = o2._read_op2_bgpdt68()
+                    o2.skip_op2_table()
                     continue
 
                 # if name.find('CSTM') == 0:
@@ -2974,7 +2974,7 @@ def rdpostop2(op2file, verbose=False, getougv1=False):
                 elif name.find('GEOM1') == 0:
                     if verbose:
                         print("Reading table {0}...".format(name))
-                    cords, sebulk, selist = o2._rdop2geom1cord2()
+                    cords, sebulk, selist = o2._read_op2_geom1_cord2()
                     if 0 not in cords:
                         cords[0] = np.array([[0., 1., 0.],
                                              [0., 0., 0.],
@@ -2990,26 +2990,26 @@ def rdpostop2(op2file, verbose=False, getougv1=False):
                 elif name.find('DYNAMIC') == 0:
                     if verbose:
                         print("Reading DYNAMIC table {0}...".format(name))
-                    mats['tload'] = o2.rdop2dynamics()
+                    mats['tload'] = o2.read_op2_dynamics()
                     continue
 
                 elif name.find('EQEXIN') == 0:
                     if verbose:
                         print("Reading EQEXIN table {0}...".format(name))
-                    eqexin1, eqexin = o2._rdop2eqexin()
+                    eqexin1, eqexin = o2._read_op2_eqexin()
                     continue
 
                 elif name.find('USET') == 0:
                     if verbose:
                         print("Reading USET table {0}...".format(name))
-                    uset = o2._rdop2uset()
+                    uset = o2._read_op2_uset()
                     continue
 
                 elif getougv1 and (name.find('OUGV1') == 0 or
                                    name.find('BOPHIG') == 0):
                     if verbose:
                         print("Reading OUG table {0}...".format(name))
-                    mats['ougv1'] += [o2._rdop2ougv1(name)]
+                    mats['ougv1'] += [o2._read_op2_ougv1(name)]
                     continue
 
                 # if name.find('OEF1X') == 0:
@@ -3020,15 +3020,15 @@ def rdpostop2(op2file, verbose=False, getougv1=False):
 
                 elif verbose:
                     print("Skipping table %r..." % name)
-                o2.skipop2table()
+                o2.skip_op2_table()
 
         if eqexin1 is not None:
             (bgpdt, dof,
              doftype, nid, upids) = o2._proc_bgpdt(eqexin1, eqexin,
                                                    True, bgpdt_rec1)
         if dof is not None:
-            Uset, cstm, cstm2 = o2._buildUset(se, dof, doftype, nid,
-                                              uset, bgpdt, None, cstm2)
+            Uset, cstm, cstm2 = o2._build_Uset(se, dof, doftype, nid,
+                                               uset, bgpdt, None, cstm2)
     return {'uset': Uset,
             'cstm': cstm,
             'cstm2': cstm2,
