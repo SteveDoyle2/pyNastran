@@ -1,7 +1,4 @@
-#from six import iteritems
 from pyNastran.op2.resultObjects.tableObject import RealTableArray, ComplexTableArray
-#RealTableObject, ComplexTableObject
-#from pyNastran.f06.f06_formatting import write_floats_13e
 
 
 class RealLoadVectorArray(RealTableArray):  # table_code=2, sort_code=0, thermal=0

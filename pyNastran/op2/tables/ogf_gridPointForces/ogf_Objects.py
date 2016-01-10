@@ -774,7 +774,7 @@ class RealGridPointForces(ScalarObject):
         msg.append('  force_moment, elemName, eids\n')
         return msg
 
-    def add_new_transient(self, dt):  # eKey
+    def add_new_transient(self, dt):  # ekey
         """initializes the transient variables"""
         self.force_moment[dt] = {}
 
@@ -782,14 +782,14 @@ class RealGridPointForces(ScalarObject):
         self.elemName[dt] = {}
         self.eids[dt] = {}
 
-    def add(self, dt, eKey, eid, elemName, f1, f2, f3, m1, m2, m3):
-        if eKey not in self.force_moment:
-            self.eids[eKey] = []
-            self.force_moment[eKey] = []
-            self.elemName[eKey] = []
-        self.force_moment[eKey].append(array([f1, f2, f3, m1, m2, m3], dtype='float32'))  # Fx,Fy,Fz
-        self.elemName[eKey].append(elemName)
-        self.eids[eKey].append(eid)
+    def add(self, dt, ekey, eid, elemName, f1, f2, f3, m1, m2, m3):
+        if ekey not in self.force_moment:
+            self.eids[ekey] = []
+            self.force_moment[ekey] = []
+            self.elemName[ekey] = []
+        self.force_moment[ekey].append(array([f1, f2, f3, m1, m2, m3], dtype='float32'))  # Fx,Fy,Fz
+        self.elemName[ekey].append(elemName)
+        self.eids[ekey].append(eid)
 
     def add_f06_data(self, dt, data):
         if dt is None:
@@ -863,17 +863,17 @@ class RealGridPointForces(ScalarObject):
               #'      13683          3737    TRIAX6        -4.996584E+00   0.0           -1.203093E+02   0.0            0.0            0.0'
               #'      13683                  *TOTALS*       6.366463E-12   0.0           -1.364242E-12   0.0            0.0            0.0'
         zero = ' '
-        for eKey, Force in sorted(iteritems(self.force_moment)):
+        for ekey, Force in sorted(iteritems(self.force_moment)):
             for iLoad, force in enumerate(Force):
                 (f1, f2, f3, m1, m2, m3) = force
-                elemName = self.elemName[eKey][iLoad]
-                eid = self.eids[eKey][iLoad]
+                elemName = self.elemName[ekey][iLoad]
+                eid = self.eids[ekey][iLoad]
                 vals = [f1, f2, f3, m1, m2, m3]
                 vals2 = write_floats_13e(vals)
                 [f1, f2, f3, m1, m2, m3] = vals2
                 if eid == 0:
                     eid = ''
-                msg.append('%s  %8s    %10s    %-8s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (zero, eKey, eid, elemName,
+                msg.append('%s  %8s    %10s    %-8s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (zero, ekey, eid, elemName,
                                                                                                      f1, f2, f3, m1, m2, m3))
                 zero = ' '
             zero = '0'
@@ -896,18 +896,18 @@ class RealGridPointForces(ScalarObject):
             zero = ' '
             header = _eigenvalue_header(self, header, itime, ntimes, dt)
             msg += header + msg_pack
-            for eKey, Force in sorted(iteritems(Forces)):
+            for ekey, Force in sorted(iteritems(Forces)):
                 for iLoad, force in enumerate(Force):
                     (f1, f2, f3, m1, m2, m3) = force
-                    elemName = self.elemName[dt][eKey][iLoad]
-                    eid = self.eids[dt][eKey][iLoad]
+                    elemName = self.elemName[dt][ekey][iLoad]
+                    eid = self.eids[dt][ekey][iLoad]
 
                     vals = [f1, f2, f3, m1, m2, m3]
                     vals2 = write_floats_13e(vals)
                     [f1, f2, f3, m1, m2, m3] = vals2
                     if eid == 0:
                         eid = ''
-                    msg.append('%s  %8s    %10s    %-8s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (zero, eKey, eid, elemName,
+                    msg.append('%s  %8s    %10s    %-8s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (zero, ekey, eid, elemName,
                                                                                                         f1, f2, f3, m1, m2, m3))
                     zero = ' '
                 zero = '0'

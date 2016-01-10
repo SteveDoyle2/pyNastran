@@ -480,8 +480,23 @@ class F06Writer(OP2_F06_Common):
             self.spc_forces,
             self.thermal_load_vectors,
 
-            self.strain_energy,
-
+            #self.strain_energy,
+            self.cquad4_strain_energy, self.cquad8_strain_energy,
+            self.cquadr_strain_energy, self.cquadx_strain_energy,
+            self.ctria3_strain_energy, self.ctria6_strain_energy,
+            self.ctriar_strain_energy, self.ctriax_strain_energy,
+            self.ctriax6_strain_energy,
+            self.ctetra_strain_energy, self.cpenta_strain_energy,
+            self.chexa_strain_energy,
+            self.crod_strain_energy, self.ctube_strain_energy,
+            self.conrod_strain_energy,
+            self.cbar_strain_energy, self.cbeam_strain_energy,
+            self.cgap_strain_energy, self.cbush_strain_energy,
+            self.celas1_strain_energy, self.celas2_strain_energy,
+            self.celas3_strain_energy, self.celas4_strain_energy,
+            self.cdum8_strain_energy, self.dmig_strain_energy,
+            self.cbend_strain_energy,
+            self.genel_strain_energy, self.cshear_strain_energy,
             #------------------------------------------
             # OEF - forces
 

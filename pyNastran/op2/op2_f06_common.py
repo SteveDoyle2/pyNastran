@@ -343,22 +343,41 @@ class OP2_F06_Common(object):
         self.force_vectors = {}       # tCode=12 thermal=0
 
         #: OEE - strain energy density
-        self.strain_energy = {}  # tCode=18
-        #self.cquad4_strain_energy = {}
-        #self.cquad8_strain_energy = {}
-        #self.ctria3_strain_energy = {}
-        #self.ctria6_strain_energy = {}
+        #self.strain_energy = {}  # tCode=18
+        self.cquad4_strain_energy = {}
+        self.cquad8_strain_energy = {}
+        self.cquadr_strain_energy = {}
+        self.cquadx_strain_energy = {}
 
-        #self.ctetra_strain_energy = {}
-        #self.cpenta_strain_energy = {}
-        #self.chexa_strain_energy = {}
+        self.ctria3_strain_energy = {}
+        self.ctria6_strain_energy = {}
+        self.ctriar_strain_energy = {}
+        self.ctriax_strain_energy = {}
+        self.ctriax6_strain_energy = {}
 
-        #self.crod_strain_energy = {}
-        #self.ctube_strain_energy = {}
-        #self.conrod_strain_energy = {}
+        self.ctetra_strain_energy = {}
+        self.cpenta_strain_energy = {}
+        self.chexa_strain_energy = {}
 
-        #self.cbar_strain_energy = {}
-        #self.cbeam_strain_energy = {}
+        self.crod_strain_energy = {}
+        self.ctube_strain_energy = {}
+        self.conrod_strain_energy = {}
+
+        self.cbar_strain_energy = {}
+        self.cbeam_strain_energy = {}
+
+        self.cgap_strain_energy = {}
+        self.celas1_strain_energy = {}
+        self.celas2_strain_energy = {}
+        self.celas3_strain_energy = {}
+        self.celas4_strain_energy = {}
+        self.cdum8_strain_energy = {}
+        self.cbush_strain_energy = {}
+        #self.chexa8fd_strain_energy = {}
+        self.cbend_strain_energy = {}
+        self.dmig_strain_energy = {}
+        self.genel_strain_energy = {}
+        self.cshear_strain_energy = {}
 
     def _get_result_length(self, res_types, res_key):
         """
@@ -374,9 +393,9 @@ class OP2_F06_Common(object):
             key0 = list(res_type.keys())[0]
             if not isinstance(key0, (int, int32)) and not isinstance(res_key, (int, int32)):
                 if not type(key0) == type(res_key):
-                    raise RuntimeError('bad compression check...keys0=%s type(key0)=%s res_key=%s type(res_key)=%s' % (
-                        key0, type(key0),
-                        res_key, type(res_key)))
+                    msg = 'bad compression check...keys0=%s type(key0)=%s res_key=%s type(res_key)=%s' % (
+                        key0, type(key0), res_key, type(res_key))
+                    raise RuntimeError(msg)
 
             #print('res_type.keys()=%s' % res_type.keys())
             # res_key_list = res_key[:-1] + [res_key[-1]]
@@ -664,7 +683,45 @@ class OP2_F06_Common(object):
             'grid_point_volume_stresses',  # tCode=27
 
             # OEE - strain energy density
-            'strain_energy',  # tCode=18
+            #'strain_energy',  # tCode=18
+            'cquad4_strain_energy',
+            'cquad8_strain_energy',
+            'cquadr_strain_energy',
+            'cquadx_strain_energy',
+
+            'ctria3_strain_energy',
+            'ctria6_strain_energy',
+            'ctriar_strain_energy',
+            'ctriax_strain_energy',
+            'ctriax6_strain_energy',
+
+            'cshear_strain_energy',
+
+
+            'ctetra_strain_energy',
+            'cpenta_strain_energy',
+            'chexa_strain_energy',
+
+            'crod_strain_energy',
+            'ctube_strain_energy',
+            'conrod_strain_energy',
+
+            'cbar_strain_energy',
+            'cbeam_strain_energy',
+
+            'cgap_strain_energy',
+            'cbush_strain_energy',
+            'celas1_strain_energy',
+            'celas2_strain_energy',
+            'celas3_strain_energy',
+            'celas4_strain_energy',
+
+            'cdum8_strain_energy',
+            #'chexa8fd_strain_energy'
+            'cbend_strain_energy',
+            'dmig_strain_energy',
+            'genel_strain_energy',
+
 
             # unused?
             'displacement_scaled_response_spectra_NRL',
@@ -693,8 +750,9 @@ class OP2_F06_Common(object):
         tables = object_attributes(self, 'public')
         tables = [table for table in tables
                   if isinstance(getattr(self, table), dict)
-                  and table not in ['card_count', 'data_code', 'element_mapper', 'iSubcaseNameMap',
-                  'labels', 'subtitles', 'additional_matrices', 'matrices', 'subcase_key']]
+                  and table not in [
+                      'card_count', 'data_code', 'element_mapper', 'iSubcaseNameMap',
+                      'labels', 'subtitles', 'additional_matrices', 'matrices', 'subcase_key']]
         for table in tables:
             if self.make_geom:
                 break
@@ -745,7 +803,7 @@ class OP2_F06_Common(object):
         displacements[1]; RealDisplacementArray; [1, 72, 6]; [t1, t2, t3, r1, r2, r3]
         """
         def compare(key_value):
-            key, value = key_value
+            key = key_value[0]
             if isinstance(key, (int, int32, binary_type)):
                 return key
             else:
@@ -760,7 +818,7 @@ class OP2_F06_Common(object):
                 for isubcase, subcase in sorted(iteritems(table), key=compare):
                     class_name = subcase.__class__.__name__
                     if hasattr(subcase, 'data'):
-                        data = subcase.data
+                        #data = subcase.data
                         #shape = [int(i) for i in subcase.data.shape]
                         #headers = subcase.get_headers()
                         #headers_str = str(', '.join(headers))
@@ -768,8 +826,9 @@ class OP2_F06_Common(object):
                         #table_type, isubcase, class_name, shape, headers_str))
                         msg.append('%s[%s]\n' % (table_type, isubcase))
                     else:
-                        msg.append('skipping %s op2.%s[%s]\n' % (class_name, table_type, isubcase))
-                        #raise RuntimeError('skipping %s op2.%s[%s]\n\n' % (class_name, table_type, isubcase))
+                        msgi = 'skipping %s op2.%s[%s]\n' % (class_name, table_type, isubcase)
+                        msg.append(msgi)
+                        #raise RuntimeError(msgi)
         else:
             for table_type in table_types:
                 table = getattr(self, table_type)
@@ -780,15 +839,18 @@ class OP2_F06_Common(object):
                             try:
                                 stats = subcase.get_stats() # short=short
                             except:
-                                msg.append('errored reading %s %s[%s]\n\n' % (class_name, table_type, isubcase))
+                                msgi = 'errored reading %s %s[%s]\n\n' % (
+                                    class_name, table_type, isubcase)
+                                msg.append(msgi)
                                 raise
                             else:
                                 msg.append('%s[%s]\n' % (table_type, isubcase))
                                 msg.extend(stats)
                                 msg.append('\n')
                         else:
-                            msg.append('skipping %s %s[%s]\n\n' % (class_name, table_type, isubcase))
-                            raise RuntimeError('skipping %s %s[%s]\n\n' % (class_name, table_type, isubcase))
+                            msgi = 'skipping %s %s[%s]\n\n' % (class_name, table_type, isubcase)
+                            msg.append(msgi)
+                            raise RuntimeError(msgi)
                 except:
                     self.log.warning('type(table)=%s' % type(table))
                     self.log.warning(table)

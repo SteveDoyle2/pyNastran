@@ -6,6 +6,10 @@ from numpy import zeros, empty, array_equal
 from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
 from pyNastran.f06.f06_formatting import get_key0, write_floats_13e, _eigenvalue_header
 from pyNastran.op2.resultObjects.element_table_object import RealElementTableArray
+try:
+    import pandas as pd
+except ImportError:
+    pass
 
 
 class Real1DHeatFluxArray(ScalarObject):

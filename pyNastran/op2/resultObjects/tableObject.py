@@ -48,6 +48,7 @@ class TableArray(ScalarObject):  # displacement style table
         self.analysis_code = None
         ScalarObject.__init__(self, data_code, isubcase, apply_data_code=True)  # no double inheritance
         self.is_sort1()
+        self.is_sort2()
         #self.dt = dt
 
         #self.eType = {}

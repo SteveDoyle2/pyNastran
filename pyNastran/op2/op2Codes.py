@@ -1071,7 +1071,7 @@ class Op2Codes(object):
         sort_method = 1
         is_real = True
         is_random = False
-        assert tcode in [0, 1, 2, 3, 4, 5, 6], tcode
+        assert tcode in [0, 1, 2, 3, 4, 5, 6], 'tcode=%s\n%s' % (tcode, self.code_information())
         if tcode in [2, 3, 5, 6]:
             sort_method = 2
         if tcode in [1, 3]:

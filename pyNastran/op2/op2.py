@@ -355,17 +355,22 @@ class OP2(OP2_Scalar):
                     obj.finalize()
 
     def build_dataframe(self):
+        skip_classes = ['RealEigenvalues']
         result_types = self.get_table_types()
         for result_type in result_types:
             result = getattr(self, result_type)
             for obj in itervalues(result):
+                class_name = obj.__class__.__name__
+                if class_name in skip_classes:
+                    print('build_dataframe is not supported for %s' % class_name)
+                    continue
                 if obj.is_sort2():
-                    print('build_dataframe is not supported for %s - SORT2' % obj.__class__.__name__)
+                    print('build_dataframe is not supported for %s - SORT2' % class_name)
                     continue
                 try:
                     obj.build_dataframe()
                 except:
-                    print('build_dataframe is broken for %s' % obj.__class__.__name__)
+                    print('build_dataframe is broken for %s' % class_name)
                     raise
 
 

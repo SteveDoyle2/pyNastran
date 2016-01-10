@@ -155,12 +155,80 @@ class ONR(OP2Common):
         dt = self.nonlinear_factor
         n = 0
 
-        #if self.data_code['element_name'] == 'BAR':
-            #pass
-        #else:
-            #raise NotImplementedError('element_name=%r' % (
-                #self.data_code['element_name']))
-        result_name = 'strain_energy'
+        if self.data_code['element_name'] == 'BAR':
+            result_name = 'cbar_strain_energy'
+        elif self.data_code['element_name'] == 'BEAM':
+            result_name = 'cbeam_strain_energy'
+        elif self.data_code['element_name'] == 'BEND':
+            result_name = 'cbend_strain_energy'
+
+        elif self.data_code['element_name'] == 'ROD':
+            result_name = 'crod_strain_energy'
+        elif self.data_code['element_name'] == 'TUBE':
+            result_name = 'ctube_strain_energy'
+        elif self.data_code['element_name'] == 'CONROD':
+            result_name = 'conrod_strain_energy'
+
+
+        elif self.data_code['element_name'] in ['TRIA3', 'TRIAFD', 'TRIA3FD']:
+            result_name = 'ctria3_strain_energy'
+        elif self.data_code['element_name'] == 'TRIA6':
+            result_name = 'ctria6_strain_energy'
+        elif self.data_code['element_name'] == 'TRIAX6':
+            result_name = 'ctriax6_strain_energy'
+        elif self.data_code['element_name'] == 'TRIAR':
+            result_name = 'ctriar_strain_energy'
+        elif self.data_code['element_name'] in ['TRIAX3FD', 'TRIAXFD']:
+            result_name = 'ctriax_strain_energy'
+
+
+        elif self.data_code['element_name'] in ['QUAD4', 'QUADFD', 'QUAD4FD']:
+            result_name = 'cquad4_strain_energy'
+        elif self.data_code['element_name'] == 'QUAD8':
+            result_name = 'cquad8_strain_energy'
+        elif self.data_code['element_name'] == 'QUADR':
+            result_name = 'cquadr_strain_energy'
+        elif self.data_code['element_name'] == ['QUADXFD', 'QUADX4FD']:
+            result_name = 'cquadx_strain_energy'
+        elif self.data_code['element_name'] == 'SHEAR':
+            result_name = 'cshear_strain_energy'
+
+        elif self.data_code['element_name'] in ['HEXA', 'HEXAFD', 'HEXA8FD']:
+            result_name = 'chexa_strain_energy'
+        elif self.data_code['element_name'] in ['PENTA', 'PENTAFD', 'PENTA6FD']:
+            result_name = 'cpenta_strain_energy'
+        elif self.data_code['element_name'] in ['TETRA', 'TETRAFD', 'TETRA4FD']:
+            result_name = 'ctetra_strain_energy'
+
+        elif self.data_code['element_name'] == 'GAP':
+            result_name = 'cgap_strain_energy'
+        elif self.data_code['element_name'] == 'BUSH':
+            result_name = 'cbush_strain_energy'
+
+        elif self.data_code['element_name'] == 'ELAS1':
+            result_name = 'celas1_strain_energy'
+        elif self.data_code['element_name'] == 'ELAS2':
+            result_name = 'celas2_strain_energy'
+        elif self.data_code['element_name'] == 'ELAS3':
+            result_name = 'celas3_strain_energy'
+        elif self.data_code['element_name'] == 'ELAS4':
+            result_name = 'celas4_strain_energy'
+
+        elif self.data_code['element_name'] == 'DUM8':
+            result_name = 'cdum8_strain_energy'
+        elif self.data_code['element_name'] == 'DMIG':
+            result_name = 'dmig_strain_energy'
+        elif self.data_code['element_name'] == 'GENEL':
+            result_name = 'genel_strain_energy'
+        else:
+            #result_name = 'chexa8fd_strain_energy'
+
+            raise NotImplementedError('element_name=%r' % (
+                self.data_code['element_name']))
+        #result_name = 'strain_energy'
+
+
+
         auto_return = False
         self._results._found_result(result_name)
 
@@ -190,7 +258,7 @@ class ONR(OP2Common):
             else:
                 if self.read_mode == 1:
                     return ndata
-                self.create_transient_object(self.strain_energy, RealStrainEnergy)
+                self.create_transient_object(slot, RealStrainEnergy)
                 obj = self.obj
             is_vectorized = False
 
@@ -237,7 +305,7 @@ class ONR(OP2Common):
             if self.read_mode == 1:
                 return ndata
             assert self.cvalres in [0, 1, 2], self.cvalres # 0??
-            self.create_transient_object(self.strain_energy, RealStrainEnergy)  # why is this not different?
+            self.create_transient_object(slot, RealStrainEnergy)  # why is this not different?
             ntotal = 20
             nnodes = ndata // ntotal
 
@@ -282,7 +350,7 @@ class ONR(OP2Common):
         elif self.num_wide == 6:  ## TODO: figure this out...
             if self.read_mode == 1:
                 return ndata
-            self.create_transient_object(self.strain_energy, RealStrainEnergy)  # TODO: why is this not different?
+            self.create_transient_object(slot, RealStrainEnergy)  # TODO: why is this not different?
             ntotal = 24
             nnodes = ndata // ntotal
 
