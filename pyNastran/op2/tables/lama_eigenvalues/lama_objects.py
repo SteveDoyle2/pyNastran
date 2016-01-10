@@ -35,10 +35,10 @@ class RealEigenvalues(BaseScalarObject):
                    'cycles, generalized_mass, generalized_stiffness\n')
         return msg
 
-    def isReal(self):
+    def is_real(self):
         return True
 
-    def isComplex(self):
+    def is_complex(self):
         return False
 
     def add_f06_line(self, data):
@@ -58,36 +58,34 @@ class RealEigenvalues(BaseScalarObject):
         headers = ['eigenvalue', 'radians', 'cycle', 'generalized_mass', 'generalized_stiffness']
         return headers
 
-    #def build_dataframe(self):
-        #return
-        #headers = self.get_headers()
-        #nmodes = len(self.eigenvalues)
+    def build_dataframe(self):
+        headers = self.get_headers()
+        nmodes = len(self.eigenvalues)
 
-        ## TODO: we drop extraction_order because it doesn't slot nicely
-        #modes = np.zeros(nmodes, dtype='float32')
-        #data = np.zeros((nmodes, 5), dtype='float32')
+        modes_extraction_order = np.zeros((nmodes, 2), dtype='float32')
+        data = np.zeros((nmodes, 5), dtype='float32')
 
-        #imodei = 0
-        #for (imode, eigi) in sorted(iteritems(self.eigenvalues)):
-            ##cycle = sqrt(abs(eigenvalue)) / (2. * pi)
-            #omega = self.radians[imode]
-            #freq = self.cycles[imode]
-            #mass = self.generalized_mass[imode]
-            #stiff = self.generalized_stiffness[imode]
-            #data[imodei, :] = [eigi, omega, freq, mass, stiff]
-            #modes[imodei] = imode
-            #imodei += 1
+        imodei = 0
+        for (imode, eigi) in sorted(iteritems(self.eigenvalues)):
+            #cycle = sqrt(abs(eigenvalue)) / (2. * pi)
+            extraction_order = self.extraction_order[imode]
+            omega = self.radians[imode]
+            freq = self.cycles[imode]
+            mass = self.generalized_mass[imode]
+            stiff = self.generalized_stiffness[imode]
+            data[imodei, :] = [eigi, omega, freq, mass, stiff]
+            modes_extraction_order[imodei, :] = [imode, extraction_order]
+            imodei += 1
 
-        #print(data)
-        #self.data_frame = pd.Panel(data, items=[modes], major_axis=modes, minor_axis=headers)
-        #self.data_frame.to_frame()
-        #self.data_frame.columns.names = ['Static']
-        #self.data_frame.index.names = ['Mode', 'Item']
-        #print(self.data_frame)
+        df1 = pd.DataFrame(modes_extraction_order)
+        df1.columns = ['Mode', 'ExtractionOrder']
+        df2 = pd.DataFrame(data)
+        df2.columns = headers
+        self.data_frame = df1.join(df2)
 
     def add_f06_data(self, data):
         for line in data:
-            self.addF06Line(line)
+            self.add_f06_line(line)
 
     def write_f06(self, f, header, page_stamp, page_num=1):
         title = ''
@@ -120,10 +118,10 @@ class RealEigenvalues(BaseScalarObject):
 
             cycle = sqrt(abs(eigenvalue)) / (2. * np.pi)
             #cycle = self.cycles[mode_num]
-            genM = self.generalized_mass[mode_num]
-            genK = self.generalized_stiffness[mode_num]
+            gen_m = self.generalized_mass[mode_num]
+            gen_k = self.generalized_stiffness[mode_num]
             msg += '%-7s %15s %15s %10s %10s %10s %15s\n' % (
-                mode_num, extract_order, eigenvalue, radian, cycle, genM, genK)
+                mode_num, extract_order, eigenvalue, radian, cycle, gen_m, gen_k)
         return msg
 
 
@@ -145,10 +143,10 @@ class ComplexEigenvalues(BaseScalarObject):
                    'cycles, damping\n')
         return msg
 
-    def isReal(self):
+    def is_real(self):
         return False
 
-    def isComplex(self):
+    def is_complex(self):
         return True
 
     def add_f06_line(self, data):
@@ -161,6 +159,36 @@ class ComplexEigenvalues(BaseScalarObject):
     def add_f06_data(self, data):
         for line in data:
             self.add_f06_line(line)
+
+    def get_headers(self):
+        headers = ['eigenvalue', 'frequency', 'damping']
+        return headers
+
+    def build_dataframe(self):
+        headers = self.get_headers()
+        nmodes = len(self.eigenvalues)
+
+        modes_extraction_order = np.zeros((nmodes, 2), dtype='float32')
+        cdata = np.zeros(nmodes, dtype='complex64')
+        fdata = np.zeros((nmodes, 5), dtype='float32')
+
+        imodei = 0
+        for (imode, eigi) in sorted(iteritems(self.eigenvalues)):
+            extraction_order = self.extraction_order[imode]
+            freq = self.cycles[imodei]
+            damping = self.damping[imodei]
+
+            cdata[imodei] = eigi
+            fdata[imodei, :] = [freq, damping]
+            modes_extraction_order[imodei, :] = [imode, extraction_order]
+            imodei += 1
+        df1 = pd.DataFrame(modes_extraction_order)
+        df1.columns = ['Mode', 'ExtractionOrder']
+        df2 = pd.DataFrame(cdata)
+        df2.columns = headers[0]
+        df3 = pd.DataFrame(fdata)
+        df3.columns = headers[1:]
+        self.data_frame = df1.join([df2, df3])
 
     def write_f06(self, f, header, page_stamp, page_num=1):  # not proper msg start
         title = ''
@@ -178,7 +206,8 @@ class ComplexEigenvalues(BaseScalarObject):
             damping = self.damping[imode]
             [eigr, eigi, freq, damping] = write_floats_13e([eigr, eigi, freq, damping])
             #            imode order      eigr     eigi          freq        damping
-            msg.append(' %22s  %10s         %-15s  %-13s         %-13s         %s\n' % (imode, order, eigr, eigi, freq, damping))
+            msg.append(' %22s  %10s         %-15s  %-13s         %-13s         %s\n' % (
+                imode, order, eigr, eigi, freq, damping))
 
         msg.append(page_stamp % page_num)
         f.write(''.join(msg))
@@ -191,15 +220,16 @@ class ComplexEigenvalues(BaseScalarObject):
             eigenvalue = self.eigenvalues[imode]
             cycle = self.cycles[imode]
             damping = self.damping[imode]
-            msg += '%-7s %15s %15s %10s %10s %10s\n' % (imode, extract_order,
-                                                        eigenvalue[0], eigenvalue[1], cycle, damping)
+            msg += '%-7s %15s %15s %10s %10s %10s\n' % (
+                imode, extract_order,
+                eigenvalue[0], eigenvalue[1], cycle, damping)
         return msg
 
 
 class BucklingEigenvalues(BaseScalarObject):
     def __init__(self, title):
         BaseScalarObject.__init__(self)
-        #self.rootNumber = []
+        #self.root_number = []
         self.title = title
         self.extraction_order = {}
         self.eigenvalues = {}
@@ -214,22 +244,20 @@ class BucklingEigenvalues(BaseScalarObject):
         neigenvalues = len(self.extraction_order)
         msg = []
         msg.append('  type=%s neigenvalues=%s\n' % (self.__class__.__name__, neigenvalues))
-        msg.append('  isubcase, extraction_order, eigenvalues, '
+        msg.append('  imode, extraction_order, eigenvalues, '
                    'cycles, damping\n')
         return msg
 
-    def isReal(self):
+    def is_real(self):
         return False
 
-    def isComplex(self):
+    def is_complex(self):
         return False
 
-    def isBuckling(self):
+    def is_buckling(self):
         return True
 
     def add_f06_line(self, data):
-        #print('data =', data)
-         #(iMode, order, eigen, omega, freq, mass, stiff)
         (root_num, extract_order, eigr, omega, freq, mass, stiff) = data
         self.extraction_order[root_num] = extract_order
         self.eigenvalues[root_num] = eigr
@@ -242,6 +270,38 @@ class BucklingEigenvalues(BaseScalarObject):
         #for line in data:
             #self.add_f06_line(line)
 
+    def build_dataframe(self):
+        headers = self.get_headers()
+        nmodes = len(self.eigenvalues)
+
+        modes_extraction_order = np.zeros((nmodes, 2), dtype='float32')
+        cdata = np.zeros(nmodes, dtype='complex64')
+        fdata = np.zeros((nmodes, 5), dtype='float32')
+
+        imodei = 0
+        for (imode, eigi) in sorted(iteritems(self.eigenvalues)):
+            extraction_order = self.extraction_order[imode]
+            freq = self.freqs[imode]
+            omega = self.omegas[imode]
+            gen_m = self.generalized_mass[imode]
+            gen_k = self.generalized_stiffness[imode]
+
+            cdata[imodei] = eigi
+            fdata[imodei, :] = [freq, omega, gen_m ,gen_k]
+            modes_extraction_order[imodei, :] = [imode, extraction_order]
+            imodei += 1
+        df1 = pd.DataFrame(modes_extraction_order)
+        df1.columns = ['Mode', 'ExtractionOrder']
+        df2 = pd.DataFrame(cdata)
+        df2.columns = headers[0]
+        df3 = pd.DataFrame(fdata)
+        df3.columns = headers[1:]
+        self.data_frame = df1.join([df2, df3])
+
+    def get_headers(self):
+        headers = ['eigenvalue', 'radians', 'cycles', 'generalized_mass', 'generalized_stiffness']
+        return headers
+
     def write_f06(self, f, header, page_stamp, page_num=1):  # not proper msg start
         title = ''
         if self.title is not None:
@@ -253,13 +313,14 @@ class BucklingEigenvalues(BaseScalarObject):
         for (imode, order) in sorted(iteritems(self.extraction_order)):
             eigr = self.eigenvalues[imode]
 
-            omega = self.omegas[imode]
             freq = self.freqs[imode]
+            omega = self.omegas[imode]
             mass = self.generalized_mass[imode]
             stiff = self.generalized_stiffness[imode]
             [eigr, freq, omega, mass, stiff] = write_floats_13e([eigr, freq, omega, mass, stiff])
             #            i  ord eig ome f   m          k
-            msg.append(' %8s%10s%20s%20s%20s%20s       %s\n' % (imode, order, eigr, omega, freq, mass, stiff))
+            msg.append(' %8s%10s%20s%20s%20s%20s       %s\n' % (
+                imode, order, eigr, omega, freq, mass, stiff))
         msg.append(page_stamp % page_num)
         f.write(''.join(msg))
         return page_num

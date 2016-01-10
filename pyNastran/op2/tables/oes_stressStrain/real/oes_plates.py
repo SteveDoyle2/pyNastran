@@ -121,23 +121,12 @@ class RealPlateArray(OES_Object):
             self.data_frame.columns.names = column_names
             self.data_frame.index.names = ['ElementID', 'NodeID', 'Location', 'Item']
         else:
-            # orig
-            #self.data_frame = pd.Panel(self.data, major_axis=element_node, minor_axis=headers).to_frame()
-            #self.data_frame.columns.names = ['Static']
-            #self.data_frame.index.names = ['ElementID', 'NodeID', 'Location', 'Item']
-
-            # option A
-            #self.data_frame = pd.Panel(self.data, major_axis=element_node, minor_axis=headers).to_frame()
-            #self.data_frame.index.names = ['ElementID', 'NodeID', 'Location', 'Item']
-            #self.data_frame = self.data_frame.unstack(level=[0, 1, 2])
-
             # option B - nice!
             df1 = pd.DataFrame(element_node).T
             df1.columns = ['ElementID', 'NodeID', 'Location']
             df2 = pd.DataFrame(self.data[0])
             df2.columns = headers
             self.data_frame = df1.join(df2)
-            #self.data_frame.reset_index().set_index(['ElementID', 'NodeID', 'Location']).sort_index()
         self.data_frame = self.data_frame.reset_index().replace({'NodeID': {0:'CEN'}}).set_index(['ElementID', 'NodeID', 'Location'])
         #print(self.data_frame)
 

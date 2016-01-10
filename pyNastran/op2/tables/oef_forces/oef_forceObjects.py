@@ -1285,9 +1285,14 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
             self.data_frame.columns.names = column_names
             self.data_frame.index.names = ['ElementID', 'NodeID', 'Item']
         else:
-            self.data_frame = pd.Panel(self.data, major_axis=element_node, minor_axis=headers).to_frame()
-            self.data_frame.columns.names = ['Static']
-            self.data_frame.index.names = ['ElementID', 'NodeID', 'Item']
+            df1 = pd.DataFrame(element_node).T
+            df1.columns = ['ElementID', 'NodeID']
+            df2 = pd.DataFrame(self.data[0])
+            df2.columns = headers
+            self.data_frame = df1.join([df2])
+        # unncessary for forces
+        #self.data_frame = self.data_frame.reset_index().replace({'NodeID': {0:'CEN'}}).set_index(['ElementID', 'NodeID'])
+        #print(self.data_frame)
 
     def __eq__(self, table):
         assert self.is_sort1() == table.is_sort1()

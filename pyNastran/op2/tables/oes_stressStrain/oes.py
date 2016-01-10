@@ -1266,10 +1266,10 @@ class OES(OP2Common):
                     if self.is_debug_file:
                         self.binary_debug.write('  eid=%i C=[%s]\n' % (eid, ', '.join(['%r' % di for di in out])))
 
-                    obj.add_new_eid('CQUAD4', dt, eid, cen, fd1, sx1, sy1,
-                                         txy1, angle1, major1, minor1, max_shear1)
-                    obj.add(dt, eid, cen, fd2, sx2, sy2, txy2,
-                                 angle2, major2, minor2, max_shear2)
+                    obj._add_new_eid('CQUAD4', dt, eid, cen, fd1, sx1, sy1,
+                                     txy1, angle1, major1, minor1, max_shear1)
+                    obj._add(dt, eid, cen, fd2, sx2, sy2, txy2,
+                             angle2, major2, minor2, max_shear2)
                     n += ntotal
             elif self.format_code in [2, 3] and self.num_wide == 15:  # imag
                 nnodes = 0  # centroid + 4 corner points
