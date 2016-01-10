@@ -704,7 +704,7 @@ class OP2_F06_Common(object):
     def get_f06_stats(self):
         return self.get_op2_stats()
 
-    def get_op2_stats(self, short=True):
+    def get_op2_stats(self, short=False):
         """
         Gets info about the contents of the different attributes of the
         OP2 class.
@@ -713,7 +713,7 @@ class OP2_F06_Common(object):
         ---------
         >>> self.get_op2_stats()
 
-        op2.displacements[1]
+        displacements[1]
           isubcase = 1
           type=RealDisplacementArray nnodes=72
           data: [t1, t2, t3, r1, r2, r3] shape=[1, 72, 6] dtype=float32
@@ -721,7 +721,7 @@ class OP2_F06_Common(object):
           sort1
           lsdvmns = [1]
 
-        op2.spc_forces[1]
+        spc_forces[1]
           isubcase = 1
           type=RealSPCForcesArray nnodes=72
           data: [t1, t2, t3, r1, r2, r3] shape=[1, 72, 6] dtype=float32
@@ -729,7 +729,7 @@ class OP2_F06_Common(object):
           sort1
           lsdvmns = [1]
 
-        op2.ctetra_stress[1]
+        ctetra_stress[1]
           type=RealSolidStressArray nelements=186 nnodes=930
           nodes_per_element=5 (including centroid)
           eType, cid
@@ -742,10 +742,7 @@ class OP2_F06_Common(object):
         Example 1
         ---------
         >>> self.get_op2_stats(short=True)
-        op2.displacements[1]; RealDisplacementArray; [1, 72, 6]; [t1, t2, t3, r1, r2, r3]
-          gridTypes
-          sort1
-          lsdvmns = [1]
+        displacements[1]; RealDisplacementArray; [1, 72, 6]; [t1, t2, t3, r1, r2, r3]
         """
         def compare(key_value):
             key, value = key_value
@@ -764,14 +761,15 @@ class OP2_F06_Common(object):
                     class_name = subcase.__class__.__name__
                     if hasattr(subcase, 'data'):
                         data = subcase.data
-                        shape = [int(i) for i in subcase.data.shape]
-                        headers = subcase.get_headers()
-                        headers_str = str(', '.join(headers))
-                        msg.append('%s[%s]; %s; %s; [%s]\n' % (
-                        table_type, isubcase, class_name, shape, headers_str))
+                        #shape = [int(i) for i in subcase.data.shape]
+                        #headers = subcase.get_headers()
+                        #headers_str = str(', '.join(headers))
+                        #msg.append('%s[%s]; %s; %s; [%s]\n' % (
+                        #table_type, isubcase, class_name, shape, headers_str))
+                        msg.append('%s[%s]\n' % (table_type, isubcase))
                     else:
-                        msg.append('skipping %s op2.%s[%s]\n\n' % (class_name, table_type, isubcase))
-                        raise RuntimeError('skipping %s op2.%s[%s]\n\n' % (class_name, table_type, isubcase))
+                        msg.append('skipping %s op2.%s[%s]\n' % (class_name, table_type, isubcase))
+                        #raise RuntimeError('skipping %s op2.%s[%s]\n\n' % (class_name, table_type, isubcase))
         else:
             for table_type in table_types:
                 table = getattr(self, table_type)

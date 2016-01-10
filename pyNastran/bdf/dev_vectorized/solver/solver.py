@@ -939,7 +939,7 @@ class Solver(F06, OP2):
             'sort_bits': [0, 0, 0], 'num_wide': 8, 'table_name': 'OES',
             'element_name': elementType, 'format_code':format_code,
             's_code': s_code,
-            'nonlinear_factor': None, 'dataNames':['lsdvmn']}
+            'nonlinear_factor': None, 'data_names':['lsdvmn']}
         if Type == 'stress':
             if elementType == 'CBEAM':
                 stress = RealBeamStress(data_code, is_sort1, isubcase, dt=False)
@@ -991,7 +991,7 @@ class Solver(F06, OP2):
             'sort_bits': [0, 0, 0], 'num_wide': 8, 'table_name': 'OEF',
             'element_name': elementType, 'format_code':format_code,
             #'s_code': s_code,
-            'nonlinear_factor': None, 'dataNames':['lsdvmn']}
+            'nonlinear_factor': None, 'data_names':['lsdvmn']}
 
         if elementType == 'CBEAM':
             forces = RealCBeamForce(data_code, is_sort1, isubcase, dt=False)
@@ -1036,7 +1036,7 @@ class Solver(F06, OP2):
             'sort_bits': [0, 0, 0], 'num_wide': 8, 'table_name': 'OEF',
             'element_name': elementType, 'format_code':format_code,
             #'s_code': s_code,
-            'nonlinear_factor': None, 'dataNames':['lsdvmn']}
+            'nonlinear_factor': None, 'data_names':['lsdvmn']}
         return data_code
 
     def _store_cshear_oef(self, model, eids, force, case, elementType):
@@ -1096,7 +1096,7 @@ class Solver(F06, OP2):
             'sort_bits': [0, 0, 0], 'num_wide': 8, 'table_name': 'OES',
             'element_name': elementType, 'format_code':format_code,
             's_code': s_code,
-            'nonlinear_factor': None, 'dataNames':['lsdvmn']}
+            'nonlinear_factor': None, 'data_names':['lsdvmn']}
 
         if Type == 'stress':
             #if elementType == 'CELAS2':
@@ -1144,7 +1144,7 @@ class Solver(F06, OP2):
                     'sort_bits': [0, 0, 0], 'num_wide': 8, 'table_name': 'OES',
                     'element_name': elementType, 'format_code':format_code,
                     's_code': s_code,
-                    'nonlinear_factor': None, 'dataNames':['lsdvmn']}
+                    'nonlinear_factor': None, 'data_names':['lsdvmn']}
 
         if Type == 'stress':
             #if elementType == 'CELAS2':
@@ -1255,7 +1255,7 @@ class Solver(F06, OP2):
             'sort_bits': [0, 0, 0], 'num_wide': 8, 'table_name': 'OES',
             'element_name': elementType, 'format_code':format_code,
             's_code': s_code,
-            'nonlinear_factor': None, 'dataNames':['lsdvmn']}
+            'nonlinear_factor': None, 'data_names':['lsdvmn']}
         if Type == 'stress':
             if elementType == 'CROD':
                 stress = RealRodStress(data_code, is_sort1, isubcase, dt=False)
@@ -1311,7 +1311,7 @@ class Solver(F06, OP2):
         data_code = {'log': self.log, 'analysis_code': analysis_code,
                     'device_code': 1, 'table_code': 1, 'sort_code': 0,
                     'sort_bits': [0, 0, 0], 'num_wide': 8, 'table_name': 'OUG',
-                    'nonlinear_factor': None, 'dataNames':['lsdvmn']}
+                    'nonlinear_factor': None, 'data_names':['lsdvmn']}
         disp = RealDisplacement(data_code, is_sort1, isubcase, dt=None)
 
         data = []

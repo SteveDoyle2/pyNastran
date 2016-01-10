@@ -56,7 +56,7 @@ class OUG(object):
             'device_code': 1, 'table_code': 7, 'sort_code': 0,
             'sort_bits': [0, 0, 0], 'num_wide': 8, 'format_code': 1,
             'mode': imode, 'eigr': eigenvalue_real, 'mode_cycle': cycle,
-            'dataNames': ['mode', 'eigr', 'mode_cycle'],
+            'data_names': ['mode', 'eigr', 'mode_cycle'],
             'name': 'mode', 'table_name': 'OUGV1',
             'nonlinear_factor': imode,
         }
@@ -131,7 +131,7 @@ class OUG(object):
             'device_code': 1, 'table_code': 7, 'sort_code': 0,
             'sort_bits': [0, 0, 0], 'num_wide': 16, 'format_code': 1,
             'mode': imode, 'eigr': eigenvalue_real, 'eigi' : eigenvalue_imag,
-            'dataNames': ['mode', 'eigr', 'eigi'],
+            'data_names': ['mode', 'eigr', 'eigi'],
             'name': 'mode', 'table_name': 'OUGV1',
             'nonlinear_factor': imode,
         }
@@ -299,7 +299,7 @@ class OUG(object):
             'sort_code': 0, 'sort_bits': [0, 0, 0], 'num_wide': 8,
             'table_name': 'OUG', 'nonlinear_factor': dt,
             'lsdvmn': 1, 'format_code': 3,
-            'dataNames':['lsdvmn']
+            'data_names':['lsdvmn']
         }
         #print("headers = %s" % (headers))
         #print("transient =", transient)
@@ -349,7 +349,7 @@ class OUG(object):
             'num_wide': 14, 'format_code': 3, 'table_name': 'OUGV1',
             'nonlinear_factor': dt,
             #'mode':iMode,'eigr':transient[1], 'mode_cycle':cycle,
-            'dataNames': data_names,
+            'data_names': data_names,
             'name': name,
             #'s_code':0,
         }
@@ -418,7 +418,7 @@ class OUG(object):
             'log': self.log, 'analysis_code': 1, 'device_code': 1,
             'table_code': 1, 'sort_code': 0, 'sort_bits': [0, 0, 0],
             'num_wide': 8, 'table_name': 'OUG', 'nonlinear_factor': dt,
-            'dataNames':['lsdvmn'],
+            'data_names':['lsdvmn'],
             'thermal':1,
             'format_code':1,
             #'element_name':eType,'s_code':0,'stress_bits':stress_bits
@@ -426,7 +426,7 @@ class OUG(object):
 
         if transient:
             name = transient[0]
-            data_code['dataNames'] = [name + 's']
+            data_code['data_names'] = [name + 's']
             data_code['name'] = name
 
         if isubcase in self.temperatures:

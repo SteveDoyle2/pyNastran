@@ -995,7 +995,7 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
 
                 'format_code': 1,
                 'nonlinear_factor': dt,
-                'dataNames':['lsdvmn'],
+                'data_names':['lsdvmn'],
                 'lsdvmn': 1,
                 }
         is_sort1 = True

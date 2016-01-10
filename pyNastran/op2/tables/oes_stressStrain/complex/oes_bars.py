@@ -98,6 +98,7 @@ class ComplexBarArray(OES_Object):
         #self.e4[dt][eid] = [e4a, e4b]
         #self.axial[dt][eid] = axial
 
+        self._times[self.itime] = dt
         #[sa1, sa2, sa3, sa4, axial, sb1, sb2, sb3, sb4]
         self.data[self.itime, self.itotal, :] = [e1a, e2a, e3a, e4a, axial,
                                                  e1b, e2b, e3b, e4b,]

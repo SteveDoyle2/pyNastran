@@ -171,7 +171,7 @@ def _eigenvalue_header(obj, header, itime, ntimes, dt):
                 obj.__class__.__name__, ntimes, name, codes)
             atts = object_attributes(obj)
             msg += 'names=%s\n' % atts
-            msg += 'data_names=%s\n' % obj.dataNames
+            msg += 'data_names=%s\n' % obj.data_names
             raise IndexError(msg)
 
         if hasattr(obj, 'eigr'):

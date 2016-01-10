@@ -143,7 +143,7 @@ class OES(object):
             'stress_bits': stress_bits, 'format_code': 1,
             'element_name': element_name, 'element_type': element_type, 'nonlinear_factor': dt,
             'lsdvmn' : 1,
-            'dataNames':['lsdvmn']
+            'data_names':['lsdvmn']
         }
         return (isubcase, transient, dt, data_code)
 
@@ -258,7 +258,7 @@ class OES(object):
             'element_name': 'CBAR', 'element_type': 34,
             'nonlinear_factor': dt,
             'lsdvmn' : 1,
-            'dataNames':['lsdvmn']
+            'data_names':['lsdvmn']
         }
 
         return (isubcase, transient, dt, data_code)
@@ -277,7 +277,7 @@ class OES(object):
             'stress_bits': stress_bits, 'format_code': 1,
             'element_name': element_name, 'element_type': element_type,
             'nonlinear_factor': dt,
-            'dataNames':['lsdvmn']
+            'data_names':['lsdvmn']
         }
         return (isubcase, transient, dt, data_code)
 
@@ -385,7 +385,7 @@ class OES(object):
             'stress_bits': stress_bits, 'format_code': 1,
             'element_name': element_name, 'element_type': element_type,
             'table_name': 'OES1X', 'nonlinear_factor': dt,
-            'dataNames':['lsdvmn'],
+            'data_names':['lsdvmn'],
             'lsdvmn': 1,
         }
 
@@ -484,7 +484,7 @@ class OES(object):
             'stress_bits': stress_bits, 'format_code': 1,
             'element_name': 'CTRIA3', 'element_type': 74,
             'nonlinear_factor': dt,
-            'dataNames':['lsdvmn'],
+            'data_names':['lsdvmn'],
             'lsdvmn': 1,
             }
         if transient is not None:
@@ -626,7 +626,7 @@ class OES(object):
             'stress_bits': stress_bits, 'format_code': 1,
             'element_name': element_name, 'element_type': element_type,
             'nonlinear_factor': dt,
-            'dataNames':['lsdvmn'],
+            'data_names':['lsdvmn'],
             'lsdvmn': 1,
         }
         if transient is not None:
@@ -747,7 +747,7 @@ class OES(object):
             's_code': s_code, 'stress_bits': stress_bits,
             'nonlinear_factor': dt,
             'lsdvmn' : 1,
-            'dataNames':['lsdvmn']
+            'data_names':['lsdvmn']
         }
         if transient is not None:
             data_code['name'] = transient[0]

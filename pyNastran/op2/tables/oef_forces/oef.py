@@ -216,41 +216,41 @@ class OEF(OP2Common):
         ## assuming tCode=1
         if self.analysis_code == 1:   # statics
             self.loadID = self.add_data_parameter(data, 'loadID', 'i', 5, False)  # load set ID number
-            self.dataNames = self.apply_data_code_value('dataNames', ['loadID'])
+            self.data_names = self.apply_data_code_value('data_names', ['loadID'])
             self.setNullNonlinearFactor()
         elif self.analysis_code == 2:  # normal modes/buckling (real eigenvalues)
             #: mode number
             self.mode = self.add_data_parameter(data, 'mode', 'i', 5)
             #: eigenvalue
             self.eigr = self.add_data_parameter(data, 'eigr', 'f', 6, False)
-            self.dataNames = self.apply_data_code_value('dataNames', ['mode', 'eigr'])
+            self.data_names = self.apply_data_code_value('data_names', ['mode', 'eigr'])
             # TODO: mode_cycle is not defined?
-            #self.dataNames = self.apply_data_code_value('dataNames', ['mode', 'eigr', 'mode_cycle'])
+            #self.data_names = self.apply_data_code_value('data_names', ['mode', 'eigr', 'mode_cycle'])
         elif self.analysis_code == 3:  # differential stiffness 0
             #: load set ID number
             self.loadID = self.add_data_parameter(data, 'loadID', 'i', 5)
-            self.dataNames = self.apply_data_code_value('dataNames', ['loadID'])
+            self.data_names = self.apply_data_code_value('data_names', ['loadID'])
         elif self.analysis_code == 4:  # differential stiffness 1
             #: load set ID number
             self.loadID = self.add_data_parameter(data, 'loadID', 'i', 5)
-            self.dataNames = self.apply_data_code_value('dataNames', ['loadID'])
+            self.data_names = self.apply_data_code_value('data_names', ['loadID'])
         elif self.analysis_code == 5:   # frequency
             self.freq = self.add_data_parameter(data, 'freq', 'f', 5)  # frequency
-            self.dataNames = self.apply_data_code_value('dataNames', ['freq'])
+            self.data_names = self.apply_data_code_value('data_names', ['freq'])
         elif self.analysis_code == 6:  # transient
             self.time = self.add_data_parameter(data, 'time', 'f', 5)  # time step
-            self.dataNames = self.apply_data_code_value('dataNames', ['time'])
+            self.data_names = self.apply_data_code_value('data_names', ['time'])
         elif self.analysis_code == 7:  # pre-buckling
             #: load set ID number
             self.loadID = self.add_data_parameter(data, 'loadID', 'i', 5)
-            #self.apply_data_code_value('dataNames',['lsdvmn'])
-            self.dataNames = self.apply_data_code_value('dataNames', ['loadID'])
+            #self.apply_data_code_value('data_names',['lsdvmn'])
+            self.data_names = self.apply_data_code_value('data_names', ['loadID'])
         elif self.analysis_code == 8:  # post-buckling
             #: load set ID number
             self.loadID = self.add_data_parameter(data, 'loadID', 'i', 5)
             #: real eigenvalue
             self.eigr = self.add_data_parameter(data, 'eigr', 'f', 6, False)
-            self.dataNames = self.apply_data_code_value('dataNames', ['loadID', 'eigr'])
+            self.data_names = self.apply_data_code_value('data_names', ['loadID', 'eigr'])
         elif self.analysis_code == 9:  # complex eigenvalues
             #: mode number
             self.mode = self.add_data_parameter(data, 'mode', 'i', 5)
@@ -258,15 +258,15 @@ class OEF(OP2Common):
             self.eigr = self.add_data_parameter(data, 'eigr', 'f', 6, False)
             #: imaginary eigenvalue
             self.eigi = self.add_data_parameter(data, 'eigi', 'f', 7, False)
-            self.dataNames = self.apply_data_code_value('dataNames', ['mode', 'eigr', 'eigi'])
+            self.data_names = self.apply_data_code_value('data_names', ['mode', 'eigr', 'eigi'])
         elif self.analysis_code == 10:  # nonlinear statics
             #: load step
             self.load_step = self.add_data_parameter(data, 'load_step', 'f', 5)
-            self.dataNames = self.apply_data_code_value('dataNames', ['load_step'])
+            self.data_names = self.apply_data_code_value('data_names', ['load_step'])
         elif self.analysis_code == 11:  # geometric nonlinear statics
             #: load set ID number
             self.loadID = self.add_data_parameter(data, 'loadID', 'i', 5)
-            self.dataNames = self.apply_data_code_value('dataNames', ['loadID'])
+            self.data_names = self.apply_data_code_value('data_names', ['loadID'])
         else:
             msg = 'invalid analysis_code...analysis_code=%s' % str(self.analysis_code)
             raise RuntimeError(msg)

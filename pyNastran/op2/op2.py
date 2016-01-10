@@ -4,7 +4,6 @@ Main OP2 class
 
 
 Datablock	Type	Description
-OGPWG	OGPWG	Mass properties output
 EFMFSMS	Matrix	6 x 1 Total Effective mass matrix
 EFMASSS	Matrix	6 x 6 Effective mass matrix
 RBMASS	Matrix	6 x 6 Rigid body mass matrix
@@ -12,40 +11,42 @@ EFMFACS	Matrix	6 X N Modal effective mass fraction matrix
 MPFACS	Matrix	6 x N Modal participation factor matrix
 MEFMASS	Matrix	6 x N Modal effective mass matrix
 MEFWTS	Matrix	6 x N Modal effective weight matrix
-OQMG1	OQMG	Modal MPC forces
 RAFGEN	Matrix	N x M Generalized force matrix
-RAPCONS	 OES	Constraint mode ply stress table
-RAQCONS	OUG	Constraint mode MPC force table
-RADCONS	OUG	Constraint mode displacement table
-RASCONS	OES	Constraint mode element stress table
-RAFCONS	OEF	Constraint mode element force table
-RAECONS	OES	Constraint mode element strain table
-RANCONS	ORGY1	Constraint mode element strain energy table
-RAGCONS	OGPFB	Constraint mode grid point force table
 RADEFMP	Matrix	N X U2 Effective inertia loads
-RADEFFM	OUG	Effective inertia displacement table
-RAPEATC	 OES	Attachment mode ply stress table
-RAQEATC	OUG	Attachment mode  MPC force table
-RADEATC	OUG	Attachment mode displacement table
-RASEATC	OES	Attachment mode element stress table
-RAFEATC	OEF	Attachment mode element force table
-RAEEATC	OES	Attachment mode element strain table
-RANEATC	ORGY1	Attachment mode element strain energy table
-RAGEATC	OGPFB	Attachment mode grid point force table
 BHH	Matrix	N x N Viscous damping matrix
 K4HH	Matrix	N x N Structural damping matrix
 RADAMPZ	Matrix	N x N equivalent viscous damping ratios
 RADAMPG	Matrix	N X N equivalent structural damping ratio
+
 LAMA	LAMA	Eigenvalue summary table
-OUGV1	OUG	Eigenvector Table
+OGPWG	OGPWG	Mass properties output
+OQMG1	OQMG	Modal MPC forces
+RANCONS	ORGY1	Constraint mode element strain energy table
+RANEATC	ORGY1	Attachment mode element strain energy table
+RAGCONS	OGPFB	Constraint mode grid point force table
+RAGEATC	OGPFB	Attachment mode grid point force table
+RAPCONS	OES	Constraint mode ply stress table
+RAPEATC	OES	Attachment mode ply stress table
+RASCONS	OES	Constraint mode element stress table
+RAECONS	OES	Constraint mode element strain table
+RASEATC	OES	Attachment mode element stress table
+RAEEATC	OES	Attachment mode element strain table
 OES1C	OES	Modal Element Stress Table
+OES1X	OES	Modal Element Stress Table
 OSTR1C	OES	Modal Element Strain Table
+OSTR1X	OSTR	Modal Element Strain Table
+RAQCONS	OUG	Constraint mode MPC force table
+RADCONS	OUG	Constraint mode displacement table
+RADEFFM	OUG	Effective inertia displacement table
+RAQEATC	OUG	Attachment mode  MPC force table
+RADEATC	OUG	Attachment mode displacement table
+OUGV1	OUG	Eigenvector Table
+RAFCONS	OEF	Constraint mode element force table
+RAFEATC	OEF	Attachment mode element force table
+OEF1X	OEF	Modal Element Force Table
 OGPFB1	OGPFB	Modal Grid Point Force Table
 ONRGY1	ONRGY1	Modal Element Strain Energy Table
 ONRGY2	ONRGY1
-OEF1X	OEF	Modal Element Force Table
-OES1X	OES	Modal Element Stress Table
-OSTR1X	OSTR	Modal Element Strain Table
 
 #--------------------
 
@@ -576,6 +577,8 @@ class OP2(OP2_Scalar):
                         rotation = data[:, inode, 3:]
                         data[:, inode, :3] = translation.dot(transform)
                         data[:, inode, 3:] = rotation.dot(transform)
+
+
 def main():
     """testing new ideas"""
     import pyNastran

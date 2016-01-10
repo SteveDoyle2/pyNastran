@@ -1,4 +1,4 @@
-from __future__ import print_function
+from __future__ import print_function, unicode_literals
 from six import iteritems
 from six.moves import zip, range
 from struct import Struct, pack
@@ -224,19 +224,20 @@ class TableArray(ScalarObject):  # displacement style table
             self.data_frame.index.names = ['NodeID', 'Type', 'Item']
 
             letter_dims = [
-                (b'G', 'G', 6),
-                (b'E', 'E', 1),
-                (b'S', 'S', 1),
-                (b'H', 'H', 6),
-                (b'L', 'L', 6),
+                ('G', 6),
+                ('E', 1),
+                ('S', 1),
+                ('H', 6),
+                ('L', 6),
             ]
             cat_keys = []
-            for (letter, letter_str, dim) in letter_dims:
+            for (letter, dim) in letter_dims:
                 if letter not in ugridtype_str:
                     continue
                 if dim == 1:
                     eig = self.data_frame.xs(letter,level=1).iloc[0::6]
-                    eig = eig.reset_index().replace({'Item':{'t1' : letter_str}}).set_index(['NodeID','Item'])
+                    eig = eig.reset_index().replace(
+                        {'Item':{'t1' : letter}}).set_index(['NodeID','Item'])
                 elif dim == 6:
                     # Note that I'm only keeping every 6th row
                     eig = self.data_frame.xs(letter,level=1)
@@ -261,7 +262,7 @@ class TableArray(ScalarObject):  # displacement style table
     def finalize(self):
         gridtypes = self.node_gridtype[:, 1]
         nnodes = len(gridtypes)
-        self.gridtype_str = np.chararray((nnodes))
+        self.gridtype_str = np.chararray((nnodes), unicode=True)
         ugridtypes = unique(gridtypes)
         for ugridtype in ugridtypes:
             i = where(gridtypes == ugridtype)

@@ -326,9 +326,8 @@ class FortranFormat(object):
             table3_parser, table4_parser = table_mapper[self.table_name]
             passer = False
         else:
-            if self.is_debug_file:
-                if self.read_mode == 2:
-                    self.log.debug("skipping table_name = %r" % self.table_name)
+            if self.read_mode == 2:
+                self.log.info("skipping table_name = %r" % self.table_name)
                     #raise NotImplementedError(self.table_name)
             table3_parser = None
             table4_parser = None
@@ -550,7 +549,7 @@ class FortranFormat(object):
             'analysis_code',
             #'result_names',
             #'labels',
-            #'dataNames',
+            #'data_names',
         ]
         msg = ''
         if hasattr(self, 'words'):
@@ -563,7 +562,7 @@ class FortranFormat(object):
             self.words = []
         if hasattr(self, 'analysis_code'):
             del self.analysis_code
-        #if hasattr(self, 'dataNames') and self.dataNames is not None:
+        #if hasattr(self, 'data_names') and self.data_names is not None:
             #print(object_attributes(self))
 
         if hasattr(self, 'data_code'):

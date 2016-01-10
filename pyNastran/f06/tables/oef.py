@@ -112,7 +112,7 @@ class OEF(object):
             'format_code': 1,
             'element_name': element_name, 'element_type': element_type,
             'nonlinear_factor': dt,
-            'dataNames':['lsdvmn'],
+            'data_names':['lsdvmn'],
             'lsdvmn': 1,
             }
 
@@ -188,7 +188,7 @@ class OEF(object):
                     'format_code': 1,
                     'element_name': element_name, 'element_type': element_type,
                     'nonlinear_factor': dt,
-                    'dataNames':['lsdvmn'],
+                    'data_names':['lsdvmn'],
                     'lsdvmn': 1,
                     }
 

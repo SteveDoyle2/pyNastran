@@ -96,7 +96,7 @@ class OES(OP2Common):
         if self.analysis_code == 1:   # statics / displacement / heat flux
             ## load set number
             self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', 'i', 5, False)
-            self.dataNames = self.apply_data_code_value('dataNames', ['lsdvmn'])
+            self.data_names = self.apply_data_code_value('data_names', ['lsdvmn'])
             self.setNullNonlinearFactor()
         elif self.analysis_code == 2:  # real eigenvalues
             #: mode number
@@ -106,7 +106,7 @@ class OES(OP2Common):
             #: mode or cycle TODO confused on the type - F1 means float/int???
             self.mode2 = self.add_data_parameter(data, 'mode2', 'i', 7, False)
             self.cycle = self.add_data_parameter(data, 'cycle', 'f', 7, False)
-            self.dataNames = self.apply_data_code_value('dataNames', ['mode', 'eigr', 'mode2', 'cycle'])
+            self.data_names = self.apply_data_code_value('data_names', ['mode', 'eigr', 'mode2', 'cycle'])
         #elif self.analysis_code==3: # differential stiffness
             #self.lsdvmn = self.get_values(data,'i',5) ## load set number
             #self.data_code['lsdvmn'] = self.lsdvmn
@@ -115,20 +115,20 @@ class OES(OP2Common):
         elif self.analysis_code == 5:   # frequency
             ## frequency
             self.freq = self.add_data_parameter(data, 'freq', 'f', 5)
-            self.dataNames = self.apply_data_code_value('dataNames', ['freq'])
+            self.data_names = self.apply_data_code_value('data_names', ['freq'])
         elif self.analysis_code == 6:  # transient
             ## time step
             self.dt = self.add_data_parameter(data, 'dt', 'f', 5)
-            self.dataNames = self.apply_data_code_value('dataNames', ['dt'])
+            self.data_names = self.apply_data_code_value('data_names', ['dt'])
         elif self.analysis_code == 7:  # pre-buckling
             ## load set
             self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', 'i', 5)
-            self.dataNames = self.apply_data_code_value('dataNames', ['lsdvmn'])
+            self.data_names = self.apply_data_code_value('data_names', ['lsdvmn'])
         elif self.analysis_code == 8:  # post-buckling
             ## mode number
             self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', 'i', 5)
             self.eigr = self.add_data_parameter(data, 'eigr', 'f', 6, False)  # real eigenvalue
-            self.dataNames = self.apply_data_code_value('dataNames', ['lsdvmn', 'eigr'])
+            self.data_names = self.apply_data_code_value('data_names', ['lsdvmn', 'eigr'])
         elif self.analysis_code == 9:  # complex eigenvalues
             ## mode number
             self.mode = self.add_data_parameter(data, 'mode', 'i', 5)
@@ -136,19 +136,19 @@ class OES(OP2Common):
             self.eigr = self.add_data_parameter(data, 'eigr', 'f', 6, False)
             ## imaginary eigenvalue
             self.eigi = self.add_data_parameter(data, 'eigi', 'f', 7, False)
-            self.dataNames = self.apply_data_code_value('dataNames', ['mode', 'eigr', 'eigi'])
+            self.data_names = self.apply_data_code_value('data_names', ['mode', 'eigr', 'eigi'])
         elif self.analysis_code == 10:  # nonlinear statics
             ## load step
             self.lftsfq = self.add_data_parameter(data, 'lftsfq', 'f', 5)
-            self.dataNames = self.apply_data_code_value('dataNames', ['lftsfq'])
+            self.data_names = self.apply_data_code_value('data_names', ['lftsfq'])
         elif self.analysis_code == 11:  # old geometric nonlinear statics
             ## load set number
             self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', 'i', 5)
-            self.dataNames = self.apply_data_code_value('dataNames', ['lsdvmn'])
+            self.data_names = self.apply_data_code_value('data_names', ['lsdvmn'])
         elif self.analysis_code == 12:  # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
             ## Time step ??? --> straight from DMAP
             self.dt = self.add_data_parameter(data, 'dt', 'f', 5)
-            self.dataNames = self.apply_data_code_value('dataNames', ['dt'])
+            self.data_names = self.apply_data_code_value('data_names', ['dt'])
         else:
             msg = 'invalid analysis_code...analysis_code=%s' % self.analysis_code
             raise RuntimeError(msg)
@@ -1026,7 +1026,7 @@ class OES(OP2Common):
                 else:
                     raise RuntimeError(self.code_information())
                     #msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
-                    #return self._not_implemented_or_skip(data, ndata, msg)
+                    return self._not_implemented_or_skip(data, ndata, msg)
 
             if self._results.is_not_saved(result_name):
                 return ndata
@@ -1210,6 +1210,12 @@ class OES(OP2Common):
                                                 ex, ey, ez, etxy, etyz, etzx)
             elif self.format_code == 1 and self.num_wide == numwide_random: # random
                 msg = self.code_information()
+                return self._not_implemented_or_skip(data, ndata, msg)
+            elif self.format_code == 2 and self.num_wide == 130:
+                # 130 - CHEXA-67
+                #msg = self.code_information()
+                msg = 'OES-CHEXA-random-numwide=%s numwide_real=%s numwide_imag=%s numwide_random=%s' % (
+                    self.num_wide, numwide_real, numwide_imag, numwide_random)
                 return self._not_implemented_or_skip(data, ndata, msg)
             else:
                 raise RuntimeError(self.code_information())
@@ -1655,7 +1661,7 @@ class OES(OP2Common):
                             obj.addNewNode(dt, eid, grid, fd1, sx1, sy1,
                                                 txy1, angle1, major1, minor1, vm1)
                             obj.add(dt, eid, grid, fd2, sx2, sy2,
-                                         txy2, angle2, major2, minor2, vm2)
+                                    txy2, angle2, major2, minor2, vm2)
                             n += 68
             elif self.format_code in [2, 3] and self.num_wide == numwide_imag:  # imag
                 ntotal = numwide_imag * 4
@@ -1732,10 +1738,15 @@ class OES(OP2Common):
                         obj.add_new_node_sort1(dt, eid, grid, fd1, sx1, sy1, txy1)
                         obj.add_sort1(dt, eid, grid, fd2, sx2, sy2, txy2)
             elif self.format_code == 1 and self.num_wide == numwide_random: # random
-                msg = 'numwide_real=%s\n' % numwide_real
-                msg = 'numwide_imag=%s\n' % numwide_imag
-                msg = 'numwide_random=%s\n' % numwide_random
-                msg += self.code_information()
+                msg = self.code_information()
+                msg += '  numwide=%s numwide_real=%s numwide_imag=%s numwide_random=%s' % (
+                    self.num_wide, numwide_real, numwide_imag, numwide_random)
+                return self._not_implemented_or_skip(data, ndata, msg)
+            elif self.format_code == 2 and self.num_wide == 87:
+                # 87 - CQUAD4-144
+                #msg = self.code_information()
+                msg = 'OES-CQUAD4-random-numwide=%s numwide_real=%s numwide_imag=%s numwide_random=%s' % (
+                    self.num_wide, numwide_real, numwide_imag, numwide_random)
                 return self._not_implemented_or_skip(data, ndata, msg)
             else:
                 raise RuntimeError(self.code_information())
@@ -1996,7 +2007,8 @@ class OES(OP2Common):
                     n += ntotal
                 raise NotImplementedError('this is a really weird case...')
             else:
-                msg = self.code_information()
+                #msg = self.code_information()
+                msg = 'OES-COMP-random-numwide=%s numwide_real=11 numwide_imag=9' % (self.num_wide)
                 return self._not_implemented_or_skip(data, ndata, msg)
 
         #=========================
@@ -2683,7 +2695,7 @@ class OES(OP2Common):
                             self.binary_debug.write('  eid=%i; C%i=[%s]\n' % (eid, i, ', '.join(['%r' % di for di in out])))
                         n += ntotal
                         obj.add_new_eid(self.element_name, dt, eid,
-                                             sd, sxc, sxd, sxe, sxf, axial, smax, smin, MS)
+                                        sd, sxc, sxd, sxe, sxf, axial, smax, smin, MS)
             else:
                 raise RuntimeError(self.code_information())
         elif self.element_type == 101:

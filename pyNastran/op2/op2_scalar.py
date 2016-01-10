@@ -98,7 +98,30 @@ GEOM_TABLES = [
     b'MONITOR',
 ]
 
-RESULT_TABLES = [
+NX_RESULT_TABLES = [
+    b'OESVM1',  # OES Table of           element stresses for frequency response analysis that includes von Mises stress output in SORT1 format.
+    b'OESVM1C', # OES Table of composite element stresses for frequency response analysis that includes von Mises stress output in SORT1 format.
+    b'OSTRVM1C',
+    b'OSTRVM1',
+
+    #----------------------
+    # displacement/velocity/acceleration/eigenvector/temperature
+    # OUGV1  - Displacements in the global coordinate system
+    b'OUGV1',
+    #----------------------
+    # mpc forces - gset - sort 1
+    b'OQMG1',
+
+    #----------------------
+    # forces
+    # OEF1X - Element forces with intermediate (CBAR and CBEAM) station forces
+    #         and forces on nonlinear elements
+    b'OEF1X',
+
+    #b'RAFGEN',
+]
+
+MSC_RESULT_TABLES = [
     # new
     b'RAPCONS', b'RAQCONS', b'RADCONS', b'RASCONS', b'RAFCONS', b'RAECONS',
     b'RANCONS', b'RAGCONS', b'RADEFFM', b'RAPEATC', b'RAQEATC', b'RADEATC',
@@ -241,16 +264,22 @@ RESULT_TABLES = [
     b'OUG2T',
     b'AEMONPT',
 ]
-# RESULT_TABLES = []
 
-MATRIX_TABLES = [
+NX_MATRIX_TABLES = [
+    b'RADEFMP', # Modal Effective Inertia Matrix - Modal Matrix (per Vibrata)
+    b'RAFGEN', # Load Set Modal Forces  - Modal generalized force vectors  (per Vibrata)
+    b'RADAMPZ',
+    b'RADAMPG',
     b'EFMFSMS', b'EFMASSS', b'RBMASSS', b'EFMFACS', b'MPFACS', b'MEFMASS', b'MEFWTS',
+    b'K4HH',
+]
 
+
+MSC_MATRIX_TABLES = [
     b'TOLD', b'SDT', #b'STDISP',
     b'TOLB2', b'ADSPT', #b'MONITOR',
     b'PMRT', b'PFRT', b'PGRT', # b'AEMONPT',
     b'AFRT', b'AGRT',
-
 
     b'A', b'SOLVE,', b'UMERGE,', b'AA', b'AAP', b'ADELUF', b'ADELUS', b'ADELX',
     b'ADJG', b'ADJGT', b'ADRDUG', b'AEDBUXV', b'AEDW', b'AEFRC', b'AEIDW',
@@ -317,6 +346,11 @@ MATRIX_TABLES = [
     b'XPP', b'SOLVIT', b'XSF', b'XSS', b'XZ', b'YACCE', b'YPF', b'YPO', b'YPT',
     b'YS', b'YS0', b'YSD', b'YVELO', b'Z1ZX', b'ZZX',
 ]
+
+# this will be split later
+RESULT_TABLES = NX_RESULT_TABLES + MSC_RESULT_TABLES
+MATRIX_TABLES = NX_MATRIX_TABLES + MSC_MATRIX_TABLES
+
 class OP2_Scalar(LAMA, ONR, OGPF,
                  OEF, OES, OGS, OPG, OQG, OUG, OGPWG, FortranFormat):
     """
@@ -441,28 +475,40 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
     def _get_table_mapper(self):
         table_mapper = {
-            b'RAPCONS': [self._table_passer, self._table_passer],
-            b'RAQCONS': [self._table_passer, self._table_passer],
-            b'RADCONS': [self._table_passer, self._table_passer],
-            b'RASCONS': [self._table_passer, self._table_passer],
-            b'RAFCONS': [self._table_passer, self._table_passer],
-            b'RAECONS': [self._table_passer, self._table_passer],
-            b'RANCONS': [self._table_passer, self._table_passer],
-            b'RAGCONS': [self._table_passer, self._table_passer],
-            b'RADEFFM': [self._table_passer, self._table_passer],
-            b'RAPEATC': [self._table_passer, self._table_passer],
-            b'RAQEATC': [self._table_passer, self._table_passer],
-            b'RADEATC': [self._table_passer, self._table_passer],
-            b'RASEATC': [self._table_passer, self._table_passer],
-            b'RAFEATC': [self._table_passer, self._table_passer],
-            b'RAEEATC': [self._table_passer, self._table_passer],
-            b'RANEATC': [self._table_passer, self._table_passer],
-            b'RAGEATC': [self._table_passer, self._table_passer],
+
+            # per NX
+            b'OESVM1' : [self._read_oes1_3, self._read_oes1_4],
+            b'OESVM1C' : [self._read_oes1_3, self._read_oes1_4],
+            #b'OSTRVM1C' : [self._read_oes1_3, self._read_oes1_4],
+            #b'OSTRVM1' : [self._read_oes1_3, self._read_oes1_4],
+
+            # MSC TABLES
+
+            # common tables
+
+            # unorganized
+            #b'RAPCONS': [self._table_passer, self._table_passer],
+            #b'RAQCONS': [self._table_passer, self._table_passer],
+            #b'RADCONS': [self._table_passer, self._table_passer],
+            #b'RASCONS': [self._table_passer, self._table_passer],
+            #b'RAFCONS': [self._table_passer, self._table_passer],
+            #b'RAECONS': [self._table_passer, self._table_passer],
+            #b'RANCONS': [self._table_passer, self._table_passer],
+            #b'RAGCONS': [self._table_passer, self._table_passer],
+            #b'RADEFFM': [self._table_passer, self._table_passer],
+            #b'RAPEATC': [self._table_passer, self._table_passer],
+            #b'RAQEATC': [self._table_passer, self._table_passer],
+            #b'RADEATC': [self._table_passer, self._table_passer],
+            #b'RASEATC': [self._table_passer, self._table_passer],
+            #b'RAFEATC': [self._table_passer, self._table_passer],
+            #b'RAEEATC': [self._table_passer, self._table_passer],
+            #b'RANEATC': [self._table_passer, self._table_passer],
+            #b'RAGEATC': [self._table_passer, self._table_passer],
 
             #b'HISADD': [self._hisadd_3, self._hisadd_4],  # optimization history (SOL200)
             b'HISADD': [self._table_passer, self._table_passer],
             b'R1TABRG': [self._table_passer, self._table_passer_r1tabrg],
-            b'TOL': [self._table_passer, self._table_passer],
+            #b'TOL': [self._table_passer, self._table_passer],
 
             b'MATPOOL': [self._table_passer, self._table_passer],
             b'CSTM':    [self._table_passer, self._table_passer],
@@ -504,7 +550,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             # OPG
             # applied loads
             b'OPG1'  : [self._read_opg1_3, self._read_opg1_4],  # applied loads in the nodal frame
-            b'OPGV1' : [self._read_opg1_3, self._read_opg1_4],
+            b'OPGV1' : [self._read_opg1_3, self._read_opg1_4],  # solution set applied loads?
             b'OPNL1' : [self._read_opg1_3, self._read_opg1_4],  # nonlinear loads
 
             # OGPFB1
@@ -1056,7 +1102,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
     def _make_tables(self):
         return
-        global RESULT_TABLES
+        global RESULT_TABLES, NX_RESULT_TABLES, MSC_RESULT_TABLES
         table_mapper = self._get_table_mapper()
         RESULT_TABLES = table_mapper.keys()
 

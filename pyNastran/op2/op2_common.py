@@ -1003,8 +1003,9 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
         if is_release:
             if msg != self._last_comment:
                 #print(self.code_information())
-                self.log.warning(msg)
-                self.log.error(self.code_information())
+                if self.read_mode == 2:
+                    self.log.warning(msg)
+                #self.log.error(self.code_information())
                 #self.log.warning(self.code_information())
                 self._last_comment = msg
             return ndata

@@ -24,7 +24,7 @@ class Op2Codes(object):
         except TypeError:
             print('elem_code=%r' % elem_code)
             raise
-
+        return etype
 
     def _get_element_mappers(self):
         msc_elements = {
@@ -734,12 +734,12 @@ class Op2Codes(object):
         if hasattr(self, 'thermal'):
             thermal = self.thermal
 
-        stressWord = ''
+        stress_word = ''
         if hasattr(self, 'stress_bits'):
             if self.is_stress():
-                stressWord = 'Stress'
+                stress_word = 'Stress'
             else:
-                stressWord = 'Strain'
+                stress_word = 'Strain'
 
         element_type = None
         if hasattr(self, 'element_type'):
@@ -793,17 +793,17 @@ class Op2Codes(object):
             #raise InvalidFormatCodeError(msg)
 
         if self.sort_bits[0] == 0:
-            sortWord1 = 'Real'
+            sort_word1 = 'Real'
         else:
-            sortWord1 = 'Real/Imaginary'
+            sort_word1 = 'Real/Imaginary'
         if self.sort_bits[1] == 0:
-            sortWord2 = 'Sort1'
+            sort_word2 = 'Sort1'
         else:
-            sortWord2 = 'Sort2'
+            sort_word2 = 'Sort2'
         if self.sort_bits[2] == 0:
-            sortWord3 = 'Sorted Responses'
+            sort_word3 = 'Sorted Responses'
         else:
-            sortWord3 = 'Random Responses'
+            sort_word3 = 'Random Responses'
 
         #if   self.sort_code==0: sortWord = 'Real'
         #elif self.sort_code==1: sortWord = 'Real/Imaginary'
@@ -874,35 +874,35 @@ class Op2Codes(object):
             device = "Print, Plot, and Punch"
 
         if thermal == 0:
-            ForceFlux = 'Force'
+            force_flux = 'Force'
         elif thermal == 1:
-            ForceFlux = 'Flux'
+            force_flux = 'Flux'
         else:
-            ForceFlux = 'Force (or Flux); thermal=%r' % thermal
+            force_flux = 'Force (or Flux); thermal=%r' % thermal
 
         if thermal == 0:
-            DispTemp = 'Displacement'
+            disp_temp = 'Displacement'
         elif thermal == 1:
-            DispTemp = 'Temperature'
+            disp_temp = 'Temperature'
         #elif thermal is None:
             #raise RuntimeError('thermal_code is not specified; thermal_code=None')
         else:
-            DispTemp = 'Displacement/Temperature; thermal=%r' % thermal
+            disp_temp = 'Displacement/Temperature; thermal=%r' % thermal
 
         table = '???'
         table_code = self.table_code
         if table_code in [601, 610, 611]:
             table_code -= 600
         if table_code == 1:
-            table = "OUG - %s vector/scalar" % DispTemp
+            table = "OUG - %s vector/scalar" % disp_temp
         elif table_code == 2:
             table = "OPG - Load vector"
         elif table_code == 3:
             table = "OQG - SPC Force vector"
         elif table_code == 4:
-            table = "OEF - Element %s" % ForceFlux
+            table = "OEF - Element %s" % force_flux
         elif table_code == 5:
-            table = "OES - Element %s" % stressWord
+            table = "OES - Element %s" % stress_word
         elif table_code == 6:
             table = "LAMA - Eigenvalue summary"
         elif table_code == 7:
@@ -973,21 +973,23 @@ class Op2Codes(object):
             table = "OQG - MPC Forces"
         elif table_code == 40:
             table = "OGPKE - Grip point kinetic energy"
-
+        else:
+            table = '%s - Unknown' % self.table_name
         msg = '--Table3Data--\n\n'
         msg += "  device_code   = %-3s %s\n" % (self.device_code, device)
         msg += "  analysis_code = %-3s %s\n" % (self.analysis_code, analysis)
         msg += "  table_code    = %-3s %s-%s\n" % (self.table_code, self.table_name, table)
         msg += "  format_code   = %-3s %s\n" % (format_code, format_word)
 
-        msg += "  dataFormat    = %-3s %s\n" % (self.sort_bits[0], sortWord1)
-        msg += "  sortType      = %-3s %s\n" % (self.sort_bits[1], sortWord2)
-        msg += "  isRandom      = %-3s %s\n" % (self.sort_bits[2], sortWord3)
+        msg += "  dataFormat    = %-3s %s\n" % (self.sort_bits[0], sort_word1)
+        msg += "  sortType      = %-3s %s\n" % (self.sort_bits[1], sort_word2)
+        msg += "  isRandom      = %-3s %s\n" % (self.sort_bits[2], sort_word3)
         random_code = self.random_code if hasattr(self, 'random_code') else 0
         msg += "  random_code   = %-3s\n" % (random_code)
 
         if element_type is not None:
-            msg += "  element_type  = %-3s %s\n" % (element_type, self.get_element_type(element_type))
+            msg += "  element_type  = %-3s %s\n" % (
+                element_type, self.get_element_type(element_type))
         if s_word:  # stress code
             msg += "  s_code        = %-3s %s\n" % (s_code, s_word)
         if thermal is not None:

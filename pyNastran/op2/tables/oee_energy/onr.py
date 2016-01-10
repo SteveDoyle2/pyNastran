@@ -92,11 +92,11 @@ class ONR(OP2Common):
         if self.analysis_code == 1:   # statics / displacement / heat flux
             #del self.data_code['nonlinear_factor']
             self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', 'i', 5, False)
-            self.dataNames = self.apply_data_code_value('dataNames', ['lsdvmn'])
+            self.data_names = self.apply_data_code_value('data_names', ['lsdvmn'])
             self.setNullNonlinearFactor()
         elif self.analysis_code == 2:  # real eigenvalues
             self.mode = self.add_data_parameter(data, 'mode', 'i', 5)  ## mode number
-            self.dataNames = self.apply_data_code_value('dataNames', ['mode'])
+            self.data_names = self.apply_data_code_value('data_names', ['mode'])
             #print "mode(5)=%s eigr(6)=%s mode_cycle(7)=%s" %(self.mode,self.eigr,self.mode_cycle)
         #elif self.analysis_code==3: # differential stiffness
             #self.lsdvmn = self.get_values(data,'i',5) ## load set number
@@ -105,26 +105,26 @@ class ONR(OP2Common):
             #self.lsdvmn = self.get_values(data,'i',5) ## load set number
         elif self.analysis_code == 5:   # frequency
             self.freq2 = self.add_data_parameter(data, 'freq2', 'f', 5)  ## frequency
-            self.dataNames = self.apply_data_code_value('dataNames', ['freq2'])
+            self.data_names = self.apply_data_code_value('data_names', ['freq2'])
         elif self.analysis_code == 6:  # transient
             self.time = self.add_data_parameter(data, 'time', 'f', 5)  ## time step
-            self.dataNames = self.apply_data_code_value('dataNames', ['time'])
+            self.data_names = self.apply_data_code_value('data_names', ['time'])
         #elif self.analysis_code==7: # pre-buckling
-            #self.dataNames = self.apply_data_code_value('dataNames',['lsdvmn'])
+            #self.data_names = self.apply_data_code_value('data_names',['lsdvmn'])
         elif self.analysis_code == 8:  # post-buckling
             self.mode = self.add_data_parameter(data, 'mode', 'i', 5)  ## mode number
-            self.dataNames = self.apply_data_code_value('dataNames', ['mode'])
+            self.data_names = self.apply_data_code_value('data_names', ['mode'])
         elif self.analysis_code == 9:  # complex eigenvalues
             self.mode = self.add_data_parameter(data, 'mode', 'i', 5)  ## mode number
-            self.dataNames = self.apply_data_code_value('dataNames', ['mode'])
+            self.data_names = self.apply_data_code_value('data_names', ['mode'])
         elif self.analysis_code == 10:  # nonlinear statics
             self.loadFactor = self.add_data_parameter(data, 'loadFactor', 'f', 5)  ## load factor
-            self.dataNames = self.apply_data_code_value('dataNames', ['loadFactor'])
+            self.data_names = self.apply_data_code_value('data_names', ['loadFactor'])
         #elif self.analysis_code==11: # old geometric nonlinear statics
-            #self.dataNames = self.apply_data_code_value('dataNames',['lsdvmn'])
+            #self.data_names = self.apply_data_code_value('data_names',['lsdvmn'])
         elif self.analysis_code == 12:  # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
             self.time = self.add_data_parameter(data, 'time', 'f', 5)  ## time step
-            self.dataNames = self.apply_data_code_value('dataNames', ['time'])
+            self.data_names = self.apply_data_code_value('data_names', ['time'])
         else:
             raise RuntimeError('invalid analysis_code...analysis_code=%s' %
                                self.analysis_code)

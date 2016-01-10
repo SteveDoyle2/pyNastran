@@ -200,6 +200,7 @@ class RealGridPointForcesArray(ScalarObject):
     def add_sort1(self, dt, node_id, eid, ename, t1, t2, t3, r1, r2, r3):
         assert eid is not None, eid
         assert isinstance(node_id, int), node_id
+        self._times[self.itime] = dt
 
         if self.is_unique:
             raise NotImplementedError('not unique')
