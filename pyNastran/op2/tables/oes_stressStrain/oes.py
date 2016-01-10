@@ -1423,10 +1423,10 @@ class OES(OP2Common):
                         if self.is_debug_file:
                             self.binary_debug.write('  OES CTRIA3-74 - eid=%i; C=[%s]\n' % (eid, ', '.join(['%r' % di for di in out])))
 
-                        obj.add_new_eid('CTRIA3', dt, eid, cen, fd1, sx1, sy1,
-                                             txy1, angle1, major1, minor1, vm1)
-                        obj.add(dt, eid, cen, fd2, sx2, sy2, txy2,
-                                     angle2, major2, minor2, vm2)
+                        obj._add_new_eid('CTRIA3', dt, eid, cen, fd1, sx1, sy1,
+                                         txy1, angle1, major1, minor1, vm1)
+                        obj._add(dt, eid, cen, fd2, sx2, sy2, txy2,
+                                 angle2, major2, minor2, vm2)
                         n += ntotal
                 #ass
             elif self.format_code in [2, 3] and self.num_wide == 15:  # imag
@@ -1639,10 +1639,10 @@ class OES(OP2Common):
                         if self.is_debug_file:
                             self.binary_debug.write('  eid=%i; C=[%s]\n' % (eid, ', '.join(['%r' % di for di in out])))
 
-                        obj.add_new_eid(etype, dt, eid, gridC, fd1, sx1, sy1,
-                                             txy1, angle1, major1, minor1, vm1)
-                        obj.add(dt, eid, gridC, fd2, sx2, sy2, txy2,
-                                     angle2, major2, minor2, vm2)
+                        obj._add_new_eid(etype, dt, eid, gridC, fd1, sx1, sy1,
+                                         txy1, angle1, major1, minor1, vm1)
+                        obj._add(dt, eid, gridC, fd2, sx2, sy2, txy2,
+                                 angle2, major2, minor2, vm2)
                         n += 76
                         for inode in range(nnodes):
                             out = ns.unpack(data[n:n + 68])
@@ -1658,10 +1658,10 @@ class OES(OP2Common):
                             assert isinstance(grid, int), grid
                             assert grid > 0, grid
 
-                            obj.addNewNode(dt, eid, grid, fd1, sx1, sy1,
-                                                txy1, angle1, major1, minor1, vm1)
-                            obj.add(dt, eid, grid, fd2, sx2, sy2,
-                                    txy2, angle2, major2, minor2, vm2)
+                            obj._add_new_node(dt, eid, grid, fd1, sx1, sy1,
+                                              txy1, angle1, major1, minor1, vm1)
+                            obj._add(dt, eid, grid, fd2, sx2, sy2,
+                                     txy2, angle2, major2, minor2, vm2)
                             n += 68
             elif self.format_code in [2, 3] and self.num_wide == numwide_imag:  # imag
                 ntotal = numwide_imag * 4

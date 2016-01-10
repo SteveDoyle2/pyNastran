@@ -1,3 +1,4 @@
+# coding: utf-8
 #pylint disable=C0103
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
@@ -29,9 +30,9 @@ class RealPlateArray(OES_Object):
 
         if is_sort1:
             if dt is not None:
-                self.add = self.add_sort1
-                self.add_new_eid = self.add_new_eid_sort1
-                self.addNewNode = self.addNewNodeSort1
+                self._add = self._add_sort1
+                self._add_new_eid = self._add_new_eid_sort1
+                self._add_new_node = self._add_new_node_sort1
         else:
             raise NotImplementedError('SORT2')
 
@@ -137,6 +138,7 @@ class RealPlateArray(OES_Object):
             df2.columns = headers
             self.data_frame = df1.join(df2)
             #self.data_frame.reset_index().set_index(['ElementID', 'NodeID', 'Location']).sort_index()
+        self.data_frame = self.data_frame.reset_index().replace({'NodeID': {0:'CEN'}}).set_index(['ElementID', 'NodeID', 'Location'])
         #print(self.data_frame)
 
     def __eq__(self, table):
@@ -181,10 +183,10 @@ class RealPlateArray(OES_Object):
                     raise ValueError(msg)
         return True
 
-    def add_new_eid(self, etype, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm):
-        self.add_new_eid_sort1(etype, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm)
+    def _add_new_eid(self, etype, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm):
+        self._add_new_eid_sort1(etype, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm)
 
-    def add_new_eid_sort1(self, etype, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm):
+    def _add_new_eid_sort1(self, etype, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm):
         assert isinstance(eid, int), eid
         assert isinstance(node_id, int), node_id
         self._times[self.itime] = dt
@@ -194,18 +196,18 @@ class RealPlateArray(OES_Object):
         self.itotal += 1
         self.ielement += 1
 
-    def addNewNode(self, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm):
+    def _add_new_node(self, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm):
         assert isinstance(node_id, int), node_id
-        self.add_sort1(dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm)
+        self._add_sort1(dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm)
 
-    def add(self, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm):
+    def _add(self, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm):
         assert isinstance(node_id, int), node_id
-        self.add_sort1(dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm)
+        self._add_sort1(dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm)
 
-    def addNewNodeSort1(self, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm):
-        self.add_sort1(dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm)
+    def _add_new_node_sort1(self, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm):
+        self._add_sort1(dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm)
 
-    def add_sort1(self, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm):
+    def _add_sort1(self, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm):
         assert eid is not None, eid
         assert isinstance(node_id, int), node_id
         self.element_node[self.itotal, :] = [eid, node_id]
