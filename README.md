@@ -1,3 +1,14 @@
+
+<!--- Ripped off meshio  --->
+<!--- [![Build Status](https://travis-ci.org/SteveDoyle2/pyNastran.svg?branch=master)](https://travis-ci.org/SteveDoyle2/pyNastran)  --->
+<!--- [![codecov.io](https://codecov.io/github/SteveDoyle2/pyNastran/coverage.svg?branch=master)](https://codecov.io/github/SteveDoyle2/pyNastran?branch=master)  --->
+[![PyPi Version](https://img.shields.io/pypi/v/pynastran.svg)](https://pypi.python.org/pypi/pyNastran)
+[![PyPi Downloads](https://img.shields.io/pypi/dm/pynastran.svg)](https://pypi.python.org/pypi/pyNastran)
+<!--- [![Github Downloads](	https://img.shields.io/github/downloads/SteveDoyle2/pyNastran/latest/total.svg)  --->
+<!--- [![All Downloads](https://img.shields.io/github/downloads/SteveDoyle2/pyNastran/total.svg)  --->
+<!--- [![Total PyPi Downloads](https://img.shields.io/github/downloads/atom/atom/latest/pynastran.svg)]  --->
+<!--- [![v0.7.2 Downloads](https://img.shields.io/github/downloads/atom/atom/v0.7.2/total.svg)]  --->
+
 # Documentation
    * [v0.7] (http://pynastran-git.readthedocs.org/en/v0.7.2/index.html)
    * [Master/Trunk](http://pynastran-git.readthedocs.org/en/latest/index.html)
