@@ -40,7 +40,7 @@ class RealGridPointForcesArray(ScalarObject):
     def element_name(self):
         headers = [name.strip() for name in unique(self.element_names) if name.strip()]
         #headers = unique(self.element_names)
-        return str(b', '.join(headers))
+        return str(', '.join(headers))
 
     def build(self):
         #print("self.ielement = %s" % self.ielement)
@@ -391,7 +391,7 @@ class ComplexGridPointForcesArray(ScalarObject):
     def element_name(self):
         headers = [name.strip() for name in unique(self.element_names)]
         #headers = unique(self.element_names)
-        return str(b', '.join(headers))
+        return str(', '.join(headers))
 
     def build(self):
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
