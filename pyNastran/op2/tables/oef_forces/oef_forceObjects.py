@@ -649,8 +649,9 @@ class RealCShearForceArray(ScalarObject):
     def get_headers(self):
         headers = [
             'force41', 'force21', 'force12', 'force32', 'force23', 'force43',
-            'force34', 'force14', 'kick_force1', 'shear23', 'kick_force3', 'shear34',
-            'kick_force4', 'shear41',
+            'force34', 'force14',
+            'kick_force1', 'shear12',  'kick_force2', 'shear23',
+            'kick_force3', 'shear34', 'kick_force4', 'shear41',
         ]
         return headers
 
@@ -682,9 +683,10 @@ class RealCShearForceArray(ScalarObject):
         self._times = zeros(self.ntimes, dtype=dtype)
         self.element = zeros(self.nelements, dtype='int32')
 
-        #[force41, force14, force21, force12, force32, force23, force43, force34,
-        #kick_force1, kick_force2, kick_force3, kick_force4,
-        #shear12, shear23, shear34, shear41]
+        #[force41, force21, force12, force32, force23, force43,
+        # force34, force14,
+        # kick_force1, shear12, kick_force2, shear23,
+        # kick_force3, shear34, kick_force4, shear41]
         self.data = zeros((self.ntimes, self.ntotal, 16), dtype='float32')
 
     def build_dataframe(self):

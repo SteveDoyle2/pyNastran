@@ -318,10 +318,9 @@ class OQG(OP2Common):
             if self._results.is_not_saved(result_name):
                 return ndata
             self._results._found_result(result_name)
-            n = self._read_table(data, ndata, result_name, storage_obj,
-                                 RealTemperatureGradientAndFlux, None,
-                                 RealTemperatureGradientAndFluxArray, None,
-                                 'node', random_code=self.random_code)
+            n = self._read_table_vectorized(data, ndata, result_name, storage_obj,
+                                            RealTemperatureGradientAndFluxArray, None,
+                                            'node', random_code=self.random_code)
         elif self.thermal == 8:  # 4 ?
             result_name = 'spc_forces_scaled_response_spectra_NRL'
             storage_obj = self.spc_forces_scaled_response_spectra_NRL

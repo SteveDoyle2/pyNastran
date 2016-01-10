@@ -359,6 +359,9 @@ class OP2(OP2_Scalar):
         for result_type in result_types:
             result = getattr(self, result_type)
             for obj in itervalues(result):
+                if obj.is_sort2():
+                    print('build_dataframe is not supported for %s - SORT2' % obj.__class__.__name__)
+                    continue
                 try:
                     obj.build_dataframe()
                 except:

@@ -131,7 +131,7 @@ def get_failed_files(filename):
 def run_lots_of_files(files, make_geom=True, write_bdf=False, write_f06=True,
                       delete_f06=True, write_op2=False,
                       is_vector=False, vector_stop=True,
-                      debug=True, saveCases=True, skip_files=None,
+                      debug=True, save_cases=True, skip_files=None,
                       stop_on_failure=False, nstart=0, nstop=1000000000, binary_debug=False,
                       compare=True, quiet=False, dev=True):
     """used by op2_test.py to run thousands of files"""
@@ -185,7 +185,7 @@ def run_lots_of_files(files, make_geom=True, write_bdf=False, write_f06=True,
                 npassed += 1
             #sys.exit('end of test...test_op2.py')
 
-    if saveCases:
+    if save_cases:
         if PY2:
             failed_cases_file = open('failedCases.in', 'wb')
         else:
@@ -198,7 +198,7 @@ def run_lots_of_files(files, make_geom=True, write_bdf=False, write_f06=True,
     minutes = seconds / 60.
     print("dt = %s seconds = %s minutes" % (seconds, minutes))
 
-    msg = '-----done with all models %s/%s=%.2f%%  nFailed=%s-----' % (
+    msg = '-----done with all models %s/%s=%.2f%%  nfailed=%s-----' % (
         npassed, ntotal,
         100. * npassed / float(ntotal),
         ntotal - npassed)
@@ -327,8 +327,9 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
             for key, matrix in sorted(iteritems(op2a.matrices)):
                 m = matrix.data
                 #print(type(m))
-                print('name=%s; shape=%s' % (key, str(m.shape)))
-                print(str(m))
+                print('name=%s; shape=%s; type=%s' % (
+                    key, str(m.shape), type(m)))
+                #print(str(m))
 
         if is_memory and check_memory:
             if is_linux: # linux

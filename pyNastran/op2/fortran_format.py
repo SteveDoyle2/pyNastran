@@ -132,7 +132,7 @@ class FortranFormat(object):
         self.f.seek(self.n)
         return self.write_data(f, data, types=types)
 
-    def skip_block(self):
+    def _skip_block(self):
         """
         Skips a block following a pattern of:
             [nbytes, data, nbytes]
@@ -141,9 +141,9 @@ class FortranFormat(object):
         :retval data: since data can never be None, a None value
                       indicates something bad happened.
         """
-        return self.skip_block_ndata()[0]
+        return self._skip_block_ndata()[0]
 
-    def skip_block_ndata(self):
+    def _skip_block_ndata(self):
         """
         Skips a block following a pattern of:
             [nbytes, data, nbytes]
@@ -155,14 +155,18 @@ class FortranFormat(object):
         data = self.f.read(4)
         ndata, = self.struct_i.unpack(data)
         self.n += 8 + ndata
-        self.goto(self.n)
+        self._goto(self.n)
         return None, ndata
 
     def read_block(self):
         """
         Reads a block following a pattern of:
             [nbytes, data, nbytes]
-        :retval data: the data in binary
+
+        Returns
+        -------
+        data : bytes
+            the data in binary
         """
         data = self.f.read(4)
         ndata, = self.struct_i.unpack(data)
@@ -172,11 +176,15 @@ class FortranFormat(object):
         self.n += 8 + ndata
         return data_out
 
-    def read_block_ndata(self):
+    def _read_block_ndata(self):
         """
         Reads a block following a pattern of:
             [nbytes, data, nbytes]
-        :retval data: the data in binary
+
+        Returns
+        -------
+        data : bytes
+            the data in binary
         """
         data = self.f.read(4)
         ndata, = self.struct_i.unpack(data)
@@ -512,7 +520,7 @@ class FortranFormat(object):
                 n = table4_parser(data, ndata)
                 assert isinstance(n, integer_types), self.table_name
 
-            #self.goto(n)
+            #self._goto(n)
             #n = self._skip_record()
 
             if hasattr(self, 'obj') and self.obj is not None:
@@ -599,7 +607,7 @@ class FortranFormat(object):
             return False
         return True
 
-    def goto(self, n):
+    def _goto(self, n):
         """
         Jumps to position n in the file
 
@@ -628,7 +636,7 @@ class FortranFormat(object):
             self.binary_debug.write('  markers0=%s\n' % markers0)
 
         n = self.n
-        record = self.skip_block()
+        record = self._skip_block()
         len_record += self.n - n - 8  # -8 is for the block
         if self.is_debug_file:
             self.binary_debug.write('  len_record=%s\n' % len_record)
@@ -640,21 +648,21 @@ class FortranFormat(object):
             if self.is_debug_file:
                 self.binary_debug.write('  markers1=%s\n' % markers1)
             n = self.n
-            record = self.skip_block()
+            record = self._skip_block()
             len_record += self.n - n - 8  # -8 is for the block
             markers1 = self.get_nmarkers(1, rewind=True)
-        self.goto(n0)
+        self._goto(n0)
         return len_record
 
     def _skip_record(self):
         markers0 = self.get_nmarkers(1, rewind=False)
-        record = self.skip_block()
+        record = self._skip_block()
 
         markers1 = self.get_nmarkers(1, rewind=True)
         # handling continuation blocks
         while markers1[0] > 0:
             markers1 = self.get_nmarkers(1, rewind=False)
-            record = self.skip_block()
+            record = self._skip_block()
             markers1 = self.get_nmarkers(1, rewind=True)
         return record
         # return None #  TODO: which one do I use?
@@ -672,7 +680,7 @@ class FortranFormat(object):
         markers0 = self.get_nmarkers(1, rewind=False)
         if self.is_debug_file and debug:
             self.binary_debug.write('_stream_record - marker = [4, %i, 4]\n' % markers0[0])
-        record, nrecord = self.read_block_ndata()
+        record, nrecord = self._read_block_ndata()
         if self.is_debug_file and debug:
             self.binary_debug.write('_stream_record - record = [%i, recordi, %i]\n' % (nrecord, nrecord))
         if(markers0[0]*4) != len(record):
@@ -691,7 +699,7 @@ class FortranFormat(object):
             markers1 = self.get_nmarkers(1, rewind=False)
             if self.is_debug_file and debug:
                 self.binary_debug.write('_stream_record - markers1 = [4, %s, 4]\n' % str(markers1))
-            record, nrecordi = self.read_block_ndata()
+            record, nrecordi = self._read_block_ndata()
             yield record
             self.istream += 1
 
@@ -717,7 +725,7 @@ class FortranFormat(object):
         markers0 = self.get_nmarkers(1, rewind=False, macro_rewind=macro_rewind)
         if self.is_debug_file and debug:
             self.binary_debug.write('read_record - marker = [4, %i, 4]; macro_rewind=%s\n' % (markers0[0], macro_rewind))
-        record, nrecord = self.read_block_ndata()
+        record, nrecord = self._read_block_ndata()
 
         if self.is_debug_file and debug:
             self.binary_debug.write('read_record - record = [%i, recordi, %i]; macro_rewind=%s\n' % (nrecord, nrecord, macro_rewind))
@@ -734,7 +742,7 @@ class FortranFormat(object):
                 markers1 = self.get_nmarkers(1, rewind=False)
                 if self.is_debug_file and debug:
                     self.binary_debug.write('read_record - markers1 = [4, %i, 4]\n' % markers1[0])
-                recordi, nrecordi = self.read_block_ndata()
+                recordi, nrecordi = self._read_block_ndata()
                 nrecord += nrecordi
                 records.append(recordi)
                 #record += recordi
@@ -761,7 +769,7 @@ class FortranFormat(object):
         markers0 = self.get_nmarkers(1, rewind=False, macro_rewind=macro_rewind)
         if self.is_debug_file and debug:
             self.binary_debug.write('read_record - marker = [4, %i, 4]; macro_rewind=%s\n' % (markers0[0], macro_rewind))
-        record, nrecord = self.skip_block_ndata()
+        record, nrecord = self._skip_block_ndata()
 
         if self.is_debug_file and debug:
             self.binary_debug.write('read_record - record = [%i, recordi, %i]; macro_rewind=%s\n' % (nrecord, nrecord, macro_rewind))
@@ -776,7 +784,7 @@ class FortranFormat(object):
                 markers1 = self.get_nmarkers(1, rewind=False)
                 if self.is_debug_file and debug:
                     self.binary_debug.write('read_record - markers1 = [4, %i, 4]\n' % markers1[0])
-                recordi, nrecordi = self.skip_block_ndata()
+                recordi, nrecordi = self._skip_block_ndata()
                 nrecord += nrecordi
 
                 markers1 = self.get_nmarkers(1, rewind=True)

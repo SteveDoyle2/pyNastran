@@ -73,7 +73,7 @@ class BaseScalarObject(Op2Codes):
             column_names.append('Mode')
             column_values.append(times)
             if hasattr(self, 'freqs'):
-                freq  = self.freqs
+                freq = self.freqs
                 column_names.append('Freq')
                 column_values.append(freq)
             elif hasattr(self, 'eigrs'):

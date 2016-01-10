@@ -1,7 +1,7 @@
 from __future__ import print_function
 import os
 import unittest
-from numpy import unique
+import numpy as np
 from six import iteritems
 
 import pyNastran
@@ -553,7 +553,7 @@ class TestOP2(Tester):
             except KeyError:
                 raise KeyError('getting cquad4_stress; isubcase=%s; keys=%s' % (
                     isubcase, op2.cquad4_stress.keys()))
-            eids = unique(case.element_node[:, 0])
+            eids = np.unique(case.element_node[:, 0])
             for eid in eids:
                 assert eid in out[card_type], 'eid=%s eids=%s card_type=%s'  % (eid, out[card_type], card_type)
         if op2.cquad4_strain:
@@ -562,7 +562,7 @@ class TestOP2(Tester):
             except KeyError:
                 raise KeyError('getting cquad4_strain; isubcase=%s; keys=%s' % (
                     isubcase, op2.cquad4_strain.keys()))
-            eids = unique(case.element_node[:, 0])
+            eids = np.unique(case.element_node[:, 0])
             for eid in eids:
                 assert eid in out[card_type], 'eid=%s eids=%s card_type=%s'  % (eid, out[card_type], card_type)
         if op2.cquad4_composite_strain:
@@ -571,7 +571,7 @@ class TestOP2(Tester):
             except KeyError:
                 raise KeyError('getting cquad4_composite_strain; isubcase=%s; keys=%s' % (
                     isubcase, op2.cquad4_composite_strain.keys()))
-            eids = unique(case.element_layer[:, 0])
+            eids = np.unique(case.element_layer[:, 0])
             for eid in eids:
                 assert eid in out[card_type], 'eid=%s eids=%s card_type=%s'  % (eid, out[card_type], card_type)
         if op2.cquad4_composite_stress:
@@ -581,7 +581,7 @@ class TestOP2(Tester):
                 raise KeyError('getting cquad4_composite_stress; isubcase=%s; keys=%s' % (
                     isubcase, op2.cquad4_composite_stress.keys()))
 
-            eids = unique(case.element_layer[:, 0])
+            eids = np.unique(case.element_layer[:, 0])
             for eid in eids:
                 assert eid in out[card_type], 'eid=%s eids=%s card_type=%s'  % (eid, out[card_type], card_type)
         if op2.cquad4_force:
@@ -591,7 +591,7 @@ class TestOP2(Tester):
                 raise KeyError('getting cquad4_force; isubcase=%s; keys=%s' % (
                     isubcase, op2.cquad4_force.keys()))
 
-            eids = unique(case.element)
+            eids = np.unique(case.element)
             for eid in eids:
                 assert eid in out[card_type], 'eid=%s eids=%s card_type=%s'  % (eid, out[card_type], card_type)
 
@@ -599,27 +599,27 @@ class TestOP2(Tester):
         card_type = 'CTRIA3'
         if op2.ctria3_stress:
             case = op2.ctria3_stress[isubcase]
-            eids = unique(case.element_node[:, 0])
+            eids = np.unique(case.element_node[:, 0])
             for eid in eids:
                 assert eid in out[card_type], 'eid=%s eids=%s card_type=%s'  % (eid, out[card_type], card_type)
         if op2.ctria3_strain:
             case = op2.ctria3_strain[isubcase]
-            eids = unique(case.element_node[:, 0])
+            eids = np.unique(case.element_node[:, 0])
             for eid in eids:
                 assert eid in out[card_type], 'eid=%s eids=%s card_type=%s'  % (eid, out[card_type], card_type)
         if op2.ctria3_composite_strain:
             case = op2.ctria3_composite_strain[isubcase]
-            eids = unique(case.element_layer[:, 0])
+            eids = np.unique(case.element_layer[:, 0])
             for eid in eids:
                 assert eid in out[card_type], 'eid=%s eids=%s card_type=%s'  % (eid, out[card_type], card_type)
         if op2.ctria3_composite_stress:
             case = op2.ctria3_composite_stress[isubcase]
-            eids = unique(case.element_layer[:, 0])
+            eids = np.unique(case.element_layer[:, 0])
             for eid in eids:
                 assert eid in out[card_type], 'eid=%s eids=%s card_type=%s'  % (eid, out[card_type], card_type)
         if op2.ctria3_force:
             case = op2.ctria3_force[isubcase]
-            eids = unique(case.element)
+            eids = np.unique(case.element)
             for eid in eids:
                 assert eid in out[card_type], 'eid=%s eids=%s card_type=%s'  % (eid, out[card_type], card_type)
 
@@ -651,25 +651,24 @@ class TestOP2(Tester):
             # the OP2 doesn't have a trailing zero marker
             pass
 
-        from numpy import dot, array, array_equal
         # M rows, Ncols
-        A = array([
+        A = np.array([
             [1., 0.],
             [3., 6.],
             [5., 0.],
             [0., 8.],
         ], dtype='float32')
         B = A
-        mydof = array([
+        mydof = np.array([
             -1.0, 1.0, 1.0, -1.0, 1.0,
             2.0, -1.0, 1.0, 3.0, -1.0, 1.0, 4.0, -1.0,
             1.0, 5.0, -1.0, 1.0, 6.0, -1.0, 2.0, 1.0,
             -1.0, 2.0, 2.0, -1.0, 2.0, 3.0, -1.0, 2.0,
             4.0, -1.0, 2.0, 5.0, -1.0, 2.0, 6.0,
         ])
-        BTA = dot(B.T, A)
-        ATB = dot(A.T, B)
-        ATB_expected = array([
+        BTA = np.dot(B.T, A)
+        ATB = np.dot(A.T, B)
+        ATB_expected = np.array([
             [35., 18.],
             [18., 100.]
         ], dtype='float32')
@@ -683,7 +682,8 @@ class TestOP2(Tester):
 
 
             actual = op2.matrices[table_name].data
-            if not array_equal(expected, actual):
+            if not (np.array_equal(expected, actual) or
+                    np.array_equal(expected, np.squeeze(actual))):
                 if table_name in model.dmis:
                     dmi = model.dmis[table_name]
                     table_array, rows_reversed, cols_reversed = dmi.get_matrix(is_sparse=False, apply_symmetry=False)
@@ -691,8 +691,9 @@ class TestOP2(Tester):
                     print(table_array)
                 #print(stable_array)
                 msg = 'matrix %s was not read properly\n' % table_name
-                msg += 'expected\n%s\n' % expected
-                msg += 'actual\n%s' % actual
+                msg += 'expected shape=%s\n%s\n' % (str(expected.shape), expected)
+                msg += 'actual shape=%s\n%s' % (str(actual.shape), actual.ravel())
+                #msg += '\n%s' % actual.ravel()
                 print(msg)
                 print('==========================')
                 #raise RuntimeError(msg)
@@ -753,7 +754,6 @@ class TestOP2(Tester):
 
         for table_name, expected in zip(matrix_names, expecteds):
             assert table_name in op2.matrices, table_name
-
 
             actual = op2.matrices[table_name].data
             if not array_equal(expected, actual):

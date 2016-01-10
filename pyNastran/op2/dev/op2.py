@@ -406,7 +406,7 @@ class OP2(object):
         rec_type = self._get_key()
         return db_name, trailer, rec_type
 
-    def read_op2_matrix(self, trailer):
+    def read_op2_matrix(self, name, trailer):
         """
         Read and return Nastran op2 matrix at current file position.
 
@@ -414,17 +414,21 @@ class OP2(object):
         :func:`_read_op2_name_trailer`.
 
         The size of the matrix is read from trailer:
-             rows = trailer[2]
-             cols = trailer[1]
+             nrows = trailer[2]
+             ncols = trailer[1]
         """
         dtype = 1
-        matrix = np.zeros((trailer[2], trailer[1]), order='F')
+        nrows = trailer[2]
+        ncols = trailer[1]
+        print('    %s (%s, %s)' % (name, nrows, ncols))
+        matrix = np.zeros((nrows, ncols), order='F')
         if self._bit64:
             intsize = 8
         else:
             intsize = 4
         col = 0
         frm = self._endian + '%dd'
+        print('frm =', frm)
         while dtype > 0:  # read in matrix columns
             # key is number of elements in next record (row # followed
             # by key-1 real numbers)
@@ -448,6 +452,9 @@ class OP2(object):
         self._read_op2_end_of_table()
         if self._swap:
             matrix = matrix.byteswap()
+
+        if name in ['EFMFSMS', 'EFMASSS', 'RBMASSS']:
+            print(matrix)
         return matrix
 
     def skip_op2_matrix(self, trailer):
@@ -617,7 +624,7 @@ class OP2(object):
             hbytes = 24
 
         eot = 0
-        print('self._intstr =', self._intstr)
+        print('self._intstr = %r' % self._intstr)
         data = np.zeros(0, dtype=self._intstr)
         while not eot:
             while key > 0:
@@ -2913,15 +2920,17 @@ def read_post_op2(op2_filename, verbose=False, getougv1=False):
     -----------------------------------------
     'uset' : array
         6-column matrix as described in class OP2, member function
-        :func:`rdn2cop2`.
+        :func:`readd_nas2cam_op2`.
     'cstm' : array
         14-column matrix containing the coordinate system
         transformation matrix for each coordinate system.  See
-        description in class OP2, member function :func:`rdn2cop2`.
+        description in class OP2, member function
+        :func:`readd_nas2cam_op2`.
     'cstm2' : dictionary
         Dictionary indexed by the coordinate system id number.  This
         has the same information as 'cstm', but in a different format.
-        See description in class OP2, member function :func:`rdn2cop2`.
+        See description in class OP2, member function
+        :func:`readd_nas2cam_op2`.
     'mats' : dictionary
         Dictionary of matrices read from op2 file and indexed by the
         name.  The 'tload' entry is a typical entry.  If `getougv1` is
@@ -2955,7 +2964,7 @@ def read_post_op2(op2_filename, verbose=False, getougv1=False):
                     print("Reading matrix {0}...".format(name))
                 if name not in mats:
                     mats[name] = []
-                mats[name] += [o2.read_op2_matrix(trailer)]
+                mats[name] += [o2.read_op2_matrix(name, trailer)]
             else:
                 if name.find('BGPDT') == 0:
                     if verbose:

@@ -235,12 +235,12 @@ class TableArray(ScalarObject):  # displacement style table
                 if letter not in ugridtype_str:
                     continue
                 if dim == 1:
+                    # Note that I'm only keeping every 6th row
                     eig = self.data_frame.xs(letter,level=1).iloc[0::6]
                     eig = eig.reset_index().replace(
-                        {'Item':{'t1' : letter}}).set_index(['NodeID','Item'])
+                        {'Item' : {'t1' : letter}}).set_index(['NodeID', 'Item'])
                 elif dim == 6:
-                    # Note that I'm only keeping every 6th row
-                    eig = self.data_frame.xs(letter,level=1)
+                    eig = self.data_frame.xs(letter, level=1)
                 else:
                     raise RuntimeError(dim)
                 cat_keys.append(eig)
