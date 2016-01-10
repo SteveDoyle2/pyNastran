@@ -1,7 +1,7 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
-from pyNastran.f06.f06_formatting import writeImagFloats13E, get_key0, write_float_12E
+from pyNastran.f06.f06_formatting import write_imag_floats_13e, get_key0, write_float_12E
 from pyNastran.f06.f06_formatting import _eigenvalue_header
 from numpy import zeros, array_equal, searchsorted, allclose
 try:
@@ -222,7 +222,7 @@ class ComplexRodForceArray(ScalarObject):
             torsion = self.data[itime, :, 1]
 
             for eid, axiali, torsioni in zip(eids, axial, torsion):
-                ([raxial, rtorsion, iaxial, itorsion], is_all_zeros) = writeImagFloats13E([axiali, torsioni], is_mag_phase)
+                [raxial, rtorsion, iaxial, itorsion] = write_imag_floats_13e([axiali, torsioni], is_mag_phase)
                 #ELEMENT                             AXIAL                                       TORSIONAL
                     #ID.                              STRESS                                         STRESS
                     #14                  0.0          /  0.0                           0.0          /  0.0
@@ -448,7 +448,7 @@ class ComplexCShearForceArray(ScalarObject):
                      kick_force1, kick_force2, kick_force3, kick_force4,
                      shear12, shear23, shear34, shear41):
 
-                (vals2, is_all_zeros) = writeImagFloats13E([
+                vals2 = write_imag_floats_13e([
                      iforce41, force14i, iforce21, iforce12, iforce32, iforce23, iforce43, iforce34,
                      ikick_force1, ikick_force2, ikick_force3, ikick_force4,
                      ishear12, ishear23, ishear34, ishear41], is_mag_phase)
@@ -686,7 +686,7 @@ class ComplexSpringDamperForceArray(ScalarObject):
             spring_force = self.data[itime, :, 0]
 
             for eid, spring_forcei in zip(eids, spring_force):
-                ([rspring, ispring], is_all_zeros) = writeImagFloats13E([spring_forcei], is_mag_phase)
+                [rspring, ispring] = write_imag_floats_13e([spring_forcei], is_mag_phase)
                 #ELEMENT                             AXIAL                                       TORSIONAL
                     #ID.                              STRESS                                         STRESS
                     #14                  0.0          /  0.0                           0.0          /  0.0
@@ -907,7 +907,7 @@ class ComplexViscForceArray(ScalarObject):
             torsion = self.data[itime, :, 1]
 
             for eid, axiali, torsioni in zip(eids, axial, torsion):
-                ([raxial, rtorsion, iaxial, itorsion], is_all_zeros) = writeImagFloats13E([axiali, torsioni], is_mag_phase)
+                [raxial, rtorsion, iaxial, itorsion] = write_imag_floats_13e([axiali, torsioni], is_mag_phase)
                 #ELEMENT                             AXIAL                                       TORSIONAL
                     #ID.                              STRESS                                         STRESS
                     #14                  0.0          /  0.0                           0.0          /  0.0
@@ -1131,8 +1131,8 @@ class ComplexPlateForceArray(ScalarObject):
             ty = self.data[itime, :, 7]
 
             for eid, mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi in zip(eids, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
-                ([smxr, smyr, smxyr, sbmxr, sbmyr, sbmxyr, stxr, styr,
-                  smxi, smyi, smxyi, sbmxi, sbmyi, sbmxyi, stxi, styi], is_all_zeros) = writeImagFloats13E(
+                [smxr, smyr, smxyr, sbmxr, sbmyr, sbmxyr, stxr, styr,
+                 smxi, smyi, smxyi, sbmxi, sbmyi, sbmxyi, stxi, styi] = write_imag_floats_13e(
                       [mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi], is_mag_phase)
                 #"""
                     #ELEMENT                - MEMBRANE  FORCES -                        - BENDING MOMENTS -               - TRANSVERSE SHEAR FORCES -
@@ -1526,8 +1526,8 @@ class ComplexPlate2ForceArray(ScalarObject):
             ty = self.data[itime, :, 7]
 
             for eid, mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi in zip(eids, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
-                ([smxr, smyr, smxyr, sbmxr, sbmyr, sbmxyr, stxr, styr,
-                  smxi, smyi, smxyi, sbmxi, sbmyi, sbmxyi, stxi, styi], is_all_zeros) = writeImagFloats13E(
+                [smxr, smyr, smxyr, sbmxr, sbmyr, sbmxyr, stxr, styr,
+                 smxi, smyi, smxyi, sbmxi, sbmyi, sbmxyi, stxi, styi] = write_imag_floats_13e(
                       [mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi], is_mag_phase)
                 #"""
                     #ELEMENT                - MEMBRANE  FORCES -                        - BENDING MOMENTS -               - TRANSVERSE SHEAR FORCES -
@@ -1720,7 +1720,7 @@ class ComplexCBarForceArray(ScalarObject):
 
             for eid, bm1ai, bm2ai, bm1bi, bm2bi, ts1i, ts2i, afi, trqi in zip(eids, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq):
                 vals = (bm1ai, bm2ai, bm1bi, bm2bi, ts1i, ts2i, afi, trqi)
-                (vals2, is_all_zeros) = writeImagFloats13E(vals, is_mag_phase)
+                vals2 = write_imag_floats_13e(vals, is_mag_phase)
                 (bm1air, bm2air, bm1bir, bm2bir, ts1ir, ts2ir, afir, trqir,
                  bm1aii, bm2aii, bm1bii, bm2bii, ts1ii, ts2ii, afii, trqii) = vals2
 
@@ -1755,7 +1755,7 @@ class ComplexCBarForceArray(ScalarObject):
 
             for dt, bm1ai, bm2ai, bm1bi, bm2bi, ts1i, ts2i, afi, trqi in zip(times, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq):
                 vals = (bm1ai, bm2ai, bm1bi, bm2bi, ts1i, ts2i, afi, trqi)
-                (vals2, is_all_zeros) = writeImagFloats13E(vals, is_mag_phase)
+                vals2 = write_imag_floats_13e(vals, is_mag_phase)
                 (bm1air, bm2air, bm1bir, bm2bir, ts1ir, ts2ir, afir, trqir,
                  bm1aii, bm2aii, bm1bii, bm2bii, ts1ii, ts2ii, afii, trqii) = vals2
 
@@ -2067,8 +2067,8 @@ class ComplexSolidPressureForceArray(ScalarObject):
             pressure = self.data[itime, :, 0]
 
             for eid, axi, ayi, azi, vxi, vyi, vzi, pressurei in zip(eids, ax, ay, az, vx, vy, vz, pressure):
-                ([saxr, sayr, sazr, svxr, svyr, svzr, spressurer,
-                  saxi, sayi, sazi, svxi, svyi, svzi, spressurei], is_all_zeros) = writeImagFloats13E([axi, ayi, azi, vxi, vyi, vzi, pressurei], is_mag_phase)
+                [saxr, sayr, sazr, svxr, svyr, svzr, spressurer,
+                 saxi, sayi, sazi, svxi, svyi, svzi, spressurei] = write_imag_floats_13e([axi, ayi, azi, vxi, vyi, vzi, pressurei], is_mag_phase)
                 #'       1000    HEXPR      1.582050E-08    5.505425E+06    2.598164E-09    -8.884337E-10  -4.806934E+04   1.046571E-10   9.968034E+01'
                 #'                         -1.116439E-08   -6.040572E+05    1.315160E-09    -1.258955E-09  -4.381078E+05  -2.067553E-10'
 
@@ -2245,7 +2245,7 @@ class ComplexCBushForceArray(ScalarObject):
 
             for eid, fxi, fyi, fzi, mxi, myi, mzi in zip(eids, fx, fy, fz, mx, my, mz):
                 vals = (fxi, fyi, fzi, mxi, myi, mzi)
-                (vals2, is_all_zeros) = writeImagFloats13E(vals, is_mag_phase)
+                vals2 = write_imag_floats_13e(vals, is_mag_phase)
                 (fxir, fyir, fzir, mxir, myir, mzir,
                  fxii, fyii, fzii, mxii, myii, mzii) = vals2
 
@@ -2279,7 +2279,7 @@ class ComplexCBushForceArray(ScalarObject):
 
             for dt, fxi, fyi, fzi, mxi, myi, mzi in zip(times, fx, fy, fz, mx, my, mz):
                 vals = (fxi, fyi, fzi, mxi, myi, mzi)
-                (vals2, is_all_zeros) = writeImagFloats13E(vals, is_mag_phase)
+                vals2 = write_imag_floats_13e(vals, is_mag_phase)
                 (fxir, fyir, fzir, mxir, myir, mzir,
                  fxii, fyii, fzii, mxii, myii, mzii) = vals2
 

@@ -7,7 +7,7 @@ from numpy import array #, pi
 
 from pyNastran.op2.resultObjects.tableObject import RealTableArray, ComplexTableArray
 #RealTableObject, ComplexTableObject
-from pyNastran.f06.f06_formatting import write_floats_13e #, writeImagFloats13E
+from pyNastran.f06.f06_formatting import write_floats_13e #, write_imag_floats_13e
 
 class ComplexEigenvectorArray(ComplexTableArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -468,7 +468,7 @@ class RealEigenvectorArray(RealTableArray):
                 #(rx, ry, rz) = rotation
 
                 #vals = [dx, dy, dz, rx, ry, rz]
-                #(vals2, is_all_zeros) = writeImagFloats13E(vals, is_mag_phase)
+                #vals2 = write_imag_floats_13e(vals, is_mag_phase)
                 #[dxr, dyr, dzr, rxr, ryr, rzr,
                  #dxi, dyi, dzi, rxi, ryi, rzi] = vals2
                 #if grid_type == 'S':

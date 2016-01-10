@@ -134,8 +134,8 @@ class ComplexShearArray(OES_Object):
                     max_shear = self.data[itime, :, 0]
                     avg_shear = self.data[itime, :, 1]
                     for eid, max_sheari, avg_sheari in zip(eids, max_shear, avg_shear):
-                        ([rmax_shear, imax_shear, ravg_shear, iavg_shear
-                          ,], is_all_zeros) = writeImagFloats13E([max_sheari, avg_sheari], is_magnitude_phase)
+                        [rmax_shear, imax_shear, ravg_shear, iavg_shear
+                         ,] = write_imag_floats_13e([max_sheari, avg_sheari], is_magnitude_phase)
 
                         f.write('   %6s   %-13s / %-13s     %-13s / %-13s\n' % (
                             eid, rmax_shear, imax_shear, ravg_shear, iavg_shear))
@@ -147,8 +147,8 @@ class ComplexShearArray(OES_Object):
                     max_shear = self.data[:, ieid, 0].ravel()
                     avg_shear = self.data[:, ieid, 1].ravel()
                     for itime, max_sheari, avg_sheari in zip(times, max_shear, avg_shear):
-                        ([rmax_shear, imax_shear, ravg_shear, iavg_shear
-                          ,], is_all_zeros) = writeImagFloats13E([max_sheari, avg_sheari], is_magnitude_phase)
+                        [rmax_shear, imax_shear, ravg_shear, iavg_shear
+                         ] = write_imag_floats_13e([max_sheari, avg_sheari], is_magnitude_phase)
 
                         f.write('   %6s   %-13s / %-13s     %-13s / %-13s\n' % (
                             eid, rmax_shear, imax_shear, ravg_shear, iavg_shear))

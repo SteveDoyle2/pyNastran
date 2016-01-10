@@ -3,7 +3,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from six import iteritems
 from numpy import zeros, array_equal, searchsorted, allclose
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
-from pyNastran.f06.f06_formatting import write_floats_13e, writeImagFloats13E, _eigenvalue_header
+from pyNastran.f06.f06_formatting import write_floats_13e, write_imag_floats_13e, _eigenvalue_header
 try:
     import pandas as pd
 except ImportError:
@@ -181,8 +181,8 @@ class ComplexCBushArray(OES_Object):
             ry = self.data[itime, :, 4]
             rz = self.data[itime, :, 5]
             for eid, itx, ity, itz, irx, iry, irz in zip(eids, tx, ty, tz, rx, ry, rz):
-                ([txr, tyr, tzr, rxr, ryr, rzr,
-                  txi, tyi, tzi, rxi, ryi, rzi], is_all_zeros) = writeImagFloats13E([itx, ity, itz, irx, iry, irz], is_mag_phase)
+                [txr, tyr, tzr, rxr, ryr, rzr,
+                 txi, tyi, tzi, rxi, ryi, rzi] = write_imag_floats_13e([itx, ity, itz, irx, iry, irz], is_mag_phase)
                 #'0               1.000000E-01      0.0           2.912573E+00  0.0           0.0           0.0           0.0'
                 #'                                    0.0         179.9942        0.0           0.0           0.0           0.0'
                 f.write('                %8i    %-13s %-13s %-13s %-13s %-13s %s\n'
@@ -382,7 +382,7 @@ class ComplexBushStress(StressObject):
 
             vals = [s1[0], s2[0], s3[0], s4[0], axial,
                     s1[1], s2[1], s3[1], s4[1], ]
-            (vals2, is_all_zeros) = writeImagFloats13E(vals, is_mag_phase)
+            vals2 = write_imag_floats_13e(vals, is_mag_phase)
             [s1ar, s2ar, s3ar, s4ar, axialr,
              s1br, s2br, s3br, s4br,
              s1ai, s2ai, s3ai, s4ai, axiali,
@@ -417,7 +417,7 @@ class ComplexBushStress(StressObject):
                 s4 = self.s4[dt][eid]
                 vals = [s1[0], s2[0], s3[0], s4[0], axial,
                         s1[1], s2[1], s3[1], s4[1], ]
-                (vals2, is_all_zeros) = writeImagFloats13E(vals, is_mag_phase)
+                vals2 = write_imag_floats_13e(vals, is_mag_phase)
                 [s1ar, s2ar, s3ar, s4ar, axialr,
                  s1br, s2br, s3br, s4br,
                  s1ai, s2ai, s3ai, s4ai, axiali,

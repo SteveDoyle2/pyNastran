@@ -7,7 +7,7 @@ from numpy import zeros, concatenate
 #from numpy.linalg import eig
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
-from pyNastran.f06.f06_formatting import writeImagFloats13E
+from pyNastran.f06.f06_formatting import write_imag_floats_13e
 try:
     import pandas as pd
 except ImportError:
@@ -217,9 +217,9 @@ class ComplexSolidArray(OES_Object):
             # loop over all the elements and nodes
             for deid, node, doxx, doyy, dozz, dtxy, dtyz, dtxz in zip(eids2, nodes, oxx, oyy, ozz, txy, tyz, txz):
                 # TODO: cid not supported
-                ([oxxr, oyyr, ozzr, txyr, tyzr, txzr,
-                  oxxi, oyyi, ozzi, txyi, tyzi, txzi,], is_all_zeros) = writeImagFloats13E([doxx, doyy, dozz,
-                                                                                            dtxy, dtyz, dtxz], is_mag_phase)
+                [oxxr, oyyr, ozzr, txyr, tyzr, txzr,
+                 oxxi, oyyi, ozzi, txyi, tyzi, txzi,] = write_imag_floats_13e([doxx, doyy, dozz,
+                                                                               dtxy, dtyz, dtxz], is_mag_phase)
                 if node == 0:  # CENTER
                     f.write('0 %12i %11sGRID CS %2i GP\n' % (deid, cid, nnodes))
                     f.write('0   %22s    %-13s  %-13s  %-13s    %-13s  %-13s  %s\n' % ('CENTER', oxxr, oyyr, ozzr, txyr, tyzr, txzr))
@@ -534,9 +534,9 @@ class ComplexSolidStrainArray(ComplexSolidArray, StrainObject):
                 #txy = self.txy[dt][eid][inode]
                 #tyz = self.tyz[dt][eid][inode]
                 #txz = self.txz[dt][eid][inode]
-                #([oxxr, oyyr, ozzr, txyr, tyzr, txzr,
-                  #oxxi, oyyi, ozzi, txyi, tyzi, txzi,], is_all_zeros) = writeImagFloats13E([oxx, oyy, ozz,
-                                                                                            #txy, tyz, txz], is_mag_phase)
+                #[oxxr, oyyr, ozzr, txyr, tyzr, txzr,
+                 #oxxi, oyyi, ozzi, txyi, tyzi, txzi,] = write_imag_floats_13e([oxx, oyy, ozz,
+                                                                               #txy, tyz, txz], is_mag_phase)
 
                 #f.write('0   %22s    %-13s  %-13s  %-13s    %-13s  %-13s  %s\n' % (inode, oxxr, oyyr, ozzr, txyr, tyzr, txzr))
                 #f.write('    %22s    %-13s  %-13s  %-13s    %-13s  %-13s  %s\n' % ('', oxxi, oyyi, ozzi, txyi, tyzi, txzi))

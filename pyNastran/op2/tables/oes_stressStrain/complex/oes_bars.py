@@ -2,7 +2,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import iteritems
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
-from pyNastran.f06.f06_formatting import write_floats_13e, writeImagFloats13E
+from pyNastran.f06.f06_formatting import write_floats_13e, write_imag_floats_13e
 from numpy import concatenate, zeros
 try:
     import pandas as pd
@@ -209,7 +209,7 @@ class ComplexBarArray(OES_Object):
             for eid, s1ai, s2ai, s3ai, s4ai, axiali, s2ai, s2bi, s2ci, s2di in zip(eids, sa1, sa2, sa3, sa4, axial, sb1, sb2, sb3, sb4):
                 vals = (s1ai, s2ai, s3ai, s4ai, axiali,
                         s2ai, s2bi, s2ci, s2di)
-                (vals2, is_all_zeros) = writeImagFloats13E(vals, is_mag_phase)
+                vals2 = write_imag_floats_13e(vals, is_mag_phase)
                 (s1ar, s2ar, s3ar, s4ar, axialr,
                  s1br, s2br, s3br, s4br,
                  s1ai, s2ai, s3ai, s4ai, axiali,

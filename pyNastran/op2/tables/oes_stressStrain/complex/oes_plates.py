@@ -6,7 +6,7 @@ from six.moves import range
 from numpy import zeros
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
-from pyNastran.f06.f06_formatting import write_floats_13e, writeImagFloats13E, get_key0, write_float_13e
+from pyNastran.f06.f06_formatting import write_floats_13e, write_imag_floats_13e, get_key0, write_float_13e
 try:
     import pandas as pd
 except ImportError:
@@ -187,8 +187,8 @@ class ComplexPlateArray(OES_Object):
         for eid, node, fdr, doxx, doyy, dtxy in zip(eids, nodes, fds, oxx, oyy, txy):
             vals = write_float_13e(fdr)
             fdr = vals[0]
-            ([oxxr, oyyr, txyr,
-              oxxi, oyyi, txyi,], is_all_zeros) = writeImagFloats13E([doxx, doyy, dtxy], is_magnitude_phase)
+            [oxxr, oyyr, txyr,
+             oxxi, oyyi, txyi,] = write_imag_floats_13e([doxx, doyy, dtxy], is_magnitude_phase)
 
             if ilayer0:    # TODO: assuming 2 layers?
                 f.write('0  %6i   %-13s     %-13s / %-13s     %-13s / %-13s     %-13s / %s\n' % (eid, fdr, oxxr, oxxi, oyyr, oyyi, txyr, txyi))
@@ -214,8 +214,8 @@ class ComplexPlateArray(OES_Object):
         ilayer0 = True
         for eid, node, fd, doxx, doyy, dtxy in zip(eids, nodes, fds, oxx, oyy, txy):
             fdr = write_float_13e(fd)
-            ([oxxr, oyyr, txyr,
-              oxxi, oyyi, txyi,], is_all_zeros) = writeImagFloats13E([doxx, doyy, dtxy], is_magnitude_phase)
+            [oxxr, oyyr, txyr,
+             oxxi, oyyi, txyi,] = write_imag_floats_13e([doxx, doyy, dtxy], is_magnitude_phase)
 
             if node == 0 and ilayer0:
                 f.write('0  %8i %8s  %-13s   %-13s / %-13s   %-13s / %-13s   %-13s / %s\n' % (eid, cen, fdr, oxxr, oxxi, oyyr, oyyi, txyr, txyi))

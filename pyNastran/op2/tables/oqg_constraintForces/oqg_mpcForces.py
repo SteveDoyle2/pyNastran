@@ -1,7 +1,7 @@
 #from six import iteritems
 from pyNastran.op2.resultObjects.tableObject import RealTableArray, ComplexTableArray
 #RealTableObject, ComplexTableObject
-#from pyNastran.f06.f06_formatting import write_floats_13e, writeImagFloats13E
+#from pyNastran.f06.f06_formatting import write_floats_13e, write_imag_floats_13e
 
 
 class RealMPCForcesArray(RealTableArray):
@@ -134,7 +134,7 @@ class ComplexMPCForcesArray(ComplexTableArray):
                 #(rx, ry, rz) = rotation
 
                 #vals = [dx, dy, dz, rx, ry, rz]
-                #(vals2, is_all_zeros) = writeImagFloats13E(vals, is_mag_phase)
+                #vals2 = write_imag_floats_13e(vals, is_mag_phase)
                 ##if not is_all_zeros:
                 #[v1r, v2r, v3r, v4r, v5r, v6r, v1i,
                     #v2i, v3i, v4i, v5i, v6i] = vals2

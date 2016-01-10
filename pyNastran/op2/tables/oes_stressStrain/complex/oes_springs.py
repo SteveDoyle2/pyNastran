@@ -4,7 +4,7 @@ from six import iteritems
 from numpy import zeros, array_equal
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
 
-from pyNastran.f06.f06_formatting import writeImagFloats13E, _eigenvalue_header
+from pyNastran.f06.f06_formatting import write_imag_floats_13e, _eigenvalue_header
 try:
     import pandas as pd
 except ImportError:
@@ -233,7 +233,7 @@ class ComplexSpringDamperArray(OES_Object):
             # loop over all the elements
             out = []
             for eid, spring_forcei in zip(eids, spring_force):
-                ([rspring, ispring], is_all_zeros) = writeImagFloats13E([spring_forcei], is_mag_phase)
+                [rspring, ispring] = write_imag_floats_13e([spring_forcei], is_mag_phase)
                 #ELEMENT                             AXIAL                                       TORSIONAL
                     #ID.                              STRESS                                         STRESS
                     #14                  0.0          /  0.0                           0.0          /  0.0

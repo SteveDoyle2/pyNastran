@@ -3,7 +3,7 @@ from six import iteritems
 from numpy import array, zeros, unique, array_equal, empty
 from struct import pack
 from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
-from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header, writeImagFloats13E
+from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header, write_imag_floats_13e
 try:
     import pandas as pd
 except ImportError:
@@ -615,7 +615,7 @@ class ComplexGridPointForcesArray(ScalarObject):
                      range(ntotal), nids, eids, enames, t1, t2, t3, r1, r2, r3):
 
                     vals = [t1i, t2i, t3i, r1i, r2i, r3i]
-                    (vals2, is_all_zeros) = writeImagFloats13E(vals, is_mag_phase)
+                    vals2 = write_imag_floats_13e(vals, is_mag_phase)
                     [f1r, f2r, f3r, m1r, m2r, m3r, f1i, f2i, f3i, m1i, m2i, m3i] = vals2
                     if eid == 0:
                         f.write('   %8s    %10s    %8s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n'
@@ -656,7 +656,7 @@ class ComplexGridPointForcesArray(ScalarObject):
                      nids, eids, enames, t1, t2, t3, r1, r2, r3):
 
                     vals = [t1i, t2i, t3i, r1i, r2i, r3i]
-                    (vals2, is_all_zeros) = writeImagFloats13E(vals, is_mag_phase)
+                    vals2 = write_imag_floats_13e(vals, is_mag_phase)
                     [f1r, f2r, f3r, m1r, m2r, m3r, f1i, f2i, f3i, m1i, m2i, m3i] = vals2
                     if eid == 0:
                         f.write('   %8s    %10s    %8s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n'
@@ -697,7 +697,7 @@ class ComplexGridPointForcesArray(ScalarObject):
                          nids, eids, enames, t1, t2, t3, r1, r2, r3):
 
                         vals = [t1i, t2i, t3i, r1i, r2i, r3i]
-                        (vals2, is_all_zeros) = writeImagFloats13E(vals, is_mag_phase)
+                        vals2 = write_imag_floats_13e(vals, is_mag_phase)
                         [f1r, f2r, f3r, m1r, m2r, m3r, f1i, f2i, f3i, m1i, m2i, m3i] = vals2
                         if eid == 0:
                             f.write('   %8s    %10s    %8s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n'

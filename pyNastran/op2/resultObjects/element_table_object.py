@@ -7,7 +7,7 @@ from numpy import array, zeros, abs, angle, float32, searchsorted, empty
 from numpy import allclose, asarray, vstack, swapaxes, hstack, array_equal
 
 from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
-from pyNastran.f06.f06_formatting import write_floats_13e, writeImagFloats13E, write_float_12E
+from pyNastran.f06.f06_formatting import write_floats_13e, write_imag_floats_13e, write_float_12E
 
 
 class ElementTableArray(ScalarObject):  # displacement style table
@@ -521,7 +521,7 @@ class ComplexElementTableArray(ElementTableArray):  # displacement style table
             for node_id, gridtypei, t1i, t2i, t3i, r1i, r2i, r3i in zip(node, gridtype, t1, t2, t3, r1, r2, r3):
                 sgridtype = self.recast_gridtype_as_string(gridtypei)
                 vals = [t1i, t2i, t3i, r1i, r2i, r3i]
-                (vals2, is_all_zeros) = writeImagFloats13E(vals, is_mag_phase)
+                vals2 = write_imag_floats_13e(vals, is_mag_phase)
                 [dxr, dyr, dzr, rxr, ryr, rzr,
                  dxi, dyi, dzi, rxi, ryi, rzi] = vals2
                 if sgridtype == 'G':
@@ -561,7 +561,7 @@ class ComplexElementTableArray(ElementTableArray):  # displacement style table
             for dt, t1i, t2i, t3i, r1i, r2i, r3i in zip(times, t1, t2, t3, r1, r2, r3):
                 sgridtype = self.recast_gridtype_as_string(gridtypei)
                 vals = [t1i, t2i, t3i, r1i, r2i, r3i]
-                (vals2, is_all_zeros) = writeImagFloats13E(vals, is_mag_phase)
+                vals2 = write_imag_floats_13e(vals, is_mag_phase)
                 [dxr, dyr, dzr, rxr, ryr, rzr,
                  dxi, dyi, dzi, rxi, ryi, rzi] = vals2
                 sdt = write_float_12E(dt)
@@ -604,7 +604,7 @@ class ComplexElementTableArray(ElementTableArray):  # displacement style table
             for dt, t1i, t2i, t3i, r1i, r2i, r3i in zip(times, t1, t2, t3, r1, r2, r3):
                 sgridtype = self.recast_gridtype_as_string(gridtypei)
                 vals = [t1i, t2i, t3i, r1i, r2i, r3i]
-                (vals2, is_all_zeros) = writeImagFloats13E(vals, is_mag_phase)
+                vals2 = write_imag_floats_13e(vals, is_mag_phase)
                 [dxr, dyr, dzr, rxr, ryr, rzr,
                  dxi, dyi, dzi, rxi, ryi, rzi] = vals2
                 sdt = write_float_12E(dt)
