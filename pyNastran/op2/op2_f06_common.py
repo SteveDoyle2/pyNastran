@@ -856,6 +856,8 @@ class OP2_F06_Common(object):
                     self.log.warning(table)
                     raise
 
+        for name, matrix in iteritems(self.matrices):
+            msg.append('matrices[%s].shape = %s\n' % (name, matrix.data.shape))
         try:
             return ''.join(msg)
         except TypeError:
