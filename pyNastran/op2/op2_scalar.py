@@ -98,6 +98,10 @@ NX_RESULT_TABLES = [
     #         and forces on nonlinear elements
     b'OEF1X',
 
+    #----------------------
+    b'OES2C',
+    b'OSTR2C',
+
     #b'RAFGEN',
 ]
 
@@ -491,7 +495,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             #b'HISADD': [self._hisadd_3, self._hisadd_4],  # optimization history (SOL200)
             b'HISADD': [self._table_passer, self._table_passer],
             b'R1TABRG': [self._table_passer, self._table_passer_r1tabrg],
-            #b'TOL': [self._table_passer, self._table_passer],
+            b'TOL': [self._table_passer, self._table_passer],
 
             b'MATPOOL': [self._table_passer, self._table_passer],
             b'CSTM':    [self._table_passer, self._table_passer],
@@ -1132,6 +1136,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                     self._read_omm2()
                 elif table_name == b'DIT':  # tables
                     self._read_dit()
+                elif table_name == b'TOL':
+                    self._read_tol()
                 #elif table_name == b'KELM':
                     #self._read_kelm()
                 elif table_name == b'PCOMPTS': # blade
@@ -1156,6 +1162,36 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
             table_name = self._read_table_name(rewind=True, stop_on_failure=False)
         return table_names
+
+    def _read_tol(self):
+        """
+        This is probably broken for MSC Nastran
+
+        TOL
+        ---
+        -2 - nitimes?
+        -3 - list of times?
+        """
+        table_name = self._read_table_name(rewind=False, stop_on_failure=True)
+        self.read_markers([-1])
+        data = self._read_record()
+        #self.show_data(data)
+
+        self.read_markers([-2, 1, 0])
+        #self.show_ndata(440, types='if')
+        data = self._read_record()
+        #print('----')
+        self.read_markers([-3, 1, 0])
+        #self.show_ndata(440, types='if')
+        #print('----')
+        self.read_markers([0])
+        #data = self._read_record()
+
+
+        #self.show_ndata(440, types='ifs')
+
+        #self.show_data(data)
+        #aaaa
 
     def _skip_matrix(self):
         table_name = self._read_table_name(rewind=False, stop_on_failure=True)

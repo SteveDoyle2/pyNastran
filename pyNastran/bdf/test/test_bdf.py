@@ -529,9 +529,13 @@ def run_fem2(bdf_model, out_model, xref, punch,
                 assert subcase.has_parameter('LOAD'), subcase
             elif sol == 103:
                 assert subcase.has_parameter('METHOD'), subcase
-            elif sol == 109: # freq?
+            elif sol == 108: # freq
                 assert subcase.has_parameter('FREQUENCY'), subcase
-            elif sol == 111:  # time?
+            elif sol == 111:  # time
+                assert subcase.has_parameter('TIME'), subcase
+            elif sol == 111:  # modal frequency
+                assert subcase.has_parameter('FREQUENCY'), subcase
+            elif sol == 112:  # modal transient
                 assert subcase.has_parameter('TIME'), subcase
 
             elif sol == 129:  # nonlinear transient

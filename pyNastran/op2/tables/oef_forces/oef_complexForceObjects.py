@@ -1354,7 +1354,7 @@ class ComplexPlate2ForceArray(ScalarObject):
         headers = self.get_headers()
         assert 0 not in self.element
         name = self.name
-        print(self.element_node)
+        #print(self.element_node)
         element_node = [self.element_node[:, 0], self.element_node[:, 1]]
         assert 0 not in self.element_node[:, 0]
         if self.nonlinear_factor is not None:
