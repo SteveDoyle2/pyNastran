@@ -11,6 +11,10 @@ from traceback import print_exc
 import numpy as np
 np.set_printoptions(precision=3, threshold=20)
 
+#import warnings
+#warnings.filterwarnings('error')
+#warnings.filterwarnings('error', category=UnicodeWarning)
+
 import pyNastran
 from pyNastran import is_release
 from pyNastran.op2.op2 import OP2, FatalError, SortCodeError, DeviceCodeError

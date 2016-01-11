@@ -234,6 +234,12 @@ class OES(OP2Common):
             n = self._not_implemented_or_skip(data, ndata, msg)
         return n
 
+    def _read_oes2_3(self, data, ndata):
+        return self._table_passer(data, ndata)
+
+    def _read_oes2_4(self, data, ndata):
+        return self._table_passer(data, ndata)
+
     def _read_ostr1_4(self, data, ndata):
         """
         Reads the Strain Table 4

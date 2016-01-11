@@ -79,10 +79,14 @@ GEOM_TABLES = [
 ]
 
 NX_RESULT_TABLES = [
-    b'OESVM1',  # OES Table of           element stresses for frequency response analysis that includes von Mises stress output in SORT1 format.
-    b'OESVM1C', # OES Table of composite element stresses for frequency response analysis that includes von Mises stress output in SORT1 format.
-    b'OSTRVM1C',
-    b'OSTRVM1',
+    # OESVM1  - OES Table of           element stresses for frequency response analysis that includes von Mises stress output in SORT1 format.
+    # OESVM1C - OES Table of composite element stresses for frequency response analysis that includes von Mises stress output in SORT1 format.
+    b'OESVM1', b'OSTRVM1',
+    b'OESVM1C', b'OSTRVM1C',
+
+    b'OESPSD2C', b'OSTPSD2C',
+    b'OSTRRMS1', b'OSTRMS1C',
+    b'OSTRNO1', b'OSTNO1C',
 
     #----------------------
     # displacement/velocity/acceleration/eigenvector/temperature
@@ -468,6 +472,9 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OESVM1C' : [self._read_oes1_3, self._read_oes1_4],
             #b'OSTRVM1C' : [self._read_oes1_3, self._read_oes1_4],
             #b'OSTRVM1' : [self._read_oes1_3, self._read_oes1_4],
+            b'OES2C' : [self._read_oes2_3, self._read_oes2_4],
+            b'OSTR2C' : [self._read_oes2_3, self._read_oes2_4],
+            b'OSTR2' : [self._read_oes2_3, self._read_oes2_4],
 
             # MSC TABLES
 
