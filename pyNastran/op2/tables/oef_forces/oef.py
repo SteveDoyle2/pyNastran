@@ -1501,14 +1501,11 @@ class OEF(OP2Common):
                     s = Struct(b(self._endian + 'i8f'))
                     for i in range(nelements):
                         edata = data[n:n+36]
-
                         out = s.unpack(edata)
                         if self.is_debug_file:
                             self.binary_debug.write('real_OEF_Plate-%s - %s\n' % (self.element_type, str(out)))
                         (eid_device, mx, my, mxy, bmx, bmy, bmxy, tx, ty) = out
                         eid = self._check_id(eid_device, flag, 'FORCE', out)
-                        #print "%s" % (self.get_element_type(self.element_type)), data_in
-                        #eid = obj.add_new_eid(out)
                         obj.add_sort1(dt, eid, mx, my, mxy, bmx, bmy, bmxy, tx, ty)
                         n += ntotal
             elif self.format_code in [2, 3] and self.num_wide == 17:  # imag
@@ -1650,8 +1647,11 @@ class OEF(OP2Common):
 
                     if obj.itime == 0:
                         ints = fromstring(data, dtype=self.idtype).reshape(nelements, numwide_real)
-                        nids = ints[:, 2:].reshape(nlayers, 9)[:, 0]
+                        # Nastran makes this a 4 for CQUAD4s instead
+                        # of 0 like the bilinear stress element...
+                        ints[:, 2] = 0
 
+                        nids = ints[:, 2:].reshape(nlayers, 9)[:, 0]
                         eids = ints[:, 0] // 10
                         eids2 = vstack([eids] * nnodes_all).T.ravel()
                         obj.element_node[istart:iend, 0] = eids2
@@ -1671,8 +1671,9 @@ class OEF(OP2Common):
                         out = s1.unpack(edata)
                         if self.is_debug_file:
                             self.binary_debug.write('OEF_Plate2-%s - %s\n' % (self.element_type, str(out)))
-                        (eid_device, term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty) = out
+                        (eid_device, term, _nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty) = out
                         #term= 'CEN\'
+                        nid = 0
                         eid = self._check_id(eid_device, flag, 'FORCE', out)
                         #print "%s" % (self.get_element_type(self.element_type)), dt, term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty
                         obj.add(dt, eid, term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty)
@@ -1715,7 +1716,7 @@ class OEF(OP2Common):
                         #print(nids, len(nids), itotal2-itotal)
                         assert eids.min() > 0, eids.min()
                         obj.element[itotal:itotal2] = eids
-                        obj.element_node[itotal:itotal2, 0] = eids
+                        #obj.element_node[itotal:itotal2, 0] = eids
                         #obj.element_node[itotal:itotal2, 1] = nids
 
                     #[mx, my, mxy, bmx, bmy, bmxy, tx, ty]

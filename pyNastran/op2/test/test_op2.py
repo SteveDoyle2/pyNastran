@@ -254,8 +254,8 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
     stopOnFailure : bool; default=True
         is this used???
     """
-    op2a = None
-    op2b = None
+    op2 = None
+    op2_nv = None
     if isubcases is None:
         isubcases = []
     if exclude is None:
@@ -283,17 +283,17 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
     if make_geom and not is_geom:
         raise RuntimeError('make_geom=%s is not supported' % make_geom)
     if make_geom:
-        op2a = OP2Geom(debug=debug, debug_file=debug_file)
-        op2b = OP2Geom()
+        op2 = OP2Geom(debug=debug)
+        op2_nv = OP2Geom(debug=debug, debug_file=debug_file)
     else:
-        op2a = OP2(debug=debug, debug_file=debug_file)
-        op2b = OP2()
-    op2b.use_vector = False
+        op2 = OP2(debug=debug)
+        op2_nv = OP2(debug=debug, debug_file=debug_file) # have to double write this until
+    op2_nv.use_vector = False
 
-    op2a.set_subcases(isubcases)
-    op2b.set_subcases(isubcases)
-    op2a.remove_results(exclude)
-    op2b.remove_results(exclude)
+    op2.set_subcases(isubcases)
+    op2_nv.set_subcases(isubcases)
+    op2.remove_results(exclude)
+    op2_nv.remove_results(exclude)
 
     if is_memory and check_memory:
         if is_linux: # linux
@@ -306,21 +306,21 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
     try:
         #op2.read_bdf(op2.bdf_filename, includeDir=None, xref=False)
         if compare:
-            op2b.read_op2(op2_filename)
-        op2a.read_op2(op2_filename)
+            op2_nv.read_op2(op2_filename)
+        op2.read_op2(op2_filename)
 
         #op2a.get_op2_stats()
         if quiet:
-            op2a.get_op2_stats()
+            op2.get_op2_stats()
         else:
             print("---stats for %s---" % op2_filename)
-            print(op2a.get_op2_stats())
-            op2a.print_subcase_key()
+            print(op2.get_op2_stats())
+            op2.print_subcase_key()
         if write_bdf:
-            op2a.write_bdf(bdf_filename)
+            op2.write_bdf(bdf_filename)
             os.remove(bdf_filename)
         if compare:
-            assert op2a == op2b
+            assert op2 == op2_nv
 
         if is_memory and check_memory:
             if is_linux: # linux
@@ -331,8 +331,8 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
             print("Memory usage     end: %s (KB); %.2f (MB)" % (kb, mb))
 
         if write_f06:
-            op2a.write_f06(model + '.test_op2.f06', is_mag_phase=is_mag_phase,
-                           is_sort1=not is_sort2, quiet=quiet)
+            op2.write_f06(model + '.test_op2.f06', is_mag_phase=is_mag_phase,
+                          is_sort1=not is_sort2, quiet=quiet)
             if delete_f06:
                 try:
                     os.remove(model + '.test_op2.f06')
@@ -340,11 +340,11 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
                     pass
 
         # we put it down here so we don't blame the dataframe for real errors
-        op2b.build_dataframe()
+        op2.build_dataframe()
 
         if write_op2:
             model = os.path.splitext(op2_filename)[0]
-            op2a.write_op2(model + '.test_op2.op2', is_mag_phase=is_mag_phase)
+            op2.write_op2(model + '.test_op2.op2', is_mag_phase=is_mag_phase)
             if delete_f06:
                 try:
                     os.remove(model + '.test_op2.op2')
@@ -353,7 +353,7 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
 
         if write_xlsx:
             model = os.path.splitext(op2_filename)[0]
-            op2a.write_xlsx(model + '.test_op2.xlsx', is_mag_phase=is_mag_phase)
+            op2.write_xlsx(model + '.test_op2.xlsx', is_mag_phase=is_mag_phase)
             if delete_f06:
                 try:
                     os.remove(model + '.test_op2.xlsx')
@@ -361,8 +361,8 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
                     pass
 
         if is_memory and check_memory:
-            op2a = None
-            del op2b
+            op2 = None
+            del op2_nv
             if is_linux: # linux
                 kb = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
             else: # windows
@@ -442,7 +442,7 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
             print_exc(file=sys.stdout)
             is_passed = False
 
-    return op2a, is_passed
+    return op2, is_passed
 
 
 def main():

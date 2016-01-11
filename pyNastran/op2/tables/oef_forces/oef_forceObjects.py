@@ -1290,8 +1290,7 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
             df2 = pd.DataFrame(self.data[0])
             df2.columns = headers
             self.data_frame = df1.join([df2])
-        # unncessary for forces
-        #self.data_frame = self.data_frame.reset_index().replace({'NodeID': {0:'CEN'}}).set_index(['ElementID', 'NodeID'])
+        self.data_frame = self.data_frame.reset_index().replace({'NodeID': {0:'CEN'}}).set_index(['ElementID', 'NodeID'])
         #print(self.data_frame)
 
     def __eq__(self, table):
