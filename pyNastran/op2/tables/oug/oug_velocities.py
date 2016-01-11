@@ -1,5 +1,5 @@
 from struct import pack
-from pyNastran.op2.resultObjects.tableObject import RealTableArray, ComplexTableArray, RealTableObject, ComplexTableObject
+from pyNastran.op2.resultObjects.tableObject import RealTableArray, ComplexTableArray
 
 
 class RealVelocityArray(RealTableArray):

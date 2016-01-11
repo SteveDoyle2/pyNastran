@@ -61,7 +61,7 @@ class OPG(OP2Common):
         if self.analysis_code == 1:   # statics
             ## load set number
             self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', 'i', 5, False)
-            self.dataNames = self.apply_data_code_value('dataNames', ['lsdvmn'])
+            self.data_names = self.apply_data_code_value('data_names', ['lsdvmn'])
             self.setNullNonlinearFactor()
         elif self.analysis_code == 2:  # normal modes/buckling (real eigenvalues)
             ## mode number
@@ -71,7 +71,7 @@ class OPG(OP2Common):
             ## mode or cycle .. todo:: confused on the type - F1???
             self.mode2 = self.add_data_parameter(data, 'mode2', 'i', 7, False)
             self.cycle2 = self.add_data_parameter(data, 'cycle', 'f', 7, False)
-            self.dataNames = self.apply_data_code_value('dataNames', ['mode', 'eigr', 'mode2', 'cycle', ])
+            self.data_names = self.apply_data_code_value('data_names', ['mode', 'eigr', 'mode2', 'cycle', ])
         #elif self.analysis_code == 3: # differential stiffness
         #    ## load set number
         #    self.lsdvmn = self.get_values(data,'i',5)
@@ -81,21 +81,21 @@ class OPG(OP2Common):
         elif self.analysis_code == 5:   # frequency
             ## frequency
             self.freq = self.add_data_parameter(data, 'freq', 'f', 5)
-            self.dataNames = self.apply_data_code_value('dataNames', ['freq'])
+            self.data_names = self.apply_data_code_value('data_names', ['freq'])
         elif self.analysis_code == 6:  # transient
             ## time step
             self.time = self.add_data_parameter(data, 'time', 'f', 5)
-            self.dataNames = self.apply_data_code_value('dataNames', ['time'])
+            self.data_names = self.apply_data_code_value('data_names', ['time'])
         elif self.analysis_code == 7:  # pre-buckling
             ## load set number
             self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', 'i', 5)
-            self.dataNames = self.apply_data_code_value('dataNames', ['lsdvmn'])
+            self.data_names = self.apply_data_code_value('data_names', ['lsdvmn'])
         elif self.analysis_code == 8:  # post-buckling
             ## load set number
             self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', 'i', 5)
             ## real eigenvalue
             self.eigr = self.add_data_parameter(data, 'eigr', 'f', 6, False)
-            self.dataNames = self.apply_data_code_value('dataNames', ['lsdvmn', 'eigr'])
+            self.data_names = self.apply_data_code_value('data_names', ['lsdvmn', 'eigr'])
         elif self.analysis_code == 9:  # complex eigenvalues
             ## mode number
             self.mode = self.add_data_parameter(data, 'mode', 'i', 5)
@@ -103,19 +103,19 @@ class OPG(OP2Common):
             self.eigr = self.add_data_parameter(data, 'eigr', 'f', 6, False)
             ## imaginary eigenvalue
             self.eigi = self.add_data_parameter(data, 'eigi', 'f', 7, False)
-            self.dataNames = self.apply_data_code_value('dataNames', ['mode', 'eigr', 'eigi'])
+            self.data_names = self.apply_data_code_value('data_names', ['mode', 'eigr', 'eigi'])
         elif self.analysis_code == 10:  # nonlinear statics
             ## load step
             self.lftsfq = self.add_data_parameter(data, 'lftsfq', 'f', 5)
-            self.dataNames = self.apply_data_code_value('dataNames', ['lftsfq'])
+            self.data_names = self.apply_data_code_value('data_names', ['lftsfq'])
         elif self.analysis_code == 11:  # old geometric nonlinear statics
             ## load set number
             self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', 'i', 5)
-            self.dataNames = self.apply_data_code_value('dataNames', ['lsdvmn'])
+            self.data_names = self.apply_data_code_value('data_names', ['lsdvmn'])
         elif self.analysis_code == 12:  # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
             ## load set number
             self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', 'i', 5)
-            self.dataNames = self.apply_data_code_value('dataNames', ['lsdvmn'])
+            self.data_names = self.apply_data_code_value('data_names', ['lsdvmn'])
         else:
             raise RuntimeError('invalid analysis_code...analysis_code=%s' %
                                self.analysis_code)

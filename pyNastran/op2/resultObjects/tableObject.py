@@ -1,13 +1,18 @@
-from __future__ import print_function
+from __future__ import print_function, unicode_literals
 from six import iteritems
 from six.moves import zip, range
 from struct import Struct, pack
 
-from numpy import array, zeros, abs, angle, float32, searchsorted
+import numpy as np
+from numpy import array, zeros, abs, angle, float32, searchsorted, unique, where
 from numpy import allclose, asarray, vstack, swapaxes, hstack, array_equal
 
 from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
-from pyNastran.f06.f06_formatting import write_floats_13e, writeImagFloats13E, write_float_12E
+from pyNastran.f06.f06_formatting import write_floats_13e, write_imag_floats_13e, write_float_12E
+try:
+    import pandas as pd
+except ImportError:
+    pass
 
 
 def append_sort1_sort2(data1, data2, to_sort1=True):
@@ -43,6 +48,7 @@ class TableArray(ScalarObject):  # displacement style table
         self.analysis_code = None
         ScalarObject.__init__(self, data_code, isubcase, apply_data_code=True)  # no double inheritance
         self.is_sort1()
+        self.is_sort2()
         #self.dt = dt
 
         #self.eType = {}
@@ -117,13 +123,16 @@ class TableArray(ScalarObject):  # displacement style table
     def data_type(self):
         raise NotImplementedError()
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
-            return ['<%s>\n' % self.__class__.__name__,
-                    '  ntimes: %i\n' % self.ntimes,
-                    '  ntotal: %i\n' % self.ntotal,
-                    ]
+            return [
+                '<%s>\n' % self.__class__.__name__,
+                '  ntimes: %i\n' % self.ntimes,
+                '  ntotal: %i\n' % self.ntotal,
+            ]
         #ngrids = len(self.gridTypes)
+        if short:
+            return self._get_stats_short()
         msg = []
 
         ntimesi, ntotal = self.data.shape[:2]
@@ -162,6 +171,9 @@ class TableArray(ScalarObject):  # displacement style table
     def _get_headers(self):
         return self.headers
 
+    def get_headers(self):
+        return self._get_headers()
+
     def _reset_indices(self):
         self.itotal = 0
 
@@ -199,6 +211,63 @@ class TableArray(ScalarObject):  # displacement style table
 
         #[t1, t2, t3, r1, r2, r3]
         self.data = zeros((nx, ny, 6), self.data_type())
+
+    def build_dataframe(self):
+        headers = self.get_headers()
+        name = self.name
+        node_gridtype = [self.node_gridtype[:, 0], self.gridtype_str]
+        ugridtype_str = unique(self.gridtype_str)
+
+        if self.nonlinear_factor is not None:
+            column_names, column_values = self._build_dataframe_transient_header()
+            self.data_frame = pd.Panel(self.data, items=column_values, major_axis=node_gridtype, minor_axis=headers).to_frame()
+            self.data_frame.columns.names = column_names
+            self.data_frame.index.names = ['NodeID', 'Type', 'Item']
+
+            letter_dims = [
+                ('G', 6),
+                ('E', 1),
+                ('S', 1),
+                ('H', 6),
+                ('L', 6),
+            ]
+            cat_keys = []
+            for (letter, dim) in letter_dims:
+                if letter not in ugridtype_str:
+                    continue
+                if dim == 1:
+                    # Note that I'm only keeping every 6th row
+                    eig = self.data_frame.xs(letter,level=1).iloc[0::6]
+                    eig = eig.reset_index().replace(
+                        {'Item' : {'t1' : letter}}).set_index(['NodeID', 'Item'])
+                elif dim == 6:
+                    eig = self.data_frame.xs(letter, level=1)
+                else:
+                    raise RuntimeError(dim)
+                cat_keys.append(eig)
+            self.data_frame = pd.concat(cat_keys)
+        else:
+            #self.data_frame = pd.Panel(self.data[0, :, :], major_axis=node_gridtype, minor_axis=headers).to_frame()
+            #self.data_frame.columns.names = ['Static']
+            #self.data_frame.index.names = ['NodeID', 'Type', 'Item']
+
+            df1 = pd.DataFrame(self.node_gridtype[:, 0])
+            df1.columns = ['NodeID']
+            df2 = pd.DataFrame(self.gridtype_str)
+            df2.columns = ['Type']
+            df3 = pd.DataFrame(self.data[0])
+            df3.columns = headers
+            self.data_frame = df1.join([df2, df3])
+        #print(self.data_frame)
+
+    def finalize(self):
+        gridtypes = self.node_gridtype[:, 1]
+        nnodes = len(gridtypes)
+        self.gridtype_str = np.chararray((nnodes), unicode=True)
+        ugridtypes = unique(gridtypes)
+        for ugridtype in ugridtypes:
+            i = where(gridtypes == ugridtype)
+            self.gridtype_str[i] = self.recast_gridtype_as_string(ugridtype)
 
     def _write_xlsx(self, sheet, is_mag_phase=False):
         from xlwings import Range, Chart
@@ -291,16 +360,15 @@ class TableArray(ScalarObject):  # displacement style table
         self.itotal += 1
         #self.itime += 1
 
-def two_dee_string_add(string_lists):
-    string0 = string_lists[0]
-    n, m = string0.shape
+#def two_dee_string_add(string_lists):
+    #string0 = string_lists[0]
+    #n, m = string0.shape
 
-    s = []
-    for string_list in string_lists:
-        for string in string_list:
-            pass
-
-    return sumned
+    #s = []
+    #for string_list in string_lists:
+        #for string in string_list:
+            #pass
+    #return sumned
 
 class RealTableArray(TableArray):  # displacement style table
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -449,18 +517,18 @@ class RealTableArray(TableArray):  # displacement style table
         f.write(pack(b'%ii' % len(header), *header))
         return itable
 
-    def spike():
-        import xlwings as xw
-        wb = xw.Workbook()  # Creates a connection with a new workbook
-        xw.Range('A1').value = 'Foo 1'
-        xw.Range('A1').value
-        'Foo 1'
-        xw.Range('A1').value = [['Foo 1', 'Foo 2', 'Foo 3'], [10.0, 20.0, 30.0]]
-        xw.Range('A1').table.value  # or: Range('A1:C2').value
-        [['Foo 1', 'Foo 2', 'Foo 3'], [10.0, 20.0, 30.0]]
-        xw.Sheet(1).name
-        'Sheet1'
-        chart = xw.Chart.add(source_data=xw.Range('A1').table)
+    #def spike():
+        #import xlwings as xw
+        #wb = xw.Workbook()  # Creates a connection with a new workbook
+        #xw.Range('A1').value = 'Foo 1'
+        #xw.Range('A1').value
+        #'Foo 1'
+        #xw.Range('A1').value = [['Foo 1', 'Foo 2', 'Foo 3'], [10.0, 20.0, 30.0]]
+        #xw.Range('A1').table.value  # or: Range('A1:C2').value
+        #[['Foo 1', 'Foo 2', 'Foo 3'], [10.0, 20.0, 30.0]]
+        #xw.Sheet(1).name
+        #'Sheet1'
+        #chart = xw.Chart.add(source_data=xw.Range('A1').table)
 
     def _write_f06_block(self, words, header, page_stamp, page_num, f, write_words,
                          is_mag_phase=False, is_sort1=True):
@@ -581,16 +649,16 @@ class RealTableArray(TableArray):  # displacement style table
                 vals2 = write_floats_13e(vals)
                 (dx, dy, dz, rx, ry, rz) = vals2
                 if sgridtype == 'G':
-                    f.write('%14s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (write_float_12E(dt),
-                            sgridtype, dx, dy, dz, rx, ry, rz))
+                    f.write('%14s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
+                        write_float_12E(dt), sgridtype, dx, dy, dz, rx, ry, rz))
                 elif sgridtype == 'S':
                     f.write('%14s %6s     %s\n' % (node_id, sgridtype, dx))
                 elif sgridtype == 'H':
-                    f.write('%14s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (write_float_12E(dt),
-                            sgridtype, dx, dy, dz, rx, ry, rz))
+                    f.write('%14s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
+                        write_float_12E(dt), sgridtype, dx, dy, dz, rx, ry, rz))
                 elif sgridtype == 'L':
-                    f.write('%14s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (write_float_12E(dt),
-                            sgridtype, dx, dy, dz, rx, ry, rz))
+                    f.write('%14s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
+                        write_float_12E(dt), sgridtype, dx, dy, dz, rx, ry, rz))
                 else:
                     raise NotImplementedError(sgridtype)
             f.write(page_stamp % page_num)
@@ -716,7 +784,7 @@ class ComplexTableArray(TableArray):  # displacement style table
             for node_id, gridtypei, t1i, t2i, t3i, r1i, r2i, r3i in zip(node, gridtype, t1, t2, t3, r1, r2, r3):
                 sgridtype = self.recast_gridtype_as_string(gridtypei)
                 vals = [t1i, t2i, t3i, r1i, r2i, r3i]
-                (vals2, is_all_zeros) = writeImagFloats13E(vals, is_mag_phase)
+                vals2 = write_imag_floats_13e(vals, is_mag_phase)
                 [dxr, dyr, dzr, rxr, ryr, rzr,
                  dxi, dyi, dzi, rxi, ryi, rzi] = vals2
                 if sgridtype == 'G':
@@ -756,7 +824,7 @@ class ComplexTableArray(TableArray):  # displacement style table
             for dt, t1i, t2i, t3i, r1i, r2i, r3i in zip(times, t1, t2, t3, r1, r2, r3):
                 sgridtype = self.recast_gridtype_as_string(gridtypei)
                 vals = [t1i, t2i, t3i, r1i, r2i, r3i]
-                (vals2, is_all_zeros) = writeImagFloats13E(vals, is_mag_phase)
+                vals2 = write_imag_floats_13e(vals, is_mag_phase)
                 [dxr, dyr, dzr, rxr, ryr, rzr,
                  dxi, dyi, dzi, rxi, ryi, rzi] = vals2
                 sdt = write_float_12E(dt)
@@ -799,7 +867,7 @@ class ComplexTableArray(TableArray):  # displacement style table
             for dt, t1i, t2i, t3i, r1i, r2i, r3i in zip(times, t1, t2, t3, r1, r2, r3):
                 sgridtype = self.recast_gridtype_as_string(gridtypei)
                 vals = [t1i, t2i, t3i, r1i, r2i, r3i]
-                (vals2, is_all_zeros) = writeImagFloats13E(vals, is_mag_phase)
+                vals2 = write_imag_floats_13e(vals, is_mag_phase)
                 [dxr, dyr, dzr, rxr, ryr, rzr,
                  dxi, dyi, dzi, rxi, ryi, rzi] = vals2
                 sdt = write_float_12E(dt)
@@ -820,7 +888,8 @@ class ComplexTableArray(TableArray):  # displacement style table
             page_num += 1
         return page_num
 
-class RealTableObject(ScalarObject):  # displacement style table
+
+class _RealTableObject(ScalarObject):  # displacement style table
     def __init__(self, data_code, is_sort1, isubcase, dt):
         self.nonlinear_factor = None
         self.table_name = None
@@ -1128,7 +1197,7 @@ class RealTableObject(ScalarObject):  # displacement style table
         return words
 
 
-class ComplexTableObject(ScalarObject):
+class _ComplexTableObject(ScalarObject):
     def __init__(self, data_code, is_sort1, isubcase, dt, apply_data_code=True):
         self.nonlinear_factor = None
         self.table_name = None
@@ -1284,7 +1353,7 @@ class ComplexTableObject(ScalarObject):
             (rx, ry, rz) = rotation
 
             vals = [dx, dy, dz, rx, ry, rz]
-            (vals2, is_all_zeros) = writeImagFloats13E(vals, is_mag_phase)
+            vals2 = write_imag_floats_13e(vals, is_mag_phase)
             [dxr, dyr, dzr, rxr, ryr, rzr,
              dxi, dyi, dzi, rxi, ryi, rzi] = vals2
             if grid_type == 'G':
@@ -1326,9 +1395,9 @@ class ComplexTableObject(ScalarObject):
                 (rx, ry, rz) = rotation
 
                 vals = [dx, dy, dz, rx, ry, rz]
-                (vals2, is_all_zeros) = writeImagFloats13E(vals, is_mag_phase)
+                vals2 = write_imag_floats_13e(vals, is_mag_phase)
                 [dxr, dyr, dzr, rxr, ryr, rzr, dxi, dyi,
-                    dzi, rxi, ryi, rzi] = vals2
+                 dzi, rxi, ryi, rzi] = vals2
                 #if not is_all_zeros:
                 if grid_type == 'G':
                     msg.append('0 %12i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (node_id, grid_type, dxr, dyr, dzr, rxr, ryr, rzr))
@@ -1344,6 +1413,7 @@ class ComplexTableObject(ScalarObject):
             page_num += 1
         return page_num - 1
 
+
 class StaticArrayNode(RealTableArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealTableArray.__init__(self, data_code, is_sort1, isubcase, dt)
@@ -1351,12 +1421,14 @@ class StaticArrayNode(RealTableArray):
     def node_ids(self):
         return self.node_gridtype[:, 0]
 
+
 class StaticArrayElement(RealTableArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealTableArray.__init__(self, data_code, is_sort1, isubcase, dt)
     @property
     def element_ids(self):
         return self.node_gridtype[:, 0]
+
 
 class TimeArrayNodeSort1(RealTableArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -1368,6 +1440,7 @@ class TimeArrayNodeSort1(RealTableArray):
     def node_ids(self):
         return self.node_gridtype[:, 0]
 
+
 class TimeArrayElementSort1(RealTableArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealTableArray.__init__(self, data_code, is_sort1, isubcase, dt)
@@ -1377,6 +1450,7 @@ class TimeArrayElementSort1(RealTableArray):
     @property
     def element_ids(self):
         return self.node_gridtype[:, 0]
+
 
 class TimeArrayNodeSort2(RealTableArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -1388,6 +1462,7 @@ class TimeArrayNodeSort2(RealTableArray):
     def node_ids(self):
         return self.node_gridtype[:, 0]
 
+
 class TimeArrayElementSort2(RealTableArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealTableArray.__init__(self, data_code, is_sort1, isubcase, dt)
@@ -1397,6 +1472,7 @@ class TimeArrayElementSort2(RealTableArray):
     @property
     def element_ids(self):
         return self.node_gridtype[:, 0]
+
 
 class FrequencyArrayNodeSort2(ComplexTableArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -1408,6 +1484,7 @@ class FrequencyArrayNodeSort2(ComplexTableArray):
     def node_ids(self):
         return self.node_gridtype[:, 0]
 
+
 class FrequencyArrayElementSort2(ComplexTableArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ComplexTableArray.__init__(self, data_code, is_sort1, isubcase, dt)
@@ -1417,5 +1494,3 @@ class FrequencyArrayElementSort2(ComplexTableArray):
     @property
     def node_ids(self):
         return self.node_gridtype[:, 0]
-
-

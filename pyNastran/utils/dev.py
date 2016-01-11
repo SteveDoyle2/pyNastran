@@ -6,7 +6,7 @@ from numpy import array, ndarray
 from pyNastran.utils import object_attributes
 
 
-def get_files_of_type(dirname, extension='.txt', maxSize=100.):
+def get_files_of_type(dirname, extension='.txt', max_size=100.):
     """
     Gets the list of all the files with a given extension in the specified directory
 
@@ -26,9 +26,21 @@ def get_files_of_type(dirname, extension='.txt', maxSize=100.):
     """
     if not os.path.exists(dirname):
         return []
-    return [os.path.join(dirname, f) for f in os.listdir(dirname)
-            if os.path.splitext(f)[1].endswith(extension)
-             and os.path.getsize(os.path.join(dirname, f)) / (1048576.) <= maxSize]
+
+    fs = []
+    for f in os.listdir(dirname):
+        filename = os.path.join(dirname, f)
+        if os.path.isdir(filename):
+            fs += get_files_of_type(filename, extension, max_size)
+            #assert len(fs) > 0, dirnamei
+        elif (os.path.isfile(filename) and
+              os.path.splitext(f)[1].endswith(extension) and
+              os.path.getsize(filename) / 1048576. <= max_size):
+            fs.append(filename)
+    return fs
+    #return [os.path.join(dirname, f) for f in os.listdir(dirname)
+    #        if os.path.splitext(f)[1].endswith(extension)
+    #         and os.path.getsize(os.path.join(dirname, f)) / (1048576.) <= max_size]
 
 
 def list_print(lst, float_fmt='%-4.2f'):

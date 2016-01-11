@@ -28,7 +28,7 @@ class OQG(object):
             'sort_code': 0,
             'sort_bits': [0, 0, 0], 'num_wide': 8,
             'nonlinear_factor': dt,
-            'dataNames':['lsdvmn'],
+            'data_names':['lsdvmn'],
             'lsdvmn': 1,
             }
 
@@ -54,7 +54,7 @@ class OQG(object):
             'sort_bits': [0, 0, 0], 'num_wide': 8, 'table_name': 'OQG',
             'nonlinear_factor': dt,
             'format_code': 3,  # ???
-            'dataNames':['lsdvmn'],
+            'data_names':['lsdvmn'],
             'lsdvmn': 1,
         }
 
@@ -79,7 +79,7 @@ class OQG(object):
             'device_code': 1, 'table_code': 39,
             'sort_code': 0, 'sort_bits': [0, 0, 0], 'num_wide': 8,
             'table_name': 'OQG', 'nonlinear_factor': dt,
-            'dataNames':['lsdvmn']
+            'data_names':['lsdvmn']
         }
 
         if isubcase in self.mpc_forces:

@@ -66,17 +66,14 @@ def write_floats_13e(vals):
     return vals2
 
 
-def writeImagFloats13E(vals, is_mag_phase):
+def write_imag_floats_13e(vals, is_mag_phase):
     vals2 = []
-    is_all_zeros = True
 
     if is_mag_phase:
         for v in vals:
             v2 = '%13.6E' % abs(v)
             if v2 == ' 0.000000E+00' or v2 == '-0.000000E+00':
                 v2 = ' 0.0'
-            else:
-                is_all_zeros = False
             vals2.append(v2)
 
         # phase
@@ -87,24 +84,19 @@ def writeImagFloats13E(vals, is_mag_phase):
             if v3 == '0.0000       ':
                 v3 = '   0.0'
             vals2.append(v3)
-        is_all_zeros = False
     else:
         for v in vals:
             v2 = '%13.6E' % v.real
             if v2 == ' 0.000000E+00' or v2 == '-0.000000E+00':
                 v2 = ' 0.0'
-            else:
-                is_all_zeros = False
             vals2.append(v2)
 
         for v in vals:
             v3 = '%13.6E' % v.imag
             if v3 == ' 0.000000E+00' or v3 == '-0.000000E+00':
                 v3 = ' 0.0'
-            else:
-                is_all_zeros = False
             vals2.append(v3)
-    return vals2, is_all_zeros
+    return vals2
 
 
 def writeFloats8p4F(vals):
@@ -138,7 +130,7 @@ def _eigenvalue_header(obj, header, itime, ntimes, dt):
                 obj.__class__.__name__, ntimes, name, codes)
             atts = object_attributes(obj)
             msg += 'names=%s\n' % atts
-            msg += 'data_names=%s\n' % obj.dataNames
+            msg += 'data_names=%s\n' % obj.data_names
             raise IndexError(msg)
 
         if hasattr(obj, 'eigr'):

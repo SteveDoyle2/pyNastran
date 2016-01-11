@@ -534,7 +534,7 @@ class CaseControlDeck(object):
                 options = sline[1].split(',')
 
                 # handle TEMPERATURE(INITIAL) and TEMPERATURE(LOAD) cards
-                if key == 'TEMPERATURE' or key == 'TEMP':
+                if key in ['TEMPERATURE', 'TEMP']:
                     key = 'TEMPERATURE(%s)' % (options[0])
                     options = []
                 #print("key=%r options=%s" %(key,options))
@@ -601,7 +601,7 @@ class CaseControlDeck(object):
             param_type = 'KEY-type'
             assert key.upper() == key, key
         else:
-            msg = 'generic catch all...line=|%r|' % line
+            msg = 'generic catch all...line=%r' % line
             key = ''
             value = line
             options = None
@@ -662,7 +662,8 @@ class CaseControlDeck(object):
                 self.log.debug(msg)
         elif isubcase not in self.subcases:  # initialize new subcase
             #self.isubcase += 1 # is handled in the read code
-            msg = 'isubcase=%r is not a valid subcase...subcases=%s' % (isubcase, str(sorted(self.subcases.keys())))
+            msg = 'isubcase=%r is not a valid subcase...subcases=%s' % (
+                isubcase, str(sorted(self.subcases.keys())))
             raise RuntimeError(msg)
 
         subcase = self.subcases[isubcase]

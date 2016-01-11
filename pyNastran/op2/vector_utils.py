@@ -3,6 +3,7 @@ from struct import calcsize
 from numpy import array, where, zeros, asarray, dot, arccos, sqrt, pi
 from numpy import cos, unique, cross, abs as npabs
 
+
 def iformat(format_old, precision=2):
     """
     Converts binary data types to size vector arrays.
@@ -36,6 +37,7 @@ def iformat(format_old, precision=2):
         raise NotImplementedError(precision)
     ndata = calcsize(format_new)
     return format_new, ndata
+
 
 def abs_max_min_global(values):
     """
@@ -171,6 +173,7 @@ def abs_max_min(values, global_abs_max=True):
     # oxx = 5
     # return oxx, oy
 
+
 def principal_3d(o11, o22, o33, o12, o23, o13):
     """http://www.continuummechanics.org/cm/principalstrain.html"""
     # e = a
@@ -190,6 +193,7 @@ def principal_3d(o11, o22, o33, o12, o23, o13):
     pmax = max_min_mid.max(axis=0)
     pmin = max_min_mid.min(axis=0)
     return pmax, pmin
+
 
 def test_abs_max_min_global():
     #print(iformat('4si3f', 2))
@@ -243,6 +247,7 @@ def test_abs_max_min_vector():
         #[0.0, 2.0, 4.0],
     #]))
 
+
 def transform_force_from_local_to_global(force_in_local, gpforce_nids,
                                          nid_cd, i_transform, beta_transforms):
     """
@@ -285,6 +290,7 @@ def transform_force_from_local_to_global(force_in_local, gpforce_nids,
         else:
             raise NotImplementedError(ucds)
     return force_in_local
+
 
 def transform_force_from_global_to_local(force_in_global, coord_in, coord_out):
     """
@@ -340,6 +346,7 @@ def transform_force_from_global_to_local(force_in_global, coord_in, coord_out):
 
     #return Fxyz_local_2, Mxyz_local_2
     return Fxyz_local_2
+
 
 if __name__ == '__main__':  # pragma: no cover
     #print(iformat('4si3f'))

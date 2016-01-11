@@ -93,6 +93,15 @@ class TestNastranGUI(unittest.TestCase):
 
         test.load_nastran_geometry(bdf_filename, '')
 
+    def test_aircraft(self):
+        bdf_filename = os.path.join(model_path, 'aircraft', 'aircraft.bdf')
+        op2_filename = os.path.join(model_path, 'aircraft', 'aircraft.op2')
+
+        test = NastranGUI()
+        test.load_nastran_geometry(bdf_filename, None)
+        if os.path.exists(op2_filename):
+            test.load_nastran_results(op2_filename, None)
+
 
 def test_bottle():
     """

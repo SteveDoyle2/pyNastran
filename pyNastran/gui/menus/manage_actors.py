@@ -100,9 +100,10 @@ class EditGroupProperties(QtGui.QDialog):
         self.out_data = data
 
         self.keys = sorted(data.keys())
+        self.keys = data.keys()
         keys = self.keys
         nrows = len(keys)
-        self.active_key = keys[0]
+        self.active_key = 'main'#keys[0]
 
         self._use_old_table = False
         items = keys
@@ -153,7 +154,6 @@ class EditGroupProperties(QtGui.QDialog):
                                       #"border:1px solid rgb(255, 170, 255); "
                                       "}")
 
-
         self.opacity = QtGui.QLabel("Opacity:")
         self.opacity_edit = QtGui.QDoubleSpinBox(self)
         self.opacity_edit.setRange(0.1, 1.0)
@@ -175,6 +175,7 @@ class EditGroupProperties(QtGui.QDialog):
         self.point_size_edit.setRange(1, 10)
         self.point_size_edit.setSingleStep(1)
         self.point_size_edit.setValue(point_size)
+
         if self.representation in ['wire', 'surface']:
             self.point_size.setEnabled(False)
             self.point_size_edit.setEnabled(False)
@@ -194,6 +195,12 @@ class EditGroupProperties(QtGui.QDialog):
         self.checkbox_hide = QtGui.QCheckBox("Hide")
         self.checkbox_show.setChecked(show)
         self.checkbox_hide.setChecked(not show)
+
+        if name == 'main':
+            self.color.setEnabled(False)
+            self.color_edit.setEnabled(False)
+            self.point_size.setEnabled(False)
+            self.point_size_edit.setEnabled(False)
 
         # closing
         # self.apply_button = QtGui.QPushButton("Apply")
@@ -234,29 +241,43 @@ class EditGroupProperties(QtGui.QDialog):
         self.line_width_edit.setValue(line_width)
         self.point_size_edit.setValue(point_size)
         self.bar_scale_edit.setValue(bar_scale)
+
         if self.representation != representation:
             self.representation = representation
 
-            if self.representation == 'point':
-                self.point_size.setEnabled(True)
-                self.point_size_edit.setEnabled(True)
-            else:
+            if name == 'main':
+                self.color.setEnabled(False)
+                self.color_edit.setEnabled(False)
                 self.point_size.setEnabled(False)
                 self.point_size_edit.setEnabled(False)
-
-            if self.representation == ['wire']:
                 self.line_width.setEnabled(True)
                 self.line_width_edit.setEnabled(True)
-            else:
-                self.line_width.setEnabled(False)
-                self.line_width_edit.setEnabled(False)
-
-            if bar_scale == 0.0:
                 self.bar_scale.setEnabled(False)
                 self.bar_scale_edit.setEnabled(False)
             else:
-                self.bar_scale.setEnabled(True)
-                self.bar_scale_edit.setEnabled(True)
+                self.color.setEnabled(True)
+                self.color_edit.setEnabled(True)
+
+                if self.representation == 'point':
+                    self.point_size.setEnabled(True)
+                    self.point_size_edit.setEnabled(True)
+                else:
+                    self.point_size.setEnabled(False)
+                    self.point_size_edit.setEnabled(False)
+
+                if self.representation == 'wire':
+                    self.line_width.setEnabled(True)
+                    self.line_width_edit.setEnabled(True)
+                else:
+                    self.line_width.setEnabled(False)
+                    self.line_width_edit.setEnabled(False)
+
+                if bar_scale == 0.0:
+                    self.bar_scale.setEnabled(False)
+                    self.bar_scale_edit.setEnabled(False)
+                else:
+                    self.bar_scale.setEnabled(True)
+                    self.bar_scale_edit.setEnabled(True)
 
             #if self.representation in ['wire', 'surface']:
 

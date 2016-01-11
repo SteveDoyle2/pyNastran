@@ -92,11 +92,11 @@ class ONR(OP2Common):
         if self.analysis_code == 1:   # statics / displacement / heat flux
             #del self.data_code['nonlinear_factor']
             self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', 'i', 5, False)
-            self.dataNames = self.apply_data_code_value('dataNames', ['lsdvmn'])
+            self.data_names = self.apply_data_code_value('data_names', ['lsdvmn'])
             self.setNullNonlinearFactor()
         elif self.analysis_code == 2:  # real eigenvalues
             self.mode = self.add_data_parameter(data, 'mode', 'i', 5)  ## mode number
-            self.dataNames = self.apply_data_code_value('dataNames', ['mode'])
+            self.data_names = self.apply_data_code_value('data_names', ['mode'])
             #print "mode(5)=%s eigr(6)=%s mode_cycle(7)=%s" %(self.mode,self.eigr,self.mode_cycle)
         #elif self.analysis_code==3: # differential stiffness
             #self.lsdvmn = self.get_values(data,'i',5) ## load set number
@@ -105,26 +105,26 @@ class ONR(OP2Common):
             #self.lsdvmn = self.get_values(data,'i',5) ## load set number
         elif self.analysis_code == 5:   # frequency
             self.freq2 = self.add_data_parameter(data, 'freq2', 'f', 5)  ## frequency
-            self.dataNames = self.apply_data_code_value('dataNames', ['freq2'])
+            self.data_names = self.apply_data_code_value('data_names', ['freq2'])
         elif self.analysis_code == 6:  # transient
             self.time = self.add_data_parameter(data, 'time', 'f', 5)  ## time step
-            self.dataNames = self.apply_data_code_value('dataNames', ['time'])
+            self.data_names = self.apply_data_code_value('data_names', ['time'])
         #elif self.analysis_code==7: # pre-buckling
-            #self.dataNames = self.apply_data_code_value('dataNames',['lsdvmn'])
+            #self.data_names = self.apply_data_code_value('data_names',['lsdvmn'])
         elif self.analysis_code == 8:  # post-buckling
             self.mode = self.add_data_parameter(data, 'mode', 'i', 5)  ## mode number
-            self.dataNames = self.apply_data_code_value('dataNames', ['mode'])
+            self.data_names = self.apply_data_code_value('data_names', ['mode'])
         elif self.analysis_code == 9:  # complex eigenvalues
             self.mode = self.add_data_parameter(data, 'mode', 'i', 5)  ## mode number
-            self.dataNames = self.apply_data_code_value('dataNames', ['mode'])
+            self.data_names = self.apply_data_code_value('data_names', ['mode'])
         elif self.analysis_code == 10:  # nonlinear statics
             self.loadFactor = self.add_data_parameter(data, 'loadFactor', 'f', 5)  ## load factor
-            self.dataNames = self.apply_data_code_value('dataNames', ['loadFactor'])
+            self.data_names = self.apply_data_code_value('data_names', ['loadFactor'])
         #elif self.analysis_code==11: # old geometric nonlinear statics
-            #self.dataNames = self.apply_data_code_value('dataNames',['lsdvmn'])
+            #self.data_names = self.apply_data_code_value('data_names',['lsdvmn'])
         elif self.analysis_code == 12:  # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
             self.time = self.add_data_parameter(data, 'time', 'f', 5)  ## time step
-            self.dataNames = self.apply_data_code_value('dataNames', ['time'])
+            self.data_names = self.apply_data_code_value('data_names', ['time'])
         else:
             raise RuntimeError('invalid analysis_code...analysis_code=%s' %
                                self.analysis_code)
@@ -154,7 +154,81 @@ class ONR(OP2Common):
         """
         dt = self.nonlinear_factor
         n = 0
-        result_name = 'strain_energy'
+
+        if self.data_code['element_name'] == 'BAR':
+            result_name = 'cbar_strain_energy'
+        elif self.data_code['element_name'] == 'BEAM':
+            result_name = 'cbeam_strain_energy'
+        elif self.data_code['element_name'] == 'BEND':
+            result_name = 'cbend_strain_energy'
+
+        elif self.data_code['element_name'] == 'ROD':
+            result_name = 'crod_strain_energy'
+        elif self.data_code['element_name'] == 'TUBE':
+            result_name = 'ctube_strain_energy'
+        elif self.data_code['element_name'] == 'CONROD':
+            result_name = 'conrod_strain_energy'
+
+
+        elif self.data_code['element_name'] in ['TRIA3', 'TRIAFD', 'TRIA3FD']:
+            result_name = 'ctria3_strain_energy'
+        elif self.data_code['element_name'] == 'TRIA6':
+            result_name = 'ctria6_strain_energy'
+        elif self.data_code['element_name'] == 'TRIAX6':
+            result_name = 'ctriax6_strain_energy'
+        elif self.data_code['element_name'] == 'TRIAR':
+            result_name = 'ctriar_strain_energy'
+        elif self.data_code['element_name'] in ['TRIAX3FD', 'TRIAXFD']:
+            result_name = 'ctriax_strain_energy'
+
+
+        elif self.data_code['element_name'] in ['QUAD4', 'QUADFD', 'QUAD4FD']:
+            result_name = 'cquad4_strain_energy'
+        elif self.data_code['element_name'] == 'QUAD8':
+            result_name = 'cquad8_strain_energy'
+        elif self.data_code['element_name'] == 'QUADR':
+            result_name = 'cquadr_strain_energy'
+        elif self.data_code['element_name'] == ['QUADXFD', 'QUADX4FD']:
+            result_name = 'cquadx_strain_energy'
+        elif self.data_code['element_name'] == 'SHEAR':
+            result_name = 'cshear_strain_energy'
+
+        elif self.data_code['element_name'] in ['HEXA', 'HEXAFD', 'HEXA8FD']:
+            result_name = 'chexa_strain_energy'
+        elif self.data_code['element_name'] in ['PENTA', 'PENTAFD', 'PENTA6FD']:
+            result_name = 'cpenta_strain_energy'
+        elif self.data_code['element_name'] in ['TETRA', 'TETRAFD', 'TETRA4FD']:
+            result_name = 'ctetra_strain_energy'
+
+        elif self.data_code['element_name'] == 'GAP':
+            result_name = 'cgap_strain_energy'
+        elif self.data_code['element_name'] == 'BUSH':
+            result_name = 'cbush_strain_energy'
+
+        elif self.data_code['element_name'] == 'ELAS1':
+            result_name = 'celas1_strain_energy'
+        elif self.data_code['element_name'] == 'ELAS2':
+            result_name = 'celas2_strain_energy'
+        elif self.data_code['element_name'] == 'ELAS3':
+            result_name = 'celas3_strain_energy'
+        elif self.data_code['element_name'] == 'ELAS4':
+            result_name = 'celas4_strain_energy'
+
+        elif self.data_code['element_name'] == 'DUM8':
+            result_name = 'cdum8_strain_energy'
+        elif self.data_code['element_name'] == 'DMIG':
+            result_name = 'dmig_strain_energy'
+        elif self.data_code['element_name'] == 'GENEL':
+            result_name = 'genel_strain_energy'
+        else:
+            #result_name = 'chexa8fd_strain_energy'
+
+            raise NotImplementedError('element_name=%r' % (
+                self.data_code['element_name']))
+        #result_name = 'strain_energy'
+
+
+
         auto_return = False
         self._results._found_result(result_name)
 
@@ -162,43 +236,58 @@ class ONR(OP2Common):
             self.binary_debug.write('cvalares = %s\n' % self.cvalres)
         if self.num_wide == 4:
             assert self.cvalres in [0, 1], self.cvalres
-            self.create_transient_object(self.strain_energy, RealStrainEnergy)
+
             ntotal = 16
             nelements = ndata // ntotal
             slot = getattr(self, result_name)
-            #auto_return, is_vectorized = self._create_oes_object4(
-            #    nelements, result_name, slot, RealStrainEnergyArray)
-            #if auto_return:
-            #    return nelements * self.num_wide * 4
-            if self.read_mode == 1:
-                return ndata
+            if 0:
+                auto_return, is_vectorized = self._create_oes_object4(
+                    nelements, result_name, slot, RealStrainEnergyArray)
+
+                obj = self.obj
+                if auto_return:
+                    if obj.dt_temp is None or obj.itime is None and obj.dt_temp == dt:
+                        element_name = self.data_code['element_name']
+                        if element_name in obj.element_name_count:
+                            obj.element_name_count[element_name] += nelements
+                        else:
+                            obj.element_name_count[element_name] = nelements
+                        obj.dt_temp = dt
+                    return nelements * self.num_wide * 4
+                itime = obj.itime // obj.nelement_types
+            else:
+                if self.read_mode == 1:
+                    return ndata
+                self.create_transient_object(slot, RealStrainEnergy)
+                obj = self.obj
             is_vectorized = False
-            obj = self.obj
+
             if self.is_debug_file:
                 self.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
                 self.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % ndata)
                 self.binary_debug.write('  #elementi = [eid_device, energy, percent, density]\n')
                 self.binary_debug.write('  nelements=%i\n' % nelements)
 
+            #self.element_names.add(self.data_code['element_name'])
             if self.use_vector and is_vectorized:
                 n = nelements * 4 * self.num_wide
-                itotal = obj.itotal
-                ielement2 = obj.itotal + nelements
+                itotal = obj.itotal2 # was obj.itotal
+                ielement2 = obj.itotal2 + nelements # was obj.itotal
                 itotal2 = ielement2
-                print(itotal, itotal2)
+                print('itime=%s itotal=%s itotal2=%s' % (itime, itotal, itotal2))
 
                 floats = fromstring(data, dtype=self.fdtype).reshape(nelements, 4)
-                obj._times[obj.itime] = dt
+                obj._times[itime] = dt
                 if obj.itime == 0:
                     ints = fromstring(data, dtype=self.idtype).reshape(nelements, 4)
                     eids = ints[:, 0] // 10
-                    print(eids)
+                    print('eids =', eids)
                     assert eids.min() > 0, eids.min()
                     obj.element[itotal:itotal2] = eids
 
                 #[energy, percent, density]
-                obj.data[obj.itime, itotal:itotal2, :] = floats[:, 1:]
-                obj.itotal = itotal2
+                obj.data[itime, itotal:itotal2, :] = floats[:, 1:]
+                obj.itotal2 = itotal2 # was obj.itotal
                 #obj.ielement = ielement2
             else:
                 s = Struct(b(self._endian + 'i3f'))
@@ -216,7 +305,7 @@ class ONR(OP2Common):
             if self.read_mode == 1:
                 return ndata
             assert self.cvalres in [0, 1, 2], self.cvalres # 0??
-            self.create_transient_object(self.strain_energy, RealStrainEnergy)  # why is this not different?
+            self.create_transient_object(slot, RealStrainEnergy)  # why is this not different?
             ntotal = 20
             nnodes = ndata // ntotal
 
@@ -261,7 +350,7 @@ class ONR(OP2Common):
         elif self.num_wide == 6:  ## TODO: figure this out...
             if self.read_mode == 1:
                 return ndata
-            self.create_transient_object(self.strain_energy, RealStrainEnergy)  # TODO: why is this not different?
+            self.create_transient_object(slot, RealStrainEnergy)  # TODO: why is this not different?
             ntotal = 24
             nnodes = ndata // ntotal
 

@@ -803,8 +803,13 @@ def deprecated(old_name, new_name, deprecated_version, levels=None):
         frame = sys._getframe(3 + level)
         line_no = frame.f_lineno
         code = frame.f_code
-        filename = os.path.basename(frame.f_globals['__file__'])
+        try:
+            #filename = os.path.basename(frame.f_globals['__file__'])
+            filename = os.path.basename(inspect.getfile(code))
+        except:
+            print(code)
         print(code)
+
         source_lines, line_no0 = inspect.getsourcelines(code)
         di = line_no - line_no0
         try:

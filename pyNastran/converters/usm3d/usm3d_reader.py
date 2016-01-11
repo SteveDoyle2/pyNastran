@@ -288,7 +288,7 @@ class Usm3d(object):
         skip_nodes = False
         if skip_nodes == True:
             t = f.tell()
-            f.goto(t + data_length * 3)
+            f._goto(t + data_length * 3)
             nodes = None
         else:
             if self.precision == 'double':

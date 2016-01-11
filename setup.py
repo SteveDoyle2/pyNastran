@@ -26,11 +26,83 @@ py2_gui_scripts = []
 py2_packages = []
 if sys.version_info <= (3,):
     py2_gui_scripts = ['pyNastranGUI = pyNastran.gui.gui:main',]
+
+    try:
+        import vtk
+        vtk_version = '.'.join(vtk.VTK_VERSION.split('.'))
+        if vtk_version < '5.10.0':
+            print("vtk.VTK_VERSION = %r < '5.10.0'" % vtk.VTK_VERSION)
+            py2_packages.append('vtk >= 5.10.0')
+    except ImportError:
+        py2_packages.append('vtk >= 5.10.0')
+
+    try:
+        import PIL
+        if PIL.VERSION < '2.7.0':
+            print("PIL.version = %r < '2.7.0'" % PIL.VERSION)
+            py2_packages.append('pillow >= 2.7.0')
+    except ImportError:
+        py2_packages.append('pillow >= 2.7.0')
+
     py2_packages += [
-        'vtk >= 5.10.0',
-        'pillow >= 2.7.0',
-        #'wx >= 2.8.12.0',
+        #'vtk >= 5.10.0',
+        #'pillow >= 2.7.0',
+        ##'dill'
+        ##'wx >= 2.8.12.0',
     ]
+py_packages = []
+
+try:
+    import numpy as np
+    ver = np.lib.NumpyVersion(np.__version__)
+    if ver < '1.9.0':
+        print("np.__version__ = %r < '1.9.0'" % np.__version__)
+        py_packages.append('numpy >= 1.9.0')
+except ImportError:
+    py_packages.append('numpy >= 1.9.0')
+
+try:
+    import scipy
+    ver = scipy.version.short_version
+    if ver < '0.15.0':
+        print("scipy.version.short_version = %r < '0.15.0'" % scipy.version.short_version)
+        py_packages.append('scipy >= 0.15.0')
+except ImportError:
+    py_packages.append('scipy >= 0.15.0')
+
+try:
+    import six
+    sver = [int(val) for val in six.__version__.split('-')[0].split('.')]
+    if sver < [1, 8, 0]:
+        print("six.__version__ = %r < '1.8.0'" % six.__version__)
+        py_packages.append('six >= 1.8.0')
+except ImportError:
+    py_packages.append('six >= 1.8.0')
+
+try:
+    import docopt
+    sver = [int(val) for val in docopt.__version__.split('-')[0].split('.')]
+    if sver != [0, 6, 2]:
+    #if docopt.__version__ != '0.6.2':
+        print("docopt.__version__ = %r != '0.6.2'" % docopt.__version__)
+        py_packages.append('docopt == 0.6.2')
+except ImportError:
+    py_packages.append('docopt == 0.6.2')
+
+
+#py_packages = [
+#    'numpy >= 1.9.0',
+#    'scipy >= 0.15.0',
+#]
+
+install_requires = py_packages + [
+    # -*- Extra requirements: -*-
+    #'docopt == 0.6.2',
+    ##'matplotlib >= 1.3.0',
+    #'six >= 1.8.0',
+    ##'cython',
+] + py2_packages,
+
 
 # set up all icons
 icon_path = os.path.join('pyNastran', 'gui', 'icons')
@@ -64,19 +136,7 @@ setup(
     packages=find_packages(exclude=['ez_setup', 'examples', 'tests']),
     include_package_data=True,
     zip_safe=False,
-    install_requires=[
-
-        # -*- Extra requirements: -*-
-        'numpy >= 1.9.0',
-        'scipy >= 0.15.0',
-        'docopt == 0.6.2',
-        #'matplotlib >= 1.3.0',
-        #'vtk >= 5.10.0',   # should be installed, but not for the docs
-        'pillow >= 2.7.0',
-        'six >= 1.8.0',
-        #'wx >= 2.8.12.0',
-        #'cython',
-    ],# + py2_packages,
+    install_requires=install_requires,
     #{'': ['license.txt']}
     #package_data={'': ['*.png']},
     #data_files=[(icon_path, icon_files2)],
@@ -98,7 +158,7 @@ setup(
             #'pyNastran2 = pyNastran.bdf.dev_vectorized.solver.solver:main',
             #'nastranToCodeAster = pyNastran.converters.toCodeAster:main',
             'format_converter = pyNastran.converters.type_converter:main',
-        ]
+        ] + py2_gui_scripts
     },
     test_suite='pyNastran.all_tests',
 )

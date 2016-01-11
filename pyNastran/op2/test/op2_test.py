@@ -53,7 +53,7 @@ def get_all_files(folders_file, file_type):
                 continue
             print("move_dir = %s" % move_dir)
             #assert os.path.exists(moveDir), '%s doesnt exist' % move_dir
-            files2 += get_files_of_type(move_dir, file_type, maxSize=4.2)
+            files2 += get_files_of_type(move_dir, file_type, max_size=4.2)
     return files2
 
 
@@ -75,7 +75,7 @@ def main(regenerate=True):
     quiet = True
 
     delete_f06 = True
-    saveCases = True
+    save_cases = True
     stop_on_failure = False
     get_skip_cards = False
 
@@ -99,16 +99,16 @@ def main(regenerate=True):
     except:
         pass
 
-    print("nFiles = %s" % len(files))
+    print("nfiles = %s" % len(files))
     import time
     t0 = time.time()
     run_lots_of_files(files, make_geom=make_geom, write_bdf=write_bdf,
-                   write_f06=write_f06, delete_f06=delete_f06,
-                   write_op2=write_op2, debug=debug, saveCases=saveCases, skip_files=skip_files,
-                   stop_on_failure=stop_on_failure,
-                   is_vector=is_vector, vector_stop=vector_stop,
-                   nstart=nstart, nstop=nstop, binary_debug=binary_debug,
-                   compare=not data['--disablecompare'], quiet=quiet)
+                      write_f06=write_f06, delete_f06=delete_f06,
+                      write_op2=write_op2, debug=debug, save_cases=save_cases, skip_files=skip_files,
+                      stop_on_failure=stop_on_failure,
+                      is_vector=is_vector, vector_stop=vector_stop,
+                      nstart=nstart, nstop=nstop, binary_debug=binary_debug,
+                      compare=not data['--disablecompare'], quiet=quiet)
     print("dt = %f" %(time.time() - t0))
     sys.exit('final stop...')
 

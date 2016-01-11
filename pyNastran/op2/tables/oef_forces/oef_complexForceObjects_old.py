@@ -1,6 +1,6 @@
 from six import iteritems
 from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
-from pyNastran.f06.f06_formatting import writeImagFloats13E, get_key0, write_floats_13e
+from pyNastran.f06.f06_formatting import write_imag_floats_13e, get_key0, write_floats_13e
 
 class ComplexCBarForce(ScalarObject):  # 34-CBAR
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -69,7 +69,7 @@ class ComplexCBarForce(ScalarObject):  # 34-CBAR
                 ts1, ts2 = self.shear[dt][eid]
                 af = self.axial[dt][eid]
                 trq = self.torque[dt][eid]
-                (vals2, is_all_zeros) = writeImagFloats13E([bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq], is_mag_phase)
+                vals2 = write_imag_floats_13e([bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq], is_mag_phase)
                 [bm1ar, bm2ar, bm1br, bm2br, ts1r, ts2r, afr, trqr,
                  bm1ai, bm2ai, bm1bi, bm2bi, ts1i, ts2i, afi, trqi] = vals2
                 msg.append('     %8i    %-13s %-13s  %-13s %-13s  %-13s %-13s  %-13s  %s\n' % (eid, bm1ar, bm2ar, bm1br, bm2br, ts1r, ts2r, afr, trqr))
@@ -95,7 +95,7 @@ class ComplexCBarForce(ScalarObject):  # 34-CBAR
             ts1, ts2 = self.shear[eid]
             af = self.axial[eid]
             trq = self.torque[eid]
-            (vals2, is_all_zeros) = writeImagFloats13E([bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq], is_mag_phase)
+            vals2 = write_imag_floats_13e([bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq], is_mag_phase)
             [bm1ar, bm2ar, bm1br, bm2br, ts1r, ts2r, afr, trqr,
              bm1ai, bm2ai, bm1bi, bm2bi, ts1i, ts2i, afi, trqi] = vals2
             msg.append('     %8i    %-13s %-13s  %-13s %-13s  %-13s %-13s  %-13s  %s\n' % (eid, bm1ar, bm2ar, bm1br, bm2br, ts1r, ts2r, afr, trqr))
@@ -772,8 +772,8 @@ class ComplexPlateForce(ScalarObject):  # 33-CQUAD4, 74-CTRIA3
                 tx = self.tx[dt][eid]
                 ty = self.ty[dt][eid]
 
-                ([mxr, myr, mxyr, bmxr, bmyr, bmxyr, txr, tyr,
-                  mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi], is_all_zeros) = writeImagFloats13E([mx, my, mxy, bmx, bmy, bmxy, tx, ty], is_mag_phase)
+                [mxr, myr, mxyr, bmxr, bmyr, bmxyr, txr, tyr,
+                 mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi] = write_imag_floats_13e([mx, my, mxy, bmx, bmy, bmxy, tx, ty], is_mag_phase)
 
                 #"""
                     #ELEMENT                - MEMBRANE  FORCES -                        - BENDING MOMENTS -               - TRANSVERSE SHEAR FORCES -

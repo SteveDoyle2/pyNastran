@@ -1,13 +1,14 @@
 #pylint: disable=C0301,C0111
-from __future__ import print_function
+from __future__ import print_function, unicode_literals
 from six import  iteritems
 from six.moves import range
 import copy
 from struct import pack
-from numpy import array
+import numpy as np
 
 from pyNastran import is_release
 from pyNastran.op2.op2Codes import Op2Codes
+
 #from pyNastran.utils import list_print
 #from pyNastran.op2.write_utils import write_table_header
 
@@ -38,6 +39,78 @@ class BaseScalarObject(Op2Codes):
 
     def name(self):
         return self.__class__.__name__
+
+    def get_headers(self):
+        raise RuntimeError()
+
+    def _get_stats_short(self):
+        msg = []
+        class_name = self.__class__.__name__
+        if hasattr(self, 'data'):
+            data = self.data
+            shape = [int(i) for i in self.data.shape]
+            headers = self.get_headers()
+            headers_str = str(', '.join(headers))
+            msg.append('%s[%s]; %s; [%s]\n' % (
+            class_name, self.isubcase, shape, headers_str))
+        return msg
+
+    def _build_dataframe_transient_header(self):
+        """builds the header for the Pandas DataFrame/table"""
+        name = self.name #data_code['name']
+        times = self._times
+        utimes = np.unique(times)
+        if not len(times) == len(utimes):
+            msg = 'WARNING : %s - times=%s unique_times=%s...assuming new values...new_times=%s' % (
+            self.__class__.__name__, times, utimes, np.arange(len(times)))
+            print(msg)
+            #raise RuntimeError(msg)
+            times = np.arange(len(times))
+        column_names = []
+        column_values = []
+
+        if name == 'mode':
+            column_names.append('Mode')
+            column_values.append(times)
+            if hasattr(self, 'freqs'):
+                freq = self.freqs
+                column_names.append('Freq')
+                column_values.append(freq)
+            elif hasattr(self, 'eigrs'):
+                try:
+                    abs_freqs = np.sqrt(np.abs(self.eigrs)) / (2 * np.pi)
+                except FloatingPointError:
+                    msg = 'Cant analyze freq = sqrt(eig)/(2*pi)\neigr=%s\n' % (self.eigrs)
+                    abs_freqs = np.sqrt(np.abs(self.eigrs)) / (2 * np.pi)
+                    msg += 'freq = sqrt(abs(self.eigrs)) / (2 * np.pi)=%s' % abs_freqs
+                    raise FloatingPointError(msg)
+                column_names.append('Freq')
+                column_values.append(abs_freqs)
+            else:
+                pass
+            # Convert eigenvalues to frequencies
+            # TODO: add damping header
+        elif name in ['freq', 'freq2']:
+            column_names.append('Freq')
+            column_values.append(times)
+        elif name in ['dt','time']:
+            column_names.append('Time')
+            column_values.append(times)
+        elif name in ['lftsfq', 'lsdvmn', 'load_step', 'loadID', 'loadFactor']:
+            column_names.append('LoadStep')
+            column_values.append(times)
+        elif name == 'node_id':
+            column_names.append('NodeID')
+            column_values.append(times)
+        else:
+            raise NotImplementedError('build_dataframe; name=%r' % name)
+        assert len(column_names) > 0, column_names
+        assert len(column_names) == len(column_values), 'names=%s values=%s' % (column_names, column_values)
+        assert len(self.get_headers()) == self.data.shape[-1], 'headers=%s; n=%s\ndata.headers=%s' % (self.get_headers(), len(self.get_headers()), self.data.shape[-1])
+        return column_names, column_values
+
+    def build_dataframe(self):
+        print('build_dataframe is not implemented in %s' % self.__class__.__name__)
 
     def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
         if self.nonlinear_factor is not None:
@@ -93,11 +166,11 @@ class ScalarObject(BaseScalarObject):
         # it's really subtle...
         if apply_data_code:
             self.apply_data_code()
-            self.set_data_members()
+            self._set_data_members()
         #print(self.code_information())
 
-    def isImaginary(self):
-        return bool(self.sort_bits[1])
+    #def isImaginary(self):
+        #return bool(self.sort_bits[1])
 
     def apply_data_code(self):
         for key, value in sorted(iteritems(self.data_code)):
@@ -107,49 +180,49 @@ class ScalarObject(BaseScalarObject):
 
     def get_data_code(self):
         msg = []
-        if 'dataNames' not in self.data_code:
+        if 'data_names' not in self.data_code:
             return []
 
         msg.append('sort1\n  ' if self.is_sort1() else 'sort2\n  ')
-        for name in self.data_code['dataNames']:
+        for name in self.data_code['data_names']:
             if hasattr(self, name + 's'):
                 vals = getattr(self, name + 's')
                 name = name + 's'
             else:
                 vals = getattr(self, name)
             #msg.append('%s = [%s]\n' % (name, ', '.join(['%r' % val for val in vals])))
-            msg.append('%s = %s\n' % (name, array(vals)))
-        #print("***dataNames =", self.dataNames)
+            msg.append('%s = %s\n' % (name, np.array(vals)))
+        #print("***data_names =", self.data_names)
         return msg
 
-    def getUnsteadyValue(self):
+    def get_unsteady_value(self):
         name = self.data_code['name']
-        return self.getVar(name)
+        return self._get_var(name)
 
-    def getVar(self, name):
+    def _get_var(self, name):
         return getattr(self, name)
 
-    def set_var(self, name, value):
+    def _set_var(self, name, value):
         return self.__setattr__(name, value)
 
-    def start_data_member(self, var_name, value_name):
+    def _start_data_member(self, var_name, value_name):
         if hasattr(self, var_name):
             return True
         elif hasattr(self, value_name):
-            self.set_var(var_name, [])
+            self._set_var(var_name, [])
             return True
         return False
 
-    def append_data_member(self, var_name, value_name):
+    def _append_data_member(self, var_name, value_name):
         """
         this appends a data member to a variable that may or may not exist
         """
-        hasList = self.start_data_member(var_name, value_name)
-        if hasList:
-            listA = self.getVar(var_name)
+        has_list = self._start_data_member(var_name, value_name)
+        if has_list:
+            listA = self._get_var(var_name)
             if listA is not None:
                 #print("has %s" % var_name)
-                value = self.getVar(value_name)
+                value = self._get_var(value_name)
                 try:
                     n = len(listA)
                 except:
@@ -158,26 +231,27 @@ class ScalarObject(BaseScalarObject):
                 listA.append(value)
                 assert len(listA) == n + 1
 
-    def set_data_members(self):
-        if 'dataNames' not in self.data_code:
-            msg = 'No "transient" variable was set for %s ("dataNames" was not defined in self.data_code).\n' % self.table_name
+    def _set_data_members(self):
+        if 'data_names' not in self.data_code:
+            msg = 'No "transient" variable was set for %s ("data_names" was not defined in self.data_code).\n' % self.table_name
             raise NotImplementedError(msg + self.code_information())
 
-        for name in self.data_code['dataNames']:
-            self.append_data_member(name + 's', name)
+        for name in self.data_code['data_names']:
+            self._append_data_member(name + 's', name)
 
     def update_data_code(self, data_code):
         if not self.data_code or (data_code['nonlinear_factor'] != self.data_code['nonlinear_factor']):
             self.data_code = data_code
             self.apply_data_code()  # take all the parameters in data_code and make them attributes of the class
-            self.set_data_members()  # set the transient variables
+            self._set_data_members()  # set the transient variables
         #else:
             #print('NF_new=%r NF_old=%r' % (data_code['nonlinear_factor'], self.data_code['nonlinear_factor']))
 
     def print_data_members(self):
         """
         Prints out the "unique" vals of the case.
-        Uses a provided list of data_code['dataNames'] to set the values for
+
+        Uses a provided list of data_code['data_names'] to set the values for
         each subcase.  Then populates a list of self.name+'s' (by using
         setattr) with the current value.  For example, if the variable name is
         'mode', we make self.modes.  Then to extract the values, we build a
@@ -188,18 +262,18 @@ class ScalarObject(BaseScalarObject):
         another result type having ['mode','eigr','eigi'].
         """
         key_vals = []
-        for name in self.data_code['dataNames']:
+        for name in self.data_code['data_names']:
             vals = getattr(self, name + 's')
             key_vals.append(vals)
             #print("%ss = %s" % (name, vals))
 
         msg = ''
-        for name in self.data_code['dataNames']:
+        for name in self.data_code['data_names']:
             msg += '%-10s ' % name
         msg += '\n'
 
-        nModes = len(key_vals[0])
-        for i in range(nModes):
+        nmodes = len(key_vals[0])
+        for i in range(nmodes):
             for vals in key_vals:
                 msg += '%-10g ' % vals[i]
             msg += '\n'
@@ -208,30 +282,30 @@ class ScalarObject(BaseScalarObject):
     def recast_gridtype_as_string(self, grid_type):
         """converts a grid_type integer to a string"""
         if grid_type == 1:
-            Type = 'G'  # GRID
+            grid_type_str = 'G'  # GRID
         elif grid_type == 2:
-            Type = 'S'  # SPOINT
+            grid_type_str = 'S'  # SPOINT
         elif grid_type == 7:
-            Type = 'L'  # RIGID POINT (e.g. RBE3)
+            grid_type_str = 'L'  # RIGID POINT (e.g. RBE3)
         elif grid_type == 0:
-            Type = 'H'  # SECTOR/HARMONIC/RING POINT
+            grid_type_str = 'H'  # SECTOR/HARMONIC/RING POINT
         else:
             raise RuntimeError('grid_type=%s' % grid_type)
-        return Type
+        return grid_type_str
 
-    def cast_grid_type(self, grid_type):
+    def cast_grid_type(self, grid_type_str):
         """converts a grid_type string to an integer"""
-        if grid_type == 'G':
-            Type = 1  # GRID
-        elif grid_type == 'S':
-            Type = 2  # SPOINT
-        elif grid_type == 'L':
-            Type = 7  # RIGID POINT (e.g. RBE3)
-        elif grid_type == 'H':
-            Type = 0  # SECTOR/HARMONIC/RING POINT
+        if grid_type_str == 'G':
+            grid_type = 1  # GRID
+        elif grid_type_str == 'S':
+            grid_type = 2  # SPOINT
+        elif grid_type_str == 'L':
+            grid_type = 7  # RIGID POINT (e.g. RBE3)
+        elif grid_type_str == 'H':
+            grid_type = 0  # SECTOR/HARMONIC/RING POINT
         else:
-            raise RuntimeError('grid_type=%r' % grid_type)
-        return Type
+            raise RuntimeError('grid_type=%r' % grid_type_str)
+        return grid_type
 
     def update_dt(self, data_code, dt):
         """

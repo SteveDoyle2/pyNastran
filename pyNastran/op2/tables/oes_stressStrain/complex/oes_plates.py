@@ -6,7 +6,11 @@ from six.moves import range
 from numpy import zeros
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
-from pyNastran.f06.f06_formatting import write_floats_13e, writeImagFloats13E, get_key0, write_float_13e
+from pyNastran.f06.f06_formatting import write_floats_13e, write_imag_floats_13e, get_key0, write_float_13e
+try:
+    import pandas as pd
+except ImportError:
+    pass
 
 
 class ComplexPlateArray(OES_Object):
@@ -79,6 +83,14 @@ class ComplexPlateArray(OES_Object):
         # [oxx, oyy, txy]
         self.data = zeros((self.ntimes, self.ntotal, 3), 'complex64')
 
+    def build_dataframe(self):
+        headers = self.get_headers()
+        name = self.name
+        column_names, column_values = self._build_dataframe_transient_header()
+        self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element_node, minor_axis=headers).to_frame()
+        self.data_frame.columns.names = column_names
+        self.data_frame.index.names = ['ElementID', 'Item']
+
     def add_new_eid_sort1(self, eType, dt, eid, node_id, fdr, oxx, oyy, txy):
         self.add_eid_sort1(eType, dt, eid, node_id, fdr, oxx, oyy, txy)
 
@@ -132,8 +144,8 @@ class ComplexPlateArray(OES_Object):
         for itime in range(ntimes):
             dt = self._times[itime]
 
-            dtLine = ' %14s = %12.5E\n' % (self.data_code['name'], dt)
-            header[1] = dtLine
+            dt_line = ' %14s = %12.5E\n' % (self.data_code['name'], dt)
+            header[1] = dt_line
             msg = header + msg_temp
             f.write('\n'.join(msg))
 
@@ -175,8 +187,8 @@ class ComplexPlateArray(OES_Object):
         for eid, node, fdr, doxx, doyy, dtxy in zip(eids, nodes, fds, oxx, oyy, txy):
             vals = write_float_13e(fdr)
             fdr = vals[0]
-            ([oxxr, oyyr, txyr,
-              oxxi, oyyi, txyi,], is_all_zeros) = writeImagFloats13E([doxx, doyy, dtxy], is_magnitude_phase)
+            [oxxr, oyyr, txyr,
+             oxxi, oyyi, txyi,] = write_imag_floats_13e([doxx, doyy, dtxy], is_magnitude_phase)
 
             if ilayer0:    # TODO: assuming 2 layers?
                 f.write('0  %6i   %-13s     %-13s / %-13s     %-13s / %-13s     %-13s / %s\n' % (eid, fdr, oxxr, oxxi, oyyr, oyyi, txyr, txyi))
@@ -202,8 +214,8 @@ class ComplexPlateArray(OES_Object):
         ilayer0 = True
         for eid, node, fd, doxx, doyy, dtxy in zip(eids, nodes, fds, oxx, oyy, txy):
             fdr = write_float_13e(fd)
-            ([oxxr, oyyr, txyr,
-              oxxi, oyyi, txyi,], is_all_zeros) = writeImagFloats13E([doxx, doyy, dtxy], is_magnitude_phase)
+            [oxxr, oyyr, txyr,
+             oxxi, oyyi, txyi,] = write_imag_floats_13e([doxx, doyy, dtxy], is_magnitude_phase)
 
             if node == 0 and ilayer0:
                 f.write('0  %8i %8s  %-13s   %-13s / %-13s   %-13s / %-13s   %-13s / %s\n' % (eid, cen, fdr, oxxr, oxxi, oyyr, oyyi, txyr, txyi))
@@ -327,6 +339,9 @@ class ComplexPlateStressArray(ComplexPlateArray, StressObject):
     def _get_headers(self):
         return ['oxx', 'oyy', 'txy']
 
+    def get_headers(self):
+        return self._get_headers()
+
 class ComplexPlateStrainArray(ComplexPlateArray, StrainObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ComplexPlateArray.__init__(self, data_code, is_sort1, isubcase, dt)
@@ -335,3 +350,6 @@ class ComplexPlateStrainArray(ComplexPlateArray, StrainObject):
 
     def _get_headers(self):
         return ['exx', 'eyy', 'exy']
+
+    def get_headers(self):
+        return self._get_headers()

@@ -17,13 +17,13 @@ pyNastranGUI
 The GUI can be seen at:
   https://github.com/SteveDoyle2/pyNastran/wiki/GUI
 
-pyNastranGUI --help
+>>> pyNastranGUI --help
 Usage:
   pyNastranGUI [-f FORMAT] [-i INPUT] [-o OUTPUT...]
                   [-s SHOT] [-m MAGNIFY]
                   [-g GSCRIPT] [-p PSCRIPT]
                   [-u POINTS_FNAME...]
-                  [-q]
+                  [-c][-q]
   pyNastranGUI -h | --help
   pyNastranGUI -v | --version
 
@@ -33,6 +33,7 @@ Options:
                                            plot3d, stl, tetgen, usm3d)
   -i INPUT, --input INPUT     path to input file
   -o OUTPUT, --output OUTPUT  path to output file
+  -c, --console               disable HTML console output
   -g GSCRIPT, --geomscript GSCRIPT  path to geometry script file (runs before load geometry)
   -p PSCRIPT, --postscript PSCRIPT  path to post script file (runs after load geometry)
   -s SHOT, --shots SHOT       path to screenshot (only 1 for now)
@@ -40,7 +41,7 @@ Options:
   -u POINTS_FNAME, --user_points POINTS_FNAME               add user specified points to an alternate grid (repeatable)
   -q, --quiet                 prints debug messages (default=True)
   -v, --version               show program's version number and exit
-  
+
 test_bdf
 --------
 Runs through various checks on a BDF that Nastran doesn't do.  Verifies your model is referenced properly.  Creates a summary table.
@@ -78,6 +79,7 @@ Options:
   -h, --help     show this help message and exit
   -v, --version  show program's version number and exit
 
+
 test_op2
 --------
 Runs through various checks on an OP2 file.  Creates a summary table.
@@ -88,7 +90,7 @@ test_op2 [-q] [-b] [-c] [-g] [-n] [-m] [-f] [-o] [-p] [-z] [-w] [-s <sub>] [-x <
   test_op2 -h | --help
   test_op2 -v | --version
 
-Tests to see if an OP2 will work with pyNastran 0.8.0_dev-b705ee7.
+Tests to see if an OP2 will work with pyNastran 0.8.0+dev.a941748.
 
 Positional Arguments:
   OP2_FILENAME         Path to OP2 file
@@ -121,7 +123,7 @@ test_op4 [-q] [-o] OP4_FILENAME
   test_op4 -h | --help
   test_op4 -v | --version
 
-Tests to see if an OP4 will work with pyNastran 0.8.0_dev-b705ee7.
+Tests to see if an OP4 will work with pyNastran 0.8.0+dev.a941748.
 
 Positional Arguments:
   OP4_FILENAME         Path to OP4 file
@@ -137,8 +139,38 @@ format_converter
 Converts between various common formats, typically using Nastran as a common format.  This allows methods like nodal equivalencing to be written once.
 
 >>> format_converter --help
-Bugged...missing import
+Usage:
+  format_converter nastran <INPUT> <format2> <OUTPUT> [-o <OP2>]
+  format_converter <format1> <INPUT> tecplot <OUTPUT> [-r RESTYPE...] [-b] [--block] [-x <X>] [-y <Y>] [-z <Z>]
+  format_converter <format1> <INPUT> stl     <OUTPUT> [-b]
+  format_converter <format1> <INPUT> <format2> <OUTPUT>
+  format_converter -h | --help
+  format_converter -v | --version
 
+Options:
+  format1        format type (nastran, cart3d, stl, ugrid, tecplot)
+  format2        format type (nastran, cart3d, stl, ugrid, tecplot)
+  INPUT          path to input file
+  OUTPUT         path to output file
+  -o OP2, --op2 OP2  path to results file (nastran-specific)
+                 only used for Tecplot (not supported)
+  -x X, --xx X   Creates a constant x slice; keeps points < X
+  -y Y, --yy Y   Creates a constant y slice; keeps points < Y
+  -z Z, --zz Z   Creates a constant z slice; keeps points < Z
+  --block        Writes the data in BLOCK (vs. POINT) format
+  -r, --results  Specifies the results to write to limit output
+  -b, --binary   writes the STL in binary (not supported for Tecplot)
+  -h, --help     show this help message and exit
+  -v, --version  show program's version number and exit
+
+Notes:
+  Nastran->Tecplot assumes sequential nodes and consistent types (shell/solid)
+  STL/Tecplot supports globbing as the input filename
+  Tecplot slicing doesn't support multiple slice values and will give bad results (not crash)
+  UGRID outfiles must be of the form model.b8.ugrid, where b8, b4, lb8, lb4 are valid choices and periods are important
+
+Examples:
+  format_converter tecplot tecplot.*.plt tecplot.tecplot_joined.plt -x 0.0 -y 0.0 z 0.0
 run_nastran_double_precision
 ----------------------------
 >>> run_nastran_double_precision --help

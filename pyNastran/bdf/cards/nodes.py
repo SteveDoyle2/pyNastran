@@ -1440,7 +1440,7 @@ class POINT(Node):
         return self.get_position()
 
     def PositionWRT(self, model, cid, debug=False):
-        self.deprecated('Position()', 'get_position()', '0.8')
+        self.deprecated('Position()', 'get_position_wrt()', '0.8')
         return self.get_position_wrt(model, cid)
 
     def UpdatePosition(self, model, xyz, cid=0):

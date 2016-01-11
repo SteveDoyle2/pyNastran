@@ -6,6 +6,10 @@ from itertools import count
 from numpy import zeros, searchsorted, ravel
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header
+try:
+    import pandas as pd
+except ImportError:
+    pass
 
 
 class RealBar10NodesArray(OES_Object):
@@ -85,6 +89,19 @@ class RealBar10NodesArray(OES_Object):
 
         #[sd, sxc, sxd, sxe, sxf, axial, smax, smin, MS]
         self.data = zeros((self.ntimes, self.ntotal, 9), dtype='float32')
+
+    def build_dataframe(self):
+        headers = self.get_headers()
+        name = self.name
+        if self.nonlinear_factor is not None:
+            column_names, column_values = self._build_dataframe_transient_header()
+            self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
+            self.data_frame.columns.names = column_names
+            self.data_frame.index.names = ['ElementID', 'Item']
+        else:
+            self.data_frame = pd.Panel(self.data, major_axis=self.element, minor_axis=headers).to_frame()
+            self.data_frame.columns.names = ['Static']
+            self.data_frame.index.names = ['ElementID', 'Item']
 
     def add_new_eid(self, eType, dt, eid, sd, sxc, sxd, sxe, sxf, axial, smax, smin, MS):
         self.add_new_eid_sort1(eType, dt, eid,

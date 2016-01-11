@@ -1,10 +1,116 @@
 #pylint: disable=W0201,W0223,R0901,R0902,R0904
 """
 Main OP2 class
+
+
+Datablock	Type	Description
+EFMFSMS	Matrix	6 x 1 Total Effective mass matrix
+EFMASSS	Matrix	6 x 6 Effective mass matrix
+RBMASS	Matrix	6 x 6 Rigid body mass matrix
+EFMFACS	Matrix	6 X N Modal effective mass fraction matrix
+MPFACS	Matrix	6 x N Modal participation factor matrix
+MEFMASS	Matrix	6 x N Modal effective mass matrix
+MEFWTS	Matrix	6 x N Modal effective weight matrix
+RAFGEN	Matrix	N x M Generalized force matrix
+RADEFMP	Matrix	N X U2 Effective inertia loads
+BHH	Matrix	N x N Viscous damping matrix
+K4HH	Matrix	N x N Structural damping matrix
+RADAMPZ	Matrix	N x N equivalent viscous damping ratios
+RADAMPG	Matrix	N X N equivalent structural damping ratio
+
+LAMA	LAMA	Eigenvalue summary table
+OGPWG	OGPWG	Mass properties output
+OQMG1	OQMG	Modal MPC forces
+RANCONS	ORGY1	Constraint mode element strain energy table
+RANEATC	ORGY1	Attachment mode element strain energy table
+RAGCONS	OGPFB	Constraint mode grid point force table
+RAGEATC	OGPFB	Attachment mode grid point force table
+RAPCONS	OES	Constraint mode ply stress table
+RAPEATC	OES	Attachment mode ply stress table
+RASCONS	OES	Constraint mode element stress table
+RAECONS	OES	Constraint mode element strain table
+RASEATC	OES	Attachment mode element stress table
+RAEEATC	OES	Attachment mode element strain table
+OES1C	OES	Modal Element Stress Table
+OES1X	OES	Modal Element Stress Table
+OSTR1C	OES	Modal Element Strain Table
+OSTR1X	OSTR	Modal Element Strain Table
+RAQCONS	OUG	Constraint mode MPC force table
+RADCONS	OUG	Constraint mode displacement table
+RADEFFM	OUG	Effective inertia displacement table
+RAQEATC	OUG	Attachment mode  MPC force table
+RADEATC	OUG	Attachment mode displacement table
+OUGV1	OUG	Eigenvector Table
+RAFCONS	OEF	Constraint mode element force table
+RAFEATC	OEF	Attachment mode element force table
+OEF1X	OEF	Modal Element Force Table
+OGPFB1	OGPFB	Modal Grid Point Force Table
+ONRGY1	ONRGY1	Modal Element Strain Energy Table
+ONRGY2	ONRGY1
+
+#--------------------
+
+RADCONS - DISPLACEMENT CONSTRAINT MODE
+RADDATC - DISPLACEMENT DISTRIBUTED ATTACHMENT MODE
+RADNATC - DISPLACEMENT NODAL ATTACHMENT MODE
+RADEATC - DISPLACEMENT EQUIVALENT INERTIA ATTACHMENT MODE
+
+RADEFFM - DISPLACEMENT EFFECTIVE INERTIA MODE
+
+RAECONS - STRAIN CONSTRAINT MODE
+RAEDATC - STRAIN DISTRIBUTED ATTACHMENT MODE
+RAENATC - STRAIN NODAL ATTACHMENT MODE
+RAEEATC - STRAIN EQUIVALENT INERTIA ATTACHMENT MODE
+
+RAFCONS - ELEMENT FORCE CONSTRAINT MODE
+RAFDATC - ELEMENT FORCE DISTRIBUTED ATTACHMENT MODE
+RAFNATC - ELEMENT FORCE NODAL ATTACHMENT MODE
+RAFEATC - ELEMENT FORCE EQUIVALENT INERTIA ATTACHMENT MODE
+
+RALDATC - LOAD VECTOR USED TO COMPUTE THE DISTRIBUTED ATTACHMENT M
+
+RANCONS - STRAIN ENERGY CONSTRAINT MODE
+RANDATC - STRAIN ENERGY DISTRIBUTED ATTACHMENT MODE
+RANNATC - STRAIN ENERGY NODAL ATTACHMENT MODE
+RANEATC - STRAIN ENERGY EQUIVALENT INERTIA ATTACHMENT MODE
+
+RAQCONS - PLY STRAINS CONSTRAIN MODE
+RAQDATC - PLY STRAINS DISTRIBUTED ATTACHMENT MODE
+RAQNATC - PLY STRAINS NODAL ATTACHMENT MODE
+RAQEATC - PLY STRAINS EQUIVALENT INERTIA ATTACHMENT MODE
+
+RARCONS - REACTION FORCE CONSTRAINT MODE
+RARDATC - REACTION FORCE DISTRIBUTED ATTACHMENT MODE
+RARNATC - REACTION FORCE NODAL ATTACHMENT MODE
+RAREATC - REACTION FORCE EQUIVALENT INERTIA ATTACHMENT MODE
+
+RASCONS - STRESS CONSTRAINT MODE
+RASDATC - STRESS DISTRIBUTED ATTACHMENT MODE
+RASNATC - STRESS NODAL ATTACHMENT MODE
+RASEATC - STRESS EQUIVALENT INERTIA ATTACHMENT MODE
+
+RAPCONS - PLY STRESSES CONSTRAIN MODE
+RAPDATC - PLY STRESSES DISTRIBUTED ATTACHMENT MODE
+RAPNATC - PLY STRESSES NODAL ATTACHMENT MODE
+RAPEATC - PLY STRESSES EQUIVALENT INERTIA ATTACHMENT MODE
+
+RAGCONS - GRID POINT FORCES CONSTRAINT MODE
+RAGDATC - GRID POINT FORCES DISTRIBUTED ATTACHMENT MODE
+RAGNATC - GRID POINT FORCES NODAL ATTACHMENT MODE
+RAGEATC - GRID POINT FORCES EQUIVALENT INERTIA ATTACHMENT MODE
+
+RADEFMP - DISPLACEMENT PHA^T * EFFECTIVE INERTIA MODE
+
+RADAMPZ - VISCOUS DAMPING RATIO MATRIX
+RADAMPG - STRUCTURAL DAMPING RATIO MATRIX
+
+RAFGEN  - GENERALIZED FORCES
+BHH     - MODAL VISCOUS DAMPING MATRIX
+K4HH    - MODAL STRUCTURAL DAMPING MATRIX
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import iteritems, string_types
+from six import iteritems, string_types, itervalues
 import os
 
 from numpy import unique, int32
@@ -19,10 +125,10 @@ from pyNastran.op2.op2_f06_common import Op2F06Attributes
 
 
 def read_op2(op2_filename=None, combine=True,
-             log=None, debug=True, debug_file=None, mode='msc'):
+             log=None, debug=True, debug_file=None, build_dataframe=False,
+             skip_undefined_matrices=True, mode='msc'):
     """
-    Creates the OP2 object without all the read methods
-
+    Creates the OP2 object without calling the OP2 class.
     Parameters
     ----------
     op2_filename : str (default=None -> popup)
@@ -31,6 +137,10 @@ def read_op2(op2_filename=None, combine=True,
         True : objects are isubcase based
         False : objects are (isubcase, subtitle) based;
                 will be used for superelements regardless of the option
+    build_dataframe : bool; default=False
+        builds a pandas DataFrame for op2 objects
+    skip_undefined_matrices : bool; default=False
+         True : prevents matrix reading crashes
     debug : bool; default=False
         enables the debug log and sets the debug in the logger
     log : Log()
@@ -44,21 +154,25 @@ def read_op2(op2_filename=None, combine=True,
     model : OP2()
         an OP2 object
 
+    .. todo :: creates the OP2 object without all the read methods
+
     .. note :: this method will change in order to return an object that
                does not have so many methods
     """
     model = OP2(log=log, debug=debug, debug_file=debug_file, mode=mode)
-    model.read_op2(op2_filename=op2_filename, combine=combine)
+    model.read_op2(op2_filename=op2_filename, build_dataframe=build_dataframe,
+                   skip_undefined_matrices=skip_undefined_matrices, combine=combine)
 
     ## TODO: this will go away when OP2 is refactored
     ## TODO: many methods will be missing, but it's a start...
-    obj = Op2F06Attributes()
-    attr_names = object_attributes(obj, mode="public", keys_to_skip=None)
-    for attr_name in attr_names:
-        attr = getattr(model, attr_name)
-        setattr(obj, attr_name, attr)
-    obj.get_op2_stats()
-    return obj
+    ## doesn't support F06 writer
+    #obj = Op2F06Attributes()
+    #attr_names = object_attributes(obj, mode="public", keys_to_skip=None)
+    #for attr_name in attr_names:
+        #attr = getattr(model, attr_name)
+        #setattr(obj, attr_name, attr)
+    #obj.get_op2_stats()
+    return model
 
 #class OP2(OP2_Scalar, OP2Writer):
 class OP2(OP2_Scalar):
@@ -189,7 +303,8 @@ class OP2(OP2_Scalar):
         """
         self.ask = ask
 
-    def read_op2(self, op2_filename=None, combine=True):
+    def read_op2(self, op2_filename=None, combine=True, build_dataframe=False,
+                 skip_undefined_matrices=False):
         """
         Starts the OP2 file reading
 
@@ -201,7 +316,12 @@ class OP2(OP2_Scalar):
             True : objects are isubcase based
             False : objects are (isubcase, subtitle) based;
                     will be used for superelements regardless of the option
+        build_dataframe : bool; default=False
+            builds a pandas DataFrame for op2 objects
+        skip_undefined_matrices : bool; default=False
+             True : prevents matrix reading crashes
         """
+        self.skip_undefined_matrices = skip_undefined_matrices
         assert self.ask in [True, False], self.ask
         self.is_vectorized = True
         self.log.debug('combine=%s' % combine)
@@ -220,8 +340,43 @@ class OP2(OP2_Scalar):
         self.log.debug('-------- reading op2 with read_mode=2 --------')
         OP2_Scalar.read_op2(self, op2_filename=self.op2_filename)
 
+        self.finalize()
+        if build_dataframe:
+            self.build_dataframe()
         self.combine_results(combine=combine)
         self.log.debug('finished reading op2')
+
+    def finalize(self):
+        result_types = self.get_table_types()
+        for result_type in result_types:
+            result = getattr(self, result_type)
+            for obj in itervalues(result):
+                if hasattr(obj, 'finalize'):
+                    obj.finalize()
+
+    def build_dataframe(self):
+        no_sort2_classes = ['RealEigenvalues', 'ComplexEigenvalues', 'BucklingEigenvalues']
+        result_types = self.get_table_types()
+        for result_type in result_types:
+            result = getattr(self, result_type)
+            for obj in itervalues(result):
+                class_name = obj.__class__.__name__
+                if class_name in no_sort2_classes:
+                    try:
+                        obj.build_dataframe()
+                    except:
+                        print('build_dataframe is broken for %s' % class_name)
+                        raise
+                    continue
+                if obj.is_sort2():
+                    print('build_dataframe is not supported for %s - SORT2' % class_name)
+                    continue
+                try:
+                    obj.build_dataframe()
+                except:
+                    print('build_dataframe is broken for %s' % class_name)
+                    raise
+
 
     def combine_results(self, combine=True):
         """
@@ -434,6 +589,8 @@ class OP2(OP2_Scalar):
                         rotation = data[:, inode, 3:]
                         data[:, inode, :3] = translation.dot(transform)
                         data[:, inode, 3:] = rotation.dot(transform)
+
+
 def main():
     """testing new ideas"""
     import pyNastran

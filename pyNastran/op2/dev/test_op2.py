@@ -1,7 +1,7 @@
 from __future__ import print_function
 import os
 import unittest
-from pyNastran.op2.dev.op2 import rdpostop2
+from pyNastran.op2.dev.op2 import read_post_op2
 from pyNastran.op2.op2 import OP2
 # from original.op2 import rdpostop2
 import timeit
@@ -23,7 +23,7 @@ class TestOP2New(unittest.TestCase):
         # print('dbnames =', op2.dbnames)
         # print('dblist =', op2.dblist)
 
-        o2 = rdpostop2(op2_filename, verbose=True, getougv1=True)
+        o2 = read_post_op2(op2_filename, verbose=True, getougv1=True)
         print('a =', o2.keys())
         print('b =', o2['mats'].keys())
         print('c =', o2['mats']['ougv1'])
@@ -37,7 +37,7 @@ class TestOP2New(unittest.TestCase):
         # print(object_attributes(op2))
         # print('dbnames =', op2.dbnames)
         # print('dblist =', op2.dblist)
-        o2 = rdpostop2(op2_filename, verbose=True, getougv1=True)
+        o2 = read_post_op2(op2_filename, verbose=True, getougv1=True)
         #print('a =', o2.keys())
         #print('b =', o2['mats'].keys())
         #print('c =', len(o2['mats']['ougv1']))
@@ -49,7 +49,7 @@ class TestOP2New(unittest.TestCase):
         #s = 'o2 = rdpostop2(r"F:\work\pyNastran\pyNastran\master2\models\iSat\isat_dploy_sm.op2", verbose=True, getougv1=True)'
         #timeit.timeit(s, setup="from pyNastran.op2.dev.op2 import rdpostop2", number=10)
 
-    def test_02b(self):
+    def _test_02b(self):
         folder = os.path.abspath(os.path.join(test_path, '..', 'models'))
         op2_filename = os.path.join(folder, 'iSat', 'isat_dploy_sm.op2')
 
@@ -59,7 +59,7 @@ class TestOP2New(unittest.TestCase):
         s = '\n\nop2 = OP2()\nop2.read_op2(r"F:\work\pyNastran\pyNastran\master2\models\iSat\isat_dploy_sm.op2", combine=False)'
         timeit.timeit(s, setup="from pyNastran.op2.op2 import OP2", number=10)
 
-    def _test_03(self):
+    def test_03(self):
         folder = os.path.abspath(os.path.join(test_path, '..', 'models'))
         op2_filename = os.path.join(folder, 'sol_101_elements', 'mode_solid_shell_bar.op2')
 
@@ -68,7 +68,7 @@ class TestOP2New(unittest.TestCase):
         # print(object_attributes(op2))
         # print('dbnames =', op2.dbnames)
         # print('dblist =', op2.dblist)
-        o2 = rdpostop2(op2_filename, verbose=True, getougv1=True)
+        o2 = read_post_op2(op2_filename, verbose=True, getougv1=True)
         #print('a =', o2.keys())
         #print('b =', o2['mats'].keys())
         #print('c =', o2['mats']['ougv1'][0].keys())

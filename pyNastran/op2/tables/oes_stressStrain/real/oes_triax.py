@@ -6,6 +6,10 @@ from numpy import zeros, searchsorted, ravel
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header, get_key0
+try:
+    import pandas as pd
+except ImportError:
+    pass
 
 
 class RealTriaxArray(OES_Object):
@@ -68,6 +72,20 @@ class RealTriaxArray(OES_Object):
 
         # [radial, azimuthal, axial, shear, omax, oms, ovm]
         self.data = zeros((self.ntimes, self.ntotal, 7), dtype='float32')
+
+    def build_dataframe(self):
+        headers = self.get_headers()
+        name = self.name
+        element_node = [self.element_node[:, 0], self.element_node[:, 1]]
+        if self.nonlinear_factor is not None:
+            column_names, column_values = self._build_dataframe_transient_header()
+            self.data_frame = pd.Panel(self.data, items=column_values, major_axis=element_node, minor_axis=headers).to_frame()
+            self.data_frame.columns.names = column_names
+            self.data_frame.index.names = ['ElementID', 'NodeID', 'Item']
+        else:
+            self.data_frame = pd.Panel(self.data, major_axis=element_node, minor_axis=headers).to_frame()
+            self.data_frame.columns.names = ['Static']
+            self.data_frame.index.names = ['ElementID', 'NodeID', 'Item']
 
     def add_sort1(self, dt, eid, nid, radial, azimuthal, axial, shear, omax, oms, ovm):
         assert isinstance(eid, int)

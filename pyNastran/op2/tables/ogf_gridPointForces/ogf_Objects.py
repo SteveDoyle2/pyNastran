@@ -3,8 +3,11 @@ from six import iteritems
 from numpy import array, zeros, unique, array_equal, empty
 from struct import pack
 from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
-from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header, writeImagFloats13E
-
+from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header, write_imag_floats_13e
+try:
+    import pandas as pd
+except ImportError:
+    pass
 
 
 class RealGridPointForcesArray(ScalarObject):
@@ -17,6 +20,7 @@ class RealGridPointForcesArray(ScalarObject):
 
         # do the element_names/node_element vectors change with the time step
         self.is_unique = False
+        self.element_names = []
 
         #self.ielement = 0
         #self.nelements = 0  # result specific
@@ -34,9 +38,9 @@ class RealGridPointForcesArray(ScalarObject):
 
     @property
     def element_name(self):
-        headers = [name.strip() for name in unique(self.element_names)]
+        headers = [name.strip() for name in unique(self.element_names) if name.strip()]
         #headers = unique(self.element_names)
-        return str(b', '.join(headers))
+        return str(', '.join(headers))
 
     def build(self):
         #print("self.ielement = %s" % self.ielement)
@@ -65,8 +69,8 @@ class RealGridPointForcesArray(ScalarObject):
         #self.nelements = 0
         self.is_built = True
 
-        #print("***name=%s type=%s nnodes_per_element=%s ntimes=%s nelements=%s ntotal=%s" % (
-            #self.element_names, self.element_type, nnodes_per_element, self.ntimes, self.nelements, self.ntotal))
+        #print("***name=%s ntimes=%s ntotal=%s" % (
+            #self.element_names, self.ntimes, self.ntotal))
         dtype = 'float32'
         if isinstance(self.nonlinear_factor, int):
             dtype = 'int32'
@@ -74,7 +78,7 @@ class RealGridPointForcesArray(ScalarObject):
         self._times = zeros(self.ntimes, dtype=dtype)
 
         if self.is_unique:
-            raise NotImplementedError('not unique')
+            #raise NotImplementedError('not unique')
             self.node_element = zeros((self.ntimes, self.ntotal, 2), dtype='int32')
             self.element_names = empty((self.ntimes, self.ntotal), dtype='U8')
         else:
@@ -83,6 +87,65 @@ class RealGridPointForcesArray(ScalarObject):
 
         #[t1, t2, t3, r1, r2, r3]
         self.data = zeros((self.ntimes, self.ntotal, 6), dtype='float32')
+
+    def build_dataframe(self):
+        """
+        major-axis - the axis
+
+        mode              1     2   3
+        freq              1.0   2.0 3.0
+        nodeID ElementID Item
+        1      2         T1
+                         T2
+                         ...
+
+        major_axis / top = [
+            [1, 2, 3],
+            [1.0, 2.0, 3.0]
+        ]
+        minor_axis / headers = [T1, T2, T3, R1, R2, R3]
+        name = mode
+        """
+        headers = self.get_headers()
+        name = self.name
+        if self.is_unique:
+            #raise NotImplementedError('RealGridPointForcesArray - build_dataframe - not unique')
+            #node_element = [self.node_element[:, 0], self.node_element[:, 1]]
+
+            ntimes = self.data.shape[0]
+            nnodes = self.data.shape[1]
+            #print(ntimes, nnodes)
+            #print(self.node_element.shape)
+            node_element = self.node_element.reshape((ntimes * nnodes, 2))
+            #print(node_element)
+            if self.nonlinear_factor is not None:
+                column_names, column_values = self._build_dataframe_transient_header()
+                self.data_frame = pd.Panel(self.data, items=column_values, major_axis=node_element, minor_axis=headers).to_frame()
+                self.data_frame.columns.names = column_names
+                self.data_frame.index.names = ['NodeID', 'ElementID', 'Item']
+            else:
+                self.data_frame = pd.Panel(self.data, major_axis=node_element, minor_axis=headers).to_frame()
+                self.data_frame.columns.names = ['Static']
+                self.data_frame.index.names = ['NodeID', 'ElementID', 'Item']
+
+        else:
+            node_element = [self.node_element[:, 0], self.node_element[:, 1]]
+            #print(node_element[0])
+            #print(node_element[1], len(node_element[1]))
+            #print(self.data.shape)
+            if self.nonlinear_factor is not None:
+                column_names, column_values = self._build_dataframe_transient_header()
+                #print('column_names =', column_names)
+                #for name, values in zip(column_names, column_values):
+                    #print('  %s = %s' %(name, values))
+                self.data_frame = pd.Panel(self.data, items=column_values, major_axis=node_element, minor_axis=headers).to_frame()
+                self.data_frame.columns.names = column_names
+                self.data_frame.index.names = ['NodeID', 'ElementID', 'Item']
+            else:
+                self.data_frame = pd.Panel(self.data, major_axis=node_element, minor_axis=headers).to_frame()
+                self.data_frame.columns.names = ['Static']
+                self.data_frame.index.names = ['NodeID', 'ElementID', 'Item']
+            #print(self.data_frame)
 
     def __eq__(self, table):
         assert self.is_sort1() == table.is_sort1()
@@ -137,8 +200,18 @@ class RealGridPointForcesArray(ScalarObject):
     def add_sort1(self, dt, node_id, eid, ename, t1, t2, t3, r1, r2, r3):
         assert eid is not None, eid
         assert isinstance(node_id, int), node_id
-        self.node_element[self.itotal, :] = [eid, node_id]
-        self.element_names[self.itotal] = ename
+        self._times[self.itime] = dt
+
+        if self.is_unique:
+            raise NotImplementedError('not unique')
+            self.node_element[self.itime, self.itotal, :] = [node_id, eid]
+            self.element_names[self.itime, self.itotal] = ename
+        else:
+            self.node_element[self.itotal, :] = [node_id, eid]
+            self.element_names[self.itotal] = ename
+
+        #self.node_element[self.itotal, :] = [eid, node_id]
+        #self.element_names[self.itotal] = ename
         self.data[self.itime, self.itotal, :] = [t1, t2, t3, r1, r2, r3]
         self.itotal += 1
 
@@ -318,7 +391,7 @@ class ComplexGridPointForcesArray(ScalarObject):
     def element_name(self):
         headers = [name.strip() for name in unique(self.element_names)]
         #headers = unique(self.element_names)
-        return str(b', '.join(headers))
+        return str(', '.join(headers))
 
     def build(self):
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
@@ -365,6 +438,49 @@ class ComplexGridPointForcesArray(ScalarObject):
             self.element_names = empty(self.ntotal, dtype='U8')
         #[t1, t2, t3, r1, r2, r3]
         self.data = zeros((self.ntimes, self.ntotal, 6), dtype='complex64')
+
+    def _build_dataframe(self):
+        """
+        major-axis - the axis
+
+        mode              1     2   3
+        freq              1.0   2.0 3.0
+        nodeID ElementID Item
+        1      2         T1
+                         T2
+                         ...
+
+        major_axis / top = [
+            [1, 2, 3],
+            [1.0, 2.0, 3.0]
+        ]
+        minor_axis / headers = [T1, T2, T3, R1, R2, R3]
+        name = mode
+        """
+        headers = self.get_headers()
+        name = self.name
+        if self.is_unique:
+            #raise NotImplementedError('RealGridPointForcesArray - build_dataframe - not unique')
+            #node_element = [self.node_element[:, 0], self.node_element[:, 1]]
+            ntimes = self.data.shape[0]
+            nnodes = self.data.shape[1]
+            node_element_temp = self.node_element.reshape((ntimes * nnodes, 2))
+            node_element = [node_element_temp[:, 0], node_element_temp[:, 1]]
+            print(node_element[0], len(node_element[0]))
+            column_names, column_values = self._build_dataframe_transient_header()
+            self.data_frame = pd.Panel(self.data, items=column_values, major_axis=node_element, minor_axis=headers).to_frame()
+            self.data_frame.columns.names = column_names
+            self.data_frame.index.names = ['NodeID', 'ElementID', 'Item']
+
+        else:
+            node_element = [self.node_element[:, 0], self.node_element[:, 1]]
+            column_names, column_values = self._build_dataframe_transient_header()
+            #print('column_names =', column_names)
+            #for name, values in zip(column_names, column_values):
+                #print('  %s = %s' %(name, values))
+            self.data_frame = pd.Panel(self.data, items=column_values, major_axis=node_element, minor_axis=headers).to_frame()
+            self.data_frame.columns.names = column_names
+            self.data_frame.index.names = ['NodeID', 'ElementID', 'Item']
 
     def __eq__(self, table):
         assert self.is_sort1() == table.is_sort1()
@@ -499,7 +615,7 @@ class ComplexGridPointForcesArray(ScalarObject):
                      range(ntotal), nids, eids, enames, t1, t2, t3, r1, r2, r3):
 
                     vals = [t1i, t2i, t3i, r1i, r2i, r3i]
-                    (vals2, is_all_zeros) = writeImagFloats13E(vals, is_mag_phase)
+                    vals2 = write_imag_floats_13e(vals, is_mag_phase)
                     [f1r, f2r, f3r, m1r, m2r, m3r, f1i, f2i, f3i, m1i, m2i, m3i] = vals2
                     if eid == 0:
                         f.write('   %8s    %10s    %8s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n'
@@ -540,7 +656,7 @@ class ComplexGridPointForcesArray(ScalarObject):
                      nids, eids, enames, t1, t2, t3, r1, r2, r3):
 
                     vals = [t1i, t2i, t3i, r1i, r2i, r3i]
-                    (vals2, is_all_zeros) = writeImagFloats13E(vals, is_mag_phase)
+                    vals2 = write_imag_floats_13e(vals, is_mag_phase)
                     [f1r, f2r, f3r, m1r, m2r, m3r, f1i, f2i, f3i, m1i, m2i, m3i] = vals2
                     if eid == 0:
                         f.write('   %8s    %10s    %8s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n'
@@ -581,7 +697,7 @@ class ComplexGridPointForcesArray(ScalarObject):
                          nids, eids, enames, t1, t2, t3, r1, r2, r3):
 
                         vals = [t1i, t2i, t3i, r1i, r2i, r3i]
-                        (vals2, is_all_zeros) = writeImagFloats13E(vals, is_mag_phase)
+                        vals2 = write_imag_floats_13e(vals, is_mag_phase)
                         [f1r, f2r, f3r, m1r, m2r, m3r, f1i, f2i, f3i, m1i, m2i, m3i] = vals2
                         if eid == 0:
                             f.write('   %8s    %10s    %8s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n'
@@ -658,7 +774,7 @@ class RealGridPointForces(ScalarObject):
         msg.append('  force_moment, elemName, eids\n')
         return msg
 
-    def add_new_transient(self, dt):  # eKey
+    def add_new_transient(self, dt):  # ekey
         """initializes the transient variables"""
         self.force_moment[dt] = {}
 
@@ -666,14 +782,14 @@ class RealGridPointForces(ScalarObject):
         self.elemName[dt] = {}
         self.eids[dt] = {}
 
-    def add(self, dt, eKey, eid, elemName, f1, f2, f3, m1, m2, m3):
-        if eKey not in self.force_moment:
-            self.eids[eKey] = []
-            self.force_moment[eKey] = []
-            self.elemName[eKey] = []
-        self.force_moment[eKey].append(array([f1, f2, f3, m1, m2, m3], dtype='float32'))  # Fx,Fy,Fz
-        self.elemName[eKey].append(elemName)
-        self.eids[eKey].append(eid)
+    def add(self, dt, ekey, eid, elemName, f1, f2, f3, m1, m2, m3):
+        if ekey not in self.force_moment:
+            self.eids[ekey] = []
+            self.force_moment[ekey] = []
+            self.elemName[ekey] = []
+        self.force_moment[ekey].append(array([f1, f2, f3, m1, m2, m3], dtype='float32'))  # Fx,Fy,Fz
+        self.elemName[ekey].append(elemName)
+        self.eids[ekey].append(eid)
 
     def add_f06_data(self, dt, data):
         if dt is None:
@@ -747,17 +863,17 @@ class RealGridPointForces(ScalarObject):
               #'      13683          3737    TRIAX6        -4.996584E+00   0.0           -1.203093E+02   0.0            0.0            0.0'
               #'      13683                  *TOTALS*       6.366463E-12   0.0           -1.364242E-12   0.0            0.0            0.0'
         zero = ' '
-        for eKey, Force in sorted(iteritems(self.force_moment)):
+        for ekey, Force in sorted(iteritems(self.force_moment)):
             for iLoad, force in enumerate(Force):
                 (f1, f2, f3, m1, m2, m3) = force
-                elemName = self.elemName[eKey][iLoad]
-                eid = self.eids[eKey][iLoad]
+                elemName = self.elemName[ekey][iLoad]
+                eid = self.eids[ekey][iLoad]
                 vals = [f1, f2, f3, m1, m2, m3]
                 vals2 = write_floats_13e(vals)
                 [f1, f2, f3, m1, m2, m3] = vals2
                 if eid == 0:
                     eid = ''
-                msg.append('%s  %8s    %10s    %-8s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (zero, eKey, eid, elemName,
+                msg.append('%s  %8s    %10s    %-8s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (zero, ekey, eid, elemName,
                                                                                                      f1, f2, f3, m1, m2, m3))
                 zero = ' '
             zero = '0'
@@ -780,18 +896,18 @@ class RealGridPointForces(ScalarObject):
             zero = ' '
             header = _eigenvalue_header(self, header, itime, ntimes, dt)
             msg += header + msg_pack
-            for eKey, Force in sorted(iteritems(Forces)):
+            for ekey, Force in sorted(iteritems(Forces)):
                 for iLoad, force in enumerate(Force):
                     (f1, f2, f3, m1, m2, m3) = force
-                    elemName = self.elemName[dt][eKey][iLoad]
-                    eid = self.eids[dt][eKey][iLoad]
+                    elemName = self.elemName[dt][ekey][iLoad]
+                    eid = self.eids[dt][ekey][iLoad]
 
                     vals = [f1, f2, f3, m1, m2, m3]
                     vals2 = write_floats_13e(vals)
                     [f1, f2, f3, m1, m2, m3] = vals2
                     if eid == 0:
                         eid = ''
-                    msg.append('%s  %8s    %10s    %-8s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (zero, eKey, eid, elemName,
+                    msg.append('%s  %8s    %10s    %-8s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (zero, ekey, eid, elemName,
                                                                                                         f1, f2, f3, m1, m2, m3))
                     zero = ' '
                 zero = '0'

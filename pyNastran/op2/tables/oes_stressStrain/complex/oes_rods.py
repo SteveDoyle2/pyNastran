@@ -5,7 +5,11 @@ from six.moves import range
 from numpy import zeros, array_equal, allclose
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
-from pyNastran.f06.f06_formatting import writeImagFloats13E, get_key0, _eigenvalue_header
+from pyNastran.f06.f06_formatting import write_imag_floats_13e, get_key0, _eigenvalue_header
+try:
+    import pandas as pd
+except ImportError:
+    pass
 
 
 class ComplexRodArray(OES_Object):
@@ -54,6 +58,13 @@ class ComplexRodArray(OES_Object):
 
         #[axial, torsion]
         self.data = zeros((self.ntimes, self.nelements, 2), dtype='complex64')
+
+    def build_dataframe(self):
+        headers = self.get_headers()
+        column_names, column_values = self._build_dataframe_transient_header()
+        self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
+        self.data_frame.columns.names = column_names
+        self.data_frame.index.names = ['ElementID', 'Item']
 
     def __eq__(self, table):
         assert self.is_sort1() == table.is_sort1()
@@ -167,7 +178,7 @@ class ComplexRodArray(OES_Object):
             axial = self.data[itime, :, 0]
             torsion = self.data[itime, :, 1]
             for eid, iaxial, itorsion in zip(eids, axial, torsion):
-                ([axialr, torsionr, axiali, torsioni], is_all_zeros) = writeImagFloats13E([iaxial, itorsion], is_mag_phase)
+                [axialr, torsionr, axiali, torsioni] = write_imag_floats_13e([iaxial, itorsion], is_mag_phase)
                 f.write('                %8i                 %-13s / %-13s                 %-13s / %s\n' % (
                     eid, axialr, axiali, torsionr, torsioni))
 

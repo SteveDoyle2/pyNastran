@@ -841,7 +841,7 @@ class PBARL(LineProperty):
             #: dimension list
             self.dim = dims
             assert len(dims) == ndim, 'PBARL ndim=%s len(dims)=%s' % (ndim, len(dims))
-            assert len(dims) == len(self.dim), 'PBARL ndim=%s len(dims)=%s' % (ndim, len(self.dim))
+            #assert len(dims) == len(self.dim), 'PBARL ndim=%s len(dims)=%s' % (ndim, len(self.dim))
 
             #: non-structural mass
             self.nsm = double_or_blank(card, 9 + ndim + 1, 'nsm', 0.0)
@@ -1221,6 +1221,8 @@ class PBARL(LineProperty):
 
     def repr_fields(self):
         group = set_blank_if_default(self.group, 'MSCBMLO')
+        ndim = self.valid_types[self.Type]
+        assert len(self.dim) == ndim, 'PBARL ndim=%s len(dims)=%s' % (ndim, len(self.dim))
         list_fields = ['PBARL', self.pid, self.Mid(), group, self.Type, None,
                        None, None, None] + self.dim + [self.nsm]
         return list_fields

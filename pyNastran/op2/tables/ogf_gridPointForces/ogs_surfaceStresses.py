@@ -25,9 +25,22 @@ class GridPointStressesArray(ScalarObject):
         #oxx, oyy, txy, angle, major, minor, ovm
         self.data = zeros((self.ntimes, self.ntotal, 7), dtype='float32')
 
-    def add_sort1(self, dt, eKey, eid, elemName, nx, ny, txy, angle, majorP, minorP, tmax, ovm):
+    def build_dataframe(self):
+        headers = self.get_headers()
+        name = self.name
+        element_node = [self.element_node[:, 0], self.element_node[:, 1]]
+        if self.nonlinear_factor is not None:
+            column_names, column_values = self._build_dataframe_transient_header()
+            self.data_frame = pd.Panel(self.data, items=column_values, major_axis=element_node, minor_axis=headers).to_frame()
+            self.data_frame.columns.names = column_names
+        else:
+            self.data_frame = pd.Panel(self.data, major_axis=element_node, minor_axis=headers).to_frame()
+            self.data_frame.columns.names = ['Static']
+        self.data_frame.index.names = ['NodeID', 'ElementID', 'Item']
+
+    def add_sort1(self, dt, ekey, eid, elemName, nx, ny, txy, angle, majorP, minorP, tmax, ovm):
         self.times[self.itime] = dt
-        self.grid_element[self.ntotal, :] = [eKey, eid]
+        self.grid_element[self.ntotal, :] = [ekey, eid]
         self.data[self.itime, self.ntotal, :] = [nx, ny, txy, angle, majorP, minorP, tmax, ovm]
 
     def get_stats(self):
@@ -44,6 +57,7 @@ class GridPointStressesArray(ScalarObject):
                                                      nelements))
         msg.append('  nx, ny, txy, angle, majorP, minorP, tmax, ovm\n')
         return msg
+
 
 class GridPointStresses(ScalarObject):
 
@@ -84,7 +98,7 @@ class GridPointStresses(ScalarObject):
         msg.append('  nx, ny, txy, angle, majorP, minorP, tmax, ovm\n')
         return msg
 
-    def add_new_transient(self, dt):  # eKey
+    def add_new_transient(self, dt):  # ekey
         """initializes the transient variables"""
         self.nx[dt] = {}
         self.ny[dt] = {}
@@ -98,57 +112,57 @@ class GridPointStresses(ScalarObject):
         self.elemName = {}
         self.eids = {}
 
-    def add(self, dt, eKey, eid, elemName, nx, ny, txy, angle, majorP, minorP, tmax, ovm):
-        if eKey not in self.nx:
-            self.eids[eKey] = []
-            self.elemName[eKey] = []
-            self.nx[eKey] = []
-            self.ny[eKey] = []
-            self.txy[eKey] = []
-            self.angle[eKey] = []
-            self.majorP[eKey] = []
-            self.minorP[eKey] = []
-            self.tmax[eKey] = []
-            self.ovm[eKey] = []
-        self.nx[eKey].append(nx)
-        self.ny[eKey].append(ny)
-        self.txy[eKey].append(txy)
-        self.angle[eKey].append(angle)
-        self.majorP[eKey].append(majorP)
-        self.minorP[eKey].append(minorP)
-        self.tmax[eKey].append(tmax)
-        self.ovm[eKey].append(ovm)
+    def add(self, dt, ekey, eid, elemName, nx, ny, txy, angle, majorP, minorP, tmax, ovm):
+        if ekey not in self.nx:
+            self.eids[ekey] = []
+            self.elemName[ekey] = []
+            self.nx[ekey] = []
+            self.ny[ekey] = []
+            self.txy[ekey] = []
+            self.angle[ekey] = []
+            self.majorP[ekey] = []
+            self.minorP[ekey] = []
+            self.tmax[ekey] = []
+            self.ovm[ekey] = []
+        self.nx[ekey].append(nx)
+        self.ny[ekey].append(ny)
+        self.txy[ekey].append(txy)
+        self.angle[ekey].append(angle)
+        self.majorP[ekey].append(majorP)
+        self.minorP[ekey].append(minorP)
+        self.tmax[ekey].append(tmax)
+        self.ovm[ekey].append(ovm)
 
-        self.elemName[eKey].append(elemName)
-        self.eids[eKey].append(eid)
+        self.elemName[ekey].append(elemName)
+        self.eids[ekey].append(eid)
 
-    def add_sort1(self, dt, eKey, eid, elemName, nx, ny, txy, angle, majorP, minorP, tmax, ovm):
+    def add_sort1(self, dt, ekey, eid, elemName, nx, ny, txy, angle, majorP, minorP, tmax, ovm):
         if dt not in self.nx:
             self.add_new_transient(dt)
 
-        #print "%s=%s eKey=%s eid=%s elemName=%s f1=%s" %(self.data_code['name'],dt,eKey,eid,elemName,f1)
-        if eKey not in self.nx[dt]:
-            self.eids[eKey] = []
-            self.elemName[eKey] = []
-            self.nx[dt][eKey] = []
-            self.ny[dt][eKey] = []
-            self.txy[dt][eKey] = []
-            self.angle[dt][eKey] = []
-            self.majorP[dt][eKey] = []
-            self.minorP[dt][eKey] = []
-            self.tmax[dt][eKey] = []
-            self.ovm[dt][eKey] = []
-        self.eids[eKey].append(eid)
-        self.elemName[eKey].append(elemName)
+        #print "%s=%s ekey=%s eid=%s elemName=%s f1=%s" %(self.data_code['name'],dt,ekey,eid,elemName,f1)
+        if ekey not in self.nx[dt]:
+            self.eids[ekey] = []
+            self.elemName[ekey] = []
+            self.nx[dt][ekey] = []
+            self.ny[dt][ekey] = []
+            self.txy[dt][ekey] = []
+            self.angle[dt][ekey] = []
+            self.majorP[dt][ekey] = []
+            self.minorP[dt][ekey] = []
+            self.tmax[dt][ekey] = []
+            self.ovm[dt][ekey] = []
+        self.eids[ekey].append(eid)
+        self.elemName[ekey].append(elemName)
 
-        self.nx[dt][eKey].append(nx)
-        self.ny[dt][eKey].append(ny)
-        self.txy[dt][eKey].append(txy)
-        self.angle[dt][eKey].append(angle)
-        self.majorP[dt][eKey].append(majorP)
-        self.minorP[dt][eKey].append(minorP)
-        self.tmax[dt][eKey].append(tmax)
-        self.ovm[dt][eKey].append(ovm)
+        self.nx[dt][ekey].append(nx)
+        self.ny[dt][ekey].append(ny)
+        self.txy[dt][ekey].append(txy)
+        self.angle[dt][ekey].append(angle)
+        self.majorP[dt][ekey].append(majorP)
+        self.minorP[dt][ekey].append(minorP)
+        self.tmax[dt][ekey].append(tmax)
+        self.ovm[dt][ekey].append(ovm)
 
     def delete_transient(self, dt):
         del self.nx[dt]
@@ -181,20 +195,20 @@ class GridPointStresses(ScalarObject):
               #'0     13683          3736    TRIAX6         4.996584E+00   0.0            1.203093E+02   0.0            0.0            0.0'
               #'      13683          3737    TRIAX6        -4.996584E+00   0.0           -1.203093E+02   0.0            0.0            0.0'
               #'      13683                  *TOTALS*       6.366463E-12   0.0           -1.364242E-12   0.0            0.0            0.0'
-        for eKey, nxs in sorted(iteritems(self.nx)):
-            eKey2 = eKey
+        for ekey, nxs in sorted(iteritems(self.nx)):
+            ekey2 = ekey
             zero = '0'
             for iLoad, nx in enumerate(nxs):
-                ny = self.ny[eKey][iLoad]
-                txy = self.txy[eKey][iLoad]
-                angle = self.angle[eKey][iLoad]
-                majorP = self.majorP[eKey][iLoad]
-                minorP = self.minorP[eKey][iLoad]
-                tmax = self.tmax[eKey][iLoad]
-                ovm = self.ovm[eKey][iLoad]
+                ny = self.ny[ekey][iLoad]
+                txy = self.txy[ekey][iLoad]
+                angle = self.angle[ekey][iLoad]
+                majorP = self.majorP[ekey][iLoad]
+                minorP = self.minorP[ekey][iLoad]
+                tmax = self.tmax[ekey][iLoad]
+                ovm = self.ovm[ekey][iLoad]
 
-                (elemName) = self.elemName[eKey][iLoad]
-                eid = self.eids[eKey][iLoad]
+                (elemName) = self.elemName[ekey][iLoad]
+                eid = self.eids[ekey][iLoad]
                 vals = [nx, ny, txy, majorP, minorP, tmax, ovm]
                 (vals2, is_all_zeros) = writeFloats10E(vals)
                 [nx, ny, txy, majorP, minorP, tmax, ovm] = vals2
@@ -202,9 +216,9 @@ class GridPointStresses(ScalarObject):
                     eid = zero
                 angle, isAllZero = writeFloats8p4F([angle])
                 anglei = angle[0]
-                msg.append('%s%8s  %8s   %4s    %s %s %s   %8s %10s %10s %10s  %s\n' % (zero, eKey2, eid, elemName, nx, ny, txy, anglei, majorP, minorP, tmax, ovm))
+                msg.append('%s%8s  %8s   %4s    %s %s %s   %8s %10s %10s %10s  %s\n' % (zero, ekey2, eid, elemName, nx, ny, txy, anglei, majorP, minorP, tmax, ovm))
                 zero = ' '
-                eKey2 = ' '
+                ekey2 = ' '
         msg.append(page_stamp % page_num)
         f.write(''.join(msg))
         return page_num
@@ -221,20 +235,20 @@ class GridPointStresses(ScalarObject):
               #'      13683          3737    TRIAX6        -4.996584E+00   0.0           -1.203093E+02   0.0            0.0            0.0'
               #'      13683                  *TOTALS*       6.366463E-12   0.0           -1.364242E-12   0.0            0.0            0.0'
         for dt, Forces in sorted(iteritems(self.forces)):
-            for eKey, force in sorted(iteritems(Forces)):
+            for ekey, force in sorted(iteritems(Forces)):
                 zero = '0'
                 for iLoad, f in enumerate(force):
                     (f1, f2, f3) = f
-                    (m1, m2, m3) = self.moments[dt][eKey][iLoad]
-                    (elemName) = self.elemName[eKey][iLoad]
-                    eid = self.eids[eKey][iLoad]
+                    (m1, m2, m3) = self.moments[dt][ekey][iLoad]
+                    (elemName) = self.elemName[ekey][iLoad]
+                    eid = self.eids[ekey][iLoad]
 
                     vals = [f1, f2, f3, m1, m2, m3]
                     vals2 = write_floats_13e(vals)
                     [f1, f2, f3, m1, m2, m3] = vals2
                     if eid == 0:
                         eid = ''
-                    msg.append('%s  %8s    %10s    %8s      %10s  %10s  %10s  %10s  %10s  %s\n' % (zero, eKey, eid, elemName, f1, f2, f3, m1, m2, m3))
+                    msg.append('%s  %8s    %10s    %8s      %10s  %10s  %10s  %10s  %10s  %s\n' % (zero, ekey, eid, elemName, f1, f2, f3, m1, m2, m3))
                     zero = ' '
 
             msg.append(page_stamp % page_num)
@@ -282,7 +296,7 @@ class GridPointStressesVolume(ScalarObject):
         msg.append('  nx, ny, nz, txy, tyz, txz, pressure, ovm\n')
         return msg
 
-    def add_new_transient(self, dt):  # eKey
+    def add_new_transient(self, dt):  # ekey
         """initializes the transient variables"""
         self.nx[dt] = {}
         self.ny[dt] = {}
@@ -296,57 +310,57 @@ class GridPointStressesVolume(ScalarObject):
         self.elemName = {}
         self.eids = {}
 
-    def add(self, dt, eKey, nx, ny, nz, txy, tyz, txz, pressure, ovm):
-        if eKey not in self.nx:
-            #self.eids[eKey] = []
-            #self.elemName[eKey] = []
-            self.nx[eKey] = []
-            self.ny[eKey] = []
-            self.nz[eKey] = []
-            self.txy[eKey] = []
-            self.tyz[eKey] = []
-            self.txz[eKey] = []
-            self.pressure[eKey] = []
-            self.ovm[eKey] = []
-        self.nx[eKey].append(nx)
-        self.ny[eKey].append(ny)
-        self.nz[eKey].append(nz)
-        self.txy[eKey].append(txy)
-        self.tyz[eKey].append(tyz)
-        self.txz[eKey].append(txz)
-        self.pressure[eKey].append(pressure)
-        self.ovm[eKey].append(ovm)
+    def add(self, dt, ekey, nx, ny, nz, txy, tyz, txz, pressure, ovm):
+        if ekey not in self.nx:
+            #self.eids[ekey] = []
+            #self.elemName[ekey] = []
+            self.nx[ekey] = []
+            self.ny[ekey] = []
+            self.nz[ekey] = []
+            self.txy[ekey] = []
+            self.tyz[ekey] = []
+            self.txz[ekey] = []
+            self.pressure[ekey] = []
+            self.ovm[ekey] = []
+        self.nx[ekey].append(nx)
+        self.ny[ekey].append(ny)
+        self.nz[ekey].append(nz)
+        self.txy[ekey].append(txy)
+        self.tyz[ekey].append(tyz)
+        self.txz[ekey].append(txz)
+        self.pressure[ekey].append(pressure)
+        self.ovm[ekey].append(ovm)
 
-        #self.elemName[eKey].append(elemName)
-        #self.eids[eKey].append(eid)
+        #self.elemName[ekey].append(elemName)
+        #self.eids[ekey].append(eid)
 
-    def add_sort1(self, dt, eKey, nx, ny, nz, txy, tyz, txz, pressure, ovm):
+    def add_sort1(self, dt, ekey, nx, ny, nz, txy, tyz, txz, pressure, ovm):
         if dt not in self.nx:
             self.add_new_transient(dt)
 
-        #print "%s=%s eKey=%s eid=%s elemName=%s f1=%s" %(self.data_code['name'],dt,eKey,eid,elemName,f1)
-        if eKey not in self.nx[dt]:
-            #self.eids[eKey] = []
-            #self.elemName[eKey] = []
-            self.nx[dt][eKey] = []
-            self.ny[dt][eKey] = []
-            self.nz[dt][eKey] = []
-            self.txy[dt][eKey] = []
-            self.tyz[dt][eKey] = []
-            self.txz[dt][eKey] = []
-            self.pressure[eKey] = []
-            self.ovm[dt][eKey] = []
-        self.eids[eKey].append(eid)
-        #self.elemName[eKey].append(elemName)
+        #print "%s=%s ekey=%s eid=%s elemName=%s f1=%s" %(self.data_code['name'],dt,ekey,eid,elemName,f1)
+        if ekey not in self.nx[dt]:
+            #self.eids[ekey] = []
+            #self.elemName[ekey] = []
+            self.nx[dt][ekey] = []
+            self.ny[dt][ekey] = []
+            self.nz[dt][ekey] = []
+            self.txy[dt][ekey] = []
+            self.tyz[dt][ekey] = []
+            self.txz[dt][ekey] = []
+            self.pressure[ekey] = []
+            self.ovm[dt][ekey] = []
+        self.eids[ekey].append(eid)
+        #self.elemName[ekey].append(elemName)
 
-        self.nx[dt][eKey].append(nx)
-        self.ny[dt][eKey].append(ny)
-        self.nz[dt][eKey].append(nz)
-        self.txy[dt][eKey].append(txy)
-        self.tyz[dt][eKey].append(tyz)
-        self.txz[dt][eKey].append(txz)
-        self.pressure[dt][eKey].append(pressure)
-        self.ovm[dt][eKey].append(ovm)
+        self.nx[dt][ekey].append(nx)
+        self.ny[dt][ekey].append(ny)
+        self.nz[dt][ekey].append(nz)
+        self.txy[dt][ekey].append(txy)
+        self.tyz[dt][ekey].append(tyz)
+        self.txz[dt][ekey].append(txz)
+        self.pressure[dt][ekey].append(pressure)
+        self.ovm[dt][ekey].append(ovm)
 
     def delete_transient(self, dt):
         del self.nx[dt]
@@ -383,26 +397,26 @@ class GridPointStressesVolume(ScalarObject):
               #'0     13683          3736    TRIAX6         4.996584E+00   0.0            1.203093E+02   0.0            0.0            0.0'
               #'      13683          3737    TRIAX6        -4.996584E+00   0.0           -1.203093E+02   0.0            0.0            0.0'
               #'      13683                  *TOTALS*       6.366463E-12   0.0           -1.364242E-12   0.0            0.0            0.0'
-        for eKey, nxs in sorted(iteritems(self.nx)):
-            eKey2 = eKey
+        for ekey, nxs in sorted(iteritems(self.nx)):
+            ekey2 = ekey
             zero = '0'
             for iLoad, nx in enumerate(nxs):
-                ny = self.ny[eKey][iLoad]
-                nz = self.nz[eKey][iLoad]
-                txy = self.txy[eKey][iLoad]
-                tyz = self.tyz[eKey][iLoad]
-                txz = self.txz[eKey][iLoad]
-                pressure = self.pressure[eKey][iLoad]
-                ovm = self.ovm[eKey][iLoad]
+                ny = self.ny[ekey][iLoad]
+                nz = self.nz[ekey][iLoad]
+                txy = self.txy[ekey][iLoad]
+                tyz = self.tyz[ekey][iLoad]
+                txz = self.txz[ekey][iLoad]
+                pressure = self.pressure[ekey][iLoad]
+                ovm = self.ovm[ekey][iLoad]
 
-                #(elemName) = self.elemName[eKey][iLoad]
-                #eid = self.eids[eKey][iLoad]
+                #(elemName) = self.elemName[ekey][iLoad]
+                #eid = self.eids[ekey][iLoad]
                 vals = [nx, ny, nz, txy, tyz, txz, pressure, ovm]
                 (vals2, is_all_zeros) = writeFloats10E(vals)
                 [nx, ny, nz, txy, tyz, txz, pressure, ovm] = vals2
-                msg.append('%s%8s  %s %s %s   %s %s %s %s  %-s\n' % (zero, eKey, nx, ny, nz, txy, tyz, txz, pressure, ovm.rstrip()))
+                msg.append('%s%8s  %s %s %s   %s %s %s %s  %-s\n' % (zero, ekey, nx, ny, nz, txy, tyz, txz, pressure, ovm.rstrip()))
                 zero = ' '
-                eKey2 = ' '
+                ekey2 = ' '
 
         msg.append(page_stamp % page_num)
         f.write(''.join(msg))
@@ -420,13 +434,13 @@ class GridPointStressesVolume(ScalarObject):
               #'      13683          3737    TRIAX6        -4.996584E+00   0.0           -1.203093E+02   0.0            0.0            0.0'
               #'      13683                  *TOTALS*       6.366463E-12   0.0           -1.364242E-12   0.0            0.0            0.0'
         for dt, Forces in sorted(iteritems(self.forces)):
-            for eKey, force in sorted(iteritems(Forces)):
+            for ekey, force in sorted(iteritems(Forces)):
                 zero = '0'
                 for iLoad, f in enumerate(force):
                     (f1, f2, f3) = f
-                    (m1, m2, m3) = self.moments[dt][eKey][iLoad]
-                    (elemName) = self.elemName[eKey][iLoad]
-                    eid = self.eids[eKey][iLoad]
+                    (m1, m2, m3) = self.moments[dt][ekey][iLoad]
+                    (elemName) = self.elemName[ekey][iLoad]
+                    eid = self.eids[ekey][iLoad]
 
                     vals = [f1, f2, f3, m1, m2, m3]
                     vals2 = write_floats_13e(vals)
@@ -434,7 +448,7 @@ class GridPointStressesVolume(ScalarObject):
                     if eid == 0:
                         eid = ''
 
-                    msg.append('%s  %8s    %10s    %8s      %s  %s  %s  %s  %s  %-s\n' % (zero, eKey, eid, elemName, f1, f2, f3, m1, m2, m3))
+                    msg.append('%s  %8s    %10s    %8s      %s  %s  %s  %s  %s  %-s\n' % (zero, ekey, eid, elemName, f1, f2, f3, m1, m2, m3))
                     zero = ' '
 
             msg.append(page_stamp % page_num)

@@ -4,7 +4,11 @@ from six import iteritems
 from numpy import zeros, array_equal
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
 
-from pyNastran.f06.f06_formatting import writeImagFloats13E, _eigenvalue_header
+from pyNastran.f06.f06_formatting import write_imag_floats_13e, _eigenvalue_header
+try:
+    import pandas as pd
+except ImportError:
+    pass
 
 
 class ComplexSpringDamperArray(OES_Object):
@@ -65,6 +69,14 @@ class ComplexSpringDamperArray(OES_Object):
 
         #[axial_force, torque]
         self.data = zeros((self.ntimes, self.ntotal, 1), dtype='complex64')
+
+    def build_dataframe(self):
+        headers = self.get_headers()
+        name = self.name
+        column_names, column_values = self._build_dataframe_transient_header()
+        self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
+        self.data_frame.columns.names = column_names
+        self.data_frame.index.names = ['ElementID', 'Item']
 
     def __eq__(self, table):
         assert self.is_sort1() == table.is_sort1()
@@ -221,7 +233,7 @@ class ComplexSpringDamperArray(OES_Object):
             # loop over all the elements
             out = []
             for eid, spring_forcei in zip(eids, spring_force):
-                ([rspring, ispring], is_all_zeros) = writeImagFloats13E([spring_forcei], is_mag_phase)
+                [rspring, ispring] = write_imag_floats_13e([spring_forcei], is_mag_phase)
                 #ELEMENT                             AXIAL                                       TORSIONAL
                     #ID.                              STRESS                                         STRESS
                     #14                  0.0          /  0.0                           0.0          /  0.0

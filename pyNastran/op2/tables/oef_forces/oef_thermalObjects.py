@@ -6,6 +6,10 @@ from numpy import zeros, empty, array_equal
 from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
 from pyNastran.f06.f06_formatting import get_key0, write_floats_13e, _eigenvalue_header
 from pyNastran.op2.resultObjects.element_table_object import RealElementTableArray
+try:
+    import pandas as pd
+except ImportError:
+    pass
 
 
 class Real1DHeatFluxArray(ScalarObject):
@@ -65,6 +69,19 @@ class Real1DHeatFluxArray(ScalarObject):
 
         #[xgrad, ygrad, zgrad, xflux, yflux, zflux]
         self.data = zeros((self.ntimes, self.ntotal, 6), dtype='float32')
+
+    def build_dataframe(self):
+        headers = self.get_headers()
+        assert 0 not in self.element
+        name = self.name
+        if self.nonlinear_factor is not None:
+            column_names, column_values = self._build_dataframe_transient_header()
+            self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
+            self.data_frame.columns.names = column_names
+        else:
+            self.data_frame = pd.Panel(self.data, major_axis=self.element, minor_axis=headers).to_frame()
+            self.data_frame.columns.names = ['Static']
+        self.data_frame.index.names = ['ElementID', 'Item']
 
     def __eq__(self, table):
         assert self.is_sort1() == table.is_sort1()
@@ -629,6 +646,19 @@ class RealChbdyHeatFluxArray(ScalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
 
         #[fapplied, free_conv, force_conv, frad, ftotal]
         self.data = zeros((self.ntimes, self.ntotal, 5), dtype='float32')
+
+    def build_dataframe(self):
+        headers = self.get_headers()
+        assert 0 not in self.element
+        name = self.name
+        if self.nonlinear_factor is not None:
+            column_names, column_values = self._build_dataframe_transient_header()
+            self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
+            self.data_frame.columns.names = column_names
+        else:
+            self.data_frame = pd.Panel(self.data, major_axis=self.element, minor_axis=headers).to_frame()
+            self.data_frame.columns.names = ['Static']
+        self.data_frame.index.names = ['ElementID', 'Item']
 
     def __eq__(self, table):
         assert self.is_sort1() == table.is_sort1()

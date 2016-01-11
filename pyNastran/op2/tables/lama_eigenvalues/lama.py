@@ -74,7 +74,7 @@ class LAMA(OP2Common):
             (imode, order, eigr, eigc, freq, damping) = out # CLAMA
             #print('imode=%s order=%s eigr=%s eigc=%s freq=%s damping=%s' %
                   #(imode, order, eigr, eigc, freq, damping))
-            clama.addF06Line(out)
+            clama.add_f06_line(out)
             n += ntotal
         assert n == ndata, 'clama length error'
         return n
@@ -103,7 +103,7 @@ class LAMA(OP2Common):
             (imode, order, eigen, omega, freq, mass, stiff) = out # BLAMA??
             #(modeNum, extractOrder, eigenvalue, radian, cycle, genM, genK) = line  # LAMA
             #(rootNum, extractOrder, eigr, eigi, cycle, damping) = data  # CLAMA
-            blama.addF06Line(out)
+            blama.add_f06_line(out)
             n += ntotal
         return n
 
@@ -159,7 +159,7 @@ class LAMA(OP2Common):
             if self.is_debug_file:
                 self.binary_debug.write('  eigenvalue%s - %s\n' % (i, str(out)))
             #(imode, order, eigen, omega, freq, mass, stiff) = out
-            (imode, extractOrder, eigenvalue, radian, cycle, genM, genK) = out
-            lama.addF06Line(out)
+            (imode, extract_order, eigenvalue, radian, cycle, genM, genK) = out
+            lama.add_f06_line(out)
             n += ntotal
         return n

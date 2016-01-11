@@ -122,9 +122,18 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
         """
         Gets the thickness of the :math:`i^{th}` ply.
 
-        :param self: the PCOMP object
-        :param iply: the string **'all'** (default) or the mass per area of
-                     the :math:`i^{th}` ply
+        Parameters
+        ----------
+        self : PCOMP()
+            the PCOMP object
+        iply : int/str; default='all'
+            the string **'all'** (default) or the mass per area of
+            the :math:`i^{th}` ply
+
+        Returns
+        -------
+        thickness : float
+            the thickness of the ply or plies
         """
         nplies = len(self.thicknesses)
         if iply == 'all':  # get all layers
@@ -166,8 +175,18 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
         """
         Gets the Material ID of the :math:`i^{th}` ply.
 
-        :param self: the PCOMP/PCOMPG object
-        :param iply: the ply ID (starts from 0)
+        Parameters
+        ----------
+        self : PCOMP()
+            the PCOMP/PCOMPG object
+        iply : int/str; default='all'
+            the string **'all'** (default) or the mass per area of
+            the :math:`i^{th}` ply
+
+        Returns
+        -------
+        material_id : int
+            the material id of the ith ply
         """
         iply = self._adjust_ply_id(iply)
         Mid = self.Material(iply)

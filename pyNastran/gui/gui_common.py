@@ -789,7 +789,6 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
         # vtk actors
         self.grid = vtk.vtkUnstructuredGrid()
-        self.grid2 = vtk.vtkUnstructuredGrid()
         #self.emptyResult = vtk.vtkFloatArray()
         #self.vectorResult = vtk.vtkFloatArray()
 
@@ -863,9 +862,15 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             rend.AddActor(self.geom_actor)
 
         # initialize geometry_actors
-        self.geometry_actors = {
-            'main' : self.geom_actor,
-        }
+        self.geometry_actors['main'] = self.geom_actor
+
+        # bar scale set so you can't edit the bar scale
+        white = (255, 255, 255)
+        geom_props = AltGeometry(
+            self, 'main', color=white, line_width=1, opacity=1.0, point_size=1,
+            bar_scale=0.0, representation='main', is_visible=True)
+        self.geometry_properties['main'] = geom_props
+
         #self.addAltGeometry()
         self.rend.GetActiveCamera().ParallelProjectionOn()
         self.rend.SetBackground(*self.background_col)
@@ -2976,7 +2981,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         if not len(self.geometry_properties):
             self.log_error('No secondary geometries to edit.')
             return
-
+        print('geometry_properties.keys() =', self.geometry_properties.keys())
         #key = self.case_keys[self.icase]
         #case = self.result_cases[key]
         #if len(key) == 5:
@@ -2995,7 +3000,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         else:
             self._edit_group_properties.activateWindow()
 
-        if  'clicked_ok' not in data:
+        if 'clicked_ok' not in data:
             self._edit_group_properties.activateWindow()
 
         if data['clicked_ok']:
@@ -3114,11 +3119,14 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         # node2 = node1 + v
 
         nnodes = len(length_y)
-        points = self.alt_grids[name].GetPoints()
+        grid = self.alt_grids[name]
+        points = grid.GetPoints()
         for i in range(nnodes):
             node = node1[i, :] + length_y[i] * bar_scale * dy[i, :]
             points.SetPoint(2 * i + 1, *node)
-        self.alt_grids[name].Update()
+
+        if hasattr(grid, 'Update'):
+            grid.Update()
         # bar_z = self.bar_lines[(name)]
         # dz = bar_z[:, :3] - bar_z[:, 3:]
         # Lz = norm(dz, axis=1)

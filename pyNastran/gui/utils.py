@@ -6,6 +6,10 @@ from numpy import loadtxt
 import pyNastran
 
 def check_for_newer_version(window=None, pop_msg=False):
+    """
+    Checks to see if a newer version of pyNastran has been released.
+    Only checks this for the GUI.
+    """
     current_version = pyNastran.__version__
     target_url = 'https://raw.githubusercontent.com/SteveDoyle2/pyNastran/master/README.md'
     try:
@@ -24,7 +28,7 @@ def check_for_newer_version(window=None, pop_msg=False):
     if 'dev' in current_version:
         is_dev = True
 
-    major, minor, rev = current_version.split('_')[0].split('.')
+    major, minor, rev = current_version.split('+')[0].split('.')
     major = int(major)
     minor = int(minor)
     rev = int(rev)

@@ -1,4 +1,4 @@
-from pyNastran.op2.resultObjects.tableObject import RealTableArray, ComplexTableArray, RealTableObject, ComplexTableObject
+from pyNastran.op2.resultObjects.tableObject import RealTableArray, ComplexTableArray
 
 
 class RealAccelerationArray(RealTableArray):

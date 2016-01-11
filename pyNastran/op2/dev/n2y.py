@@ -15,7 +15,7 @@ import warnings
 import pyNastran.op2.dev.locate as locate
 
 
-def rbgeom(grids, refpoint=np.array([[0, 0, 0]])):
+def rigid_body_geom(grids, refpoint=np.array([[0, 0, 0]])):
     """
     Compute 6 rigid-body modes from geometry.
 
@@ -34,7 +34,7 @@ def rbgeom(grids, refpoint=np.array([[0, 0, 0]])):
 
     Note:  all grids are assumed to be in the same rectangular
     coordinate system.  For a much more sophisticated routine, see
-    n2y.rbgeom_uset().
+    n2y.rigid_body_geom_uset().
 
     Examples
     --------
@@ -76,7 +76,7 @@ def rbgeom(grids, refpoint=np.array([[0, 0, 0]])):
     return rbmodes
 
 
-def rbgeom_uset(uset, refpoint=np.array([[0, 0, 0]])):
+def rigid_body_geom_uset(uset, refpoint=np.array([[0, 0, 0]])):
     """
     Compute 6 rigid-body modes from geometry using a USET table.
 
@@ -108,7 +108,7 @@ def rbgeom_uset(uset, refpoint=np.array([[0, 0, 0]])):
        spherical coordinates.
 
     See also nastran.bulk2uset, n2y.rbgeom, op2.rdnas2cam,
-    op2.rdn2cop2, n2y.usetprt.
+    op2.read_nas2cam_op2, n2y.usetprt.
 
     Examples
     --------
@@ -121,11 +121,11 @@ def rbgeom_uset(uset, refpoint=np.array([[0, 0, 0]])):
     >>> cylcoord = np.array([[1, 2, 0], [0, 0, 0], [1, 0, 0],
     ...                     [0, 1, 0]])
     >>> uset = None
-    >>> uset = n2y.addgrid(uset, 100, 'b', 0, [5, 10, 15], 0)
-    >>> uset = n2y.addgrid(uset, 200, 'b', cylcoord, [32, 90, 10],
-    ...                    cylcoord)
-    >>> np.set_printoptions(precision=2, suppress=True)
-    >>> n2y.rbgeom_uset(uset)   # rb modes relative to [0, 0, 0]
+    >>> uset = n2y.add_grid(uset, 100, 'b', 0, [5, 10, 15], 0)
+    >>> uset = n2y.add_grid(uset, 200, 'b', cylcoord, [32, 90, 10],
+    ...                     cylcoord)
+    >>> np.set_print_options(precision=2, suppress=True)
+    >>> n2y.rigid_body_geom_uset(uset)   # rb modes relative to [0, 0, 0]
     array([[  1.,   0.,   0.,   0.,  15., -10.],
            [  0.,   1.,   0., -15.,   0.,   5.],
            [  0.,   0.,   1.,  10.,  -5.,   0.],
@@ -172,7 +172,7 @@ def rbgeom_uset(uset, refpoint=np.array([[0, 0, 0]])):
     # rigid-body modes in basic coordinate system:
     if np.size(refpoint) == 1:
         refpoint = np.nonzero(grids[::6, 0] == refpoint)[0]
-    rb = rbgeom(grids[::6, 3:], refpoint)
+    rb = rigid_body_geom(grids[::6, 3:], refpoint)
 
     # treat as rectangular here; fix cylindrical & spherical below
     rb2 = np.zeros((np.shape(rb)))
@@ -230,7 +230,7 @@ def rbgeom_uset(uset, refpoint=np.array([[0, 0, 0]])):
     return rbmodes
 
 
-def rbmove(rb, oldref, newref):
+def rigid_body_move(rb, oldref, newref):
     """
     Returns rigid-body modes relative to new reference point.
 
@@ -246,24 +246,24 @@ def rbmove(rb, oldref, newref):
     Returns
     -------
     rbnew : 6 column ndarray
-        New rigid-body modes from:  rb*rbgeom(oldref, newref).
+        New rigid-body modes from:  rb*rigid_body_geom(oldref, newref).
 
     Examples
     --------
     >>> import numpy as np
     >>> import n2y
     >>> grids = np.array([[0., 0., 0.], [30., 10., 20.]])
-    >>> rb0 = n2y.rbgeom(grids)
-    >>> rb1 = n2y.rbgeom(grids, [2., 4., -5.])
-    >>> rb1_b = n2y.rbmove(rb0, [0., 0., 0.], [2., 4., -5.])
+    >>> rb0 = n2y.rigid_body_geom(grids)
+    >>> rb1 = n2y.rigid_body_geom(grids, [2., 4., -5.])
+    >>> rb1_b = n2y.rigid_body_move(rb0, [0., 0., 0.], [2., 4., -5.])
     >>> np.all(rb1_b == rb1)
     True
 
     """
-    return np.dot(rb, rbgeom(oldref, newref))
+    return np.dot(rb, rigid_body_geom(oldref, newref))
 
 
-def rbcoords(rb, verbose=2):
+def rigid_body_coords(rb, verbose=2):
     """
     Return coordinates of each node given rigid-body modes.
 
@@ -327,8 +327,8 @@ def rbcoords(rb, verbose=2):
     >>> coords = np.array([[0, 0, 0],
     ...                    [1, 2, 3],
     ...                    [4, -5, 25]])
-    >>> rb = n2y.rbgeom(coords)
-    >>> coords_out, mxdev, mxerr = n2y.rbcoords(rb)
+    >>> rb = n2y.rigid_body_geom(coords)
+    >>> coords_out, mxdev, mxerr = n2y.rigid_body_coords(rb)
     >>> np.allclose(coords_out, coords)
     True
     >>> np.allclose(0., mxdev)
@@ -546,7 +546,7 @@ def mkusetmask(nasset=None):
     assume that the 2nd bit belongs to the B-set and no manual changes
     are required.
 
-    See also n2y.mksetpv, op2.rdnas2cam, op2.rdn2cop2, n2y.usetprt.
+    See also n2y.mksetpv, op2.read_nas2cam, op2.read_nas2cam_op2, n2y.usetprt.
 
     Examples
     --------
@@ -607,7 +607,7 @@ def mkusetmask(nasset=None):
     return usetmask
 
 
-def usetprt(file, uset, printsets="M,S,O,Q,R,C,B,E,L,T,A,F,N,G",
+def uset_print(file, uset, printsets="M,S,O,Q,R,C,B,E,L,T,A,F,N,G",
             form=0, perpage=float('inf')):
     """
     Print Nastran DOF set membership information from USET table.
@@ -679,8 +679,8 @@ def usetprt(file, uset, printsets="M,S,O,Q,R,C,B,E,L,T,A,F,N,G",
 
     See also
     --------
-    :func:`op2.rdn2cop2`, :func:`n2y.mksetpv`,
-    :func:`n2y.rbgeom_uset`, :func:`op2.rdnas2cam`
+    :func:`op2.read_nas2can_op2`, :func:`n2y.mksetpv`,
+    :func:`n2y.rigid_body_geom_uset`, :func:`op2.read_nas2cam`
 
     Examples
     --------
@@ -693,11 +693,11 @@ def usetprt(file, uset, printsets="M,S,O,Q,R,C,B,E,L,T,A,F,N,G",
     >>> cylcoord = np.array([[1, 2, 0], [0, 0, 0], [1, 0, 0],
     ...                     [0, 1, 0]])
     >>> uset = None
-    >>> uset = n2y.addgrid(uset, 100, 'b', 0, [5, 10, 15], 0)
-    >>> uset = n2y.addgrid(uset, 200, 'c', cylcoord, [32, 90, 10],
-    ...                    cylcoord)
-    >>> table = n2y.usetprt(1, uset,
-    ...                     printsets='r, c')  # doctest: +ELLIPSIS
+    >>> uset = n2y.add_grid(uset, 100, 'b', 0, [5, 10, 15], 0)
+    >>> uset = n2y.add_grid(uset, 200, 'c', cylcoord, [32, 90, 10],
+    ...                     cylcoord)
+    >>> table = n2y.uset_print(1, uset,
+    ...                        printsets='r, c')  # doctest: +ELLIPSIS
     R-set
           -None-
     <BLANKLINE>
@@ -705,8 +705,8 @@ def usetprt(file, uset, printsets="M,S,O,Q,R,C,B,E,L,T,A,F,N,G",
                  -1-        -2-    ...   -6-     ...  -10-
          1=      200-1      200-2  ...   200-6
     <BLANKLINE>
-    >>> table = n2y.usetprt(1, uset,
-    ...                     printsets='*')  # doctest: +ELLIPSIS
+    >>> table = n2y.uset_print(1, uset,
+    ...                        printsets='*')  # doctest: +ELLIPSIS
     M-set, S-set, O-set, Q-set, R-set, E-set, U1-set, ... U6-set
           -None-
     <BLANKLINE>
@@ -723,7 +723,7 @@ def usetprt(file, uset, printsets="M,S,O,Q,R,C,B,E,L,T,A,F,N,G",
          1=      100-1      100-2  ...    200-4 =    10
         11=      200-5      200-6
     <BLANKLINE>
-    >>> table = n2y.usetprt(1, uset)  # doctest: +ELLIPSIS
+    >>> table = n2y.uset_print(1, uset)  # doctest: +ELLIPSIS
     M-set, S-set, O-set, Q-set, R-set, E-set
           -None-
     <BLANKLINE>
@@ -1059,7 +1059,7 @@ def mksetpv(uset, major, minor):
     return pv
 
 
-def mkdofpv(uset, nasset, dof):
+def make_dof_partition_vector(uset, nasset, dof):
     """
     Make a DOF partition vector for a particular set from a Nastran
     USET table.
@@ -1184,7 +1184,7 @@ def mkdofpv(uset, nasset, dof):
     return pv, outdof
 
 
-def coordcardinfo(uset, cid=None):
+def coord_card_info(uset, cid=None):
     """
     Returns 'coordinate card' data from information in USET table
 
@@ -1361,7 +1361,7 @@ def _get_coordinfo_byid(refid, uset):
                          'found in `uset`.'.format(refid))
 
 
-def get_coordinfo(cord, uset, coordref):
+def get_coord_info(cord, uset, coordref):
     """
     Function for getting coordinfo as needed by the USET table.
     Called by addgrid.
@@ -1542,11 +1542,11 @@ def build_coords(cords):
         J = np.argsort(selected)
         for j in range(n):
             cs = np.reshape(cords[J[j], :], (4, 3))   # , order='C')
-            addgrid(None, j+1, 'b', 0, [0, 0, 0], cs, coordref)
+            add_grid_to_uset(None, j+1, 'b', 0, [0, 0, 0], cs, coordref)
     return coordref
 
 
-def getcoords(uset, gid, csys, coordref=None):
+def get_coords(uset, gid, csys, coordref=None):
     r"""
     Get coordinates of a grid or location in a specified coordinate
     system.
@@ -1752,7 +1752,7 @@ def getcoords(uset, gid, csys, coordref=None):
 
     """
     if np.size(gid) == 1:
-        pv = mkdofpv(uset, 'p', gid)[0][0]
+        pv = make_dof_partition_vector(uset, 'p', gid)[0][0]
         xyz_basic = uset[pv, 3:]
     else:
         xyz_basic = np.asarray(gid).flatten()
@@ -1761,7 +1761,7 @@ def getcoords(uset, gid, csys, coordref=None):
     # get input "coordinfo" [ cid type 0; location(1x3); T(3x3) ]:
     if coordref is None:
         coordref = {}
-    coordinfo = get_coordinfo(csys, uset, coordref)
+    coordinfo = get_coord_info(csys, uset, coordref)
     xyz_coord = coordinfo[1]
     T = coordinfo[2:]   # transform to basic for coordinate system
     g = np.dot(T.T, xyz_basic-xyz_coord)
@@ -1810,7 +1810,7 @@ def get_loc_a_basic(coordinfo, a):
     return location
 
 
-def addgrid(uset, gid, nasset, coordin, xyz, coordout, coordref=None):
+def add_grid_to_uset(uset, gid, nasset, coordin, xyz, coordout, coordref=None):
     """
     Add a grid to a USET table.
 
@@ -1911,9 +1911,9 @@ def addgrid(uset, gid, nasset, coordin, xyz, coordout, coordref=None):
     >>> cylcoord = np.array([[1, 2, 0], [0, 0, 0], [1, 0, 0],
     ...                     [0, 1, 0]])
     >>> uset = None
-    >>> uset = n2y.addgrid(uset, 100, 'b', 0, [5, 10, 15], 0)
-    >>> uset = n2y.addgrid(uset, 200, 'b', cylcoord,
-    ...                    [32, 90, 10], cylcoord)
+    >>> uset = n2y.add_grid(uset, 100, 'b', 0, [5, 10, 15], 0)
+    >>> uset = n2y.add_grid(uset, 200, 'b', cylcoord,
+    ...                     [32, 90, 10], cylcoord)
     >>> uset.astype(np.int64)
     array([[    100,       1, 2097154,       5,      10,      15],
            [    100,       2, 2097154,       0,       1,       0],
@@ -1944,7 +1944,7 @@ def addgrid(uset, gid, nasset, coordin, xyz, coordout, coordref=None):
             coordref[0] = np.vstack((np.array([[0, 1, 0],
                                                [0., 0., 0.]]),
                                      np.eye(3)))
-    coordinfo = get_coordinfo(coordin, uset, coordref)
+    coordinfo = get_coord_info(coordin, uset, coordref)
 
     # prepare set(s):
     if len(nasset) == 6:
@@ -1962,7 +1962,7 @@ def addgrid(uset, gid, nasset, coordin, xyz, coordout, coordref=None):
 
     # get output "coordinfo" [ id type 0; location(1x3); T(3x3) ]:
     if np.any(coordout != coordin):
-        coordinfo = get_coordinfo(coordout, uset, coordref)
+        coordinfo = get_coord_info(coordout, uset, coordref)
 
     # prepare uset entry for grid:
     last3 = np.vstack((xyz[None], coordinfo))
@@ -1991,7 +1991,7 @@ def _solve(a, b):
     return linalg.solve(a, b)
 
 
-def formrbe3(uset, GRID_dep, DOF_dep, Ind_List, UM_List=None):
+def form_rbe3(uset, GRID_dep, DOF_dep, Ind_List, UM_List=None):
     """
     Form a least squares interpolation matrix, like RBE3 in Nastran.
 
@@ -2183,15 +2183,15 @@ def formrbe3(uset, GRID_dep, DOF_dep, Ind_List, UM_List=None):
     # partition uset table down to needed dof only:
     npids = np.vstack((ddof[0, :1], idof[:, :1]))
     ids = sorted(list(set(npids[:, 0])))
-    alldof = mkdofpv(uset, "p", ids)[0]
+    alldof = make_dof_partition_vector(uset, "p", ids)[0]
     alldof = locate.find2zo(alldof, np.size(uset, 0))
     uset = uset[alldof]
 
     # form partition vectors:
-    ipv = mkdofpv(uset, "p", idof)[0]
+    ipv = make_dof_partition_vector(uset, "p", idof)[0]
 
     # need transformation from basic to global for dependent grid
-    pv = mkdofpv(uset, "p", GRID_dep)[0]
+    pv = make_dof_partition_vector(uset, "p", GRID_dep)[0]
 
     # need to scale rotation weights by characteristic length:
     rot = idof[:, 1] > 3
@@ -2206,7 +2206,7 @@ def formrbe3(uset, GRID_dep, DOF_dep, Ind_List, UM_List=None):
             wtdof[rot] = wtdof[rot]*(Lc*Lc)
 
     # form rigid-body modes relative to GRID_dep
-    rbb = rbgeom_uset(uset, GRID_dep)
+    rbb = rigid_body_geom_uset(uset, GRID_dep)
     T = rbb[pv]
     rb = rbb[ipv]
     rbw = rb.T * wtdof
@@ -2220,7 +2220,7 @@ def formrbe3(uset, GRID_dep, DOF_dep, Ind_List, UM_List=None):
     dpv_m = locate.get_intersection(ddof, mdof, 2)[0]
     # this works when the m-set is a subset of the independent set:
     if not np.any(dpv_m):
-        mpv = mkdofpv(uset[ipv], "p", mdof)[0]
+        mpv = make_dof_partition_vector(uset[ipv], "p", mdof)[0]
         rbe3_um = rbe3[:, mpv]
         notmpv = locate.flippv(mpv, len(ipv))
         rhs = np.hstack((np.eye(len(mpv)), -rbe3[:, notmpv]))
@@ -2317,7 +2317,7 @@ def _findse(nas, se):
     return r[0]
 
 
-def upasetpv(nas, seup):
+def upstream_aset_partition_vector(nas, seup):
     """
     Form upstream A-set partition vector for a downstream
     superelement.
@@ -2414,7 +2414,7 @@ def _formtran_0(nas, dof, gset):
     routine for more information.
     """
     uset = nas['uset'][0]
-    pvdof, dof = mkdofpv(uset, "g", dof)
+    pvdof, dof = make_dof_partition_vector(uset, "g", dof)
 
     if gset:
         ngset = sum(mksetpv(uset, 'p', 'g'))
@@ -2555,14 +2555,14 @@ def formtran(nas, se, dof, gset=False):
         return _formtran_0(nas, dof, gset)
 
     uset = nas['uset'][se]
-    pvdof, dof = mkdofpv(uset, "g", dof)
+    pvdof, dof = make_dof_partition_vector(uset, "g", dof)
     t_a = np.nonzero(mksetpv(uset, "a", "t"))[0]
     q_a = np.nonzero(mksetpv(uset, "a", "q"))[0]
 
     # if all dof are in a-set we can quit quickly:
     a = mksetpv(uset, "g", "a")
     if np.all(a[pvdof]):
-        pvdofa = mkdofpv(uset, "a", dof)[0]
+        pvdofa = make_dof_partition_vector(uset, "a", dof)[0]
         tran = np.eye(sum(a))
         tran = tran[pvdofa]
         return tran, dof
@@ -2767,7 +2767,7 @@ def formulvs(nas, seup, sedn=0, keepcset=True, shortcut=True,
     while 1:
         usetup = nas['uset'][seup]
         usetdn = nas['uset'][sedown]
-        tqup = upasetpv(nas, seup)
+        tqup = upstream_aset_partition_vector(nas, seup)
         ulvs1, outdof = formtran(nas, sedown, usetdn[tqup, :2], gset)
         # get rid of c-set if required
         if not keepcset:

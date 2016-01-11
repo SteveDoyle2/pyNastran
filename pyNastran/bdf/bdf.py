@@ -46,7 +46,7 @@ from pyNastran.bdf.cards.properties.springs import PELAS, PELAST
 from pyNastran.bdf.cards.elements.solid import (CTETRA4, CTETRA10, CPYRAM5, CPYRAM13,
                                                 CPENTA6, CPENTA15,
                                                 CHEXA8, CHEXA20)
-from pyNastran.bdf.cards.elements.rigid import RBAR, RBAR1, RBE1, RBE2, RBE3
+from pyNastran.bdf.cards.elements.rigid import RBAR, RBAR1, RBE1, RBE2, RBE3, RROD
 
 from pyNastran.bdf.cards.elements.shell import (CQUAD, CQUAD4, CQUAD8, CQUADR, CQUADX,
                                                 CSHEAR, CTRIA3, CTRIA6, CTRIAX,
@@ -351,7 +351,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'CGAP',
 
             ## rigid_elements
-            'RBAR', 'RBAR1', 'RBE1', 'RBE2', 'RBE3',
+            'RBAR', 'RBAR1', 'RBE1', 'RBE2', 'RBE3', 'RROD',
 
             ## plotels
             'PLOTEL',
@@ -1440,6 +1440,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'RBE1' : (RBE1, self.add_rigid_element),
             'RBE2' : (RBE2, self.add_rigid_element),
             'RBE3' : (RBE3, self.add_rigid_element),
+            'RROD' : (RROD, self.add_rigid_element),
 
             # there is no MAT6 or MAT7
             'MAT1' : (MAT1, self.add_structural_material),
@@ -2028,13 +2029,13 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             except KeyError:
                 #: .. warning:: cards with = signs in them
                 #:              are not announced when they are rejected
-                #if '=' not in card[0]:
-                #    self.log.info('rejecting processed equal signed card %s' % card)
-                #self.reject_cards.append(card)
+                if '=' in card[0]:
+                    self.log.info('rejecting processed equal signed card %s' % card)
+                #self.reject_cards.append(card) #  TOD: this is bad...
                 msg = 'card_name=%r not in card_parser_b'  % (card_name)
                 raise KeyError(msg)
                 #print(msg)
-                #return
+                return
 
             try:
                 add_card_function(card, card_obj, comment=comment)

@@ -1,7 +1,7 @@
 from __future__ import print_function
 import os
 import unittest
-from numpy import unique
+import numpy as np
 from six import iteritems
 
 import pyNastran
@@ -70,6 +70,13 @@ class TestOP2(Tester):
         assert os.path.exists(debug_file), os.listdir(folder)
         os.remove(debug_file)
 
+    def test_op2_solid_bending_02(self):
+        op2_filename = os.path.join('solid_bending.op2')
+        folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'solid_bending'))
+        op2_filename = os.path.join(folder, op2_filename)
+
+        op2 = read_op2(op2_filename)
+
     def test_op2_solid_shell_bar_01(self):
         op2_filename = os.path.join('static_solid_shell_bar.op2')
         folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'sol_101_elements'))
@@ -91,38 +98,68 @@ class TestOP2(Tester):
 
         isubcase = 1
         rod_force = op2.crod_force[isubcase]
+        rod_force.build_dataframe()
         assert rod_force.nelements == 2, rod_force.nelements
         assert rod_force.data.shape == (1, 2, 2), rod_force.data.shape
 
         rod_stress = op2.crod_stress[isubcase]
+        rod_stress.build_dataframe()
         assert rod_stress.nelements == 2, rod_stress.nelements
         assert rod_stress.data.shape == (1, 2, 4), rod_stress.data.shape
 
+        cbar_force = op2.cbar_force[isubcase]
+        cbar_force.build_dataframe()
+        assert cbar_force.nelements == 1, cbar_force.nelements
+        assert cbar_force.data.shape == (1, 1, 8), cbar_force.data.shape
+
         cbar_stress = op2.cbar_stress[isubcase]
+        cbar_stress.build_dataframe()
         assert cbar_stress.nelements == 1, cbar_stress.nelements
         assert cbar_stress.data.shape == (1, 1, 15), cbar_stress.data.shape
 
+        # TODO: not vectorized
+        #cbeam_force = op2.cbeam_force[isubcase]
+        #cbeam_force.build_dataframe()
+        #assert cbeam_force.nelements == 11, cbeam_force.nelements
+        #assert cbeam_force.data.shape == (1, 11, 8), cbeam_force.data.shape
+
         cbeam_stress = op2.cbeam_stress[isubcase]
+        cbeam_stress.build_dataframe()
         assert cbeam_stress.nelements == 11, cbeam_stress.nelements  # wrong
         assert cbeam_stress.data.shape == (1, 11, 8), cbeam_stress.data.shape
 
+        cquad4_force = op2.cquad4_force[isubcase]
+        cquad4_force.build_dataframe()
+        assert cquad4_force.nelements == 4, cquad4_force.nelements
+        assert cquad4_force.data.shape == (1, 20, 8), cquad4_force.data.shape
+
         cquad4_stress = op2.cquad4_stress[isubcase]
-        assert cquad4_stress.nelements == 20, cquad4_stress.nelements
+        cquad4_stress.build_dataframe()
+        assert cquad4_stress.nelements == 20, cquad4_stress.nelements # TODO: should this be 4; yes by actual count...
         assert cquad4_stress.data.shape == (1, 20, 8), cquad4_stress.data.shape
 
+        ctria3_force = op2.ctria3_force[isubcase]
+        ctria3_force.build_dataframe()
+        assert ctria3_force.nelements == 8, ctria3_force.nelements
+        assert ctria3_force.data.shape == (1, 8, 8), ctria3_force.data.shape
+
         ctria3_stress = op2.ctria3_stress[isubcase]
+        ctria3_stress.build_dataframe()
         assert ctria3_stress.nelements == 8, ctria3_stress.nelements
         assert ctria3_stress.data.shape == (1, 8, 8), ctria3_stress.data.shape
 
         ctetra_stress = op2.ctetra_stress[isubcase]
+        ctetra_stress.build_dataframe()
         assert ctetra_stress.nelements == 2, ctetra_stress.nelements
         assert ctetra_stress.data.shape == (1, 10, 10), ctetra_stress.data.shape
 
         cpenta_stress = op2.cpenta_stress[isubcase]
+        cpenta_stress.build_dataframe()
         assert cpenta_stress.nelements == 2, cpenta_stress.nelements
         assert cpenta_stress.data.shape == (1, 14, 10), cpenta_stress.data.shape
 
         chexa_stress = op2.chexa_stress[isubcase]
+        chexa_stress.build_dataframe()
         assert chexa_stress.nelements == 1, chexa_stress.nelements
         assert chexa_stress.data.shape == (1, 9, 10), chexa_stress.data.shape
 
@@ -156,6 +193,12 @@ class TestOP2(Tester):
         rod_stress = op2.crod_stress[isubcase]
         assert rod_stress.nelements == 2, rod_stress.nelements
         assert rod_stress.data.shape == (3, 2, 4), rod_stress.data.shape
+
+        cbar_force = op2.cbar_force[isubcase]
+        cbar_force.build_dataframe()
+        str(cbar_force.data_frame)
+        assert cbar_force.nelements == 1, cbar_force.nelements
+        assert cbar_force.data.shape == (3, 1, 8), cbar_force.data.shape
 
         cbar_stress = op2.cbar_stress[isubcase]
         assert cbar_stress.nelements == 3, cbar_stress.nelements  # TODO: wrong
@@ -222,6 +265,12 @@ class TestOP2(Tester):
         assert rod_stress.nelements == 2, rod_stress.nelements
         assert rod_stress.data.shape == (4, 2, 4), rod_stress.data.shape
 
+        cbar_force = op2.cbar_force[isubcase]
+        cbar_force.build_dataframe()
+        str(cbar_force.data_frame)
+        assert cbar_force.nelements == 1, cbar_force.nelements
+        assert cbar_force.data.shape == (4, 1, 8), cbar_force.data.shape
+
         cbar_stress = op2.cbar_stress[isubcase]
         assert cbar_stress.nelements == 4, cbar_stress.nelements  # TODO: wrong
         assert cbar_stress.data.shape == (4, 1, 15), cbar_stress.data.shape
@@ -282,14 +331,22 @@ class TestOP2(Tester):
         # isubcase = isubcases[1]
 
         rod_force = op2.crod_force[isubcase]
+        rod_force.build_dataframe()
         assert rod_force.nelements == 2, rod_force.nelements
         assert rod_force.data.shape == (7, 2, 2), rod_force.data.shape
 
         rod_stress = op2.crod_stress[isubcase]
+        rod_stress.build_dataframe()
         assert rod_stress.nelements == 2, rod_stress.nelements
         assert rod_stress.data.shape == (7, 2, 2), rod_stress.data.shape
 
+        cbar_force = op2.cbar_force[isubcase]
+        cbar_force.build_dataframe()
+        assert cbar_force.nelements == 1, cbar_force.nelements
+        assert cbar_force.data.shape == (7, 1, 8), cbar_force.data.shape
+
         cbar_stress = op2.cbar_stress[isubcase]
+        cbar_stress.build_dataframe()
         assert cbar_stress.nelements == 1, cbar_stress.nelements
         assert cbar_stress.data.shape == (7, 1, 9), cbar_stress.data.shape
 
@@ -299,27 +356,33 @@ class TestOP2(Tester):
         # assert cbeam_stress.data.shape == (7, 11, 8), cbeam_stress.data.shape
 
         cquad4_stress = op2.cquad4_stress[isubcase]
+        #cquad4_stress.build_dataframe()
         assert cquad4_stress.nelements == 4, cquad4_stress.nelements # TODO: wrong
         assert cquad4_stress.data.shape == (7, 40, 3), cquad4_stress.data.shape
 
         #print(op2.ctria3_stress.keys())
         ctria3_stress = op2.ctria3_stress[isubcase]
+        ctria3_stress.build_dataframe()
         assert ctria3_stress.nelements == 8, ctria3_stress.nelements # TODO: wrong
         assert ctria3_stress.data.shape == (7, 32, 3), ctria3_stress.data.shape
 
         ctetra_stress = op2.ctetra_stress[isubcase]
+        ctetra_stress.build_dataframe()
         assert ctetra_stress.nelements == 2, ctetra_stress.nelements
         assert ctetra_stress.data.shape == (7, 10, 6), ctetra_stress.data.shape
 
         cpenta_stress = op2.cpenta_stress[isubcase]
+        cpenta_stress.build_dataframe()
         assert cpenta_stress.nelements == 2, cpenta_stress.nelements
         assert cpenta_stress.data.shape == (7, 14, 6), cpenta_stress.data.shape
 
         chexa_stress = op2.chexa_stress[isubcase]
+        chexa_stress.build_dataframe()
         assert chexa_stress.nelements == 1, chexa_stress.nelements
         assert chexa_stress.data.shape == (7, 9, 6), chexa_stress.data.shape
 
         grid_point_forces = op2.grid_point_forces[isubcase]
+        grid_point_forces.build_dataframe()
         #print(grid_point_forces._ntotals)
         assert grid_point_forces.ntotal == 106, grid_point_forces.ntotal
         assert grid_point_forces.data.shape == (7, 106, 6), grid_point_forces.data.shape
@@ -363,18 +426,19 @@ class TestOP2(Tester):
 
         nids = [5]
         isubcase = 103
+        try:
+            acc = op2i.accelerations[isubcase]
+        except KeyError:
+            raise KeyError('getting accelerations; isubcase=%s; keys=%s' % (
+                isubcase, op2i.accelerations.keys()))
+
         with self.assertRaises(AssertionError):
             # no index 0; fortran 1-based
-            try:
-                acc = op2i.accelerations[isubcase]
-            except KeyError:
-                raise KeyError('getting accelerations; isubcase=%s; keys=%s' % (
-                    isubcase, op2i.accelerations.keys()))
-
             acc.extract_xyplot(nids, 0, 'real')
 
-        accx = op2i.accelerations[103].extract_xyplot(nids, 1, 'real')
-        accxi = op2i.accelerations[103].extract_xyplot(nids, 1, 'imag')
+        acc.build_dataframe()
+        accx = acc.extract_xyplot(nids, 1, 'real')
+        accxi = acc.extract_xyplot(nids, 1, 'imag')
         #print(accx)
         #print(accxi)
         #make_geom = False
@@ -440,6 +504,43 @@ class TestOP2(Tester):
         op2.write_f06('junk.f06', quiet=True)
         os.remove('junk.f06')
 
+    def test_op2_cbush_01(self):
+        op2_filename = os.path.join('cbush.op2')
+        folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'cbush'))
+        op2_filename = os.path.join(folder, op2_filename)
+        make_geom = False
+        write_bdf = False
+        write_f06 = True
+        debug = False
+        #debug_file = 'solid_bending.debug.out'
+        model, ext = os.path.splitext(op2_filename)
+        debug_file = model + '.debug.out'
+
+        if os.path.exists(debug_file):
+            os.remove(debug_file)
+        read_op2(op2_filename)
+        op2, is_passed = run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, isubcases=[],
+                                 write_f06=write_f06,
+                                 debug=debug, stop_on_failure=True, binary_debug=True, quiet=True)
+        isubcase = 1
+
+        cbush_stress = op2.cbush_stress[isubcase]
+        cbush_stress.build_dataframe()
+        assert cbush_stress.nelements == 1, cbush_stress.nelements
+        assert cbush_stress.data.shape == (1, 1, 6), cbush_stress.data.shape
+
+        cbush_strain = op2.cbush_strain[isubcase]
+        cbush_strain.build_dataframe()
+        assert cbush_strain.nelements == 1, cbush_strain.nelements
+        assert cbush_strain.data.shape == (1, 1, 6), cbush_strain.data.shape
+
+        cbush_force = op2.cbush_force[isubcase]
+        cbush_force.build_dataframe()
+        assert cbush_force.nelements == 1, cbush_force.nelements
+        assert cbush_force.data.shape == (1, 1, 6), cbush_force.data.shape
+
+        assert os.path.exists(debug_file), os.listdir(folder)
+        os.remove(debug_file)
 
     def _verify_ids(self, bdf, op2, isubcase=1):
         types = ['CQUAD4', 'CTRIA3', 'CHEXA', 'CPENTA', 'CTETRA', 'CROD', 'CONROD', 'CTUBE']
@@ -452,7 +553,7 @@ class TestOP2(Tester):
             except KeyError:
                 raise KeyError('getting cquad4_stress; isubcase=%s; keys=%s' % (
                     isubcase, op2.cquad4_stress.keys()))
-            eids = unique(case.element_node[:, 0])
+            eids = np.unique(case.element_node[:, 0])
             for eid in eids:
                 assert eid in out[card_type], 'eid=%s eids=%s card_type=%s'  % (eid, out[card_type], card_type)
         if op2.cquad4_strain:
@@ -461,7 +562,7 @@ class TestOP2(Tester):
             except KeyError:
                 raise KeyError('getting cquad4_strain; isubcase=%s; keys=%s' % (
                     isubcase, op2.cquad4_strain.keys()))
-            eids = unique(case.element_node[:, 0])
+            eids = np.unique(case.element_node[:, 0])
             for eid in eids:
                 assert eid in out[card_type], 'eid=%s eids=%s card_type=%s'  % (eid, out[card_type], card_type)
         if op2.cquad4_composite_strain:
@@ -470,7 +571,7 @@ class TestOP2(Tester):
             except KeyError:
                 raise KeyError('getting cquad4_composite_strain; isubcase=%s; keys=%s' % (
                     isubcase, op2.cquad4_composite_strain.keys()))
-            eids = unique(case.element_layer[:, 0])
+            eids = np.unique(case.element_layer[:, 0])
             for eid in eids:
                 assert eid in out[card_type], 'eid=%s eids=%s card_type=%s'  % (eid, out[card_type], card_type)
         if op2.cquad4_composite_stress:
@@ -480,7 +581,7 @@ class TestOP2(Tester):
                 raise KeyError('getting cquad4_composite_stress; isubcase=%s; keys=%s' % (
                     isubcase, op2.cquad4_composite_stress.keys()))
 
-            eids = unique(case.element_layer[:, 0])
+            eids = np.unique(case.element_layer[:, 0])
             for eid in eids:
                 assert eid in out[card_type], 'eid=%s eids=%s card_type=%s'  % (eid, out[card_type], card_type)
         if op2.cquad4_force:
@@ -490,7 +591,7 @@ class TestOP2(Tester):
                 raise KeyError('getting cquad4_force; isubcase=%s; keys=%s' % (
                     isubcase, op2.cquad4_force.keys()))
 
-            eids = unique(case.element)
+            eids = np.unique(case.element)
             for eid in eids:
                 assert eid in out[card_type], 'eid=%s eids=%s card_type=%s'  % (eid, out[card_type], card_type)
 
@@ -498,32 +599,31 @@ class TestOP2(Tester):
         card_type = 'CTRIA3'
         if op2.ctria3_stress:
             case = op2.ctria3_stress[isubcase]
-            eids = unique(case.element_node[:, 0])
+            eids = np.unique(case.element_node[:, 0])
             for eid in eids:
                 assert eid in out[card_type], 'eid=%s eids=%s card_type=%s'  % (eid, out[card_type], card_type)
         if op2.ctria3_strain:
             case = op2.ctria3_strain[isubcase]
-            eids = unique(case.element_node[:, 0])
+            eids = np.unique(case.element_node[:, 0])
             for eid in eids:
                 assert eid in out[card_type], 'eid=%s eids=%s card_type=%s'  % (eid, out[card_type], card_type)
         if op2.ctria3_composite_strain:
             case = op2.ctria3_composite_strain[isubcase]
-            eids = unique(case.element_layer[:, 0])
+            eids = np.unique(case.element_layer[:, 0])
             for eid in eids:
                 assert eid in out[card_type], 'eid=%s eids=%s card_type=%s'  % (eid, out[card_type], card_type)
         if op2.ctria3_composite_stress:
             case = op2.ctria3_composite_stress[isubcase]
-            eids = unique(case.element_layer[:, 0])
+            eids = np.unique(case.element_layer[:, 0])
             for eid in eids:
                 assert eid in out[card_type], 'eid=%s eids=%s card_type=%s'  % (eid, out[card_type], card_type)
         if op2.ctria3_force:
             case = op2.ctria3_force[isubcase]
-            eids = unique(case.element)
+            eids = np.unique(case.element)
             for eid in eids:
                 assert eid in out[card_type], 'eid=%s eids=%s card_type=%s'  % (eid, out[card_type], card_type)
 
-
-    def test_op2_dmi(self):
+    def test_op2_dmi_01(self):
         folder = os.path.abspath(os.path.join(test_path, '..', 'models'))
         bdf_filename = os.path.join(folder, 'matrix', 'matrix.dat')
         op2_filename = os.path.join(folder, 'matrix', 'mymatrix.op2')
@@ -542,10 +642,84 @@ class TestOP2(Tester):
         print('model.dmi.A =\n%s' % dmi_a)
         print('model.dmi.A =\n%s' % str(a))
         #return
-        op2 = OP2()
+        op2 = OP2(debug=False)
         op2.set_additional_matrices_to_read(matrices)
         try:
             op2.read_op2(op2_filename)
+            raise RuntimeError('this is wrong...')
+        except FatalError:
+            # the OP2 doesn't have a trailing zero marker
+            pass
+
+        # M rows, Ncols
+        A = np.array([
+            [1., 0.],
+            [3., 6.],
+            [5., 0.],
+            [0., 8.],
+        ], dtype='float32')
+        B = A
+        mydof = np.array([
+            -1.0, 1.0, 1.0, -1.0, 1.0,
+            2.0, -1.0, 1.0, 3.0, -1.0, 1.0, 4.0, -1.0,
+            1.0, 5.0, -1.0, 1.0, 6.0, -1.0, 2.0, 1.0,
+            -1.0, 2.0, 2.0, -1.0, 2.0, 3.0, -1.0, 2.0,
+            4.0, -1.0, 2.0, 5.0, -1.0, 2.0, 6.0,
+        ])
+        BTA = np.dot(B.T, A)
+        ATB = np.dot(A.T, B)
+        ATB_expected = np.array([
+            [35., 18.],
+            [18., 100.]
+        ], dtype='float32')
+        BTA_expected = ATB_expected
+
+        expecteds = [A, ATB, B, BTA, mydof]
+        matrix_names = sorted(matrices.keys())
+
+        for table_name, expected in zip(matrix_names, expecteds):
+            assert table_name in op2.matrices, table_name
+
+
+            actual = op2.matrices[table_name].data
+            if not (np.array_equal(expected, actual) or
+                    np.array_equal(expected, np.squeeze(actual))):
+                if table_name in model.dmis:
+                    dmi = model.dmis[table_name]
+                    table_array, rows_reversed, cols_reversed = dmi.get_matrix(is_sparse=False, apply_symmetry=False)
+                    #stable_array, rows_reversed, cols_reversed = dmi.get_matrix(is_sparse=True, apply_symmetry=False)
+                    print(table_array)
+                #print(stable_array)
+                msg = 'matrix %s was not read properly\n' % table_name
+                msg += 'expected shape=%s\n%s\n' % (str(expected.shape), expected)
+                msg += 'actual shape=%s\n%s' % (str(actual.shape), actual.ravel())
+                #msg += '\n%s' % actual.ravel()
+                print(msg)
+                print('==========================')
+                #raise RuntimeError(msg)
+
+    def test_op2_dmi_02(self):
+        folder = os.path.abspath(os.path.join(test_path, '..', 'models'))
+        bdf_filename = os.path.join(folder, 'matrix', 'matrix.dat')
+        op2_filename = os.path.join(folder, 'matrix', 'mymatrix.op2')
+        matrices = {
+            'A' : True,
+            'B' : False,
+            'ATB' : False,
+            'BTA' : False,
+            'MYDOF' : True,
+        }
+        model = BDF()
+        model.read_bdf(bdf_filename)
+
+        dmi_a = model.dmis['A']
+        a, rows_reversed, cols_reversed = dmi_a.get_matrix(is_sparse=False, apply_symmetry=False)
+        #print('model.dmi.A =\n%s' % dmi_a)
+        #print('model.dmi.A =\n%s' % str(a))
+        #return
+        op2 = OP2()
+        try:
+            op2.read_op2(op2_filename, skip_undefined_matrices=True)
             raise RuntimeError('this is wrong...')
         except FatalError:
             # the OP2 doesn't have a trailing zero marker
@@ -581,14 +755,13 @@ class TestOP2(Tester):
         for table_name, expected in zip(matrix_names, expecteds):
             assert table_name in op2.matrices, table_name
 
-
             actual = op2.matrices[table_name].data
             if not array_equal(expected, actual):
                 if table_name in model.dmis:
                     dmi = model.dmis[table_name]
                     table_array, rows_reversed, cols_reversed = dmi.get_matrix(is_sparse=False, apply_symmetry=False)
                     #stable_array, rows_reversed, cols_reversed = dmi.get_matrix(is_sparse=True, apply_symmetry=False)
-                    print(table_array)
+                    #print(table_array)
                 #print(stable_array)
                 msg = 'matrix %s was not read properly\n' % table_name
                 msg += 'expected\n%s\n' % expected

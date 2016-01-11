@@ -54,28 +54,28 @@ class OGS(OP2Common):
         if self.analysis_code == 1:   # statics
             ## load set number
             self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', 'i', 5, False)
-            self.dataNames = self.apply_data_code_value('dataNames', ['lsdvmn'])
+            self.data_names = self.apply_data_code_value('data_names', ['lsdvmn'])
             self.setNullNonlinearFactor()
         elif self.analysis_code == 2:  # normal modes/buckling (real eigenvalues)
             ## mode number
             self.mode = self.add_data_parameter(data, 'mode', 'i', 5)
             ## real eigenvalue
             self.eign = self.add_data_parameter(data, 'eign', 'f', 6, False)
-            self.dataNames = self.apply_data_code_value('dataNames', ['mode', 'eign'])
+            self.data_names = self.apply_data_code_value('data_names', ['mode', 'eign'])
         #elif self.analysis_code == 3: # differential stiffness
         #elif self.analysis_code == 4: # differential stiffness
         #elif self.analysis_code == 5: # frequency
         elif self.analysis_code == 6:  # transient
             ## time step
             self.time = self.add_data_parameter(data, 'time', 'f', 5)
-            self.dataNames = self.apply_data_code_value('dataNames', ['time'])
+            self.data_names = self.apply_data_code_value('data_names', ['time'])
         #elif self.analysis_code == 7:  # pre-buckling
         #elif self.analysis_code == 8:  # post-buckling
         #elif self.analysis_code == 9:  # complex eigenvalues
         elif self.analysis_code == 10:  # nonlinear statics
             ## load step
             self.lftsfq = self.add_data_parameter(data, 'lftsfq', 'f', 5)
-            self.dataNames = self.apply_data_code_value('dataNames', ['lftsfq'])
+            self.data_names = self.apply_data_code_value('data_names', ['lftsfq'])
         #elif self.analysis_code == 11:  # old geometric nonlinear statics
         #elif self.analysis_code == 12:  # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
         else:
@@ -124,16 +124,16 @@ class OGS(OP2Common):
         return ndata
 
     def _read_ogs1_table26(self, data, ndata):
-        result_name = 'gridPointStresses'
+        result_name = 'grid_point_stresses'
         if self.num_wide == 11:  # real/random
             #self.create_transient_object(self.gridPointStresses, GridPointStressesObject)
-            n = self._readOGS1_table26_numWide11(data, ndata)
+            n = self._read_ogs1_table26_numwide11(data, ndata)
         else:
             msg = 'only num_wide=11 is allowed  num_wide=%s' % self.num_wide
             raise RuntimeError(msg)
         return n
 
-    def _readOGS1_table26_numWide11(self, data, ndata):
+    def _read_ogs1_table26_numwide11(self, data, ndata):
         """surface stresses"""
         #dt = self.nonlinear_factor
         s = Struct(b'2i4s8f')
@@ -156,15 +156,15 @@ class OGS(OP2Common):
         """OGS1 - grid point stresses - volume direct"""
         #is_sort1 = self.is_sort1()
         if self.num_wide == 9:  # real/random
-            result_name = 'gridPointVolumeStresses'
+            result_name = 'grid_point_volume_stresses'
             #self.create_transient_object(self.gridPointVolumeStresses, GridPointStressesVolumeObject)
-            n = self._readOGS1_table27_numWide9(data, ndata)
+            n = self._read_ogs1_table27_numwide9(data, ndata)
         else:
             msg = 'only num_wide=9 is allowed  num_wide=%s' % self.num_wide
             raise RuntimeError(msg)
         return n
 
-    def _readOGS1_table27_numWide9(self, data, ndata):
+    def _read_ogs1_table27_numwide9(self, data, ndata):
         """surface stresses"""
         s = Struct(b(self._endian + '2i7f'))
         n = 0
@@ -182,16 +182,16 @@ class OGS(OP2Common):
 
     def _read_ogs1_table35(self, data, ndata):
         """grid point stress discontinuities (plane stress/strain)"""
-        result_name = 'gridPointStresses'
+        result_name = 'grid_point_stresses'
         if self.num_wide == 6:
             #self.create_transient_object(self.gridPointStresses, GridPointStressesObject)
-            n = self._readOGS1_table35_numWide6(data, ndata)
+            n = self._read_ogs1_table35_numwide6(data, ndata)
         else:
             msg = 'only num_wide=11 is allowed  num_wide=%s' % self.num_wide
             raise RuntimeError(msg)
         return n
 
-    def _readOGS1_table35_numWide6(self, data, ndata):
+    def _read_ogs1_table35_numwide6(self, data, ndata):
         """grid point stress discontinuities (plane stress/strain)"""
         s = Struct(b(self._endian + 'i5f'))
         n = 0
