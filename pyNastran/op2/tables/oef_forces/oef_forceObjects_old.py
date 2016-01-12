@@ -73,9 +73,9 @@ class RealRodForce(ScalarObject):
                 self.torque[eid] = torque
             return
 
-        (dtName, dt) = transient
+        (dt_name, dt) = transient
         self.dt = dt
-        self.data_code['name'] = dtName
+        self.data_code['name'] = dt_name
         #if dt not in self.axial_force:
             #self.update_dt(self.data_code, dt)
 

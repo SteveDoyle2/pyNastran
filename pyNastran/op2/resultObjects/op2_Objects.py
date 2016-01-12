@@ -1,6 +1,6 @@
 #pylint: disable=C0301,C0111
 from __future__ import print_function, unicode_literals
-from six import  iteritems
+from six import  iteritems, PY3
 from six.moves import range
 import copy
 from struct import pack
@@ -174,6 +174,8 @@ class ScalarObject(BaseScalarObject):
 
     def apply_data_code(self):
         for key, value in sorted(iteritems(self.data_code)):
+            if PY3 and isinstance(value, bytes):
+                print("  key=%s value=%s; value is bytes" % (key, value))
             self.__setattr__(key, value)
             #print("  key=%s value=%s" %(key, value))
         #if self.table_name in [b'OES1X', b'OES1X1']:

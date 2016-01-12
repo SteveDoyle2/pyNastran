@@ -271,7 +271,7 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
         assert len(data) == 584, len(data)
         # titleSubtitleLabel
         title, subtitle, label = unpack(b(self._endian + '128s128s128s'), data[200:])
-        self.title = title.strip()#.decode(self.encoding).strip()
+        self.title = title.strip().decode(self.encoding).strip()
         self.subtitle = subtitle.strip().decode(self.encoding).strip()
         self.label = label.strip().decode(self.encoding).strip()
         #print('title = %r' % self.title)
@@ -281,7 +281,7 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
 
         #: the label of the subcase
         self.data_code['label'] = self.label
-        self.data_code['Title'] = self.title
+        self.data_code['title'] = self.title#.decode(self.encoding)
 
         if self.is_debug_file:
             self.binary_debug.write('  %-14s = %r\n' % ('count', self._count))
@@ -955,7 +955,7 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
         #assert class_obj is not None, 'name=%r has no associated classObject' % storageName
 
         #self.log.debug('self.table_name=%s isubcase=%s subtitle=%r' % (self.table_name, self.isubcase, self.subtitle.strip()))
-        self.data_code['table_name'] = self.table_name
+        self.data_code['table_name'] = self.table_name.decode(self.encoding)
         assert self.log is not None
 
         code = self._get_code()

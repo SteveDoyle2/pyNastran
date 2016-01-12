@@ -452,65 +452,65 @@ class OP4(object):
 #--------------------------------------------------------------------------
     def read_op4_binary(self, op4_filename, matrix_names=None, precision='default'):
         """matrix_names must be a list or None, but basically the same"""
-        f = io.open(op4_filename, mode='rb')
-        self.n = 0
+        with io.open(op4_filename, mode='rb') as f:
+            self.n = 0
 
-        # get the endian
-        data = f.read(4)
-        (recordLengthBig,) = unpack('>i', data)
-        (recordLengthLittle,) = unpack('<i', data)
+            # get the endian
+            data = f.read(4)
+            (recordLengthBig,) = unpack('>i', data)
+            (recordLengthLittle,) = unpack('<i', data)
 
-        if recordLengthBig == 24:
-            self.endian = '>'
-        elif recordLengthLittle == 24:
-            self.endian = '<'
-        else:
-            msg = 'a 24 could not be found as the first word...endian error\n'
-            msg += "RL_Big=%s RL_Little=%s" % (
-                recordLengthBig, recordLengthLittle)
-            raise RuntimeError(msg)
-        f.seek(0)
+            if recordLengthBig == 24:
+                self.endian = '>'
+            elif recordLengthLittle == 24:
+                self.endian = '<'
+            else:
+                msg = 'a 24 could not be found as the first word...endian error\n'
+                msg += "RL_Big=%s RL_Little=%s" % (
+                    recordLengthBig, recordLengthLittle)
+                raise RuntimeError(msg)
+            f.seek(0)
 
-        i = 0
-        matrices = {}
-        name = 'dummyName'
-        while name is not None:
-            #print "i =", i
-            # checks for the end of the file
-            assert self.n == f.tell(), 'n=%s tell=%s' % (self.n, f.tell())
-            n = self.n
-            data1 = f.read(1)
-            f.seek(n)
-            if len(data1) == 0:
-                break
-            #self.show(f, 60)
+            i = 0
+            matrices = {}
+            name = 'dummyName'
+            while name is not None:
+                #print "i =", i
+                # checks for the end of the file
+                assert self.n == f.tell(), 'n=%s tell=%s' % (self.n, f.tell())
+                n = self.n
+                data1 = f.read(1)
+                f.seek(n)
+                if len(data1) == 0:
+                    break
+                #self.show(f, 60)
 
-            (name, form, matrix) = self._read_matrix_binary(f, precision, matrix_names)
-            #print print_matrix(matrix)
-            if name is not None:
-                if matrix_names is None or name in matrix_names:  # save the matrix
-                    matrices[name] = (form, matrix)
+                (name, form, matrix) = self._read_matrix_binary(f, precision, matrix_names)
+                #print print_matrix(matrix)
+                if name is not None:
+                    if matrix_names is None or name in matrix_names:  # save the matrix
+                        matrices[name] = (form, matrix)
 
-            #print "not f.closed = ",not f.closed,form,name
-            # if not f.closed or form is not None:
-            #     data = f.read(4)
-            #     self.n+=4
-            #     if len(data) == 0:
-            #         break
-            #     (record_length,) = unpack(self.endian+'i', data)
-            #     print("RL = %s" % record_length)
-            #     if record_length == 24:
-            #         self.n-=4
-            #         f.seek(self.n)
-            #     else:
-            #         data = f.read(4)
-            #         if len(data) == 0:
-            #             break
-            #         (recordLength2,) = unpack(self.endian+'i', data)
-            #         assert recordLength2 == 24
-            #         f.seek(self.n)
-            #
-            i += 1
+                #print "not f.closed = ",not f.closed,form,name
+                # if not f.closed or form is not None:
+                #     data = f.read(4)
+                #     self.n+=4
+                #     if len(data) == 0:
+                #         break
+                #     (record_length,) = unpack(self.endian+'i', data)
+                #     print("RL = %s" % record_length)
+                #     if record_length == 24:
+                #         self.n-=4
+                #         f.seek(self.n)
+                #     else:
+                #         data = f.read(4)
+                #         if len(data) == 0:
+                #             break
+                #         (recordLength2,) = unpack(self.endian+'i', data)
+                #         assert recordLength2 == 24
+                #         f.seek(self.n)
+                #
+                i += 1
         return matrices
 
     def read_start_marker(self, f):
@@ -1083,18 +1083,25 @@ class OP4(object):
         """
         Writes the OP4
 
-        :param op4_filename: The filename to write
-        :type op4_filename:  String -> opens a file (closed at the end)
-                             file   -> no file is opened and it's not closed
+        Parameters
+        ----------
+        op4_filename : str/file
+            The filename to write
+            String -> opens a file (closed at the end)
+            file   -> no file is opened and it's not closed
+        name_order: List[str]
+            List of the names of the matrices that should be
+            written or string (default=None -> sorted based on matrices)
+        is_binary : bool; default=True
+            Should a binary file be written
+        precision : str; default='default'
+            Overwrite the default precision ('single', 'double', 'default')
+            Applies to all matrices
 
         Method 1:
         ---------
-        :param name_order:  List of the names of the matrices that should be
-                            written or string (default=None -> sorted based on matrices)
-        :param is_binary: Should a binary file be written (True, False)
-        :param precision: Overwrite the default precision ('single', 'double', 'default')
-                          Applies to all matrices
-
+        >>> write_op4(op4_filename, name_order=['A', 'B', 'C'],
+                      precision='default', is_binary=True)
         Method 2:
         ---------
         matrices = {
@@ -1113,15 +1120,14 @@ class OP4(object):
 
         if isinstance(op4_filename, string_types):
             if PY2 or is_binary:
-                f = open(op4_filename, 'wb')
+                wb = 'wb'
             else:
-                f = open(op4_filename, 'w')
+                wb = 'w'
             with open(op4_filename, 'w') as f:
                 self._write_op4_f(f, name_order, is_binary, precision, matrices)
         else:
             f = op4_filename
             self._write_op4_f(f, name_order, is_binary, precision, matrices)
-        f.close()
 
     def _write_op4_f(self, f, name_order, is_binary, precision, matrices):
         if name_order is None:

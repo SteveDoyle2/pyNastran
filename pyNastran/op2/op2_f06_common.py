@@ -1,5 +1,5 @@
 from __future__ import print_function
-from six import iteritems, string_types, binary_type
+from six import iteritems, string_types, binary_type, text_type
 from collections import defaultdict
 from numpy import unique, int32
 
@@ -810,11 +810,11 @@ class OP2_F06_Common(object):
         """
         def compare(key_value):
             key = key_value[0]
-            if isinstance(key, (int, int32, binary_type)):
+            if isinstance(key, (int, int32, text_type, binary_type)):
                 return key
             else:
                 #print('key=%s type=%s' % (key, type(key)))
-                self.log.debug(type(key))
+                #self.log.debug(type(key))
                 return key[0]
 
         table_types = self._get_table_types_testing()
