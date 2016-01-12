@@ -476,8 +476,9 @@ class F06Writer(OP2_F06_Common):
             self.velocities, self.velocitiesPSD,
             #self.eigenvectors,
 
-            self.mpc_forces,
-            self.spc_forces,
+            self.mpc_forces, self.mpc_forcesPSD, self.mpc_forcesATO, self.mpc_forcesRMS,
+
+            self.spc_forces, self.spc_forcesPSD, self.spc_forcesATO, self.spc_forcesRMS,
             self.thermal_load_vectors,
 
             #self.strain_energy,

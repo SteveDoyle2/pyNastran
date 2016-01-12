@@ -323,8 +323,13 @@ class OP2_F06_Common(object):
         self.spc_forces = {}  # tCode=3?
         self.spc_forces_scaled_response_spectra_NRL = {}
         self.spc_forcesPSD = {}
+        self.spc_forcesATO = {}
+        self.spc_forcesRMS = {}
 
         self.mpc_forces = {}  # tCode=39
+        self.mpc_forcesPSD = {}
+        self.mpc_forcesATO = {}
+        self.mpc_forcesRMS = {}
 
         # OQG - thermal forces
         self.thermal_gradient_and_flux = {}
@@ -459,10 +464,11 @@ class OP2_F06_Common(object):
             'accelerationsPSD',
 
             # OQG - spc/mpc forces
-            'spc_forces',
-            'spc_forcesPSD',
+            'spc_forces', 'spc_forcesPSD', 'mpc_forcesATO', 'mpc_forcesRMS',
             'spc_forces_scaled_response_spectra_NRL',
-            'mpc_forces',
+
+            'mpc_forces', 'mpc_forcesPSD', 'spc_forcesATO', 'spc_forcesRMS',
+
             'thermal_gradient_and_flux',
 
             # OGF - grid point forces

@@ -271,7 +271,7 @@ class OQG(OP2Common):
                 if self.table_code not in [3]:
                     msg = 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
                     raise AssertionError(msg)
-                n = self._read_oqg_psd(data, ndata)
+                n = self._read_oqg_spc_psd(data, ndata)
 
             elif self.table_code == 3:   # SPC Forces
                 assert self.table_name in [b'OQG1', b'OQGV1', b'OQP1'], self.code_information()
@@ -281,18 +281,26 @@ class OQG(OP2Common):
                 n = self._read_mpc_forces(data, ndata)
             else:
                 raise RuntimeError(self.code_information())
-                msg = self.code_information()
-                return self._not_implemented_or_skip(data, ndata, msg)
+                #msg = self.code_information()
+                #return self._not_implemented_or_skip(data, ndata, msg)
         elif self.is_nx:
-            if self.table_code == 3:   # SPC Forces
+            if self.table_name == b'OQMPSD2':
+                if self.table_code not in [603]:
+                    msg = 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
+                    raise AssertionError(msg)
+                n = self._read_oqg_mpc_psd(data, ndata)
+
+            elif self.table_code == 3:   # SPC Forces
                 if self.table_name in [b'OQG1', b'OQG2', b'OQGV1', b'OQP1']:
                     n = self._read_spc_forces(data, ndata)
                 elif self.table_name == b'OQMG1':
                     n = self._read_mpc_forces(data, ndata)
                 else:
                     raise RuntimeError(self.code_information())
-                    msg = self.code_information()
-                    return self._not_implemented_or_skip(data, ndata, msg)
+                    #msg = self.code_information()
+                    #return self._not_implemented_or_skip(data, ndata, msg)
+            else:
+                raise RuntimeError(self.code_information())
         else:
             msg = 'table_code=%s' % self.table_code
             return self._not_implemented_or_skip(data, ndata, msg)
@@ -360,7 +368,7 @@ class OQG(OP2Common):
             return self._not_implemented_or_skip(data, ndata, msg)
         return n
 
-    def _read_oqg_psd(self, data, ndata):
+    def _read_oqg_spc_psd(self, data, ndata):
         """
         table_code = 601/610/611
         """
@@ -405,3 +413,27 @@ class OQG(OP2Common):
                                      #'node', random_code=self.random_code)
             else:
                 raise RuntimeError(self.code_information())
+        else:
+            raise RuntimeError(self.code_information())
+
+    def _read_oqg_mpc_psd(self, data, ndata):
+        """
+        table_code = 603
+        """
+        if self.thermal == 0:
+            if self.table_code in [603]:
+                result_name = 'mpc_forcesPSD'
+                storage_obj = self.mpc_forcesPSD
+                if self._results.is_not_saved(result_name):
+                    return ndata
+                self._results._found_result(result_name)
+                n = self._read_table_vectorized(data, ndata, result_name, storage_obj,
+                                     RealMPCForcesArray, ComplexMPCForcesArray,
+                                     'node', random_code=self.random_code)
+            else:
+                raise RuntimeError(self.code_information())
+        else:
+            raise RuntimeError(self.code_information())
+
+        assert n is not None, n
+        return n
