@@ -64,7 +64,7 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
         self.i = 0
 
         #: the TITLE in the Case Control Deck
-        self.Title = ''
+        self.title = ''
         self._start_log(log, debug)
 
         self._line_marker_map = {
@@ -752,7 +752,7 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
         if found_i1:
             title_line = header_lines[0]
             assert 'PAGE' in title_line, title_line
-            self.Title = title_line[1:75].strip()
+            self.title = title_line[1:75].strip()
             date = title_line[75:93].strip()
             if date:
                 if ',' in date:
@@ -763,7 +763,7 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
                     raise RuntimeError('Couldnt parse date; line=%r' % title_line.strip())
 
                 self._set_f06_date(month, day, year)
-        #self.Title = subcaseName  # 'no title'
+        #self.title = subcaseName  # 'no title'
 
         subcase_name = ''
         #print("subcase_name = %r" % subcase_name)

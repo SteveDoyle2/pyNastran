@@ -318,7 +318,7 @@ class Solver(F06, OP2):
         d = date.today()
         self.date = (d.month, d.day, d.year)
 
-        pageStamp = self.make_stamp(self.Title, self.date)
+        pageStamp = self.make_stamp(self.title, self.date)
 
         #------------------------------------------
         # start of analysis
@@ -382,9 +382,9 @@ class Solver(F06, OP2):
         isubcase = case.id
         if model.sol in sols:
             if case.has_parameter('TITLE'):
-                (self.Title, options) = case.get_parameter('TITLE')
+                (self.title, options) = case.get_parameter('TITLE')
             else:
-                self.Title = 'pyNastran Job'
+                self.title = 'pyNastran Job'
             if case.has_parameter('SUBTITLE'):
                 (self.Subtitle, options) = case.get_parameter('SUBTITLE')
             else:
@@ -2065,7 +2065,7 @@ class Solver(F06, OP2):
                 #if 'PRINT' in options:
                     #f06.write(result.write_f06(header, pageStamp, page_num))
                 #if 'PLOT' in options:
-                    #op2.write(result.write_op2(self.Title, self.Subtitle))
+                    #op2.write(result.write_op2(self.title, self.Subtitle))
 
         #assert case.has_parameter('SPCFORCES') == True
         #if case.has_parameter('SPCFORCES'):

@@ -63,7 +63,7 @@ class LAMA(OP2Common):
         n = 0
         #assert self.isubcase != 0, self.isubcase
         clama = ComplexEigenvalues(11)
-        self.eigenvalues[self.Title] = clama
+        self.eigenvalues[self.title] = clama
         #self.eigenvalues[self.isubcase] = lama
         s = Struct(b(self._endian + 'ii4f'))
         for i in range(nmodes):
@@ -92,7 +92,7 @@ class LAMA(OP2Common):
         n = 0
         #assert self.isubcase != 0, self.isubcase
         blama = BucklingEigenvalues(11)
-        self.eigenvalues[self.Title] = blama
+        self.eigenvalues[self.title] = blama
         #self.eigenvalues[self.isubcase] = lama
         s = Struct(b(self._endian + 'ii5f'))
         for i in range(nmodes):
@@ -126,7 +126,7 @@ class LAMA(OP2Common):
         self.resFlag = self.add_data_parameter(data, 'resFlag', 'i', 11, False)
         ## fluid modes Flag
         self.fldFlag = self.add_data_parameter(data, 'fldFlag', 'i', 12, False)
-        self.Title = None
+        self.title = None
 
         #print(self.data_code)
         #self.add_data_parameter(data,'format_code',  'i',9,False)   ## format code
@@ -150,8 +150,8 @@ class LAMA(OP2Common):
         n = 0
         ntotal = 28
         #assert self.isubcase != 0, self.isubcase
-        lama = RealEigenvalues(self.Title)
-        self.eigenvalues[self.Title] = lama
+        lama = RealEigenvalues(self.title)
+        self.eigenvalues[self.title] = lama
         s = Struct('ii5f')
         for i in range(nModes):
             edata = data[n:n+28]

@@ -21,7 +21,7 @@ class OP2_F06_Common(object):
         self.make_geom = False
 
         #: BDF Title
-        self.Title = None
+        self.title = None
 
         self.page_num = 1
 
@@ -813,7 +813,8 @@ class OP2_F06_Common(object):
             if isinstance(key, (int, int32, binary_type)):
                 return key
             else:
-                #self.log.debug(type(key))
+                #print('key=%s type=%s' % (key, type(key)))
+                self.log.debug(type(key))
                 return key[0]
 
         table_types = self._get_table_types_testing()

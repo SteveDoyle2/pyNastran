@@ -1121,6 +1121,7 @@ class OP4(object):
         else:
             f = op4_filename
             self._write_op4_f(f, name_order, is_binary, precision, matrices)
+        f.close()
 
     def _write_op4_f(self, f, name_order, is_binary, precision, matrices):
         if name_order is None:
@@ -1310,8 +1311,8 @@ class OP4(object):
 
         .. todo:: support precision
         """
-        if PY3:
-            raise NotImplementedError('_write_dense_matrix_binary is not supported')
+        #if PY3:
+            #raise NotImplementedError('_write_dense_matrix_binary is not supported')
         A = matrix
         (Type, NWV) = self._get_type_nwv(A[0, 0], precision)
 
@@ -1319,9 +1320,11 @@ class OP4(object):
         #if nrows==ncols and form==2:
             #form = 1
         name2 = '%-8s' % name
+        name_bytes = name2.encode('ascii')
         assert len(name2) == 8, 'name=%r is too long; 8 characters max' % name
         s = Struct(self.endian + '5i8s')
-        msg = s.pack(24, ncols, nrows, form, Type, name2)
+
+        msg = s.pack(24, ncols, nrows, form, Type, name_bytes)
         f.write(msg)
 
         for icol in range(ncols):
@@ -1338,7 +1341,7 @@ class OP4(object):
                         fmt = '%if' % (iEnd - iStart)
                     else:         # real, double
                         fmt = '%id' % (iEnd - iStart)
-                    f.write(pack(fmt, *A[iStart:iEnd+1, icol]))
+                    f.write(pack(self.endian + fmt, *A[iStart:iEnd+1, icol]))
 
                 else:  # complex
                     if Type == 1: # complex, single
@@ -1346,7 +1349,7 @@ class OP4(object):
                     else:         # complex, double
                         fmt = '2d'
                     for irow in range(iStart, iEnd):
-                        msg += pack(fmt, A[irow, icol].real,
+                        msg += pack(self.endian + fmt, A[irow, icol].real,
                                          A[irow, icol].imag)
             f.write(msg)
         if Type in [1, 3]: # single precision

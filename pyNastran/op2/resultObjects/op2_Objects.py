@@ -24,7 +24,7 @@ class BaseScalarObject(Op2Codes):
         self.format_code = None
         self.sort_code = None
         self.table_code = None
-        self.Title = None
+        self.title = None
         self.subtitle = None
         self.label = None
         self.num_wide = None

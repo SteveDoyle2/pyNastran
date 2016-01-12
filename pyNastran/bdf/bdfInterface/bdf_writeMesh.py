@@ -8,6 +8,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from six import string_types, iteritems, itervalues, PY2, StringIO
 import sys
 from codecs import open
+import io
 
 from pyNastran.bdf.utils import print_filename
 from pyNastran.utils.gui_io import save_file_dialog
@@ -68,10 +69,16 @@ class WriteMesh(BDFAttributes):
             out_filename = save_file_dialog(title, wildcard_wx, wildcard_qt)
             assert out_filename is not None, out_filename
 
-        if not (hasattr(out_filename, 'read') and hasattr(out_filename, 'write')) or isinstance(out_filename, file):
-            return out_filename
-        elif not isinstance(out_filename, string_types):
-            raise TypeError('out_filename=%r must be a string' % out_filename)
+        if PY2:
+            if not (hasattr(out_filename, 'read') and hasattr(out_filename, 'write')) or isinstance(out_filename, file):
+                return out_filename
+            elif not isinstance(out_filename, string_types):
+                raise TypeError('out_filename=%r must be a string; type=%s' % (out_filename, type(out_filename)))
+        else:
+            if not (hasattr(out_filename, 'read') and hasattr(out_filename, 'write')) or isinstance(out_filename, io.IOBase):
+                return out_filename
+            elif not isinstance(out_filename, string_types):
+                raise TypeError('out_filename=%r must be a string; type=%s' % (out_filename, type(out_filename)))
 
         if size == 8:
             assert is_double is False, 'is_double=%r' % is_double

@@ -248,7 +248,7 @@ class F06Writer(OP2_F06_Common):
         else:
             msg += 'No constraints have been applied...\n'
 
-        page_stamp = self.make_stamp(self.Title, self.date)
+        page_stamp = self.make_stamp(self.title, self.date)
         msg += page_stamp % self.page_num
         self.page_num += 1
         return msg
@@ -336,7 +336,7 @@ class F06Writer(OP2_F06_Common):
             f06.write(summary_header)
             f06.write(summary)
 
-            page_stamp = self.make_stamp(self.Title, self.date)
+            page_stamp = self.make_stamp(self.title, self.date)
             f06.write(page_stamp % self.page_num)
             self.page_num += 1
 
@@ -379,7 +379,7 @@ class F06Writer(OP2_F06_Common):
             f06_outname = f06.name
             print('f06_outname =', f06_outname)
 
-        page_stamp = self.make_stamp(self.Title, self.date)
+        page_stamp = self.make_stamp(self.title, self.date)
         if self.grid_point_weight.reference_point is not None:
             if not quiet:
                 print("grid_point_weight")

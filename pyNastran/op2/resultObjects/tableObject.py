@@ -402,7 +402,7 @@ class RealTableArray(TableArray):  # displacement style table
         num_wide = self.num_wide
         acoustic_flag = 0
         thermal = 0
-        Title = '%-128s' % self.Title
+        title = '%-128s' % self.title
         subtitle = '%-128s' % self.subtitle
         label = '%-128s' % self.label
         ftable3 = '50i 128s 128s 128s'
@@ -420,7 +420,7 @@ class RealTableArray(TableArray):  # displacement style table
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, thermal, thermal, 0,
-            Title, subtitle, label,
+            title, subtitle, label,
         ]
 
         n = 0

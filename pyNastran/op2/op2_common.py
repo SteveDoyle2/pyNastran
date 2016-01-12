@@ -271,21 +271,21 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
         assert len(data) == 584, len(data)
         # titleSubtitleLabel
         title, subtitle, label = unpack(b(self._endian + '128s128s128s'), data[200:])
-
-        self.Title = title.strip()
+        self.title = title.strip()#.decode(self.encoding).strip()
+        self.subtitle = subtitle.strip().decode(self.encoding).strip()
+        self.label = label.strip().decode(self.encoding).strip()
+        #print('title = %r' % self.title)
 
         #: the subtitle of the subcase
-        self.subtitle = subtitle.strip()
         self.data_code['subtitle'] = self.subtitle
 
         #: the label of the subcase
-        self.label = label.strip()
         self.data_code['label'] = self.label
-        self.data_code['Title'] = self.Title
+        self.data_code['Title'] = self.title
 
         if self.is_debug_file:
             self.binary_debug.write('  %-14s = %r\n' % ('count', self._count))
-            self.binary_debug.write('  %-14s = %r\n' % ('Title', self.Title))
+            self.binary_debug.write('  %-14s = %r\n' % ('title', self.title))
             self.binary_debug.write('  %-14s = %r\n' % ('subtitle', self.subtitle))
             self.binary_debug.write('  %-14s = %r\n' % ('label', self.label))
 
