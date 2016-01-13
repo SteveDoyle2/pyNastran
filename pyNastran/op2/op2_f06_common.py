@@ -8,6 +8,10 @@ from pyNastran.f06.tables.grid_point_weight import GridPointWeight
 from pyNastran.f06.f06_formatting import get_key0
 from pyNastran.utils import object_attributes
 from pyNastran.bdf.cards.baseCard import deprecated
+try:
+    import pandas as pd
+except ImportError:
+    pass
 
 
 class OP2_F06_Common(object):
@@ -275,8 +279,25 @@ class OP2_F06_Common(object):
         #OEF - Fluxes - tCode=4 thermal=1
         self.thermalLoad_CONV = {}
         self.thermalLoad_CHBDY = {}
-        self.thermalLoad_1D = {}
-        self.thermalLoad_2D_3D = {}
+
+        #self.thermalLoad_1D = {}
+        self.crod_thermal_load = {}
+        self.cbeam_thermal_load = {}
+        self.ctube_thermal_load = {}
+        self.conrod_thermal_load = {}
+        self.cbar_thermal_load = {}
+        self.cbend_thermal_load = {}
+
+        #self.thermalLoad_2D_3D = {}
+        self.cquad4_thermal_load = {}
+        self.ctriax6_thermal_load = {}
+        self.cquad8_thermal_load = {}
+        self.ctria3_thermal_load = {}
+        self.ctria6_thermal_load = {}
+        self.ctetra_thermal_load = {}
+        self.cthexa_thermal_load = {}
+        self.cpenta_thermal_load = {}
+
         self.thermalLoad_VU = {}
         self.thermalLoad_VU_3D = {}
         self.thermalLoad_VUBeam = {}
@@ -363,6 +384,7 @@ class OP2_F06_Common(object):
         self.ctetra_strain_energy = {}
         self.cpenta_strain_energy = {}
         self.chexa_strain_energy = {}
+        self.cpyram_strain_energy = {}
 
         self.crod_strain_energy = {}
         self.ctube_strain_energy = {}
@@ -630,8 +652,25 @@ class OP2_F06_Common(object):
             #OEF - Fluxes - tCode=4 thermal=1
             'thermalLoad_CONV',
             'thermalLoad_CHBDY',
-            'thermalLoad_1D',
-            'thermalLoad_2D_3D',
+
+            #'thermalLoad_1D',
+            'crod_thermal_load',
+            'cbeam_thermal_load',
+            'ctube_thermal_load',
+            'conrod_thermal_load',
+            'cbar_thermal_load',
+            'cbend_thermal_load',
+
+            #'thermalLoad_2D_3D',
+            'cquad4_thermal_load',
+            'ctriax6_thermal_load',
+            'cquad8_thermal_load',
+            'ctria3_thermal_load',
+            'ctria6_thermal_load',
+            'ctetra_thermal_load',
+            'cthexa_thermal_load',
+            'cpenta_thermal_load',
+
             'thermalLoad_VU',
             'thermalLoad_VU_3D',
             'thermalLoad_VUBeam',
@@ -703,10 +742,10 @@ class OP2_F06_Common(object):
 
             'cshear_strain_energy',
 
-
             'ctetra_strain_energy',
             'cpenta_strain_energy',
             'chexa_strain_energy',
+            'cpyram_strain_energy',
 
             'crod_strain_energy',
             'ctube_strain_energy',

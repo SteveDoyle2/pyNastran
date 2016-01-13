@@ -116,7 +116,9 @@ class TestConstraints(unittest.TestCase):
         #print ' %r' % str(mpc)
         #print '%r' % mpc.write_card(size=8)
         #msg = mpc.write_card(size=8, double=False)
-        self.assertEqual('MPC            1    1002       1      1.    1000       1  -3.861\n', mpc.write_card(size=8))
+        self.assertEqual(
+            'MPC            1    1002       1      1.    1000       1  -3.861\n',
+            mpc.write_card(size=8))
 
     def test_mpc_02(self):
         model = BDF(debug=False)
@@ -125,10 +127,11 @@ class TestConstraints(unittest.TestCase):
                 '                    1000       5-7.152-3    1000       6-.013655']
         msg8 = ('MPC            1    1002       4      1.    1000       4-.129394\n'
                 '                    1000       5-7.152-3    1000       6-.013655\n')
-        msg16 =('MPC*                   1            1002               4              1.\n'
-                '*                   1000               4        -.129394\n'
-                '*                                   1000               5        -.007152\n'
-                '*                   1000               6        -.013655\n')
+        msg16 = (
+            'MPC*                   1            1002               4              1.\n'
+            '*                   1000               4        -.129394\n'
+            '*                                   1000               5        -.007152\n'
+            '*                   1000               6        -.013655\n')
 
 
         card = model.add_card(card, 'MPC', is_list=False)
@@ -142,18 +145,21 @@ class TestConstraints(unittest.TestCase):
     def test_mpc_03(self):
         model = BDF(debug=False)
 
-        card = ['MPC            1    1002       4      1.    1000       4-.129394',
-                '                    1000       5-7.152-3    1000       6-.013655',
-                '                    1004       2   123.3',]
-        msg8 = ('MPC            1    1002       4      1.    1000       4-.129394\n'
-                '                    1000       5-7.152-3    1000       6-.013655\n'
-                '                    1004       2   123.3\n')
-        msg16 =('MPC*                   1            1002               4              1.\n'
-                '*                   1000               4        -.129394\n'
-                '*                                   1000               5        -.007152\n'
-                '*                   1000               6        -.013655\n'
-                '*                                   1004               2           123.3\n'
-                '*\n')
+        card = [
+            'MPC            1    1002       4      1.    1000       4-.129394',
+            '                    1000       5-7.152-3    1000       6-.013655',
+            '                    1004       2   123.3',]
+        msg8 = (
+            'MPC            1    1002       4      1.    1000       4-.129394\n'
+            '                    1000       5-7.152-3    1000       6-.013655\n'
+            '                    1004       2   123.3\n')
+        msg16 = (
+            'MPC*                   1            1002               4              1.\n'
+            '*                   1000               4        -.129394\n'
+            '*                                   1000               5        -.007152\n'
+            '*                   1000               6        -.013655\n'
+            '*                                   1004               2           123.3\n'
+            '*\n')
 
 
         card = model.add_card(card, 'MPC', is_list=False)

@@ -188,7 +188,7 @@ class ONR(OP2Common):
             result_name = 'cquad8_strain_energy'
         elif self.data_code['element_name'] == 'QUADR':
             result_name = 'cquadr_strain_energy'
-        elif self.data_code['element_name'] == ['QUADXFD', 'QUADX4FD']:
+        elif self.data_code['element_name'] in ['QUADXFD', 'QUADX4FD']:
             result_name = 'cquadx_strain_energy'
         elif self.data_code['element_name'] == 'SHEAR':
             result_name = 'cshear_strain_energy'
@@ -199,6 +199,8 @@ class ONR(OP2Common):
             result_name = 'cpenta_strain_energy'
         elif self.data_code['element_name'] in ['TETRA', 'TETRAFD', 'TETRA4FD']:
             result_name = 'ctetra_strain_energy'
+        elif self.data_code['element_name'] in ['PYRAM']:
+            result_name = 'cpyram_strain_energy'
 
         elif self.data_code['element_name'] == 'GAP':
             result_name = 'cgap_strain_energy'

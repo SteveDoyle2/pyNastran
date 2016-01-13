@@ -349,7 +349,7 @@ class OES(OP2Common):
             n = self._not_implemented_or_skip(data, ndata, msg)
         return n
 
-    def autojit3(func):
+    def _autojit3(func):
         """
         Debugging function to print the object name and an needed parameters
         """
@@ -361,7 +361,7 @@ class OES(OP2Common):
             return n
         return new_func
 
-    def print_obj_name_on_crash(func):
+    def _print_obj_name_on_crash(func):
         """
         Debugging function to print the object name and an needed parameters
         """
@@ -389,7 +389,7 @@ class OES(OP2Common):
             return n
         return new_func
 
-    #@print_obj_name_on_crash
+    #@_print_obj_name_on_crash
     def _read_oes1_4_sort1(self, data, ndata):
         """
         Reads OES1 subtable 4
@@ -408,7 +408,7 @@ class OES(OP2Common):
             n = self._not_implemented_or_skip(data, ndata, msg)
         return n
 
-    #@print_obj_name_on_crash
+    #@_print_obj_name_on_crash
     def _read_ostr1_4_sort1(self, data, ndata):
         """
         Reads OSTR1 subtable 4
@@ -1366,6 +1366,7 @@ class OES(OP2Common):
 
             slot = getattr(self, result_name)
 
+            numwide_real = 17
             if self.format_code == 1 and self.num_wide == 17:  # real
                 ntotal = 68  # 4*17
                 nelements = ndata // ntotal
@@ -1380,6 +1381,8 @@ class OES(OP2Common):
 
                 obj = self.obj
                 #print('dt=%s, itime=%s' % (obj.itime, dt))
+                #is_vectorized = False
+                assert obj.is_built == True, obj.is_built
                 if self.use_vector and is_vectorized:
                     n = nelements * 4 * self.num_wide
                     itotal = obj.ielement
@@ -1390,8 +1393,9 @@ class OES(OP2Common):
                         ints = fromstring(data, dtype=self.idtype)
                         ints1 = ints.reshape(nelements, numwide_real)
                         eids = ints1[:, 0] // 10
+                        eids = np.vstack([eids, eids]).T.ravel()
                         assert eids.min() > 0, eids.min()
-                        obj.element[itotal:itotalf] = eids
+                        obj.element_node[itotal:itotalf, 0] = eids
 
                     floats = fromstring(data, dtype=self.fdtype).reshape(nelements, numwide_real)[:, 1:]
 

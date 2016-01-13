@@ -971,7 +971,7 @@ class Cord1x(Coord):
         #self.j = None
         #self.k = None
 
-    def add_data(self, data):
+    def add_op2_data(self, data):
         self.cid = data[0]
         self.g1 = data[1]
         self.g2 = data[2]

@@ -57,9 +57,10 @@ class TestCoords(unittest.TestCase):
             [5, 1., 0., -1., 1.],
         ]
 
-        coords = [  # cid, rid, origin,      zaxis,     xaxis
-                   [1, 0, [0., 0., 0.], [1., 0., 0.], [0., 0., 1.]],
-                 ]
+        coords = [
+            # cid, rid, origin,      zaxis,     xaxis
+            [1, 0, [0., 0., 0.], [1., 0., 0.], [0., 0., 1.]],
+        ]
         self.get_nodes(grids, grids_expected, coords)
 
     def test_rotate2(self):
@@ -78,9 +79,10 @@ class TestCoords(unittest.TestCase):
             [5, 1, 1., -1., 0.],
         ]
 
-        coords = [  # cid, rid, origin,     zaxis        xaxis
-                   [1, 0, [0., 0., 0.], [0., 0., -1.], [1., 0., 0.]],
-                 ]
+        coords = [
+            # cid, rid, origin,     zaxis        xaxis
+            [1, 0, [0., 0., 0.], [0., 0., -1.], [1., 0., 0.]],
+        ]
         self.get_nodes(grids, grids_expected, coords)
 
     def test_rotate3(self):
@@ -100,20 +102,20 @@ class TestCoords(unittest.TestCase):
         ]
 
         coords = [
-                 # cid, rid, origin,      zaxis          xaxis
-                   [1, 0, [0., 0., 0.], [0., 0., -1.], [-1., 0., 0.]],
-                 ]
+            # cid, rid, origin,      zaxis          xaxis
+            [1, 0, [0., 0., 0.], [0., 0., -1.], [-1., 0., 0.]],
+        ]
         self.get_nodes(grids, grids_expected, coords)
 
     def test_rid_1(self):
         grids = [
             [1, 2, 10., 5., 3.],  # nid, cid, x,y,z
             [2, 3, 10., 5., 3.],
-         ]
+        ]
         grids_expected = [
             [1, 1, 11., 6., 4.],
             [2, 1, 11., 6., 4.],
-         ]
+        ]
 
         coords = [
             # cid, rid, origin,     zaxis        xaxis
@@ -242,20 +244,20 @@ class TestCoords(unittest.TestCase):
         model = BDF(debug=False)
         cards = [
             ['CORD2R', 1, 0, 0., 0., 0.,
-                             0., 0., 0.,
-                             0., 0., 0.],  # fails on self.k
+             0., 0., 0.,
+             0., 0., 0.],  # fails on self.k
             ['CORD2R', 2, 0, 0., 0., 0.,
-                             1., 0., 0.,
-                             0., 0., 0.],  # fails on normalize self.j
+             1., 0., 0.,
+             0., 0., 0.],  # fails on normalize self.j
             ['CORD2R', 3, 0, 0., 0., 0.,
-                             1., 0., 0.,
-                             1., 1., 0.],  # passes
+             1., 0., 0.,
+             1., 1., 0.],  # passes
             ['CORD2R', 4, 0, 0., 1., 0.,
-                             1., 0., 0.,
-                             1., 1., 0.],  # passes
+             1., 0., 0.,
+             1., 1., 0.],  # passes
             ['CORD2R', 5, 4, 0., 1., 0.,
-                             1., 0., 0.,
-                             1., 1., 0.],  # passes
+             1., 0., 0.,
+             1., 1., 0.],  # passes
         ]
         for card in cards:
             cid = card[1]
@@ -479,7 +481,7 @@ class TestCoords(unittest.TestCase):
         for coord in coords:
             (cid, rid, x, y, z) = coord
             model.add_card(['CORD2R', cid, rid] + x + y + z, 'CORD2R')
-            coordObj = model.Coord(cid)
+            #coord_obj = model.Coord(cid)
 
         model.cross_reference()
 
@@ -500,7 +502,7 @@ class TestCoords(unittest.TestCase):
 
 
     def test_A(self):
-        origin  = array([0., 0., 0.])
+        origin = array([0., 0., 0.])
         zaxis = array([0., 0., 1.])
         xzplane = array([1., 0., 0.])
         cid0 = CORD2R()
@@ -531,7 +533,7 @@ class TestCoords(unittest.TestCase):
         self.assertTrue(array_equal(Mxyz_local, cross(r, F))), "expected=%s actual=%s" % (M, Mxyz_local)
 
     def test_B(self):
-        origin  = array([0., 0., 0.])
+        origin = array([0., 0., 0.])
         zaxis = array([0., 0., 1.])
         xzplane = array([1., 0., 0.])
         cid0 = CORD2R()

@@ -253,7 +253,7 @@ class F06Writer(OP2_F06_Common):
         self.page_num += 1
         return msg
 
-    def write_summary(self, f06, card_count=None):
+    def _write_summary(self, f06, card_count=None):
         summary_header = '                                        M O D E L   S U M M A R Y\n\n'
         summary = ''
 
@@ -372,7 +372,7 @@ class F06Writer(OP2_F06_Common):
                 f06 = open(f06_outname, 'wb')
             else:
                 f06 = open(f06_outname, 'w')
-            self.write_summary(f06)
+            self._write_summary(f06)
         else:
             assert isinstance(f06_outname, file), 'type(f06_outname)= %s' % f06_outname
             f06 = f06_outname
@@ -488,7 +488,7 @@ class F06Writer(OP2_F06_Common):
             self.ctriar_strain_energy, self.ctriax_strain_energy,
             self.ctriax6_strain_energy,
             self.ctetra_strain_energy, self.cpenta_strain_energy,
-            self.chexa_strain_energy,
+            self.chexa_strain_energy, self.cpyram_strain_energy,
             self.crod_strain_energy, self.ctube_strain_energy,
             self.conrod_strain_energy,
             self.cbar_strain_energy, self.cbeam_strain_energy,
@@ -660,8 +660,26 @@ class F06Writer(OP2_F06_Common):
             #OEF - Fluxes - tCode=4 thermal=1
             self.thermalLoad_CONV,
             self.thermalLoad_CHBDY,
-            self.thermalLoad_1D,
-            self.thermalLoad_2D_3D,
+
+            #self.thermalLoad_1D,
+            self.crod_thermal_load,
+            self.cbeam_thermal_load,
+            self.ctube_thermal_load,
+            self.conrod_thermal_load,
+            self.cbar_thermal_load,
+            self.cbend_thermal_load,
+
+            #self.thermalLoad_2D_3D,
+            self.cquad4_thermal_load,
+            self.ctriax6_thermal_load,
+            self.cquad8_thermal_load,
+            self.ctria3_thermal_load,
+            self.ctria6_thermal_load,
+            self.ctetra_thermal_load,
+            self.cthexa_thermal_load,
+            self.cpenta_thermal_load,
+
+
             self.thermalLoad_VU,
             self.thermalLoad_VU_3D,
             self.thermalLoad_VUBeam,

@@ -54,7 +54,7 @@ class TestShells(unittest.TestCase):
         n2 = 2
         n3 = 3
         mid2 = mid3 = mid4 = twelveIt3 = tst = z1 = z2 = None
-        z0 = sb = ft = Tref = ge = lam = None
+        z0 = sb = ft = tref = ge = lam = None
         sout = None
         theta0 = 0.
         theta1 = 30.
@@ -70,7 +70,7 @@ class TestShells(unittest.TestCase):
 
             ['ctria3', eid + 1, pid + 1, n1, n2, n3],   # A = 1/2 * 4 * 1 = 2.
             [
-                'pcomp', pid + 1, z0, nsm, sb, ft, Tref, ge, lam,
+                'pcomp', pid + 1, z0, nsm, sb, ft, tref, ge, lam,
                 mid, t, theta0, sout,
                 mid, 2 * t, theta1, sout,
                 mid, 3 * t, theta2, sout,
@@ -279,14 +279,14 @@ class TestShells(unittest.TestCase):
         nsm = 0.
         sb = 0.
         ft = 0.
-        TRef = 0.
+        tref = 0.
         ge = 0.
         lam = 'NO' # isSymmetrical YES/NO
         Mid = [1, 2, 3]
-        Theta = [0., 10., 20.]
+        theta = [0., 10., 20.]
         T = [.1, .2, .3]
-        Sout = [1, 1, 0]  # 0-NO, 1-YES
-        data = [pid, z0, nsm, sb, ft, TRef, ge, lam, Mid, T, Theta, Sout]
+        sout = [1, 1, 0]  # 0-NO, 1-YES
+        data = [pid, z0, nsm, sb, ft, tref, ge, lam, Mid, T, theta, sout]
 
         p = PCOMP(data=data)
         self.assertFalse(p.isSymmetrical())
@@ -407,14 +407,14 @@ class TestShells(unittest.TestCase):
         nsm = 0.
         sb = 0.
         ft = 0.
-        TRef = 0.
+        tref = 0.
         ge = 0.
         lam = 'SYM'  # isSymmetrical SYM
         Mid = [1, 2, 3]
-        Theta = [0., 10., 20.]
+        theta = [0., 10., 20.]
         T = [.1, .2, .3]
-        Sout = [1, 1, 0]  # 0-NO, 1-YES
-        data = [pid, z0, nsm, sb, ft, TRef, ge, lam, Mid, T, Theta, Sout]
+        sout = [1, 1, 0]  # 0-NO, 1-YES
+        data = [pid, z0, nsm, sb, ft, tref, ge, lam, Mid, T, theta, sout]
         p = PCOMP(data=data)
         self.assertTrue(p.isSymmetrical())
         self.assertEqual(p.nPlies(), 6)

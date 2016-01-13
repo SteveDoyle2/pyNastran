@@ -65,7 +65,7 @@ class OEF(OP2Common):
     def __init__(self):
         OP2Common.__init__(self)
 
-    def OEF_ForceCode(self):
+    def _oef_force_code(self):
         """
         Gets the numwide codes for the element to determine if
         the real or complex result should be found.
@@ -334,7 +334,21 @@ class OEF(OP2Common):
             # 69-CBEND
             obj_vector_real = Real1DHeatFluxArray
             #if self.element_type == 1: # CROD
-            result_name = 'thermalLoad_1D'
+            if self.element_type == 1:
+                result_name = 'crod_1d_thermal_load'
+            elif self.element_type == 2:
+                result_name = 'cbeam_1d_thermal_load'
+            elif self.element_type == 3:
+                result_name = 'ctube_1d_thermal_load'
+            elif self.element_type == 10:
+                result_name = 'conrod_1d_thermal_load'
+            elif self.element_type == 34:
+                result_name = 'cbar_1d_thermal_load'
+            elif self.element_type == 69:
+                result_name = 'cbend_1d_thermal_load'
+            else:
+                raise NotImplementedError('element_type=%s element_name=%s' % (
+                    self.element_type, self.element_name))
 
             if self._results.is_not_saved(result_name):
                 return ndata
@@ -405,6 +419,25 @@ class OEF(OP2Common):
             # 39-TETRA
             # 67-HEXA
             # 68-PENTA
+            if self.element_type == 33:
+                result_name = 'cquad4_thermal_load'
+            elif self.element_type == 53:
+                result_name = 'ctriax6_thermal_load'
+            elif self.element_type == 64:
+                result_name = 'cquad8_thermal_load'
+            elif self.element_type == 74:
+                result_name = 'ctria3_thermal_load'
+            elif self.element_type == 75:
+                result_name = 'ctria6_thermal_load'
+            elif self.element_type == 39:
+                result_name = 'ctetra_thermal_load'
+            elif self.element_type == 67:
+                result_name = 'cthexa_thermal_load'
+            elif self.element_type == 68:
+                result_name = 'cpenta_thermal_load'
+            else:
+                raise NotImplementedError('element_type=%s element_name=%s' % (
+                    self.element_type, self.element_name))
 
             obj_vector_real = HeatFlux_2D_3DArray
             #if self.element_type == 1: # CROD
@@ -430,7 +463,7 @@ class OEF(OP2Common):
                     #self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
 
                 if self.use_vector and is_vectorized:
-                    #n = nelements * 4 * self.num_wide
+                    n = nelements * 4 * self.num_wide
                     itotal = obj.ielement
                     ielement2 = obj.itotal + nelements
                     itotal2 = ielement2
@@ -731,10 +764,11 @@ class OEF(OP2Common):
             raise UnboundLocalError('element_name=%r' % self.element_name)
         #assert ndata % ntotal == 0, '%s n=%s nwide=%s len=%s ntotal=%s' % (self.element_name, ndata % ntotal, ndata % self.num_wide, ndata, ntotal)
         assert self.num_wide * 4 == ntotal, 'numwide*4=%s ntotal=%s' % (self.num_wide*4, ntotal)
-        assert n > 0, n
+        assert n > 0, 'n=%s element_type=%s element_name=%s numwide=%s' % (
+            n, self.element_type, self.element_name, self.num_wide)
         return n
 
-    def print_obj_name_on_crash(func):
+    def _print_obj_name_on_crash(func):
         """
         Decorator debugging function to print the object name and an needed parameters
         """
@@ -761,7 +795,7 @@ class OEF(OP2Common):
             return n
         return new_func
 
-    # @print_obj_name_on_crash
+    # @_print_obj_name_on_crash
     def _read_oef1_loads(self, data, ndata):
         """
         Reads the OEF1 table; stores the element forces/heat flux.
@@ -769,7 +803,7 @@ class OEF(OP2Common):
         if self._results.is_not_saved('element_forces'):
             return ndata
         flag = 'element_id'
-        (num_wide_real, num_wide_imag) = self.OEF_ForceCode()
+        (num_wide_real, num_wide_imag) = self._oef_force_code()
         if self.is_debug_file:
             self.binary_debug.write('  num_wide_real = %r\n' % num_wide_real)
             self.binary_debug.write('  num_wide_imag = %r\n' % num_wide_imag)
@@ -1485,7 +1519,6 @@ class OEF(OP2Common):
                 return self._not_implemented_or_skip(data, ndata, msg)
 
             obj_real = RealPlateForceArray
-
             if self.format_code == 1 and self.num_wide == 9:  # real
                 ntotal = 36 # 9*4
                 nelements = ndata // ntotal
@@ -2738,7 +2771,8 @@ class OEF(OP2Common):
 
         #assert self.thermal == 0, self.thermal
         assert ndata > 0, ndata
-        assert nelements > 0, 'nelements=%r element_type=%s element_name=%r' % (nelements, self.element_type, self.element_name)
+        assert nelements > 0, 'nelements=%r element_type=%s element_name=%r num_wide=%s' % (
+            nelements, self.element_type, self.element_name, self.num_wide)
         #assert ndata % ntotal == 0, '%s n=%s nwide=%s len=%s ntotal=%s' % (self.element_name, ndata % ntotal, ndata % self.num_wide, ndata, ntotal)
         assert self.num_wide * 4 == ntotal, 'numwide*4=%s ntotal=%s' % (self.num_wide*4, ntotal)
         assert n > 0, n

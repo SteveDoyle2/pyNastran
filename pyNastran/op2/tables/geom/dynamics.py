@@ -37,17 +37,17 @@ class DYNAMICS(object):
             (3207, 34, 130): ['NONLIN4', self._read_fake], # 23
             (2107, 21, 195): ['RANDPS', self._read_fake], # 24
             (2207, 22, 196): ['RANDT1', self._read_fake], # 25
-            (5107, 51, 131): ['RLOAD1', self.readRLoad1],  # 26
-            (5207, 52, 132): ['RLOAD2', self.readRLoad2],  # 27
+            (5107, 51, 131): ['RLOAD1', self._read_rload1],  # 26
+            (5207, 52, 132): ['RLOAD2', self._read_rload2],  # 27
             (8910, 89, 606): ['ROTORB', self._read_fake],  # 28
             (8210, 82, 599): ['ROTORD', self._read_fake],  # 29
             (8410, 84, 600): ['ROTORG', self._read_fake],  # 30
             (5707, 57, 135): ['SEQEP', self._read_fake],  # 31
             (6207, 62, 136): ['TF', self._read_fake],  # 32
             (6607, 66, 137): ['TIC', self._read_fake],  # 33
-            (7107, 71, 138): ['TLOAD1', self.readTLoad1],  # 37
-            (7207, 72, 139): ['TLOAD2', self.readTLoad2],  # 38
-            (8307, 83, 142): ['TSTEP', self.readTStep],  # 39
+            (7107, 71, 138): ['TLOAD1', self._read_tload1],  # 37
+            (7207, 72, 139): ['TLOAD2', self._read_tload2],  # 38
+            (8307, 83, 142): ['TSTEP', self._read_tstep],  # 39
 
             (10701, 107, 117) : ['', self._read_fake],
             (10801, 108, 242) : ['', self._read_fake],
@@ -123,7 +123,7 @@ class DYNAMICS(object):
         self.binary_debug.write('skipping EPOINT in DYNAMICS\n')
         return len(data)
 
-    def _readFreq(self, data, n):
+    def _read_freq(self, data, n):
         """FREQ(1307,13,126) - Record 13"""
         self.binary_debug.write('skipping FREQ in DYNAMICS\n')
         return len(data)
@@ -161,12 +161,12 @@ class DYNAMICS(object):
 #RANDPS
 #RANDT1
 
-    def readRLoad1(self, data, n):
+    def _read_rload1(self, data, n):
         """RLOAD1(5107,51,131) - Record 26"""
         self.binary_debug.write('skipping RLOAD1 in DYNAMICS\n')
         return len(data)
 
-    def readRLoad2(self, data, n):
+    def _read_rload2(self, data, n):
         """RLOAD2(5107,51,131) - Record 27"""
         self.binary_debug.write('skipping RLOAD2 in DYNAMICS\n')
         return len(data)
@@ -183,17 +183,17 @@ class DYNAMICS(object):
 #TIC
 #TIC3
 
-    def readTLoad1(self, data, n):
+    def _read_tload1(self, data, n):
         """TLOAD1(7107,71,138) - Record 37"""
         self.binary_debug.write('skipping TLOAD1 in DYNAMICS\n')
         return len(data)
 
-    def readTLoad2(self, data, n):
+    def _read_tload2(self, data, n):
         """TLOAD2(7207,72,139) - Record 37"""
         self.binary_debug.write('skipping TLOAD2 in DYNAMICS\n')
         return len(data)
 
-    def readTStep(self, data, n):
+    def _read_tstep(self, data, n):
         """TSTEP(8307,83,142) - Record 38"""
         self.binary_debug.write('skipping TSTEP in DYNAMICS\n')
         return len(data)

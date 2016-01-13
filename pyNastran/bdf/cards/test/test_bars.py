@@ -113,7 +113,7 @@ class TestBars(unittest.TestCase):
         grid3 = ['GRID', 3, None, 1., 0., 0.]
         force = ['FORCE', 100, 1, 0, 2., 3., 4.]
         cbar = [
-            'CAR', 10, 11, 1, 2,   0., 1., 0., None,
+            'CAR', 10, 11, 1, 2, 0., 1., 0., None,
         ]
         k1 = k2 = None
         area = 2.0

@@ -611,7 +611,7 @@ class RealChbdyHeatFluxArray(ScalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
 
     def get_headers(self):
         headers = [
-            'xgrad', 'ygrad', 'zgrad', 'xflux', 'yflux', 'zflux'
+            'fapplied', 'free_conv', 'force_conv', 'frad', 'ftotal',
         ]
         return headers
 

@@ -577,7 +577,12 @@ class OP2(OP2_Scalar):
             self.acceleration_scaled_response_spectra_ABS,
             self.acceleration_scaled_response_spectra_NRL,
 
-            self.eigenvectors
+            self.eigenvectors,
+            self.spc_forces, self.spc_forcesATO, self.spc_forcesPSD,
+            self.spc_forcesRMS,
+            self.mpc_forces, self.mpc_forcesATO, self.mpc_forcesPSD,
+            self.mpc_forcesRMS,
+            self.applied_loads, self.load_vectors,
         ]
 
         for disp_like_dict in disp_like_dicts:

@@ -6,9 +6,7 @@ from itertools import count
 
 from numpy import allclose
 
-from pyNastran.bdf.bdf import BDF, CaseControlDeck, BDFCard, PBEAM, PBAR, CBEAM, GRID, MAT1
-from pyNastran.bdf.bdf import CROD, CONROD
-from pyNastran.bdf.bdf import PELAS
+from pyNastran.bdf.bdf import BDF, BDFCard, PBEAM, CBEAM, GRID
 
 from pyNastran.bdf.field_writer_8 import print_card_8
 
@@ -42,13 +40,13 @@ class TestBeams(unittest.TestCase):
     def _compare(self, fields, lines_expected):
         msg = print_card_8(fields).rstrip()
         lines_actual = msg.rstrip().split('\n')
-        msgA = '\n%s\n\n%s\n' % ('\n'.join(lines_expected), msg)
-        msgA += 'nlines_actual=%i nlines_expected=%i' % (len(lines_actual), len(lines_expected))
-        self.assertEqual(len(lines_actual), len(lines_expected), msgA)
+        msg_a = '\n%s\n\n%s\n' % ('\n'.join(lines_expected), msg)
+        msg_a += 'nlines_actual=%i nlines_expected=%i' % (len(lines_actual), len(lines_expected))
+        self.assertEqual(len(lines_actual), len(lines_expected), msg_a)
         for i, actual, expected in zip(count(), lines_actual, lines_expected):
             actual = str(actual)
             expected = str(expected)
-            msg = msgA + '\ni=%s' % i + '\nactual   = %r\n' % actual
+            msg = msg_a + '\ni=%s' % i + '\nactual   = %r\n' % actual
             msg += 'expected = %r' % expected
             self.assertEqual(actual, expected, msg)
 
@@ -276,13 +274,13 @@ class TestBeams(unittest.TestCase):
             msg = card2.write_card(size, 'dummy')
 
             lines_actual = msg.rstrip().split('\n')
-            msgA = '\n%s\n\n%s' % ('\n'.join(lines_expected), msg)
-            msgA += 'nlines_actual=%i nlines_expected=%i' % (len(lines_actual), len(lines_expected))
+            msg_a = '\n%s\n\n%s' % ('\n'.join(lines_expected), msg)
+            msg_a += 'nlines_actual=%i nlines_expected=%i' % (len(lines_actual), len(lines_expected))
             self.assertEqual(len(lines_actual), len(lines_expected), msg)
             for actual, expected in zip(lines_actual, lines_expected):
                 actual = str(actual)
                 expected = str(expected)
-                msg = msgA + '\nactual   = %r\n' % actual
+                msg = msg_a + '\nactual   = %r\n' % actual
                 msg += 'expected = %r' % expected
                 self.assertEqual(actual, expected, msg)
 
@@ -400,12 +398,12 @@ class TestBeams(unittest.TestCase):
         prop = model.properties[1]
         #print(prop.raw_fields())
         lines_actual = prop.write_card().split('\n')
-        msgA = ''
+        msg_a = ''
         for line_expected, line_actual in zip(lines_expected, lines_actual):
             #assert line_expected == line_actual, line_actual
             actual = str(line_actual)
             expected = str(line_expected)
-            msg = msgA + '\nactual   = %r\n' % actual
+            msg = msg_a + '\nactual   = %r\n' % actual
             msg += 'expected = %r' % expected
             self.assertEqual(actual, expected, msg)
 
@@ -418,7 +416,7 @@ class TestBeams(unittest.TestCase):
         grid3 = ['GRID', 3, None, 1., 0., 0.]
         force = ['FORCE', 100, 1, 0, 2., 3., 4.]
         cbeam = [
-            'CBEAM', 10, 11, 1, 2,   0., 1., 0., None,
+            'CBEAM', 10, 11, 1, 2, 0., 1., 0., None,
         ]
         nsm_offset_a = [0., 0., 0.]
         nsm_offset_b = [0., 50., 0.]

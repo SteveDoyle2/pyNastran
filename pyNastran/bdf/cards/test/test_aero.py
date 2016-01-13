@@ -1,10 +1,7 @@
 import unittest
 
-import os
 import pyNastran
 from pyNastran.bdf.bdf import BDF
-
-from numpy import array, array_equal, sqrt, sin, cos, radians
 
 root_path = pyNastran.__path__[0]
 #test_path = os.path.join(root_path, 'bdf', 'cards', 'test')
