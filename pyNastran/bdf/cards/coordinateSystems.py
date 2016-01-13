@@ -1,4 +1,4 @@
-# pylint: disable=C0103,R0902,R0904,R0914
+# pylint: disable=R0902,R0904,R0914
 """
 All coordinate cards are defined in this file.  This includes:
 
@@ -39,10 +39,10 @@ def normalize(v):
 
     .. math:: v_{norm} = \frac{v}{\lvert v \lvert}
     """
-    normV = norm(v)
-    if not normV > 0.:
-        raise RuntimeError('v=%s norm(v)=%s' % (v, normV))
-    return v / normV
+    norm_v = norm(v)
+    if not norm_v > 0.:
+        raise RuntimeError('v=%s norm(v)=%s' % (v, norm_v))
+    return v / norm_v
 
 
 class Coord(BaseCard):
@@ -232,9 +232,17 @@ class Coord(BaseCard):
           - Generalized Vectors (Force, Moment about the origin)
           - Not Generalized Vectors (node xyz, displacement, Moment)
 
-        :param p: the vector in the local frame
-        :param debug: debug flag (default=False; unused)
-        :retval p3: the vector in the global frame
+        Parameters
+        ----------
+        self : Coord()
+            the coordinate system object
+        p : (1,3) ndarray
+            the vector in the local frame
+
+        Returns
+        -------
+        p3 : (1,3) ndarray
+            the vector in the global frame
 
         .. note:: Shifting the load application point of a force creates
                   a moment, but the force will be the same.
@@ -263,7 +271,7 @@ class Coord(BaseCard):
         p3 = dot(p2, matrix)
         return p3
 
-    def transform_node_to_global(self, p):
+    def transform_node_to_global(self, xyz):
         r"""
         Transforms a point from the local coordinate system to the reference
         coordinate frames "global" coordinate system.
@@ -285,41 +293,60 @@ class Coord(BaseCard):
         * :math:`g` is the global directional vector (e.g. :math:`g_x = [1,0,0]`)
         * :math:`ijk` is the math:`i^{th}` direction in the local coordinate system
 
-        :param self:    the coordinate system object
-        :param p:       the point to be transformed in the local frame.  Type=1x3 NUMPY.NDARRAY
-        :param debug:   developer debug (default=False)
-        :returns p2:  the point in the global frame.  Type=1x3 NUMPY.NDARRAY
-        :returns beta:  the rotation matrix.  Type=6x6 NUMPY.NDARRAY
+        Parameters
+        ----------
+        self : Coord()
+            the coordinate system object
+        xyz : (1,3) ndarray
+            the point in the local frame to be transformed
+
+        Returns
+        -------
+        xyz_global : (1,3) ndarray
+            the point in the global frame
+        beta : (6,6) ndarray
+            the rotation matrix
 
         .. warning:: make sure you cross-reference before calling this
         .. warning:: you probably shouldnt call this, call the Node methods
                      Position and PositionWRT
         """
         if self.cid == 0:
-            return p
-        return self.transform_vector_to_global(p) + self.origin
+            return xyz
+        return self.transform_vector_to_global(xyz) + self.origin
 
-    def _transform_node_to_local(self, p, beta, debug=False):
-        #betaT = hstack([self.i,self.j,self.k])  # verify
-        #pGlobal = self.transform_node_to_global(p, debug=False)
+    def _transform_node_to_local(self, xyz, beta):
+        """
+        Parameters
+        ----------
+        self : Coord()
+            the coordinate system object
+        xyz : (1,3) ndarray
+            the point in the global frame
+
+        Returns
+        -------
+        xyz_local : (1,3) ndarray
+            the point in the local frame
+        beta : (6,6) ndarray
+            the rotation matrix
+        """
         if self.origin is None:
             raise RuntimeError('Origin=%s; Cid=%s Rid=%s' % (self.origin, self.cid, self.Rid()))
-        pCoord = dot(p - self.origin, transpose(beta))
-        pLocal = self.XYZtoCoord(pCoord)
-        if debug:
-            print("p        = %s" % p)
-            print("p-origin = %s" % (p - self.origin))
-            print("pCoord = %s" % pCoord)
-            print("pLocal = %s\n" % pLocal)
-        return pLocal
+        xyz_coord = dot(xyz - self.origin, transpose(beta))
+        xyz_local = self.XYZtoCoord(xyz_coord)
+        return xyz_local
 
-    def transform_node_to_local(self, p, debug=False):
+    def transform_node_to_local(self, xyz):
         r"""
         Transforms the global point p to the local coordinate system
 
-        :param self:   the coordinate system object
-        :param p:      the point to transform
-        :param debug:  developer debug
+        Parameterse
+        -----------
+        self : Coord()
+            the coordinate system object
+        xyz : (1,3) ndarray
+            the point to transform
 
         .. note::  uses the matrix as there is no linking from a global
                    coordinate system to the local
@@ -340,16 +367,16 @@ class Coord(BaseCard):
         spherical coordinate system
         """
         beta = self.beta()
-        return self._transform_node_to_local(p, beta, debug)
+        return self._transform_node_to_local(xyz, beta)
 
-    def transform_vector_to_local(self, p):
+    def transform_vector_to_local(self, xyz):
         """
         see transform_node_to_local, but set the origin to <0, 0, 0>
         """
         beta = self.beta()
-        pCoord = dot(p, transpose(beta))
-        pLocal = self.XYZtoCoord(pCoord)
-        return pLocal
+        xyz_coord = dot(xyz, transpose(beta))
+        xyz_local = self.XYZtoCoord(xyz_coord)
+        return xyz_local
 
     def beta(self):
         r"""
@@ -376,60 +403,6 @@ class Coord(BaseCard):
         for i in range(n):
             t[i*3:i*3+2, i*3:i*3+2] = matrix[0:2, 0:2]
         return t
-
-    #def T(self):
-        #r"""
-        #Gets the 6 x 6 transformation
-
-        #.. math:: [\lambda] = [B_{ij}]
-
-        #.. math::
-          #[T] =
-          #\left[
-            #\begin{array}{cc}
-            #\lambda  & 0 \\
-            #0  & \lambda \\
-            #\end{array}
-          #\right]
-        #"""
-        #self.deprecated('T()', 'beta_n(2)', '0.7')
-        #return self.beta_n(2)
-
-    #def transformToGlobal(self, p, debug=False):
-        #"""
-        #Transforms a node from the local frame to the global frame
-
-        #:param p: the xyz point in the local frame
-        #:param debug: debug flag (default=False; unused)
-
-        #:retval p2: the xyz point in the global frame
-        #:retval matrix: the transformation matrix
-        #"""
-        #self.deprecated('(p2,M)=cid.transformToGlobal(p)', 'p2=cid.transform_node_to_global(p); M=cid.beta()', '0.7')
-        #if self.cid == 0:
-            #return p, array([[1., 0., 0.],
-                             #[0., 1., 0.],
-                             #[0., 0., 1.]], dtype='float64')
-
-        #p2 = self.transform_node_to_global(p)
-        #matrix = self.beta()
-        #return p2, matrix
-
-    #def transformVectorToGlobal(self, p):
-        #self.deprecated('transformVectorToGlobal(p)', 'transform_vector_to_global(p)', '0.7')
-        #return self.transform_vector_to_global(p)
-
-    #def transformNodeToGlobal(self, p):
-        #self.deprecated('transformNodeToGlobal(p)', 'transform_node_to_global(p)', '0.7')
-        #return self.transform_node_to_global(p)
-
-    #def transformToLocal(self, p, beta, debug=False):
-        #self.deprecated('transformToLocal(p)', 'transform_node_to_local(p)', '0.7')
-        #return self.transform_node_to_local(p, debug)
-
-    #def transform_to_local(self, p, beta, debug=False):
-        #self.deprecated('transform_to_local(p)', 'transform_node_to_local(p)', '0.7')
-        #return self.transform_node_to_local(p, debug)
 
     def repr_fields(self):
         return self.raw_fields()
@@ -459,14 +432,6 @@ class Coord(BaseCard):
         else:
             raise RuntimeError('Cannot move %s; cid=%s' % (self.type, self.cid))
         self.origin = xyz
-
-    #def __update_rid(self, rid):
-        #"""
-        #Rotate the coordinate system???
-        #"""
-        #raise NotImplementedError()
-        #if self.i == None:
-            #self.setup()
 
 
 def _fix_xyz_shape(xyz, name='xyz'):
@@ -540,15 +505,24 @@ def define_coord_e123(model, Type, cid, origin, rid=0,
     Create a coordinate system based on a defined axis and point on the
     plane.  This is the generalized version of the CORDx card.
 
-    :param model: a BDF object
-    :param Type:  'CORD2R', 'CORD2C', 'CORD2S'
-    :param cid:  the new coordinate system id
-    :param origin: a (3,) ndarray defining the location of the origin in
-                   the global coordinate frame
-    :param rid:  the new reference coordinate system id (default=0)
-    :param xaxis:  a (3,) ndarray defining the x axis (default=None)
-    :param yaxis:  a (3,) ndarray defining the y axis (default=None)
-    :param zaxis:  a (3,) ndarray defining the z axis (default=None)
+    Parameters
+    ----------
+    model : BDF()
+        a BDF object
+    Type : str
+        'CORD2R', 'CORD2C', 'CORD2S'
+    cid : int
+        the new coordinate system id
+    origin : (3,) ndarray
+         defines the location of the origin in the global coordinate frame
+    rid : int; default=0
+        the new reference coordinate system id
+    xaxis : (3,) ndarray
+        defines the x axis (default=None)
+    yaxis : (3,) ndarray
+        defines the y axis (default=None)
+    zaxis : (3,) ndarray
+        defines the z axis (default=None)
 
     .. note:: one axis (xaxis, yaxis, zaxis) and one plane
               (xyplane, yzplane, xz plane) must be defined; the others
@@ -634,15 +608,24 @@ def define_coord_ijk(model, Type, cid, origin, rid=0, i=None, j=None, k=None):
     """
     Create a coordinate system based on 2 or 3 perpendicular unit vectors
 
-    :param model: a BDF object
-    :param Type:  'CORD2R', 'CORD2C', 'CORD2S'
-    :param cid:  the new coordinate system id
-    :param origin: a (3,) ndarray defining the location of the origin in
-                   the global coordinate frame
-    :param rid:  the new reference coordinate system id (default=0)
-    :param i:    the i unit vector (default=None)
-    :param j:    the j unit vector (default=None)
-    :param k:    the k unit vector (default=None)
+    Parameters
+    ----------
+    model : BDF()
+        a BDF object
+    Type : str
+        'CORD2R', 'CORD2C', 'CORD2S'
+    cid : int
+        the new coordinate system id
+    origin : (3,) ndarray
+         defines the location of the origin in the global coordinate frame
+    rid : int; default=0
+        the new reference coordinate system id
+    i : (3,) ndarray
+        defines the i unit vector
+    j : (3,) ndarray
+        defines the j unit vector
+    k : (3,) ndarray
+        defines the k unit vector
 
     TODO: hasn't been tested...
     """
@@ -797,9 +780,14 @@ class Cord2x(Coord):
 
     def __init__(self):
         Coord.__init__(self)
+        self.rid = None
 
     def add(self, cid, rid=0, origin=None, zaxis=None, xzplane=None, comment=''):
         """
+        This method emulates the CORD2x card.
+
+        Parameters
+        ----------
         cid : int
             coord id
         rid : int; default=0
@@ -833,6 +821,156 @@ class Cord2x(Coord):
         #else:
         self.e3 = xzplane
         self._finish_setup()
+
+    def add_axes(cid, origin, rid=0,
+                 xaxis=None, yaxis=None, zaxis=None,
+                 xyplane=None, yzplane=None, xzplane=None):
+        """
+        Create a coordinate system based on a defined axis and point on the
+        plane.  This is the generalized version of the CORD2x card.
+
+        Parameters
+        ----------
+        cid : int
+            the new coordinate system id
+        origin : (3,) ndarray
+             defines the location of the origin in the global coordinate frame
+        rid : int; default=0
+            the new reference coordinate system id
+        xaxis : (3,) ndarray
+            defines the x axis (default=None)
+        yaxis : (3,) ndarray
+            defines the y axis (default=None)
+        zaxis : (3,) ndarray
+            defines the z axis (default=None)
+
+        .. note:: one axis (xaxis, yaxis, zaxis) and one plane
+                  (xyplane, yzplane, xz plane) must be defined; the others
+                  must be None
+        .. note:: the axes and planes are defined in the rid coordinate system
+
+        TODO: hasn't been tested...
+        """
+        assert self.type in ['CORD2R', 'CORD2C', 'CORD2S'], self.type
+        origin = _fix_xyz_shape(origin, 'origin')
+
+        # check for overdefined axes
+        if xaxis is not None:
+            assert yaxis is None and zaxis is None, 'yaxis=%s zaxis=%s' % (yaxis, zaxis)
+            xaxis = _fix_xyz_shape(xaxis, 'xaxis')
+            xaxis = rcoord.transform_node_to_global(xaxis)
+        elif yaxis is not None:
+            assert zaxis is None, 'zaxis=%s' % (zaxis)
+            yaxis = _fix_xyz_shape(yaxis, 'yaxis')
+            yaxis = rcoord.transform_node_to_global(yaxis)
+        else:
+            zaxis = _fix_xyz_shape(zaxis, 'zaxis')
+            zaxis = rcoord.transform_node_to_global(zaxis)
+
+        # check for invalid planes
+        if xyplane is not None:
+            assert yzplane is None and xzplane is None, 'yzplane=%s xzplane=%s' % (yzplane, xzplane)
+            assert xaxis is not None or yaxis is not None, 'xaxis=%s yaxis=%s' % (xaxis, yaxis)
+            xyplane = _fix_xyz_shape(xyplane, 'xyplane')
+            xyplane = rcoord.transform_node_to_global(xyplane)
+        elif yzplane is not None:
+            assert xzplane is None, 'xzplane=%s' % (xzplane)
+            assert yaxis is not None or zaxis is not None, 'yaxis=%s zaxis=%s' % (yaxis, zaxis)
+            yzplane = _fix_xyz_shape(yzplane, 'yzplane')
+            yzplane = rcoord.transform_node_to_global(yzplane)
+        else:
+            assert xaxis is not None or zaxis is not None, 'xaxis=%s zaxis=%s' % (xaxis, zaxis)
+            xzplane = _fix_xyz_shape(xzplane, 'xzplane')
+            xzplane = rcoord.transform_node_to_global(xzplane)
+
+        if xyplane is not None:
+            if xaxis is not None:
+                i = xaxis / norm(xaxis)
+                khat = cross(i, xyplane)  # xyplane is "defining" yaxis
+                k = khat / norm(khat)
+                j = cross(k, i)
+            elif yaxis is not None:
+                j = yaxis / norm(yaxis)
+                khat = cross(xyplane, j)  # xyplane is "defining" xaxis
+                k = khat / norm(khat)
+                i = cross(j, k)
+
+        elif yzplane is not None:
+            if yaxis is not None:
+                j = yaxis / norm(yaxis)
+                ihat = cross(j, yzplane)  # yzplane is "defining" zaxis
+                i = ihat / norm(ihat)
+                k = cross(i, j)
+            elif zaxis is not None:
+                k = zaxis / norm(zaxis)
+                ihat = cross(yzplane, zaxis)  # yzplane is "defining" yaxis
+                i = ihat / norm(ihat)
+                j = cross(k, i)
+
+        elif xzplane is not None:
+            if xaxis is not None:
+                i = xaxis / norm(xaxis)
+                jhat = cross(xzplane, i)  # xzplane is "defining" zaxis
+                j = jhat / norm(jhat)
+                k = cross(i, j)
+            elif zaxis is not None:
+                # standard
+                k = zaxis / norm(zaxis)
+                jhat = cross(k, xzplane) # xzplane is "defining" xaxis
+                j = jhat / norm(jhat)
+                i = cross(j, k)
+        self.add_ijk(Type, cid, origin, rid, i, j, k)
+
+    def add_ijk(cid, origin, rid=0, i=None, j=None, k=None):
+        """
+        Create a coordinate system based on 2 or 3 perpendicular unit vectors
+
+        Parameters
+        ----------
+        cid : int
+            the new coordinate system id
+        origin : (3,) ndarray
+             defines the location of the origin in the global coordinate frame
+        rid : int; default=0
+            the new reference coordinate system id
+        i : (3,) ndarray
+            defines the i unit vector
+        j : (3,) ndarray
+            defines the j unit vector
+        k : (3,) ndarray
+            defines the k unit vector
+
+        TODO: hasn't been tested...
+        """
+        Type = self.type
+        assert Type in ['CORD2R', 'CORD2C', 'CORD2S'], Type
+        origin = _fix_xyz_shape(origin, 'origin')
+
+        # create cross vectors
+        if i is None:
+            if j is not None and k is not None:
+                i = cross(k, j)
+            else:
+                raise RuntimeError('i, j and k are None')
+        else:
+            # i is defined
+            if j is not None and k is not None:
+                # all 3 vectors are defined
+                pass
+            elif j is None:
+                j = cross(k, i)
+            elif k is None:
+                k = cross(i, j)
+            else:
+                raise RuntimeError('j or k are None; j=%s k=%s' % (j, k))
+
+        # define e1, e2, e3
+        rcoord = model.Coord(rid, 'which is required to create cid=%s' % cid)
+        e1 = rcoord.transform_node_to_local(origin)
+        e2 = rcoord.transform_node_to_local(origin + k) # point on z axis
+        e3 = rcoord.transform_node_to_local(origin + i) # point on x-z plane / point on x axis
+        card = [Type, cid, rid] + list(e1) + list(e2) + list(e3)
+        model.add_card(Type, card, is_list=True)
 
     def add_op2_data(self, data):
         self.cid = data[0]
@@ -945,20 +1083,23 @@ class Cord1x(Coord):
 
     def __init__(self):
         Coord.__init__(self)
+        self.g1 = None
+        self.g2 = None
+        self.g3 = None
 
     def add_card(self, card, icard=0, comment=''):
         #self.isResolved = False
         assert icard == 0 or icard == 1, 'icard=%r' % (icard)
-        nCoord = 4 * icard  # 0 if the 1st coord, 4 if the 2nd
+        ncoord = 4 * icard  # 0 if the 1st coord, 4 if the 2nd
 
         #: the coordinate ID
-        self.cid = integer(card, 1 + nCoord, 'cid')
+        self.cid = integer(card, 1 + ncoord, 'cid')
         #: a Node at the origin
-        self.g1 = integer(card, 2 + nCoord, 'g1')
+        self.g1 = integer(card, 2 + ncoord, 'g1')
         #: a Node on the z-axis
-        self.g2 = integer(card, 3 + nCoord, 'g2')
+        self.g2 = integer(card, 3 + ncoord, 'g2')
         #: a Node on the xz-plane
-        self.g3 = integer(card, 4 + nCoord, 'g3')
+        self.g3 = integer(card, 4 + ncoord, 'g3')
 
         assert self.g1 != self.g2
         assert self.g1 != self.g3
@@ -1009,13 +1150,14 @@ class Cord1x(Coord):
         data = [type1, self.cid, rid1, list(p1) + list(p2) + list(p3)]
 
         if self.type == 'CORD1R':
-            coord = CORD2R(card=None, data=data, comment=self.comment)
+            coord = CORD2R()
         elif self.type == 'CORD1C':
-            coord = CORD2C(card=None, data=data, comment=self.comment)
+            coord = CORD2C()
         elif self.type == 'CORD1S':
-            coord = CORD2S(card=None, data=data, comment=self.comment)
+            coord = CORD2S()
         else:
             raise RuntimeError('coordinate type of \n%s is %s' % (str(self), type1))
+        coord.add_op2_data(data=data, comment=self.comment)
         model.coords[self.cid] = coord
 
     def _verify(self, xref):
@@ -1116,7 +1258,12 @@ class Cord1x(Coord):
 class GMCORD(BaseCard):
     type = 'GMCORD'
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self):
+        self.cid = None
+        self.entity = None
+        self.gm_ids = None
+
+    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
         self.cid = integer(card, 1, 'cid')
@@ -1166,8 +1313,8 @@ class CORD3G(Coord):  # not done
 
         self.cid = integer(card, 1, 'cid')
         method = string_or_blank(card, 2, 'E313')
-        self.methodES = method[0]
-        self.methodInt = int(method[1:])
+        self.method_es = method[0]
+        self.method_int = int(method[1:])
         assert self.methodES in ['E', 'S'] # Euler / Space-Fixed
         assert 0 < self.methodInt < 1000
 
@@ -1209,8 +1356,8 @@ class CORD3G(Coord):  # not done
          of matrices is the opposite of the order in which they're
          applied to a vector)."
         """
-        if self.methodES == 'E':
-            rotations = [int(i) for i in str(self.methodInt)]
+        if self.method_es == 'E':
+            rotations = [int(i) for i in str(self.method_int)]
             for (rotation, theta) in zip(rotations, self.thetas):
                 ct = cos(radians(theta))
                 st = sin(radians(theta))
@@ -1222,10 +1369,10 @@ class CORD3G(Coord):  # not done
                     p = dot(self.rotation_z(ct, st), p)
                 else:
                     raise RuntimeError('rotation=%s rotations=%s' % (rotation, rotations))
-        elif self.methodES == 'S':
+        elif self.method_es == 'S':
             raise RuntimeError('Space-Fixed rotation hasnt been implemented')
         else:
-            msg = 'Invalid method; Use Euler or Space-Fixed.  MethodES=%r' % self.methodES
+            msg = 'Invalid method; Use Euler or Space-Fixed.  method_es=%r' % self.method_es
             raise RuntimeError(msg)
         return p
 
@@ -1248,7 +1395,7 @@ class CORD3G(Coord):  # not done
         return matrix
 
     def raw_fields(self):
-        method = self.methodES + str(self.methodInt)
+        method = self.method_es + str(self.method_int)
         list_fields = (['CORD3G', self.cid, method, self.form] + self.thetas +
                        [self.Rid()])
         return list_fields
@@ -1258,7 +1405,7 @@ class CORD1R(Cord1x, RectangularCoord):
     type = 'CORD1R'
     Type = 'R'
 
-    def __init__(self, card=None, icard=0, data=None, comment=''):
+    def __init__(self):
         """
         Intilizes the CORD1R
 
@@ -1289,7 +1436,7 @@ class CORD1C(Cord1x, CylindricalCoord):
     type = 'CORD1C'
     Type = 'C'
 
-    def __init__(self, card=None, icard=0, data=None, comment=''):
+    def __init__(self):
         """
         Intilizes the CORD1R
 
@@ -1388,7 +1535,7 @@ class CORD2C(Cord2x, CylindricalCoord):
     type = 'CORD2C'
     Type = 'C'
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self):
         """
         Intilizes the CORD2C
 
@@ -1417,7 +1564,7 @@ class CORD2S(Cord2x, SphericalCoord):
     type = 'CORD2S'
     Type = 'S'
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self):
         """
         Intilizes the CORD2S
 
