@@ -193,6 +193,7 @@ class OP2(OP2_Scalar):
         debug_file : str; default=None (No debug)
             sets the filename that will be written to
         """
+        self.encoding = 'utf-8'
         self.set_mode(mode)
         make_geom = False
         assert make_geom == False, make_geom

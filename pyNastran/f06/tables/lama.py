@@ -14,7 +14,7 @@ class LAMA(object):
             NO.       ORDER                                                                       MASS              STIFFNESS
                 1         1        6.158494E+07        7.847607E+03        1.248985E+03        1.000000E+00        6.158494E+07
         """
-        self.Title = None
+        self.title = None
         (subcase_name, isubcase, transient, dt, analysis_code, is_sort1) = self._read_f06_subcase_header()
         Title = None
         line1 = self.infile.readline().strip(); self.i += 1
@@ -32,8 +32,8 @@ class LAMA(object):
         #print(headers)
         data = self._read_f06_table([int, int, float, float, float, float, float])
 
-        self.eigenvalues[self.Title] = RealEigenvalues(Title)
-        self.eigenvalues[self.Title].add_f06_data(data)
+        self.eigenvalues[self.title] = RealEigenvalues(Title)
+        self.eigenvalues[self.title].add_f06_data(data)
 
     def _complex_eigenvalue_summary(self):
         """
@@ -51,9 +51,9 @@ class LAMA(object):
         headers = self.skip(2)
         data = self._read_f06_table([int, int, float, float, float, float])
 
-        if self.Title in self.eigenvalues:
-            self.eigenvalues[self.Title].add_f06_data(data)
+        if self.title in self.eigenvalues:
+            self.eigenvalues[self.title].add_f06_data(data)
         else:
-            self.eigenvalues[self.Title] = ComplexEigenvalues(self.Title)
-            self.eigenvalues[self.Title].add_f06_data(data)
+            self.eigenvalues[self.title] = ComplexEigenvalues(self.title)
+            self.eigenvalues[self.title].add_f06_data(data)
         self.iSubcases.append(isubcase)

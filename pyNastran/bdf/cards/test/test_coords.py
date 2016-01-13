@@ -17,7 +17,7 @@ class TestCoords(unittest.TestCase):
         ]
         grids_expected = grids
         coords = []
-        self.getNodes(grids, grids_expected, coords)
+        self.get_nodes(grids, grids_expected, coords)
 
     def test_shift(self):
         grids = [
@@ -38,7 +38,7 @@ class TestCoords(unittest.TestCase):
         coords = [  # cid,rid, origin,      zaxis,     xaxis
             [1, 0, [1., 1., 1.], [1., 1., 2.], [2., 1., 1.]],
         ]
-        self.getNodes(grids, grids_expected, coords)
+        self.get_nodes(grids, grids_expected, coords)
 
     def test_rotate(self):
         grids = [
@@ -60,7 +60,7 @@ class TestCoords(unittest.TestCase):
         coords = [  # cid, rid, origin,      zaxis,     xaxis
                    [1, 0, [0., 0., 0.], [1., 0., 0.], [0., 0., 1.]],
                  ]
-        self.getNodes(grids, grids_expected, coords)
+        self.get_nodes(grids, grids_expected, coords)
 
     def test_rotate2(self):
         grids = [
@@ -81,7 +81,7 @@ class TestCoords(unittest.TestCase):
         coords = [  # cid, rid, origin,     zaxis        xaxis
                    [1, 0, [0., 0., 0.], [0., 0., -1.], [1., 0., 0.]],
                  ]
-        self.getNodes(grids, grids_expected, coords)
+        self.get_nodes(grids, grids_expected, coords)
 
     def test_rotate3(self):
         grids = [
@@ -103,7 +103,7 @@ class TestCoords(unittest.TestCase):
                  # cid, rid, origin,      zaxis          xaxis
                    [1, 0, [0., 0., 0.], [0., 0., -1.], [-1., 0., 0.]],
                  ]
-        self.getNodes(grids, grids_expected, coords)
+        self.get_nodes(grids, grids_expected, coords)
 
     def test_rid_1(self):
         grids = [
@@ -124,7 +124,7 @@ class TestCoords(unittest.TestCase):
             [3, 0, [1., 1., 1.], [1., 1., 2.], [2., 1., 1.]],  # cid=3
             #[3, 0, [0., 0., 0.], [0., 0., 1.], [1., 0., 0.]],  # cid=3,equiv
         ]
-        self.getNodes(grids, grids_expected, coords)
+        self.get_nodes(grids, grids_expected, coords)
 
     def test_cord1r_01(self):
         lines = ['cord1r,2,1,4,3']
@@ -132,11 +132,12 @@ class TestCoords(unittest.TestCase):
         card = BDFCard(card)
 
         size = 8
-        card = CORD1R(card)
-        self.assertEqual(card.Cid(), 2)
-        self.assertEqual(card.Rid(), 0)
-        card.write_card(size, 'dummy')
-        card.raw_fields()
+        coord = CORD1R()
+        coord.add_card(card)
+        self.assertEqual(coord.Cid(), 2)
+        self.assertEqual(coord.Rid(), 0)
+        coord.write_card(size, 'dummy')
+        coord.raw_fields()
 
     def test_cord2c_01(self):
         lines = [
@@ -146,18 +147,20 @@ class TestCoords(unittest.TestCase):
         ]
         model = BDF(debug=False)
         card = model.process_card(lines)
-        card = BDFCard(card)
-        card = CORD2C(card)
-        model.add_coord(card)
+        cardi = BDFCard(card)
+        coord = CORD2C()
+        coord.add_card(cardi)
+        model.add_coord(coord)
 
         lines = [
             'CORD2R         4       3     10.      0.      5.     10.     90.      5.',
             '             10.      0.      6.'
         ]
         card = model.process_card(lines)
-        card = BDFCard(card)
-        card = CORD2R(card)
-        model.add_coord(card)
+        cardi = BDFCard(card)
+        coord = CORD2R()
+        coord.add_card(cardi)
+        model.add_coord(coord)
         model.cross_reference()
 
         cord2r = model.Coord(3)
@@ -404,10 +407,11 @@ class TestCoords(unittest.TestCase):
     def test_cord1c_01(self):
         lines = ['cord1c,2,1,4,3']
         card = bdf.process_card(lines)
-        card = BDFCard(card)
+        cardi = BDFCard(card)
 
         size = 8
-        card = CORD1C(card)
+        card = CORD1C()
+        card.add_card(cardi)
         self.assertEqual(card.Cid(), 2)
         self.assertEqual(card.Rid(), 0)
         card.write_card(size, 'dummy')
@@ -416,10 +420,11 @@ class TestCoords(unittest.TestCase):
     def test_cord1s_01(self):
         lines = ['cord1s,2,1,4,3']
         card = bdf.process_card(lines)
-        card = BDFCard(card)
+        cardi = BDFCard(card)
 
         size = 8
-        card = CORD1S(card)
+        card = CORD1S()
+        card.add_card(cardi)
         self.assertEqual(card.Cid(), 2)
         self.assertEqual(card.Rid(), 0)
         card.write_card(size, 'dummy')
@@ -464,7 +469,7 @@ class TestCoords(unittest.TestCase):
         #with self.assertRaises(NotImplementedError):
             #self.assertTrue(array_equal(coord.T(), coord.beta_n(2)))
 
-    def getNodes(self, grids, grids_expected, coords):
+    def get_nodes(self, grids, grids_expected, coords):
         model = BDF(debug=False)
 
         for grid in grids:
@@ -495,7 +500,11 @@ class TestCoords(unittest.TestCase):
 
 
     def test_A(self):
+        origin  = array([0., 0., 0.])
+        zaxis = array([0., 0., 1.])
+        xzplane = array([1., 0., 0.])
         cid0 = CORD2R()
+        cid0.add(cid=0, rid=0, origin=origin, zaxis=zaxis, xzplane=xzplane)
         Lx = 2.
         Ly = 0.
         Lz = 3.
@@ -508,7 +517,8 @@ class TestCoords(unittest.TestCase):
 
         Fxyz = [0., -Fy, 0.]
         Mxyz = [0., 0., 0.]
-        cid_new = CORD2R(data=data)
+        cid_new = CORD2R()
+        cid_new.add_op2_data(data=data)
         model = None
 
         Fxyz_local, Mxyz_local = TransformLoadWRT(Fxyz, Mxyz, cid0, cid_new,
@@ -521,7 +531,12 @@ class TestCoords(unittest.TestCase):
         self.assertTrue(array_equal(Mxyz_local, cross(r, F))), "expected=%s actual=%s" % (M, Mxyz_local)
 
     def test_B(self):
+        origin  = array([0., 0., 0.])
+        zaxis = array([0., 0., 1.])
+        xzplane = array([1., 0., 0.])
         cid0 = CORD2R()
+        cid0.add(cid=0, rid=0, origin=origin, zaxis=zaxis, xzplane=xzplane)
+
         Lx = 2.
         Ly = 3.
         Lz = 5.
@@ -534,7 +549,8 @@ class TestCoords(unittest.TestCase):
 
         Fxyz = [0., -Fy, 0.]
         Mxyz = [0., 0., 0.]
-        cid_new = CORD2R(data=data)
+        cid_new = CORD2R()
+        cid_new.add_op2_data(data=data)
         model = None
 
         Fxyz_local, Mxyz_local = TransformLoadWRT(Fxyz, Mxyz, cid0, cid_new,

@@ -518,7 +518,7 @@ class FortranFormat(object):
             else:
                 data, ndata = self._skip_record_ndata()
                 n = table4_parser(data, ndata)
-                assert isinstance(n, integer_types), self.table_name
+                assert isinstance(n, integer_types), 'table_name=%s n=%s' % (self.table_name, n)
 
             #self._goto(n)
             #n = self._skip_record()
