@@ -240,27 +240,27 @@ class ONR(OP2Common):
             ntotal = 16
             nelements = ndata // ntotal
             slot = getattr(self, result_name)
-            if 0:
+            if 1:
                 auto_return, is_vectorized = self._create_oes_object4(
                     nelements, result_name, slot, RealStrainEnergyArray)
 
                 obj = self.obj
                 if auto_return:
-                    if obj.dt_temp is None or obj.itime is None and obj.dt_temp == dt:
-                        element_name = self.data_code['element_name']
-                        if element_name in obj.element_name_count:
-                            obj.element_name_count[element_name] += nelements
-                        else:
-                            obj.element_name_count[element_name] = nelements
-                        obj.dt_temp = dt
+                    #if obj.dt_temp is None or obj.itime is None and obj.dt_temp == dt:
+                        #element_name = self.data_code['element_name']
+                        #if element_name in obj.element_name_count:
+                            #obj.element_name_count[element_name] += nelements
+                        #else:
+                            #obj.element_name_count[element_name] = nelements
+                        #obj.dt_temp = dt
                     return nelements * self.num_wide * 4
-                itime = obj.itime // obj.nelement_types
+                itime = obj.itime #// obj.nelement_types
             else:
                 if self.read_mode == 1:
                     return ndata
                 self.create_transient_object(slot, RealStrainEnergy)
                 obj = self.obj
-            is_vectorized = False
+            is_vectorized = True
 
             if self.is_debug_file:
                 self.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
@@ -268,27 +268,25 @@ class ONR(OP2Common):
                 self.binary_debug.write('  #elementi = [eid_device, energy, percent, density]\n')
                 self.binary_debug.write('  nelements=%i\n' % nelements)
 
-            #self.element_names.add(self.data_code['element_name'])
             if self.use_vector and is_vectorized:
                 n = nelements * 4 * self.num_wide
-                itotal = obj.itotal2 # was obj.itotal
-                ielement2 = obj.itotal2 + nelements # was obj.itotal
-                itotal2 = ielement2
-                print('itime=%s itotal=%s itotal2=%s' % (itime, itotal, itotal2))
+                ielement = obj.ielement
+                ielement2 = obj.ielement + nelements
+                itotal = obj.itotal
+                itotal2 = obj.itotal + nelements * 4
 
                 floats = fromstring(data, dtype=self.fdtype).reshape(nelements, 4)
                 obj._times[itime] = dt
                 if obj.itime == 0:
                     ints = fromstring(data, dtype=self.idtype).reshape(nelements, 4)
                     eids = ints[:, 0] // 10
-                    print('eids =', eids)
                     assert eids.min() > 0, eids.min()
-                    obj.element[itotal:itotal2] = eids
+                    obj.element[ielement:ielement2] = eids
 
                 #[energy, percent, density]
-                obj.data[itime, itotal:itotal2, :] = floats[:, 1:]
-                obj.itotal2 = itotal2 # was obj.itotal
-                #obj.ielement = ielement2
+                obj.data[itime, ielement:ielement2, :] = floats[:, 1:]
+                obj.itotal2 = itotal2
+                obj.ielement = ielement2
             else:
                 s = Struct(b(self._endian + 'i3f'))
                 for i in range(nelements):

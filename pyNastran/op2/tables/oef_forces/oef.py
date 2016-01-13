@@ -1702,37 +1702,39 @@ class OEF(OP2Common):
                 obj = self.obj
                 if self.use_vector and is_vectorized:
                     n = nelements * 4 * self.num_wide
-                    itotal = obj.ielement
-                    ielement2 = obj.itotal + nelements
+                    itotal = obj.itotal
+                    ielement = obj.ielement
+                    ielement2 = obj.ielement + nelements
                     itotal2 = obj.itotal + nelements * nnodes_all
 
                     floats = fromstring(data, dtype=self.fdtype).reshape(nelements, numwide_imag)
                     obj._times[obj.itime] = dt
                     if obj.itime == 0:
                         ints = fromstring(data, dtype=self.idtype).reshape(nelements, numwide_imag)
+                        ints[:, 2] = 0
                         ints2 = ints[:, 2:].reshape(nelements * nnodes_all, 17)
 
                         eids = ints[:, 0] // 10
                         nids = ints2[:, 0]
                         assert eids.min() > 0, eids.min()
                         eids2 = vstack([eids] * nnodes_all).T.ravel()
-                        obj.element[itotal:itotal2] = eids
+                        obj.element[ielement:ielement2] = eids
                         obj.element_node[itotal:itotal2, 0] = eids2
                         obj.element_node[itotal:itotal2, 1] = nids
 
                     #[mx, my, mxy, bmx, bmy, bmxy, tx, ty]
                     floats2 = floats[:, 2:].reshape(nelements * nnodes_all, 17)
                     if is_magnitude_phase:
-                        mag = floats[:, [1, 2, 3, 4, 5, 6, 7, 8]]
-                        phase = floats[:, [9, 10, 11, 12, 13, 14, 15, 16]]
+                        mag = floats2[:, [1, 2, 3, 4, 5, 6, 7, 8]]
+                        phase = floats2[:, [9, 10, 11, 12, 13, 14, 15, 16]]
                         rtheta = radians(phase)
                         real_imag = mag * (cos(rtheta) + 1.j * sin(rtheta))
                     else:
-                        real = floats[:, [1, 2, 3, 4, 5, 6, 7, 8]]
-                        imag = floats[:, [9, 10, 11, 12, 13, 14, 15, 16]]
+                        real = floats2[:, [1, 2, 3, 4, 5, 6, 7, 8]]
+                        imag = floats2[:, [9, 10, 11, 12, 13, 14, 15, 16]]
                         real_imag = real + 1.j * imag
-                    #print('real_imag.shape =', str(real_imag.shape))
-                    obj.data[obj.itime, itotal:ielement2, :] = real_imag
+                    obj.data[obj.itime, itotal:itotal2, :] = real_imag
+                    #asdf
                     obj.itotal = itotal2
                     obj.ielement = ielement2
                 else:

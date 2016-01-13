@@ -2807,22 +2807,22 @@ class NastranIO(object):
         ]
         strain_energy = [
             #model.strain_energy,
-            self.cquad4_strain_energy, self.cquad8_strain_energy,
-            self.cquadr_strain_energy, self.cquadx_strain_energy,
-            self.ctria3_strain_energy, self.ctria6_strain_energy,
-            self.ctriar_strain_energy, self.ctriax_strain_energy,
-            self.ctriax6_strain_energy,
-            self.ctetra_strain_energy, self.cpenta_strain_energy,
-            self.chexa_strain_energy,
-            self.crod_strain_energy, self.ctube_strain_energy,
-            self.conrod_strain_energy,
-            self.cbar_strain_energy, self.cbeam_strain_energy,
-            self.cgap_strain_energy, self.cbush_strain_energy,
-            self.celas1_strain_energy, self.celas2_strain_energy,
-            self.celas3_strain_energy, self.celas4_strain_energy,
-            self.cdum8_strain_energy, self.dmig_strain_energy,
-            self.cbend_strain_energy,
-            self.genel_strain_energy, self.cshear_strain_energy,
+            model.cquad4_strain_energy, model.cquad8_strain_energy,
+            model.cquadr_strain_energy, model.cquadx_strain_energy,
+            model.ctria3_strain_energy, model.ctria6_strain_energy,
+            model.ctriar_strain_energy, model.ctriax_strain_energy,
+            model.ctriax6_strain_energy,
+            model.ctetra_strain_energy, model.cpenta_strain_energy,
+            model.chexa_strain_energy,
+            model.crod_strain_energy, model.ctube_strain_energy,
+            model.conrod_strain_energy,
+            model.cbar_strain_energy, model.cbeam_strain_energy,
+            model.cgap_strain_energy, model.cbush_strain_energy,
+            model.celas1_strain_energy, model.celas2_strain_energy,
+            model.celas3_strain_energy, model.celas4_strain_energy,
+            model.cdum8_strain_energy, model.dmig_strain_energy,
+            model.cbend_strain_energy,
+            model.genel_strain_energy, model.cshear_strain_energy,
         ]
 
         result_groups = [
@@ -3581,6 +3581,8 @@ class NastranIO(object):
           #modes = [1, 2, 3]
         case = None
         subcase_id = key[2]
+        if not hasattr(model, 'strain_energy'):
+            return icase
         if key in model.strain_energy:
             #print('key =', key)
             ese = model.strain_energy[key]

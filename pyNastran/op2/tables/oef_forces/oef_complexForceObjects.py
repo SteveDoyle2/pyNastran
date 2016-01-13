@@ -1386,6 +1386,10 @@ class ComplexPlate2ForceArray(ScalarObject):
         if not array_equal(self.element_node, table.element_node):
             assert self.element.shape == table.element.shape, 'element_node shape=%s table.shape=%s' % (
                 self.element_node.shape, table.element_node.shape)
+
+            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+            msg += '%s\n' % str(self.code_information())
+            msg += '(Eid, Nid)\n'
             for (eid1, nid1), (eid2, nid2) in zip(self.element_node, table.element_node):
                 msg += '(%s, %s), (%s, %s)\n' % (eid1, nid1, eid2, nid2)
             print(msg)
@@ -1396,7 +1400,7 @@ class ComplexPlate2ForceArray(ScalarObject):
             msg += '%s\n' % str(self.code_information())
             i = 0
             for itime in range(self.ntimes):
-                for ie, e in enumerate(self.element):
+                for ie, e in enumerate(self.element_node):
                     (eid, nid) = e
                     t1 = self.data[itime, ie, :]
                     t2 = table.data[itime, ie, :]
@@ -1404,9 +1408,12 @@ class ComplexPlate2ForceArray(ScalarObject):
                     (mx2, my2, mxy2, bmx2, bmy2, bmxy2, tx2, ty2) = t2
 
                     if not allclose(t1, t2):
-                        msg += '(%s, %s)    (%s, %s, %s, %s, %s, %s, %s, %s)  (%s, %s, %s, %s, %s, %s, %s, %s)\n' % (
-                            eid, nid,
+                        base1 = '(%s, %s)   ' % (eid, nid)
+                        base2 = ' ' * len(base1)
+                        msg += '%s (%s, %s, %s, %s, %s, %s, %s, %s)\n%s(%s, %s, %s, %s, %s, %s, %s, %s)\n' % (
+                            base1,
                             mx1, my1, mxy1, bmx1, bmy1, bmxy1, tx1, ty1,
+                            base2,
                             mx2, my2, mxy2, bmx2, bmy2, bmxy2, tx2, ty2)
                         i += 1
                         if i > 10:
@@ -1426,7 +1433,7 @@ class ComplexPlate2ForceArray(ScalarObject):
 
     def add_sort1(self, dt, eid, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
         self._times[self.itime] = dt
-        assert self.element[self.ielement - 1] == eid, eid
+        #assert self.element[self.ielement - 1] == eid, eid
         self.element_node[self.itotal, :] = [eid, nid]
         self.data[self.itime, self.itotal, :] = [mx, my, mxy, bmx, bmy, bmxy, tx, ty]
         self.itotal += 1
