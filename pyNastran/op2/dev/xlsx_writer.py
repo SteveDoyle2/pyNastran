@@ -279,7 +279,7 @@ class XlsxWriter(OP2_F06_Common):
             self.thermal_load_vectors,
         ]
         isubcases = sorted(self.iSubcaseNameMap.keys())
-        #title = self.Title
+        #title = self.title
 
         res_categories = [
             ('OUG', oug),

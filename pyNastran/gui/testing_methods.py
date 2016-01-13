@@ -20,7 +20,7 @@ class GuiAttributes(object):
         self._script_path = None
         self._icon_path = ''
 
-        self.Title = None
+        self.title = None
         self.min_value = None
         self.max_value = None
         self.blue_to_red = False

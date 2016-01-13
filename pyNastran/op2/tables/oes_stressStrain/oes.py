@@ -234,6 +234,105 @@ class OES(OP2Common):
             n = self._not_implemented_or_skip(data, ndata, msg)
         return n
 
+    def _read_oes2_3(self, data, ndata):
+        """
+        reads OES1 subtable 3
+        """
+        self._data_factor = 1
+        self.words = [
+            'aCode', 'tCode', 'element_type', 'isubcase',
+            '???', '???', '???', 'load_set'
+            'format_code', 'num_wide', 's_code', '???',
+            '???', '???', '???', '???',
+            '???', '???', '???', '???',
+            '???', '???', '???', '???',
+            '???', 'Title', 'subtitle', 'label']
+
+        self.parse_approach_code(data)  # 3
+
+        ## element type
+        self.element_type = self.add_data_parameter(data, 'element_type', 'i', 3, False)
+
+        ## load set ID
+        self.load_set = self.add_data_parameter(data, 'load_set', 'i', 8, False)
+
+        ## format code
+        self.format_code = self.add_data_parameter(data, 'format_code', 'i', 9, False)
+
+        ## number of words per entry in record
+        ## .. note:: is this needed for this table ???
+        self.num_wide = self.add_data_parameter(data, 'num_wide', 'i', 10, False)
+
+        ## stress/strain codes
+        self.s_code = self.add_data_parameter(data, 's_code', 'i', 11, False)
+
+        ## thermal flag; 1 for heat ransfer, 0 otherwise
+        self.thermal = self.add_data_parameter(data, 'thermal', 'i', 23, False)
+
+        if self.analysis_code == 2:  # real eigenvalues
+            self._analysis_code_fmt = 'i'
+            self.eigr = self.add_data_parameter(data, 'eigr', 'f', 6, False)
+            self.mode_cycle = self.add_data_parameter(data, 'mode_cycle', 'i', 7, False)  # mode or cycle .. todo:: confused on the type - F1???
+            self.data_names = self.apply_data_code_value('data_names', ['node_id', 'eigr', 'mode_cycle'])
+        elif self.analysis_code == 5:   # frequency
+            self._analysis_code_fmt = 'f'
+            self.data_names = self.apply_data_code_value('data_names', ['node_id'])
+        elif self.analysis_code == 6:  # transient
+            self._analysis_code_fmt = 'f'
+            self.data_names = self.apply_data_code_value('data_names', ['node_id'])
+        elif self.analysis_code == 7:  # pre-buckling
+            self._analysis_code_fmt = 'i'
+            self.data_names = self.apply_data_code_value('data_names', ['node_id'])
+        elif self.analysis_code == 8:  # post-buckling
+            self._analysis_code_fmt = 'f'
+            self.eigr = self.add_data_parameter(data, 'eigr', 'f', 6, False)
+            self.data_names = self.apply_data_code_value('data_names', ['node_id', 'eigr'])
+        elif self.analysis_code == 9:  # complex eigenvalues
+            # mode number
+            self._analysis_code_fmt = 'i'
+            self.eigr = self.add_data_parameter(data, 'eigr', 'f', 6, False)
+            self.eigi = self.add_data_parameter(data, 'eigi', 'f', 7, False)
+            self.data_names = self.apply_data_code_value('data_names', ['node_id', 'eigr', 'eigi'])
+        elif self.analysis_code == 10:  # nonlinear statics
+            # load step
+            self._analysis_code_fmt = 'f'
+            self.data_names = self.apply_data_code_value('data_names', ['node_id'])
+        elif self.analysis_code == 11:  # old geometric nonlinear statics
+            # load set number
+            self.data_names = self.apply_data_code_value('data_names', ['node_id'])
+        elif self.analysis_code == 12:  # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
+            self.data_names = self.apply_data_code_value('data_names', ['node_id'])
+        else:
+            msg = 'invalid analysis_code...analysis_code=%s' % self.analysis_code
+            raise RuntimeError(msg)
+
+        self._fix_sort2(data)
+
+    def _fix_sort2(self, data):
+        self.fix_format_code()
+        if self.num_wide == 8:
+            self.format_code = 1
+            self.data_code['format_code'] = 1
+        else:
+            #self.fix_format_code()
+            if self.format_code == 1:
+                self.format_code = 2
+                self.data_code['format_code'] = 2
+            assert self.format_code in [2, 3], self.code_information()
+
+        self._parse_thermal_code()
+        if self.is_debug_file:
+            self.binary_debug.write('  %-14s = %r %s\n' % ('approach_code', self.approach_code,
+                                                           self.approach_code_str(self.approach_code)))
+            self.binary_debug.write('  %-14s = %r\n' % ('tCode', self.tCode))
+            self.binary_debug.write('  %-14s = %r\n' % ('isubcase', self.isubcase))
+        self._read_title(data)
+        self._write_debug_bits()
+        #assert isinstance(self.nonlinear_factor, int), self.nonlinear_factor
+
+    def _read_oes2_4(self, data, ndata):
+        return self._table_passer(data, ndata)
+
     def _read_ostr1_4(self, data, ndata):
         """
         Reads the Strain Table 4
@@ -301,9 +400,9 @@ class OES(OP2Common):
         assert isinstance(self.format_code, int), self.format_code
         assert self.is_sort1() == True
         if self.thermal == 0:
-            n = self._read_oes_loads(data, ndata)
+            n = self._read_oes1_loads(data, ndata)
         elif self.thermal == 1:
-            n = self._read_oes_thermal(data, ndata)
+            n = self._read_oes1_thermal(data, ndata)
         else:
             msg = 'thermal=%s' % self.thermal
             n = self._not_implemented_or_skip(data, ndata, msg)
@@ -319,27 +418,27 @@ class OES(OP2Common):
             #assert ndata != 146, self.code_information()
         assert self.is_sort1() == True
         if self.thermal == 0:
-            n = self._read_oes_loads(data, ndata)
+            n = self._read_oes1_loads(data, ndata)
         elif self.thermal == 1:
-            n = self._read_oes_thermal(data, ndata)
+            n = self._read_oes1_thermal(data, ndata)
         else:
             msg = 'thermal=%s' % self.thermal
             n = self._not_implemented_or_skip(data, ndata, msg)
         return n
 
-    def _read_oes_thermal(self, data, ndata):
+    def _read_oes1_thermal(self, data, ndata):
         """
         Reads OES self.thermal=1 tables; uses a hackish method to just skip the table.
         """
         return ndata
 
-    def _read_ostr_thermal(self, data, ndata):
+    def _read_ostr1_thermal(self, data, ndata):
         """
         Reads OSTR self.thermal=1 tables; uses a hackish method to just skip the table.
         """
         return ndata
 
-    def _read_oes_loads(self, data, ndata):
+    def _read_oes1_loads(self, data, ndata):
         """
         Reads OES self.thermal=0 stress/strain
         """
@@ -917,8 +1016,8 @@ class OES(OP2Common):
                         self.binary_debug.write('  eid=%i; C%i=[%s]\n' % (eid, i, ', '.join(['%r' % di for di in out])))
                     n += ntotal
                     obj.add_new_eid(self.element_name, dt, eid,
-                                         s1a, s2a, s3a, s4a, axial, smaxa, smina, MSt,
-                                         s1b, s2b, s3b, s4b, smaxb, sminb, MSc)
+                                    s1a, s2a, s3a, s4a, axial, smaxa, smina, MSt,
+                                    s1b, s2b, s3b, s4b, smaxb, sminb, MSc)
             elif self.format_code in [2, 3] and self.num_wide == 19:  # imag
                 if self.is_stress():
                     obj_vector_complex = ComplexBarStressArray
@@ -976,8 +1075,8 @@ class OES(OP2Common):
                         axial = complex(axialr, axiali)
 
                     obj.add_new_eid_sort1('CBAR', dt, eid,
-                                               s1a, s2a, s3a, s4a, axial,
-                                               s1b, s2b, s3b, s4b)
+                                          s1a, s2a, s3a, s4a, axial,
+                                          s1b, s2b, s3b, s4b)
             elif self.format_code == 1 and self.num_wide == 19: # random
                 msg = self.code_information()
                 return self._not_implemented_or_skip(data, ndata, msg)
@@ -1207,16 +1306,44 @@ class OES(OP2Common):
                         if self.is_debug_file:
                             self.binary_debug.write('       node%s=[%s]\n' % (grid, ', '.join(['%r' % di for di in out])))
                         obj.add_node_sort1(dt, eid, grid, inode,
-                                                ex, ey, ez, etxy, etyz, etzx)
+                                           ex, ey, ez, etxy, etyz, etzx)
             elif self.format_code == 1 and self.num_wide == numwide_random: # random
                 msg = self.code_information()
                 return self._not_implemented_or_skip(data, ndata, msg)
             elif self.format_code == 2 and self.num_wide == 130:
                 # 130 - CHEXA-67
+                #msg = 'OES-CHEXA-random-numwide=%s numwide_real=%s numwide_imag=%s numwide_random=%s' % (
+                    #self.num_wide, numwide_real, numwide_imag, numwide_random)
+                #return self._not_implemented_or_skip(data, ndata, msg)
+
+                num_wide_random = 4 + nnodes_expected * (17 - 4)
+                print('numwide=%s numwide_random=%s attempt2=%s subcase=%s' % (self.num_wide, numwide_random, num_wide_random, self.isubcase))
+                #if self.num_wide ==
+                if self.read_mode == 1:
+                    return ndata
+
                 #msg = self.code_information()
-                msg = 'OES-CHEXA-random-numwide=%s numwide_real=%s numwide_imag=%s numwide_random=%s' % (
-                    self.num_wide, numwide_real, numwide_imag, numwide_random)
-                return self._not_implemented_or_skip(data, ndata, msg)
+                ntotal = 130
+                nelements = ndata // ntotal
+
+                # cid, coord_type, nactive_pnts,
+                #      nid, oxx, oyy, ozz, txy, tyz, txz
+                for i in range(nelements):
+                    edata = data[n:n+12]
+                    out = struct1.unpack(edata)
+                    (eid_device, cid, abcd) = out
+                    eid = self._check_id(eid_device, flag, stress_name, out)
+                    if self.is_debug_file:
+                        self.binary_debug.write('%s - eid=%i; %s\n' % (preline1, eid, str(out)))
+                    n += 12
+                    for inode in range(nnodes_expected):  # nodes pts, +1 for centroid (???)
+                        out = struct2.unpack(data[n:n + 28]) # 4*7 = 28
+                        if self.is_debug_file:
+                            self.binary_debug.write('%s - %s\n' % (preline2, str(out)))
+                        (grid_device, sxx, syy, sz, txy, tyz, txz) = out
+                #msg = 'OES-CHEXA-random-numwide=%s numwide_real=%s numwide_imag=%s numwide_random=%s' % (
+                    #self.num_wide, numwide_real, numwide_imag, numwide_random)
+                #return self._not_implemented_or_skip(data, ndata, msg)
             else:
                 raise RuntimeError(self.code_information())
 
@@ -1982,7 +2109,6 @@ class OES(OP2Common):
                         edata = data[n:n+44]  # 4*11
                         out = s.unpack(edata)
                         (eid_device, layer, o1, o2, t12, t1z, t2z, angle, major, minor, ovm) = out
-                        # TODO: this is a hack that I think is composite specific
                         eid = eid_device // 10
 
                         if self.is_debug_file:
@@ -3128,10 +3254,12 @@ class OES(OP2Common):
             #eid, failure, ply, failureIndexPly, failureIndexBonding, failureIndexMax, flag
             # 3,TSAIWU,1,8.5640,0.0,None
 
-            (eid, failure, ply, strengthRatioPly, failureIndexBonding, strengthRatioBonding, flag, flag2) = out
+            (eid, failure, ply, strength_ratio_ply, failure_index_bonding, strength_ratio_bonding, flag, flag2) = out
             #strengthRatioPly
-            #print("eid=%s failure=%r ply=%s failureIndexPly=%s  failureIndexBonding=%s strengthRatioBonding=%s flag=%s flag2=%s" % (eid, failure.strip(), ply, failureIndexPly, failureIndexBonding, strengthRatioBonding, flag, flag2))
-            print("eid=%s strengthRatioPly=%g failureIndexBonding=%s strengthRatioBonding=%s" % (eid, strengthRatioPly, failureIndexBonding, strengthRatioBonding))
+            #print("eid=%s failure=%r ply=%s failureIndexPly=%s  failure_index_bonding=%s strength_ratio_bonding=%s flag=%s flag2=%s" % (
+            #    eid, failure.strip(), ply, failureIndexPly, failure_index_bonding, strength_ratio_bonding, flag, flag2))
+            print("eid=%s strengthRatioPly=%g failure_index_bonding=%s strength_ratio_bonding=%s" % (
+                eid, strengthRatioPly, failure_index_bonding, strength_ratio_bonding))
             #obj.add_new_eid(element_name, dt, eid, force, stress)
             n += ntotal
 

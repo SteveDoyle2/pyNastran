@@ -288,8 +288,8 @@ class RealTriaxStrainArray(RealTriaxArray, StrainObject):
                 #self.MS_torsion[eid] = MSt
             #return
 
-        #(dtName, dt) = transient
-        #self.data_code['name'] = dtName
+        #(dt_name, dt) = transient
+        #self.data_code['name'] = dt_name
         #if dt not in self.s1:
             #self.update_dt(self.data_code, dt)
             #self.isTransient = True

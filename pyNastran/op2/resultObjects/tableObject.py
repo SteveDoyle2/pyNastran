@@ -402,7 +402,7 @@ class RealTableArray(TableArray):  # displacement style table
         num_wide = self.num_wide
         acoustic_flag = 0
         thermal = 0
-        Title = '%-128s' % self.Title
+        title = '%-128s' % self.title
         subtitle = '%-128s' % self.subtitle
         label = '%-128s' % self.label
         ftable3 = '50i 128s 128s 128s'
@@ -420,7 +420,7 @@ class RealTableArray(TableArray):  # displacement style table
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, thermal, thermal, 0,
-            Title, subtitle, label,
+            title, subtitle, label,
         ]
 
         n = 0
@@ -952,8 +952,8 @@ class _RealTableObject(ScalarObject):  # displacement style table
                     raise NotImplementedError(line)
             return
 
-        (dtName, dt) = transient
-        self.data_code['name'] = dtName
+        (dt_name, dt) = transient
+        self.data_code['name'] = dt_name
         if dt not in self.translations:
             self.update_dt(self.data_code, dt)
 
@@ -1238,8 +1238,8 @@ class _ComplexTableObject(ScalarObject):
                 self.rotations[self.dt][node_id] = array([v4, v5, v6], dtype='complex64')  # rx,ry,rz
             return
 
-        (dtName, dt) = transient
-        self.data_code['name'] = dtName
+        (dt_name, dt) = transient
+        self.data_code['name'] = dt_name
         if dt not in self.translations:
             self.update_dt(self.data_code, dt)
 

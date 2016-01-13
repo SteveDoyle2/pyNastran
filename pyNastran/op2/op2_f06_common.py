@@ -1,5 +1,5 @@
 from __future__ import print_function
-from six import iteritems, string_types, binary_type
+from six import iteritems, string_types, binary_type, text_type
 from collections import defaultdict
 from numpy import unique, int32
 
@@ -21,7 +21,7 @@ class OP2_F06_Common(object):
         self.make_geom = False
 
         #: BDF Title
-        self.Title = None
+        self.title = None
 
         self.page_num = 1
 
@@ -323,8 +323,13 @@ class OP2_F06_Common(object):
         self.spc_forces = {}  # tCode=3?
         self.spc_forces_scaled_response_spectra_NRL = {}
         self.spc_forcesPSD = {}
+        self.spc_forcesATO = {}
+        self.spc_forcesRMS = {}
 
         self.mpc_forces = {}  # tCode=39
+        self.mpc_forcesPSD = {}
+        self.mpc_forcesATO = {}
+        self.mpc_forcesRMS = {}
 
         # OQG - thermal forces
         self.thermal_gradient_and_flux = {}
@@ -459,10 +464,11 @@ class OP2_F06_Common(object):
             'accelerationsPSD',
 
             # OQG - spc/mpc forces
-            'spc_forces',
-            'spc_forcesPSD',
+            'spc_forces', 'spc_forcesPSD', 'mpc_forcesATO', 'mpc_forcesRMS',
             'spc_forces_scaled_response_spectra_NRL',
-            'mpc_forces',
+
+            'mpc_forces', 'mpc_forcesPSD', 'spc_forcesATO', 'spc_forcesRMS',
+
             'thermal_gradient_and_flux',
 
             # OGF - grid point forces
@@ -804,9 +810,10 @@ class OP2_F06_Common(object):
         """
         def compare(key_value):
             key = key_value[0]
-            if isinstance(key, (int, int32, binary_type)):
+            if isinstance(key, (int, int32, text_type, binary_type)):
                 return key
             else:
+                #print('key=%s type=%s' % (key, type(key)))
                 #self.log.debug(type(key))
                 return key[0]
 

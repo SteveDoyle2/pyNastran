@@ -321,8 +321,8 @@ class ComplexBushStress(StressObject):
                 self.rotations[eid] = [rx, ry, rz]
             return
 
-        (dtName, dt) = transient
-        self.data_code['name'] = dtName
+        (dt_name, dt) = transient
+        self.data_code['name'] = dt_name
 
         if dt not in self.translations:
             self.update_dt(self.data_code, dt)
@@ -482,8 +482,8 @@ class ComplexBushStrain(StrainObject):
                 self.rotations[eid] = [rx, ry, rz]
             return
 
-        (dtName, dt) = transient
-        self.data_code['name'] = dtName
+        (dt_name, dt) = transient
+        self.data_code['name'] = dt_name
 
         if dt not in self.translations:
             self.update_dt(self.data_code, dt)

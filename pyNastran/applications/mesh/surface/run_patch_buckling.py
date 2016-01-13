@@ -2,15 +2,14 @@ import os
 from copy import deepcopy
 from six import iteritems, string_types
 import glob
+import subprocess
+import time
+
 import matplotlib.pyplot as plt
 import numpy as np
-import time
 
 from pyNastran.bdf.bdf import BDF
 from pyNastran.op2.op2 import OP2
-import subprocess
-
-import subprocess
 
 def run_nastran(fname, keywords=None):
     """

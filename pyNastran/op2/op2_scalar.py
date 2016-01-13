@@ -79,10 +79,14 @@ GEOM_TABLES = [
 ]
 
 NX_RESULT_TABLES = [
-    b'OESVM1',  # OES Table of           element stresses for frequency response analysis that includes von Mises stress output in SORT1 format.
-    b'OESVM1C', # OES Table of composite element stresses for frequency response analysis that includes von Mises stress output in SORT1 format.
-    b'OSTRVM1C',
-    b'OSTRVM1',
+    # OESVM1  - OES Table of           element stresses for frequency response analysis that includes von Mises stress output in SORT1 format.
+    # OESVM1C - OES Table of composite element stresses for frequency response analysis that includes von Mises stress output in SORT1 format.
+    b'OESVM1', b'OSTRVM1',
+    b'OESVM1C', b'OSTRVM1C',
+
+    b'OESPSD2C', b'OSTPSD2C',
+    b'OSTRRMS1', b'OSTRMS1C',
+    b'OSTRNO1', b'OSTNO1C',
 
     #----------------------
     # displacement/velocity/acceleration/eigenvector/temperature
@@ -98,6 +102,8 @@ NX_RESULT_TABLES = [
     #         and forces on nonlinear elements
     b'OEF1X',
 
+    b'OES2C',
+    b'OSTR2C',
     b'OSTRRMS1',
     b'OSTRMS1C',
     b'OSTRNO1',
@@ -469,6 +475,9 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OESVM1C' : [self._read_oes1_3, self._read_oes1_4],
             #b'OSTRVM1C' : [self._read_oes1_3, self._read_oes1_4],
             #b'OSTRVM1' : [self._read_oes1_3, self._read_oes1_4],
+            b'OES2C' : [self._read_oes2_3, self._read_oes2_4],
+            b'OSTR2C' : [self._read_oes2_3, self._read_oes2_4],
+            b'OSTR2' : [self._read_oes2_3, self._read_oes2_4],
 
             # MSC TABLES
 
@@ -477,21 +486,21 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             # unorganized
             #b'RAPCONS': [self._table_passer, self._table_passer],
             #b'RAQCONS': [self._table_passer, self._table_passer],
-            #b'RADCONS': [self._table_passer, self._table_passer],
-            #b'RASCONS': [self._table_passer, self._table_passer],
-            #b'RAFCONS': [self._table_passer, self._table_passer],
-            #b'RAECONS': [self._table_passer, self._table_passer],
+            #b'RADCONS': [self._read_oug1_3, self._read_oug_4],     # Displacement Constraint Mode (OUG)
+            #b'RASCONS': [self._read_oes1_3, self._read_oes1_4], # Stress Constraint Mode (OES)
+            #b'RAFCONS': [self._read_oef1_3, self._read_oef1_4], # Element Force Constraint Mode (OEF)
+            #b'RAECONS': [self._read_oes1_3, self._read_oes1_4], # Strain Constraint Mode (OSTR)
             #b'RANCONS': [self._table_passer, self._table_passer],
-            #b'RAGCONS': [self._table_passer, self._table_passer],
-            #b'RADEFFM': [self._table_passer, self._table_passer],
+            #b'RAGCONS': [self._read_oef1_3, self._read_oef1_4], # Grid Point Forces Constraint Mode (OEF)
+            #b'RADEFFM': [self._read_oug1_3, self._read_oug_4], # Displacement Effective Inertia Mode (OUG)
             #b'RAPEATC': [self._table_passer, self._table_passer],
             #b'RAQEATC': [self._table_passer, self._table_passer],
-            #b'RADEATC': [self._table_passer, self._table_passer],
-            #b'RASEATC': [self._table_passer, self._table_passer],
-            #b'RAFEATC': [self._table_passer, self._table_passer],
-            #b'RAEEATC': [self._table_passer, self._table_passer],
-            #b'RANEATC': [self._table_passer, self._table_passer],
-            #b'RAGEATC': [self._table_passer, self._table_passer],
+            #b'RADEATC': [self._read_oug1_3, self._read_oug_4], # Displacement Equivalent Inertia Attachment mode (OUG)
+            #b'RASEATC': [self._read_oes1_3, self._read_oes1_4], # Stress Equivalent Inertia Attachment mode (OES)
+            #b'RAFEATC': [self._read_oef1_3, self._read_oef1_4], # Element Force Equivalent Inertia Attachment mode (OEF)
+            #b'RAEEATC': [self._table_passer, self._table_passer], # Strain Equivalent Inertia Attachment mode (OES)
+            #b'RANEATC': [self._table_passer, self._table_passer], # Strain Energy Equivalent Inertia Attachment mode (OESS)
+            #b'RAGEATC': [self._table_passer, self._table_passer], # Grid Point Forces Equivalent Inertia Attachment mode (OEF)
 
             #b'HISADD': [self._hisadd_3, self._hisadd_4],  # optimization history (SOL200)
             b'HISADD': [self._table_passer, self._table_passer],
@@ -560,6 +569,13 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OES1C'   : [self._read_oes1_3, self._read_oes1_4],  # stress - composite
             b'OESCP'   : [self._read_oes1_3, self._read_oes1_4],
             b'OESRT'   : [self._read_oes1_3, self._read_oes1_4],
+
+            #b'OSTRRMS1' : [self._read_oes1_3, self._read_oes1_4], # isat_random
+            #b'OSTRNO1' : [self._read_oes1_3, self._read_oes1_4],  # isat_random
+            #b'OSTRMS1C' : [self._read_oes1_3, self._read_oes1_4], # isat_random
+            #b'OSTRMS1C' : [self._read_oes1_3, self._read_oes1_4], # isat_random
+            #b'OSTNO1C' : [self._read_oes1_3, self._read_oes1_4],  # isat_random
+
 
             # special nonlinear tables
             b'OESNLXR' : [self._read_oes1_3, self._read_oes1_4],  # nonlinear stresses
@@ -771,7 +787,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OSTRNO2' : [self._table_passer, self._table_passer],
             b'OSTRCRM2' : [self._table_passer, self._table_passer],
 
-            b'OQMPSD2' : [self._table_passer, self._table_passer],
+            b'OQMPSD2' : [self._read_oqg2_3, self._read_oqg_4],
+            #b'OQMPSD2' : [self._table_passer, self._table_passer],
             b'OQMATO2' : [self._table_passer, self._table_passer],
             b'OQMRMS2' : [self._table_passer, self._table_passer],
             b'OQMNO2' : [self._table_passer, self._table_passer],
@@ -850,6 +867,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
     def _table_passer(self, data, ndata):
         """auto-table skipper"""
+        if self.is_debug_file:
+            self.binary_debug.write('  skipping table = %s\n' % self.table_name)
         return ndata
 
     def _table_passer_r1tabrg(self, data, ndata):
@@ -1137,6 +1156,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                     self._read_omm2()
                 elif table_name == b'DIT':  # tables
                     self._read_dit()
+                elif table_name == b'TOL':
+                    self._read_tol()
                 #elif table_name == b'KELM':
                     #self._read_kelm()
                 elif table_name == b'PCOMPTS': # blade
@@ -1161,6 +1182,36 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
             table_name = self._read_table_name(rewind=True, stop_on_failure=False)
         return table_names
+
+    def _read_tol(self):
+        """
+        This is probably broken for MSC Nastran
+
+        TOL
+        ---
+        -2 - nitimes?
+        -3 - list of times?
+        """
+        table_name = self._read_table_name(rewind=False, stop_on_failure=True)
+        self.read_markers([-1])
+        data = self._read_record()
+        #self.show_data(data)
+
+        self.read_markers([-2, 1, 0])
+        #self.show_ndata(440, types='if')
+        data = self._read_record()
+        #print('----')
+        self.read_markers([-3, 1, 0])
+        #self.show_ndata(440, types='if')
+        #print('----')
+        self.read_markers([0])
+        #data = self._read_record()
+
+
+        #self.show_ndata(440, types='ifs')
+
+        #self.show_data(data)
+        #aaaa
 
     def _skip_matrix(self):
         table_name = self._read_table_name(rewind=False, stop_on_failure=True)

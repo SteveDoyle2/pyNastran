@@ -7,6 +7,7 @@ from __future__ import print_function
 from six import b
 from six.moves import range
 from struct import Struct
+import numpy as np
 from numpy import fromstring, vstack, sin, cos, radians, array
 from numpy import hstack, zeros
 
@@ -1703,7 +1704,7 @@ class OEF(OP2Common):
                     n = nelements * 4 * self.num_wide
                     itotal = obj.ielement
                     ielement2 = obj.itotal + nelements
-                    itotal2 = ielement2
+                    itotal2 = obj.itotal + nelements * nnodes_all
 
                     floats = fromstring(data, dtype=self.fdtype).reshape(nelements, numwide_imag)
                     obj._times[obj.itime] = dt
@@ -1713,12 +1714,11 @@ class OEF(OP2Common):
 
                         eids = ints[:, 0] // 10
                         nids = ints2[:, 0]
-                        #print(nids, len(eids), len(nids), itotal2-itotal)
                         assert eids.min() > 0, eids.min()
-                        #eids2 = vstack([eids] * nnodes_all).T.ravel()
+                        eids2 = vstack([eids] * nnodes_all).T.ravel()
                         obj.element[itotal:itotal2] = eids
-                        obj.element_node[itotal:itotal2, 0] = eids#2
-                        #obj.element_node[itotal:itotal2, 1] = nids
+                        obj.element_node[itotal:itotal2, 0] = eids2
+                        obj.element_node[itotal:itotal2, 1] = nids
 
                     #[mx, my, mxy, bmx, bmy, bmxy, tx, ty]
                     floats2 = floats[:, 2:].reshape(nelements * nnodes_all, 17)
@@ -1731,7 +1731,8 @@ class OEF(OP2Common):
                         real = floats[:, [1, 2, 3, 4, 5, 6, 7, 8]]
                         imag = floats[:, [9, 10, 11, 12, 13, 14, 15, 16]]
                         real_imag = real + 1.j * imag
-                    obj.data[obj.itime, itotal:itotal2, :] = real_imag
+                    #print('real_imag.shape =', str(real_imag.shape))
+                    obj.data[obj.itime, itotal:ielement2, :] = real_imag
                     obj.itotal = itotal2
                     obj.ielement = ielement2
                 else:
