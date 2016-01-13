@@ -1713,10 +1713,11 @@ class OEF(OP2Common):
 
                         eids = ints[:, 0] // 10
                         nids = ints2[:, 0]
-                        #print(nids, len(nids), itotal2-itotal)
+                        #print(nids, len(eids), len(nids), itotal2-itotal)
                         assert eids.min() > 0, eids.min()
+                        #eids2 = vstack([eids] * nnodes_all).T.ravel()
                         obj.element[itotal:itotal2] = eids
-                        #obj.element_node[itotal:itotal2, 0] = eids
+                        obj.element_node[itotal:itotal2, 0] = eids#2
                         #obj.element_node[itotal:itotal2, 1] = nids
 
                     #[mx, my, mxy, bmx, bmy, bmxy, tx, ty]

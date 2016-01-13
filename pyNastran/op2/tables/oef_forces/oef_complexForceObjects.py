@@ -1367,22 +1367,30 @@ class ComplexPlate2ForceArray(ScalarObject):
         self.data_frame.index.names = ['ElementID', 'NodeID', 'Item']
 
     def __eq__(self, table):
-        return True ## TODO: write ==
-
         assert self.is_sort1() == table.is_sort1()
         assert self.nonlinear_factor == table.nonlinear_factor
         assert self.ntotal == table.ntotal
         assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
         assert self.approach_code == table.approach_code
         if not array_equal(self.element, table.element):
-            assert self.element.shape == table.element.shape, 'element shape=%s table.shape=%s' % (self.element.shape, table.element.shape)
+            assert self.element.shape == table.element.shape, 'element shape=%s table.shape=%s' % (
+                self.element.shape, table.element.shape)
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
             msg += 'Eid\n'
-            for eid, eid2 in zip(self.element, table.element):
-                msg += '%s, %s\n' % (eid, eid2)
+            for eid1, eid2 in zip(self.element, table.element):
+                msg += '%s, %s\n' % (eid1, eid2)
             print(msg)
             raise ValueError(msg)
+
+        if not array_equal(self.element_node, table.element_node):
+            assert self.element.shape == table.element.shape, 'element_node shape=%s table.shape=%s' % (
+                self.element_node.shape, table.element_node.shape)
+            for (eid1, nid1), (eid2, nid2) in zip(self.element_node, table.element_node):
+                msg += '(%s, %s), (%s, %s)\n' % (eid1, nid1, eid2, nid2)
+            print(msg)
+            raise ValueError(msg)
+
         if not array_equal(self.data, table.data):
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
@@ -1404,7 +1412,6 @@ class ComplexPlate2ForceArray(ScalarObject):
                         if i > 10:
                             print(msg)
                             raise ValueError(msg)
-                #print(msg)
                 if i > 0:
                     raise ValueError(msg)
         return True

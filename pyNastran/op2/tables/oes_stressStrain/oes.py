@@ -1071,7 +1071,6 @@ class OES(OP2Common):
                         assert eids.min() > 0, eids.min()
                         obj.element_node[itotal:itotalf, 0] = repeat(eids, nnodes_expected)
                         ints2 = ints1[:, 4:].reshape(nelements * nnodes_expected, 21)
-                        #print('ints2 =', ints2)
                         grid_device = ints2[:, 0]#.reshape(nelements, nnodes_expected)
 
                         #print('%s-grid_device=%s' % (self.element_name, grid_device))
@@ -1132,7 +1131,8 @@ class OES(OP2Common):
                              szz, sxz, s3, c1, c2, c3) = out
 
                             if self.is_debug_file:
-                                self.binary_debug.write('  eid=%s inode=%i; C=[%s]\n' % (eid, grid_device, ', '.join(['%r' % di for di in out])))
+                                self.binary_debug.write('  eid=%s inode=%i; C=[%s]\n' % (
+                                    eid, grid_device, ', '.join(['%r' % di for di in out])))
 
                             #if grid_device == 0:
                                 #grid = 'CENTER'
@@ -1141,18 +1141,18 @@ class OES(OP2Common):
                                 #grid = grid_device
 
                             grid = grid_device
-                            aCos = [a1, a2, a3]
-                            bCos = [b1, b2, b3]
-                            cCos = [c1, c2, c3]
+                            a_cos = [a1, a2, a3]
+                            b_cos = [b1, b2, b3]
+                            c_cos = [c1, c2, c3]
                             if inode == 0:
                                 #element_name = self.element_name + str(nnodes) #  this is correct, but fails
                                 obj.add_eid(element_name, cid, dt, eid, grid,
                                             sxx, syy, szz, sxy, syz, sxz, s1, s2, s3,
-                                            aCos, bCos, cCos, pressure, svm)
+                                            a_cos, b_cos, c_cos, pressure, svm)
                             else:
                                 obj.add_node(dt, eid, inode, grid,
                                              sxx, syy, szz, sxy, syz, sxz, s1, s2, s3,
-                                             aCos, bCos, cCos, pressure, svm)
+                                             a_cos, b_cos, c_cos, pressure, svm)
                             n += 84
 
             elif self.format_code in [2, 3] and self.num_wide == numwide_imag:  # complex
@@ -1243,6 +1243,7 @@ class OES(OP2Common):
                 ntotal = 68  # 4*17
                 nelements = ndata // ntotal
                 nlayers = nelements * 2
+                nnodes_expected = 2
 
                 auto_return, is_vectorized = self._create_oes_object4(
                     nlayers, result_name, slot, obj_vector_real)
@@ -1250,27 +1251,49 @@ class OES(OP2Common):
                     self._data_factor = 2
                     return nelements * ntotal
 
-                s = Struct(b(self._endian + 'i16f'))
-                cen = 0 # CEN/4
                 obj = self.obj
-                for i in range(nelements):
-                    edata = data[n:n+ntotal]
-                    out = s.unpack(edata)
+                #print('dt=%s, itime=%s' % (obj.itime, dt))
+                if self.use_vector and is_vectorized:
+                    n = nelements * 4 * self.num_wide
+                    itotal = obj.ielement
+                    itotali = obj.itotal + nelements
+                    itotalf = obj.itotal + nelements * nnodes_expected
+                    obj._times[obj.itime] = dt
+                    if obj.itime == 0:
+                        ints = fromstring(data, dtype=self.idtype)
+                        ints1 = ints.reshape(nelements, numwide_real)
+                        eids = ints1[:, 0] // 10
+                        assert eids.min() > 0, eids.min()
+                        obj.element[itotal:itotalf] = eids
 
-                    (eid_device,
-                     fd1, sx1, sy1, txy1, angle1, major1, minor1, max_shear1,
-                     fd2, sx2, sy2, txy2, angle2, major2, minor2, max_shear2) = out
+                    floats = fromstring(data, dtype=self.fdtype).reshape(nelements, numwide_real)[:, 1:]
 
-                    #eid = (eid_device - self.device_code) // 10
-                    eid = self._check_id(eid_device, flag, stress_name, out)
-                    if self.is_debug_file:
-                        self.binary_debug.write('  eid=%i C=[%s]\n' % (eid, ', '.join(['%r' % di for di in out])))
+                    #fd, sx, sy, txy, angle, major, minor, max_shear
+                    floats1 = floats.reshape(nelements * nnodes_expected, 8)
+                    obj.data[obj.itime, itotal:itotalf, :] = floats1
+                    obj.itotal = itotalf
+                    obj.ielement = itotali
+                else:
+                    s = Struct(b(self._endian + 'i16f'))
+                    cen = 0 # CEN/4
+                    for i in range(nelements):
+                        edata = data[n:n+ntotal]
+                        out = s.unpack(edata)
 
-                    obj._add_new_eid('CQUAD4', dt, eid, cen, fd1, sx1, sy1,
-                                     txy1, angle1, major1, minor1, max_shear1)
-                    obj._add(dt, eid, cen, fd2, sx2, sy2, txy2,
-                             angle2, major2, minor2, max_shear2)
-                    n += ntotal
+                        (eid_device,
+                         fd1, sx1, sy1, txy1, angle1, major1, minor1, max_shear1,
+                         fd2, sx2, sy2, txy2, angle2, major2, minor2, max_shear2) = out
+
+                        #eid = (eid_device - self.device_code) // 10
+                        eid = self._check_id(eid_device, flag, stress_name, out)
+                        if self.is_debug_file:
+                            self.binary_debug.write('  eid=%i C=[%s]\n' % (eid, ', '.join(['%r' % di for di in out])))
+
+                        obj._add_new_eid('CQUAD4', dt, eid, cen, fd1, sx1, sy1,
+                                         txy1, angle1, major1, minor1, max_shear1)
+                        obj._add(dt, eid, cen, fd2, sx2, sy2, txy2,
+                                 angle2, major2, minor2, max_shear2)
+                        n += ntotal
             elif self.format_code in [2, 3] and self.num_wide == 15:  # imag
                 nnodes = 0  # centroid + 4 corner points
                 ntotal = 4 * (15 * (nnodes + 1))
@@ -1565,6 +1588,7 @@ class OES(OP2Common):
                     return nelements * self.num_wide * 4
 
                 obj = self.obj
+                #print('dt=%s, itime=%s' % (obj.itime, dt))
                 if self.use_vector and is_vectorized:
                     # self.itime = 0
                     # self.ielement = 0

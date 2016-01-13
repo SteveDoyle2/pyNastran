@@ -98,7 +98,12 @@ NX_RESULT_TABLES = [
     #         and forces on nonlinear elements
     b'OEF1X',
 
-    #b'RAFGEN',
+    b'OSTRRMS1',
+    b'OSTRMS1C',
+    b'OSTRNO1',
+    b'OSTNO1C',
+    b'OESPSD2C',
+    b'OSTPSD2C',
 ]
 
 MSC_RESULT_TABLES = [
@@ -1191,7 +1196,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             niter += 1
         raise RuntimeError('this should never happen; n=%s' % niter_max)
 
-    def _get_matrix_row_fmt_nvalues2(self, nvalues, tout):
+    def _get_matrix_row_fmt_nterms_nfloats(self, nvalues, tout):
         """
         +------+---------------------------+
         | Type | Meaning                   |
@@ -1202,20 +1207,25 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         |  4   | Complex, double precision |
         +------+---------------------------+
         """
-        nvalues2 = nvalues
         if tout == 1:
-            fmt = self._endian + 'i %if' % nvalues
+            nfloats = nvalues
+            nterms = nvalues
+            fmt = self._endian + 'i %if' % nfloats
         elif tout == 2:
-            nvalues2 = nvalues // 2
-            fmt = self._endian + 'i %id' % nvalues2
+            nfloats = nvalues // 2
+            nterms = nvalues // 2
+            fmt = self._endian + 'i %id' % nfloats
         elif tout == 3:
-            fmt = self._endian + 'i %if' % nvalues
+            nfloats = nvalues
+            nterms = nvalues // 2
+            fmt = self._endian + 'i %if' % nfloats
         elif tout == 4:
-            nvalues2 = nvalues // 2
-            fmt = self._endian + 'i %id' % nvalues2
+            nfloats = nvalues // 2
+            nterms = nvalues // 4
+            fmt = self._endian + 'i %id' % nfloats
         else:
             raise RuntimeError('tout = %s' % tout)
-        return fmt, nvalues2
+        return fmt, nfloats, nterms
 
     def _read_matrix(self):
         """
@@ -1357,8 +1367,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
                 while nvalues >= 0:
                     nvalues, = self.get_nmarkers(1, rewind=False)
-                    fmt, nvalues2 = self._get_matrix_row_fmt_nvalues2(nvalues, tout)
-                    GCj += [jj] * nvalues2
+                    fmt, nfloats, nterms = self._get_matrix_row_fmt_nterms_nfloats(nvalues, tout)
+                    GCj += [jj] * nterms
 
                     #-----------
                     data = self.read_block()
@@ -1368,11 +1378,14 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                     ii = out[0]
                     values = out[1:]
 
-                    GCi += list(range(ii, ii + nvalues2))
+                    GCi += list(range(ii, ii + nterms))
                     reals += values
                     nvalues, = self.get_nmarkers(1, rewind=True)
                 assert len(GCi) == len(GCj), 'nGCi=%s nGCj=%s' % (len(GCi), len(GCj))
-                assert len(GCi) == len(reals), 'nGCi=%s nReals=%s' % (len(GCi), len(reals))
+                if tout in [1, 2]:
+                    assert len(GCi) == len(reals), 'tout=%s nGCi=%s nReals=%s' % (tout, len(GCi), len(reals))
+                else:
+                    assert len(GCi)*2 == len(reals), 'tout=%s nGCi=%s nReals=%s' % (tout, len(GCi)*2, len(reals))
                 jj += 1
             else:
                 nvalues, = self.get_nmarkers(1, rewind=False)
@@ -1393,11 +1406,22 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                     if dtype == '????':
                         matrix = None
                         self.log.warning('what is the dtype?')
-                    else:
-                        matrix = coo_matrix((reals, (GCi, GCj)),
+                    elif tout in [1, 2]:
+                        real_array = np.array(reals, dtype=dtype)
+                        matrix = coo_matrix((real_array, (GCi, GCj)),
                                             shape=(mrows, ncols), dtype=dtype)
                         matrix = matrix.todense()
                         self.log.info('created %s' % self.table_name)
+                    elif tout in [3, 4]:
+                        real_array = np.array(reals, dtype=dtype)
+                        nvalues_matrix = real_array.shape[0] // 2
+                        real_complex = real_array.reshape((nvalues_matrix, 2))
+                        real_imag = real_complex[:, 0] + real_complex[:, 1]*1j
+                        matrix = coo_matrix((real_imag, (GCi, GCj)),
+                                            shape=(mrows, ncols), dtype=dtype)
+                        self.log.warning('created %s...verify the complex matrix' % self.table_name)
+                    else:
+                        raise RuntimeError('this should never happen')
                 except ValueError:
                     self.log.warning('shape=(%s, %s)' % (mrows, ncols))
                     self.log.warning('cant make a coo/sparse matrix...trying dense')
@@ -1406,13 +1430,15 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                         matrix = None
                         self.log.warning('what is the dtype?')
                     else:
-                        matrix = np.array(reals, dtype=dtype)
-                        self.log.debug('shape=%s mrows=%s ncols=%s' % (str(matrix.shape), mrows, ncols))
+                        print('dtype =', dtype)
+                        real_array = np.array(reals, dtype=dtype)
+                        self.log.debug('shape=%s mrows=%s ncols=%s' % (str(real_array.shape), mrows, ncols))
                         if len(reals) == mrows * ncols:
+                            real_array = real_array.reshape(mrows, ncols)
                             self.log.info('created %s' % self.table_name)
                         else:
                             self.log.warning('cant reshape because invalid sizes : created %s' % self.table_name)
-                        #matrix.reshape(mrows, ncols)
+                        matrix = real_array
                     #print('m =', matrix)
 
                 m.data = matrix

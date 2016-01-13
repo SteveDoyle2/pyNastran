@@ -1480,7 +1480,6 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
             header = _eigenvalue_header(self, header, itime, ntimes, dt)
             f.write(''.join(header + msg_temp))
 
-            # TODO: can I get this without a reshape?
             #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
             #[mx, my, mxy, bmx, bmy, bmxy, tx, ty]
             mx = self.data[itime, :, 0]
@@ -1492,8 +1491,6 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
             tx = self.data[itime, :, 6]
             ty = self.data[itime, :, 7]
 
-            # loop over all the elements
-            #if self.element_type in 144:
             for i, eid, nid, mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi in zip(cyc, eids, nids, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
                 [mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi] = write_floats_13e(
                     [mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi])
