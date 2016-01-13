@@ -15,6 +15,7 @@ from six import integer_types
 from six.moves import zip, range
 from math import sqrt, degrees, radians, atan2, acos, sin, cos
 
+import numpy as np
 from numpy import array, cross, dot, transpose, zeros, vstack, ndarray
 from numpy.linalg import norm
 
@@ -66,6 +67,15 @@ class Coord(BaseCard):
         self.j = None
         self.k = None
         self.origin = None
+
+
+    def XYZtoCoord(self, p):
+        self.deprecated('XYZtoCoord', 'xyz_to_coord', '0.8')
+        return self.xyz_to_coord(p)
+
+    def coordToXYZ(self, p):
+        self.deprecated('coordToXYZ', 'coord_to_xyz', '0.8')
+        return self.coord_to_xyz(p)
 
     def Cid(self):
         """Gets the coordinate ID"""
@@ -259,7 +269,7 @@ class Coord(BaseCard):
                 self.setup()
 
         # the ijk axes arent resolved as R-theta-z, only points
-        p2 = self.coordToXYZ(p)
+        p2 = self.coord_to_xyz(p)
 
         if self.i is None:
             msg = "Local unit vectors haven't been set.\nType=%r cid=%s rid=%s" % (
@@ -334,7 +344,7 @@ class Coord(BaseCard):
         if self.origin is None:
             raise RuntimeError('Origin=%s; Cid=%s Rid=%s' % (self.origin, self.cid, self.Rid()))
         xyz_coord = dot(xyz - self.origin, transpose(beta))
-        xyz_local = self.XYZtoCoord(xyz_coord)
+        xyz_local = self.xyz_to_coord(xyz_coord)
         return xyz_local
 
     def transform_node_to_local(self, xyz):
@@ -375,7 +385,7 @@ class Coord(BaseCard):
         """
         beta = self.beta()
         xyz_coord = dot(xyz, transpose(beta))
-        xyz_local = self.XYZtoCoord(xyz_coord)
+        xyz_local = self.xyz_to_coord(xyz_coord)
         return xyz_local
 
     def beta(self):
@@ -438,8 +448,9 @@ def _fix_xyz_shape(xyz, name='xyz'):
     """
     Checks the shape of a grid point location and fixes it if possible
     """
+    xyz = np.asarray(xyz)
     if not isinstance(xyz, ndarray):
-        msg = '%s must be type ndarray' % name
+        msg = '%s must be type ndarray; type=%s' % (name, type(xyz))
         raise TypeError(msg)
     if xyz.shape == (1, 3):
         xyz.reshape(3, 1)
@@ -664,14 +675,14 @@ def define_coord_ijk(model, Type, cid, origin, rid=0, i=None, j=None, k=None):
 
 
 class RectangularCoord(object):
-    def coordToXYZ(self, p):
+    def coord_to_xyz(self, p):
         """
         :param self:  the coordinate system object
         :returns xyz: the point in the local coordinate system
         """
         return p
 
-    def XYZtoCoord(self, p):
+    def xyz_to_coord(self, p):
         """
         :param self:  the coordinate system object
         :returns xyz: the delta xyz point in the local coordinate system
@@ -695,7 +706,7 @@ class CylindricalCoord(object):
     .. _msc:  http://simcompanion.mscsoftware.com/resources/sites/MSC/content/meta/DOCUMENTATION/9000/DOC9188/~secure/refman.pdf?token=WDkwz5Q6v7LTw9Vb5p+nwkbZMJAxZ4rU6BoR7AHZFxi2Tl1QdrbVvWj00qmcC4+S3fnbL4WUa5ovbpBwGDBt+zFPzsGyYC13zvGPg0j/5SrMF6bnWrQoTGyJb8ho1ROYsm2OqdSA9jVceaFHQVc+tJq4b49VogM4dZBxyi/QrHgdUgPFos8BAL9mgju5WGk8yYcFtRzQIxU=
     .. seealso:: `MSC Reference Manual (pdf) <`http://simcompanion.mscsoftware.com/resources/sites/MSC/content/meta/DOCUMENTATION/9000/DOC9188/~secure/refman.pdf?token=WDkwz5Q6v7LTw9Vb5p+nwkbZMJAxZ4rU6BoR7AHZFxi2Tl1QdrbVvWj00qmcC4+S3fnbL4WUa5ovbpBwGDBt+zFPzsGyYC13zvGPg0j/5SrMF6bnWrQoTGyJb8ho1ROYsm2OqdSA9jVceaFHQVc+tJq4b49VogM4dZBxyi/QrHgdUgPFos8BAL9mgju5WGk8yYcFtRzQIxU=>`_.
     """
-    def coordToXYZ(self, p):
+    def coord_to_xyz(self, p):
         r"""
         ::
 
@@ -717,7 +728,7 @@ class CylindricalCoord(object):
         y = R * sin(theta)
         return array([x, y, p[2]], dtype='float64')
 
-    def XYZtoCoord(self, p):
+    def xyz_to_coord(self, p):
         """
         :param self:  the coordinate system object
         :returns xyz: the delta xyz point in the local coordinate system
@@ -748,7 +759,7 @@ class SphericalCoord(object):
 
     .. seealso:: `MSC Reference Manual (pdf) <`http://simcompanion.mscsoftware.com/resources/sites/MSC/content/meta/DOCUMENTATION/9000/DOC9188/~secure/refman.pdf?token=WDkwz5Q6v7LTw9Vb5p+nwkbZMJAxZ4rU6BoR7AHZFxi2Tl1QdrbVvWj00qmcC4+S3fnbL4WUa5ovbpBwGDBt+zFPzsGyYC13zvGPg0j/5SrMF6bnWrQoTGyJb8ho1ROYsm2OqdSA9jVceaFHQVc+tJq4b49VogM4dZBxyi/QrHgdUgPFos8BAL9mgju5WGk8yYcFtRzQIxU=>`_.
     """
-    def XYZtoCoord(self, p):
+    def xyz_to_coord(self, p):
         r"""
         :param self:  the coordinate system object
         :returns xyz: the loca XYZ point in the R, \theta, \phi coordinate system
@@ -762,7 +773,7 @@ class SphericalCoord(object):
             theta = 0.
         return array([R, theta, phi], dtype='float64')
 
-    def coordToXYZ(self, p):
+    def coord_to_xyz(self, p):
         r"""
         :param self:  the coordinate system object
         :returns xyz: the R, \theta, \phi point in the local XYZ coordinate system
@@ -806,23 +817,23 @@ class Cord2x(Coord):
         self.cid = cid
         self.rid = rid
 
-        #if origin is None:
-            #self.e1 = array([0., 0., 0.], dtype='float64')
-        #else:
-        self.e1 = origin
+        if origin is None:
+            self.e1 = array([0., 0., 0.], dtype='float64')
+        else:
+            self.e1 = np.asarray(origin)
 
-        #if zaxis is None:
-            #self.e2 = array([0., 0., 1.], dtype='float64')
-        #else:
-        self.e2 = zaxis
+        if zaxis is None:
+            self.e2 = array([0., 0., 1.], dtype='float64')
+        else:
+            self.e2 = np.asarray(zaxis)
 
-        #if xzplane is None:
-            #self.e3 = array([1., 0., 0.], dtype='float64')
-        #else:
-        self.e3 = xzplane
+        if xzplane is None:
+            self.e3 = array([1., 0., 0.], dtype='float64')
+        else:
+            self.e3 = np.asarray(xzplane)
         self._finish_setup()
 
-    def add_axes(cid, origin, rid=0,
+    def add_axes(self, cid, rid=0, origin=None,
                  xaxis=None, yaxis=None, zaxis=None,
                  xyplane=None, yzplane=None, xzplane=None):
         """
@@ -831,12 +842,14 @@ class Cord2x(Coord):
 
         Parameters
         ----------
+        self : Cord2x()
+            the coordinate system object
         cid : int
             the new coordinate system id
-        origin : (3,) ndarray
-             defines the location of the origin in the global coordinate frame
         rid : int; default=0
             the new reference coordinate system id
+        origin : (3,) ndarray
+             defines the location of the origin in the global coordinate frame
         xaxis : (3,) ndarray
             defines the x axis (default=None)
         yaxis : (3,) ndarray
@@ -848,40 +861,41 @@ class Cord2x(Coord):
                   (xyplane, yzplane, xz plane) must be defined; the others
                   must be None
         .. note:: the axes and planes are defined in the rid coordinate system
-
-        TODO: hasn't been tested...
         """
         assert self.type in ['CORD2R', 'CORD2C', 'CORD2S'], self.type
-        origin = _fix_xyz_shape(origin, 'origin')
+        if origin is None:
+            origin = array([0., 0., 0.], dtype='float64')
+        else:
+            origin = _fix_xyz_shape(origin, 'origin')
 
         # check for overdefined axes
         if xaxis is not None:
             assert yaxis is None and zaxis is None, 'yaxis=%s zaxis=%s' % (yaxis, zaxis)
             xaxis = _fix_xyz_shape(xaxis, 'xaxis')
-            xaxis = rcoord.transform_node_to_global(xaxis)
+            xaxis = self.coord_to_xyz(xaxis)
         elif yaxis is not None:
             assert zaxis is None, 'zaxis=%s' % (zaxis)
             yaxis = _fix_xyz_shape(yaxis, 'yaxis')
-            yaxis = rcoord.transform_node_to_global(yaxis)
+            yaxis = self.coord_to_xyz(yaxis)
         else:
             zaxis = _fix_xyz_shape(zaxis, 'zaxis')
-            zaxis = rcoord.transform_node_to_global(zaxis)
+            zaxis = self.coord_to_xyz(zaxis)
 
         # check for invalid planes
         if xyplane is not None:
             assert yzplane is None and xzplane is None, 'yzplane=%s xzplane=%s' % (yzplane, xzplane)
             assert xaxis is not None or yaxis is not None, 'xaxis=%s yaxis=%s' % (xaxis, yaxis)
             xyplane = _fix_xyz_shape(xyplane, 'xyplane')
-            xyplane = rcoord.transform_node_to_global(xyplane)
+            xyplane = self.coord_to_xyz(xyplane)
         elif yzplane is not None:
             assert xzplane is None, 'xzplane=%s' % (xzplane)
             assert yaxis is not None or zaxis is not None, 'yaxis=%s zaxis=%s' % (yaxis, zaxis)
             yzplane = _fix_xyz_shape(yzplane, 'yzplane')
-            yzplane = rcoord.transform_node_to_global(yzplane)
+            yzplane = self.coord_to_xyz(yzplane)
         else:
             assert xaxis is not None or zaxis is not None, 'xaxis=%s zaxis=%s' % (xaxis, zaxis)
             xzplane = _fix_xyz_shape(xzplane, 'xzplane')
-            xzplane = rcoord.transform_node_to_global(xzplane)
+            xzplane = self.coord_to_xyz(xzplane)
 
         if xyplane is not None:
             if xaxis is not None:
@@ -919,14 +933,16 @@ class Cord2x(Coord):
                 jhat = cross(k, xzplane) # xzplane is "defining" xaxis
                 j = jhat / norm(jhat)
                 i = cross(j, k)
-        self.add_ijk(Type, cid, origin, rid, i, j, k)
+        self.add_ijk(cid, rid, origin, i, j, k)
 
-    def add_ijk(cid, origin, rid=0, i=None, j=None, k=None):
+    def add_ijk(self, cid, rid=0, origin=None, i=None, j=None, k=None):
         """
         Create a coordinate system based on 2 or 3 perpendicular unit vectors
 
         Parameters
         ----------
+        self : Cord2x()
+            the coordinate system object
         cid : int
             the new coordinate system id
         origin : (3,) ndarray
@@ -939,12 +955,13 @@ class Cord2x(Coord):
             defines the j unit vector
         k : (3,) ndarray
             defines the k unit vector
-
-        TODO: hasn't been tested...
         """
         Type = self.type
         assert Type in ['CORD2R', 'CORD2C', 'CORD2S'], Type
-        origin = _fix_xyz_shape(origin, 'origin')
+        if origin is None:
+            origin = array([0., 0., 0.], dtype='float64')
+        else:
+            origin = _fix_xyz_shape(origin, 'origin')
 
         # create cross vectors
         if i is None:
@@ -964,13 +981,14 @@ class Cord2x(Coord):
             else:
                 raise RuntimeError('j or k are None; j=%s k=%s' % (j, k))
 
-        # define e1, e2, e3
-        rcoord = model.Coord(rid, 'which is required to create cid=%s' % cid)
-        e1 = rcoord.transform_node_to_local(origin)
-        e2 = rcoord.transform_node_to_local(origin + k) # point on z axis
-        e3 = rcoord.transform_node_to_local(origin + i) # point on x-z plane / point on x axis
-        card = [Type, cid, rid] + list(e1) + list(e2) + list(e3)
-        model.add_card(Type, card, is_list=True)
+        # origin
+        self.e1 = origin
+        # point on z axis
+        self.e2 = origin + k
+
+        # point on x-z plane / point on x axis
+        self.e3 = origin + i
+        self._finish_setup()
 
     def add_op2_data(self, data):
         self.cid = data[0]
@@ -1029,9 +1047,12 @@ class Cord2x(Coord):
         """
         Verifies all methods for this object work
 
-        :param self: the CORD2x object pointer
-        :param xref: has this model been cross referenced
-        :type xref:  bool
+        Parameters
+        ----------
+        self : Cord2x()
+            the coordinate system object
+        xref : bool
+            has this model been cross referenced
         """
         cid = self.Cid()
         rid = self.Rid()
@@ -1050,8 +1071,13 @@ class Cord2x(Coord):
         """
         Links self.rid to a coordinate system.
 
-        :param self:  the coordinate system object
-        :param model: the BDF object
+        Parameters
+        ----------
+        self : Cord2x()
+            the coordinate system object
+        model : BDF()
+            the BDF object
+
         .. warning:: Doesn't set rid to the coordinate system if it's in the
                     global.  This isn't a problem.  It's meant to speed up the
                     code in order to resolve extra coordinate systems.
@@ -1123,11 +1149,14 @@ class Cord1x(Coord):
         """
         Converts a coordinate system from a CORD1x to a CORD2x
 
-        :param self:  the coordinate system object
-        :param model: a BDF model
-        :param rid:
-          The relative coordinate system (default=0 -> Global);
-          TYPE = INT.
+        Parameters
+        ----------
+        self : Cord1x()
+            the coordinate system object
+        model : BDF()
+            a BDF model
+        rid : int; default=0
+            The relative coordinate system
         """
         rid1 = self.g1.Cid()
         rid2 = self.g2.Cid()
@@ -1164,9 +1193,12 @@ class Cord1x(Coord):
         """
         Verifies all methods for this object work
 
-        :param self: the CORD1x object pointer
-        :param xref: has this model been cross referenced
-        :type xref:  bool
+        Parameters
+        ----------
+        self : Cord1x()
+            the coordinate system object
+        xref : bool
+            has this model been cross referenced
         """
         cid = self.Cid()
         assert isinstance(cid, int), 'cid=%r' % cid
@@ -1175,8 +1207,12 @@ class Cord1x(Coord):
         """
         Links self.rid to a coordinate system.
 
-        :param self:  the coordinate system object
-        :param model: the BDF object
+        Parameters
+        ----------
+        self : Cord1x()
+            the coordinate system object
+        model : BDF()
+            the BDF object
         """
         msg = ' which is required by %s cid=%s' % (self.type, self.cid)
         #: grid point 1
@@ -1201,7 +1237,10 @@ class Cord1x(Coord):
         Finds the position of the nodes used define the coordinate system
         and sets the ijk vectors
 
-        :param self: the coordinate system object
+        Parameters
+        ----------
+        self : Cord1x()
+            the coordinate system object
         """
         if self.isResolved:
             return
@@ -1240,7 +1279,10 @@ class Cord1x(Coord):
         """
         Gets the integers for the node [g1,g2,g3]
 
-        :param self: the coordinate system object
+        Parameters
+        ----------
+        self : Cord1x()
+            the coordinate system object
         """
         self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
         return self.node_ids

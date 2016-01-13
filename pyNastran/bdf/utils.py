@@ -696,8 +696,8 @@ def TransformLoadWRT(F, M, cid, cid_new, model, is_cid_int=True):
     r = cp_ref.origin - coord_to_ref.origin
 
     # change R-theta-z to xyz
-    Fxyz_local_1 = cp_ref.coordToXYZ(F)
-    Mxyz_local_1 = cp_ref.coordToXYZ(M)
+    Fxyz_local_1 = cp_ref.coord_to_xyz(F)
+    Mxyz_local_1 = cp_ref.coord_to_xyz(M)
 
     # pGlobal = pLocal1 * beta1 + porigin1
     # pGlobal = pLocal2 * beta2 + porigin2
@@ -718,7 +718,7 @@ def TransformLoadWRT(F, M, cid, cid_new, model, is_cid_int=True):
     Mxyz_local_2 = Mxyz_local_1 + dMxyz_local_2
 
     # rotate the delta moment into the local frame
-    M_local = coord_to_ref.XYZtoCoord(Mxyz_local_2)
+    M_local = coord_to_ref.xyz_to_coord(Mxyz_local_2)
 
     return Fxyz_local_2, Mxyz_local_2
 
@@ -759,7 +759,7 @@ def PositionWRT(xyz, cid, cid_new, model, is_cid_int=True):
         # (plocal1 * beta1 + porigin1 - porigin2) * beta2.T = plocal2
 
         # convert R-Theta-Z_1 to xyz_1
-        p1_local = cp_ref.coordToXYZ(xyz)
+        p1_local = cp_ref.coord_to_xyz(xyz)
 
         # transform xyz_1 to xyz_2
         p2_local = dot(
@@ -767,7 +767,7 @@ def PositionWRT(xyz, cid, cid_new, model, is_cid_int=True):
                 coord_to_ref.beta().T)
 
         # convert xyz_2 to R-Theta-Z_2
-        xyz_local = coord_to_ref.XYZtoCoord(p2_local)
+        xyz_local = coord_to_ref.xyz_to_coord(p2_local)
     else:
         # converting the xyz point arbitrary->global
         xyz_global = cp_ref.transform_node_to_global(xyz)

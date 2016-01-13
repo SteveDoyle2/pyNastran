@@ -563,6 +563,56 @@ class TestCoords(unittest.TestCase):
         self.assertTrue(array_equal(Fxyz_local, F)), "expected=%s actual=%s" % (F, Fxyz_local)
         self.assertTrue(array_equal(Mxyz_local, cross(r, F))), "expected=%s actual=%s" % (M, Mxyz_local)
 
+    def test_coord_adding(self):
+        cid1 = CORD2R()
+
+        origin = [0., 0., 0.]
+        zaxis = [0., 0., 1.]
+        xzplane = [1., 0., 0.]
+        cid1.add(cid=1, rid=0, origin=origin, zaxis=zaxis, xzplane=xzplane,
+                 comment='')
+
+        cid2 = CORD2R()
+        xaxis = [1., 0., 0.]
+        yaxis = [0., 1., 0.]
+        zaxis = [0., 0., 1.]
+        xz_plane = [1., 0., 1.]
+        yz_plane = [0., 1., 1.]
+        xy_plane = [1., 1., 0.]
+        # x-axis
+        cid2.add_axes(cid=2, rid=0, origin=origin, xaxis=xaxis, yaxis=None, zaxis=None,
+                     xyplane=None, yzplane=None, xzplane=xz_plane)
+
+        cid3 = CORD2R()
+        cid3.add_axes(cid=2, rid=0, origin=origin, xaxis=xaxis, yaxis=None, zaxis=None,
+                      xyplane=xy_plane, yzplane=None, xzplane=None)
+
+        # y-axis
+        cid4 = CORD2R()
+        cid4.add_axes(cid=4, rid=0, origin=origin, xaxis=None, yaxis=yaxis, zaxis=None,
+                      xyplane=xy_plane, yzplane=None, xzplane=None)
+
+        cid5 = CORD2R()
+        cid5.add_axes(cid=5, rid=0, origin=origin, xaxis=None, yaxis=yaxis, zaxis=None,
+                      xyplane=None, yzplane=yz_plane, xzplane=None)
+
+        # z-axis
+        cid4 = CORD2R()
+        cid4.add_axes(cid=4, rid=0, origin=origin, xaxis=None, yaxis=None, zaxis=zaxis,
+                      xyplane=None, yzplane=None, xzplane=xz_plane)
+
+        cid5 = CORD2R()
+        cid5.add_axes(cid=5, rid=0, origin=origin, xaxis=None, yaxis=None, zaxis=zaxis,
+                      xyplane=None, yzplane=yz_plane, xzplane=None)
+
+        # ijk
+        cid6 = CORD2R()
+        cid7 = CORD2R()
+        cid8 = CORD2R()
+        cid6.add_ijk(cid=6, rid=0, origin=origin, i=xaxis, j=yaxis, k=None)
+        cid7.add_ijk(cid=7, rid=0, origin=origin, i=xaxis, j=None, k=zaxis)
+        cid8.add_ijk(cid=8, rid=0, origin=origin, i=None, j=yaxis, k=zaxis)
+        #cid6.add_ijk(rid=0, origin=origin, i=None, j=None, k=None)
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()
