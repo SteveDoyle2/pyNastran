@@ -48,7 +48,7 @@ def normalize(v):
 class Coord(BaseCard):
     type = 'COORD'
 
-    def __init__(self, card, data, comment):
+    def __init__(self):
         """
         Defines a general CORDxx object
 
@@ -56,9 +56,6 @@ class Coord(BaseCard):
         :param card: a BDFCard object
         :param data: a list analogous to the card
         """
-        if comment:
-            self._comment = comment
-
         #: have all the transformation matricies been determined
         self.isResolved = False
         self.cid = None
@@ -797,46 +794,86 @@ class SphericalCoord(object):
 
 
 class Cord2x(Coord):
-    def __init__(self, card, data, comment):
+
+    def __init__(self):
+        Coord.__init__(self)
+
+    def add(self, cid, rid=0, origin=None, zaxis=None, xzplane=None, comment=''):
+        """
+        cid : int
+            coord id
+        rid : int; default=0
+            reference coord id
+        origin : ndarray/None; default=None -> [0., 0., 0.]
+            the origin
+        zaxis : ndarray/None; default=None -> [0., 0., 1.]
+            a point on the z-axis
+        xzplane : ndarray/None; default=None -> [1., 0., 0.]
+            a point on the xz-plane
+
+        .. note :: no type checking
+        """
+        if comment:
+            self._comment = comment
+        self.cid = cid
+        self.rid = rid
+
+        #if origin is None:
+            #self.e1 = array([0., 0., 0.], dtype='float64')
+        #else:
+        self.e1 = origin
+
+        #if zaxis is None:
+            #self.e2 = array([0., 0., 1.], dtype='float64')
+        #else:
+        self.e2 = zaxis
+
+        #if xzplane is None:
+            #self.e3 = array([1., 0., 0.], dtype='float64')
+        #else:
+        self.e3 = xzplane
+        self._finish_setup()
+
+    def add_op2_data(self, data):
+        self.cid = data[0]
+        self.rid = data[1]
+        self.e1 = array(data[2:5], dtype='float64')
+        self.e2 = array(data[5:8], dtype='float64')
+        self.e3 = array(data[8:11], dtype='float64')
+        assert len(data) == 11, 'data = %s' % (data)
+        self._finish_setup()
+
+    def add_card(self, card, comment=''):
         """
         Defines the CORD2x class
-
-        :param self: the coordinate system object
-        :param card: a BDFCard object
-        :param data: a list analogous to the card
         """
+        if comment:
+            self._comment = comment
         self.isResolved = False
-        Coord.__init__(self, card, data, comment)
 
-        if card:
-            #: coordinate system ID
-            self.cid = integer(card, 1, 'cid')
-            #: reference coordinate system ID
-            self.rid = integer_or_blank(card, 2, 'rid', 0)
+        #: coordinate system ID
+        self.cid = integer(card, 1, 'cid')
+        #: reference coordinate system ID
+        self.rid = integer_or_blank(card, 2, 'rid', 0)
 
-            #: origin in a point relative to the rid coordinate system
-            self.e1 = array([double_or_blank(card, 3, 'e1x', 0.0),
-                             double_or_blank(card, 4, 'e1y', 0.0),
-                             double_or_blank(card, 5, 'e1z', 0.0)],
-                            dtype='float64')
-            #: z-axis in a point relative to the rid coordinate system
-            self.e2 = array([double_or_blank(card, 6, 'e2x', 0.0),
-                             double_or_blank(card, 7, 'e2y', 0.0),
-                             double_or_blank(card, 8, 'e2z', 0.0)],
-                            dtype='float64')
-            #: a point on the xz-plane relative to the rid coordinate system
-            self.e3 = array([double_or_blank(card, 9, 'e3x', 0.0),
-                             double_or_blank(card, 10, 'e3y', 0.0),
-                             double_or_blank(card, 11, 'e3z', 0.0)],
-                            dtype='float64')
-        else:
-            self.cid = data[0]
-            self.rid = data[1]
-            self.e1 = array(data[2:5], dtype='float64')
-            self.e2 = array(data[5:8], dtype='float64')
-            self.e3 = array(data[8:11], dtype='float64')
-            assert len(data) == 11, 'data = %s' % (data)
+        #: origin in a point relative to the rid coordinate system
+        self.e1 = array([double_or_blank(card, 3, 'e1x', 0.0),
+                         double_or_blank(card, 4, 'e1y', 0.0),
+                         double_or_blank(card, 5, 'e1z', 0.0)],
+                        dtype='float64')
+        #: z-axis in a point relative to the rid coordinate system
+        self.e2 = array([double_or_blank(card, 6, 'e2x', 0.0),
+                         double_or_blank(card, 7, 'e2y', 0.0),
+                         double_or_blank(card, 8, 'e2z', 0.0)],
+                        dtype='float64')
+        #: a point on the xz-plane relative to the rid coordinate system
+        self.e3 = array([double_or_blank(card, 9, 'e3x', 0.0),
+                         double_or_blank(card, 10, 'e3y', 0.0),
+                         double_or_blank(card, 11, 'e3z', 0.0)],
+                        dtype='float64')
+        self._finish_setup()
 
+    def _finish_setup(self):
         assert len(self.e1) == 3, self.e1
         assert len(self.e2) == 3, self.e2
         assert len(self.e3) == 3, self.e3
@@ -906,38 +943,40 @@ class Cord1x(Coord):
         """Gets the reference coordinate system self.rid"""
         return self.rid
 
-    def __init__(self, card, icard, data, comment):
-        Coord.__init__(self, card, data, comment)
-        self.isResolved = False
-        if icard is not None:
-            assert icard == 0 or icard == 1, 'icard=%r' % (icard)
-            nCoord = 4 * icard  # 0 if the 1st coord, 4 if the 2nd
+    def __init__(self):
+        Coord.__init__(self)
 
-            #: the coordinate ID
-            self.cid = integer(card, 1 + nCoord, 'cid')
-            #: a Node at the origin
-            self.g1 = integer(card, 2 + nCoord, 'g1')
-            #: a Node on the z-axis
-            self.g2 = integer(card, 3 + nCoord, 'g2')
-            #: a Node on the xz-plane
-            self.g3 = integer(card, 4 + nCoord, 'g3')
-        else:
-            self.cid = data[0]
-            self.g1 = data[1]
-            self.g2 = data[2]
-            self.g3 = data[3]
-            assert len(data) == 4, 'data = %s' % (data)
+    def add_card(self, card, icard=0, comment=''):
+        #self.isResolved = False
+        assert icard == 0 or icard == 1, 'icard=%r' % (icard)
+        nCoord = 4 * icard  # 0 if the 1st coord, 4 if the 2nd
+
+        #: the coordinate ID
+        self.cid = integer(card, 1 + nCoord, 'cid')
+        #: a Node at the origin
+        self.g1 = integer(card, 2 + nCoord, 'g1')
+        #: a Node on the z-axis
+        self.g2 = integer(card, 3 + nCoord, 'g2')
+        #: a Node on the xz-plane
+        self.g3 = integer(card, 4 + nCoord, 'g3')
 
         assert self.g1 != self.g2
         assert self.g1 != self.g3
         assert self.g2 != self.g3
 
-        self.e1 = None
-        self.e2 = None
-        self.e3 = None
-        self.i = None
-        self.j = None
-        self.k = None
+        #self.e1 = None
+        #self.e2 = None
+        #self.e3 = None
+        #self.i = None
+        #self.j = None
+        #self.k = None
+
+    def add_data(self, data):
+        self.cid = data[0]
+        self.g1 = data[1]
+        self.g2 = data[2]
+        self.g3 = data[3]
+        assert len(data) == 4, 'data = %s' % (data)
 
     def to_CORD2x(self, model, rid=0):
         """
@@ -1239,7 +1278,7 @@ class CORD1R(Cord1x, RectangularCoord):
         card : List
             a list version of the fields (1 CORD1R only)
         """
-        Cord1x.__init__(self, card, icard, data, comment)
+        Cord1x.__init__(self)
 
     def raw_fields(self):
         list_fields = ['CORD1R', self.cid] + self.node_ids
@@ -1266,7 +1305,7 @@ class CORD1C(Cord1x, CylindricalCoord):
                        (there are possibly 2 coordinates on 1 card)
         :param data:   a list version of the fields (1 CORD1R only)
         """
-        Cord1x.__init__(self, card, icard, data, comment)
+        Cord1x.__init__(self)
 
     def raw_fields(self):
         list_fields = ['CORD1C', self.cid] + self.node_ids
@@ -1277,7 +1316,7 @@ class CORD1S(Cord1x, SphericalCoord):
     type = 'CORD1S'
     Type = 'S'
 
-    def __init__(self, card=None, icard=0, data=None, comment=''):
+    def __init__(self):
         """
         Intilizes the CORD1S
 
@@ -1293,7 +1332,7 @@ class CORD1S(Cord1x, SphericalCoord):
                        (there are possibly 2 coordinates on 1 card)
         :param data:   a list version of the fields (1 CORD1S only)
         """
-        Cord1x.__init__(self, card, icard, data, comment)
+        Cord1x.__init__(self)
 
     def raw_fields(self):
         list_fields = ['CORD1S', self.cid] + self.node_ids
@@ -1304,7 +1343,7 @@ class CORD2R(Cord2x, RectangularCoord):
     type = 'CORD2R'
     Type = 'R'
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self):
         """
         Intilizes the CORD2R
 
@@ -1320,10 +1359,10 @@ class CORD2R(Cord2x, RectangularCoord):
         :param card: a BDFCard object
         :param data: a list version of the fields (1 CORD2R only)
                      default=None -> [0, 0, 0., 0., 0., 0., 0., 1., 1., 0., 0.]
+
+        .. note :: no type checking
         """
-        if data is None:
-            data = [0, 0, 0., 0., 0., 0., 0., 1., 1., 0., 0.]
-        Cord2x.__init__(self, card, data, comment)
+        Cord2x.__init__(self)
 
     def _verify(self, xref):
         """
@@ -1365,7 +1404,7 @@ class CORD2C(Cord2x, CylindricalCoord):
         :param card: a BDFCard object
         :param data: a list version of the fields (1 CORD2C only)
         """
-        Cord2x.__init__(self, card, data, comment)
+        Cord2x.__init__(self)
 
     def raw_fields(self):
         rid = set_blank_if_default(self.Rid(), 0)
@@ -1394,7 +1433,7 @@ class CORD2S(Cord2x, SphericalCoord):
         :param card: a BDFCard object
         :param data: a list version of the fields (1 CORD2S only)
         """
-        Cord2x.__init__(self, card, data, comment)
+        Cord2x.__init__(self)
 
     def raw_fields(self):
         rid = set_blank_if_default(self.Rid(), 0)

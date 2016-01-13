@@ -1576,9 +1576,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             #DVCREL1
             # DVCREL2 - deqatn
 
-            'CORD2R' : (CORD2R, self.add_coord),
-            'CORD2C' : (CORD2C, self.add_coord),
-            'CORD2S' : (CORD2S, self.add_coord),
             'GMCORD' : (GMCORD, self.add_coord),
 
             'TABLED1' : (TABLED1, self.add_table),
@@ -1657,6 +1654,11 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'GRDSET' : self._prepare_grdset,
 
             'BCTSET' : self._prepare_bctset,
+        }
+        self._card_parser_c = {
+            'CORD2R' : (CORD2R, self.add_coord),
+            'CORD2C' : (CORD2C, self.add_coord),
+            'CORD2S' : (CORD2S, self.add_coord),
         }
 
     def _prepare_bctset(self, card, card_obj, comment=''):
@@ -1818,26 +1820,30 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
     def _prepare_cord1r(self, card, card_obj, comment=''):
         """adds a CORD1R"""
-        class_instance = CORD1R(card_obj, comment=comment)
+        class_instance = CORD1R()
+        class_instance.add_card(card_obj, comment=comment)
         self.add_coord(class_instance)
         if card_obj.field(5):
-            class_instance = CORD1R(card_obj, icard=1, comment=comment)
+            class_instance = CORD1R()
+            class_instance.add_card(card_obj, icard=1, comment=comment)
             self.add_coord(class_instance)
 
     def _prepare_cord1c(self, card, card_obj, comment=''):
         """adds a CORD1C"""
-        class_instance = CORD1C(card_obj, comment=comment)
-        self.add_coord(class_instance)
+        class_instance = CORD1C()
+        class_instance.add_card(card_obj, comment=comment)
         if card_obj.field(5):
-            class_instance = CORD1C(card_obj, icard=1, comment=comment)
+            class_instance = CORD1C()
+            class_instance.add_card(card_obj, icard=1, comment=comment)
             self.add_coord(class_instance)
 
     def _prepare_cord1s(self, card, card_obj, comment=''):
         """adds a CORD1S"""
-        class_instance = CORD1S(card_obj, comment=comment)
-        self.add_coord(class_instance)
+        class_instance = CORD1S()
+        class_instance.add_card(card_obj, comment=comment)
         if card_obj.field(5):
-            class_instance = CORD1S(card_obj, icard=1, comment=comment)
+            class_instance = CORD1S()
+            class_instance.add_card(card_obj, icard=1, comment=comment)
             self.add_coord(class_instance)
 
     def _prepare_ctetra(self, card, card_obj, comment=''):
@@ -2020,53 +2026,66 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
         # function that gets by name the initialized object (from global scope)
         failed = True
-        try:
+        if card_name in self._card_parser:
             card_class, add_card_function = self._card_parser[card_name]
-            failed = False
-        except KeyError:
-            try:
-                add_card_function = self._card_parser_b[card_name]
-            except KeyError:
-                #: .. warning:: cards with = signs in them
-                #:              are not announced when they are rejected
-                if '=' in card[0]:
-                    self.log.info('rejecting processed equal signed card %s' % card)
-                #self.reject_cards.append(card) #  TOD: this is bad...
-                msg = 'card_name=%r not in card_parser_b'  % (card_name)
-                raise KeyError(msg)
-                #print(msg)
-                return
+            class_instance = card_class(card_obj, comment=comment)
+            add_card_function(class_instance)
 
-            try:
-                add_card_function(card, card_obj, comment=comment)
-            except (SyntaxError, AssertionError, KeyError, ValueError) as exception:
-                # WARNING: Don't catch RuntimeErrors or a massive memory leak can occur
-                #tpl/cc451.bdf
-                #raise
-                # NameErrors should be caught
-                self._iparse_errors += 1
-                var = traceback.format_exception_only(type(exception), exception)
-                self._stored_parse_errors.append((card, var))
-                if self._iparse_errors > self._nparse_errors:
-                    self.pop_parse_errors()
+            #try:
+                #add_card_function(class_instance)
+            #except (SyntaxError, AssertionError, KeyError, ValueError) as exception:
+                ## WARNING: Don't catch RuntimeErrors or a massive memory leak can occur
+                ##tpl/cc451.bdf
+                ##raise
+                ## NameErrors should be caught
+                #self._iparse_errors += 1
+                #var = traceback.format_exception_only(type(exception), exception)
+                #self._stored_parse_errors.append((card, var))
+                #if self._iparse_errors > self._nparse_errors:
+                    #self.pop_parse_errors()
+
+        elif card_name in self._card_parser_b:
+            add_card_function = self._card_parser_b[card_name]
+            #class_instance = card_class(card_obj, comment=comment)
+            add_card_function(card, card_obj)
+
+            #try:
+                #add_card_function(card, card_obj, comment=comment)
+            #except (SyntaxError, AssertionError, KeyError, ValueError) as exception:
+                ## WARNING: Don't catch RuntimeErrors or a massive memory leak can occur
+                ##tpl/cc451.bdf
+                ##raise
+                ## NameErrors should be caught
+                #self._iparse_errors += 1
+                #var = traceback.format_exception_only(type(exception), exception)
+                #self._stored_parse_errors.append((card, var))
+                #if self._iparse_errors > self._nparse_errors:
+                    #self.pop_parse_errors()
+        elif card_name in self._card_parser_c:
+            card_class, add_card_function = self._card_parser_c[card_name]
+            class_instance = card_class()
+            class_instance.add_card(card_obj, comment=comment)
+            add_card_function(class_instance)
         else:
-            assert failed == False, failed
-            # KeyError won't trigger this
+            raise NotImplementedError(card_name)
+        #else:
+            #assert failed == False, failed
+            ## KeyError won't trigger this
 
-            try:
-                class_instance = card_class(card_obj, comment=comment)
-                add_card_function(class_instance)
-            except (SyntaxError, AssertionError, ValueError) as exception:
-                #raise
-                # WARNING: Don't catch RuntimeErrors or a massive memory leak can occur
-                #tpl/cc451.bdf
-                #raise
-                # NameErrors should be caught
-                self._iparse_errors += 1
-                var = traceback.format_exception_only(type(exception), exception)
-                self._stored_parse_errors.append((card, var))
-                if self._iparse_errors > self._nparse_errors:
-                    self.pop_parse_errors()
+            #try:
+                #class_instance = card_class(card_obj, comment=comment)
+                #add_card_function(class_instance)
+            #except (SyntaxError, AssertionError, ValueError) as exception:
+                ##raise
+                ## WARNING: Don't catch RuntimeErrors or a massive memory leak can occur
+                ##tpl/cc451.bdf
+                ##raise
+                ## NameErrors should be caught
+                #self._iparse_errors += 1
+                #var = traceback.format_exception_only(type(exception), exception)
+                #self._stored_parse_errors.append((card, var))
+                #if self._iparse_errors > self._nparse_errors:
+                    #self.pop_parse_errors()
 
     def get_bdf_stats(self, return_type='string'):
         """

@@ -1,5 +1,6 @@
 from __future__ import print_function
 from collections import defaultdict
+from numpy import array
 
 from pyNastran.utils import object_attributes, object_methods
 from pyNastran.bdf.utils import deprecated
@@ -249,7 +250,12 @@ class BDFAttributes(object):
         #self.random = {} # Case Control RANDOM = 100
 
         #: stores coordinate systems
-        self.coords = {0: CORD2R()}
+        origin  = array([0., 0., 0.])
+        zaxis = array([0., 0., 1.])
+        xzplane = array([1., 0., 0.])
+        coord = CORD2R()
+        coord.add(cid=0, rid=0, origin=origin, zaxis=zaxis, xzplane=xzplane)
+        self.coords = {0 : coord}
 
         # --------------------------- constraints ----------------------------
         #: stores SUPORT1s
