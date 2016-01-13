@@ -6,10 +6,9 @@ C:\Users\Steve\Dropbox\pyNastran_examples\demo_sort2_post_m2
 C:\Users\Steve\Dropbox\pyNastran_examples\solid_shell_bar
 C:\Users\Steve\Dropbox\pyNastran_examples\solid_shell_bar_m2
 C:\Users\Steve\Dropbox\pyNastran_examples\iSat
-F:\work\pyNastran
-F:\work\pyNastran\large_freq\raw
-F:\work\pyNastran\large_freq\sort2
+F:\work\pyNastran\examples
 F:\work\pyNastran\pyNastran_v0.7\models\nxlignes
+F:\work\pyNastran\pyNastran\master2\pyNastran\bdf\test\nx_spike
 
 F:\work\pyNastran\femap_examples\Support\nast\demo
 F:\work\pyNastran\femap_examples\Support\nast\misc\doc\advdynamics
@@ -62,4 +61,3 @@ D:\work\move\Dropbox\pyNastran_examples\demo_sort2_post_m2
 D:\work\move\Dropbox\pyNastran_examples\solid_shell_bar
 D:\work\move\Dropbox\pyNastran_examples\solid_shell_bar_m2
 D:\work\move\Dropbox\pyNastran_examples\iSat
-F:\work\pyNastran\pyNastran\master2\pyNastran\bdf\test\nx_spike
