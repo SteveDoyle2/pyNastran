@@ -384,11 +384,17 @@ class OUG(OP2Common):
         """
         table_code = 10
         """
-        if self.table_name == b'OUGV1':
+        if self.table_name in [b'OUGV1', b'OUGV2']:
             result_name = 'velocities'
         elif self.table_name == b'OUPV1':
-            assert self.thermal == 2, self.thermal
-            result_name = 'velocity_scaled_response_spectra_ABS'
+            assert self.thermal in [2, 4], self.thermal
+            if self.thermal == 2:
+                result_name = 'velocity_scaled_response_spectra_ABS'
+            elif self.thermal == 4:
+                result_name = 'velocity_scaled_response_spectra_NRL'
+            else:
+                msg = 'velocities; table_name=%s' % self.table_name
+                raise NotImplementedError(msg)
         else:
             msg = 'velocities; table_name=%s' % self.table_name
             raise NotImplementedError(msg)
@@ -435,11 +441,17 @@ class OUG(OP2Common):
         """
         table_code = 11
         """
-        if self.table_name in [b'OUGV1']:
+        if self.table_name in [b'OUGV1', b'OUGV2']:
             result_name = 'accelerations'
         elif self.table_name == b'OUPV1':
-            assert self.thermal == 2, self.thermal
-            result_name = 'acceleration_scaled_response_spectra_ABS'
+            assert self.thermal in [2, 4], self.thermal
+            if self.thermal == 2:
+                result_name = 'acceleration_scaled_response_spectra_ABS'
+            elif self.thermal == 4:
+                result_name = 'acceleration_scaled_response_spectra_NRL'
+            else:
+                msg = 'accelerations; table_name=%s' % self.table_name
+                raise NotImplementedError(msg)
         else:
             msg = 'accelerations; table_name=%s' % self.table_name
             raise NotImplementedError(msg)
@@ -490,7 +502,7 @@ class OUG(OP2Common):
         """
         table_code = 7
         """
-        if self.table_name == b'OUGV1':
+        if self.table_name in [b'OUGV1', b'OUGV2']:
             result_name = 'eigenvectors'
         elif self.table_name == b'RADCONS':
             result_name = 'eigenvectors_RADCONS'

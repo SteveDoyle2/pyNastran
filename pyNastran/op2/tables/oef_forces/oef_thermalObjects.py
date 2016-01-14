@@ -511,7 +511,7 @@ class HeatFlux_2D_3DArray(RealElementTableArray):
     def build_dataframe(self):
         headers = self.get_headers()
 
-        nelements = self.element_node.shape[0] // 2
+        #nelements = self.element.shape[0]# // 2
         if self.nonlinear_factor is not None:
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
@@ -538,7 +538,7 @@ class HeatFlux_2D_3DArray(RealElementTableArray):
         return self._write_f06_block(words, header, page_stamp, page_num, f,
                                          is_mag_phase=is_mag_phase, is_sort1=is_sort1)
 
-    def _get_headers(self):
+    def get_headers(self):
         return ['grad1', 'grad2', 'grad3', 'flux1', 'flux2', 'flux3']
 
 

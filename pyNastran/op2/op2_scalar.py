@@ -620,7 +620,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OESNO1' : [self._table_passer, self._table_passer],
             b'OESRMS1' : [self._table_passer, self._table_passer],
             b'OESNO1' : [self._table_passer, self._table_passer],
-            b'OESNLXR2' : [self._table_passer, self._table_passer],
             b'OPG2' : [self._table_passer, self._table_passer],
 
             b'ONRGY' : [self._table_passer, self._table_passer],
@@ -634,7 +633,15 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OSPDS1' : [self._table_passer, self._table_passer],
             b'OSPDSI1' : [self._table_passer, self._table_passer],
 
+            'OBC2' : [self._table_passer, self._table_passer],
+            b'OSPDSI2' : [self._table_passer, self._table_passer],
+            b'OSPDS2' : [self._table_passer, self._table_passer],
+            b'OQGCF2' : [self._table_passer, self._table_passer],
+            b'OQGGF2' : [self._table_passer, self._table_passer],
+            b'OES1MX' : [self._table_passer, self._table_passer],
 
+            b'OESNLXR2' : [self._table_passer, self._table_passer],
+            b'OESNLBR2' : [self._table_passer, self._table_passer],
 
             #=======================
             # OGPWG
@@ -763,7 +770,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             #b'OUGATO2' : [self._table_passer, self._table_passer],
             #b'OUGCRM2' : [self._table_passer, self._table_passer],
             #b'OUGNO2' : [self._table_passer, self._table_passer],
-            ##b'OUGPSD2' : [self._table_passer, self._table_passer],
+            #b'OUGPSD2' : [self._table_passer, self._table_passer],
             #b'OUGRMS2' : [self._table_passer, self._table_passer],  # rms
             # new
             b'OUGATO2' : [self._read_oug2_3, self._read_oug_4],
