@@ -105,7 +105,6 @@ class RealPlateArray(OES_Object):
 
     def build_dataframe(self):
         headers = self.get_headers()
-        name = self.name
 
         nelements = self.element_node.shape[0] // 2
         if self.is_fiber_distance():

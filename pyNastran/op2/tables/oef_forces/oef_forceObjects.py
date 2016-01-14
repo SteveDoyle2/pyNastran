@@ -3,8 +3,9 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import iteritems
 from six.moves import zip, range
-from numpy import zeros, searchsorted, array_equal, allclose, sqrt, pi
 from itertools import cycle
+import numpy as np
+from numpy import zeros, searchsorted, array_equal, allclose, sqrt, pi
 
 from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
 from pyNastran.f06.f06_formatting import write_floats_13e, writeFloats12E, _eigenvalue_header, get_key0, write_float_13e
@@ -86,7 +87,6 @@ class RealSpringDamperForceArray(RealForceObject):
 
     def build_dataframe(self):
         headers = self.get_headers()
-        name = self.name
         if self.nonlinear_factor is not None:
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
@@ -301,7 +301,6 @@ class RealRodForceArray(RealForceObject):
 
     def build_dataframe(self):
         headers = self.get_headers()
-        name = self.name
         if self.nonlinear_factor is not None:
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
@@ -445,6 +444,219 @@ class RealRodForceArray(RealForceObject):
         return True
 
 
+class RealCBeamForceArray(ScalarObject):
+    def get_headers(self):
+        headers = [
+            'sd', 'bending_moment1', 'bending_moment2', 'shear1', 'shear2',
+            'axial_force', 'total_torque', 'warping_torque', ]
+        return headers
+
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        #ForceObject.__init__(self, data_code, isubcase)
+        ScalarObject.__init__(self, data_code, isubcase)
+
+        self.result_flag = 0
+        self.itime = 0
+        self.nelements = 0  # result specific
+        self.element_type = 'CBEAM'
+
+        if is_sort1:
+            #sort1
+            pass
+        else:
+            raise NotImplementedError('SORT2')
+
+    def _reset_indices(self):
+        self.itotal = 0
+        self.ielement = 0
+
+    def is_real(self):
+        return True
+
+    def is_complex(self):
+        return False
+
+    def build(self):
+        #print('ntimes=%s nelements=%s ntotal=%s subtitle=%s' % (self.ntimes, self.nelements, self.ntotal, self.subtitle))
+        if self.is_built:
+            return
+        nnodes = 11
+
+        #self.names = []
+        #self.nelements //= nnodes
+        self.nelements //= self.ntimes
+        #self.ntotal //= self.ntimes
+        self.itime = 0
+        self.ielement = 0
+        self.itotal = 0
+        self.is_built = True
+        #print('ntotal=%s ntimes=%s nelements=%s' % (self.ntotal, self.ntimes, self.nelements))
+
+        #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
+        self._times = zeros(self.ntimes, 'float32')
+        self.element = zeros(self.ntotal, 'int32')
+        self.element_node = zeros((self.ntotal, 2), 'int32')
+
+        # the number is messed up because of the offset for the element's properties
+
+        if not self.nelements * nnodes == self.ntotal:
+            msg = 'ntimes=%s nelements=%s nnodes=%s ne*nn=%s ntotal=%s' % (self.ntimes,
+                                                                           self.nelements, nnodes,
+                                                                           self.nelements * nnodes,
+                                                                           self.ntotal)
+            raise RuntimeError(msg)
+        #[sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq]
+        self.data = zeros((self.ntimes, self.ntotal, 8), 'float32')
+
+    def finalize(self):
+        sd = self.data[0, :, 0].real
+        i_sd_zero = np.where(sd != 0.0)[0]
+        i_node_zero = np.where(self.element_node[:, 1] != 0)[0]
+        assert i_node_zero.max() > 0, 'CBEAM element_node hasnt been filled'
+        i = np.union1d(i_sd_zero, i_node_zero)
+        self.element = self.element[i]
+        self.element_node = self.element_node[i, :]
+        self.data = self.data[:, i, :]
+
+    def build_dataframe(self):
+        headers = self.get_headers()
+        element_location = [
+            self.element_node[:, 0],
+            self.data[0, :, 0],
+        ]
+        if self.nonlinear_factor is not None:
+            column_names, column_values = self._build_dataframe_transient_header()
+            self.data_frame = pd.Panel(self.data[:, :, 1:], items=column_values, major_axis=element_location, minor_axis=headers[1:]).to_frame()
+            self.data_frame.columns.names = column_names
+            self.data_frame.index.names = ['ElementID', 'Location', 'Item']
+        else:
+            df1 = pd.DataFrame(element_location).T
+            df1.columns = ['ElementID', 'Location']
+            df2 = pd.DataFrame(self.data[0])
+            df2.columns = headers
+            self.data_frame = df1.join([df2])
+        #self.data_frame = self.data_frame.reset_index().replace({'NodeID': {0:'CEN'}}).set_index(['ElementID', 'NodeID'])
+        #print(self.data_frame)
+        #print(self.data_frame)
+
+    def add_new_element_sort1(self, dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq):
+        return self.add_sort1(dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq)
+
+    def add_sort1(self, dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq):
+        self._times[self.itime] = dt
+        self.data[self.itime, self.itotal, :] = [sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq]
+        self.element[self.itotal] = eid
+        self.element_node[self.itotal, :] = [eid, nid]
+        self.itotal += 1
+
+    def get_stats(self):
+        if not self.is_built:
+            return [
+                '<%s>\n' % self.__class__.__name__,
+                '  ntimes: %i\n' % self.ntimes,
+                '  ntotal: %i\n' % self.ntotal,
+            ]
+
+        nelements = self.nelements
+        ntimes = self.ntimes
+        msg = []
+
+        if self.nonlinear_factor is not None:  # transient
+            msg.append('  type=%s ntimes=%i nelements=%i\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+        else:
+            msg.append('  type=%s nelements=%i\n' % (self.__class__.__name__, nelements))
+        #msg.append('  eType, cid\n')
+        msg.append('  data: [ntimes, nelements, 8] where 8=[%s]\n' % str(', '.join(self.get_headers())))
+        msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
+        msg.append('  is_sort1=%s is_sort2=%s\n' % (self.is_sort1(), self.is_sort2()))
+        msg.append('  CBEAM\n  ')
+        msg += self.get_data_code()
+        return msg
+
+    def _write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
+        #msg_temp, nnodes = get_f06_header(self, is_mag_phase, is_sort1)
+        print('write_f06 not implemented for ComplexCBeamForceArray')
+        return page_num
+        asdf
+
+        #is_sort1 = False
+        if is_mag_phase:
+            mag_phase = '                                                          (MAGNITUDE/PHASE)\n \n'
+        else:
+            mag_phase = '                                                          (REAL/IMAGINARY)\n \n'
+
+
+        name = self.data_code['name']
+        if name == 'freq':
+            name = 'FREQUENCY'
+        #else: # mode
+            #raise RuntimeError(name)
+
+        if is_sort1:
+            line1 = '0    ELEMENT         BEND-MOMENT-END-A            BEND-MOMENT-END-B                  SHEAR\n'
+            line2 = '       ID.         PLANE 1       PLANE 2        PLANE 1       PLANE 2        PLANE 1       PLANE 2        FORCE          TORQUE\n'
+        else:
+            line1 = '                    BEND-MOMENT-END-A            BEND-MOMENT-END-B                  SHEAR\n'
+            line2 = '   %16s       PLANE 1       PLANE 2        PLANE 1       PLANE 2        PLANE 1       PLANE 2        FORCE          TORQUE\n' % name
+
+        # force
+        msg_temp = header + [
+            '                             C O M P L E X   F O R C E S   I N   B A R   E L E M E N T S   ( C B E A M )\n',
+            mag_phase,
+            ' ',
+            line1,
+            line2,
+        ]
+        if self.is_sort1():
+            assert self.is_sort1() == True, str(self)
+            #if is_sort1:
+            page_num = self._write_sort1_as_sort1(f, page_num, page_stamp, header, msg_temp, is_mag_phase)
+            #else:
+                #self._write_sort1_as_sort2(f, page_num, page_stamp, header, msg_temp, is_mag_phase)
+        else:
+            assert self.is_sort1() == True, str(self)
+        return page_num - 1
+
+    def _write_sort1_as_sort1(self, f, page_num, page_stamp, header, msg_temp, is_mag_phase):
+        eids = self.element
+        times = self._times
+        ntimes = self.data.shape[0]
+        for itime in range(ntimes):
+            dt = self._times[itime]
+            dt_line = ' %14s = %12.5E\n' % (self.data_code['name'], dt)
+            header[1] = dt_line
+            msg = header + msg_temp
+            f.write(''.join(msg))
+
+            # TODO: can I get this without a reshape?
+            #bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq
+            assert self.is_sort1() == True, str(self)
+            sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq
+            sd = self.data[itime, :, 0]
+            bm1 = self.data[itime, :, 1]
+            bm2 = self.data[itime, :, 2]
+            ts1 = self.data[itime, :, 3]
+            ts2 = self.data[itime, :, 4]
+            af = self.data[itime, :, 5]
+            ttrq = self.data[itime, :, 6]
+            wtrq = self.data[itime, :, 7]
+
+            for eid, sdi, bm1i, bm2i, ts1i, ts2i, afi, ttrqi, wtrqi in zip(eids, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq):
+                vals = (sdi, bm1i, bm2i, ts1i, ts2i, afi, ttrqi, wtrqi)
+                vals2 = write_imag_floats_13e(vals, is_mag_phase)
+                (sdir, bm1ir, bm2ir, ts1ir, ts2ir, afir, ttrqir, wtrqir,
+                 sdii, bm1ii, bm2ii, ts1ii, ts2ii, afii, ttrqii, wtrqii) = vals2
+
+                f.write('0%16i   %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %s\n'
+                        ' %14s   %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
+                            eid, sdir, bm1ir, bm2ir, ts1ir, ts2ir, afir, ttrqir, wtrqir,
+                            '',  sdii, bm1ii, bm2ii, ts1ii, ts2ii, afii, ttrqii, wtrqii))
+            f.write(page_stamp % page_num)
+            page_num += 1
+        return page_num
+
+
 class RealCBeamForce(ScalarObject):  # 2-CBEAM
     def __init__(self, data_code, is_sort1, isubcase, dt):
         self.element_type = None
@@ -460,11 +672,11 @@ class RealCBeamForce(ScalarObject):  # 2-CBEAM
         self.dt = dt
         if is_sort1:
             if dt is not None:
-                self.add_new_element = self.addNewElementSort1
+                self.add_new_element = self.add_new_element_sort1
                 self.add = self.add_sort1
         else:
             assert dt is not None
-            self.add_new_element = self.addNewElementSort2
+            self.add_new_element = self.add_new_element_sort2
             self.add = self.add_sort2
 
     def get_stats(self):
@@ -515,8 +727,7 @@ class RealCBeamForce(ScalarObject):  # 2-CBEAM
                 self.warpingTorque[eid] = {sd: wtrq}
             #print('nodes', self.nodes)
 
-    def add_new_element(self, dt, data):
-        [eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq] = data
+    def add_new_element(self, dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq):
         self.nodes[eid] = {sd: nid}
         self.bendingMoment[eid] = {sd: [bm1, bm2]}
         self.shear[eid] = {sd: [ts1, ts2]}
@@ -524,8 +735,7 @@ class RealCBeamForce(ScalarObject):  # 2-CBEAM
         self.totalTorque[eid] = {sd: ttrq}
         self.warpingTorque[eid] = {sd: wtrq}
 
-    def add(self, dt, data):
-        [eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq] = data
+    def add(self, dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq):
         self.nodes[eid][sd] = nid
         self.bendingMoment[eid][sd] = [bm1, bm2]
         self.shear[eid][sd] = [ts1, ts2]
@@ -533,21 +743,17 @@ class RealCBeamForce(ScalarObject):  # 2-CBEAM
         self.totalTorque[eid][sd] = ttrq
         self.warpingTorque[eid][sd] = wtrq
 
-    def addNewElementSort1(self, dt, data):
-        [eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq] = data
-        self._fillObjectNew(dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq)
+    def add_new_element_sort1(self, dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq):
+        self._fill_object_new(dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq)
 
-    def add_sort1(self, dt, data):
-        [eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq] = data
+    def add_sort1(self, dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq):
         self._fill_object(dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq)
 
-    def addNewElementSort2(self, eid, data):
-        [dt, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq] = data
-        self._fillObjectNew(
+    def add_new_element_sort2(self, eid, dt, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq):
+        self._fill_object_new(
             dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq)
 
-    def add_sort2(self, eid, data):
-        [dt, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq] = data
+    def add_sort2(self, eid, dt, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq):
         self._fill_object(dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq)
 
     def _fill_object(self, dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq):
@@ -560,7 +766,7 @@ class RealCBeamForce(ScalarObject):  # 2-CBEAM
         self.totalTorque[dt][eid][sd] = ttrq
         self.warpingTorque[dt][eid][sd] = wtrq
 
-    def _fillObjectNew(self, dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq):
+    def _fill_object_new(self, dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq):
         if dt not in self.axial:
             self.add_new_transient(dt)
         self.nodes[eid] = {sd: nid}
@@ -691,7 +897,6 @@ class RealCShearForceArray(ScalarObject):
 
     def build_dataframe(self):
         headers = self.get_headers()
-        name = self.name
         if self.nonlinear_factor is not None:
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
@@ -1093,7 +1298,6 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
     def build_dataframe(self):
         headers = self.get_headers()
         assert 0 not in self.element
-        name = self.name
         if self.nonlinear_factor is not None:
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
@@ -1278,7 +1482,6 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
     def build_dataframe(self):
         headers = self.get_headers()
         element_node = [self.element_node[:, 0], self.element_node[:, 1]]
-        name = self.name
         if self.nonlinear_factor is not None:
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data, items=column_values, major_axis=element_node, minor_axis=headers).to_frame()
@@ -1570,7 +1773,6 @@ class RealCBarForceArray(ScalarObject):  # 34-CBAR
 
     def build_dataframe(self):
         headers = self.get_headers()
-        name = self.name #data_code['name']
         if self.nonlinear_factor is not None:
             column_names, column_values = self._build_dataframe_transient_header()
             # Create a 3D Panel
@@ -2125,7 +2327,6 @@ class RealCGapForceArray(ScalarObject):  # 38-CGAP
 
     def build_dataframe(self):
         headers = self.get_headers()
-        name = self.name
         if self.nonlinear_factor is not None:
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
@@ -2615,7 +2816,6 @@ class RealCBushForceArray(ScalarObject):
 
     def build_dataframe(self):
         headers = self.get_headers()
-        name = self.name
         if self.nonlinear_factor is not None:
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()

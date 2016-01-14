@@ -107,7 +107,7 @@ class RealGridPointForcesArray(ScalarObject):
         name = mode
         """
         headers = self.get_headers()
-        name = self.name
+        #name = self.name
         if self.is_unique:
             #raise NotImplementedError('RealGridPointForcesArray - build_dataframe - not unique')
             #node_element = [self.node_element[:, 0], self.node_element[:, 1]]
@@ -458,7 +458,6 @@ class ComplexGridPointForcesArray(ScalarObject):
         name = mode
         """
         headers = self.get_headers()
-        name = self.name
         if self.is_unique:
             #raise NotImplementedError('RealGridPointForcesArray - build_dataframe - not unique')
             #node_element = [self.node_element[:, 0], self.node_element[:, 1]]

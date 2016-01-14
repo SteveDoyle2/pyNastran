@@ -214,7 +214,6 @@ class TableArray(ScalarObject):  # displacement style table
 
     def build_dataframe(self):
         headers = self.get_headers()
-        name = self.name
         node_gridtype = [self.node_gridtype[:, 0], self.gridtype_str]
         ugridtype_str = unique(self.gridtype_str)
 

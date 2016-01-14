@@ -355,27 +355,48 @@ class OP2(OP2_Scalar):
                     obj.finalize()
 
     def build_dataframe(self):
+        """
+        Converts the OP2 objects into pandas DataFrames
+
+        .. todo:: fix issues with:
+         - RealDisplacementArray
+         - RealPlateStressArray (???)
+         - RealPlateStrainArray (???)
+         - RealCompositePlateStrainArray (???)
+
+        C:\Anaconda\lib\site-packages\pandas\core\algorithms.py:198: DeprecationWarning: unorderable dtypes;
+            returning scalar but in the future this will be an error
+        sorter = uniques.argsort()
+        """
         no_sort2_classes = ['RealEigenvalues', 'ComplexEigenvalues', 'BucklingEigenvalues']
         result_types = self.get_table_types()
+        i = 0
+        #nbreak = 0
         for result_type in result_types:
             result = getattr(self, result_type)
             for obj in itervalues(result):
                 class_name = obj.__class__.__name__
+                #print('working on %s' % class_name)
+                i += 1
                 if class_name in no_sort2_classes:
                     try:
                         obj.build_dataframe()
                     except:
-                        print('build_dataframe is broken for %s' % class_name)
+                        self.log.error('build_dataframe is broken for %s' % class_name)
                         raise
                     continue
                 if obj.is_sort2():
-                    print('build_dataframe is not supported for %s - SORT2' % class_name)
+                    self.log.warning('build_dataframe is not supported for %s - SORT2' % class_name)
                     continue
                 try:
                     obj.build_dataframe()
+                except NotImplementedError:
+                    self.log.warning('build_dataframe is broken for %s' % class_name)
                 except:
-                    print('build_dataframe is broken for %s' % class_name)
+                    self.log.error('build_dataframe is broken for %s' % class_name)
                     raise
+                #if i >= nbreak:
+                    #return
 
 
     def combine_results(self, combine=True):

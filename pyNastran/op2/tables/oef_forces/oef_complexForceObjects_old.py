@@ -218,11 +218,11 @@ class ComplexCBeamForce(ScalarObject):  # 2-CBEAM
         self.dt = dt
         if is_sort1:
             if dt is not None:
-                self.add_new_element = self.addNewElementSort1
+                self.add_new_element = self.add_new_element_sort1
                 self.add = self.add_sort1
         else:
             assert dt is not None
-            self.add_new_element = self.addNewElementSort2
+            self.add_new_element = self.add_new_element_sort2
             self.add = self.add_sort2
 
     def get_stats(self):
@@ -259,7 +259,7 @@ class ComplexCBeamForce(ScalarObject):  # 2-CBEAM
         self.totalTorque[eid] = {sd: ttrq}
         self.warpingTorque[eid] = {sd: wtrq}
 
-    def add(self, dt, data):
+    def add(self, dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq):
         [eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq] = data
         #print "CBEAM add   ",data
         self.bendingMoment[eid][sd] = [bm1, bm2]
@@ -268,22 +268,18 @@ class ComplexCBeamForce(ScalarObject):  # 2-CBEAM
         self.totalTorque[eid][sd] = ttrq
         self.warpingTorque[eid][sd] = wtrq
 
-    def addNewElementSort1(self, dt, data):
-        [eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq] = data
+    def add_new_element_sort1(self, dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq):
         self._fillNewObject(
             dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq)
 
-    def add_sort1(self, dt, data):
-        [eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq] = data
+    def add_sort1(self, dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq):
         self._fill_object(dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq)
 
-    def addNewElementSort2(self, eid, data):
-        [dt, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq] = data
+    def add_new_element_sort2(self, eid, dt, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq):
         self._fillNewObject(
             dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq)
 
-    def add_sort2(self, eid, data):
-        [dt, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq] = data
+    def add_sort2(self, eid, dt, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq):
         self._fill_object(dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq)
 
     def _fill_object(self, dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq):

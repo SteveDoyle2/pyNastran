@@ -102,7 +102,6 @@ class RealCompositePlateArray(OES_Object):
         name = mode
         """
         headers = self.get_headers()
-        name = self.name
         element_layer = [self.element_layer[:, 0], self.element_layer[:, 1]]
         if self.nonlinear_factor is not None:
             column_names, column_values = self._build_dataframe_transient_header()
