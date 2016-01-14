@@ -69,7 +69,6 @@ class RealShearArray(OES_Object):
 
     def build_dataframe(self):
         headers = self.get_headers()
-        name = self.name
         if self.nonlinear_factor is not None:
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()

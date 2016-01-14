@@ -73,7 +73,6 @@ class Real1DHeatFluxArray(ScalarObject):
     def build_dataframe(self):
         headers = self.get_headers()
         assert 0 not in self.element
-        name = self.name
         if self.nonlinear_factor is not None:
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
@@ -650,7 +649,6 @@ class RealChbdyHeatFluxArray(ScalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
     def build_dataframe(self):
         headers = self.get_headers()
         assert 0 not in self.element
-        name = self.name
         if self.nonlinear_factor is not None:
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()

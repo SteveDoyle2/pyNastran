@@ -1,6 +1,6 @@
 #pylint: disable=C0301,C0111
 from __future__ import print_function, unicode_literals
-from six import  iteritems, PY3
+from six import text_type, binary_type, iteritems, PY3
 from six.moves import range
 import copy
 from struct import pack
@@ -30,6 +30,9 @@ class BaseScalarObject(Op2Codes):
         self.num_wide = None
         self.device_code = None
         self.table_name = None
+        #self.ntimes = 0
+        #self.ntotal = 0
+        #assert isinstance(self.name, (text_type, binary_type)), 'name=%s type=%s' % (self.name, type(self.name))
 
     def __eq__(self, table):
         return True
@@ -37,7 +40,8 @@ class BaseScalarObject(Op2Codes):
     def __ne__(self, table):
         return not self == table
 
-    def name(self):
+    @property
+    def class_name(self):
         return self.__class__.__name__
 
     def get_headers(self):
@@ -57,6 +61,7 @@ class BaseScalarObject(Op2Codes):
 
     def _build_dataframe_transient_header(self):
         """builds the header for the Pandas DataFrame/table"""
+        assert isinstance(self.name, (text_type, binary_type)), 'name=%s type=%s' % (self.name, type(self.name))
         name = self.name #data_code['name']
         times = self._times
         utimes = np.unique(times)
@@ -96,14 +101,16 @@ class BaseScalarObject(Op2Codes):
         elif name in ['dt','time']:
             column_names.append('Time')
             column_values.append(times)
-        elif name in ['lftsfq', 'lsdvmn', 'load_step', 'loadID', 'loadFactor']:
+        elif name in ['lftsfq', 'lsdvmn', 'load_step', 'loadID', 'loadFactor', 'loadIDs']:
             column_names.append('LoadStep')
             column_values.append(times)
         elif name == 'node_id':
             column_names.append('NodeID')
             column_values.append(times)
         else:
-            raise NotImplementedError('build_dataframe; name=%r' % name)
+            msg = 'build_dataframe; name=%r' % name
+            print(msg)
+            raise NotImplementedError(msg)
         assert len(column_names) > 0, column_names
         assert len(column_names) == len(column_values), 'names=%s values=%s' % (column_names, column_values)
         assert len(self.get_headers()) == self.data.shape[-1], 'headers=%s; n=%s\ndata.headers=%s' % (self.get_headers(), len(self.get_headers()), self.data.shape[-1])

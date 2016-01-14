@@ -114,7 +114,7 @@ class Coord(BaseCard):
                 self.setup()
 
         # the ijk axes arent resolved as R-theta-z, only points
-        p2 = self.coordToXYZ(p)
+        p2 = self.coord_to_xyz(p)
 
         if self.i is None:
             msg = "Local unit vectors haven't been set.\nType=%r cid=%s rid=%s" % (
@@ -168,7 +168,7 @@ class Coord(BaseCard):
         if self.origin is None:
             raise RuntimeError('Origin=%s; Cid=%s Rid=%s' % (self.origin, self.cid, self.Rid()))
         pCoord = dot(p - self.origin, transpose(beta))
-        pLocal = self.XYZtoCoord(pCoord)
+        pLocal = self.xyz_to_coord(pCoord)
         if debug:
             print("p        = %s" % p)
             print("p-origin = %s" % (p - self.origin))
@@ -211,7 +211,7 @@ class Coord(BaseCard):
         """
         beta = self.beta()
         pCoord = dot(p, transpose(beta))
-        pLocal = self.XYZtoCoord(pCoord)
+        pLocal = self.xyz_to_coord(pCoord)
         return pLocal
 
     def beta(self):
@@ -582,14 +582,14 @@ class CORD1R(Cord1x):
         list_fields = ['CORD1R', self.cid] + self.NodeIDs()
         return list_fields
 
-    def coordToXYZ(self, p):
+    def coord_to_xyz(self, p):
         """
         :param self:  the coordinate system object
         :returns xyz: the point in the local coordinate system
         """
         return p
 
-    def XYZtoCoord(self, p):
+    def xyz_to_coord(self, p):
         """
         :param self:  the coordinate system object
         :returns xyz: the delta xyz point in the local coordinate system
@@ -637,7 +637,7 @@ class CORD1C(Cord1x):
         list_fields = ['CORD1C', self.cid] + self.node_ids
         return list_fields
 
-    def coordToXYZ(self, p):
+    def coord_to_xyz(self, p):
         r"""
         ::
 
@@ -659,7 +659,7 @@ class CORD1C(Cord1x):
         y = R * sin(theta)
         return array([x, y, p[2]], dtype='float64')
 
-    def XYZtoCoord(self, p):
+    def xyz_to_coord(self, p):
         """
         :param self:  the coordinate system object
         :returns xyz: the delta xyz point in the local coordinate system
@@ -715,7 +715,7 @@ class CORD1S(Cord1x):
         list_fields = ['CORD1S', self.cid] + self.node_ids
         return list_fields
 
-    def XYZtoCoord(self, p):
+    def xyz_to_coord(self, p):
         r"""
         :param self:  the coordinate system object
         :returns xyz: the loca XYZ point in the R, \theta, \phi coordinate system
@@ -729,7 +729,7 @@ class CORD1S(Cord1x):
             theta = 0.
         return array([R, theta, phi], dtype='float64')
 
-    def coordToXYZ(self, p):
+    def coord_to_xyz(self, p):
         r"""
         :param self:  the coordinate system object
         :returns xyz: the R, \theta, \phi point in the local XYZ coordinate system
@@ -785,14 +785,14 @@ class CORD2R(Cord2x):
             self.e2) + list(self.e3)
         return list_fields
 
-    def coordToXYZ(self, p):
+    def coord_to_xyz(self, p):
         """
         :param self:  the coordinate system object
         :returns xyz: the point in the local coordinate system
         """
         return p
 
-    def XYZtoCoord(self, p):
+    def xyz_to_coord(self, p):
         """
         :param self:  the coordinate system object
         :returns xyz: the delta xyz point in the local coordinate system
@@ -845,7 +845,7 @@ class CORD2C(Cord2x):
                        list(self.e2) + list(self.e3))
         return list_fields
 
-    def coordToXYZ(self, p):
+    def coord_to_xyz(self, p):
         r"""
         ::
 
@@ -867,7 +867,7 @@ class CORD2C(Cord2x):
         y = R * sin(theta)
         return array([x, y, p[2]], dtype='float64')
 
-    def XYZtoCoord(self, p):
+    def xyz_to_coord(self, p):
         """
         :param self:  the coordinate system object
         :returns xyz: the delta xyz point in the local coordinate system
@@ -925,7 +925,7 @@ class CORD2S(Cord2x):
                        list(self.e2) + list(self.e3))
         return list_fields
 
-    def XYZtoCoord(self, p):
+    def xyz_to_coord(self, p):
         r"""
         :param self:  the coordinate system object
         :returns xyz: the loca XYZ point in the R, \theta, \phi coordinate system
@@ -939,7 +939,7 @@ class CORD2S(Cord2x):
             theta = 0.
         return array([R, theta, phi], dtype='float64')
 
-    def coordToXYZ(self, p):
+    def coord_to_xyz(self, p):
         r"""
         :param self:  the coordinate system object
         :returns xyz: the R, \theta, \phi point in the local XYZ coordinate system

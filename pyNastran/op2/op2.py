@@ -50,63 +50,62 @@ ONRGY2	ONRGY1
 
 #--------------------
 
-RADCONS - DISPLACEMENT CONSTRAINT MODE
-RADDATC - DISPLACEMENT DISTRIBUTED ATTACHMENT MODE
-RADNATC - DISPLACEMENT NODAL ATTACHMENT MODE
-RADEATC - DISPLACEMENT EQUIVALENT INERTIA ATTACHMENT MODE
+RADCONS - Displacement Constraint Mode
+RADDATC - Displacement Distributed Attachment Mode
+RADNATC - Displacement Nodal Attachment Mode
+RADEATC - Displacement Equivalent Inertia Attachment Mode
+RADEFFM - Displacement Effective Inertia Mode
 
-RADEFFM - DISPLACEMENT EFFECTIVE INERTIA MODE
+RAECONS - Strain Constraint Mode
+RAEDATC - Strain Distributed Attachment Mode
+RAENATC - Strain Nodal Attachment Mode
+RAEEATC - Strain Equivalent Inertia Attachment Mode
 
-RAECONS - STRAIN CONSTRAINT MODE
-RAEDATC - STRAIN DISTRIBUTED ATTACHMENT MODE
-RAENATC - STRAIN NODAL ATTACHMENT MODE
-RAEEATC - STRAIN EQUIVALENT INERTIA ATTACHMENT MODE
+RAFCONS - Element Force Constraint Mode
+RAFDATC - Element Force Distributed Attachment Mode
+RAFNATC - Element Force Nodal Attachment Mode
+RAFEATC - Element Force Equivalent Inertia Attachment Mode
 
-RAFCONS - ELEMENT FORCE CONSTRAINT MODE
-RAFDATC - ELEMENT FORCE DISTRIBUTED ATTACHMENT MODE
-RAFNATC - ELEMENT FORCE NODAL ATTACHMENT MODE
-RAFEATC - ELEMENT FORCE EQUIVALENT INERTIA ATTACHMENT MODE
+RALDATC - Load Vector Used to Compute the Distributed Attachment M
 
-RALDATC - LOAD VECTOR USED TO COMPUTE THE DISTRIBUTED ATTACHMENT M
+RANCONS - Strain Energy Constraint Mode
+RANDATC - Strain Energy Distributed Attachment Mode
+RANNATC - Strain Energy Nodal Attachment Mode
+RANEATC - Strain Energy Equivalent Inertia Attachment Mode
 
-RANCONS - STRAIN ENERGY CONSTRAINT MODE
-RANDATC - STRAIN ENERGY DISTRIBUTED ATTACHMENT MODE
-RANNATC - STRAIN ENERGY NODAL ATTACHMENT MODE
-RANEATC - STRAIN ENERGY EQUIVALENT INERTIA ATTACHMENT MODE
+RAQCONS - Ply Strains Constraint Mode
+RAQDATC - Ply Strains Distributed Attachment Mode
+RAQNATC - Ply Strains Nodal Attachment Mode
+RAQEATC - Ply Strains Equivalent Inertia Attachment Mode
 
-RAQCONS - PLY STRAINS CONSTRAIN MODE
-RAQDATC - PLY STRAINS DISTRIBUTED ATTACHMENT MODE
-RAQNATC - PLY STRAINS NODAL ATTACHMENT MODE
-RAQEATC - PLY STRAINS EQUIVALENT INERTIA ATTACHMENT MODE
+RARCONS - Reaction Force Constraint Mode
+RARDATC - Reaction Force Distributed Attachment Mode
+RARNATC - Reaction Force Nodal Attachment Mode
+RAREATC - Reaction Force Equivalent Inertia Attachment Mode
 
-RARCONS - REACTION FORCE CONSTRAINT MODE
-RARDATC - REACTION FORCE DISTRIBUTED ATTACHMENT MODE
-RARNATC - REACTION FORCE NODAL ATTACHMENT MODE
-RAREATC - REACTION FORCE EQUIVALENT INERTIA ATTACHMENT MODE
+RASCONS - Stress Constraint Mode
+RASDATC - Stress Distributed Attachment Mode
+RASNATC - Stress Nodal Attachment Mode
+RASEATC - Stress Equivalent Inertia Attachment Mode
 
-RASCONS - STRESS CONSTRAINT MODE
-RASDATC - STRESS DISTRIBUTED ATTACHMENT MODE
-RASNATC - STRESS NODAL ATTACHMENT MODE
-RASEATC - STRESS EQUIVALENT INERTIA ATTACHMENT MODE
+RAPCONS - Ply Stresses Constraint Mode
+RAPDATC - Ply Stresses Distributed Attachment Mode
+RAPNATC - Ply Stresses Nodal Attachment Mode
+RAPEATC - Ply Stresses Equivalent Inertia Attachment Mode
 
-RAPCONS - PLY STRESSES CONSTRAIN MODE
-RAPDATC - PLY STRESSES DISTRIBUTED ATTACHMENT MODE
-RAPNATC - PLY STRESSES NODAL ATTACHMENT MODE
-RAPEATC - PLY STRESSES EQUIVALENT INERTIA ATTACHMENT MODE
+RAGCONS - Grid Point Forces Constraint Mode
+RAGDATC - Grid Point Forces Distributed Attachment Mode
+RAGNATC - Grid Point Forces Nodal Attachment Mode
+RAGEATC - Grid Point Forces Equivalent Inertia Attachment Mode
 
-RAGCONS - GRID POINT FORCES CONSTRAINT MODE
-RAGDATC - GRID POINT FORCES DISTRIBUTED ATTACHMENT MODE
-RAGNATC - GRID POINT FORCES NODAL ATTACHMENT MODE
-RAGEATC - GRID POINT FORCES EQUIVALENT INERTIA ATTACHMENT MODE
+RADEFMP - Displacement PHA^T * Effective Inertia Mode
 
-RADEFMP - DISPLACEMENT PHA^T * EFFECTIVE INERTIA MODE
+RADAMPZ - Viscous Damping Ratio Matrix
+RADAMPG - Structural Damping Ratio Matrix
 
-RADAMPZ - VISCOUS DAMPING RATIO MATRIX
-RADAMPG - STRUCTURAL DAMPING RATIO MATRIX
-
-RAFGEN  - GENERALIZED FORCES
-BHH     - MODAL VISCOUS DAMPING MATRIX
-K4HH    - MODAL STRUCTURAL DAMPING MATRIX
+RAFGEN  - Generalized Forces
+BHH     - Modal Viscous Damping Matrix
+K4HH    - Modal Structural Damping Matrix
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
@@ -356,27 +355,48 @@ class OP2(OP2_Scalar):
                     obj.finalize()
 
     def build_dataframe(self):
+        """
+        Converts the OP2 objects into pandas DataFrames
+
+        .. todo:: fix issues with:
+         - RealDisplacementArray
+         - RealPlateStressArray (???)
+         - RealPlateStrainArray (???)
+         - RealCompositePlateStrainArray (???)
+
+        C:\Anaconda\lib\site-packages\pandas\core\algorithms.py:198: DeprecationWarning: unorderable dtypes;
+            returning scalar but in the future this will be an error
+        sorter = uniques.argsort()
+        """
         no_sort2_classes = ['RealEigenvalues', 'ComplexEigenvalues', 'BucklingEigenvalues']
         result_types = self.get_table_types()
+        i = 0
+        #nbreak = 0
         for result_type in result_types:
             result = getattr(self, result_type)
             for obj in itervalues(result):
                 class_name = obj.__class__.__name__
+                #print('working on %s' % class_name)
+                i += 1
                 if class_name in no_sort2_classes:
                     try:
                         obj.build_dataframe()
                     except:
-                        print('build_dataframe is broken for %s' % class_name)
+                        self.log.error('build_dataframe is broken for %s' % class_name)
                         raise
                     continue
                 if obj.is_sort2():
-                    print('build_dataframe is not supported for %s - SORT2' % class_name)
+                    self.log.warning('build_dataframe is not supported for %s - SORT2' % class_name)
                     continue
                 try:
                     obj.build_dataframe()
+                except NotImplementedError:
+                    self.log.warning('build_dataframe is broken for %s' % class_name)
                 except:
-                    print('build_dataframe is broken for %s' % class_name)
+                    self.log.error('build_dataframe is broken for %s' % class_name)
                     raise
+                #if i >= nbreak:
+                    #return
 
 
     def combine_results(self, combine=True):
