@@ -5,7 +5,7 @@ Defines the Real/Complex Forces created by:
 """
 from struct import unpack
 
-from pyNastran.op2.tables.opg_appliedLoads.opg_Objects import (RealAppliedLoads,  #ComplexAppliedLoads,
+from pyNastran.op2.tables.opg_appliedLoads.opg_Objects import (#RealAppliedLoads,  #ComplexAppliedLoads,
                                                                RealAppliedLoadsVectorArray, ComplexAppliedLoadsVectorArray)
 from pyNastran.op2.tables.opg_appliedLoads.opg_loadVector import (#RealLoadVector, ComplexLoadVector,
                                                                   RealLoadVectorArray, ComplexLoadVectorArray,
