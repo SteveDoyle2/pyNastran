@@ -44,7 +44,8 @@ if sys.platform == 'win32':
     binaries = [('msvcp100.dll', 'C:\\Windows\\System32\\msvcp100.dll', 'BINARY'),
                 ('msvcr100.dll', 'C:\\Windows\\System32\\msvcr100.dll', 'BINARY')]
 
-python_path = 'C:\\Python27_x86'
+#python_path = 'C:\\Python27_x86'
+python_path = 'C:\\Anaconda'
 a = Analysis(analyze_files,
              pathex=[pyInstaller_path,
                      python_path,
@@ -57,7 +58,9 @@ a = Analysis(analyze_files,
                      os.path.join(pkg_path, 'f06'),
                      os.path.join(pkg_path, 'gui'),
                     ],
-             hiddenimports=[],
+             hiddenimports=[
+                'vtk.vtkCommonPythonSIP', 'vtk.vtkFilteringPythonSIP',
+                'PyQt4.QtOpenGL', 'vtk.vtkRenderingPythonSIP'],
              hookspath=None)
 pyz = PYZ(a.pure)
 

@@ -1055,7 +1055,6 @@ class OEF(OP2Common):
                         n += 36
 
             elif self.format_code == 1 and self.num_wide == 100:  # real
-                # TODO: vectorize
                 ntotal = 400  # 1+(10-1)*11=100 ->100*4 = 400
                 nelements = ndata // ntotal
                 auto_return, is_vectorized = self._create_oes_object4(
@@ -1065,7 +1064,6 @@ class OEF(OP2Common):
                     return nelements * self.num_wide * 4
                 obj = self.obj
 
-                #is_vectorized = False
                 if self.use_vector and is_vectorized:
                     n = nelements * 4 * self.num_wide
                     itotal = obj.itotal
@@ -1615,7 +1613,6 @@ class OEF(OP2Common):
             self._results._found_result(result_name)
             slot = getattr(self, result_name)
             if self.format_code == 1 and self.num_wide == 8:  # real
-
                 ntotal = 32  # 8*4
                 nelements = ndata // ntotal
                 auto_return, is_vectorized = self._create_oes_object4(
@@ -1652,12 +1649,9 @@ class OEF(OP2Common):
                             self.binary_debug.write('OEF_CBar100 - %s\n' % (str(out)))
                         (eid_device, sd, bm1, bm2, ts1, ts2, af, trq) = out
                         eid = eid_device // 10
-                        data_in = [eid, sd, bm1, bm2, ts1, ts2, af, trq]
-                        #print "%s" %(self.get_element_type(self.element_type)), data_in
-                        #eid = obj.add_new_eid(out)
-                        obj.add(dt, data_in)
+                        obj.add_sort1(dt, eid, sd, bm1, bm2, ts1, ts2, af, trq)
                         n += 32
-                #elif self.format_code in [2, 3] and self.num_wide == 14:  # imag
+            #elif self.format_code in [2, 3] and self.num_wide == 14:  # imag
             else:
                 msg = self.code_information()
                 return self._not_implemented_or_skip(data, ndata, msg)
