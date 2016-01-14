@@ -175,9 +175,10 @@ class ComplexEigenvalues(BaseScalarObject):
         imodei = 0
         for (imode, eigi) in sorted(iteritems(self.eigenvalues)):
             extraction_order = self.extraction_order[imode]
-            freq = self.cycles[imodei]
-            damping = self.damping[imodei]
+            freq = self.cycles[imode]
+            damping = self.damping[imode]
 
+            print('eigi=%s imodei=%s' % (str(eigi), imodei))
             cdata[imodei] = eigi
             fdata[imodei, :] = [freq, damping]
             modes_extraction_order[imodei, :] = [imode, extraction_order]

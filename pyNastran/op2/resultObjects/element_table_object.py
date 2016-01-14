@@ -294,18 +294,18 @@ class RealElementTableArray(ElementTableArray):  # displacement style table
     def data_type(self):
         return 'float32'
 
-    def spike():
-        import xlwings as xw
-        wb = xw.Workbook()  # Creates a connection with a new workbook
-        xw.Range('A1').value = 'Foo 1'
-        xw.Range('A1').value
-        'Foo 1'
-        xw.Range('A1').value = [['Foo 1', 'Foo 2', 'Foo 3'], [10.0, 20.0, 30.0]]
-        xw.Range('A1').table.value  # or: Range('A1:C2').value
-        [['Foo 1', 'Foo 2', 'Foo 3'], [10.0, 20.0, 30.0]]
-        xw.Sheet(1).name
-        'Sheet1'
-        chart = xw.Chart.add(source_data=xw.Range('A1').table)
+    #def spike():
+        #import xlwings as xw
+        #wb = xw.Workbook()  # Creates a connection with a new workbook
+        #xw.Range('A1').value = 'Foo 1'
+        #xw.Range('A1').value
+        #'Foo 1'
+        #xw.Range('A1').value = [['Foo 1', 'Foo 2', 'Foo 3'], [10.0, 20.0, 30.0]]
+        #xw.Range('A1').table.value  # or: Range('A1:C2').value
+        #[['Foo 1', 'Foo 2', 'Foo 3'], [10.0, 20.0, 30.0]]
+        #xw.Sheet(1).name
+        #'Sheet1'
+        #chart = xw.Chart.add(source_data=xw.Range('A1').table)
 
     def _write_f06_block(self, words, header, page_stamp, page_num, f,
                          is_mag_phase=False, is_sort1=True):

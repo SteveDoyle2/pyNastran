@@ -1,9 +1,9 @@
-#pylint: disable=C0326,C0301,C0103
+#pylint: disable=C0326,C0301
 from __future__ import print_function, unicode_literals
 from six import b
 from six.moves import range
-from struct import Struct, unpack
-from numpy import fromstring
+from struct import Struct
+from numpy import fromstring, array
 
 from pyNastran.op2.tables.oee_energy.oee_objects import RealStrainEnergy, RealStrainEnergyArray
 from pyNastran.op2.op2_common import OP2Common
@@ -30,7 +30,7 @@ class ONR(OP2Common):
         #aCode = self.get_block_int_entry(data, 1)
 
         ## total energy of all elements in isubcase/mode
-        self.eTotal = self.parse_approach_code(data)
+        self.etotal = self.parse_approach_code(data)
         if self.is_debug_file:
             self.binary_debug.flush()
 
@@ -69,13 +69,13 @@ class ONR(OP2Common):
         self.cvalres = self.add_data_parameter(data, 'cvalres', 'i', 11, False)
 
         #: Set identification number Number
-        self.setID = self.add_data_parameter(data, 'setID', 'i', 13, False)
+        self.set_id = self.add_data_parameter(data, 'set_id', 'i', 13, False)
 
         #: Natural eigenvalue - real part
-        self.eigenReal = self.add_data_parameter(data, 'eigenReal', 'i', 14, False)
+        self.eigen_real = self.add_data_parameter(data, 'eigen_real', 'i', 14, False)
 
         #: Natural eigenvalue - imaginary part
-        self.eigenImag = self.add_data_parameter(data, 'eigenImag', 'i', 15, False)
+        self.eigen_imag = self.add_data_parameter(data, 'eigen_imag', 'i', 15, False)
 
         self.add_data_parameter(data, 'freq', 'f', 16, False)  ## Natural frequency
 
@@ -228,6 +228,7 @@ class ONR(OP2Common):
             raise NotImplementedError('element_name=%r' % (
                 self.data_code['element_name']))
         #result_name = 'strain_energy'
+        slot = getattr(self, result_name)
 
 
 
@@ -241,7 +242,6 @@ class ONR(OP2Common):
 
             ntotal = 16
             nelements = ndata // ntotal
-            slot = getattr(self, result_name)
             if 1:
                 auto_return, is_vectorized = self._create_oes_object4(
                     nelements, result_name, slot, RealStrainEnergyArray)
@@ -290,11 +290,11 @@ class ONR(OP2Common):
                 obj.itotal2 = itotal2
                 obj.ielement = ielement2
             else:
-                s = Struct(b(self._endian + 'i3f'))
+                struct1 = Struct(b(self._endian + 'i3f'))
                 for i in range(nelements):
                     edata = data[n:n+ntotal]
 
-                    out = s.unpack(edata)
+                    out = struct1.unpack(edata)
                     (eid_device, energy, percent, density) = out
                     eid = eid_device // 10
                     if self.is_debug_file:
@@ -379,10 +379,10 @@ class ONR(OP2Common):
                 obj.itotal = itotal2
                 obj.ielement = ielement2
             else:
-                s = Struct(b(self._endian + 'i8s3f'))
+                struct1 = Struct(b(self._endian + 'i8s3f'))
                 for i in range(nnodes):
                     edata = data[n:n+24]
-                    out = s.unpack(edata)
+                    out = struct1.unpack(edata)
                     (word, energy, percent, density) = out  # TODO: this has to be wrong...
                     word = word.strip()
                     #print "eType=%s" % (eType)

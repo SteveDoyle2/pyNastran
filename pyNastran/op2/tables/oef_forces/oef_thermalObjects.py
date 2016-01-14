@@ -508,6 +508,23 @@ class HeatFlux_2D_3DArray(RealElementTableArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealElementTableArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
+    def build_dataframe(self):
+        headers = self.get_headers()
+
+        nelements = self.element_node.shape[0] // 2
+        if self.nonlinear_factor is not None:
+            column_names, column_values = self._build_dataframe_transient_header()
+            self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
+            self.data_frame.columns.names = column_names
+            self.data_frame.index.names = ['ElementID', 'Item']
+        else:
+            df1 = pd.DataFrame(self.element).T
+            df1.columns = ['ElementID']
+            df2 = pd.DataFrame(self.data[0])
+            df2.columns = headers
+            self.data_frame = df1.join(df2)
+        #print(self.data_frame)
+
     def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
         words = [
             '                   F I N I T E   E L E M E N T   T E M P E R A T U R E   G R A D I E N T S   A N D   F L U X E S  \n \n',

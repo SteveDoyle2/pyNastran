@@ -102,13 +102,15 @@ def main(regenerate=True):
     print("nfiles = %s" % len(files))
     import time
     t0 = time.time()
+    short_stats = data['--short_stats']
     run_lots_of_files(files, make_geom=make_geom, write_bdf=write_bdf,
                       write_f06=write_f06, delete_f06=delete_f06,
                       write_op2=write_op2, debug=debug, save_cases=save_cases, skip_files=skip_files,
                       stop_on_failure=stop_on_failure,
                       is_vector=is_vector, vector_stop=vector_stop,
                       nstart=nstart, nstop=nstop, binary_debug=binary_debug,
-                      compare=not data['--disablecompare'], quiet=quiet)
+                      compare=not data['--disablecompare'], short_stats=short_stats,
+                      quiet=quiet)
     print("dt = %f" %(time.time() - t0))
     sys.exit('final stop...')
 
@@ -119,7 +121,7 @@ if __name__ == '__main__':
 
     msg = "Usage:\n"
     is_release = False
-    msg += "op2_test [-r] [-c] [-u]\n"
+    msg += "op2_test [-r] [-c] [-u] [-t]\n"
     msg += "  op2_test -h | --help\n"
     msg += "  op2_test -v | --version\n"
     msg += "\n"
@@ -131,6 +133,7 @@ if __name__ == '__main__':
     msg += "Options:\n"
     msg += "  -r, --regenerate      Dumps the OP2 as a readable text file\n"
     msg += "  -c, --disablecompare  Doesn't do a validation of the vectorized result\n"
+    msg += "  -t, --short_stats     Short get_op2_stats printout\n"
     #msg += "  -z, --is_mag_phase    F06 Writer writes Magnitude/Phase instead of\n"
     #msg += "                        Real/Imaginary (still stores Real/Imag); [default: False]\n"
     #msg += "  -s <sub>, --subcase   Specify one or more subcases to parse; (e.g. 2_5)\n"

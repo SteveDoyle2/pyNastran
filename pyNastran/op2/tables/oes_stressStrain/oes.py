@@ -1317,17 +1317,19 @@ class OES(OP2Common):
                 #return self._not_implemented_or_skip(data, ndata, msg)
 
                 num_wide_random = 4 + nnodes_expected * (17 - 4)
-                print('numwide=%s numwide_random=%s attempt2=%s subcase=%s' % (self.num_wide, numwide_random, num_wide_random, self.isubcase))
                 #if self.num_wide ==
                 if self.read_mode == 1:
                     return ndata
-
+                return ndata
+                print('numwide=%s numwide_random=%s attempt2=%s subcase=%s' % (self.num_wide, numwide_random, num_wide_random, self.isubcase))
                 #msg = self.code_information()
                 ntotal = 130
                 nelements = ndata // ntotal
 
                 # cid, coord_type, nactive_pnts,
                 #      nid, oxx, oyy, ozz, txy, tyz, txz
+                struct1 = Struct(b('2i 4s'))
+                struct2 = Struct(b('i6f'))
                 for i in range(nelements):
                     edata = data[n:n+12]
                     out = struct1.unpack(edata)

@@ -335,17 +335,17 @@ class OEF(OP2Common):
             obj_vector_real = Real1DHeatFluxArray
             #if self.element_type == 1: # CROD
             if self.element_type == 1:
-                result_name = 'crod_1d_thermal_load'
+                result_name = 'crod_thermal_load'
             elif self.element_type == 2:
-                result_name = 'cbeam_1d_thermal_load'
+                result_name = 'cbeam_thermal_load'
             elif self.element_type == 3:
-                result_name = 'ctube_1d_thermal_load'
+                result_name = 'ctube_thermal_load'
             elif self.element_type == 10:
-                result_name = 'conrod_1d_thermal_load'
+                result_name = 'conrod_thermal_load'
             elif self.element_type == 34:
-                result_name = 'cbar_1d_thermal_load'
+                result_name = 'cbar_thermal_load'
             elif self.element_type == 69:
-                result_name = 'cbend_1d_thermal_load'
+                result_name = 'cbend_thermal_load'
             else:
                 raise NotImplementedError('element_type=%s element_name=%s' % (
                     self.element_type, self.element_name))
@@ -441,7 +441,7 @@ class OEF(OP2Common):
 
             obj_vector_real = HeatFlux_2D_3DArray
             #if self.element_type == 1: # CROD
-            result_name = 'thermalLoad_2D_3D'
+            #result_name = 'thermalLoad_2D_3D'
 
             if self._results.is_not_saved(result_name):
                 return ndata
@@ -969,31 +969,48 @@ class OEF(OP2Common):
             slot = getattr(self, result_name)
             if self.format_code == 1 and self.num_wide == 9:  # real centroid ???
                 aaa
-                if 0:
-                    # TODO: vectorize
-                    if self.read_mode == 1:
-                        return ndata
-                    self.create_transient_object(self.cbeam_force, RealCBeamForce)
+                auto_return, is_vectorized = self._create_oes_object4(
+                    nelements, result_name, slot, RealCBeamForceArray)
+                if auto_return:
+                    return nelements * self.num_wide * 4
+
+                obj = self.obj
+                #is_vectorized = False
+                if self.use_vector and is_vectorized:
+                    n = nelements * 4 * self.num_wide
+                    itotal = obj.itotal
+                    itotal2 = obj.itotal + nelements
+                    ielement2 = obj.ielement + nelements
+
+                    floats = fromstring(data, dtype=self.fdtype).reshape(nelements, 9)[:, 1:]
+                    obj._times[obj.itime] = dt
+                    if obj.itime == 0:
+                        ints = fromstring(data, dtype=self.idtype).reshape(nelements, 9)
+                        eids = ints[:, 0] // 10
+                        assert eids.min() > 0, eids.min()
+                        assert 0 not in eids, eids
+
+                        obj.element[itotal:itotal2] = eids
+                        obj.element_node[itotal:itotal2, 0] = eids
+                        #obj.element_node[itotal:itotal2, 1] = nids
+
+                    #[sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq]
+                    obj.data[obj.itime, itotal:itotal2, :] = floats
+                    obj.itotal = itotal2
+                    obj.ielement = ielement2
                 else:
-                    auto_return, is_vectorized = self._create_oes_object4(
-                        nelements, result_name, slot, obj_complex)
-                    if auto_return:
-                        return nelements * self.num_wide * 4
-
-                obj = self.obj
-
-                s = Struct(b(self._endian + 'i8f'))  # 36
-                ntotal = 36
-                nelements = ndata // ntotal
-                obj = self.obj
-                for i in range(nelements):
-                    edata = data[n:n+36]
-                    out = s.unpack(edata)
-                    if self.is_debug_file:
-                        self.binary_debug.write('OEF_Beam - %s\n' % (str(out)))
-                    (eid_device, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq) = out
-                    eid = eid_device // 10
-                    n += 36
+                    s = Struct(b(self._endian + 'i8f'))  # 36
+                    ntotal = 36
+                    nelements = ndata // ntotal
+                    obj = self.obj
+                    for i in range(nelements):
+                        edata = data[n:n+36]
+                        out = s.unpack(edata)
+                        if self.is_debug_file:
+                            self.binary_debug.write('OEF_Beam - %s\n' % (str(out)))
+                        (eid_device, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq) = out
+                        eid = eid_device // 10
+                        n += 36
 
             elif self.format_code == 1 and self.num_wide == 100:  # real
                 # TODO: vectorize
@@ -1011,11 +1028,12 @@ class OEF(OP2Common):
                         return nelements * self.num_wide * 4
                 obj = self.obj
 
-                is_vectorized = False
+                #is_vectorized = False
                 if self.use_vector and is_vectorized:
                     n = nelements * 4 * self.num_wide
                     itotal = obj.itotal
                     itotal2 = obj.itotal + nelements * 11
+                    ielement = obj.ielement
                     ielement2 = obj.ielement + nelements
 
                     floats = fromstring(data, dtype=self.fdtype).reshape(nelements, 100)[:, 1:]
@@ -1030,7 +1048,7 @@ class OEF(OP2Common):
                         ints2 = ints[:, 1:].reshape(nelements * 11, 9)
                         nids = ints2[:, 0]
 
-                        obj.element[itotal:itotal2] = eids
+                        obj.element[ielement:ielement2] = eids
                         obj.element_node[itotal:itotal2, 0] = eids2
                         obj.element_node[itotal:itotal2, 1] = nids
 
@@ -1087,6 +1105,7 @@ class OEF(OP2Common):
                     n = nelements * 4 * self.num_wide
                     itotal = obj.itotal
                     itotal2 = obj.itotal + nelements * 11
+                    ielement = obj.ielement
                     ielement2 = obj.ielement + nelements
 
                     floats = fromstring(data, dtype=self.fdtype).reshape(nelements, 177)[:, 1:]
@@ -1101,7 +1120,7 @@ class OEF(OP2Common):
                         ints2 = ints[:, 1:].reshape(nelements * 11, 16)
                         nids = ints2[:, 0]
 
-                        obj.element[itotal:itotal2] = eids
+                        obj.element[ielement:ielement2] = eids
                         obj.element_node[itotal:itotal2, 0] = eids2
                         obj.element_node[itotal:itotal2, 1] = nids
 

@@ -384,8 +384,18 @@ class OUG(OP2Common):
         """
         table_code = 10
         """
-        result_name = 'velocities'
-        storage_obj = self.velocities
+        if self.table_name == b'OUGV1':
+            result_name = 'velocities'
+        elif self.table_name == b'OUPV1':
+            assert self.thermal == 2, self.thermal
+            result_name = 'velocity_scaled_response_spectra_ABS'
+        else:
+            msg = 'velocities; table_name=%s' % self.table_name
+            raise NotImplementedError(msg)
+
+        #result_name = 'velocities'
+        #storage_obj = self.velocities
+        storage_obj = getattr(self, result_name)
         if self.thermal == 0:
             result_name = 'velocities'
             storage_obj = self.velocities
@@ -425,6 +435,15 @@ class OUG(OP2Common):
         """
         table_code = 11
         """
+        if self.table_name in [b'OUGV1']:
+            result_name = 'accelerations'
+        elif self.table_name == b'OUPV1':
+            assert self.thermal == 2, self.thermal
+            result_name = 'acceleration_scaled_response_spectra_ABS'
+        else:
+            msg = 'accelerations; table_name=%s' % self.table_name
+            raise NotImplementedError(msg)
+
         if self.thermal == 0:
             result_name = 'accelerations'
             storage_obj = self.accelerations
@@ -471,8 +490,19 @@ class OUG(OP2Common):
         """
         table_code = 7
         """
-        result_name = 'eigenvectors'
-        storage_obj = self.eigenvectors
+        if self.table_name == b'OUGV1':
+            result_name = 'eigenvectors'
+        elif self.table_name == b'RADCONS':
+            result_name = 'eigenvectors_RADCONS'
+        elif self.table_name == b'RADEFFM':
+            result_name = 'eigenvectors_RADEFFM'
+        elif self.table_name == b'RADEATC':
+            result_name = 'eigenvectors_RADEATC'
+        else:
+            msg = 'eigenvectors; table_name=%s' % self.table_name
+            raise NotImplementedError(msg)
+
+        storage_obj = getattr(self, result_name)
         if self.thermal == 0:
             if self._results.is_not_saved(result_name):
                 return ndata

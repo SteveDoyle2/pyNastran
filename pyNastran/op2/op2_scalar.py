@@ -484,23 +484,32 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             # common tables
 
             # unorganized
-            #b'RAPCONS': [self._table_passer, self._table_passer],
-            #b'RAQCONS': [self._table_passer, self._table_passer],
-            #b'RADCONS': [self._read_oug1_3, self._read_oug_4],     # Displacement Constraint Mode (OUG)
-            #b'RASCONS': [self._read_oes1_3, self._read_oes1_4], # Stress Constraint Mode (OES)
+            b'RADCONS': [self._read_oug1_3, self._read_oug_4],     # Displacement Constraint Mode (OUG)
+            b'RADEFFM': [self._read_oug1_3, self._read_oug_4], # Displacement Effective Inertia Mode (OUG)
+            b'RADEATC': [self._read_oug1_3, self._read_oug_4], # Displacement Equivalent Inertia Attachment mode (OUG)
+
+            # broken
+            #b'RAQCONS': [self._read_oqg1_3, self._read_oqg_4], # Constraint mode MPC force table (OQG)
+            #b'RAQEATC': [self._read_oqg1_3, self._read_oqg_4], # Attachment mode MPC force table (OQG)
+
             #b'RAFCONS': [self._read_oef1_3, self._read_oef1_4], # Element Force Constraint Mode (OEF)
-            #b'RAECONS': [self._read_oes1_3, self._read_oes1_4], # Strain Constraint Mode (OSTR)
-            #b'RANCONS': [self._table_passer, self._table_passer],
-            #b'RAGCONS': [self._read_oef1_3, self._read_oef1_4], # Grid Point Forces Constraint Mode (OEF)
-            #b'RADEFFM': [self._read_oug1_3, self._read_oug_4], # Displacement Effective Inertia Mode (OUG)
-            #b'RAPEATC': [self._table_passer, self._table_passer],
-            #b'RAQEATC': [self._table_passer, self._table_passer],
-            #b'RADEATC': [self._read_oug1_3, self._read_oug_4], # Displacement Equivalent Inertia Attachment mode (OUG)
-            #b'RASEATC': [self._read_oes1_3, self._read_oes1_4], # Stress Equivalent Inertia Attachment mode (OES)
             #b'RAFEATC': [self._read_oef1_3, self._read_oef1_4], # Element Force Equivalent Inertia Attachment mode (OEF)
-            #b'RAEEATC': [self._table_passer, self._table_passer], # Strain Equivalent Inertia Attachment mode (OES)
-            #b'RANEATC': [self._table_passer, self._table_passer], # Strain Energy Equivalent Inertia Attachment mode (OESS)
+
+            #b'RAGCONS': [self._read_oef1_3, self._read_oef1_4], # Grid Point Forces Constraint Mode (OGPFB)
             #b'RAGEATC': [self._table_passer, self._table_passer], # Grid Point Forces Equivalent Inertia Attachment mode (OEF)
+
+            #b'RAPCONS': [self._table_passer, self._table_passer], # Constraint mode ply stress table (OES)
+            #b'RAPEATC': [self._table_passer, self._table_passer], # Attachment mode ply stress table (OES)
+
+            #b'RASCONS': [self._read_oes1_3, self._read_oes1_4], # Stress Constraint Mode (OES)
+            #b'RASEATC': [self._read_oes1_3, self._read_oes1_4], # Stress Equivalent Inertia Attachment mode (OES)
+
+            #b'RAEEATC': [self._table_passer, self._table_passer], # Strain Equivalent Inertia Attachment mode (OES)
+            #b'RAECONS': [self._read_oes1_3, self._read_oes1_4], # Strain Constraint Mode (OSTR)
+
+            #b'RANEATC': [self._table_passer, self._table_passer], # Strain Energy Equivalent Inertia Attachment mode (ORGY1)
+            #b'RANCONS': [self._table_passer, self._table_passer], # Constraint mode element strain energy table (ORGY1)
+
 
             #b'HISADD': [self._hisadd_3, self._hisadd_4],  # optimization history (SOL200)
             b'HISADD': [self._table_passer, self._table_passer],
@@ -603,6 +612,30 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
             b'OUGV2'   : [self._read_oug2_3, self._read_oug_4],  # displacements in nodal frame
 
+            b'OUGRMS1' : [self._table_passer, self._table_passer],
+            b'OUGNO1' : [self._table_passer, self._table_passer],
+
+            #=======================
+            # ????
+            b'OESNO1' : [self._table_passer, self._table_passer],
+            b'OESRMS1' : [self._table_passer, self._table_passer],
+            b'OESNO1' : [self._table_passer, self._table_passer],
+            b'OESNLXR2' : [self._table_passer, self._table_passer],
+            b'OPG2' : [self._table_passer, self._table_passer],
+
+            b'ONRGY' : [self._table_passer, self._table_passer],
+            b'OQGGF1' : [self._table_passer, self._table_passer],
+            b'OBG1' : [self._table_passer, self._table_passer],
+
+            b'OEF1MX' : [self._table_passer, self._table_passer],
+            b'OUGV1MX' : [self._table_passer, self._table_passer],
+            b'OQGCF1' : [self._table_passer, self._table_passer],
+
+            b'OSPDS1' : [self._table_passer, self._table_passer],
+            b'OSPDSI1' : [self._table_passer, self._table_passer],
+
+
+
             #=======================
             # OGPWG
             # grid point weight
@@ -631,6 +664,10 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'GEOM2S' : [self._table_passer, self._table_passer],
             b'GEOM3S' : [self._table_passer, self._table_passer],
             b'GEOM4S' : [self._table_passer, self._table_passer],
+
+            b'GEOM1VU' : [self._table_passer, self._table_passer],
+            b'GEOM2VU' : [self._table_passer, self._table_passer],
+            b'BGPDTVU' : [self._table_passer, self._table_passer],
 
             b'GEOM1N' : [self._table_passer, self._table_passer],
             b'GEOM2N' : [self._table_passer, self._table_passer],
@@ -695,6 +732,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'BGPDTS' : [self._table_passer, self._table_passer],
             b'BGPDTOLD' : [self._table_passer, self._table_passer],
 
+            b'PVT' : [self._table_passer, self._table_passer],
             b'PVT0' : [self._table_passer, self._table_passer],  # user parameter value table
             b'DESTAB' : [self._table_passer, self._table_passer],
             b'TOLD' : [self._table_passer, self._table_passer],
@@ -704,12 +742,20 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'AEDISP' : [self._table_passer, self._table_passer], # matrix?
             #b'TOLB2' : [self._table_passer, self._table_passer], # matrix?
 
+            b'EDT' : [self._table_passer, self._table_passer],
             b'EDTS' : [self._table_passer, self._table_passer],
+
             b'FOL' : [self._table_passer, self._table_passer],
             b'MONITOR' : [self._table_passer, self._table_passer],  # monitor points
             b'PERF' : [self._table_passer, self._table_passer],
             b'VIEWTB' : [self._table_passer, self._table_passer],   # view elements
 
+            b'CONTACT' : [self._table_passer, self._table_passer],
+            b'CONTACTS' : [self._table_passer, self._table_passer],
+            b'OEKE1' : [self._table_passer, self._table_passer],
+            b'OBC1' : [self._table_passer, self._table_passer],
+            b'DSCMCOL' : [self._table_passer, self._table_passer],
+            b'DBCOPT' : [self._table_passer, self._table_passer],
             #b'FRL0': [self._table_passer, self._table_passer],  # frequency response list
 
             #==================================

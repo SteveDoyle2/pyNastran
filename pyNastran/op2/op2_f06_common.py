@@ -247,6 +247,9 @@ class OP2_F06_Common(object):
 
         #: OUG - eigenvectors
         self.eigenvectors = {}            # tCode=7 thermal=0
+        self.eigenvectors_RADCONS = {}
+        self.eigenvectors_RADEFFM = {}
+        self.eigenvectors_RADEATC = {}
 
         # OEF - Forces - tCode=4 thermal=0
 
@@ -351,6 +354,8 @@ class OP2_F06_Common(object):
         self.mpc_forcesPSD = {}
         self.mpc_forcesATO = {}
         self.mpc_forcesRMS = {}
+        self.mpc_forces_RAQCONS = {}
+        #self.mpc_forces_RAQEATC = {}
 
         # OQG - thermal forces
         self.thermal_gradient_and_flux = {}
@@ -476,6 +481,10 @@ class OP2_F06_Common(object):
 
             # OUG - eigenvectors
             'eigenvectors',
+            'eigenvectors_RADCONS',
+            'eigenvectors_RADEFFM',
+            'eigenvectors_RADEATC',
+
 
             # OUG - velocity
             'velocities',
@@ -486,10 +495,12 @@ class OP2_F06_Common(object):
             'accelerationsPSD',
 
             # OQG - spc/mpc forces
-            'spc_forces', 'spc_forcesPSD', 'mpc_forcesATO', 'mpc_forcesRMS',
+            'spc_forces', 'spc_forcesPSD', 'spc_forcesATO', 'spc_forcesRMS',
             'spc_forces_scaled_response_spectra_NRL',
 
-            'mpc_forces', 'mpc_forcesPSD', 'spc_forcesATO', 'spc_forcesRMS',
+            'mpc_forces', 'mpc_forcesPSD', 'mpc_forcesATO', 'mpc_forcesRMS',
+            'mpc_forces_RAQCONS',
+            #'mpc_forces_RAQEATC',
 
             'thermal_gradient_and_flux',
 
@@ -859,11 +870,14 @@ class OP2_F06_Common(object):
         table_types = self._get_table_types_testing()
         msg = []
         if short:
+            no_data_classes = ['RealEigenvalues', 'ComplexEigenvalues', 'BucklingEigenvalues']
             for table_type in table_types:
                 table = getattr(self, table_type)
                 for isubcase, subcase in sorted(iteritems(table), key=compare):
                     class_name = subcase.__class__.__name__
-                    if hasattr(subcase, 'data'):
+                    if class_name in no_data_classes:
+                        msg.append('%s[%r]\n' % (table_type, isubcase))
+                    elif hasattr(subcase, 'data'):
                         #data = subcase.data
                         #shape = [int(i) for i in subcase.data.shape]
                         #headers = subcase.get_headers()
@@ -871,8 +885,11 @@ class OP2_F06_Common(object):
                         #msg.append('%s[%s]; %s; %s; [%s]\n' % (
                         #table_type, isubcase, class_name, shape, headers_str))
                         msg.append('%s[%s]\n' % (table_type, isubcase))
+                    elif hasattr(subcase, 'get_stats'):
+                        msgi = '%s[%s] # unvectorized\n' % (table_type, isubcase)
+                        msg.append(msgi)
                     else:
-                        msgi = 'skipping %s op2.%s[%s]\n' % (class_name, table_type, isubcase)
+                        msgi = 'skipping %r %s[%s]\n' % (class_name, table_type, isubcase)
                         msg.append(msgi)
                         #raise RuntimeError(msgi)
         else:
