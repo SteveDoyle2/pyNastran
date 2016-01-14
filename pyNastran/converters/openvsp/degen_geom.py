@@ -120,7 +120,7 @@ class DegenGeom(object):
                     x[:, 1] = xend[imid:]
                     y[:, 1] = yend[imid:]
                     z[:, 1] = zend[imid:]
-                    print x
+                    print (x)
 
                     #x = xend[0:imid:-1].extend(x[imid:])
                     #y = yend[0:imid:-1].extend(y[imid:])

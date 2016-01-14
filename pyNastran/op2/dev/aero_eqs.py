@@ -36,7 +36,7 @@ IPZ = INTZ - (K.T @ Ka_ll + Ka_rl) @ UINTL
 
 # eq 1-89
 M5RR = -K2RR @ M4RR + MSRR
-MIRR = -KAZL ! AMLR + M5RR
+MIRR = -KAZL @ AMLR + M5RR
 KR1ZX = -K2RR @ K4LX + KARZX
 IPZF = K2RR @ TMP2 + IPZ
 
@@ -157,7 +157,7 @@ if not only_steady:
         QKK = SKJ1 @ AJJT @ DKJB
 
 # 36.
-return
+#return
 
 #--------------------------------------------------------------
 # AESTATRS

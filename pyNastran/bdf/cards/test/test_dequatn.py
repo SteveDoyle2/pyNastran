@@ -135,7 +135,7 @@ class TestDEQATN(unittest.TestCase):
         s = StringIO.StringIO()
         s.write(s)
         s.close()
-        exec func_str
+        exec (func_str)
         f(1, 2, 3)
         #func = exec func_str
         assert f(1, 2, 3) == 9, func(1, 2, 3)

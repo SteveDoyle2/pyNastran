@@ -27,13 +27,13 @@ class Intersect(object):
         n = cross(a, b)
         assert len(n) == ne, 'len(n)=%s ne=%s' % (len(n), ne)
 
-        print n
+        print (n)
         ni = norm(n, axis=1)
         print('n.shape=%s ni.shape=%s' % (n.shape, ni.shape))
         assert len(ni) == ne, 'len(ni)=%s ne=%s' % (len(ni), ne)
 
         A = 0.5 * ni # area
-        print min(ni)
+        print(min(ni))
         assert A.min() > 0, A
 
         #sys.exit()
@@ -112,11 +112,11 @@ class Intersect(object):
         sdvi = sign(dvi2)
         sign_range = sdvi.max() - sdvi.min()
         if allclose(dvi2.min(), 0.) or sign_range == 2.:
-            print "     element2 = ", element2[0]
-            print "     ", pt
-            print "     d2", d2
-            print "     dvi = %s" % dvi2
-            print "     sign_range = %s" % sign_range
+            print("     element2 = ", element2[0])
+            print("     ", pt)
+            print("     d2", d2)
+            print("     dvi = %s" % dvi2)
+            print("     sign_range = %s" % sign_range)
             is_intersection = True
             raise NotImplementedError()
         else:
