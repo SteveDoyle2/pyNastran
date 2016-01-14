@@ -26,6 +26,7 @@ from collections import defaultdict, OrderedDict
 #VTK_HEXAHEDRON = 12
 #VTK_QUADRATIC_HEXAHEDRON = 25
 
+import numpy as np
 from numpy import zeros, abs as npabs, mean, where, nan_to_num, amax, amin, vstack, array, empty, ones, int32
 from numpy import searchsorted, sqrt, pi, arange, unique, allclose, ndarray, cross, array_equal, setdiff1d, hstack
 from numpy.linalg import norm
@@ -4090,7 +4091,6 @@ class NastranIO(object):
                 ueids = unique(eidsi)
                 #neids = len(ueids)
 
-                j = 0
                 # sxc, sxd, sxe, sxf
                 # smax, smin, MSt, MSc
                 dt = case._times[itime]
@@ -4102,23 +4102,30 @@ class NastranIO(object):
                 sxf = case.data[itime, :, 3]
                 smax = case.data[itime, :, 4]
                 smin = case.data[itime, :, 5]
-                for ieid, eid in enumerate(ueids):
+
+                imin = np.searchsorted(eidsi, ueids)
+                imax = np.searchsorted(eidsi, ueids, side='right')
+                #sxxi = smax[imin:imax]
+                for eid, imini, imaxi in zip(ueids, imin, imax):
                     oxxi = 0.
                     smaxi = 0.
                     smini = 0.
                     eid2 = self.eidMap[eid]
                     is_element_on[eid2] = 1.
-                    for i in range(11):
-                        oxxi = max(sxc[j], sxd[j], sxe[j], sxf[j], oxxi)
-                        smaxi = max(smax[j], smaxi)
-                        smini = min(smin[j], smini)
-                        j += 1
+                    oxxi = max(
+                        sxc[imini:imaxi].max(),
+                        sxd[imini:imaxi].max(),
+                        sxe[imini:imaxi].max(),
+                        sxf[imini:imaxi].max(),
+                    )
+                    smaxi = smax[imini:imaxi].max()
+                    smini = smin[imini:imaxi].min()
                     ovmi = max(npabs(smaxi), npabs(smini))
                     oxxi = oxx[eid2]
                     max_principal[eid2] = smaxi
                     min_principal[eid2] = smini
                     ovm[eid2] = ovmi
-                del j, eidsi, ueids, sxc, sxd, sxe, sxf, smax, smin, oxxi, smaxi, smini, ovmi
+                del eidsi, ueids, sxc, sxd, sxe, sxf, smax, smin, oxxi, smaxi, smini, ovmi
         del beams
 
 
