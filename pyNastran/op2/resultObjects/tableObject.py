@@ -262,7 +262,7 @@ class TableArray(ScalarObject):  # displacement style table
     def finalize(self):
         gridtypes = self.node_gridtype[:, 1]
         nnodes = len(gridtypes)
-        self.gridtype_str = np.chararray((nnodes), unicode=True)
+        self.gridtype_str = np.chararray((nnodes))
         ugridtypes = unique(gridtypes)
         for ugridtype in ugridtypes:
             i = where(gridtypes == ugridtype)
