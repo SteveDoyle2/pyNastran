@@ -233,8 +233,8 @@ class ADB_Reader(FortranFormat):
                 edge = [n1, n2]
                 edges.append(edge)
                 edge_surf_ids.append(surf_idi)
-        print edge_surf_ids
-        print edges
+        print (edge_surf_ids)
+        print (edges)
 
         self.edges = array(edges, dtype='int32')
         self.edge_surf_id = array(edge_surf_ids, dtype='int32')

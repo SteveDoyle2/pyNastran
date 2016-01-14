@@ -87,7 +87,7 @@ class AvusGrid(object):
             ncells.append(ncell)
             mxppfs.append(mxppf)
             mxfpcs.append(mxfpc)
-            print "npoint=%s nface=%s ncells=%s mxppf=%s mxfpc=%s" % (npoint, nface, ncell, mxppf, mxfpc)
+            print ("npoint=%s nface=%s ncells=%s mxppf=%s mxfpc=%s" % (npoint, nface, ncell, mxppf, mxfpc))
 
         self.ndm = ndm
         self.npatches = npatches
