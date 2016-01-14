@@ -123,9 +123,9 @@ class ElementTableArray(ScalarObject):  # displacement style table
         headers = ', '.join(self._get_headers())
         #msg.append('  data: [%s] shape=%s dtype=%s\n'
                    #% (headers, [int(i) for i in self.data.shape], self.data.dtype))
-        msg.append('  data: [t1, t2, t3, r1, r2, r3] shape=%s dtype=%s\n'
-                   % ([int(i) for i in self.data.shape], self.data.dtype))
-        msg.append('  gridTypes\n  ')
+        msg.append('  data: [%s] shape=%s dtype=%s\n  '
+                   % (headers,
+                      [int(i) for i in self.data.shape], self.data.dtype))
         msg += self.get_data_code()
         return msg
 
@@ -545,8 +545,7 @@ class ComplexElementTableArray(ElementTableArray):  # displacement style table
         times = self._times
         # print(self.data.shape)
         for inode, (node_id, gridtypei) in enumerate(zip(node, gridtype)):
-            # TODO: for SORT1 pretending to be SORT2
-            #t1 = self.data[:, inode, 0].ravel()
+            # SORT1 is pretending to be SORT2
             t1 = self.data[:, inode, 0].ravel()
             t2 = self.data[:, inode, 1].ravel()
             t3 = self.data[:, inode, 2].ravel()

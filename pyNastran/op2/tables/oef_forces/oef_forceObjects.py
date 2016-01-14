@@ -382,7 +382,6 @@ class RealRodForceArray(RealForceObject):
             header = _eigenvalue_header(self, header, itime, ntimes, dt)
             f.write(''.join(header + msg_temp))
 
-            # TODO: can I get this without a reshape?
             #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
             axial = self.data[itime, :, 0]
             torsion = self.data[itime, :, 1]
@@ -537,7 +536,6 @@ class RealCBeamForceArray(ScalarObject):
             self.data_frame = df1.join([df2])
         #self.data_frame = self.data_frame.reset_index().replace({'NodeID': {0:'CEN'}}).set_index(['ElementID', 'NodeID'])
         #print(self.data_frame)
-        #print(self.data_frame)
 
     def add_new_element_sort1(self, dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq):
         return self.add_sort1(dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq)
@@ -629,7 +627,6 @@ class RealCBeamForceArray(ScalarObject):
             msg = header + msg_temp
             f.write(''.join(msg))
 
-            # TODO: can I get this without a reshape?
             #bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq
             assert self.is_sort1() == True, str(self)
             sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq
@@ -1185,7 +1182,6 @@ class RealViscForceArray(RealForceObject):  # 24-CVISC
             header = _eigenvalue_header(self, header, itime, ntimes, dt)
             f.write(''.join(header + msg_temp))
 
-            # TODO: can I get this without a reshape?
             #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
             axial = self.data[itime, :, 0]
             torsion = self.data[itime, :, 1]
@@ -1391,7 +1387,6 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
             header = _eigenvalue_header(self, header, itime, ntimes, dt)
             f.write(''.join(header + msg_temp))
 
-            # TODO: can I get this without a reshape?
             #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
             #[mx, my, mxy, bmx, bmy, bmxy, tx, ty]
             mx = self.data[itime, :, 0]
@@ -1965,6 +1960,21 @@ class RealConeAxForceArray(ScalarObject):
 
         #[hopa, bmu, bmv, tm, su, sv]
         self.data = zeros((self.ntimes, self.ntotal, 6), dtype='float32')
+
+    def build_dataframe(self):
+        headers = self.get_headers()
+        if self.nonlinear_factor is not None:
+            column_names, column_values = self._build_dataframe_transient_header()
+            self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
+            self.data_frame.columns.names = column_names
+            self.data_frame.index.names = ['ElementID', 'Item']
+        else:
+            df1 = pd.DataFrame(self.element)
+            df1.columns = ['ElementID']
+            df2 = pd.DataFrame(self.data[0])
+            df2.columns = headers
+            self.data_frame = df1.join([df2])
+        #print(self.data_frame)
 
     def __eq__(self, table):
         assert self.is_sort1() == table.is_sort1()
@@ -2948,7 +2958,6 @@ class RealCBushForceArray(ScalarObject):
             header = _eigenvalue_header(self, header, itime, ntimes, dt)
             f.write(''.join(header + msg_temp))
 
-            # TODO: can I get this without a reshape?
             #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
             fx = self.data[itime, :, 0]
             fy = self.data[itime, :, 1]

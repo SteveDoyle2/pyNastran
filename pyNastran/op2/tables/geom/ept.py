@@ -24,32 +24,32 @@ class EPT(object):
         self.card_count = {}
         self.bigProperties = {}
         self._ept_map = {
-            (3201,32,55):    ['NSM',    self._readNSM],     # record 2  - needs an object holder (e.g. self.elements/self.properties)
-            (52,   20, 181): ['PBAR',   self._readPBAR],    # record 11 - buggy
-            (9102, 91,  52): ['PBARL',  self._readPBARL],   # record 12 - almost there...
-            (2706, 27, 287): ['PCOMP',  self._readPCOMP],   # record 22 - buggy
-            (302,   3,  46): ['PELAS',  self._readPELAS],   # record 39
-            (2102, 21, 121): ['PGAP',   self._readPGAP],    # record 42
-            (902,   9,  29): ['PROD',   self._readPROD],    # record 49
-            (1002, 10,  42): ['PSHEAR', self._readPSHEAR],  # record 50
-            (2402, 24, 281): ['PSOLID', self._readPSOLID],  # record 51
-            (2302, 23, 283): ['PSHELL', self._readPSHELL],  # record 52
-            (1602, 16,  30): ['PTUBE',  self._readPTUBE],   # record 56
+            (3201,32,55):    ['NSM',    self._read_nsm],     # record 2  - needs an object holder (e.g. self.elements/self.properties)
+            (52,   20, 181): ['PBAR',   self._read_pbar],    # record 11 - buggy
+            (9102, 91,  52): ['PBARL',  self._read_pbarl],   # record 12 - almost there...
+            (2706, 27, 287): ['PCOMP',  self._read_pcomp],   # record 22 - buggy
+            (302,   3,  46): ['PELAS',  self._read_pelas],   # record 39
+            (2102, 21, 121): ['PGAP',   self._read_pgap],    # record 42
+            (902,   9,  29): ['PROD',   self._read_prod],    # record 49
+            (1002, 10,  42): ['PSHEAR', self._read_pshear],  # record 50
+            (2402, 24, 281): ['PSOLID', self._read_psolid],  # record 51
+            (2302, 23, 283): ['PSHELL', self._read_pshell],  # record 52
+            (1602, 16,  30): ['PTUBE',  self._read_ptube],   # record 56
 
-            (5402,  54, 262): ['PBEAM',   self._readPBEAM],   # record 14 - not done
-            (9202,  92,  53): ['PBEAML',  self._readPBEAML],  # record 15 - not done
-            (2502,  25, 248): ['PBEND',   self._readPBEND],   # record 16 - not done
-            (1402,  14,  37): ['PBUSH', self._readPBUSH],    # record 19 - not done
-            (3101,  31, 219): ['PBUSH1D', self._readPBUSH1D], # record 20 - not done
-            (152,   19, 147): ['PCONEAX', self._readPCONEAX], # record 24 - not done
-            (11001,110, 411): ['PCONV',   self._readPCONV],   # record 25 - not done
+            (5402,  54, 262): ['PBEAM',   self._read_pbeam],   # record 14 - not done
+            (9202,  92,  53): ['PBEAML',  self._read_pbeaml],  # record 15 - not done
+            (2502,  25, 248): ['PBEND',   self._read_pbend],   # record 16 - not done
+            (1402,  14,  37): ['PBUSH', self._read_pbush],    # record 19 - not done
+            (3101,  31, 219): ['PBUSH1D', self._read_pbush1d], # record 20 - not done
+            (152,   19, 147): ['PCONEAX', self._read_pconeax], # record 24 - not done
+            (11001,110, 411): ['PCONV',   self._read_pconv],   # record 25 - not done
             # record 26
-            (202,    2,  45): ['PDAMP',   self._readPDAMP],   # record 27 - not done
-            (2802,  28, 236): ['PHBDY',   self._readPHBDY],   # record 43 - not done
-            (402,    4,  44): ['PMASS',   self._readPMASS],   # record 48
-            (1802,  18,  31): ['PVISC',   self._readPVISC],   # record 59
-            (10201,102, 400): ['PVAL',   self._readPVAL],     # record 58 - not done
-            (2606,  26, 289): ['VIEW',   self._readVIEW],     # record 62 - not done
+            (202,    2,  45): ['PDAMP',   self._read_pdamp],   # record 27 - not done
+            (2802,  28, 236): ['PHBDY',   self._read_phbdy],   # record 43 - not done
+            (402,    4,  44): ['PMASS',   self._read_pmass],   # record 48
+            (1802,  18,  31): ['PVISC',   self._read_pvisc],   # record 59
+            (10201,102, 400): ['PVAL',   self._read_pval],     # record 58 - not done
+            (2606,  26, 289): ['VIEW',   self._read_view],     # record 62 - not done
             (2706,   27, 287): ['', self._read_fake],    # record
             (702,     7,  38): ['', self._read_fake],    # record
             (10301, 103, 399): ['', self._read_fake],
@@ -85,7 +85,7 @@ class EPT(object):
 
 # HGSUPPR
 
-    def _readNSM(self, data, n):
+    def _read_nsm(self, data, n):
         """
         NSM(3201,32,55) - the marker for Record 2
         .. todo:: this isnt a property...
@@ -110,7 +110,7 @@ class EPT(object):
 # PAABSF
 # PACABS
 # PACBAR
-    def _readPBAR(self, data, n):
+    def _read_pbar(self, data, n):
         """
         PBAR(52,20,181) - the marker for Record 11
         .. warning:: this makes a funny property...
@@ -129,7 +129,7 @@ class EPT(object):
         self.card_count['PBAR'] = nentries
         return n
 
-    def _readPBARL(self, data, n):
+    def _read_pbarl(self, data, n):
         """
         PBARL(9102,91,52) - the marker for Record 12
         TODO: buggy
@@ -197,7 +197,7 @@ class EPT(object):
 
 # PBCOMP
 
-    def _readPBEAM(self, data, n):
+    def _read_pbeam(self, data, n):
         """
         PBEAM(5402,54,262) - the marker for Record 14
         .. todo:: add object
@@ -233,30 +233,30 @@ class EPT(object):
         self.card_count['PBEAM'] = nproperties
         return n
 
-    def _readPBEAML(self, data, n):
+    def _read_pbeaml(self, data, n):
         self.binary_debug.write('skipping PBEAML in EPT\n')
         return len(data)
 
-    def _readPBEND(self, data, n):
+    def _read_pbend(self, data, n):
         self.binary_debug.write('skipping PBEND in EPT\n')
         return len(data)
 
 # PBMSECT
 # PBRSECT
 
-    def _readPBUSH(self, data, n):
+    def _read_pbush(self, data, n):
         self.binary_debug.write('skipping PBUSH in EPT\n')
         return len(data)
 
-    def _readPBUSH1D(self, data, n):
+    def _read_pbush1d(self, data, n):
         self.binary_debug.write('skipping PBUSH1D in EPT\n')
         return len(data)
 
-    def _readPBUSHT(self, data, n):
+    def _read_pbusht(self, data, n):
         self.binary_debug.write('skipping PBUSHT in EPT\n')
         return len(data)
 
-    def _readPCOMP(self, data, n):
+    def _read_pcomp(self, data, n):
         """
         PCOMP(2706,27,287) - the marker for Record 22
         """
@@ -271,21 +271,21 @@ class EPT(object):
             edata = data[n:n+32]
             out = s1.unpack(edata)
             self.binary_debug.write('  PCOMP=%s\n' % str(out))
-            (pid, nLayers, z0, nsm, sb, ft, Tref, ge,) = out
+            (pid, nlayers, z0, nsm, sb, ft, Tref, ge,) = out
 
-            edata = data[n:n+16 * (nLayers)]
+            edata = data[n:n+16 * (nlayers)]
             Mid = []
             T = []
             Theta = []
             Sout = []
-            if nLayers < 0:
+            if nlayers < 0:
                 isSymmetrical = 'YES'
-                nLayers = abs(nLayers)
-            #print("nLayers = ",nLayers)
-            assert 0 < nLayers < 100, 'pid=%s nLayers=%s z0=%s nms=%s sb=%s ft=%s Tref=%s ge=%s' % (pid, nLayers, z0, nsm, sb, ft, Tref, ge)
+                nlayers = abs(nlayers)
+            #print("nlayers = ",nlayers)
+            assert 0 < nlayers < 100, 'pid=%s nlayers=%s z0=%s nms=%s sb=%s ft=%s Tref=%s ge=%s' % (pid, nlayers, z0, nsm, sb, ft, Tref, ge)
 
             idata = 0
-            for ilayer in range(nLayers):
+            for ilayer in range(nlayers):
                 (mid, t, theta, sout) = s2.unpack(edata[idata:idata+16])
                 Mid.append(mid)
                 T.append(t)
@@ -303,16 +303,16 @@ class EPT(object):
         return n
 
 # PCOMPA
-    def _readPCONEAX(self, data, n):  # 24
+    def _read_pconeax(self, data, n):  # 24
         self.binary_debug.write('skipping PCONEAX\n')
         return len(data)
-    def _readPCONV(self, data, n):  # 25
+    def _read_pconv(self, data, n):  # 25
         self.binary_debug.write('skipping PCONV\n')
         return len(data)
-    def _readPCONVM(self, data, n):  # 26
+    def _read_pconvm(self, data, n):  # 26
         self.binary_debug.write('skipping PCONVM\n')
         return len(data)
-    def _readPDAMP(self, data, n):
+    def _read_pdamp(self, data, n):
         self.binary_debug.write('skipping PDAMP\n')
         return len(data)
 
@@ -328,7 +328,7 @@ class EPT(object):
 # PDUM8
 # PDUM9
 
-    def _readPELAS(self, data, n):
+    def _read_pelas(self, data, n):
         """PELAS(302,3,46) - the marker for Record 39"""
         s = Struct(b(self._endian + 'i3f'))
         ntotal = 16  # 4*4
@@ -347,7 +347,7 @@ class EPT(object):
 # PFAST
 # PELAST
 
-    def _readPGAP(self, data, n):
+    def _read_pgap(self, data, n):
         """
         PGAP(3201,32,55) - the marker for Record 42
         """
@@ -362,18 +362,18 @@ class EPT(object):
             self._add_op2_property(prop)
         return n
 
-    def _readPHBDY(self, data, n):
+    def _read_phbdy(self, data, n):
         return len(data)
-    def _readPINTC(self, data, n):
+    def _read_pintc(self, data, n):
         return len(data)
-    def _readPINTS(self, data, n):
+    def _read_pints(self, data, n):
         return len(data)
-    def _readPLPLANE(self, data, n):
+    def _read_plplane(self, data, n):
         return len(data)
-    def _readPLSOLID(self, data, n):
+    def _read_plsolid(self, data, n):
         return len(data)
 
-    def _readPMASS(self, data, n):
+    def _read_pmass(self, data, n):
         """
         PMASS(402,4,44) - the marker for Record 48
         """
@@ -390,7 +390,7 @@ class EPT(object):
             n += 8
         return n
 
-    def _readPROD(self, data, n):
+    def _read_prod(self, data, n):
         """
         PROD(902,9,29) - the marker for Record 49
         """
@@ -408,7 +408,7 @@ class EPT(object):
         self.card_count['PROD'] = nproperties
         return n
 
-    def _readPSHEAR(self, data, n):
+    def _read_pshear(self, data, n):
         """
         PSHEAR(1002,10,42) - the marker for Record 50
         """
@@ -425,7 +425,7 @@ class EPT(object):
         self.card_count['PSHEAR'] = nproperties
         return n
 
-    def _readPSHELL(self, data, n):
+    def _read_pshell(self, data, n):
         """
         PSHELL(2302,23,283) - the marker for Record 51
         """
@@ -448,7 +448,7 @@ class EPT(object):
         self.card_count['PSHELL'] = nproperties
         return n
 
-    def _readPSOLID(self, data, n):
+    def _read_psolid(self, data, n):
         """
         PSOLID(2402,24,281) - the marker for Record 52
         """
@@ -472,7 +472,7 @@ class EPT(object):
 # PTRIA6
 # PTSHELL
 
-    def _readPTUBE(self, data, n):
+    def _read_ptube(self, data, n):
         """
         PTUBE(1602,16,30) - the marker for Record 56
         .. todo:: OD2 only exists for heat transfer...how do i know if there's heat transfer at this point...
@@ -493,12 +493,12 @@ class EPT(object):
         self.card_count['PTUBE'] = nproperties
         return n
 
-    def _readPSET(self, data, n):
+    def _read_pset(self, data, n):
         return len(data)
-    def _readPVAL(self, data, n):
+    def _read_pval(self, data, n):
         return len(data)
 
-    def _readPVISC(self, data, n):
+    def _read_pvisc(self, data, n):
         """PVISC(1802,18,31) - the marker for Record 39"""
         s = Struct(b(self._endian + 'i2f'))
         nproperties = (len(data) - n) // 12
@@ -515,7 +515,7 @@ class EPT(object):
 
 # PWELD
 # PWSEAM
-    def _readVIEW(self, data, n):
+    def _read_view(self, data, n):
         return len(data)
-    def _readVIEW3D(self, data, n):
+    def _read_view3d(self, data, n):
         return len(data)

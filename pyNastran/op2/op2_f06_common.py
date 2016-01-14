@@ -281,7 +281,11 @@ class OP2_F06_Common(object):
 
         #OEF - Fluxes - tCode=4 thermal=1
         self.thermalLoad_CONV = {}
-        self.thermalLoad_CHBDY = {}
+
+        #self.thermalLoad_CHBDY = {}
+        self.chbdye_thermal_load = {}
+        self.chbdyg_thermal_load = {}
+        self.chbdyp_thermal_load = {}
 
         #self.thermalLoad_1D = {}
         self.crod_thermal_load = {}
@@ -662,7 +666,11 @@ class OP2_F06_Common(object):
 
             #OEF - Fluxes - tCode=4 thermal=1
             'thermalLoad_CONV',
-            'thermalLoad_CHBDY',
+
+            #'thermalLoad_CHBDY',
+            'chbdye_thermal_load',
+            'chbdyg_thermal_load',
+            'chbdyp_thermal_load',
 
             #'thermalLoad_1D',
             'crod_thermal_load',

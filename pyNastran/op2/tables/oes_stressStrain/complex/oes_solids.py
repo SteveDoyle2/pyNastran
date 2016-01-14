@@ -202,7 +202,6 @@ class ComplexSolidArray(OES_Object):
             msg = header + msg_temp
             f.write('\n'.join(msg))
 
-            # TODO: can I get this without a reshape?
             oxx = self.data[itime, :, 0]
             oyy = self.data[itime, :, 1]
             ozz = self.data[itime, :, 2]
