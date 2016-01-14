@@ -275,5 +275,3 @@ class RealBarStrainArray(RealBarArray, StrainObject):
             '    ID.          SB1            SB2            SB3            SB4           STRAIN         SB-MAX         SB-MIN     M.S.-C\n',
         ]
         return msg
-
-

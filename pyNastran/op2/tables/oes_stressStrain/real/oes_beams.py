@@ -94,6 +94,16 @@ class RealBeamArray(OES_Object):
         self.xxb = zeros(self.ntotal, dtype='float32')
         self.data = zeros((self.ntimes, self.ntotal, 8), dtype='float32')
 
+    def finalize(self):
+        sd = self.data[0, :, 0].real
+        i_sd_zero = np.where(sd != 0.0)[0]
+        i_node_zero = np.where(self.element_node[:, 1] != 0)[0]
+        assert i_node_zero.max() > 0, 'CBEAM element_node hasnt been filled'
+        i = np.union1d(i_sd_zero, i_node_zero)
+        #self.element = self.element[i]
+        self.element_node = self.element_node[i, :]
+        self.data = self.data[:, i, :]
+
     def build_dataframe(self):
         headers = self.get_headers()
         element_node = [self.element_node[:, 0], self.element_node[:, 1]]
