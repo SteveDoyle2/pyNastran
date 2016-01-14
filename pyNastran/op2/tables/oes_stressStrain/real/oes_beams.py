@@ -3,6 +3,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from six import iteritems
 from six.moves import range, zip
 from itertools import count
+import numpy as np
 from numpy import zeros
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (

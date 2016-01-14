@@ -350,6 +350,8 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
 
         # we put it down here so we don't blame the dataframe for real errors
         op2.build_dataframe()
+        #if compare:
+            #op2_nv.build_dataframe()
 
         if write_op2:
             model = os.path.splitext(op2_filename)[0]

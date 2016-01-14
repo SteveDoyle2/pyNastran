@@ -7,6 +7,11 @@ from numpy import zeros, array_equal
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header
+try:
+    import pandas as pd
+except ImportError:
+    pass
+
 
 class RealNonlinearRodArray(OES_Object):
     """
@@ -76,6 +81,21 @@ class RealNonlinearRodArray(OES_Object):
         #[axial_stress, equiv_stress, total_strain, effective_plastic_creep_strain,
         # effective_creep_strain, linear_torsional_stress]
         self.data = zeros((self.ntimes, self.nelements, 6), dtype='float32')
+
+    def build_dataframe(self):
+        headers = self.get_headers()
+        if self.nonlinear_factor is not None:
+            column_names, column_values = self._build_dataframe_transient_header()
+            self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
+            self.data_frame.columns.names = column_names
+            self.data_frame.index.names = ['ElementID', 'Item']
+        else:
+            df1 = pd.DataFrame(self.element).T
+            df1.columns = ['ElementID']
+            df2 = pd.DataFrame(self.data[0])
+            df2.columns = headers
+            self.data_frame = df1.join([df2])
+        #print(self.data_frame)
 
     def __eq__(self, table):
         assert self.is_sort1() == table.is_sort1()
@@ -195,7 +215,6 @@ class RealNonlinearRodArray(OES_Object):
             header = _eigenvalue_header(self, header, itime, ntimes, dt)
             f.write(''.join(header + msg_temp))
 
-            # TODO: can I get this without a reshape?
             #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
             axial = self.data[itime, :, 0]
             eqs = self.data[itime, :, 1]

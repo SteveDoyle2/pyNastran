@@ -126,7 +126,7 @@ class TestOP2(Tester):
         cbeam_stress = op2.cbeam_stress[isubcase]
         cbeam_stress.build_dataframe()
         assert cbeam_stress.nelements == 11, cbeam_stress.nelements  # wrong
-        assert cbeam_stress.data.shape == (1, 11, 8), cbeam_stress.data.shape
+        assert cbeam_stress.data.shape == (1, 2, 8), cbeam_stress.data.shape
 
         cquad4_force = op2.cquad4_force[isubcase]
         cquad4_force.build_dataframe()
@@ -206,7 +206,7 @@ class TestOP2(Tester):
 
         cbeam_stress = op2.cbeam_stress[isubcase]
         assert cbeam_stress.nelements == 11, cbeam_stress.nelements  # TODO: wrong
-        assert cbeam_stress.data.shape == (3, 11, 8), cbeam_stress.data.shape
+        assert cbeam_stress.data.shape == (3, 2, 8), cbeam_stress.data.shape
 
         cquad4_stress = op2.cquad4_stress[isubcase]
         assert cquad4_stress.nelements == 60, cquad4_stress.nelements # TODO: wrong
@@ -277,7 +277,7 @@ class TestOP2(Tester):
 
         cbeam_stress = op2.cbeam_stress[isubcase]
         assert cbeam_stress.nelements == 11, cbeam_stress.nelements  # TODO: wrong
-        assert cbeam_stress.data.shape == (4, 11, 8), cbeam_stress.data.shape
+        assert cbeam_stress.data.shape == (4, 2, 8), cbeam_stress.data.shape
 
         cquad4_stress = op2.cquad4_stress[isubcase]
         assert cquad4_stress.nelements == 80, cquad4_stress.nelements # TODO: wrong

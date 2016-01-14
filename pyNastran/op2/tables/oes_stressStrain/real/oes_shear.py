@@ -184,7 +184,6 @@ class RealShearArray(OES_Object):
             header = _eigenvalue_header(self, header, itime, ntimes, dt)
             f.write(''.join(header + msg_temp))
 
-            # TODO: can I get this without a reshape?
             #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
             max_shear = self.data[itime, :, 0]
             avg_shear = self.data[itime, :, 1]

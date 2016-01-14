@@ -217,7 +217,6 @@ class ComplexRodForceArray(ScalarObject):
             header = _eigenvalue_header(self, header, itime, ntimes, dt)
             f.write(''.join(header + msg_temp))
 
-            # TODO: can I get this without a reshape?
             #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
             axial = self.data[itime, :, 0]
             torsion = self.data[itime, :, 1]
@@ -421,7 +420,6 @@ class ComplexCShearForceArray(ScalarObject):
             header = _eigenvalue_header(self, header, itime, ntimes, dt)
             f.write(''.join(header + msg_temp))
 
-            # TODO: can I get this without a reshape?
             #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
 
             ## TODO: I'm sure this ordering is wrong...
@@ -682,7 +680,6 @@ class ComplexSpringDamperForceArray(ScalarObject):
             header = _eigenvalue_header(self, header, itime, ntimes, dt)
             f.write(''.join(header + msg_temp))
 
-            # TODO: can I get this without a reshape?
             #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
             spring_force = self.data[itime, :, 0]
 
@@ -902,7 +899,6 @@ class ComplexViscForceArray(ScalarObject):
             header = _eigenvalue_header(self, header, itime, ntimes, dt)
             f.write(''.join(header + msg_temp))
 
-            # TODO: can I get this without a reshape?
             #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
             axial = self.data[itime, :, 0]
             torsion = self.data[itime, :, 1]
@@ -1120,7 +1116,6 @@ class ComplexPlateForceArray(ScalarObject):
             header = _eigenvalue_header(self, header, itime, ntimes, dt)
             f.write(''.join(header + msg_temp))
 
-            # TODO: can I get this without a reshape?
             #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
             mx = self.data[itime, :, 0]
             my = self.data[itime, :, 1]
@@ -1529,7 +1524,6 @@ class ComplexPlate2ForceArray(ScalarObject):
             header = _eigenvalue_header(self, header, itime, ntimes, dt)
             f.write(''.join(header + msg_temp))
 
-            # TODO: can I get this without a reshape?
             #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
             mx = self.data[itime, :, 0]
             my = self.data[itime, :, 1]
@@ -1721,7 +1715,6 @@ class ComplexCBarForceArray(ScalarObject):
             msg = header + msg_temp
             f.write(''.join(msg))
 
-            # TODO: can I get this without a reshape?
             #bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq
             assert self.is_sort1() == True, str(self)
             bm1a = self.data[itime, :, 0]
@@ -1757,7 +1750,6 @@ class ComplexCBarForceArray(ScalarObject):
             msg = header + msg_temp
             f.write(''.join(msg))
 
-            # TODO: can I get this without a reshape?
             #bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq
             bm1a = self.data[:, ieid, 0]
             bm2a = self.data[:, ieid, 1]
@@ -1960,7 +1952,6 @@ class ComplexCBeamForceArray(ScalarObject):
             msg = header + msg_temp
             f.write(''.join(msg))
 
-            # TODO: can I get this without a reshape?
             #bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq
             assert self.is_sort1() == True, str(self)
             sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq
@@ -2275,7 +2266,6 @@ class ComplexSolidPressureForceArray(ScalarObject):
             header = _eigenvalue_header(self, header, itime, ntimes, dt)
             f.write(''.join(header + msg_temp))
 
-            # TODO: can I get this without a reshape?
             #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
             ax = self.data[itime, :, 0]
             ay = self.data[itime, :, 0]
@@ -2443,7 +2433,6 @@ class ComplexCBushForceArray(ScalarObject):
             msg = header + msg_temp
             f.write(''.join(msg))
 
-            # TODO: can I get this without a reshape?
             #fx, fy, fz, mx, my, mz
             if self.is_sort1():
                 fx = self.data[itime, :, 0]
@@ -2459,8 +2448,6 @@ class ComplexCBushForceArray(ScalarObject):
                 mx = self.data[:, itime, 3]
                 my = self.data[:, itime, 4]
                 mz = self.data[:, itime, 5]
-                af = self.data[:, itime, 6]
-
 
             for eid, fxi, fyi, fzi, mxi, myi, mzi in zip(eids, fx, fy, fz, mx, my, mz):
                 vals = (fxi, fyi, fzi, mxi, myi, mzi)
@@ -2485,7 +2472,6 @@ class ComplexCBushForceArray(ScalarObject):
             msg = header + msg_temp
             f.write(''.join(msg))
 
-            # TODO: can I get this without a reshape?
             if self.is_sort1():
                 fx = self.data[:, ieid, 0]
                 fy = self.data[:, ieid, 1]

@@ -449,62 +449,62 @@ class HeatFlux_VUBEAM(ScalarObject):  # 191-VUBEAM
             self.flux[dt][eid][nid] = [xflux, yflux, zflux]
 
 
-class HeatFlux_1D(ScalarObject):  # 1-ROD, 2-BEAM, 3-TUBE, 10-CONROD, 34-BAR, 69-BEND
-    def __init__(self, data_code, is_sort1, isubcase, dt):
-        ScalarObject.__init__(self, data_code, isubcase)
-        self.eType = {}
-        self.grad = {}
-        self.flux = {}
+#class HeatFlux_1D(ScalarObject):  # 1-ROD, 2-BEAM, 3-TUBE, 10-CONROD, 34-BAR, 69-BEND
+    #def __init__(self, data_code, is_sort1, isubcase, dt):
+        #ScalarObject.__init__(self, data_code, isubcase)
+        #self.eType = {}
+        #self.grad = {}
+        #self.flux = {}
 
-        # TODO if dt=None, handle SORT1 case
-        if is_sort1:
-            if dt is not None:
-                self.add = self.add_sort1
-        else:
-            assert dt is not None
-            self.add = self.add_sort2
+        ## TODO if dt=None, handle SORT1 case
+        #if is_sort1:
+            #if dt is not None:
+                #self.add = self.add_sort1
+        #else:
+            #assert dt is not None
+            #self.add = self.add_sort2
 
-    def get_stats(self):
-        msg = self.get_data_code()
-        nelements = len(self.eType)
-        if self.nonlinear_factor is not None:  # transient
-            ntimes = len(self.grad)
-            msg.append('  type=%s ntimes=%s nelements=%s\n'
-                       % (self.__class__.__name__, ntimes, nelements))
-        else:
-            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
-                                                     nelements))
-        msg.append('  eType, grad, flux\n')
-        return msg
+    #def get_stats(self):
+        #msg = self.get_data_code()
+        #nelements = len(self.eType)
+        #if self.nonlinear_factor is not None:  # transient
+            #ntimes = len(self.grad)
+            #msg.append('  type=%s ntimes=%s nelements=%s\n'
+                       #% (self.__class__.__name__, ntimes, nelements))
+        #else:
+            #msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                     #nelements))
+        #msg.append('  eType, grad, flux\n')
+        #return msg
 
-    def add_new_transient(self, dt):
-        self.grad[dt] = {}
-        self.flux[dt] = {}
+    #def add_new_transient(self, dt):
+        #self.grad[dt] = {}
+        #self.flux[dt] = {}
 
-    def add(self, dt, data):
-        [eid, eType, xgrad, ygrad, zgrad, xflux, yflux, zflux] = data
-        self.eType[eid] = eType
-        self.grad[eid] = [xgrad, ygrad, zgrad]
-        self.flux[eid] = [xflux, yflux, zflux]
+    #def add(self, dt, data):
+        #[eid, eType, xgrad, ygrad, zgrad, xflux, yflux, zflux] = data
+        #self.eType[eid] = eType
+        #self.grad[eid] = [xgrad, ygrad, zgrad]
+        #self.flux[eid] = [xflux, yflux, zflux]
 
-    def add_sort1(self, dt, data):
-        [eid, eType, xgrad, ygrad, zgrad, xflux, yflux, zflux] = data
-        if dt not in self.grad:
-            self.add_new_transient(dt)
-        self.eType[eid] = eType
-        self.grad[dt][eid] = [xgrad, ygrad, zgrad]
-        self.flux[dt][eid] = [xflux, yflux, zflux]
+    #def add_sort1(self, dt, data):
+        #[eid, eType, xgrad, ygrad, zgrad, xflux, yflux, zflux] = data
+        #if dt not in self.grad:
+            #self.add_new_transient(dt)
+        #self.eType[eid] = eType
+        #self.grad[dt][eid] = [xgrad, ygrad, zgrad]
+        #self.flux[dt][eid] = [xflux, yflux, zflux]
 
-    def add_sort2(self, eid, data):
-        [dt, eType, xgrad, ygrad, zgrad, xflux, yflux, zflux] = data
-        if dt not in self.fApplied:
-            self.add_new_transient(dt)
-        self.eType[eid] = eType
-        self.grad[dt][eid] = [xgrad, ygrad, zgrad]
-        self.flux[dt][eid] = [xflux, yflux, zflux]
+    #def add_sort2(self, eid, data):
+        #[dt, eType, xgrad, ygrad, zgrad, xflux, yflux, zflux] = data
+        #if dt not in self.fApplied:
+            #self.add_new_transient(dt)
+        #self.eType[eid] = eType
+        #self.grad[dt][eid] = [xgrad, ygrad, zgrad]
+        #self.flux[dt][eid] = [xflux, yflux, zflux]
 
 
-class HeatFlux_2D_3DArray(RealElementTableArray):
+class HeatFlux_2D_3DArray(RealElementTableArray):  # 1-ROD, 2-BEAM, 3-TUBE, 10-CONROD, 34-BAR, 69-BEND
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealElementTableArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
@@ -577,24 +577,21 @@ class HeatFlux_CONV(ScalarObject):  # 110-CONV
         self.freeConv[dt] = {}
         self.freeConvK[dt] = {}
 
-    def add(self, dt, data):
-        [eid, cntl_node, freeConv, freeConvK] = data
-        #self.eType[eid]     = eType
+    def add(self, dt, eid, cntl_node, freeConv, freeConvK):
+        #self.eType[eid] = eType
         self.cntlNode[eid] = cntl_node
         self.freeConv[eid] = freeConv
         self.freeConvK[eid] = freeConvK
 
-    def add_sort1(self, dt, data):
-        [eid, cntl_node, freeConv, freeConvK] = data
+    def add_sort1(self, dt, eid, cntl_node, freeConv, freeConvK):
         if dt not in self.freeConv:
             self.add_new_transient(dt)
-        #self.eType[eid]     = eType
+        #self.eType[eid] = eType
         self.cntlNode[dt][eid] = cntl_node
         self.freeConv[dt][eid] = freeConv
         self.freeConvK[dt][eid] = freeConvK
 
-    def add_sort2(self, eid, data):
-        [dt, eType, fApplied, freeConv, forceConv, fRad, fTotal] = data
+    def add_sort2(self, eid, dt, eType, fApplied, freeConv, forceConv, fRad, fTotal):
         if dt not in self.freeConv:
             self.add_new_transient(dt)
         #self.eType[eid]     = eType
@@ -630,10 +627,6 @@ class RealChbdyHeatFluxArray(ScalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
             'fapplied', 'free_conv', 'force_conv', 'frad', 'ftotal',
         ]
         return headers
-
-    #def get_headers(self):
-        #headers = ['axial', 'torque']
-        #return headers
 
     def build(self):
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
@@ -753,7 +746,7 @@ class RealChbdyHeatFluxArray(ScalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
         headers = self.get_headers()
         n = len(headers)
         msg.append('  data: [%s, nelements, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
-        msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
+        msg.append('  data.shape = %s\n  ' % str(self.data.shape).replace('L', ''))
         #msg.append('  element type: %s\n' % self.element_type)
         #msg.append('  element name: %s\n  ' % self.element_name)
         msg += self.get_data_code()
@@ -797,72 +790,72 @@ class RealChbdyHeatFluxArray(ScalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
         return page_num - 1
 
 
-class HeatFlux_CHBDYx(ScalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
-    def __init__(self, data_code, is_sort1, isubcase, dt):
-        ScalarObject.__init__(self, data_code, isubcase)
-        self.eType = {}
-        self.fApplied = {}
-        self.freeConv = {}
-        self.forceConv = {}
-        self.fRad = {}
-        self.fTotal = {}
+#class HeatFlux_CHBDYx(ScalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
+    #def __init__(self, data_code, is_sort1, isubcase, dt):
+        #ScalarObject.__init__(self, data_code, isubcase)
+        #self.eType = {}
+        #self.fApplied = {}
+        #self.freeConv = {}
+        #self.forceConv = {}
+        #self.fRad = {}
+        #self.fTotal = {}
 
-        # TODO if dt=None, handle SORT1 case
-        if is_sort1:
-            if dt is not None:
-                self.add = self.add_sort1
-        else:
-            assert dt is not None
-            self.add = self.add_sort2
+        ## TODO if dt=None, handle SORT1 case
+        #if is_sort1:
+            #if dt is not None:
+                #self.add = self.add_sort1
+        #else:
+            #assert dt is not None
+            #self.add = self.add_sort2
 
-    def get_stats(self):
-        msg = self.get_data_code()
-        nelements = len(self.eType)
-        if self.nonlinear_factor is not None:  # transient
-            ntimes = len(self.fApplied)
-            msg.append('  type=%s ntimes=%s nelements=%s\n'
-                       % (self.__class__.__name__, ntimes, nelements))
-        else:
-            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
-                                                     nelements))
-        msg.append('  eType, fApplied, freeConv, forceConv, fRad, fTotal\n')
-        return msg
+    #def get_stats(self):
+        #msg = self.get_data_code()
+        #nelements = len(self.eType)
+        #if self.nonlinear_factor is not None:  # transient
+            #ntimes = len(self.fApplied)
+            #msg.append('  type=%s ntimes=%s nelements=%s\n'
+                       #% (self.__class__.__name__, ntimes, nelements))
+        #else:
+            #msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
+                                                     #nelements))
+        #msg.append('  eType, fApplied, freeConv, forceConv, fRad, fTotal\n')
+        #return msg
 
-    def add_new_transient(self, dt):
-        self.fApplied[dt] = {}
-        self.freeConv[dt] = {}
-        self.forceConv[dt] = {}
-        self.fRad[dt] = {}
-        self.fTotal[dt] = {}
+    #def add_new_transient(self, dt):
+        #self.fApplied[dt] = {}
+        #self.freeConv[dt] = {}
+        #self.forceConv[dt] = {}
+        #self.fRad[dt] = {}
+        #self.fTotal[dt] = {}
 
-    def add(self, dt, data):
-        [eid, etype, fapplied, free_conv, force_conv, frad, ftotal] = data
+    #def add(self, dt, data):
+        #[eid, etype, fapplied, free_conv, force_conv, frad, ftotal] = data
 
-        self.eType[eid] = etype
-        self.fApplied[eid] = fapplied
-        self.freeConv[eid] = free_conv
-        self.forceConv[eid] = force_conv
-        self.fRad[eid] = frad
-        self.fTotal[eid] = ftotal
+        #self.eType[eid] = etype
+        #self.fApplied[eid] = fapplied
+        #self.freeConv[eid] = free_conv
+        #self.forceConv[eid] = force_conv
+        #self.fRad[eid] = frad
+        #self.fTotal[eid] = ftotal
 
-    def add_sort1(self, dt, data):
-        [eid, etype, fapplied, free_conv, force_conv, frad, ftotal] = data
-        if dt not in self.fApplied:
-            self.add_new_transient(dt)
-        self.eType[eid] = etype
-        self.fApplied[dt][eid] = fapplied
-        self.freeConv[dt][eid] = free_conv
-        self.forceConv[dt][eid] = force_conv
-        self.fRad[dt][eid] = frad
-        self.fTotal[dt][eid] = ftotal
+    #def add_sort1(self, dt, data):
+        #[eid, etype, fapplied, free_conv, force_conv, frad, ftotal] = data
+        #if dt not in self.fApplied:
+            #self.add_new_transient(dt)
+        #self.eType[eid] = etype
+        #self.fApplied[dt][eid] = fapplied
+        #self.freeConv[dt][eid] = free_conv
+        #self.forceConv[dt][eid] = force_conv
+        #self.fRad[dt][eid] = frad
+        #self.fTotal[dt][eid] = ftotal
 
-    def add_sort2(self, eid, data):
-        [dt, etype, fapplied, free_conv, force_conv, frad, ftotal] = data
-        if dt not in self.fApplied:
-            self.add_new_transient(dt)
-        self.eType[eid] = eType
-        self.fApplied[dt][eid] = fapplied
-        self.freeConv[dt][eid] = free_conv
-        self.forceConv[dt][eid] = force_conv
-        self.fRad[dt][eid] = frad
-        self.fTotal[dt][eid] = ftotal
+    #def add_sort2(self, eid, data):
+        #[dt, etype, fapplied, free_conv, force_conv, frad, ftotal] = data
+        #if dt not in self.fApplied:
+            #self.add_new_transient(dt)
+        #self.eType[eid] = eType
+        #self.fApplied[dt][eid] = fapplied
+        #self.freeConv[dt][eid] = free_conv
+        #self.forceConv[dt][eid] = force_conv
+        #self.fRad[dt][eid] = frad
+        #self.fTotal[dt][eid] = ftotal

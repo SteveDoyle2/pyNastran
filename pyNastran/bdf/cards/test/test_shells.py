@@ -342,7 +342,7 @@ class TestShells(unittest.TestCase):
         Sc = None
         Ss = None
         Mcsid = None
-        mat1 = [mid, E, G, nu, rho, a, TRef, ge, St, Sc, Ss, Mcsid]
+        mat1 = [mid, E, G, nu, rho, a, tref, ge, St, Sc, Ss, Mcsid]
         m = MAT1(data=mat1)
         for iply in range(len(p.plies)):
             mid = p.plies[iply][0]
@@ -469,7 +469,7 @@ class TestShells(unittest.TestCase):
         Sc = None
         Ss = None
         Mcsid = None
-        mat1 = [mid, E, G, nu, rho, a, TRef, ge, St, Sc, Ss, Mcsid]
+        mat1 = [mid, E, G, nu, rho, a, tref, ge, St, Sc, Ss, Mcsid]
         m = MAT1(data=mat1)
         for iply in range(len(p.plies)):
             mid = p.plies[iply][0]

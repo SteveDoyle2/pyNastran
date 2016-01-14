@@ -192,7 +192,6 @@ class ComplexBarArray(OES_Object):
             msg = header + msg_temp
             f.write('\n'.join(msg))
 
-            # TODO: can I get this without a reshape?
             sa1 = self.data[itime, :, 0]
             sa2 = self.data[itime, :, 1]
             sa3 = self.data[itime, :, 2]

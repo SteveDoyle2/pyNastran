@@ -36,8 +36,7 @@ from pyNastran.op2.tables.oef_forces.oef_forceObjects import (
     RealSolidPressureForceArray,
     RealCBeamForceArray,
 
-    # TODO: vectorize 4
-    RealCBeamForce,
+    # TODO: vectorize 3
     RealBendForce,
     RealForce_VU_2D, RealForce_VU,
 )
@@ -539,8 +538,17 @@ class OEF(OP2Common):
             # 108-CHBDYG
             # 109-CHBDYP
             if self.format_code == 1 and self.num_wide == 8:  # real
-                #if self.element_type == 1: # CROD
-                result_name = 'thermalLoad_CHBDY'
+                if self.element_type == 107:
+                    result_name = 'chbdye_thermal_load'
+                elif self.element_type == 108:
+                    result_name = 'chbdyg_thermal_load'
+                elif self.element_type == 109:
+                    result_name = 'chbdyp_thermal_load'
+                else:
+                    raise NotImplementedError('element_type=%s element_name=%s' % (
+                        self.element_type, self.element_name))
+
+                #result_name = 'thermalLoad_CHBDY'
                 if self._results.is_not_saved(result_name):
                     return ndata
                 self._results._found_result(result_name)
@@ -599,25 +607,59 @@ class OEF(OP2Common):
 
         elif self.element_type == 110:
             # 110-CONV
-            if self.read_mode == 1:
-                return ndata
             if self.format_code == 1 and self.num_wide == 4:
                 # TODO: vectorize
-                self.create_transient_object(self.thermalLoad_CONV, HeatFlux_CONV)
                 s1 = Struct(b(self._endian + 'ifif'))
                 ntotal = 16
                 nelements = ndata // ntotal
+
+                if 0:
+                    if self.read_mode == 1:
+                        return ndata
+                    self.create_transient_object(self.thermalLoad_CONV, HeatFlux_CONV)
+                else:
+                    auto_return, is_vectorized = self._create_oes_object4(
+                        nelements, result_name, slot, obj_vector_real)
+                    if auto_return:
+                        return nelements * self.num_wide * 4
                 obj = self.obj
-                for i in range(nelements):
-                    edata = data[n:n+16]
-                    n += 16
-                    out = s1.unpack(edata)
-                    (eid_device, cntl_node, free_conv, free_conv_k) = out
-                    #eid = (eid_device - self.device_code) // 10
-                    eid = eid_device // 10
-                    data_in = [eid, cntl_node, free_conv, free_conv_k]
-                    #print "heatFlux %s" %(self.get_element_type(self.element_type)), data_in
-                    obj.add(dt, data_in)
+                #if self.is_debug_file:
+                    #self.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
+                    #self.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % ndata)
+                    #self.binary_debug.write('  #elementi = [eid_device, etype, fapplied, free_conv, force_conv, frad, ftotal]\n')
+                    #self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
+
+                is_vectorized = False
+                if self.use_vector and is_vectorized:
+                    n = nelements * 4 * self.num_wide
+                    ielement = obj.ielement
+                    ielement2 = obj.element + nelements
+
+                    floats = fromstring(data, dtype=self.fdtype).reshape(nelements, 4)
+                    obj._times[obj.itime] = dt
+                    if obj.itime == 0:
+                        ints = fromstring(data, dtype=self.idtype).reshape(nelements, 4)
+                        eids = ints[:, 0] // 10
+                        nids = ints[:, 1]
+                        assert eids.min() > 0, eids.min()
+                        assert nids.min() > 0, nids.min()
+                        obj.element_node[itotal:itotal2, 0] = eids
+                        obj.element_node[itotal:itotal2, 1] = nids
+
+                    #[eid, cntl_node, free_conv, free_conv_k]
+                    obj.data[obj.itime, ielement:ielement2, :] = floats[:, 2:]
+                    obj.itotal = ielement2
+                    obj.ielement = ielement2
+                else:
+                    for i in range(nelements):
+                        edata = data[n:n+16]
+                        n += 16
+                        out = s1.unpack(edata)
+                        (eid_device, cntl_node, free_conv, free_conv_k) = out
+                        #eid = (eid_device - self.device_code) // 10
+                        eid = eid_device // 10
+                        #print "heatFlux %s" %(self.get_element_type(self.element_type)), data_in
+                        obj.add(dt, eid, cntl_node, free_conv, free_conv_k)
             else:
                 msg = self.code_information()
                 return self._not_implemented_or_skip(data, ndata, msg)
@@ -1013,22 +1055,15 @@ class OEF(OP2Common):
                         n += 36
 
             elif self.format_code == 1 and self.num_wide == 100:  # real
-                # TODO: vectorize
                 ntotal = 400  # 1+(10-1)*11=100 ->100*4 = 400
                 nelements = ndata // ntotal
-                if 0:
-                    if self.read_mode == 1:
-                        return ndata
-                    self.create_transient_object(self.cbeam_force, RealCBeamForce)
-                else:
-                    auto_return, is_vectorized = self._create_oes_object4(
-                        nelements, result_name, slot, RealCBeamForceArray)
-                    if auto_return:
-                        self._data_factor = 11
-                        return nelements * self.num_wide * 4
+                auto_return, is_vectorized = self._create_oes_object4(
+                    nelements, result_name, slot, RealCBeamForceArray)
+                if auto_return:
+                    self._data_factor = 11
+                    return nelements * self.num_wide * 4
                 obj = self.obj
 
-                #is_vectorized = False
                 if self.use_vector and is_vectorized:
                     n = nelements * 4 * self.num_wide
                     itotal = obj.itotal
@@ -1578,7 +1613,6 @@ class OEF(OP2Common):
             self._results._found_result(result_name)
             slot = getattr(self, result_name)
             if self.format_code == 1 and self.num_wide == 8:  # real
-
                 ntotal = 32  # 8*4
                 nelements = ndata // ntotal
                 auto_return, is_vectorized = self._create_oes_object4(
@@ -1615,12 +1649,9 @@ class OEF(OP2Common):
                             self.binary_debug.write('OEF_CBar100 - %s\n' % (str(out)))
                         (eid_device, sd, bm1, bm2, ts1, ts2, af, trq) = out
                         eid = eid_device // 10
-                        data_in = [eid, sd, bm1, bm2, ts1, ts2, af, trq]
-                        #print "%s" %(self.get_element_type(self.element_type)), data_in
-                        #eid = obj.add_new_eid(out)
-                        obj.add(dt, data_in)
+                        obj.add_sort1(dt, eid, sd, bm1, bm2, ts1, ts2, af, trq)
                         n += 32
-                #elif self.format_code in [2, 3] and self.num_wide == 14:  # imag
+            #elif self.format_code in [2, 3] and self.num_wide == 14:  # imag
             else:
                 msg = self.code_information()
                 return self._not_implemented_or_skip(data, ndata, msg)
