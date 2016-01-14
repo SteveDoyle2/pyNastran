@@ -475,8 +475,13 @@ class F06Writer(OP2_F06_Common):
             self.temperatures,
             self.velocities, self.velocitiesPSD,
             #self.eigenvectors,
+            self.eigenvectors_RADCONS,
+            self.eigenvectors_RADEFFM,
+            self.eigenvectors_RADEATC,
 
             self.mpc_forces, self.mpc_forcesPSD, self.mpc_forcesATO, self.mpc_forcesRMS,
+            self.mpc_forces_RAQCONS,
+            #self.mpc_forces_RAQEATC,
 
             self.spc_forces, self.spc_forcesPSD, self.spc_forcesATO, self.spc_forcesRMS,
             self.thermal_load_vectors,
