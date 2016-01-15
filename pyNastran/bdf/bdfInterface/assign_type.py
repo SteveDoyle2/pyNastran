@@ -4,7 +4,7 @@ Parses Nastran fields
 from __future__ import print_function
 from numpy import float32
 from six import string_types, PY2
-from pyNastran.bdf.bdfInterface.BDF_Card import BDFCard
+from pyNastran.bdf.bdfInterface.bdf_card import BDFCard
 if PY2:
     integer_types = (int, long)
     integer_float_types = (int, long, float, float32)

@@ -119,11 +119,11 @@ from pyNastran.bdf.cards.bdf_tables import (TABLED1, TABLED2, TABLED3, TABLED4,
 from pyNastran.bdf.cards.contact import BCRPARA, BCTADD, BCTSET, BSURF, BSURFS, BCTPARA
 from pyNastran.bdf.caseControlDeck import CaseControlDeck
 from pyNastran.bdf.bdf_Methods import BDFMethods
-from pyNastran.bdf.bdfInterface.getCard import GetMethods
-from pyNastran.bdf.bdfInterface.addCard import AddMethods
-from pyNastran.bdf.bdfInterface.BDF_Card import BDFCard
-from pyNastran.bdf.bdfInterface.bdf_writeMesh import WriteMesh
-from pyNastran.bdf.bdfInterface.crossReference import XrefMesh
+from pyNastran.bdf.bdfInterface.get_card import GetMethods
+from pyNastran.bdf.bdfInterface.add_card import AddMethods
+from pyNastran.bdf.bdfInterface.bdf_card import BDFCard
+from pyNastran.bdf.bdfInterface.bdf_write_mesh import WriteMesh
+from pyNastran.bdf.bdfInterface.cross_reference import XrefMesh
 from pyNastran.bdf.errors import CrossReferenceError, DuplicateIDsError, CardParseSyntaxError
 from pyNastran.bdf.field_writer_16 import print_field_16
 
@@ -1505,6 +1505,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'SPC1' : (SPC1, self.add_constraint_SPC),
             'SPCAX' : (SPCAX, self.add_constraint_SPC),
             'SPCADD' : (SPCADD, self.add_constraint_SPC),
+            # GMSPC-will be last card to update from card_parser
             'GMSPC' : (GMSPC, self.add_constraint_SPC),
 
             'SUPORT' : (SUPORT, self.add_suport), # pseudo-constraint
@@ -1658,6 +1659,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'CONV' : self._prepare_conv,
             'RADM' : self._prepare_radm,
             'RADBC' : self._prepare_radbc,
+            # GRDSET-will be last card to update from card_parser_b
             'GRDSET' : self._prepare_grdset,
 
             'BCTSET' : self._prepare_bctset,
@@ -2026,13 +2028,23 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             except:
                 print(print_card_16(card_obj).rstrip())
 
-        # function that gets by name the initialized object (from global scope)
-        failed = True
         if card_name in self._card_parser_a:
             card_class, add_card_function = self._card_parser_a[card_name]
             class_instance = card_class()
-            class_instance.add_card(card_obj, comment=comment)
-            add_card_function(class_instance)
+            try:
+                class_instance.add_card(card_obj, comment=comment)
+                add_card_function(class_instance)
+            except (SyntaxError, AssertionError, KeyError, ValueError) as exception:
+                # WARNING: Don't catch RuntimeErrors or a massive memory leak can occur
+                #tpl/cc451.bdf
+                #raise
+                # NameErrors should be caught
+                self._iparse_errors += 1
+                var = traceback.format_exception_only(type(exception), exception)
+                self._stored_parse_errors.append((card, var))
+                if self._iparse_errors > self._nparse_errors:
+                    self.pop_parse_errors()
+
         elif card_name in self._card_parser:
             card_class, add_card_function = self._card_parser[card_name]
             try:
@@ -2041,58 +2053,35 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                 msg = '%s has a init problem' % card_name
                 #raise TypeError(msg)
                 raise
+            except (SyntaxError, AssertionError, KeyError, ValueError) as exception:
+                # WARNING: Don't catch RuntimeErrors or a massive memory leak can occur
+                #tpl/cc451.bdf
+                #raise
+                # NameErrors should be caught
+                self._iparse_errors += 1
+                var = traceback.format_exception_only(type(exception), exception)
+                self._stored_parse_errors.append((card, var))
+                if self._iparse_errors > self._nparse_errors:
+                    self.pop_parse_errors()
+                return
             add_card_function(class_instance)
-
-            #try:
-                #add_card_function(class_instance)
-            #except (SyntaxError, AssertionError, KeyError, ValueError) as exception:
-                ## WARNING: Don't catch RuntimeErrors or a massive memory leak can occur
-                ##tpl/cc451.bdf
-                ##raise
-                ## NameErrors should be caught
-                #self._iparse_errors += 1
-                #var = traceback.format_exception_only(type(exception), exception)
-                #self._stored_parse_errors.append((card, var))
-                #if self._iparse_errors > self._nparse_errors:
-                    #self.pop_parse_errors()
 
         elif card_name in self._card_parser_b:
             add_card_function = self._card_parser_b[card_name]
-            #class_instance = card_class(card_obj, comment=comment)
-            add_card_function(card, card_obj)
-
-            #try:
-                #add_card_function(card, card_obj, comment=comment)
-            #except (SyntaxError, AssertionError, KeyError, ValueError) as exception:
-                ## WARNING: Don't catch RuntimeErrors or a massive memory leak can occur
-                ##tpl/cc451.bdf
-                ##raise
-                ## NameErrors should be caught
-                #self._iparse_errors += 1
-                #var = traceback.format_exception_only(type(exception), exception)
-                #self._stored_parse_errors.append((card, var))
-                #if self._iparse_errors > self._nparse_errors:
-                    #self.pop_parse_errors()
+            try:
+                add_card_function(card, card_obj)
+            except (SyntaxError, AssertionError, KeyError, ValueError) as exception:
+                # WARNING: Don't catch RuntimeErrors or a massive memory leak can occur
+                #tpl/cc451.bdf
+                #raise
+                # NameErrors should be caught
+                self._iparse_errors += 1
+                var = traceback.format_exception_only(type(exception), exception)
+                self._stored_parse_errors.append((card, var))
+                if self._iparse_errors > self._nparse_errors:
+                    self.pop_parse_errors()
         else:
-            raise NotImplementedError(card_name)
-        #else:
-            #assert failed == False, failed
-            ## KeyError won't trigger this
-
-            #try:
-                #class_instance = card_class(card_obj, comment=comment)
-                #add_card_function(class_instance)
-            #except (SyntaxError, AssertionError, ValueError) as exception:
-                ##raise
-                ## WARNING: Don't catch RuntimeErrors or a massive memory leak can occur
-                ##tpl/cc451.bdf
-                ##raise
-                ## NameErrors should be caught
-                #self._iparse_errors += 1
-                #var = traceback.format_exception_only(type(exception), exception)
-                #self._stored_parse_errors.append((card, var))
-                #if self._iparse_errors > self._nparse_errors:
-                    #self.pop_parse_errors()
+            self.reject_cards.append(card_obj)
 
     def get_bdf_stats(self, return_type='string'):
         """

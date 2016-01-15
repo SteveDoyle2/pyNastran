@@ -664,7 +664,7 @@ class XrefMesh(BDFAttributes):
                 raise
 
         if self.spoints:
-            self.spointi = self.spoints.createSPOINTi()
+            self.spointi = self.spoints.create_spointi()
 
         # GRDPNT for mass calculations
         #if model.has_key()
