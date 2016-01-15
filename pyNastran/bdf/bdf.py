@@ -1302,6 +1302,21 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'CTUBE' : (CTUBE, self.add_element),
             'PTUBE' : (PTUBE, self.add_property),
 
+            'CBAR' : (CBAR, self.add_element),
+            'PBAR' : (PBAR, self.add_property),
+            'PBARL' : (PBARL, self.add_property),
+
+            'CBEAM' : (CBEAM, self.add_element),
+            'PBEAM' : (PBEAM, self.add_property),
+            'PBEAML' : (PBEAML, self.add_property),
+            'PBCOMP' : (PBCOMP, self.add_property),
+
+            'CBEAM3' : (CBEAM3, self.add_element),
+            #'PBEAM3' : (PBEAM3, self.add_property),
+
+            'CBEND' : (CBEND, self.add_element),
+            #'PBEND' : (PBEND, self.add_property),
+
             'CTRIA3' : (CTRIA3, self.add_element),
             'CQUAD4' : (CQUAD4, self.add_element),
             'PCOMP' : (PCOMP, self.add_property),
@@ -1309,16 +1324,33 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
             # there is no MAT6 or MAT7
             'MAT1' : (MAT1, self.add_structural_material),
+
+            # there is no MAT6 or MAT7
+            'MAT1' : (MAT1, self.add_structural_material),
+            'MAT2' : (MAT2, self.add_structural_material),
+            'MAT3' : (MAT3, self.add_structural_material),
+            'MAT8' : (MAT8, self.add_structural_material),
+            'MAT9' : (MAT9, self.add_structural_material),
             'MAT10' : (MAT10, self.add_structural_material),
-        }
-        self._card_parser = {
+            'MAT11' : (MAT11, self.add_structural_material),
+            'EQUIV' : (EQUIV, self.add_structural_material),
+
+            #'MATHE' : (MATHE, self.add_hyperelastic_material),
+            'MATHP' : (MATHP, self.add_hyperelastic_material),
+            'MAT4' : (MAT4, self.add_thermal_material),
+            'MAT5' : (MAT5, self.add_thermal_material),
+
+            # hasnt been verified, links up to MAT1, MAT2, MAT9 w/ same MID
+            'CREEP' : (CREEP, self.add_creep_material),
+
             'FORCE' : (FORCE, self.add_load),
             'FORCE1' : (FORCE1, self.add_load),
             'FORCE2' : (FORCE2, self.add_load),
             'MOMENT' : (MOMENT, self.add_load),
             'MOMENT1' : (MOMENT1, self.add_load),
             'MOMENT2' : (MOMENT2, self.add_load),
-
+        }
+        self._card_parser = {
             'GRAV' : (GRAV, self.add_load),
             'ACCEL' : (ACCEL, self.add_load),
             'ACCEL1' : (ACCEL1, self.add_load),
@@ -1358,21 +1390,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'PSOLID' : (PSOLID, self.add_property),
             'PLSOLID' : (PLSOLID, self.add_property),
             'PCONEAX' : (PCONEAX, self.add_property),
-
-            'CBAR' : (CBAR, self.add_element),
-            'PBAR' : (PBAR, self.add_property),
-            'PBARL' : (PBARL, self.add_property),
-
-            'CBEAM' : (CBEAM, self.add_element),
-            'PBEAM' : (PBEAM, self.add_property),
-            'PBEAML' : (PBEAML, self.add_property),
-            'PBCOMP' : (PBCOMP, self.add_property),
-
-            'CBEAM3' : (CBEAM3, self.add_element),
-            #'PBEAM3' : (PBEAM3, self.add_property),
-
-            'CBEND' : (CBEND, self.add_element),
-            #'PBEND' : (PBEND, self.add_property),
 
             'CBUSH' : (CBUSH, self.add_damper),
             'CBUSH1D' : (CBUSH1D, self.add_damper),
@@ -1450,20 +1467,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'RBE3' : (RBE3, self.add_rigid_element),
             'RROD' : (RROD, self.add_rigid_element),
 
-            # there is no MAT6 or MAT7
-            'MAT1' : (MAT1, self.add_structural_material),
-            'MAT2' : (MAT2, self.add_structural_material),
-            'MAT3' : (MAT3, self.add_structural_material),
-            'MAT8' : (MAT8, self.add_structural_material),
-            'MAT9' : (MAT9, self.add_structural_material),
-            'MAT11' : (MAT11, self.add_structural_material),
-            'EQUIV' : (EQUIV, self.add_structural_material),
-
-            #'MATHE' : (MATHE, self.add_hyperelastic_material),
-            'MATHP' : (MATHP, self.add_hyperelastic_material),
-            'MAT4' : (MAT4, self.add_thermal_material),
-            'MAT5' : (MAT5, self.add_thermal_material),
-
             'MATS1' : (MATS1, self.add_material_dependence),
             #'MATS3' : (MATS3, self.add_material_dependence),
             #'MATS8' : (MATS8, self.add_material_dependence),
@@ -1474,10 +1477,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'MATT5' : (MATT5, self.add_material_dependence),
             #'MATT8' : (MATT8, self.add_material_dependence),
             #'MATT9' : (MATT9, self.add_material_dependence),
-
-            # hasnt been verified, links up to MAT1, MAT2, MAT9 w/ same MID
-            'CREEP' : (CREEP, self.add_creep_material),
-
 
             'DLOAD' : (DLOAD, self.add_dload),
             'TLOAD1' : (TLOAD1, self.add_dload_entry),
@@ -2051,6 +2050,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                 class_instance = card_class(card_obj, comment=comment)
             except TypeError:
                 msg = '%s has a init problem' % card_name
+                print(msg)
                 #raise TypeError(msg)
                 raise
             except (SyntaxError, AssertionError, KeyError, ValueError) as exception:
@@ -2669,6 +2669,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                 card_name, comment, card_lines = card
                 if self.is_reject(card_name):
                     if card_name not in self.card_count:
+                        if card_name in ['BEGIN BU', 'BEGIN SU']:
+                            raise RuntimeError('No executive/case control deck was defined.')
                         self.log.info('    rejecting card_name = %s' % card_name)
                     self._increase_card_count(card_name)
                     self.rejects.append([comment] + card_lines)

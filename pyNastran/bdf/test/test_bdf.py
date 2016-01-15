@@ -532,16 +532,16 @@ def run_fem2(bdf_model, out_model, xref, punch,
             elif sol == 108: # freq
                 assert subcase.has_parameter('FREQUENCY'), subcase
             elif sol == 111:  # time
-                assert subcase.has_parameter('TIME'), subcase
+                assert subcase.has_parameter('TIME') or subcase.has_parameter('TSTEPNL'), subcase
             elif sol == 111:  # modal frequency
                 assert subcase.has_parameter('FREQUENCY'), subcase
             elif sol == 112:  # modal transient
-                assert subcase.has_parameter('TIME'), subcase
+                assert subcase.has_parameter('TIME') or subcase.has_parameter('TSTEPNL'), subcase
 
             elif sol == 129:  # nonlinear transient
-                assert subcase.has_parameter('TIME'), subcase
+                assert subcase.has_parameter('TIME') or subcase.has_parameter('TSTEPNL'), subcase
             elif sol == 159:  # thermal transient
-                assert subcase.has_parameter('TIME'), subcase
+                assert subcase.has_parameter('TIME') or subcase.has_parameter('TSTEPNL'), subcase
 
             elif sol == 144:
                 assert subcase.has_parameter('SUPORT') or len(fem2.suports), subcase

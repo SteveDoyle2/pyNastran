@@ -1115,14 +1115,14 @@ class BDFMethods(BDFAttributes):
         try:
             load_case = self.loads[loadcase_id]
         except:
-            msg = 'load_case=%s is invalid' % loadcase_id
+            msg = 'load_case=%s is invalid; ' % loadcase_id
             msg += 'load_cases = %s\n' % self.loads.keys()
             for subcase_id, subcase in iteritems(self.subcases):
                 if subcase.has_parameter('LOAD'):
                     load_id = subcase.get_parameter('LOAD')[0]
-                    msg += 'SUBCASE %i; LOAD=%s\n' % (subcase_id, load_id)
+                    msg += '  SUBCASE %i; LOAD=%s\n' % (subcase_id, load_id)
                 else:
-                    msg += 'SUBCASE %i has no LOAD\n' % (subcase_id)
+                    msg += '  SUBCASE %i has no LOAD\n' % (subcase_id)
                 print(msg)
             raise KeyError(msg)
         #for (key, load_case) in iteritems(self.loads):

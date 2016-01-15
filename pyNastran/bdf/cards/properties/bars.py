@@ -88,7 +88,7 @@ def getInertiaRectangular(sections):
 
 
 class LineProperty(Property):
-    def __init__(self, card, data):
+    def __init__(self):
         self.Type = None
         self.dim = None
         self.A = None
@@ -97,7 +97,7 @@ class LineProperty(Property):
         self.i12 = None
         self.j = None
         self.nsm = None
-        Property.__init__(self, card, data)
+        Property.__init__(self)
 
     #def D_bending(self):
         #pass
@@ -530,14 +530,14 @@ def _bar_areaL(class_name, Type, dim):
     return A
 
 class IntegratedLineProperty(LineProperty):
-    def __init__(self, card, data):
+    def __init__(self):
         self.xxb = None
         self.A = None
         self.j = None
         self.i1 = None
         self.i2 = None
         self.i12 = None
-        LineProperty.__init__(self, card, data)
+        LineProperty.__init__(self)
 
     def Area(self):
         A = integrate_positive_line(self.xxb, self.A)
@@ -569,7 +569,7 @@ class IntegratedLineProperty(LineProperty):
 class PBAR(LineProperty):
     type = 'PBAR'
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self):
         """
         .. todo::
             support solution 600 default
@@ -584,85 +584,87 @@ class PBAR(LineProperty):
         |      | K1  | K2  | I12 |    |    |    |     |     |
         +------+-----+-----+-----+----+----+----+-----+-----+
         """
-        LineProperty.__init__(self, card, data)
+        LineProperty.__init__(self)
+
+    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            #: property ID -> use Pid()
-            self.pid = integer(card, 1, 'pid')
-            #: material ID -> use Mid()
-            self.mid = integer(card, 2, 'mid')
-            #: Area -> use Area()
-            self.A = double_or_blank(card, 3, 'A', 0.0)
-            #: I1 -> use I1()
-            self.i1 = double_or_blank(card, 4, 'I1', 0.0)
-            #: I2 -> use I2()
-            self.i2 = double_or_blank(card, 5, 'I2', 0.0)
+        #: property ID -> use Pid()
+        self.pid = integer(card, 1, 'pid')
+        #: material ID -> use Mid()
+        self.mid = integer(card, 2, 'mid')
+        #: Area -> use Area()
+        self.A = double_or_blank(card, 3, 'A', 0.0)
+        #: I1 -> use I1()
+        self.i1 = double_or_blank(card, 4, 'I1', 0.0)
+        #: I2 -> use I2()
+        self.i2 = double_or_blank(card, 5, 'I2', 0.0)
 
-            #: Polar Moment of Inertia J -> use J()
-            #: default=1/2(I1+I2) for SOL=600, otherwise 0.0
-            #: .. todo:: support SOL 600 default
-            self.j = double_or_blank(card, 6, 'J', 0.0)
-            #: nonstructral mass -> use Nsm()
-            self.nsm = double_or_blank(card, 7, 'nsm', 0.0)
+        #: Polar Moment of Inertia J -> use J()
+        #: default=1/2(I1+I2) for SOL=600, otherwise 0.0
+        #: .. todo:: support SOL 600 default
+        self.j = double_or_blank(card, 6, 'J', 0.0)
+        #: nonstructral mass -> use Nsm()
+        self.nsm = double_or_blank(card, 7, 'nsm', 0.0)
 
-            self.C1 = double_or_blank(card, 9, 'C1', 0.0)
-            self.C2 = double_or_blank(card, 10, 'C2', 0.0)
-            self.D1 = double_or_blank(card, 11, 'D1', 0.0)
-            self.D2 = double_or_blank(card, 12, 'D2', 0.0)
-            self.E1 = double_or_blank(card, 13, 'E1', 0.0)
-            self.E2 = double_or_blank(card, 14, 'E2', 0.0)
-            self.F1 = double_or_blank(card, 15, 'F1', 0.0)
-            self.F2 = double_or_blank(card, 16, 'F2', 0.0)
+        self.C1 = double_or_blank(card, 9, 'C1', 0.0)
+        self.C2 = double_or_blank(card, 10, 'C2', 0.0)
+        self.D1 = double_or_blank(card, 11, 'D1', 0.0)
+        self.D2 = double_or_blank(card, 12, 'D2', 0.0)
+        self.E1 = double_or_blank(card, 13, 'E1', 0.0)
+        self.E2 = double_or_blank(card, 14, 'E2', 0.0)
+        self.F1 = double_or_blank(card, 15, 'F1', 0.0)
+        self.F2 = double_or_blank(card, 16, 'F2', 0.0)
 
-            if self.i1 < 0.:
-                raise RuntimeError('I1=%r must be greater than or equal to 0.0' % self.i1)
-            if self.i2 < 0.:
-                raise RuntimeError('I2=%r must be greater than or equal to 0.0' % self.i2)
-            if self.j < 0.:
-                raise RuntimeError('J=%r must be greater than or equal to 0.0' % self.j)
+        if self.i1 < 0.:
+            raise RuntimeError('I1=%r must be greater than or equal to 0.0' % self.i1)
+        if self.i2 < 0.:
+            raise RuntimeError('I2=%r must be greater than or equal to 0.0' % self.i2)
+        if self.j < 0.:
+            raise RuntimeError('J=%r must be greater than or equal to 0.0' % self.j)
 
-            #: I12 -> use I12()
-            self.i12 = double_or_blank(card, 19, 'I12', 0.0)
+        #: I12 -> use I12()
+        self.i12 = double_or_blank(card, 19, 'I12', 0.0)
 
-            if self.A == 0.0:
-                # K1/K2 must be blank
-                #: default=infinite; assume 1e8
-                self.K1 = blank(card, 17, 'K1')
-                #: default=infinite; assume 1e8
-                self.K2 = blank(card, 18, 'K2')
-            elif self.i12 != 0.0:
-                # K1 / K2 are ignored
-                self.K1 = None
-                self.K2 = None
-            else:
-                #: default=infinite; assume 1e8
-                self.K1 = double_or_blank(card, 17, 'K1', 1e8)
-                #: default=infinite; assume 1e8
-                self.K2 = double_or_blank(card, 18, 'K2', 1e8)
-
-            assert len(card) <= 20, 'len(PBAR card) = %i' % len(card)
+        if self.A == 0.0:
+            # K1/K2 must be blank
+            #: default=infinite; assume 1e8
+            self.K1 = blank(card, 17, 'K1')
+            #: default=infinite; assume 1e8
+            self.K2 = blank(card, 18, 'K2')
+        elif self.i12 != 0.0:
+            # K1 / K2 are ignored
+            self.K1 = None
+            self.K2 = None
         else:
-            self.pid = data[0]
-            self.mid = data[1]
-            self.A = data[2]
-            self.i1 = data[3]
-            self.i2 = data[4]
-            self.j = data[5]
+            #: default=infinite; assume 1e8
+            self.K1 = double_or_blank(card, 17, 'K1', 1e8)
+            #: default=infinite; assume 1e8
+            self.K2 = double_or_blank(card, 18, 'K2', 1e8)
 
-            self.nsm = data[6]
-            #self.fe  = data[7] #: .. todo:: not documented....
-            self.C1 = data[8]
-            self.C2 = data[9]
-            self.D1 = data[10]
-            self.D2 = data[11]
-            self.E1 = data[12]
-            self.E2 = data[13]
-            self.F1 = data[14]
-            self.F2 = data[15]
-            self.K1 = data[16]
-            self.K2 = data[17]
-            self.i12 = data[18]
+        assert len(card) <= 20, 'len(PBAR card) = %i' % len(card)
+
+    def add_op2_data(self, card, comment=''):
+        self.pid = data[0]
+        self.mid = data[1]
+        self.A = data[2]
+        self.i1 = data[3]
+        self.i2 = data[4]
+        self.j = data[5]
+
+        self.nsm = data[6]
+        #self.fe  = data[7] #: .. todo:: not documented....
+        self.C1 = data[8]
+        self.C2 = data[9]
+        self.D1 = data[10]
+        self.D2 = data[11]
+        self.E1 = data[12]
+        self.E2 = data[13]
+        self.F1 = data[14]
+        self.F2 = data[15]
+        self.K1 = data[16]
+        self.K2 = data[17]
+        self.i12 = data[18]
 
     def _verify(self, xref=False):
         pid = self.Pid()
@@ -815,50 +817,58 @@ class PBARL(LineProperty):
         "DBOX": 10,  # was 12
     }  # for GROUP="MSCBML0"
 
-    def __init__(self, card=None, data=None, comment=''):
-        LineProperty.__init__(self, card, data)
+    def __init__(self):
+        LineProperty.__init__(self)
+
+    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            #: Property ID
-            self.pid = integer(card, 1, 'pid')
-            #: Material ID
-            self.mid = integer(card, 2, 'mid')
-            self.group = string_or_blank(card, 3, 'group', 'MSCBMLO')
-            #: Section Type (e.g. 'ROD', 'TUBE', 'I', 'H')
-            self.Type = string(card, 4, 'Type')
 
-            ndim = self.valid_types[self.Type]
-            j = 9 + ndim + 1
+        #: Property ID
+        self.pid = integer(card, 1, 'pid')
+        #: Material ID
+        self.mid = integer(card, 2, 'mid')
+        self.group = string_or_blank(card, 3, 'group', 'MSCBMLO')
+        #: Section Type (e.g. 'ROD', 'TUBE', 'I', 'H')
+        self.Type = string(card, 4, 'Type')
 
-            dims = []
-            #dim_old = None  ## TODO: is there a default?
-            for i in range(ndim):
-                #dim = double_or_blank(card, 9 + i, 'dim%i' % (i + 1))
-                dim = double(card, 9 + i, 'dim%i' % (i + 1))
-                dims.append(dim)
+        ndim = self.valid_types[self.Type]
+        j = 9 + ndim + 1
 
-            #: dimension list
-            self.dim = dims
-            assert len(dims) == ndim, 'PBARL ndim=%s len(dims)=%s' % (ndim, len(dims))
-            #assert len(dims) == len(self.dim), 'PBARL ndim=%s len(dims)=%s' % (ndim, len(self.dim))
+        dims = []
+        #dim_old = None  ## TODO: is there a default?
+        for i in range(ndim):
+            #dim = double_or_blank(card, 9 + i, 'dim%i' % (i + 1))
+            dim = double(card, 9 + i, 'dim%i' % (i + 1))
+            dims.append(dim)
 
-            #: non-structural mass
-            self.nsm = double_or_blank(card, 9 + ndim + 1, 'nsm', 0.0)
+        #: dimension list
+        self.dim = dims
+        assert len(dims) == ndim, 'PBARL ndim=%s len(dims)=%s' % (ndim, len(dims))
+        #assert len(dims) == len(self.dim), 'PBARL ndim=%s len(dims)=%s' % (ndim, len(self.dim))
 
-        else:
-            self.pid = data[0]
-            self.mid = data[1]
-            self.group = data[2].strip()
-            self.Type = data[3].strip()
-            self.dim = list(data[4:-1])
-            self.nsm = data[-1]
-            #print("group = %r" % self.group)
-            #print("Type  = %r" % self.Type)
-            #print("dim = ",self.dim)
-            #print(str(self))
-            #print("*PBARL = ",data)
-            #raise NotImplementedError('not finished...')
+        #: non-structural mass
+        self.nsm = double_or_blank(card, 9 + ndim + 1, 'nsm', 0.0)
+        self._validate_input()
+
+    def add_op2_data(self, data, comment=''):
+        if comment:
+            self._comment = comment
+        self.pid = data[0]
+        self.mid = data[1]
+        self.group = data[2].strip()
+        self.Type = data[3].strip()
+        self.dim = list(data[4:-1])
+        self.nsm = data[-1]
+        #print("group = %r" % self.group)
+        #print("Type  = %r" % self.Type)
+        #print("dim = ",self.dim)
+        #print(str(self))
+        #print("*PBARL = ",data)
+        #raise NotImplementedError('not finished...')
+        self._validate_input()
+
+    def _validate_input(self):
         if self.Type not in self.valid_types:
             msg = ('Invalid PBARL Type, Type=%s '
                    'valid_types=%s' % (self.Type, self.valid_types.keys()))
@@ -1237,32 +1247,36 @@ class PBARL(LineProperty):
 class PBEAM3(LineProperty):  # not done, cleanup
     type = 'PBEAM3'
 
-    def __init__(self, card=None, data=None, comment=''):
-        LineProperty.__init__(self, card, data)
+    def __init__(self):
+        LineProperty.__init__(self)
+
+    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            self.pid = integer(card, 1, 'pid')
-            self.mid = integer(card, 2, 'mid')
+        self.pid = integer(card, 1, 'pid')
+        self.mid = integer(card, 2, 'mid')
 
-            self.A = double(card, 3, 'A')
-            self.iz = double(card, 4, 'Iz')
-            self.iy = double(card, 5, 'Iy')
-            self.iyz = double_or_blank(card, 6, 'Iyz', 0.0)
-            self.j = double_or_blank(card, 7, 'J', self.iy + self.iz)
-            self.nsm = double_or_blank(card, 8, 'nsm', 0.0)
+        self.A = double(card, 3, 'A')
+        self.iz = double(card, 4, 'Iz')
+        self.iy = double(card, 5, 'Iy')
+        self.iyz = double_or_blank(card, 6, 'Iyz', 0.0)
+        self.j = double_or_blank(card, 7, 'J', self.iy + self.iz)
+        self.nsm = double_or_blank(card, 8, 'nsm', 0.0)
 
-            self.cy = double(card, 9, 'cy')
-            self.cz = double(card, 10, 'cz')
-            self.dy = double(card, 11, 'dy')
-            self.dz = double(card, 12, 'dz')
-            self.ey = double(card, 13, 'ey')
-            self.dz = double(card, 14, 'ez')
-            self.fy = double(card, 15, 'fy')
-            self.fz = double(card, 16, 'fz')
-            # more...
-        else:
-            raise NotImplementedError(data)
+        self.cy = double(card, 9, 'cy')
+        self.cz = double(card, 10, 'cz')
+        self.dy = double(card, 11, 'dy')
+        self.dz = double(card, 12, 'dz')
+        self.ey = double(card, 13, 'ey')
+        self.dz = double(card, 14, 'ez')
+        self.fy = double(card, 15, 'fy')
+        self.fz = double(card, 16, 'fz')
+        # more...
+
+    def add_op2_data(self, data, comment=''):
+        if comment:
+            self._comment = comment
+        raise NotImplementedError(data)
 
     def Nsm(self):
         """

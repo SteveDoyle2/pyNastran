@@ -70,68 +70,75 @@ class CBEAM(CBAR):
                 else:
                     raise KeyError('Field %r=%r is an invalid %s entry or is unsupported.' % (n, value, self.type))
 
-    def __init__(self, card=None, data=None, comment=''):
-        LineElement.__init__(self, card, data)
+    def __init__(self):
+        LineElement.__init__(self)
+
+    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            self.eid = integer(card, 1, 'eid')
-            self.pid = integer_or_blank(card, 2, 'pid', self.eid)
-            self.ga = integer(card, 3, 'ga')
-            self.gb = integer(card, 4, 'gb')
+        self.eid = integer(card, 1, 'eid')
+        self.pid = integer_or_blank(card, 2, 'pid', self.eid)
+        self.ga = integer(card, 3, 'ga')
+        self.gb = integer(card, 4, 'gb')
 
-            self._init_x_g0(card)
-            self._init_offt_bit(card)  # offt doesn't exist in NX nastran
-            self.pa = integer_or_blank(card, 9, 'pa', 0)
-            self.pb = integer_or_blank(card, 10, 'pb', 0)
+        self._init_x_g0(card)
+        self._init_offt_bit(card)  # offt doesn't exist in NX nastran
+        self.pa = integer_or_blank(card, 9, 'pa', 0)
+        self.pb = integer_or_blank(card, 10, 'pb', 0)
 
-            self.wa = array([double_or_blank(card, 11, 'w1a', 0.0),
-                             double_or_blank(card, 12, 'w2a', 0.0),
-                             double_or_blank(card, 13, 'w3a', 0.0)], 'float64')
+        self.wa = array([double_or_blank(card, 11, 'w1a', 0.0),
+                         double_or_blank(card, 12, 'w2a', 0.0),
+                         double_or_blank(card, 13, 'w3a', 0.0)], 'float64')
 
-            self.wb = array([double_or_blank(card, 14, 'w1b', 0.0),
-                             double_or_blank(card, 15, 'w2b', 0.0),
-                             double_or_blank(card, 16, 'w3b', 0.0)], 'float64')
+        self.wb = array([double_or_blank(card, 14, 'w1b', 0.0),
+                         double_or_blank(card, 15, 'w2b', 0.0),
+                         double_or_blank(card, 16, 'w3b', 0.0)], 'float64')
 
-            self.sa = integer_or_blank(card, 17, 'sa', 0)
-            self.sb = integer_or_blank(card, 18, 'sb', 0)
-            assert len(card) <= 19, 'len(CBEAM card) = %i' % len(card)
-        else:  #: .. todo:: verify
-            #data = [[eid,pid,ga,gb,sa,sb, pa,pb,w1a,w2a,w3a,w1b,w2b,w3b],
-            #        [f,g0]]
-            #data = [[eid,pid,ga,gb,sa,sb, pa,pb,w1a,w2a,w3a,w1b,w2b,w3b],
-            #        [f,x1,x2,x3]]
+        self.sa = integer_or_blank(card, 17, 'sa', 0)
+        self.sb = integer_or_blank(card, 18, 'sb', 0)
+        assert len(card) <= 19, 'len(CBEAM card) = %i' % len(card)
+        self._validate_input()
 
-            main = data[0]
+    def add_op2_data(self, data, comment=''):
+        if comment:
+            self._comment = comment
+        #: .. todo:: verify
+        #data = [[eid,pid,ga,gb,sa,sb, pa,pb,w1a,w2a,w3a,w1b,w2b,w3b],
+        #        [f,g0]]
+        #data = [[eid,pid,ga,gb,sa,sb, pa,pb,w1a,w2a,w3a,w1b,w2b,w3b],
+        #        [f,x1,x2,x3]]
 
-            flag = data[1][0]
-            if flag in [0, 1]:
-                self.g0 = None
-                self.x = array([data[1][1],
-                                data[1][2],
-                                data[1][3]], dtype='float64')
-            else:
-                self.g0 = data[1][1]
-                self.x = None
+        main = data[0]
 
-            self.eid = main[0]
-            self.pid = main[1]
-            self.ga = main[2]
-            self.gb = main[3]
-            self.sa = main[4]
-            self.sb = main[5]
+        flag = data[1][0]
+        if flag in [0, 1]:
+            self.g0 = None
+            self.x = array([data[1][1],
+                            data[1][2],
+                            data[1][3]], dtype='float64')
+        else:
+            self.g0 = data[1][1]
+            self.x = None
 
-            self.is_offt = True  #: .. todo:: is this correct???
-            #self.offt = str(data[6]) # GGG
-            self.offt = 'GGG'  #: .. todo:: is this correct???
+        self.eid = main[0]
+        self.pid = main[1]
+        self.ga = main[2]
+        self.gb = main[3]
+        self.sa = main[4]
+        self.sb = main[5]
 
-            self.pa = main[6]
-            self.pb = main[7]
+        self.is_offt = True  #: .. todo:: is this correct???
+        #self.offt = str(data[6]) # GGG
+        self.offt = 'GGG'  #: .. todo:: is this correct???
 
-            self.wa = array([main[8], main[9], main[10]], 'float64')
-            self.wb = array([main[11], main[12], main[13]], 'float64')
+        self.pa = main[6]
+        self.pb = main[7]
 
+        self.wa = array([main[8], main[9], main[10]], 'float64')
+        self.wb = array([main[11], main[12], main[13]], 'float64')
+        self._validate_input()
 
+    def _validate_input(self):
         if self.g0 in [self.ga, self.gb]:
             msg = 'G0=%s cannot be GA=%s or GB=%s' % (self.g0, self.ga, self.gb)
             raise RuntimeError(msg)

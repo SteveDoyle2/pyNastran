@@ -110,6 +110,8 @@ NX_RESULT_TABLES = [
     b'OSTNO1C',
     b'OESPSD2C',
     b'OSTPSD2C',
+
+    b'OPHIG', # Eigenvectors in the basic coordinate system.
 ]
 
 MSC_RESULT_TABLES = [
@@ -519,6 +521,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'MATPOOL': [self._table_passer, self._table_passer],
             b'CSTM':    [self._table_passer, self._table_passer],
             b'AXIC':    [self._table_passer, self._table_passer],
+            b'OPHIG' :  [self._table_passer, self._table_passer],  # eigenvectors in basic coordinate system
             b'BOPHIG':  [self._table_passer, self._table_passer],  # eigenvectors in basic coordinate system
             b'ONRGY2':  [self._table_passer, self._table_passer],
 

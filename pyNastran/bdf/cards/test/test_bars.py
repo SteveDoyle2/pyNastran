@@ -21,8 +21,9 @@ class TestBars(unittest.TestCase):
         card = print_card_8(fields)
         lines = card.split('\n')
         card = bdf.process_card(lines)
-        card2 = BDFCard(card)
-        pbar = PBAR(card2)
+        cardi = BDFCard(card)
+        pbar = PBAR()
+        pbar.add_card(cardi)
         self.assertEqual(pbar.A, 0.), pbar.A
         self.assertEqual(pbar.i12, 0.), pbar.i12
         self.assertEqual(pbar.K1, None), pbar.K1
@@ -48,9 +49,10 @@ class TestBars(unittest.TestCase):
         card = print_card_8(fields)
         lines = card.split('\n')
         card = bdf.process_card(lines)
-        card2 = BDFCard(card)
+        cardi = BDFCard(card)
 
-        pbar = PBAR(card2)
+        pbar = PBAR()
+        pbar.add_card(cardi)
         self.assertEqual(pbar.pid, 1)
         self.assertEqual(pbar.mid, 2)
         self.assertEqual(pbar.A, 0.0)
@@ -84,9 +86,11 @@ class TestBars(unittest.TestCase):
         card = print_card_8(fields)
         lines = card.split('\n')
         card = bdf.process_card(lines)
-        card3 = BDFCard(card)
 
-        pbar = PBAR(card3)
+        cardi = BDFCard(card)
+        pbar = PBAR()
+        pbar.add_card(cardi)
+
         self.assertEqual(pbar.pid, 1)
         self.assertEqual(pbar.mid, 2)
         self.assertEqual(pbar.A, 6.0)
@@ -146,14 +150,14 @@ class TestBars(unittest.TestCase):
             sym_axis=None,
             num_cpus=1,
             scale=None)
-        print('cg* =', cg)
+        #print('cg* =', cg)
         L = 1.0
         mass_per_length = area * rho + nsm
         mass = L * mass_per_length
 
         #xcg = (0.0 * mass_a + 1.0 * mass_b) / (mass_a + mass_b)
         #print(mass_a, mass_b, xcg, mass_a + mass_b)
-        print('mass =', mass)
+        #print('mass =', mass)
         #cbar = CBEAM()
         cbar = model.elements[10]
         pbar = model.properties[11]
@@ -180,7 +184,7 @@ class TestBars(unittest.TestCase):
         f.write(case_control_lines)
         model.write_bdf(f, enddata=True)
         f.close()
-        model2 = BDF()
+        model2 = BDF(debug=False)
         model2.read_bdf('cbar.bdf')
 
         model2._verify_bdf(xref=True)

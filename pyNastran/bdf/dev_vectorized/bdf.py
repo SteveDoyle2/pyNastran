@@ -138,7 +138,7 @@ from .bdf_interface.write_mesh import WriteMesh
 from .bdf_interface.cross_reference import XRefMesh
 
 # old
-from pyNastran.bdf.bdfInterface.BDF_Card import BDFCard
+from pyNastran.bdf.bdfInterface.bdf_card import BDFCard
 
 # sets
 from pyNastran.bdf.cards.bdf_sets import SET1, SET3

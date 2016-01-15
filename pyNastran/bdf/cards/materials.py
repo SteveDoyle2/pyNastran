@@ -31,75 +31,79 @@ from pyNastran.bdf.field_writer_16 import print_card_16
 
 class IsotropicMaterial(Material):
     """Isotropic Material Class"""
-    def __init__(self, card=None, data=None):
-        Material.__init__(self, card, data)
+    def __init__(self):
+        Material.__init__(self)
 
 
 class OrthotropicMaterial(Material):
     """Orthotropic Material Class"""
-    def __init__(self, card, data):
-        Material.__init__(self, card, data)
+    def __init__(self):
+        Material.__init__(self)
 
 class AnisotropicMaterial(Material):
     """Anisotropic Material Class"""
-    def __init__(self, card, data):
-        Material.__init__(self, card, data)
+    def __init__(self):
+        Material.__init__(self)
 
 
 class ThermalMaterial(Material):
     """Thermal Material Class"""
-    def __init__(self, card, data):
-        Material.__init__(self, card, data)
+    def __init__(self):
+        Material.__init__(self)
 
 
 class HyperelasticMaterial(Material):
     """Hyperelastic Material Class"""
-    def __init__(self, card, data):
-        Material.__init__(self, card, data)
+    def __init__(self):
+        Material.__init__(self)
 
 
 class CREEP(Material):
     type = 'CREEP'
 
-    def __init__(self, card=None, data=None, comment=''):
-        Material.__init__(self, card, data)
+    def __init__(self):
+        Material.__init__(self)
+
+    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            self.mid = integer(card, 1, 'mid')
-            self.T0 = double_or_blank(card, 2, 'T0', 0.0)
-            self.exp = double_or_blank(card, 3, 'exp', 1e-9)
-            self.form = string_or_blank(card, 4, 'form') # blank?
-            self.tidkp = integer_or_blank(card, 5, 'tidkp') # blank?
-            self.tidcp = integer_or_blank(card, 6, 'tidcp') # blank?
-            self.tidcs = integer_or_blank(card, 7, 'tidcs') # blank?
-            self.thresh = double_or_blank(card, 8, 'thresh', 1e-5)
-            self.Type = integer_or_blank(card, 9, 'Type') # 111, 112, 121, 122, 211, 212, 221, 222, 300 (or blank?)
-            self.a = double_or_blank(card, 10, 'a')
-            self.b = double_or_blank(card, 11, 'b')
-            self.c = double_or_blank(card, 12, 'c')
-            self.d = double_or_blank(card, 13, 'd')
-            self.e = double_or_blank(card, 14, 'e')
-            self.f = double_or_blank(card, 15, 'f')
-            self.g = double_or_blank(card, 16, 'g')
-            assert len(card) <= 17, 'len(CREEP card) = %i' % len(card)
-        else:
-            self.mid = data[0]
-            self.T0 = data[1]
-            self.exp = data[2]
-            self.form = data[3]
-            self.tidkp = data[4]
-            self.tidcp = data[5]
-            self.tidcs = data[6]
-            self.thresh = data[7]
-            self.Type = data[8]
-            self.a = data[9]
-            self.b = data[10]
-            self.c = data[11]
-            self.d = data[12]
-            self.e = data[13]
-            self.f = data[14]
-            self.g = data[15]
+        self.mid = integer(card, 1, 'mid')
+        self.T0 = double_or_blank(card, 2, 'T0', 0.0)
+        self.exp = double_or_blank(card, 3, 'exp', 1e-9)
+        self.form = string_or_blank(card, 4, 'form') # blank?
+        self.tidkp = integer_or_blank(card, 5, 'tidkp') # blank?
+        self.tidcp = integer_or_blank(card, 6, 'tidcp') # blank?
+        self.tidcs = integer_or_blank(card, 7, 'tidcs') # blank?
+        self.thresh = double_or_blank(card, 8, 'thresh', 1e-5)
+        self.Type = integer_or_blank(card, 9, 'Type') # 111, 112, 121, 122, 211, 212, 221, 222, 300 (or blank?)
+        self.a = double_or_blank(card, 10, 'a')
+        self.b = double_or_blank(card, 11, 'b')
+        self.c = double_or_blank(card, 12, 'c')
+        self.d = double_or_blank(card, 13, 'd')
+        self.e = double_or_blank(card, 14, 'e')
+        self.f = double_or_blank(card, 15, 'f')
+        self.g = double_or_blank(card, 16, 'g')
+        assert len(card) <= 17, 'len(CREEP card) = %i' % len(card)
+
+    def add_op2_data(self, data, comment=''):
+        if comment:
+            self._comment = comment
+        self.mid = data[0]
+        self.T0 = data[1]
+        self.exp = data[2]
+        self.form = data[3]
+        self.tidkp = data[4]
+        self.tidcp = data[5]
+        self.tidcs = data[6]
+        self.thresh = data[7]
+        self.Type = data[8]
+        self.a = data[9]
+        self.b = data[10]
+        self.c = data[11]
+        self.d = data[12]
+        self.e = data[13]
+        self.f = data[14]
+        self.g = data[15]
 
     def cross_reference(self, model):
         msg = ' which is required by CREEP pid=%s' % self.mid
@@ -185,7 +189,9 @@ class MAT1(IsotropicMaterial):
         self.Mcsid = integer_or_blank(card, 12, 'Mcsid', 0)
         assert len(card) <= 13, 'len(MAT1 card) = %i' % len(card)
 
-    def add_op2_data(self, data):
+    def add_op2_data(self, data, comment=''):
+        if comment:
+            self._comment = comment
         self.mid = data[0]
         self.e = data[1]
         self.g = data[2]
@@ -425,50 +431,54 @@ class MAT2(AnisotropicMaterial):
         14: 'St', 15:'Sc', 16:'Ss', 17:'Mcsid',
     }
 
-    def __init__(self, card=None, data=None, comment=''):
-        AnisotropicMaterial.__init__(self, card, data)
+    def __init__(self):
+        AnisotropicMaterial.__init__(self)
         self.matt2 = None
+
+    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            self.mid = integer(card, 1, 'mid')
-            self.G11 = double_or_blank(card, 2, 'G11', 0.0)
-            self.G12 = double_or_blank(card, 3, 'G12', 0.0)
-            self.G13 = double_or_blank(card, 4, 'G13', 0.0)
-            self.G22 = double_or_blank(card, 5, 'G22', 0.0)
-            self.G23 = double_or_blank(card, 6, 'G23', 0.0)
-            self.G33 = double_or_blank(card, 7, 'G33', 0.0)
+        self.mid = integer(card, 1, 'mid')
+        self.G11 = double_or_blank(card, 2, 'G11', 0.0)
+        self.G12 = double_or_blank(card, 3, 'G12', 0.0)
+        self.G13 = double_or_blank(card, 4, 'G13', 0.0)
+        self.G22 = double_or_blank(card, 5, 'G22', 0.0)
+        self.G23 = double_or_blank(card, 6, 'G23', 0.0)
+        self.G33 = double_or_blank(card, 7, 'G33', 0.0)
 
-            self.rho = double_or_blank(card, 8, 'rho', 0.0)
-            self.a1 = double_or_blank(card, 9, 'a1') # blank?
-            self.a2 = double_or_blank(card, 10, 'a2') # blank?
-            self.a3 = double_or_blank(card, 11, 'a3') # blank?
-            self.TRef = double_or_blank(card, 12, 'TRef', 0.0)
-            self.ge = double_or_blank(card, 13, 'ge', 0.0)
-            self.St = double_or_blank(card, 14, 'St') # or blank?
-            self.Sc = double_or_blank(card, 15, 'Sc') # or blank?
-            self.Ss = double_or_blank(card, 16, 'Ss') # or blank?
-            self.Mcsid = integer_or_blank(card, 17, 'Mcsid')
-            assert len(card) <= 18, 'len(MAT2 card) = %i' % len(card)
-        else:
-            self.mid = data[0]
-            self.G11 = data[1]
-            self.G12 = data[2]
-            self.G13 = data[3]
-            self.G22 = data[4]
-            self.G23 = data[5]
-            self.G33 = data[6]
+        self.rho = double_or_blank(card, 8, 'rho', 0.0)
+        self.a1 = double_or_blank(card, 9, 'a1') # blank?
+        self.a2 = double_or_blank(card, 10, 'a2') # blank?
+        self.a3 = double_or_blank(card, 11, 'a3') # blank?
+        self.TRef = double_or_blank(card, 12, 'TRef', 0.0)
+        self.ge = double_or_blank(card, 13, 'ge', 0.0)
+        self.St = double_or_blank(card, 14, 'St') # or blank?
+        self.Sc = double_or_blank(card, 15, 'Sc') # or blank?
+        self.Ss = double_or_blank(card, 16, 'Ss') # or blank?
+        self.Mcsid = integer_or_blank(card, 17, 'Mcsid')
+        assert len(card) <= 18, 'len(MAT2 card) = %i' % len(card)
 
-            self.rho = data[7]
-            self.a1 = data[8]
-            self.a2 = data[9]
-            self.a3 = data[10]
-            self.TRef = data[11]
-            self.ge = data[12]
-            self.St = data[13]
-            self.Sc = data[14]
-            self.Ss = data[15]
-            self.Mcsid = data[16]
+    def add_op2_data(self, data, comment=''):
+        if comment:
+            self._comment = comment
+        self.mid = data[0]
+        self.G11 = data[1]
+        self.G12 = data[2]
+        self.G13 = data[3]
+        self.G22 = data[4]
+        self.G23 = data[5]
+        self.G33 = data[6]
+
+        self.rho = data[7]
+        self.a1 = data[8]
+        self.a2 = data[9]
+        self.a3 = data[10]
+        self.TRef = data[11]
+        self.ge = data[12]
+        self.St = data[13]
+        self.Sc = data[14]
+        self.Ss = data[15]
+        self.Mcsid = data[16]
 
     def get_density(self):
         return self.rho
@@ -634,45 +644,49 @@ class MAT3(OrthotropicMaterial):
         16: 'ge',
     }
 
-    def __init__(self, card=None, data=None, comment=''):
-        OrthotropicMaterial.__init__(self, card, data)
+    def __init__(self):
+        OrthotropicMaterial.__init__(self)
         self.mats3 = None
         self.matt3 = None
+
+    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            self.mid = integer(card, 1, 'mid')
-            self.ex = double(card, 2, 'ex')
-            self.eth = double(card, 3, 'eth')
-            self.ez = double(card, 4, 'ez')
-            self.nuxth = double(card, 5, 'nuxth')
-            self.nuthz = double(card, 6, 'nuthz')
-            self.nuzx = double(card, 7, 'nuzx')
-            self.rho = double_or_blank(card, 8, 'rho', 0.0)
+        self.mid = integer(card, 1, 'mid')
+        self.ex = double(card, 2, 'ex')
+        self.eth = double(card, 3, 'eth')
+        self.ez = double(card, 4, 'ez')
+        self.nuxth = double(card, 5, 'nuxth')
+        self.nuthz = double(card, 6, 'nuthz')
+        self.nuzx = double(card, 7, 'nuzx')
+        self.rho = double_or_blank(card, 8, 'rho', 0.0)
 
-            self.gzx = double_or_blank(card, 11, 'gzx')
-            self.ax = double_or_blank(card, 12, 'ax', 0.0)
-            self.ath = double_or_blank(card, 13, 'ath', 0.0)
-            self.az = double_or_blank(card, 14, 'az', 0.0)
-            self.TRef = double_or_blank(card, 15, 'TRef', 0.0)
-            self.ge = double_or_blank(card, 16, 'ge', 0.0)
-            assert len(card) <= 17, 'len(MAT3 card) = %i' % len(card)
-        else:
-            self.mid = data[0]
-            self.ex = data[1]
-            self.eth = data[2]
-            self.ez = data[3]
-            self.nuxth = data[4]
-            self.nuthz = data[5]
-            self.nuzx = data[6]
+        self.gzx = double_or_blank(card, 11, 'gzx')
+        self.ax = double_or_blank(card, 12, 'ax', 0.0)
+        self.ath = double_or_blank(card, 13, 'ath', 0.0)
+        self.az = double_or_blank(card, 14, 'az', 0.0)
+        self.TRef = double_or_blank(card, 15, 'TRef', 0.0)
+        self.ge = double_or_blank(card, 16, 'ge', 0.0)
+        assert len(card) <= 17, 'len(MAT3 card) = %i' % len(card)
 
-            self.rho = data[7]
-            self.gzx = data[8]
-            self.ax = data[9]
-            self.ath = data[10]
-            self.az = data[11]
-            self.TRef = data[12]
-            self.ge = data[13]
+    def add_op2_data(self, data, comment=''):
+        if comment:
+            self._comment = comment
+        self.mid = data[0]
+        self.ex = data[1]
+        self.eth = data[2]
+        self.ez = data[3]
+        self.nuxth = data[4]
+        self.nuthz = data[5]
+        self.nuzx = data[6]
+
+        self.rho = data[7]
+        self.gzx = data[8]
+        self.ax = data[9]
+        self.ath = data[10]
+        self.az = data[11]
+        self.TRef = data[12]
+        self.ge = data[13]
 
     def get_density(self):
         return self.rho
@@ -753,36 +767,40 @@ class MAT4(ThermalMaterial):
         8:'refEnthalpy', 9:'tch', 10:'tdelta', 11:'qlat',
     }
 
-    def __init__(self, card=None, data=None, comment=''):
-        ThermalMaterial.__init__(self, card, data)
+    def __init__(self):
+        ThermalMaterial.__init__(self)
         self.matt4 = None
+
+    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            self.mid = integer(card, 1, 'mid')
-            self.k = double_or_blank(card, 2, 'k')
-            self.cp = double_or_blank(card, 3, 'cp', 0.0)
-            self.rho = double_or_blank(card, 4, 'rho', 1.0)
-            self.H = double_or_blank(card, 5, 'H')
-            self.mu = double_or_blank(card, 6, 'mu')
-            self.hgen = double_or_blank(card, 7, 'hgen', 1.0)
-            self.refEnthalpy = double_or_blank(card, 8, 'refEnthalpy')
-            self.tch = double_or_blank(card, 9, 'tch')
-            self.tdelta = double_or_blank(card, 10, 'tdelta')
-            self.qlat = double_or_blank(card, 11, 'qlat')
-            assert len(card) <= 12, 'len(MAT4 card) = %i' % len(card)
-        else:
-            self.mid = data[0]
-            self.k = data[1]
-            self.cp = data[2]
-            self.rho = data[3]
-            self.H = data[4]
-            self.mu = data[5]
-            self.hgen = data[6]
-            self.refEnthalpy = data[7]
-            self.tch = data[8]
-            self.tdelta = data[9]
-            self.qlat = data[10]
+        self.mid = integer(card, 1, 'mid')
+        self.k = double_or_blank(card, 2, 'k')
+        self.cp = double_or_blank(card, 3, 'cp', 0.0)
+        self.rho = double_or_blank(card, 4, 'rho', 1.0)
+        self.H = double_or_blank(card, 5, 'H')
+        self.mu = double_or_blank(card, 6, 'mu')
+        self.hgen = double_or_blank(card, 7, 'hgen', 1.0)
+        self.refEnthalpy = double_or_blank(card, 8, 'refEnthalpy')
+        self.tch = double_or_blank(card, 9, 'tch')
+        self.tdelta = double_or_blank(card, 10, 'tdelta')
+        self.qlat = double_or_blank(card, 11, 'qlat')
+        assert len(card) <= 12, 'len(MAT4 card) = %i' % len(card)
+
+    def add_op2_data(self, data, comment=''):
+        if comment:
+            self._comment = comment
+        self.mid = data[0]
+        self.k = data[1]
+        self.cp = data[2]
+        self.rho = data[3]
+        self.H = data[4]
+        self.mu = data[5]
+        self.hgen = data[6]
+        self.refEnthalpy = data[7]
+        self.tch = data[8]
+        self.tdelta = data[9]
+        self.qlat = data[10]
 
     def get_density(self):
         return self.rho
@@ -841,37 +859,40 @@ class MAT5(ThermalMaterial):  # also AnisotropicMaterial
         1: 'mid', 2:'kxx', 3:'kxy', 4:'kxz', 5: 'kyy', 6:'kyz', 7:'kzz',
     }
 
-    def __init__(self, card=None, data=None, comment=''):
-        ThermalMaterial.__init__(self, card, data)
+    def __init__(self):
+        ThermalMaterial.__init__(self)
         self.matt5 = None
+
+    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            self.mid = integer(card, 1, 'mid')
-            #: Thermal conductivity (assumed default=0.0)
-            self.kxx = double_or_blank(card, 2, 'kxx', 0.0)
-            self.kxy = double_or_blank(card, 3, 'kxy', 0.0)
-            self.kxz = double_or_blank(card, 4, 'kxz', 0.0)
-            self.kyy = double_or_blank(card, 5, 'kyy', 0.0)
-            self.kyz = double_or_blank(card, 6, 'kyz', 0.0)
-            self.kzz = double_or_blank(card, 7, 'kzz', 0.0)
+        self.mid = integer(card, 1, 'mid')
+        #: Thermal conductivity (assumed default=0.0)
+        self.kxx = double_or_blank(card, 2, 'kxx', 0.0)
+        self.kxy = double_or_blank(card, 3, 'kxy', 0.0)
+        self.kxz = double_or_blank(card, 4, 'kxz', 0.0)
+        self.kyy = double_or_blank(card, 5, 'kyy', 0.0)
+        self.kyz = double_or_blank(card, 6, 'kyz', 0.0)
+        self.kzz = double_or_blank(card, 7, 'kzz', 0.0)
 
-            self.cp = double_or_blank(card, 8, 'cp', 0.0)
-            self.rho = double_or_blank(card, 9, 'rho', 1.0)
-            self.hgen = double_or_blank(card, 10, 'hgen', 1.0)
-            assert len(card) <= 11, 'len(MAT5 card) = %i' % len(card)
-        else:
-            self.mid = data[0]
-            self.kxx = data[1]
-            self.kxy = data[2]
-            self.kxz = data[3]
-            self.kyy = data[4]
-            self.kyz = data[5]
-            self.kzz = data[6]
-            self.cp = data[7]
-            self.rho = data[8]
-            self.hgen = data[9]
+        self.cp = double_or_blank(card, 8, 'cp', 0.0)
+        self.rho = double_or_blank(card, 9, 'rho', 1.0)
+        self.hgen = double_or_blank(card, 10, 'hgen', 1.0)
+        assert len(card) <= 11, 'len(MAT5 card) = %i' % len(card)
 
+    def add_op2_data(self, data, comment=''):
+        if comment:
+            self._comment = comment
+        self.mid = data[0]
+        self.kxx = data[1]
+        self.kxy = data[2]
+        self.kxz = data[3]
+        self.kyy = data[4]
+        self.kyz = data[5]
+        self.kzz = data[6]
+        self.cp = data[7]
+        self.rho = data[8]
+        self.hgen = data[9]
 
     def cross_reference(self, model):
         #msg = ' which is required by MAT5 mid=%s' % self.mid
@@ -954,58 +975,62 @@ class MAT8(OrthotropicMaterial):
         15:'Yc', 16: 'S', 17:'ge', 18:'F12', 19:'strn',
     }
 
-    def __init__(self, card=None, data=None, comment=''):
-        OrthotropicMaterial.__init__(self, card, data)
+    def __init__(self):
+        OrthotropicMaterial.__init__(self)
         self.mats8 = None
         self.matt8 = None
+
+    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            self.mid = integer(card, 1, 'mid')
-            self.e11 = double(card, 2, 'E11')    #: .. todo:: is this the correct default
-            self.e22 = double(card, 3, 'E22')    #: .. todo:: is this the correct default
+        self.mid = integer(card, 1, 'mid')
+        self.e11 = double(card, 2, 'E11')    #: .. todo:: is this the correct default
+        self.e22 = double(card, 3, 'E22')    #: .. todo:: is this the correct default
 
-            # this default was tested with a complicated model (Master_model_TAXI) using NX Nastran
-            # it is not defined in the QRG, but will work
-            self.nu12 = double_or_blank(card, 4, 'nu12', 0.0)
+        # this default was tested with a complicated model (Master_model_TAXI) using NX Nastran
+        # it is not defined in the QRG, but will work
+        self.nu12 = double_or_blank(card, 4, 'nu12', 0.0)
 
-            self.g12 = double_or_blank(card, 5, 'g12', 0.0)
-            self.g1z = double_or_blank(card, 6, 'g1z', 1e8)
-            self.g2z = double_or_blank(card, 7, 'g2z', 1e8)
-            self.rho = double_or_blank(card, 8, 'rho', 0.0)
-            self.a1 = double_or_blank(card, 9, 'a1', 0.0)
-            self.a2 = double_or_blank(card, 10, 'a2', 0.0)
-            self.TRef = double_or_blank(card, 11, 'TRef', 0.0)
-            self.Xt = double_or_blank(card, 12, 'Xt', 0.0)
-            self.Xc = double_or_blank(card, 13, 'Xc', self.Xt)
-            self.Yt = double_or_blank(card, 14, 'Yt', 0.0)
-            self.Yc = double_or_blank(card, 15, 'Yc', self.Yt)
-            self.S = double_or_blank(card, 16, 'S', 0.0)
-            self.ge = double_or_blank(card, 17, 'ge', 0.0)
-            self.F12 = double_or_blank(card, 18, 'F12', 0.0)
-            self.strn = double_or_blank(card, 19, 'strn', 0.0)
-            assert len(card) <= 20, 'len(MAT8 card) = %i' % len(card)
-        else:
-            self.mid = data[0]
-            self.e11 = data[1]
-            self.e22 = data[2]
-            self.nu12 = data[3]
+        self.g12 = double_or_blank(card, 5, 'g12', 0.0)
+        self.g1z = double_or_blank(card, 6, 'g1z', 1e8)
+        self.g2z = double_or_blank(card, 7, 'g2z', 1e8)
+        self.rho = double_or_blank(card, 8, 'rho', 0.0)
+        self.a1 = double_or_blank(card, 9, 'a1', 0.0)
+        self.a2 = double_or_blank(card, 10, 'a2', 0.0)
+        self.TRef = double_or_blank(card, 11, 'TRef', 0.0)
+        self.Xt = double_or_blank(card, 12, 'Xt', 0.0)
+        self.Xc = double_or_blank(card, 13, 'Xc', self.Xt)
+        self.Yt = double_or_blank(card, 14, 'Yt', 0.0)
+        self.Yc = double_or_blank(card, 15, 'Yc', self.Yt)
+        self.S = double_or_blank(card, 16, 'S', 0.0)
+        self.ge = double_or_blank(card, 17, 'ge', 0.0)
+        self.F12 = double_or_blank(card, 18, 'F12', 0.0)
+        self.strn = double_or_blank(card, 19, 'strn', 0.0)
+        assert len(card) <= 20, 'len(MAT8 card) = %i' % len(card)
 
-            self.g12 = data[4]
-            self.g1z = data[5]
-            self.g2z = data[6]
-            self.rho = data[7]
-            self.a1 = data[8]
-            self.a2 = data[9]
-            self.TRef = data[10]
-            self.Xt = data[11]
-            self.Xc = data[12]
-            self.Yt = data[13]
-            self.Yc = data[14]
-            self.S = data[15]
-            self.ge = data[16]
-            self.F12 = data[17]
-            self.strn = data[18]
+    def add_op2_data(self, data, comment=''):
+        if comment:
+            self._comment = comment
+        self.mid = data[0]
+        self.e11 = data[1]
+        self.e22 = data[2]
+        self.nu12 = data[3]
+
+        self.g12 = data[4]
+        self.g1z = data[5]
+        self.g2z = data[6]
+        self.rho = data[7]
+        self.a1 = data[8]
+        self.a2 = data[9]
+        self.TRef = data[10]
+        self.Xt = data[11]
+        self.Xc = data[12]
+        self.Yt = data[13]
+        self.Yc = data[14]
+        self.S = data[15]
+        self.ge = data[16]
+        self.F12 = data[17]
+        self.strn = data[18]
 
     def cross_reference(self, model):
         #msg = ' which is required by MATT8 mid=%s' % self.mid
@@ -1147,73 +1172,75 @@ class MAT9(AnisotropicMaterial):
     }
 
     def __init__(self, card=None, data=None, comment=''):
-        AnisotropicMaterial.__init__(self, card, data)
+        AnisotropicMaterial.__init__(self)
         self.matt9 = None
+
+    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            #: Material ID
-            self.mid = integer(card, 1, 'mid')
-            self.G11 = double_or_blank(card, 2, 'G11', 0.0)
-            self.G12 = double_or_blank(card, 3, 'G12', 0.0)
-            self.G13 = double_or_blank(card, 4, 'G13', 0.0)
-            self.G14 = double_or_blank(card, 5, 'G14', 0.0)
-            self.G15 = double_or_blank(card, 6, 'G15', 0.0)
-            self.G16 = double_or_blank(card, 7, 'G16', 0.0)
-            self.G22 = double_or_blank(card, 8, 'G22', 0.0)
-            self.G23 = double_or_blank(card, 9, 'G23', 0.0)
-            self.G24 = double_or_blank(card, 10, 'G24', 0.0)
-            self.G25 = double_or_blank(card, 11, 'G25', 0.0)
-            self.G26 = double_or_blank(card, 12, 'G26', 0.0)
-            self.G33 = double_or_blank(card, 13, 'G33', 0.0)
-            self.G34 = double_or_blank(card, 14, 'G34', 0.0)
-            self.G35 = double_or_blank(card, 15, 'G35', 0.0)
-            self.G36 = double_or_blank(card, 16, 'G36', 0.0)
-            self.G44 = double_or_blank(card, 17, 'G44', 0.0)
-            self.G45 = double_or_blank(card, 18, 'G45', 0.0)
-            self.G46 = double_or_blank(card, 19, 'G46', 0.0)
-            self.G55 = double_or_blank(card, 20, 'G55', 0.0)
-            self.G56 = double_or_blank(card, 21, 'G56', 0.0)
-            self.G66 = double_or_blank(card, 22, 'G66', 0.0)
-            self.rho = double_or_blank(card, 23, 'rho', 0.0)
-            self.A = [double_or_blank(card, 24, 'A1', 0.0),
-                      double_or_blank(card, 25, 'A2', 0.0),
-                      double_or_blank(card, 26, 'A3', 0.0),
-                      double_or_blank(card, 27, 'A4', 0.0),
-                      double_or_blank(card, 28, 'A5', 0.0),
-                      double_or_blank(card, 29, 'A6', 0.0)]
-            self.TRef = double_or_blank(card, 30, 'TRef', 0.0)
-            self.ge = double_or_blank(card, 31, 'ge', 0.0)
-            assert len(card) <= 32, 'len(MAT9 card) = %i' % len(card)
-        else:
-            self.mid = data[0]
-            self.G11 = data[1][0]
-            self.G12 = data[1][1]
-            self.G13 = data[1][2]
-            self.G14 = data[1][3]
-            self.G15 = data[1][4]
-            self.G16 = data[1][5]
-            self.G22 = data[1][6]
-            self.G23 = data[1][7]
-            self.G24 = data[1][8]
-            self.G25 = data[1][9]
-            self.G26 = data[1][10]
-            self.G33 = data[1][11]
-            self.G34 = data[1][12]
-            self.G35 = data[1][13]
-            self.G36 = data[1][14]
-            self.G44 = data[1][15]
-            self.G45 = data[1][16]
-            self.G46 = data[1][17]
-            self.G55 = data[1][18]
-            self.G56 = data[1][19]
-            self.G66 = data[1][20]
-            self.rho = data[2]
-            self.A = data[3]
-            self.TRef = data[4]
-            self.ge = data[5]
+        #: Material ID
+        self.mid = integer(card, 1, 'mid')
+        self.G11 = double_or_blank(card, 2, 'G11', 0.0)
+        self.G12 = double_or_blank(card, 3, 'G12', 0.0)
+        self.G13 = double_or_blank(card, 4, 'G13', 0.0)
+        self.G14 = double_or_blank(card, 5, 'G14', 0.0)
+        self.G15 = double_or_blank(card, 6, 'G15', 0.0)
+        self.G16 = double_or_blank(card, 7, 'G16', 0.0)
+        self.G22 = double_or_blank(card, 8, 'G22', 0.0)
+        self.G23 = double_or_blank(card, 9, 'G23', 0.0)
+        self.G24 = double_or_blank(card, 10, 'G24', 0.0)
+        self.G25 = double_or_blank(card, 11, 'G25', 0.0)
+        self.G26 = double_or_blank(card, 12, 'G26', 0.0)
+        self.G33 = double_or_blank(card, 13, 'G33', 0.0)
+        self.G34 = double_or_blank(card, 14, 'G34', 0.0)
+        self.G35 = double_or_blank(card, 15, 'G35', 0.0)
+        self.G36 = double_or_blank(card, 16, 'G36', 0.0)
+        self.G44 = double_or_blank(card, 17, 'G44', 0.0)
+        self.G45 = double_or_blank(card, 18, 'G45', 0.0)
+        self.G46 = double_or_blank(card, 19, 'G46', 0.0)
+        self.G55 = double_or_blank(card, 20, 'G55', 0.0)
+        self.G56 = double_or_blank(card, 21, 'G56', 0.0)
+        self.G66 = double_or_blank(card, 22, 'G66', 0.0)
+        self.rho = double_or_blank(card, 23, 'rho', 0.0)
+        self.A = [double_or_blank(card, 24, 'A1', 0.0),
+                  double_or_blank(card, 25, 'A2', 0.0),
+                  double_or_blank(card, 26, 'A3', 0.0),
+                  double_or_blank(card, 27, 'A4', 0.0),
+                  double_or_blank(card, 28, 'A5', 0.0),
+                  double_or_blank(card, 29, 'A6', 0.0)]
+        self.TRef = double_or_blank(card, 30, 'TRef', 0.0)
+        self.ge = double_or_blank(card, 31, 'ge', 0.0)
+        assert len(card) <= 32, 'len(MAT9 card) = %i' % len(card)
+        assert len(self.A) == 6, A
 
-        assert len(self.A) == 6
+    def add_op2_data(self, data, comment=''):
+        self.mid = data[0]
+        self.G11 = data[1][0]
+        self.G12 = data[1][1]
+        self.G13 = data[1][2]
+        self.G14 = data[1][3]
+        self.G15 = data[1][4]
+        self.G16 = data[1][5]
+        self.G22 = data[1][6]
+        self.G23 = data[1][7]
+        self.G24 = data[1][8]
+        self.G25 = data[1][9]
+        self.G26 = data[1][10]
+        self.G33 = data[1][11]
+        self.G34 = data[1][12]
+        self.G35 = data[1][13]
+        self.G36 = data[1][14]
+        self.G44 = data[1][15]
+        self.G45 = data[1][16]
+        self.G46 = data[1][17]
+        self.G55 = data[1][18]
+        self.G56 = data[1][19]
+        self.G66 = data[1][20]
+        self.rho = data[2]
+        self.A = data[3]
+        self.TRef = data[4]
+        self.ge = data[5]
+        assert len(self.A) == 6, A
 
     def _verify(self, xref):
         """
@@ -1312,7 +1339,9 @@ class MAT10(Material):
         self.ge = double_or_blank(card, 5, 'ge', 0.0)
         assert len(card) <= 6, 'len(MAT10 card) = %i' % len(card)
 
-    def add_op2_data(self, data):
+    def add_op2_data(self, data, comment=''):
+        if comment:
+            self._comment = comment
         self.mid = data[0]
         self.bulk = data[1]
         self.rho = data[2]
@@ -1415,49 +1444,57 @@ class MAT11(Material):
         8: 'g12', 9:'g13', 10:'g23', 11:'rho', 12:'a1', 13:'a2', 14:'a3',
         15:'TRef', 16: 'ge',
     }
-    def __init__(self, card=None, data=None, comment=''):
-        Material.__init__(self, card, data)
+    def __init__(self):
+        Material.__init__(self)
+
+    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            self.mid = integer(card, 1, 'mid')
-            self.e1 = double(card, 2, 'E1')
-            self.e2 = double(card, 3, 'E2')
-            self.e3 = double(card, 4, 'E3')
+        self.mid = integer(card, 1, 'mid')
+        self.e1 = double(card, 2, 'E1')
+        self.e2 = double(card, 3, 'E2')
+        self.e3 = double(card, 4, 'E3')
 
-            self.nu12 = double(card, 5, 'nu12')
-            self.nu13 = double(card, 6, 'nu13')
-            self.nu23 = double(card, 7, 'nu23')
+        self.nu12 = double(card, 5, 'nu12')
+        self.nu13 = double(card, 6, 'nu13')
+        self.nu23 = double(card, 7, 'nu23')
 
-            self.g12 = double(card, 8, 'g12')
-            self.g13 = double(card, 9, 'g13')
-            self.g23 = double(card, 10, 'g23')
+        self.g12 = double(card, 8, 'g12')
+        self.g13 = double(card, 9, 'g13')
+        self.g23 = double(card, 10, 'g23')
 
-            self.rho = double_or_blank(card, 11, 'rho', 0.0)
-            self.a1 = double_or_blank(card, 12, 'a1', 0.0)
-            self.a2 = double_or_blank(card, 13, 'a2', 0.0)
-            self.a3 = double_or_blank(card, 14, 'a3', 0.0)
+        self.rho = double_or_blank(card, 11, 'rho', 0.0)
+        self.a1 = double_or_blank(card, 12, 'a1', 0.0)
+        self.a2 = double_or_blank(card, 13, 'a2', 0.0)
+        self.a3 = double_or_blank(card, 14, 'a3', 0.0)
 
-            self.TRef = double_or_blank(card, 15, 'TRef', 0.0)
-            self.ge = double_or_blank(card, 16, 'ge', 0.0)
-            assert len(card) <= 17, 'len(MAT11 card) = %i' % len(card)
-        else:
-            self.mid = data[0]
-            self.e1 = data[1]
-            self.e2 = data[2]
-            self.e3 = data[3]
-            self.nu12 = data[4]
-            self.nu13 = data[5]
-            self.nu23 = data[6]
-            self.g12 = data[7]
-            self.g13 = data[8]
-            self.g23 = data[9]
-            self.rho = data[10]
-            self.a1 = data[11]
-            self.a2 = data[12]
-            self.a3 = data[13]
-            self.TRef = data[14]
-            self.ge = data[15]
+        self.TRef = double_or_blank(card, 15, 'TRef', 0.0)
+        self.ge = double_or_blank(card, 16, 'ge', 0.0)
+        assert len(card) <= 17, 'len(MAT11 card) = %i' % len(card)
+        self._validate_input()
+
+    def add_data(self, data, comment=''):
+        if comment:
+            self._comment = comment
+        self.mid = data[0]
+        self.e1 = data[1]
+        self.e2 = data[2]
+        self.e3 = data[3]
+        self.nu12 = data[4]
+        self.nu13 = data[5]
+        self.nu23 = data[6]
+        self.g12 = data[7]
+        self.g13 = data[8]
+        self.g23 = data[9]
+        self.rho = data[10]
+        self.a1 = data[11]
+        self.a2 = data[12]
+        self.a3 = data[13]
+        self.TRef = data[14]
+        self.ge = data[15]
+        self._validate_input()
+
+    def _validate_input(self):
         msg = 'MAT11 mid=%s does not have ' % self.mid
         assert self.e1 is not None, msg + 'E1 defined'
         assert self.e2 is not None, msg + 'E2 defined'
@@ -1509,116 +1546,120 @@ class MAT11(Material):
 class MATHP(HyperelasticMaterial):
     type = 'MATHP'
 
-    def __init__(self, card=None, data=None, comment=''):
-        HyperelasticMaterial.__init__(self, card, data)
+    def __init__(self):
+        HyperelasticMaterial.__init__(self)
+
+    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            self.mid = integer(card, 1, 'mid')
-            self.a10 = double_or_blank(card, 2, 'a10', 0.)
-            self.a01 = double_or_blank(card, 3, 'a01', 0.)
-            self.d1 = double_or_blank(card, 4, 'd1', (self.a10 + self.a01) * 1000)
-            self.rho = double_or_blank(card, 5, 'rho', 0.)
-            self.av = double_or_blank(card, 6, 'av', 0.)
-            self.TRef = double_or_blank(card, 7, 'TRef', 0.)
-            self.ge = double_or_blank(card, 8, 'ge', 0.)
+        self.mid = integer(card, 1, 'mid')
+        self.a10 = double_or_blank(card, 2, 'a10', 0.)
+        self.a01 = double_or_blank(card, 3, 'a01', 0.)
+        self.d1 = double_or_blank(card, 4, 'd1', (self.a10 + self.a01) * 1000)
+        self.rho = double_or_blank(card, 5, 'rho', 0.)
+        self.av = double_or_blank(card, 6, 'av', 0.)
+        self.TRef = double_or_blank(card, 7, 'TRef', 0.)
+        self.ge = double_or_blank(card, 8, 'ge', 0.)
 
-            self.na = integer_or_blank(card, 10, 'na', 1)
-            self.nd = integer_or_blank(card, 11, 'nd', 1)
+        self.na = integer_or_blank(card, 10, 'na', 1)
+        self.nd = integer_or_blank(card, 11, 'nd', 1)
 
-            self.a20 = double_or_blank(card, 17, 'a20', 0.)
-            self.a11 = double_or_blank(card, 18, 'a11', 0.)
-            self.a02 = double_or_blank(card, 19, 'a02', 0.)
-            self.d2 = double_or_blank(card, 20, 'd2', 0.)
+        self.a20 = double_or_blank(card, 17, 'a20', 0.)
+        self.a11 = double_or_blank(card, 18, 'a11', 0.)
+        self.a02 = double_or_blank(card, 19, 'a02', 0.)
+        self.d2 = double_or_blank(card, 20, 'd2', 0.)
 
-            self.a30 = double_or_blank(card, 25, 'a30', 0.)
-            self.a21 = double_or_blank(card, 26, 'a21', 0.)
-            self.a12 = double_or_blank(card, 27, 'a12', 0.)
-            self.a03 = double_or_blank(card, 28, 'a03', 0.)
-            self.d3 = double_or_blank(card, 29, 'd3', 0.)
+        self.a30 = double_or_blank(card, 25, 'a30', 0.)
+        self.a21 = double_or_blank(card, 26, 'a21', 0.)
+        self.a12 = double_or_blank(card, 27, 'a12', 0.)
+        self.a03 = double_or_blank(card, 28, 'a03', 0.)
+        self.d3 = double_or_blank(card, 29, 'd3', 0.)
 
-            self.a40 = double_or_blank(card, 33, 'a40', 0.)
-            self.a31 = double_or_blank(card, 34, 'a31', 0.)
-            self.a22 = double_or_blank(card, 35, 'a22', 0.)
-            self.a13 = double_or_blank(card, 36, 'a13', 0.)
-            self.a04 = double_or_blank(card, 37, 'a04', 0.)
-            self.d4 = double_or_blank(card, 38, 'd4', 0.)
+        self.a40 = double_or_blank(card, 33, 'a40', 0.)
+        self.a31 = double_or_blank(card, 34, 'a31', 0.)
+        self.a22 = double_or_blank(card, 35, 'a22', 0.)
+        self.a13 = double_or_blank(card, 36, 'a13', 0.)
+        self.a04 = double_or_blank(card, 37, 'a04', 0.)
+        self.d4 = double_or_blank(card, 38, 'd4', 0.)
 
-            self.a50 = double_or_blank(card, 41, 'a50', 0.)
-            self.a41 = double_or_blank(card, 42, 'a41', 0.)
-            self.a32 = double_or_blank(card, 43, 'a32', 0.)
-            self.a23 = double_or_blank(card, 44, 'a23', 0.)
-            self.a14 = double_or_blank(card, 45, 'a14', 0.)
-            self.a05 = double_or_blank(card, 46, 'a05', 0.)
-            self.d5 = double_or_blank(card, 47, 'd5', 0.)
+        self.a50 = double_or_blank(card, 41, 'a50', 0.)
+        self.a41 = double_or_blank(card, 42, 'a41', 0.)
+        self.a32 = double_or_blank(card, 43, 'a32', 0.)
+        self.a23 = double_or_blank(card, 44, 'a23', 0.)
+        self.a14 = double_or_blank(card, 45, 'a14', 0.)
+        self.a05 = double_or_blank(card, 46, 'a05', 0.)
+        self.d5 = double_or_blank(card, 47, 'd5', 0.)
 
-            self.tab1 = integer_or_blank(card, 49, 'tab1')
-            self.tab2 = integer_or_blank(card, 50, 'tab2')
-            self.tab3 = integer_or_blank(card, 51, 'tab3')
-            self.tab4 = integer_or_blank(card, 52, 'tab4')
-            self.tabd = integer_or_blank(card, 56, 'tabd')
-            assert len(card) <= 57, 'len(MATHP card) = %i' % len(card)
+        self.tab1 = integer_or_blank(card, 49, 'tab1')
+        self.tab2 = integer_or_blank(card, 50, 'tab2')
+        self.tab3 = integer_or_blank(card, 51, 'tab3')
+        self.tab4 = integer_or_blank(card, 52, 'tab4')
+        self.tabd = integer_or_blank(card, 56, 'tabd')
+        assert len(card) <= 57, 'len(MATHP card) = %i' % len(card)
+
+    def add_op2_data(self, data, comment=''):
+        if comment:
+            self._comment = comment
+        main = data[0]
+        (mid, a10, a01, d1, rho, av, alpha, tref, ge, sf, na, nd, kp,
+         a20, a11, a02, d2,
+         a30, a21, a12, a03, d3,
+         a40, a31, a22, a13, a04, d4,
+         a50, a41, a32, a23, a14, a05, d5,
+         continueFlag) = main
+
+        self.mid = mid
+        self.a10 = a10
+        self.a01 = a01
+        self.d1 = d1
+        self.rho = rho
+        self.av = av
+        self.TRef = tref
+        self.ge = ge
+
+        self.na = na
+        self.nd = nd
+
+        self.a20 = a20
+        self.a11 = a11
+        self.a02 = a02
+        self.d2 = d2
+
+        self.a30 = a30
+        self.a21 = a21
+        self.a12 = a12
+        self.a03 = a03
+        self.d3 = d3
+
+        self.a40 = a40
+        self.a31 = a31
+        self.a22 = a22
+        self.a13 = a13
+        self.a04 = a04
+        self.d4 = d4
+
+        self.a50 = a50
+        self.a41 = a41
+        self.a32 = a32
+        self.a23 = a23
+        self.a14 = a14
+        self.a05 = a05
+        self.d5 = d5
+
+        if continueFlag:
+            (tab1, tab2, tab3, tab4, x1, x2, x3, tab5) = data[1]
         else:
-            main = data[0]
-            (mid, a10, a01, d1, rho, av, alpha, tref, ge, sf, na, nd, kp,
-             a20, a11, a02, d2,
-             a30, a21, a12, a03, d3,
-             a40, a31, a22, a13, a04, d4,
-             a50, a41, a32, a23, a14, a05, d5,
-             continueFlag) = main
+            tab1 = None
+            tab2 = None
+            tab3 = None
+            tab4 = None
+            tab5 = None
 
-            self.mid = mid
-            self.a10 = a10
-            self.a01 = a01
-            self.d1 = d1
-            self.rho = rho
-            self.av = av
-            self.TRef = tref
-            self.ge = ge
-
-            self.na = na
-            self.nd = nd
-
-            self.a20 = a20
-            self.a11 = a11
-            self.a02 = a02
-            self.d2 = d2
-
-            self.a30 = a30
-            self.a21 = a21
-            self.a12 = a12
-            self.a03 = a03
-            self.d3 = d3
-
-            self.a40 = a40
-            self.a31 = a31
-            self.a22 = a22
-            self.a13 = a13
-            self.a04 = a04
-            self.d4 = d4
-
-            self.a50 = a50
-            self.a41 = a41
-            self.a32 = a32
-            self.a23 = a23
-            self.a14 = a14
-            self.a05 = a05
-            self.d5 = d5
-
-            if continueFlag:
-                (tab1, tab2, tab3, tab4, x1, x2, x3, tab5) = data[1]
-            else:
-                tab1 = None
-                tab2 = None
-                tab3 = None
-                tab4 = None
-                tab5 = None
-
-            self.tab1 = tab1
-            self.tab2 = tab2
-            self.tab3 = tab3
-            self.tab4 = tab4
-            self.tabd = tab5
+        self.tab1 = tab1
+        self.tab2 = tab2
+        self.tab3 = tab3
+        self.tab4 = tab4
+        self.tabd = tab5
 
     def raw_fields(self):
         list_fields = ['MATHP', self.mid, self.a10, self.a01, self.d1, self.rho,

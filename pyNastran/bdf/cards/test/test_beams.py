@@ -4,7 +4,7 @@ from six.moves import zip, StringIO
 import unittest
 from itertools import count
 
-from numpy import allclose
+from numpy import array, allclose
 
 from pyNastran.bdf.bdf import BDF, BDFCard, PBEAM, CBEAM, GRID
 
@@ -23,8 +23,9 @@ class TestBeams(unittest.TestCase):
         ]
         card = bdf.process_card(lines)
         #print(print_card_8(card))
-        card = BDFCard(card)
-        card2 = PBEAM(card)
+        cardi = BDFCard(card)
+        card2 = PBEAM()
+        card2.add_card(cardi)
         fields = card2.raw_fields()
 
         lines_expected = [
@@ -65,8 +66,9 @@ class TestBeams(unittest.TestCase):
         ]
 
         card = bdf.process_card(lines)
-        card = BDFCard(card)
-        card2 = PBEAM(card)
+        cardi = BDFCard(card)
+        card2 = PBEAM()
+        card2.add_card(cardi)
         fields = card2.raw_fields()
 
         lines_expected = [
@@ -94,8 +96,9 @@ class TestBeams(unittest.TestCase):
         ]
 
         card = bdf.process_card(lines)
-        card = BDFCard(card)
-        card2 = PBEAM(card)
+        cardi = BDFCard(card)
+        card2 = PBEAM()
+        card2.add_card(cardi)
         fields = card2.raw_fields()
 
         lines_expected = [
@@ -117,8 +120,9 @@ class TestBeams(unittest.TestCase):
         ]
 
         card = bdf.process_card(lines)
-        card = BDFCard(card)
-        card2 = PBEAM(card)
+        cardi = BDFCard(card)
+        card2 = PBEAM()
+        card2.add_card(cardi)
         fields = card2.raw_fields()
         lines_expected = [
             'PBEAM         39       6     2.9     3.5    5.97      0.      0.      0.',
@@ -136,8 +140,9 @@ class TestBeams(unittest.TestCase):
 
         card = bdf.process_card(lines)
         #print(print_card_8(card))
-        card = BDFCard(card)
-        card2 = PBEAM(card)
+        cardi = BDFCard(card)
+        card2 = PBEAM()
+        card2.add_card(cardi)
         fields = card2.raw_fields()
         msg = print_card_8(fields)
 
@@ -200,8 +205,9 @@ class TestBeams(unittest.TestCase):
         ]
 
         card = bdf.process_card(lines)
-        card = BDFCard(card)
-        card2 = PBEAM(card)
+        cardi = BDFCard(card)
+        card2 = PBEAM()
+        card2.add_card(cardi)
         fields = card2.raw_fields()
 
         lines_expected = [
@@ -221,8 +227,9 @@ class TestBeams(unittest.TestCase):
             '+Z4     0.0     0.0',
         ]
         card = bdf.process_card(lines)
-        card = BDFCard(card)
-        card2 = PBEAM(card)
+        cardi = BDFCard(card)
+        card2 = PBEAM()
+        card2.add_card(cardi)
 
         #if 0:
             #fields = card2.raw_fields()
@@ -264,8 +271,9 @@ class TestBeams(unittest.TestCase):
         ]
 
         card = bdf.process_card(lines)
-        card = BDFCard(card)
-        card2 = PBEAM(card)
+        cardi = BDFCard(card)
+        card2 = PBEAM()
+        card2.add_card(cardi)
 
         if 1:
             fields = card2.raw_fields()
@@ -300,9 +308,10 @@ class TestBeams(unittest.TestCase):
         card = print_card_8(fields)
         lines = card.split('\n')
         card = bdf.process_card(lines)
-        card2 = BDFCard(card)
+        cardi = BDFCard(card)
         #with self.assertRaises(AssertionError):  # A=0, I12=0, K1=0
-        pbeam = PBEAM(card2)
+        pbeam = PBEAM()
+        pbeam.add_card(cardi)
         fields2 = pbeam.repr_fields()
         assert fields == fields
 
@@ -457,7 +466,7 @@ class TestBeams(unittest.TestCase):
             sym_axis=None,
             num_cpus=1,
             scale=None)
-        print('cg* =', cg)
+        #print('cg* =', cg)
         L = 1.0
         area = (area1 + area2) / 2.
         nsm = (nsm_a + nsm_b) / 2.
@@ -468,7 +477,6 @@ class TestBeams(unittest.TestCase):
         mass_b = L / 2. * (area2 * rho + nsm_b)
         xcg = (0.0 * mass_a + 1.0 * mass_b) / (mass_a + mass_b)
         #print(mass_a, mass_b, xcg, mass_a + mass_b)
-        from numpy import array
         #print('mass =', mass)
         #cbeam = CBEAM()
         cbeam = model.elements[10]

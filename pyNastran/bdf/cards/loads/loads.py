@@ -27,7 +27,7 @@ class Load(BaseCard):
     """defines the DefaultLoad class"""
     type = 'DefLoad'
 
-    def __init__(self, card, data):
+    def __init__(self, card=None, data=None):
         self.cid = None
         self.nodes = None
 

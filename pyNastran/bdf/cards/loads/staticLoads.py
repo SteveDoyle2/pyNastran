@@ -622,8 +622,8 @@ class Force(Load):
     """Generic class for all Forces"""
     type = 'Force'
 
-    def __init__(self, card, data):
-        Load.__init__(self, card, data)
+    def __init__(self):
+        Load.__init__(self)
 
     def normalize(self):
         """
@@ -701,8 +701,8 @@ class Moment(Load):
     """Generic class for all Moments"""
     type = 'Moment'
 
-    def __init__(self, card, data):
-        Load.__init__(self, card, data)
+    def __init__(self):
+        Load.__init__(self)
 
     def normalize(self):
         """
@@ -776,32 +776,42 @@ class Moment(Load):
 class FORCE(Force):
     type = 'FORCE'
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self):
         """
-        ::
+        +-------+-----+------+-------+------+------+------+------+
+        |   1   |  2  |  3   |   4   |  5   |  6   |   7  |   8  |
+        +-------+-----+------+-------+------+------+------+------+
+        | FORCE | SID | NODE | CID   | MAG  |  FX  |  FY  |  FZ  |
+        +-------+-----+------+-------+------+------+------+------+
 
-          FORCE          3       1            100.      0.      0.      1.
+        +-------+-----+------+-------+------+------+------+------+
+        | FORCE |  3  |  1   |       | 100. |  0.  |  0.  |  1.  |
+        +-------+-----+------+-------+------+------+------+------+
         """
-        Force.__init__(self, card, data)
+        Force.__init__(self)
+
+    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            self.sid = integer(card, 1, 'sid')
-            self.node = integer(card, 2, 'node')
-            self.cid = integer_or_blank(card, 3, 'cid', 0)
-            self.mag = double(card, 4, 'mag')
-            self.xyz = array([double_or_blank(card, 5, 'X1', 0.0),
-                              double_or_blank(card, 6, 'X2', 0.0),
-                              double_or_blank(card, 7, 'X3', 0.0)])
-            assert len(card) <= 8, 'len(FORCE card) = %i' % len(card)
-        else:
-            self.sid = data[0]
-            self.node = data[1]
-            self.cid = data[2]
-            self.mag = data[3]
-            xyz = data[4:7]
-            assert len(xyz) == 3, 'xyz=%s' % str(xyz)
-            self.xyz = array(xyz)
+        self.sid = integer(card, 1, 'sid')
+        self.node = integer(card, 2, 'node')
+        self.cid = integer_or_blank(card, 3, 'cid', 0)
+        self.mag = double(card, 4, 'mag')
+        self.xyz = array([double_or_blank(card, 5, 'X1', 0.0),
+                          double_or_blank(card, 6, 'X2', 0.0),
+                          double_or_blank(card, 7, 'X3', 0.0)])
+        assert len(card) <= 8, 'len(FORCE card) = %i' % len(card)
+
+    def add_op2_data(self, data, comment=''):
+        if comment:
+            self._comment = comment
+        self.sid = data[0]
+        self.node = data[1]
+        self.cid = data[2]
+        self.mag = data[3]
+        xyz = data[4:7]
+        assert len(xyz) == 3, 'xyz=%s' % str(xyz)
+        self.xyz = array(xyz)
 
     @property
     def node_id(self):
@@ -879,23 +889,27 @@ class FORCE1(Force):
     """
     type = 'FORCE1'
 
-    def __init__(self, card=None, data=None, comment=''):
-        Force.__init__(self, card, data)
+    def __init__(self):
+        Force.__init__(self)
+
+    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            self.sid = integer(card, 1, 'sid')
-            self.node = integer(card, 2, 'node')
-            self.mag = double(card, 3, 'mag')
-            self.g1 = integer(card, 4, 'g1')
-            self.g2 = integer(card, 5, 'g2')
-            assert len(card) == 6, 'len(FORCE1 card) = %i' % len(card)
-        else:
-            self.sid = data[0]
-            self.node = data[1]
-            self.mag = data[2]
-            self.g1 = data[3]
-            self.g2 = data[4]
+        self.sid = integer(card, 1, 'sid')
+        self.node = integer(card, 2, 'node')
+        self.mag = double(card, 3, 'mag')
+        self.g1 = integer(card, 4, 'g1')
+        self.g2 = integer(card, 5, 'g2')
+        assert len(card) == 6, 'len(FORCE1 card) = %i' % len(card)
+
+    def add_op2_data(self, data, comment=''):
+        if comment:
+            self._comment = comment
+        self.sid = data[0]
+        self.node = data[1]
+        self.mag = data[2]
+        self.g1 = data[3]
+        self.g2 = data[4]
 
     def cross_reference(self, model):
         """
@@ -969,32 +983,36 @@ class FORCE2(Force):
     """
     type = 'FORCE2'
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self):
         """
         +--------+-----+---+---+----+----+----+----+
         | FORCE2 | SID | G | F | G1 | G2 | G3 | G4 |
         +--------+-----+---+---+----+----+----+----+
         """
-        Force.__init__(self, card, data)
+        Force.__init__(self)
+
+    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            self.sid = integer(card, 1, 'sid')
-            self.node = integer(card, 2, 'node')
-            self.mag = double(card, 3, 'mag')
-            self.g1 = integer(card, 4, 'g1')
-            self.g2 = integer(card, 5, 'g2')
-            self.g3 = integer(card, 6, 'g3')
-            self.g4 = integer(card, 7, 'g4')
-            assert len(card) == 8, 'len(FORCE2 card) = %i' % len(card)
-        else:
-            self.sid = data[0]
-            self.node = data[1]
-            self.mag = data[2]
-            self.g1 = data[3]
-            self.g2 = data[4]
-            self.g3 = data[5]
-            self.g4 = data[6]
+        self.sid = integer(card, 1, 'sid')
+        self.node = integer(card, 2, 'node')
+        self.mag = double(card, 3, 'mag')
+        self.g1 = integer(card, 4, 'g1')
+        self.g2 = integer(card, 5, 'g2')
+        self.g3 = integer(card, 6, 'g3')
+        self.g4 = integer(card, 7, 'g4')
+        assert len(card) == 8, 'len(FORCE2 card) = %i' % len(card)
+
+    def add_op2_data(self, data, comment=''):
+        if comment:
+            self._comment = comment
+        self.sid = data[0]
+        self.node = data[1]
+        self.mag = data[2]
+        self.g1 = data[3]
+        self.g2 = data[4]
+        self.g3 = data[5]
+        self.g4 = data[6]
 
     def cross_reference(self, model):
         """
@@ -1128,7 +1146,7 @@ class FORCE2(Force):
 class MOMENT(Moment):
     type = 'MOMENT'
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self):
         """
         Defines a static concentrated moment at a grid point by specifying a
         scale factor and a vector that determines the direction.::
@@ -1139,25 +1157,31 @@ class MOMENT(Moment):
         | MOMENT | 2   | 5 |  6  | 2.9 | 0.0 | 1.0 | 0.0 |
         +--------+-----+---+-----+-----+-----+-----+-----+
         """
-        Moment.__init__(self, card, data)
+        Moment.__init__(self)
+
+    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            self.sid = integer(card, 1, 'sid')
-            self.node = integer(card, 2, 'node')
-            self.cid = integer_or_blank(card, 3, 'cid', 0)
-            self.mag = double(card, 4, 'mag')
+        self.sid = integer(card, 1, 'sid')
+        self.node = integer(card, 2, 'node')
+        self.cid = integer_or_blank(card, 3, 'cid', 0)
+        self.mag = double(card, 4, 'mag')
 
-            xyz = array([double_or_blank(card, 5, 'X1', 0.0),
-                         double_or_blank(card, 6, 'X2', 0.0),
-                         double_or_blank(card, 7, 'X3', 0.0)])
-            assert len(card) <= 8, 'len(MOMENT card) = %i' % len(card)
-        else:
-            self.sid = data[0]
-            self.node = data[1]
-            self.cid = data[2]
-            self.mag = data[3]
-            xyz = data[4:7]
+        xyz = array([double_or_blank(card, 5, 'X1', 0.0),
+                     double_or_blank(card, 6, 'X2', 0.0),
+                     double_or_blank(card, 7, 'X3', 0.0)])
+        assert len(card) <= 8, 'len(MOMENT card) = %i' % len(card)
+        assert len(xyz) == 3, 'xyz=%s' % str(xyz)
+        self.xyz = xyz
+
+    def add_op2_data(self, data, comment=''):
+        if comment:
+            self._comment = comment
+        self.sid = data[0]
+        self.node = data[1]
+        self.cid = data[2]
+        self.mag = data[3]
+        xyz = data[4:7]
         assert len(xyz) == 3, 'xyz=%s' % str(xyz)
         self.xyz = xyz
 
@@ -1227,7 +1251,7 @@ class MOMENT(Moment):
 class MOMENT1(Moment):
     type = 'MOMENT1'
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self):
         """
         Defines a static concentrated moment at a grid point by specifying a
         magnitude and two grid points that determine the direction.::
@@ -1236,27 +1260,31 @@ class MOMENT1(Moment):
         | MOMENT1 | SID | G | M | G1 | G2 |
         +---------+-----+---+---+----+----+
         """
-        Moment.__init__(self, card, data)
+        Moment.__init__(self)
+        self.xyz = None
+
+    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            self.sid = integer(card, 1, 'sid')
-            self.node = integer(card, 2, 'node')
-            self.mag = double(card, 3, 'mag')
-            self.g1 = integer(card, 4, 'g1')
-            self.g2 = integer(card, 5, 'g2')
-            assert len(card) == 6, 'len(MOMENT1 card) = %i' % len(card)
-        else:
-            self.sid = data[0]
-            self.node = data[1]
-            self.mag = data[2]
-            self.g1 = data[3]
-            self.g2 = data[4]
-            self.g3 = data[5]
-            self.g4 = data[6]
-            xyz = data[7:10]
-            raise NotImplementedError('MOMENT1 is probably wrong')
+        self.sid = integer(card, 1, 'sid')
+        self.node = integer(card, 2, 'node')
+        self.mag = double(card, 3, 'mag')
+        self.g1 = integer(card, 4, 'g1')
+        self.g2 = integer(card, 5, 'g2')
+        assert len(card) == 6, 'len(MOMENT1 card) = %i' % len(card)
 
+    def add_op2_data(self, data, comment=''):
+        if comment:
+            self._comment = comment
+        self.sid = data[0]
+        self.node = data[1]
+        self.mag = data[2]
+        self.g1 = data[3]
+        self.g2 = data[4]
+        self.g3 = data[5]
+        self.g4 = data[6]
+        xyz = data[7:10]
+        raise NotImplementedError('MOMENT1 is probably wrong')
         #assert len(xyz) == 3, 'xyz=%s' % str(xyz)
         #self.xyz = array(xyz)
         self.xyz = None
@@ -1336,7 +1364,7 @@ class MOMENT1(Moment):
 class MOMENT2(Moment):
     type = 'MOMENT2'
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self):
         """
         Defines a static concentrated moment at a grid point by specification
         of a magnitude and four grid points that determine the direction.::
@@ -1345,30 +1373,32 @@ class MOMENT2(Moment):
         | MOMENT2 | SID | G | M | G1 | G2 | G3 | G4 |
         +---------+-----+---+---+----+----+----+----+
         """
-        Moment.__init__(self, card, data)
+        Moment.__init__(self)
+
+    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            self.sid = integer(card, 1, 'sid')
-            self.node = integer(card, 2, 'node')
-            self.mag = double(card, 3, 'mag')
-            self.g1 = integer(card, 4, 'g1')
-            self.g2 = integer(card, 5, 'g2')
-            self.g3 = integer(card, 6, 'g3')
-            self.g4 = integer(card, 7, 'g4')
-            self.xyz = None
-            assert len(card) <= 8, 'len(MOMENT2 card) = %i' % len(card)
-        else:
-            self.sid = data[0]
-            self.node = data[1]
-            self.mag = data[2]
-            self.g1 = data[3]
-            self.g2 = data[4]
-            self.g3 = data[5]
-            self.g4 = data[6]
-            xyz = data[7:10]
-            self.xyz = array(xyz)
-            assert len(xyz) == 3, 'xyz=%s' % str(xyz)
+        self.sid = integer(card, 1, 'sid')
+        self.node = integer(card, 2, 'node')
+        self.mag = double(card, 3, 'mag')
+        self.g1 = integer(card, 4, 'g1')
+        self.g2 = integer(card, 5, 'g2')
+        self.g3 = integer(card, 6, 'g3')
+        self.g4 = integer(card, 7, 'g4')
+        self.xyz = None
+        assert len(card) <= 8, 'len(MOMENT2 card) = %i' % len(card)
+
+    def add_op2_data(self, data, comment=''):
+        self.sid = data[0]
+        self.node = data[1]
+        self.mag = data[2]
+        self.g1 = data[3]
+        self.g2 = data[4]
+        self.g3 = data[5]
+        self.g4 = data[6]
+        xyz = data[7:10]
+        self.xyz = array(xyz)
+        assert len(xyz) == 3, 'xyz=%s' % str(xyz)
 
     def cross_reference(self, model):
         """
