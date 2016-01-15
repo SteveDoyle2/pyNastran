@@ -31,7 +31,7 @@ from pyNastran.bdf.field_writer_16 import print_card_16
 
 class IsotropicMaterial(Material):
     """Isotropic Material Class"""
-    def __init__(self, card, data):
+    def __init__(self, card=None, data=None):
         Material.__init__(self, card, data)
 
 
@@ -165,37 +165,39 @@ class MAT1(IsotropicMaterial):
         9: 'St', 10:'Sc', 11:'Ss', 12:'Mcsid',
     }
 
-    def __init__(self, card=None, data=None, comment=''):
-        IsotropicMaterial.__init__(self, card, data)
+    def __init__(self):
+        IsotropicMaterial.__init__(self)
         self.mats1 = None
         self.matt1 = None
+
+    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            self.mid = integer(card, 1, 'mid')
-            self.set_E_G_nu(card)
-            self.rho = double_or_blank(card, 5, 'rho', 0.)
-            self.a = double_or_blank(card, 6, 'a', 0.0)
-            self.TRef = double_or_blank(card, 7, 'TRef', 0.0)
-            self.ge = double_or_blank(card, 8, 'ge', 0.0)
-            self.St = double_or_blank(card, 9, 'St', 0.0)
-            self.Sc = double_or_blank(card, 10, 'Sc', 0.0)
-            self.Ss = double_or_blank(card, 11, 'Ss', 0.0)
-            self.Mcsid = integer_or_blank(card, 12, 'Mcsid', 0)
-            assert len(card) <= 13, 'len(MAT1 card) = %i' % len(card)
-        else:
-            self.mid = data[0]
-            self.e = data[1]
-            self.g = data[2]
-            self.nu = data[3]
-            self.rho = data[4]
-            self.a = data[5]
-            self.TRef = data[6]
-            self.ge = data[7]
-            self.St = data[8]
-            self.Sc = data[9]
-            self.Ss = data[10]
-            self.Mcsid = data[11]
+        self.mid = integer(card, 1, 'mid')
+        self.set_E_G_nu(card)
+        self.rho = double_or_blank(card, 5, 'rho', 0.)
+        self.a = double_or_blank(card, 6, 'a', 0.0)
+        self.TRef = double_or_blank(card, 7, 'TRef', 0.0)
+        self.ge = double_or_blank(card, 8, 'ge', 0.0)
+        self.St = double_or_blank(card, 9, 'St', 0.0)
+        self.Sc = double_or_blank(card, 10, 'Sc', 0.0)
+        self.Ss = double_or_blank(card, 11, 'Ss', 0.0)
+        self.Mcsid = integer_or_blank(card, 12, 'Mcsid', 0)
+        assert len(card) <= 13, 'len(MAT1 card) = %i' % len(card)
+
+    def add_op2_data(self, data):
+        self.mid = data[0]
+        self.e = data[1]
+        self.g = data[2]
+        self.nu = data[3]
+        self.rho = data[4]
+        self.a = data[5]
+        self.TRef = data[6]
+        self.ge = data[7]
+        self.St = data[8]
+        self.Sc = data[9]
+        self.Ss = data[10]
+        self.Mcsid = data[11]
 
     def _verify(self, xref):
         """
@@ -1299,21 +1301,23 @@ class MAT10(Material):
         1: 'mid', 2:'bulk', 3:'rho', 4:'c', 5:'ge',
     }
 
-    def __init__(self, card=None, data=None, comment=''):
-        Material.__init__(self, card, data)
+    def __init__(self):
+        Material.__init__(self)
+
+    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            self.mid = integer(card, 1, 'mid')
-            self.getBulkRhoC(card)
-            self.ge = double_or_blank(card, 5, 'ge', 0.0)
-            assert len(card) <= 6, 'len(MAT10 card) = %i' % len(card)
-        else:
-            self.mid = data[0]
-            self.bulk = data[1]
-            self.rho = data[2]
-            self.c = data[3]
-            self.ge = data[4]
+        self.mid = integer(card, 1, 'mid')
+        self.getBulkRhoC(card)
+        self.ge = double_or_blank(card, 5, 'ge', 0.0)
+        assert len(card) <= 6, 'len(MAT10 card) = %i' % len(card)
+
+    def add_op2_data(self, data):
+        self.mid = data[0]
+        self.bulk = data[1]
+        self.rho = data[2]
+        self.c = data[3]
+        self.ge = data[4]
 
     def _verify(self, xref):
         """

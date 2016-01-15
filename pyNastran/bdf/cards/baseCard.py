@@ -224,7 +224,7 @@ class BaseCard(object):
 
 
 class Property(BaseCard):
-    def __init__(self, card, data):
+    def __init__(self, card=None, data=None):
         assert card is None or data is None
 
     def Pid(self):
@@ -285,7 +285,7 @@ class Property(BaseCard):
 
 class Material(BaseCard):
     """Base Material Class"""
-    def __init__(self, card, data):
+    def __init__(self, card=None, data=None):
         BaseCard.__init__(self)
 
     def cross_reference(self, model):
@@ -313,7 +313,7 @@ class Element(BaseCard):
     """defines the Element class"""
     pid = 0  # CONM2, rigid
 
-    def __init__(self, card, data):
+    def __init__(self, card=None, data=None):
         BaseCard.__init__(self)
         assert card is None or data is None
         #: the list of node IDs for an element (default=None)

@@ -23,7 +23,7 @@ EPOINTs/SPOINTs classes are for multiple degrees of freedom
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from numpy import array
+import numpy as np
 from six import integer_types, string_types, PY2
 if PY2:
     u = unicode
@@ -43,15 +43,13 @@ from pyNastran.bdf.field_writer_double import print_scientific_double, print_car
 
 class Ring(BaseCard):
     """Generic Ring base class"""
-    def __init__(self, card, data):
-        assert card is None or data is None
-
+    def __init__(self):
+        pass
 
 class Node(BaseCard):
     """Generic Node base class"""
-    def __init__(self, card, data):
-        assert card is None or data is None
-
+    def __init__(self):
+        pass
 
 class RINGAX(Ring):
     """
@@ -86,7 +84,7 @@ class RINGAX(Ring):
         :type comment:
           string
         """
-        Ring.__init__(self, card, data)
+        Ring.__init__(self)
         if comment:
             self._comment = comment
         if card:
@@ -144,7 +142,7 @@ class RINGAX(Ring):
 class XPoint(Node):
     """common class for EPOINT/SPOINT"""
     def __init__(self, nid, comment):
-        Node.__init__(self, card=None, data=None)
+        Node.__init__(self)
         if comment:
             self._comment = comment
         self.nid = nid
@@ -308,7 +306,7 @@ class XPoints(Node):
     def __init__(self, card=None, data=None, comment=''):
         if comment:
             self._comment = comment
-        Node.__init__(self, card, data)
+        Node.__init__(self)
 
         if card:
             fields = []
@@ -425,7 +423,7 @@ class SPOINTs(XPoints):
         """
         XPoints.__init__(self, card, data, comment)
 
-    def createSPOINTi(self):
+    def create_spointi(self):
         """
         Creates individal SPOINT objects
 
@@ -472,7 +470,7 @@ class EPOINTs(XPoints):
         """
         XPoints.__init__(self, card, data, comment)
 
-    def createEPOINTi(self):
+    def create_epointi(self):
         """
         Creates individal EPOINT objects
 
@@ -706,7 +704,7 @@ class GRIDB(Node):
         """
         if comment:
             self._comment = comment
-        Node.__init__(self, card, data)
+        Node.__init__(self)
 
         if card:
             #: node ID
@@ -876,7 +874,33 @@ class GRID(Node):
         else:
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self):
+        Node.__init__(self)
+
+    def add_op2_data(self, data, comment=''):
+        if comment:
+            self._comment = comment
+        self.nid = data[0]
+        self.cp = data[1]
+        self.xyz = np.array(data[2:5])
+        self.cd = data[5]
+        self.ps = data[6]
+        self.seid = data[7]
+        if self.ps == 0:
+            self.ps = ''
+        assert len(self.xyz) == 3
+
+    def add(self, nid, cp=0, xyz=None, cd=0, ps='', seid=0):
+        self.nid = nid
+        self.cp = cp
+        if xyz is None:
+            xyz = [0., 0., 0.]
+        self.xyz = np.asarray(xyz, dtype='float64')
+        self.cd = cd
+        self.ps = ps
+        self._validate_input()
+
+    def add_card(self, card, comment=''):
         """
         Creates the GRID card
 
@@ -893,47 +917,37 @@ class GRID(Node):
         """
         if comment:
             self._comment = comment
-        Node.__init__(self, card, data)
 
-        if card:
-            nfields = len(card)
-            #: Node ID
-            self.nid = integer(card, 1, 'nid')
+        nfields = len(card)
+        #: Node ID
+        self.nid = integer(card, 1, 'nid')
 
-            #: Grid point coordinate system
-            self.cp = integer_or_blank(card, 2, 'cp', 0)
+        #: Grid point coordinate system
+        self.cp = integer_or_blank(card, 2, 'cp', 0)
 
-            #: node location in local frame
-            self.xyz = array([
-                double_or_blank(card, 3, 'x1', 0.),
-                double_or_blank(card, 4, 'x2', 0.),
-                double_or_blank(card, 5, 'x3', 0.)], dtype='float64')
+        #: node location in local frame
+        self.xyz = np.array([
+            double_or_blank(card, 3, 'x1', 0.),
+            double_or_blank(card, 4, 'x2', 0.),
+            double_or_blank(card, 5, 'x3', 0.)], dtype='float64')
 
-            if nfields > 6:
-                #: Analysis coordinate system
-                self.cd = integer_or_blank(card, 6, 'cd', 0)
+        if nfields > 6:
+            #: Analysis coordinate system
+            self.cd = integer_or_blank(card, 6, 'cd', 0)
 
-                #: SPC constraint
-                self.ps = u(integer_or_blank(card, 7, 'ps', ''))
+            #: SPC constraint
+            self.ps = u(integer_or_blank(card, 7, 'ps', ''))
 
-                #: Superelement ID
-                self.seid = integer_or_blank(card, 8, 'seid', 0)
-                assert len(card) <= 9, 'len(GRID card) = %i' % len(card)
-            else:
-                self.cd = 0
-                self.ps = ''
-                self.seid = 0
+            #: Superelement ID
+            self.seid = integer_or_blank(card, 8, 'seid', 0)
+            assert len(card) <= 9, 'len(GRID card) = %i' % len(card)
         else:
-            self.nid = data[0]
-            self.cp = data[1]
-            self.xyz = array(data[2:5])
-            self.cd = data[5]
-            self.ps = data[6]
-            self.seid = data[7]
-            if self.ps == 0:
-                self.ps = ''
-            assert len(self.xyz) == 3
+            self.cd = 0
+            self.ps = ''
+            self.seid = 0
+        self._validate_input()
 
+    def _validate_input(self):
         assert self.nid > 0, 'nid=%s' % (self.nid)
         assert self.cp >= 0, 'cp=%s' % (self.cp)
         assert self.cd >= -1, 'cd=%s' % (self.cd)
@@ -944,11 +958,13 @@ class GRID(Node):
         return self.get_position()
 
     def PositionWRT(self, model, cid):
-        self.deprecated('PositionWRT(self, model, cid)', 'get_position_wrt(model, cid)', '0.8')
+        self.deprecated('PositionWRT(self, model, cid)',
+                        'get_position_wrt(model, cid)', '0.8')
         return self.get_position_wrt(model, cid)
 
     def UpdatePosition(self, model, xyz, cid=0):
-        self.deprecated('UpdatePosition(self, model, xyz, cid', 'set_position(self, model, xyz, cid=cid)', '0.8')
+        self.deprecated('UpdatePosition(self, model, xyz, cid',
+                        'set_position(self, model, xyz, cid=cid)', '0.8')
         return self.set_position(model, xyz, cid=cid)
 
     def Nid(self):
@@ -1409,7 +1425,7 @@ class POINT(Node):
             self.cp = integer_or_blank(card, 2, 'cp', 0)
 
             #: node location in local frame
-            self.xyz = array([
+            self.xyz = np.array([
                 double_or_blank(card, 3, 'x1', 0.),
                 double_or_blank(card, 4, 'x2', 0.),
                 double_or_blank(card, 5, 'x3', 0.)], dtype='float64')
@@ -1426,7 +1442,7 @@ class POINT(Node):
         else:
             self.nid = data[0]
             self.cp = data[1]
-            self.xyz = array(data[2:5])
+            self.xyz = np.array(data[2:5])
             assert len(self.xyz) == 3
             self.ps = ''
             self.seid = 0
@@ -1494,8 +1510,8 @@ class POINT(Node):
 
         # a matrix global->local matrix is found
         msg = ' which is required by %s nid=%s' % (self.type, self.nid)
-        coordB = model.Coord(cid, msg=msg)
-        xyz = coordB.transform_node_to_local(p)
+        coord_b = model.Coord(cid, msg=msg)
+        xyz = coord_b.transform_node_to_local(p)
         return xyz
 
     def Cp(self):

@@ -24,12 +24,12 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 
 class ShellProperty(Property):
-    def __init__(self, card, data):
+    def __init__(self, card=None, data=None):
         Property.__init__(self, card, data)
 
 
 class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
-    def __init__(self, card, data):
+    def __init__(self, card=None, data=None):
         ShellProperty.__init__(self, card, data)
 
     def cross_reference(self, model):
@@ -497,121 +497,124 @@ class PCOMP(CompositeShellProperty):
             #self.souts[i] = sout
             #i += 1
 
-    def __init__(self, card=None, data=None, comment=''):  # not done, cleanup
-        CompositeShellProperty.__init__(self, card, data)
-
-        if comment:
-            self._comment = comment
-
+    def __init__(self):
+        CompositeShellProperty.__init__(self)
         self.mids = []
         self.thicknesses = []
         self.thetas = []
         self.souts = []
-        if card:
-            #: Property ID
-            self.pid = integer(card, 1, 'pid')
 
-            # z0 is field 2 and is calculated at the end because we need the
-            # thickness first
-            #self.z0 = double_or_blank(card, 1, 'pid')
+    def add_card(self, card, comment=''):
+        if comment:
+            self._comment = comment
 
-            #: Non-Structural Mass per unit Area
-            self.nsm = double_or_blank(card, 3, 'nsm', 0.0)
+        #: Property ID
+        self.pid = integer(card, 1, 'pid')
 
-            self.sb = double_or_blank(card, 4, 'sb', 0.0)
-            #: Failure Theory
-            #:
-            #:   ['HILL', 'HOFF', 'TSAI', 'STRN', None]
-            self.ft = string_or_blank(card, 5, 'ft')
-            assert self.ft in ['HILL', 'HOFF', 'TSAI', 'STRN', None]
+        # z0 is field 2 and is calculated at the end because we need the
+        # thickness first
+        #self.z0 = double_or_blank(card, 1, 'pid')
 
-            #: Reference Temperature (default=0.0)
-            self.TRef = double_or_blank(card, 6, 'TRef', 0.0)
-            self.ge = double_or_blank(card, 7, 'ge', 0.0)
+        #: Non-Structural Mass per unit Area
+        self.nsm = double_or_blank(card, 3, 'nsm', 0.0)
 
-            #: symmetric flag - default = No Symmetry (NO)
-            self.lam = string_or_blank(card, 8, 'lam')
-            assert self.lam in [None, 'SYM', 'MEM', 'BEND', 'SMEAR', 'SMCORE'], 'lam=%r is invalid' % self.lam
+        self.sb = double_or_blank(card, 4, 'sb', 0.0)
+        #: Failure Theory
+        #:
+        #:   ['HILL', 'HOFF', 'TSAI', 'STRN', None]
+        self.ft = string_or_blank(card, 5, 'ft')
+        assert self.ft in ['HILL', 'HOFF', 'TSAI', 'STRN', None]
 
-            # -8 for the first 8 fields (1st line)
-            nply_fields = card.nfields - 9
+        #: Reference Temperature (default=0.0)
+        self.TRef = double_or_blank(card, 6, 'TRef', 0.0)
+        self.ge = double_or_blank(card, 7, 'ge', 0.0)
 
-            # counting plies
-            nmajor = nply_fields // 4
-            nleftover = nply_fields % 4
-            if nleftover:
-                nmajor += 1
-            nplies = nmajor
+        #: symmetric flag - default = No Symmetry (NO)
+        self.lam = string_or_blank(card, 8, 'lam')
+        assert self.lam in [None, 'SYM', 'MEM', 'BEND', 'SMEAR', 'SMCORE'], 'lam=%r is invalid' % self.lam
 
-            mid_last = None
-            thick_last = None
-            ply = None
-            iply = 1
+        # -8 for the first 8 fields (1st line)
+        nply_fields = card.nfields - 9
 
-            # supports single ply per line
-            for i in range(9, 9 + nplies * 4, 4):
-                actual = card.fields(i, i + 4)
-                mid = integer_or_blank(card, i, 'mid', mid_last)
-                t = double_or_blank(card, i + 1, 't', thick_last)
-                theta = double_or_blank(card, i + 2, 'theta', 0.0)
-                sout = string_or_blank(card, i + 3, 'sout', 'NO')
+        # counting plies
+        nmajor = nply_fields // 4
+        nleftover = nply_fields % 4
+        if nleftover:
+            nmajor += 1
+        nplies = nmajor
 
-                if not t > 0.:
-                    msg = ('thickness of PCOMP layer is invalid pid=%s'
-                           ' iLayer=%s t=%s ply=[mid,t,theta,'
-                           'sout]=%s' % (self.pid, iply, t, ply))
-                    raise RuntimeError(msg)
+        mid_last = None
+        thick_last = None
+        ply = None
+        iply = 1
 
-                # if this card has 2 plies on the line
-                if actual != [None, None, None, None]:
-                    self.mids.append(mid)
-                    self.thicknesses.append(t)
-                    self.thetas.append(theta)
-                    self.souts.append(sout)
-                    iply += 1
-                mid_last = mid
-                thick_last = t
-            #print "nplies = ",nplies
+        # supports single ply per line
+        for i in range(9, 9 + nplies * 4, 4):
+            actual = card.fields(i, i + 4)
+            mid = integer_or_blank(card, i, 'mid', mid_last)
+            t = double_or_blank(card, i + 1, 't', thick_last)
+            theta = double_or_blank(card, i + 2, 'theta', 0.0)
+            sout = string_or_blank(card, i + 3, 'sout', 'NO')
 
-            #self.plies = []
-            #if self.lam == 'SYM':
-            #    if nplies%2 == 1:  # 0th layer is the core layer
-            #       # cut the thickness in half to make the ply have an
-            #       # even number of plies, is there a better way???
-            #       plies[0][1] = plies[0][1]/2.
-            #
-            #    pliesLower = plies.reverse()
-            #    self.plies = pliesLower+plies
-            #    #print str(self)
-            self.z0 = double_or_blank(card, 2, 'z0', -0.5 * self.Thickness())
-        else:
-            self.pid = data[0]
-            self.z0 = data[1]
-            self.nsm = data[2]
-            self.sb = data[3]
-            self.ft = data[4]
-            self.TRef = data[5]
-            self.ge = data[6]
-            self.lam = data[7]
-            assert self.lam in ['SYM', 'NO'], "lam=%r and must be 'SYM'."
-            Mid = data[8]
-            T = data[9]
-            Theta = data[10]
-            Sout = data[11]
+            if not t > 0.:
+                msg = ('thickness of PCOMP layer is invalid pid=%s'
+                       ' iLayer=%s t=%s ply=[mid,t,theta,'
+                       'sout]=%s' % (self.pid, iply, t, ply))
+                raise RuntimeError(msg)
 
-            #ply = [mid,t,theta,sout]
-            for (mid, t, theta, sout) in zip(Mid, T, Theta, Sout):
-                if sout == 0:
-                    sout = 'NO'
-                elif sout == 1:  #: .. todo:: not sure  0=NO,1=YES (most likely)
-                    sout = 'YES'
-                else:
-                    raise RuntimeError('unsupported sout.  sout=%r and must be 0 or 1.'
-                                       '\nPCOMP = %s' % (sout, data))
+            # if this card has 2 plies on the line
+            if actual != [None, None, None, None]:
                 self.mids.append(mid)
                 self.thicknesses.append(t)
                 self.thetas.append(theta)
                 self.souts.append(sout)
+                iply += 1
+            mid_last = mid
+            thick_last = t
+        #print "nplies = ",nplies
+
+        #self.plies = []
+        #if self.lam == 'SYM':
+        #    if nplies%2 == 1:  # 0th layer is the core layer
+        #       # cut the thickness in half to make the ply have an
+        #       # even number of plies, is there a better way???
+        #       plies[0][1] = plies[0][1]/2.
+        #
+        #    pliesLower = plies.reverse()
+        #    self.plies = pliesLower+plies
+        #    #print str(self)
+        self.z0 = double_or_blank(card, 2, 'z0', -0.5 * self.Thickness())
+
+    def add_op2_data(self, data, comment=''):
+        if comment:
+            self._comment = comment
+        self.pid = data[0]
+        self.z0 = data[1]
+        self.nsm = data[2]
+        self.sb = data[3]
+        self.ft = data[4]
+        self.TRef = data[5]
+        self.ge = data[6]
+        self.lam = data[7]
+        assert self.lam in ['SYM', 'NO'], "lam=%r and must be 'SYM'."
+        Mid = data[8]
+        T = data[9]
+        Theta = data[10]
+        Sout = data[11]
+
+        #ply = [mid,t,theta,sout]
+        for (mid, t, theta, sout) in zip(Mid, T, Theta, Sout):
+            if sout == 0:
+                sout = 'NO'
+            elif sout == 1:  #: .. todo:: not sure  0=NO,1=YES (most likely)
+                sout = 'YES'
+            else:
+                raise RuntimeError('unsupported sout.  sout=%r and must be 0 or 1.'
+                                   '\nPCOMP = %s' % (sout, data))
+            self.mids.append(mid)
+            self.thicknesses.append(t)
+            self.thetas.append(theta)
+            self.souts.append(sout)
 
     def _verify(self, xref=False):
         pid = self.Pid()
@@ -1008,65 +1011,68 @@ class PSHELL(ShellProperty):
         7: 'tst', 8:'nsm', 9:'z1', 10:'z2',
     }
 
-    def __init__(self, card=None, data=None, comment=''):
-        ShellProperty.__init__(self, card, data)
+    def __init__(self):
+        ShellProperty.__init__(self)
+
+    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            #: Property ID
-            self.pid = integer(card, 1, 'pid')
-            self.mid1 = integer_or_blank(card, 2, 'mid1')
-            #: thickness
-            self.t = double_or_blank(card, 3, 't')
-            if self.t is not None:
-                assert self.t >= 0.0, 'PSHELL pid=%s Thickness=%s must be >= 0' % (self.pid, self.t)
+        #: Property ID
+        self.pid = integer(card, 1, 'pid')
+        self.mid1 = integer_or_blank(card, 2, 'mid1')
+        #: thickness
+        self.t = double_or_blank(card, 3, 't')
+        if self.t is not None:
+            assert self.t >= 0.0, 'PSHELL pid=%s Thickness=%s must be >= 0' % (self.pid, self.t)
 
-            #: Material identification number for bending
-            #: -1 for plane strin
-            self.mid2 = integer_or_blank(card, 4, 'mid2')
-            #: Scales the moment of interia of the element based on the
-            #: moment of interia for a plate
-            #:
-            #: ..math:: I = \frac{12I}{t^3} I_{plate}
-            self.twelveIt3 = double_or_blank(card, 5, '12*I/t^3', 1.0)  # poor name
-            self.mid3 = integer_or_blank(card, 6, 'mid3')
-            self.tst = double_or_blank(card, 7, 'ts/t', 0.833333)
-            #: Non-structural Mass
-            self.nsm = double_or_blank(card, 8, 'nsm', 0.0)
+        #: Material identification number for bending
+        #: -1 for plane strin
+        self.mid2 = integer_or_blank(card, 4, 'mid2')
+        #: Scales the moment of interia of the element based on the
+        #: moment of interia for a plate
+        #:
+        #: ..math:: I = \frac{12I}{t^3} I_{plate}
+        self.twelveIt3 = double_or_blank(card, 5, '12*I/t^3', 1.0)  # poor name
+        self.mid3 = integer_or_blank(card, 6, 'mid3')
+        self.tst = double_or_blank(card, 7, 'ts/t', 0.833333)
+        #: Non-structural Mass
+        self.nsm = double_or_blank(card, 8, 'nsm', 0.0)
 
-            if self.t is not None:
-                tOver2 = self.t / 2.
-                self.z1 = double_or_blank(card, 9, 'z1', -tOver2)
-                self.z2 = double_or_blank(card, 10, 'z2', tOver2)
-            else:
-                self.z1 = double_or_blank(card, 9, 'z1')
-                self.z2 = double_or_blank(card, 10, 'z2')
-            self.mid4 = integer_or_blank(card, 11, 'mid4')
-
-            #if self.mid2 is None:
-            #    assert self.mid3 is None
-            #else: # mid2 is defined
-            #    #print "self.mid2 = ",self.mid2
-            #    assert self.mid2 >= -1
-            #    #assert self.mid3 >   0
-
-            #if self.mid is not None and self.mid2 is not None:
-            #    assert self.mid4==None
-            assert len(card) <= 12, 'len(PSHELL card) = %i' % len(card)
+        if self.t is not None:
+            tOver2 = self.t / 2.
+            self.z1 = double_or_blank(card, 9, 'z1', -tOver2)
+            self.z2 = double_or_blank(card, 10, 'z2', tOver2)
         else:
-            self.pid = data[0]
-            self.mid1 = data[1]
-            self.t = data[2]
-            self.mid2 = data[3]
-            self.twelveIt3 = data[4]
-            self.mid3 = data[5]
-            self.tst = data[6]
-            self.nsm = data[7]
-            self.z1 = data[8]
-            self.z2 = data[9]
-            self.mid4 = data[10]
-            #maxMid = max(self.mid1,self.mid2,self.mid3,self.mid4)
+            self.z1 = double_or_blank(card, 9, 'z1')
+            self.z2 = double_or_blank(card, 10, 'z2')
+        self.mid4 = integer_or_blank(card, 11, 'mid4')
 
+        #if self.mid2 is None:
+        #    assert self.mid3 is None
+        #else: # mid2 is defined
+        #    #print "self.mid2 = ",self.mid2
+        #    assert self.mid2 >= -1
+        #    #assert self.mid3 >   0
+
+        #if self.mid is not None and self.mid2 is not None:
+        #    assert self.mid4==None
+        #assert self.t > 0.0, ('the thickness must be defined on the PSHELL'
+                              #' card (Ti field not supported)')
+        assert len(card) <= 12, 'len(PSHELL card) = %i' % len(card)
+
+    def add_op2_data(self, data, comment=''):
+        self.pid = data[0]
+        self.mid1 = data[1]
+        self.t = data[2]
+        self.mid2 = data[3]
+        self.twelveIt3 = data[4]
+        self.mid3 = data[5]
+        self.tst = data[6]
+        self.nsm = data[7]
+        self.z1 = data[8]
+        self.z2 = data[9]
+        self.mid4 = data[10]
+        #maxMid = max(self.mid1,self.mid2,self.mid3,self.mid4)
         #assert self.t > 0.0, ('the thickness must be defined on the PSHELL'
                               #' card (Ti field not supported)')
 

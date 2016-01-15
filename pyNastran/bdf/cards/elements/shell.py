@@ -276,56 +276,72 @@ class CTRIA3(TriShell):
 
     def __init__(self, card=None, data=None, comment=''):
         TriShell.__init__(self, card, data)
+
+    def add(self, eid, pid, nids,
+            theta_mcid=0.0, tflag=0, t1=1.0, t2=1.0, t3=1.0, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            #: Element ID
-            self.eid = integer(card, 1, 'eid')
-            #: Property ID
-            self.pid = integer_or_blank(card, 2, 'pid', self.eid)
+        self.eid = eid
+        self.pid = pid
+        assert len(nids) == 3, nids
+        self.prepare_node_ids(nids)
+        self.thetaMcid = theta_mcid
+        self.TFlag = tflag
+        self.T1 = t1
+        self.T2 = t2
+        self.T3 = t3
 
-            nids = [
-                integer(card, 3, 'n1'),
-                integer(card, 4, 'n2'),
-                integer(card, 5, 'n3')
-            ]
+    def add_op2_data(self, data):
+        self.eid = data[0]
+        self.pid = data[1]
+        nids = data[2:5]
 
-            if len(card) > 5:
-                self.thetaMcid = integer_double_or_blank(card, 6, 'thetaMcid', 0.0)
-                self.zOffset = double_or_blank(card, 7, 'zOffset', 0.0)
-                blank(card, 8, 'blank')
-                blank(card, 9, 'blank')
+        self.thetaMcid = data[5]
+        self.zOffset = data[6]
+        self.TFlag = data[7]
+        self.T1 = data[8]
+        self.T2 = data[9]
+        self.T3 = data[10]
+        if self.T1 == -1.0:
+            self.T1 = 1.0
+        if self.T2 == -1.0:
+            self.T2 = 1.0
+        if self.T3 == -1.0:
+            self.T3 = 1.0
+        self.prepare_node_ids(nids)
+        assert len(self.nodes) == 3
 
-                self.TFlag = integer_or_blank(card, 10, 'TFlag', 0)
-                self.T1 = double_or_blank(card, 11, 'T1', 1.0)
-                self.T2 = double_or_blank(card, 12, 'T2', 1.0)
-                self.T3 = double_or_blank(card, 13, 'T3', 1.0)
-                assert len(card) <= 14, 'len(CTRIA3 card) = %i' % len(card)
-            else:
-                self.thetaMcid = 0.0
-                self.zOffset = 0.0
-                self.TFlag = 0
-                self.T1 = 1.0
-                self.T2 = 1.0
-                self.T3 = 1.0
+    def add_card(self, card, comment=''):
+        if comment:
+            self._comment = comment
+        #: Element ID
+        self.eid = integer(card, 1, 'eid')
+        #: Property ID
+        self.pid = integer_or_blank(card, 2, 'pid', self.eid)
+
+        nids = [
+            integer(card, 3, 'n1'),
+            integer(card, 4, 'n2'),
+            integer(card, 5, 'n3')
+        ]
+        if len(card) > 5:
+            self.thetaMcid = integer_double_or_blank(card, 6, 'thetaMcid', 0.0)
+            self.zOffset = double_or_blank(card, 7, 'zOffset', 0.0)
+            blank(card, 8, 'blank')
+            blank(card, 9, 'blank')
+
+            self.TFlag = integer_or_blank(card, 10, 'TFlag', 0)
+            self.T1 = double_or_blank(card, 11, 'T1', 1.0)
+            self.T2 = double_or_blank(card, 12, 'T2', 1.0)
+            self.T3 = double_or_blank(card, 13, 'T3', 1.0)
+            assert len(card) <= 14, 'len(CTRIA3 card) = %i' % len(card)
         else:
-            self.eid = data[0]
-            self.pid = data[1]
-            nids = data[2:5]
-
-            self.thetaMcid = data[5]
-            self.zOffset = data[6]
-            self.TFlag = data[7]
-            self.T1 = data[8]
-            self.T2 = data[9]
-            self.T3 = data[10]
-            if self.T1 == -1.0:
-                self.T1 = 1.0
-            if self.T2 == -1.0:
-                self.T2 = 1.0
-            if self.T3 == -1.0:
-                self.T3 = 1.0
-
+            self.thetaMcid = 0.0
+            self.zOffset = 0.0
+            self.TFlag = 0
+            self.T1 = 1.0
+            self.T2 = 1.0
+            self.T3 = 1.0
         self.prepare_node_ids(nids)
         assert len(self.nodes) == 3
 
@@ -1381,56 +1397,73 @@ class CQUAD4(QuadShell):
 
     def __init__(self, card=None, data=None, comment=''):
         QuadShell.__init__(self, card, data)
+
+    def add(self, eid, pid, nids,
+            theta_mcid=0.0, tflag=0, t1=1.0, t2=1.0, t3=1.0, t4=1.0, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            #: Element ID
-            self.eid = integer(card, 1, 'eid')
-            #: Property ID
-            self.pid = integer_or_blank(card, 2, 'pid', self.eid)
-            nids = [integer(card, 3, 'n1'),
-                    integer(card, 4, 'n2'),
-                    integer(card, 5, 'n3'),
-                    integer(card, 6, 'n4')]
-            if len(card) > 6:
-                self.thetaMcid = integer_double_or_blank(card, 7, 'thetaMcid', 0.0)
-                self.zOffset = double_or_blank(card, 8, 'zOffset', 0.0)
-                blank(card, 9, 'blank')
-                self.TFlag = integer_or_blank(card, 10, 'TFlag', 0)
-                self.T1 = double_or_blank(card, 11, 'T1', 1.0)
-                self.T2 = double_or_blank(card, 12, 'T2', 1.0)
-                self.T3 = double_or_blank(card, 13, 'T3', 1.0)
-                self.T4 = double_or_blank(card, 14, 'T4', 1.0)
-                assert len(card) <= 15, 'len(CQUAD4 card) = %i' % len(card)
-            else:
-                self.thetaMcid = 0.0
-                self.zOffset = 0.0
-                self.TFlag = 0
-                self.T1 = 1.0
-                self.T2 = 1.0
-                self.T3 = 1.0
-                self.T4 = 1.0
+        self.eid = eid
+        self.pid = pid
+        assert len(nids) == 4, nids
+        self.prepare_node_ids(nids)
+        self.thetaMcid = theta_mcid
+        self.TFlag = tflag
+        self.T1 = t1
+        self.T2 = t2
+        self.T3 = t3
+        self.T4 = t4
+
+    def add_op2_data(self, data):
+        self.eid = data[0]
+        self.pid = data[1]
+        nids = data[2:6]
+        self.prepare_node_ids(nids)
+
+        self.thetaMcid = data[6]
+        self.zOffset = data[7]
+        self.TFlag = data[8]
+        self.T1 = data[9]
+        self.T2 = data[10]
+        self.T3 = data[11]
+        self.T4 = data[12]
+        if self.T1 == -1.0:
+            self.T1 = 1.0
+        if self.T2 == -1.0:
+            self.T2 = 1.0
+        if self.T3 == -1.0:
+            self.T3 = 1.0
+        if self.T4 == -1.0:
+            self.T4 = 1.0
+
+    def add_card(self, card, comment=''):
+        if comment:
+            self._comment = comment
+        #: Element ID
+        self.eid = integer(card, 1, 'eid')
+        #: Property ID
+        self.pid = integer_or_blank(card, 2, 'pid', self.eid)
+        nids = [integer(card, 3, 'n1'),
+                integer(card, 4, 'n2'),
+                integer(card, 5, 'n3'),
+                integer(card, 6, 'n4')]
+        if len(card) > 6:
+            self.thetaMcid = integer_double_or_blank(card, 7, 'thetaMcid', 0.0)
+            self.zOffset = double_or_blank(card, 8, 'zOffset', 0.0)
+            blank(card, 9, 'blank')
+            self.TFlag = integer_or_blank(card, 10, 'TFlag', 0)
+            self.T1 = double_or_blank(card, 11, 'T1', 1.0)
+            self.T2 = double_or_blank(card, 12, 'T2', 1.0)
+            self.T3 = double_or_blank(card, 13, 'T3', 1.0)
+            self.T4 = double_or_blank(card, 14, 'T4', 1.0)
+            assert len(card) <= 15, 'len(CQUAD4 card) = %i' % len(card)
         else:
-            self.eid = data[0]
-            self.pid = data[1]
-            nids = data[2:6]
-
-            self.thetaMcid = data[6]
-            self.zOffset = data[7]
-            self.TFlag = data[8]
-            self.T1 = data[9]
-            self.T2 = data[10]
-            self.T3 = data[11]
-            self.T4 = data[12]
-            if self.T1 == -1.0:
-                self.T1 = 1.0
-            if self.T2 == -1.0:
-                self.T2 = 1.0
-            if self.T3 == -1.0:
-                self.T3 = 1.0
-            if self.T4 == -1.0:
-                self.T4 = 1.0
-
+            self.thetaMcid = 0.0
+            self.zOffset = 0.0
+            self.TFlag = 0
+            self.T1 = 1.0
+            self.T2 = 1.0
+            self.T3 = 1.0
+            self.T4 = 1.0
         self.prepare_node_ids(nids)
         assert len(self.nodes) == 4, 'CQUAD4'
 

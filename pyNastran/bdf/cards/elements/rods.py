@@ -19,8 +19,8 @@ from pyNastran.bdf.field_writer_16 import print_card_16
 
 class RodElement(Element):  # CROD, CONROD, CTUBE
 
-    def __init__(self, card, data):
-        Element.__init__(self, card, data)
+    def __init__(self):
+        Element.__init__(self)
 
     def cross_reference(self, model):
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
@@ -84,25 +84,29 @@ class CROD(RodElement):
         else:
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self):
         """
         +------+-----+-----+----+----+
         | CROD | EID | PID | N1 | N2 |
         +------+-----+-----+----+----+
         """
-        RodElement.__init__(self, card, data)
+        RodElement.__init__(self)
+
+    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            self.eid = integer(card, 1, 'eid')
-            self.pid = integer_or_blank(card, 2, 'pid', self.eid)
-            nids = [integer(card, 3, 'n1'),
-                    integer(card, 4, 'n2')]
-            assert len(card) == 5, 'len(CROD card) = %i\ncard=%s' % (len(card), str(card))
-        else:
-            self.eid = data[0]
-            self.pid = data[1]
-            nids = data[2:4]
+        self.eid = integer(card, 1, 'eid')
+        self.pid = integer_or_blank(card, 2, 'pid', self.eid)
+        nids = [integer(card, 3, 'n1'),
+                integer(card, 4, 'n2')]
+        assert len(card) == 5, 'len(CROD card) = %i\ncard=%s' % (len(card), str(card))
+        self.prepare_node_ids(nids)
+        assert len(self.nodes) == 2
+
+    def add_op2_data(self, data):
+        self.eid = data[0]
+        self.pid = data[1]
+        nids = data[2:4]
         self.prepare_node_ids(nids)
         assert len(self.nodes) == 2
 
@@ -210,20 +214,25 @@ class CTUBE(RodElement):
         else:
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
-    def __init__(self, card=None, data=None, comment=''):
-        RodElement.__init__(self, card, data)
+    def __init__(self):
+        RodElement.__init__(self)
+
+    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            self.eid = integer(card, 1, 'eid')
-            self.pid = integer_or_blank(card, 2, 'pid', self.eid)
-            nids = [integer(card, 3, 'n1'),
-                    integer(card, 4, 'n2')]
-            assert len(card) == 5, 'len(CTUBE card) = %i' % len(card)
-        else:
-            self.eid = data[0]
-            self.pid = data[1]
-            nids = data[2:4]
+        self.eid = integer(card, 1, 'eid')
+        self.pid = integer_or_blank(card, 2, 'pid', self.eid)
+        nids = [integer(card, 3, 'n1'),
+                integer(card, 4, 'n2')]
+        assert len(card) == 5, 'len(CTUBE card) = %i' % len(card)
+
+        self.prepare_node_ids(nids)
+        assert len(self.nodes) == 2
+
+    def add_op2_data(self, data):
+        self.eid = data[0]
+        self.pid = data[1]
+        nids = data[2:4]
         self.prepare_node_ids(nids)
         assert len(self.nodes) == 2
 
@@ -312,30 +321,33 @@ class CONROD(RodElement):
         else:
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
-    def __init__(self, card=None, data=None, comment=''):
-        RodElement.__init__(self, card, data)
+    def __init__(self):
+        RodElement.__init__(self)
+
+    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            self.eid = integer(card, 1, 'eid')
-            nids = [integer(card, 2, 'n1'),
-                    integer(card, 3, 'n2')]
-            self.mid = integer(card, 4, 'mid')
-            self.A = double(card, 5, 'A')
-            self.j = double_or_blank(card, 6, 'j', 0.0)
-            self.c = double_or_blank(card, 7, 'c', 0.0)
-            self.nsm = double_or_blank(card, 8, 'nsm', 0.0)
-        else:
-            self.eid = data[0]
-            nids = data[1:3]
-            self.mid = data[3]
-            self.A = data[4]
-            self.j = data[5]
-            self.c = data[6]
-            self.nsm = data[7]
+        self.eid = integer(card, 1, 'eid')
+        nids = [integer(card, 2, 'n1'),
+                integer(card, 3, 'n2')]
+        self.mid = integer(card, 4, 'mid')
+        self.A = double(card, 5, 'A')
+        self.j = double_or_blank(card, 6, 'j', 0.0)
+        self.c = double_or_blank(card, 7, 'c', 0.0)
+        self.nsm = double_or_blank(card, 8, 'nsm', 0.0)
         self.prepare_node_ids(nids)
         assert len(self.nodes) == 2
-        #print self.nodes
+
+    def add_op2_data(self, data):
+        self.eid = data[0]
+        nids = data[1:3]
+        self.mid = data[3]
+        self.A = data[4]
+        self.j = data[5]
+        self.c = data[6]
+        self.nsm = data[7]
+        self.prepare_node_ids(nids)
+        assert len(self.nodes) == 2
 
     def cross_reference(self, model):
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)

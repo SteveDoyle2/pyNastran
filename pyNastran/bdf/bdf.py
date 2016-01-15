@@ -1289,9 +1289,29 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
     def _make_card_parser(self):
         """creates the card parser variables that are used by add_card"""
-        self._card_parser = {
+        self._card_parser_a = {
             'GRID' : (GRID, self.add_node),
 
+            'CORD2R' : (CORD2R, self.add_coord),
+            'CORD2C' : (CORD2C, self.add_coord),
+            'CORD2S' : (CORD2S, self.add_coord),
+
+            'CONROD' : (CONROD, self.add_element),
+            'CROD' : (CROD, self.add_element),
+            'PROD' : (PROD, self.add_property),
+            'CTUBE' : (CTUBE, self.add_element),
+            'PTUBE' : (PTUBE, self.add_property),
+
+            'CTRIA3' : (CTRIA3, self.add_element),
+            'CQUAD4' : (CQUAD4, self.add_element),
+            'PCOMP' : (PCOMP, self.add_property),
+            'PSHELL' : (PSHELL, self.add_property),
+
+            # there is no MAT6 or MAT7
+            'MAT1' : (MAT1, self.add_structural_material),
+            'MAT10' : (MAT10, self.add_structural_material),
+        }
+        self._card_parser = {
             'FORCE' : (FORCE, self.add_load),
             'FORCE1' : (FORCE1, self.add_load),
             'FORCE2' : (FORCE2, self.add_load),
@@ -1318,19 +1338,15 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
             'PLOTEL' : (PLOTEL, self.add_plotel),
             'CQUAD' : (CQUAD, self.add_element),
-            'CQUAD4' : (CQUAD4, self.add_element),
             'CQUAD8' : (CQUAD8, self.add_element),
             'CQUADX' : (CQUADX, self.add_element),
             'CQUADR' : (CQUADR, self.add_element),
-            'CTRIA3' : (CTRIA3, self.add_element),
             'CTRIA6' : (CTRIA6, self.add_element),
             'CTRIAR' : (CTRIAR, self.add_element),
             'CTRIAX' : (CTRIAX, self.add_element),
             'CTRIAX6' : (CTRIAX6, self.add_element),
-            'PCOMP' : (PCOMP, self.add_property),
             'PCOMPG' : (PCOMPG, self.add_property),
             'PLPLANE' : (PLPLANE, self.add_property),
-            'PSHELL' : (PSHELL, self.add_property),
 
             'CSHEAR' : (CSHEAR, self.add_element),
             'PSHEAR' : (PSHEAR, self.add_property),
@@ -1377,14 +1393,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             # CDAMP4 added later because the documentation is wrong
             'CDAMP5' : (CDAMP5, self.add_damper),
             'PDAMP5' : (PDAMP5, self.add_property),
-
-            'CONROD' : (CONROD, self.add_element),
-
-            'CROD' : (CROD, self.add_element),
-            'PROD' : (PROD, self.add_property),
-
-            'CTUBE' : (CTUBE, self.add_element),
-            'PTUBE' : (PTUBE, self.add_property),
 
             'CFAST' : (CFAST, self.add_damper),
             'PFAST' : (PFAST, self.add_property),
@@ -1448,7 +1456,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'MAT3' : (MAT3, self.add_structural_material),
             'MAT8' : (MAT8, self.add_structural_material),
             'MAT9' : (MAT9, self.add_structural_material),
-            'MAT10' : (MAT10, self.add_structural_material),
             'MAT11' : (MAT11, self.add_structural_material),
             'EQUIV' : (EQUIV, self.add_structural_material),
 
@@ -1654,11 +1661,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'GRDSET' : self._prepare_grdset,
 
             'BCTSET' : self._prepare_bctset,
-        }
-        self._card_parser_c = {
-            'CORD2R' : (CORD2R, self.add_coord),
-            'CORD2C' : (CORD2C, self.add_coord),
-            'CORD2S' : (CORD2S, self.add_coord),
         }
 
     def _prepare_bctset(self, card, card_obj, comment=''):
@@ -2026,9 +2028,19 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
         # function that gets by name the initialized object (from global scope)
         failed = True
-        if card_name in self._card_parser:
+        if card_name in self._card_parser_a:
+            card_class, add_card_function = self._card_parser_a[card_name]
+            class_instance = card_class()
+            class_instance.add_card(card_obj, comment=comment)
+            add_card_function(class_instance)
+        elif card_name in self._card_parser:
             card_class, add_card_function = self._card_parser[card_name]
-            class_instance = card_class(card_obj, comment=comment)
+            try:
+                class_instance = card_class(card_obj, comment=comment)
+            except TypeError:
+                msg = '%s has a init problem' % card_name
+                #raise TypeError(msg)
+                raise
             add_card_function(class_instance)
 
             #try:
@@ -2061,11 +2073,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                 #self._stored_parse_errors.append((card, var))
                 #if self._iparse_errors > self._nparse_errors:
                     #self.pop_parse_errors()
-        elif card_name in self._card_parser_c:
-            card_class, add_card_function = self._card_parser_c[card_name]
-            class_instance = card_class()
-            class_instance.add_card(card_obj, comment=comment)
-            add_card_function(class_instance)
         else:
             raise NotImplementedError(card_name)
         #else:

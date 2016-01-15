@@ -288,7 +288,8 @@ class TestShells(unittest.TestCase):
         sout = [1, 1, 0]  # 0-NO, 1-YES
         data = [pid, z0, nsm, sb, ft, tref, ge, lam, Mid, T, theta, sout]
 
-        p = PCOMP(data=data)
+        p = PCOMP()
+        p.add_op2_data(data)
         self.assertFalse(p.isSymmetrical())
         self.assertEqual(p.nPlies(), 3)
 
@@ -343,7 +344,8 @@ class TestShells(unittest.TestCase):
         Ss = None
         Mcsid = None
         mat1 = [mid, E, G, nu, rho, a, tref, ge, St, Sc, Ss, Mcsid]
-        m = MAT1(data=mat1)
+        m = MAT1()
+        m.add_op2_data(mat1)
         for iply in range(len(p.plies)):
             mid = p.plies[iply][0]
             p.mids[iply] = m # MAT1
@@ -415,7 +417,8 @@ class TestShells(unittest.TestCase):
         T = [.1, .2, .3]
         sout = [1, 1, 0]  # 0-NO, 1-YES
         data = [pid, z0, nsm, sb, ft, tref, ge, lam, Mid, T, theta, sout]
-        p = PCOMP(data=data)
+        p = PCOMP()
+        p.add_op2_data(data)
         self.assertTrue(p.isSymmetrical())
         self.assertEqual(p.nPlies(), 6)
 
@@ -470,7 +473,8 @@ class TestShells(unittest.TestCase):
         Ss = None
         Mcsid = None
         mat1 = [mid, E, G, nu, rho, a, tref, ge, St, Sc, Ss, Mcsid]
-        m = MAT1(data=mat1)
+        m = MAT1()
+        m.add_op2_data(mat1)
         for iply in range(len(p.plies)):
             mid = p.plies[iply][0]
             p.mids[iply] = m # MAT1
