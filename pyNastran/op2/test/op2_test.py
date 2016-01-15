@@ -45,7 +45,7 @@ def get_all_files(folders_file, file_type):
 
     files2 = []
     for line in lines:
-        move_dir = os.path.join('r"'+line.strip()+'"')
+        move_dir = os.path.join('r"' + line.strip() + '"')
         move_dir = line.strip()
         if move_dir and move_dir[0] != '#':
             if not os.path.exists(move_dir):

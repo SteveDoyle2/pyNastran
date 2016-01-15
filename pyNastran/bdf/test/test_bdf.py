@@ -41,7 +41,7 @@ def run_all_files_in_folder(folder, debug=False, xref=True, check=True,
 
 
 def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
-                      punch=False, cid=None, nastran='',
+                      punch=False, cid=None, nastran='', encoding=None,
                       size=None, is_double=None, post=None, sum_load=True, dev=True):
     """
     Runs multiple BDFs
@@ -133,7 +133,8 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
             for size, is_double, post in size_doubles_post:
                 fem1, fem2, diff_cards2 = run_bdf(folder, filename, debug=debug,
                                                   xref=xref, check=check, punch=punch,
-                                                  cid=cid, is_folder=True, dynamic_vars={},
+                                                  cid=cid, encoding=encoding,
+                                                  is_folder=True, dynamic_vars={},
                                                   nastran=nastran, size=size, is_double=is_double,
                                                   post=post, sum_load=sum_load, dev=dev)
                 del fem1
@@ -186,7 +187,7 @@ def memory_usage_psutil():
 
 def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=False,
             cid=None, mesh_form='combined', is_folder=False, print_stats=False,
-            sum_load=False, size=8, is_double=False,
+            encoding=None, sum_load=False, size=8, is_double=False,
             reject=False, stop=False, nastran='', post=-1, dynamic_vars=None,
             quiet=False, dumplines=False, dictsort=False, dev=False):
     """
@@ -272,14 +273,16 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
         #nastran = 'nastran scr=yes bat=no old=no news=no '
         nastran = ''
         #try:
-        out_model, fem1 = run_fem1(fem1, bdf_model, mesh_form, xref, punch, sum_load, size, is_double, cid)
+        out_model, fem1 = run_fem1(fem1, bdf_model, mesh_form, xref, punch, sum_load, size,
+                                   is_double, cid, encoding=encoding)
         if stop:
             print('card_count:')
             print('-----------')
             for card_name, card_count in sorted(iteritems(fem1.card_count)):
                 print('key=%-8s value=%s' % (card_name, card_count))
             return fem1, None, None
-        fem2 = run_fem2(bdf_model, out_model, xref, punch, sum_load, size, is_double, reject, debug=debug, log=None)
+        fem2 = run_fem2(bdf_model, out_model, xref, punch, sum_load, size, is_double, reject,
+                        encoding=encoding, debug=debug, log=None)
 
         diff_cards = compare(fem1, fem2, xref=xref, check=check, print_stats=print_stats, quiet=quiet)
         test_get_cards_by_card_types(fem2)
@@ -379,7 +382,8 @@ def run_nastran(bdf_model, nastran, post=-1, size=8, is_double=False):
         op2.read_op2(op2_model2)
         print(op2.get_op2_stats())
 
-def run_fem1(fem1, bdf_model, mesh_form, xref, punch, sum_load, size, is_double, cid):
+def run_fem1(fem1, bdf_model, mesh_form, xref, punch, sum_load, size, is_double, cid,
+             encoding=None):
     """
     Reads/writes the BDF
 
@@ -408,16 +412,16 @@ def run_fem1(fem1, bdf_model, mesh_form, xref, punch, sum_load, size, is_double,
     assert os.path.exists(bdf_model), print_bad_path(bdf_model)
     try:
         if '.pch' in bdf_model:
-            fem1.read_bdf(bdf_model, xref=False, punch=True)
+            fem1.read_bdf(bdf_model, xref=False, punch=True, encoding=encoding)
         else:
-            fem1.read_bdf(bdf_model, xref=False, punch=punch)
+            fem1.read_bdf(bdf_model, xref=False, punch=punch, encoding=encoding)
             #fem1.geom_check(geom_check=True, xref=False)
             fem1.write_skin_solid_faces('skin_file.bdf', size=16, is_double=False)
             if xref:
                 #fem1.uncross_reference()
                 fem1.cross_reference()
                 fem1._xref = True
-                spike_fem = _read_bdf(fem1.bdf_filename)
+                spike_fem = _read_bdf(fem1.bdf_filename, encoding=encoding)
 
                 remake = False
                 if remake:
@@ -467,7 +471,7 @@ def run_fem1(fem1, bdf_model, mesh_form, xref, punch, sum_load, size, is_double,
 
 def run_fem2(bdf_model, out_model, xref, punch,
              sum_load, size, is_double,
-             reject, debug=False, log=None):
+             reject, encoding=None, debug=False, log=None):
     """
     Reads/writes the BDF to verify nothing has been lost
 
@@ -501,7 +505,7 @@ def run_fem2(bdf_model, out_model, xref, punch,
     fem2.log.info('starting fem2')
     sys.stdout.flush()
     try:
-        fem2.read_bdf(out_model, xref=xref, punch=punch)
+        fem2.read_bdf(out_model, xref=xref, punch=punch, encoding=encoding)
     except:
         print("failed reading %r" % out_model)
         raise
@@ -532,16 +536,16 @@ def run_fem2(bdf_model, out_model, xref, punch,
             elif sol == 108: # freq
                 assert subcase.has_parameter('FREQUENCY'), subcase
             elif sol == 111:  # time
-                assert subcase.has_parameter('TIME') or subcase.has_parameter('TSTEPNL'), subcase
+                assert subcase.has_parameter('TIME') or subcase.has_parameter('TSTEP') or subcase.has_parameter('TSTEPNL'), subcase
             elif sol == 111:  # modal frequency
                 assert subcase.has_parameter('FREQUENCY'), subcase
             elif sol == 112:  # modal transient
-                assert subcase.has_parameter('TIME') or subcase.has_parameter('TSTEPNL'), subcase
+                assert subcase.has_parameter('TIME') or subcase.has_parameter('TSTEP') or subcase.has_parameter('TSTEPNL'), subcase
 
             elif sol == 129:  # nonlinear transient
-                assert subcase.has_parameter('TIME') or subcase.has_parameter('TSTEPNL'), subcase
+                assert subcase.has_parameter('TIME') or subcase.has_parameter('TSTEP') or subcase.has_parameter('TSTEPNL'), subcase
             elif sol == 159:  # thermal transient
-                assert subcase.has_parameter('TIME') or subcase.has_parameter('TSTEPNL'), subcase
+                assert subcase.has_parameter('TIME') or subcase.has_parameter('TSTEP') or subcase.has_parameter('TSTEPNL'), subcase
 
             elif sol == 144:
                 assert subcase.has_parameter('SUPORT') or len(fem2.suports), subcase
@@ -551,7 +555,7 @@ def run_fem2(bdf_model, out_model, xref, punch,
                 assert subcase.has_parameter('FMETHOD'), subcase  # FLUTTER
             elif sol == 146:
                 assert subcase.has_parameter('METHOD'), subcase
-                assert subcase.has_parameter('FREQUENCY') or subcase.has_parameter('TIME'), subcase
+                assert subcase.has_parameter('FREQUENCY') or subcase.has_parameter('TIME') or subcase.has_parameter('TSTEP') or subcase.has_parameter('TSTEPNL'), subcase
                 assert subcase.has_parameter('GUST') or subcase.has_parameter('LOAD'), subcase
             elif sol == 200:
                 assert subcase.has_parameter('DESOBJ'), subcase

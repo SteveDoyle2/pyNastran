@@ -12,13 +12,12 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from six import integer_types
 from six.moves import zip, range
 from scipy.interpolate import interp1d
-from numpy import array, exp, pi
+import numpy as np
 
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 #from pyNastran.bdf.cards.baseCard import BaseCard
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
-    double_or_blank, integer_string_or_blank, string_or_blank,
-    integer_double_or_blank)
+    double_or_blank, integer_string_or_blank, integer_double_or_blank)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
@@ -531,7 +530,7 @@ class TLOAD1(TabularLoad):
 
     def get_load_at_time(self, time, scale=1.):
         # A = 1. # points to DAREA or SPCD
-        xy = array(self.tid.table.table)
+        xy = np.array(self.tid.table.table)
         x = xy[:, 0]
         y = xy[:, 1]
         assert x.shape == y.shape, 'x.shape=%s y.shape=%s' % (str(x.shape), str(y.shape))
@@ -596,7 +595,7 @@ class TLOAD2(TabularLoad):
             #: SID must be unique for all TLOAD1, TLOAD2, RLOAD1, RLOAD2, and ACSRCE entries.
             self.sid = integer(card, 1, 'sid')
 
-            self.exciteID = integer(card, 2, 'exciteID')
+            self.excite_id = integer(card, 2, 'excite_id')
             self.delay = integer_or_blank(card, 3, 'delay', 0)
 
             #: Defines the type of the dynamic excitation. (Integer; character
@@ -646,29 +645,28 @@ class TLOAD2(TabularLoad):
 
     def get_load_at_time(self, time, scale=1.):
         # A = 1. # points to DAREA or SPCD
-        xy = array(self.tid.table.table)
-        x = xy[:, 0]
-        y = xy[:, 1]
-        assert x.shape == y.shape, 'x.shape=%s y.shape=%s' % (str(x.shape), str(y.shape))
-        f = interp1d(x, y)
+        #xy = array(self.tid.table.table)
+        #x = xy[:, 0]
+        #y = xy[:, 1]
+        #assert x.shape == y.shape, 'x.shape=%s y.shape=%s' % (str(x.shape), str(y.shape))
+        #f = interp1d(x, y)
 
         if isinstance(self.delay, float):
             tau = self.delay
         elif self.delay == 0 or self.delay is None:
             tau = 0.0
         else:
-            #raise NotImplementedError('DELAY is not supported')
-            tau = self.delay.get_delay_at_time(time)
+            tau = self.delay_ref.get_delay_at_time(time)
         # return f(time - tau)
 
         t1 = self.T1 + tau
         t2 = self.T2 + tau
         f = self.frequency
         p = self.phase
-        f = zeros(time.shape, dtype=time.dtype)
+        f = np.zeros(time.shape, dtype=time.dtype)
 
-        i = where(t1 <= time & time <= t2)[0]
-        f[i] = time[i] ** b * exp(c * time[i]) * cos(2 * pi * f * time[i] + p)
+        i = np.where(t1 <= time & time <= t2)[0]
+        f[i] = time[i] ** b * np.exp(c * time[i]) * np.cos(2 * np.pi * f * time[i] + p)
 
         is_spcd = False
         resp = f
@@ -690,13 +688,14 @@ class TLOAD2(TabularLoad):
         if isinstance(self.delay, integer_types) and self.delay > 0:
             self.delay = model.DELAY(self.delay_id, msg=msg)
             self.delay_ref = self.delay
-        # TODO: exciteID
+        # TODO: excite_id
 
     def safe_cross_reference(self, model, debug=True):
         msg = ' which is required by TLOAD2 sid=%s' % (self.sid)
         if isinstance(self.delay, integer_types) and self.delay > 0:
             self.delay = model.DELAY(self.delay_id, msg=msg)
-        # TODO: exciteID
+            self.delay_ref = self.delay
+        # TODO: excite_id
 
     def uncross_reference(self):
         self.delay = self.delay_id
@@ -712,7 +711,7 @@ class TLOAD2(TabularLoad):
         return self.delay_ref.sid
 
     def raw_fields(self):
-        list_fields = ['TLOAD2', self.sid, self.exciteID, self.delay_id, self.Type,
+        list_fields = ['TLOAD2', self.sid, self.excite_id, self.delay_id, self.Type,
                        self.T1, self.T2, self.frequency, self.phase, self.c, self.b,
                        self.us0, self.vs0]
         return list_fields
@@ -725,7 +724,7 @@ class TLOAD2(TabularLoad):
 
         us0 = set_blank_if_default(self.us0, 0.0)
         vs0 = set_blank_if_default(self.vs0, 0.0)
-        list_fields = ['TLOAD2', self.sid, self.exciteID, self.delay_id, self.Type,
+        list_fields = ['TLOAD2', self.sid, self.excite_id, self.delay_id, self.Type,
                        self.T1, self.T2, frequency, phase, c, b, us0, vs0]
         return list_fields
 

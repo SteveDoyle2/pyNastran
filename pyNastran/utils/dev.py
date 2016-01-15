@@ -6,7 +6,7 @@ from numpy import array, ndarray
 from pyNastran.utils import object_attributes
 
 
-def get_files_of_type(dirname, extension='.txt', max_size=100.):
+def get_files_of_type(dirname, extension='.txt', max_size=100., limit_file='no_dig.txt'):
     """
     Gets the list of all the files with a given extension in the specified directory
 
@@ -18,6 +18,9 @@ def get_files_of_type(dirname, extension='.txt', max_size=100.):
         list of filetypes to get
     max_size : float; default=100.0
         size in MB for max file size
+    limit_file : str; default=no_dig.txt
+        the presence of this file indicates no folder digging
+        should be done on this folder
 
     Returns
     -------
@@ -28,11 +31,18 @@ def get_files_of_type(dirname, extension='.txt', max_size=100.):
         return []
 
     fs = []
-    for f in os.listdir(dirname):
+    files = os.listdir(dirname)
+    allow_digging = True
+    if limit_file in files:
+        allow_digging = False
+    for f in files:
         filename = os.path.join(dirname, f)
         if os.path.isdir(filename):
-            fs += get_files_of_type(filename, extension, max_size)
-            #assert len(fs) > 0, dirnamei
+            if allow_digging:
+                fs += get_files_of_type(filename, extension, max_size)
+                #assert len(fs) > 0, dirnamei
+            else:
+                print('no digging in filename=%s; dirname=%s' % (filename, dirname))
         elif (os.path.isfile(filename) and
               os.path.splitext(f)[1].endswith(extension) and
               os.path.getsize(filename) / 1048576. <= max_size):

@@ -476,13 +476,16 @@ class EIGRL(Method):
             #: Method for normalizing eigenvectors (Character: 'MASS' or 'MAX')
             self.norm = string_or_blank(card, 8, 'norm')
 
-            optionValues = [interpret_value(field) for field in card[9:]]
+            option_values = [interpret_value(field) for field in card[9:]]
             self.options = []
             self.values = []
-            #print "optionValues = ",optionValues
-            for optionValue in optionValues:
-                #print "optionValue = ",optionValue
-                (option, value) = optionValue.split('=')
+            for option_value in option_values:
+                try:
+                    (option, value) = option_value.split('=')
+                except AttributeError:
+                    msg = 'parsing EIGRL card incorrectly; option_values=%s\ncard=%s' % (
+                        option_values, card)
+                    raise RuntimeError(msg)
                 self.options.append(option)
                 self.values.append(value)
 

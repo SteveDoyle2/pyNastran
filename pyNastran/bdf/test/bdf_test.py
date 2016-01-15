@@ -90,7 +90,8 @@ def run(regenerate=True, run_nastran=False, debug=False, sum_load=True):
     failed_files = run_lots_of_files(files, debug=debug, xref=xref,
                                      check=check, cid=cid,
                                      nastran=nastran,
-                                     size=size, is_double=is_double, post=post)
+                                     size=size, is_double=is_double, post=post,
+                                     encoding='latin1')
     ntotal = len(files)
     nfailed = len(failed_files)
     npassed = ntotal - nfailed
