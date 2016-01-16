@@ -43,7 +43,7 @@ from pyNastran.bdf.bdf import (BDF,
                                CQUAD4, CQUAD8, CQUADR, CSHEAR,
                                CTRIA3, CTRIA6, CTRIAR, CTRIAX6,
                                CTETRA4, CTETRA10, CPENTA6, CPENTA15,
-                               CHEXA8, CHEXA20,
+                               CHEXA8, CHEXA20, CIHEX1,
                                CPYRAM5, CPYRAM13,
                                CONM2,
                                LOAD)
@@ -1707,7 +1707,7 @@ class NastranIO(object):
                 elem.GetPointIds().SetId(4, nid_map[node_ids[4]])
                 elem.GetPointIds().SetId(5, nid_map[node_ids[5]])
                 self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
-            elif isinstance(element, CHEXA8):
+            elif isinstance(element, (CHEXA8, CIHEX1)):
                 node_ids = element.node_ids
                 pid = element.Pid()
                 for nid in node_ids:
@@ -2069,7 +2069,7 @@ class NastranIO(object):
                     xoffset[ie] = zi * normali[0]
                     yoffset[ie] = zi * normali[1]
                     zoffset[ie] = zi * normali[2]
-                elif element.type in ['CTETRA', 'CHEXA', 'CPENTA', 'CPYRAM']:
+                elif element.type in ['CTETRA', 'CHEXA', 'CPENTA', 'CPYRAM', 'CIHEX1']:
                     ie = self.eidMap[eid]
                     element_dimi = 3
                 elif element.type in ['CROD', 'CONROD', 'CBEND', 'CBAR', 'CBEAM', 'CGAP']:
@@ -2210,7 +2210,7 @@ class NastranIO(object):
             # print('iload=%s' % iload)
             # print(case_name)
             # subcase_id, resultType, vector_size, location, dataFormat
-            cases[(0, icase, case_name, 1, 'centroid', '%.1f')] = pressures
+            cases[(0, icase, case_name, 1, 'centroid', '%.1f', '')] = pressures
             form0.append((case_name, icase, []))
             icase += 1
         return icase
@@ -2256,17 +2256,17 @@ class NastranIO(object):
                 # print('iload=%s' % iload)
                 # print(case_name)
                 # subcase_id, resultType, vector_size, location, dataFormat
-                cases[(0, 'Pressure', 1, 'centroid', '%.1f')] = centroidal_pressures
+                cases[(0, icase, 'Pressure', 1, 'centroid', '%.1f', '')] = centroidal_pressures
                 form0.append(('Pressure', icase, []))
                 icase += 1
 
             if npabs(forces.max() - forces.min()) > 0.0:
                 # if forces[:, 0].min() != forces[:, 0].max():
-                cases[(subcase_id, icase, 'LoadX', 1, 'node', '%.1f')] = forces[:, 0]
+                cases[(subcase_id, icase, 'LoadX', 1, 'node', '%.1f', '')] = forces[:, 0]
                 # if forces[:, 1].min() != forces[:, 1].max():
-                cases[(subcase_id, icase + 1, 'LoadY', 1, 'node', '%.1f')] = forces[:, 1]
+                cases[(subcase_id, icase + 1, 'LoadY', 1, 'node', '%.1f', '')] = forces[:, 1]
                 # if forces[:, 2].min() != forces[:, 2].max():
-                cases[(subcase_id, icase + 2, 'LoadZ', 1, 'node', '%.1f')] = forces[:, 2]
+                cases[(subcase_id, icase + 2, 'LoadZ', 1, 'node', '%.1f', '')] = forces[:, 2]
 
                 form0.append(('Total Load FX', icase, []))
                 form0.append(('Total Load FY', icase + 1, []))

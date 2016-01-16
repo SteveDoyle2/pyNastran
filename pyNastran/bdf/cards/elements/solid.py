@@ -179,7 +179,6 @@ class SolidElement(Element):
         ##assert msg1 == msg2, 'write_card != write_card\n%s---\n%s\n%r\n%r' % (msg1, msg2, msg1, msg2)
         #return msg2
 
-
 class CHEXA8(SolidElement):
     """
     +-------+-----+-----+----+----+----+----+----+----+
@@ -325,6 +324,26 @@ class CHEXA8(SolidElement):
             tuple(sorted([node_ids[2], node_ids[6]])),
             tuple(sorted([node_ids[3], node_ids[7]])),
         ]
+
+
+class CIHEX1(CHEXA8):
+    type = 'CIHEX1'
+
+    def write_card(self, size=8, is_double=False):
+        data = [self.eid, self.Pid()] + self.node_ids
+        msg = ('CIHEX1  %8i%8i%8i%8i%8i%8i%8i%8i\n'
+               '        %8i%8i\n' % tuple(data))
+        return self.comment + msg
+
+    def write_card_16(self, is_double=False):
+        data = [self.eid, self.Pid()] + self.node_ids
+        msg = ('CIHEX1* %16i%16i%16i%16i\n'
+               '*       %16i%16i%16i%16i\n'
+               '*       %16i%16i\n' % tuple(data))
+        return self.comment + msg
+
+    def __init__(self, card=None, data=None, comment=''):
+        CHEXA8.__init__(self, card, comment=comment)
 
 
 class CHEXA20(SolidElement):

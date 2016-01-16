@@ -38,14 +38,14 @@ from pyNastran.bdf.bdfInterface.assign_type import (integer,
 
 from pyNastran.bdf.cards.elements.elements import CFAST, CGAP, CRAC2D, CRAC3D, PLOTEL
 from pyNastran.bdf.cards.properties.properties import (PFAST, PGAP, PLSOLID, PSOLID,
-                                                       PRAC2D, PRAC3D, PCONEAX)
+                                                       PRAC2D, PRAC3D, PCONEAX, PIHEX)
 
 from pyNastran.bdf.cards.elements.springs import (CELAS1, CELAS2, CELAS3, CELAS4,)
 from pyNastran.bdf.cards.properties.springs import PELAS, PELAST
 
 from pyNastran.bdf.cards.elements.solid import (CTETRA4, CTETRA10, CPYRAM5, CPYRAM13,
                                                 CPENTA6, CPENTA15,
-                                                CHEXA8, CHEXA20)
+                                                CHEXA8, CHEXA20, CIHEX1)
 from pyNastran.bdf.cards.elements.rigid import RBAR, RBAR1, RBE1, RBE2, RBE3, RROD
 
 from pyNastran.bdf.cards.elements.shell import (CQUAD, CQUAD4, CQUAD8, CQUADR, CQUADX,
@@ -347,6 +347,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'CTRIA3', 'CTRIA6', 'CTRIAR', 'CTRIAX', 'CTRIAX6',
             'CQUAD4', 'CQUAD8', 'CQUADR', 'CQUADX', 'CQUAD',
             'CTETRA', 'CPYRAM', 'CPENTA', 'CHEXA',
+            'CIHEX1',
             'CSHEAR', 'CVISC', 'CRAC2D', 'CRAC3D',
             'CGAP',
 
@@ -367,6 +368,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
             'PSHELL', 'PCOMP', 'PCOMPG', 'PSHEAR',
             'PSOLID', 'PLSOLID', 'PVISC', 'PRAC2D', 'PRAC3D',
+            'PIHEX',
             # PQUAD4
 
             ## pdampt
@@ -1387,7 +1389,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             # CHEXA  - added later
             # CPENTA - added later
             # CPYRAM - added later
+            'CIHEX1' : (CIHEX1, self.add_element),
             'PSOLID' : (PSOLID, self.add_property),
+            'PIHEX' : (PIHEX, self.add_property),
             'PLSOLID' : (PLSOLID, self.add_property),
             'PCONEAX' : (PCONEAX, self.add_property),
 

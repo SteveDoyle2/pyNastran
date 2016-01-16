@@ -268,7 +268,6 @@ class PLSOLID(SolidProperty):
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)
 
-
 class PSOLID(SolidProperty):
     """
     +--------+-----+-----+-------+-----+--------+---------+------+
@@ -360,6 +359,25 @@ class PSOLID(SolidProperty):
         card = self.repr_fields()
         # this card has integers & strings, so it uses...
         return self.comment + print_card_8(card)
+
+
+class PIHEX(PSOLID):
+    type = 'PIHEX'
+    def __init__(self, card=None, data=None, comment=''):
+        PSOLID.__init__(self, card, data, comment)
+
+    def raw_fields(self):
+        fields = ['PIHEX', self.pid, self.Mid(), self.cordm, self.integ,
+                  self.stress, self.isop, self.fctn]
+        return fields
+
+    def repr_fields(self):
+        cordm = set_blank_if_default(self.cordm, 0)
+        fctn = set_blank_if_default(self.fctn, 'SMECH')
+        fields = ['PIHEX', self.pid, self.Mid(), cordm, self.integ,
+                  self.stress, self.isop, fctn]
+        return fields
+
 
 class CrackProperty(Property):
     def __init__(self, card, data):

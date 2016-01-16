@@ -445,7 +445,7 @@ class BDFAttributes(object):
                 'CBAR', 'CROD', 'CTUBE', 'CBEAM', 'CBEAM3', 'CONROD', 'CBEND',
                 'CTRIA3', 'CTRIA6', 'CTRIAR', 'CTRIAX', 'CTRIAX6',
                 'CQUAD4', 'CQUAD8', 'CQUADR', 'CQUADX', 'CQUAD',
-                'CTETRA', 'CPYRAM', 'CPENTA', 'CHEXA',
+                'CTETRA', 'CPYRAM', 'CPENTA', 'CHEXA', 'CIHEX1',
                 'CSHEAR', 'CVISC', 'CRAC2D', 'CRAC3D',
                 'CGAP',
 
@@ -466,6 +466,7 @@ class BDFAttributes(object):
 
                 'PSHELL', 'PCOMP', 'PCOMPG', 'PSHEAR',
                 'PSOLID', 'PLSOLID', 'PVISC', 'PRAC2D', 'PRAC3D',
+                'PIHEX',
             ],
             'pdampt' : ['PDAMPT',],
             'pelast' : ['PELAST',],

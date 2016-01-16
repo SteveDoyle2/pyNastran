@@ -455,7 +455,7 @@ class GuiCommon(GuiAttributes):
         #elif len(key) == 6:
             #(subcase_id, j, result_type, vector_size, location, data_format) = key
         else:
-            assert len(key) == 7, key
+            assert len(key) == 7, '%s = (subcase_id, j, result_type, vector_size, location, data_format, label2)' % str(key)
             (subcase_id, j, result_type, vector_size, location, data_format, label2) = key
         return result_type
 
