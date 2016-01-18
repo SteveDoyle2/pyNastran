@@ -1,7 +1,5 @@
 # pylint: disable=E1101
-#from six import iteritems
-from pyNastran.op2.resultObjects.tableObject import RealTableArray  #, ComplexTableArray, TableObject, ComplexTableObject
-#from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
+from pyNastran.op2.resultObjects.tableObject import RealTableArray
 
 
 class RealTemperatureArray(RealTableArray):

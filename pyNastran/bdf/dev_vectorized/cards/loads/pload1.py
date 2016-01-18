@@ -1,7 +1,6 @@
 from six.moves import zip
 from numpy import arange, array, zeros, searchsorted, unique
 
-#from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.bdfInterface.assign_type import (integer,

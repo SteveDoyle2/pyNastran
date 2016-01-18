@@ -16,7 +16,6 @@ from pyNastran.applications.cart3d_nastran_fsi.structural_model import Structura
 from pyNastran.applications.cart3d_nastran_fsi.aero_model import AeroModel
 from pyNastran.applications.cart3d_nastran_fsi.kdtree import KdTree
 
-# pyNastran
 from pyNastran.converters.cart3d.cart3d_reader import Cart3DReader
 from pyNastran.bdf.bdf import BDF
 from pyNastran.utils.log import get_logger

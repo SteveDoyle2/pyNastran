@@ -20,12 +20,12 @@ class ONR(OP2Common):
         """
         self.words = [
             'aCode',       'tCode',    'eTotal',        'isubcase',
-             '???',         '???',      'element_name', 'load_set'
-             'format_code', 'num_wide', 'cvalres',      'setID',
-             'setID',       'eigenReal','eigenImag',     '???',
-             'etotpos',     'etotneg',  '???',          '???',
-             '???',         '???',      '???',      '???',
-             '???', 'Title', 'subtitle', 'label']
+            '???',         '???',      'element_name', 'load_set',
+            'format_code', 'num_wide', 'cvalres',      'setID',
+            'setID',       'eigenReal', 'eigenImag',     '???',
+            'etotpos',     'etotneg',  '???',          '???',
+            '???',         '???',      '???',      '???',
+            '???', 'Title', 'subtitle', 'label']
 
         #aCode = self.get_block_int_entry(data, 1)
 

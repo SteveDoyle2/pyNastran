@@ -1,13 +1,5 @@
 from six.moves import zip
-#from itertools import count
-
 from numpy import array
-
-#from pyNastran.bdf.field_writer_8 import print_card_8
-#from pyNastran.bdf.field_writer_16 import print_card_16
-
-#from pyNastran.bdf.bdfInterface.assign_type import (
-    #components_or_blank)
 
 
 class SPCD(object):

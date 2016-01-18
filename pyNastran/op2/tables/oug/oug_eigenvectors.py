@@ -1,13 +1,9 @@
-#from six import iteritems
 from six.moves import zip, range
-#from math import sqrt
-from numpy import array #, pi
-
-#from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
+from numpy import array
 
 from pyNastran.op2.resultObjects.tableObject import RealTableArray, ComplexTableArray
-#RealTableObject, ComplexTableObject
-from pyNastran.f06.f06_formatting import write_floats_13e #, write_imag_floats_13e
+from pyNastran.f06.f06_formatting import write_floats_13e
+
 
 class ComplexEigenvectorArray(ComplexTableArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -28,6 +24,7 @@ class ComplexEigenvectorArray(ComplexTableArray):
         words = ['                                         C O M P L E X   E I G E N V E C T O R   N O . ???\n \n']
         #words += self.get_table_marker()
         return self._write_f06_transient_block(words, header, page_stamp, page_num, f, is_mag_phase, is_sort1)
+
 
 class RealEigenvectorArray(RealTableArray):
     def __init__(self, data_code, is_sort1, isubcase, dt, f06_flag=False):

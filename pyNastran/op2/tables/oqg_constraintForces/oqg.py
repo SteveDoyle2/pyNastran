@@ -7,8 +7,6 @@ This file defines the OUG Table, which contains:
  * Real Temperature Gradient & Flux
    - FLUX = ALL
 """
-from struct import unpack
-
 from pyNastran.op2.op2_common import OP2Common
 
 from pyNastran.op2.tables.oqg_constraintForces.oqg_spcForces import (
@@ -34,13 +32,13 @@ class OQG(OP2Common):
         self.is_table_2 = False
         three = self.parse_approach_code(data)
         self.words = [
-            'analysis_code', 'table_code', '???',       'isubcase',
-             '???',         '???',      '???',          'random_code'
-             'format_code', 'num_wide', '11',           '???',
-            'acoustic_flag','???',      '???',          '???',
-             '???',         '???',      '???',          '???',
-             '???',         '???',      'thermal',      '???',
-             '???', 'Title', 'subtitle', 'label']
+            'analysis_code', 'table_code', '???', 'isubcase',
+            '???', '???', '???', 'random_code',
+            'format_code', 'num_wide', '11', '???',
+            'acoustic_flag', '???', '???', '???',
+            '???', '???', '???', '???',
+            '???', '???', 'thermal', '???',
+            '???', 'Title', 'subtitle', 'label']
 
         ## random code
         self.random_code = self.add_data_parameter(data, 'random_code', 'i', 8, False)
@@ -147,13 +145,13 @@ class OQG(OP2Common):
         self.is_table_2 = True
         three = self.parse_approach_code(data)
         self.words = [
-            'analysis_code', 'table_code', '???',           'isubcase',
-             '???',         '???',      '???',          'random_code'
-             'format_code', 'num_wide', '11',           '???',
-            'acoustic_flag','???',      '???',          '???',
-             '???',         '???',      '???',          '???',
-             '???',         '???',      'thermal',      '???',
-             '???', 'Title', 'subtitle', 'label']
+            'analysis_code', 'table_code', '???', 'isubcase',
+            '???', '???', '???', 'random_code',
+            'format_code', 'num_wide', '11', '???',
+            'acoustic_flag', '???', '???', '???',
+            '???', '???', '???', '???',
+            '???', '???', 'thermal', '???',
+            '???', 'Title', 'subtitle', 'label']
 
         ## random code
         self.random_code = self.add_data_parameter(data, 'random_code', 'i', 8, False)
@@ -398,8 +396,8 @@ class OQG(OP2Common):
                     return ndata
                 self._results._found_result(result_name)
                 n = self._read_table_vectorized(data, ndata, result_name, storage_obj,
-                                     RealSPCForcesArray, ComplexSPCForcesArray,
-                                     'node', random_code=self.random_code)
+                                                RealSPCForcesArray, ComplexSPCForcesArray,
+                                                'node', random_code=self.random_code)
             #elif self.table_code == 610:
                 #result_name = 'velocitiesPSD'
                 #storage_obj = self.velocitiesPSD
@@ -446,8 +444,8 @@ class OQG(OP2Common):
                     return ndata
                 self._results._found_result(result_name)
                 n = self._read_table_vectorized(data, ndata, result_name, storage_obj,
-                                     RealMPCForcesArray, ComplexMPCForcesArray,
-                                     'node', random_code=self.random_code)
+                                                RealMPCForcesArray, ComplexMPCForcesArray,
+                                                'node', random_code=self.random_code)
             else:
                 raise RuntimeError(self.code_information())
         else:

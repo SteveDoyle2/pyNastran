@@ -29,10 +29,9 @@ from pyNastran.op2.tables.oug.oug_temperatures import (
 
 from pyNastran.op2.tables.oug.oug_eigenvectors import (
     RealEigenvectorArray, ComplexEigenvectorArray,
-     #Eigenvector, ComplexEigenvector,
 )
 
-from pyNastran.op2.tables.opg_appliedLoads.opg_loadVector import RealThermalVelocityVectorArray # RealThermalVelocityVector
+from pyNastran.op2.tables.opg_appliedLoads.opg_loadVector import RealThermalVelocityVectorArray
 
 
 class OUG(OP2Common):
@@ -47,13 +46,13 @@ class OUG(OP2Common):
         self.is_table_2 = False
         three = self.parse_approach_code(data)
         self.words = [
-            'approach_code','table_code','???',         'isubcase',
-             '???',         '???',      '???',          'random_code'
-             'format_code', 'num_wide', '???',          '???',
-            'acoustic_flag','???',      '???',          '???',
-             '???',         '???',      '???',          '???',
-             '???',         '???',      'thermal',      '???',
-             '???', 'Title', 'subtitle', 'label']
+            'approach_code', 'table_code', '???', 'isubcase',
+            '???', '???', '???', 'random_code',
+            'format_code', 'num_wide', '???', '???',
+            'acoustic_flag', '???', '???', '???',
+            '???', '???', '???', '???',
+            '???', '???', 'thermal', '???',
+            '???', 'Title', 'subtitle', 'label']
 
         ## random code
         self.random_code = self.add_data_parameter(data, 'random_code', 'i', 8, False)
@@ -161,13 +160,13 @@ class OUG(OP2Common):
         self.is_table_2 = True
         three = self.parse_approach_code(data)
         self.words = [
-            'approach_code','table_code','???',         'isubcase',
-             '???',         '???',      '???',          'random_code'
-             'format_code', 'num_wide', '???',          '???',
-            'acoustic_flag','???',      '???',          '???',
-             '???',         '???',      '???',          '???',
-             '???',         '???',      'thermal',      '???',
-             '???', 'Title', 'subtitle', 'label']
+            'approach_code', 'table_code', '???', 'isubcase',
+            '???', '???', '???', 'random_code',
+            'format_code', 'num_wide', '???', '???',
+            'acoustic_flag', '???', '???', '???',
+            '???', '???', '???', '???',
+            '???', '???', 'thermal', '???',
+            '???', 'Title', 'subtitle', 'label']
 
         ## random code
         self.random_code = self.add_data_parameter(data, 'random_code', 'i', 8, False)
@@ -332,9 +331,9 @@ class OUG(OP2Common):
                 return ndata
             self._results._found_result(result_name)
             n = self._read_table_vectorized(data, ndata, result_name, storage_obj,
-                                           RealDisplacementArray, ComplexDisplacementArray,
-                                           'node', random_code=self.random_code,
-                                           is_cid=is_cid)
+                                            RealDisplacementArray, ComplexDisplacementArray,
+                                            'node', random_code=self.random_code,
+                                            is_cid=is_cid)
         elif self.thermal == 1:
             result_name = 'temperatures'
             storage_obj = self.temperatures
@@ -384,7 +383,7 @@ class OUG(OP2Common):
         """
         table_code = 10
         """
-        if self.table_name in [b'OUGV1', b'OUGV2']:
+        if self.table_name in [b'OUGV1', b'OUGV2', b'ROUGV1']:
             result_name = 'velocities'
         elif self.table_name == b'OUPV1':
             assert self.thermal in [2, 4], self.thermal
@@ -531,55 +530,6 @@ class OUG(OP2Common):
             raise NotImplementedError(self.thermal)
         return n
 
-    def _read_eigenvector_backup(self, data, ndata):
-        """
-        table_code = 7
-        """
-        result_name = 'eigenvectors'
-        storage_obj = self.eigenvectors
-        if self.thermal == 0:
-            if self._results.is_not_saved(result_name):
-                return ndata
-            self._results._found_result(result_name)
-            #if self.isRandomResponse():
-            if self.isRandomResponse():
-                if self.format_code == 1 and self.num_wide == 8:  # real/random
-                    real_obj = Eigenvector
-                    #assert real_obj is not None
-                    nnodes = ndata // 32  # 8*4
-                    auto_return, is_vectorized = self._create_table_object(
-                        result_name, nnodes, storage_obj, real_obj, real_vector)
-                    if auto_return:
-                        return ndata
-                    n = self._read_real_table_sort1(data, result_name, node_elem)
-                elif self.format_code in [1, 2, 3] and self.num_wide == 14:  # real (fsi.op2 odd...) or real/imaginary or mag/phase
-                    complex_obj = ComplexEigenvector
-                    #assert complex_obj is not None
-                    nnodes = ndata // 56  # 14*4
-                    auto_return, is_vectorized = self._create_table_object(result_name, nnodes, storage_obj, complex_obj, complex_vector)
-                    if auto_return:
-                        return ndata
-                    n = self._read_complex_table_sort1(data, result_name, node_elem)
-                else:
-                    raise RuntimeError(self.table_name)
-                    msg = 'only num_wide=8 or 14 is allowed  num_wide=%s' % self.num_wide
-                    n = self._not_implemented_or_skip(data, ndata, msg)
-            else:
-                raise RuntimeError(self.table_name)
-                msg = 'invalid random_code=%s num_wide=%s' % (self.random_code, self.num_wide)
-                n = self._not_implemented_or_skip(data, ndata, msg)
-            #n = self._read_table(data, result_name, storage_obj,
-            #                     Eigenvector, ComplexEigenvector,
-            #                     RealEigenvectorArray, ComplexEigenvectorArray, 'node')
-        elif self.thermal == 1:
-            n = self._not_implemented_or_skip(data, ndata, msg='thermal=1')
-            #n = self._read_table(data, result_name, storage_obj,
-            #                     None, None,
-            #                     None, None, 'node', random_code=self.random_code)
-        else:
-            raise NotImplementedError(self.thermal)
-        return n
-
     def _read_oug_psd(self, data, ndata):
         """
         table_code = 601/610/611
@@ -591,26 +541,29 @@ class OUG(OP2Common):
                 if self._results.is_not_saved(result_name):
                     return ndata
                 self._results._found_result(result_name)
-                n = self._read_table_vectorized(data, ndata, result_name, storage_obj,
-                                     RealDisplacementArray, ComplexDisplacementArray,
-                                     'node', random_code=self.random_code)
+                n = self._read_table_vectorized(
+                    data, ndata, result_name, storage_obj,
+                    RealDisplacementArray, ComplexDisplacementArray,
+                    'node', random_code=self.random_code)
             elif self.table_code == 610:
                 result_name = 'velocitiesPSD'
                 storage_obj = self.velocitiesPSD
                 if self._results.is_not_saved(result_name):
                     return ndata
                 self._results._found_result(result_name)
-                n = self._read_table_vectorized(data, ndata, result_name, storage_obj,
-                                                RealVelocityArray, ComplexVelocityArray,
-                                                'node', random_code=self.random_code)
+                n = self._read_table_vectorized(
+                    data, ndata, result_name, storage_obj,
+                    RealVelocityArray, ComplexVelocityArray,
+                    'node', random_code=self.random_code)
             elif self.table_code == 611:
                 result_name = 'accelerationsPSD'
                 storage_obj = self.accelerationsPSD
                 if self._results.is_not_saved(result_name):
                     return ndata
-                n = self._read_table_vectorized(data, ndata, result_name, storage_obj,
-                                                RealAccelerationArray, ComplexAccelerationArray,
-                                                'node', random_code=self.random_code)
+                n = self._read_table_vectorized(
+                    data, ndata, result_name, storage_obj,
+                    RealAccelerationArray, ComplexAccelerationArray,
+                    'node', random_code=self.random_code)
             #elif self.table_code in [1]:
                 #if self.format_code == 2:
                     #self.format_code = 1

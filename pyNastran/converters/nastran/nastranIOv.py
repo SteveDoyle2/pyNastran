@@ -61,7 +61,6 @@ try:
     is_geom = True
 except ImportError:
     is_geom = False
-#from pyNastran.f06.f06 import F06
 
 
 class NastranIO(object):

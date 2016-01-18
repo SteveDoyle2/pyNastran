@@ -1,7 +1,6 @@
 import unittest
 
 from pyNastran.bdf.bdf import BDF, BDFCard, PELAS
-#from pyNastran.bdf.field_writer_8 import print_card
 
 bdf = BDF(debug=False)
 class TestSprings(unittest.TestCase):

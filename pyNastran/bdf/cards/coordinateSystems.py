@@ -21,7 +21,6 @@ from numpy.linalg import norm
 
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import BaseCard
-#from pyNastran.utils.dev import list_print
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double_or_blank, string_or_blank, string)
 from pyNastran.bdf.field_writer_8 import print_card_8

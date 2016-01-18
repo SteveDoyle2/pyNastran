@@ -18,10 +18,11 @@ from pyNastran.op2.tables.oef_forces.oef_thermalObjects import (
     Real1DHeatFluxArray,
     HeatFlux_2D_3DArray,
     RealChbdyHeatFluxArray,
+    RealConvHeatFluxArray,
 
-    # TODO: vectorize 4
+    # TODO: vectorize 3
     HeatFlux_VU,
-    HeatFlux_VUBEAM, HeatFlux_VU_3D, HeatFlux_CONV
+    HeatFlux_VUBEAM, HeatFlux_VU_3D,
 )
 from pyNastran.op2.tables.oef_forces.oef_forceObjects import (
     RealRodForceArray, RealViscForceArray,
@@ -35,9 +36,9 @@ from pyNastran.op2.tables.oef_forces.oef_forceObjects import (
     RealConeAxForceArray,
     RealSolidPressureForceArray,
     RealCBeamForceArray,
+    RealBendForceArray,
 
-    # TODO: vectorize 3
-    RealBendForce,
+    # TODO: vectorize 2
     RealForce_VU_2D, RealForce_VU,
 )
 from pyNastran.op2.tables.oef_forces.oef_complexForceObjects import (
@@ -52,9 +53,9 @@ from pyNastran.op2.tables.oef_forces.oef_complexForceObjects import (
     ComplexPlateForceArray,
     ComplexPlate2ForceArray,
     ComplexSolidPressureForceArray,
+    ComplexCBendForceArray,
 
-    # TODO: vectorize 3
-    ComplexBendForce,
+    # TODO: vectorize 2
     ComplexForce_VU_2D, ComplexForce_VU,
 )
 
@@ -607,9 +608,13 @@ class OEF(OP2Common):
 
         elif self.element_type == 110:
             # 110-CONV
+            result_name = 'thermalLoad_CONV'
+            if self._results.is_not_saved(result_name):
+                return ndata
+            self._results._found_result(result_name)
+            slot = getattr(self, result_name)
+
             if self.format_code == 1 and self.num_wide == 4:
-                # TODO: vectorize
-                s1 = Struct(b(self._endian + 'ifif'))
                 ntotal = 16
                 nelements = ndata // ntotal
 
@@ -619,7 +624,7 @@ class OEF(OP2Common):
                     self.create_transient_object(self.thermalLoad_CONV, HeatFlux_CONV)
                 else:
                     auto_return, is_vectorized = self._create_oes_object4(
-                        nelements, result_name, slot, obj_vector_real)
+                        nelements, result_name, slot, RealConvHeatFluxArray)
                     if auto_return:
                         return nelements * self.num_wide * 4
                 obj = self.obj
@@ -629,36 +634,35 @@ class OEF(OP2Common):
                     #self.binary_debug.write('  #elementi = [eid_device, etype, fapplied, free_conv, force_conv, frad, ftotal]\n')
                     #self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
 
-                is_vectorized = False
                 if self.use_vector and is_vectorized:
                     n = nelements * 4 * self.num_wide
                     ielement = obj.ielement
-                    ielement2 = obj.element + nelements
+                    ielement2 = obj.ielement + nelements
 
                     floats = fromstring(data, dtype=self.fdtype).reshape(nelements, 4)
                     obj._times[obj.itime] = dt
                     if obj.itime == 0:
                         ints = fromstring(data, dtype=self.idtype).reshape(nelements, 4)
                         eids = ints[:, 0] // 10
-                        nids = ints[:, 1]
+                        nids = ints[:, 2]
                         assert eids.min() > 0, eids.min()
-                        assert nids.min() > 0, nids.min()
-                        obj.element_node[itotal:itotal2, 0] = eids
-                        obj.element_node[itotal:itotal2, 1] = nids
+                        assert nids.min() >= 0, nids.min()
+                        obj.element_node[ielement:ielement2, 0] = eids
+                        obj.element_node[ielement:ielement2, 1] = nids
 
-                    #[eid, cntl_node, free_conv, free_conv_k]
-                    obj.data[obj.itime, ielement:ielement2, :] = floats[:, 2:]
+                    #[eid, free_conv, cntl_node, free_conv_k]
+                    obj.data[obj.itime, ielement:ielement2, :] = floats[:, [1, 3]]
                     obj.itotal = ielement2
                     obj.ielement = ielement2
                 else:
+                    s1 = Struct(b(self._endian + 'ifif'))
                     for i in range(nelements):
                         edata = data[n:n+16]
                         n += 16
                         out = s1.unpack(edata)
-                        (eid_device, cntl_node, free_conv, free_conv_k) = out
-                        #eid = (eid_device - self.device_code) // 10
+                        (eid_device, free_conv, cntl_node, free_conv_k) = out
                         eid = eid_device // 10
-                        #print "heatFlux %s" %(self.get_element_type(self.element_type)), data_in
+                        assert cntl_node >= 0, cntl_node
                         obj.add(dt, eid, cntl_node, free_conv, free_conv_k)
             else:
                 msg = self.code_information()
@@ -739,7 +743,6 @@ class OEF(OP2Common):
 
                     out = s1.unpack(edata)
                     (eid_device, parent, coord, icord, theta, null) = out
-                    #eid = (eid_device - self.device_code) // 10
                     eid = eid_device // 10
                     data_in = [eid, parent, coord, icord, theta]
 
@@ -928,7 +931,6 @@ class OEF(OP2Common):
                         edata = data[n:n+ntotal]
                         out = s.unpack(edata)
                         (eid_device, axial, torque) = out
-                        #eid = (eid_device - self.device_code) // 10
                         eid = eid_device // 10
                         if self.is_debug_file:
                             self.binary_debug.write('OEF_Rod - %s\n' % (str(out)))
@@ -1101,7 +1103,6 @@ class OEF(OP2Common):
                     for i in range(nelements):
                         edata = data[n:n+4]
                         eid_device, = s1.unpack(edata)
-                        #eid = (eid_device - self.device_code) // 10
                         eid = eid_device // 10
                         n += 4
 
@@ -2009,7 +2010,7 @@ class OEF(OP2Common):
                     #self.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % ndata)
                     ##self.binary_debug.write('  #centeri = [eid_device, j, grid, fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,\n')
                     ##self.binary_debug.write('  #                                fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,)]\n')
-                    ##self.binary_debug.write('  #nodeji = [eid, iLayer, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)]\n')
+                    ##self.binary_debug.write('  #nodeji = [eid, ilayer, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)]\n')
                     #self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
 
                 #eid_old = 0
@@ -2021,7 +2022,7 @@ class OEF(OP2Common):
                     #out = s.unpack(edata)
                     #(eid_device, theory, lamid, failure_index_direct_stress, failure_mode_max_shear,
                              #failure_index_interlaminar_shear, fmax, failure_flag) = out
-                    #eid = (eid_device - self.device_code) // 10
+                    eid = eid_device // 10
                     #if self.is_debug_file:
                         #if eid > 0:
                             #self.binary_debug.write('  eid=%i; C=[%s]\n' % (', '.join(['%r' % di for di in out]) ))
@@ -2225,8 +2226,8 @@ class OEF(OP2Common):
 
                         eid = eid_device // 10
                         obj.add_sort1(dt, eid,
-                                f41, f21, f12, f32, f23, f43, f34, f14,
-                                kf1, s12, kf2, s23, kf3, s34, kf4, s41)
+                                      f41, f21, f12, f32, f23, f43, f34, f14,
+                                      kf1, s12, kf2, s23, kf3, s34, kf4, s41)
             else:
                 msg = self.code_information()
                 return self._not_implemented_or_skip(data, ndata, msg)
@@ -2339,90 +2340,170 @@ class OEF(OP2Common):
                 return self._not_implemented_or_skip(data, ndata, msg)
         elif self.element_type == 69:  # cbend
             # 69-CBEND
-            if self.read_mode == 1:
-                return ndata
             result_name = 'cbend_force'
             self._results._found_result(result_name)
+            slot = getattr(self, result_name)
             if self.format_code == 1 and self.num_wide == 15:  # real
-                # TODO: vectorize
-                self.create_transient_object(self.cbend_force, RealBendForce)
-                s = Struct(b(self._endian + 'ii13f'))
-
                 ntotal = 60  # 15*4
                 nelements = ndata // ntotal
-                obj = self.obj
-                for i in range(nelements):
-                    edata = data[n:n+ntotal]
+                auto_return, is_vectorized = self._create_oes_object4(
+                    nelements, result_name, slot, RealBendForceArray)
+                if auto_return:
+                    return nelements * self.num_wide * 4
 
-                    out = s.unpack(edata)
-                    if self.is_debug_file:
-                        self.binary_debug.write('OEF_BEND-69 - %s\n' % (str(out)))
-                    (eid_device,
-                     nidA, bm1A, bm2A, ts1A, ts2A, afA, trqA,
-                     nidB, bm1B, bm2B, ts1B, ts2B, afB, trqB) = out
-                    eid = eid_device // 10
-                    data_in = [eid,
-                               nidA, bm1A, bm2A, ts1A, ts2A, afA, trqA,
-                               nidB, bm1B, bm2B, ts1B, ts2B, afB, trqB]
-                    #print "%s" %(self.get_element_type(self.element_type)), data_in
-                    #eid = obj.add_new_eid(out)
-                    obj.add(dt, data_in)
-                    n += ntotal
+                obj = self.obj
+                if self.use_vector and is_vectorized:
+                    n = nelements * 4 * self.num_wide
+                    itotal = obj.ielement
+                    ielement2 = obj.itotal + nelements
+                    itotal2 = ielement2
+
+                    floats = fromstring(data, dtype=self.fdtype).reshape(nelements, 15)
+                    obj._times[obj.itime] = dt
+                    if obj.itime == 0:
+                        ints = fromstring(data, dtype=self.idtype).reshape(nelements, 15)
+                        eids = ints[:, 0] // 10
+                        nids_a = ints[:, 1]
+                        nids_b = ints[:, 8]
+                        assert eids.min() > 0, eids.min()
+                        obj.element_nodes[itotal:itotal2, 0] = eids
+                        obj.element_nodes[itotal:itotal2, 1] = nids_a
+                        obj.element_nodes[itotal:itotal2, 2] = nids_b
+
+                    # [nidA, bm1A, bm2A, ts1A, ts2A, afA, trqA,
+                    #  nidB, bm1B, bm2B, ts1B, ts2B, afB, trqB]
+                    assert floats[:, 2:8].shape[1] == 6, floats[:, 2:8].shape
+                    assert floats[:, 9:].shape[1] == 6, floats[:, 9:].shape
+                    obj.data[obj.itime, itotal:itotal2, :6] = floats[:, 2:8]
+                    obj.data[obj.itime, itotal:itotal2, 6:] = floats[:, 9:]
+                    obj.itotal = itotal2
+                    obj.ielement = ielement2
+                else:
+                    s = Struct(b(self._endian + 'i i6fi6f'))
+                    for i in range(nelements):
+                        edata = data[n:n+ntotal]
+
+                        out = s.unpack(edata)
+                        if self.is_debug_file:
+                            self.binary_debug.write('OEF_BEND-69 - %s\n' % (str(out)))
+                        (eid_device,
+                         nidA, bm1A, bm2A, ts1A, ts2A, afA, trqA,
+                         nidB, bm1B, bm2B, ts1B, ts2B, afB, trqB) = out
+                        eid = eid_device // 10
+
+                        obj.add_sort1(
+                            dt, eid,
+                            nidA, bm1A, bm2A, ts1A, ts2A, afA, trqA,
+                            nidB, bm1B, bm2B, ts1B, ts2B, afB, trqB)
+                        n += ntotal
             elif self.format_code in [2, 3] and self.num_wide == 27:  # imag
                 # TODO: vectorize
-                self.create_transient_object(self.cbend_force, ComplexBendForce)
-                s = Struct(b(self._endian + 'ii25f'))
-
                 ntotal = 108  # 27*4
                 nelements = ndata // ntotal
-                obj = self.obj
-                for i in range(nelements):
-                    edata = data[n:n+108]
-                    n += ntotal
 
-                    out = s.unpack(edata)
-                    if self.is_debug_file:
-                        self.binary_debug.write('OEF_BEND-69 - %s\n' % (str(out)))
-                    (eid_device, nidA,
-                     bm1Ar, bm2Ar, ts1Ar, ts2Ar, afAr, trqAr,
-                     bm1Ai, bm2Ai, ts1Ai, ts2Ai, afAi, trqAi,
-                     nidB,
-                     bm1Br, bm2Br, ts1Br, ts2Br, afBr, trqBr,
-                     bm1Bi, bm2Bi, ts1Bi, ts2Bi, afBi, trqBi) = out
-                    eid = eid_device // 10
+                auto_return, is_vectorized = self._create_oes_object4(
+                    nelements, result_name, slot, ComplexCBendForceArray)
+                if auto_return:
+                    return nelements * self.num_wide * 4
+
+                obj = self.obj
+                if self.use_vector and is_vectorized:
+                    n = nelements * 4 * self.num_wide
+                    itotal = obj.ielement
+                    ielement2 = obj.itotal + nelements
+                    itotal2 = ielement2
+
+                    ireal = [2, 3,  4,  5,  6,  7, 15, 16, 17, 18, 19, 20]
+                    iimag = [8, 9, 10, 11, 12, 13, 21, 22, 23, 24, 25, 26]
+                    # 0    1
+                    # eid, nidA,
+                    # 2      3      4       5     6     7
+                    # 8      9      10      11    12    13
+                    # bm1Ar, bm2Ar, ts1Ar, ts2Ar, afAr, trqAr,
+                    # bm1Ai, bm2Ai, ts1Ai, ts2Ai, afAi, trqAi,
+                    # 14
+                    # nidB
+                    # 15     16     17     18     19    20
+                    # 21     22     23     24     25    26
+                    # bm1Br, bm2Br, ts1Br, ts2Br, afBr, trqBr,
+                    # bm1Bi, bm2Bi, ts1Bi, ts2Bi, afBi, trqBi
+                    floats = fromstring(data, dtype=self.fdtype).reshape(nelements, 27)
+                    obj._times[obj.itime] = dt
+                    if obj.itime == 0:
+                        ints = fromstring(data, dtype=self.idtype).reshape(nelements, 27)
+                        eids = ints[:, 0] // 10
+                        nids_a = ints[:, 1]
+                        nids_b = ints[:, 14]
+                        assert nids_a.min() > 0, nids_a
+                        assert nids_b.min() > 0, nids_b
+                        assert eids.min() > 0, eids.min()
+                        #print(nids_b)
+                        obj.element_nodes[itotal:itotal2, 0] = eids
+                        obj.element_nodes[itotal:itotal2, 1] = nids_a
+                        obj.element_nodes[itotal:itotal2, 2] = nids_b
 
                     if is_magnitude_phase:
-                        bm1A = polar_to_real_imag(bm1Ar, bm1Ai)
-                        bm1B = polar_to_real_imag(bm1Br, bm1Bi)
-                        bm2A = polar_to_real_imag(bm2Ar, bm2Ai)
-                        bm2B = polar_to_real_imag(bm2Br, bm2Bi)
-                        ts1A = polar_to_real_imag(ts1Ar, ts1Ai)
-                        ts1B = polar_to_real_imag(ts1Br, ts1Bi)
-                        ts2A = polar_to_real_imag(ts2Ar, ts2Ai)
-                        ts2B = polar_to_real_imag(ts2Br, ts2Bi)
-                        afA = polar_to_real_imag(afAr, afAi)
-                        afB = polar_to_real_imag(afBr, afBi)
-                        trqA = polar_to_real_imag(trqAr, trqAi)
-                        trqB = polar_to_real_imag(trqBr, trqBi)
+                        mag = floats[:, ireal]
+                        phase = floats[:, iimag]
+                        rtheta = radians(phase)
+                        real_imag = mag * (cos(rtheta) + 1.j * sin(rtheta))
                     else:
-                        bm1A = complex(bm1Ar, bm1Ai)
-                        bm1B = complex(bm1Br, bm1Bi)
-                        bm2A = complex(bm2Ar, bm2Ai)
-                        bm2B = complex(bm2Br, bm2Bi)
-                        ts1A = complex(ts1Ar, ts1Ai)
-                        ts1B = complex(ts1Br, ts1Bi)
-                        ts2A = complex(ts2Ar, ts2Ai)
-                        ts2B = complex(ts2Br, ts2Bi)
-                        afA = complex(afAr, afAi)
-                        afB = complex(afBr, afBi)
-                        trqA = complex(trqAr, trqAi)
-                        trqB = complex(trqBr, trqBi)
+                        real = floats[:, ireal]
+                        imag = floats[:, iimag]
+                        real_imag = real + 1.j * imag
+                    obj.data[obj.itime, itotal:itotal2, :] = real_imag
+                    #assert floats[:, 1:6].shape[1] == 12, floats[:, 1:6].shape
+                    #assert floats[:, 7:].shape[1] == 6, floats[:, 7:].shape
+                    #obj.data[obj.itime, itotal:itotal2, :6] = floats[:, 1:6]
+                    #obj.data[obj.itime, itotal:itotal2, 6:] = floats[:, 7:]
+                    obj.itotal = itotal2
+                    obj.ielement = ielement2
+                else:
+                    s = Struct(b(self._endian + 'i i12f i12f'))
+                    for i in range(nelements):
+                        edata = data[n:n+108]
+                        n += ntotal
+                        out = s.unpack(edata)
+                        if self.is_debug_file:
+                            self.binary_debug.write('OEF_BEND-69 - %s\n' % (str(out)))
+                        (eid_device, nidA,
+                         bm1Ar, bm2Ar, ts1Ar, ts2Ar, afAr, trqAr,
+                         bm1Ai, bm2Ai, ts1Ai, ts2Ai, afAi, trqAi,
+                         nidB,
+                         bm1Br, bm2Br, ts1Br, ts2Br, afBr, trqBr,
+                         bm1Bi, bm2Bi, ts1Bi, ts2Bi, afBi, trqBi) = out
+                        eid = eid_device // 10
 
-                    data_in = [eid, nidA,
-                               bm1A, bm2A, ts1A, ts2A, afA, trqA,
-                               nidB,
-                               bm1B, bm2B, ts1B, ts2B, afB, trqB]
-                    obj.add(dt, data_in)
+                        if is_magnitude_phase:
+                            bm1A = polar_to_real_imag(bm1Ar, bm1Ai)
+                            bm1B = polar_to_real_imag(bm1Br, bm1Bi)
+                            bm2A = polar_to_real_imag(bm2Ar, bm2Ai)
+                            bm2B = polar_to_real_imag(bm2Br, bm2Bi)
+                            ts1A = polar_to_real_imag(ts1Ar, ts1Ai)
+                            ts1B = polar_to_real_imag(ts1Br, ts1Bi)
+                            ts2A = polar_to_real_imag(ts2Ar, ts2Ai)
+                            ts2B = polar_to_real_imag(ts2Br, ts2Bi)
+                            afA = polar_to_real_imag(afAr, afAi)
+                            afB = polar_to_real_imag(afBr, afBi)
+                            trqA = polar_to_real_imag(trqAr, trqAi)
+                            trqB = polar_to_real_imag(trqBr, trqBi)
+                        else:
+                            bm1A = complex(bm1Ar, bm1Ai)
+                            bm1B = complex(bm1Br, bm1Bi)
+                            bm2A = complex(bm2Ar, bm2Ai)
+                            bm2B = complex(bm2Br, bm2Bi)
+                            ts1A = complex(ts1Ar, ts1Ai)
+                            ts1B = complex(ts1Br, ts1Bi)
+                            ts2A = complex(ts2Ar, ts2Ai)
+                            ts2B = complex(ts2Br, ts2Bi)
+                            afA = complex(afAr, afAi)
+                            afB = complex(afBr, afBi)
+                            trqA = complex(trqAr, trqAi)
+                            trqB = complex(trqBr, trqBi)
+
+                        obj.add_sort1(dt, eid,
+                                nidA, bm1A, bm2A, ts1A, ts2A, afA, trqA,
+                                nidB, bm1B, bm2B, ts1B, ts2B, afB, trqB)
             else:
                 msg = self.code_information()
                 return self._not_implemented_or_skip(data, ndata, msg)

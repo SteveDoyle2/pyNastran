@@ -3,7 +3,6 @@ from numpy import arange, array, zeros, searchsorted, unique, full, nan, where
 
 from pyNastran.bdf.cards.baseCard import expand_thru
 from pyNastran.bdf.field_writer_8 import print_card_8
-#from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double_or_blank, integer_string_or_blank, string_or_blank)
 

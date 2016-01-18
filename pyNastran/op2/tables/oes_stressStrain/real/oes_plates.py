@@ -140,8 +140,8 @@ class RealPlateArray(OES_Object):
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
             msg += '(Eid, Nid)\n'
-            for (eid, nid), (eid2, nid2) in zip(self.element_node, table.element_node):
-                msg += '(%s, %s)    (%s, %s)\n' % (eid, nid, eid2, nid2)
+            for (eid1, nid1), (eid2, nid2) in zip(self.element_node, table.element_node):
+                msg += '(%s, %s)    (%s, %s)\n' % (eid1, nid1, eid2, nid2)
             print(msg)
             raise ValueError(msg)
         if not np.array_equal(self.data, table.data):
@@ -540,8 +540,8 @@ class RealCPLSTRNPlateArray(OES_Object):
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
             msg += '(Eid, Nid)\n'
-            for (eid, nid), (eid2, nid2) in zip(self.element_node, table.element_node):
-                msg += '(%s, %s)    (%s, %s)\n' % (eid, nid, eid2, nid2)
+            for (eid1, nid1), (eid2, nid2) in zip(self.element_node, table.element_node):
+                msg += '(%s, %s)    (%s, %s)\n' % (eid1, nid1, eid2, nid2)
             print(msg)
             raise ValueError(msg)
         if not array_equal(self.data, table.data):

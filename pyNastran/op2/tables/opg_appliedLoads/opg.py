@@ -3,17 +3,17 @@
 Defines the Real/Complex Forces created by:
     OLOAD = ALL
 """
-from struct import unpack
 
-from pyNastran.op2.tables.opg_appliedLoads.opg_Objects import (#RealAppliedLoads,  #ComplexAppliedLoads,
-                                                               RealAppliedLoadsVectorArray, ComplexAppliedLoadsVectorArray)
-from pyNastran.op2.tables.opg_appliedLoads.opg_loadVector import (#RealLoadVector, ComplexLoadVector,
-                                                                  RealLoadVectorArray, ComplexLoadVectorArray,
-                                                                  #RealThermalLoadVector,
-                                                                  RealTemperatureVectorArray,
-                                                                  #RealThermalVelocityArray
-                                                                  )
-from pyNastran.op2.tables.opg_appliedLoads.opnl_forceVector import RealForceVectorArray, ComplexForceVectorArray
+#from pyNastran.op2.tables.opg_appliedLoads.opg_Objects import (#RealAppliedLoads,  #ComplexAppliedLoads,
+                                                               #RealAppliedLoadsVectorArray, ComplexAppliedLoadsVectorArray)
+from pyNastran.op2.tables.opg_appliedLoads.opg_loadVector import (
+    #RealLoadVector, ComplexLoadVector,
+    RealLoadVectorArray, ComplexLoadVectorArray,
+    #RealThermalLoadVector,
+    RealTemperatureVectorArray,
+    #RealThermalVelocityArray
+)
+from pyNastran.op2.tables.opg_appliedLoads.opnl_forceVector import RealForceVectorArray#, ComplexForceVectorArray
 
 from pyNastran.op2.op2_common import OP2Common
 
@@ -25,13 +25,13 @@ class OPG(OP2Common):
     def _read_opg1_3(self, data, ndata):
         three = self.parse_approach_code(data)
         self.words = [
-            'aCode',       'tCode',    '???',           'isubcase',
-             '???',         '???',      '???',          'dLoadID'
-             'format_code', 'num_wide', 'o_code',       '???',
-            'acoustic_flag','???',      '???',          '???',
-             '???',         '???',      '???',          '???',
-             '???',         '???',      'thermal',      '???',
-             '???', 'Title', 'subtitle', 'label']
+            'aCode', 'tCode', '???', 'isubcase',
+            '???', '???', '???', 'dLoadID',
+            'format_code', 'num_wide', 'o_code', '???',
+            'acoustic_flag', '???', '???', '???',
+            '???', '???', '???', '???',
+            '???', '???', 'thermal', '???',
+            '???', 'Title', 'subtitle', 'label']
 
         self.parse_approach_code(data)
         #isubcase = self.get_values(data,'i',4)

@@ -159,7 +159,7 @@ class RealGridPointForcesArray(ScalarObject):
 
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
-            msg += '(Eid, Nid, EName)\n'
+            msg += '(Nid, Eid, EName)\n'
             for (nid1, eid1), ename1, (nid2, eid2), ename2 in zip(self.node_element, self.element_names,
                                                                   table.element_names, table.element_names):
                 msg += '(%s, %s, %s)    (%s, %s, %s)\n' % (nid1, eid1, ename1, nid2, eid2, ename2)
@@ -171,7 +171,7 @@ class RealGridPointForcesArray(ScalarObject):
             i = 0
             for itime in range(self.ntimes):
                 for ie, e in enumerate(self.node_element):
-                    (eid, nid) = e
+                    (nid, eid) = e
                     ename1 = self.element_names[ie]
                     ename2 = self.element_names[ie]
                     t1 = self.data[itime, ie, :]
@@ -181,7 +181,7 @@ class RealGridPointForcesArray(ScalarObject):
 
                     if not array_equal(t1, t2):
                         msg += '(%s, %s, %s)    (%s, %s, %s, %s, %s, %s)  (%s, %s, %s, %s, %s, %s)\n' % (
-                            eid, nid, ename,
+                            nid, eid, ename,
                             t12, t22, t32, r12, r22, r32,
                             t12, t22, t32, r12, r22, r32)
                         i += 1
