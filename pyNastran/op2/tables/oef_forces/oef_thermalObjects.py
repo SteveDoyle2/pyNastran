@@ -4,7 +4,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 
 from numpy import zeros, empty, array_equal
 from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
-from pyNastran.f06.f06_formatting import get_key0, write_floats_13e, _eigenvalue_header
+from pyNastran.f06.f06_formatting import get_key0, write_float_13e, write_floats_13e, _eigenvalue_header
 from pyNastran.op2.resultObjects.element_table_object import RealElementTableArray
 try:
     import pandas as pd
@@ -279,10 +279,204 @@ class HeatFlux_VU_3D(ScalarObject):  # 146-VUPENTA, 147-VUTETRA, 148-VUPENTA
             self.flux[dt][eid][nid] = [xflux, yflux, zflux]
 
 
+class RealHeatFluxVUArray(ScalarObject):  # 189-VUQUAD 190-VUTRIA,191-VUBEAM
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        self.element_type = None
+        self.element_name = None
+        ScalarObject.__init__(self, data_code, isubcase)
+        #self.code = [self.format_code, self.sort_code, self.s_code]
+
+        #self.ntimes = 0  # or frequency/mode
+        #self.ntotal = 0
+        self.nelements = 0  # result specific
+
+    def _reset_indices(self):
+        self.itotal = 0
+        self.ielement = 0
+
+    def get_headers(self):
+        headers = [
+            'free_conv', 'free_conv_k',
+        ]
+        return headers
+
+    def build(self):
+        #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
+        if self.is_built:
+            return
+
+        assert self.ntimes > 0, 'ntimes=%s' % self.ntimes
+        assert self.nelements > 0, 'nelements=%s' % self.nelements
+        assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
+        #self.names = []
+        self.nelements //= self.ntimes
+        self.itime = 0
+        self.ielement = 0
+        self.itotal = 0
+        #self.ntimes = 0
+        #self.nelements = 0
+        self.is_built = True
+
+        #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
+        dtype = 'float32'
+        if isinstance(self.nonlinear_factor, int):
+            dtype = 'int32'
+        self._times = zeros(self.ntimes, dtype=dtype)
+        self.element_parent_coord_icord = zeros((self.nelements, 4), dtype='int32')
+
+        #[xgrad, ygrad, zgrad, xflux, yflux, zflux]
+        self.data = zeros((self.ntimes, self.ntotal, 6), dtype='float32')
+
+    def _build_dataframe(self):
+        # TODO: fix me
+        headers = self.get_headers()
+        #assert 0 not in self.element
+        element_node = [
+            self.element_node[:, 0],
+            self.element_node[:, 1],
+        ]
+        if self.nonlinear_factor is not None:
+            column_names, column_values = self._build_dataframe_transient_header()
+            self.data_frame = pd.Panel(self.data, items=column_values, major_axis=element_node, minor_axis=headers).to_frame()
+            self.data_frame.columns.names = column_names
+        else:
+            self.data_frame = pd.Panel(self.data, major_axis=element_node, minor_axis=headers).to_frame()
+            self.data_frame.columns.names = ['Static']
+        self.data_frame.index.names = ['ElementID', 'Node', 'Item']
+
+    def __eq__(self, table):
+        assert self.is_sort1() == table.is_sort1()
+        assert self.nonlinear_factor == table.nonlinear_factor
+        assert self.ntotal == table.ntotal
+        assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
+        assert self.approach_code == table.approach_code
+        if not array_equal(self.element_parent_coord_icord, table.element_parent_coord_icord):
+            assert self.element_parent_coord_icord.shape == table.element_parent_coord_icord.shape, 'element_parent_coord_icord shape=%s table.shape=%s' % (
+                self.element_parent_coord_icord.shape, table.element_parent_coord_icord.shape)
+            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+            msg += '%s\n' % str(self.code_information())
+            msg += 'Eid, Parent, Coord, iCoord\n'
+            for (eid1, parent1, coord1, icord1), (eid2, parent2, coord2, icord2) in zip(self.element_parent_coord_icord, table.element_parent_coord_icord):
+                msg += '(%s, %s, %s, %s) (%s, %s, %s, %s)\n' % (eid1, parent1, coord1, icord1, eid2, parent2, coord2, icord2)
+            print(msg)
+            raise ValueError(msg)
+        if not array_equal(self.data, table.data):
+            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+            msg += '%s\n' % str(self.code_information())
+            j = 0
+            #eids = self.element_node[:, 0]
+            ntotal = self.data.shape[2]
+            for itime in range(self.ntimes):
+                for i in range(ntotal):
+                    t1 = self.data[itime, j, :]
+                    t2 = table.data[itime, j, :]
+                    if not array_equal(t1, t2):
+                        (xgrad1, ygrad1, zgrad1, xflux1, yflux1, zflux1) = t1
+                        (xgrad2, ygrad2, zgrad2, xflux2, yflux2, zflux2) = t2
+                        msg += (
+                            '%s   (%s, %s, %s, %s, %s, %s) (%s, %s, %s, %s, %s, %s)\n' % (
+                                j,
+                                xgrad1, ygrad1, zgrad1, xflux1, yflux1, zflux1,
+                                xgrad2, ygrad2, zgrad2, xflux2, yflux2, zflux2,
+                            ))
+                        i += 1
+                        if i > 10:
+                            print(msg)
+                            raise ValueError(msg)
+                #print(msg)
+                if i > 0:
+                    raise ValueError(msg)
+        return True
+
+    def add_sort1(self, dt, eid, parent, coord, icord, theta, grad_fluxes):
+        self._times[self.itime] = dt
+        #icord,
+        print([eid, parent, coord, theta])
+        self.element_parent_coord_icord[self.ielement, :] = [eid, parent, coord, theta]
+        for grad_flux in grad_fluxes:
+            print(grad_flux)
+            self.data[self.itime, self.itotal, :] = grad_flux[1:]
+            self.itotal += 1
+        self.ielement += 1
+
+    def get_stats(self):
+        if not self.is_built:
+            return [
+                '<%s>\n' % self.__class__.__name__,
+                '  ntimes: %i\n' % self.ntimes,
+                '  ntotal: %i\n' % self.ntotal,
+            ]
+
+        nelements = self.nelements
+        ntimes = self.ntimes
+        #ntotal = self.ntotal
+
+        msg = []
+        if self.nonlinear_factor is not None:  # transient
+            msg.append('  type=%s ntimes=%i nelements=%i\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+            ntimes_word = 'ntimes'
+        else:
+            msg.append('  type=%s nelements=%i\n'
+                       % (self.__class__.__name__, nelements))
+            ntimes_word = 1
+        headers = self.get_headers()
+        n = len(headers)
+        msg.append('  data: [%s, nelements, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
+        msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
+        msg.append('  element type: %s\n' % self.element_type)
+        msg.append('  element name: %s\n  ' % self.element_name)
+        msg += self.get_data_code()
+        return msg
+
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
+        '          T E M P E R A T U R E   G R A D I E N T S   A N D   F L U X E S   I N   T R I A N G U L A R   P - E L E M E N T S'
+        '                 VU-ELEMENT ID=  100005001, P-ELEMENT ID =       5, OUTPUT COORD. ID= (LOCAL), P OF EDGES =  2  2  2'
+        '                       LOCAL X DIR. = PROJECTED +X DIR.,  LOCAL NORMAL = COUNTER-CLOCKWISE,  ANGLE =    0.0000'
+        ''
+        '             VUGRID      X-GRADIENT       Y-GRADIENT       Z-GRADIENT        X-FLUX           Y-FLUX           Z-FLUX    '
+        '          111005001     2.000000E+01    -4.799646E-14     0.000000E+00    -4.080000E+03     9.791279E-12     0.000000E+00'
+        asdf
+        msg_temp = [
+            '                                H E A T   F L O W   I N T O   H B D Y   E L E M E N T S   (CHBDY)\n'
+            ' \n'
+            '               ELEMENT-ID      APPLIED-LOAD   FREE-CONVECTION   FORCED-CONVECTION     RADIATION           TOTAL\n'
+            #'                       60      0.000000E+00      1.641941E+02      0.000000E+00      0.000000E+00      1.641941E+02'
+        ]
+
+        #(elem_name, msg_temp) = self.get_f06_header(is_mag_phase=is_mag_phase, is_sort1=is_sort1)
+        #(ntimes, ntotal, two) = self.data.shape
+        ntimes = self.data.shape[0]
+
+        eids = self.element
+        for itime in range(ntimes):
+            dt = self._times[itime]  # TODO: rename this...
+            header = _eigenvalue_header(self, header, itime, ntimes, dt)
+            f.write(''.join(header + msg_temp))
+
+            # [fapplied, free_conv, force_conv, frad, ftotal]
+            fapplied = self.data[itime, :, 0]
+            free_conv = self.data[itime, :, 1]
+            force_conv = self.data[itime, :, 2]
+            frad = self.data[itime, :, 3]
+            ftotal = self.data[itime, :, 4]
+
+            for (eid, fappliedi, free_convi, force_convi, fradi, ftotali) in zip(
+                eids, fapplied, free_conv, force_conv, frad, ftotal):
+                vals2 = write_floats_13e(
+                    [fappliedi, free_convi, force_convi, fradi, ftotali])
+                [sfapplied, sfree_conv, sforce_conv, sfrad, sftotal] = vals2
+
+                f.write(' %8i  %-13s %-13s %-13s %-13s %s\n' % (
+                    eid, sfapplied, sfree_conv, sforce_conv, sfrad, sftotal))
+            f.write(page_stamp % page_num)
+            page_num += 1
+        return page_num - 1
+
+
 class HeatFlux_VU(ScalarObject):  # 189-VUQUAD 190-VUTRIA,191-VUBEAM
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ScalarObject.__init__(self, data_code, isubcase)
-        #self.eType = {}
         self.parent = {}
         self.coord = {}
         self.icord = {}
@@ -316,13 +510,11 @@ class HeatFlux_VU(ScalarObject):  # 189-VUQUAD 190-VUTRIA,191-VUBEAM
         self.grad[dt] = {}
         self.flux[dt] = {}
 
-    def add(self, nnodes, dt, data):
-        [eid, parent, coord, icord, theta, grad_fluxes] = data
+    def add(self, nnodes, dt, eid, parent, coord, icord, theta, grad_fluxes):
         self.parent[eid] = parent
         self.coord[eid] = coord
         self.icord[eid] = icord
         self.theta[eid] = theta
-        #self.eType[eid]    = eType
 
         self.grad[eid] = {}
         self.flux[eid] = {}
@@ -331,15 +523,13 @@ class HeatFlux_VU(ScalarObject):  # 189-VUQUAD 190-VUTRIA,191-VUBEAM
             self.grad[eid][nid] = [xgrad, ygrad, zgrad]
             self.flux[eid][nid] = [xflux, yflux, zflux]
 
-    def add_sort1(self, nnodes, dt, data):
-        [eid, parent, coord, icord, theta, grad_fluxes] = data
+    def add_sort1(self, nnodes, dt, eid, parent, coord, icord, theta, grad_fluxes):
         if dt not in self.grad:
             self.add_new_transient(dt)
         self.parent[eid] = parent
         self.coord[eid] = coord
         self.icord[eid] = icord
         self.theta[eid] = theta
-        #self.eType[eid]    = eType
 
         self.grad[dt][eid] = {}
         self.flux[dt][eid] = {}
@@ -348,15 +538,13 @@ class HeatFlux_VU(ScalarObject):  # 189-VUQUAD 190-VUTRIA,191-VUBEAM
             self.grad[dt][eid][nid] = [xgrad, ygrad, zgrad]
             self.flux[dt][eid][nid] = [xflux, yflux, zflux]
 
-    def add_sort2(self, nnodes, eid, data):
-        [dt, parent, coord, icord, theta, grad_fluxes] = data
+    def add_sort2(self, nnodes, eid, dt, parent, coord, icord, theta, grad_fluxes):
         if dt not in self.grad:
             self.add_new_transient(dt)
         self.parent[eid] = parent
         self.coord[eid] = coord
         self.icord[eid] = icord
         self.theta[eid] = theta
-        #self.eType[eid]    = eType
 
         self.grad[dt][eid] = {}
         self.flux[dt][eid] = {}
@@ -364,6 +552,198 @@ class HeatFlux_VU(ScalarObject):  # 189-VUQUAD 190-VUTRIA,191-VUBEAM
             [nid, xgrad, ygrad, zgrad, xflux, yflux, zflux] = grad_flux
             self.grad[dt][eid][nid] = [xgrad, ygrad, zgrad]
             self.flux[dt][eid][nid] = [xflux, yflux, zflux]
+
+
+class RealHeatFluxVUBeamArray(ScalarObject):  # 191-VUBEAM
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        self.element_type = None
+        self.element_name = None
+        ScalarObject.__init__(self, data_code, isubcase)
+        #self.code = [self.format_code, self.sort_code, self.s_code]
+
+        #self.ntimes = 0  # or frequency/mode
+        #self.ntotal = 0
+        self.nelements = 0  # result specific
+
+        if is_sort1:
+            self.add = self.add_sort1
+        else:
+            raise NotImplementedError('SORT2')
+
+    def _reset_indices(self):
+        self.itotal = 0
+        self.ielement = 0
+
+    def get_headers(self):
+        headers = [
+            'free_conv', 'free_conv_k',
+        ]
+        return headers
+
+    def build(self):
+        #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
+        if self.is_built:
+            return
+
+        assert self.ntimes > 0, 'ntimes=%s' % self.ntimes
+        assert self.nelements > 0, 'nelements=%s' % self.nelements
+        assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
+        #self.names = []
+        self.nelements //= self.ntimes
+        self.itime = 0
+        self.ielement = 0
+        self.itotal = 0
+        #self.ntimes = 0
+        #self.nelements = 0
+        self.is_built = True
+
+        #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
+        dtype = 'float32'
+        if isinstance(self.nonlinear_factor, int):
+            dtype = 'int32'
+        self._times = zeros(self.ntimes, dtype=dtype)
+        self.element_node = zeros((self.nelements, 2), dtype='int32')
+
+        #[free_conv, free_conv_k]
+        self.data = zeros((self.ntimes, self.ntotal, 2), dtype='float32')
+
+    def build_dataframe(self):
+        # TODO: fix me
+        headers = self.get_headers()
+        #assert 0 not in self.element
+        element_node = [
+            self.element_node[:, 0],
+            self.element_node[:, 1],
+        ]
+        if self.nonlinear_factor is not None:
+            column_names, column_values = self._build_dataframe_transient_header()
+            self.data_frame = pd.Panel(self.data, items=column_values, major_axis=element_node, minor_axis=headers).to_frame()
+            self.data_frame.columns.names = column_names
+        else:
+            self.data_frame = pd.Panel(self.data, major_axis=element_node, minor_axis=headers).to_frame()
+            self.data_frame.columns.names = ['Static']
+        self.data_frame.index.names = ['ElementID', 'Node', 'Item']
+
+    def __eq__(self, table):
+        assert self.is_sort1() == table.is_sort1()
+        assert self.nonlinear_factor == table.nonlinear_factor
+        assert self.ntotal == table.ntotal
+        assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
+        assert self.approach_code == table.approach_code
+        if not array_equal(self.element_node, table.element_node):
+            assert self.element_node.shape == table.element_node.shape, 'element_node shape=%s table.shape=%s' % (self.element_node.shape, table.element_node.shape)
+            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+            msg += '%s\n' % str(self.code_information())
+            msg += 'Eid, Nid\n'
+            for (eid1, nid1), (eid2, nid2) in zip(self.element_node, table.element_node):
+                msg += '%s, %s\n' % (eid1, nid1, eid2, nid2)
+            print(msg)
+            raise ValueError(msg)
+        if not array_equal(self.data, table.data):
+            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+            msg += '%s\n' % str(self.code_information())
+            i = 0
+            eids = self.element_node[:, 0]
+            for itime in range(self.ntimes):
+                for ie, e in enumerate(eids):
+                    eid = e
+                    t1 = self.data[itime, ie, :]
+                    t2 = table.data[itime, ie, :]
+                    (free_conv1, free_conv_k1) = t1
+                    (free_conv2, free_conv_k2) = t2
+
+                    if not array_equal(t1, t2):
+                        msg += (
+                            '%s   (%s, %s) (%s, %s)\n' % (
+                                eid,
+                                free_conv1, free_conv_k1,
+                                free_conv2, free_conv_k2,
+                            ))
+                        i += 1
+                        if i > 10:
+                            print(msg)
+                            raise ValueError(msg)
+                #print(msg)
+                if i > 0:
+                    raise ValueError(msg)
+        return True
+
+    def add(self, dt, eid, cntl_node, free_conv, free_conv_k):
+        self.add_sort1(dt, eid, cntl_node, free_conv, free_conv_k)
+
+    def add_sort1(self, dt, eid, cntl_node, free_conv, free_conv_k):
+        self._times[self.itime] = dt
+        self.element_node[self.ielement, :] = [eid, cntl_node]
+        self.data[self.itime, self.ielement, :] = [free_conv, free_conv_k]
+        self.ielement += 1
+
+    def get_stats(self):
+        if not self.is_built:
+            return [
+                '<%s>\n' % self.__class__.__name__,
+                '  ntimes: %i\n' % self.ntimes,
+                '  ntotal: %i\n' % self.ntotal,
+            ]
+
+        nelements = self.nelements
+        ntimes = self.ntimes
+        #ntotal = self.ntotal
+
+        msg = []
+        if self.nonlinear_factor is not None:  # transient
+            msg.append('  type=%s ntimes=%i nelements=%i\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+            ntimes_word = 'ntimes'
+        else:
+            msg.append('  type=%s nelements=%i\n'
+                       % (self.__class__.__name__, nelements))
+            ntimes_word = 1
+        headers = self.get_headers()
+        n = len(headers)
+        msg.append('  data: [%s, nelements, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
+        msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
+        msg.append('  element type: %s\n' % self.element_type)
+        msg.append('  element name: %s\n  ' % self.element_name)
+        msg += self.get_data_code()
+        return msg
+
+    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
+        asdf
+        msg_temp = [
+            '                                H E A T   F L O W   I N T O   H B D Y   E L E M E N T S   (CHBDY)\n'
+            ' \n'
+            '               ELEMENT-ID      APPLIED-LOAD   FREE-CONVECTION   FORCED-CONVECTION     RADIATION           TOTAL\n'
+            #'                       60      0.000000E+00      1.641941E+02      0.000000E+00      0.000000E+00      1.641941E+02'
+        ]
+
+        #(elem_name, msg_temp) = self.get_f06_header(is_mag_phase=is_mag_phase, is_sort1=is_sort1)
+        #(ntimes, ntotal, two) = self.data.shape
+        ntimes = self.data.shape[0]
+
+        eids = self.element
+        for itime in range(ntimes):
+            dt = self._times[itime]  # TODO: rename this...
+            header = _eigenvalue_header(self, header, itime, ntimes, dt)
+            f.write(''.join(header + msg_temp))
+
+            # [fapplied, free_conv, force_conv, frad, ftotal]
+            fapplied = self.data[itime, :, 0]
+            free_conv = self.data[itime, :, 1]
+            force_conv = self.data[itime, :, 2]
+            frad = self.data[itime, :, 3]
+            ftotal = self.data[itime, :, 4]
+
+            for (eid, fappliedi, free_convi, force_convi, fradi, ftotali) in zip(
+                eids, fapplied, free_conv, force_conv, frad, ftotal):
+                vals2 = write_floats_13e(
+                    [fappliedi, free_convi, force_convi, fradi, ftotali])
+                [sfapplied, sfree_conv, sforce_conv, sfrad, sftotal] = vals2
+
+                f.write(' %8i  %-13s %-13s %-13s %-13s %s\n' % (
+                    eid, sfapplied, sfree_conv, sforce_conv, sfrad, sftotal))
+            f.write(page_stamp % page_num)
+            page_num += 1
+        return page_num - 1
 
 
 class HeatFlux_VUBEAM(ScalarObject):  # 191-VUBEAM
@@ -696,92 +1076,37 @@ class RealConvHeatFluxArray(ScalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
         return msg
 
     def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
-        asdf
         msg_temp = [
-            '                                H E A T   F L O W   I N T O   H B D Y   E L E M E N T S   (CHBDY)\n'
-            ' \n'
-            '               ELEMENT-ID      APPLIED-LOAD   FREE-CONVECTION   FORCED-CONVECTION     RADIATION           TOTAL\n'
-            #'                       60      0.000000E+00      1.641941E+02      0.000000E+00      0.000000E+00      1.641941E+02'
+            #'                   F I N I T E   E L E M E N T   T E M P E R A T U R E   G R A D I E N T S   A N D   F L U X E S  '
+            #' '
+            #'    ELEMENT-ID   EL-TYPE        X-GRADIENT       Y-GRADIENT       Z-GRADIENT        X-FLUX           Y-FLUX           Z-FLUX'
+            #'             1    QUAD4       -8.372393E-01     1.776357E-15                      8.372393E-01    -1.776357E-15'
+            '                                RealConvHeatFluxArray\n'
+            '               ELEMENT-ID      FREE-CONVECTION   CONTROL-NODE   FREE-CONVECTION-K\n'
         ]
-
-        #(elem_name, msg_temp) = self.get_f06_header(is_mag_phase=is_mag_phase, is_sort1=is_sort1)
-        #(ntimes, ntotal, two) = self.data.shape
         ntimes = self.data.shape[0]
 
-        eids = self.element
+        eids = self.element_node[:, 0]
+        nids = self.element_node[:, 1]
         for itime in range(ntimes):
             dt = self._times[itime]  # TODO: rename this...
             header = _eigenvalue_header(self, header, itime, ntimes, dt)
             f.write(''.join(header + msg_temp))
 
-            # [fapplied, free_conv, force_conv, frad, ftotal]
-            fapplied = self.data[itime, :, 0]
-            free_conv = self.data[itime, :, 1]
-            force_conv = self.data[itime, :, 2]
-            frad = self.data[itime, :, 3]
-            ftotal = self.data[itime, :, 4]
+            # [free_conv, free_conv_k]
+            free_conv = self.data[itime, :, 0]
+            free_conv_k = self.data[itime, :, 1]
 
-            for (eid, fappliedi, free_convi, force_convi, fradi, ftotali) in zip(
-                eids, fapplied, free_conv, force_conv, frad, ftotal):
-                vals2 = write_floats_13e(
-                    [fappliedi, free_convi, force_convi, fradi, ftotali])
-                [sfapplied, sfree_conv, sforce_conv, sfrad, sftotal] = vals2
-
-                f.write(' %8i  %-13s %-13s %-13s %-13s %s\n' % (
-                    eid, sfapplied, sfree_conv, sforce_conv, sfrad, sftotal))
+            for (eid, nid, free_convi, free_conv_ki) in zip(eids, nids, free_conv, free_conv_k):
+                f.write(' %8i  %-13s %-13s %s\n' % (
+                    eid,
+                    write_float_13e(free_convi),
+                    nid,
+                    write_float_13e(free_conv_ki)
+                ))
             f.write(page_stamp % page_num)
             page_num += 1
         return page_num - 1
-
-
-class HeatFlux_CONV(ScalarObject):  # 110-CONV
-    def __init__(self, data_code, is_sort1, isubcase, dt):
-        ScalarObject.__init__(self, data_code, isubcase)
-        self.cntlNode = {}
-        self.freeConv = {}
-        self.freeConvK = {}
-
-        # TODO if dt=None, handle SORT1 case
-        if is_sort1:
-            if dt is not None:
-                self.add = self.add_sort1
-        else:
-            assert dt is not None
-            self.add = self.add_sort2
-
-    def get_stats(self):
-        msg = self.get_data_code()
-        if self.nonlinear_factor is not None:  # transient
-            ntimes = len(self.cntlNode)
-            times0 = get_key0(self.cntlNode)
-            nelements = len(self.cntlNode[times0])
-            msg.append('  type=%s ntimes=%s nelements=%s\n'
-                       % (self.__class__.__name__, ntimes, nelements))
-        else:
-            nelements = len(self.cntlNode)
-            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
-                                                     nelements))
-        msg.append('  cntlNode, freeConv, freeConvK\n')
-        return msg
-
-    def add_new_transient(self, dt):
-        self.cntlNode[dt] = {}
-        self.freeConv[dt] = {}
-        self.freeConvK[dt] = {}
-
-    def add(self, dt, eid, cntl_node, free_conv, free_conv_k):
-        #self.eType[eid] = eType
-        self.cntlNode[eid] = cntl_node
-        self.freeConv[eid] = free_conv
-        self.freeConvK[eid] = free_conv_k
-
-    def add_sort1(self, dt, eid, cntl_node, free_conv, free_conv_k):
-        if dt not in self.freeConv:
-            self.add_new_transient(dt)
-        #self.eType[eid] = eType
-        self.cntlNode[dt][eid] = cntl_node
-        self.freeConv[dt][eid] = free_conv
-        self.freeConvK[dt][eid] = free_conv_k
 
 
 class RealChbdyHeatFluxArray(ScalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
