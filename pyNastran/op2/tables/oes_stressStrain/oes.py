@@ -2545,6 +2545,7 @@ class OES(OP2Common):
             slot = getattr(self, result_name)
 
             if self.format_code == 1 and self.num_wide == 33: # real
+                # TODO: vectorize
                 if self.is_stress():
                     obj_vector_real = RealTriaxStressArray
                 else:
@@ -2649,6 +2650,7 @@ class OES(OP2Common):
             slot = getattr(self, result_name)
 
             if self.format_code == 1 and self.num_wide == 7:  # real
+                # TODO: vectorize
                 if self.is_stress():
                     obj_vector_real = RealBushStressArray
                 else:
@@ -2774,21 +2776,42 @@ class OES(OP2Common):
                 if auto_return:
                     return nelements * self.num_wide * 4
 
-                s = Struct(b(self._endian + 'i6fi'))
-                nelements = ndata // ntotal
                 obj = self.obj
+                if self.use_vector and is_vectorized:
+                    n = nelements * self.num_wide * 4
 
-                for i in range(nelements):
-                    edata = data[n:n + ntotal]
-                    out = s.unpack(edata)  # num_wide=25
-                    if self.is_debug_file:
-                        self.binary_debug.write('CBUSH1D-40 - %s\n' % (str(out)))
-                    (eid_device, fe, ue, ve, ao, ae, ep, fail) = out
-                    eid = self._check_id(eid_device, flag, stress_name, out)
+                    itotal = obj.itotal
+                    itotal2 = itotal + nelements
+                    itime = obj.itime
+                    obj._times[itime] = dt
 
-                    # axial_force, axial_displacement, axial_velocity, axial_stress, axial_strain, plastic_strain, is_failed
-                    obj.add_sort1(dt, eid, fe, ue, ve, ao, ae, ep, fail)
-                    n += ntotal
+                    if 1: #obj.itime == 0:
+                        ints = fromstring(data, dtype=self.idtype).reshape(nelements, 8)
+                        eids = ints[:, 0] // 10
+                        fail = ints[:, 7]
+                        obj.element[itotal:itotal2] = eids
+                        obj.is_failed[itime, itotal:itotal2, 0] = fail
+
+                    floats = fromstring(data, dtype=self.fdtype).reshape(nelements, 8)
+                    #[xxx, fe, ue, ve, ao, ae, ep, xxx]
+                    obj.data[itime, itotal:itotal2, :] = floats[:, 1:7]
+
+                    obj.ielement = itotal2
+                    obj.itotal = itotal2
+                else:
+                    s = Struct(b(self._endian + 'i6fi'))
+                    for i in range(nelements):
+                        edata = data[n:n + 32]
+                        out = s.unpack(edata)  # num_wide=25
+                        if self.is_debug_file:
+                            self.binary_debug.write('CBUSH1D-40 - %s\n' % (str(out)))
+                        (eid_device, fe, ue, ve, ao, ae, ep, fail) = out
+                        eid = eid_device // 10
+
+                        # axial_force, axial_displacement, axial_velocity, axial_stress,
+                        # axial_strain, plastic_strain, is_failed
+                        obj.add_sort1(dt, eid, fe, ue, ve, ao, ae, ep, fail)
+                        n += ntotal
             elif self.format_code in [2, 3] and self.num_wide == 9:  # imag
                 if self.is_stress():
                     auto_return, is_vectorized = self._create_oes_object4(

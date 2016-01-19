@@ -19,13 +19,14 @@ from pyNastran.op2.tables.oef_forces.oef_thermalObjects import (
     HeatFlux_2D_3DArray,
     RealChbdyHeatFluxArray,
     RealConvHeatFluxArray,
-
     RealHeatFluxVUArray,
+
     RealHeatFluxVUBeamArray,
-    # TODO: vectorize 3
-    #HeatFlux_VU,
-    #HeatFlux_VUBEAM,
-    #HeatFlux_VU_3D,
+    RealHeatFluxVU3DArray,
+
+    # TODO: vectorize 2
+    HeatFlux_VUBEAM,
+    HeatFlux_VU_3D,
 )
 from pyNastran.op2.tables.oef_forces.oef_forceObjects import (
     RealRodForceArray, RealViscForceArray,
@@ -42,7 +43,7 @@ from pyNastran.op2.tables.oef_forces.oef_forceObjects import (
     RealBendForceArray,
 
     # TODO: vectorize 2
-    #RealForce_VU_2D, RealForce_VU,
+    RealForce_VU_2D, RealForce_VU,
 )
 from pyNastran.op2.tables.oef_forces.oef_complexForceObjects import (
     ComplexRodForceArray,
@@ -677,9 +678,6 @@ class OEF(OP2Common):
             # 145-VUHEXA
             # 146-VUPENTA
             # 147-VUTETRA
-            if self.read_mode == 1:
-                return ndata
-            self.create_transient_object(self.thermalLoad_VU_3D, HeatFlux_VU_3D)
             if self.element_type == 147:  # VUTETRA
                 nnodes = 4
             elif self.element_type == 146:  # VUPENTA
@@ -690,30 +688,68 @@ class OEF(OP2Common):
                 msg = self.code_information()
                 return self._not_implemented_or_skip(data, ndata, msg)
 
+            result_name = 'thermalLoad_VU_3D'
+            if self._results.is_not_saved(result_name):
+                return ndata
+            self._results._found_result(result_name)
+            slot = getattr(self, result_name)
+
             numwide_real = 2 + 7 * nnodes
             if self.format_code == 1 and self.num_wide == numwide_real:  # real
                 ntotal = 8 + 28 * nnodes
-                s1 = self.struct_2i
-                s2 = Struct(b(self._endian + 'i6f'))
                 nelements = ndata // ntotal
+                if 1:
+                    if self.read_mode == 1:
+                        return ndata
+                    self.create_transient_object(self.thermalLoad_VU_3D, HeatFlux_VU_3D)
+                    is_vectorized = False
+                else:
+                    nelements = ndata // ntotal
+                    auto_return, is_vectorized = self._create_oes_object4(
+                        nelements, result_name, slot, RealHeatFluxVU3DArray)
+                    if auto_return:
+                        self._data_factor = nnodes
+                        return nelements * self.num_wide * 4
+
                 obj = self.obj
-                for i in range(nelements):
-                    edata = data[n:n+8]  # 2*4
-                    n += 8
-                    out = s1.unpack(edata)
-                    (eid_device, parent) = out
-                    eid = eid_device // 10
-                    data_in = [eid, parent]
+                if self.use_vector and is_vectorized:
+                    n = nelements * 4 * self.num_wide
+                    ielement = obj.ielement
+                    ielement2 = ielement + nelements
+                    itotal = obj.itotal
+                    itotal2 = itotal + nelements * nnodes
+
+                    floats = fromstring(data, dtype=self.fdtype).reshape(nelements, numwide_real)
+                    floats2 = floats[:, 2:].reshape(nelements * nnodes, 7)
+                    obj._times[obj.itime] = dt
+                    #if obj.itime == 0:
+                    ints = fromstring(data, dtype=self.idtype).reshape(nelements, numwide_real)
+                    ints2 = ints[:, 2:].reshape(nelements * nnodes, 7)
+                    eids = ints[:, 0] // 10
+                    parent = ints[:, 1]
+                    assert eids.min() > 0, eids.min()
+                    obj.element_parent[ielement:ielement2] = eids
+                    obj.element_parent[ielement:ielement2] = parent
+
+                    #[vugrid, xgrad, ygrad, zgrad, xflux, yflux, zflux]
+                    obj.vugrid[obj.itime, itotal:itotal2, :] = ints2[:, 0]
+                    obj.data[obj.itime, itotal:itotal2, :] = floats2[:, 3:]
+                    obj.itotal = itotal2
+                    obj.ielement = ielement2
+                else:
+                    s1 = self.struct_2i
+                    s2 = Struct(b(self._endian + 'i6f'))
                     grad_fluxes = []
-                    for i in range(nnodes):
-                        edata = data[0:28]
-                        n += 28
-                        #print "i=%s len(edata)=%s" %(i, len(edata))
-                        out = s2.unpack(edata)
-                        grad_fluxes.append(out)
-                    data_in.append(grad_fluxes)
-                    #print "heatFlux %s" %(self.get_element_type(self.element_type)), data_in
-                    obj.add(nnodes, dt, data_in)
+                    for i in range(nelements):
+                        out = s1.unpack(data[n:n+8])
+                        n += 8
+                        (eid_device, parent) = out
+                        eid = eid_device // 10
+                        for i in range(nnodes):
+                            out = s2.unpack(data[n:n+28])
+                            grad_fluxes.append(out)
+                            n += 28
+                        obj.add_sort1(dt, eid, parent, grad_fluxes)
             else:
                 msg = self.code_information()
                 return self._not_implemented_or_skip(data, ndata, msg)
@@ -742,16 +778,11 @@ class OEF(OP2Common):
                 ntotal = 24 + 28 * nnodes
                 assert ntotal == numwide * 4
                 nelements = ndata // ntotal
-                if 0:
-                    if self.read_mode == 1:
-                        return ndata
-                    self.create_transient_object(self.thermalLoad_VU, HeatFlux_VU)
-                else:
-                    auto_return, is_vectorized = self._create_oes_object4(
-                        nelements, result_name, slot, RealHeatFluxVUArray)
-                    if auto_return:
-                        self._data_factor = nnodes
-                        return nelements * self.num_wide * 4
+                auto_return, is_vectorized = self._create_oes_object4(
+                    nelements, result_name, slot, RealHeatFluxVUArray)
+                if auto_return:
+                    self._data_factor = nnodes
+                    return nelements * self.num_wide * 4
 
                 obj = self.obj
                 if self.use_vector and is_vectorized:
@@ -761,10 +792,10 @@ class OEF(OP2Common):
                     ielement = obj.ielement
                     ielement2 = obj.ielement + nelements
 
+                    ints = fromstring(data, dtype=self.idtype).reshape(nelements, numwide)
                     floats = fromstring(data, dtype=self.fdtype).reshape(nelements, numwide)
                     obj._times[obj.itime] = dt
                     if obj.itime == 0:
-                        ints = fromstring(data, dtype=self.idtype).reshape(nelements, numwide)
                         eids = ints[:, 0] // 10
                         parent = ints[:, 1]
                         coord = ints[:, 2]
@@ -777,9 +808,12 @@ class OEF(OP2Common):
                         obj.element_parent_coord_icord[ielement:ielement2, 3] = theta
                     #obj.data[itotal:itotal2, 0] = floats[:, 4]
 
+                    ints2 = ints[:, 6:].reshape(nelements * nnodes, 7)
                     floats2 = floats[:, 6:].reshape(nelements * nnodes, 7)
 
+                    #[vugrid]
                     #[xgrad, ygrad, zgrad, xflux, yflux, zflux]
+                    obj.int_data[obj.itime, itotal:itotal2, 0] = ints2[:, 0]
                     obj.data[obj.itime, itotal:itotal2, :] = floats2[:, 1:]
                     obj.itotal = itotal2
                     obj.ielement = ielement2
@@ -794,7 +828,7 @@ class OEF(OP2Common):
                         (eid_device, parent, coord, icord, theta, null) = out
                         eid = eid_device // 10
                         data_in = [eid, parent, coord, icord, theta]
-                        print('RealHeatFluxVUArray =', data_in)
+                        #self.log.debug('RealHeatFluxVUArray = %s' % data_in)
                         grad_fluxes = []
                         for i in range(nnodes):
                             edata = data[n:n+28]  # 7*4
@@ -809,39 +843,83 @@ class OEF(OP2Common):
 
         elif self.element_type == 191:  # VUBEAM
             # TODO: vectorize
-            if self.read_mode == 1:
-                return ndata
-            #assert self.num_wide==27,self.code_information()
-            self.create_transient_object(self.thermalLoad_VUBeam, HeatFlux_VUBEAM)
             nnodes = 2
-
             numwide_real = 4 + 7 * nnodes
+
+            result_name = 'thermalLoad_VUBeam'
+            if self._results.is_not_saved(result_name):
+                return ndata
+            self._results._found_result(result_name)
+            slot = getattr(self, result_name)
             if self.format_code == 1 and self.num_wide == numwide_real:  # real
                 ntotal = 16 + 28 * nnodes
-                s1 = Struct(b(self._endian + 'iii4s'))
-                s2 = Struct(b(self._endian + 'i6f'))
                 nelements = ndata // ntotal
+
+                if 0:
+                    if self.read_mode == 1:
+                        return ndata
+                    #assert self.num_wide==27,self.code_information()
+                    self.create_transient_object(self.thermalLoad_VUBeam, HeatFlux_VUBEAM)
+                else:
+                    auto_return, is_vectorized = self._create_oes_object4(
+                        nelements, result_name, slot, RealHeatFluxVUBeamArray)
+                    if auto_return:
+                        self._data_factor = nnodes
+                        return nelements * self.num_wide * 4
+
                 obj = self.obj
-                for i in range(nelements):
-                    edata = data[n:n+16]  # 4*4
-                    n += 16
+                if self.use_vector and is_vectorized:
+                    n = nelements * 4 * self.num_wide
+                    itotal = obj.itotal
+                    itotal2 = itotal + nelements * nnodes
+                    ielement = obj.ielement
+                    ielement2 = obj.ielement + nelements
 
-                    out = s1.unpack(edata)
-                    (eid_device, parent, coord, icord) = out
-                    eid = eid_device // 10
-                    data_in = [eid, parent, coord, icord]
+                    ints = fromstring(data, dtype=self.idtype).reshape(nelements, numwide_real)
+                    floats = fromstring(data, dtype=self.fdtype).reshape(nelements, numwide_real)
+                    obj._times[obj.itime] = dt
+                    if obj.itime == 0:
+                        eids = ints[:, 0] // 10
+                        parent = ints[:, 1]
+                        coord = ints[:, 2]
+                        # icord - 4s
+                        assert eids.min() > 0, eids.min()
+                        obj.element_parent_coord[ielement:ielement2, 0] = eids
+                        obj.element_parent_coord[ielement:ielement2, 1] = parent
+                        obj.element_parent_coord[ielement:ielement2, 2] = coord
+                    #obj.data[itotal:itotal2, 0] = floats[:, 4]
 
-                    grad_fluxes = []
-                    for i in range(nnodes):
-                        edata = data[n:n+28]  # 7*4
-                        n += 28
-                        out = s2.unpack(edata)
-                        grad_fluxes.append(out)
-                    data_in.append(grad_fluxes)
+                    ints2 = ints[:, 4:].reshape(nelements * nnodes, 7)
+                    floats2 = floats[:, 4:].reshape(nelements * nnodes, 7)
 
-                    #data_in = [eid, eType, xgrad, ygrad, zgrad, xflux, yflux, zflux]
-                    #print "heatFlux %s" %(self.get_element_type(self.element_type)), data_in
-                    obj.add(nnodes, dt, data_in)
+                    #[vugrid]
+                    #[xgrad, ygrad, zgrad, xflux, yflux, zflux]
+                    obj.vugrid[obj.itime, itotal:itotal2, 0] = ints2[:, 0]
+                    obj.data[obj.itime, itotal:itotal2, :] = floats2[:, 1:]
+                    obj.itotal = itotal2
+                    obj.ielement = ielement2
+                else:
+                    s1 = Struct(b(self._endian + 'iii4s'))
+                    s2 = Struct(b(self._endian + 'i6f'))
+                    for i in range(nelements):
+                        edata = data[n:n+16]  # 4*4
+                        n += 16
+
+                        out = s1.unpack(edata)
+                        (eid_device, parent, coord, icord) = out
+                        eid = eid_device // 10
+                        data_in = [eid, parent, coord, icord]
+                        self.log.debug('VUBeam %s' % data_in)
+
+                        grad_fluxes = []
+                        for i in range(nnodes):
+                            edata = data[n:n+28]  # 7*4
+                            n += 28
+                            out = s2.unpack(edata)
+                            grad_fluxes.append(out)
+                        data_in.append(grad_fluxes)
+                        obj.add_sort1(dt, eid, parent, coord, icord, grad_fluxes)
+
             elif self.element_type == 118:  # CWELDP
                 msg = 'OEF sort1 thermal Type=%s num=%s' % (self.element_name, self.element_type)
                 return self._not_implemented_or_skip(data, ndata, msg)

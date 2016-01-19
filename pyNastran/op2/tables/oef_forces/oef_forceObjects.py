@@ -1308,7 +1308,7 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
             df1.columns = ['ElementID', 'NodeID']
             df2 = pd.DataFrame(self.data[0])
             df2.columns = headers
-            self.data_frame = df1.join([df2])
+            self.data_frame = df1.join(df2)
         self.data_frame = self.data_frame.reset_index().replace({'NodeID': {0:'CEN'}}).set_index(['ElementID', 'NodeID'])
         #print(self.data_frame)
 
@@ -2370,13 +2370,18 @@ class RealBendForceArray(RealForceObject):  # 69-CBEND
         element = self.element_nodes[:, 0]
         headers = self.get_headers()
         if self.nonlinear_factor is not None:
+            # TODO: add NodeA, NodeB
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data, items=column_values, major_axis=element, minor_axis=headers).to_frame()
             self.data_frame.columns.names = column_names
+            self.data_frame.index.names = ['ElementID', 'Item']
+            #print(self.data_frame)
         else:
-            self.data_frame = pd.Panel(self.data[0], major_axis=element, minor_axis=headers).to_frame()
-            self.data_frame.columns.names = ['Static']
-        self.data_frame.index.names = ['ElementID', 'Item']
+            df1 = pd.DataFrame(self.element_nodes)
+            df1.columns = ['ElementID', 'NodeA', 'NodeB']
+            df2 = pd.DataFrame(self.data[0])
+            df2.columns = headers
+            self.data_frame = df1.join(df2)
 
     #def add(self, dt, eid, axial, torque):
         #self.add_sort1(dt, eid, axial, torque)

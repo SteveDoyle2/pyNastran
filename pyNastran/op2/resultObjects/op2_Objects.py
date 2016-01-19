@@ -125,14 +125,14 @@ class BaseScalarObject(Op2Codes):
         msg = 'write_f06 is not implemented in %s\n' % self.__class__.__name__
         f.write(msg)
         print(msg[:-1])
-        raise NotImplementedError(msg)
+        #raise NotImplementedError(msg)
         return page_num
 
     def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
         msg = '_write_f06_transient is not implemented in %s\n' % self.__class__.__name__
         f.write(msg)
         print(msg[:-1])
-        raise NotImplementedError(msg)
+        #raise NotImplementedError(msg)
         return page_num
 
     def __repr__(self):

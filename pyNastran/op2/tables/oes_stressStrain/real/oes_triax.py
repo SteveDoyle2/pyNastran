@@ -43,8 +43,7 @@ class RealTriaxArray(OES_Object):
         if self.is_built:
             return
         #print("self.ielement =", self.ielement)
-        print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
-        #aasdf
+        #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         assert self.ntimes > 0, 'ntimes=%s' % self.ntimes
         assert self.nelements > 0, 'nelements=%s' % self.nelements
         assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
@@ -68,7 +67,6 @@ class RealTriaxArray(OES_Object):
             dtype = 'int32'
         self._times = zeros(self.ntimes, dtype=dtype)
         self.element_node = zeros((self.ntotal, 2), dtype='int32')
-        print('self.element_node.shape', self.element_node.shape)
 
         # [radial, azimuthal, axial, shear, omax, oms, ovm]
         self.data = zeros((self.ntimes, self.ntotal, 7), dtype='float32')
