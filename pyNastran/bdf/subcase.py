@@ -666,7 +666,9 @@ class Subcase(object):
         #print('key=%s param=%s param_type=%s' % (key, param, param_type))
         if param_type == 'SUBCASE-type':
             if self.id > 0:
-                msg += 'SUBCASE %s\n' % (self.id)
+                msgi = 'SUBCASE %s\n' % (self.id)
+                assert len(msgi) < 72, 'len(msg)=%s; msg=\n%s' % (len(msgi), msgi)
+                msg += msgi
             #else:  global subcase ID=0 and is not printed
             #    pass
         elif param_type == 'KEY-type':
@@ -675,26 +677,57 @@ class Subcase(object):
             if ',' in value:
                 sline = value.split(',')
                 two_spaces = ',\n' + 2 * spaces
-                msg += spaces + two_spaces.join(sline) + '\n'
+                msgi = spaces + two_spaces.join(sline) + '\n'
+                assert len(msgi) < 68, 'len(msg)=%s; msg=\n%s' % (len(msgi), msgi)
+                msg += msgi
             else:
-                msg += spaces + '%s\n' % value
+                msgi = spaces + '%s\n' % value
+                assert len(msgi) < 68, 'len(msg)=%s; msg=\n%s' % (len(msgi), msgi)
+                msg += msgi
         elif param_type == 'STRING-type':
-            msg += spaces + '%s = %s\n' % (key, value)
+            msgi = spaces + '%s = %s\n' % (key, value)
+            assert len(msgi) < 68, 'len(msg)=%s; msg=\n%s' % (len(msgi), msgi)
+            msg += msgi
         elif param_type == 'CSV-type':
-            msg += spaces + '%s,%s,%s\n' % (key, value, options)
+            msgi = spaces + '%s,%s,%s\n' % (key, value, options)
+            assert len(msgi) < 68, 'len(msg)=%s; msg=\n%s' % (len(msgi), msgi)
+            msg += msgi
         elif param_type == 'STRESS-type':
-            sOptions = ','.join(options)
-            #print("sOptions = |%s|" %(sOptions))
+            str_options = ','.join(options)
+            #print("str_options = |%s|" %(str_options))
             #print("STRESSTYPE key=%s value=%s options=%s"
             #    %(key, value, options))
             if value is None:
                 val = ''
             else:
                 val = ' = %s' % value
-            if len(sOptions) > 0:
-                msg += '%s(%s)%s\n' % (key, sOptions, val)
+            if len(str_options) > 0:
+                msgi = '%s(%s)%s\n' % (key, str_options, val)
+                if len(msgi) > 64:
+                    msgi = '%s(' % key
+                    msg_done = ''
+                    i = 0
+                    while i < len(options):
+                        option = options[i]
+                        new_msgi = '%s,' % options[i]
+                        if (len(msgi) + len(new_msgi)) < 64:
+                            msgi += new_msgi
+                        else:
+                            msg_done += msgi + '\n'
+                            msgi = spaces + new_msgi
+                        i += 1
+                    msg_done += msgi
+                    msgi = ''
+                    msg_done = msg_done.rstrip(' ,\n') + ')%s\n' % val
+                    assert len(msgi) < 68, 'len(msg)=%s; msg=\n%s' % (len(msgi), msgi)
+                    msg += msg_done
+                else:
+                    assert len(msgi) < 68, 'len(msg)=%s; msg=\n%s' % (len(msgi), msgi)
+                    msg += msgi
             else:
-                msg += '%s%s\n' % (key, val)
+                msgi = '%s%s\n' % (key, val)
+                assert len(msgi) < 68, 'len(msg)=%s; msg=\n%s' % (len(msgi), msgi)
+                msg += msgi
             msg = spaces + msg
 
         elif param_type == 'SET-type':
@@ -885,6 +918,7 @@ class Subcase(object):
         nparams = 0
         for key, param in self.subcase_sorted(iteritems(self.params)):
             (value, options, param_type) = param
+            #print('key=%r value=%s options=%s' % (key, value, options))
             msg += self.print_param(key, param)
             nparams += 1
         if self.id > 0:

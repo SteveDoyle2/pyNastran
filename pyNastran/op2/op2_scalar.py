@@ -87,6 +87,7 @@ NX_RESULT_TABLES = [
     b'OESPSD2C', b'OSTPSD2C',
     b'OSTRRMS1', b'OSTRMS1C',
     b'OSTRNO1', b'OSTNO1C',
+    b'MDICT', b'BDICT', b'KDICTP', b'MDICTP',
 
     #----------------------
     # displacement/velocity/acceleration/eigenvector/temperature
@@ -264,7 +265,7 @@ NX_MATRIX_TABLES = [
     b'RADAMPZ',
     b'RADAMPG',
     b'EFMFSMS', b'EFMASSS', b'RBMASSS', b'EFMFACS', b'MPFACS', b'MEFMASS', b'MEFWTS',
-    b'K4HH',
+    b'K4HH', b'KELMP', b'MELMP',
 ]
 
 
@@ -340,7 +341,7 @@ MSC_MATRIX_TABLES = [
     b'YS', b'YS0', b'YSD', b'YVELO', b'Z1ZX', b'ZZX',
 ]
 AUTODESK_MATRIX_TABLES = [
-    b'KELM', b'MELM', #b'MDICT',
+    b'BELM', b'KELM', b'MELM',
 
 ]
 # this will be split later
@@ -463,7 +464,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                    subcaseID_2: [time3, time4]}
         """
         expected_times = {}
-        for (isubcase, eTimes) in iteritems(times):
+        for (isubcase, etimes) in iteritems(times):
             etimes = list(times)
             etimes.sort()
             expected_times[isubcase] = array(etimes)

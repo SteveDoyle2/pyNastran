@@ -462,18 +462,16 @@ class CaseControlDeck(object):
             param_type = 'SUBCASE-type'
             assert key.upper() == key, key
 
-        elif (line_upper.startswith('LABEL') or
-              line_upper.startswith('SUBT') or  # SUBTITLE
-              line_upper.startswith('TITL')):   # TITLE
+        elif line_upper.startswith(('LABEL', 'SUBT', 'TITL')):  # SUBTITLE/TITLE
             try:
-                eIndex = line.index('=')
+                eindex = line.index('=')
             except:
                 msg = "cannot find an = sign in LABEL/SUBTITLE/TITLE line\n"
                 msg += "line = %r" % line_upper.strip()
                 raise RuntimeError(msg)
 
-            key = line_upper[0:eIndex].strip()
-            value = line[eIndex + 1:].strip()
+            key = line_upper[0:eindex].strip()
+            value = line[eindex + 1:].strip()
             options = []
             param_type = 'STRING-type'
         elif line_upper.startswith('SET ') and equals_count == 1:
@@ -577,7 +575,61 @@ class CaseControlDeck(object):
             key = update_param_name(key.strip().upper())
             verify_card(key, value, options, line)
             assert key.upper() == key, key
+        elif equals_count > 2:
+            #GROUNDCHECK(PRINT,SET=(G,N,N+AUTOSPC,F,A),DATAREC=NO)=YES
+            #print('****', lines)
+            assert len(lines) == 1, lines
+            line = lines[0]
+            key, value_options = line.split('(', 1)
+            options_paren, value = value_options.rsplit('=', 1)
+            options_paren = options_paren.strip()
 
+            value = value.strip()
+            if value.isdigit():
+                value = int(value)
+            if not options_paren.endswith(')'):
+                raise RuntimeError(line)
+            str_options = options_paren[:-1]
+
+            if '(' in str_options:
+                options_start = []
+                options_end = []
+                icomma = str_options.index(',')
+                iparen = str_options.index('(')
+                #print('icomma=%s iparen=%s' % (icomma, iparen))
+                while icomma < iparen:
+                    base, str_options = str_options.split(',', 1)
+                    str_options = str_options.strip()
+                    icomma = str_options.index(',')
+                    iparen = str_options.index('(')
+                    options_start.append(base.strip())
+                    #print('  icomma=%s iparen=%s' % (icomma, iparen))
+                    #print('  options_start=%s' % options_start)
+
+                icomma = str_options.rindex(',')
+                iparen = str_options.rindex(')')
+                #print('icomma=%s iparen=%s' % (icomma, iparen))
+                while icomma > iparen:
+                    str_options, end = str_options.rsplit(')', 1)
+                    str_options = str_options.strip() + ')'
+                    #print('  str_options = %r' % str_options)
+                    icomma = str_options.rindex(',')
+                    iparen = str_options.rindex(')')
+                    options_end.append(end.strip(' ,'))
+                    #print('  icomma=%s iparen=%s' % (icomma, iparen))
+                    #print('  options_end=%s' % options_end[::-1])
+
+                #print()
+                #print('options_start=%s' % options_start)
+                #print('options_end=%s' % options_end)
+                #print('leftover = %r' % str_options)
+                options = options_start + [str_options] + options_end[::-1]
+
+            else:
+                options = str_options.split(',')
+            param_type = 'STRESS-type'
+            #print('options =', options)
+            #asdf
         elif line_upper.startswith('BEGIN'):  # begin bulk
             try:
                 (key, value) = line_upper.split(' ')
