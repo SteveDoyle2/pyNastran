@@ -355,8 +355,30 @@ def parse_executive_control_deck(executive_control_lines):
 
 
 def _parse_pynastran_header(line):
-    lline = line[1:].lower()
-    if 'pynastran' in lline:
+    """
+    Search for data of the form:
+        ..code-block :: python
+            $ pyNastran: version=NX
+            $ pyNastran: encoding=latin-1
+            $ pyNastran: punch=True
+            $ pyNastran: dumplines=True
+            $ pyNastran: nnodes=10
+            $ pyNastran: nelements=100
+            $ pyNastran: skip_cards=PBEAM,CBEAM
+            $ pyNastran: units=in,lb,s
+
+    If we find:
+        ..code-block :: python
+            $$ pyNastran: version=NX
+
+    or a line without a valid pyNastran flag, we'll stop reading,
+    even a valid header statement is on the following line.
+    """
+    lline = line[1:].lower().strip()
+    if len(lline) == 0 or lline[0] == '$':
+        key = None
+        value = None
+    elif 'pynastran' in lline:
         base, word = lline.split(':')
         if base.strip() != 'pynastran':
             msg = 'unrecognized pyNastran marker\n'

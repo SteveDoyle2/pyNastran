@@ -1324,6 +1324,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'PCOMP' : (PCOMP, self.add_property),
             'PSHELL' : (PSHELL, self.add_property),
 
+            'PSOLID' : (PSOLID, self.add_property),
+
             # there is no MAT6 or MAT7
             'MAT1' : (MAT1, self.add_structural_material),
 
@@ -1390,7 +1392,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             # CPENTA - added later
             # CPYRAM - added later
             'CIHEX1' : (CIHEX1, self.add_element),
-            'PSOLID' : (PSOLID, self.add_property),
             'PIHEX' : (PIHEX, self.add_property),
             'PLSOLID' : (PLSOLID, self.add_property),
             'PCONEAX' : (PCONEAX, self.add_property),
@@ -2677,7 +2678,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                     raise RuntimeError(msg)
                 if self.is_reject(card_name):
                     if card_name not in self.card_count:
-                        if card_name in ['BEGIN BU', 'BEGIN SU']:
+                        if card_name in ['BEGIN BU', 'BEGIN SU', 'SUBCASE ', 'CEND']:
                             raise RuntimeError('No executive/case control deck was defined.')
                         self.log.info('    rejecting card_name = %s' % card_name)
                     self._increase_card_count(card_name)
@@ -2740,7 +2741,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             $ pyNastran: dumplines=True
             $ pyNastran: nnodes=10
             $ pyNastran: nelements=100
-            $ pyNastran:skip_cards=PBEAM,CBEAM
+            $ pyNastran: skip_cards=PBEAM,CBEAM
             $ pyNastran: units=in,lb,s
 
         ..warning :: pyNastran lines must be at the top of the file

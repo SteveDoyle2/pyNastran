@@ -204,8 +204,8 @@ class PGAP(Property):
 
 
 class SolidProperty(Property):
-    def __init__(self, card, data):
-        Property.__init__(self, card, data)
+    def __init__(self):
+        Property.__init__(self)
 
     def Rho(self):
         return self.mid_ref.rho
@@ -215,8 +215,12 @@ class PLSOLID(SolidProperty):
     """
     Defines a fully nonlinear (i.e., large strain and large rotation)
     hyperelastic solid element.
-    PLSOLID PID MID STR
-    PLSOLID 20 21
+
+    +---------+-----+-----+-----+
+    | PLSOLID | PID | MID | STR |
+    +---------+-----+-----+-----+
+    | PLSOLID |  20 |  21 |     |
+    +---------+-----+-----+-----+
     """
     type = 'PLSOLID'
     _field_map = {
@@ -286,34 +290,47 @@ class PSOLID(SolidProperty):
         6:'isop', 7:'fctn',
     }
 
-    def __init__(self, card=None, data=None, comment=''):
-        SolidProperty.__init__(self, card, data)
+    def __init__(self):
+        SolidProperty.__init__(self)
+
+    def add(self, pid, mid, cordm=0, integ=None, stress=None, isop=None, fctn='SMECH'):
+        self.pid = pid
+        self.mid = mid
+        self.cordm = cordm
+        self.integ = integ
+        self.stress = stress
+        self.isop = isop
+        self.fctn = fctn
+
+    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            #: Property ID
-            self.pid = integer(card, 1, 'pid')
-            #: Material ID
-            self.mid = integer(card, 2, 'mid')
-            self.cordm = integer_or_blank(card, 3, 'cordm', 0)
-            self.integ = integer_string_or_blank(card, 4, 'integ')
-            #validIntegration = ['THREE', 'TWO', 'FULL', 'BUBBLE',
-            #                    2, 3, None, 'REDUCED']
-            self.stress = integer_string_or_blank(card, 5, 'stress')
-            self.isop = integer_string_or_blank(card, 6, 'isop')
-            self.fctn = string_or_blank(card, 7, 'fctn', 'SMECH')
-            assert len(card) <= 8, 'len(PSOLID card) = %i' % len(card)
-        else:
-            self.pid = data[0]
-            self.mid = data[1]
-            self.cordm = data[2]
-            self.integ = data[3]
-            self.stress = data[4]
-            self.isop = data[5]
-            self.fctn = data[6]
+        #: Property ID
+        self.pid = integer(card, 1, 'pid')
+        #: Material ID
+        self.mid = integer(card, 2, 'mid')
+        self.cordm = integer_or_blank(card, 3, 'cordm', 0)
+        self.integ = integer_string_or_blank(card, 4, 'integ')
+        #validIntegration = ['THREE', 'TWO', 'FULL', 'BUBBLE',
+        #                    2, 3, None, 'REDUCED']
+        self.stress = integer_string_or_blank(card, 5, 'stress')
+        self.isop = integer_string_or_blank(card, 6, 'isop')
+        self.fctn = string_or_blank(card, 7, 'fctn', 'SMECH')
+        assert len(card) <= 8, 'len(PSOLID card) = %i' % len(card)
 
-            if self.fctn == 'SMEC':
-                self.fctn = 'SMECH'
+    def add_op2_data(self, data, comment=''):
+        if comment:
+            self._comment = comment
+        self.pid = data[0]
+        self.mid = data[1]
+        self.cordm = data[2]
+        self.integ = data[3]
+        self.stress = data[4]
+        self.isop = data[5]
+        self.fctn = data[6]
+
+        if self.fctn == 'SMEC':
+            self.fctn = 'SMECH'
 
     def E(self):
         return self.mid_ref.E()
