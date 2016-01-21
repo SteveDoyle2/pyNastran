@@ -308,7 +308,9 @@ class RealStrainEnergyArray(ScalarObject):
         msg += self.get_data_code()
         return msg
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+        if header is None:
+            header = []
         """
         '      EIGENVALUE =  2.005177E+05'
         '      CYCLES =  7.126832E+01'

@@ -153,7 +153,9 @@ class RealBush1DStressArray(OES_Object):
         ind = ravel([searchsorted(self.element == eid) for eid in eids])
         return ind
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+        if header is None:
+            header = []
         msg = self._get_msgs()
         (ntimes, ntotal) = self.data.shape[:2]
         eids = self.element
@@ -171,7 +173,6 @@ class RealBush1DStressArray(OES_Object):
             plastic_strain = self.data[itime, :, 5]
             is_failed = self.is_failed[itime, :, 0]
 
-            # loop over all the elements
             for (i, eid, element_forcei, axial_displacementi, axial_velocityi, axial_stressi, axial_straini, plastic_straini, is_failedi) in zip(
                 count(), eids, element_force, axial_displacement, axial_velocity, axial_stress, axial_strain, plastic_strain, is_failed):
 

@@ -166,7 +166,9 @@ class RealShearArray(OES_Object):
     def get_f06_header(self):
         raise NotImplementedError('CSHEAR...')
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+        if header is None:
+            header = []
         msg_temp = self.get_f06_header()
 
         # write the f06
@@ -189,7 +191,6 @@ class RealShearArray(OES_Object):
             avg_shear = self.data[itime, :, 1]
             margin = self.data[itime, :, 2]
 
-            # loop over all the elements
             out = []
             for eid, max_sheari, avg_sheari, margini in zip(eids, max_shear, avg_shear, margin):
                 #[max_sheari, avg_sheari, margini] = write_floats_13e([max_sheari, avg_sheari, margini])

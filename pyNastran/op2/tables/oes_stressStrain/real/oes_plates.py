@@ -248,7 +248,9 @@ class RealPlateArray(OES_Object):
         #ind.sort()
         return ind
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+        if header is None:
+            header = []
         msg, nnodes, cen = _get_plate_msg(self)
 
         # write the f06
@@ -276,7 +278,6 @@ class RealPlateArray(OES_Object):
             minorP = self.data[itime, :, 6]
             ovm = self.data[itime, :, 7]
 
-            # loop over all the elements
             for (i, eid, nid, fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi) in zip(
                  count(), eids, nids, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm):
                 [fdi, oxxi, oyyi, txyi, major, minor, ovmi] = write_floats_13e(
@@ -617,7 +618,9 @@ class RealCPLSTRNPlateArray(OES_Object):
         ##ind.sort()
         #return ind
 
-    #def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
+    #def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+        #if header is None:
+            #header = []
         #msg, nnodes, cen = _get_plate_msg(self)
 
         ## write the f06
@@ -645,7 +648,6 @@ class RealCPLSTRNPlateArray(OES_Object):
             #minorP = self.data[itime, :, 6]
             #ovm = self.data[itime, :, 7]
 
-            ## loop over all the elements
             #for (i, eid, nid, fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi) in zip(
                  #count(), eids, nids, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm):
                 #[fdi, oxxi, oyyi, txyi, major, minor, ovmi] = write_floats_13e(

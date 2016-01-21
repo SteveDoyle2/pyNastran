@@ -450,8 +450,8 @@ class F06Writer(OP2_F06_Common):
                 else:
                     print(res_format % (class_name, isubcase))
 
-                self.page_num = result.write_f06(header, page_stamp,
-                                                 self.page_num, f=f06, is_mag_phase=is_mag_phase, is_sort1=True)
+                self.page_num = result.write_f06(f06, header, page_stamp,
+                                                 self.page_num, is_mag_phase=is_mag_phase, is_sort1=True)
                 assert isinstance(self.page_num, int), 'pageNum=%r' % str(self.page_num)
                 if delete_objects:
                     del result
@@ -740,8 +740,8 @@ class F06Writer(OP2_F06_Common):
                         else:
                             print(res_format % (class_name, isubcase, element_name))
 
-                        self.page_num = result.write_f06(header, page_stamp, page_num=self.page_num,
-                                                         f=f06, is_mag_phase=is_mag_phase, is_sort1=is_sort1)
+                        self.page_num = result.write_f06(f06, header, page_stamp, page_num=self.page_num,
+                                                         is_mag_phase=is_mag_phase, is_sort1=is_sort1)
                         assert isinstance(self.page_num, int), 'pageNum=%r' % str(self.page_num)
                     except:
                         #print("result name = %r" % result.name())

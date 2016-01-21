@@ -245,7 +245,9 @@ class RealCompositePlateArray(OES_Object):
         #ind.sort()
         return ind
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+        if header is None:
+            header = []
         #msg, nnodes, is_bilinear = self._get_msgs()
         if self.is_von_mises():
             von = 'VON'
@@ -313,7 +315,6 @@ class RealCompositePlateArray(OES_Object):
             minor = self.data[itime, :, 7]
             ovm = self.data[itime, :, 8]
 
-            # loop over all the elements
             for eid, layer, o11i, o22i, t12i, t1zi, t2zi, anglei, majori, minori, ovmi in zip(
                 eids, layers, o11, o22, t12, t1z, t2z, angle, major, minor, ovm):
 

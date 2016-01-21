@@ -119,7 +119,9 @@ class BaseScalarObject(Op2Codes):
     def build_dataframe(self):
         print('build_dataframe is not implemented in %s' % self.__class__.__name__)
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+        if header is None:
+            header = []
         if self.nonlinear_factor is not None:
             return self._write_f06_transient(header, page_stamp, page_num=page_num, f=f, is_mag_phase=is_mag_phase, is_sort1=is_sort1)
         msg = 'write_f06 is not implemented in %s\n' % self.__class__.__name__

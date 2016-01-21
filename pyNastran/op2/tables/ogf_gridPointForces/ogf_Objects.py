@@ -263,7 +263,9 @@ class RealGridPointForcesArray(ScalarObject):
         #ind = ravel([searchsorted(self.node_element[:, 0] == eid) for eid in eids])
         #return ind
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+        if header is None:
+            header = []
         msg = self._get_f06_msg()
 
         ntimes = self.data.shape[0]
@@ -583,7 +585,9 @@ class ComplexGridPointForcesArray(ScalarObject):
         #ind = ravel([searchsorted(self.node_element[:, 0] == eid) for eid in eids])
         #return ind
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+        if header is None:
+            header = []
         msg = self._get_f06_msg(is_mag_phase=is_mag_phase, is_sort1=is_sort1)
 
         ntimes = self.data.shape[0]
@@ -851,7 +855,9 @@ class RealGridPointForces(ScalarObject):
         #self.elemName = self.elemName[k[0]]
         #self.eids = self.eids[k[0]]
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+        if header is None:
+            header = []
         if self.nonlinear_factor is not None:
             return self._write_f06_transient(header, page_stamp, page_num, f, is_mag_phase=is_mag_phase, is_sort1=is_sort1)
 

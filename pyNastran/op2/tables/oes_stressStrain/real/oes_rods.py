@@ -188,7 +188,9 @@ class RealRodArray(OES_Object):
         #ind.sort()
         return ind
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+        if header is None:
+            header = []
         (elem_name, msg_temp) = self.get_f06_header(is_mag_phase)
 
         if self.is_sort1():
@@ -216,7 +218,6 @@ class RealRodArray(OES_Object):
             torsion = self.data[itime, :, 2]
             SMt = self.data[itime, :, 3]
 
-            # loop over all the elements
             out = []
             for eid, axiali, SMai, torsioni, SMti in zip(eids, axial, SMa, torsion, SMt):
                 [axiali, torsioni, SMai, SMti] = write_floats_13e([axiali, torsioni, SMai, SMti])

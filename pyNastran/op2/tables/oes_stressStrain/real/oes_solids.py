@@ -222,8 +222,9 @@ class RealSolidArray(OES_Object):
         #ind.sort()
         return ind
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None,
-                  is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+        if header is None:
+            header = []
         nnodes, msg_temp = _get_f06_header_nnodes(self, is_mag_phase)
 
         # write the f06
@@ -253,7 +254,6 @@ class RealSolidArray(OES_Object):
             ovm = self.data[itime, :, 9]
             p = (o1 + o2 + o3) / -3.
 
-            # loop over all the elements and nodes
             cnnodes = nnodes + 1
             for i, deid, node_id, doxx, doyy, dozz, dtxy, dtyz, dtxz, do1, do2, do3, dp, dovm in zip(
                 count(), eids2, nodes, oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, p, ovm):

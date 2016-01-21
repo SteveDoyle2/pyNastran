@@ -177,7 +177,9 @@ class RealBushArray(OES_Object):
         ind = ravel([searchsorted(self.element == eid) for eid in eids])
         return ind
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+        if header is None:
+            header = []
         msg = self._get_msgs()
         (ntimes, ntotal) = self.data.shape[:2]
         eids = self.element
@@ -194,7 +196,6 @@ class RealBushArray(OES_Object):
             ry = self.data[itime, :, 4]
             rz = self.data[itime, :, 5]
 
-            # loop over all the elements
             for eid, txi, tyi, tzi, rxi, ryi, rzi in zip(
                 eids, tx, ty, tz, rx, ry, rz):
 

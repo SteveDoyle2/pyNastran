@@ -181,7 +181,9 @@ class RealNonlinearRodArray(OES_Object):
         msg += self.get_data_code()
         return msg
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+        if header is None:
+            header = []
         if is_sort1:
             msg = [
                 '                         N O N L I N E A R   S T R E S S E S   I N   R O D   E L E M E N T S      ( C R O D )\n',
@@ -438,7 +440,9 @@ class RealNonlinearPlateArray(OES_Object):
         msg += self.get_data_code()
         return msg
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+        if header is None:
+            header = []
         real_nonlinear_plate_array
         msg, nnodes, cen = _get_plate_msg(self)
 
@@ -467,7 +471,6 @@ class RealNonlinearPlateArray(OES_Object):
             minorP = self.data[itime, :, 6]
             ovm = self.data[itime, :, 7]
 
-            # loop over all the elements
             for (i, eid, nid, fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi) in zip(
                  count(), eids, nids, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm):
                 [fdi, oxxi, oyyi, txyi, major, minor, ovmi] = write_floats_13e(
@@ -626,7 +629,9 @@ class NonlinearQuad(StressObject):
         self.eps[dt][eid].append(eps)
         self.ecs[dt][eid].append(ecs)
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+        if header is None:
+            header = []
         msg_start = [
             '      ELEMENT-ID =     129\n'
             '               N O N L I N E A R   S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S    ( Q U A D 4 )\n'
@@ -757,7 +762,10 @@ class HyperelasticQuad(StressObject):
         self.majorP[dt][eid].append(majorP)
         self.minorP[dt][eid].append(minorP)
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):  # .. todo:: doesnt support CTRIA3NL (calls them CQUAD4s)
+    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+        # .. todo:: doesnt support CTRIA3NL (calls them CQUAD4s)
+        if header is None:
+            header = []
         msg = ['           S T R E S S E S   I N   H Y P E R E L A S T I C   Q U A D R I L A T E R A L   E L E M E N T S  ( QUAD4FD )\n',
                '  ELEMENT     GRID/    POINT       ---------CAUCHY STRESSES--------             PRINCIPAL STRESSES (ZERO SHEAR)\n',
                '     ID       GAUSS      ID      NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR\n', ]
@@ -860,7 +868,10 @@ class HyperelasticQuad(StressObject):
         #self.linearTorsionalStress[dt][eid] = data[6]
         ##print data
 
-    #def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):  # .. todo:: doesnt support CONROD/CTUBE (calls them CRODs)
+    #def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+        ## .. todo:: doesnt support CONROD/CTUBE (calls them CRODs)
+        #if header is None:
+            #header = []
         #"""
         #::
 

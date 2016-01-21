@@ -205,7 +205,9 @@ class ComplexSpringDamperArray(OES_Object):
         ##ind.sort()
         #return ind
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+        if header is None:
+            header = []
         msg_temp = self.get_f06_header(is_mag_phase=is_mag_phase, is_sort1=is_sort1)
 
         # write the f06
@@ -228,7 +230,6 @@ class ComplexSpringDamperArray(OES_Object):
             #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
             spring_force = self.data[itime, :, 0]
 
-            # loop over all the elements
             out = []
             for eid, spring_forcei in zip(eids, spring_force):
                 [rspring, ispring] = write_imag_floats_13e([spring_forcei], is_mag_phase)

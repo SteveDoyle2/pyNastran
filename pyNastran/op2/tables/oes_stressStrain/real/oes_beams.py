@@ -191,7 +191,9 @@ class RealBeamArray(OES_Object):
         #ind.sort()
         #return ind
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+        if header is None:
+            header = []
         msg = self._get_msgs()
         ntimes = self.data.shape[0]
 
@@ -213,7 +215,6 @@ class RealBeamArray(OES_Object):
             SMts = self.data[itime, :, 6]
             SMcs = self.data[itime, :, 7]
 
-            # loop over all the elements
             eid_old = None
             xxb_old = None
             for (i, eid, nid, xxb, sxc, sxd, sxe, sxf, sMax, sMin, SMt, SMc) in zip(
@@ -398,7 +399,9 @@ class RealNonlinearBeamArray(OES_Object):
         #ind.sort()
         #return ind
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+        if header is None:
+            header = []
         msg = self._get_msgs()
         ntimes = self.data.shape[0]
 

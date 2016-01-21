@@ -132,7 +132,9 @@ class RealTriaxArray(OES_Object):
         ind = ravel([searchsorted(self.element == eid) for eid in eids])
         return ind
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+        if header is None:
+            header = []
         msg = self._get_msgs()
         (ntimes, ntotal) = self.data.shape[:2]
         eids = self.element_node[:, 0]
@@ -152,7 +154,6 @@ class RealTriaxArray(OES_Object):
             oms = self.data[itime, :, 5]
             ovm = self.data[itime, :, 6]
 
-            # loop over all the elements
             for (i, eid, nid, radiali, azimuthali, axiali, sheari, omaxi, omsi, ovmi) in zip(
                 count(), eids, nids, radial, azimuthal, axial, shear, omax, oms, ovm):
 

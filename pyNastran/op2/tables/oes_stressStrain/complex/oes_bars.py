@@ -132,7 +132,9 @@ class ComplexBarArray(OES_Object):
         msg += self.get_data_code()
         return msg
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+        if header is None:
+            header = []
         #msg_temp, nnodes = get_f06_header(self, is_mag_phase, is_sort1)
 
         # write the f06

@@ -185,7 +185,9 @@ class ComplexSolidArray(OES_Object):
         msg += self.get_data_code()
         return msg
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+        if header is None:
+            header = []
         msg_temp, nnodes = get_f06_header(self, is_mag_phase, is_sort1)
 
         # write the f06
@@ -212,7 +214,6 @@ class ComplexSolidArray(OES_Object):
             eids2 = self.element_node[:, 0]
             nodes = self.element_node[:, 1]
 
-            # loop over all the elements and nodes
             for deid, node, doxx, doyy, dozz, dtxy, dtyz, dtxz in zip(eids2, nodes, oxx, oyy, ozz, txy, tyz, txz):
                 # TODO: cid not supported
                 [oxxr, oyyr, ozzr, txyr, tyzr, txzr,

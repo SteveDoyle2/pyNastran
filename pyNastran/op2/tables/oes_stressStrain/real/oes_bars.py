@@ -176,7 +176,9 @@ class RealBarArray(OES_Object):
         #ind.sort()
         return ind
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+        if header is None:
+            header = []
         msg = self._get_msgs()
         (ntimes, ntotal) = self.data.shape[:2]
         eids = self.element
@@ -205,7 +207,6 @@ class RealBarArray(OES_Object):
             sminb = self.data[itime, :, 13]
             MSc = self.data[itime, :, 14]
 
-            # loop over all the elements
             for (i, eid, s1ai, s2ai, s3ai, s4ai, axiali, smaxai, sminai, MSti,
                          s1bi, s2bi, s3bi, s4bi,         smaxbi, sminbi, MSci) in zip(
                 count(), eids, s1a, s2a, s3a, s4a, axial, smaxa, smina, MSt,
