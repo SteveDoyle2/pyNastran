@@ -394,6 +394,9 @@ class TestOP2(Tester):
         """
         MSC 2005r2 Tables : GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPTS, DYNAMICS, DIT
                             OQG1, OUGV1, OGPFB1, OEF1X, OES1X1, OSTR1X, OPG1
+        NX 10 Tables : PVT0, CASECC, GEOM1S, GEOM2S, GEOM3S, GEOM4S, EPTS, MPTS,
+                       DYNAMICS, BGPDTS, EQEXINS, DIT,
+                       OQG1, OUGV1, OGPFB1, OEF1X, OES1X1, OSTR1X, OPG1
         """
         op2_filename = os.path.join('transient_solid_shell_bar.op2')
         folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'sol_101_elements'))
