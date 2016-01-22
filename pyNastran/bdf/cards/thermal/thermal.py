@@ -57,6 +57,10 @@ class CHBDYE(ThermalElement):
     """
     Defines a boundary condition surface element with reference to a heat
     conduction element.
+
+    +--------+-----+------+------+--------+--------+---------+---------+
+    | CHBDYE | EID | EID2 | SIDE | IVIEWF | IVIEWB | RADMIDF | RADMIDB |
+    +--------+-----+------+------+--------+--------+---------+---------+
     """
     type = 'CHBDYE'
 
@@ -196,6 +200,12 @@ class CHBDYG(ThermalElement):
     """
     Defines a boundary condition surface element without reference to a
     property entry.
+
+    +--------+-----+----+------+--------+--------+---------+---------+-----+
+    | CHBDYG | EID |    | TYPE | IVIEWF | IVIEWB | RADMIDF | RADMIDB |     |
+    +--------+-----+----+------+--------+--------+---------+---------+-----+
+    |        | G1  | G2 |  G3  |   G4   |   G5   |   G6    |   G7    |  G8 |
+    +--------+-----+----+------+--------+--------+---------+---------+-----+
     """
     type = 'CHBDYG'
 
@@ -308,6 +318,12 @@ class CHBDYP(ThermalElement):
     """
     Defines a boundary condition surface element with reference to a PHBDY
     entry
+
+    +--------+---------+---------+------+--------+--------+----+----+----+
+    | CHBDYP |   EID   |   PID   | TYPE | IVIEWF | IVIEWB | G1 | G2 | G0 |
+    +--------+---------+---------+------+--------+--------+----+----+----+
+    |        | RADMIDF | RADMIDB | GMID |   CE   |   E1   | E2 | E3 |    |
+    +--------+---------+---------+------+--------+--------+----+----+----+
     """
     type = 'CHBDYP'
 

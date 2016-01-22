@@ -265,6 +265,10 @@ class RealSolidArray(OES_Object):
                      [dtxz, dtyz, dozz]]
                 (Lambda, v) = eigh(A)  # a hermitian matrix is a symmetric-real matrix
 
+                # o1-max
+                # o2-mid
+                # o3-min
+                assert do1 >= do3 >= do2, 'o1 >= o2 >= o3; eid=%s o1=%e o2=%e o3=%e' % (deid, do1, do2, do3)  # TODO: remove once this is verified...then change the order in oes.py
                 [oxxi, oyyi, ozzi, txyi, tyzi, txzi, o1i, o2i, o3i, pi, ovmi] = write_floats_13e(
                     [doxx, doyy, dozz, dtxy, dtyz, dtxz, do1, do2, do3, dp, dovm])
 

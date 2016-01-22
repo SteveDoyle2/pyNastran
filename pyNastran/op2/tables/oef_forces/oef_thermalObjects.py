@@ -1423,6 +1423,10 @@ class RealChbdyHeatFluxArray(ScalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
     def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
+
+        assert self.is_sort1() == True, self.is_sort1()
+
+
         msg_temp = [
             '                                H E A T   F L O W   I N T O   H B D Y   E L E M E N T S   (CHBDY)\n'
             ' \n'
@@ -1449,12 +1453,13 @@ class RealChbdyHeatFluxArray(ScalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
 
             for (eid, fappliedi, free_convi, force_convi, fradi, ftotali) in zip(
                 eids, fapplied, free_conv, force_conv, frad, ftotal):
-                vals2 = write_floats_13e(
-                    [fappliedi, free_convi, force_convi, fradi, ftotali])
-                [sfapplied, sfree_conv, sforce_conv, sfrad, sftotal] = vals2
+                #vals2 = write_floats_13e(
+                    #[fappliedi, free_convi, force_convi, fradi, ftotali])
+                #[sfapplied, sfree_conv, sforce_conv, sfrad, sftotal] = vals2
 
-                f.write(' %8i  %-13s %-13s %-13s %-13s %s\n' % (
-                    eid, sfapplied, sfree_conv, sforce_conv, sfrad, sftotal))
+                f.write('                 %8i     %13E     %13E     %13E     %13E     %13E\n' % (
+                #f.write(' %8i  %-13s %-13s %-13s %-13s %s\n' % (
+                    eid, fappliedi, free_convi, force_convi, fradi, ftotali))
             f.write(page_stamp % page_num)
             page_num += 1
         return page_num - 1

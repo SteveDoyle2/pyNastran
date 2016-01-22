@@ -182,6 +182,9 @@ class ScalarObject(BaseScalarObject):
         #return bool(self.sort_bits[1])
 
     def apply_data_code(self):
+        if self.table_name is not None and self.table_name != self.data_code['table_name']:
+            print(self.data_code)
+            raise RuntimeError('old_table_name=%r new_table_name=%r' % (self.table_name, self.data_code['table_name']))
         for key, value in sorted(iteritems(self.data_code)):
             if PY3 and isinstance(value, bytes):
                 print("  key=%s value=%s; value is bytes" % (key, value))

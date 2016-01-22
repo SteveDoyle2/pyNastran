@@ -519,7 +519,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'R1TABRG': [self._table_passer, self._table_passer_r1tabrg],
             #b'TOL': [self._table_passer, self._table_passer],
 
-            b'MATPOOL': [self._table_passer, self._table_passer],
+            b'MATPOOL': [self._table_passer, self._table_passer], # DMIG bulk data entries
             b'CSTM':    [self._table_passer, self._table_passer],
             b'AXIC':    [self._table_passer, self._table_passer],
             b'OPHIG' :  [self._table_passer, self._table_passer],  # eigenvectors in basic coordinate system
@@ -665,10 +665,10 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
             # ===geom passers===
             # geometry
-            b'GEOM1' : [self._table_passer, self._table_passer],
-            b'GEOM2' : [self._table_passer, self._table_passer],
-            b'GEOM3' : [self._table_passer, self._table_passer],
-            b'GEOM4' : [self._table_passer, self._table_passer],
+            b'GEOM1' : [self._table_passer, self._table_passer], # GEOM1-Geometry-related bulk data
+            b'GEOM2' : [self._table_passer, self._table_passer], # GEOM2-element connectivity and SPOINT-related data
+            b'GEOM3' : [self._table_passer, self._table_passer], # GEOM3-Static and thermal loads
+            b'GEOM4' : [self._table_passer, self._table_passer], # GEOM4-constraints, DOF membership entries, MPC, and R-type element data
 
             # superelements
             b'GEOM1S' : [self._table_passer, self._table_passer],  # GEOMx + superelement
@@ -743,7 +743,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'BGPDTS' : [self._table_passer, self._table_passer],
             b'BGPDTOLD' : [self._table_passer, self._table_passer],
 
-            b'PVT' : [self._table_passer, self._table_passer],
+            b'PVT' : [self._table_passer, self._table_passer], # PVT - Parameter Variable Table
             b'PVT0' : [self._table_passer, self._table_passer],  # user parameter value table
             b'DESTAB' : [self._table_passer, self._table_passer],
             b'TOLD' : [self._table_passer, self._table_passer],
@@ -753,6 +753,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'AEDISP' : [self._table_passer, self._table_passer], # matrix?
             #b'TOLB2' : [self._table_passer, self._table_passer], # matrix?
 
+            # EDT - element deformation, aerodynamics, p-element, divergence analysis, and iterative solver input (includes SET1 entries)
             b'EDT' : [self._table_passer, self._table_passer],
             b'EDTS' : [self._table_passer, self._table_passer],
 

@@ -324,6 +324,16 @@ class OUG(OP2Common):
         raise NotImplementedError()
 
     def _read_displacement(self, data, ndata, is_cid):
+        if self.table_name in [b'BOUGV1', b'OUGV1', b'OUGV2']:
+            result_name = 'displacements'
+        elif self.table_name in ['OUPV1']:
+            result_name = 'displacements'
+        elif self.table_name in [b'TOUGV1']:
+            result_name = 'temperatures'
+        else:
+            msg = 'displacements; table_name=%s' % self.table_name
+            raise NotImplementedError(msg)
+
         if self.thermal == 0:
             result_name = 'displacements'
             storage_obj = self.displacements

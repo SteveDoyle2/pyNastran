@@ -1,7 +1,7 @@
 #pylint: disable=W0201,W0223,R0901,R0902,R0904
 """
 Main OP2 class
-
+ftp://161.24.15.247/Nastran2011/seminar/SEC04-DMAP_MODULES.pdf
 
 Datablock	Type	Description
 EFMFSMS	Matrix	6 x 1 Total Effective mass matrix

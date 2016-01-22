@@ -85,6 +85,7 @@ class RealPlateArray(OES_Object):
         #print('nnodes_per_element[%s, %s] = %s' % (self.isubcase, self.element_type, nnodes_per_element))
         self.nnodes = nnodes_per_element
         #self.nelements //= nnodes_per_element
+        self.nelements //= self.ntimes
         self.itime = 0
         self.ielement = 0
         self.itotal = 0
