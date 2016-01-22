@@ -1527,7 +1527,7 @@ class OES(OP2Common):
                     n = nelements * 4 * self.num_wide
                     itotal = obj.ielement
                     itotali = obj.itotal + nelements
-                    itotalf = obj.itotal + nelements * nnodes_expected
+                    itotal2 = obj.itotal + nelements * nnodes_expected
                     obj._times[obj.itime] = dt
                     if obj.itime == 0:
                         # (eid_device, cid, abcd, nnodes)
@@ -1543,17 +1543,17 @@ class OES(OP2Common):
                         cids = ints1[:, 1]
                         #nids = ints1[:, 4]
                         assert eids.min() > 0, eids.min()
-                        obj.element_node[itotal:itotalf, 0] = repeat(eids, nnodes_expected)
+                        obj.element_node[itotal:itotal2, 0] = repeat(eids, nnodes_expected)
                         ints2 = ints1[:, 4:].reshape(nelements * nnodes_expected, 21)
                         grid_device = ints2[:, 0]#.reshape(nelements, nnodes_expected)
 
                         #print('%s-grid_device=%s' % (self.element_name, grid_device))
                         grid_device2 = repeat(grid_device, nnodes_expected)
                         try:
-                            obj.element_node[itotal:itotalf, 1] = grid_device
+                            obj.element_node[itotal:itotal2, 1] = grid_device
                         except ValueError:
                             msg = '%s; nnodes=%s\n' % (self.element_name, nnodes_expected)
-                            msg += 'itotal=%s itotalf=%s\n' % (itotal, itotalf)
+                            msg += 'itotal=%s itotal2=%s\n' % (itotal, itotal2)
                             msg += 'grid_device.shape=%s; size=%s\n' % (str(grid_device.shape), grid_device.size)
                             #msg += 'nids=%s' % nids
                             raise ValueError(msg)
@@ -1563,15 +1563,27 @@ class OES(OP2Common):
                     floats = fromstring(data, dtype=self.fdtype).reshape(nelements, numwide_real)[:, 4:]
                     # 1     9    15   2    10   16  3   11  17   8
                     #[oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, ovm]
-                    isave = [1, 9, 15, 2, 10, 16, 3, 11, 17, 8]
+                    #isave = [1, 9, 15, 2, 10, 16, 3, 11, 17, 8]
                     #(grid_device,
                         #sxx, sxy, s1, a1, a2, a3, pressure, svm,
                         #syy, syz, s2, b1, b2, b3,
                         #szz, sxz, s3, c1, c2, c3)
                     floats1 = floats.reshape(nelements * nnodes_expected, 21)#[:, 1:] # drop grid_device
 
-                    obj.data[obj.itime, itotal:itotalf, :] = floats1[:, isave]
-                    obj.itotal = itotalf
+                    # o1/o2/o3 is not max/mid/min.  They are not consistently ordered, so we force it.
+                    max_mid_min = np.vstack([
+                        floats1[:, 3],
+                        floats1[:, 11],
+                        floats1[:, 17],
+                    ]).T
+                    max_mid_min.sort(axis=1)
+                    assert max_mid_min.shape == (nelements * nnodes_expected, 3), max_mid_min.shape
+                    obj.data[obj.itime, itotal:itotal2, 6:9] = max_mid_min[:, [2, 1, 0]]
+
+                    #obj.data[obj.itime, itotal:itotal2, :] = floats1[:, isave]
+                    obj.data[obj.itime, itotal:itotal2, :6] = floats1[:, [1, 9, 15, 2, 10, 16]]
+                    obj.data[obj.itime, itotal:itotal2, 9] = floats1[:, 8]
+                    obj.itotal = itotal2
                     obj.ielement = itotali
                 else:
                     struct1 = Struct(b(self._endian + 'ii4si'))

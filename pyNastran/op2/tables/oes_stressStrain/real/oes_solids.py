@@ -110,7 +110,16 @@ class RealSolidArray(OES_Object):
 
         self.eType[self.ielement] = eType
         self.element_node[self.itotal, :] = [eid, 0]  # 0 is center
-        self.data[self.itime, self.itotal, :] = [oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, ovm]
+
+        omax_mid_min = [o1, o2, o3]
+        omin = min(omax_mid_min)
+        omax_mid_min.remove(omin)
+
+        omax = max(omax_mid_min)
+        omax_mid_min.remove(omax)
+
+        omid = omax_mid_min[0]
+        self.data[self.itime, self.itotal, :] = [oxx, oyy, ozz, txy, tyz, txz, omax, omid, omin, ovm]
         #self.data[self.itime, self.ielement, 0, :] = [oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, ovm]
 
         #print('element_cid[%i, :] = [%s, %s]' % (self.ielement, eid, cid))
@@ -148,10 +157,12 @@ class RealSolidArray(OES_Object):
                     (oxx2, oyy2, ozz2, txy2, tyz2, txz2, o12, o22, o32, ovm2) = t2
 
                     if not array_equal(t1, t2):
-                        msg += '(%s, %s)    (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)  (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)\n' % (
+                        msg += ('(%s, %s)    (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)\n'
+                                '%s      (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)\n' % (
                             eid, nid,
                             oxx1, oyy1, ozz1, txy1, tyz1, txz1, o11, o21, o31, ovm1,
-                            oxx2, oyy2, ozz2, txy2, tyz2, txz2, o12, o22, o32, ovm2)
+                            ' ' * (len(str(eid)) + len(str(nid)) + 2),
+                            oxx2, oyy2, ozz2, txy2, tyz2, txz2, o12, o22, o32, ovm2))
                         i += 1
                         if i > 10:
                             print(msg)
@@ -163,7 +174,15 @@ class RealSolidArray(OES_Object):
 
     def add_node_sort1(self, dt, eid, inode, node_id, oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, aCos, bCos, cCos, pressure, ovm):
         # skipping aCos, bCos, cCos, pressure
-        self.data[self.itime, self.itotal, :] = [oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, ovm]
+        omax_mid_min = [o1, o2, o3]
+        omin = min(omax_mid_min)
+        omax_mid_min.remove(omin)
+
+        omax = max(omax_mid_min)
+        omax_mid_min.remove(omax)
+
+        omid = omax_mid_min[0]
+        self.data[self.itime, self.itotal, :] = [oxx, oyy, ozz, txy, tyz, txz, omax, omid, omin, ovm]
         #print('data[%s, %s, :] = %s' % (self.itime, self.itotal, str(self.data[self.itime, self.itotal, :])))
 
         #self.data[self.itime, self.ielement-1, self.inode, :] = [oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, ovm]
@@ -268,7 +287,7 @@ class RealSolidArray(OES_Object):
                 # o1-max
                 # o2-mid
                 # o3-min
-                assert do1 >= do3 >= do2, 'o1 >= o2 >= o3; eid=%s o1=%e o2=%e o3=%e' % (deid, do1, do2, do3)  # TODO: remove once this is verified...then change the order in oes.py
+                assert do1 >= do2 >= do3, 'o1 >= o2 >= o3; eid=%s o1=%e o2=%e o3=%e' % (deid, do1, do2, do3)
                 [oxxi, oyyi, ozzi, txyi, tyzi, txzi, o1i, o2i, o3i, pi, ovmi] = write_floats_13e(
                     [doxx, doyy, dozz, dtxy, dtyz, dtxz, do1, do2, do3, dp, dovm])
 
@@ -496,7 +515,7 @@ class RealSolidStressArray(RealSolidArray, StressObject):
             von_mises = 'von_mises'
         else:
             von_mises = 'max_shear'
-        headers = ['oxx', 'oyy', 'ozz', 'txy', 'tyz', 'txz', 'o1', 'o2', 'o3', von_mises]
+        headers = ['oxx', 'oyy', 'ozz', 'txy', 'tyz', 'txz', 'omax', 'omid', 'omin', von_mises]
         return headers
 
 
@@ -510,7 +529,7 @@ class RealSolidStrainArray(RealSolidArray, StrainObject):
             von_mises = 'von_mises'
         else:
             von_mises = 'max_shear'
-        headers = ['exx', 'eyy', 'ezz', 'exy', 'eyz', 'exz', 'e1', 'e2', 'e3', von_mises]
+        headers = ['exx', 'eyy', 'ezz', 'exy', 'eyz', 'exz', 'emax', 'emid', 'emin', von_mises]
         return headers
 
 def _get_solid_msgs(self):

@@ -189,7 +189,9 @@ class OUG(OP2Common):
             #self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', 'i', 5, False)
             #self.data_names = self.apply_data_code_value('data_names', ['node_id'])
             #self.setNullNonlinearFactor()
-        if self.analysis_code == 2:  # real eigenvalues
+        if self.analysis_code == 1:  # static...because reasons.
+            self._analysis_code_fmt = 'i'
+        elif self.analysis_code == 2:  # real eigenvalues
             # mode number
             #self.mode = self.add_data_parameter(data, 'mode', 'i', 5)
             self._analysis_code_fmt = 'i'
@@ -277,6 +279,27 @@ class OUG(OP2Common):
                 msg = 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
                 raise AssertionError(msg)
             n = self._read_oug_psd(data, ndata)
+        elif self.table_name in [b'OUGRMS1', b'OUGRMS2']:
+            if self.table_code not in [1, 801]:
+                msg = 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
+                raise AssertionError(msg)
+            n = self._read_oug_rms(data, ndata)
+        elif self.table_name in [b'OUGNO1', b'OUGNO2']:
+            if self.table_code not in [1, 901]:
+                msg = 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
+                raise AssertionError(msg)
+            n = self._read_oug_no(data, ndata)
+        elif self.table_name in [b'OUGATO1', b'OUGATO2']:
+            if self.table_code not in [1]:
+                msg = 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
+                raise AssertionError(msg)
+            n = self._read_oug_ato(data, ndata)
+        elif self.table_name in [b'OUGCRM2']:
+            if self.table_code not in [1]:
+                msg = 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
+                raise AssertionError(msg)
+            n = self._not_implemented_or_skip(data, ndata)
+
         elif self.table_code == 1:   # Displacements
             if self.table_name not in [b'OUG1', b'BOUGV1', b'OUGV1', b'OUGV1PAT', b'TOUGV1',
                                        b'OUGV2',
@@ -324,12 +347,15 @@ class OUG(OP2Common):
         raise NotImplementedError()
 
     def _read_displacement(self, data, ndata, is_cid):
-        if self.table_name in [b'BOUGV1', b'OUGV1', b'OUGV2']:
+        if self.table_name in [b'BOUGV1', b'OUGV1', b'OUGV2', 'ROUGV1']:
             result_name = 'displacements'
+            assert self.thermal == 0, self.code_information()
         elif self.table_name in ['OUPV1']:
             result_name = 'displacements'
+            assert self.thermal == 0, self.code_information()
         elif self.table_name in [b'TOUGV1']:
             result_name = 'temperatures'
+            assert self.thermal == 0, self.code_information()
         else:
             msg = 'displacements; table_name=%s' % self.table_name
             raise NotImplementedError(msg)
@@ -452,6 +478,7 @@ class OUG(OP2Common):
         """
         if self.table_name in [b'OUGV1', b'OUGV2']:
             result_name = 'accelerations'
+            assert self.thermal == 0, self.code_information()
         elif self.table_name == b'OUPV1':
             assert self.thermal in [2, 4], self.thermal
             if self.thermal == 2:
@@ -522,6 +549,7 @@ class OUG(OP2Common):
         else:
             msg = 'eigenvectors; table_name=%s' % self.table_name
             raise NotImplementedError(msg)
+        assert self.thermal == 0, self.code_information()
 
         storage_obj = getattr(self, result_name)
         if self.thermal == 0:
@@ -587,7 +615,260 @@ class OUG(OP2Common):
                                      #RealDisplacementArray, ComplexDisplacementArray,
                                      #'node', random_code=self.random_code)
             else:
-                raise RuntimeError(self.code_information())
+                n = self._not_implemented_or_skip(data, ndata, self.code_information())
+                #raise RuntimeError(self.code_information())
+        #elif self.thermal == 1:
+            #result_name = 'accelerations'
+            #storage_obj = self.accelerations
+            #if self._results.is_not_saved(result_name):
+                #return ndata
+            #self._results._found_result(result_name)
+            #n = self._read_table(data, ndata, result_name, storage_obj,
+                                 #None, None,
+                                 #None, None, 'node', random_code=self.random_code)
+        #elif self.thermal == 2:
+            #result_name = 'acceleration_scaled_response_spectra_ABS'
+            #storage_obj = self.acceleration_scaled_response_spectra_ABS
+            #if self._results.is_not_saved(result_name):
+                #return ndata
+            #self._results._found_result(result_name)
+            #n = self._read_table(data, ndata, result_name, storage_obj,
+                                 #RealAcceleration, ComplexAcceleration,
+                                 #RealAccelerationArray, ComplexAccelerationArray,
+                                 #'node', random_code=self.random_code)
+            ##n = self._not_implemented_or_skip(data, ndata, msg='thermal=2')
+        #elif self.thermal == 4:
+            #result_name = 'acceleration_scaled_response_spectra_NRL'
+            #storage_obj = self.acceleration_scaled_response_spectra_NRL
+            #if self._results.is_not_saved(result_name):
+                #return ndata
+            #self._results._found_result(result_name)
+            #n = self._read_table(data, ndata, result_name, storage_obj,
+                                 #RealAcceleration, ComplexAcceleration,
+                                 #RealAccelerationArray, ComplexAccelerationArray,
+                                 #'node', random_code=self.random_code)
+            ##n = self._not_implemented_or_skip(data, ndata, msg='thermal=4')
+        else:
+            raise NotImplementedError(self.thermal)
+        return n
+
+    def _read_oug_rms(self, data, ndata):
+        """
+        table_code = 801  # /610/611
+        """
+        if self.thermal == 0:
+            if self.table_code in [801]:
+                result_name = 'displacementsRMS'
+                storage_obj = self.displacementsRMS
+                if self._results.is_not_saved(result_name):
+                    return ndata
+                self._results._found_result(result_name)
+                n = self._read_table_vectorized(
+                    data, ndata, result_name, storage_obj,
+                    RealDisplacementArray, ComplexDisplacementArray,
+                    'node', random_code=self.random_code)
+            #elif self.table_code == 610:
+                #result_name = 'velocitiesPSD'
+                #storage_obj = self.velocitiesPSD
+                #if self._results.is_not_saved(result_name):
+                    #return ndata
+                #self._results._found_result(result_name)
+                #n = self._read_table_vectorized(
+                    #data, ndata, result_name, storage_obj,
+                    #RealVelocityArray, ComplexVelocityArray,
+                    #'node', random_code=self.random_code)
+            #elif self.table_code == 611:
+                #result_name = 'accelerationsPSD'
+                #storage_obj = self.accelerationsPSD
+                #if self._results.is_not_saved(result_name):
+                    #return ndata
+                #n = self._read_table_vectorized(
+                    #data, ndata, result_name, storage_obj,
+                    #RealAccelerationArray, ComplexAccelerationArray,
+                    #'node', random_code=self.random_code)
+            #elif self.table_code in [1]:
+                #if self.format_code == 2:
+                    #self.format_code = 1
+                    #self.data['format_code'] = 1
+                #result_name = 'displacements'
+                #storage_obj = self.displacements
+                #if self._results.is_not_saved(result_name):
+                    #return ndata
+                #self._results._found_result(result_name)
+                #n = self._read_table_vectorized(data, ndata, result_name, storage_obj,
+                                     #RealDisplacementArray, ComplexDisplacementArray,
+                                     #'node', random_code=self.random_code)
+            else:
+                n = self._not_implemented_or_skip(data, ndata, self.code_information())
+                #raise RuntimeError(self.code_information())
+        #elif self.thermal == 1:
+            #result_name = 'accelerations'
+            #storage_obj = self.accelerations
+            #if self._results.is_not_saved(result_name):
+                #return ndata
+            #self._results._found_result(result_name)
+            #n = self._read_table(data, ndata, result_name, storage_obj,
+                                 #None, None,
+                                 #None, None, 'node', random_code=self.random_code)
+        #elif self.thermal == 2:
+            #result_name = 'acceleration_scaled_response_spectra_ABS'
+            #storage_obj = self.acceleration_scaled_response_spectra_ABS
+            #if self._results.is_not_saved(result_name):
+                #return ndata
+            #self._results._found_result(result_name)
+            #n = self._read_table(data, ndata, result_name, storage_obj,
+                                 #RealAcceleration, ComplexAcceleration,
+                                 #RealAccelerationArray, ComplexAccelerationArray,
+                                 #'node', random_code=self.random_code)
+            ##n = self._not_implemented_or_skip(data, ndata, msg='thermal=2')
+        #elif self.thermal == 4:
+            #result_name = 'acceleration_scaled_response_spectra_NRL'
+            #storage_obj = self.acceleration_scaled_response_spectra_NRL
+            #if self._results.is_not_saved(result_name):
+                #return ndata
+            #self._results._found_result(result_name)
+            #n = self._read_table(data, ndata, result_name, storage_obj,
+                                 #RealAcceleration, ComplexAcceleration,
+                                 #RealAccelerationArray, ComplexAccelerationArray,
+                                 #'node', random_code=self.random_code)
+            ##n = self._not_implemented_or_skip(data, ndata, msg='thermal=4')
+        else:
+            raise NotImplementedError(self.thermal)
+        return n
+
+    def _read_oug_no(self, data, ndata):
+        """
+        table_code = 901  # /610/611
+        """
+        if self.thermal == 0:
+            if self.table_code in [901]:
+                result_name = 'displacementsNO'
+                storage_obj = self.displacementsNO
+                if self._results.is_not_saved(result_name):
+                    return ndata
+                self._results._found_result(result_name)
+                n = self._read_table_vectorized(
+                    data, ndata, result_name, storage_obj,
+                    RealDisplacementArray, ComplexDisplacementArray,
+                    'node', random_code=self.random_code)
+            #elif self.table_code == 610:
+                #result_name = 'velocitiesPSD'
+                #storage_obj = self.velocitiesPSD
+                #if self._results.is_not_saved(result_name):
+                    #return ndata
+                #self._results._found_result(result_name)
+                #n = self._read_table_vectorized(
+                    #data, ndata, result_name, storage_obj,
+                    #RealVelocityArray, ComplexVelocityArray,
+                    #'node', random_code=self.random_code)
+            #elif self.table_code == 611:
+                #result_name = 'accelerationsPSD'
+                #storage_obj = self.accelerationsPSD
+                #if self._results.is_not_saved(result_name):
+                    #return ndata
+                #n = self._read_table_vectorized(
+                    #data, ndata, result_name, storage_obj,
+                    #RealAccelerationArray, ComplexAccelerationArray,
+                    #'node', random_code=self.random_code)
+            #elif self.table_code in [1]:
+                #if self.format_code == 2:
+                    #self.format_code = 1
+                    #self.data['format_code'] = 1
+                #result_name = 'displacements'
+                #storage_obj = self.displacements
+                #if self._results.is_not_saved(result_name):
+                    #return ndata
+                #self._results._found_result(result_name)
+                #n = self._read_table_vectorized(data, ndata, result_name, storage_obj,
+                                     #RealDisplacementArray, ComplexDisplacementArray,
+                                     #'node', random_code=self.random_code)
+            else:
+                n = self._not_implemented_or_skip(data, ndata, self.code_information())
+                #raise RuntimeError(self.code_information())
+        #elif self.thermal == 1:
+            #result_name = 'accelerations'
+            #storage_obj = self.accelerations
+            #if self._results.is_not_saved(result_name):
+                #return ndata
+            #self._results._found_result(result_name)
+            #n = self._read_table(data, ndata, result_name, storage_obj,
+                                 #None, None,
+                                 #None, None, 'node', random_code=self.random_code)
+        #elif self.thermal == 2:
+            #result_name = 'acceleration_scaled_response_spectra_ABS'
+            #storage_obj = self.acceleration_scaled_response_spectra_ABS
+            #if self._results.is_not_saved(result_name):
+                #return ndata
+            #self._results._found_result(result_name)
+            #n = self._read_table(data, ndata, result_name, storage_obj,
+                                 #RealAcceleration, ComplexAcceleration,
+                                 #RealAccelerationArray, ComplexAccelerationArray,
+                                 #'node', random_code=self.random_code)
+            ##n = self._not_implemented_or_skip(data, ndata, msg='thermal=2')
+        #elif self.thermal == 4:
+            #result_name = 'acceleration_scaled_response_spectra_NRL'
+            #storage_obj = self.acceleration_scaled_response_spectra_NRL
+            #if self._results.is_not_saved(result_name):
+                #return ndata
+            #self._results._found_result(result_name)
+            #n = self._read_table(data, ndata, result_name, storage_obj,
+                                 #RealAcceleration, ComplexAcceleration,
+                                 #RealAccelerationArray, ComplexAccelerationArray,
+                                 #'node', random_code=self.random_code)
+            ##n = self._not_implemented_or_skip(data, ndata, msg='thermal=4')
+        else:
+            raise NotImplementedError(self.thermal)
+        return n
+
+    def _read_oug_ato(self, data, ndata):
+        """
+        table_code = 901  # /610/611
+        """
+        if self.thermal == 0:
+            if self.table_code in []:
+                result_name = 'displacementsATO'
+                storage_obj = self.displacementsATO
+                if self._results.is_not_saved(result_name):
+                    return ndata
+                self._results._found_result(result_name)
+                n = self._read_table_vectorized(
+                    data, ndata, result_name, storage_obj,
+                    RealDisplacementArray, ComplexDisplacementArray,
+                    'node', random_code=self.random_code)
+            #elif self.table_code == 610:
+                #result_name = 'velocitiesPSD'
+                #storage_obj = self.velocitiesPSD
+                #if self._results.is_not_saved(result_name):
+                    #return ndata
+                #self._results._found_result(result_name)
+                #n = self._read_table_vectorized(
+                    #data, ndata, result_name, storage_obj,
+                    #RealVelocityArray, ComplexVelocityArray,
+                    #'node', random_code=self.random_code)
+            #elif self.table_code == 611:
+                #result_name = 'accelerationsPSD'
+                #storage_obj = self.accelerationsPSD
+                #if self._results.is_not_saved(result_name):
+                    #return ndata
+                #n = self._read_table_vectorized(
+                    #data, ndata, result_name, storage_obj,
+                    #RealAccelerationArray, ComplexAccelerationArray,
+                    #'node', random_code=self.random_code)
+            #elif self.table_code in [1]:
+                #if self.format_code == 2:
+                    #self.format_code = 1
+                    #self.data['format_code'] = 1
+                #result_name = 'displacements'
+                #storage_obj = self.displacements
+                #if self._results.is_not_saved(result_name):
+                    #return ndata
+                #self._results._found_result(result_name)
+                #n = self._read_table_vectorized(data, ndata, result_name, storage_obj,
+                                     #RealDisplacementArray, ComplexDisplacementArray,
+                                     #'node', random_code=self.random_code)
+            else:
+                n = self._not_implemented_or_skip(data, ndata, self.code_information())
+                #raise RuntimeError(self.code_information())
         #elif self.thermal == 1:
             #result_name = 'accelerations'
             #storage_obj = self.accelerations

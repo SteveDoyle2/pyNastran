@@ -153,7 +153,7 @@ MSC_RESULT_TABLES = [
 
     #----------------------
     # displacement/velocity/acceleration/eigenvector/temperature
-    # OUPV1 - Scaled Response Spectra
+    # OUPV1 - Scaled Response Spectra - displacements
     b'OUG1', b'OUGV1', b'BOUGV1', b'OUPV1', b'OUGV1PAT',
 
     # OUGV1PAT - Displacements in the basic coordinate system
@@ -538,50 +538,81 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OEF1X' : [self._read_oef1_3, self._read_oef1_4],  # element forces at intermediate stations
             b'OEF1'  : [self._read_oef1_3, self._read_oef1_4],  # element forces or heat flux
             b'HOEF1':  [self._read_oef1_3, self._read_oef1_4], # element heat flux
-            b'DOEF1' : [self._read_oef1_3, self._read_oef1_4],  # scaled response spectra - spc forces?
+            b'DOEF1' : [self._read_oef1_3, self._read_oef1_4],  # scaled response spectra - forces
 
             # off force
             b'OEF2'    : [self._table_passer, self._table_passer],  # element forces or heat flux
+
+            b'OEFATO2' : [self._table_passer, self._table_passer],
+            b'OEFCRM2' : [self._table_passer, self._table_passer],
+            b'OEFNO2' : [self._table_passer, self._table_passer],
+            b'OEFPSD2' : [self._table_passer, self._table_passer],
+            b'OEFRMS2' : [self._table_passer, self._table_passer],
             #=======================
             # OQG
             # spc forces
             # OQG1/OQGV1 - spc forces in the nodal frame
-            # OQP1 - scaled response spectra - spc forces
+            # OQP1 - scaled response spectra - spc-forces
             b'OQG1' : [self._read_oqg1_3, self._read_oqg_4],
             b'OQG2' : [self._read_oqg2_3, self._read_oqg_4],
 
             b'OQGV1' : [self._read_oqg1_3, self._read_oqg_4],
             b'OQGV2' : [self._read_oqg2_3, self._read_oqg_4],
 
-            'OQP1' : [self._read_oqg1_3, self._read_oqg_4],
-            'OQP2' : [self._read_oqg2_3, self._read_oqg_4],
+            b'OQP1' : [self._read_oqg1_3, self._read_oqg_4],
+            b'OQP2' : [self._read_oqg2_3, self._read_oqg_4],
 
-            # OQGM1     - mpc forces in the nodal frame
-            b'OQMG1' : [self._read_oqg1_3, self._read_oqg_4],
+            b'OQGATO2' : [self._read_oqg2_3, self._read_oqg_4],
+            b'OQGCRM2' : [self._read_oqg2_3, self._read_oqg_4],
+            b'OQGNO2'  : [self._read_oqg2_3, self._read_oqg_4],
+            b'OQGPSD2' : [self._read_oqg2_3, self._read_oqg_4],
+            b'OQGRMS2' : [self._read_oqg2_3, self._read_oqg_4],
+
+            #=======================
+            # MPC Forces
+            # OQGM1 - mpc forces in the nodal frame
+            b'OQMG1'   : [self._read_oqg1_3, self._read_oqg_4],
+            b'OQMPSD2' : [self._read_oqg2_3, self._read_oqg_4],
+            b'OQMATO2' : [self._read_oqg2_3, self._read_oqg_4],
+            b'OQMRMS2' : [self._read_oqg2_3, self._read_oqg_4],
+            b'OQMNO2'  : [self._read_oqg2_3, self._read_oqg_4],
+            b'OQMCRM2' : [self._read_oqg2_3, self._read_oqg_4],
 
             #=======================
             # OPG
             # applied loads
             b'OPG1'  : [self._read_opg1_3, self._read_opg1_4],  # applied loads in the nodal frame
+            b'OPG2' : [self._table_passer, self._table_passer],
+
             b'OPGV1' : [self._read_opg1_3, self._read_opg1_4],  # solution set applied loads?
             b'OPNL1' : [self._read_opg1_3, self._read_opg1_4],  # nonlinear loads
 
+            b'OPGPSD2' : [self._table_passer, self._table_passer],
+            b'OPGATO2' : [self._table_passer, self._table_passer],
+            b'OPGRMS2' : [self._table_passer, self._table_passer],
+            b'OPGNO2'  : [self._table_passer, self._table_passer],
+            b'OPGCRM2' : [self._table_passer, self._table_passer],
+            #=======================
             # OGPFB1
             # grid point forces
             b'OGPFB1' : [self._read_ogpf1_3, self._read_ogpf1_4],  # grid point forces
 
+            #=======================
             # ONR/OEE
             # strain energy density
+            b'ONRGY'  : [self._read_onr1_3, self._read_onr1_4],
             b'ONRGY1' : [self._read_onr1_3, self._read_onr1_4],  # strain energy density
             #=======================
             # OES
             # stress
-            b'OES1X1'  : [self._read_oes1_3, self._read_oes1_4],  # stress - nonlinear elements
-            b'OES1'    : [self._read_oes1_3, self._read_oes1_4],  # stress - linear only
-            b'OES1X'   : [self._read_oes1_3, self._read_oes1_4],  # element stresses at intermediate stations & nonlinear stresses
-            b'OES1C'   : [self._read_oes1_3, self._read_oes1_4],  # stress - composite
-            b'OESCP'   : [self._read_oes1_3, self._read_oes1_4],
-            b'OESRT'   : [self._read_oes1_3, self._read_oes1_4],
+            # OES1C - Table of composite element stresses or strains in SORT1 format
+            # OESRT - Table of composite element ply strength ratio. Output by SDRCOMP
+            b'OES1X1' : [self._read_oes1_3, self._read_oes1_4],  # stress - nonlinear elements
+            b'OES1'   : [self._read_oes1_3, self._read_oes1_4],  # stress - linear only
+            b'OES1X'  : [self._read_oes1_3, self._read_oes1_4],  # element stresses at intermediate stations & nonlinear stresses
+            b'OES1C'  : [self._read_oes1_3, self._read_oes1_4],  # stress - composite
+            b'OESCP'  : [self._read_oes1_3, self._read_oes1_4],
+            b'OESRT'  : [self._read_oes1_3, self._read_oes1_4], # ply strength ratio
 
             #b'OSTRRMS1' : [self._read_oes1_3, self._read_oes1_4], # isat_random
             #b'OSTRNO1' : [self._read_oes1_3, self._read_oes1_4],  # isat_random
@@ -591,18 +622,41 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
 
             # special nonlinear tables
+            # OESNLBR - Slideline stresses
+            # OESNLXD - Nonlinear transient stresses
+            # OESNLXR - Nonlinear stress
+            #           Table of nonlinear element stresses in SORT1 format and appended for all subcases
             b'OESNLXR' : [self._read_oes1_3, self._read_oes1_4],  # nonlinear stresses
             b'OESNLXD' : [self._read_oes1_3, self._read_oes1_4],  # nonlinear transient stresses
             b'OESNLBR' : [self._read_oes1_3, self._read_oes1_4],
             b'OESNL1X' : [self._read_oes1_3, self._read_oes1_4],
 
+            b'OESNLXR2' : [self._table_passer, self._table_passer],
+            b'OESNLBR2' : [self._table_passer, self._table_passer],
+
+            # off stress
+            b'OES2'    : [self._table_passer, self._table_passer],  # stress - linear only
+            b'OESNO1'  : [self._table_passer, self._table_passer],
+            b'OESRMS1' : [self._table_passer, self._table_passer],
+            b'OESNO1'  : [self._table_passer, self._table_passer],
+
+            b'OESATO2' : [self._table_passer, self._table_passer],
+            b'OESCRM2' : [self._table_passer, self._table_passer],
+            b'OESNO2'  : [self._table_passer, self._table_passer],
+            b'OESPSD2' : [self._table_passer, self._table_passer],
+            b'OESRMS2' : [self._table_passer, self._table_passer],
+            #=======================
             # strain
             b'OSTR1X'  : [self._read_oes1_3, self._read_ostr1_4],  # strain - isotropic
             b'OSTR1C'  : [self._read_oes1_3, self._read_ostr1_4],  # strain - composite
             b'OESTRCP' : [self._read_oes1_3, self._read_ostr1_4],
 
-            # off stress/strain
-            b'OES2'    : [self._table_passer, self._table_passer],  # stress - linear only
+            # off strain
+            b'OSTRPSD2' : [self._table_passer, self._table_passer],
+            b'OSTRATO2' : [self._table_passer, self._table_passer],
+            b'OSTRRMS2' : [self._table_passer, self._table_passer],
+            b'OSTRNO2'  : [self._table_passer, self._table_passer],
+            b'OSTRCRM2' : [self._table_passer, self._table_passer],
             #=======================
             # OUG
             # displacement/velocity/acceleration/eigenvector/temperature
@@ -616,37 +670,39 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
             b'OUGV2'   : [self._read_oug2_3, self._read_oug_4],  # displacements in nodal frame
 
-            b'OUGRMS1' : [self._table_passer, self._table_passer],
-            b'OUGNO1' : [self._table_passer, self._table_passer],
+            b'OUGRMS1' : [self._read_oug1_3, self._read_oug_4],
+            b'OUGNO1'  : [self._read_oug1_3, self._read_oug_4],
+
+            b'OUGATO2' : [self._read_oug2_3, self._read_oug_4],
+            b'OUGCRM2' : [self._read_oug2_3, self._read_oug_4],
+            b'OUGNO2'  : [self._read_oug2_3, self._read_oug_4],
+            b'OUGPSD2' : [self._read_oug2_3, self._read_oug_4], # done
+            b'OUGRMS2' : [self._read_oug2_3, self._read_oug_4],
 
             #=======================
-            # ????
-            b'OESNO1' : [self._table_passer, self._table_passer],
-            b'OESRMS1' : [self._table_passer, self._table_passer],
-            b'OESNO1' : [self._table_passer, self._table_passer],
-            b'OPG2' : [self._table_passer, self._table_passer],
-
-            b'ONRGY' : [self._table_passer, self._table_passer],
-            b'OQGGF1' : [self._table_passer, self._table_passer],
-            b'OBG1' : [self._table_passer, self._table_passer],
-
-            b'OEF1MX' : [self._table_passer, self._table_passer],
+            # extreme values of the respective table
             b'OUGV1MX' : [self._table_passer, self._table_passer],
-            b'OQGCF1' : [self._table_passer, self._table_passer],
-
-            b'OSPDS1' : [self._table_passer, self._table_passer],
-            b'OSPDSI1' : [self._table_passer, self._table_passer],
-
-            'OBC2' : [self._table_passer, self._table_passer],
-            b'OSPDSI2' : [self._table_passer, self._table_passer],
-            b'OSPDS2' : [self._table_passer, self._table_passer],
-            b'OQGCF2' : [self._table_passer, self._table_passer],
-            b'OQGGF2' : [self._table_passer, self._table_passer],
+            b'OEF1MX' : [self._table_passer, self._table_passer],
             b'OES1MX' : [self._table_passer, self._table_passer],
 
-            b'OESNLXR2' : [self._table_passer, self._table_passer],
-            b'OESNLBR2' : [self._table_passer, self._table_passer],
+            #=======================
+            # contact
+            b'OQGCF1' : [self._table_passer, self._table_passer], # Contact force at grid point.
+            b'OQGCF2' : [self._table_passer, self._table_passer], # Contact force at grid point.
 
+            b'OSPDS1' : [self._table_passer, self._table_passer],  # Final separation distance.
+            b'OSPDS2' : [self._table_passer, self._table_passer],
+
+            b'OSPDSI1' : [self._table_passer, self._table_passer], # Initial separation distance.
+            b'OSPDSI2' : [self._table_passer, self._table_passer], # Output contact separation distance results.
+
+            b'OBC1' : [self._table_passer, self._table_passer],
+            b'OBC2' : [self._table_passer, self._table_passer], # Contact pressures and tractions at grid points.
+
+            b'OBG1' : [self._table_passer, self._table_passer], # Glue normal and tangential tractions at grid point in basic coordinate system
+
+            b'OQGGF1' : [self._table_passer, self._table_passer], # Glue forces at grid point in basic coordinate system
+            b'OQGGF2' : [self._table_passer, self._table_passer],
             #=======================
             # OGPWG
             # grid point weight
@@ -762,52 +818,22 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'PERF' : [self._table_passer, self._table_passer],
             b'VIEWTB' : [self._table_passer, self._table_passer],   # view elements
 
+            # DSCMCOL - Correlation table for normalized design sensitivity coefficient matrix. Output by DSTAP2.
+            # DBCOPT - Design optimization history table for
             b'CONTACT' : [self._table_passer, self._table_passer],
             b'CONTACTS' : [self._table_passer, self._table_passer],
             b'OEKE1' : [self._table_passer, self._table_passer],
-            b'OBC1' : [self._table_passer, self._table_passer],
             b'DSCMCOL' : [self._table_passer, self._table_passer],
             b'DBCOPT' : [self._table_passer, self._table_passer],
             #b'FRL0': [self._table_passer, self._table_passer],  # frequency response list
 
             #==================================
-            # works
-            #b'OUGATO2' : [self._table_passer, self._table_passer],
-            #b'OUGCRM2' : [self._table_passer, self._table_passer],
-            #b'OUGNO2' : [self._table_passer, self._table_passer],
-            #b'OUGPSD2' : [self._table_passer, self._table_passer],
-            #b'OUGRMS2' : [self._table_passer, self._table_passer],  # rms
             # new
-            b'OUGATO2' : [self._read_oug2_3, self._read_oug_4],
-            b'OUGCRM2' : [self._read_oug2_3, self._read_oug_4],
-            b'OUGNO2' : [self._read_oug2_3, self._read_oug_4],
-            b'OUGPSD2' : [self._read_oug2_3, self._read_oug_4], # done
-            b'OUGRMS2' : [self._read_oug2_3, self._read_oug_4],
-
-            b'OQGATO2' : [self._table_passer, self._table_passer],
-            b'OQGCRM2' : [self._table_passer, self._table_passer],
-
-            b'OQGNO2' : [self._table_passer, self._table_passer],
-            b'OQGPSD2' : [self._read_oqg2_3, self._read_oqg_4],
-            b'OQGRMS2' : [self._table_passer, self._table_passer],
-
             b'OFMPF2M' : [self._table_passer, self._table_passer],
             b'OLMPF2M' : [self._table_passer, self._table_passer],
             b'OPMPF2M' : [self._table_passer, self._table_passer],
             b'OSMPF2M' : [self._table_passer, self._table_passer],
             b'OGPMPF2M' : [self._table_passer, self._table_passer],
-
-            b'OEFATO2' : [self._table_passer, self._table_passer],
-            b'OEFCRM2' : [self._table_passer, self._table_passer],
-            b'OEFNO2' : [self._table_passer, self._table_passer],
-            b'OEFPSD2' : [self._table_passer, self._table_passer],
-            b'OEFRMS2' : [self._table_passer, self._table_passer],
-
-            b'OESATO2' : [self._table_passer, self._table_passer],
-            b'OESCRM2' : [self._table_passer, self._table_passer],
-            b'OESNO2' : [self._table_passer, self._table_passer],
-            b'OESPSD2' : [self._table_passer, self._table_passer],
-            b'OESRMS2' : [self._table_passer, self._table_passer],
 
             b'OVGATO2' : [self._table_passer, self._table_passer],
             b'OVGCRM2' : [self._table_passer, self._table_passer],
@@ -832,25 +858,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OAGRMS2' : [self._table_passer, self._table_passer],
             b'OAGNO2' : [self._table_passer, self._table_passer],
             b'OAGCRM2' : [self._table_passer, self._table_passer],
-
-            b'OPGPSD2' : [self._table_passer, self._table_passer],
-            b'OPGATO2' : [self._table_passer, self._table_passer],
-            b'OPGRMS2' : [self._table_passer, self._table_passer],
-            b'OPGNO2' : [self._table_passer, self._table_passer],
-            b'OPGCRM2' : [self._table_passer, self._table_passer],
-
-            b'OSTRPSD2' : [self._table_passer, self._table_passer],
-            b'OSTRATO2' : [self._table_passer, self._table_passer],
-            b'OSTRRMS2' : [self._table_passer, self._table_passer],
-            b'OSTRNO2' : [self._table_passer, self._table_passer],
-            b'OSTRCRM2' : [self._table_passer, self._table_passer],
-
-            b'OQMPSD2' : [self._read_oqg2_3, self._read_oqg_4],
-            #b'OQMPSD2' : [self._table_passer, self._table_passer],
-            b'OQMATO2' : [self._table_passer, self._table_passer],
-            b'OQMRMS2' : [self._table_passer, self._table_passer],
-            b'OQMNO2' : [self._table_passer, self._table_passer],
-            b'OQMCRM2' : [self._table_passer, self._table_passer],
         }
         return table_mapper
 
