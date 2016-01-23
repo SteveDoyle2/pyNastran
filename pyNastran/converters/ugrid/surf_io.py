@@ -141,27 +141,7 @@ class SurfIO(object):
         pass
 
     def _load_surf_results(self, openfoam_filename, dirname):
-        model = Cart3DReader(log=self.log, debug=False)
-        #self.model_type = model.model_type
-        #(nodes, elements, regions, loads) = model.read_cart3d(cart3dFileName)
-
-        model.infilename = cart3d_filename
-        if is_binary(infilename):
-            model.infile = open(cart3d_filename, 'rb')
-            (model.nPoints, model.nElements) = self.read_header_binary()
-            points = model.read_points_binary(self.nPoints)
-            elements = model.read_elements_binary(self.nElements)
-            regions = model.read_regions_binary(self.nElements)
-            #loads = {}
-        else:
-            model.infile = open(cart3d_filename, 'r')
-            model.read_header_ascii()
-            points = model.read_points_ascii(bypass=True)
-            elements = model.read_elements_ascii(bypass=True)
-            regions = model.read_regions_ascii(bypass=True)
-            loads = model.read_results_ascii(0, model.infile, result_names=result_names)
-        self.load_cart3d_geometry(cart3d_filename, dirname)
-
+        raise NotImplementedError()
 
     def _fill_surf_case(self, surf_filename, cases, ID, nnodes, nelements, model):
         base, ext = os.path.splitext(surf_filename)

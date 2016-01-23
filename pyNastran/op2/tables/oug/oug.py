@@ -347,15 +347,32 @@ class OUG(OP2Common):
         raise NotImplementedError()
 
     def _read_displacement(self, data, ndata, is_cid):
-        if self.table_name in [b'BOUGV1', b'OUGV1', b'OUGV2', 'ROUGV1']:
-            result_name = 'displacements'
-            assert self.thermal == 0, self.code_information()
-        elif self.table_name in ['OUPV1']:
-            result_name = 'displacements'
-            assert self.thermal == 0, self.code_information()
+        if self.table_name in [b'BOUGV1', b'OUGV1', b'OUGV2', b'ROUGV1']:
+            assert self.thermal in [0, 1], self.code_information()
+            if self.thermal == 0:
+                result_name = 'displacements'
+            elif self.thermal == 1:
+                result_name = 'temperatures'
+            else:
+                msg = 'displacements; table_name=%s' % self.table_name
+                raise NotImplementedError(msg)
+
+        elif self.table_name in [b'OUPV1']:
+            result_name = 'temperatures'
+            assert self.thermal in [2, 4, 8], self.code_information()
+            if self.thermal == 2:
+                result_name = 'displacement_scaled_response_spectra_ABS'
+            elif self.thermal == 4:
+                result_name = 'displacement_scaled_response_spectra_SRSS'
+            elif self.thermal == 8:
+                result_name = 'displacement_scaled_response_spectra_NRL'
+            else:
+                msg = 'displacements; table_name=%s' % self.table_name
+                raise NotImplementedError(msg)
+
         elif self.table_name in [b'TOUGV1']:
             result_name = 'temperatures'
-            assert self.thermal == 0, self.code_information()
+            assert self.thermal == 1, self.code_information()
         else:
             msg = 'displacements; table_name=%s' % self.table_name
             raise NotImplementedError(msg)

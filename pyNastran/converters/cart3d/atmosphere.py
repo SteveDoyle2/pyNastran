@@ -165,7 +165,7 @@ def atm_dynamic_pressure(alt, Mach, SI=False, debug=False):
 
     Returns
     -------
-    dynamicPressure : float
+    dynamic_Pressure : float
         Returns dynamic pressure in lb/ft^2 or Pa (SI).
 
     The common method that requires many calculations...

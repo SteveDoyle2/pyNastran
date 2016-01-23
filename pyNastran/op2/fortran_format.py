@@ -58,11 +58,19 @@ class FortranFormat(object):
             i - int
             f - float
             s - string
+            d - double (float; 8 bytes)
+
+            l - long (int; 4 bytes)
+            q - long long (int; int; 8 bytes)
+            I - unsigned int (int; 4 bytes)
+            L - unsigned long (int; 4 bytes)
+            Q - unsigned long long (int; 8 bytes)
         endian : str; default=None -> auto determined somewhere else in the code
             the big/little endian {>, <}
 
         .. warning :: 's' is apparently not Python 3 friendly
         """
+        assert endian is not None
         return self.write_data(sys.stdout, data, types=types, endian=endian)
 
     def write_data(self, f, data, types='ifs', endian=None):
@@ -79,6 +87,13 @@ class FortranFormat(object):
             i - int
             f - float
             s - string
+            d - double (float; 8 bytes)
+
+            l - long (int; 4 bytes)
+            q - long long (int; int; 8 bytes)
+            I - unsigned int (int; 4 bytes)
+            L - unsigned long (int; 4 bytes)
+            Q - unsigned long long (int; 8 bytes)
         endian : str; default=None -> auto determined somewhere else in the code
             the big/little endian {>, <}
         """
@@ -92,6 +107,7 @@ class FortranFormat(object):
 
         if endian is None:
             endian = self._endian
+        assert endian is not None, endian
 
         if 's' in types:
             strings = unpack(b'%s%is' % (endian, n), data)
@@ -102,6 +118,9 @@ class FortranFormat(object):
         if 'f' in types:
             floats = unpack(b'%s%if' % (endian, nints), data)
             f.write("floats  = %s\n" % str(floats))
+        if 'd' in types:
+            doubles = unpack(b'%s%id' % (endian, ndoubles), data[:ndoubles*8])
+            f.write("doubles  = %s\n" % str(doubles))
 
         if 'l' in types:
             longs = unpack(b'%s%il' % (endian, nints), data)

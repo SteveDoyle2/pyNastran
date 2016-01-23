@@ -3,26 +3,26 @@ from six.moves import range
 
 from numpy import zeros
 
-from pyNastran.converters.cart3d.cart3d_reader import Cart3DReader
+from pyNastran.converters.cart3d.cart3d import Cart3D
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 
-class Cart3d_Mesher(Cart3DReader):
+class Cart3d_Mesher(Cart3D):
     def __init__(self, log=None, debug=False):
-        Cart3DReader.__init__(self, log=log, debug=debug)
+        Cart3D.__init__(self, log=log, debug=debug)
 
     def read_cart3d(self, cart3d_filename):
-        nodes, elements, regions, loads = Cart3DReader.read_cart3d(self, cart3d_filename)
-        self.nodes = nodes
-        self.elements = elements - 1
+        Cart3D.read_cart3d(self, cart3d_filename)
+        #self.nodes = nodes
+        #self.elements = elements - 1
 
     def _get_segment(self, a, eid, segments):
         if a in segments:
-            aElems = segments[a]
-            i = aElems.index(eid)
-            aElems.pop(i)
-            eidA = aElems[0]
-            return eidA
+            a_elems = segments[a]
+            i = a_elems.index(eid)
+            a_elems.pop(i)
+            eid_a = a_elems[0]
+            return eid_a
         return None
 
     def _get_segments(self, nodes, elements):

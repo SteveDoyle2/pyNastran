@@ -3,7 +3,7 @@ import os
 import sys
 
 from pyNastran.converters.panair.panairGridPatch import PanairGridHelper
-from pyNastran.converters.cart3d.cart3d_reader import Cart3dReader
+from pyNastran.converters.cart3d.cart3d_reader import Cart3d
 
 def load_panair_file(fname='panair.in'):
     if not os.path.exists(fname):
@@ -52,10 +52,10 @@ def load_panair_file(fname='panair.in'):
 if 0:
     title = 'simple wing-body with composite panel. (run with a502i)'
     alphas = 4.
-    alphaCompressibility = 4.
+    alpha_compressibility = 4.
 
     beta = 0.
-    betaCompressibility = 0.
+    beta_compressibility = 0.
     xySym = True
     yzSym = False
     mach = 0.6
@@ -146,98 +146,104 @@ class Cart3dToPanair(PanairGridHelper):
         return pointOut
 
     def run(self, cart3dGeom, oname, varmap):
-            f = open(oname, 'wb')
-            print("oname", oname)
-            self.title = varmap['title']
-            self.mach = varmap['mach']
-            self.ncases = 1
-            self.alphaC = varmap['alphaCompressibility']
-            self.alphas = [varmap['alpha']]
+        f = open(oname, 'wb')
+        print("oname", oname)
+        self.title = varmap['title']
+        self.mach = varmap['mach']
+        self.ncases = 1
+        self.alphaC = varmap['alpha_compressibility']
+        self.alphas = [varmap['alpha']]
 
-            self.betaC = varmap['betaCompressibility']
-            self.betas = [varmap['beta']]
-            self.xref = varmap['Xref']
-            self.yref = varmap['Yref']
-            self.zref = varmap['Zref']
-            self.sref = varmap['Sref']
-            self.bref = varmap['Bref']
-            self.cref = varmap['Cref']
-            self.dref = varmap['Dref']
-            self.isEnd = True
-            msg = ''
-            msg += self.write_title()
-            msg += self.write_mach()
-            msg += self.write_cases()
-            msg += self.write_alphas()
-            msg += self.write_betas()
-            msg += self.write_reference_quantities()
-            msg += self.printout
-            f.write(msg)
+        self.betaC = varmap['beta_compressibility']
+        self.betas = [varmap['beta']]
+        self.xref = varmap['Xref']
+        self.yref = varmap['Yref']
+        self.zref = varmap['Zref']
+        self.sref = varmap['Sref']
+        self.bref = varmap['Bref']
+        self.cref = varmap['Cref']
+        self.dref = varmap['Dref']
+        self.isEnd = True
+        msg = ''
+        msg += self.write_title()
+        msg += self.write_mach()
+        msg += self.write_cases()
+        msg += self.write_alphas()
+        msg += self.write_betas()
+        msg += self.write_reference_quantities()
+        msg += self.printout
+        f.write(msg)
 
-            BCMap = varmap['bcMap']
+        BCMap = varmap['bcMap']
 
-            cart = Cart3dReader()
-            (points, elements, regions, loads) = cart.read_cart3d(cart3dGeom)
+        cart = Cart3d()
+        cart.read_cart3d(cart3dGeom)
+        points = cart.points
+        elements = cart.elements
+        regions = cart.regions
+        #(points, elements, regions, loads) =
 
-            #for pid, point in sorted(iteritems(points)):
-                #if pid<85:
-                #    print(pid,point)
-                #pass
-            region_old = 9
-            for eid, element in sorted(iteritems(elements)):
-                header = ''
-                region = regions[eid]
-                if region not in BCMap:
-                    #continue
-                    msg = 'regionID=%s is not defined in the BCMap' % region
-                    raise RuntimeError(msg)
+        #for pid, point in sorted(iteritems(points)):
+            #if pid<85:
+            #    print(pid,point)
+            #pass
+        region_old = 9
+        for eid, element in sorted(iteritems(elements)):
+            header = ''
+            region = regions[eid]
+            if region not in BCMap:
+                #continue
+                msg = 'regionID=%s is not defined in the BCMap' % region
+                raise RuntimeError(msg)
 
-                (kt, cpNorm) = BCMap[region]
-                if cpNorm is None:
-                    cpNorm = ''
-                if region != region_old:
-                    header += '=region %s\n' % region
-                region_old = region
+            (kt, cp_norm) = BCMap[region]
+            if cp_norm is None:
+                cp_norm = ''
+            if region != region_old:
+                header += '=region %s\n' % region
+            region_old = region
 
-                #print("****")
-                #print("element =",element)
-                #print("region  =",region)
-                #if eid==2:
-                   #print("points = ",points)
-                nid1, nid2, nid3 = element
-                n1, n2, n3 = points[nid1], points[nid2], points[nid3]
-                #print("n1=%s" % n1)
-                #print("n2=%s" % n2)
-                #print("n3=%s" % n3)
-                #p1 =
-                #sys.exit()
-
-                netName = 'e%s' % eid
-
-                header += '$points - surface panels\n'
-
-                header += '%-10s%-10s\n' % ('1.', cpNorm)  # nNetworks is 1
-                header += '%-10s\n' % sInt(kt)
-                header += '%-10s%-10s%50s%-10s\n' % (
-                    sInt(2), sInt(2), '', netName)
-                pointsOut = self.write_points(n1, n2)
-                pointsOut += self.write_points(n3, n3)
-                f.write(header + pointsOut)
-                #break
-            #print(points)
-            #print(outfilename)
-
-            f.write('$end of panair inputs\n')
+            #print("****")
+            #print("element =",element)
+            #print("region  =",region)
+            #if eid==2:
+               #print("points = ",points)
+            nid1, nid2, nid3 = element
+            n1, n2, n3 = points[nid1], points[nid2], points[nid3]
+            #print("n1=%s" % n1)
+            #print("n2=%s" % n2)
+            #print("n3=%s" % n3)
+            #p1 =
             #sys.exit()
 
+            net_name = 'e%s' % eid
+
+            header += '$points - surface panels\n'
+
+            header += '%-10s%-10s\n' % ('1.', cp_norm)  # nNetworks is 1
+            header += '%-10s\n' % sInt(kt)
+            header += '%-10s%-10s%50s%-10s\n' % (
+                sInt(2), sInt(2), '', net_name)
+            points_out = self.write_points(n1, n2)
+            points_out += self.write_points(n3, n3)
+            f.write(header + points_out)
+            #break
+        #print(points)
+        #print(outfilename)
+
+        f.write('$end of panair inputs\n')
+        #sys.exit()
+
+def main():
+    panair_in = sys.argv[1]
+    cart3d_geom_filename = sys.argv[2]
+    outfilename = sys.argv[3]
+    varmap = load_panair_file(panair_in)
+    #cart3d_geom_filename = os.path.join('models', 'threePlugs.tri')
+    #cart3d_geom_filename  = os.path.join('models','spike.a.tri')
+    #outfilename = os.path.join('models', 'panair.inp')
+    Cart3dToPanair(cart3d_geom_filename, outfilename, varmap)
+    print("done...")
 
 if __name__ == '__main__':  # pragma: no cover
-    panairIn = sys.argv[1]
-    cart3dGeom = sys.argv[2]
-    outfilename = sys.argv[3]
-    varmap = load_panair_file(panairIn)
-    #cart3dGeom = os.path.join('models', 'threePlugs.tri')
-    #cart3dGeom  = os.path.join('models','spike.a.tri')
-    #outfilename = os.path.join('models', 'panair.inp')
-    Cart3dToPanair(cart3dGeom, outfilename, varmap)
-    print("done...")
+    main()

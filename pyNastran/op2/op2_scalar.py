@@ -1043,14 +1043,21 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             #: the OP2 file object
             self.f = open(self.op2_filename, 'rb')
             self._endian = None
-            flag_data = self.f.read(4)
+            flag_data = self.f.read(20)
             self.f.seek(0)
 
-            if unpack(b'>i', flag_data)[0] == 4:
+            if unpack(b'>5i', flag_data)[0] == 4:
                 self._endian = '>'
-            elif unpack(b'<i', flag_data)[0] == 4:
+            elif unpack(b'<5i', flag_data)[0] == 4:
                 self._endian = '<'
+            #elif unpack(b'<ii', flag_data)[0] == 4:
+                #self._endian = '<'
             else:
+                # Matrices from test show
+                # (24, 10, 10, 6, 2) before the Matrix Name...
+                #self.show_data(flag_data, types='iqlfsld', endian='<')
+                #print('----------')
+                #self.show_data(flag_data, types='iqlfsld', endian='>')
                 raise FatalError('cannot determine endian')
             if PY2:
                 self._endian = b(self._endian)

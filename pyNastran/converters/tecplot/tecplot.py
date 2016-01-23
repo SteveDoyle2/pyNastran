@@ -380,12 +380,6 @@ class Tecplot(FortranFormat):
         self.xyz = xyz
         self.results = results
 
-    #def show(self, n, types='', endian=''):
-        #pass
-
-    #def show_data(self, data, types='', endian=''):
-        #pass
-
     @property
     def nnodes(self):
         return self.xyz.shape[0]

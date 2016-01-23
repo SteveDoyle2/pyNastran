@@ -164,8 +164,7 @@ class ADB_IO(object):
         #pass
 
     #def load_adb_results(self, cart3d_filename, dirname):
-        #model = Cart3DReader(log=self.log, debug=False)
-        #self.load_cart3d_geometry(cart3d_filename, dirname)
+        #raise NotImplementedError()
 
 
     def _fill_adb_case(self, cases, ID, model, plot_wakes=False):

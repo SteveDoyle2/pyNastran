@@ -9,7 +9,7 @@ from numpy.linalg import inv
 from pyNastran.bdf.bdf import BDF
 from pyNastran.op2.op2 import OP2
 from pyNastran.f06.f06 import F06
-from pyNastran.converters.cart3d.cart3d_reader import Cart3DReader
+from pyNastran.converters.cart3d.cart3d_reader import Cart3D
 #from pyNastran.applications.cart3d_nastran_fsi.mathFunctions import printMatrix
 
 from pyNastran.utils.log import get_logger
@@ -42,23 +42,23 @@ def read_f06(f06_filename, isubcase=1):
     return displacment_obj.translations
 
 
-def read_half_cart3d_points(cfdGridFile):
+def read_half_cart3d_points(cfd_grid_file):
     """return half model points to shrink xK matrix"""
-    cart = Cart3DReader()
-    points, elements, regions, loads = cart.read_cart3d(cfdGridFile)
-    points, elements, regions, loads = cart.make_half_model(points, elements, regions, loads)
+    cart = Cart3D()
+    cart.read_cart3d(cfd_grid_file)
+    points, elements, regions, loads = cart.make_half_model()
     return points
 
 
-def write_new_cart3d_mesh(cfdGridFile, cfdGridFile2, wA):
+def write_new_cart3d_mesh(cfd_grid_file, cfdGridFile2, wA):
     """takes in half model wA, and baseline cart3d model, updates full model grids"""
     log.info("---starting write_new_cart3d_mesh---")
 
     # make half model
-    cart = Cart3DReader()
+    cart = Cart3D()
     result_names = ['Cp']
-    points, elements, regions, loads = cart.read_cart3d(cfdGridFile, result_names=result_names) # reading full model
-    points, elements, regions, loads = cart.make_half_model(points, elements, regions, loads)
+    cart.read_cart3d(cfd_grid_file, result_names=result_names) # reading full model
+    points, elements, regions, loads = cart.make_half_model()
 
     # adjusting points
     points2 = {}

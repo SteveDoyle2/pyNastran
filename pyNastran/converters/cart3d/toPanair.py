@@ -3,7 +3,7 @@ import os
 import sys
 
 #from pyNastran.converters.panair.panairGridPatch import PanairGridHelper
-from pyNastran.converters.cart3d.cart3d_reader import Cart3dReader
+from pyNastran.converters.cart3d.cart3d import Cart3d
 
 def load_panair_file(fname='panair.in'):
     if not os.path.exists(fname):
@@ -12,11 +12,11 @@ def load_panair_file(fname='panair.in'):
     varnames = {
                    'title': 'default title',
                    'alpha': 0.,
-                   'alphaCompressibility': 0.,
+                   'alpha_compressibility': 0.,
                    'beta': 0.,
-                   'betaCompressibility': 0.,
-                   'xySym': True,
-                   'yzSym': False,
+                   'beta_compressibility': 0.,
+                   'xy_sym': True,
+                   'yz_sym': False,
                    'mach':  0.8,
                    'Sref':  1.,
                    'Bref':  1.,
@@ -52,12 +52,12 @@ def load_panair_file(fname='panair.in'):
 if 0:
     title = 'simple wing-body with composite panel. (run with a502i)'
     alphas = 4.
-    alphaCompressibility = 4.
+    alpha_compressibility = 4.
 
     beta = 0.
-    betaCompressibility = 0.
-    xySym = True
-    yzSym = False
+    beta_compressibility = 0.
+    xy_sym = True
+    yz_sym = False
     mach = 0.6
     Sref = 2400.
     Bref = 60.
@@ -112,19 +112,17 @@ def sInt(value):
 
 
 class Cart3dToPanair(PanairGridHelper):
-    def __init__(self, cart3dGeom, oname, varmap):
+    def __init__(self, cart3d_geom_filename, oname, varmap):
         self.printout = ("$printout options\n"
                          "=isings   igeomp    isingp    icontp    ibconp    iedgep\n"
                          "4.        0.        0.        1.        1.        0.\n"
                          "=ipraic   nexdgn    ioutpr    ifmcpr\n"
                          ".0        .0        1.        0.                  3.\n")
-        self.run(cart3dGeom, oname, varmap)
+        self.run(cart3d_geom_filename, oname, varmap)
 
     def write_points(self, point1, point2):
         point1 = self.fix_point(point1)
         point2 = self.fix_point(point2)
-        #print point1
-        #print point2
         out = "%-10s" * 6 % (point1[0], point1[1], point1[2],
                              point2[0], point2[1], point2[2])
         return out + '\n'
@@ -145,16 +143,16 @@ class Cart3dToPanair(PanairGridHelper):
         #print "pointOut = ",pointOut
         return pointOut
 
-    def run(self, cart3dGeom, oname, varmap):
+    def run(self, cart3d_geom_filename, oname, varmap):
             f = open(oname, 'wb')
             print("oname", oname)
             self.title = varmap['title']
             self.mach = varmap['mach']
             self.ncases = 1
-            self.alphaC = varmap['alphaCompressibility']
+            self.alphaC = varmap['alpha_compressibility']
             self.alphas = [varmap['alpha']]
 
-            self.betaC = varmap['betaCompressibility']
+            self.betaC = varmap['beta_compressibility']
             self.betas = [varmap['beta']]
             self.xref = varmap['Xref']
             self.yref = varmap['Yref']
@@ -177,7 +175,7 @@ class Cart3dToPanair(PanairGridHelper):
             BCMap = varmap['bcMap']
 
             cart = Cart3d()
-            cart.read_cart3d(cart3dGeom)
+            cart.read_cart3d(cart3d_geom_filename)
             points = cart.points
             elements = cart.elements
             regions = cart.regions
@@ -215,17 +213,17 @@ class Cart3dToPanair(PanairGridHelper):
                 #p1 =
                 #sys.exit()
 
-                netName = 'e%s' % eid
+                net_name = 'e%s' % eid
 
                 header += '$points - surface panels\n'
 
                 header += '%-10s%-10s\n' % ('1.', cpNorm)  # nNetworks is 1
                 header += '%-10s\n' % sInt(kt)
                 header += '%-10s%-10s%50s%-10s\n' % (
-                    sInt(2), sInt(2), '', netName)
-                pointsOut = self.write_points(n1, n2)
-                pointsOut += self.write_points(n3, n3)
-                f.write(header + pointsOut)
+                    sInt(2), sInt(2), '', net_name)
+                points_out = self.write_points(n1, n2)
+                points_out += self.write_points(n3, n3)
+                f.write(header + points_out)
                 #break
             #print points
             #print outfilename
@@ -234,13 +232,16 @@ class Cart3dToPanair(PanairGridHelper):
             #sys.exit()
 
 
-if __name__ == '__main__':  # pragma: no cover
-    panairIn = sys.argv[1]
-    cart3dGeom = sys.argv[2]
-    outfilename = sys.argv[3]
-    varmap = load_panair_file(panairIn)
+def main():
+    panair_in = sys.argv[1]
+    cart3d_geom_filename = sys.argv[2]
+    panair_inp_filename = sys.argv[3]
+    varmap = load_panair_file(panair_in)
     #cart3dGeom = os.path.join('models', 'threePlugs.tri')
     #cart3dGeom  = os.path.join('models','spike.a.tri')
     #outfilename = os.path.join('models', 'panair.inp')
-    Cart3dToPanair(cart3dGeom, outfilename, varmap)
+    Cart3dToPanair(cart3d_geom_filename, panair_inp_filename, varmap)
     print("done...")
+
+if __name__ == '__main__':  # pragma: no cover
+    main()

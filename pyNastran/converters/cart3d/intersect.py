@@ -1,7 +1,7 @@
 from numpy import zeros, cross, dot, allclose, sign
 from numpy.linalg import norm
 
-from pyNastran.converters.cart3d.cart3d_reader import Cart3DReader
+from pyNastran.converters.cart3d.cart3d_reader import Cart3D
 
 from scipy.spatial import KDTree
 

@@ -39,7 +39,6 @@ def run_arg_parse():
 
 from numpy import array, zeros, transpose
 from pyNastran.bdf.bdf import BDF
-#from pyNastran.converters.cart3d.cart3d_reader import Cart3DReader
 
 from pyNastran.converters.nastran.nastran_to_cart3d import nastran_to_cart3d_filename
 from pyNastran.converters.cart3d.cart3d_to_stl import cart3d_to_stl_filename

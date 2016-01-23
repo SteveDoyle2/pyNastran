@@ -16,14 +16,13 @@ from pyNastran.applications.cart3d_nastran_fsi.structural_model import Structura
 from pyNastran.applications.cart3d_nastran_fsi.aero_model import AeroModel
 from pyNastran.applications.cart3d_nastran_fsi.kdtree import KdTree
 
-from pyNastran.converters.cart3d.cart3d_reader import Cart3DReader
+from pyNastran.converters.cart3d.cart3d import Cart3D
 from pyNastran.bdf.bdf import BDF
 from pyNastran.utils.log import get_logger
 
 debug = True
 log = get_logger(None, 'debug' if debug else 'info')
 
-#------------------------------------------------------------------
 
 def entryExit(f):
     def new_f(*args, **kwargs):
@@ -250,28 +249,28 @@ class LoadMapping(object):
                 distribution[sEID] = weight
             mapping_matrix[aEID] = distribution
         #log.info("mappingKeys = %s" %(sorted(mapping_matrix.keys())))
-        self.runMapTest(mapping_matrix)
+        self.run_map_test(mapping_matrix)
         log.info("---finished parseMapFile---")
         return mapping_matrix
 
     #@entryExit
-    def runMapTest(self, mapping_matrix, mapTestFilename='mapTest.out'):
+    def run_map_test(self, mapping_matrix, map_test_filename='map_test.out'):
         """
         Checks to see what elements loads were mapped to.
         Ideally, all elements would have a value of 1.0, given equal area.
         Instead, each element should have a value of area[i].
         """
-        mapTest = {}
+        map_test = {}
         for (aero_eid, distribution) in sorted(iteritems(mapping_matrix)):
             for sEID, weight in distribution.items():
-                if sEID in mapTest:
-                    mapTest[sEID] += weight
+                if sEID in map_test:
+                    map_test[sEID] += weight
                 else:
-                    mapTest[sEID] = weight
+                    map_test[sEID] = weight
 
-        with open(mapTestFilename, 'wb') as map_out:
+        with open(map_test_filename, 'wb') as map_out:
             map_out.write('# sEID  weight\n')
-            for sEID, weight in sorted(iteritems(mapTest)):
+            for sEID, weight in sorted(iteritems(map_test)):
                 map_out.write("%s %s\n" % (sEID, weight))
 
     def map_loads_mp_func(self, aero_eid, aero_model):
@@ -383,7 +382,7 @@ class LoadMapping(object):
 
         map_file.close()
         log.info("---finish piercing---")
-        self.runMapTest(self.mapping_matrix)
+        self.run_map_test(self.mapping_matrix)
         #print "mapping_matrix = ", self.mapping_matrix
         log.info("---finished build_mapping_matrix---")
         sys.stdout.flush()
@@ -617,15 +616,15 @@ class LoadMapping(object):
 
 #------------------------------------------------------------------
 
-def run_map_loads(inputs, cart3dGeom='Components.i.triq', bdfModel='fem.bdf',
-                  bdfModelOut='fem.loads.out'):
-    assert os.path.exists(bdfModel), '%r doesnt exist' % bdfModel
+def run_map_loads(inputs, cart3d_geom='Components.i.triq', bdf_model='fem.bdf',
+                  bdf_model_out='fem.loads.out'):
+    assert os.path.exists(bdf_model), '%r doesnt exist' % bdf_model
 
     t0 = time()
     aero_format = inputs['aero_format'].lower()
 
     # the property regions to map elements to
-    propertyRegions = [
+    property_regions = [
         1, 1101, 1501, 1601, 1701, 1801, 1901, 2101, 2501, 2601, 2701, 2801,
         2901, 10103, 10201, 10203, 10301, 10401, 10501, 10601, 10701, 10801,
         10901, 20103, 20203, 20301, 20401, 20501, 20601, 20701, 20801, 20901,
@@ -651,30 +650,33 @@ def run_map_loads(inputs, cart3dGeom='Components.i.triq', bdfModel='fem.bdf',
     qInf = inputs['qInf']
 
     if aero_format == 'cart3d':
-        mesh = Cart3DReader()
-        half_model = cart3dGeom + '_half'
+        mesh = Cart3D()
+        half_model = cart3d_geom + '_half'
         result_names = ['Cp', 'rho', 'rhoU', 'rhoV', 'rhoW', 'E']
 
         if not os.path.exists(half_model):
-            (nodes, elements, regions, loads) = mesh.read_cart3d(cart3dGeom, result_names=result_names)
-            #Cp = loads['Cp']
-            (nodes, elements, regions, loads) = mesh.make_half_model(nodes, elements, regions, loads, axis='y')
-            Cp = loads['Cp']
+            mesh.read_cart3d(cart3d_geom, result_names=result_names)
+            (nodes, elements, regions, loads) = mesh.make_half_model(axis='y')
+            mesh.nodes = nodes
+            mesh.elements = elements
+            mesh.regions = regions
+            mesh.loads = loads
             #(nodes, elements, regions, Cp) = mesh.renumber_mesh(nodes, elements, regions, Cp)
-            mesh.write_cart3d(half_model, nodes, elements, regions, loads)
+            mesh.write_cart3d(half_model)
         else:
-            (nodes, elements, regions, loads) = mesh.read_cart3d(half_model, result_names=['Cp'])
+            mesh.read_cart3d(half_model, result_names=['Cp'])
+        loads = mesh.loads['Cp']
         Cp = loads['Cp']
     else:
         raise NotImplementedError('aero_format=%r' % aero_format)
 
-    aeroModel = AeroModel(inputs, nodes, elements, Cp)
+    aero_model = AeroModel(inputs, mesh.nodes, mesh.elements, Cp)
     log.info("elements[1] = %s" % elements[1])
     del elements, nodes, Cp
 
 
     fem = BDF(debug=True, log=log)
-    fem.read_bdf(bdfModel)
+    fem.read_bdf(bdf_model)
     sys.stdout.flush()
 
     # 1 inboard
@@ -682,12 +684,12 @@ def run_map_loads(inputs, cart3dGeom='Components.i.triq', bdfModel='fem.bdf',
     # 2000s lower - lower inboard
     # big - fin
 
-    structuralModel = StructuralModel(fem, propertyRegions)
+    structural_model = StructuralModel(fem, property_regions)
 
-    mapper = LoadMapping(aeroModel, structuralModel)
+    mapper = LoadMapping(aero_model, structural_model)
     t1 = time()
     mapper.set_flight_condition(pInf, qInf)
-    mapper.set_output(bdffile=bdfModelOut, load_case=isubcase)
+    mapper.set_output(bdffile=bdf_model_out, load_case=isubcase)
     log.info("setup time = %g sec; %g min" % (t1-t0, (t1-t0)/60.))
 
     mapper.build_mapping_matrix(debug=False)
@@ -705,14 +707,14 @@ def main():
     workpath = os.path.join(basepath, 'outputs')
     cart3dGeom = os.path.join(configpath, 'Cart3d_35000_0.825_10_0_0_0_0.i.triq')
 
-    bdfModel = os.path.join(configpath, 'aeroModel_mod.bdf')
-    assert os.path.exists(bdfModel), '%r doesnt exist' % bdfModel
+    bdf_model = os.path.join(configpath, 'aeroModel_mod.bdf')
+    assert os.path.exists(bdf_model), '%r doesnt exist' % bdf_model
     os.chdir(workpath)
     log.info("basepath = %s" % basepath)
 
-    bdfModelOut = os.path.join(workpath, 'fem_loads_3.bdf')
+    bdf_model_out = os.path.join(workpath, 'fem_loads_3.bdf')
     inputs = None
-    run_map_loads(inputs, cart3dGeom, bdfModel, bdfModelOut)
+    run_map_loads(inputs, cart3dGeom, bdf_model, bdf_model_out)
 
 
 if __name__ == '__main__':
