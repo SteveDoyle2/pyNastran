@@ -153,6 +153,7 @@ class ScalarObject(BaseScalarObject):
         BaseScalarObject.__init__(self)
         self.isubcase = isubcase
         self.isTransient = False
+        self.data_frame = None
         # the nonlinear factor; None=static; float=transient
         self.dt = None
         # the number of time steps

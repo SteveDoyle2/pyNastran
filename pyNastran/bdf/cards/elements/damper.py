@@ -21,13 +21,13 @@ from numpy import int32
 
 
 class DamperElement(Element):
-    def __init__(self, card, data):
-        Element.__init__(self, card, data)
+    def __init__(self):
+        Element.__init__(self)
 
 
 class LineDamper(DamperElement):
-    def __init__(self, card, data):
-        DamperElement.__init__(self, card, data)
+    def __init__(self):
+        DamperElement.__init__(self)
 
     def cross_reference(self, model):
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
@@ -55,7 +55,7 @@ class CDAMP1(LineDamper):
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
     def __init__(self, card=None, data=None, comment=''):
-        LineDamper.__init__(self, card, data)
+        LineDamper.__init__(self)
         if comment:
             self._comment = comment
         if card:
@@ -169,7 +169,7 @@ class CDAMP2(LineDamper):
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
     def __init__(self, card=None, data=None, comment=''):
-        LineDamper.__init__(self, card, data)
+        LineDamper.__init__(self)
         if comment:
             self._comment = comment
         if card:
@@ -262,7 +262,7 @@ class CDAMP3(LineDamper):
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
     def __init__(self, card=None, data=None, comment=''):
-        LineDamper.__init__(self, card, data)
+        LineDamper.__init__(self)
         if comment:
             self._comment = comment
         if card:
@@ -341,7 +341,7 @@ class CDAMP4(LineDamper):
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
     def __init__(self, card=None, icard=0, data=None, comment=''):
-        LineDamper.__init__(self, card, data)
+        LineDamper.__init__(self)
         if comment:
             self._comment = comment
         if card:
@@ -413,7 +413,7 @@ class CDAMP5(LineDamper):
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
     def __init__(self, card=None, data=None, comment=''):
-        LineDamper.__init__(self, card, data)
+        LineDamper.__init__(self)
         if comment:
             self._comment = comment
         if card:
@@ -497,20 +497,26 @@ class CVISC(LineDamper):
         else:
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
-    def __init__(self, card=None, data=None, comment=''):
-        LineDamper.__init__(self, card, data)
+    def __init__(self):
+        LineDamper.__init__(self)
+
+    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            self.eid = integer(card, 1, 'eid')
-            self.pid = integer_or_blank(card, 2, 'pid', self.eid)
-            nids = [integer_or_blank(card, 3, 'n1', 0),
-                    integer_or_blank(card, 4, 'n2', 0)]
-            assert len(card) <= 5, 'len(CVISC card) = %i' % len(card)
-        else:
-            self.eid = data[0]
-            self.pid = data[1]
-            nids = data[2:4]
+        self.eid = integer(card, 1, 'eid')
+        self.pid = integer_or_blank(card, 2, 'pid', self.eid)
+        nids = [integer_or_blank(card, 3, 'n1', 0),
+                integer_or_blank(card, 4, 'n2', 0)]
+        assert len(card) <= 5, 'len(CVISC card) = %i' % len(card)
+        self.prepare_node_ids(nids)
+        assert len(self.nodes) == 2
+
+    def add_op2_data(self, data, comment):
+        if comment:
+            self._comment = comment
+        self.eid = data[0]
+        self.pid = data[1]
+        nids = data[2:4]
         self.prepare_node_ids(nids)
         assert len(self.nodes) == 2
 

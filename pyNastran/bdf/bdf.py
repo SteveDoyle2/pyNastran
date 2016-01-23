@@ -1325,6 +1325,15 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'PSHELL' : (PSHELL, self.add_property),
 
             'PSOLID' : (PSOLID, self.add_property),
+            'PLSOLID' : (PLSOLID, self.add_property),
+
+
+            'CELAS1' : (CELAS1, self.add_element),
+            'CELAS2' : (CELAS2, self.add_element),
+            'CELAS3' : (CELAS3, self.add_element),
+            'CELAS4' : (CELAS4, self.add_element),
+            'CVISC' : (CVISC, self.add_element),
+            'PELAST' : (PELAST, self.add_PELAST),
 
             # there is no MAT6 or MAT7
             'MAT1' : (MAT1, self.add_structural_material),
@@ -1347,14 +1356,32 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             # hasnt been verified, links up to MAT1, MAT2, MAT9 w/ same MID
             'CREEP' : (CREEP, self.add_creep_material),
 
+            'CONM1' : (CONM1, self.add_mass),
+            'CONM2' : (CONM2, self.add_mass),
+            'CMASS1' : (CMASS1, self.add_mass),
+            'CMASS2' : (CMASS2, self.add_mass),
+            'CMASS3' : (CMASS3, self.add_mass),
+            # CMASS4 - added later because documentation is wrong
+
+            'MPC' : (MPC, self.add_constraint_MPC),
+            'MPCADD' : (MPCADD, self.add_constraint_MPC),
+
+            'SPC' : (SPC, self.add_constraint_SPC),
+            'SPC1' : (SPC1, self.add_constraint_SPC),
+            'SPCAX' : (SPCAX, self.add_constraint_SPC),
+            'SPCADD' : (SPCADD, self.add_constraint_SPC),
+            'GMSPC' : (GMSPC, self.add_constraint_SPC),
+
+            'SUPORT' : (SUPORT, self.add_suport), # pseudo-constraint
+            'SUPORT1' : (SUPORT1, self.add_suport1),  # pseudo-constraint
+
             'FORCE' : (FORCE, self.add_load),
             'FORCE1' : (FORCE1, self.add_load),
             'FORCE2' : (FORCE2, self.add_load),
             'MOMENT' : (MOMENT, self.add_load),
             'MOMENT1' : (MOMENT1, self.add_load),
             'MOMENT2' : (MOMENT2, self.add_load),
-        }
-        self._card_parser = {
+
             'GRAV' : (GRAV, self.add_load),
             'ACCEL' : (ACCEL, self.add_load),
             'ACCEL1' : (ACCEL1, self.add_load),
@@ -1371,7 +1398,18 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'SPCD' : (SPCD, self.add_load),  # enforced displacement
             'QVOL' : (QVOL, self.add_load),  # thermal
 
+            'DLOAD' : (DLOAD, self.add_dload),
+            'TLOAD1' : (TLOAD1, self.add_dload_entry),
+            'TLOAD2' : (TLOAD2, self.add_dload_entry),
+            'RLOAD1' : (RLOAD1, self.add_dload_entry),
+            'RLOAD2' : (RLOAD2, self.add_dload_entry),
 
+            'DOPTPRM' : (DOPTPRM, self._add_doptprm),
+            'SPOINT' : (SPOINTs, self.add_SPOINT),
+            'EPOINT' : (EPOINTs, self.add_EPOINT),
+            # BCTSET
+        }
+        self._card_parser = {
             'PLOTEL' : (PLOTEL, self.add_plotel),
             'CQUAD' : (CQUAD, self.add_element),
             'CQUAD8' : (CQUAD8, self.add_element),
@@ -1393,7 +1431,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             # CPYRAM - added later
             'CIHEX1' : (CIHEX1, self.add_element),
             'PIHEX' : (PIHEX, self.add_property),
-            'PLSOLID' : (PLSOLID, self.add_property),
             'PCONEAX' : (PCONEAX, self.add_property),
 
             'CBUSH' : (CBUSH, self.add_damper),
@@ -1401,13 +1438,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'CBUSH2D' : (CBUSH2D, self.add_damper),
             'PBUSH' : (PBUSH, self.add_property),
             'PBUSH1D' : (PBUSH1D, self.add_property),
-
-            'CELAS1' : (CELAS1, self.add_element),
-            'CELAS2' : (CELAS2, self.add_element),
-            'CELAS3' : (CELAS3, self.add_element),
-            'CELAS4' : (CELAS4, self.add_element),
-            'CVISC' : (CVISC, self.add_element),
-            'PELAST' : (PELAST, self.add_PELAST),
 
             'CDAMP1' : (CDAMP1, self.add_damper),
             'CDAMP2' : (CDAMP2, self.add_damper),
@@ -1483,12 +1513,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             #'MATT8' : (MATT8, self.add_material_dependence),
             #'MATT9' : (MATT9, self.add_material_dependence),
 
-            'DLOAD' : (DLOAD, self.add_dload),
-            'TLOAD1' : (TLOAD1, self.add_dload_entry),
-            'TLOAD2' : (TLOAD2, self.add_dload_entry),
-            'RLOAD1' : (RLOAD1, self.add_dload_entry),
-            'RLOAD2' : (RLOAD2, self.add_dload_entry),
-
             'TEMP' : (TEMP, self.add_thermal_load),
             'QBDY1' : (QBDY1, self.add_thermal_load),
             'QBDY2' : (QBDY2, self.add_thermal_load),
@@ -1501,18 +1525,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
             'PCONV' : (PCONV, self.add_convection_property),
             'PCONVM' : (PCONVM, self.add_convection_property),
-
-            'MPC' : (MPC, self.add_constraint_MPC),
-            'MPCADD' : (MPCADD, self.add_constraint_MPC),
-
-            'SPC' : (SPC, self.add_constraint_SPC),
-            'SPC1' : (SPC1, self.add_constraint_SPC),
-            'SPCAX' : (SPCAX, self.add_constraint_SPC),
-            'SPCADD' : (SPCADD, self.add_constraint_SPC),
-            # GMSPC-will be last card to update from card_parser
-            'GMSPC' : (GMSPC, self.add_constraint_SPC),
-
-            'SUPORT' : (SUPORT, self.add_suport), # pseudo-constraint
 
             'CAERO1' : (CAERO1, self.add_CAERO),
             'CAERO2' : (CAERO2, self.add_CAERO),
@@ -1536,7 +1548,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'MKAERO1' : (MKAERO1, self.add_MKAERO),
             'MKAERO2' : (MKAERO2, self.add_MKAERO),
 
-            'SUPORT1' : (SUPORT1, self.add_suport1),  # pseudo-constraint
             #'SESUP' : (SESUP, self.add_SESUP),  # pseudo-constraint
 
             'FREQ' : (FREQ, self.add_FREQ),
@@ -1617,18 +1628,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'BCTPARA' : (BCTPARA, self.add_BCTPARA),
             'BSURF' : (BSURF, self.add_BSURF),
             'BSURFS' : (BSURFS, self.add_BSURFS),
-
-            'CONM1' : (CONM1, self.add_mass),
-            'CONM2' : (CONM2, self.add_mass),
-            'CMASS1' : (CMASS1, self.add_mass),
-            'CMASS2' : (CMASS2, self.add_mass),
-            'CMASS3' : (CMASS3, self.add_mass),
-            # CMASS4 - added later because documentation is wrong
-
-            'DOPTPRM' : (DOPTPRM, self._add_doptprm),
-            'SPOINT' : (SPOINTs, self.add_SPOINT),
-            'EPOINT' : (EPOINTs, self.add_EPOINT),
-            # BCTSET
         }
         self._card_parser_b = {
             'CTETRA' : self._prepare_ctetra,
@@ -1773,18 +1772,22 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
     def _prepare_pelas(self, card, card_obj, comment=''):
         """adds a PELAS"""
-        class_instance = PELAS(card_obj, icard=0, comment=comment)
+        class_instance = PELAS()
+        class_instance.add_card(card_obj, icard=0, comment=comment)
         self.add_property(class_instance)
         if card_obj.field(5):
-            class_instance = PELAS(card_obj, icard=1, comment=comment)
+            class_instance = PELAS()
+            class_instance.add_card(card_obj, icard=1, comment=comment)
             self.add_property(class_instance)
 
     def _prepare_pvisc(self, card, card_obj, comment=''):
         """adds a PVISC"""
-        class_instance = PVISC(card_obj, icard=0, comment=comment)
+        class_instance = PVISC()
+        class_instance.add_card(card_obj, icard=0, comment=comment)
         self.add_property(class_instance)
         if card_obj.field(5):
-            class_instance = PVISC(card_obj, icard=1, comment=comment)
+            class_instance = PVISC()
+            class_instance.add_card(card_obj, icard=1, comment=comment)
             self.add_property(class_instance)
 
     def _prepare_pdamp(self, card, card_obj, comment=''):

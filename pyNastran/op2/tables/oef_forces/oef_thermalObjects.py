@@ -23,6 +23,8 @@ class Real1DHeatFluxArray(ScalarObject):  # 1-ROD, 2-BEAM, 3-TUBE, 10-CONROD, 34
         #self.ntimes = 0  # or frequency/mode
         #self.ntotal = 0
         self.nelements = 0  # result specific
+        self.itotal = 0
+        self.ielement = 0
 
         if is_sort1:
             self.add = self.add_sort1
@@ -198,7 +200,7 @@ class Real1DHeatFluxArray(ScalarObject):  # 1-ROD, 2-BEAM, 3-TUBE, 10-CONROD, 34
 
                 # TODO: hopa is probably the wrong type
                 f.write(' %8i  %8s %-13s %-13s %-13s %s\n' % (
-                    eid, etypei, sxgradi, '', '', sxfluxi))
+                        eid, etypei, sxgradi, '', '', sxfluxi))
             f.write(page_stamp % page_num)
             page_num += 1
         return page_num - 1
@@ -214,6 +216,9 @@ class RealHeatFluxVU3DArray(ScalarObject):  # 189-VUQUAD 190-VUTRIA,191-VUBEAM
         #self.ntimes = 0  # or frequency/mode
         #self.ntotal = 0
         self.nelements = 0  # result specific
+        self.ielement = 0
+        self.itotal = 0
+        self.itime = 0
 
     def _reset_indices(self):
         self.itotal = 0
@@ -389,7 +394,7 @@ class RealHeatFluxVU3DArray(ScalarObject):  # 189-VUQUAD 190-VUTRIA,191-VUBEAM
             zflux = self.data[itime, :, 5]
 
             for (vugrid, xgradi, ygradi, zgradi, xfluxi, yfluxi, zfluxi) in zip(
-                vugrids, xgrad, ygrad, zgrad, xflux, yflux, zflux):
+                 vugrids, xgrad, ygrad, zgrad, xflux, yflux, zflux):
                 f.write('         %10i    %-13E    %-13E    %-13E    %-13E    %-13E    %-13E\n' % (
                     vugrid, xgradi, ygradi, zgradi, xfluxi, yfluxi, zfluxi))
             f.write(page_stamp % page_num)
@@ -482,6 +487,8 @@ class RealHeatFluxVUArray(ScalarObject):  # 189-VUQUAD 190-VUTRIA,191-VUBEAM
         #self.ntimes = 0  # or frequency/mode
         #self.ntotal = 0
         self.nelements = 0  # result specific
+        self.itotal = 0
+        self.ielement = 0
 
     def _reset_indices(self):
         self.itotal = 0
@@ -656,7 +663,7 @@ class RealHeatFluxVUArray(ScalarObject):  # 189-VUQUAD 190-VUTRIA,191-VUBEAM
             zflux = self.data[itime, :, 5]
 
             for (vugrid, xgradi, ygradi, zgradi, xfluxi, yfluxi, zfluxi) in zip(
-                vugrids, xgrad, ygrad, zgrad, xflux, yflux, zflux):
+                 vugrids, xgrad, ygrad, zgrad, xflux, yflux, zflux):
                 f.write('         %10i    %-13E    %-13E    %-13E    %-13E    %-13E    %-13E\n' % (
                     vugrid, xgradi, ygradi, zgradi, xfluxi, yfluxi, zfluxi))
             f.write(page_stamp % page_num)
@@ -754,6 +761,9 @@ class RealHeatFluxVUBeamArray(ScalarObject):  # 191-VUBEAM
         #self.ntimes = 0  # or frequency/mode
         #self.ntotal = 0
         self.nelements = 0  # result specific
+        self.itotal = 0
+        self.ielement = 0
+        self.itime = 0
 
         if is_sort1:
             self.add = self.add_sort1
@@ -946,7 +956,7 @@ class RealHeatFluxVUBeamArray(ScalarObject):  # 191-VUBEAM
             zflux = self.data[itime, :, 5]
 
             for (nid, xgradi, ygradi, zgradi, xfluxi, yfluxi, zfluxi) in zip(
-                vugrids, xgrad, ygrad, zgrad, xflux, yflux, zflux):
+                 vugrids, xgrad, ygrad, zgrad, xflux, yflux, zflux):
                 vals2 = write_floats_13e(
                     [fappliedi, free_convi, force_convi, fradi, ftotali])
                 [sfapplied, sfree_conv, sforce_conv, sfrad, sftotal] = vals2
@@ -1075,7 +1085,7 @@ class HeatFlux_2D_3DArray(RealElementTableArray):
             return self._write_f06_transient_block(words, header, page_stamp, page_num, f,
                                                    is_mag_phase=is_mag_phase, is_sort1=is_sort1)
         return self._write_f06_block(words, header, page_stamp, page_num, f,
-                                         is_mag_phase=is_mag_phase, is_sort1=is_sort1)
+                                     is_mag_phase=is_mag_phase, is_sort1=is_sort1)
 
     def get_headers(self):
         return ['grad1', 'grad2', 'grad3', 'flux1', 'flux2', 'flux3']
@@ -1091,6 +1101,8 @@ class RealConvHeatFluxArray(ScalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
         #self.ntimes = 0  # or frequency/mode
         #self.ntotal = 0
         self.nelements = 0  # result specific
+        self.ielement = 0
+        self.itotal = 0
 
         if is_sort1:
             self.add = self.add_sort1
@@ -1280,6 +1292,8 @@ class RealChbdyHeatFluxArray(ScalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
         #self.ntimes = 0  # or frequency/mode
         #self.ntotal = 0
         self.nelements = 0  # result specific
+        self.ielement = 0
+        self.itotal = 0
 
         if is_sort1:
             self.add = self.add_sort1
@@ -1458,7 +1472,6 @@ class RealChbdyHeatFluxArray(ScalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
                 #[sfapplied, sfree_conv, sforce_conv, sfrad, sftotal] = vals2
 
                 f.write('                 %8i     %13E     %13E     %13E     %13E     %13E\n' % (
-                #f.write(' %8i  %-13s %-13s %-13s %-13s %s\n' % (
                     eid, fappliedi, free_convi, force_convi, fradi, ftotali))
             f.write(page_stamp % page_num)
             page_num += 1

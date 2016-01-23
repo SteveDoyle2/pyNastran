@@ -56,35 +56,40 @@ class Load(BaseCard):
 
 
 class LoadCombination(Load):  # LOAD, DLOAD
-    def __init__(self, card, data):
-        Load.__init__(self, card, data)
+    def __init__(self):
+        Load.__init__(self)
 
-        if card:
-            #: load ID
-            self.sid = integer(card, 1, 'sid')
+    def add_card(self, card, comment=''):
+        if comment:
+            self._comment = comment
+        #: load ID
+        self.sid = integer(card, 1, 'sid')
 
-            #: overall scale factor
-            self.scale = double(card, 2, 'scale')
+        #: overall scale factor
+        self.scale = double(card, 2, 'scale')
 
-            #: individual scale factors (corresponds to loadIDs)
-            self.scaleFactors = []
+        #: individual scale factors (corresponds to loadIDs)
+        self.scaleFactors = []
 
-            #: individual loadIDs (corresponds to scaleFactors)
-            self.loadIDs = []
+        #: individual loadIDs (corresponds to scaleFactors)
+        self.loadIDs = []
 
-            # alternating of scale factor & load set ID
-            nloads = len(card) - 3
-            assert nloads % 2 == 0
-            for i in range(nloads // 2):
-                n = 2 * i + 3
-                self.scaleFactors.append(double(card, n, 'scale_factor'))
-                self.loadIDs.append(integer(card, n + 1, 'load_id'))
-        else:
-            self.sid = data[0]
-            self.scale = data[1]
-            self.scaleFactors = data[2]
-            self.loadIDs = data[3]
-            assert len(data) == 4, '%s data=%s' % (self.type, data)
+        # alternating of scale factor & load set ID
+        nloads = len(card) - 3
+        assert nloads % 2 == 0
+        for i in range(nloads // 2):
+            n = 2 * i + 3
+            self.scaleFactors.append(double(card, n, 'scale_factor'))
+            self.loadIDs.append(integer(card, n + 1, 'load_id'))
+
+    def add_op2_data(self, data, comment=''):
+        if comment:
+            self._comment = comment
+        self.sid = data[0]
+        self.scale = data[1]
+        self.scaleFactors = data[2]
+        self.loadIDs = data[3]
+        assert len(data) == 4, '%s data=%s' % (self.type, data)
 
     def cross_reference(self, model):
         load_ids2 = []
@@ -257,21 +262,26 @@ class DAREA(BaseCard):
     """
     type = 'DAREA'
 
-    def __init__(self, card=None, icard=0, data=None, comment=''):
+    def __init__(self):
+        pass
+
+    def add_card(self, card=None, icard=0, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            nOffset = 3 * icard
-            self.sid = integer(card, 1, 'sid')
-            self.p = integer(card, 2 + nOffset, 'p')
-            self.c = components_or_blank(card, 3 + nOffset, 'c', 0)
-            self.scale = double(card, 4 + nOffset, 'scale')
-        else:
-            self.sid = data[0]
-            self.p = data[1]
-            self.c = data[2]
-            self.scale = data[3]
-            assert len(data) == 4, 'data = %s' % data
+        noffset = 3 * icard
+        self.sid = integer(card, 1, 'sid')
+        self.p = integer(card, 2 + noffset, 'p')
+        self.c = components_or_blank(card, 3 + noffset, 'c', 0)
+        self.scale = double(card, 4 + noffset, 'scale')
+
+    def add_op2_data(self, data, comment=''):
+        if comment:
+            self._comment = comment
+        self.sid = data[0]
+        self.p = data[1]
+        self.c = data[2]
+        self.scale = data[3]
+        assert len(data) == 4, 'data = %s' % data
 
     def cross_reference(self, model):
         msg = ', which is required by %s=%s' % (self.type, self.sid)
@@ -303,7 +313,7 @@ class DAREA(BaseCard):
 
 
 class TabularLoad(BaseCard):
-    def __init__(self, card, data):
+    def __init__(self):
         pass
 
 
@@ -320,30 +330,35 @@ class SPCD(Load):
     """
     type = 'SPCD'
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self):
+        pass
+
+    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            self.sid = integer(card, 1, 'sid')
-            if card.field(5) in [None, '']:
-                self.gids = [integer(card, 2, 'G1'),]
-                self.constraints = [components_or_blank(card, 3, 'C1', 0)]
-                self.enforced = [double_or_blank(card, 4, 'D1', 0.0)]
-            else:
-                self.gids = [
-                    integer(card, 2, 'G1'),
-                    integer(card, 5, 'G2'),
-                ]
-                # :0 if scalar point 1-6 if grid
-                self.constraints = [components_or_blank(card, 3, 'C1', 0),
-                                    components_or_blank(card, 6, 'C2', 0)]
-                self.enforced = [double_or_blank(card, 4, 'D1', 0.0),
-                                 double_or_blank(card, 7, 'D2', 0.0)]
+        self.sid = integer(card, 1, 'sid')
+        if card.field(5) in [None, '']:
+            self.gids = [integer(card, 2, 'G1'),]
+            self.constraints = [components_or_blank(card, 3, 'C1', 0)]
+            self.enforced = [double_or_blank(card, 4, 'D1', 0.0)]
         else:
-            self.sid = data[0]
-            self.gids = [data[1]]
-            self.constraints = [data[2]]
-            self.enforced = [data[3]]
+            self.gids = [
+                integer(card, 2, 'G1'),
+                integer(card, 5, 'G2'),
+            ]
+            # :0 if scalar point 1-6 if grid
+            self.constraints = [components_or_blank(card, 3, 'C1', 0),
+                                components_or_blank(card, 6, 'C2', 0)]
+            self.enforced = [double_or_blank(card, 4, 'D1', 0.0),
+                             double_or_blank(card, 7, 'D2', 0.0)]
+
+    def add_op2_data(self, data, comment=''):
+        if comment:
+            self._comment = comment
+        self.sid = data[0]
+        self.gids = [data[1]]
+        self.constraints = [data[2]]
+        self.enforced = [data[3]]
 
     @property
     def node_ids(self):

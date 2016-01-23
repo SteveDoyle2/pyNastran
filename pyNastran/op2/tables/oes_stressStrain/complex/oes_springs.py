@@ -67,7 +67,7 @@ class ComplexSpringDamperArray(OES_Object):
         self._times = zeros(self.ntimes, dtype=dtype)
         self.element = zeros(self.nelements, dtype='int32')
 
-        #[axial_force, torque]
+        #[spring_stress]
         self.data = zeros((self.ntimes, self.ntotal, 1), dtype='complex64')
 
     def build_dataframe(self):
@@ -100,9 +100,6 @@ class ComplexSpringDamperArray(OES_Object):
                 for ie, eid in enumerate(self.element):
                     t1 = self.data[itime, ie, :]
                     t2 = table.data[itime, ie, :]
-                    #(springr, springi) = t1
-                    #(axial2, torque2) = t2
-
                     if not array_equal(t1, t2):
                         msg += '%s    (%s, %s)  (%s, %s)\n' % (
                             eid,
@@ -189,29 +186,13 @@ class ComplexSpringDamperArray(OES_Object):
             #'                      14                  0.0          /  0.0                           0.0          /  0.0'
         else:
             msg += ['            FREQUENCY                    STRESS                       FREQUENCY                    STRESS\n']
-
-
         return msg
-
-    #def get_element_index(self, eids):
-        ## elements are always sorted; nodes are not
-        #itot = searchsorted(eids, self.element)  #[0]
-        #return itot
-
-    #def eid_to_element_node_index(self, eids):
-        ##ind = ravel([searchsorted(self.element == eid) for eid in eids])
-        #ind = searchsorted(eids, self.element)
-        ##ind = ind.reshape(ind.size)
-        ##ind.sort()
-        #return ind
 
     def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
         msg_temp = self.get_f06_header(is_mag_phase=is_mag_phase, is_sort1=is_sort1)
 
-        # write the f06
-        #(ntimes, ntotal, two) = self.data.shape
         ntimes = self.data.shape[0]
 
         eids = self.element
@@ -242,6 +223,7 @@ class ComplexSpringDamperArray(OES_Object):
             f.write(page_stamp % page_num)
             page_num += 1
         return page_num - 1
+
 
 class ComplexSpringStressArray(ComplexSpringDamperArray, StressObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):

@@ -303,20 +303,25 @@ class XPoints(Node):
         """dummy method for EPOINTs/SPOINTs classes"""
         raise NotImplementedError('This method should be overwritten by the parent class')
 
-    def __init__(self, card=None, data=None, comment=''):
-        if comment:
-            self._comment = comment
+    def __init__(self):
         Node.__init__(self)
 
-        if card:
-            fields = []
-            for i in range(1, len(card)):
-                field = integer_or_string(card, i, 'ID%i' % i)
-                fields.append(field)
-        else:
-            fields = data
-            assert isinstance(data, list), data
-            assert isinstance(data[0], int), data
+    def add_card(self, card, comment=''):
+        if comment:
+            self._comment = comment
+
+        fields = []
+        for i in range(1, len(card)):
+            field = integer_or_string(card, i, 'ID%i' % i)
+            fields.append(field)
+        self.points = set(expand_thru(fields))
+
+    def add_op2_data(self, data, comment=''):
+        if comment:
+            self._comment = comment
+        fields = data
+        assert isinstance(data, list), data
+        assert isinstance(data[0], int), data
         self.points = set(expand_thru(fields))
 
     def __len__(self):
@@ -403,7 +408,7 @@ class SPOINTs(XPoints):
     """
     type = 'SPOINT'
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self):
         """
         Creates the SPOINTs card that contains many SPOINTs
         :param self:
@@ -421,7 +426,7 @@ class SPOINTs(XPoints):
         :type comment:
           string
         """
-        XPoints.__init__(self, card, data, comment)
+        XPoints.__init__(self)
 
     def create_spointi(self):
         """
@@ -450,25 +455,22 @@ class EPOINTs(XPoints):
     """
     type = 'EPOINT'
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self):
         """
         Creates the EPOINTs card that contains many SPOINTs
-        :param self:
-          the EPOINTs object pointer
-        :param card:
-          a BDFCard object
-        :type card:
-          BDFCard
-        :param data:
-          a list with the EPOINT fields defined in OP2 format
-        :type data:
-          LIST
-        :param comment:
-          a comment for the card
-        :type comment:
-          string
+
+        Parameters
+        ----------
+        self : EPOINT()
+            the EPOINTs object pointer
+        card : BDFCard()
+            a BDFCard object
+        data : List[int]
+            a list with the EPOINT fields defined in OP2 format
+        comment : str
+            a comment for the card
         """
-        XPoints.__init__(self, card, data, comment)
+        XPoints.__init__(self)
 
     def create_epointi(self):
         """

@@ -3011,7 +3011,6 @@ class NastranIO(object):
                         len(nxyz), nnodes)
 
                     #cases[(subcase_id, icase, word + 'XX', 1, 'node', '%.3f')] = oxx
-                    #if new_cases:
                     tx_res = GuiResult(subcase_idi, header=name + 'Tx', title=name + 'Tx',
                                        location='node', scalar=loads[:, 0])
                     ty_res = GuiResult(subcase_idi, header=name + 'Ty', title=name + 'Ty',
@@ -3034,14 +3033,6 @@ class NastranIO(object):
                     cases[icase + 4] = (ry_res, (0, name + 'Ry'))
                     cases[icase + 5] = (rz_res, (0, name + 'Rz'))
                     cases[icase + 6] = (txyz_res, (0, name  + 'Txyz'))
-                    #else:
-                        #cases[(subcase_idi, icase, name + 'Tx', 1, 'node', '%g', header)] = loads[:, 0]
-                        #cases[(subcase_idi, icase + 1, name + 'Ty', 1, 'node', '%g', header)] = loads[:, 1]
-                        #cases[(subcase_idi, icase + 2, name + 'Tz', 1, 'node', '%g', header)] = loads[:, 2]
-                        #cases[(subcase_idi, icase + 3, name + 'Rx', 1, 'node', '%g', header)] = loads[:, 3]
-                        #cases[(subcase_idi, icase + 4, name + 'Ry', 1, 'node', '%g', header)] = loads[:, 4]
-                        #cases[(subcase_idi, icase + 5, name + 'Rz', 1, 'node', '%g', header)] = loads[:, 5]
-                        #cases[(subcase_idi, icase + 6, title, 1, 'node', '%g', header)] = nxyz
 
                     form_dict[(key, itime)].append((name + 'Tx', icase, []))
                     form_dict[(key, itime)].append((name + 'Ty', icase + 1, []))
@@ -3070,12 +3061,9 @@ class NastranIO(object):
                 assert len(nxyz) == nnodes, 'len(nxyz)=%s nnodes=%s' % (
                     len(nxyz), nnodes)
 
-                #if new_cases:
                 temp_res = GuiResult(subcase_idi, header=name, title=name + name,
                                      location='node', scalar=loads[:, 0])
                 cases[icase] = (temp_res, (0, name))
-                #else:
-                    #cases[(subcase_idi, icase, name, 1, 'node', '%g', header)] = loads[:, 0]
                 form_dict[(key, itime)].append((name, icase, []))
                 icase += 1
 
@@ -3098,7 +3086,6 @@ class NastranIO(object):
         icase = self._fill_op2_time_centroidal_force(
             cases, model, key, icase, itime,
             form_dict, header_dict, is_static)
-        #icase = self._fill_stress_nodal(cases, model, key, formi, icase)
         return icase
 
     def _fill_op2_stress(self, cases, model, key, icase, itime,
@@ -3109,7 +3096,6 @@ class NastranIO(object):
         icase = self._fill_op2_time_centroidal_stress(
             cases, model, key, icase, itime, form_dict, header_dict,
             is_static, is_stress=is_stress)
-        #icase = self._fill_stress_nodal(cases, model, key, formi, icase)
         return icase
 
     def _fill_op2_strain(self, cases, model, key, icase, itime,
@@ -3118,258 +3104,6 @@ class NastranIO(object):
         return self._fill_op2_stress(cases, model, key, icase, itime,
                                      form_dict, header_dict,
                                      is_static, is_stress=False)
-
-    #def _fill_op2_stress_nodal(self, cases, model, subcase_id, formi, icase, itime):
-        #"""
-        #disabled...
-        #"""
-        #return icase
-
-        #is_stress = True
-        #if is_stress:
-            #word = 'Stress'
-        #else:
-            #word = 'Strain'
-
-        #oxx_dict = {}
-        #oyy_dict = {}
-        #ozz_dict = {}
-        #o1_dict = {}
-        #o2_dict = {}
-        #o3_dict = {}
-        #ovm_dict = {}
-
-        #for nid in self.nidMap:
-            #oxx_dict[nid] = []
-            #oyy_dict[nid] = []
-            #ozz_dict[nid] = []
-            #o1_dict[nid] = []
-            #o2_dict[nid] = []
-            #o3_dict[nid] = []
-            #ovm_dict[nid] = []
-
-        #vm_word = None
-        #if subcase_id in model.rodStress:
-            #case = model.rodStress[subcase_id]
-            #if case.nonlinear_factor is not None: # transient
-                #return
-            #for eid in case.axial:
-                #axial = case.axial[eid]
-                #torsion = case.torsion[eid]
-                #node_ids = self.eid_to_nid_map[eid]
-                #o1i = max(axial, torsion)  # not really
-                #o3i = min(axial, torsion)
-                #ovmi = max(npabs(axial), npabs(torsion))
-                #for nid in node_ids:
-                    #oxx_dict[nid].append(axial)
-                    #oyy_dict[nid].append(torsion)
-                    #o1_dict[nid].append(o1i)
-                    #o3_dict[nid].append(o3i)
-                    #ovm_dict[nid].append(ovmi)
-
-        #if is_stress:
-            #bars = model.barStress
-        #else:
-            #bars = model.barStrain
-
-        #if subcase_id in bars:
-            #case = bars[subcase_id]
-            #if case.nonlinear_factor is not None: # transient
-                #return
-            #for eid in case.axial:
-                #node_ids = self.eid_to_nid_map[eid]
-                #oxxi = case.axial[eid]
-                #o1i = max(case.smax[eid])
-                #o3i = min(case.smin[eid])
-                #ovmi = max(npabs(max(case.smax[eid])),
-                           #npabs(min(case.smin[eid])))
-                #for nid in node_ids:
-                    #oxx_dict[nid].append(oxxi)
-                    #o1_dict[nid].append(o1i)
-                    #o3_dict[nid].append(o3i)
-                    #ovm_dict[nid].append(ovmi)
-
-        #if subcase_id in model.beamStress:
-            #case = model.beamStress[subcase_id]
-            #if case.nonlinear_factor is not None: # transient
-                #return
-            #for eid in case.smax:
-                #node_ids = self.eid_to_nid_map[eid]
-                #oxxi = max(max(case.sxc[eid]),
-                           #max(case.sxd[eid]),
-                           #max(case.sxe[eid]),
-                           #max(case.sxf[eid]))
-                #o1i = max(case.smax[eid])
-                #o3i = min(case.smin[eid])
-                #ovmi = max(npabs(max(case.smax[eid])),
-                           #npabs(min(case.smin[eid])))
-                #for nid in node_ids:
-                    #oxx_dict[nid].append(oxxi)
-                    #o1_dict[nid].append(o1i)
-                    #o3_dict[nid].append(o3i)
-                    #ovm_dict[nid].append(ovmi)
-
-        #if subcase_id in model.plateStress:
-            #case = model.plateStress[subcase_id]
-            #if case.nonlinear_factor is not None: # transient
-                #return
-            #if case.is_von_mises():
-                #vm_word = 'vonMises'
-            #else:
-                #vm_word = 'maxShear'
-            #for eid in case.ovmShear:
-                #node_ids = self.eid_to_nid_map[eid]
-
-                #eType = case.eType[eid]
-                #if eType in ['CQUAD4', 'CQUAD8']:
-                    ##cen = 'CEN/%s' % eType[-1]
-                    #for nid in node_ids:
-                        #oxxi = max(case.oxx[eid][nid])
-                        #oyyi = max(case.oyy[eid][nid])
-                        #ozzi = min(case.oxx[eid][nid], min(case.oyy[eid][nid]))
-                        #o1i = max(case.majorP[eid][nid])
-                        #o2i = max(case.minorP[eid][nid])
-                        #o3i = min(case.majorP[eid][nid], min(case.minorP[eid][nid]))
-                        #ovmi = max(case.ovmShear[eid][nid])
-
-                        #oxx_dict[nid].append(oxxi)
-                        #oyy_dict[nid].append(oyyi)
-                        #o1_dict[nid].append(o1i)
-                        #o3_dict[nid].append(o3i)
-                        #ovm_dict[nid].append(ovmi)
-
-                #elif eType in ['CTRIA3', 'CTRIA6']:
-                    #cen = 'CEN/%s' % eType[-1]
-                    #oxxi = case.oxx[eid][cen]
-
-                    #oxxi = max(case.oxx[eid][cen])
-                    #oyyi = max(case.oyy[eid][cen])
-                    #ozzi = min(case.oxx[eid][cen], min(case.oyy[eid][cen]))
-
-                    #o1i = max(case.majorP[eid][cen])
-                    #o2i = max(case.minorP[eid][cen])
-                    #o3i = min(case.majorP[eid][cen], min(case.minorP[eid][cen]))
-                    #ovmi = max(case.ovmShear[eid][cen])
-
-                    #for nid in node_ids:
-                        #oxx_dict[nid].append(oxxi)
-                        #oyy_dict[nid].append(oyyi)
-                        #o1_dict[nid].append(o1i)
-                        #o3_dict[nid].append(o3i)
-                        #ovm_dict[nid].append(ovmi)
-
-        #if subcase_id in model.compositePlateStress:
-            #case = model.compositePlateStress[subcase_id]
-            #if case.nonlinear_factor is not None: # transient
-                #return
-            #if case.is_von_mises():
-                #vm_word = 'vonMises'
-            #else:
-                #vm_word = 'maxShear'
-
-            #for eid in case.ovmShear:
-                #node_ids = self.eid_to_nid_map[eid]
-
-                #oxxi = max(case.o11[eid])
-                #oyyi = max(case.o22[eid])
-                #o1i = max(case.majorP[eid])
-                #o3i = min(case.minorP[eid])
-                #ovmi = max(case.ovmShear[eid])
-
-                #for nid in node_ids:
-                    #oxx_dict[nid].append(oxxi)
-                    #oyy_dict[nid].append(oyyi)
-                    #o1_dict[nid].append(o1i)
-                    #o3_dict[nid].append(o3i)
-                    #ovm_dict[nid].append(ovmi)
-
-        #if subcase_id in model.solidStress:
-            #case = model.solidStress[subcase_id]
-            #if case.nonlinear_factor is not None: # transient
-                #return
-            #if case.is_von_mises():
-                #vm_word = 'vonMises'
-            #else:
-                #vm_word = 'maxShear'
-            #for eid in case.ovmShear:
-                #node_ids = self.eid_to_nid_map[eid]
-                #for nid in node_ids:
-                    #oxxi = case.oxx[eid][nid]
-                    #oyyi = case.oyy[eid][nid]
-                    #ozzi = case.ozz[eid][nid]
-                    #o1i = case.o1[eid][nid]
-                    #o2i = case.o2[eid][nid]
-                    #o3i = case.o3[eid][nid]
-                    #ovmi = case.ovmShear[eid][nid]
-
-                    #oxx_dict[nid].append(oxxi)
-                    #oyy_dict[nid].append(oyyi)
-                    #ozz_dict[nid].append(ozzi)
-                    #o1_dict[nid].append(o1i)
-                    #o2_dict[nid].append(o2i)
-                    #o3_dict[nid].append(o3i)
-                    #ovm_dict[nid].append(ovmi)
-
-        #nnodes = self.nNodes
-        #oxx = zeros(nnodes, dtype='float32')
-        #oyy = zeros(nnodes, dtype='float32')
-        #ozz = zeros(nnodes, dtype='float32')
-        #o1 = zeros(nnodes, dtype='float32')
-        #o2 = zeros(nnodes, dtype='float32')
-        #o3 = zeros(nnodes, dtype='float32')
-        #ovm = zeros(nnodes, dtype='float32')
-        #for i, nid in enumerate(sorted(self.nidMap)):
-            #oxx[i] = mean(oxx_dict[nid])
-            #oyy[i] = mean(oyy_dict[nid])
-            #ozz[i] = mean(ozz_dict[nid])
-            #o1[i] = mean(o1_dict[nid])
-            #o2[i] = mean(o2_dict[nid])
-            #o3[i] = mean(o3_dict[nid])
-            #ovm[i] = mean(ovm_dict[nid])
-
-        ## do this to prevent screwy stresses at points that have no stress
-        #oxx = nan_to_num(oxx)
-        #oyy = nan_to_num(oyy)
-        #ozz = nan_to_num(ozz)
-        #o1 = nan_to_num(o1)
-        #o2 = nan_to_num(o2)
-        #o3 = nan_to_num(o3)
-        #ovm = nan_to_num(ovm)
-        #if oxx.min() != oxx.max():
-            #cases[(subcase_id, icase, word + 'XX', 1, 'node', '%.3f')] = oxx
-            #icase += 1
-        #if oyy.min() != oyy.max():
-            #cases[(subcase_id, icase, word + 'YY', 1, 'node', '%.3f')] = oyy
-            #icase += 1
-        #if ozz.min() != ozz.max():
-            #cases[(subcase_id, icase, word + 'ZZ', 1, 'node', '%.3f')] = ozz
-            #icase += 1
-
-        #if o1.min() != o1.max():
-            #cases[(subcase_id, icase, word + '1', 1, 'node', '%.3f')] = o1
-            #icase += 1
-        #if o2.min() != o2.max():
-            #cases[(subcase_id, icase, word + '2', 1, 'node', '%.3f')] = o2
-            #icase += 1
-        #if o3.min() != o3.max():
-            #cases[(subcase_id, icase, word + '3', 1, 'node', '%.3f')] = o3
-            #icase += 1
-        #if vm_word is not None:
-            #cases[(subcase_id, icase, vm_word, 1, 'node', '%.3f')] = ovm
-            #icase += 1
-        #return icase
-
-    #def _is_nonlinear(self, model, isubcase):
-        #table_types = model.get_table_types()
-        #for table_type in table_types:
-            #table = getattr(model, table_type)
-            #if isubcase in table:
-                #case = table[isubcase]
-                #if case.nonlinear_factor:
-                    #return True
-                #else:
-                    #return False
-        #raise RuntimeError('self._is_nonlinear(...) failed')
 
     def _get_times(self, model, isubcase):
         """
@@ -3653,10 +3387,6 @@ class NastranIO(object):
         header = ''
         form0 = ('Force', None, [])
 
-        #op2.strain_energy[1]
-            #type=StrainEnergyObject ntimes=3 nelements=16
-            #energy, percent, density
-            #modes = [1, 2, 3]
         case = None
         found_force = False
         for res_type in (model.conrod_force, model.crod_force, model.ctube_force):
@@ -3736,13 +3466,9 @@ class NastranIO(object):
             header = self._get_nastran_header(case, dt, itime)
             header_dict[(key, itime)] = header
 
-            #print('eids =', eids[:12])
-            #i = searchsorted(self.element_ids, eids)
             j = searchsorted(self.element_ids, ueids)
-            #print('unique eids =', ueids)
             is_element_on[j] = 1.
             di = j[1:-1] - j[0:-2]
-            #print('di =', unique(di))
             if di.max() != 2:
                 print('di =', unique(di))
                 # [station, bending_moment1, bending_moment2, shear1, shear2, axial, torque]
@@ -3804,7 +3530,6 @@ class NastranIO(object):
 
             if fx.min() != fx.max() or rx.min() != rx.max() and not num_off == nelements:
 
-                #if new_cases:
                 fx_res = GuiResult(subcase_id, header='Axial', title='Axial',
                                    location='centroid', scalar=fx)
                 fy_res = GuiResult(subcase_id, header='ShearY', title='ShearY',
@@ -3823,13 +3548,7 @@ class NastranIO(object):
                 cases[icase + 3] = (mx_res, (subcase_id, 'Torsion'))
                 cases[icase + 4] = (my_res, (subcase_id, 'BendingY'))
                 cases[icase + 5] = (mz_res, (subcase_id, 'BendingZ'))
-                #else:
-                    #cases[(subcase_id, icase, 'Axial', 1, 'centroid', fmt, header)] = fx
-                    #cases[(subcase_id, icase + 1, 'ShearY', 1, 'centroid', fmt, header)] = fy
-                    #cases[(subcase_id, icase + 2, 'ShearZ', 1, 'centroid', fmt, header)] = fz
-                    #cases[(subcase_id, icase + 3, 'Torsion', 1, 'centroid', fmt, header)] = rx
-                    #cases[(subcase_id, icase + 4, 'BendingY', 1, 'centroid', fmt, header)] = ry
-                    #cases[(subcase_id, icase + 5, 'BendingZ', 1, 'centroid', fmt, header)] = rz
+
                 form_dict[(key, itime)].append(('Axial', icase, []))
                 form_dict[(key, itime)].append(('ShearY', icase + 1, []))
                 form_dict[(key, itime)].append(('ShearZ', icase + 2, []))
@@ -3852,7 +3571,6 @@ class NastranIO(object):
                 is_bending_z[where(npabs(rz) > 0.0)[0]] = 1
                 #is_bending[where(abs(rx) > 0.0)[0]] = 1
 
-                #if new_cases:
                 is_fx_res = GuiResult(subcase_id, header='IsAxial', title='IsAxial',
                                       location='centroid', scalar=is_axial, data_format=fmt)
                 is_fy_res = GuiResult(subcase_id, header='IsShearY', title='IsShearY',
@@ -3871,13 +3589,7 @@ class NastranIO(object):
                 cases[icase + 3] = (is_mx_res, (subcase_id, 'IsTorsion'))
                 cases[icase + 4] = (is_my_res, (subcase_id, 'IsBendingY'))
                 cases[icase + 5] = (is_mz_res, (subcase_id, 'IsBendingZ'))
-                #else:
-                    #cases[(subcase_id, icase, 'IsAxial', 1, 'centroid', fmt, header)] = is_axial
-                    #cases[(subcase_id, icase + 1, 'IsShearY', 1, 'centroid', fmt, header)] = is_shear_y
-                    #cases[(subcase_id, icase + 2, 'IsShearZ', 1, 'centroid', fmt, header)] = is_shear_z
-                    #cases[(subcase_id, icase + 3, 'IsTorsion', 1, 'centroid', fmt, header)] = is_torsion
-                    #cases[(subcase_id, icase + 4, 'IsBendingY', 1, 'centroid', fmt, header)] = is_bending_y
-                    #cases[(subcase_id, icase + 5, 'IsBendingZ', 1, 'centroid', fmt, header)] = is_bending_z
+
                 form_dict[(key, itime)].append(('IsAxial', icase, []))
                 form_dict[(key, itime)].append(('IsShearY', icase + 1, []))
                 form_dict[(key, itime)].append(('IsShearZ', icase + 2, []))
@@ -3963,7 +3675,7 @@ class NastranIO(object):
         else:
             bars = model.cbar_strain
 
-        if key in bars:  # vectorized....
+        if key in bars:
             case = bars[key]
             if case.is_complex():
                 pass
@@ -4022,7 +3734,7 @@ class NastranIO(object):
         else:
             bars2 = model.cbar_strain_10nodes
 
-        if key in bars2 and 0:  # vectorized....
+        if key in bars2:
             case = bars[key]
             if case.is_complex():
                 pass
@@ -4081,7 +3793,7 @@ class NastranIO(object):
         else:
             beams = model.cbeam_strain
 
-        if key in beams:  # vectorized
+        if key in beams:
             case = beams[key]
             if case.is_complex():
                 pass
@@ -4142,7 +3854,6 @@ class NastranIO(object):
             ]
 
         for result in plates:
-            ## TODO: is tria6, quad8, bilinear quad handled?
             if key not in result:
                 continue
             case = result[key]
@@ -4356,7 +4067,6 @@ class NastranIO(object):
             ovmi = case.data[itime, j, 9]
 
             for inode in range(1, nnodes_per_element):
-                #print('%s - inode = %s' % (case.element_name, inode))
                 oxxi = amax(vstack([oxxi, case.data[itime, j + inode, 0]]), axis=0)
                 oyyi = amax(vstack([oyyi, case.data[itime, j + inode, 1]]), axis=0)
                 ozzi = amax(vstack([ozzi, case.data[itime, j + inode, 2]]), axis=0)
@@ -4424,84 +4134,57 @@ class NastranIO(object):
 
         subcase_id = key[2]
         if oxx.min() != oxx.max():
-            #if new_cases:
             oxx_res = GuiResult(subcase_id, header=word + 'XX', title=word + 'XX',
                                 location='centroid', scalar=oxx, data_format=fmt)
             cases[icase] = (oxx_res, (subcase_id, word + 'XX'))
-            #else:
-                #cases[(subcase_id, icase, word + 'XX', 1, 'centroid', fmt, header)] = oxx
             form_dict[(key, itime)].append((word + 'XX', icase, []))
             icase += 1
         if oyy.min() != oyy.max():
-            #if new_cases:
             oyy_res = GuiResult(subcase_id, header=word + 'YY', title=word + 'YY',
                                 location='centroid', scalar=oyy, data_format=fmt)
             cases[icase] = (oyy_res, (subcase_id, word + 'YY'))
-            #else:
-                #cases[(subcase_id, icase, word + 'YY', 1, 'centroid', fmt, header)] = oyy
             form_dict[(key, itime)].append((word + 'YY', icase, []))
             icase += 1
         if ozz.min() != ozz.max():
-            #if new_cases:
             ozz_res = GuiResult(subcase_id, header=word + 'ZZ', title=word + 'ZZ',
                                 location='centroid', scalar=ozz, data_format=fmt)
             cases[icase] = (ozz_res, (subcase_id, word + 'ZZ'))
-            #else:
-                #cases[(subcase_id, icase, word + 'ZZ', 1, 'centroid', fmt, header)] = ozz
             form_dict[(key, itime)].append((word + 'ZZ', icase, []))
             icase += 1
         if txy.min() != txy.max():
-            #if new_cases:
             oxy_res = GuiResult(subcase_id, header=word + 'XY', title=word + 'XY',
                                 location='centroid', scalar=txy, data_format=fmt)
             cases[icase] = (oxy_res, (subcase_id, word + 'XY'))
-            #else:
-                #cases[(subcase_id, icase, word + 'XY', 1, 'centroid', fmt, header)] = txy
             form_dict[(key, itime)].append((word + 'XY', icase, []))
             icase += 1
         if tyz.min() != tyz.max():
-            #if new_cases:
             oyz_res = GuiResult(subcase_id, header=word + 'YZ', title=word + 'YZ',
                                 location='centroid', scalar=tyz, data_format=fmt)
             cases[icase] = (oyz_res, (subcase_id, word + 'YZ'))
-            #else:
-                #cases[(subcase_id, icase, word + 'YZ', 1, 'centroid', fmt, header)] = tyz
             form_dict[(key, itime)].append((word + 'YZ', icase, []))
             icase += 1
         if txz.min() != txz.max():
-            #if new_cases:
             oxz_res = GuiResult(subcase_id, header=word + 'XZ', title=word + 'XZ',
                                 location='centroid', scalar=txz, data_format=fmt)
             cases[icase] = (oxz_res, (subcase_id, word + 'XZ'))
-            #else:
-                #cases[(subcase_id, icase, word + 'XZ', 1, 'centroid', fmt, header)] = txz
             form_dict[(key, itime)].append((word + 'XZ', icase, []))
             icase += 1
         if max_principal.min() != max_principal.max():
-            #if new_cases:
             maxp_res = GuiResult(subcase_id, header='MaxPrincipal', title='MaxPrincipal',
                                  location='centroid', scalar=max_principal, data_format=fmt)
             cases[icase] = (maxp_res, (subcase_id, 'MaxPrincipal'))
-            #else:
-                #cases[(subcase_id, icase, 'MaxPrincipal', 1, 'centroid', fmt, header)] = max_principal
             form_dict[(key, itime)].append(('Max Principal', icase, []))
             icase += 1
         if mid_principal.min() != mid_principal.max():
-            #if new_cases:
             midp_res = GuiResult(subcase_id, header='MidPrincipal', title='MidPrincipal',
                                  location='centroid', scalar=mid_principal, data_format=fmt)
             cases[icase] = (midp_res, (subcase_id, 'MidPrincipal'))
-            #else:
-                #cases[(subcase_id, icase, 'MidPrincipal', 1, 'centroid', fmt, header)] = mid_principal
             form_dict[(key, itime)].append(('Mid Principal', icase, []))
             icase += 1
         if min_principal.min() != min_principal.max():
-            #if new_cases:
             minp_res = GuiResult(subcase_id, header='MinPrincipal', title='MinPrincipal',
                                  location='centroid', scalar=min_principal, data_format=fmt)
             cases[icase] = (minp_res, (subcase_id, 'MinPrincipal'))
-            #else:
-                #cases[(subcase_id, icase, 'MinPrincipal', 1, 'centroid', fmt, header)] = min_principal
             form_dict[(key, itime)].append(('Min Principal', icase, []))
             icase += 1
         if vm_word is not None:
@@ -4510,12 +4193,9 @@ class NastranIO(object):
                 if max_min > 100:
                     raise RuntimeError('vm strain = %s' % ovm)
 
-            #if new_cases:
             ovm_res = GuiResult(subcase_id, header=vm_word, title=vm_word,
                                 location='centroid', scalar=ovm, data_format=fmt)
             cases[icase] = (ovm_res, (subcase_id, 'MinPrincipal'))
-            #else:
-                #cases[(subcase_id, icase, vm_word, 1, 'centroid', fmt, header)] = ovm
             form_dict[(key, itime)].append((vm_word, icase, []))
             icase += 1
 

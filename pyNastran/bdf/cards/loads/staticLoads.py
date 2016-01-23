@@ -40,7 +40,7 @@ class LOAD(LoadCombination):
     type = 'LOAD'
 
     def __init__(self, card=None, data=None, comment=''):
-        LoadCombination.__init__(self, card, data)
+        LoadCombination.__init__(self)
         if comment:
             self._comment = comment
 
@@ -316,37 +316,43 @@ class GRAV(BaseCard):
     """
     type = 'GRAV'
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self):
+        pass
+
+    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            #: Set identification number
-            self.sid = integer(card, 1, 'sid')
-            #: Coordinate system identification number.
-            self.cid = integer_or_blank(card, 2, 'cid', 0)
-            #: scale factor
-            self.scale = double(card, 3, 'scale')
-            #: Acceleration vector components measured in coordinate system CID
-            self.N = array([double_or_blank(card, 4, 'N1', 0.0),
-                            double_or_blank(card, 5, 'N2', 0.0),
-                            double_or_blank(card, 6, 'N3', 0.0)])
-            #: Indicates whether the CID coordinate system is defined in the
-            #: main Bulk Data Section (MB = -1) or the partitioned superelement
-            #: Bulk Data Section (MB = 0). Coordinate systems referenced in the
-            #: main Bulk Data Section are considered stationary with respect to
-            #: the assembly basic coordinate system. See Remark 10.
-            #: (Integer; Default = 0)
-            self.mb = integer_or_blank(card, 7, 'mb', 0)
-            assert len(card) <= 8, 'len(GRAV card) = %i' % len(card)
-        else:
-            self.sid = data[0]
-            self.cid = data[1]
-            self.a = data[2]
-            self.N = array(data[3:6])
-            self.mb = data[6]
-            self.scale = 1.
-            assert len(data) == 7
+        #: Set identification number
+        self.sid = integer(card, 1, 'sid')
+        #: Coordinate system identification number.
+        self.cid = integer_or_blank(card, 2, 'cid', 0)
+        #: scale factor
+        self.scale = double(card, 3, 'scale')
+        #: Acceleration vector components measured in coordinate system CID
+        self.N = array([double_or_blank(card, 4, 'N1', 0.0),
+                        double_or_blank(card, 5, 'N2', 0.0),
+                        double_or_blank(card, 6, 'N3', 0.0)])
+        #: Indicates whether the CID coordinate system is defined in the
+        #: main Bulk Data Section (MB = -1) or the partitioned superelement
+        #: Bulk Data Section (MB = 0). Coordinate systems referenced in the
+        #: main Bulk Data Section are considered stationary with respect to
+        #: the assembly basic coordinate system. See Remark 10.
+        #: (Integer; Default = 0)
+        self.mb = integer_or_blank(card, 7, 'mb', 0)
+        assert len(card) <= 8, 'len(GRAV card) = %i' % len(card)
+        assert not allclose(max(abs(self.N)), 0.), ('GRAV N is a zero vector, '
+                                                   'N=%s' % str(self.N))
 
+    def add_op2_data(self, data, comment=''):
+        if comment:
+            self._comment = comment
+        self.sid = data[0]
+        self.cid = data[1]
+        self.a = data[2]
+        self.N = array(data[3:6])
+        self.mb = data[6]
+        self.scale = 1.
+        assert len(data) == 7
         assert not allclose(max(abs(self.N)), 0.), ('GRAV N is a zero vector, '
                                                    'N=%s' % str(self.N))
 
@@ -452,40 +458,40 @@ class ACCEL(BaseCard):
     """
     type = 'ACCEL'
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self):
+        pass
+
+    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            #: Load set identification number (Integer>0)
-            self.sid = integer(card, 1, 'sid')
+        #: Load set identification number (Integer>0)
+        self.sid = integer(card, 1, 'sid')
 
-            #: Coordinate system identification number. (Integer>0: Default=0)
-            self.cid = integer_or_blank(card, 2, 'cid', 0)
+        #: Coordinate system identification number. (Integer>0: Default=0)
+        self.cid = integer_or_blank(card, 2, 'cid', 0)
 
-            #: Components of the acceleration vector measured in coordinate system
-            #: CID. (Real; at least one Ni != 0)
-            self.N = array([double_or_blank(card, 3, 'N1', 0.0),
-                            double_or_blank(card, 4, 'N2', 0.0),
-                            double_or_blank(card, 5, 'N3', 0.0)])
-            assert max(abs(self.N)) > 0.
+        #: Components of the acceleration vector measured in coordinate system
+        #: CID. (Real; at least one Ni != 0)
+        self.N = array([double_or_blank(card, 3, 'N1', 0.0),
+                        double_or_blank(card, 4, 'N2', 0.0),
+                        double_or_blank(card, 5, 'N3', 0.0)])
+        assert max(abs(self.N)) > 0.
 
-            #: Acceleration vector scale factor. (Real)
-            self.dir = string(card, 6, 'dir')
-            assert self.dir in ['X', 'Y', 'Z'], 'dir=%r' % self.dir
+        #: Acceleration vector scale factor. (Real)
+        self.dir = string(card, 6, 'dir')
+        assert self.dir in ['X', 'Y', 'Z'], 'dir=%r' % self.dir
 
-            i = 9
-            locs = []
-            vals = []
-            j = 0
-            while i < len(card):
-                loc = double(card, i, 'loc%i' % j)
-                val = double(card, i, 'loc%i' % j)
-                j += 1
-                i += 2
-            self.locs = array(locs)
-            self.vals = array(vals)
-        else:
-            raise NotImplementedError(data)
+        i = 9
+        locs = []
+        vals = []
+        j = 0
+        while i < len(card):
+            loc = double(card, i, 'loc%i' % j)
+            val = double(card, i, 'loc%i' % j)
+            j += 1
+            i += 2
+        self.locs = array(locs)
+        self.vals = array(vals)
 
     #def get_reduced_loads(self):
         #scale_factors = [1.]
@@ -541,29 +547,29 @@ class ACCEL1(BaseCard):
     """
     type = 'ACCEL1'
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self):
+        pass
+
+    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            #: Load set identification number (Integer>0)
-            self.sid = integer(card, 1, 'sid')
+        #: Load set identification number (Integer>0)
+        self.sid = integer(card, 1, 'sid')
 
-            #: Coordinate system identification number. (Integer>0: Default=0)
-            self.cid = integer_or_blank(card, 2, 'cid', 0)
+        #: Coordinate system identification number. (Integer>0: Default=0)
+        self.cid = integer_or_blank(card, 2, 'cid', 0)
 
-            #: Acceleration vector scale factor. (Real)
-            self.scale = double(card, 3, 'scale')
+        #: Acceleration vector scale factor. (Real)
+        self.scale = double(card, 3, 'scale')
 
-            #: Components of the acceleration vector measured in coordinate system
-            #: CID. (Real; at least one Ni != 0)
-            self.N = array([double_or_blank(card, 4, 'N1', 0.0),
-                            double_or_blank(card, 5, 'N2', 0.0),
-                            double_or_blank(card, 6, 'N3', 0.0)])
-            assert max(abs(self.N)) > 0.
+        #: Components of the acceleration vector measured in coordinate system
+        #: CID. (Real; at least one Ni != 0)
+        self.N = array([double_or_blank(card, 4, 'N1', 0.0),
+                        double_or_blank(card, 5, 'N2', 0.0),
+                        double_or_blank(card, 6, 'N3', 0.0)])
+        assert max(abs(self.N)) > 0.
 
-            nodes = fields(integer_or_string, card, 'node', i=9, j=len(card))
-        else:
-            raise NotImplementedError(data)
+        nodes = fields(integer_or_string, card, 'node', i=9, j=len(card))
 
         #: nodes to apply the acceleration to
         self.nodes = expand_thru_by(nodes)
@@ -1505,29 +1511,28 @@ class GMLOAD(Load):
     """
     type = 'GMLOAD'
 
-    def __init__(self, card=None, data=None, comment=''):
-        Load.__init__(self, card, data)
+    def __init__(self):
+        Load.__init__(self)
+
+    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            self.sid = integer(card, 1, 'sid')
-            self.cid = integer_or_blank(card, 2, 'cid', 0)
-            self.normal = array([
-                double_or_blank(card, 3, 'N1', 0.),
-                double_or_blank(card, 4, 'N2', 0.),
-                double_or_blank(card, 5, 'N3', 1.),
-            ])
-            self.entity = string(card, 6, 'entity')
-            self.entity_id = integer(card, 7, 'entity_id')
-            self.method = string(card, 8, 'method')
+        self.sid = integer(card, 1, 'sid')
+        self.cid = integer_or_blank(card, 2, 'cid', 0)
+        self.normal = array([
+            double_or_blank(card, 3, 'N1', 0.),
+            double_or_blank(card, 4, 'N2', 0.),
+            double_or_blank(card, 5, 'N3', 1.),
+        ])
+        self.entity = string(card, 6, 'entity')
+        self.entity_id = integer(card, 7, 'entity_id')
+        self.method = string(card, 8, 'method')
 
-            self.load_magnitudes = []
-            for i in range(9, len(card)):
-                ifield = i - 8
-                load_mag = integer_or_double(card, i, 'load_magnitude_%s' % ifield)
-                self.load_magnitudes.append(load_mag)
-        else:
-            raise NotImplementedError('GMLOAD-op2')
+        self.load_magnitudes = []
+        for i in range(9, len(card)):
+            ifield = i - 8
+            load_mag = integer_or_double(card, i, 'load_magnitude_%s' % ifield)
+            self.load_magnitudes.append(load_mag)
 
     #def DEquation(self):
         #if isinstance(self.dequation, int):
@@ -1593,28 +1598,35 @@ class GMLOAD(Load):
 class PLOAD(Load):
     type = 'PLOAD'
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self):
+        pass
+
+    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            self.sid = integer(card, 1, 'sid')
-            self.p = double(card, 2, 'p')
-            nodes = [integer(card, 3, 'n1'),
-                     integer(card, 4, 'n2'),
-                     integer(card, 5, 'n3')]
-            n4 = integer_or_blank(card, 6, 'n4', 0)
-            if n4:
-                nodes.append(n4)
-            #self.nodes = wipe_empty_fields(nodes)
-            self.nodes = nodes
-            assert len(card) <= 7, 'len(PLOAD card) = %i' % len(card)
-        else:
-            self.sid = data[0]
-            self.p = data[1]
-            self.nodes = data[2:]
-            print("PLOAD = %s" % data)
-            raise NotImplementedError('PLOAD')
+
+        self.sid = integer(card, 1, 'sid')
+        self.p = double(card, 2, 'p')
+        nodes = [integer(card, 3, 'n1'),
+                 integer(card, 4, 'n2'),
+                 integer(card, 5, 'n3')]
+        n4 = integer_or_blank(card, 6, 'n4', 0)
+        if n4:
+            nodes.append(n4)
+        #self.nodes = wipe_empty_fields(nodes)
+        self.nodes = nodes
+        assert len(card) <= 7, 'len(PLOAD card) = %i' % len(card)
         assert len(self.nodes) in [3, 4], 'nodes=%s' % self.nodes
+
+    def add_op2_data(self, data, comment=''):
+        if comment:
+            self._comment = comment
+        self.sid = data[0]
+        self.p = data[1]
+        self.nodes = data[2:]
+        print("PLOAD = %s" % data)
+        raise NotImplementedError('PLOAD')
+        #assert len(self.nodes) in [3, 4], 'nodes=%s' % self.nodes
 
     def cross_reference(self, model):
         """
@@ -1654,31 +1666,39 @@ class PLOAD1(Load):
                    'MX', 'MY', 'MZ', 'MXE', 'MYE', 'MZE']
     valid_scales = ['LE', 'FR', 'LEPR', 'FRPR'] # LE: length-based; FR: fractional; PR:projected
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self):
+        pass
+
+    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            self.sid = integer(card, 1, 'sid')
-            self.eid = integer(card, 2, 'eid')
-            self.Type = string(card, 3, 'Type ("%s")' % '",  "'.join(self.valid_types))
-            self.scale = string(card, 4, 'scale ("%s")' % '", "'.join(self.valid_scales))
-            self.x1 = double(card, 5, 'x1')
-            self.p1 = double(card, 6, 'p1')
-            self.x2 = double_or_blank(card, 7, 'x2', self.x1)
-            self.p2 = double_or_blank(card, 8, 'p2', self.p1)
-            assert len(card) <= 9, 'len(PLOAD1 card) = %i' % len(card)
-        else:
-            self.sid = data[0]
-            self.eid = data[1]
-            self.Type = data[2]
-            self.scale = data[3]
-            self.x1 = data[4]
-            self.p1 = data[5]
-            self.x2 = data[6]
-            self.p2 = data[7]
-            self.Type = self.valid_types[self.Type - 1]
-            self.scale = self.valid_scales[self.scale - 1]
+        self.sid = integer(card, 1, 'sid')
+        self.eid = integer(card, 2, 'eid')
+        self.Type = string(card, 3, 'Type ("%s")' % '",  "'.join(self.valid_types))
+        self.scale = string(card, 4, 'scale ("%s")' % '", "'.join(self.valid_scales))
+        self.x1 = double(card, 5, 'x1')
+        self.p1 = double(card, 6, 'p1')
+        self.x2 = double_or_blank(card, 7, 'x2', self.x1)
+        self.p2 = double_or_blank(card, 8, 'p2', self.p1)
+        assert len(card) <= 9, 'len(PLOAD1 card) = %i' % len(card)
+        self._validate_input()
 
+    def add_op2_data(self, data, comment=''):
+        if comment:
+            self._comment = comment
+        self.sid = data[0]
+        self.eid = data[1]
+        self.Type = data[2]
+        self.scale = data[3]
+        self.x1 = data[4]
+        self.p1 = data[5]
+        self.x2 = data[6]
+        self.p2 = data[7]
+        self.Type = self.valid_types[self.Type - 1]
+        self.scale = self.valid_scales[self.scale - 1]
+        self._validate_input()
+
+    def _validate_input(self):
         if self.Type not in self.valid_types:
             msg = '%s is an invalid type on the PLOAD1 card; valid_types=[%s]' % (
                 self.Type, ', '.join(self.valid_types).rstrip(', '))
@@ -1693,7 +1713,6 @@ class PLOAD1(Load):
             assert self.x1 <= 1.0, 'x1=%r' % self.x1
             assert self.x2 <= 1.0, 'x2=%r' % self.x2
         assert self.scale in self.valid_scales, '%s is an invalid scale on the PLOAD1 card' % (self.scale)
-
 
     def cross_reference(self, model):
         """
@@ -1893,25 +1912,30 @@ class PLOAD1(Load):
 class PLOAD2(Load):
     type = 'PLOAD2'
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self):
+        pass
+
+    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            self.sid = integer(card, 1, 'sid')
-            self.pressure = double(card, 2, 'p')
+        self.sid = integer(card, 1, 'sid')
+        self.pressure = double(card, 2, 'p')
 
-            if integer_string_or_blank(card, 4, 'THRU') == 'THRU':
-                e1 = integer(card, 3, 'Element1')
-                e2 = integer(card, 5, 'Element1')
-                eids = [i for i in range(e1, e2 + 1)]
-                assert len(card) == 6, 'len(PLOAD2 card) = %i' % len(card)
-            else:
-                eids = fields(integer, card, 'eid', i=3, j=len(card))
-            self.eids = eids
+        if integer_string_or_blank(card, 4, 'THRU') == 'THRU':
+            e1 = integer(card, 3, 'Element1')
+            e2 = integer(card, 5, 'Element1')
+            eids = [i for i in range(e1, e2 + 1)]
+            assert len(card) == 6, 'len(PLOAD2 card) = %i' % len(card)
         else:
-            self.sid = data[0]
-            self.pressure = data[1]
-            self.eids = list(data[2:])
+            eids = fields(integer, card, 'eid', i=3, j=len(card))
+        self.eids = eids
+
+    def add_op2_data(self, data, comment=''):
+        if comment:
+            self._comment = comment
+        self.sid = data[0]
+        self.pressure = data[1]
+        self.eids = list(data[2:])
 
     def cross_reference(self, model):
         """
@@ -1979,66 +2003,74 @@ class PLOAD4(Load):
         self.deprecated('transformLoad()', 'transform_load()', '0.8')
         return self.transform_load()
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self):
+        pass
+
+    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            self.sid = integer(card, 1, 'sid')
-            self.eid = integer(card, 2, 'eid')
-            p1 = double_or_blank(card, 3, 'p1', 0.0)
-            p = [p1,
-                 double_or_blank(card, 4, 'p2', p1),
-                 double_or_blank(card, 5, 'p3', p1),
-                 double_or_blank(card, 6, 'p4', p1)]
-            self.pressures = p
+        self.sid = integer(card, 1, 'sid')
+        self.eid = integer(card, 2, 'eid')
+        p1 = double_or_blank(card, 3, 'p1', 0.0)
+        p = [p1,
+             double_or_blank(card, 4, 'p2', p1),
+             double_or_blank(card, 5, 'p3', p1),
+             double_or_blank(card, 6, 'p4', p1)]
+        self.pressures = p
 
-            self.eids = [self.eid]
-            if (integer_string_or_blank(card, 7, 'g1/THRU') == 'THRU' and
-                integer_or_blank(card, 8, 'eid2')):  # plates
-                eid2 = integer(card, 8, 'eid2')
-                if eid2:
-                    self.eids = list(unique(
-                        expand_thru([self.eid, 'THRU', eid2], set_fields=False, sort_fields=False)
-                    ))
-                self.g1 = None
-                self.g34 = None
-            else:
-                #: used for CPENTA, CHEXA
-                self.eids = [self.eid]
-                #: used for solid element only
-                self.g1 = integer_or_blank(card, 7, 'g1')
-                #: g3/g4 - different depending on CHEXA/CPENTA or CTETRA
-                self.g34 = integer_or_blank(card, 8, 'g34')
-
-            #: Coordinate system identification number. See Remark 2.
-            #: (Integer >= 0;Default=0)
-            self.cid = integer_or_blank(card, 9, 'cid', 0)
-            self.NVector = array([double_or_blank(card, 10, 'N1', 0.0),
-                                  double_or_blank(card, 11, 'N2', 0.0),
-                                  double_or_blank(card, 12, 'N3', 0.0)])
-            self.sorl = string_or_blank(card, 13, 'sorl', 'SURF')
-            self.ldir = string_or_blank(card, 14, 'ldir', 'NORM')
-            assert len(card) <= 15, 'len(PLOAD4 card) = %i' % len(card)
+        self.eids = [self.eid]
+        if (integer_string_or_blank(card, 7, 'g1/THRU') == 'THRU' and
+            integer_or_blank(card, 8, 'eid2')):  # plates
+            eid2 = integer(card, 8, 'eid2')
+            if eid2:
+                self.eids = list(unique(
+                    expand_thru([self.eid, 'THRU', eid2], set_fields=False, sort_fields=False)
+                ))
+            self.g1 = None
+            self.g34 = None
         else:
-            self.sid = data[0]
-            self.eid = data[1]
-            self.pressures = data[2]
-
-            self.g1 = data[3]
-            self.g34 = data[4]
-            self.cid = data[5]
-            self.NVector = data[6]
-
-            self.sorl = data[7]
-            #self.ldir = data[8]
-            #assert len(data)==8
-
-            self.g1 = self.g1
-            self.g34 = self.g34
+            #: used for CPENTA, CHEXA
             self.eids = [self.eid]
-            self.sorl = 'SURF'
-            self.ldir = 'NORM'
+            #: used for solid element only
+            self.g1 = integer_or_blank(card, 7, 'g1')
+            #: g3/g4 - different depending on CHEXA/CPENTA or CTETRA
+            self.g34 = integer_or_blank(card, 8, 'g34')
 
+        #: Coordinate system identification number. See Remark 2.
+        #: (Integer >= 0;Default=0)
+        self.cid = integer_or_blank(card, 9, 'cid', 0)
+        self.NVector = array([double_or_blank(card, 10, 'N1', 0.0),
+                              double_or_blank(card, 11, 'N2', 0.0),
+                              double_or_blank(card, 12, 'N3', 0.0)])
+        self.sorl = string_or_blank(card, 13, 'sorl', 'SURF')
+        self.ldir = string_or_blank(card, 14, 'ldir', 'NORM')
+        assert len(card) <= 15, 'len(PLOAD4 card) = %i' % len(card)
+        self._validate_input()
+
+    def add_op2_data(self, data, comment=''):
+        if comment:
+            self._comment = comment
+        self.sid = data[0]
+        self.eid = data[1]
+        self.pressures = data[2]
+
+        self.g1 = data[3]
+        self.g34 = data[4]
+        self.cid = data[5]
+        self.NVector = data[6]
+
+        self.sorl = data[7]
+        #self.ldir = data[8]
+        #assert len(data)==8
+
+        self.g1 = self.g1
+        self.g34 = self.g34
+        self.eids = [self.eid]
+        self.sorl = 'SURF'
+        self.ldir = 'NORM'
+        self._validate_input()
+
+    def _validate_input(self):
         if self.sorl not in ['SURF', 'LINE']:
             raise RuntimeError(self.sorl)
         if self.ldir not in ['LINE', 'X', 'Y', 'Z', 'TANG', 'NORM']:
@@ -2221,22 +2253,27 @@ class PLOAD4(Load):
 class PLOADX1(Load):
     type = 'PLOADX1'
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self):
+        pass
+
+    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            self.sid = integer(card, 1, 'sid')
-            self.eid = integer(card, 2, 'eid')
-            self.pa = double(card, 3, 'pa')
-            self.pb = double_or_blank(card, 4, 'pb', self.pa)
-            self.ga = integer(card, 5, 'ga')
-            self.gb = integer(card, 6, 'gb')
-            self.theta = double_or_blank(card, 7, 'theta', 0.)
-            assert len(card) <= 8, 'len(PLOADX1 card) = %i' % len(card)
-        else:
-            self.sid = data[0]
-            print("PLOADX1 = %s" % data)
-            raise NotImplementedError(data)
+        self.sid = integer(card, 1, 'sid')
+        self.eid = integer(card, 2, 'eid')
+        self.pa = double(card, 3, 'pa')
+        self.pb = double_or_blank(card, 4, 'pb', self.pa)
+        self.ga = integer(card, 5, 'ga')
+        self.gb = integer(card, 6, 'gb')
+        self.theta = double_or_blank(card, 7, 'theta', 0.)
+        assert len(card) <= 8, 'len(PLOADX1 card) = %i' % len(card)
+
+    def add_op2_data(self, data, comment=''):
+        if comment:
+            self._comment = comment
+        self.sid = data[0]
+        print("PLOADX1 = %s" % data)
+        raise NotImplementedError(data)
 
     def cross_reference(self, model):
         msg = ' which is required by PLOADX1 lid=%s' % self.sid

@@ -238,7 +238,7 @@ class DOPTPRM(OptConstraint):
         'UPDFAC1' : 2.0,
         'UPDFAC2' : 0.5,
         }
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self):
         """
         Design Optimization Parameters
         Overrides default values of parameters used in design optimization
@@ -249,6 +249,9 @@ class DOPTPRM(OptConstraint):
         |         | PARAM5 | VAL5 | -etc.- |      |        |      |        |      |
         +---------+--------+------+--------+------+--------+------+--------+------+
         """
+        pass
+
+    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
 

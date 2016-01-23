@@ -21,30 +21,33 @@ class TestLoads(unittest.TestCase):
         #DAREA 3   6   2 8.2 15 1  10.1
         lines = ['DAREA,3,6,2,8.2,15,1,10.1']
         card = bdf.process_card(lines)
-        card = BDFCard(card)
+        cardi = BDFCard(card)
 
         size = 8
-        card = DAREA(card)
+        card = DAREA()
+        card.add_card(cardi)
         card.write_card(size, 'dummy')
         card.raw_fields()
 
     def test_pload4_01(self):
         lines = ['PLOAD4  1000    1       -60.    -60.    60.             1']
         card = bdf.process_card(lines)
-        card = BDFCard(card)
+        cardi = BDFCard(card)
 
         size = 8
-        card = PLOAD4(card)
+        card = PLOAD4()
+        card.add_card(cardi)
         card.write_card(size, 'dummy')
         card.raw_fields()
 
     def test_pload4_02(self):
         lines = ['PLOAD4  1       101     1.                              10000   10011']
         card = bdf.process_card(lines)
-        card = BDFCard(card)
+        cardi = BDFCard(card)
 
         size = 8
-        card = PLOAD4(card)
+        card = PLOAD4()
+        card.add_card(cardi)
         card.write_card(size, 'dummy')
         card.raw_fields()
 

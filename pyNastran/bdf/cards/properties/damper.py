@@ -21,8 +21,8 @@ from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
 
 
 class DamperProperty(Property):
-    def __init__(self, card, data):
-        Property.__init__(self, card, data)
+    def __init__(self):
+        Property.__init__(self)
 
     def cross_reference(self, model):
         pass
@@ -38,7 +38,7 @@ class PDAMP(DamperProperty):
     }
 
     def __init__(self, card=None, icard=0, data=None, comment=''):
-        DamperProperty.__init__(self, card, data)
+        DamperProperty.__init__(self)
         if comment:
             self._comment = comment
         nOffset = icard * 2
@@ -88,7 +88,7 @@ class PDAMP5(DamperProperty):
         Defines the damping multiplier and references the material properties
         for damping. CDAMP5 is intended for heat transfer analysis only.
         """
-        DamperProperty.__init__(self, card, data)
+        DamperProperty.__init__(self)
         if comment:
             self._comment = comment
         if card:
@@ -146,7 +146,7 @@ class PDAMPT(DamperProperty):
     }
 
     def __init__(self, card=None, data=None, comment=''):
-        DamperProperty.__init__(self, card, data)
+        DamperProperty.__init__(self)
         if comment:
             self._comment = comment
         if card:
@@ -199,18 +199,22 @@ class PVISC(DamperProperty):
         1: 'pid', 2:'ce', 3:'cr',
     }
 
-    def __init__(self, card=None, icard=0, data=None, comment=''):
-        DamperProperty.__init__(self, card, data)
+    def __init__(self):
+        DamperProperty.__init__(self)
+
+    def add_card(self, card, icard=0, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            self.pid = integer(card, 1 + 4 * icard, 'pid')
-            self.ce = double(card, 2 + 4 * icard, 'ce')
-            self.cr = double_or_blank(card, 3 + 4 * icard, 'cr', 0.)
-        else:
-            self.pid = data[0]
-            self.ce = data[1]
-            self.cr = data[2]
+        self.pid = integer(card, 1 + 4 * icard, 'pid')
+        self.ce = double(card, 2 + 4 * icard, 'ce')
+        self.cr = double_or_blank(card, 3 + 4 * icard, 'cr', 0.)
+
+    def add_op2_data(self, data, comment=''):
+        if comment:
+            self._comment = comment
+        self.pid = data[0]
+        self.ce = data[1]
+        self.cr = data[2]
 
     def cross_reference(self, model):
         pass

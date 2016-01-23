@@ -228,23 +228,30 @@ class PLSOLID(SolidProperty):
     }
 
     def __init__(self, card=None, data=None, comment=''):
-        SolidProperty.__init__(self, card, data)
+        SolidProperty.__init__(self)
+
+    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            #: Property ID
-            self.pid = integer(card, 1, 'pid')
-            #: Material ID
-            self.mid = integer(card, 2, 'mid')
-            #: Location of stress and strain output
-            self.str = string_or_blank(card, 3, 'str', 'GRID')
-            assert len(card) <= 4, 'len(PLSOLID card) = %i' % len(card)
-        else:
-            self.pid = data[0]
-            self.mid = data[1]
-            self.ge = data[2]
-            self.str = data[3]
+        #: Property ID
+        self.pid = integer(card, 1, 'pid')
+        #: Material ID
+        self.mid = integer(card, 2, 'mid')
+        #: Location of stress and strain output
+        self.str = string_or_blank(card, 3, 'str', 'GRID')
+        assert len(card) <= 4, 'len(PLSOLID card) = %i' % len(card)
+        self._validate_input()
 
+    def add_op2_data(data, comment=''):
+        if comment:
+            self._comment = comment
+        self.pid = data[0]
+        self.mid = data[1]
+        self.ge = data[2]
+        self.str = data[3]
+        self._validate_input()
+
+    def _validate_input(self):
         if self.str == 'GAUS':
             self.str = 'GAUSS'
         if self.str not in ['GRID', 'GAUSS']:
