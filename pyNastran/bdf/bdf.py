@@ -1335,6 +1335,13 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'CVISC' : (CVISC, self.add_element),
             'PELAST' : (PELAST, self.add_PELAST),
 
+            'CDAMP1' : (CDAMP1, self.add_damper),
+            'CDAMP2' : (CDAMP2, self.add_damper),
+            'CDAMP3' : (CDAMP3, self.add_damper),
+            # CDAMP4 added later because the documentation is wrong
+            'CDAMP5' : (CDAMP5, self.add_damper),
+            'PDAMP5' : (PDAMP5, self.add_property),
+
             # there is no MAT6 or MAT7
             'MAT1' : (MAT1, self.add_structural_material),
 
@@ -1438,13 +1445,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'CBUSH2D' : (CBUSH2D, self.add_damper),
             'PBUSH' : (PBUSH, self.add_property),
             'PBUSH1D' : (PBUSH1D, self.add_property),
-
-            'CDAMP1' : (CDAMP1, self.add_damper),
-            'CDAMP2' : (CDAMP2, self.add_damper),
-            'CDAMP3' : (CDAMP3, self.add_damper),
-            # CDAMP4 added later because the documentation is wrong
-            'CDAMP5' : (CDAMP5, self.add_damper),
-            'PDAMP5' : (PDAMP5, self.add_property),
 
             'CFAST' : (CFAST, self.add_damper),
             'PFAST' : (PFAST, self.add_property),

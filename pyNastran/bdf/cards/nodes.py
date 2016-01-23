@@ -411,20 +411,17 @@ class SPOINTs(XPoints):
     def __init__(self):
         """
         Creates the SPOINTs card that contains many SPOINTs
-        :param self:
-          the SPOINTs object pointer
-        :param card:
-          a BDFCard object
-        :type card:
-          BDFCard
-        :param data:
-          a list with the SPOINT fields defined in OP2 format
-        :type data:
-          LIST
-        :param comment:
-          a comment for the card
-        :type comment:
-          string
+
+        Parameters
+        ----------
+        self : SPOINT()
+            the SPOINTs object pointer
+        card : BDFCard()
+            a BDFCard object
+        data : List[int]
+            a list with the SPOINT fields defined in OP2 format
+        comment : str
+            a comment for the card
         """
         XPoints.__init__(self)
 
@@ -457,7 +454,7 @@ class EPOINTs(XPoints):
 
     def __init__(self):
         """
-        Creates the EPOINTs card that contains many SPOINTs
+        Creates the EPOINTs card that contains many EPOINTs
 
         Parameters
         ----------
@@ -893,11 +890,32 @@ class GRID(Node):
         assert len(self.xyz) == 3
 
     def add(self, nid, cp=0, xyz=None, cd=0, ps='', seid=0):
+        """
+        Creates the GRID card in a functional way
+
+        Parameters
+        ----------
+        self : GRID()
+            the GRID object pointer
+        nid : int
+            node id
+        cp : int; default=0
+            the xyz coordinate frame
+        xyz : (3, ) float ndarray; default=None -> [0., 0., 0.]
+            the xyz/r-theta-z/rho-theta-phi values
+        cd : int; default=0
+            the analysis coordinate frame
+        ps : str; default=''
+            additional SPCs in the analysis coordinate frame (e.g. '123')
+        seid : int; default=0
+            ???
+        """
         self.nid = nid
         self.cp = cp
         if xyz is None:
             xyz = [0., 0., 0.]
         self.xyz = np.asarray(xyz, dtype='float64')
+        assert xyz.shape == 3, xyz.shape
         self.cd = cd
         self.ps = ps
         self._validate_input()

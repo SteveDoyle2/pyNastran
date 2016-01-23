@@ -83,28 +83,32 @@ class PDAMP5(DamperProperty):
         1: 'pid', 2:'mid', 3:'b',
     }
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self):
         """
         Defines the damping multiplier and references the material properties
         for damping. CDAMP5 is intended for heat transfer analysis only.
         """
         DamperProperty.__init__(self)
+
+    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            #: Property ID
-            self.pid = integer(card, 1, 'pid')
-            #: Material ID
-            self.mid = integer(card, 2, 'mid')
-            #: Damping multiplier. (Real > 0.0)
-            #: B is the mass that multiplies the heat capacity CP on the MAT4
-            #: or MAT5 entry.
-            self.b = double(card, 3, 'b')
-            assert len(card) == 4, 'len(PDAMP5 card) = %i' % len(card)
-        else:
-            self.pid = data[0]
-            self.mid = data[1]
-            self.b = data[2]
+        #: Property ID
+        self.pid = integer(card, 1, 'pid')
+        #: Material ID
+        self.mid = integer(card, 2, 'mid')
+        #: Damping multiplier. (Real > 0.0)
+        #: B is the mass that multiplies the heat capacity CP on the MAT4
+        #: or MAT5 entry.
+        self.b = double(card, 3, 'b')
+        assert len(card) == 4, 'len(PDAMP5 card) = %i' % len(card)
+
+    def add_op2_data(self, data, comment=''):
+        if comment:
+            self._comment = comment
+        self.pid = data[0]
+        self.mid = data[1]
+        self.b = data[2]
 
     def _verify(self, xref=True):
         pid = self.Pid()

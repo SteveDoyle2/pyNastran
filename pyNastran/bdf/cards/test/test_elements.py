@@ -25,7 +25,8 @@ class TestElements(unittest.TestCase):
         card = BDFCard(card)
 
         size = 8
-        elem = CDAMP1(card)
+        elem = CDAMP1()
+        elem.add_card(card)
         self.assertEqual(elem.Eid(), 2001)
         self.assertEqual(elem.Pid(), 20)
         node_ids = elem.node_ids
