@@ -8,10 +8,10 @@ from six.moves import range
 from struct import Struct
 from numpy import fromstring
 
+from pyNastran.op2.op2_helper import polar_to_real_imag
 from pyNastran.op2.op2_common import OP2Common
 from pyNastran.op2.tables.ogf_gridPointForces.ogf_Objects import (
-    RealGridPointForcesArray, ComplexGridPointForcesArray,
-    ComplexGridPointForces)
+    RealGridPointForcesArray, ComplexGridPointForcesArray)
 
 
 class OGPF(OP2Common):
@@ -116,7 +116,6 @@ class OGPF(OP2Common):
                         if self.is_debug_file:
                             self.binary_debug.write('  nid=%s - %s\n' % (nid, str(out)))
                         self.obj.add(dt, nid, eid, elem_name, f1, f2, f3, m1, m2, m3)
-                        #print "eid/dt/freq=%s eid=%-6s eName=%-8s f1=%g f2=%g f3=%g m1=%g m2=%g m3=%g" %(nid, eid, elemName, f1, f2, f3, m1, m2, m3)
                         n += ntotal
             elif self.num_wide == 16:
                 # complex
@@ -148,7 +147,7 @@ class OGPF(OP2Common):
                         eids = ints[:, 1]
                         obj.node_element[istart:iend, 0] = nids
                         obj.node_element[istart:iend, 1] = eids
-                        strings = fromstring(data, dtype=self._endian + 'S8').reshape(nnodes, 8)#[:, 2:3]
+                        strings = fromstring(data, dtype=self._endian + 'S8').reshape(nnodes, 8)
                         obj.element_names[istart:iend] = strings[:, 1]
 
                     floats = fromstring(data, dtype=self.fdtype).reshape(nnodes, 16)

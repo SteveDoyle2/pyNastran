@@ -103,13 +103,13 @@ class RealBarArray(OES_Object):
             self.data_frame.columns.names = ['Static']
             self.data_frame.index.names = ['ElementID', 'Item']
 
-    def add_new_eid(self, eType, dt, eid, s1a, s2a, s3a, s4a, axial, smaxa, smina, MSt,
+    def add_new_eid(self, dt, eid, s1a, s2a, s3a, s4a, axial, smaxa, smina, MSt,
                     s1b, s2b, s3b, s4b, smaxb, sminb, MSc):
-        self.add_new_eid_sort1(eType, dt, eid,
+        self.add_new_eid_sort1(dt, eid,
                                s1a, s2a, s3a, s4a, axial, smaxa, smina, MSt,
                                s1b, s2b, s3b, s4b, smaxb, sminb, MSc)
 
-    def add_new_eid_sort1(self, eType, dt, eid,
+    def add_new_eid_sort1(self, dt, eid,
                           s1a, s2a, s3a, s4a, axial, smaxa, smina, MSt,
                           s1b, s2b, s3b, s4b, smaxb, sminb, MSc):
 

@@ -940,6 +940,17 @@ class RealViscForceArray(RealForceObject):  # 24-CVISC
         #[axial_force, torque]
         self.data = zeros((self.ntimes, self.ntotal, 2), dtype='float32')
 
+    def build_dataframe(self):
+        headers = self.get_headers()
+        if self.nonlinear_factor is not None:
+            column_names, column_values = self._build_dataframe_transient_header()
+            self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
+            self.data_frame.columns.names = column_names
+        else:
+            self.data_frame = pd.Panel(self.data, major_axis=self.element, minor_axis=headers).to_frame()
+            self.data_frame.columns.names = ['Static']
+        self.data_frame.index.names = ['ElementID', 'Item']
+
     def add(self, dt, eid, axial, torque):
         self.add_sort1(dt, eid, axial, torque)
 
@@ -981,14 +992,21 @@ class RealViscForceArray(RealForceObject):  # 24-CVISC
 
     def get_f06_header(self, is_mag_phase=True, is_sort1=True):
         if is_sort1:
-            realviscforcearray
             msg = [
+                '                                     F O R C E S   I N   R O D   E L E M E N T S      ( C R O D )\n'
+                ' \n'
                 '       ELEMENT       AXIAL       TORSIONAL     ELEMENT       AXIAL       TORSIONAL\n'
                 '         ID.         FORCE        MOMENT        ID.          FORCE        MOMENT\n'
-                '                                     F O R C E S   I N   R O D   E L E M E N T S      ( C R O D )\n'
             ]
         else:
-            raise NotImplementedError('sort2')
+            msg = [
+                '                                   F O R C E S   I N   V I S C   E L E M E N T S   ( C V I S C )'
+                ' \n'
+                '                         AXIAL                                                       AXIAL\n'
+                '       TIME              FORCE         TORQUE                      TIME              FORCE         TORQUE\n'
+                #'   0.0                0.0            0.0                       1.000000E+00      -5.642718E-04   0.0\n'
+                #'   2.000000E+00      -1.905584E-06   0.0                       3.000000E+00       9.472010E-07   0.0\n'
+            ]
         return msg
 
     def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):

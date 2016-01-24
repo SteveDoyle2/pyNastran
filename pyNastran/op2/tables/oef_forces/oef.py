@@ -1552,7 +1552,7 @@ class OEF(OP2Common):
                         obj.element[itotal:itotal2] = eids
 
                     #(eid_device, axial, torque)
-                    obj.data[obj.itime, itotal:itotal2, :] = floats[:, 1]
+                    obj.data[obj.itime, itotal:itotal2, :] = floats[:, 1:]
                     obj.itotal = itotal2
                     obj.ielement = ielement2
                 else:
@@ -1830,9 +1830,10 @@ class OEF(OP2Common):
                 obj = self.obj
                 if self.use_vector and is_vectorized:
                     n = nelements * 4 * self.num_wide
-                    itotal = obj.ielement
-                    ielement2 = obj.itotal + nelements
-                    itotal2 = ielement2
+                    ielement = obj.ielement
+                    ielement2 = ielement + nelements
+                    itotal = obj.itotal
+                    itotal2 = itotal + nelements
 
                     floats = fromstring(data, dtype=self.fdtype).reshape(nelements, 17)
                     obj._times[obj.itime] = dt

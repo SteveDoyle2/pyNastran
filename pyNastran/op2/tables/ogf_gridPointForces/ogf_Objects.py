@@ -1,7 +1,7 @@
 from __future__ import print_function
 from six import iteritems
-from numpy import array, zeros, unique, array_equal, empty
-from struct import pack
+import numpy as np
+from numpy import zeros, unique, array_equal, empty
 from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header, write_imag_floats_13e
 try:
@@ -17,6 +17,7 @@ class RealGridPointForcesArray(ScalarObject):
 
         #self.ntimes = 0  # or frequency/mode
         self.ntotal = 0
+        self.itotal = 0
 
         # do the element_names/node_element vectors change with the time step
         self.is_unique = False
@@ -55,7 +56,7 @@ class RealGridPointForcesArray(ScalarObject):
             #raise ValueError('RealGridPointForcesArray: ntotal=%s _ntotals=%s' % (self.ntotal, self._ntotals))
 
         self.is_unique = False
-        if self.ntotal != min(self._ntotals):
+        if self.ntotal != min(self._ntotals) or 1:
             self.ntotal = max(self._ntotals)
             self.is_unique = True
         #self.names = []
@@ -109,35 +110,49 @@ class RealGridPointForcesArray(ScalarObject):
         headers = self.get_headers()
         #name = self.name
         if self.is_unique:
-            #raise NotImplementedError('RealGridPointForcesArray - build_dataframe - not unique')
-            #node_element = [self.node_element[:, 0], self.node_element[:, 1]]
-
             ntimes = self.data.shape[0]
             nnodes = self.data.shape[1]
-            #print(ntimes, nnodes)
-            #print(self.node_element.shape)
+            nvalues = ntimes * nnodes
             node_element = self.node_element.reshape((ntimes * nnodes, 2))
-            #print(node_element)
             if self.nonlinear_factor is not None:
                 column_names, column_values = self._build_dataframe_transient_header()
-                self.data_frame = pd.Panel(self.data, items=column_values, major_axis=node_element, minor_axis=headers).to_frame()
-                self.data_frame.columns.names = column_names
-                self.data_frame.index.names = ['NodeID', 'ElementID', 'Item']
-            else:
-                self.data_frame = pd.Panel(self.data, major_axis=node_element, minor_axis=headers).to_frame()
-                self.data_frame.columns.names = ['Static']
-                self.data_frame.index.names = ['NodeID', 'ElementID', 'Item']
 
+                column_values2 = []
+                for value in column_values:
+                    values2 = []
+                    for valuei in value:
+                        values = np.ones(nnodes) * valuei
+                        values2.append(values)
+                    values3 = np.vstack(values2).ravel()
+                    column_values2.append(values3)
+                df1 = pd.DataFrame(column_values2).T
+                df1.columns = column_names
+
+                df2 = pd.DataFrame(node_element)
+                df2.columns = ['NodeID', 'ElementID']
+                df3 = pd.DataFrame(self.element_names.ravel())
+                df3.columns = ['ElementType']
+
+                dfs = [df2, df3]
+                for i, header in enumerate(headers):
+                    df = pd.DataFrame(self.data[:, :, i].ravel())
+                    df.columns = [header]
+                    dfs.append(df)
+                self.data_frame = df1.join(dfs)
+                #print(self.data_frame)
+            else:
+                df1 = pd.DataFrame(node_element)
+                df1.columns = ['NodeID', 'ElementID']
+                df2 = pd.DataFrame(self.element_names[0, :])
+                df2.columns = ['ElementType']
+                df3 = pd.DataFrame(self.data[0])
+                df3.columns = headers
+                self.data_frame = df1.join([df2, df3])
+                #print(self.data_frame)
         else:
             node_element = [self.node_element[:, 0], self.node_element[:, 1]]
-            #print(node_element[0])
-            #print(node_element[1], len(node_element[1]))
-            #print(self.data.shape)
             if self.nonlinear_factor is not None:
                 column_names, column_values = self._build_dataframe_transient_header()
-                #print('column_names =', column_names)
-                #for name, values in zip(column_names, column_values):
-                    #print('  %s = %s' %(name, values))
                 self.data_frame = pd.Panel(self.data, items=column_values, major_axis=node_element, minor_axis=headers).to_frame()
                 self.data_frame.columns.names = column_names
                 self.data_frame.index.names = ['NodeID', 'ElementID', 'Item']
@@ -165,32 +180,61 @@ class RealGridPointForcesArray(ScalarObject):
                 msg += '(%s, %s, %s)    (%s, %s, %s)\n' % (nid1, eid1, ename1, nid2, eid2, ename2)
             print(msg)
             raise ValueError(msg)
-        if not array_equal(self.data, table.data):
-            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
-            msg += '%s\n' % str(self.code_information())
-            i = 0
-            for itime in range(self.ntimes):
-                for ie, e in enumerate(self.node_element):
-                    (nid, eid) = e
-                    ename1 = self.element_names[ie]
-                    ename2 = self.element_names[ie]
-                    t1 = self.data[itime, ie, :]
-                    t2 = table.data[itime, ie, :]
-                    (t11, t21, t31, r11, r21, r31) = t1
-                    (t12, t22, t32, r12, r22, r32) = t2
 
-                    if not array_equal(t1, t2):
-                        msg += '(%s, %s, %s)    (%s, %s, %s, %s, %s, %s)  (%s, %s, %s, %s, %s, %s)\n' % (
-                            nid, eid, ename,
-                            t12, t22, t32, r12, r22, r32,
-                            t12, t22, t32, r12, r22, r32)
-                        i += 1
-                        if i > 10:
-                            print(msg)
-                            raise ValueError(msg)
-                #print(msg)
-                if i > 0:
-                    raise ValueError(msg)
+        if self.is_unique:
+            if not array_equal(self.data, table.data):
+                msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+                msg += '%s\n' % str(self.code_information())
+                i = 0
+                for itime in range(self.ntimes):
+                    for ie, e in enumerate(self.node_element):
+                        (nid, eid) = e
+                        ename1 = self.element_names[itime, ie]
+                        ename2 = self.element_names[itime, ie]
+                        t1 = self.data[itime, ie, :]
+                        t2 = table.data[itime, ie, :]
+                        (t11, t21, t31, r11, r21, r31) = t1
+                        (t12, t22, t32, r12, r22, r32) = t2
+
+                        if not array_equal(t1, t2):
+                            msg += '(%s, %s, %s)    (%s, %s, %s, %s, %s, %s)  (%s, %s, %s, %s, %s, %s)\n' % (
+                                nid, eid, ename1,
+                                t12, t22, t32, r12, r22, r32,
+                                t12, t22, t32, r12, r22, r32)
+                            i += 1
+                            if i > 10:
+                                print(msg)
+                                raise ValueError(msg)
+                    #print(msg)
+                    if i > 0:
+                        raise ValueError(msg)
+        else:
+            if not array_equal(self.data, table.data):
+                msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+                msg += '%s\n' % str(self.code_information())
+                i = 0
+                for itime in range(self.ntimes):
+                    for ie, e in enumerate(self.node_element):
+                        (nid, eid) = e
+                        ename1 = self.element_names[ie]
+                        ename2 = self.element_names[ie]
+                        t1 = self.data[itime, ie, :]
+                        t2 = table.data[itime, ie, :]
+                        (t11, t21, t31, r11, r21, r31) = t1
+                        (t12, t22, t32, r12, r22, r32) = t2
+
+                        if not array_equal(t1, t2):
+                            msg += '(%s, %s, %s)    (%s, %s, %s, %s, %s, %s)  (%s, %s, %s, %s, %s, %s)\n' % (
+                                nid, eid, ename1,
+                                t12, t22, t32, r12, r22, r32,
+                                t12, t22, t32, r12, r22, r32)
+                            i += 1
+                            if i > 10:
+                                print(msg)
+                                raise ValueError(msg)
+                    #print(msg)
+                    if i > 0:
+                        raise ValueError(msg)
         return True
 
     def add(self, dt, node_id, eid, ename, t1, t2, t3, r1, r2, r3):
@@ -203,7 +247,6 @@ class RealGridPointForcesArray(ScalarObject):
         self._times[self.itime] = dt
 
         if self.is_unique:
-            raise NotImplementedError('not unique')
             self.node_element[self.itime, self.itotal, :] = [node_id, eid]
             self.element_names[self.itime, self.itotal] = ename
         else:
@@ -371,6 +414,7 @@ class ComplexGridPointForcesArray(ScalarObject):
 
         #self.ntimes = 0  # or frequency/mode
         self.ntotal = 0
+        self.itotal = 0
 
         # do the element_names/node_element vectors change with the time step
         self.is_unique = False
@@ -404,8 +448,8 @@ class ComplexGridPointForcesArray(ScalarObject):
         #print("self.itotal = %s" % self.itotal)
         #print("self._ntotals = %s" % self._ntotals)
 
-        self.is_unique = False
-        if self.ntotal != max(self._ntotals):
+        #self.is_unique = False
+        if self.ntotal != max(self._ntotals) or 1:
             self.ntotal = max(self._ntotals)
             self.is_unique = True
 
@@ -432,7 +476,6 @@ class ComplexGridPointForcesArray(ScalarObject):
         self._times = zeros(self.ntimes, dtype=dtype)
 
         if self.is_unique:
-            #print(self._ntotals)
             self.node_element = zeros((self.ntimes, self.ntotal, 2), dtype='int32')
             self.element_names = empty((self.ntimes, self.ntotal), dtype='U8')
         else:
@@ -460,25 +503,21 @@ class ComplexGridPointForcesArray(ScalarObject):
         name = mode
         """
         headers = self.get_headers()
+        column_names, column_values = self._build_dataframe_transient_header()
         if self.is_unique:
-            #raise NotImplementedError('RealGridPointForcesArray - build_dataframe - not unique')
             #node_element = [self.node_element[:, 0], self.node_element[:, 1]]
             ntimes = self.data.shape[0]
             nnodes = self.data.shape[1]
             node_element_temp = self.node_element.reshape((ntimes * nnodes, 2))
             node_element = [node_element_temp[:, 0], node_element_temp[:, 1]]
-            print(node_element[0], len(node_element[0]))
-            column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data, items=column_values, major_axis=node_element, minor_axis=headers).to_frame()
             self.data_frame.columns.names = column_names
             self.data_frame.index.names = ['NodeID', 'ElementID', 'Item']
-
         else:
             node_element = [self.node_element[:, 0], self.node_element[:, 1]]
-            column_names, column_values = self._build_dataframe_transient_header()
             #print('column_names =', column_names)
             #for name, values in zip(column_names, column_values):
-                #print('  %s = %s' %(name, values))
+                #print('  %s = %s' % (name, values))
             self.data_frame = pd.Panel(self.data, items=column_values, major_axis=node_element, minor_axis=headers).to_frame()
             self.data_frame.columns.names = column_names
             self.data_frame.index.names = ['NodeID', 'ElementID', 'Item']
@@ -501,32 +540,60 @@ class ComplexGridPointForcesArray(ScalarObject):
                 msg += '(%s, %s, %s)    (%s, %s, %s)\n' % (nid1, eid1, ename1, nid2, eid2, ename2)
             print(msg)
             raise ValueError(msg)
-        if not array_equal(self.data, table.data):
-            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
-            msg += '%s\n' % str(self.code_information())
-            i = 0
-            for itime in range(self.ntimes):
-                for ie, e in enumerate(self.node_element):
-                    (eid, nid) = e
-                    ename1 = self.element_names[ie]
-                    ename2 = self.element_names[ie]
-                    t1 = self.data[itime, ie, :]
-                    t2 = table.data[itime, ie, :]
-                    (t11, t21, t31, r11, r21, r31) = t1
-                    (t12, t22, t32, r12, r22, r32) = t2
+        if self.is_unique:
+            if not array_equal(self.data, table.data):
+                msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+                msg += '%s\n' % str(self.code_information())
+                i = 0
+                for itime in range(self.ntimes):
+                    for ie, e in enumerate(self.node_element):
+                        (eid, nid) = e
+                        ename1 = self.element_names[itime, ie]
+                        ename2 = self.element_names[itime, ie]
+                        t1 = self.data[itime, ie, :]
+                        t2 = table.data[itime, ie, :]
+                        (t11, t21, t31, r11, r21, r31) = t1
+                        (t12, t22, t32, r12, r22, r32) = t2
 
-                    if not array_equal(t1, t2):
-                        msg += '(%s, %s, %s)    (%s, %s, %s, %s, %s, %s)  (%s, %s, %s, %s, %s, %s)\n' % (
-                            eid, nid, ename,
-                            t12, t22, t32, r12, r22, r32,
-                            t12, t22, t32, r12, r22, r32)
-                        i += 1
-                        if i > 10:
-                            print(msg)
-                            raise ValueError(msg)
-                #print(msg)
-                if i > 0:
-                    raise ValueError(msg)
+                        if not array_equal(t1, t2):
+                            msg += '(%s, %s, %s)    (%s, %s, %s, %s, %s, %s)  (%s, %s, %s, %s, %s, %s)\n' % (
+                                eid, nid, ename1,
+                                t12, t22, t32, r12, r22, r32,
+                                t12, t22, t32, r12, r22, r32)
+                            i += 1
+                            if i > 10:
+                                print(msg)
+                                raise ValueError(msg)
+                    #print(msg)
+                    if i > 0:
+                        raise ValueError(msg)
+        else:
+            if not array_equal(self.data, table.data):
+                msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+                msg += '%s\n' % str(self.code_information())
+                i = 0
+                for itime in range(self.ntimes):
+                    for ie, e in enumerate(self.node_element):
+                        (eid, nid) = e
+                        ename1 = self.element_names[ie]
+                        ename2 = self.element_names[ie]
+                        t1 = self.data[itime, ie, :]
+                        t2 = table.data[itime, ie, :]
+                        (t11, t21, t31, r11, r21, r31) = t1
+                        (t12, t22, t32, r12, r22, r32) = t2
+
+                        if not array_equal(t1, t2):
+                            msg += '(%s, %s, %s)    (%s, %s, %s, %s, %s, %s)  (%s, %s, %s, %s, %s, %s)\n' % (
+                                eid, nid, ename1,
+                                t12, t22, t32, r12, r22, r32,
+                                t12, t22, t32, r12, r22, r32)
+                            i += 1
+                            if i > 10:
+                                print(msg)
+                                raise ValueError(msg)
+                    #print(msg)
+                    if i > 0:
+                        raise ValueError(msg)
         return True
 
     def add_sort1(self, dt, node_id, eid, ename, t1, t2, t3, r1, r2, r3):
@@ -746,200 +813,3 @@ class ComplexGridPointForcesArray(ScalarObject):
     def get_headers(self):
         headers = ['f1', 'f2', 'f3', 'm1', 'm2', 'm3']
         return headers
-
-
-class RealGridPointForces(ScalarObject):
-    def __init__(self, data_code, is_sort1, isubcase, dt):
-        ScalarObject.__init__(self, data_code, isubcase)
-        self.force_moment = {}
-        self.elemName = {}
-        self.eids = {}
-
-        self.dt = dt
-        if is_sort1:
-            if dt is not None:
-                self.add = self.add_sort1
-        else:
-            assert dt is not None, 'is_sort1=%s' % is_sort1
-            self.add = self.add_sort2
-
-    def get_stats(self):
-        nelements = len(self.eids)
-
-        msg = self.get_data_code()
-        if self.dt is not None:  # transient
-            ntimes = len(self.force_moment)
-            msg.append('  type=%s ntimes=%s nelements=%s\n'
-                       % (self.__class__.__name__, ntimes, nelements))
-        else:
-            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
-                                                     nelements))
-        msg.append('  force_moment, elemName, eids\n')
-        return msg
-
-    def add_new_transient(self, dt):  # ekey
-        """initializes the transient variables"""
-        self.force_moment[dt] = {}
-
-        # these can shockingly be different sizes, so we can't save space
-        self.elemName[dt] = {}
-        self.eids[dt] = {}
-
-    def add(self, dt, ekey, eid, elemName, f1, f2, f3, m1, m2, m3):
-        if ekey not in self.force_moment:
-            self.eids[ekey] = []
-            self.force_moment[ekey] = []
-            self.elemName[ekey] = []
-        self.force_moment[ekey].append(array([f1, f2, f3, m1, m2, m3], dtype='float32'))  # Fx,Fy,Fz
-        self.elemName[ekey].append(elemName)
-        self.eids[ekey].append(eid)
-
-    def add_f06_data(self, dt, data):
-        if dt is None:
-            for (nid, eid, source, f1, f2, f3, m1, m2, m3) in data:
-                if nid not in self.force_moment:
-                    self.eids[nid] = []
-                    self.force_moment[nid] = []
-                    self.elemName[nid] = []
-                self.force_moment[nid].append(array([f1, f2, f3, m1, m2, m3], dtype='float32'))
-                self.elemName[nid].append(source)
-                self.eids[nid].append(eid)
-
-        else:
-            if dt not in self.force_moment:
-                self.force_moment[dt] = {}
-            for (nid, eid, source, f1, f2, f3, m1, m2, m3) in data:
-                if nid not in self.force_moment[dt]:
-                    self.eids[nid] = []
-                    self.force_moment[dt][nid] = []
-                    self.elemName[dt][nid] = []
-                    self.eids[dt][nid] = []
-                self.force_moment[dt][nid].append(array([f1, f2, f3, m1, m2, m3], dtype='float32'))
-                self.elemName[dt][nid].append(source)
-                self.eids[dt][nid].append(eid)
-
-    def add_sort1(self, dt, ekey, eid, elemName, f1, f2, f3, m1, m2, m3):
-        if dt not in self.force_moment:
-            #print "new transient"
-            self.add_new_transient(dt)
-
-        #print "%s=%s ekey=%s eid=%s elemName=%s f1=%s" %(self.data_code['name'], dt, ekey, eid, elemName, f1)
-        if ekey not in self.force_moment[dt]:
-            self.eids[dt][ekey] = []
-            self.force_moment[dt][ekey] = []
-            self.elemName[dt][ekey] = []
-        self.force_moment[dt][ekey].append(array([f1, f2, f3, m1, m2, m3], dtype='float32'))
-        self.elemName[dt][ekey].append(elemName)
-        self.eids[dt][ekey].append(eid)
-
-    def update_dt(self, data_code, freq):
-        self.data_code = data_code
-        self.apply_data_code()
-        if freq is not None:
-            self.log.debug("updating %s...%s=%s  isubcase=%s" % (self.data_code['name'], self.data_code['name'], freq, self.isubcase))
-            self.dt = dt
-            self.add_new_transient()
-
-    def delete_transient(self, dt):
-        del self.force_moment[dt]
-        del self.elemName[dt]
-        del self.eids[dt]
-
-    def get_transients(self):
-        k = self.force_moment.keys()
-        k.sort()
-        return k
-
-    #def cleanupObj(self):
-        #k = self.elemName.keys()
-        #self.elemName = self.elemName[k[0]]
-        #self.eids = self.eids[k[0]]
-
-    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
-        if header is None:
-            header = []
-        if self.nonlinear_factor is not None:
-            return self._write_f06_transient(header, page_stamp, page_num, f, is_mag_phase=is_mag_phase, is_sort1=is_sort1)
-
-        msg = header + ['                                          G R I D   P O I N T   F O R C E   B A L A N C E\n',
-                        ' \n',
-                        '   POINT-ID    ELEMENT-ID     SOURCE             T1             T2             T3             R1             R2             R3\n', ]
-              #'0     13683          3736    TRIAX6         4.996584E+00   0.0            1.203093E+02   0.0            0.0            0.0'
-              #'      13683          3737    TRIAX6        -4.996584E+00   0.0           -1.203093E+02   0.0            0.0            0.0'
-              #'      13683                  *TOTALS*       6.366463E-12   0.0           -1.364242E-12   0.0            0.0            0.0'
-        zero = ' '
-        for ekey, Force in sorted(iteritems(self.force_moment)):
-            for iLoad, force in enumerate(Force):
-                (f1, f2, f3, m1, m2, m3) = force
-                elemName = self.elemName[ekey][iLoad]
-                eid = self.eids[ekey][iLoad]
-                vals = [f1, f2, f3, m1, m2, m3]
-                vals2 = write_floats_13e(vals)
-                [f1, f2, f3, m1, m2, m3] = vals2
-                if eid == 0:
-                    eid = ''
-                msg.append('%s  %8s    %10s    %-8s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (zero, ekey, eid, elemName,
-                                                                                                     f1, f2, f3, m1, m2, m3))
-                zero = ' '
-            zero = '0'
-        msg.append(page_stamp % page_num)
-        f.write(''.join(msg))
-        return page_num
-
-    def _write_f06_transient(self, header, page_stamp, page_num=1, f=None,
-                             is_mag_phase=False, is_sort1=True):
-        msg_pack = ['                                          G R I D   P O I N T   F O R C E   B A L A N C E\n',
-                    ' \n',
-                    '   POINT-ID    ELEMENT-ID     SOURCE             T1             T2             T3             R1             R2             R3\n', ]
-              #'0     13683          3736    TRIAX6         4.996584E+00   0.0            1.203093E+02   0.0            0.0            0.0'
-              #'      13683          3737    TRIAX6        -4.996584E+00   0.0           -1.203093E+02   0.0            0.0            0.0'
-              #'      13683                  *TOTALS*       6.366463E-12   0.0           -1.364242E-12   0.0            0.0            0.0'
-        ntimes = len(self.force_moment)
-        itime = 0
-        msg = ['']
-        for dt, Forces in sorted(iteritems(self.force_moment)):
-            zero = ' '
-            header = _eigenvalue_header(self, header, itime, ntimes, dt)
-            msg += header + msg_pack
-            for ekey, Force in sorted(iteritems(Forces)):
-                for iLoad, force in enumerate(Force):
-                    (f1, f2, f3, m1, m2, m3) = force
-                    elemName = self.elemName[dt][ekey][iLoad]
-                    eid = self.eids[dt][ekey][iLoad]
-
-                    vals = [f1, f2, f3, m1, m2, m3]
-                    vals2 = write_floats_13e(vals)
-                    [f1, f2, f3, m1, m2, m3] = vals2
-                    if eid == 0:
-                        eid = ''
-                    msg.append('%s  %8s    %10s    %-8s      %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (zero, ekey, eid, elemName,
-                                                                                                        f1, f2, f3, m1, m2, m3))
-                    zero = ' '
-                zero = '0'
-
-            msg.append(page_stamp % page_num)
-            f.write(''.join(msg))
-            msg = ['']
-            itime += 1
-            page_num += 1
-        return page_num - 1
-
-
-class ComplexGridPointForces(ScalarObject):
-    def __init__(self, data_code, is_sort1, isubcase, freq=None):
-        ScalarObject.__init__(self, data_code, isubcase)
-        raise NotImplementedError()
-
-    def get_stats(self):
-        nelements = len(self.eids)
-
-        msg = self.get_data_code()
-        if self.dt is not None:  # transient
-            ntimes = len(self.forces)
-            msg.append('  type=%s ntimes=%s nelements=%s\n'
-                       % (self.__class__.__name__, ntimes, nelements))
-        else:
-            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
-                                                     nelements))
-        msg.append('  forces, moments, elemName, eids\n')
-        return msg

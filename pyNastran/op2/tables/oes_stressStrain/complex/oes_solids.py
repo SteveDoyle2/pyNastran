@@ -98,7 +98,7 @@ class ComplexSolidArray(OES_Object):
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         self._times = zeros(self.ntimes, 'float32')
         #self.element_types2 = array(self.nelements, dtype='|S8')
-        self.element_types3 = zeros((self.nelements, 2), dtype='int32')
+        #self.element_types3 = zeros((self.nelements, 2), dtype='int32')
 
 
         #self.ntotal = self.nelements * nnodes
@@ -140,7 +140,7 @@ class ComplexSolidArray(OES_Object):
         #try:
         if self.ielement < self.nelements:
             self.element_cid[self.ielement] = [eid, cid]
-            self.element_types3[self.ielement, :] = [element_num, nodef]
+            #self.element_types3[self.ielement, :] = [element_num, nodef]
         #except IndexError:
             #pass
             #print('element_types3', self.element_types3)

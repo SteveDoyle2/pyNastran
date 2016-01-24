@@ -142,7 +142,9 @@ class ONR(OP2Common):
         reads ONRGY1 subtable 4
         """
         if self.table_code == 18:  # element strain energy
-            assert self.table_name in [b'ONRGY1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
+            if self.table_name not in self.table_name in [b'ONRGY', b'ONRGY1']:
+                msg = 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
+                raise NotImplementedError(msg)
             n = self._read_element_strain_energy(data, ndata)
         else:
             raise NotImplementedError(self.table_code)

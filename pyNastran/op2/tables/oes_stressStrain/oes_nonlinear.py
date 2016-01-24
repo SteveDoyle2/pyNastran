@@ -13,7 +13,7 @@ except ImportError:
     pass
 
 
-class RealNonlinearRodArray(OES_Object):
+class RealNonlinearRodArray(OES_Object): # 89-CRODNL, 92-CONRODNL
     """
     ::
 
@@ -583,16 +583,14 @@ class NonlinearQuad(StressObject):
         self.eps[dt] = {}
         self.ecs[dt] = {}
 
-    def add_new_eid_sort1(self, eType, dt, data):
+    def add_new_eid_sort1(self, dt, eid, fd, sx, sy, sz, txy, es, eps, ecs, ex, ey, ez, exy):
         if dt not in self.oxx:
             self.add_new_transient(dt)
-        (eid, fd, sx, sy, sz, txy, es, eps, ecs, ex, ey, ez, exy) = data
         self.fiberDistance[dt][eid] = [fd]
         if isnan(sz):
             sz = 0.
         if isnan(ez):
             ez = 0.
-        self.eType[eid] = eType
         self.oxx[dt][eid] = [sx]
         self.oyy[dt][eid] = [sy]
         self.ozz[dt][eid] = [sz]
@@ -607,8 +605,7 @@ class NonlinearQuad(StressObject):
         self.eps[dt][eid] = [eps]
         self.ecs[dt][eid] = [ecs]
 
-    def add_sort1(self, dt, data):
-        (eid, fd, sx, sy, sz, txy, es, eps, ecs, ex, ey, ez, exy) = data
+    def add_sort1(self, dt, eid, fd, sx, sy, sz, txy, es, eps, ecs, ex, ey, ez, exy):
         self.fiberDistance[dt][eid].append(fd)
         if isnan(sz):
             sz = 0.
@@ -741,10 +738,9 @@ class HyperelasticQuad(StressObject):
         self.majorP[dt] = {}
         self.minorP[dt] = {}
 
-    def add_new_eid_sort1(self, dt, data):
+    def add_new_eid_sort1(self, dt, eid, Type, oxx, oyy, txy, angle, majorP, minorP):
         if dt not in self.oxx:
             self.add_new_transient(dt)
-        (eid, Type, oxx, oyy, txy, angle, majorP, minorP) = data
         self.Type[eid] = Type
         self.oxx[dt] = {eid: [oxx]}
         self.oyy[dt] = {eid: [oyy]}
@@ -753,8 +749,7 @@ class HyperelasticQuad(StressObject):
         self.majorP[dt] = {eid: [majorP]}
         self.minorP[dt] = {eid: [minorP]}
 
-    def add_sort1(self, dt, eid, data):
-        (ID, oxx, oyy, txy, angle, majorP, minorP) = data
+    def add_sort1(self, dt, eid, ID, oxx, oyy, txy, angle, majorP, minorP):
         self.oxx[dt][eid].append(oxx)
         self.oyy[dt][eid].append(oyy)
         self.txy[dt][eid].append(txy)
@@ -772,10 +767,10 @@ class HyperelasticQuad(StressObject):
                #0       1     GAUS         1   7.318995E+00   6.367099E-01  -6.551054E+00   -31.4888    1.133173E+01   -3.376026E+00
                #                           2   1.097933E+01   4.149028E+00   6.278160E+00    30.7275    1.471111E+01    4.172537E-01
 
-        for dt, Oxxs in sorted(iteritems(self.oxx)):
+        for dt, oxxs in sorted(iteritems(self.oxx)):
             #header[-1] = '     LOAD STEP = %12.5E' %(dt)
             msg += header
-            for eid, oxxs in sorted(iteritems(Oxxs)):
+            for eid, oxxs in sorted(iteritems(oxxs)):
                 gauss = self.Type[eid]
                 oxx = self.oxx[dt][eid]
                 oyy = self.oyy[dt][eid]
@@ -791,121 +786,3 @@ class HyperelasticQuad(StressObject):
                         msg.append(' %8s %8s  %8i  %13E.6  %13E.6  %13E.6  %13E.6  %13E.6  %13E.6\n' % ('', '', i + 1, oxx[i], oyy[i], txy[i], angle[i], majorP[i], minorP[i]))
         f.write(''.join(msg))
         return page_num
-
-
-#class NonlinearRod(StressObject):
-    #def __init__(self, data_code, is_sort1, isubcase, dt):
-        #StressObject.__init__(self, data_code, isubcase)
-        ##self.eType = 'CROD'
-        #self.eTypeMap = {89: 'CRODNL', 92: 'CONRODNL'}
-        #self.code = [self.format_code, self.sort_code, self.s_code]
-
-        #self.eType = {}
-        #self.axialStress = {}
-        #self.equivStress = {}
-        #self.totalStrain = {}
-        #self.effectivePlasticCreepStrain = {}
-        #self.effectiveCreepStrain = {}
-        #self.linearTorsionalStress = {}
-
-        #self.dt = dt
-        #if is_sort1:
-            #if dt is not None:
-                #self.add = self.add_sort1
-                ##self.add_new_eid = self.add_new_eid_sort1
-        #else:
-            #assert dt is not None
-            ##self.add = self.add_sort2
-            ##self.add_new_eid = self.add_new_eid_sort2
-
-    #def get_stats(self):
-        #nelements = len(self.eType)
-        #msg = self.get_data_code()
-        #if self.nonlinear_factor is not None:  # transient
-            #ntimes = len(self.axialStress)
-            #msg.append('  type=%s ntimes=%s nelements=%s\n'
-                       #% (self.__class__.__name__, ntimes, nelements))
-        #else:
-            #msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
-                                                     #nelements))
-        #msg.append('  eType, axialStress, equivStress, totalStrain, '
-                   #'effectivePlasticCreepStrain, effectiveCreepStrain, '
-                   #'linearTorsionalStress\n')
-        #return msg
-
-    #def delete_transient(self, dt):
-        #del self.axialStress[dt]
-        #del self.equivStress[dt]
-        #del self.totalStrain[dt]
-        #del self.effectivePlasticCreepStrain[dt]
-
-        #del self.effectiveCreepStrain[dt]
-        #del self.linearTorsionalStress[dt]
-
-    #def get_transients(self):
-        #k = self.axialStress.keys()
-        #k.sort()
-        #return k
-
-    #def add_new_transient(self, dt):
-        #self.axialStress[dt] = {}
-        #self.equivStress[dt] = {}
-        #self.totalStrain[dt] = {}
-        #self.effectivePlasticCreepStrain[dt] = {}
-        #self.effectiveCreepStrain[dt] = {}
-        #self.linearTorsionalStress[dt] = {}
-
-    #def add_sort1(self, eType, dt, data):
-        #if dt not in self.axialStress:
-            #self.add_new_transient(dt)
-        #eid = data[0]
-        #self.eType[eid] = eType
-        #self.axialStress[dt][eid] = data[1]
-        #self.equivStress[dt][eid] = data[2]
-        #self.totalStrain[dt][eid] = data[3]
-        #self.effectivePlasticCreepStrain[dt][eid] = data[4]
-        #self.effectiveCreepStrain[dt][eid] = data[5]
-        #self.linearTorsionalStress[dt][eid] = data[6]
-        ##print data
-
-    #def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
-        ## .. todo:: doesnt support CONROD/CTUBE (calls them CRODs)
-        #if header is None:
-            #header = []
-        #"""
-        #::
-
-          #ELEMENT-ID =     102
-                                   #N O N L I N E A R   S T R E S S E S   I N   R O D   E L E M E N T S      ( C R O D )
-            #TIME          AXIAL STRESS         EQUIVALENT         TOTAL STRAIN       EFF. STRAIN          EFF. CREEP        LIN. TORSIONAL
-                                                 #STRESS                             PLASTIC/NLELAST          STRAIN              STRESS
-          #2.000E-02        1.941367E+01        1.941367E+01        1.941367E-04        0.0                 0.0                 0.0
-          #3.000E-02        1.941367E+01        1.941367E+01        1.941367E-04        0.0                 0.0                 0.0
-        #"""
-        #msg = []
-        #msg_start = [
-            #'                         N O N L I N E A R   S T R E S S E S   I N   R O D   E L E M E N T S      ( C R O D )\n',
-            #' \n',
-            #'    TIME          AXIAL STRESS         EQUIVALENT         TOTAL STRAIN       EFF. STRAIN          EFF. CREEP        LIN. TORSIONAL\n',
-            #'                                         STRESS                             PLASTIC/NLELAST          STRAIN              STRESS\n'
-        #]
-        #msg_element = {}
-        #msg_time = {}
-        #for dt, axials in sorted(iteritems(self.axialStress)):
-            #for eid, axial in sorted(iteritems(axials)):
-                #eqs = self.equivStress[dt][eid]
-                #ts = self.totalStrain[dt][eid]
-                #epcs = self.effectivePlasticCreepStrain[dt][eid]
-                #ecs = self.effectiveCreepStrain[dt][eid]
-                #lts = self.linearTorsionalStress[dt][eid]
-                ##print "dt=%s axials=%s eqs=%s ts=%s epcs=%s ecs=%s lts=%s" %(dt,axial,eqs,ts,epcs,ecs,lts)
-                #msg_element[eid] = '      ELEMENT-ID = %8i\n' % (eid)
-                #if eid not in msg_time:
-                    #msg_time[eid] = []
-                #msg_time[eid].append('  %9.3E       %13.6E       %13.6E       %13.6E       %13.6E       %13.6E       %13.6E\n' % (dt, axial, eqs, ts, epcs, ecs, lts))
-
-        #for eid, e in sorted(iteritems(msg_element)):
-            #msg += header + [e] + msg_start + msg_time[eid]
-            #msg.append(page_stamp % page_num)
-        #f.write(''.join(msg))
-        #return page_num

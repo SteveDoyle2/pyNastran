@@ -79,7 +79,7 @@ class ComplexPlateArray(OES_Object):
                                                                            self.ntotal)
             raise RuntimeError(msg)
 
-        self.fiber_curvature = zeros((self.ntotal, 1), 'float32')
+        self.fiber_curvature = zeros(self.ntotal, 'float32')
         # [oxx, oyy, txy]
         self.data = zeros((self.ntimes, self.ntotal, 3), 'complex64')
 
@@ -90,19 +90,19 @@ class ComplexPlateArray(OES_Object):
         self.data_frame.columns.names = column_names
         self.data_frame.index.names = ['ElementID', 'Item']
 
-    def add_new_eid_sort1(self, eType, dt, eid, node_id, fdr, oxx, oyy, txy):
-        self.add_eid_sort1(eType, dt, eid, node_id, fdr, oxx, oyy, txy)
+    def add_new_eid_sort1(self, dt, eid, node_id, fdr, oxx, oyy, txy):
+        self.add_eid_sort1(dt, eid, node_id, fdr, oxx, oyy, txy)
 
     def add_sort1(self, dt, eid, gridC, fdr, oxx, oyy, txy):
-        self.add_eid_sort1(self.element_name, dt, eid, gridC, fdr, oxx, oyy, txy)
+        self.add_eid_sort1(dt, eid, gridC, fdr, oxx, oyy, txy)
 
     def add_new_node_sort1(self, dt, eid, gridc, fdr, oxx, oyy, txy):
-        self.add_eid_sort1(self.element_name, dt, eid, gridc, fdr, oxx, oyy, txy)
+        self.add_eid_sort1(dt, eid, gridc, fdr, oxx, oyy, txy)
 
-    def add_eid_sort1(self, eType, dt, eid, node_id, fdr, oxx, oyy, txy):
+    def add_eid_sort1(self, dt, eid, node_id, fdr, oxx, oyy, txy):
         self._times[self.itime] = dt
         #print(self.element_types2, element_type, self.element_types2.dtype)
-        #print('itotal=%s eType=%r dt=%s eid=%s nid=%-5s oxx=%s' % (self.itotal, eType, dt, eid, node_id, oxx))
+        #print('itotal=%s dt=%s eid=%s nid=%-5s oxx=%s' % (self.itotal, dt, eid, node_id, oxx))
 
         assert isinstance(node_id, int), node_id
         self.data[self.itime, self.itotal] = [oxx, oyy, txy]
@@ -176,7 +176,7 @@ class ComplexPlateArray(OES_Object):
         CQUAD4 linear
         CTRIA3
         """
-        fds = self.fiber_curvature[:, 0]
+        fds = self.fiber_curvature
         oxx = self.data[itime, :, 0]
         oyy = self.data[itime, :, 1]
         txy = self.data[itime, :, 2]
@@ -204,7 +204,7 @@ class ComplexPlateArray(OES_Object):
         CTRIAR
         CTRIA6
         """
-        fds = self.fiber_curvature[:, 0]
+        fds = self.fiber_curvature
         oxx = self.data[itime, :, 0]
         oyy = self.data[itime, :, 1]
         txy = self.data[itime, :, 2]

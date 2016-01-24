@@ -70,7 +70,6 @@ class FortranFormat(object):
 
         .. warning :: 's' is apparently not Python 3 friendly
         """
-        assert endian is not None
         return self.write_data(sys.stdout, data, types=types, endian=endian)
 
     def write_data(self, f, data, types='ifs', endian=None):
@@ -107,7 +106,7 @@ class FortranFormat(object):
 
         if endian is None:
             endian = self._endian
-        assert endian is not None, endian
+            assert endian is not None, endian
 
         if 's' in types:
             strings = unpack(b'%s%is' % (endian, n), data)
