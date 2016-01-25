@@ -44,7 +44,7 @@ def export_to_vtk(model):
     export_to_vtk_filename(bdf_filename, op2_filename, vtk_filename)
     print('finished exporting %s' % vtk_filename)
 
-def export_to_vtk_filename(bdf_filename, op2_filename, vtk_filename):
+def export_to_vtk_filename(bdf_filename, op2_filename, vtk_filename, debug=False):
     with open(vtk_filename, 'w') as vtk_file:
         vtk_file.write('# vtk DataFile Version 3.1\n')
         vtk_file.write('created by pyNastran\n')
@@ -87,9 +87,9 @@ def export_to_vtk_filename(bdf_filename, op2_filename, vtk_filename):
             #'CHEXA' : 67, # hex
         }
 
-        bdf = BDF()
+        bdf = BDF(debug=debug)
         bdf.read_bdf(bdf_filename)
-        op2 = OP2()
+        op2 = OP2(debug=debug)
         op2.read_op2(op2_filename)
 
         out = bdf.get_card_ids_by_card_types()
@@ -105,7 +105,21 @@ def export_to_vtk_filename(bdf_filename, op2_filename, vtk_filename):
         ncrod = len(out['CROD'])
         nconrod = len(out['CONROD'])
         nctube = len(out['CTUBE'])
-        nline = ncrod + nconrod + nctube
+        ncbeam = len(out['CBEAM'])
+        ncbar = len(out['CBAR'])
+        nline = ncrod + nconrod + nctube + ncbeam + ncbar
+
+        ncelas1 = len(out['CELAS1'])
+        ncelas2 = len(out['CELAS2'])
+        ncelas3 = len(out['CELAS3'])
+        ncelas4 = len(out['CELAS4'])
+
+        ncdamp1 = len(out['CDAMP1'])
+        ncdamp2 = len(out['CDAMP2'])
+        ncdamp3 = len(out['CDAMP3'])
+        ncdamp4 = len(out['CDAMP4'])
+        n0d = (ncelas1 + ncelas2 + ncelas3 + ncelas4 +
+               ncdamp1 + ncdamp2 + ncdamp3 + ncdamp4)
 
         nctria3 = len(out['CTRIA3'])
         ncquad4 = len(out['CQUAD4'])
@@ -124,22 +138,27 @@ def export_to_vtk_filename(bdf_filename, op2_filename, vtk_filename):
         nsolid = (nctetra4 + ncpyram5 + ncpenta6 + nchexa8 +
                   nctetra10 + ncpyram8 + ncpenta15 + nchexa20)
 
-        nelements = nline + nshell + nsolid
-        nproperties = nelements
+        #nelements = n0d + nline + nshell + nsolid
+        nelements = 0
         etypes = [
             'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
-            'CDAMP', 'CDAMP', 'CDAMP', 'CDAMP',
-            'CROD', 'CONROD', 'CBAR', 'CBEAM',
-            'CFAST',
+            'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4',
+            'CROD', 'CONROD', 'CTUBE',
+            'CBAR', 'CBEAM',
+            'CFAST', 'CBUSH', 'CBUSH1D', 'CBUSH2D',
 
-            'CTRIA3', 'CQUAD4', 'CTRIA3', 'CQUAD8',
+            'CTRIA3', 'CQUAD4', 'CTRIA6', 'CQUAD8',
 
             'CTETRA', 'CPENTA', 'CPYRAM', 'CHEXA',
         ]
+        assert len(etypes) == len(set(etypes)), 'there are duplicate etypes'
         for etype in etypes:
             if etype in out:
                 ne = len(out[etype])
                 nelements += ne
+        nproperties = nelements
+
+        bdf_nelements = bdf.nelements
 
         # SPOINT & EPOINT are implicitly defined
         xyz_cid0 = zeros((nnodes, 3), dtype='float32')
@@ -173,30 +192,53 @@ def export_to_vtk_filename(bdf_filename, op2_filename, vtk_filename):
         nshell_slots = 4 * nctria3 + 5 * ncquad4 + 7 * nctria6 + 9 * ncquad8
         nsolid_slots = 5 * nctetra4 + 6 * ncpyram5 + 7 * ncpenta6 + 9 * nchexa8
         nelements_slots = nline_slots + nshell_slots + nsolid_slots
+        assert nelements == bdf_nelements, 'nelements=%s bdf.nelements=%s' % (nelements, bdf_nelements)
 
         i = 0
         vtk_file.write('CELLS %i %i\n' % (nelements, nelements_slots))
         for eid, elem in sorted(iteritems(bdf.elements)):
             etype = etype_map[elem.type]
             nids2 = searchsorted(nids, elem.node_ids)
-            #print(elem.type)
-            #print(elem.node_ids, nids2)
+
             nnodesi = len(nids2)
             vtk_file.write('%i %s\n' % (nnodesi, str(nids2)[1:-1]))
-            pid = elem.Pid()
-            mid = elem.Mid()
+            if elem.type in ['CTETRA', 'CPENTA', 'CHEXA', 'CPYRAM', 'CBEAM', 'CROD', 'CBAR']:
+                pid = elem.Pid()
+                mid = elem.Mid()
+            elif elem.type in ['CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
+                               'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CBUSH', 'CFAST']:
+                pid = elem.Pid()
+                mid = 0
+            elif elem.type in ['CQUAD4', 'CQUAD8', 'CQUADX', 'CQUADX8', 'CQUAD',
+                               'CTRIA3', 'CTRIA6', 'CTRIAX', 'CTRIAX6']:
+                pid = elem.Pid()
+                prop = elem.pid
+                if prop.type in ['PCOMP', 'PCOMPG']:
+                    mid = prop.Mid(0)
+                elif prop.type in ['PSHELL']:
+                    mid = prop.Mid1()
+                else:
+                    raise NotImplementedError(prop)
+            elif elem.type in ['CONROD']:
+                pid = 0
+                mid = elem.Mid()
+            else:
+                raise NotImplementedError(elem)
+
             eids[i] = eid
             pids[i] = pid
             mids[i] = mid
             cell_types[i] = etype
             i += 1
+        assert nelements == bdf_nelements, 'i=%s nelements=%s bdf.nelements=%s' % (i, nelements, bdf_nelements)
+
         #vtk_file.write('\n')
         vtk_file.write('CELL_TYPES %i\n' % nelements)
         vtk_file.write(pack_int_array(eid_fmt, cell_types))
         vtk_file.write('\n')
 
         vtk_file.write('POINT_DATA %i\n' % nnodes)
-        if 0:
+        if 1:
             vtk_file.write('NodeID %i float\n' % nnodes)
             vtk_file.write(pack_int_array(nid_fmt, nids))
 

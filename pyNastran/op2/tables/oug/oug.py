@@ -347,7 +347,7 @@ class OUG(OP2Common):
         raise NotImplementedError()
 
     def _read_displacement(self, data, ndata, is_cid):
-        if self.table_name in [b'BOUGV1', b'OUGV1', b'OUGV2', b'ROUGV1']:
+        if self.table_name in [b'OUG1', b'OUGV1', b'OUGV2', b'OUGV1PAT', b'BOUGV1', b'ROUGV1']:
             assert self.thermal in [0, 1], self.code_information()
             if self.thermal == 0:
                 result_name = 'displacements'

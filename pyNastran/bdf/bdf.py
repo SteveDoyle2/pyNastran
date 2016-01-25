@@ -1813,10 +1813,11 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
     def _prepare_darea(self, card, card_obj, comment=''):
         """adds a DAREA"""
-        class_instance = DAREA(card_obj, comment=comment)
+        class_instance = DAREA()
+        class_instance.add_card(card_obj, comment=comment)
         self.add_DAREA(class_instance)
         if card_obj.field(5):
-            class_instance = DAREA(card_obj, icard=1, comment=comment)
+            class_instance.add_card(card_obj, icard=1, comment=comment)
             self.add_DAREA(class_instance)
 
     def _prepare_dphase(self, card, card_obj, comment=''):

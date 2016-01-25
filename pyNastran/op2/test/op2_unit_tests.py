@@ -12,6 +12,8 @@ from pyNastran.op2.op2 import OP2, FatalError, read_op2
 from pyNastran.op2.test.test_op2 import run_op2
 from pyNastran.bdf.test.bdf_unit_tests import Tester
 from pyNastran.op2.tables.oef_forces.oef_forceObjects import RealPlateBilinearForceArray, RealPlateForceArray
+from pyNastran.op2.export_to_vtk import export_to_vtk_filename
+
 
 class TestOP2(Tester):
     #def _spike(self):
@@ -166,6 +168,13 @@ class TestOP2(Tester):
         assert os.path.exists(debug_file), os.listdir(folder)
         os.remove(debug_file)
 
+    def test_op2_solid_shell_bar_01_export(self):
+        folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'sol_101_elements'))
+        bdf_filename = os.path.join(folder, 'static_solid_shell_bar.bdf')
+        op2_filename = os.path.join(folder, 'static_solid_shell_bar.op2')
+        vtk_filename = os.path.join(folder, 'static_solid_shell_bar.vtk')
+        export_to_vtk_filename(bdf_filename, op2_filename, vtk_filename)
+
     def test_op2_solid_shell_bar_02(self):
         op2_filename = os.path.join('mode_solid_shell_bar.op2')
         folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'sol_101_elements'))
@@ -230,6 +239,13 @@ class TestOP2(Tester):
 
         assert os.path.exists(debug_file), os.listdir(folder)
         os.remove(debug_file)
+
+    def test_op2_solid_shell_bar_02_export(self):
+        folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'sol_101_elements'))
+        bdf_filename = os.path.join(folder, 'mode_solid_shell_bar.bdf')
+        op2_filename = os.path.join(folder, 'mode_solid_shell_bar.op2')
+        vtk_filename = os.path.join(folder, 'mode_solid_shell_bar.vtk')
+        export_to_vtk_filename(bdf_filename, op2_filename, vtk_filename)
 
     def test_op2_solid_shell_bar_03(self):
         op2_filename = os.path.join('buckling_solid_shell_bar.op2')
@@ -389,6 +405,13 @@ class TestOP2(Tester):
 
         assert os.path.exists(debug_file), os.listdir(folder)
         os.remove(debug_file)
+
+    def test_op2_solid_shell_bar_03_export(self):
+        folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'sol_101_elements'))
+        bdf_filename = os.path.join(folder, 'freq_solid_shell_bar.bdf')
+        op2_filename = os.path.join(folder, 'freq_solid_shell_bar.op2')
+        vtk_filename = os.path.join(folder, 'freq_solid_shell_bar.vtk')
+        export_to_vtk_filename(bdf_filename, op2_filename, vtk_filename)
 
     def test_op2_solid_shell_bar_05(self):
         """
