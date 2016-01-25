@@ -63,8 +63,14 @@ install:
   # Useful for debugging any issues with conda
   - conda info -a
 
-  # Replace dep1 dep2 ... with your dependencies
-  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas numpy scipy vtk pandas
+  # install dependencies
+  - echo "python version=$TRAVIS_PYTHON_VERSION"
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]];     conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas numpy scipy pandas vtk; fi
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.2" ]];     conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas numpy scipy pandas; fi
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.3" ]];     conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas numpy scipy pandas; fi
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.4" ]];     conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas numpy scipy pandas; fi
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.5" ]];     conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas numpy scipy pandas; fi
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "nightly" ]]; conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas numpy scipy pandas; fi
   - source activate test-environment
   - python setup.py develop
 
