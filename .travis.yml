@@ -6,7 +6,6 @@ language: python
 python:
 #  - "2.6"
   - "2.7"
-  - "3.2"
   - "3.3"
   - "3.4"
   - "3.5"
@@ -67,7 +66,6 @@ install:
   # if line per https://docs.travis-ci.com/user/multi-os/
   - echo "python version=$TRAVIS_PYTHON_VERSION"
   - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]];     then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas numpy scipy pandas vtk; fi
-  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.2" ]];     then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas numpy scipy pandas; fi
   - if [[ "$TRAVIS_PYTHON_VERSION" == "3.3" ]];     then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas numpy scipy pandas; fi
   - if [[ "$TRAVIS_PYTHON_VERSION" == "3.4" ]];     then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas numpy scipy pandas; fi
   - if [[ "$TRAVIS_PYTHON_VERSION" == "3.5" ]];     then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas numpy scipy pandas; fi
