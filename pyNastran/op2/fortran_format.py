@@ -510,7 +510,7 @@ class FortranFormat(object):
                             self.obj.ntotal, str(self.obj.data.shape),
                             self.obj.data.shape[1], self._data_factor)
                         self.log.debug(msgb)
-                        raise RuntimeError(msga + msgb)
+                        raise RuntimeError(msga + '\n' + msgb)
 
                 #else:
                     #print('self.obj.name=%r doesnt have itime' % self.obj.__class__.__name__)

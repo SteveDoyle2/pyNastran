@@ -31,44 +31,43 @@ class PFAST(Property):
         11:'mass', 12:'ge'
     }
 
-    def __init__(self, card=None, data=None, comment=''):
-        Property.__init__(self, card, data)
+    def __init__(self):
+        Property.__init__(self)
+
+    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            #: Property ID
-            self.pid = integer(card, 1, 'pid')
+        #: Property ID
+        self.pid = integer(card, 1, 'pid')
 
-            #: diameter of the fastener
-            self.d = double(card, 2, 'd')
-            assert self.d > 0
+        #: diameter of the fastener
+        self.d = double(card, 2, 'd')
+        assert self.d > 0
 
-            #: Specifies the element stiffness coordinate system
-            self.mcid = integer_or_blank(card, 3, 'mcid', -1)
-            assert self.mcid >= -1
+        #: Specifies the element stiffness coordinate system
+        self.mcid = integer_or_blank(card, 3, 'mcid', -1)
+        assert self.mcid >= -1
 
-            #: 0-absolute 1-relative
-            self.mflag = integer_or_blank(card, 4, 'mflag', 0)
-            assert self.mflag in [0, 1]
+        #: 0-absolute 1-relative
+        self.mflag = integer_or_blank(card, 4, 'mflag', 0)
+        assert self.mflag in [0, 1]
 
-            #: stiffness values in directions 1-3
-            self.kt1 = double(card, 5, 'kt1')
-            self.kt2 = double(card, 6, 'kt2')
-            self.kt3 = double(card, 7, 'kt3')
+        #: stiffness values in directions 1-3
+        self.kt1 = double(card, 5, 'kt1')
+        self.kt2 = double(card, 6, 'kt2')
+        self.kt3 = double(card, 7, 'kt3')
 
-            #: Rotational stiffness values in directions 1-3
-            self.kr1 = double_or_blank(card, 8, 'kr1', 0.0)
-            self.kr2 = double_or_blank(card, 9, 'kr2', 0.0)
-            self.kr3 = double_or_blank(card, 10, 'kr3', 0.0)
+        #: Rotational stiffness values in directions 1-3
+        self.kr1 = double_or_blank(card, 8, 'kr1', 0.0)
+        self.kr2 = double_or_blank(card, 9, 'kr2', 0.0)
+        self.kr3 = double_or_blank(card, 10, 'kr3', 0.0)
 
-            #: Lumped mass of fastener
-            self.mass = double_or_blank(card, 11, 'mass', 0.0)
+        #: Lumped mass of fastener
+        self.mass = double_or_blank(card, 11, 'mass', 0.0)
 
-            #: Structural damping
-            self.ge = double_or_blank(card, 12, 'ge', 0.0)
-            assert len(card) <= 13, 'len(PFAST card) = %i' % len(card)
-        else:
-            raise NotImplementedError(data)
+        #: Structural damping
+        self.ge = double_or_blank(card, 12, 'ge', 0.0)
+        assert len(card) <= 13, 'len(PFAST card) = %i' % len(card)
 
     def cross_reference(self, model):
         msg = ' which is required by PFAST pid=%s' % self.pid
@@ -404,8 +403,8 @@ class PIHEX(PSOLID):
 
 
 class CrackProperty(Property):
-    def __init__(self, card, data):
-        Property.__init__(self, card, data)
+    def __init__(self):
+        Property.__init__(self)
 
     def Mid(self):
         if isinstance(self.mid, int):
@@ -430,35 +429,33 @@ class PRAC2D(CrackProperty):
         1: 'pid', 2:'mid', 3:'thick', 4:'iPlane', 5:'nsm', 6:'gamma', 7:'phi',
     }
 
-    def __init__(self, card=None, data=None, comment=''):
-        CrackProperty.__init__(self, card, data)
+    def __init__(self):
+        CrackProperty.__init__(self)
+
+    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            #: Property ID
-            self.pid = integer(card, 1, 'pid')
-            #: Material ID
-            self.mid = integer(card, 2, 'mid')
-            self.thick = double(card, 3, 'thick')
-            #: Plane strain or plane stress option.
-            #: Use 0 for plane strain; 1 for plane stress. (Integer = 0 or 1)
-            self.iPlane = integer(card, 4, 'iPlane')
-            if self.iPlane not in [0, 1]:
-                raise RuntimeError('Invalid value for iPlane on PRAC2D, can '
-                                   'only be 0,1 iPlane=|%s|' % self.iPlane)
-            #: Non-structural mass per unit area.(Real >= 0.0; Default = 0)
-            self.nsm = double_or_blank(card, 5, 'nsm', 0.)
-            #: Exponent used in the displacement field. See Remark 4.
-            #: (Real; Default = 0.5)
-            self.gamma = double_or_blank(card, 6, 'gamma', 0.5)
-            #: Angle (in degrees) relative to the element x-axis along which
-            #: stress intensity factors are to be calculated. See Remark 4.
-            #: (Real; Default = 180.0)
-            self.phi = double_or_blank(card, 7, 'phi', 180.)
-            assert len(card) <= 8, 'len(PRAC2D card) = %i' % len(card)
-
-        else:
-            raise NotImplementedError(data)
+        #: Property ID
+        self.pid = integer(card, 1, 'pid')
+        #: Material ID
+        self.mid = integer(card, 2, 'mid')
+        self.thick = double(card, 3, 'thick')
+        #: Plane strain or plane stress option.
+        #: Use 0 for plane strain; 1 for plane stress. (Integer = 0 or 1)
+        self.iPlane = integer(card, 4, 'iPlane')
+        if self.iPlane not in [0, 1]:
+            raise RuntimeError('Invalid value for iPlane on PRAC2D, can '
+                               'only be 0,1 iPlane=|%s|' % self.iPlane)
+        #: Non-structural mass per unit area.(Real >= 0.0; Default = 0)
+        self.nsm = double_or_blank(card, 5, 'nsm', 0.)
+        #: Exponent used in the displacement field. See Remark 4.
+        #: (Real; Default = 0.5)
+        self.gamma = double_or_blank(card, 6, 'gamma', 0.5)
+        #: Angle (in degrees) relative to the element x-axis along which
+        #: stress intensity factors are to be calculated. See Remark 4.
+        #: (Real; Default = 180.0)
+        self.phi = double_or_blank(card, 7, 'phi', 180.)
+        assert len(card) <= 8, 'len(PRAC2D card) = %i' % len(card)
 
     def _verify(self, xref=True):
         pid = self.Pid()
@@ -497,25 +494,24 @@ class PRAC3D(CrackProperty):
         1: 'pid', 2:'mid', 3:'gamma', 4:'phi',
     }
 
-    def __init__(self, card=None, data=None, comment=''):
-        CrackProperty.__init__(self, card, data)
+    def __init__(self):
+        CrackProperty.__init__(self)
+
+    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            #: Property ID
-            self.pid = integer(card, 1, 'pid')
-            #: Material ID
-            self.mid = integer(card, 2, 'mid')
-            #: Exponent used in the displacement field. See Remark 4.
-            #: (Real; Default = 0.5)
-            self.gamma = double_or_blank(card, 3, 'gamma', 0.5)
-            #: Angle (in degrees) relative to the element x-axis along which
-            #: stress intensity factors are to be calculated. See Remark 4.
-            #: (Real; Default = 180.0)
-            self.phi = double_or_blank(card, 4, 'gamma', 180.)
-            assert len(card) <= 5, 'len(PRAC3D card) = %i' % len(card)
-        else:
-            raise NotImplementedError(data)
+        #: Property ID
+        self.pid = integer(card, 1, 'pid')
+        #: Material ID
+        self.mid = integer(card, 2, 'mid')
+        #: Exponent used in the displacement field. See Remark 4.
+        #: (Real; Default = 0.5)
+        self.gamma = double_or_blank(card, 3, 'gamma', 0.5)
+        #: Angle (in degrees) relative to the element x-axis along which
+        #: stress intensity factors are to be calculated. See Remark 4.
+        #: (Real; Default = 180.0)
+        self.phi = double_or_blank(card, 4, 'gamma', 180.)
+        assert len(card) <= 5, 'len(PRAC3D card) = %i' % len(card)
 
     def _verify(self, xref=True):
         pid = self.Pid()
@@ -553,43 +549,42 @@ class PCONEAX(Property):
             raise KeyError(msg)
         self.phi[n - 10] = value
 
-    def __init__(self, card=None, data=None, comment=''):
-        Property.__init__(self, card, data)
+    def __init__(self):
+        Property.__init__(self)
+        self.phi = []
+
+    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            #: Property ID
-            self.pid = integer(card, 1, 'pid')
-            #: Material ID
-            self.mid1 = integer_or_blank(card, 2, 'mid1', 0)
-            self.t1 = double_or_blank(card, 3, 't1')
+        #: Property ID
+        self.pid = integer(card, 1, 'pid')
+        #: Material ID
+        self.mid1 = integer_or_blank(card, 2, 'mid1', 0)
+        self.t1 = double_or_blank(card, 3, 't1')
 
-            self.mid2 = integer_or_blank(card, 4, 'mid2', 0)
-            if self.mid2 > 0:
-                self.i = double(card, 5, 'i')
-                assert self.i > 0.0
-            else:
-                self.i = blank(card, 5, 'i')
-
-            self.mid3 = integer(card, 6, 0)
-            if self.mid3 > 0:
-                self.t2 = double(card, 7, 't3')
-                assert self.t2 > 0.0
-            else:
-                self.t2 = blank(card, 7, 't3')
-
-            self.nsm = double(card, 8, 'nsm')
-            self.z1 = double(card, 9, 'z1')
-            self.z2 = double(card, 10, 'z2')
-
-            j = 1
-            self.phi = []
-            for i in range(11, len(card)):
-                phii = double(card, i, 'phi' % j)
-                self.phi.append(phii)
-                j += 1
+        self.mid2 = integer_or_blank(card, 4, 'mid2', 0)
+        if self.mid2 > 0:
+            self.i = double(card, 5, 'i')
+            assert self.i > 0.0
         else:
-            raise NotImplementedError(data)
+            self.i = blank(card, 5, 'i')
+
+        self.mid3 = integer(card, 6, 0)
+        if self.mid3 > 0:
+            self.t2 = double(card, 7, 't3')
+            assert self.t2 > 0.0
+        else:
+            self.t2 = blank(card, 7, 't3')
+
+        self.nsm = double(card, 8, 'nsm')
+        self.z1 = double(card, 9, 'z1')
+        self.z2 = double(card, 10, 'z2')
+
+        j = 1
+        for i in range(11, len(card)):
+            phii = double(card, i, 'phi' % j)
+            self.phi.append(phii)
+            j += 1
 
     def cross_reference(self, model):
         msg = ' which is required by %s=%s' %(self.type, self.pid)

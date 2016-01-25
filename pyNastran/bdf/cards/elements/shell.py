@@ -89,8 +89,8 @@ def _normal(a, b):
 class ShellElement(Element):
     type = 'ShellElement'
 
-    def __init__(self, card, data):
-        Element.__init__(self, card, data)
+    def __init__(self):
+        Element.__init__(self)
 
     def Rho(self):
         """
@@ -156,8 +156,8 @@ class ShellElement(Element):
 
 
 class TriShell(ShellElement):
-    def __init__(self, card, data):
-        ShellElement.__init__(self, card, data)
+    def __init__(self):
+        ShellElement.__init__(self)
 
     def get_edge_ids(self):
         """
@@ -274,8 +274,8 @@ class CTRIA3(TriShell):
         else:
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
-    def __init__(self, card=None, data=None, comment=''):
-        TriShell.__init__(self, card, data)
+    def __init__(self):
+        TriShell.__init__(self)
 
     def add(self, eid, pid, nids,
             theta_mcid=0.0, tflag=0, t1=1.0, t2=1.0, t3=1.0, comment=''):
@@ -466,50 +466,56 @@ class CTRIA6(TriShell):
     aster_type = 'TRIA6'
     calculixType = 'S6'
 
-    def __init__(self, card=None, data=None, comment=''):
-        TriShell.__init__(self, card, data)
+    def __init__(self):
+        TriShell.__init__(self)
+
+    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            #: Element ID
-            self.eid = integer(card, 1, 'eid')
-            #: Property ID
-            self.pid = integer(card, 2, 'pid')
+        #: Element ID
+        self.eid = integer(card, 1, 'eid')
+        #: Property ID
+        self.pid = integer(card, 2, 'pid')
 
-            nids = [
-                integer(card, 3, 'n1'),
-                integer(card, 4, 'n2'),
-                integer(card, 5, 'n3'),
-                integer_or_blank(card, 6, 'n4', 0),
-                integer_or_blank(card, 7, 'n5', 0),
-                integer_or_blank(card, 8, 'n6', 0)
-            ]
-            if len(card) > 9:
-                self.thetaMcid = integer_double_or_blank(card, 9, 'thetaMcid', 0.0)
-                self.zOffset = double_or_blank(card, 10, 'zOffset', 0.0)
+        nids = [
+            integer(card, 3, 'n1'),
+            integer(card, 4, 'n2'),
+            integer(card, 5, 'n3'),
+            integer_or_blank(card, 6, 'n4', 0),
+            integer_or_blank(card, 7, 'n5', 0),
+            integer_or_blank(card, 8, 'n6', 0)
+        ]
+        if len(card) > 9:
+            self.thetaMcid = integer_double_or_blank(card, 9, 'thetaMcid', 0.0)
+            self.zOffset = double_or_blank(card, 10, 'zOffset', 0.0)
 
-                self.T1 = double_or_blank(card, 11, 'T1', 1.0)
-                self.T2 = double_or_blank(card, 12, 'T2', 1.0)
-                self.T3 = double_or_blank(card, 13, 'T3', 1.0)
-                self.TFlag = integer_or_blank(card, 14, 'TFlag', 0)
-                assert len(card) <= 15, 'len(CTRIA6 card) = %i' % len(card)
-            else:
-                self.thetaMcid = 0.0
-                self.zOffset = 0.0
-                self.T1 = 1.0
-                self.T2 = 1.0
-                self.T3 = 1.0
-                self.TFlag = 0
+            self.T1 = double_or_blank(card, 11, 'T1', 1.0)
+            self.T2 = double_or_blank(card, 12, 'T2', 1.0)
+            self.T3 = double_or_blank(card, 13, 'T3', 1.0)
+            self.TFlag = integer_or_blank(card, 14, 'TFlag', 0)
+            assert len(card) <= 15, 'len(CTRIA6 card) = %i' % len(card)
         else:
-            self.eid = data[0]
-            self.pid = data[1]
-            nids = data[2:8]
-            self.thetaMcid = data[8]
-            self.zOffset = data[8]
-            self.T1 = data[9]
-            self.T2 = data[10]
-            self.T3 = data[11]
-            self.TFlag = data[12]
+            self.thetaMcid = 0.0
+            self.zOffset = 0.0
+            self.T1 = 1.0
+            self.T2 = 1.0
+            self.T3 = 1.0
+            self.TFlag = 0
+        self.prepare_node_ids(nids, allow_empty_nodes=True)
+        assert len(nids) == 6, 'error on CTRIA6'
+
+    def add_op2_data(self, data, comment=''):
+        if comment:
+            self._comment = comment
+        self.eid = data[0]
+        self.pid = data[1]
+        nids = data[2:8]
+        self.thetaMcid = data[8]
+        self.zOffset = data[8]
+        self.T1 = data[9]
+        self.T2 = data[10]
+        self.T3 = data[11]
+        self.TFlag = data[12]
         self.prepare_node_ids(nids, allow_empty_nodes=True)
         assert len(nids) == 6, 'error on CTRIA6'
 
@@ -654,8 +660,10 @@ class CTRIA6(TriShell):
 
 class CTRIAR(TriShell):
     type = 'CTRIAR'
-    def __init__(self, card=None, data=None, comment=''):
-        TriShell.__init__(self, card, data)
+    def __init__(self):
+        TriShell.__init__(self)
+
+    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
         #: Element ID
@@ -920,30 +928,29 @@ class CTRIAX6(TriShell):
     """
     type = 'CTRIAX6'
     #calculixType = 'CAX6'
-    def __init__(self, card=None, data=None, comment=''):
-        TriShell.__init__(self, card, data)
+    def __init__(self):
+        TriShell.__init__(self)
+
+    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            #: Element ID
-            self.eid = integer(card, 1, 'eid')
-            #: Material ID
-            self.mid = integer(card, 2, 'mid')
+        #: Element ID
+        self.eid = integer(card, 1, 'eid')
+        #: Material ID
+        self.mid = integer(card, 2, 'mid')
 
-            nids = [
-                integer(card, 3, 'n1'),
-                integer_or_blank(card, 4, 'n2'),
-                integer(card, 5, 'n3'),
-                integer_or_blank(card, 6, 'n4'),
-                integer(card, 7, 'n5'),
-                integer_or_blank(card, 8, 'n6'),
-            ]
+        nids = [
+            integer(card, 3, 'n1'),
+            integer_or_blank(card, 4, 'n2'),
+            integer(card, 5, 'n3'),
+            integer_or_blank(card, 6, 'n4'),
+            integer(card, 7, 'n5'),
+            integer_or_blank(card, 8, 'n6'),
+        ]
 
-            #: theta
-            self.theta = double_or_blank(card, 9, 'theta', 0.0)
-            assert len(card) <= 10, 'len(CTRIAX6 card) = %i' % len(card)
-        else:
-            raise NotImplementedError(data)
+        #: theta
+        self.theta = double_or_blank(card, 9, 'theta', 0.0)
+        assert len(card) <= 10, 'len(CTRIAX6 card) = %i' % len(card)
         self.prepare_node_ids(nids, allow_empty_nodes=True)
         assert len(nids) == 6, 'error on CTRIAX6'
 
@@ -1062,8 +1069,8 @@ class CTRIAX6(TriShell):
 
 
 class QuadShell(ShellElement):
-    def __init__(self, card, data):
-        ShellElement.__init__(self, card, data)
+    def __init__(self):
+        ShellElement.__init__(self)
 
     def get_edge_ids(self):
         """
@@ -1214,24 +1221,30 @@ class QuadShell(ShellElement):
 class CSHEAR(QuadShell):
     type = 'CSHEAR'
     calculixType = 'S4'
-    def __init__(self, card=None, data=None, comment=''):
-        QuadShell.__init__(self, card, data)
+    def __init__(self):
+        QuadShell.__init__(self)
+
+    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            #: Element ID
-            self.eid = integer(card, 1, 'eid')
-            #: Property ID
-            self.pid = integer_or_blank(card, 2, 'pid', self.eid)
-            nids = [integer_or_blank(card, 3, 'n1'),
-                    integer_or_blank(card, 4, 'n2'),
-                    integer_or_blank(card, 5, 'n3'),
-                    integer_or_blank(card, 6, 'n4')]
-            assert len(card) <= 7, 'len(CSHEAR card) = %i' % len(card)
-        else:
-            self.eid = data[0]
-            self.pid = data[1]
-            nids = data[2:]
+        #: Element ID
+        self.eid = integer(card, 1, 'eid')
+        #: Property ID
+        self.pid = integer_or_blank(card, 2, 'pid', self.eid)
+        nids = [integer_or_blank(card, 3, 'n1'),
+                integer_or_blank(card, 4, 'n2'),
+                integer_or_blank(card, 5, 'n3'),
+                integer_or_blank(card, 6, 'n4')]
+        assert len(card) <= 7, 'len(CSHEAR card) = %i' % len(card)
+        self.prepare_node_ids(nids)
+        assert len(self.nodes) == 4
+
+    def add_op2_data(self, data, comment=''):
+        if comment:
+            self._comment = comment
+        self.eid = data[0]
+        self.pid = data[1]
+        nids = data[2:]
         self.prepare_node_ids(nids)
         assert len(self.nodes) == 4
 
@@ -1395,8 +1408,8 @@ class CQUAD4(QuadShell):
         else:
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
-    def __init__(self, card=None, data=None, comment=''):
-        QuadShell.__init__(self, card, data)
+    def __init__(self):
+        QuadShell.__init__(self)
 
     def add(self, eid, pid, nids,
             theta_mcid=0.0, tflag=0, t1=1.0, t2=1.0, t3=1.0, t4=1.0, comment=''):
@@ -1413,7 +1426,9 @@ class CQUAD4(QuadShell):
         self.T3 = t3
         self.T4 = t4
 
-    def add_op2_data(self, data):
+    def add_op2_data(self, data, comment=''):
+        if comment:
+            self._comment = comment
         self.eid = data[0]
         self.pid = data[1]
         nids = data[2:6]
@@ -1589,49 +1604,53 @@ class CQUADR(QuadShell):
     type = 'CQUADR'
     #calculixType = 'CAX8'
 
-    def __init__(self, card=None, data=None, comment=''):
-        QuadShell.__init__(self, card, data)
+    def __init__(self):
+        QuadShell.__init__(self)
+
+    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            #: Element ID
-            self.eid = integer(card, 1, 'eid')
-            #: Property ID
-            self.pid = integer(card, 2, 'pid')
-            nids = [integer_or_blank(card, 3, 'n1'),
-                    integer_or_blank(card, 4, 'n2'),
-                    integer_or_blank(card, 5, 'n3'),
-                    integer_or_blank(card, 6, 'n4')]
+        #: Element ID
+        self.eid = integer(card, 1, 'eid')
+        #: Property ID
+        self.pid = integer(card, 2, 'pid')
+        nids = [integer_or_blank(card, 3, 'n1'),
+                integer_or_blank(card, 4, 'n2'),
+                integer_or_blank(card, 5, 'n3'),
+                integer_or_blank(card, 6, 'n4')]
 
-            self.thetaMcid = integer_double_or_blank(card, 7, 'thetaMcid', 0.0)
-            self.zOffset = double_or_blank(card, 8, 'zOffset', 0.0)
+        self.thetaMcid = integer_double_or_blank(card, 7, 'thetaMcid', 0.0)
+        self.zOffset = double_or_blank(card, 8, 'zOffset', 0.0)
 
-            self.TFlag = integer_or_blank(card, 10, 'TFlag', 0)
-            self.T1 = double_or_blank(card, 11, 'T1', 1.0)
-            self.T2 = double_or_blank(card, 12, 'T2', 1.0)
-            self.T3 = double_or_blank(card, 13, 'T3', 1.0)
-            self.T4 = double_or_blank(card, 14, 'T4', 1.0)
-            assert len(card) <= 15, 'len(CQUADR card) = %i' % len(card)
-        else:
-            self.eid = data[0]
-            self.pid = data[1]
-            nids = data[2:6]
+        self.TFlag = integer_or_blank(card, 10, 'TFlag', 0)
+        self.T1 = double_or_blank(card, 11, 'T1', 1.0)
+        self.T2 = double_or_blank(card, 12, 'T2', 1.0)
+        self.T3 = double_or_blank(card, 13, 'T3', 1.0)
+        self.T4 = double_or_blank(card, 14, 'T4', 1.0)
+        assert len(card) <= 15, 'len(CQUADR card) = %i' % len(card)
+        self.prepare_node_ids(nids)
+        assert len(self.nodes) == 4, 'CQUADR'
 
-            self.thetaMcid = data[6]
-            self.zOffset = data[7]
-            self.TFlag = data[8]
-            self.T1 = data[9]
-            self.T2 = data[10]
-            self.T3 = data[11]
-            self.T4 = data[12]
-            if self.T1 == -1.0:
-                self.T1 = 1.0
-            if self.T2 == -1.0:
-                self.T2 = 1.0
-            if self.T3 == -1.0:
-                self.T3 = 1.0
-            if self.T4 == -1.0:
-                self.T4 = 1.0
+    def add_op2_data(self, data, comment=''):
+        self.eid = data[0]
+        self.pid = data[1]
+        nids = data[2:6]
+
+        self.thetaMcid = data[6]
+        self.zOffset = data[7]
+        self.TFlag = data[8]
+        self.T1 = data[9]
+        self.T2 = data[10]
+        self.T3 = data[11]
+        self.T4 = data[12]
+        if self.T1 == -1.0:
+            self.T1 = 1.0
+        if self.T2 == -1.0:
+            self.T2 = 1.0
+        if self.T3 == -1.0:
+            self.T3 = 1.0
+        if self.T4 == -1.0:
+            self.T4 = 1.0
         self.prepare_node_ids(nids)
         assert len(self.nodes) == 4, 'CQUADR'
 
@@ -1725,8 +1744,10 @@ class CQUADR(QuadShell):
 class CQUAD(QuadShell):
     type = 'CQUAD'
 
-    def __init__(self, card=None, data=None, comment=''):
-        QuadShell.__init__(self, card, data)
+    def __init__(self):
+        QuadShell.__init__(self)
+
+    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
         #: Element ID
@@ -1814,58 +1835,61 @@ class CQUAD8(QuadShell):
     type = 'CQUAD8'
     aster_type = 'QUAD8'
 
-    def __init__(self, card=None, data=None, comment=''):
-        QuadShell.__init__(self, card, data)
+    def __init__(self):
+        QuadShell.__init__(self)
+
+    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            #: Element ID
-            self.eid = integer(card, 1, 'eid')
-            #: Property ID
-            self.pid = integer(card, 2, 'pid')
-            nids = [integer(card, 3, 'n1'),
-                    integer(card, 4, 'n2'),
-                    integer(card, 5, 'n3'),
-                    integer(card, 6, 'n4'),
-                    integer_or_blank(card, 7, 'n5', 0),
-                    integer_or_blank(card, 8, 'n6', 0),
-                    integer_or_blank(card, 9, 'n7', 0),
-                    integer_or_blank(card, 10, 'n8', 0)]
-            if len(card) > 11:
-                self.T1 = double_or_blank(card, 11, 'T1', 1.0)
-                self.T2 = double_or_blank(card, 12, 'T2', 1.0)
-                self.T3 = double_or_blank(card, 13, 'T3', 1.0)
-                self.T4 = double_or_blank(card, 14, 'T4', 1.0)
-                self.thetaMcid = integer_double_or_blank(card, 15, 'thetaMcid', 0.0)
-                self.zOffset = double_or_blank(card, 16, 'zOffset', 0.0)
-                self.TFlag = integer_or_blank(card, 17, 'TFlag', 0)
-                assert len(card) <= 18, 'len(CQUAD4 card) = %i' % len(card)
-            else:
-                self.thetaMcid = 0.0
-                self.zOffset = 0.0
-                self.T1 = 1.0
-                self.T2 = 1.0
-                self.T3 = 1.0
-                self.T4 = 1.0
-                self.TFlag = 0
+        #: Element ID
+        self.eid = integer(card, 1, 'eid')
+        #: Property ID
+        self.pid = integer(card, 2, 'pid')
+        nids = [integer(card, 3, 'n1'),
+                integer(card, 4, 'n2'),
+                integer(card, 5, 'n3'),
+                integer(card, 6, 'n4'),
+                integer_or_blank(card, 7, 'n5', 0),
+                integer_or_blank(card, 8, 'n6', 0),
+                integer_or_blank(card, 9, 'n7', 0),
+                integer_or_blank(card, 10, 'n8', 0)]
+        if len(card) > 11:
+            self.T1 = double_or_blank(card, 11, 'T1', 1.0)
+            self.T2 = double_or_blank(card, 12, 'T2', 1.0)
+            self.T3 = double_or_blank(card, 13, 'T3', 1.0)
+            self.T4 = double_or_blank(card, 14, 'T4', 1.0)
+            self.thetaMcid = integer_double_or_blank(card, 15, 'thetaMcid', 0.0)
+            self.zOffset = double_or_blank(card, 16, 'zOffset', 0.0)
+            self.TFlag = integer_or_blank(card, 17, 'TFlag', 0)
+            assert len(card) <= 18, 'len(CQUAD4 card) = %i' % len(card)
         else:
-            #print "CQUAD8 = ",data
-            #(6401,
-            #6400,
-            #6401, 6402, 6405, 6403, 0, 0, 6404, 0,
-            #-1.0, -1.0, -1.0, -1.0,
-            #0.0, 0)
-            self.eid = data[0]
-            self.pid = data[1]
-            nids = data[2:10]
-            self.T1 = data[10]
-            self.T2 = data[11]
-            self.T3 = data[12]
-            self.T4 = data[13]
-            self.thetaMcid = data[14]
-            self.zOffset = data[14]
-            self.TFlag = data[15]
+            self.thetaMcid = 0.0
+            self.zOffset = 0.0
+            self.T1 = 1.0
+            self.T2 = 1.0
+            self.T3 = 1.0
+            self.T4 = 1.0
+            self.TFlag = 0
+        self.prepare_node_ids(nids, allow_empty_nodes=True)
+        assert len(self.nodes) == 8
 
+    def add_op2_data(self, data, comment=''):
+        #print "CQUAD8 = ",data
+        #(6401,
+        #6400,
+        #6401, 6402, 6405, 6403, 0, 0, 6404, 0,
+        #-1.0, -1.0, -1.0, -1.0,
+        #0.0, 0)
+        self.eid = data[0]
+        self.pid = data[1]
+        nids = data[2:10]
+        self.T1 = data[10]
+        self.T2 = data[11]
+        self.T3 = data[12]
+        self.T4 = data[13]
+        self.thetaMcid = data[14]
+        self.zOffset = data[14]
+        self.TFlag = data[15]
         self.prepare_node_ids(nids, allow_empty_nodes=True)
         assert len(self.nodes) == 8
 
@@ -2000,29 +2024,28 @@ class CQUADX(QuadShell):
     type = 'CQUADX'
     calculixType = 'CAX8'
 
-    def __init__(self, card=None, data=None, comment=''):
-        QuadShell.__init__(self, card, data)
+    def __init__(self):
+        QuadShell.__init__(self)
+
+    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            #: Element ID
-            self.eid = integer(card, 1, 'eid')
-            #: Property ID
-            self.pid = integer(card, 2, 'pid')
-            nids = [
-                integer_or_blank(card, 3, 'n1'),
-                integer_or_blank(card, 4, 'n2'),
-                integer_or_blank(card, 5, 'n3'),
-                integer_or_blank(card, 6, 'n4'),
-                integer_or_blank(card, 7, 'n5'),
-                integer_or_blank(card, 8, 'n6'),
-                integer_or_blank(card, 9, 'n7'),
-                integer_or_blank(card, 10, 'n8'),
-                integer_or_blank(card, 11, 'n9')
-            ]
-            assert len(card) <= 12, 'len(CQUADX card) = %i' % len(card)
-        else:
-            raise NotImplementedError(data)
+        #: Element ID
+        self.eid = integer(card, 1, 'eid')
+        #: Property ID
+        self.pid = integer(card, 2, 'pid')
+        nids = [
+            integer_or_blank(card, 3, 'n1'),
+            integer_or_blank(card, 4, 'n2'),
+            integer_or_blank(card, 5, 'n3'),
+            integer_or_blank(card, 6, 'n4'),
+            integer_or_blank(card, 7, 'n5'),
+            integer_or_blank(card, 8, 'n6'),
+            integer_or_blank(card, 9, 'n7'),
+            integer_or_blank(card, 10, 'n8'),
+            integer_or_blank(card, 11, 'n9')
+        ]
+        assert len(card) <= 12, 'len(CQUADX card) = %i' % len(card)
         self.prepare_node_ids(nids, allow_empty_nodes=True)
         assert len(self.nodes) == 9
 

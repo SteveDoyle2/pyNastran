@@ -21,8 +21,8 @@ from pyNastran.bdf.field_writer_16 import print_card_16
 class BushingProperty(Property):
     type = 'BushingProperty'
 
-    def __init__(self, card, data):
-        Property.__init__(self, card, data)
+    def __init__(self):
+        Property.__init__(self)
 
     def cross_reference(self, model):
         pass
@@ -37,10 +37,8 @@ class PBUSH(BushingProperty):
         1: 'pid',
     }
 
-    def __init__(self, card=None, data=None, comment=''):
-        BushingProperty.__init__(self, card, data)
-        if comment:
-            self._comment = comment
+    def __init__(self):
+        BushingProperty.__init__(self)
 
         # K parameter
         self.Ki = []
@@ -57,30 +55,36 @@ class PBUSH(BushingProperty):
         self.ea = None
         self.et = None
 
-        if card:
-            #: Property ID
-            self.pid = integer(card, 1, 'pid')
+    def add_card(self, card, comment=''):
+        if comment:
+            self._comment = comment
 
-            nfields = card.nfields
-            self.vars = []
-            istart = 2
-            while istart < nfields:
-                pname = string(card, istart, 'pname')
-                if   pname == 'K':
-                    self._read_k(card, istart)
-                elif pname == 'B':
-                    self._read_b(card, istart)
-                elif pname == 'GE':
-                    self._read_ge(card, istart)
-                elif pname == 'RCV':
-                    self._read_rcv(card, istart)
-                else:
-                    break
-                istart += 8
-        else:
-            self.pid = data[0]
-            self.b = data[1]
-            raise NotImplementedError('PBUSH data...')
+        #: Property ID
+        self.pid = integer(card, 1, 'pid')
+
+        nfields = card.nfields
+        self.vars = []
+        istart = 2
+        while istart < nfields:
+            pname = string(card, istart, 'pname')
+            if   pname == 'K':
+                self._read_k(card, istart)
+            elif pname == 'B':
+                self._read_b(card, istart)
+            elif pname == 'GE':
+                self._read_ge(card, istart)
+            elif pname == 'RCV':
+                self._read_rcv(card, istart)
+            else:
+                break
+            istart += 8
+
+    def add_op2_data(self, data, comment=''):
+        if comment:
+            self._comment = comment
+        self.pid = data[0]
+        self.b = data[1]
+        raise NotImplementedError('PBUSH data...')
         #print self
 
     def _verify(self, xref=False):
@@ -164,11 +168,8 @@ class PBUSH(BushingProperty):
 class PBUSH1D(BushingProperty):
     type = 'PBUSH1D'
 
-    def __init__(self, card=None, data=None, comment=''):
-        BushingProperty.__init__(self, card, data)
-        if comment:
-            self._comment = comment
-
+    def __init__(self):
+        BushingProperty.__init__(self)
         # SPRING parameters
         self.springType = None
         self.springIDT = None
@@ -204,36 +205,42 @@ class PBUSH1D(BushingProperty):
         self.shockIDETSD = None
         self.shockIDECSD = None
 
-        if card:
-            #: Property ID
-            self.pid = integer(card, 1, 'pid')
-            self.k = double_or_blank(card, 2, 'k', 0.0)
-            self.c = double_or_blank(card, 3, 'c', 0.0)
-            self.m = double_or_blank(card, 4, 'm', 0.0)
+    def add_card(self, card, comment=''):
+        if comment:
+            self._comment = comment
 
-            self.sa = double_or_blank(card, 6, 'sa', 0.0)
-            self.se = double_or_blank(card, 7, 'se', 0.0)
+        #: Property ID
+        self.pid = integer(card, 1, 'pid')
+        self.k = double_or_blank(card, 2, 'k', 0.0)
+        self.c = double_or_blank(card, 3, 'c', 0.0)
+        self.m = double_or_blank(card, 4, 'm', 0.0)
 
-            nfields = card.nfields
-            self.vars = []
-            istart = 9
-            while istart < nfields:
-                pname = string(card, istart, 'pname')
-                if   pname == 'SHOCKA':
-                    istart = self._read_shock(card, istart)
-                elif pname == 'SPRING':
-                    self._read_spring(card, istart)
-                elif pname == 'DAMPER':
-                    self._read_damper(card, istart)
-                elif pname == 'GENER':
-                    self._read_gener(card, istart)
-                else:
-                    break
-                istart += 8
-        else:
-            self.pid = data[0]
-            self.b = data[1]
-            raise NotImplementedError('PBUSH1D data...')
+        self.sa = double_or_blank(card, 6, 'sa', 0.0)
+        self.se = double_or_blank(card, 7, 'se', 0.0)
+
+        nfields = card.nfields
+        self.vars = []
+        istart = 9
+        while istart < nfields:
+            pname = string(card, istart, 'pname')
+            if   pname == 'SHOCKA':
+                istart = self._read_shock(card, istart)
+            elif pname == 'SPRING':
+                self._read_spring(card, istart)
+            elif pname == 'DAMPER':
+                self._read_damper(card, istart)
+            elif pname == 'GENER':
+                self._read_gener(card, istart)
+            else:
+                break
+            istart += 8
+
+    def add_op2_data(self, data, comment=''):
+        if comment:
+            self._comment = comment
+        self.pid = data[0]
+        self.b = data[1]
+        raise NotImplementedError('PBUSH1D data...')
 
     def _verify(self, xref=False):
         pid = self.Pid()
@@ -407,41 +414,40 @@ class PBUSH2D(BushingProperty):
 class PBUSHT(BushingProperty):
     type = 'PBUSHT'
 
-    def __init__(self, card=None, data=None, comment=''):
-        BushingProperty.__init__(self, card, data)
+    def __init__(self):
+        BushingProperty.__init__(self)
+        self.k_tables = []
+        self.b_tables = []
+        self.ge_tables = []
+        self.kn_tables = []
+
+    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
 
-        if card:
-            self.pid = integer(card, 1, 'pid')
-            nfields = len(card) - 1
-            nrows = nfields // 8
-            if nfields % 8 != 0:
-                nrows += 1
+        self.pid = integer(card, 1, 'pid')
+        nfields = len(card) - 1
+        nrows = nfields // 8
+        if nfields % 8 != 0:
+            nrows += 1
 
-            self.k_tables = []
-            self.b_tables = []
-            self.ge_tables = []
-            self.kn_tables = []
-            for irow in range(nrows):
-                ifield = 1 + irow * 8
-                param = string(card, ifield + 1, 'param_type')
-                table = []
-                for j in range(6):
-                    table_value = integer_or_blank(card, ifield + j + 2, param + '%i' % (j+1))
-                    table.append(table_value)
-                if param == 'K':
-                    self.k_tables = table
-                elif param == 'B':
-                    self.b_tables = table
-                elif param == 'GE':
-                    self.ge_tables = table
-                elif param == 'KN':
-                    self.kn_tables = table
-                else:
-                    raise ValueError(param)
-        else:
-            raise NotImplementedError()
+        for irow in range(nrows):
+            ifield = 1 + irow * 8
+            param = string(card, ifield + 1, 'param_type')
+            table = []
+            for j in range(6):
+                table_value = integer_or_blank(card, ifield + j + 2, param + '%i' % (j+1))
+                table.append(table_value)
+            if param == 'K':
+                self.k_tables = table
+            elif param == 'B':
+                self.b_tables = table
+            elif param == 'GE':
+                self.ge_tables = table
+            elif param == 'KN':
+                self.kn_tables = table
+            else:
+                raise ValueError(param)
 
     def raw_fields(self):
         list_fields = ['PBUSHT', self.pid]

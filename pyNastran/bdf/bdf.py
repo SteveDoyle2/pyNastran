@@ -1298,6 +1298,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'CORD2C' : (CORD2C, self.add_coord),
             'CORD2S' : (CORD2S, self.add_coord),
 
+            'PLOTEL' : (PLOTEL, self.add_plotel),
+
             'CONROD' : (CONROD, self.add_element),
             'CROD' : (CROD, self.add_element),
             'PROD' : (PROD, self.add_property),
@@ -1321,12 +1323,24 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
             'CTRIA3' : (CTRIA3, self.add_element),
             'CQUAD4' : (CQUAD4, self.add_element),
+            'CQUAD' : (CQUAD, self.add_element),
+            'CQUAD8' : (CQUAD8, self.add_element),
+            'CQUADX' : (CQUADX, self.add_element),
+            'CQUADR' : (CQUADR, self.add_element),
+            'CTRIA6' : (CTRIA6, self.add_element),
+            'CTRIAR' : (CTRIAR, self.add_element),
+            'CTRIAX' : (CTRIAX, self.add_element),
+            'CTRIAX6' : (CTRIAX6, self.add_element),
+            'PCOMPG' : (PCOMPG, self.add_property),
+            'PLPLANE' : (PLPLANE, self.add_property),
             'PCOMP' : (PCOMP, self.add_property),
             'PSHELL' : (PSHELL, self.add_property),
 
+            'CSHEAR' : (CSHEAR, self.add_element),
+            'PSHEAR' : (PSHEAR, self.add_property),
+
             'PSOLID' : (PSOLID, self.add_property),
             'PLSOLID' : (PLSOLID, self.add_property),
-
 
             'CELAS1' : (CELAS1, self.add_element),
             'CELAS2' : (CELAS2, self.add_element),
@@ -1342,8 +1356,36 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'CDAMP5' : (CDAMP5, self.add_damper),
             'PDAMP5' : (PDAMP5, self.add_property),
 
-            # there is no MAT6 or MAT7
-            'MAT1' : (MAT1, self.add_structural_material),
+            'CFAST' : (CFAST, self.add_damper),
+            'PFAST' : (PFAST, self.add_property),
+
+            'CGAP' : (CGAP, self.add_element),
+            'PGAP' : (PGAP, self.add_property),
+
+            'CBUSH' : (CBUSH, self.add_damper),
+            'CBUSH1D' : (CBUSH1D, self.add_damper),
+            'CBUSH2D' : (CBUSH2D, self.add_damper),
+            'PBUSH' : (PBUSH, self.add_property),
+            'PBUSH1D' : (PBUSH1D, self.add_property),
+
+            'CRAC2D' : (CRAC2D, self.add_element),
+            'PRAC2D' : (PRAC2D, self.add_property),
+
+            'CRAC3D' : (CRAC3D, self.add_element),
+            'PRAC3D' : (PRAC3D, self.add_property),
+
+            'PDAMPT' : (PDAMPT, self.add_PDAMPT),
+            'PBUSHT' : (PBUSHT, self.add_PBUSHT),
+
+            'PCONEAX' : (PCONEAX, self.add_property),
+
+            'RBAR' : (RBAR, self.add_rigid_element),
+            'RBAR1' : (RBAR1, self.add_rigid_element),
+            'RBE1' : (RBE1, self.add_rigid_element),
+            'RBE2' : (RBE2, self.add_rigid_element),
+            'RBE3' : (RBE3, self.add_rigid_element),
+            'RROD' : (RROD, self.add_rigid_element),
+
 
             # there is no MAT6 or MAT7
             'MAT1' : (MAT1, self.add_structural_material),
@@ -1417,49 +1459,12 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             # BCTSET
         }
         self._card_parser = {
-            'PLOTEL' : (PLOTEL, self.add_plotel),
-            'CQUAD' : (CQUAD, self.add_element),
-            'CQUAD8' : (CQUAD8, self.add_element),
-            'CQUADX' : (CQUADX, self.add_element),
-            'CQUADR' : (CQUADR, self.add_element),
-            'CTRIA6' : (CTRIA6, self.add_element),
-            'CTRIAR' : (CTRIAR, self.add_element),
-            'CTRIAX' : (CTRIAX, self.add_element),
-            'CTRIAX6' : (CTRIAX6, self.add_element),
-            'PCOMPG' : (PCOMPG, self.add_property),
-            'PLPLANE' : (PLPLANE, self.add_property),
-
-            'CSHEAR' : (CSHEAR, self.add_element),
-            'PSHEAR' : (PSHEAR, self.add_property),
-
             # CTETRA - added later
             # CHEXA  - added later
             # CPENTA - added later
             # CPYRAM - added later
             'CIHEX1' : (CIHEX1, self.add_element),
             'PIHEX' : (PIHEX, self.add_property),
-            'PCONEAX' : (PCONEAX, self.add_property),
-
-            'CBUSH' : (CBUSH, self.add_damper),
-            'CBUSH1D' : (CBUSH1D, self.add_damper),
-            'CBUSH2D' : (CBUSH2D, self.add_damper),
-            'PBUSH' : (PBUSH, self.add_property),
-            'PBUSH1D' : (PBUSH1D, self.add_property),
-
-            'CFAST' : (CFAST, self.add_damper),
-            'PFAST' : (PFAST, self.add_property),
-
-            'CGAP' : (CGAP, self.add_element),
-            'PGAP' : (PGAP, self.add_property),
-
-            'CRAC2D' : (CRAC2D, self.add_element),
-            'PRAC2D' : (PRAC2D, self.add_property),
-
-            'CRAC3D' : (CRAC3D, self.add_element),
-            'PRAC3D' : (PRAC3D, self.add_property),
-
-            'PDAMPT' : (PDAMPT, self.add_PDAMPT),
-            'PBUSHT' : (PBUSHT, self.add_PBUSHT),
 
             'LSEQ' : (LSEQ, self.add_LSEQ),
             'PHBDY' : (PHBDY, self.add_PHBDY),
@@ -1494,13 +1499,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'TF' : (TF, self.add_TF),
             'DELAY' : (DELAY, self.add_DELAY),
             'DCONADD' : (DCONADD, self.add_DCONADD),
-
-            'RBAR' : (RBAR, self.add_rigid_element),
-            'RBAR1' : (RBAR1, self.add_rigid_element),
-            'RBE1' : (RBE1, self.add_rigid_element),
-            'RBE2' : (RBE2, self.add_rigid_element),
-            'RBE3' : (RBE3, self.add_rigid_element),
-            'RROD' : (RROD, self.add_rigid_element),
 
             'MATS1' : (MATS1, self.add_material_dependence),
             #'MATS3' : (MATS3, self.add_material_dependence),

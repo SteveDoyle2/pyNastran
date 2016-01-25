@@ -1171,7 +1171,7 @@ class MAT9(AnisotropicMaterial):
         1: 'mid',
     }
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self):
         AnisotropicMaterial.__init__(self)
         self.matt9 = None
 
@@ -1743,25 +1743,24 @@ class MATHP(HyperelasticMaterial):
 class EQUIV(Material):
     type = 'EQUIV'
 
-    def __init__(self, card=None, data=None, comment=''):
-        Material.__init__(self, card, data)
+    def __init__(self):
+        Material.__init__(self)
+
+    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            #: Identification number of a MAT1, MAT2, or MAT9 entry.
-            self.mid = integer(card, 1, 'mid')
-            self.field2 = integer(card, 2, 'field2')
-            self.field3 = integer(card, 3, 'field3')
-            self.field4 = blank(card, 4, 'field4')
+        #: Identification number of a MAT1, MAT2, or MAT9 entry.
+        self.mid = integer(card, 1, 'mid')
+        self.field2 = integer(card, 2, 'field2')
+        self.field3 = integer(card, 3, 'field3')
+        self.field4 = blank(card, 4, 'field4')
 
-            self.field5 = integer(card, 5, 'field5')
-            self.field6 = integer(card, 6, 'field6')
-            self.field7 = integer(card, 7, 'field7')
-            #[u'EQUIV', 1, 106, 306, None, 1, 106, 306]
-            #[u'EQUIV', 2, 100, 104, None, 1, 0, 4]
-            assert len(card) <= 8, 'len(EQUIV card)=%i card=%s' % (len(card), card)
-        else:
-            raise NotImplementedError(data)
+        self.field5 = integer(card, 5, 'field5')
+        self.field6 = integer(card, 6, 'field6')
+        self.field7 = integer(card, 7, 'field7')
+        #[u'EQUIV', 1, 106, 306, None, 1, 106, 306]
+        #[u'EQUIV', 2, 100, 104, None, 1, 0, 4]
+        assert len(card) <= 8, 'len(EQUIV card)=%i card=%s' % (len(card), card)
 
     def raw_fields(self):
         list_fields = ['EQUIV', self.Mid(), self.field2, self.field3,

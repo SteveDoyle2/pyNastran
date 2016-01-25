@@ -49,6 +49,117 @@ class RealForceObject(ScalarObject):
         return ind
 
 
+class FailureIndices(RealForceObject):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        RealForceObject.__init__(self, data_code, isubcase)
+        self.nelements = 0  # result specific
+        if is_sort1:
+            self.add = self.add_sort1
+        else:
+            raise NotImplementedError('SORT2')
+
+    def build(self):
+        if self.is_built:
+            return
+
+        #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
+        assert self.ntimes > 0, 'ntimes=%s' % self.ntimes
+        assert self.nelements > 0, 'nelements=%s' % self.nelements
+        assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
+        #self.names = []
+        self.nelements //= self.ntimes
+        self.itime = 0
+        self.ielement = 0
+        self.itotal = 0
+        #self.ntimes = 0
+        #self.nelements = 0
+        self.is_built = True
+
+        #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
+        dtype = 'float32'
+        if isinstance(self.nonlinear_factor, int):
+            dtype = 'int32'
+        self._times = zeros(self.ntimes, dtype=dtype)
+        self.element = zeros(self.nelements, dtype='int32')
+
+        #[force]
+        self.data = zeros((self.ntimes, self.nelements, 1), dtype='float32')
+
+    def build_dataframe(self):
+        headers = self.get_headers()
+        if self.nonlinear_factor is not None:
+            column_names, column_values = self._build_dataframe_transient_header()
+            self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
+            self.data_frame.columns.names = column_names
+        else:
+            self.data_frame = pd.Panel(self.data, major_axis=self.element, minor_axis=headers).to_frame()
+            self.data_frame.columns.names = ['Static']
+        self.data_frame.index.names = ['ElementID', 'Item']
+
+    def add(self, dt, eid, force):
+        self.add_sort1(dt, eid, force)
+
+    def add_sort1(self, dt, eid, force):
+        self._times[self.itime] = dt
+        self.element[self.ielement] = eid
+        self.data[self.itime, self.ielement, :] = [force]
+        self.ielement += 1
+
+    def get_stats(self):
+        if not self.is_built:
+            return [
+                '<%s>\n' % self.__class__.__name__,
+                '  ntimes: %i\n' % self.ntimes,
+                '  ntotal: %i\n' % self.ntotal,
+            ]
+
+        ntimes = self.data.shape[0]
+        nelements = self.data.shape[1]
+        assert self.ntimes == ntimes, 'ntimes=%s expected=%s' % (self.ntimes, ntimes)
+        assert self.nelements == nelements, 'nelements=%s expected=%s' % (self.nelements, nelements)
+
+        msg = []
+        if self.nonlinear_factor is not None:  # transient
+            msg.append('  type=%s ntimes=%i nelements=%i\n'
+                       % (self.__class__.__name__, ntimes, nelements))
+            ntimes_word = 'ntimes'
+        else:
+            msg.append('  type=%s nelements=%i\n'
+                       % (self.__class__.__name__, nelements))
+            ntimes_word = 1
+        headers = self.get_headers()
+        n = len(headers)
+        msg.append('  data: [%s, nelements, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
+        msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
+        msg.append('  element type: %s\n  ' % self.element_name)
+        msg += self.get_data_code()
+        return msg
+
+    def get_f06_header(self, is_mag_phase=True, is_sort1=True):
+        raise NotImplementedError('this should be overwritten by %s' % (self.__class__.__name__))
+
+    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+        if header is None:
+            header = []
+        msg_temp = self.get_f06_header(is_mag_phase=is_mag_phase, is_sort1=is_sort1)
+
+        asd
+        if self.is_sort1():
+            page_num = self._write_sort1_as_sort1(header, page_stamp, page_num, f, msg_temp)
+        else:
+            raise NotImplementedError(self.code_information())
+            #page_num = self._write_sort2_as_sort2(header, page_stamp, page_num, f, msg_temp)
+
+        '          F A I L U R E   I N D I C E S   F O R   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A 3 )\n'
+        '   ELEMENT  FAILURE        PLY   FP=FAILURE INDEX FOR PLY    FB=FAILURE INDEX FOR BONDING   FAILURE INDEX FOR ELEMENT      FLAG\n'
+        '     ID      THEORY         ID  (DIRECT STRESSES/STRAINS)     (INTER-LAMINAR STRESSES)      MAX OF FP,FB FOR ALL PLIES\n'
+        '         1   HOFFMAN       101      6.987186E-02      \n'
+        '                                                                     1.687182E-02                                              \n'
+        '                           102      9.048269E-02      \n'
+        '                                                                     1.721401E-02                                               \n'
+        return page_num
+
+
 class RealSpringDamperForceArray(RealForceObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealForceObject.__init__(self, data_code, isubcase)

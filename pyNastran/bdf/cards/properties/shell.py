@@ -25,13 +25,13 @@ from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_8 import is_same
 
 class ShellProperty(Property):
-    def __init__(self, card=None, data=None):
-        Property.__init__(self, card, data)
+    def __init__(self):
+        Property.__init__(self)
 
 
 class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
-    def __init__(self, card=None, data=None):
-        ShellProperty.__init__(self, card, data)
+    def __init__(self):
+        ShellProperty.__init__(self)
 
     def cross_reference(self, model):
         """
@@ -724,64 +724,63 @@ class PCOMPG(CompositeShellProperty):
             #self.global_ply_ids[i] = global_ply_id
             #i += 1
 
-    def __init__(self, card=None, data=None, comment=''):
-        CompositeShellProperty.__init__(self, card, data)
-        if comment:
-            self._comment = comment
-
+    def __init__(self):
+        CompositeShellProperty.__init__(self)
         self.mids = []
         self.thicknesses = []
         self.thetas = []
         self.souts = []
         self.global_ply_ids = []
-        if card:
-            self.pid = integer(card, 1, 'pid')
-            # z0 will be calculated later
-            self.nsm = double_or_blank(card, 3, 'nsm', 0.0)
-            self.sb = double_or_blank(card, 4, 'sb', 0.0)
-            self.ft = string_or_blank(card, 5, 'ft')
-            assert self.ft in ['HILL', 'HOFF', 'TSAI', 'STRN', None]
-            self.TRef = double_or_blank(card, 6, 'TRef', 0.0)
-            self.ge = double_or_blank(card, 7, 'ge', 0.0)
-            self.lam = string_or_blank(card, 8, 'lam')
-            fields = card.fields(9)
 
-            T = 0.  # thickness
-            mid_last = None
-            thick_last = None
+    def add_card(self, card, comment=''):
+        if comment:
+            self._comment = comment
 
-            i = 0
-            #n = 0
-            while i < len(fields):
-                global_ply_id = integer(card, 9 + i, 'global_ply_id')
-                mid = integer_or_blank(card, 9 + i + 1, 'mid', mid_last)
+        self.pid = integer(card, 1, 'pid')
+        # z0 will be calculated later
+        self.nsm = double_or_blank(card, 3, 'nsm', 0.0)
+        self.sb = double_or_blank(card, 4, 'sb', 0.0)
+        self.ft = string_or_blank(card, 5, 'ft')
+        assert self.ft in ['HILL', 'HOFF', 'TSAI', 'STRN', None]
+        self.TRef = double_or_blank(card, 6, 'TRef', 0.0)
+        self.ge = double_or_blank(card, 7, 'ge', 0.0)
+        self.lam = string_or_blank(card, 8, 'lam')
+        fields = card.fields(9)
 
-                # can be blank 2nd time thru
-                thickness = double_or_blank(card, 9 + i + 2, 'thickness', thick_last)
+        T = 0.  # thickness
+        mid_last = None
+        thick_last = None
 
-                theta = double_or_blank(card, 9 + i + 3, 'theta', 0.0)
-                sout = string_or_blank(card, 9 + i + 4, 'sout', 'NO')
-                #print('n=%s global_ply_id=%s mid=%s thickness=%s len=%s' %(
-                #    n,global_ply_id,mid,thickness,len(fields)))
+        i = 0
+        #n = 0
+        while i < len(fields):
+            global_ply_id = integer(card, 9 + i, 'global_ply_id')
+            mid = integer_or_blank(card, 9 + i + 1, 'mid', mid_last)
 
-                self.mids.append(mid)
-                self.thicknesses.append(thickness)
-                self.thetas.append(theta)
-                self.souts.append(sout)
-                self.global_ply_ids.append(global_ply_id)
+            # can be blank 2nd time thru
+            thickness = double_or_blank(card, 9 + i + 2, 'thickness', thick_last)
 
-                assert mid is not None
-                assert thickness is not None
-                assert isinstance(mid, int), 'mid=%s' % mid
-                assert isinstance(thickness, float), 'thickness=%s' % thickness
-                mid_last = mid
-                thick_last = thickness
-                T += thickness
-                i += 8
-                #n += 1
-            self.z0 = double_or_blank(card, 2, 'z0', -0.5 * T)
-        else:
-            raise NotImplementedError('PCOMPG data')
+            theta = double_or_blank(card, 9 + i + 3, 'theta', 0.0)
+            sout = string_or_blank(card, 9 + i + 4, 'sout', 'NO')
+            #print('n=%s global_ply_id=%s mid=%s thickness=%s len=%s' %(
+            #    n,global_ply_id,mid,thickness,len(fields)))
+
+            self.mids.append(mid)
+            self.thicknesses.append(thickness)
+            self.thetas.append(theta)
+            self.souts.append(sout)
+            self.global_ply_ids.append(global_ply_id)
+
+            assert mid is not None
+            assert thickness is not None
+            assert isinstance(mid, int), 'mid=%s' % mid
+            assert isinstance(thickness, float), 'thickness=%s' % thickness
+            mid_last = mid
+            thick_last = thickness
+            T += thickness
+            i += 8
+            #n += 1
+        self.z0 = double_or_blank(card, 2, 'z0', -0.5 * T)
 
     def _verify(self, xref=False):
         pid = self.Pid()
@@ -848,18 +847,17 @@ class PLPLANE(ShellProperty):
     type = 'PLPLANE'
     _field_map = {1: 'pid', 2:'mid', 6:'cid', 7:'str'}
 
-    def __init__(self, card=None, data=None, comment=''):
-        ShellProperty.__init__(self, card, data)
+    def __init__(self):
+        ShellProperty.__init__(self)
+
+    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            #: Property ID
-            self.pid = integer(card, 1, 'pid')
-            self.mid = integer(card, 2, 'mid')  # MATHE, MATHP
-            self.cid = integer_or_blank(card, 3, 'cid', 0)
-            self.str = string_or_blank(card, 4, 'str', 'GRID')
-        else:
-            raise NotImplementedError(data)
+        #: Property ID
+        self.pid = integer(card, 1, 'pid')
+        self.mid = integer(card, 2, 'mid')  # MATHE, MATHP
+        self.cid = integer_or_blank(card, 3, 'cid', 0)
+        self.str = string_or_blank(card, 4, 'str', 'GRID')
 
     def cross_reference(self, model):
         msg = ' which is required by PLPLANE pid=%s' % self.pid
@@ -906,7 +904,7 @@ class PSHEAR(ShellProperty):
     type = 'PSHEAR'
     _field_map = {1: 'pid', 2:'mid', 3:'t', 4:'nsm', 5:'f1', 6:'f2'}
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self):
         """
         Defines the properties of a shear panel (CSHEAR entry).
 
@@ -914,30 +912,34 @@ class PSHEAR(ShellProperty):
         | PSHEAR | PID | MID | T | NSM | F1 | F2 |
         +--------+-----+-----+---+-----+----+----+
         """
-        ShellProperty.__init__(self, card, data)
+        ShellProperty.__init__(self)
+
+    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            #: Property ID
-            self.pid = integer(card, 1, 'pid')
-            #: Material ID
-            self.mid = integer(card, 2, 'mid')
-            self.t = double(card, 3, 't')
-            self.nsm = double_or_blank(card, 4, 'nsm', 0.0)
-            self.f1 = double_or_blank(card, 5, 'f1', 0.0)
-            self.f2 = double_or_blank(card, 6, 'f2', 0.0)
-            assert self.t > 0.0
-            #assert self.f1 >= 0.0
-            #assert self.f2 >= 0.0
-            assert len(card) <= 7, 'len(PSHEAR card) = %i' % len(card)
-        else:
-            #(pid,mid,t,nsm,f1,f2) = out
-            self.pid = data[0]
-            self.mid = data[1]
-            self.t = data[2]
-            self.nsm = data[3]
-            self.f1 = data[4]
-            self.f2 = data[5]
+        #: Property ID
+        self.pid = integer(card, 1, 'pid')
+        #: Material ID
+        self.mid = integer(card, 2, 'mid')
+        self.t = double(card, 3, 't')
+        self.nsm = double_or_blank(card, 4, 'nsm', 0.0)
+        self.f1 = double_or_blank(card, 5, 'f1', 0.0)
+        self.f2 = double_or_blank(card, 6, 'f2', 0.0)
+        assert self.t > 0.0
+        #assert self.f1 >= 0.0
+        #assert self.f2 >= 0.0
+        assert len(card) <= 7, 'len(PSHEAR card) = %i' % len(card)
+
+    def add_op2_data(self, data, comment=''):
+        if comment:
+            self._comment = comment
+        #(pid,mid,t,nsm,f1,f2) = out
+        self.pid = data[0]
+        self.mid = data[1]
+        self.t = data[2]
+        self.nsm = data[3]
+        self.f1 = data[4]
+        self.f2 = data[5]
 
     def _is_same_card(self, prop, debug=False):
         if self.type != prop.type:

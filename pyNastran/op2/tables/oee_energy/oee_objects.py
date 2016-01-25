@@ -150,13 +150,15 @@ class RealStrainEnergyArray(ScalarObject):
             return
         del self.dt_temp
 
-        self.ntotal = sum(self._ntotals)  # TODO: is this correct???
+        print(self._ntotals)
+        self.ntotal = max(self._ntotals)  # TODO: is this correct???
 
         assert self.ntimes > 0, 'ntimes=%s' % self.ntimes
         assert self.nelements > 0, 'nelements=%s' % self.nelements
         assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
         #self.names = []
         #self.nelements = self.ntotal // self.ntimes
+        self.nelements = self.ntotal
         self.itime = 0
         self.ielement = 0
         self.itotal = 0
@@ -189,9 +191,9 @@ class RealStrainEnergyArray(ScalarObject):
             self.data_frame.columns.names = ['Static']
         self.data_frame.index.names = ['ElementID', 'Item']
 
-    def finalize(self):
+    #def finalize(self):
         #self._times = self._times[::self.nelement_types]
-        ntimes = len(self._times)
+        #ntimes = len(self._times)
         #print('times =', self._times)
         #ntypes_ntimes, _nelements, nheaders = self.data.shape
         #nelements = ntypes_nelements // self.nelement_types
@@ -276,7 +278,7 @@ class RealStrainEnergyArray(ScalarObject):
             print('RealStrainEnergyArray', dt, eid, energyi, percenti, densityi)
             raise
         self.ielement += 1
-        #asdf
+        self.itotal += 1
 
     def get_stats(self):
         if not self.is_built:

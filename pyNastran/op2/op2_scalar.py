@@ -1542,7 +1542,9 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                         real_imag = real_complex[:, 0] + real_complex[:, 1]*1j
                         matrix = coo_matrix((real_imag, (GCi, GCj)),
                                             shape=(mrows, ncols), dtype=dtype)
-                        self.log.warning('created %s...verify the complex matrix' % self.table_name)
+                        msg = 'created %s...verify the complex matrix' % self.table_name
+                        self.log.warning(msg)
+                        #raise RuntimeError(msg)
                     else:
                         raise RuntimeError('this should never happen')
                 except ValueError:
@@ -1560,7 +1562,9 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                             real_array = real_array.reshape(mrows, ncols)
                             self.log.info('created %s' % self.table_name)
                         else:
-                            self.log.warning('cant reshape because invalid sizes : created %s' % self.table_name)
+                            msg = 'cant reshape because invalid sizes : created %s' % self.table_name
+                            self.log.warning(msg)
+
                         matrix = real_array
                     #print('m =', matrix)
 

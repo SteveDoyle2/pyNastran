@@ -149,20 +149,24 @@ class PDAMPT(DamperProperty):
         1: 'pid', 2:'tbid',
     }
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self):
         DamperProperty.__init__(self)
+
+    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            #: Property ID
-            self.pid = integer(card, 1, 'pid')
-            #: Identification number of a TABLEDi entry that defines the
-            #: damping force per-unit velocity versus frequency relationship
-            self.tbid = integer_or_blank(card, 2, 'tbid', 0)
-            assert len(card) <= 3, 'len(PDAMPT card) = %i' % len(card)
-        else:
-            self.pid = data[0]
-            self.tbid = data[1]
+        #: Property ID
+        self.pid = integer(card, 1, 'pid')
+        #: Identification number of a TABLEDi entry that defines the
+        #: damping force per-unit velocity versus frequency relationship
+        self.tbid = integer_or_blank(card, 2, 'tbid', 0)
+        assert len(card) <= 3, 'len(PDAMPT card) = %i' % len(card)
+
+    def add_op2_data(self, data, comment=''):
+        if comment:
+            self._comment = comment
+        self.pid = data[0]
+        self.tbid = data[1]
 
     def _verify(self, xref=False):
         pid = self.Pid()

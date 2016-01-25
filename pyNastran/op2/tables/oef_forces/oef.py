@@ -1794,19 +1794,32 @@ class OEF(OP2Common):
                 msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
                 return self._not_implemented_or_skip(data, ndata, msg)
 
-            obj_real = RealPlateForceArray
             if self.format_code == 1 and self.num_wide == 9:  # real
-                # TODO: vectorize
                 ntotal = 36 # 9*4
                 nelements = ndata // ntotal
                 auto_return, is_vectorized = self._create_oes_object4(
-                    nelements, result_name, slot, obj_real)
+                    nelements, result_name, slot, RealPlateForceArray)
                 if auto_return:
                     return nelements * self.num_wide * 4
+
                 obj = self.obj
-                is_vectorized = False
                 if is_vectorized:
-                    raise NotImplementedError()
+                    n = nelements * 4 * self.num_wide
+                    ielement = obj.ielement
+                    ielement2 = ielement + nelements
+
+                    floats = fromstring(data, dtype=self.fdtype).reshape(nelements, 9)
+                    obj._times[obj.itime] = dt
+                    if obj.itime == 0:
+                        ints = fromstring(data, dtype=self.idtype).reshape(nelements, 9)
+                        eids = ints[:, 0] // 10
+                        assert eids.min() > 0, eids.min()
+                        obj.element[ielement:ielement2] = eids
+
+                    #[mx, my, mxy, bmx, bmy, bmxy, tx, ty]
+                    obj.data[obj.itime, ielement:ielement2, :] = floats[:, 1:]
+                    obj.itotal = ielement2
+                    obj.ielement = ielement2
                 else:
                     s = Struct(b(self._endian + 'i8f'))
                     for i in range(nelements):
@@ -2121,9 +2134,34 @@ class OEF(OP2Common):
             # 96 - CQUAD8
             # 97 - CTRIA3
             # 98 - CTRIA6 (composite)
-            if self.read_mode == 1:
-                return ndata
-            #if self.format_code == 1 and self.num_wide == 9:  # real
+            if self.format_code == 1 and self.num_wide == 9:  # real
+                if self.read_mode == 1:
+                    return ndata
+                ntotal = 36
+                nelements = ndata // ntotal
+
+                s1 = Struct(b('i8sifffif'))
+                s2 = Struct(b('i8sifffff'))
+                for i in range(nelements):
+                    edata = data[n:n+ntotal]  # 4*9
+                    out = s1.unpack(edata)
+
+                    # i    8s              i        f
+                    (eid, failure_theory, ply_id, failure_index_for_ply,
+                     six, seven, flag, nine,
+                     #failure_index_for_bonding,
+                     #failure_index_for_element,
+                     #flag,
+                     #direct_stress_or_strain,
+                     #interlaminar_stress,
+                     #max_of_fb_fp_for_all_plies
+                     ) = out
+                    if flag != -1:
+                        out = s2.unpack(edata)
+                    #print(out)
+                    n += 36
+
+
                 ## TODO: add
                 #return ndata
                 #print self.code_information()
@@ -2172,6 +2210,7 @@ class OEF(OP2Common):
             if self.read_mode == 1:
                 return ndata
             #self._results._found_result('solid_forces')
+            raise RuntimeError(self.code_information())
             if self.format_code == 1 and self.num_wide == 0:  # real
                 #self.create_transient_object(self.solidForces, RealCSolidForce)
                 raise RuntimeError(self.code_information())
@@ -2370,9 +2409,8 @@ class OEF(OP2Common):
                 ntotal = 28  # 7*4
                 nelements = ndata // ntotal
 
-                obj_real = RealConeAxForceArray
                 auto_return, is_vectorized = self._create_oes_object4(
-                    nelements, result_name, slot, obj_real)
+                    nelements, result_name, slot, RealConeAxForceArray)
                 if auto_return:
                     return nelements * self.num_wide * 4
 
@@ -2421,9 +2459,8 @@ class OEF(OP2Common):
                 nelements = ndata // ntotal
                 obj = self.obj
 
-                obj_real = RealCGapForceArray
                 auto_return, is_vectorized = self._create_oes_object4(
-                    nelements, result_name, slot, obj_real)
+                    nelements, result_name, slot, RealCGapForceArray)
                 if auto_return:
                     return nelements * self.num_wide * 4
 
@@ -2840,10 +2877,9 @@ class OEF(OP2Common):
                 # TODO: vectorize
                 ntotal = 52  # 13*4
                 nelements = ndata // ntotal
-                obj_complex = ComplexCBushForceArray
                 result_name = 'cbush_force'
                 auto_return, is_vectorized = self._create_oes_object4(
-                    nelements, result_name, slot, obj_complex)
+                    nelements, result_name, slot, ComplexCBushForceArray)
                 if auto_return:
                     return nelements * self.num_wide * 4
 
@@ -3049,6 +3085,7 @@ class OEF(OP2Common):
                     #print "force %s" %(self.get_element_type(self.element_type)), data_in
                     obj.add(nnodes, dt, data_in)
             elif self.format_code == 1 and self.num_wide == 32:  # random
+                # TODO: vectorize
                 return ndata
             elif self.format_code in [2, 3] and self.num_wide == 32:  # imag
                 # TODO: vectorize

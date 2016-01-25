@@ -638,7 +638,7 @@ class SPCADD(ConstraintADD):
     """
     type = 'SPCADD'
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self):
         ConstraintADD.__init__(self)
 
     def add_card(self, card, comment=''):

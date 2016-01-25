@@ -209,7 +209,7 @@ def run_lots_of_files(files, make_geom=True, write_bdf=False, write_f06=True,
         100. * npassed / float(ntotal),
         ntotal - npassed)
     print(msg)
-    sys.exit("%s\ndt = %s seconds = %s minutes" % (msg, seconds, minutes))
+    sys.exit("%s\ndt = %.2f seconds = %.2f minutes" % (msg, seconds, minutes))
 
 
 def run_op2(op2_filename, make_geom=False, write_bdf=False,

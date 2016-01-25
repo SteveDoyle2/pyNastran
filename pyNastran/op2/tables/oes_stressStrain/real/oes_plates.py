@@ -158,7 +158,7 @@ class RealPlateArray(OES_Object):
                     (fiber_dist2, oxx2, oyy2, txy2, angle2, majorP2, minorP2, ovm2) = t2
 
                     # vm stress can be NaN for some reason...
-                    if not array_equal(t1[:-1], t2[:-1]):
+                    if not np.array_equal(t1[:-1], t2[:-1]):
                         msg += '(%s, %s)    (%s, %s, %s, %s, %s, %s, %s, %s)  (%s, %s, %s, %s, %s, %s, %s, %s)\n' % (
                             eid, nid,
                             fiber_dist1, oxx1, oyy1, txy1, angle1, majorP1, minorP1, ovm1,
@@ -537,7 +537,7 @@ class RealCPLSTRNPlateArray(OES_Object):
         assert self.ntotal == table.ntotal
         assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
         assert self.approach_code == table.approach_code
-        if not array_equal(self.element_node, table.element_node):
+        if not np.array_equal(self.element_node, table.element_node):
             assert self.element_node.shape == table.element_node.shape, 'element_node shape=%s table.shape=%s' % (self.element_node.shape, table.element_node.shape)
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
@@ -546,7 +546,7 @@ class RealCPLSTRNPlateArray(OES_Object):
                 msg += '(%s, %s)    (%s, %s)\n' % (eid1, nid1, eid2, nid2)
             print(msg)
             raise ValueError(msg)
-        if not array_equal(self.data, table.data):
+        if not np.array_equal(self.data, table.data):
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
             i = 0
@@ -559,7 +559,7 @@ class RealCPLSTRNPlateArray(OES_Object):
                     (fiber_dist2, oxx2, oyy2, txy2, angle2, majorP2, minorP2, ovm2) = t2
 
                     # vm stress can be NaN for some reason...
-                    if not array_equal(t1[:-1], t2[:-1]):
+                    if not np.array_equal(t1[:-1], t2[:-1]):
                         msg += '(%s, %s)    (%s, %s, %s, %s, %s, %s, %s, %s)  (%s, %s, %s, %s, %s, %s, %s, %s)\n' % (
                             eid, nid,
                             fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm,
