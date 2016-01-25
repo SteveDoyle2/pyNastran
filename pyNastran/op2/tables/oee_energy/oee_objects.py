@@ -150,7 +150,7 @@ class RealStrainEnergyArray(ScalarObject):
             return
         del self.dt_temp
 
-        print(self._ntotals)
+        #print(self._ntotals)
         self.ntotal = max(self._ntotals)  # TODO: is this correct???
 
         assert self.ntimes > 0, 'ntimes=%s' % self.ntimes
