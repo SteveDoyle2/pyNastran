@@ -64,7 +64,10 @@ class TableArray(ScalarObject):  # displacement style table
         assert self.ntotal == table.ntotal
         assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
         assert self.approach_code == table.approach_code
-        if not array_equal(self.node_gridtype, table.node_gridtype):
+        if self.nonlinear_factor is not None:
+            assert np.array_equal(self._times, table._times), 'class_name=%s times=%s table.times=%s' % (
+                self.class_name, self._times, table._times)
+        if not np.array_equal(self.node_gridtype, table.node_gridtype):
             assert self.node_gridtype.shape == table.node_gridtype.shape, 'shape=%s table.shape=%s' % (self.node_gridtype.shape, table.node_gridtype.shape)
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
@@ -72,7 +75,7 @@ class TableArray(ScalarObject):  # displacement style table
                 msg += '(%s, %s)    (%s, %s)\n' % (nid, grid_type, nid2, grid_type2)
             print(msg)
             raise ValueError(msg)
-        if not array_equal(self.data, table.data):
+        if not np.array_equal(self.data, table.data):
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
             ntimes = self.data.shape[0]
@@ -87,7 +90,7 @@ class TableArray(ScalarObject):  # displacement style table
                         (tx, ty, tz, rx, ry, rz) = t1
                         (tx2, ty2, tz2, rx2, ry2, rz2) = t2
                         if not allclose(t1, t2):
-                        #if not array_equal(t1, t2):
+                        #if not np.array_equal(t1, t2):
                             msg += '(%s, %s)\n  (%s, %s, %s, %s, %s, %s)\n  (%s, %s, %s, %s, %s, %s)\n' % (
                                 nid, grid_type,
                                 tx, ty, tz, rx, ry, rz,

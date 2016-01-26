@@ -168,7 +168,10 @@ class RealGridPointForcesArray(ScalarObject):
         assert self.ntotal == table.ntotal
         assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
         assert self.approach_code == table.approach_code
-        if not array_equal(self.node_element, table.node_element) and array_equal(self.element_names, table.element_names):
+        if self.nonlinear_factor is not None:
+            assert np.array_equal(self._times, table._times), 'class_name=%s times=%s table.times=%s' % (
+                self.class_name, self._times, table._times)
+        if not np.array_equal(self.node_element, table.node_element) and array_equal(self.element_names, table.element_names):
             assert self.node_element.shape == table.node_element.shape, 'node_element shape=%s table.shape=%s' % (self.node_element.shape, table.node_element.shape)
             assert self.element_names.shape == table.element_names.shape, 'element_names shape=%s table.shape=%s' % (self.element_names.shape, table.element_names.shape)
 
@@ -182,7 +185,7 @@ class RealGridPointForcesArray(ScalarObject):
             raise ValueError(msg)
 
         if self.is_unique:
-            if not array_equal(self.data, table.data):
+            if not np.array_equal(self.data, table.data):
                 msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
                 msg += '%s\n' % str(self.code_information())
                 i = 0
@@ -196,7 +199,7 @@ class RealGridPointForcesArray(ScalarObject):
                         (t11, t21, t31, r11, r21, r31) = t1
                         (t12, t22, t32, r12, r22, r32) = t2
 
-                        if not array_equal(t1, t2):
+                        if not np.array_equal(t1, t2):
                             msg += '(%s, %s, %s)    (%s, %s, %s, %s, %s, %s)  (%s, %s, %s, %s, %s, %s)\n' % (
                                 nid, eid, ename1,
                                 t12, t22, t32, r12, r22, r32,
@@ -209,7 +212,7 @@ class RealGridPointForcesArray(ScalarObject):
                     if i > 0:
                         raise ValueError(msg)
         else:
-            if not array_equal(self.data, table.data):
+            if not np.array_equal(self.data, table.data):
                 msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
                 msg += '%s\n' % str(self.code_information())
                 i = 0
@@ -223,7 +226,7 @@ class RealGridPointForcesArray(ScalarObject):
                         (t11, t21, t31, r11, r21, r31) = t1
                         (t12, t22, t32, r12, r22, r32) = t2
 
-                        if not array_equal(t1, t2):
+                        if not np.array_equal(t1, t2):
                             msg += '(%s, %s, %s)    (%s, %s, %s, %s, %s, %s)  (%s, %s, %s, %s, %s, %s)\n' % (
                                 nid, eid, ename1,
                                 t12, t22, t32, r12, r22, r32,
@@ -528,7 +531,10 @@ class ComplexGridPointForcesArray(ScalarObject):
         assert self.ntotal == table.ntotal
         assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
         assert self.approach_code == table.approach_code
-        if not array_equal(self.node_element, table.node_element) and array_equal(self.element_names, table.element_names):
+        if self.nonlinear_factor is not None:
+            assert np.array_equal(self._times, table._times), 'class_name=%s times=%s table.times=%s' % (
+                self.class_name, self._times, table._times)
+        if not np.array_equal(self.node_element, table.node_element) and array_equal(self.element_names, table.element_names):
             assert self.node_element.shape == table.node_element.shape, 'node_element shape=%s table.shape=%s' % (self.node_element.shape, table.node_element.shape)
             assert self.element_names.shape == table.element_names.shape, 'element_names shape=%s table.shape=%s' % (self.element_names.shape, table.element_names.shape)
 
@@ -541,7 +547,7 @@ class ComplexGridPointForcesArray(ScalarObject):
             print(msg)
             raise ValueError(msg)
         if self.is_unique:
-            if not array_equal(self.data, table.data):
+            if not np.array_equal(self.data, table.data):
                 msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
                 msg += '%s\n' % str(self.code_information())
                 i = 0
@@ -555,7 +561,7 @@ class ComplexGridPointForcesArray(ScalarObject):
                         (t11, t21, t31, r11, r21, r31) = t1
                         (t12, t22, t32, r12, r22, r32) = t2
 
-                        if not array_equal(t1, t2):
+                        if not np.array_equal(t1, t2):
                             msg += '(%s, %s, %s)    (%s, %s, %s, %s, %s, %s)  (%s, %s, %s, %s, %s, %s)\n' % (
                                 eid, nid, ename1,
                                 t12, t22, t32, r12, r22, r32,
@@ -568,7 +574,7 @@ class ComplexGridPointForcesArray(ScalarObject):
                     if i > 0:
                         raise ValueError(msg)
         else:
-            if not array_equal(self.data, table.data):
+            if not np.array_equal(self.data, table.data):
                 msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
                 msg += '%s\n' % str(self.code_information())
                 i = 0
@@ -582,7 +588,7 @@ class ComplexGridPointForcesArray(ScalarObject):
                         (t11, t21, t31, r11, r21, r31) = t1
                         (t12, t22, t32, r12, r22, r32) = t2
 
-                        if not array_equal(t1, t2):
+                        if not np.array_equal(t1, t2):
                             msg += '(%s, %s, %s)    (%s, %s, %s, %s, %s, %s)  (%s, %s, %s, %s, %s, %s)\n' % (
                                 eid, nid, ename1,
                                 t12, t22, t32, r12, r22, r32,

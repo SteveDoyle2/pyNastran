@@ -216,7 +216,10 @@ class RealStrainEnergyArray(ScalarObject):
         assert self.ntotal == table.ntotal
         assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
         assert self.approach_code == table.approach_code
-        if not array_equal(self.element, table.element):
+        if self.nonlinear_factor is not None:
+            assert np.array_equal(self._times, table._times), 'class_name=%s times=%s table.times=%s' % (
+                self.class_name, self._times, table._times)
+        if not np.array_equal(self.element, table.element):
             assert self.element.shape == table.element.shape, 'element shape=%s table.shape=%s' % (self.element.shape, table.element.shape)
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
@@ -225,7 +228,7 @@ class RealStrainEnergyArray(ScalarObject):
                 msg += '(%s), (%s)\n' % (eid, eid2)
             print(msg)
             raise ValueError(msg)
-        if not array_equal(self.data, table.data):
+        if not np.array_equal(self.data, table.data):
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
             i = 0
@@ -237,7 +240,7 @@ class RealStrainEnergyArray(ScalarObject):
                     (energyi2, percenti2, densityi2) = t2
 
                     if np.isnan(densityi1) or not np.isfinite(densityi1):
-                        if not array_equal(t1[:2], t2[:2]):
+                        if not np.array_equal(t1[:2], t2[:2]):
                             msg += (
                                 '%s (%s, %s)\n'
                                 '%s (%s, %s)\n' % (
@@ -249,7 +252,7 @@ class RealStrainEnergyArray(ScalarObject):
                             if i > 10:
                                 print(msg)
                                 raise ValueError(msg)
-                    elif not array_equal(t1, t2):
+                    elif not np.array_equal(t1, t2):
                         msg += (
                             '%s (%s, %s, %s)\n'
                             '%s (%s, %s, %s)\n' % (

@@ -2,6 +2,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import iteritems
 from six.moves import zip, range
+import numpy as np
 from numpy import zeros, searchsorted, unique, ravel, array_equal
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
@@ -119,7 +120,10 @@ class RealCompositePlateArray(OES_Object):
         assert self.ntotal == table.ntotal
         assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
         assert self.approach_code == table.approach_code
-        if not array_equal(self.element_layer, table.element_layer):
+        if self.nonlinear_factor is not None:
+            assert np.array_equal(self._times, table._times), 'ename=%s-%s times=%s table.times=%s' % (
+                self.element_name, self.element_type, self._times, table._times)
+        if not np.array_equal(self.element_layer, table.element_layer):
             assert self.element_node.shape == table.element_layer.shape, 'element_layer shape=%s table.shape=%s' % (
                 self.element_layer.shape, table.element_layer.shape)
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
@@ -129,7 +133,7 @@ class RealCompositePlateArray(OES_Object):
                 msg += '(%s, %s)    (%s, %s)\n' % (eid, layer1, eid2, layer2)
             print(msg)
             raise ValueError(msg)
-        if not array_equal(self.data, table.data):
+        if not np.array_equal(self.data, table.data):
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
             i = 0
@@ -142,7 +146,7 @@ class RealCompositePlateArray(OES_Object):
                     (o112, o222, t122, t1z2, t2z2, angle2, major2, minor2, ovm2) = t2
 
                     # vm stress can be NaN for some reason...
-                    if not array_equal(t1[:-1], t2[:-1]):
+                    if not np.array_equal(t1[:-1], t2[:-1]):
                         msg += '(%s, %s)    (%s, %s, %s, %s, %s, %s, %s, %s, %s)  (%s, %s, %s, %s, %s, %s, %s, %s, %s)\n' % (
                             eid, layer,
                             o11, o22, t12, t1z, t2z, angle, major, minor, ovm,

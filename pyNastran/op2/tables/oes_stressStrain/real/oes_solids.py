@@ -6,6 +6,7 @@ from six.moves import zip, range
 from itertools import count
 from struct import Struct, pack
 
+import numpy as np
 from numpy import sqrt, zeros, where, searchsorted, array_equal
 from numpy.linalg import eigh
 
@@ -135,7 +136,10 @@ class RealSolidArray(OES_Object):
         assert self.ntotal == table.ntotal
         assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
         assert self.approach_code == table.approach_code
-        if not array_equal(self.element_node, table.element_node):
+        if self.nonlinear_factor is not None:
+            assert np.array_equal(self._times, table._times), 'ename=%s-%s times=%s table.times=%s' % (
+                self.element_name, self.element_type, self._times, table._times)
+        if not np.array_equal(self.element_node, table.element_node):
             assert self.element_node.shape == table.element_node.shape, 'element_node shape=%s table.shape=%s' % (self.element_node.shape, table.element_node.shape)
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
@@ -144,7 +148,7 @@ class RealSolidArray(OES_Object):
                 msg += '(%s, %s)    (%s, %s)\n' % (eid1, nid1, eid2, nid2)
             print(msg)
             raise ValueError(msg)
-        if not array_equal(self.data, table.data):
+        if not np.array_equal(self.data, table.data):
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
             i = 0
@@ -156,7 +160,7 @@ class RealSolidArray(OES_Object):
                     (oxx1, oyy1, ozz1, txy1, tyz1, txz1, o11, o21, o31, ovm1) = t1
                     (oxx2, oyy2, ozz2, txy2, tyz2, txz2, o12, o22, o32, ovm2) = t2
 
-                    if not array_equal(t1, t2):
+                    if not np.array_equal(t1, t2):
                         msg += ('(%s, %s)    (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)\n'
                                 '%s      (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)\n' % (
                             eid, nid,

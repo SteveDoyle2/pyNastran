@@ -88,7 +88,6 @@ class ONR(OP2Common):
         if not self.is_sort1():
             raise NotImplementedError('sort2...')
 
-        #self.print_block(data) # on
         if self.analysis_code == 1:   # statics / displacement / heat flux
             #del self.data_code['nonlinear_factor']
             self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', 'i', 5, False)
@@ -98,10 +97,10 @@ class ONR(OP2Common):
             self.mode = self.add_data_parameter(data, 'mode', 'i', 5)  ## mode number
             self.data_names = self.apply_data_code_value('data_names', ['mode'])
             #print "mode(5)=%s eigr(6)=%s mode_cycle(7)=%s" %(self.mode,self.eigr,self.mode_cycle)
-        #elif self.analysis_code==3: # differential stiffness
+        #elif self.analysis_code == 3: # differential stiffness
             #self.lsdvmn = self.get_values(data,'i',5) ## load set number
             #self.data_code['lsdvmn'] = self.lsdvmn
-        #elif self.analysis_code==4: # differential stiffness
+        #elif self.analysis_code == 4: # differential stiffness
             #self.lsdvmn = self.get_values(data,'i',5) ## load set number
         elif self.analysis_code == 5:   # frequency
             self.freq2 = self.add_data_parameter(data, 'freq2', 'f', 5)  ## frequency
@@ -109,7 +108,7 @@ class ONR(OP2Common):
         elif self.analysis_code == 6:  # transient
             self.time = self.add_data_parameter(data, 'time', 'f', 5)  ## time step
             self.data_names = self.apply_data_code_value('data_names', ['time'])
-        #elif self.analysis_code==7: # pre-buckling
+        #elif self.analysis_code == 7: # pre-buckling
             #self.data_names = self.apply_data_code_value('data_names',['lsdvmn'])
         elif self.analysis_code == 8:  # post-buckling
             self.mode = self.add_data_parameter(data, 'mode', 'i', 5)  ## mode number
@@ -120,7 +119,7 @@ class ONR(OP2Common):
         elif self.analysis_code == 10:  # nonlinear statics
             self.loadFactor = self.add_data_parameter(data, 'loadFactor', 'f', 5)  ## load factor
             self.data_names = self.apply_data_code_value('data_names', ['loadFactor'])
-        #elif self.analysis_code==11: # old geometric nonlinear statics
+        #elif self.analysis_code == 11: # old geometric nonlinear statics
             #self.data_names = self.apply_data_code_value('data_names',['lsdvmn'])
         elif self.analysis_code == 12:  # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
             self.time = self.add_data_parameter(data, 'time', 'f', 5)  ## time step
@@ -248,7 +247,6 @@ class ONR(OP2Common):
                 auto_return, is_vectorized = self._create_oes_object4(
                     nelements, result_name, slot, RealStrainEnergyArray)
 
-                obj = self.obj
                 if auto_return:
                     #if obj.dt_temp is None or obj.itime is None and obj.dt_temp == dt:
                         #element_name = self.data_code['element_name']
@@ -258,12 +256,14 @@ class ONR(OP2Common):
                             #obj.element_name_count[element_name] = nelements
                         #obj.dt_temp = dt
                     return nelements * self.num_wide * 4
-                itime = obj.itime #// obj.nelement_types
+                #itime = obj.itime #// obj.nelement_types
             else:
                 if self.read_mode == 1:
                     return ndata
                 self.create_transient_object(slot, RealStrainEnergy)
-                obj = self.obj
+
+            obj = self.obj
+            itime = obj.itime
             is_vectorized = True
 
             if self.is_debug_file:
@@ -304,15 +304,20 @@ class ONR(OP2Common):
                     self.obj.add_sort1(dt, eid, energy, percent, density)
                     n += ntotal
         elif self.num_wide == 5:
-            if self.read_mode == 1:
-                return ndata
             assert self.cvalres in [0, 1, 2], self.cvalres # 0??
-            self.create_transient_object(slot, RealStrainEnergy)  # why is this not different?
             ntotal = 20
             nnodes = ndata // ntotal
 
+            if 0:
+                if self.read_mode == 1:
+                    return ndata
+                self.create_transient_object(slot, RealStrainEnergy)  # why is this not different?
+            else:
+                auto_return, is_vectorized = self._create_oes_object4(
+                    nelements, result_name, slot, RealStrainEnergyArray)
+
             obj = self.obj
-            is_vectorized = False
+            is_vectorized = True
             if self.use_vector and is_vectorized:
                 n = nelements * 4 * self.num_wide
                 itotal = obj.ielement
@@ -350,14 +355,18 @@ class ONR(OP2Common):
                     obj.add(dt, word, energy, percent, density)
                     n += ntotal
         elif self.num_wide == 6:  ## TODO: figure this out...
-            if self.read_mode == 1:
-                return ndata
-            self.create_transient_object(slot, RealStrainEnergy)  # TODO: why is this not different?
             ntotal = 24
             nnodes = ndata // ntotal
+            if 0:
+                if self.read_mode == 1:
+                    return ndata
+                self.create_transient_object(slot, RealStrainEnergy)  # TODO: why is this not different?
+            else:
+                auto_return, is_vectorized = self._create_oes_object4(
+                    nelements, result_name, slot, RealStrainEnergyArray)
 
             obj = self.obj
-            is_vectorized = False
+            is_vectorized = True
             if self.use_vector and is_vectorized:
                 n = nelements * 4 * self.num_wide
                 itotal = obj.ielement
@@ -367,9 +376,10 @@ class ONR(OP2Common):
                 floats = fromstring(data, dtype=self.fdtype).reshape(nelements, 5)
                 obj._times[obj.itime] = dt
 
-                strings = fromstring(data, dtype=self._endian + 'S4').reshape(nelements, 6)
-                s = array([s1+s2 for s1, s2 in zip(strings[:, 1], strings[:, 2])])
                 if obj.itime == 0:
+                    strings = fromstring(data, dtype=self._endian + 'S4').reshape(nelements, 6)
+                    s = array([s1+s2 for s1, s2 in zip(strings[:, 1], strings[:, 2])])
+
                     ints = fromstring(data, dtype=self.idtype).reshape(nelements, 6)
                     eids = ints[:, 0] // 10
                     assert eids.min() > 0, eids.min()

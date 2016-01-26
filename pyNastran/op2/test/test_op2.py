@@ -11,6 +11,12 @@ from traceback import print_exc
 import numpy as np
 np.set_printoptions(precision=3, threshold=20)
 
+try:
+    import pandas
+    is_pandas = True
+except ImportError:
+    is_pandas = False
+
 #import warnings
 #warnings.filterwarnings('error')
 #warnings.filterwarnings('error', category=UnicodeWarning)
@@ -202,7 +208,7 @@ def run_lots_of_files(files, make_geom=True, write_bdf=False, write_f06=True,
 
     seconds = time.time() - t0
     minutes = seconds / 60.
-    print("dt = %s seconds = %s minutes" % (seconds, minutes))
+    print("dt = %.2f seconds = %.2f minutes" % (seconds, minutes))
 
     msg = '-----done with all models %s/%s=%.2f%%  nfailed=%s-----' % (
         npassed, ntotal,
@@ -349,7 +355,8 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
                     pass
 
         # we put it down here so we don't blame the dataframe for real errors
-        op2.build_dataframe()
+        if is_pandas:
+            op2.build_dataframe()
         #if compare:
             #op2_nv.build_dataframe()
 

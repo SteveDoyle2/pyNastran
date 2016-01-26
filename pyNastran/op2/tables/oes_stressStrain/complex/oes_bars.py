@@ -89,6 +89,9 @@ class ComplexBarArray(OES_Object):
         self.data_frame.columns.names = column_names
         self.data_frame.index.names = ['ElementID', 'Item']
 
+    def __eq__(self, table):
+        assert 1 == 2
+
     def add_new_eid_sort1(self, dt, eid, e1a, e2a, e3a, e4a, axial,
                           e1b, e2b, e3b, e4b,):
         #self.e1[dt][eid] = [e1a, e1b]

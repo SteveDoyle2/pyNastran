@@ -3,7 +3,8 @@ from six import iteritems
 from six.moves import zip, range
 from struct import Struct, pack
 
-from numpy import array, zeros, abs, angle, float32, searchsorted, empty
+import numpy as np
+from numpy import array, zeros, angle, float32, searchsorted, empty
 from numpy import allclose, asarray, vstack, swapaxes, hstack, array_equal
 
 from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
@@ -33,7 +34,10 @@ class ElementTableArray(ScalarObject):  # displacement style table
         assert self.ntotal == table.ntotal
         assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
         assert self.approach_code == table.approach_code
-        if not array_equal(self.element, table.element):
+        if self.nonlinear_factor is not None:
+            assert np.array_equal(self._times, table._times), 'ename=%s-%s times=%s table.times=%s' % (
+                self.element_name, self.element_type, self._times, table._times)
+        if not np.array_equal(self.element, table.element):
             assert self.element.shape == table.element.shape, 'shape=%s table.shape=%s' % (self.element.shape, table.element.shape)
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
@@ -41,7 +45,7 @@ class ElementTableArray(ScalarObject):  # displacement style table
                 msg += '(%s, %s)    (%s, %s)\n' % (eid, etype, eid2, etype2)
             print(msg)
             raise ValueError(msg)
-        if not array_equal(self.data, table.data):
+        if not np.array_equal(self.data, table.data):
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
             ntimes = self.data.shape[0]
@@ -55,7 +59,7 @@ class ElementTableArray(ScalarObject):  # displacement style table
                         (tx1, ty1, tz1, rx1, ry1, rz1) = t1
                         (tx2, ty2, tz2, rx2, ry2, rz2) = t2
                         if not allclose(t1, t2):
-                        #if not array_equal(t1, t2):
+                        #if not np.array_equal(t1, t2):
                             msg += '%s\n  (%s, %s, %s, %s, %s, %s)\n  (%s, %s, %s, %s, %s, %s)\n' % (
                                 nid,
                                 tx1, ty1, tz1, rx1, ry1, rz1,
@@ -463,7 +467,7 @@ class ComplexElementTableArray(ElementTableArray):  # displacement style table
             return self.data[:, inids, i].imag
         elif j == 3:
             # mag
-            return abs(self.data[:, inids, i])
+            return np.abs(self.data[:, inids, i])
         elif j == 4:
             # phase
             return angle(self.data[:, inids, i])

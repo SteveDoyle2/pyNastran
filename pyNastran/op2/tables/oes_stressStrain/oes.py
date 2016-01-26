@@ -1932,12 +1932,12 @@ class OES(OP2Common):
                     n = nelements * 4 * self.num_wide
                     nnodes_all = (nnodes + 1)
                     itotal = obj.itotal
-                    itotal2 = itotal + nelements * nnodes_all
+                    itotal2 = itotal + 2 * nelements * nnodes_all
                     ielement = obj.ielement
                     ielement2 = ielement + nelements
 
                     floats = fromstring(data, dtype=self.fdtype).reshape(nelements, 15 * nnodes_all)
-                    floats1 = floats[:, 1:].reshape(nelements * nnodes_all, 14)
+                    floats1 = floats[:, 1:].reshape(nelements * nnodes_all * 2, 7)
                     obj._times[obj.itime] = dt
                     if obj.itime == 0:
                         ints = fromstring(data, dtype=self.idtype).reshape(nelements, 15 * nnodes_all)
@@ -1945,10 +1945,13 @@ class OES(OP2Common):
                         ints[:, 0] = 0
                         ints1 = ints.reshape(nelements * nnodes_all, 15)
                         nids = ints[:, 0]
-
+                        #print(eids)
                         assert eids.min() > 0, eids.min()
-                        obj.element_node[itotal:itotal2, 0] = eids
-                        obj.element_node[itotal:itotal2, 1] = nids
+                        eids2 = np.vstack([eids, eids]).T.ravel()
+                        nids2 = np.vstack([nids, nids]).T.ravel()
+                        #print(eids2, itotal, itotal2)
+                        obj.element_node[itotal:itotal2, 0] = eids2
+                        obj.element_node[itotal:itotal2, 1] = nids2
 
                     #[fd, sxr, sxi, syr, syi, txyr, txyi]
                     isave1 = [1, 3, 5]
@@ -2089,6 +2092,7 @@ class OES(OP2Common):
                     floats = fromstring(data, dtype=self.fdtype).reshape(nelements, 17)
                     floats1 = floats[:, 1:].reshape(nlayers, 8)
                     obj.data[obj.itime, istart:iend, :] = floats1
+                    obj._times[obj.itime] = dt
                     obj.itotal += nlayers
                     n = nbytes
                 else:
@@ -2261,7 +2265,6 @@ class OES(OP2Common):
                 raise RuntimeError(self.code_information())
             nnodes_all = nnodes + 1 # adding the centroid
 
-            grid_center = 0
             slot = getattr(self, result_name)
             numwide_real = 2 + 17 * nnodes_all
             numwide_imag = 2 + 15 * nnodes_all
@@ -2341,6 +2344,7 @@ class OES(OP2Common):
                         self.binary_debug.write('  #                fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,)]\n')
                         self.binary_debug.write('  nelements=%i; nnodes=%i # +1 centroid\n' % (nelements, nnodes))
 
+                    grid_center = 0
                     for i in range(nelements):
                         edata = data[n:n+76]
 
@@ -2387,49 +2391,52 @@ class OES(OP2Common):
                 auto_return, is_vectorized = self._create_oes_object4(
                     nelements, result_name, slot, obj_vector_complex)
                 if auto_return:
+                    self._data_factor = 2
                     return nelements * ntotal
                 obj = self.obj
 
                 if self.use_vector and is_vectorized:
                     n = nelements * 4 * self.num_wide
                     itotal = obj.itotal
-                    itotal2 = itotal + nelements * nnodes_all
+                    itotal2 = itotal + nelements * (nnodes_all * 2)
                     ielement = obj.ielement
                     ielement2 = ielement + nelements
 
                     floats = fromstring(data, dtype=self.fdtype).reshape(nelements, numwide_imag)
                     floats1 = floats[:, 2:].reshape(nelements * nnodes_all, 15)
-
+                    floats2 = floats1[:, 1:].reshape(nelements * nnodes_all * 2, 7)
                     obj._times[obj.itime] = dt
                     if obj.itime == 0:
                         ints = fromstring(data, dtype=self.idtype).reshape(nelements, numwide_imag)
+                        ints[:, 2] = 0  # set center node to 0
                         ints1 = ints[:, 2:].reshape(nelements * nnodes_all, 15)
                         eids = ints[:, 0] // 10
-                        ints[:, 0] = 0
                         nids = ints1[:, 0]
-                        eids2 = np.vstack([eids] * nnodes_all).T.ravel()
+                        eids2 = np.vstack([eids] * (nnodes_all * 2)).T.ravel()
+                        nids2 = np.vstack([nids, nids]).T.ravel()
                         assert eids.min() > 0, eids.min()
                         obj.element_node[itotal:itotal2, 0] = eids2
-                        obj.element_node[itotal:itotal2, 1] = nids
+                        obj.element_node[itotal:itotal2, 1] = nids2
 
                     #[fd, sxr, sxi, syr, syi, txyr, txyi]
                     isave1 = [1, 3, 5]
                     isave2 = [2, 4, 6]
                     if is_magnitude_phase:
-                        mag = floats1[:, isave1]
-                        phase = floats1[:, isave2]
+                        mag = floats2[:, isave1]
+                        phase = floats2[:, isave2]
                         rtheta = radians(phase)
                         real_imag = mag * (cos(rtheta) + 1.j * sin(rtheta))
                     else:
-                        real = floats1[:, isave1]
-                        imag = floats1[:, isave2]
+                        real = floats2[:, isave1]
+                        imag = floats2[:, isave2]
                         real_imag = real + 1.j * imag
 
-                    obj.fiber_curvature[itotal:itotal2] = floats1[:, 0]
+                    obj.fiber_curvature[itotal:itotal2] = floats2[:, 0]
                     obj.data[obj.itime, itotal:itotal2, :] = real_imag
                     obj.itotal = itotal2
                     obj.ielement = ielement2
                 else:
+                    grid_center = 0
                     s1 = self.struct_2i  # 2
                     s2 = Struct(b(self._endian + 'i14f')) # 15
                     for i in range(nelements):

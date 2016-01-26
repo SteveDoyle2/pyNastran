@@ -91,7 +91,10 @@ class Real1DHeatFluxArray(ScalarObject):  # 1-ROD, 2-BEAM, 3-TUBE, 10-CONROD, 34
         assert self.ntotal == table.ntotal
         assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
         assert self.approach_code == table.approach_code
-        if not array_equal(self.element, table.element):
+        if self.nonlinear_factor is not None:
+            assert np.array_equal(self._times, table._times), 'ename=%s-%s times=%s table.times=%s' % (
+                self.element_name, self.element_type, self._times, table._times)
+        if not np.array_equal(self.element, table.element):
             assert self.element.shape == table.element.shape, 'element shape=%s table.shape=%s' % (self.element.shape, table.element.shape)
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
@@ -100,7 +103,7 @@ class Real1DHeatFluxArray(ScalarObject):  # 1-ROD, 2-BEAM, 3-TUBE, 10-CONROD, 34
                 msg += '(%s, %s), (%s, %s)\n' % (eid, etype, eid2, etype2)
             print(msg)
             raise ValueError(msg)
-        if not array_equal(self.data, table.data):
+        if not np.array_equal(self.data, table.data):
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
             i = 0
@@ -112,7 +115,7 @@ class Real1DHeatFluxArray(ScalarObject):  # 1-ROD, 2-BEAM, 3-TUBE, 10-CONROD, 34
                     (xgrad1, ygrad1, zgrad1, xflux1, yflux1, zflux1) = t1
                     (xgrad2, ygrad2, zgrad2, xflux2, yflux2, zflux2) = t2
 
-                    if not array_equal(t1, t2):
+                    if not np.array_equal(t1, t2):
                         msg += (
                             '%s   (%s, %s, %s, %s, %s, %s)\n'
                             '     (%s, %s, %s, %s, %s, %s)\n' % (
@@ -281,7 +284,10 @@ class RealHeatFluxVU3DArray(ScalarObject):  # 189-VUQUAD 190-VUTRIA,191-VUBEAM
         assert self.ntotal == table.ntotal
         assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
         assert self.approach_code == table.approach_code
-        if not array_equal(self.element_parent, table.element_parent):
+        if self.nonlinear_factor is not None:
+            assert np.array_equal(self._times, table._times), 'ename=%s-%s times=%s table.times=%s' % (
+                self.element_name, self.element_type, self._times, table._times)
+        if not np.array_equal(self.element_parent, table.element_parent):
             assert self.element_parent.shape == table.element_parent.shape, 'element_parent shape=%s table.shape=%s' % (
                 self.element_parent.shape, table.element_parent.shape)
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
@@ -291,7 +297,7 @@ class RealHeatFluxVU3DArray(ScalarObject):  # 189-VUQUAD 190-VUTRIA,191-VUBEAM
                 msg += '(%s, %s, %s, %s) (%s, %s, %s, %s)\n' % (eid1, parent1, coord1, icord1, eid2, parent2, coord2, icord2)
             print(msg)
             raise ValueError(msg)
-        if not array_equal(self.data, table.data):
+        if not np.array_equal(self.data, table.data):
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
             i = 0
@@ -302,7 +308,7 @@ class RealHeatFluxVU3DArray(ScalarObject):  # 189-VUQUAD 190-VUTRIA,191-VUBEAM
                 for j, vugrid in enumerate(vugrids):
                     t1 = self.data[itime, j, :]
                     t2 = table.data[itime, j, :]
-                    if not array_equal(t1, t2):
+                    if not np.array_equal(t1, t2):
                         (xgrad1, ygrad1, zgrad1, xflux1, yflux1, zflux1) = t1
                         (xgrad2, ygrad2, zgrad2, xflux2, yflux2, zflux2) = t2
                         msg += (
@@ -551,7 +557,10 @@ class RealHeatFluxVUArray(ScalarObject):  # 189-VUQUAD 190-VUTRIA,191-VUBEAM
         assert self.ntotal == table.ntotal
         assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
         assert self.approach_code == table.approach_code
-        if not array_equal(self.element_parent_coord_icord, table.element_parent_coord_icord):
+        if self.nonlinear_factor is not None:
+            assert np.array_equal(self._times, table._times), 'ename=%s-%s times=%s table.times=%s' % (
+                self.element_name, self.element_type, self._times, table._times)
+        if not np.array_equal(self.element_parent_coord_icord, table.element_parent_coord_icord):
             assert self.element_parent_coord_icord.shape == table.element_parent_coord_icord.shape, 'element_parent_coord_icord shape=%s table.shape=%s' % (
                 self.element_parent_coord_icord.shape, table.element_parent_coord_icord.shape)
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
@@ -561,7 +570,7 @@ class RealHeatFluxVUArray(ScalarObject):  # 189-VUQUAD 190-VUTRIA,191-VUBEAM
                 msg += '(%s, %s, %s, %s) (%s, %s, %s, %s)\n' % (eid1, parent1, coord1, icord1, eid2, parent2, coord2, icord2)
             print(msg)
             raise ValueError(msg)
-        if not array_equal(self.data, table.data):
+        if not np.array_equal(self.data, table.data):
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
             i = 0
@@ -572,7 +581,7 @@ class RealHeatFluxVUArray(ScalarObject):  # 189-VUQUAD 190-VUTRIA,191-VUBEAM
                 for j, vugrid in enumerate(vugrids):
                     t1 = self.data[itime, j, :]
                     t2 = table.data[itime, j, :]
-                    if not array_equal(t1, t2):
+                    if not np.array_equal(t1, t2):
                         (xgrad1, ygrad1, zgrad1, xflux1, yflux1, zflux1) = t1
                         (xgrad2, ygrad2, zgrad2, xflux2, yflux2, zflux2) = t2
                         msg += (
@@ -845,7 +854,10 @@ class RealHeatFluxVUBeamArray(ScalarObject):  # 191-VUBEAM
         assert self.ntotal == table.ntotal
         assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
         assert self.approach_code == table.approach_code
-        if not array_equal(self.element_parent_coord, table.element_parent_coord):
+        if self.nonlinear_factor is not None:
+            assert np.array_equal(self._times, table._times), 'ename=%s-%s times=%s table.times=%s' % (
+                self.element_name, self.element_type, self._times, table._times)
+        if not np.array_equal(self.element_parent_coord, table.element_parent_coord):
             assert self.element_parent_coord.shape == table.element_parent_coord.shape, 'element_parent_coord shape=%s table.shape=%s' % (
                 self.element_parent_coord.shape, table.element_parent_coord.shape)
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
@@ -855,7 +867,7 @@ class RealHeatFluxVUBeamArray(ScalarObject):  # 191-VUBEAM
                 msg += '(%s, %s, %s)  (%s, %s, %s)\n' % (eid1, parent1, coord1, eid2, parent2, coord2)
             print(msg)
             raise ValueError(msg)
-        if not array_equal(self.data, table.data):
+        if not np.array_equal(self.data, table.data):
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
             i = 0
@@ -868,7 +880,7 @@ class RealHeatFluxVUBeamArray(ScalarObject):  # 191-VUBEAM
                     (free_conv1, free_conv_k1) = t1
                     (free_conv2, free_conv_k2) = t2
 
-                    if not array_equal(t1, t2):
+                    if not np.array_equal(t1, t2):
                         msg += (
                             '%s   (%s, %s) (%s, %s)\n' % (
                                 eid,
@@ -1169,7 +1181,10 @@ class RealConvHeatFluxArray(ScalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
         assert self.ntotal == table.ntotal
         assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
         assert self.approach_code == table.approach_code
-        if not array_equal(self.element_node, table.element_node):
+        if self.nonlinear_factor is not None:
+            assert np.array_equal(self._times, table._times), 'ename=%s-%s times=%s table.times=%s' % (
+                self.element_name, self.element_type, self._times, table._times)
+        if not np.array_equal(self.element_node, table.element_node):
             assert self.element_node.shape == table.element_node.shape, 'element_node shape=%s table.shape=%s' % (self.element_node.shape, table.element_node.shape)
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
@@ -1178,7 +1193,7 @@ class RealConvHeatFluxArray(ScalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
                 msg += '%s, %s\n' % (eid1, nid1, eid2, nid2)
             print(msg)
             raise ValueError(msg)
-        if not array_equal(self.data, table.data):
+        if not np.array_equal(self.data, table.data):
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
             i = 0
@@ -1191,7 +1206,7 @@ class RealConvHeatFluxArray(ScalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
                     (free_conv1, free_conv_k1) = t1
                     (free_conv2, free_conv_k2) = t2
 
-                    if not array_equal(t1, t2):
+                    if not np.array_equal(t1, t2):
                         msg += (
                             '%s   (%s, %s) (%s, %s)\n' % (
                                 eid,
@@ -1356,7 +1371,10 @@ class RealChbdyHeatFluxArray(ScalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
         assert self.ntotal == table.ntotal
         assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
         assert self.approach_code == table.approach_code
-        if not array_equal(self.element, table.element):
+        if self.nonlinear_factor is not None:
+            assert np.array_equal(self._times, table._times), 'ename=%s-%s times=%s table.times=%s' % (
+                self.element_name, self.element_type, self._times, table._times)
+        if not np.array_equal(self.element, table.element):
             assert self.element.shape == table.element.shape, 'element shape=%s table.shape=%s' % (self.element.shape, table.element.shape)
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
@@ -1365,7 +1383,7 @@ class RealChbdyHeatFluxArray(ScalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
                 msg += '(%s, %s), (%s, %s)\n' % (eid1, nid1, eid2, nid2)
             print(msg)
             raise ValueError(msg)
-        if not array_equal(self.data, table.data):
+        if not np.array_equal(self.data, table.data):
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
             i = 0
@@ -1377,7 +1395,7 @@ class RealChbdyHeatFluxArray(ScalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
                     (fapplied1, free_conv1, force_conv1, frad1, ftotal1) = t1
                     (fapplied2, free_conv2, force_conv2, frad2, ftotal2) = t2
 
-                    if not array_equal(t1, t2):
+                    if not np.array_equal(t1, t2):
                         msg += (
                             '%s   (%s, %s, %s, %s, %s, %s)\n'
                             '     (%s, %s, %s, %s, %s, %s)\n' % (
