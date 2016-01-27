@@ -27,7 +27,7 @@ from collections import defaultdict, OrderedDict
 #VTK_QUADRATIC_HEXAHEDRON = 25
 
 import numpy as np
-from numpy import zeros, abs as npabs, mean, where, nan_to_num, amax, amin, vstack, array, empty, ones, int32
+from numpy import zeros, abs as npabs, mean, where, nan_to_num, amax, amin, vstack, array, empty, ones
 from numpy import searchsorted, sqrt, pi, arange, unique, allclose, ndarray, cross, array_equal, setdiff1d, hstack
 from numpy.linalg import norm
 
@@ -38,6 +38,7 @@ from vtk import (vtkTriangle, vtkQuad, vtkTetra, vtkWedge, vtkHexahedron,
                  vtkPyramid) #vtkQuadraticPyramid
 
 #from pyNastran import is_release
+from pyNastran.utils import integer_types
 from pyNastran.bdf.bdf import (BDF,
                                CAERO1, CAERO3, CAERO4, CAERO5, # CAERO2,
                                CQUAD4, CQUAD8, CQUADR, CSHEAR,
@@ -226,7 +227,7 @@ class NastranIO(object):
             cid_type = cid_types[coord.Type]
             if self.show_cids is True:
                 self._create_coord(cid, coord, cid_type)
-            elif isinstance(self.show_cids, (int, int32)):
+            elif isinstance(self.show_cids, integer_types):
                 if cid == self.show_cids:
                     self._create_coord(cid, coord, cid_type)
             elif isinstance(self.show_cids, (list, tuple, ndarray)):
@@ -2553,7 +2554,7 @@ class NastranIO(object):
         # self.iSubcaseNameMap = model.subcase_key
         #print(self.iSubcaseNameMap)
         for isubcase, values in iteritems(model.iSubcaseNameMap):
-            if not isinstance(isubcase, (int, int32)):
+            if not isinstance(isubcase, integer_types):
                 print('isubcase type =', type(isubcase))
                 continue
             if isinstance(values, str):

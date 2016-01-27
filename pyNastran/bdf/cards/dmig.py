@@ -1,7 +1,6 @@
 # pylint: disable=R0902,R0904,R0914
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import integer_types
 from six.moves import zip, range
 from math import sin, cos, radians, atan2, sqrt, degrees
 #from math import (sin,sinh,cos,cosh,tan,tanh,sqrt,atan,atan2,acosh,acos,asin,
@@ -10,8 +9,8 @@ from math import sin, cos, radians, atan2, sqrt, degrees
 from numpy import array, zeros
 from scipy.sparse import coo_matrix
 
+from pyNastran.utils import integer_types
 from pyNastran.bdf.cards.baseCard import BaseCard
-
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double

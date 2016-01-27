@@ -112,9 +112,9 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from six import iteritems, string_types, itervalues
 import os
 
-from numpy import unique, int32
+from numpy import unique
 
-from pyNastran.utils import object_attributes, object_methods
+from pyNastran.utils import object_attributes, object_methods, integer_types
 from pyNastran.op2.op2_scalar import OP2_Scalar
 
 from pyNastran.f06.errors import FatalError
@@ -535,7 +535,7 @@ class OP2(OP2_Scalar):
                 for case_key in case_keys:
                     #print('isubcase=%s case_key=%s' % (isubcase, case_key))
                     assert not isinstance(case_key, string_types), result_type
-                    if isinstance(case_key, (int, int32)):
+                    if isinstance(case_key, integer_types):
                         if isubcase == case_key and case_key not in subcase_key2[isubcase]:
                             subcase_key2[isubcase] = [isubcase]
                     else:

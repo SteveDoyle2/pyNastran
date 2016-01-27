@@ -4,7 +4,7 @@ from six.moves import range, zip
 import copy
 from struct import Struct, unpack
 
-from numpy import radians, sin, cos, fromstring, ones, int32, float32, dtype as npdtype
+from numpy import radians, sin, cos, fromstring, ones, float32, dtype as npdtype
 
 import numpy as np
 #from numba import autojit

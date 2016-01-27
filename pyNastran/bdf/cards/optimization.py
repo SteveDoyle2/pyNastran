@@ -1,11 +1,12 @@
 # pylint: disable=C0103,R0902,R0904,R0914
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import iteritems, integer_types, string_types
+from six import iteritems, string_types
 from six.moves import zip, range
 #from math import ceil
 from numpy import where, searchsorted, array
 
+from pyNastran.utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import (BaseCard, expand_thru_by)
 from pyNastran.bdf.cards.deqatn import fortran_to_python, fortran_to_python_short

@@ -1,7 +1,8 @@
 from __future__ import print_function
-from six import integer_types
 
 from numpy import array
+
+from pyNastran.utils import integer_types
 #from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
                                                     #double_or_blank, integer_double_or_blank, blank, string_or_blank)
 from pyNastran.bdf.bdfInterface.assign_type import integer, double_or_blank, string_or_blank, integer_or_blank

@@ -1,10 +1,11 @@
 # pylint: disable=E1101,C0103
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import string_types, iteritems, integer_types, iterkeys
+from six import string_types, iteritems, iterkeys
 from collections import defaultdict
 from numpy import array
 
+from pyNastran.utils import integer_types
 from pyNastran.bdf.deprecated import GetMethodsDeprecated
 from pyNastran.bdf.cards.nodes import SPOINT, EPOINT
 from pyNastran.bdf.bdfInterface.attributes import BDFAttributes

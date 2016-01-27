@@ -1,5 +1,7 @@
+from __future__ import print_function
+
+from pyNastran.utils import integer_types
 from pyNastran.bdf.dev_vectorized.cards.vectorized_card import VectorizedCard
-from six import integer_types
 
 class Element(VectorizedCard):
     def __init__(self, model):

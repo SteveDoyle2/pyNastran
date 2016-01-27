@@ -3,9 +3,10 @@
 Subcase creation/extraction class
 """
 from __future__ import print_function
-from six import string_types, integer_types, iteritems, PY2
+from six import string_types, iteritems, PY2
 from numpy import ndarray
 
+from pyNastran.utils import integer_types
 from pyNastran.bdf.cards.baseCard import collapse_thru_packs, deprecated
 
 int_cards = (

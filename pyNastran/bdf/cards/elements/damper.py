@@ -12,12 +12,12 @@ All damper elements are DamperElement and Element objects.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import integer_types
+
+from pyNastran.utils import integer_types
 from pyNastran.bdf.cards.baseCard import Element
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
                                                     double)
 from pyNastran.bdf.field_writer_8 import print_card_8
-from numpy import int32
 
 
 class DamperElement(Element):
@@ -243,7 +243,7 @@ class CDAMP2(LineDamper):
 
     def get_edge_ids(self):
         node_ids = self._nodeIDs(allow_empty_nodes=True)
-        if isinstance(node_ids[0], (int, int32)) and isinstance(node_ids[0], (int, int32)):
+        if isinstance(node_ids[0], integer_types) and isinstance(node_ids[1], integer_types):
             return [tuple(sorted(node_ids))]
         return []
 

@@ -17,10 +17,11 @@ The ConstraintObject contain multiple constraints.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import iteritems, integer_types
+from six import iteritems
 from six.moves import zip, range
 from itertools import count
 
+from pyNastran.utils import integer_types
 from pyNastran.bdf.cards.baseCard import BaseCard, _node_ids, expand_thru
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, double_or_blank, components, components_or_blank, string)

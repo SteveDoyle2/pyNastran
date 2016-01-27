@@ -256,7 +256,7 @@ def export_to_vtk_filename(bdf_filename, op2_filename, vtk_filename, debug=False
         nodal_cases = [op2.eigenvectors, op2.displacements, op2.velocities, op2.accelerations]
         fmt = '%sf' % (nnodes * 6)
         for cases in nodal_cases:
-            keys = list(cases.keys())
+            keys = list(cases.keys())  # list is needed for PY3
             if not keys:
                 continue
             key0 = keys[0]

@@ -1,9 +1,11 @@
 from __future__ import print_function
-from six import iteritems, b, integer_types
+from six import iteritems, b
 from six.moves import range
 import sys
 from struct import unpack, Struct
 from copy import deepcopy
+
+from pyNastran.utils import integer_types
 from pyNastran.op2.errors import FortranMarkerError, SortCodeError
 from pyNastran.utils import object_attributes
 

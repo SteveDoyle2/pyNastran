@@ -16,7 +16,7 @@ reading/writing/accessing of BDF data.  Such methods include:
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import iteritems, integer_types, string_types
+from six import iteritems, string_types
 from six.moves import zip
 from collections import defaultdict
 from copy import deepcopy
@@ -25,7 +25,7 @@ import multiprocessing as mp
 from numpy import array, cross, zeros, dot, allclose, mean
 from numpy.linalg import norm
 
-
+from pyNastran.utils import integer_types
 from pyNastran.bdf.cards.loads.staticLoads import Moment, Force, LOAD
 from pyNastran.bdf.bdfInterface.attributes import BDFAttributes
 from pyNastran.bdf.field_writer_8 import print_card_8

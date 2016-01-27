@@ -5,11 +5,12 @@ from six import iteritems
 from copy import deepcopy
 
 import numpy
-from numpy import ndarray, full, int32, float32, issubdtype
+from numpy import ndarray, full, float32, issubdtype
 from numpy.linalg import norm
 import vtk
 from vtk.util.numpy_support import numpy_to_vtk
 
+from pyNastran.utils import integer_types
 from pyNastran.gui.names_storage import NamesStorage
 from pyNastran.gui.testing_methods import GuiAttributes
 
@@ -108,7 +109,7 @@ class GuiCommon(GuiAttributes):
         self.icase = icase
         case = self.result_cases[key]
         label2 = ''
-        if isinstance(key, (int, int32)):
+        if isinstance(key, integer_types):
             (obj, (i, name)) = self.result_cases[key]
             subcase_id = obj.subcase_id
             case = obj.get_result(i, name)

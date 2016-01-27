@@ -1,11 +1,11 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import string_types, integer_types, PY2
+from six import string_types, PY2
 from six.moves import zip, range
 
 from numpy import nan, empty, unique
 
-from pyNastran.utils import object_attributes, object_methods
+from pyNastran.utils import object_attributes, object_methods, integer_types
 from pyNastran.bdf.field_writer import print_card
 from pyNastran.bdf.field_writer_8 import is_same
 from pyNastran.bdf.bdfInterface.assign_type import interpret_value

@@ -12,8 +12,8 @@ All ungrouped elements are Element objects.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import integer_types
 
+from pyNastran.utils import integer_types
 from pyNastran.bdf.cards.baseCard import Element, BaseCard
 from pyNastran.bdf.bdfInterface.assign_type import (fields, integer, integer_or_blank,
     integer_double_or_blank, double_or_blank, string)  # double

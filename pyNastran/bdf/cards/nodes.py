@@ -24,12 +24,13 @@ EPOINTs/SPOINTs classes are for multiple degrees of freedom
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import numpy as np
-from six import integer_types, string_types, PY2
+from six import string_types, PY2
 if PY2:
     u = unicode
 else:
     u = str
 
+from pyNastran.utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_string8_blank_if_default
 from pyNastran.bdf.field_writer_16 import set_string16_blank_if_default
 

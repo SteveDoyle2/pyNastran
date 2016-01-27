@@ -1,12 +1,12 @@
 from __future__ import print_function
 from six import iteritems, string_types, binary_type, text_type
 from collections import defaultdict
-from numpy import unique, int32
+from numpy import unique, int32, int64
 
 from pyNastran import is_release
 from pyNastran.f06.tables.grid_point_weight import GridPointWeight
 from pyNastran.f06.f06_formatting import get_key0
-from pyNastran.utils import object_attributes
+from pyNastran.utils import object_attributes, integer_types
 from pyNastran.bdf.cards.baseCard import deprecated
 try:
     import pandas as pd
@@ -427,7 +427,7 @@ class OP2_F06_Common(object):
             if not res_type:
                 continue
             key0 = list(res_type.keys())[0]
-            if not isinstance(key0, (int, int32)) and not isinstance(res_key, (int, int32)):
+            if not isinstance(key0, integer_types) and not isinstance(res_key, integer_types):
                 if not type(key0) == type(res_key):
                     msg = 'bad compression check...keys0=%s type(key0)=%s res_key=%s type(res_key)=%s' % (
                         key0, type(key0), res_key, type(res_key))
@@ -868,7 +868,7 @@ class OP2_F06_Common(object):
         """
         def compare(key_value):
             key = key_value[0]
-            if isinstance(key, (int, int32, text_type, binary_type)):
+            if isinstance(key, (int, int32, int64, text_type, binary_type)):
                 return key
             else:
                 #print('key=%s type=%s' % (key, type(key)))

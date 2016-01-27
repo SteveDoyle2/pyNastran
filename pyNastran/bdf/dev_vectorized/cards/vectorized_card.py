@@ -1,9 +1,8 @@
 from __future__ import print_function
-from six import integer_types
 from six.moves import StringIO
 from numpy import (array, searchsorted, array_equal, setdiff1d, int64, argsort,
                    arange, ndarray, asarray, int64)
-from pyNastran.utils import object_attributes
+from pyNastran.utils import object_attributes, integer_types
 
 class VectorizedCard(object):
     type = 'VectorizedCard'

@@ -1,8 +1,8 @@
 from __future__ import print_function
-from six import integer_types
 from six.moves import zip, StringIO
 from numpy import zeros, unique, where, searchsorted, asarray, array
 
+from pyNastran.utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,

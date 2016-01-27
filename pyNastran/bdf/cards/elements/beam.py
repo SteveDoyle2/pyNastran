@@ -1,9 +1,9 @@
 # pylint: disable=R0904,R0902,E1101,E1103,C0111,C0302,C0103,W0101
-from six import string_types, integer_types
+from six import string_types
 from numpy import array, cross
 from numpy.linalg import norm
 
-
+from pyNastran.utils import integer_types
 from pyNastran.bdf.cards.elements.bars import CBAR, LineElement
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double_or_blank, integer_double_string_or_blank)

@@ -9,7 +9,7 @@ As such, ``test_bdf`` is very useful for debugging models.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import iteritems, integer_types
+from six import iteritems
 import os
 import sys
 import numpy
@@ -21,7 +21,7 @@ numpy.seterr(all='raise')
 import traceback
 
 from pyNastran.op2.op2 import OP2
-from pyNastran.utils import print_bad_path
+from pyNastran.utils import print_bad_path, integer_types
 from pyNastran.bdf.errors import CrossReferenceError, CardParseSyntaxError, DuplicateIDsError
 from pyNastran.bdf.bdf import BDF, DLOAD, _read_bdf
 from pyNastran.bdf.cards.dmig import NastranMatrix

@@ -18,13 +18,13 @@ All static loads are defined in this file.  This includes:
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import integer_types
 from six.moves import zip
 
-from numpy import array, cross, allclose, unique, int32
+from numpy import array, cross, allclose, unique
 from numpy.linalg import norm
 
 #from pyNastran.bdf.errors import CrossReferenceError
+from pyNastran.utils import integer_types
 from pyNastran.bdf.cards.loads.loads import Load, LoadCombination
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.baseCard import BaseCard, expand_thru, expand_thru_by, range
@@ -2162,17 +2162,17 @@ class PLOAD4(Load):
         del self.eid_ref, self.cid_ref, self.eids_ref
 
     def G1(self):
-        if isinstance(self.g1, (integer_types, int32)):
+        if isinstance(self.g1, (integer_types)):
             return self.g1
         return self.g1_ref.nid
 
     def G34(self):
-        if isinstance(self.g34, (integer_types, int32)):
+        if isinstance(self.g34, (integer_types)):
             return self.g34
         return self.g34_ref.nid
 
     def Eid(self, eid):
-        if isinstance(eid, (integer_types, int32)):
+        if isinstance(eid, (integer_types)):
             return eid
         return eid.eid
 
@@ -2292,17 +2292,17 @@ class PLOADX1(Load):
         del self.eid_ref, self.ga_ref, self.gb_ref
 
     def Eid(self):
-        if isinstance(self.eid, (integer_types, int32)):
+        if isinstance(self.eid, (integer_types)):
             return self.eid
         return self.eid_ref.eid
 
     def Ga(self):
-        if isinstance(self.ga, (integer_types, int32)):
+        if isinstance(self.ga, (integer_types)):
             return self.ga
         return self.ga_ref.nid
 
     def Gb(self):
-        if isinstance(self.gb, (integer_types, int32)):
+        if isinstance(self.gb, (integer_types)):
             return self.gb
         return self.gb_ref.nid
 

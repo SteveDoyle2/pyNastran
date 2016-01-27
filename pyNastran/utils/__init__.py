@@ -1,9 +1,14 @@
 # -*- coding: utf-8 -*-
-from six import string_types
+from six import PY2, string_types
 from types import MethodType
 import os
-from numpy import ndarray, array, loadtxt
+from numpy import ndarray, array, loadtxt, int32, int64
 import io
+
+if PY2:
+    integer_types = (int, long, int32, int64)
+else:
+    integer_types = (int, int32, int64)
 
 def loadtxt_nice(filename, delimiter=',', skiprows=0, comment='#', dtype=None):
     """

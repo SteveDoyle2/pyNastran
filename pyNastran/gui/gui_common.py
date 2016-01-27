@@ -18,13 +18,13 @@ from PyQt4 import QtCore, QtGui
 import vtk
 from vtk.qt4.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 
-from numpy import ndarray, eye, array, zeros, loadtxt, int32
+from numpy import ndarray, eye, array, zeros, loadtxt
 from numpy.linalg import norm
 
 import pyNastran
 from pyNastran.bdf.cards.baseCard import deprecated
 from pyNastran.utils.log import SimpleLogger
-from pyNastran.utils import print_bad_path, loadtxt_nice
+from pyNastran.utils import print_bad_path, loadtxt_nice, integer_types
 
 from pyNastran.gui.qt_files.gui_qt_common import GuiCommon
 from pyNastran.gui.qt_files.scalar_bar import ScalarBar
@@ -2213,7 +2213,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         result_name = self.result_name
         case = self.result_cases[case_key]
 
-        if isinstance(case_key, (int, int32)):
+        if isinstance(case_key, integer_types):
             (obj, (i, res_name)) = case
             subcase_id = obj.subcase_id
             case = obj.get_result(i, res_name)
@@ -2282,7 +2282,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         node_id = cell.GetPointId(imin)
         xyz = array(point_min, dtype='float32')
         case = self.result_cases[case_key]
-        if isinstance(case_key, (int, int32)):
+        if isinstance(case_key, integer_types):
             (obj, (i, res_name)) = case
             subcase_id = obj.subcase_id
             case = obj.get_result(i, res_name)
@@ -2700,7 +2700,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         case = self.result_cases[key]
         default_format = None
         default_scale = None
-        if isinstance(key, (int, int32)):
+        if isinstance(key, integer_types):
             #(subcase_id, result_type, vector_size, location, data_format) = key
             (obj, (i, res_name)) = self.result_cases[key]
             #subcase_id = obj.subcase_id
@@ -2792,7 +2792,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             self._legend_window._updated_legend = True
 
             key = self.case_keys[icase]
-            if isinstance(key, (int, int32)):
+            if isinstance(key, integer_types):
                 (obj, (i, name)) = self.result_cases[key]
                 #subcase_id = obj.subcase_id
                 #case = obj.get_result(i, name)
@@ -2853,7 +2853,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         plot_value = self.result_cases[key] # scalar
         vector_size1 = 1
         update_3d = False
-        if isinstance(key, (int, int32)):
+        if isinstance(key, integer_types):
             #(subcase_id, result_type, vector_size, location, data_format) = key
             (obj, (i, res_name)) = self.result_cases[key]
             subcase_id = obj.subcase_id
@@ -2890,7 +2890,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         assert vector_size1 == 1, vector_size1
 
 
-        #if isinstance(key, (int, int32)):  # vector 3
+        #if isinstance(key, integer_types):  # vector 3
             #norm_plot_value = norm(plot_value, axis=1)
             #min_value = norm_plot_value.min()
             #max_value = norm_plot_value.max()
@@ -2912,7 +2912,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         norm_value = float(max_value - min_value)
         # if name not in self._loaded_names:
 
-        #if isinstance(key, (int, int32)):  # vector 3
+        #if isinstance(key, integer_types):  # vector 3
             #norm_plot_value = norm(plot_value, axis=1)
             #grid_result = self.set_grid_values(name, norm_plot_value, vector_size1,
                                                #min_value, max_value, norm_value,
