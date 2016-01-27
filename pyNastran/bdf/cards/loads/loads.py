@@ -285,12 +285,12 @@ class DAREA(BaseCard):
 
     def cross_reference(self, model):
         msg = ', which is required by %s=%s' % (self.type, self.sid)
-        self.p = model.Node(self.p, allow_empty_nodes=False, msg=msg)
+        self.p = model.Node(self.node_id, allow_empty_nodes=False, msg=msg)
         self.p_ref = self.p
 
     def safe_cross_reference(self, model, debug=True):
         msg = ', which is required by %s=%s' % (self.type, self.sid)
-        self.p = model.Node(self.p, allow_empty_nodes=False, msg=msg)
+        self.p = model.Node(self.node_id, allow_empty_nodes=False, msg=msg)
         self.p_ref = self.p
 
     def uncross_reference(self):
@@ -411,10 +411,14 @@ class SLOAD(Load):
     """
     type = 'SLOAD'
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self):
+        pass
+
+    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-            #: load ID
+
+        #: load ID
         self.sid = integer(card, 1, 'sid')
 
         nfields = len(card) - 2
@@ -477,26 +481,29 @@ class SLOAD(Load):
 class RFORCE(Load):
     type = 'RFORCE'
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self):
+        pass
+
+    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            self.sid = integer(card, 1, 'sid')
-            self.nid = integer_or_blank(card, 2, 'nid', 0)
-            self.cid = integer_or_blank(card, 3, 'cid', 0)
-            self.scale = double_or_blank(card, 4, 'scale', 1.)
-            self.r1 = double_or_blank(card, 5, 'r1', 0.)
-            self.r2 = double_or_blank(card, 6, 'r2', 0.)
-            self.r3 = double_or_blank(card, 7, 'r3', 0.)
-            self.method = integer_or_blank(card, 8, 'method', 1)
-            self.racc = double_or_blank(card, 9, 'racc', 0.)
-            self.mb = integer_or_blank(card, 10, 'mb', 0)
-            self.idrf = integer_or_blank(card, 11, 'idrf', 0)
-            assert len(card) <= 12, 'len(RFORCE card) = %i' % len(card)
-        else:
-            self.sid = data[0]
-            print("RFORCE = %s" % data)
-            raise NotImplementedError(data)
+        self.sid = integer(card, 1, 'sid')
+        self.nid = integer_or_blank(card, 2, 'nid', 0)
+        self.cid = integer_or_blank(card, 3, 'cid', 0)
+        self.scale = double_or_blank(card, 4, 'scale', 1.)
+        self.r1 = double_or_blank(card, 5, 'r1', 0.)
+        self.r2 = double_or_blank(card, 6, 'r2', 0.)
+        self.r3 = double_or_blank(card, 7, 'r3', 0.)
+        self.method = integer_or_blank(card, 8, 'method', 1)
+        self.racc = double_or_blank(card, 9, 'racc', 0.)
+        self.mb = integer_or_blank(card, 10, 'mb', 0)
+        self.idrf = integer_or_blank(card, 11, 'idrf', 0)
+        assert len(card) <= 12, 'len(RFORCE card) = %i' % len(card)
+
+    def add_op2_data(self, data, comment=''):
+        self.sid = data[0]
+        print("RFORCE = %s" % data)
+        raise NotImplementedError(data)
 
     def cross_reference(self, model):
         msg = ' which is required by RFORCE sid=%s' % self.sid

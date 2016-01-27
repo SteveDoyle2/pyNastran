@@ -136,6 +136,7 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
                                                   cid=cid, encoding=encoding,
                                                   is_folder=True, dynamic_vars={},
                                                   nastran=nastran, size=size, is_double=is_double,
+                                                  nerrors=0,
                                                   post=post, sum_load=sum_load, dev=dev)
                 del fem1
                 del fem2
@@ -189,7 +190,7 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
             cid=None, mesh_form='combined', is_folder=False, print_stats=False,
             encoding=None, sum_load=False, size=8, is_double=False,
             reject=False, stop=False, nastran='', post=-1, dynamic_vars=None,
-            quiet=False, dumplines=False, dictsort=False, dev=False):
+            quiet=False, dumplines=False, dictsort=False, nerrors=0, dev=False):
     """
     Runs a single BDF
 
@@ -257,8 +258,9 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
         fem1 = BDFReplacer(bdf_model + '.rej', debug=debug, log=None)
     else:
         fem1 = BDF(debug=debug, log=None)
-    fem1.set_error_storage(nparse_errors=100, stop_on_parsing_error=True,
-                           nxref_errors=100, stop_on_xref_error=True)
+
+    fem1.set_error_storage(nparse_errors=nerrors, stop_on_parsing_error=True,
+                           nxref_errors=nerrors, stop_on_xref_error=True)
     #fem1.set_error_storage(nparse_errors=0, stop_on_parsing_error=True,
     #                      nxref_errors=0, stop_on_xref_error=True)
     if dynamic_vars:
@@ -548,7 +550,7 @@ def run_fem2(bdf_model, out_model, xref, punch,
                 assert subcase.has_parameter('TIME') or subcase.has_parameter('TSTEP') or subcase.has_parameter('TSTEPNL'), subcase
 
             elif sol == 144:
-                assert subcase.has_parameter('SUPORT') or len(fem2.suports), subcase
+                assert subcase.has_parameter('SUPORT') or len(fem2.suport1), subcase
                 assert subcase.has_parameter('TRIM'), subcase
             elif sol == 145:
                 assert subcase.has_parameter('METHOD'), subcase
@@ -563,7 +565,13 @@ def run_fem2(bdf_model, out_model, xref, punch,
 
             if subcase.has_parameter('METHOD'):
                 method_id = subcase.get_parameter('METHOD')[0]
-                method = fem2.methods[method_id]
+                if method_id in fem2.methods:
+                    method = fem2.methods[method_id]
+                #elif method_id in fem2.cMethods:
+                    #method = fem2.cMethods[method_id]
+                else:
+                    raise RuntimeError('METHOD = %s' % method_id)
+
                 assert sol in [5, 76, 101, 103, 105, 106, 107, 108, 110, 111,
                                112, 144, 145, 146, 187], 'sol=%s METHOD' % sol
             if subcase.has_parameter('CMETHOD'):
@@ -919,11 +927,11 @@ def main():
     """
     from docopt import docopt
     msg = "Usage:\n"
-    msg += "  test_bdf [-q] [-D] [-i] [-x] [-p] [-c] [-L] [-f] BDF_FILENAME\n" #
-    msg += "  test_bdf [-q] [-D] [-i] [-x] [-p] [-c] [-L] [-d] [-f] BDF_FILENAME\n" #
-    msg += "  test_bdf [-q] [-D] [-i] [-x] [-p] [-c] [-L] [-l] [-f] BDF_FILENAME\n" #
-    msg += "  test_bdf [-q] [-D] [-i] [-p] [-r] [-f] BDF_FILENAME\n" #
-    msg += "  test_bdf [-q] [-D] [-i] [-x] [-p] [-s] [-f] BDF_FILENAME\n" #
+    msg += "  test_bdf [-q] [-D] [-i] [-e E] [-x] [-p] [-c] [-L] [-f] BDF_FILENAME\n" #
+    msg += "  test_bdf [-q] [-D] [-i] [-e E] [-x] [-p] [-c] [-L] [-d] [-f] BDF_FILENAME\n" #
+    msg += "  test_bdf [-q] [-D] [-i] [-e E] [-x] [-p] [-c] [-L] [-l] [-f] BDF_FILENAME\n" #
+    msg += "  test_bdf [-q] [-D] [-i] [-e E] [-p] [-r] [-f] BDF_FILENAME\n" #
+    msg += "  test_bdf [-q] [-D] [-i] [-e E] [-x] [-p] [-s] [-f] BDF_FILENAME\n" #
 
     #msg += "  test_bdf [-q] [-p] [-o [<VAR=VAL>]...] BDF_FILENAME\n" #
     msg += '  test_bdf -h | --help\n'
@@ -949,8 +957,9 @@ def main():
     msg += '  -r, --reject   rejects all cards with the appropriate values applied (default=False)\n'
     msg += '  -D, --dumplines  Writes the BDF exactly as read with the INCLUDES processed (pyNastran_dump.bdf)\n'
     msg += '  -i, --dictsort  Writes the BDF with exactly as read with the INCLUDES processed (pyNastran_dict.bdf)\n'
-    msg += '  -f, --profile  Profiles the code (default=False)\n'
-    msg += '  -s, --stop     Stop after first read/write (default=False)\n'
+    msg += '  -f, --profile   Profiles the code (default=False)\n'
+    msg += '  -s, --stop      Stop after first read/write (default=False)\n'
+    msg += '  -e E, --nerrors E  Allow for cross-reference errors (default=100)\n'
     #msg += '  -o <VAR_VAL>, --openmdao <VAR_VAL>   rejects all cards with the appropriate values applied;\n'
     #msg += '                 Uses the OpenMDAO %var syntax to replace it with value.\n'
     #msg += '                 So test_bdf -r var1=val1 var2=val2\n'
@@ -1003,6 +1012,7 @@ def main():
             quiet=data['--quiet'],
             dumplines=data['--dumplines'],
             dictsort=data['--dictsort'],
+            nerrors=data['--nerrors'],
         )
         prof.dump_stats('bdf.profile')
 
@@ -1040,6 +1050,7 @@ def main():
             quiet=data['--quiet'],
             dumplines=data['--dumplines'],
             dictsort=data['--dictsort'],
+            nerrors=data['--nerrors'],
         )
     print("total time:  %.2f sec" % (time.time() - t0))
 

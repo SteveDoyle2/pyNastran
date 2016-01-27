@@ -799,12 +799,11 @@ class XrefMesh(BDFAttributes):
         Links the loads to nodes, coordinate systems, and other loads.
         """
         for (lid, sid) in iteritems(self.loads):
-            #self.log.debug("lid=%s sid=%s" %(lid, sid))
+            #self.log.debug("load lid=%s sid=%s" %(lid, sid))
             for load in sid:
                 try:
                     load.cross_reference(self)
                 except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as e:
-                    raise
                     self._ixref_errors += 1
                     var = traceback.format_exception_only(type(e), e)
                     self._stored_xref_errors.append((load, var))
@@ -812,12 +811,12 @@ class XrefMesh(BDFAttributes):
                         self.pop_xref_errors()
 
         for (lid, sid) in iteritems(self.dloads):
-            #self.log.debug("lid=%s sid=%s" %(lid, sid))
+            #self.log.debug("dload lid=%s sid=%s" % (lid, sid))
             for load in sid:
+                #self.log.debug("  dloadi load=%s" % (load))
                 try:
                     load.cross_reference(self)
                 except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as e:
-                    raise
                     self._ixref_errors += 1
                     var = traceback.format_exception_only(type(e), e)
                     self._stored_xref_errors.append((load, var))
@@ -825,10 +824,13 @@ class XrefMesh(BDFAttributes):
                         self.pop_xref_errors()
 
         for (lid, sid) in iteritems(self.dload_entries):
+            #self.log.debug("dload_entries lid=%s sid=%s" % (lid, sid))
             for load in sid:
+                #self.log.debug("  dloadi load=%s" % (load))
                 try:
                     load.cross_reference(self)
                 except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as e:
+                    #raise
                     self._ixref_errors += 1
                     var = traceback.format_exception_only(type(e), e)
                     self._stored_xref_errors.append((load, var))
@@ -839,6 +841,7 @@ class XrefMesh(BDFAttributes):
             try:
                 darea.cross_reference(self)
             except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as e:
+                #raise
                 self._ixref_errors += 1
                 var = traceback.format_exception_only(type(e), e)
                 self._stored_xref_errors.append((load, var))
@@ -849,6 +852,7 @@ class XrefMesh(BDFAttributes):
             try:
                 dphase.cross_reference(self)
             except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as e:
+                #raise
                 self._ixref_errors += 1
                 var = traceback.format_exception_only(type(e), e)
                 self._stored_xref_errors.append((load, var))
