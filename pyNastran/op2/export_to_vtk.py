@@ -242,7 +242,7 @@ def export_to_vtk_filename(bdf_filename, op2_filename, vtk_filename, debug=False
             vtk_file.write('NodeID %i float\n' % nnodes)
             vtk_file.write(pack_int_array(nid_fmt, nids))
 
-            fmt = b'%si' % nelements
+            fmt = '%si' % nelements
             if nelements:
                 vtk_file.write('ElementID %i float\n' % nelements)
                 vtk_file.write(pack_int_array(eid_fmt, eids))
@@ -256,7 +256,7 @@ def export_to_vtk_filename(bdf_filename, op2_filename, vtk_filename, debug=False
         nodal_cases = [op2.eigenvectors, op2.displacements, op2.velocities, op2.accelerations]
         fmt = '%sf' % (nnodes * 6)
         for cases in nodal_cases:
-            keys = cases.keys()#[0]
+            keys = list(cases.keys())
             if not keys:
                 continue
             key0 = keys[0]
