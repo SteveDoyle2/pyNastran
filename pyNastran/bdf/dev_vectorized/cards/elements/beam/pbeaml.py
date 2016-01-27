@@ -10,7 +10,6 @@ from pyNastran.bdf.dev_vectorized.utils import slice_to_iter
 
 
 class PBEAML(object):
-#class PBEAML(Property):
     type = 'PBEAML'
 
     def __iter__(self):

@@ -1276,7 +1276,9 @@ class OEF(OP2Common):
                         eids = ints[:, 0] // 10
                         assert eids.min() > 0, eids.min()
                         assert 0 not in eids, eids
+                        #print('eids =', eids)
                         eids2 = np.repeat(eids, 11)
+                        #print('eids2 =', eids2)
 
                         ints2 = ints[:, 1:].reshape(nelements * 11, 16)
                         nids = ints2[:, 0]
@@ -1284,6 +1286,9 @@ class OEF(OP2Common):
                         obj.element[ielement:ielement2] = eids
                         obj.element_node[itotal:itotal2, 0] = eids2
                         obj.element_node[itotal:itotal2, 1] = nids
+                        #print(itotal2, itotal, len(eids2))
+                        #print(obj.element_node)
+                        #print(obj.element)
 
                     #[nid, sd, bm1r, bm2r, ts1r, ts2r, afr, ttrqr, wtrqr,
                     #          bm1i, bm2i, ts1i, ts2i, afi, ttrqi, wtrqi]
@@ -1309,7 +1314,6 @@ class OEF(OP2Common):
                     s2 = Struct(b(self._endian + 'i15f'))
                     ntotal = 708  # (16*11+1)*4 = 177*4
                     nelements = ndata // ntotal
-                    obj = self.obj
                     for i in range(nelements):
                         edata = data[n:n+4]
                         eid_device, = s1.unpack(edata)
@@ -1343,16 +1347,17 @@ class OEF(OP2Common):
                                 ttrq = complex(ttrqr, ttrqi)
                                 wtrq = complex(wtrqr, wtrqi)
 
-                            if i == 0:
-                                obj.add_new_element_sort1(
-                                    dt, eid, nid, sd, bm1, bm2, ts1, ts2,
-                                    af, ttrq, wtrq)
-                            elif sd > 0.:
-                                obj.add_sort1(dt, eid, nid, sd,
-                                        bm1, bm2, ts1, ts2, af, ttrq, wtrq)
-                            else:
-                                # don't add this field
-                                pass
+                            #if i == 0:
+                                #obj.add_new_element_sort1(
+                                    #dt, eid, nid, sd, bm1, bm2, ts1, ts2,
+                                    #af, ttrq, wtrq)
+                            #elif sd > 0.:
+                            obj.add_sort1(
+                                dt, eid, nid, sd, bm1, bm2, ts1, ts2,
+                                af, ttrq, wtrq)
+                            #else:
+                                ## don't add this field
+                                #pass
                                 #raise RuntimeError('CBEAM error; i=%s sd=%s' % (i, sd))
             else:
                 msg = self.code_information()
@@ -1794,6 +1799,7 @@ class OEF(OP2Common):
                 msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
                 return self._not_implemented_or_skip(data, ndata, msg)
 
+            assert self._data_factor == 1, self._data_factor
             if self.format_code == 1 and self.num_wide == 9:  # real
                 ntotal = 36 # 9*4
                 nelements = ndata // ntotal

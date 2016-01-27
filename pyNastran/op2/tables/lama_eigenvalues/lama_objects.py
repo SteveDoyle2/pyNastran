@@ -25,6 +25,9 @@ class RealEigenvalues(BaseScalarObject):
         self.generalized_mass = {}
         self.generalized_stiffness = {}
 
+    def __eq__(self, table):
+        return True
+
     def get_stats(self):
         msg = []
         neigenvalues = len(self.extraction_order)
@@ -133,6 +136,9 @@ class ComplexEigenvalues(BaseScalarObject):
         self.cycles = {}
         self.damping = {}
 
+    def __eq__(self, table):
+        return True
+
     def get_stats(self):
         neigenvalues = len(self.extraction_order)
         msg = []
@@ -234,6 +240,9 @@ class BucklingEigenvalues(BaseScalarObject):
         self.omegas = {}
         self.generalized_mass = {}
         self.generalized_stiffness = {}
+
+    def __eq__(self, table):
+        return True
 
     def get_stats(self):
         neigenvalues = len(self.extraction_order)

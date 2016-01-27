@@ -93,13 +93,7 @@ class ComplexPlateArray(OES_Object):
 
     def __eq__(self, table):
         assert self.is_sort1() == table.is_sort1()
-        assert self.nonlinear_factor == table.nonlinear_factor
-        assert self.ntotal == table.ntotal
-        assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
-        assert self.approach_code == table.approach_code
-        if self.nonlinear_factor is not None:
-            assert np.array_equal(self._times, table._times), 'ename=%s-%s times=%s table.times=%s' % (
-                self.element_name, self.element_type, self._times, table._times)
+        self._eq_header(table)
         if not np.array_equal(self.element_node, table.element_node):
             assert self.element_node.shape == table.element_node.shape, 'shape=%s element_node.shape=%s' % (
                 self.element_node.shape, table.element_node.shape)
@@ -117,20 +111,21 @@ class ComplexPlateArray(OES_Object):
             i = 0
             if self.is_sort1():
                 for itime in range(ntimes):
-                    for ieid, eid in enumerate(self.element):
+                    for ieid, (eid, nid) in enumerate(self.element_node):
                         t1 = self.data[itime, ieid, :]
                         t2 = table.data[itime, ieid, :]
-                        (tx1, ty1, tz1, rx1, ry1, rz1) = t1
-                        (tx2, ty2, tz2, rx2, ry2, rz2) = t2
-                        d = t1 - t2
-                        if not allclose([tx1.real, tx1.imag, ty1.real, ty1.imag],
-                                        [tx2.real, tx2.imag, ty2.real, ty2.imag], atol=0.0001):
+                        (oxx1, oyy1, txy1) = t1
+                        (oxx2, oyy2, txy2) = t2
+                        #d = t1 - t2
+                        if not np.allclose(
+                            [oxx1.real, oxx1.imag, oyy1.real, oyy1.imag, txy1.real, txy1.imag, ],
+                            [oxx2.real, oxx2.imag, oyy2.real, oyy2.imag, txy2.real, txy2.imag, ], atol=0.0001):
                         #if not np.array_equal(t1, t2):
-                            msg += '%-4s  (%s, %sj, %s, %sj)\n      (%s, %sj, %s, %sj)\n  dt12=(%s, %sj, %s, %sj)\n' % (
+                            msg += '%-4s  (%s, %sj, %s, %sj, %s, %sj)\n      (%s, %sj, %s, %sj, %s, %sj)\n' % (
                                 eid,
-                                tx1.real, tx1.imag, ty1.real, ty1.imag,
-                                tx2.real, tx2.imag, ty2.real, ty2.imag,
-                                d[0].real, d[0].imag, d[1].real, d[1].imag,)
+                                oxx1.real, oxx1.imag, oyy1.real, oyy1.imag, txy1.real, txy1.imag,
+                                oxx2.real, oxx2.imag, oyy2.real, oyy2.imag, txy2.real, txy2.imag,
+                                )
                             i += 1
                         if i > 10:
                             print(msg)

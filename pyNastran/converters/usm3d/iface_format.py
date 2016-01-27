@@ -2,7 +2,7 @@ from __future__ import print_function
 from numpy import zeros
 from struct import unpack
 #from pyNastran.op2.fortranFile import FortranFile
-from pyNastran.converters.usm3d.usm3d_reader import Usm3dReader
+from pyNastran.converters.usm3d.usm3d_reader import Usm3d
 
 def factors(nraw):
     """
@@ -25,29 +25,26 @@ def factors(nraw):
                 return result
     return [nraw]
 
-#class IFace(FortranFile):
+
 class IFace(object):
     def __init__(self, log=None, debug=None):
-        #FortranFile.__init__(self)
         self.n = 0
         self.log = log
         self.debug = debug
 
-
     def read_poin1(self, poin1_filename):
-        f = open(poin1_filename, 'r')
-        ipoin1, ilines = f.readline().strip().split()
-        ipoin1 = int(ipoin1)
-        ilines = int(ilines)
+        with openopen(poin1_filename, 'r') as poin1_file:
+            ipoin1, ilines = poin1_file.readline().strip().split()
+            ipoin1 = int(ipoin1)
+            ilines = int(ilines)
 
-        poin1 = zeros(ilines, 'int32')
-        for i, line in enumerate(f.readlines()):
-            ii, poin1i = line.split()
-            ii = int(ii)
-            assert i + 1 == ii, 'i=%s ii=%s' % (i+1, ii)
-            poin1[i] = poin1i
-        assert poin1.max() == ipoin1
-        f.close()
+            poin1 = zeros(ilines, 'int32')
+            for i, line in enumerate(poin1_file.readlines()):
+                ii, poin1i = line.split()
+                ii = int(ii)
+                assert i + 1 == ii, 'i=%s ii=%s' % (i+1, ii)
+                poin1[i] = poin1i
+            assert poin1.max() == ipoin1
         return poin1
 
     def read_m2(self, m2_filename):
@@ -126,47 +123,47 @@ class IFace(object):
         B =
         C = nfaces
         """
-        f = open(iface_filename, 'rb')
+        with open(iface_filename, 'rb') as iface_file:
 
-        # makes it so FortranFile works...
-        #self.op2 = f
-        #n = 0
+            # makes it so FortranFile works...
+            #self.op2 = iface_file
+            #n = 0
 
-        data = f.read(4 * 3)  # A, B, C
-        A, B, C = unpack('>3i', data)
+            data = iface_file.read(4 * 3)  # A, B, C
+            A, B, C = unpack('>3i', data)
 
-        print("A=%s B=%s C=%s" % (A, B, C))
-        nints = C
-        Format = '>%ii' % nints
-        data = f.read(4 * nints)  # read nints ints
-        ints = unpack(Format, data)
-        self.n += 4 * nints
+            print("A=%s B=%s C=%s" % (A, B, C))
+            nints = C
+            Format = '>%ii' % nints
+            data = iface_file.read(4 * nints)  # read nints ints
+            ints = unpack(Format, data)
+            self.n += 4 * nints
 
-        assert max(ints) == ints[-1], 'max(ints)=%i ints[-1]=%i'  % (max(ints), ints[-1])
+            assert max(ints) == ints[-1], 'max(ints)=%i ints[-1]=%i'  % (max(ints), ints[-1])
 
-        # A=16235848 B=811792 C=56864
-        # A = 2^3 * 3^4
-        # B = 2^4 * 50737
-        # C = 2^5 *
+            # A=16235848 B=811792 C=56864
+            # A = 2^3 * 3^4
+            # B = 2^4 * 50737
+            # C = 2^5 *
 
-        # A=2584268 B=129213 C=6810
-        # A = [2, 2, 646067]
-        # B = [3, 3, 7, 7]
-        # C = [2, 3, 5, 227]
+            # A=2584268 B=129213 C=6810
+            # A = [2, 2, 646067]
+            # B = [3, 3, 7, 7]
+            # C = [2, 3, 5, 227]
 
-        nints = B
-        Format = '>%ii' % nints
-        data = f.read(4 * nints)  # read nint ints
-        ints = unpack(Format, data)
-        assert max(ints) < nints, 'max(ints)=%i nints=%i'  % (max(ints), nints)
-        self.n += 4 * nints
-        #print(ints
+            nints = B
+            Format = '>%ii' % nints
+            data = iface_file.read(4 * nints)  # read nint ints
+            ints = unpack(Format, data)
+            assert max(ints) < nints, 'max(ints)=%i nints=%i'  % (max(ints), nints)
+            self.n += 4 * nints
+            #print(ints
 
-        #print(factors(A))
-        #print(factors(B))
-        #print(factors(C))
+            #print(factors(A))
+            #print(factors(B))
+            #print(factors(C))
 
-        #print(self.print_section2(n, '>'))
+            #print(self.print_section2(n, '>'))
 
 
 #if __name__ == '__main__':  # pragma: no cover

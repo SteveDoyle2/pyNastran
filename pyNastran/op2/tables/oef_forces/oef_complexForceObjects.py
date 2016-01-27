@@ -575,7 +575,7 @@ class ComplexSpringDamperForceArray(ScalarObject):
                     t1 = self.data[itime, ie, 0]
                     t2 = table.data[itime, ie, 0]
 
-                    if not allclose([t1.real, t1.imag], [t2.real, t2.imag]):
+                    if not allclose([t1.real, t1.imag], [t2.real, t2.imag], atol=0.0001):
                         msg += '%s    (%s, %s)  (%s, %s)\n' % (
                             eid,
                             t1.real, t1.imag,
@@ -992,22 +992,18 @@ class ComplexPlateForceArray(ScalarObject):
 
     def __eq__(self, table):
         assert self.is_sort1() == table.is_sort1()
-        assert self.nonlinear_factor == table.nonlinear_factor
-        assert self.ntotal == table.ntotal
-        assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
-        assert self.approach_code == table.approach_code
-        if self.nonlinear_factor is not None:
-            assert np.array_equal(self._times, table._times), 'ename=%s-%s times=%s table.times=%s' % (
-                self.element_name, self.element_type, self._times, table._times)
+        self._eq_header(table)
         if not np.array_equal(self.element, table.element):
-            assert self.element.shape == table.element.shape, 'element shape=%s table.shape=%s' % (self.element.shape, table.element.shape)
+            assert self.element.shape == table.element.shape, 'element shape=%s table.shape=%s' % (
+                self.element.shape, table.element.shape)
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
             msg += 'Eid\n'
-            for eid, eid2 in zip(self.element, table.element):
-                msg += '%s, %s\n' % (eid, eid2)
+            for eid1, eid2 in zip(self.element, table.element):
+                msg += '%s, %s\n' % (eid1, eid2)
             print(msg)
             raise ValueError(msg)
+
         if not np.array_equal(self.data, table.data):
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
@@ -1044,6 +1040,7 @@ class ComplexPlateForceArray(ScalarObject):
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, :] = [mx, my, mxy, bmx, bmy, bmxy, tx, ty]
         self.ielement += 1
+        self.itotal += 1
 
     def get_stats(self):
         if not self.is_built:
@@ -1167,155 +1164,6 @@ class ComplexPlateForceArray(ScalarObject):
             f.write(page_stamp % page_num)
             page_num += 1
         return page_num - 1
-
-
-#class ComplexPlate2Force(ScalarObject):  # 64-CQUAD8, 75-CTRIA6, 82-CQUADR
-    #def __init__(self, data_code, is_sort1, isubcase, dt):
-        #ScalarObject.__init__(self, data_code, isubcase)
-        #self.term = {}
-        #self.ngrids = {}
-        #self.mx = {}
-        #self.my = {}
-        #self.mxy = {}
-        #self.bmx = {}
-        #self.bmy = {}
-        #self.bmxy = {}
-        #self.tx = {}
-        #self.ty = {}
-
-        #self.dt = dt
-        #if is_sort1:
-            #if dt is not None:
-                #self.add_new_element = self.addNewElementSort1
-                #self.add = self.add_sort1
-        #else:
-            #assert dt is not None
-            #self.add_new_element = self.addNewElementSort2
-            #self.add = self.add_sort2
-
-    #def get_stats(self):
-        #msg = ['  '] + self.get_data_code()
-        #if self.dt is not None:  # transient
-            #ntimes = len(self.mx)
-            #time0 = get_key0(self.mx)
-            #nelements = len(self.mx[time0])
-            #msg.append('  type=%s ntimes=%s nelements=%s\n'
-                       #% (self.__class__.__name__, ntimes, nelements))
-        #else:
-            #nelements = len(self.mx)
-            #msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
-                                                     #nelements))
-        #msg.append('  term, ngrids, mx, my, mxy, bmx, bmy, bmxy, tx, ty\n')
-        #return msg
-
-    #def add_new_transient(self, dt):
-        #self.dt = dt
-        #self.mx[dt] = {}
-        #self.my[dt] = {}
-        #self.mxy[dt] = {}
-        #self.bmx[dt] = {}
-        #self.bmy[dt] = {}
-        #self.bmxy[dt] = {}
-        #self.tx[dt] = {}
-        #self.ty[dt] = {}
-
-    #def add_new_element(self, eid, dt, data):
-        #[term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty] = data
-        #self.term[eid] = term
-        #self.ngrids[eid] = nid
-        #self.mx[eid] = [mx]
-        #self.my[eid] = [my]
-        #self.mxy[eid] = [mxy]
-        #self.bmx[eid] = [bmx]
-        #self.bmy[eid] = [bmy]
-        #self.bmxy[eid] = [bmxy]
-        #self.tx[eid] = [tx]
-        #self.ty[eid] = [ty]
-
-    #def add(self, eid, dt, data):
-        #[nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty] = data
-        #self.mx[eid].append(mx)
-        #self.my[eid].append(my)
-        #self.mxy[eid].append(mxy)
-        #self.bmx[eid].append(bmx)
-        #self.bmy[eid].append(bmy)
-        #self.bmxy[eid].append(bmxy)
-        #self.tx[eid].append(tx)
-        #self.ty[eid].append(ty)
-
-    #def addNewElementSort1(self, eid, dt, data):
-        #[term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty] = data
-        #if dt not in self.mx:
-            #self.add_new_transient(dt)
-        #self.term[eid] = term
-        #self.ngrids[eid] = nid
-        #self.mx[dt][eid] = [mx]
-        #self.my[dt][eid] = [my]
-        #self.mxy[dt][eid] = [mxy]
-        #self.bmx[dt][eid] = [bmx]
-        #self.bmy[dt][eid] = [bmy]
-        #self.bmxy[dt][eid] = [bmxy]
-        #self.tx[dt][eid] = [tx]
-        #self.ty[dt][eid] = [ty]
-
-    #def add_sort1(self, eid, dt, data):
-        #[nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty] = data
-        #if dt not in self.mx:
-            #self.add_new_transient(dt)
-        #self.mx[dt][eid].append(mx)
-        #self.my[dt][eid].append(my)
-        #self.mxy[dt][eid].append(mxy)
-        #self.bmx[dt][eid].append(bmx)
-        #self.bmy[dt][eid].append(bmy)
-        #self.bmxy[dt][eid].append(bmxy)
-        #self.tx[dt][eid].append(tx)
-        #self.ty[dt][eid].append(ty)
-
-    #def addNewElementSort2(self, dt, eid, data):
-        #[term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty] = data
-        #if dt not in self.mx:
-            #self.add_new_transient(dt)
-        #self.term[eid] = term
-        #self.ngrids[eid] = nid
-
-        #self.mx[dt][eid] = [mx]
-        #self.my[dt][eid] = [my]
-        #self.mxy[dt][eid] = [mxy]
-        #self.bmx[dt][eid] = [bmx]
-        #self.bmy[dt][eid] = [bmy]
-        #self.bmxy[dt][eid] = [bmxy]
-        #self.tx[dt][eid] = [tx]
-        #self.ty[dt][eid] = [ty]
-
-    #def add_sort2(self, dt, eid, data):
-        #[nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty] = data
-        #if dt not in self.mx:
-            #self.add_new_transient(dt)
-        #self.mx[dt][eid].append(mx)
-        #self.my[dt][eid].append(my)
-        #self.mxy[dt][eid].append(mxy)
-        #self.bmx[dt][eid].append(bmx)
-        #self.bmy[dt][eid].append(bmy)
-        #self.bmxy[dt][eid].append(bmxy)
-        #self.tx[dt][eid].append(tx)
-        #self.ty[dt][eid].append(ty)
-
-    #def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
-        #if header is None:
-            #header = []
-        #if self.nonlinear_factor is not None:
-            #return self._write_f06_transient(header, page_stamp, page_num, f, is_mag_phase=is_mag_phase, is_sort1=is_sort1)
-        #f.write('%s write_f06 not implemented...\n' % self.__class__.__name__)
-        ##raise NotImplementedError()
-        ##words = ['                                             A C C E L E R A T I O N   V E C T O R\n',
-        ##       ' \n',
-        ##       '      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
-        ##words += self.getTableMarker()
-        ##return self._writeF06Block(words, header, page_stamp, page_num, f)
-
-    #def _write_f06_transient(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
-        #f.write('%s _write_f06_transient not implemented...\n' % self.__class__.__name__)
-        #return page_num
 
 
 class ComplexPlate2ForceArray(ScalarObject):
@@ -1662,7 +1510,48 @@ class ComplexCBarForceArray(ScalarObject):
         self.data_frame.index.names = ['ElementID', 'Item']
 
     def __eq__(self, table):
-        assert 1 == 2
+        assert self.is_sort1() == table.is_sort1()
+        self._eq_header(table)
+        if not np.array_equal(self.element, table.element):
+            assert self.element.shape == table.element.shape, 'shape=%s element.shape=%s' % (self.element.shape, table.element.shape)
+            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+            msg += '%s\nEid' % str(self.code_information())
+            for eid1, eid2 in zip(self.element, table.element):
+                msg += '%s, %s\n' % (eid1, eid2)
+            print(msg)
+            raise ValueError(msg)
+        if not np.array_equal(self.data, table.data):
+            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+            msg += '%s\n' % str(self.code_information())
+            ntimes = self.data.shape[0]
+
+            i = 0
+            if self.is_sort1():
+                for itime in range(ntimes):
+                    for ieid, eid in enumerate(self.element):
+                        t1 = self.data[itime, ieid, :]
+                        t2 = table.data[itime, ieid, :]
+                        (s1a1, s2a1, s3a1, s4a1, axial1, s2a1, s2b1, s2c1, s2d1) = t1
+                        (s1a2, s2a2, s3a2, s4a2, axial2, s2a2, s2b2, s2c2, s2d2) = t2
+                        #d = t1 - t2
+                        if not allclose([s1a1.real, s2a1.real, s3a1.real, s4a1.real, axial1.real, s2a1.real, s2b1.real, s2c1.real, s2d1.real],
+                                        [s1a2.real, s2a2.real, s3a2.real, s4a2.real, axial2.real, s2a2.real, s2b2.real, s2c2.real, s2d2.real], atol=0.0001):
+                        #if not np.array_equal(t1, t2):
+                            msg += '%-4s  (%s, %s, %s, %s, %s, %s, %s, %s, %s)\n      (%s, %s, %s, %s, %s, %s, %s, %s, %s)\m' % (
+                                eid,
+                                s1a1.real, s2a1.real, s3a1.real, s4a1.real, axial1.real, s2a1.real, s2b1.real, s2c1.real, s2d1.real,
+                                s1a2.real, s2a2.real, s3a2.real, s4a2.real, axial2.real, s2a2.real, s2b2.real, s2c2.real, s2d2.real,
+                                )
+                            i += 1
+                        if i > 10:
+                            print(msg)
+                            raise ValueError(msg)
+            else:
+                raise NotImplementedError(self.is_sort2())
+            if i > 0:
+                print(msg)
+                raise ValueError(msg)
+        return True
 
     def add_sort1(self, dt, eid, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq):
         self._times[self.itime] = dt
@@ -1899,28 +1788,22 @@ class ComplexCBeamForceArray(ScalarObject):
 
     def __eq__(self, table):
         assert self.is_sort1() == table.is_sort1()
-        assert self.nonlinear_factor == table.nonlinear_factor
-        assert self.ntotal == table.ntotal
-        assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
-        assert self.approach_code == table.approach_code
-        if self.nonlinear_factor is not None:
-            assert np.array_equal(self._times, table._times), 'ename=%s-%s times=%s table.times=%s' % (
-                self.element_name, self.element_type, self._times, table._times)
-        if not np.array_equal(self.element, table.element):
-            assert self.element.shape == table.element.shape, 'shape=%s element.shape=%s' % (self.element.shape, table.element.shape)
-            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
-            msg += '%s\n' % str(self.code_information())
-            for eid1, eid2 in zip(self.element, table.element):
-                msg += '%s, %s\n' % (eid1, eid2)
-            print(msg)
-            raise ValueError(msg)
+        self._eq_header(table)
+        #if not np.array_equal(self.element, table.element):
+            #assert self.element.shape == table.element.shape, 'shape=%s element.shape=%s' % (self.element.shape, table.element.shape)
+            #msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+            #msg += '%sEid\n' % str(self.code_information())
+            #for eid1, eid2 in zip(self.element, table.element):
+                #msg += '%s, %s\n' % (eid1, eid2)
+            #print(msg)
+            #raise ValueError(msg)
         if not np.array_equal(self.element_node, table.element_node):
             assert self.element_node.shape == table.element_node.shape, 'shape=%s element_node.shape=%s' % (
                 self.element_node.shape, table.element_node.shape)
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
             for (eid1, nid1), (eid2, nid2) in zip(self.element_node, table.element_node):
-                msg += '%s, %s\n' % (eid1, nid1, eid2, nid2)
+                msg += '(%s, %s), (%s, %s)\n' % (eid1, nid1, eid2, nid2)
             print(msg)
             raise ValueError(msg)
 
@@ -1957,8 +1840,8 @@ class ComplexCBeamForceArray(ScalarObject):
                 raise ValueError(msg)
         return True
 
-    def add_new_element_sort1(self, dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq):
-        return self.add_sort1(dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq)
+    #def add_new_element_sort1(self, dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq):
+        #return self.add_sort1(dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq)
 
     def add_sort1(self, dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq):
         self._times[self.itime] = dt

@@ -487,6 +487,52 @@ class ComplexGridPointForcesArray(ScalarObject):
         #[t1, t2, t3, r1, r2, r3]
         self.data = zeros((self.ntimes, self.ntotal, 6), dtype='complex64')
 
+    def build_dataframe(self):
+        """
+        major-axis - the axis
+
+        mode              1     2   3
+        freq              1.0   2.0 3.0
+        nodeID ElementID Item
+        1      2         T1
+                         T2
+                         ...
+
+        major_axis / top = [
+            [1, 2, 3],
+            [1.0, 2.0, 3.0]
+        ]
+        minor_axis / headers = [T1, T2, T3, R1, R2, R3]
+        name = mode
+        """
+        headers = self.get_headers()
+        #name = self.name
+        if self.is_unique:
+            ntimes = self.data.shape[0]
+            nnodes = self.data.shape[1]
+            nvalues = ntimes * nnodes
+            node_element = self.node_element.reshape((ntimes * nnodes, 2))
+            df1 = pd.DataFrame(node_element)
+            df1.columns = ['NodeID', 'ElementID']
+            df2 = pd.DataFrame(self.element_names[0, :])
+            df2.columns = ['ElementType']
+            df3 = pd.DataFrame(self.data[0])
+            df3.columns = headers
+            self.data_frame = df1.join([df2, df3])
+            #print(self.data_frame)
+        else:
+            node_element = [self.node_element[:, 0], self.node_element[:, 1]]
+            if self.nonlinear_factor is not None:
+                column_names, column_values = self._build_dataframe_transient_header()
+                self.data_frame = pd.Panel(self.data, items=column_values, major_axis=node_element, minor_axis=headers).to_frame()
+                self.data_frame.columns.names = column_names
+                self.data_frame.index.names = ['NodeID', 'ElementID', 'Item']
+            else:
+                self.data_frame = pd.Panel(self.data, major_axis=node_element, minor_axis=headers).to_frame()
+                self.data_frame.columns.names = ['Static']
+                self.data_frame.index.names = ['NodeID', 'ElementID', 'Item']
+            #print(self.data_frame)
+
     def _build_dataframe(self):
         """
         major-axis - the axis

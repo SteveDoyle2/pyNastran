@@ -1732,6 +1732,8 @@ class OES(OP2Common):
                         assert eids.min() > 0, eids.min()
                         assert nids.min() >= 0, nids.min()
                         eids2 = np.vstack([eids] * nnodes_expected).T.ravel()
+                        #nids2 = np.vstack([nids] * nnodes_expected).T.ravel()
+                        #print(nids2)
                         obj.element_node[itotal:itotal2, 0] = eids2
                         obj.element_node[itotal:itotal2, 1] = nids
 
@@ -1911,7 +1913,7 @@ class OES(OP2Common):
                         if self.is_debug_file:
                             self.binary_debug.write('  eid=%i C=[%s]\n' % (eid, ', '.join(['%r' % di for di in out])))
 
-                        obj._add_new_eid('CQUAD4', dt, eid, cen, fd1, sx1, sy1,
+                        obj._add_new_eid(dt, eid, cen, fd1, sx1, sy1,
                                          txy1, angle1, major1, minor1, max_shear1)
                         obj._add(dt, eid, cen, fd2, sx2, sy2, txy2,
                                  angle2, major2, minor2, max_shear2)
@@ -2073,7 +2075,7 @@ class OES(OP2Common):
                 if self.use_vector and is_vectorized:
                     nfields = 17 * nelements
                     nbytes = nfields * 4
-                    istart = obj.itotal
+                    itotal = obj.itotal
                     iend = obj.itotal + nlayers
 
                     itime = obj.itime
@@ -2084,19 +2086,18 @@ class OES(OP2Common):
                         ints2 = ints[:, 1:].reshape(nlayers, 8)
                         assert eids.min() > 0, eids
                         obj._times[obj.itime] = dt
-                        obj.element_node[istart:iend:2, 0] = eids
-                        obj.element_node[istart+1:iend+1:2, 0] = eids
-                        #obj.element_node[istart:iend, 1] = 0
+                        obj.element_node[itotal:iend:2, 0] = eids
+                        obj.element_node[itotal+1:iend+1:2, 0] = eids
+                        #obj.element_node[itotal:iend, 1] = 0
                         #print('obj.element_node\n', obj.element_node)
 
                     floats = fromstring(data, dtype=self.fdtype).reshape(nelements, 17)
                     floats1 = floats[:, 1:].reshape(nlayers, 8)
-                    obj.data[obj.itime, istart:iend, :] = floats1
+                    obj.data[obj.itime, itotal:iend, :] = floats1
                     obj._times[obj.itime] = dt
                     obj.itotal += nlayers
                     n = nbytes
                 else:
-                #if 1:
                     cen = 0 # 'CEN/3'
                     s = Struct(b(self._endian + 'i16f'))
                     for i in range(nelements):
@@ -2109,7 +2110,7 @@ class OES(OP2Common):
                         if self.is_debug_file:
                             self.binary_debug.write('  OES CTRIA3-74 - eid=%i; C=[%s]\n' % (eid, ', '.join(['%r' % di for di in out])))
 
-                        obj._add_new_eid('CTRIA3', dt, eid, cen, fd1, sx1, sy1,
+                        obj._add_new_eid(dt, eid, cen, fd1, sx1, sy1,
                                          txy1, angle1, major1, minor1, vm1)
                         obj._add(dt, eid, cen, fd2, sx2, sy2, txy2,
                                  angle2, major2, minor2, vm2)
@@ -2121,18 +2122,19 @@ class OES(OP2Common):
                 auto_return, is_vectorized = self._create_oes_object4(
                     nelements, result_name, slot, obj_vector_complex)
                 if auto_return:
+                    self._data_factor = 2
                     return nelements * self.num_wide * 4
                 obj = self.obj
 
                 if self.use_vector and is_vectorized:
                     n = nelements * 4 * self.num_wide
                     itotal = obj.itotal
-                    itotal2 = itotal + nelements
+                    itotal2 = itotal + nelements * 2
                     ielement = obj.ielement
                     ielement2 = ielement + nelements
 
                     floats = fromstring(data, dtype=self.fdtype).reshape(nelements, 15)
-                    floats1 = floats[:, 1:].reshape(nelements, 14)
+                    floats1 = floats[:, 1:].reshape(nelements * 2, 7)
                     obj._times[obj.itime] = dt
                     if obj.itime == 0:
                         ints = fromstring(data, dtype=self.idtype).reshape(nelements, 15)
@@ -2142,8 +2144,10 @@ class OES(OP2Common):
                         nids = ints[:, 0]
 
                         assert eids.min() > 0, eids.min()
-                        obj.element_node[itotal:itotal2, 0] = eids
-                        obj.element_node[itotal:itotal2, 1] = nids
+                        eids2 = np.vstack([eids, eids]).T.ravel()
+                        nids2 = np.vstack([nids, nids]).T.ravel()
+                        obj.element_node[itotal:itotal2, 0] = eids2
+                        obj.element_node[itotal:itotal2, 1] = nids2
 
                     #[fd, sxr, sxi, syr, syi, txyr, txyi]
                     isave1 = [1, 3, 5]
@@ -2359,7 +2363,7 @@ class OES(OP2Common):
                         if self.is_debug_file:
                             self.binary_debug.write('  eid=%i; C=[%s]\n' % (eid, ', '.join(['%r' % di for di in out])))
 
-                        obj._add_new_eid(etype, dt, eid, grid_center, fd1, sx1, sy1,
+                        obj._add_new_eid(dt, eid, grid_center, fd1, sx1, sy1,
                                          txy1, angle1, major1, minor1, vm1)
                         obj._add(dt, eid, grid_center, fd2, sx2, sy2, txy2,
                                  angle2, major2, minor2, vm2)

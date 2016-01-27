@@ -35,10 +35,20 @@ class BaseScalarObject(Op2Codes):
         #assert isinstance(self.name, (text_type, binary_type)), 'name=%s type=%s' % (self.name, type(self.name))
 
     def __eq__(self, table):
-        return True
+        self._eq_header(table)
+        return False
 
     def __ne__(self, table):
         return not self == table
+
+    def _eq_header(self, table):
+        assert self.nonlinear_factor == table.nonlinear_factor
+        assert self.ntotal == table.ntotal
+        assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
+        assert self.approach_code == table.approach_code
+        if self.nonlinear_factor is not None:
+            assert np.array_equal(self._times, table._times), 'ename=%s-%s times=%s table.times=%s' % (
+                self.element_name, self.element_type, self._times, table._times)
 
     @property
     def class_name(self):
