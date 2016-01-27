@@ -539,7 +539,12 @@ class OP2(OP2_Scalar):
                         if isubcase == case_key and case_key not in subcase_key2[isubcase]:
                             subcase_key2[isubcase] = [isubcase]
                     else:
-                        subcasei = case_key[0]
+                        try:
+                            subcasei = case_key[0]
+                        except IndexError:
+                            msg = 'case_key=%s; type(case_key)=%s; case_key[0] is not the subcase id' % (
+                                case_key, type(case_key))
+                            raise IndexError(msg)
                         #if not subcasei == isubcase:
                             #continue
                         if case_key not in subcase_key2[subcasei]:
