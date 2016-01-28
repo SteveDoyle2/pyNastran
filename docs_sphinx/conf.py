@@ -204,7 +204,7 @@ pygments_style = 'sphinx'
 # a list of builtin themes.
 if on_rtd:
     #html_theme = 'default'
-    html_theme = 'napoleon'
+    html_theme = 'sphinx_rtd_theme'
 else:
     # old
     #html_theme = 'napoleon' # classic/alabaster/numpydoc/napolean
@@ -212,7 +212,9 @@ else:
     #extensions = ['sphinx.ext.autodoc', 'sphinxcontrib.napoleon']
 
     # new
-    html_theme = 'alabaster' # classic/alabaster/numpydoc/napolean
+    # napolean is now called sphinx_rtd_theme
+
+    html_theme = 'sphinx_rtd_theme' # classic/alabaster/numpydoc/sphinx_rtd_theme
     # napolean handles mixed sphinx (alabaster) and numpydoc docstring formats
 
 # Theme options are theme-specific and customize the look and feel of a theme

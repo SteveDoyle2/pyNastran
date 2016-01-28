@@ -7,4 +7,5 @@ pyNastran Manual
    Installation
    bdf
    op2
+   gui
 

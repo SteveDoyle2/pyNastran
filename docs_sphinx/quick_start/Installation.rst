@@ -48,7 +48,8 @@ PyNastran's package requirements are tested with packages no older than 1 year a
 
 Download pyNastran
 ------------------
- * Click the downloads page and download the most recent `\*.zip version <https://github.com/SteveDoyle2/pynastran/archive/master.zip>`_ or [clone](github-windows://openRepo/https://github.com/SteveDoyle2/pynastran) it using Git.
+
+ * Click the downloads page and download the most recent `zip version <https://github.com/SteveDoyle2/pynastran/archive/master.zip>`_ or `clone <github-windows://openRepo/https://github.com/SteveDoyle2/pynastran>`_ it using Git.  Using Git allows you to easily update to the latest dev version when you want to as well as push any commits of your own.
 
 
 Install pyNastran
