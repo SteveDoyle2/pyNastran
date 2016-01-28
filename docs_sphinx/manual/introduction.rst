@@ -3,13 +3,13 @@ Brief Project Overview
 ========================
 
 Since the 1960's `NASTRAN <http://en.wikipedia.org/wiki/Nastran>`_ (NASA
-Structural ANalysis) has been used to solve
-structural/thermal/aerodynamic/dynamics/etc. problems.  The file formats were
-originally developed by MSC for a product now called MSC Nastran.  There have
-been many spinoff version of NASTRAN that have been created based on the 2001
-source code release of MSC Nastran in 2002 after settlement with the FTC
-(Federal Trade Commisson).  There is now NX Nastran and NEi Nastran, which are
-developed independently.
+Structural ANalysis) has been used to solve structural, thermal, aerodynamic, 
+dynamics, etc. problems.  The file formats were originally developed by MSC 
+for a product now called MSC Nastran.  There have been many spinoff version 
+of NASTRAN that have been created based on the 2001 source code release of 
+MSC Nastran in 2002 after settlement with the FTC (Federal Trade Commisson).
+There is now NX Nastran and NEi Nastran, which are developed independently as well
+as the 1995 Natran `source code <https://github.com/nasa/NASTRAN-95>`_.
 
 :mod:`pyNastran` is at it's core an API (Application Programming Interface) to
 the legacy formats used by Nastran.  These files include the BDF, F06, OP2, OP4,
@@ -41,8 +41,4 @@ However, for convenience, it's still good to document variables.
 <http://www.mathworks.com/products/matlab/>`_, a matrix based programming
 language, and typically has little experience with general programming.  There
 are also users that know Python, but have never used a class or a dictionary,
-which makes an API seems complicated.  Additionally, while not difficult to
-build, the `Cython <http://www.cython.org/>`_ OP4 reader, which requires a C
-compiler, has been a source of frustration for many users.  That said, most
-operations should be relatively easy to accomplish.
-
+which makes an API seems complicated.  As such, it needs to be kept simple.

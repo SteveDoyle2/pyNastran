@@ -104,7 +104,7 @@ def create_rst_from_python_files():
         print(fname1)
         print(fname2)
         shutil.copyfile(fname1, fname2)
-
+    return
     fnames = [
         os.path.join('py_docs', fname) for fname in os.listdir('py_docs')
         if '__init__' not in fname
