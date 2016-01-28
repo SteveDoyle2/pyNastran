@@ -28,6 +28,13 @@ except ImportError:
 #gui - just tests the imports
 #import pyNastran.gui.gui
 
+import pyNastran
+pkg_path = pyNastran.__path__[0]
+manual_path = os.path.join(pkg_path, '..', 'docs_sphinx', 'manual') # , 'py_to_rst.py'
+sys.path.append(manual_path)
+
+from py_to_rst import create_rst_from_python_files
+#create_rst_from_python_files()
 
 if __name__ == "__main__":
     import unittest

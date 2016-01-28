@@ -3,6 +3,10 @@ import os
 import shutil
 from importlib import import_module
 
+import pyNastran
+from pyNastran.utils import print_bad_path
+pkg_path = pyNastran.__path__[0]
+
 class Section(object):
     def __init__(self, func_name):
         if 'def ' in func_name:
@@ -87,20 +91,29 @@ def create_html_from_rst(rst_filename, html_filename):
     destination.close()
 
 
-def main():
-    pydocs_dir = os.path.join('..', '..', 'quick_start', 'py_docs')
-    if not os.path.exists('py_docs'):
-        os.makedirs('py_docs')
+def create_rst_from_python_files():
+    quick_start_pydocs_dir = os.path.join(pkg_path, '..', 'quick_start', 'py_docs')
+    pydocs_dir = os.path.join(pkg_path, '..', 'docs_sphinx', 'manual', 'py_docs')
+    if not os.path.exists(pydocs_dir):
+        os.makedirs(pydocs_dir)
 
-    for fname in os.listdir(pydocs_dir):
-        shutil.copyfile(os.path.join(pydocs_dir, fname), os.path.join('py_docs', fname))
+    assert os.path.exists(quick_start_pydocs_dir), print_bad_path(quick_start_pydocs_dir)
+    for fname in os.listdir(quick_start_pydocs_dir):
+        fname1 = os.path.join(quick_start_pydocs_dir, fname)
+        fname2 = os.path.join(pydocs_dir, fname)
+        print(fname1)
+        print(fname2)
+        shutil.copyfile(fname1, fname2)
 
-    fnames = [os.path.join('py_docs', fname) for fname in os.listdir('py_docs')
-              if '__init__' not in fname
-              and fname.endswith('.py')
-              #and not fname.endswith('.pyc')
-              #and not fname.endswith('.rst')
-              ]
+    fnames = [
+        os.path.join('py_docs', fname) for fname in os.listdir('py_docs')
+        if '__init__' not in fname
+        and fname.endswith('.py')
+        and not fname.endswith('.pyc')
+        and not fname.endswith('.html')
+        and not fname.endswith('.txt')
+        #and not fname.endswith('.rst')
+    ]
 
     print(fnames)
     for py_filename in fnames:
@@ -113,6 +126,8 @@ def main():
         #print(py_filename)
         create_rst_from_python(py_filename, rst_filename)
         create_html_from_rst(rst_filename, html_filename)
+
+    print(os.path.abspath(py_filename))
     for py_filename in fnames:
         root = os.path.splitext(py_filename)[0]
         base = os.path.splitext(os.path.basename(py_filename))[0]
@@ -256,5 +271,5 @@ def create_rst_from_python(py_filename, rst_filename, debug=False):
         rst.write(str(section))
 
 if __name__ == '__main__':
-    main()
+    create_rst_from_python_files()
 
