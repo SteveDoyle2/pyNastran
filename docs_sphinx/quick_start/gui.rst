@@ -3,15 +3,18 @@ Graphical User Interface (GUI)
 
 Setup Note
 ----------
-`Installation Guide <https://github.com/SteveDoyle2/pyNastran/wiki/Installation>`_
-Download the entire package from Github or just the `GUI <https://sourceforge.net/projects/pynastran/files/?source=navbar/>`_ executable.
+Download the entire package from Github or just the `GUI 
+<https://sourceforge.net/projects/pynastran/files/?source=navbar/>`_ executable.
 
-If you download the source (either v0.7.2 or v0.8-dev/masterr), make sure you follow the `Installation Guide <https://github.com/SteveDoyle2/pyNastran/wiki/Installation>`_ and use **setup.py develop** and not **setup.py install**.
+If you download the source, make sure you follow the `Installation Guide 
+<https://github.com/SteveDoyle2/pyNastran/wiki/Installation>`_ and use 
+**setup.py develop** and not **setup.py install**.
 
-If you're using Python 3.x, the GUI will **not** work because `VTK <http://www.vtk.org/Wiki/VTK/Python_Wrapping_FAQ>`_ does not support Python 3.
+If you're using Python 3.x, the GUI will **not** work because 
+`VTK <http://www.vtk.org/Wiki/VTK/Python_Wrapping_FAQ>`_ does not support Python 3.
 
 Introduction
-============
+------------
 
 The Graphical User Interface (GUI) looks like:
 
@@ -20,7 +23,7 @@ The Graphical User Interface (GUI) looks like:
 The GUI also has a sidebar and transient support.
 
 Running the GUI
-===============
+---------------
 On the command line:
 
 .. code-block:: console
@@ -37,23 +40,24 @@ To view the options:
                     [-s SHOT] [-m MAGNIFY]
                     [-g GSCRIPT] [-p PSCRIPT]
                     [-u POINTS_FNAME...]
-                    [-q]
+                    [-c][-q]
     pyNastranGUI -h | --help
     pyNastranGUI -v | --version
-
+  
   Options:
-    -h, --help                        show this help message and exit
+    -h, --help                  show this help message and exit
     -f FORMAT, --format FORMAT  format type (cart3d, lawgs, nastran, panair,
                                              plot3d, stl, tetgen, usm3d)
-    -i INPUT, --input INPUT           path to input file
-    -o OUTPUT, --output OUTPUT        path to output file
+    -i INPUT, --input INPUT     path to input file
+    -o OUTPUT, --output OUTPUT  path to output file
+    -c, --console               disable HTML console output
     -g GSCRIPT, --geomscript GSCRIPT  path to geometry script file (runs before load geometry)
     -p PSCRIPT, --postscript PSCRIPT  path to post script file (runs after load geometry)
-    -s SHOT, --shots SHOT             path to screenshot (only 1 for now)
-    -m MAGNIFY, --magnify             how much should the resolution on a picture be magnified (default=1)
-    -u POINTS_FNAME, --user_points POINTS_FNAME  add user specified points to an alternate grid (repeatable)
-    -q, --quiet                       prints debug messages (default=True)
-    -v, --version                     show program's version number and exit
+    -s SHOT, --shots SHOT       path to screenshot (only 1 for now)
+    -m MAGNIFY, --magnify       how much should the resolution on a picture be magnified [default: 5]
+    -u POINTS_FNAME, --user_points POINTS_FNAME               add user specified points to an alternate grid (repeatable)
+    -q, --quiet                 prints debug messages (default=True)
+    -v, --version               show program's version number and exit
 
 
 The standard way to run the code:
@@ -62,7 +66,9 @@ The standard way to run the code:
 
   >>> pyNastranGUI -f nastran -i model.bdf -o model1.op2 -o model2.op2
 
-The **solid_bending.bdf** and **solid_bending.op2** files have been included as examples that work in the GUI.  They are inside the "models" folder (at the same level as setup.py).
+The **solid_bending.bdf** and **solid_bending.op2** files have been included 
+as examples that work in the GUI.  They are inside the "models" folder
+(at the same level as setup.py).
 
 Features
 --------
@@ -81,10 +87,12 @@ New Features
  * attach multiple OP2 files
  * displacement/eigenvectors now shown as a deformation (real)
  * SPC/MPC/RBE constraints are viewable
-   * can edit properties (e.g. color/opacity/size) using ``Edit Geometry Properties...`` on the ``View`` menu
+   * can edit properties (e.g. color/opacity/size) using 
+     ``Edit Geometry Properties...`` on the ``View`` menu
    * additional points may be added with the ``-u`` option
    * bar/beam element orientation vectors
- * attach custom CSV (comma-delimited) or .txt (space/tab-delimited) files as either node-based or element-based results
+ * attach custom CSV (comma-delimited) or .txt (space/tab-delimited) files as
+   either node-based or element-based results
  * legend is more robust
  * clipping customization menu
  * save view menu
@@ -107,11 +115,15 @@ Supported Elements
 BDF Requirements
 ----------------
  * Entire model can be cross-referenced
- * Same requirements as BDF (include an executive/case control deck, define all cross-referenced cards, etc.)
+ * Same requirements as BDF (include an executive/case control deck, define
+   all cross-referenced cards, etc.)
 
 Scripting
 ---------
-GUI commands are logged to the window with their call signature.  Users may then use a custom Python script to take many pictures, show the sub-caero panels, etc.  A sample CAERO script that shows individual CAERO subpanels (instead of just the outline of the CAERO panel) is provided with the download.
+GUI commands are logged to the window with their call signature.  Users may 
+then use a custom Python script to take many pictures, show the sub-caero
+panels, etc.  A sample CAERO script that shows individual CAERO subpanels
+(instead of just the outline of the CAERO panel) is provided with the download.
 
 For example, a model with CAERO elements:
 
@@ -135,7 +147,10 @@ which creates:
 
 .. image:: ../../pyNastran/gui/caero_subpanels.png
 
-Scripting may be used to call any function in the GUI class.  This includes dynamically loading geometry/results, changing results, taking screenshots, rotating the model, etc.  Most of these commands are written to the ``COMMAND`` output.
+Scripting may be used to call any function in the GUI class.  This includes 
+dynamically loading geometry/results, changing results, taking screenshots, 
+rotating the model, etc.  Most of these commands are written to the 
+``COMMAND`` output.
 
 Versioning Note
 ^^^^^^^^^^^^^^^
@@ -184,11 +199,22 @@ The following results are supported:
 
 Graphical Issues
 ^^^^^^^^^^^^^^^^
-You'll have the best performance if you run the GUI on Windows with an new NVIDIA graphics card and on a desktop.
+You'll have the best performance if you run the GUI on Windows with an new 
+NVIDIA graphics card and on a desktop.
 
-If you're having issues, you should update the driver for your graphics card, especially if you have a laptop or Radeon card. For a desktop machine, go to the web site of the manufacturer of the graphics card. For a laptop, you should normally go to the web site of the laptop manufacturer, though for NVIDIA you may now find a newer driver available from NVIDIA.
+If you're having issues, you should update the driver for your graphics card, 
+especially if you have a laptop or Radeon card. For a desktop machine, go to 
+the web site of the manufacturer of the graphics card. For a laptop, you should
+normally go to the web site of the laptop manufacturer, though for NVIDIA you 
+may now find a newer driver available from NVIDIA.
 
 Issues include:
   1. the backfaces of elements not being colored
   2. the GUI not working
 
+Application Log Dislay
+^^^^^^^^^^^^^^^^^^^^^^
+It's possible that the Application Log will not be visible.  This is a PyQt4
+install issue.  Reinstalling may fix the problem, but using one of the
+recommended distributions is both the easiest and most reliable way to fix
+this problem.

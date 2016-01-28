@@ -327,6 +327,8 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
         #op2a.get_op2_stats()
         if quiet:
             op2.get_op2_stats()
+            op2.object_attributes()
+            op2.object_methods()
         else:
             print("---stats for %s---" % op2_filename)
             print(op2.get_op2_stats(short=short_stats))

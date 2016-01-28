@@ -8,6 +8,7 @@ import numpy as np
 
 from pyNastran import is_release
 from pyNastran.op2.op2Codes import Op2Codes
+from pyNastran.utils import object_attributes, object_methods
 
 #from pyNastran.utils import list_print
 #from pyNastran.op2.write_utils import write_table_header
@@ -33,6 +34,25 @@ class BaseScalarObject(Op2Codes):
         #self.ntimes = 0
         #self.ntotal = 0
         #assert isinstance(self.name, (text_type, binary_type)), 'name=%s type=%s' % (self.name, type(self.name))
+
+    def object_attributes(self, mode='public', keys_to_skip=None):
+        if keys_to_skip is None:
+            keys_to_skip = []
+
+        my_keys_to_skip = [
+            'object_methods', 'object_attributes',
+        ]
+        return object_attributes(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
+
+    def object_methods(self, mode='public', keys_to_skip=None):
+        if keys_to_skip is None:
+            keys_to_skip = []
+        my_keys_to_skip = []
+
+        my_keys_to_skip = [
+            'object_methods', 'object_attributes',
+        ]
+        return object_methods(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
 
     def __eq__(self, table):
         self._eq_header(table)

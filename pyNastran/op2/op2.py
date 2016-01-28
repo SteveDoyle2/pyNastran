@@ -200,13 +200,24 @@ class OP2(OP2_Scalar):
         OP2_Scalar.__init__(self, debug=debug, log=log, debug_file=debug_file)
         self.ask = False
 
-    @property
-    def object_attributes(self):
-        return object_attributes(self, keys_to_skip=['object_attributes', 'object_methods'])
+    def object_attributes(self, mode='public', keys_to_skip=None):
+        if keys_to_skip is None:
+            keys_to_skip = []
 
-    @property
-    def object_methods(self):
-        return object_methods(self, keys_to_skip=['object_attributes', 'object_methods'])
+        my_keys_to_skip = [
+            'object_methods', 'object_attributes',
+        ]
+        return object_attributes(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
+
+    def object_methods(self, mode='public', keys_to_skip=None):
+        if keys_to_skip is None:
+            keys_to_skip = []
+        my_keys_to_skip = []
+
+        my_keys_to_skip = [
+            'object_methods', 'object_attributes',
+        ]
+        return object_methods(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
 
     def __eq__(self, op2_model):
         if not self.read_mode == op2_model.read_mode:
@@ -379,10 +390,12 @@ class OP2(OP2_Scalar):
             for obj in itervalues(result):
                 class_name = obj.__class__.__name__
                 #print('working on %s' % class_name)
+                obj.object_attributes()
+                obj.object_methods()
                 i += 1
                 if class_name in no_sort2_classes:
                     try:
-                        obj.build_dataframe()
+                        obj.object_methods()
                     except:
                         self.log.error('build_dataframe is broken for %s' % class_name)
                         raise

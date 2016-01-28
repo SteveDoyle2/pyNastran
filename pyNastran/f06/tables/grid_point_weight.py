@@ -4,6 +4,8 @@ defines the GridPointWeight class
 from __future__ import print_function
 from six.moves import range
 from numpy import zeros
+from pyNastran.utils import object_attributes, object_methods
+
 
 class GridPointWeight(object):
     def __init__(self):
@@ -65,6 +67,25 @@ class GridPointWeight(object):
         # Q is the coordinate transformation between the S axes and the Q axes. IBAR(S) is the
         # same as I(s) except that the signs of the offdiagonal terms are reversed.
         self.Q = None
+
+    def object_attributes(self, mode='public', keys_to_skip=None):
+        if keys_to_skip is None:
+            keys_to_skip = []
+
+        my_keys_to_skip = [
+            'object_methods', 'object_attributes',
+        ]
+        return object_attributes(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
+
+    def object_methods(self, mode='public', keys_to_skip=None):
+        if keys_to_skip is None:
+            keys_to_skip = []
+        my_keys_to_skip = []
+
+        my_keys_to_skip = [
+            'object_methods', 'object_attributes',
+        ]
+        return object_methods(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
 
     def set_grid_point_weight(self, reference_point, MO, S, mass, cg, IS, IQ, Q):
         self.reference_point = reference_point

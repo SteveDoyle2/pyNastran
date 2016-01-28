@@ -1,6 +1,18 @@
 #import warnings
 #warnings.filterwarnings('ignore', 'missing __init__.py*')
 
+import sys
+import os
+import pyNastran
+pkg_path = pyNastran.__path__[0]
+manual_path = os.path.abspath(os.path.join(pkg_path, '..', 'docs_sphinx', 'manual')) # , 'py_to_rst.py'
+sys.path.append(manual_path)
+
+#print(sys.path)
+from notebook_to_markdown import create_rst_from_ipython_notebooks
+create_rst_from_ipython_notebooks()
+
+
 #bdf
 from pyNastran.bdf.test.all_tests import *
 
@@ -26,15 +38,7 @@ except ImportError:
     pass
 
 #gui - just tests the imports
-#import pyNastran.gui.gui
-
-import pyNastran
-pkg_path = pyNastran.__path__[0]
-manual_path = os.path.join(pkg_path, '..', 'docs_sphinx', 'manual') # , 'py_to_rst.py'
-sys.path.append(manual_path)
-
-from py_to_rst import create_rst_from_python_files
-#create_rst_from_python_files()
+import pyNastran.gui.gui
 
 if __name__ == "__main__":
     import unittest
