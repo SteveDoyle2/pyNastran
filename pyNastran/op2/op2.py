@@ -128,6 +128,7 @@ def read_op2(op2_filename=None, combine=True,
              skip_undefined_matrices=True, mode='msc'):
     """
     Creates the OP2 object without calling the OP2 class.
+
     Parameters
     ----------
     op2_filename : str (default=None -> popup)
