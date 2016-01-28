@@ -16,6 +16,9 @@ from pyNastran.bdf.test.unit.test_sum_loads import *
 
 
 if __name__ == "__main__":  # pragma: no cover
+    import os
     import unittest
-    unittest.main()
+    on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
+    if on_rtd:
+        unittest.main()
 

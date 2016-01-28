@@ -889,4 +889,6 @@ class TestOP2(Tester):
 
 
 if __name__ == '__main__':  # pragma: no cover
-    unittest.main()
+    on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
+    if not on_rtd:
+        unittest.main()
