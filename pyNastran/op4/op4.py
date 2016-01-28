@@ -1568,5 +1568,5 @@ def main():
     print("done")
     print("-----------------------------")
 
-if __name__ == '__main__':  # pragma: no cover
-    main()
+#if __name__ == '__main__':  # pragma: no cover
+#    main()
