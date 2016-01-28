@@ -74,21 +74,22 @@ MOCK_MODULES = [#'numpy', 'numpy.linalg','numpy.__version__',
 
 # requires the mock module in Python 2.x
 # pip install mock
-from six import PY2
-if PY2:
-    from mock import MagicMock
-else:
-    from unittest.mock import MagicMock
+load_mock = False
+if load_mock:
+    from six import PY2
+    if PY2:
+        from mock import MagicMock
+    else:
+        from unittest.mock import MagicMock
 
-class Mock(MagicMock):
-    @classmethod
-    def __getattr__(cls, name):
-            if name in ['__path__', 'pi', '_string', '__get__', '__set__']:
+    class Mock(MagicMock):
+        @classmethod
+        def __getattr__(cls, name):
+                if name in ['__path__', 'pi', '_string', '__get__', '__set__']:
+                    return Mock()
+                print('MOCK cls=%r name=%r' % (cls, name))
                 return Mock()
-            print('MOCK cls=%r name=%r' % (cls, name))
-            return Mock()
-
-sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
+    sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 
 if 0:
     class Mock(object):
@@ -205,7 +206,13 @@ if on_rtd:
     #html_theme = 'default'
     html_theme = 'napoleon'
 else:
-    html_theme = 'napoleon' # classic/alabaster/numpydoc/napolean
+    # old
+    #html_theme = 'napoleon' # classic/alabaster/numpydoc/napolean
+
+    #extensions = ['sphinx.ext.autodoc', 'sphinxcontrib.napoleon']
+
+    # new
+    html_theme = 'alabaster' # classic/alabaster/numpydoc/napolean
     # napolean handles mixed sphinx (alabaster) and numpydoc docstring formats
 
 # Theme options are theme-specific and customize the look and feel of a theme
