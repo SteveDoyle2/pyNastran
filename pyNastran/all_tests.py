@@ -38,9 +38,9 @@ except ImportError:
     pass
 
 #gui - just tests the imports
-on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
-if not on_rtd:
-    import pyNastran.gui.gui
+#on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
+#if not on_rtd:
+#    import pyNastran.gui.gui
 
 if __name__ == "__main__":
     import unittest
