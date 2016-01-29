@@ -118,7 +118,7 @@ from pyNastran.bdf.cards.bdf_tables import (TABLED1, TABLED2, TABLED3, TABLED4,
                                             DTABLE)
 from pyNastran.bdf.cards.contact import BCRPARA, BCTADD, BCTSET, BSURF, BSURFS, BCTPARA
 from pyNastran.bdf.case_control_deck import CaseControlDeck
-from pyNastran.bdf.bdf_Methods import BDFMethods
+from pyNastran.bdf.bdf_methods import BDFMethods
 from pyNastran.bdf.bdfInterface.get_card import GetMethods
 from pyNastran.bdf.bdfInterface.add_card import AddMethods
 from pyNastran.bdf.bdfInterface.bdf_card import BDFCard
