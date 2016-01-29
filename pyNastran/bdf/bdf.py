@@ -77,19 +77,19 @@ from pyNastran.bdf.cards.aero import (AECOMP, AEFACT, AELINK, AELIST, AEPARM, AE
 from pyNastran.bdf.cards.constraints import (SPC, SPCADD, SPCAX, SPC1,
                                              MPC, MPCADD, SUPORT1, SUPORT, SESUP,
                                              GMSPC)
-from pyNastran.bdf.cards.coordinateSystems import (CORD1R, CORD1C, CORD1S,
-                                                   CORD2R, CORD2C, CORD2S, CORD3G,
-                                                   GMCORD)
+from pyNastran.bdf.cards.coordinate_systems import (CORD1R, CORD1C, CORD1S,
+                                                    CORD2R, CORD2C, CORD2S, CORD3G,
+                                                    GMCORD)
 from pyNastran.bdf.cards.dmig import DMIG, DMI, DMIJ, DMIK, DMIJI
 from pyNastran.bdf.cards.deqatn import DEQATN
 from pyNastran.bdf.cards.dynamic import (DELAY, DPHASE, FREQ, FREQ1, FREQ2, FREQ4, TSTEP,
                                          TSTEPNL, NLPARM, NLPCI, TF)
 from pyNastran.bdf.cards.loads.loads import LSEQ, SLOAD, DAREA, RANDPS, RFORCE, SPCD
 from pyNastran.bdf.cards.loads.dloads import DLOAD, TLOAD1, TLOAD2, RLOAD1, RLOAD2
-from pyNastran.bdf.cards.loads.staticLoads import (LOAD, GRAV, ACCEL, ACCEL1, FORCE,
-                                                   FORCE1, FORCE2, MOMENT, MOMENT1, MOMENT2,
-                                                   PLOAD, PLOAD1, PLOAD2, PLOAD4, PLOADX1,
-                                                   GMLOAD)
+from pyNastran.bdf.cards.loads.static_loads import (LOAD, GRAV, ACCEL, ACCEL1, FORCE,
+                                                    FORCE1, FORCE2, MOMENT, MOMENT1, MOMENT2,
+                                                    PLOAD, PLOAD1, PLOAD2, PLOAD4, PLOADX1,
+                                                    GMLOAD)
 
 from pyNastran.bdf.cards.materials import (MAT1, MAT2, MAT3, MAT4, MAT5,
                                            MAT8, MAT9, MAT10, MAT11,
@@ -117,12 +117,12 @@ from pyNastran.bdf.cards.bdf_tables import (TABLED1, TABLED2, TABLED3, TABLED4,
                                             TABLES1, TABDMP1, TABLEST, TABRND1, TABRNDG, TIC,
                                             DTABLE)
 from pyNastran.bdf.cards.contact import BCRPARA, BCTADD, BCTSET, BSURF, BSURFS, BCTPARA
-from pyNastran.bdf.caseControlDeck import CaseControlDeck
+from pyNastran.bdf.case_control_deck import CaseControlDeck
 from pyNastran.bdf.bdf_Methods import BDFMethods
 from pyNastran.bdf.bdfInterface.get_card import GetMethods
 from pyNastran.bdf.bdfInterface.add_card import AddMethods
 from pyNastran.bdf.bdfInterface.bdf_card import BDFCard
-from pyNastran.bdf.bdfInterface.bdf_write_mesh import WriteMesh
+from pyNastran.bdf.bdfInterface.write_mesh import WriteMesh
 from pyNastran.bdf.bdfInterface.cross_reference import XrefMesh
 from pyNastran.bdf.errors import CrossReferenceError, DuplicateIDsError, CardParseSyntaxError
 from pyNastran.bdf.field_writer_16 import print_field_16

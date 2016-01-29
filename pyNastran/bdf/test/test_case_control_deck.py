@@ -6,7 +6,7 @@ import unittest
 
 import pyNastran
 from pyNastran.bdf.bdf import BDF
-from pyNastran.bdf.caseControlDeck import CaseControlDeck
+from pyNastran.bdf.case_control_deck import CaseControlDeck
 from pyNastran.bdf.subcase import write_set, collapse_thru_packs
 from codecs import open as codec_open
 

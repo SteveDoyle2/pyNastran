@@ -14,7 +14,7 @@ import scipy
 
 from pyNastran.utils import integer_types
 from pyNastran.bdf.bdf import BDF
-#from pyNastran.bdf.cards.baseCard import expand_thru
+#from pyNastran.bdf.cards.base_card import expand_thru
 from pyNastran.utils import object_attributes
 
 

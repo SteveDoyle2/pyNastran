@@ -7,7 +7,7 @@ from six import string_types, iteritems, PY2
 from numpy import ndarray
 
 from pyNastran.utils import integer_types
-from pyNastran.bdf.cards.baseCard import collapse_thru_packs, deprecated
+from pyNastran.bdf.cards.base_card import collapse_thru_packs, deprecated
 
 int_cards = (
     # these are cards that look like:
