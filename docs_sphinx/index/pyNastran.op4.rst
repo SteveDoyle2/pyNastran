@@ -12,17 +12,6 @@ op4 Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`test_loadop4` Module
---------------------------
-
-.. inheritance-diagram:: pyNastran.op4.test_loadop4
-
-.. automodule:: pyNastran.op4.test_loadop4
-    :members:
-    :private-members:
-    :undoc-members:
-    :show-inheritance:
-
 
 .. toctree::
 
