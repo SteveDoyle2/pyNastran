@@ -14,12 +14,12 @@ This is the pyNastran.bdf.rst file.
     :undoc-members:
     :show-inheritance:
 
-:mod:`bdf_Methods` Module
+:mod:`bdf_methods` Module
 -------------------------
 
-.. inheritance-diagram:: pyNastran.bdf.bdf_Methods
+.. inheritance-diagram:: pyNastran.bdf.bdf_methods
 
-.. automodule:: pyNastran.bdf.bdf_Methods
+.. automodule:: pyNastran.bdf.bdf_methods
     :members:
     :private-members:
     :undoc-members:
@@ -36,12 +36,12 @@ This is the pyNastran.bdf.rst file.
     :undoc-members:
     :show-inheritance:
 
-:mod:`caseControlDeck` Module
+:mod:`case_control_deck` Module
 -----------------------------
 
-.. inheritance-diagram:: pyNastran.bdf.caseControlDeck
+.. inheritance-diagram:: pyNastran.bdf.case_control_deck
 
-.. automodule:: pyNastran.bdf.caseControlDeck
+.. automodule:: pyNastran.bdf.case_control_deck
     :members:
     :private-members:
     :undoc-members:

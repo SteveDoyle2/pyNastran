@@ -1,12 +1,12 @@
 bdfInterface Package
 ====================
 
-:mod:`addCard` Module
+:mod:`add_card` Module
 ---------------------
 
-.. inheritance-diagram:: pyNastran.bdf.bdfInterface.addCard
+.. inheritance-diagram:: pyNastran.bdf.bdfInterface.add_card
 
-.. automodule:: pyNastran.bdf.bdfInterface.addCard
+.. automodule:: pyNastran.bdf.bdfInterface.add_card
     :members:
     :private-members:
     :undoc-members:
@@ -23,45 +23,45 @@ bdfInterface Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`BDF_Card` Module
+:mod:`bdf_card` Module
 ----------------------
 
-.. inheritance-diagram:: pyNastran.bdf.bdfInterface.BDF_Card
+.. inheritance-diagram:: pyNastran.bdf.bdfInterface.bdf_card
 
-.. automodule:: pyNastran.bdf.bdfInterface.BDF_Card
+.. automodule:: pyNastran.bdf.bdfInterface.bdf_card
     :members:
     :private-members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`bdf_writeMesh` Module
+:mod:`write_mesh` Module
 ---------------------------
 
-.. inheritance-diagram:: pyNastran.bdf.bdfInterface.bdf_writeMesh
+.. inheritance-diagram:: pyNastran.bdf.bdfInterface.write_mesh
 
-.. automodule:: pyNastran.bdf.bdfInterface.bdf_writeMesh
+.. automodule:: pyNastran.bdf.bdfInterface.write_mesh
     :members:
     :private-members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`crossReference` Module
+:mod:`cross_reference` Module
 ----------------------------
 
-.. inheritance-diagram:: pyNastran.bdf.bdfInterface.crossReference
+.. inheritance-diagram:: pyNastran.bdf.bdfInterface.cross_reference
 
-.. automodule:: pyNastran.bdf.bdfInterface.crossReference
+.. automodule:: pyNastran.bdf.bdfInterface.cross_reference
     :members:
     :private-members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`getCard` Module
+:mod:`get_card` Module
 ---------------------
 
-.. inheritance-diagram:: pyNastran.bdf.bdfInterface.getCard
+.. inheritance-diagram:: pyNastran.bdf.bdfInterface.get_card
 
-.. automodule:: pyNastran.bdf.bdfInterface.getCard
+.. automodule:: pyNastran.bdf.bdfInterface.get_card
     :members:
     :private-members:
     :undoc-members:
