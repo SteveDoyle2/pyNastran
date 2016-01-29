@@ -51,8 +51,8 @@ The following packages are required.
 
 PyNastran's package requirements are tested with packages no older than 1 year
 at the time of release.  If you require an older version, try changing version
-requirements in `setup.py`.  It shouldn't be that different, but pyNastran does
-make use of numpy's "new" axis option in `numpy.linalg.norm` and there was a
+requirements in ``setup.py``.  It shouldn't be that different, but pyNastran does
+make use of numpy's "new" axis option in ``numpy.linalg.norm`` and there was a
 major bug fix in Python 2.7.8, so buyer beware.
 
 Download pyNastran
@@ -73,15 +73,15 @@ Install pyNastran
  * Either run...
    1. Able to edit the source code and have the changes propogate
 
-    ``
-    >>> python setup.py develop
-    ``
+    .. code-block:: console
+
+      >>> python setup.py develop
 
    2. Changes will not propogate
 
-    ``
-    >>> python setup.py install
-    ``
+    .. code-block:: console
+
+      >>> python setup.py install
 
 If you don't want the gui, use ``setup_no_gui.py`` instead of ``setup.py``.
 
@@ -104,16 +104,16 @@ Install extra Python packages
 -----------------------------
 Install Sphinx and alabaster
 
-``
-pip install Sphinx
-pip install alabaster
-``
+.. code-block:: console
+
+  pip install Sphinx
+  pip install alabaster
 
 Install Git
 -----------
 
  * Download & install `Git <http://git-scm.com/downloads/guis/>`_
- * Optionally, download a GUI for Git
+ * Download a GUI for Git (optional)
     * `TortoiseGit <https://code.google.com/p/tortoisegit/>`_ (recommended for Windows)
 
 
@@ -121,15 +121,15 @@ Cloning pyNastran
 -----------------
 To checkout a branch
 
-``
->>> git.exe clone --branch v0.8 --progress -v "https://github.com/SteveDoyle2/pyNastran.git" "C:\\work\\pyNastran_v0.8"
-``
+.. code-block:: console
+  
+  >>> git.exe clone --branch v0.8 --progress -v "https://github.com/SteveDoyle2/pyNastran.git" "C:\\work\\pyNastran_v0.8"
 
 Checkout/clone the code by typing
 
-``
->>> git clone https://github.com/SteveDoyle2/pynastran
-``
+.. code-block:: console
+
+  >>> git clone https://github.com/SteveDoyle2/pynastran
 
 or using a GUI and cloning the project.
 
@@ -147,11 +147,11 @@ Build Docs
 ^^^^^^^^^^
 Navigate to `pyNastran/docs_sphinx` directory on the command line.
 
-``
->>> make html
-``
+.. code-block:: console
 
-Use existing docs
+  >>> make html
+
+Use Web docs
 ^^^^^^^^^^^^^^^^^
-Use the `web docs <http://pynastran-git.readthedocs.org/en/latest/>`_
+`web docs <http://pynastran-git.readthedocs.org/en/latest/>`_
 
