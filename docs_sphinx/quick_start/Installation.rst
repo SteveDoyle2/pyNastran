@@ -20,10 +20,10 @@ Overview
 Download Python
 ---------------
 v0.8 is tested against:
- - Python 2.7.8
- - Python 3.3
- - Python 3.4
- - Python 3.5
+ - Python 2.7.8 (Windows/Linux)
+ - Python 3.3 (Linux)
+ - Python 3.4 (Windows/Linux)
+ - Python 3.5 (Linux)
 
 
 Options include:
@@ -37,6 +37,11 @@ shouldn't matter too much as long as your packages versions (e.g. numpy/scipy)
 are consistent.  **With either distribution, both Python and all 3rd party
 packages will be installed.  With base Python, you need to do that yourself.**
 
+**Note that Python 2.7.8+ is recommended** because:
+
+ * pyNastran is mainly tested against 2.7
+ * not everything in the OP2 has been switched over to unicode from bytes
+ * the GUI works
 
 Additional packages
 -------------------
@@ -58,11 +63,18 @@ major bug fix in Python 2.7.8, so buyer beware.
 Download pyNastran
 ------------------
 
- * Click the downloads page and download the most recent `zip version
- <https://github.com/SteveDoyle2/pynastran/archive/master.zip>`_ or `clone
- <github-windows://openRepo/https://github.com/SteveDoyle2/pynastran>`_ 
- it using Git.  Using Git allows you to easily update to the latest dev version
- when you want to as well as push any commits of your own.
+If you want to most recent official release, either:
+
+ 1. Run
+ 
+   .. code-block:: console
+   
+     >>> pip install pyNastran
+
+ 2. Downlad the most recent `release <https://github.com/SteveDoyle2/pyNastran/releases>_`
+    (**required if you don't want to install the GUI**).
+
+If you don't want the gui, use ``setup_no_gui.py`` instead of ``setup.py``.
 
 
 Install pyNastran
@@ -83,7 +95,7 @@ Install pyNastran
 
       >>> python setup.py install
 
-If you don't want the gui, use ``setup_no_gui.py`` instead of ``setup.py``.
+If you don't want the gui for Python 2.7, use ``setup_no_gui.py`` instead of ``setup.py``.
 
 Install Procedure - From Source
 ===============================
@@ -96,8 +108,7 @@ Overview
  * Install Sphinx, GraphViz, alabaster (for documentation)
 
  * Install Git
- * Use Git to clone pyNastran and checkout the `master`
- * Clone the latest pyNastran from Github
+ * Clone pyNastran-master from Github
  * Install pyNastran
 
 Install extra Python packages
@@ -112,20 +123,42 @@ Install Sphinx and alabaster
 Install Git
 -----------
 
- * Download & install `Git <http://git-scm.com/downloads/guis/>`_
+ * Download & install `Git <http://git-scm.com/>`_ (required)
  * Download a GUI for Git (optional)
     * `TortoiseGit <https://code.google.com/p/tortoisegit/>`_ (recommended for Windows)
 
 
-Cloning pyNastran
+Install pyNastran
 -----------------
+There are two ways to install the dev version of pyNastran
+
+ 1. Download the most recent `zip version <https://github.com/SteveDoyle2/pynastran/archive/master.zip>`_
+ 
+ 2. Clone pyNastran (see below).  Using Git allows you to easily update to the
+   latest dev version when you want to as well as push any commits of your own.
+
+If you don't want the gui for Python 2.7, use ``setup_no_gui.py`` instead of ``setup.py``.
+
+
+Cloning pyNastran using TortoiseGit
+-----------------------------------
+Right-click in a folder and select ``Git Clone``.
+
+.. image:: clone.png
+
+Enter the above information.  Iif desired, click the branch box and and enter a branch name.
+Then click ``OK`` to clone the dev version.
+
+
+Cloning pyNastran Using Git
+---------------------------
 To checkout a branch
 
 .. code-block:: console
   
   >>> git.exe clone --branch v0.8 --progress -v "https://github.com/SteveDoyle2/pyNastran.git" "C:\\work\\pyNastran_v0.8"
 
-Checkout/clone the code by typing
+Checkout/clone the dev code by typing
 
 .. code-block:: console
 
@@ -133,15 +166,10 @@ Checkout/clone the code by typing
 
 or using a GUI and cloning the project.
 
-If this seems hard, try TortoiseGit.  It's much easier.
-
-Install pyNastran
------------------
-see above
 
 Documentation
 -------------
-Two options for documentation exist
+Two options for documentation exist.
 
 Build Docs
 ^^^^^^^^^^

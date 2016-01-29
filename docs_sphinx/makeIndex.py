@@ -126,7 +126,7 @@ def get_doc(filenames):
             msg += '\n'
             msg += '.. inheritance-diagram:: %s\n' % automodname
             msg += '\n'
-            msg += '.. automodule:: %s\n' % automodname # pyNastran.bdf.bdfInterface.BDF_Card, pyNastran.bdf.cards.loads.staticLoads
+            msg += '.. automodule:: %s\n' % automodname # pyNastran.bdf.bdfInterface.bdf_card, pyNastran.bdf.cards.loads.static_loads
             msg += '    :members:\n'
             msg += '    :private-members:\n'
             msg += '    :undoc-members:\n'
