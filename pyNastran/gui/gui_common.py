@@ -22,7 +22,7 @@ from numpy import ndarray, eye, array, zeros, loadtxt
 from numpy.linalg import norm
 
 import pyNastran
-from pyNastran.bdf.cards.baseCard import deprecated
+from pyNastran.bdf.cards.base_card import deprecated
 from pyNastran.utils.log import SimpleLogger
 from pyNastran.utils import print_bad_path, loadtxt_nice, integer_types
 

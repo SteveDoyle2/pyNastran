@@ -15,9 +15,9 @@ cards Package
 :mod:`baseCard` Module
 ----------------------
 
-.. inheritance-diagram:: pyNastran.bdf.cards.baseCard
+.. inheritance-diagram:: pyNastran.bdf.cards.base_card
 
-.. automodule:: pyNastran.bdf.cards.baseCard
+.. automodule:: pyNastran.bdf.cards.base_card
     :members:
     :private-members:
     :undoc-members:
@@ -70,9 +70,9 @@ cards Package
 :mod:`coordinateSystems` Module
 -------------------------------
 
-.. inheritance-diagram:: pyNastran.bdf.cards.coordinateSystems
+.. inheritance-diagram:: pyNastran.bdf.cards.coordinate_systems
 
-.. automodule:: pyNastran.bdf.cards.coordinateSystems
+.. automodule:: pyNastran.bdf.cards.coordinate_systems
     :members:
     :private-members:
     :undoc-members:

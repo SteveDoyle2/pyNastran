@@ -30,7 +30,7 @@ from numpy.linalg import norm
 
 from pyNastran.utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8, print_float_8
-from pyNastran.bdf.cards.baseCard import BaseCard, expand_thru
+from pyNastran.bdf.cards.base_card import BaseCard, expand_thru
 from pyNastran.bdf.bdfInterface.assign_type import (fields,
     integer, integer_or_blank, double, double_or_blank, string, string_or_blank,
     integer_or_string, double_string_or_blank, blank, interpret_value, components)

@@ -14,7 +14,7 @@ from itertools import count
 from numpy import pi, array
 
 from pyNastran.bdf.field_writer_8 import set_blank_if_default, set_default_if_blank
-from pyNastran.bdf.cards.baseCard import Property
+from pyNastran.bdf.cards.base_card import Property
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, double_or_blank, string, string_or_blank, blank,
     integer_or_double, double_string_or_blank, fields, integer_double_string_or_blank)

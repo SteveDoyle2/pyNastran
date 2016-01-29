@@ -26,7 +26,7 @@ from numpy import array, cross, zeros, dot, allclose, mean
 from numpy.linalg import norm
 
 from pyNastran.utils import integer_types
-from pyNastran.bdf.cards.loads.staticLoads import Moment, Force, LOAD
+from pyNastran.bdf.cards.loads.static_loads import Moment, Force, LOAD
 from pyNastran.bdf.bdfInterface.attributes import BDFAttributes
 from pyNastran.bdf.field_writer_8 import print_card_8
 

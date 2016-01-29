@@ -17,7 +17,7 @@ All material dependency cards are defined in this file.  This includes:
 All cards are Material objects.
 """
 from pyNastran.utils import integer_types
-from pyNastran.bdf.cards.baseCard import BaseCard
+from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.cards.bdf_tables import Table
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, double_or_blank, string, blank)

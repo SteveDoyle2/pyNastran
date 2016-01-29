@@ -7,7 +7,7 @@ from pyNastran import is_release
 from pyNastran.f06.tables.grid_point_weight import GridPointWeight
 from pyNastran.f06.f06_formatting import get_key0
 from pyNastran.utils import object_attributes, integer_types
-from pyNastran.bdf.cards.baseCard import deprecated
+from pyNastran.bdf.cards.base_card import deprecated
 try:
     import pandas as pd
 except ImportError:

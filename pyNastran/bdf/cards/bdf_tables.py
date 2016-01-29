@@ -28,7 +28,7 @@ from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
 
-from pyNastran.bdf.cards.baseCard import BaseCard
+from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.utils.dev import list_print
 from pyNastran.bdf.bdfInterface.assign_type import (integer,
     integer_or_blank, double, components, string, string_or_blank,
