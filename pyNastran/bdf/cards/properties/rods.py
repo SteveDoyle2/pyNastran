@@ -17,7 +17,7 @@ from itertools import count
 from numpy import pi, array
 
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
-from pyNastran.bdf.cards.baseCard import Property
+from pyNastran.bdf.cards.base_card import Property
 from pyNastran.bdf.bdfInterface.assign_type import (integer,
     double, double_or_blank)
 from pyNastran.utils.mathematics import integrate_line, integrate_positive_line

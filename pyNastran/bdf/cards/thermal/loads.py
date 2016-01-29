@@ -11,7 +11,7 @@ from pyNastran.bdf.field_writer_double import print_card_double
 from pyNastran.bdf.cards.utils import wipe_empty_fields
 from pyNastran.bdf.cards.thermal.thermal import ThermalCard
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
-from pyNastran.bdf.cards.baseCard import expand_thru, expand_thru_by, collapse_thru_by, BaseCard
+from pyNastran.bdf.cards.base_card import expand_thru, expand_thru_by, collapse_thru_by, BaseCard
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, double_or_blank, integer_or_string, string, fields)
 

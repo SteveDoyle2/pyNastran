@@ -15,7 +15,7 @@ from six.moves import range
 
 from pyNastran.utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
-from pyNastran.bdf.cards.baseCard import Property, Material
+from pyNastran.bdf.cards.base_card import Property, Material
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, double_or_blank, string_or_blank, integer_string_or_blank, blank)
 from pyNastran.bdf.field_writer_8 import print_card_8

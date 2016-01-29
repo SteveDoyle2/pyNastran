@@ -15,7 +15,7 @@ from six.moves import zip, range
 
 #from pyNastran.bdf.errors import CrossReferenceError
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
-from pyNastran.bdf.cards.baseCard import BaseCard, _node_ids
+from pyNastran.bdf.cards.base_card import BaseCard, _node_ids
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, double_or_blank, components_or_blank)
 from pyNastran.bdf.field_writer_8 import print_card_8
