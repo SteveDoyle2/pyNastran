@@ -5,7 +5,8 @@ from PyQt4 import QtCore, QtGui
 from numpy import setdiff1d, unique, array, hstack
 
 from pyNastran.bdf.utils import parse_patran_syntax, parse_patran_syntax_dict
-from pyNastran.bdf.cards.baseCard import collapse_colon_packs
+from pyNastran.bdf.cards.base_card import collapse_colon_packs
+
 
 class ColorDisplay(QtGui.QWidget):
     """

@@ -10,7 +10,7 @@ sys.path.append(manual_path)
 
 #print(sys.path)
 from notebook_to_markdown import create_rst_from_ipython_notebooks
-create_rst_from_ipython_notebooks()
+#create_rst_from_ipython_notebooks()
 
 
 #bdf
@@ -41,6 +41,8 @@ except ImportError:
 #on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 #if not on_rtd:
 #    import pyNastran.gui.gui
+#import pyNastran.gui.gui
+
 
 if __name__ == "__main__":
     import unittest

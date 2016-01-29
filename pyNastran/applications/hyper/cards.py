@@ -1,4 +1,4 @@
-from pyNastran.bdf.cards.baseCard import BaseCard
+from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.bdfInterface.assign_type import double, double_or_blank, string, integer
 from numpy import array, cross, sin, cos, dot, radians
 from numpy.linalg import norm
