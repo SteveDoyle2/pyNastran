@@ -674,6 +674,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             should an error be raised if there
             are cross-reference errors (default=True)
         """
+        assert isinstance(nparse_errors, int), type(nparse_errors)
+        assert isinstance(nxref_errors, int), type(nxref_errors)
         self._nparse_errors = nparse_errors
         self._nxref_errors = nxref_errors
         self._stop_on_parsing_error = stop_on_parsing_error

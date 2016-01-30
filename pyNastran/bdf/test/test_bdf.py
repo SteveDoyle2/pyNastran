@@ -925,13 +925,13 @@ def main():
     """
     The main function for the command line ``test_bdf`` script.
     """
-    from docopt import docopt
+    from pyNastran.utils.docopt_types import docopt_types
     msg = "Usage:\n"
-    msg += "  test_bdf [-q] [-D] [-i] [-e E] [-x] [-p] [-c] [-L] [-f] BDF_FILENAME\n" #
-    msg += "  test_bdf [-q] [-D] [-i] [-e E] [-x] [-p] [-c] [-L] [-d] [-f] BDF_FILENAME\n" #
-    msg += "  test_bdf [-q] [-D] [-i] [-e E] [-x] [-p] [-c] [-L] [-l] [-f] BDF_FILENAME\n" #
-    msg += "  test_bdf [-q] [-D] [-i] [-e E] [-p] [-r] [-f] BDF_FILENAME\n" #
-    msg += "  test_bdf [-q] [-D] [-i] [-e E] [-x] [-p] [-s] [-f] BDF_FILENAME\n" #
+    msg += "  test_bdf [-q] [-D] [-i] [-e E] [-x] [-p] [-c] [-L] [-f] BDF_FILENAME\n"
+    msg += "  test_bdf [-q] [-D] [-i] [-e E] [-x] [-p] [-c] [-L] [-d] [-f] BDF_FILENAME\n"
+    msg += "  test_bdf [-q] [-D] [-i] [-e E] [-x] [-p] [-c] [-L] [-l] [-f] BDF_FILENAME\n"
+    msg += "  test_bdf [-q] [-D] [-i] [-e E] [-p] [-r] [-f] BDF_FILENAME\n"
+    msg += "  test_bdf [-q] [-D] [-i] [-e E] [-x] [-p] [-s] [-f] BDF_FILENAME\n"
 
     #msg += "  test_bdf [-q] [-p] [-o [<VAR=VAL>]...] BDF_FILENAME\n" #
     msg += '  test_bdf -h | --help\n'
@@ -971,7 +971,10 @@ def main():
         sys.exit(msg)
 
     ver = str(pyNastran.__version__)
-    data = docopt(msg, version=ver)
+    types = {
+        '--nerrors' : int,
+    }
+    data = docopt_types(msg, version=ver, types=types)
 
     for key, value in sorted(iteritems(data)):
         print("%-12s = %r" % (key.strip('--'), value))

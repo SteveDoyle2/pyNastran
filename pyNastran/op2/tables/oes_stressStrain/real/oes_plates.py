@@ -301,6 +301,31 @@ class RealPlateArray(OES_Object):
             page_num += 1
         return page_num - 1
 
+    def get_nnodes_bilinear(self):
+        is_bilinear = False
+        if self.element_type == 74:
+            nnodes = 3
+        elif self.element_type == 33:
+            nnodes = 4
+        elif self.element_type == 144:
+            nnodes = 4
+            is_bilinear = True
+        elif self.element_type == 82:  # CQUADR
+            nnodes = 4
+            is_bilinear = True
+        elif self.element_type == 64:  # CQUAD8
+            nnodes = 4
+            is_bilinear = True
+        elif self.element_type == 75:  # CTRIA6
+            nnodes = 3
+            is_bilinear = True
+        elif self.element_type == 70:  # CTRIAR
+            nnodes = 3
+            is_bilinear = True
+        else:
+            raise NotImplementedError('name=%s type=%s' % (self.element_name, self.element_type))
+        return nnodes, is_bilinear
+
 
 class RealPlateStressArray(RealPlateArray, StressObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -436,7 +461,6 @@ def _get_plate_msg(self):
     else:
         raise NotImplementedError('name=%s type=%s' % (self.element_name, self.element_type))
     return msg, nnodes, cen
-
 
 class RealCPLSTRNPlateArray(OES_Object):
     def __init__(self, data_code, is_sort1, isubcase, dt):
