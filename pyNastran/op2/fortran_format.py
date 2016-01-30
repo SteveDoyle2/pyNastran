@@ -39,11 +39,11 @@ class FortranFormat(object):
 
     def show(self, n, types='ifs', endian=None):
         """
-        :param self:    the OP2 object pointer
+        Shows binary data
         """
         assert self.n == self.f.tell()
         nints = n // 4
-        data = self.f.read(4 * n)
+        data = self.f.read(4 * nints)
         strings, ints, floats = self.show_data(data, types=types, endian=endian)
         self.f.seek(self.n)
         return strings, ints, floats

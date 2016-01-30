@@ -174,7 +174,7 @@ class OP4(object):
         line_size = int(line_size)
 
         line = op4.readline().rstrip()
-        (icol, irow, nwords) = line.split()
+        (_icol, irow, _nwords) = line.split()
 
         is_sparse = False
         if irow == '0':
@@ -231,12 +231,12 @@ class OP4(object):
             # next sparse entry
             while (len(sline) == 1 or len(sline) == 2) and 'E' not in line or run_loop:
                 if is_big_mat:
-                    irow = self._get_irow_big_ascii(op4, line, sline, nwords, irow)
+                    irow = self._get_irow_big_ascii(op4, line, sline, irow)
                 else:
-                    irow = self._get_irow_small_ascii(op4, line, sline, nwords, irow)
+                    irow = self._get_irow_small_ascii(op4, line, sline, irow)
 
                 run_loop = False
-                iword = 0
+                #iword = 0
                 is_done_reading_row = False
                 while nwords:
                     n = 0
@@ -256,7 +256,7 @@ class OP4(object):
                                 irow - 1, icol - 1, float(word)))
                         n += line_size
                         irow += 1
-                    iword += nwords_in_line
+                    #iword += nwords_in_line
                     nwords -= nwords_in_line
                 sline = line.strip().split()
                 nloops += 1
@@ -307,7 +307,7 @@ class OP4(object):
             while (len(sline) == 1 or len(sline) == 2) and 'E' not in line or run_loop:
                 run_loop = False
                 #i = 0
-                iword = 0
+                #iword = 0
                 is_done_reading_row = False
                 while nwords:
                     n = 0
@@ -322,7 +322,7 @@ class OP4(object):
                         A[irow - 1, icol - 1] = word
                         n += line_size
                         irow += 1
-                    iword += nwords_in_line
+                    #iword += nwords_in_line
                     nwords -= nwords_in_line
                 sline = line.strip().split()
                 nloops += 1
@@ -363,9 +363,9 @@ class OP4(object):
             # next sparse entry
             while (len(sline) == 1 or len(sline) == 2) and 'E' not in line or run_loop:
                 if is_big_mat:
-                    irow = self._get_irow_big_ascii(op4, line, sline, nwords, irow)
+                    irow = self._get_irow_big_ascii(op4, line, sline, irow)
                 else:
-                    irow = self._get_irow_small_ascii(op4, line, sline, nwords, irow)
+                    irow = self._get_irow_small_ascii(op4, line, sline, irow)
                 run_loop = False
 
                 #i = 0
@@ -467,7 +467,7 @@ class OP4(object):
         op4.readline()
         return A
 
-    def _get_irow_small_ascii(self, op4, line, sline, nwords, irow):
+    def _get_irow_small_ascii(self, op4, line, sline, irow):
         sline = line.strip().split()
         if len(sline) == 1:
             IS = int(line)
@@ -495,7 +495,7 @@ class OP4(object):
             assert L > 0, L
         return irow, L
 
-    def _get_irow_big_ascii(self, op4, line, sline, nwords, irow):
+    def _get_irow_big_ascii(self, op4, line, sline, irow):
         sline = line.strip().split()
         if len(sline) == 2:
             pass
@@ -667,7 +667,7 @@ class OP4(object):
             op4.read(4)
             self.n += 4
         else:
-            raise NotImplementedError(d)
+            raise NotImplementedError(data_format)
         #f.read(record_length); self.n+=record_length
         #self.show(f, 10)
         #f.read(4); self.n+=4
@@ -799,16 +799,9 @@ class OP4(object):
             #if icol == ncols + 1:
                 #break
 
-            nvalues = L // nwords_per_value
-            str_values = self._endian + '%i%s' % (nvalues, data_format)
-            if self.debug:
-                print('str_values = %r' % str_values)
-
             i = 0
             while len(data) > 0:
-                if i == 0:
-                    pass
-                else:
+                if i > 0:
                     if is_big_mat:
                         (irow, L) = self._get_irow_big_binary(op4, data[0:8])
                         data = data[8:]
@@ -816,8 +809,8 @@ class OP4(object):
                         (irow, L) = self._get_irow_small_binary(op4, data[0:4])
                         data = data[4:]
                     assert irow > 0
-                    nvalues = L // nwords_per_value
-                    str_values = self._endian + '%i%s' % (nvalues, data_format)
+                nvalues = L // nwords_per_value
+                str_values = self._endian + '%i%s' % (nvalues, data_format)
 
                 if self.debug:
                     print('irow=%s L=%s nwords_per_value=%s nvalues=%s '
@@ -825,13 +818,7 @@ class OP4(object):
                               irow, L, nwords_per_value, nvalues, nbytes_per_value))
                     print('str_values = %r' % str_values)
 
-                try:
-                    value_list = unpack(str_values, data[0:nvalues * nbytes_per_value])
-                except:
-                    self._show_data(data, types='id')
-                    print('i=%s' % i)
-                    print('len(data) =', len(data))
-                    raise
+                value_list = unpack(str_values, data[0:nvalues * nbytes_per_value])
                 assert self.n == op4.tell(), 'n=%s tell=%s' % (self.n, op4.tell())
 
                 #irow -= 1
@@ -873,7 +860,7 @@ class OP4(object):
         """
         assert self.n == op4.tell()
         nints = n // 4
-        data = op4.read(4 * n)
+        data = op4.read(4 * nints)
         strings, ints, floats = self._show_data(data, types=types, endian=endian)
         op4.seek(self.n)
         return strings, ints, floats
@@ -1555,18 +1542,18 @@ def _write_sparse_matrix_ascii(op4, name, A, form=2, is_big_mat=False,
 
             irow = A.row[col[dpack[0]]]
             if is_big_mat:
-                #L = complexFactor * (2 * len(pack)) + 1
-                #L = (nPacks+1) + nRows * complexFactor
+                #L = complex_factor * (2 * len(pack)) + 1
+                #L = (nPacks+1) + nRows * complex_factor
                 L = (len(dpack) + 1) * nwords_per_value
                 #if iPack==0:
                     #L+=1
 
-                #L = complexFactor * (2 + nPacks) + 1
-                #L = len(pack) + complexFactor * 2
+                #L = complex_factor * (2 + npacks) + 1
+                #L = len(pack) + complex_factor * 2
                 #msg = '%8i%8i%8i\n' % (j+1, 0, L+1)
                 msg += '%8i%8i\n' % (L, irow + 1)
             else:
-                #L = complexFactor * (2 * len(pack))
+                #L = complex_factor * (2 * len(pack))
                 #msg = '%8i%8i%8i\n' % (j+1, 0, L+1)
 
                 IS = irow + 65536 * (L + 1) + 1
