@@ -1226,9 +1226,17 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         """
         Should the card be read?
 
-        :param self: the BDF object
-        :param card_name: the card_name -> 'GRID'
-        :returns is_reject:  True/False
+        Parameters
+        ----------
+        self : BDF()
+            the BDF object
+        card_name : str
+            the card_name -> 'GRID'
+
+        Returns
+        -------
+        is_reject : bool
+            True/False
         """
         if card_name.startswith('='):
             return False
@@ -1244,8 +1252,10 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         """
         Opens the primary bdf/dat file and all subsequent INCLUDE files.
 
-        :param bdf_filename: the name of the bdf/dat file to open
-        :returns: None
+        Parameters
+        ----------
+        bdf_filename : str
+            the name of the bdf/dat file to open
 
         .. note:: Doesn't allow reuse of the same bdf/dat file twice.
         """
@@ -1298,11 +1308,21 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         """
         Returns the next Bulk Data Card in the BDF
 
-        :param self:        the BDF object
-        :param line_stream: the generator for the file
-        :returns lines:    the lines of the card
-        :returns comment:  the comment for the card
-        :returns cardname: the name of the card
+        Parameters
+        ----------
+        self : BDF()
+            the BDF object
+        line_stream :
+            the generator for the file
+
+        Returns
+        -------
+        lines : List[str]
+            the lines of the card
+        comment : str
+            the comment for the card
+        cardname : str
+            the name of the card
         """
         for (i, line, comment) in line_stream:
             #-----------------------------------------------------------------

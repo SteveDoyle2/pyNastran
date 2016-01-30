@@ -190,6 +190,18 @@ class RealSolidArray(OES_Object):
         #self.element_node[self.ielement-1, self.inode-1, :] = [eid, node_id]
         self.itotal += 1
 
+    @property
+    def nnodes_per_element(self):
+        if self.element_type == 39: # CTETRA
+            nnodes = 4
+        elif self.element_type == 67: # CHEXA
+            nnodes = 8
+        elif self.element_type == 68: # CPENTA
+            nnodes = 6
+        else:
+            raise NotImplementedError('element_name=%s self.element_type=%s' % (self.element_name, self.element_type))
+        return nnodes
+
     def get_stats(self):
         if not self.is_built:
             return [

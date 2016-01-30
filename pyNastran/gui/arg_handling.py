@@ -32,7 +32,7 @@ def determine_format(input):
         raise TypeError(msg)
     return format
 
-def run_arg_parse():
+def run_docopt():
     msg  = "Usage:\n"
     msg += "  pyNastranGUI [-f FORMAT] [-i INPUT] [-o OUTPUT...]\n"
     msg += '                  [-s SHOT] [-m MAGNIFY]\n'  #  [-r XYZ]
@@ -133,7 +133,7 @@ def get_inputs():
     else:
         if len(sys.argv) > 1:
             (format, input, output, console, shots, magnify,
-             rotation, geom_script, post_script, debug, user_points) = run_arg_parse()
+             rotation, geom_script, post_script, debug, user_points) = run_docopt()
 
     inputs = {
         'format' : format,
