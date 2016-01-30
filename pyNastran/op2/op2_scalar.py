@@ -638,7 +638,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OES2'    : [self._table_passer, self._table_passer],  # stress - linear only
             b'OESNO1'  : [self._table_passer, self._table_passer],
             b'OESRMS1' : [self._table_passer, self._table_passer],
-            b'OESNO1'  : [self._table_passer, self._table_passer],
 
             b'OESATO2' : [self._table_passer, self._table_passer],
             b'OESCRM2' : [self._table_passer, self._table_passer],

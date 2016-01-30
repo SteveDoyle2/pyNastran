@@ -18,7 +18,7 @@ from pyNastran.f06.tables.oqg import OQG
 from pyNastran.f06.tables.oef import OEF
 from pyNastran.f06.tables.lama import LAMA
 from pyNastran.f06.tables.max_min import MAX_MIN
-from pyNastran.f06.f06Writer import F06Writer
+from pyNastran.f06.f06_writer import F06Writer
 from pyNastran.op2.tables.ogf_gridPointForces.ogf_Objects import RealGridPointForces
 
 from pyNastran.utils import is_binary_file
