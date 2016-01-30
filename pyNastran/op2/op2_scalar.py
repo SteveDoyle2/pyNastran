@@ -17,7 +17,7 @@ from scipy.sparse import coo_matrix
 from pyNastran import is_release
 from pyNastran.f06.errors import FatalError
 from pyNastran.op2.errors import SortCodeError, DeviceCodeError, FortranMarkerError
-from pyNastran.f06.tables.grid_point_weight import GridPointWeight
+from pyNastran.op2.tables.grid_point_weight import GridPointWeight
 
 #============================
 
