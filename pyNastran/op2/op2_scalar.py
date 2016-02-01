@@ -1238,6 +1238,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                     self._read_fol()
                 elif table_name in [b'SDF', b'PMRF']:  #, 'PERF'
                     self._read_sdf()
+                elif table_name in [b'IBULK']:
+                    self._read_ibulk()
                 elif table_name in MATRIX_TABLES:
                     self._read_matrix()
                 elif table_name in RESULT_TABLES:
@@ -2019,6 +2021,38 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         #self.show_ndata(100)
         #import sys
         #sys.exit()
+
+    def _read_ibulk(self):
+        """
+        Parameters
+        ----------
+        self : OP2
+            the OP2 object pointer
+        """
+        self.table_name = self._read_table_name(rewind=False)
+        self.log.debug('table_name = %r' % self.table_name)
+        if self.is_debug_file:
+            self.binary_debug.write('_read_geom_table - %s\n' % self.table_name)
+        self.read_markers([-1])
+        if self.is_debug_file:
+            self.binary_debug.write('---markers = [-1]---\n')
+        data = self._read_record()
+
+        markers = self.get_nmarkers(1, rewind=True)
+        marker = -2
+        while 1:
+            self.read_markers([marker, 1, 0])
+            nfields, = self.get_nmarkers(1, rewind=True)
+            if nfields > 0:
+                data = self._read_record()
+                #self.show_data(data, types='s', endian=None)
+            elif nfields == 0:
+                #self.show_ndata(100, types='ifs')
+                break
+            else:
+                raise RuntimeError('nfields=%s' % nfields)
+            marker -= 1
+        marker_end, = self.get_nmarkers(1, rewind=False)
 
     def _read_meff(self):
         """
