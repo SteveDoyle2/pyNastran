@@ -3,7 +3,7 @@ from six import string_types
 #from struct import pack
 
 
-from pyNastran.op2.resultObjects.tableObject import RealTableArray, ComplexTableArray
+from pyNastran.op2.result_objects.table_object import RealTableArray, ComplexTableArray
 #RealTableObject, ComplexTableObject
 
 

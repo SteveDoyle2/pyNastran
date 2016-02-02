@@ -56,7 +56,7 @@ class OP4(object):
           >>> (formC, C) = matrices['C']
 
           # or to reduce memory usage
-          >>> matrices = op4.read_op4(op4_filename, matrix_names=['A','B'])
+          >>> matrices = op4.read_op4(op4_filename, matrix_names=['A', 'B'])
           >>> (formA, A) = matrices['A']
           >>> (formB, B) = matrices['B']
 
@@ -81,22 +81,31 @@ class OP4(object):
         Returns
         -------
         matricies : dict[str] = (int, matrix)
-           dictionary of matrices where the key is the name and the value is [form, matrix]
+            dictionary of matrices where the key is the name and the value is [form, matrix]
 
-              ==== ===============
-              Form Definition
-              ==== ===============
-              1.   Square
-              2.   Rectangular
-              3.   Diagonal
-              6.   Symmetric
-              8.   Id entity
-              9.   Pseudoidentity
-              ==== ===============
+            +------+----------------+
+            | Form |   Definition   |
+            +======+================+
+            |  1   | Square         |
+            +------+----------------+
+            |  2   | Rectangular    |
+            +------+----------------+
+            |  3   | Diagonal       |
+            +------+----------------+
+            |  6   | Symmetric      |
+            +------+----------------+
+            |  8   | Id entity      |
+            +------+----------------+
+            |  9   | Pseudoidentity |
+            +------+----------------+
 
-            Matrix:
-              Dense Type:  NUMPY.NDARRAY
-              Sparse Type: SCIPY.SPARSE.COO_MATRIX
+            +--------+-------------------------+
+            |  Type  | Object                  |
+            +========+=========================+
+            | Dense  | NUMPY.NDARRAY           |
+            +--------+-------------------------+
+            | Sparse | SCIPY.SPARSE.COO_MATRIX |
+            +--------+-------------------------+
 
         .. note:: based off the MATLAB code SAVEOP4 developed by ATA-E and
                   later UCSD.
@@ -150,7 +159,7 @@ class OP4(object):
         if line == '':
             op4.close()
             return None, None, None
-        ncols, nrows, form, Type = line[0:32].split()
+        ncols, nrows, form, matrix_type = line[0:32].split()
         nrows = int(nrows)
 
         if nrows < 0:  # if less than 0, big
@@ -165,8 +174,8 @@ class OP4(object):
         nrows = abs(nrows)
         ncols = int(ncols)
         form = int(form)
-        Type = int(Type)
-        dtype = get_dtype(Type, precision)
+        matrix_type = int(matrix_type)
+        dtype = get_dtype(matrix_type, precision)
 
         name = line[32:40].strip()
         size = line[40:].strip()
@@ -180,14 +189,14 @@ class OP4(object):
         if irow == '0':
             is_sparse = True
 
-        if Type in [1, 2]:  # real
+        if matrix_type in [1, 2]:  # real
             A = self._read_real_ascii(op4, nrows, ncols, line_size, line,
                                       dtype, is_sparse, is_big_mat)
-        elif Type in [3, 4]:  # complex
+        elif matrix_type in [3, 4]:  # complex
             A = self._read_complex_ascii(op4, nrows, ncols, line_size, line,
                                          dtype, is_sparse, is_big_mat)
         else:
-            raise RuntimeError('invalid matrix type.  Type=%s' % Type)
+            raise RuntimeError('invalid matrix type.  matrix_type=%s' % matrix_type)
 
         if not(matrix_names is None or name in matrix_names):  # kill the matrix
             A = None
@@ -675,37 +684,37 @@ class OP4(object):
         assert self.n == op4.tell(), 'n=%s op4.tell=%s' % (self.n, op4.tell())
         return (name, form, A)
 
-    def _get_matrix_info(self, Type, debug=True):
-        if Type == 1:
+    def _get_matrix_info(self, matrix_type, debug=True):
+        if matrix_type == 1:
             nwords_per_value = 1  # number words per value
             nbytes_per_value = 4
             data_format = 'f'
-        elif Type == 2:
+        elif matrix_type == 2:
             nwords_per_value = 2
             nbytes_per_value = 8
             data_format = 'd'
-        elif Type == 3:
+        elif matrix_type == 3:
             nwords_per_value = 2
             nbytes_per_value = 8
             data_format = 'f'
-        elif Type == 4:
+        elif matrix_type == 4:
             nwords_per_value = 4
             nbytes_per_value = 16
             data_format = 'd'
         else:
-            raise RuntimeError("Type=%s" % Type)
-        dtype = get_dtype(Type)
+            raise RuntimeError("matrix_type=%s" % matrix_type)
+        dtype = get_dtype(matrix_type)
         if self.debug and debug:
-            print('Type = %s' % Type)
+            print('matrix_type = %s' % matrix_type)
             print('  nwords_per_value = %s' % nwords_per_value)
             print('  nbytes_per_value = %s' % nbytes_per_value)
             print('  dtype = %s ' % dtype)
         return (nwords_per_value, nbytes_per_value, data_format, dtype)
 
-    def _read_real_dense_binary(self, op4, nrows, ncols, Type, is_big_mat):
+    def _read_real_dense_binary(self, op4, nrows, ncols, matrix_type, is_big_mat):
         if self.debug:
             print('_read_real_dense_binary')
-        out = self._get_matrix_info(Type, debug=False)
+        out = self._get_matrix_info(matrix_type, debug=False)
         (nwords_per_value, _nbytes_per_value, data_format, dtype) = out
         A = zeros((nrows, ncols), dtype=dtype)
 
@@ -737,17 +746,17 @@ class OP4(object):
         return A
 
 
-    def _read_real_binary(self, op4, nrows, ncols, Type, is_sparse, is_big_mat):
+    def _read_real_binary(self, op4, nrows, ncols, matrix_type, is_sparse, is_big_mat):
         if is_sparse:
-            A = self._read_real_sparse_binary(op4, nrows, ncols, Type, is_big_mat)
+            A = self._read_real_sparse_binary(op4, nrows, ncols, matrix_type, is_big_mat)
         else:
-            A = self._read_real_dense_binary(op4, nrows, ncols, Type, is_big_mat)
+            A = self._read_real_dense_binary(op4, nrows, ncols, matrix_type, is_big_mat)
         return A
 
-    def _read_real_sparse_binary(self, op4, nrows, ncols, Type, is_big_mat):
+    def _read_real_sparse_binary(self, op4, nrows, ncols, matrix_type, is_big_mat):
         if self.debug:
             print('_read_real_sparse_binary')
-        out = self._get_matrix_info(Type, debug=False)
+        out = self._get_matrix_info(matrix_type, debug=False)
         (nwords_per_value, nbytes_per_value, data_format, dtype) = out
         rows = []
         cols = []
@@ -969,11 +978,11 @@ class OP4(object):
         f.seek(self.n)
         return self._write_data(f, data, types=types)
 
-    def _read_complex_dense_binary(self, op4, nrows, ncols, Type, is_big_mat):
+    def _read_complex_dense_binary(self, op4, nrows, ncols, matrix_type, is_big_mat):
         """reads a dense complex binary matrix"""
         if self.debug:
             print('_read_complex_dense_binary')
-        out = self._get_matrix_info(Type, debug=False)
+        out = self._get_matrix_info(matrix_type, debug=False)
         (nwords_per_value, nbytes_per_value, data_format, dtype) = out
 
         A = zeros((nrows, ncols), dtype=dtype)
@@ -1069,19 +1078,19 @@ class OP4(object):
         self.n += 4
         return A
 
-    def _read_complex_binary(self, op4, nrows, ncols, Type, is_sparse, is_big_mat):
+    def _read_complex_binary(self, op4, nrows, ncols, matrix_type, is_sparse, is_big_mat):
         """reads a complex binary matrix"""
         if is_sparse:
-            A = self._read_complex_sparse_binary(op4, nrows, ncols, Type, is_big_mat)
+            A = self._read_complex_sparse_binary(op4, nrows, ncols, matrix_type, is_big_mat)
         else:
-            A = self._read_complex_dense_binary(op4, nrows, ncols, Type, is_big_mat)
+            A = self._read_complex_dense_binary(op4, nrows, ncols, matrix_type, is_big_mat)
         return A
 
-    def _read_complex_sparse_binary(self, op4, nrows, ncols, Type, is_big_mat):
+    def _read_complex_sparse_binary(self, op4, nrows, ncols, matrix_type, is_big_mat):
         """reads a sparse complex binary matrix"""
         if self.debug:
             print('_read_complex_sparse_binary')
-        out = self._get_matrix_info(Type, debug=False)
+        out = self._get_matrix_info(matrix_type, debug=False)
         (nwords_per_value, nbytes_per_value, data_format, dtype) = out
         rows = []
         cols = []
@@ -1316,30 +1325,40 @@ class OP4(object):
         precision : str; default=True
             {'default', 'single', 'double'}
 
-        ==== ===============
-        Form Definition
-        ==== ===============
-        1.   Square
-        2.   Rectangular
-        3.   Diagonal
-        6.   Symmetric
-        8.   Id entity
-        9.   Pseudoidentity
-        ==== ===============
+        +======+================+
+        | Form |   Definition   |
+        +======+================+
+        |  1   | Square         |
+        +------+----------------+
+        |  2   | Rectangular    |
+        +------+----------------+
+        |  3   | Diagonal       |
+        +------+----------------+
+        |  6   | Symmetric      |
+        +------+----------------+
+        |  8   | Id entity      |
+        +------+----------------+
+        |  9   | Pseudoidentity |
+        +------+----------------+
 
         Not Supported by all OP4s (this is not a restriction of the OP4
         reader/writer)
 
-        ==== ===============================
-        Form Definition
-        ==== ===============================
-        4.   Lower triangular factor
-        5.   Upper triangular factor
-        10.  Cholesky factor
-        11.  Trapezoidal factor
-        13.  Sparse lower triangular factor
-        15.  Sparse upper triangular factor
-        ==== ===============================
+        +======+================================+
+        | Form |         Definition             |
+        +======+================================+
+        |  4   | Lower triangular factor        |
+        +------+--------------------------------+
+        |  5   | Upper triangular factor        |
+        +------+--------------------------------+
+        |  10  | Cholesky factor                |
+        +------+--------------------------------+
+        |  11  | Trapezoidal factor             |
+        +------+--------------------------------+
+        |  13  | Sparse lower triangular factor |
+        +------+--------------------------------+
+        |  15  | Sparse upper triangular factor |
+        +------+--------------------------------+
 
         .. note:: form defaults to 2, but 1 can be easily determined.
                   Any others must be specified.
@@ -1351,17 +1370,26 @@ class OP4(object):
                                    precision='default', encoding='utf-8'):
         """
         24 bytes is the record length
-          - (1) ncols
-          - (2) nrows
-          - (3) form
-          - (4) Type
-          - (5,6) name2
-          6 words * 4 bytes/word = 24 bytes
+
+        +-------------+--------------+
+        | Word Number | Variable     |
+        +-------------+--------------+
+        |      1      |  ncols       |
+        +-------------+--------------+
+        |      2      |  nrows       |
+        +-------------+--------------+
+        |      3      |  form        |
+        +-------------+--------------+
+        |      4      |  matrix_type |
+        +-------------+--------------+
+        |    5, 6     |  name        |
+        +-------------+--------------+
+        6 words * 4 bytes/word = 24 bytes
 
         .. todo:: support precision
         """
         A = matrix
-        Type, nwords_per_value = _get_type_nwv(A[0, 0], precision)
+        matrix_type, nwords_per_value = _get_type_nwv(A[0, 0], precision)
 
         (nrows, ncols) = A.shape
         #if nrows==ncols and form==2:
@@ -1370,7 +1398,7 @@ class OP4(object):
         name_bytes = name2.encode('ascii')
         assert len(name2) == 8, 'name=%r is too long; 8 characters max' % name
         s = Struct(self._endian + '5i8s')
-        msg = s.pack(24, ncols, nrows, form, Type, name_bytes)
+        msg = s.pack(24, ncols, nrows, form, matrix_type, name_bytes)
         op4.write(msg)
 
         for icol in range(ncols):
@@ -1382,15 +1410,15 @@ class OP4(object):
                 msg = pack(self._endian + '4i', 24, icol +
                            1, istart + 1, (iend - istart) * nwords_per_value)
 
-                if Type in [1, 2]: # real
-                    if Type == 1: # real, single
+                if matrix_type in [1, 2]: # real
+                    if matrix_type == 1: # real, single
                         fmt = '%if' % (iend - istart)
                     else:         # real, double
                         fmt = '%id' % (iend - istart)
                     op4.write(pack(self._endian + fmt, *A[istart:iend+1, icol]))
 
                 else:  # complex
-                    if Type == 3: # complex, single
+                    if matrix_type == 3: # complex, single
                         fmt = '2f'
                     else:         # complex, double
                         fmt = '2d'
@@ -1398,7 +1426,7 @@ class OP4(object):
                         msg += pack(self._endian + fmt, A[irow, icol].real,
                                     A[irow, icol].imag)
             op4.write(msg)
-        if Type in [1, 3]: # single precision
+        if matrix_type in [1, 3]: # single precision
             # .. todo:: is this right???
             msg = pack(self._endian + '4if', 24, ncols + 1, 1, 1, 1.0)
         else: # double precision
@@ -1423,13 +1451,13 @@ class OP4(object):
         """writes a dense ASCII matrx"""
         if self.debug:
             print('_write_dense_matrix_ascii')
-        Type, nwords_per_value = _get_type_nwv(A[0, 0], precision)
+        matrix_type, nwords_per_value = _get_type_nwv(A[0, 0], precision)
 
         (nrows, ncols) = A.shape
-        msg = u'%8i%8i%8i%8i%-8s1P,3E23.16\n' % (ncols, nrows, form, Type, name)
+        msg = u'%8i%8i%8i%8i%-8s1P,3E23.16\n' % (ncols, nrows, form, matrix_type, name)
         op4.write(msg)
 
-        if Type in [1, 2]: # real
+        if matrix_type in [1, 2]: # real
             for icol in range(ncols):
                 value_str = ''
                 (istart, iend) = self._get_start_end_row(A[:, icol], nrows)
@@ -1487,8 +1515,8 @@ def _write_sparse_matrix_ascii(op4, name, A, form=2, is_big_mat=False,
     assert isinstance(name, string_types), 'name=%s' % name
     #A = A.tolil() # list-of-lists sparse matrix
     #print dir(A)
-    Type, nwords_per_value = _get_type_nwv(A.data[0], precision)
-    if Type in [3, 4]:
+    matrix_type, nwords_per_value = _get_type_nwv(A.data[0], precision)
+    if matrix_type in [3, 4]:
         complex_factor = 2
     else: # 1, 2
         complex_factor = 1
@@ -1496,11 +1524,11 @@ def _write_sparse_matrix_ascii(op4, name, A, form=2, is_big_mat=False,
 
     #if nrows == ncols and form == 2:
         #form = 1
-    #print("Type=%s" % Type)
+    #print("matrix_type=%s" % matrix_type)
     if is_big_mat:
-        msg += '%8i%8i%8i%8i%-8s1P,3E23.16\n' % (ncols, -nrows, form, Type, name)
+        msg += '%8i%8i%8i%8i%-8s1P,3E23.16\n' % (ncols, -nrows, form, matrix_type, name)
     else:
-        msg += '%8i%8i%8i%8i%-8s1P,3E23.16\n' % (ncols, nrows, form, Type, name)
+        msg += '%8i%8i%8i%8i%-8s1P,3E23.16\n' % (ncols, nrows, form, matrix_type, name)
 
     #print("A.row = ", A.row)
     #print("A.col = ", A.col)
@@ -1567,7 +1595,7 @@ def _write_sparse_matrix_ascii(op4, name, A, form=2, is_big_mat=False,
                 val = A.data[irow]
                 irow = A.row[irow]
 
-                if Type in [1, 2]:
+                if matrix_type in [1, 2]:
                     value_str += '%23.16E' % val
                     if (i + 1) % 3 == 0:
                         msg += value_str + '\n'
@@ -1607,24 +1635,24 @@ def _determine_endian(op4):
     op4.seek(0)
     return endian
 
-def get_dtype(Type, precision='default'):
+def get_dtype(matrix_type, precision='default'):
     """reset the type if 'default' not selected"""
     if precision == 'single':
-        if Type in [1, 2]:
+        if matrix_type in [1, 2]:
             dtype = 'float32'
         else:
             dtype = 'complex64'
     elif precision == 'double':
-        if Type in [1, 2]:
+        if matrix_type in [1, 2]:
             dtype = 'float64'
         else:
             dtype = 'complex128'
     else:  # default
-        if Type == 1:
+        if matrix_type == 1:
             dtype = 'float32'
-        elif Type == 2:
+        elif matrix_type == 2:
             dtype = 'float64'
-        elif Type == 3:
+        elif matrix_type == 3:
             dtype = 'complex64'
         else:
             dtype = 'complex128'
@@ -1646,51 +1674,56 @@ def _get_type_nwv(A, precision='default'):
     Returns
     -------
     matrix_type : int
-        1 = real, single precision
-        2 = real, double precision
-        3 = complex, single precision
-        4 = complex, double precision
+        the dtype of the matrix as an integer
     nwords_per_value : int
         Number of words per value
 
-    .. note:: a word is 4 bytes
-              nwords(float32)=1;    single precison
-              nwords(complex64)=2;  single precison
-              nwords(float64)=2;    double precision
-              nwords(complex128)=4; double precision
+    A word is 4 bytes
+
+    +-------------+------------+-----------+--------+--------+
+    | Matrix Type |   dtype    | precision | nwords | nbytes |
+    +=============+============+===========+========+========+
+    |      1      | float32    |   single  |    1   |    4   |
+    +-------------+------------+-----------+--------+--------+
+    |      2      | complex64  |   single  |    2   |    8   |
+    +-------------+------------+-----------+--------+--------+
+    |      3      | float64    |   double  |    2   |    8   |
+    +-------------+------------+-----------+--------+--------+
+    |      4      | complex128 |   double  |    4   |   16   |
+    +-------------+------------+-----------+--------+--------+
     """
     # real
     if isinstance(A.dtype.type(), float32):
         nwords_per_value = 1
         if precision != 'double':
-            Type = 1
+            matrix_type = 1
         else:
-            Type = 2
+            matrix_type = 2
     elif isinstance(A.dtype.type(), float64):
         nwords_per_value = 1
         if precision != 'single':
-            Type = 2
+            matrix_type = 2
         else:
-            Type = 1
+            matrix_type = 1
 
     # complex
     elif isinstance(A.dtype.type(), complex64):
         nwords_per_value = 2
         if precision != 'double':
-            Type = 3
+            matrix_type = 3
         else:
-            Type = 4
+            matrix_type = 4
     elif isinstance(A.dtype.type(), complex128):
         nwords_per_value = 2
         if precision != 'single':
-            Type = 4
+            matrix_type = 4
         else:
-            Type = 3
+            matrix_type = 3
     else:
-        msg = ('invalid Type, only float32, float64, '
+        msg = ('invalid matrix_type, only float32, float64, '
                'complex64, complex128; dtype=%r' % A.dtype)
         raise TypeError(msg)
-    return Type, nwords_per_value
+    return matrix_type, nwords_per_value
 
 
 def get_matrices():

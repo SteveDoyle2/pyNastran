@@ -1,4 +1,4 @@
-from pyNastran.op2.resultObjects.tableObject import RealTableArray, ComplexTableArray
+from pyNastran.op2.result_objects.table_object import RealTableArray, ComplexTableArray
 
 
 class RealForceVectorArray(RealTableArray):  # table_code=2, sort_code=0, thermal=0

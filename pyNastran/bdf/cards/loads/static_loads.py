@@ -782,7 +782,7 @@ class Moment(Load):
 class FORCE(Force):
     type = 'FORCE'
 
-    def __init__(self):
+    def __init__(self, sid, node, cid, mag, xyz, comment=''):
         """
         +-------+-----+------+-------+------+------+------+------+
         |   1   |  2  |  3   |   4   |  5   |  6   |   7  |   8  |
@@ -795,29 +795,35 @@ class FORCE(Force):
         +-------+-----+------+-------+------+------+------+------+
         """
         Force.__init__(self)
-
-    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        self.sid = integer(card, 1, 'sid')
-        self.node = integer(card, 2, 'node')
-        self.cid = integer_or_blank(card, 3, 'cid', 0)
-        self.mag = double(card, 4, 'mag')
-        self.xyz = array([double_or_blank(card, 5, 'X1', 0.0),
+        self.sid = sid
+        self.node = node
+        self.cid = cid
+        self.mag = mag
+        self.xyz = xyz
+
+    @classmethod
+    def add_card(self, card, comment=''):
+        sid = integer(card, 1, 'sid')
+        node = integer(card, 2, 'node')
+        cid = integer_or_blank(card, 3, 'cid', 0)
+        mag = double(card, 4, 'mag')
+        xyz = array([double_or_blank(card, 5, 'X1', 0.0),
                           double_or_blank(card, 6, 'X2', 0.0),
                           double_or_blank(card, 7, 'X3', 0.0)])
         assert len(card) <= 8, 'len(FORCE card) = %i' % len(card)
+        return FORCE(sid, node, cid, mag, xyz, comment=comment)
 
+    @classmethod
     def add_op2_data(self, data, comment=''):
-        if comment:
-            self._comment = comment
-        self.sid = data[0]
-        self.node = data[1]
-        self.cid = data[2]
-        self.mag = data[3]
-        xyz = data[4:7]
+        sid = data[0]
+        node = data[1]
+        cid = data[2]
+        mag = data[3]
+        xyz = array(data[4:7])
         assert len(xyz) == 3, 'xyz=%s' % str(xyz)
-        self.xyz = array(xyz)
+        return FORCE(sid, node, cid, mag, xyz, comment=comment)
 
     @property
     def node_id(self):
@@ -1152,44 +1158,49 @@ class FORCE2(Force):
 class MOMENT(Moment):
     type = 'MOMENT'
 
-    def __init__(self):
+    def __init__(self, sid, node, cid, mag, xyz, comment=''):
         """
         Defines a static concentrated moment at a grid point by specifying a
         scale factor and a vector that determines the direction.::
 
         +--------+-----+---+-----+-----+-----+-----+-----+
-        | MOMENT | SID | G | CID | M   |  N1 |  N2 |  N3 |
+        | MOMENT | SID | G | CID |  M  |  N1 |  N2 |  N3 |
         +--------+-----+---+-----+-----+-----+-----+-----+
-        | MOMENT | 2   | 5 |  6  | 2.9 | 0.0 | 1.0 | 0.0 |
+        | MOMENT |  2  | 5 |  6  | 2.9 | 0.0 | 1.0 | 0.0 |
         +--------+-----+---+-----+-----+-----+-----+-----+
         """
         Moment.__init__(self)
-
-    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        self.sid = integer(card, 1, 'sid')
-        self.node = integer(card, 2, 'node')
-        self.cid = integer_or_blank(card, 3, 'cid', 0)
-        self.mag = double(card, 4, 'mag')
+        self.sid = sid
+        self.node = node
+        self.cid = cid
+        self.mag = mag
+        self.xyz = xyz
+
+    @classmethod
+    def add_card(self, card, comment=''):
+        sid = integer(card, 1, 'sid')
+        node = integer(card, 2, 'node')
+        cid = integer_or_blank(card, 3, 'cid', 0)
+        mag = double(card, 4, 'mag')
 
         xyz = array([double_or_blank(card, 5, 'X1', 0.0),
                      double_or_blank(card, 6, 'X2', 0.0),
                      double_or_blank(card, 7, 'X3', 0.0)])
         assert len(card) <= 8, 'len(MOMENT card) = %i' % len(card)
         assert len(xyz) == 3, 'xyz=%s' % str(xyz)
-        self.xyz = xyz
+        return MOMENT(sid, node, cid, mag, xyz, comment=comment)
 
+    @classmethod
     def add_op2_data(self, data, comment=''):
-        if comment:
-            self._comment = comment
-        self.sid = data[0]
-        self.node = data[1]
-        self.cid = data[2]
-        self.mag = data[3]
+        sid = data[0]
+        node = data[1]
+        cid = data[2]
+        mag = data[3]
         xyz = data[4:7]
         assert len(xyz) == 3, 'xyz=%s' % str(xyz)
-        self.xyz = xyz
+        return MOMENT(sid, node, cid, mag, xyz, comment=comment)
 
     def Cid(self):
         if isinstance(self.cid, integer_types):

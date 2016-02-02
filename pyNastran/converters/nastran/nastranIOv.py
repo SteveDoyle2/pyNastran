@@ -309,7 +309,7 @@ class NastranIO(object):
                                   xref_constraints=False)
         else:  # read the bdf/punch
             model = BDF(log=self.log, debug=True)
-            self.model_type = model.model_type
+            self.model_type = 'nastran'
             model.read_bdf(bdf_filename,
                            punch=punch, xref=False)
             # model.cross_reference(xref=True, xref_loads=xref_loads,
