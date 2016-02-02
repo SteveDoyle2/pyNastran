@@ -37,12 +37,12 @@ This is the pyNastran.op2.rst file.
     :undoc-members:
     :show-inheritance:
 
-:mod:`op2Codes` Module
+:mod:`op2_codes` Module
 ----------------------
 
-.. inheritance-diagram:: pyNastran.op2.op2Codes
+.. inheritance-diagram:: pyNastran.op2.op2_codes
 
-.. automodule:: pyNastran.op2.op2Codes
+.. automodule:: pyNastran.op2.op2_codes
     :members:
     :private-members:
     :undoc-members:
@@ -95,7 +95,7 @@ This is the pyNastran.op2.rst file.
 
 .. toctree::
 
-    pyNastran.op2.resultObjects
+    pyNastran.op2.result_objects
     pyNastran.op2.tables
     pyNastran.op2.test
 

@@ -3,38 +3,18 @@ f06 Package
 
 This is the pyNastran.f06.rst file.
 
-:mod:`f06` Module
------------------
 
-.. inheritance-diagram:: pyNastran.f06.f06
-
-.. automodule:: pyNastran.f06.f06
-    :members:
-    :private-members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`f06Writer` Module
+:mod:`f06_writer` Module
 -----------------------
 
-.. inheritance-diagram:: pyNastran.f06.f06Writer
+.. inheritance-diagram:: pyNastran.f06.f06_writer
 
-.. automodule:: pyNastran.f06.f06Writer
+.. automodule:: pyNastran.f06.f06_writer
     :members:
     :private-members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`f06_classes` Module
--------------------------
-
-.. inheritance-diagram:: pyNastran.f06.f06_classes
-
-.. automodule:: pyNastran.f06.f06_classes
-    :members:
-    :private-members:
-    :undoc-members:
-    :show-inheritance:
 
 :mod:`f06_formatting` Module
 ----------------------------
@@ -61,6 +41,5 @@ This is the pyNastran.f06.rst file.
 
 .. toctree::
 
-    pyNastran.f06.tables
     pyNastran.f06.test
 

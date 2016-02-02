@@ -1237,7 +1237,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                     self._read_fol()
                 elif table_name in [b'SDF', b'PMRF']:  #, 'PERF'
                     self._read_sdf()
-                elif table_name in [b'IBULK']:
+                elif table_name in [b'IBULK', b'CDDATA']:
                     self._read_ibulk()
                 elif table_name in MATRIX_TABLES:
                     self._read_matrix()

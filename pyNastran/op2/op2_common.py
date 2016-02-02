@@ -11,7 +11,7 @@ import numpy as np
 
 from pyNastran import is_release
 from pyNastran.f06.f06_writer import F06Writer
-from pyNastran.op2.op2Codes import Op2Codes
+from pyNastran.op2.op2_codes import Op2Codes
 from pyNastran.op2.op2_helper import polar_to_real_imag
 
 from pyNastran.op2.errors import SortCodeError, MultipleSolutionNotImplementedError # DeviceCodeError,
