@@ -60,26 +60,6 @@ class BaseCard(object):
         ]
         return object_methods(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
 
-    #def rawFields(self):
-        #self.deprecated('rawFields()', 'raw_fields()', '0.7')
-        #return self.raw_fields()
-
-    #def reprFields(self):
-        #self.deprecated('reprFields()', 'repr_fields()', '0.7')
-        #return self.repr_fields()
-
-    #def reprCard(self):
-        #self.deprecated('reprCard()', 'print_repr_card(size, is_double)', '0.7')
-        #return self.print_repr_card()
-
-    #def repr_card(self):
-        #self.deprecated('repr_card()', 'print_repr_card(size, is_double)', '0.7')
-        #return self.print_repr_card()
-
-    #def printRawFields(self, size=8):
-        #self.deprecated('printRawFields(size)', 'print_raw_card(size, is_double)', '0.7')
-        #return self.print_raw_card(size=size)
-
     @property
     def comment(self):
         # just for testing
@@ -260,7 +240,7 @@ class Property(BaseCard):
         if isinstance(self.mid, integer_types):
             return self.mid
         else:
-            return self.mid.mid
+            return self.mid_ref.mid
 
     def cross_reference(self, model):
         """dummy cross reference method for a Property"""

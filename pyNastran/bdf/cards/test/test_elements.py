@@ -13,8 +13,7 @@ class TestElements(unittest.TestCase):
         card = BDFCard(card)
 
         size = 8
-        elem = CBUSH()
-        elem.add_card(card)
+        elem = CBUSH.add_card(card)
         self.assertEqual(elem.Eid(), 101)
         self.assertEqual(elem.Pid(), 102)
         elem.write_card(size, 'dummy')
@@ -26,8 +25,7 @@ class TestElements(unittest.TestCase):
         card = BDFCard(card)
 
         size = 8
-        elem = CDAMP1()
-        elem.add_card(card)
+        elem = CDAMP1.add_card(card)
         self.assertEqual(elem.Eid(), 2001)
         self.assertEqual(elem.Pid(), 20)
         node_ids = elem.node_ids

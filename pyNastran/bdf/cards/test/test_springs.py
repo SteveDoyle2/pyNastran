@@ -10,8 +10,7 @@ class TestSprings(unittest.TestCase):
         card = BDFCard(card)
 
         size = 8
-        elem = PELAS()
-        elem.add_card(card)
+        elem = PELAS.add_card(card)
         elem.write_card(size, 'dummy')
         elem.raw_fields()
         self.assertEqual(elem.Pid(), 201)

@@ -426,28 +426,34 @@ class CMASS4(PointMassElement):
         1: 'eid', 2:'mass', 3:'s1', 4:'s2',
     }
 
-    def __init__(self):
+    def __init__(self, eid, mass, s1, s2=0):
         PointMassElement.__init__(self)
-
-    def add_card(self, card, icard=0, comment=''):
         if comment:
             self._comment = comment
-        ioffset = icard * 4
-        self.eid = integer(card, 1 + ioffset, 'eid')
-        self.mass = double_or_blank(card, 2 + ioffset, 'mass', 0.)
-        self.s1 = integer(card, 3 + ioffset, 's1')
-        self.s2 = integer_or_blank(card, 4 + ioffset, 's2', 0)
-        assert len(card) <= 9, 'len(CMASS4 card) = %i' % len(card)
+        self.eid = eid
+        self.mass = mass
+        self.s1 = s1
+        self.s2 = s2
         assert self.s1 != self.s2
 
+    @classmethod
+    def add_card(self, card, icard=0, comment=''):
+        ioffset = icard * 4
+        eid = integer(card, 1 + ioffset, 'eid')
+        mass = double_or_blank(card, 2 + ioffset, 'mass', 0.)
+        s1 = integer(card, 3 + ioffset, 's1')
+        s2 = integer_or_blank(card, 4 + ioffset, 's2', 0)
+        assert len(card) <= 9, 'len(CMASS4 card) = %i' % len(card)
+        return CMASS4(eid, mass, s1, s2, comment=comment)
+
+    @classmethod
     def add_op2_data(self, data, comment=''):
         if comment:
             self._comment = comment
-        self.eid = data[0]
-        self.mass = data[1]
-        self.s1 = data[2]
-        self.s2 = data[3]
-        assert self.s1 != self.s2
+        eid = data[0]
+        mass = data[1]
+        s1 = data[2]
+        s2 = data[3]
 
     def Eid(self):
         return self.eid

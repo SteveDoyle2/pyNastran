@@ -24,8 +24,7 @@ class TestLoads(unittest.TestCase):
         cardi = BDFCard(card)
 
         size = 8
-        card = DAREA()
-        card.add_card(cardi)
+        card = DAREA.add_card(cardi)
         card.write_card(size, 'dummy')
         card.raw_fields()
 

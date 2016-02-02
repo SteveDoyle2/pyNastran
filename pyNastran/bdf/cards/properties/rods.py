@@ -27,27 +27,37 @@ from pyNastran.bdf.field_writer_16 import print_card_16
 class PROD(Property):
     type = 'PROD'
 
-    def __init__(self):
+    def __init__(self, pid, mid, A, j=0., c=0., nsm=0., comment=''):
         Property.__init__(self)
-
-    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        self.pid = integer(card, 1, 'pid')
-        self.mid = integer(card, 2, 'mid')
-        self.A = double(card, 3, 'A')
-        self.j = double_or_blank(card, 4, 'J', 0.0)
-        self.c = double_or_blank(card, 5, 'c', 0.0)
-        self.nsm = double_or_blank(card, 6, 'nsm', 0.0)
-        assert len(card) <= 7, 'len(PROD card) = %i' % len(card)
+        self.pid = pid
+        self.mid = mid
+        self.A = A
+        self.j = j
+        self.c = c
+        self.nsm = nsm
 
+    @classmethod
+    def add_card(self, card, comment=''):
+        pid = integer(card, 1, 'pid')
+        mid = integer(card, 2, 'mid')
+        A = double(card, 3, 'A')
+        j = double_or_blank(card, 4, 'J', 0.0)
+        c = double_or_blank(card, 5, 'c', 0.0)
+        nsm = double_or_blank(card, 6, 'nsm', 0.0)
+        assert len(card) <= 7, 'len(PROD card) = %i' % len(card)
+        return PROD(pid, mid, A, j, c, nsm, comment=comment)
+
+    @classmethod
     def add_op2_data(self, data):
-        self.pid = data[0]
-        self.mid = data[1]
-        self.A = data[2]
-        self.j = data[3]
-        self.c = data[4]
-        self.nsm = data[5]
+        pid = data[0]
+        mid = data[1]
+        A = data[2]
+        j = data[3]
+        c = data[4]
+        nsm = data[5]
+        return PROD(pid, mid, A, j, c, nsm, comment=comment)
 
     def _verify(self, xref=False):
         pid = self.Pid()
@@ -125,30 +135,40 @@ class PROD(Property):
 class PTUBE(Property):
     type = 'PTUBE'
 
-    def __init__(self):
+    def __init__(self, pid, mid, OD1, t, nsm, OD2, comment=''):
         Property.__init__(self)
-
-    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        self.pid = integer(card, 1, 'pid')
-        self.mid = integer(card, 2, 'mid')
-        self.OD1 = double(card, 3, 'OD1')
-        self.t = double_or_blank(card, 4, 't')
-        if self.t is None:
-            self.t = self.OD1 / 2.
-        self.nsm = double_or_blank(card, 5, 'nsm', 0.0)
-        self.OD2 = double_or_blank(card, 6, 'OD2', self.OD1)
-        assert len(card) <= 7, 'len(PTUBE card) = %i' % len(card)
+        self.pid = pid
+        self.mid = mid
+        self.OD1 = OD1
+        self.OD2 = OD2
+        self.t = t
+        self.nsm = nsm
 
+    @classmethod
+    def add_card(self, card, comment=''):
+        pid = integer(card, 1, 'pid')
+        mid = integer(card, 2, 'mid')
+        OD1 = double(card, 3, 'OD1')
+        t = double_or_blank(card, 4, 't')
+        if t is None:
+            t = OD1 / 2.
+        nsm = double_or_blank(card, 5, 'nsm', 0.0)
+        OD2 = double_or_blank(card, 6, 'OD2', OD1)
+        assert len(card) <= 7, 'len(PTUBE card) = %i' % len(card)
+        return PTUBE(pid, mid, OD1, t, nsm, OD2, comment=comment)
+
+    @classmethod
     def add_op2_data(self, data):
-        self.pid = data[0]
-        self.mid = data[1]
-        self.OD1 = data[2]
-        self.t = data[3]
-        self.nsm = data[4]
-        self.OD2 = self.OD1
-        #self.OD2 = data[5]  #: .. note:: quirk to this one...
+        pid = data[0]
+        mid = data[1]
+        OD1 = data[2]
+        t = data[3]
+        nsm = data[4]
+        OD2 = OD1
+        #OD2 = data[5]  #: .. note:: quirk to this one...
+        return PTUBE(pid, mid, OD1, t, nsm, OD2, comment=comment)
 
     def _verify(self, xref=False):
         pid = self.Pid()

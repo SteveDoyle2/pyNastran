@@ -874,23 +874,7 @@ class GRID(Node):
         else:
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
-    def __init__(self):
-        Node.__init__(self)
-
-    def add_op2_data(self, data, comment=''):
-        if comment:
-            self._comment = comment
-        self.nid = data[0]
-        self.cp = data[1]
-        self.xyz = np.array(data[2:5])
-        self.cd = data[5]
-        self.ps = data[6]
-        self.seid = data[7]
-        if self.ps == 0:
-            self.ps = ''
-        assert len(self.xyz) == 3
-
-    def add(self, nid, cp=0, xyz=None, cd=0, ps='', seid=0):
+    def __init__(self, nid, cp=0, xyz=None, cd=0, ps='', seid=0, comment=''):
         """
         Creates the GRID card in a functional way
 
@@ -907,20 +891,38 @@ class GRID(Node):
         cd : int; default=0
             the analysis coordinate frame
         ps : str; default=''
-            additional SPCs in the analysis coordinate frame (e.g. '123')
+            Additional SPCs in the analysis coordinate frame (e.g. '123').
+            This corresponds to DOF set ``SG``.
         seid : int; default=0
             ???
         """
+        Node.__init__(self)
+        if comment:
+            self._comment = comment
         self.nid = nid
         self.cp = cp
         if xyz is None:
             xyz = [0., 0., 0.]
         self.xyz = np.asarray(xyz, dtype='float64')
-        assert xyz.shape == 3, xyz.shape
+        assert xyz.size == 3, xyz.shape
         self.cd = cd
         self.ps = ps
+        self.seid = seid
         self._validate_input()
 
+    @classmethod
+    def add_op2_data(self, data, comment=''):
+        nid = data[0]
+        cp = data[1]
+        xyz = np.array(data[2:5])
+        cd = data[5]
+        ps = data[6]
+        seid = data[7]
+        if ps == 0:
+            ps = ''
+        return GRID(nid, cp, xyz, cd, ps, seid, comment=comment)
+
+    @classmethod
     def add_card(self, card, comment=''):
         """
         Creates the GRID card
@@ -936,43 +938,41 @@ class GRID(Node):
         comment : str; default=''
           a comment for the card
         """
-        if comment:
-            self._comment = comment
-
         nfields = len(card)
         #: Node ID
-        self.nid = integer(card, 1, 'nid')
+        nid = integer(card, 1, 'nid')
 
         #: Grid point coordinate system
-        self.cp = integer_or_blank(card, 2, 'cp', 0)
+        cp = integer_or_blank(card, 2, 'cp', 0)
 
         #: node location in local frame
-        self.xyz = np.array([
+        xyz = np.array([
             double_or_blank(card, 3, 'x1', 0.),
             double_or_blank(card, 4, 'x2', 0.),
             double_or_blank(card, 5, 'x3', 0.)], dtype='float64')
 
         if nfields > 6:
             #: Analysis coordinate system
-            self.cd = integer_or_blank(card, 6, 'cd', 0)
+            cd = integer_or_blank(card, 6, 'cd', 0)
 
             #: SPC constraint
-            self.ps = u(integer_or_blank(card, 7, 'ps', ''))
+            ps = u(integer_or_blank(card, 7, 'ps', ''))
 
             #: Superelement ID
-            self.seid = integer_or_blank(card, 8, 'seid', 0)
+            seid = integer_or_blank(card, 8, 'seid', 0)
             assert len(card) <= 9, 'len(GRID card) = %i' % len(card)
         else:
-            self.cd = 0
-            self.ps = ''
-            self.seid = 0
-        self._validate_input()
+            cd = 0
+            ps = ''
+            seid = 0
+        return GRID(nid, cp, xyz, cd, ps, seid, comment=comment)
 
     def _validate_input(self):
         assert self.nid > 0, 'nid=%s' % (self.nid)
         assert self.cp >= 0, 'cp=%s' % (self.cp)
         assert self.cd >= -1, 'cd=%s' % (self.cd)
         assert self.seid >= 0, 'seid=%s' % (self.seid)
+        assert len(self.xyz) == 3
 
     def Position(self, debug=False):
         self.deprecated('Position()', 'get_position()', '0.8')
