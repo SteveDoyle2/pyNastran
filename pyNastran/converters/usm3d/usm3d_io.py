@@ -195,7 +195,7 @@ class Usm3dIO(object):
             self.grid.Update()
 
         # regions/loads
-        self.TurnTextOn()
+        self. turn_text_on()
         self.scalarBar.Modified()
 
         cases = {}

@@ -65,7 +65,7 @@ class NastranIO(NastranIO_xref):
             #self.scalarBar.VisibilityOff()
             return
         else:
-            self.TurnTextOff()
+            self.turn_text_off()
             self.grid.Reset()
             self.grid2.Reset()
             #self.gridResult = vtk.vtkFloatArray()
@@ -975,7 +975,7 @@ class NastranIO(NastranIO_xref):
 
     def load_nastran_results(self, op2_filename, dirname):
         #gridResult.SetNumberOfComponents(self.nElements)
-        self.TurnTextOn()
+        self. turn_text_on()
         self.scalarBar.VisibilityOn()
         self.scalarBar.Modified()
 

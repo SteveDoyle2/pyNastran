@@ -1707,7 +1707,7 @@ class BDFMethods(BDFAttributes):
         -------
         eid_set : Dict[tuple(int, int, ...)] = List[int]
            key : sorted face
-           value : list of element ids with the face
+           value : list of element ids with that face
         face_map : Dict[tuple(int, int, ...)] = List[int]
            key : sorted face
            value : unsorted face
@@ -1760,6 +1760,8 @@ class BDFMethods(BDFAttributes):
             len(self.property_ids) == 0):
             return
         eid_set, face_map = self.get_solid_skin_faces()
+        if len(eid_set) == 0:
+            return
 
         eid_set_to_write = set([])
         nid_set_to_write = set([])

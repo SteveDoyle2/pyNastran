@@ -117,6 +117,7 @@ NX_RESULT_TABLES = [
 
 MSC_RESULT_TABLES = [
     # new
+    b'TOLD',
     b'RAPCONS', b'RAQCONS', b'RADCONS', b'RASCONS', b'RAFCONS', b'RAECONS',
     b'RANCONS', b'RAGCONS', b'RADEFFM', b'RAPEATC', b'RAQEATC', b'RADEATC',
     b'RASEATC', b'RAFEATC', b'RAEEATC', b'RANEATC', b'RAGEATC',
@@ -270,7 +271,8 @@ NX_MATRIX_TABLES = [
 
 
 MSC_MATRIX_TABLES = [
-    b'TOLD', b'SDT', #b'STDISP',
+    #b'TOLD',
+    b'SDT', #b'STDISP',
     b'TOLB2', b'ADSPT', #b'MONITOR',
     b'PMRT', b'PFRT', b'PGRT', # b'AEMONPT',
     b'AFRT', b'AGRT',

@@ -97,7 +97,7 @@ class PanairIO(object):
             self.grid.Update()
 
         # loadPanairResults - regions/loads
-        self.TurnTextOn()
+        self. turn_text_on()
         self.scalarBar.VisibilityOn()
         self.scalarBar.Modified()
 

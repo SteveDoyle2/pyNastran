@@ -419,6 +419,8 @@ class PLOTEL(BaseCard):
         BaseCard.__init__(self)
         if comment:
             self._comment = comment
+        self.eid = eid
+        self.nodes = nodes
 
     @classmethod
     def add_card(self, card, comment=''):

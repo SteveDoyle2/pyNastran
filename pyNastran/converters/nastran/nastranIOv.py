@@ -249,7 +249,7 @@ class NastranIO(object):
             skip_reading = True
             return skip_reading
         else:
-            self.TurnTextOff()
+            self.turn_text_off()
             self.grid.Reset()
 
             #self.gridResult = vtk.vtkFloatArray()
@@ -277,6 +277,8 @@ class NastranIO(object):
         skip_reading = self._remove_old_nastran_geometry(bdf_filename)
         pink = (0.98, 0.4, 0.93)
         orange = (219/255., 168/255., 13/255.)
+        blue = (0., 0., 1.)
+        red = (1., 0., 0.)
         # if 0:
             # yellow = (1., 1., 0.)
             # line_width = 3
@@ -467,6 +469,32 @@ class NastranIO(object):
         self.log_info("ymin=%s ymax=%s dy=%s" % (ymin, ymax, ymax-ymin))
         self.log_info("zmin=%s zmax=%s dz=%s" % (zmin, zmax, zmax-zmin))
 
+        if model.splines:
+            ispline = 0
+            for spline_id, spline in sorted(model.splines.items()):
+                setg = spline.setg_ref
+                ids = setg.get_IDs()
+                name = 'spline_%s' % spline_id
+                self.create_alternate_vtk_grid(
+                    name, color=blue, opacity=1.0, point_size=4,
+                    representation='point', is_visible=False)
+                self._add_nastran_nodes_to_grid(name, ids, model)
+                ispline += 1
+        if model.suport:
+            ids = []
+            for suport in model.suport:
+                print(suport)
+                try:
+                    idsi = suport.node_ids
+                except:
+                    print(suport.object_attributes())
+                    print(suport.object_methods())
+                    raise
+                print('idsi =', idsi)
+                ids += idsi
+            self.create_alternate_vtk_grid(
+                'SUPORT', color=red, opacity=1.0, point_size=42,
+                representation='point', is_visible=True)
         j = 0
         nid_to_pid_map, icase, cases, form = self.map_elements(
             points, self.nidMap, model, j, dim_max, plot=plot, xref_loads=xref_loads)
@@ -943,6 +971,7 @@ class NastranIO(object):
                 # continue
             ieid = self.eidMap[eid]
             elem = model.elements[eid]
+            print(elem)
             pid = elem.pid
             if pid.type in ['PBAR', 'PBEAM']:
                 bar_type = 'bar'
@@ -950,6 +979,7 @@ class NastranIO(object):
                 bar_type = pid.Type
             else:
                 raise NotImplementedError(pid)
+            print('bar_type =', bar_type)
             found_bar_types.add(bar_type)
 
             (nid1, nid2) = elem.node_ids
@@ -964,8 +994,8 @@ class NastranIO(object):
             ihat = i / Li
 
             if 1:
-                if elem.pa == 0 and elem.pb == 0:
-                    continue
+                #if elem.pa == 0 and elem.pb == 0:
+                    #continue
 
                 if elem.pa == 1 or elem.pb == 1:
                     no_axial[ieid] = 1
@@ -1058,7 +1088,10 @@ class NastranIO(object):
                 # basic - cid = 0
                 pass
             else:
-                raise NotImplementedError(elem.offt)
+                msg = 'offt_vector=%r is not supported; offt=%s' % (offt_vector, elem.offt)
+                self.log.debug(msg)
+                raise NotImplementedError(msg)
+            print('v =', v)
 
             # rotate wa
             wa = elem.wa
@@ -1072,8 +1105,11 @@ class NastranIO(object):
             elif offt_end_a == 'O':
                 wa = node1.cp.transform_node_to_global(n1 - wa)
             else:
-                raise NotImplementedError(elem.offt)
+                msg = 'offt_end_a=%r is not supported; offt=%s' % (offt_end_a, elem.offt)
+                self.log.debug(msg)
+                raise NotImplementedError(msg)
 
+            print('wa =', wa)
             # rotate wb
             wb = elem.wb
             if offt_end_b == 'G':
@@ -1086,8 +1122,11 @@ class NastranIO(object):
             elif offt_end_b == 'O':
                 wb = node1.cp.transform_node_to_global(n2 - wb)
             else:
-                raise NotImplementedError(elem.offt)
+                msg = 'offt_end_b=%r is not supported; offt=%s' % (offt_end_b, elem.offt)
+                model.log.debug(msg)
+                raise NotImplementedError(msg)
 
+            print('wb =', wb)
             ## concept has a GOO
             if not elem.offt in ['GGG', 'BGG']:
                 msg = 'offt=%r for CBAR/CBEAM eid=%s is not supported...skipping' % (elem.offt, eid)
@@ -1109,10 +1148,14 @@ class NastranIO(object):
                 msg += 'v   =%s\n' % str(v)
                 msg += 'vhat=%s\n' % str(vhat)
                 msg += 'z=cross(ihat, vhat)'
+                print(msg)
                 raise ValueError(msg)
 
             zhat = z / norm(z)
             yhat = cross(zhat, ihat) # j
+            print('ihat =', ihat)
+            print('yhat =', yhat)
+            print('zhat =', zhat)
             #if eid == 5570:
                 #print('  check - eid=%s yhat=%s zhat=%s v=%s i=%s n%s=%s n%s=%s' % (
                       #eid, yhat, zhat, v, i, nid1, n1, nid2, n2))
@@ -1230,7 +1273,8 @@ class NastranIO(object):
                 icase += 1
 
         # print(geo_form)
-        geo_form.append(bar_form)
+        if len(bar_form[2]):
+            geo_form.append(bar_form)
         return icase
 
     def _add_nastran_lines_xyz_to_grid(self, name, lines, model):
@@ -1347,6 +1391,7 @@ class NastranIO(object):
         """used to create MPC independent/dependent nodes"""
         nnodes = len(node_ids)
         if nnodes == 0:
+            model.log.warning('0 nodes added for %r' % name)
             return
         points = vtk.vtkPoints()
         points.SetNumberOfPoints(nnodes)
@@ -1361,6 +1406,7 @@ class NastranIO(object):
                 continue
 
             if nid not in model.nodes:
+                model.log.warning('nid=%s doesnt exist' % nid)
                 continue
             # point = self.grid.GetPoint(i)
             # points.InsertPoint(j, *point)
@@ -2450,7 +2496,7 @@ class NastranIO(object):
         Loads the Nastran results into the GUI
         """
         #gridResult.SetNumberOfComponents(self.nElements)
-        self.TurnTextOn()
+        self. turn_text_on()
         self.scalarBar.VisibilityOn()
         self.scalarBar.Modified()
         #self.show_caero_mesh()
