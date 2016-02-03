@@ -1,6 +1,6 @@
 from docopt import docopt
 
-def docopt_types(doc, argv=None, help=True, version=None, options_first=False, types=None):
+def docopt_types(doc, argv=None, help=True, version=None, options_first=False, type_defaults=None):
     """Parse `argv` based on command-line interface described in `doc`.
 
     `docopt` creates your command-line interface based on its
@@ -24,9 +24,9 @@ def docopt_types(doc, argv=None, help=True, version=None, options_first=False, t
     options_first : bool (default: False)
         Set to True to require options preceed positional arguments,
         i.e. to forbid options and positional arguments intermix.
-    types : dict (default:None)
+    type_defaults : dict (default:None)
         key : name of argument
-        value : type
+        value : [type, default]
 
     Returns
     -------
@@ -67,13 +67,16 @@ def docopt_types(doc, argv=None, help=True, version=None, options_first=False, t
 
     """
     data = docopt(doc, argv=None, help=True, version=None, options_first=False)
-    if types:
+    if type_defaults:
         data2 = data
-        for key, type_func in sorted(types.items()):
+        for key, (type_func, default) in sorted(type_defaults.items()):
             try:
                 value_in = data[key]
             except KeyError:
                 msg = 'Key not found : key=%r\ndata.keys()=%s' % (key, list(data.keys()))
                 raise KeyError(msg)
-            data[key] = type_func(value_in)
+            if value_in is None:
+                data[key] = default
+            else:
+                data[key] = type_func(value_in)
     return data

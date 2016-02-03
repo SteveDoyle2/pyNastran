@@ -613,20 +613,24 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.log_mutex.unlock()
 
     def log_info(self, msg):
-        """ Helper funtion: log a messaage msg with a 'GUI:' prefix """
-        self.log.simple_msg(msg, 'GUI')
+        """ Helper funtion: log a messaage msg with a 'INFO:' prefix """
+        self.log.simple_msg(msg, 'INFO')
+
+    def log_debug(self, msg):
+        """ Helper funtion: log a messaage msg with a 'DEBUG:' prefix """
+        self.log.simple_msg(msg, 'DEBUG')
 
     def log_command(self, msg):
-        """ Helper funtion: log a messaage msg with a 'GUI:' prefix """
+        """ Helper funtion: log a messaage msg with a 'COMMAND:' prefix """
         self.log.simple_msg(msg, 'COMMAND')
 
     def log_error(self, msg):
-        """ Helper funtion: log a messaage msg with a 'GUI:' prefix """
+        """ Helper funtion: log a messaage msg with a 'GUI ERROR:' prefix """
         self.log.simple_msg(msg, 'GUI ERROR')
 
     def log_warning(self, msg):
-        """ Helper funtion: log a messaage msg with a 'GUI:' prefix """
-        self.log.simple_msg(msg, 'GUI ERROR')
+        """ Helper funtion: log a messaage msg with a 'WARNING:' prefix """
+        self.log.simple_msg(msg, 'WARNING')
 
     def change_background_color(self):
         """ Choose a background color """
@@ -3106,7 +3110,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             self.log_command(msg)
 
     def set_bar_scale(self, name, bar_scale):
-        print('set_bar_scale; name=%s scale=%s' % (name, bar_scale))
+        print('set_bar_scale - GuiCommon2; name=%s scale=%s' % (name, bar_scale))
         bar_y = self.bar_lines[name]
         #dy = c - yaxis
         #dz = c - zaxis

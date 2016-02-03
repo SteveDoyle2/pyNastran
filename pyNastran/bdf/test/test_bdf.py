@@ -971,10 +971,10 @@ def main():
         sys.exit(msg)
 
     ver = str(pyNastran.__version__)
-    types = {
-        '--nerrors' : int,
+    type_defaults = {
+        '--nerrors' : [int, 100],
     }
-    data = docopt_types(msg, version=ver, types=types)
+    data = docopt_types(msg, version=ver, type_defaults=type_defaults)
 
     for key, value in sorted(iteritems(data)):
         print("%-12s = %r" % (key.strip('--'), value))

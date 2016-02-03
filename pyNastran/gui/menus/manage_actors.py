@@ -184,7 +184,8 @@ class EditGroupProperties(QtGui.QDialog):
         self.bar_scale_edit = QtGui.QDoubleSpinBox(self)
         #self.bar_scale_edit.setRange(0.1, 1.0)
         self.bar_scale_edit.setDecimals(2)
-        self.bar_scale_edit.setSingleStep(bar_scale / 10.)
+        #self.bar_scale_edit.setSingleStep(bar_scale / 10.)
+        self.bar_scale_edit.setSingleStep(0.05)
         self.bar_scale_edit.setValue(bar_scale)
         if bar_scale == 0.0:
             self.bar_scale.setEnabled(False)
@@ -278,12 +279,14 @@ class EditGroupProperties(QtGui.QDialog):
                 else:
                     self.bar_scale.setEnabled(True)
                     self.bar_scale_edit.setEnabled(True)
+                    #self.bar_scale_edit.setSingleStep(bar_scale / 10.)
 
             #if self.representation in ['wire', 'surface']:
 
         self.opacity_edit.setValue(opacity)
         self.checkbox_show.setChecked(is_visible)
         self.checkbox_hide.setChecked(not is_visible)
+        self.on_apply(force=True)
 
     #def on_name_select(self):
         #print('on_name_select')
@@ -392,43 +395,43 @@ class EditGroupProperties(QtGui.QDialog):
                                           "background-color: rgb(%s, %s, %s);" % tuple(obj.color) +
                                           #"border:1px solid rgb(255, 170, 255); "
                                           "}")
-        self.on_apply()
+        self.on_apply(force=True)
 
     def on_show(self):
         name = self.active_key
         is_checked = self.checkbox_show.isChecked()
         self.out_data[name].is_visible = is_checked
-        self.on_apply()
+        self.on_apply(force=True)
 
     def on_hide(self):
         name = self.active_key
         is_checked = self.checkbox_hide.isChecked()
         self.out_data[name].is_visible = not is_checked
-        self.on_apply()
+        self.on_apply(force=True)
 
     def on_line_width(self):
         name = self.active_key
         line_width = self.line_width_edit.value()
         self.out_data[name].line_width = line_width
-        self.on_apply()
+        self.on_apply(force=True)
 
     def on_point_size(self):
         name = self.active_key
         point_size = self.point_size_edit.value()
         self.out_data[name].point_size = point_size
-        self.on_apply()
+        self.on_apply(force=True)
 
     def on_bar_scale(self):
         name = self.active_key
         bar_scale = self.bar_scale_edit.value()
         self.out_data[name].bar_scale = bar_scale
-        self.on_apply()
+        self.on_apply(force=True)
 
     def on_opacity(self):
         name = self.active_key
         opacity = self.opacity_edit.value()
         self.out_data[name].opacity = opacity
-        self.on_apply()
+        self.on_apply(force=True)
 
     #def on_axis(self, text):
         ##print(self.combo_axis.itemText())
@@ -493,14 +496,14 @@ class EditGroupProperties(QtGui.QDialog):
             #return True
         #return False
 
-    def on_apply(self):
+    def on_apply(self, force=False):
         passed = self.on_validate()
-        if passed:
+        if passed or force:
             self.win_parent.on_update_geometry_properties(self.out_data)
         return passed
 
     def on_cancel(self):
-        passed = self.on_apply()
+        passed = self.on_apply(force=True)
         if passed:
             self.close()
             #self.destroy()

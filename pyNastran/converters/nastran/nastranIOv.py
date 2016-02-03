@@ -964,8 +964,8 @@ class NastranIO(object):
             ihat = i / Li
 
             if 1:
-                if elem.pa == 0 and elem.pb == 0:
-                    continue
+                #if elem.pa == 0 and elem.pb == 0:
+                    #continue
 
                 if elem.pa == 1 or elem.pb == 1:
                     no_axial[ieid] = 1
@@ -1133,7 +1133,7 @@ class NastranIO(object):
         red = (1., 0., 0.)
         self.create_alternate_vtk_grid(
             'Bar Nodes', color=red, line_width=1, opacity=1.,
-            point_size=5, representation='point', bar_scale=scale, is_visible=True)
+            point_size=5, representation='point', bar_scale=0., is_visible=True)
         self._add_nastran_nodes_to_grid('Bar Nodes', bar_nids, model)
 
 
@@ -1149,10 +1149,10 @@ class NastranIO(object):
 
                 self.create_alternate_vtk_grid(
                     bar_y, color=green, line_width=5, opacity=1.,
-                    point_size=5, representation='wire', bar_scale=scale, is_visible=False)
+                    point_size=5, representation='wire', bar_scale=scale, is_visible=True)
                 self.create_alternate_vtk_grid(
                     bar_z, color=blue, line_width=5, opacity=1.,
-                    point_size=5, representation='wire', bar_scale=scale, is_visible=False)
+                    point_size=5, representation='wire', bar_scale=scale, is_visible=True)
 
                 self._add_nastran_lines_xyz_to_grid(bar_y, lines_bar_y, model)
                 self._add_nastran_lines_xyz_to_grid(bar_z, lines_bar_z, model)
@@ -1243,6 +1243,7 @@ class NastranIO(object):
         points.SetNumberOfPoints(nnodes)
 
         bar_lines = zeros((nnodes, 6))
+        assert name != u'Bar Nodes', name
         self.bar_lines[name] = bar_lines
 
         j = 0

@@ -2682,7 +2682,10 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                     raise RuntimeError(msg)
                 if self.is_reject(card_name):
                     if card_name not in self.card_count:
-                        if card_name in ['BEGIN BU', 'BEGIN SU', 'SUBCASE ', 'CEND']:
+                        if ' ' in card_name:
+                            raise RuntimeError('No spaces allowed in card name %r.  '
+                                               'Should this be a comment?\n%s%s' % (card_name, comment, card_lines))
+                        if card_name in ['SUBCASE ', 'CEND']:
                             raise RuntimeError('No executive/case control deck was defined.')
                         self.log.info('    rejecting card_name = %s' % card_name)
                     self._increase_card_count(card_name)
