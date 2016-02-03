@@ -434,8 +434,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
         Parameters
         ----------
-        self : OP2
-            the OP2 object pointer
         subcases : List[int, ...] / int; default=None->all subcases
             list of [subcase1_ID,subcase2_ID]
         """
@@ -950,8 +948,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
         Parameters
         ----------
-        self : OP2
-            the OP2 object pointer
         op2_filename : str
             the filename to check (None -> gui)
 
@@ -997,8 +993,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
         Parameters
         ----------
-        self : OP2
-            the OP2 object pointer
         op2_filename : str
             the op2 file
 
@@ -1857,8 +1851,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         """
         Parameters
         ----------
-        self : OP2
-            the OP2 object pointer
         matrices : Dict[str] = bool
             a dictionary of key=name, value=True/False,
             where True/False indicates the matrix should be read
@@ -1889,12 +1881,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         self._skip_subtables()
 
     def _read_omm2(self):
-        """
-        Parameters
-        ----------
-        self : OP2
-            the OP2 object pointer
-        """
         self.log.debug("table_name = %r" % self.table_name)
         self.table_name = self._read_table_name(rewind=False)
         self.read_markers([-1])
@@ -1913,12 +1899,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         self._read_subtables()
 
     def _read_fol(self):
-        """
-        Parameters
-        ----------
-        self : OP2
-            the OP2 object pointer
-        """
         self.log.debug("table_name = %r" % self.table_name)
         self.table_name = self._read_table_name(rewind=False)
         self.read_markers([-1])
@@ -1941,12 +1921,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         self._read_subtables()
 
     def _read_gpl(self):
-        """
-        Parameters
-        ----------
-        self : OP2
-            the OP2 object pointer
-        """
         self.table_name = self._read_table_name(rewind=False)
         self.log.debug('table_name = %r' % self.table_name)
         if self.is_debug_file:
@@ -1975,12 +1949,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             markers = self.get_nmarkers(1, rewind=True)
 
     def _read_extdb(self):
-        """
-        Parameters
-        ----------
-        self : OP2
-            the OP2 object pointer
-        """
         self.table_name = self._read_table_name(rewind=False)
         self.log.debug('table_name = %r' % self.table_name)
         if self.is_debug_file:
@@ -2024,12 +1992,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         #sys.exit()
 
     def _read_ibulk(self):
-        """
-        Parameters
-        ----------
-        self : OP2
-            the OP2 object pointer
-        """
         self.table_name = self._read_table_name(rewind=False)
         self.log.debug('table_name = %r' % self.table_name)
         if self.is_debug_file:
@@ -2056,12 +2018,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         marker_end, = self.get_nmarkers(1, rewind=False)
 
     def _read_meff(self):
-        """
-        Parameters
-        ----------
-        self : OP2
-            the OP2 object pointer
-        """
         self.table_name = self._read_table_name(rewind=False)
         self.log.debug('table_name = %r' % self.table_name)
         if self.is_debug_file:
@@ -2196,8 +2152,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
         Parameters
         ----------
-        self : OP2
-            the OP2 object pointer
         nmarkers : int
             the number of markers to read
 
@@ -2217,11 +2171,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
     def _read_geom_table(self):
         """
         Reads a geometry table
-
-        Parameters
-        ----------
-        self : OP2
-            the OP2 object pointer
         """
         self.table_name = self._read_table_name(rewind=False)
         if self.is_debug_file:
@@ -2258,12 +2207,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
 
     def _read_sdf(self):
-        """
-        Parameters
-        ----------
-        self : OP2
-            the OP2 object pointer
-        """
         self.log.debug("table_name = %r" % self.table_name)
         self.table_name = self._read_table_name(rewind=False)
         self.read_markers([-1])
@@ -2298,11 +2241,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
     def _read_results_table(self):
         """
         Reads a results table
-
-        Parameters
-        ----------
-        self : OP2
-            the OP2 object pointer
         """
         if self.is_debug_file:
             self.binary_debug.write('read_results_table - %s\n' % self.table_name)
@@ -2355,8 +2293,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
         Parameters
         ----------
-        self : OP2
-            the OP2 object pointer
         month : int
             the month (integer <= 12)
         day :  int

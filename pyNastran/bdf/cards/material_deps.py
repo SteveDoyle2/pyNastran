@@ -137,7 +137,6 @@ class MATS1(MaterialDependence):
         """
         Gets E (Young's Modulus) for a given strain.
 
-        :param self:   the object pointer
         :param strain: the strain (None -> linear E value)
         :returns E:    Young's Modulus
         """
@@ -220,7 +219,6 @@ class MATT1(MaterialDependence):
         """
         Gets E (Young's Modulus) for a given temperature.
 
-        :param self:   the object pointer
         :param temperature: the temperature (None -> linear E value)
         :returns E:    Young's Modulus
         """

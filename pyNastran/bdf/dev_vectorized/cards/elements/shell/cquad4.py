@@ -98,7 +98,6 @@ class CQUAD4(ShellElement):
         Gets the mass, area, and normals of the CQUAD4s on a per
         element basis.
 
-        :param self: the CQUAD4 object
         :param element_id: the elements to consider (default=None -> all)
 
         :param xyz_cid0: the GRIDs as an (N, 3) NDARRAY in CORD2R=0 (or None)

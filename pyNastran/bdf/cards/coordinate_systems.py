@@ -32,7 +32,6 @@ def normalize(v):
     r"""
     Normalizes v into a unit vector.
 
-    :param self: the coordinate system object
     :param v:    the vector to normalize
 
     :returns:  normalized v
@@ -52,7 +51,6 @@ class Coord(BaseCard):
         """
         Defines a general CORDxx object
 
-        :param self: the coordinate system object
         :param card: a BDFCard object
         :param data: a list analogous to the card
         """
@@ -243,8 +241,6 @@ class Coord(BaseCard):
 
         Parameters
         ----------
-        self : Coord()
-            the coordinate system object
         p : (1,3) ndarray
             the vector in the local frame
 
@@ -304,8 +300,6 @@ class Coord(BaseCard):
 
         Parameters
         ----------
-        self : Coord()
-            the coordinate system object
         xyz : (1,3) ndarray
             the point in the local frame to be transformed
 
@@ -328,8 +322,6 @@ class Coord(BaseCard):
         """
         Parameters
         ----------
-        self : Coord()
-            the coordinate system object
         xyz : (1,3) ndarray
             the point in the global frame
 
@@ -352,8 +344,6 @@ class Coord(BaseCard):
 
         Parameterse
         -----------
-        self : Coord()
-            the coordinate system object
         xyz : (1,3) ndarray
             the point to transform
 
@@ -421,7 +411,6 @@ class Coord(BaseCard):
         Move the coordinate system to a new origin while maintaining
         the orientation
 
-        :param self:  the coordinate system object
         :param xyz: the new origin point to move the coordinate to in
                     the global coordinate system
         """
@@ -676,14 +665,12 @@ def define_coord_ijk(model, Type, cid, origin, rid=0, i=None, j=None, k=None):
 class RectangularCoord(object):
     def coord_to_xyz(self, p):
         """
-        :param self:  the coordinate system object
         :returns xyz: the point in the local coordinate system
         """
         return p
 
     def xyz_to_coord(self, p):
         """
-        :param self:  the coordinate system object
         :returns xyz: the delta xyz point in the local coordinate system
         """
         return p
@@ -718,7 +705,6 @@ class CylindricalCoord(object):
         .. math:: x = R \cos(\theta)
         .. math:: y = R \sin(\theta)
 
-        :param self:  the coordinate system object
         :returns xyz: the point in the local coordinate system
         """
         R = p[0]
@@ -729,7 +715,6 @@ class CylindricalCoord(object):
 
     def xyz_to_coord(self, p):
         """
-        :param self:  the coordinate system object
         :returns xyz: the delta xyz point in the local coordinate system
         """
         (x, y, z) = p
@@ -760,7 +745,6 @@ class SphericalCoord(object):
     """
     def xyz_to_coord(self, p):
         r"""
-        :param self:  the coordinate system object
         :returns xyz: the loca XYZ point in the R, \theta, \phi coordinate system
         """
         (x, y, z) = p
@@ -774,7 +758,6 @@ class SphericalCoord(object):
 
     def coord_to_xyz(self, p):
         r"""
-        :param self:  the coordinate system object
         :returns xyz: the R, \theta, \phi point in the local XYZ coordinate system
         """
         R = p[0]
@@ -841,8 +824,6 @@ class Cord2x(Coord):
 
         Parameters
         ----------
-        self : Cord2x()
-            the coordinate system object
         cid : int
             the new coordinate system id
         rid : int; default=0
@@ -940,8 +921,6 @@ class Cord2x(Coord):
 
         Parameters
         ----------
-        self : Cord2x()
-            the coordinate system object
         cid : int
             the new coordinate system id
         origin : (3,) ndarray
@@ -1048,8 +1027,6 @@ class Cord2x(Coord):
 
         Parameters
         ----------
-        self : Cord2x()
-            the coordinate system object
         xref : bool
             has this model been cross referenced
         """
@@ -1072,8 +1049,6 @@ class Cord2x(Coord):
 
         Parameters
         ----------
-        self : Cord2x()
-            the coordinate system object
         model : BDF()
             the BDF object
 
@@ -1150,8 +1125,6 @@ class Cord1x(Coord):
 
         Parameters
         ----------
-        self : Cord1x()
-            the coordinate system object
         model : BDF()
             a BDF model
         rid : int; default=0
@@ -1194,8 +1167,6 @@ class Cord1x(Coord):
 
         Parameters
         ----------
-        self : Cord1x()
-            the coordinate system object
         xref : bool
             has this model been cross referenced
         """
@@ -1208,8 +1179,6 @@ class Cord1x(Coord):
 
         Parameters
         ----------
-        self : Cord1x()
-            the coordinate system object
         model : BDF()
             the BDF object
         """
@@ -1235,11 +1204,6 @@ class Cord1x(Coord):
         """
         Finds the position of the nodes used define the coordinate system
         and sets the ijk vectors
-
-        Parameters
-        ----------
-        self : Cord1x()
-            the coordinate system object
         """
         if self.isResolved:
             return
@@ -1277,11 +1241,6 @@ class Cord1x(Coord):
     def nodeIDs(self):
         """
         Gets the integers for the node [g1,g2,g3]
-
-        Parameters
-        ----------
-        self : Cord1x()
-            the coordinate system object
         """
         self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
         return self.node_ids
@@ -1347,7 +1306,6 @@ class CORD3G(Coord):  # not done
         """
         Intilizes the CORD3G
 
-        :param self: the CORD3G coordinate system object
         :param card: a list version of the fields
         """
         Coord.__init__(self, card, data, comment)
@@ -1386,7 +1344,6 @@ class CORD3G(Coord):  # not done
 
     def coord3g_transform_to_global(self, p):
         """
-        :param self:  the coordinate system object
         :param p:     the point to transform.  TYPE=NUMPY.NDARRAY.
 
         .. warning:: not done, just setting up how you'd do this
@@ -1487,8 +1444,6 @@ class CORD1C(Cord1x, CylindricalCoord):
         |CORD1C | CIDA | G1A | G2A | CIDB | G1B  | G2B | G3B  |     |
         +-------+------+-----+-----+------+------+-----+------+-----+
 
-        :param self:   the CORD1C coordinate system object
-        :param card:   a BDFCard object
         :param icard:  the coordinate location on the line
                        (there are possibly 2 coordinates on 1 card)
         :param data:   a list version of the fields (1 CORD1R only)
@@ -1514,7 +1469,6 @@ class CORD1S(Cord1x, SphericalCoord):
         |CORD1S | CIDA | G1A | G2A | CIDB | G1B  | G2B | G3B  |     |
         +-------+------+-----+-----+------+------+-----+------+-----+
 
-        :param self:   the CORD1S coordinate system object
         :param card:   a BDFCard object
         :param icard: the coordinate location on the line
                        (there are possibly 2 coordinates on 1 card)
@@ -1543,7 +1497,6 @@ class CORD2R(Cord2x, RectangularCoord):
         |        | B3  | C1  | C2  | C3 |     |    |    |     |
         +--------+-----+-----+-----+----+-----+----+----+-----+
 
-        :param self: the CORD2R coordinate system object
         :param card: a BDFCard object
         :param data: a list version of the fields (1 CORD2R only)
                      default=None -> [0, 0, 0., 0., 0., 0., 0., 1., 1., 0., 0.]
@@ -1556,7 +1509,6 @@ class CORD2R(Cord2x, RectangularCoord):
         """
         Verifies all methods for this object work
 
-        :param self: the CORD2R object pointer
         :param xref: has this model been cross referenced
         :type xref:  bool
         """
@@ -1588,7 +1540,6 @@ class CORD2C(Cord2x, CylindricalCoord):
         |        | B3  | C1  | C2  | C3 |     |    |    |     |
         +--------+-----+-----+-----+----+-----+----+----+-----+
 
-        :param self: the CORD2C coordinate system object
         :param card: a BDFCard object
         :param data: a list version of the fields (1 CORD2C only)
         """
@@ -1617,7 +1568,6 @@ class CORD2S(Cord2x, SphericalCoord):
         |        | B3  | C1  | C2  | C3 |     |    |    |     |
         +--------+-----+-----+-----+----+-----+----+----+-----+
 
-        :param self: the CORD2S coordinate system object
         :param card: a BDFCard object
         :param data: a list version of the fields (1 CORD2S only)
         """

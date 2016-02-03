@@ -17,7 +17,6 @@ class CELAS2(SpringElement):
         """
         Defines the CELAS2 object.
 
-        :param self: the CELAS2 object
         :param model: the BDF object
         """
         SpringElement.__init__(self, model)
@@ -55,9 +54,6 @@ class CELAS2(SpringElement):
         self.i += 1
 
     def build(self):
-        """
-        :param self: the CELAS2 object
-        """
         if self.n:
             i = self.element_id.argsort()
             self.element_id = self.element_id[i]

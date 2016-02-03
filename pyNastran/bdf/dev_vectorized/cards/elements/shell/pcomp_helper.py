@@ -46,7 +46,6 @@ class Property_i(BaseCard):
         """
         returns the property ID of an property
 
-        :param self:  the Property pointer
         :returns pid: the Property ID
         :type pid:    int
         """
@@ -56,7 +55,6 @@ class Property_i(BaseCard):
         """
         returns the material ID of an element
 
-        :param self:  the Property pointer
         :returns mid: the Material ID
         :type mid:    int
         """
@@ -130,7 +128,6 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
         symmetrical ply, the element will always have an even number of
         layers.
 
-        :param self: the PCOMP object
         :param iply: the ply ID
         :raises: IndexError if iply is invalid
 

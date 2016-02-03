@@ -263,8 +263,6 @@ class STL(object):
 
         Parameters
         ----------
-        self : STL()
-            The STL object
         elements : ????
             The elements...should be removed
         normals : (n, 3) ndarray floats
@@ -341,8 +339,6 @@ class STL(object):
 
         Parameters
         ----------
-        self : STL()
-            The STL object
         nodes : (n, 3) ndarray floats
             The nodes on the surface.
         elements : (n, 3) ndarray ints

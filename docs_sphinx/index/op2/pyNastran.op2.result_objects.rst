@@ -24,7 +24,7 @@ resultObjects Package
     :show-inheritance:
 
 :mod:`element_table_object` Module
--------------------------
+----------------------------------
 
 .. inheritance-diagram:: pyNastran.op2.result_objects.element_table_object
 
@@ -35,7 +35,7 @@ resultObjects Package
     :show-inheritance:
 
 :mod:`table_object` Module
--------------------------
+--------------------------
 
 .. inheritance-diagram:: pyNastran.op2.result_objects.table_object
 

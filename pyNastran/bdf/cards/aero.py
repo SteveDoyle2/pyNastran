@@ -155,11 +155,6 @@ class AEFACT(BaseCard):
         """
         Gets the fields in their unmodified form
 
-        Parameters
-        ----------
-        self : AEFACT()
-            the AEFACT object pointer
-
         Returns
         -------
         fields : List[int/float/str]
@@ -222,11 +217,6 @@ class AELINK(BaseCard):
     def raw_fields(self):
         """
         Gets the fields in their unmodified form
-
-        Parameters
-        ----------
-        self : AELINK()
-            the AELINK object pointer
 
         Returns
         -------
@@ -300,11 +290,6 @@ class AELIST(BaseCard):
         """
         Gets the fields in their unmodified form
 
-        Parameters
-        ----------
-        self : AELIST()
-            the AELIST object pointer
-
         Returns
         -------
         fields : List[int/float/str]
@@ -356,11 +341,6 @@ class AEPARM(BaseCard):
         """
         Gets the fields in their unmodified form
 
-        Parameters
-        ----------
-        self : AEPARM()
-            the AEPARM object pointer
-
         Returns
         -------
         fields : List[int/float/str]
@@ -411,11 +391,6 @@ class AESTAT(BaseCard):
     def raw_fields(self):
         """
         Gets the fields in their unmodified form
-
-        Parameters
-        ----------
-        self : AESTAT()
-            the AESTAT object pointer
 
         Returns
         -------
@@ -550,14 +525,9 @@ class AESURF(BaseCard):
         """
         Gets the fields in their unmodified form
 
-        Parameters
-        ----------
-        self : AESURF()
-            the AESURF object pointer
-
         Returns
         -------
-        fields : List[int/float/str]
+        fieldsreset_camera[int/float/str]
             the fields that define the card
         """
         list_fields = ['AESURF', self.aesid, self.label, self.Cid1(), self.AELIST_id1(),
@@ -569,11 +539,6 @@ class AESURF(BaseCard):
     def repr_fields(self):
         """
         Gets the fields in their simplified form
-
-        Parameters
-        ----------
-        self : AESURF()
-            the AESURF object pointer
 
         Returns
         -------
@@ -640,11 +605,6 @@ class AESURFS(BaseCard):  # not integrated
     def raw_fields(self):
         """
         Gets the fields in their unmodified form
-
-        Parameters
-        ----------
-        self : AESURFS()
-            the AESURFS object pointer
 
         Returns
         -------
@@ -766,11 +726,6 @@ class AERO(Aero):
         """
         Gets the fields in their unmodified form
 
-        Parameters
-        ----------
-        self : AERO()
-            the AERO object pointer
-
         Returns
         -------
         fields : List[int/float/str]
@@ -784,8 +739,6 @@ class AERO(Aero):
         """
         Gets the fields in their simplified form
 
-        :param self:
-          the AERO object pointer
         :returns fields:
           the fields that define the card
         :type fields:
@@ -852,8 +805,6 @@ class AEROS(Aero):
         """
         Gets the fields in their unmodified form
 
-        :param self:
-          the AEROS object pointer
         :returns fields:
           the fields that define the card
         :type fields:
@@ -867,8 +818,6 @@ class AEROS(Aero):
         """
         Gets the fields in their simplified form
 
-        :param self:
-          the AEROS object pointer
         :returns fields:
           the fields that define the card
         :type fields:
@@ -923,7 +872,6 @@ class CSSCHD(Aero):
         """
         Cross links the card
 
-        :param self:   the CSSCHD object pointer
         :param model:  the BDF object
         :type model:   BDF()
         """
@@ -972,8 +920,6 @@ class CSSCHD(Aero):
         """
         Gets the fields in their unmodified form
 
-        :param self:
-          the CSSCHD object pointer
         :returns fields:
           the fields that define the card
         :type fields:
@@ -1045,8 +991,6 @@ class CAERO1(BaseCard):
 
         Parameters
         ----------
-        self : CAERO1()
-            the CAERO1 object pointer
         n : int
             the field number to update
         value : int/float
@@ -1074,8 +1018,6 @@ class CAERO1(BaseCard):
 
         Parameters
         ----------
-        self : CAERO1()
-            the CAERO1 object pointer
         n : int
             the field number to update
         value : int/float
@@ -1162,11 +1104,6 @@ class CAERO1(BaseCard):
     def _init_ids(self):
         """
         Fill `self.box_ids` with the sub-box ids. Shape is (nchord, nspan)
-
-        Parameters
-        ----------
-        self : CAERO1 obj
-            The CAERO1 object.
         """
         nchord, nspan = self.shape
         self.box_ids = zeros((nchord, nspan), dtype='int32')
@@ -1198,8 +1135,6 @@ class CAERO1(BaseCard):
 
         Parameters
         ----------
-        self : CAERO1 obj
-            The CAERO1 object.
         model : BDF obj
             The BDF object.
         """
@@ -1230,11 +1165,6 @@ class CAERO1(BaseCard):
         """
         Gets the min and max element ids of the CAERO card
 
-        Parameters
-        ----------
-        self : CAERO1 obj
-            The CAERO1 object.
-
         Returns
         -------
         min_max_eid : (2, ) list
@@ -1246,11 +1176,6 @@ class CAERO1(BaseCard):
     def get_points(self):
         """
         Get the 4 corner points for the CAERO card
-
-        Parameters
-        ----------
-        self : CAERO1 obj
-            The CAERO1 object.
 
         Returns
         -------
@@ -1289,8 +1214,8 @@ class CAERO1(BaseCard):
 
         Parameters
         ----------
-        self : CAERO1 obj
-            The CAERO1 object.
+        box_ids : ???
+            nothing???
 
         Returns
         -------
@@ -1307,11 +1232,6 @@ class CAERO1(BaseCard):
     @property
     def xy(self):
         """
-        Parameters
-        ----------
-        self : CAERO1 obj
-            The CAERO1 object.
-
         Returns
         -------
         x : (nchord,) ndarray
@@ -1344,11 +1264,6 @@ class CAERO1(BaseCard):
         """
         Gets the sub-points and sub-elements for the CAERO card
 
-        Parameters
-        ----------
-        self : CAERO1 obj
-            The CAERO1 object.
-
         Returns
         -------
         points : (nnodes,3) ndarray of floats
@@ -1379,11 +1294,6 @@ class CAERO1(BaseCard):
         """
         Gets the fields in their unmodified form
 
-        Parameters
-        ----------
-        self : CAERO 1 obj
-            the CAERO1 object pointer.
-
         Returns
         -------
         fields : list
@@ -1409,11 +1319,6 @@ class CAERO1(BaseCard):
     def repr_fields(self):
         """
         Gets the fields in their simplified form
-
-        Parameters
-        ----------
-        self : CAERO1 obj
-            The CAERO1 object.
 
         Returns
         -------
@@ -1452,8 +1357,6 @@ class CAERO2(BaseCard):
 
         Parameters
         ----------
-        self : CAERO2 obj
-            The CAERO2 object.
         n : int
             The field number to update
 
@@ -1477,8 +1380,6 @@ class CAERO2(BaseCard):
 
         Parameters
         ----------
-        self : CAERO2 obj
-            The CAERO2 object.
         n : int
             The field number to update
         value : int, float, None
@@ -1588,8 +1489,6 @@ class CAERO2(BaseCard):
 
         Parameters
         ----------
-        self : CAERO2 obj
-            The CAERO2 object.
         model : BDF obj
             The BDF object.
         """
@@ -1623,11 +1522,6 @@ class CAERO2(BaseCard):
         """
         Gets the fields in their unmodified form
 
-        Parameters
-        ----------
-        self : CAERO2 obj
-            The CAERO2 object.
-
         Returns
         -------
         fields : list
@@ -1641,11 +1535,6 @@ class CAERO2(BaseCard):
     def repr_fields(self):
         """
         Gets the fields in their simplified form
-
-        Parameters
-        ----------
-        self : CAERO2 obj
-            The CAERO2 object.
 
         Returns
         -------
@@ -1698,8 +1587,6 @@ class CAERO3(BaseCard):
 
         Parameters
         ----------
-        self : CAERO3 obj
-            The CAERO3 object.
         model : BDF obj
             The BDF object.
         """
@@ -1732,11 +1619,6 @@ class CAERO3(BaseCard):
         """
         Gets the fields in their unmodified form
 
-        Parameters
-        ----------
-        self : CAERO3 obj
-            The CAERO3 object.
-
         Returns
         -------
         fields : list
@@ -1750,11 +1632,6 @@ class CAERO3(BaseCard):
     def repr_fields(self):
         """
         Gets the fields in their simplified form
-
-        Parameters
-        ----------
-        self : CAERO2 obj
-            The CAERO2 object.
 
         Returns
         -------
@@ -1815,8 +1692,6 @@ class CAERO4(BaseCard):
 
         Parameters
         ----------
-        self : CAERO4 obj
-            The CAERO4 object.
         model : BDF obj
             The BDF object.
         """
@@ -1847,11 +1722,6 @@ class CAERO4(BaseCard):
         """
         Gets the fields in their unmodified form
 
-        Parameters
-        ----------
-        self : CAERO4 obj
-            The CAERO4 object.
-
         Returns
         -------
         fields : list
@@ -1865,11 +1735,6 @@ class CAERO4(BaseCard):
     def repr_fields(self):
         """
         Gets the fields in their simplified form
-
-        Parameters
-        ----------
-        self : CAERO4 obj
-            The CAERO4 object.
 
         Returns
         -------
@@ -1931,8 +1796,6 @@ class CAERO5(BaseCard):
 
         Parameters
         ----------
-        self : CAERO5 obj
-            The CAERO5 object.
         model : BDF obj
             The BDF object.
         """
@@ -2045,11 +1908,6 @@ class CAERO5(BaseCard):
     def repr_fields(self):
         """
         Gets the fields in their simplified form
-
-        Parameters
-        ----------
-        self : CAERO5 obj
-            The CAERO5 object.
 
         Returns
         -------
@@ -2270,8 +2128,6 @@ class FLFACT(BaseCard):
         """
         Gets the fields in their unmodified form
 
-        :param self:
-          the FLFACT object pointer
         :returns fields:
           the fields that define the card
         :type fields:
@@ -2306,7 +2162,6 @@ class FLUTTER(BaseCard):
         """
         Gets complicated parameters on the FLUTTER card
 
-        :param self:  the FLUTTER object pointer
         :param n:     the field number to update
         :type n:      int
         :param value: the value for the appropriate field
@@ -2327,7 +2182,6 @@ class FLUTTER(BaseCard):
         """
         Updates complicated parameters on the FLUTTER card
 
-        :param self:  the FLUTTER object pointer
         :param n:     the field number to update
         :type n:      int
         :param value: the value for the appropriate field
@@ -2391,7 +2245,6 @@ class FLUTTER(BaseCard):
         """
         Cross links the card
 
-        :param self:   the FLUTTER object pointer
         :param model:  the BDF object
         :type model:   BDF()
         """
@@ -2448,8 +2301,6 @@ class FLUTTER(BaseCard):
         """
         Gets the fields in their unmodified form
 
-        :param self:
-          the FLUTTER object pointer
         :returns fields:
           the fields that define the card
         :type fields:
@@ -2518,8 +2369,6 @@ class GUST(BaseCard):
         """
         Gets the fields in their unmodified form
 
-        :param self:
-          the GUST object pointer
         :returns fields:
           the fields that define the card
         :type fields:
@@ -2582,8 +2431,6 @@ class MKAERO1(BaseCard):
         """
         Gets the fields in their unmodified form
 
-        :param self:
-          the MKAERO1 object pointer
         :returns fields:
           the fields that define the card
         :type fields:
@@ -2651,8 +2498,6 @@ class MKAERO2(BaseCard):
         """
         Gets the fields in their unmodified form
 
-        :param self:
-          the MKAERO2 object pointer
         :returns fields:
           the fields that define the card
         :type fields:
@@ -2728,7 +2573,6 @@ class PAERO1(BaseCard):
         """
         Gets complicated parameters on the PAERO1 card
 
-        :param self:  the PAERO1 object pointer
         :param n:     the field number to update
         :type n:      int
         :param value: the value for the appropriate field
@@ -2740,7 +2584,6 @@ class PAERO1(BaseCard):
         """
         Updates complicated parameters on the PAERO1 card
 
-        :param self:  the PAERO1 object pointer
         :param n:     the field number to update
         :type n:      int
         :param value: the value for the appropriate field
@@ -2780,8 +2623,6 @@ class PAERO1(BaseCard):
         """
         Gets the fields in their unmodified form
 
-        :param self:
-          the PAERO1 object pointer
         :returns fields:
           the fields that define the card
         :type fields:
@@ -2815,7 +2656,6 @@ class PAERO2(BaseCard):
         """
         Gets complicated parameters on the PAERO2 card
 
-        :param self:  the PAERO2 object pointer
         :param n:     the field number to update
         :type n:      int
         :param value: the value for the appropriate field
@@ -2834,7 +2674,6 @@ class PAERO2(BaseCard):
         """
         Updates complicated parameters on the PAERO2 card
 
-        :param self:  the PAERO2 object pointer
         :param n:     the field number to update
         :type n:      int
         :param value: the value for the appropriate field
@@ -2898,8 +2737,6 @@ class PAERO2(BaseCard):
         """
         Gets the fields in their unmodified form
 
-        :param self:
-          the PAERO2 object pointer
         :returns fields:
           the fields that define the card
         :type fields:
@@ -2930,7 +2767,6 @@ class PAERO3(BaseCard):
         """
         Gets complicated parameters on the PAERO3 card
 
-        :param self:  the PAERO3 object pointer
         :param n:     the field number to update
         :type n:      int
         :param value: the value for the appropriate field
@@ -2951,7 +2787,6 @@ class PAERO3(BaseCard):
         """
         Updates complicated parameters on the PAERO3 card
 
-        :param self:  the PAERO3 object pointer
         :param n:     the field number to update
         :type n:      int
         :param value: the value for the appropriate field
@@ -3000,8 +2835,6 @@ class PAERO3(BaseCard):
         """
         Gets the fields in their unmodified form
 
-        :param self:
-          the PAERO3 object pointer
         :returns fields:
           the fields that define the card
         :type fields:
@@ -3092,7 +2925,6 @@ class SPLINE1(Spline):
         """
         Cross links the card
 
-        :param self:   the SPLINE1 object pointer
         :param model:  the BDF object
         :type model:   BDF()
         """
@@ -3113,8 +2945,6 @@ class SPLINE1(Spline):
         """
         Gets the fields in their unmodified form
 
-        :param self:
-          the SPLINE1 object pointer
         :returns fields:
           the fields that define the card
         :type fields:
@@ -3194,7 +3024,6 @@ class SPLINE2(Spline):
         """
         Cross links the card
 
-        :param self:   the SPLINE2 object pointer
         :param model:  the BDF object
         :type model:   BDF()
         """
@@ -3233,8 +3062,6 @@ class SPLINE2(Spline):
         """
         Gets the fields in their unmodified form
 
-        :param self:
-          the SPLINE2 object pointer
         :returns fields:
           the fields that define the card
         :type fields:
@@ -3395,7 +3222,6 @@ class SPLINE4(Spline):
         """
         Cross links the card
 
-        :param self:   the SPLINE4 object pointer
         :param model:  the BDF object
         :type model:   BDF()
         """
@@ -3419,8 +3245,6 @@ class SPLINE4(Spline):
         """
         Gets the fields in their unmodified form
 
-        :param self:
-          the SPLINE4 object pointer
         :returns fields:
           the fields that define the card
         :type fields:
@@ -3526,7 +3350,6 @@ class SPLINE5(Spline):
         """
         Cross links the card
 
-        :param self:   the SPLINE5 object pointer
         :param model:  the BDF object
         :type model:   BDF()
         """
@@ -3553,8 +3376,6 @@ class SPLINE5(Spline):
         """
         Gets the fields in their unmodified form
 
-        :param self:
-          the SPLINE5 object pointer
         :returns fields:
           the fields that define the card
         :type fields:
@@ -3588,7 +3409,6 @@ class TRIM(BaseCard):
         """
         Gets complicated parameters on the TRIM card
 
-        :param self:  the TRIM object pointer
         :param n:     the field number to update
         :type n:      int
         :param value: the value for the appropriate field
@@ -3613,7 +3433,6 @@ class TRIM(BaseCard):
         """
         Updates complicated parameters on the TRIM card
 
-        :param self:  the TRIM object pointer
         :param n:     the field number to update
         :type n:      int
         :param value: the value for the appropriate field
@@ -3685,8 +3504,6 @@ class TRIM(BaseCard):
         """
         Gets the fields in their unmodified form
 
-        :param self:
-          the TRIM object pointer
         :returns fields:
           the fields that define the card
         :type fields:

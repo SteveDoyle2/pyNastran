@@ -37,7 +37,7 @@ This is the pyNastran.bdf.rst file.
     :show-inheritance:
 
 :mod:`case_control_deck` Module
------------------------------
+-------------------------------
 
 .. inheritance-diagram:: pyNastran.bdf.case_control_deck
 
@@ -58,50 +58,6 @@ This is the pyNastran.bdf.rst file.
     :undoc-members:
     :show-inheritance:
 
-:mod:`fieldWriter` Module
--------------------------
-
-.. inheritance-diagram:: pyNastran.bdf.fieldWriter
-
-.. automodule:: pyNastran.bdf.fieldWriter
-    :members:
-    :private-members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`field_writer_8` Module
-----------------------------
-
-.. inheritance-diagram:: pyNastran.bdf.field_writer_8
-
-.. automodule:: pyNastran.bdf.field_writer_8
-    :members:
-    :private-members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`field_writer_16` Module
------------------------------
-
-.. inheritance-diagram:: pyNastran.bdf.field_writer_16
-
-.. automodule:: pyNastran.bdf.field_writer_16
-    :members:
-    :private-members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`field_writer_double` Module
----------------------------------
-
-.. inheritance-diagram:: pyNastran.bdf.field_writer_double
-
-.. automodule:: pyNastran.bdf.field_writer_double
-    :members:
-    :private-members:
-    :undoc-members:
-    :show-inheritance:
-
 :mod:`subcase` Module
 ---------------------
 
@@ -113,30 +69,10 @@ This is the pyNastran.bdf.rst file.
     :undoc-members:
     :show-inheritance:
 
-:mod:`utils` Module
--------------------
-
-.. inheritance-diagram:: pyNastran.bdf.utils
-
-.. automodule:: pyNastran.bdf.utils
-    :members:
-    :private-members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`write_path` Module
-------------------------
-
-.. inheritance-diagram:: pyNastran.bdf.write_path
-
-.. automodule:: pyNastran.bdf.write_path
-    :members:
-    :private-members:
-    :undoc-members:
-    :show-inheritance:
-
 
 .. toctree::
+    pyNastran.bdf.utils
+    pyNastran.bdf.field_writer
 
     pyNastran.bdf.bdfInterface
     pyNastran.bdf.cards

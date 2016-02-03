@@ -16,7 +16,6 @@ class PBUSH(object):
         """
         Defines the PCOMP object.
 
-        :param self: the PBUSH object
         :param model: the BDF object
         :param cards: the list of PBUSH cards
         """

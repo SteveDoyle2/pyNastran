@@ -743,8 +743,6 @@ class CONM2(PointMassElement):
         """
         Parameters
         ----------
-        self : CONM2
-           the CONM2 object
         eid : int
            element ID
         nid : int

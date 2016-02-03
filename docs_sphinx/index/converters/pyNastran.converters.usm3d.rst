@@ -2,7 +2,7 @@ nastran Package
 ===============
 
 :mod:`iface_format` Module
-------------------------
+--------------------------
 
 .. inheritance-diagram:: pyNastran.converters.usm3d.iface_format
 
@@ -13,7 +13,7 @@ nastran Package
     :show-inheritance:
 
 :mod:`time_accurate_results` Module
--------------------------------
+-----------------------------------
 
 .. inheritance-diagram:: pyNastran.converters.usm3d.time_accurate_results
 

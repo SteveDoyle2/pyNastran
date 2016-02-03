@@ -14,7 +14,6 @@ class Mass(object):
         """
         Defines the ShellProperties object.
 
-        :param self: the ElementsSolid object
         :param model: the BDF object
         """
         self.model = model

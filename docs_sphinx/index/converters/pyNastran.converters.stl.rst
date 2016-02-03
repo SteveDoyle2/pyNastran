@@ -1,4 +1,4 @@
-nastran Package
+stl Package
 ===============
 
 :mod:`stl_io` Module

@@ -1,4 +1,4 @@
-nastran Package
+lawgs Package
 ===============
 
 :mod:`wgsIO` Module

@@ -171,7 +171,6 @@ class CAERO1(VectorizedCard):
         """
         Gets the area of the CAERO1s on a total or per element basis.
 
-        :param self: the CAERO1 object
         :param element_id: the elements to consider (default=None -> all)
         :param total: should the area be summed (default=False)
 
@@ -195,9 +194,7 @@ class CAERO1(VectorizedCard):
         """
         Gets the normals of the CAERO1s on per element basis.
 
-        :param self: the CAERO1 object
         :param element_id: the elements to consider (default=None -> all)
-
         :param node_ids:   the GRIDs as an (N, )  NDARRAY (or None)
         :param grids_cid0: the GRIDs as an (N, 3) NDARRAY in CORD2R=0 (or None)
 
@@ -222,7 +219,6 @@ class CAERO1(VectorizedCard):
         Gets the area, and normals of the CAERO1s on a per
         element basis.
 
-        :param self: the CAERO1 object
         :param element_id: the elements to consider (default=None -> all)
 
         :param node_ids:   the GRIDs as an (N, )  NDARRAY (or None)

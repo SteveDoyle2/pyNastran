@@ -95,7 +95,6 @@ class CTRIAX6(object):
         """
         Gets the mass of the CTRIAX6s on a total or per element basis.
 
-        :param self: the CTRIAX6 object
         :param element_id: the elements to consider (default=None -> all)
         :param total: should the mass be summed (default=False)
 
@@ -119,7 +118,6 @@ class CTRIAX6(object):
         """
         Gets the area of the CTRIAX6s on a total or per element basis.
 
-        :param self: the CTRIAX6 object
         :param element_id: the elements to consider (default=None -> all)
         :param total: should the area be summed (default=False)
 
@@ -143,7 +141,6 @@ class CTRIAX6(object):
         """
         Gets the normals of the CTRIAX6s on per element basis.
 
-        :param self: the CTRIAX6 object
         :param element_id: the elements to consider (default=None -> all)
 
         :param node_ids:   the GRIDs as an (N, )  NDARRAY (or None)
@@ -169,7 +166,6 @@ class CTRIAX6(object):
         Gets the mass, area, and normals of the CTRIAX6s on a per
         element basis.
 
-        :param self: the CTRIAX6 object
         :param element_id: the elements to consider (default=None -> all)
 
         :param node_ids:   the GRIDs as an (N, )  NDARRAY (or None)

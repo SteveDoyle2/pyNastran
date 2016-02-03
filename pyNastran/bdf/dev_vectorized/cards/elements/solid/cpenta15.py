@@ -16,7 +16,6 @@ class CPENTA15(SolidElement):
         """
         Defines the CPENTA15 object.
 
-        :param self: the CPENTA15 object
         :param model: the BDF object
         """
         SolidElement.__init__(self, model)

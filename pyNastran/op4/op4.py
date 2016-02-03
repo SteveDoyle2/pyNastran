@@ -154,7 +154,9 @@ class OP4(object):
         return matrices
 
     def _read_matrix_ascii(self, op4, matrix_names=None, precision='default'):
-        """reads a matrix"""
+        """
+        reads a matrix
+        """
         line = op4.readline().rstrip()
         if line == '':
             op4.close()
@@ -906,8 +908,6 @@ class OP4(object):
 
         Parameters
         ----------
-        self : OP2
-            the OP2 object pointer
         data : bytes
             the binary string bytes
         types : str; default='ifs'
@@ -969,8 +969,6 @@ class OP4(object):
     def _write_ndata(self, f, n, types='ifs'):
         """
         Useful function for seeing what's going on locally when debugging.
-
-        :param self:    the OP2 object pointer
         """
         nold = self.n
         data = f.read(n)

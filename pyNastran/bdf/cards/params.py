@@ -30,8 +30,6 @@ class PARAM(BaseCard):
 
         Parameters
         ----------
-        self : PARAM()
-            the object pointer
         card : BDFCard(); default=None
             BDFCard object
         data : List[int/float/str]; default=None
@@ -109,7 +107,6 @@ class PARAM(BaseCard):
         Updates value1 and value2.  Performs type checking based on the PARAM
         type after setting any default value(s).
 
-        :param self:   the PARAM object
         :param value1: the main value (default=None)
         :param value2: optional value (default=None)
 

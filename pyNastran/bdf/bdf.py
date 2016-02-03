@@ -244,15 +244,13 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
     """
     #: required for sphinx bug
     #: http://stackoverflow.com/questions/11208997/autoclass-and-instance-attributes
-    #__slots__ = ['_is_dynamic_syntax']
+    __slots__ = ['_is_dynamic_syntax']
     def __init__(self, debug=True, log=None, mode='msc'):
         """
         Initializes the BDF object
 
         Parameters
         ----------
-        self :  BDF()
-            the BDF object
         debug : bool/None
             used to set the logger if no logger is passed in
                 True:  logs debug/info/error messages
@@ -638,8 +636,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
         Paramters
         ---------
-        self : BDF()
-            the BDF object
         cards : List[str]; Set[str]
             a list/set of cards that should not be read
 
@@ -661,8 +657,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
         Parameters
         ----------
-        self : BDF()
-            the BDF object
         nparse_errors : int
             how many parse errors should be stored
             (default=0; all=None; no storage=0)
@@ -690,8 +684,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
         Parameters
         ----------
-        self : BDF()
-            the BDF object
         bdf_filename : str / None
             the input bdf (default=None; popup a dialog)
         xref :  bool
@@ -1082,8 +1074,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
         Parameters
         ----------
-        self : BDF
-            the object pointer
         sol : int
             the solution type (101,103, etc)
         method : str
@@ -1120,8 +1110,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
         Parameters
         ----------
-        self : BDF()
-            the BDF object
         dict_of_vars : dict[str] = int/float/str
             dictionary of 7 character variable names to map.
 
@@ -1161,8 +1149,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
         Parameters
         ----------
-        self : BDF()
-            the BDF object
         card_name : str
             the card_name -> 'GRID'
         """
@@ -1183,8 +1169,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
         Parameters
         ----------
-        self : BDF()
-            the BDF object
         card_lines : List[str]
             list of strings that represent the card's lines
 
@@ -2012,8 +1996,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
         Parameters
         ----------
-        self : BDF
-            the BDF object
         card_lines: list[str]
             the list of the card fields
         card_name : str
@@ -2083,8 +2065,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
         Parameters
         ----------
-        self : BDF
-            the BDF object
         card_lines: list[str]
             the list of the card fields
             input is a list of card fields -> ['GRID', 1, 2, 3.0, 4.0, 5.0]
@@ -2109,8 +2089,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
         Parameters
         ----------
-        self : BDF
-            the BDF object
         card_lines: list[str]
             the list of the card fields
             input is list of card_lines -> ['GRID, 1, 2, 3.0, 4.0, 5.0']
@@ -2135,8 +2113,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
         Parameters
         ----------
-        self : BDF
-            the BDF object
         card_object : BDFCard()
             the card object representation of card
         card : ???
@@ -2238,15 +2214,15 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
         Parameters
         ----------
-        self : BDF()
-            the BDF object
-
-        Returns
-        -------
-        return_type : str, optional
+        return_type : str (default='string')
             the output type ('list', 'string')
                 'list' : list of strings
                 'string' : single, joined string
+
+        Returns
+        -------
+        return_data : str, optional
+            the output data
 
         .. note:: if a card is not supported and not added to the proper
                   lists, this method will fail
@@ -2418,11 +2394,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         their output in coordinate systems other than the global.
         Used in combination with ``OP2.transform_displacements_to_global``
 
-        Parameters
-        ----------
-        self : BDF
-            BDF object.
-
         Returns
         ----------
         i_transform : dict{int:(n,) int ndarray}
@@ -2480,8 +2451,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
         Parameters
         ----------
-        self : BDF()
-            the BDF object
         lines : list[str]
             the lines of the card
 
@@ -2649,8 +2618,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
         Parameters
         ----------
-        self : BDF()
-            the BDF object
         bdf_dump_filename : str
             the bdf filename to dump
         lines : List[str]
@@ -2670,8 +2637,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
         Parameters
         ----------
-        self : BDF()
-            the BDF object
         card_name : str
             the card_name -> 'GRID'
         count_name : int, optional
@@ -2833,8 +2798,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
         Parameters
         ----------
-        self : BDF()
-            the BDF object
         key : str
             the uppercased key
 
@@ -2842,6 +2805,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         -------
         value : int/float/str
             the dynamic value defined by dict_of_vars
+
         .. seealso:: :func: `set_dynamic_syntax`
         """
         key = key.strip()[1:]
@@ -2870,8 +2834,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
         Parameters
         ----------
-        self : BDF()
-            the BDF object
         bdf_filename : str
             the input filename
 

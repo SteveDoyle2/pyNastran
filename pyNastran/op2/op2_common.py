@@ -1332,8 +1332,6 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
 
         Parameters
         ----------
-        self : OES()
-            the object pointer
         nelements :  int
             the number of elements to preallocate for vectorization
         result_name : str

@@ -74,8 +74,6 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
 
         Parameters
         ----------
-        self : PCOMP()
-            the PCOMP object
         iply : int
             the ply ID
 
@@ -125,8 +123,6 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
 
         Parameters
         ----------
-        self : PCOMP()
-            the PCOMP object
         iply : int/str; default='all'
             the string **'all'** (default) or the mass per area of
             the :math:`i^{th}` ply
@@ -178,8 +174,6 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
 
         Parameters
         ----------
-        self : PCOMP()
-            the PCOMP/PCOMPG object
         iply : int/str; default='all'
             the string **'all'** (default) or the mass per area of
             the :math:`i^{th}` ply

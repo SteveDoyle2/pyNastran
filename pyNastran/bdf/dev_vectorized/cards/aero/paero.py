@@ -9,7 +9,6 @@ class PAero(object):
         """
         Defines the ShellProperties object.
 
-        :param self: the PAero object
         :param model: the BDF object
         """
         self.model = model

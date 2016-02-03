@@ -1008,7 +1008,6 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
         """
         Reads displacement, spc/mpc forces
 
-        :param self:   the object pointer
         :param Format: list of types [int,str,float,float,float] that maps to sline
 
         .. seealso:: self.parseLine
@@ -1045,7 +1044,6 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
 
     def parseLine(self, sline, formats):
         """
-        :param self:    the object pointer
         :param sline:   list of strings (split line)
         :param formats: list of types [int,str,float,float,float] that maps to sline
         """

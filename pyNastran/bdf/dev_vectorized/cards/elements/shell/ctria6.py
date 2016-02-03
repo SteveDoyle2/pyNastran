@@ -109,7 +109,6 @@ class CTRIA6(ShellElement):
         Gets the mass, area, and normals of the CTRIA6s on a per
         element basis.
 
-        :param self: the CTRIA6 object
         :param element_id: the elements to consider (default=None -> all)
 
         :param node_ids: the GRIDs as an (N, )  NDARRAY (or None)

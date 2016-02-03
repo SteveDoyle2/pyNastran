@@ -458,8 +458,6 @@ class RBE2(RigidElement):
 
         Parameters
         ----------
-        self : RBE2()
-            the RBE2 object pointer
         n : int
             the field number to update
         value : int/float/str

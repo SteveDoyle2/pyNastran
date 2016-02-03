@@ -291,7 +291,6 @@ def _bar_areaL(class_name, Type, dim):
     """
     Area(x) method for the PBARL and PBEAML classes (pronounced **Area-L**)
 
-    :param self:   the object pointer
     :param dim:    a list of the dimensions associated with **Type**
     :returns Area: Area of the given cross section defined
                    by **self.Type**

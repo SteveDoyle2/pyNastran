@@ -12,8 +12,13 @@ class MarginChecker(object):
     def __init__(self, filenames=None, subcases=None, IDs=None):
         """
         Performs load case combination for:
-        @param filenames  list of filenames that the subcase result will come from
-        @param subcases   list of subcases to grab from from each filename
+
+        Parameters
+        ----------
+        filenames : List[str]
+            list of filenames that the subcase result will come from
+        subcases : List[int]
+            list of subcases to grab from from each filename
 
         Assumptions:
             * linear static analysis

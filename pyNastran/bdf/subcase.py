@@ -101,8 +101,6 @@ class Subcase(object):
 
         Parameters
         ----------
-        self : Subcase()
-            the Subcase object
         options : list[int/float/str]
             the options for a parameter
         value : int/float/str
@@ -126,8 +124,6 @@ class Subcase(object):
 
         Parameters
         ----------
-        self : Subcase()
-            the Subcase object
         options : List[int/str]
             the options for a parameter
         value : int; str
@@ -148,8 +144,6 @@ class Subcase(object):
 
         Parameters
         ----------
-        self : Subcase()
-            the Subcase object
         options : list[int/float/str]
             the options for a parameter
         value : int/float/str
@@ -215,8 +209,6 @@ class Subcase(object):
 
         Parameters
         ----------
-        self : Subcase()
-            the Subcase object
         options : list[int/float/str]
             the options for a parameter
         value : int/float/str

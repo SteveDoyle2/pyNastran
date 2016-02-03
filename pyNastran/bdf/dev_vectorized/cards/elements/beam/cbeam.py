@@ -39,7 +39,6 @@ class CBEAM(Element):
         """
         Defines the CBEAM object.
 
-        :param self: the CBEAM object
         :param model: the BDF object
         """
         Element.__init__(self, model)
@@ -130,9 +129,6 @@ class CBEAM(Element):
         self.i += 1
 
     def build(self):
-        """
-        :param self: the CBEAM object
-        """
         if self.n:
             i = self.element_id.argsort()
             self.element_id = self.element_id[i]

@@ -56,7 +56,6 @@ class VectorizedCardDict(object):
         """
         Defines the object.
 
-        :param self: the object
         :param model: the BDF object
         :param cards: the list of cards
         """

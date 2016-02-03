@@ -228,7 +228,6 @@ class MAT1(IsotropicMaterial):
         """
         Verifies all methods for this object work
 
-        :param self: the MAT1 object pointer
         :param xref: has this model been cross referenced
         :type xref:  bool
         """
@@ -515,7 +514,6 @@ class MAT2(AnisotropicMaterial):
         """
         Verifies all methods for this object work
 
-        :param self: the MAT2 object pointer
         :param xref: has this model been cross referenced
         :type xref:  bool
         """
@@ -713,7 +711,6 @@ class MAT3(OrthotropicMaterial):
         """
         Verifies all methods for this object work
 
-        :param self: the MAT1 object pointer
         :param xref: has this model been cross referenced
         :type xref:  bool
         """
@@ -1101,7 +1098,6 @@ class MAT8(OrthotropicMaterial):
         """
         Verifies all methods for this object work
 
-        :param self: the MAT8 object pointer
         :param xref: has this model been cross referenced
         :type xref:  bool
         """
@@ -1295,7 +1291,6 @@ class MAT9(AnisotropicMaterial):
         """
         Verifies all methods for this object work
 
-        :param self: the MAT9 object pointer
         :param xref: has this model been cross referenced
         :type xref:  bool
         """
@@ -1401,7 +1396,6 @@ class MAT10(Material):
         """
         Verifies all methods for this object work
 
-        :param self: the MAT10 object pointer
         :param xref: has this model been cross referenced
         :type xref:  bool
         """

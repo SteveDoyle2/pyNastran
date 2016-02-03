@@ -138,8 +138,6 @@ class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
         Gets the length, :math:`L`, of the element.
 
         .. math:: L = \sqrt{  (n_{x2}-n_{x1})^2+(n_{y2}-n_{y1})^2+(n_{z2}-n_{z1})^2  }
-
-        :param self: the object pointer
         """
         L = norm(self.nodes_ref[1].get_position() - self.nodes_ref[0].get_position())
         return L

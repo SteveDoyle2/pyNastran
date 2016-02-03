@@ -87,7 +87,6 @@ class BaseCard(object):
         """
         Updates a field based on it's field number.
 
-        :param self: the BaseCard object
         :param n: the integer field number
         :param value: the value to update the field to
 
@@ -117,7 +116,6 @@ class BaseCard(object):
         """
         Gets a field based on it's field number
 
-        :param self: the BaseCard object
         :param n: the integer field number
         :returns value: the value of the field
 
@@ -147,8 +145,6 @@ class BaseCard(object):
 
         Parameters
         ----------
-        self : BaseCard()
-            the object pointer
         xref : bool
             has this model been cross referenced
         """
@@ -211,11 +207,6 @@ class Property(BaseCard):
         """
         returns the property ID of an property
 
-        Parameters
-        ----------
-        self : Property()
-            the Property pointer
-
         Returns
         -------
         pid : int
@@ -226,11 +217,6 @@ class Property(BaseCard):
     def Mid(self):
         """
         returns the material ID of an element
-
-        Parameters
-        ----------
-        self : Property()
-            the Property pointer
 
         Returns
         -------
@@ -276,11 +262,6 @@ class Material(BaseCard):
         """
         returns the material ID of an element
 
-        Parameters
-        ----------
-        self : Material()
-            the Material pointer
-
         Returns
         -------
         mid : int
@@ -324,11 +305,6 @@ class Element(BaseCard):
     def Pid(self):
         """
         Gets the Property ID of an element
-
-        Parameters
-        ----------
-        self : Element()
-            the Element pointer
 
         Returns
         -------
@@ -480,8 +456,6 @@ class Element(BaseCard):
 
         Parameters
         -----------
-        self : Element()
-            the object pointer
         nodes : List[node]
             a series of nodes
 

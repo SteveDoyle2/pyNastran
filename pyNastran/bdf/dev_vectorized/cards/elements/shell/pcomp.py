@@ -25,7 +25,6 @@ class PCOMP(Property):
         """
         Defines the PCOMP object.
 
-        :param self: the PCOMP object
         :param model: the BDF object
         :param cards: the list of PCOMP cards
         """
@@ -110,7 +109,6 @@ class PCOMP(Property):
         #"""
         #Gets the nonstructural mass of the PHSELLs.
 
-        #:param self: the PSHELL object
         #:param property_id: the property IDs to consider (default=None -> all)
         #"""
         #cow

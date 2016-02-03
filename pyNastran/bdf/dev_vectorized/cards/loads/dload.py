@@ -12,7 +12,6 @@ class DLOAD(object):
         """
         Defines the DLOAD object.
 
-        :param self: the DLOAD object
         :param model: the BDF object
         """
         self.model = model
@@ -28,7 +27,6 @@ class DLOAD(object):
         """
         Fills the DLOAD object from the BDF reader
 
-        :param self: the DLOAD object
         :param card:  the BDFCard object
         :param comment: a comment
         """

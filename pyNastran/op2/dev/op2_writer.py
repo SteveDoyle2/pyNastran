@@ -56,7 +56,6 @@ class OP2Writer(OP2_F06_Common):
         """
         Writes an OP2 file based on the data we have stored in the object
 
-        :param self:         the F06 object
         :param op2_outname:  the name of the F06 file to write
         :param is_mag_phase: should complex data be written using Magnitude/Phase
                          instead of Real/Imaginary (default=False; Real/Imag)

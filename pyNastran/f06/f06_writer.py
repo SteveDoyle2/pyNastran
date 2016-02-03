@@ -347,8 +347,6 @@ class F06Writer(OP2_F06_Common):
 
         Parameters
         ----------
-        self : F06() / OP2()
-            the F06 object
         f06_outname : str
             the name of the F06 file to write
         is_mag_phase : bool; default=False
