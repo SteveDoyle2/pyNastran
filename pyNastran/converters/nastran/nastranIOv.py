@@ -488,44 +488,22 @@ class NastranIO(object):
                     raise
 
                 zfighting_offset = 0.0001 * iaero
-                if 0:
-                    name = 'spline_%s_surface' % spline_id
-                    self.create_alternate_vtk_grid(
-                        name, color=blue, opacity=0.5, point_size=0,
-                        #line_width=0,
-                        representation='surface', is_visible=True)
-                    self.set_caero_control_surface_grid(
-                        name, aero_box_ids, box_id_to_caero_element_map, caero_points,
-                        zfighting_offset=zfighting_offset)
-                else:
-                    name = 'spline_%s_structure_points' % spline_id
-                    self.create_alternate_vtk_grid(
-                        name, color=blue, opacity=1.0, point_size=5,
-                        representation='point', is_visible=True)
-                    self._add_nastran_nodes_to_grid(name, aero_box_ids, model)
+                name = 'spline_%s_structure_points' % spline_id
+                self.create_alternate_vtk_grid(
+                    name, color=blue, opacity=1.0, point_size=5,
+                    representation='point', is_visible=False)
+                self._add_nastran_nodes_to_grid(name, structure_points, model)
 
 
                 zfighting_offset = 0.0001 * (iaero + 1)
-                if 0:
-                    name = 'spline_%s_boxes_and_structure_points' % spline_id
-                    self.create_alternate_vtk_grid(
-                        name, color=blue, opacity=1.0,
-                        point_size=5, line_width=3,
-                        representation='wire', is_visible=True)
-                    self.set_caero_wireframe_points(
-                        name, aero_box_ids, box_id_to_caero_element_map,
-                        caero_points, structure_points, xyz_cid0,
-                        zfighting_offset=zfighting_offset
-                    )
-                else:
-                    name = 'spline_%s_boxes' % spline_id
-                    self.create_alternate_vtk_grid(
-                        name, color=blue, opacity=0.3,
-                        line_width=4,
-                        representation='wire', is_visible=True)
-                    self.set_caero_control_surface_grid(
-                        name, aero_box_ids, box_id_to_caero_element_map, caero_points,
-                        zfighting_offset=zfighting_offset)
+                name = 'spline_%s_boxes' % spline_id
+                self.create_alternate_vtk_grid(
+                    name, color=blue, opacity=0.3,
+                    line_width=4,
+                    representation='toggle', is_visible=False)
+                self.set_caero_control_surface_grid(
+                    name, aero_box_ids, box_id_to_caero_element_map, caero_points,
+                    zfighting_offset=zfighting_offset)
 
                 iaero += 2
         if model.suport:
@@ -1299,10 +1277,10 @@ class NastranIO(object):
 
                 self.create_alternate_vtk_grid(
                     bar_y, color=green, line_width=5, opacity=1.,
-                    point_size=5, representation='wire', bar_scale=scale, is_visible=True)
+                    point_size=5, representation='wire', bar_scale=scale, is_visible=False)
                 self.create_alternate_vtk_grid(
                     bar_z, color=blue, line_width=5, opacity=1.,
-                    point_size=5, representation='wire', bar_scale=scale, is_visible=True)
+                    point_size=5, representation='wire', bar_scale=scale, is_visible=False)
 
                 self._add_nastran_lines_xyz_to_grid(bar_y, lines_bar_y, model)
                 self._add_nastran_lines_xyz_to_grid(bar_z, lines_bar_z, model)
