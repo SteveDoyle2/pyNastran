@@ -3066,6 +3066,14 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             geom_prop.point_size = group.point_size
 
     def on_update_geometry_properties(self, out_data):
+        """
+        Applies the changed properties to the different actors if
+        something changed.
+
+        Note that some of the values are limited.  This prevents
+        points/lines from being shrunk to 0 and also the actor
+        being actually "hidden" at the same time.
+        """
         lines = []
         for name, group in iteritems(out_data):
             if name in ['clicked_ok', 'clicked_cancel']:

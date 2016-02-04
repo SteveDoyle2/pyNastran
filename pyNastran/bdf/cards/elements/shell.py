@@ -1245,32 +1245,34 @@ class QuadShell(ShellElement):
 class CSHEAR(QuadShell):
     type = 'CSHEAR'
     calculixType = 'S4'
-    def __init__(self):
+    def __init__(self, eid, pid, nids, comment=''):
         QuadShell.__init__(self)
-
-    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
         #: Element ID
-        self.eid = integer(card, 1, 'eid')
+        self.eid = eid
         #: Property ID
+        self.pid = pid
+        self.prepare_node_ids(nids)
+        assert len(self.nodes) == 4
+
+    @classmethod
+    def add_card(self, card, comment=''):
+        self.eid = integer(card, 1, 'eid')
         self.pid = integer_or_blank(card, 2, 'pid', self.eid)
         nids = [integer_or_blank(card, 3, 'n1'),
                 integer_or_blank(card, 4, 'n2'),
                 integer_or_blank(card, 5, 'n3'),
                 integer_or_blank(card, 6, 'n4')]
         assert len(card) <= 7, 'len(CSHEAR card) = %i' % len(card)
-        self.prepare_node_ids(nids)
-        assert len(self.nodes) == 4
+        return CSHEAR(eid, pid, nids, comment=comment)
 
+    @classmethod
     def add_op2_data(self, data, comment=''):
-        if comment:
-            self._comment = comment
-        self.eid = data[0]
-        self.pid = data[1]
+        eid = data[0]
+        pid = data[1]
         nids = data[2:]
-        self.prepare_node_ids(nids)
-        assert len(self.nodes) == 4
+        return CSHEAR(eid, pid, nids, comment=comment)
 
     def cross_reference(self, model):
         msg = ' which is required by CSHEAR eid=%s' % self.eid

@@ -936,8 +936,6 @@ class Cart3D(Cart3dIO):
 
         Parameters
         ----------
-        self:
-            the reader object
         shift_nodes : boolean; default=True
             shifts element IDs such that the
               - node IDs start at 0 instead of 1

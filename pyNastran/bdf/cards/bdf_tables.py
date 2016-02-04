@@ -62,8 +62,6 @@ class TableObj(object):
         """
         Parameters
         ----------
-        self: TableObj()
-            the Table Object
         xy : List[float/str]
             the X/Y data with an ENDT appended
         nrepeated : int

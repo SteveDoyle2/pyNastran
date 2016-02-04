@@ -640,7 +640,8 @@ class PCOMP(CompositeShellProperty):
     def raw_fields(self):
         list_fields = ['PCOMP', self.pid, self.z0, self.nsm, self.sb, self.ft,
                        self.TRef, self.ge, self.lam, ]
-        for (mid, t, theta, sout) in zip(self.material_ids, self.thicknesses, self.thetas, self.souts):
+        for (mid, t, theta, sout) in zip(self.material_ids, self.thicknesses,
+                                         self.thetas, self.souts):
             list_fields += [mid, t, theta, sout]
         return list_fields
 
@@ -652,7 +653,8 @@ class PCOMP(CompositeShellProperty):
         z0 = set_blank_if_default(self.z0, -0.5 * self.get_thickness())
 
         list_fields = ['PCOMP', self.pid, z0, nsm, sb, self.ft, TRef, ge, self.lam]
-        for (mid, t, theta, sout) in zip(self.material_ids, self.thicknesses, self.thetas, self.souts):
+        for (mid, t, theta, sout) in zip(self.material_ids, self.thicknesses,
+                                         self.thetas, self.souts):
             #theta = set_blank_if_default(theta,0.0)
             str_sout = set_blank_if_default(sout, 'NO')
             list_fields += [mid, t, theta, str_sout]
@@ -691,10 +693,12 @@ class PCOMPG(CompositeShellProperty):
 
     @property
     def plies(self):
-        plys = []
-        for mid, t, theta, sout, global_ply_id in zip(self.mids, self.thicknesses, self.thetas, self.souts, self.global_ply_ids):
-            ply.append((mid, t, theta, sout, global_ply_id))
-        return ply
+        plies = []
+        for mid, t, theta, sout, global_ply_id in zip(self.mids, self.thicknesses,
+                                                      self.thetas, self.souts,
+                                                      self.global_ply_ids):
+            plies.append((mid, t, theta, sout, global_ply_id))
+        return plies
 
     #@plies.setter
     #def plies(self, plies):
@@ -799,9 +803,12 @@ class PCOMPG(CompositeShellProperty):
         return global_ply_id
 
     def raw_fields(self):
-        list_fields = ['PCOMPG', self.pid, self.z0, self.nsm, self.sb, self.ft,
-                       self.TRef, self.ge, self.lam, ]
-        for (mid, t, theta, sout, global_ply_id) in zip(self.material_ids, self.thicknesses, self.thetas, self.souts, self.global_ply_ids):
+        list_fields = [
+            'PCOMPG', self.pid, self.z0, self.nsm, self.sb, self.ft,
+            self.TRef, self.ge, self.lam, ]
+        for (mid, t, theta, sout, global_ply_id) in zip(
+            self.material_ids, self.thicknesses, self.thetas,
+            self.souts, self.global_ply_ids):
             list_fields += [global_ply_id, mid, t, theta, sout, None, None, None]
         return list_fields
 
@@ -812,9 +819,12 @@ class PCOMPG(CompositeShellProperty):
         ge = set_blank_if_default(self.ge, 0.0)
         z0 = set_blank_if_default(self.z0, -0.5 * self.Thickness())
 
-        list_fields = ['PCOMPG', self.pid, z0, nsm, sb, self.ft, TRef, ge,
-                       self.lam]
-        for (mid, t, theta, sout, global_ply_id) in zip(self.material_ids, self.thicknesses, self.thetas, self.souts, self.global_ply_ids):
+        list_fields = [
+            'PCOMPG', self.pid, z0, nsm, sb, self.ft, TRef, ge,
+            self.lam]
+        for (mid, t, theta, sout, global_ply_id) in zip(
+            self.material_ids, self.thicknesses, self.thetas, self.souts,
+            self.global_ply_ids):
             sout = set_blank_if_default(sout, 'NO')
             list_fields += [global_ply_id, mid, t, theta, sout, None, None, None]
         return list_fields
@@ -887,42 +897,52 @@ class PSHEAR(ShellProperty):
     type = 'PSHEAR'
     _field_map = {1: 'pid', 2:'mid', 3:'t', 4:'nsm', 5:'f1', 6:'f2'}
 
-    def __init__(self):
+    def __init__(self, pid, t, mid, nsm, f1, f2, comment=''):
         """
         Defines the properties of a shear panel (CSHEAR entry).
 
+
         +--------+-----+-----+---+-----+----+----+
+        |   1    |  2  |  3  | 4 |  5  |  6 |  7 |
+        +========+=====+=====+===+=====+====+====+
         | PSHEAR | PID | MID | T | NSM | F1 | F2 |
         +--------+-----+-----+---+-----+----+----+
         """
         ShellProperty.__init__(self)
-
-    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
         #: Property ID
-        self.pid = integer(card, 1, 'pid')
+        self.pid = pid
+        self.t = t
         #: Material ID
+        self.mid = mid
+        self.nsm = nsm
+        self.f1 = f1
+        self.f2 = f2
+        #assert self.f1 >= 0.0
+        #assert self.f2 >= 0.0
+        assert self.t > 0.0
+
+    @classmethod
+    def add_card(self, card, comment=''):
+        self.pid = integer(card, 1, 'pid')
         self.mid = integer(card, 2, 'mid')
         self.t = double(card, 3, 't')
         self.nsm = double_or_blank(card, 4, 'nsm', 0.0)
         self.f1 = double_or_blank(card, 5, 'f1', 0.0)
         self.f2 = double_or_blank(card, 6, 'f2', 0.0)
-        assert self.t > 0.0
-        #assert self.f1 >= 0.0
-        #assert self.f2 >= 0.0
         assert len(card) <= 7, 'len(PSHEAR card) = %i' % len(card)
+        return PSHEAR(pid, mid, t, nsm, f1, f2, comment=comment)
 
+    @classmethod
     def add_op2_data(self, data, comment=''):
-        if comment:
-            self._comment = comment
-        #(pid,mid,t,nsm,f1,f2) = out
-        self.pid = data[0]
-        self.mid = data[1]
-        self.t = data[2]
-        self.nsm = data[3]
-        self.f1 = data[4]
-        self.f2 = data[5]
+        pid = data[0]
+        mid = data[1]
+        t = data[2]
+        nsm = data[3]
+        f1 = data[4]
+        f2 = data[5]
+        return PSHEAR(pid, mid, t, nsm, f1, f2, comment=comment)
 
     def _is_same_card(self, prop, debug=False):
         if self.type != prop.type:
@@ -1005,70 +1025,100 @@ class PSHELL(ShellProperty):
         7: 'tst', 8:'nsm', 9:'z1', 10:'z2',
     }
 
-    def __init__(self):
+    def __init__(self, pid, mid1=None, t=None, mid2=None, twelveIt3=1.0,
+                 mid3=None, tst=0.833333, nsm=0.0,
+                 z1=None, z2=None, mid4=None, comment=''):
         ShellProperty.__init__(self)
-
-    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        #: Property ID
-        self.pid = integer(card, 1, 'pid')
-        self.mid1 = integer_or_blank(card, 2, 'mid1')
-        #: thickness
-        self.t = double_or_blank(card, 3, 't')
-        if self.t is not None:
-            assert self.t >= 0.0, 'PSHELL pid=%s Thickness=%s must be >= 0' % (self.pid, self.t)
 
+        #: Property ID
+        self.pid = pid
+        self.mid1 = mid1
         #: Material identification number for bending
         #: -1 for plane strin
-        self.mid2 = integer_or_blank(card, 4, 'mid2')
+        self.mid2 = mid2
+        self.mid3 = mid3
+        self.mid4 = mid4
+
+        #: thickness
+        self.t = t
+
         #: Scales the moment of interia of the element based on the
         #: moment of interia for a plate
         #:
         #: ..math:: I = \frac{12I}{t^3} I_{plate}
-        self.twelveIt3 = double_or_blank(card, 5, '12*I/t^3', 1.0)  # poor name
-        self.mid3 = integer_or_blank(card, 6, 'mid3')
-        self.tst = double_or_blank(card, 7, 'ts/t', 0.833333)
+        self.twelveIt3 = twelveIt3
+        self.tst = tst
+
         #: Non-structural Mass
-        self.nsm = double_or_blank(card, 8, 'nsm', 0.0)
+        self.nsm = nsm
+
+        if z1 is None and self.t is not None:
+            z1 = -self.t / 2.
+        if z2 is None and self.t is not None:
+            z2 = -self.t / 2.
+
+        self.z1 = z1
+        self.z2 = z2
 
         if self.t is not None:
-            tOver2 = self.t / 2.
-            self.z1 = double_or_blank(card, 9, 'z1', -tOver2)
-            self.z2 = double_or_blank(card, 10, 'z2', tOver2)
+            assert self.t >= 0.0, 'PSHELL pid=%s Thickness=%s must be >= 0' % (self.pid, self.t)
+
+    @classmethod
+    def add_card(self, card, comment=''):
+        pid = integer(card, 1, 'pid')
+        mid1 = integer_or_blank(card, 2, 'mid1')
+        t = double_or_blank(card, 3, 't')
+
+        mid2 = integer_or_blank(card, 4, 'mid2')
+        twelveIt3 = double_or_blank(card, 5, '12*I/t^3', 1.0)  # poor name
+        mid3 = integer_or_blank(card, 6, 'mid3')
+        tst = double_or_blank(card, 7, 'ts/t', 0.833333)
+        nsm = double_or_blank(card, 8, 'nsm', 0.0)
+
+        if t is not None:
+            t_over_2 = t / 2.
+            z1 = double_or_blank(card, 9, 'z1', -t_over_2)
+            z2 = double_or_blank(card, 10, 'z2', t_over_2)
         else:
-            self.z1 = double_or_blank(card, 9, 'z1')
-            self.z2 = double_or_blank(card, 10, 'z2')
-        self.mid4 = integer_or_blank(card, 11, 'mid4')
+            z1 = double_or_blank(card, 9, 'z1')
+            z2 = double_or_blank(card, 10, 'z2')
+        mid4 = integer_or_blank(card, 11, 'mid4')
 
         #if self.mid2 is None:
         #    assert self.mid3 is None
         #else: # mid2 is defined
-        #    #print "self.mid2 = ",self.mid2
+        #    #print (self.mid2 = ", self.mid2)
         #    assert self.mid2 >= -1
-        #    #assert self.mid3 >   0
+        #    #assert self.mid3 >  0
 
-        #if self.mid is not None and self.mid2 is not None:
-        #    assert self.mid4==None
-        #assert self.t > 0.0, ('the thickness must be defined on the PSHELL'
-                              #' card (Ti field not supported)')
+        #if self.mid1 is not None and self.mid2 is not None:
+        #    assert self.mid4 == None
         assert len(card) <= 12, 'len(PSHELL card) = %i' % len(card)
+        return PSHELL(pid, mid1, t, mid2, twelveIt3,
+                      mid3, tst, nsm,
+                      z1, z2, mid4, comment=comment)
 
+    @classmethod
     def add_op2_data(self, data, comment=''):
-        self.pid = data[0]
-        self.mid1 = data[1]
-        self.t = data[2]
-        self.mid2 = data[3]
-        self.twelveIt3 = data[4]
-        self.mid3 = data[5]
-        self.tst = data[6]
-        self.nsm = data[7]
-        self.z1 = data[8]
-        self.z2 = data[9]
-        self.mid4 = data[10]
+        pid = data[0]
+        mid1 = data[1]
+        t = data[2]
+        mid2 = data[3]
+        twelveIt3 = data[4]
+        mid3 = data[5]
+        tst = data[6]
+        nsm = data[7]
+        z1 = data[8]
+        z2 = data[9]
+        mid4 = data[10]
         #maxMid = max(self.mid1,self.mid2,self.mid3,self.mid4)
         #assert self.t > 0.0, ('the thickness must be defined on the PSHELL'
                               #' card (Ti field not supported)')
+        return PSHELL(pid, mid1, t, mid2, twelveIt3,
+                      mid3, tst, nsm,
+                      z1, z2, mid4, comment=comment)
 
     def _verify(self, xref=False):
         pid = self.Pid()

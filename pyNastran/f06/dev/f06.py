@@ -567,7 +567,6 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
         """
         Sets up a dummy logger if one is not provided
 
-        :self:  the object pointer
         :log:   a python logging object
         :debug: adds debug messages (True/False)
         """
@@ -1079,9 +1078,7 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
         """
         Reads the F06 file
 
-        :self: the object pointer
-
-        :f06FileName: the file to be parsed (None -> GUI)
+        :f06_filename: the file to be parsed (None -> GUI)
         """
         self.is_vectorized = vectorized
         if f06_filename is None:

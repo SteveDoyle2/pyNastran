@@ -1327,10 +1327,10 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             #'PCOMPG' : (PCOMPG, self.add_property),
             #'PLPLANE' : (PLPLANE, self.add_property),
             #'PCOMP' : (PCOMP, self.add_property),
-            #'PSHELL' : (PSHELL, self.add_property),
+            'PSHELL' : (PSHELL, self.add_property),
 
-            #'CSHEAR' : (CSHEAR, self.add_element),
-            #'PSHEAR' : (PSHEAR, self.add_property),
+            'CSHEAR' : (CSHEAR, self.add_element),
+            'PSHEAR' : (PSHEAR, self.add_property),
 
             'PSOLID' : (PSOLID, self.add_property),
             'PLSOLID' : (PLSOLID, self.add_property),
@@ -1417,11 +1417,11 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             #'SUPORT1' : (SUPORT1, self.add_suport1),  # pseudo-constraint
 
             'FORCE' : (FORCE, self.add_load),
-            #'FORCE1' : (FORCE1, self.add_load),
-            #'FORCE2' : (FORCE2, self.add_load),
+            'FORCE1' : (FORCE1, self.add_load),
+            'FORCE2' : (FORCE2, self.add_load),
             'MOMENT' : (MOMENT, self.add_load),
-            #'MOMENT1' : (MOMENT1, self.add_load),
-            #'MOMENT2' : (MOMENT2, self.add_load),
+            'MOMENT1' : (MOMENT1, self.add_load),
+            'MOMENT2' : (MOMENT2, self.add_load),
 
             #'GRAV' : (GRAV, self.add_load),
             #'ACCEL' : (ACCEL, self.add_load),
@@ -1477,10 +1477,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'PCOMPG' : (PCOMPG, self.add_property),
             'PLPLANE' : (PLPLANE, self.add_property),
             'PCOMP' : (PCOMP, self.add_property),
-            'PSHELL' : (PSHELL, self.add_property),
-
-            'CSHEAR' : (CSHEAR, self.add_element),
-            'PSHEAR' : (PSHEAR, self.add_property),
 
             'CFAST' : (CFAST, self.add_damper),
             'PFAST' : (PFAST, self.add_property),
@@ -1540,11 +1536,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
             'SUPORT' : (SUPORT, self.add_suport), # pseudo-constraint
             'SUPORT1' : (SUPORT1, self.add_suport1),  # pseudo-constraint
-
-            'FORCE1' : (FORCE1, self.add_load),
-            'FORCE2' : (FORCE2, self.add_load),
-            'MOMENT1' : (MOMENT1, self.add_load),
-            'MOMENT2' : (MOMENT2, self.add_load),
 
             'GRAV' : (GRAV, self.add_load),
             'ACCEL' : (ACCEL, self.add_load),
@@ -2141,8 +2132,20 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
         if card_name in self._card_parser_new:
             card_class, add_card_function = self._card_parser_new[card_name]
-            class_instance = card_class.add_card(card_obj, comment='')
-            add_card_function(class_instance)
+            try:
+                class_instance = card_class.add_card(card_obj, comment='')
+                add_card_function(class_instance)
+            except (SyntaxError, AssertionError, KeyError, ValueError) as exception:
+                #raise
+                # WARNING: Don't catch RuntimeErrors or a massive memory leak can occur
+                #tpl/cc451.bdf
+                #raise
+                # NameErrors should be caught
+                self._iparse_errors += 1
+                var = traceback.format_exception_only(type(exception), exception)
+                self._stored_parse_errors.append((card, var))
+                if self._iparse_errors > self._nparse_errors:
+                    self.pop_parse_errors()
 
         elif card_name in self._card_parser_a:
             card_class, add_card_function = self._card_parser_a[card_name]

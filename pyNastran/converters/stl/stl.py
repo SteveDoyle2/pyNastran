@@ -236,7 +236,6 @@ class STL(object):
 
         Parameters
         ----------
-        self: The STL object
         i : (n, ) ndarray ints; default=None -> all
             the indicies to flip
         """
