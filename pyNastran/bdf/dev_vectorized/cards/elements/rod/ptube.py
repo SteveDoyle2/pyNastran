@@ -18,7 +18,6 @@ class PTUBE(Property):
         """
         Defines the PTUBE object.
 
-        :param self: the PTUBE object
         :param model: the BDF object
         """
         Property.__init__(self, model)
@@ -53,7 +52,6 @@ class PTUBE(Property):
 
     def build(self):
         """
-        :param self: the PTUBE object
         :param cards: the list of PTUBE cards
         """
         if self.n:

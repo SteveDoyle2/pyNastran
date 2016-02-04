@@ -37,7 +37,6 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
         """
         Links the Material IDs to the materials.
 
-        :param self:  the PCOMP/PCOMPG object
         :param model: a BDF object
         """
         for iply in range(len(self.thicknesses)):
@@ -163,8 +162,6 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
     def get_nonstructural_mass(self):
         """
         Gets the non-structural mass :math:`i^{th}` ply
-
-        :param self: the PCOMP/PCOMPG object
         """
         return self.nsm
 
@@ -197,7 +194,6 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
         """
             Gets the material IDs of all the plies
 
-            :param self: the PCOMP/PCOMPG object
             :returns mids: the material IDs
             """
         mids = []
@@ -209,7 +205,6 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
         """
         Gets the density of the :math:`i^{th}` ply
 
-        :param self: the PCOMP/PCOMPG object
         :param iply: the ply ID (starts from 0)
         """
         iply = self._adjust_ply_id(iply)
@@ -221,7 +216,6 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
         Gets the material of the :math:`i^{th}` ply (not the ID unless
         it is not cross-referenced).
 
-        :param self: the PCOMP/PCOMPG object
         :param iply: the ply ID (starts from 0)
         """
         iply = self._adjust_ply_id(iply)
@@ -232,7 +226,6 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
         """
         Gets the ply angle of the :math:`i^{th}` ply (not the ID)
 
-        :param self: the PCOMP/PCOMPG object
         :param iply: the ply ID (starts from 0)
         """
         iply = self._adjust_ply_id(iply)
@@ -244,7 +237,6 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
         Gets the the flag identifying stress/strain outpur of the
         :math:`i^{th}` ply (not the ID).  default='NO'.
 
-        :param self: the PCOMP/PCOMPG object
         :param iply: the ply ID (starts from 0)
         """
         iply = self._adjust_ply_id(iply)
@@ -255,7 +247,6 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
         """
         Gets the z locations for the various plies.
 
-        :param self: the PCOMP/PCOMPG object
         :param iply: the ply ID (starts from 0)
 
         Assume there are 2 plies, each of 1.0 thick, starting from :math:`z=0`.
@@ -288,7 +279,6 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
         where :math:`nsm_i` is the non-structural mass of the
         :math:`i^{th}` ply
 
-        :param self:   the PCOMP object
         :param iply:   the string 'all' (default) or the mass per area of
                        the :math:`i^{th}` ply
         :param method: the method to compute MassPerArea
@@ -339,7 +329,6 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
         where :math:`nsm_i` is the non-structural mass of the
         :math:`i^{th}` ply
 
-        :param self:   the PCOMP object
         :param iply:   the string 'all' (default) or the mass per area of
                        the :math:`i^{th}` ply
         :param method: the method to compute MassPerArea

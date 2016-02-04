@@ -129,8 +129,6 @@ class CREEP(Material):
         """
         Gets the fields in their simplified form
 
-        :param self:
-          the CREEP object pointer
         :returns fields:
           the fields that define the card
         :type fields:
@@ -393,8 +391,6 @@ class MAT1(IsotropicMaterial):
         """
         Gets the fields in their simplified form
 
-        :param self:
-          the MAT1 object pointer
         :returns fields:
           the fields that define the card
         :type fields:
@@ -612,8 +608,6 @@ class MAT2(AnisotropicMaterial):
         """
         Gets the fields in their simplified form
 
-        :param self:
-          the MAT2 object pointer
         :returns fields:
           the fields that define the card
         :type fields:
@@ -736,8 +730,6 @@ class MAT3(OrthotropicMaterial):
         """
         Gets the fields in their simplified form
 
-        :param self:
-          the MAT3 object pointer
         :returns fields:
           the fields that define the card
         :type fields:
@@ -851,8 +843,6 @@ class MAT4(ThermalMaterial):
         """
         Gets the fields in their simplified form
 
-        :param self:
-          the MAT4 object pointer
         :returns fields:
           the fields that define the card
         :type fields:
@@ -971,8 +961,6 @@ class MAT5(ThermalMaterial):  # also AnisotropicMaterial
         """
         Gets the fields in their simplified form
 
-        :param self:
-          the MAT5 object pointer
         :returns fields:
           the fields that define the card
         :type fields:
@@ -1156,8 +1144,6 @@ class MAT8(OrthotropicMaterial):
         """
         Gets the fields in their simplified form
 
-        :param self:
-          the MAT8 object pointer
         :returns fields:
           the fields that define the card
         :type fields:
@@ -1327,8 +1313,6 @@ class MAT9(AnisotropicMaterial):
         """
         Gets the fields in their simplified form
 
-        :param self:
-          the MAT9 object pointer
         :returns fields:
           the fields that define the card
         :type fields:
@@ -1449,8 +1433,6 @@ class MAT10(Material):
         """
         Gets the fields in their simplified form
 
-        :param self:
-          the MAT10 object pointer
         :returns fields:
           the fields that define the card
         :type fields:
@@ -1559,8 +1541,6 @@ class MAT11(Material):
         """
         Gets the fields in their simplified form
 
-        :param self:
-          the MAT11 object pointer
         :returns fields:
           the fields that define the card
         :type fields:
@@ -1723,8 +1703,6 @@ class MATHP(HyperelasticMaterial):
         """
         Gets the fields in their simplified form
 
-        :param self:
-          the MATHP object pointer
         :returns fields:
           the fields that define the card
         :type fields:

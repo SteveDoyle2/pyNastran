@@ -17,7 +17,6 @@ class PSOLID(Property):
         """
         Defines the PSOLID object.
 
-        :param self: the PSOLID object
         :param model: the BDF object
         """
         Property.__init__(self, model)
@@ -69,7 +68,6 @@ class PSOLID(Property):
 
     def build(self):
         """
-        :param self: the PSOLID object
         :param cards: the list of PSOLID cards
         """
         #print "N[%s] = %s" % (self.type, self.n)

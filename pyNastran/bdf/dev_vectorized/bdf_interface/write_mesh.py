@@ -516,8 +516,6 @@ class WriteMesh(object):
     def _write_nodes(self, f, size, is_double):
         """
         Writes the NODE-type cards
-
-        :param self: the BDF object
         """
         self.grdset.write_card(f, size=size, is_double=is_double)
         self.grid.write_card(f, size=size, is_double=is_double)

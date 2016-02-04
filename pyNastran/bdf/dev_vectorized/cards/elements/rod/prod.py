@@ -17,7 +17,6 @@ class PROD(Property):
         """
         Defines the PROD object.
 
-        :param self: the PROD object
         :param model: the BDF object
         """
         Property.__init__(self, model)
@@ -48,7 +47,6 @@ class PROD(Property):
 
     def build(self):
         """
-        :param self: the PROD object
         :param cards: the list of PROD cards
         """
         if self.n:

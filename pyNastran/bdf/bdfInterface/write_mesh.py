@@ -797,7 +797,6 @@ class WriteMesh(BDFAttributes):
         #"""
         #Writes the NODE-type in associated and unassociated groups.
 
-        #:param self: the BDF object
         #.. warning:: Sometimes crashes, probably on invalid BDFs.
         #"""
         #msg = []

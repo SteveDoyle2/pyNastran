@@ -54,7 +54,6 @@ class RodElement(Element):  # CROD, CONROD, CTUBE
         Gets the length of the element.
 
         .. math:: L = \sqrt{  (n_{x2}-n_{x1})^2+(n_{y2}-n_{y1})^2+(n_{z2}-n_{z1})^2  }
-        :param self: the CROD/CONROD/CTUBE element
         """
         L = norm(self.nodes_ref[1].get_position() - self.nodes_ref[0].get_position())
         return L

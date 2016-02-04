@@ -15,7 +15,6 @@ class Properties(object):
         """
         Defines the Properties object.
 
-        :param self: the Properties object
         :param model: the BDF object
         """
         self.model = model

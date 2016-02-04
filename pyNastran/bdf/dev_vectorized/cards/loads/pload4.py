@@ -14,7 +14,6 @@ class PLOAD4(object):
         """
         Defines the PLOAD4 object.
 
-        :param self: the PLOAD4 object
         :param model: the BDF object
         """
         self.model = model
@@ -76,9 +75,6 @@ class PLOAD4(object):
         self.NVector = zeros((ncards, 3), dtype=float_fmt)
 
     def build(self):
-        """
-        :param self: the PLOAD4 object
-        """
         cards = self._cards
         ncards = len(cards)
         self.n = ncards

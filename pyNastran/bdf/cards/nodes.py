@@ -70,8 +70,7 @@ class RINGAX(Ring):
     def __init__(self, card=None, data=None, comment=''):  # this card has missing fields
         """
         Creates the RINGAX card
-        :param self:
-          the RINGAX object pointer
+
         :param card:
           a BDFCard object
         :type card:
@@ -113,8 +112,6 @@ class RINGAX(Ring):
         """
         Gets the fields in their unmodified form
 
-        :param self:
-          the RINGAX object pointer
         :returns fields:
           the fields that define the card
         :type fields:
@@ -128,8 +125,6 @@ class RINGAX(Ring):
         """
         The writer method used by BDF.write_card
 
-        :param self:
-          the RINGAX object pointer
         :param size:
           the size of the card (8/16)
         :type size:
@@ -158,8 +153,6 @@ class XPoint(Node):
         """
         Gets the fields in their unmodified form
 
-        :param self:
-          the EPOINT/SPOINT object pointer
         :returns fields:
           the fields that define the card
         :type fields:
@@ -199,8 +192,6 @@ class XPoint(Node):
         """
         Cross links the card
 
-        :param self:
-          the EPOINT/SPOINT object pointer
         :param model:
           the BDF object
         :type model:
@@ -216,8 +207,6 @@ class SPOINT(XPoint):
         """
         Creates the SPOINT card
 
-        :param self:
-          the SPOINT object pointer
         :param card:
           a BDFCard object
         :type card:
@@ -242,8 +231,6 @@ class EPOINT(XPoint):
         """
         Creates the EPOINT card
 
-        :param self:
-          the EPOINT object pointer
         :param card:
           a BDFCard object
         :type card:
@@ -328,8 +315,6 @@ class XPoints(Node):
         """
         Returns the number of degrees of freedom for the EPOINTs/SPOINTs class
 
-        :param self:
-          the EPOINTs/SPOINTs object pointer
         :returns ndofs:
           the number of degrees of freedom
         :type ndofs:
@@ -343,9 +328,6 @@ class XPoints(Node):
     def add_points(self, sList):
         """
         Adds more EPOINTs/SPOINTs to this object
-
-        :param self:
-          the EPOINTs/SPOINTs object pointer
         """
         self.points = self.points.union(set(sList))
 
@@ -353,8 +335,6 @@ class XPoints(Node):
         """
         Cross links the card
 
-        :param self:
-          the EPOINTs/SPOINTs object pointer
         :param model:
           the BDF object
         :type model:
@@ -366,8 +346,6 @@ class XPoints(Node):
         """
         Gets the fields in their unmodified form
 
-        :param self:
-          the EPOINTs/SPOINTs object pointer
         :returns fields:
           the fields that define the card
         :type fields:
@@ -425,9 +403,6 @@ class SPOINTs(XPoints):
     def create_spointi(self):
         """
         Creates individal SPOINT objects
-
-        :param self:
-          the SPOINT object pointer
         """
         spoints = []
         for nid in self.points:
@@ -467,9 +442,6 @@ class EPOINTs(XPoints):
     def create_epointi(self):
         """
         Creates individal EPOINT objects
-
-        :param self:
-          the EPOINT object pointer
         """
         points = []
         for nid in self.points:
@@ -496,8 +468,6 @@ class GRDSET(Node):
         """
         Creates the GRDSET card
 
-        :param self:
-          the GRDSET object pointer
         :param card:
           a BDFCard object
         :type card:
@@ -537,8 +507,6 @@ class GRDSET(Node):
         """
         Cross links the card
 
-        :param self:
-          the SPOINT object pointer
         :param model:
           the BDF object
         :type model:
@@ -621,8 +589,6 @@ class GRDSET(Node):
         """
         Gets the fields in their unmodified form
 
-        :param self:
-          the GRDSET object pointer
         :returns fields:
           the fields that define the card
         :type fields:
@@ -636,8 +602,6 @@ class GRDSET(Node):
         """
         Gets the fields in their simplified form
 
-        :param self:
-          the GRDSET object pointer
         :returns fields:
           the fields that define the card
         :type fields:
@@ -654,8 +618,6 @@ class GRDSET(Node):
         """
         The writer method used by BDF.write_card
 
-        :param self:
-          the SPOINT object pointer
         :param size:
           the size of the card (8/16)
         :type size:
@@ -676,8 +638,6 @@ class GRIDB(Node):
         """
         Creates the GRIDB card
 
-        :param self:
-          the GRIDB object pointer
         :param card:
           a BDFCard object
         :type card:
@@ -746,8 +706,6 @@ class GRIDB(Node):
         """
         Gets the fields in their unmodified form
 
-        :param self:
-          the GRIDB object pointer
         :returns fields:
           the fields that define the card
         :type fields:
@@ -761,8 +719,6 @@ class GRIDB(Node):
         """
         Gets the fields in their simplified form
 
-        :param self:
-          the GRIDB object pointer
         :returns fields:
           the fields that define the card
         :type fields:
@@ -1302,7 +1258,6 @@ class POINT(Node):
         """
         Gets complicated parameters on the POINT card
 
-        :param self:  the POINT object pointer
         :param n:     the field number to update
         :type n:      int
         :param value: the value for the appropriate field
@@ -1322,7 +1277,6 @@ class POINT(Node):
         """
         Updates complicated parameters on the POINT card
 
-        :param self:  the POINT object pointer
         :param n:     the field number to update
         :type n:      int
         :param value: the value for the appropriate field
@@ -1341,8 +1295,6 @@ class POINT(Node):
         """
         Creates the POINT card
 
-        :param self:
-          the POINT object pointer
         :param card:
           a BDFCard object
         :type card:
@@ -1410,7 +1362,6 @@ class POINT(Node):
         """
         Updates the POINT location
 
-        :param self: the POINT object pointer
         :param xyz:  the location of the node.
         :type xyz:   TYPE = NDARRAY.  SIZE=(3,)
         :param cp:   the analysis coordinate system.  (default=0; global)
@@ -1485,8 +1436,6 @@ class POINT(Node):
         """
         Gets the fields in their unmodified form
 
-        :param self:
-          the GRID object pointer
         :returns fields:
           the fields that define the card
         :type fields:
@@ -1499,8 +1448,6 @@ class POINT(Node):
         """
         Gets the fields in their simplified form
 
-        :param self:
-          the GRID object pointer
         :returns fields:
           the fields that define the card
         :type fields:
@@ -1514,8 +1461,6 @@ class POINT(Node):
         """
         The writer method used by BDF.write_card
 
-        :param self:
-          the GRID object pointer
         :param size:
           the size of the card (8/16)
         :type size:
