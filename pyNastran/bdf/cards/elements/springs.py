@@ -69,7 +69,7 @@ class CELAS1(SpringElement):
         self._validate_input()
 
     @classmethod
-    def add_card(self, card, comment=''):
+    def add_card(cls, card, comment=''):
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', eid)
         nids = [integer(card, 3, 'g1'), integer_or_blank(card, 5, 'g2', 0)]
@@ -79,7 +79,7 @@ class CELAS1(SpringElement):
         return CELAS1(eid, pid, nids, c1, c2, comment=comment)
 
     @classmethod
-    def add_op2_data(self, data, comment=''):
+    def add_op2_data(cls, data, comment=''):
         eid = data[0]
         pid = data[1]
         nids = [data[2], data[3]]
@@ -192,7 +192,7 @@ class CELAS2(SpringElement):
         self._validate_input()
 
     @classmethod
-    def add_card(self, card, comment=''):
+    def add_card(cls, card, comment=''):
         eid = integer(card, 1, 'eid')
         k = double(card, 2, 'k')
         nids = [integer_or_blank(card, 3, 'g1', 0),
@@ -205,7 +205,7 @@ class CELAS2(SpringElement):
         return CELAS2(eid, k, nids, c1, c2, ge, s, comment=comment)
 
     @classmethod
-    def add_op2_data(self, data, comment=''):
+    def add_op2_data(cls, data, comment=''):
         eid = data[0]
         k = data[1]
         nids = [data[2], data[3]]
@@ -349,7 +349,7 @@ class CELAS3(SpringElement):
         self.s2 = s2
 
     @classmethod
-    def add_card(self, card, comment=''):
+    def add_card(cls, card, comment=''):
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', eid)
 
@@ -359,7 +359,7 @@ class CELAS3(SpringElement):
         return CELAS3(eid, pid, s1, s2, comment=comment)
 
     @classmethod
-    def add_op2_data(self, data, comment=''):
+    def add_op2_data(cls, data, comment=''):
         eid = data[0]
         pid = data[1]
         s1 = data[2]
@@ -438,7 +438,7 @@ class CELAS4(SpringElement):
         assert self.s1 > 0 or self.s2 > 0, 's1=%s s2=%s' % (self.s1, self.s2)
 
     @classmethod
-    def add_card(self, card=None, comment=''):
+    def add_card(cls, card, comment=''):
         eid = integer(card, 1, 'eid')
         k = double(card, 2, 'k')
         s1 = integer_or_blank(card, 3, 's1', 0)
@@ -447,7 +447,7 @@ class CELAS4(SpringElement):
         return CELAS4(eid, k, s1, s2, comment=comment)
 
     @classmethod
-    def add_op2_data(self, data, comment=''):
+    def add_op2_data(cls, data, comment=''):
         eid = data[0]
         k = data[1]
         s1 = data[2]

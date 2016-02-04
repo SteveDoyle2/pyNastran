@@ -924,18 +924,18 @@ class PSHEAR(ShellProperty):
         assert self.t > 0.0
 
     @classmethod
-    def add_card(self, card, comment=''):
-        self.pid = integer(card, 1, 'pid')
-        self.mid = integer(card, 2, 'mid')
-        self.t = double(card, 3, 't')
-        self.nsm = double_or_blank(card, 4, 'nsm', 0.0)
-        self.f1 = double_or_blank(card, 5, 'f1', 0.0)
-        self.f2 = double_or_blank(card, 6, 'f2', 0.0)
+    def add_card(cls, card, comment=''):
+        pid = integer(card, 1, 'pid')
+        mid = integer(card, 2, 'mid')
+        t = double(card, 3, 't')
+        nsm = double_or_blank(card, 4, 'nsm', 0.0)
+        f1 = double_or_blank(card, 5, 'f1', 0.0)
+        f2 = double_or_blank(card, 6, 'f2', 0.0)
         assert len(card) <= 7, 'len(PSHEAR card) = %i' % len(card)
         return PSHEAR(pid, mid, t, nsm, f1, f2, comment=comment)
 
     @classmethod
-    def add_op2_data(self, data, comment=''):
+    def add_op2_data(cls, data, comment=''):
         pid = data[0]
         mid = data[1]
         t = data[2]
@@ -1066,7 +1066,7 @@ class PSHELL(ShellProperty):
             assert self.t >= 0.0, 'PSHELL pid=%s Thickness=%s must be >= 0' % (self.pid, self.t)
 
     @classmethod
-    def add_card(self, card, comment=''):
+    def add_card(cls, card, comment=''):
         pid = integer(card, 1, 'pid')
         mid1 = integer_or_blank(card, 2, 'mid1')
         t = double_or_blank(card, 3, 't')
@@ -1101,7 +1101,7 @@ class PSHELL(ShellProperty):
                       z1, z2, mid4, comment=comment)
 
     @classmethod
-    def add_op2_data(self, data, comment=''):
+    def add_op2_data(cls, data, comment=''):
         pid = data[0]
         mid1 = data[1]
         t = data[2]

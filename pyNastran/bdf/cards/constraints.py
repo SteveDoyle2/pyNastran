@@ -478,7 +478,7 @@ class GMSPC(Constraint):
         self.entity_id = entity_id
 
     @classmethod
-    def add_card(self, card, comment=''):
+    def add_card(cls, card, comment=''):
         conid = integer(card, 1, 'sid')
         component = components(card, 2, 'components')
         entity = string(card, 3, 'entity')
@@ -486,9 +486,7 @@ class GMSPC(Constraint):
         return GMSPC(conid, component, entity, entity_id, comment=comment)
 
     @classmethod
-    def add_op2_data(self, data, comment=''):
-        if comment:
-            self._comment = comment
+    def add_op2_data(cls, data, comment=''):
         raise NotImplementedError('GMSPC')
 
     def cross_reference(self, model):

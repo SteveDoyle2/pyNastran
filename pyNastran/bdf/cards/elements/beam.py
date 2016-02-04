@@ -119,7 +119,7 @@ class CBEAM(CBAR):
                      pa, pb, wa, wb, sa, sb, comment=comment)
 
     @classmethod
-    def add_op2_data(self, data, comment=''):
+    def add_op2_data(cls, data, comment=''):
         #: .. todo:: verify
         #data = [[eid,pid,ga,gb,sa,sb, pa,pb,w1a,w2a,w3a,w1b,w2b,w3b],
         #        [f,g0]]

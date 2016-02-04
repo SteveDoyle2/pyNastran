@@ -445,7 +445,7 @@ class PBUSHT(BushingProperty):
         self.kn_tables = kn_tables
 
     @classmethod
-    def add_card(self, comment=''):
+    def add_card(cls, comment=''):
         k_tables = []
         b_tables = []
         ge_tables = []

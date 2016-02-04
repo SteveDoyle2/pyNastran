@@ -39,7 +39,7 @@ class PROD(Property):
         self.nsm = nsm
 
     @classmethod
-    def add_card(self, card, comment=''):
+    def add_card(cls, card, comment=''):
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')
         A = double(card, 3, 'A')
@@ -50,7 +50,7 @@ class PROD(Property):
         return PROD(pid, mid, A, j, c, nsm, comment=comment)
 
     @classmethod
-    def add_op2_data(self, data):
+    def add_op2_data(cls, data):
         pid = data[0]
         mid = data[1]
         A = data[2]

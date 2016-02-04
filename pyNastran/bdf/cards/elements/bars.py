@@ -299,7 +299,7 @@ class CBAR(LineElement):
                     offt, pa, pb, wa, wb, comment=comment)
 
     @classmethod
-    def add_op2_data(self, data, comment=''):
+    def add_op2_data(cls, data, comment=''):
         #: .. todo:: verify
         #data = [[eid,pid,ga,gb,pa,pb,w1a,w2a,w3a,w1b,w2b,w3b],[f,g0]]
         #data = [[eid,pid,ga,gb,pa,pb,w1a,w2a,w3a,w1b,w2b,w3b],[f,x1,x2,x3]]
@@ -308,12 +308,12 @@ class CBAR(LineElement):
         flag = data[1][0]
         if flag in [0, 1]:
             self.g0 = None
-            self.x = array([data[1][1],
-                            data[1][2],
-                            data[1][3]], dtype='float64')
+            x = array([data[1][1],
+                       data[1][2],
+                       data[1][3]], dtype='float64')
         else:
-            self.g0 = data[1][1]
-            self.x = None
+            g0 = data[1][1]
+            x = None
 
         eid = main[0]
         pid = main[1]
@@ -576,7 +576,7 @@ class CBEAM3(CBAR):
                       wa, wb, wc, tw, s, comment='')
 
     @classmethod
-    def add_card(self, data, comment=''):
+    def add_card(cls, data, comment=''):
         raise NotImplementedError(data)
 
     def cross_reference(self, model):

@@ -98,7 +98,7 @@ class CROD(RodElement):
         assert len(self.nodes) == 2
 
     @classmethod
-    def add_card(self, card, comment=''):
+    def add_card(cls, card, comment=''):
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', eid)
         nids = [integer(card, 3, 'n1'),
@@ -107,7 +107,7 @@ class CROD(RodElement):
         return CROD(eid, pid, nids, comment=comment)
 
     @classmethod
-    def add_op2_data(self, data):
+    def add_op2_data(cls, data):
         eid = data[0]
         pid = data[1]
         nids = data[2:4]
@@ -227,7 +227,7 @@ class CTUBE(RodElement):
         assert len(self.nodes) == 2
 
     @classmethod
-    def add_card(self, card, comment=''):
+    def add_card(cls, card, comment=''):
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', eid)
         nids = [integer(card, 3, 'n1'),
@@ -236,7 +236,7 @@ class CTUBE(RodElement):
         return CTUBE(eid, pid, nids, comment=comment)
 
     @classmethod
-    def add_op2_data(self, data):
+    def add_op2_data(cls, data):
         eid = data[0]
         pid = data[1]
         nids = data[2:4]
@@ -341,7 +341,7 @@ class CONROD(RodElement):
         assert len(self.nodes) == 2
 
     @classmethod
-    def add_card(self, card, comment=''):
+    def add_card(cls, card, comment=''):
         eid = integer(card, 1, 'eid')
         nids = [integer(card, 2, 'n1'),
                 integer(card, 3, 'n2')]
@@ -353,8 +353,8 @@ class CONROD(RodElement):
         return CONROD(eid, mid, nids, A, j, c, nsm, comment=comment)
 
     @classmethod
-    def add_op2_data(self, data):
-        self.eid = data[0]
+    def add_op2_data(cls, data):
+        eid = data[0]
         nids = data[1:3]
         mid = data[3]
         A = data[4]

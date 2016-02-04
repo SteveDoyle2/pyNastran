@@ -269,9 +269,7 @@ class DAREA(BaseCard):
         self.scale = scale
 
     @classmethod
-    def add_card(self, card, icard=0, comment=''):
-        if comment:
-            self._comment = comment
+    def add_card(cls, card, icard=0, comment=''):
         noffset = 3 * icard
         sid = integer(card, 1, 'sid')
         p = integer(card, 2 + noffset, 'p')
@@ -280,7 +278,7 @@ class DAREA(BaseCard):
         return DAREA(sid, p, c, scale, comment=comment)
 
     @classmethod
-    def add_op2_data(self, data, comment=''):
+    def add_op2_data(cls, data, comment=''):
         sid = data[0]
         p = data[1]
         c = data[2]

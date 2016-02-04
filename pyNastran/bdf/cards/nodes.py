@@ -846,7 +846,7 @@ class GRID(Node):
         self._validate_input()
 
     @classmethod
-    def add_op2_data(self, data, comment=''):
+    def add_op2_data(cls, data, comment=''):
         nid = data[0]
         cp = data[1]
         xyz = np.array(data[2:5])
@@ -858,7 +858,7 @@ class GRID(Node):
         return GRID(nid, cp, xyz, cd, ps, seid, comment=comment)
 
     @classmethod
-    def add_card(self, card, comment=''):
+    def add_card(cls, card, comment=''):
         """
         Creates the GRID card
 

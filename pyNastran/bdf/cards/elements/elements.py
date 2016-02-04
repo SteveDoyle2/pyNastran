@@ -423,7 +423,7 @@ class PLOTEL(BaseCard):
         self.nodes = nodes
 
     @classmethod
-    def add_card(self, card, comment=''):
+    def add_card(cls, card, comment=''):
         eid = integer(card, 1, 'eid')
         nodes = [
             integer(card, 2, 'g1'),
@@ -433,7 +433,7 @@ class PLOTEL(BaseCard):
         return PLOTEL(eid, nodes, comment=comment)
 
     @classmethod
-    def add_op2_data(self, data, comment=''):
+    def add_op2_data(cls, data, comment=''):
         eid = data[0]
         pid = data[1]
         nodes = [data[2], data[3]]

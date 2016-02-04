@@ -804,7 +804,7 @@ class FORCE(Force):
         self.xyz = xyz
 
     @classmethod
-    def add_card(self, card, comment=''):
+    def add_card(cls, card, comment=''):
         sid = integer(card, 1, 'sid')
         node = integer(card, 2, 'node')
         cid = integer_or_blank(card, 3, 'cid', 0)
@@ -816,7 +816,7 @@ class FORCE(Force):
         return FORCE(sid, node, cid, mag, xyz, comment=comment)
 
     @classmethod
-    def add_op2_data(self, data, comment=''):
+    def add_op2_data(cls, data, comment=''):
         sid = data[0]
         node = data[1]
         cid = data[2]
@@ -912,7 +912,7 @@ class FORCE1(Force):
         self.g2 = g2
 
     @classmethod
-    def add_card(self, card, comment=''):
+    def add_card(cls, card, comment=''):
         sid = integer(card, 1, 'sid')
         node = integer(card, 2, 'node')
         mag = double(card, 3, 'mag')
@@ -922,7 +922,7 @@ class FORCE1(Force):
         return FORCE1(sid, node, mag, g1, g2, comment=comment)
 
     @classmethod
-    def add_op2_data(self, data, comment=''):
+    def add_op2_data(cls, data, comment=''):
         sid = data[0]
         node = data[1]
         mag = data[2]
@@ -1020,7 +1020,7 @@ class FORCE2(Force):
         self.g4 = g4
 
     @classmethod
-    def add_card(self, card, comment=''):
+    def add_card(cls, card, comment=''):
         sid = integer(card, 1, 'sid')
         node = integer(card, 2, 'node')
         mag = double(card, 3, 'mag')
@@ -1032,7 +1032,7 @@ class FORCE2(Force):
         return FORCE2(sid, node, mag, g1, g2, g3, g4, comment=comment)
 
     @classmethod
-    def add_op2_data(self, data, comment=''):
+    def add_op2_data(cls, data, comment=''):
         sid = data[0]
         node = data[1]
         mag = data[2]
@@ -1195,7 +1195,7 @@ class MOMENT(Moment):
         self.xyz = xyz
 
     @classmethod
-    def add_card(self, card, comment=''):
+    def add_card(cls, card, comment=''):
         sid = integer(card, 1, 'sid')
         node = integer(card, 2, 'node')
         cid = integer_or_blank(card, 3, 'cid', 0)
@@ -1209,7 +1209,7 @@ class MOMENT(Moment):
         return MOMENT(sid, node, cid, mag, xyz, comment=comment)
 
     @classmethod
-    def add_op2_data(self, data, comment=''):
+    def add_op2_data(cls, data, comment=''):
         sid = data[0]
         node = data[1]
         cid = data[2]
@@ -1302,7 +1302,7 @@ class MOMENT1(Moment):
         self.g2 = g2
 
     @classmethod
-    def add_card(self, card, comment=''):
+    def add_card(cls, card, comment=''):
         sid = integer(card, 1, 'sid')
         node = integer(card, 2, 'node')
         mag = double(card, 3, 'mag')
@@ -1312,7 +1312,7 @@ class MOMENT1(Moment):
         return MOMENT1(sid, node, mag, g1, g2, comment=comment)
 
     @classmethod
-    def add_op2_data(self, data, comment=''):
+    def add_op2_data(cls, data, comment=''):
         sid = data[0]
         node = data[1]
         mag = data[2]
@@ -1421,7 +1421,7 @@ class MOMENT2(Moment):
         self.xyz = xyz
 
     @classmethod
-    def add_card(self, card, comment=''):
+    def add_card(cls, card, comment=''):
         sid = integer(card, 1, 'sid')
         node = integer(card, 2, 'node')
         mag = double(card, 3, 'mag')
@@ -1434,7 +1434,7 @@ class MOMENT2(Moment):
         return MOMENT2(sid, node, mag, g1, g2, g3, g4, xyz, comment=comment)
 
     @classmethod
-    def add_op2_data(self, data, comment=''):
+    def add_op2_data(cls, data, comment=''):
         sid = data[0]
         node = data[1]
         mag = data[2]

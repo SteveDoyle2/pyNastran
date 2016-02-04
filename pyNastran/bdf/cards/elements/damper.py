@@ -66,7 +66,7 @@ class CDAMP1(LineDamper):
         self._validate_input()
 
     @classmethod
-    def add_card(self, card, comment=''):
+    def add_card(cls, card, comment=''):
         eid = integer(card, 1, 'eid')
         pid = integer(card, 2, 'pid')
         nids = [integer_or_blank(card, 3, 'g1', 0),
@@ -79,7 +79,7 @@ class CDAMP1(LineDamper):
         return CDAMP1(eid, pid, nids, c1, c2, comment=comment)
 
     @classmethod
-    def add_op2_data(self, data, comment=''):
+    def add_op2_data(cls, data, comment=''):
         eid = data[0]
         pid = data[1]
         nids = [data[2], data[4]]
@@ -198,7 +198,7 @@ class CDAMP2(LineDamper):
         self._validate_input()
 
     @classmethod
-    def add_card(self, card, comment=''):
+    def add_card(cls, card, comment=''):
         eid = integer(card, 1, 'eid')
         b = double(card, 2, 'b')
         nids = [integer_or_blank(card, 3, 'n1', 0),
@@ -210,7 +210,7 @@ class CDAMP2(LineDamper):
         return CDAMP2(eid, b, nids, c1, c2, comment=comment)
 
     @classmethod
-    def add_op2_data(self, data, comment=''):
+    def add_op2_data(cls, data, comment=''):
         eid = data[0]
         b = data[1]
         nids = [data[2], data[4]]
@@ -297,7 +297,7 @@ class CDAMP3(LineDamper):
         assert len(self.nodes) == 2
 
     @classmethod
-    def add_card(self, card, comment=''):
+    def add_card(cls, card, comment=''):
         eid = integer(card, 1, 'eid')
         pid = integer(card, 2, 'pid')
         nids = [integer_or_blank(card, 3, 's1', 0),
@@ -306,7 +306,7 @@ class CDAMP3(LineDamper):
         return CDAMP3(eid, pid, nids, comment=comment)
 
     @classmethod
-    def add_op2_data(self, data, comment=''):
+    def add_op2_data(cls, data, comment=''):
         eid = data[0]
         pid = data[1]
         nids = [data[2], data[3]]
@@ -458,7 +458,7 @@ class CDAMP5(LineDamper):
         assert len(self.nodes) == 2
 
     @classmethod
-    def add_card(self, card, comment=''):
+    def add_card(cls, card, comment=''):
         eid = integer(card, 1, 'eid')
         pid = integer(card, 2, 'pid')
         nids = [integer_or_blank(card, 3, 'n1', 0),
@@ -466,7 +466,7 @@ class CDAMP5(LineDamper):
         assert len(card) <= 5, 'len(CDAMP5 card) = %i' % len(card)
         return CDAMP5(eid, pid, nids, comment=comment)
 
-    def add_op2_data(self, data, comment=''):
+    def add_op2_data(cls, data, comment=''):
         eid = data[0]
         pid = data[1]
         nids = [data[2], data[3]]
@@ -549,7 +549,7 @@ class CVISC(LineDamper):
         assert len(self.nodes) == 2
 
     @classmethod
-    def add_card(self, card, comment=''):
+    def add_card(cls, card, comment=''):
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', eid)
         nids = [integer_or_blank(card, 3, 'n1', 0),
@@ -558,7 +558,7 @@ class CVISC(LineDamper):
         return CVISC(eid, pid, nids, comment=comment)
 
     @classmethod
-    def add_op2_data(self, data, comment):
+    def add_op2_data(cls, data, comment):
         eid = data[0]
         pid = data[1]
         nids = data[2:4]

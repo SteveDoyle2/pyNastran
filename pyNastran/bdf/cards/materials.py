@@ -206,7 +206,7 @@ class MAT1(IsotropicMaterial):
                     St, Sc, Ss, Mcsid, comment=comment)
 
     @classmethod
-    def add_op2_data(self, data, comment=''):
+    def add_op2_data(cls, data, comment=''):
         mid = data[0]
         e = data[1]
         g = data[2]
@@ -792,7 +792,7 @@ class MAT4(ThermalMaterial):
         self.qlat = qlat
 
     @classmethod
-    def add_card(self, card, comment=''):
+    def add_card(cls, card, comment=''):
         mid = integer(card, 1, 'mid')
         k = double_or_blank(card, 2, 'k')
         cp = double_or_blank(card, 3, 'cp', 0.0)
@@ -806,10 +806,10 @@ class MAT4(ThermalMaterial):
         qlat = double_or_blank(card, 11, 'qlat')
         assert len(card) <= 12, 'len(MAT4 card) = %i' % len(card)
         return MAT4(mid, k, cp, rho, H, mu, hgen, refEnthalpy, tch, tdelta,
-                   qlat, comment=comment)
+                    qlat, comment=comment)
 
     @classmethod
-    def add_op2_data(self, data, comment=''):
+    def add_op2_data(cls, data, comment=''):
         mid = data[0]
         k = data[1]
         cp = data[2]
@@ -897,26 +897,24 @@ class MAT5(ThermalMaterial):  # also AnisotropicMaterial
         self.hgen = hgen
 
     @classmethod
-    def add_card(self, card, comment=''):
-        if comment:
-            self._comment = comment
-        self.mid = integer(card, 1, 'mid')
-        self.kxx = double_or_blank(card, 2, 'kxx', 0.0)
-        self.kxy = double_or_blank(card, 3, 'kxy', 0.0)
-        self.kxz = double_or_blank(card, 4, 'kxz', 0.0)
-        self.kyy = double_or_blank(card, 5, 'kyy', 0.0)
-        self.kyz = double_or_blank(card, 6, 'kyz', 0.0)
-        self.kzz = double_or_blank(card, 7, 'kzz', 0.0)
+    def add_card(cls, card, comment=''):
+        mid = integer(card, 1, 'mid')
+        kxx = double_or_blank(card, 2, 'kxx', 0.0)
+        kxy = double_or_blank(card, 3, 'kxy', 0.0)
+        kxz = double_or_blank(card, 4, 'kxz', 0.0)
+        kyy = double_or_blank(card, 5, 'kyy', 0.0)
+        kyz = double_or_blank(card, 6, 'kyz', 0.0)
+        kzz = double_or_blank(card, 7, 'kzz', 0.0)
 
-        self.cp = double_or_blank(card, 8, 'cp', 0.0)
-        self.rho = double_or_blank(card, 9, 'rho', 1.0)
-        self.hgen = double_or_blank(card, 10, 'hgen', 1.0)
+        cp = double_or_blank(card, 8, 'cp', 0.0)
+        rho = double_or_blank(card, 9, 'rho', 1.0)
+        hgen = double_or_blank(card, 10, 'hgen', 1.0)
         assert len(card) <= 11, 'len(MAT5 card) = %i' % len(card)
         return MAT5(mid, kxx, kyy, kxz, kyy, kyz, kzz,
                     cp, rho, hgen, comment=comment)
 
     @classmethod
-    def add_op2_data(self, data, comment=''):
+    def add_op2_data(cls, data, comment=''):
         mid = data[0]
         kxx = data[1]
         kxy = data[2]

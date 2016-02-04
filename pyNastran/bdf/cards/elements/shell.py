@@ -293,7 +293,7 @@ class CTRIA3(TriShell):
         assert len(self.nodes) == 3
 
     @classmethod
-    def add_op2_data(self, data, comment=''):
+    def add_op2_data(cls, data, comment=''):
         eid = data[0]
         pid = data[1]
         nids = data[2:5]
@@ -314,7 +314,7 @@ class CTRIA3(TriShell):
                           TFlag, T1, T2, T3, comment=comment)
 
     @classmethod
-    def add_card(self, card, comment=''):
+    def add_card(cls, card, comment=''):
         #: Element ID
         eid = integer(card, 1, 'eid')
         #: Property ID
@@ -1257,9 +1257,9 @@ class CSHEAR(QuadShell):
         assert len(self.nodes) == 4
 
     @classmethod
-    def add_card(self, card, comment=''):
-        self.eid = integer(card, 1, 'eid')
-        self.pid = integer_or_blank(card, 2, 'pid', self.eid)
+    def add_card(cls, card, comment=''):
+        eid = integer(card, 1, 'eid')
+        pid = integer_or_blank(card, 2, 'pid', eid)
         nids = [integer_or_blank(card, 3, 'n1'),
                 integer_or_blank(card, 4, 'n2'),
                 integer_or_blank(card, 5, 'n3'),
@@ -1268,7 +1268,7 @@ class CSHEAR(QuadShell):
         return CSHEAR(eid, pid, nids, comment=comment)
 
     @classmethod
-    def add_op2_data(self, data, comment=''):
+    def add_op2_data(cls, data, comment=''):
         eid = data[0]
         pid = data[1]
         nids = data[2:]
@@ -1454,9 +1454,7 @@ class CQUAD4(QuadShell):
         self.T4 = T4
 
     @classmethod
-    def add_op2_data(self, data, comment=''):
-        if comment:
-            self._comment = comment
+    def add_op2_data(cls, data, comment=''):
         eid = data[0]
         pid = data[1]
         nids = data[2:6]
@@ -1480,7 +1478,7 @@ class CQUAD4(QuadShell):
                       TFlag, T1, T2, T3, T4, comment=comment)
 
     @classmethod
-    def add_card(self, card, comment=''):
+    def add_card(cls, card, comment=''):
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', eid)
         nids = [integer(card, 3, 'n1'),

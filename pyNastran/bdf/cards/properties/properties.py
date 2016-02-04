@@ -241,7 +241,7 @@ class PLSOLID(SolidProperty):
         self._validate_input()
 
     @classmethod
-    def add_card(self, card, comment=''):
+    def add_card(cls, card, comment=''):
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')
         stress_strain = string_or_blank(card, 3, 'stress_strain', 'GRID')
@@ -249,7 +249,7 @@ class PLSOLID(SolidProperty):
         return PLSOLID(pid, mid, stress_strain, comment=comment)
 
     @classmethod
-    def add_op2_data(self, data, comment=''):
+    def add_op2_data(cls, data, comment=''):
         pid = data[0]
         mid = data[1]
         ge = data[2]

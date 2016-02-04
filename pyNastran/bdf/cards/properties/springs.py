@@ -56,7 +56,7 @@ class PELAS(SpringProperty):
         self.s = s
 
     @classmethod
-    def add_card(self, card, icard=0, comment=''):
+    def add_card(cls, card, icard=0, comment=''):
         noffset = icard * 5
         pid = integer(card, 1 + noffset, 'pid')
         k = double(card, 2 + noffset, 'k')
@@ -65,7 +65,7 @@ class PELAS(SpringProperty):
         return PELAS(pid, k, ge, s, comment=comment)
 
     @classmethod
-    def add_op2_data(self, data, comment=''):
+    def add_op2_data(cls, data, comment=''):
         pid = data[0]
         k = data[1]
         ge = data[2]
@@ -137,7 +137,7 @@ class PELAST(SpringProperty):
         self.tknid = tknid
 
     @classmethod
-    def add_card(self, card, comment=''):
+    def add_card(cls, card, comment=''):
         pid = integer(card, 1, 'pid')
         tkid = integer_or_blank(card, 2, 'tkid', 0)
         tgeid = integer_or_blank(card, 3, 'tgeid', 0)

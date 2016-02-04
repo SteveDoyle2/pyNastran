@@ -437,7 +437,7 @@ class CMASS4(PointMassElement):
         assert self.s1 != self.s2
 
     @classmethod
-    def add_card(self, card, icard=0, comment=''):
+    def add_card(cls, card, icard=0, comment=''):
         ioffset = icard * 4
         eid = integer(card, 1 + ioffset, 'eid')
         mass = double_or_blank(card, 2 + ioffset, 'mass', 0.)
@@ -447,13 +447,12 @@ class CMASS4(PointMassElement):
         return CMASS4(eid, mass, s1, s2, comment=comment)
 
     @classmethod
-    def add_op2_data(self, data, comment=''):
-        if comment:
-            self._comment = comment
+    def add_op2_data(cls, data, comment=''):
         eid = data[0]
         mass = data[1]
         s1 = data[2]
         s2 = data[3]
+        return CMASS4(eid, mass, s1, s2, comment=comment)
 
     def Eid(self):
         return self.eid

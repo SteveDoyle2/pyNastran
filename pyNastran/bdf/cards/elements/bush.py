@@ -85,7 +85,7 @@ class CBUSH(BushElement):
         self.si = si
 
     @classmethod
-    def add_card(self, card, comment=''):
+    def add_card(cls, card, comment=''):
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', eid)
         ga = integer(card, 3, 'ga')
@@ -125,7 +125,7 @@ class CBUSH(BushElement):
         assert len(card) <= 14, 'len(CBUSH card) = %i' % len(card)
         return CBUSH(eid, pid, ga, gb, x, g0, cid, s, ocid, si, comment=comment)
 
-    def add_op2_data(self, data, comment=''):
+    def add_op2_data(cls, data, comment=''):
         eid = data[0]
         raise NotImplementedError('CBUSH data...')
 
@@ -246,7 +246,7 @@ class CBUSH1D(BushElement):
         self.cid = cid
 
     @classmethod
-    def add_card(self, comment=''):
+    def add_card(cls, comment=''):
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', eid)
         ga = integer(card, 3, 'ga')
@@ -255,7 +255,7 @@ class CBUSH1D(BushElement):
         assert len(card) <= 6, 'len(CBUSH1D card) = %i' % len(card)
         return CBUSH1D(eid, pid, ga, gb, cid, comment=comment)
 
-    def add_op2_data(self, data, comment=''):
+    def add_op2_data(cls, data, comment=''):
         eid = data[0]
         pid = data[1]
         ga = data[2]
