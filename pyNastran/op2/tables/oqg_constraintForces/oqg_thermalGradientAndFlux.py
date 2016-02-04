@@ -1,4 +1,4 @@
-from pyNastran.op2.resultObjects.tableObject import RealTableArray
+from pyNastran.op2.result_objects.table_object import RealTableArray
 
 class RealTemperatureGradientAndFluxArray(RealTableArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):

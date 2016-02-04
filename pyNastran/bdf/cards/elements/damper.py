@@ -54,35 +54,38 @@ class CDAMP1(LineDamper):
         else:
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
-    def __init__(self):
+    def __init__(self, eid, pid, nids, c1, c2, comment=''):
         LineDamper.__init__(self)
-
-    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        self.eid = integer(card, 1, 'eid')
-        self.pid = integer(card, 2, 'pid')
+        self.eid = eid
+        self.pid = pid
+        self.c1 = c1
+        self.c2 = c2
+        self.prepare_node_ids(nids, allow_empty_nodes=True)
+        self._validate_input()
+
+    @classmethod
+    def add_card(self, card, comment=''):
+        eid = integer(card, 1, 'eid')
+        pid = integer(card, 2, 'pid')
         nids = [integer_or_blank(card, 3, 'g1', 0),
                 integer_or_blank(card, 5, 'g2', 0)]
 
         #: component number
-        self.c1 = integer_or_blank(card, 4, 'c1', 0)
-        self.c2 = integer_or_blank(card, 6, 'c2', 0)
+        c1 = integer_or_blank(card, 4, 'c1', 0)
+        c2 = integer_or_blank(card, 6, 'c2', 0)
         assert len(card) <= 7, 'len(CDAMP1 card) = %i' % len(card)
-        self.prepare_node_ids(nids, allow_empty_nodes=True)
-        self._validate_input()
+        return CDAMP1(eid, pid, nids, c1, c2, comment=comment)
 
-    def add_op2_data(self, data, commet=''):
-        if comment:
-            self._comment = comment
-        self.eid = data[0]
-        self.pid = data[1]
+    @classmethod
+    def add_op2_data(self, data, comment=''):
+        eid = data[0]
+        pid = data[1]
         nids = [data[2], data[4]]
-        self.c1 = data[3]
-        self.c2 = data[5]
-
-        self.prepare_node_ids(nids, allow_empty_nodes=True)
-        self._validate_input()
+        c1 = data[3]
+        c2 = data[5]
+        return CDAMP1(eid, pid, nids, c1, c2, comment=comment)
 
     def _validate_input(self):
         assert len(self.nodes) == 2
@@ -145,7 +148,8 @@ class CDAMP1(LineDamper):
         else:
             pids = model.properties.keys() + model.pdampt.keys()
             pids.sort()
-            msg = 'pid=%i not found which is required by CDAMP1 eid=%i.  Allowed Pids=%s' % (self.pid, self.eid, pids)
+            msg = ('pid=%i not found which is required by CDAMP1 eid=%i.  '
+                   'Allowed Pids=%s' % (self.pid, self.eid, pids))
             raise KeyError(msg)
 
     def uncross_reference(self):
@@ -177,38 +181,42 @@ class CDAMP2(LineDamper):
         else:
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
-    def __init__(self):
+    def __init__(self, eid, b, nids, c1, c2, comment=''):
         LineDamper.__init__(self)
-
-    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        self.eid = integer(card, 1, 'eid')
-
+        self.eid = eid
         #: Value of the scalar damper (Real)
-        self.b = double(card, 2, 'b')
+        self.b = b
+
+        #: component number
+        self.c1 = c1
+        self.c2 = c2
+
+        # CDAMP2 do not have to be unique
+        self.prepare_node_ids(nids, allow_empty_nodes=True)
+        self._validate_input()
+
+    @classmethod
+    def add_card(self, card, comment=''):
+        eid = integer(card, 1, 'eid')
+        b = double(card, 2, 'b')
         nids = [integer_or_blank(card, 3, 'n1', 0),
                 integer_or_blank(card, 5, 'n2', 0)]
 
-        #: component number
-        self.c1 = integer_or_blank(card, 4, 'c1', 0)
-        self.c2 = integer_or_blank(card, 6, 'c2', 0)
+        c1 = integer_or_blank(card, 4, 'c1', 0)
+        c2 = integer_or_blank(card, 6, 'c2', 0)
         assert len(card) <= 7, 'len(CDAMP2 card) = %i' % len(card)
+        return CDAMP2(eid, b, nids, c1, c2, comment=comment)
 
-        # CDAMP2 do not have to be unique
-        self.prepare_node_ids(nids, allow_empty_nodes=True)
-        self._validate_input()
-
+    @classmethod
     def add_op2_data(self, data, comment=''):
-        self.eid = data[0]
-        self.b = data[1]
+        eid = data[0]
+        b = data[1]
         nids = [data[2], data[4]]
-        self.c1 = data[3]
-        self.c2 = data[5]
-
-        # CDAMP2 do not have to be unique
-        self.prepare_node_ids(nids, allow_empty_nodes=True)
-        self._validate_input()
+        c1 = data[3]
+        c2 = data[5]
+        return CDAMP2(eid, b, nids, c1, c2, comment=comment)
 
     def _validate_input(self):
         assert len(self.nodes) == 2
@@ -279,28 +287,30 @@ class CDAMP3(LineDamper):
         else:
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
-    def __init__(self):
-        LineDamper.__init__(self)
-
-    def add_card(self, card, comment=''):
+    def __init__(self, eid, pid, nids, comment=''):
         if comment:
             self._comment = comment
-        self.eid = integer(card, 1, 'eid')
-        self.pid = integer(card, 2, 'pid')
+        LineDamper.__init__(self)
+        self.eid = eid
+        self.pid = pid
+        self.prepare_node_ids(nids, allow_empty_nodes=True)
+        assert len(self.nodes) == 2
+
+    @classmethod
+    def add_card(self, card, comment=''):
+        eid = integer(card, 1, 'eid')
+        pid = integer(card, 2, 'pid')
         nids = [integer_or_blank(card, 3, 's1', 0),
                 integer_or_blank(card, 4, 's2', 0)]
         assert len(card) <= 5, 'len(CDAMP3 card) = %i' % len(card)
-        self.prepare_node_ids(nids, allow_empty_nodes=True)
-        assert len(self.nodes) == 2
+        return CDAMP3(eid, pid, nids, comment=comment)
 
+    @classmethod
     def add_op2_data(self, data, comment=''):
-        if comment:
-            self._comment = comment
-        self.eid = data[0]
-        self.pid = data[1]
+        eid = data[0]
+        pid = data[1]
         nids = [data[2], data[3]]
-        self.prepare_node_ids(nids, allow_empty_nodes=True)
-        assert len(self.nodes) == 2
+        return CDAMP3(eid, pid, nids, comment=comment)
 
     def _verify(self, xref=True):
         eid = self.Eid()
@@ -436,27 +446,31 @@ class CDAMP5(LineDamper):
         else:
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
-    def __init__(self):
+    def __init__(self, eid, pid, nids, comment=''):
         LineDamper.__init__(self)
-
-    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        self.eid = integer(card, 1, 'eid')
+
+        self.eid = eid
         #: Property ID
-        self.pid = integer(card, 2, 'pid')
+        self.pid = pid
+        self.prepare_node_ids(nids, allow_empty_nodes=True)
+        assert len(self.nodes) == 2
+
+    @classmethod
+    def add_card(self, card, comment=''):
+        eid = integer(card, 1, 'eid')
+        pid = integer(card, 2, 'pid')
         nids = [integer_or_blank(card, 3, 'n1', 0),
                 integer_or_blank(card, 4, 'n2', 0)]
         assert len(card) <= 5, 'len(CDAMP5 card) = %i' % len(card)
-        self.prepare_node_ids(nids, allow_empty_nodes=True)
-        assert len(self.nodes) == 2
+        return CDAMP5(eid, pid, nids, comment=comment)
 
     def add_op2_data(self, data, comment=''):
-        self.eid = data[0]
-        self.pid = data[1]
+        eid = data[0]
+        pid = data[1]
         nids = [data[2], data[3]]
-        self.prepare_node_ids(nids, allow_empty_nodes=True)
-        assert len(self.nodes) == 2
+        return CDAMP5(eid, pid, nids, comment=comment)
 
     def _verify(self, xref=True):
         eid = self.Eid()
@@ -525,28 +539,30 @@ class CVISC(LineDamper):
         else:
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
-    def __init__(self):
+    def __init__(self, eid, pid, nids, comment=''):
         LineDamper.__init__(self)
-
-    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        self.eid = integer(card, 1, 'eid')
-        self.pid = integer_or_blank(card, 2, 'pid', self.eid)
+        self.eid = eid
+        self.pid = pid
+        self.prepare_node_ids(nids)
+        assert len(self.nodes) == 2
+
+    @classmethod
+    def add_card(self, card, comment=''):
+        eid = integer(card, 1, 'eid')
+        pid = integer_or_blank(card, 2, 'pid', eid)
         nids = [integer_or_blank(card, 3, 'n1', 0),
                 integer_or_blank(card, 4, 'n2', 0)]
         assert len(card) <= 5, 'len(CVISC card) = %i' % len(card)
-        self.prepare_node_ids(nids)
-        assert len(self.nodes) == 2
+        return CVISC(eid, pid, nids, comment=comment)
 
+    @classmethod
     def add_op2_data(self, data, comment):
-        if comment:
-            self._comment = comment
-        self.eid = data[0]
-        self.pid = data[1]
+        eid = data[0]
+        pid = data[1]
         nids = data[2:4]
-        self.prepare_node_ids(nids)
-        assert len(self.nodes) == 2
+        return CVISC(eid, pid, nids, comment=comment)
 
     def _verify(self, xref=True):
         eid = self.Eid()

@@ -18,7 +18,7 @@ from PyQt4 import QtCore, QtGui
 import vtk
 from vtk.qt4.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 
-from numpy import ndarray, eye, array, zeros, loadtxt
+from numpy import eye, array, zeros, loadtxt
 from numpy.linalg import norm
 
 import pyNastran
@@ -265,11 +265,13 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             checkables = ['show_info', 'show_debug', 'show_gui', 'show_command']
         if tools is None:
             tools = [
+
                 ('exit', '&Exit', 'texit.png', 'Ctrl+Q', 'Exit application', self.closeEvent), # QtGui.qApp.quit
                 ('load_geometry', 'Load &Geometry', 'load_geometry.png', 'Ctrl+O', 'Loads a geometry input file', self.on_load_geometry),
                 ('load_results', 'Load &Results', 'load_results.png', 'Ctrl+R', 'Loads a results file', self.on_load_results),
                 ('load_csv_nodal', 'Load CSV Nodal Results', '', None, 'Loads a custom nodal results file', self.on_load_nodal_results),
                 ('load_csv_elemental', 'Load CSV Elemental Results', '', None, 'Loads a custom elemental results file', self.on_load_elemental_results),
+                ('load_csv_user_points', 'Load CSV User Points', 'user_points.png', None, 'Loads user defined points ', self.on_load_user_points),
 
                 ('back_col', 'Change background color', 'tcolorpick.png', None, 'Choose a background color', self.change_background_color),
                 ('label_col', 'Change label color', 'tcolorpick.png', None, 'Choose a label color', self.change_label_color),
@@ -305,7 +307,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                 ('scshot', 'Take a Screenshot', 'tcamera.png', 'CTRL+I', 'Take a Screenshot of current view', self.on_take_screenshot),
                 ('about', 'About pyNastran GUI', 'tabout.png', 'CTRL+H', 'About pyCart3d GUI and help on shortcuts', self.about_dialog),
                 ('view', 'Camera View', 'view.png', None, 'Load the camera menu', self.view_camera),
-                ('creset', 'Reset camera view', 'trefresh.png', 'r', 'Reset the camera view to default', self.on_reset_camera),
+                ('camera_reset', 'Reset camera view', 'trefresh.png', 'r', 'Reset the camera view to default', self.on_reset_camera),
                 ('reload', 'Reload model', 'treload.png', 'r', 'Reload the model', self.on_reload),
 
                 ('cycle_res', 'Cycle Results', 'cycle_results.png', 'CTRL+L', 'Changes the result case', self.cycle_results),
@@ -385,7 +387,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
         menu_window = ['toolbar', 'reswidget']
         menu_view = [
-            'scshot', '', 'wireframe', 'surface', 'creset', '',
+            'scshot', '', 'wireframe', 'surface', 'camera_reset', '',
             'back_col', 'text_col', '',
             'label_col', 'label_clear', 'label_reset', '',
             'legend', 'geo_properties', '', 'clipping', 'axis']
@@ -400,14 +402,14 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
         menu_file = [
             'load_geometry', 'load_results', 'load_csv_nodal', 'load_csv_elemental',
-            'script', '', 'exit']
+            'load_csv_user_points', 'script', '', 'exit']
         toolbar_tools = ['reload', 'load_geometry', 'load_results',
                          'x', 'y', 'z', 'X', 'Y', 'Z',
                          'magnify', 'shrink', 'rotate_clockwise', 'rotate_cclockwise',
                          'wireframe', 'surface',]
         if self.vtk_version[0] < 6:
             toolbar_tools.append('edges')
-        toolbar_tools += ['creset', 'view', 'scshot', '', 'exit']
+        toolbar_tools += ['camera_reset', 'view', 'scshot', '', 'exit']
 
         menu_items = [
             (self.menu_file, menu_file),
@@ -861,7 +863,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
         #for cid, axes in iteritems(self.axes):
             #self.rend.AddActor(axes)
-        self.addGeometry()
+        self.add_geometry()
         if nframes == 2:
             rend.AddActor(self.geom_actor)
 
@@ -884,10 +886,10 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.build_lookup_table()
 
         text_size = 14
-        self.createText([5, 50], 'Max  ', text_size)  # text actor 0
-        self.createText([5, 35], 'Min  ', text_size)  # text actor 1
-        self.createText([5, 20], 'Word1', text_size)  # text actor 2
-        self.createText([5, 5], 'Word2', text_size)  # text actor 3
+        self.create_text([5, 50], 'Max  ', text_size)  # text actor 0
+        self.create_text([5, 35], 'Min  ', text_size)  # text actor 1
+        self.create_text([5, 20], 'Word1', text_size)  # text actor 2
+        self.create_text([5, 5], 'Word2', text_size)  # text actor 3
 
         self.get_edges()
         if self.is_edges:
@@ -1039,7 +1041,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.edgeActor.SetVisibility(self.is_edges)
         self.rend.AddActor(self.edgeActor)
 
-    def createText(self, position, label, text_size=18, movable=False):
+    def create_text(self, position, label, text_size=18, movable=False):
         text_actor = vtk.vtkTextActor()
         text_actor.SetInput(label)
         text_prop = text_actor.GetTextProperty()
@@ -1059,11 +1061,11 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.text_actors[self.iText] = text_actor
         self.iText += 1
 
-    def TurnTextOff(self):
+    def turn_text_off(self):
         for text in itervalues(self.text_actors):
             text.VisibilityOff()
 
-    def TurnTextOn(self):
+    def turn_text_on(self):
         for text in itervalues(self.text_actors):
             text.VisibilityOn()
 
@@ -1154,7 +1156,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             #if geometry_format in self.formats:
             msg = 'The import for the %r module failed.\n' % geometry_format
             #else:
-            #msg += '%r is not a enabled format; enabled_formats=%s\n' % (geometry_format, self.supported_formats)
+            #msg += '%r is not a enabled format; enabled_formats=%s\n' % (
+                #geometry_format, self.supported_formats)
             self.log_error(msg)
             return is_failed
 
@@ -1175,7 +1178,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                 self.log_error('---invalid format=%r' % geometry_format)
                 is_failed = True
                 return is_failed
-                #raise NotImplementedError('on_load_geometry; infile_name=%r format=%r' % (infile_name, geometry_format))
+                #raise NotImplementedError('on_load_geometry; infile_name=%r format=%r' % (
+                    #infile_name, geometry_format))
             formats = [geometry_format]
             filter_index = 0
         else:
@@ -1253,7 +1257,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                 #else:
                     #name = load_function.__name__
                     #self.log_error(str(args))
-                    #self.log_error("'plot' needs to be added to %r; args[-1]=%r" % (name, args[-1]))
+                    #self.log_error("'plot' needs to be added to %r; "
+                                   #"args[-1]=%r" % (name, args[-1]))
                     #has_results = load_function(infile_name, self.last_dir)
                     #form, cases = load_function(infile_name, self.last_dir)
             except Exception as e:
@@ -1462,7 +1467,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                     load_function = _resfunc
                     break
             else:
-                msg = 'format=%r is not supported.  Did you load a geometry model?' % geometry_format
+                msg = ('format=%r is not supported.  '
+                       'Did you load a geometry model?' % geometry_format)
                 self.log_error(msg)
                 raise RuntimeError(msg)
 
@@ -1536,11 +1542,45 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                               (1.0, 1.0, 0.117647058824),
                               (1.0, 0.662745098039, 0.113725490196)]
             for fname in inputs['user_points']:
-                name = os.path.basename(fname).rsplit('.', 1)[0]
                 color = initial_colors[self.num_user_points % len(initial_colors)]
-                self.add_user_points(fname, name, color=color)
-                self.num_user_points += 1
+                self.on_load_user_points(fname, None, color)
 
+    def on_load_user_points(self, csv_filename=None, name=None, color=None):
+        """
+        Loads a User Points CSV File of the form:
+
+        1.0, 2.0, 3.0
+        1.5, 2.5, 3.5
+
+        Parameters
+        ----------
+        csv_filename : str (default=None -> load a dialog)
+           the path to the user points CSV file
+        name : str (default=None -> extract from fname)
+           the name for the user points
+        color : (float, float, float)
+            RGB values as 0.0 <= rgb <= 1.0
+
+        .. note :: no header line is required
+        .. note :: nodes are in the global frame
+
+        .. todo :: support changing the name
+        .. todo :: support changing the color
+        .. todo :: support overwriting points
+        """
+        if csv_filename in [None, False]:
+            qt_wildcard = '*.csv'
+            title = 'Load User Points'
+            wildcard_level, csv_filename = self._create_load_file_dialog(qt_wildcard, title)
+        if color is None:
+            color = (1.0, 0., 0.) # red
+        if name is None:
+            name = os.path.basename(csv_filename).rsplit('.', 1)[0]
+
+        self._add_user_points(csv_filename, name, color=color)
+        self.num_user_points += 1
+        self.log_command('on_load_user_points(%r, %r, %s)' % (
+            csv_filename, name, str(color)))
 
     def create_cell_picker(self):
         # cell picker
@@ -1897,7 +1937,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             text_prop.SetFontSize(text_size)
         self.iText += 1
 
-    def addGeometry(self):
+    def add_geometry(self):
         """
         #(N,)  for stress, x-disp
         #(N,3) for warp vectors/glyphs
@@ -3030,6 +3070,14 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             geom_prop.point_size = group.point_size
 
     def on_update_geometry_properties(self, out_data):
+        """
+        Applies the changed properties to the different actors if
+        something changed.
+
+        Note that some of the values are limited.  This prevents
+        points/lines from being shrunk to 0 and also the actor
+        being actually "hidden" at the same time.
+        """
         lines = []
         for name, group in iteritems(out_data):
             if name in ['clicked_ok', 'clicked_cancel']:
@@ -3137,7 +3185,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         # bar_z[:, 3:] = bar_z[:, :3] + Lz * bar_scale
 
 
-    def add_user_points(self, points_filename, name, color=None):
+    def _add_user_points(self, points_filename, name, color=None):
         if name in self.geometry_actors:
             msg = 'Name: %s is already in geometry_actors\nChoose a different name.' % name
             raise ValueError(msg)
@@ -3156,7 +3204,10 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             user_points = loadtxt_nice(points_filename, delimiter=',')
             # can't handle leading spaces?
             #raise
+
         npoints = user_points.shape[0]
+        if len(user_points.shape) == 1:
+            user_points = user_points.reshape(1, npoints)
 
         # allocate grid
         self.alt_grids[name].Allocate(npoints, 1000)

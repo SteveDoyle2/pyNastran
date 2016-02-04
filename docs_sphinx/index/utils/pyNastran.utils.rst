@@ -39,8 +39,6 @@ This is the pyNastran.utils.rst file.
 :mod:`mathematics` Module
 -------------------------
 
-.. inheritance-diagram:: pyNastran.utils.mathematics
-
 .. automodule:: pyNastran.utils.mathematics
     :members:
     :private-members:
@@ -50,8 +48,6 @@ This is the pyNastran.utils.rst file.
 :mod:`dev` Module
 -----------------
 
-.. inheritance-diagram:: pyNastran.utils.dev
-
 .. automodule:: pyNastran.utils.dev
     :members:
     :private-members:
@@ -60,8 +56,6 @@ This is the pyNastran.utils.rst file.
 
 :mod:`__init__` Module
 ----------------------
-
-.. inheritance-diagram:: pyNastran.utils.__init__
 
 .. automodule:: pyNastran.utils.__init__
     :members:

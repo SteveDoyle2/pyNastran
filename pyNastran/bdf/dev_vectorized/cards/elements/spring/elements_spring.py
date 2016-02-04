@@ -9,7 +9,6 @@ class ElementsSpring(object):
         """
         Defines the ElementsShell object.
 
-        :param self: the ElementsShell object
         :param model: the BDF object
         """
         self.model = model

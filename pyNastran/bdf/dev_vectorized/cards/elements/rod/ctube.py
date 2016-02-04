@@ -19,7 +19,6 @@ class CTUBE(RodElement):
         """
         Defines the CTUBE object.
 
-        :param self: the CTUBE object
         :param model: the BDF object
         """
         RodElement.__init__(self, model)
@@ -49,9 +48,6 @@ class CTUBE(RodElement):
         self.i += 1
 
     def build(self):
-        """
-        :param self: the CTUBE object
-        """
         if self.n:
             i = self.element_id.argsort()
             self.element_id = self.element_id[i]

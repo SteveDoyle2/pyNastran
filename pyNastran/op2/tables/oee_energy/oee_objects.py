@@ -6,7 +6,7 @@ from collections import OrderedDict
 from numpy import zeros, empty, array_equal
 import numpy as np
 
-from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
+from pyNastran.op2.result_objects.op2_objects import ScalarObject
 from pyNastran.f06.f06_formatting import get_key0, _eigenvalue_header, write_float_13e
 try:
     import pandas as pd

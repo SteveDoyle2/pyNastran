@@ -14,7 +14,6 @@ class PLOAD2(object):
         """
         Defines the PLOAD2 object.
 
-        :param self: the PLOAD2 object
         :param model: the BDF object
         """
         self.model = model

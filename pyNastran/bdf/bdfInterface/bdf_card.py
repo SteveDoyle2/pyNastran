@@ -54,11 +54,6 @@ class BDFCard(object):
         """
         Prints the card as a list
 
-        Parameters
-        ----------
-        self : BDFCard()
-            the object pointer
-
         Returns
         -------
         msg : str
@@ -70,11 +65,6 @@ class BDFCard(object):
     def nFields(self):
         """
         Gets how many fields are on the card
-
-        Parameters
-        ----------
-        self : BDFCard()
-            the object pointer
 
         Returns
         -------
@@ -94,8 +84,6 @@ class BDFCard(object):
 
         Parameters
         ----------
-        self : BDFCard()
-            the object pointer
         i : int > 0
             the ith field on the card (following list notation)
         j : int / None
@@ -134,8 +122,6 @@ class BDFCard(object):
 
         Parameters
         ----------
-        self : BDFCard()
-            the object pointer
         i : int
             the ith field on the card (following list notation)
         default : int/float/str/None

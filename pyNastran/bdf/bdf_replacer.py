@@ -48,8 +48,6 @@ class BDFReplacer(BDF):
 
         Parameters
         ----------
-        self : BDF()
-            the BDF object
         card_lines : List[str]
             the list of the card fields
 

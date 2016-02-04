@@ -249,7 +249,7 @@ class NastranIO(object):
             skip_reading = True
             return skip_reading
         else:
-            self.TurnTextOff()
+            self.turn_text_off()
             self.grid.Reset()
 
             #self.gridResult = vtk.vtkFloatArray()
@@ -277,6 +277,8 @@ class NastranIO(object):
         skip_reading = self._remove_old_nastran_geometry(bdf_filename)
         pink = (0.98, 0.4, 0.93)
         orange = (219/255., 168/255., 13/255.)
+        blue = (0., 0., 1.)
+        red = (1., 0., 0.)
         # if 0:
             # yellow = (1., 1., 0.)
             # line_width = 3
@@ -309,7 +311,7 @@ class NastranIO(object):
                                   xref_constraints=False)
         else:  # read the bdf/punch
             model = BDF(log=self.log, debug=True)
-            self.model_type = model.model_type
+            self.model_type = 'nastran'
             model.read_bdf(bdf_filename,
                            punch=punch, xref=False)
             # model.cross_reference(xref=True, xref_loads=xref_loads,
@@ -467,6 +469,75 @@ class NastranIO(object):
         self.log_info("ymin=%s ymax=%s dy=%s" % (ymin, ymax, ymax-ymin))
         self.log_info("zmin=%s zmax=%s dz=%s" % (zmin, zmax, zmax-zmin))
 
+        if model.splines:
+            # 0 - caero / caero_subpanel
+            # 1 - control surface
+            iaero = 2
+            for spline_id, spline in sorted(model.splines.items()):
+                # the control surfaces all lie perfectly on top of each other
+                # such that we have z fighting, so based on the aero index,
+                # we calculate a z offset.
+                setg = spline.setg_ref
+                structure_points = setg.get_IDs()
+
+                try:
+                    aero_box_ids = spline.aero_element_ids
+                except:
+                    print(spline.object_attributes())
+                    print(spline.object_methods())
+                    raise
+
+                zfighting_offset = 0.0001 * iaero
+                if 0:
+                    name = 'spline_%s_surface' % spline_id
+                    self.create_alternate_vtk_grid(
+                        name, color=blue, opacity=0.5, point_size=0,
+                        #line_width=0,
+                        representation='surface', is_visible=True)
+                    self.set_caero_control_surface_grid(
+                        name, aero_box_ids, box_id_to_caero_element_map, caero_points,
+                        zfighting_offset=zfighting_offset)
+                else:
+                    name = 'spline_%s_structure_points' % spline_id
+                    self.create_alternate_vtk_grid(
+                        name, color=blue, opacity=1.0, point_size=5,
+                        representation='point', is_visible=True)
+                    self._add_nastran_nodes_to_grid(name, aero_box_ids, model)
+
+
+                zfighting_offset = 0.0001 * (iaero + 1)
+                if 0:
+                    name = 'spline_%s_boxes_and_structure_points' % spline_id
+                    self.create_alternate_vtk_grid(
+                        name, color=blue, opacity=1.0,
+                        point_size=5, line_width=3,
+                        representation='wire', is_visible=True)
+                    self.set_caero_wireframe_points(
+                        name, aero_box_ids, box_id_to_caero_element_map,
+                        caero_points, structure_points, xyz_cid0,
+                        zfighting_offset=zfighting_offset
+                    )
+                else:
+                    name = 'spline_%s_boxes' % spline_id
+                    self.create_alternate_vtk_grid(
+                        name, color=blue, opacity=0.3,
+                        line_width=4,
+                        representation='wire', is_visible=True)
+                    self.set_caero_control_surface_grid(
+                        name, aero_box_ids, box_id_to_caero_element_map, caero_points,
+                        zfighting_offset=zfighting_offset)
+
+                iaero += 2
+        if model.suport:
+            ids = []
+            for suport in model.suport:
+                #print(suport)
+                idsi = suport.node_ids
+                #print('idsi =', idsi)
+                ids += idsi
+            self.create_alternate_vtk_grid(
+                'SUPORT', color=red, opacity=1.0, point_size=42,
+                representation='point', is_visible=True)
         j = 0
         nid_to_pid_map, icase, cases, form = self.map_elements(
             points, self.nidMap, model, j, dim_max, plot=plot, xref_loads=xref_loads)
@@ -490,7 +561,7 @@ class NastranIO(object):
             self.set_caero_subpanel_grid(ncaero_sub_points, model)
             if has_control_surface:
                 self.set_caero_control_surface_grid(
-                    cs_box_ids, box_id_to_caero_element_map, caero_points)
+                    'caero_cs', cs_box_ids, box_id_to_caero_element_map, caero_points)
 
         if nconm2 > 0:
             self.set_conm_grid(nconm2, dim_max, model)
@@ -616,8 +687,10 @@ class NastranIO(object):
         self.alt_grids['caero_sub'].SetPoints(points)
         return j
 
-    def set_caero_control_surface_grid(self, cs_box_ids, box_id_to_caero_element_map,
-                                       caero_points, j=0):
+    def set_caero_control_surface_grid(self, name, cs_box_ids,
+                                       box_id_to_caero_element_map,
+                                       caero_points,
+                                       zfighting_offset=0.001, j=0):
         points_list = []
         missing_boxes = []
         for ibox, box_id in enumerate(cs_box_ids):
@@ -646,16 +719,80 @@ class NastranIO(object):
             pointsi = caero_points[elementi]
             for ipoint, point in enumerate(pointsi):
                 # shift z to remove z-fighting with caero in surface representation
-                point[2] += 0.001
+                point[1] += zfighting_offset
+                point[2] += zfighting_offset
                 points.InsertPoint(j + ipoint, *point)
             elem = vtkQuad()
             elem.GetPointIds().SetId(0, j)
             elem.GetPointIds().SetId(1, j + 1)
             elem.GetPointIds().SetId(2, j + 2)
             elem.GetPointIds().SetId(3, j + 3)
-            self.alt_grids['caero_cs'].InsertNextCell(vtk_type, elem.GetPointIds())
+            self.alt_grids[name].InsertNextCell(vtk_type, elem.GetPointIds())
             j += ipoint + 1
-        self.alt_grids['caero_cs'].SetPoints(points)
+        self.alt_grids[name].SetPoints(points)
+        return j
+
+    def set_caero_wireframe_points(self, name, aero_box_ids,
+                                   box_id_to_caero_element_map,
+                                   caero_points,
+                                   structure_points, xyz_cid0,
+                                   zfighting_offset=0.0, j=0):
+        points_list = []
+        missing_boxes = []
+        for ibox, box_id in enumerate(aero_box_ids):
+            try:
+                ipoints = box_id_to_caero_element_map[box_id]
+            except KeyError:
+                missing_boxes.append(box_id)
+                continue
+            points_list.append(caero_points[ipoints, :])
+        if missing_boxes:
+            msg = 'Missing CAERO AELIST boxes: ' + str(missing_boxes)
+            self.log_error(msg)
+
+        nid_map = self.nidMap
+        structure_points2 = []
+        for nid in structure_points:
+            if nid in nid_map:
+                structure_points2.append(nid)
+
+        points_list = array(points_list)
+        ncaero_sub_points = len(unique(points_list.ravel()))
+
+        points = vtk.vtkPoints()
+        points.SetNumberOfPoints(ncaero_sub_points)
+
+        vtk_type = vtkQuad().GetCellType()
+        for ibox, box_id in enumerate(aero_box_ids):
+            try:
+                elementi = box_id_to_caero_element_map[box_id]
+            except KeyError:
+                continue
+            pointsi = caero_points[elementi]
+            for ipoint, point in enumerate(pointsi):
+                # shift z to remove z-fighting with caero in surface representation
+                point[1] += zfighting_offset
+                point[2] += zfighting_offset
+                points.InsertPoint(j + ipoint, *point)
+            elem = vtkQuad()
+            elem.GetPointIds().SetId(0, j)
+            elem.GetPointIds().SetId(1, j + 1)
+            elem.GetPointIds().SetId(2, j + 2)
+            elem.GetPointIds().SetId(3, j + 3)
+            self.alt_grids[name].InsertNextCell(vtk_type, elem.GetPointIds())
+            j += ipoint + 1
+
+        #xyz_cid0[i, :] = node.get_position()
+        #nid_map[nid] = i
+
+        vtk_type = vtk.vtkVertex().GetCellType()
+        for i, nid in enumerate(structure_points2):
+            ipoint = nid_map[nid]
+            point = xyz_cid0[i, :]
+            points.InsertPoint(j, *point)
+
+            j += 1
+        self.alt_grids[name].SetPoints(points)
         return j
 
     def set_conm_grid(self, nconm2, dim_max, model, j=0):
@@ -939,10 +1076,9 @@ class NastranIO(object):
             no_0_16 = zeros(self.element_ids.shape, dtype='int32')
         bar_nids = set([])
         for eid in bar_beam_eids:
-            # if eid < 30000:
-                # continue
             ieid = self.eidMap[eid]
             elem = model.elements[eid]
+            #print(elem)
             pid = elem.pid
             if pid.type in ['PBAR', 'PBEAM']:
                 bar_type = 'bar'
@@ -950,6 +1086,7 @@ class NastranIO(object):
                 bar_type = pid.Type
             else:
                 raise NotImplementedError(pid)
+            #print('bar_type =', bar_type)
             found_bar_types.add(bar_type)
 
             (nid1, nid2) = elem.node_ids
@@ -1058,7 +1195,10 @@ class NastranIO(object):
                 # basic - cid = 0
                 pass
             else:
-                raise NotImplementedError(elem.offt)
+                msg = 'offt_vector=%r is not supported; offt=%s' % (offt_vector, elem.offt)
+                self.log.debug(msg)
+                raise NotImplementedError(msg)
+            #print('v =', v)
 
             # rotate wa
             wa = elem.wa
@@ -1072,8 +1212,11 @@ class NastranIO(object):
             elif offt_end_a == 'O':
                 wa = node1.cp.transform_node_to_global(n1 - wa)
             else:
-                raise NotImplementedError(elem.offt)
+                msg = 'offt_end_a=%r is not supported; offt=%s' % (offt_end_a, elem.offt)
+                self.log.debug(msg)
+                raise NotImplementedError(msg)
 
+            #print('wa =', wa)
             # rotate wb
             wb = elem.wb
             if offt_end_b == 'G':
@@ -1086,8 +1229,11 @@ class NastranIO(object):
             elif offt_end_b == 'O':
                 wb = node1.cp.transform_node_to_global(n2 - wb)
             else:
-                raise NotImplementedError(elem.offt)
+                msg = 'offt_end_b=%r is not supported; offt=%s' % (offt_end_b, elem.offt)
+                model.log.debug(msg)
+                raise NotImplementedError(msg)
 
+            #print('wb =', wb)
             ## concept has a GOO
             if not elem.offt in ['GGG', 'BGG']:
                 msg = 'offt=%r for CBAR/CBEAM eid=%s is not supported...skipping' % (elem.offt, eid)
@@ -1109,10 +1255,14 @@ class NastranIO(object):
                 msg += 'v   =%s\n' % str(v)
                 msg += 'vhat=%s\n' % str(vhat)
                 msg += 'z=cross(ihat, vhat)'
+                print(msg)
                 raise ValueError(msg)
 
             zhat = z / norm(z)
             yhat = cross(zhat, ihat) # j
+            #print('ihat =', ihat)
+            #print('yhat =', yhat)
+            #print('zhat =', zhat)
             #if eid == 5570:
                 #print('  check - eid=%s yhat=%s zhat=%s v=%s i=%s n%s=%s n%s=%s' % (
                       #eid, yhat, zhat, v, i, nid1, n1, nid2, n2))
@@ -1230,7 +1380,8 @@ class NastranIO(object):
                 icase += 1
 
         # print(geo_form)
-        geo_form.append(bar_form)
+        if len(bar_form[2]):
+            geo_form.append(bar_form)
         return icase
 
     def _add_nastran_lines_xyz_to_grid(self, name, lines, model):
@@ -1348,6 +1499,7 @@ class NastranIO(object):
         """used to create MPC independent/dependent nodes"""
         nnodes = len(node_ids)
         if nnodes == 0:
+            model.log.warning('0 nodes added for %r' % name)
             return
         points = vtk.vtkPoints()
         points.SetNumberOfPoints(nnodes)
@@ -1362,6 +1514,7 @@ class NastranIO(object):
                 continue
 
             if nid not in model.nodes:
+                model.log.warning('nid=%s doesnt exist' % nid)
                 continue
             # point = self.grid.GetPoint(i)
             # points.InsertPoint(j, *point)
@@ -2451,7 +2604,7 @@ class NastranIO(object):
         Loads the Nastran results into the GUI
         """
         #gridResult.SetNumberOfComponents(self.nElements)
-        self.TurnTextOn()
+        self. turn_text_on()
         self.scalarBar.VisibilityOn()
         self.scalarBar.Modified()
         #self.show_caero_mesh()

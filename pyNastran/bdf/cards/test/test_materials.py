@@ -19,8 +19,7 @@ class TestMaterials(unittest.TestCase):
 
         card = BDFCard(fields)
 
-        mat1 = MAT1()
-        mat1.add_card(card)
+        mat1 = MAT1.add_card(card)
         self.assertEqual(mid, mat1.Mid())
         self.assertEqual(E, mat1.E())
         self.assertEqual(G, mat1.G())

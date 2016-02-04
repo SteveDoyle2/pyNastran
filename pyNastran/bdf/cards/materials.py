@@ -129,8 +129,6 @@ class CREEP(Material):
         """
         Gets the fields in their simplified form
 
-        :param self:
-          the CREEP object pointer
         :returns fields:
           the fields that define the card
         :type fields:
@@ -169,47 +167,65 @@ class MAT1(IsotropicMaterial):
         9: 'St', 10:'Sc', 11:'Ss', 12:'Mcsid',
     }
 
-    def __init__(self):
+    def __init__(self, mid, E, G, nu,
+                 rho=0.0, a=0.0, TRef=0.0, ge=0.0,
+                 St=0.0, Sc=0.0, Ss=0.0, Mcsid=0, comment=''):
         IsotropicMaterial.__init__(self)
         self.mats1 = None
         self.matt1 = None
+        if comment:
+            self._comment = comment
+        self.mid = mid
+        self.e = E
+        self.g = G
+        self.nu = nu
+        self.rho = rho
+        self.a = a
+        self.TRef = TRef
+        self.ge = ge
+        self.St = St
+        self.Sc = Sc
+        self.Ss = Ss
+        self.Mcsid = Mcsid
 
+    @classmethod
     def add_card(self, card, comment=''):
-        if comment:
-            self._comment = comment
-        self.mid = integer(card, 1, 'mid')
-        self.set_E_G_nu(card)
-        self.rho = double_or_blank(card, 5, 'rho', 0.)
-        self.a = double_or_blank(card, 6, 'a', 0.0)
-        self.TRef = double_or_blank(card, 7, 'TRef', 0.0)
-        self.ge = double_or_blank(card, 8, 'ge', 0.0)
-        self.St = double_or_blank(card, 9, 'St', 0.0)
-        self.Sc = double_or_blank(card, 10, 'Sc', 0.0)
-        self.Ss = double_or_blank(card, 11, 'Ss', 0.0)
-        self.Mcsid = integer_or_blank(card, 12, 'Mcsid', 0)
-        assert len(card) <= 13, 'len(MAT1 card) = %i' % len(card)
+        mid = integer(card, 1, 'mid')
+        E, G, nu = self.set_E_G_nu(card)
 
+        rho = double_or_blank(card, 5, 'rho', 0.)
+        a = double_or_blank(card, 6, 'a', 0.0)
+        TRef = double_or_blank(card, 7, 'TRef', 0.0)
+        ge = double_or_blank(card, 8, 'ge', 0.0)
+        St = double_or_blank(card, 9, 'St', 0.0)
+        Sc = double_or_blank(card, 10, 'Sc', 0.0)
+        Ss = double_or_blank(card, 11, 'Ss', 0.0)
+        Mcsid = integer_or_blank(card, 12, 'Mcsid', 0)
+        assert len(card) <= 13, 'len(MAT1 card) = %i' % len(card)
+        return MAT1(mid, E, G, nu, rho, a, TRef, ge,
+                    St, Sc, Ss, Mcsid, comment=comment)
+
+    @classmethod
     def add_op2_data(self, data, comment=''):
-        if comment:
-            self._comment = comment
-        self.mid = data[0]
-        self.e = data[1]
-        self.g = data[2]
-        self.nu = data[3]
-        self.rho = data[4]
-        self.a = data[5]
-        self.TRef = data[6]
-        self.ge = data[7]
-        self.St = data[8]
-        self.Sc = data[9]
-        self.Ss = data[10]
-        self.Mcsid = data[11]
+        mid = data[0]
+        e = data[1]
+        g = data[2]
+        nu = data[3]
+        rho = data[4]
+        a = data[5]
+        TRef = data[6]
+        ge = data[7]
+        St = data[8]
+        Sc = data[9]
+        Ss = data[10]
+        Mcsid = data[11]
+        return MAT1(mid, e, g, nu, rho, a, TRef, ge,
+                    St, Sc, Ss, Mcsid, comment=comment)
 
     def _verify(self, xref):
         """
         Verifies all methods for this object work
 
-        :param self: the MAT1 object pointer
         :param xref: has this model been cross referenced
         :type xref:  bool
         """
@@ -269,6 +285,7 @@ class MAT1(IsotropicMaterial):
             E = self.e
         return E
 
+    @classmethod
     def set_E_G_nu(self, card):
         r"""
         \f[ G = \frac{E}{2 (1+\nu)} \f]
@@ -296,9 +313,7 @@ class MAT1(IsotropicMaterial):
         else:
             msg = 'G=%s E=%s nu=%s' % (G, E, nu)
             raise RuntimeError(msg)
-        self.e = E
-        self.g = G
-        self.nu = nu
+        return E, G, nu
 
     def _write_calculix(self, element_set='ELSetDummyMat'):
         # default value - same properties for all values
@@ -376,8 +391,6 @@ class MAT1(IsotropicMaterial):
         """
         Gets the fields in their simplified form
 
-        :param self:
-          the MAT1 object pointer
         :returns fields:
           the fields that define the card
         :type fields:
@@ -497,7 +510,6 @@ class MAT2(AnisotropicMaterial):
         """
         Verifies all methods for this object work
 
-        :param self: the MAT2 object pointer
         :param xref: has this model been cross referenced
         :type xref:  bool
         """
@@ -596,8 +608,6 @@ class MAT2(AnisotropicMaterial):
         """
         Gets the fields in their simplified form
 
-        :param self:
-          the MAT2 object pointer
         :returns fields:
           the fields that define the card
         :type fields:
@@ -695,7 +705,6 @@ class MAT3(OrthotropicMaterial):
         """
         Verifies all methods for this object work
 
-        :param self: the MAT1 object pointer
         :param xref: has this model been cross referenced
         :type xref:  bool
         """
@@ -721,8 +730,6 @@ class MAT3(OrthotropicMaterial):
         """
         Gets the fields in their simplified form
 
-        :param self:
-          the MAT3 object pointer
         :returns fields:
           the fields that define the card
         :type fields:
@@ -767,40 +774,55 @@ class MAT4(ThermalMaterial):
         8:'refEnthalpy', 9:'tch', 10:'tdelta', 11:'qlat',
     }
 
-    def __init__(self):
+    def __init__(self, mid, k, cp, rho, H, mu, hgen, refEnthalpy, tch, tdelta, qlat, comment=''):
         ThermalMaterial.__init__(self)
         self.matt4 = None
+        if comment:
+            self._comment = comment
+        self.mid = mid
+        self.k = k
+        self.cp = cp
+        self.rho = rho
+        self.H = H
+        self.mu = mu
+        self.hgen = hgen
+        self.refEnthalpy = refEnthalpy
+        self.tch = tch
+        self.tdelta = tdelta
+        self.qlat = qlat
 
+    @classmethod
     def add_card(self, card, comment=''):
-        if comment:
-            self._comment = comment
-        self.mid = integer(card, 1, 'mid')
-        self.k = double_or_blank(card, 2, 'k')
-        self.cp = double_or_blank(card, 3, 'cp', 0.0)
-        self.rho = double_or_blank(card, 4, 'rho', 1.0)
-        self.H = double_or_blank(card, 5, 'H')
-        self.mu = double_or_blank(card, 6, 'mu')
-        self.hgen = double_or_blank(card, 7, 'hgen', 1.0)
-        self.refEnthalpy = double_or_blank(card, 8, 'refEnthalpy')
-        self.tch = double_or_blank(card, 9, 'tch')
-        self.tdelta = double_or_blank(card, 10, 'tdelta')
-        self.qlat = double_or_blank(card, 11, 'qlat')
+        mid = integer(card, 1, 'mid')
+        k = double_or_blank(card, 2, 'k')
+        cp = double_or_blank(card, 3, 'cp', 0.0)
+        rho = double_or_blank(card, 4, 'rho', 1.0)
+        H = double_or_blank(card, 5, 'H')
+        mu = double_or_blank(card, 6, 'mu')
+        hgen = double_or_blank(card, 7, 'hgen', 1.0)
+        refEnthalpy = double_or_blank(card, 8, 'refEnthalpy')
+        tch = double_or_blank(card, 9, 'tch')
+        tdelta = double_or_blank(card, 10, 'tdelta')
+        qlat = double_or_blank(card, 11, 'qlat')
         assert len(card) <= 12, 'len(MAT4 card) = %i' % len(card)
+        return MAT4(mid, k, cp, rho, H, mu, hgen, refEnthalpy, tch, tdelta,
+                   qlat, comment=comment)
 
+    @classmethod
     def add_op2_data(self, data, comment=''):
-        if comment:
-            self._comment = comment
-        self.mid = data[0]
-        self.k = data[1]
-        self.cp = data[2]
-        self.rho = data[3]
-        self.H = data[4]
-        self.mu = data[5]
-        self.hgen = data[6]
-        self.refEnthalpy = data[7]
-        self.tch = data[8]
-        self.tdelta = data[9]
-        self.qlat = data[10]
+        mid = data[0]
+        k = data[1]
+        cp = data[2]
+        rho = data[3]
+        H = data[4]
+        mu = data[5]
+        hgen = data[6]
+        refEnthalpy = data[7]
+        tch = data[8]
+        tdelta = data[9]
+        qlat = data[10]
+        return MAT4(mid, k, cp, rho, H, mu, hgen, refEnthalpy, tch, tdelta,
+                   qlat, comment=comment)
 
     def get_density(self):
         return self.rho
@@ -821,8 +843,6 @@ class MAT4(ThermalMaterial):
         """
         Gets the fields in their simplified form
 
-        :param self:
-          the MAT4 object pointer
         :returns fields:
           the fields that define the card
         :type fields:
@@ -859,15 +879,28 @@ class MAT5(ThermalMaterial):  # also AnisotropicMaterial
         1: 'mid', 2:'kxx', 3:'kxy', 4:'kxz', 5: 'kyy', 6:'kyz', 7:'kzz',
     }
 
-    def __init__(self):
+    def __init__(self, mid, kxx=0., kxz=0., kyy=0., kyz=0., kzz=0.,
+                 cp=0., rho=1., hgen=1., comment=''):
         ThermalMaterial.__init__(self)
         self.matt5 = None
+        self.mid = mid
+        #: Thermal conductivity (assumed default=0.0)
+        self.mid = mid
+        self.kxx = kxx
+        self.kxy = kxy
+        self.kxz = kxz
+        self.kyz = kyz
+        self.kzz = kzz
 
+        self.cp = cp
+        self.rho = rho
+        self.hgen = hgen
+
+    @classmethod
     def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
         self.mid = integer(card, 1, 'mid')
-        #: Thermal conductivity (assumed default=0.0)
         self.kxx = double_or_blank(card, 2, 'kxx', 0.0)
         self.kxy = double_or_blank(card, 3, 'kxy', 0.0)
         self.kxz = double_or_blank(card, 4, 'kxz', 0.0)
@@ -879,20 +912,23 @@ class MAT5(ThermalMaterial):  # also AnisotropicMaterial
         self.rho = double_or_blank(card, 9, 'rho', 1.0)
         self.hgen = double_or_blank(card, 10, 'hgen', 1.0)
         assert len(card) <= 11, 'len(MAT5 card) = %i' % len(card)
+        return MAT5(mid, kxx, kyy, kxz, kyy, kyz, kzz,
+                    cp, rho, hgen, comment=comment)
 
+    @classmethod
     def add_op2_data(self, data, comment=''):
-        if comment:
-            self._comment = comment
-        self.mid = data[0]
-        self.kxx = data[1]
-        self.kxy = data[2]
-        self.kxz = data[3]
-        self.kyy = data[4]
-        self.kyz = data[5]
-        self.kzz = data[6]
-        self.cp = data[7]
-        self.rho = data[8]
-        self.hgen = data[9]
+        mid = data[0]
+        kxx = data[1]
+        kxy = data[2]
+        kxz = data[3]
+        kyy = data[4]
+        kyz = data[5]
+        kzz = data[6]
+        cp = data[7]
+        rho = data[8]
+        hgen = data[9]
+        return MAT5(mid, kxx, kyy, kxz, kyy, kyz, kzz,
+                    cp, rho, hgen, comment=comment)
 
     def cross_reference(self, model):
         #msg = ' which is required by MAT5 mid=%s' % self.mid
@@ -925,8 +961,6 @@ class MAT5(ThermalMaterial):  # also AnisotropicMaterial
         """
         Gets the fields in their simplified form
 
-        :param self:
-          the MAT5 object pointer
         :returns fields:
           the fields that define the card
         :type fields:
@@ -1052,7 +1086,6 @@ class MAT8(OrthotropicMaterial):
         """
         Verifies all methods for this object work
 
-        :param self: the MAT8 object pointer
         :param xref: has this model been cross referenced
         :type xref:  bool
         """
@@ -1111,8 +1144,6 @@ class MAT8(OrthotropicMaterial):
         """
         Gets the fields in their simplified form
 
-        :param self:
-          the MAT8 object pointer
         :returns fields:
           the fields that define the card
         :type fields:
@@ -1246,7 +1277,6 @@ class MAT9(AnisotropicMaterial):
         """
         Verifies all methods for this object work
 
-        :param self: the MAT9 object pointer
         :param xref: has this model been cross referenced
         :type xref:  bool
         """
@@ -1283,8 +1313,6 @@ class MAT9(AnisotropicMaterial):
         """
         Gets the fields in their simplified form
 
-        :param self:
-          the MAT9 object pointer
         :returns fields:
           the fields that define the card
         :type fields:
@@ -1352,7 +1380,6 @@ class MAT10(Material):
         """
         Verifies all methods for this object work
 
-        :param self: the MAT10 object pointer
         :param xref: has this model been cross referenced
         :type xref:  bool
         """
@@ -1406,8 +1433,6 @@ class MAT10(Material):
         """
         Gets the fields in their simplified form
 
-        :param self:
-          the MAT10 object pointer
         :returns fields:
           the fields that define the card
         :type fields:
@@ -1516,8 +1541,6 @@ class MAT11(Material):
         """
         Gets the fields in their simplified form
 
-        :param self:
-          the MAT11 object pointer
         :returns fields:
           the fields that define the card
         :type fields:
@@ -1680,8 +1703,6 @@ class MATHP(HyperelasticMaterial):
         """
         Gets the fields in their simplified form
 
-        :param self:
-          the MATHP object pointer
         :returns fields:
           the fields that define the card
         :type fields:

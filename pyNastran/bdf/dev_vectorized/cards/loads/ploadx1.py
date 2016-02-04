@@ -14,7 +14,6 @@ class PLOADX1(object):
         """
         Defines the PLOADX1 object.
 
-        :param self: the PLOADX1 object
         :param model: the BDF object
         """
         self.model = model
@@ -54,7 +53,6 @@ class PLOADX1(object):
 
     def build(self):
         """
-        :param self: the PLOADX1 object
         :param cards: the list of PLOADX1 cards
         """
         cards = self._cards

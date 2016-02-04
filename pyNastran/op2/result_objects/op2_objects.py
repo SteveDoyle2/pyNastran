@@ -7,7 +7,7 @@ from struct import pack
 import numpy as np
 
 from pyNastran import is_release
-from pyNastran.op2.op2Codes import Op2Codes
+from pyNastran.op2.op2_codes import Op2Codes
 from pyNastran.utils import object_attributes, object_methods
 
 #from pyNastran.utils import list_print

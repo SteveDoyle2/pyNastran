@@ -30,7 +30,7 @@ class ADB_IO(object):
             self.scalarBar.VisibilityOff()
             skip_reading = True
         else:
-            self.TurnTextOff()
+            self.turn_text_off()
             self.grid.Reset()
             #self.gridResult.Reset()
             #self.gridResult.Modified()
@@ -145,7 +145,7 @@ class ADB_IO(object):
         print("updated grid")
 
         # load results - regions/loads
-        self.TurnTextOn()
+        self. turn_text_on()
         self.scalarBar.VisibilityOn()
         self.scalarBar.Modified()
 

@@ -1,4 +1,4 @@
-nastran Package
+panair Package
 ===============
 
 :mod:`agps` Module
@@ -24,7 +24,7 @@ nastran Package
     :show-inheritance:
 
 :mod:`panairGridPatch` Module
-----------------------------
+-----------------------------
 
 .. inheritance-diagram:: pyNastran.converters.panair.panairGridPatch
 

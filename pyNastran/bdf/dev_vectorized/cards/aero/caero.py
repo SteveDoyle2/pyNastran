@@ -8,7 +8,6 @@ class CAero(object):
         """
         Defines the CAero object.
 
-        :param self: the CAero object
         :param model: the BDF object
         """
         self.model = model

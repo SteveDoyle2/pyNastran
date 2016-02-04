@@ -262,26 +262,31 @@ class DAREA(BaseCard):
     """
     type = 'DAREA'
 
-    def __init__(self):
-        pass
+    def __init__(self, sid, p, c, scale, comment=''):
+        self.sid = sid
+        self.p = p
+        self.c = c
+        self.scale = scale
 
-    def add_card(self, card=None, icard=0, comment=''):
+    @classmethod
+    def add_card(self, card, icard=0, comment=''):
         if comment:
             self._comment = comment
         noffset = 3 * icard
-        self.sid = integer(card, 1, 'sid')
-        self.p = integer(card, 2 + noffset, 'p')
-        self.c = components_or_blank(card, 3 + noffset, 'c', 0)
-        self.scale = double(card, 4 + noffset, 'scale')
+        sid = integer(card, 1, 'sid')
+        p = integer(card, 2 + noffset, 'p')
+        c = components_or_blank(card, 3 + noffset, 'c', 0)
+        scale = double(card, 4 + noffset, 'scale')
+        return DAREA(sid, p, c, scale, comment=comment)
 
+    @classmethod
     def add_op2_data(self, data, comment=''):
-        if comment:
-            self._comment = comment
-        self.sid = data[0]
-        self.p = data[1]
-        self.c = data[2]
-        self.scale = data[3]
+        sid = data[0]
+        p = data[1]
+        c = data[2]
+        scale = data[3]
         assert len(data) == 4, 'data = %s' % data
+        return DAREA(sid, p, c, scale, comment=comment)
 
     def cross_reference(self, model):
         msg = ', which is required by %s=%s' % (self.type, self.sid)

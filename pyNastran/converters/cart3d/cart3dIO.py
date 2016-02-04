@@ -183,7 +183,7 @@ class Cart3dIO(object):
             self.scalarBar.VisibilityOff()
             skip_reading = True
         else:
-            self.TurnTextOff()
+            self.turn_text_off()
             self.grid.Reset()
             #self.gridResult.Reset()
             #self.gridResult.Modified()
@@ -264,7 +264,7 @@ class Cart3dIO(object):
 
 
         # loadCart3dResults - regions/loads
-        self.TurnTextOn()
+        self. turn_text_on()
         self.scalarBar.VisibilityOn()
         self.scalarBar.Modified()
 

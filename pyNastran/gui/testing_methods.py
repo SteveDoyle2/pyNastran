@@ -248,9 +248,9 @@ class GUIMethods(GuiAttributes):
         return skip_reading
     def cycle_results(self):
         pass
-    def TurnTextOn(self):
+    def  turn_text_on(self):
         pass
-    def TurnTextOff(self):
+    def turn_text_off(self):
         pass
     def update_axes_length(self, value):
         self.dim_max = value
@@ -293,8 +293,8 @@ class GUIMethods(GuiAttributes):
     #test.log_info = print
     #test.log_info = log_info
     #test.cycle_results = cycle_results
-    #test.TurnTextOn = TurnTextOn
-    #test.TurnTextOff = TurnTextOff
+    #test.turn_text_on =  turn_text_on
+    #test.turn_text_off = turn_text_off
     #test.update_axes_length = update_axes_length
     #test.cycle_results_explicit = passer
 

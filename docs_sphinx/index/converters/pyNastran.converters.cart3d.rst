@@ -1,4 +1,4 @@
-nastran Package
+cart3d Package
 ===============
 
 :mod:`cart3dIO` Module

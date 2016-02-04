@@ -1,7 +1,7 @@
 from six.moves import zip, range
 from numpy import array
 
-from pyNastran.op2.resultObjects.tableObject import RealTableArray, ComplexTableArray
+from pyNastran.op2.result_objects.table_object import RealTableArray, ComplexTableArray
 from pyNastran.f06.f06_formatting import write_floats_13e
 
 

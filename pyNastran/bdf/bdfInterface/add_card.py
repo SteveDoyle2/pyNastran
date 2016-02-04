@@ -49,8 +49,6 @@ class AddMethods(BDFAttributes):
         key = node.nid
         if key in self.nodes and not allow_overwrites:
             if not node._is_same_card(self.nodes[key]):
-                print('nid=%s\noldNode=\n%snewNode=\n%s'
-                      % (key, self.nodes[key], node))
                 assert node.nid not in self.nodes, 'nid=%s\noldNode=\n%snewNode=\n%s' % (node.nid, self.nodes[key], node)
             else:
                 #print('Node was duplicated...nid=%s; node=\n%s' % (key, node))
@@ -60,13 +58,13 @@ class AddMethods(BDFAttributes):
             self.nodes[key] = node
             self._type_to_id_map[node.type].append(key)
 
-    def add_SPOINT(self, spoints):
+    def add_spoint(self, spoints):
         if self.spoints is None:
             self.spoints = spoints
         else:
             self.spoints.add_points(spoints.points)
 
-    def add_EPOINT(self, epoints):
+    def add_epoint(self, epoints):
         if self.epoints is None:
             self.epoints = epoints
         else:
@@ -117,8 +115,6 @@ class AddMethods(BDFAttributes):
         key = elem.eid
         assert key > 0, 'eid=%s elem=%s' % (key, elem)
         if key in self.rigid_elements and not allow_overwrites:
-            print('eid=%s\noldElement=\n%snewElement=\n%s' % (
-                key, self.rigid_elements[key], elem))
             assert elem.eid not in self.rigid_elements, 'eid=%s\noldElement=\n%snewElement=\n%s' % (elem.eid, self.rigid_elements[elem.eid], elem)
         self.rigid_elements[key] = elem
         self._type_to_id_map[elem.type].append(key)
@@ -212,9 +208,6 @@ class AddMethods(BDFAttributes):
         key = tempd.sid
         if key in self.tempds and not allow_overwrites:
             if not tempd._is_same_card(self.tempds[key]):
-                print('A', tempd.raw_fields())
-                print('B', self.tempds[key].raw_fields())
-                print(tempd._is_same_card(self.tempds[key]))
                 assert key not in self.tempds, 'pid=%s old_TEMPD=\n%snew_TEMPD=\n%s' % (
                     key, self.tempds[key], tempd)
         else:

@@ -44,7 +44,7 @@ class AltGeometry(object):
         assert isinstance(is_visible, bool), is_visible
         self.is_visible = is_visible
 
-        assert representation in ['main', 'toggle', 'wire', 'point', 'surface'], 'representation=%r' % representation
+        assert representation in ['main', 'toggle', 'wire', 'point', 'surface', 'wire+point'], 'representation=%r' % representation
         self.representation = representation
 
     def __deepcopy__(self, memo):
@@ -123,11 +123,12 @@ class AltGeometry(object):
         * toggle - change with main mesh
         * wire - always wireframe
         * point - always points
+        * wire+point - point (vertex) and wireframe allowed
         * surface - always surface
         """
         return self._representation
 
     @representation.setter
     def representation(self, representation):
-        assert representation in ['main', 'toggle', 'wire', 'point', 'surface'], 'representation=%r is invalid' % representation
+        assert representation in ['main', 'toggle', 'wire', 'point', 'surface', 'wire+point'], 'representation=%r is invalid' % representation
         self._representation = representation

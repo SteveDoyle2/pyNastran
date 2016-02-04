@@ -6,7 +6,6 @@ class PropertiesBeam(object):
         """
         Defines the PropertiesBar object.
 
-        :param self: the PropertiesBar object
         :param model: the BDF object
         """
         self.model = model

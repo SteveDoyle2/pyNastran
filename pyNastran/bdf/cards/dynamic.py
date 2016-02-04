@@ -227,8 +227,6 @@ class FREQ(BaseCard):
 
         Parameters
         ----------
-        self : FREQ()
-            the object pointer
         freqs : ???
             the frequencies for a FREQx object
         """
@@ -239,7 +237,6 @@ class FREQ(BaseCard):
 
     def add_frequency_object(self, freq):
         """
-        :param self: the object pointer
         :param freq: a FREQx object
 
         .. seealso:: :func:`addFrequencies`

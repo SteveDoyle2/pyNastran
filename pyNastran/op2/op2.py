@@ -589,8 +589,6 @@ class OP2(OP2_Scalar):
 
         Parameters
         ----------
-        self : OP2
-            OP2 object.
         i_transform : dict{float:ndarray}
             Dictionary from coordinate id to index of the nodes in
             ``BDF.point_ids`` that their output (`CD`) in that

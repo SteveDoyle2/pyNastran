@@ -101,8 +101,6 @@ class Subcase(object):
 
         Parameters
         ----------
-        self : Subcase()
-            the Subcase object
         options : list[int/float/str]
             the options for a parameter
         value : int/float/str
@@ -126,8 +124,6 @@ class Subcase(object):
 
         Parameters
         ----------
-        self : Subcase()
-            the Subcase object
         options : List[int/str]
             the options for a parameter
         value : int; str
@@ -148,8 +144,6 @@ class Subcase(object):
 
         Parameters
         ----------
-        self : Subcase()
-            the Subcase object
         options : list[int/float/str]
             the options for a parameter
         value : int/float/str
@@ -215,8 +209,6 @@ class Subcase(object):
 
         Parameters
         ----------
-        self : Subcase()
-            the Subcase object
         options : list[int/float/str]
             the options for a parameter
         value : int/float/str
@@ -408,7 +400,6 @@ class Subcase(object):
         """
         Checks to see if a parameter name is in the subcase.
 
-        :param self:       the Subcase object
         :param param_name: the case control parameter to check for
 
         .. code-block:: python
@@ -432,7 +423,6 @@ class Subcase(object):
         """
         Gets the [value, options] for a subcase.
 
-        :param self:       the Subcase object
         :param param_name: the case control parameter to check for
 
         .. code-block:: python
@@ -475,7 +465,6 @@ class Subcase(object):
         """
         Gets the [value, options] for a subcase.
 
-        :param self:       the Subcase object
         :param param_name: the case control parameter to check for
 
         .. code-block:: python
@@ -653,8 +642,6 @@ class Subcase(object):
         """
         Prints a single entry of the a subcase from the global or local
         subcase list.
-
-        :param self: the Subcase object
         """
         msg = ''
         #msg += 'id=%s   ' %(self.id)
@@ -757,7 +744,6 @@ class Subcase(object):
         """
         Method crossReference:
 
-        :param self:   the Subcase object
         :param model: the BDF object
         .. note:: this is not integrated and probably never will be as it's
           not really that necessary.  it's only really useful when running an
@@ -805,8 +791,6 @@ class Subcase(object):
         """
         Removes the subcase parameter from the subcase to avoid printing it in
         a funny spot
-
-        :param self:  the Subcase object
         """
         if 'SUBCASE' in self.params:
             del self.params['SUBCASE']
@@ -816,7 +800,6 @@ class Subcase(object):
         """
         Internal method to print a subcase
 
-        :param self:     the Subcase object
         :param subcase0: the global Subcase object
         """
         if self.id == 0:
@@ -852,7 +835,6 @@ class Subcase(object):
         Does a "smart" sort on the keys such that SET cards increment in
         numerical order.  Also puts the sets first.
 
-        :param self:    the Subcase object
         :param lst : List[str]
             the list of subcase list objects (list_a)
 

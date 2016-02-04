@@ -8,7 +8,6 @@ class PropertiesSolid(object):
         """
         Defines the PropertiesSolid object.
 
-        :param self: the PropertiesSolid object
         :param model: the BDF object
         """
         self.model = model

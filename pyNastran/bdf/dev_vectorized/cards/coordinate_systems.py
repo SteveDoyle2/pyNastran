@@ -31,7 +31,6 @@ def normalize(v):
     r"""
     Normalizes v into a unit vector.
 
-    :param self: the coordinate system object
     :param v:    the vector to normalize
 
     :returns:  normalized v
@@ -55,7 +54,6 @@ class Coord(BaseCard):
         """
         Defines a general CORDxx object
 
-        :param self: the coordinate system object
         :param card: a BDFCard object
         :param data: a list analogous to the card
         """
@@ -148,7 +146,6 @@ class Coord(BaseCard):
         * :math:`g` is the global directional vector (e.g. :math:`g_x = [1,0,0]`)
         * :math:`ijk` is the math:`i^{th}` direction in the local coordinate system
 
-        :param self:    the coordinate system object
         :param p:       the point to be transformed in the local frame.  Type=1x3 NUMPY.NDARRAY
         :param debug:   developer debug (default=False)
         :returns p2:  the point in the global frame.  Type=1x3 NUMPY.NDARRAY
@@ -180,7 +177,6 @@ class Coord(BaseCard):
         r"""
         Transforms the global point p to the local coordinate system
 
-        :param self:   the coordinate system object
         :param p:      the point to transform
         :param debug:  developer debug
 
@@ -249,7 +245,6 @@ class Cord2x(Coord):
         """
         Defines the CORD2x class
 
-        :param self: the coordinate system object
         :param card: a BDFCard object
         :param data: a list analogous to the card
         """
@@ -301,8 +296,6 @@ class Cord2x(Coord):
     def _verify(self):
         """
         Verifies all methods for this object work
-
-        :param self: the CORD2x object pointer
         """
         cid = self.Cid()
         rid = self.Rid()
@@ -321,7 +314,6 @@ class Cord2x(Coord):
         """
         Links self.rid to a coordinate system.
 
-        :param self:  the coordinate system object
         :param model: the BDF object
         .. warning:: Doesn't set rid to the coordinate system if it's in the
                     global.  This isn't a problem.  It's meant to speed up the
@@ -387,7 +379,6 @@ class Cord1x(Coord):
         """
         Converts a coordinate system from a CORD1x to a CORD2x
 
-        :param self:  the coordinate system object
         :param model: a BDF model
         :param rid:
           The relative coordinate system (default=0 -> Global);
@@ -426,8 +417,6 @@ class Cord1x(Coord):
     def _verify(self):
         """
         Verifies all methods for this object work
-
-        :param self: the CORD1x object pointer
         """
         cid = self.Cid()
         assert isinstance(cid, int), 'cid=%r' % cid
@@ -467,7 +456,6 @@ class CORD3G(Coord):  # not done
         """
         Intilizes the CORD3G
 
-        :param self: the CORD3G coordinate system object
         :param card: a list version of the fields
         """
         if comment:
@@ -498,7 +486,6 @@ class CORD3G(Coord):  # not done
 
     def coord3g_transformToGlobal(self, p, debug=False):
         """
-        :param self:  the coordinate system object
         :param p:     the point to transform.  TYPE=NUMPY.NDARRAY.
         :param debug: should debug messages be printed
 
@@ -569,7 +556,6 @@ class CORD1R(Cord1x):
         |CORD1R | CIDA | G1A | G2A | CIDB | G1B  | G2B | G3B  |     |
         +-------+------+-----+-----+------+------+-----+------+-----+
 
-        :param self:   the CORD1R coordinate system object
         :param nCoord: the coordinate location on the line
                        (there are possibly 2 coordinates on 1 card)
         :param card:   a list version of the fields (1 CORD1R only)
@@ -584,14 +570,12 @@ class CORD1R(Cord1x):
 
     def coord_to_xyz(self, p):
         """
-        :param self:  the coordinate system object
         :returns xyz: the point in the local coordinate system
         """
         return p
 
     def xyz_to_coord(self, p):
         """
-        :param self:  the coordinate system object
         :returns xyz: the delta xyz point in the local coordinate system
         """
         return p
@@ -625,7 +609,6 @@ class CORD1C(Cord1x):
         |CORD1C | CIDA | G1A | G2A | CIDB | G1B  | G2B | G3B  |     |
         +-------+------+-----+-----+------+------+-----+------+-----+
 
-        :param self:   the CORD1C coordinate system object
         :param card:   a BDFCard object
         :param nCoord: the coordinate location on the line
                        (there are possibly 2 coordinates on 1 card)
@@ -650,7 +633,6 @@ class CORD1C(Cord1x):
         .. math:: x = R \cos(\theta)
         .. math:: y = R \sin(\theta)
 
-        :param self:  the coordinate system object
         :returns xyz: the point in the local coordinate system
         """
         R = p[0]
@@ -661,7 +643,6 @@ class CORD1C(Cord1x):
 
     def xyz_to_coord(self, p):
         """
-        :param self:  the coordinate system object
         :returns xyz: the delta xyz point in the local coordinate system
         """
         (x, y, z) = p
@@ -703,7 +684,6 @@ class CORD1S(Cord1x):
         |CORD1S | CIDA | G1A | G2A | CIDB | G1B  | G2B | G3B  |     |
         +-------+------+-----+-----+------+------+-----+------+-----+
 
-        :param self:   the CORD1S coordinate system object
         :param card:   a BDFCard object
         :param nCoord: the coordinate location on the line
                        (there are possibly 2 coordinates on 1 card)
@@ -717,7 +697,6 @@ class CORD1S(Cord1x):
 
     def xyz_to_coord(self, p):
         r"""
-        :param self:  the coordinate system object
         :returns xyz: the loca XYZ point in the R, \theta, \phi coordinate system
         """
         (x, y, z) = p
@@ -731,7 +710,6 @@ class CORD1S(Cord1x):
 
     def coord_to_xyz(self, p):
         r"""
-        :param self:  the coordinate system object
         :returns xyz: the R, \theta, \phi point in the local XYZ coordinate system
         """
         R = p[0]
@@ -759,7 +737,6 @@ class CORD2R(Cord2x):
         |        | B3  | C1  | C2  | C3 |     |    |    |     |
         +--------+-----+-----+-----+----+-----+----+----+-----+
 
-        :param self: the CORD2R coordinate system object
         :param card: a BDFCard object
         :param data: a list version of the fields (1 CORD2R only)
                      default=None -> [0, 0, 0., 0., 0., 0., 0., 1., 1., 0., 0.]
@@ -771,8 +748,6 @@ class CORD2R(Cord2x):
     def _verify(self):
         """
         Verifies all methods for this object work
-
-        :param self: the CORD2R object pointer
         """
         cid = self.Cid()
         rid = self.Rid()
@@ -787,14 +762,12 @@ class CORD2R(Cord2x):
 
     def coord_to_xyz(self, p):
         """
-        :param self:  the coordinate system object
         :returns xyz: the point in the local coordinate system
         """
         return p
 
     def xyz_to_coord(self, p):
         """
-        :param self:  the coordinate system object
         :returns xyz: the delta xyz point in the local coordinate system
         """
         return p
@@ -831,7 +804,6 @@ class CORD2C(Cord2x):
         |        | B3  | C1  | C2  | C3 |     |    |    |     |
         +--------+-----+-----+-----+----+-----+----+----+-----+
 
-        :param self: the CORD2C coordinate system object
         :param card: a BDFCard object
         :param data: a list version of the fields (1 CORD2C only)
         """
@@ -858,7 +830,6 @@ class CORD2C(Cord2x):
         .. math:: x = R \cos(\theta)
         .. math:: y = R \sin(\theta)
 
-        :param self:  the coordinate system object
         :returns xyz: the point in the local coordinate system
         """
         R = p[0]
@@ -869,7 +840,6 @@ class CORD2C(Cord2x):
 
     def xyz_to_coord(self, p):
         """
-        :param self:  the coordinate system object
         :returns xyz: the delta xyz point in the local coordinate system
         """
         (x, y, z) = p
@@ -913,8 +883,6 @@ class CORD2S(Cord2x):
         |        | B3  | C1  | C2  | C3 |     |    |    |     |
         +--------+-----+-----+-----+----+-----+----+----+-----+
 
-        :param self: the CORD2S coordinate system object
-        :param card: a BDFCard object
         :param data: a list version of the fields (1 CORD2S only)
         """
         Cord2x.__init__(self, card, data, comment)
@@ -927,7 +895,6 @@ class CORD2S(Cord2x):
 
     def xyz_to_coord(self, p):
         r"""
-        :param self:  the coordinate system object
         :returns xyz: the loca XYZ point in the R, \theta, \phi coordinate system
         """
         (x, y, z) = p
@@ -941,7 +908,6 @@ class CORD2S(Cord2x):
 
     def coord_to_xyz(self, p):
         r"""
-        :param self:  the coordinate system object
         :returns xyz: the R, \theta, \phi point in the local XYZ coordinate system
         """
         R = p[0]

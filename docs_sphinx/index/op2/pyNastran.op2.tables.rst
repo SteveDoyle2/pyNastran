@@ -1,6 +1,17 @@
 tables Package
 ==============
 
+:mod:`grid_point_weight` Module
+-------------------------------
+
+.. inheritance-diagram:: pyNastran.op2.tables.grid_point_weight
+
+.. automodule:: pyNastran.op2.tables.grid_point_weight
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
+
 :mod:`ogs` Module
 --------------------
 

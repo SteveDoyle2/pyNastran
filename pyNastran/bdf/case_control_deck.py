@@ -47,8 +47,6 @@ class CaseControlDeck(object):
         """
         Parameters
         ----------
-        self : CaseControlDeck
-            the CaseControlDeck object
         lines : List[str]
             list of lines that represent the case control deck
             ending with BEGIN BULK
@@ -126,7 +124,6 @@ class CaseControlDeck(object):
         Checks to see if a parameter (e.g. STRESS) is defined in a certain
         subcase ID.
 
-        :param self:       the CaseControlDeck object
         :param isubcase:   the subcase ID to check
         :param param_name: the parameter name to look for
         """
@@ -139,7 +136,6 @@ class CaseControlDeck(object):
         STRESS(PLOT,POST)=ALL, param_name=STRESS, value=ALL, options=['PLOT',
         'POST']
 
-        :param self:       the CaseControlDeck object
         :param isubcase:   the subcase ID to check
         :param param_name: the parameter name to get the [value, options] for
         """
@@ -153,7 +149,6 @@ class CaseControlDeck(object):
         """
         Checks to see if a subcase exists.
 
-        :param self:     the CaseControlDeck object
         :param isubcase: the subcase ID
         :type isubcase: int
         :returns val: does_subcase_exist (type = bool)
@@ -183,7 +178,6 @@ class CaseControlDeck(object):
         """
         Deletes a subcase.
 
-        :param self:     the CaseControlDeck object
         :param isubcase: the Subcase to delete
         :type isubcase: int
         """
@@ -195,7 +189,6 @@ class CaseControlDeck(object):
         """
         Overwrites the parameters from one subcase to another.
 
-        :param self:              the CaseControlDeck object
         :param i_from_subcase:    the Subcase to pull the data from
         :param i_to_subcase:      the Subcase to map the data to
         :param overwrite_subcase: NULLs i_to_subcase before copying
@@ -228,16 +221,12 @@ class CaseControlDeck(object):
     def get_subcase_list(self):
         """
         Gets the list of subcases including the global subcase ID (0)
-
-        :param self:  the CaseControlDeck object
         """
         return sorted(self.subcases.keys())
 
     def get_local_subcase_list(self):
         """
         Gets the list of subcases that aren't the global subcase ID
-
-        :param self:  the CaseControlDeck object
         """
         id_list = [id for id in self.subcases if id != 0]  # skip the global
         return sorted(id_list)
@@ -246,7 +235,6 @@ class CaseControlDeck(object):
         """
         sol = STATICS, FLUTTER, MODAL, etc.
 
-        :param self:  the CaseControlDeck object
         :param isubcase: the subcase ID to update
         :param sol: the solution type to change the solution to
 
@@ -267,7 +255,6 @@ class CaseControlDeck(object):
         """
         Takes in a single-lined string and adds it to the global Subcase.
 
-        :param self:  the CaseControlDeck object
         :param param: the variable to add
         .. note:: dont worry about overbounding the line
 
@@ -288,7 +275,6 @@ class CaseControlDeck(object):
         """
         Takes in a single-lined string and adds it to a single Subcase.
 
-        :param self:     the CaseControlDeck object
         :param isubcase: the subcase ID to add
         :param param:    the variable to add
         .. note::  dont worry about overbounding the line
@@ -310,7 +296,6 @@ class CaseControlDeck(object):
         """
         Parses a case control line
 
-        :param self:  the CaseControlDeck object
         :param param: the variable to add
         """
         if '\n' in param or '\r' in param or '\t' in param:
@@ -413,8 +398,6 @@ class CaseControlDeck(object):
 
         Parameters
         ----------
-        self : CaseControlDeck
-            the CaseControlDeck object
         lines : List[str, str, ...]
             list of lines
 
@@ -668,8 +651,6 @@ class CaseControlDeck(object):
         """
         Removes any unwanted data in the subcase...specifically the SUBCASE
         data member.  Otherwise it will print out after a key like stress.
-
-        :param self:  the CaseControlDeck object
         """
         for subcase in itervalues(self.subcases):
             subcase.finish_subcase()
@@ -678,8 +659,10 @@ class CaseControlDeck(object):
         """
         Takes a case control deck and changes it from a SOL xxx to a SOL 200
 
-        :param self: the CaseControlDeck object
-        .. todo:: not done...
+        :param model: BDF()
+            the BDF object
+
+        .. todo :: not done...
         """
         analysis = model.rsolmap_toStr[model.sol]
         model.sol = 200
@@ -690,8 +673,6 @@ class CaseControlDeck(object):
     def _add_parameter_to_subcase(self, key, value, options, param_type, isubcase):
         """
         Internal method
-
-        self:  the CaseControlDeck object
         """
         if self.debug:
             a = 'key=%r' % key
@@ -735,7 +716,6 @@ class CaseControlDeck(object):
         """
         Gets the relevant op2 parameters required for a given subcase
 
-        :param self:  the CaseControlDeck object
         .. todo:: not done...
         """
         cases = {}
@@ -745,9 +725,6 @@ class CaseControlDeck(object):
         return cases
 
     def __repr__(self):
-        """
-        :param self:  the CaseControlDeck object
-        """
         msg = ''
         subcase0 = self.subcases[0]
         for subcase in itervalues(self.subcases):

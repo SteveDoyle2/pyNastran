@@ -51,7 +51,6 @@ class PBEAM(Property):
         """
         Defines the PBEAM object.
 
-        :param self: the PBEAM object
         :param model: the BDF object
         :param cards: the list of PBEAM cards
         """

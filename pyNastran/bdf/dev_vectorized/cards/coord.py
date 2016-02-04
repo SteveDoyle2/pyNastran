@@ -177,7 +177,6 @@ class Coord(VectorizedCard):
         """
         Defines the ShellProperties object.
 
-        :param self: the ShellProperties object
         :param model: the BDF object
         :param pshells: the list of PSHELL cards
         :param pcomps: the list of PCOMP cards

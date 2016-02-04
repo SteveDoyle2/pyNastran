@@ -226,37 +226,43 @@ class PLSOLID(SolidProperty):
         1: 'pid', 2:'mid', 3:'str',
     }
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self, pid, mid, stress_strain='GRID', comment=''):
         SolidProperty.__init__(self)
-
-    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
         #: Property ID
-        self.pid = integer(card, 1, 'pid')
+        self.pid = pid
         #: Material ID
-        self.mid = integer(card, 2, 'mid')
+        self.mid = mid
         #: Location of stress and strain output
-        self.str = string_or_blank(card, 3, 'str', 'GRID')
-        assert len(card) <= 4, 'len(PLSOLID card) = %i' % len(card)
+        self.stress_strain = stress_strain
+        assert isinstance(pid, int), type(pid)
+        assert isinstance(mid, int), type(mid)
         self._validate_input()
 
-    def add_op2_data(data, comment=''):
-        if comment:
-            self._comment = comment
-        self.pid = data[0]
-        self.mid = data[1]
-        self.ge = data[2]
-        self.str = data[3]
-        self._validate_input()
+    @classmethod
+    def add_card(self, card, comment=''):
+        pid = integer(card, 1, 'pid')
+        mid = integer(card, 2, 'mid')
+        stress_strain = string_or_blank(card, 3, 'stress_strain', 'GRID')
+        assert len(card) <= 4, 'len(PLSOLID card) = %i' % len(card)
+        return PLSOLID(pid, mid, stress_strain, comment=comment)
+
+    @classmethod
+    def add_op2_data(self, data, comment=''):
+        pid = data[0]
+        mid = data[1]
+        ge = data[2]
+        stress_strain = data[3]
+        return PLSOLID(pid, mid, stress_strain, comment=comment)
 
     def _validate_input(self):
-        if self.str == 'GAUS':
-            self.str = 'GAUSS'
-        if self.str not in ['GRID', 'GAUSS']:
+        if self.stress_strain == 'GAUS':
+            self.stress_strain = 'GAUSS'
+        if self.stress_strain not in ['GRID', 'GAUSS']:
             raise RuntimeError('STR="%s" doesnt have a valid stress/strain '
                                'output value set; valid=["GRID", "GAUSS"]\n'
-                               % self.str)
+                               % self.stress_strain)
 
     def cross_reference(self, model):
         msg = ' which is required by PLSOLID pid=%s' % self.pid
@@ -268,7 +274,7 @@ class PLSOLID(SolidProperty):
         del self.mid_ref
 
     def raw_fields(self):
-        stress_strain = set_blank_if_default(self.str, 'GRID')
+        stress_strain = set_blank_if_default(self.stress_strain, 'GRID')
         fields = ['PLSOLID', self.pid, self.Mid(), stress_strain]
         return fields
 
@@ -296,47 +302,50 @@ class PSOLID(SolidProperty):
         6:'isop', 7:'fctn',
     }
 
-    def __init__(self):
+    def __init__(self, pid, mid, cordm=0, integ=None, stress=None, isop=None,
+                 fctn='SMECH', comment=''):
         SolidProperty.__init__(self)
-
-    def add(self, pid, mid, cordm=0, integ=None, stress=None, isop=None, fctn='SMECH'):
+        if comment:
+            self._comment = comment
+        #: Property ID
         self.pid = pid
+        #: Material ID
         self.mid = mid
         self.cordm = cordm
+        #valid_integration = ['THREE', 'TWO', 'FULL', 'BUBBLE',
+        #                     2, 3, None, 'REDUCED']
         self.integ = integ
         self.stress = stress
         self.isop = isop
         self.fctn = fctn
 
+    @classmethod
     def add_card(self, card, comment=''):
-        if comment:
-            self._comment = comment
-        #: Property ID
-        self.pid = integer(card, 1, 'pid')
-        #: Material ID
-        self.mid = integer(card, 2, 'mid')
-        self.cordm = integer_or_blank(card, 3, 'cordm', 0)
-        self.integ = integer_string_or_blank(card, 4, 'integ')
-        #validIntegration = ['THREE', 'TWO', 'FULL', 'BUBBLE',
-        #                    2, 3, None, 'REDUCED']
-        self.stress = integer_string_or_blank(card, 5, 'stress')
-        self.isop = integer_string_or_blank(card, 6, 'isop')
-        self.fctn = string_or_blank(card, 7, 'fctn', 'SMECH')
+        pid = integer(card, 1, 'pid')
+        mid = integer(card, 2, 'mid')
+        cordm = integer_or_blank(card, 3, 'cordm', 0)
+        integ = integer_string_or_blank(card, 4, 'integ')
+        stress = integer_string_or_blank(card, 5, 'stress')
+        isop = integer_string_or_blank(card, 6, 'isop')
+        fctn = string_or_blank(card, 7, 'fctn', 'SMECH')
         assert len(card) <= 8, 'len(PSOLID card) = %i' % len(card)
+        return PSOLID(pid, mid, cordm, integ, stress, isop,
+                     fctn, comment=comment)
 
+    @classmethod
     def add_op2_data(self, data, comment=''):
-        if comment:
-            self._comment = comment
-        self.pid = data[0]
-        self.mid = data[1]
-        self.cordm = data[2]
-        self.integ = data[3]
-        self.stress = data[4]
-        self.isop = data[5]
-        self.fctn = data[6]
+        pid = data[0]
+        mid = data[1]
+        cordm = data[2]
+        integ = data[3]
+        stress = data[4]
+        isop = data[5]
+        fctn = data[6]
 
-        if self.fctn == 'SMEC':
-            self.fctn = 'SMECH'
+        if fctn == 'SMEC':
+            fctn = 'SMECH'
+        return PSOLID(pid, mid, cordm, integ, stress, isop,
+                     fctn, comment=comment)
 
     def E(self):
         return self.mid_ref.E()

@@ -15,7 +15,6 @@ class PBAR(Property):
         """
         Defines the PBAR object.
 
-        :param self: the PBAR object
         :param model: the BDF object
         :param cards: the list of PBAR cards
         """

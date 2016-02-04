@@ -97,6 +97,7 @@ class TestSolids(unittest.TestCase):
         mass = rho * V
         element = model.elements[eid]
         element.node_ids
+        assert pid in model.properties, 'pid is missing for\n%s' % str(element)
         self.assertEqual(element.type, etype)
         self.assertEqual(element.Eid(), eid)
         self.assertEqual(element.pid.type, ptype)

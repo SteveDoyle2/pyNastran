@@ -37,47 +37,65 @@ class PBUSH(BushingProperty):
         1: 'pid',
     }
 
-    def __init__(self):
+    def __init__(self, pid, k, b, ge, rcv, comment=''):
         BushingProperty.__init__(self)
-
-        # K parameter
-        self.Ki = []
-
-        # B parameter
-        self.Bi = []
-
-        # GE parameter
-        self.GEi = []
-
-        # RCV parameters
-        self.sa = None
-        self.st = None
-        self.ea = None
-        self.et = None
-
-    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
 
         #: Property ID
-        self.pid = integer(card, 1, 'pid')
+        self.pid = pid
+        self.vars = []
+
+        # K parameter
+        self.Ki = k
+        if k:
+            self.vars.append('K')
+        # B parameter
+        self.Bi = b
+        if b:
+            self.vars.append('B')
+
+        # GE parameter
+        self.GEi = ge
+        if ge:
+            self.vars.append('GE')
+
+        # RCV parameters
+        sa, st, ea, et = rcv
+        if sa is not None or st is not None or ea is not None or et is not None:
+            self.vars.append('RCV')
+            self.sa = rcv[0]
+            self.st = rcv[1]
+            self.ea = rcv[2]
+            self.et = rcv[3]
+
+    @classmethod
+    def add_card(self, card, comment=''):
+        k_fields = []
+        b_fields = []
+        ge_fields = []
+        rcv_fields = [None, None, None, None]
+
+        pid = integer(card, 1, 'pid')
 
         nfields = card.nfields
-        self.vars = []
         istart = 2
         while istart < nfields:
             pname = string(card, istart, 'pname')
             if   pname == 'K':
-                self._read_k(card, istart)
+                k_fields = self._read_k(card, istart)
             elif pname == 'B':
-                self._read_b(card, istart)
+                b_fields = self._read_b(card, istart)
             elif pname == 'GE':
-                self._read_ge(card, istart)
+                ge_fields = self._read_ge(card, istart)
             elif pname == 'RCV':
-                self._read_rcv(card, istart)
+                rcv_fields = self._read_rcv(card, istart)
             else:
                 break
             istart += 8
+        return PBUSH(pid, k_fields, b_fields, ge_fields, rcv_fields,
+                     #comment=comment)
+                     )
 
     def add_op2_data(self, data, comment=''):
         if comment:
@@ -85,12 +103,12 @@ class PBUSH(BushingProperty):
         self.pid = data[0]
         self.b = data[1]
         raise NotImplementedError('PBUSH data...')
-        #print self
 
     def _verify(self, xref=False):
         pid = self.Pid()
         assert isinstance(pid, integer_types), 'pid=%r' % pid
 
+    @classmethod
     def _read_k(self, card, istart):
         # Flag indicating that the next 1 to 6 fields are stiffness values in
         # the element coordinate system.
@@ -98,10 +116,10 @@ class PBUSH(BushingProperty):
 
         #: Nominal stiffness values in directions 1 through 6.
         #: See Remarks 2 and 3. (Real; Default = 0.0)
-        self.Ki = fields(double_or_blank, card, 'Ki', istart + 1, istart + 7)
-        #print "Ki = ",self.Ki
-        self.vars.append('K')
+        Ki = fields(double_or_blank, card, 'Ki', istart + 1, istart + 7)
+        return Ki
 
+    @classmethod
     def _read_b(self, card, istart):
         # Flag indicating that the next 1 to 6 fields are force-per-velocity
         # damping.
@@ -110,9 +128,10 @@ class PBUSH(BushingProperty):
         #: Force per unit velocity (Real)
         #: Nominal damping coefficients in direction 1 through 6 in units of
         #: force per unit velocity. See Remarks 2, 3, and 9. (Real; Default=0.)
-        self.Bi = fields(double_or_blank, card, 'Bi', istart + 1, istart + 7)
-        self.vars.append('B')
+        Bi = fields(double_or_blank, card, 'Bi', istart + 1, istart + 7)
+        return Bi
 
+    @classmethod
     def _read_ge(self, card, istart):
         # Flag indicating that the next fields, 1 through 6 are structural
         # damping constants. See Remark 7. (Character)
@@ -120,19 +139,20 @@ class PBUSH(BushingProperty):
 
         #: Nominal structural damping constant in directions 1 through 6. See
         #: Remarks 2. and 3. (Real; Default = 0.0)
-        self.GEi = fields(double_or_blank, card, 'GEi', istart + 1, istart + 7)
-        self.vars.append('GE')
+        GEi = fields(double_or_blank, card, 'GEi', istart + 1, istart + 7)
+        return GEi
 
+    @classmethod
     def _read_rcv(self, card, istart):
         # Flag indicating that the next 1 to 4 fields are stress or strain
         # coefficients. (Character)
         #self.rcv = string(card, istart, 'rcv')
 
-        self.sa = double_or_blank(card, istart + 1, 'sa', 1.)
-        self.st = double_or_blank(card, istart + 2, 'st', 1.)
-        self.ea = double_or_blank(card, istart + 3, 'ea', 1.)
-        self.et = double_or_blank(card, istart + 4, 'et', 1.)
-        self.vars.append('RCV')
+        sa = double_or_blank(card, istart + 1, 'sa', 1.)
+        st = double_or_blank(card, istart + 2, 'st', 1.)
+        ea = double_or_blank(card, istart + 3, 'ea', 1.)
+        et = double_or_blank(card, istart + 4, 'et', 1.)
+        return [sa, st, ea, et]
 
     def raw_fields(self):
         list_fields = ['PBUSH', self.pid]
@@ -147,12 +167,12 @@ class PBUSH(BushingProperty):
                 list_fields += ['RCV', self.sa, self.st, self.ea, self.et]
             else:
                 raise RuntimeError('not supported PBUSH field...')
-            nSpaces = 8 - (len(list_fields) - 1) % 8
+            nspaces = 8 - (len(list_fields) - 1) % 8
 
-            if nSpaces == 8:
+            if nspaces == 8:
                 list_fields += [None]
-            elif nSpaces < 8:
-                list_fields += [None] * (nSpaces + 1)
+            elif nspaces < 8:
+                list_fields += [None] * (nspaces + 1)
         return list_fields
 
     def repr_fields(self):
@@ -414,18 +434,24 @@ class PBUSH2D(BushingProperty):
 class PBUSHT(BushingProperty):
     type = 'PBUSHT'
 
-    def __init__(self):
+    def __init__(self, pid, k_tables, b_tables,
+                 ge_tables, kn_tables, comment=''):
         BushingProperty.__init__(self)
-        self.k_tables = []
-        self.b_tables = []
-        self.ge_tables = []
-        self.kn_tables = []
-
-    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
+        self.k_tables = k_tables
+        self.b_tables = b_tables
+        self.ge_tables = ge_tables
+        self.kn_tables = kn_tables
 
-        self.pid = integer(card, 1, 'pid')
+    @classmethod
+    def add_card(self, comment=''):
+        k_tables = []
+        b_tables = []
+        ge_tables = []
+        kn_tables = []
+
+        pid = integer(card, 1, 'pid')
         nfields = len(card) - 1
         nrows = nfields // 8
         if nfields % 8 != 0:
@@ -439,15 +465,17 @@ class PBUSHT(BushingProperty):
                 table_value = integer_or_blank(card, ifield + j + 2, param + '%i' % (j+1))
                 table.append(table_value)
             if param == 'K':
-                self.k_tables = table
+                k_tables = table
             elif param == 'B':
-                self.b_tables = table
+                b_tables = table
             elif param == 'GE':
-                self.ge_tables = table
+                ge_tables = table
             elif param == 'KN':
-                self.kn_tables = table
+                kn_tables = table
             else:
                 raise ValueError(param)
+        return PBUSHT(pid, k_tables, b_tables, ge_tables, kn_tables,
+                      comment=comment)
 
     def raw_fields(self):
         list_fields = ['PBUSHT', self.pid]

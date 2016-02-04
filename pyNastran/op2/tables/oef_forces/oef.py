@@ -2061,7 +2061,6 @@ class OEF(OP2Common):
                         imag = floats2[:, [9, 10, 11, 12, 13, 14, 15, 16]]
                         real_imag = real + 1.j * imag
                     obj.data[obj.itime, itotal:itotal2, :] = real_imag
-                    #asdf
                     obj.itotal = itotal2
                     obj.ielement = ielement2
                 else:

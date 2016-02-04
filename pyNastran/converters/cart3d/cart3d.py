@@ -396,12 +396,6 @@ class Cart3dIO(object):
         self.infile.seek(self.n)
 
     def show(self, n, types='ifs', endian=None):
-        """
-        Parameters
-        ----------
-        self : Cart3D()
-            the object pointer
-        """
         assert self.n == self.infile.tell(), 'n=%s tell=%s' % (self.n, self.infile.tell())
         nints = n // 4
         data = self.infile.read(4 * n)
@@ -415,11 +409,6 @@ class Cart3dIO(object):
     def write_data(self, outfile, data, types='ifs', endian=None):
         """
         Useful function for seeing what's going on locally when debugging.
-
-        Parameters
-        ----------
-        self : Cart3D()
-            the object pointer
         """
         n = len(data)
         nints = n // 4
@@ -462,11 +451,6 @@ class Cart3dIO(object):
     def write_ndata(self, outfile, n, types='ifs'):
         """
         Useful function for seeing what's going on locally when debugging.
-
-        Parameters
-        ----------
-        self : Cart3D()
-            the object pointer
         """
         nold = self.n
         data = self.infile.read(n)
@@ -825,8 +809,7 @@ class Cart3D(Cart3dIO):
         Takes the Cart3d variables and calculates additional variables
 
         Parameters
-        self : Cart3d()
-            the object pointer
+        ----------
         result_names : List[str]
             the variables to calculate
         results : (n,6) ndarray
@@ -953,8 +936,6 @@ class Cart3D(Cart3dIO):
 
         Parameters
         ----------
-        self:
-            the reader object
         shift_nodes : boolean; default=True
             shifts element IDs such that the
               - node IDs start at 0 instead of 1
@@ -996,8 +977,6 @@ class Cart3D(Cart3dIO):
 
         Parameters
         ----------
-        self : Cart3D()
-            the reader object
         cnormals : (n, 3) ndarray
             normalized centroidal normal vectors
         shift_nodes : bool; default=True

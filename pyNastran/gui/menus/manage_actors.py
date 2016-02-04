@@ -163,7 +163,7 @@ class EditGroupProperties(QtGui.QDialog):
 
         self.line_width = QtGui.QLabel("Line Width:")
         self.line_width_edit = QtGui.QSpinBox(self)
-        self.line_width_edit.setRange(1, 10)
+        self.line_width_edit.setRange(1, 15)
         self.line_width_edit.setSingleStep(1)
         self.line_width_edit.setValue(line_width)
         if self.representation in ['point', 'surface']:
@@ -172,7 +172,7 @@ class EditGroupProperties(QtGui.QDialog):
 
         self.point_size = QtGui.QLabel("Point Size:")
         self.point_size_edit = QtGui.QSpinBox(self)
-        self.point_size_edit.setRange(1, 10)
+        self.point_size_edit.setRange(1, 15)
         self.point_size_edit.setSingleStep(1)
         self.point_size_edit.setValue(point_size)
 
@@ -259,14 +259,14 @@ class EditGroupProperties(QtGui.QDialog):
                 self.color.setEnabled(True)
                 self.color_edit.setEnabled(True)
 
-                if self.representation == 'point':
+                if self.representation in ['point', 'wire+point']:
                     self.point_size.setEnabled(True)
                     self.point_size_edit.setEnabled(True)
                 else:
                     self.point_size.setEnabled(False)
                     self.point_size_edit.setEnabled(False)
 
-                if self.representation == 'wire':
+                if self.representation in ['wire', 'wire+point']:
                     self.line_width.setEnabled(True)
                     self.line_width_edit.setEnabled(True)
                 else:

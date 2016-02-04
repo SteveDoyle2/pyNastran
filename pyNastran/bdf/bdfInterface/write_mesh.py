@@ -162,8 +162,6 @@ class WriteMesh(BDFAttributes):
 
         Parameters
         ----------
-        self : BDF()
-            the BDF object
         out_filename : varies; default=None
             str        - the name to call the output bdf
             file       - a file object
@@ -234,8 +232,6 @@ class WriteMesh(BDFAttributes):
 
         Parameters
         ----------
-        self : BDF()
-            the BDF object
         out_filename : varies; default=None
             str        - the name to call the output bdf
             file       - a file object
@@ -298,11 +294,6 @@ class WriteMesh(BDFAttributes):
     def _write_header(self, outfile, encoding):
         """
         Writes the executive and case control decks.
-
-        Parameters
-        ----------
-        self : BDF()
-            the BDF object
         """
         if self.punch is None:
             # writing a mesh without using read_bdf
@@ -325,11 +316,6 @@ class WriteMesh(BDFAttributes):
     def _write_executive_control_deck(self, outfile):
         """
         Writes the executive control deck.
-
-        Parameters
-        ----------
-        self : BDF()
-            the BDF object
         """
         if self.executive_control_lines:
             msg = '$EXECUTIVE CONTROL DECK\n'
@@ -348,11 +334,6 @@ class WriteMesh(BDFAttributes):
     def _write_case_control_deck(self, outfile):
         """
         Writes the Case Control Deck.
-
-        Parameters
-        ----------
-        self : BDF()
-            the BDF object
         """
         if self.case_control_deck:
             msg = '$CASE CONTROL DECK\n'
@@ -363,11 +344,6 @@ class WriteMesh(BDFAttributes):
     def _write_elements(self, outfile, size=8, is_double=False):
         """
         Writes the elements in a sorted order
-
-        Parameters
-        ----------
-        self : BDF()
-            the BDF object
         """
         if self.elements:
             outfile.write('$ELEMENTS\n')
@@ -386,11 +362,6 @@ class WriteMesh(BDFAttributes):
     def _write_elements_symmetric(self, outfile, size=8, is_double=False):
         """
         Writes the elements in a sorted order
-
-        Parameters
-        ----------
-        self : BDF()
-            the BDF object
         """
         nid_offset = max(self.nodes.keys())
         eid_offset = max(self.elements.keys())
@@ -416,11 +387,6 @@ class WriteMesh(BDFAttributes):
     def _write_elements_properties(self, outfile, size=8, is_double=False):
         """
         Writes the elements and properties in and interspersed order
-
-        Parameters
-        ----------
-        self : BDF()
-            the BDF object
         """
         missing_properties = []
         if self.properties:
@@ -533,8 +499,12 @@ class WriteMesh(BDFAttributes):
 
         Parameters
         ----------
-        self : BDF()
-            the BDF object
+        outfile : file
+            the file object
+        size : int (default=8)
+            the field width
+        is_double : bool (default=False)
+            is this double precision
 
         Returns
         -------
@@ -629,8 +599,6 @@ class WriteMesh(BDFAttributes):
 
         Parameters
         ----------
-        self : BDF()
-            the BDF object
         size : int
             large field (16) or small field (8)
 
@@ -797,11 +765,6 @@ class WriteMesh(BDFAttributes):
     def _write_nodes(self, outfile, size=8, is_double=False):
         """
         Writes the NODE-type cards
-
-        Parameters
-        ----------
-        self : BDF()
-            the BDF object
         """
         if self.spoints:
             msg = []
@@ -834,7 +797,6 @@ class WriteMesh(BDFAttributes):
         #"""
         #Writes the NODE-type in associated and unassociated groups.
 
-        #:param self: the BDF object
         #.. warning:: Sometimes crashes, probably on invalid BDFs.
         #"""
         #msg = []
@@ -871,11 +833,6 @@ class WriteMesh(BDFAttributes):
     def _write_nodes_symmetric(self, outfile, size=8, is_double=False, plane='xz'):
         """
         Writes the NODE-type cards
-
-        Parameters
-        ----------
-        self : BDF()
-            the BDF object
 
         .. warning :: doesn't consider coordinate systems;
                       it could, but you'd need 20 new coordinate systems
@@ -966,11 +923,6 @@ class WriteMesh(BDFAttributes):
     def _write_params(self, outfile, size=8, is_double=False):
         """
         Writes the PARAM cards
-
-        Parameters
-        ----------
-        self : BDF()
-            the BDF object
         """
         if self.params:
             msg = ['$PARAMS\n']

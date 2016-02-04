@@ -49,7 +49,6 @@ class CONROD(RodElement):
         """
         Defines the CONROD object.
 
-        :param self: the CONROD object
         :param model: the BDF object
         """
         RodElement.__init__(self, model)
@@ -82,7 +81,6 @@ class CONROD(RodElement):
 
     def build(self):
         """
-        :param self: the CONROD object
         :param cards: the list of CONROD cards
         """
         if self.n:

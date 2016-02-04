@@ -425,11 +425,6 @@ def cut_model(model, axis='-y'):
 def _write_nodes(self, outfile, size, is_double):
     """
     Writes the NODE-type cards
-
-    Parameters
-    ----------
-    self : BDF()
-        the BDF object
     """
     if self.spoints:
         msg = []

@@ -66,8 +66,6 @@ class BDFMethods(BDFAttributes):
 
         Parameters
         ----------
-        self : BDF
-            The BDF object.
         element_ids : list[int]; (n, ) ndarray, optional
             An array of element ids.
         mass_ids : list[int]; (n, ) ndarray, optional
@@ -159,12 +157,10 @@ class BDFMethods(BDFAttributes):
 
         Parameters
         ----------
-        self : BDF()
-            the BDF object
-        elements : ???
-            ???
-        masses : ???
-            ???
+        elements : List[int]; ndarray
+            the element ids to consider
+        masses : List[int]; ndarray
+            the mass ids to consider
         reference_point : (3, ) ndarray; default = <0,0,0>.
             an array that defines the origin of the frame.
 
@@ -486,8 +482,6 @@ class BDFMethods(BDFAttributes):
 
         Parameters
         ----------
-        self : BDF()
-            the BDF object
         num_cpus : int
             the number of CPUs to use; 2 < num_cpus < 20
         elements : ???
@@ -585,8 +579,6 @@ class BDFMethods(BDFAttributes):
 
         Parameters
         ----------
-        self : BDF()
-            the object pointer
         cid : int; default=0
             the cid to resolve the nodes to
 
@@ -605,8 +597,6 @@ class BDFMethods(BDFAttributes):
 
         Parameters
         ----------
-        self : BDF()
-            the object pointer
         model_old : BDF()
             the old model that hasnt lost it's connection to the node cids
 
@@ -1707,7 +1697,7 @@ class BDFMethods(BDFAttributes):
         -------
         eid_set : Dict[tuple(int, int, ...)] = List[int]
            key : sorted face
-           value : list of element ids with the face
+           value : list of element ids with that face
         face_map : Dict[tuple(int, int, ...)] = List[int]
            key : sorted face
            value : unsorted face
@@ -1760,6 +1750,8 @@ class BDFMethods(BDFAttributes):
             len(self.property_ids) == 0):
             return
         eid_set, face_map = self.get_solid_skin_faces()
+        if len(eid_set) == 0:
+            return
 
         eid_set_to_write = set([])
         nid_set_to_write = set([])

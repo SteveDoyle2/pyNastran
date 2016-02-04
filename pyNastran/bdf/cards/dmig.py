@@ -166,8 +166,6 @@ class NastranMatrix(BaseCard):
 
         Parameters
         ----------
-        self : NastranMatrix
-            the object pointer
         is_sparse : bool; default=False
             should the matrix be returned as a sparse matrix.
             Slower for dense matrices.
@@ -359,8 +357,6 @@ def get_matrix(self, is_sparse=False, apply_symmetry=True):
 
     Parameters
     ----------
-    self : DMIG
-        the object pointer
     is_sparse : bool
         should the matrix be returned as a sparse matrix (default=True).
         Slower for dense matrices.

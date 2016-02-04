@@ -47,7 +47,6 @@ class PBARL(Property):
         """
         Defines the PCOMP object.
 
-        :param self: the PBARL object
         :param model: the BDF object
         :param cards: the list of PBARL cards
         """

@@ -118,14 +118,25 @@ class ComplexPlateArray(OES_Object):
                         (oxx2, oyy2, txy2) = t2
                         #d = t1 - t2
                         if not np.allclose(
-                            [oxx1.real, oxx1.imag, oyy1.real, oyy1.imag, txy1.real, txy1.imag, ],
-                            [oxx2.real, oxx2.imag, oyy2.real, oyy2.imag, txy2.real, txy2.imag, ], atol=0.0001):
+                            [oxx1.real, oxx1.imag, oyy1.real, oyy1.imag, txy1.real, txy1.imag, ], # atol=0.0001
+                            [oxx2.real, oxx2.imag, oyy2.real, oyy2.imag, txy2.real, txy2.imag, ], atol=0.075):
+                            ni = len(str(eid)) + len(str(nid))
                         #if not np.array_equal(t1, t2):
-                            msg += '%-4s  (%s, %sj, %s, %sj, %s, %sj)\n      (%s, %sj, %s, %sj, %s, %sj)\n' % (
-                                eid,
+                            msg += ('(%s %s)  (%s, %sj, %s, %sj, %s, %sj)\n'
+                                    '%s     (%s, %sj, %s, %sj, %s, %sj)\n' % (
+                                eid, nid,
                                 oxx1.real, oxx1.imag, oyy1.real, oyy1.imag, txy1.real, txy1.imag,
+                                ' ' * ni,
                                 oxx2.real, oxx2.imag, oyy2.real, oyy2.imag, txy2.real, txy2.imag,
-                                )
+                                ))
+                            msg += ('%s     (%s, %sj, %s, %sj, %s, %sj)\n'
+                                    % (
+                                        ' ' * ni,
+                                        oxx1.real - oxx2.real, oxx1.imag - oxx2.imag,
+                                        oyy1.real - oyy2.real, oyy1.imag - oyy2.imag,
+                                        txy1.real - txy2.real, txy1.imag - txy2.imag,
+                                    ))
+
                             i += 1
                         if i > 10:
                             print(msg)

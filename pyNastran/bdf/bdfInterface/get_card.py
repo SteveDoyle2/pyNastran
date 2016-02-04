@@ -253,8 +253,6 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
 
         Parameters
         ----------
-        self : BDF()
-            The BDF object
         eids : List[int]
             list of element ID
         msg : str
@@ -313,8 +311,6 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
 
         Parameters
         ----------
-        self : BDF()
-            the BDF object
         pids : List[int]
             list of property ID
 
@@ -346,8 +342,6 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
 
         Parameters
         ----------
-        self : BDF()
-            the BDF object
         pids : List[int]
             list of property ID
 

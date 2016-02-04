@@ -19,7 +19,7 @@ from scipy.sparse import dok_matrix, coo_matrix
 
 # pyNastran
 from pyNastran.bdf.dev_vectorized.solver.utils import triple, reverse_dict, partition_dense_symmetric, partition_dense_vector, remove_dofs
-from pyNastran.f06.f06Writer import sorted_bulk_data_header
+from pyNastran.f06.f06_writer import sorted_bulk_data_header
 from pyNastran.utils.dev import list_print
 from pyNastran.utils.mathematics import print_matrix, print_annotated_matrix
 from pyNastran.bdf.dev_vectorized.bdf import BDF, SPC, SPC1

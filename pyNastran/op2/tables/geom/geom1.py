@@ -4,9 +4,10 @@ from six.moves import range
 from struct import unpack, Struct
 
 from pyNastran.bdf.cards.nodes import GRID
-from pyNastran.bdf.cards.coordinateSystems import (CORD1R, CORD1C, CORD1S,
-                                                   CORD2R, CORD2C, CORD2S,
-                                                   CORD3G)
+from pyNastran.bdf.cards.coordinate_systems import (
+    CORD1R, CORD1C, CORD1S,
+    CORD2R, CORD2C, CORD2S,
+    CORD3G)
 
 class GEOM1(object):
     def _is_same_fields(self, fields1, fields2):

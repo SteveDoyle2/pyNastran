@@ -89,7 +89,6 @@ class CTRIA3(ShellElement):
         #"""
         #Gets the mass of the CTRIA3s on a total or per element basis.
 
-        #:param self: the CTRIA3 object
         #:param element_ids: the elements to consider (default=None -> all)
         #:param total: should the mass be summed (default=False)
 
@@ -113,7 +112,6 @@ class CTRIA3(ShellElement):
         #"""
         #Gets the area of the CTRIA3s on a total or per element basis.
 
-        #:param self: the CTRIA3 object
         #:param element_id: the elements to consider (default=None -> all)
         #:param total: should the area be summed (default=False)
 
@@ -134,7 +132,6 @@ class CTRIA3(ShellElement):
         #"""
         #Gets the normals of the CTRIA3s on per element basis.
 
-        #:param self: the CTRIA3 object
         #:param element_id: the elements to consider (default=None -> all)
 
         #:param node_ids:   the GRIDs as an (N, )  NDARRAY (or None)
@@ -180,7 +177,6 @@ class CTRIA3(ShellElement):
         Gets the mass, area, and normals of the CTRIA3s on a per
         element basis.
 
-        :param self: the CTRIA3 object
         :param element_id: the elements to consider (default=None -> all)
 
         :param node_ids: the GRIDs as an (N, )  NDARRAY (or None)

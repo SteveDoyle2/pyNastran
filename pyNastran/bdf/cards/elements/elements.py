@@ -407,7 +407,7 @@ class PLOTEL(BaseCard):
         1: 'eid', 3:'g1', 4:'g2',
     }
 
-    def __init__(self):
+    def __init__(self, eid, nodes, comment=''):
         """
         Defines a 1D dummy element used for plotting.
         +--------+-----+-----+-----+
@@ -417,23 +417,27 @@ class PLOTEL(BaseCard):
         +--------+-----+-----+-----+
         """
         BaseCard.__init__(self)
-
-    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        self.eid = integer(card, 1, 'eid')
-        self.nodes = [
+        self.eid = eid
+        self.nodes = nodes
+
+    @classmethod
+    def add_card(self, card, comment=''):
+        eid = integer(card, 1, 'eid')
+        nodes = [
             integer(card, 2, 'g1'),
             integer(card, 3, 'g2'),
-            ]
+        ]
         assert len(card) <= 4, 'len(CGAP card) = %i' % len(card)
+        return PLOTEL(eid, nodes, comment=comment)
 
+    @classmethod
     def add_op2_data(self, data, comment=''):
-        if comment:
-            self._comment = comment
-        self.eid = data[0]
-        self.pid = data[1]
-        self.nodes = [data[2], data[3]]
+        eid = data[0]
+        pid = data[1]
+        nodes = [data[2], data[3]]
+        return PLOTEL(eid, nodes, comment=comment)
 
     def _verify(self, xref=True):
         pass

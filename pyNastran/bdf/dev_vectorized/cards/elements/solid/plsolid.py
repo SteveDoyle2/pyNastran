@@ -15,7 +15,6 @@ class PLSOLID(Property):
         """
         Defines the PLSOLID object.
 
-        :param self: the PLSOLID object
         :param model: the BDF object
         """
         Property.__init__(self, model)
@@ -45,9 +44,6 @@ class PLSOLID(Property):
         self.i += 1
 
     def build(self):
-        """
-        :param self: the PLSOLID object
-        """
         if self.n:
             i = self.property_id.argsort()
             self.property_id = self.property_id[i]

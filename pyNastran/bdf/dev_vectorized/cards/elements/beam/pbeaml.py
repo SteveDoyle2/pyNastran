@@ -54,7 +54,6 @@ class PBEAML(object):
         """
         Defines the PBEAML object.
 
-        :param self: the PBEAML object
         :param model: the BDF object
         :param cards: the list of PBEAML cards
         """

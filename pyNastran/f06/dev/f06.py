@@ -18,7 +18,7 @@ from pyNastran.f06.tables.oqg import OQG
 from pyNastran.f06.tables.oef import OEF
 from pyNastran.f06.tables.lama import LAMA
 from pyNastran.f06.tables.max_min import MAX_MIN
-from pyNastran.f06.f06Writer import F06Writer
+from pyNastran.f06.f06_writer import F06Writer
 from pyNastran.op2.tables.ogf_gridPointForces.ogf_Objects import RealGridPointForces
 
 from pyNastran.utils import is_binary_file
@@ -567,7 +567,6 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
         """
         Sets up a dummy logger if one is not provided
 
-        :self:  the object pointer
         :log:   a python logging object
         :debug: adds debug messages (True/False)
         """
@@ -1008,7 +1007,6 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
         """
         Reads displacement, spc/mpc forces
 
-        :param self:   the object pointer
         :param Format: list of types [int,str,float,float,float] that maps to sline
 
         .. seealso:: self.parseLine
@@ -1045,7 +1043,6 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
 
     def parseLine(self, sline, formats):
         """
-        :param self:    the object pointer
         :param sline:   list of strings (split line)
         :param formats: list of types [int,str,float,float,float] that maps to sline
         """
@@ -1081,9 +1078,7 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
         """
         Reads the F06 file
 
-        :self: the object pointer
-
-        :f06FileName: the file to be parsed (None -> GUI)
+        :f06_filename: the file to be parsed (None -> GUI)
         """
         self.is_vectorized = vectorized
         if f06_filename is None:

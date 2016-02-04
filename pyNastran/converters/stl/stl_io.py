@@ -96,7 +96,7 @@ class STL_IO(object):
             print("updated grid")
 
         # loadSTLResults - regions/loads
-        self.TurnTextOn()
+        self. turn_text_on()
         self.scalarBar.VisibilityOff()
         self.scalarBar.Modified()
 

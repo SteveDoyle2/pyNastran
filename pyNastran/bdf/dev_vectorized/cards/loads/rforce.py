@@ -15,7 +15,6 @@ class RFORCE(object):
         """
         Defines the RFORCE object.
 
-        :param self: the RFORCE object
         :param model: the BDF object
 
         .. todo:: collapse loads
@@ -77,7 +76,6 @@ class RFORCE(object):
 
     def build(self):
         """
-        :param self: the RFORCE object
         :param cards: the list of RFORCE cards
         """
         cards = self._cards

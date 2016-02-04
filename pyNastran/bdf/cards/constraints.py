@@ -468,17 +468,24 @@ class SPC(Constraint):
 class GMSPC(Constraint):
     type = 'GMSPC'
 
-    def __init__(self):
+    def __init__(self, conid, component, entity, entity_id, comment=''):
         Constraint.__init__(self)
-
-    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        self.conid = integer(card, 1, 'sid')
-        self.components = components(card, 2, 'components')
-        self.entity = string(card, 3, 'entity')
-        self.entity_id = integer(card, 4, 'entity_id')
+        self.conid = conid
+        self.component = component
+        self.entity = entity
+        self.entity_id = entity_id
 
+    @classmethod
+    def add_card(self, card, comment=''):
+        conid = integer(card, 1, 'sid')
+        component = components(card, 2, 'components')
+        entity = string(card, 3, 'entity')
+        entity_id = integer(card, 4, 'entity_id')
+        return GMSPC(conid, component, entity, entity_id, comment=comment)
+
+    @classmethod
     def add_op2_data(self, data, comment=''):
         if comment:
             self._comment = comment
@@ -492,7 +499,7 @@ class GMSPC(Constraint):
         pass
 
     def raw_fields(self):
-        fields = ['GMSPC', self.conid, self.components, self.entity, self.entity_id]
+        fields = ['GMSPC', self.conid, self.component, self.entity, self.entity_id]
         return fields
 
     def write_card(self, size=8, is_double=False):

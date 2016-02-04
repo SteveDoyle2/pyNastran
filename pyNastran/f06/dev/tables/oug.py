@@ -19,8 +19,6 @@ class OUG(object):
         """
         Reads real eigenvector table accounting for blank entries
 
-        :param self:   the object pointer
-
         ::
                                                                                                                  SUBCASE 1
           EIGENVALUE =  6.158494E+07
@@ -77,8 +75,6 @@ class OUG(object):
     def _complex_eigenvectors(self, marker):
         """
         Reads real eigenvector table accounting for blank entries
-
-        :param self:   the object pointer
 
         ::
                 COMPLEX EIGENVALUE =  0.000000E+00,  3.805272E+02
@@ -153,7 +149,6 @@ class OUG(object):
         Reads real displacement/velocity/spc forces/mpc forces
         Handles GRIDs and SPOINTs.
 
-        :param self:         the object pointer
         :param allow_blanks: Accounting for blank entries (e.g. on eigenvector)
                              default=False
         :returns data:       the parsed data
@@ -209,7 +204,6 @@ class OUG(object):
         Reads complex displacement/velocity/spc forces/mpc forces
         Handles GRIDs and SPOINTs.
 
-        :param self:         the object pointer
         :param allow_blanks: Accounting for blank entries (e.g. on eigenvector)
                              default=False
         :returns data:       the parsed data
