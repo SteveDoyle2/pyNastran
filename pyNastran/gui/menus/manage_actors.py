@@ -22,6 +22,18 @@ class CustomQTableView(QtGui.QTableView):
         index = self.currentIndex()
         self.parent2.update_active_key(index)
 
+    #def mousePressEvent(self, event):
+        #index = self.currentIndex()
+        #self.parent2.update_active_key(index)
+
+    #def clicked(self, event):
+        #index = self.currentIndex()
+        #self.parent2.update_active_key(index)
+
+    #def performSingleClickAction(self):
+        #index = self.currentIndex()
+        #self.parent2.update_active_key(index)
+
     #def performSingleClickAction(self):
         #if self.last == "Click":
             #self.message = "Click"

@@ -1,7 +1,7 @@
 from docopt import docopt
 
 def docopt_types(doc, argv=None, help=True, version=None, options_first=False, type_defaults=None):
-
+    """
     `docopt` creates your command-line interface based on its
     description that you pass as `doc`. Such description can contain
     --options, <positional-argument>, commands, which could be

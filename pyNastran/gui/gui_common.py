@@ -3046,6 +3046,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
         if 'clicked_ok' not in data:
             self._edit_group_properties.activateWindow()
+            return
 
         if data['clicked_ok']:
             self.on_update_geometry_properties(data)
