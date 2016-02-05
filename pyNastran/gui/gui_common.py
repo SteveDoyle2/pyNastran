@@ -34,7 +34,7 @@ from pyNastran.gui.menus.results_sidebar import Sidebar
 from pyNastran.gui.menus.qt_legend import LegendPropertiesWindow
 from pyNastran.gui.menus.clipping import ClippingPropertiesWindow
 from pyNastran.gui.menus.camera import CameraWindow
-from pyNastran.gui.menus.application_log import ApplicationLogDockWidget
+from pyNastran.gui.menus.application_log import PythonConsoleWidget
 from pyNastran.gui.menus.manage_actors import EditGroupProperties
 #from pyNastran.gui.menus.multidialog import MultiFileDialog
 from pyNastran.gui.utils import load_csv
@@ -78,6 +78,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.set_tools()
 
         self.html_logging = html_logging
+        self.execute_python = True
         self.scalar_bar = ScalarBar(self.is_horizontal_scalar_bar)
         # in,lb,s
         self.input_units = ['', '', ''] # '' means not set
@@ -185,14 +186,6 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         #compassWidget.SetRepresentation(compassRepresentation)
         #compassWidget.EnabledOn()
 
-    #@property
-    #def dock_widget(self):
-        #return self.log_dock.dock_widget
-
-    #@property
-    #def log_widget(self):
-        #return self.log_dock.log_widget
-
     def create_log_python_docks(self):
         """
         The not perfect (it's sized poorly) Python Console
@@ -211,56 +204,22 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
           -> Python console doesn't work, but HTML always works
         """
         #=========== Logging widget ===================
-        execute_python = False
-        use_old = False
-        if self.html_logging and use_old:
-            self.log_dock = ApplicationLogDockWidget(self, execute_python=execute_python)
-            #self.addDockWidget(QtCore.Qt.BottomDockWidgetArea, self.log_dock)
-        elif self.html_logging:
-            self.log_dock = QtGui.QDockWidget("Application log", self)
-            self.log_dock.setObjectName("application_log")
+        if self.html_logging:
+            self.log_dock_widget = QtGui.QDockWidget("Application log", self)
+            self.log_dock_widget.setObjectName("application_log")
             self.log_widget = QtGui.QTextEdit()
             self.log_widget.setReadOnly(True)
-            self.log_dock.setWidget(self.log_widget)
-            self.addDockWidget(QtCore.Qt.BottomDockWidgetArea, self.log_dock)
-            self.dock_widget = self.log_dock
-            if execute_python and 0:
-                self.python_dock = QtGui.QDockWidget("'Python Console", self)
-                self.python_dock.setObjectName("python_console")
-                #self.log_widget = QtGui.QTextEdit()
-                #self.log_widget.setReadOnly(True)
-                #self.log_dock.setWidget(self.log_widget)
-                #self.addDockWidget(QtCore.Qt.BottomDockWidgetArea, self.log_dock)
-                #self.dock_widget = self.log_dock
+            self.log_dock_widget.setWidget(self.log_widget)
+            self.addDockWidget(QtCore.Qt.BottomDockWidgetArea, self.log_dock_widget)
 
-                self.enter_data = QtGui.QTextEdit()
-                self.execute_python_button = QtGui.QPushButton("Execute")
-                self.execute_and_clear_python_button = QtGui.QPushButton("Execute and Clear")
-
-                vbox = QtGui.QVBoxLayout()
-                vbox.addWidget(QtGui.QLabel('Python Console:'))
-                vbox.addWidget(self.enter_data)
-
-                hbox = QtGui.QHBoxLayout()
-                hbox.addWidget(self.execute_python_button)
-                hbox.addWidget(self.execute_and_clear_python_button)
-
-                vbox.addLayout(hbox)
-                #self.python_dock.setLayout(vbox)
-                #print(dir(self.python_dock))
-
-                self.connect(self.execute_python_button, QtCore.SIGNAL('clicked()'), self.on_execute_python_button)
-                self.connect(self.execute_and_clear_python_button, QtCore.SIGNAL('clicked()'), self.on_execute_and_clear_python_button)
-
-    def on_execute_and_clear_python_button(self):
-        self._on_execute_python_button(clear=True)
-
-    def on_execute_python_button(self):
-        self._on_execute_python_button(clear=False)
+        if self.execute_python:
+            self.python_dock_widget = PythonConsoleWidget(self)
+            self.python_dock_widget.setObjectName("python_console")
+            self.addDockWidget(QtCore.Qt.BottomDockWidgetArea, self.python_dock_widget)
 
     def _on_execute_python_button(self, clear=False):
         """executes the docked python console"""
-        txt = str(self.log_dock.enter_data.toPlainText()).rstrip()
+        txt = str(self.python_dock_widget.enter_data.toPlainText()).rstrip()
         if len(txt) == 0:
             return
         self.log_command(txt)
@@ -276,7 +235,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             self.log_error(str(txt))
             return
         if clear:
-            self.lock_dock.enter_data.clear()
+            self.python_dock_widget.enter_data.clear()
 
     def load_batch_inputs(self, inputs):
         geom_script = inputs['geomscript']
@@ -461,12 +420,14 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         if self.vtk_version[0] < 6:
             menu_view += ['edges', 'edges_black',]
         if self.html_logging:
-            #self.actions['logwidget'] = self.log_dock.dock_widget.toggleViewAction()
-            self.actions['logwidget'] = self.dock_widget.toggleViewAction()
-            self.actions['logwidget'].setStatusTip("Show/Hide application log")
+            self.actions['log_dock_widget'] = self.log_dock_widget.toggleViewAction()
+            self.actions['log_dock_widget'].setStatusTip("Show/Hide application log")
             menu_view += ['', 'show_info', 'show_debug', 'show_gui', 'show_command']
-            menu_window += ['logwidget']
-
+            menu_window += ['log_dock_widget']
+        if self.execute_python:
+            self.actions['python_dock_widget'] = self.python_dock_widget.toggleViewAction()
+            self.actions['python_dock_widget'].setStatusTip("Show/Hide Python Console")
+            menu_window += ['python_dock_widget']
 
         menu_file = [
             'load_geometry', 'load_results', 'load_csv_nodal', 'load_csv_elemental',
@@ -519,6 +480,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             if menu is None:
                 continue
             for i in items:
+                print('i =', i)
                 if not i:
                     menu.addSeparator()
                 else:
@@ -1586,13 +1548,13 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         if PY2:
             self.restoreGeometry(settings.value("mainWindowGeometry").toByteArray())
         if self.reset_settings:
-            self.background_col = settings.value("backgroundColor", nice_blue).toPyObject()
-            self.label_col = settings.value("labelColor", red).toPyObject()
-            self.text_col = settings.value("textColor", white).toPyObject()
-        else:
             self.background_col = nice_blue
             self.label_col = red
             self.text_col = white
+        else:
+            self.background_col = settings.value("backgroundColor", nice_blue).toPyObject()
+            self.label_col = settings.value("labelColor", red).toPyObject()
+            self.text_col = settings.value("textColor", white).toPyObject()
 
         self.init_ui()
         self.init_cell_picker()
