@@ -87,8 +87,12 @@ class BaseCard(object):
         """
         Updates a field based on it's field number.
 
-        :param n: the integer field number
-        :param value: the value to update the field to
+        Parameters
+        ----------
+        n : int
+            the field number
+        value : int/float/str/None
+           the value to update the field to
 
         .. note::
             This is dynamic if the card length changes.
@@ -116,8 +120,15 @@ class BaseCard(object):
         """
         Gets a field based on it's field number
 
-        :param n: the integer field number
-        :returns value: the value of the field
+        Parameters
+        ----------
+        n : int
+           the field number
+
+        Returns
+        -------
+        value : int/float/str/None
+            the value of the field
 
         .. code-block:: python
 
@@ -197,6 +208,24 @@ class BaseCard(object):
                 print('problem printing %s card' % self.type)
                 print("list_fields = ", list_fields)
                 raise
+
+    def write_card(self, size=8, is_double=False):
+        """
+        Writes the card with the specified width and precision
+
+        Parameters
+        ----------
+        size : int (default=8)
+            size of the field; {8, 16}
+        is_double : bool (default=False)
+            is this card double precision
+
+        Returns
+        -------
+        msg : str
+            the string representation of the card
+        """
+        raise NotImplementedError('%s has not overwritten write_card' % self.__class__.__name__)
 
 
 class Property(BaseCard):

@@ -349,6 +349,7 @@ class MPC(Constraint):
         return fields
 
     def write_card(self, size=8, is_double=False):
+        """see BaseCard.write_card``"""
         if size == 8:
             return self.write_card_8()
         else:

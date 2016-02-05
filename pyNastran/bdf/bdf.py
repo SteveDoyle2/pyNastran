@@ -2780,7 +2780,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         else:
             for card in cards:
                 card_name, comment, card_lines = card
-                if card_name == None:
+                if card_name is None:
                     msg = 'card_name = %r\n' % card_name
                     msg += 'card_lines = %s' % card_lines
                     raise RuntimeError(msg)

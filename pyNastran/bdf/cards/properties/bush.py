@@ -425,6 +425,21 @@ class PBUSH2D(BushingProperty):
             raise NotImplementedError()
 
     def write_card(self, size=8, is_double=False):
+        """
+        Writes the card with the specified width and precision
+
+        Parameters
+        ----------
+        size : int (default=8)
+            size of the field; {8, 16}
+        is_double : bool (default=False)
+            is this card double precision
+
+        Returns
+        -------
+        msg : str
+            the string representation of the card
+        """
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)

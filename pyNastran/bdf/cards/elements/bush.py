@@ -356,7 +356,7 @@ class CBUSH2D(BushElement):
             raise RuntimeError(msg)
 
     @classmethod
-    def add_card(self, comment=''):
+    def add_card(cls, comment=''):
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid')
         ga = integer(card, 3, 'ga')
@@ -368,7 +368,7 @@ class CBUSH2D(BushElement):
         return CBUSH2D(eid, pid, ga, gb, cid, plane, sptid, comment=comment)
 
     @classmethod
-    def add_card(self, data, comment=''):
+    def add_card(cls, data, comment=''):
         eid = data[0]
         pid = data[1]
         ga = data[2]

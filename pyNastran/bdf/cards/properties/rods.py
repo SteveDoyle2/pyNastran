@@ -147,7 +147,7 @@ class PTUBE(Property):
         self.nsm = nsm
 
     @classmethod
-    def add_card(self, card, comment=''):
+    def add_card(cls, card, comment=''):
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')
         OD1 = double(card, 3, 'OD1')
@@ -160,7 +160,7 @@ class PTUBE(Property):
         return PTUBE(pid, mid, OD1, t, nsm, OD2, comment=comment)
 
     @classmethod
-    def add_op2_data(self, data):
+    def add_op2_data(cls, data):
         pid = data[0]
         mid = data[1]
         OD1 = data[2]
