@@ -428,6 +428,14 @@ class GuiCommon(GuiAttributes):
             except IndexError:
                 found_cases = False
                 return found_cases
+            except TypeError:
+                msg = 'type(case_keys)=%s\n' % type(self.case_keys)
+                msg += 'icase=%r\n' % str(self.icase)
+                msg += 'case_keys=%r' % str(self.case_keys)
+                raise TypeError(msg)
+            msg = 'icase=%r\n' % str(self.icase)
+            msg += 'case_keys=%r' % str(self.case_keys)
+            print(msg)
 
             location = self.get_case_location(key)
             print("key = %s" % str(key))

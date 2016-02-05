@@ -34,6 +34,7 @@ class ApplicationLogDockWidget(QtGui.QDockWidget):
             hbox.addWidget(self.execute_python_button)
             hbox.addWidget(self.execute_and_clear_python_button)
             vbox2.addLayout(hbox)
+
             self.connect(self.execute_python_button, QtCore.SIGNAL('clicked()'), self.on_execute_python_button)
             self.connect(self.execute_and_clear_python_button, QtCore.SIGNAL('clicked()'), self.on_execute_and_clear_python_button)
             self.dock_widget.setWidget(splitter)

@@ -147,7 +147,7 @@ class GuiAttributes(object):
 
         self.res_widget.update_results(formi)
 
-        key = self.case_keys[0]
+        key = list(self.case_keys)[0]
         location = self.get_case_location(key)
         method = 'centroid' if location else 'nodal'
 

@@ -42,6 +42,10 @@ for more detailed information.
 
 # News
 
+### pyNastran v0.8 GUI demo (2/4/2016)
+
+  [Download](https://sourceforge.net/projects/pynastran/files/?source=navbar)
+
 ## pyNastran v0.8 progress (~2/2016)
  - BDF
    - supports unicode

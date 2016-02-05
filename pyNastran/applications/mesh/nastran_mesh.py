@@ -3,7 +3,7 @@ from six.moves import zip, range
 from numpy import array, dot, norm
 
 from pyNastran.bdf.bdf import BDF
-from pyNastran.bdf.fieldWriter import print_card
+from pyNastran.bdf.field_writer import print_card
 from scipy import spatial
 
 

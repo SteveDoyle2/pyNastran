@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=W0201,C0111
 from __future__ import division, unicode_literals, print_function
-from six import string_types, iteritems, itervalues
+from six import string_types, iteritems, itervalues, PY2
 from six.moves import range
 
 # standard library
@@ -65,6 +65,9 @@ class PyNastranRenderWindowInteractor(QVTKRenderWindowInteractor):
 
 class GuiCommon2(QtGui.QMainWindow, GuiCommon):
     def __init__(self, fmt_order, html_logging, inputs):
+        # this will reset the background color/label color if things break
+        self.reset_settings = False
+
         QtGui.QMainWindow.__init__(self)
         GuiCommon.__init__(self, inputs)
 
@@ -162,17 +165,14 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.res_dock.setWidget(self.res_widget)
 
         self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.res_dock)
-        #=========== Logging widget ===================
-        if self.html_logging:
-            execute_python = True
-            self.log_dock = ApplicationLogDockWidget(self, execute_python=execute_python)
-            #self.addDockWidget(QtCore.Qt.BottomDockWidgetArea, self.log_dock)
+        self.create_log_python_docks()
         #===============================================
 
         self.run_vtk = True
         if self.run_vtk:
             self._create_vtk_objects()
         self._build_menubar()
+        #self._hide_menubar()
 
         # right sidebar
         self.res_dock.hide()
@@ -185,13 +185,78 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         #compassWidget.SetRepresentation(compassRepresentation)
         #compassWidget.EnabledOn()
 
-    @property
-    def dock_widget(self):
-        return self.log_dock.dock_widget
+    #@property
+    #def dock_widget(self):
+        #return self.log_dock.dock_widget
 
-    @property
-    def log_widget(self):
-        return self.log_dock.log_widget
+    #@property
+    #def log_widget(self):
+        #return self.log_dock.log_widget
+
+    def create_log_python_docks(self):
+        """
+        The not perfect (it's sized poorly) Python Console
+        ApplicationLogDockWidget breaks on some versions of PyQt4, so:
+
+        Option 1
+        --------
+        if you want that version (a few lines down):
+          - use_old=True
+          - uncomment the two commented @property blocks above
+          -> If HTML works, Python console will work; otherwise both break
+
+        Option 2
+        --------
+          - use_old=False
+          -> Python console doesn't work, but HTML always works
+        """
+        #=========== Logging widget ===================
+        execute_python = False
+        use_old = False
+        if self.html_logging and use_old:
+            self.log_dock = ApplicationLogDockWidget(self, execute_python=execute_python)
+            #self.addDockWidget(QtCore.Qt.BottomDockWidgetArea, self.log_dock)
+        elif self.html_logging:
+            self.log_dock = QtGui.QDockWidget("Application log", self)
+            self.log_dock.setObjectName("application_log")
+            self.log_widget = QtGui.QTextEdit()
+            self.log_widget.setReadOnly(True)
+            self.log_dock.setWidget(self.log_widget)
+            self.addDockWidget(QtCore.Qt.BottomDockWidgetArea, self.log_dock)
+            self.dock_widget = self.log_dock
+            if execute_python and 0:
+                self.python_dock = QtGui.QDockWidget("'Python Console", self)
+                self.python_dock.setObjectName("python_console")
+                #self.log_widget = QtGui.QTextEdit()
+                #self.log_widget.setReadOnly(True)
+                #self.log_dock.setWidget(self.log_widget)
+                #self.addDockWidget(QtCore.Qt.BottomDockWidgetArea, self.log_dock)
+                #self.dock_widget = self.log_dock
+
+                self.enter_data = QtGui.QTextEdit()
+                self.execute_python_button = QtGui.QPushButton("Execute")
+                self.execute_and_clear_python_button = QtGui.QPushButton("Execute and Clear")
+
+                vbox = QtGui.QVBoxLayout()
+                vbox.addWidget(QtGui.QLabel('Python Console:'))
+                vbox.addWidget(self.enter_data)
+
+                hbox = QtGui.QHBoxLayout()
+                hbox.addWidget(self.execute_python_button)
+                hbox.addWidget(self.execute_and_clear_python_button)
+
+                vbox.addLayout(hbox)
+                #self.python_dock.setLayout(vbox)
+                #print(dir(self.python_dock))
+
+                self.connect(self.execute_python_button, QtCore.SIGNAL('clicked()'), self.on_execute_python_button)
+                self.connect(self.execute_and_clear_python_button, QtCore.SIGNAL('clicked()'), self.on_execute_and_clear_python_button)
+
+    def on_execute_and_clear_python_button(self):
+        self._on_execute_python_button(clear=True)
+
+    def on_execute_python_button(self):
+        self._on_execute_python_button(clear=False)
 
     def _on_execute_python_button(self, clear=False):
         """executes the docked python console"""
@@ -355,16 +420,18 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             # raise RuntimeError(self.pick_state)
         # self.log_command("on_flip_pick() # pick_state='%s'" % self.pick_state)
 
-    def _create_menu_items(self, actions=None):
+    def _create_menu_items(self, actions=None, create_menu_bar=True):
         if actions is None:
             actions = self.actions
-        self.menu_file = self.menubar.addMenu('&File')
-        self.menu_view = self.menubar.addMenu('&View')
-        self.menu_window = self.menubar.addMenu('&Window')
-        self.menu_help = self.menubar.addMenu('&Help')
 
-        self.menu_hidden = self.menubar.addMenu('&Hidden')
-        self.menu_hidden.menuAction().setVisible(False)
+        if create_menu_bar:
+            self.menu_file = self.menubar.addMenu('&File')
+            self.menu_view = self.menubar.addMenu('&View')
+            self.menu_window = self.menubar.addMenu('&Window')
+            self.menu_help = self.menubar.addMenu('&Help')
+
+            self.menu_hidden = self.menubar.addMenu('&Hidden')
+            self.menu_hidden.menuAction().setVisible(False)
 
         if self._script_path is not None and os.path.exists(self._script_path):
             scripts = [script for script in os.listdir(self._script_path) if '.py' in script]
@@ -394,7 +461,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         if self.vtk_version[0] < 6:
             menu_view += ['edges', 'edges_black',]
         if self.html_logging:
-            self.actions['logwidget'] = self.log_dock.dock_widget.toggleViewAction()
+            #self.actions['logwidget'] = self.log_dock.dock_widget.toggleViewAction()
+            self.actions['logwidget'] = self.dock_widget.toggleViewAction()
             self.actions['logwidget'].setStatusTip("Show/Hide application log")
             menu_view += ['', 'show_info', 'show_debug', 'show_gui', 'show_command']
             menu_window += ['logwidget']
@@ -411,18 +479,24 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             toolbar_tools.append('edges')
         toolbar_tools += ['camera_reset', 'view', 'scshot', '', 'exit']
 
-        menu_items = [
-            (self.menu_file, menu_file),
-            (self.menu_view, menu_view),
-            (self.menu_window, menu_window),
-            (self.menu_help, ('about',)),
-            (self.menu_scripts, scripts),
-            (self.toolbar, toolbar_tools),
-            (self.menu_hidden, ('cycle_res',)),
-            # (self.menu_scripts, ()),
-            #(self._dummy_toolbar, ('cell_pick', 'node_pick'))
-        ]
+        menu_items = []
+        if create_menu_bar:
+            menu_items = [
+                (self.menu_file, menu_file),
+                (self.menu_view, menu_view),
+                (self.menu_window, menu_window),
+                (self.menu_help, ('about',)),
+                (self.menu_scripts, scripts),
+                (self.toolbar, toolbar_tools),
+                (self.menu_hidden, ('cycle_res',)),
+                # (self.menu_scripts, ()),
+                #(self._dummy_toolbar, ('cell_pick', 'node_pick'))
+            ]
         return menu_items
+
+    def _hide_menubar(self):
+        self.toolbar.setVisible(False)
+        #self.menuBar.setVisible(False)
 
     def _build_menubar(self):
         ## toolbar
@@ -514,7 +588,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         """
         if checkables is None:
             checkables = []
-        print('---------------------------')
+        #print('---------------------------')
         for tool in tools:
             (nam, txt, icon, shortcut, tip, func) = tool
             if nam in self.actions:
@@ -1509,15 +1583,22 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         white = (1.0, 1.0, 1.0)
         #black = (0.0, 0.0, 0.0)
         red = (1.0, 0.0, 0.0)
-        self.restoreGeometry(settings.value("mainWindowGeometry").toByteArray())
-        self.background_col = settings.value("backgroundColor", nice_blue).toPyObject()
-        self.label_col = settings.value("labelColor", red).toPyObject()
-        self.text_col = settings.value("textColor", white).toPyObject()
+        if PY2:
+            self.restoreGeometry(settings.value("mainWindowGeometry").toByteArray())
+        if self.reset_settings:
+            self.background_col = settings.value("backgroundColor", nice_blue).toPyObject()
+            self.label_col = settings.value("labelColor", red).toPyObject()
+            self.text_col = settings.value("textColor", white).toPyObject()
+        else:
+            self.background_col = nice_blue
+            self.label_col = red
+            self.text_col = white
 
         self.init_ui()
         self.init_cell_picker()
 
-        self.restoreState(settings.value("mainWindowState").toByteArray())
+        if PY2:
+            self.restoreState(settings.value("mainWindowState").toByteArray())
         self.create_corner_axis()
         #-------------
         # loading
@@ -2184,7 +2265,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
     def _set_results(self, form, cases):
         assert len(cases) > 0, cases
         if isinstance(cases, OrderedDict):
-            self.case_keys = cases.keys()
+            self.case_keys = list(cases.keys())
         else:
             self.case_keys = sorted(cases.keys())
             assert isinstance(cases, dict), type(cases)
@@ -3159,7 +3240,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             self.log_command(msg)
 
     def set_bar_scale(self, name, bar_scale):
-        print('set_bar_scale - GuiCommon2; name=%s scale=%s' % (name, bar_scale))
+        #print('set_bar_scale - GuiCommon2; name=%s scale=%s' % (name, bar_scale))
         bar_y = self.bar_lines[name]
         #dy = c - yaxis
         #dz = c - zaxis

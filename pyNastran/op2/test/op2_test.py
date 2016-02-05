@@ -17,26 +17,26 @@ def parse_skipped_cards(fname):
     for line in lines:
         if 'OES' in line[0:3]:
             (fore, aft) = line.strip().split('->')
-            (oes, form, elementTypeNum) = fore.strip().split(' ')
-            (element_type, eType) = elementTypeNum.strip().split('=')
+            (oes, form, element_type_num) = fore.strip().split(' ')
+            (element_type, etype) = element_type_num.strip().split('=')
             (msg, fpath) = aft.strip().split('-')
             #print("fpath=%r" % fpath)
             fpath = fpath.lstrip()[6:]
             ename = msg.split(' ')[0]
-            #print "eName=%s eType=%s form=%s fpath=|%s|" %(ename, eType, form, fpath)
-            key = (ename, eType, form)
+            #print "eName=%s eType=%s form=%s fpath=|%s|" %(ename, etype, form, fpath)
+            key = (ename, etype, form)
             if key not in results:
                 results[key] = fpath
 
-    filesToAnalyze = []
+    files_to_analyze = []
     for key, value in sorted(iteritems(results)):
-        filesToAnalyze.append(value)
+        files_to_analyze.append(value)
 
-    f = open('newElements.in', 'wb')
-    for fname in filesToAnalyze:
+    f = open('new_elements.in', 'wb')
+    for fname in files_to_analyze:
         f.write(fname + '\n')
     f.close()
-    return filesToAnalyze
+    return files_to_analyze
 
 
 def get_all_files(folders_file, file_type):
@@ -52,7 +52,7 @@ def get_all_files(folders_file, file_type):
                 print("***move_dir doesn't exist = %s" % move_dir)
                 continue
             print("move_dir = %s" % move_dir)
-            #assert os.path.exists(moveDir), '%s doesnt exist' % move_dir
+            #assert os.path.exists(move_dir), '%s doesnt exist' % move_dir
             files2 += get_files_of_type(move_dir, file_type, max_size=4.2)
     return files2
 
@@ -80,13 +80,13 @@ def main(regenerate=True):
     get_skip_cards = False
 
     if get_skip_cards:
-        files2 = parse_skipped_cards('skippedCards.out')
+        files2 = parse_skipped_cards('skipped_cards.out')
     elif regenerate:
         files2 = get_all_files(folders_file, '.op2')
         files2 += files
         files2.sort()
     else:
-        files2 = get_failed_files('failedCases.in')
+        files2 = get_failed_files('failed_cases.in')
     files = files2
 
     skip_files = []
@@ -95,7 +95,7 @@ def main(regenerate=True):
     nstart = 0
     nstop = 10000
     try:
-        os.remove('skippedCards.out')
+        os.remove('skipped_cards.out')
     except:
         pass
 
