@@ -41,7 +41,7 @@ class MeshTools(BDF):
             for nid in nids:
                 nid_to_eids[nid].append(eid)
 
-        for eid, element in iteritems(self.rigidElements):
+        for eid, element in iteritems(self.rigid_elements):
             nids = element.node_ids
             #print(nids)
             eid_to_nids[eid] = nids

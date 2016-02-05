@@ -199,9 +199,9 @@ def run_lots_of_files(files, make_geom=True, write_bdf=False, write_f06=True,
 
     if save_cases:
         if PY2:
-            failed_cases_file = open('failedCases.in', 'wb')
+            failed_cases_file = open('failed_cases.in', 'wb')
         else:
-            failed_cases_file = open('failedCases.in', 'w')
+            failed_cases_file = open('failed_cases.in', 'w')
         for op2file in failed_cases:
             failed_cases_file.write('%s\n' % op2file)
         failed_cases_file.close()

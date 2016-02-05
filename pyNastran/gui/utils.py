@@ -1,6 +1,7 @@
 from __future__ import print_function
+from six.moves import urllib
 import os
-import urllib2
+#import urllib2  # PY2
 
 from numpy import loadtxt
 import pyNastran
@@ -14,8 +15,12 @@ def check_for_newer_version(window=None, pop_msg=False):
     target_url = 'https://raw.githubusercontent.com/SteveDoyle2/pyNastran/master/README.md'
     try:
         # it's a file like object and works just like a file
-        data = urllib2.urlopen(target_url)
-    except urllib2.URLError:
+        # import urllib2
+        # data = urllib.request.urlopen(target_url)
+        data = urllib.request.urlopen(target_url)
+    except: #  urllib2.URLError
+        print(help(urllib))
+        raise
         return
     for btye_line in data: # files are iterable
         line_lower = btye_line.lower().decode('utf-8')

@@ -2970,7 +2970,7 @@ class NastranIO(object):
         # subcase_ids = model.subcase_key.keys()
 
         #self.iSubcaseNameMap[self.isubcase] = [self.subtitle, self.analysis_code, self.label]
-        subcase_ids = model.iSubcaseNameMap.keys()
+        subcase_ids = list(model.iSubcaseNameMap.keys())
         subcase_ids.sort()
         #print('subcase_ids =', subcase_ids)
 
@@ -4261,7 +4261,7 @@ class NastranIO(object):
                 ioff = where(is_element_on == 0)[0]
                 print('stress_eids_off = %s' % self.element_ids[ioff])
                 self.log_error('stress_eids_off = %s' % self.element_ids[ioff])
-                cases[(1, icase, 'Stress\nisElementOn', 1, 'centroid', '%i')] = is_element_on
+                cases[(1, icase, 'Stress\nisElementOn', 1, 'centroid', '%i', header)] = is_element_on
                 form_dict[(key, itime)].append(('Stress - IsElementOn', icase, []))
                 icase += 1
 
