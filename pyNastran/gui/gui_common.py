@@ -480,7 +480,6 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             if menu is None:
                 continue
             for i in items:
-                print('i =', i)
                 if not i:
                     menu.addSeparator()
                 else:

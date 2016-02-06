@@ -6,6 +6,7 @@ from math import sin, cos, radians, atan2, sqrt, degrees
 #from math import (sin,sinh,cos,cosh,tan,tanh,sqrt,atan,atan2,acosh,acos,asin,
 #                  asinh,atanh) #,atanh2   # going to be used by DEQATN
 
+import numpy as np
 from numpy import array, zeros
 from scipy.sparse import coo_matrix
 
@@ -59,6 +60,16 @@ class NastranMatrix(BaseCard):
         self.Real = []
         if self.is_complex():
             self.Complex = []
+
+    @property
+    def shape(self):
+        if self.ifo in [1, 6]: # square, symmetric
+            shape = (self.ncol, self.ncol)
+        elif self.ifo in [2, 9]:
+            raise NotImplementedError('need to pull the nrows after reading in everything')
+            shape = (self.ncol, self.ncol)
+        else:
+            raise NotImplementedError('ifo=%s' % ifo)
 
     def write_code_aster(self):
         """
@@ -591,6 +602,10 @@ class DMI(NastranMatrix):
             self.Complex = []
 
     @property
+    def shape(self):
+        return (self.nRows, self.nCols)
+
+    @property
     def ifo(self):
         return self.nRows == self.nCols
 
@@ -599,7 +614,8 @@ class DMI(NastranMatrix):
         .. todo :: support comment
         """
         if not self.is_complex():  # real
-            self._read_real(card)
+            return self._read_real(card)
+        raise NotImplementedError('complex DMI')
 
     def _read_real(self, card):
         # column number
@@ -679,6 +695,16 @@ class DMI(NastranMatrix):
         return False
 
     def raw_fields(self):
+        """
+        .. warning ::
+
+          All the writers are bad because Nastran insists on making columns a single
+          DMI card.  This makes writing a card much harder, so there are a lot of
+          NotImplementedErrors floating about.
+
+          This is an invalid method, but is not disabled because it's currently
+          needed for checking results
+        """
         list_fields = ['DMI', self.name, 0, self.form, self.tin,
                        self.tout, None, self.nRows, self.nCols]
 
@@ -690,35 +716,86 @@ class DMI(NastranMatrix):
                 list_fields += ['DMI', self.name, gcj, gci, reali]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card_8(self):
+        return self._write_card(print_card_8)
+
+    def _get_real_fields(self, func):
+        msg = ''
+        uGCj = np.unique(self.GCj)
+        for gcj in uGCj:
+            i = np.where(gcj == self.GCj)[0]
+            gcis = self.GCi[i]
+            reals = self.Real[i]
+            isort = np.argsort(gcis)
+            list_fields = ['DMI', self.name, gcj]
+
+            # will always write the first one
+            gci_last = -1
+            for gci, real in zip(gcis[isort], reals[isort]):
+                if gci == gci_last + 1:
+                    pass
+                else:
+                    list_fields.append(gci)
+                list_fields.append(real)
+                gci_last = gci
+            msg += func(list_fields)
+        return msg
+
+    def _get_complex_fields(self, func):
+        msg = ''
+        uGCj = np.unique(self.GCj)
+        for gcj in uGCj:
+            i = np.where(gcj == self.GCj)[0]
+            gcis = self.GCi[i]
+            reals = self.Real[i]
+            complexs = self.Complex[i]
+            isort = np.argsort(gcis)
+            list_fields = ['DMI', self.name, gcj]
+
+            # will always write the first one
+            gci_last = -1
+            for gci, real, complexi in zip(gcis[isort], reals[isort], complexs[isort]):
+                if gci != gci_last + 1:
+                    pass
+                else:
+                    list_fields.append(gci)
+                list_fields.append(real)
+                list_fields.append(complexi)
+                gci_last = gci
+            msg += func(list_fields)
+        return msg
+
+    def write_card_16(self):
+        return self._write_card(print_card_16)
+
+    def write_card_double(self):
+        return self._write_card(print_card_16)
+
+    def _write_card(self, func):
+        self.GCi = np.asarray(self.GCi)
+        self.GCj = np.asarray(self.GCj)
+        self.Real = np.asarray(self.Real)
+        if self.is_complex():
+            self.Complex = np.asarray(self.Complex)
+
         msg = '\n$' + '-' * 80
         msg += '\n$ %s Matrix %s\n' % ('DMI', self.name)
         list_fields = ['DMI', self.name, 0, self.form, self.tin,
                        self.tout, None, self.nRows, self.nCols]
-        if size == 8:
-            msg += print_card_8(list_fields)
-        else:
-            msg += print_card_16(list_fields)
+        msg += print_card_8(list_fields)
 
         if self.is_complex():
-            for (gci, gcj, reali, imagi) in zip(self.GCi, self.GCj, self.Real, self.Complex):
-                list_fields = ['DMI', self.name, gcj, gci, reali, imagi]
-                if size == 8:
-                    msg += print_card_8(list_fields)
-                elif is_double:
-                    msg += print_card_double(list_fields)
-                else:
-                    msg += print_card_16(list_fields)
+            msg += self._get_complex_fields(func)
         else:
-            for (gci, gcj, reali) in zip(self.GCi, self.GCj, self.Real):
-                list_fields = ['DMI', self.name, gcj, gci, reali]
-                if size == 8:
-                    msg += print_card_8(list_fields)
-                elif is_double:
-                    msg += print_card_double(list_fields)
-                else:
-                    msg += print_card_16(list_fields)
+            msg += self._get_real_fields(func)
         return msg
+
+    def write_card(self, size=8, is_double=False):
+        if size == 8:
+            return self.write_card_8()
+        elif is_double:
+            return self.write_card_double()
+        return self.write_card_16()
 
     def __repr__(self):
         """

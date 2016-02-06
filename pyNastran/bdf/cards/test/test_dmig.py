@@ -1,3 +1,4 @@
+from __future__ import print_function
 import unittest
 
 import os
@@ -302,15 +303,31 @@ DMI         W2GJ       1       1 1.54685.1353939.1312423.0986108.0621382
         .9973973-.062269-.064098-.070488  -.0769-.080234-.079264-.071769
         -.051909 -.00519.5332272-.043435-.050199 -.06278-.075336-.083821
         -.088398-.088075-.075685-.044054
-    """
-    open('dmi.bdf', 'w') as bdf_file:
-        bdf_file.write(data)
-    model = BDF()
-    model.read_bdf('dmi.bdf')
-    model.write_bdf('dmi_out.bdf')
+        """
+        with open('dmi.bdf', 'w') as bdf_file:
+            bdf_file.write(data)
+        model = BDF()
+        model.read_bdf('dmi.bdf', punch=True)
+        w2gj = model.dmis['W2GJ']
+        assert w2gj.shape == (1200, 1), w2gj.shape
 
-    model2 = BDF()
-    model2.read_bdf('dmi_out.bdf')
+        real2 = []
+        for i, real in enumerate(w2gj.Real):
+            real2.append(0.1  * i)
+        #w2gj.Real = real2
+        #print(w2gj.GCi)  # varying (rows)
+        #print(w2gj.GCj)  # constant (cols)
+
+        model.write_bdf('dmi_out.bdf')
+
+        model2 = BDF()
+        model2.read_bdf('dmi_out.bdf')
+        w2gj_new = model.dmis['W2GJ']
+        assert w2gj_new.shape == (1200, 1), w2gj_new.shape
+
+        assert array_equal(w2gj.GCi, w2gj_new.GCi)
+        assert array_equal(w2gj.GCj, w2gj_new.GCj)
+        assert array_equal(w2gj.Real, w2gj_new.Real)
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()
