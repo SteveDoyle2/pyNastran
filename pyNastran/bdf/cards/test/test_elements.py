@@ -39,8 +39,7 @@ class TestElements(unittest.TestCase):
         card = BDFCard(card)
 
         size = 8
-        elem = CGAP()
-        elem.add_card(card)
+        elem = CGAP.add_card(card)
         node_ids = elem.node_ids
         assert node_ids == [21, 99], node_ids
         self.assertEqual(elem.Eid(), 899)
@@ -54,7 +53,7 @@ class TestElements(unittest.TestCase):
         card = BDFCard(card)
 
         size = 8
-        elem = PGAP(card)
+        elem = PGAP.add_card(card)
         elem.write_card(size, 'dummy')
         self.assertEqual(elem.Pid(), 90)
         elem.raw_fields()

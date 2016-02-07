@@ -34,8 +34,7 @@ class TestLoads(unittest.TestCase):
         cardi = BDFCard(card)
 
         size = 8
-        card = PLOAD4()
-        card.add_card(cardi)
+        card = PLOAD4.add_card(cardi)
         card.write_card(size, 'dummy')
         card.raw_fields()
 
@@ -45,8 +44,7 @@ class TestLoads(unittest.TestCase):
         cardi = BDFCard(card)
 
         size = 8
-        card = PLOAD4()
-        card.add_card(cardi)
+        card = PLOAD4.add_card(cardi)
         card.write_card(size, 'dummy')
         card.raw_fields()
 
@@ -76,7 +74,7 @@ class TestLoads(unittest.TestCase):
                 #continue
             loadcase_id = subcase.get_parameter('LOAD')[0]
             load = model_b.loads[loadcase_id][0]
-            elem = load.eid
+            elem = load.eids[0]
             g1 = load.g1.nid
             if load.g34 is None:
                 #print(load)
@@ -157,7 +155,7 @@ class TestLoads(unittest.TestCase):
                 #continue
             loadcase_id = subcase.get_parameter('LOAD')[0]
             load = model_b.loads[loadcase_id][0]
-            elem = load.eid
+            elem = load.eids[0]
             area = 0.5
             centroid = elem.Centroid()
             normal = elem.Normal()
@@ -207,7 +205,7 @@ class TestLoads(unittest.TestCase):
             load = model_b.loads[loadcase_id]
             loadi = load[0]
             if loadi.type == 'PLOAD4':
-                elem = loadi.eid
+                elem = loadi.eids[0]
                 area = 1.0
                 centroid = elem.Centroid()
                 normal = elem.Normal()
@@ -259,7 +257,7 @@ class TestLoads(unittest.TestCase):
                 continue
             loadcase_id = subcase.get_parameter('LOAD')[0]
             load = model_b.loads[loadcase_id][0]
-            elem = load.eid
+            elem = load.eids[0]
             g1 = load.g1.nid
 
             # f, m = model_b.sum_forces_moments(p0, loadcase_id, include_grav=False)
@@ -362,7 +360,7 @@ class TestLoads(unittest.TestCase):
                 continue
             loadcase_id = subcase.get_parameter('LOAD')[0]
             load = model_b.loads[loadcase_id][0]
-            elem = load.eid
+            elem = load.eids[0]
             g1 = load.g1.nid
 
             # f, m = model_b.sum_forces_moments(p0, loadcase_id, include_grav=False)

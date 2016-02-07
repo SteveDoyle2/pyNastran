@@ -31,43 +31,56 @@ class PFAST(Property):
         11:'mass', 12:'ge'
     }
 
-    def __init__(self):
+    def __init__(self, pid, d, mcid, mflag, kt1, kt2, kt3,
+                 kr1, kr2, kr3, mass, ge, comment=''):
         Property.__init__(self)
-
-    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
         #: Property ID
-        self.pid = integer(card, 1, 'pid')
-
+        self.pid = pid
         #: diameter of the fastener
-        self.d = double(card, 2, 'd')
-        assert self.d > 0
-
+        self.d = d
         #: Specifies the element stiffness coordinate system
-        self.mcid = integer_or_blank(card, 3, 'mcid', -1)
-        assert self.mcid >= -1
-
+        self.mcid = mcid
         #: 0-absolute 1-relative
-        self.mflag = integer_or_blank(card, 4, 'mflag', 0)
-        assert self.mflag in [0, 1]
+        self.mflag = mflag
 
         #: stiffness values in directions 1-3
-        self.kt1 = double(card, 5, 'kt1')
-        self.kt2 = double(card, 6, 'kt2')
-        self.kt3 = double(card, 7, 'kt3')
+        self.kt1 = kt1
+        self.kt2 = kt2
+        self.kt3 = kt3
 
         #: Rotational stiffness values in directions 1-3
-        self.kr1 = double_or_blank(card, 8, 'kr1', 0.0)
-        self.kr2 = double_or_blank(card, 9, 'kr2', 0.0)
-        self.kr3 = double_or_blank(card, 10, 'kr3', 0.0)
-
+        self.kr1 = kr1
+        self.kr2 = kr2
+        self.kr3 = kr3
         #: Lumped mass of fastener
-        self.mass = double_or_blank(card, 11, 'mass', 0.0)
-
+        self.mass = mass
         #: Structural damping
-        self.ge = double_or_blank(card, 12, 'ge', 0.0)
+        self.ge = ge
+        assert self.d > 0
+        assert mflag in [0, 1]
+        assert self.mcid >= -1
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        pid = integer(card, 1, 'pid')
+        d = double(card, 2, 'd')
+        mcid = integer_or_blank(card, 3, 'mcid', -1)
+        mflag = integer_or_blank(card, 4, 'mflag', 0)
+
+        kt1 = double(card, 5, 'kt1')
+        kt2 = double(card, 6, 'kt2')
+        kt3 = double(card, 7, 'kt3')
+
+        kr1 = double_or_blank(card, 8, 'kr1', 0.0)
+        kr2 = double_or_blank(card, 9, 'kr2', 0.0)
+        kr3 = double_or_blank(card, 10, 'kr3', 0.0)
+        mass = double_or_blank(card, 11, 'mass', 0.0)
+        ge = double_or_blank(card, 12, 'ge', 0.0)
         assert len(card) <= 13, 'len(PFAST card) = %i' % len(card)
+        return PFAST(pid, d, mcid, mflag, kt1, kt2, kt3,
+                     kr1, kr2, kr3, mass, ge, comment=comment)
 
     def cross_reference(self, model):
         msg = ' which is required by PFAST pid=%s' % self.pid
@@ -121,47 +134,67 @@ class PGAP(Property):
         8:'mu2', 9:'tmax', 10:'mar', 11:'trmin',
     }
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self, pid, u0, f0, ka, kb, mu1, kt, mu2,
+                 tmax, mar, trmin, comment=''):
         """
         Defines the properties of the gap element (CGAP entry).
         """
-        Property.__init__(self, card, data)
+        Property.__init__(self)
         if comment:
             self._comment = comment
-        if card:
-            #: Property ID
-            self.pid = integer(card, 1, 'pid')
-            #: initial gap opening
-            self.u0 = double_or_blank(card, 2, 'u0', 0.)
-            #: preload
-            self.f0 = double_or_blank(card, 3, 'f0', 0.)
-            #: axial stiffness of closed gap
-            self.ka = double_or_blank(card, 4, 'ka', 1.e8)
-            #: axial stiffness of open gap
-            self.kb = double_or_blank(card, 5, 'kb', 1e-14 * self.ka)
-            #: static friction coeff
-            self.mu1 = double_or_blank(card, 7, 'mu1', 0.)
-            #: transverse stiffness of closed gap
-            self.kt = double_or_blank(card, 6, 'kt', self.mu1 * self.ka)
-            #: kinetic friction coeff
-            self.mu2 = double_or_blank(card, 8, 'mu2', self.mu1)
-            self.tmax = double_or_blank(card, 9, 'tmax', 0.)
-            self.mar = double_or_blank(card, 10, 'mar', 100.)
-            self.trmin = double_or_blank(card, 11, 'trmin', 0.001)
-            assert len(card) <= 12, 'len(PGAP card) = %i' % len(card)
-        else:
-            #(pid,u0,f0,ka,kb,kt,mu1,mu2,tmax,mar,trmin) = out
-            self.pid = data[0]
-            self.u0 = data[1]
-            self.f0 = data[2]
-            self.ka = data[3]
-            self.kb = data[4]
-            self.kt = data[5]
-            self.mu1 = data[6]
-            self.mu2 = data[7]
-            self.tmax = data[8]
-            self.mar = data[9]
-            self.trmin = data[10]
+
+        #: Property ID
+        self.pid = pid
+        #: initial gap opening
+        self.u0 = u0
+        #: preload
+        self.f0 = f0
+        #: axial stiffness of closed gap
+        self.ka = ka
+        #: axial stiffness of open gap
+        self.kb = kb
+        #: static friction coeff
+        self.mu1 = mu1
+        #: transverse stiffness of closed gap
+        self.kt = kt
+        #: kinetic friction coeff
+        self.mu2 = mu2
+        self.tmax = tmax
+        self.mar = mar
+        self.trmin = trmin
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        pid = integer(card, 1, 'pid')
+        u0 = double_or_blank(card, 2, 'u0', 0.)
+        f0 = double_or_blank(card, 3, 'f0', 0.)
+        ka = double_or_blank(card, 4, 'ka', 1.e8)
+        kb = double_or_blank(card, 5, 'kb', 1e-14 * ka)
+        mu1 = double_or_blank(card, 7, 'mu1', 0.)
+        kt = double_or_blank(card, 6, 'kt', mu1 * ka)
+        mu2 = double_or_blank(card, 8, 'mu2', mu1)
+        tmax = double_or_blank(card, 9, 'tmax', 0.)
+        mar = double_or_blank(card, 10, 'mar', 100.)
+        trmin = double_or_blank(card, 11, 'trmin', 0.001)
+        assert len(card) <= 12, 'len(PGAP card) = %i' % len(card)
+        return PGAP(pid, u0, f0, ka, kb, mu1, kt, mu2, tmax, mar, trmin,
+                    comment=comment)
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        pid = data[0]
+        u0 = data[1]
+        f0 = data[2]
+        ka = data[3]
+        kb = data[4]
+        kt = data[5]
+        mu1 = data[6]
+        mu2 = data[7]
+        tmax = data[8]
+        mar = data[9]
+        trmin = data[10]
+        return PGAP(pid, u0, f0, ka, kb, mu1, kt, mu2, tmax, mar, trmin,
+                    comment=comment)
 
     def _verify(self, xref=True):
         pid = self.Pid()
@@ -226,7 +259,7 @@ class PLSOLID(SolidProperty):
         1: 'pid', 2:'mid', 3:'str',
     }
 
-    def __init__(self, pid, mid, stress_strain='GRID', comment=''):
+    def __init__(self, pid, mid, stress_strain='GRID', ge=0., comment=''):
         SolidProperty.__init__(self)
         if comment:
             self._comment = comment
@@ -236,6 +269,8 @@ class PLSOLID(SolidProperty):
         self.mid = mid
         #: Location of stress and strain output
         self.stress_strain = stress_strain
+
+        self.ge = ge
         assert isinstance(pid, int), type(pid)
         assert isinstance(mid, int), type(mid)
         self._validate_input()
@@ -254,7 +289,7 @@ class PLSOLID(SolidProperty):
         mid = data[1]
         ge = data[2]
         stress_strain = data[3]
-        return PLSOLID(pid, mid, stress_strain, comment=comment)
+        return PLSOLID(pid, mid, stress_strain, ge, comment=comment)
 
     def _validate_input(self):
         if self.stress_strain == 'GAUS':
@@ -330,7 +365,7 @@ class PSOLID(SolidProperty):
         fctn = string_or_blank(card, 7, 'fctn', 'SMECH')
         assert len(card) <= 8, 'len(PSOLID card) = %i' % len(card)
         return PSOLID(pid, mid, cordm, integ, stress, isop,
-                     fctn, comment=comment)
+                      fctn, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -345,7 +380,7 @@ class PSOLID(SolidProperty):
         if fctn == 'SMEC':
             fctn = 'SMECH'
         return PSOLID(pid, mid, cordm, integ, stress, isop,
-                     fctn, comment=comment)
+                      fctn, comment=comment)
 
     def E(self):
         return self.mid_ref.E()
@@ -438,33 +473,45 @@ class PRAC2D(CrackProperty):
         1: 'pid', 2:'mid', 3:'thick', 4:'iPlane', 5:'nsm', 6:'gamma', 7:'phi',
     }
 
-    def __init__(self):
+    def __init__(self, pid, mid, thick, iplane, nsm=0., gamma=0.5, phi=180.,
+                 comment=''):
         CrackProperty.__init__(self)
-
-    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
         #: Property ID
-        self.pid = integer(card, 1, 'pid')
+        self.pid = pid
         #: Material ID
-        self.mid = integer(card, 2, 'mid')
-        self.thick = double(card, 3, 'thick')
+        self.mid = mid
+        self.thick = thick
         #: Plane strain or plane stress option.
         #: Use 0 for plane strain; 1 for plane stress. (Integer = 0 or 1)
-        self.iPlane = integer(card, 4, 'iPlane')
-        if self.iPlane not in [0, 1]:
-            raise RuntimeError('Invalid value for iPlane on PRAC2D, can '
-                               'only be 0,1 iPlane=|%s|' % self.iPlane)
+        self.iplane = iplane
         #: Non-structural mass per unit area.(Real >= 0.0; Default = 0)
-        self.nsm = double_or_blank(card, 5, 'nsm', 0.)
+        self.nsm = nsm
         #: Exponent used in the displacement field. See Remark 4.
         #: (Real; Default = 0.5)
-        self.gamma = double_or_blank(card, 6, 'gamma', 0.5)
+        self.gamma = gamma
         #: Angle (in degrees) relative to the element x-axis along which
         #: stress intensity factors are to be calculated. See Remark 4.
         #: (Real; Default = 180.0)
-        self.phi = double_or_blank(card, 7, 'phi', 180.)
+        self.phi = phi
+
+        if iplane not in [0, 1]:
+            raise RuntimeError('Invalid value for iPlane on PRAC2D, can '
+                               'only be 0,1 iPlane=%r' % iplane)
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        pid = integer(card, 1, 'pid')
+        mid = integer(card, 2, 'mid')
+        thick = double(card, 3, 'thick')
+        iplane = integer(card, 4, 'iplane')
+        nsm = double_or_blank(card, 5, 'nsm', 0.)
+        gamma = double_or_blank(card, 6, 'gamma', 0.5)
+        phi = double_or_blank(card, 7, 'phi', 180.)
         assert len(card) <= 8, 'len(PRAC2D card) = %i' % len(card)
+        return PRAC2D(pid, mid, thick, iplane, nsm, gamma, phi,
+                      comment=comment)
 
     def _verify(self, xref=True):
         pid = self.Pid()
@@ -481,7 +528,7 @@ class PRAC2D(CrackProperty):
 
     def raw_fields(self):
         fields = ['PRAC2D', self.pid, self.Mid(), self.thick,
-                  self.iPlane, self.nsm, self.gamma, self.phi]
+                  self.iplane, self.nsm, self.gamma, self.phi]
         return fields
 
     def repr_fields(self):
@@ -489,7 +536,7 @@ class PRAC2D(CrackProperty):
         gamma = set_blank_if_default(self.gamma, 0.5)
         phi = set_blank_if_default(self.phi, 180.)
         fields = ['PRAC2D', self.pid, self.Mid(), self.thick,
-                  self.iPlane, nsm, gamma, phi]
+                  self.iplane, nsm, gamma, phi]
         return fields
 
 
@@ -503,24 +550,30 @@ class PRAC3D(CrackProperty):
         1: 'pid', 2:'mid', 3:'gamma', 4:'phi',
     }
 
-    def __init__(self):
+    def __init__(self, pid, mid, gamma=0.5, phi=180., comment=''):
         CrackProperty.__init__(self)
-
-    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
         #: Property ID
-        self.pid = integer(card, 1, 'pid')
+        self.pid = pid
         #: Material ID
-        self.mid = integer(card, 2, 'mid')
+        self.mid = mid
         #: Exponent used in the displacement field. See Remark 4.
         #: (Real; Default = 0.5)
-        self.gamma = double_or_blank(card, 3, 'gamma', 0.5)
+        self.gamma = gamma
         #: Angle (in degrees) relative to the element x-axis along which
         #: stress intensity factors are to be calculated. See Remark 4.
         #: (Real; Default = 180.0)
-        self.phi = double_or_blank(card, 4, 'gamma', 180.)
+        self.phi = phi
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        pid = integer(card, 1, 'pid')
+        mid = integer(card, 2, 'mid')
+        gamma = double_or_blank(card, 3, 'gamma', 0.5)
+        phi = double_or_blank(card, 4, 'gamma', 180.)
         assert len(card) <= 5, 'len(PRAC3D card) = %i' % len(card)
+        return PRAC3D(pid, mid, gamma, phi, comment=comment)
 
     def _verify(self, xref=True):
         pid = self.Pid()
@@ -558,42 +611,56 @@ class PCONEAX(Property):
             raise KeyError(msg)
         self.phi[n - 10] = value
 
-    def __init__(self):
+    def __init__(self, pid, mid1, t1, mid2, i, mid3, t2, nsm, z1, z2, phi, comment=''):
         Property.__init__(self)
-        self.phi = []
-
-    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
+        self.pid = pid
+        self.mid1 = mid1
+        self.t1 = t1
+        self.mid2 = mid2
+        self.i = i
+        self.mid3 = mid3
+        self.t2 = t2
+        self.nsm = nsm
+        self.z1 = z1
+        self.z2 = z2
+        self.phi = phi
+
+    @classmethod
+    def add_card(cls, card, comment=''):
         #: Property ID
-        self.pid = integer(card, 1, 'pid')
+        pid = integer(card, 1, 'pid')
         #: Material ID
-        self.mid1 = integer_or_blank(card, 2, 'mid1', 0)
-        self.t1 = double_or_blank(card, 3, 't1')
+        mid1 = integer_or_blank(card, 2, 'mid1', 0)
+        t1 = double_or_blank(card, 3, 't1')
 
-        self.mid2 = integer_or_blank(card, 4, 'mid2', 0)
-        if self.mid2 > 0:
-            self.i = double(card, 5, 'i')
-            assert self.i > 0.0
+        mid2 = integer_or_blank(card, 4, 'mid2', 0)
+        if mid2 > 0:
+            i = double(card, 5, 'i')
+            assert i > 0.0
         else:
-            self.i = blank(card, 5, 'i')
+            i = blank(card, 5, 'i')
 
-        self.mid3 = integer(card, 6, 0)
-        if self.mid3 > 0:
-            self.t2 = double(card, 7, 't3')
-            assert self.t2 > 0.0
+        mid3 = integer(card, 6, 0)
+        if mid3 > 0:
+            t2 = double(card, 7, 't3')
+            assert t2 > 0.0
         else:
-            self.t2 = blank(card, 7, 't3')
+            t2 = blank(card, 7, 't3')
 
-        self.nsm = double(card, 8, 'nsm')
-        self.z1 = double(card, 9, 'z1')
-        self.z2 = double(card, 10, 'z2')
+        nsm = double(card, 8, 'nsm')
+        z1 = double(card, 9, 'z1')
+        z2 = double(card, 10, 'z2')
 
         j = 1
+        phi = []
         for i in range(11, len(card)):
             phii = double(card, i, 'phi' % j)
-            self.phi.append(phii)
+            phi.append(phii)
             j += 1
+        return PCONEAX(pid, mid1, t1, mid2, i, mid3, t2, nsm, z1, z2, phi,
+                       comment=comment)
 
     def cross_reference(self, model):
         msg = ' which is required by %s=%s' %(self.type, self.pid)

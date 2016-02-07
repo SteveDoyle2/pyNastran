@@ -1300,8 +1300,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'PTUBE' : (PTUBE, self.add_property),
 
             'CBAR' : (CBAR, self.add_element),
-            #'PBAR' : (PBAR, self.add_property),
-            #'PBARL' : (PBARL, self.add_property),
+            'PBAR' : (PBAR, self.add_property),
+            'PBARL' : (PBARL, self.add_property),
 
             'CBEAM' : (CBEAM, self.add_element),
             #'PBEAM' : (PBEAM, self.add_property),
@@ -1349,11 +1349,11 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'CDAMP5' : (CDAMP5, self.add_damper),
             'PDAMP5' : (PDAMP5, self.add_property),
 
-            #'CFAST' : (CFAST, self.add_damper),
-            #'PFAST' : (PFAST, self.add_property),
+            'CFAST' : (CFAST, self.add_damper),
+            'PFAST' : (PFAST, self.add_property),
 
-            #'CGAP' : (CGAP, self.add_element),
-            #'PGAP' : (PGAP, self.add_property),
+            'CGAP' : (CGAP, self.add_element),
+            'PGAP' : (PGAP, self.add_property),
 
             'CBUSH' : (CBUSH, self.add_damper),
             'PBUSH' : (PBUSH, self.add_property),
@@ -1361,32 +1361,32 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'CBUSH2D' : (CBUSH2D, self.add_damper),
 
             #'CRAC2D' : (CRAC2D, self.add_element),
-            #'PRAC2D' : (PRAC2D, self.add_property),
+            'PRAC2D' : (PRAC2D, self.add_property),
 
             #'CRAC3D' : (CRAC3D, self.add_element),
-            #'PRAC3D' : (PRAC3D, self.add_property),
+            'PRAC3D' : (PRAC3D, self.add_property),
 
             'PDAMPT' : (PDAMPT, self.add_PDAMPT),
             'PBUSHT' : (PBUSHT, self.add_PBUSHT),
 
-            #'PCONEAX' : (PCONEAX, self.add_property),
+            'PCONEAX' : (PCONEAX, self.add_property),
 
-            #'RBAR' : (RBAR, self.add_rigid_element),
-            #'RBAR1' : (RBAR1, self.add_rigid_element),
-            #'RBE1' : (RBE1, self.add_rigid_element),
+            'RBAR' : (RBAR, self.add_rigid_element),
+            'RBAR1' : (RBAR1, self.add_rigid_element),
+            'RBE1' : (RBE1, self.add_rigid_element),
             #'RBE2' : (RBE2, self.add_rigid_element),
             #'RBE3' : (RBE3, self.add_rigid_element),
-            #'RROD' : (RROD, self.add_rigid_element),
+            'RROD' : (RROD, self.add_rigid_element),
 
 
             ## there is no MAT6 or MAT7
             'MAT1' : (MAT1, self.add_structural_material),
-            #'MAT2' : (MAT2, self.add_structural_material),
-            #'MAT3' : (MAT3, self.add_structural_material),
+            'MAT2' : (MAT2, self.add_structural_material),
+            'MAT3' : (MAT3, self.add_structural_material),
             #'MAT8' : (MAT8, self.add_structural_material),
             #'MAT9' : (MAT9, self.add_structural_material),
-            #'MAT10' : (MAT10, self.add_structural_material),
-            #'MAT11' : (MAT11, self.add_structural_material),
+            'MAT10' : (MAT10, self.add_structural_material),
+            'MAT11' : (MAT11, self.add_structural_material),
             #'EQUIV' : (EQUIV, self.add_structural_material),
 
             ##'MATHE' : (MATHE, self.add_hyperelastic_material),
@@ -1398,23 +1398,23 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             #'CREEP' : (CREEP, self.add_creep_material),
 
             #'CONM1' : (CONM1, self.add_mass),
-            #'CONM2' : (CONM2, self.add_mass),
-            #'CMASS1' : (CMASS1, self.add_mass),
-            #'CMASS2' : (CMASS2, self.add_mass),
-            #'CMASS3' : (CMASS3, self.add_mass),
+            'CONM2' : (CONM2, self.add_mass),
+            'CMASS1' : (CMASS1, self.add_mass),
+            'CMASS2' : (CMASS2, self.add_mass),
+            'CMASS3' : (CMASS3, self.add_mass),
             ## CMASS4 - added later because documentation is wrong
 
-            #'MPC' : (MPC, self.add_constraint_MPC),
-            #'MPCADD' : (MPCADD, self.add_constraint_MPC),
+            'MPC' : (MPC, self.add_constraint_MPC),
+            'MPCADD' : (MPCADD, self.add_constraint_MPC),
 
-            #'SPC' : (SPC, self.add_constraint_SPC),
-            #'SPC1' : (SPC1, self.add_constraint_SPC),
-            #'SPCAX' : (SPCAX, self.add_constraint_SPC),
-            #'SPCADD' : (SPCADD, self.add_constraint_SPC),
+            'SPC' : (SPC, self.add_constraint_SPC),
+            'SPC1' : (SPC1, self.add_constraint_SPC),
+            'SPCAX' : (SPCAX, self.add_constraint_SPC),
+            'SPCADD' : (SPCADD, self.add_constraint_SPC),
             'GMSPC' : (GMSPC, self.add_constraint_SPC),
 
-            #'SUPORT' : (SUPORT, self.add_suport), # pseudo-constraint
-            #'SUPORT1' : (SUPORT1, self.add_suport1),  # pseudo-constraint
+            'SUPORT' : (SUPORT, self.add_suport), # pseudo-constraint
+            'SUPORT1' : (SUPORT1, self.add_suport1),  # pseudo-constraint
 
             'FORCE' : (FORCE, self.add_load),
             'FORCE1' : (FORCE1, self.add_load),
@@ -1423,29 +1423,29 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'MOMENT1' : (MOMENT1, self.add_load),
             'MOMENT2' : (MOMENT2, self.add_load),
 
-            #'GRAV' : (GRAV, self.add_load),
-            #'ACCEL' : (ACCEL, self.add_load),
-            #'ACCEL1' : (ACCEL1, self.add_load),
+            'GRAV' : (GRAV, self.add_load),
+            'ACCEL' : (ACCEL, self.add_load),
+            'ACCEL1' : (ACCEL1, self.add_load),
             #'LOAD' : (LOAD, self.add_load),
-            #'PLOAD' : (PLOAD, self.add_load),
-            #'PLOAD1' : (PLOAD1, self.add_load),
-            #'PLOAD2' : (PLOAD2, self.add_load),
-            #'PLOAD4' : (PLOAD4, self.add_load),
-            #'PLOADX1' : (PLOADX1, self.add_load),
+            'PLOAD' : (PLOAD, self.add_load),
+            'PLOAD1' : (PLOAD1, self.add_load),
+            'PLOAD2' : (PLOAD2, self.add_load),
+            'PLOAD4' : (PLOAD4, self.add_load),
+            'PLOADX1' : (PLOADX1, self.add_load),
             #'RFORCE' : (RFORCE, self.add_load),
             #'SLOAD' : (SLOAD, self.add_load),
-            #'RANDPS' : (RANDPS, self.add_load),
-            #'GMLOAD' : (GMLOAD, self.add_load),
-            #'SPCD' : (SPCD, self.add_load),  # enforced displacement
+            'RANDPS' : (RANDPS, self.add_load),
+            'GMLOAD' : (GMLOAD, self.add_load),
+            'SPCD' : (SPCD, self.add_load),  # enforced displacement
             #'QVOL' : (QVOL, self.add_load),  # thermal
 
             #'DLOAD' : (DLOAD, self.add_dload),
-            #'TLOAD1' : (TLOAD1, self.add_dload_entry),
-            #'TLOAD2' : (TLOAD2, self.add_dload_entry),
-            #'RLOAD1' : (RLOAD1, self.add_dload_entry),
-            #'RLOAD2' : (RLOAD2, self.add_dload_entry),
+            'TLOAD1' : (TLOAD1, self.add_dload_entry),
+            'TLOAD2' : (TLOAD2, self.add_dload_entry),
+            'RLOAD1' : (RLOAD1, self.add_dload_entry),
+            'RLOAD2' : (RLOAD2, self.add_dload_entry),
 
-            #'DOPTPRM' : (DOPTPRM, self._add_doptprm),
+            'DOPTPRM' : (DOPTPRM, self._add_doptprm),
             #'SPOINT' : (SPOINTs, self.add_spoint),
             #'EPOINT' : (EPOINTs, self.add_epoint),
             # BCTSET
@@ -1454,9 +1454,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'CORD2R' : (CORD2R, self.add_coord),
             'CORD2C' : (CORD2C, self.add_coord),
             'CORD2S' : (CORD2S, self.add_coord),
-
-            'PBAR' : (PBAR, self.add_property),
-            'PBARL' : (PBARL, self.add_property),
 
             'PBEAM' : (PBEAM, self.add_property),
             'PBEAML' : (PBEAML, self.add_property),
@@ -1478,39 +1475,19 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'PLPLANE' : (PLPLANE, self.add_property),
             'PCOMP' : (PCOMP, self.add_property),
 
-            'CFAST' : (CFAST, self.add_damper),
-            'PFAST' : (PFAST, self.add_property),
-
-            'CGAP' : (CGAP, self.add_element),
-            'PGAP' : (PGAP, self.add_property),
-
             'CRAC2D' : (CRAC2D, self.add_element),
-            'PRAC2D' : (PRAC2D, self.add_property),
-
             'CRAC3D' : (CRAC3D, self.add_element),
-            'PRAC3D' : (PRAC3D, self.add_property),
 
             'PDAMPT' : (PDAMPT, self.add_PDAMPT),
             'PBUSHT' : (PBUSHT, self.add_PBUSHT),
             'PBUSH1D' : (PBUSH1D, self.add_property),
 
-            'PCONEAX' : (PCONEAX, self.add_property),
-
-            'RBAR' : (RBAR, self.add_rigid_element),
-            'RBAR1' : (RBAR1, self.add_rigid_element),
-            'RBE1' : (RBE1, self.add_rigid_element),
             'RBE2' : (RBE2, self.add_rigid_element),
             'RBE3' : (RBE3, self.add_rigid_element),
-            'RROD' : (RROD, self.add_rigid_element),
-
 
             # there is no MAT6 or MAT7
-            'MAT2' : (MAT2, self.add_structural_material),
-            'MAT3' : (MAT3, self.add_structural_material),
             'MAT8' : (MAT8, self.add_structural_material),
             'MAT9' : (MAT9, self.add_structural_material),
-            'MAT10' : (MAT10, self.add_structural_material),
-            'MAT11' : (MAT11, self.add_structural_material),
             'EQUIV' : (EQUIV, self.add_structural_material),
 
             #'MATHE' : (MATHE, self.add_hyperelastic_material),
@@ -1520,46 +1497,14 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'CREEP' : (CREEP, self.add_creep_material),
 
             'CONM1' : (CONM1, self.add_mass),
-            'CONM2' : (CONM2, self.add_mass),
-            'CMASS1' : (CMASS1, self.add_mass),
-            'CMASS2' : (CMASS2, self.add_mass),
-            'CMASS3' : (CMASS3, self.add_mass),
-            # CMASS4 - added later because documentation is wrong
 
-            'MPC' : (MPC, self.add_constraint_MPC),
-            'MPCADD' : (MPCADD, self.add_constraint_MPC),
-
-            'SPC' : (SPC, self.add_constraint_SPC),
-            'SPC1' : (SPC1, self.add_constraint_SPC),
-            'SPCAX' : (SPCAX, self.add_constraint_SPC),
-            'SPCADD' : (SPCADD, self.add_constraint_SPC),
-
-            'SUPORT' : (SUPORT, self.add_suport), # pseudo-constraint
-            'SUPORT1' : (SUPORT1, self.add_suport1),  # pseudo-constraint
-
-            'GRAV' : (GRAV, self.add_load),
-            'ACCEL' : (ACCEL, self.add_load),
-            'ACCEL1' : (ACCEL1, self.add_load),
             'LOAD' : (LOAD, self.add_load),
-            'PLOAD' : (PLOAD, self.add_load),
-            'PLOAD1' : (PLOAD1, self.add_load),
-            'PLOAD2' : (PLOAD2, self.add_load),
-            'PLOAD4' : (PLOAD4, self.add_load),
-            'PLOADX1' : (PLOADX1, self.add_load),
             'RFORCE' : (RFORCE, self.add_load),
             'SLOAD' : (SLOAD, self.add_load),
-            'RANDPS' : (RANDPS, self.add_load),
-            'GMLOAD' : (GMLOAD, self.add_load),
-            'SPCD' : (SPCD, self.add_load),  # enforced displacement
             'QVOL' : (QVOL, self.add_load),  # thermal
 
             'DLOAD' : (DLOAD, self.add_dload),
-            'TLOAD1' : (TLOAD1, self.add_dload_entry),
-            'TLOAD2' : (TLOAD2, self.add_dload_entry),
-            'RLOAD1' : (RLOAD1, self.add_dload_entry),
-            'RLOAD2' : (RLOAD2, self.add_dload_entry),
 
-            'DOPTPRM' : (DOPTPRM, self._add_doptprm),
             'SPOINT' : (SPOINTs, self.add_spoint),
             'EPOINT' : (EPOINTs, self.add_epoint),
             # BCTSET

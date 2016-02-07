@@ -34,36 +34,46 @@ class RigidElement(Element):
 class RROD(RigidElement):
     type = 'RROD'
 
-    def __init__(self):
+    def __init__(self, eid, ga, gb, cma, cmb, alpha, comment=''):
         """
         +------+-----+----+----+-----+-----+-------+
+        |   1  |  2  | 3  | 4  |  5  |  6  |   7   |
+        +======+=====+====+====+=====+=====+=======+
         | RROD | EID | GA | GB | CMA | CMB | ALPHA |
         +------+-----+----+----+-----+-----+-------+
         | RROD | 5   | 1  |  2 |     |     | 6.5-6 |
         +------+-----+----+----+-----+-----+-------+
         """
         RigidElement.__init__(self)
-
-    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        self.eid = integer(card, 1, 'eid')
-        self.ga = integer(card, 2, 'ga')
-        self.gb = integer(card, 3, 'gb')
-        self.cma = components_or_blank(card, 4, 'cma')
-        self.cmb = components_or_blank(card, 5, 'cmb')
-        self.alpha = double_or_blank(card, 6, 'alpha', 0.0)
+        self.eid = eid
+        self.ga = ga
+        self.gb = gb
+        self.cma = cma
+        self.cmb = cmb
+        self.alpha = alpha
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        eid = integer(card, 1, 'eid')
+        ga = integer(card, 2, 'ga')
+        gb = integer(card, 3, 'gb')
+        cma = components_or_blank(card, 4, 'cma')
+        cmb = components_or_blank(card, 5, 'cmb')
+        alpha = double_or_blank(card, 6, 'alpha', 0.0)
         assert len(card) <= 6, 'len(RROD card) = %i' % len(card)
+        return RROD(eid, ga, gb, cma, cmb, alpha, comment=comment)
 
-    def add_op2_data(self, data, comment=''):
-        if comment:
-            self._comment = comment
-        self.eid = data[0]
-        self.ga = data[1]
-        self.gb = data[2]
-        self.cma = data[3]
-        self.cmb = data[4]
-        self.alpha = data[5]
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        eid = data[0]
+        ga = data[1]
+        gb = data[2]
+        cma = data[3]
+        cmb = data[4]
+        alpha = data[5]
+        return RROD(eid, ga, gb, cma, cmb, alpha, comment=comment)
 
     def Ga(self):
         if isinstance(self.ga, integer_types):
@@ -118,40 +128,52 @@ class RROD(RigidElement):
 class RBAR(RigidElement):
     type = 'RBAR'
 
-    def __init__(self):
+    def __init__(self, eid, ga, gb, cna, cnb, cma, cmb, alpha=0., comment=''):
         """
         +------+-----+----+----+--------+-----+-----+-----+-------+
-        | RBAR | EID | GA | GB | CNA    | CNB | CMA | CMB | ALPHA |
+        |  1   |  2  |  3 |  4 |    5   |  6  |  7  |  8  |   9   |
+        +======+=====+====+====+========+=====+=====+=====+=======+
+        | RBAR | EID | GA | GB |  CNA   | CNB | CMA | CMB | ALPHA |
         +------+-----+----+----+--------+-----+-----+-----+-------+
-        | RBAR | 5   | 1  |  2 | 123456 |     |     |     | 6.5-6 |
+        | RBAR |  5  | 1  |  2 | 123456 |     |     |     | 6.5-6 |
         +------+-----+----+----+--------+-----+-----+-----+-------+
         """
         RigidElement.__init__(self)
-
-    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        self.eid = integer(card, 1, 'eid')
-        self.ga = integer(card, 2, 'ga')
-        self.gb = integer(card, 3, 'gb')
-        self.cna = components_or_blank(card, 4, 'cna')
-        self.cnb = components_or_blank(card, 5, 'cnb')
-        self.cma = components_or_blank(card, 6, 'cma')
-        self.cmb = components_or_blank(card, 7, 'cmb')
-        self.alpha = double_or_blank(card, 8, 'alpha', 0.0)
+        self.eid = eid
+        self.ga = ga
+        self.gb = gb
+        self.cna = cna
+        self.cnb = cnb
+        self.cma = cma
+        self.cmb = cmb
+        self.alpha = alpha
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        eid = integer(card, 1, 'eid')
+        ga = integer(card, 2, 'ga')
+        gb = integer(card, 3, 'gb')
+        cna = components_or_blank(card, 4, 'cna')
+        cnb = components_or_blank(card, 5, 'cnb')
+        cma = components_or_blank(card, 6, 'cma')
+        cmb = components_or_blank(card, 7, 'cmb')
+        alpha = double_or_blank(card, 8, 'alpha', 0.0)
         assert len(card) <= 9, 'len(RBAR card) = %i' % len(card)
+        return RBAR(eid, ga, gb, cna, cnb, cma, cmb, alpha, comment=comment)
 
-    def add_op2_data(self, data, comment=''):
-        if comment:
-            self._comment = comment
-        self.eid = data[0]
-        self.ga = data[1]
-        self.gb = data[2]
-        self.cna = data[3]
-        self.cnb = data[4]
-        self.cma = data[5]
-        self.cmb = data[6]
-        self.alpha = data[7]
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        eid = data[0]
+        ga = data[1]
+        gb = data[2]
+        cna = data[3]
+        cnb = data[4]
+        cma = data[5]
+        cmb = data[6]
+        alpha = data[7]
+        return RBAR(eid, ga, gb, cna, cnb, cma, cmb, alpha, comment=comment)
 
     # def convert_to_MPC(self, mpcID):
     #     """
@@ -234,34 +256,43 @@ class RBAR(RigidElement):
 class RBAR1(RigidElement):
     type = 'RBAR1'
 
-    def __init__(self):
+    def __init__(self, eid, ga, gb, cb, alpha, comment=''):
         """
         +-------+-----+----+----+-----+-------+
+        |   1   |  2  |  3 |  4 |  5  |   6   |
+        +=======+=====+====+====+=====+=======+
         | RBAR1 | EID | GA | GB | CB  | ALPHA |
         +-------+-----+----+----+-----+-------+
         | RBAR1 | 5   |  1 |  2 | 123 | 6.5-6 |
         +-------+-----+----+----+-----+-------+
         """
         RigidElement.__init__(self)
-
-    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        self.eid = integer(card, 1, 'eid')
-        self.ga = integer(card, 2, 'ga')
-        self.gb = integer(card, 3, 'gb')
-        self.cb = components_or_blank(card, 4, 'cb')
-        self.alpha = double_or_blank(card, 5, 'alpha', 0.0)
+        self.eid = eid
+        self.ga = ga
+        self.gb = gb
+        self.cb = cb
+        self.alpha = alpha
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        eid = integer(card, 1, 'eid')
+        ga = integer(card, 2, 'ga')
+        gb = integer(card, 3, 'gb')
+        cb = components_or_blank(card, 4, 'cb')
+        alpha = double_or_blank(card, 5, 'alpha', 0.0)
         assert len(card) <= 6, 'len(RBAR1 card) = %i' % len(card)
+        return RBAR1(eid, ga, gb, cb, alpha, comment=comment)
 
-    def add_op2_data(self, data, comment=''):
-        if comment:
-            self._comment = comment
-        self.eid = data[0]
-        self.ga = data[1]
-        self.gb = data[2]
-        self.cb = data[3]
-        self.alpha = data[4]
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        eid = data[0]
+        ga = data[1]
+        gb = data[2]
+        cb = data[3]
+        alpha = data[4]
+        return RBAR1(eid, ga, gb, cb, alpha, comment=comment)
 
     def Ga(self):
         if isinstance(self.ga, integer_types):
@@ -314,18 +345,20 @@ class RBAR1(RigidElement):
 class RBE1(RigidElement):  # maybe not done, needs testing
     type = 'RBE1'
 
-    def __init__(self):
+    def __init__(self, eid, Gni, Cni, Gmi, Cmi, alpha, comment=''):
         RigidElement.__init__(self)
-        self.Gni = []
-        self.Cni = []
-        self.Gmi = []
-        self.Cmi = []
-
-    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
+        self.eid = eid
+        self.Gni = Gni
+        self.Cni = Cni
+        self.Gmi = Gmi
+        self.Cmi = Cmi
+        self.alpha = alpha
 
-        self.eid = integer(card, 1, 'eid')
+    @classmethod
+    def add_card(self, card, comment=''):
+        eid = integer(card, 1, 'eid')
         iUm = card.index('UM')
         if iUm > 0:
             assert string(card, iUm, 'UM') == 'UM'
@@ -333,15 +366,19 @@ class RBE1(RigidElement):  # maybe not done, needs testing
         #assert isinstance(card[-1], string_types), 'card[-1]=%r type=%s' %(card[-1], type(card[-1]))
         alpha_last = integer_double_or_string(card, -1, 'alpha_last')
         if isinstance(alpha_last, float):
-            self.alpha = alpha_last
+            alpha = alpha_last
             card.pop()  # remove the last field so len(card) will not include alpha
         else:
-            self.alpha = 0.
+            alpha = 0.
 
         # loop till UM, no field9,field10
         n = 1
         i = 0
         offset = 2
+        Gni = []
+        Cni = []
+        Gmi = []
+        Cmi = []
         while offset + i < iUm - 1:
             #print('field(%s) = %s' % (offset + i, card.field(offset + i)))
             gni = integer_or_blank(card, offset + i, 'gn%i' % n)
@@ -349,8 +386,8 @@ class RBE1(RigidElement):  # maybe not done, needs testing
 
             if gni:
                 #print("gni=%s cni=%s" % (gni ,cni))
-                self.Gni.append(gni)
-                self.Cni.append(cni)
+                Gni.append(gni)
+                Cni.append(cni)
                 n += 1
             else:
                 assert cni is None
@@ -366,12 +403,13 @@ class RBE1(RigidElement):  # maybe not done, needs testing
             gmi = integer_or_blank(card, offset + i, 'gm%i' % n)
             cmi = components_or_blank(card, offset + i + 1, 'cm%i' % n)
             if gmi:
-                self.Gmi.append(gmi)
-                self.Cmi.append(cmi)
+                Gmi.append(gmi)
+                Cmi.append(cmi)
                 n += 1
             else:
                 assert cmi is None
             i += 2
+        return RBE1(eid, Gni, Cni, Gmi, Cmi, alpha, comment=comment)
 
     def cross_reference(self, model):
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
@@ -381,8 +419,8 @@ class RBE1(RigidElement):  # maybe not done, needs testing
         self.Gmi_ref = self.Gmi
 
     def uncross_reference(self):
-        self.Gni = self.Gni_node_ids()
-        self.Gmi = self.Gmi_node_ids()
+        self.Gni = self.Gni_node_ids
+        self.Gmi = self.Gmi_node_ids
         del self.Gni_ref, self.Gmi_ref
 
     @property
@@ -475,8 +513,8 @@ class RBE2(RigidElement):
         """
         +-------+-----+-----+-----+------+-------+-----+-----+-----+
         |   1   |  2  |  3  |  4  |  5   |   6   |  7  |  8  |  9  |
-        +-------+-----+-----+-----+------+-------+-----+-----+-----+
-        |  RBE2 | EID | GN  | CM  | GM1  | GM2   | GM3 | GM4 | GM5 |
+        +=======+=====+=====+=====+======+=======+=====+=====+=====+
+        |  RBE2 | EID | GN  | CM  | GM1  |  GM2  | GM3 | GM4 | GM5 |
         +-------+-----+-----+-----+------+-------+-----+-----+-----+
         |       | GM6 | GM7 | GM8 | etc. | ALPHA |     |     |     |
         +-------+-----+-----+-----+------+-------+-----+-----+-----+
@@ -548,8 +586,8 @@ class RBE2(RigidElement):
          | RBE2 | eid  | gn | cm | g1  | g2 | g3 | g4 |
          +------+------+----+----+-----+----+----+----+
         """
-        nCM = len(self.cm)
-        Ai = nCM * len(self.Gmi) / len(self.gn)  # where nGN=1
+        n_cm = len(self.cm)
+        Ai = n_cm * len(self.Gmi) / len(self.gn)  # where nGN=1
 
         card = ['MPC', mpc_id]
         for cm in self.cm:

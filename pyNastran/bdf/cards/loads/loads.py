@@ -325,35 +325,41 @@ class SPCD(Load):
     Defines an enforced displacement value for static analysis and an enforced
     motion value (displacement, velocity or acceleration) in dynamic analysis.
 
-     +------+-----+-----+-----+------+----+---+----+
-     | SPCD | SID |  G1 | C1  |  D1  | G2 |C2 | D2 |
-     +------+-----+-----+-----+------+----+---+----+
-     | SPCD | 100 | 32  | 436 | -2.6 | 5  | 2 | .9 |
-     +------+-----+-----+-----+------+----+---+----+
+     +------+-----+-----+-----+------+----+----+----+
+     |   1  |  2  |  3  |  4  |   5  |  6 | 7  |  8 |
+     +======+=====+=====+=====+======+====+====+====+
+     | SPCD | SID |  G1 | C1  |  D1  | G2 | C2 | D2 |
+     +------+-----+-----+-----+------+----+----+----+
+     | SPCD | 100 | 32  | 436 | -2.6 | 5  | 2  | .9 |
+     +------+-----+-----+-----+------+----+----+----+
     """
     type = 'SPCD'
 
-    def __init__(self):
-        pass
-
-    def add_card(self, card, comment=''):
+    def __init__(self, sid, gids, constraints, enforced, comment=''):
         if comment:
             self._comment = comment
-        self.sid = integer(card, 1, 'sid')
+        self.sid = sid
+        self.gids = gids
+        self.constraints = constraints
+        self.enforced = enforced
+
+    def add_card(self, card, comment=''):
+        sid = integer(card, 1, 'sid')
         if card.field(5) in [None, '']:
-            self.gids = [integer(card, 2, 'G1'),]
-            self.constraints = [components_or_blank(card, 3, 'C1', 0)]
-            self.enforced = [double_or_blank(card, 4, 'D1', 0.0)]
+            gids = [integer(card, 2, 'G1'),]
+            constraints = [components_or_blank(card, 3, 'C1', 0)]
+            enforced = [double_or_blank(card, 4, 'D1', 0.0)]
         else:
-            self.gids = [
+            gids = [
                 integer(card, 2, 'G1'),
                 integer(card, 5, 'G2'),
             ]
             # :0 if scalar point 1-6 if grid
-            self.constraints = [components_or_blank(card, 3, 'C1', 0),
-                                components_or_blank(card, 6, 'C2', 0)]
-            self.enforced = [double_or_blank(card, 4, 'D1', 0.0),
-                             double_or_blank(card, 7, 'D2', 0.0)]
+            constraints = [components_or_blank(card, 3, 'C1', 0),
+                           components_or_blank(card, 6, 'C2', 0)]
+            enforced = [double_or_blank(card, 4, 'D1', 0.0),
+                        double_or_blank(card, 7, 'D2', 0.0)]
+        return SPCD(sid, gids, constraints, enforced, comment=comment)
 
     def add_op2_data(self, data, comment=''):
         if comment:
@@ -581,30 +587,38 @@ class RANDPS(RandomLoad):
     """
     type = 'RANDPS'
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self, sid, j, k, x=0., y=0., tid=0, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            #: Random analysis set identification number. (Integer > 0)
-            #: Defined by RANDOM in the Case Control Deck.
-            self.sid = integer(card, 1, 'sid')
+        #: Random analysis set identification number. (Integer > 0)
+        #: Defined by RANDOM in the Case Control Deck.
+        self.sid = sid
 
-            #: Subcase identification number of the excited load set.
-            #: (Integer > 0)
-            self.j = integer(card, 2, 'j')
+        #: Subcase identification number of the excited load set.
+        #: (Integer > 0)
+        self.j = j
 
-            #: Subcase identification number of the applied load set.
-            #: (Integer >= 0; K >= J)
-            self.k = integer(card, 3, 'k')
+        #: Subcase identification number of the applied load set.
+        #: (Integer >= 0; K >= J)
+        self.k = k
 
-            #: Components of the complex number. (Real)
-            self.x = double_or_blank(card, 4, 'x', 0.0)
-            self.y = double_or_blank(card, 5, 'y', 0.0)
-            #: Identification number of a TABRNDi entry that defines G(F).
-            self.tid = integer_or_blank(card, 6, 'tid', 0)
-            assert len(card) <= 7, 'len(RANDPS card) = %i' % len(card)
-        else:
-            raise NotImplementedError(data)
+        #: Components of the complex number. (Real)
+        self.x = x
+        self.y = y
+
+        #: Identification number of a TABRNDi entry that defines G(F).
+        self.tid = tid
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        sid = integer(card, 1, 'sid')
+        j = integer(card, 2, 'j')
+        k = integer(card, 3, 'k')
+        x = double_or_blank(card, 4, 'x', 0.0)
+        y = double_or_blank(card, 5, 'y', 0.0)
+        tid = integer_or_blank(card, 6, 'tid', 0)
+        assert len(card) <= 7, 'len(RANDPS card) = %i' % len(card)
+        return RANDPS(sid, j, k, x, y, tid, comment=comment)
 
     def cross_reference(self, model):
         if self.tid:

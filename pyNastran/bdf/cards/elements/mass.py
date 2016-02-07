@@ -21,7 +21,7 @@ from pyNastran.utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8
 from pyNastran.bdf.cards.base_card import Element
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
-                                       double_or_blank)
+                                                    double_or_blank)
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
 
@@ -65,29 +65,37 @@ class CMASS1(PointMassElement):
         1: 'eid', 2:'pid', 3:'g1', 4:'c1', 5:'g2', 6:'c2',
     }
 
-    def __init__(self):
+    def __init__(self, eid, pid, g1, c1, g2, c2, comment=''):
         PointMassElement.__init__(self)
-
-    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        self.eid = integer(card, 1, 'eid')
-        self.pid = integer_or_blank(card, 2, 'pid', self.eid)
-        self.g1 = integer_or_blank(card, 3, 'g1')
-        self.c1 = integer_or_blank(card, 4, 'c1')
-        self.g2 = integer_or_blank(card, 5, 'g2')
-        self.c2 = integer_or_blank(card, 6, 'c2')
+        self.eid = eid
+        self.pid = pid
+        self.g1 = g1
+        self.c1 = c1
+        self.g2 = g2
+        self.c2 = c2
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        eid = integer(card, 1, 'eid')
+        pid = integer_or_blank(card, 2, 'pid', eid)
+        g1 = integer_or_blank(card, 3, 'g1')
+        c1 = integer_or_blank(card, 4, 'c1')
+        g2 = integer_or_blank(card, 5, 'g2')
+        c2 = integer_or_blank(card, 6, 'c2')
         assert len(card) <= 7, 'len(CMASS1 card) = %i' % len(card)
+        return CMASS1(eid, pid, g1, c1, g2, c2, comment=comment)
 
-    def add_op2_data(self, data, comment=''):
-        if comment:
-            self._comment = comment
-        self.eid = data[0]
-        self.pid = data[1]
-        self.g1 = data[2]
-        self.g2 = data[3]
-        self.c1 = data[4]
-        self.c2 = data[5]
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        eid = data[0]
+        pid = data[1]
+        g1 = data[2]
+        g2 = data[3]
+        c1 = data[4]
+        c2 = data[5]
+        return CMASS1(eid, pid, g1, c1, g2, c2, comment=comment)
 
     def Eid(self):
         return self.eid
@@ -204,29 +212,37 @@ class CMASS2(PointMassElement):
         1: 'eid', 2:'pid', 3:'g1', 4:'c1', 5:'g2', 6:'c2',
     }
 
-    def __init__(self):
+    def __init__(self, eid, mass, g1, c1, g2, c2, comment=''):
         PointMassElement.__init__(self)
-
-    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        self.eid = integer(card, 1, 'eid')
-        self.mass = double_or_blank(card, 2, 'mass', 0.)
-        self.g1 = integer_or_blank(card, 3, 'g1')
-        self.c1 = integer_or_blank(card, 4, 'c1')
-        self.g2 = integer_or_blank(card, 5, 'g2')
-        self.c2 = integer_or_blank(card, 6, 'c2')
+        self.eid = eid
+        self.mass = mass
+        self.g1 = g1
+        self.c1 = c1
+        self.g2 = g2
+        self.c2 = c2
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        eid = integer(card, 1, 'eid')
+        mass = double_or_blank(card, 2, 'mass', 0.)
+        g1 = integer_or_blank(card, 3, 'g1')
+        c1 = integer_or_blank(card, 4, 'c1')
+        g2 = integer_or_blank(card, 5, 'g2')
+        c2 = integer_or_blank(card, 6, 'c2')
         assert len(card) <= 7, 'len(CMASS2 card) = %i' % len(card)
+        return CMASS2(eid, mass, g1, c1, g2, c2, comment=comment)
 
-    def add_op2_data(self, data, comment=''):
-        if comment:
-            self._comment = comment
-        self.eid = data[0]
-        self.mass = data[1]
-        self.g1 = data[2]
-        self.g2 = data[3]
-        self.c1 = data[4]
-        self.c2 = data[5]
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        eid = data[0]
+        mass = data[1]
+        g1 = data[2]
+        g2 = data[3]
+        c1 = data[4]
+        c2 = data[5]
+        return CMASS2(eid, mass, g1, c1, g2, c2, comment=comment)
 
     def _verify(self, xref=False):
         eid = self.Eid()
@@ -344,27 +360,32 @@ class CMASS3(PointMassElement):
         1: 'eid', 2:'pid', 3:'s1', 4:'s2',
     }
 
-    def __init__(self):
+    def __init__(self, eid, pid, s1, s2, comment=''):
         PointMassElement.__init__(self)
-
-    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        self.eid = integer(card, 1, 'eid')
-        self.pid = integer_or_blank(card, 2, 'pid', self.eid)
-        self.s1 = integer_or_blank(card, 3, 's1')
-        self.s2 = integer_or_blank(card, 4, 's2')
+        self.eid = eid
+        self.pid = pid
+        self.s1 = s1
+        self.s2 = s2
+        assert self.s1 != self.s2
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        eid = integer(card, 1, 'eid')
+        pid = integer_or_blank(card, 2, 'pid', eid)
+        s1 = integer_or_blank(card, 3, 's1')
+        s2 = integer_or_blank(card, 4, 's2')
         assert len(card) <= 5, 'len(CMASS3 card) = %i' % len(card)
-        assert self.s1 != self.s2
+        return CMASS3(eid, pid, s1, s2, comment=comment)
 
-    def add_op2_data(self, data, comment=''):
-        if comment:
-            self._comment = comment
-        self.eid = data[0]
-        self.pid = data[1]
-        self.s1 = data[2]
-        self.s2 = data[3]
-        assert self.s1 != self.s2
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        eid = data[0]
+        pid = data[1]
+        s1 = data[2]
+        s2 = data[3]
+        return CMASS3(eid, pid, s1, s2, comment=comment)
 
     def Eid(self):
         return self.eid
@@ -426,7 +447,7 @@ class CMASS4(PointMassElement):
         1: 'eid', 2:'mass', 3:'s1', 4:'s2',
     }
 
-    def __init__(self, eid, mass, s1, s2=0):
+    def __init__(self, eid, mass, s1, s2=0, comment=''):
         PointMassElement.__init__(self)
         if comment:
             self._comment = comment
@@ -503,7 +524,7 @@ class CONM1(PointMassElement):
         1: 'eid', 2:'nid', 3:'cid',
     }
     def _update_field_helper(self, n, value):
-        m = self.massMatrix
+        m = self.mass_matrix
         if n == 4:
             m[0, 0] = value
         elif n == 5:
@@ -738,7 +759,7 @@ class CONM2(PointMassElement):
         else:
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
-    def __init__(self):
+    def __init__(self, eid, nid, cid, mass, X, I, comment=''):
         """
         Parameters
         ----------
@@ -755,7 +776,7 @@ class CONM2(PointMassElement):
 
         +-------+--------+-------+-------+---------+------+------+------+-----+
         |   1   |    2   |    3  |   4   |    5    |  6   |  7   |   8  |  9  |
-        +-------+--------+-------+-------+---------+------+------+------+-----+
+        +=======+========+=======+=======+=========+======+======+======+=====+
         | CONM2 |   EID  |  NID  |  CID  |  MASS   |  X1  |  X2  |  X3  |     |
         +-------+--------+-------+-------+---------+------+------+------+-----+
         |       |   I11  |  I21  |  I22  |   I31   |  I32 |  I33 |      |     |
@@ -766,42 +787,35 @@ class CONM2(PointMassElement):
         +-------+--------+-------+-------+---------+
         """
         PointMassElement.__init__(self)
-
-    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
         #: Element identification number. (0 < Integer < 100,000,000)
-        self.eid = integer(card, 1, 'eid')
+        self.eid = eid
 
         #: Grid point identification number. (Integer > 0)
-        self.nid = integer(card, 2, 'nid')
+        self.nid = nid
+
         #: Coordinate system identification number.
         #: For CID of -1; see X1, X2, X3 below.
         #: (Integer > -1; Default = 0)
-        self.cid = integer_or_blank(card, 3, 'cid', 0)
+        self.cid = cid
 
         #: Mass value. (Real)
-        self.mass = double_or_blank(card, 4, 'mass', 0.)
-        assert self.mass >= 0., 'mass=%s' % self.mass
+        self.mass = mass
 
         #: Offset distances from the grid point to the center of gravity of
         # the mass in the coordinate system defined in field 4, unless
         # CID = -1, in which case X1, X2, X3 are the coordinates, not
         # offsets, of the center of gravity of the mass in the basic
         #: coordinate system. (Real)
-        self.X = array([double_or_blank(card, 5, 'x1', 0.0),
-                        double_or_blank(card, 6, 'x2', 0.0),
-                        double_or_blank(card, 7, 'x3', 0.0)])
+        self.X = X
 
         #: Mass moments of inertia measured at the mass center of gravity in
         # the coordinate system defined by field 4. If CID = -1, the basic
         # coordinate system is implied. (Real)
-        self.I = array([double_or_blank(card, 9, 'I11', 0.0),
-                        double_or_blank(card, 10, 'I21', 0.0),
-                        double_or_blank(card, 11, 'I22', 0.0),
-                        double_or_blank(card, 12, 'I31', 0.0),
-                        double_or_blank(card, 13, 'I32', 0.0),
-                        double_or_blank(card, 14, 'I33', 0.0)])
+        self.I = I
+
+        assert self.mass >= 0., 'mass=%s' % self.mass
 
         I11, I12, I22, I13, I23, I33 = self.I
         I = array([
@@ -815,17 +829,37 @@ class CONM2(PointMassElement):
             msg += 'I=\n%s\n' % str(I)
             msg += 'eigenvalues=%s' % str(eigi)
             raise RuntimeError(msg)
-        assert len(card) <= 15, 'len(CONM2 card) = %i' % len(card)
 
-    def add_op2_data(self, data, comment=''):
-        if comment:
-            self._comment = comment
-        self.eid = data[0]
-        self.nid = data[1]
-        self.cid = data[2]
-        self.mass = data[3]
-        self.X = array(data[4:7])
-        self.I = array(data[7:])
+    @classmethod
+    def add_card(cls, card, comment=''):
+        eid = integer(card, 1, 'eid')
+        nid = integer(card, 2, 'nid')
+        cid = integer_or_blank(card, 3, 'cid', 0)
+        mass = double_or_blank(card, 4, 'mass', 0.)
+
+        X = array([double_or_blank(card, 5, 'x1', 0.0),
+                   double_or_blank(card, 6, 'x2', 0.0),
+                   double_or_blank(card, 7, 'x3', 0.0)])
+
+        I = array([double_or_blank(card, 9, 'I11', 0.0),
+                   double_or_blank(card, 10, 'I21', 0.0),
+                   double_or_blank(card, 11, 'I22', 0.0),
+                   double_or_blank(card, 12, 'I31', 0.0),
+                   double_or_blank(card, 13, 'I32', 0.0),
+                   double_or_blank(card, 14, 'I33', 0.0)])
+
+        assert len(card) <= 15, 'len(CONM2 card) = %i' % len(card)
+        return CONM2(eid, nid, cid, mass, X, I, comment=comment)
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        eid = data[0]
+        nid = data[1]
+        cid = data[2]
+        mass = data[3]
+        X = array(data[4:7])
+        I = array(data[7:])
+        return CONM2(eid, nid, cid, mass, X, I, comment=comment)
 
     def _verify(self, xref=False):
         eid = self.Eid()

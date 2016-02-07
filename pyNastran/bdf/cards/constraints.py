@@ -51,11 +51,11 @@ class ConstraintObject(object):
         else:
             self.constraints[key] = [constraint]
 
-    def _spc(self, spcID):
+    def _spc(self, spc_id):
         """could be an spcadd/mpcadd or spc/mpc,spc1,spcd,spcax,suport1"""
-        if spcID in self.add_constraints:
-            return self.add_constraints[spcID]
-        return self.constraints[spcID]
+        if spc_id in self.add_constraints:
+            return self.add_constraints[spc_id]
+        return self.constraints[spc_id]
 
     def cross_reference(self, model):
         #return
@@ -121,6 +121,8 @@ class Constraint(BaseCard):
 class SUPORT1(Constraint):
     """
     +---------+-----+-----+----+-----+----+-----+----+
+    |    1    |  2  |  3  |  4 |  5  | 6  |  7  | 8  |
+    +=========+=====+=====+====+=====+====+=====+====+
     | SUPORT1 | SID | ID1 | C1 | ID2 | C2 | ID3 | C3 |
     +---------+-----+-----+----+-----+----+-----+----+
     | SUPORT1 |  1  |  2  | 23 |  4  | 15 |  5  |  0 |
@@ -128,37 +130,40 @@ class SUPORT1(Constraint):
     """
     type = 'SUPORT1'
 
-    def __init__(self):
+    def __init__(self, conid, IDs, Cs, comment=''):
         Constraint.__init__(self)
-        self.IDs = []
-        self.Cs = []
-
-    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        self.conid = integer(card, 1, 'conid')  # really a support id sid
+        self.conid = conid
+        self.IDs = IDs
+        self.Cs = Cs
+        assert len(self.IDs) > 0
+        assert len(self.IDs) == len(self.Cs)
+
+    @classmethod
+    def add_card(self, card, comment=''):
+        conid = integer(card, 1, 'conid')  # really a support id sid
 
         nfields = len(card)
         assert len(card) > 2
         nterms = int((nfields - 1.) / 2.)
         n = 1
+        IDs = []
+        Cs = []
         for i in range(nterms):
             nstart = 2 + 2 * i
             ID = integer(card, nstart, 'ID%s' % n)
             C = components_or_blank(card, nstart + 1, 'component%s' % n, '0')
-            self.IDs.append(ID)
-            self.Cs.append(C)
+            IDs.append(ID)
+            Cs.append(C)
             n += 1
-        assert len(self.IDs) > 0
-        assert len(self.IDs) == len(self.Cs)
+        return SUPORT1(conid, IDs, Cs, comment=comment)
 
-    def add_op2_data(self, data, comment=''):
-        if comment:
-            self._comment = comment
-        msg = '%s has not implemented data parsing' % self.type
-        raise NotImplementedError(msg)
-        #assert len(self.IDs) > 0
-        #assert len(self.IDs) == len(self.Cs)
+    #@classmethod
+    #def add_op2_data(cls, data, comment=''):
+        #msg = '%s has not implemented data parsing' % cls.type
+        #raise NotImplementedError(msg)
+        #return SUPORT1(conid, IDs, Cs, commment=comment)
 
     def add_suport1_to_set(self, suport1):
         assert self.conid == suport1.conid, 'SUPORT1 conid=%s new_conid=%s; they must be the same' % (self.conid, suport1.conid)
@@ -196,43 +201,51 @@ class SUPORT1(Constraint):
 class SUPORT(Constraint):
     """
     +---------+-----+-----+-----+-----+-----+-----+-----+----+
+    |    1    |  2  |  3  |  4  |  5  |  6  |  7  |  8  | 9  |
+    +=========+=====+=====+=====+=====+=====+=====+=====+====+
     | SUPORT  | ID1 | C1  | ID2 |  C2 | ID3 | C3  | ID4 | C4 |
     +---------+-----+-----+-----+-----+-----+-----+-----+----+
     """
     type = 'SUPORT'
 
-    def __init__(self):
+    def __init__(self, IDs, Cs, comment=''):
         Constraint.__init__(self)
-        self.IDs = [] ## TODO:  IDs reference nodes???
-        self.Cs = []
-
-    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
+        self.IDs = IDs ## TODO:  IDs reference nodes???
+        self.Cs = Cs
+        assert len(self.IDs) > 0
+        assert len(self.IDs) == len(self.Cs)
+
+    @classmethod
+    def add_card(cls, card, comment=''):
         # TODO: remove fields...
-        fields = card.fields(1)
+        #fields = card.fields(1)
 
         nfields = len(card)
         assert len(card) > 1, card
         nterms = int(nfields / 2.)
         n = 1
+        IDs = []
+        Cs = []
         for i in range(nterms):
             nstart = 1 + 2 * i
             ID = integer(card, nstart, 'ID%s' % n)
             C = components_or_blank(card, nstart + 1, 'component%s' % n, '0')
-            self.IDs.append(ID)
-            self.Cs.append(C)
+            IDs.append(ID)
+            Cs.append(C)
             n += 1
-        assert len(self.IDs) > 0
-        assert len(self.IDs) == len(self.Cs)
+        return SUPORT(IDs, Cs, comment=comment)
 
-    def add_op2_data(self, data):
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
         fields = data
+        IDs = []
+        Cs = []
         for i in range(0, len(fields), 2):
-            self.IDs.append(fields[i])
-            self.Cs.append(fields[i + 1])
-        assert len(self.IDs) > 0
-        assert len(self.IDs) == len(self.Cs)
+            IDs.append(fields[i])
+            Cs.append(fields[i + 1])
+        return SUPORT(IDs, Cs, comment=comment)
 
     @property
     def node_ids(self):
@@ -269,22 +282,26 @@ class SESUP(SUPORT):
 class MPC(Constraint):
     type = 'MPC'
 
-    def __init__(self):
+    def __init__(self, conid, gids, constraints, enforced, comment=''):
         Constraint.__init__(self)
-
-    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-
         #: Set identification number. (Integer > 0)
-        self.conid = integer(card, 1, 'conid')
+        self.conid = conid
         #: Identification number of grid or scalar point. (Integer > 0)
-        self.gids = []
+        self.gids = gids
         #: Component number. (Any one of the Integers 1 through 6 for grid
         #: points; blank or zero for scalar points.)
-        self.constraints = []
+        self.constraints = constraints
         #: Coefficient. (Real; Default = 0.0 except A1 must be nonzero.)
-        self.enforced = []
+        self.enforced = enforced
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        conid = integer(card, 1, 'conid')
+        gids = []
+        constraints = []
+        enforced = []
 
         fields = card.fields(0)
         nfields = len(fields)
@@ -299,9 +316,9 @@ class MPC(Constraint):
                     raise RuntimeError('enforced1 must be nonzero; enforcedi=%r' % enforcedi)
             else:
                 enforcedi = double_or_blank(card, ifield + 2, 'enforced%i' % i, 0.0)
-            self.gids.append(grid)
-            self.constraints.append(component)
-            self.enforced.append(enforcedi)
+            gids.append(grid)
+            constraints.append(component)
+            enforced.append(enforcedi)
             i += 1
 
             if ifield + 4 > nfields and i != 2:
@@ -310,16 +327,17 @@ class MPC(Constraint):
             grid = integer(card, ifield + 3, 'G%i' % i)
             component = components_or_blank(card, ifield + 4, 'constraint%i' % i, 0)  # scalar point
             enforcedi = double_or_blank(card, ifield + 5, 'enforced%i' % i)
-            self.gids.append(grid)
-            self.constraints.append(component)
-            self.enforced.append(enforcedi)
+            gids.append(grid)
+            constraints.append(component)
+            enforced.append(enforcedi)
             i += 1
+        return MPC(conid, gids, constraints, enforced, comment=comment)
 
-    def add_op2_data(self, data, comment=''):
-        if comment:
-            self._comment = comment
-        msg = '%s has not implemented data parsing' % self.type
-        raise NotImplementedError(msg)
+    #@classmethod
+    #def add_op2_data(cls, data, comment=''):
+        #msg = '%s has not implemented data parsing' % cls.type
+        #raise NotImplementedError(msg)
+        #return MPC(conid, gids, constraints, enforced, comment=comment)
 
     def nodeIDs(self):
         self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
@@ -371,19 +389,24 @@ class MPC(Constraint):
         if is_double:
             for i, grid, component, enforced in zip(count(), grids, constraints, enforceds):
                 if i == 0:
-                    msg += '%16i%16s%16s\n' % (grid, component, print_scientific_double(enforced))
+                    msg += '%16i%16s%16s\n' % (
+                        grid, component, print_scientific_double(enforced))
                 elif i % 2 == 1:
-                    msg += '%-8s%16i%16s%16s\n' % ('*', grid, component, print_scientific_double(enforced))
+                    msg += '%-8s%16i%16s%16s\n' % (
+                        '*', grid, component, print_scientific_double(enforced))
                 else:
-                    msg += '%-8s%16s%16i%16s%16s\n' % ('*', '', grid, component, print_scientific_double(enforced))
+                    msg += '%-8s%16s%16i%16s%16s\n' % (
+                        '*', '', grid, component, print_scientific_double(enforced))
         else:
             for i, grid, component, enforced in zip(count(), grids, constraints, enforceds):
                 if i == 0:
                     msg += '%16i%16s%16s\n' % (grid, component, print_float_16(enforced))
                 elif i % 2 == 1:
-                    msg += '%-8s%16i%16s%16s\n' % ('*', grid, component, print_float_16(enforced))
+                    msg += '%-8s%16i%16s%16s\n' % (
+                        '*', grid, component, print_float_16(enforced))
                 else:
-                    msg += '%-8s%16s%16i%16s%16s\n' % ('*', '', grid, component, print_float_16(enforced))
+                    msg += '%-8s%16s%16i%16s%16s\n' % (
+                        '*', '', grid, component, print_float_16(enforced))
         if i % 2 == 0:
             msg += '*'
         return self.comment + msg.rstrip() + '\n'
@@ -402,36 +425,41 @@ class SPC(Constraint):
     """
     type = 'SPC'
 
-    def __init__(self):
+    def __init__(self, conid, gids, constraints, enforced, comment=''):
         Constraint.__init__(self)
-
-    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
+        self.conid = conid
+        self.gids = gids
+        self.constraints = constraints
+        self.enforced = enforced
 
-        self.conid = integer(card, 1, 'sid')
+    @classmethod
+    def add_card(cls, card, comment=''):
+        conid = integer(card, 1, 'sid')
         if card.field(5) in [None, '']:
-            self.gids = [integer(card, 2, 'G1'),]
-            self.constraints = [components_or_blank(card, 3, 'C1', 0)]
-            self.enforced = [double_or_blank(card, 4, 'D1', 0.0)]
+            gids = [integer(card, 2, 'G1'),]
+            constraints = [components_or_blank(card, 3, 'C1', 0)]
+            enforced = [double_or_blank(card, 4, 'D1', 0.0)]
         else:
-            self.gids = [
+            gids = [
                 integer(card, 2, 'G1'),
                 integer_or_blank(card, 5, 'G2'),
             ]
             # :0 if scalar point 1-6 if grid
-            self.constraints = [components_or_blank(card, 3, 'C1', 0),
-                                components_or_blank(card, 6, 'C2', 0)]
-            self.enforced = [double_or_blank(card, 4, 'D1', 0.0),
-                             double_or_blank(card, 7, 'D2', 0.0)]
+            constraints = [components_or_blank(card, 3, 'C1', 0),
+                           components_or_blank(card, 6, 'C2', 0)]
+            enforced = [double_or_blank(card, 4, 'D1', 0.0),
+                        double_or_blank(card, 7, 'D2', 0.0)]
+        return SPC(conid, gids, constraints, enforced, comment=comment)
 
-    def add_op2_data(self, data, comment=''):
-        if comment:
-            self._comment = comment
-        self.conid = data[0]
-        self.gids = [data[1]]
-        self.constraints = [data[2]]
-        self.enforced = [data[3]]
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        conid = data[0]
+        gids = [data[1]]
+        constraints = [data[2]]
+        enforced = [data[3]]
+        return SPC(conid, gids, constraints, enforced, comment=comment)
 
     #def get_node_dofs(self, model):
         #pass
@@ -492,7 +520,8 @@ class GMSPC(Constraint):
 
     def cross_reference(self, model):
         """TODO: xref"""
-        msg = ', which is required by %s=%s' % (self.type, self.conid)
+        #msg = ', which is required by %s=%s' % (self.type, self.conid)
+        pass
 
     def uncross_reference(self):
         pass
@@ -519,37 +548,43 @@ class SPCAX(Constraint):
     """
     type = 'SPCAX'
 
-    def __init__(self):
+    def __init__(self, conid, rid, hid, c, d, comment=''):
         # defines everything :) at least until cross-referencing methods are
         # implemented
         Constraint.__init__(self)
-
-    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
         #: Identification number of a single-point constraint set.
-        self.conid = integer(card, 1, 'conid')
+        self.conid = conid
         #: Ring identification number. See RINGAX entry.
-        self.rid = integer(card, 2, 'rid')
+        self.rid = rid
         #: Harmonic identification number. (Integer >= 0)
-        self.hid = integer(card, 3, 'hid')
+        self.hid = hid
         #: Component identification number. (Any unique combination of the
         #: Integers 1 through 6.)
-        self.c = components(card, 4, 'c')
+        self.c = c
         #: Enforced displacement value
-        self.d = double(card, 5, 'd')
+        self.d = d
 
-    def add_op2_data(self, data, comment=''):
-        if comment:
-            self._comment = comment
-        msg = '%s has not implemented data parsing' % self.type
-        raise NotImplementedError(msg)
+    @classmethod
+    def add_card(cls, card, comment=''):
+        conid = integer(card, 1, 'conid')
+        rid = integer(card, 2, 'rid')
+        hid = integer(card, 3, 'hid')
+        c = components(card, 4, 'c')
+        d = double(card, 5, 'd')
+        return SPCAX(conid, rid, hid, c, d, comment=comment)
+
+    #@classmethod
+    #def add_op2_data(cls, data, comment=''):
+        #msg = '%s has not implemented data parsing' % cls.type
+        #raise NotImplementedError(msg)
 
     def cross_reference(self, model):
-        msg = ', which is required by %s=%s' % (self.type, self.conid)
+        pass
+        #msg = ', which is required by %s=%s' % (self.type, self.conid)
         #self.rid = model.ring[self.rid]
         #self.hid = model.harmonic[self.hid]
-        pass
 
     def uncross_reference(self):
         pass
@@ -587,24 +622,28 @@ class SPC1(Constraint):
     """
     type = 'SPC1'
 
-    def __init__(self):
+    def __init__(self, conid, constraints, nodes, comment=''):
         Constraint.__init__(self)
-
-    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        self.conid = integer(card, 1, 'conid')
-        self.constraints = components(card, 2, 'constraints')  # 246 = y; dx, dz dir
-        nodes = card.fields(3)
+        self.conid = conid
+        self.constraints = constraints
         self.nodes = expand_thru(nodes)
         self.nodes.sort()
 
-    def add_op2_data(self, data, comment=''):
-        if comment:
-            self._comment = comment
-        self.conid = data[0]
-        self.constraints = data[1]
-        self.nodes = data[2:]
+    @classmethod
+    def add_card(cls, card, comment=''):
+        conid = integer(card, 1, 'conid')
+        constraints = components(card, 2, 'constraints')  # 246 = y; dx, dz dir
+        nodes = card.fields(3)
+        return SPC1(conid, constraints, nodes, comment=comment)
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        conid = data[0]
+        constraints = data[1]
+        nodes = data[2:]
+        return SPC1(conid, constraints, nodes, comment=comment)
 
     @property
     def node_ids(self):
@@ -639,22 +678,27 @@ class SPCADD(ConstraintADD):
     Defines a single-point constraint set as a union of single-point constraint
     sets defined on SPC or SPC1 entries.
 
-    +---------+---+---+------+
+    +--------+----+----+-----+
+    |    1   | 2  |  3 |  4  |
+    +========+====+====+=====+
     | SPCADD  | 2 | 1 |   3  |
     +---------+---+---+------+
     """
     type = 'SPCADD'
 
-    def __init__(self):
+    def __init__(self, conid, sets, comment=''):
         ConstraintADD.__init__(self)
-
-    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        self.conid = integer(card, 1, 'conid')
-        sets = card.fields(2)
+        self.conid = conid
         self.sets = expand_thru(sets)
         self.sets.sort()
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        conid = integer(card, 1, 'conid')
+        sets = card.fields(2)
+        return MPCADD(conid, sets, comment=comment)
 
     def organize_constraints(self, model):
         """
@@ -709,28 +753,31 @@ class MPCADD(ConstraintADD):
 
     +--------+----+----+-----+
     |    1   | 2  |  3 |  4  |
-    +--------+----+----+-----+
+    +========+====+====+=====+
     | MPCADD | 2  |  1 |  3  |
     +--------+----+----+-----+
     """
     type = 'MPCADD'
 
-    def __init__(self):
+    def __init__(self, conid, sets, comment=''):
         ConstraintADD.__init__(self)
-
-    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        self.conid = integer(card, 1, 'conid')
-        sets = card.fields(2)
+        self.conid = conid
         self.sets = expand_thru(sets)
         self.sets.sort()
 
-    def add_op2_data(self, data, comment=''):
-        if comment:
-            self._comment = comment
-        msg = '%s has not implemented data parsing' % self.type
-        raise NotImplementedError(msg)
+    @classmethod
+    def add_card(cls, card, comment=''):
+        conid = integer(card, 1, 'conid')
+        sets = card.fields(2)
+        return MPCADD(conid, sets, comment=comment)
+
+    #@classmethod
+    #def add_op2_data(cls, data, comment=''):
+        #msg = '%s has not implemented data parsing' % self.type
+        #raise NotImplementedError(msg)
+        #return MPCADD(conid, sets, comment=comment)
 
     @property
     def mpc_ids(self):

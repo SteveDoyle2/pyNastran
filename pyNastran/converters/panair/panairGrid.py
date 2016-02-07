@@ -232,13 +232,14 @@ class PanairGrid(object):
 
     def _read_symmetry(self, section):
         """
-        @code
-        $symmetry - xz plane of symmetry
-        =misymm   mjsymm
-        1.        0.
-        @endcode
+        .. code-block:: console
 
-        @warning
+          $symmetry - xz plane of symmetry
+          =misymm   mjsymm
+          1.        0.
+
+        .. warning::
+
             doesnt consider antisymmetryic
         """
         # doesnt consider antisymmetric
@@ -313,17 +314,17 @@ class PanairGrid(object):
 
     def _read_points(self, section):
         """
-        @code
-        $points - wing-body  with composite panels
-        =kn                                               cpnorm
-        4.                                                2.
-        =kt
-        1.
-        =nm       nn                                                          netname
-        11.       3.                                                          winga
-        =x(1,1)   y(1,1)    z(1,1)    x(*,*)    y(*,*)    z(*,*)
-           69.4737    9.2105    0.0000   63.7818    9.5807    0.7831
-        @endcode
+        .. code-block:: console
+
+          $points - wing-body  with composite panels
+          =kn                                               cpnorm
+          4.                                                2.
+          =kt
+          1.
+          =nm       nn                                                          netname
+          11.       3.                                                          winga
+          =x(1,1)   y(1,1)    z(1,1)    x(*,*)    y(*,*)    z(*,*)
+             69.4737    9.2105    0.0000   63.7818    9.5807    0.7831
         """
         nnetworks = int(float(section[1][0:10]))
         cp_norm = section[1][50:60].strip()
@@ -372,29 +373,28 @@ class PanairGrid(object):
 
     def _read_circular_section(self, section):
         """
-        @code
-        $circular sections - nacelle with composite panels
-        =kn
-        2.
-        =kt
-        1.
-        =nopt                                                                 netname
-        0.                                                                    cowlu
-        =nm
-        20.
-        =xs(1)    ri(1)     xs(2)     ri(2)     xs(*)     ri(*)
-            2.0000    2.3000    1.5756    2.3000    1.1486    2.3000
-            0.7460    2.3030    0.4069    2.3286    0.1624    2.3790
-            0.0214    2.4542   -0.0200    2.5485    0.0388    2.6522
-            0.2056    2.7554    0.4869    2.8522    0.8883    2.9413
-            1.4250    3.0178    2.1188    3.0656    2.9586    3.0658
-            3.8551    3.0175    4.6715    2.9439    5.3492    2.8700
-            6.0000    2.7842    6.4687    2.7442
-        =nn
-        5.
-        =th(1)    th(2)     th(3)     th(4)     th(5)
-        -90.      -45.      0.        45.       90.
-        @endcode
+        .. code-block:: console
+          $circular sections - nacelle with composite panels
+          =kn
+          2.
+          =kt
+          1.
+          =nopt                                                                 netname
+          0.                                                                    cowlu
+          =nm
+          20.
+          =xs(1)    ri(1)     xs(2)     ri(2)     xs(*)     ri(*)
+              2.0000    2.3000    1.5756    2.3000    1.1486    2.3000
+              0.7460    2.3030    0.4069    2.3286    0.1624    2.3790
+              0.0214    2.4542   -0.0200    2.5485    0.0388    2.6522
+              0.2056    2.7554    0.4869    2.8522    0.8883    2.9413
+              1.4250    3.0178    2.1188    3.0656    2.9586    3.0658
+              3.8551    3.0175    4.6715    2.9439    5.3492    2.8700
+              6.0000    2.7842    6.4687    2.7442
+          =nn
+          5.
+          =th(1)    th(2)     th(3)     th(4)     th(5)
+          -90.      -45.      0.        45.       90.
         """
         nnetworks = int(float(section[1][0:10]))
         cp_norm = section[1][50:60].strip()
@@ -554,10 +554,10 @@ class PanairGrid(object):
 
     def _read_printout(self, section):
         """
-        @code
-        isings  igeomp  isingp  icontp  ibconp  iedgep
-        ipraic  nexdgn  ioutpr  ifmcpr  icostp
-        @endcode
+        .. code-block:: console
+
+          isings  igeomp  isingp  icontp  ibconp  iedgep
+          ipraic  nexdgn  ioutpr  ifmcpr  icostp
         """
         #self.printoutSection = '\n'.join(section)+'\n'
 
@@ -632,16 +632,16 @@ class PanairGrid(object):
 
     def _read_trailing_wakes(self, section):
         """
-        @code
-        $trailing wakes from body
-        =kn                                               cpnorm
-        2.
-        =kt       matcw
-        18.       1.
-        =inat     insd      xwake     twake                                   netname
-        bodyl     3.        100.      .0                                      bodylwk
-        bodyu     3.        100.      .0                                      bodyuwk
-        @endcode
+        .. code-block:: console
+
+          $trailing wakes from body
+          =kn                                               cpnorm
+          2.
+          =kt       matcw
+          18.       1.
+          =inat     insd      xwake     twake                                   netname
+          bodyl     3.        100.      .0                                      bodylwk
+          bodyu     3.        100.      .0                                      bodyuwk
         """
         #return True  # disable wakes
         nnetworks = int(float(section[1][0:10]))

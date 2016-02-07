@@ -12,7 +12,7 @@ class CalculixConverter(BDF):
     """
     Converts a BDF to Calculix (inp/dat/py files).
 
-    @warning Totally inaccurate....
+    .. warning:: Totally inaccurate....
 
     How:
       * Nodes/Coordinate Systems/Elements/Properties/Materials are
@@ -147,7 +147,7 @@ class CalculixConverter(BDF):
 
     def calculix_elements(self, f):
         """
-        @todo sort elements by Type and Material ID
+        .. todo:: sort elements by Type and Material ID
         """
         dat = ''
         dat += '** Calculix_Elements\n'

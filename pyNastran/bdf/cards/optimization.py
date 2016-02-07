@@ -239,25 +239,27 @@ class DOPTPRM(OptConstraint):
         'UPDFAC1' : 2.0,
         'UPDFAC2' : 0.5,
         }
-    def __init__(self):
+    def __init__(self, params, comment=''):
         """
         Design Optimization Parameters
         Overrides default values of parameters used in design optimization
 
         +---------+--------+------+--------+------+--------+------+--------+------+
+        |    1    |    2   |   3  |   4    |  5   |    6   |   7  |    8   |   9  |
+        +=========+========+======+========+======+========+======+========+======+
         | DOPTPRM | PARAM1 | VAL1 | PARAM2 | VAL2 | PARAM3 | VAL3 | PARAM4 | VAL4 |
         +---------+--------+------+--------+------+--------+------+--------+------+
         |         | PARAM5 | VAL5 | -etc.- |      |        |      |        |      |
         +---------+--------+------+--------+------+--------+------+--------+------+
         """
-        pass
-
-    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
+        self.params = params
 
+    @classmethod
+    def add_card(self, card, comment=''):
         nfields = len(card) - 1
-        self.params = {}
+        params = {}
         for i in range(0, nfields, 2):
             param = string_or_blank(card, i + 1, 'param')
             default_value = None
@@ -266,7 +268,8 @@ class DOPTPRM(OptConstraint):
             if param in self.defaults:
                 default_value = self.defaults[param]
             val = integer_double_or_blank(card, i + 2, '%s_value' % param, default_value)
-            self.params[param] = val
+            params[param] = val
+        return DOPTPRM(params, comment=comment)
 
     def raw_fields(self):
         list_fields = ['DOPTPRM']

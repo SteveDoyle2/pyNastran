@@ -365,10 +365,6 @@ class MAT1(IsotropicMaterial):
     def Matt1(self):
         return self.matt1
 
-    def uncross_reference(self):
-        self.mats1 = self.Mats1()
-        self.matt1 = self.Matt1()
-
     def raw_fields(self):
         list_fields = ['MAT1', self.mid, self.e, self.g, self.nu, self.rho, self.a,
                        self.TRef, self.ge, self.St, self.Sc, self.Ss, self.Mcsid]
@@ -444,54 +440,78 @@ class MAT2(AnisotropicMaterial):
         14: 'St', 15:'Sc', 16:'Ss', 17:'Mcsid',
     }
 
-    def __init__(self):
+    def __init__(self, mid, G11, G12, G13, G22, G23, G33,
+                 rho, a1, a2, a3, TRef, ge, St, Sc, Ss, Mcsid, comment=''):
         AnisotropicMaterial.__init__(self)
         self.matt2 = None
-
-    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        self.mid = integer(card, 1, 'mid')
-        self.G11 = double_or_blank(card, 2, 'G11', 0.0)
-        self.G12 = double_or_blank(card, 3, 'G12', 0.0)
-        self.G13 = double_or_blank(card, 4, 'G13', 0.0)
-        self.G22 = double_or_blank(card, 5, 'G22', 0.0)
-        self.G23 = double_or_blank(card, 6, 'G23', 0.0)
-        self.G33 = double_or_blank(card, 7, 'G33', 0.0)
+        self.mid = mid
+        self.G11 = G11
+        self.G12 = G12
+        self.G13 = G13
+        self.G22 = G22
+        self.G23 = G23
+        self.G33 = G33
+        self.rho = rho
+        self.a1 = a1
+        self.a2 = a2
+        self.a3 = a3
+        self.TRef = TRef
+        self.ge = ge
+        self.St = St
+        self.Sc = Sc
+        self.St = St
+        self.Mcsid = Mcsid
 
-        self.rho = double_or_blank(card, 8, 'rho', 0.0)
-        self.a1 = double_or_blank(card, 9, 'a1') # blank?
-        self.a2 = double_or_blank(card, 10, 'a2') # blank?
-        self.a3 = double_or_blank(card, 11, 'a3') # blank?
-        self.TRef = double_or_blank(card, 12, 'TRef', 0.0)
-        self.ge = double_or_blank(card, 13, 'ge', 0.0)
-        self.St = double_or_blank(card, 14, 'St') # or blank?
-        self.Sc = double_or_blank(card, 15, 'Sc') # or blank?
-        self.Ss = double_or_blank(card, 16, 'Ss') # or blank?
-        self.Mcsid = integer_or_blank(card, 17, 'Mcsid')
+    @classmethod
+    def add_card(cls, card, comment=''):
+        mid = integer(card, 1, 'mid')
+        G11 = double_or_blank(card, 2, 'G11', 0.0)
+        G12 = double_or_blank(card, 3, 'G12', 0.0)
+        G13 = double_or_blank(card, 4, 'G13', 0.0)
+        G22 = double_or_blank(card, 5, 'G22', 0.0)
+        G23 = double_or_blank(card, 6, 'G23', 0.0)
+        G33 = double_or_blank(card, 7, 'G33', 0.0)
+
+        rho = double_or_blank(card, 8, 'rho', 0.0)
+        a1 = double_or_blank(card, 9, 'a1') # blank?
+        a2 = double_or_blank(card, 10, 'a2') # blank?
+        a3 = double_or_blank(card, 11, 'a3') # blank?
+        TRef = double_or_blank(card, 12, 'TRef', 0.0)
+        ge = double_or_blank(card, 13, 'ge', 0.0)
+        St = double_or_blank(card, 14, 'St') # or blank?
+        Sc = double_or_blank(card, 15, 'Sc') # or blank?
+        Ss = double_or_blank(card, 16, 'Ss') # or blank?
+        Mcsid = integer_or_blank(card, 17, 'Mcsid')
         assert len(card) <= 18, 'len(MAT2 card) = %i' % len(card)
+        return MAT2(mid, G11, G12, G13, G22, G23, G33,
+                    rho, a1, a2, a3, TRef,  ge, St, Sc, Ss, Mcsid,
+                    comment=comment)
 
-    def add_op2_data(self, data, comment=''):
-        if comment:
-            self._comment = comment
-        self.mid = data[0]
-        self.G11 = data[1]
-        self.G12 = data[2]
-        self.G13 = data[3]
-        self.G22 = data[4]
-        self.G23 = data[5]
-        self.G33 = data[6]
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        mid = data[0]
+        G11 = data[1]
+        G12 = data[2]
+        G13 = data[3]
+        G22 = data[4]
+        G23 = data[5]
+        G33 = data[6]
 
-        self.rho = data[7]
-        self.a1 = data[8]
-        self.a2 = data[9]
-        self.a3 = data[10]
-        self.TRef = data[11]
-        self.ge = data[12]
-        self.St = data[13]
-        self.Sc = data[14]
-        self.Ss = data[15]
-        self.Mcsid = data[16]
+        rho = data[7]
+        a1 = data[8]
+        a2 = data[9]
+        a3 = data[10]
+        TRef = data[11]
+        ge = data[12]
+        St = data[13]
+        Sc = data[14]
+        Ss = data[15]
+        Mcsid = data[16]
+        return MAT2(mid, G11, G12, G13, G22, G23, G33,
+                    rho, a1, a2, a3, TRef,  ge, St, Sc, Ss, Mcsid,
+                    comment=comment)
 
     def get_density(self):
         return self.rho
@@ -654,49 +674,67 @@ class MAT3(OrthotropicMaterial):
         16: 'ge',
     }
 
-    def __init__(self):
+    def __init__(self, mid, ex, eth, ez, nuxth, nuthz, nuzx, rho, gzx,
+                 ax, ath, TRef, ge, comment=''):
         OrthotropicMaterial.__init__(self)
         self.mats3 = None
         self.matt3 = None
-
-    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        self.mid = integer(card, 1, 'mid')
-        self.ex = double(card, 2, 'ex')
-        self.eth = double(card, 3, 'eth')
-        self.ez = double(card, 4, 'ez')
-        self.nuxth = double(card, 5, 'nuxth')
-        self.nuthz = double(card, 6, 'nuthz')
-        self.nuzx = double(card, 7, 'nuzx')
-        self.rho = double_or_blank(card, 8, 'rho', 0.0)
+        self.mid = mid
+        self.ex = ex
+        self.eth = eth
+        self.ez = ez
+        self.nuxth = nuxth
+        self.nuthz = nuthz
+        self.nuxz = nuzx
+        self.rho = rho
+        self.gzx = gzx
+        self.ax = ax
+        self.ath = ath
+        self.TRef = TRef
+        self.ge = ge
 
-        self.gzx = double_or_blank(card, 11, 'gzx')
-        self.ax = double_or_blank(card, 12, 'ax', 0.0)
-        self.ath = double_or_blank(card, 13, 'ath', 0.0)
-        self.az = double_or_blank(card, 14, 'az', 0.0)
-        self.TRef = double_or_blank(card, 15, 'TRef', 0.0)
-        self.ge = double_or_blank(card, 16, 'ge', 0.0)
+    @classmethod
+    def add_card(cls, card, comment=''):
+        mid = integer(card, 1, 'mid')
+        ex = double(card, 2, 'ex')
+        eth = double(card, 3, 'eth')
+        ez = double(card, 4, 'ez')
+        nuxth = double(card, 5, 'nuxth')
+        nuthz = double(card, 6, 'nuthz')
+        nuzx = double(card, 7, 'nuzx')
+        rho = double_or_blank(card, 8, 'rho', 0.0)
+
+        gzx = double_or_blank(card, 11, 'gzx')
+        ax = double_or_blank(card, 12, 'ax', 0.0)
+        ath = double_or_blank(card, 13, 'ath', 0.0)
+        az = double_or_blank(card, 14, 'az', 0.0)
+        TRef = double_or_blank(card, 15, 'TRef', 0.0)
+        ge = double_or_blank(card, 16, 'ge', 0.0)
         assert len(card) <= 17, 'len(MAT3 card) = %i' % len(card)
+        return MAT3(mid, ex, eth, ez, nuxth, nuthz, nuzx, rho, gzx, ax, ath,
+                    TRef, ge, comment=comment)
 
-    def add_op2_data(self, data, comment=''):
-        if comment:
-            self._comment = comment
-        self.mid = data[0]
-        self.ex = data[1]
-        self.eth = data[2]
-        self.ez = data[3]
-        self.nuxth = data[4]
-        self.nuthz = data[5]
-        self.nuzx = data[6]
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        mid = data[0]
+        ex = data[1]
+        eth = data[2]
+        ez = data[3]
+        nuxth = data[4]
+        nuthz = data[5]
+        nuzx = data[6]
 
-        self.rho = data[7]
-        self.gzx = data[8]
-        self.ax = data[9]
-        self.ath = data[10]
-        self.az = data[11]
-        self.TRef = data[12]
-        self.ge = data[13]
+        rho = data[7]
+        gzx = data[8]
+        ax = data[9]
+        ath = data[10]
+        az = data[11]
+        TRef = data[12]
+        ge = data[13]
+        return MAT3(mid, ex, eth, ez, nuxth, nuthz, nuzx, rho, gzx, ax, ath,
+                    TRef, ge, comment=comment)
 
     def get_density(self):
         return self.rho
@@ -822,7 +860,7 @@ class MAT4(ThermalMaterial):
         tdelta = data[9]
         qlat = data[10]
         return MAT4(mid, k, cp, rho, H, mu, hgen, refEnthalpy, tch, tdelta,
-                   qlat, comment=comment)
+                    qlat, comment=comment)
 
     def get_density(self):
         return self.rho
@@ -910,7 +948,7 @@ class MAT5(ThermalMaterial):  # also AnisotropicMaterial
         rho = double_or_blank(card, 9, 'rho', 1.0)
         hgen = double_or_blank(card, 10, 'hgen', 1.0)
         assert len(card) <= 11, 'len(MAT5 card) = %i' % len(card)
-        return MAT5(mid, kxx, kyy, kxz, kyy, kyz, kzz,
+        return MAT5(mid, kxx, kxz, kyy, kyz, kzz,
                     cp, rho, hgen, comment=comment)
 
     @classmethod
@@ -925,7 +963,7 @@ class MAT5(ThermalMaterial):  # also AnisotropicMaterial
         cp = data[7]
         rho = data[8]
         hgen = data[9]
-        return MAT5(mid, kxx, kyy, kxz, kyy, kyz, kzz,
+        return MAT5(mid, kxx, kxz, kyy, kyz, kzz,
                     cp, rho, hgen, comment=comment)
 
     def cross_reference(self, model):
@@ -1076,9 +1114,6 @@ class MAT8(OrthotropicMaterial):
 
     def Matt8(self):
         return self.matt8
-
-    def uncross_reference(self):
-        self.matt8 = self.Matt8()
 
     def _verify(self, xref):
         """
@@ -1354,25 +1389,32 @@ class MAT10(Material):
         1: 'mid', 2:'bulk', 3:'rho', 4:'c', 5:'ge',
     }
 
-    def __init__(self):
+    def __init__(self, mid, bulk, rho, c, ge, comment=''):
         Material.__init__(self)
-
-    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        self.mid = integer(card, 1, 'mid')
-        self.getBulkRhoC(card)
-        self.ge = double_or_blank(card, 5, 'ge', 0.0)
+        self.mid = mid
+        self.bulk = bulk
+        self.rho = rho
+        self.c = c
+        self.ge = ge
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        mid = integer(card, 1, 'mid')
+        bulk, rho, c = cls._get_bulk_rho_c(card)
+        ge = double_or_blank(card, 5, 'ge', 0.0)
         assert len(card) <= 6, 'len(MAT10 card) = %i' % len(card)
+        return MAT10(mid, bulk, rho, c, ge, comment=comment)
 
-    def add_op2_data(self, data, comment=''):
-        if comment:
-            self._comment = comment
-        self.mid = data[0]
-        self.bulk = data[1]
-        self.rho = data[2]
-        self.c = data[3]
-        self.ge = data[4]
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        mid = data[0]
+        bulk = data[1]
+        rho = data[2]
+        c = data[3]
+        ge = data[4]
+        return MAT10(mid, bulk, rho, c, ge, comment=comment)
 
     def _verify(self, xref):
         """
@@ -1393,7 +1435,7 @@ class MAT10(Material):
         assert isinstance(c, float), 'c=%r' % c
         assert isinstance(ge, float), 'ge=%r' % ge
 
-    def getBulkRhoC(self, card):
+    def _get_bulk_rho_c(self, card):
         r"""
         .. math:: bulk = c^2 \rho
         """
@@ -1419,9 +1461,7 @@ class MAT10(Material):
             msg = 'c, bulk, and rho are all undefined on tbe MAT10'
             raise RuntimeError(msg)
 
-        self.bulk = bulk
-        self.rho = rho
-        self.c = c
+        return bulk, rho, c
 
     def raw_fields(self):
         list_fields = ['MAT10', self.mid, self.bulk, self.rho, self.c, self.ge]
