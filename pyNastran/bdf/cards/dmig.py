@@ -61,6 +61,13 @@ class NastranMatrix(BaseCard):
         if self.is_complex():
             self.Complex = []
 
+    def finalize(self):
+        self.GCi = np.asarray(self.GCi)
+        self.GCj = np.asarray(self.GCj)
+        self.Real = np.asarray(self.Real)
+        if self.is_complex():
+            self.Complex = np.asarray(self.Complex)
+
     @property
     def shape(self):
         if self.ifo in [1, 6]: # square, symmetric
@@ -389,7 +396,8 @@ def get_matrix(self, is_sparse=False, apply_symmetry=True):
     i = 0
     rows = {}
     rows_reversed = {}
-    for GCi in self.GCi:
+    for (nid, comp) in self.GCi:
+        GCi = (nid, comp)
         if GCi not in rows:
             rows[GCi] = i
             rows_reversed[i] = GCi
@@ -399,7 +407,8 @@ def get_matrix(self, is_sparse=False, apply_symmetry=True):
     j = 0
     cols = {}
     cols_reversed = {}
-    for GCj in self.GCj:
+    for (nid, comp) in self.GCj:
+        GCj = (nid, comp)
         if GCj not in cols:
             cols[GCj] = j
             cols_reversed[j] = GCj
@@ -452,27 +461,27 @@ def get_matrix(self, is_sparse=False, apply_symmetry=True):
             M = zeros((i, j), dtype='complex128')
             if self.ifo == 6 and apply_symmetry:  # symmetric
                 for (gcj, gci, reali, complexi) in zip(self.GCj, self.GCi, self.Real, self.Complex):
-                    i = rows[gci]
-                    j = cols[gcj]
+                    i = rows[(gci[0], gci[1])]
+                    j = cols[(gcj[0], gcj[1])]
                     M[i, j] = complex(reali, complexi)
                     M[j, i] = complex(reali, complexi)
             else:
                 for (gcj, gci, reali, complexi) in zip(self.GCj, self.GCi, self.Real, self.Complex):
-                    i = rows[gci]
-                    j = cols[gcj]
+                    i = rows[(gci[0], gci[1])]
+                    j = cols[(gcj[0], gcj[1])]
                     M[i, j] = complex(reali, complexi)
         else:
             M = zeros((i, j), dtype='float64')
             if self.ifo == 6 and apply_symmetry:  # symmetric
                 for (gcj, gci, reali) in zip(self.GCj, self.GCi, self.Real):
-                    i = rows[gci]
-                    j = cols[gcj]
+                    i = rows[(gci[0], gci[1])]
+                    j = cols[(gcj[0], gcj[1])]
                     M[i, j] = reali
                     M[j, i] = reali
             else:
                 for (gcj, gci, reali) in zip(self.GCj, self.GCi, self.Real):
-                    i = rows[gci]
-                    j = cols[gcj]
+                    i = rows[(gci[0], gci[1])]
+                    j = cols[(gcj[0], gcj[1])]
                     M[i, j] = reali
     #print(M)
     return (M, rows_reversed, cols_reversed)
@@ -600,6 +609,13 @@ class DMI(NastranMatrix):
 
         if self.is_complex():
             self.Complex = []
+
+    def finalize(self):
+        self.GCi = np.asarray(self.GCi)
+        self.GCj = np.asarray(self.GCj)
+        self.Real = np.asarray(self.Real)
+        if self.is_complex():
+            self.Complex = np.asarray(self.Complex)
 
     @property
     def shape(self):
@@ -772,12 +788,6 @@ class DMI(NastranMatrix):
         return self._write_card(print_card_16)
 
     def _write_card(self, func):
-        self.GCi = np.asarray(self.GCi)
-        self.GCj = np.asarray(self.GCj)
-        self.Real = np.asarray(self.Real)
-        if self.is_complex():
-            self.Complex = np.asarray(self.Complex)
-
         msg = '\n$' + '-' * 80
         msg += '\n$ %s Matrix %s\n' % ('DMI', self.name)
         list_fields = ['DMI', self.name, 0, self.form, self.tin,

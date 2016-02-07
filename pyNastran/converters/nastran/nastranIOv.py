@@ -2151,16 +2151,12 @@ class NastranIO(object):
                         print('eids=%s dont have materials' %
                               not_skipped_eids_missing_material_id)
 
-            #if new_cases:
             t_res = GuiResult(0, header='Thickness', title='Thickness',
                               location='centroid', scalar=thickness)
             mid_res = GuiResult(0, header='MaterialID', title='MaterialID',
                                 location='centroid', scalar=mids)
             cases[icase] = (t_res, (0, 'Thickness'))
             cases[icase + 1] = (mid_res, (0, 'MaterialID'))
-            #else:
-                #cases[(0, icase, 'Thickness', 1, 'centroid', '%.3f', '')] = thickness
-                #cases[(0, icase + 1, 'MaterialID', 1, 'centroid', '%i', '')] = mids
             form0.append(('Thickness', icase, []))
             form0.append(('MaterialID', icase + 1, []))
             icase += 2
@@ -2223,7 +2219,6 @@ class NastranIO(object):
             # if not a flat plate
             #if min(nxs) == max(nxs) and min(nxs) != 0.0:
             # subcase_id, resultType, vector_size, location, dataFormat
-            #if new_cases:
             eid_dim_res = GuiResult(0, header='ElementDim', title='ElementDim',
                                     location='centroid', scalar=element_dim)
             nx_res = GuiResult(0, header='NormalX', title='NormalX',
@@ -2237,11 +2232,6 @@ class NastranIO(object):
             cases[icase + 1] = (nx_res, (0, 'NormalX'))
             cases[icase + 2] = (ny_res, (0, 'NormalY'))
             cases[icase + 3] = (nz_res, (0, 'NormalZ'))
-            #else:
-                #cases[(0, icase, 'ElementDim', 1, 'centroid', '%i', '')] = element_dim
-                #cases[(0, icase + 1, 'NormalX', 1, 'centroid', '%.1f', '')] = normals[:, 0]
-                #cases[(0, icase + 2, 'NormalY', 1, 'centroid', '%.1f', '')] = normals[:, 1]
-                #cases[(0, icase + 3, 'NormalZ', 1, 'centroid', '%.1f', '')] = normals[:, 2]
 
             form0.append(('ElementDim', icase, []))
             form0.append(('NormalX', icase + 1, []))
@@ -2251,7 +2241,6 @@ class NastranIO(object):
 
             if npabs(xoffset).max() > 0.0 or npabs(yoffset).max() > 0.0 or npabs(zoffset).max() > 0.0:
                 # offsets
-                #if new_cases:
                 offset_x_res = GuiResult(0, header='OffsetX', title='OffsetX',
                                          location='centroid', scalar=xoffset, data_format='%.1f')
                 offset_y_res = GuiResult(0, header='OffsetY', title='OffsetY',
@@ -2262,10 +2251,6 @@ class NastranIO(object):
                 cases[icase] = (offset_x_res, (0, 'OffsetX'))
                 cases[icase + 1] = (offset_y_res, (0, 'OffsetY'))
                 cases[icase + 2] = (offset_z_res, (0, 'OffsetZ'))
-                #else:
-                    #cases[(0, icase, 'OffsetX', 1, 'centroid', '%.1f', '')] = xoffset
-                    #cases[(0, icase, 'OffsetY', 1, 'centroid', '%.1f', '')] = yoffset
-                    #cases[(0, icase, 'OffsetZ', 1, 'centroid', '%.1f', '')] = zoffset
 
                 form0.append(('OffsetX', icase, []))
                 form0.append(('OffsetY', icase + 1, []))

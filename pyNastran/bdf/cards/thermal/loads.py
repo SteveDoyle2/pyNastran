@@ -31,24 +31,31 @@ class QVOL(ThermalLoad):
     """
     type = 'QVOL'
 
-    def __init__(self, card, data=None, comment=''):
-        ThermalLoad.__init__(self, card, data)
+    def __init__(self, sid, qvol, control_point, elements, comment=''):
+        ThermalLoad.__init__(self)
         if comment:
             self._comment = comment
-        if card:
-            #: Load set identification number. (Integer > 0)
-            self.sid = integer(card, 1, 'sid')
+        #: Load set identification number. (Integer > 0)
+        self.sid = sid
+        self.qvol = qvol
+        self.control_point = control_point
+        self.elements = elements
 
-            self.qvol = double(card, 2, 'qvol')
-            self.control_point = integer_or_blank(card, 3, 'control_id', 0)
+    @classmethod
+    def add_card(self, card, comment=''):
+        sid = integer(card, 1, 'sid')
 
-            i = 1
-            eids = []
-            for ifield in range(4, len(card)):
-                eid = integer_or_string(card, ifield, 'eid_%i' % i)
-                eids.append(eid)
-                i += 1
-            self.elements = expand_thru_by(eids)
+        qvol = double(card, 2, 'qvol')
+        control_point = integer_or_blank(card, 3, 'control_id', 0)
+
+        i = 1
+        eids = []
+        for ifield in range(4, len(card)):
+            eid = integer_or_string(card, ifield, 'eid_%i' % i)
+            eids.append(eid)
+            i += 1
+        elements = expand_thru_by(eids)
+        return QVOL(sid, qvol, control_point, elements, comment=comment)
 
     def getLoads(self):
         self.deprecated('getLoads()', 'get_loads()', '0.8')

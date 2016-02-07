@@ -345,11 +345,11 @@ class MPC(Constraint):
 
     @property
     def node_ids(self):
-        msg = ', which is required by %s=%s' % (self.type, self.conid)
+        msg = ', which is required by MPC=%s' % self.conid
         return self._nodeIDs(nodes=self.gids, allow_empty_nodes=True, msg=msg)
 
     def cross_reference(self, model):
-        msg = ', which is required by %s=%s' % (self.type, self.conid)
+        msg = ', which is required by MPC=%s' % self.conid
         self.gids = model.Nodes(self.gids, allow_empty_nodes=True, msg=msg)
         self.gids_ref = self.gids
 
@@ -698,7 +698,7 @@ class SPCADD(ConstraintADD):
     def add_card(cls, card, comment=''):
         conid = integer(card, 1, 'conid')
         sets = card.fields(2)
-        return MPCADD(conid, sets, comment=comment)
+        return SPCADD(conid, sets, comment=comment)
 
     def organize_constraints(self, model):
         """
@@ -723,7 +723,7 @@ class SPCADD(ConstraintADD):
         return spc_ids
 
     def cross_reference(self, model):
-        msg = ', which is required by %s=%s' % (self.type, self.conid)
+        msg = ', which is required by SPCADD=%s' % self.conid
         for i, spc in enumerate(self.sets):
             self.sets[i] = model.SPC(spc, msg=msg)
         self.sets_ref = self.sets
@@ -790,8 +790,9 @@ class MPCADD(ConstraintADD):
         return mpc_ids
 
     def cross_reference(self, model):
+        msg = ', which is required by MPCADD=%s' % self.conid
         for i, mpc in enumerate(self.sets):
-            self.sets[i] = model.MPC(mpc)
+            self.sets[i] = model.MPC(mpc, msg=msg)
         self.sets_ref = self.sets
 
     def raw_fields(self):

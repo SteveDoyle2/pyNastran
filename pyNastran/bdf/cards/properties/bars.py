@@ -849,7 +849,7 @@ class PBARL(LineProperty):
         "DBOX": 10,  # was 12
     }  # for GROUP="MSCBML0"
 
-    def __init__(self, pid, mid, group, Type, dims, nsm=0., comment=''):
+    def __init__(self, pid, mid, group, Type, dim, nsm=0., comment=''):
         LineProperty.__init__(self)
         if comment:
             self._comment = comment
@@ -861,7 +861,7 @@ class PBARL(LineProperty):
         self.group = group
         #: Section Type (e.g. 'ROD', 'TUBE', 'I', 'H')
         self.Type = Type
-        self.dims = dims
+        self.dim = dim
         #: non-structural mass
         self.nsm = nsm
         self._validate_input()
@@ -876,36 +876,35 @@ class PBARL(LineProperty):
         ndim = cls.valid_types[Type]
         #j = 9 + ndim + 1
 
-        dims = []
+        dim = []
         #dim_old = None  ## TODO: is there a default?
         for i in range(ndim):
             #dim = double_or_blank(card, 9 + i, 'dim%i' % (i + 1))
-            dim = double(card, 9 + i, 'dim%i' % (i + 1))
-            dims.append(dim)
+            dimi = double(card, 9 + i, 'dim%i' % (i + 1))
+            dim.append(dimi)
 
         #: dimension list
-        assert len(dims) == ndim, 'PBARL ndim=%s len(dims)=%s' % (ndim, len(dims))
+        assert len(dim) == ndim, 'PBARL ndim=%s len(dims)=%s' % (ndim, len(dim))
         #assert len(dims) == len(self.dim), 'PBARL ndim=%s len(dims)=%s' % (ndim, len(self.dim))
 
         nsm = double_or_blank(card, 9 + ndim + 1, 'nsm', 0.0)
-        return PBARL(pid, mid, group, Type, dims, nsm, comment=comment)
+        return PBARL(pid, mid, group, Type, dim, nsm, comment=comment)
 
-    def add_op2_data(self, data, comment=''):
-        if comment:
-            self._comment = comment
-        self.pid = data[0]
-        self.mid = data[1]
-        self.group = data[2].strip()
-        self.Type = data[3].strip()
-        self.dim = list(data[4:-1])
-        self.nsm = data[-1]
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        pid = data[0]
+        mid = data[1]
+        group = data[2].strip()
+        Type = data[3].strip()
+        dim = list(data[4:-1])
+        nsm = data[-1]
         #print("group = %r" % self.group)
         #print("Type  = %r" % self.Type)
         #print("dim = ",self.dim)
         #print(str(self))
         #print("*PBARL = ",data)
         #raise NotImplementedError('not finished...')
-        self._validate_input()
+        return PBARL(pid, mid, group, Type, dim, nsm, comment=comment)
 
     def _validate_input(self):
         if self.Type not in self.valid_types:

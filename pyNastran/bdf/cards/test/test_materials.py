@@ -68,8 +68,7 @@ class TestMaterials(unittest.TestCase):
         cardi = BDFCard(card)
         #print("card =", card)
         #with self.assertRaises(RuntimeError):  # temporary RuntimeError
-        card2 = MAT8()
-        card2.add_card(cardi)
+        card2 = MAT8.add_card(cardi)
 
         fields = card2.raw_fields()
         msg = print_card_8(fields)
@@ -100,8 +99,7 @@ class TestMaterials(unittest.TestCase):
         ]
         card = bdf.process_card(lines)
         cardi = BDFCard(card)
-        card2 = MAT11()
-        card2.add_card(cardi)
+        card2 = MAT11.add_card(cardi)
 
         fields = card2.raw_fields()
         msg = print_card_8(fields)

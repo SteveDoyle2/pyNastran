@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 import sys
 from six import iteritems
@@ -34,11 +35,21 @@ def determine_format(input):
 
 def run_docopt():
     msg  = "Usage:\n"
+    msg += "  pyNastranGUI [-f FORMAT] INPUT\n"
+    msg += '                  [-s SHOT] [-m MAGNIFY]\n'  #  [-r XYZ]
+    msg += '                  [-g GSCRIPT] [-p PSCRIPT]\n'
+    msg += '                  [-u POINTS_FNAME...]\n'
+    msg += '                  [-q]\n'
+    msg += "  pyNastranGUI [-f FORMAT] INPUT OUTPUT\n"
+    msg += '                  [-s SHOT] [-m MAGNIFY]\n'  #  [-r XYZ]
+    msg += '                  [-g GSCRIPT] [-p PSCRIPT]\n'
+    msg += '                  [-u POINTS_FNAME...]\n'
+    msg += '                  [-q]\n'
     msg += "  pyNastranGUI [-f FORMAT] [-i INPUT] [-o OUTPUT...]\n"
     msg += '                  [-s SHOT] [-m MAGNIFY]\n'  #  [-r XYZ]
     msg += '                  [-g GSCRIPT] [-p PSCRIPT]\n'
     msg += '                  [-u POINTS_FNAME...]\n'
-    msg += '                  [-c][-q]\n'
+    msg += '                  [-q]\n'
     msg += '  pyNastranGUI -h | --help\n'
     msg += '  pyNastranGUI -v | --version\n'
     msg += "\n"
@@ -48,7 +59,6 @@ def run_docopt():
     msg += "                                           plot3d, stl, tetgen, usm3d)\n"
     msg += "  -i INPUT, --input INPUT     path to input file\n"
     msg += "  -o OUTPUT, --output OUTPUT  path to output file\n"
-    msg += "  -c, --console               disable HTML console output\n"
     #msg += "  -r XYZ, --rotation XYZ      [x, y, z, -x, -y, -z] default is ???\n"
 
     #if mode != 'qt':
@@ -68,16 +78,20 @@ def run_docopt():
     #print(data)
 
     format  = data['--format']
-    input = data['--input']
-    output = data['--output']
+
+    if data['INPUT']:
+        input = data['INPUT']
+    else:
+        input = data['--input']
+
+    if data['OUTPUT']:
+        output = [data['OUTPUT']]
+    else:
+        output = data['--output']
     debug = not(data['--quiet'])
 
     if input and not format:
         format = determine_format(input)
-
-    console = True
-    if '--console' in data:
-        console = not data['--console']
 
     shots = []
     if '--shots' in data:
@@ -110,14 +124,13 @@ def run_docopt():
         shots = shots.split(';')[0]
 
     #assert data['--console'] == False, data['--console']
-    return (format, input, output, console, shots,
+    return (format, input, output, shots,
             magnify, rotation, geom_script, post_script, debug, user_points)
 
 
 def get_inputs():
     format = None
     input = None
-    console = True
     output = None
     debug = True
 
@@ -132,14 +145,13 @@ def get_inputs():
         print("requires Python 2.6+ to use command line arguments...")
     else:
         if len(sys.argv) > 1:
-            (format, input, output, console, shots, magnify,
+            (format, input, output, shots, magnify,
              rotation, geom_script, post_script, debug, user_points) = run_docopt()
 
     inputs = {
         'format' : format,
         'input' : input,
         'output' : output,
-        'console' : console,
         'shots' : shots,
         'magnify' : magnify,
         'rotation' : rotation,

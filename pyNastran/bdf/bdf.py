@@ -575,7 +575,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         #del self.log
         #del self.spcObject
         #del self.mpcObject
-        #del self._card_parser, self._card_parser_b
+        #del self._card_parser, self._card_parser_prepare
 
         #try:
             #del self.log
@@ -795,6 +795,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
             for (card_obj, comment) in card_comments:
                 card._add_column(card_obj, comment=comment)
+            card.finalize()
 
         self._dmig_temp = defaultdict(list)
 
@@ -1284,12 +1285,14 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
     def _make_card_parser(self):
         """creates the card parser variables that are used by add_card"""
-        self._card_parser_new = {
+        self._card_parser = {
             'GRID' : (GRID, self.add_node),
+            'SPOINT' : (SPOINTs, self.add_spoint),
+            'EPOINT' : (EPOINTs, self.add_epoint),
 
-            #'CORD2R' : (CORD2R, self.add_coord),
-            #'CORD2C' : (CORD2C, self.add_coord),
-            #'CORD2S' : (CORD2S, self.add_coord),
+            'CORD2R' : (CORD2R, self.add_coord),
+            'CORD2C' : (CORD2C, self.add_coord),
+            'CORD2S' : (CORD2S, self.add_coord),
 
             'PLOTEL' : (PLOTEL, self.add_plotel),
 
@@ -1324,10 +1327,10 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'CTRIAR' : (CTRIAR, self.add_element),
             #'CTRIAX' : (CTRIAX, self.add_element),
             #'CTRIAX6' : (CTRIAX6, self.add_element),
-            #'PCOMPG' : (PCOMPG, self.add_property),
-            #'PLPLANE' : (PLPLANE, self.add_property),
-            #'PCOMP' : (PCOMP, self.add_property),
+            'PCOMP' : (PCOMP, self.add_property),
+            'PCOMPG' : (PCOMPG, self.add_property),
             'PSHELL' : (PSHELL, self.add_property),
+            'PLPLANE' : (PLPLANE, self.add_property),
 
             'CSHEAR' : (CSHEAR, self.add_element),
             'PSHEAR' : (PSHEAR, self.add_property),
@@ -1374,8 +1377,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'RBAR' : (RBAR, self.add_rigid_element),
             'RBAR1' : (RBAR1, self.add_rigid_element),
             'RBE1' : (RBE1, self.add_rigid_element),
-            #'RBE2' : (RBE2, self.add_rigid_element),
-            #'RBE3' : (RBE3, self.add_rigid_element),
+            'RBE2' : (RBE2, self.add_rigid_element),
+            'RBE3' : (RBE3, self.add_rigid_element),
             'RROD' : (RROD, self.add_rigid_element),
 
 
@@ -1383,11 +1386,11 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'MAT1' : (MAT1, self.add_structural_material),
             'MAT2' : (MAT2, self.add_structural_material),
             'MAT3' : (MAT3, self.add_structural_material),
-            #'MAT8' : (MAT8, self.add_structural_material),
-            #'MAT9' : (MAT9, self.add_structural_material),
+            'MAT8' : (MAT8, self.add_structural_material),
+            'MAT9' : (MAT9, self.add_structural_material),
             'MAT10' : (MAT10, self.add_structural_material),
             'MAT11' : (MAT11, self.add_structural_material),
-            #'EQUIV' : (EQUIV, self.add_structural_material),
+            'EQUIV' : (EQUIV, self.add_structural_material),
 
             ##'MATHE' : (MATHE, self.add_hyperelastic_material),
             #'MATHP' : (MATHP, self.add_hyperelastic_material),
@@ -1395,7 +1398,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'MAT5' : (MAT5, self.add_thermal_material),
 
             ## hasnt been verified, links up to MAT1, MAT2, MAT9 w/ same MID
-            #'CREEP' : (CREEP, self.add_creep_material),
+            'CREEP' : (CREEP, self.add_creep_material),
 
             #'CONM1' : (CONM1, self.add_mass),
             'CONM2' : (CONM2, self.add_mass),
@@ -1432,12 +1435,12 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'PLOAD2' : (PLOAD2, self.add_load),
             'PLOAD4' : (PLOAD4, self.add_load),
             'PLOADX1' : (PLOADX1, self.add_load),
-            #'RFORCE' : (RFORCE, self.add_load),
+            'RFORCE' : (RFORCE, self.add_load),
             #'SLOAD' : (SLOAD, self.add_load),
             'RANDPS' : (RANDPS, self.add_load),
             'GMLOAD' : (GMLOAD, self.add_load),
             'SPCD' : (SPCD, self.add_load),  # enforced displacement
-            #'QVOL' : (QVOL, self.add_load),  # thermal
+            'QVOL' : (QVOL, self.add_load),  # thermal
 
             #'DLOAD' : (DLOAD, self.add_dload),
             'TLOAD1' : (TLOAD1, self.add_dload_entry),
@@ -1446,15 +1449,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'RLOAD2' : (RLOAD2, self.add_dload_entry),
 
             'DOPTPRM' : (DOPTPRM, self._add_doptprm),
-            #'SPOINT' : (SPOINTs, self.add_spoint),
-            #'EPOINT' : (EPOINTs, self.add_epoint),
             # BCTSET
         }
         self._card_parser_a = {
-            'CORD2R' : (CORD2R, self.add_coord),
-            'CORD2C' : (CORD2C, self.add_coord),
-            'CORD2S' : (CORD2S, self.add_coord),
-
             'PBEAM' : (PBEAM, self.add_property),
             'PBEAML' : (PBEAML, self.add_property),
             'PBCOMP' : (PBCOMP, self.add_property),
@@ -1471,9 +1468,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'CQUADR' : (CQUADR, self.add_element),
             'CTRIAX' : (CTRIAX, self.add_element),
             'CTRIAX6' : (CTRIAX6, self.add_element),
-            'PCOMPG' : (PCOMPG, self.add_property),
-            'PLPLANE' : (PLPLANE, self.add_property),
-            'PCOMP' : (PCOMP, self.add_property),
 
             'CRAC2D' : (CRAC2D, self.add_element),
             'CRAC3D' : (CRAC3D, self.add_element),
@@ -1482,34 +1476,18 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'PBUSHT' : (PBUSHT, self.add_PBUSHT),
             'PBUSH1D' : (PBUSH1D, self.add_property),
 
-            'RBE2' : (RBE2, self.add_rigid_element),
-            'RBE3' : (RBE3, self.add_rigid_element),
-
             # there is no MAT6 or MAT7
-            'MAT8' : (MAT8, self.add_structural_material),
-            'MAT9' : (MAT9, self.add_structural_material),
-            'EQUIV' : (EQUIV, self.add_structural_material),
-
             #'MATHE' : (MATHE, self.add_hyperelastic_material),
             'MATHP' : (MATHP, self.add_hyperelastic_material),
-
-            # hasnt been verified, links up to MAT1, MAT2, MAT9 w/ same MID
-            'CREEP' : (CREEP, self.add_creep_material),
 
             'CONM1' : (CONM1, self.add_mass),
 
             'LOAD' : (LOAD, self.add_load),
-            'RFORCE' : (RFORCE, self.add_load),
             'SLOAD' : (SLOAD, self.add_load),
-            'QVOL' : (QVOL, self.add_load),  # thermal
-
             'DLOAD' : (DLOAD, self.add_dload),
-
-            'SPOINT' : (SPOINTs, self.add_spoint),
-            'EPOINT' : (EPOINTs, self.add_epoint),
             # BCTSET
         }
-        self._card_parser = {
+        self._card_parser_b = {
             # CTETRA - added later
             # CHEXA  - added later
             # CPENTA - added later
@@ -1678,7 +1656,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'BSURF' : (BSURF, self.add_BSURF),
             'BSURFS' : (BSURFS, self.add_BSURFS),
         }
-        self._card_parser_b = {
+        self._card_parser_prepare = {
             'CTETRA' : self._prepare_ctetra,
             'CPYRAM' : self._prepare_cpyram,
             'CPENTA' : self._prepare_cpenta,
@@ -2075,8 +2053,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             except:
                 print(print_card_16(card_obj).rstrip())
 
-        if card_name in self._card_parser_new:
-            card_class, add_card_function = self._card_parser_new[card_name]
+        if card_name in self._card_parser:
+            #print(card_name)
+            card_class, add_card_function = self._card_parser[card_name]
             try:
                 class_instance = card_class.add_card(card_obj, comment='')
                 add_card_function(class_instance)
@@ -2093,6 +2072,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                     self.pop_parse_errors()
 
         elif card_name in self._card_parser_a:
+            #print('*', card_name)
             card_class, add_card_function = self._card_parser_a[card_name]
             try:
                 class_instance = card_class()
@@ -2115,8 +2095,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                 if self._iparse_errors > self._nparse_errors:
                     self.pop_parse_errors()
 
-        elif card_name in self._card_parser:
-            card_class, add_card_function = self._card_parser[card_name]
+        elif card_name in self._card_parser_b:
+            card_class, add_card_function = self._card_parser_b[card_name]
             try:
                 class_instance = card_class(card_obj, comment=comment)
             except TypeError:
@@ -2137,8 +2117,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                 return
             add_card_function(class_instance)
 
-        elif card_name in self._card_parser_b:
-            add_card_function = self._card_parser_b[card_name]
+        elif card_name in self._card_parser_prepare:
+            add_card_function = self._card_parser_prepare[card_name]
             try:
                 add_card_function(card, card_obj)
             except (SyntaxError, AssertionError, KeyError, ValueError) as exception:

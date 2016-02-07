@@ -490,29 +490,45 @@ class SLOAD(Load):
 class RFORCE(Load):
     type = 'RFORCE'
 
-    def __init__(self):
-        pass
-
-    def add_card(self, card, comment=''):
+    def __init__(self, sid, nid, cid, scale, r1, r2, r3, method, racc,
+                 mb, idrf, comment=''):
         if comment:
             self._comment = comment
-        self.sid = integer(card, 1, 'sid')
-        self.nid = integer_or_blank(card, 2, 'nid', 0)
-        self.cid = integer_or_blank(card, 3, 'cid', 0)
-        self.scale = double_or_blank(card, 4, 'scale', 1.)
-        self.r1 = double_or_blank(card, 5, 'r1', 0.)
-        self.r2 = double_or_blank(card, 6, 'r2', 0.)
-        self.r3 = double_or_blank(card, 7, 'r3', 0.)
-        self.method = integer_or_blank(card, 8, 'method', 1)
-        self.racc = double_or_blank(card, 9, 'racc', 0.)
-        self.mb = integer_or_blank(card, 10, 'mb', 0)
-        self.idrf = integer_or_blank(card, 11, 'idrf', 0)
-        assert len(card) <= 12, 'len(RFORCE card) = %i' % len(card)
+        self.sid = sid
+        self.nid = nid
+        self.cid = cid
+        self.scale = scale
+        self.r1 = r1
+        self.r2 = r2
+        self.method = method
+        self.racc = racc
+        self.mb = mb
+        self.idfr = idrf
 
-    def add_op2_data(self, data, comment=''):
-        self.sid = data[0]
-        print("RFORCE = %s" % data)
-        raise NotImplementedError(data)
+    @classmethod
+    def add_card(self, card, comment=''):
+        sid = integer(card, 1, 'sid')
+        nid = integer_or_blank(card, 2, 'nid', 0)
+        cid = integer_or_blank(card, 3, 'cid', 0)
+        scale = double_or_blank(card, 4, 'scale', 1.)
+        r1 = double_or_blank(card, 5, 'r1', 0.)
+        r2 = double_or_blank(card, 6, 'r2', 0.)
+        r3 = double_or_blank(card, 7, 'r3', 0.)
+        method = integer_or_blank(card, 8, 'method', 1)
+        racc = double_or_blank(card, 9, 'racc', 0.)
+        mb = integer_or_blank(card, 10, 'mb', 0)
+        idrf = integer_or_blank(card, 11, 'idrf', 0)
+        assert len(card) <= 12, 'len(RFORCE card) = %i' % len(card)
+        return RFORCE(sid, nid, cid, scale, r1, r2, r3, method, racc, mb,
+                     idrf, comment=comment)
+
+    #@classmethod
+    #def add_op2_data(self, data, comment=''):
+        #self.sid = data[0]
+        #print("RFORCE = %s" % data)
+        #raise NotImplementedError(data)
+        #return RFORCE(sid, nid, cid, scale, r1, r2, r3, method, racc, mb,
+                      #idrf, comment=comment)
 
     def cross_reference(self, model):
         msg = ' which is required by RFORCE sid=%s' % self.sid

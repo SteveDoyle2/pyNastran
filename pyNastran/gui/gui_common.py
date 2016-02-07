@@ -188,20 +188,9 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
     def create_log_python_docks(self):
         """
-        The not perfect (it's sized poorly) Python Console
-        ApplicationLogDockWidget breaks on some versions of PyQt4, so:
-
-        Option 1
-        --------
-        if you want that version (a few lines down):
-          - use_old=True
-          - uncomment the two commented @property blocks above
-          -> If HTML works, Python console will work; otherwise both break
-
-        Option 2
-        --------
-          - use_old=False
-          -> Python console doesn't work, but HTML always works
+        Creates the
+         - HTML Log dock
+         - Python Console dock
         """
         #=========== Logging widget ===================
         if self.html_logging:

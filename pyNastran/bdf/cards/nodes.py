@@ -290,26 +290,28 @@ class XPoints(Node):
         """dummy method for EPOINTs/SPOINTs classes"""
         raise NotImplementedError('This method should be overwritten by the parent class')
 
-    def __init__(self):
+    def __init__(self, ids, comment=''):
         Node.__init__(self)
-
-    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
+        self.points = ids
 
+    @classmethod
+    def add_card(cls, card, comment=''):
         fields = []
         for i in range(1, len(card)):
             field = integer_or_string(card, i, 'ID%i' % i)
             fields.append(field)
-        self.points = set(expand_thru(fields))
+        points = set(expand_thru(fields))
+        return cls(points, comment=comment)
 
-    def add_op2_data(self, data, comment=''):
-        if comment:
-            self._comment = comment
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
         fields = data
         assert isinstance(data, list), data
         assert isinstance(data[0], int), data
-        self.points = set(expand_thru(fields))
+        points = set(expand_thru(fields))
+        return cls(points, comment=comment)
 
     def __len__(self):
         """
@@ -385,20 +387,18 @@ class SPOINTs(XPoints):
     """
     type = 'SPOINT'
 
-    def __init__(self):
+    def __init__(self, ids, comment=''):
         """
         Creates the SPOINTs card that contains many SPOINTs
 
         Parameters
         ----------
-        card : BDFCard()
-            a BDFCard object
-        data : List[int]
-            a list with the SPOINT fields defined in OP2 format
+        ids : List[int]
+            SPOINT ids
         comment : str
             a comment for the card
         """
-        XPoints.__init__(self)
+        XPoints.__init__(self, ids, comment=comment)
 
     def create_spointi(self):
         """
@@ -424,20 +424,18 @@ class EPOINTs(XPoints):
     """
     type = 'EPOINT'
 
-    def __init__(self):
+    def __init__(self, ids, comment=''):
         """
         Creates the EPOINTs card that contains many EPOINTs
 
         Parameters
         ----------
-        card : BDFCard()
-            a BDFCard object
-        data : List[int]
-            a list with the EPOINT fields defined in OP2 format
+        ids : List[int]
+            EPOINT ids
         comment : str
             a comment for the card
         """
-        XPoints.__init__(self)
+        XPoints.__init__(self, ids, comment=comment)
 
     def create_epointi(self):
         """
