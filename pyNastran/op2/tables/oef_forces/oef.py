@@ -25,8 +25,8 @@ from pyNastran.op2.tables.oef_forces.oef_thermalObjects import (
     RealHeatFluxVU3DArray,
 
     # TODO: vectorize 2
-    HeatFlux_VUBEAM,
-    HeatFlux_VU_3D,
+    #HeatFlux_VUBEAM,
+    #HeatFlux_VU_3D,
 )
 from pyNastran.op2.tables.oef_forces.oef_forceObjects import (
     RealRodForceArray, RealViscForceArray,
@@ -43,7 +43,7 @@ from pyNastran.op2.tables.oef_forces.oef_forceObjects import (
     RealBendForceArray,
 
     # TODO: vectorize 2
-    RealForce_VU_2D, RealForce_VU,
+    #RealForce_VU_2D, RealForce_VU,
 )
 from pyNastran.op2.tables.oef_forces.oef_complexForceObjects import (
     ComplexRodForceArray,
@@ -60,7 +60,7 @@ from pyNastran.op2.tables.oef_forces.oef_complexForceObjects import (
     ComplexCBendForceArray,
 
     # TODO: vectorize 2
-    ComplexForce_VU_2D, ComplexForce_VU,
+    #ComplexForce_VU_2D, ComplexForce_VU,
 )
 
 
