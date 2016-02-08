@@ -1,8 +1,8 @@
 from __future__ import print_function
 from six.moves import urllib
 import os
-#import urllib2  # PY2
 
+import numpy as np
 from numpy import loadtxt
 import pyNastran
 
@@ -140,3 +140,39 @@ def load_csv(out_filename):
         msg += 'headers = %s' % headers
         raise SyntaxError(msg)
     return A, nrows, ncols, fmts, headers
+
+
+def load_user_geom(fname):
+    with open(fname, 'r') as f:
+        lines = f.readlines()
+
+    grid_ids = []
+    xyz = []
+    bars = []
+    tris = []
+    quads = []
+    lines2 = []
+    for line in lines:
+        line2 = line.strip().split('#')[0].upper()
+        if line2:
+            sline = line2.split(',')
+            if line2.startswith('GRID'):
+                assert len(sline) == 5, sline
+                grid_ids.append(sline[1])
+                xyz.append(sline[2:])
+            elif line2.startswith('BAR'):
+                assert len(sline) == 4, sline
+                bars.append(sline[1:])
+            elif line2.startswith('TRI'):
+                assert len(sline) == 5, sline
+                tris.append(sline[1:])
+            elif line2.startswith('QUAD'):
+                assert len(sline) == 6, sline
+                quads.append(sline[1:])
+
+    grid_ids = np.array(grid_ids, dtype='int32')
+    xyz = np.array(xyz, dtype='float32')
+    tris = np.array(tris, dtype='int32')
+    quads = np.array(quads, dtype='int32')
+    bars = np.array(bars, dtype='int32')
+    return grid_ids, xyz, bars, tris, quads

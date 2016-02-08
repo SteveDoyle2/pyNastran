@@ -37,7 +37,7 @@ from pyNastran.gui.menus.camera import CameraWindow
 from pyNastran.gui.menus.application_log import PythonConsoleWidget
 from pyNastran.gui.menus.manage_actors import EditGroupProperties
 #from pyNastran.gui.menus.multidialog import MultiFileDialog
-from pyNastran.gui.utils import load_csv
+from pyNastran.gui.utils import load_csv, load_user_geom
 
 
 class Interactor(vtk.vtkGenericRenderWindowInteractor):
@@ -1565,16 +1565,130 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             self.on_take_screenshot(shots)
             sys.exit('took screenshot %r' % shots)
 
+        self.color_order = [
+            (1.0, 0.145098039216, 1.0),
+            (0.0823529411765, 0.0823529411765, 1.0),
+            (0.0901960784314, 1.0, 0.941176470588),
+            (0.501960784314, 1.0, 0.0941176470588),
+            (1.0, 1.0, 0.117647058824),
+            (1.0, 0.662745098039, 0.113725490196)
+        ]
         if inputs['user_points'] is not None:
-            initial_colors = [(1.0, 0.145098039216, 1.0),
-                              (0.0823529411765, 0.0823529411765, 1.0),
-                              (0.0901960784314, 1.0, 0.941176470588),
-                              (0.501960784314, 1.0, 0.0941176470588),
-                              (1.0, 1.0, 0.117647058824),
-                              (1.0, 0.662745098039, 0.113725490196)]
             for fname in inputs['user_points']:
-                color = initial_colors[self.num_user_points % len(initial_colors)]
-                self.on_load_user_points(fname, None, color)
+                self.on_load_user_points(fname)
+
+        if inputs['user_geom'] is not None:
+            for fname in inputs['user_geom']:
+                self.on_load_user_geom(fname)
+
+    def on_load_user_geom(self, csv_filename=None, name=None, color=None):
+        if csv_filename in [None, False]:
+            qt_wildcard = '*.csv'
+            title = 'Load User Points'
+            wildcard_level, csv_filename = self._create_load_file_dialog(qt_wildcard, title)
+        if color is None:
+            # we mod the num_user_points so we don't go outside the range
+            icolor = self.num_user_points % len(self.color_order)
+            color = self.color_order[icolor]
+        if name is None:
+            name = os.path.basename(csv_filename).rsplit('.', 1)[0]
+
+        point_name = name + '_point'
+        geom_name = name + '_geom'
+
+
+        grid_ids, xyz, bars, tris, quads = load_user_geom(csv_filename)
+        nbars = len(bars)
+        ntris = len(tris)
+        nquads = len(quads)
+        nelements = nbars + ntris + nquads
+        self.create_alternate_vtk_grid(point_name, color=color, opacity=1.0,
+                                       point_size=5, representation='point')
+
+        if nelements > 0:
+            nid_map = {}
+            i = 0
+            for nid in grid_ids:
+                nid_map[nid] = i
+                i += 1
+            self.create_alternate_vtk_grid(geom_name, color=color, opacity=1.0,
+                                           line_width=5, representation='toggle')
+
+        # allocate
+        npoints = len(grid_ids)
+        self.alt_grids[point_name].Allocate(npoints, 1000)
+        if nelements > 0:
+            self.alt_grids[geom_name].Allocate(npoints, 1000)
+
+        # set points
+        points = vtk.vtkPoints()
+        points.SetNumberOfPoints(npoints)
+
+
+        if nelements > 0:
+            geom_grid = self.alt_grids[geom_name]
+            for i, point in enumerate(xyz):
+                points.InsertPoint(i, *point)
+                elem = vtk.vtkVertex()
+                elem.GetPointIds().SetId(0, i)
+                self.alt_grids[point_name].InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                geom_grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+        else:
+            for i, point in enumerate(xyz):
+                points.InsertPoint(i, *point)
+                elem = vtk.vtkVertex()
+                elem.GetPointIds().SetId(0, i)
+                self.alt_grids[point_name].InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+        if nbars:
+            for i, bar in enumerate(bars[:, 1:]):
+                g1 = nid_map[bar[0]]
+                g2 = nid_map[bar[1]]
+                elem = vtk.vtkLine()
+                elem.GetPointIds().SetId(0, g1)
+                elem.GetPointIds().SetId(1, g2)
+                geom_grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+
+        if ntris:
+            for i, tri in enumerate(tris[:, 1:]):
+                g1 = nid_map[tri[0]]
+                g2 = nid_map[tri[1]]
+                g3 = nid_map[tri[2]]
+                elem = vtk.vtkTriangle()
+                elem.GetPointIds().SetId(0, g1)
+                elem.GetPointIds().SetId(1, g2)
+                elem.GetPointIds().SetId(2, g3)
+                geom_grid.InsertNextCell(5, elem.GetPointIds())
+
+        if nquads:
+            for i, quad in enumerate(quads[:, 1:]):
+                g1 = nid_map[quad[0]]
+                g2 = nid_map[quad[1]]
+                g3 = nid_map[quad[2]]
+                g4 = nid_map[quad[3]]
+                elem = vtk.vtkQuad()
+                point_ids = elem.GetPointIds()
+                point_ids.SetId(0, g1)
+                point_ids.SetId(1, g2)
+                point_ids.SetId(2, g3)
+                point_ids.SetId(3, g4)
+                geom_grid.InsertNextCell(9, elem.GetPointIds())
+
+        self.alt_grids[point_name].SetPoints(points)
+        if nelements > 0:
+            self.alt_grids[geom_name].SetPoints(points)
+
+        # create actor/mapper
+        self._add_alt_geometry(self.alt_grids[point_name], point_name)
+        if nelements > 0:
+            self._add_alt_geometry(self.alt_grids[geom_name], geom_name)
+
+        # set representation to points
+        #self.geometry_properties[point_name].representation = 'point'
+        #self.geometry_properties[geom_name].representation = 'toggle'
+        #actor = self.geometry_actors[name]
+        #prop = actor.GetProperty()
+        #prop.SetRepresentationToPoints()
+        #prop.SetPointSize(4)
 
     def on_load_user_points(self, csv_filename=None, name=None, color=None):
         """
@@ -1604,11 +1718,13 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             title = 'Load User Points'
             wildcard_level, csv_filename = self._create_load_file_dialog(qt_wildcard, title)
         if color is None:
-            color = (1.0, 0., 0.) # red
+            # we mod the num_user_points so we don't go outside the range
+            icolor = self.num_user_points % len(self.color_order)
+            color = self.color_order[icolor]
         if name is None:
             name = os.path.basename(csv_filename).rsplit('.', 1)[0]
 
-        self._add_user_points(csv_filename, name, color=color)
+        self._add_user_points(csv_filename, name, color)
         self.num_user_points += 1
         self.log_command('on_load_user_points(%r, %r, %s)' % (
             csv_filename, name, str(color)))
@@ -3217,14 +3333,10 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         # bar_z[:, 3:] = bar_z[:, :3] + Lz * bar_scale
 
 
-    def _add_user_points(self, points_filename, name, color=None):
+    def _add_user_points(self, points_filename, name, color):
         if name in self.geometry_actors:
             msg = 'Name: %s is already in geometry_actors\nChoose a different name.' % name
             raise ValueError(msg)
-
-        if color is None:
-            color = (0., 1., .1)
-
         # create grid
         self.create_alternate_vtk_grid(name, color=color, line_width=5, opacity=1.0,
                                        point_size=1, representation='point')
