@@ -56,14 +56,14 @@ if sys.version_info <= (3,):
 else:
     py3_gui_scripts = ['pyNastranGUI = pyNastran.gui.gui:main',]
 
-    try:
-        import vtk
-        vtk_version = '.'.join(vtk.VTK_VERSION.split('.'))
-        if vtk_version < '7.0.0':
-            print("vtk.VTK_VERSION = %r < '7.0.0'" % vtk.VTK_VERSION)
-            py3_packages.append('vtk >= 7.0.0')
-    except ImportError:
-        py3_packages.append('vtk >= 7.0.0')
+#    try:
+#        import vtk
+#        vtk_version = '.'.join(vtk.VTK_VERSION.split('.'))
+#        if vtk_version < '7.0.0':
+#            print("vtk.VTK_VERSION = %r < '7.0.0'" % vtk.VTK_VERSION)
+#            py3_packages.append('vtk >= 7.0.0')
+#    except ImportError:
+#        py3_packages.append('vtk >= 7.0.0')
 
     #try:  # is this still required?
         #import PIL
