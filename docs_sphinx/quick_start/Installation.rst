@@ -10,8 +10,8 @@ Install Procedure - From a Release
 Overview
 ========
  * Install Python
- * Install numpy, scipy, pandas, vtk, PyQt4 (Python 2.x)
- * Install numpy, scipy, pandas (Python 3.x)
+ * Install numpy, scipy, pandas, vtk, PyQt4 (GUI)
+ * Install numpy, scipy, pandas (no GUI)
  * Download pyNastran from Github
  * Navigate to pyNastran directory on the command line
  * Install the package
@@ -49,7 +49,7 @@ The following packages are required.
 
  * `scipy <http://scipy.org/>`_
  * `numpy 1.9+ <http://numpy.org/>`_
- * `vtk 5.x or 6.x <http://www.vtk.org/VTK/resources/software.html>`_ (for the GUI)
+ * `vtk 5.x, 6.x, 7.x <http://www.vtk.org/VTK/resources/software.html>`_ (for the GUI)
  * `wxPython <http://wxpython.org/download.php#stable>`_ (for BDF/OP2/OP4 popups)
  * `PyQt4 <http://www.riverbankcomputing.com/software/pyqt/download>`_ (for the GUI; BDF/OP2/OP4 popups in v0.7)
  * `pandas <http://pandas.pydata.org/>`_ (optional way to use the OP2 in iPython; v0.8)
@@ -59,6 +59,10 @@ at the time of release.  If you require an older version, try changing version
 requirements in ``setup.py``.  It shouldn't be that different, but pyNastran does
 make use of numpy's "new" axis option in ``numpy.linalg.norm`` and there was a
 major bug fix in Python 2.7.8, so buyer beware.
+
+Regarding the GUI, Python 2.7 with ``vtk==5.10.1`` will give you the best
+looking GUI.  The GUI in vtk 6/7 won't let you see element edges.  The
+GUI in Python 3 won't save your settings.
 
 Download pyNastran
 ------------------
@@ -103,8 +107,8 @@ Install Procedure - From Source
 Overview
 ========
  * Install Python
- * Install numpy, scipy, pandas, vtk, PyQt4 (Python 2.x)
- * Install numpy, scipy, pandas (Python 3.x)
+ * Install numpy, scipy, pandas, vtk, PyQt4 (GUI)
+ * Install numpy, scipy, pandas (no GUI)
  * Install Sphinx, GraphViz, alabaster (for documentation)
 
  * Install Git

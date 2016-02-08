@@ -644,7 +644,7 @@ def run_fem2(bdf_model, out_model, xref, punch,
                         scale_factors = []
                         loads = []
                         # scale_factors, loads = load.get_reduced_loads()
-                        for load, scale_factor in zip(load.loadIDs, load.scaleFactors):
+                        for load, scale_factor in zip(load.load_ids, load.scale_factors):
                             if isinstance(load, list):
                                 for loadi in load:
                                     assert not isinstance(loadi, list), loadi

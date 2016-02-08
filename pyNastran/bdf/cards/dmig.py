@@ -396,28 +396,42 @@ def get_matrix(self, is_sparse=False, apply_symmetry=True):
     i = 0
     rows = {}
     rows_reversed = {}
-    for (nid, comp) in self.GCi:
-        GCi = (nid, comp)
-        if GCi not in rows:
-            rows[GCi] = i
-            rows_reversed[i] = GCi
-            i += 1
-    #nrows = len(rows2)
 
     j = 0
     cols = {}
     cols_reversed = {}
-    for (nid, comp) in self.GCj:
-        GCj = (nid, comp)
-        if GCj not in cols:
-            cols[GCj] = j
-            cols_reversed[j] = GCj
-            j += 1
+    ndim = len(self.GCi.shape)
+    if ndim == 1:
+        for GCi in self.GCi:
+            if GCi not in rows:
+                rows[GCi] = i
+                rows_reversed[i] = GCi
+                i += 1
+        for GCj in self.GCj:
+            if GCj not in cols:
+                cols[GCj] = j
+                cols_reversed[j] = GCj
+                j += 1
+    else:
+        for (nid, comp) in self.GCi:
+            GCi = (nid, comp)
+            if GCi not in rows:
+                rows[GCi] = i
+                rows_reversed[i] = GCi
+                i += 1
+        for (nid, comp) in self.GCj:
+            GCj = (nid, comp)
+            if GCj not in cols:
+                cols[GCj] = j
+                cols_reversed[j] = GCj
+                j += 1
+    #nrows = len(rows2)
     #ncols = len(cols2)
 
     #A = ss.lil_matrix((3,3), dtype='d') # double precision
-
-    #rows=[]; cols=[]; data=[]
+    #rows=[]
+    #cols=[]
+    #data=[]
     #for i in range(3):
     #    for j in range(3):
     #        k = float((i+1)*(j+1))
@@ -457,32 +471,59 @@ def get_matrix(self, is_sparse=False, apply_symmetry=True):
         #print(M.todense())
         #print(M)
     else:
-        if self.is_complex():
-            M = zeros((i, j), dtype='complex128')
-            if self.ifo == 6 and apply_symmetry:  # symmetric
-                for (gcj, gci, reali, complexi) in zip(self.GCj, self.GCi, self.Real, self.Complex):
-                    i = rows[(gci[0], gci[1])]
-                    j = cols[(gcj[0], gcj[1])]
-                    M[i, j] = complex(reali, complexi)
-                    M[j, i] = complex(reali, complexi)
+        if ndim == 1:
+            if self.is_complex():
+                M = zeros((i, j), dtype='complex128')
+                if self.ifo == 6 and apply_symmetry:  # symmetric
+                    for (gcj, gci, reali, complexi) in zip(self.GCj, self.GCi, self.Real, self.Complex):
+                        i = rows[gci]
+                        j = cols[gcj]
+                        M[i, j] = complex(reali, complexi)
+                        M[j, i] = complex(reali, complexi)
+                else:
+                    for (gcj, gci, reali, complexi) in zip(self.GCj, self.GCi, self.Real, self.Complex):
+                        i = rows[gci]
+                        j = cols[gcj]
             else:
-                for (gcj, gci, reali, complexi) in zip(self.GCj, self.GCi, self.Real, self.Complex):
-                    i = rows[(gci[0], gci[1])]
-                    j = cols[(gcj[0], gcj[1])]
-                    M[i, j] = complex(reali, complexi)
+                M = zeros((i, j), dtype='float64')
+                if self.ifo == 6 and apply_symmetry:  # symmetric
+                    for (gcj, gci, reali) in zip(self.GCj, self.GCi, self.Real):
+                        i = rows[gci]
+                        j = cols[gcj]
+                        M[i, j] = reali
+                        M[j, i] = reali
+                else:
+                    for (gcj, gci, reali) in zip(self.GCj, self.GCi, self.Real):
+                        i = rows[gci]
+                        j = cols[gcj]
+                        M[i, j] = reali
         else:
-            M = zeros((i, j), dtype='float64')
-            if self.ifo == 6 and apply_symmetry:  # symmetric
-                for (gcj, gci, reali) in zip(self.GCj, self.GCi, self.Real):
-                    i = rows[(gci[0], gci[1])]
-                    j = cols[(gcj[0], gcj[1])]
-                    M[i, j] = reali
-                    M[j, i] = reali
+            if self.is_complex():
+                M = zeros((i, j), dtype='complex128')
+                if self.ifo == 6 and apply_symmetry:  # symmetric
+                    for (gcj, gci, reali, complexi) in zip(self.GCj, self.GCi, self.Real, self.Complex):
+                        i = rows[(gci[0], gci[1])]
+                        j = cols[(gcj[0], gcj[1])]
+                        M[i, j] = complex(reali, complexi)
+                        M[j, i] = complex(reali, complexi)
+                else:
+                    for (gcj, gci, reali, complexi) in zip(self.GCj, self.GCi, self.Real, self.Complex):
+                        i = rows[(gci[0], gci[1])]
+                        j = cols[(gcj[0], gcj[1])]
+                        M[i, j] = complex(reali, complexi)
             else:
-                for (gcj, gci, reali) in zip(self.GCj, self.GCi, self.Real):
-                    i = rows[(gci[0], gci[1])]
-                    j = cols[(gcj[0], gcj[1])]
-                    M[i, j] = reali
+                M = zeros((i, j), dtype='float64')
+                if self.ifo == 6 and apply_symmetry:  # symmetric
+                    for (gcj, gci, reali) in zip(self.GCj, self.GCi, self.Real):
+                        i = rows[(gci[0], gci[1])]
+                        j = cols[(gcj[0], gcj[1])]
+                        M[i, j] = reali
+                        M[j, i] = reali
+                else:
+                    for (gcj, gci, reali) in zip(self.GCj, self.GCi, self.Real):
+                        i = rows[(gci[0], gci[1])]
+                        j = cols[(gcj[0], gcj[1])]
+                        M[i, j] = reali
     #print(M)
     return (M, rows_reversed, cols_reversed)
 

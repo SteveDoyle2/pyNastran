@@ -24,6 +24,9 @@ packages = find_packages()+['gui/icons/*.*']
 
 py2_gui_scripts = []
 py2_packages = []
+py3_gui_scripts = []
+py3_packages = []
+
 if sys.version_info <= (3,):
     py2_gui_scripts = ['pyNastranGUI = pyNastran.gui.gui:main',]
 
@@ -36,13 +39,13 @@ if sys.version_info <= (3,):
     except ImportError:
         py2_packages.append('vtk >= 5.10.0')
 
-    try:
-        import PIL
-        if PIL.VERSION < '2.7.0':
-            print("PIL.version = %r < '2.7.0'" % PIL.VERSION)
-            py2_packages.append('pillow >= 2.7.0')
-    except ImportError:
-        py2_packages.append('pillow >= 2.7.0')
+    #try:  # is this still required?
+        #import PIL
+        #if PIL.VERSION < '2.7.0':
+            #print("PIL.version = %r < '2.7.0'" % PIL.VERSION)
+            #py2_packages.append('pillow >= 2.7.0')
+    #except ImportError:
+        #py2_packages.append('pillow >= 2.7.0')
 
     py2_packages += [
         #'vtk >= 5.10.0',
@@ -50,6 +53,33 @@ if sys.version_info <= (3,):
         ##'dill'
         ##'wx >= 2.8.12.0',
     ]
+else:
+    py3_gui_scripts = ['pyNastranGUI = pyNastran.gui.gui:main',]
+
+    try:
+        import vtk
+        vtk_version = '.'.join(vtk.VTK_VERSION.split('.'))
+        if vtk_version < '7.0.0':
+            print("vtk.VTK_VERSION = %r < '7.0.0'" % vtk.VTK_VERSION)
+            py3_packages.append('vtk >= 7.0.0')
+    except ImportError:
+        py3_packages.append('vtk >= 7.0.0')
+
+    #try:  # is this still required?
+        #import PIL
+        #if PIL.VERSION < '2.7.0':
+            #print("PIL.version = %r < '2.7.0'" % PIL.VERSION)
+            #py3_packages.append('pillow >= 2.7.0')
+    #except ImportError:
+        #py3_packages.append('pillow >= 2.7.0')
+
+    py3_packages += [
+        #'vtk >= 5.10.0',
+        #'pillow >= 2.7.0',
+        ##'dill'
+        ##'wx >= 2.8.12.0',
+    ]
+
 py_packages = []
 
 try:
@@ -101,7 +131,7 @@ install_requires = py_packages + [
     ##'matplotlib >= 1.3.0',
     #'six >= 1.8.0',
     ##'cython',
-] + py2_packages,
+] + py2_packages + py3_packages,
 
 
 # set up all icons
@@ -159,7 +189,7 @@ setup(
             #'pyNastran2 = pyNastran.bdf.dev_vectorized.solver.solver:main',
             #'nastranToCodeAster = pyNastran.converters.toCodeAster:main',
             'format_converter = pyNastran.converters.type_converter:main',
-        ] + py2_gui_scripts
+        ] + py2_gui_scripts + py3_gui_scripts
     },
     test_suite='pyNastran.all_tests',
 )

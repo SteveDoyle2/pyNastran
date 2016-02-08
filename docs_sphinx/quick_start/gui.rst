@@ -10,8 +10,9 @@ If you download the source, make sure you follow the `Installation Guide
 <https://github.com/SteveDoyle2/pyNastran/wiki/Installation>`_ and use 
 **setup.py develop** and not **setup.py install**.
 
-If you're using Python 3.x, the GUI will **not** work because 
-`VTK <http://www.vtk.org/Wiki/VTK/Python_Wrapping_FAQ>`_ does not support Python 3.
+Python 2.7 with ``vtk==5.10.1`` will give you the best looking GUI.
+The GUI in vtk 6/7 won't let you see element edges.  The GUI in 
+Python 3 won't save your settings.
 
 Introduction
 ------------
@@ -36,11 +37,21 @@ To view the options:
 
   >>> pyNastranGUI --help
 
+    pyNastranGUI [-f FORMAT] INPUT
+                 [-s SHOT] [-m MAGNIFY]
+                 [-g GSCRIPT] [-p PSCRIPT]
+                 [-u POINTS_FNAME...]
+                 [-q]
+    pyNastranGUI [-f FORMAT] INPUT OUTPUT
+                 [-s SHOT] [-m MAGNIFY]
+                 [-g GSCRIPT] [-p PSCRIPT]
+                 [-u POINTS_FNAME...]
+                 [-q]
     pyNastranGUI [-f FORMAT] [-i INPUT] [-o OUTPUT...]
-                    [-s SHOT] [-m MAGNIFY]
-                    [-g GSCRIPT] [-p PSCRIPT]
-                    [-u POINTS_FNAME...]
-                    [-c][-q]
+                 [-s SHOT] [-m MAGNIFY]
+                 [-g GSCRIPT] [-p PSCRIPT]
+                 [-u POINTS_FNAME...]
+                 [-q]
     pyNastranGUI -h | --help
     pyNastranGUI -v | --version
   
@@ -50,7 +61,6 @@ To view the options:
                                              plot3d, stl, tetgen, usm3d)
     -i INPUT, --input INPUT     path to input file
     -o OUTPUT, --output OUTPUT  path to output file
-    -c, --console               disable HTML console output
     -g GSCRIPT, --geomscript GSCRIPT  path to geometry script file (runs before load geometry)
     -p PSCRIPT, --postscript PSCRIPT  path to post script file (runs after load geometry)
     -s SHOT, --shots SHOT       path to screenshot (only 1 for now)
