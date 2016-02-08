@@ -27,25 +27,26 @@ from pyNastran.bdf.cards.loads.loads import TabularLoad, LoadCombination
 class DLOAD(LoadCombination):
     type = 'DLOAD'
 
-    def __init__(self):
-        LoadCombination.__init__(self)
+    def __init__(self, sid, scale, scale_factors, load_ids, comment=''):
+        LoadCombination.__init__(self, sid, scale, scale_factors, load_ids,
+                                 comment=comment)
 
     def cross_reference(self, model):
         load_ids2 = []
         msg = ' which is required by %s=%s' % (self.type, self.sid)
-        for load_id in self.loadIDs:
+        for load_id in self.load_ids:
             load_id2 = model.get_dload_entries(load_id, msg=msg)
             load_ids2.append(load_id2)
-        self.loadIDs = load_ids2
-        self.loadIDs_ref = self.loadIDs
+        self.load_ids = load_ids2
+        self.load_ids_ref = self.load_ids
 
     def uncross_reference(self):
-        self.loadIDs = [self.LoadID(load) for load in self.loadIDs]
-        del self.loadIDs_ref
+        self.load_ids = [self.LoadID(load) for load in self.load_ids]
+        del self.load_ids_ref
 
     def raw_fields(self):
         list_fields = ['DLOAD', self.sid, self.scale]
-        for (scale_factor, load_id) in zip(self.scaleFactors, self.loadIDs):
+        for (scale_factor, load_id) in zip(self.scale_factors, self.load_ids):
             list_fields += [scale_factor, self.LoadID(load_id)]
         return list_fields
 

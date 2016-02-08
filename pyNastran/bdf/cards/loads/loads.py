@@ -27,7 +27,7 @@ class Load(BaseCard):
     """defines the DefaultLoad class"""
     type = 'DefLoad'
 
-    def __init__(self, card=None, data=None):
+    def __init__(self):
         self.cid = None
         self.nodes = None
 
@@ -56,74 +56,74 @@ class Load(BaseCard):
 
 
 class LoadCombination(Load):  # LOAD, DLOAD
-    def __init__(self):
+    def __init__(self, sid, scale, scale_factors, load_ids, comment=''):
         Load.__init__(self)
-
-    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
+
         #: load ID
-        self.sid = integer(card, 1, 'sid')
+        self.sid = sid
 
         #: overall scale factor
-        self.scale = double(card, 2, 'scale')
+        self.scale = scale
 
-        #: individual scale factors (corresponds to loadIDs)
-        self.scaleFactors = []
+        #: individual scale factors (corresponds to load_ids)
+        self.scale_factors = scale_factors
 
-        #: individual loadIDs (corresponds to scaleFactors)
-        self.loadIDs = []
+        #: individual load_ids (corresponds to scale_factors)
+        self.load_ids = load_ids
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        sid = integer(card, 1, 'sid')
+        scale = double(card, 2, 'scale')
+
+        scale_factors = []
+        load_ids = []
 
         # alternating of scale factor & load set ID
         nloads = len(card) - 3
         assert nloads % 2 == 0
         for i in range(nloads // 2):
             n = 2 * i + 3
-            self.scaleFactors.append(double(card, n, 'scale_factor'))
-            self.loadIDs.append(integer(card, n + 1, 'load_id'))
+            scale_factors.append(double(card, n, 'scale_factor'))
+            load_ids.append(integer(card, n + 1, 'load_id'))
+        return cls(sid, scale, scale_factors, load_ids, comment=comment)
 
-    def add_op2_data(self, data, comment=''):
-        if comment:
-            self._comment = comment
-        self.sid = data[0]
-        self.scale = data[1]
-        self.scaleFactors = data[2]
-        self.loadIDs = data[3]
-        assert len(data) == 4, '%s data=%s' % (self.type, data)
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        sid = data[0]
+        scale = data[1]
+        scale_factors = data[2]
+        load_ids = data[3]
+        assert len(data) == 4, '%s data=%s' % (cls.type, data)
+        return cls(sid, scale, scale_factors, load_ids, comment=comment)
 
     def cross_reference(self, model):
         load_ids2 = []
-        #print('%s.xref' % self.type)
         msg = ' which is required by %s=%s' % (self.type, self.sid)
-        #print('    loadIDs=%s' % str(self.loadIDs))
-        for load_id in self.loadIDs:
+        for load_id in self.load_ids:
             load_id2 = model.Load(load_id, msg=msg)
             assert isinstance(load_id2, list), load_id2
             load_ids2.append(load_id2)
-        self.loadIDs = load_ids2
-        #print('    loadIDs=%s' % str(self.loadIDs))
+        self.load_ids = load_ids2
 
-        self.loadIDs_ref = self.loadIDs
-
-    #def uncross_reference(self):
-        #asdf
-        #self.loadIDs = []
-        #self.pid = self.Pid()
-        #del self.loadIDs_ref
+        self.load_ids_ref = self.load_ids
 
     def safe_cross_reference(self, model, debug=True):
-        loadIDs2 = []
+        load_ids2 = []
         msg = ' which is required by %s=%s' % (self.type, self.sid)
-        for load_id in self.loadIDs:
+        for load_id in self.load_ids:
             try:
-                loadID2 = model.Load(load_id, msg=msg)
+                load_id2 = model.Load(load_id, msg=msg)
             except KeyError:
                 if debug:
-                    msg = 'Couldnt find load_id=%i, which is required by %s=%s' % (load_id, self.type, self.sid)
+                    msg = 'Couldnt find load_id=%i, which is required by %s=%s' % (
+                        load_id, self.type, self.sid)
                     print(msg)
                 continue
-            loadIDs2.append(loadID2)
-        self.loadIDs = loadIDs2
+            load_ids2.append(load_id2)
+        self.load_ids = load_ids2
 
     def LoadID(self, lid):
         if isinstance(lid, integer_types):
@@ -142,12 +142,7 @@ class LoadCombination(Load):  # LOAD, DLOAD
         .. note:: requires a cross referenced load
         """
         loads = []
-        #print('***************************')
-        #print('classname=%s' % self.type)
-        #print('self.loadIDs =', self.loadIDs)
-        #print(self)
-        #print('self.%s.loadIDs = %s' % (self.type, self.loadIDs))
-        for all_loads in self.loadIDs:
+        for all_loads in self.load_ids:
             assert not isinstance(all_loads, int), 'all_loads=%s\n%s' % (str(all_loads), str(self))
             for load in all_loads:
                 try:
@@ -166,27 +161,30 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
     """
     type = 'LSEQ'
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self):
+        pass
+
+    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            self.sid = integer(card, 1, 'sid')
-            self.exciteID = integer(card, 2, 'exciteID')
-            self.lid = integer(card, 3, 'lid')
-            self.tid = integer_or_blank(card, 4, 'tid')
-            assert len(card) <= 5, 'len(LSEQ card) = %i' % len(card)
-        else:
-            self.sid = data[0]
-            self.exciteID = data[1]
-            self.lid = data[2]
-            self.tid = data[3]
-            raise NotImplementedError()
+        self.sid = integer(card, 1, 'sid')
+        self.excite_id = integer(card, 2, 'excite_id')
+        self.lid = integer(card, 3, 'lid')
+        self.tid = integer_or_blank(card, 4, 'tid')
+        assert len(card) <= 5, 'len(LSEQ card) = %i' % len(card)
+
+    def add_op2_data(self, data, comment=''):
+        self.sid = data[0]
+        self.excite_id = data[1]
+        self.lid = data[2]
+        self.tid = data[3]
+        raise NotImplementedError()
 
     def cross_reference(self, model):
         msg = ' which is required by %s=%s' % (self.type, self.sid)
         self.lid = model.Load(self.lid, msg=msg)
         self.lid_ref = self.lid
-        #self.exciteID = model.Node(self.exciteID, msg=msg)
+        #self.excite_id = model.Node(self.excite_id, msg=msg)
         if self.tid:
             self.tid = model.Table(self.tid, msg=msg)
             self.tid_ref = self.tid
@@ -222,10 +220,10 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
 
     #@property
     #def node_id(self):
-        #print('self.exciteID =', self.exciteID)
-        #if isinstance(self.exciteID, integer_types):
-            #return self.exciteID
-        #return self.exciteID.nid
+        #print('self.excite_id =', self.excite_id)
+        #if isinstance(self.excite_id, integer_types):
+            #return self.excite_id
+        #return self.excite_id.nid
 
     def Tid(self):
         if self.tid is None:
@@ -235,7 +233,7 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
         return self.tid_ref.tid
 
     def raw_fields(self):
-        list_fields = ['LSEQ', self.sid, self.exciteID, self.Lid(), self.Tid()]
+        list_fields = ['LSEQ', self.sid, self.excite_id, self.Lid(), self.Tid()]
         return list_fields
 
     def repr_fields(self):
@@ -343,7 +341,8 @@ class SPCD(Load):
         self.constraints = constraints
         self.enforced = enforced
 
-    def add_card(self, card, comment=''):
+    @classmethod
+    def add_card(cls, card, comment=''):
         sid = integer(card, 1, 'sid')
         if card.field(5) in [None, '']:
             gids = [integer(card, 2, 'G1'),]
@@ -361,13 +360,13 @@ class SPCD(Load):
                         double_or_blank(card, 7, 'D2', 0.0)]
         return SPCD(sid, gids, constraints, enforced, comment=comment)
 
-    def add_op2_data(self, data, comment=''):
-        if comment:
-            self._comment = comment
-        self.sid = data[0]
-        self.gids = [data[1]]
-        self.constraints = [data[2]]
-        self.enforced = [data[3]]
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        sid = data[0]
+        gids = [data[1]]
+        constraints = [data[2]]
+        enforced = [data[3]]
+        return SPCD(sid, gids, constraints, enforced, comment=comment)
 
     @property
     def node_ids(self):
@@ -420,15 +419,18 @@ class SLOAD(Load):
     """
     type = 'SLOAD'
 
-    def __init__(self):
-        pass
-
-    def add_card(self, card, comment=''):
+    def __init__(self, sid, nids, mags, comment=''):
         if comment:
             self._comment = comment
-
         #: load ID
-        self.sid = integer(card, 1, 'sid')
+        self.sid = sid
+        self.nids = nids
+        self.mags = mags
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+
+        sid = integer(card, 1, 'sid')
 
         nfields = len(card) - 2
         n = nfields // 2
@@ -437,12 +439,13 @@ class SLOAD(Load):
             msg = 'Missing last magnitude on SLOAD card=%s' % card.fields()
             raise RuntimeError(msg)
 
-        self.nids = []
-        self.mags = []
+        nids = []
+        mags = []
         for i in range(n):
             j = 2 * i + 2
-            self.nids.append(integer(card, j, 'nid' + str(i)))
-            self.mags.append(double(card, j + 1, 'mag' + str(i)))
+            nids.append(integer(card, j, 'nid' + str(i)))
+            mags.append(double(card, j + 1, 'mag' + str(i)))
+        return SLOAD(sid, nids, mags, comment=comment)
 
     def cross_reference(self, model):
         msg = ' which is required by %s=%s' % (self.type, self.sid)
@@ -500,10 +503,11 @@ class RFORCE(Load):
         self.scale = scale
         self.r1 = r1
         self.r2 = r2
+        self.r3 = r3
         self.method = method
         self.racc = racc
         self.mb = mb
-        self.idfr = idrf
+        self.idrf = idrf
 
     @classmethod
     def add_card(self, card, comment=''):
@@ -520,7 +524,7 @@ class RFORCE(Load):
         idrf = integer_or_blank(card, 11, 'idrf', 0)
         assert len(card) <= 12, 'len(RFORCE card) = %i' % len(card)
         return RFORCE(sid, nid, cid, scale, r1, r2, r3, method, racc, mb,
-                     idrf, comment=comment)
+                      idrf, comment=comment)
 
     #@classmethod
     #def add_op2_data(self, data, comment=''):

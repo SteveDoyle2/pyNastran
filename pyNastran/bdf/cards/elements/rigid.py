@@ -875,21 +875,22 @@ class RBE3(RigidElement):
         self.refgrid = model.Node(self.ref_grid_id, msg=msg)
         self.refgrid_ref = self.refgrid
 
-        ## TODO: add refs
-        for i, (wt, ci, Gij) in enumerate(self.WtCG_groups):
-            self.WtCG_groups[i][2] = model.Nodes(Gij, allow_empty_nodes=True, msg=msg)
+        for i, Gij in enumerate(self.Gijs):
+            self.Gijs[i] = model.Nodes(Gij, allow_empty_nodes=True, msg=msg)
+        self.Gijs_ref = self.Gijs
 
     def uncross_reference(self):
         self.Gmi = self.Gmi_node_ids
         self.refgrid = self.ref_grid_id
 
-        weight_cg_groups2 = []
-        for (wt, compi, Gij) in self.WtCG_groups:
-            Giji = self._nodeIDs(nodes=Gij, allow_empty_nodes=True)
-            weight_cg_groups2.append([wt, compi, Giji])
-
-        self.WtCG_groups = weight_cg_groups2
-        del self.Gmi_ref, self.refgrid_ref
+        Gij = []
+        for i, Gij in enumerate(self.Gijs):
+            gij = []
+            for giji in Gij:
+                gij.append(Giji.nid)
+            Gij.append(gij)
+        self.Gijs = Gij
+        del self.Gmi_ref, self.refgrid_ref, self.Gijs_ref
 
     def safe_cross_reference(self, model, debug=True):
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
@@ -901,8 +902,9 @@ class RBE3(RigidElement):
         self.refgrid = model.Node(self.ref_grid_id, msg=msg)
         self.refgrid_ref = self.refgrid
 
-        for i, (wt, ci, Gij) in enumerate(self.WtCG_groups):
-            self.WtCG_groups[i][2] = model.Nodes(Gij, allow_empty_nodes=True, msg=msg)
+        for i, Gij in enumerate(self.Gijs):
+            self.Gijs[i] = model.Nodes(Gij, allow_empty_nodes=True, msg=msg)
+        self.Gijs_ref = self.Gijs
 
     @property
     def independent_nodes(self):
@@ -911,7 +913,7 @@ class RBE3(RigidElement):
         TODO: not checked
         """
         nodes = []
-        for (wt, compi, Gij) in self.WtCG_groups:
+        for Gij in self.Gijs:
             Giji = self._nodeIDs(nodes=Gij, allow_empty_nodes=True)
             nodes += Giji
         return nodes
@@ -928,7 +930,7 @@ class RBE3(RigidElement):
 
     def raw_fields(self):
         list_fields = ['RBE3', self.eid, None, self.ref_grid_id, self.refc]
-        for (wt, ci, Gij) in self.WtCG_groups:
+        for (wt, ci, Gij) in zip(self.weights, self.comps, self.Gijs):
             Giji = self._nodeIDs(nodes=Gij, allow_empty_nodes=True)
             list_fields += [wt, ci] + Giji
         nspaces = 8 - (len(list_fields) - 1) % 8  # puts UM onto next line

@@ -39,10 +39,9 @@ from pyNastran.bdf.field_writer_double import print_card_double, print_scientifi
 class LOAD(LoadCombination):
     type = 'LOAD'
 
-    def __init__(self, card=None, data=None, comment=''):
-        LoadCombination.__init__(self)
-        if comment:
-            self._comment = comment
+    def __init__(self, sid, scale, scale_factors, load_ids, comment=''):
+        LoadCombination.__init__(self, sid, scale, scale_factors, load_ids,
+                                 comment=comment)
 
     def getLoadIDs(self):
         self.deprecated('getLoadIDs()', 'get_load_ids()', '0.8')
@@ -65,7 +64,7 @@ class LOAD(LoadCombination):
         .. note:: requires a cross referenced load
         """
         load_ids = []
-        for loads in self.loadIDs:
+        for loads in self.load_ids:
             for load in loads:
                 #if isinstance(load, int):
                     #load_ids += [load]
@@ -75,11 +74,11 @@ class LOAD(LoadCombination):
                     if isinstance(lid, list):
                         load_ids += load.lid
                     else:  # int
-                        load_ids += load.getLoadIDs()
+                        load_ids += load.get_load_ids()
                 elif isinstance(load, (Force, Moment, PLOAD4, GRAV)):
                     load_ids += [load.sid]
                 else:
-                    msg = ('The getLoadIDs method doesnt support %s cards.\n'
+                    msg = ('The get_load_ids method doesnt support %s cards.\n'
                            '%s' % (load.__class__.__name__, str(load)))
                     raise NotImplementedError(msg)
 
@@ -92,7 +91,7 @@ class LOAD(LoadCombination):
         .. note:: requires a cross referenced load
         """
         load_types = []
-        for loads in self.loadIDs:
+        for loads in self.load_ids:
             for load in loads:
                 if isinstance(load, LOAD):
                     lid = load.lid
@@ -196,7 +195,7 @@ class LOAD(LoadCombination):
             'PLOAD1', 'PLOAD2', 'PLOAD4',
             'GRAV', 'ACCEL', 'ACCEL1']
         load_scale = self.scale # global
-        for (loads_pack, i_scale) in zip(self.loadIDs, self.scaleFactors):
+        for (loads_pack, i_scale) in zip(self.load_ids, self.scale_factors):
             scale = i_scale * load_scale # actual scale = global * local
             if isinstance(loads_pack, integer_types):
                 raise RuntimeError('the load have not been cross-referenced')
@@ -229,13 +228,11 @@ class LOAD(LoadCombination):
         force_constraints = {}
         moment_constraints = {}
         gravity_loads = []
-        #print("self.loadIDs = ",self.loadIDs)
 
         types_found = set()
         (scale_factors, loads) = self.get_reduced_loads()
 
         for (scale_factor, load) in zip(scale_factors, loads):
-            #print("*load = ",load)
             out = load.transform_load()
             types_found.add(load.__class__.__name__)
             if isinstance(load, Force):
@@ -282,7 +279,7 @@ class LOAD(LoadCombination):
 
     def raw_fields(self):
         list_fields = ['LOAD', self.sid, self.scale]
-        for (scale_factor, load_id) in zip(self.scaleFactors, self.loadIDs):
+        for (scale_factor, load_id) in zip(self.scale_factors, self.load_ids):
             list_fields += [scale_factor, self.LoadID(load_id)]
         return list_fields
 
@@ -298,12 +295,12 @@ class LOAD(LoadCombination):
 
     def uncross_reference(self):
         ids = []
-        for i, load_id in enumerate(self.loadIDs):
+        for i, load_id in enumerate(self.load_ids):
             idi = self.LoadID(load_id)
             ids.append(idi)
-        self.loadIDs = ids
+        self.load_ids = ids
         #assert ids == ['cat'], ids
-        del self.loadIDs_ref
+        del self.load_ids_ref
 
 
 class GRAV(BaseCard):
@@ -345,7 +342,8 @@ class GRAV(BaseCard):
         assert not allclose(max(abs(self.N)), 0.), ('GRAV N is a zero vector, '
                                                     'N=%s' % str(self.N))
 
-    def add_card(self, card, comment=''):
+    @classmethod
+    def add_card(cls, card, comment=''):
         sid = integer(card, 1, 'sid')
         cid = integer_or_blank(card, 2, 'cid', 0)
         scale = double(card, 3, 'scale')
@@ -356,7 +354,8 @@ class GRAV(BaseCard):
         assert len(card) <= 8, 'len(GRAV card) = %i' % len(card)
         return GRAV(sid, cid, scale, N, mb, comment=comment)
 
-    def add_op2_data(self, data, comment=''):
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
         sid = data[0]
         cid = data[1]
         a = data[2]
@@ -481,8 +480,8 @@ class ACCEL(BaseCard):
 
         #: Component direction of acceleration variation. (Character; one of X,Y or Z)
         self.direction = direction
-        self.locs = array(locs)
-        self.vals = array(vals)
+        self.locs = array(locs, dtype='float64')
+        self.vals = array(vals, dtype='float64')
 
         assert max(abs(self.N)) > 0.
         assert self.direction in ['X', 'Y', 'Z'], 'dir=%r' % self.direction
@@ -499,13 +498,17 @@ class ACCEL(BaseCard):
         i = 9
         locs = []
         vals = []
-        #j = 0
-        while i < len(card):
-            raise NotImplementedError('ACCEL-line 2')
-            #loc = double(card, i, 'loc%i' % j)
-            #val = double(card, i, 'loc%i' % j)
-            #j += 1
-            #i += 2
+        j = 0
+        nfields = len(card)
+        while i < nfields:
+            #raise NotImplementedError('ACCEL-line 2')
+            loc = double(card, i, 'loc%i' % j)
+            val = double(card, i, 'loc%i' % j)
+            #print('i=%s j=%s len=%s loc=%s val=%s' % (i, j, len(card), loc, val))
+            locs.append(loc)
+            vals.append(val)
+            j += 1
+            i += 2
         return ACCEL(sid, cid, N, direction, locs, vals, comment=comment)
 
     #def get_reduced_loads(self):
@@ -516,6 +519,7 @@ class ACCEL(BaseCard):
     def cross_reference(self, model):
         msg = ' which is required by ACCEL sid=%s' % self.sid
         self.cid = model.Coord(self.cid, msg=msg)
+        self.cid_ref = self.cid
 
     def uncross_reference(self):
         self.cid = self.Cid()

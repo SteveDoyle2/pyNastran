@@ -796,7 +796,10 @@ def string(card, ifield, fieldname):
         msg = ('%s = %r (field #%s) on card must be an string with a character (not %s).\n'
                'card=%s' % (fieldname, value, ifield, dtype, card))
         raise SyntaxError(msg)
-
+#    if '=' in svalue or '*' in svalue:
+#        msg = ('%s = %r (field #%s) on card must be an string with a character (not replicated).\n'
+#               'card=%s' % (fieldname, value, ifield, card))
+#        raise SyntaxError(msg)
     if svalue:  # string
         return str(svalue.upper())
     dtype = _get_dtype(svalue)
@@ -836,6 +839,10 @@ def string_or_blank(card, ifield, fieldname, default=None):
         dtype = _get_dtype(svalue)
         raise SyntaxError('%s = %r (field #%s) on card must be an string or blank (not %s).\n'
                           'card=%s' % (fieldname, svalue, ifield, dtype, card))
+#    if '=' in svalue or '*' in svalue:
+#        msg = ('%s = %r (field #%s) on card must be an string with a character (not replicated).\n'
+#               'card=%s' % (fieldname, value, ifield, card))
+#        raise SyntaxError(msg)
 
     if svalue:  # string
         return str(svalue.upper())

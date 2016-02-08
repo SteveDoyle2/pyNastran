@@ -92,7 +92,8 @@ class CREEP(Material):
         tidcp = integer_or_blank(card, 6, 'tidcp') # blank?
         tidcs = integer_or_blank(card, 7, 'tidcs') # blank?
         thresh = double_or_blank(card, 8, 'thresh', 1e-5)
-        Type = integer_or_blank(card, 9, 'Type') # 111, 112, 121, 122, 211, 212, 221, 222, 300 (or blank?)
+        Type = integer_or_blank(card, 9, 'Type')
+        # 111, 112, 121, 122, 211, 212, 221, 222, 300 (or blank?)
         a = double_or_blank(card, 10, 'a')
         b = double_or_blank(card, 11, 'b')
         c = double_or_blank(card, 12, 'c')
@@ -481,7 +482,7 @@ class MAT2(AnisotropicMaterial):
         self.ge = ge
         self.St = St
         self.Sc = Sc
-        self.St = St
+        self.Ss = Ss
         self.Mcsid = Mcsid
 
     @classmethod
@@ -695,7 +696,7 @@ class MAT3(OrthotropicMaterial):
     }
 
     def __init__(self, mid, ex, eth, ez, nuxth, nuthz, nuzx, rho, gzx,
-                 ax, ath, TRef, ge, comment=''):
+                 ax, ath, az, TRef, ge, comment=''):
         OrthotropicMaterial.__init__(self)
         self.mats3 = None
         self.matt3 = None
@@ -707,11 +708,12 @@ class MAT3(OrthotropicMaterial):
         self.ez = ez
         self.nuxth = nuxth
         self.nuthz = nuthz
-        self.nuxz = nuzx
+        self.nuzx = nuzx
         self.rho = rho
         self.gzx = gzx
         self.ax = ax
         self.ath = ath
+        self.az = az
         self.TRef = TRef
         self.ge = ge
 
@@ -733,7 +735,7 @@ class MAT3(OrthotropicMaterial):
         TRef = double_or_blank(card, 15, 'TRef', 0.0)
         ge = double_or_blank(card, 16, 'ge', 0.0)
         assert len(card) <= 17, 'len(MAT3 card) = %i' % len(card)
-        return MAT3(mid, ex, eth, ez, nuxth, nuthz, nuzx, rho, gzx, ax, ath,
+        return MAT3(mid, ex, eth, ez, nuxth, nuthz, nuzx, rho, gzx, ax, ath, az,
                     TRef, ge, comment=comment)
 
     @classmethod
@@ -937,10 +939,12 @@ class MAT5(ThermalMaterial):  # also AnisotropicMaterial
         1: 'mid', 2:'kxx', 3:'kxy', 4:'kxz', 5: 'kyy', 6:'kyz', 7:'kzz',
     }
 
-    def __init__(self, mid, kxx=0., kxz=0., kyy=0., kyz=0., kzz=0.,
+    def __init__(self, mid, kxx=0., kxy=0., kxz=0., kyy=0., kyz=0., kzz=0.,
                  cp=0., rho=1., hgen=1., comment=''):
         ThermalMaterial.__init__(self)
         self.matt5 = None
+        if comment:
+            self._comment = comment
         self.mid = mid
         #: Thermal conductivity (assumed default=0.0)
         self.mid = mid
@@ -1618,7 +1622,7 @@ class MAT11(Material):
         self._validate_input()
 
     @classmethod
-    def add_card(self, card, comment=''):
+    def add_card(cls, card, comment=''):
         mid = integer(card, 1, 'mid')
         e1 = double(card, 2, 'E1')
         e2 = double(card, 3, 'E2')
@@ -1643,26 +1647,26 @@ class MAT11(Material):
         return MAT11(mid, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23, rho,
                      a1, a2, a3, TRef, ge, comment=comment)
 
-    def add_data(self, data, comment=''):
-        if comment:
-            self._comment = comment
-        self.mid = data[0]
-        self.e1 = data[1]
-        self.e2 = data[2]
-        self.e3 = data[3]
-        self.nu12 = data[4]
-        self.nu13 = data[5]
-        self.nu23 = data[6]
-        self.g12 = data[7]
-        self.g13 = data[8]
-        self.g23 = data[9]
-        self.rho = data[10]
-        self.a1 = data[11]
-        self.a2 = data[12]
-        self.a3 = data[13]
-        self.TRef = data[14]
-        self.ge = data[15]
-        self._validate_input()
+    @classmethod
+    def add_data(cls, data, comment=''):
+        mid = data[0]
+        e1 = data[1]
+        e2 = data[2]
+        e3 = data[3]
+        nu12 = data[4]
+        nu13 = data[5]
+        nu23 = data[6]
+        g12 = data[7]
+        g13 = data[8]
+        g23 = data[9]
+        rho = data[10]
+        a1 = data[11]
+        a2 = data[12]
+        a3 = data[13]
+        TRef = data[14]
+        ge = data[15]
+        return MAT11(mid, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23, rho,
+                     a1, a2, a3, TRef, ge, comment=comment)
 
     def _validate_input(self):
         msg = 'MAT11 mid=%s does not have ' % self.mid
@@ -1714,56 +1718,110 @@ class MAT11(Material):
 class MATHP(HyperelasticMaterial):
     type = 'MATHP'
 
-    def __init__(self):
+    def __init__(self, mid, a10, a01, d1, rho, av, TRef, ge, na, nd,
+                 a20, a11, a02, d2,
+                 a30, a21, a12, a03, d3,
+                 a40, a31, a22, a13, a04, d4,
+                 a50, a41, a32, a23, a14, a05, d5,
+                 tab1, tab2, tab3, tab4, tabd, comment=''):
         HyperelasticMaterial.__init__(self)
-
-    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        self.mid = integer(card, 1, 'mid')
-        self.a10 = double_or_blank(card, 2, 'a10', 0.)
-        self.a01 = double_or_blank(card, 3, 'a01', 0.)
-        self.d1 = double_or_blank(card, 4, 'd1', (self.a10 + self.a01) * 1000)
-        self.rho = double_or_blank(card, 5, 'rho', 0.)
-        self.av = double_or_blank(card, 6, 'av', 0.)
-        self.TRef = double_or_blank(card, 7, 'TRef', 0.)
-        self.ge = double_or_blank(card, 8, 'ge', 0.)
+        self.mid = mid
+        self.a10 = a10
+        self.a01 = a01
+        self.d1 = d1
+        self.rho = rho
+        self.av = av
+        self.TRef = TRef
+        self.ge = ge
 
-        self.na = integer_or_blank(card, 10, 'na', 1)
-        self.nd = integer_or_blank(card, 11, 'nd', 1)
+        self.na = na
+        self.nd = nd
 
-        self.a20 = double_or_blank(card, 17, 'a20', 0.)
-        self.a11 = double_or_blank(card, 18, 'a11', 0.)
-        self.a02 = double_or_blank(card, 19, 'a02', 0.)
-        self.d2 = double_or_blank(card, 20, 'd2', 0.)
+        self.a20 = a20
+        self.a11 = a11
+        self.a02 = a02
+        self.d2 = d2
 
-        self.a30 = double_or_blank(card, 25, 'a30', 0.)
-        self.a21 = double_or_blank(card, 26, 'a21', 0.)
-        self.a12 = double_or_blank(card, 27, 'a12', 0.)
-        self.a03 = double_or_blank(card, 28, 'a03', 0.)
-        self.d3 = double_or_blank(card, 29, 'd3', 0.)
+        self.a30 = a30
+        self.a21 = a21
+        self.a12 = a12
+        self.a03 = a03
+        self.d3 = d3
 
-        self.a40 = double_or_blank(card, 33, 'a40', 0.)
-        self.a31 = double_or_blank(card, 34, 'a31', 0.)
-        self.a22 = double_or_blank(card, 35, 'a22', 0.)
-        self.a13 = double_or_blank(card, 36, 'a13', 0.)
-        self.a04 = double_or_blank(card, 37, 'a04', 0.)
-        self.d4 = double_or_blank(card, 38, 'd4', 0.)
+        self.a40 = a40
+        self.a31 = a31
+        self.a22 = a22
+        self.a13 = a13
+        self.a04 = a04
+        self.d4 = d4
 
-        self.a50 = double_or_blank(card, 41, 'a50', 0.)
-        self.a41 = double_or_blank(card, 42, 'a41', 0.)
-        self.a32 = double_or_blank(card, 43, 'a32', 0.)
-        self.a23 = double_or_blank(card, 44, 'a23', 0.)
-        self.a14 = double_or_blank(card, 45, 'a14', 0.)
-        self.a05 = double_or_blank(card, 46, 'a05', 0.)
-        self.d5 = double_or_blank(card, 47, 'd5', 0.)
+        self.a50 = a50
+        self.a41 = a41
+        self.a32 = a32
+        self.a23 = a23
+        self.a14 = a14
+        self.a05 = a05
+        self.d5 = d5
 
-        self.tab1 = integer_or_blank(card, 49, 'tab1')
-        self.tab2 = integer_or_blank(card, 50, 'tab2')
-        self.tab3 = integer_or_blank(card, 51, 'tab3')
-        self.tab4 = integer_or_blank(card, 52, 'tab4')
-        self.tabd = integer_or_blank(card, 56, 'tabd')
+        self.tab1 = tab1
+        self.tab2 = tab2
+        self.tab3 = tab3
+        self.tab4 = tab4
+        self.tabd = tabd
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        mid = integer(card, 1, 'mid')
+        a10 = double_or_blank(card, 2, 'a10', 0.)
+        a01 = double_or_blank(card, 3, 'a01', 0.)
+        d1 = double_or_blank(card, 4, 'd1', (a10 + a01) * 1000)
+        rho = double_or_blank(card, 5, 'rho', 0.)
+        av = double_or_blank(card, 6, 'av', 0.)
+        TRef = double_or_blank(card, 7, 'TRef', 0.)
+        ge = double_or_blank(card, 8, 'ge', 0.)
+
+        na = integer_or_blank(card, 10, 'na', 1)
+        nd = integer_or_blank(card, 11, 'nd', 1)
+
+        a20 = double_or_blank(card, 17, 'a20', 0.)
+        a11 = double_or_blank(card, 18, 'a11', 0.)
+        a02 = double_or_blank(card, 19, 'a02', 0.)
+        d2 = double_or_blank(card, 20, 'd2', 0.)
+
+        a30 = double_or_blank(card, 25, 'a30', 0.)
+        a21 = double_or_blank(card, 26, 'a21', 0.)
+        a12 = double_or_blank(card, 27, 'a12', 0.)
+        a03 = double_or_blank(card, 28, 'a03', 0.)
+        d3 = double_or_blank(card, 29, 'd3', 0.)
+
+        a40 = double_or_blank(card, 33, 'a40', 0.)
+        a31 = double_or_blank(card, 34, 'a31', 0.)
+        a22 = double_or_blank(card, 35, 'a22', 0.)
+        a13 = double_or_blank(card, 36, 'a13', 0.)
+        a04 = double_or_blank(card, 37, 'a04', 0.)
+        d4 = double_or_blank(card, 38, 'd4', 0.)
+
+        a50 = double_or_blank(card, 41, 'a50', 0.)
+        a41 = double_or_blank(card, 42, 'a41', 0.)
+        a32 = double_or_blank(card, 43, 'a32', 0.)
+        a23 = double_or_blank(card, 44, 'a23', 0.)
+        a14 = double_or_blank(card, 45, 'a14', 0.)
+        a05 = double_or_blank(card, 46, 'a05', 0.)
+        d5 = double_or_blank(card, 47, 'd5', 0.)
+
+        tab1 = integer_or_blank(card, 49, 'tab1')
+        tab2 = integer_or_blank(card, 50, 'tab2')
+        tab3 = integer_or_blank(card, 51, 'tab3')
+        tab4 = integer_or_blank(card, 52, 'tab4')
+        tabd = integer_or_blank(card, 56, 'tabd')
         assert len(card) <= 57, 'len(MATHP card) = %i' % len(card)
+        return MATHP(mid, a10, a01, d1, rho, av, TRef, ge, na, nd, a20, a11,
+                     a02, d2, a30, a21, a12, a03, d3, a40,
+                     a31, a22, a13, a04, d4, a50, a41,
+                     a32, a23, a14, a05, d5, tab1, tab2,
+                     tab3, tab4, tabd, comment=comment)
 
     def add_op2_data(self, data, comment=''):
         if comment:

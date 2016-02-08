@@ -94,8 +94,7 @@ class PBUSH(BushingProperty):
                 break
             istart += 8
         return PBUSH(pid, k_fields, b_fields, ge_fields, rcv_fields,
-                     #comment=comment)
-                     )
+                     comment=comment)
 
     def add_op2_data(self, data, comment=''):
         if comment:
@@ -454,13 +453,14 @@ class PBUSHT(BushingProperty):
         BushingProperty.__init__(self)
         if comment:
             self._comment = comment
+        self.pid = pid
         self.k_tables = k_tables
         self.b_tables = b_tables
         self.ge_tables = ge_tables
         self.kn_tables = kn_tables
 
     @classmethod
-    def add_card(cls, comment=''):
+    def add_card(cls, card, comment=''):
         k_tables = []
         b_tables = []
         ge_tables = []

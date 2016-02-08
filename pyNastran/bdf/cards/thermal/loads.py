@@ -22,7 +22,7 @@ class ThermalLoadDefault(ThermalCard):
 
 
 class ThermalLoad(ThermalCard):
-    def __init__(self, card, data):
+    def __init__(self):
         pass
 
 class QVOL(ThermalLoad):
@@ -113,7 +113,7 @@ class QBDY1(ThermalLoad):
     type = 'QBDY1'
 
     def __init__(self, card=None, data=None, comment=''):
-        ThermalLoad.__init__(self, card, data)
+        ThermalLoad.__init__(self)
         if comment:
             self._comment = comment
         if card:
@@ -197,7 +197,7 @@ class QBDY2(ThermalLoad):  # not tested
     type = 'QBDY2'
 
     def __init__(self, card=None, data=None, comment=''):
-        ThermalLoad.__init__(self, card, data)
+        ThermalLoad.__init__(self)
         if comment:
             self._comment = comment
         if card:
@@ -270,7 +270,7 @@ class QBDY3(ThermalLoad):
     type = 'QBDY3'
 
     def __init__(self, card=None, data=None, comment=''):
-        ThermalLoad.__init__(self, card, data)
+        ThermalLoad.__init__(self)
         if comment:
             self._comment = comment
         if card:
@@ -361,7 +361,7 @@ class QHBDY(ThermalLoad):
     }
 
     def __init__(self, card=None, data=None, comment=''):
-        ThermalLoad.__init__(self, card, data)
+        ThermalLoad.__init__(self)
         if comment:
             self._comment = comment
         if card:
@@ -438,7 +438,7 @@ class TEMP(ThermalLoad):
     type = 'TEMP'
 
     def __init__(self, card=None, data=None, comment=''):
-        ThermalLoad.__init__(self, card, data)
+        ThermalLoad.__init__(self)
         if comment:
             self._comment = comment
         if card:

@@ -1319,14 +1319,14 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
             'CTRIA3' : (CTRIA3, self.add_element),
             'CQUAD4' : (CQUAD4, self.add_element),
-            #'CQUAD' : (CQUAD, self.add_element),
-            #'CQUAD8' : (CQUAD8, self.add_element),
-            #'CQUADX' : (CQUADX, self.add_element),
-            #'CQUADR' : (CQUADR, self.add_element),
+            'CQUAD' : (CQUAD, self.add_element),
+            'CQUAD8' : (CQUAD8, self.add_element),
+            'CQUADX' : (CQUADX, self.add_element),
+            'CQUADR' : (CQUADR, self.add_element),
             'CTRIA6' : (CTRIA6, self.add_element),
             'CTRIAR' : (CTRIAR, self.add_element),
-            #'CTRIAX' : (CTRIAX, self.add_element),
-            #'CTRIAX6' : (CTRIAX6, self.add_element),
+            'CTRIAX' : (CTRIAX, self.add_element),
+            'CTRIAX6' : (CTRIAX6, self.add_element),
             'PCOMP' : (PCOMP, self.add_property),
             'PCOMPG' : (PCOMPG, self.add_property),
             'PSHELL' : (PSHELL, self.add_property),
@@ -1363,10 +1363,10 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'CBUSH1D' : (CBUSH1D, self.add_damper),
             'CBUSH2D' : (CBUSH2D, self.add_damper),
 
-            #'CRAC2D' : (CRAC2D, self.add_element),
+            'CRAC2D' : (CRAC2D, self.add_element),
             'PRAC2D' : (PRAC2D, self.add_property),
 
-            #'CRAC3D' : (CRAC3D, self.add_element),
+            'CRAC3D' : (CRAC3D, self.add_element),
             'PRAC3D' : (PRAC3D, self.add_property),
 
             'PDAMPT' : (PDAMPT, self.add_PDAMPT),
@@ -1393,7 +1393,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'EQUIV' : (EQUIV, self.add_structural_material),
 
             ##'MATHE' : (MATHE, self.add_hyperelastic_material),
-            #'MATHP' : (MATHP, self.add_hyperelastic_material),
+            'MATHP' : (MATHP, self.add_hyperelastic_material),
             'MAT4' : (MAT4, self.add_thermal_material),
             'MAT5' : (MAT5, self.add_thermal_material),
 
@@ -1429,20 +1429,20 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'GRAV' : (GRAV, self.add_load),
             'ACCEL' : (ACCEL, self.add_load),
             'ACCEL1' : (ACCEL1, self.add_load),
-            #'LOAD' : (LOAD, self.add_load),
+            'LOAD' : (LOAD, self.add_load),
             'PLOAD' : (PLOAD, self.add_load),
             'PLOAD1' : (PLOAD1, self.add_load),
             'PLOAD2' : (PLOAD2, self.add_load),
             'PLOAD4' : (PLOAD4, self.add_load),
             'PLOADX1' : (PLOADX1, self.add_load),
             'RFORCE' : (RFORCE, self.add_load),
-            #'SLOAD' : (SLOAD, self.add_load),
+            'SLOAD' : (SLOAD, self.add_load),
             'RANDPS' : (RANDPS, self.add_load),
             'GMLOAD' : (GMLOAD, self.add_load),
             'SPCD' : (SPCD, self.add_load),  # enforced displacement
             'QVOL' : (QVOL, self.add_load),  # thermal
 
-            #'DLOAD' : (DLOAD, self.add_dload),
+            'DLOAD' : (DLOAD, self.add_dload),
             'TLOAD1' : (TLOAD1, self.add_dload_entry),
             'TLOAD2' : (TLOAD2, self.add_dload_entry),
             'RLOAD1' : (RLOAD1, self.add_dload_entry),
@@ -1458,34 +1458,18 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
             'CBEAM3' : (CBEAM3, self.add_element),
             #'PBEAM3' : (PBEAM3, self.add_property),
-
-            'CBEND' : (CBEND, self.add_element),
             #'PBEND' : (PBEND, self.add_property),
 
-            'CQUAD' : (CQUAD, self.add_element),
-            'CQUAD8' : (CQUAD8, self.add_element),
-            'CQUADX' : (CQUADX, self.add_element),
-            'CQUADR' : (CQUADR, self.add_element),
-            'CTRIAX' : (CTRIAX, self.add_element),
-            'CTRIAX6' : (CTRIAX6, self.add_element),
-
-            'CRAC2D' : (CRAC2D, self.add_element),
-            'CRAC3D' : (CRAC3D, self.add_element),
-
-            'PDAMPT' : (PDAMPT, self.add_PDAMPT),
-            'PBUSHT' : (PBUSHT, self.add_PBUSHT),
             'PBUSH1D' : (PBUSH1D, self.add_property),
 
             # there is no MAT6 or MAT7
             #'MATHE' : (MATHE, self.add_hyperelastic_material),
-            'MATHP' : (MATHP, self.add_hyperelastic_material),
 
             'CONM1' : (CONM1, self.add_mass),
-
-            'LOAD' : (LOAD, self.add_load),
-            'SLOAD' : (SLOAD, self.add_load),
-            'DLOAD' : (DLOAD, self.add_dload),
             # BCTSET
+
+            # not added to new
+            'LSEQ' : (LSEQ, self.add_LSEQ),
         }
         self._card_parser_b = {
             # CTETRA - added later
@@ -1495,7 +1479,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'CIHEX1' : (CIHEX1, self.add_element),
             'PIHEX' : (PIHEX, self.add_property),
 
-            'LSEQ' : (LSEQ, self.add_LSEQ),
             'PHBDY' : (PHBDY, self.add_PHBDY),
             'AERO' : (AERO, self.add_AERO),
             'AEROS' : (AEROS, self.add_AEROS),
@@ -2097,6 +2080,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
         elif card_name in self._card_parser_b:
             card_class, add_card_function = self._card_parser_b[card_name]
+            #print('b', card_name)
             try:
                 class_instance = card_class(card_obj, comment=comment)
             except TypeError:

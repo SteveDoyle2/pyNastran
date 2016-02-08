@@ -665,42 +665,51 @@ class CBEND(LineElement):
             else:
                 raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
-    def __init__(self):
+    def __init__(self, eid, pid, ga, gb, g0, x, geom, comment=''):
         LineElement.__init__(self)
-
-    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        self.eid = integer(card, 1, 'eid')
-        self.pid = integer_or_blank(card, 2, 'pid', self.eid)
-        self.ga = integer(card, 3, 'ga')
-        self.gb = integer(card, 4, 'gb')
+        self.eid = eid
+        self.pid = pid
+        self.ga = ga
+        self.gb = gb
+        self.g0 = g0
+        self.x = x
+        self.geom = geom
+        assert self.geom in [1, 2, 3, 4], 'geom is invalid geom=%r' % self.geom
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        eid = integer(card, 1, 'eid')
+        pid = integer_or_blank(card, 2, 'pid', eid)
+        ga = integer(card, 3, 'ga')
+        gb = integer(card, 4, 'gb')
         x1_g0 = integer_double_or_blank(card, 5, 'x1_g0', 0.0)
         if isinstance(x1_g0, integer_types):
-            self.g0 = x1_g0
-            self.x = None
+            g0 = x1_g0
+            x = None
         elif isinstance(x1_g0, float):
-            self.g0 = None
-            self.x = array([double_or_blank(card, 5, 'x1', 0.0),
-                            double_or_blank(card, 6, 'x2', 0.0),
-                            double_or_blank(card, 7, 'x3', 0.0)], dtype='float64')
-            if norm(self.x) == 0.0:
+            g0 = None
+            x = array([double_or_blank(card, 5, 'x1', 0.0),
+                       double_or_blank(card, 6, 'x2', 0.0),
+                       double_or_blank(card, 7, 'x3', 0.0)], dtype='float64')
+            if norm(x) == 0.0:
                 msg = 'G0 vector defining plane 1 is not defined.\n'
-                msg += 'G0 = %s\n' % self.g0
-                msg += 'X  = %s\n' % self.x
+                msg += 'G0 = %s\n' % g0
+                msg += 'X  = %s\n' % x
                 raise RuntimeError(msg)
         else:
             raise ValueError('invalid x1Go=%r on CBEND' % x1_g0)
-        self.geom = integer(card, 8, 'geom')
+        geom = integer(card, 8, 'geom')
 
         assert len(card) == 9, 'len(CBEND card) = %i' % len(card)
-        assert self.geom in [1, 2, 3, 4], 'geom is invalid geom=%r' % self.geom
+        return CBEND(eid, pid, ga, gb, g0, x, geom, comment=comment)
         self._validate_input()
 
-    def add_op2_data(self, data, comment=''):
-        if comment:
-            self._comment = comment
-        raise NotImplementedError(data)
+    #def add_op2_data(self, data, comment=''):
+        #if comment:
+            #self._comment = comment
+        #raise NotImplementedError(data)
 
     def _validate_input(self):
         if self.g0 in [self.ga, self.gb]:

@@ -59,7 +59,7 @@ class CFAST(Element):
         assert len(card) <= 12, 'len(CFAST card) = %i' % len(card)
         #if self.Type=='PROP': # PSHELL/PCOMP  ida & idb
         return CFAST(eid, pid, Type, ida, idb, gs, ga, gb, xs, ys, zs,
-                    comment=comment)
+                     comment=comment)
 
     def cross_reference(self, model):
         msg = ' which is required by CFAST eid=%s' % self.eid
@@ -165,9 +165,10 @@ class CGAP(Element):
             x = [None, None, None]
             cid = None
         assert len(card) <= 9, 'len(CGAP card) = %i' % len(card)
-        return CGAP(eid, pid, ga, gb, x, g0, cid, comment='')
+        return CGAP(eid, pid, ga, gb, x, g0, cid, comment=comment)
 
-    def add_op2_data(self, data, comment=''):
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
         eid = data[0]
         pid = data[1]
         ga = data[2]
@@ -178,7 +179,7 @@ class CGAP(Element):
         x3 = data[7]
         x = [x1, x2, x3]
         cid = data[8]
-        return CGAP(eid, pid, ga, gb, x, g0, cid, comment='')
+        return CGAP(eid, pid, ga, gb, x, g0, cid, comment=comment)
 
     def _verify(self, xref=True):
         cid = self.Cid()
@@ -196,7 +197,8 @@ class CGAP(Element):
             assert self.pid_ref.type in ['PGAP'], 'pid=%i self.pid_ref.type=%s' % (pid, self.pid_ref.type)
             if self.cid is not None and self.cid != 0:
                 assert self.cid_ref.type in ['CORD1R', 'CORD1C', 'CORD1S', 'CORD2R', 'CORD2C',
-                                         'CORD2S'], 'cid=%i self.cid.type=%s' % (cid, self.cid_ref.type)
+                                             'CORD2S'], 'cid=%i self.cid.type=%s' % (
+                                                 cid, self.cid_ref.type)
 
     def cross_reference(self, model):
         msg = ' which is required by CGAP eid=%s' % self.Eid()
@@ -262,7 +264,7 @@ class CGAP(Element):
         else:
             x = self.x
         list_fields = (['CGAP', self.eid, self.Pid(), self.Ga(), self.Gb()] + x +
-                  [self.Cid()])
+                       [self.Cid()])
         return list_fields
 
     def write_card(self, size=8, is_double=False):
@@ -296,14 +298,19 @@ class CRAC2D(CrackElement):
     }
     ## todo:: not done
 
-    def __init__(self):
+    def __init__(self, eid, pid, nids, comment=''):
         CrackElement.__init__(self)
-
-    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        self.eid = integer(card, 1, 'eid')
-        self.pid = integer(card, 2, 'pid')
+        self.eid = eid
+        self.pid = pid
+        self.prepare_node_ids(nids, allow_empty_nodes=True)
+        assert len(self.nodes) == 18
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        eid = integer(card, 1, 'eid')
+        pid = integer(card, 2, 'pid')
         nids = [
             integer(card, 3, 'n1'), integer(card, 4, 'n2'),
             integer(card, 5, 'n3'), integer(card, 6, 'n4'),
@@ -320,17 +327,14 @@ class CRAC2D(CrackElement):
             integer_or_blank(card, 20, 'n18')
         ]
         assert len(card) <= 21, 'len(CRAC2D card) = %i' % len(card)
-        self.prepare_node_ids(nids, allow_empty_nodes=True)
-        assert len(self.nodes) == 18
+        return CRAC2D(eid, pid, nids, comment=comment)
 
-    def add_op2_data(self, data, comment=''):
-        if comment:
-            self._comment = comment
-        self.eid = data[0]
-        self.pid = data[1]
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        eid = data[0]
+        pid = data[1]
         nids = data[2:]
-        self.prepare_node_ids(nids, allow_empty_nodes=True)
-        assert len(self.nodes) == 18
+        return CRAC2D(eid, pid, nids, comment=comment)
 
     def _verify(self, xref=True):
         eid = self.Eid()
@@ -370,28 +374,32 @@ class CRAC3D(CrackElement):
     }
     ## todo:: not done
 
-    def __init__(self):
+    def __init__(self, eid, pid, nids, comment=''):
         CrackElement.__init__(self)
-
-    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        self.eid = integer(card, 1, 'eid')
-        self.pid = integer(card, 2, 'pid')
+        self.eid = eid
+        self.pid = pid
+        self.prepare_node_ids(nids, allow_empty_nodes=True)
+        assert len(self.nodes) == 64
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        eid = integer(card, 1, 'eid')
+        pid = integer(card, 2, 'pid')
         # required 1-10, 19-28
         # optional 11-18, 29-36, 37-64
         # all/none 37-46
         nids = fields(integer_or_blank, card, 'nid', 3, 67)  # cap at +3 = 67
         assert len(card) <= 67, 'len(CRAC3D card) = %i' % len(card)
-        self.prepare_node_ids(nids, allow_empty_nodes=True)
-        assert len(self.nodes) == 64
+        return CRAC3D(eid, pid, nids, comment=comment)
 
-    def add_op2_data(self, data, comment=''):
-        self.eid = data[0]
-        self.pid = data[1]
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        eid = data[0]
+        pid = data[1]
         nids = data[2:]
-        self.prepare_node_ids(nids, allow_empty_nodes=True)
-        assert len(self.nodes) == 64
+        return CRAC3D(eid, pid, nids, comment=comment)
 
     def Eid(self):
         return self.eid
@@ -457,8 +465,7 @@ class PLOTEL(BaseCard):
     @classmethod
     def add_op2_data(cls, data, comment=''):
         eid = data[0]
-        pid = data[1]
-        nodes = [data[2], data[3]]
+        nodes = [data[1], data[2]]
         return PLOTEL(eid, nodes, comment=comment)
 
     def _verify(self, xref=True):
@@ -476,9 +483,6 @@ class PLOTEL(BaseCard):
     def uncross_reference(self):
         self.nodes = self.node_ids
         del self.nodes_ref
-
-    def uncross_reference(self):
-        self.nodes = self.node_ids
 
     def Eid(self):
         return self.eid

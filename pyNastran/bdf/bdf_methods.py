@@ -1791,6 +1791,8 @@ class BDFMethods(BDFAttributes):
         with open(skin_filename, 'w') as bdf_file:
             bdf_file.write('$ pyNastran: punch=True\n')
             for nid in sorted(nids_to_write):
+                if nid is None:
+                    continue
                 node = self.nodes[nid]
                 bdf_file.write(node.write_card(size=size, is_double=is_double))
 

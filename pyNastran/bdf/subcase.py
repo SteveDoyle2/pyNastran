@@ -674,7 +674,8 @@ class Subcase(object):
                 msg += msgi
         elif param_type == 'STRING-type':
             msgi = spaces + '%s = %s\n' % (key, value)
-            assert len(msgi) < 68, 'len(msg)=%s; msg=\n%s' % (len(msgi), msgi)
+            if key not in ['TITLE', 'LABEL', 'SUBTITLE']:
+                assert len(msgi) < 68, 'len(msg)=%s; msg=\n%s' % (len(msgi), msgi)
             msg += msgi
         elif param_type == 'CSV-type':
             msgi = spaces + '%s,%s,%s\n' % (key, value, options)
