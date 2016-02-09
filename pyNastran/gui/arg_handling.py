@@ -80,10 +80,11 @@ def run_docopt():
 
     input_format = data['--format']
 
+    input_filenames = []
     if data['INPUT']:
-        input_filename = data['INPUT']
-    else:
-        input_filename = data['--input']
+        input_filenames += [data['INPUT']]
+    if data['--input']:
+        input_filenames += [data['--input']]
 
     output_filenames = []
     if data['OUTPUT']:
@@ -92,8 +93,8 @@ def run_docopt():
         output_filenames += data['--output']
     debug = not(data['--quiet'])
 
-    if input_filename and not input_format:
-        input_format = determine_format(input_filename)
+    if input_filenames and not input_format:
+        input_format = determine_format(input_filenames[0])
 
     shots = []
     if '--shots' in data:
@@ -127,7 +128,7 @@ def run_docopt():
         shots = shots.split(';')[0]
 
     #assert data['--console'] == False, data['--console']
-    return (input_format, input_filename, output_filenames, shots,
+    return (input_format, input_filenames, output_filenames, shots,
             magnify, rotation, geom_script, post_script, debug, user_points, user_geom)
 
 

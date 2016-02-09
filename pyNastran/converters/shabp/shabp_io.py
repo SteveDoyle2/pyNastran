@@ -20,8 +20,8 @@ class ShabpIO(object):
                 'Shabp (*.out)', self.load_shabp_results)
         return data
 
-    def load_shabp_geometry(self, shabpFilename, dirname, plot=True):
-        self.nidMap = {}
+    def load_shabp_geometry(self, shabpFilename, dirname, name='main', plot=True):
+        self.nid_map = {}
 
         #key = self.case_keys[self.icase]
         #case = self.result_cases[key]

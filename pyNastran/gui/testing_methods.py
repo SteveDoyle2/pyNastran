@@ -104,6 +104,25 @@ class GuiAttributes(object):
 
         self.nvalues = 9
         self.dim_max = 1.0
+        self.nid_maps = {}
+        self.eid_maps = {}
+        self.name = 'main'
+
+    @property
+    def nid_map(self):
+        return self.nid_maps[self.name]
+
+    @nid_map.setter
+    def nid_map(self, nid_map):
+        self.nid_maps[self.name] = nid_map
+
+    @property
+    def eid_map(self):
+        return self.eid_maps[self.name]
+
+    @eid_map.setter
+    def eid_map(self, eid_map):
+        self.eid_maps[self.name] = eid_map
 
     @property
     def displacement_scale_factor(self):

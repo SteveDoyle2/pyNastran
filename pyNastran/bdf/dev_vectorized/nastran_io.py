@@ -46,33 +46,14 @@ class NastranIO(NastranIO_xref):
         self.is_sub_panels = False
         self.save_data = False
 
-    def load_nastran_geometry(self, bdf_filename, dirname):
-        self.eidMap = {}
-        self.nidMap = {}
-        #print('bdf_filename=%r' % bdf_filename)
-        #key = self.case_keys[self.icase]
-        #case = self.result_cases[key]
-
-        #skip_reading = self.removeOldGeometry(bdf_filename)
-        #if skip_reading:
-            #return
+    def load_nastran_geometry(self, bdf_filename, dirname, name='main'):
+        self.eid_map = {}
+        self.nid_map = {}
         if bdf_filename is None or bdf_filename is '':
-            #self.grid = vtk.vtkUnstructuredGrid()
-            #self.gridResult = vtk.vtkFloatArray()
-            #self.emptyResult = vtk.vtkFloatArray()
-            #self.vectorResult = vtk.vtkFloatArray()
-            #self.grid2 = vtk.vtkUnstructuredGrid()
-            #self.scalarBar.VisibilityOff()
             return
         else:
             self.turn_text_off()
             self.grid.Reset()
-            self.grid2.Reset()
-            #self.gridResult = vtk.vtkFloatArray()
-            #self.gridResult.Reset()
-            #self.gridResult.Modified()
-            #self.eidMap = {}
-            #self.nidMap = {}
 
             self.result_cases = {}
             self.ncases = 0
@@ -80,7 +61,6 @@ class NastranIO(NastranIO_xref):
             if hasattr(self, i):
                 del i
 
-            #print(dir(self))
         self.scalarBar.VisibilityOff()
         self.scalarBar.Modified()
 
@@ -121,14 +101,14 @@ class NastranIO(NastranIO_xref):
                         nsub_points_caeros += nelements
                     else:
                         print('%r doesnt support panel_points_elements' % caero.type)
-                nCAeros = nsub_elements_caeros
-                nCAerosPoints = nsub_points_caeros
+                ncaeros = nsub_elements_caeros
+                ncaeros_points = nsub_points_caeros
             else:
-                nCAeros = model.nCAeros()
-                nCAerosPoints = nCAeros * 4
+                ncaeros = model.nCAeros()
+                ncaeros_points = ncaeros * 4
         else:
-            nCAeros = 0
-            nCAerosPoints = 0
+            ncaeros = 0
+            ncaeros_points = 0
 
         # old
         self.nNodes = nNodes
@@ -147,12 +127,12 @@ class NastranIO(NastranIO_xref):
         #self.aQuadGrid.Allocate(nElements+nNodes, 1000)
 
         if 'CONM2' in model.card_count:
-            nCONM2 = model.card_count['CONM2']
+            nconm2 = model.card_count['CONM2']
         else:
-            nCONM2 = 0
+            nconm2 = 0
         self.grid.Allocate(self.nElements, 1000)
         #self.gridResult.SetNumberOfComponents(self.nElements)
-        self.grid2.Allocate(nCAeros + nCONM2, 1000)
+        self.grid2.Allocate(ncaeros + nconm2, 1000)
 
         points = vtk.vtkPoints()
         points.SetNumberOfPoints(self.nNodes)
@@ -173,7 +153,7 @@ class NastranIO(NastranIO_xref):
                 #                              elem.GetPointIds())
                 #vectorResult.InsertTuple3(0, 0.0, 0.0, 1.0)
 
-                self.nidMap[nid] = i
+                self.nid_map[nid] = i
                 i += 1
 
         # add the nodes
@@ -189,7 +169,7 @@ class NastranIO(NastranIO_xref):
             self.xyz_cid0 = xyz_cid0
         for i, (xyz, node_id) in enumerate(zip(xyz_cid0, node_ids)):
             points.InsertPoint(i, *xyz)
-            self.nidMap[node_id] = i
+            self.nid_map[node_id] = i
 
         dim_max = max(xmax-xmin, ymax-ymin, zmax-zmin)
         self.update_axes_length(dim_max)
@@ -253,7 +233,7 @@ class NastranIO(NastranIO_xref):
         if 0:
             for (eid, element) in sorted(iteritems(model.elements.mass)):
                 if isinstance(element, CONM2):
-                    #del self.eidMap[eid]
+                    #del self.eid_map[eid]
 
                     #print("element", element)
                     #print("element.nid", element.nid)
@@ -267,7 +247,7 @@ class NastranIO(NastranIO_xref):
                     if d == 0.:
                         d = sphere_size
                     #elem.SetRadius(d)
-                    #elem.SetCenter(points.GetPoint(self.nidMap[nid]))
+                    #elem.SetCenter(points.GetPoint(self.nid_map[nid]))
                     #print(str(element))
 
                     points2.InsertPoint(j, *c)
@@ -277,14 +257,14 @@ class NastranIO(NastranIO_xref):
                 else:
                     self.log_info("skipping %s" % element.type)
 
-        self.mapElements(points, points2, self.nidMap, model, j, dim_max)
+        self.mapElements(points, points2, self.nid_map, model, j, dim_max)
 
     #def _get_sphere_size(self, dim_max):
         #return 0.05 * dim_max
 
     def mapElements(self, points, points2, nidMap, model, j, dim_max):
         sphere_size = self._get_sphere_size(dim_max)
-        #self.eidMap = {}
+        #self.eid_map = {}
 
         # :param i: the element id in grid
         # :param j: the element id in grid2
@@ -304,7 +284,7 @@ class NastranIO(NastranIO_xref):
 
         ie = 0
         eidMap = {}
-        self.eidMap = eidMap
+        self.eid_map = eidMap
 
         #======================================================================
         rods = [
@@ -490,7 +470,7 @@ class NastranIO(NastranIO_xref):
 
         if 0:
             for (eid, element) in sorted(iteritems(model.elements)):
-                self.eidMap[eid] = i
+                self.eid_map[eid] = i
                 #print(element.type)
                 pid = 0
                 if isinstance(element, (CTRIA3, CTRIAR)):
@@ -709,7 +689,7 @@ class NastranIO(NastranIO_xref):
                         pid = 0
                     nodeIDs = element.node_ids
                     if nodeIDs[0] is None and  nodeIDs[0] is None: # CELAS2
-                        del self.eidMap[eid]
+                        del self.eid_map[eid]
                         continue
                     if None in nodeIDs:  # used to be 0...
                         if nodeIDs[0] is None:
@@ -745,7 +725,7 @@ class NastranIO(NastranIO_xref):
 
                     self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
                 else:
-                    del self.eidMap[eid]
+                    del self.eid_map[eid]
                     self.log_info("skipping %s" % element.type)
                     continue
                 # what about MPCs, RBE2s (rigid elements)?
@@ -780,10 +760,10 @@ class NastranIO(NastranIO_xref):
         if 0:
             nelements = len(model.elements)
             pids = array(pids, 'int32')
-            if not len(pids) == len(self.eidMap):
-                msg = 'ERROR:  len(pids)=%s len(eidMap)=%s\n' % (len(pids), len(self.eidMap))
+            if not len(pids) == len(self.eid_map):
+                msg = 'ERROR:  len(pids)=%s len(eidMap)=%s\n' % (len(pids), len(self.eid_map))
                 for eid, pid in sorted(iteritems(pids_dict)):
-                    if eid not in self.eidMap:
+                    if eid not in self.eid_map:
                         msg += 'eid=%s %s' % (eid, str(model.elements[eid]))
                 raise RuntimeError(msg)
             del pids_dict
@@ -804,14 +784,14 @@ class NastranIO(NastranIO_xref):
 
         self.iSubcaseNameMap = {1: ['Nastran', '']}
 
-        nElements = len(self.eidMap)
+        nElements = len(self.eid_map)
         #print("nElements = ", nElements)
 
         # set to True to enable nodeIDs as an result
         nidsSet = True
         if nidsSet and self.is_nodal:
             nids = model.grid.node_id
-            #for (nid, nid2) in iteritems(self.nidMap):
+            #for (nid, nid2) in iteritems(self.nid_map):
             #    nids[nid2] = nid
             cases[(0, 'Node_ID', 1, 'node', '%i')] = nids
             nidsSet = True
@@ -821,7 +801,7 @@ class NastranIO(NastranIO_xref):
         Types, eids, pids = model.elements.get_element_properties()
         if eidsSet and self.is_centroidal:
             #eids = zeros(nElements, dtype='int32')
-            #for (eid, eid2) in iteritems(self.eidMap):
+            #for (eid, eid2) in iteritems(self.eid_map):
             #    eids[eid2] = eid
             #eids = model.elements.element_id
             cases[(0, 'Element_ID', 1, 'centroid', '%i')] = eids
@@ -1078,7 +1058,7 @@ class NastranIO(NastranIO_xref):
 
                     print('case.type =', case.__class__.__name__)
                     for (nid, txyz) in iteritems(res):
-                        nid2 = self.nidMap[nid]
+                        nid2 = self.nid_map[nid]
                         displacements[nid2] = txyz
                         xyz_displacements[nid2] = norm(txyz)
                         x_displacements[nid2] = txyz[0]
@@ -1100,7 +1080,7 @@ class NastranIO(NastranIO_xref):
                         return
                     temperatures = zeros(nnodes, dtype='float32')
                     for (nid, txyz) in iteritems(case.translations):
-                        nid2 = self.nidMap[nid]
+                        nid2 = self.nid_map[nid]
                         displacements[nid2] = txyz
                         temperatures[nid2] = norm(txyz)
 
@@ -1109,8 +1089,8 @@ class NastranIO(NastranIO_xref):
         return cases
 
     def clear_nastran(self):
-        self.eidMap = {}
-        self.nidMap = {}
+        self.eid_map = {}
+        self.nid_map = {}
         self.eid_to_nid_map = {}
 
     def fill_stress_case(self, cases, model, subcaseID):
@@ -1132,7 +1112,7 @@ class NastranIO(NastranIO_xref):
         o3_dict = {}
         ovm_dict = {}
 
-        for nid in self.nidMap:
+        for nid in self.nid_map:
             oxx_dict[nid] = []
             oyy_dict[nid] = []
             ozz_dict[nid] = []
@@ -1306,7 +1286,7 @@ class NastranIO(NastranIO_xref):
         o2 = zeros(nnodes, dtype='float32')
         o3 = zeros(nnodes, dtype='float32')
         ovm = zeros(nnodes, dtype='float32')
-        for i, nid in enumerate(sorted(self.nidMap)):
+        for i, nid in enumerate(sorted(self.nid_map)):
             oxx[i] = mean(oxx_dict[nid])
             oyy[i] = mean(oyy_dict[nid])
             ozz[i] = mean(ozz_dict[nid])
@@ -1356,7 +1336,7 @@ class NastranIO(NastranIO_xref):
         if subcaseID in model.rodStress:
             case = model.rodStress[subcaseID]
             for eid in case.axial:
-                eid2 = self.eidMap[eid]
+                eid2 = self.eid_map[eid]
                 isElementOn[eid2] = 1.
 
                 axial = case.axial[eid]
@@ -1374,7 +1354,7 @@ class NastranIO(NastranIO_xref):
             if case.nonlinear_factor is not None:
                 return
             for eid in case.axial:
-                eid2 = self.eidMap[eid]
+                eid2 = self.eid_map[eid]
                 isElementOn[eid2] = 1.
 
                 oxx[eid2] = case.axial[eid]
@@ -1391,7 +1371,7 @@ class NastranIO(NastranIO_xref):
             if case.nonlinear_factor is not None: # transient
                 return
             for eid in case.smax:
-                eid2 = self.eidMap[eid]
+                eid2 = self.eid_map[eid]
                 isElementOn[eid2] = 1.
 
                 oxx[eid2] = max(
@@ -1417,7 +1397,7 @@ class NastranIO(NastranIO_xref):
             else:
                 vmWord = 'maxShear'
             for eid in case.ovmShear:
-                eid2 = self.eidMap[eid]
+                eid2 = self.eid_map[eid]
                 isElementOn[eid2] = 1.
 
                 eType = case.eType[eid]
@@ -1450,7 +1430,7 @@ class NastranIO(NastranIO_xref):
             else:
                 vmWord = 'maxShear'
             for eid in case.ovmShear:
-                eid2 = self.eidMap[eid]
+                eid2 = self.eid_map[eid]
                 isElementOn[eid2] = 1.
 
                 eType = case.eType[eid]
@@ -1478,7 +1458,7 @@ class NastranIO(NastranIO_xref):
             else:
                 vmWord = 'maxShear'
             for eid in case.ovmShear:
-                eid2 = self.eidMap[eid]
+                eid2 = self.eid_map[eid]
                 isElementOn[eid2] = 1.
 
                 #print('case.oxx[%i].keys() = %s' % (eid, case.oxx[eid].keys()))

@@ -23,8 +23,8 @@ class PanairIO(object):
                 'Panair (*agps)', self.load_panair_results)
         return data
 
-    def load_panair_geometry(self, panair_filename, dirname, plot=True):
-        self.nidMap = {}
+    def load_panair_geometry(self, panair_filename, dirname, name='main', plot=True):
+        self.nid_map = {}
 
         #key = self.case_keys[self.icase]
         #case = self.result_cases[key]

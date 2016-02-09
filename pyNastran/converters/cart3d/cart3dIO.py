@@ -175,8 +175,8 @@ class Cart3dIO(object):
         return data
 
     def _remove_old_cart3d_geometry(self, filename):
-        self.eidMap = {}
-        self.nidMap = {}
+        self.eid_map = {}
+        self.nid_map = {}
         if filename is None:
             #self.emptyResult = vtk.vtkFloatArray()
             #self.vectorResult = vtk.vtkFloatArray()
@@ -204,7 +204,7 @@ class Cart3dIO(object):
         self.scalarBar.Modified()
         return skip_reading
 
-    def load_cart3d_geometry(self, cart3d_filename, dirname, plot=True):
+    def load_cart3d_geometry(self, cart3d_filename, dirname, name='main', plot=True):
         skip_reading = self._remove_old_cart3d_geometry(cart3d_filename)
         if skip_reading:
             return
@@ -225,7 +225,7 @@ class Cart3dIO(object):
 
         points = vtk.vtkPoints()
         points.SetNumberOfPoints(self.nNodes)
-        self.nidMap = {}
+        self.nid_map = {}
         if 0:
             fraction = 1. / self.nNodes  # so you can color the nodes by ID
             for nid, node in sorted(iteritems(nodes)):

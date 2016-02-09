@@ -234,21 +234,22 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         if not inputs['format']:
             return
         form = inputs['format'].lower()
-        input_filename = inputs['input']
+        input_filenames = inputs['input']
         results_filename = inputs['output']
         plot = True
         if results_filename:
             plot = False
 
         #print('input_filename =', input_filename)
-        if input_filename is not None:
-            if not os.path.exists(input_filename):
-                msg = '%s does not exist\n%s' % (
-                    input_filename, print_bad_path(input_filename))
-                self.log.error(msg)
-                if self.html_logging:
-                    print(msg)
-                return
+        if input_filenames is not None:
+            for input_filename in input_filenames:
+                if not os.path.exists(input_filename):
+                    msg = '%s does not exist\n%s' % (
+                        input_filename, print_bad_path(input_filename))
+                    self.log.error(msg)
+                    if self.html_logging:
+                        print(msg)
+                    return
             for results_filenamei in results_filename:
                 #print('results_filenamei =', results_filenamei)
                 if results_filenamei is not None:
@@ -260,7 +261,19 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                             print(msg)
                         return
 
-        is_failed = self.on_load_geometry(input_filename, form, plot=plot)
+        name = 'main'
+        for i, input_filename in enumerate(input_filenames):
+            if i == 0:
+                name = 'main'
+            else:
+                name = input_filename
+            print('name =', name)
+            self.name = name
+            #form = inputs['format'].lower()
+            is_failed = self.on_load_geometry(infile_name=input_filename, name=name, geometry_format=form, plot=plot)
+        self.name = 'main'
+        print('keys =', self.nid_maps.keys())
+
         if is_failed:
             return
         if results_filename:
@@ -1157,7 +1170,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         if len(fmts) == 0:
             raise RuntimeError('no modules were loaded...')
 
-    def on_load_geometry(self, infile_name=None, geometry_format=None, plot=True):
+    def on_load_geometry(self, infile_name=None, geometry_format=None, name='main', plot=True):
         """
         Loads a baseline geometry
 
@@ -1277,7 +1290,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             #args, varargs, keywords, defaults = inspect.getargspec(load_function)
             try:
                 #if args[-1] == 'plot':
-                has_results = load_function(infile_name, self.last_dir, plot=plot)
+                has_results = load_function(infile_name, self.last_dir, name=name, plot=plot)
                 #else:
                     #name = load_function.__name__
                     #self.log_error(str(args))

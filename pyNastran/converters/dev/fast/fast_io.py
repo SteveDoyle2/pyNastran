@@ -32,7 +32,7 @@ class FastIO(object):
         bcmap_to_bc_name = None
         self._fill_fast_results(cases, model)
 
-    def load_fast_geometry(self, fgrid_filename, dirname, plot=True):
+    def load_fast_geometry(self, fgrid_filename, dirname, name='main', plot=True):
         skip_reading = self.removeOldGeometry(fgrid_filename)
         if skip_reading:
             return
@@ -80,7 +80,7 @@ class FastIO(object):
 
         points = vtk.vtkPoints()
         points.SetNumberOfPoints(self.nNodes)
-        self.nidMap = {}
+        self.nid_map = {}
         if 0:
             fraction = 1. / self.nNodes  # so you can color the nodes by ID
             for nid, node in sorted(iteritems(nodes)):

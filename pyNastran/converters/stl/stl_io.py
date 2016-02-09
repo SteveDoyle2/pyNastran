@@ -20,7 +20,7 @@ class STL_IO(object):
                 None, None)
         return data
 
-    def load_stl_geometry(self, stl_filename, dirname, plot=True):
+    def load_stl_geometry(self, stl_filename, dirname, name='main', plot=True):
         print("load_stl_geometry...")
         skip_reading = self.removeOldGeometry(stl_filename)
         if skip_reading:
@@ -48,7 +48,7 @@ class STL_IO(object):
         points.SetNumberOfPoints(self.nNodes)
         #self.gridResult.Allocate(self.nNodes, 1000)
         #vectorReselt.SetNumberOfComponents(3)
-        self.nidMap = {}
+        self.nid_map = {}
         #elem.SetNumberOfPoints(nNodes)
         if 0:
             fraction = 1. / self.nNodes  # so you can color the nodes by ID

@@ -84,8 +84,8 @@ class NastranIO(object):
 
         self.element_ids = None
         self.node_ids = None
-        self.nidMap = None
-        self.eidMap = None
+        self.nid_map = None
+        self.eid_map = None
         self.nNodes = None
         self.nElements = None
         self.model_type = None
@@ -255,8 +255,8 @@ class NastranIO(object):
             #self.gridResult = vtk.vtkFloatArray()
             #self.gridResult.Reset()
             #self.gridResult.Modified()
-            #self.eidMap = {}
-            #self.nidMap = {}
+            #self.eid_map = {}
+            #self.nid_map = {}
 
             self.result_cases = {}
             self.ncases = 0
@@ -265,9 +265,9 @@ class NastranIO(object):
                 del i
         return skip_reading
 
-    def load_nastran_geometry(self, bdf_filename, dirname, plot=True):
-        self.eidMap = {}
-        self.nidMap = {}
+    def load_nastran_geometry(self, bdf_filename, dirname, name='main', plot=True):
+        self.eid_maps[name] = {}
+        self.nid_maps[name] = {}
         self.i_transform = {}
         self.transforms = {}
         #print('bdf_filename=%r' % bdf_filename)
@@ -433,7 +433,7 @@ class NastranIO(object):
         if self.save_data:
             self.model = model
 
-        nid_map = self.nidMap
+        nid_map = self.nid_map
         xyz_cid0 = zeros((nnodes + nspoints, 3), dtype='float32')
         if nspoints:
             nids = model.nodes.keys()
@@ -488,21 +488,21 @@ class NastranIO(object):
                     raise
 
                 zfighting_offset = 0.0001 * iaero
-                name = 'spline_%s_structure_points' % spline_id
+                grid_name = 'spline_%s_structure_points' % spline_id
                 self.create_alternate_vtk_grid(
-                    name, color=blue, opacity=1.0, point_size=5,
+                    grid_name, color=blue, opacity=1.0, point_size=5,
                     representation='point', is_visible=False)
-                self._add_nastran_nodes_to_grid(name, structure_points, model)
+                self._add_nastran_nodes_to_grid(grid_name, structure_points, model)
 
 
                 zfighting_offset = 0.0001 * (iaero + 1)
-                name = 'spline_%s_boxes' % spline_id
+                grid_name = 'spline_%s_boxes' % spline_id
                 self.create_alternate_vtk_grid(
-                    name, color=blue, opacity=0.3,
+                    grid_name, color=blue, opacity=0.3,
                     line_width=4,
                     representation='toggle', is_visible=False)
                 self.set_caero_control_surface_grid(
-                    name, aero_box_ids, box_id_to_caero_element_map, caero_points,
+                    grid_name, aero_box_ids, box_id_to_caero_element_map, caero_points,
                     zfighting_offset=zfighting_offset)
 
                 iaero += 2
@@ -513,12 +513,13 @@ class NastranIO(object):
                 idsi = suport.node_ids
                 #print('idsi =', idsi)
                 ids += idsi
+            grid_name = 'SUPORT'
             self.create_alternate_vtk_grid(
-                'SUPORT', color=red, opacity=1.0, point_size=42,
+                grid_name, color=red, opacity=1.0, point_size=42,
                 representation='point', is_visible=True)
         j = 0
         nid_to_pid_map, icase, cases, form = self.map_elements(
-            points, self.nidMap, model, j, dim_max, plot=plot, xref_loads=xref_loads)
+            points, self.nid_map, model, j, dim_max, plot=plot, xref_loads=xref_loads)
 
         #if 0:
             #nsprings = 0
@@ -597,9 +598,9 @@ class NastranIO(object):
             if has_control_surface and hasattr(self.geometry_actors['caero_sub'], 'Update'):
                 self.geometry_actors['caero_cs'].Update()
 
-        for name in ['suport', 'spc', 'mpc', 'mpc_dependent', 'mpc_independent']:
-            if name in self.geometry_actors:
-                self.geometry_actors[name].Modified()
+        for grid_name in ['suport', 'spc', 'mpc', 'mpc_dependent', 'mpc_independent']:
+            if grid_name in self.geometry_actors:
+                self.geometry_actors[grid_name].Modified()
 
         if plot:
             self.log.info(cases.keys())
@@ -728,7 +729,7 @@ class NastranIO(object):
             msg = 'Missing CAERO AELIST boxes: ' + str(missing_boxes)
             self.log_error(msg)
 
-        nid_map = self.nidMap
+        nid_map = self.nid_map
         structure_points2 = []
         for nid in structure_points:
             if nid in nid_map:
@@ -1054,7 +1055,7 @@ class NastranIO(object):
             no_0_16 = zeros(self.element_ids.shape, dtype='int32')
         bar_nids = set([])
         for eid in bar_beam_eids:
-            ieid = self.eidMap[eid]
+            ieid = self.eid_map[eid]
             elem = model.elements[eid]
             #print(elem)
             pid = elem.pid
@@ -1483,7 +1484,7 @@ class NastranIO(object):
         points.SetNumberOfPoints(nnodes)
 
         j = 0
-        nid_map = self.nidMap
+        nid_map = self.nid_map
         for nid in sorted(node_ids):
             try:
                 i = nid_map[nid]
@@ -1528,7 +1529,7 @@ class NastranIO(object):
         points.SetNumberOfPoints(nnodes)
 
         j = 0
-        nid_map = self.nidMap
+        nid_map = self.nid_map
         for nid1, nid2 in lines:
             try:
                 i1 = nid_map[nid1]
@@ -1633,7 +1634,6 @@ class NastranIO(object):
     def map_elements(self, points, nid_map, model, j, dim_max,
                      plot=True, xref_loads=True):
         sphere_size = self._get_sphere_size(dim_max)
-        #self.eidMap = {}
 
         # :param i: the element id in grid
         # :param j: the element id in grid2
@@ -1665,7 +1665,7 @@ class NastranIO(object):
                 # continue
             # if element.pid.type == 'PSOLID':
                 # continue
-            self.eidMap[eid] = i
+            self.eid_map[eid] = i
             pid = 0
             if isinstance(element, (CTRIA3, CTRIAR)):
                 elem = vtkTriangle()
@@ -1952,7 +1952,7 @@ class NastranIO(object):
 
                 if node_ids[0] is None and  node_ids[0] is None: # CELAS2
                     print('removing CELASx eid=%i -> no node %i' % (eid, node_ids[0]))
-                    del self.eidMap[eid]
+                    del self.eid_map[eid]
                     continue
                 if None in node_ids:  # used to be 0...
                     if node_ids[0] is None:
@@ -1991,7 +1991,7 @@ class NastranIO(object):
                 self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
             else:
                 print('removing eid=%s; %s' % (eid, elem.type))
-                del self.eidMap[eid]
+                del self.eid_map[eid]
                 self.log_info("skipping %s" % element.type)
                 continue
             # what about MPCs, RBE2s (rigid elements)?
@@ -2008,7 +2008,7 @@ class NastranIO(object):
                 pids[i] = pid
                 pids_dict[eid] = pid
             i += 1
-        assert len(self.eidMap) > 0, self.eidMap
+        assert len(self.eid_map) > 0, self.eid_map
 
         nelements = i
         self.nElements = nelements
@@ -2025,23 +2025,23 @@ class NastranIO(object):
         cases = OrderedDict()
         #pids = array(pids, 'int32')
         #print('eid_map')
-        #for key, value in sorted(iteritems(self.eidMap)):
+        #for key, value in sorted(iteritems(self.eid_map)):
             #print('  %s %s' % (key, value))
 
         if 0:
-            if not len(pids) == len(self.eidMap):
-                msg = 'ERROR:  len(pids)=%s len(eidMap)=%s\n' % (len(pids), len(self.eidMap))
+            if not len(pids) == len(self.eid_map):
+                msg = 'ERROR:  len(pids)=%s len(eid_map)=%s\n' % (len(pids), len(self.eid_map))
                 for eid, pid in sorted(iteritems(pids_dict)):
-                    #self.eidMap[eid] = i
+                    #self.eid_map[eid] = i
                     #pids_dict[eid] = pid
-                    if eid not in self.eidMap:
+                    if eid not in self.eid_map:
                         msg += 'eid=%s %s' % (eid, str(model.elements[eid]))
                 raise RuntimeError(msg)
         del pids_dict
 
 
         self.iSubcaseNameMap = {1: ['Nastran', '']}
-        #nelements = len(self.eidMap)
+        #nelements = len(self.eid_map)
         icase = 0
         form = ['Geometry', None, []]
         form0 = form[2]
@@ -2051,7 +2051,7 @@ class NastranIO(object):
         nids_set = True
         if nids_set:
             nids = zeros(self.nNodes, dtype='int32')
-            for (nid, nid2) in iteritems(self.nidMap):
+            for (nid, nid2) in iteritems(self.nid_map):
                 nids[nid2] = nid
 
             #if new_cases:
@@ -2069,7 +2069,7 @@ class NastranIO(object):
         eids_set = True
         if eids_set:
             eids = zeros(nelements, dtype='int32')
-            for (eid, eid2) in iteritems(self.eidMap):
+            for (eid, eid2) in iteritems(self.eid_map):
                 eids[eid2] = eid
 
             #if new_cases:
@@ -2192,24 +2192,24 @@ class NastranIO(object):
                             raise NotImplementedError(element.type)
                     zi = element.zOffset + z0
 
-                    ie = self.eidMap[eid]
+                    ie = self.eid_map[eid]
                     normals[ie, :] = normali
                     xoffset[ie] = zi * normali[0]
                     yoffset[ie] = zi * normali[1]
                     zoffset[ie] = zi * normali[2]
                 elif element.type in ['CTETRA', 'CHEXA', 'CPENTA', 'CPYRAM', 'CIHEX1']:
-                    ie = self.eidMap[eid]
+                    ie = self.eid_map[eid]
                     element_dimi = 3
                 elif element.type in ['CROD', 'CONROD', 'CBEND', 'CBAR', 'CBEAM', 'CGAP']:
-                    ie = self.eidMap[eid]
+                    ie = self.eid_map[eid]
                     element_dimi = 1
                 elif element.type in ['CBUSH', 'CBUSH1D', 'CFAST', 'CVISC',
                                       'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
                                       'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5']:
-                    ie = self.eidMap[eid]
+                    ie = self.eid_map[eid]
                     element_dimi = 0
                 else:
-                    ie = self.eidMap[eid]
+                    ie = self.eid_map[eid]
                     element_dimi = -1
                     print('element.type=%s doesnt have a dimension' % element.type)
 
@@ -2455,7 +2455,7 @@ class NastranIO(object):
         #print('  NastranIOv _get_forces_moments_array')
         nids = sorted(model.nodes.keys())
         nnodes = len(nids)
-        nid_map = self.nidMap
+        nid_map = self.nid_map
 
         load_case = model.loads[load_case_id]
         loads2, scale_factors2 = self._get_loads_and_scale_factors(load_case)
@@ -3189,8 +3189,8 @@ class NastranIO(object):
 
     def clear_nastran(self):
         """cleans up variables specific to Nastran"""
-        self.eidMap = {}
-        self.nidMap = {}
+        self.eid_map = {}
+        self.nid_map = {}
         self.eid_to_nid_map = {}
         self.element_ids = None
         self.node_ids = None
@@ -3458,9 +3458,9 @@ class NastranIO(object):
                 energy = ese.energy[dt]
                 density = ese.density[dt]
             for eid, percenti in sorted(iteritems(percent)):
-                if eid not in self.eidMap:
+                if eid not in self.eid_map:
                     continue
-                i = self.eidMap[eid]
+                i = self.eid_map[eid]
                 oxx[i] = energy[eid]
                 oyy[i] = percenti
                 ozz[i] = density[eid]
@@ -3939,7 +3939,7 @@ class NastranIO(object):
                     oxxi = 0.
                     smaxi = 0.
                     smini = 0.
-                    eid2 = self.eidMap[eid]
+                    eid2 = self.eid_map[eid]
                     is_element_on[eid2] = 1.
                     oxxi = max(
                         sxc[imini:imaxi].max(),
@@ -4090,7 +4090,7 @@ class NastranIO(object):
                 ieid = where(eidsi == eid)[0]
                 ieid.sort()
                 layersi = layers[ieid]
-                eid2 = self.eidMap[eid]
+                eid2 = self.eid_map[eid]
                 is_element_on[eid2] = 1.
 
                 oxxi = 0.
