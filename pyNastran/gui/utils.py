@@ -19,8 +19,8 @@ def check_for_newer_version(window=None, pop_msg=False):
         # data = urllib.request.urlopen(target_url)
         data = urllib.request.urlopen(target_url)
     except: #  urllib2.URLError
-        print(help(urllib))
-        raise
+        #print(help(urllib))
+        #raise
         return
     for btye_line in data: # files are iterable
         line_lower = btye_line.lower().decode('utf-8')

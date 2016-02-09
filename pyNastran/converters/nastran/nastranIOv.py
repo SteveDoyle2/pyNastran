@@ -204,7 +204,7 @@ class NastranIO(object):
         if 'conm2' in self.geometry_actors:
             if self.show_conm:
                 self.geometry_actors['conm2'].VisibilityOn()
-                self.geometry_properties['conm'].is_visble = True
+                self.geometry_properties['conm2'].is_visble = True
             else:
                 self.geometry_actors['conm2'].VisibilityOff()
                 self.geometry_properties['conm2'].is_visble = False
@@ -422,7 +422,7 @@ class NastranIO(object):
                 self.alt_grids['caero_cs'].Allocate(ncaeros_cs, 1000)
 
         if nconm2 > 0:
-            self.alt_grids['conm'].Allocate(nconm2, 1000)
+            self.alt_grids['conm2'].Allocate(nconm2, 1000)
 
         points = vtk.vtkPoints()
         points.SetNumberOfPoints(self.nNodes)
@@ -794,12 +794,12 @@ class NastranIO(object):
                     elem.SetRadius(sphere_size)
                     elem.SetCenter(points.GetPoint(j))
 
-                self.alt_grids['conm'].InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                self.alt_grids['conm2'].InsertNextCell(elem.GetCellType(), elem.GetPointIds())
                 j += 1
             else:
                 self.log_info("skipping %s" % element.type)
-        self.alt_grids['conm'].SetPoints(points)
-        #self.alt_grids['conm'].Set
+        self.alt_grids['conm2'].SetPoints(points)
+        #self.alt_grids['conm2'].Set
 
     def set_spc_grid(self, dim_max, model, nid_to_pid_map):
         #case_control = model.case_control_deck
