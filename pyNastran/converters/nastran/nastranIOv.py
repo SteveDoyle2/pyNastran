@@ -145,7 +145,7 @@ class NastranIO(object):
 
         menu_items = [
             #(self.menu_help2, ('about_nastran',)),
-            (self.nastran_toolbar, ('caero', 'caero_sub', 'conm'))
+            (self.nastran_toolbar, ('caero', 'caero_sub', 'conm2'))
             #(self.menu_window, tuple(menu_window)),
             #(self.menu_help, ('load_geometry', 'load_results', 'script', '', 'exit')),
             #(self.menu_help2, ('load_geometry', 'load_results', 'script', '', 'exit')),
@@ -201,13 +201,13 @@ class NastranIO(object):
         Toggle the visibility of the CONMS
         """
         self.show_conm = not self.show_conm
-        if 'conm' in self.geometry_actors:
+        if 'conm2' in self.geometry_actors:
             if self.show_conm:
-                self.geometry_actors['conm'].VisibilityOn()
+                self.geometry_actors['conm2'].VisibilityOn()
                 self.geometry_properties['conm'].is_visble = True
             else:
-                self.geometry_actors['conm'].VisibilityOff()
-                self.geometry_properties['conm'].is_visble = False
+                self.geometry_actors['conm2'].VisibilityOff()
+                self.geometry_properties['conm2'].is_visble = False
         self.vtk_interactor.Render()
 
     def _create_coord(self, cid, coord, cid_type):
@@ -400,7 +400,7 @@ class NastranIO(object):
         #self.gridResult.SetNumberOfComponents(self.nElements)
         if nconm2 > 0:
             self.create_alternate_vtk_grid(
-                'conm', color=orange, line_width=5, opacity=1., point_size=4,
+                'conm2', color=orange, line_width=5, opacity=1., point_size=4,
                 representation='point')
 
         # Allocate grids
