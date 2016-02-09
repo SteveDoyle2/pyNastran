@@ -333,19 +333,17 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                 ('Y', 'Flips to -Y Axis', 'minus_y.png', 'Y', 'Flips to -Y Axis', lambda: self.update_camera('-y')),
                 ('Z', 'Flips to -Z Axis', 'minus_z.png', 'Z', 'Flips to -Z Axis', lambda: self.update_camera('-z')),
                 ('script', 'Run Python script', 'python48.png', None, 'Runs pyCart3dGUI in batch mode', self.on_run_script),
-            ]
-        # print('version =', vtk.VTK_VERSION, self.vtk_version)
-        if self.vtk_version[0] < 6:
-            tools += [
                 ('edges', 'Show/Hide Edges', 'tedges.png', 'e', 'Show/Hide Model Edges', self.on_flip_edges),
                 ('edges_black', 'Color Edges', '', 'b', 'Set Edge Color to Color/Black', self.on_set_edge_visibility),
             ]
+        # print('version =', vtk.VTK_VERSION, self.vtk_version)
+        #if self.vtk_version[0] < 6
 
         if 'nastran' in self.fmts:
             tools += [
                 ('caero', 'Show/Hide CAERO Panels', '', None, 'Show/Hide CAERO Panel Outlines', self.toggle_caero_panels),
                 ('caero_sub', 'Toggle CAERO Subpanels', '', None, 'Show/Hide CAERO Subanel Outlines', self.toggle_caero_sub_panels),
-                ('conm', 'Toggle CONMs', '', None, 'Show/Hide CONMs', self.toggle_conms),
+                ('conm2', 'Toggle CONM2s', '', None, 'Show/Hide CONM2s', self.toggle_conms),
             ]
         self.tools = tools
         self.checkables = checkables
@@ -405,9 +403,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             'scshot', '', 'wireframe', 'surface', 'camera_reset', '',
             'back_col', 'text_col', '',
             'label_col', 'label_clear', 'label_reset', '',
-            'legend', 'geo_properties', '', 'clipping', 'axis']
-        if self.vtk_version[0] < 6:
-            menu_view += ['edges', 'edges_black',]
+            'legend', 'geo_properties', '', 'clipping', 'axis',
+            'edges', 'edges_black',]
         if self.html_logging:
             self.actions['log_dock_widget'] = self.log_dock_widget.toggleViewAction()
             self.actions['log_dock_widget'].setStatusTip("Show/Hide application log")
@@ -424,9 +421,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         toolbar_tools = ['reload', 'load_geometry', 'load_results',
                          'x', 'y', 'z', 'X', 'Y', 'Z',
                          'magnify', 'shrink', 'rotate_clockwise', 'rotate_cclockwise',
-                         'wireframe', 'surface',]
-        if self.vtk_version[0] < 6:
-            toolbar_tools.append('edges')
+                         'wireframe', 'surface', 'edges']
         toolbar_tools += ['camera_reset', 'view', 'scshot', '', 'exit']
 
         menu_items = []
@@ -1049,8 +1044,9 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         """
         edges = vtk.vtkExtractEdges()
         if self.vtk_version[0] >= 6:
+            # new
             edges.SetInputData(self.grid)
-            self.edgeMapper.SetInputData(edges.GetOutput())
+            self.edgeMapper.SetInputConnection(edges.GetOutputPort())
         else:
             edges.SetInput(self.grid)
             self.edgeMapper.SetInput(edges.GetOutput())
@@ -1968,6 +1964,25 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         #self.log_info("cell_id = %s" % cell_id)
         #self.log_info("select_point = %s" % str(select_point))
         #self.log_info("data_set = %s" % ds)
+
+    def get_2d_point(self, point3D, viewMatrix,
+                     projectionMatrix,
+                     width, height):
+        viewProjectionMatrix = projectionMatrix * viewMatrix;
+        # transform world to clipping coordinates
+        point3D = viewProjectionMatrix.multiply(point3D)
+        winX = math.round((( point3D.getX() + 1 ) / 2.0) * width )
+        # we calculate -point3D.getY() because the screen Y axis is
+        # oriented top->down
+        winY = math.round((( 1 - point3D.getY() ) / 2.0) * height )
+        return Point2D(winX, winY)
+
+    def get_3d_point(self, point2D, width, height, viewMatrix, projectionMatrix):
+        x = 2.0 * winX / clientWidth - 1
+        y = - 2.0 * winY / clientHeight + 1
+        viewProjectionInverse = inverse(projectionMatrix * viewMatrix);
+        point3D = Point3D(x, y, 0)
+        return viewProjectionInverse.multiply(point3D)
 
     def on_take_screenshot(self, fname=None, magnification=None):
         """ Take a screenshot of a current view and save as a file"""
