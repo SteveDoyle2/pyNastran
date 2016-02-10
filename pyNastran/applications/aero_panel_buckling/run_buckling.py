@@ -4,7 +4,7 @@ from six import iteritems
 
 from pyNastran.applications.aero_panel_buckling.find_surface_panels import find_surface_panels
 from pyNastran.applications.aero_panel_buckling.split_model import split_model_by_pid_panel, load_regions, load_regions_and_create_eigenvalue_csv
-from pyNastran.applications.aero_panel_buckling.run_patch_buckling import run_bdfs, load_sym_regions_map
+from pyNastran.applications.aero_panel_buckling.run_patch_buckling_helper import run_bdfs, load_sym_regions_map
 
 
 def run_panel_buckling(bdf_filename='model_144.bdf', op2_filename='model_144.op2',
