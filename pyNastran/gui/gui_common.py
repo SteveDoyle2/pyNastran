@@ -9,7 +9,6 @@ import sys
 import os.path
 import datetime
 import cgi #  html lib
-import inspect
 import traceback
 from copy import deepcopy
 from collections import OrderedDict
@@ -18,8 +17,10 @@ from PyQt4 import QtCore, QtGui
 import vtk
 from vtk.qt4.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 
-from numpy import eye, array, zeros, loadtxt
-from numpy.linalg import norm
+import numpy as np
+from numpy import arange
+#from numpy import eye, array, zeros, loadtxt
+#from numpy.linalg import norm
 
 import pyNastran
 from pyNastran.bdf.cards.base_card import deprecated
@@ -67,6 +68,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
     def __init__(self, fmt_order, html_logging, inputs):
         # this will reset the background color/label color if things break
         self.reset_settings = False
+        self.is_groups = False
 
         QtGui.QMainWindow.__init__(self)
         GuiCommon.__init__(self, inputs)
@@ -531,10 +533,10 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         splane.Update()
 
     def _fit_plane(self, points):
-        origin = array([34.60272856552356, 16.92028913186242, 37.805958003209184])
-        vx = array([1., 0., 0.])
-        vy = array([0., 1., 0.])
-        vz = array([0., 0., 1.])
+        origin = np.array([34.60272856552356, 16.92028913186242, 37.805958003209184])
+        vx = np.array([1., 0., 0.])
+        vy = np.array([0., 1., 0.])
+        vz = np.array([0., 0., 1.])
         x_limits = [-1., 2.]
         y_limits = [0., 1.]
         return origin, vx, vy, vz, x_limits, y_limits
@@ -740,7 +742,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             print('origin%s = %s' % (label, str(origin)))
             transform.Translate(*origin)
         elif matrix_3x3 is not None:  # origin can be None
-            m = eye(4, dtype='float32')
+            m = np.eye(4, dtype='float32')
             m[:3, :3] = matrix_3x3
             if origin is not None:
                 m[:3, 3] = origin
@@ -831,8 +833,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         #self.vectorResult = vtk.vtkFloatArray()
 
         # edges
-        self.edgeActor = vtk.vtkLODActor()
-        self.edgeMapper = vtk.vtkPolyDataMapper()
+        self.edge_actor = vtk.vtkLODActor()
+        self.edge_mapper = vtk.vtkPolyDataMapper()
 
         self.create_cell_picker()
 
@@ -925,10 +927,10 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
         self.get_edges()
         if self.is_edges:
-            prop = self.edgeActor.GetProperty()
+            prop = self.edge_actor.GetProperty()
             prop.EdgeVisibilityOn()
         else:
-            prop = self.edgeActor.GetProperty()
+            prop = self.edge_actor.GetProperty()
             prop.EdgeVisibilityOff()
 
     #def _script_helper(self, python_file=False):
@@ -940,7 +942,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         if python_file in [None, False]:
             title = 'Choose a Python Script to Run'
             wildcard = "Python (*.py)"
-            wildcard_index, infile_name = self._create_load_file_dialog(wildcard, title)
+            infile_name = self._create_load_file_dialog(wildcard, title)[1]
             if not infile_name:
                 is_failed = True
                 return is_failed # user clicked cancel
@@ -1030,24 +1032,24 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
     def on_flip_edges(self):
         self.is_edges = not self.is_edges
-        self.edgeActor.SetVisibility(self.is_edges)
-        #self.edgeActor.GetProperty().SetColor(0, 0, 0)  # cart3d edge color isn't black...
-        self.edgeActor.Modified()
+        self.edge_actor.SetVisibility(self.is_edges)
+        #self.edge_actor.GetProperty().SetColor(0, 0, 0)  # cart3d edge color isn't black...
+        self.edge_actor.Modified()
         #self.widget.Update()
         self._update_camera()
         #self.refresh()
         self.log_command('on_flip_edges()')
 
     def on_set_edge_visibility(self):
-        #self.edgeActor.SetVisibility(self.is_edges_black)
+        #self.edge_actor.SetVisibility(self.is_edges_black)
         self.is_edges_black = not self.is_edges_black
         if self.is_edges_black:
-            prop = self.edgeActor.GetProperty()
+            prop = self.edge_actor.GetProperty()
             prop.EdgeVisibilityOn()
         else:
-            prop = self.edgeActor.GetProperty()
+            prop = self.edge_actor.GetProperty()
             prop.EdgeVisibilityOff()
-        self.edgeActor.Modified()
+        self.edge_actor.Modified()
         prop.Modified()
         self.vtk_interactor.Render()
 
@@ -1060,30 +1062,37 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         if self.vtk_version[0] >= 6:
             # new
             edges.SetInputData(self.grid)
-            self.edgeMapper.SetInputConnection(edges.GetOutputPort())
+            self.edge_mapper.SetInputConnection(edges.GetOutputPort())
         else:
             edges.SetInput(self.grid)
-            self.edgeMapper.SetInput(edges.GetOutput())
+            self.edge_mapper.SetInput(edges.GetOutput())
 
-        self.edgeActor.SetMapper(self.edgeMapper)
-        self.edgeActor.GetProperty().SetColor(0, 0, 0)
-        self.edgeMapper.SetLookupTable(self.colorFunction)
-        self.edgeMapper.SetResolveCoincidentTopologyToPolygonOffset()
+        self.edge_actor.SetMapper(self.edge_mapper)
+        self.edge_actor.GetProperty().SetColor(0, 0, 0)
+        self.edge_mapper.SetLookupTable(self.colorFunction)
+        self.edge_mapper.SetResolveCoincidentTopologyToPolygonOffset()
 
-        prop = self.edgeActor.GetProperty()
+        prop = self.edge_actor.GetProperty()
         prop.SetColor(0, 0, 0)
-        self.edgeActor.SetVisibility(self.is_edges)
-        self.rend.AddActor(self.edgeActor)
+        self.edge_actor.SetVisibility(self.is_edges)
+        self.rend.AddActor(self.edge_actor)
 
-    def update_element_mask(self, ids):
-        ids = vtk.vtkIdTypeArray()
-        for eid in ids:
+    def update_element_mask(self, eids_to_show):
+        ids = self.shown_ids
+        ids.Reset()
+        #ids.SetNumberOfValues(len(eids_to_show))
+        ids.Allocate(len(eids_to_show))
+        for eid in eids_to_show:
             ids.InsertNextValue(eid)
+        self.shown_ids.Modified()
+        pass
 
     def _setup_element_mask(self):
         """
-        .. todo:: For some reason, the edge color is set to the parent
-        surface's color instead of black
+        starts the masking
+
+        self.grid feeds in the geometry
+
         """
         self.shown_ids = vtk.vtkIdTypeArray()
         self.shown_ids.SetNumberOfComponents(1)
@@ -1097,19 +1106,27 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         selection.AddNode(selection_node)
 
         extract_selection = vtk.vtkExtractSelection()
-        extract_selection.SetInputConnection(0, self.grid.GetOutputPort())
-        if vtk.VTK_MAJOR_VERSION <= 5:
-            extract_selection.SetInput(1, selection)
-        else:
-            extract_selection.SetInputData(1, selection)
+        # VTK 6
+        # SetInputData
+        # SetInputConnection
+        # SetOutput
+
+        extract_selection.SetInputData(0, self.grid)
+        # VTK 6
+        #extract_selection.SetInput(self.grid)
+        #extract_selection.SetInputConnection(0, self.grid.GetOutput())
+        #extract_selection.SetInputConnection(0, self.grid.GetOutputPort())
+        #if vtk.VTK_MAJOR_VERSION <= 5:
+            #extract_selection.SetInput(1, selection)
+        #else:
+        extract_selection.SetInputData(1, selection)
         extract_selection.Update()
 
         # In selection
-        selected = vtk.vtkUnstructuredGrid()
-        selected.ShallowCopy(extract_selection.GetOutput())
+        self.grid_selected = vtk.vtkUnstructuredGrid()
+        self.grid_selected.ShallowCopy(extract_selection.GetOutput())
 
-
-    def create_text(self, position, label, text_size=18, movable=False):
+    def create_text(self, position, label, text_size=18):
         text_actor = vtk.vtkTextActor()
         text_actor.SetInput(label)
         text_prop = text_actor.GetTextProperty()
@@ -1126,8 +1143,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
         # assign actor to the renderer
         self.rend.AddActor(text_actor)
-        self.text_actors[self.iText] = text_actor
-        self.iText += 1
+        self.text_actors[self.itext] = text_actor
+        self.itext += 1
 
     def turn_text_off(self):
         for text in itervalues(self.text_actors):
@@ -1414,7 +1431,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         if out_filename in [None, False]:
             title = 'Select a %s Results File for %s' % (result_type, self.format)
             wildcard = 'Delimited Text (*.txt; *.dat; *.csv)'
-            wildcard_index, out_filename = self._create_load_file_dialog(wildcard, title)
+            out_filename = self._create_load_file_dialog(wildcard, title)[1]
 
         if out_filename == '':
             return
@@ -1525,7 +1542,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                 msg = 'format=%r has no method to load results' % geometry_format
                 self.log_error(msg)
                 return
-            wildcard_index, out_filename = self._create_load_file_dialog(wildcard, title)
+            out_filename = self._create_load_file_dialog(wildcard, title)[1]
         else:
 
             for fmt in self.fmts:
@@ -1629,7 +1646,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         if csv_filename in [None, False]:
             qt_wildcard = '*.csv'
             title = 'Load User Points'
-            wildcard_level, csv_filename = self._create_load_file_dialog(qt_wildcard, title)
+            csv_filename = self._create_load_file_dialog(qt_wildcard, title)[1]
         if color is None:
             # we mod the num_user_points so we don't go outside the range
             icolor = self.num_user_points % len(self.color_order)
@@ -1760,7 +1777,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         if csv_filename in [None, False]:
             qt_wildcard = '*.csv'
             title = 'Load User Points'
-            wildcard_level, csv_filename = self._create_load_file_dialog(qt_wildcard, title)
+            csv_filename = self._create_load_file_dialog(qt_wildcard, title)[1]
         if color is None:
             # we mod the num_user_points so we don't go outside the range
             icolor = self.num_user_points % len(self.color_order)
@@ -2025,12 +2042,12 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         winY = math.round((( 1 - point3D.getY() ) / 2.0) * height )
         return Point2D(winX, winY)
 
-    def get_3d_point(self, point2D, width, height, viewMatrix, projectionMatrix):
-        x = 2.0 * winX / clientWidth - 1
-        y = - 2.0 * winY / clientHeight + 1
-        viewProjectionInverse = inverse(projectionMatrix * viewMatrix);
+    def get_3d_point(self, point2D, width, height, view_matrix, projection_matrix):
+        x = 2.0 * winX / client_width - 1
+        y = - 2.0 * winY / client_height + 1
+        view_projection_inverse = inverse(projection_matrix * view_vatrix);
         point3D = Point3D(x, y, 0)
-        return viewProjectionInverse.multiply(point3D)
+        return view_projection_inverse.multiply(point3D)
 
     def on_take_screenshot(self, fname=None, magnification=None):
         """ Take a screenshot of a current view and save as a file"""
@@ -2145,7 +2162,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         for itext, text_actor in iteritems(self.text_actors):
             text_prop = text_actor.GetTextProperty()
             text_prop.SetFontSize(text_size)
-        self.iText += 1
+        self.itext += 1
 
     def add_geometry(self):
         """
@@ -2166,11 +2183,21 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.grid_mapper   <--map--> self.geom_actor <-add-> self.rend
         vtkDataSetMapper() <--map--> vtkActor()      <-add-> vtkRenderer()
         """
+        if self.is_groups:
+            # solid_bending: eids 1-182
+            self._setup_element_mask()
+            #eids = np.arange(172)
+            eids = arange(172)
+            self.update_element_mask(eids)
+        else:
+            self.grid_selected = self.grid
+        print('grid_selected =', self.grid_selected)
+
         self.grid_mapper = vtk.vtkDataSetMapper()
         if self.vtk_version[0] >= 6:
-            self.grid_mapper.SetInputData(self.grid)
+            self.grid_mapper.SetInputData(self.grid_selected)
         else:
-            self.grid_mapper.SetInput(self.grid)
+            self.grid_mapper.SetInput(self.grid_selected)
 
         if 0:
             self.warp_filter = vtk.vtkWarpVector()
@@ -2504,7 +2531,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         cell_type = cell.GetCellType()
 
         if cell_type in [5, 9, 22, 23]:  # CTRIA3, CQUAD4, CTRIA6, CQUAD8
-            node_xyz = zeros((nnodes, 3), dtype='float32')
+            node_xyz = np.zeros((nnodes, 3), dtype='float32')
             for ipoint in range(nnodes):
                 point = points.GetPoint(ipoint)
                 node_xyz[ipoint, :] = point
@@ -2557,7 +2584,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                 point_min = point
 
         node_id = cell.GetPointId(imin)
-        xyz = array(point_min, dtype='float32')
+        xyz = np.array(point_min, dtype='float32')
         case = self.result_cases[case_key]
         if isinstance(case_key, integer_types):
             (obj, (i, res_name)) = case
@@ -3400,7 +3427,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         node2 = bar_y[:, 3:]
         dy = node2 - node1
 
-        length_y = norm(dy, axis=1)
+        length_y = np.linalg.norm(dy, axis=1)
         # v = dy / length_y *  bar_scale
         # node2 = node1 + v
 
@@ -3429,7 +3456,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
         # read input file
         try:
-            user_points = loadtxt(points_filename, delimiter=',')
+            user_points = np.loadtxt(points_filename, delimiter=',')
         except ValueError:
             user_points = loadtxt_nice(points_filename, delimiter=',')
             # can't handle leading spaces?

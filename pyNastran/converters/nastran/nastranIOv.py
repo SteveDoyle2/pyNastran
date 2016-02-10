@@ -145,7 +145,7 @@ class NastranIO(object):
 
         menu_items = [
             #(self.menu_help2, ('about_nastran',)),
-            (self.nastran_toolbar, ('caero', 'caero_sub', 'conm2'))
+            (self.nastran_toolbar, ('caero', 'caero_subpanels', 'conm2'))
             #(self.menu_window, tuple(menu_window)),
             #(self.menu_help, ('load_geometry', 'load_results', 'script', '', 'exit')),
             #(self.menu_help2, ('load_geometry', 'load_results', 'script', '', 'exit')),
@@ -162,16 +162,16 @@ class NastranIO(object):
         self.show_caero_actor = not self.show_caero_actor
         if self.show_caero_actor:
             if self.show_caero_sub_panels:
-                self.geometry_actors['caero_sub'].VisibilityOn()
-                self.geometry_properties['caero_sub'].is_visble = True
+                self.geometry_actors['caero_subpanels'].VisibilityOn()
+                self.geometry_properties['caero_subpanels'].is_visble = True
             else:
                 self.geometry_actors['caero'].VisibilityOn()
                 self.geometry_properties['caero'].is_visble = True
         else:
             self.geometry_actors['caero'].VisibilityOff()
             self.geometry_properties['caero'].is_visble = False
-            self.geometry_actors['caero_sub'].VisibilityOff()
-            self.geometry_properties['caero_sub'].is_visble = False
+            self.geometry_actors['caero_subpanels'].VisibilityOff()
+            self.geometry_properties['caero_subpanels'].is_visble = False
         self.vtk_interactor.Render()
 
     def toggle_caero_sub_panels(self):
@@ -186,14 +186,14 @@ class NastranIO(object):
                 self.geometry_actors['caero'].VisibilityOff()
                 self.geometry_properties['caero'].is_visble = False
 
-                self.geometry_actors['caero_sub'].VisibilityOn()
-                self.geometry_properties['caero_sub'].is_visble = True
+                self.geometry_actors['caero_subpanels'].VisibilityOn()
+                self.geometry_properties['caero_subpanels'].is_visble = True
             else:
                 self.geometry_actors['caero'].VisibilityOn()
                 self.geometry_properties['caero'].is_visble = True
 
-                self.geometry_actors['caero_sub'].VisibilityOff()
-                self.geometry_properties['caero_sub'].is_visble = False
+                self.geometry_actors['caero_subpanels'].VisibilityOff()
+                self.geometry_properties['caero_subpanels'].is_visble = False
         self.vtk_interactor.Render()
 
     def toggle_conms(self):
@@ -285,7 +285,7 @@ class NastranIO(object):
             # opacity = 1
             # alt_grids = [
                 # ['caero', yellow, line_width, opacity],
-                # ['caero_sub', yellow, line_width, opacity],
+                # ['caero_subpanels', yellow, line_width, opacity],
             # ]
             # skip_reading = self._remove_old_geometry2(bdf_filename, alt_grids=alt_grids)
         if skip_reading:
@@ -369,10 +369,10 @@ class NastranIO(object):
             cs_box_ids = []
             has_control_surface = True
             ncaeros_cs = 0
-            ncaero_cs_points = 0
-            if 'caero_cs' not in self.alt_grids:
+            #ncaero_cs_points = 0
+            if 'caero_control_surfaces' not in self.alt_grids:
                 self.create_alternate_vtk_grid(
-                    'caero_cs', color=pink, line_width=5, opacity=1.0,
+                    'caero_control_surfaces', color=pink, line_width=5, opacity=1.0,
                     representation='surface')
             for aid, aesurf in iteritems(model.aesurfs):
                 aelist = aesurf.alid1
@@ -411,15 +411,15 @@ class NastranIO(object):
                 self.create_alternate_vtk_grid(
                     'caero', color=yellow, line_width=3, opacity=1.0,
                     representation='toggle', is_visible=True)
-            if 'caero_sub' not in self.alt_grids:
+            if 'caero_subpanels' not in self.alt_grids:
                 self.create_alternate_vtk_grid(
-                    'caero_sub', color=yellow, line_width=3, opacity=1.0,
+                    'caero_subpanels', color=yellow, line_width=3, opacity=1.0,
                     representation='toggle', is_visible=False)
 
             self.alt_grids['caero'].Allocate(ncaeros, 1000)
-            self.alt_grids['caero_sub'].Allocate(ncaeros_sub, 1000)
+            self.alt_grids['caero_subpanels'].Allocate(ncaeros_sub, 1000)
             if has_control_surface:
-                self.alt_grids['caero_cs'].Allocate(ncaeros_cs, 1000)
+                self.alt_grids['caero_control_surfaces'].Allocate(ncaeros_cs, 1000)
 
         if nconm2 > 0:
             self.alt_grids['conm2'].Allocate(nconm2, 1000)
@@ -540,7 +540,8 @@ class NastranIO(object):
             self.set_caero_subpanel_grid(ncaero_sub_points, model)
             if has_control_surface:
                 self.set_caero_control_surface_grid(
-                    'caero_cs', cs_box_ids, box_id_to_caero_element_map, caero_points)
+                    'caero_control_surfaces', cs_box_ids,
+                    box_id_to_caero_element_map, caero_points)
 
         if nconm2 > 0:
             self.set_conm_grid(nconm2, dim_max, model)
@@ -584,19 +585,19 @@ class NastranIO(object):
         self._add_alt_actors(self.alt_grids)
 
         # set default representation
-        if 'caero_cs' in self.geometry_actors:
-            self.geometry_properties['caero_cs'].opacity = 0.5
+        if 'caero_control_surfaces' in self.geometry_actors:
+            self.geometry_properties['caero_control_surfaces'].opacity = 0.5
 
             self.geometry_actors['caero'].Modified()
-            self.geometry_actors['caero_sub'].Modified()
+            self.geometry_actors['caero_subpanels'].Modified()
             if has_control_surface:
-                self.geometry_actors['caero_cs'].Modified()
+                self.geometry_actors['caero_control_surfaces'].Modified()
             if hasattr(self.geometry_actors['caero'], 'Update'):
                 self.geometry_actors['caero'].Update()
-            if hasattr(self.geometry_actors['caero_sub'], 'Update'):
-                self.geometry_actors['caero_sub'].Update()
-            if has_control_surface and hasattr(self.geometry_actors['caero_sub'], 'Update'):
-                self.geometry_actors['caero_cs'].Update()
+            if hasattr(self.geometry_actors['caero_subpanels'], 'Update'):
+                self.geometry_actors['caero_subpanels'].Update()
+            if has_control_surface and hasattr(self.geometry_actors['caero_subpanels'], 'Update'):
+                self.geometry_actors['caero_control_surfaces'].Update()
 
         for grid_name in ['suport', 'spc', 'mpc', 'mpc_dependent', 'mpc_independent']:
             if grid_name in self.geometry_actors:
@@ -659,11 +660,11 @@ class NastranIO(object):
                     elem.GetPointIds().SetId(1, j + elementi[1])
                     elem.GetPointIds().SetId(2, j + elementi[2])
                     elem.GetPointIds().SetId(3, j + elementi[3])
-                    self.alt_grids['caero_sub'].InsertNextCell(vtk_type, elem.GetPointIds())
+                    self.alt_grids['caero_subpanels'].InsertNextCell(vtk_type, elem.GetPointIds())
                 j += ipoint + 1
             else:
                 self.log_info("skipping %s" % element.type)
-        self.alt_grids['caero_sub'].SetPoints(points)
+        self.alt_grids['caero_subpanels'].SetPoints(points)
         return j
 
     def set_caero_control_surface_grid(self, name, cs_box_ids,

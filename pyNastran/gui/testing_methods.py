@@ -86,7 +86,7 @@ class GuiAttributes(object):
         #}
         self.geometry_properties = OrderedDict()
 
-        self.iText = 0
+        self.itext = 0
 
         self.pick_state = 'node/centroid' # if self.is_centroidal else 'nodal'
         self.label_actors = {}

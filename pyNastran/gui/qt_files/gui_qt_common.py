@@ -381,6 +381,7 @@ class GuiCommon(GuiAttributes):
             raise RuntimeError(location)
 
         self.grid.Modified()
+        self.grid_selected.Modified()
         self.vtk_interactor.Render()
 
         self.hide_labels(show_msg=False)
