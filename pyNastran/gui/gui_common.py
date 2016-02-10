@@ -355,7 +355,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         if 'nastran' in self.fmts:
             tools += [
                 ('caero', 'Show/Hide CAERO Panels', '', None, 'Show/Hide CAERO Panel Outlines', self.toggle_caero_panels),
-                ('caero_sub', 'Toggle CAERO Subpanels', '', None, 'Show/Hide CAERO Subanel Outlines', self.toggle_caero_sub_panels),
+                ('caero_subpanels', 'Toggle CAERO Subpanels', '', None, 'Show/Hide CAERO Subanel Outlines', self.toggle_caero_sub_panels),
                 ('conm2', 'Toggle CONM2s', '', None, 'Show/Hide CONM2s', self.toggle_conms),
             ]
         self.tools = tools
@@ -975,6 +975,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                     #print('name: %s\nrep: %s' % (name, self.geometry_properties[name].representation ))
                 if name == 'main' or self.geometry_properties[name].representation in ['main', 'toggle']:
                     prop = actor.GetProperty()
+
                     prop.SetRepresentationToSurface()
             self.is_wireframe = False
             self.vtk_interactor.Render()
@@ -1074,6 +1075,40 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.edgeActor.SetVisibility(self.is_edges)
         self.rend.AddActor(self.edgeActor)
 
+    def update_element_mask(self, ids):
+        ids = vtk.vtkIdTypeArray()
+        for eid in ids:
+            ids.InsertNextValue(eid)
+
+    def _setup_element_mask(self):
+        """
+        .. todo:: For some reason, the edge color is set to the parent
+        surface's color instead of black
+        """
+        self.shown_ids = vtk.vtkIdTypeArray()
+        self.shown_ids.SetNumberOfComponents(1)
+
+        selection_node = vtk.vtkSelectionNode()
+        selection_node.SetFieldType(vtk.vtkSelectionNode.CELL)
+        selection_node.SetContentType(vtk.vtkSelectionNode.INDICES)
+        selection_node.SetSelectionList(self.shown_ids)
+
+        selection = vtk.vtkSelection()
+        selection.AddNode(selection_node)
+
+        extract_selection = vtk.vtkExtractSelection()
+        extract_selection.SetInputConnection(0, self.grid.GetOutputPort())
+        if vtk.VTK_MAJOR_VERSION <= 5:
+            extract_selection.SetInput(1, selection)
+        else:
+            extract_selection.SetInputData(1, selection)
+        extract_selection.Update()
+
+        # In selection
+        selected = vtk.vtkUnstructuredGrid()
+        selected.ShallowCopy(extract_selection.GetOutput())
+
+
     def create_text(self, position, label, text_size=18, movable=False):
         text_actor = vtk.vtkTextActor()
         text_actor.SetInput(label)
@@ -1106,8 +1141,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         """TODO: add support for NanColors"""
         scalar_range = self.grid.GetScalarRange()
         #print('min = %s\nmax = %s' % scalar_range)
-        self.aQuadMapper.SetScalarRange(scalar_range)
-        self.aQuadMapper.SetLookupTable(self.colorFunction)
+        self.grid_mapper.SetScalarRange(scalar_range)
+        self.grid_mapper.SetLookupTable(self.colorFunction)
         self.rend.AddActor(self.scalarBar)
 
     def _create_load_file_dialog(self, qt_wildcard, title):
@@ -2125,22 +2160,22 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.grid.GetPointData().SetScalars(grid_result)
 
 
-        self.aQuadMapper   <-input-> self.grid
+        self.grid_mapper   <-input-> self.grid
         vtkDataSetMapper() <-input-> vtkUnstructuredGrid()
 
-        self.aQuadMapper   <--map--> self.geom_actor <-add-> self.rend
+        self.grid_mapper   <--map--> self.geom_actor <-add-> self.rend
         vtkDataSetMapper() <--map--> vtkActor()      <-add-> vtkRenderer()
         """
-        self.aQuadMapper = vtk.vtkDataSetMapper()
+        self.grid_mapper = vtk.vtkDataSetMapper()
         if self.vtk_version[0] >= 6:
-            self.aQuadMapper.SetInputData(self.grid)
+            self.grid_mapper.SetInputData(self.grid)
         else:
-            self.aQuadMapper.SetInput(self.grid)
+            self.grid_mapper.SetInput(self.grid)
 
         if 0:
             self.warp_filter = vtk.vtkWarpVector()
             self.warp_filter.SetScaleFactor(50.0)
-            self.warp_filter.SetInput(self.aQuadMapper.GetUnstructuredGridOutput())
+            self.warp_filter.SetInput(self.grid_mapper.GetUnstructuredGridOutput())
 
             self.geom_filter = vtk.vtkGeometryFilter()
             self.geom_filter.SetInput(self.warp_filter.GetUnstructuredGridOutput())
@@ -2173,14 +2208,30 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
 
         #self.warpVector = vtk.vtkWarpVector()
-        #self.warpVector.SetInput(self.aQuadMapper.GetUnstructuredGridOutput())
-        #aQuadMapper.SetInput(Filter.GetOutput())
+        #self.warpVector.SetInput(self.grid_mapper.GetUnstructuredGridOutput())
+        #grid_mapper.SetInput(Filter.GetOutput())
 
         self.geom_actor = vtk.vtkLODActor()
-        self.geom_actor.SetMapper(self.aQuadMapper)
+        self.geom_actor.SetMapper(self.grid_mapper)
         #geometryActor.AddPosition(2, 0, 2)
         #geometryActor.GetProperty().SetDiffuseColor(0, 0, 1) # blue
         #self.geom_actor.GetProperty().SetDiffuseColor(1, 0, 0)  # red
+
+        if 0:
+            id_filter = vtk.vtkIdFilter()
+
+            import numpy as np
+            from vtk.util.numpy_support import numpy_to_vtk
+            ids = np.array([1, 2, 3], dtype='int32')
+            id_array = numpy_to_vtk(
+                num_array=ids,
+                deep=True,
+                array_type=vtk.VTK_INT,
+            )
+
+            id_filter.SetCellIds(id_array.GetOutputPort())
+            id_filter.CellIdsOff()
+            self.grid_mapper.SetInputConnection(id_filter.GetOutputPort())
         self.rend.AddActor(self.geom_actor)
 
     def _add_alt_actors(self, grids_dict, names_to_ignore=None):
@@ -2249,8 +2300,15 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         assert color[0] <= 1.0, color
 
         prop = alt_geometry_actor.GetProperty()
+        #prop.SetInterpolationToFlat()    # 0
+        #prop.SetInterpolationToGouraud() # 1
+        #prop.SetInterpolationToPhong()   # 2
         prop.SetDiffuseColor(color)
         prop.SetOpacity(opacity)
+        #prop.Update()
+
+        print('prop.GetInterpolation()', prop.GetInterpolation())
+
         if representation == 'point':
             prop.SetRepresentationToPoints()
             prop.SetPointSize(point_size)

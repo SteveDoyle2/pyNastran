@@ -84,13 +84,13 @@ class GroupImport(object):
 
     def _create_grid_mapper(self, name):
         self.grid = vtk.vtkUnstructuredGrid()
-        self.aQuadMapper = vtk.vtkDataSetMapper()
-        self.aQuadMapper.SetInput(self.grid)
+        self.grid_mapper = vtk.vtkDataSetMapper()
+        self.grid_mapper.SetInput(self.grid)
 
-        geometryActor = vtk.vtkActor()
-        geometryActor.SetMapper(self.aQuadMapper)
-        geometryActor.GetProperty().SetDiffuseColor(1, 0, 0)  # red
-        self.rend.AddActor(geometryActor)
+        geometry_actor = vtk.vtkActor()
+        geometry_actor.SetMapper(self.grid_mapper)
+        geometry_actor.GetProperty().SetDiffuseColor(1, 0, 0)  # red
+        self.rend.AddActor(geometry_actor)
 
 
 class Groups(object):

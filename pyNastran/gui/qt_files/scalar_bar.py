@@ -139,10 +139,10 @@ class ScalarBar(object):
 
             #scalar_range = self.grid.GetScalarRange()
             #print('scalar_range', scalar_range)
-            #self.aQuadMapper.SetScalarRange(scalar_range)
-            #self.aQuadMapper.SetScalarRange(min_value, max_value)
-            #self.aQuadMapper.SetScalarRange(max_value, min_value)
-            #self.aQuadMapper.Update()
+            #self.grid_mapper.SetScalarRange(scalar_range)
+            #self.grid_mapper.SetScalarRange(min_value, max_value)
+            #self.grid_mapper.SetScalarRange(max_value, min_value)
+            #self.grid_mapper.Update()
 
         #self.scalar_bar.SetLookupTable(self.color_function)
         nchars = len(title)
