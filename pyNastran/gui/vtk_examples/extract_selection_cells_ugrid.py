@@ -72,7 +72,10 @@ def main():
     ugrid.SetPoints(points)
 
     grid_mapper = vtk.vtkDataSetMapper()
-    grid_mapper.SetInputData(ugrid)
+    if vtk.VTK_MAJOR_VERSION <= 5:
+        grid_mapper.SetInputConnection(ugrid.GetProducerPort())
+    else:
+        grid_mapper.SetInputData(ugrid)
     input_actor = vtk.vtkActor()
     input_actor.SetMapper(grid_mapper)
 
@@ -105,10 +108,11 @@ def main():
     selection.AddNode(selection_node)
 
     extract_selection = vtk.vtkExtractSelection()
-    extract_selection.SetInputData(0, ugrid)
     if vtk.VTK_MAJOR_VERSION <= 5:
+        extract_selection.SetInput(0, ugrid)
         extract_selection.SetInput(1, selection)
     else:
+        extract_selection.SetInputData(0, ugrid)
         extract_selection.SetInputData(1, selection)
     extract_selection.Update()
 
@@ -132,13 +136,19 @@ def main():
 
 
     selected_mapper = vtk.vtkDataSetMapper()
-    selected_mapper.SetInputData(grid_selected)
+    if vtk.VTK_MAJOR_VERSION <= 5:
+        selected_mapper.SetInputConnection(grid_selected.GetProducerPort())
+    else:
+        selected_mapper.SetInputData(grid_selected)
 
     selected_actor = vtk.vtkActor()
     selected_actor.SetMapper(selected_mapper)
 
     not_selected_mapper = vtk.vtkDataSetMapper()
-    not_selected_mapper.SetInputData(not_selected)
+    if vtk.VTK_MAJOR_VERSION <= 5:
+        not_selected_mapper.SetInputConnection(not_selected.GetProducerPort())
+    else:
+        not_selected_mapper.SetInputData(not_selected)
 
     not_selected_actor = vtk.vtkActor()
     not_selected_actor.SetMapper(not_selected_mapper)

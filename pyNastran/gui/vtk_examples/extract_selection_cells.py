@@ -31,19 +31,20 @@ def main():
     selection.AddNode(selection_node)
 
     extract_selection = vtk.vtkExtractSelection()
-    extract_selection.SetInputConnection(0, sphere_source.GetOutputPort())
     if vtk.VTK_MAJOR_VERSION <= 5:
+        extract_selection.SetInputConnection(0, sphere_source.GetOutputPort())
         extract_selection.SetInput(1, selection)
     else:
+        extract_selection.SetInputConnection(0, sphere_source.GetOutputPort())
         extract_selection.SetInputData(1, selection)
     extract_selection.Update()
 
     # In selection
-    selected = vtk.vtkUnstructuredGrid()
-    selected.ShallowCopy(extract_selection.GetOutput())
+    grid_selected = vtk.vtkUnstructuredGrid()
+    grid_selected.ShallowCopy(extract_selection.GetOutput())
 
-    print("There are %s points in the selection" % selected.GetNumberOfPoints())
-    print("There are %s cells in the selection" % selected.GetNumberOfCells())
+    print("There are %s points in the selection" % grid_selected.GetNumberOfPoints())
+    print("There are %s cells in the selection" % grid_selected.GetNumberOfCells())
 
     # Get points that are NOT in the selection
     # invert the selection
@@ -68,9 +69,9 @@ def main():
 
     selected_mapper = vtk.vtkDataSetMapper()
     if vtk.VTK_MAJOR_VERSION <= 5:
-        selected_mapper.SetInputConnection(selected.GetProducerPort())
+        selected_mapper.SetInputConnection(grid_selected.GetProducerPort())
     else:
-        selected_mapper.SetInputData(selected)
+        selected_mapper.SetInputData(grid_selected)
 
     selected_actor = vtk.vtkActor()
     selected_actor.SetMapper(selected_mapper)

@@ -26,7 +26,7 @@ def run_nastran(fname, keywords=None):
         keywords = ['old=no','news=no'] # ['mem=1024mb','old=no','news=no']
     return subprocess.call(['nastran', fname] + keywords)
 
-def run_bdfs(bdf_filenames, workpath='results'):
+def run_bdfs_batch(bdf_filenames, workpath='results', mem='100mb', auth=None, overwrite_op2_if_exists=False):
     #print(bdf_filenames)
     print('Start running patch jobs.')
 
@@ -45,13 +45,16 @@ def run_bdfs(bdf_filenames, workpath='results'):
         patch_id_str = basename.split('_')[1].split('.')[0]
         patch_id = int(patch_id_str)
         op2_filename = 'patch_%s.op2' % patch_id
-        if not os.path.exists(op2_filename):
+        if not os.path.exists(op2_filename) or overwrite_op2_if_exists:
             #print(bdf_filename)
             #shutil.copyfile(bdf_filename, os.path.join('linux', basename))
             #print('working on %s' % bdf_filename)
             #cmd = 'nastran {} scr=yes bat=no mem=100MB old=no'.format(bdf_filename)  # subprocess/os.system version
             #cmd = 'nastran results/%s scr=yes' % (basename) # shell version
-            cmd = 'nastran %s scr=yes bat=no old=no mem=100mb auth=1700@192.168.100.91' % (basename) # shell version
+            cmd = 'nastran %s scr=yes bat=no old=no' % (basename) # shell version
+            for key, value in nastran_keywords:
+                cmd += ' %s=%s' % (key, value)
+
             #subprocess.call(['nastran', bdf_filename, 'scr=yes', 'bat=no', 'old=no'])
             run_file.write('echo "%s"\n' % count)
             run_file.write('%s\n' % cmd)
@@ -64,6 +67,25 @@ def run_bdfs(bdf_filenames, workpath='results'):
     run_file.close()
     #shutil.copyfile('run_jobs.sh', os.path.join(work))
     #os.system('bash run_jobs.sh')
+    print('Done running patch jobs.')
+
+
+def run_bdfs(bdf_filenames, workpath='results', nastran_keywords=None, overwrite_op2_if_exists=False):
+    #print(bdf_filenames)
+    print('Start running patch jobs.')
+    for bdf_filename in bdf_filenames:
+        basename = os.path.basename(bdf_filename)
+        patch_id_str = basename.split('_')[1].split('.')[0]
+        patch_id = int(patch_id_str)
+        op2_filename = 'patch_%s.op2' % patch_id
+        if not os.path.exists(op2_filename) or overwrite_op2_if_exists:
+            #cmd = 'nastran %s scr=yes bat=no old=no' % (basename) # shell version
+
+            call_args = ['nastran', bdf_filename, 'scr=yes', 'bat=no', 'old=no']
+            for key, value in nastran_keywords:
+                call_args.append('%s=%s' % (key, value))
+
+            subprocess.call(call_args)
     print('Done running patch jobs.')
 
 
