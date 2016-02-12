@@ -119,7 +119,7 @@ class CaseControlDeck(object):
                 # continue
             subcase.suppress_output()
 
-    def has_parameter(self, isubcase, param_name):
+    def has_parameter(self, isubcase, *param_names):
         """
         Checks to see if a parameter (e.g. STRESS) is defined in a certain
         subcase ID.
@@ -128,7 +128,7 @@ class CaseControlDeck(object):
         :param param_name: the parameter name to look for
         """
         if self.has_subcase(isubcase):
-            return self.subcases[isubcase].has_parameter(param_name.upper())
+            return any(self.subcases[isubcase].has_parameter(*param_names))
 
     def get_subcase_parameter(self, isubcase, param_name):
         """

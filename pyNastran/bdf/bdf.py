@@ -2040,7 +2040,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             #print(card_name)
             card_class, add_card_function = self._card_parser[card_name]
             try:
-                class_instance = card_class.add_card(card_obj, comment='')
+                class_instance = card_class.add_card(card_obj, comment=comment)
                 add_card_function(class_instance)
             except (SyntaxError, AssertionError, KeyError, ValueError) as exception:
                 #raise
