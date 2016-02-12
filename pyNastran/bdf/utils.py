@@ -13,7 +13,9 @@ import os
 import sys
 import inspect
 import warnings
+from copy import deepcopy
 
+import numpy as np
 from numpy import unique, cross, dot, array
 
 import pyNastran
@@ -845,3 +847,50 @@ def deprecated(old_name, new_name, deprecated_version, levels=None):
         raise NotImplementedError(msg)
     else:
         warnings.warn(msg, DeprecationWarning)
+
+def split_eids_along_nids(model, eids, nids):
+    """
+    Dissassociate a list of elements along a list of nodes.
+
+    The expected use of this function is that you have two bodies that
+    are incorrectly equivalenced and you would like to create duplicate
+    nodes at the same location and associate the new nodes with one half
+    of the elements.
+
+    Pick the nodes along the line and the elements along one side of the line.
+
+    Parameters
+    ----------
+    model : BDF()
+        the BDF model
+    eids : list/tuple
+        element ids to disassociate
+    nids : list/tuple
+        node ids to disassociate
+
+    Implicitly returns model with additional nodes.
+
+    .. note :: xref should be set to False for this function.
+    """
+    #assert model.xref == False, model.xref
+    nid = max(model.nodes.keys()) + 1
+
+    nid_map = {}
+    for nidi in nids:
+        node = model.nodes[nidi]
+        node2 = deepcopy(node)
+        node2.nid = nid
+        model.nodes[nid] = node2
+        nid_map[nidi] = nid
+        nid += 1
+
+    for eid in eids:
+        nodes = []
+        elem = model.elements[eid]
+        for nidi in elem.nodes:
+            if nidi in nid_map:
+                nodes.append(nid_map[nidi])
+            else:
+                nodes.append(nidi)
+            assert len(np.unique(nodes)) == len(nodes), 'nodes=%s' % nodes
+        elem.nodes = nodes

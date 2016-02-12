@@ -292,7 +292,6 @@ class RealGridPointForcesArray(ScalarObject):
         total_force_global = force_in_global.sum(axis=0)
 
         total_force_local = transform_force_from_global_to_local(total_force_global, coord_in, coord_out)
-
         return total_force_global, total_force_local
 
     def add(self, dt, node_id, eid, ename, t1, t2, t3, r1, r2, r3):
