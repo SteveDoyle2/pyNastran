@@ -1,0 +1,72 @@
+#!/usr/bin/env python
+import os
+import sys
+from setuptools import setup, find_packages
+
+PY2 = False
+if sys.version_info < (3, 0):
+    PY2 = True
+if sys.version_info < (2, 7, 7):
+    # makes sure we don't get the following bug:
+    #   Issue #19099: The struct module now supports Unicode format strings.
+    sys.exit('Upgrade your Python to >= 2.7.7; version=(%s.%s.%s)' % (imajor, minor1, minor2))
+
+import pyNastran
+packages = find_packages()+['gui/icons/*.*']
+
+# set up all icons
+icon_path = os.path.join('pyNastran', 'gui', 'icons')
+icon_files = os.listdir(icon_path)
+icon_files2 = []
+for icon_file in icon_files:
+    if icon_file.endswith('.png'):
+        icon_files2.append(os.path.join(icon_path, icon_file))
+
+setup(
+    name='pyNastran',
+    version=pyNastran.__version__,
+    description=pyNastran.__desc__,
+    long_description="""\
+""",
+    classifiers=[
+        'Natural Language :: English',
+        'Intended Audience :: Science/Research',
+        'License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)',
+        'Programming Language :: Python :: 2',
+        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.3',
+        'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.5',
+        ], # Get strings from http://pypi.python.org/pypi?%3Aaction=list_classifiers
+    keywords='',
+    author=pyNastran.__author__,
+    author_email=pyNastran.__email__,
+    url=pyNastran.__website__,
+    license=pyNastran.__license__,
+    packages=find_packages(exclude=['ez_setup', 'examples', 'tests']),
+    include_package_data=True,
+    zip_safe=False,
+    #{'': ['license.txt']}
+    #package_data={'': ['*.png']},
+    #data_files=[(icon_path, icon_files2)],
+    package_data={
+        # https://pythonhosted.org/setuptools/setuptools.html#including-data-files
+        # If any package contains *.png files, include them:
+        '': ['*.png'],
+        #'mypkg': ['data/*.dat'],
+    },
+    entry_points={
+        'console_scripts': [
+            'run_nastran_double_precision = pyNastran.bdf.test.run_nastran_double_precision:cmd_line',
+            'test_bdf  = pyNastran.bdf.test.test_bdf:main',
+            'test_op2  = pyNastran.op2.test.test_op2:main',
+            'test_op4  = pyNastran.op4.test.test_op4:main',
+
+            'format_converter = pyNastran.converters.type_converter:main',
+            'pyNastranGUI = pyNastran.gui.gui:main',
+        ]
+    },
+    test_suite='pyNastran.all_tests',
+)
+
