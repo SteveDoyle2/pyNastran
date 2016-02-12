@@ -356,5 +356,22 @@ class TestReadWrite(unittest.TestCase):
         model.read_bdf(bdf_filename)
         assert len(model.elements) == 0, len(model.elements)
 
+    def test_solid_shell_bar_buckling(self):
+        bdf_filename = os.path.join(root_path, '..', 'models',
+            'sol_101_elements', 'buckling_solid_shell_bar.bdf')
+        bdf_filename2 = os.path.join(root_path, '..', 'models',
+            'sol_101_elements', 'buckling_solid_shell_bar2.bdf')
+        model = BDF(debug=False)
+        model.read_bdf(bdf_filename)
+        model.write_bdf(bdf_filename2)
+
+        model2 = BDF(debug=False)
+        model2.read_bdf(bdf_filename2)
+        #print(model2.get_bdf_stats())
+
+        eigb = model2.methods[42]
+        assert eigb.comment == '$ this is a preload buckling case\n', 'comment=%r\n%s' % (eigb.comment, str(eigb))
+        os.remove(bdf_filename2)
+
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

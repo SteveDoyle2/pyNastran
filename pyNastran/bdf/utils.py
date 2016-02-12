@@ -752,18 +752,23 @@ def PositionWRT(xyz, cid, cid_new, model, is_cid_int=True):
     Gets the location of the GRID which started in some arbitrary system and
     returns it in the desired coordinate system
 
-    :param xyz:      the position of the GRID in an arbitrary
-                     coordinate system
-    :type xyz:       TYPE = NDARRAY.  SIZE=(3,)
-    :param cid:      the coordinate ID for xyz
-    :type cid:       int
-    :param cid_new:  the desired coordinate ID
-    :type cid_new:   int
-    :param model:    the BDF model object
-    :type model:     BDF()
+    Parameters
+    ----------
+    xyz : (3, ) float ndarray
+        the position of the GRID in an arbitrary coordinate system
+    cid : int
+        the coordinate ID for xyz
+    cid_new : int
+        the desired coordinate ID
+    model : BDF()
+        the BDF model object
+    is_cid_int : bool
+        is cid/cid_new an integer or a Coord object
 
-    :returns xyz_local:  the position of the GRID in an arbitrary coordinate system
-    :type xyz_local:     TYPE = NDARRAY.  SIZE=(3,)
+    Returns
+    -------
+    xyz_local : (3, ) float ndarray
+        the position of the GRID in an arbitrary coordinate system
     """
     if cid == cid_new: # same coordinate system
         return xyz
