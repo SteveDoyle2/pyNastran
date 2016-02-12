@@ -18,7 +18,8 @@ import vtk
 from vtk.qt4.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 
 import numpy as np
-from numpy import arange
+#from numpy import arange
+from vtk.util.numpy_support import numpy_to_vtk
 #from numpy import eye, array, zeros, loadtxt
 #from numpy.linalg import norm
 
@@ -35,8 +36,8 @@ from pyNastran.gui.menus.results_sidebar import Sidebar
 from pyNastran.gui.menus.qt_legend import LegendPropertiesWindow
 from pyNastran.gui.menus.clipping import ClippingPropertiesWindow
 from pyNastran.gui.menus.camera import CameraWindow
-from pyNastran.gui.menus.application_log import PythonConsoleWidget
-from pyNastran.gui.menus.manage_actors import EditGroupProperties
+from pyNastran.gui.menus.application_log import PythonConsoleWidget, ApplicationLogWidget
+from pyNastran.gui.menus.manage_actors import EditGeometryProperties
 #from pyNastran.gui.menus.multidialog import MultiFileDialog
 from pyNastran.gui.utils import load_csv, load_user_geom
 
@@ -195,12 +196,15 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
          - Python Console dock
         """
         #=========== Logging widget ===================
+
         if self.html_logging:
-            self.log_dock_widget = QtGui.QDockWidget("Application log", self)
-            self.log_dock_widget.setObjectName("application_log")
-            self.log_widget = QtGui.QTextEdit()
-            self.log_widget.setReadOnly(True)
-            self.log_dock_widget.setWidget(self.log_widget)
+            self.log_dock_widget = ApplicationLogWidget(self)
+            self.log_widget = self.log_dock_widget.log_widget
+            #self.log_dock_widget = QtGui.QDockWidget("Application log", self)
+            #self.log_dock_widget.setObjectName("application_log")
+            #self.log_widget = QtGui.QTextEdit()
+            #self.log_widget.setReadOnly(True)
+            #self.log_dock_widget.setWidget(self.log_widget)
             self.addDockWidget(QtCore.Qt.BottomDockWidgetArea, self.log_dock_widget)
 
         if self.execute_python:
@@ -272,7 +276,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             print('name =', name)
             self.name = name
             #form = inputs['format'].lower()
-            is_failed = self.on_load_geometry(infile_name=input_filename, name=name, geometry_format=form, plot=plot)
+            is_failed = self.on_load_geometry(
+                infile_name=input_filename, name=name, geometry_format=form, plot=plot)
         self.name = 'main'
         print('keys =', self.nid_maps.keys())
 
@@ -301,9 +306,9 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                 ('load_csv_elemental', 'Load CSV Elemental Results', '', None, 'Loads a custom elemental results file', self.on_load_elemental_results),
                 ('load_csv_user_points', 'Load CSV User Points', 'user_points.png', None, 'Loads user defined points ', self.on_load_user_points),
 
-                ('back_col', 'Change background color', 'tcolorpick.png', None, 'Choose a background color', self.change_background_color),
-                ('label_col', 'Change label color', 'tcolorpick.png', None, 'Choose a label color', self.change_label_color),
-                ('text_col', 'Change text color', 'tcolorpick.png', None, 'Choose a text color', self.change_text_color),
+                ('back_color', 'Change background color', 'tcolorpick.png', None, 'Choose a background color', self.change_background_color),
+                ('label_color', 'Change label color', 'tcolorpick.png', None, 'Choose a label color', self.change_label_color),
+                ('text_color', 'Change text color', 'tcolorpick.png', None, 'Choose a text color', self.change_text_color),
 
                 ('label_clear', 'Clear current labels', '', None, 'Clear current labels', self.clear_labels),
                 ('label_resize', 'Resize labels', '', None, 'Resize labels', self.resize_labels),
@@ -315,7 +320,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
                 ('wireframe', 'Wireframe Model', 'twireframe.png', 'w', 'Show Model as a Wireframe Model', self.on_wireframe),
                 ('surface', 'Surface Model', 'tsolid.png', 's', 'Show Model as a Surface Model', self.on_surface),
-                ('geo_properties', 'Edit Geometry Properties', '', None, 'Change Model Color/Opacity/Line Width', self.set_actor_properties),
+                ('geo_properties', 'Edit Geometry Properties', '', None, 'Change Model Color/Opacity/Line Width', self.edit_geometry_properties),
 
                 ('show_info', 'Show INFO', 'show_info.png', None, 'Show "INFO" messages', self.on_show_info),
                 ('show_debug', 'Show DEBUG', 'show_debug.png', None, 'Show "DEBUG" messages', self.on_show_debug),
@@ -332,13 +337,13 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                 ('rotate_clockwise', 'Rotate Clockwise', 'tclock.png', 'o', 'Rotate Clockwise', self.on_rotate_clockwise),
                 ('rotate_cclockwise', 'Rotate Counter-Clockwise', 'tcclock.png', 'O', 'Rotate Counter-Clockwise', self.on_rotate_cclockwise),
 
-                ('scshot', 'Take a Screenshot', 'tcamera.png', 'CTRL+I', 'Take a Screenshot of current view', self.on_take_screenshot),
-                ('about', 'About pyNastran GUI', 'tabout.png', 'CTRL+H', 'About pyCart3d GUI and help on shortcuts', self.about_dialog),
+                ('screenshot', 'Take a Screenshot', 'tcamera.png', 'CTRL+I', 'Take a Screenshot of current view', self.on_take_screenshot),
+                ('about', 'About pyNastran GUI', 'tabout.png', 'CTRL+H', 'About pyNastran GUI and help on shortcuts', self.about_dialog),
                 ('view', 'Camera View', 'view.png', None, 'Load the camera menu', self.view_camera),
                 ('camera_reset', 'Reset camera view', 'trefresh.png', 'r', 'Reset the camera view to default', self.on_reset_camera),
-                ('reload', 'Reload model', 'treload.png', 'r', 'Reload the model', self.on_reload),
+                ('reload', 'Reload model', 'treload.png', 'r', 'Remove the model and reload the same geometry file', self.on_reload),
 
-                ('cycle_res', 'Cycle Results', 'cycle_results.png', 'CTRL+L', 'Changes the result case', self.cycle_results),
+                ('cycle_results', 'Cycle Results', 'cycle_results.png', 'CTRL+L', 'Changes the result case', self.cycle_results),
 
                 ('x', 'Flips to +X Axis', 'plus_x.png', 'x', 'Flips to +X Axis', lambda: self.update_camera('+x')),
                 ('y', 'Flips to +Y Axis', 'plus_y.png', 'y', 'Flips to +Y Axis', lambda: self.update_camera('+y')),
@@ -415,9 +420,9 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
         menu_window = ['toolbar', 'reswidget']
         menu_view = [
-            'scshot', '', 'wireframe', 'surface', 'camera_reset', '',
-            'back_col', 'text_col', '',
-            'label_col', 'label_clear', 'label_reset', '',
+            'screenshot', '', 'wireframe', 'surface', 'camera_reset', '',
+            'back_color', 'text_color', '',
+            'label_color', 'label_clear', 'label_reset', '',
             'legend', 'geo_properties', '', 'clipping', 'axis',
             'edges', 'edges_black',]
         if self.html_logging:
@@ -437,7 +442,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                          'x', 'y', 'z', 'X', 'Y', 'Z',
                          'magnify', 'shrink', 'rotate_clockwise', 'rotate_cclockwise',
                          'wireframe', 'surface', 'edges']
-        toolbar_tools += ['camera_reset', 'view', 'scshot', '', 'exit']
+        toolbar_tools += ['camera_reset', 'view', 'screenshot', '', 'exit']
 
         menu_items = []
         if create_menu_bar:
@@ -448,7 +453,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                 (self.menu_help, ('about',)),
                 (self.menu_scripts, scripts),
                 (self.toolbar, toolbar_tools),
-                (self.menu_hidden, ('cycle_res',)),
+                (self.menu_hidden, ('cycle_results',)),
                 # (self.menu_scripts, ()),
                 #(self._dummy_toolbar, ('cell_pick', 'node_pick'))
             ]
@@ -1078,14 +1083,13 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.rend.AddActor(self.edge_actor)
 
     def update_element_mask(self, eids_to_show):
-        ids = self.shown_ids
-        ids.Reset()
+        self.shown_ids.Reset()
         #ids.SetNumberOfValues(len(eids_to_show))
-        ids.Allocate(len(eids_to_show))
+        self.shown_ids.Allocate(len(eids_to_show))
         for eid in eids_to_show:
-            ids.InsertNextValue(eid)
+            self.shown_ids.InsertNextValue(eid)
         self.shown_ids.Modified()
-        pass
+        #self.grid_selected.Update() # not in vtk 6
 
     def _setup_element_mask(self):
         """
@@ -1096,35 +1100,31 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         """
         self.shown_ids = vtk.vtkIdTypeArray()
         self.shown_ids.SetNumberOfComponents(1)
+        ids_to_show = np.arange(172)
+        self.shown_ids.Allocate(len(ids_to_show))
+        for eid in ids_to_show:
+            self.shown_ids.InsertNextValue(eid)
 
-        selection_node = vtk.vtkSelectionNode()
-        selection_node.SetFieldType(vtk.vtkSelectionNode.CELL)
-        selection_node.SetContentType(vtk.vtkSelectionNode.INDICES)
-        selection_node.SetSelectionList(self.shown_ids)
+        self.selection_node = vtk.vtkSelectionNode()
+        self.selection_node.SetFieldType(vtk.vtkSelectionNode.CELL)
+        self.selection_node.SetContentType(vtk.vtkSelectionNode.INDICES)
+        self.selection_node.SetSelectionList(self.shown_ids)
 
-        selection = vtk.vtkSelection()
-        selection.AddNode(selection_node)
+        self.selection = vtk.vtkSelection()
+        self.selection.AddNode(self.selection_node)
 
-        extract_selection = vtk.vtkExtractSelection()
-        # VTK 6
-        # SetInputData
-        # SetInputConnection
-        # SetOutput
-
-        extract_selection.SetInputData(0, self.grid)
-        # VTK 6
-        #extract_selection.SetInput(self.grid)
-        #extract_selection.SetInputConnection(0, self.grid.GetOutput())
-        #extract_selection.SetInputConnection(0, self.grid.GetOutputPort())
-        #if vtk.VTK_MAJOR_VERSION <= 5:
-            #extract_selection.SetInput(1, selection)
-        #else:
-        extract_selection.SetInputData(1, selection)
-        extract_selection.Update()
+        self.extract_selection = vtk.vtkExtractSelection()
+        if vtk.VTK_MAJOR_VERSION <= 5:
+            self.extract_selection.SetInput(0, self.grid)
+            self.extract_selection.SetInput(1, self.selection)
+        else:
+            self.extract_selection.SetInputData(0, self.grid)
+            self.extract_selection.SetInputData(1, self.selection)
+        self.extract_selection.Update()
 
         # In selection
         self.grid_selected = vtk.vtkUnstructuredGrid()
-        self.grid_selected.ShallowCopy(extract_selection.GetOutput())
+        self.grid_selected.ShallowCopy(self.extract_selection.GetOutput())
 
     def create_text(self, position, label, text_size=18):
         text_actor = vtk.vtkTextActor()
@@ -2030,24 +2030,24 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         #self.log_info("select_point = %s" % str(select_point))
         #self.log_info("data_set = %s" % ds)
 
-    def get_2d_point(self, point3D, viewMatrix,
-                     projectionMatrix,
+    def get_2d_point(self, point3d, view_matrix,
+                     projection_matrix,
                      width, height):
-        viewProjectionMatrix = projectionMatrix * viewMatrix;
+        view_projection_matrix = projection_matrix * view_matrix
         # transform world to clipping coordinates
-        point3D = viewProjectionMatrix.multiply(point3D)
-        winX = math.round((( point3D.getX() + 1 ) / 2.0) * width )
+        point3d = view_projection_matrix.multiply(point3d)
+        win_x = math.round(((point3d.getX() + 1) / 2.0) * width)
         # we calculate -point3D.getY() because the screen Y axis is
         # oriented top->down
-        winY = math.round((( 1 - point3D.getY() ) / 2.0) * height )
-        return Point2D(winX, winY)
+        win_y = math.round(((1 - point3d.getY()) / 2.0) * height)
+        return Point2D(win_x, win_y)
 
     def get_3d_point(self, point2D, width, height, view_matrix, projection_matrix):
-        x = 2.0 * winX / client_width - 1
-        y = - 2.0 * winY / client_height + 1
-        view_projection_inverse = inverse(projection_matrix * view_vatrix);
-        point3D = Point3D(x, y, 0)
-        return view_projection_inverse.multiply(point3D)
+        x = 2.0 * win_x / client_width - 1
+        y = -2.0 * win_y / client_height + 1
+        view_projection_inverse = inverse(projection_matrix * view_vatrix)
+        point3d = Point3D(x, y, 0)
+        return view_projection_inverse.multiply(point3d)
 
     def on_take_screenshot(self, fname=None, magnification=None):
         """ Take a screenshot of a current view and save as a file"""
@@ -2187,17 +2187,24 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             # solid_bending: eids 1-182
             self._setup_element_mask()
             #eids = np.arange(172)
-            eids = arange(172)
-            self.update_element_mask(eids)
+            #eids = arange(172)
+            #self.update_element_mask(eids)
         else:
             self.grid_selected = self.grid
-        print('grid_selected =', self.grid_selected)
+        #print('grid_selected =', self.grid_selected)
 
         self.grid_mapper = vtk.vtkDataSetMapper()
         if self.vtk_version[0] >= 6:
             self.grid_mapper.SetInputData(self.grid_selected)
         else:
             self.grid_mapper.SetInput(self.grid_selected)
+
+        #if vtk.VTK_MAJOR_VERSION <= 5:
+            #selected_mapper.SetInputConnection(grid_selected.GetProducerPort())
+        #else:
+            #selected_mapper.SetInputData(grid_selected)
+
+
 
         if 0:
             self.warp_filter = vtk.vtkWarpVector()
@@ -2247,8 +2254,6 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         if 0:
             id_filter = vtk.vtkIdFilter()
 
-            import numpy as np
-            from vtk.util.numpy_support import numpy_to_vtk
             ids = np.array([1, 2, 3], dtype='int32')
             id_array = numpy_to_vtk(
                 num_array=ids,
@@ -3193,7 +3198,6 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             scalar_result = plot_value
         assert vector_size1 == 1, vector_size1
 
-
         #if isinstance(key, integer_types):  # vector 3
             #norm_plot_value = norm(plot_value, axis=1)
             #min_value = norm_plot_value.min()
@@ -3265,7 +3269,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             #pass
     #---------------------------------------------------------------------------------------
     # EDIT ACTOR PROPERTIES
-    def set_actor_properties(self):
+    def edit_geometry_properties(self):
         """
         Opens a dialog box to set:
 
@@ -3296,27 +3300,27 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             #(subcase_id, i, result_type, vector_size, location, data_format, label2) = key
 
         data = deepcopy(self.geometry_properties)
-        if not self._edit_group_properties_window_shown:
-            self._edit_group_properties = EditGroupProperties(data, win_parent=self)
-            self._edit_group_properties.show()
-            self._edit_group_properties_window_shown = True
-            self._edit_group_properties.exec_()
+        if not self._edit_geometry_properties_window_shown:
+            self._edit_geometry_properties = EditGeometryProperties(data, win_parent=self)
+            self._edit_geometry_properties.show()
+            self._edit_geometry_properties_window_shown = True
+            self._edit_geometry_properties.exec_()
         else:
-            self._edit_group_properties.activateWindow()
+            self._edit_geometry_properties.activateWindow()
 
         if 'clicked_ok' not in data:
-            self._edit_group_properties.activateWindow()
+            self._edit_geometry_properties.activateWindow()
             return
 
         if data['clicked_ok']:
             self.on_update_geometry_properties(data)
             self._save_geometry_properties(data)
-            del self._edit_group_properties
-            self._edit_group_properties_window_shown = False
+            del self._edit_geometry_properties
+            self._edit_geometry_properties_window_shown = False
         elif data['clicked_cancel']:
             self.on_update_geometry_properties(self.geometry_properties)
-            del self._edit_group_properties
-            self._edit_group_properties_window_shown = False
+            del self._edit_geometry_properties
+            self._edit_geometry_properties_window_shown = False
 
     def _save_geometry_properties(self, out_data):
         for name, group in iteritems(out_data):

@@ -82,7 +82,7 @@ class Model(QtCore.QAbstractTableModel):
             self.close()
 
 
-class EditGroupProperties(QtGui.QDialog):
+class EditGeometryProperties(QtGui.QDialog):
     def __init__(self, data, win_parent=None):
         """
         +------------------+
@@ -105,7 +105,7 @@ class EditGroupProperties(QtGui.QDialog):
         +-------------------------+
         """
         QtGui.QDialog.__init__(self, win_parent)
-        self.setWindowTitle('Edit Group Properties')
+        self.setWindowTitle('Edit Geometry Properties')
 
         #default
         self.win_parent = win_parent

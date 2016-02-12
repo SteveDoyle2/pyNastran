@@ -32,7 +32,7 @@ class GuiAttributes(object):
         # window variables
         self._legend_window_shown = False
         self._clipping_window_shown = False
-        self._edit_group_properties_window_shown = False
+        self._edit_geometry_properties_window_shown = False
         #-------------
         # inputs dict
         self.is_edges = False

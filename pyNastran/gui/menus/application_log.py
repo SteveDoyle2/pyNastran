@@ -1,5 +1,21 @@
 from PyQt4 import QtCore, QtGui
 
+class HtmlLog(QtGui.QTextEdit):
+
+    def __init__(self, parent):
+        QtGui.QTextEdit.__init__(self, parent=parent)
+        self.setReadOnly(True)
+
+    def buttonClicked(self):
+        if QtGui.qApp.mouseButtons() & QtCore.Qt.RightButton:
+            print(self.sender().toolTip())
+
+class ApplicationLogWidget(QtGui.QDockWidget):
+    def __init__(self, parent=None):
+        QtGui.QDockWidget.__init__(self, "Application log", parent=parent)
+        self.setObjectName("application_log")
+        self.log_widget = HtmlLog(parent=self)
+        self.setWidget(self.log_widget)
 
 class PythonConsoleWidget(QtGui.QDockWidget):
     def __init__(self, parent):

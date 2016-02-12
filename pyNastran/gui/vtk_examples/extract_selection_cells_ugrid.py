@@ -4,6 +4,7 @@ based on:
 """
 
 import vtk
+import numpy as np
 
 def main():
     """
@@ -51,6 +52,8 @@ def main():
     ]
     ids_to_hide = [2, 3] # remove a single quad
     ids_to_hide_updated = [2, 3, 4, 5]  # remove two quads
+    ids_to_hide = np.arange(2, 4)
+    print('ids_to_hide =', ids_to_hide)
 
     nnodes = len(xyzs)
     points = vtk.vtkPoints()
