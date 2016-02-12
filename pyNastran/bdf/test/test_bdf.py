@@ -532,22 +532,22 @@ def run_fem2(bdf_model, out_model, xref, punch,
 
             if sol == 101:
                 assert subcase.has_parameter('SPC'), subcase
-                assert subcase.has_parameter('LOAD'), subcase
+                assert True in subcase.has_parameter('LOAD', 'TEMPERATURE(LOAD)'), subcase
             elif sol == 103:
                 assert subcase.has_parameter('METHOD'), subcase
             elif sol == 108: # freq
                 assert subcase.has_parameter('FREQUENCY'), subcase
             elif sol == 111:  # time
-                assert subcase.has_parameter('TIME') or subcase.has_parameter('TSTEP') or subcase.has_parameter('TSTEPNL'), subcase
+                assert any(subcase.has_parameter('TIME', 'TSTEP', 'TSTEPNL')), subcase
             elif sol == 111:  # modal frequency
                 assert subcase.has_parameter('FREQUENCY'), subcase
             elif sol == 112:  # modal transient
-                assert subcase.has_parameter('TIME') or subcase.has_parameter('TSTEP') or subcase.has_parameter('TSTEPNL'), subcase
+                assert any(subcase.has_parameter('TIME', 'TSTEP', 'TSTEPNL')), subcase
 
             elif sol == 129:  # nonlinear transient
-                assert subcase.has_parameter('TIME') or subcase.has_parameter('TSTEP') or subcase.has_parameter('TSTEPNL'), subcase
+                assert any(subcase.has_parameter('TIME', 'TSTEP', 'TSTEPNL')), subcase
             elif sol == 159:  # thermal transient
-                assert subcase.has_parameter('TIME') or subcase.has_parameter('TSTEP') or subcase.has_parameter('TSTEPNL'), subcase
+                assert any(subcase.has_parameter('TIME', 'TSTEP', 'TSTEPNL')), subcase
 
             elif sol == 144:
                 assert subcase.has_parameter('SUPORT') or len(fem2.suport1), subcase
@@ -557,13 +557,13 @@ def run_fem2(bdf_model, out_model, xref, punch,
                 assert subcase.has_parameter('FMETHOD'), subcase  # FLUTTER
             elif sol == 146:
                 assert subcase.has_parameter('METHOD'), subcase
-                assert subcase.has_parameter('FREQUENCY') or subcase.has_parameter('TIME') or subcase.has_parameter('TSTEP') or subcase.has_parameter('TSTEPNL'), subcase
+                assert any(subcase.has_parameter('FREQUENCY', 'TIME', 'TSTEP', 'TSTEPNL')), subcase
                 assert subcase.has_parameter('GUST') or subcase.has_parameter('LOAD'), subcase
             elif sol == 200:
                 assert subcase.has_parameter('DESOBJ'), subcase
                 assert subcase.has_parameter('ANALYSIS'), subcase
 
-            if subcase.has_parameter('METHOD'):
+            if 'METHOD' in subcase:
                 method_id = subcase.get_parameter('METHOD')[0]
                 if method_id in fem2.methods:
                     method = fem2.methods[method_id]
@@ -574,12 +574,12 @@ def run_fem2(bdf_model, out_model, xref, punch,
 
                 assert sol in [5, 76, 101, 103, 105, 106, 107, 108, 110, 111,
                                112, 144, 145, 146, 187], 'sol=%s METHOD' % sol
-            if subcase.has_parameter('CMETHOD'):
+            if 'CMETHOD' in subcase:
                 method_id = subcase.get_parameter('CMETHOD')[0]
                 method = fem2.cMethods[method_id]
                 assert sol in [107, 110, 145], 'sol=%s CMETHOD' % sol
 
-            if subcase.has_parameter('LOAD'):
+            if 'LOAD' in subcase:
                 loadcase_id = fem2.case_control_deck.get_subcase_parameter(isubcase, 'LOAD')[0]
                 force, moment = fem2.sum_forces_moments(p0, loadcase_id, include_grav=False)
                 print('  isubcase=%i F=%s M=%s' % (isubcase, force, moment))
@@ -589,7 +589,7 @@ def run_fem2(bdf_model, out_model, xref, punch,
                 # print('is_load =', subcase.has_parameter('LOAD'))
                 pass
 
-            if subcase.has_parameter('FREQUENCY'):
+            if 'FREQUENCY' in subcase:
                 freq_id = subcase.get_parameter('FREQUENCY')[0]
                 freq = fem2.frequencies[freq_id]
                 assert sol in [26, 68, 76, 78, 88, 108, 101, 111, 112, 118, 146], 'sol=%s FREQUENCY' % sol
@@ -600,19 +600,19 @@ def run_fem2(bdf_model, out_model, xref, punch,
                 # lseq = fem2.loads[lseq_id]
                 # assert sol in [], sol
                 # print(lseq)
-            if subcase.has_parameter('SPC'):
+            if 'SPC' in subcase:
                 spc_id = subcase.get_parameter('SPC')[0]
                 fem2.get_spcs(spc_id)
-            if subcase.has_parameter('MPC'):
+            if 'MPC' in subcase:
                 mpc_id = subcase.get_parameter('MPC')[0]
                 fem2.get_mpcs(mpc_id)
 
-            if subcase.has_parameter('DLOAD'):
+            if 'DLOAD' in subcase:
                 assert sol in [26, 68, 76, 78, 88, 99, 103, 108, 109, 111, 112, 118, 129, 146,
                                153, 159, 400, 601], 'sol=%s DLOAD' % sol
-                if subcase.has_parameter('LOADSET'):
+                if 'LOADSET' in subcase:
                     raise NotImplementedError('LOADSET & DLOAD -> LSEQ')
-                if subcase.has_parameter('IC'):
+                if 'IC' in subcase:
                     raise NotImplementedError('IC & DLOAD -> TIC')
 
                 # DLOAD (case)   -> dynamic loads -> DLOAD, RLOAD1, RLOAD2, TLOAD1, TLOAD2, ACSRCE
@@ -853,7 +853,6 @@ def compute(cards1, cards2, quiet=False):
 
 def get_element_stats(fem1, fem2, quiet=False):
     """verifies that the various element methods work"""
-    print('fem1')
     for (key, loads) in sorted(iteritems(fem1.loads)):
         for load in loads:
             try:
