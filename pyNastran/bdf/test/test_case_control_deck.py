@@ -87,9 +87,8 @@ class CaseControlTest(unittest.TestCase):
         mesh.write_bdf(bdf_filename2)
         #print("---cc 3---\n%s" % str(mesh.case_control_deck))
 
-        f = open(bdf_filename2, 'r')
-        lines = f.readlines()
-        f.close()
+        with open(bdf_filename2, 'r') as f:
+            lines = f.readlines()
 
         lines_expected = [
             '$pyNastran: version=msc',

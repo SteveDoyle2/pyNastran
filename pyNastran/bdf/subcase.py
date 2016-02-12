@@ -459,7 +459,8 @@ class Subcase(object):
           if any(subcase1.has_parameter('LOAD', 'TEMPERATURE(LOAD)')):
               print('found LOAD for subcase 1')
         """
-        return [True if param_name in self.params else False for param_name in param_names]
+        exists = [True if param_name.upper() in self.params else False for param_name in param_names]
+        return exists
 
     def __getitem__(self, param_name):
         """
