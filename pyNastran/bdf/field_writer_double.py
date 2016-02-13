@@ -3,10 +3,10 @@ Defines functions for double precision 16 character field writing.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import integer_types
 from six.moves import range
 
 import sys
+from pyNastran.utils import integer_types
 from pyNastran.bdf.cards.utils import wipe_empty_fields_typed
 
 def print_scientific_double(value):

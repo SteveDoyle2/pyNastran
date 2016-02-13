@@ -2,13 +2,20 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import iteritems
 from six.moves import range
+from itertools import cycle
 from math import isnan
+import numpy as np
 from numpy import zeros, array_equal
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
-from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header
+from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header, write_float_13e
+try:
+    import pandas as pd
+except ImportError:
+    pass
 
-class RealNonlinearRodArray(OES_Object):
+
+class RealNonlinearRodArray(OES_Object): # 89-CRODNL, 92-CONRODNL
     """
     ::
 
@@ -24,11 +31,6 @@ class RealNonlinearRodArray(OES_Object):
         #self.code = [self.format_code, self.sort_code, self.s_code]
 
         self.nelements = 0  # result specific
-
-        if is_sort1:
-            pass
-        else:
-            raise NotImplementedError('SORT2')
 
     def is_real(self):
         return True
@@ -77,13 +79,31 @@ class RealNonlinearRodArray(OES_Object):
         # effective_creep_strain, linear_torsional_stress]
         self.data = zeros((self.ntimes, self.nelements, 6), dtype='float32')
 
+    def build_dataframe(self):
+        headers = self.get_headers()
+        if self.nonlinear_factor is not None:
+            column_names, column_values = self._build_dataframe_transient_header()
+            self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
+            self.data_frame.columns.names = column_names
+            self.data_frame.index.names = ['ElementID', 'Item']
+        else:
+            df1 = pd.DataFrame(self.element).T
+            df1.columns = ['ElementID']
+            df2 = pd.DataFrame(self.data[0])
+            df2.columns = headers
+            self.data_frame = df1.join([df2])
+        #print(self.data_frame)
+
     def __eq__(self, table):
         assert self.is_sort1() == table.is_sort1()
         assert self.nonlinear_factor == table.nonlinear_factor
         assert self.ntotal == table.ntotal
         assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
         assert self.approach_code == table.approach_code
-        if not array_equal(self.element, table.element):
+        if self.nonlinear_factor is not None:
+            assert np.array_equal(self._times, table._times), 'ename=%s-%s times=%s table.times=%s' % (
+                self.element_name, self.element_type, self._times, table._times)
+        if not np.array_equal(self.element, table.element):
             assert self.element.shape == table.element.shape, 'shape=%s element.shape=%s' % (self.element.shape, table.element.shape)
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
@@ -91,7 +111,7 @@ class RealNonlinearRodArray(OES_Object):
                 msg += '%s, %s\n' % (eid, eid2)
             print(msg)
             raise ValueError(msg)
-        if not array_equal(self.data, table.data):
+        if not np.array_equal(self.data, table.data):
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
             ntimes = self.data.shape[0]
@@ -104,8 +124,8 @@ class RealNonlinearRodArray(OES_Object):
                         t2 = table.data[itime, inid, :]
                         (axial_stress1, equiv_stress1, total_strain1, effective_plastic_creep_strain1, effective_creep_strain1, linear_torsional_stress1) = t1
                         (axial_stress2, equiv_stress2, total_strain2, effective_plastic_creep_strain2, effective_creep_strain2, linear_torsional_stress2) = t2
-                        if not allclose(t1, t2):
-                        #if not array_equal(t1, t2):
+                        if not np.allclose(t1, t2):
+                        #if not np.array_equal(t1, t2):
                             msg += '%s\n  (%s, %s, %s, %s, %s, %s)\n  (%s, %s, %s, %s, %s, %s)\n' % (
                                 eid,
                                 axial_stress1, equiv_stress1, total_strain1, effective_plastic_creep_strain1, effective_creep_strain1, linear_torsional_stress1,
@@ -161,7 +181,9 @@ class RealNonlinearRodArray(OES_Object):
         msg += self.get_data_code()
         return msg
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+        if header is None:
+            header = []
         if is_sort1:
             msg = [
                 '                         N O N L I N E A R   S T R E S S E S   I N   R O D   E L E M E N T S      ( C R O D )\n',
@@ -195,7 +217,6 @@ class RealNonlinearRodArray(OES_Object):
             header = _eigenvalue_header(self, header, itime, ntimes, dt)
             f.write(''.join(header + msg_temp))
 
-            # TODO: can I get this without a reshape?
             #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
             axial = self.data[itime, :, 0]
             eqs = self.data[itime, :, 1]
@@ -223,8 +244,7 @@ class RealNonlinearRodArray(OES_Object):
 
 class RealNonlinearPlateArray(OES_Object):
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        OES_Object.__init__(self, data_code, isubcase, apply_data_code=False)
-        self.eType = {}
+        OES_Object.__init__(self, data_code, isubcase, apply_data_code=True)
         #self.code = [self.format_code, self.sort_code, self.s_code]
 
         #self.ntimes = 0  # or frequency/mode
@@ -232,14 +252,6 @@ class RealNonlinearPlateArray(OES_Object):
         self.ielement = 0
         self.nelements = 0  # result specific
         self.nnodes = None
-
-        if is_sort1:
-            if dt is not None:
-                self.add = self.add_sort1
-                self.add_new_eid = self.add_new_eid_sort1
-                self.addNewNode = self.addNewNodeSort1
-        else:
-            raise NotImplementedError('SORT2')
 
     def is_real(self):
         return True
@@ -251,10 +263,15 @@ class RealNonlinearPlateArray(OES_Object):
         self.itotal = 0
         self.ielement = 0
 
+    def is_stress(self):
+        return True
+
     def get_headers(self):
         headers = [
-            'fiberDistance', 'oxx', 'oyy', 'ozz', 'txy',
-            'exx', 'eyy', 'ezz', 'exy', 'es', 'eps', 'ecs'
+            #[fiber_dist, oxx, oyy, ozz, txy, es, eps, ecs, exx, eyy, ezz, etxy]
+            'fiber_distance', 'oxx', 'oyy', 'ozz', 'txy',
+            'eff_plastic_strain', 'eff_plastic_strain', 'eff_creep_strain',
+            'exx', 'eyy', 'ezz', 'exy',
         ]
         return headers
 
@@ -289,8 +306,9 @@ class RealNonlinearPlateArray(OES_Object):
         #elif self.element_type == 75:  # CTRIA6
             #nnodes_per_element = 4
         #else:
-        raise NotImplementedError('name=%r type=%s' % (self.element_name, self.element_type))
+        #raise NotImplementedError('name=%r type=%s' % (self.element_name, self.element_type))
 
+        nnodes_per_element = 1
         self.nnodes = nnodes_per_element
         #self.nelements //= nnodes_per_element
         self.itime = 0
@@ -308,8 +326,55 @@ class RealNonlinearPlateArray(OES_Object):
         self._times = zeros(self.ntimes, dtype=dtype)
         self.element_node = zeros((self.ntotal, 2), dtype='int32')
 
-        #[fiberDistance, oxx, oyy, ozz, txy, exx, eyy, ezz, exy, es, eps, ecs]
+        #[fiber_dist, oxx, oyy, ozz, txy, es, eps, ecs, exx, eyy, ezz, etxy]
         self.data = zeros((self.ntimes, self.ntotal, 12), dtype='float32')
+
+    def build_dataframe(self):
+        headers = self.get_headers()[1:]
+
+        nelements = self.element_node.shape[0] // 2
+        if self.is_fiber_distance():
+            fiber_distance = ['Top', 'Bottom'] * nelements
+        else:
+            fiber_distance = ['Mean', 'Curvature'] * nelements
+        fd = np.array(fiber_distance, dtype='unicode')
+        element_node = [self.element_node[:, 0], self.element_node[:, 1], fd]
+
+        if self.nonlinear_factor is not None:
+            column_names, column_values = self._build_dataframe_transient_header()
+            self.data_frame = pd.Panel(self.data[:, :, 1:], items=column_values, major_axis=element_node, minor_axis=headers).to_frame()
+            self.data_frame.columns.names = column_names
+            self.data_frame.index.names = ['ElementID', 'NodeID', 'Location', 'Item']
+        else:
+            # option B - nice!
+            df1 = pd.DataFrame(element_node).T
+            df1.columns = ['ElementID', 'NodeID', 'Location']
+            df2 = pd.DataFrame(self.data[0, :, 1:])
+            df2.columns = headers
+            self.data_frame = df1.join(df2)
+        self.data_frame = self.data_frame.reset_index().replace({'NodeID': {0:'CEN'}}).set_index(['ElementID', 'NodeID', 'Location'])
+        #print(self.data_frame)
+
+    def add_new_eid(self, dt, eid, etype, fd, sx, sy, sz, txy, es, eps, ecs, ex, ey, ez, exy):
+        self.add_sort1(dt, eid, etype, fd, sx, sy, sz, txy, es, eps, ecs, ex, ey, ez, exy)
+
+    def add_new_eid_sort1(self, dt, eid, etype, fd, sx, sy, sz, txy, es, eps, ecs, ex, ey, ez, exy):
+        self.add_sort1(dt, eid, etype, fd, sx, sy, sz, txy, es, eps, ecs, ex, ey, ez, exy)
+
+    def add_sort1(self, dt, eid, etype, fd, sx, sy, sz, txy, es, eps, ecs, ex, ey, ez, exy):
+        #print(etype, eid)
+        if isnan(fd):
+            fd = 0.
+        if isnan(sz):
+            sz = 0.
+        if isnan(ez):
+            ez = 0.
+        self._times[self.itime] = dt
+        self.element_node[self.ielement, 0] = eid
+        #[fiber_dist, oxx, oyy, ozz, txy, es, eps, ecs, exx, eyy, ezz, etxy]
+        self.data[self.itime, self.ielement, :] = [fd, sx, sy, sz, txy, es, eps, ecs, ex, ey, ez, exy]
+        self.ielement += 1
+        self.itotal += 1
 
     def __eq__(self, table):
         assert self.is_sort1() == table.is_sort1()
@@ -317,16 +382,19 @@ class RealNonlinearPlateArray(OES_Object):
         assert self.ntotal == table.ntotal
         assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
         assert self.approach_code == table.approach_code
-        if not array_equal(self.element_node, table.element_node):
+        if self.nonlinear_factor is not None:
+            assert np.array_equal(self._times, table._times), 'ename=%s-%s times=%s table.times=%s' % (
+                self.element_name, self.element_type, self._times, table._times)
+        if not np.array_equal(self.element_node, table.element_node):
             assert self.element_node.shape == table.element_node.shape, 'element_node shape=%s table.shape=%s' % (self.element_node.shape, table.element_node.shape)
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
             msg += '(Eid, Nid)\n'
-            for (eid, nid), (eid2, nid2) in zip(self.element_node, table.element_node):
-                msg += '(%s, %s)    (%s, %s)\n' % (eid, nid, eid2, nid2)
+            for (eid1, nid1), (eid2, nid2) in zip(self.element_node, table.element_node):
+                msg += '(%s, %s)    (%s, %s)\n' % (eid1, nid1, eid2, nid2)
             print(msg)
             raise ValueError(msg)
-        if not array_equal(self.data, table.data):
+        if not np.array_equal(self.data, table.data):
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
             i = 0
@@ -335,16 +403,20 @@ class RealNonlinearPlateArray(OES_Object):
                     (eid, nid) = e
                     t1 = self.data[itime, ie, :]
                     t2 = table.data[itime, ie, :]
-                    (fiberDistance1, oxx1, oyy1, ozz1, txy1, exx1, eyy1, ezz1, exy1, es1, eps1, ecs1) = t1
-                    (fiberDistance2, oxx2, oyy2, ozz2, txy2, exx2, eyy2, ezz2, exy2, es2, eps2, ecs2) = t2
+
+                    # TODO: this name order is wrong
+                    #[fiber_dist, oxx, oyy, ozz, txy, es, eps, ecs, exx, eyy, ezz, etxy]
+                    (fiber_distance1, oxx1, oyy1, ozz1, txy1, exx1, eyy1, ezz1, exy1, es1, eps1, ecs1) = t1
+                    (fiber_distance2, oxx2, oyy2, ozz2, txy2, exx2, eyy2, ezz2, exy2, es2, eps2, ecs2) = t2
 
                     # vm stress can be NaN for some reason...
-                    if not array_equal(t1[:-1], t2[:-1]):
+                    if not np.array_equal(t1, t2):
                         msg += ('(%s, %s)    (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)\n'
-                                '            (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)\n' % (
+                                     '%s     (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)\n' % (
                             eid, nid,
-                            fiberDistance1, oxx1, oyy1, ozz1, txy1, exx1, eyy1, ezz1, exy1, es1, eps1, ecs1,
-                            fiberDistance2, oxx2, oyy2, ozz2, txy2, exx2, eyy2, ezz2, exy2, es2, eps2, ecs2))
+                            fiber_distance1, oxx1, oyy1, ozz1, txy1, exx1, eyy1, ezz1, exy1, es1, eps1, ecs1,
+                            ' ' * (len(str(eid)) + len(str(nid)) + 3),
+                            fiber_distance2, oxx2, oyy2, ozz2, txy2, exx2, eyy2, ezz2, exy2, es2, eps2, ecs2))
                         i += 1
                         if i > 10:
                             print(msg)
@@ -353,37 +425,6 @@ class RealNonlinearPlateArray(OES_Object):
                 if i > 0:
                     raise ValueError(msg)
         return True
-
-    #def add_new_eid(self, etype, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm):
-        #self.add_new_eid_sort1(etype, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm)
-
-    #def add_new_eid_sort1(self, etype, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm):
-        #assert isinstance(eid, int), eid
-        #assert isinstance(node_id, int), node_id
-        #self._times[self.itime] = dt
-        ##assert self.itotal == 0, oxx
-        #self.element_node[self.itotal, :] = [eid, node_id]
-        #self.data[self.itime, self.itotal, :] = [fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm]
-        #self.itotal += 1
-        #self.ielement += 1
-
-    #def addNewNode(self, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm):
-        #assert isinstance(node_id, int), node_id
-        #self.add_sort1(dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm)
-
-    #def add(self, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm):
-        #assert isinstance(node_id, int), node_id
-        #self.add_sort1(dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm)
-
-    #def addNewNodeSort1(self, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm):
-        #self.add_sort1(dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm)
-
-    #def add_sort1(self, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm):
-        #assert eid is not None, eid
-        #assert isinstance(node_id, int), node_id
-        #self.element_node[self.itotal, :] = [eid, node_id]
-        #self.data[self.itime, self.itotal, :] = [fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm]
-        #self.itotal += 1
 
     def get_stats(self):
         if not self.is_built:
@@ -419,9 +460,42 @@ class RealNonlinearPlateArray(OES_Object):
         msg += self.get_data_code()
         return msg
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
-        real_nonlinear_plate_array
-        msg, nnodes, cen = _get_plate_msg(self)
+    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+        if header is None:
+            header = []
+        #msg, nnodes, cen = _get_plate_msg(self)
+        if self.element_type == 88:
+            msg = [
+                '                   N O N L I N E A R   S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S      ( T R I A 3 )\n'
+                ' \n'
+                '    ELEMENT      FIBER                        STRESSES/ TOTAL STRAINS                     EQUIVALENT    EFF. STRAIN     EFF. CREEP\n'
+                '       ID      DISTANCE           X              Y             Z               XY           STRESS    PLASTIC/NLELAST     STRAIN\n'
+            ]
+        elif self.element_type == 90:
+            msg = [
+                '               N O N L I N E A R   S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S    ( Q U A D 4 )\n'
+                ' \n'
+                '    ELEMENT      FIBER                        STRESSES/ TOTAL STRAINS                     EQUIVALENT    EFF. STRAIN     EFF. CREEP\n'
+                '       ID      DISTANCE           X              Y             Z               XY           STRESS    PLASTIC/NLELAST     STRAIN\n'
+                #'0         1  -2.500000E-02  -4.829193E+00  -1.640651E-05                 -1.907010E-04   4.829185E+00   0.0            0.0\n'
+                #'                            -4.829188E-05   1.448741E-05                 -4.958226E-09\n'
+                #'              2.500000E-02   4.770547E+00   1.493975E-04                  1.907012E-04   4.770473E+00   0.0            0.0\n'
+                #'                             4.770502E-05  -1.431015E-05                  4.958231E-09\n'
+            ]
+        else:
+            raise NotImplementedError('element_name=%s self.element_type=%s' % (self.element_name, self.element_type))
+
+        #msg = [
+        #'               N O N L I N E A R   S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S    ( Q U A D 4 )\n'
+        #' \n'
+        #'    ELEMENT      FIBER                        STRESSES/ TOTAL STRAINS                     EQUIVALENT    EFF. STRAIN     EFF. CREEP\n'
+        #'       ID      DISTANCE           X              Y             Z               XY           STRESS    PLASTIC/NLELAST     STRAIN\n'
+        ##'0         1  -2.500000E-02  -4.829193E+00  -1.640651E-05                 -1.907010E-04   4.829185E+00   0.0            0.0\n'
+        ##'                            -4.829188E-05   1.448741E-05                 -4.958226E-09\n'
+        ##'              2.500000E-02   4.770547E+00   1.493975E-04                  1.907012E-04   4.770473E+00   0.0            0.0\n'
+        ##'                             4.770502E-05  -1.431015E-05                  4.958231E-09\n'
+        #]
+
 
         # write the f06
         ntimes = self.data.shape[0]
@@ -430,7 +504,6 @@ class RealNonlinearPlateArray(OES_Object):
         nids = self.element_node[:, 1]
 
         #cen_word = 'CEN/%i' % nnodes
-        cen_word = cen
         for itime in range(ntimes):
             dt = self._times[itime]
             header = _eigenvalue_header(self, header, itime, ntimes, dt)
@@ -438,39 +511,76 @@ class RealNonlinearPlateArray(OES_Object):
 
             #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
 
-            #[fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm]
+            #[fiber_dist, oxx, oyy, ozz, txy, es, eps, ecs, exx, eyy, ezz, etxy]
             fiber_dist = self.data[itime, :, 0]
             oxx = self.data[itime, :, 1]
             oyy = self.data[itime, :, 2]
-            txy = self.data[itime, :, 3]
-            angle = self.data[itime, :, 4]
-            majorP = self.data[itime, :, 5]
-            minorP = self.data[itime, :, 6]
-            ovm = self.data[itime, :, 7]
+            ozz = self.data[itime, :, 3]
+            txy = self.data[itime, :, 4]
+            es = self.data[itime, :, 5]
+            eps = self.data[itime, :, 6]
+            ecs = self.data[itime, :, 7]
+            exx = self.data[itime, :, 8]
+            eyy = self.data[itime, :, 9]
+            ezz = self.data[itime, :, 10]
+            exy = self.data[itime, :, 11]
 
-            # loop over all the elements
-            for (i, eid, nid, fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi) in zip(
-                 count(), eids, nids, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm):
-                [fdi, oxxi, oyyi, txyi, major, minor, ovmi] = write_floats_13e(
-                    [fdi, oxxi, oyyi, txyi, major, minor, ovmi])
-                ilayer = i % 2
-                # tria3
-                if self.element_type in [33, 74]:  # CQUAD4, CTRIA3
-                    if ilayer == 0:
-                        f.write('0  %6i   %-13s     %-13s  %-13s  %-13s   %8.4f   %-13s   %-13s  %s\n' % (eid, fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi))
-                    else:
-                        f.write('   %6s   %-13s     %-13s  %-13s  %-13s   %8.4f   %-13s   %-13s  %s\n' % ('', fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi))
+            for (i, eid, nid, fdi, oxxi, oyyi, ozzi, txyi, exxi, eyyi, ezzi, exyi, esi, epsi, ecsi) in zip(
+                 cycle([0, 1]), eids, nids, fiber_dist, oxx, oyy, ozz, txy, exx, eyy, ezz, exy, es, eps, ecs):
+                #[fdi, oxxi, oyyi, txyi, major, minor, ovmi] = write_floats_13e(
+                    #[fdi, oxxi, oyyi, txyi, major, minor, ovmi])
 
-                elif self.element_type in [64, 70, 75, 82, 144]:  # CQUAD8, CTRIAR, CTRIA6, CQUADR, CQUAD4
-                    # bilinear
-                    if nid == 0 and ilayer == 0:  # CEN
-                        f.write('0  %8i %8s  %-13s  %-13s %-13s %-13s   %8.4f  %-13s %-13s %s\n' % (eid, cen_word, fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi))
-                    elif ilayer == 0:
-                        f.write('   %8s %8i  %-13s  %-13s %-13s %-13s   %8.4f  %-13s %-13s %s\n' % ('', nid, fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi))
-                    elif ilayer == 1:
-                        f.write('   %8s %8s  %-13s  %-13s %-13s %-13s   %8.4f  %-13s %-13s %s\n\n' % ('', '', fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi))
+                #'    ELEMENT      FIBER                        STRESSES/ TOTAL STRAINS                     EQUIVALENT    EFF. STRAIN     EFF. CREEP\n'
+                #'       ID      DISTANCE           X              Y             Z               XY           STRESS    PLASTIC/NLELAST     STRAIN\n'
+                #'0         1  -2.500000E-02  -4.829193E+00  -1.640651E-05                 -1.907010E-04   4.829185E+00   0.0            0.0\n'
+                #'                            -4.829188E-05   1.448741E-05                 -4.958226E-09\n'
+                #'              2.500000E-02   4.770547E+00   1.493975E-04                  1.907012E-04   4.770473E+00   0.0            0.0\n'
+                #'                             4.770502E-05  -1.431015E-05                  4.958231E-09\n'
+                if i == 0:
+                    f.write(
+                        '0  %8i  %-13s  %-13s  %-13s                 %-13s  %-13s  %-13s  %s\n'
+                        '                            %-13s  %-13s                 %s\n' % (
+                            # A
+                            #eid, write_float_13e(fdi),
+                            #write_float_13e(oxxi), write_float_13e(oyyi),
+                            ##write_float_13e(ozzi),
+                            #write_float_13e(txyi),
+                            #write_float_13e(esi), write_float_13e(epsi),
+                            #write_float_13e(ecsi),
+
+                            #write_float_13e(exxi), write_float_13e(eyyi),
+                            ##write_float_13e(ezzi),
+                            #write_float_13e(exyi),
+
+                            #    ELEMENT  FIBER  XYZ STRESS     EQUIVALENT  EFF.STRAIN  EFF.CREEP\n'
+                            eid, write_float_13e(fdi),
+                            write_float_13e(oxxi), write_float_13e(oyyi),
+                            #write_float_13e(ozzi),
+                            write_float_13e(txyi),
+
+                            write_float_13e(esi), write_float_13e(epsi),
+                            write_float_13e(ecsi),
+
+                            write_float_13e(exxi), write_float_13e(eyyi),
+                            #write_float_13e(ezzi),
+                            write_float_13e(exyi),
+                        ))
                 else:
-                    raise NotImplementedError('element_name=%s self.element_type=%s' % (self.element_name, self.element_type))
+                    f.write(
+                        '             %-13s  %-13s  %-13s                 %-13s  %-13s  %-13s  %s\n'
+                        '                            %-13s  %-13s                 %s\n' % (
+                            write_float_13e(fdi),
+                            write_float_13e(oxxi), write_float_13e(oyyi),
+                            #write_float_13e(ozzi),
+                            write_float_13e(txyi),
+
+                            write_float_13e(esi), write_float_13e(epsi),
+                            write_float_13e(ecsi),
+
+                            write_float_13e(exxi), write_float_13e(eyyi),
+                            #write_float_13e(ezzi),
+                            write_float_13e(exyi),
+                    ))
 
             f.write(page_stamp % page_num)
             page_num += 1
@@ -561,16 +671,14 @@ class NonlinearQuad(StressObject):
         self.eps[dt] = {}
         self.ecs[dt] = {}
 
-    def add_new_eid_sort1(self, eType, dt, data):
+    def add_new_eid_sort1(self, dt, eid, fd, sx, sy, sz, txy, es, eps, ecs, ex, ey, ez, exy):
         if dt not in self.oxx:
             self.add_new_transient(dt)
-        (eid, fd, sx, sy, sz, txy, es, eps, ecs, ex, ey, ez, exy) = data
         self.fiberDistance[dt][eid] = [fd]
         if isnan(sz):
             sz = 0.
         if isnan(ez):
             ez = 0.
-        self.eType[eid] = eType
         self.oxx[dt][eid] = [sx]
         self.oyy[dt][eid] = [sy]
         self.ozz[dt][eid] = [sz]
@@ -585,8 +693,7 @@ class NonlinearQuad(StressObject):
         self.eps[dt][eid] = [eps]
         self.ecs[dt][eid] = [ecs]
 
-    def add_sort1(self, dt, data):
-        (eid, fd, sx, sy, sz, txy, es, eps, ecs, ex, ey, ez, exy) = data
+    def add_sort1(self, dt, eid, fd, sx, sy, sz, txy, es, eps, ecs, ex, ey, ez, exy):
         self.fiberDistance[dt][eid].append(fd)
         if isnan(sz):
             sz = 0.
@@ -607,7 +714,9 @@ class NonlinearQuad(StressObject):
         self.eps[dt][eid].append(eps)
         self.ecs[dt][eid].append(ecs)
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+        if header is None:
+            header = []
         msg_start = [
             '      ELEMENT-ID =     129\n'
             '               N O N L I N E A R   S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S    ( Q U A D 4 )\n'
@@ -717,10 +826,9 @@ class HyperelasticQuad(StressObject):
         self.majorP[dt] = {}
         self.minorP[dt] = {}
 
-    def add_new_eid_sort1(self, dt, data):
+    def add_new_eid_sort1(self, dt, eid, Type, oxx, oyy, txy, angle, majorP, minorP):
         if dt not in self.oxx:
             self.add_new_transient(dt)
-        (eid, Type, oxx, oyy, txy, angle, majorP, minorP) = data
         self.Type[eid] = Type
         self.oxx[dt] = {eid: [oxx]}
         self.oyy[dt] = {eid: [oyy]}
@@ -729,8 +837,7 @@ class HyperelasticQuad(StressObject):
         self.majorP[dt] = {eid: [majorP]}
         self.minorP[dt] = {eid: [minorP]}
 
-    def add_sort1(self, dt, eid, data):
-        (ID, oxx, oyy, txy, angle, majorP, minorP) = data
+    def add_sort1(self, dt, eid, ID, oxx, oyy, txy, angle, majorP, minorP):
         self.oxx[dt][eid].append(oxx)
         self.oyy[dt][eid].append(oyy)
         self.txy[dt][eid].append(txy)
@@ -738,17 +845,20 @@ class HyperelasticQuad(StressObject):
         self.majorP[dt][eid].append(majorP)
         self.minorP[dt][eid].append(minorP)
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):  # .. todo:: doesnt support CTRIA3NL (calls them CQUAD4s)
+    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+        # .. todo:: doesnt support CTRIA3NL (calls them CQUAD4s)
+        if header is None:
+            header = []
         msg = ['           S T R E S S E S   I N   H Y P E R E L A S T I C   Q U A D R I L A T E R A L   E L E M E N T S  ( QUAD4FD )\n',
                '  ELEMENT     GRID/    POINT       ---------CAUCHY STRESSES--------             PRINCIPAL STRESSES (ZERO SHEAR)\n',
                '     ID       GAUSS      ID      NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR\n', ]
                #0       1     GAUS         1   7.318995E+00   6.367099E-01  -6.551054E+00   -31.4888    1.133173E+01   -3.376026E+00
                #                           2   1.097933E+01   4.149028E+00   6.278160E+00    30.7275    1.471111E+01    4.172537E-01
 
-        for dt, Oxxs in sorted(iteritems(self.oxx)):
+        for dt, oxxs in sorted(iteritems(self.oxx)):
             #header[-1] = '     LOAD STEP = %12.5E' %(dt)
             msg += header
-            for eid, oxxs in sorted(iteritems(Oxxs)):
+            for eid, oxxs in sorted(iteritems(oxxs)):
                 gauss = self.Type[eid]
                 oxx = self.oxx[dt][eid]
                 oyy = self.oyy[dt][eid]
@@ -764,118 +874,3 @@ class HyperelasticQuad(StressObject):
                         msg.append(' %8s %8s  %8i  %13E.6  %13E.6  %13E.6  %13E.6  %13E.6  %13E.6\n' % ('', '', i + 1, oxx[i], oyy[i], txy[i], angle[i], majorP[i], minorP[i]))
         f.write(''.join(msg))
         return page_num
-
-
-#class NonlinearRod(StressObject):
-    #def __init__(self, data_code, is_sort1, isubcase, dt):
-        #StressObject.__init__(self, data_code, isubcase)
-        ##self.eType = 'CROD'
-        #self.eTypeMap = {89: 'CRODNL', 92: 'CONRODNL'}
-        #self.code = [self.format_code, self.sort_code, self.s_code]
-
-        #self.eType = {}
-        #self.axialStress = {}
-        #self.equivStress = {}
-        #self.totalStrain = {}
-        #self.effectivePlasticCreepStrain = {}
-        #self.effectiveCreepStrain = {}
-        #self.linearTorsionalStress = {}
-
-        #self.dt = dt
-        #if is_sort1:
-            #if dt is not None:
-                #self.add = self.add_sort1
-                ##self.add_new_eid = self.add_new_eid_sort1
-        #else:
-            #assert dt is not None
-            ##self.add = self.add_sort2
-            ##self.add_new_eid = self.add_new_eid_sort2
-
-    #def get_stats(self):
-        #nelements = len(self.eType)
-        #msg = self.get_data_code()
-        #if self.nonlinear_factor is not None:  # transient
-            #ntimes = len(self.axialStress)
-            #msg.append('  type=%s ntimes=%s nelements=%s\n'
-                       #% (self.__class__.__name__, ntimes, nelements))
-        #else:
-            #msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
-                                                     #nelements))
-        #msg.append('  eType, axialStress, equivStress, totalStrain, '
-                   #'effectivePlasticCreepStrain, effectiveCreepStrain, '
-                   #'linearTorsionalStress\n')
-        #return msg
-
-    #def delete_transient(self, dt):
-        #del self.axialStress[dt]
-        #del self.equivStress[dt]
-        #del self.totalStrain[dt]
-        #del self.effectivePlasticCreepStrain[dt]
-
-        #del self.effectiveCreepStrain[dt]
-        #del self.linearTorsionalStress[dt]
-
-    #def get_transients(self):
-        #k = self.axialStress.keys()
-        #k.sort()
-        #return k
-
-    #def add_new_transient(self, dt):
-        #self.axialStress[dt] = {}
-        #self.equivStress[dt] = {}
-        #self.totalStrain[dt] = {}
-        #self.effectivePlasticCreepStrain[dt] = {}
-        #self.effectiveCreepStrain[dt] = {}
-        #self.linearTorsionalStress[dt] = {}
-
-    #def add_sort1(self, eType, dt, data):
-        #if dt not in self.axialStress:
-            #self.add_new_transient(dt)
-        #eid = data[0]
-        #self.eType[eid] = eType
-        #self.axialStress[dt][eid] = data[1]
-        #self.equivStress[dt][eid] = data[2]
-        #self.totalStrain[dt][eid] = data[3]
-        #self.effectivePlasticCreepStrain[dt][eid] = data[4]
-        #self.effectiveCreepStrain[dt][eid] = data[5]
-        #self.linearTorsionalStress[dt][eid] = data[6]
-        ##print data
-
-    #def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):  # .. todo:: doesnt support CONROD/CTUBE (calls them CRODs)
-        #"""
-        #::
-
-          #ELEMENT-ID =     102
-                                   #N O N L I N E A R   S T R E S S E S   I N   R O D   E L E M E N T S      ( C R O D )
-            #TIME          AXIAL STRESS         EQUIVALENT         TOTAL STRAIN       EFF. STRAIN          EFF. CREEP        LIN. TORSIONAL
-                                                 #STRESS                             PLASTIC/NLELAST          STRAIN              STRESS
-          #2.000E-02        1.941367E+01        1.941367E+01        1.941367E-04        0.0                 0.0                 0.0
-          #3.000E-02        1.941367E+01        1.941367E+01        1.941367E-04        0.0                 0.0                 0.0
-        #"""
-        #msg = []
-        #msg_start = [
-            #'                         N O N L I N E A R   S T R E S S E S   I N   R O D   E L E M E N T S      ( C R O D )\n',
-            #' \n',
-            #'    TIME          AXIAL STRESS         EQUIVALENT         TOTAL STRAIN       EFF. STRAIN          EFF. CREEP        LIN. TORSIONAL\n',
-            #'                                         STRESS                             PLASTIC/NLELAST          STRAIN              STRESS\n'
-        #]
-        #msg_element = {}
-        #msg_time = {}
-        #for dt, axials in sorted(iteritems(self.axialStress)):
-            #for eid, axial in sorted(iteritems(axials)):
-                #eqs = self.equivStress[dt][eid]
-                #ts = self.totalStrain[dt][eid]
-                #epcs = self.effectivePlasticCreepStrain[dt][eid]
-                #ecs = self.effectiveCreepStrain[dt][eid]
-                #lts = self.linearTorsionalStress[dt][eid]
-                ##print "dt=%s axials=%s eqs=%s ts=%s epcs=%s ecs=%s lts=%s" %(dt,axial,eqs,ts,epcs,ecs,lts)
-                #msg_element[eid] = '      ELEMENT-ID = %8i\n' % (eid)
-                #if eid not in msg_time:
-                    #msg_time[eid] = []
-                #msg_time[eid].append('  %9.3E       %13.6E       %13.6E       %13.6E       %13.6E       %13.6E       %13.6E\n' % (dt, axial, eqs, ts, epcs, ecs, lts))
-
-        #for eid, e in sorted(iteritems(msg_element)):
-            #msg += header + [e] + msg_start + msg_time[eid]
-            #msg.append(page_stamp % page_num)
-        #f.write(''.join(msg))
-        #return page_num

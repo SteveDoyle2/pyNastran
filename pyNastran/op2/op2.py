@@ -1,7 +1,7 @@
 #pylint: disable=W0201,W0223,R0901,R0902,R0904
 """
 Main OP2 class
-
+ftp://161.24.15.247/Nastran2011/seminar/SEC04-DMAP_MODULES.pdf
 
 Datablock	Type	Description
 EFMFSMS	Matrix	6 x 1 Total Effective mass matrix
@@ -50,72 +50,71 @@ ONRGY2	ONRGY1
 
 #--------------------
 
-RADCONS - DISPLACEMENT CONSTRAINT MODE
-RADDATC - DISPLACEMENT DISTRIBUTED ATTACHMENT MODE
-RADNATC - DISPLACEMENT NODAL ATTACHMENT MODE
-RADEATC - DISPLACEMENT EQUIVALENT INERTIA ATTACHMENT MODE
+RADCONS - Displacement Constraint Mode
+RADDATC - Displacement Distributed Attachment Mode
+RADNATC - Displacement Nodal Attachment Mode
+RADEATC - Displacement Equivalent Inertia Attachment Mode
+RADEFFM - Displacement Effective Inertia Mode
 
-RADEFFM - DISPLACEMENT EFFECTIVE INERTIA MODE
+RAECONS - Strain Constraint Mode
+RAEDATC - Strain Distributed Attachment Mode
+RAENATC - Strain Nodal Attachment Mode
+RAEEATC - Strain Equivalent Inertia Attachment Mode
 
-RAECONS - STRAIN CONSTRAINT MODE
-RAEDATC - STRAIN DISTRIBUTED ATTACHMENT MODE
-RAENATC - STRAIN NODAL ATTACHMENT MODE
-RAEEATC - STRAIN EQUIVALENT INERTIA ATTACHMENT MODE
+RAFCONS - Element Force Constraint Mode
+RAFDATC - Element Force Distributed Attachment Mode
+RAFNATC - Element Force Nodal Attachment Mode
+RAFEATC - Element Force Equivalent Inertia Attachment Mode
 
-RAFCONS - ELEMENT FORCE CONSTRAINT MODE
-RAFDATC - ELEMENT FORCE DISTRIBUTED ATTACHMENT MODE
-RAFNATC - ELEMENT FORCE NODAL ATTACHMENT MODE
-RAFEATC - ELEMENT FORCE EQUIVALENT INERTIA ATTACHMENT MODE
+RALDATC - Load Vector Used to Compute the Distributed Attachment M
 
-RALDATC - LOAD VECTOR USED TO COMPUTE THE DISTRIBUTED ATTACHMENT M
+RANCONS - Strain Energy Constraint Mode
+RANDATC - Strain Energy Distributed Attachment Mode
+RANNATC - Strain Energy Nodal Attachment Mode
+RANEATC - Strain Energy Equivalent Inertia Attachment Mode
 
-RANCONS - STRAIN ENERGY CONSTRAINT MODE
-RANDATC - STRAIN ENERGY DISTRIBUTED ATTACHMENT MODE
-RANNATC - STRAIN ENERGY NODAL ATTACHMENT MODE
-RANEATC - STRAIN ENERGY EQUIVALENT INERTIA ATTACHMENT MODE
+RAQCONS - Ply Strains Constraint Mode
+RAQDATC - Ply Strains Distributed Attachment Mode
+RAQNATC - Ply Strains Nodal Attachment Mode
+RAQEATC - Ply Strains Equivalent Inertia Attachment Mode
 
-RAQCONS - PLY STRAINS CONSTRAIN MODE
-RAQDATC - PLY STRAINS DISTRIBUTED ATTACHMENT MODE
-RAQNATC - PLY STRAINS NODAL ATTACHMENT MODE
-RAQEATC - PLY STRAINS EQUIVALENT INERTIA ATTACHMENT MODE
+RARCONS - Reaction Force Constraint Mode
+RARDATC - Reaction Force Distributed Attachment Mode
+RARNATC - Reaction Force Nodal Attachment Mode
+RAREATC - Reaction Force Equivalent Inertia Attachment Mode
 
-RARCONS - REACTION FORCE CONSTRAINT MODE
-RARDATC - REACTION FORCE DISTRIBUTED ATTACHMENT MODE
-RARNATC - REACTION FORCE NODAL ATTACHMENT MODE
-RAREATC - REACTION FORCE EQUIVALENT INERTIA ATTACHMENT MODE
+RASCONS - Stress Constraint Mode
+RASDATC - Stress Distributed Attachment Mode
+RASNATC - Stress Nodal Attachment Mode
+RASEATC - Stress Equivalent Inertia Attachment Mode
 
-RASCONS - STRESS CONSTRAINT MODE
-RASDATC - STRESS DISTRIBUTED ATTACHMENT MODE
-RASNATC - STRESS NODAL ATTACHMENT MODE
-RASEATC - STRESS EQUIVALENT INERTIA ATTACHMENT MODE
+RAPCONS - Ply Stresses Constraint Mode
+RAPDATC - Ply Stresses Distributed Attachment Mode
+RAPNATC - Ply Stresses Nodal Attachment Mode
+RAPEATC - Ply Stresses Equivalent Inertia Attachment Mode
 
-RAPCONS - PLY STRESSES CONSTRAIN MODE
-RAPDATC - PLY STRESSES DISTRIBUTED ATTACHMENT MODE
-RAPNATC - PLY STRESSES NODAL ATTACHMENT MODE
-RAPEATC - PLY STRESSES EQUIVALENT INERTIA ATTACHMENT MODE
+RAGCONS - Grid Point Forces Constraint Mode
+RAGDATC - Grid Point Forces Distributed Attachment Mode
+RAGNATC - Grid Point Forces Nodal Attachment Mode
+RAGEATC - Grid Point Forces Equivalent Inertia Attachment Mode
 
-RAGCONS - GRID POINT FORCES CONSTRAINT MODE
-RAGDATC - GRID POINT FORCES DISTRIBUTED ATTACHMENT MODE
-RAGNATC - GRID POINT FORCES NODAL ATTACHMENT MODE
-RAGEATC - GRID POINT FORCES EQUIVALENT INERTIA ATTACHMENT MODE
+RADEFMP - Displacement PHA^T * Effective Inertia Mode
 
-RADEFMP - DISPLACEMENT PHA^T * EFFECTIVE INERTIA MODE
+RADAMPZ - Viscous Damping Ratio Matrix
+RADAMPG - Structural Damping Ratio Matrix
 
-RADAMPZ - VISCOUS DAMPING RATIO MATRIX
-RADAMPG - STRUCTURAL DAMPING RATIO MATRIX
-
-RAFGEN  - GENERALIZED FORCES
-BHH     - MODAL VISCOUS DAMPING MATRIX
-K4HH    - MODAL STRUCTURAL DAMPING MATRIX
+RAFGEN  - Generalized Forces
+BHH     - Modal Viscous Damping Matrix
+K4HH    - Modal Structural Damping Matrix
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import iteritems, string_types, itervalues
 import os
 
-from numpy import unique, int32
+from numpy import unique
 
-from pyNastran.utils import object_attributes, object_methods
+from pyNastran.utils import object_attributes, object_methods, integer_types
 from pyNastran.op2.op2_scalar import OP2_Scalar
 
 from pyNastran.f06.errors import FatalError
@@ -129,6 +128,7 @@ def read_op2(op2_filename=None, combine=True,
              skip_undefined_matrices=True, mode='msc'):
     """
     Creates the OP2 object without calling the OP2 class.
+
     Parameters
     ----------
     op2_filename : str (default=None -> popup)
@@ -200,13 +200,24 @@ class OP2(OP2_Scalar):
         OP2_Scalar.__init__(self, debug=debug, log=log, debug_file=debug_file)
         self.ask = False
 
-    @property
-    def object_attributes(self):
-        return object_attributes(self, keys_to_skip=['object_attributes', 'object_methods'])
+    def object_attributes(self, mode='public', keys_to_skip=None):
+        if keys_to_skip is None:
+            keys_to_skip = []
 
-    @property
-    def object_methods(self):
-        return object_methods(self, keys_to_skip=['object_attributes', 'object_methods'])
+        my_keys_to_skip = [
+            'object_methods', 'object_attributes',
+        ]
+        return object_attributes(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
+
+    def object_methods(self, mode='public', keys_to_skip=None):
+        if keys_to_skip is None:
+            keys_to_skip = []
+        my_keys_to_skip = []
+
+        my_keys_to_skip = [
+            'object_methods', 'object_attributes',
+        ]
+        return object_methods(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
 
     def __eq__(self, op2_model):
         if not self.read_mode == op2_model.read_mode:
@@ -228,8 +239,9 @@ class OP2(OP2_Scalar):
                     print('type(a)=%s type(b)=%s' % (aname, bname))
                     return False
                 if not any(word in aname for word in ['Array', 'Eigenvalues']):
-                    print('%s is not an Array ... assume equal' % aname)
-                    #raise NotImplementedError('%s __eq__' % aname)
+                    msg = '%s is not an Array ... assume equal' % aname
+                    print(msg)
+                    raise NotImplementedError('%s __eq__' % aname)
                     continue
                 if avalue != bvalue:
                     print('key=%s table_type=%r is different; class_name=%r' % (key, table_type, aname))
@@ -356,27 +368,50 @@ class OP2(OP2_Scalar):
                     obj.finalize()
 
     def build_dataframe(self):
+        """
+        Converts the OP2 objects into pandas DataFrames
+
+        .. todo:: fix issues with:
+         - RealDisplacementArray
+         - RealPlateStressArray (???)
+         - RealPlateStrainArray (???)
+         - RealCompositePlateStrainArray (???)
+
+        C:\Anaconda\lib\site-packages\pandas\core\algorithms.py:198: DeprecationWarning: unorderable dtypes;
+            returning scalar but in the future this will be an error
+        sorter = uniques.argsort()
+        """
         no_sort2_classes = ['RealEigenvalues', 'ComplexEigenvalues', 'BucklingEigenvalues']
         result_types = self.get_table_types()
+        i = 0
+        #nbreak = 0
         for result_type in result_types:
             result = getattr(self, result_type)
             for obj in itervalues(result):
                 class_name = obj.__class__.__name__
+                #print('working on %s' % class_name)
+                obj.object_attributes()
+                obj.object_methods()
+                i += 1
                 if class_name in no_sort2_classes:
                     try:
-                        obj.build_dataframe()
+                        obj.object_methods()
                     except:
-                        print('build_dataframe is broken for %s' % class_name)
+                        self.log.error('build_dataframe is broken for %s' % class_name)
                         raise
                     continue
                 if obj.is_sort2():
-                    print('build_dataframe is not supported for %s - SORT2' % class_name)
+                    self.log.warning('build_dataframe is not supported for %s - SORT2' % class_name)
                     continue
                 try:
                     obj.build_dataframe()
+                except NotImplementedError:
+                    self.log.warning('build_dataframe is broken for %s' % class_name)
                 except:
-                    print('build_dataframe is broken for %s' % class_name)
+                    self.log.error('build_dataframe is broken for %s' % class_name)
                     raise
+                #if i >= nbreak:
+                    #return
 
 
     def combine_results(self, combine=True):
@@ -514,11 +549,16 @@ class OP2(OP2_Scalar):
                 for case_key in case_keys:
                     #print('isubcase=%s case_key=%s' % (isubcase, case_key))
                     assert not isinstance(case_key, string_types), result_type
-                    if isinstance(case_key, (int, int32)):
+                    if isinstance(case_key, integer_types):
                         if isubcase == case_key and case_key not in subcase_key2[isubcase]:
                             subcase_key2[isubcase] = [isubcase]
                     else:
-                        subcasei = case_key[0]
+                        try:
+                            subcasei = case_key[0]
+                        except IndexError:
+                            msg = 'case_key=%s; type(case_key)=%s; case_key[0] is not the subcase id' % (
+                                case_key, type(case_key))
+                            raise IndexError(msg)
                         #if not subcasei == isubcase:
                             #continue
                         if case_key not in subcase_key2[subcasei]:
@@ -549,8 +589,6 @@ class OP2(OP2_Scalar):
 
         Parameters
         ----------
-        self : OP2
-            OP2 object.
         i_transform : dict{float:ndarray}
             Dictionary from coordinate id to index of the nodes in
             ``BDF.point_ids`` that their output (`CD`) in that
@@ -577,7 +615,12 @@ class OP2(OP2_Scalar):
             self.acceleration_scaled_response_spectra_ABS,
             self.acceleration_scaled_response_spectra_NRL,
 
-            self.eigenvectors
+            self.eigenvectors,
+            self.spc_forces, self.spc_forcesATO, self.spc_forcesPSD,
+            self.spc_forcesRMS,
+            self.mpc_forces, self.mpc_forcesATO, self.mpc_forcesPSD,
+            self.mpc_forcesRMS,
+            self.applied_loads, self.load_vectors,
         ]
 
         for disp_like_dict in disp_like_dicts:

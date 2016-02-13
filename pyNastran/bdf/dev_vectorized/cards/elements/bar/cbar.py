@@ -1,9 +1,9 @@
 from __future__ import print_function
-from six import integer_types
 from six.moves import zip, StringIO
 from numpy import array, arange, zeros, unique, searchsorted, full, nan
 from numpy.linalg import norm
 
+from pyNastran.utils import integer_types
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
@@ -12,8 +12,6 @@ from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
 from pyNastran.bdf.cards.elements.bars import CBAROR
 
 from pyNastran.bdf.field_writer_8 import set_string8_blank_if_default
-#from pyNastran.bdf.field_writer_16 import set_string16_blank_if_default
-
 from pyNastran.bdf.dev_vectorized.cards.elements.element import Element
 
 
@@ -44,7 +42,6 @@ class CBAR(Element):
         """
         Defines the CBAR object.
 
-        :param self: the CBAR object
         :param model: the BDF object
         """
         Element.__init__(self, model)
@@ -148,9 +145,6 @@ class CBAR(Element):
         self.i += 1
 
     def build(self):
-        """
-        :param self: the CBAR object
-        """
         if self.n:
             i = self.element_id.argsort()
             self.element_id = self.element_id[i]

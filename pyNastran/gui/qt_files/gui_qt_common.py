@@ -5,11 +5,12 @@ from six import iteritems
 from copy import deepcopy
 
 import numpy
-from numpy import ndarray, full, int32, float32, issubdtype
+from numpy import ndarray, full, float32, issubdtype
 from numpy.linalg import norm
 import vtk
 from vtk.util.numpy_support import numpy_to_vtk
 
+from pyNastran.utils import integer_types
 from pyNastran.gui.names_storage import NamesStorage
 from pyNastran.gui.testing_methods import GuiAttributes
 
@@ -108,7 +109,7 @@ class GuiCommon(GuiAttributes):
         self.icase = icase
         case = self.result_cases[key]
         label2 = ''
-        if isinstance(key, (int, int32)):
+        if isinstance(key, integer_types):
             (obj, (i, name)) = self.result_cases[key]
             subcase_id = obj.subcase_id
             case = obj.get_result(i, name)
@@ -215,10 +216,10 @@ class GuiCommon(GuiAttributes):
 
         if issubdtype(case.dtype, numpy.integer):
             data_type = vtk.VTK_INT
-            self.aQuadMapper.InterpolateScalarsBeforeMappingOn()
+            self.grid_mapper.InterpolateScalarsBeforeMappingOn()
         elif issubdtype(case.dtype, numpy.float):
             data_type = vtk.VTK_FLOAT
-            self.aQuadMapper.InterpolateScalarsBeforeMappingOff()
+            self.grid_mapper.InterpolateScalarsBeforeMappingOff()
         else:
             raise NotImplementedError(case.dtype.type)
 
@@ -380,6 +381,7 @@ class GuiCommon(GuiAttributes):
             raise RuntimeError(location)
 
         self.grid.Modified()
+        self.grid_selected.Modified()
         self.vtk_interactor.Render()
 
         self.hide_labels(show_msg=False)
@@ -427,6 +429,14 @@ class GuiCommon(GuiAttributes):
             except IndexError:
                 found_cases = False
                 return found_cases
+            except TypeError:
+                msg = 'type(case_keys)=%s\n' % type(self.case_keys)
+                msg += 'icase=%r\n' % str(self.icase)
+                msg += 'case_keys=%r' % str(self.case_keys)
+                raise TypeError(msg)
+            msg = 'icase=%r\n' % str(self.icase)
+            msg += 'case_keys=%r' % str(self.case_keys)
+            print(msg)
 
             location = self.get_case_location(key)
             print("key = %s" % str(key))
@@ -455,7 +465,7 @@ class GuiCommon(GuiAttributes):
         #elif len(key) == 6:
             #(subcase_id, j, result_type, vector_size, location, data_format) = key
         else:
-            assert len(key) == 7, key
+            assert len(key) == 7, '%s = (subcase_id, j, result_type, vector_size, location, data_format, label2)' % str(key)
             (subcase_id, j, result_type, vector_size, location, data_format, label2) = key
         return result_type
 

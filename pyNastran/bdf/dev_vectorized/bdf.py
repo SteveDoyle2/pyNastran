@@ -138,7 +138,7 @@ from .bdf_interface.write_mesh import WriteMesh
 from .bdf_interface.cross_reference import XRefMesh
 
 # old
-from pyNastran.bdf.bdfInterface.BDF_Card import BDFCard
+from pyNastran.bdf.bdfInterface.bdf_card import BDFCard
 
 # sets
 from pyNastran.bdf.cards.bdf_sets import SET1, SET3
@@ -185,7 +185,6 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         """
         Initializes the BDF object
 
-        :param self:  the BDF object
         :param debug: used to set the logger if no logger is passed in; bool
         :param log:   a python logging module object
         :param precision:  string of 'single'/'float32' or
@@ -446,7 +445,6 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         """
         Method for removing broken cards from the reader
 
-        :param self:  the BDF object
         :param cards: a list/set of cards that should not be read
         """
         disableSet = set(cards)
@@ -901,7 +899,6 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         """
         Read method for the bdf files
 
-        :param self:         the BDF object
         :param bdf_filename: the input bdf (default=None; popup a dialog)
         :param include_dir:  the relative path to any include files
                              (default=None if no include files)
@@ -1074,7 +1071,6 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         """
         Updates the overall solution type (e.g. 101,200,600)
 
-        :param self:     the object pointer
         :param sol:      the solution type (101,103, etc)
         :param method:   the solution method (only for SOL=600)
         :param iSolLine: the line to put the SOL/method on
@@ -1104,7 +1100,6 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         Uses the OpenMDAO syntax of %varName in an embedded BDF to
         update the values for an optimization study.
 
-        :param self:         the BDF object
         :param dict_of_vars: dictionary of 7 character variable names to map.
 
         ::
@@ -1139,7 +1134,6 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         """
         Applies the dynamic syntax for %varName
 
-        :param self: the BDF object
         :param key:  the uppercased key
         :returns value: the dynamic value defined by dict_of_vars
 
@@ -1172,7 +1166,6 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         """
         Reads the case control deck
 
-        :param self: the BDF object
         .. note:: called with recursion if an INCLUDE file is found
         """
         self._break_comment = False
@@ -1226,9 +1219,15 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         """
         Should the card be read?
 
-        :param self: the BDF object
-        :param card_name: the card_name -> 'GRID'
-        :returns is_reject:  True/False
+        Parameters
+        ----------
+        card_name : str
+            the card_name -> 'GRID'
+
+        Returns
+        -------
+        is_reject : bool
+            True/False
         """
         if card_name.startswith('='):
             return False
@@ -1244,8 +1243,10 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         """
         Opens the primary bdf/dat file and all subsequent INCLUDE files.
 
-        :param bdf_filename: the name of the bdf/dat file to open
-        :returns: None
+        Parameters
+        ----------
+        bdf_filename : str
+            the name of the bdf/dat file to open
 
         .. note:: Doesn't allow reuse of the same bdf/dat file twice.
         """
@@ -1298,11 +1299,19 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         """
         Returns the next Bulk Data Card in the BDF
 
-        :param self:        the BDF object
-        :param line_stream: the generator for the file
-        :returns lines:    the lines of the card
-        :returns comment:  the comment for the card
-        :returns cardname: the name of the card
+        Parameters
+        ----------
+        line_stream :
+            the generator for the file
+
+        Returns
+        -------
+        lines : List[str]
+            the lines of the card
+        comment : str
+            the comment for the card
+        cardname : str
+            the name of the card
         """
         for (i, line, comment) in line_stream:
             #-----------------------------------------------------------------
@@ -1414,7 +1423,6 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         """
         Returns the name of the card defined by the provided lines
 
-        :param self:  the BDF object
         :param lines: the lines of the card
         :returns cardname: the name of the card
         """
@@ -1430,11 +1438,6 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
     def _read_bulk_data_deck(self):
         """
         Parses the Bulk Data Deck
-
-        Parameters
-        ----------
-        self : BDF()
-            the BDF object
         """
         self.log.debug("reading Bulk Data Deck...")
         self._break_comment = True
@@ -1493,8 +1496,6 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
 
         Parameters
         ----------
-        self : BDF()
-            the BDF object
         comment : str
             the card comment
         lines : List[str]
@@ -1511,8 +1512,6 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
 
         Parameters
         ----------
-        self : BDF()
-            the BDF object
         card_name : str
             the card_name -> 'GRID'
 
@@ -1567,8 +1566,6 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         """
         Parameters
         ----------
-        self : BDF()
-            the BDF object
         card_lines : List[str]
             the lines that are part of the current card
 
@@ -1638,8 +1635,6 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
 
         Parameters
         ----------
-        self : BDF()
-            the BDF object
         card_lines : List[str]
             the list of the card fields
 
@@ -2369,8 +2364,6 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
 
         Parameters
         ----------
-        self : BDF()
-            the BDF object
         return_type : str; default='string'
             'string'/'list':
                 'string' returns one big string, while 'list' of each line in the string.

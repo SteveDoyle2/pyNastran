@@ -1,3 +1,13 @@
+Released Example Problems
+-------------------------
+- bar3truss
+- solid_bending
+- sol_101_elements
+- iSat
+- aero
+
+All Examples
+------------
 bar3truss
  - taken from OpenMDAO
  - https://github.com/OpenMDAO-Plugins/nastranwrapper
@@ -44,3 +54,13 @@ contact
    - shows a badly formatted BCTABLE
  - op2
    - skips CONTACT table, but reads stresses and displacements
+
+aero
+ - bdf: shows off aero support (CAERO1/SPLINE5)
+ - op2: incomplete, but working test problem
+
+pload4
+ - various PLOAD4 test problems 
+
+sol200
+ - 

@@ -1,6 +1,6 @@
 from six import  iteritems
 from struct import pack
-from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
+from pyNastran.op2.result_objects.op2_objects import ScalarObject
 from numpy import array
 
 #class staticFlux(scalarObject): # approach_code=1, table_code=3 - whatever the static version of this is...

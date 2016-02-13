@@ -1,9 +1,10 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import integer_types, string_types
+from six import string_types
 from six.moves import zip, range
 
-from pyNastran.bdf.cards.baseCard import (BaseCard, _node_ids, expand_thru,
+from pyNastran.utils import integer_types
+from pyNastran.bdf.cards.base_card import (BaseCard, _node_ids, expand_thru,
     collapse_thru, collapse_thru_packs)
 from pyNastran.bdf.field_writer_8 import print_card_8, print_int_card_blocks
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,

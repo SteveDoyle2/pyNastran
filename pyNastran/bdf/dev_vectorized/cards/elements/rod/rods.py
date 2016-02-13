@@ -13,7 +13,6 @@ class ElementsRod(object):
         """
         Defines the ElementsRod object.
 
-        :param self: the ElementsRod object
         :param model: the BDF object
         """
         aaa

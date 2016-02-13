@@ -16,7 +16,6 @@ class CONM2(VectorizedCard):
         """
         Defines the CONM2 object.
 
-        :param self: the CONM2 object
         :param model: the BDF object
         """
         VectorizedCard.__init__(self, model)
@@ -55,9 +54,6 @@ class CONM2(VectorizedCard):
         self.i += 1
 
     def build(self):
-        """
-        :param self: the CONM2 object
-        """
         if self.n:
             i = self.element_id.argsort()
             #print("iconm2 %s %s" % (i, type(i)))

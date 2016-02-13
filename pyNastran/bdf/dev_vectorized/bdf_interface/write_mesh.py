@@ -77,8 +77,6 @@ class WriteMesh(object):
 
         Parameters
         ----------
-        self : BDF()
-            the BDF object
         out_filename : str; default=None -> dialog box
             the name to call the output bdf
         interspersed : bool; default=False
@@ -127,11 +125,6 @@ class WriteMesh(object):
     def _write_header(self, outfile):
         """
         Writes the executive and case control decks.
-
-        Parameters
-        ----------
-        self : BDF()
-            the BDF object
         """
         self._write_executive_control_deck(outfile)
         self._write_case_control_deck(outfile)
@@ -139,11 +132,6 @@ class WriteMesh(object):
     def _write_executive_control_deck(self, outfile):
         """
         Writes the executive control deck.
-
-        Parameters
-        ----------
-        self : BDF()
-            the BDF object
         """
         msg = ''
         if self.executive_control_lines:
@@ -163,11 +151,6 @@ class WriteMesh(object):
     def _write_case_control_deck(self, outfile):
         """
         Writes the Case Control Deck.
-
-        Parameters
-        ----------
-        self : BDF()
-            the BDF object
         """
         if self.case_control_deck:
             msg = '$CASE CONTROL DECK\n'
@@ -389,11 +372,6 @@ class WriteMesh(object):
         """
         Write the common outputs so none get missed...
 
-        Parameters
-        ----------
-        self : BDF()
-            the BDF object
-
         Returns
         -------
         msg : str
@@ -475,8 +453,6 @@ class WriteMesh(object):
 
         Parameters
         ----------
-        self : BDF()
-            the BDF object
         size : int
             large field (16) or small field (8)
 
@@ -540,8 +516,6 @@ class WriteMesh(object):
     def _write_nodes(self, f, size, is_double):
         """
         Writes the NODE-type cards
-
-        :param self: the BDF object
         """
         self.grdset.write_card(f, size=size, is_double=is_double)
         self.grid.write_card(f, size=size, is_double=is_double)
@@ -586,11 +560,6 @@ class WriteMesh(object):
     def _write_params(self, outfile, size, is_double):
         """
         Writes the PARAM cards
-
-        Parameters
-        ----------
-        self : BDF()
-            the BDF object
         """
         if self.params:
             msg = ['$PARAMS\n']
@@ -601,12 +570,7 @@ class WriteMesh(object):
     def _write_rejects(self, outfile, size):
         """
         Writes the rejected (processed) cards and the rejected unprocessed
-        cardLines
-
-        Parameters
-        ----------
-        self : BDF()
-            the BDF object
+        card_lines
         """
         if size == 8:
             print_func = print_card_8

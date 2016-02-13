@@ -66,7 +66,6 @@ class CHEXA8(SolidElement):
         """
         Defines the CHEXA object.
 
-        :param self: the CHEXA object
         :param model: the BDF object
         """
         SolidElement.__init__(self, model)

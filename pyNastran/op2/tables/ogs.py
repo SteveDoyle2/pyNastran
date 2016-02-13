@@ -10,13 +10,13 @@ class OGS(OP2Common):
     def _read_ogs1_3(self, data, ndata):
         three = self.parse_approach_code(data)
         self.words = [
-            'aCode',       'tCode',     '???',          'isubcase',
-             '???',         '???',      '???',          'dLoadID'
-             'format_code', 'num_wide', 'o_code',       '???',
-            'acoustic_flag','???',      '???',          '???',
-             '???',         '???',      '???',          '???',
-             '???',         '???',      'thermal',      '???',
-             '???', 'Title', 'subtitle', 'label']
+            'aCode', 'tCode', '???', 'isubcase',
+            '???', '???', '???', 'dLoadID',
+            'format_code', 'num_wide', 'o_code', '???',
+            'acoustic_flag', '???', '???', '???',
+            '???', '???', '???', '???',
+            '???', '???', 'thermal', '???',
+            '???', 'Title', 'subtitle', 'label']
 
         self.parse_approach_code(data)
         #isubcase = self.get_values(data, 'i', 4)
@@ -46,7 +46,6 @@ class OGS(OP2Common):
         self.normal = self.add_data_parameter(data, 'normal', 'i', 14, False)
 
         self.fix_format_code()
-        #print "dLoadID(8)=%s format_code(9)=%s num_wide(10)=%s oCode(11)=%s thermal(23)=%s" %(self.dLoadID,self.format_code,self.num_wide,self.oCode,self.thermal)
         if not self.is_sort1():
             raise NotImplementedError('OGS sort2...')
 
@@ -197,8 +196,7 @@ class OGS(OP2Common):
         n = 0
         nelements = ndata // 24  # 6*4
         for i in range(nelements):
-            edata = data[n:n+24]
-            out = s.unpack(edata)
+            out = s.unpack(data[n:n+24])
             (ekey, nx, ny, nz, txy, pressure) = out
             nid = ekey // 10
             assert nid > 0, nid

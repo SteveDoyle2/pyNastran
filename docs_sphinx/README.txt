@@ -1,6 +1,6 @@
 # generate the index.rst file
 # and the root directory
-shinx-quickstart.exe
+sphinx-quickstart.exe
 
 # no idea...
 sphinx-apidoc.exe -d 4 -o index -V 0.6.0 -H pyNastran -A SteveDoyle ../pyNastran

@@ -16,10 +16,10 @@ used to be very large and was split (in a non-standard way) into multiple files
 that allowed for simpler development.  The classes:
 
  * :py:class:`pyNastran.bdf.bdf_Methods.BDFMethods`,
- * :py:class:`pyNastran.bdf.bdfInterface.getCard.GetMethods`,
- * :py:class:`pyNastran.bdf.bdfInterface.addCard.AddMethods`,
- * :py:class:`pyNastran.bdf.bdfInterface.bdf_writeMesh.WriteMesh`,
- * :py:class:`pyNastran.bdf.bdfInterface.crossReference.XrefMesh`
+ * :py:class:`pyNastran.bdf.bdfInterface.get_card.GetMethods`,
+ * :py:class:`pyNastran.bdf.bdfInterface.add_card.AddMethods`,
+ * :py:class:`pyNastran.bdf.bdfInterface.write_mesh.WriteMesh`,
+ * :py:class:`pyNastran.bdf.bdfInterface.cross_reference.XrefMesh`
 
 are basically bags of functions for the "model" object.
 
@@ -39,10 +39,9 @@ In methods :py:meth:`pyNastran.bdf.bdf.BDF._init_structural_defaults`,
 the structural, aerodyanmic, and thermal card holders (e.g. model.materials)
 are defined as dictionaries.
 
-Finally, the :py:meth:`pyNastran.bdf.bdf.BDF.readBDF` method is defined.
-There are three sections to a BDF/DAT/NAS file. BDF (Bulk Data File) is the file
-format used by MSC Nastran and the DAT (data?) file is used by NX Nastran.
-NAS (Nastran) is also used.
+Finally, the :py:meth:`pyNastran.bdf.bdf.BDF.read_bdf` method is defined.
+There are three sections to a BDF/DAT/NAS file. The BDF (Bulk Data File) is the
+file format used by MSC Nastran and NX Nastran.
 
 The first section is the "Executive Control Deck" and contains a "SOL 101" or
 "SOL 103" or "SOL STATIC" depending on the solution type. It ends when the "CEND"
@@ -102,75 +101,54 @@ A basic card is a GRID card.  Once parsed, a standard grid card will have fields
 of ``['GRID', nodeID, coord, x, y, z]``. This section will discuss how a card is
 parsed.
 
-The :py:meth:`pyNastran.bdf.bdf.BDF.readBDF` method must generalize the way
+The :py:meth:`pyNastran.bdf.bdf.BDF.read_bdf` method must generalize the way
 files are opened because INCLUDE files may be used. Once the Executive and Case
 Control Decks are read (using simple while loops), the
 :py:meth:`pyNastran.bdf.bdf.BDF._read_bulk_data_deck` method is called.
 
 This method (:meth:`BDF._read_bulk_data_deck`) keeps looping over the file as
 long as there are files opened (an INCLUDE file side effect) and calls:
-``(rawCard, card, cardName) = self._get_card(debug=False)``. ``cardName`` is
+``(raw_card, card, card_name) = self._get_card(debug=False)``. ``card_name`` is
 just the card's name, while ``rawCard`` is the full, unparsed card. ``card`` is
 the card  parsed into fields as a ``card`` object, which is basically a list
 of fields ``['GRID', nodeID, coord, x, y, z]``.
 
-The basic idea of the ``self._get_card()`` method(see
-:py:meth:`pyNastran.bdf.bdfInterface.bdf_cardMethods.CardMethods._get_card`) is
-to make a ``self.linesPack``, (:py:attr:`pyNastran.bdf.bdf.BDF.linesPack`)which
-is a list of 1500 lines that are stored in memory.  When a new line is added to
-``self.linesPack``, it is first stripped of comments in order to simplify
-parsing.  If the linesPack is empty or 50 blank lines are found, the code
-assumes an infinite loop has been entered and closes the file.  If additional
-files are open, the ``linesPack`` from the previous file will be used (INCLUDE
-file case).
+``self.read_bdf(bdf_filename)`` works by:
 
-Now that we have 1500 lines in linesPack, we must call:  ``(i, tempcard) =
-self._get_multi_line_card(i, tempcard)`` to get the card. ``tempcard`` starts
-out as the first line in the card and afterwards contains all lines of the card.
-``tempcard`` will eventually become ``rawCard``.  It's important to note the
-``tempcard`` passed into
-:py:meth:`pyNastran.bdf.bdfInterface.bdf_cardMethods.CardMethods._get_multi_line_card`
-is a 72-character string (generally) and the ``tempcard`` output is a list of
-8-character (or 16) width fields.  Why: the original data isn't needed, so the
-variable is reused.
+  1. Load the geometry into memory, while considering INCLUDE files
+  2. Split off the Executive Control and Case Control Decks
+  3. Convert the Bulk Data Deck into a series of Nastran "cards", where a ``BDFCard()``
+     is a ``list`` object that returns ``None`` if you try to access a value outside
+     the valid range.  This conversion step supports:
+    
+      * small field (8 characters wide)
+      * small field CSV
+      * large field (16 characters wide)
+      * large field CSV
 
-:py:meth:`pyNastran.bdf.bdfInterface.bdf_cardMethods.CardMethods._get_multi_line_card`
-will search through the ``linesPack`` and try to end the card by looking for a
-non-whitespace character in the first character position (all cards must have
-``field[0]`` justified).
-If a * is found, it's double precision, if not it's small field.  Additionally,
-if a ',' is found it's CSV format.
-So the formats are:
+  4. Run the ``BDF.add_card(...)`` method for each card
+  5. Run cross-referencing to make it easier to access data members
 
- #. small field,
- #. small field CSV,
- #. large field,
- #. large field CSV.
+During the ``BDF.add_card(...)`` method, a new object (e.g. ``GRID()``, ``CQUAD4()``)
+object is created.  Then the ``GRID.add_card(card, comment='')`` method is called.
+In the ``GRID.add_card(card, comment='')``, each card field begins as a string
+and then is casted appropriately.  Incorrect card fields are not allowed.
 
-
-Once the format of the line is known, it's an easy process to split the card
-(see
-:py:meth:`pyNastran.bdf.bdfInterface.bdf_cardMethods.CardMethods.processCard`)
-and turn it into a :py:class:`pyNastran.bdf.bdfInterface.BDF_Card.BDFCard`
-object.  Note that the first field in any line beyond the first one must be
-blank and is ignored.  This prevents cards defined in small field and large
-field to have the same value defined in different positions of the list.
-
-Finally, as Nastran is very specific in putting a decimal on float values, it's
+As Nastran is very specific in putting a decimal on float values, it's
 easy to parse field values into their proper type dynamically.  This is
 especially important when a field may be defined as an integer, float, a string,
 or be left blank and the variable is different depending on variable type.
 Strings, must being with alphabetical characters (A, B, C) and are case
-insensitive, which is why a "GRID" card is called a "GRID" card and not a "grid"
-card.
+insensitive.  Note that card names (e.g. ``GRID``, ``CQUAD4``) are special
+markers and must start at the beginning of the line.
 
 
 :mod:`bdf` : Card Object
 --------------------------
 
-A :py:class:`pyNastran.bdf.bdfInterface.BDF_Card.BDFCard` object is basically a
-list of fields of ``['GRID', nodeID, coord, x, y, z]`` with methods to get the
-1st entry (``nodeID``) as ``card.field(1)`` instead of ``fields[1]`` for a list.
+A :py:class:`pyNastran.bdf.bdfInterface.bdf_card.BDFCard` object is basically a
+list of fields of ``['GRID', node_id, coord, x, y, z]`` with methods to get the
+1st entry (``node_id``) as ``card.field(1)`` instead of ``fields[1]`` for a list.
 A card object is useful for setting defaults.  The ``x, y``, and ``z`` values
 on the GRID card have defaults of 0.0, so ``card.field(3,0.0)`` may be used to
 get the ``x`` coordinate. Finally, ``card.fields(3,5,[0.,0.,0.])`` may be used
@@ -179,7 +157,7 @@ to get ``xyz`` and set the defaults in a single step.  Additionally, the
 disabled.
 
 After an excessively long branch of ``cardNames`` in
-:py:meth:`pyNastran.bdf.BDF.readBDF`, the card object is turned into a GRID,
+:py:meth:`pyNastran.bdf.BDF.read_bdf`, the card object is turned into a GRID,
 CTRIA3, CQUAD4, PSHELL, MAT1 or any of 200 other card types.  There are roughly
 as many nodes as there are elements, which make up roughly 95% of the cards in
 large models.  The difference in a large model and a small model, is the
@@ -218,14 +196,14 @@ in the the same way for each card (although the axi-symmetric cards return mass
 per unit theta).  The last thing to note is ``rawFields`` and ``reprFields`` are
 very important to how the code integrates.
 
-``rawFields`` is used to check if a duplicated card is the same as another card
+``raw_fields`` is used to check if a duplicated card is the same as another card
 and is also used for testing.  After reading and writing, reading back in,
 writing back out, reading back in, if the fields are the  same, then there's
 likely no error in reading a card (fields can still be missed while reading, so
 it's not perfect). ``raw_fields`` returns a list of the fields (similar to the
 list-esque card object from before).
 
-``reprFields`` is analogous to the ``__repr__()`` method, and is an abbreviated
+``repr_fields`` is analogous to the ``__repr__()`` method, and is an abbreviated
 way to write the card. For example, the ``T1, T2, T3``, and ``T4`` values
 (thickness at nodes 1, 2, 3, 4) are generally 0.0 and instead are set at an
 elemental level using the PSHELL card.  If these fields were printed, the CQUAD4
@@ -297,7 +275,7 @@ in a 3D space:
 (see http://en.wikipedia.org/wiki/Quadrilateral).
 
 
-:mod:`crossReference`: Cross-Referencing Process
+:mod:`cross_reference`: Cross-Referencing Process
 -------------------------------------------------
 
 Cross referencing must first be done on the coordinate cards.  Then, once they're
@@ -311,7 +289,7 @@ Cross Referencing is performed by looping over the card objects and calling the
 ``card.cross_reference()`` method.  This will setup all cross-referencing and
 a full list of the status of various cards is listed in ``bdf_crossReferencing.txt``.
 
-:mod:`bdf_writeMesh.py`: Writing the BDF
+:mod:`bdf_write_mesh.py`: Writing the BDF
 -----------------------------------------
 
 The BDF is written by looping through all the objects and calling the
@@ -320,6 +298,7 @@ Cards may also be written by typing ``str(card)``.
 
 The ``card.write_bdf()`` method dynamically figures out how to write the card
 based on the data type.
+
 For float values, the highest precision 8/16-character width field will be used
 even if it uses Nastran's strange syntax of "1.2345+8" to represent
 a more standard "1.2345e+08".

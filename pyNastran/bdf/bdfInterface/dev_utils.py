@@ -1,5 +1,5 @@
 from __future__ import print_function
-from six import iteritems, itervalues, integer_types, string_types, PY2
+from six import iteritems, itervalues, string_types, PY2
 from six.moves import zip, range
 
 import os
@@ -12,8 +12,9 @@ from numpy import (array, unique, where, arange, hstack, searchsorted,
 from numpy.linalg import norm
 import scipy
 
+from pyNastran.utils import integer_types
 from pyNastran.bdf.bdf import BDF
-#from pyNastran.bdf.cards.baseCard import expand_thru
+#from pyNastran.bdf.cards.base_card import expand_thru
 from pyNastran.utils import object_attributes
 
 
@@ -424,11 +425,6 @@ def cut_model(model, axis='-y'):
 def _write_nodes(self, outfile, size, is_double):
     """
     Writes the NODE-type cards
-
-    Parameters
-    ----------
-    self : BDF()
-        the BDF object
     """
     if self.spoints:
         msg = []

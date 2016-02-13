@@ -78,11 +78,54 @@ class ComplexShearArray(OES_Object):
 
     def build_dataframe(self):
         headers = self.get_headers()
-        name = self.name
         column_names, column_values = self._build_dataframe_transient_header()
         self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
         self.data_frame.columns.names = column_names
         self.data_frame.index.names = ['ElementID', 'Item']
+
+    def __eq__(self, table):
+        assert self.is_sort1() == table.is_sort1()
+        self._eq_header(table)
+        if not np.array_equal(self.element, table.element):
+            assert self.element.shape == table.element.shape, 'shape=%s element.shape=%s' % (self.element.shape, table.element.shape)
+            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+            msg += '%s\n' % str(self.code_information())
+            for eid, eid2 in zip(self.element, table.element):
+                msg += '%s, %s\n' % (eid, eid2)
+            print(msg)
+            raise ValueError(msg)
+        if not np.array_equal(self.data, table.data):
+            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+            msg += '%s\n' % str(self.code_information())
+            ntimes = self.data.shape[0]
+
+            i = 0
+            if self.is_sort1():
+                for itime in range(ntimes):
+                    for ieid, eid in enumerate(self.element):
+                        t1 = self.data[itime, ieid, :]
+                        t2 = table.data[itime, ieid, :]
+                        (tx1, ty1, tz1, rx1, ry1, rz1) = t1
+                        (tx2, ty2, tz2, rx2, ry2, rz2) = t2
+                        d = t1 - t2
+                        if not allclose([tx1.real, tx1.imag, ty1.real, ty1.imag],
+                                        [tx2.real, tx2.imag, ty2.real, ty2.imag], atol=0.0001):
+                        #if not np.array_equal(t1, t2):
+                            msg += '%-4s  (%s, %sj, %s, %sj)\n      (%s, %sj, %s, %sj)\n  dt12=(%s, %sj, %s, %sj)\n' % (
+                                eid,
+                                tx1.real, tx1.imag, ty1.real, ty1.imag,
+                                tx2.real, tx2.imag, ty2.real, ty2.imag,
+                                d[0].real, d[0].imag, d[1].real, d[1].imag,)
+                            i += 1
+                        if i > 10:
+                            print(msg)
+                            raise ValueError(msg)
+            else:
+                raise NotImplementedError(self.is_sort2())
+            if i > 0:
+                print(msg)
+                raise ValueError(msg)
+        return True
 
     def add_sort1(self, dt, eid, max_shear, avg_shear):
         self._times[self.itime] = dt
@@ -115,7 +158,9 @@ class ComplexShearArray(OES_Object):
         msg += self.get_data_code()
         return msg
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+        if header is None:
+            header = []
         raise NotImplementedError('ComplexShearArray')
         msg_temp, nnodes, is_bilinear = _get_plate_msg(self, is_mag_phase, is_sort1)
 

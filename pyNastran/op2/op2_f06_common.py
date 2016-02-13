@@ -1,13 +1,17 @@
 from __future__ import print_function
 from six import iteritems, string_types, binary_type, text_type
 from collections import defaultdict
-from numpy import unique, int32
+from numpy import unique, int32, int64
 
 from pyNastran import is_release
-from pyNastran.f06.tables.grid_point_weight import GridPointWeight
+from pyNastran.op2.tables.grid_point_weight import GridPointWeight
 from pyNastran.f06.f06_formatting import get_key0
-from pyNastran.utils import object_attributes
-from pyNastran.bdf.cards.baseCard import deprecated
+from pyNastran.utils import object_attributes, integer_types
+from pyNastran.bdf.cards.base_card import deprecated
+try:
+    import pandas as pd
+except ImportError:
+    pass
 
 
 class OP2_F06_Common(object):
@@ -243,6 +247,9 @@ class OP2_F06_Common(object):
 
         #: OUG - eigenvectors
         self.eigenvectors = {}            # tCode=7 thermal=0
+        self.eigenvectors_RADCONS = {}
+        self.eigenvectors_RADEFFM = {}
+        self.eigenvectors_RADEATC = {}
 
         # OEF - Forces - tCode=4 thermal=0
 
@@ -274,9 +281,30 @@ class OP2_F06_Common(object):
 
         #OEF - Fluxes - tCode=4 thermal=1
         self.thermalLoad_CONV = {}
-        self.thermalLoad_CHBDY = {}
-        self.thermalLoad_1D = {}
-        self.thermalLoad_2D_3D = {}
+
+        #self.thermalLoad_CHBDY = {}
+        self.chbdye_thermal_load = {}
+        self.chbdyg_thermal_load = {}
+        self.chbdyp_thermal_load = {}
+
+        #self.thermalLoad_1D = {}
+        self.crod_thermal_load = {}
+        self.cbeam_thermal_load = {}
+        self.ctube_thermal_load = {}
+        self.conrod_thermal_load = {}
+        self.cbar_thermal_load = {}
+        self.cbend_thermal_load = {}
+
+        #self.thermalLoad_2D_3D = {}
+        self.cquad4_thermal_load = {}
+        self.ctriax6_thermal_load = {}
+        self.cquad8_thermal_load = {}
+        self.ctria3_thermal_load = {}
+        self.ctria6_thermal_load = {}
+        self.ctetra_thermal_load = {}
+        self.cthexa_thermal_load = {}
+        self.cpenta_thermal_load = {}
+
         self.thermalLoad_VU = {}
         self.thermalLoad_VU_3D = {}
         self.thermalLoad_VUBeam = {}
@@ -330,6 +358,8 @@ class OP2_F06_Common(object):
         self.mpc_forcesPSD = {}
         self.mpc_forcesATO = {}
         self.mpc_forcesRMS = {}
+        self.mpc_forces_RAQCONS = {}
+        #self.mpc_forces_RAQEATC = {}
 
         # OQG - thermal forces
         self.thermal_gradient_and_flux = {}
@@ -363,6 +393,7 @@ class OP2_F06_Common(object):
         self.ctetra_strain_energy = {}
         self.cpenta_strain_energy = {}
         self.chexa_strain_energy = {}
+        self.cpyram_strain_energy = {}
 
         self.crod_strain_energy = {}
         self.ctube_strain_energy = {}
@@ -396,7 +427,7 @@ class OP2_F06_Common(object):
             if not res_type:
                 continue
             key0 = list(res_type.keys())[0]
-            if not isinstance(key0, (int, int32)) and not isinstance(res_key, (int, int32)):
+            if not isinstance(key0, integer_types) and not isinstance(res_key, integer_types):
                 if not type(key0) == type(res_key):
                     msg = 'bad compression check...keys0=%s type(key0)=%s res_key=%s type(res_key)=%s' % (
                         key0, type(key0), res_key, type(res_key))
@@ -454,6 +485,10 @@ class OP2_F06_Common(object):
 
             # OUG - eigenvectors
             'eigenvectors',
+            'eigenvectors_RADCONS',
+            'eigenvectors_RADEFFM',
+            'eigenvectors_RADEATC',
+
 
             # OUG - velocity
             'velocities',
@@ -464,10 +499,12 @@ class OP2_F06_Common(object):
             'accelerationsPSD',
 
             # OQG - spc/mpc forces
-            'spc_forces', 'spc_forcesPSD', 'mpc_forcesATO', 'mpc_forcesRMS',
+            'spc_forces', 'spc_forcesPSD', 'spc_forcesATO', 'spc_forcesRMS',
             'spc_forces_scaled_response_spectra_NRL',
 
-            'mpc_forces', 'mpc_forcesPSD', 'spc_forcesATO', 'spc_forcesRMS',
+            'mpc_forces', 'mpc_forcesPSD', 'mpc_forcesATO', 'mpc_forcesRMS',
+            'mpc_forces_RAQCONS',
+            #'mpc_forces_RAQEATC',
 
             'thermal_gradient_and_flux',
 
@@ -629,9 +666,30 @@ class OP2_F06_Common(object):
 
             #OEF - Fluxes - tCode=4 thermal=1
             'thermalLoad_CONV',
-            'thermalLoad_CHBDY',
-            'thermalLoad_1D',
-            'thermalLoad_2D_3D',
+
+            #'thermalLoad_CHBDY',
+            'chbdye_thermal_load',
+            'chbdyg_thermal_load',
+            'chbdyp_thermal_load',
+
+            #'thermalLoad_1D',
+            'crod_thermal_load',
+            'cbeam_thermal_load',
+            'ctube_thermal_load',
+            'conrod_thermal_load',
+            'cbar_thermal_load',
+            'cbend_thermal_load',
+
+            #'thermalLoad_2D_3D',
+            'cquad4_thermal_load',
+            'ctriax6_thermal_load',
+            'cquad8_thermal_load',
+            'ctria3_thermal_load',
+            'ctria6_thermal_load',
+            'ctetra_thermal_load',
+            'cthexa_thermal_load',
+            'cpenta_thermal_load',
+
             'thermalLoad_VU',
             'thermalLoad_VU_3D',
             'thermalLoad_VUBeam',
@@ -703,10 +761,10 @@ class OP2_F06_Common(object):
 
             'cshear_strain_energy',
 
-
             'ctetra_strain_energy',
             'cpenta_strain_energy',
             'chexa_strain_energy',
+            'cpyram_strain_energy',
 
             'crod_strain_energy',
             'ctube_strain_energy',
@@ -810,7 +868,7 @@ class OP2_F06_Common(object):
         """
         def compare(key_value):
             key = key_value[0]
-            if isinstance(key, (int, int32, text_type, binary_type)):
+            if isinstance(key, (int, int32, int64, text_type, binary_type)):
                 return key
             else:
                 #print('key=%s type=%s' % (key, type(key)))
@@ -820,11 +878,14 @@ class OP2_F06_Common(object):
         table_types = self._get_table_types_testing()
         msg = []
         if short:
+            no_data_classes = ['RealEigenvalues', 'ComplexEigenvalues', 'BucklingEigenvalues']
             for table_type in table_types:
                 table = getattr(self, table_type)
                 for isubcase, subcase in sorted(iteritems(table), key=compare):
                     class_name = subcase.__class__.__name__
-                    if hasattr(subcase, 'data'):
+                    if class_name in no_data_classes:
+                        msg.append('%s[%r]\n' % (table_type, isubcase))
+                    elif hasattr(subcase, 'data'):
                         #data = subcase.data
                         #shape = [int(i) for i in subcase.data.shape]
                         #headers = subcase.get_headers()
@@ -832,8 +893,11 @@ class OP2_F06_Common(object):
                         #msg.append('%s[%s]; %s; %s; [%s]\n' % (
                         #table_type, isubcase, class_name, shape, headers_str))
                         msg.append('%s[%s]\n' % (table_type, isubcase))
+                    elif hasattr(subcase, 'get_stats'):
+                        msgi = '%s[%s] # unvectorized\n' % (table_type, isubcase)
+                        msg.append(msgi)
                     else:
-                        msgi = 'skipping %s op2.%s[%s]\n' % (class_name, table_type, isubcase)
+                        msgi = 'skipping %r %s[%s]\n' % (class_name, table_type, isubcase)
                         msg.append(msgi)
                         #raise RuntimeError(msgi)
         else:

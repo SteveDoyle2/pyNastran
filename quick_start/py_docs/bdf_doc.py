@@ -11,11 +11,11 @@ def introduction():
 
     ####The **head**/**tail**/**file_slice** methods can be found at:
     ####
-    ####    https://github.com/SteveDoyle2/pyNastran/blob/v0.7/docs_sphinx/manual/py_docs/bdf_doc.py
+    ####    https://github.com/SteveDoyle2/pyNastran/blob/master/quick_start/py_docs/bdf_doc.py
     ####
     ####These examples can be found at:
     ####
-    ####    https://github.com/SteveDoyle2/pyNastran/blob/v0.7/docs_sphinx/manual/py_docs/bdf_doc.py
+    ####    https://github.com/SteveDoyle2/pyNastran/blob/master/quick_start/py_docs/bdf_doc.py
     ####
     pass
 

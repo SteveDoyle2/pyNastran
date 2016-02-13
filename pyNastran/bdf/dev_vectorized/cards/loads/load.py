@@ -19,7 +19,6 @@ class LOAD(object):
         """
         Defines the LOAD object.
 
-        :param self: the LOAD object
         :param model: the BDF object
         """
         self.model = model
@@ -35,7 +34,6 @@ class LOAD(object):
         """
         Fills the LOAD object from the BDF reader
 
-        :param self: the LOAD object
         :param card:  the BDFCard object
         :param comment: a comment
         """

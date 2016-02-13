@@ -1,11 +1,12 @@
 from __future__ import print_function
-from six import iteritems, integer_types
+from six import iteritems
 from six.moves import StringIO, zip
 from itertools import count
 
 from numpy import (array, zeros, searchsorted, where, unique,
                    hstack)
 
+from pyNastran.utils import integer_types
 #from pyNastran.bdf.dev_vectorized.utils import slice_to_iter
 #from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.fieldWriter import print_card_8
@@ -24,7 +25,6 @@ class PCOMP(Property):
         """
         Defines the PCOMP object.
 
-        :param self: the PCOMP object
         :param model: the BDF object
         :param cards: the list of PCOMP cards
         """
@@ -109,7 +109,6 @@ class PCOMP(Property):
         #"""
         #Gets the nonstructural mass of the PHSELLs.
 
-        #:param self: the PSHELL object
         #:param property_id: the property IDs to consider (default=None -> all)
         #"""
         #cow

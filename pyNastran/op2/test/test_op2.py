@@ -11,6 +11,12 @@ from traceback import print_exc
 import numpy as np
 np.set_printoptions(precision=3, threshold=20)
 
+try:
+    import pandas
+    is_pandas = True
+except ImportError:
+    is_pandas = False
+
 #import warnings
 #warnings.filterwarnings('error')
 #warnings.filterwarnings('error', category=UnicodeWarning)
@@ -136,7 +142,8 @@ def run_lots_of_files(files, make_geom=True, write_bdf=False, write_f06=True,
                       delete_f06=True, write_op2=False,
                       is_vector=False, vector_stop=True,
                       debug=True, save_cases=True, skip_files=None,
-                      stop_on_failure=False, nstart=0, nstop=1000000000, binary_debug=False,
+                      stop_on_failure=False, nstart=0, nstop=1000000000,
+                      short_stats=False, binary_debug=False,
                       compare=True, quiet=False, dev=True):
     """used by op2_test.py to run thousands of files"""
     if skip_files is None:
@@ -173,6 +180,7 @@ def run_lots_of_files(files, make_geom=True, write_bdf=False, write_f06=True,
                                       write_f06=write_f06, write_op2=write_op2,
                                       is_mag_phase=False,
                                       delete_f06=delete_f06,
+                                      short_stats=short_stats,
                                       isubcases=isubcases, debug=debug,
                                       stop_on_failure=stop_on_failure,
                                       binary_debug=binary_debug,
@@ -191,30 +199,31 @@ def run_lots_of_files(files, make_geom=True, write_bdf=False, write_f06=True,
 
     if save_cases:
         if PY2:
-            failed_cases_file = open('failedCases.in', 'wb')
+            failed_cases_file = open('failed_cases.in', 'wb')
         else:
-            failed_cases_file = open('failedCases.in', 'w')
+            failed_cases_file = open('failed_cases.in', 'w')
         for op2file in failed_cases:
             failed_cases_file.write('%s\n' % op2file)
         failed_cases_file.close()
 
     seconds = time.time() - t0
     minutes = seconds / 60.
-    print("dt = %s seconds = %s minutes" % (seconds, minutes))
+    print("dt = %.2f seconds = %.2f minutes" % (seconds, minutes))
 
     msg = '-----done with all models %s/%s=%.2f%%  nfailed=%s-----' % (
         npassed, ntotal,
         100. * npassed / float(ntotal),
         ntotal - npassed)
     print(msg)
-    sys.exit(msg)
+    sys.exit("%s\ndt = %.2f seconds = %.2f minutes" % (msg, seconds, minutes))
 
 
 def run_op2(op2_filename, make_geom=False, write_bdf=False,
             write_f06=True, write_op2=False, write_xlsx=False,
             is_mag_phase=False, is_sort2=False,
             delete_f06=False,
-            isubcases=None, exclude=None, compare=True, debug=False, binary_debug=False,
+            isubcases=None, exclude=None, short_stats=False,
+            compare=True, debug=False, binary_debug=False,
             quiet=False, check_memory=False, stop_on_failure=True, dev=False):
     """
     Runs an OP2
@@ -246,6 +255,8 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
         limits subcases to specified values; default=None -> no limiting
     exclude : List[str, ...]; default=None
         limits result types; (remove what's listed)
+    short_stats : bool; default=False
+        print a short version of the op2 stats
     compare : bool
         True : compares vectorized result to slow vectorized result
         False : doesn't run slow vectorized result
@@ -316,9 +327,11 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
         #op2a.get_op2_stats()
         if quiet:
             op2.get_op2_stats()
+            op2.object_attributes()
+            op2.object_methods()
         else:
             print("---stats for %s---" % op2_filename)
-            print(op2.get_op2_stats())
+            print(op2.get_op2_stats(short=short_stats))
             op2.print_subcase_key()
         if write_bdf:
             op2.write_bdf(bdf_filename)
@@ -344,7 +357,10 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
                     pass
 
         # we put it down here so we don't blame the dataframe for real errors
-        op2.build_dataframe()
+        if is_pandas:
+            op2.build_dataframe()
+        #if compare:
+            #op2_nv.build_dataframe()
 
         if write_op2:
             model = os.path.splitext(op2_filename)[0]
@@ -457,9 +473,9 @@ def main():
     msg = "Usage:\n"
     is_release = False
     if is_release:
-        line1 = "test_op2 [-q] [-b] [-c]                [-f]           [-z] [-w] [-s <sub>] [-x <arg>]... OP2_FILENAME\n"
+        line1 = "test_op2 [-q] [-b] [-c]                [-f]           [-z] [-w] [-t] [-s <sub>] [-x <arg>]... OP2_FILENAME\n"
     else:
-        line1 = "test_op2 [-q] [-b] [-c] [-g] [-n] [-m] [-f] [-o] [-p] [-z] [-w] [-s <sub>] [-x <arg>]... OP2_FILENAME\n"
+        line1 = "test_op2 [-q] [-b] [-c] [-g] [-n] [-m] [-f] [-o] [-p] [-z] [-w] [-t] [-s <sub>] [-x <arg>]... OP2_FILENAME\n"
 
     while '  ' in line1:
         line1 = line1.replace('  ', ' ')
@@ -476,6 +492,7 @@ def main():
     msg += "  -b, --binarydebug     Dumps the OP2 as a readable text file\n"
     msg += "  -c, --disablecompare  Doesn't do a validation of the vectorized result\n"
     msg += "  -q, --quiet           Suppresses debug messages [default: False]\n"
+    msg += "  -t, --short_stats     Short get_op2_stats printout\n"
     #if not is_release:
     msg += "  -g, --geometry        Reads the OP2 for geometry, which can be written out\n"
     msg += "  -n, --write_bdf      Writes the bdf to fem.test_op2.bdf (default=False)\n" # n is for NAS
@@ -550,6 +567,7 @@ def main():
                 is_mag_phase=data['--is_mag_phase'],
                 isubcases=data['--subcase'],
                 exclude=data['--exclude'],
+                short_stats=data['--short_stats'],
                 debug=not data['--quiet'],
                 binary_debug=data['--binarydebug'],
                 is_sort2=data['--is_sort2'],

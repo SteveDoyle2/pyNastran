@@ -2,6 +2,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import iteritems
 from six.moves import zip, range
+import numpy as np
 from numpy import zeros, searchsorted, array_equal, allclose
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
@@ -72,7 +73,6 @@ class RealRodArray(OES_Object):
 
     def build_dataframe(self):
         headers = self.get_headers()
-        name = self.name
         if self.nonlinear_factor is not None:
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
@@ -85,11 +85,8 @@ class RealRodArray(OES_Object):
 
     def __eq__(self, table):
         assert self.is_sort1() == table.is_sort1()
-        assert self.nonlinear_factor == table.nonlinear_factor
-        assert self.ntotal == table.ntotal
-        assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
-        assert self.approach_code == table.approach_code
-        if not array_equal(self.element, table.element):
+        self._eq_header(table)
+        if not np.array_equal(self.element, table.element):
             assert self.element.shape == table.element.shape, 'shape=%s element.shape=%s' % (self.element.shape, table.element.shape)
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
@@ -97,7 +94,7 @@ class RealRodArray(OES_Object):
                 msg += '%s, %s\n' % (eid, eid2)
             print(msg)
             raise ValueError(msg)
-        if not array_equal(self.data, table.data):
+        if not np.array_equal(self.data, table.data):
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
             ntimes = self.data.shape[0]
@@ -111,7 +108,7 @@ class RealRodArray(OES_Object):
                         (axial, torsion, sma, smt) = t1
                         (axial2, torsion2, sma2, smt2) = t2
                         if not allclose(t1, t2):
-                        #if not array_equal(t1, t2):
+                        #if not np.array_equal(t1, t2):
                             msg += '%s\n  (%s, %s, %s, %s)\n  (%s, %s, %s, %s)\n' % (
                                 eid,
                                 axial, torsion, sma, smt,
@@ -189,7 +186,9 @@ class RealRodArray(OES_Object):
         #ind.sort()
         return ind
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+        if header is None:
+            header = []
         (elem_name, msg_temp) = self.get_f06_header(is_mag_phase)
 
         if self.is_sort1():
@@ -211,14 +210,12 @@ class RealRodArray(OES_Object):
             header = _eigenvalue_header(self, header, itime, ntimes, dt)
             f.write(''.join(header + msg_temp))
 
-            # TODO: can I get this without a reshape?
             #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
             axial = self.data[itime, :, 0]
             SMa = self.data[itime, :, 1]
             torsion = self.data[itime, :, 2]
             SMt = self.data[itime, :, 3]
 
-            # loop over all the elements
             out = []
             for eid, axiali, SMai, torsioni, SMti in zip(eids, axial, SMa, torsion, SMt):
                 [axiali, torsioni, SMai, SMti] = write_floats_13e([axiali, torsioni, SMai, SMti])

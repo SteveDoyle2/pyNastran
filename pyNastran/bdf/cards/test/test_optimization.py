@@ -11,7 +11,6 @@ import pyNastran
 from pyNastran.bdf.bdf import BDF
 from pyNastran.op2.op2 import OP2
 from pyNastran.f06.test.f06_unit_tests import run_model
-from numpy import zeros, array_equal
 
 root_path = pyNastran.__path__[0]
 #test_path = os.path.join(root_path, 'bdf', 'cards', 'test')

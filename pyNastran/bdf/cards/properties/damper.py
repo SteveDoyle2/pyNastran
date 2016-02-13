@@ -11,18 +11,18 @@ All damper properties are DamperProperty and Property objects.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import integer_types
 
+from pyNastran.utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
-from pyNastran.bdf.cards.baseCard import Property
+from pyNastran.bdf.cards.base_card import Property
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, double_or_blank)
 
 
 class DamperProperty(Property):
-    def __init__(self, card, data):
-        Property.__init__(self, card, data)
+    def __init__(self):
+        Property.__init__(self)
 
     def cross_reference(self, model):
         pass
@@ -37,22 +37,30 @@ class PDAMP(DamperProperty):
         1: 'pid', 2:'b',
     }
 
-    def __init__(self, card=None, icard=0, data=None, comment=''):
-        DamperProperty.__init__(self, card, data)
+    def __init__(self, pid, b, comment=''):
+        DamperProperty.__init__(self)
         if comment:
             self._comment = comment
-        nOffset = icard * 2
-        if card:
-            # 3 PDAMP properties can be defined on 1 PDAMP card
-            #: Property ID
-            self.pid = integer(card, 1 + nOffset, 'pid')
+        # 3 PDAMP properties can be defined on 1 PDAMP card
+        #: Property ID
+        self.pid = pid
+        # these are split into 2 separate cards
+        #: Force per unit velocity (Real)
+        self.b = b
 
-            # these are split into 2 separate cards
-            #: Force per unit velocity (Real)
-            self.b = double(card, 2 + nOffset, 'b')
-        else:
-            self.pid = data[0]
-            self.b = data[1]
+    @classmethod
+    def add_card(cls, card, icard, comment=''):
+        noffset = icard * 2
+        pid = integer(card, 1 + noffset, 'pid')
+
+        b = double(card, 2 + noffset, 'b')
+        return PDAMP(pid, b, comment=comment)
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        pid = data[0]
+        b = data[1]
+        return PDAMP(pid, b, comment=comment)
 
     def B(self):
         return self.b
@@ -83,28 +91,37 @@ class PDAMP5(DamperProperty):
         1: 'pid', 2:'mid', 3:'b',
     }
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self, pid, mid, b, comment=''):
         """
         Defines the damping multiplier and references the material properties
         for damping. CDAMP5 is intended for heat transfer analysis only.
         """
-        DamperProperty.__init__(self, card, data)
+        DamperProperty.__init__(self)
         if comment:
             self._comment = comment
-        if card:
             #: Property ID
-            self.pid = integer(card, 1, 'pid')
-            #: Material ID
-            self.mid = integer(card, 2, 'mid')
-            #: Damping multiplier. (Real > 0.0)
-            #: B is the mass that multiplies the heat capacity CP on the MAT4
-            #: or MAT5 entry.
-            self.b = double(card, 3, 'b')
-            assert len(card) == 4, 'len(PDAMP5 card) = %i' % len(card)
-        else:
-            self.pid = data[0]
-            self.mid = data[1]
-            self.b = data[2]
+        self.pid = pid
+        #: Material ID
+        self.mid = mid
+        #: Damping multiplier. (Real > 0.0)
+        #: B is the mass that multiplies the heat capacity CP on the MAT4
+        #: or MAT5 entry.
+        self.b = b
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        pid = integer(card, 1, 'pid')
+        mid = integer(card, 2, 'mid')
+        b = double(card, 3, 'b')
+        assert len(card) == 4, 'len(PDAMP5 card) = %i' % len(card)
+        return PDAMP5(pid, mid, b, comment=comment)
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        pid = data[0]
+        mid = data[1]
+        b = data[2]
+        return PDAMP5(pid, mid, b, comment=comment)
 
     def _verify(self, xref=True):
         pid = self.Pid()
@@ -145,20 +162,28 @@ class PDAMPT(DamperProperty):
         1: 'pid', 2:'tbid',
     }
 
-    def __init__(self, card=None, data=None, comment=''):
-        DamperProperty.__init__(self, card, data)
+    def __init__(self, pid, tbid, comment=''):
+        DamperProperty.__init__(self)
         if comment:
             self._comment = comment
-        if card:
-            #: Property ID
-            self.pid = integer(card, 1, 'pid')
-            #: Identification number of a TABLEDi entry that defines the
-            #: damping force per-unit velocity versus frequency relationship
-            self.tbid = integer_or_blank(card, 2, 'tbid', 0)
-            assert len(card) <= 3, 'len(PDAMPT card) = %i' % len(card)
-        else:
-            self.pid = data[0]
-            self.tbid = data[1]
+        #: Property ID
+        self.pid = pid
+        #: Identification number of a TABLEDi entry that defines the
+        #: damping force per-unit velocity versus frequency relationship
+        self.tbid = tbid
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        pid = integer(card, 1, 'pid')
+        tbid = integer_or_blank(card, 2, 'tbid', 0)
+        assert len(card) <= 3, 'len(PDAMPT card) = %i' % len(card)
+        return PDAMPT(pid, tbid, comment=comment)
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        pid = data[0]
+        tbid = data[1]
+        return PDAMPT(pid, tbid, comment=comment)
 
     def _verify(self, xref=False):
         pid = self.Pid()
@@ -199,18 +224,27 @@ class PVISC(DamperProperty):
         1: 'pid', 2:'ce', 3:'cr',
     }
 
-    def __init__(self, card=None, icard=0, data=None, comment=''):
-        DamperProperty.__init__(self, card, data)
+    def __init__(self, pid, ce, cr, comment=''):
+        DamperProperty.__init__(self)
         if comment:
             self._comment = comment
-        if card:
-            self.pid = integer(card, 1 + 4 * icard, 'pid')
-            self.ce = double(card, 2 + 4 * icard, 'ce')
-            self.cr = double_or_blank(card, 3 + 4 * icard, 'cr', 0.)
-        else:
-            self.pid = data[0]
-            self.ce = data[1]
-            self.cr = data[2]
+        self.pid = pid
+        self.ce = ce
+        self.cr = cr
+
+    @classmethod
+    def add_card(cls, card, icard=0, comment=''):
+        pid = integer(card, 1 + 4 * icard, 'pid')
+        ce = double(card, 2 + 4 * icard, 'ce')
+        cr = double_or_blank(card, 3 + 4 * icard, 'cr', 0.)
+        return PVISC(pid, ce, cr, comment=comment)
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        pid = data[0]
+        ce = data[1]
+        cr = data[2]
+        return PVISC(pid, ce, cr, comment=comment)
 
     def cross_reference(self, model):
         pass

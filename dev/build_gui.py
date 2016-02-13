@@ -1,5 +1,5 @@
 import sys
-from PyInstaller.main import run, run_build
+from PyInstaller.__main__ import run, run_build
 spec_file = 'pyNastranGUI.spec'
 #sys.argv = [None, 'pyNastranGUI.spec']
 #run(pyi_args=)

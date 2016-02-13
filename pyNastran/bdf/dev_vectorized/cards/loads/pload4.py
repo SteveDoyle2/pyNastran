@@ -1,9 +1,8 @@
 from six.moves import zip, range
 from numpy import arange, array, zeros, searchsorted, unique, full, nan, where
 
-from pyNastran.bdf.cards.baseCard import expand_thru
+from pyNastran.bdf.cards.base_card import expand_thru
 from pyNastran.bdf.field_writer_8 import print_card_8
-#from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double_or_blank, integer_string_or_blank, string_or_blank)
 
@@ -15,7 +14,6 @@ class PLOAD4(object):
         """
         Defines the PLOAD4 object.
 
-        :param self: the PLOAD4 object
         :param model: the BDF object
         """
         self.model = model
@@ -77,9 +75,6 @@ class PLOAD4(object):
         self.NVector = zeros((ncards, 3), dtype=float_fmt)
 
     def build(self):
-        """
-        :param self: the PLOAD4 object
-        """
         cards = self._cards
         ncards = len(cards)
         self.n = ncards

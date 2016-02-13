@@ -14,7 +14,6 @@ class FORCE(object):
         """
         Defines the FORCE object.
 
-        :param self: the FORCE object
         :param model: the BDF object
 
         .. todo:: collapse loads
@@ -75,7 +74,6 @@ class FORCE(object):
 
     def build(self):
         """
-        :param self: the FORCE object
         :param cards: the list of FORCE cards
         """
         cards = self._cards

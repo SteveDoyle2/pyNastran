@@ -1,9 +1,14 @@
 # -*- coding: utf-8 -*-
-from six import string_types
+from six import PY2, string_types
 from types import MethodType
 import os
-from numpy import ndarray, array, loadtxt
+from numpy import ndarray, array, loadtxt, int32, int64
 import io
+
+if PY2:
+    integer_types = (int, long, int32, int64)
+else:
+    integer_types = (int, int32, int64)
 
 def loadtxt_nice(filename, delimiter=',', skiprows=0, comment='#', dtype=None):
     """
@@ -205,14 +210,14 @@ def object_attributes(obj, mode="public", keys_to_skip=None):
     return __object_attr(obj, mode, keys_to_skip, lambda x: not isinstance(x, MethodType))
 
 
-def write_object_attributes(name, obj, nspaces=0, nbase=0, isClass=True, debug=False):
+def write_object_attributes(name, obj, nspaces=0, nbase=0, is_class=True, debug=False):
     """
     Writes a series of nested objects
     """
-    spaces = (nbase+nspaces) * ' '
+    spaces = (nbase + nspaces) * ' '
     msg = spaces
     xml = spaces
-    if isClass:
+    if is_class:
         equals = '='
     else:
         equals = ':'
@@ -229,12 +234,12 @@ def write_object_attributes(name, obj, nspaces=0, nbase=0, isClass=True, debug=F
             else:
                 msg += "'%s' %s " % (name, equals)
     elif isinstance(name, string_types):
-        if isClass:
+        if is_class:
             key = '%s' % name
         else:
             key = "'%s'" % name
     # elif isinstance(name, unicode):
-        # if isClass:
+        # if is_class:
             # key = u'%s' % name
         # else:
             # key = "u'%s'" % name
@@ -249,14 +254,14 @@ def write_object_attributes(name, obj, nspaces=0, nbase=0, isClass=True, debug=F
     # write the object
     if isinstance(obj, (int, float)) or obj is None:
         xml += '<name=%s value=%s type=%s>' % (name, obj, type(obj))
-        msg += '%s %s %s,\n' % (key, equals, write_value(obj, nspaces, nbase, isClass))
+        msg += '%s %s %s,\n' % (key, equals, write_value(obj, nspaces, nbase, is_class))
     elif is_string(obj):
-        msg += "%s %s %s,\n" % (key, equals, write_value(obj, nspaces, nbase, isClass))
+        msg += "%s %s %s,\n" % (key, equals, write_value(obj, nspaces, nbase, is_class))
 
     elif isinstance(obj, dict):
-        msg += write_dict(obj, nspaces, nbase, isClass) + ',\n'
+        msg += write_dict(obj, nspaces, nbase, is_class) + ',\n'
     elif isinstance(obj, (tuple, list)):
-        msg += '%s %s %s,\n' % (key, equals, write_value(obj, nspaces, nbase, isClass))
+        msg += '%s %s %s,\n' % (key, equals, write_value(obj, nspaces, nbase, is_class))
 
     elif isinstance(obj, ndarray):
         starter = '%s%s %s' % (nspaces, key, equals)

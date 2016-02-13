@@ -3,10 +3,11 @@ from six import b
 from six.moves import range
 from struct import unpack, Struct
 
-from pyNastran.bdf.cards.loads.staticLoads import (FORCE, FORCE1, FORCE2, GRAV,
-                                                   MOMENT, MOMENT1, MOMENT2,
-                                                   LOAD, PLOAD1, PLOAD2,  #PLOAD3,
-                                                   PLOAD4)  # PLOAD3,
+from pyNastran.bdf.cards.loads.static_loads import (
+    FORCE, FORCE1, FORCE2, GRAV,
+    MOMENT, MOMENT1, MOMENT2,
+    LOAD, PLOAD1, PLOAD2,  #PLOAD3,
+    PLOAD4)  # PLOAD3,
 from pyNastran.bdf.cards.thermal.loads import QBDY1, QBDY2, QBDY3, TEMP, TEMPD
 
 class GEOM3(object):

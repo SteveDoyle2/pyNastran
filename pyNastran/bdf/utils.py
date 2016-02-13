@@ -13,7 +13,9 @@ import os
 import sys
 import inspect
 import warnings
+from copy import deepcopy
 
+import numpy as np
 from numpy import unique, cross, dot, array
 
 import pyNastran
@@ -355,8 +357,30 @@ def parse_executive_control_deck(executive_control_lines):
 
 
 def _parse_pynastran_header(line):
-    lline = line[1:].lower()
-    if 'pynastran' in lline:
+    """
+    Search for data of the form:
+        ..code-block :: python
+            $ pyNastran: version=NX
+            $ pyNastran: encoding=latin-1
+            $ pyNastran: punch=True
+            $ pyNastran: dumplines=True
+            $ pyNastran: nnodes=10
+            $ pyNastran: nelements=100
+            $ pyNastran: skip_cards=PBEAM,CBEAM
+            $ pyNastran: units=in,lb,s
+
+    If we find:
+        ..code-block :: python
+            $$ pyNastran: version=NX
+
+    or a line without a valid pyNastran flag, we'll stop reading,
+    even a valid header statement is on the following line.
+    """
+    lline = line[1:].lower().strip()
+    if len(lline) == 0 or lline[0] == '$':
+        key = None
+        value = None
+    elif 'pynastran' in lline:
         base, word = lline.split(':')
         if base.strip() != 'pynastran':
             msg = 'unrecognized pyNastran marker\n'
@@ -696,8 +720,8 @@ def TransformLoadWRT(F, M, cid, cid_new, model, is_cid_int=True):
     r = cp_ref.origin - coord_to_ref.origin
 
     # change R-theta-z to xyz
-    Fxyz_local_1 = cp_ref.coordToXYZ(F)
-    Mxyz_local_1 = cp_ref.coordToXYZ(M)
+    Fxyz_local_1 = cp_ref.coord_to_xyz(F)
+    Mxyz_local_1 = cp_ref.coord_to_xyz(M)
 
     # pGlobal = pLocal1 * beta1 + porigin1
     # pGlobal = pLocal2 * beta2 + porigin2
@@ -718,7 +742,7 @@ def TransformLoadWRT(F, M, cid, cid_new, model, is_cid_int=True):
     Mxyz_local_2 = Mxyz_local_1 + dMxyz_local_2
 
     # rotate the delta moment into the local frame
-    M_local = coord_to_ref.XYZtoCoord(Mxyz_local_2)
+    M_local = coord_to_ref.xyz_to_coord(Mxyz_local_2)
 
     return Fxyz_local_2, Mxyz_local_2
 
@@ -728,18 +752,23 @@ def PositionWRT(xyz, cid, cid_new, model, is_cid_int=True):
     Gets the location of the GRID which started in some arbitrary system and
     returns it in the desired coordinate system
 
-    :param xyz:      the position of the GRID in an arbitrary
-                     coordinate system
-    :type xyz:       TYPE = NDARRAY.  SIZE=(3,)
-    :param cid:      the coordinate ID for xyz
-    :type cid:       int
-    :param cid_new:  the desired coordinate ID
-    :type cid_new:   int
-    :param model:    the BDF model object
-    :type model:     BDF()
+    Parameters
+    ----------
+    xyz : (3, ) float ndarray
+        the position of the GRID in an arbitrary coordinate system
+    cid : int
+        the coordinate ID for xyz
+    cid_new : int
+        the desired coordinate ID
+    model : BDF()
+        the BDF model object
+    is_cid_int : bool
+        is cid/cid_new an integer or a Coord object
 
-    :returns xyz_local:  the position of the GRID in an arbitrary coordinate system
-    :type xyz_local:     TYPE = NDARRAY.  SIZE=(3,)
+    Returns
+    -------
+    xyz_local : (3, ) float ndarray
+        the position of the GRID in an arbitrary coordinate system
     """
     if cid == cid_new: # same coordinate system
         return xyz
@@ -759,7 +788,7 @@ def PositionWRT(xyz, cid, cid_new, model, is_cid_int=True):
         # (plocal1 * beta1 + porigin1 - porigin2) * beta2.T = plocal2
 
         # convert R-Theta-Z_1 to xyz_1
-        p1_local = cp_ref.coordToXYZ(xyz)
+        p1_local = cp_ref.coord_to_xyz(xyz)
 
         # transform xyz_1 to xyz_2
         p2_local = dot(
@@ -767,7 +796,7 @@ def PositionWRT(xyz, cid, cid_new, model, is_cid_int=True):
                 coord_to_ref.beta().T)
 
         # convert xyz_2 to R-Theta-Z_2
-        xyz_local = coord_to_ref.XYZtoCoord(p2_local)
+        xyz_local = coord_to_ref.xyz_to_coord(p2_local)
     else:
         # converting the xyz point arbitrary->global
         xyz_global = cp_ref.transform_node_to_global(xyz)
@@ -823,3 +852,50 @@ def deprecated(old_name, new_name, deprecated_version, levels=None):
         raise NotImplementedError(msg)
     else:
         warnings.warn(msg, DeprecationWarning)
+
+def split_eids_along_nids(model, eids, nids):
+    """
+    Dissassociate a list of elements along a list of nodes.
+
+    The expected use of this function is that you have two bodies that
+    are incorrectly equivalenced and you would like to create duplicate
+    nodes at the same location and associate the new nodes with one half
+    of the elements.
+
+    Pick the nodes along the line and the elements along one side of the line.
+
+    Parameters
+    ----------
+    model : BDF()
+        the BDF model
+    eids : list/tuple
+        element ids to disassociate
+    nids : list/tuple
+        node ids to disassociate
+
+    Implicitly returns model with additional nodes.
+
+    .. note :: xref should be set to False for this function.
+    """
+    #assert model.xref == False, model.xref
+    nid = max(model.nodes.keys()) + 1
+
+    nid_map = {}
+    for nidi in nids:
+        node = model.nodes[nidi]
+        node2 = deepcopy(node)
+        node2.nid = nid
+        model.nodes[nid] = node2
+        nid_map[nidi] = nid
+        nid += 1
+
+    for eid in eids:
+        nodes = []
+        elem = model.elements[eid]
+        for nidi in elem.nodes:
+            if nidi in nid_map:
+                nodes.append(nid_map[nidi])
+            else:
+                nodes.append(nidi)
+            assert len(np.unique(nodes)) == len(nodes), 'nodes=%s' % nodes
+        elem.nodes = nodes

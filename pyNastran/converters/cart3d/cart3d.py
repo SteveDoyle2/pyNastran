@@ -13,6 +13,52 @@ from numpy.linalg import norm
 from pyNastran.utils import is_binary_file
 from pyNastran.utils.log import get_logger
 
+def comp2tri(self, in_filenames, out_filename,
+             is_binary=False, float_fmt='%6.7f'):
+    """
+    Combines multiple Cart3d files (binary or ascii) into a single file.
+
+    Parameters
+    ----------
+    in_filenames : List[str]
+        list of filenames
+    out_filename : str
+        output filename
+    is_binary : bool; default=False
+        is the output filename binary
+    float_fmt : str; default='%6.7f'
+        the format string to use for ascii writing
+
+    .. note:: assumes loads is None
+    """
+    points = []
+    elements = []
+    regions = []
+
+    #ne = 0
+    npi = 0
+    nri = 0
+    model = Cart3D()
+    for infilename in in_filenames:
+        model.read_cart3d(infilename)
+        np = point.shape[0]
+        nr = len(unique(region))
+        element += npi - 1
+        region += nri
+
+        points.append(model.nodes)
+        elements.append(model.elements)
+        regions.append(model.regions)
+        npi += np
+        nri += nr
+
+    points = vstack(points)
+    elements = vstack(elements)
+    regions = vstack(regions)
+    self.write_cart3d(out_filename,
+                      points, elements, regions,
+                      loads=None, is_binary=False, float_fmt=float_fmt)
+
 
 class Cart3dIO(object):
     """
@@ -350,12 +396,6 @@ class Cart3dIO(object):
         self.infile.seek(self.n)
 
     def show(self, n, types='ifs', endian=None):
-        """
-        Parameters
-        ----------
-        self : Cart3D()
-            the object pointer
-        """
         assert self.n == self.infile.tell(), 'n=%s tell=%s' % (self.n, self.infile.tell())
         nints = n // 4
         data = self.infile.read(4 * n)
@@ -369,11 +409,6 @@ class Cart3dIO(object):
     def write_data(self, outfile, data, types='ifs', endian=None):
         """
         Useful function for seeing what's going on locally when debugging.
-
-        Parameters
-        ----------
-        self : Cart3D()
-            the object pointer
         """
         n = len(data)
         nints = n // 4
@@ -416,11 +451,6 @@ class Cart3dIO(object):
     def write_ndata(self, outfile, n, types='ifs'):
         """
         Useful function for seeing what's going on locally when debugging.
-
-        Parameters
-        ----------
-        self : Cart3D()
-            the object pointer
         """
         nold = self.n
         data = self.infile.read(n)
@@ -463,6 +493,70 @@ class Cart3D(Cart3dIO):
             the tolerance for the centerline points
         """
         raise NotImplementedError()
+        self.log.info('---starting make_mirror_model---')
+        assert tol >= 0, 'tol=%r' % tol #  prevents hacks to the axis
+
+        nnodes = nodes.shape[0]
+        assert nnodes > 0, 'nnodes=%s' % nnodes
+
+        nelements = elements.shape[0]
+        assert nelements > 0, 'nelements=%s' % nelements
+
+        ax = self._get_ax(axis)
+        if ax in [0, 1, 2]:  # positive x, y, z values; mirror to -side
+            iy0 = where(nodes[:, ax] > tol)[0]
+            ax2 = ax
+        elif ax in [3, 4, 5]:  # negative x, y, z values; mirror to +side
+            iy0 = where(nodes[:, ax-3] < -tol)[0]
+            ax2 = ax - 3 # we create ax2 in order to generalize the data updating
+        else:
+            raise NotImplementedError(axis)
+
+        # the nodes to be duplicated are the nodes that aren't below the tolerance
+        nodes_upper = nodes[iy0]
+        nodes_upper[:, ax2] *= -1.0  # flip the nodes about the axis
+
+        nodes2 = vstack([nodes, nodes_upper])
+        nnodes2 = nodes2.shape[0]
+        assert nnodes2 > nnodes, 'nnodes2=%s nnodes=%s' % (nnodes2, nnodes)
+
+        nnodes_upper = nodes_upper.shape[0]
+        elements_upper = elements.copy()
+        nelements = elements.shape[0]
+
+        # remap the mirrored nodes with the new node ids
+        for eid in range(nelements):
+            element = elements_upper[eid, :]
+            for i, eidi in enumerate(element):
+                if eidi in iy0:
+                    elements_upper[eid][i] = nnodes_upper + eidi
+
+                # we need to reverse the element in order to get
+                # the proper normal vector
+                elements_upper[eid] = elements_upper[eid, ::-1]
+
+        elements2 = vstack([elements, elements_upper])
+        nelements2 = elements2.shape[0]
+        assert nelements2 > nelements, 'nelements2=%s nelements=%s' % (nelements2, nelements)
+
+        nregions = len(unique(regions))
+        regions_upper = regions.copy() + nregions
+        regions2 = hstack([regions, regions_upper])
+
+        loads2 = {}
+        for key, data in iteritems(loads):
+
+            # flip the sign on the flipping axis terms
+            if((key in ['U', 'rhoU'] and ax2 == 0) or
+               (key in ['V', 'rhoV'] and ax2 == 1) or
+               (key in ['W', 'rhoW'] and ax2 == 2)):
+                data_upper = -data[iy0]
+            else:
+                data_upper = data[iy0]
+            loads2[key] = hstack([data, data_upper])
+
+        self.log.info('---finished make_mirror_model---')
+        return (nodes2, elements2, regions2, loads2)
 
     def _get_ax(self, axis):
         axis = axis.lower().strip()
@@ -484,13 +578,15 @@ class Cart3D(Cart3dIO):
         self.log.info("axis=%r ax=%s" % (axis, ax))
         return ax
 
-    def make_half_model(self, nodes, elements, regions, loads=None, axis='y',
-                        remap_nodes=True):
+    def make_half_model(self, axis='y', remap_nodes=True):
         """
         Makes a half model from a full model
 
         ... note:: Cp is really loads['Cp'] and was meant for loads analysis only
         """
+        nodes = self.nodes
+        elements = self.elements
+        loads = self.loads
         if loads is None:
             loads = {}
 
@@ -713,8 +809,7 @@ class Cart3D(Cart3dIO):
         Takes the Cart3d variables and calculates additional variables
 
         Parameters
-        self : Cart3d()
-            the object pointer
+        ----------
         result_names : List[str]
             the variables to calculate
         results : (n,6) ndarray
@@ -841,8 +936,6 @@ class Cart3D(Cart3dIO):
 
         Parameters
         ----------
-        self:
-            the reader object
         shift_nodes : boolean; default=True
             shifts element IDs such that the
               - node IDs start at 0 instead of 1
@@ -884,8 +977,6 @@ class Cart3D(Cart3dIO):
 
         Parameters
         ----------
-        self : Cart3D()
-            the reader object
         cnormals : (n, 3) ndarray
             normalized centroidal normal vectors
         shift_nodes : bool; default=True

@@ -10,7 +10,6 @@ from pyNastran.bdf.dev_vectorized.utils import slice_to_iter
 
 
 class PBEAML(object):
-#class PBEAML(Property):
     type = 'PBEAML'
 
     def __iter__(self):
@@ -55,7 +54,6 @@ class PBEAML(object):
         """
         Defines the PBEAML object.
 
-        :param self: the PBEAML object
         :param model: the BDF object
         :param cards: the list of PBEAML cards
         """

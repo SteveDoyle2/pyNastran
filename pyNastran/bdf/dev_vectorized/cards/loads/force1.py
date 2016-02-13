@@ -16,7 +16,6 @@ class FORCE1(VectorizedCard):
         """
         Defines the FORCE1 object.
 
-        :param self: the FORCE1 object
         :param model: the BDF object
 
         .. todo:: collapse loads
@@ -62,7 +61,6 @@ class FORCE1(VectorizedCard):
 
     def build(self):
         """
-        :param self: the FORCE1 object
         :param cards: the list of FORCE cards
         """
         cards = self._cards

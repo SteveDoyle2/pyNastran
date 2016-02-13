@@ -15,7 +15,6 @@ class MOMENT(object):
         """
         Defines the MOMENT object.
 
-        :param self: the MOMENT object
         :param model: the BDF object
         """
         self.model = model
@@ -56,7 +55,6 @@ class MOMENT(object):
 
     def build(self):
         """
-        :param self: the MOMENT object
         :param cards: the list of MOMENT cards
         """
         cards = self._cards

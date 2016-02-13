@@ -1,9 +1,9 @@
-#pylint: disable=C0326,C0301,C0103
+#pylint: disable=C0326,C0301
 from __future__ import print_function, unicode_literals
 from six import b
 from six.moves import range
-from struct import Struct, unpack
-from numpy import fromstring
+from struct import Struct
+from numpy import fromstring, array
 
 from pyNastran.op2.tables.oee_energy.oee_objects import RealStrainEnergy, RealStrainEnergyArray
 from pyNastran.op2.op2_common import OP2Common
@@ -20,17 +20,17 @@ class ONR(OP2Common):
         """
         self.words = [
             'aCode',       'tCode',    'eTotal',        'isubcase',
-             '???',         '???',      'element_name', 'load_set'
-             'format_code', 'num_wide', 'cvalres',      'setID',
-             'setID',       'eigenReal','eigenImag',     '???',
-             'etotpos',     'etotneg',  '???',          '???',
-             '???',         '???',      '???',      '???',
-             '???', 'Title', 'subtitle', 'label']
+            '???',         '???',      'element_name', 'load_set',
+            'format_code', 'num_wide', 'cvalres',      'setID',
+            'setID',       'eigenReal', 'eigenImag',     '???',
+            'etotpos',     'etotneg',  '???',          '???',
+            '???',         '???',      '???',      '???',
+            '???', 'Title', 'subtitle', 'label']
 
         #aCode = self.get_block_int_entry(data, 1)
 
         ## total energy of all elements in isubcase/mode
-        self.eTotal = self.parse_approach_code(data)
+        self.etotal = self.parse_approach_code(data)
         if self.is_debug_file:
             self.binary_debug.flush()
 
@@ -69,13 +69,13 @@ class ONR(OP2Common):
         self.cvalres = self.add_data_parameter(data, 'cvalres', 'i', 11, False)
 
         #: Set identification number Number
-        self.setID = self.add_data_parameter(data, 'setID', 'i', 13, False)
+        self.set_id = self.add_data_parameter(data, 'set_id', 'i', 13, False)
 
         #: Natural eigenvalue - real part
-        self.eigenReal = self.add_data_parameter(data, 'eigenReal', 'i', 14, False)
+        self.eigen_real = self.add_data_parameter(data, 'eigen_real', 'i', 14, False)
 
         #: Natural eigenvalue - imaginary part
-        self.eigenImag = self.add_data_parameter(data, 'eigenImag', 'i', 15, False)
+        self.eigen_imag = self.add_data_parameter(data, 'eigen_imag', 'i', 15, False)
 
         self.add_data_parameter(data, 'freq', 'f', 16, False)  ## Natural frequency
 
@@ -88,7 +88,6 @@ class ONR(OP2Common):
         if not self.is_sort1():
             raise NotImplementedError('sort2...')
 
-        #self.print_block(data) # on
         if self.analysis_code == 1:   # statics / displacement / heat flux
             #del self.data_code['nonlinear_factor']
             self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', 'i', 5, False)
@@ -98,10 +97,10 @@ class ONR(OP2Common):
             self.mode = self.add_data_parameter(data, 'mode', 'i', 5)  ## mode number
             self.data_names = self.apply_data_code_value('data_names', ['mode'])
             #print "mode(5)=%s eigr(6)=%s mode_cycle(7)=%s" %(self.mode,self.eigr,self.mode_cycle)
-        #elif self.analysis_code==3: # differential stiffness
+        #elif self.analysis_code == 3: # differential stiffness
             #self.lsdvmn = self.get_values(data,'i',5) ## load set number
             #self.data_code['lsdvmn'] = self.lsdvmn
-        #elif self.analysis_code==4: # differential stiffness
+        #elif self.analysis_code == 4: # differential stiffness
             #self.lsdvmn = self.get_values(data,'i',5) ## load set number
         elif self.analysis_code == 5:   # frequency
             self.freq2 = self.add_data_parameter(data, 'freq2', 'f', 5)  ## frequency
@@ -109,7 +108,7 @@ class ONR(OP2Common):
         elif self.analysis_code == 6:  # transient
             self.time = self.add_data_parameter(data, 'time', 'f', 5)  ## time step
             self.data_names = self.apply_data_code_value('data_names', ['time'])
-        #elif self.analysis_code==7: # pre-buckling
+        #elif self.analysis_code == 7: # pre-buckling
             #self.data_names = self.apply_data_code_value('data_names',['lsdvmn'])
         elif self.analysis_code == 8:  # post-buckling
             self.mode = self.add_data_parameter(data, 'mode', 'i', 5)  ## mode number
@@ -120,7 +119,7 @@ class ONR(OP2Common):
         elif self.analysis_code == 10:  # nonlinear statics
             self.loadFactor = self.add_data_parameter(data, 'loadFactor', 'f', 5)  ## load factor
             self.data_names = self.apply_data_code_value('data_names', ['loadFactor'])
-        #elif self.analysis_code==11: # old geometric nonlinear statics
+        #elif self.analysis_code == 11: # old geometric nonlinear statics
             #self.data_names = self.apply_data_code_value('data_names',['lsdvmn'])
         elif self.analysis_code == 12:  # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
             self.time = self.add_data_parameter(data, 'time', 'f', 5)  ## time step
@@ -142,7 +141,9 @@ class ONR(OP2Common):
         reads ONRGY1 subtable 4
         """
         if self.table_code == 18:  # element strain energy
-            assert self.table_name in [b'ONRGY1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
+            if self.table_name not in self.table_name in [b'ONRGY', b'ONRGY1']:
+                msg = 'table_name=%s table_code=%s' % (self.table_name, self.table_code)
+                raise NotImplementedError(msg)
             n = self._read_element_strain_energy(data, ndata)
         else:
             raise NotImplementedError(self.table_code)
@@ -188,7 +189,7 @@ class ONR(OP2Common):
             result_name = 'cquad8_strain_energy'
         elif self.data_code['element_name'] == 'QUADR':
             result_name = 'cquadr_strain_energy'
-        elif self.data_code['element_name'] == ['QUADXFD', 'QUADX4FD']:
+        elif self.data_code['element_name'] in ['QUADXFD', 'QUADX4FD']:
             result_name = 'cquadx_strain_energy'
         elif self.data_code['element_name'] == 'SHEAR':
             result_name = 'cshear_strain_energy'
@@ -199,6 +200,8 @@ class ONR(OP2Common):
             result_name = 'cpenta_strain_energy'
         elif self.data_code['element_name'] in ['TETRA', 'TETRAFD', 'TETRA4FD']:
             result_name = 'ctetra_strain_energy'
+        elif self.data_code['element_name'] in ['PYRAM']:
+            result_name = 'cpyram_strain_energy'
 
         elif self.data_code['element_name'] == 'GAP':
             result_name = 'cgap_strain_energy'
@@ -226,6 +229,7 @@ class ONR(OP2Common):
             raise NotImplementedError('element_name=%r' % (
                 self.data_code['element_name']))
         #result_name = 'strain_energy'
+        slot = getattr(self, result_name)
 
 
 
@@ -239,28 +243,28 @@ class ONR(OP2Common):
 
             ntotal = 16
             nelements = ndata // ntotal
-            slot = getattr(self, result_name)
-            if 0:
+            if 1:
                 auto_return, is_vectorized = self._create_oes_object4(
                     nelements, result_name, slot, RealStrainEnergyArray)
 
-                obj = self.obj
                 if auto_return:
-                    if obj.dt_temp is None or obj.itime is None and obj.dt_temp == dt:
-                        element_name = self.data_code['element_name']
-                        if element_name in obj.element_name_count:
-                            obj.element_name_count[element_name] += nelements
-                        else:
-                            obj.element_name_count[element_name] = nelements
-                        obj.dt_temp = dt
+                    #if obj.dt_temp is None or obj.itime is None and obj.dt_temp == dt:
+                        #element_name = self.data_code['element_name']
+                        #if element_name in obj.element_name_count:
+                            #obj.element_name_count[element_name] += nelements
+                        #else:
+                            #obj.element_name_count[element_name] = nelements
+                        #obj.dt_temp = dt
                     return nelements * self.num_wide * 4
-                itime = obj.itime // obj.nelement_types
+                #itime = obj.itime #// obj.nelement_types
             else:
                 if self.read_mode == 1:
                     return ndata
                 self.create_transient_object(slot, RealStrainEnergy)
-                obj = self.obj
-            is_vectorized = False
+
+            obj = self.obj
+            itime = obj.itime
+            is_vectorized = True
 
             if self.is_debug_file:
                 self.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
@@ -268,33 +272,31 @@ class ONR(OP2Common):
                 self.binary_debug.write('  #elementi = [eid_device, energy, percent, density]\n')
                 self.binary_debug.write('  nelements=%i\n' % nelements)
 
-            #self.element_names.add(self.data_code['element_name'])
             if self.use_vector and is_vectorized:
                 n = nelements * 4 * self.num_wide
-                itotal = obj.itotal2 # was obj.itotal
-                ielement2 = obj.itotal2 + nelements # was obj.itotal
-                itotal2 = ielement2
-                print('itime=%s itotal=%s itotal2=%s' % (itime, itotal, itotal2))
+                ielement = obj.ielement
+                ielement2 = obj.ielement + nelements
+                itotal = obj.itotal
+                itotal2 = obj.itotal + nelements * 4
 
                 floats = fromstring(data, dtype=self.fdtype).reshape(nelements, 4)
                 obj._times[itime] = dt
                 if obj.itime == 0:
                     ints = fromstring(data, dtype=self.idtype).reshape(nelements, 4)
                     eids = ints[:, 0] // 10
-                    print('eids =', eids)
                     assert eids.min() > 0, eids.min()
-                    obj.element[itotal:itotal2] = eids
+                    obj.element[ielement:ielement2] = eids
 
                 #[energy, percent, density]
-                obj.data[itime, itotal:itotal2, :] = floats[:, 1:]
-                obj.itotal2 = itotal2 # was obj.itotal
-                #obj.ielement = ielement2
+                obj.data[itime, ielement:ielement2, :] = floats[:, 1:]
+                obj.itotal2 = itotal2
+                obj.ielement = ielement2
             else:
-                s = Struct(b(self._endian + 'i3f'))
+                struct1 = Struct(b(self._endian + 'i3f'))
                 for i in range(nelements):
                     edata = data[n:n+ntotal]
 
-                    out = s.unpack(edata)
+                    out = struct1.unpack(edata)
                     (eid_device, energy, percent, density) = out
                     eid = eid_device // 10
                     if self.is_debug_file:
@@ -302,15 +304,20 @@ class ONR(OP2Common):
                     self.obj.add_sort1(dt, eid, energy, percent, density)
                     n += ntotal
         elif self.num_wide == 5:
-            if self.read_mode == 1:
-                return ndata
             assert self.cvalres in [0, 1, 2], self.cvalres # 0??
-            self.create_transient_object(slot, RealStrainEnergy)  # why is this not different?
             ntotal = 20
             nnodes = ndata // ntotal
 
+            if 0:
+                if self.read_mode == 1:
+                    return ndata
+                self.create_transient_object(slot, RealStrainEnergy)  # why is this not different?
+            else:
+                auto_return, is_vectorized = self._create_oes_object4(
+                    nelements, result_name, slot, RealStrainEnergyArray)
+
             obj = self.obj
-            is_vectorized = False
+            is_vectorized = True
             if self.use_vector and is_vectorized:
                 n = nelements * 4 * self.num_wide
                 itotal = obj.ielement
@@ -348,14 +355,18 @@ class ONR(OP2Common):
                     obj.add(dt, word, energy, percent, density)
                     n += ntotal
         elif self.num_wide == 6:  ## TODO: figure this out...
-            if self.read_mode == 1:
-                return ndata
-            self.create_transient_object(slot, RealStrainEnergy)  # TODO: why is this not different?
             ntotal = 24
             nnodes = ndata // ntotal
+            if 0:
+                if self.read_mode == 1:
+                    return ndata
+                self.create_transient_object(slot, RealStrainEnergy)  # TODO: why is this not different?
+            else:
+                auto_return, is_vectorized = self._create_oes_object4(
+                    nelements, result_name, slot, RealStrainEnergyArray)
 
             obj = self.obj
-            is_vectorized = False
+            is_vectorized = True
             if self.use_vector and is_vectorized:
                 n = nelements * 4 * self.num_wide
                 itotal = obj.ielement
@@ -365,9 +376,10 @@ class ONR(OP2Common):
                 floats = fromstring(data, dtype=self.fdtype).reshape(nelements, 5)
                 obj._times[obj.itime] = dt
 
-                strings = fromstring(data, dtype=self._endian + 'S4').reshape(nelements, 6)
-                s = array([s1+s2 for s1, s2 in zip(strings[:, 1], strings[:, 2])])
                 if obj.itime == 0:
+                    strings = fromstring(data, dtype=self._endian + 'S4').reshape(nelements, 6)
+                    s = array([s1+s2 for s1, s2 in zip(strings[:, 1], strings[:, 2])])
+
                     ints = fromstring(data, dtype=self.idtype).reshape(nelements, 6)
                     eids = ints[:, 0] // 10
                     assert eids.min() > 0, eids.min()
@@ -379,10 +391,10 @@ class ONR(OP2Common):
                 obj.itotal = itotal2
                 obj.ielement = ielement2
             else:
-                s = Struct(b(self._endian + 'i8s3f'))
+                struct1 = Struct(b(self._endian + 'i8s3f'))
                 for i in range(nnodes):
                     edata = data[n:n+24]
-                    out = s.unpack(edata)
+                    out = struct1.unpack(edata)
                     (word, energy, percent, density) = out  # TODO: this has to be wrong...
                     word = word.strip()
                     #print "eType=%s" % (eType)

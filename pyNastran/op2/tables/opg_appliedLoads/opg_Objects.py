@@ -1,6 +1,6 @@
 from six.moves import zip
 from numpy import array, zeros
-from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
+from pyNastran.op2.result_objects.op2_objects import ScalarObject
 from pyNastran.f06.f06_formatting import write_floats_13e, write_imag_floats_13e
 
 
@@ -74,7 +74,9 @@ class RealAppliedLoadsVectorArray(AppliedLoadsVectorArray):
     def data_type(self):
         raise 'float32'
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+        if header is None:
+            header = []
         words = ['                      APPLIED LOADS VECTOR\n',
                  '\n',
                  '      EID SOURCE FX FY FZ MX MY MZ\n']
@@ -111,7 +113,9 @@ class ComplexAppliedLoadsVectorArray(AppliedLoadsVectorArray):
     def data_type(self):
         raise 'float32'
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+        if header is None:
+            header = []
         words = ['                      APPLIED LOADS VECTOR\n',
                  '\n',
                  '      EID SOURCE FX FY FZ MX MY MZ\n']
@@ -142,53 +146,53 @@ class ComplexAppliedLoadsVectorArray(AppliedLoadsVectorArray):
             page_num += 1
         return page_num-1
 
-class RealAppliedLoads(ScalarObject):  # approach_code=1, sort_code=0
+#class RealAppliedLoads(ScalarObject):  # approach_code=1, sort_code=0
 
-    def __init__(self, data_code, is_sort1, isubcase, dt):
-        ScalarObject.__init__(self, data_code, isubcase)
-        self.dt = dt
+    #def __init__(self, data_code, is_sort1, isubcase, dt):
+        #ScalarObject.__init__(self, data_code, isubcase)
+        #self.dt = dt
 
-        self.eids = {}
-        self.sources = {}
-        self.forces = {}
-        self.moments = {}
-        if self.dt is not None:
-            assert dt >= 0.
-            raise NotImplementedError('transient appliedLoads not implemented...')
-            self.eids = {dt: []}
-            self.sources = {dt: []}
-            self.forces = {dt: []}
-            self.moments = {dt: []}
-            self.add = self.addTransient
+        #self.eids = {}
+        #self.sources = {}
+        #self.forces = {}
+        #self.moments = {}
+        #if self.dt is not None:
+            #assert dt >= 0.
+            #raise NotImplementedError('transient appliedLoads not implemented...')
+            #self.eids = {dt: []}
+            #self.sources = {dt: []}
+            #self.forces = {dt: []}
+            #self.moments = {dt: []}
+            #self.add = self.addTransient
 
-    def add_node(self, nodeID, eid, source, v1, v2, v3, v4, v5, v6):
-        msg = "nodeID=%s eid=%s source=|%s| v1=%i v2=%i v3=%i v4=%i v5=%i v6=%i" % (nodeID, eid, source, v1, v2, v3, v4, v5, v6)
-        assert 0 < nodeID < 1000000000, msg
-        assert nodeID not in self.forces, msg
+    #def add_node(self, nodeID, eid, source, v1, v2, v3, v4, v5, v6):
+        #msg = "nodeID=%s eid=%s source=|%s| v1=%i v2=%i v3=%i v4=%i v5=%i v6=%i" % (nodeID, eid, source, v1, v2, v3, v4, v5, v6)
+        #assert 0 < nodeID < 1000000000, msg
+        #assert nodeID not in self.forces, msg
 
-        self.eids[nodeID] = [eid]
-        self.sources[nodeID] = [source]
-        self.forces[nodeID] = [array([v1, v2, v3])]  # Fx,Fy,Fz
-        self.moments[nodeID] = [array([v4, v5, v6])]  # Mx,My,Mz
+        #self.eids[nodeID] = [eid]
+        #self.sources[nodeID] = [source]
+        #self.forces[nodeID] = [array([v1, v2, v3])]  # Fx,Fy,Fz
+        #self.moments[nodeID] = [array([v4, v5, v6])]  # Mx,My,Mz
 
-    def add(self, nodeID, eid, source, v1, v2, v3, v4, v5, v6):
-        msg = "nodeID=%s eid=%s source=|%s| v1=%i v2=%i v3=%i v4=%i v5=%i v6=%i" % (nodeID, eid, source, v1, v2, v3, v4, v5, v6)
-        assert 0 < nodeID < 1000000000, msg
-        if nodeID not in self.forces:
-            self.add_node(nodeID, eid, source, v1, v2, v3, v4, v5, v6)
-            return None
-        #assert nodeID not in self.forces,msg
+    #def add(self, nodeID, eid, source, v1, v2, v3, v4, v5, v6):
+        #msg = "nodeID=%s eid=%s source=|%s| v1=%i v2=%i v3=%i v4=%i v5=%i v6=%i" % (nodeID, eid, source, v1, v2, v3, v4, v5, v6)
+        #assert 0 < nodeID < 1000000000, msg
+        #if nodeID not in self.forces:
+            #self.add_node(nodeID, eid, source, v1, v2, v3, v4, v5, v6)
+            #return None
+        ##assert nodeID not in self.forces,msg
 
-        self.eids[nodeID].append(eid)
-        self.sources[nodeID].append(source)
-        self.forces[nodeID].append(array([v1, v2, v3]))  # Fx,Fy,Fz
-        self.moments[nodeID].append(array([v4, v5, v6]))  # Mx,My,Mz
+        #self.eids[nodeID].append(eid)
+        #self.sources[nodeID].append(source)
+        #self.forces[nodeID].append(array([v1, v2, v3]))  # Fx,Fy,Fz
+        #self.moments[nodeID].append(array([v4, v5, v6]))  # Mx,My,Mz
 
-    def addTransient(self, nodeID, eid, source, v1, v2, v3, v4, v5, v6):
-        raise NotImplementedError('AppliedLoads')
-        msg = "nodeID=%s v1=%s v2=%s v3=%s" % (nodeID, v1, v2, v3)
-        assert 0 < nodeID < 1000000000, msg
-        assert nodeID not in self.forces
+    #def addTransient(self, nodeID, eid, source, v1, v2, v3, v4, v5, v6):
+        #raise NotImplementedError('AppliedLoads')
+        #msg = "nodeID=%s v1=%s v2=%s v3=%s" % (nodeID, v1, v2, v3)
+        #assert 0 < nodeID < 1000000000, msg
+        #assert nodeID not in self.forces
 
-        self.forces[self.dt][nodeID] = array([v1, v2, v3])  # Fx,Fy,Fz
-        self.moments[self.dt][nodeID] = array([v4, v5, v6])  # Mx,My,Mz
+        #self.forces[self.dt][nodeID] = array([v1, v2, v3])  # Fx,Fy,Fz
+        #self.moments[self.dt][nodeID] = array([v4, v5, v6])  # Mx,My,Mz

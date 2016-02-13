@@ -5,7 +5,6 @@ class RodElement(Element):
         """
         Defines the CONROD object.
 
-        :param self: the CONROD object
         :param model: the BDF object
         """
         Element.__init__(self, model)

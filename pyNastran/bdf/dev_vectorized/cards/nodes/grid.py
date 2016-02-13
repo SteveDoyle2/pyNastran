@@ -56,7 +56,6 @@ class GRDSET(object):
         """
         Defines the GRID object.
 
-        :param self: the GRID object
         :param model: the BDF object
 
         +--------+-----+----+----+----+----+----+----+------+
@@ -101,7 +100,6 @@ class GRID(VectorizedCard):
         """
         Defines the GRID object.
 
-        :param self: the GRID object
         :param model: the BDF object
 
         +------+-----+----+----+----+----+----+----+------+

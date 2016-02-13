@@ -2,6 +2,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import iteritems
 from itertools import count
+import numpy as np
 from numpy import zeros, searchsorted, ravel
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
@@ -43,8 +44,7 @@ class RealTriaxArray(OES_Object):
         if self.is_built:
             return
         #print("self.ielement =", self.ielement)
-        print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
-        #aasdf
+        #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         assert self.ntimes > 0, 'ntimes=%s' % self.ntimes
         assert self.nelements > 0, 'nelements=%s' % self.nelements
         assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
@@ -68,14 +68,12 @@ class RealTriaxArray(OES_Object):
             dtype = 'int32'
         self._times = zeros(self.ntimes, dtype=dtype)
         self.element_node = zeros((self.ntotal, 2), dtype='int32')
-        print('self.element_node.shape', self.element_node.shape)
 
         # [radial, azimuthal, axial, shear, omax, oms, ovm]
         self.data = zeros((self.ntimes, self.ntotal, 7), dtype='float32')
 
     def build_dataframe(self):
         headers = self.get_headers()
-        name = self.name
         element_node = [self.element_node[:, 0], self.element_node[:, 1]]
         if self.nonlinear_factor is not None:
             column_names, column_values = self._build_dataframe_transient_header()
@@ -86,6 +84,48 @@ class RealTriaxArray(OES_Object):
             self.data_frame = pd.Panel(self.data, major_axis=element_node, minor_axis=headers).to_frame()
             self.data_frame.columns.names = ['Static']
             self.data_frame.index.names = ['ElementID', 'NodeID', 'Item']
+
+    def __eq__(self, table):
+        assert self.is_sort1() == table.is_sort1()
+        self._eq_header(table)
+        if not np.array_equal(self.element_node, table.element_node):
+            assert self.element_node.shape == table.element_node.shape, 'shape=%s element_node.shape=%s' % (
+                self.element_node.shape, table.element_node.shape)
+            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+            msg += '%s\nEid1, Eid2\n' % str(self.code_information())
+            for (eid1, nid1), (eid2, nid2) in zip(self.element_node, table.element_node):
+                msg += '(%s, %s) (%s, %s)\n' % (eid1, nid1, eid2, nid2)
+            print(msg)
+            raise ValueError(msg)
+        if not np.array_equal(self.data, table.data):
+            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+            msg += '%s\n' % str(self.code_information())
+            ntimes = self.data.shape[0]
+
+            i = 0
+            if self.is_sort1():
+                for itime in range(ntimes):
+                    for ieid, eid, in enumerate(self.element):
+                        t1 = self.data[itime, inid, :]
+                        t2 = table.data[itime, inid, :]
+                        (force1, stress1) = t1
+                        (force2, stress2) = t2
+                        if not allclose(t1, t2):
+                        #if not np.array_equal(t1, t2):
+                            msg += '%s\n  (%s, %s, %s, %s, %s, %s)\n  (%s, %s, %s, %s, %s, %s)\n' % (
+                                eid,
+                                force1, stress1,
+                                force2, stress2)
+                            i += 1
+                        if i > 10:
+                            print(msg)
+                            raise ValueError(msg)
+            else:
+                raise NotImplementedError(self.is_sort2())
+            if i > 0:
+                print(msg)
+                raise ValueError(msg)
+        return True
 
     def add_sort1(self, dt, eid, nid, radial, azimuthal, axial, shear, omax, oms, ovm):
         assert isinstance(eid, int)
@@ -135,7 +175,9 @@ class RealTriaxArray(OES_Object):
         ind = ravel([searchsorted(self.element == eid) for eid in eids])
         return ind
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+        if header is None:
+            header = []
         msg = self._get_msgs()
         (ntimes, ntotal) = self.data.shape[:2]
         eids = self.element_node[:, 0]
@@ -155,7 +197,6 @@ class RealTriaxArray(OES_Object):
             oms = self.data[itime, :, 5]
             ovm = self.data[itime, :, 6]
 
-            # loop over all the elements
             for (i, eid, nid, radiali, azimuthali, axiali, sheari, omaxi, omsi, ovmi) in zip(
                 count(), eids, nids, radial, azimuthal, axial, shear, omax, oms, ovm):
 
@@ -216,421 +257,3 @@ class RealTriaxStrainArray(RealTriaxArray, StrainObject):
               #'               4389 -9.867789E+02 -1.624276E+03 -1.388424E+03 -9.212539E+01  -1.624276E+03  3.288099E+02  5.806334E+02
         ]
         return msg
-
-#class RealTriaxStress(StressObject):
-    #"""
-    #::
-
-      ## format_code=1 sort_code=0 stressCode=0
-                                        #S T R E S S E S   I N   T R I A X 6   E L E M E N T S
-      #ELEMENT  GRID ID       STRESSES  IN  MATERIAL  COORD  SYSTEM                 MAX  MAG        MAX        VON MISES
-         #ID               RADIAL        AZIMUTHAL     AXIAL         SHEAR         PRINCIPAL       SHEAR
-         #5351        0 -9.726205E+02 -1.678908E+03 -1.452340E+03 -1.325111E+02  -1.678908E+03  3.702285E+02  6.654553E+02
-                  #4389 -9.867789E+02 -1.624276E+03 -1.388424E+03 -9.212539E+01  -1.624276E+03  3.288099E+02  5.806334E+02
-    #"""
-    #def __init__(self, data_code, is_sort1, isubcase, dt):
-        #StressObject.__init__(self, data_code, isubcase)
-        #self.eType = 'CTRIAX6'
-
-        #self.code = [self.format_code, self.sort_code, self.s_code]
-        #self.radial = {}
-        #self.azimuthal = {}
-        #self.axial = {}
-        #self.shear = {}
-        #self.omax = {}
-        #self.oms = {}
-        #self.ovm = {}
-
-        #self.dt = dt
-        #if is_sort1:
-            #if dt is not None:
-                #self.add = self.add_sort1
-                #self.add_new_eid = self.add_new_eid_sort1
-        #else:
-            #assert dt is not None
-            #self.add = self.add_sort2
-            #self.add_new_eid = self.add_new_eid_sort2
-
-    #def is_real(self):
-        #return True
-
-    #def is_complex(self):
-        #return False
-
-    #def get_stats(self):
-        #msg = self.get_data_code()
-        #if self.nonlinear_factor is not None:  # transient
-            #ntimes = len(self.radial)
-            #r0 = get_key0(self.radial)
-            #nelements = len(self.radial[r0])
-            #msg.append('  type=%s ntimes=%s nelements=%s\n'
-                       #% (self.__class__.__name__, ntimes, nelements))
-        #else:
-            #nelements = len(self.radial)
-            #msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
-                                                     #nelements))
-        #msg.append('  eType, radial, azimuthal, axial, shear, '
-                   #'omax, oms, ovm\n')
-        #return msg
-
-    #def add_f06_data(self, data, transient):
-        #raise Exception('Not Implemented')
-        #if transient is None:
-            #for line in data:
-                #(eid, axial, MSa, torsion, MSt) = line
-                #if MSa is None:
-                    #MSa = 0.
-                #if MSt is None:
-                    #MSt = 0.
-                #self.axial[eid] = axial
-                #self.MS_axial[eid] = MSa
-                #self.torsion[eid] = torsion
-                #self.MS_torsion[eid] = MSt
-            #return
-
-        #(dt_name, dt) = transient
-        #self.data_code['name'] = dt_name
-        #if dt not in self.s1:
-            #self.update_dt(self.data_code, dt)
-            #self.isTransient = True
-
-        #for line in data:
-            #(eid, axial, MSa, torsion, MSt) = line
-            #if MSa is None:
-                #MSa = 0.
-            #if MSt is None:
-                #MSt = 0.
-            #self.axial[dt][eid] = axial
-            #self.MS_axial[dt][eid] = MSa
-            #self.torsion[dt][eid] = torsion
-            #self.MS_torsion[dt][eid] = MSt
-
-    #def delete_transient(self, dt):
-        #del self.radial[dt]
-        #del self.azimuthal[dt]
-        #del self.axial[dt]
-        #del self.shear[dt]
-        #del self.omax[dt]
-        #del self.oms[dt]
-        #del self.ovm[dt]
-
-    #def get_transients(self):
-        #k = self.axial.keys()
-        #k.sort()
-        #return k
-
-    #def add_new_transient(self, dt):
-        #"""
-        #initializes the transient variables
-        #"""
-        #self.radial[dt] = {}
-        #self.azimuthal[dt] = {}
-        #self.axial[dt] = {}
-        #self.shear[dt] = {}
-        #self.omax[dt] = {}
-        #self.oms[dt] = {}
-        #self.ovm[dt] = {}
-
-    #def add_new_eid(self, dt, eid, nid, rs, azs, As, ss, maxp, tmax, octs):
-        ##print "**?eid=%s loc=%s rs=%s azs=%s as=%s ss=%s maxp=%s tmx=%s octs=%s" %(eid,nid,rs,azs,As,ss,maxp,tmax,octs)
-        #self.radial[eid] = {nid: rs}
-        #self.azimuthal[eid] = {nid: azs}
-        #self.axial[eid] = {nid: As}
-        #self.shear[eid] = {nid: ss}
-        #self.omax[eid] = {nid: maxp}
-        #self.oms[eid] = {nid: tmax}
-        #self.ovm[eid] = {nid: octs}
-
-    #def add(self, dt, eid, nid, rs, azs, As, ss, maxp, tmax, octs):
-        ##print "***eid=%s loc=%s rs=%s azs=%s as=%s ss=%s maxp=%s tmx=%s octs=%s" %(eid,nid,rs,azs,As,ss,maxp,tmax,octs)
-        #self.radial[eid][nid] = rs
-        #self.azimuthal[eid][nid] = azs
-        #self.axial[eid][nid] = As
-        #self.shear[eid][nid] = ss
-        #self.omax[eid][nid] = maxp
-        #self.oms[eid][nid] = tmax
-        #self.ovm[eid][nid] = octs
-
-    #def add_new_eid_sort1(self, dt, eid, nid, rs, azs, As, ss, maxp, tmax, octs):
-        ##assert isinstance(eid,int)
-        ##assert eid >= 0, eid
-        ##print "*  eid=%s loc=%s rs=%s azs=%s as=%s ss=%s maxp=%s tmx=%s octs=%s" %(eid,nid,rs,azs,As,ss,maxp,tmax,octs)
-        #if dt not in self.radial:
-            #self.add_new_transient(dt)
-        #self.radial[dt][eid] = {nid: rs}
-        #self.azimuthal[dt][eid] = {nid: azs}
-        #self.axial[dt][eid] = {nid: As}
-        #self.shear[dt][eid] = {nid: ss}
-        #self.omax[dt][eid] = {nid: maxp}
-        #self.oms[dt][eid] = {nid: tmax}
-        #self.ovm[dt][eid] = {nid: octs}
-
-    #def add_sort1(self, dt, eid, nid, rs, azs, As, ss, maxp, tmax, octs):
-        ##print "***eid=%s loc=%s rs=%s azs=%s as=%s ss=%s maxp=%s tmx=%s octs=%s" %(eid,nid,rs,azs,As,ss,maxp,tmax,octs)
-        #self.radial[dt][eid][nid] = rs
-        #self.azimuthal[dt][eid][nid] = azs
-        #self.axial[dt][eid][nid] = As
-        #self.shear[dt][eid][nid] = ss
-        #self.omax[dt][eid][nid] = maxp
-        #self.oms[dt][eid][nid] = tmax
-        #self.ovm[dt][eid][nid] = octs
-
-    #def write_f06(self, header, page_stamp, page_num=1, f=None,
-                  #is_mag_phase=False, is_sort1=True):
-        #if self.nonlinear_factor is not None:
-            #return self._write_f06_transient(header, page_stamp, page_num, f,
-                                             #is_mag_phase=is_mag_phase, is_sort1=is_sort1)
-
-        #msg = header + ['                                      S T R E S S E S   I N   T R I A X 6   E L E M E N T S\n',
-                        #'   ELEMENT  GRID ID       STRESSES  IN  MATERIAL  COORD  SYSTEM                 MAX  MAG        MAX        VON MISES  \n',
-                        #'      ID               RADIAL        AZIMUTHAL     AXIAL         SHEAR         PRINCIPAL       SHEAR\n', ]
-                       ##'      5351        0 -9.726205E+02 -1.678908E+03 -1.452340E+03 -1.325111E+02  -1.678908E+03  3.702285E+02  6.654553E+02
-                       ##'               4389 -9.867789E+02 -1.624276E+03 -1.388424E+03 -9.212539E+01  -1.624276E+03  3.288099E+02  5.806334E+02
-
-        ##out = []
-        #for eid, radial in sorted(iteritems(self.radial)):
-            #for nid in sorted(radial):
-                #rad = self.radial[eid][nid]
-                #azimuth = self.azimuthal[eid][nid]
-                #axial = self.axial[eid][nid]
-                #shear = self.shear[eid][nid]
-                #omax = self.omax[eid][nid]
-                #oms = self.oms[eid][nid]
-                #ovm = self.ovm[eid][nid]
-                #if nid == 0:
-                    #Eid = eid
-                #else:
-                    #Eid = ''
-                #[rad, azimuth, axial, shear, omax, oms, ovm] = write_floats_13e([rad, azimuth, axial, shear, omax, oms, ovm])
-                #msg.append('  %8s %8s %s %s %s %s  %s %s %-s\n' % (Eid, nid, radial, azimuth, axial, shear, omax, oms, ovm.rstrip()))
-            #msg.append('\n')
-
-        #msg.append(page_stamp % page_num)
-        #f.write(''.join(msg))
-        #return page_num
-
-    #def _write_f06_transient(self, header, page_stamp,
-                             #page_num=1, f=None, is_mag_phase=False, is_sort1=True):
-        #words = ['                                      S T R E S S E S   I N   T R I A X 6   E L E M E N T S\n',
-                 #'   ELEMENT  GRID ID       STRESSES  IN  MATERIAL  COORD  SYSTEM                 MAX  MAG        MAX        VON MISES  \n',
-                 #'      ID               RADIAL        AZIMUTHAL     AXIAL         SHEAR         PRINCIPAL       SHEAR\n', ]
-                ##'      5351        0 -9.726205E+02 -1.678908E+03 -1.452340E+03 -1.325111E+02  -1.678908E+03  3.702285E+02  6.654553E+02
-                ##'               4389 -9.867789E+02 -1.624276E+03 -1.388424E+03 -9.212539E+01  -1.624276E+03  3.288099E+02  5.806334E+02
-
-        #msg = []
-        #for dt, Radial in sorted(iteritems(self.radial)):
-            #header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
-            #msg += header + words
-            #for eid, radial in sorted(iteritems(Radial)):
-                #for nid in sorted(radial):
-                    #rad = self.radial[dt][eid][nid]
-                    #azimuth = self.azimuthal[dt][eid][nid]
-                    #axial = self.axial[dt][eid][nid]
-                    #shear = self.shear[dt][eid][nid]
-                    #omax = self.omax[dt][eid][nid]
-                    #oms = self.oms[dt][eid][nid]
-                    #ovm = self.ovm[dt][eid][nid]
-                    #if nid == 0:
-                        #Eid = eid
-                    #else:
-                        #Eid = ''
-                    #[rad, azimuth, axial, shear, omax, oms, ovm] = write_floats_13e([rad, azimuth, axial, shear, omax, oms, ovm])
-                    #msg.append('  %8s %8s %s %s %s %s  %s %s %-s\n' % (Eid, nid, rad, azimuth, axial, shear, omax, oms, ovm.rstrip()))
-                #msg.append('\n')
-
-            #msg.append(page_stamp % page_num)
-            #f.write(''.join(msg))
-            #msg = ['']
-            #page_num += 1
-        #return page_num - 1
-
-
-#class RealTriaxStrain(StrainObject):
-    #"""
-    #::
-
-      ## format_code=1 sort_code=0 stressCode=0
-                                        #S T R A I N S   I N   T R I A X 6   E L E M E N T S
-      #ELEMENT  GRID ID       STRAINS  IN  MATERIAL  COORD  SYSTEM                 MAX  MAG        MAX        VON MISES
-         #ID               RADIAL        AZIMUTHAL     AXIAL         SHEAR         PRINCIPAL       SHEAR
-         #5351        0 -9.726205E+02 -1.678908E+03 -1.452340E+03 -1.325111E+02  -1.678908E+03  3.702285E+02  6.654553E+02
-                  #4389 -9.867789E+02 -1.624276E+03 -1.388424E+03 -9.212539E+01  -1.624276E+03  3.288099E+02  5.806334E+02
-    #"""
-    #def __init__(self, data_code, is_sort1, isubcase, dt):
-        #StrainObject.__init__(self, data_code, isubcase)
-        #self.eType = 'CTRIAX6'
-
-        #self.code = [self.format_code, self.sort_code, self.s_code]
-        #self.radial = {}
-        #self.azimuthal = {}
-        #self.axial = {}
-        #self.shear = {}
-        #self.emax = {}
-        #self.ems = {}
-        #self.evm = {}
-
-        #self.dt = dt
-        #if is_sort1:
-            #if dt is not None:
-                #self.add = self.add_sort1
-                #self.add_new_eid = self.add_new_eid_sort1
-        #else:
-            #assert dt is not None
-            #self.add = self.add_sort2
-            #self.add_new_eid = self.add_new_eid_sort2
-
-    #def get_stats(self):
-        #msg = self.get_data_code()
-        #if self.nonlinear_factor is not None:  # transient
-            #ntimes = len(self.radial)
-            #r0 = get_key0(self.radial)
-            #nelements = len(self.radial[r0])
-            #msg.append('  type=%s ntimes=%s nelements=%s\n'
-                       #% (self.__class__.__name__, ntimes, nelements))
-        #else:
-            #nelements = len(self.radial)
-            #msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
-                                                     #nelements))
-        #msg.append('  eType, radial, azimuthal, axial, shear, '
-                   #'emax, ems, evm\n')
-        #return msg
-
-    #def add_f06_data(self, data, transient):
-        #raise Exception('Not Implemented')
-
-    #def delete_transient(self, dt):
-        #del self.radial[dt]
-        #del self.azimuthal[dt]
-        #del self.axial[dt]
-        #del self.shear[dt]
-        #del self.emax[dt]
-        #del self.ems[dt]
-        #del self.evm[dt]
-
-    #def get_transients(self):
-        #k = self.axial.keys()
-        #k.sort()
-        #return k
-
-    #def add_new_transient(self, dt):
-        #"""
-        #initializes the transient variables
-        #"""
-        #self.radial[dt] = {}
-        #self.azimuthal[dt] = {}
-        #self.axial[dt] = {}
-        #self.shear[dt] = {}
-        #self.emax[dt] = {}
-        #self.ems[dt] = {}
-        #self.evm[dt] = {}
-
-    #def add_new_eid(self, dt, eid, nid, rs, azs, As, ss, maxp, tmax, octs):
-        ##print "**?eid=%s loc=%s rs=%s azs=%s as=%s ss=%s maxp=%s tmx=%s octs=%s" %(eid,nid,rs,azs,As,ss,maxp,tmax,octs)
-        #self.radial[eid] = {nid: rs}
-        #self.azimuthal[eid] = {nid: azs}
-        #self.axial[eid] = {nid: As}
-        #self.shear[eid] = {nid: ss}
-        #self.emax[eid] = {nid: maxp}
-        #self.ems[eid] = {nid: emax}
-        #self.evm[eid] = {nid: ects}
-
-    #def add(self, dt, eid, nid, rs, azs, As, ss, maxp, emax, ects):
-        ##print "***eid=%s loc=%s rs=%s azs=%s as=%s ss=%s maxp=%s tmx=%s octs=%s" %(eid,nid,rs,azs,As,ss,maxp,tmax,octs)
-        #self.radial[eid][nid] = rs
-        #self.azimuthal[eid][nid] = azs
-        #self.axial[eid][nid] = As
-        #self.shear[eid][nid] = ss
-        #self.emax[eid][nid] = maxp
-        #self.ems[eid][nid] = emax
-        #self.evm[eid][nid] = ects
-
-    #def add_new_eid_sort1(self, dt, eid, nid, rs, azs, As, ss, maxp, emax, ects):
-        ##assert isinstance(eid,int)
-        ##assert eid >= 0, eid
-        ##print "*  eid=%s loc=%s rs=%s azs=%s as=%s ss=%s maxp=%s tmx=%s octs=%s" %(eid,nid,rs,azs,As,ss,maxp,tmax,octs)
-        #self.radial[dt][eid] = {nid: rs}
-        #self.azimuthal[dt][eid] = {nid: azs}
-        #self.axial[dt][eid] = {nid: As}
-        #self.shear[dt][eid] = {nid: ss}
-        #self.emax[dt][eid] = {nid: maxp}
-        #self.ems[dt][eid] = {nid: emax}
-        #self.evm[dt][eid] = {nid: ects}
-
-    #def add_sort1(self, dt, eid, nid, rs, azs, As, ss, maxp, emax, ects):
-        ##print "***eid=%s loc=%s rs=%s azs=%s as=%s ss=%s maxp=%s tmx=%s octs=%s" %(eid,nid,rs,azs,As,ss,maxp,tmax,octs)
-        #self.radial[dt][eid][nid] = rs
-        #self.azimuthal[dt][eid][nid] = azs
-        #self.axial[dt][eid][nid] = As
-        #self.shear[dt][eid][nid] = ss
-        #self.emax[dt][eid][nid] = maxp
-        #self.ems[dt][eid][nid] = emax
-        #self.evm[dt][eid][nid] = ects
-
-    #def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
-        #if self.nonlinear_factor is not None:
-            #return self._write_f06_transient(header, page_stamp, page_num, f, is_mag_phase=is_mag_phase, is_sort1=is_sort1)
-
-        #msg = header + ['                                      S T R A I N S   I N   T R I A X 6   E L E M E N T S\n',
-                        #'   ELEMENT  GRID ID       STRAINS  IN  MATERIAL  COORD  SYSTEM                 MAX  MAG        MAX        VON MISES  \n',
-                        #'      ID               RADIAL        AZIMUTHAL     AXIAL         SHEAR         PRINCIPAL       SHEAR\n', ]
-              ##         '      5351        0 -9.726205E+02 -1.678908E+03 -1.452340E+03 -1.325111E+02  -1.678908E+03  3.702285E+02  6.654553E+02
-              ##         '               4389 -9.867789E+02 -1.624276E+03 -1.388424E+03 -9.212539E+01  -1.624276E+03  3.288099E+02  5.806334E+02
-
-        ##out = []
-        #for eid, radial in sorted(iteritems(self.radial)):
-            #for nid in sorted(radial):
-                #rad = self.radial[eid][nid]
-                #azimuth = self.azimuthal[eid][nid]
-                #axial = self.axial[eid][nid]
-                #shear = self.shear[eid][nid]
-                #emax = self.emax[eid][nid]
-                #ems = self.ems[eid][nid]
-                #evm = self.evm[eid][nid]
-                #if nid == 0:
-                    #Eid = eid
-                #else:
-                    #Eid = ''
-                #[rad, azimuth, axial, shear, emax, ems, evm] = write_floats_13e([rad, azimuth, axial, shear, emax, ems, evm])
-                #msg.append('  %8s %8s %s %s %s %s  %s %s %-s\n' % (Eid, nid, radial, azimuth, axial, shear, emax, ems, evm.rstrip()))
-            #msg.append('\n')
-
-        #msg.append(page_stamp % page_num)
-        #f.write(''.join(msg))
-        #return page_num
-
-    #def _write_f06_transient(self, header, page_stamp,
-                          #page_num=1, f=None, is_mag_phase=False):
-        #words = ['                                      S T R A I N S   I N   T R I A X 6   E L E M E N T S\n',
-                 #'   ELEMENT  GRID ID       STRAINS  IN  MATERIAL  COORD  SYSTEM                 MAX  MAG        MAX        VON MISES  \n',
-                 #'      ID               RADIAL        AZIMUTHAL     AXIAL         SHEAR         PRINCIPAL       SHEAR\n', ]
-              ##'      5351        0 -9.726205E+02 -1.678908E+03 -1.452340E+03 -1.325111E+02  -1.678908E+03  3.702285E+02  6.654553E+02
-              ##'               4389 -9.867789E+02 -1.624276E+03 -1.388424E+03 -9.212539E+01  -1.624276E+03  3.288099E+02  5.806334E+02
-
-        #msg = []
-        #for dt, Radial in sorted(iteritems(self.radial)):
-            #header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
-            #msg += header + words
-            #for eid, radial in sorted(iteritems(Radial)):
-                #for nid in sorted(radial):
-                    #rad = self.radial[dt][eid][nid]
-                    #azimuth = self.azimuthal[dt][eid][nid]
-                    #axial = self.axial[dt][eid][nid]
-                    #shear = self.shear[dt][eid][nid]
-                    #emax = self.emax[dt][eid][nid]
-                    #ems = self.ems[dt][eid][nid]
-                    #evm = self.evm[dt][eid][nid]
-                    #if nid == 0:
-                        #Eid = eid
-                    #else:
-                        #Eid = ''
-                    #[rad, azimuth, axial, shear, emax, ems, evm] = write_floats_13e([rad, azimuth, axial, shear, emax, ems, evm])
-                    #msg.append('  %8s %8s %s %s %s %s  %s %s %-s\n'
-                               #% (Eid, nid, rad, azimuth, axial, shear, emax,
-                                  #ems, evm.rstrip()))
-                #msg.append('\n')
-
-            #msg.append(page_stamp % page_num)
-            #f.write(''.join(msg))
-            #msg = ['']
-            #page_num += 1
-        #return page_num - 1

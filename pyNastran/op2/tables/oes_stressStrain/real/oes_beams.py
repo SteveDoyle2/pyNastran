@@ -3,6 +3,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from six import iteritems
 from six.moves import range, zip
 from itertools import count
+import numpy as np
 from numpy import zeros
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
@@ -94,9 +95,18 @@ class RealBeamArray(OES_Object):
         self.xxb = zeros(self.ntotal, dtype='float32')
         self.data = zeros((self.ntimes, self.ntotal, 8), dtype='float32')
 
+    def finalize(self):
+        sd = self.data[0, :, 0].real
+        i_sd_zero = np.where(sd != 0.0)[0]
+        i_node_zero = np.where(self.element_node[:, 1] != 0)[0]
+        assert i_node_zero.max() > 0, 'CBEAM element_node hasnt been filled'
+        i = np.union1d(i_sd_zero, i_node_zero)
+        #self.element = self.element[i]
+        self.element_node = self.element_node[i, :]
+        self.data = self.data[:, i, :]
+
     def build_dataframe(self):
         headers = self.get_headers()
-        name = self.name
         element_node = [self.element_node[:, 0], self.element_node[:, 1]]
         if self.nonlinear_factor is not None:
             column_names, column_values = self._build_dataframe_transient_header()
@@ -107,6 +117,48 @@ class RealBeamArray(OES_Object):
             self.data_frame = pd.Panel(self.data, major_axis=element_node, minor_axis=headers).to_frame()
             self.data_frame.columns.names = ['Static']
             self.data_frame.index.names = ['ElementID', 'NodeID', 'Item']
+
+    def __eq__(self, table):
+        assert self.is_sort1() == table.is_sort1()
+        self._eq_header(table)
+        if not np.array_equal(self.element_node, table.element_node):
+            assert self.element_node.shape == table.element_node.shape, 'shape=%s element_node.shape=%s' % (
+                self.element_node.shape, table.element_node.shape)
+            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+            msg += '%s\n' % str(self.code_information())
+            for (eid1, nid1), (eid2, nid2) in zip(self.element_node, table.element_node):
+                msg += '%s, %s\n' % (eid1, nid1, eid2, eid2)
+            print(msg)
+            raise ValueError(msg)
+        if not np.array_equal(self.data, table.data):
+            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+            msg += '%s\n' % str(self.code_information())
+            ntimes = self.data.shape[0]
+
+            i = 0
+            if self.is_sort1():
+                for itime in range(ntimes):
+                    for ieid, eid, in enumerate(self.element):
+                        t1 = self.data[itime, inid, :]
+                        t2 = table.data[itime, inid, :]
+                        (axial_stress1, equiv_stress1, total_strain1, effective_plastic_creep_strain1, effective_creep_strain1, linear_torsional_stress1) = t1
+                        (axial_stress2, equiv_stress2, total_strain2, effective_plastic_creep_strain2, effective_creep_strain2, linear_torsional_stress2) = t2
+                        if not np.allclose(t1, t2):
+                        #if not np.array_equal(t1, t2):
+                            msg += '%s\n  (%s, %s, %s, %s, %s, %s)\n  (%s, %s, %s, %s, %s, %s)\n' % (
+                                eid,
+                                axial_stress1, equiv_stress1, total_strain1, effective_plastic_creep_strain1, effective_creep_strain1, linear_torsional_stress1,
+                                axial_stress2, equiv_stress2, total_strain2, effective_plastic_creep_strain2, effective_creep_strain2, linear_torsional_stress2)
+                            i += 1
+                        if i > 10:
+                            print(msg)
+                            raise ValueError(msg)
+            else:
+                raise NotImplementedError(self.is_sort2())
+            if i > 0:
+                print(msg)
+                raise ValueError(msg)
+        return True
 
     def add_new_eid(self, dt, eid, out):
         self.add_new_eid_sort1(dt, eid, out)
@@ -181,7 +233,9 @@ class RealBeamArray(OES_Object):
         #ind.sort()
         #return ind
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+        if header is None:
+            header = []
         msg = self._get_msgs()
         ntimes = self.data.shape[0]
 
@@ -203,7 +257,6 @@ class RealBeamArray(OES_Object):
             SMts = self.data[itime, :, 6]
             SMcs = self.data[itime, :, 7]
 
-            # loop over all the elements
             eid_old = None
             xxb_old = None
             for (i, eid, nid, xxb, sxc, sxd, sxe, sxf, sMax, sMin, SMt, SMc) in zip(
@@ -388,7 +441,9 @@ class RealNonlinearBeamArray(OES_Object):
         #ind.sort()
         #return ind
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+        if header is None:
+            header = []
         msg = self._get_msgs()
         ntimes = self.data.shape[0]
 

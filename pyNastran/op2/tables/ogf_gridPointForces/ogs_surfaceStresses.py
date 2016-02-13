@@ -1,7 +1,7 @@
 from six import iteritems
 from numpy import zeros
 
-from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
+from pyNastran.op2.result_objects.op2_objects import ScalarObject
 from pyNastran.f06.f06_formatting import write_floats_13e, writeFloats10E, writeFloats8p4F, get_key0
 
 
@@ -27,7 +27,6 @@ class GridPointStressesArray(ScalarObject):
 
     def build_dataframe(self):
         headers = self.get_headers()
-        name = self.name
         element_node = [self.element_node[:, 0], self.element_node[:, 1]]
         if self.nonlinear_factor is not None:
             column_names, column_values = self._build_dataframe_transient_header()
@@ -184,7 +183,9 @@ class GridPointStresses(ScalarObject):
         #self.elemName = self.elemName[k[0]]
         #self.eids = self.eids[k[0]]
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+        if header is None:
+            header = []
         if self.nonlinear_factor is not None:
             return self._write_f06_transient(header, page_stamp, page_num, f, is_mag_phase=is_mag_phase, is_sort1=is_sort1)
 
@@ -382,7 +383,9 @@ class GridPointStressesVolume(ScalarObject):
         #self.elemName = self.elemName[k[0]]
         #self.eids = self.eids[k[0]]
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+        if header is None:
+            header = []
         f.write('GridPointStressesVolumeObject write_f06 is not implemented...\n')
         return page_num
 

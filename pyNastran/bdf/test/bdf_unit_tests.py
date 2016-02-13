@@ -7,7 +7,7 @@ from numpy.linalg import norm
 
 import pyNastran
 from pyNastran.utils import object_attributes, object_methods
-from pyNastran.bdf.cards.baseCard import collapse_thru_by
+from pyNastran.bdf.cards.base_card import collapse_thru_by
 from pyNastran.bdf.bdf import BDF
 
 pkg_path = pyNastran.__path__[0]
@@ -207,31 +207,6 @@ class TestBDF(Tester):
         self._compare_mass_cg_I(fem1)
         self._compare_mass_cg_I(fem1, reference_point=u'cg')
         self._compare_mass_cg_I(fem1, reference_point='cg')
-
-class TestBDFLong(Tester):
-
-    def test_bdf_aircraft(self):
-        bdf_filename = os.path.join('aircraft', 'aircraft.bdf')
-        folder = os.path.abspath(os.path.join(pkg_path, '..', 'models'))
-        fem1, fem2, diff_cards = self.run_bdf(folder, bdf_filename, size=16)
-        diff_cards2 = list(set(diff_cards))
-        diff_cards2.sort()
-        assert len(diff_cards2) == 0, diff_cards2
-
-        #for fem in [fem1, fem2]:
-            #assert len(fem.params) == 6, 'len(params) = %i' % len(fem.params)
-            #assert len(fem.coords) == 1, 'len(coords) = %i' % len(fem.coords)
-            #assert len(fem.nodes) == 12, 'len(nodes) = %i' % len(fem.nodes)
-            #assert len(fem.materials) == 1, 'len(materials) = %i' % len(fem.materials)
-            #assert len(fem.elements) == 10, 'len(elements) = %i' % len(fem.elements)
-            #assert len(fem.masses) == 1, 'len(masses) = %i' % len(fem.elements)
-            #assert len(fem.methods) == 1, 'len(methods) = %i' % len(fem.methods)
-            #assert len(fem.properties) == 3, 'len(properties) = %i' % len(fem.properties)  # PBEAML issue
-            #assert len(fem.properties_mass) == 0, 'len(properties_mass) = %i' % len(fem.properties_mass)
-        self._compare_mass_cg_I(fem1)
-        #self._compare_mass_cg_I(fem1, reference_point=u'cg')
-
-        #self.run_bdf(folder, bdf_filename, xref=True) # PBEAML is not supported
 
 
 class TestBaseCard(Tester):

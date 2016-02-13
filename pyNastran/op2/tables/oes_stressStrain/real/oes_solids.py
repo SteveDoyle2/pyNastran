@@ -6,6 +6,7 @@ from six.moves import zip, range
 from itertools import count
 from struct import Struct, pack
 
+import numpy as np
 from numpy import sqrt, zeros, where, searchsorted, array_equal
 from numpy.linalg import eigh
 
@@ -89,7 +90,6 @@ class RealSolidArray(OES_Object):
 
     def build_dataframe(self):
         headers = self.get_headers()
-        name = self.name
         # TODO: cid?
         element_node = [self.element_node[:, 0], self.element_node[:, 1]]
         if self.nonlinear_factor is not None:
@@ -111,7 +111,16 @@ class RealSolidArray(OES_Object):
 
         self.eType[self.ielement] = eType
         self.element_node[self.itotal, :] = [eid, 0]  # 0 is center
-        self.data[self.itime, self.itotal, :] = [oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, ovm]
+
+        omax_mid_min = [o1, o2, o3]
+        omin = min(omax_mid_min)
+        omax_mid_min.remove(omin)
+
+        omax = max(omax_mid_min)
+        omax_mid_min.remove(omax)
+
+        omid = omax_mid_min[0]
+        self.data[self.itime, self.itotal, :] = [oxx, oyy, ozz, txy, tyz, txz, omax, omid, omin, ovm]
         #self.data[self.itime, self.ielement, 0, :] = [oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, ovm]
 
         #print('element_cid[%i, :] = [%s, %s]' % (self.ielement, eid, cid))
@@ -123,20 +132,17 @@ class RealSolidArray(OES_Object):
 
     def __eq__(self, table):
         assert self.is_sort1() == table.is_sort1()
-        assert self.nonlinear_factor == table.nonlinear_factor
-        assert self.ntotal == table.ntotal
-        assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
-        assert self.approach_code == table.approach_code
-        if not array_equal(self.element_node, table.element_node):
+        self._eq_header(table)
+        if not np.array_equal(self.element_node, table.element_node):
             assert self.element_node.shape == table.element_node.shape, 'element_node shape=%s table.shape=%s' % (self.element_node.shape, table.element_node.shape)
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
             msg += '(Eid, Nid)\n'
-            for (eid, nid), (eid2, nid2) in zip(self.element_node, table.element_node):
-                msg += '(%s, %s)    (%s, %s)\n' % (eid, nid, eid2, nid2)
+            for (eid1, nid1), (eid2, nid2) in zip(self.element_node, table.element_node):
+                msg += '(%s, %s)    (%s, %s)\n' % (eid1, nid1, eid2, nid2)
             print(msg)
             raise ValueError(msg)
-        if not array_equal(self.data, table.data):
+        if not np.array_equal(self.data, table.data):
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
             i = 0
@@ -148,11 +154,13 @@ class RealSolidArray(OES_Object):
                     (oxx1, oyy1, ozz1, txy1, tyz1, txz1, o11, o21, o31, ovm1) = t1
                     (oxx2, oyy2, ozz2, txy2, tyz2, txz2, o12, o22, o32, ovm2) = t2
 
-                    if not array_equal(t1, t2):
-                        msg += '(%s, %s)    (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)  (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)\n' % (
+                    if not np.array_equal(t1, t2):
+                        msg += ('(%s, %s)    (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)\n'
+                                '%s      (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)\n' % (
                             eid, nid,
                             oxx1, oyy1, ozz1, txy1, tyz1, txz1, o11, o21, o31, ovm1,
-                            oxx2, oyy2, ozz2, txy2, tyz2, txz2, o12, o22, o32, ovm2)
+                            ' ' * (len(str(eid)) + len(str(nid)) + 2),
+                            oxx2, oyy2, ozz2, txy2, tyz2, txz2, o12, o22, o32, ovm2))
                         i += 1
                         if i > 10:
                             print(msg)
@@ -164,7 +172,15 @@ class RealSolidArray(OES_Object):
 
     def add_node_sort1(self, dt, eid, inode, node_id, oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, aCos, bCos, cCos, pressure, ovm):
         # skipping aCos, bCos, cCos, pressure
-        self.data[self.itime, self.itotal, :] = [oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, ovm]
+        omax_mid_min = [o1, o2, o3]
+        omin = min(omax_mid_min)
+        omax_mid_min.remove(omin)
+
+        omax = max(omax_mid_min)
+        omax_mid_min.remove(omax)
+
+        omid = omax_mid_min[0]
+        self.data[self.itime, self.itotal, :] = [oxx, oyy, ozz, txy, tyz, txz, omax, omid, omin, ovm]
         #print('data[%s, %s, :] = %s' % (self.itime, self.itotal, str(self.data[self.itime, self.itotal, :])))
 
         #self.data[self.itime, self.ielement-1, self.inode, :] = [oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, ovm]
@@ -173,6 +189,18 @@ class RealSolidArray(OES_Object):
         self.element_node[self.itotal, :] = [eid, node_id]
         #self.element_node[self.ielement-1, self.inode-1, :] = [eid, node_id]
         self.itotal += 1
+
+    @property
+    def nnodes_per_element(self):
+        if self.element_type == 39: # CTETRA
+            nnodes = 4
+        elif self.element_type == 67: # CHEXA
+            nnodes = 8
+        elif self.element_type == 68: # CPENTA
+            nnodes = 6
+        else:
+            raise NotImplementedError('element_name=%s self.element_type=%s' % (self.element_name, self.element_type))
+        return nnodes
 
     def get_stats(self):
         if not self.is_built:
@@ -223,8 +251,9 @@ class RealSolidArray(OES_Object):
         #ind.sort()
         return ind
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None,
-                  is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+        if header is None:
+            header = []
         nnodes, msg_temp = _get_f06_header_nnodes(self, is_mag_phase)
 
         # write the f06
@@ -241,7 +270,6 @@ class RealSolidArray(OES_Object):
             header = _eigenvalue_header(self, header, itime, ntimes, dt)
             f.write(''.join(header + msg_temp))
 
-            # TODO: can I get this without a reshape?
             #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
             oxx = self.data[itime, :, 0]
             oyy = self.data[itime, :, 1]
@@ -255,7 +283,6 @@ class RealSolidArray(OES_Object):
             ovm = self.data[itime, :, 9]
             p = (o1 + o2 + o3) / -3.
 
-            # loop over all the elements and nodes
             cnnodes = nnodes + 1
             for i, deid, node_id, doxx, doyy, dozz, dtxy, dtyz, dtxz, do1, do2, do3, dp, dovm in zip(
                 count(), eids2, nodes, oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, p, ovm):
@@ -267,6 +294,10 @@ class RealSolidArray(OES_Object):
                      [dtxz, dtyz, dozz]]
                 (Lambda, v) = eigh(A)  # a hermitian matrix is a symmetric-real matrix
 
+                # o1-max
+                # o2-mid
+                # o3-min
+                assert do1 >= do2 >= do3, 'o1 >= o2 >= o3; eid=%s o1=%e o2=%e o3=%e' % (deid, do1, do2, do3)
                 [oxxi, oyyi, ozzi, txyi, tyzi, txzi, o1i, o2i, o3i, pi, ovmi] = write_floats_13e(
                     [doxx, doyy, dozz, dtxy, dtyz, dtxz, do1, do2, do3, dp, dovm])
 
@@ -494,7 +525,7 @@ class RealSolidStressArray(RealSolidArray, StressObject):
             von_mises = 'von_mises'
         else:
             von_mises = 'max_shear'
-        headers = ['oxx', 'oyy', 'ozz', 'txy', 'tyz', 'txz', 'o1', 'o2', 'o3', von_mises]
+        headers = ['oxx', 'oyy', 'ozz', 'txy', 'tyz', 'txz', 'omax', 'omid', 'omin', von_mises]
         return headers
 
 
@@ -508,7 +539,7 @@ class RealSolidStrainArray(RealSolidArray, StrainObject):
             von_mises = 'von_mises'
         else:
             von_mises = 'max_shear'
-        headers = ['exx', 'eyy', 'ezz', 'exy', 'eyz', 'exz', 'e1', 'e2', 'e3', von_mises]
+        headers = ['exx', 'eyy', 'ezz', 'exy', 'eyz', 'exz', 'emax', 'emid', 'emin', von_mises]
         return headers
 
 def _get_solid_msgs(self):

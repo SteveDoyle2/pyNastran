@@ -8,7 +8,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from six import exec_
 from copy import deepcopy
 
-from pyNastran.bdf.cards.baseCard import BaseCard
+from pyNastran.bdf.cards.base_card import BaseCard
 
 from numpy import cos, sin, tan
 from numpy import arcsin as asin, arccos as acos, arctan as atan, arctan2 as atan2

@@ -3,7 +3,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from six import iteritems
 from numpy import argsort
 
-from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
+from pyNastran.op2.result_objects.op2_objects import ScalarObject
 
 
 class OES_Object(ScalarObject):
@@ -27,39 +27,6 @@ class OES_Object(ScalarObject):
 
     def is_max_shear(self):
         return True if self.stress_bits[4] == 0 else False
-
-    def getOrderedETypes(self, valid_types):
-        """
-        Groups element IDs by element type
-
-        :param valid_types: list of valid element types
-                           e.g. ['CTRIA3', 'CTRIA6', 'CQUAD4', 'CQUAD8']
-        :returns types_out:      the ordered list of types
-        :returns ordered_etypes: dictionary of Type-IDs to write
-        """
-        raise RuntimeError('is this still used???')
-        ordered_etypes = {}
-
-        #valid_types = ['CTRIA3', 'CTRIA6', 'CQUAD4', 'CQUAD8']
-        for etype in valid_types:
-            ordered_etypes[etype] = []
-        for eid, etype in sorted(iteritems(self.eType)):
-            assert etype in valid_types, 'unsupported eType=%r; valid_type=%s' % (etype, str(['%r' % str(t) for t in valid_types]))
-            ordered_etypes[etype].append(eid)
-
-        min_vals = []
-        for etype in valid_types:
-            vals = ordered_etypes[etype]
-            if len(vals) == 0:
-                min_vals.append(-1)
-            else:
-                min_vals.append(min(vals))
-        arg_list = argsort(min_vals)
-
-        types_out = []
-        for i in arg_list:
-            types_out.append(valid_types[i])
-        return (types_out, ordered_etypes)
 
 
 class StressObject(OES_Object):

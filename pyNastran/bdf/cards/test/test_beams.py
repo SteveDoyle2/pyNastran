@@ -4,11 +4,9 @@ from six.moves import zip, StringIO
 import unittest
 from itertools import count
 
-from numpy import allclose
+from numpy import array, allclose
 
-from pyNastran.bdf.bdf import BDF, CaseControlDeck, BDFCard, PBEAM, PBAR, CBEAM, GRID, MAT1
-from pyNastran.bdf.bdf import CROD, CONROD
-from pyNastran.bdf.bdf import PELAS
+from pyNastran.bdf.bdf import BDF, BDFCard, PBEAM, CBEAM, GRID
 
 from pyNastran.bdf.field_writer_8 import print_card_8
 
@@ -25,8 +23,9 @@ class TestBeams(unittest.TestCase):
         ]
         card = bdf.process_card(lines)
         #print(print_card_8(card))
-        card = BDFCard(card)
-        card2 = PBEAM(card)
+        cardi = BDFCard(card)
+        card2 = PBEAM()
+        card2.add_card(cardi)
         fields = card2.raw_fields()
 
         lines_expected = [
@@ -42,13 +41,13 @@ class TestBeams(unittest.TestCase):
     def _compare(self, fields, lines_expected):
         msg = print_card_8(fields).rstrip()
         lines_actual = msg.rstrip().split('\n')
-        msgA = '\n%s\n\n%s\n' % ('\n'.join(lines_expected), msg)
-        msgA += 'nlines_actual=%i nlines_expected=%i' % (len(lines_actual), len(lines_expected))
-        self.assertEqual(len(lines_actual), len(lines_expected), msgA)
+        msg_a = '\n%s\n\n%s\n' % ('\n'.join(lines_expected), msg)
+        msg_a += 'nlines_actual=%i nlines_expected=%i' % (len(lines_actual), len(lines_expected))
+        self.assertEqual(len(lines_actual), len(lines_expected), msg_a)
         for i, actual, expected in zip(count(), lines_actual, lines_expected):
             actual = str(actual)
             expected = str(expected)
-            msg = msgA + '\ni=%s' % i + '\nactual   = %r\n' % actual
+            msg = msg_a + '\ni=%s' % i + '\nactual   = %r\n' % actual
             msg += 'expected = %r' % expected
             self.assertEqual(actual, expected, msg)
 
@@ -67,8 +66,9 @@ class TestBeams(unittest.TestCase):
         ]
 
         card = bdf.process_card(lines)
-        card = BDFCard(card)
-        card2 = PBEAM(card)
+        cardi = BDFCard(card)
+        card2 = PBEAM()
+        card2.add_card(cardi)
         fields = card2.raw_fields()
 
         lines_expected = [
@@ -96,8 +96,9 @@ class TestBeams(unittest.TestCase):
         ]
 
         card = bdf.process_card(lines)
-        card = BDFCard(card)
-        card2 = PBEAM(card)
+        cardi = BDFCard(card)
+        card2 = PBEAM()
+        card2.add_card(cardi)
         fields = card2.raw_fields()
 
         lines_expected = [
@@ -119,8 +120,9 @@ class TestBeams(unittest.TestCase):
         ]
 
         card = bdf.process_card(lines)
-        card = BDFCard(card)
-        card2 = PBEAM(card)
+        cardi = BDFCard(card)
+        card2 = PBEAM()
+        card2.add_card(cardi)
         fields = card2.raw_fields()
         lines_expected = [
             'PBEAM         39       6     2.9     3.5    5.97      0.      0.      0.',
@@ -138,8 +140,9 @@ class TestBeams(unittest.TestCase):
 
         card = bdf.process_card(lines)
         #print(print_card_8(card))
-        card = BDFCard(card)
-        card2 = PBEAM(card)
+        cardi = BDFCard(card)
+        card2 = PBEAM()
+        card2.add_card(cardi)
         fields = card2.raw_fields()
         msg = print_card_8(fields)
 
@@ -202,8 +205,9 @@ class TestBeams(unittest.TestCase):
         ]
 
         card = bdf.process_card(lines)
-        card = BDFCard(card)
-        card2 = PBEAM(card)
+        cardi = BDFCard(card)
+        card2 = PBEAM()
+        card2.add_card(cardi)
         fields = card2.raw_fields()
 
         lines_expected = [
@@ -223,8 +227,9 @@ class TestBeams(unittest.TestCase):
             '+Z4     0.0     0.0',
         ]
         card = bdf.process_card(lines)
-        card = BDFCard(card)
-        card2 = PBEAM(card)
+        cardi = BDFCard(card)
+        card2 = PBEAM()
+        card2.add_card(cardi)
 
         #if 0:
             #fields = card2.raw_fields()
@@ -266,8 +271,9 @@ class TestBeams(unittest.TestCase):
         ]
 
         card = bdf.process_card(lines)
-        card = BDFCard(card)
-        card2 = PBEAM(card)
+        cardi = BDFCard(card)
+        card2 = PBEAM()
+        card2.add_card(cardi)
 
         if 1:
             fields = card2.raw_fields()
@@ -276,13 +282,13 @@ class TestBeams(unittest.TestCase):
             msg = card2.write_card(size, 'dummy')
 
             lines_actual = msg.rstrip().split('\n')
-            msgA = '\n%s\n\n%s' % ('\n'.join(lines_expected), msg)
-            msgA += 'nlines_actual=%i nlines_expected=%i' % (len(lines_actual), len(lines_expected))
+            msg_a = '\n%s\n\n%s' % ('\n'.join(lines_expected), msg)
+            msg_a += 'nlines_actual=%i nlines_expected=%i' % (len(lines_actual), len(lines_expected))
             self.assertEqual(len(lines_actual), len(lines_expected), msg)
             for actual, expected in zip(lines_actual, lines_expected):
                 actual = str(actual)
                 expected = str(expected)
-                msg = msgA + '\nactual   = %r\n' % actual
+                msg = msg_a + '\nactual   = %r\n' % actual
                 msg += 'expected = %r' % expected
                 self.assertEqual(actual, expected, msg)
 
@@ -302,9 +308,10 @@ class TestBeams(unittest.TestCase):
         card = print_card_8(fields)
         lines = card.split('\n')
         card = bdf.process_card(lines)
-        card2 = BDFCard(card)
+        cardi = BDFCard(card)
         #with self.assertRaises(AssertionError):  # A=0, I12=0, K1=0
-        pbeam = PBEAM(card2)
+        pbeam = PBEAM()
+        pbeam.add_card(cardi)
         fields2 = pbeam.repr_fields()
         assert fields == fields
 
@@ -400,12 +407,12 @@ class TestBeams(unittest.TestCase):
         prop = model.properties[1]
         #print(prop.raw_fields())
         lines_actual = prop.write_card().split('\n')
-        msgA = ''
+        msg_a = ''
         for line_expected, line_actual in zip(lines_expected, lines_actual):
             #assert line_expected == line_actual, line_actual
             actual = str(line_actual)
             expected = str(line_expected)
-            msg = msgA + '\nactual   = %r\n' % actual
+            msg = msg_a + '\nactual   = %r\n' % actual
             msg += 'expected = %r' % expected
             self.assertEqual(actual, expected, msg)
 
@@ -418,7 +425,7 @@ class TestBeams(unittest.TestCase):
         grid3 = ['GRID', 3, None, 1., 0., 0.]
         force = ['FORCE', 100, 1, 0, 2., 3., 4.]
         cbeam = [
-            'CBEAM', 10, 11, 1, 2,   0., 1., 0., None,
+            'CBEAM', 10, 11, 1, 2, 0., 1., 0., None,
         ]
         nsm_offset_a = [0., 0., 0.]
         nsm_offset_b = [0., 50., 0.]
@@ -459,7 +466,7 @@ class TestBeams(unittest.TestCase):
             sym_axis=None,
             num_cpus=1,
             scale=None)
-        print('cg* =', cg)
+        #print('cg* =', cg)
         L = 1.0
         area = (area1 + area2) / 2.
         nsm = (nsm_a + nsm_b) / 2.
@@ -470,7 +477,6 @@ class TestBeams(unittest.TestCase):
         mass_b = L / 2. * (area2 * rho + nsm_b)
         xcg = (0.0 * mass_a + 1.0 * mass_b) / (mass_a + mass_b)
         #print(mass_a, mass_b, xcg, mass_a + mass_b)
-        from numpy import array
         #print('mass =', mass)
         #cbeam = CBEAM()
         cbeam = model.elements[10]

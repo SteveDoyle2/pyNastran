@@ -21,12 +21,12 @@ class TestBars(unittest.TestCase):
         card = print_card_8(fields)
         lines = card.split('\n')
         card = bdf.process_card(lines)
-        card2 = BDFCard(card)
-        pbar = PBAR(card2)
+        cardi = BDFCard(card)
+        pbar = PBAR.add_card(cardi)
         self.assertEqual(pbar.A, 0.), pbar.A
         self.assertEqual(pbar.i12, 0.), pbar.i12
-        self.assertEqual(pbar.K1, None), pbar.K1
-        self.assertEqual(pbar.K2, None), pbar.K2
+        self.assertEqual(pbar.k1, None), pbar.k1
+        self.assertEqual(pbar.k2, None), pbar.k2
         #with self.assertRaises(AssertionError):  # A=0, I12=0, K1=0
             #pbar = PBAR(card2)
 
@@ -48,9 +48,9 @@ class TestBars(unittest.TestCase):
         card = print_card_8(fields)
         lines = card.split('\n')
         card = bdf.process_card(lines)
-        card2 = BDFCard(card)
+        cardi = BDFCard(card)
 
-        pbar = PBAR(card2)
+        pbar = PBAR.add_card(cardi)
         self.assertEqual(pbar.pid, 1)
         self.assertEqual(pbar.mid, 2)
         self.assertEqual(pbar.A, 0.0)
@@ -59,14 +59,14 @@ class TestBars(unittest.TestCase):
         self.assertEqual(pbar.j, 0.0)
         self.assertEqual(pbar.nsm, 0.0)
         self.assertEqual(pbar.i12, 3.0)
-        self.assertEqual(pbar.C1, 0.0)
-        self.assertEqual(pbar.C2, 0.0)
-        self.assertEqual(pbar.D1, 0.0)
-        self.assertEqual(pbar.D2, 0.0)
-        self.assertEqual(pbar.E1, 0.0)
-        self.assertEqual(pbar.E2, 0.0)
-        self.assertEqual(pbar.K1, None)
-        self.assertEqual(pbar.K2, None)
+        self.assertEqual(pbar.c1, 0.0)
+        self.assertEqual(pbar.c2, 0.0)
+        self.assertEqual(pbar.d1, 0.0)
+        self.assertEqual(pbar.d2, 0.0)
+        self.assertEqual(pbar.e1, 0.0)
+        self.assertEqual(pbar.e2, 0.0)
+        self.assertEqual(pbar.k1, None)
+        self.assertEqual(pbar.k2, None)
 
         #--------------------------------------------------------
         A = 6.
@@ -84,9 +84,10 @@ class TestBars(unittest.TestCase):
         card = print_card_8(fields)
         lines = card.split('\n')
         card = bdf.process_card(lines)
-        card3 = BDFCard(card)
 
-        pbar = PBAR(card3)
+        cardi = BDFCard(card)
+        pbar = PBAR.add_card(cardi)
+
         self.assertEqual(pbar.pid, 1)
         self.assertEqual(pbar.mid, 2)
         self.assertEqual(pbar.A, 6.0)
@@ -95,14 +96,14 @@ class TestBars(unittest.TestCase):
         self.assertEqual(pbar.j, 3.0)
         self.assertEqual(pbar.nsm, 2.0)
         self.assertEqual(pbar.i12, 0.0)
-        self.assertEqual(pbar.C1, 0.0)
-        self.assertEqual(pbar.C2, 0.0)
-        self.assertEqual(pbar.D1, 0.0)
-        self.assertEqual(pbar.D2, 0.0)
-        self.assertEqual(pbar.E1, 0.0)
-        self.assertEqual(pbar.E2, 0.0)
-        self.assertEqual(pbar.K1, 1e2)
-        self.assertEqual(pbar.K2, 1e2)
+        self.assertEqual(pbar.c1, 0.0)
+        self.assertEqual(pbar.c2, 0.0)
+        self.assertEqual(pbar.d1, 0.0)
+        self.assertEqual(pbar.d2, 0.0)
+        self.assertEqual(pbar.e1, 0.0)
+        self.assertEqual(pbar.e2, 0.0)
+        self.assertEqual(pbar.k1, 1e2)
+        self.assertEqual(pbar.k2, 1e2)
 
     def test_bar_mass_01(self):
         model = BDF(debug=False)
@@ -113,7 +114,7 @@ class TestBars(unittest.TestCase):
         grid3 = ['GRID', 3, None, 1., 0., 0.]
         force = ['FORCE', 100, 1, 0, 2., 3., 4.]
         cbar = [
-            'CAR', 10, 11, 1, 2,   0., 1., 0., None,
+            'CAR', 10, 11, 1, 2, 0., 1., 0., None,
         ]
         k1 = k2 = None
         area = 2.0
@@ -146,14 +147,14 @@ class TestBars(unittest.TestCase):
             sym_axis=None,
             num_cpus=1,
             scale=None)
-        print('cg* =', cg)
+        #print('cg* =', cg)
         L = 1.0
         mass_per_length = area * rho + nsm
         mass = L * mass_per_length
 
         #xcg = (0.0 * mass_a + 1.0 * mass_b) / (mass_a + mass_b)
         #print(mass_a, mass_b, xcg, mass_a + mass_b)
-        print('mass =', mass)
+        #print('mass =', mass)
         #cbar = CBEAM()
         cbar = model.elements[10]
         pbar = model.properties[11]
@@ -164,7 +165,6 @@ class TestBars(unittest.TestCase):
         #assert allclose(cbar.MassPerLength(), 10.25), cbar.MassPerLength()
         #assert allclose(mass, 10.25), mass
 
-        f = open('cbar.bdf', 'w')
         case_control_lines = (
             'SOL 101\n'
             'CEND\n'
@@ -177,10 +177,10 @@ class TestBars(unittest.TestCase):
             'PARAM,POST,-1\n'
             'PARAM   POSTEXT YES\n'
         )
-        f.write(case_control_lines)
-        model.write_bdf(f, enddata=True)
-        f.close()
-        model2 = BDF()
+        with open('cbar.bdf', 'w') as bdf_file:
+            bdf_file.write(case_control_lines)
+            model.write_bdf(bdf_file, enddata=True)
+        model2 = BDF(debug=False)
         model2.read_bdf('cbar.bdf')
 
         model2._verify_bdf(xref=True)

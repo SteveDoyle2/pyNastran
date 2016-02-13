@@ -17,13 +17,13 @@ All cards are BaseCard objects.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import integer_types
 from six.moves import zip, range
 from math import log, exp, ceil
 from numpy import unique, hstack
 
+from pyNastran.utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
-from pyNastran.bdf.cards.baseCard import BaseCard
+from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, double_or_blank, string_or_blank, blank, fields, components)
 from pyNastran.bdf.field_writer_8 import print_card_8
@@ -227,8 +227,6 @@ class FREQ(BaseCard):
 
         Parameters
         ----------
-        self : FREQ()
-            the object pointer
         freqs : ???
             the frequencies for a FREQx object
         """
@@ -239,7 +237,6 @@ class FREQ(BaseCard):
 
     def add_frequency_object(self, freq):
         """
-        :param self: the object pointer
         :param freq: a FREQx object
 
         .. seealso:: :func:`addFrequencies`

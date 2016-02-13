@@ -2,6 +2,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import iteritems
 from six.moves import zip, range
+import numpy as np
 from numpy import zeros, searchsorted, unique, ravel, array_equal
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
@@ -102,7 +103,6 @@ class RealCompositePlateArray(OES_Object):
         name = mode
         """
         headers = self.get_headers()
-        name = self.name
         element_layer = [self.element_layer[:, 0], self.element_layer[:, 1]]
         if self.nonlinear_factor is not None:
             column_names, column_values = self._build_dataframe_transient_header()
@@ -116,11 +116,8 @@ class RealCompositePlateArray(OES_Object):
 
     def __eq__(self, table):
         assert self.is_sort1() == table.is_sort1()
-        assert self.nonlinear_factor == table.nonlinear_factor
-        assert self.ntotal == table.ntotal
-        assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
-        assert self.approach_code == table.approach_code
-        if not array_equal(self.element_layer, table.element_layer):
+        self._eq_header(table)
+        if not np.array_equal(self.element_layer, table.element_layer):
             assert self.element_node.shape == table.element_layer.shape, 'element_layer shape=%s table.shape=%s' % (
                 self.element_layer.shape, table.element_layer.shape)
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
@@ -130,7 +127,7 @@ class RealCompositePlateArray(OES_Object):
                 msg += '(%s, %s)    (%s, %s)\n' % (eid, layer1, eid2, layer2)
             print(msg)
             raise ValueError(msg)
-        if not array_equal(self.data, table.data):
+        if not np.array_equal(self.data, table.data):
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
             i = 0
@@ -143,7 +140,7 @@ class RealCompositePlateArray(OES_Object):
                     (o112, o222, t122, t1z2, t2z2, angle2, major2, minor2, ovm2) = t2
 
                     # vm stress can be NaN for some reason...
-                    if not array_equal(t1[:-1], t2[:-1]):
+                    if not np.array_equal(t1[:-1], t2[:-1]):
                         msg += '(%s, %s)    (%s, %s, %s, %s, %s, %s, %s, %s, %s)  (%s, %s, %s, %s, %s, %s, %s, %s, %s)\n' % (
                             eid, layer,
                             o11, o22, t12, t1z, t2z, angle, major, minor, ovm,
@@ -157,11 +154,6 @@ class RealCompositePlateArray(OES_Object):
                     raise ValueError(msg)
         return True
 
-    def add_new_eid(self, eType, dt, eid, layer, o11, o22, t12, t1z, t2z,
-                    angle, major, minor, ovm):
-        self.add_new_eid_sort1(eType, dt, eid, layer, o11, o22, t12, t1z, t2z,
-                               angle, major, minor, ovm)
-
     def add_new_eid_sort1(self, etype, dt, eid, layer, o11, o22, t12, t1z, t2z,
                           angle, major, minor, ovm):
         self._times[self.itime] = dt
@@ -170,16 +162,9 @@ class RealCompositePlateArray(OES_Object):
         self.itotal += 1
         self.ielement += 1
 
-    def add(self, dt, eid, layer, o11, o22, t12, t1z, t2z, angle,
-                 major, minor, ovm):
-        self.add_sort1(dt, eid, layer, o11, o22, t12, t1z, t2z, angle,
-                       major, minor, ovm)
-
     def add_sort1(self, dt, eid, layer, o11, o22, t12, t1z, t2z, angle,
                   major, minor, ovm):
         assert eid is not None
-        #if isinstance(nodeID, string_types):
-            #nodeID = 0
         self.element_layer[self.itotal, :] = [eid, layer]
         self.data[self.itime, self.itotal, :] = [o11, o22, t12, t1z, t2z, angle, major, minor, ovm]
         self.itotal += 1
@@ -246,7 +231,9 @@ class RealCompositePlateArray(OES_Object):
         #ind.sort()
         return ind
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+        if header is None:
+            header = []
         #msg, nnodes, is_bilinear = self._get_msgs()
         if self.is_von_mises():
             von = 'VON'
@@ -301,7 +288,6 @@ class RealCompositePlateArray(OES_Object):
             header = _eigenvalue_header(self, header, itime, ntimes, dt)
             f.write(''.join(header + msg))
 
-            # TODO: can I get this without a reshape?
             #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
 
             #[o11, o22, t12, t1z, t2z, angle, major, minor, ovm]
@@ -315,7 +301,6 @@ class RealCompositePlateArray(OES_Object):
             minor = self.data[itime, :, 7]
             ovm = self.data[itime, :, 8]
 
-            # loop over all the elements
             for eid, layer, o11i, o22i, t12i, t1zi, t2zi, anglei, majori, minori, ovmi in zip(
                 eids, layers, o11, o22, t12, t1z, t2z, angle, major, minor, ovm):
 
@@ -336,7 +321,7 @@ class RealCompositePlateStressArray(RealCompositePlateArray, StressObject):
     def is_stress(self):
         return True
 
-    def isStrain(self):
+    def is_strain(self):
         return False
 
     def get_headers(self):
@@ -356,7 +341,7 @@ class RealCompositePlateStrainArray(RealCompositePlateArray, StrainObject):
     def is_stress(self):
         return False
 
-    def isStrain(self):
+    def is_strain(self):
         return True
 
     def get_headers(self):

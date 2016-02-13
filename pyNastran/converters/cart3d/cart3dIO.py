@@ -174,19 +174,16 @@ class Cart3dIO(object):
                 'Cart3d (*.triq)', self.load_cart3d_results)
         return data
 
-    def removeOldGeometry(self, filename):
-        self._remove_old_cart3d_geometry(filename)
-
     def _remove_old_cart3d_geometry(self, filename):
-        self.eidMap = {}
-        self.nidMap = {}
+        self.eid_map = {}
+        self.nid_map = {}
         if filename is None:
             #self.emptyResult = vtk.vtkFloatArray()
             #self.vectorResult = vtk.vtkFloatArray()
             self.scalarBar.VisibilityOff()
             skip_reading = True
         else:
-            self.TurnTextOff()
+            self.turn_text_off()
             self.grid.Reset()
             #self.gridResult.Reset()
             #self.gridResult.Modified()
@@ -207,10 +204,7 @@ class Cart3dIO(object):
         self.scalarBar.Modified()
         return skip_reading
 
-    def load_cart3d_geometry(self, cart3d_filename, dirname, plot=True):
-        #key = self.case_keys[self.icase]
-        #case = self.result_cases[key]
-
+    def load_cart3d_geometry(self, cart3d_filename, dirname, name='main', plot=True):
         skip_reading = self._remove_old_cart3d_geometry(cart3d_filename)
         if skip_reading:
             return
@@ -227,35 +221,21 @@ class Cart3dIO(object):
         self.nNodes = model.npoints
         self.nElements = model.nelements
 
-        #print("nNodes = ",self.nNodes)
-        #print("nElements = ", self.nElements)
-
         self.grid.Allocate(self.nElements, 1000)
-        #self.gridResult.SetNumberOfComponents(self.nElements)
 
         points = vtk.vtkPoints()
         points.SetNumberOfPoints(self.nNodes)
-        #self.gridResult.Allocate(self.nNodes, 1000)
-        #vectorReselt.SetNumberOfComponents(3)
-        self.nidMap = {}
-        #elem.SetNumberOfPoints(nNodes)
+        self.nid_map = {}
         if 0:
             fraction = 1. / self.nNodes  # so you can color the nodes by ID
             for nid, node in sorted(iteritems(nodes)):
                 points.InsertPoint(nid - 1, *node)
                 self.gridResult.InsertNextValue(nid * fraction)
-                #print(str(element))
-
-                #elem = vtk.vtkVertex()
-                #elem.GetPointIds().SetId(0, i)
-                #self.aQuadGrid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
-                #vectorResult.InsertTuple3(0, 0.0, 0.0, 1.0)
 
         assert nodes is not None
         nnodes = nodes.shape[0]
 
         nid = 0
-        #print("nnodes=%s" % nnodes)
         mmax = amax(nodes, axis=0)
         mmin = amin(nodes, axis=0)
         dim_max = (mmax - mmin).max()
@@ -276,10 +256,6 @@ class Cart3dIO(object):
             self.grid.InsertNextCell(5, elem.GetPointIds())  #elem.GetCellType() = 5  # vtkTriangle
 
         self.grid.SetPoints(points)
-        #self.grid.GetPointData().SetScalars(self.gridResult)
-        #print(dir(self.grid) #.SetNumberOfComponents(0))
-        #self.grid.GetCellData().SetNumberOfTuples(1);
-        #self.grid.GetCellData().SetScalars(self.gridResult)
         self.grid.Modified()
         if hasattr(self.grid, 'Update'):
             self.grid.Update()
@@ -288,7 +264,7 @@ class Cart3dIO(object):
 
 
         # loadCart3dResults - regions/loads
-        self.TurnTextOn()
+        self. turn_text_on()
         self.scalarBar.VisibilityOn()
         self.scalarBar.Modified()
 
@@ -580,13 +556,13 @@ class Cart3dIO(object):
         nids = arange(1, nnodes + 1)
 
         if new:
-            cases_new[0] = (ID, nids, 'NodeID', 'node', '%i')
-            cases_new[1] = (ID, eids, 'ElementID', 'centroid', '%i')
-            cases_new[2] = (ID, regions, 'Region', 'centroid', '%i')
+            cases_new[0] = (ID, nids, 'NodeID', 'node', '%i', '')
+            cases_new[1] = (ID, eids, 'ElementID', 'centroid', '%i', '')
+            cases_new[2] = (ID, regions, 'Region', 'centroid', '%i', '')
         else:
-            cases[(ID, 0, 'NodeID', 1, 'node', '%i')] = nids
-            cases[(ID, 1, 'ElementID', 1, 'centroid', '%i')] = eids
-            cases[(ID, 2, 'Region', 1, 'centroid', '%i')] = regions
+            cases[(ID, 0, 'NodeID', 1, 'node', '%i', '')] = nids
+            cases[(ID, 1, 'ElementID', 1, 'centroid', '%i', '')] = eids
+            cases[(ID, 2, 'Region', 1, 'centroid', '%i', '')] = regions
 
         icase = 3
         if is_normals:
@@ -599,13 +575,13 @@ class Cart3dIO(object):
             assert cnnodes == nelements, len(cnnodes)
 
             if new:
-                cases_new[icase] = (ID, cnormals[:, 0], 'Normal X', 'centroid', '%.3f')
-                cases_new[icase + 1] = (ID, cnormals[:, 1], 'Normal Y', 'centroid', '%.3f')
-                cases_new[icase + 2] = (ID, cnormals[:, 2], 'Normal Z', 'centroid', '%.3f')
+                cases_new[icase] = (ID, cnormals[:, 0], 'Normal X', 'centroid', '%.3f', '')
+                cases_new[icase + 1] = (ID, cnormals[:, 1], 'Normal Y', 'centroid', '%.3f', '')
+                cases_new[icase + 2] = (ID, cnormals[:, 2], 'Normal Z', 'centroid', '%.3f', '')
             else:
-                cases[(ID, icase, 'Normal X', 1, 'centroid', '%.3f')] = cnormals[:, 0]
-                cases[(ID, icase + 1, 'Normal Y', 1, 'centroid', '%.3f')] = cnormals[:, 1]
-                cases[(ID, icase + 2, 'Normal Z', 1, 'centroid', '%.3f')] = cnormals[:, 2]
+                cases[(ID, icase, 'Normal X', 1, 'centroid', '%.3f', '')] = cnormals[:, 0]
+                cases[(ID, icase + 1, 'Normal Y', 1, 'centroid', '%.3f', '')] = cnormals[:, 1]
+                cases[(ID, icase + 2, 'Normal Z', 1, 'centroid', '%.3f', '')] = cnormals[:, 2]
             icase += 3
 
         #if is_normals:

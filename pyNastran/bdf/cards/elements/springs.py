@@ -16,15 +16,15 @@ from numpy import array, zeros, dot, transpose
 from numpy.linalg import norm
 
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
-from pyNastran.bdf.cards.baseCard import Element
+from pyNastran.bdf.cards.base_card import Element
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
                                        double, double_or_blank)
 from pyNastran.bdf.field_writer_8 import print_card_8
 
 
 class SpringElement(Element):
-    def __init__(self, card, data):
-        Element.__init__(self, card, data)
+    def __init__(self):
+        Element.__init__(self)
         self.nodes = [None, None]
 
     def Eid(self):
@@ -55,32 +55,42 @@ class CELAS1(SpringElement):
         else:
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
-    def __init__(self, card=None, data=None, comment=''):
-        SpringElement.__init__(self, card, data)
+    def __init__(self, eid, pid, nids, c1, c2, comment=''):
+        SpringElement.__init__(self)
         if comment:
             self._comment = comment
-        if card:
-            self.eid = integer(card, 1, 'eid')
+        self.eid = eid
+        #: property ID
+        self.pid = pid
+        #: component number
+        self.c1 = c1
+        self.c2 = c2
+        self.prepare_node_ids(nids, allow_empty_nodes=True)
+        self._validate_input()
 
-            #: property ID
-            self.pid = integer_or_blank(card, 2, 'pid', self.eid)
+    @classmethod
+    def add_card(cls, card, comment=''):
+        eid = integer(card, 1, 'eid')
+        pid = integer_or_blank(card, 2, 'pid', eid)
+        nids = [integer(card, 3, 'g1'), integer_or_blank(card, 5, 'g2', 0)]
+        c1 = integer_or_blank(card, 4, 'c1', 0)
+        c2 = integer_or_blank(card, 6, 'c2', 0)
+        assert len(card) <= 7, 'len(CELAS1 card) = %i' % len(card)
+        return CELAS1(eid, pid, nids, c1, c2, comment=comment)
 
-            nids = [integer(card, 3, 'g1'), integer_or_blank(card, 5, 'g2', 0)]
-            #: component number
-            self.c1 = integer_or_blank(card, 4, 'c1', 0)
-            self.c2 = integer_or_blank(card, 6, 'c2', 0)
-            assert len(card) <= 7, 'len(CELAS1 card) = %i' % len(card)
-        else:
-            self.eid = data[0]
-            self.pid = data[1]
-            nids = [data[2], data[3]]
-            self.c1 = data[4]
-            self.c2 = data[5]
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        eid = data[0]
+        pid = data[1]
+        nids = [data[2], data[3]]
+        c1 = data[4]
+        c2 = data[5]
+        return CELAS1(eid, pid, nids, c1, c2, comment=comment)
 
+    def _validate_input(self):
         msg = 'on\n%s\n is invalid validComponents=[0,1,2,3,4,5,6]' % str(self)
         assert self.c1 in [0, 1, 2, 3, 4, 5, 6], 'c1=|%s| %s' % (self.c1, msg)
         assert self.c2 in [0, 1, 2, 3, 4, 5, 6], 'c2=|%s| %s' % (self.c2, msg)
-        self.prepare_node_ids(nids, allow_empty_nodes=True)
         assert len(self.nodes) == 2
 
     def nodeIDs(self):
@@ -164,42 +174,51 @@ class CELAS2(SpringElement):
         else:
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
-    def __init__(self, card=None, data=None, comment=''):
-        SpringElement.__init__(self, card, data)
+    def __init__(self, eid, k, nids, c1, c2, ge, s, comment=''):
+        SpringElement.__init__(self)
         if comment:
             self._comment = comment
-        if card:
-            self.eid = integer(card, 1, 'eid')
+        self.eid = eid
+        #: stiffness of the scalar spring
+        self.k = k
+        #: component number
+        self.c1 = c1
+        self.c2 = c2
+        #: damping coefficient
+        self.ge = ge
+        #: stress coefficient
+        self.s = s
+        self.prepare_node_ids(nids, allow_empty_nodes=True)
+        self._validate_input()
 
-            #: stiffness of the scalar spring
-            self.k = double(card, 2, 'k')
+    @classmethod
+    def add_card(cls, card, comment=''):
+        eid = integer(card, 1, 'eid')
+        k = double(card, 2, 'k')
+        nids = [integer_or_blank(card, 3, 'g1', 0),
+                integer_or_blank(card, 5, 'g2', 0)]
+        c1 = integer_or_blank(card, 4, 'c1', 0)
+        c2 = integer_or_blank(card, 6, 'c2', 0)
+        ge = double_or_blank(card, 7, 'ge', 0.)
+        s = double_or_blank(card, 8, 's', 0.)
+        assert len(card) <= 9, 'len(CELAS2 card) = %i' % len(card)
+        return CELAS2(eid, k, nids, c1, c2, ge, s, comment=comment)
 
-            nids = [integer_or_blank(card, 3, 'g1', 0),
-                    integer_or_blank(card, 5, 'g2', 0)]
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        eid = data[0]
+        k = data[1]
+        nids = [data[2], data[3]]
+        c1 = data[4]
+        c2 = data[5]
+        ge = data[6]
+        s = data[7]
+        return CELAS2(eid, k, nids, c1, c2, ge, s, comment=comment)
 
-            #: component number
-            self.c1 = integer_or_blank(card, 4, 'c1', 0)
-            self.c2 = integer_or_blank(card, 6, 'c2', 0)
-
-            #: damping coefficient
-            self.ge = double_or_blank(card, 7, 'ge', 0.)
-
-            #: stress coefficient
-            self.s = double_or_blank(card, 8, 's', 0.)
-            assert len(card) <= 9, 'len(CELAS2 card) = %i' % len(card)
-        else:
-            self.eid = data[0]
-            self.k = data[1]
-            nids = [data[2], data[3]]
-            self.c1 = data[4]
-            self.c2 = data[5]
-            self.ge = data[6]
-            self.s = data[7]
-
+    def _validate_input(self):
         msg = 'on\n%s\n is invalid validComponents=[0,1,2,3,4,5,6]' % str(self)
         assert self.c1 in [0, 1, 2, 3, 4, 5, 6], 'c1=%r %s' % (self.c1, msg)
         assert self.c2 in [0, 1, 2, 3, 4, 5, 6], 'c2=%r %s' % (self.c2, msg)
-        self.prepare_node_ids(nids, allow_empty_nodes=True)
         assert len(set(self.nodes)) == 2, 'There are duplicate nodes=%s on CELAS2 eid=%s' % (self.nodes, self.eid)
 
     def nodeIDs(self):
@@ -318,25 +337,34 @@ class CELAS3(SpringElement):
         1: 'eid', 2:'pid', 4:'s1', 6:'s2',
     }
 
-    def __init__(self, card=None, data=None, comment=''):
-        SpringElement.__init__(self, card, data)
-
+    def __init__(self, eid, pid, s1, s2, comment=''):
+        SpringElement.__init__(self)
         if comment:
             self._comment = comment
-        if card:
-            self.eid = integer(card, 1, 'eid')
-            #: property ID
-            self.pid = integer_or_blank(card, 2, 'pid', self.eid)
+        self.eid = eid
+        #: property ID
+        self.pid = pid
+        #: Scalar point identification numbers
+        self.s1 = s1
+        self.s2 = s2
 
-            #: Scalar point identification numbers
-            self.s1 = integer_or_blank(card, 3, 's1', 0)
-            self.s2 = integer_or_blank(card, 4, 's2', 0)
-            assert len(card) <= 5, 'len(CELAS3 card) = %i' % len(card)
-        else:
-            self.eid = data[0]
-            self.pid = data[1]
-            self.s1 = data[2]
-            self.s2 = data[3]
+    @classmethod
+    def add_card(cls, card, comment=''):
+        eid = integer(card, 1, 'eid')
+        pid = integer_or_blank(card, 2, 'pid', eid)
+
+        s1 = integer_or_blank(card, 3, 's1', 0)
+        s2 = integer_or_blank(card, 4, 's2', 0)
+        assert len(card) <= 5, 'len(CELAS3 card) = %i' % len(card)
+        return CELAS3(eid, pid, s1, s2, comment=comment)
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        eid = data[0]
+        pid = data[1]
+        s1 = data[2]
+        s2 = data[3]
+        return CELAS3(eid, pid, s1, s2, comment=comment)
 
     def _is_same_card(self, elem, debug=False):
         if self.type != elem.type:
@@ -396,27 +424,35 @@ class CELAS4(SpringElement):
         1: 'eid', 2:'k', 4:'s1', 6:'s2',
     }
 
-    def __init__(self, card=None, data=None, comment=''):
-        SpringElement.__init__(self, card, data)
-
+    def __init__(self, eid, k, s1, s2, comment=''):
+        SpringElement.__init__(self)
         if comment:
             self._comment = comment
-        if card:
-            self.eid = integer(card, 1, 'eid')
 
-            #: stiffness of the scalar spring
-            self.k = double(card, 2, 'k')
+        self.eid = eid
+        #: stiffness of the scalar spring
+        self.k = k
+        #: Scalar point identification numbers
+        self.s1 = s1
+        self.s2 = s2
+        assert self.s1 > 0 or self.s2 > 0, 's1=%s s2=%s' % (self.s1, self.s2)
 
-            #: Scalar point identification numbers
-            self.s1 = integer_or_blank(card, 3, 's1', 0)
-            self.s2 = integer_or_blank(card, 4, 's2', 0)
-            assert self.s1 > 0 or self.s2 > 0, 's1=%s s2=%s' % (self.s1, self.s2)
-            assert len(card) <= 5, 'len(CELAS4 card) = %i' % len(card)
-        else:
-            self.eid = data[0]
-            self.k = data[1]
-            self.s1 = data[2]
-            self.s2 = data[3]
+    @classmethod
+    def add_card(cls, card, comment=''):
+        eid = integer(card, 1, 'eid')
+        k = double(card, 2, 'k')
+        s1 = integer_or_blank(card, 3, 's1', 0)
+        s2 = integer_or_blank(card, 4, 's2', 0)
+        assert len(card) <= 5, 'len(CELAS4 card) = %i' % len(card)
+        return CELAS4(eid, k, s1, s2, comment=comment)
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        eid = data[0]
+        k = data[1]
+        s1 = data[2]
+        s2 = data[3]
+        return CELAS4(eid, k, s1, s2, comment=comment)
 
     def _is_same_card(self, elem, debug=False):
         if self.type != elem.type:

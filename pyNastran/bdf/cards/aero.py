@@ -23,14 +23,14 @@ All cards are BaseCard objects.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import integer_types
 from six.moves import zip, range
 from itertools import count
-from numpy import array, pi, linspace, zeros, arange, repeat, cos, arcsin
-from numpy.linalg import norm
 
+import numpy as np
+
+from pyNastran.utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8, print_float_8
-from pyNastran.bdf.cards.baseCard import BaseCard, expand_thru
+from pyNastran.bdf.cards.base_card import BaseCard, expand_thru
 from pyNastran.bdf.bdfInterface.assign_type import (fields,
     integer, integer_or_blank, double, double_or_blank, string, string_or_blank,
     integer_or_string, double_string_or_blank, blank, interpret_value, components)
@@ -41,7 +41,7 @@ class AECOMP(BaseCard):
     """
     +--------+-------+----------+-------+-------+-------+-------+-------+-------+
     |   1    |   2   |    3     |   4   |   5   |   6   |   7   |   8   |   9   |
-    +--------+-------+----------+-------+-------+-------+-------+-------+-------+
+    +========+=======+==========+=======+=======+=======+=======+=======+=======+
     | AECOMP | NAME  | LISTTYPE | LIST1 | LIST2 | LIST3 | LIST4 | LIST5 | LIST6 |
     +--------+-------+----------+-------+-------+-------+-------+-------+-------+
     |        | LIST7 |  -etc.-  |       |       |       |       |       |       |
@@ -119,6 +119,8 @@ class AEFACT(BaseCard):
     Defines real numbers for aeroelastic analysis.
 
     +--------+-----+----+--------+-----+----+----+----+----+
+    |   1    |   2 |  3 |    4   |  5  |  6 |  7 | 8  |  9 |
+    +========+=====+====+========+=====+====+====+====+====+
     | AEFACT | SID | D1 | D2     | D3  | D4 | D5 | D6 | D7 |
     +--------+-----+----+--------+-----+----+----+----+----+
     |        | D8  | D9 | -etc.- |     |    |    |    |    |
@@ -143,7 +145,7 @@ class AEFACT(BaseCard):
                 Di.append(di)
 
             #: Number (float)
-            self.Di = array(Di, dtype='float64')
+            self.Di = np.array(Di, dtype='float64')
         else:
             msg = '%s has not implemented data parsing' % self.type
             raise NotImplementedError(msg)
@@ -154,11 +156,6 @@ class AEFACT(BaseCard):
     def raw_fields(self):
         """
         Gets the fields in their unmodified form
-
-        Parameters
-        ----------
-        self : AEFACT()
-            the AEFACT object pointer
 
         Returns
         -------
@@ -181,6 +178,8 @@ class AELINK(BaseCard):
     .. math:: u^D + \Sigma_{i=1}^n C_i u_i^I = 0.0
 
     +--------+-------+-------+--------+----+-------+----+-------+----+
+    |   1    |   2   |   3   |   4    |  5 |   6   |  7 |   8   |  9 |
+    +========+=======+=======+========+====+=======+====+=======+====+
     | AELINK | ID    | LABLD | LABL1  | C1 | LABL2 | C2 | LABL3 | C3 |
     +--------+-------+-------+--------+----+-------+----+-------+----+
     |        | LABL4 | C4    | etc.   |    |       |    |       |    |
@@ -223,11 +222,6 @@ class AELINK(BaseCard):
         """
         Gets the fields in their unmodified form
 
-        Parameters
-        ----------
-        self : AELINK()
-            the AELINK object pointer
-
         Returns
         -------
         fields : List[int/float/str]
@@ -249,7 +243,9 @@ class AELIST(BaseCard):
     with the AESURF Bulk Data entry for static aeroelasticity.
 
     +---------+------+------+------+------+------+------+------+------+
-    |  AELIST |  SID | E1   | E2   | E3   | E4   | E5   | E6   | E7   |
+    |    1    |   2  |   3  |  4   |   5  |   6  |  7   |  8   |  9   |
+    +=========+======+======+======+======+======+======+======+======+
+    |  AELIST |  SID |  E1  |  E2  |  E3  |  E4  |  E5  |  E6  |  E7  |
     +---------+------+------+------+------+------+------+------+------+
     |         |  E8  | etc. |      |      |      |      |      |      |
     +---------+------+------+------+------+------+------+------+------+
@@ -300,11 +296,6 @@ class AELIST(BaseCard):
         """
         Gets the fields in their unmodified form
 
-        Parameters
-        ----------
-        self : AELIST()
-            the AELIST object pointer
-
         Returns
         -------
         fields : List[int/float/str]
@@ -325,6 +316,8 @@ class AEPARM(BaseCard):
     from AEDW, AEFORCE and AEPRESS input data.
 
     +--------+----+--------+-------+
+    |    1   | 2  |    3   |   4   |
+    +========+====+========+=======+
     | AEPARM | ID | LABEL  | UNITS |
     +--------+----+--------+-------+
     | AEPARM | 5  | THRUST | LBS   |
@@ -356,11 +349,6 @@ class AEPARM(BaseCard):
         """
         Gets the fields in their unmodified form
 
-        Parameters
-        ----------
-        self : AEPARM()
-            the AEPARM object pointer
-
         Returns
         -------
         fields : List[int/float/str]
@@ -380,6 +368,8 @@ class AESTAT(BaseCard):
     aeroelasticity.
 
     +--------+------+--------+
+    |    1   |   2  |    3   |
+    +========+======+========+
     | AESTAT | ID   | LABEL  |
     +--------+------+--------+
     | AESTAT | 5001 | ANGLEA |
@@ -412,11 +402,6 @@ class AESTAT(BaseCard):
         """
         Gets the fields in their unmodified form
 
-        Parameters
-        ----------
-        self : AESTAT()
-            the AESTAT object pointer
-
         Returns
         -------
         fields : List[int/str]
@@ -439,7 +424,9 @@ class AESURF(BaseCard):
     of the control surface can be specified using an AESURFS entry.
 
     +--------+--------+-------+-------+-------+--------+--------+--------+--------+
-    | AESURF |  ID    | LABEL | CID1  | ALID1 | CID2   | ALID2  | EFF    | LDW    |
+    |    1   |   2    |   3   |   4   |   5   |   6    |    7   |   8    |   9    |
+    +========+========+=======+=======+=======+========+========+========+========+
+    | AESURF |   ID   | LABEL | CID1  | ALID1 | CID2   | ALID2  |  EFF   |  LDW   |
     +--------+--------+-------+-------+-------+--------+--------+--------+--------+
     |        |  CREFC | CREFS | PLLIM | PULIM | HMLLIM | HMULIM | TQLLIM | TQULIM |
     +--------+--------+-------+-------+-------+--------+--------+--------+--------+
@@ -486,8 +473,8 @@ class AESURF(BaseCard):
             self.crefs = double_or_blank(card, 10, 'crefs', 1.0)
             #: Lower and upper deflection limits for the control surface in
             #: radians. (Real, Default = +/- pi/2)
-            self.pllim = double_or_blank(card, 11, 'pllim', -pi / 2.)
-            self.pulim = double_or_blank(card, 12, 'pulim', pi / 2.)
+            self.pllim = double_or_blank(card, 11, 'pllim', -np.pi / 2.)
+            self.pulim = double_or_blank(card, 12, 'pulim', np.pi / 2.)
             #: Lower and upper hinge moment limits for the control surface in
             #: force-length units. (Real, Default = no limit) -> 1e8
             self.hmllim = double_or_blank(card, 13, 'hmllim')
@@ -550,14 +537,9 @@ class AESURF(BaseCard):
         """
         Gets the fields in their unmodified form
 
-        Parameters
-        ----------
-        self : AESURF()
-            the AESURF object pointer
-
         Returns
         -------
-        fields : List[int/float/str]
+        fieldsreset_camera[int/float/str]
             the fields that define the card
         """
         list_fields = ['AESURF', self.aesid, self.label, self.Cid1(), self.AELIST_id1(),
@@ -570,11 +552,6 @@ class AESURF(BaseCard):
         """
         Gets the fields in their simplified form
 
-        Parameters
-        ----------
-        self : AESURF()
-            the AESURF object pointer
-
         Returns
         -------
         fields : List[int/float/str]
@@ -585,8 +562,8 @@ class AESURF(BaseCard):
         crefc = set_blank_if_default(self.crefc, 1.0)
         crefs = set_blank_if_default(self.crefs, 1.0)
 
-        pllim = set_blank_if_default(self.pllim, -pi / 2.)
-        pulim = set_blank_if_default(self.pulim, pi / 2.)
+        pllim = set_blank_if_default(self.pllim, -np.pi / 2.)
+        pulim = set_blank_if_default(self.pulim, np.pi / 2.)
 
         list_fields = ['AESURF', self.aesid, self.label, self.Cid1(), self.AELIST_id1(),
                        self.Cid2(), self.AELIST_id2(), eff, ldw, crefc, crefs,
@@ -595,6 +572,21 @@ class AESURF(BaseCard):
         return list_fields
 
     def write_card(self, size=8, is_double=False):
+        """
+        Writes the card with the specified width and precision
+
+        Parameters
+        ----------
+        size : int (default=8)
+            size of the field; {8, 16}
+        is_double : bool (default=False)
+            is this card double precision
+
+        Returns
+        -------
+        msg : str
+            the string representation of the card
+        """
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
@@ -610,7 +602,7 @@ class AESURFS(BaseCard):  # not integrated
 
     +---------+------+-------+---+-------+---+-------+
     |    1    |  2   |   3   | 4 |   5   | 6 |   7   |
-    +---------+------+-------+---+-------+---+-------+
+    +=========+======+=======+===+=======+===+=======+
     | AESURFS | ID   | LABEL |   | LIST1 |   | LIST2 |
     +---------+------+-------+---+-------+---+-------+
     | AESURFS | 6001 | ELEV  |   | 6002  |   | 6003  |
@@ -640,11 +632,6 @@ class AESURFS(BaseCard):  # not integrated
     def raw_fields(self):
         """
         Gets the fields in their unmodified form
-
-        Parameters
-        ----------
-        self : AESURFS()
-            the AESURFS object pointer
 
         Returns
         -------
@@ -723,7 +710,7 @@ class AERO(Aero):
 
     +------+-------+----------+------+--------+-------+-------+
     | 1    | 2     | 3        | 4    | 5      | 6     | 7     |
-    +------+-------+----------+------+--------+-------+-------+
+    +======+=======+==========+======+========+=======+=======+
     | AERO | ACSID | VELOCITY | REFC | RHOREF | SYMXZ | SYMXY |
     +------+-------+----------+------+--------+-------+-------+
     | AERO | 3     | 1.3+4    | 100. |  1.-5  | 1     | -1    |
@@ -766,11 +753,6 @@ class AERO(Aero):
         """
         Gets the fields in their unmodified form
 
-        Parameters
-        ----------
-        self : AERO()
-            the AERO object pointer
-
         Returns
         -------
         fields : List[int/float/str]
@@ -784,8 +766,6 @@ class AERO(Aero):
         """
         Gets the fields in their simplified form
 
-        :param self:
-          the AERO object pointer
         :returns fields:
           the fields that define the card
         :type fields:
@@ -798,6 +778,21 @@ class AERO(Aero):
         return list_fields
 
     def write_card(self, size=8, is_double=False):
+        """
+        Writes the card with the specified width and precision
+
+        Parameters
+        ----------
+        size : int (default=8)
+            size of the field; {8, 16}
+        is_double : bool (default=False)
+            is this card double precision
+
+        Returns
+        -------
+        msg : str
+            the string representation of the card
+        """
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
@@ -808,7 +803,7 @@ class AEROS(Aero):
 
     +-------+-------+-------+------+------+-------+------+-------+
     | 1     | 2     | 3     | 4    | 5    | 6     | 7    |   8   |
-    +-------+-------+-------+------+------+-------+------+-------+
+    +=======+=======+=======+======+======+=======+======+=======+
     | AEROS | ACSID | RCSID | REFC | REFB | REFS  |SYMXZ | SYMXY |
     +-------+-------+-------+------+------+-------+------+-------+
 
@@ -852,8 +847,6 @@ class AEROS(Aero):
         """
         Gets the fields in their unmodified form
 
-        :param self:
-          the AEROS object pointer
         :returns fields:
           the fields that define the card
         :type fields:
@@ -867,8 +860,6 @@ class AEROS(Aero):
         """
         Gets the fields in their simplified form
 
-        :param self:
-          the AEROS object pointer
         :returns fields:
           the fields that define the card
         :type fields:
@@ -892,7 +883,7 @@ class CSSCHD(Aero):
 
     +--------+-----+-------+--------+-------+-------+
     |    1   |  2  |   3   |   4    |   5   |   6   |
-    +--------+-----+-------+--------+-------+-------+
+    +========+=====+=======+========+=======+=======+
     | CSSCHD | SlD | AESID | LALPHA | LMACH | LSCHD |
     +--------+-----+-------+--------+-------+-------+
     """
@@ -923,7 +914,6 @@ class CSSCHD(Aero):
         """
         Cross links the card
 
-        :param self:   the CSSCHD object pointer
         :param model:  the BDF object
         :type model:   BDF()
         """
@@ -972,8 +962,6 @@ class CSSCHD(Aero):
         """
         Gets the fields in their unmodified form
 
-        :param self:
-          the CSSCHD object pointer
         :returns fields:
           the fields that define the card
         :type fields:
@@ -996,7 +984,7 @@ class CAERO1(BaseCard):
 
     +--------+-----+-----+----+-------+--------+--------+--------+------+
     |   1    |  2  |  3  | 4  |   5   |   6    |    7   |   8    |   9  |
-    +--------+-----+-----+----+-------+--------+--------+--------+------+
+    +========+=====+=====+====+=======+========+========+========+======+
     | CAERO1 | EID | PID | CP | NSPAN | NCHORD |  LSPAN | LCHORD | IGID |
     +--------+-----+-----+----+-------+--------+--------+--------+------+
     |        |  X1 | Y1  | Z1 | X12   | X4     | Y4     | Z4     | X43  |
@@ -1045,8 +1033,6 @@ class CAERO1(BaseCard):
 
         Parameters
         ----------
-        self : CAERO1()
-            the CAERO1 object pointer
         n : int
             the field number to update
         value : int/float
@@ -1074,8 +1060,6 @@ class CAERO1(BaseCard):
 
         Parameters
         ----------
-        self : CAERO1()
-            the CAERO1 object pointer
         n : int
             the field number to update
         value : int/float
@@ -1130,14 +1114,16 @@ class CAERO1(BaseCard):
 
             self.igid = integer(card, 8, 'igid')
 
-            self.p1 = array([double_or_blank(card, 9, 'x1', 0.0),
-                             double_or_blank(card, 10, 'y1', 0.0),
-                             double_or_blank(card, 11, 'z1', 0.0)])
+            self.p1 = np.array([
+                double_or_blank(card, 9, 'x1', 0.0),
+                double_or_blank(card, 10, 'y1', 0.0),
+                double_or_blank(card, 11, 'z1', 0.0)])
             self.x12 = double_or_blank(card, 12, 'x12', 0.)
 
-            self.p4 = array([double_or_blank(card, 13, 'x4', 0.0),
-                             double_or_blank(card, 14, 'y4', 0.0),
-                             double_or_blank(card, 15, 'z4', 0.0)])
+            self.p4 = np.array([
+                double_or_blank(card, 13, 'x4', 0.0),
+                double_or_blank(card, 14, 'y4', 0.0),
+                double_or_blank(card, 15, 'z4', 0.0)])
             self.x43 = double_or_blank(card, 16, 'x43', 0.)
 
             if self.nspan == 0 and self.lspan == 0:
@@ -1162,14 +1148,9 @@ class CAERO1(BaseCard):
     def _init_ids(self):
         """
         Fill `self.box_ids` with the sub-box ids. Shape is (nchord, nspan)
-
-        Parameters
-        ----------
-        self : CAERO1 obj
-            The CAERO1 object.
         """
         nchord, nspan = self.shape
-        self.box_ids = zeros((nchord, nspan), dtype='int32')
+        self.box_ids = np.zeros((nchord, nspan), dtype='int32')
         for ichord in range(nchord):
             for ispan in range(nspan):
                 self.box_ids[ichord, ispan] = self.eid + ichord + ispan * nchord
@@ -1198,8 +1179,6 @@ class CAERO1(BaseCard):
 
         Parameters
         ----------
-        self : CAERO1 obj
-            The CAERO1 object.
         model : BDF obj
             The BDF object.
         """
@@ -1219,21 +1198,22 @@ class CAERO1(BaseCard):
             self.lspan_ref = self.lspan
         self._init_ids()
 
+    #def uncross_reference(self):
+        #self.pid = self.Pid()
+        #self.cp = self.Cp()
+        #del self.pid_ref
+        #del self.pid_ref, self.cp_ref
+
     def uncross_reference(self):
         self.pid = self.Pid()
         self.cp = self.Cp()
-        del self.pid_ref
-        del self.pid_ref, self.cp_ref
+        self.lchord = self.get_LChord()
+        self.lspan = self.get_LSpan()
 
     @property
     def min_max_eid(self):
         """
         Gets the min and max element ids of the CAERO card
-
-        Parameters
-        ----------
-        self : CAERO1 obj
-            The CAERO1 object.
 
         Returns
         -------
@@ -1247,11 +1227,6 @@ class CAERO1(BaseCard):
         """
         Get the 4 corner points for the CAERO card
 
-        Parameters
-        ----------
-        self : CAERO1 obj
-            The CAERO1 object.
-
         Returns
         -------
         p1234 : (4, 3) list
@@ -1259,8 +1234,8 @@ class CAERO1(BaseCard):
         """
         p1 = self.cp_ref.transform_node_to_global(self.p1)
         p4 = self.cp_ref.transform_node_to_global(self.p4)
-        p2 = p1 + array([self.x12, 0., 0.])
-        p3 = p4 + array([self.x43, 0., 0.])
+        p2 = p1 + np.array([self.x12, 0., 0.])
+        p3 = p4 + np.array([self.x43, 0., 0.])
         return [p1, p2, p3, p4]
 
     @property
@@ -1289,8 +1264,8 @@ class CAERO1(BaseCard):
 
         Parameters
         ----------
-        self : CAERO1 obj
-            The CAERO1 object.
+        box_ids : ???
+            nothing???
 
         Returns
         -------
@@ -1307,11 +1282,6 @@ class CAERO1(BaseCard):
     @property
     def xy(self):
         """
-        Parameters
-        ----------
-        self : CAERO1 obj
-            The CAERO1 object.
-
         Returns
         -------
         x : (nchord,) ndarray
@@ -1324,14 +1294,14 @@ class CAERO1(BaseCard):
             nchord = len(x) - 1
         else:
             nchord = self.nchord
-            x = linspace(0., 1., nchord + 1)
+            x = np.linspace(0., 1., nchord + 1)
 
         if self.nspan == 0:
             y = self.lspan_ref.Di
             nspan = len(y) - 1
         else:
             nspan = self.nspan
-            y = linspace(0., 1., nspan + 1)
+            y = np.linspace(0., 1., nspan + 1)
 
         if nchord < 1 or nspan < 1:
             msg = '%s eid=%s nchord=%s nspan=%s lchord=%s lspan=%s' % (
@@ -1343,11 +1313,6 @@ class CAERO1(BaseCard):
     def panel_points_elements(self):
         """
         Gets the sub-points and sub-elements for the CAERO card
-
-        Parameters
-        ----------
-        self : CAERO1 obj
-            The CAERO1 object.
 
         Returns
         -------
@@ -1368,21 +1333,9 @@ class CAERO1(BaseCard):
         self.x12 = self.p2[0] - self.p1[0]
         self.x43 = self.p4[0] - self.p3[0]
 
-    def uncross_reference(self):
-        self.pid = self.Pid()
-        self.cp = self.Cp()
-        self.lchord = self.get_LChord()
-        self.lspan = self.get_LSpan()
-
-
     def raw_fields(self):
         """
         Gets the fields in their unmodified form
-
-        Parameters
-        ----------
-        self : CAERO 1 obj
-            the CAERO1 object pointer.
 
         Returns
         -------
@@ -1409,11 +1362,6 @@ class CAERO1(BaseCard):
     def repr_fields(self):
         """
         Gets the fields in their simplified form
-
-        Parameters
-        ----------
-        self : CAERO1 obj
-            The CAERO1 object.
 
         Returns
         -------
@@ -1452,8 +1400,6 @@ class CAERO2(BaseCard):
 
         Parameters
         ----------
-        self : CAERO2 obj
-            The CAERO2 object.
         n : int
             The field number to update
 
@@ -1469,7 +1415,8 @@ class CAERO2(BaseCard):
         elif n == 11:
             return self.p1[2]
         else:
-            raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
+            raise KeyError('Field %r is an invalid %s entry.' % (
+                n, self.type))
 
     def _update_field_helper(self, n, value):
         """
@@ -1477,8 +1424,6 @@ class CAERO2(BaseCard):
 
         Parameters
         ----------
-        self : CAERO2 obj
-            The CAERO2 object.
         n : int
             The field number to update
         value : int, float, None
@@ -1547,9 +1492,10 @@ class CAERO2(BaseCard):
             self.igid = integer(card, 8, 'igid')
 
             #: Location of point 1 in coordinate system CP
-            self.p1 = array([double_or_blank(card, 9, 'x1', 0.0),
-                             double_or_blank(card, 10, 'y1', 0.0),
-                             double_or_blank(card, 11, 'z1', 0.0)])
+            self.p1 = np.array([
+                double_or_blank(card, 9, 'x1', 0.0),
+                double_or_blank(card, 10, 'y1', 0.0),
+                double_or_blank(card, 11, 'z1', 0.0)])
 
             #: Length of body in the x-direction of the aerodynamic coordinate
             #: system.  (Real > 0)
@@ -1588,8 +1534,6 @@ class CAERO2(BaseCard):
 
         Parameters
         ----------
-        self : CAERO2 obj
-            The CAERO2 object.
         model : BDF obj
             The BDF object.
         """
@@ -1608,7 +1552,7 @@ class CAERO2(BaseCard):
 
     def get_points(self):
         p1 = self.cp_ref.transform_node_to_global(self.p1)
-        p2 = p1 + array([self.x12, 0., 0.])
+        p2 = p1 + np.array([self.x12, 0., 0.])
         #print("x12 = %s" % self.x12)
         #print("pcaero[%s] = %s" % (self.eid, [p1,p2]))
         return [p1, p2]
@@ -1623,11 +1567,6 @@ class CAERO2(BaseCard):
         """
         Gets the fields in their unmodified form
 
-        Parameters
-        ----------
-        self : CAERO2 obj
-            The CAERO2 object.
-
         Returns
         -------
         fields : list
@@ -1641,11 +1580,6 @@ class CAERO2(BaseCard):
     def repr_fields(self):
         """
         Gets the fields in their simplified form
-
-        Parameters
-        ----------
-        self : CAERO2 obj
-            The CAERO2 object.
 
         Returns
         -------
@@ -1678,14 +1612,16 @@ class CAERO3(BaseCard):
             self.list_w = integer(card, 4, 'list_w')
             self.list_c1 = integer_or_blank(card, 5, 'list_c1')
             self.list_c2 = integer_or_blank(card, 6, 'list_c2')
-            self.p1 = array([double_or_blank(card, 9, 'x1', 0.0),
-                             double_or_blank(card, 10, 'y1', 0.0),
-                             double_or_blank(card, 11, 'z1', 0.0)])
+            self.p1 = np.array([
+                double_or_blank(card, 9, 'x1', 0.0),
+                double_or_blank(card, 10, 'y1', 0.0),
+                double_or_blank(card, 11, 'z1', 0.0)])
             self.x12 = double(card, 12, 'x12')
             assert self.x12 > 0., 'x12=%s' % self.x12
-            self.p4 = array([double_or_blank(card, 13, 'x4', 0.0),
-                             double_or_blank(card, 14, 'y4', 0.0),
-                             double_or_blank(card, 15, 'z4', 0.0)])
+            self.p4 = np.array([
+                double_or_blank(card, 13, 'x4', 0.0),
+                double_or_blank(card, 14, 'y4', 0.0),
+                double_or_blank(card, 15, 'z4', 0.0)])
             self.x43 = double_or_blank(card, 16, 'x43', 0.0)
             assert len(card) <= 17, 'len(CAERO3 card) = %i' % len(card)
         else:
@@ -1698,8 +1634,6 @@ class CAERO3(BaseCard):
 
         Parameters
         ----------
-        self : CAERO3 obj
-            The CAERO3 object.
         model : BDF obj
             The BDF object.
         """
@@ -1732,11 +1666,6 @@ class CAERO3(BaseCard):
         """
         Gets the fields in their unmodified form
 
-        Parameters
-        ----------
-        self : CAERO3 obj
-            The CAERO3 object.
-
         Returns
         -------
         fields : list
@@ -1750,11 +1679,6 @@ class CAERO3(BaseCard):
     def repr_fields(self):
         """
         Gets the fields in their simplified form
-
-        Parameters
-        ----------
-        self : CAERO2 obj
-            The CAERO2 object.
 
         Returns
         -------
@@ -1788,14 +1712,16 @@ class CAERO4(BaseCard):
             self.nspan = integer_or_blank(card, 4, 'nspan', 0)
             self.lspan = integer_or_blank(card, 5, 'lspan', 0)
 
-            self.p1 = array([double_or_blank(card, 9, 'x1', 0.0),
-                             double_or_blank(card, 10, 'y1', 0.0),
-                             double_or_blank(card, 11, 'z1', 0.0)])
+            self.p1 = np.array([
+                double_or_blank(card, 9, 'x1', 0.0),
+                double_or_blank(card, 10, 'y1', 0.0),
+                double_or_blank(card, 11, 'z1', 0.0)])
             self.x12 = double_or_blank(card, 12, 'x12', 0.)
 
-            self.p4 = array([double_or_blank(card, 13, 'x4', 0.0),
-                             double_or_blank(card, 14, 'y4', 0.0),
-                             double_or_blank(card, 15, 'z4', 0.0)])
+            self.p4 = np.array([
+                double_or_blank(card, 13, 'x4', 0.0),
+                double_or_blank(card, 14, 'y4', 0.0),
+                double_or_blank(card, 15, 'z4', 0.0)])
             self.x43 = double_or_blank(card, 16, 'x43', 0.)
             assert len(card) <= 17, 'len(CAERO4 card) = %i' % len(card)
         else:
@@ -1805,8 +1731,8 @@ class CAERO4(BaseCard):
     def get_points(self):
         p1 = self.cp_ref.transform_node_to_global(self.p1)
         p4 = self.cp_ref.transform_node_to_global(self.p4)
-        p2 = p1 + array([self.x12, 0., 0.])
-        p3 = p4 + array([self.x43, 0., 0.])
+        p2 = p1 + np.array([self.x12, 0., 0.])
+        p3 = p4 + np.array([self.x43, 0., 0.])
         return [p1, p2, p3, p4]
 
     def cross_reference(self, model):
@@ -1815,8 +1741,6 @@ class CAERO4(BaseCard):
 
         Parameters
         ----------
-        self : CAERO4 obj
-            The CAERO4 object.
         model : BDF obj
             The BDF object.
         """
@@ -1847,11 +1771,6 @@ class CAERO4(BaseCard):
         """
         Gets the fields in their unmodified form
 
-        Parameters
-        ----------
-        self : CAERO4 obj
-            The CAERO4 object.
-
         Returns
         -------
         fields : list
@@ -1865,11 +1784,6 @@ class CAERO4(BaseCard):
     def repr_fields(self):
         """
         Gets the fields in their simplified form
-
-        Parameters
-        ----------
-        self : CAERO4 obj
-            The CAERO4 object.
 
         Returns
         -------
@@ -1904,14 +1818,16 @@ class CAERO5(BaseCard):
             self.ntheory = integer_or_blank(card, 6, 'ntheory')
             self.nthick = integer_or_blank(card, 7, 'nthick')
             # 8 - blank
-            self.p1 = array([double_or_blank(card, 9, 'x1', 0.0),
-                             double_or_blank(card, 10, 'y1', 0.0),
-                             double_or_blank(card, 11, 'z1', 0.0)])
+            self.p1 = np.array([
+                double_or_blank(card, 9, 'x1', 0.0),
+                double_or_blank(card, 10, 'y1', 0.0),
+                double_or_blank(card, 11, 'z1', 0.0)])
             self.x12 = double(card, 12, 'x12')
             assert self.x12 > 0., 'x12=%s' % self.x12
-            self.p4 = array([double_or_blank(card, 13, 'x4', 0.0),
-                             double_or_blank(card, 14, 'y4', 0.0),
-                             double_or_blank(card, 15, 'z4', 0.0)])
+            self.p4 = np.array([
+                double_or_blank(card, 13, 'x4', 0.0),
+                double_or_blank(card, 14, 'y4', 0.0),
+                double_or_blank(card, 15, 'z4', 0.0)])
             self.x43 = double_or_blank(card, 16, 'x43', 0.0)
             assert len(card) <= 17, 'len(CAERO3 card) = %i' % len(card)
         else:
@@ -1931,8 +1847,6 @@ class CAERO5(BaseCard):
 
         Parameters
         ----------
-        self : CAERO5 obj
-            The CAERO5 object.
         model : BDF obj
             The BDF object.
         """
@@ -1954,8 +1868,8 @@ class CAERO5(BaseCard):
     def get_points(self):
         p1 = self.cp_ref.transform_node_to_global(self.p1)
         p4 = self.cp_ref.transform_node_to_global(self.p4)
-        p2 = p1 + array([self.x12, 0., 0.])
-        p3 = p4 + array([self.x43, 0., 0.])
+        p2 = p1 + np.array([self.x12, 0., 0.])
+        p3 = p4 + np.array([self.x43, 0., 0.])
         return [p1, p2, p3, p4]
 
     def get_npanel_points_elements(self):
@@ -1983,10 +1897,10 @@ class CAERO5(BaseCard):
             nspan = len(y) - 1
         else:
             nspan = self.nspan
-            y = linspace(0., 1., nspan + 1)
+            y = np.linspace(0., 1., nspan + 1)
         assert nspan >= 1, msg
 
-        x = array([0., 1.], dtype='float64')
+        x = np.array([0., 1.], dtype='float64')
         assert nspan >= 1, msg
 
         return points_elements_from_quad_points(p1, p2, p3, p4, x, y)
@@ -1999,7 +1913,7 @@ class CAERO5(BaseCard):
         #khat = k / norm(k)
         #jhat = cross(khat, ihat)
         #b = self.p4 - self.p1
-        L = norm(p4 - p1)
+        L = np.linalg.norm(p4 - p1)
 
         # b = L * cos(Lambda)
         # ci = L * sin(Lambda)
@@ -2012,7 +1926,7 @@ class CAERO5(BaseCard):
             #Lambda = 0.
             c1 = 1.
 
-            secL = 1 / cos(Lambda)
+            secL = 1 / np.cos(Lambda)
             secL2 = secL ** 2
             ma2_secL2 = mach ** 2 - secL2
             c1 = mach / ma2_secL2 ** 0.5
@@ -2024,9 +1938,9 @@ class CAERO5(BaseCard):
             ci = p4[0] - p1[0]
 
             # sweep angle
-            Lambda = arcsin(ci / L)
+            Lambda = np.arcsin(ci / L)
 
-            secL = 1 / cos(Lambda)
+            secL = 1 / np.cos(Lambda)
             secL2 = secL ** 2
             ma2_secL2 = mach ** 2 - secL2
             c1 = mach / ma2_secL2 ** 0.5
@@ -2045,11 +1959,6 @@ class CAERO5(BaseCard):
     def repr_fields(self):
         """
         Gets the fields in their simplified form
-
-        Parameters
-        ----------
-        self : CAERO5 obj
-            The CAERO5 object.
 
         Returns
         -------
@@ -2089,8 +1998,8 @@ def points_elements_from_quad_points(p1, p2, p3, p4, x, y):
 
     # x repeats ny times and varies slowly
     # y repeats nx times and varies quickly
-    xv = repeat(x, ny, axis=1).reshape(npoints, 1)
-    yv = repeat(y, nx, axis=0).reshape(npoints, 1)
+    xv = np.repeat(x, ny, axis=1).reshape(npoints, 1)
+    yv = np.repeat(y, nx, axis=0).reshape(npoints, 1)
 
     # calculate the points a and b xv% along the chord
     a = xv * p2 + (1 - xv) * p1
@@ -2101,10 +2010,10 @@ def points_elements_from_quad_points(p1, p2, p3, p4, x, y):
     assert points.shape == (npoints, 3), "npoints=%s shape=%s" % (npoints, str(points.shape))
 
     # create a matrix with the point counter
-    ipoints = arange(npoints, dtype='int32').reshape((nx, ny))
+    ipoints = np.arange(npoints, dtype='int32').reshape((nx, ny))
 
     # move around the CAERO quad and apply ipoints
-    elements = zeros((nelements, 4), dtype='int32')
+    elements = np.zeros((nelements, 4), dtype='int32')
     elements[:, 0] = ipoints[:-1, :-1].ravel()  # (i,  j  )
     elements[:, 1] = ipoints[1:, :-1].ravel()   # (i+1,j  )
     elements[:, 2] = ipoints[1:, 1:].ravel()    # (i+1,j+1)
@@ -2150,7 +2059,7 @@ class PAERO5(BaseCard):
             for n, i in enumerate(range(9, len(card))):
                 ca = double(card, i, 'ca/ci_%i' % (n+1))
                 caoci.append(ca)
-            self.caoci = array(caoci, dtype='float64')
+            self.caoci = np.array(caoci, dtype='float64')
         else:
             raise NotImplementedError('data')
 
@@ -2211,7 +2120,7 @@ class FLFACT(BaseCard):
     """
     +--------+-----+----+------+----+----+----+----+----+
     |   1    |  2  |  3 |   4  | 5  | 6  | 7  | 8  | 9  |
-    +--------+-----+----+------+----+----+----+----+----+
+    +========+=====+====+======+====+====+====+====+====+
     | FLFACT | SID | F1 | F2   | F3 | F4 | F5 | F6 | F7 |
     +--------+-----+----+------+----+----+----+----+----+
     |        | F8  | F9 | etc. |    |    |    |    |    |
@@ -2219,15 +2128,15 @@ class FLFACT(BaseCard):
 
     +--------+-----+----+------+-----+
     |   1    |  2  |  3 |   4  | 5   |
-    +--------+-----+----+------+-----+
-    | FLFACT | 97  | .3 |.7    | 3.5 |
+    +========+=====+====+======+=====+
+    | FLFACT | 97  | .3 |  .7  | 3.5 |
     +--------+-----+----+------+-----+
 
     # delta quantity approach
 
     +--------+-----+-------+------+-------+----+--------+
     |   1    |  2  |  3    |   4  |   5   | 6  |     7  |
-    +--------+-----+-------+------+-------+----+--------+
+    +========+=====+=======+======+=======+====+========+
     | FLFACT | SID | F1    | THRU | FNF   | NF | FMID   |
     +--------+-----+-------+------+-------+----+--------+
     | FLFACT | 201 | 0.200 | THRU | 0.100 | 11 | 0.1333 |
@@ -2248,7 +2157,7 @@ class FLFACT(BaseCard):
                 nf = double(card, 5, 'nf')
                 fmid = double(card, 6, 'fmid')
                 assert len(card) == 7, 'len(FLFACT card)=%s; card=%s' % (len(card), card)
-                i = linspace(0, nf, nf, endpoint=False)
+                i = np.linspace(0, nf, nf, endpoint=False)
                 self.factors = ((f1*(fnf - fmid) * (nf - 1) + fnf * (fmid - f1) * i) /
                                    ((fnf - fmid) * (nf - 1) +       (fmid - f1) * i))
             else:
@@ -2270,8 +2179,6 @@ class FLFACT(BaseCard):
         """
         Gets the fields in their unmodified form
 
-        :param self:
-          the FLFACT object pointer
         :returns fields:
           the fields that define the card
         :type fields:
@@ -2291,7 +2198,7 @@ class FLUTTER(BaseCard):
 
     +---------+-----+--------+------+------+-------+-------+-------------+------+
     |    1    |  2  |   3    |  4   |  5   |   6   |   7   |      8      |  9   |
-    +---------+-----+--------+------+------+-------+-------+-------------+------+
+    +=========+=====+========+======+======+=======+=======+=============+======+
     | FLUTTER | SID | METHOD | DENS | MACH | RFREQ | IMETH | NVALUE/OMAX | EPS  |
     +---------+-----+--------+------+------+-------+-------+-------------+------+
     | FLUTTER | 19  | K      | 119  | 219  | 319   |     S | 5           | 1.-4 |
@@ -2306,7 +2213,6 @@ class FLUTTER(BaseCard):
         """
         Gets complicated parameters on the FLUTTER card
 
-        :param self:  the FLUTTER object pointer
         :param n:     the field number to update
         :type n:      int
         :param value: the value for the appropriate field
@@ -2327,7 +2233,6 @@ class FLUTTER(BaseCard):
         """
         Updates complicated parameters on the FLUTTER card
 
-        :param self:  the FLUTTER object pointer
         :param n:     the field number to update
         :type n:      int
         :param value: the value for the appropriate field
@@ -2391,7 +2296,6 @@ class FLUTTER(BaseCard):
         """
         Cross links the card
 
-        :param self:   the FLUTTER object pointer
         :param model:  the BDF object
         :type model:   BDF()
         """
@@ -2448,8 +2352,6 @@ class FLUTTER(BaseCard):
         """
         Gets the fields in their unmodified form
 
-        :param self:
-          the FLUTTER object pointer
         :returns fields:
           the fields that define the card
         :type fields:
@@ -2478,7 +2380,7 @@ class GUST(BaseCard):
 
     +------+-----+-------+-----+-----+------+
     |   1  |  2  |   3   |  4  |  5  |  6   |
-    +------+-----+-------+-----+-----+------+
+    +======+=====+=======+=====+=====+======+
     | GUST | SID | DLOAD | WG  | X0  | V    |
     +------+-----+-------+-----+-----+------+
     | GUST | 133 | 61    | 1.0 | 0.  | 1.+4 |
@@ -2518,8 +2420,6 @@ class GUST(BaseCard):
         """
         Gets the fields in their unmodified form
 
-        :param self:
-          the GUST object pointer
         :returns fields:
           the fields that define the card
         :type fields:
@@ -2540,7 +2440,7 @@ class MKAERO1(BaseCard):
 
     +---------+----+----+----+----+----+----+----+----+
     |    1    |  2 | 3  |  4 | 5  | 6  | 7  | 8  | 9  |
-    +---------+----+----+----+----+----+----+----+----+
+    +=========+====+====+====+====+====+====+====+====+
     | MKAERO1 | m1 | m2 | m3 | m4 | m5 | m6 | m7 | m8 |
     +---------+----+----+----+----+----+----+----+----+
     |         | k1 | k2 | k3 | k4 | k5 | k6 | k7 | k8 |
@@ -2582,8 +2482,6 @@ class MKAERO1(BaseCard):
         """
         Gets the fields in their unmodified form
 
-        :param self:
-          the MKAERO1 object pointer
         :returns fields:
           the fields that define the card
         :type fields:
@@ -2616,7 +2514,7 @@ class MKAERO2(BaseCard):
 
     +---------+----+----+----+----+----+----+----+----+
     |    1    | 2  | 3  | 4  | 5  | 6  | 7  | 8  | 9  |
-    +---------+----+----+----+----+----+----+----+----+
+    +=========+====+====+====+====+====+====+====+====+
     | MKAERO2 | m1 | k1 | m2 | k2 | m3 | k3 | m4 | k4 |
     +---------+----+----+----+----+----+----+----+----+
     """
@@ -2651,8 +2549,6 @@ class MKAERO2(BaseCard):
         """
         Gets the fields in their unmodified form
 
-        :param self:
-          the MKAERO2 object pointer
         :returns fields:
           the fields that define the card
         :type fields:
@@ -2728,7 +2624,6 @@ class PAERO1(BaseCard):
         """
         Gets complicated parameters on the PAERO1 card
 
-        :param self:  the PAERO1 object pointer
         :param n:     the field number to update
         :type n:      int
         :param value: the value for the appropriate field
@@ -2740,7 +2635,6 @@ class PAERO1(BaseCard):
         """
         Updates complicated parameters on the PAERO1 card
 
-        :param self:  the PAERO1 object pointer
         :param n:     the field number to update
         :type n:      int
         :param value: the value for the appropriate field
@@ -2780,8 +2674,6 @@ class PAERO1(BaseCard):
         """
         Gets the fields in their unmodified form
 
-        :param self:
-          the PAERO1 object pointer
         :returns fields:
           the fields that define the card
         :type fields:
@@ -2815,7 +2707,6 @@ class PAERO2(BaseCard):
         """
         Gets complicated parameters on the PAERO2 card
 
-        :param self:  the PAERO2 object pointer
         :param n:     the field number to update
         :type n:      int
         :param value: the value for the appropriate field
@@ -2834,7 +2725,6 @@ class PAERO2(BaseCard):
         """
         Updates complicated parameters on the PAERO2 card
 
-        :param self:  the PAERO2 object pointer
         :param n:     the field number to update
         :type n:      int
         :param value: the value for the appropriate field
@@ -2898,8 +2788,6 @@ class PAERO2(BaseCard):
         """
         Gets the fields in their unmodified form
 
-        :param self:
-          the PAERO2 object pointer
         :returns fields:
           the fields that define the card
         :type fields:
@@ -2930,7 +2818,6 @@ class PAERO3(BaseCard):
         """
         Gets complicated parameters on the PAERO3 card
 
-        :param self:  the PAERO3 object pointer
         :param n:     the field number to update
         :type n:      int
         :param value: the value for the appropriate field
@@ -2951,7 +2838,6 @@ class PAERO3(BaseCard):
         """
         Updates complicated parameters on the PAERO3 card
 
-        :param self:  the PAERO3 object pointer
         :param n:     the field number to update
         :type n:      int
         :param value: the value for the appropriate field
@@ -3000,8 +2886,6 @@ class PAERO3(BaseCard):
         """
         Gets the fields in their unmodified form
 
-        :param self:
-          the PAERO3 object pointer
         :returns fields:
           the fields that define the card
         :type fields:
@@ -3078,6 +2962,10 @@ class SPLINE1(Spline):
         assert self.method in ['IPS', 'TPS', 'FPS'], 'method = %s' % self.method
         assert self.usage in ['FORCE', 'DISP', 'BOTH'], 'usage = %s' % self.usage
 
+    @property
+    def aero_element_ids(self):
+        return np.arange(self.box1, self.box2 + 1)
+
     def CAero(self):
         if isinstance(self.caero, integer_types):
             return self.caero
@@ -3092,7 +2980,6 @@ class SPLINE1(Spline):
         """
         Cross links the card
 
-        :param self:   the SPLINE1 object pointer
         :param model:  the BDF object
         :type model:   BDF()
         """
@@ -3113,8 +3000,6 @@ class SPLINE1(Spline):
         """
         Gets the fields in their unmodified form
 
-        :param self:
-          the SPLINE1 object pointer
         :returns fields:
           the fields that define the card
         :type fields:
@@ -3194,7 +3079,6 @@ class SPLINE2(Spline):
         """
         Cross links the card
 
-        :param self:   the SPLINE2 object pointer
         :param model:  the BDF object
         :type model:   BDF()
         """
@@ -3213,6 +3097,10 @@ class SPLINE2(Spline):
         self.caero = self.CAero()
         self.setg = self.Set()
         del self.cid_ref, self.caero_ref, self.setg_ref
+
+    @property
+    def aero_element_ids(self):
+        return np.arange(self.id1, self.id2 + 1)
 
     def Cid(self):
         if isinstance(self.cid, integer_types):
@@ -3233,8 +3121,6 @@ class SPLINE2(Spline):
         """
         Gets the fields in their unmodified form
 
-        :param self:
-          the SPLINE2 object pointer
         :returns fields:
           the fields that define the card
         :type fields:
@@ -3272,7 +3158,7 @@ class SPLINE3(Spline):
         if card:
             self.eid = integer(card, 1, 'eid')
             self.caero = integer(card, 2, 'caero')
-            self.box_idt = integer(card, 3, 'box_id')
+            self.box_id = integer(card, 3, 'box_id')
             self.components = integer(card, 4, 'comp')
             assert self.components in [1, 2, 3, 4, 5, 6], self.components
             self.g1 = integer(card, 5, 'G1')
@@ -3391,11 +3277,14 @@ class SPLINE4(Spline):
             return self.setg
         return self.setg_ref.sid
 
+    @property
+    def aero_element_ids(self):
+        return self.aelist_ref.elements
+
     def cross_reference(self, model):
         """
         Cross links the card
 
-        :param self:   the SPLINE4 object pointer
         :param model:  the BDF object
         :type model:   BDF()
         """
@@ -3419,8 +3308,6 @@ class SPLINE4(Spline):
         """
         Gets the fields in their unmodified form
 
-        :param self:
-          the SPLINE4 object pointer
         :returns fields:
           the fields that define the card
         :type fields:
@@ -3502,6 +3389,11 @@ class SPLINE5(Spline):
             msg = '%s has not implemented data parsing' % self.type
             raise NotImplementedError(msg)
 
+    @property
+    def aero_element_ids(self):
+        return self.aelist_ref.elements
+
+
     def Cid(self):
         if isinstance(self.cid, integer_types):
             return self.cid
@@ -3526,7 +3418,6 @@ class SPLINE5(Spline):
         """
         Cross links the card
 
-        :param self:   the SPLINE5 object pointer
         :param model:  the BDF object
         :type model:   BDF()
         """
@@ -3553,8 +3444,6 @@ class SPLINE5(Spline):
         """
         Gets the fields in their unmodified form
 
-        :param self:
-          the SPLINE5 object pointer
         :returns fields:
           the fields that define the card
         :type fields:
@@ -3588,7 +3477,6 @@ class TRIM(BaseCard):
         """
         Gets complicated parameters on the TRIM card
 
-        :param self:  the TRIM object pointer
         :param n:     the field number to update
         :type n:      int
         :param value: the value for the appropriate field
@@ -3613,7 +3501,6 @@ class TRIM(BaseCard):
         """
         Updates complicated parameters on the TRIM card
 
-        :param self:  the TRIM object pointer
         :param n:     the field number to update
         :type n:      int
         :param value: the value for the appropriate field
@@ -3685,8 +3572,6 @@ class TRIM(BaseCard):
         """
         Gets the fields in their unmodified form
 
-        :param self:
-          the TRIM object pointer
         :returns fields:
           the fields that define the card
         :type fields:

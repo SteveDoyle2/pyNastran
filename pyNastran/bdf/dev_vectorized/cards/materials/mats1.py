@@ -152,7 +152,6 @@ class MATS1(Material):
         """
         Gets E (Young's Modulus) for a given stress.
 
-        :param self:   the object pointer
         :param stress: the stress (None -> linear E value)
         :returns E:    Young's Modulus
         """

@@ -32,7 +32,7 @@ class GuiAttributes(object):
         # window variables
         self._legend_window_shown = False
         self._clipping_window_shown = False
-        self._edit_group_properties_window_shown = False
+        self._edit_geometry_properties_window_shown = False
         #-------------
         # inputs dict
         self.is_edges = False
@@ -86,7 +86,7 @@ class GuiAttributes(object):
         #}
         self.geometry_properties = OrderedDict()
 
-        self.iText = 0
+        self.itext = 0
 
         self.pick_state = 'node/centroid' # if self.is_centroidal else 'nodal'
         self.label_actors = {}
@@ -104,6 +104,25 @@ class GuiAttributes(object):
 
         self.nvalues = 9
         self.dim_max = 1.0
+        self.nid_maps = {}
+        self.eid_maps = {}
+        self.name = 'main'
+
+    @property
+    def nid_map(self):
+        return self.nid_maps[self.name]
+
+    @nid_map.setter
+    def nid_map(self, nid_map):
+        self.nid_maps[self.name] = nid_map
+
+    @property
+    def eid_map(self):
+        return self.eid_maps[self.name]
+
+    @eid_map.setter
+    def eid_map(self, eid_map):
+        self.eid_maps[self.name] = eid_map
 
     @property
     def displacement_scale_factor(self):
@@ -147,7 +166,7 @@ class GuiAttributes(object):
 
         self.res_widget.update_results(formi)
 
-        key = self.case_keys[0]
+        key = list(self.case_keys)[0]
         location = self.get_case_location(key)
         method = 'centroid' if location else 'nodal'
 
@@ -248,9 +267,9 @@ class GUIMethods(GuiAttributes):
         return skip_reading
     def cycle_results(self):
         pass
-    def TurnTextOn(self):
+    def  turn_text_on(self):
         pass
-    def TurnTextOff(self):
+    def turn_text_off(self):
         pass
     def update_axes_length(self, value):
         self.dim_max = value
@@ -293,8 +312,8 @@ class GUIMethods(GuiAttributes):
     #test.log_info = print
     #test.log_info = log_info
     #test.cycle_results = cycle_results
-    #test.TurnTextOn = TurnTextOn
-    #test.TurnTextOff = TurnTextOff
+    #test.turn_text_on =  turn_text_on
+    #test.turn_text_off = turn_text_off
     #test.update_axes_length = update_axes_length
     #test.cycle_results_explicit = passer
 

@@ -1,6 +1,6 @@
 from __future__ import unicode_literals, print_function
 import unittest
-from six import PY2
+from six import PY2, StringIO
 from codecs import open as codec_open
 
 import os
@@ -130,6 +130,39 @@ class TestReadWrite(unittest.TestCase):
             else:
                 self.assertFalse('ENDDATA' in data, msg)
             os.remove(out_filename)
+
+    def test_add_card_skip(self):
+        model = BDF(log=log, debug=False)
+
+        card_name = 'JUNK'
+        card_lines1 = ['JUNK',1,2,3]
+        card_lines2 = ['JUNK,a,b,c']
+        model.add_card(card_lines1, card_name)
+        model.add_card(card_lines2, card_name, comment='', is_list=False,
+                      has_none=True)
+        f = StringIO()
+        model.write_bdf(f, close=False)
+        msg = f.getvalue()
+        f.close()
+        assert 'JUNK           1       2       3' in msg, msg
+        assert 'JUNK           a       b       c' in msg, msg
+
+    def test_add_card_fail(self):
+        model = BDF(log=log, debug=False)
+        card_lines1 = ['GRID', 1, 'a', 'b', 'c']
+        card_lines2 = ['GRID', 1, 'd', 'e', 'f']
+        with self.assertRaises(SyntaxError):
+            model.add_card(card_lines1, 'GRID')
+
+        model.set_error_storage(nparse_errors=100, stop_on_parsing_error=True,
+                                nxref_errors=100,
+                                stop_on_xref_error=True)
+
+        card_lines3 = ['GMSPC', 1, 'd', 'e', 'f']
+        model.add_card(card_lines3, 'GMSPC')
+
+        card_lines4 = ['GRDSET', 1, 'd', 'e', 'f']
+        model.add_card(card_lines4, 'GRDSET')
 
     def test_include_end(self):
         with codec_open('a.bdf', 'w') as f:
@@ -322,6 +355,23 @@ class TestReadWrite(unittest.TestCase):
         model.disable_cards(['CTETRA'])
         model.read_bdf(bdf_filename)
         assert len(model.elements) == 0, len(model.elements)
+
+    def test_solid_shell_bar_buckling(self):
+        bdf_filename = os.path.join(root_path, '..', 'models',
+            'sol_101_elements', 'buckling_solid_shell_bar.bdf')
+        bdf_filename2 = os.path.join(root_path, '..', 'models',
+            'sol_101_elements', 'buckling_solid_shell_bar2.bdf')
+        model = BDF(debug=False)
+        model.read_bdf(bdf_filename)
+        model.write_bdf(bdf_filename2)
+
+        model2 = BDF(debug=False)
+        model2.read_bdf(bdf_filename2)
+        #print(model2.get_bdf_stats())
+
+        eigb = model2.methods[42]
+        assert eigb.comment == '$ this is a preload buckling case\n', 'comment=%r\n%s' % (eigb.comment, str(eigb))
+        os.remove(bdf_filename2)
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

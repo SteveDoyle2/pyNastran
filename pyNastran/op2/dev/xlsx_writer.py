@@ -55,7 +55,6 @@ class XlsxWriter(OP2_F06_Common):
         """
         Writes an OP2 file based on the data we have stored in the object
 
-        :param self:         the F06/OP2 object
         :param xlsx_filename:  the name of the XLSX file to write
         :param is_mag_phase: should complex data be written using Magnitude/Phase
                          instead of Real/Imaginary (default=False; Real/Imag)

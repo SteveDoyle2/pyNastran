@@ -4,8 +4,8 @@ from numpy import array
 
 from pyNastran.utils import object_attributes, object_methods
 from pyNastran.bdf.utils import deprecated
-from pyNastran.bdf.caseControlDeck import CaseControlDeck
-from pyNastran.bdf.cards.coordinateSystems import CORD2R
+from pyNastran.bdf.case_control_deck import CaseControlDeck
+from pyNastran.bdf.cards.coordinate_systems import CORD2R
 from pyNastran.bdf.cards.constraints import ConstraintObject
 
 class BDFAttributes(object):
@@ -253,8 +253,7 @@ class BDFAttributes(object):
         origin  = array([0., 0., 0.])
         zaxis = array([0., 0., 1.])
         xzplane = array([1., 0., 0.])
-        coord = CORD2R()
-        coord.add(cid=0, rid=0, origin=origin, zaxis=zaxis, xzplane=xzplane)
+        coord = CORD2R(cid=0, rid=0, origin=origin, zaxis=zaxis, xzplane=xzplane)
         self.coords = {0 : coord}
 
         # --------------------------- constraints ----------------------------
@@ -445,7 +444,7 @@ class BDFAttributes(object):
                 'CBAR', 'CROD', 'CTUBE', 'CBEAM', 'CBEAM3', 'CONROD', 'CBEND',
                 'CTRIA3', 'CTRIA6', 'CTRIAR', 'CTRIAX', 'CTRIAX6',
                 'CQUAD4', 'CQUAD8', 'CQUADR', 'CQUADX', 'CQUAD',
-                'CTETRA', 'CPYRAM', 'CPENTA', 'CHEXA',
+                'CTETRA', 'CPYRAM', 'CPENTA', 'CHEXA', 'CIHEX1',
                 'CSHEAR', 'CVISC', 'CRAC2D', 'CRAC3D',
                 'CGAP',
 
@@ -466,6 +465,7 @@ class BDFAttributes(object):
 
                 'PSHELL', 'PCOMP', 'PCOMPG', 'PSHEAR',
                 'PSOLID', 'PLSOLID', 'PVISC', 'PRAC2D', 'PRAC3D',
+                'PIHEX',
             ],
             'pdampt' : ['PDAMPT',],
             'pelast' : ['PELAST',],

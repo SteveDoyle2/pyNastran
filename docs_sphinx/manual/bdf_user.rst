@@ -36,7 +36,7 @@ Name                 Description
 Using the node object::
 
  bdf = BDF()
- bdf.readBDF(bdfName)
+ bdf.read_bdf(bdf_filename)
  node = bdf.Node(nid)
  node.Position()              % gets the position of the node in the global frame
  node.Position(cid=0)         % same
@@ -47,7 +47,7 @@ Using the node object::
  bdf.resolveGrids(cid=0)      % change the xyz of all nodes to the same coordinate system as cid
  
  bdf2 = BDF()
- bdf2.readBDF(bdfNameAlt)
+ bdf2.read_bdf(bdfNameAlt)
  bdf.unresolveGrids(bdf2)     % change the coordinte system back to the coordinate system in bdf2
 
 

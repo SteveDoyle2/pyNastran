@@ -68,6 +68,7 @@ class TestLoadSum(unittest.TestCase):
         p0 = array([0., 0., 0.])
         model = BDF(log=log)
         bdf_filename = os.path.join(model_path, 'plate', 'plate.bdf')
+        print(bdf_filename)
         model.read_bdf(bdf_filename)
         #print("keys4", model.loads.keys())
 

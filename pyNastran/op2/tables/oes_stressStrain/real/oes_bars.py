@@ -2,6 +2,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import iteritems
 from itertools import count
+import numpy as np
 from numpy import zeros, searchsorted, ravel
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
@@ -21,7 +22,6 @@ except ImportError:
 class RealBarArray(OES_Object):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         OES_Object.__init__(self, data_code, isubcase, apply_data_code=False)
-        self.eType = {}
         #self.code = [self.format_code, self.sort_code, self.s_code]
 
         #self.ntimes = 0  # or frequency/mode
@@ -93,7 +93,6 @@ class RealBarArray(OES_Object):
 
     def build_dataframe(self):
         headers = self.get_headers()
-        name = self.name
         if self.nonlinear_factor is not None:
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
@@ -104,13 +103,54 @@ class RealBarArray(OES_Object):
             self.data_frame.columns.names = ['Static']
             self.data_frame.index.names = ['ElementID', 'Item']
 
-    def add_new_eid(self, eType, dt, eid, s1a, s2a, s3a, s4a, axial, smaxa, smina, MSt,
+    def __eq__(self, table):
+        assert self.is_sort1() == table.is_sort1()
+        self._eq_header(table)
+        if not np.array_equal(self.element, table.element):
+            assert self.element.shape == table.element.shape, 'shape=%s element.shape=%s' % (self.element.shape, table.element.shape)
+            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+            msg += '%s\n' % str(self.code_information())
+            for eid, eid2 in zip(self.element, table.element):
+                msg += '%s, %s\n' % (eid, eid2)
+            print(msg)
+            raise ValueError(msg)
+        if not np.array_equal(self.data, table.data):
+            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+            msg += '%s\n' % str(self.code_information())
+            ntimes = self.data.shape[0]
+
+            i = 0
+            if self.is_sort1():
+                for itime in range(ntimes):
+                    for ieid, eid, in enumerate(self.element):
+                        t1 = self.data[itime, inid, :]
+                        t2 = table.data[itime, inid, :]
+                        (axial_stress1, equiv_stress1, total_strain1, effective_plastic_creep_strain1, effective_creep_strain1, linear_torsional_stress1) = t1
+                        (axial_stress2, equiv_stress2, total_strain2, effective_plastic_creep_strain2, effective_creep_strain2, linear_torsional_stress2) = t2
+                        if not np.allclose(t1, t2):
+                        #if not np.array_equal(t1, t2):
+                            msg += '%s\n  (%s, %s, %s, %s, %s, %s)\n  (%s, %s, %s, %s, %s, %s)\n' % (
+                                eid,
+                                axial_stress1, equiv_stress1, total_strain1, effective_plastic_creep_strain1, effective_creep_strain1, linear_torsional_stress1,
+                                axial_stress2, equiv_stress2, total_strain2, effective_plastic_creep_strain2, effective_creep_strain2, linear_torsional_stress2)
+                            i += 1
+                        if i > 10:
+                            print(msg)
+                            raise ValueError(msg)
+            else:
+                raise NotImplementedError(self.is_sort2())
+            if i > 0:
+                print(msg)
+                raise ValueError(msg)
+        return True
+
+    def add_new_eid(self, dt, eid, s1a, s2a, s3a, s4a, axial, smaxa, smina, MSt,
                     s1b, s2b, s3b, s4b, smaxb, sminb, MSc):
-        self.add_new_eid_sort1(eType, dt, eid,
+        self.add_new_eid_sort1(dt, eid,
                                s1a, s2a, s3a, s4a, axial, smaxa, smina, MSt,
                                s1b, s2b, s3b, s4b, smaxb, sminb, MSc)
 
-    def add_new_eid_sort1(self, eType, dt, eid,
+    def add_new_eid_sort1(self, dt, eid,
                           s1a, s2a, s3a, s4a, axial, smaxa, smina, MSt,
                           s1b, s2b, s3b, s4b, smaxb, sminb, MSc):
 
@@ -177,7 +217,9 @@ class RealBarArray(OES_Object):
         #ind.sort()
         return ind
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+        if header is None:
+            header = []
         msg = self._get_msgs()
         (ntimes, ntotal) = self.data.shape[:2]
         eids = self.element
@@ -206,7 +248,6 @@ class RealBarArray(OES_Object):
             sminb = self.data[itime, :, 13]
             MSc = self.data[itime, :, 14]
 
-            # loop over all the elements
             for (i, eid, s1ai, s2ai, s3ai, s4ai, axiali, smaxai, sminai, MSti,
                          s1bi, s2bi, s3bi, s4bi,         smaxbi, sminbi, MSci) in zip(
                 count(), eids, s1a, s2a, s3a, s4a, axial, smaxa, smina, MSt,
@@ -276,5 +317,3 @@ class RealBarStrainArray(RealBarArray, StrainObject):
             '    ID.          SB1            SB2            SB3            SB4           STRAIN         SB-MAX         SB-MIN     M.S.-C\n',
         ]
         return msg
-
-

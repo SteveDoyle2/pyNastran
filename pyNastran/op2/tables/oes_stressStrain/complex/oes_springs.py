@@ -1,6 +1,7 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import iteritems
+import numpy as np
 from numpy import zeros, array_equal
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
 
@@ -67,12 +68,11 @@ class ComplexSpringDamperArray(OES_Object):
         self._times = zeros(self.ntimes, dtype=dtype)
         self.element = zeros(self.nelements, dtype='int32')
 
-        #[axial_force, torque]
+        #[spring_stress]
         self.data = zeros((self.ntimes, self.ntotal, 1), dtype='complex64')
 
     def build_dataframe(self):
         headers = self.get_headers()
-        name = self.name
         column_names, column_values = self._build_dataframe_transient_header()
         self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
         self.data_frame.columns.names = column_names
@@ -80,11 +80,8 @@ class ComplexSpringDamperArray(OES_Object):
 
     def __eq__(self, table):
         assert self.is_sort1() == table.is_sort1()
-        assert self.nonlinear_factor == table.nonlinear_factor
-        assert self.ntotal == table.ntotal
-        assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
-        assert self.approach_code == table.approach_code
-        if not array_equal(self.element, table.element):
+        self._eq_header(table)
+        if not np.array_equal(self.element, table.element):
             assert self.element.shape == table.element.shape, 'element shape=%s table.shape=%s' % (self.element.shape, table.element.shape)
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
@@ -93,7 +90,7 @@ class ComplexSpringDamperArray(OES_Object):
                 msg += '%s, %s\n' % (eid, eid2)
             print(msg)
             raise ValueError(msg)
-        if not array_equal(self.data, table.data):
+        if not np.array_equal(self.data, table.data):
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
             i = 0
@@ -101,10 +98,7 @@ class ComplexSpringDamperArray(OES_Object):
                 for ie, eid in enumerate(self.element):
                     t1 = self.data[itime, ie, :]
                     t2 = table.data[itime, ie, :]
-                    #(springr, springi) = t1
-                    #(axial2, torque2) = t2
-
-                    if not array_equal(t1, t2):
+                    if not np.array_equal(t1, t2):
                         msg += '%s    (%s, %s)  (%s, %s)\n' % (
                             eid,
                             t1.real, t1.imag,
@@ -190,27 +184,13 @@ class ComplexSpringDamperArray(OES_Object):
             #'                      14                  0.0          /  0.0                           0.0          /  0.0'
         else:
             msg += ['            FREQUENCY                    STRESS                       FREQUENCY                    STRESS\n']
-
-
         return msg
 
-    #def get_element_index(self, eids):
-        ## elements are always sorted; nodes are not
-        #itot = searchsorted(eids, self.element)  #[0]
-        #return itot
-
-    #def eid_to_element_node_index(self, eids):
-        ##ind = ravel([searchsorted(self.element == eid) for eid in eids])
-        #ind = searchsorted(eids, self.element)
-        ##ind = ind.reshape(ind.size)
-        ##ind.sort()
-        #return ind
-
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+        if header is None:
+            header = []
         msg_temp = self.get_f06_header(is_mag_phase=is_mag_phase, is_sort1=is_sort1)
 
-        # write the f06
-        #(ntimes, ntotal, two) = self.data.shape
         ntimes = self.data.shape[0]
 
         eids = self.element
@@ -226,11 +206,9 @@ class ComplexSpringDamperArray(OES_Object):
             header = _eigenvalue_header(self, header, itime, ntimes, dt)
             f.write(''.join(header + msg_temp))
 
-            # TODO: can I get this without a reshape?
             #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
             spring_force = self.data[itime, :, 0]
 
-            # loop over all the elements
             out = []
             for eid, spring_forcei in zip(eids, spring_force):
                 [rspring, ispring] = write_imag_floats_13e([spring_forcei], is_mag_phase)
@@ -243,6 +221,7 @@ class ComplexSpringDamperArray(OES_Object):
             f.write(page_stamp % page_num)
             page_num += 1
         return page_num - 1
+
 
 class ComplexSpringStressArray(ComplexSpringDamperArray, StressObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):

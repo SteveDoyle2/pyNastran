@@ -28,7 +28,7 @@ class UGRID_IO(object):
             None, None)
         return data
 
-    def load_ugrid_geometry(self, ugrid_filename, dirname, plot=True):
+    def load_ugrid_geometry(self, ugrid_filename, dirname, name='main', plot=True):
         #skip_reading = self.remove_old_openfoam_geometry(openfoam_filename)
         #if skip_reading:
         #    return
@@ -128,7 +128,7 @@ class UGRID_IO(object):
         #print("updated grid")
 
         # loadCart3dResults - regions/loads
-        self.TurnTextOn()
+        self. turn_text_on()
         self.scalarBar.VisibilityOn()
         self.scalarBar.Modified()
 

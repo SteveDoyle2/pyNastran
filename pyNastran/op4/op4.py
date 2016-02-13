@@ -1,6 +1,10 @@
+"""
+Main OP4 class
+"""
 from __future__ import print_function
 from six import string_types, iteritems, PY2
 from six.moves import range
+import sys
 import os
 import io
 from struct import pack, unpack, Struct
@@ -9,23 +13,33 @@ from numpy import array, zeros, float32, float64, complex64, complex128, ndarray
 from scipy.sparse import coo_matrix
 
 from pyNastran.utils import is_binary_file as file_is_binary
-from pyNastran.utils.mathematics import print_matrix, print_annotated_matrix
+from pyNastran.utils.mathematics import print_matrix #, print_annotated_matrix
+
+
+def read_op4(op4_filename=None, matrix_names=None, precision='default'):
+    """
+    See ``OP4.read_op4``
+    """
+    op4 = OP4(log=None, debug=True)
+    return op4.read_op4(op4_filename, matrix_names, precision)
 
 
 class OP4(object):
     """
-     todo:: add endian checking
-     todo:: test on big matrices
-     todo:: finish write_op4
+    todo:: add endian checking
+    todo:: test on big matrices
+    todo:: finish write_op4
     """
-    def __init__(self, log=None):
+    def __init__(self, log=None, debug=False):
         self.n = 0
-        self.endian = ''
+        self._endian = ''
+        self.debug = debug
+        self.log = log
 
     def read_op4(self, op4_filename=None, matrix_names=None, precision='default'):
         """
-        Reads a NASTRAN OUTPUT4 file, regular or sparse, and stores the
-        matrices as the output arguments of the function.  The number of
+        Reads a NASTRAN OUTPUT4 file, and stores the
+        matrices as the output arguments.  The number of
         matrices read is defined by the list matrix_names.  By default, all
         matrices will be read.  The resulting output is a dictionary of
         matrices that are accessed by their name.
@@ -42,7 +56,7 @@ class OP4(object):
           >>> (formC, C) = matrices['C']
 
           # or to reduce memory usage
-          >>> matrices = op4.read_op4(op4_filename, matrix_names=['A','B'])
+          >>> matrices = op4.read_op4(op4_filename, matrix_names=['A', 'B'])
           >>> (formA, A) = matrices['A']
           >>> (formB, B) = matrices['B']
 
@@ -67,22 +81,31 @@ class OP4(object):
         Returns
         -------
         matricies : dict[str] = (int, matrix)
-           dictionary of matrices where the key is the name and the value is [form, matrix]
+            dictionary of matrices where the key is the name and the value is [form, matrix]
 
-              ==== ===============
-              Form Definition
-              ==== ===============
-              1.   Square
-              2.   Rectangular
-              3.   Diagonal
-              6.   Symmetric
-              8.   Id entity
-              9.   Pseudoidentity
-              ==== ===============
+            +------+----------------+
+            | Form |   Definition   |
+            +======+================+
+            |  1   | Square         |
+            +------+----------------+
+            |  2   | Rectangular    |
+            +------+----------------+
+            |  3   | Diagonal       |
+            +------+----------------+
+            |  6   | Symmetric      |
+            +------+----------------+
+            |  8   | Id entity      |
+            +------+----------------+
+            |  9   | Pseudoidentity |
+            +------+----------------+
 
-            Matrix:
-              Dense Type:  NUMPY.NDARRAY
-              Sparse Type: SCIPY.SPARSE.COO_MATRIX
+            +--------+-------------------------+
+            |  Type  | Object                  |
+            +========+=========================+
+            | Dense  | NUMPY.NDARRAY           |
+            +--------+-------------------------+
+            | Sparse | SCIPY.SPARSE.COO_MATRIX |
+            +--------+-------------------------+
 
         .. note:: based off the MATLAB code SAVEOP4 developed by ATA-E and
                   later UCSD.
@@ -93,7 +116,8 @@ class OP4(object):
         .. warning:: sparse binary is buggy right now
         """
         if not precision in ('default', 'single', 'double'):
-            raise ValueError("precision=%r and must be 'single', 'double', or 'default'" % precision)
+            msg = "precision=%r and must be 'single', 'double', or 'default'" % precision
+            raise ValueError(msg)
 
         if op4_filename is None:
             from pyNastran.utils.gui_io import load_file_dialog
@@ -101,7 +125,7 @@ class OP4(object):
                 "All files (*.*)|*.*"
             wildcard_qt = "Nastran OP4 (*.op4);;All files (*)"
             title = 'Please select a OP4 to load'
-            op4_filename, wildcard_level = load_file_dialog(title, wildcard_wx, wildcard_qt)
+            op4_filename = load_file_dialog(title, wildcard_wx, wildcard_qt)[0]
             assert op4_filename is not None, op4_filename
 
         if not os.path.exists(op4_filename):
@@ -119,23 +143,25 @@ class OP4(object):
 #--------------------------------------------------------------------------
     def read_op4_ascii(self, op4_filename, matrix_names=None, precision='default'):
         """matrix_names must be a list or None, but basically the same"""
-        with open(op4_filename, 'r') as f:
+        with open(op4_filename, 'r') as op4:
             matrices = {}
             name = 'dummyName'
             while name is not None:
-                (name, form, matrix) = self._read_matrix_ascii(f, matrix_names, precision)
+                (name, form, matrix) = self._read_matrix_ascii(op4, matrix_names, precision)
                 if name is not None:
                     if matrix_names is None or name in matrix_names:  # save the matrix
                         matrices[name] = (form, matrix)
         return matrices
 
-    def _read_matrix_ascii(self, f, matrix_names=None, precision='default'):
-        """reads a matrix"""
-        line = f.readline().rstrip()
+    def _read_matrix_ascii(self, op4, matrix_names=None, precision='default'):
+        """
+        reads a matrix
+        """
+        line = op4.readline().rstrip()
         if line == '':
-            f.close()
+            op4.close()
             return None, None, None
-        ncols, nrows, form, Type = line[0:32].split()
+        ncols, nrows, form, matrix_type = line[0:32].split()
         nrows = int(nrows)
 
         if nrows < 0:  # if less than 0, big
@@ -144,38 +170,45 @@ class OP4(object):
             is_big_mat = False
         else:
             raise RuntimeError('unknown BIGMAT.  nRows=%s' % nrows)
+        if self.debug:
+            print('is_big_matrix =', is_big_mat)
 
         nrows = abs(nrows)
         ncols = int(ncols)
         form = int(form)
-        Type = int(Type)
-        dtype = get_dtype(Type, precision)
+        matrix_type = int(matrix_type)
+        dtype = get_dtype(matrix_type, precision)
 
         name = line[32:40].strip()
         size = line[40:].strip()
         line_size = size.split(',')[1].split('E')[1].split('.')[0]  # 3E23.16 to 23
         line_size = int(line_size)
 
-        line = f.readline().rstrip()
-        (icol, irow, nwords) = line.split()
+        line = op4.readline().rstrip()
+        (_icol, irow, _nwords) = line.split()
 
         is_sparse = False
         if irow == '0':
             is_sparse = True
 
-        if Type in [1, 2]:  # real
-            A = self._read_real_ascii(f, nrows, ncols, line_size, line, dtype, is_sparse, is_big_mat)
-        elif Type in [3, 4]:  # complex
-            A = self._read_complex_ascii(f, nrows, ncols, line_size, line, dtype, is_sparse, is_big_mat)
+        if matrix_type in [1, 2]:  # real
+            A = self._read_real_ascii(op4, nrows, ncols, line_size, line,
+                                      dtype, is_sparse, is_big_mat)
+        elif matrix_type in [3, 4]:  # complex
+            A = self._read_complex_ascii(op4, nrows, ncols, line_size, line,
+                                         dtype, is_sparse, is_big_mat)
         else:
-            raise RuntimeError('invalid matrix type.  Type=%s' % Type)
+            raise RuntimeError('invalid matrix type.  matrix_type=%s' % matrix_type)
 
         if not(matrix_names is None or name in matrix_names):  # kill the matrix
             A = None
-        #print("form=%s name=%s A=\n%s" % (form, name, str(A)))
+
+        if self.debug:
+            print("form=%s name=%s A=\n%s" % (form, name, str(A)))
         return (name, form, A)
 
-    def _read_real_sparse_ascii(self, f, nrows, ncols, line_size, line, dtype, is_big_mat):
+    def _read_real_sparse_ascii(self, op4, nrows, ncols, line_size, line, dtype, is_big_mat):
+        """reads a sparse real ASCII matrix"""
         rows = []
         cols = []
         entries = []
@@ -183,10 +216,10 @@ class OP4(object):
         was_broken = False
         while 1:
             if nloops > 0 and not was_broken:
-                line = f.readline().rstrip()
+                line = op4.readline().rstrip()
             was_broken = False
 
-            (icol, irow, nwords) = line.split()
+            icol, irow, nwords = line.split()
             icol = int(icol)
 
             if icol > ncols:
@@ -206,17 +239,19 @@ class OP4(object):
             # which starts a new column.  We only want to continue a column.
             run_loop = True
             sline = line.strip().split()
-            while (len(sline) == 1 or len(sline) == 2) and 'E' not in line or run_loop:  # next sparse entry
-                irow = self._get_irow_sparse_ascii(f, line, sline, nwords, irow,
-                                                   is_big_mat)
+            # next sparse entry
+            while (len(sline) == 1 or len(sline) == 2) and 'E' not in line or run_loop:
+                if is_big_mat:
+                    irow = self._get_irow_big_ascii(op4, line, sline, irow)
+                else:
+                    irow = self._get_irow_small_ascii(op4, line, sline, irow)
 
                 run_loop = False
-                i = 0
-                iword = 0
+                #iword = 0
                 is_done_reading_row = False
                 while nwords:
                     n = 0
-                    line = f.readline().rstrip()
+                    line = op4.readline().rstrip()
                     nwords_in_line = line.count('E')
                     if nwords_in_line == 0:
                         was_broken = True
@@ -227,14 +262,17 @@ class OP4(object):
                         rows.append(irow)
                         cols.append(icol)
                         entries.append(word)
+                        if self.debug:
+                            print('  irow=%s icol=%s word=%.4g' % (
+                                irow - 1, icol - 1, float(word)))
                         n += line_size
                         irow += 1
-                    iword += nwords_in_line
+                    #iword += nwords_in_line
                     nwords -= nwords_in_line
                 sline = line.strip().split()
                 nloops += 1
 
-        f.readline()
+        op4.readline()
 
         #if rows == []:  # NULL matrix
             #raise NotImplementedError()
@@ -246,13 +284,14 @@ class OP4(object):
         #A = A.todense()
         return A
 
-    def _read_real_dense_ascii(self, f, nrows, ncols, line_size, line, dtype, is_big_mat):
+    def _read_real_dense_ascii(self, op4, nrows, ncols, line_size, line, dtype, is_big_mat):
+        """reads a real dense ASCII matrix"""
         A = zeros((nrows, ncols), dtype=dtype)  # Initialize a real matrix
         nloops = 0
         was_broken = False
         while 1:
             if nloops > 0 and not was_broken:
-                line = f.readline().rstrip()
+                line = op4.readline().rstrip()
             was_broken = False
 
             (icol, irow, nwords) = line.split()
@@ -275,14 +314,15 @@ class OP4(object):
             # which starts a new column.  We only want to continue a column.
             run_loop = True
             sline = line.strip().split()
-            while (len(sline) == 1 or len(sline) == 2) and 'E' not in line or run_loop:  # next dense entry
+            # next dense entry
+            while (len(sline) == 1 or len(sline) == 2) and 'E' not in line or run_loop:
                 run_loop = False
-                i = 0
-                iword = 0
+                #i = 0
+                #iword = 0
                 is_done_reading_row = False
                 while nwords:
                     n = 0
-                    line = f.readline().rstrip()
+                    line = op4.readline().rstrip()
                     nwords_in_line = line.count('E')
                     if nwords_in_line == 0:
                         was_broken = True
@@ -293,21 +333,23 @@ class OP4(object):
                         A[irow - 1, icol - 1] = word
                         n += line_size
                         irow += 1
-                    iword += nwords_in_line
+                    #iword += nwords_in_line
                     nwords -= nwords_in_line
                 sline = line.strip().split()
                 nloops += 1
-        f.readline()
+        op4.readline()
         return A
 
-    def _read_real_ascii(self, f, nrows, ncols, line_size, line, dtype, is_sparse, is_big_mat):
+    def _read_real_ascii(self, op4, nrows, ncols, line_size, line, dtype, is_sparse, is_big_mat):
+        """reads a real ASCII matrix"""
         if is_sparse:
-            A = self._read_real_sparse_ascii(f, nrows, ncols, line_size, line, dtype, is_big_mat)
+            A = self._read_real_sparse_ascii(op4, nrows, ncols, line_size, line, dtype, is_big_mat)
         else:
-            A = self._read_real_dense_ascii(f, nrows, ncols, line_size, line, dtype, is_big_mat)
+            A = self._read_real_dense_ascii(op4, nrows, ncols, line_size, line, dtype, is_big_mat)
         return A
 
-    def _read_complex_sparse_ascii(self, f, nrows, ncols, line_size, line, dtype, is_big_mat):
+    def _read_complex_sparse_ascii(self, op4, nrows, ncols, line_size, line, dtype, is_big_mat):
+        """reads a sparse complex ASCII matrix"""
         rows = []
         cols = []
         entries = []
@@ -315,7 +357,7 @@ class OP4(object):
         was_broken = False
         while 1:
             if nloops > 0 and not was_broken:
-                line = f.readline().rstrip()
+                line = op4.readline().rstrip()
             was_broken = False
 
             (icol, irow, nwords) = line.split()
@@ -329,17 +371,20 @@ class OP4(object):
 
             run_loop = True
             sline = line.strip().split()
-            while (len(sline) == 1 or len(sline) == 2) and 'E' not in line or run_loop:  # next sparse entry
-                irow = self._get_irow_sparse_ascii(f, line, sline, nwords, irow,
-                                                   is_big_mat)
+            # next sparse entry
+            while (len(sline) == 1 or len(sline) == 2) and 'E' not in line or run_loop:
+                if is_big_mat:
+                    irow = self._get_irow_big_ascii(op4, line, sline, irow)
+                else:
+                    irow = self._get_irow_small_ascii(op4, line, sline, irow)
                 run_loop = False
 
-                i = 0
+                #i = 0
                 is_real = True
                 is_done_reading_row = False
                 while nwords:
                     n = 0
-                    line = f.readline().rstrip()
+                    line = op4.readline().rstrip()
                     nwords_in_line = line.count('E')
                     if nwords_in_line == 0:
                         was_broken = True
@@ -365,24 +410,28 @@ class OP4(object):
         rows = array(rows, dtype='int32') - 1
         cols = array(cols, dtype='int32') - 1
         A = coo_matrix((entries, (rows, cols)), shape=(nrows, ncols), dtype=dtype)
-        f.readline()
+        op4.readline()
         return A
 
-    def _read_complex_ascii(self, f, nrows, ncols, line_size, line, dtype, is_sparse, is_big_mat):
+    def _read_complex_ascii(self, op4, nrows, ncols, line_size, line, dtype, is_sparse, is_big_mat):
+        """reads a complex ASCII matrix"""
         if is_sparse:
-            A = self._read_complex_sparse_ascii(f, nrows, ncols, line_size, line, dtype, is_big_mat)
+            A = self._read_complex_sparse_ascii(op4, nrows, ncols,
+                                                line_size, line, dtype, is_big_mat)
         else:
-            A = self._read_complex_dense_ascii(f, nrows, ncols, line_size, line, dtype, is_big_mat)
+            A = self._read_complex_dense_ascii(op4, nrows, ncols,
+                                               line_size, line, dtype, is_big_mat)
         return A
 
-    def _read_complex_dense_ascii(self, f, nrows, ncols, line_size, line, dtype, is_big_mat):
+    def _read_complex_dense_ascii(self, op4, nrows, ncols, line_size, line, dtype, is_big_mat):
+        """reads a dense complex ASCII matrix"""
         A = zeros((nrows, ncols), dtype=dtype)  # Initialize a complex matrix
 
         nloops = 0
         was_broken = False
         while 1:
             if nloops > 0 and not was_broken:
-                line = f.readline().rstrip()
+                line = op4.readline().rstrip()
             was_broken = False
 
             (icol, irow, nwords) = line.split()
@@ -396,15 +445,16 @@ class OP4(object):
 
             run_loop = True
             sline = line.strip().split()
-            while (len(sline) == 1 or len(sline) == 2) and 'E' not in line or run_loop:  # next sparse entry
+
+            # next sparse entry
+            while (len(sline) == 1 or len(sline) == 2) and 'E' not in line or run_loop:
                 run_loop = False
 
-                i = 0
                 iword = 0
                 is_done_reading_row = False
                 while nwords:
                     n = 0
-                    line = f.readline().rstrip()
+                    line = op4.readline().rstrip()
                     nwords_in_line = line.count('E')
                     if nwords_in_line == 0:
                         was_broken = True
@@ -425,158 +475,156 @@ class OP4(object):
                 sline = line.strip().split()
                 nloops += 1
 
-        f.readline()
+        op4.readline()
         return A
 
-    def _get_irow_sparse_ascii(self, f, line, sline, nwords, irow, is_big_mat):
-        #nwords = (nwords-1)//2  # TODO this cant be right...
+    def _get_irow_small_ascii(self, op4, line, sline, irow):
         sline = line.strip().split()
-        if is_big_mat:
-            if len(sline) == 2:
-                pass
-            else:
-                sline = f.readline().strip().split()
-            assert len(sline) == 2, 'sline=%s len(sline)=%s' % (sline, len(sline))
-            (idummy, irow) = sline
-            irow = int(irow)
+        if len(sline) == 1:
+            IS = int(line)
         else:
-            if len(sline) == 1:
-                IS = int(line)
-            else:
-                IS = int(f.readline().strip())
-            L = IS // 65536 - 1
-            irow = IS - 65536 * (L + 1)
-
+            IS = int(op4.readline().strip())
+        L = IS // 65536 - 1
+        irow = IS - 65536 * (L + 1)
+        if self.debug:
+            print('small_mat-next row')
+            print('  IS=%s L=%s irow=%s' % (IS, L, irow))
         return irow
+
+    def _get_irow_small_binary(self, op4, data):
+        if len(data) == 0:
+            data = op4.read(4)
+            self.n += 4
+
+        IS, = unpack(self._endian + 'i', data)
+        L = IS // 65536 - 1
+        irow = IS - 65536 * (L + 1)
+        if self.debug:
+            print('small_mat-next row')
+            print("  IS=%s L=%s irow=%s" % (IS, L, irow))
+            assert IS > 0, IS
+            assert L > 0, L
+        return irow, L
+
+    def _get_irow_big_ascii(self, op4, line, sline, irow):
+        sline = line.strip().split()
+        if len(sline) == 2:
+            pass
+        else:
+            sline = op4.readline().strip().split()
+        assert len(sline) == 2, 'sline=%s len(sline)=%s' % (sline, len(sline))
+        (idummy, irow) = sline
+        irow = int(irow)
+        if self.debug:
+            print("idummy=%s irow=%s" % (idummy, irow))
+        return irow
+
+    def _get_irow_big_binary(self, op4, data):
+        if len(data) == 0:
+            data = op4.read(8)
+            self.n += 8
+        idummy, irow = unpack(self._endian + '2i', data)
+        if self.debug:
+            print("idummy=%s irow=%s" % (idummy, irow))
+            assert irow < 100, irow
+        return (irow, idummy - 1)
 
 #--------------------------------------------------------------------------
     def read_op4_binary(self, op4_filename, matrix_names=None, precision='default'):
         """matrix_names must be a list or None, but basically the same"""
-        with io.open(op4_filename, mode='rb') as f:
+        with io.open(op4_filename, mode='rb') as op4:
             self.n = 0
+            self._endian = _determine_endian(op4)
 
-            # get the endian
-            data = f.read(4)
-            (recordLengthBig,) = unpack('>i', data)
-            (recordLengthLittle,) = unpack('<i', data)
-
-            if recordLengthBig == 24:
-                self.endian = '>'
-            elif recordLengthLittle == 24:
-                self.endian = '<'
-            else:
-                msg = 'a 24 could not be found as the first word...endian error\n'
-                msg += "RL_Big=%s RL_Little=%s" % (
-                    recordLengthBig, recordLengthLittle)
-                raise RuntimeError(msg)
-            f.seek(0)
-
-            i = 0
             matrices = {}
             name = 'dummyName'
             while name is not None:
                 #print "i =", i
                 # checks for the end of the file
-                assert self.n == f.tell(), 'n=%s tell=%s' % (self.n, f.tell())
+                assert self.n == op4.tell(), 'n=%s tell=%s' % (self.n, op4.tell())
                 n = self.n
-                data1 = f.read(1)
-                f.seek(n)
+                data1 = op4.read(1)
+                op4.seek(n)
                 if len(data1) == 0:
                     break
                 #self.show(f, 60)
 
-                (name, form, matrix) = self._read_matrix_binary(f, precision, matrix_names)
+                (name, form, matrix) = self._read_matrix_binary(op4, precision, matrix_names)
                 #print print_matrix(matrix)
                 if name is not None:
                     if matrix_names is None or name in matrix_names:  # save the matrix
                         matrices[name] = (form, matrix)
 
-                #print "not f.closed = ",not f.closed,form,name
-                # if not f.closed or form is not None:
-                #     data = f.read(4)
-                #     self.n+=4
+                #print "not op4.closed = ",not op4.closed,form,name
+                # if not op4.closed or form is not None:
+                #     data = op4.read(4)
+                #     self.n += 4
                 #     if len(data) == 0:
                 #         break
-                #     (record_length,) = unpack(self.endian+'i', data)
-                #     print("RL = %s" % record_length)
+                #     (record_length,) = unpack(self._endian + 'i', data)
+                #     print("record_length = %s" % record_length)
                 #     if record_length == 24:
-                #         self.n-=4
-                #         f.seek(self.n)
+                #         self.n -= 4
+                #         op4.seek(self.n)
                 #     else:
-                #         data = f.read(4)
+                #         data = op4.read(4)
                 #         if len(data) == 0:
                 #             break
-                #         (recordLength2,) = unpack(self.endian+'i', data)
-                #         assert recordLength2 == 24
-                #         f.seek(self.n)
+                #         (record_length2,) = unpack(self._endian + 'i', data)
+                #         assert record_length2 == 24
+                #         op4.seek(self.n)
                 #
-                i += 1
         return matrices
 
-    def read_start_marker(self, f):
-        #print '--------------------------------------'
-        #self.show(f, 60)
-        data = f.read(4)
+    def read_start_marker(self, op4):
+        if self.debug:
+            print('--------------------------------------')
+        #self.show(op4, 60)
+        data = op4.read(4)
         self.n += 4
-        (record_length,) = unpack(self.endian + 'i', data)
+        record_length, = unpack(self._endian + 'i', data)
 
         record_length = 16
-        data = f.read(record_length)
+        data = op4.read(record_length)
         self.n += record_length
-        assert self.n == f.tell(), 'n=%s tell=%s' % (self.n, f.tell())
+        assert self.n == op4.tell(), 'n=%s tell=%s' % (self.n, op4.tell())
 
-        if record_length == 16:  # b,icol,irow,nwords,
-            (a, icol, irow, nwords) = unpack(self.endian + '4i', data)
-            #print("a=%s icol=%s irow=%s nwords=%s" % (a, icol, irow, nwords))
+        if record_length == 16:
+            a, icol, irow, nwords = unpack(self._endian + '4i', data)
+            if self.debug:
+                print("a=%s icol=%s irow=%s nwords=%s" % (a, icol, irow, nwords))
         else:
             raise NotImplementedError('record_length=%s' % record_length)
         return (a, icol, irow, nwords)
 
-    def _get_irow_small(self, f, data):
-        if len(data) == 0:
-            data = f.read(4)
-            self.n += 4
-
-        IS, = unpack(self.endian + 'i', data)
-        L = IS // 65536 - 1
-        irow = IS - 65536 * (L + 1)
-        #print("IS=%s L=%s irow=%s" % (IS, L, irow))
-        #assert IS>0
-        #assert L>0
-        return irow, L
-
-    def _get_irow_big(self, f, data):
-        if len(data) == 0:
-            data = f.read(8)
-            self.n += 8
-        (idummy, irow) = unpack(self.endian + '2i', data)
-        #print("idummy=%s irow=%s" % (idummy, irow))
-        #assert irow<100
-        return (irow, idummy - 1)
-
-    def _read_matrix_binary(self, f, precision, matrix_names):
+    def _read_matrix_binary(self, op4, precision, matrix_names):
         """reads a matrix"""
         #self.show(f, 60)
-        #print("*************************")
-        data = f.read(4)
+        if self.debug:
+            print("*************************")
+        data = op4.read(4)
         self.n += 4
-        (record_length,) = unpack(self.endian + 'i', data)
-        assert self.n == f.tell(), 'n=%s tell=%s' % (self.n, f.tell())
-        #print("RL = %s" % record_length)
+        (record_length,) = unpack(self._endian + 'i', data)
+        assert self.n == op4.tell(), 'n=%s tell=%s' % (self.n, op4.tell())
+        if self.debug:
+            print("record_length = %s" % record_length)
 
         if record_length == 24:
-            data = f.read(record_length)
+            data = op4.read(record_length)
             self.n += record_length
 
             (ncols, nrows, form, Type, name) = unpack(
-                self.endian + '4i8s', data)
-            #print("nrows=%s ncols=%s form=%s Type=%s name=%r" % (nrows, ncols, form, Type, name))
+                self._endian + '4i8s', data)
+            if self.debug:
+                print("nrows=%s ncols=%s form=%s Type=%s name=%r" % (
+                    nrows, ncols, form, Type, name))
         else:
-            msg = record_length #+ self.print_block(data)
-            raise NotImplementedError('record_length=%s filename=%r' % (record_length, f.name))
+            #msg = record_length #+ self.print_block(data)
+            msg = 'record_length=%s filename=%r' % (record_length, op4.name)
+            raise NotImplementedError(msg)
 
         name = name.strip()
-        if 0:
+        if self.debug:
             if Type == 1:
                 print("Type = Real, Single Precision")
             elif Type == 2:
@@ -592,25 +640,29 @@ class OP4(object):
         elif nrows > 0:
             is_big_mat = False
         else:
-            raise RuntimeError('unknown BIGMAT.  nRows=%s' % nrows)
+            raise RuntimeError('unknown BIGMAT.  nrows=%s' % nrows)
+        if self.debug:
+            print('is_big_matrix =', is_big_mat)
 
-        # jump forward to get if is_sparse, then jump back
+        # jump forward to get irow (needed for check on is_sparse),
+        # then jump back
         nsave = self.n
-        (_a, _icol, _irow, _nwords) = self.read_start_marker(f)
-        f.seek(nsave)
+        irow = self.read_start_marker(op4)[2]
+        op4.seek(nsave)
         self.n = nsave
 
-        (NWV, NBW, d, dtype) = self._get_matrix_info(Type)
+        #(nwords_per_value, nbytes_per_value, data_format, dtype) = self._get_matrix_info(Type)
+        data_format, dtype = self._get_matrix_info(Type)[2:]
 
         is_sparse = False
-        if _irow == 0:
+        if irow == 0:
             is_sparse = True
 
-        assert self.n == f.tell(), 'n=%s tell=%s' % (self.n, f.tell())
+        assert self.n == op4.tell(), 'n=%s tell=%s' % (self.n, op4.tell())
         if Type in [1, 2]:  # real
-            A = self._read_real_binary(f, nrows, ncols, Type, is_sparse, is_big_mat)
+            A = self._read_real_binary(op4, nrows, ncols, Type, is_sparse, is_big_mat)
         elif Type in [3, 4]:  # complex
-            A = self._read_complex_binary(f, nrows, ncols, Type, is_sparse, is_big_mat)
+            A = self._read_complex_binary(op4, nrows, ncols, Type, is_sparse, is_big_mat)
         else:
             raise TypeError("Type=%s" % Type)
 
@@ -619,51 +671,59 @@ class OP4(object):
         #except:
             #pass
 
-        if d in ['d', 'dd']:
-            f.read(8)
+        if data_format in ['d', 'dd']:
+            op4.read(8)
             self.n += 8
-        elif d in ['f', 'ff']:
-            f.read(4)
+        elif data_format in ['f', 'ff']:
+            op4.read(4)
             self.n += 4
         else:
-            raise NotImplementedError(d)
+            raise NotImplementedError(data_format)
         #f.read(record_length); self.n+=record_length
         #self.show(f, 10)
         #f.read(4); self.n+=4
 
-        assert self.n == f.tell(), 'n=%s f.tell=%s' % (self.n, f.tell())
+        assert self.n == op4.tell(), 'n=%s op4.tell=%s' % (self.n, op4.tell())
         return (name, form, A)
 
-    def _get_matrix_info(self, Type):
-        if Type == 1:
-            NWV = 1  # number words per value
-            NBW = 4
-            d = 'f'
-        elif Type == 2:
-            NWV = 2
-            NBW = 8
-            d = 'd'
-        elif Type == 3:
-            NWV = 2
-            NBW = 8
-            d = 'ff'
-        elif Type == 4:
-            NWV = 4
-            NBW = 16
-            d = 'dd'
+    def _get_matrix_info(self, matrix_type, debug=True):
+        if matrix_type == 1:
+            nwords_per_value = 1  # number words per value
+            nbytes_per_value = 4
+            data_format = 'f'
+        elif matrix_type == 2:
+            nwords_per_value = 2
+            nbytes_per_value = 8
+            data_format = 'd'
+        elif matrix_type == 3:
+            nwords_per_value = 2
+            nbytes_per_value = 8
+            data_format = 'f'
+        elif matrix_type == 4:
+            nwords_per_value = 4
+            nbytes_per_value = 16
+            data_format = 'd'
         else:
-            raise RuntimeError("Type=%s" % Type)
-        dtype = get_dtype(Type)
-        return (NWV, NBW, d, dtype)
+            raise RuntimeError("matrix_type=%s" % matrix_type)
+        dtype = get_dtype(matrix_type)
+        if self.debug and debug:
+            print('matrix_type = %s' % matrix_type)
+            print('  nwords_per_value = %s' % nwords_per_value)
+            print('  nbytes_per_value = %s' % nbytes_per_value)
+            print('  dtype = %s ' % dtype)
+        return (nwords_per_value, nbytes_per_value, data_format, dtype)
 
-    def _read_real_dense_binary(self, f, nrows, ncols, Type, is_sparse, is_big_mat):
-        (NWV, NBW, d, dtype) = self._get_matrix_info(Type)
+    def _read_real_dense_binary(self, op4, nrows, ncols, matrix_type, is_big_mat):
+        if self.debug:
+            print('_read_real_dense_binary')
+        out = self._get_matrix_info(matrix_type, debug=False)
+        (nwords_per_value, _nbytes_per_value, data_format, dtype) = out
         A = zeros((nrows, ncols), dtype=dtype)
 
         icol = -1  # dummy value so the loop starts
         while icol < ncols + 1:  # if isDense
-            assert self.n == f.tell(), 'n=%s tell=%s' % (self.n, f.tell())
-            (icol, irow, nwords) = self.get_markers_dense(f)
+            assert self.n == op4.tell(), 'n=%s tell=%s' % (self.n, op4.tell())
+            (icol, irow, nwords) = self.get_markers_dense(op4)
             L = nwords
             if icol == ncols + 1:
                 break
@@ -671,26 +731,35 @@ class OP4(object):
                 break
 
             record_length = 4 * nwords
-            data = f.read(record_length)
+            data = op4.read(record_length)
             self.n += record_length
-            nvalues = L // NWV
-            str_values = self.endian + '%i%s' % (nvalues * len(d), d[0])
+            nvalues = L // nwords_per_value
+            str_values = self._endian + '%i%s' % (nvalues, data_format)
             A[irow-1:irow-1+nvalues, icol-1] = unpack(str_values, data)
-        #assert self.n == f.tell(), 'n=%s tell=%s' % (self.n, f.tell())
-        f.read(4)
+            if self.debug:
+                print('A[%s:%s, %s] = %s' % (
+                    irow - 1,
+                    irow - 1 + nvalues,
+                    icol-1,
+                    A[irow-1:irow-1+nvalues, icol-1]))
+        #assert self.n == op4.tell(), 'n=%s tell=%s' % (self.n, op4.tell())
+        op4.read(4)
         self.n += 4
         return A
 
 
-    def _read_real_binary(self, f, nrows, ncols, Type, is_sparse, is_big_mat):
+    def _read_real_binary(self, op4, nrows, ncols, matrix_type, is_sparse, is_big_mat):
         if is_sparse:
-            A = self._read_real_sparse_binary(f, nrows, ncols, Type, is_sparse, is_big_mat)
+            A = self._read_real_sparse_binary(op4, nrows, ncols, matrix_type, is_big_mat)
         else:
-            A = self._read_real_dense_binary(f, nrows, ncols, Type, is_sparse, is_big_mat)
+            A = self._read_real_dense_binary(op4, nrows, ncols, matrix_type, is_big_mat)
         return A
 
-    def _read_real_sparse_binary(self, f, nrows, ncols, Type, is_sparse, is_big_mat):
-        (NWV, NBW, d, dtype) = self._get_matrix_info(Type)
+    def _read_real_sparse_binary(self, op4, nrows, ncols, matrix_type, is_big_mat):
+        if self.debug:
+            print('_read_real_sparse_binary')
+        out = self._get_matrix_info(matrix_type, debug=False)
+        (nwords_per_value, nbytes_per_value, data_format, dtype) = out
         rows = []
         cols = []
         entries = []
@@ -699,74 +768,87 @@ class OP4(object):
         icol = -1  # dummy value so the loop starts
         while icol < ncols + 1:  # if isDense
             #if record_length==0:
-            assert self.n == f.tell(), 'n=%s tell=%s' % (self.n, f.tell())
-            (icol, irow, nwords) = self.get_markers_sparse(f, is_big_mat)
+            assert self.n == op4.tell(), 'n=%s tell=%s' % (self.n, op4.tell())
+            (icol, irow, nwords) = self.get_markers_sparse(op4, is_big_mat)
             L = nwords
 
             if icol == ncols + 1:
+                if self.debug:
+                    print('breaking on icol=%s ncol+1=%s' % (icol, ncols + 1))
                 break
 
             if is_big_mat:
-                (irow, L) = self._get_irow_big(f, data[:8])
+                irow, L = self._get_irow_big_binary(op4, data[:8])
                 data = data[8:]
             else:
-                (irow, L) = self._get_irow_small(f, data[:4])
+                irow, L = self._get_irow_small_binary(op4, data[:4])
                 data = data[4:]
 
             if L == -1:
+                if self.debug:
+                    print('breaking on L=-1')
                 break
 
-            if 0:
-                print("next icol")
-                print("N=%s icol=%s irow=%s nwords=%s" % (
+            if self.debug:
+                print("  next icol")
+                print("    n=%s icol=%s irow=%s nwords=%s" % (
                     self.n, icol, irow, nwords))
+                self._show(op4, 100, types='qd')
+                print('**************************************************')
 
-            #if nwords==0 and is_big_mat:
-                #self.n-=4; f.seek(self.n)
+            #if nwords == 0 and is_big_mat:
+                #self.n -= 4
+                #op4.seek(self.n)
                 #break
 
             record_length = 4 * nwords
-            data = f.read(record_length)
+            data = op4.read(record_length)
             self.n += record_length
-            #print("dataFormat=%s RL=%s NNext=%s" % (d, record_length, self.n))
-            #if icol==ncols+1:
+            if self.debug:
+                print("  data_format=%s record_length=%s n_next=%s" % (
+                    data_format, record_length, self.n))
+            #if icol == ncols + 1:
                 #break
-
-            nvalues = L // NWV
-
-            str_values = self.endian + '%i%s' % (nvalues * len(d), d[0])
 
             i = 0
             while len(data) > 0:
-                if i == 0:
-                    pass
-                else:
+                if i > 0:
                     if is_big_mat:
-                        (irow, L) = self._get_irow_big(f, data[0:8])
+                        (irow, L) = self._get_irow_big_binary(op4, data[0:8])
                         data = data[8:]
                     else:
-                        (irow, L) = self._get_irow_small(f, data[0:4])
+                        (irow, L) = self._get_irow_small_binary(op4, data[0:4])
                         data = data[4:]
                     assert irow > 0
-                    nvalues = L // NWV
+                nvalues = L // nwords_per_value
+                str_values = self._endian + '%i%s' % (nvalues, data_format)
 
-                value_list = unpack(str_values, data[0:nvalues * NBW])
-                assert self.n == f.tell(), 'n=%s tell=%s' % (self.n, f.tell())
+                if self.debug:
+                    print('irow=%s L=%s nwords_per_value=%s nvalues=%s '
+                          'nbytes_per_value=%s' % (
+                              irow, L, nwords_per_value, nvalues, nbytes_per_value))
+                    print('str_values = %r' % str_values)
+
+                value_list = unpack(str_values, data[0:nvalues * nbytes_per_value])
+                assert self.n == op4.tell(), 'n=%s tell=%s' % (self.n, op4.tell())
 
                 #irow -= 1
                 #icol -= 1
-                #print "is_sparse = ",is_sparse
+                if self.debug:
+                    print('rows = %s' % list(i+irow-1 for i in range(nvalues)))
+                    print('cols = %s ' % ([icol-1] * nvalues))
+                    print('value_list = %s' % str(value_list))
 
                 rows.extend([i+irow-1 for i in range(nvalues)])
                 irow += nvalues
                 cols.extend([icol-1] * nvalues)
                 entries.extend(value_list)
 
-                record_length -= nvalues * NBW
-                data = data[nvalues * NBW:]
-                #if 0:
-                    #print("record_length=%s NBW=%s len(data)=%s" %
-                          #(record_length, NBW, len(data)))
+                record_length -= nvalues * nbytes_per_value
+                data = data[nvalues * nbytes_per_value:]
+                if self.debug:
+                    print("  record_length=%s nbytes_per_value=%s len(data)=%s" %
+                          (record_length, nbytes_per_value, len(data)))
                     ##print(A)
                     #print("********")  # ,data
                     #print(self.print_block(data))
@@ -778,126 +860,236 @@ class OP4(object):
 
         A = coo_matrix((entries, (rows, cols)), shape=(nrows, ncols),
                        dtype=dtype)
-        f.read(4)
+        op4.read(4)
         self.n += 4
 
         return A
 
-    def show(self, f, n):
-        #assert self.n == f.tell()
-        nold = f.tell()
+    def _show(self, op4, n, types='ifs', endian=None):
+        """
+        Shows binary data
+        """
+        assert self.n == op4.tell()
         nints = n // 4
-        data = f.read(n)
-        strings, ints, floats = self._show_data(data)
-        f.seek(nold)
+        data = op4.read(4 * nints)
+        strings, ints, floats = self._show_data(data, types=types, endian=endian)
+        op4.seek(self.n)
         return strings, ints, floats
 
-    def _show_data(self, data):
+    def _show_data(self, data, types='ifs', endian=None):
+        """
+        Shows a data block as various types
+
+        Parameters
+        ----------
+        data : bytes
+            the binary string bytes
+        types : str; default='ifs'
+            i - int
+            f - float
+            s - string
+            d - double (float; 8 bytes)
+
+            l - long (int; 4 bytes)
+            q - long long (int; int; 8 bytes)
+            I - unsigned int (int; 4 bytes)
+            L - unsigned long (int; 4 bytes)
+            Q - unsigned long long (int; 8 bytes)
+        endian : str; default=None -> auto determined somewhere else in the code
+            the big/little endian {>, <}
+
+        .. warning :: 's' is apparently not Python 3 friendly
+        """
+        return self._write_data(sys.stdout, data, types=types, endian=endian)
+
+    def _write_data(self, f, data, types='ifs', endian=None):
+        """
+        Useful function for seeing what's going on locally when debugging.
+
+        Parameters
+        ----------
+        data : bytes
+            the binary string bytes
+        types : str; default='ifs'
+            i - int
+            f - float
+            s - string
+            d - double (float; 8 bytes)
+
+            l - long (int; 4 bytes)
+            q - long long (int; int; 8 bytes)
+            I - unsigned int (int; 4 bytes)
+            L - unsigned long (int; 4 bytes)
+            Q - unsigned long long (int; 8 bytes)
+        endian : str; default=None -> auto determined somewhere else in the code
+            the big/little endian {>, <}
+        """
         n = len(data)
         nints = n // 4
-        strings = unpack(self.endian + '%is' % n, data)
-        ints = unpack(self.endian + '%ii' % nints, data)
-        floats = unpack(self.endian + '%if' % nints, data)
-        #print("strings =", strings)
-        print("ints    =", ints)
-        print("floats  =", floats)
+        ndoubles = n // 8
+        strings = None
+        ints = None
+        floats = None
+        longs = None
+
+        if endian is None:
+            endian = self._endian
+            assert endian is not None, endian
+
+        if 's' in types:
+            strings = unpack(b'%s%is' % (endian, n), data)
+            f.write("strings = %s\n" % str(strings))
+        if 'i' in types:
+            ints = unpack(b'%s%ii' % (endian, nints), data)
+            f.write("ints    = %s\n" % str(ints))
+        if 'f' in types:
+            floats = unpack(b'%s%if' % (endian, nints), data)
+            f.write("floats  = %s\n" % str(floats))
+        if 'd' in types:
+            doubles = unpack(b'%s%id' % (endian, ndoubles), data[:ndoubles*8])
+            f.write("doubles  = %s\n" % str(doubles))
+
+        if 'l' in types:
+            longs = unpack(b'%s%il' % (endian, nints), data)
+            f.write("long  = %s\n" % str(longs))
+        if 'I' in types:
+            ints2 = unpack(b'%s%iI' % (endian, nints), data)
+            f.write("unsigned int = %s\n" % str(ints2))
+        if 'L' in types:
+            longs2 = unpack(b'%s%iL' % (endian, nints), data)
+            f.write("unsigned long = %s\n" % str(longs2))
+        if 'q' in types:
+            longs = unpack(b'%s%iq' % (endian, ndoubles), data[:ndoubles*8])
+            f.write("long long = %s\n" % str(longs))
         return strings, ints, floats
 
-    def _read_complex_dense_binary(self, f, nrows, ncols, Type, is_big_mat):
-        (NWV, NBW, d, dtype) = self._get_matrix_info(Type)
+    def _show_ndata(self, n, types='ifs'):
+        return self._write_ndata(sys.stdout, n, types=types)
+
+    def _write_ndata(self, f, n, types='ifs'):
+        """
+        Useful function for seeing what's going on locally when debugging.
+        """
+        nold = self.n
+        data = f.read(n)
+        self.n = nold
+        f.seek(self.n)
+        return self._write_data(f, data, types=types)
+
+    def _read_complex_dense_binary(self, op4, nrows, ncols, matrix_type, is_big_mat):
+        """reads a dense complex binary matrix"""
+        if self.debug:
+            print('_read_complex_dense_binary')
+        out = self._get_matrix_info(matrix_type, debug=False)
+        (nwords_per_value, nbytes_per_value, data_format, dtype) = out
+
         A = zeros((nrows, ncols), dtype=dtype)
         record_length = 0
         icol = -1  # dummy value so the loop starts
         while icol < ncols + 1:  # if isDense
             #if record_length==0:
-            assert self.n == f.tell(), 'n=%s tell=%s' % (self.n, f.tell())
-            (icol, irow, nwords) = self.get_markers_dense(f)
-            if 0:
-                print("N=%s icol=%s irow=%s nwords=%s" % (self.n, icol, irow,
-                                                          nwords))
+            assert self.n == op4.tell(), 'n=%s tell=%s' % (self.n, op4.tell())
+            (icol, irow, nwords) = self.get_markers_dense(op4)
+            if self.debug:
+                print("N=%s icol=%s irow=%s nwords=%s" % (
+                    self.n, icol, irow, nwords))
                 print("-----------")
 
             L = nwords
-
             if icol == ncols + 1:
+                if self.debug:
+                    print('breaking...icol=%s ncols+1=%s' % (
+                        icol, ncols + 1))
                 break
 
             if L == -1:
+                if self.debug:
+                    print('breaking...nwords (L) = %s' % nwords)
                 break
 
-            if 0:
-                print("next icol")
-                print("N=%s icol=%s irow=%s nwords=%s" % (
+            if self.debug:
+                print("  n=%s icol=%s irow=%s nwords=%s" % (
                     self.n, icol, irow, nwords))
 
-            #if nwords==0 and is_big_mat:
-                #self.n-=4; f.seek(self.n)
+            #if nwords == 0 and is_big_mat:
+                #self.n -=4
+                #f.seek(self.n)
                 #break
 
             record_length = 4 * nwords
-            data = f.read(record_length)
+            data = op4.read(record_length)
             self.n += record_length
-            #print("dataFormat=%s RL=%s NNext=%s" % (d, record_length, self.n))
+            if self.debug:
+                print("data_format=%s record_length=%s n_next=%s" % (
+                    data_format, record_length, self.n))
             if icol == ncols + 1:
                 continue
 
-            nvalues = nwords // NWV
-            #nRead = nwords//4
-            while record_length >= NBW:
-                if 0:
+            nvalues = nwords // nwords_per_value
+            #nread = nwords // 4
+            while record_length >= nbytes_per_value:
+                if self.debug:
                     print("inner while...")
                     print("nwords  = %s" % nwords)
                     print("nvalues = %s" % nvalues)
-                    print("NWV     = %s" % NWV)
+                    print("nwords_per_value = %s" % nwords_per_value)
 
                 #if nvalues == 0:
-                    #assert icol == ncols+1
+                    #assert icol == ncols + 1
                     #break
-                str_values = self.endian + '%i%s' % (nvalues * len(d), d[0])
-                if 0:
-                    print("str_values = %s" % str_values)
-                    print("nvalues*NBW=%s len(data)=%s" %
-                          (nvalues * NBW, len(data)))
-                value_list = unpack(str_values, data[0:nvalues * NBW])
-                assert self.n == f.tell(), 'n=%s tell=%s' % (self.n, f.tell())
-                #self.show(f, 4)
-                #print self.print_block(data)
-                if 0:
-                    print("value_list = %s" % (value_list))
 
-                #irow-=1
-                #icol-=1
-                #print("is_sparse = ", is_sparse)
+                # we have more 2x values for complex numbers
+                str_values = self._endian + '%i%s' % (nvalues * 2, data_format)
+                if self.debug:
+                    print("str_values = %s" % str_values)
+                    print("nvalues*nbytes_per_value=%s len(data)=%s" %
+                          (nvalues * nbytes_per_value, len(data)))
+                value_list = unpack(str_values, data[0:nvalues * nbytes_per_value])
+                assert self.n == op4.tell(), 'n=%s tell=%s' % (self.n, op4.tell())
+                #self.show(op4, 4)
+                #print self.print_block(data)
+                if self.debug:
+                    print("value_list = %s" % str(value_list))
+
+                #irow -= 1
+                #icol -= 1
                 irow -= 1
                 icol -= 1
-
                 for i, value in enumerate(value_list):
                     if i % 2 == 0:
                         real_value = value
                     else:
-                        #print("A[%s,%s] = %s" % (irow, icol, complex(real_value, value)))
+                        if self.debug:
+                            print("A[%s,%s] = %s" % (irow, icol, complex(real_value, value)))
                         A[irow, icol] = complex(real_value, value)
                         irow += 1
 
-                record_length -= nvalues * NBW
-                data = data[nvalues * NBW:]
-                #print("record_length=%s NBW=%s" % (record_length, NBW))
-                #print(print_matrix(A))
-                #print("********", data)
+                record_length -= nvalues * nbytes_per_value
+                data = data[nvalues * nbytes_per_value:]
+                if self.debug:
+                    print("record_length=%s nbytes_per_value=%s" % (
+                        record_length, nbytes_per_value))
+                    print(print_matrix(A))
+                    print("********", data)
 
-        f.read(4)
+        op4.read(4)
         self.n += 4
         return A
 
-    def _read_complex_binary(self, f, nrows, ncols, Type, is_sparse, is_big_mat):
+    def _read_complex_binary(self, op4, nrows, ncols, matrix_type, is_sparse, is_big_mat):
+        """reads a complex binary matrix"""
         if is_sparse:
-            A = self._read_complex_sparse_binary(f, nrows, ncols, Type, is_big_mat)
+            A = self._read_complex_sparse_binary(op4, nrows, ncols, matrix_type, is_big_mat)
         else:
-            A = self._read_complex_dense_binary(f, nrows, ncols, Type, is_big_mat)
+            A = self._read_complex_dense_binary(op4, nrows, ncols, matrix_type, is_big_mat)
         return A
 
-    def _read_complex_sparse_binary(self, f, nrows, ncols, Type, is_big_mat):
-        (NWV, NBW, d, dtype) = self._get_matrix_info(Type)
+    def _read_complex_sparse_binary(self, op4, nrows, ncols, matrix_type, is_big_mat):
+        """reads a sparse complex binary matrix"""
+        if self.debug:
+            print('_read_complex_sparse_binary')
+        out = self._get_matrix_info(matrix_type, debug=False)
+        (nwords_per_value, nbytes_per_value, data_format, dtype) = out
         rows = []
         cols = []
         entries = []
@@ -905,11 +1097,11 @@ class OP4(object):
         data = ''
         icol = -1  # dummy value so the loop starts
         while icol < ncols + 1:  # if isDense
-            #if record_length==0:
-            assert self.n == f.tell(), 'n=%s tell=%s' % (self.n, f.tell())
-            (icol, irow, nwords) = self.get_markers_sparse(f, is_big_mat)
-            if 0:
-                print("N=%s icol=%s irow=%s nwords=%s" % (self.n, icol, irow,
+            #if record_length == 0:
+            assert self.n == op4.tell(), 'n=%s tell=%s' % (self.n, op4.tell())
+            (icol, irow, nwords) = self.get_markers_sparse(op4, is_big_mat)
+            if self.debug:
+                print("n=%s icol=%s irow=%s nwords=%s" % (self.n, icol, irow,
                                                           nwords))
                 print("-----------")
 
@@ -919,57 +1111,64 @@ class OP4(object):
                 break
 
             if is_big_mat:
-                (irow, L) = self._get_irow_big(f, data[:8])
+                (irow, L) = self._get_irow_big_binary(op4, data[:8])
                 data = data[8:]
             else:
-                (irow, L) = self._get_irow_small(f, data[:4])
+                (irow, L) = self._get_irow_small_binary(op4, data[:4])
                 data = data[4:]
 
             if L == -1:
+                if self.debug:
+                    print('breaking on L=-1')
                 break
 
-            if 0:
-                print("next icol")
-                print("N=%s icol=%s irow=%s nwords=%s" % (
+            if self.debug:
+                print("n=%s icol=%s irow=%s nwords=%s" % (
                     self.n, icol, irow, nwords))
+                self._show(op4, 100, types='qf')
+                print('\n\n')
 
-            #if nwords==0 and is_big_mat:
-                #self.n-=4; f.seek(self.n)
+            #if nwords == 0 and is_big_mat:
+                #self.n -= 4
+                #op4.seek(self.n)
                 #break
 
             record_length = 4 * nwords
-            data = f.read(record_length)
+            data = op4.read(record_length)
             self.n += record_length
-            #print("dataFormat=%s RL=%s NNext=%s" % (d, record_length, self.n))
+            if self.debug:
+                print("data_format=%s record_length=%s n_next=%s" % (
+                    data_format, record_length, self.n))
             if icol == ncols + 1:
                 continue
 
-            nvalues = nwords // NWV
-            #nRead = nwords//4
-            while record_length >= NBW:
-                if 0:
+            nvalues = nwords // nwords_per_value
+            while record_length >= nbytes_per_value:
+                if self.debug:
                     print("inner while...")
                     print("nwords  = %s" % nwords)
                     print("nvalues = %s" % nvalues)
-                    print("NWV     = %s" % NWV)
+                    print("nwords_per_value = %s" % nwords_per_value)
 
                 #if nvalues == 0:
-                    #assert icol==ncols+1
+                    #assert icol == ncols + 1
                     #break
-                str_values = self.endian + '%i%s' % (nvalues * len(d), d[0])
-                if 0:
-                    print("str_values = %s" % str_values)
-                    print("nvalues*NBW=%s len(data)=%s" %
-                          (nvalues * NBW, len(data)))
-                value_list = unpack(str_values, data[0:nvalues * NBW])
-                assert self.n == f.tell(), 'n=%s tell=%s' % (self.n, f.tell())
-                #self.show(f, 4)
-                #print(self.print_block(data))
-                if 0:
-                    print("value_list = %s" % (value_list))
 
-                #irow-=1
-                #icol-=1
+                # we have 2x values for complex
+                str_values = self._endian + '%i%s' % (nvalues * 2, data_format)
+                if self.debug:
+                    print("  str_values = %s" % str_values)
+                    print("  nvalues*nbytes_per_value=%s len(data)=%s" %
+                          (nvalues * nbytes_per_value, len(data)))
+                value_list = unpack(str_values, data[0:nvalues * nbytes_per_value])
+                assert self.n == op4.tell(), 'n=%s tell=%s' % (self.n, op4.tell())
+                #self.show(op4, 4)
+                #print(self.print_block(data))
+                if self.debug:
+                    print("  value_list = %s" % str(value_list))
+
+                #irow -= 1
+                #icol -= 1
                 irow -= 1
                 icol -= 1
 
@@ -979,107 +1178,52 @@ class OP4(object):
                     if i % 2 == 0:
                         real_value = value
                     else:
-                        #print("A[%s,%s] = %s" % (irow, icol, complex(real_value, value)))
+                        if self.debug:
+                            print("  A[%s,%s] = %s" % (
+                                irow, icol, complex(real_value, value)))
                         #A[irow, icol] = complex(real_value, value)
                         entries.append(complex(real_value, value))
                         irow += 1
 
-                record_length -= nvalues * NBW
-                data = data[nvalues * NBW:]
-                #print("record_length=%s NBW=%s" % (record_length, NBW))
+                record_length -= nvalues * nbytes_per_value
+                data = data[nvalues * nbytes_per_value:]
+                #print("record_length=%s nbytes_per_value=%s" % (record_length, nbytes_per_value))
                 #print(print_matrix(A))
                 #print("********", data)
 
         A = coo_matrix((entries, (rows, cols)), shape=(nrows, ncols), dtype=dtype)
-        f.read(4)
+        op4.read(4)
         self.n += 4
         return A
 
-    def get_markers_sparse(self, f, is_big_mat):
+    def get_markers_sparse(self, op4, is_big_mat):
         if is_big_mat:
-            (a, icol, irow, nwords) = self.read_start_marker(f)
-            #irow = self._get_irow_big(f)
+            (a, icol, irow, nwords) = self.read_start_marker(op4)
+            #irow = self._get_irow_big(op4)
             nwords -= 2
-            #if nwords>1:
-            #    nwords -= 2
+            #if nwords > 1:
+               #nwords -= 2
             #else:
-            #    print("nwords0 = %s" % nwords)
-            #    nwords = 0
+               #print("nwords0 = %s" % nwords)
+               #nwords = 0
         else:
-            (a, icol, irow, nwords) = self.read_start_marker(f)
+            a, icol, irow, nwords = self.read_start_marker(op4)
             if irow != 0:
                 assert nwords == 1, 'nwords=%s' % nwords
 
-            #(irow) = self._get_irow_small(f)
+            #irow = self._get_irow_small(f)
             nwords -= 1
-        return (icol, irow, nwords)
+        return icol, irow, nwords
 
-    def get_markers_dense(self, f):
-        (a, icol, irow, nwords) = self.read_start_marker(f)
-        #print("N=%s a=%s icol=%s irow=%s nwords=%s"% (self.n, a, icol, irow, nwords))
-        return (icol, irow, nwords)
+    def get_markers_dense(self, op4):
+        a, icol, irow, nwords = self.read_start_marker(op4)
+        if self.debug:
+            print("n=%s a=%s icol=%s irow=%s nwords=%s"% (
+                self.n, a, icol, irow, nwords))
+        return icol, irow, nwords
 
-#--------------------------------------------------------------------------
-    def _get_type_nwv(self, A, precision='default'):
-        """
-        Determines the Type and number of words per value
-        an entry in the matrix takes up.
-
-        Parameters
-        ----------
-        A : matrix
-            a matrix or entry in a matrix (to save memory)
-        precision : str
-            data precision ='default', 'single', 'double'
-
-        Returns
-        -------
-        matrix_type : int
-            1 = real, single precision
-            2 = real, double precision
-            3 = complex, single precision
-            4 = complex, double precision
-        NWV : int
-            Number of Words per Value
-
-        .. note:: a word is 4 bytes
-                  nwords(float32)=1;    single precison
-                  nwords(complex64)=2;  single precison
-                  nwords(float64)=2;    double precision
-                  nwords(complex128)=4; double precision
-        """
-        # real
-        if isinstance(A.dtype.type(), float32):
-            NWV = 1
-            if precision != 'double':
-                Type = 1
-            else:
-                Type = 2
-        elif isinstance(A.dtype.type(), float64):
-            NWV = 1
-            if precision != 'single':
-                Type = 2
-            else:
-                Type = 1
-
-        # complex
-        elif isinstance(A.dtype.type(), complex64):
-            NWV = 2
-            if precision != 'double':
-                Type = 3
-            else:
-                Type = 4
-        elif isinstance(A.dtype.type(), complex128):
-            NWV = 2
-            if precision != 'single':
-                Type = 4
-            else:
-                Type = 3
-        else:
-            raise TypeError('invalid Type, only float32, float64, complex64, complex128; dtype=%r' % A.dtype)
-        return (Type, NWV)
-
-    def write_op4(self, op4_filename, matrices, name_order=None, precision='default', is_binary=True):
+    def write_op4(self, op4_filename, matrices, name_order=None,
+                  precision='default', is_binary=True):
         """
         Writes the OP4
 
@@ -1112,7 +1256,8 @@ class OP4(object):
         .. todo::  This method is not even close to being done
         """
         if not precision in ('single', 'double', 'default'):
-            raise ValueError("precision=%r and must be 'single', 'double', or 'default'" % precision)
+            msg = "precision=%r and must be 'single', 'double', or 'default'" % precision
+            raise ValueError(msg)
         if not is_binary in (True, False):
             raise ValueError('is_binary=%r and must be True or False' % is_binary)
         #if nR == nC: op4_form = 1   # square
@@ -1123,13 +1268,14 @@ class OP4(object):
                 wb = 'wb'
             else:
                 wb = 'w'
-            with open(op4_filename, 'w') as f:
-                self._write_op4_f(f, name_order, is_binary, precision, matrices)
+            with open(op4_filename, 'w') as op4:
+                self._write_op4_file(op4, name_order, is_binary, precision, matrices)
         else:
-            f = op4_filename
-            self._write_op4_f(f, name_order, is_binary, precision, matrices)
+            op4 = op4_filename
+            self._write_op4_file(op4, name_order, is_binary, precision, matrices)
 
-    def _write_op4_f(self, f, name_order, is_binary, precision, matrices):
+    def _write_op4_file(self, op4, name_order, is_binary, precision, matrices):
+        """Helper method for OP4 writing"""
         if name_order is None:
             name_order = sorted(matrices.keys())
         elif isinstance(name_order, string_types):
@@ -1146,181 +1292,102 @@ class OP4(object):
                 if is_binary:
                     raise NotImplementedError('sparse binary op4 writing not implemented')
                 else:
-                    self._write_sparse_matrix_ascii(f, name, matrix, form=form,
-                                                    precision=precision, is_big_mat=is_big_mat)
+                    _write_sparse_matrix_ascii(
+                        op4, name, matrix, form=form,
+                        precision=precision, is_big_mat=is_big_mat)
             elif isinstance(matrix, ndarray):
                 if is_binary:
-                    self._write_dense_matrix_binary(f, name, matrix, form=form, precision=precision)
+                    self._write_dense_matrix_binary(
+                        op4, name, matrix, form=form, precision=precision)
                 else:
-                    self._write_dense_matrix_ascii(f, name, matrix, form=form, precision=precision)
+                    self._write_dense_matrix_ascii(
+                        op4, name, matrix, form=form, precision=precision)
             else:
-                raise NotImplementedError('Matrix type=%r is not supported.  types=[coo_matrix, ndarray]' % type(matrix))
+                msg = ('Matrix type=%r is not supported.  '
+                       'types=[coo_matrix, ndarray]' % type(matrix))
+                raise NotImplementedError(msg)
 
 
     def __backup(self, name, matrix, form=2, precision='default'):
         """
         Put this documentation somewhere else...
 
-        :param name: the name of the matrix
-        :param matrix: a two-dimensional NUMPY.NDARRAY
-        :param form: Form is defined as one of the following:
+        Parameters
+        ----------
+        name : str
+            the name of the matrix
+        matrix : ndarray
+            a two-dimensional NUMPY.NDARRAY
+        form : int (default=2)
+            Form is defined as one of the following:
+        precision : str; default=True
+            {'default', 'single', 'double'}
 
-        ==== ===============
-        Form Definition
-        ==== ===============
-        1.   Square
-        2.   Rectangular
-        3.   Diagonal
-        6.   Symmetric
-        8.   Id entity
-        9.   Pseudoidentity
-        ==== ===============
+        +======+================+
+        | Form |   Definition   |
+        +======+================+
+        |  1   | Square         |
+        +------+----------------+
+        |  2   | Rectangular    |
+        +------+----------------+
+        |  3   | Diagonal       |
+        +------+----------------+
+        |  6   | Symmetric      |
+        +------+----------------+
+        |  8   | Id entity      |
+        +------+----------------+
+        |  9   | Pseudoidentity |
+        +------+----------------+
 
-        Not Supported by all OP4s (this is not a restriction of the OP4 reader/writer):
+        Not Supported by all OP4s (this is not a restriction of the OP4
+        reader/writer)
 
-        ==== ===============================
-        Form Definition
-        ==== ===============================
-        4.   Lower triangular factor
-        5.   Upper triangular factor
-        10.  Cholesky factor
-        11.  Trapezoidal factor
-        13.  Sparse lower triangular factor
-        15.  Sparse upper triangular factor
-        ==== ===============================
+        +======+================================+
+        | Form |         Definition             |
+        +======+================================+
+        |  4   | Lower triangular factor        |
+        +------+--------------------------------+
+        |  5   | Upper triangular factor        |
+        +------+--------------------------------+
+        |  10  | Cholesky factor                |
+        +------+--------------------------------+
+        |  11  | Trapezoidal factor             |
+        +------+--------------------------------+
+        |  13  | Sparse lower triangular factor |
+        +------+--------------------------------+
+        |  15  | Sparse upper triangular factor |
+        +------+--------------------------------+
 
-        .. note:: form defaults to 2, but 1 can be easily determined.  Any others must be specified.
+        .. note:: form defaults to 2, but 1 can be easily determined.
+                  Any others must be specified.
         """
         assert isinstance(name, string_types), name
         assert isinstance(form, int), form
 
-    def _write_sparse_matrix_ascii(self, f, name, A, form=2, is_big_mat=False, precision='default'):
-        """
-        .. todo:: Does this work for complex matrices?
-        """
-        msg = ''
-        assert isinstance(name, string_types), 'name=%s' % name
-        #A = A.tolil() # list-of-lists sparse matrix
-        #print dir(A)
-        (Type, NWV) = self._get_type_nwv(A.data[0], precision)
-        if Type in [3, 4]:
-            complex_factor = 2
-        else: # 1, 2
-            complex_factor = 1
-        (nrows, ncols) = A.shape
-
-        #if nrows == ncols and form == 2:
-            #form = 1
-        #print("Type=%s" % Type)
-        if is_big_mat:
-            msg += '%8i%8i%8i%8i%-8s1P,3E23.16\n' % (ncols, -nrows, form, Type, name)
-        else:
-            msg += '%8i%8i%8i%8i%-8s1P,3E23.16\n' % (ncols, nrows, form, Type, name)
-
-        #print "A.row = ",A.row
-        #print "A.col = ",A.col
-
-        cols = {}
-        for j in A.col:
-            cols[j] = []
-        for i, jcol in enumerate(A.col):
-            cols[jcol].append(i)
-        #print("cols = ", cols)
-
-        f.write(msg)
-        msg = ''
-        for j, col in iteritems(cols):
-            #print("***********")
-            #print("j=%s col=%s" % (j, col))
-            #col.sort()
-
-            #print('A =', A)
-            irows = [A.row[jj] for jj in col]
-            #print "irows = ",irows
-            (dpacks) = compress_column(irows)
-            #print("dpacks = %s" % (dpacks))
-
-            npacks = len(dpacks)
-            nrows = len(irows)
-            if is_big_mat:
-                #L = complex_factor * (2 * len(irows)) + 1
-                L = 2 * npacks * NWV + nrows
-                msg = '%8i%8i%8i\n' % (j + 1, 0, L)
-            else:
-                L = complex_factor * (2 * len(irows))
-                msg = '%8i%8i%8i\n' % (j + 1, 0, L + 1)
-            f.write(msg)
-
-            for (ipack, dpack) in enumerate(dpacks):
-                msg = ''
-                #print "pack = ",pack
-
-                irow = A.row[col[dpack[0]]]
-                if is_big_mat:
-                    #L = complexFactor * (2 * len(pack)) + 1
-                    #L = (nPacks+1) + nRows*complexFactor
-                    L = (len(dpack) + 1) * NWV
-                    #if iPack==0:
-                        #L+=1
-
-                    #L = complexFactor * (2 + nPacks) + 1
-                    #L = len(pack) + complexFactor * 2
-                    #msg = '%8i%8i%8i\n' % (j+1, 0, L+1)
-                    msg += '%8i%8i\n' % (L, irow + 1)
-                else:
-                    #L = complexFactor * (2 * len(pack))
-                    #msg = '%8i%8i%8i\n' % (j+1, 0, L+1)
-
-                    IS = irow + 65536 * (L + 1) + 1
-                    msg += '%8i\n' % IS
-
-                i = 0
-                value_str = ''
-                #print("ipack=%s rowPack=%s" % (ipack, [A.row[p] for p in dpack]))
-                for p in dpack:
-                    irow = col[p]
-                    val = A.data[irow]
-                    irow = A.row[irow]
-
-                    if Type in [1, 2]:
-                        value_str += '%23.16E' % val
-                        if (i + 1) % 3 == 0:
-                            msg += value_str + '\n'
-                            value_str = ''
-                    else:
-                        value_str += '%23.16E' % val.real
-                        if (i + 1) % 3 == 0:
-                            msg += value_str + '\n'
-                            value_str = ''
-                        i += 1
-                        value_str += '%23.16E' % val.imag
-                        if (i + 1) % 3 == 0:
-                            msg += value_str + '\n'
-                            value_str = ''
-                    i += 1
-                if value_str:
-                    msg += value_str + '\n'
-                f.write(msg)
-        f.write('%8i%8i%8i\n' % (ncols + 1, 1, 1))
-        f.write(' 1.0000000000000000E+00\n')
-
-    def _write_dense_matrix_binary(self, f, name, matrix, form=2,
+    def _write_dense_matrix_binary(self, op4, name, matrix, form=2,
                                    precision='default', encoding='utf-8'):
         """
         24 bytes is the record length
-          - (1) ncols
-          - (2) nrows
-          - (3) form
-          - (4) Type
-          - (5,6) name2
-          6 words * 4 bytes/word = 24 bytes
+
+        +-------------+--------------+
+        | Word Number | Variable     |
+        +-------------+--------------+
+        |      1      |  ncols       |
+        +-------------+--------------+
+        |      2      |  nrows       |
+        +-------------+--------------+
+        |      3      |  form        |
+        +-------------+--------------+
+        |      4      |  matrix_type |
+        +-------------+--------------+
+        |    5, 6     |  name        |
+        +-------------+--------------+
+        6 words * 4 bytes/word = 24 bytes
 
         .. todo:: support precision
         """
-        #if PY3:
-            #raise NotImplementedError('_write_dense_matrix_binary is not supported')
         A = matrix
-        (Type, NWV) = self._get_type_nwv(A[0, 0], precision)
+        matrix_type, nwords_per_value = _get_type_nwv(A[0, 0], precision)
 
         (nrows, ncols) = A.shape
         #if nrows==ncols and form==2:
@@ -1328,9 +1395,9 @@ class OP4(object):
         name2 = '%-8s' % name
         name_bytes = name2.encode('ascii')
         assert len(name2) == 8, 'name=%r is too long; 8 characters max' % name
-        s = Struct(self.endian + '5i8s')
-        msg = s.pack(24, ncols, nrows, form, Type, name_bytes)
-        f.write(msg)
+        s = Struct(self._endian + '5i8s')
+        msg = s.pack(24, ncols, nrows, form, matrix_type, name_bytes)
+        op4.write(msg)
 
         for icol in range(ncols):
             (istart, iend) = self._get_start_end_row(A[:, icol], nrows)
@@ -1338,30 +1405,31 @@ class OP4(object):
             # write the column
             if istart is not None and iend is not None:
                 iend += 1
-                msg = pack(self.endian + '4i', 24, icol +
-                           1, istart + 1, (iend - istart) * NWV)
+                msg = pack(self._endian + '4i', 24, icol +
+                           1, istart + 1, (iend - istart) * nwords_per_value)
 
-                if Type in [1, 2]: # real
-                    if Type == 1: # real, single
+                if matrix_type in [1, 2]: # real
+                    if matrix_type == 1: # real, single
                         fmt = '%if' % (iend - istart)
                     else:         # real, double
                         fmt = '%id' % (iend - istart)
-                    f.write(pack(self.endian + fmt, *A[istart:iend+1, icol]))
+                    op4.write(pack(self._endian + fmt, *A[istart:iend+1, icol]))
 
                 else:  # complex
-                    if Type == 1: # complex, single
+                    if matrix_type == 3: # complex, single
                         fmt = '2f'
                     else:         # complex, double
                         fmt = '2d'
                     for irow in range(istart, iend):
-                        msg += pack(self.endian + fmt, A[irow, icol].real,
+                        msg += pack(self._endian + fmt, A[irow, icol].real,
                                     A[irow, icol].imag)
-            f.write(msg)
-        if Type in [1, 3]: # single precision
-            msg = pack(self.endian + '4if', 24, ncols + 1, 1, 1, 1.0)  # .. todo:: is this right???
+            op4.write(msg)
+        if matrix_type in [1, 3]: # single precision
+            # .. todo:: is this right???
+            msg = pack(self._endian + '4if', 24, ncols + 1, 1, 1, 1.0)
         else: # double precision
-            msg = pack(self.endian + '4id', 24, ncols + 1, 1, 1, 1.0)
-        f.write(msg)
+            msg = pack(self._endian + '4id', 24, ncols + 1, 1, 1, 1.0)
+        op4.write(msg)
 
     def _get_start_end_row(self, A, nrows):
         """find the starting and ending points of the matrix"""
@@ -1377,14 +1445,17 @@ class OP4(object):
                 break
         return (istart, iend)
 
-    def _write_dense_matrix_ascii(self, f, name, A, form=2, precision='default'):
-        (Type, NWV) = self._get_type_nwv(A[0, 0], precision)
+    def _write_dense_matrix_ascii(self, op4, name, A, form=2, precision='default'):
+        """writes a dense ASCII matrx"""
+        if self.debug:
+            print('_write_dense_matrix_ascii')
+        matrix_type, nwords_per_value = _get_type_nwv(A[0, 0], precision)
 
         (nrows, ncols) = A.shape
-        msg = u'%8i%8i%8i%8i%-8s1P,3E23.16\n' % (ncols, nrows, form, Type, name)
-        f.write(msg)
+        msg = u'%8i%8i%8i%8i%-8s1P,3E23.16\n' % (ncols, nrows, form, matrix_type, name)
+        op4.write(msg)
 
-        if Type in [1, 2]: # real
+        if matrix_type in [1, 2]: # real
             for icol in range(ncols):
                 value_str = ''
                 (istart, iend) = self._get_start_end_row(A[:, icol], nrows)
@@ -1393,15 +1464,15 @@ class OP4(object):
                 if istart is not None and iend is not None:  # not a null column
                     iend += 1
                     msg = '%8i%8i%8i\n' % (icol + 1, istart + 1,
-                                           (iend - istart) * NWV)
-                    f.write(msg)
+                                           (iend - istart) * nwords_per_value)
+                    op4.write(msg)
                     for i, irow in enumerate(range(istart, iend)):
                         value_str += '%23.16E' % A[irow, icol]
                         if (i + 1) % 3 == 0:
-                            f.write(value_str + '\n')
+                            op4.write(value_str + '\n')
                             value_str = ''
                 if value_str:
-                    f.write(value_str + '\n')
+                    op4.write(value_str + '\n')
         else: # complex
             for icol in range(ncols):
                 value_str = ''
@@ -1411,88 +1482,286 @@ class OP4(object):
                 if istart is not None and iend is not None:  # not a null column
                     iend += 1
                     msg = '%8i%8i%8i\n' % (icol + 1, istart + 1,
-                                           (iend - istart) * NWV)
-                    f.write(msg)
+                                           (iend - istart) * nwords_per_value)
+                    op4.write(msg)
                     i = 0
                     for irow in range(istart, iend):
                         value_str += '%23.16E' % A[irow, icol].real
                         if (i + 1) % 3 == 0:
-                            f.write(value_str + '\n')
+                            op4.write(value_str + '\n')
                             value_str = ''
 
                         value_str += '%23.16E' % A[irow, icol].imag
                         if (i + 2) % 3 == 0:
-                            f.write(value_str + '\n')
+                            op4.write(value_str + '\n')
                             value_str = ''
                         i += 2
                 if value_str:
-                    f.write(value_str + '\n')
+                    op4.write(value_str + '\n')
 
         # end of the matrix?
         msg = '%8i%8i%8i\n' % (ncols + 1, 1, 1)
         msg += ' 1.0000000000000000E+00\n'
-        f.write(msg)
+        op4.write(msg)
 
+def _write_sparse_matrix_ascii(op4, name, A, form=2, is_big_mat=False,
+                               precision='default'):
+    """
+    .. todo:: Does this work for complex matrices?
+    """
+    msg = ''
+    assert isinstance(name, string_types), 'name=%s' % name
+    #A = A.tolil() # list-of-lists sparse matrix
+    #print dir(A)
+    matrix_type, nwords_per_value = _get_type_nwv(A.data[0], precision)
+    if matrix_type in [3, 4]:
+        complex_factor = 2
+    else: # 1, 2
+        complex_factor = 1
+    (nrows, ncols) = A.shape
 
-def get_dtype(Type, precision='default'):
+    #if nrows == ncols and form == 2:
+        #form = 1
+    #print("matrix_type=%s" % matrix_type)
+    if is_big_mat:
+        msg += '%8i%8i%8i%8i%-8s1P,3E23.16\n' % (ncols, -nrows, form, matrix_type, name)
+    else:
+        msg += '%8i%8i%8i%8i%-8s1P,3E23.16\n' % (ncols, nrows, form, matrix_type, name)
+
+    #print("A.row = ", A.row)
+    #print("A.col = ", A.col)
+
+    cols = {}
+    for j in A.col:
+        cols[j] = []
+    for i, jcol in enumerate(A.col):
+        cols[jcol].append(i)
+    #print("cols = ", cols)
+
+    op4.write(msg)
+    msg = ''
+    for j, col in iteritems(cols):
+        #print("***********")
+        #print("j=%s col=%s" % (j, col))
+        #col.sort()
+
+        #print('A =', A)
+        irows = [A.row[jj] for jj in col]
+        #print "irows = ",irows
+        (dpacks) = compress_column(irows)
+        #print("dpacks = %s" % (dpacks))
+
+        npacks = len(dpacks)
+        nrows = len(irows)
+        if is_big_mat:
+            #L = complex_factor * (2 * len(irows)) + 1
+            L = 2 * npacks * nwords_per_value + nrows
+            msg = '%8i%8i%8i\n' % (j + 1, 0, L)
+        else:
+            L = complex_factor * (2 * len(irows))
+            msg = '%8i%8i%8i\n' % (j + 1, 0, L + 1)
+        op4.write(msg)
+
+        for (ipack, dpack) in enumerate(dpacks):
+            msg = ''
+            #print("pack = ",pack)
+
+            irow = A.row[col[dpack[0]]]
+            if is_big_mat:
+                #L = complex_factor * (2 * len(pack)) + 1
+                #L = (nPacks+1) + nRows * complex_factor
+                L = (len(dpack) + 1) * nwords_per_value
+                #if iPack==0:
+                    #L+=1
+
+                #L = complex_factor * (2 + npacks) + 1
+                #L = len(pack) + complex_factor * 2
+                #msg = '%8i%8i%8i\n' % (j+1, 0, L+1)
+                msg += '%8i%8i\n' % (L, irow + 1)
+            else:
+                #L = complex_factor * (2 * len(pack))
+                #msg = '%8i%8i%8i\n' % (j+1, 0, L+1)
+
+                IS = irow + 65536 * (L + 1) + 1
+                msg += '%8i\n' % IS
+
+            i = 0
+            value_str = ''
+            #print("ipack=%s rowPack=%s" % (ipack, [A.row[p] for p in dpack]))
+            for p in dpack:
+                irow = col[p]
+                val = A.data[irow]
+                irow = A.row[irow]
+
+                if matrix_type in [1, 2]:
+                    value_str += '%23.16E' % val
+                    if (i + 1) % 3 == 0:
+                        msg += value_str + '\n'
+                        value_str = ''
+                else:
+                    value_str += '%23.16E' % val.real
+                    if (i + 1) % 3 == 0:
+                        msg += value_str + '\n'
+                        value_str = ''
+                    i += 1
+                    value_str += '%23.16E' % val.imag
+                    if (i + 1) % 3 == 0:
+                        msg += value_str + '\n'
+                        value_str = ''
+                i += 1
+            if value_str:
+                msg += value_str + '\n'
+            op4.write(msg)
+    op4.write('%8i%8i%8i\n' % (ncols + 1, 1, 1))
+    op4.write(' 1.0000000000000000E+00\n')
+
+def _determine_endian(op4):
+    # get the endian
+    data = op4.read(4)
+    (record_length_big,) = unpack('>i', data)
+    (record_length_little,) = unpack('<i', data)
+
+    if record_length_big == 24:
+        endian = '>'
+    elif record_length_little == 24:
+        endian = '<'
+    else:
+        msg = 'a 24 could not be found as the first word...endian error\n'
+        msg += "record_length_big=%s record_length_little=%s" % (
+            record_length_big, record_length_little)
+        raise RuntimeError(msg)
+    op4.seek(0)
+    return endian
+
+def get_dtype(matrix_type, precision='default'):
     """reset the type if 'default' not selected"""
     if precision == 'single':
-        if Type in [1, 2]:
+        if matrix_type in [1, 2]:
             dtype = 'float32'
         else:
             dtype = 'complex64'
     elif precision == 'double':
-        if Type in [1, 2]:
+        if matrix_type in [1, 2]:
             dtype = 'float64'
         else:
             dtype = 'complex128'
     else:  # default
-        if Type == 1:
+        if matrix_type == 1:
             dtype = 'float32'
-        elif Type == 2:
+        elif matrix_type == 2:
             dtype = 'float64'
-        elif Type == 3:
+        elif matrix_type == 3:
             dtype = 'complex64'
         else:
             dtype = 'complex128'
     return dtype
 
 
+def _get_type_nwv(A, precision='default'):
+    """
+    Determines the Type and number of words per value
+    an entry in the matrix takes up.
+
+    Parameters
+    ----------
+    A : matrix
+        a matrix or entry in a matrix (to save memory)
+    precision : str
+        data precision ='default', 'single', 'double'
+
+    Returns
+    -------
+    matrix_type : int
+        the dtype of the matrix as an integer
+    nwords_per_value : int
+        Number of words per value
+
+    A word is 4 bytes
+
+    +-------------+------------+-----------+--------+--------+
+    | Matrix Type |   dtype    | precision | nwords | nbytes |
+    +=============+============+===========+========+========+
+    |      1      | float32    |   single  |    1   |    4   |
+    +-------------+------------+-----------+--------+--------+
+    |      2      | complex64  |   single  |    2   |    8   |
+    +-------------+------------+-----------+--------+--------+
+    |      3      | float64    |   double  |    2   |    8   |
+    +-------------+------------+-----------+--------+--------+
+    |      4      | complex128 |   double  |    4   |   16   |
+    +-------------+------------+-----------+--------+--------+
+    """
+    # real
+    if isinstance(A.dtype.type(), float32):
+        nwords_per_value = 1
+        if precision != 'double':
+            matrix_type = 1
+        else:
+            matrix_type = 2
+    elif isinstance(A.dtype.type(), float64):
+        nwords_per_value = 1
+        if precision != 'single':
+            matrix_type = 2
+        else:
+            matrix_type = 1
+
+    # complex
+    elif isinstance(A.dtype.type(), complex64):
+        nwords_per_value = 2
+        if precision != 'double':
+            matrix_type = 3
+        else:
+            matrix_type = 4
+    elif isinstance(A.dtype.type(), complex128):
+        nwords_per_value = 2
+        if precision != 'single':
+            matrix_type = 4
+        else:
+            matrix_type = 3
+    else:
+        msg = ('invalid matrix_type, only float32, float64, '
+               'complex64, complex128; dtype=%r' % A.dtype)
+        raise TypeError(msg)
+    return matrix_type, nwords_per_value
+
+
 def get_matrices():
-    strings = array([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                     [1, 0, 3, 0, 5, 0, 7, 0, 9, 0, 11, 0, 13, 0, 15, 0, 17, 0, 19, 0],
-                     [1, 0, 3, 0, 5, 0, 7, 0, 9, 0, 11, 0, 13, 0, 15, 0, 17, 0, 19, 0],
-                     [1, 0, 3, 0, 5, 0, 7, 0, 9, 0, 11, 0, 13, 0, 15, 0, 17, 0, 19, 0],
-                     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                     [1, 0, 3, 0, 5, 0, 7, 0, 9, 0, 11, 0, 13, 0, 15, 0, 17, 0, 19, 0],
-                     [1, 0, 3, 0, 5, 0, 7, 0, 9, 0, 11, 0, 13, 0, 15, 0, 17, 0, 19, 0],
-                     [1, 0, 3, 0, 5, 0, 7, 0, 9, 0, 11, 0, 13, 0, 15, 0, 17, 0, 19, 0],
-                     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                     [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
-                     [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
-                     [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
-                     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                     [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
-                     [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
-                     [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
-                     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                     [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
-                     [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
-                     [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
-                     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]], dtype='float32') # f?
+    """creates dummy matrices"""
+    strings = array([
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [1, 0, 3, 0, 5, 0, 7, 0, 9, 0, 11, 0, 13, 0, 15, 0, 17, 0, 19, 0],
+        [1, 0, 3, 0, 5, 0, 7, 0, 9, 0, 11, 0, 13, 0, 15, 0, 17, 0, 19, 0],
+        [1, 0, 3, 0, 5, 0, 7, 0, 9, 0, 11, 0, 13, 0, 15, 0, 17, 0, 19, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [1, 0, 3, 0, 5, 0, 7, 0, 9, 0, 11, 0, 13, 0, 15, 0, 17, 0, 19, 0],
+        [1, 0, 3, 0, 5, 0, 7, 0, 9, 0, 11, 0, 13, 0, 15, 0, 17, 0, 19, 0],
+        [1, 0, 3, 0, 5, 0, 7, 0, 9, 0, 11, 0, 13, 0, 15, 0, 17, 0, 19, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
+        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
+        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
+        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
+        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
+        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
+        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]], dtype='float32') # f?
     return strings
 
 
 def compress_column(col):
+    """takes a dense matrix column and puts it into OP4 format"""
     packs = []
 
     n = 0
@@ -1518,7 +1787,9 @@ def compress_column(col):
     #print("packs = ", packs)
     return packs
 
+
 def main():
+    """tests various matrices"""
     from pyNastran.op4.utils import write_DMIG
 
     #compress_column([14, 15, 16, 20, 21, 22, 26, 27, 28])
@@ -1548,8 +1819,8 @@ def main():
     if PY2:
         wb = 'wb'
     else:
-        w = 'w'
-    with open('ascii.op4', wb) as f:
+        wb = 'w'
+    with open('ascii.op4', wb) as op4_file:
         for fname in filenames:
             op4 = OP4()
             op4.endian = '>'
@@ -1562,11 +1833,11 @@ def main():
             print("keys = %s" % matrices.keys())
             print("fname=%s" % fname)
             for name, (form, matrix) in sorted(iteritems(matrices)):
-                op4.write_op4(f, matrices, name_order=name)
+                op4.write_op4(op4_file, matrices, name_order=name)
 
     print("-----------------------------")
     print("done")
     print("-----------------------------")
 
-if __name__ == '__main__':  # pragma: no cover
-    main()
+#if __name__ == '__main__':  # pragma: no cover
+    #main()

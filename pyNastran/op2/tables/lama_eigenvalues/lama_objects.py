@@ -4,9 +4,8 @@ from math import sqrt
 
 import numpy as np
 
-from pyNastran.op2.resultObjects.op2_Objects import BaseScalarObject
+from pyNastran.op2.result_objects.op2_objects import BaseScalarObject
 from pyNastran.f06.f06_formatting import write_floats_13e
-#from pyNastran.op2.resultObjects.op2_Objects import scalarObject,array
 try:
     import pandas as pd
 except ImportError:
@@ -26,6 +25,9 @@ class RealEigenvalues(BaseScalarObject):
         self.generalized_mass = {}
         self.generalized_stiffness = {}
 
+    def __eq__(self, table):
+        return True
+
     def get_stats(self):
         msg = []
         neigenvalues = len(self.extraction_order)
@@ -43,7 +45,6 @@ class RealEigenvalues(BaseScalarObject):
 
     def add_f06_line(self, data):
         (mode_num, extract_order, eigenvalue, radian, cycle, gen_mass, gen_stiffness) = data
-        #print('data =', data)
         self.extraction_order[mode_num] = extract_order
         self.eigenvalues[mode_num] = eigenvalue
         self.radians[mode_num] = radian
@@ -135,6 +136,9 @@ class ComplexEigenvalues(BaseScalarObject):
         self.cycles = {}
         self.damping = {}
 
+    def __eq__(self, table):
+        return True
+
     def get_stats(self):
         neigenvalues = len(self.extraction_order)
         msg = []
@@ -152,7 +156,7 @@ class ComplexEigenvalues(BaseScalarObject):
     def add_f06_line(self, data):
         (root_num, extract_order, eigr, eigi, cycle, damping) = data
         self.extraction_order[root_num] = extract_order
-        self.eigenvalues[root_num] = np.array([eigr, eigi])
+        self.eigenvalues[root_num] = complex(eigr, eigi)
         self.cycles[root_num] = cycle
         self.damping[root_num] = damping
 
@@ -170,14 +174,13 @@ class ComplexEigenvalues(BaseScalarObject):
 
         modes_extraction_order = np.zeros((nmodes, 2), dtype='float32')
         cdata = np.zeros(nmodes, dtype='complex64')
-        fdata = np.zeros((nmodes, 5), dtype='float32')
+        fdata = np.zeros((nmodes, 2), dtype='float32')
 
         imodei = 0
         for (imode, eigi) in sorted(iteritems(self.eigenvalues)):
             extraction_order = self.extraction_order[imode]
-            freq = self.cycles[imodei]
-            damping = self.damping[imodei]
-
+            freq = self.cycles[imode]
+            damping = self.damping[imode]
             cdata[imodei] = eigi
             fdata[imodei, :] = [freq, damping]
             modes_extraction_order[imodei, :] = [imode, extraction_order]
@@ -185,10 +188,11 @@ class ComplexEigenvalues(BaseScalarObject):
         df1 = pd.DataFrame(modes_extraction_order)
         df1.columns = ['Mode', 'ExtractionOrder']
         df2 = pd.DataFrame(cdata)
-        df2.columns = headers[0]
+        df2.columns = [headers[0]]
         df3 = pd.DataFrame(fdata)
         df3.columns = headers[1:]
         self.data_frame = df1.join([df2, df3])
+        #print(self.data_frame)
 
     def write_f06(self, f, header, page_stamp, page_num=1):  # not proper msg start
         title = ''
@@ -199,8 +203,8 @@ class ComplexEigenvalues(BaseScalarObject):
                         '                  NO.        ORDER             (REAL)           (IMAG)                (CYCLES)            COEFFICIENT\n']
 
         for (imode, order) in sorted(iteritems(self.extraction_order)):
-            eigr = self.eigenvalues[imode][0]
-            eigi = self.eigenvalues[imode][1]
+            eigr = self.eigenvalues[imode].real
+            eigi = self.eigenvalues[imode].imag
 
             freq = self.cycles[imode]
             damping = self.damping[imode]
@@ -229,7 +233,6 @@ class ComplexEigenvalues(BaseScalarObject):
 class BucklingEigenvalues(BaseScalarObject):
     def __init__(self, title):
         BaseScalarObject.__init__(self)
-        #self.root_number = []
         self.title = title
         self.extraction_order = {}
         self.eigenvalues = {}
@@ -237,15 +240,16 @@ class BucklingEigenvalues(BaseScalarObject):
         self.omegas = {}
         self.generalized_mass = {}
         self.generalized_stiffness = {}
-        #self.cycles = {}
-        #self.damping = {}
+
+    def __eq__(self, table):
+        return True
 
     def get_stats(self):
         neigenvalues = len(self.extraction_order)
         msg = []
         msg.append('  type=%s neigenvalues=%s\n' % (self.__class__.__name__, neigenvalues))
         msg.append('  imode, extraction_order, eigenvalues, '
-                   'cycles, damping\n')
+                   'radians, cycles, generalized_mass, generalized_stiffness\n')
         return msg
 
     def is_real(self):
@@ -275,7 +279,6 @@ class BucklingEigenvalues(BaseScalarObject):
         nmodes = len(self.eigenvalues)
 
         modes_extraction_order = np.zeros((nmodes, 2), dtype='float32')
-        cdata = np.zeros(nmodes, dtype='complex64')
         fdata = np.zeros((nmodes, 5), dtype='float32')
 
         imodei = 0
@@ -286,17 +289,15 @@ class BucklingEigenvalues(BaseScalarObject):
             gen_m = self.generalized_mass[imode]
             gen_k = self.generalized_stiffness[imode]
 
-            cdata[imodei] = eigi
-            fdata[imodei, :] = [freq, omega, gen_m ,gen_k]
+            fdata[imodei, :] = [eigi, freq, omega, gen_m, gen_k]
             modes_extraction_order[imodei, :] = [imode, extraction_order]
             imodei += 1
         df1 = pd.DataFrame(modes_extraction_order)
         df1.columns = ['Mode', 'ExtractionOrder']
-        df2 = pd.DataFrame(cdata)
-        df2.columns = headers[0]
-        df3 = pd.DataFrame(fdata)
-        df3.columns = headers[1:]
-        self.data_frame = df1.join([df2, df3])
+        df2 = pd.DataFrame(fdata)
+        df2.columns = headers
+        self.data_frame = df1.join([df2])
+        #print(self.data_frame)
 
     def get_headers(self):
         headers = ['eigenvalue', 'radians', 'cycles', 'generalized_mass', 'generalized_stiffness']
@@ -312,7 +313,6 @@ class BucklingEigenvalues(BaseScalarObject):
 
         for (imode, order) in sorted(iteritems(self.extraction_order)):
             eigr = self.eigenvalues[imode]
-
             freq = self.freqs[imode]
             omega = self.omegas[imode]
             mass = self.generalized_mass[imode]

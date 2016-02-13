@@ -19,7 +19,7 @@ class LaWGS_IO(object):
                 None, None)
         return data
 
-    def load_lawgs_geometry(self, lawgsFileName, dirname, plot=True):
+    def load_lawgs_geometry(self, lawgsFileName, dirname, name='main', plot=True):
         #key = self.case_keys[self.icase]
         #case = self.result_cases[key]
 
@@ -48,7 +48,7 @@ class LaWGS_IO(object):
         points.SetNumberOfPoints(self.nNodes)
         #self.gridResult.Allocate(self.nNodes, 1000)
         #vectorReselt.SetNumberOfComponents(3)
-        self.nidMap = {}
+        self.nid_map = {}
         #elem.SetNumberOfPoints(nNodes)
         if 0:
             fraction = 1. / self.nNodes  # so you can color the nodes by ID
@@ -89,7 +89,7 @@ class LaWGS_IO(object):
             self.grid.Update()
 
         # loadCart3dResults - regions/loads
-        #self.TurnTextOn()
+        #self. turn_text_on()
         #self.scalarBar.VisibilityOn()
         #self.scalarBar.Modified()
 

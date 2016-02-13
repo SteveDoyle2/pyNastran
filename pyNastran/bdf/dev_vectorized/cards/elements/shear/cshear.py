@@ -76,7 +76,6 @@ class CSHEAR(Element):
         """
         Gets the mass of the CSHEARs on a total or per element basis.
 
-        :param self: the CSHEAR object
         :param eids: the elements to consider (default=None -> all)
         :param total: should the mass be summed (default=False)
 
@@ -100,7 +99,6 @@ class CSHEAR(Element):
         """
         Gets the area of the CSHEARs on a total or per element basis.
 
-        :param self: the CSHEAR object
         :param eids: the elements to consider (default=None -> all)
         :param total: should the area be summed (default=False)
 
@@ -124,7 +122,6 @@ class CSHEAR(Element):
         """
         Gets the normals of the CSHEARs on per element basis.
 
-        :param self: the CSHEAR object
         :param eids: the elements to consider (default=None -> all)
 
         :param node_ids:   the GRIDs as an (N, )  NDARRAY (or None)
@@ -150,7 +147,6 @@ class CSHEAR(Element):
         Gets the mass, area, and normals of the CSHEARs on a per
         element basis.
 
-        :param self: the CSHEAR object
         :param element_id: the elements to consider (default=None -> all)
 
         :param node_ids:   the GRIDs as an (N, )  NDARRAY (or None)

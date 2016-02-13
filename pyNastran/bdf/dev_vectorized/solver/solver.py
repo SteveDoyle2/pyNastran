@@ -19,7 +19,7 @@ from scipy.sparse import dok_matrix, coo_matrix
 
 # pyNastran
 from pyNastran.bdf.dev_vectorized.solver.utils import triple, reverse_dict, partition_dense_symmetric, partition_dense_vector, remove_dofs
-from pyNastran.f06.f06Writer import sorted_bulk_data_header
+from pyNastran.f06.f06_writer import sorted_bulk_data_header
 from pyNastran.utils.dev import list_print
 from pyNastran.utils.mathematics import print_matrix, print_annotated_matrix
 from pyNastran.bdf.dev_vectorized.bdf import BDF, SPC, SPC1
@@ -82,54 +82,54 @@ class Solver(F06, OP2):
     Case Control
        - LOAD, SPC, TITLE, LABEL
        - DISP, STRESS, STRAIN
-      @todo SETx not supported for output requests; ALL/NONE
+      .. todo:: SETx not supported for output requests; ALL/NONE
 
     Bulk Data:
       GRID,CORDx
        - Position
        - ps constraint
-       - @todo analysis & output coordinate system != 0
+       .. todo:: analysis & output coordinate system != 0
 
       CONROD, CROD/PROD, CTUBE/PTUBE
-       - @todo CTUBE not tested
+       - .. todo:: CTUBE not tested
 
       CELAS1, CELAS2, CELAS3, CELAS4, PELAS
        - ge not supported (it's damping, so not an issue)
-       - @todo test CELAS3/CELAS4
+       - .. todo:: test CELAS3/CELAS4
 
       CSHEAR/PSHEAR
-       - @todo what loads can be applied?
-       - @todo non-constant a, b not tested
-       - @todo f1, f2 not supported and not checked
-         @todo support PLOAD2
+       - .. todo:: what loads can be applied?
+       - .. todo:: non-constant a, b not tested
+       - .. todo:: f1, f2 not supported and not checked
+         .. todo:: support PLOAD2
       MAT1
 
       LOAD, FORCE, MOMENT
        - coord 0
-       - @todo coordx not tested
+       - .. todo:: coordx not tested
       PLOAD1
-       - @todo validate...
+       - .. todo:: validate...
        - distributed load; forces/moments
        - LE: x1=0.0*L; x2=1.0*L
        - FR: x1=0.0; x2=1.0
-       - LE_PR:  @todo add this...
-       - FR_PR:  @todo add this...
-       - @todo support alternate coordinate system
-       - @todo static load at x1=0.5
+       - LE_PR:  .. todo:: add this...
+       - FR_PR:  .. todo:: add this...
+       - .. todo:: support alternate coordinate system
+       - .. todo:: static load at x1=0.5
 
       SPC, SPC1
-       - @todo constraints in alternate coordinate system (specified by GRID cards)
+       - .. todo:: constraints in alternate coordinate system (specified by GRID cards)
 
       MPC/RBE2/RBE3/RBAR
-       - @todo not supported
+       - .. todo:: not supported
 
      CQUAD4/CTRIA3
-       - @todo not supported
-       - @todo PLOAD, PLOAD2, PLOAD4
+       - .. todo:: not supported
+       - .. todo:: PLOAD, PLOAD2, PLOAD4
 
      CHEXA, CPENTA, CTETRA
-       - @todo not supported
-       - @todo PLOAD, PLOAD4
+       - .. todo:: not supported
+       - .. todo:: PLOAD, PLOAD4
 
     Results:
       CONROD, CROD/PROD
@@ -140,11 +140,11 @@ class Solver(F06, OP2):
 
       CELAS1, CELAS2, CELAS3, CELAS4, PELAS
        - STRESS/STRAIN/FORCE
-       - @todo test CELAS3/CELAS4
+       - .. todo:: test CELAS3/CELAS4
 
       CBEAM
           - PLOAD1
-        - @todo not done... but close
+        - .. todo:: not done... but close
       CSHEAR
         - FORCE/STRESS/STRAIN
           - not calculated

@@ -1,16 +1,17 @@
 # pylint: disable=C0103,R0902,R0904,R0914,C0111
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import  iteritems, integer_types
+from six import  iteritems
 from six.moves import range
 
+from pyNastran.utils import integer_types
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
 from pyNastran.bdf.cards.utils import wipe_empty_fields
 from pyNastran.bdf.cards.thermal.thermal import ThermalCard
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
-from pyNastran.bdf.cards.baseCard import expand_thru, expand_thru_by, collapse_thru_by, BaseCard
+from pyNastran.bdf.cards.base_card import expand_thru, expand_thru_by, collapse_thru_by, BaseCard
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, double_or_blank, integer_or_string, string, fields)
 
@@ -21,7 +22,7 @@ class ThermalLoadDefault(ThermalCard):
 
 
 class ThermalLoad(ThermalCard):
-    def __init__(self, card, data):
+    def __init__(self):
         pass
 
 class QVOL(ThermalLoad):
@@ -30,24 +31,31 @@ class QVOL(ThermalLoad):
     """
     type = 'QVOL'
 
-    def __init__(self, card, data=None, comment=''):
-        ThermalLoad.__init__(self, card, data)
+    def __init__(self, sid, qvol, control_point, elements, comment=''):
+        ThermalLoad.__init__(self)
         if comment:
             self._comment = comment
-        if card:
-            #: Load set identification number. (Integer > 0)
-            self.sid = integer(card, 1, 'sid')
+        #: Load set identification number. (Integer > 0)
+        self.sid = sid
+        self.qvol = qvol
+        self.control_point = control_point
+        self.elements = elements
 
-            self.qvol = double(card, 2, 'qvol')
-            self.control_point = integer_or_blank(card, 3, 'control_id', 0)
+    @classmethod
+    def add_card(self, card, comment=''):
+        sid = integer(card, 1, 'sid')
 
-            i = 1
-            eids = []
-            for ifield in range(4, len(card)):
-                eid = integer_or_string(card, ifield, 'eid_%i' % i)
-                eids.append(eid)
-                i += 1
-            self.elements = expand_thru_by(eids)
+        qvol = double(card, 2, 'qvol')
+        control_point = integer_or_blank(card, 3, 'control_id', 0)
+
+        i = 1
+        eids = []
+        for ifield in range(4, len(card)):
+            eid = integer_or_string(card, ifield, 'eid_%i' % i)
+            eids.append(eid)
+            i += 1
+        elements = expand_thru_by(eids)
+        return QVOL(sid, qvol, control_point, elements, comment=comment)
 
     def getLoads(self):
         self.deprecated('getLoads()', 'get_loads()', '0.8')
@@ -105,7 +113,7 @@ class QBDY1(ThermalLoad):
     type = 'QBDY1'
 
     def __init__(self, card=None, data=None, comment=''):
-        ThermalLoad.__init__(self, card, data)
+        ThermalLoad.__init__(self)
         if comment:
             self._comment = comment
         if card:
@@ -189,7 +197,7 @@ class QBDY2(ThermalLoad):  # not tested
     type = 'QBDY2'
 
     def __init__(self, card=None, data=None, comment=''):
-        ThermalLoad.__init__(self, card, data)
+        ThermalLoad.__init__(self)
         if comment:
             self._comment = comment
         if card:
@@ -262,7 +270,7 @@ class QBDY3(ThermalLoad):
     type = 'QBDY3'
 
     def __init__(self, card=None, data=None, comment=''):
-        ThermalLoad.__init__(self, card, data)
+        ThermalLoad.__init__(self)
         if comment:
             self._comment = comment
         if card:
@@ -353,7 +361,7 @@ class QHBDY(ThermalLoad):
     }
 
     def __init__(self, card=None, data=None, comment=''):
-        ThermalLoad.__init__(self, card, data)
+        ThermalLoad.__init__(self)
         if comment:
             self._comment = comment
         if card:
@@ -430,7 +438,7 @@ class TEMP(ThermalLoad):
     type = 'TEMP'
 
     def __init__(self, card=None, data=None, comment=''):
-        ThermalLoad.__init__(self, card, data)
+        ThermalLoad.__init__(self)
         if comment:
             self._comment = comment
         if card:

@@ -1,5 +1,5 @@
 from __future__ import print_function
-from six import iteritems, integer_types
+from six import iteritems
 from six.moves import zip
 from numpy import zeros, where, array, unique, concatenate
 
@@ -8,6 +8,7 @@ from numpy import zeros, where, array, unique, concatenate
 #from pyNastran.bdf.dev_vectorized.cards.materials.mat4 import MAT4
 #from pyNastran.bdf.dev_vectorized.cards.materials.mat10 import MAT10
 
+from pyNastran.utils import integer_types
 from pyNastran.bdf.dev_vectorized.utils import slice_to_iter
 
 #from pyNastran.bdf.cards.materials import (MAT1, MAT2, MAT4, MAT5, MAT8,

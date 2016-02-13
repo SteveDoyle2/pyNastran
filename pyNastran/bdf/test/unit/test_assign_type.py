@@ -1,5 +1,5 @@
 import unittest
-from pyNastran.bdf.bdfInterface.BDF_Card import BDFCard
+from pyNastran.bdf.bdfInterface.bdf_card import BDFCard
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double, double_or_blank, integer_or_double, integer_double_or_blank,
     string, string_or_blank, double_or_string, double_string_or_blank,

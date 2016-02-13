@@ -7,8 +7,6 @@ This file defines the OUG Table, which contains:
  * Real Temperature Gradient & Flux
    - FLUX = ALL
 """
-from struct import unpack
-
 from pyNastran.op2.op2_common import OP2Common
 
 from pyNastran.op2.tables.oqg_constraintForces.oqg_spcForces import (
@@ -34,13 +32,13 @@ class OQG(OP2Common):
         self.is_table_2 = False
         three = self.parse_approach_code(data)
         self.words = [
-            'analysis_code', 'table_code', '???',       'isubcase',
-             '???',         '???',      '???',          'random_code'
-             'format_code', 'num_wide', '11',           '???',
-            'acoustic_flag','???',      '???',          '???',
-             '???',         '???',      '???',          '???',
-             '???',         '???',      'thermal',      '???',
-             '???', 'Title', 'subtitle', 'label']
+            'analysis_code', 'table_code', '???', 'isubcase',
+            '???', '???', '???', 'random_code',
+            'format_code', 'num_wide', '11', '???',
+            'acoustic_flag', '???', '???', '???',
+            '???', '???', '???', '???',
+            '???', '???', 'thermal', '???',
+            '???', 'Title', 'subtitle', 'label']
 
         ## random code
         self.random_code = self.add_data_parameter(data, 'random_code', 'i', 8, False)
@@ -147,13 +145,13 @@ class OQG(OP2Common):
         self.is_table_2 = True
         three = self.parse_approach_code(data)
         self.words = [
-            'analysis_code', 'table_code', '???',           'isubcase',
-             '???',         '???',      '???',          'random_code'
-             'format_code', 'num_wide', '11',           '???',
-            'acoustic_flag','???',      '???',          '???',
-             '???',         '???',      '???',          '???',
-             '???',         '???',      'thermal',      '???',
-             '???', 'Title', 'subtitle', 'label']
+            'analysis_code', 'table_code', '???', 'isubcase',
+            '???', '???', '???', 'random_code',
+            'format_code', 'num_wide', '11', '???',
+            'acoustic_flag', '???', '???', '???',
+            '???', '???', '???', '???',
+            '???', '???', 'thermal', '???',
+            '???', 'Title', 'subtitle', 'label']
 
         ## random code
         self.random_code = self.add_data_parameter(data, 'random_code', 'i', 8, False)
@@ -293,23 +291,32 @@ class OQG(OP2Common):
             elif self.table_code == 3:   # SPC Forces
                 if self.table_name in [b'OQG1', b'OQG2', b'OQGV1', b'OQP1']:
                     n = self._read_spc_forces(data, ndata)
-                elif self.table_name == b'OQMG1':
+                elif self.table_name in [b'OQMG1']:
                     n = self._read_mpc_forces(data, ndata)
                 else:
                     raise RuntimeError(self.code_information())
                     #msg = self.code_information()
                     #return self._not_implemented_or_skip(data, ndata, msg)
+            elif self.table_code == 5 and self.table_name in [b'RAQEATC', b'RAQCONS']:
+                n = self._read_mpc_forces(data, ndata)
             else:
                 raise RuntimeError(self.code_information())
         else:
-            msg = 'table_code=%s' % self.table_code
-            return self._not_implemented_or_skip(data, ndata, msg)
+            raise RuntimeError(self.code_information())
+            #msg = 'table_code=%s' % self.table_code
+            #return self._not_implemented_or_skip(data, ndata, msg)
         return n
 
     def _read_spc_forces(self, data, ndata):
         """
         table_code = 3
         """
+        if self.table_name in [b'OQG1', b'OQG2', b'OQGV1', b'OQP1']:
+            pass
+        else:
+            msg = 'spc_forces; table_name=%s' % self.table_name
+            raise NotImplementedError(msg)
+
         if self.thermal == 0:
             result_name = 'spc_forces'
             storage_obj = self.spc_forces
@@ -348,8 +355,17 @@ class OQG(OP2Common):
         """
         table_code = 39
         """
-        result_name = 'mpc_forces'
-        storage_obj = self.mpc_forces
+        if self.table_name == b'OQMG1':
+            result_name = 'mpc_forces'
+        elif self.table_name == b'RAQEATC':
+            result_name = 'mpc_forces_RAQEATC'
+        elif self.table_name == b'RAQCONS':
+            result_name = 'mpc_forces_RAQCONS'
+        else:
+            msg = 'mpc_forces; table_name=%s' % self.table_name
+            raise NotImplementedError(msg)
+
+        storage_obj = getattr(self, result_name)
         if self.thermal == 0:
             if self._results.is_not_saved(result_name):
                 return ndata
@@ -380,8 +396,8 @@ class OQG(OP2Common):
                     return ndata
                 self._results._found_result(result_name)
                 n = self._read_table_vectorized(data, ndata, result_name, storage_obj,
-                                     RealSPCForcesArray, ComplexSPCForcesArray,
-                                     'node', random_code=self.random_code)
+                                                RealSPCForcesArray, ComplexSPCForcesArray,
+                                                'node', random_code=self.random_code)
             #elif self.table_code == 610:
                 #result_name = 'velocitiesPSD'
                 #storage_obj = self.velocitiesPSD
@@ -428,8 +444,8 @@ class OQG(OP2Common):
                     return ndata
                 self._results._found_result(result_name)
                 n = self._read_table_vectorized(data, ndata, result_name, storage_obj,
-                                     RealMPCForcesArray, ComplexMPCForcesArray,
-                                     'node', random_code=self.random_code)
+                                                RealMPCForcesArray, ComplexMPCForcesArray,
+                                                'node', random_code=self.random_code)
             else:
                 raise RuntimeError(self.code_information())
         else:

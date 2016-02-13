@@ -4,14 +4,14 @@ from six.moves import range, zip
 import copy
 from struct import Struct, unpack
 
-from numpy import radians, sin, cos, fromstring, ones, int32, float32, dtype as npdtype
+from numpy import radians, sin, cos, fromstring, ones, float32, dtype as npdtype
 
 import numpy as np
 #from numba import autojit
 
 from pyNastran import is_release
-from pyNastran.f06.f06Writer import F06Writer
-from pyNastran.op2.op2Codes import Op2Codes
+from pyNastran.f06.f06_writer import F06Writer
+from pyNastran.op2.op2_codes import Op2Codes
 from pyNastran.op2.op2_helper import polar_to_real_imag
 
 from pyNastran.op2.errors import SortCodeError, MultipleSolutionNotImplementedError # DeviceCodeError,
@@ -1332,8 +1332,6 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
 
         Parameters
         ----------
-        self : OES()
-            the object pointer
         nelements :  int
             the number of elements to preallocate for vectorization
         result_name : str

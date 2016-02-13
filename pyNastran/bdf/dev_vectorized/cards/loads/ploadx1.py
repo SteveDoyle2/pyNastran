@@ -2,7 +2,6 @@ from six.moves import zip
 
 from numpy import arange, zeros, unique
 
-#from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.bdfInterface.assign_type import (integer,
@@ -15,7 +14,6 @@ class PLOADX1(object):
         """
         Defines the PLOADX1 object.
 
-        :param self: the PLOADX1 object
         :param model: the BDF object
         """
         self.model = model
@@ -55,7 +53,6 @@ class PLOADX1(object):
 
     def build(self):
         """
-        :param self: the PLOADX1 object
         :param cards: the list of PLOADX1 cards
         """
         cards = self._cards

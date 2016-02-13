@@ -3,10 +3,11 @@
 Subcase creation/extraction class
 """
 from __future__ import print_function
-from six import string_types, integer_types, iteritems, PY2
+from six import string_types, iteritems, PY2
 from numpy import ndarray
 
-from pyNastran.bdf.cards.baseCard import collapse_thru_packs, deprecated
+from pyNastran.utils import integer_types
+from pyNastran.bdf.cards.base_card import collapse_thru_packs, deprecated
 
 int_cards = (
     # these are cards that look like:
@@ -100,8 +101,6 @@ class Subcase(object):
 
         Parameters
         ----------
-        self : Subcase()
-            the Subcase object
         options : list[int/float/str]
             the options for a parameter
         value : int/float/str
@@ -125,8 +124,6 @@ class Subcase(object):
 
         Parameters
         ----------
-        self : Subcase()
-            the Subcase object
         options : List[int/str]
             the options for a parameter
         value : int; str
@@ -147,12 +144,23 @@ class Subcase(object):
 
         Parameters
         ----------
-        self : Subcase()
-            the Subcase object
         options : list[int/float/str]
             the options for a parameter
         value : int/float/str
             the value of the parameter
+
+        Returns
+        -------
+        device_code : int
+           The OP2 device code
+
+           0 - No output
+           1 - PRINT
+           2 - PLOT
+           3 - PRINT, PLOT
+           4 - PUNCH
+           5 - PRINT, PUNCH
+           6 - PRINT, PLOT, PUNCH
         """
         device_code = 0
         if 'PRINT' in options:
@@ -214,12 +222,15 @@ class Subcase(object):
 
         Parameters
         ----------
-        self : Subcase()
-            the Subcase object
         options : list[int/float/str]
             the options for a parameter
         value : int/float/str
             the value of the parameter
+
+        Returns
+        -------
+        table_code : int
+           the OP2 table_code
         """
         if table_name in ['VECTOR', 'PRESSURE']:
             table_name = 'DISPLACEMENT'  # equivalent tables...
@@ -407,8 +418,10 @@ class Subcase(object):
         """
         Checks to see if a parameter name is in the subcase.
 
-        :param self:       the Subcase object
-        :param param_name: the case control parameter to check for
+        Parameters
+        ----------
+        param_name : str
+            the case control parameters to check for
 
         .. code-block:: python
 
@@ -423,16 +436,49 @@ class Subcase(object):
             return True
         return False
 
-    def has_parameter(self, param_name):  # possibly deprecate...
-        """see ``__contains__``"""
-        return self.__contains__(param_name)
+    def has_parameter(self, *param_names):
+        """
+        Checks to see if one or more parameter names are in the subcase.
+
+        Parameters
+        ----------
+        param_names : str; List[str]
+            the case control parameters to check for
+
+        Returns
+        -------
+        exists : List[bool]
+            do the parameters exist
+
+        .. code-block:: python
+
+          model = BDF()
+          model.read_bdf(bdf_filename)
+          case_control = model.case_control_deck
+          subcase1 = case_control.subcases[1]
+          if any(subcase1.has_parameter('LOAD', 'TEMPERATURE(LOAD)')):
+              print('found LOAD for subcase 1')
+        """
+        exists = [True if param_name.upper() in self.params else False for param_name in param_names]
+        return exists
 
     def __getitem__(self, param_name):
         """
         Gets the [value, options] for a subcase.
 
-        :param self:       the Subcase object
-        :param param_name: the case control parameter to check for
+        Parameters
+        ----------
+        param_name : str
+            the case control parameters to get
+
+        Returns
+        -------
+        value : varies
+            the value of the parameter
+            'ALL' in STRESS(PLOT,PRINT) = ALL
+        options : List[varies]
+            the values in parentheses
+            ['PLOT', 'PRINT'] in STRESS(PLOT,PRINT) = ALL
 
         .. code-block:: python
 
@@ -474,8 +520,19 @@ class Subcase(object):
         """
         Gets the [value, options] for a subcase.
 
-        :param self:       the Subcase object
-        :param param_name: the case control parameter to check for
+        Parameters
+        ----------
+        param_name : str
+            the case control parameters to get
+
+        Returns
+        -------
+        value : varies
+            the value of the parameter
+            'ALL' in STRESS(PLOT,PRINT) = ALL
+        options : List[varies]
+            the values in parentheses
+            ['PLOT', 'PRINT'] in STRESS(PLOT,PRINT) = ALL
 
         .. code-block:: python
 
@@ -652,8 +709,6 @@ class Subcase(object):
         """
         Prints a single entry of the a subcase from the global or local
         subcase list.
-
-        :param self: the Subcase object
         """
         msg = ''
         #msg += 'id=%s   ' %(self.id)
@@ -666,7 +721,9 @@ class Subcase(object):
         #print('key=%s param=%s param_type=%s' % (key, param, param_type))
         if param_type == 'SUBCASE-type':
             if self.id > 0:
-                msg += 'SUBCASE %s\n' % (self.id)
+                msgi = 'SUBCASE %s\n' % (self.id)
+                assert len(msgi) < 72, 'len(msg)=%s; msg=\n%s' % (len(msgi), msgi)
+                msg += msgi
             #else:  global subcase ID=0 and is not printed
             #    pass
         elif param_type == 'KEY-type':
@@ -675,26 +732,58 @@ class Subcase(object):
             if ',' in value:
                 sline = value.split(',')
                 two_spaces = ',\n' + 2 * spaces
-                msg += spaces + two_spaces.join(sline) + '\n'
+                msgi = spaces + two_spaces.join(sline) + '\n'
+                assert len(msgi) < 68, 'len(msg)=%s; msg=\n%s' % (len(msgi), msgi)
+                msg += msgi
             else:
-                msg += spaces + '%s\n' % value
+                msgi = spaces + '%s\n' % value
+                assert len(msgi) < 68, 'len(msg)=%s; msg=\n%s' % (len(msgi), msgi)
+                msg += msgi
         elif param_type == 'STRING-type':
-            msg += spaces + '%s = %s\n' % (key, value)
+            msgi = spaces + '%s = %s\n' % (key, value)
+            if key not in ['TITLE', 'LABEL', 'SUBTITLE']:
+                assert len(msgi) < 68, 'len(msg)=%s; msg=\n%s' % (len(msgi), msgi)
+            msg += msgi
         elif param_type == 'CSV-type':
-            msg += spaces + '%s,%s,%s\n' % (key, value, options)
+            msgi = spaces + '%s,%s,%s\n' % (key, value, options)
+            assert len(msgi) < 68, 'len(msg)=%s; msg=\n%s' % (len(msgi), msgi)
+            msg += msgi
         elif param_type == 'STRESS-type':
-            sOptions = ','.join(options)
-            #print("sOptions = |%s|" %(sOptions))
+            str_options = ','.join(options)
+            #print("str_options = |%s|" %(str_options))
             #print("STRESSTYPE key=%s value=%s options=%s"
             #    %(key, value, options))
             if value is None:
                 val = ''
             else:
                 val = ' = %s' % value
-            if len(sOptions) > 0:
-                msg += '%s(%s)%s\n' % (key, sOptions, val)
+            if len(str_options) > 0:
+                msgi = '%s(%s)%s\n' % (key, str_options, val)
+                if len(msgi) > 64:
+                    msgi = '%s(' % key
+                    msg_done = ''
+                    i = 0
+                    while i < len(options):
+                        option = options[i]
+                        new_msgi = '%s,' % options[i]
+                        if (len(msgi) + len(new_msgi)) < 64:
+                            msgi += new_msgi
+                        else:
+                            msg_done += msgi + '\n'
+                            msgi = spaces + new_msgi
+                        i += 1
+                    msg_done += msgi
+                    msgi = ''
+                    msg_done = msg_done.rstrip(' ,\n') + ')%s\n' % val
+                    assert len(msgi) < 68, 'len(msg)=%s; msg=\n%s' % (len(msgi), msgi)
+                    msg += msg_done
+                else:
+                    assert len(msgi) < 68, 'len(msg)=%s; msg=\n%s' % (len(msgi), msgi)
+                    msg += msgi
             else:
-                msg += '%s%s\n' % (key, val)
+                msgi = '%s%s\n' % (key, val)
+                assert len(msgi) < 68, 'len(msg)=%s; msg=\n%s' % (len(msgi), msgi)
+                msg += msgi
             msg = spaces + msg
 
         elif param_type == 'SET-type':
@@ -723,8 +812,11 @@ class Subcase(object):
         """
         Method crossReference:
 
-        :param self:   the Subcase object
-        :param model: the BDF object
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+
         .. note:: this is not integrated and probably never will be as it's
           not really that necessary.  it's only really useful when running an
           analysis.
@@ -771,8 +863,6 @@ class Subcase(object):
         """
         Removes the subcase parameter from the subcase to avoid printing it in
         a funny spot
-
-        :param self:  the Subcase object
         """
         if 'SUBCASE' in self.params:
             del self.params['SUBCASE']
@@ -782,8 +872,15 @@ class Subcase(object):
         """
         Internal method to print a subcase
 
-        :param self:     the Subcase object
-        :param subcase0: the global Subcase object
+        Parameters
+        ----------
+        subcase0 : Subcase()
+            the global Subcase object
+
+        Returns
+        -------
+        msg : str
+           the string of the current Subcase
         """
         if self.id == 0:
             msg = str(self)
@@ -818,8 +915,9 @@ class Subcase(object):
         Does a "smart" sort on the keys such that SET cards increment in
         numerical order.  Also puts the sets first.
 
-        :param self:    the Subcase object
-        :param lst : List[str]
+        Parameters
+        ----------
+        lst : List[str]
             the list of subcase list objects (list_a)
 
         Returns
@@ -885,6 +983,7 @@ class Subcase(object):
         nparams = 0
         for key, param in self.subcase_sorted(iteritems(self.params)):
             (value, options, param_type) = param
+            #print('key=%r value=%s options=%s' % (key, value, options))
             msg += self.print_param(key, param)
             nparams += 1
         if self.id > 0:
@@ -1087,6 +1186,19 @@ def write_set(value, options, spaces=''):
          4572, 4573, 3323 THRU 3462, 3464 THRU 3603, 3605 THRU 3683,
          3910 THRU 3921, 4125 THRU 4136, 4340 THRU 4351
 
+    Parameters
+    ----------
+    value : int
+        the Set ID
+    options : List[int]
+        the Set values
+    spaces : str; default=''
+        indentation
+
+    Returns
+    -------
+    msg : str
+       the string of the set
 
     Example
     -------

@@ -1,13 +1,13 @@
 # pylint: disable=R0902,R0904,R0914,C0111
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import integer_types
 from six.moves import range
 
+from pyNastran.utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
-from pyNastran.bdf.cards.baseCard import (BaseCard, expand_thru_by,
-                                          collapse_thru_by, _node_ids)
+from pyNastran.bdf.cards.base_card import (BaseCard, expand_thru_by,
+                                           collapse_thru_by, _node_ids)
 from pyNastran.bdf.bdfInterface.assign_type import (fields, integer, double,
     integer_or_blank, double_or_blank, integer_or_string, string, blank)
 
@@ -57,6 +57,10 @@ class CHBDYE(ThermalElement):
     """
     Defines a boundary condition surface element with reference to a heat
     conduction element.
+
+    +--------+-----+------+------+--------+--------+---------+---------+
+    | CHBDYE | EID | EID2 | SIDE | IVIEWF | IVIEWB | RADMIDF | RADMIDB |
+    +--------+-----+------+------+--------+--------+---------+---------+
     """
     type = 'CHBDYE'
 
@@ -196,6 +200,12 @@ class CHBDYG(ThermalElement):
     """
     Defines a boundary condition surface element without reference to a
     property entry.
+
+    +--------+-----+----+------+--------+--------+---------+---------+-----+
+    | CHBDYG | EID |    | TYPE | IVIEWF | IVIEWB | RADMIDF | RADMIDB |     |
+    +--------+-----+----+------+--------+--------+---------+---------+-----+
+    |        | G1  | G2 |  G3  |   G4   |   G5   |   G6    |   G7    |  G8 |
+    +--------+-----+----+------+--------+--------+---------+---------+-----+
     """
     type = 'CHBDYG'
 
@@ -308,6 +318,12 @@ class CHBDYP(ThermalElement):
     """
     Defines a boundary condition surface element with reference to a PHBDY
     entry
+
+    +--------+---------+---------+------+--------+--------+----+----+----+
+    | CHBDYP |   EID   |   PID   | TYPE | IVIEWF | IVIEWB | G1 | G2 | G0 |
+    +--------+---------+---------+------+--------+--------+----+----+----+
+    |        | RADMIDF | RADMIDB | GMID |   CE   |   E1   | E2 | E3 |    |
+    +--------+---------+---------+------+--------+--------+----+----+----+
     """
     type = 'CHBDYP'
 

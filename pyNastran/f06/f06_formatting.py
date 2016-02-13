@@ -35,13 +35,12 @@ def write_float_12E(val):
         v2 = ' 0.0'
     return v2
 
+
 def write_float_13e(val):
-    vals2 = []
-    is_all_zeros = True
-    v2 = '%13.6E' % val
-    if v2 == ' 0.000000E+00' or v2 == '-0.000000E+00':
-        v2 = ' 0.0'
-    return v2
+    val2 = '%13.6E' % val
+    if val2 == ' 0.000000E+00' or val2 == '-0.000000E+00':
+        val2 = ' 0.0'
+    return val2
 
 
 #def writeFloats13E(vals):

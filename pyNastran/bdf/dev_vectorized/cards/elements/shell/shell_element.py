@@ -51,7 +51,6 @@ class ShellElement(Element):
         """
         Gets the mass of the CQUAD4s on a total or per element basis.
 
-        :param self: the CQUAD4 object
         :param element_id: the elements to consider (default=None -> all)
         :param total: should the mass be summed (default=False)
 
@@ -75,7 +74,6 @@ class ShellElement(Element):
         """
         Gets the mass per area of the CQUAD4s on a total or per element basis.
 
-        :param self: the CQUAD4 object
         :param element_id: the elements to consider (default=None -> all)
         :param total: should the mass be summed (default=False)
 
@@ -95,7 +93,6 @@ class ShellElement(Element):
         """
         Gets the normals of the CQUAD4s on per element basis.
 
-        :param self: the CQUAD4 object
         :param element_id: the elements to consider (default=None -> all)
 
         :param xyz_cid0: the GRIDs as an (N, 3) NDARRAY in CORD2R=0 (or None)
@@ -113,7 +110,6 @@ class ShellElement(Element):
         """
         Gets the area of the CQUAD4s on a total or per element basis.
 
-        :param self: the CQUAD4 object
         :param element_id: the elements to consider (default=None -> all)
         :param total: should the area be summed (default=False)
 

@@ -1,13 +1,14 @@
 # pylint: disable=C0103,R0902,R0904,R0914
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import iteritems, integer_types, string_types
+from six import iteritems, string_types
 from six.moves import zip, range
 #from math import ceil
 from numpy import where, searchsorted, array
 
+from pyNastran.utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
-from pyNastran.bdf.cards.baseCard import (BaseCard, expand_thru_by)
+from pyNastran.bdf.cards.base_card import (BaseCard, expand_thru_by)
 from pyNastran.bdf.cards.deqatn import fortran_to_python, fortran_to_python_short
     #collapse_thru_by_float, condense, build_thru_float)
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
@@ -238,12 +239,14 @@ class DOPTPRM(OptConstraint):
         'UPDFAC1' : 2.0,
         'UPDFAC2' : 0.5,
         }
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self, params, comment=''):
         """
         Design Optimization Parameters
         Overrides default values of parameters used in design optimization
 
         +---------+--------+------+--------+------+--------+------+--------+------+
+        |    1    |    2   |   3  |   4    |  5   |    6   |   7  |    8   |   9  |
+        +=========+========+======+========+======+========+======+========+======+
         | DOPTPRM | PARAM1 | VAL1 | PARAM2 | VAL2 | PARAM3 | VAL3 | PARAM4 | VAL4 |
         +---------+--------+------+--------+------+--------+------+--------+------+
         |         | PARAM5 | VAL5 | -etc.- |      |        |      |        |      |
@@ -251,9 +254,12 @@ class DOPTPRM(OptConstraint):
         """
         if comment:
             self._comment = comment
+        self.params = params
 
+    @classmethod
+    def add_card(self, card, comment=''):
         nfields = len(card) - 1
-        self.params = {}
+        params = {}
         for i in range(0, nfields, 2):
             param = string_or_blank(card, i + 1, 'param')
             default_value = None
@@ -262,7 +268,8 @@ class DOPTPRM(OptConstraint):
             if param in self.defaults:
                 default_value = self.defaults[param]
             val = integer_double_or_blank(card, i + 2, '%s_value' % param, default_value)
-            self.params[param] = val
+            params[param] = val
+        return DOPTPRM(params, comment=comment)
 
     def raw_fields(self):
         list_fields = ['DOPTPRM']

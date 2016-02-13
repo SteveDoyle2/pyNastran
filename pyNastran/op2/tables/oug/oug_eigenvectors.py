@@ -1,19 +1,17 @@
-#from six import iteritems
 from six.moves import zip, range
-#from math import sqrt
-from numpy import array #, pi
+from numpy import array
 
-#from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
+from pyNastran.op2.result_objects.table_object import RealTableArray, ComplexTableArray
+from pyNastran.f06.f06_formatting import write_floats_13e
 
-from pyNastran.op2.resultObjects.tableObject import RealTableArray, ComplexTableArray
-#RealTableObject, ComplexTableObject
-from pyNastran.f06.f06_formatting import write_floats_13e #, write_imag_floats_13e
 
 class ComplexEigenvectorArray(ComplexTableArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ComplexTableArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+        if header is None:
+            header = []
         if 0:
             msg += header
             freq = self.eigrs[i]
@@ -28,6 +26,7 @@ class ComplexEigenvectorArray(ComplexTableArray):
         words = ['                                         C O M P L E X   E I G E N V E C T O R   N O . ???\n \n']
         #words += self.get_table_marker()
         return self._write_f06_transient_block(words, header, page_stamp, page_num, f, is_mag_phase, is_sort1)
+
 
 class RealEigenvectorArray(RealTableArray):
     def __init__(self, data_code, is_sort1, isubcase, dt, f06_flag=False):
@@ -96,7 +95,9 @@ class RealEigenvectorArray(RealTableArray):
             datai.append([t1, t2, t3, r1, r2, r3])
         assert self.eigrs[-1] == data_code['eigr'], 'eigrs=%s\ndata_code[eigrs]=%s' %(self.eigrs, data_code['eigr'])
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+        if header is None:
+            header = []
         #if self.nonlinear_factor is not None:
             #return self._write_f06_transient(header, page_stamp, page_num, f, is_mag_phase=is_mag_phase, is_sort1=is_sort1)
         # modes get added
@@ -210,7 +211,9 @@ class RealEigenvectorArray(RealTableArray):
     #def eigenvalues(self):
         #return self.eigrs
 
-    #def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
+    #def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+        #if header is None:
+            #header = []
         #"""
         #::
 
@@ -333,7 +336,9 @@ class RealEigenvectorArray(RealTableArray):
     #def eigenvalues(self):
         #return self.eigrs
 
-    #def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
+    #def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+        #if header is None:
+            #header = []
         #"""
         #::
 
@@ -436,7 +441,9 @@ class RealEigenvectorArray(RealTableArray):
         #assert self.eigrs[-1] == data_code['eigr'], 'eigrs=%s\ndata_code[eigrs]=%s' %(self.eigrs, data_code['eigr'])
         #assert self.eigis[-1] == data_code['eigi'], 'eigis=%s\ndata_code[eigis]=%s' %(self.eigis, data_code['eigi'])
 
-    #def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
+    #def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+        #if header is None:
+            #header = []
         #msg = []
         ##print self.data_code
         #hasCycle = hasattr(self, 'mode_cycle')

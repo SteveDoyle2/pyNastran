@@ -6,8 +6,8 @@ from collections import OrderedDict
 from numpy import zeros, empty, array_equal
 import numpy as np
 
-from pyNastran.op2.resultObjects.op2_Objects import ScalarObject
-from pyNastran.f06.f06_formatting import get_key0, _eigenvalue_header
+from pyNastran.op2.result_objects.op2_objects import ScalarObject
+from pyNastran.f06.f06_formatting import get_key0, _eigenvalue_header, write_float_13e
 try:
     import pandas as pd
 except ImportError:
@@ -126,7 +126,7 @@ class RealStrainEnergyArray(ScalarObject):
         self.nelements = 0  # result specific
         self.itime = None
         self.itotal2 = 0
-        self.element_name_count = OrderedDict()
+        #self.element_name_count = OrderedDict()
         self.dt_temp = None
 
         if is_sort1:
@@ -135,8 +135,8 @@ class RealStrainEnergyArray(ScalarObject):
             raise NotImplementedError('SORT2')
 
     def _reset_indices(self):
-        #self.itotal = 0
-        #self.ielement = 0
+        self.itotal = 0
+        self.ielement = 0
         pass
 
     def get_headers(self):
@@ -145,36 +145,24 @@ class RealStrainEnergyArray(ScalarObject):
         ]
         return headers
 
-    #def get_headers(self):
-        #headers = ['axial', 'torque']
-        #return headers
-
     def build(self):
         if self.is_built:
             return
         del self.dt_temp
-        print('element_name_count =', self.element_name_count)
-        print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
-        print('ntotals =', self._ntotals)
-        self.nelement_types = len(self.element_name_count)
-        self.nelements = 0
-        for val in itervalues(self.element_name_count):
-            self.nelements += val
-        self.ntimes //= self.nelement_types
-        #self.ntimes //= self.nelement_types
 
-        self.ntotal = sum(self._ntotals)  # TODO: is this correct???
-        print('ntotal =', self.ntotal)
+        #print(self._ntotals)
+        self.ntotal = max(self._ntotals)  # TODO: is this correct???
 
         assert self.ntimes > 0, 'ntimes=%s' % self.ntimes
         assert self.nelements > 0, 'nelements=%s' % self.nelements
         assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
         #self.names = []
-        #self.nelements //= self.ntimes
+        #self.nelements = self.ntotal // self.ntimes
+        self.nelements = self.ntotal
         self.itime = 0
         self.ielement = 0
         self.itotal = 0
-        self.itotal2 = 0
+        #self.itotal2 = 0
         #self.ntimes = 0
         #self.nelements = 0
         self.is_built = True
@@ -184,17 +172,16 @@ class RealStrainEnergyArray(ScalarObject):
         if isinstance(self.nonlinear_factor, int):
             dtype = 'int32'
         self._times = zeros(self.ntimes, dtype=dtype)
-        self.element = zeros(self.ntotal, dtype='int32')
+        self.element = zeros(self.nelements, dtype='int32')
         #self.element_data_type = empty(self.nelements, dtype='|U8')
 
         #[energy, percent, density]
         assert isinstance(self.ntimes, int), self.ntimes
         assert isinstance(self.ntotal, int), self.ntotal
-        self.data = zeros((self.ntimes, self.ntotal, 3), dtype='float32')
+        self.data = zeros((self.ntimes, self.nelements, 3), dtype='float32')
 
     def build_dataframe(self):
         headers = self.get_headers()
-        name = self.name
         if self.nonlinear_factor is not None:
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
@@ -204,9 +191,9 @@ class RealStrainEnergyArray(ScalarObject):
             self.data_frame.columns.names = ['Static']
         self.data_frame.index.names = ['ElementID', 'Item']
 
-    def finalize(self):
+    #def finalize(self):
         #self._times = self._times[::self.nelement_types]
-        ntimes = len(self._times)
+        #ntimes = len(self._times)
         #print('times =', self._times)
         #ntypes_ntimes, _nelements, nheaders = self.data.shape
         #nelements = ntypes_nelements // self.nelement_types
@@ -214,14 +201,14 @@ class RealStrainEnergyArray(ScalarObject):
         #nheaders = len(self.get_headers())
 
         #print('self.nelements =', self.nelements)
-        print('data1.shape =', self.data.shape)
+        #print('data1.shape =', self.data.shape)
         #print(self.data[:10, :, 0])
         #assert nelements == 29
         #assert ntimes == 3
         #print('ntimes=%s nelements=%s nheaders=%s' % (
             #ntimes, nelements, nheaders))
         #self.data = self.data.reshape(ntimes, nelements, nheaders)
-        print('data2.shape =', self.data.shape)
+        #print('data2.shape =', self.data.shape)
 
     def __eq__(self, table):
         assert self.is_sort1() == table.is_sort1()
@@ -229,7 +216,10 @@ class RealStrainEnergyArray(ScalarObject):
         assert self.ntotal == table.ntotal
         assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
         assert self.approach_code == table.approach_code
-        if not array_equal(self.element, table.element):
+        if self.nonlinear_factor is not None:
+            assert np.array_equal(self._times, table._times), 'class_name=%s times=%s table.times=%s' % (
+                self.class_name, self._times, table._times)
+        if not np.array_equal(self.element, table.element):
             assert self.element.shape == table.element.shape, 'element shape=%s table.shape=%s' % (self.element.shape, table.element.shape)
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
@@ -238,7 +228,7 @@ class RealStrainEnergyArray(ScalarObject):
                 msg += '(%s), (%s)\n' % (eid, eid2)
             print(msg)
             raise ValueError(msg)
-        if not array_equal(self.data, table.data):
+        if not np.array_equal(self.data, table.data):
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
             i = 0
@@ -250,7 +240,7 @@ class RealStrainEnergyArray(ScalarObject):
                     (energyi2, percenti2, densityi2) = t2
 
                     if np.isnan(densityi1) or not np.isfinite(densityi1):
-                        if not array_equal(t1[:2], t2[:2]):
+                        if not np.array_equal(t1[:2], t2[:2]):
                             msg += (
                                 '%s (%s, %s)\n'
                                 '%s (%s, %s)\n' % (
@@ -262,7 +252,7 @@ class RealStrainEnergyArray(ScalarObject):
                             if i > 10:
                                 print(msg)
                                 raise ValueError(msg)
-                    elif not array_equal(t1, t2):
+                    elif not np.array_equal(t1, t2):
                         msg += (
                             '%s (%s, %s, %s)\n'
                             '%s (%s, %s, %s)\n' % (
@@ -291,7 +281,7 @@ class RealStrainEnergyArray(ScalarObject):
             print('RealStrainEnergyArray', dt, eid, energyi, percenti, densityi)
             raise
         self.ielement += 1
-        #asdf
+        self.itotal += 1
 
     def get_stats(self):
         if not self.is_built:
@@ -323,7 +313,9 @@ class RealStrainEnergyArray(ScalarObject):
         msg += self.get_data_code()
         return msg
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+        if header is None:
+            header = []
         """
         '      EIGENVALUE =  2.005177E+05'
         '      CYCLES =  7.126832E+01'
@@ -338,14 +330,14 @@ class RealStrainEnergyArray(ScalarObject):
         ''
         '                        TYPE = TETRA    SUBTOTAL        7.225325E+00                 0.0072'
         """
-        msg_temp = [
+        msg_temp = (
             '                                           E L E M E N T   S T R A I N   E N E R G I E S\n'
             ' \n'
             '                ELEMENT-TYPE = TETRA               * TOTAL ENERGY OF ALL ELEMENTS IN PROBLEM     =   %s\n'
             '                   MODE        %8i            * TOTAL ENERGY OF ALL ELEMENTS IN SET      -1 =   %s\n'
             '0\n'
             '                                    ELEMENT-ID          STRAIN-ENERGY           PERCENT OF TOTAL    STRAIN-ENERGY-DENSITY\n'
-        ]
+        )
         ntimes = self.data.shape[0]
 
         eids = self.element
@@ -355,7 +347,8 @@ class RealStrainEnergyArray(ScalarObject):
             header = _eigenvalue_header(self, header, itime, ntimes, dt)
             total_energy = 0.
             total_set_energy = 0.
-            f.write(''.join(header + msg_temp % (total_energy, itime, total_set_energy)))
+            msg_temp2 = [msg_temp % (total_energy, itime, total_set_energy)]
+            f.write(''.join(header + msg_temp2))
 
             # energy, percent, density
             energy = self.data[itime, :, 0]
@@ -363,7 +356,8 @@ class RealStrainEnergyArray(ScalarObject):
             density = self.data[itime, :, 2]
 
             for (eid, energyi, percenti, densityi) in zip(eids, energy, percent, density):
-                (senergyi, sdensityi) = write_floats_13e([energyi, densityi])
+                senergyi = write_float_13e(energyi)
+                sdensityi = write_float_13e(densityi)
 
                 f.write(' %8i  %-13s %.4fs %s\n' % (
                     eid, senergyi, percenti, sdensityi))

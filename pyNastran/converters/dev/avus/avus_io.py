@@ -24,7 +24,7 @@ class AvusIO(object):
     #def removeOldGeometry(self, filename):
         #self._remove_old_cart3d_geometry(filename)
 
-    def load_avus_geometry(self, avus_filename, dirname, plot=True):
+    def load_avus_geometry(self, avus_filename, dirname, name='main', plot=True):
         #key = self.case_keys[self.icase]
         #case = self.result_cases[key]
 
@@ -46,7 +46,7 @@ class AvusIO(object):
 
 
         # loadCart3dResults - regions/loads
-        self.TurnTextOn()
+        self. turn_text_on()
         self.scalarBar.VisibilityOn()
         self.scalarBar.Modified()
 
@@ -83,7 +83,7 @@ class AvusIO(object):
         points.SetNumberOfPoints(nnodes)
         #self.gridResult.Allocate(self.nNodes, 1000)
         #vectorReselt.SetNumberOfComponents(3)
-        #self.nidMap = {}
+        #self.nid_map = {}
         #elem.SetNumberOfPoints(nNodes)
 
         #assert nodes is not None

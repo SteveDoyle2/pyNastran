@@ -1,18 +1,15 @@
-from six import integer_types
+from __future__ import print_function
 from six.moves import zip
 from numpy import array, arange, zeros, unique, searchsorted, full, nan, isnan
 from numpy.linalg import norm
 
+from pyNastran.utils import integer_types
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     double_or_blank, integer_double_or_blank)
 from pyNastran.bdf.cards.elements.bars import CBAROR
-
-#from pyNastran.bdf.field_writer_8 import set_string8_blank_if_default
-#from pyNastran.bdf.field_writer_16 import set_string16_blank_if_default
-
 from pyNastran.bdf.dev_vectorized.cards.elements.element import Element
 
 
@@ -43,7 +40,6 @@ class CBUSH(Element):
         """
         Defines the CBUSH object.
 
-        :param self: the CBUSH object
         :param model: the BDF object
         """
         Element.__init__(self, model)
@@ -118,9 +114,6 @@ class CBUSH(Element):
         self.i += 1
 
     def build(self):
-        """
-        :param self: the CBUSH object
-        """
         if self.n:
             i = self.element_id.argsort()
             self.element_id = self.element_id[i]

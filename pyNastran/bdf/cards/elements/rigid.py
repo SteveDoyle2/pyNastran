@@ -12,12 +12,13 @@ All rigid elements are RigidElement and Element objects.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import string_types, integer_types
+from six import string_types
 from six.moves import zip, range
 from itertools import count
 
+from pyNastran.utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8
-from pyNastran.bdf.cards.baseCard import Element
+from pyNastran.bdf.cards.base_card import Element
 from pyNastran.bdf.bdfInterface.assign_type import (integer,
     integer_or_double, integer_double_or_blank, integer_or_blank,
     double_or_blank, integer_double_or_string, components, components_or_blank,
@@ -33,32 +34,46 @@ class RigidElement(Element):
 class RROD(RigidElement):
     type = 'RROD'
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self, eid, ga, gb, cma, cmb, alpha, comment=''):
         """
         +------+-----+----+----+-----+-----+-------+
+        |   1  |  2  | 3  | 4  |  5  |  6  |   7   |
+        +======+=====+====+====+=====+=====+=======+
         | RROD | EID | GA | GB | CMA | CMB | ALPHA |
         +------+-----+----+----+-----+-----+-------+
         | RROD | 5   | 1  |  2 |     |     | 6.5-6 |
         +------+-----+----+----+-----+-----+-------+
         """
-        RigidElement.__init__(self, card, data)
+        RigidElement.__init__(self)
         if comment:
             self._comment = comment
-        if card:
-            self.eid = integer(card, 1, 'eid')
-            self.ga = integer(card, 2, 'ga')
-            self.gb = integer(card, 3, 'gb')
-            self.cma = components_or_blank(card, 4, 'cma')
-            self.cmb = components_or_blank(card, 5, 'cmb')
-            self.alpha = double_or_blank(card, 6, 'alpha', 0.0)
-            assert len(card) <= 6, 'len(RROD card) = %i' % len(card)
-        else:
-            self.eid = data[0]
-            self.ga = data[1]
-            self.gb = data[2]
-            self.cma = data[3]
-            self.cmb = data[4]
-            self.alpha = data[5]
+        self.eid = eid
+        self.ga = ga
+        self.gb = gb
+        self.cma = cma
+        self.cmb = cmb
+        self.alpha = alpha
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        eid = integer(card, 1, 'eid')
+        ga = integer(card, 2, 'ga')
+        gb = integer(card, 3, 'gb')
+        cma = components_or_blank(card, 4, 'cma')
+        cmb = components_or_blank(card, 5, 'cmb')
+        alpha = double_or_blank(card, 6, 'alpha', 0.0)
+        assert len(card) <= 6, 'len(RROD card) = %i' % len(card)
+        return RROD(eid, ga, gb, cma, cmb, alpha, comment=comment)
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        eid = data[0]
+        ga = data[1]
+        gb = data[2]
+        cma = data[3]
+        cmb = data[4]
+        alpha = data[5]
+        return RROD(eid, ga, gb, cma, cmb, alpha, comment=comment)
 
     def Ga(self):
         if isinstance(self.ga, integer_types):
@@ -113,36 +128,52 @@ class RROD(RigidElement):
 class RBAR(RigidElement):
     type = 'RBAR'
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self, eid, ga, gb, cna, cnb, cma, cmb, alpha=0., comment=''):
         """
         +------+-----+----+----+--------+-----+-----+-----+-------+
-        | RBAR | EID | GA | GB | CNA    | CNB | CMA | CMB | ALPHA |
+        |  1   |  2  |  3 |  4 |    5   |  6  |  7  |  8  |   9   |
+        +======+=====+====+====+========+=====+=====+=====+=======+
+        | RBAR | EID | GA | GB |  CNA   | CNB | CMA | CMB | ALPHA |
         +------+-----+----+----+--------+-----+-----+-----+-------+
-        | RBAR | 5   | 1  |  2 | 123456 |     |     |     | 6.5-6 |
+        | RBAR |  5  | 1  |  2 | 123456 |     |     |     | 6.5-6 |
         +------+-----+----+----+--------+-----+-----+-----+-------+
         """
-        RigidElement.__init__(self, card, data)
+        RigidElement.__init__(self)
         if comment:
             self._comment = comment
-        if card:
-            self.eid = integer(card, 1, 'eid')
-            self.ga = integer(card, 2, 'ga')
-            self.gb = integer(card, 3, 'gb')
-            self.cna = components_or_blank(card, 4, 'cna')
-            self.cnb = components_or_blank(card, 5, 'cnb')
-            self.cma = components_or_blank(card, 6, 'cma')
-            self.cmb = components_or_blank(card, 7, 'cmb')
-            self.alpha = double_or_blank(card, 8, 'alpha', 0.0)
-            assert len(card) <= 9, 'len(RBAR card) = %i' % len(card)
-        else:
-            self.eid = data[0]
-            self.ga = data[1]
-            self.gb = data[2]
-            self.cna = data[3]
-            self.cnb = data[4]
-            self.cma = data[5]
-            self.cmb = data[6]
-            self.alpha = data[7]
+        self.eid = eid
+        self.ga = ga
+        self.gb = gb
+        self.cna = cna
+        self.cnb = cnb
+        self.cma = cma
+        self.cmb = cmb
+        self.alpha = alpha
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        eid = integer(card, 1, 'eid')
+        ga = integer(card, 2, 'ga')
+        gb = integer(card, 3, 'gb')
+        cna = components_or_blank(card, 4, 'cna')
+        cnb = components_or_blank(card, 5, 'cnb')
+        cma = components_or_blank(card, 6, 'cma')
+        cmb = components_or_blank(card, 7, 'cmb')
+        alpha = double_or_blank(card, 8, 'alpha', 0.0)
+        assert len(card) <= 9, 'len(RBAR card) = %i' % len(card)
+        return RBAR(eid, ga, gb, cna, cnb, cma, cmb, alpha, comment=comment)
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        eid = data[0]
+        ga = data[1]
+        gb = data[2]
+        cna = data[3]
+        cnb = data[4]
+        cma = data[5]
+        cmb = data[6]
+        alpha = data[7]
+        return RBAR(eid, ga, gb, cna, cnb, cma, cmb, alpha, comment=comment)
 
     # def convert_to_MPC(self, mpcID):
     #     """
@@ -225,30 +256,43 @@ class RBAR(RigidElement):
 class RBAR1(RigidElement):
     type = 'RBAR1'
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self, eid, ga, gb, cb, alpha, comment=''):
         """
         +-------+-----+----+----+-----+-------+
+        |   1   |  2  |  3 |  4 |  5  |   6   |
+        +=======+=====+====+====+=====+=======+
         | RBAR1 | EID | GA | GB | CB  | ALPHA |
         +-------+-----+----+----+-----+-------+
         | RBAR1 | 5   |  1 |  2 | 123 | 6.5-6 |
         +-------+-----+----+----+-----+-------+
         """
-        RigidElement.__init__(self, card, data)
+        RigidElement.__init__(self)
         if comment:
             self._comment = comment
-        if card:
-            self.eid = integer(card, 1, 'eid')
-            self.ga = integer(card, 2, 'ga')
-            self.gb = integer(card, 3, 'gb')
-            self.cb = components_or_blank(card, 4, 'cb')
-            self.alpha = double_or_blank(card, 5, 'alpha', 0.0)
-            assert len(card) <= 6, 'len(RBAR1 card) = %i' % len(card)
-        else:
-            self.eid = data[0]
-            self.ga = data[1]
-            self.gb = data[2]
-            self.cb = data[3]
-            self.alpha = data[4]
+        self.eid = eid
+        self.ga = ga
+        self.gb = gb
+        self.cb = cb
+        self.alpha = alpha
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        eid = integer(card, 1, 'eid')
+        ga = integer(card, 2, 'ga')
+        gb = integer(card, 3, 'gb')
+        cb = components_or_blank(card, 4, 'cb')
+        alpha = double_or_blank(card, 5, 'alpha', 0.0)
+        assert len(card) <= 6, 'len(RBAR1 card) = %i' % len(card)
+        return RBAR1(eid, ga, gb, cb, alpha, comment=comment)
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        eid = data[0]
+        ga = data[1]
+        gb = data[2]
+        cb = data[3]
+        alpha = data[4]
+        return RBAR1(eid, ga, gb, cb, alpha, comment=comment)
 
     def Ga(self):
         if isinstance(self.ga, integer_types):
@@ -301,15 +345,20 @@ class RBAR1(RigidElement):
 class RBE1(RigidElement):  # maybe not done, needs testing
     type = 'RBE1'
 
-    def __init__(self, card=None, data=None, comment=''):
-        RigidElement.__init__(self, card, data)
+    def __init__(self, eid, Gni, Cni, Gmi, Cmi, alpha, comment=''):
+        RigidElement.__init__(self)
         if comment:
             self._comment = comment
+        self.eid = eid
+        self.Gni = Gni
+        self.Cni = Cni
+        self.Gmi = Gmi
+        self.Cmi = Cmi
+        self.alpha = alpha
 
-        self.eid = integer(card, 1, 'eid')
-        self.Gni = []
-        self.Cni = []
-
+    @classmethod
+    def add_card(self, card, comment=''):
+        eid = integer(card, 1, 'eid')
         iUm = card.index('UM')
         if iUm > 0:
             assert string(card, iUm, 'UM') == 'UM'
@@ -317,15 +366,19 @@ class RBE1(RigidElement):  # maybe not done, needs testing
         #assert isinstance(card[-1], string_types), 'card[-1]=%r type=%s' %(card[-1], type(card[-1]))
         alpha_last = integer_double_or_string(card, -1, 'alpha_last')
         if isinstance(alpha_last, float):
-            self.alpha = alpha_last
+            alpha = alpha_last
             card.pop()  # remove the last field so len(card) will not include alpha
         else:
-            self.alpha = 0.
+            alpha = 0.
 
         # loop till UM, no field9,field10
         n = 1
         i = 0
         offset = 2
+        Gni = []
+        Cni = []
+        Gmi = []
+        Cmi = []
         while offset + i < iUm - 1:
             #print('field(%s) = %s' % (offset + i, card.field(offset + i)))
             gni = integer_or_blank(card, offset + i, 'gn%i' % n)
@@ -333,15 +386,12 @@ class RBE1(RigidElement):  # maybe not done, needs testing
 
             if gni:
                 #print("gni=%s cni=%s" % (gni ,cni))
-                self.Gni.append(gni)
-                self.Cni.append(cni)
+                Gni.append(gni)
+                Cni.append(cni)
                 n += 1
             else:
                 assert cni is None
             i += 2
-
-        self.Gmi = []
-        self.Cmi = []
 
         # loop till alpha, no field9,field10
         n = 1
@@ -353,12 +403,13 @@ class RBE1(RigidElement):  # maybe not done, needs testing
             gmi = integer_or_blank(card, offset + i, 'gm%i' % n)
             cmi = components_or_blank(card, offset + i + 1, 'cm%i' % n)
             if gmi:
-                self.Gmi.append(gmi)
-                self.Cmi.append(cmi)
+                Gmi.append(gmi)
+                Cmi.append(cmi)
                 n += 1
             else:
                 assert cmi is None
             i += 2
+        return RBE1(eid, Gni, Cni, Gmi, Cmi, alpha, comment=comment)
 
     def cross_reference(self, model):
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
@@ -368,8 +419,8 @@ class RBE1(RigidElement):  # maybe not done, needs testing
         self.Gmi_ref = self.Gmi
 
     def uncross_reference(self):
-        self.Gni = self.Gni_node_ids()
-        self.Gmi = self.Gmi_node_ids()
+        self.Gni = self.Gni_node_ids
+        self.Gmi = self.Gmi_node_ids
         del self.Gni_ref, self.Gmi_ref
 
     @property
@@ -445,8 +496,6 @@ class RBE2(RigidElement):
 
         Parameters
         ----------
-        self : RBE2()
-            the RBE2 object pointer
         n : int
             the field number to update
         value : int/float/str
@@ -460,60 +509,74 @@ class RBE2(RigidElement):
             raise KeyError('Field %r is an invalid %s entry.' % (n, self.type))
         return value
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self, eid, gn, cm, Gmi, alpha, comment=''):
         """
         +-------+-----+-----+-----+------+-------+-----+-----+-----+
         |   1   |  2  |  3  |  4  |  5   |   6   |  7  |  8  |  9  |
-        +-------+-----+-----+-----+------+-------+-----+-----+-----+
-        |  RBE2 | EID | GN  | CM  | GM1  | GM2   | GM3 | GM4 | GM5 |
+        +=======+=====+=====+=====+======+=======+=====+=====+=====+
+        |  RBE2 | EID | GN  | CM  | GM1  |  GM2  | GM3 | GM4 | GM5 |
         +-------+-----+-----+-----+------+-------+-----+-----+-----+
         |       | GM6 | GM7 | GM8 | etc. | ALPHA |     |     |     |
         +-------+-----+-----+-----+------+-------+-----+-----+-----+
         """
-        RigidElement.__init__(self, card, data)
+        RigidElement.__init__(self)
         if comment:
             self._comment = comment
-        if card:
-            #: Element identification number
-            self.eid = integer(card, 1, 'eid')
+        #: Element identification number
+        self.eid = eid
 
-            #: Identification number of grid point to which all six independent
-            #: degrees-of-freedom for the element are assigned. (Integer > 0)
-            self.gn = integer(card, 2, 'gn')
+        #: Identification number of grid point to which all six independent
+        #: degrees-of-freedom for the element are assigned. (Integer > 0)
+        self.gn = gn
 
-            #: Component numbers of the dependent degrees-of-freedom in the
-            #: global coordinate system at grid points GMi. (Integers 1 through
-            #: 6 with no embedded blanks.)
-            self.cm = components_or_blank(card, 3, 'cm')
+        #: Component numbers of the dependent degrees-of-freedom in the
+        #: global coordinate system at grid points GMi. (Integers 1 through
+        #: 6 with no embedded blanks.)
+        self.cm = cm
 
-            alpha = integer_or_double(card, len(card) - 1, 'alpha')
-            if isinstance(alpha, float):
-                #: Grid point identification numbers at which dependent
-                #: degrees-of-freedom are assigned. (Integer > 0)
-                self.alpha = alpha
+        self.alpha = alpha
 
-                # the last field is not part of Gmi
-                n = 1
-            else:
-                # the last field is part of Gmi
-                n = 0
-                self.alpha = 0.0
+        #: Grid point identification numbers at which dependent
+        #: degrees-of-freedom are assigned. (Integer > 0)
+        self.Gmi = Gmi
+        self._validate_input()
 
-            j = 4
-            self.Gmi = []
-            for i in range(len(card) - 4 - n):
-                gmi = integer(card, j + i, 'Gm%i' % (i + 1))
-                self.Gmi.append(gmi)
+    @classmethod
+    def add_card(cls, card, comment=''):
+        eid = integer(card, 1, 'eid')
+        gn = integer(card, 2, 'gn')
+        cm = components_or_blank(card, 3, 'cm')
+
+        alpha = integer_or_double(card, len(card) - 1, 'alpha')
+        if isinstance(alpha, float):
+            # alpha is correct
+            # the last field is not part of Gmi
+            n = 1
         else:
-            self.eid = data[0]
-            self.gn = data[1]
-            self.cm = data[2]
-            self.Gmi = data[3]
-            self.alpha = data[4]
-            #print("eid=%s gn=%s cm=%s Gmi=%s alpha=%s"
-                  #% (self.eid, self.gn, self.cm, self.Gmi, self.alpha))
-            #raise NotImplementedError('RBE2 data...')
+            # the last field is part of Gmi
+            n = 0
+            alpha = 0.0
 
+        j = 4
+        Gmi = []
+        for i in range(len(card) - 4 - n):
+            gmi = integer(card, j + i, 'Gm%i' % (i + 1))
+            Gmi.append(gmi)
+        return RBE2(eid, gn, cm, Gmi, alpha, comment=comment)
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        eid = data[0]
+        gn = data[1]
+        cm = data[2]
+        Gmi = data[3]
+        alpha = data[4]
+        #print("eid=%s gn=%s cm=%s Gmi=%s alpha=%s"
+              #% (self.eid, self.gn, self.cm, self.Gmi, self.alpha))
+        #raise NotImplementedError('RBE2 data...')
+        return RBE2(eid, gn, cm, Gmi, alpha, comment=comment)
+
+    def _validate_input(self):
         assert self.gn is not None, 'gn=%s' % self.gn
         assert self.cm is not None, 'cm=%s' % self.cm
         self.gn = self.gn
@@ -531,8 +594,8 @@ class RBE2(RigidElement):
          | RBE2 | eid  | gn | cm | g1  | g2 | g3 | g4 |
          +------+------+----+----+-----+----+----+----+
         """
-        nCM = len(self.cm)
-        Ai = nCM * len(self.Gmi) / len(self.gn)  # where nGN=1
+        n_cm = len(self.cm)
+        Ai = n_cm * len(self.Gmi) / len(self.gn)  # where nGN=1
 
         card = ['MPC', mpc_id]
         for cm in self.cm:
@@ -643,7 +706,8 @@ class RBE3(RigidElement):
     """
     type = 'RBE3'
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self, eid, refgrid, refc, Gmi, Cmi,
+                 weights, comps, Gijs, alpha, comment=''):
         """
         eid
         refgrid
@@ -653,13 +717,29 @@ class RBE3(RigidElement):
         Cmi
         alpha
         """
-        RigidElement.__init__(self, card, data)
+        RigidElement.__init__(self)
         if comment:
             self._comment = comment
-        self.eid = integer(card, 1, 'eid')
+        self.eid = eid
+        self.refgrid = refgrid
+        self.refc = refc
+
+        self.Gmi = Gmi
+        self.Cmi = Cmi
+
+        #self.WtCG_groups = []
+        self.weights = weights
+        self.comps = comps
+        self.Gijs = Gijs
+
+        self.alpha = alpha
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        eid = integer(card, 1, 'eid')
         blank(card, 2, 'blank')
-        self.refgrid = integer(card, 3, 'refgrid')
-        self.refc = components_or_blank(card, 4, 'refc')
+        refgrid = integer(card, 3, 'refgrid')
+        refc = components_or_blank(card, 4, 'refc')
 
         fields = [field.upper() if isinstance(field, string_types) else field for field in card[5:]]
         ioffset = 5
@@ -678,10 +758,12 @@ class RBE3(RigidElement):
         except ValueError:
             ium = None
 
-        self.WtCG_groups = []
-
         i = ioffset
         n = 1
+        weight_cg_group = []
+        weights = []
+        comps = []
+        Gijs = []
         while i < iwt_max:
             Gij = []
             wtname = 'wt' + str(n)
@@ -708,14 +790,17 @@ class RBE3(RigidElement):
                 assert compi is not None
                 assert len(Gij) > 0, Gij
                 assert Gij[0] is not None, Gij
-                weight_cg_group = [wt, compi, Gij]
-                self.WtCG_groups.append(weight_cg_group)
+                #weight_cg_group = [wt, compi, Gij]
+                weights.append(wt)
+                comps.append(compi)
+                Gijs.append(Gij)
+                #weight_cg_group.append(weight_cg_group)
                 #print('----finished a group=%r----' % weight_cg_group)
             else:
                 i += 1
 
-        self.Gmi = []
-        self.Cmi = []
+        Gmi = []
+        Cmi = []
         if ium:
             #print('UM = %s' % card.field(ium))  # UM
             i = ium + 1
@@ -729,16 +814,25 @@ class RBE3(RigidElement):
                 if gmi is not None:
                     cmi = components(card, j + 1, cm_name)
                     #print "gmi=%s cmi=%s" % (gmi, cmi)
-                    self.Gmi.append(gmi)
-                    self.Cmi.append(cmi)
+                    Gmi.append(gmi)
+                    Cmi.append(cmi)
 
         if ialpha:
-            self.alpha = double_or_blank(card, ialpha + 1, 'alpha')
+            alpha = double_or_blank(card, ialpha + 1, 'alpha')
         else:
             #: thermal expansion coefficient
-            self.alpha = 0.0
+            alpha = 0.0
+        return RBE3(eid, refgrid, refc, Gmi, Cmi,
+                    weights, comps, Gijs, alpha, comment=comment)
 
-    # def convert_to_MPC(self, mpcID):
+    @property
+    def WtCG_groups(self):
+        wt_cg_groups = []
+        for weight, comp, gijs in zip(self.weights, self.comps, self.Gijs):
+            wt_cg_groups.append((weight, comp, gijs))
+        return wt_cg_groups
+
+    # def convert_to_mpc(self, mpc_id):
     #     """
     #     -Ai*ui + Aj*uj = 0
     #     where ui are the base DOFs (max=6)
@@ -750,7 +844,7 @@ class RBE3(RigidElement):
     #     nCM = len(self.cm)
     #     Ai = nCM * len(self.Gmi) / len(self.gn)  # where nGN=1
     #
-    #     card = ['MPC', mpcID]
+    #     card = ['MPC', mpc_id]
     #     for cm in self.cm:  # the minus sign is applied to the base node
     #         card += [self.gn, cm, -Ai]
     #
@@ -781,21 +875,22 @@ class RBE3(RigidElement):
         self.refgrid = model.Node(self.ref_grid_id, msg=msg)
         self.refgrid_ref = self.refgrid
 
-        ## TODO: add refs
-        for i, (wt, ci, Gij) in enumerate(self.WtCG_groups):
-            self.WtCG_groups[i][2] = model.Nodes(Gij, allow_empty_nodes=True, msg=msg)
+        for i, Gij in enumerate(self.Gijs):
+            self.Gijs[i] = model.Nodes(Gij, allow_empty_nodes=True, msg=msg)
+        self.Gijs_ref = self.Gijs
 
     def uncross_reference(self):
         self.Gmi = self.Gmi_node_ids
         self.refgrid = self.ref_grid_id
 
-        weight_cg_groups2 = []
-        for (wt, compi, Gij) in self.WtCG_groups:
-            Giji = self._nodeIDs(nodes=Gij, allow_empty_nodes=True)
-            weight_cg_groups2.append([wt, compi, Giji])
-
-        self.WtCG_groups = weight_cg_groups2
-        del self.Gmi_ref, self.refgrid_ref
+        Gij = []
+        for i, Gij in enumerate(self.Gijs):
+            gij = []
+            for giji in Gij:
+                gij.append(Giji.nid)
+            Gij.append(gij)
+        self.Gijs = Gij
+        del self.Gmi_ref, self.refgrid_ref, self.Gijs_ref
 
     def safe_cross_reference(self, model, debug=True):
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
@@ -807,8 +902,9 @@ class RBE3(RigidElement):
         self.refgrid = model.Node(self.ref_grid_id, msg=msg)
         self.refgrid_ref = self.refgrid
 
-        for i, (wt, ci, Gij) in enumerate(self.WtCG_groups):
-            self.WtCG_groups[i][2] = model.Nodes(Gij, allow_empty_nodes=True, msg=msg)
+        for i, Gij in enumerate(self.Gijs):
+            self.Gijs[i] = model.Nodes(Gij, allow_empty_nodes=True, msg=msg)
+        self.Gijs_ref = self.Gijs
 
     @property
     def independent_nodes(self):
@@ -817,7 +913,7 @@ class RBE3(RigidElement):
         TODO: not checked
         """
         nodes = []
-        for (wt, compi, Gij) in self.WtCG_groups:
+        for Gij in self.Gijs:
             Giji = self._nodeIDs(nodes=Gij, allow_empty_nodes=True)
             nodes += Giji
         return nodes
@@ -834,7 +930,7 @@ class RBE3(RigidElement):
 
     def raw_fields(self):
         list_fields = ['RBE3', self.eid, None, self.ref_grid_id, self.refc]
-        for (wt, ci, Gij) in self.WtCG_groups:
+        for (wt, ci, Gij) in zip(self.weights, self.comps, self.Gijs):
             Giji = self._nodeIDs(nodes=Gij, allow_empty_nodes=True)
             list_fields += [wt, ci] + Giji
         nspaces = 8 - (len(list_fields) - 1) % 8  # puts UM onto next line

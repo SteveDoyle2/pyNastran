@@ -1,6 +1,5 @@
 from six.moves import StringIO
 from math import pi, sqrt
-from itertools import count
 
 import unittest
 
@@ -14,10 +13,10 @@ class TestRods(unittest.TestCase):
     def test_crod_01(self):
         lines = ['CROD          10     100      10       2']
         card = bdf.process_card(lines)
-        card = BDFCard(card)
+        cardi = BDFCard(card)
 
         size = 8
-        card = CROD(card)
+        card = CROD.add_card(cardi)
         card.write_card(size, 'dummy')
         card.raw_fields()
         self.assertEqual(card.Eid(), 10)
@@ -33,10 +32,10 @@ class TestRods(unittest.TestCase):
         A = 27.0
         lines = ['conrod,%i, %i, %i, %i, %f' % (eid, nid1, nid2, mid, A)]
         card = bdf.process_card(lines)
-        card = BDFCard(card)
+        cardi = BDFCard(card)
 
         size = 8
-        card = CONROD(card)
+        card = CONROD.add_card(cardi)
         card.write_card(size, 'dummy')
         card.raw_fields()
         self.assertEqual(card.Eid(), eid)
@@ -73,8 +72,8 @@ class TestRods(unittest.TestCase):
         model = BDF(debug=False)
         lines = ['conrod,%i, %i, %i, %i, %f, %f, %f, %f' % (eid, nid1, nid2, mid, A, J, c, nsm)]
         card = model.process_card(lines)
-        card = BDFCard(card)
-        conrod = CONROD(card)
+        cardi = BDFCard(card)
+        conrod = CONROD.add_card(cardi)
         model.add_element(conrod)
         card = model.elements[eid]
         node_ids = card.node_ids
@@ -82,8 +81,8 @@ class TestRods(unittest.TestCase):
 
         lines = ['crod,%i, %i, %i, %i' % (eid+1, pid, nid1, nid2)]
         card = model.process_card(lines)
-        card = BDFCard(card)
-        crod = CROD(card)
+        cardi = BDFCard(card)
+        crod = CROD.add_card(cardi)
         model.add_element(crod)
         card = model.elements[eid+1]
         node_ids = card.node_ids
@@ -91,8 +90,8 @@ class TestRods(unittest.TestCase):
 
         lines = ['ctube,%i, %i, %i, %i' % (eid+2, pid+1, nid1, nid2)]
         card = model.process_card(lines)
-        card = BDFCard(card)
-        ctube = CTUBE(card)
+        cardi = BDFCard(card)
+        ctube = CTUBE.add_card(cardi)
         model.add_element(ctube)
         card = model.elements[eid+2]
         node_ids = card.node_ids
@@ -100,8 +99,8 @@ class TestRods(unittest.TestCase):
 
         lines = ['prod,%i, %i, %f, %f, %f, %f' % (pid, mid, A, J, c, nsm)]
         card = model.process_card(lines)
-        card = BDFCard(card)
-        prod = PROD(card)
+        cardi = BDFCard(card)
+        prod = PROD.add_card(cardi)
         model.add_property(prod)
 
         #self.pid = integer(card, 1, 'pid')
@@ -115,26 +114,26 @@ class TestRods(unittest.TestCase):
         OD2 = OD1
         lines = ['ptube,%i, %i, %f, %f, %f, %f' % (pid+1, mid, OD1, t, nsm, OD2)]
         card = model.process_card(lines)
-        card = BDFCard(card)
-        ptube = PTUBE(card)
+        cardi = BDFCard(card)
+        ptube = PTUBE.add_card(cardi)
         model.add_property(ptube)
 
         lines = ['mat1,%i, %.2e, %.2e, %f, %f' % (mid, E, G, nu, rho)]
         card = model.process_card(lines)
-        card = BDFCard(card)
-        card = MAT1(card)
+        cardi = BDFCard(card)
+        card = MAT1.add_card(cardi)
         model.add_structural_material(card)
 
         lines = ['grid,%i, %i, %f, %f, %f' % (nid1, 0, xyz1[0], xyz1[1], xyz1[2])]
         card = model.process_card(lines)
-        card = BDFCard(card)
-        card = GRID(card)
+        cardi = BDFCard(card)
+        card = GRID.add_card(cardi)
         model.add_node(card)
 
         lines = ['grid,%i, %i, %f, %f, %f' % (nid2, 0, xyz2[0], xyz2[1], xyz2[2])]
         card = model.process_card(lines)
-        card = BDFCard(card)
-        card = GRID(card)
+        cardi = BDFCard(card)
+        card = GRID.add_card(cardi)
         model.add_node(card)
 
         model.cross_reference()

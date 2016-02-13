@@ -14,7 +14,6 @@ class GRAV(object):
         """
         Defines the GRAV object.
 
-        :param self: the GRAV object
         :param model: the BDF object
 
         .. todo:: collapse loads
@@ -64,7 +63,6 @@ class GRAV(object):
 
     def build(self):
         """
-        :param self: the GRAV object
         :param cards: the list of GRAV cards
         """
         cards = self._cards

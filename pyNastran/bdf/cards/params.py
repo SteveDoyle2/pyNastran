@@ -3,8 +3,8 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import string_types
 from six.moves import zip
-from pyNastran.bdf.cards.baseCard import BaseCard
-from pyNastran.bdf.bdfInterface.BDF_Card import BDFCard
+from pyNastran.bdf.cards.base_card import BaseCard
+from pyNastran.bdf.bdfInterface.bdf_card import BDFCard
 from pyNastran.bdf.bdfInterface.assign_type import (integer_or_blank,
     double_or_blank, string, string_or_blank, integer_double_string_or_blank)
 from pyNastran.bdf.field_writer_8 import print_card_8
@@ -30,8 +30,6 @@ class PARAM(BaseCard):
 
         Parameters
         ----------
-        self : PARAM()
-            the object pointer
         card : BDFCard(); default=None
             BDFCard object
         data : List[int/float/str]; default=None
@@ -109,7 +107,6 @@ class PARAM(BaseCard):
         Updates value1 and value2.  Performs type checking based on the PARAM
         type after setting any default value(s).
 
-        :param self:   the PARAM object
         :param value1: the main value (default=None)
         :param value2: optional value (default=None)
 

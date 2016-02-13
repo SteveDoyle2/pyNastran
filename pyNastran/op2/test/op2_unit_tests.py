@@ -12,6 +12,8 @@ from pyNastran.op2.op2 import OP2, FatalError, read_op2
 from pyNastran.op2.test.test_op2 import run_op2
 from pyNastran.bdf.test.bdf_unit_tests import Tester
 from pyNastran.op2.tables.oef_forces.oef_forceObjects import RealPlateBilinearForceArray, RealPlateForceArray
+from pyNastran.op2.export_to_vtk import export_to_vtk_filename
+
 
 class TestOP2(Tester):
     #def _spike(self):
@@ -126,7 +128,7 @@ class TestOP2(Tester):
         cbeam_stress = op2.cbeam_stress[isubcase]
         cbeam_stress.build_dataframe()
         assert cbeam_stress.nelements == 11, cbeam_stress.nelements  # wrong
-        assert cbeam_stress.data.shape == (1, 11, 8), cbeam_stress.data.shape
+        assert cbeam_stress.data.shape == (1, 2, 8), cbeam_stress.data.shape
 
         cquad4_force = op2.cquad4_force[isubcase]
         cquad4_force.build_dataframe()
@@ -165,6 +167,13 @@ class TestOP2(Tester):
 
         assert os.path.exists(debug_file), os.listdir(folder)
         os.remove(debug_file)
+
+    def test_op2_solid_shell_bar_01_export(self):
+        folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'sol_101_elements'))
+        bdf_filename = os.path.join(folder, 'static_solid_shell_bar.bdf')
+        op2_filename = os.path.join(folder, 'static_solid_shell_bar.op2')
+        vtk_filename = os.path.join(folder, 'static_solid_shell_bar.vtk')
+        export_to_vtk_filename(bdf_filename, op2_filename, vtk_filename)
 
     def test_op2_solid_shell_bar_02(self):
         op2_filename = os.path.join('mode_solid_shell_bar.op2')
@@ -206,14 +215,14 @@ class TestOP2(Tester):
 
         cbeam_stress = op2.cbeam_stress[isubcase]
         assert cbeam_stress.nelements == 11, cbeam_stress.nelements  # TODO: wrong
-        assert cbeam_stress.data.shape == (3, 11, 8), cbeam_stress.data.shape
+        assert cbeam_stress.data.shape == (3, 2, 8), cbeam_stress.data.shape
 
         cquad4_stress = op2.cquad4_stress[isubcase]
-        assert cquad4_stress.nelements == 60, cquad4_stress.nelements # TODO: wrong
+        assert cquad4_stress.nelements == 20, cquad4_stress.nelements
         assert cquad4_stress.data.shape == (3, 20, 8), cquad4_stress.data.shape
 
         ctria3_stress = op2.ctria3_stress[isubcase]
-        assert ctria3_stress.nelements == 24, ctria3_stress.nelements # TODO: wrong
+        assert ctria3_stress.nelements == 8, ctria3_stress.nelements
         assert ctria3_stress.data.shape == (3, 8, 8), ctria3_stress.data.shape
 
         ctetra_stress = op2.ctetra_stress[isubcase]
@@ -230,6 +239,13 @@ class TestOP2(Tester):
 
         assert os.path.exists(debug_file), os.listdir(folder)
         os.remove(debug_file)
+
+    def test_op2_solid_shell_bar_02_export(self):
+        folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'sol_101_elements'))
+        bdf_filename = os.path.join(folder, 'mode_solid_shell_bar.bdf')
+        op2_filename = os.path.join(folder, 'mode_solid_shell_bar.op2')
+        vtk_filename = os.path.join(folder, 'mode_solid_shell_bar.vtk')
+        export_to_vtk_filename(bdf_filename, op2_filename, vtk_filename)
 
     def test_op2_solid_shell_bar_03(self):
         op2_filename = os.path.join('buckling_solid_shell_bar.op2')
@@ -277,14 +293,14 @@ class TestOP2(Tester):
 
         cbeam_stress = op2.cbeam_stress[isubcase]
         assert cbeam_stress.nelements == 11, cbeam_stress.nelements  # TODO: wrong
-        assert cbeam_stress.data.shape == (4, 11, 8), cbeam_stress.data.shape
+        assert cbeam_stress.data.shape == (4, 2, 8), cbeam_stress.data.shape
 
         cquad4_stress = op2.cquad4_stress[isubcase]
-        assert cquad4_stress.nelements == 80, cquad4_stress.nelements # TODO: wrong
+        assert cquad4_stress.nelements == 20, cquad4_stress.nelements
         assert cquad4_stress.data.shape == (4, 20, 8), cquad4_stress.data.shape
 
         ctria3_stress = op2.ctria3_stress[isubcase]
-        assert ctria3_stress.nelements == 32, ctria3_stress.nelements # TODO: wrong
+        assert ctria3_stress.nelements == 8, ctria3_stress.nelements
         assert ctria3_stress.data.shape == (4, 8, 8), ctria3_stress.data.shape
 
         ctetra_stress = op2.ctetra_stress[isubcase]
@@ -386,6 +402,107 @@ class TestOP2(Tester):
         #print(grid_point_forces._ntotals)
         assert grid_point_forces.ntotal == 106, grid_point_forces.ntotal
         assert grid_point_forces.data.shape == (7, 106, 6), grid_point_forces.data.shape
+
+        assert os.path.exists(debug_file), os.listdir(folder)
+        os.remove(debug_file)
+
+    def test_op2_solid_shell_bar_03_export(self):
+        folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'sol_101_elements'))
+        bdf_filename = os.path.join(folder, 'freq_solid_shell_bar.bdf')
+        op2_filename = os.path.join(folder, 'freq_solid_shell_bar.op2')
+        vtk_filename = os.path.join(folder, 'freq_solid_shell_bar.vtk')
+        export_to_vtk_filename(bdf_filename, op2_filename, vtk_filename)
+
+    def test_op2_solid_shell_bar_05(self):
+        """
+        MSC 2005r2 Tables : GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPTS, DYNAMICS, DIT
+                            OQG1, OUGV1, OGPFB1, OEF1X, OES1X1, OSTR1X, OPG1
+        NX 10 Tables : PVT0, CASECC, GEOM1S, GEOM2S, GEOM3S, GEOM4S, EPTS, MPTS,
+                       DYNAMICS, BGPDTS, EQEXINS, DIT,
+                       OQG1, OUGV1, OGPFB1, OEF1X, OES1X1, OSTR1X, OPG1
+        """
+        op2_filename = os.path.join('transient_solid_shell_bar.op2')
+        folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'sol_101_elements'))
+        op2_filename = os.path.join(folder, op2_filename)
+        make_geom = False
+        write_bdf = False
+        write_f06 = True
+        debug = False
+        #debug_file = 'solid_bending.debug.out'
+        model, ext = os.path.splitext(op2_filename)
+        debug_file = model + '.debug.out'
+
+        if os.path.exists(debug_file):
+            os.remove(debug_file)
+        read_op2(op2_filename)
+        op2, is_passed = run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, isubcases=[],
+                                 write_f06=write_f06,
+                                 debug=debug, stop_on_failure=True, binary_debug=True, quiet=True)
+        isubcase = 1
+        # rod_force = op2.crod_force[isubcase]
+        # assert rod_force.nelements == 2, rod_force.nelements
+        # assert rod_force.data.shape == (7, 2, 2), rod_force.data.shape
+
+
+        # isubcases = [(1, 1, 1, 0, 'DEFAULT'), (1, 8, 1, 0, 'DEFAULT')]
+        # isubcase = isubcases[1]
+
+        rod_force = op2.crod_force[isubcase]
+        rod_force.build_dataframe()
+        assert rod_force.nelements == 2, rod_force.nelements
+        assert rod_force.data.shape == (21, 2, 2), rod_force.data.shape
+
+        rod_stress = op2.crod_stress[isubcase]
+        rod_stress.build_dataframe()
+        assert rod_stress.nelements == 2, rod_stress.nelements
+        assert rod_stress.data.shape == (21, 2, 4), rod_stress.data.shape
+
+        cbar_force = op2.cbar_force[isubcase]
+        cbar_force.build_dataframe()
+        assert cbar_force.nelements == 1, cbar_force.nelements
+        assert cbar_force.data.shape == (21, 1, 8), cbar_force.data.shape
+
+        cbar_stress = op2.cbar_stress[isubcase]
+        cbar_stress.build_dataframe()
+        assert cbar_stress.nelements == 21, cbar_stress.nelements # 1-wrong
+        assert cbar_stress.data.shape == (21, 1, 15), cbar_stress.data.shape
+
+        #print(op2.cbeam_stress.keys())
+        # cbeam_stress = op2.cbeam_stress[isubcase]
+        # assert cbeam_stress.nelements == 11, cbeam_stress.nelements  # TODO: wrong
+        # assert cbeam_stress.data.shape == (7, 11, 8), cbeam_stress.data.shape
+
+        cquad4_stress = op2.cquad4_stress[isubcase]
+        #cquad4_stress.build_dataframe()
+        assert cquad4_stress.nelements == 40, cquad4_stress.nelements # TODO: (840-wrong, 40-correct)
+        assert cquad4_stress.data.shape == (21, 40, 8), cquad4_stress.data.shape
+
+        #print(op2.ctria3_stress.keys())
+        ctria3_stress = op2.ctria3_stress[isubcase]
+        ctria3_stress.build_dataframe()
+        assert ctria3_stress.nelements == 16, ctria3_stress.nelements # TODO: 8-wrong
+        assert ctria3_stress.data.shape == (21, 16, 8), ctria3_stress.data.shape
+
+        ctetra_stress = op2.ctetra_stress[isubcase]
+        ctetra_stress.build_dataframe()
+        assert ctetra_stress.nelements == 2, ctetra_stress.nelements
+        assert ctetra_stress.data.shape == (21, 10, 10), ctetra_stress.data.shape
+
+        cpenta_stress = op2.cpenta_stress[isubcase]
+        cpenta_stress.build_dataframe()
+        assert cpenta_stress.nelements == 2, cpenta_stress.nelements
+        assert cpenta_stress.data.shape == (21, 14, 10), cpenta_stress.data.shape
+
+        chexa_stress = op2.chexa_stress[isubcase]
+        chexa_stress.build_dataframe()
+        assert chexa_stress.nelements == 1, chexa_stress.nelements
+        assert chexa_stress.data.shape == (21, 9, 10), chexa_stress.data.shape
+
+        grid_point_forces = op2.grid_point_forces[isubcase]
+        grid_point_forces.build_dataframe()
+        #print(grid_point_forces._ntotals)
+        assert grid_point_forces.ntotal == 130, grid_point_forces.ntotal
+        assert grid_point_forces.data.shape == (21, 130, 6), grid_point_forces.data.shape
 
         assert os.path.exists(debug_file), os.listdir(folder)
         os.remove(debug_file)
@@ -772,4 +889,6 @@ class TestOP2(Tester):
 
 
 if __name__ == '__main__':  # pragma: no cover
-    unittest.main()
+    on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
+    if not on_rtd:
+        unittest.main()

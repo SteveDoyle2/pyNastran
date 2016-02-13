@@ -17,7 +17,6 @@ class CELAS4(SpringElement):
         """
         Defines the CELAS4 object.
 
-        :param self: the CELAS4 object
         :param model: the BDF object
         """
         SpringElement.__init__(self, model)
@@ -55,9 +54,6 @@ class CELAS4(SpringElement):
         self.i += 1
 
     def build(self):
-        """
-        :param self: the CELAS4 object
-        """
         if self.n:
             i = self.element_id.argsort()
             self.element_id = self.element_id[i]

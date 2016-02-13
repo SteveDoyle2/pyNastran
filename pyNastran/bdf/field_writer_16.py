@@ -3,12 +3,12 @@ Defines functions for single precision 16 character field writing.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import integer_types
 from six.moves import range
 
 import sys
 from numpy import float32, isnan
 
+from pyNastran.utils import integer_types
 from pyNastran.bdf.cards.utils import wipe_empty_fields_typed
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 

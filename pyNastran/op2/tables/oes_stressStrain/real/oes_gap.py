@@ -1,6 +1,7 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from itertools import count
+import numpy as np
 from numpy import zeros, searchsorted, ravel
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, OES_Object
@@ -74,7 +75,6 @@ class NonlinearGapStressArray(OES_Object):
 
     def build_dataframe(self):
         headers = self.get_headers()
-        name = self.name
         if self.nonlinear_factor is not None:
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
@@ -84,6 +84,47 @@ class NonlinearGapStressArray(OES_Object):
             self.data_frame = pd.Panel(self.data, major_axis=self.element, minor_axis=headers).to_frame()
             self.data_frame.columns.names = ['Static']
             self.data_frame.index.names = ['ElementID', 'Item']
+
+    def __eq__(self, table):
+        assert self.is_sort1() == table.is_sort1()
+        self._eq_header(table)
+        if not np.array_equal(self.element, table.element):
+            assert self.element.shape == table.element.shape, 'shape=%s element.shape=%s' % (self.element.shape, table.element.shape)
+            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+            msg += '%s\n' % str(self.code_information())
+            for eid, eid2 in zip(self.element, table.element):
+                msg += '%s, %s\n' % (eid, eid2)
+            print(msg)
+            raise ValueError(msg)
+        if not np.array_equal(self.data, table.data):
+            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+            msg += '%s\n' % str(self.code_information())
+            ntimes = self.data.shape[0]
+
+            i = 0
+            if self.is_sort1():
+                for itime in range(ntimes):
+                    for ieid, eid, in enumerate(self.element):
+                        t1 = self.data[itime, inid, :]
+                        t2 = table.data[itime, inid, :]
+                        (axial_stress1, equiv_stress1, total_strain1, effective_plastic_creep_strain1, effective_creep_strain1, linear_torsional_stress1) = t1
+                        (axial_stress2, equiv_stress2, total_strain2, effective_plastic_creep_strain2, effective_creep_strain2, linear_torsional_stress2) = t2
+                        if not np.allclose(t1, t2):
+                        #if not np.array_equal(t1, t2):
+                            msg += '%s\n  (%s, %s, %s, %s, %s, %s)\n  (%s, %s, %s, %s, %s, %s)\n' % (
+                                eid,
+                                axial_stress1, equiv_stress1, total_strain1, effective_plastic_creep_strain1, effective_creep_strain1, linear_torsional_stress1,
+                                axial_stress2, equiv_stress2, total_strain2, effective_plastic_creep_strain2, effective_creep_strain2, linear_torsional_stress2)
+                            i += 1
+                        if i > 10:
+                            print(msg)
+                            raise ValueError(msg)
+            else:
+                raise NotImplementedError(self.is_sort2())
+            if i > 0:
+                print(msg)
+                raise ValueError(msg)
+        return True
 
     def add_sort1(self, dt, eid, compX, shearY, shearZ, axialU, shearV, shearW, slipV, slipW, form1, form2):
         assert isinstance(eid, int)
@@ -133,7 +174,9 @@ class NonlinearGapStressArray(OES_Object):
         ind = ravel([searchsorted(self.element == eid) for eid in eids])
         return ind
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+        if header is None:
+            header = []
         msg = self._get_msgs()
         (ntimes, ntotal) = self.data.shape[:2]
         eids = self.element
@@ -152,7 +195,6 @@ class NonlinearGapStressArray(OES_Object):
             slipV = self.data[itime, :, 6]
             slipW = self.data[itime, :, 7]
 
-            # loop over all the elements
             for (i, eid, compXi, shearYi, shearZi, axialUi, shearVi, shearWi, slipVi, slipWi) in zip(
                 count(), eids, compX, shearY, shearZ, axialU, shearV, shearW, slipV, slipW):
 
@@ -166,112 +208,3 @@ class NonlinearGapStressArray(OES_Object):
         if self.nonlinear_factor is None:
             page_num -= 1
         return page_num
-
-
-class NonlinearGapStress(StressObject):
-
-    def __init__(self, data_code, is_sort1, isubcase, dt):
-        StressObject.__init__(self, data_code, isubcase)
-        self.eType = {}
-        self.element_name = self.data_code['element_name']
-
-        self.code = [self.format_code, self.sort_code, self.s_code]
-        self.compX = {}
-        self.shearY = {}
-        self.shearZ = {}
-        self.axialU = {}
-        self.shearV = {}
-        self.shearW = {}
-        self.slipV = {}
-        self.slipW = {}
-
-        self.dt = dt
-        if is_sort1:
-            if dt is not None:
-                #self.add = self.add_sort1
-                self.add_new_eid = self.add_new_eid_sort1
-        else:
-            assert dt is not None
-            #self.add = self.add_sort2
-            self.add_new_eid = self.add_new_eid_sort2
-
-    def is_real(self):
-        return True
-
-    def is_complex(self):
-        return False
-
-    def get_stats(self):
-        nelements = len(self.eType)
-        msg = self.get_data_code()
-        if self.dt is not None:  # transient
-            ntimes = len(self.compX)
-            msg.append('  type=%s ntimes=%s nelements=%s\n'
-                       % (self.__class__.__name__, ntimes, nelements))
-        else:
-            msg.append('  type=%s nelements=%s\n' % (self.__class__.__name__,
-                                                     nelements))
-        msg.append('  eType, compX, shearY, shearZ, axialU, shearV, shearW, slipV, slipW\n')
-        msg.append('  %s\n' % self.element_name)
-        return msg
-
-    def getLength(self):
-        return (8, 'f')
-
-    def delete_transient(self, dt):
-        del self.compX[dt]
-
-    def get_transients(self):
-        k = self.compX.keys()
-        k.sort()
-        return k
-
-    def add_new_transient(self, dt):
-        """initializes the transient variables"""
-        self.element_name = self.data_code['element_name']
-        self.dt = dt
-        self.compX[dt] = {}
-        self.shearY[dt] = {}
-        self.shearZ[dt] = {}
-        self.axialU[dt] = {}
-        self.shearV[dt] = {}
-        self.shearW[dt] = {}
-        self.slipV[dt] = {}
-        self.slipW[dt] = {}
-
-    def add_new_eid(self, dt, eid, cpx, shy, shz, au, shv, shw, slv, slp, form1, form2):
-        self.eType[eid] = self.element_name
-        self.compX[eid] = cpx
-        self.shearY[eid] = shy
-        self.shearZ[eid] = shz
-        self.axialU[eid] = au
-        self.shearV[eid] = shv
-        self.shearW[eid] = shw
-        self.slipV[eid] = slv
-        self.slipW[eid] = slp
-
-    def add_new_eid_sort1(self, dt, eid, cpx, shy, shz, au, shv, shw, slv, slp, form1, form2):
-        if dt not in self.compX:
-            self.add_new_transient(dt)
-        self.eType[eid] = self.element_name
-        self.compX[dt][eid] = cpx
-        self.shearY[dt][eid] = shy
-        self.shearZ[dt][eid] = shz
-        self.axialU[dt][eid] = au
-        self.shearV[dt][eid] = shv
-        self.shearW[dt][eid] = shw
-        self.slipV[dt][eid] = slv
-        self.slipW[dt][eid] = slp
-
-    def add_new_eid_sort2(self, eid, dt, cpx, shy, shz, au, shv, shw, slv, slp, form1, form2):
-        if dt not in self.compX:
-            self.add_new_transient(dt)
-        self.eType[eid] = self.element_name
-        self.compX[dt][eid] = cpx
-        self.shearY[dt][eid] = shy
-        self.shearZ[dt][eid] = shz
-        self.axialU[dt][eid] = au
-        self.shearV[dt][eid] = shv
-        self.shearW[dt][eid] = shw
-        self.slipV[dt][eid] = slv
-        self.slipW[dt][eid] = slp

@@ -22,15 +22,15 @@ class ADB_IO(object):
         return data
 
     def _remove_old_adb_geometry(self, fileName):
-        self.eidMap = {}
-        self.nidMap = {}
+        self.eid_map = {}
+        self.nid_map = {}
         if fileName is None:
             #self.emptyResult = vtk.vtkFloatArray()
             #self.vectorResult = vtk.vtkFloatArray()
             self.scalarBar.VisibilityOff()
             skip_reading = True
         else:
-            self.TurnTextOff()
+            self.turn_text_off()
             self.grid.Reset()
             #self.gridResult.Reset()
             #self.gridResult.Modified()
@@ -51,7 +51,7 @@ class ADB_IO(object):
         self.scalarBar.Modified()
         return skip_reading
 
-    def load_vsp_aero_geometry(self, adb_filename, dirname, plot=True):
+    def load_vsp_aero_geometry(self, adb_filename, dirname, name='main', plot=True):
         #key = self.case_keys[self.icase]
         #case = self.result_cases[key]
 
@@ -90,7 +90,7 @@ class ADB_IO(object):
         points.SetNumberOfPoints(self.nNodes)
         #self.gridResult.Allocate(self.nNodes, 1000)
         #vectorReselt.SetNumberOfComponents(3)
-        self.nidMap = {}
+        self.nid_map = {}
 
         assert nodes is not None
 
@@ -145,7 +145,7 @@ class ADB_IO(object):
         print("updated grid")
 
         # load results - regions/loads
-        self.TurnTextOn()
+        self. turn_text_on()
         self.scalarBar.VisibilityOn()
         self.scalarBar.Modified()
 
@@ -164,8 +164,7 @@ class ADB_IO(object):
         #pass
 
     #def load_adb_results(self, cart3d_filename, dirname):
-        #model = Cart3DReader(log=self.log, debug=False)
-        #self.load_cart3d_geometry(cart3d_filename, dirname)
+        #raise NotImplementedError()
 
 
     def _fill_adb_case(self, cases, ID, model, plot_wakes=False):

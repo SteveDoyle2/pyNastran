@@ -1,9 +1,11 @@
 from __future__ import print_function
-from six import iteritems, b, integer_types
+from six import iteritems, b
 from six.moves import range
 import sys
 from struct import unpack, Struct
 from copy import deepcopy
+
+from pyNastran.utils import integer_types
 from pyNastran.op2.errors import FortranMarkerError, SortCodeError
 from pyNastran.utils import object_attributes
 
@@ -14,12 +16,6 @@ if sys.version_info < (2, 7, 7):
 
 class FortranFormat(object):
     def __init__(self):
-        """
-        Parameters
-        ----------
-        self : OP2
-            the OP2 object pointer
-        """
         self.n = 0
         self.f = None
         self.obj = None
@@ -37,11 +33,11 @@ class FortranFormat(object):
 
     def show(self, n, types='ifs', endian=None):
         """
-        :param self:    the OP2 object pointer
+        Shows binary data
         """
         assert self.n == self.f.tell()
         nints = n // 4
-        data = self.f.read(4 * n)
+        data = self.f.read(4 * nints)
         strings, ints, floats = self.show_data(data, types=types, endian=endian)
         self.f.seek(self.n)
         return strings, ints, floats
@@ -58,6 +54,13 @@ class FortranFormat(object):
             i - int
             f - float
             s - string
+            d - double (float; 8 bytes)
+
+            l - long (int; 4 bytes)
+            q - long long (int; int; 8 bytes)
+            I - unsigned int (int; 4 bytes)
+            L - unsigned long (int; 4 bytes)
+            Q - unsigned long long (int; 8 bytes)
         endian : str; default=None -> auto determined somewhere else in the code
             the big/little endian {>, <}
 
@@ -71,14 +74,19 @@ class FortranFormat(object):
 
         Parameters
         ----------
-        self : OP2
-            the OP2 object pointer
         data : bytes
             the binary string bytes
         types : str; default='ifs'
             i - int
             f - float
             s - string
+            d - double (float; 8 bytes)
+
+            l - long (int; 4 bytes)
+            q - long long (int; int; 8 bytes)
+            I - unsigned int (int; 4 bytes)
+            L - unsigned long (int; 4 bytes)
+            Q - unsigned long long (int; 8 bytes)
         endian : str; default=None -> auto determined somewhere else in the code
             the big/little endian {>, <}
         """
@@ -92,6 +100,7 @@ class FortranFormat(object):
 
         if endian is None:
             endian = self._endian
+            assert endian is not None, endian
 
         if 's' in types:
             strings = unpack(b'%s%is' % (endian, n), data)
@@ -102,6 +111,9 @@ class FortranFormat(object):
         if 'f' in types:
             floats = unpack(b'%s%if' % (endian, nints), data)
             f.write("floats  = %s\n" % str(floats))
+        if 'd' in types:
+            doubles = unpack(b'%s%id' % (endian, ndoubles), data[:ndoubles*8])
+            f.write("doubles  = %s\n" % str(doubles))
 
         if 'l' in types:
             longs = unpack(b'%s%il' % (endian, nints), data)
@@ -123,8 +135,6 @@ class FortranFormat(object):
     def write_ndata(self, f, n, types='ifs'):
         """
         Useful function for seeing what's going on locally when debugging.
-
-        :param self:    the OP2 object pointer
         """
         nold = self.n
         data = self.f.read(n)
@@ -137,7 +147,6 @@ class FortranFormat(object):
         Skips a block following a pattern of:
             [nbytes, data, nbytes]
 
-        :param self:    the OP2 object pointer
         :retval data: since data can never be None, a None value
                       indicates something bad happened.
         """
@@ -148,7 +157,6 @@ class FortranFormat(object):
         Skips a block following a pattern of:
             [nbytes, data, nbytes]
 
-        :param self:    the OP2 object pointer
         :retval data: since data can never be None, a None value
                       indicates something bad happened.
         """
@@ -204,9 +212,6 @@ class FortranFormat(object):
 
         Parameters
         ----------
-
-        self : OP2
-            the OP2 object pointer
         markers : List[int]
             markers to get; markers = [-10, 1]
         """
@@ -225,8 +230,6 @@ class FortranFormat(object):
 
         Parameters
         ----------
-        self : OP2
-            the OP2 object pointer
         n : int
             number of markers to get
         rewind : bool
@@ -256,12 +259,6 @@ class FortranFormat(object):
         return markers
 
     def _skip_subtables(self):
-        """
-        Parameters
-        ----------
-        self : OP2
-            the OP2 object pointer
-        """
         self.isubtable = -3
         self.read_markers([-3, 1, 0])
 
@@ -283,27 +280,13 @@ class FortranFormat(object):
     def passer(self, data):
         """
         dummy function used for unsupported tables
-
-        Parameters
-        ----------
-        self : OP2
-            the OP2 object pointer
         """
         pass
 
     def _get_table_mapper(self):
-        """
-        :param self:    the OP2 object pointer
-        """
         raise NotImplementedError('this should be overwritten')
 
     def _read_subtables(self):
-        """
-        Parameters
-        ----------
-        self : OP2
-            the OP2 object pointer
-        """
         # this parameters is used for numpy streaming
         self._table4_count = 0
         self.is_table_1 = True
@@ -415,8 +398,6 @@ class FortranFormat(object):
 
         Parameters
         ----------
-        self : OP2
-            the OP2 object pointer
         table4_parser : function
             the parser function for table 4
         record_len : int
@@ -492,7 +473,7 @@ class FortranFormat(object):
                             self.obj.ntotal, str(self.obj.data.shape),
                             self.obj.data.shape[1], self._data_factor)
                         self.log.debug(msgb)
-                        raise RuntimeError(msga + msgb)
+                        raise RuntimeError(msga + '\n' + msgb)
 
                 #else:
                     #print('self.obj.name=%r doesnt have itime' % self.obj.__class__.__name__)
@@ -591,11 +572,6 @@ class FortranFormat(object):
         """
         Lets the code check whether or not to read a subcase
 
-        Parameters
-        ----------
-        self : OP2()
-            the OP2 object pointer
-
         Returns
         -------
         is_valid : bool
@@ -613,8 +589,6 @@ class FortranFormat(object):
 
         Parameters
         ----------
-        self : OP2()
-            the OP2 object pointer
         n : int
             the position to goto
         """
@@ -670,11 +644,6 @@ class FortranFormat(object):
     def _stream_record(self, debug=True):
         """
         Creates a "for" loop that keeps giving us records until we're done.
-
-        Parameters
-        ----------
-        self : OP2()
-            the OP2 object pointer
         """
         self.istream = 0
         markers0 = self.get_nmarkers(1, rewind=False)
@@ -707,21 +676,9 @@ class FortranFormat(object):
             #nloop += 1
 
     def _read_record(self, stream=False, debug=True, macro_rewind=False):
-        """
-        Parameters
-        ----------
-        self : OP2()
-            the OP2 object pointer
-        """
         return self._read_record_ndata(stream, debug, macro_rewind)[0]
 
     def _read_record_ndata(self, stream=False, debug=True, macro_rewind=False):
-        """
-        Parameters
-        ----------
-        self : OP2()
-            the OP2 object pointer
-        """
         markers0 = self.get_nmarkers(1, rewind=False, macro_rewind=macro_rewind)
         if self.is_debug_file and debug:
             self.binary_debug.write('read_record - marker = [4, %i, 4]; macro_rewind=%s\n' % (markers0[0], macro_rewind))
@@ -760,12 +717,6 @@ class FortranFormat(object):
         return record, nrecord
 
     def _skip_record_ndata(self, stream=False, debug=True, macro_rewind=False):
-        """
-        Parameters
-        ----------
-        self : OP2()
-            the OP2 object pointer
-        """
         markers0 = self.get_nmarkers(1, rewind=False, macro_rewind=macro_rewind)
         if self.is_debug_file and debug:
             self.binary_debug.write('read_record - marker = [4, %i, 4]; macro_rewind=%s\n' % (markers0[0], macro_rewind))

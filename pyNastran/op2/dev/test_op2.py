@@ -60,14 +60,17 @@ class TestOP2New(unittest.TestCase):
         timeit.timeit(s, setup="from pyNastran.op2.op2 import OP2", number=10)
 
     def test_03(self):
-        folder = os.path.abspath(os.path.join(test_path, '..', 'models'))
-        op2_filename = os.path.join(folder, 'sol_101_elements', 'mode_solid_shell_bar.op2')
+        op2_filename = os.path.join('sol_101_elements', 'mode_solid_shell_bar.op2')
 
         # op2 = OP2(op2_filename)
         # op2.rdn2cop2()
         # print(object_attributes(op2))
         # print('dbnames =', op2.dbnames)
         # print('dblist =', op2.dblist)
+        o2 = read_post_op2(op2_filename, verbose=True, getougv1=True)
+
+    def test_04(self):
+        op2_filename = 'mat_b_dn.op2'
         o2 = read_post_op2(op2_filename, verbose=True, getougv1=True)
         #print('a =', o2.keys())
         #print('b =', o2['mats'].keys())

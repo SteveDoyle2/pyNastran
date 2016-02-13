@@ -10,7 +10,7 @@ All mass properties are PointProperty and Property objects.
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
-from pyNastran.bdf.cards.baseCard import Property
+from pyNastran.bdf.cards.base_card import Property
 from pyNastran.bdf.bdfInterface.assign_type import (integer,
     double, double_or_blank, string)
 from pyNastran.bdf.field_writer_8 import print_card_8

@@ -19,7 +19,7 @@ class TetgenIO(object):
                 None, None)
         return data
 
-    def load_tetgen_geometry(self, smesh_filename, dirname, plot=True):
+    def load_tetgen_geometry(self, smesh_filename, dirname, name='main', plot=True):
         print("load_tetgen_geometry...")
         skip_reading = self.removeOldGeometry(smesh_filename)
         if skip_reading:
@@ -62,7 +62,7 @@ class TetgenIO(object):
         points.SetNumberOfPoints(self.nNodes)
         #self.gridResult.Allocate(self.nNodes, 1000)
         #vectorReselt.SetNumberOfComponents(3)
-        self.nidMap = {}
+        self.nid_map = {}
         #elem.SetNumberOfPoints(nNodes)
         if 0:
             fraction = 1. / self.nNodes  # so you can color the nodes by ID
@@ -112,7 +112,7 @@ class TetgenIO(object):
             self.grid.Update()
 
         # loadSTLResults - regions/loads
-        self.TurnTextOn()
+        self. turn_text_on()
         self.scalarBar.VisibilityOff()
         self.scalarBar.Modified()
 

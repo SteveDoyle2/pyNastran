@@ -321,8 +321,8 @@ def transform_force_from_global_to_local(force_in_global, coord_in, coord_out):
 
     #cp_cid = cp.cid
     if cp.cid != 0:
-        Fxyz_local_1 = cp.coordToXYZ(F)
-        Mxyz_local_1 = cp.coordToXYZ(M)
+        Fxyz_local_1 = cp.coord_to_xyz(F)
+        Mxyz_local_1 = cp.coord_to_xyz(M)
         Fxyz_global = dot(Fxyz_local_1, cp.beta())
         Fxyz_local_2 = dot(dot(Fxyz_local_1, cp.beta()), coord_to.beta().T)
     else:
@@ -342,7 +342,7 @@ def transform_force_from_global_to_local(force_in_global, coord_in, coord_out):
 
 
     # rotate the delta moment into the local frame
-    M_local = coord_to.XYZtoCoord(Mxyz_local_2)
+    M_local = coord_to.xyz_to_coord(Mxyz_local_2)
 
     #return Fxyz_local_2, Mxyz_local_2
     return Fxyz_local_2

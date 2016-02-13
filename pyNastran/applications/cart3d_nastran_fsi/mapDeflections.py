@@ -15,7 +15,7 @@ from pyNastran.applications.cart3d_nastran_fsi.mathFunctions import ListPrint
 #from f06Reader import f06Reader
 
 from pyNastran.op2.op2 import OP2
-from pyNastran.converters.cart3d.cart3d_reader import Cart3DReader
+from pyNastran.converters.cart3d.cart3d import Cart3D
 
 from pyNastran.utils.log import get_logger
 debug = True
@@ -24,12 +24,12 @@ log = get_logger(None, 'debug' if debug else 'info')
 #------------------------------------------------------------------
 
 class DeflectionReader(object):
-    def __init__(self, op2_filename='fem.op2'):
+    def __init__(self, op2_filename='fem.op2', isubcase=1):
         log.info('---starting deflectionReader.init of %s---' % op2_filename)
         op2 = OP2()
         op2.set_results('displacements')
         op2.read_op2(op2_filename)
-        self.deflections = op2.displacements.translations
+        self.deflections = op2.displacements[isubcase].data
         log.info('---finished deflectionReader.init of %s---' % op2_filename)
 
     def get_deflections(self, ID, n0, n1, n2, n3):
@@ -52,20 +52,20 @@ class DeflectionReader(object):
 #------------------------------------------------------------------
 
 class DeflectionMapper(object):
-    def __init__(self, aeroNodes, tets, deflectionReader):  #structuralModel
+    def __init__(self, aeroNodes, tets, deflectionReader):  #structural_model
         self.aeroNodes = aeroNodes
         self.tets = tets
         self.deflectionReader = deflectionReader
-        #self.structuralModel = structuralModel
-        #self.setAeroInfile()
-        #self.setStructuralOutfile()
-        #self.structuralOutfile = structuralOutfile
+        #self.structural_model = structural_model
+        #self.set_aero_infile()
+        #self.set_structural_outfile()
+        #self.structural_outfile = structural_outfile
 
-    #def setAeroInfile(self, infile='cart3d.i.tri'):
-    #    self.aeroInfile = infile
+    #def set_aero_infile(self, infile='cart3d.i.tri'):
+    #    self.aero_infile = infile
 
-    #def setStructuralOutfile(self, outfile='fem.f06'):
-    #    self.structuralOutfile = outfile
+    #def set_structural_outfile(self, outfile='fem.f06'):
+    #    self.structural_outfile = outfile
 
     def build_tetrahedralization(self):
         """runs regtet"""
@@ -215,16 +215,16 @@ class DeflectionMapper(object):
         #print "dists = ",dists
 
         #print dists
-        minValue = min(dists)
-        i = dists.index(minValue)
+        min_value = min(dists)
+        i = dists.index(min_value)
         neighbors = tet0.neighbors
         #print "neighbors = ",neighbors
         #print "tet0.neightbors[%s] = %s" %(i,tet0.neighbors[i])
-        tetNew = tets[tet0.neighbors[i]]
-        #print "tetNew = ", tetNew
+        tet_new = tets[tet0.neighbors[i]]
+        #print "tet_new = ", tet_new
 
-        #closestTet = self.findClosestTet_recursion(m, tetNew, tets, excluded)
-        return tetNew, minValue
+        #closestTet = self.findClosestTet_recursion(m, tet_new, tets, excluded)
+        return tet_new, min_value
 
 
     def distance(self, p1, p2):
@@ -385,8 +385,8 @@ def mapDeflectionsStructures_Aero(bdf_model='test_tet10.bdf', op2_filename='test
         #print("d = ", d)
 
     # loading aero nodes
-    cart = Cart3DReader()  # bJet.a.tri
-    cart_points, elements, regions, loads = cart.read_cart3d(cart3d_geom_filename)
+    cart = Cart3D()  # bJet.a.tri
+    cart.read_cart3d(cart3d_geom_filename)
     #(cartPoints, elements, regions, Cp) = cart.makeHalfModel(cartPoints, elements, regions, Cp)
     sys.stdout.flush()
 
@@ -398,16 +398,17 @@ def mapDeflectionsStructures_Aero(bdf_model='test_tet10.bdf', op2_filename='test
 
 
     # deflect the aero nodes
-    dmap = DeflectionMapper(cart_points, tets, defreader)
+    dmap = DeflectionMapper(cart.points, tets, defreader)
     t1 = time()
     log.info("setup time = %g sec" %(t1-t0))
 
-    aeroNodes2, proper_tets = dmap.map_deflections(proper_tets)
+    aero_nodes2, proper_tets = dmap.map_deflections(proper_tets)
     write_proper_tets(workpath, proper_tets)
 
 
     # write out the deflected aero nodes
-    cart.write_cart3d(cart3d_out_filename, aeroNodes2, elements, regions) #bJet.a.tri_new
+    cart.nodes = aero_nodes2
+    cart.write_cart3d(cart3d_out_filename) #bJet.a.tri_new
     log.info("done with deflection mapping!")
 
     #for aeroNode in aeroNodes2:
@@ -421,18 +422,18 @@ def main():
     basepath = os.getcwd()
     configpath = os.path.join(basepath, 'inputs')
     workpath = os.path.join(basepath, 'outputs')
-    bdfModel = os.path.join(configpath, 'fem3.bdf')
-    assert os.path.exists(bdfModel), '%r doesnt exist' % bdfModel
+    bdf_model = os.path.join(configpath, 'fem3.bdf')
+    assert os.path.exists(bdf_model), '%r doesnt exist' % bdf_model
 
     os.chdir(workpath)
     log.info("basepath = %r" % basepath)
-    tetFilename = os.path.join(configpath, 'geometry.morph.in')
-    op2Filename = os.path.join(configpath, 'fem3.op2')
+    tet_filename = os.path.join(configpath, 'geometry.morph.in')
+    op2_filename = os.path.join(configpath, 'fem3.op2')
     cart3dGeom = os.path.join(configpath, 'Cart3d_bwb.i.tri')
     cart3dOut = os.path.join(workpath, 'Cart3d_bwb.i.tri2')
     proper_tet_filename = os.path.join(configpath, 'properTets.in')  # not required to exist...
 
-    mapDeflectionsStructures_Aero(bdfModel, op2Filename, tetFilename,
+    mapDeflectionsStructures_Aero(bdf_model, op2_filename, tet_filename,
                                   cart3dGeom, cart3dOut, proper_tet_filename,
                                   workpath=workpath)
 
@@ -446,11 +447,11 @@ def main():
 
 def map_old(aero_model, structural_model):
     iteration = [1, 2, 3]
-    def_mapper = DeflectionMapper(aero_model, structural_model)
+    def_mapper = DeflectionMapper(aero_model, tets, structural_model)
     for i in iteration:
-        def_mapper.setStructuralOutfile('fem.f06')
+        #def_mapper.set_structural_outfile('fem.f06')
         aero_file = 'cart3d_%s.tri' % i
-        def_mapper.setAeroInfile(aero_file)
+        #def_mapper.set_aero_infile(aero_file)
         def_mapper.build_tetrahedralization()
         #def_mapper.buildMappingMatrix()
         def_mapper.map_deflections()

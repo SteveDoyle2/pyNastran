@@ -6,7 +6,7 @@ from collections import defaultdict
 import vtk
 from vtk import vtkTriangle, vtkTetra
 
-from pyNastran.converters.usm3d.usm3d_reader import Usm3dReader
+from pyNastran.converters.usm3d.usm3d_reader import Usm3d
 from pyNastran.converters.usm3d.time_accurate_results import get_n_list
 
 
@@ -71,7 +71,7 @@ class Usm3dIO(object):
         #return None
 
     def load_usm3d_results(self, flo_filename, dirname):
-        model = Usm3dReader(log=self.log, debug=False)
+        model = Usm3d(log=self.log, debug=False)
         #self.result_cases = {}
         npoints = self.nNodes
         node_ids_volume, loads = model.read_flo(flo_filename, n=npoints)
@@ -82,13 +82,13 @@ class Usm3dIO(object):
         bcmap_to_bc_name = None
         self._fill_usm3d_results(cases, bcs, mapbc, bcmap_to_bc_name, loads)
 
-    def load_usm3d_geometry(self, cogsg_filename, dirname, plot=True):
+    def load_usm3d_geometry(self, cogsg_filename, dirname, name='main', plot=True):
         #print("load_usm3d_geometry...")
         skip_reading = self.removeOldGeometry(cogsg_filename)
         if skip_reading:
             return
 
-        model = Usm3dReader(log=self.log, debug=False)
+        model = Usm3d(log=self.log, debug=False)
 
         base_filename, ext = os.path.splitext(cogsg_filename)
         #node_filename = base_filename + '.node'
@@ -141,7 +141,7 @@ class Usm3dIO(object):
         points.SetNumberOfPoints(self.nNodes)
         #self.gridResult.Allocate(self.nNodes, 1000)
         #vectorReselt.SetNumberOfComponents(3)
-        self.nidMap = {}
+        self.nid_map = {}
         #elem.SetNumberOfPoints(nNodes)
         if 0:
             fraction = 1. / self.nNodes  # so you can color the nodes by ID
@@ -195,7 +195,7 @@ class Usm3dIO(object):
             self.grid.Update()
 
         # regions/loads
-        self.TurnTextOn()
+        self. turn_text_on()
         self.scalarBar.Modified()
 
         cases = {}

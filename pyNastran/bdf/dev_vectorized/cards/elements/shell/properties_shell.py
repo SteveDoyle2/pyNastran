@@ -11,7 +11,6 @@ class PropertiesShell(object):
         """
         Defines the ShellProperties object.
 
-        :param self: the ShellProperties object
         :param model: the BDF object
         """
         self.model = model
@@ -79,7 +78,6 @@ class PropertiesShell(object):
         """
         Gets the thickness of the PSHELLs/PCOMPs.
 
-        :param self: the ShellProperties object
         :param property_id: the property IDs to consider (default=None -> all)
         """
         return self._getmethod(property_id, 'get_thickness_by_property_id')
@@ -88,7 +86,6 @@ class PropertiesShell(object):
         """
         Gets the density of the PSHELLs/PCOMPs.
 
-        :param self: the ShellProperties object
         :param property_ids: the property IDs to consider (default=None -> all)
         """
         return self._getmethod(property_id, 'get_density_by_property_id')

@@ -90,7 +90,8 @@ def run(regenerate=True, run_nastran=False, debug=False, sum_load=True):
     failed_files = run_lots_of_files(files, debug=debug, xref=xref,
                                      check=check, cid=cid,
                                      nastran=nastran,
-                                     size=size, is_double=is_double, post=post)
+                                     size=size, is_double=is_double, post=post,
+                                     encoding='latin1')
     ntotal = len(files)
     nfailed = len(failed_files)
     npassed = ntotal - nfailed
@@ -112,7 +113,7 @@ def main():
 
     msg = "Usage:\n"
     is_release = False
-    msg += "bdf_test [-r] [-n] [-s S...] [-L]\n"
+    msg += "bdf_test [-r] [-n] [-s S...] [-e E] [-L]\n"
     msg += "  bdf_test -h | --help\n"
     msg += "  bdf_test -v | --version\n"
     msg += "\n"
@@ -126,6 +127,7 @@ def main():
     msg += "  -n, --run_nastran     Runs Nastran\n"
     msg += "  -L, --sum_loads       Disables static/dynamic loads sum\n"
     msg += "  -s S, --size S        Sets the field size\n"
+    msg += '  -e E, --nerrors E  Allow for cross-reference errors (default=100)\n'
     #msg += "  -c, --disablecompare  Doesn't do a validation of the vectorized result\n"
     #msg += "  -z, --is_mag_phase    F06 Writer writes Magnitude/Phase instead of\n"
     #msg += "                        Real/Imaginary (still stores Real/Imag); [default: False]\n"

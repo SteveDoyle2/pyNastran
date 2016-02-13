@@ -1,13 +1,14 @@
 # pylint: disable=R0904,R0902,E1101,E1103,C0111,C0302,C0103,W0101
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import string_types, integer_types
+from six import string_types
 
 from numpy import array
 from numpy.linalg import norm
 
+from pyNastran.utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
-from pyNastran.bdf.cards.baseCard import Element
+from pyNastran.bdf.cards.base_card import Element
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     integer_double_or_blank, double_or_blank, string_or_blank)
 from pyNastran.bdf.field_writer_8 import print_card_8
@@ -15,8 +16,8 @@ from pyNastran.bdf.field_writer_16 import print_card_16
 
 
 class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
-    def __init__(self, card, data):
-        Element.__init__(self, card, data)
+    def __init__(self):
+        Element.__init__(self)
 
     def C(self):
         """torsional constant"""
@@ -137,8 +138,6 @@ class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
         Gets the length, :math:`L`, of the element.
 
         .. math:: L = \sqrt{  (n_{x2}-n_{x1})^2+(n_{y2}-n_{y1})^2+(n_{z2}-n_{z1})^2  }
-
-        :param self: the object pointer
         """
         L = norm(self.nodes_ref[1].get_position() - self.nodes_ref[0].get_position())
         return L
@@ -239,61 +238,29 @@ class CBAR(LineElement):
                 else:
                     raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
-    def __init__(self, card=None, data=None, comment=''):
-        LineElement.__init__(self, card, data)
+    def __init__(self, eid, pid, ga, gb,
+                 x, g0, offt='GGG',
+                 pa=0, pb=0, wa=None, wb=None, comment=''):
+        LineElement.__init__(self)
         if comment:
             self._comment = comment
-        if card:
-            self.eid = integer(card, 1, 'eid')
-            self.pid = integer_or_blank(card, 2, 'pid', self.eid)
-            self.ga = integer(card, 3, 'ga')
-            self.gb = integer(card, 4, 'gb')
-            self._init_x_g0(card)
+        self.eid = eid
+        self.pid = pid
+        self.x = x
+        self.g0 = g0
+        self.ga = ga
+        self.gb = gb
+        self.offt = offt
+        self.pa = pa
+        self.pb = pb
+        self.wa = wa
+        self.wb = wb
+        self._validate_input()
 
-            self.offt = string_or_blank(card, 8, 'offt', 'GGG')  # doesn't exist in NX nastran
-            #print('self.offt = |%s|' % (self.offt))
-
-            self.pa = integer_or_blank(card, 9, 'pa', 0)
-            self.pb = integer_or_blank(card, 10, 'pb', 0)
-
-            self.wa = array([double_or_blank(card, 11, 'w1a', 0.0),
-                             double_or_blank(card, 12, 'w2a', 0.0),
-                             double_or_blank(card, 13, 'w3a', 0.0)], dtype='float64')
-
-            self.wb = array([double_or_blank(card, 14, 'w1b', 0.0),
-                             double_or_blank(card, 15, 'w2b', 0.0),
-                             double_or_blank(card, 16, 'w3b', 0.0)], dtype='float64')
-            assert len(card) <= 17, 'len(CBAR card) = %i' % len(card)
-        else:  #: .. todo:: verify
-            #data = [[eid,pid,ga,gb,pa,pb,w1a,w2a,w3a,w1b,w2b,w3b],[f,g0]]
-            #data = [[eid,pid,ga,gb,pa,pb,w1a,w2a,w3a,w1b,w2b,w3b],[f,x1,x2,x3]]
-
-            main = data[0]
-            flag = data[1][0]
-            if flag in [0, 1]:
-                self.g0 = None
-                self.x = array([data[1][1],
-                                data[1][2],
-                                data[1][3]], dtype='float64')
-            else:
-                self.g0 = data[1][1]
-                self.x = None
-
-            self.eid = main[0]
-            self.pid = main[1]
-            self.ga = main[2]
-            self.gb = main[3]
-            #self.offt = str(data[4]) # GGG
-            self.offt = 'GGG'  #: .. todo:: offt can be an integer; translate to char
-            self.pa = main[4]
-            self.pb = main[5]
-
-            self.wa = array([main[6], main[7], main[8]], dtype='float64')
-            self.wb = array([main[9], main[10], main[11]], dtype='float64')
-
+    def _validate_input(self):
         if not isinstance(self.offt, string_types):
             raise SyntaxError('invalid offt expected a string of length 3 '
-                              'offt=|%r|; Type=%s' % (self.offt, type(self.offt)))
+                              'offt=%r; Type=%s' % (self.offt, type(self.offt)))
 
         if self.g0 in [self.ga, self.gb]:
             msg = 'G0=%s cannot be GA=%s or GB=%s' % (self.g0, self.ga, self.gb)
@@ -304,6 +271,63 @@ class CBAR(LineElement):
         assert self.offt[0] in ['G', 'B'], msg
         assert self.offt[1] in ['G', 'O', 'E'], msg
         assert self.offt[2] in ['G', 'O', 'E'], msg
+
+    @classmethod
+    def add_card(self, card, comment=''):
+        eid = integer(card, 1, 'eid')
+        pid = integer_or_blank(card, 2, 'pid', eid)
+        ga = integer(card, 3, 'ga')
+        gb = integer(card, 4, 'gb')
+        x, g0 = self._init_x_g0(card, eid)
+
+        # doesn't exist in NX nastran
+        offt = string_or_blank(card, 8, 'offt', 'GGG')
+        #print('self.offt = %r' % (self.offt))
+
+        pa = integer_or_blank(card, 9, 'pa', 0)
+        pb = integer_or_blank(card, 10, 'pb', 0)
+
+        wa = array([double_or_blank(card, 11, 'w1a', 0.0),
+                    double_or_blank(card, 12, 'w2a', 0.0),
+                    double_or_blank(card, 13, 'w3a', 0.0)], dtype='float64')
+
+        wb = array([double_or_blank(card, 14, 'w1b', 0.0),
+                    double_or_blank(card, 15, 'w2b', 0.0),
+                    double_or_blank(card, 16, 'w3b', 0.0)], dtype='float64')
+        assert len(card) <= 17, 'len(CBAR card) = %i' % len(card)
+        return CBAR(eid, pid, ga, gb, x, g0,
+                    offt, pa, pb, wa, wb, comment=comment)
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        #: .. todo:: verify
+        #data = [[eid,pid,ga,gb,pa,pb,w1a,w2a,w3a,w1b,w2b,w3b],[f,g0]]
+        #data = [[eid,pid,ga,gb,pa,pb,w1a,w2a,w3a,w1b,w2b,w3b],[f,x1,x2,x3]]
+
+        main = data[0]
+        flag = data[1][0]
+        if flag in [0, 1]:
+            self.g0 = None
+            x = array([data[1][1],
+                       data[1][2],
+                       data[1][3]], dtype='float64')
+        else:
+            g0 = data[1][1]
+            x = None
+
+        eid = main[0]
+        pid = main[1]
+        ga = main[2]
+        gb = main[3]
+        #self.offt = str(data[4]) # GGG
+        offt = 'GGG'  #: .. todo:: offt can be an integer; translate to char
+        pa = main[4]
+        pb = main[5]
+
+        wa = array([main[6], main[7], main[8]], dtype='float64')
+        wb = array([main[9], main[10], main[11]], dtype='float64')
+        return CBAR(eid, pid, ga, gb, x, g0,
+                    offt, pa, pb, wa, wb, comment=comment)
 
     def _verify(self, xref=False):
         eid = self.eid
@@ -367,25 +391,27 @@ class CBAR(LineElement):
     def Centroid(self):
         return (self.ga_ref.get_position() + self.gb_ref.get_position()) / 2.
 
-    def _init_x_g0(self, card):
+    @classmethod
+    def _init_x_g0(self, card, eid):
         field5 = integer_double_or_blank(card, 5, 'g0_x1', 0.0)
         if isinstance(field5, integer_types):
-            self.g0 = field5
-            self.x = None
+            g0 = field5
+            x = None
         elif isinstance(field5, float):
-            self.g0 = None
-            self.x = array([field5,
+            g0 = None
+            x = array([field5,
                             double_or_blank(card, 6, 'x2', 0.0),
                             double_or_blank(card, 7, 'x3', 0.0)], dtype='float64')
-            if norm(self.x) == 0.0:
+            if norm(x) == 0.0:
                 msg = 'G0 vector defining plane 1 is not defined.\n'
-                msg += 'G0 = %s\n' % self.g0
-                msg += 'X  = %s\n' % self.x
+                msg += 'G0 = %s\n' % g0
+                msg += 'X  = %s\n' % x
                 raise RuntimeError(msg)
         else:
             msg = ('field5 on %s (G0/X1) is the wrong type...id=%s field5=%s '
-                   'type=%s' % (self.type, self.eid, field5, type(field5)))
+                   'type=%s' % (self.type, eid, field5, type(field5)))
             raise RuntimeError(msg)
+        return x, g0
 
     def cross_reference(self, model):
         #if self.g0:
@@ -498,41 +524,60 @@ class CBEAM3(CBAR):
     """
     type = 'CBEAM3'
 
-    def __init__(self, card=None, data=None, comment=''):
-        LineElement.__init__(self, card, data)
+    def __init__(self, eid, pid, ga, gb, gc, x, g0,
+                 wa, wb, wc, tw, s, comment=''):
+        LineElement.__init__(self)
         if comment:
             self._comment = comment
-        if card:
-            self.eid = integer(card, 1, 'eid')
-            self.pid = integer_or_blank(card, 2, 'pid', self.eid)
-            self.ga = integer(card, 3, 'ga')
-            self.gb = integer(card, 4, 'gb')
-            self.gc = integer(card, 5, 'gc')
+        self.eid = eid
+        self.pid = pid
+        self.ga = ga
+        self.gb = gb
+        self.gc = gc
+        self.x = x
+        self.g0 = g0
+        self.wa = wa
+        self.wb = wb
+        self.wc = wc
+        self.tw = tw
+        self.s = s
 
-            self._init_x_g0(card)
+    @classmethod
+    def add_card(self, card, comment=''):
+        eid = integer(card, 1, 'eid')
+        pid = integer_or_blank(card, 2, 'pid', self.eid)
+        ga = integer(card, 3, 'ga')
+        gb = integer(card, 4, 'gb')
+        gc = integer(card, 5, 'gc')
 
-            self.wa = array([double_or_blank(card, 9, 'w1a', 0.0),
-                             double_or_blank(card, 10, 'w2a', 0.0),
-                             double_or_blank(card, 11, 'w3a', 0.0)], dtype='float64')
+        self._init_x_g0(card, eid)
 
-            self.wb = array([double_or_blank(card, 12, 'w1b', 0.0),
-                             double_or_blank(card, 13, 'w2b', 0.0),
-                             double_or_blank(card, 14, 'w3b', 0.0)], dtype='float64')
+        wa = array([double_or_blank(card, 9, 'w1a', 0.0),
+                    double_or_blank(card, 10, 'w2a', 0.0),
+                    double_or_blank(card, 11, 'w3a', 0.0)], dtype='float64')
 
-            self.wc = array([double_or_blank(card, 15, 'w1c', 0.0),
-                             double_or_blank(card, 16, 'w2c', 0.0),
-                             double_or_blank(card, 17, 'w3c', 0.0)], dtype='float64')
+        wb = array([double_or_blank(card, 12, 'w1b', 0.0),
+                    double_or_blank(card, 13, 'w2b', 0.0),
+                    double_or_blank(card, 14, 'w3b', 0.0)], dtype='float64')
 
-            self.tw = array([double_or_blank(card, 18, 0., 'twa'),
-                             double_or_blank(card, 19, 0., 'twb'),
-                             double_or_blank(card, 20, 0., 'twc')], dtype='float64')
+        wc = array([double_or_blank(card, 15, 'w1c', 0.0),
+                    double_or_blank(card, 16, 'w2c', 0.0),
+                    double_or_blank(card, 17, 'w3c', 0.0)], dtype='float64')
 
-            self.s = array([integer_or_blank(card, 21, 'sa'),
-                            integer_or_blank(card, 22, 'sb'),
-                            integer_or_blank(card, 23, 'sc')], dtype='float64')
-            assert len(card) <= 24, 'len(CBEAM3 card) = %i' % len(card)
-        else:
-            raise NotImplementedError(data)
+        tw = array([double_or_blank(card, 18, 0., 'twa'),
+                    double_or_blank(card, 19, 0., 'twb'),
+                    double_or_blank(card, 20, 0., 'twc')], dtype='float64')
+
+        s = array([integer_or_blank(card, 21, 'sa'),
+                   integer_or_blank(card, 22, 'sb'),
+                   integer_or_blank(card, 23, 'sc')], dtype='float64')
+        assert len(card) <= 24, 'len(CBEAM3 card) = %i' % len(card)
+        return CBEAM3(eid, pid, ga, gb, gc, x, g0,
+                      wa, wb, wc, tw, s, comment='')
+
+    @classmethod
+    def add_card(cls, data, comment=''):
+        raise NotImplementedError(data)
 
     def cross_reference(self, model):
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
@@ -620,38 +665,53 @@ class CBEND(LineElement):
             else:
                 raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
-    def __init__(self, card=None, data=None, comment=''):
-        LineElement.__init__(self, card, data)
+    def __init__(self, eid, pid, ga, gb, g0, x, geom, comment=''):
+        LineElement.__init__(self)
         if comment:
             self._comment = comment
-        if card:
-            self.eid = integer(card, 1, 'eid')
-            self.pid = integer_or_blank(card, 2, 'pid', self.eid)
-            self.ga = integer(card, 3, 'ga')
-            self.gb = integer(card, 4, 'gb')
-            x1Go = integer_double_or_blank(card, 5, 'x1_g0', 0.0)
-            if isinstance(x1Go, integer_types):
-                self.g0 = x1Go
-                self.x = None
-            elif isinstance(x1Go, float):
-                self.g0 = None
-                self.x = array([double_or_blank(card, 5, 'x1', 0.0),
-                                double_or_blank(card, 6, 'x2', 0.0),
-                                double_or_blank(card, 7, 'x3', 0.0)], dtype='float64')
-                if norm(self.x) == 0.0:
-                    msg = 'G0 vector defining plane 1 is not defined.\n'
-                    msg += 'G0 = %s\n' % self.g0
-                    msg += 'X  = %s\n' % self.x
-                    raise RuntimeError(msg)
-            else:
-                raise ValueError('invalid x1Go=|%s| on CBEND' % x1Go)
-            self.geom = integer(card, 8, 'geom')
+        self.eid = eid
+        self.pid = pid
+        self.ga = ga
+        self.gb = gb
+        self.g0 = g0
+        self.x = x
+        self.geom = geom
+        assert self.geom in [1, 2, 3, 4], 'geom is invalid geom=%r' % self.geom
 
-            assert len(card) == 9, 'len(CBEND card) = %i' % len(card)
-            assert self.geom in [1, 2, 3, 4], 'geom is invalid geom=|%s|' % self.geom
+    @classmethod
+    def add_card(cls, card, comment=''):
+        eid = integer(card, 1, 'eid')
+        pid = integer_or_blank(card, 2, 'pid', eid)
+        ga = integer(card, 3, 'ga')
+        gb = integer(card, 4, 'gb')
+        x1_g0 = integer_double_or_blank(card, 5, 'x1_g0', 0.0)
+        if isinstance(x1_g0, integer_types):
+            g0 = x1_g0
+            x = None
+        elif isinstance(x1_g0, float):
+            g0 = None
+            x = array([double_or_blank(card, 5, 'x1', 0.0),
+                       double_or_blank(card, 6, 'x2', 0.0),
+                       double_or_blank(card, 7, 'x3', 0.0)], dtype='float64')
+            if norm(x) == 0.0:
+                msg = 'G0 vector defining plane 1 is not defined.\n'
+                msg += 'G0 = %s\n' % g0
+                msg += 'X  = %s\n' % x
+                raise RuntimeError(msg)
         else:
-            raise NotImplementedError(data)
+            raise ValueError('invalid x1Go=%r on CBEND' % x1_g0)
+        geom = integer(card, 8, 'geom')
 
+        assert len(card) == 9, 'len(CBEND card) = %i' % len(card)
+        return CBEND(eid, pid, ga, gb, g0, x, geom, comment=comment)
+        self._validate_input()
+
+    #def add_op2_data(self, data, comment=''):
+        #if comment:
+            #self._comment = comment
+        #raise NotImplementedError(data)
+
+    def _validate_input(self):
         if self.g0 in [self.ga, self.gb]:
             msg = 'G0=%s cannot be GA=%s or GB=%s' % (self.g0, self.ga, self.gb)
             raise RuntimeError(msg)

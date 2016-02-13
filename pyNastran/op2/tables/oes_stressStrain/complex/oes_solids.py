@@ -3,8 +3,8 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six.moves import zip, range
 
+import numpy as np
 from numpy import zeros, concatenate
-#from numpy.linalg import eig
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
 from pyNastran.f06.f06_formatting import write_imag_floats_13e
@@ -98,7 +98,7 @@ class ComplexSolidArray(OES_Object):
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
         self._times = zeros(self.ntimes, 'float32')
         #self.element_types2 = array(self.nelements, dtype='|S8')
-        self.element_types3 = zeros((self.nelements, 2), dtype='int32')
+        #self.element_types3 = zeros((self.nelements, 2), dtype='int32')
 
 
         #self.ntotal = self.nelements * nnodes
@@ -125,12 +125,56 @@ class ComplexSolidArray(OES_Object):
 
     def build_dataframe(self):
         headers = self.get_headers()
-        name = self.name
         column_names, column_values = self._build_dataframe_transient_header()
         element_node = [self.element_node[:, 0], self.element_node[:, 1]]
         self.data_frame = pd.Panel(self.data, items=column_values, major_axis=element_node, minor_axis=headers).to_frame()
         self.data_frame.columns.names = column_names
         self.data_frame.index.names = ['ElementID', 'NodeID', 'Item']
+
+    def __eq__(self, table):
+        assert self.is_sort1() == table.is_sort1()
+        self._eq_header(table)
+        if not np.array_equal(self.element_node, table.element_node):
+            assert self.element_node.shape == table.element_node.shape, 'shape=%s element_node.shape=%s' % (
+                self.element_node.shape, table.element_node.shape)
+            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+            msg += '%s\nEid, Nid\n' % str(self.code_information())
+            for (eid1, nid1), (eid2, nid2) in zip(self.element_node, table.element_node):
+                msg += '(%s, %s), (%s, %s)\n' % (eid1, nid1, eid2, nid2)
+            print(msg)
+            raise ValueError(msg)
+        if not np.array_equal(self.data, table.data):
+            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+            msg += '%s\n' % str(self.code_information())
+            ntimes = self.data.shape[0]
+
+            i = 0
+            if self.is_sort1():
+                for itime in range(ntimes):
+                    for ieid, eid in enumerate(self.element):
+                        t1 = self.data[itime, ieid, :]
+                        t2 = table.data[itime, ieid, :]
+                        (tx1, ty1, tz1, rx1, ry1, rz1) = t1
+                        (tx2, ty2, tz2, rx2, ry2, rz2) = t2
+                        d = t1 - t2
+                        if not allclose([tx1.real, tx1.imag, ty1.real, ty1.imag],
+                                        [tx2.real, tx2.imag, ty2.real, ty2.imag], atol=0.0001):
+                        #if not np.array_equal(t1, t2):
+                            msg += '%-4s  (%s, %sj, %s, %sj)\n      (%s, %sj, %s, %sj)\n  dt12=(%s, %sj, %s, %sj)\n' % (
+                                eid,
+                                tx1.real, tx1.imag, ty1.real, ty1.imag,
+                                tx2.real, tx2.imag, ty2.real, ty2.imag,
+                                d[0].real, d[0].imag, d[1].real, d[1].imag,)
+                            i += 1
+                        if i > 10:
+                            print(msg)
+                            raise ValueError(msg)
+            else:
+                raise NotImplementedError(self.is_sort2())
+            if i > 0:
+                print(msg)
+                raise ValueError(msg)
+        return True
 
     def add_eid_sort1(self, element_num, element_type, dt, eid, cid, ctype, nodef):
         self._times[self.itime] = dt
@@ -141,7 +185,7 @@ class ComplexSolidArray(OES_Object):
         #try:
         if self.ielement < self.nelements:
             self.element_cid[self.ielement] = [eid, cid]
-            self.element_types3[self.ielement, :] = [element_num, nodef]
+            #self.element_types3[self.ielement, :] = [element_num, nodef]
         #except IndexError:
             #pass
             #print('element_types3', self.element_types3)
@@ -186,7 +230,9 @@ class ComplexSolidArray(OES_Object):
         msg += self.get_data_code()
         return msg
 
-    def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+        if header is None:
+            header = []
         msg_temp, nnodes = get_f06_header(self, is_mag_phase, is_sort1)
 
         # write the f06
@@ -203,7 +249,6 @@ class ComplexSolidArray(OES_Object):
             msg = header + msg_temp
             f.write('\n'.join(msg))
 
-            # TODO: can I get this without a reshape?
             oxx = self.data[itime, :, 0]
             oyy = self.data[itime, :, 1]
             ozz = self.data[itime, :, 2]
@@ -214,7 +259,6 @@ class ComplexSolidArray(OES_Object):
             eids2 = self.element_node[:, 0]
             nodes = self.element_node[:, 1]
 
-            # loop over all the elements and nodes
             for deid, node, doxx, doyy, dozz, dtxy, dtyz, dtxz in zip(eids2, nodes, oxx, oyy, ozz, txy, tyz, txz):
                 # TODO: cid not supported
                 [oxxr, oyyr, ozzr, txyr, tyzr, txzr,
@@ -293,250 +337,3 @@ class ComplexSolidStrainArray(ComplexSolidArray, StrainObject):
     def get_headers(self):
         headers = ['exx', 'eyy', 'ezz', 'exy', 'eyz', 'exz']
         return headers
-
-
-
-
-#class ComplexSolidStress(StressObject):
-    #def __init__(self, data_code, is_sort1, isubcase, dt):
-        #StressObject.__init__(self, data_code, isubcase)
-
-        #self.result_flag = 0
-        #self.eType = {}
-        #self.code = [self.format_code, self.sort_code, self.s_code]
-
-        #self.cid = {}  # gridGauss
-        #if self.result_flag == 0:
-            #self.oxx = {}
-            #self.oyy = {}
-            #self.ozz = {}
-            #self.txy = {}
-            #self.tyz = {}
-            #self.txz = {}
-        #elif self.result_flag == 1:
-            #self.wmax = {}
-            #self.oxx = {}  # dummy
-
-        #if is_sort1:
-            #pass
-            ##if dt is not None:
-                ##self.add = self.add_sort1
-                ##self.add_new_eid = self.add_new_eid_sort1
-        #else:
-            #assert dt is not None
-            #raise NotImplementedError('SORT2')
-            ##self.add = self.add_sort2
-            ##self.add_new_eid = self.add_new_eid_sort2
-
-    #def get_stats(self):
-        #nelements = len(self.eType)
-
-        #msg = []
-        #if self.nonlinear_factor is not None:  # transient
-            #ntimes = len(self.oxx)
-            #msg.append('  type=%s ntimes=%i nelements=%i\n'
-                       #% (self.__class__.__name__, ntimes, nelements))
-        #else:
-            #msg.append('  type=%s nelements=%i\n' % (self.__class__.__name__, nelements))
-        #msg.append('  eType, cid, oxx, oyy, ozz, txy, tyz, txz\n  ')
-        #msg.append('%s\n  ' % self.element_name)
-        #msg += self.get_data_code()
-        #return msg
-
-    #def add_f06_data(self, data, transient):
-        #if transient is None:
-            #if not hasattr(self, 'data'):
-                #self.data = []
-            #self.data += data
-        #else:
-            #dt = transient[1]
-            #if not hasattr(self, 'data'):
-                #self.data = {}
-            ##print(self.data)
-            #if dt not in self.data:
-                #self.data[dt] = []
-            #for line in data:
-                #self.data[dt] += data
-
-    #def processF06Data(self):
-        #raise NotImplementedError()
-
-    #def delete_transient(self, dt):
-        #del self.oxx[dt]
-        #del self.oyy[dt]
-        #del self.ozz[dt]
-        #del self.txy[dt]
-        #del self.tyz[dt]
-        #del self.txz[dt]
-
-    #def get_transients(self):
-        #k = self.oxx.keys()
-        #k.sort()
-        #return k
-
-    #def add_new_transient(self, dt):
-        #"""
-        #initializes the transient variables
-        #"""
-        #if self.result_flag == 0:
-            #self.oxx[dt] = {}
-            #self.oyy[dt] = {}
-            #self.ozz[dt] = {}
-            #self.txy[dt] = {}
-            #self.tyz[dt] = {}
-            #self.txz[dt] = {}
-        #elif self.result_flag == 1:
-            #self.wmax[dt] = {}
-        #else:
-            #raise RuntimeError(self.result_flag)
-
-
-    #def add_eid_sort1(self, element_num, eType, dt, eid, cid, ctype, nodef):
-        #assert cid >= -1, cid
-        #assert eid >= 0, eid
-
-        ##print "dt=%s eid=%s eType=%s" %(dt,eid,eType)
-        #self.eType[eid] = eType
-        #self.cid[eid] = cid
-
-        #if self.result_flag == 0:
-            #if dt not in self.oxx:
-                #self.add_new_transient(dt)
-            #assert eid not in self.oxx[dt], self.oxx[dt]
-            #self.oxx[dt][eid] = {}
-            #self.oyy[dt][eid] = {}
-            #self.ozz[dt][eid] = {}
-            #self.txy[dt][eid] = {}
-            #self.tyz[dt][eid] = {}
-            #self.txz[dt][eid] = {}
-        #else:
-            #if dt not in self.wmax:
-                #self.add_new_transient(dt)
-            #assert eid not in self.wmax[dt], self.wmax[dt]
-            #self.wmax[dt][eid] = {}
-        ##msg = "*eid=%s node_id=%s vm=%g" % (eid, node_id, ovm)
-
-    #def add_node_sort1(self, dt, eid, node_id, inode, oxx, oyy, ozz, txy, tyz, tzx):
-        ##msg = "eid=%s node_id=%s vm=%g" % (eid, node_id, ovm)
-        ##print msg
-
-        #assert isinstance(node_id, int), node_id
-
-        #if self.result_flag == 1:
-            #self.wmax[dt][eid][node_id] = oxx
-            #return
-
-            #tensor = zeros((3, 3), dtype='complex64')
-            #tensor[0, 0] = oxx
-            #tensor[1, 1] = oyy
-            #tensor[2, 2] = ozz
-            #tensor[0, 1] = txy
-            #tensor[1, 2] = tyz
-            #tensor[0, 2] = tzx
-            #tensor[1, 0] = tensor[0, 1]
-            #tensor[2, 1] = tensor[1, 2]
-            #tensor[2, 0] = tensor[0, 2]
-
-            #wr, v = eig(tensor.real)
-            #wi, v = eig(tensor.imag)
-            #self.wmax[dt][eid][node_id] = abs(wr + 1j * wi).max()   #close...
-            #return
-
-            ##w, v = eig(tensor)
-            ##self.wmax[dt][eid][node_id] = abs(w).max()
-            ##return
-
-            ##w, v = eig(abs(tensor))  #  close for freq=343
-            ##self.wmax[dt][eid][node_id] = abs(w).max()
-            ##return
-
-            ##w, v = eig(abs(tensor.real))
-            ##self.wmax[dt][eid][node_id] = w.max()
-            ##return
-            ##w, v = eig(tensor)
-            ##abs_w = abs(w)
-            ##iw = list(abs_w).index(abs_w.max())
-            ##self.wmax[dt][eid][node_id] = w[iw]
-            ##return
-
-            ##wreal = eigvalsh(tensor.real)
-            ##wimag = eigvalsh(tensor.imag)
-            ##wmaxr = 0.
-            ##wmaxi = 0.
-            ##for ii in range(3):
-                ##if abs(wreal[ii]) > abs(wmaxr):
-                    ##wmaxr = wreal[ii]
-                ##if abs(wimag[ii]) > abs(wmaxi):
-                    ##wmaxi = wimag[ii]
-            ##wmax = wmaxr + 1j * wmaxi
-            ##self.wmax[dt][eid][node_id] = wmax
-        #else:
-            ##print("eid=%s nid=%s oyy=%s" %(eid, node_id, oyy))
-            #self.oxx[dt][eid][node_id] = oxx
-            #self.oyy[dt][eid][node_id] = oyy
-            #self.ozz[dt][eid][node_id] = ozz
-
-            #self.txy[dt][eid][node_id] = txy
-            #self.tyz[dt][eid][node_id] = tyz
-            #self.txz[dt][eid][node_id] = tzx
-
-    #def get_headers(self):
-        #headers = ['oxx', 'oyy', 'ozz', 'txy', 'tyz', 'txz']
-        #return headers
-
-    #def directional_vectors(self, oxx, oyy, ozz, txy, tyz, txz):
-        #A = [[oxx, txy, txz],
-             #[txy, oyy, tyz],
-             #[txz, tyz, ozz]]
-        #(Lambda, v) = eig(A)  # we can't use a hermitian matrix
-        #return v
-
-    #def write_f06(self, header, page_stamp, page_num=1, f=None, is_mag_phase=False, is_sort1=True):
-        #tetra_msg, penta_msg, hexa_msg = _get_msgs(self, is_mag_phase, is_sort1)
-        #dts = list(self.oxx.keys())
-        #dts.sort()
-        #dt0 = dts[0]
-        #eids = sorted(self.oxx[dt0].keys())
-
-        #if self.element_type == 39:  # CTETRA
-            #for dt in dts:
-                #self._write_element_transient('CTETRA', 4, eids, dt, header, tetra_msg, f, is_mag_phase)
-                #f.write(page_stamp % page_num)
-                #page_num += 1
-        #elif self.element_type == 67:  # CHEXA
-            #for dt in dts:
-                #self._write_element_transient('CHEXA', 8, eids, dt, header, hexa_msg, f, is_mag_phase)
-                #f.write(page_stamp % page_num)
-                #page_num += 1
-        #elif self.element_type == 68:  # CPENTA
-            #for dt in dts:
-                #self._write_element_transient('CPENTA', 6, eids, dt, header, penta_msg, f, is_mag_phase)
-                #f.write(page_stamp % page_num)
-                #page_num += 1
-        #else:
-            #raise NotImplementedError('complex solid stress/strain name=%r Type=%s' % (self.element_name, self.element_type))
-        #return page_num - 1
-
-    #def _write_element_transient(self, element_name, nnodes, eids, dt, header, msg, f, is_mag_phase):
-        #dt_line = ' %14s = %12.5E\n' % (self.data_code['name'], dt)
-        #header[1] = dt_line
-        #msg = header + msg
-
-        #cid = 0
-        #f.write('\n'.join(msg))
-        #for eid in eids:
-            #node_ids = sorted(self.oxx[dt][eid].keys())
-            #f.write('0 %12i %11sGRID CS %2i GP\n' % (eid, cid, nnodes))
-            #for inode in node_ids:
-                #oxx = self.oxx[dt][eid][inode]
-                #oyy = self.oyy[dt][eid][inode]
-                #ozz = self.ozz[dt][eid][inode]
-                #txy = self.txy[dt][eid][inode]
-                #tyz = self.tyz[dt][eid][inode]
-                #txz = self.txz[dt][eid][inode]
-                #[oxxr, oyyr, ozzr, txyr, tyzr, txzr,
-                 #oxxi, oyyi, ozzi, txyi, tyzi, txzi,] = write_imag_floats_13e([oxx, oyy, ozz,
-                                                                               #txy, tyz, txz], is_mag_phase)
-
-                #f.write('0   %22s    %-13s  %-13s  %-13s    %-13s  %-13s  %s\n' % (inode, oxxr, oyyr, ozzr, txyr, tyzr, txzr))
-                #f.write('    %22s    %-13s  %-13s  %-13s    %-13s  %-13s  %s\n' % ('', oxxi, oyyi, ozzi, txyi, tyzi, txzi))

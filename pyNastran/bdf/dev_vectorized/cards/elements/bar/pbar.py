@@ -1,7 +1,7 @@
-from six import integer_types
 from six.moves import zip
 from numpy import array, zeros, arange, searchsorted, unique
 
+from pyNastran.utils import integer_types
 from pyNastran.bdf.dev_vectorized.cards.elements.property import Property
 
 from pyNastran.bdf.field_writer_8 import print_card_8
@@ -15,7 +15,6 @@ class PBAR(Property):
         """
         Defines the PBAR object.
 
-        :param self: the PBAR object
         :param model: the BDF object
         :param cards: the list of PBAR cards
         """

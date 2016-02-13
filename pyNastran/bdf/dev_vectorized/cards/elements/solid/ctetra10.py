@@ -3,8 +3,6 @@ from numpy import zeros, arange, dot, cross, searchsorted, array
 #from numpy.linalg import norm
 
 from pyNastran.bdf.field_writer_8 import print_card_8
-#from pyNastran.bdf.field_writer_16 import print_card_16
-
 from pyNastran.bdf.bdfInterface.assign_type import integer, integer_or_blank
 from pyNastran.bdf.dev_vectorized.cards.elements.solid.solid_element import SolidElement
 
@@ -25,7 +23,6 @@ class CTETRA10(SolidElement):
         """
         Defines the CTETRA10 object.
 
-        :param self: the CTETRA10 object
         :param model: the BDF object
         """
         SolidElement.__init__(self, model)

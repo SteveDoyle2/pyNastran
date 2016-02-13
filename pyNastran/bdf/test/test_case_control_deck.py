@@ -6,7 +6,7 @@ import unittest
 
 import pyNastran
 from pyNastran.bdf.bdf import BDF
-from pyNastran.bdf.caseControlDeck import CaseControlDeck
+from pyNastran.bdf.case_control_deck import CaseControlDeck
 from pyNastran.bdf.subcase import write_set, collapse_thru_packs
 from codecs import open as codec_open
 
@@ -87,9 +87,8 @@ class CaseControlTest(unittest.TestCase):
         mesh.write_bdf(bdf_filename2)
         #print("---cc 3---\n%s" % str(mesh.case_control_deck))
 
-        f = open(bdf_filename2, 'r')
-        lines = f.readlines()
-        f.close()
+        with open(bdf_filename2, 'r') as f:
+            lines = f.readlines()
 
         lines_expected = [
             '$pyNastran: version=msc',
@@ -227,7 +226,6 @@ class CaseControlTest(unittest.TestCase):
         deck_lines = deck_msg.split('\n')
         compare_lines(self, deck_lines, lines_expected, has_endline=False)
 
-
     def test_case_control_07(self):
         lines = [
             'TITLE= VIBRATION OF A BEAM.',
@@ -299,6 +297,81 @@ class CaseControlTest(unittest.TestCase):
             lines = f.readlines()
             compare_lines(self, lines, lines_expected, has_endline=True)
 
+    def test_case_control_09(self):
+        lines = [
+            'GROUNDCHECK(PRINT,SET=(G,N,N+AUTOSPC,F,A),',
+            'DATAREC=NO)=YES',
+            'SUBCASE 1',
+            '    DISPLACEMENT = ALL',
+        ]
+        lines_expected = [
+            'GROUNDCHECK(PRINT,SET=(G,N,N+AUTOSPC,F,A),DATAREC=NO) = YES',
+            'SUBCASE 1',
+            '    DISPLACEMENT = ALL',
+        ]
+        deck = CaseControlDeck(lines)
+        deck_msg = '%s' % deck
+        #print('%s' % deck_msg)
+        deck_lines = deck_msg.split('\n')
+        compare_lines(self, deck_lines, lines_expected, has_endline=False)
+
+    def test_case_control_10(self):
+        lines = [
+            'GROUNDCHECK(PRINT,SET=(G,N,N+AUTOSPC,F,A),',
+            'THRESH=1e-2,DATAREC=NO)=YES',
+            'SUBCASE 1',
+            '    DISPLACEMENT = ALL',
+        ]
+        lines_expected = [
+            'GROUNDCHECK(PRINT,SET=(G,N,N+AUTOSPC,F,A),',
+            'THRESH=1e-2,DATAREC=NO) = YES',
+            'SUBCASE 1',
+            '    DISPLACEMENT = ALL',
+            'BEGIN BULK',
+        ]
+        deck = CaseControlDeck(lines)
+        deck_msg = '%s' % deck
+        #print('%s' % deck_msg)
+        deck_lines = deck_msg.split('\n')
+        compare_lines(self, deck_lines, lines_expected, has_endline=False)
+
+    def test_case_control_11(self):
+        lines = [
+            'GROUNDCHECK(PRINT,',
+            'THRESH=1e-2,DATAREC=NO)=YES',
+            'SUBCASE 1',
+            '    DISPLACEMENT = ALL',
+        ]
+        lines_expected = [
+            'GROUNDCHECK(PRINT,THRESH=1e-2,DATAREC=NO) = YES',
+            'SUBCASE 1',
+            '    DISPLACEMENT = ALL',
+        ]
+        deck = CaseControlDeck(lines)
+        deck_msg = '%s' % deck
+        #print('%s' % deck_msg)
+        deck_lines = deck_msg.split('\n')
+        compare_lines(self, deck_lines, lines_expected, has_endline=False)
+
+    def test_case_control_12(self):
+        lines = [
+            'GROUNDCHECK(PRINT,SET=(G,N,N+AUTOSPC,F,A),THRESH=1e-2,DATAREC=NO,RPRINT,OTHER,OTHER2)=YES',
+            'SUBCASE 1',
+            '    DISPLACEMENT = ALL',
+        ]
+        lines_expected = [
+            'GROUNDCHECK(PRINT,SET=(G,N,N+AUTOSPC,F,A),',
+            'THRESH=1e-2,DATAREC=NO,RPRINT,OTHER,OTHER2) = YES',
+            'SUBCASE 1',
+            '    DISPLACEMENT = ALL',
+            'BEGIN BULK',
+        ]
+        deck = CaseControlDeck(lines)
+        deck_msg = '%s' % deck
+        #print('%s' % deck_msg)
+        deck_lines = deck_msg.split('\n')
+        compare_lines(self, deck_lines, lines_expected, has_endline=False)
+
 def compare_lines(self, lines, lines_expected, has_endline):
     i = 0
     for line, line_expected in zip(lines, lines_expected):
@@ -307,10 +380,11 @@ def compare_lines(self, lines, lines_expected, has_endline):
         msg = 'The lines are not the same...i=%s\n' % i
         msg += 'line     = %r\n' % line
         msg += 'expected = %r\n' % line_expected
-        msg += '-------------\n--Actual--\n%s' % ''.join(lines)
         if has_endline:
+            msg += '-------------\n--Actual--\n%s' % ''.join(lines)
             msg += '-------------\n--Expected--\n%s' % ''.join(lines_expected)
         else:
+            msg += '-------------\n--Actual--\n%s' % '\n'.join(lines)
             msg += '-------------\n--Expected--\n%s' % '\n'.join(lines_expected)
         self.assertEqual(line, line_expected, msg)
         i += 1

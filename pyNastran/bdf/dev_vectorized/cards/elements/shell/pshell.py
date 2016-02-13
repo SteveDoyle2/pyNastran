@@ -25,7 +25,6 @@ class PSHELL(Property):
         """
         Defines the PSHELL object.
 
-        :param self: the PSHELL object
         :param model: the BDF object
         :param cards: the list of PSHELL cards
         """
@@ -114,7 +113,6 @@ class PSHELL(Property):
         """
         Writes the PSHELL properties.
 
-        :param self:  the PSHELL object
         :param f:     file object
         :param size:  the bdf field size (8/16; default=8)
         :param property_id:  the property_ids to write (default=None -> all)
@@ -152,7 +150,6 @@ class PSHELL(Property):
         """
         Gets the nonstructural mass of the PHSELLs.
 
-        :param self: the PSHELL object
         :param property_id: the property IDs to consider (default=None -> all)
         """
         #print('get_nonstructural_mass; pids = %s' % property_ids)
@@ -169,7 +166,6 @@ class PSHELL(Property):
         """
         Gets the thickness of the PHSELLs.
 
-        :param self: the PSHELL object
         :param property_id: the property IDs to consider (default=None -> all)
         """
         int_flag = True if isinstance(property_id, int) else False
@@ -184,7 +180,6 @@ class PSHELL(Property):
         """
         Gets the mass per area of the PHSELLs.
 
-        :param self: the PSHELL object
         :param property_id: the property IDs to consider (default=None -> all)
         """
         #mass_per_area = self.nsm + self.Rho() * self.t
@@ -203,7 +198,6 @@ class PSHELL(Property):
         """
         Gets the density of the PHSELLs.
 
-        :param self: the PSHELL object
         :param property_id: the property IDs to consider (default=None -> all)
         """
         int_flag = True if isinstance(property_id, int) else False
@@ -223,7 +217,6 @@ class PSHELL(Property):
         """
         Gets the material IDs of the PSHELLs.
 
-        :param self: the PSHELL object
         :param property_id: the property IDs to consider (default=None -> all)
         """
         if property_id is None:

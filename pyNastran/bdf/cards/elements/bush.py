@@ -10,19 +10,19 @@ All bush elements are BushElement and Element objects.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import integer_types
 
+from pyNastran.utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
-from pyNastran.bdf.cards.baseCard import Element
+from pyNastran.bdf.cards.base_card import Element
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
     integer_double_or_blank, double_or_blank, string_or_blank)
 from pyNastran.bdf.field_writer_8 import print_card_8
 
 
 class BushElement(Element):
-    def __init__(self, card, data):
+    def __init__(self):
         self.cid = None
-        Element.__init__(self, card, data)
+        Element.__init__(self)
 
     def Cid(self):
         if self.cid is None:
@@ -69,51 +69,65 @@ class CBUSH(BushElement):
                 else:
                     raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
-    def __init__(self, card=None, data=None, comment=''):
-        BushElement.__init__(self, card, data)
+    def __init__(self, eid, pid, ga, gb, x, g0, cid, s, ocid, si, comment=''):
+        BushElement.__init__(self)
         if comment:
             self._comment = comment
-        if card:
-            self.eid = integer(card, 1, 'eid')
-            self.pid = integer_or_blank(card, 2, 'pid', self.eid)
-            self.ga = integer(card, 3, 'ga')
-            self.gb = integer_or_blank(card, 4, 'gb')
+        self.eid = eid
+        self.pid = pid
+        self.ga = ga
+        self.gb = gb
+        self.x = x
+        self.g0 = g0
+        self.cid = cid
+        self.s = s
+        self.ocid = ocid
+        self.si = si
 
-            x1G0 = integer_double_or_blank(card, 5, 'x1_g0')
-            if isinstance(x1G0, integer_types):
-                self.g0 = x1G0
-                self.x = None
-            elif isinstance(x1G0, float):
-                self.g0 = None
-                x1 = x1G0
-                x2 = double_or_blank(card, 6, 'x2', 0.0)
-                x3 = double_or_blank(card, 7, 'x3', 0.0)
-                self.x = [x1, x2, x3]
-                assert max(self.x) != min(self.x), 'x=%s' % self.x
-            else:
-                self.g0 = None
-                self.x = [None, None, None]
+    @classmethod
+    def add_card(cls, card, comment=''):
+        eid = integer(card, 1, 'eid')
+        pid = integer_or_blank(card, 2, 'pid', eid)
+        ga = integer(card, 3, 'ga')
+        gb = integer_or_blank(card, 4, 'gb')
 
-            #: Element coordinate system identification. A 0 means the basic
-            #: coordinate system. If CID is blank, then the element coordinate
-            #: system is determined from GO or Xi.
-            #: (default=blank=element-based)
-            self.cid = integer_or_blank(card, 8, 'cid')
-            #: Location of spring damper (0 <= s <= 1.0)
-            self.s = double_or_blank(card, 9, 's', 0.5)
-            #: Coordinate system identification of spring-damper offset. See
-            #: Remark 9. (Integer > -1; Default = -1, which means the offset
-            #: point lies on the line between GA and GB
-            self.ocid = integer_or_blank(card, 10, 'ocid', -1)
-            #: Components of spring-damper offset in the OCID coordinate system
-            #: if OCID > 0.
-            self.si = [double_or_blank(card, 11, 's1'),
-                       double_or_blank(card, 12, 's2'),
-                       double_or_blank(card, 13, 's3')]
-            assert len(card) <= 14, 'len(CBUSH card) = %i' % len(card)
+        x1_g0 = integer_double_or_blank(card, 5, 'x1_g0')
+        if isinstance(x1_g0, integer_types):
+            g0 = x1_g0
+            x = None
+        elif isinstance(x1_g0, float):
+            g0 = None
+            x1 = x1_g0
+            x2 = double_or_blank(card, 6, 'x2', 0.0)
+            x3 = double_or_blank(card, 7, 'x3', 0.0)
+            x = [x1, x2, x3]
+            assert max(x) != min(x), 'x=%s' % x
         else:
-            self.eid = data[0]
-            raise NotImplementedError('CBUSH data...')
+            g0 = None
+            x = [None, None, None]
+
+        #: Element coordinate system identification. A 0 means the basic
+        #: coordinate system. If CID is blank, then the element coordinate
+        #: system is determined from GO or Xi.
+        #: (default=blank=element-based)
+        cid = integer_or_blank(card, 8, 'cid')
+        #: Location of spring damper (0 <= s <= 1.0)
+        s = double_or_blank(card, 9, 's', 0.5)
+        #: Coordinate system identification of spring-damper offset. See
+        #: Remark 9. (Integer > -1; Default = -1, which means the offset
+        #: point lies on the line between GA and GB
+        ocid = integer_or_blank(card, 10, 'ocid', -1)
+        #: Components of spring-damper offset in the OCID coordinate system
+        #: if OCID > 0.
+        si = [double_or_blank(card, 11, 's1'),
+              double_or_blank(card, 12, 's2'),
+              double_or_blank(card, 13, 's3')]
+        assert len(card) <= 14, 'len(CBUSH card) = %i' % len(card)
+        return CBUSH(eid, pid, ga, gb, x, g0, cid, s, ocid, si, comment=comment)
+
+    def add_op2_data(cls, data, comment=''):
+        eid = data[0]
+        raise NotImplementedError('CBUSH data...')
 
     def Eid(self):
         return self.eid
@@ -221,22 +235,33 @@ class CBUSH1D(BushElement):
         1: 'eid', 2:'pid', 3:'ga', 4:'gb', 5:'cid',
     }
 
-    def __init__(self, card=None, data=None, comment=''):
-        BushElement.__init__(self, card, data)
+    def __init__(self, eid, pid, ga, gb, cid, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            self.eid = integer(card, 1, 'eid')
-            self.pid = integer_or_blank(card, 2, 'pid', self.eid)
-            self.ga = integer(card, 3, 'ga')
-            self.gb = integer_or_blank(card, 4, 'gb')
-            self.cid = integer_or_blank(card, 5, 'cid')
-            assert len(card) <= 6, 'len(CBUSH1D card) = %i' % len(card)
-        else:
-            self.eid = data[0]
-            self.pid = data[1]
-            self.ga = data[2]
-            self.gb = data[3]
+        BushElement.__init__(self)
+        self.eid = eid
+        self.pid = pid
+        self.ga = ga
+        self.gb = gb
+        self.cid = cid
+
+    @classmethod
+    def add_card(cls, comment=''):
+        eid = integer(card, 1, 'eid')
+        pid = integer_or_blank(card, 2, 'pid', eid)
+        ga = integer(card, 3, 'ga')
+        gb = integer_or_blank(card, 4, 'gb')
+        cid = integer_or_blank(card, 5, 'cid')
+        assert len(card) <= 6, 'len(CBUSH1D card) = %i' % len(card)
+        return CBUSH1D(eid, pid, ga, gb, cid, comment=comment)
+
+    def add_op2_data(cls, data, comment=''):
+        eid = data[0]
+        pid = data[1]
+        ga = data[2]
+        gb = data[3]
+        raise NotImplementedError(data)
+        return CBUSH1D(eid, pid, ga, gb, cid, comment=comment)
 
     def cross_reference(self, model):
         msg = ' which is required by CBUSH1D eid=%s' % self.eid
@@ -314,29 +339,42 @@ class CBUSH2D(BushElement):
         1: 'eid', 2:'pid', 3:'ga', 4:'gb', 5:'cid', 6:'plane', 7:'sptid',
     }
 
-    def __init__(self, card=None, data=None, comment=''):
-        BushElement.__init__(self, card, data)
+    def __init__(self, eid, pid, ga, gb, cid, plane, sptid, comment=''):
+        BushElement.__init__(self)
         if comment:
             self._comment = comment
-        if card:
-            self.eid = integer(card, 1, 'eid')
-            self.pid = integer_or_blank(card, 2, 'pid')
-            self.ga = integer(card, 3, 'ga')
-            self.gb = integer(card, 4, 'gb')
+        self.eid = eid
+        self.pid = pid
+        self.ga = ga
+        self.gb = gb
+        self.cid = cid
+        self.plane = plane
+        self.sptid = sptid
+        if self.plane not in ['XY', 'YZ', 'ZX']:
+            msg = ("plane not in required list, plane=|%s|\n"
+                   "expected planes = ['XY','YZ','ZX']" % self.plane)
+            raise RuntimeError(msg)
 
-            self.cid = integer_or_blank(card, 5, 'cid', 0)
-            self.plane = string_or_blank(card, 6, 'plane', 'XY')
-            if self.plane not in ['XY', 'YZ', 'ZX']:
-                msg = ("plane not in required list, plane=|%s|\n"
-                       "expected planes = ['XY','YZ','ZX']" % self.plane)
-                raise RuntimeError(msg)
-            self.sptid = integer_or_blank(card, 7, 'sptid')
-            assert len(card) <= 8, 'len(CBUSH2D card) = %i' % len(card)
-        else:
-            self.eid = data[0]
-            self.pid = data[1]
-            self.ga = data[2]
-            self.gb = data[3]
+    @classmethod
+    def add_card(cls, comment=''):
+        eid = integer(card, 1, 'eid')
+        pid = integer_or_blank(card, 2, 'pid')
+        ga = integer(card, 3, 'ga')
+        gb = integer(card, 4, 'gb')
+        cid = integer_or_blank(card, 5, 'cid', 0)
+        plane = string_or_blank(card, 6, 'plane', 'XY')
+        sptid = integer_or_blank(card, 7, 'sptid')
+        assert len(card) <= 8, 'len(CBUSH2D card) = %i' % len(card)
+        return CBUSH2D(eid, pid, ga, gb, cid, plane, sptid, comment=comment)
+
+    @classmethod
+    def add_card(cls, data, comment=''):
+        eid = data[0]
+        pid = data[1]
+        ga = data[2]
+        gb = data[3]
+        raise NotImplementedError(data)
+        return CBUSH2D(eid, pid, ga, gb, cid, plane, sptid, comment=comment)
 
     def _verify(self, xref=False):
         ga = self.Ga()

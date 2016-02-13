@@ -9,18 +9,18 @@ All spring properties are SpringProperty and Property objects.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import integer_types
 
+from pyNastran.utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
-from pyNastran.bdf.cards.baseCard import Property
+from pyNastran.bdf.cards.base_card import Property
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
                                                     double, double_or_blank)
 from pyNastran.bdf.field_writer_8 import print_card_8
 
 
 class SpringProperty(Property):
-    def __init__(self, card, data):
-        Property.__init__(self, card, data)
+    def __init__(self):
+        Property.__init__(self)
 
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
@@ -37,31 +37,40 @@ class PELAS(SpringProperty):
         1: 'pid', 2:'k', 3:'ge', 4:'s',
     }
 
-    def __init__(self, card=None, icard=0, data=None, comment=''):
-        SpringProperty.__init__(self, card, data)
+    def __init__(self, pid, k, ge, s, comment=''):
         if comment:
             self._comment = comment
-        nOffset = icard * 5
-        if card:
-            # 2 PELAS properties can be defined on 1 PELAS card
-            # these are split into 2 separate cards
+        SpringProperty.__init__(self)
+        # 2 PELAS properties can be defined on 1 PELAS card
+        # these are split into 2 separate cards
 
-            #: Property identification number. (Integer > 0)
-            self.pid = integer(card, 1 + nOffset, 'pid')
-            #: Ki Elastic property value. (Real)
-            self.k = double(card, 2 + nOffset, 'k')
+        #: Property identification number. (Integer > 0)
+        self.pid = pid
+        #: Ki Elastic property value. (Real)
+        self.k = k
+        #: Damping coefficient, . See Remarks 5. and 6. (Real)
+        #: To obtain the damping coefficient GE, multiply the
+        #: critical damping ratio c/c0 by 2.0.
+        self.ge = ge
+        #: Stress coefficient. (Real)
+        self.s = s
 
-            #: Damping coefficient, . See Remarks 5. and 6. (Real)
-            #: To obtain the damping coefficient GE, multiply the
-            #: critical damping ratio c/c0 by 2.0.
-            self.ge = double_or_blank(card, 3 + nOffset, 'ge', 0.)
-            #: Stress coefficient. (Real)
-            self.s = double_or_blank(card, 4 + nOffset, 's', 0.)
-        else:
-            self.pid = data[0]
-            self.k = data[1]
-            self.ge = data[2]
-            self.s = data[3]
+    @classmethod
+    def add_card(cls, card, icard=0, comment=''):
+        noffset = icard * 5
+        pid = integer(card, 1 + noffset, 'pid')
+        k = double(card, 2 + noffset, 'k')
+        ge = double_or_blank(card, 3 + noffset, 'ge', 0.)
+        s = double_or_blank(card, 4 + noffset, 's', 0.)
+        return PELAS(pid, k, ge, s, comment=comment)
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        pid = data[0]
+        k = data[1]
+        ge = data[2]
+        s = data[3]
+        return PELAS(pid, k, ge, s, comment=comment)
 
     def cross_reference(self, model):
         #if self.sol in [108, 129]:
@@ -108,27 +117,33 @@ class PELAST(SpringProperty):
         1: 'pid', 2:'tkid', 3:'tgeid', 4:'tknid',
     }
 
-    def __init__(self, card=None, data=None, comment=''):
-        SpringProperty.__init__(self, card, data)
+    def __init__(self, pid, tkid, tgeid, tknid, comment=''):
+        SpringProperty.__init__(self)
         if comment:
             self._comment = comment
-        if card:
-            #: Property identification number. (Integer > 0)
-            self.pid = integer(card, 1, 'pid')
-            #: Identification number of a TABLEDi entry that defines the
-            #: force per unit displacement vs. frequency relationship.
-            #: (Integer > 0; Default = 0)
-            self.tkid = integer_or_blank(card, 2, 'tkid', 0)
-            #: Identification number of a TABLEDi entry that defines the
-            #: nondimensional structural damping coefficient vs. frequency
-            #: relationship. (Integer > 0; Default = 0)
-            self.tgeid = integer_or_blank(card, 3, 'tgeid', 0)
-            #: Identification number of a TABELDi entry that defines the nonlinear
-            #: force vs. displacement relationship. (Integer > 0; Default = 0)
-            self.tknid = integer_or_blank(card, 4, 'tknid', 0)
-            assert len(card) <= 5, 'len(PELAST card) = %i' % len(card)
-        else:
-            raise NotImplementedError(data)
+
+        #: Property identification number. (Integer > 0)
+        self.pid = pid
+        #: Identification number of a TABLEDi entry that defines the
+        #: force per unit displacement vs. frequency relationship.
+        #: (Integer > 0; Default = 0)
+        self.tkid = tkid
+        #: Identification number of a TABLEDi entry that defines the
+        #: nondimensional structural damping coefficient vs. frequency
+        #: relationship. (Integer > 0; Default = 0)
+        self.tgeid = tgeid
+        #: Identification number of a TABELDi entry that defines the nonlinear
+        #: force vs. displacement relationship. (Integer > 0; Default = 0)
+        self.tknid = tknid
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        pid = integer(card, 1, 'pid')
+        tkid = integer_or_blank(card, 2, 'tkid', 0)
+        tgeid = integer_or_blank(card, 3, 'tgeid', 0)
+        tknid = integer_or_blank(card, 4, 'tknid', 0)
+        assert len(card) <= 5, 'len(PELAST card) = %i' % len(card)
+        return PELAST(pid, tkid, tgeid, tknid, comment=comment)
 
     def cross_reference(self, model):
         self.pid = model.Property(self.pid)

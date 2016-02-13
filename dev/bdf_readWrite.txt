@@ -6,6 +6,10 @@ Important calculated parameters are nice, but not required.
 
 BDF Cards Supported Reading/Writing
 
+----Control---:
+ECHOON  (done)
+ECHOOFF (done
+
 ----Nodes----:
 GRID    (done)
 GRDSET  (done)
@@ -21,27 +25,41 @@ CORD2S  (done)
 CORD3G  (partial)
 
 ----Rods/Bars/Beams (Elements/Properties)----:
-CBAR    (done)
+# rods
 CROD    (done)
-CTUBE   (done)
-CBEAM   (done)
-CBEAM3  (done)
-CBEND   (done)
+PROD    (done)
 CONROD  (done)
 
-PROD    (done)
+# tube
+CTUBE   (done)
+PTUBE   (done)
+
+# bars
+CBAR    (done)
+CBARAO
+BAROR
 PBAR    (done)
 PBARL   (done)
+PBRSECT  # arbitrary bar section
+
+# beam
+CBEAM   (done)
+BEAMOR
+PBMSECT  # arbitrary beam section
+
+# beam3
+CBEAM3  (done)
+PBCOMP  (done)
 PBEAM   (done)
-PBEAML  (partial)
+PBEAML  (done)
+
+# bend
+CBEND   (done)
+PBEND   (done)
+
+# beam3
 PBEAM3
 
-PBCOMP  (done)
-PBRSECT
-PBMSECT
-
-PBEND   (done)
-PTUBE   (done)
 
 ----Plates/Shells (Elements/Properties)----:
 CTRIA3  (done)
@@ -110,6 +128,7 @@ NSM1
 CTETRA  (done)
 CPENTA  (done)
 CHEXA   (done)
+CPYRAM  (done)
 
 PSOLID  (done)
 PLSOLID (done)
@@ -127,11 +146,8 @@ PFAST   (done)
 CGAP    (done)
 PGAP    (done)
 
-PBCOMP  (done)
-
-
 ----Rigid Elements----:
-RROD
+RROD  (done)
 RTRPLT
 RBAR  (done)
 RBAR1 (done)
@@ -147,6 +163,7 @@ MAT3  (done)
 MAT8  (done)
 MAT9  (done)
 MAT10 (done)
+MAT11 (done)
 
 ----Hyperelastic Materials----:
 MATHP (done)
@@ -160,16 +177,16 @@ MAT5  (done)
 MATS1  (done)
 MATT1  (done)
 MATT2  (done)
-MATT3  (???)
+MATT3
 MATT4  (done)
 MATT5  (done)
-MATT8  (done)
-MATT9  (???)
+MATT8
+MATT9
 
+MATS1 (done)
 ----Constraints----:
 SPC     (done)
 SPC1    (done)
-SPCD    (done)
 SPCADD  (done)
 
 MPC     (done)
@@ -181,7 +198,7 @@ SUPORT1 (done)
 ----Loads----:
 LOAD    (done)
 LSEQ    (done)
-SPCAX   (done)
+SPCD    (done)
 
 FORCE   (done)
 FORCE1  (done)
@@ -219,6 +236,8 @@ QHBDY  (done)
 QBDY1  (done)
 QBDY2  (done)
 QBDY3  (done)
+
+QVOL  (done)
 
 ----Thermal Elements----:
 CHBDYE (done)
@@ -280,10 +299,13 @@ TRIM    (done)
 ----Dynamic----:
 EPOINT  (done)
 DAREA   (done)
+PHASE   (done)
+DELAY   (done)
 NLPARM  (done)
 NLPCI   (done)
 TSTEP   (done)
 TSTEPNL (done)
+TF      (done)
 
 ----Modal Cards----:
 FREQ  (done)
@@ -294,14 +316,16 @@ FREQ4
 FREQ5
 
 ----Optimization----:
-DCONADD  (done?)
+DEQATN   (done)
+DTABLE   (done)
 DCONSTR  (done)
 DESVAR   (done)
 DDVAL    (done)
-DOPTPRM  (done)
 DRESP1   (done)
 DRESP2   (done)
-DRESP3
+DRESP3   (done)
+
+
 DVGRID
 DVCREL1         # element  DV
 DVCREL2
@@ -309,11 +333,12 @@ DVPREL1  (done) # property DV
 DVPREL2  (done)
 DVMREL1  (done) # material DV
 DVMREL2
-DLINK   (done)
-DEQATN  (in progress)
+
+DOPTPRM  (done)
+DLINK    (done)
+DCONADD  (done)
 
 ---Tables---
-DTABLE
 TABLED1  (done)
 TABLED2  (done)
 TABLED3  (done)
@@ -325,8 +350,9 @@ TABLEM1  (done)
 TABLEM2  (done)
 TABLEM3  (done)
 TABLEM4  (done)
-TABLES1  (done)
+
 TABLEST  (done)
+TABLES1  (done)
 TIC      (not integrated)
 
 ---Random Tables---
@@ -345,18 +371,18 @@ CSET1  (done)
 QSET1  (done)
 USET1  (done)
 
-SESET   (done)
+SESET  (done)
 SET1   (done)
 SET2
 SET3   (done)
 
-SEQSEP (not integrated...is this a set)
-RADSET (not integrated)
+SEQSEP (done)
+RADSET (done)
 
 SEBSET  (done)
 SECSET  (done)
 SEQSET  (done)
-SEUSET 
+SEUSET
 SEBSET1 (done)
 SECSET1 (done)
 SEQSET1 (done)
@@ -371,16 +397,31 @@ EIGRL   (done)
 MKAERO1 (done)
 MKAERO2 (done)
 
+AECOMP (done)
+
 ----MATRICES----:
 DMIG        (done)
 DMIG,UACCEL
 DMIJ        (done)
 DMIJI       (done)
 DMIK        (done)
+DMI         (done)
+
+----Contact----:
+BCTPARA (done)
+BCRPARA (done)
+BCTADD  (done)
+BCTSET  (done)
+BSURF   (done)
+BSURFS  (done)
+
+----Super Elements----:
+SEQSEP  (done)
+SESUP   (done)
 
 ----Other----:
 INCLUDE (done)
-PARAM (done)
+PARAM   (done)
 
 -----------------------------------------------
 
@@ -396,7 +437,7 @@ RINGAX
 
 ----Axial Cone Elements/Properties----:
 CCONEAX
-PCONEAX
+PCONEAX (done)
 
 ----Axial Loads----:
 FORCEAX
@@ -415,13 +456,10 @@ AXIC
 OMITAX
 SECTAX
 
-----Contact----:
-BCTPARA (done)
-BCRPARA (done)
-BCTADD  (done)
-BCTSET  (done)
-BSURF   (done)
-BSURFS  (done)
+-----------------------------------------------
+----Equation Geometry----:
+GMLOAD  (done)
+GMCORD  (done)
 
 -----------------------------------------------
 
@@ -429,17 +467,12 @@ Not supported - ask for the cards you want
 
 
 ---- Elements w/ Properties----:
-CBARAO
 
 ---- Elements----:
-PLOTEL
+PLOTEL   (done)
 MBOLTUS
-BAROR
-BEAMOR
-CBARAO
 
 ---- Rigid Elements----:
-RROD
 RSPLINE
 RTRPLT
 RBE2GS
@@ -449,9 +482,8 @@ RJOINT
 RTRPLT1
 MATRIG
 
-----Patran Loads----:
+----Loads----:
 QVECT
-QVOL
 
 RADCAV
 RADMT
@@ -465,7 +497,7 @@ VIEW3D
 ----Nodes----:
 EGRID
 GRIDG
-MONPNT1
+MONPNT1 (done)
 MONPNT2
 MONPNT3
 
@@ -495,8 +527,6 @@ SELOC
 SEMPLN
 SENQST
 SEQGP
-SEQSEP
-SESUP
 
 ----Acoustic----:
 ACSRCE

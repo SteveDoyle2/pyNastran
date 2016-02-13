@@ -18,7 +18,6 @@ class CROD(RodElement):
         """
         Defines the CROD object.
 
-        :param self: the CROD object
         :param model: the BDF object
         """
         RodElement.__init__(self, model)
@@ -48,9 +47,6 @@ class CROD(RodElement):
         self.i += 1
 
     def build(self):
-        """
-        :param self: the CROD object
-        """
         if self.n:
             i = self.element_id.argsort()
             self.element_id = self.element_id[i]

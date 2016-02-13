@@ -4,7 +4,6 @@ from numpy import array_equal, allclose
 import unittest
 
 import pyNastran
-from pyNastran.converters.cart3d.cart3d_reader import Cart3DReader
 from pyNastran.converters.cart3d.cart3d import Cart3D
 from pyNastran.converters.cart3d.cart3d_to_nastran import cart3d_to_nastran_filename, cart3d_to_nastran_model
 
@@ -14,41 +13,6 @@ test_path = os.path.join(pkg_path, 'converters', 'cart3d', 'models')
 class TestCart3d(unittest.TestCase):
 
     def test_cart3d_io_01(self):
-        lines = (
-            "7 6\n"
-            "0.000000 0.000000 0.000000\n"
-            "1.000000 0.000000 0.000000\n"
-            "2.000000 0.000000 0.000000\n"
-            "1.000000 1.000000 0.000000\n"
-            "2.000000 1.000000 0.000000\n"
-            "1.000000 -1.000000 0.000000\n"
-            "2.000000 -1.000000 0.000000\n"
-            "1 4 2\n"
-            "2 4 5\n"
-            "2 5 3\n"
-            "2 6 1\n"
-            "5 6 2\n"
-            "5 5 2\n"
-            "1\n"
-            "2\n"
-            "3\n"
-            "2\n"
-            "4\n"
-            "6\n"
-        )
-        infile_name = os.path.join(test_path, 'flat_full.tri')
-        f = open(infile_name, 'wb')
-        f.write(lines)
-        f.close()
-
-        cart3d = Cart3DReader(log=None, debug=False)
-        (points, elements, regions, loads) = cart3d.read_cart3d(infile_name)
-        assert len(points) == 7, 'npoints=%s' % len(points)
-        assert len(elements) == 6, 'nelements=%s' % len(elements)
-        assert len(regions) == 6, 'nregions=%s' % len(regions)
-        assert len(loads) == 0, 'nloads=%s' % len(loads)
-
-    def test_cart3d_io_01b(self):
         lines = (
             "7 6\n"
             "0.000000 0.000000 0.000000\n"
@@ -113,51 +77,6 @@ class TestCart3d(unittest.TestCase):
         f.write(lines)
         f.close()
 
-        cart3d = Cart3DReader(log=None, debug=False)
-        (points, elements, regions, loads) = cart3d.read_cart3d(infile_name)
-
-        assert len(points) == 5, 'npoints=%s' % len(points)
-        assert len(elements) == 3, 'nelements=%s' % len(elements)
-        assert len(regions) == 3, 'nregions=%s' % len(regions)
-
-        assert len(loads) == 14, 'nloads=%s' % len(loads)  # was 10
-        assert len(loads['Cp']) == 5, 'nCp=%s' % len(loads['Cp'])
-
-        outfile_name = os.path.join(test_path, 'flat.bin.tri')
-        cart3d.write_cart3d(outfile_name, points, elements, regions, loads=None, is_binary=True)
-        cnormals = cart3d.get_normals(points, elements)
-        nnormals = cart3d.get_normals_at_nodes(points, elements, cnormals)
-
-    def test_cart3d_io_02b(self):
-        lines = (
-            "5 3 6\n"
-            "0. 0. 0.\n"
-            "1. 0. 0.\n"
-            "2. 0. 0.\n"
-            "1. 1. 0.\n"
-            "2. 1. 0.\n"
-            "1 4 2\n"
-            "2 4 5\n"
-            "2 5 3\n"
-            "1\n"
-            "2\n"
-            "3\n"
-            "1.\n"
-            "1. 1. 1. 1. 1.\n"
-            "2.\n"
-            "2. 2. 2. 2. 2.\n"
-            "3.\n"
-            "3. 3. 3. 3. 3.\n"
-            "4.\n"
-            "4. 4. 4. 4. 4.\n"
-            "5.\n"
-            "5. 5. 5. 5. 5.\n"
-        )
-        infile_name = os.path.join(test_path, 'flat.tri')
-        f = open(infile_name, 'wb')
-        f.write(lines)
-        f.close()
-
         cart3d = Cart3D(log=None, debug=False)
         cart3d.read_cart3d(infile_name)
 
@@ -176,29 +95,6 @@ class TestCart3d(unittest.TestCase):
 
 
     def test_cart3d_io_03(self):
-        infile_name = os.path.join(test_path, 'threePlugs.bin.tri')
-        outfile_name = os.path.join(test_path, 'threePlugs_out.tri')
-        outfile_name_bin = os.path.join(test_path, 'threePlugs_bin2.tri')
-        outfile_name_bin_out = os.path.join(test_path, 'threePlugs_bin_out.tri')
-        cart3d = Cart3DReader(log=None, debug=False)
-
-        (points, elements, regions, loads) = cart3d.read_cart3d(infile_name)
-        cart3d.write_cart3d(outfile_name, points, elements, regions, loads=None, is_binary=False)
-        cart3d.write_cart3d(outfile_name_bin, points, elements, regions, loads=None, is_binary=True)
-
-        (points2, elements2, regions2, loads2) = cart3d.read_cart3d(outfile_name)
-        check_array(points, points2)
-
-        (points2, elements2, regions2, loads2) = cart3d.read_cart3d(outfile_name_bin)
-        check_array(points, points2)
-
-        os.remove(outfile_name)
-        os.remove(outfile_name_bin)
-
-        cart3d.write_cart3d(outfile_name_bin_out, points2, elements2, regions2, loads2, is_binary=False)
-        os.remove(outfile_name_bin_out)
-
-    def test_cart3d_io_03b(self):
         infile_name = os.path.join(test_path, 'threePlugs.bin.tri')
         outfile_name = os.path.join(test_path, 'threePlugs_out.tri')
         outfile_name_bin = os.path.join(test_path, 'threePlugs_bin2.tri')

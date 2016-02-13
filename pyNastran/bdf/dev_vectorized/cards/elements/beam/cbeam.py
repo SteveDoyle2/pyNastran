@@ -1,8 +1,9 @@
-from six import string_types, integer_types
+from six import string_types
 from six.moves import zip, StringIO
 from numpy import array, dot, arange, zeros, unique, searchsorted, nan, full
 from numpy.linalg import norm
 
+from pyNastran.utils import integer_types
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
@@ -38,7 +39,6 @@ class CBEAM(Element):
         """
         Defines the CBEAM object.
 
-        :param self: the CBEAM object
         :param model: the BDF object
         """
         Element.__init__(self, model)
@@ -129,9 +129,6 @@ class CBEAM(Element):
         self.i += 1
 
     def build(self):
-        """
-        :param self: the CBEAM object
-        """
         if self.n:
             i = self.element_id.argsort()
             self.element_id = self.element_id[i]
