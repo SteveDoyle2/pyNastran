@@ -243,9 +243,15 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
         settings = QtCore.QSettings()
         settings.setValue("main_WindowGeometry", self.saveGeometry())
         settings.setValue("mainWindowState", self.saveState())
-        settings.setValue("backgroundColor", self.background_col)
-        settings.setValue("textColor", self.text_col)
-        settings.setValue("labelColor", self.label_col)
+        settings.setValue("backgroundColor", self.background_color)
+        settings.setValue("textColor", self.text_color)
+        settings.setValue("labelColor", self.label_color)
+
+        #screen_shape = QtGui.QDesktopWidget().screenGeometry()
+        main_window = self.window()
+        width = main_window.frameGeometry().width()
+        height = main_window.frameGeometry().height()
+        settings.setValue('screen_shape', (width, height))
         QtGui.qApp.quit()
 
 

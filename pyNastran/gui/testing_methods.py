@@ -179,6 +179,13 @@ class GuiAttributes(object):
 
 
 
+class CoordProperties(object):
+    def __init__(self, label, Type, is_visible):
+        self.label = label
+        #self.axes = axes
+        self.Type = Type
+        self.is_visible = is_visible
+
 class GeometryProperty(object):
     def __init__(self):
         pass
