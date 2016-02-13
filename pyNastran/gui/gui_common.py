@@ -69,10 +69,10 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
     def __init__(self, fmt_order, html_logging, inputs):
         # this will reset the background color/label color if things break
         self.reset_settings = False
-        self.is_groups = False
 
         QtGui.QMainWindow.__init__(self)
         GuiCommon.__init__(self, inputs)
+        self.is_groups = True
 
         self.fmts = fmt_order
         self.base_window_title = "pyNastran v%s"  % pyNastran.__version__
@@ -108,7 +108,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         return self.scalar_bar.scalar_bar
 
     @property
-    def colorFunction(self):
+    def color_function(self):
         return self.scalar_bar.color_function
 
     #def get_color_function(self):
@@ -839,6 +839,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
         # edges
         self.edge_actor = vtk.vtkLODActor()
+        self.edge_actor.DragableOff()
         self.edge_mapper = vtk.vtkPolyDataMapper()
 
         self.create_cell_picker()
@@ -1066,15 +1067,15 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         edges = vtk.vtkExtractEdges()
         if self.vtk_version[0] >= 6:
             # new
-            edges.SetInputData(self.grid)
+            edges.SetInputData(self.grid_selected)
             self.edge_mapper.SetInputConnection(edges.GetOutputPort())
         else:
-            edges.SetInput(self.grid)
+            edges.SetInput(self.grid_selected)
             self.edge_mapper.SetInput(edges.GetOutput())
 
         self.edge_actor.SetMapper(self.edge_mapper)
         self.edge_actor.GetProperty().SetColor(0, 0, 0)
-        self.edge_mapper.SetLookupTable(self.colorFunction)
+        self.edge_mapper.SetLookupTable(self.color_function)
         self.edge_mapper.SetResolveCoincidentTopologyToPolygonOffset()
 
         prop = self.edge_actor.GetProperty()
@@ -1082,38 +1083,96 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.edge_actor.SetVisibility(self.is_edges)
         self.rend.AddActor(self.edge_actor)
 
-    def update_element_mask(self, eids_to_show):
-        self.shown_ids.Reset()
+    def show_elements_mask(self, eids_to_show):
+        if not self._show_flag:
+            self.selection_node.GetProperties().Set(vtk.vtkSelectionNode.INVERSE(), 1)
+            self._show_flag = True
+        self._update_element_mask(eids_to_show)
+
+    def hide_elements_mask(self, eids_to_hide):
+        if self._show_flag:
+            self._show_flag = False
+        self._update_element_mask(eids_to_hide)
+
+    def _update_element_mask(self, eids_to_show, _show_flag=True):
+        ids = vtk.vtkIdTypeArray()
+        ids.SetNumberOfComponents(1)
         #ids.SetNumberOfValues(len(eids_to_show))
-        self.shown_ids.Allocate(len(eids_to_show))
+        ids.Allocate(len(eids_to_show))
         for eid in eids_to_show:
-            self.shown_ids.InsertNextValue(eid)
-        self.shown_ids.Modified()
+            ids.InsertNextValue(eid)
+        ids.Modified()
+        print('ids =', ids)
+        self.selection_node.SetSelectionList(ids)
+
+        #self.selection.RemoveAllNodes()
+        #if not show_flag:
+            #self.selection_node.GetProperties().Set(vtk.vtkSelectionNode.INVERSE(), 1)
+        #self.selection.AddNode(self.selection_node)
+
         #self.grid_selected.Update() # not in vtk 6
+
+        #ids.Update()
+        #self.shown_ids.Modified()
+
+        self.grid_selected.ShallowCopy(self.extract_selection.GetOutput())
+        self.grid_selected.Modified()
+
+        #selection_node.Update()
+        self.selection_node.Modified()
+        #selection.Update()
+        self.selection.Modified()
+        self.extract_selection.Update()
+        self.extract_selection.Modified()
+        #grid_selected.Update()
+        self.grid_selected.Modified()
+        self.grid_mapper.Update()
+        self.grid_mapper.Modified()
+        #selected_actor.Update()
+        #selected_actor.Modified()
+
+        #right_renderer.Modified()
+        #right_renderer.Update()
+
+        self.iren.Modified()
+        #interactor.Update()
+        #-----------------
+        self.rend.Render()
+        #interactor.Start()
+
+        self.rend.Modified()
+
+        self.geom_actor.Modified()
+        self.vtk_interactor.Render()
+        #render_window.Update()
+
 
     def _setup_element_mask(self):
         """
         starts the masking
 
         self.grid feeds in the geometry
-
         """
-        self.shown_ids = vtk.vtkIdTypeArray()
-        self.shown_ids.SetNumberOfComponents(1)
-        ids_to_show = np.arange(172)
-        self.shown_ids.Allocate(len(ids_to_show))
-        for eid in ids_to_show:
-            self.shown_ids.InsertNextValue(eid)
+        ids = vtk.vtkIdTypeArray()
+        ids.SetNumberOfComponents(1)
+        #ids_to_show = np.arange(172)
+        #ids.Allocate(len(ids_to_show))
+        #for eid in ids_to_show:
+            #ids.InsertNextValue(eid)
 
         self.selection_node = vtk.vtkSelectionNode()
         self.selection_node.SetFieldType(vtk.vtkSelectionNode.CELL)
         self.selection_node.SetContentType(vtk.vtkSelectionNode.INDICES)
-        self.selection_node.SetSelectionList(self.shown_ids)
+        if self._show_flag:
+            self.selection_node.GetProperties().Set(vtk.vtkSelectionNode.INVERSE(), 1)
+        self.selection_node.SetSelectionList(ids)
 
         self.selection = vtk.vtkSelection()
+        self.selection.DebugOn()
         self.selection.AddNode(self.selection_node)
 
         self.extract_selection = vtk.vtkExtractSelection()
+        self.extract_selection.DebugOn()
         if vtk.VTK_MAJOR_VERSION <= 5:
             self.extract_selection.SetInput(0, self.grid)
             self.extract_selection.SetInput(1, self.selection)
@@ -1124,6 +1183,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
         # In selection
         self.grid_selected = vtk.vtkUnstructuredGrid()
+        self.grid_selected.DebugOn()
         self.grid_selected.ShallowCopy(self.extract_selection.GetOutput())
 
     def create_text(self, position, label, text_size=18):
@@ -1156,10 +1216,10 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
     def build_lookup_table(self):
         """TODO: add support for NanColors"""
-        scalar_range = self.grid.GetScalarRange()
+        scalar_range = self.grid_selected.GetScalarRange()
         #print('min = %s\nmax = %s' % scalar_range)
         self.grid_mapper.SetScalarRange(scalar_range)
-        self.grid_mapper.SetLookupTable(self.colorFunction)
+        self.grid_mapper.SetLookupTable(self.color_function)
         self.rend.AddActor(self.scalarBar)
 
     def _create_load_file_dialog(self, qt_wildcard, title):
@@ -2194,16 +2254,11 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         #print('grid_selected =', self.grid_selected)
 
         self.grid_mapper = vtk.vtkDataSetMapper()
-        if self.vtk_version[0] >= 6:
-            self.grid_mapper.SetInputData(self.grid_selected)
+        if self.vtk_version[0] <= 5:
+            #self.grid_mapper.SetInput(self.grid_selected)  ## OLD
+            self.grid_mapper.SetInputConnection(self.grid_selected.GetProducerPort())
         else:
-            self.grid_mapper.SetInput(self.grid_selected)
-
-        #if vtk.VTK_MAJOR_VERSION <= 5:
-            #selected_mapper.SetInputConnection(grid_selected.GetProducerPort())
-        #else:
-            #selected_mapper.SetInputData(grid_selected)
-
+            self.grid_mapper.SetInputData(self.grid_selected)
 
 
         if 0:
@@ -2246,6 +2301,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         #grid_mapper.SetInput(Filter.GetOutput())
 
         self.geom_actor = vtk.vtkLODActor()
+        self.geom_actor.DragableOff()
         self.geom_actor.SetMapper(self.grid_mapper)
         #geometryActor.AddPosition(2, 0, 2)
         #geometryActor.GetProperty().SetDiffuseColor(0, 0, 1) # blue

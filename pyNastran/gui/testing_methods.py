@@ -14,8 +14,10 @@ class GuiAttributes(object):
         """
         self.case_keys = {}
         self.res_widget = res_widget
+        self._show_flag = True
 
         self.is_testing = False
+        self.is_groups = False
         self._logo = None
         self._script_path = None
         self._icon_path = ''
