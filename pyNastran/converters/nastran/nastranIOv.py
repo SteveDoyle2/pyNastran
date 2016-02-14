@@ -1266,6 +1266,12 @@ class NastranIO(object):
             elif not allclose(norm(yhat), 1.0) or not allclose(norm(zhat), 1.0) or Li == 0.0:
                 print('  length_error        - eid=%s Li=%s Lyhat=%s Lzhat=%s v=%s i=%s n%s=%s n%s=%s' % (
                     eid, Li, norm(yhat), norm(zhat), v, i, nid1, n1, nid2, n2))
+
+            #print('adding bar %s' % bar_type)
+            #print('   centroid=%s' % centroid)
+            #print('   yhat=%s len=%s' % (yhat, np.linalg.norm(yhat)))
+            #print('   zhat=%s len=%s' % (zhat, np.linalg.norm(zhat)))
+            #print('   Li=%s scale=%s' % (Li, scale))
             bar_types[bar_type][0].append(eid)
             bar_types[bar_type][1].append((centroid, centroid + yhat * Li * scale))
             bar_types[bar_type][2].append((centroid, centroid + zhat * Li * scale))
@@ -1405,10 +1411,10 @@ class NastranIO(object):
             self.alt_grids[name].InsertNextCell(elem.GetCellType(), elem.GetPointIds())
             j += 2
 
-        n1 = bar_lines[:, :3]
-        n2 = bar_lines[:, 3:]
-        dy = n2 - n1
-        Ly = norm(dy, axis=1)
+        #n1 = bar_lines[:, :3]
+        #n2 = bar_lines[:, 3:]
+        #dy = n2 - n1
+        #Ly = norm(dy, axis=1)
         # v = dy / Ly *  bar_scale
         # n2 = n1 + v
         # print(Ly)

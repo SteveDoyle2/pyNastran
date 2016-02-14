@@ -52,11 +52,32 @@ class Model(QtCore.QAbstractTableModel):
         self.items = items
         self.header_labels = header_labels
 
+    #def adding_row(index):
+        ## http://stackoverflow.com/questions/13109128/pyqt-qabstracttablemodel-never-updates-when-rows-are-added
+        #self.beginInsertRows(self.createIndex(0, 0), index, index)
+        #print 'adding ', index
+
+
     def rowCount(self, parent=QtCore.QModelIndex()):
         return len(self.items)
 
     def columnCount(self, parent=QtCore.QModelIndex()):
         return 1
+
+
+    def change_data(self, items):
+        #self.emit(SIGNAL("LayoutAboutToBeChanged()"))
+        self.items = items
+        #self.emit(SIGNAL("LayoutChanged()"))
+        self.select()
+
+        #self.dataChanged.emit(self.createIndex(0, 0),
+                              #self.createIndex(self.rowCount(0),
+                                               #self.columnCount(0)))
+        #self.emit(SIGNAL("DataChanged(QModelIndex,QModelIndex)"),
+                  #self.createIndex(0, 0),
+                  #self.createIndex(self.rowCount(0),
+                                   #self.columnCount(0)))
 
     def data(self, index, role):
         if not index.isValid():
@@ -118,8 +139,8 @@ class EditGeometryProperties(QtGui.QDialog):
         nrows = len(keys)
         self.active_key = 'main'#keys[0]
 
-        self._use_old_table = False
         items = keys
+
         header_labels = ['Groups']
         table_model = Model(items, header_labels, self)
         view = CustomQTableView(self) #Call your custom QTableView here
@@ -137,10 +158,8 @@ class EditGeometryProperties(QtGui.QDialog):
         show = actor_obj.is_visible
         self.representation = actor_obj.representation
 
-        table = self.table
-        #headers = [QtCore.QString('Groups')]
-
-        header = table.horizontalHeader()
+        # table
+        header = self.table.horizontalHeader()
         header.setStretchLastSection(True)
 
         self._default_is_apply = False
@@ -242,9 +261,9 @@ class EditGeometryProperties(QtGui.QDialog):
         self.name_edit.setText(name)
         obj = self.out_data[name]
         if isinstance(obj, CoordProperties):
-            line_width = 0
-            point_size = 0
-            bar_scale = 0.0
+            #line_width = 0
+            #point_size = 0
+            #bar_scale = 0.0
             opacity = 1.0
             representation = 'coord'
             is_visible = obj.is_visible
@@ -260,12 +279,11 @@ class EditGeometryProperties(QtGui.QDialog):
                                           "background-color: rgb(%s, %s, %s);" % tuple(obj.color) +
                                           #"border:1px solid rgb(255, 170, 255); "
                                           "}")
+            self.line_width_edit.setValue(line_width)
+            self.point_size_edit.setValue(point_size)
+            self.bar_scale_edit.setValue(bar_scale)
         else:
             raise NotImplementedError(obj)
-
-        self.line_width_edit.setValue(line_width)
-        self.point_size_edit.setValue(point_size)
-        self.bar_scale_edit.setValue(bar_scale)
 
         if self.representation != representation:
             self.representation = representation

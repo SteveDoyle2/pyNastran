@@ -114,6 +114,8 @@ class GuiAttributes(object):
         self.eid_maps = {}
         self.name = 'main'
 
+        self.groups = {}
+
     @property
     def nid_map(self):
         return self.nid_maps[self.name]

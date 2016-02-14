@@ -1124,7 +1124,6 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         for eid in eids_to_show:
             ids.InsertNextValue(eid)
         ids.Modified()
-        print('ids =', ids)
 
         if flip_flag:
             self.selection.RemoveAllNodes()
@@ -3446,6 +3445,18 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                 geom_prop.point_size = group.point_size
             else:
                 raise NotImplementedError(geom_prop)
+
+    def on_modify_group(self, out_data):
+        """
+        Applies the changed groups to the different groups if
+        something changed.
+        """
+        self.groups = out_data
+        #for name, group in iteritems(out_data):
+            #if name in ['clicked_ok', 'clicked_cancel']:
+                #continue
+            #group = self.groups[name]
+
 
     def on_update_geometry_properties(self, out_data):
         """
