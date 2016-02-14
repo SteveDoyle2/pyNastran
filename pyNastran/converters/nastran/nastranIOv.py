@@ -210,30 +210,32 @@ class NastranIO(object):
                 self.geometry_properties['conm2'].is_visble = False
         self.vtk_interactor.Render()
 
-    def _create_coord(self, cid, coord, cid_type):
+    def _create_coord(self, dim_max, cid, coord, cid_type):
         origin = coord.origin
         beta = coord.beta()
-        self.create_coordinate_system(label=cid, origin=origin, matrix_3x3=beta, Type=cid_type)
+        self.create_coordinate_system(dim_max, label='%s' % cid, origin=origin, matrix_3x3=beta, Type=cid_type)
 
-    def _create_nastran_coords(self, model):
+    def _create_nastran_coords(self, model, dim_max):
         cid_types = {
             'R' : 'xyz',
             'C' : 'Rtz',
             'S' : 'Rtp',
         }
+        self.create_global_axes(dim_max)
+        self.show_cids = True
         for cid, coord in sorted(iteritems(model.coords)):
             if cid == 0:
                 continue
             cid_type = cid_types[coord.Type]
             if self.show_cids is True:
-                self._create_coord(cid, coord, cid_type)
+                self._create_coord(dim_max, cid, coord, cid_type)
             elif isinstance(self.show_cids, integer_types):
                 if cid == self.show_cids:
-                    self._create_coord(cid, coord, cid_type)
+                    self._create_coord(dim_max, cid, coord, cid_type)
             elif isinstance(self.show_cids, (list, tuple, ndarray)):
                 if cid in self.show_cids:
                     # .. todo:: has issues in VTK 6 I think due to lack of self.grid.Update()
-                    self._create_coord(cid, coord, cid_type)
+                    self._create_coord(dim_max, cid, coord, cid_type)
             else:
                 print('skipping cid=%s; use a script and set self.show_cids=[%s] to view' % (cid, cid))
 
@@ -460,10 +462,9 @@ class NastranIO(object):
         assert len(maxi) == 3, len(maxi)
         xmax, ymax, zmax = maxi
         xmin, ymin, zmin = mini
-        self._create_nastran_coords(model)
-
         dim_max = max(xmax-xmin, ymax-ymin, zmax-zmin)
-        self.update_axes_length(dim_max)
+
+        self._create_nastran_coords(model, dim_max)
 
         self.log_info("xmin=%s xmax=%s dx=%s" % (xmin, xmax, xmax-xmin))
         self.log_info("ymin=%s ymax=%s dy=%s" % (ymin, ymax, ymax-ymin))
@@ -1003,9 +1004,13 @@ class NastranIO(object):
         lines_bar_z = []
 
         bar_types = {
+            # PBAR
             'bar' : [],
+
+            # PBEAML/PBARL
             "ROD": [],
             "TUBE": [],
+            "TUBE2" : [],
             "I": [],
             "CHAN": [],
             "T": [],
@@ -1024,6 +1029,12 @@ class NastranIO(object):
             "HAT": [],
             "HAT1": [],
             "DBOX": [],  # was 12
+
+            # PBEAM
+            'beam' : [],
+
+            # PBEAML specfic
+            "L" : [],
         }  # for GROUP="MSCBML0"
 
         found_bar_types = set([])
@@ -1062,6 +1073,8 @@ class NastranIO(object):
             pid = elem.pid
             if pid.type in ['PBAR', 'PBEAM']:
                 bar_type = 'bar'
+            elif pid.type in ['PBEAM']:
+                bar_type = 'beam'
             elif pid.type in ['PBARL', 'PBEAML']:
                 bar_type = pid.Type
             else:

@@ -82,6 +82,10 @@ class GuiAttributes(object):
         self.geometry_actors = OrderedDict()
         self.alt_grids = {} #additional grids
 
+        # coords
+        self.transform = {}
+        self.axes = {}
+
         #geom = Geom(color, line_thickness, etc.)
         #self.geometry_properties = {
         #    'name' : Geom(),
@@ -180,11 +184,13 @@ class GuiAttributes(object):
 
 
 class CoordProperties(object):
-    def __init__(self, label, Type, is_visible):
+    def __init__(self, label, Type, is_visible, scale):
         self.label = label
         #self.axes = axes
         self.Type = Type
         self.is_visible = is_visible
+        self.representation = 'coord'
+        self.scale = scale
 
 class GeometryProperty(object):
     def __init__(self):
@@ -323,6 +329,5 @@ class GUIMethods(GuiAttributes):
     #test.cycle_results = cycle_results
     #test.turn_text_on =  turn_text_on
     #test.turn_text_off = turn_text_off
-    #test.update_axes_length = update_axes_length
     #test.cycle_results_explicit = passer
 

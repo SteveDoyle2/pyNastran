@@ -716,12 +716,14 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             text_actor.GetTextProperty().SetColor(color)
         self.log_command('set_text_color(%s, %s, %s)' % color)
 
-    def create_coordinate_system(self, label='', origin=None, matrix_3x3=None, Type='xyz'):
+    def create_coordinate_system(self, dim_max, label='', origin=None, matrix_3x3=None, Type='xyz'):
         """
         Creates a coordinate system
 
         Parameters
         ----------
+        dim_max : float
+            the max model dimension; 10% of the max will be used for the coord length
         label : str
             the coord id or other unique label (default is empty to indicate the global frame)
         origin : (3, ) ndarray/list/tuple
@@ -741,12 +743,13 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             http://www.vtk.org/doc/nightly/html/classvtkTransform.html#ad58b847446d791391e32441b98eff151
         """
         coord_id = self.coord_id
+        scale = 0.05 * dim_max
 
         transform = vtk.vtkTransform()
         if origin is None and matrix_3x3 is None:
             pass
         elif origin is not None and matrix_3x3 is None:
-            print('origin%s = %s' % (label, str(origin)))
+            #print('origin%s = %s' % (label, str(origin)))
             transform.Translate(*origin)
         elif matrix_3x3 is not None:  # origin can be None
             m = np.eye(4, dtype='float32')
@@ -758,8 +761,18 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             raise RuntimeError('unexpected coordinate system')
 
         axes = vtk.vtkAxesActor()
-        axes.SetUserTransform(transform)
+        axes.DragableOff()
+        axes.PickableOff()
+        #axes.GetLength() # pi
+        #axes.GetNormalizedShaftLength() # (0.8, 0.8, 0.8)
+        #axes.GetNormalizedTipLength() # (0.2, 0.2, 0.2)
+        #axes.GetOrigin() # (0., 0., 0.)
+        #axes.GetScale() # (1., 1., 1.)
+        #axes.GetShaftType() # 1
+        #axes.GetTotalLength() # (1., 1., 1.)
 
+        axes.SetUserTransform(transform)
+        axes.SetTotalLength(scale, scale, scale)
         if Type == 'xyz':
             if label:
                 xlabel = 'x%s' % label
@@ -799,18 +812,18 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
         is_visible = False
         if label == '':
-            label = 'global XYZ'
+            label = 'Global XYZ'
             is_visible = True
-        self.geometry_properties[label] = CoordProperties(label, Type, is_visible)
+        else:
+            label = 'Coord %s' % label
+        self.geometry_properties[label] = CoordProperties(label, Type, is_visible, scale)
         self.geometry_actors[label] = axes
         self.coord_id += 1
         self.rend.AddActor(axes)
         return self.coord_id
 
-    def create_global_axes(self):
-        self.transform = {}
-        self.axes = {}
-        self.create_coordinate_system(label='', origin=None, matrix_3x3=None, Type='xyz')
+    def create_global_axes(self, dim_max):
+        self.create_coordinate_system(dim_max, label='', origin=None, matrix_3x3=None, Type='xyz')
 
     def create_corner_axis(self):
         if not self.run_vtk:
@@ -852,9 +865,6 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.edge_mapper = vtk.vtkPolyDataMapper()
 
         self.create_cell_picker()
-
-        # axes
-        self.create_global_axes()
 
     def create_alternate_vtk_grid(self, name, color=None, line_width=5, opacity=1.0, point_size=1,
                                   bar_scale=0.0, representation=None, is_visible=True):
@@ -990,6 +1000,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             for name, actor in iteritems(self.geometry_actors):
                 #if name != 'main':
                     #print('name: %s\nrep: %s' % (name, self.geometry_properties[name].representation ))
+                representation = self.geometry_properties[name].representation
                 if name == 'main' or self.geometry_properties[name].representation in ['main', 'toggle']:
                     prop = actor.GetProperty()
 
@@ -1003,7 +1014,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             for name, actor in iteritems(self.geometry_actors):
                 #if name != 'main':
                     #print('name: %s\nrep: %s' % (name, self.geometry_properties[name].representation ))
-                if name == 'main' or self.geometry_properties[name].representation in ['main', 'toggle']:
+                representation = self.geometry_properties[name].representation
+                if name == 'main' or representation in ['main', 'toggle']:
                     prop = actor.GetProperty()
                     prop.SetRepresentationToWireframe()
                 #prop.SetRepresentationToPoints()
@@ -2057,7 +2069,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             follower.SetScale(self.dim_max * 0.01 * self.label_scale)
 
             prop = follower.GetProperty()
-            prop.SetColor(self.label_col)
+            prop.SetColor(self.label_color)
             #prop.SetOpacity( 0.3 );
 
             # we need to make sure the text rotates when the camera is changed
@@ -2073,7 +2085,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             tprop.SetFontSize(10)
             tprop.BoldOn()
             tprop.ShadowOn()
-            tprop.SetColor(self.label_col)
+            tprop.SetColor(self.label_color)
 
             text_actor = vtk.vtkActor2D()
             text_actor.GetPositionCoordinate().SetCoordinateSystemToWorld()
@@ -2429,7 +2441,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         prop.SetOpacity(opacity)
         #prop.Update()
 
-        print('prop.GetInterpolation()', prop.GetInterpolation())
+        #print('prop.GetInterpolation()', prop.GetInterpolation()) # 1
 
         if representation == 'point':
             prop.SetRepresentationToPoints()

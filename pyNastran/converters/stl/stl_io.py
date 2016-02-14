@@ -70,7 +70,7 @@ class STL_IO(object):
         self.log.info('ymax=%s ymin=%s' % (ymax, ymin))
         self.log.info('zmax=%s zmin=%s' % (zmax, zmin))
         dim_max = max(xmax-xmin, ymax-ymin, zmax-zmin)
-        self.update_axes_length(dim_max)
+        self.create_global_axes(dim_max)
 
 
         nid = 0

@@ -86,7 +86,7 @@ class UGRID_IO(object):
         mmax = amax(nodes, axis=0)
         mmin = amin(nodes, axis=0)
         dim_max = (mmax - mmin).max()
-        self.update_axes_length(dim_max)
+        self.create_global_axes(dim_max)
         self.log.info('max = %s' % mmax)
         self.log.info('min = %s' % mmin)
 
