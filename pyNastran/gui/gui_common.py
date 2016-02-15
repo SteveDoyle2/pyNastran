@@ -38,6 +38,8 @@ from pyNastran.gui.menus.clipping import ClippingPropertiesWindow
 from pyNastran.gui.menus.camera import CameraWindow
 from pyNastran.gui.menus.application_log import PythonConsoleWidget, ApplicationLogWidget
 from pyNastran.gui.menus.manage_actors import EditGeometryProperties
+from pyNastran.gui.menus.groups_modify import GroupsModify, Group
+
 from pyNastran.gui.testing_methods import CoordProperties
 #from pyNastran.gui.menus.multidialog import MultiFileDialog
 from pyNastran.gui.utils import load_csv, load_user_geom
@@ -323,6 +325,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                 ('wireframe', 'Wireframe Model', 'twireframe.png', 'w', 'Show Model as a Wireframe Model', self.on_wireframe),
                 ('surface', 'Surface Model', 'tsolid.png', 's', 'Show Model as a Surface Model', self.on_surface),
                 ('geo_properties', 'Edit Geometry Properties', '', None, 'Change Model Color/Opacity/Line Width', self.edit_geometry_properties),
+                ('modify_groups', 'Modify Groups', '', None, 'Create/Edit/Delete Groups', self.modify_group),
 
                 ('show_info', 'Show INFO', 'show_info.png', None, 'Show "INFO" messages', self.on_show_info),
                 ('show_debug', 'Show DEBUG', 'show_debug.png', None, 'Show "DEBUG" messages', self.on_show_debug),
@@ -425,7 +428,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             'screenshot', '', 'wireframe', 'surface', 'camera_reset', '',
             'back_color', 'text_color', '',
             'label_color', 'label_clear', 'label_reset', '',
-            'legend', 'geo_properties', '', 'clipping', #'axis',
+            'legend', 'geo_properties', 'modify_groups', '', 'clipping', #'axis',
             'edges', 'edges_black',]
         if self.html_logging:
             self.actions['log_dock_widget'] = self.log_dock_widget.toggleViewAction()
@@ -1104,6 +1107,26 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.edge_actor.SetVisibility(self.is_edges)
         self.rend.AddActor(self.edge_actor)
 
+    def post_group_by_name(self, name):
+        group = self.groups[name]
+        self.post_group(group)
+
+    def post_group(self, group):
+        eids = group.element_ids
+        print('eids = ', eids)
+
+        name, result = self.get_name_result_data(0)
+        if name != 'ElementID':
+            name, result = self.get_name_result_data(1)
+            assert name == 'ElementID', name
+
+        eids = np.intersect1d(result, eids)
+        i = np.searchsorted(result, eids)
+
+        # TODO: update for indices
+        # TODO: remove eids that are out of range
+        self.show_elements_mask(i)
+
     def show_elements_mask(self, eids_to_show):
         flip_flag = True == self._show_flag
         self._update_element_mask(eids_to_show, flip_flag, show_flag=True)
@@ -1111,7 +1134,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self._show_flag = True
 
     def hide_elements_mask(self, eids_to_hide):
-        flip_flag = True == self._show_flag
+        flip_flag = False == self._show_flag
         self._update_element_mask(eids_to_hide, flip_flag, show_flag=False)
         self._update_element_mask(eids_to_hide, False, show_flag=False)
         self._show_flag = False
@@ -2621,7 +2644,14 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             #eids = np.arange(172)
             #eids = []
             #self.hide_elements_mask(eids)
-            self.show_elements_mask(np.arange(self.nElements))
+            elements_pound = self.element_ids[-1]
+            group = Group(
+                'main', '', elements_pound,
+                editable=False)
+            group.element_ids = self.element_ids
+            self.groups['main'] = group
+            self.post_group(group)
+            #self.show_elements_mask(np.arange(self.nElements))
 
     def get_result_by_cell_id(self, cell_id, world_position):
         """TODO: should handle multiple cell_ids"""
@@ -3446,17 +3476,67 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             else:
                 raise NotImplementedError(geom_prop)
 
-    def on_modify_group(self, out_data):
+    def modify_group(self):
+        """
+        Opens a dialog box to set:
+
+        +--------+----------+
+        |  Name  |  String  |
+        +--------+----------+
+        |  Min   |  Float   |
+        +--------+----------+
+        |  Max   |  Float   |
+        +--------+----------+
+        | Format | pyString |
+        +--------+----------+
+        """
+        if not len(self.groups):  # no 'main' group
+            self.log_error('No main group to create.')
+            return
+        print('groups.keys() =', self.groups.keys())
+
+        i = 0
+        data = {}
+        for name, group in sorted(iteritems(self.groups)):
+            data[i] = group
+        #data = deepcopy(self.groups)
+
+        if not self._modify_groups_window_shown:
+            self._modify_groups = GroupsModify(data, win_parent=self)
+            self._modify_groups.show()
+            self._modify_groups_window_shown = True
+            self._modify_groups.exec_()
+        else:
+            self._modify_groups.activateWindow()
+
+        if 'clicked_ok' not in data:
+            self._modify_groups.activateWindow()
+            return
+
+        if data['clicked_ok']:
+            self.on_update_modify_group(data)
+            imain = self._modify_groups.imain
+            name = self._modify_groups.keys[imain]
+            self.post_group(name)
+            #name =
+            #self._save_geometry_properties(data)
+            del self._modify_groups
+            self._modify_groups_window_shown = False
+        elif data['clicked_cancel']:
+            self.on_update_modify_group(data)
+            del self._modify_groups
+            self._modify_groups_window_shown = False
+
+    def on_update_modify_group(self, out_data):
         """
         Applies the changed groups to the different groups if
         something changed.
         """
-        self.groups = out_data
-        #for name, group in iteritems(out_data):
-            #if name in ['clicked_ok', 'clicked_cancel']:
-                #continue
-            #group = self.groups[name]
-
+        #self.groups = out_data
+        data = {}
+        for group_id, group in sorted(iteritems(out_data)):
+            data[name] = group.name
+        self.groups = data
 
     def on_update_geometry_properties(self, out_data):
         """

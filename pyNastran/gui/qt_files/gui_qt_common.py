@@ -19,7 +19,7 @@ class GuiCommon(GuiAttributes):
     def __init__(self, inputs):
         GuiAttributes.__init__(self, inputs, res_widget=None)
 
-        self.groups = set([])
+        #self.groups = set([])
         self._group_elements = {}
         self._group_coords = {}
         self._group_shown = {}
@@ -91,6 +91,17 @@ class GuiCommon(GuiAttributes):
         #else:
             #self.log_command(""didn't find case...")
         return result_type
+
+    def get_name_result_data(self, icase):
+        key = self.case_keys[icase]
+        if isinstance(key, integer_types):
+            (obj, (i, name)) = self.result_cases[key]
+            #subcase_id = obj.subcase_id
+            case = obj.get_result(i, name)
+        else:
+            assert len(key) == 7, key
+            #(subcase_id, j, result_type, vector_size, location, data_format, label2) = key
+        return name, case
 
     def _set_case(self, result_name, icase, explicit=False, cycle=False, skip_click_check=False,
                   min_value=None, max_value=None, is_legend_shown=None):

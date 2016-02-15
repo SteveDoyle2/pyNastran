@@ -3,7 +3,7 @@ from __future__ import print_function, unicode_literals
 from six import iteritems
 
 from PyQt4 import QtCore, QtGui
-from numpy import setdiff1d, unique, array, hstack
+from numpy import setdiff1d, unique, array, hstack, ndarray
 
 from pyNastran.bdf.utils import parse_patran_syntax, parse_patran_syntax_dict
 from pyNastran.bdf.cards.base_card import collapse_colon_packs
@@ -83,7 +83,7 @@ class GroupsModify(QtGui.QDialog):
         self.nrows = len(self.keys)
 
         self._default_name = group_obj.name
-        self._default_elements = group_obj.elements
+        self._default_elements = group_obj.element_str
         self.elements_pound = group_obj.elements_pound
 
         #self._default_coords = data['coords']
@@ -182,6 +182,7 @@ class GroupsModify(QtGui.QDialog):
         self.name_button.setEnabled(False)
         self.elements.setEnabled(False)
         self.elements_button.setEnabled(False)
+        self.elements_set.setEnabled(False)
         self.elements_edit.setEnabled(False)
         self.add.setEnabled(False)
         self.add_button.setEnabled(False)
@@ -198,7 +199,8 @@ class GroupsModify(QtGui.QDialog):
         grid = QtGui.QGridLayout()
         grid.addWidget(self.name, 0, 0)
         grid.addWidget(self.name_edit, 0, 1)
-        grid.addWidget(self.name_button, 0, 2)
+        grid.addWidget(self.name_set, 0, 2)
+        grid.addWidget(self.name_button, 0, 3)
 
         #grid.addWidget(self.coords, 1, 0)
         #grid.addWidget(self.coords_edit, 1, 1)
@@ -238,11 +240,19 @@ class GroupsModify(QtGui.QDialog):
         vbox.addLayout(main_create_delete)
         vbox.addStretch()
         vbox.addLayout(ok_cancel_box)
-
-
         self.setLayout(vbox)
 
+    def on_set_name(self):
+        print('on_set_name')
+        name = str(cell.text()).strip()
+        if name not in self.keys:
+            group = self.out_data[self.active_key]
+            group.name = name
+
     def set_connections(self):
+        #self.connect(self.name_edit, QtCore.SIGNAL("textChanged(QString)"), self.on_name)
+        self.connect(self.name_set, QtCore.SIGNAL('clicked()'), self.on_set_name)
+
         self.connect(self.name_button, QtCore.SIGNAL('clicked()'), self.on_default_name)
         #self.connect(self.coords_button, QtCore.SIGNAL('clicked()'), self.on_default_coords)
         self.connect(self.elements_button, QtCore.SIGNAL('clicked()'), self.on_default_elements)
@@ -279,7 +289,7 @@ class GroupsModify(QtGui.QDialog):
             self.keys.append(new_key)
             group = Group(
                 new_key,
-                elements='',
+                element_str='',
                 elements_pound=self.elements_pound,
                 editable=True)
 
@@ -326,7 +336,7 @@ class GroupsModify(QtGui.QDialog):
         #----------------------------------
         # update internal parameters
         #self.out_data = items
-        if self.imain >= self.active_key:
+        if self.imain > self.active_key:
             self.imain += 1
 
         #make the new group the default
@@ -454,11 +464,18 @@ class GroupsModify(QtGui.QDialog):
                         self.shown_set.remove(imain)
             self.imain = imain
 
+        group = self.out_data[self.imain]
+        self._default_elements = group.element_str
+        self._default_name = group.name
+        if self.win_parent is not None:
+            # we're not testing the menu
+            self.win_parent.post_group(group)
+
     def closeEvent(self, event):
         event.accept()
 
     def on_add(self):
-        eids, is_valid = self.check_patran_syntax(self.add_edit)
+        eids, is_valid = self.check_patran_syntax(self.add_edit, pound=self.elements_pound)
         #adict, is_valid = self.check_patran_syntax_dict(self.add_edit)
         if not is_valid:
             #self.add_edit.setStyleSheet("QLineEdit{background: red;}")
@@ -478,6 +495,7 @@ class GroupsModify(QtGui.QDialog):
 
         #self.coords_edit.setText(str(ctext.lstrip()))
         self.elements_edit.setText(str(etext.lstrip()))
+        self.out_data[self.active_key].element_ids = self.eids
 
     def on_remove(self):
         eids, is_valid = self.check_patran_syntax(self.remove_edit)
@@ -495,16 +513,23 @@ class GroupsModify(QtGui.QDialog):
         self.remove_edit.setStyleSheet("QLineEdit{background: white;}")
 
     def on_default_name(self):
-        self.name_edit.setText(str(self._default_name))
+        name = str(self._default_name)
+        #assert name not in self.keys
+        self.name_edit.setText(name)
         self.name_edit.setStyleSheet("QLineEdit{background: white;}")
+        #group = self.out_data[self.active_key]
+        #group.name = name
 
     #def on_default_coords(self):
         #self.coords_edit.setText(str(self._default_coords))
         #self.coords_edit.setStyleSheet("QLineEdit{background: white;}")
 
     def on_default_elements(self):
-        self.elements_edit.setText(str(self._default_elements))
+        element_str = str(self._default_elements)
+        self.elements_edit.setText(element_str)
         self.elements_edit.setStyleSheet("QLineEdit{background: white;}")
+        group = self.out_data[self.active_key]
+        group.element_str = element_str
 
     #def on_edit_color(self):
         #c = [int(255 * i) for i in self.text_color]
@@ -664,12 +689,13 @@ class GroupsModify(QtGui.QDialog):
         self.name_edit.setText(name)
         obj = self.out_data[self.active_key]
 
-        self.eids = parse_patran_syntax(obj.elements, pound=obj.elements_pound)
-        self._default_elements = obj.elements
+        self.eids = parse_patran_syntax(obj.element_str, pound=obj.elements_pound)
+        self._default_elements = obj.element_str
         self._apply_cids_eids()
 
         if name == 'main':
             self.name.setEnabled(False)
+            self.name_set.setEnabled(False)
             self.name_edit.setEnabled(False)
             self.name_button.setEnabled(False)
             self.elements.setEnabled(False)
@@ -686,11 +712,12 @@ class GroupsModify(QtGui.QDialog):
             #self.ok_button.setEnabled(False)
         else:
             self.name.setEnabled(True)
+            self.name_set.setEnabled(True)
             self.name_edit.setEnabled(True)
             self.name_button.setEnabled(True)
             self.elements.setEnabled(True)
             self.elements_button.setEnabled(True)
-            self.elements_edit.setEnabled(True)
+            #self.elements_edit.setEnabled(True)
             self.add.setEnabled(True)
             self.add_button.setEnabled(True)
             self.add_edit.setEnabled(True)
@@ -745,20 +772,29 @@ def _remove(adict, keys, values_to_remove):
     return values_to_remove
 
 class Group(object):
-    def __init__(self, name, elements, elements_pound, editable=True):
+    def __init__(self, name, element_str, elements_pound, editable=True):
         self.name = name
         #self.cids = [0]
-        assert isinstance(elements, (str, unicode)), elements
-        self.elements = elements
+        assert isinstance(element_str, (str, unicode)), element_str
+        self.element_str = element_str
         self.elements_pound = elements_pound
         self.editable = editable
+
+    @property
+    def element_ids(self):
+        return parse_patran_syntax(self.element_str, pound=self.elements_pound)
+
+    @element_ids.setter
+    def element_ids(self, eids):
+        assert isinstance(eids, ndarray), eids
+        self.element_str = _get_collapsed_text(eids).strip()
 
     def __repr__(self):
         msg = 'Group:\n'
         msg += '  name: %s\n' % self.name
         msg += '  editable: %s\n' % self.editable
         #msg += '  cids: [%s]\n' % _get_collapsed_text(self.cids).strip()
-        msg += '  elements: [%s]\n' % self.elements
+        msg += '  element_str: [%s]\n' % self.element_str
         #msg += '  elements: [%s]\n' % _get_collapsed_text(self.elements).strip()
         msg += '  elements_pound: %s\n' % self.elements_pound
         return msg
@@ -775,22 +811,22 @@ def main():
     app = QtGui.QApplication(sys.argv)
 
     d = {
-        0 : Group(name='main', elements='1:#', elements_pound='103', editable=False),
-        1 : Group(name='wing', elements='1:10', elements_pound='103', editable=True),
-        2 : Group(name='fuselage1', elements='50:60', elements_pound='103', editable=True),
-        3 : Group(name='fuselage2', elements='50:60', elements_pound='103', editable=True),
-        4 : Group(name='fuselage3', elements='50:60', elements_pound='103', editable=True),
-        5 : Group(name='fuselage4', elements='50:60', elements_pound='103', editable=True),
-        6 : Group(name='fuselage5', elements='50:60', elements_pound='103', editable=True),
-        7 : Group(name='fuselage6', elements='50:60', elements_pound='103', editable=True),
-        8 : Group(name='fuselage7', elements='50:60', elements_pound='103', editable=True),
-        9 : Group(name='fuselage8', elements='50:60', elements_pound='103', editable=True),
-        10 : Group(name='fuselage9', elements='50:60', elements_pound='103', editable=True),
-        11 : Group(name='fuselage10', elements='50:60', elements_pound='103', editable=True),
-        12 : Group(name='fuselage11', elements='50:60', elements_pound='103', editable=True),
-        13 : Group(name='fuselage12', elements='50:60', elements_pound='103', editable=True),
-        14 : Group(name='fuselage13', elements='50:60', elements_pound='103', editable=True),
-        15 : Group(name='fuselage14', elements='50:60', elements_pound='103', editable=True),
+        0 : Group(name='main', element_str='1:#', elements_pound='103', editable=False),
+        1 : Group(name='wing', element_str='1:10', elements_pound='103', editable=True),
+        2 : Group(name='fuselage1', element_str='50:60', elements_pound='103', editable=True),
+        3 : Group(name='fuselage2', element_str='50:60', elements_pound='103', editable=True),
+        4 : Group(name='fuselage3', element_str='50:60', elements_pound='103', editable=True),
+        5 : Group(name='fuselage4', element_str='50:60', elements_pound='103', editable=True),
+        6 : Group(name='fuselage5', element_str='50:60', elements_pound='103', editable=True),
+        7 : Group(name='fuselage6', element_str='50:60', elements_pound='103', editable=True),
+        8 : Group(name='fuselage7', element_str='50:60', elements_pound='103', editable=True),
+        9 : Group(name='fuselage8', element_str='50:60', elements_pound='103', editable=True),
+        10 : Group(name='fuselage9', element_str='50:60', elements_pound='103', editable=True),
+        11 : Group(name='fuselage10', element_str='50:60', elements_pound='103', editable=True),
+        12 : Group(name='fuselage11', element_str='50:60', elements_pound='103', editable=True),
+        13 : Group(name='fuselage12', element_str='50:60', elements_pound='103', editable=True),
+        14 : Group(name='fuselage13', element_str='50:60', elements_pound='103', editable=True),
+        15 : Group(name='fuselage14', element_str='50:60', elements_pound='103', editable=True),
     }
     main_window = GroupsModify(d)
     main_window.show()
