@@ -289,6 +289,8 @@ class GUIMethods(GuiAttributes):
         pass
     def turn_text_off(self):
         pass
+    def create_global_axes(self, dim_max):
+        pass
     def update_axes_length(self, value):
         self.dim_max = value
     def passer(self):
