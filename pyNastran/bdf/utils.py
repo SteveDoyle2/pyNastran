@@ -502,7 +502,7 @@ def parse_patran_syntax(node_sets, pound=None):
     """
     assert isinstance(node_sets, string_types), type(node_sets)
     if pound is not None:
-        assert isinstance(pound, (str, unicode, int)), type(pound)
+        assert isinstance(pound, (string_types, int)), type(pound)
         node_sets = node_sets.replace('#', str(pound).strip())
     if len(node_sets) == 0:
         return array([], dtype='int32')
