@@ -91,27 +91,11 @@ class GroupsModify(QtGui.QDialog):
         #self.coords_pound = data['coords_pound']
 
 
-        self.use_qlist = True
-
-        if self.use_qlist:
-            self.table = QtGui.QListWidget(parent=None)
-            self.table.clear()
-            self.table.addItems(self.keys)
-        else:
-            header_labels = ['Groups']
-            table_model = Model(self.keys, header_labels, self)
-            view = CustomQTableView(self) #Call your custom QTableView here
-            view.setModel(table_model)
-            view.horizontalHeader().setResizeMode(QtGui.QHeaderView.Stretch)
-            self.table = view
-
+        self.table = QtGui.QListWidget(parent=None)
+        self.table.clear()
+        self.table.addItems(self.keys)
 
         # table
-        if not self.use_qlist:
-            header = self.table.horizontalHeader()
-            header.setStretchLastSection(True)
-
-
         self.setWindowTitle('Groups: Modify')
         self.create_widgets()
         self.create_layout()
@@ -123,6 +107,7 @@ class GroupsModify(QtGui.QDialog):
     def create_widgets(self):
         # Name
         self.name = QtGui.QLabel("Name:")
+        self.name_set = QtGui.QPushButton("Set")
         self.name_edit = QtGui.QLineEdit(str(self._default_name).strip())
         self.name_button = QtGui.QPushButton("Default")
 
@@ -178,11 +163,11 @@ class GroupsModify(QtGui.QDialog):
         self.delete_group_button = QtGui.QPushButton('Delete Group')
 
         self.name.setEnabled(False)
+        self.name_set.setEnabled(False)
         self.name_edit.setEnabled(False)
         self.name_button.setEnabled(False)
         self.elements.setEnabled(False)
         self.elements_button.setEnabled(False)
-        self.elements_set.setEnabled(False)
         self.elements_edit.setEnabled(False)
         self.add.setEnabled(False)
         self.add_button.setEnabled(False)
@@ -243,11 +228,17 @@ class GroupsModify(QtGui.QDialog):
         self.setLayout(vbox)
 
     def on_set_name(self):
-        print('on_set_name')
-        name = str(cell.text()).strip()
+        name = str(self.name_edit.text()).strip()
         if name not in self.keys:
+            self.name_edit.setStyleSheet("QLineEdit{background: white;}")
             group = self.out_data[self.active_key]
             group.name = name
+            self.keys[self.active_key] = name
+            self.recreate_table()
+        elif name != self.keys[self.active_key]:
+            self.name_edit.setStyleSheet("QLineEdit{background: red;}")
+        elif name == self.keys[self.active_key]:
+            self.name_edit.setStyleSheet("QLineEdit{background: white;}")
 
     def set_connections(self):
         #self.connect(self.name_edit, QtCore.SIGNAL("textChanged(QString)"), self.on_name)
@@ -260,8 +251,7 @@ class GroupsModify(QtGui.QDialog):
         self.connect(self.add_button, QtCore.SIGNAL('clicked()'), self.on_add)
         self.connect(self.remove_button, QtCore.SIGNAL('clicked()'), self.on_remove)
 
-        if self.use_qlist:
-            self.connect(self.table, QtCore.SIGNAL('itemClicked(QListWidgetItem *)'), self.on_update_active_key)
+        self.connect(self.table, QtCore.SIGNAL('itemClicked(QListWidgetItem *)'), self.on_update_active_key)
 
         #self.connect(self.color_edit, QtCore.SIGNAL('clicked()'), self.on_edit_color)
         #self.color_edit.clicked.connect(self.on_edit_color)
@@ -277,7 +267,6 @@ class GroupsModify(QtGui.QDialog):
         self.connect(self.delete_group_button, QtCore.SIGNAL('clicked()'), self.on_delete_group)
 
     def on_create_group(self):
-        print('on_create_group')
         irow = self.nrows
         new_key = 'Group %s' % irow
         while new_key in self.keys:
@@ -285,53 +274,17 @@ class GroupsModify(QtGui.QDialog):
             new_key = 'Group %s' % irow
         irow = self.nrows
 
-        if self.use_qlist:
-            self.keys.append(new_key)
-            group = Group(
-                new_key,
-                element_str='',
-                elements_pound=self.elements_pound,
-                editable=True)
+        self.keys.append(new_key)
+        group = Group(
+            new_key,
+            element_str='',
+            elements_pound=self.elements_pound,
+            editable=True)
+        self.out_data[irow] = group
 
-            self.out_data[irow] = group
-            self.table.reset()
-            self.table.addItems(self.keys)
-        else:
-            self.table.model.addRow(new_key)
+        self.table.reset()
+        self.table.addItems(self.keys)
         self.nrows += 1
-
-        if self.use_qlist:
-            pass
-            #item = self.table.getItem(self.)
-        else:
-            for irow in range(self.nrows):
-                check = self.checks[irow]
-                is_checked = check.checkState()
-
-                # 0 - unchecked
-                # 1 - partially checked (invalid)
-                # 2 - checked
-                if irow == 0 and is_checked:
-                    # TODO: change this to a log
-                    print('error deleting group ALL...change this to a log')
-                    #self.window_parent.log
-                    return
-                if is_checked:
-                    self.table.hideRow(irow)
-                    self.deleted_groups.add(irow)
-                    check.setCheckState(0)
-
-            if self.imain > 0 and self.shown_set == set([0]):
-                bold = QtGui.QFont()
-                bold.setBold(True)
-                bold.setItalic(True)
-
-                self.imain = 0
-                irow = 0
-                check = self.checks[irow]
-                name_text = self.names_texts[irow]
-                name_text.setFont(bold)
-                name_text.setBackground(QtGui.QColor(*self.light_grey))
 
         #----------------------------------
         # update internal parameters
@@ -347,35 +300,25 @@ class GroupsModify(QtGui.QDialog):
 
     def recreate_table(self):
         # update gui
-        if self.use_qlist:
-            #self.table.reset()
-            self.table.clear()
-            self.table.addItems(self.keys)
-            #item = self.table.getItem(self.imain)
-            item = self.table.item(self.imain)
+        #self.table.reset()
+        self.table.clear()
+        self.table.addItems(self.keys)
+        item = self.table.item(self.imain)
 
-            bold = QtGui.QFont()
-            bold.setBold(True)
-            bold.setItalic(True)
-            item.setFont(bold)
-            self.table.update()
-        else:
-            model = self.table.model()
-            model.reset()
-            for i, key in enumerate(self.keys):
-                model.insertRow(i, key)
-            #model.setData(self.keys)
+        bold = QtGui.QFont()
+        bold.setBold(True)
+        bold.setItalic(True)
+        item.setFont(bold)
+        self.table.update()
 
         # update key
         name = self.keys[self.active_key]
         self._update_active_key_by_name(name)
 
     def on_delete_group(self):
-        print('on_delete_group - A')
         if self.active_key == 0:
             return
 
-        print('on_delete_group - B')
         #self.deleted_groups.add(self.imain)
         items = {}
         j = 0
@@ -394,26 +337,6 @@ class GroupsModify(QtGui.QDialog):
 
         self.recreate_table()
 
-        ## update gui
-        #if self.use_qlist:
-            ##self.table.reset()
-            #self.table.clear()
-            #self.table.addItems(self.keys)
-            ##item = self.table.getItem(self.imain)
-            #item = self.table.item(self.imain)
-
-            #bold = QtGui.QFont()
-            #bold.setBold(True)
-            #bold.setItalic(True)
-            #item.setFont(bold)
-            #self.table.update()
-        #else:
-            #model = self.table.model()
-            #model.reset()
-            #for i, key in enumerate(self.keys):
-                #model.insertRow(i, key)
-            ##model.setData(self.keys)
-
         # update key
         name = self.keys[self.active_key]
         self._update_active_key_by_name(name)
@@ -427,43 +350,12 @@ class GroupsModify(QtGui.QDialog):
         normal.setBold(False)
         normal.setItalic(False)
 
-        if self.use_qlist:
-            obj = self.table.item(self.imain)
-            obj.setFont(normal)
+        obj = self.table.item(self.imain)
+        obj.setFont(normal)
 
-            self.imain = self.active_key
-            obj = self.table.item(self.imain)
-            obj.setFont(bold)
-        else:
-            imain = None
-            imain_set = False
-            for irow in range(self.nrows):
-                check = self.checks[irow]
-                name_text = self.names_text[irow]
-                is_checked = check.checkState()
-
-                # 0 - unchecked
-                # 1 - partially checked (invalid)
-                # 2 - checked
-                if is_checked and not imain_set:
-                    # TODO: change this to a log
-                    #self.window_parent.log
-                    imain_set = True
-                    imain = irow
-                    name_text.setFont(bold)
-                    name_text.setBackground(QtGui.QColor(*self.light_grey))
-                    self.shown_set.add(irow)
-                elif irow == self.imain:
-                    name_text.setFont(normal)
-                    if irow == 0:
-                        name_text.setBackground(QtGui.QColor(*self.white))
-                        if irow in self.shown_set:
-                            self.shown_set.remove(irow)
-                    elif imain == 0:
-                        name_text.setBackground(QtGui.QColor(*self.white))
-                        self.shown_set.remove(imain)
-            self.imain = imain
-
+        self.imain = self.active_key
+        obj = self.table.item(self.imain)
+        obj.setFont(bold)
         group = self.out_data[self.imain]
         self._default_elements = group.element_str
         self._default_name = group.name
@@ -637,15 +529,10 @@ class GroupsModify(QtGui.QDialog):
         if flag0 and flag1:
             self._default_name = name
             self._default_elements = self.eids
-            self.out_data['name'] = name
-            self.out_data['elements'] = elements
+            #self.out_data['name'] = name
+            #self.out_data['elements'] = elements
             #self.out_data['coords'] = coords
             self.out_data['clicked_ok'] = True
-
-            #print("name = %r" % self.name_edit.text())
-            #print("min = %r" % self.min_edit.text())
-            #print("max = %r" % self.max_edit.text())
-            #print("format = %r" % self.format_edit.text())
             return True
         return False
 
@@ -670,10 +557,7 @@ class GroupsModify(QtGui.QDialog):
     def update_active_key(self, index):
         old_obj = self.out_data[self.imain]
 
-        if self.use_qlist:
-            name = str(index.text())
-        else:
-            name = str(index.data().toString())
+        name = str(index.text())
         #i = self.keys.index(self.active_key)
 
         self._update_active_key_by_name(name)
@@ -691,6 +575,7 @@ class GroupsModify(QtGui.QDialog):
 
         self.eids = parse_patran_syntax(obj.element_str, pound=obj.elements_pound)
         self._default_elements = obj.element_str
+        self._default_name = name
         self._apply_cids_eids()
 
         if name == 'main':
@@ -773,6 +658,12 @@ def _remove(adict, keys, values_to_remove):
 
 class Group(object):
     def __init__(self, name, element_str, elements_pound, editable=True):
+        if len(name):
+            assert len(name) > 0, name
+            assert name[-1] != ' ', name
+            assert '\n' not in name, name
+            assert '\r' not in name, name
+            assert '\t' not in name, name
         self.name = name
         #self.cids = [0]
         assert isinstance(element_str, (str, unicode)), element_str

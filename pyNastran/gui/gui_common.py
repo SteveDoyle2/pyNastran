@@ -326,6 +326,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                 ('surface', 'Surface Model', 'tsolid.png', 's', 'Show Model as a Surface Model', self.on_surface),
                 ('geo_properties', 'Edit Geometry Properties', '', None, 'Change Model Color/Opacity/Line Width', self.edit_geometry_properties),
                 ('modify_groups', 'Modify Groups', '', None, 'Create/Edit/Delete Groups', self.modify_group),
+                ('create_groups_by_property_id', 'Create Groups By Property ID', '', None, 'Create Groups', self.create_groups_by_property_id),
 
                 ('show_info', 'Show INFO', 'show_info.png', None, 'Show "INFO" messages', self.on_show_info),
                 ('show_debug', 'Show DEBUG', 'show_debug.png', None, 'Show "DEBUG" messages', self.on_show_debug),
@@ -428,7 +429,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             'screenshot', '', 'wireframe', 'surface', 'camera_reset', '',
             'back_color', 'text_color', '',
             'label_color', 'label_clear', 'label_reset', '',
-            'legend', 'geo_properties', 'modify_groups', '', 'clipping', #'axis',
+            'legend', 'geo_properties', 'modify_groups', 'create_groups_by_property_id', '', 'clipping', #'axis',
             'edges', 'edges_black',]
         if self.html_logging:
             self.actions['log_dock_widget'] = self.log_dock_widget.toggleViewAction()
@@ -1126,6 +1127,34 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         # TODO: update for indices
         # TODO: remove eids that are out of range
         self.show_elements_mask(i)
+
+    def create_groups_by_property_id(self):
+        self._create_groups_by_name('PropertyID', 'property')
+
+    def _create_groups_by_name(self, name, prefix):
+        eids = self.find_result_by_name('ElementID')
+        elements_pound = eids.max()
+
+        result = self.find_result_by_name(name)
+        ures = np.unique(result)
+        for uresi in ures:
+            ids = np.where(uresi == result)[0]
+
+            name = '%s %s' % (prefix, uresi)
+            element_str = ''
+            group = Group(
+                name, element_str, elements_pound,
+                editable=True)
+            group.element_ids = eids[ids]
+            print('creating group=%r' % name)
+            self.groups[name] = group
+
+    def find_result_by_name(self, desired_name):
+        for icase in range(self.ncases):
+            name, result = self.get_name_result_data(icase)
+            if name == desired_name:
+                return result
+        raise RuntimeError('cannot find name=%r' % desired_name)
 
     def show_elements_mask(self, eids_to_show):
         flip_flag = True == self._show_flag
@@ -3495,10 +3524,14 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             return
         print('groups.keys() =', self.groups.keys())
 
-        i = 0
-        data = {}
+        data = {0 : self.groups['main']}
+
+        i = 1
         for name, group in sorted(iteritems(self.groups)):
+            if name == 'main':
+                continue
             data[i] = group
+            i += 1
         #data = deepcopy(self.groups)
 
         if not self._modify_groups_window_shown:
@@ -3517,7 +3550,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             self.on_update_modify_group(data)
             imain = self._modify_groups.imain
             name = self._modify_groups.keys[imain]
-            self.post_group(name)
+            self.post_group_by_name(name)
             #name =
             #self._save_geometry_properties(data)
             del self._modify_groups
@@ -3535,7 +3568,9 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         #self.groups = out_data
         data = {}
         for group_id, group in sorted(iteritems(out_data)):
-            data[name] = group.name
+            if not isinstance(group, Group):
+                continue
+            data[group.name] = group
         self.groups = data
 
     def on_update_geometry_properties(self, out_data):
