@@ -522,8 +522,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'MATPOOL': [self._table_passer, self._table_passer], # DMIG bulk data entries
             b'CSTM':    [self._table_passer, self._table_passer],
             b'AXIC':    [self._table_passer, self._table_passer],
-            b'OPHIG' :  [self._table_passer, self._table_passer],  # eigenvectors in basic coordinate system
-            b'BOPHIG':  [self._table_passer, self._table_passer],  # eigenvectors in basic coordinate system
             b'ONRGY2':  [self._table_passer, self._table_passer],
 
             b'RSOUGV1': [self._table_passer, self._table_passer],
@@ -666,6 +664,9 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OUPV1'   : [self._read_oug1_3, self._read_oug_4],  # scaled response spectra - displacement
             b'TOUGV1'  : [self._read_oug1_3, self._read_oug_4],  # grid point temperature
             b'ROUGV1'  : [self._read_oug1_3, self._read_oug_4], # relative OUG
+
+            b'OPHIG' :  [self._read_oug1_3, self._read_oug_4],  # eigenvectors in basic coordinate system
+            b'BOPHIG':  [self._read_oug1_3, self._read_oug_4],  # eigenvectors in basic coordinate system
 
             b'OUGV2'   : [self._read_oug2_3, self._read_oug_4],  # displacements in nodal frame
 

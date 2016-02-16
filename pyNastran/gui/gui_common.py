@@ -76,7 +76,6 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
         QtGui.QMainWindow.__init__(self)
         GuiCommon.__init__(self, inputs)
-        self.is_groups = True
 
         self.fmts = fmt_order
         self.base_window_title = "pyNastran v%s"  % pyNastran.__version__
@@ -228,10 +227,12 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             print(type(txt))
             raise
         except Exception as e:
-            #traceback.print_stack()
+            #self.log_error(traceback.print_stack(f))
+            self.log_error('\n' + ''.join(traceback.format_stack()))
             #traceback.print_exc(file=self.log_error)
             self.log_error(str(e))
             self.log_error(str(txt))
+            raise
             return
         if clear:
             self.python_dock_widget.enter_data.clear()
@@ -326,7 +327,9 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                 ('surface', 'Surface Model', 'tsolid.png', 's', 'Show Model as a Surface Model', self.on_surface),
                 ('geo_properties', 'Edit Geometry Properties', '', None, 'Change Model Color/Opacity/Line Width', self.edit_geometry_properties),
                 ('modify_groups', 'Modify Groups', '', None, 'Create/Edit/Delete Groups', self.modify_group),
+
                 ('create_groups_by_property_id', 'Create Groups By Property ID', '', None, 'Create Groups', self.create_groups_by_property_id),
+                #('create_list', 'Create Lists through Booleans', '', None, 'Create List', self.create_list),
 
                 ('show_info', 'Show INFO', 'show_info.png', None, 'Show "INFO" messages', self.on_show_info),
                 ('show_debug', 'Show DEBUG', 'show_debug.png', None, 'Show "DEBUG" messages', self.on_show_debug),
@@ -429,7 +432,11 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             'screenshot', '', 'wireframe', 'surface', 'camera_reset', '',
             'back_color', 'text_color', '',
             'label_color', 'label_clear', 'label_reset', '',
-            'legend', 'geo_properties', 'modify_groups', 'create_groups_by_property_id', '', 'clipping', #'axis',
+            'legend', 'geo_properties']
+        if self.is_groups:
+            menu_view += ['modify_groups', 'create_groups_by_property_id']
+        menu_view += [
+            '', 'clipping', #'axis',
             'edges', 'edges_black',]
         if self.html_logging:
             self.actions['log_dock_widget'] = self.log_dock_widget.toggleViewAction()
@@ -661,22 +668,27 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
     def log_info(self, msg):
         """ Helper funtion: log a messaage msg with a 'INFO:' prefix """
+        assert msg is not None, msg
         self.log.simple_msg(msg, 'INFO')
 
     def log_debug(self, msg):
         """ Helper funtion: log a messaage msg with a 'DEBUG:' prefix """
+        assert msg is not None, msg
         self.log.simple_msg(msg, 'DEBUG')
 
     def log_command(self, msg):
         """ Helper funtion: log a messaage msg with a 'COMMAND:' prefix """
+        assert msg is not None, msg
         self.log.simple_msg(msg, 'COMMAND')
 
     def log_error(self, msg):
         """ Helper funtion: log a messaage msg with a 'GUI ERROR:' prefix """
+        assert msg is not None, msg
         self.log.simple_msg(msg, 'GUI ERROR')
 
     def log_warning(self, msg):
         """ Helper funtion: log a messaage msg with a 'WARNING:' prefix """
+        assert msg is not None, msg
         self.log.simple_msg(msg, 'WARNING')
 
     def change_background_color(self):
@@ -1050,18 +1062,23 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.log_command('rotate(%s)' % rotate_deg)
 
     def on_rotate_clockwise(self):
+        """rotate clockwise"""
         self.rotate(15.0)
 
     def on_rotate_cclockwise(self):
+        """rotate counter clockwise"""
         self.rotate(-15.0)
 
     def on_increase_magnification(self):
+        """zoom in"""
         self.zoom(1.1)
 
     def on_decrease_magnification(self):
+        """zoom out"""
         self.zoom(1.0 / 1.1)
 
     def on_flip_edges(self):
+        """turn edges on/off"""
         self.is_edges = not self.is_edges
         self.edge_actor.SetVisibility(self.is_edges)
         #self.edge_actor.GetProperty().SetColor(0, 0, 0)  # cart3d edge color isn't black...
@@ -1085,10 +1102,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.vtk_interactor.Render()
 
     def get_edges(self):
-        """
-        .. todo:: For some reason, the edge color is set to the parent
-        surface's color instead of black
-        """
+        """Create the edge actor"""
         edges = vtk.vtkExtractEdges()
         if self.vtk_version[0] >= 6:
             # new
@@ -1111,25 +1125,50 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
     def post_group_by_name(self, name):
         group = self.groups[name]
         self.post_group(group)
+        self.group_active = name
 
     def post_group(self, group):
+        """posts a group object"""
         eids = group.element_ids
-        print('eids = ', eids)
+        self.show_eids(eids)
 
+    def get_all_eids(self):
+        """get the list of all the element IDs"""
         name, result = self.get_name_result_data(0)
         if name != 'ElementID':
             name, result = self.get_name_result_data(1)
             assert name == 'ElementID', name
+        return result
 
-        eids = np.intersect1d(result, eids)
-        i = np.searchsorted(result, eids)
+    def show_eids(self, eids):
+        """shows the specified element IDs"""
+        all_eids = self.get_all_eids()
 
-        # TODO: update for indices
-        # TODO: remove eids that are out of range
-        self.show_elements_mask(i)
+        # remove eids that are out of range
+        eids = np.intersect1d(all_eids, eids)
+
+        # update for indices
+        i = np.searchsorted(all_eids, eids)
+        self.show_ids_mask(i)
+
+    def hide_eids(self, eids):
+        """hides the specified element IDs"""
+        all_eids = self.get_all_eids()
+
+        # remove eids that are out of range
+        # I don't think I need this...
+        #eids = np.intersect1d(all_eids, eids)
+
+        # A-B
+        eids = np.setdiff1d(all_eids, eids)
+
+        # update for indices
+        i = np.searchsorted(all_eids, eids)
+        self.show_ids_mask(i)
 
     def create_groups_by_property_id(self):
         self._create_groups_by_name('PropertyID', 'property')
+        self.log_command('create_groups_by_property_id()')
 
     def _create_groups_by_name(self, name, prefix):
         eids = self.find_result_by_name('ElementID')
@@ -1146,7 +1185,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                 name, element_str, elements_pound,
                 editable=True)
             group.element_ids = eids[ids]
-            print('creating group=%r' % name)
+            self.log_info('creating group=%r' % name)
             self.groups[name] = group
 
     def find_result_by_name(self, desired_name):
@@ -1156,25 +1195,25 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                 return result
         raise RuntimeError('cannot find name=%r' % desired_name)
 
-    def show_elements_mask(self, eids_to_show):
+    def show_ids_mask(self, ids_to_show):
         flip_flag = True == self._show_flag
-        self._update_element_mask(eids_to_show, flip_flag, show_flag=True)
-        self._update_element_mask(eids_to_show, False, show_flag=True)
+        self._update_ids_mask(ids_to_show, flip_flag, show_flag=True)
+        self._update_ids_mask(ids_to_show, False, show_flag=True)
         self._show_flag = True
 
-    def hide_elements_mask(self, eids_to_hide):
+    def hide_ids_mask(self, ids_to_hide):
         flip_flag = False == self._show_flag
-        self._update_element_mask(eids_to_hide, flip_flag, show_flag=False)
-        self._update_element_mask(eids_to_hide, False, show_flag=False)
+        self._update_ids_mask(ids_to_hide, flip_flag, show_flag=False)
+        self._update_ids_mask(ids_to_hide, False, show_flag=False)
         self._show_flag = False
 
-    def _update_element_mask(self, eids_to_show, flip_flag=True, show_flag=True):
+    def _update_ids_mask(self, ids_to_show, flip_flag=True, show_flag=True):
         ids = vtk.vtkIdTypeArray()
         ids.SetNumberOfComponents(1)
-        #ids.SetNumberOfValues(len(eids_to_show))
-        ids.Allocate(len(eids_to_show))
-        for eid in eids_to_show:
-            ids.InsertNextValue(eid)
+        #ids.SetNumberOfValues(len(ids_to_show))
+        ids.Allocate(len(ids_to_show))
+        for idi in ids_to_show:
+            ids.InsertNextValue(idi)
         ids.Modified()
 
         if flip_flag:
@@ -1194,8 +1233,10 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
         #ids.Update()
         #self.shown_ids.Modified()
-
         self.grid_selected.ShallowCopy(self.extract_selection.GetOutput())
+        self.update_all()
+
+    def update_all(self):
         self.grid_selected.Modified()
 
         #selection_node.Update()
@@ -1229,7 +1270,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         #render_window.Update()
         render_window.Render()
         #if flip_flag:
-            #self._update_element_mask(
+            #self._update_ids_mask(
                 #eids_to_show, flip_flag=False, show_flag=show_flag)
 
 
@@ -2153,6 +2194,13 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         #camera.GetClippingRange()
         #camera.GetFocalPoint()
 
+    def _on_multi_pick(self, a):
+        """
+        vtkFrustumExtractor
+        vtkAreaPicker
+        """
+        pass
+
     def _on_cell_picker(self, a):
         self.vtk_interactor.SetPicker(self.cell_picker)
         picker = self.cell_picker
@@ -2187,24 +2235,24 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         #self.log_info("select_point = %s" % str(select_point))
         #self.log_info("data_set = %s" % ds)
 
-    def get_2d_point(self, point3d, view_matrix,
-                     projection_matrix,
-                     width, height):
-        view_projection_matrix = projection_matrix * view_matrix
-        # transform world to clipping coordinates
-        point3d = view_projection_matrix.multiply(point3d)
-        win_x = math.round(((point3d.getX() + 1) / 2.0) * width)
-        # we calculate -point3D.getY() because the screen Y axis is
-        # oriented top->down
-        win_y = math.round(((1 - point3d.getY()) / 2.0) * height)
-        return Point2D(win_x, win_y)
+    #def get_2d_point(self, point3d, view_matrix,
+                     #projection_matrix,
+                     #width, height):
+        #view_projection_matrix = projection_matrix * view_matrix
+        ## transform world to clipping coordinates
+        #point3d = view_projection_matrix.multiply(point3d)
+        #win_x = math.round(((point3d.getX() + 1) / 2.0) * width)
+        ## we calculate -point3D.getY() because the screen Y axis is
+        ## oriented top->down
+        #win_y = math.round(((1 - point3d.getY()) / 2.0) * height)
+        #return Point2D(win_x, win_y)
 
-    def get_3d_point(self, point2D, width, height, view_matrix, projection_matrix):
-        x = 2.0 * win_x / client_width - 1
-        y = -2.0 * win_y / client_height + 1
-        view_projection_inverse = inverse(projection_matrix * view_vatrix)
-        point3d = Point3D(x, y, 0)
-        return view_projection_inverse.multiply(point3d)
+    #def get_3d_point(self, point2D, width, height, view_matrix, projection_matrix):
+        #x = 2.0 * win_x / client_width - 1
+        #y = -2.0 * win_y / client_height + 1
+        #view_projection_inverse = inverse(projection_matrix * view_vatrix)
+        #point3d = Point3D(x, y, 0)
+        #return view_projection_inverse.multiply(point3d)
 
     def on_take_screenshot(self, fname=None, magnification=None):
         """ Take a screenshot of a current view and save as a file"""
@@ -2264,16 +2312,21 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             line_widths0 = {}
             point_sizes0 = {}
             for key, geom_actor in iteritems(self.geometry_actors):
-                prop = geom_actor.GetProperty()
-                line_width0 = prop.GetLineWidth()
-                point_size0 = prop.GetPointSize()
-                line_widths0[key] = line_width0
-                point_sizes0[key] = point_size0
-                line_width = line_width0 * magnify
-                point_size = point_size0 * magnify
-                prop.SetLineWidth(line_width)
-                prop.SetPointSize(point_size)
-                prop.Modified()
+                if isinstance(geom_actor, vtk.vtkActor):
+                    prop = geom_actor.GetProperty()
+                    line_width0 = prop.GetLineWidth()
+                    point_size0 = prop.GetPointSize()
+                    line_widths0[key] = line_width0
+                    point_sizes0[key] = point_size0
+                    line_width = line_width0 * magnify
+                    point_size = point_size0 * magnify
+                    prop.SetLineWidth(line_width)
+                    prop.SetPointSize(point_size)
+                    prop.Modified()
+                elif isinstance(geom_actor, vtk.vtkAxesActor):
+                    pass
+                else:
+                    raise NotImplementedError(geom_actor)
 
             # hide corner axis
             axes_actor = self.corner_axis.GetOrientationMarker()
@@ -2308,10 +2361,15 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
             # set linewidth back
             for key, geom_actor in iteritems(self.geometry_actors):
-                prop = geom_actor.GetProperty()
-                prop.SetLineWidth(line_widths0[key])
-                prop.SetPointSize(point_sizes0[key])
-                prop.Modified()
+                if isinstance(geom_actor, vtk.vtkActor):
+                    prop = geom_actor.GetProperty()
+                    prop.SetLineWidth(line_widths0[key])
+                    prop.SetPointSize(point_sizes0[key])
+                    prop.Modified()
+                elif isinstance(geom_actor, vtk.vtkAxesActor):
+                    pass
+                else:
+                    raise NotImplementedError(geom_actor)
 
 
     def _update_text_size(self, magnify=1.0):
@@ -2696,7 +2754,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         else:
             result_values = case[cell_id]
 
-        cell = self.grid.GetCell(cell_id)
+        cell = self.grid_selected.GetCell(cell_id)
         nnodes = cell.GetNumberOfPoints()
         points = cell.GetPoints()
         cell_type = cell.GetCellType()
@@ -2732,7 +2790,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         case_key = self.case_keys[self.icase]
         result_name = self.result_name
 
-        cell = self.grid.GetCell(cell_id)
+        cell = self.grid_selected.GetCell(cell_id)
         nnodes = cell.GetNumberOfPoints()
         points = cell.GetPoints()
 
@@ -2977,6 +3035,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                           data_format, is_blue_to_red=True, is_horizontal=True,
                           is_shown=True):
         """
+        Updates the Scalar Bar
+
         Parameters
         ----------
         title : str
@@ -3340,6 +3400,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                 plot_value = obj.get_plot_value(i, res_name) # vector
                 update_3d = True
                 print('seeting scale=%s' % scale)
+                assert isinstance(scale, float), scale
                 obj.set_scale(i, res_name, scale)
             else:
                 scalar_result = obj.get_scalar(i, res_name)
@@ -3397,11 +3458,11 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                                            is_blue_to_red=is_blue_to_red)
 
         grid_result_vector = None
-        if name_vector and 0:
-            vector_size = 3
-            grid_result_vector = self.set_grid_values(name_vector, plot_value, vector_size,
-                                                      min_value, max_value, norm_value,
-                                                      is_blue_to_red=is_blue_to_red)
+        #if name_vector and 0:
+            #vector_size = 3
+            #grid_result_vector = self.set_grid_values(name_vector, plot_value, vector_size,
+                                                      #min_value, max_value, norm_value,
+                                                      #is_blue_to_red=is_blue_to_red)
 
         self.update_scalar_bar(title, min_value, max_value, norm_value,
                                data_format, is_blue_to_red=is_blue_to_red,
@@ -3535,7 +3596,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         #data = deepcopy(self.groups)
 
         if not self._modify_groups_window_shown:
-            self._modify_groups = GroupsModify(data, win_parent=self)
+            self._modify_groups = GroupsModify(data, win_parent=self, group_active=self.group_active)
             self._modify_groups.show()
             self._modify_groups_window_shown = True
             self._modify_groups.exec_()

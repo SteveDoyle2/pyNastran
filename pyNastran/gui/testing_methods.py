@@ -116,6 +116,7 @@ class GuiAttributes(object):
         self.name = 'main'
 
         self.groups = {}
+        self.group_active = 'main'
 
     @property
     def nid_map(self):

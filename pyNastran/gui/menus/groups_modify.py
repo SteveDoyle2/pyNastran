@@ -62,7 +62,7 @@ class GroupsModify(QtGui.QDialog):
     |      Set  OK Cancel      |
     +--------------------------+
     """
-    def __init__(self, data, win_parent=None):
+    def __init__(self, data, win_parent=None, group_active='main'):
         self.win_parent = win_parent
         QtGui.QDialog.__init__(self, win_parent)
 
@@ -72,9 +72,9 @@ class GroupsModify(QtGui.QDialog):
         #self.keys = sorted(data.keys())
         #self.keys = data.keys()
         #keys = self.keys
-        self.active_key = 0 #'main'
         print(data)
         self.keys = [group.name for key, group in sorted(iteritems(data))]
+        self.active_key = self.keys.index(group_active)
 
         group_obj = data[self.active_key]
         name = group_obj.name

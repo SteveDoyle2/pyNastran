@@ -165,6 +165,7 @@ class SimpleLogger(object):
         typ : str
             type of a message (e.g. INFO)
         """
+        assert msg is not None, msg
         self.log_func(typ, msg)
 
     def info(self, msg):
@@ -178,6 +179,7 @@ class SimpleLogger(object):
         """
         if self.level not in ('debug', 'info'):
             return
+        assert msg is not None, msg
         self.msg_typ('INFO', msg)
 
     def warning(self, msg):
@@ -189,6 +191,7 @@ class SimpleLogger(object):
         msg : str
             message to be logged
         """
+        assert msg is not None, msg
         self.msg_typ('WARNING', msg)
 
     def error(self, msg):
@@ -200,6 +203,7 @@ class SimpleLogger(object):
         msg : str
             message to be logged
         """
+        assert msg is not None, msg
         self.msg_typ('ERROR', msg)
 
     def exception(self, msg):
@@ -211,6 +215,7 @@ class SimpleLogger(object):
         msg : str
             message to be logged
         """
+        assert msg is not None, msg
         self.msg_typ('ERROR', msg)
 
     def critical(self, msg):
@@ -222,6 +227,7 @@ class SimpleLogger(object):
         msg : str
             message to be logged
         """
+        assert msg is not None, msg
         self.msg_typ('CRITICAL', msg)
 
 
