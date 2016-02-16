@@ -134,12 +134,6 @@ class GuiCommon(GuiAttributes):
             #default_max, default_min = obj.get_default_min_max(i, name)
             if min_value is None and max_value is None:
                 min_value, max_value = obj.get_min_max(i, name)
-        #elif len(key) == 5:
-            #(subcase_id, result_type, vector_size, location, data_format) = key
-            #scale = 0.0
-        #elif len(key) == 6:
-            #(subcase_id, j, result_type, vector_size, location, data_format) = key
-            #scale = 0.0
         else:
             assert len(key) == 7, key
             (subcase_id, j, result_type, vector_size, location, data_format, label2) = key
@@ -338,14 +332,9 @@ class GuiCommon(GuiAttributes):
             #case = obj.get_result(i, name)
             result_type = obj.get_title(i, res_name)
             vector_size = obj.get_vector_size(i, res_name)
-            #print('res_name=%s vector_size=%s' % (res_name, vector_size))
             location = obj.get_location(i, res_name)
             data_format = obj.get_data_format(i, res_name)
             label2 = ''
-        #elif len(key) == 5:
-            #(subcase_id, result_type, vector_size, location, data_format) = key
-        #elif len(key) == 6:
-            #(subcase_id, j, result_type, vector_size, location, data_format) = key
         else:
             assert len(key) == 7, key
             # j is icase? and is used to...
@@ -368,10 +357,6 @@ class GuiCommon(GuiAttributes):
             #print('res_name=%s vector_size=%s' % (res_name, vector_size))
             location = obj.get_location(i, res_name)
             #data_format = obj.get_data_format(i, res_name)
-        #elif len(key) == 5:
-            #(subcase_id, result_type, vector_size, location, data_format) = key
-        #elif len(key) == 6:
-            #(subcase_id, j, result_type, vector_size, location, data_format) = key
         else:
             assert len(key) == 7, key
             # j is icase? and is used to...
@@ -552,10 +537,6 @@ class GuiCommon(GuiAttributes):
         if isinstance(key, int):
             (obj, (i, name)) = self.result_cases[key]
             return name
-        #elif len(key) == 5:
-            #(subcase_id, result_type, vector_size, location, data_format) = key
-        #elif len(key) == 6:
-            #(subcase_id, j, result_type, vector_size, location, data_format) = key
         else:
             assert len(key) == 7, '%s = (subcase_id, j, result_type, vector_size, location, data_format, label2)' % str(key)
             (subcase_id, j, result_type, vector_size, location, data_format, label2) = key
@@ -565,10 +546,6 @@ class GuiCommon(GuiAttributes):
         if isinstance(key, int):
             (obj, (i, name)) = self.result_cases[key]
             return obj.get_location(i, name)
-        #elif len(key) == 5:
-            #(subcase_id, result_type, vector_size, location, data_format) = key
-        #elif len(key) == 6:
-            #(subcase_id, j, result_type, vector_size, location, data_format) = key
         else:
             assert len(key) == 7, key
             try:

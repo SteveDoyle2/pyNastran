@@ -21,6 +21,8 @@ The Graphical User Interface (GUI) looks like:
 
 .. image:: ../../pyNastran/gui/qt.png
 
+.. image:: ../../pyNastran/gui/eigenvectors_groups_legend.png
+
 The GUI also has a sidebar and transient support.
 
 Running the GUI
@@ -78,15 +80,17 @@ The standard way to run the code:
 
 The **solid_bending.bdf** and **solid_bending.op2** files have been included
 as examples that work in the GUI.  They are inside the "models" folder
-(at the same level as setup.py).
+(at the same level as ``setup.py``).
 
 Features
 --------
  * Fringe Plot support
+
    - Custom Fringes supported
+
  * Command line interface
  * Scripting capability
- * High resolution screenshot (menu/button/keyboard)
+ * High resolution screenshot
  * Snap to Axis
  * Change Background Color
 
@@ -95,9 +99,11 @@ New Features
  * nodal/element-based results at the same time
  * results may be shown alongside geometry
  * show/hide elements
+
    * can edit properties (e.g. color/opacity/size) using
      ``Edit Geometry Properties...`` on the ``View`` menu
    * additional points may be added with the ``-u`` option
+
  * attach custom CSV (comma-delimited) or .txt (space/tab-delimited) files as
    either node-based or element-based results
  * attach simplistic custom geometry
@@ -111,8 +117,11 @@ New Nastran Specific Features
  * attach multiple OP2 files
  * supports SPOINTs
  * displacement/eigenvectors now shown as a deformation (real)
+
    * scale editable from legend menu
+
  * Edit Geometry Properties
+
    * SPC/MPC/RBE constraints
    * CAERO panel, subpanels
    * AEFACT control surfaces
@@ -137,40 +146,6 @@ BDF Requirements
  * Same requirements as BDF (include an executive/case control deck, define
    all cross-referenced cards, etc.)
 
-Scripting
----------
-GUI commands are logged to the window with their call signature.  Users may
-then use a custom Python script to take many pictures, show the sub-caero
-panels, etc.  A sample CAERO script that shows individual CAERO subpanels
-(instead of just the outline of the CAERO panel) is provided with the download.
-
-For example, a model with CAERO elements:
-
-.. image:: ../../pyNastran/gui/images/caero.png
-
-can use the script:
-
-.. code-block:: python
-
-  # this script no longer works...
-  self.show_cid = [1, 110000]
-  self.is_sub_panels = True
-
-and is called using:
-
-.. code-block:: console
-
-  >>> pyNastranGUI -f nastran -i bwb.bdf --script script.py
-
-
-which creates:
-
-.. image:: ../../pyNastran/gui/caero_subpanels.png
-
-Scripting may be used to call any function in the GUI class.  This includes
-dynamically loading geometry/results, changing results, taking screenshots,
-rotating the model, etc.  Most of these commands are written to the
-``COMMAND`` output.
 
 Versioning Note
 ^^^^^^^^^^^^^^^
@@ -181,7 +156,9 @@ Additional Formats
 Some of the results include:
 
    * **Nastran** ASCII input (\*.bdf, \*.nas, \*.dat, \*.pch); binary output (\*.op2)
+
      * geometry
+
         * node ID
         * element ID
         * property ID
@@ -192,6 +169,7 @@ Some of the results include:
         * PBAR/PBEAM/PBARL/PBEAML type
 
      * results (real only)
+
          * stress, strain
          * displacement, eigenvector, temperature, SPC forces, MPC forces, load vector
 
@@ -333,7 +311,7 @@ The name of the group may also be changed, but duplicate names are not allowed.
 The "main" group is the entire geometry.
 
 The bolded/italicized text indicates the group that will be displayed to the screen.
-The defaults will be updated when you click "Set As Main".  This will also update
+The defaults will be updated when you click ``Set As Main``.  This will also update
 the bolded/italicided group.
 
 Camera Views
@@ -411,16 +389,61 @@ has 3 scalar values with 2 locations.
       1.0,     2,     3.0
       4.0,     5,     6.0
 
+Custom Results Specific Buttons
+-------------------------------
+Nastran Static/Dynamic Aero solutions require custom cards that create
+difficult to view, difficult to validate geometry.  The pyNastranGUI
+aides in creating models.  The CAERO panels are seen when a model is loaded:
+
+.. image:: ../../pyNastran/gui/images/caero.png
+
+Additionally, by clicking the ``Toggle CAERO Subpanels`` button
+(the figure is somewhat outdated), the subpanels may be seen:
+
+.. image:: ../../pyNastran/gui/images/caero_subpanels.png
+
+Additionally, flaps are shown from within the GUI.  SPLINE surfaces
+are also generated and may be seen on the ``View`` -> ``Edit Geometry Properties``
+menu.
 
 Scripting
 =========
-The scripting menu allows for custom code and experimentation to be written without
-loading a script from a file.  All valid Python is accepted.  Scripting commands should
-start with ``self.``, but it's very powerful.  For example, you can do:
+GUI commands are logged to the window with their call signature.
+Scripting may be used to call any function in the GUI class.
+Most of these commands are written to the ``COMMAND`` output.
 
+For example, you can:
+
+ - load geometry
+ - load results
+ - plot unsupported result types
  - custom animations of mode shapes
  - high resolution screenshots
  - model introspection
+
+Using the Scripting menu:
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The scripting menu allows for custom code and experimentation to be written without
+loading a script from a file.  All valid Python is accepted.
+Scripting commands should start with ``self.`` as they're left off from the menu.
+
+Command line scripting
+^^^^^^^^^^^^^^^^^^^^^^
+
+``geom_script`` runs after the load_geometry method, while
+``postscript`` runs after load_results has been performed
+
+.. code-block :: python
+
+    import sys
+    self.on_take_screenshot('solid_bending.png', magnification=5)
+    sys.exit()
+
+.. code-block :: console
+
+    >>> pyNastranGUI solid_bending.bdf solid_bending.op2 --postscript take_picture.py
+
 
 High Resolution Screenshots
 ---------------------------
@@ -446,7 +469,47 @@ Animation of Mode Shapes
 
 .. image:: ../../pyNastran/gui/images/solid_bending.gif
 
-Attempt #1 - broken
+
+.. code-block:: python
+
+    from PIL.Image import open as open_image
+    from pyNastran.gui.images2gif import writeGif
+
+    icase = 9
+    out = self.get_result_data_from_icase(icase)
+    obj, i, j, res_name, subcase_id, result_type, vector_size, location, data_format, label2 = out
+
+    xyz_base = obj.xyz
+    nnodes = xyz_base.shape[0]
+    actor = self.geometry_actors['main']
+
+    screenshot_filenames = []
+    scales = np.arange(-1., 1., 0.1) * 100.
+    for scale in scales:
+        screenshot_filename = 'solid_bending_%.0f.png' % scale
+        xyz = xyz_base + scale * obj.dxyz[i, :]
+        for j in range(nnodes):
+            self.grid.GetPoints().SetPoint(j, xyz[j, :])
+
+        self.grid.Modified()
+        actor.Modified()
+        self.rend.Render()
+        self.on_take_screenshot(screenshot_filename, magnification=1)
+        screenshot_filenames.append(screenshot_filename)
+
+    screenshot_filenames += screenshot_filenames[::-1][1:]
+    gif_filename = 'solid_bending.gif'
+    with open_image(screenshot_filenames[0]) as image:
+        shape = (image.width, image.height)
+
+    print('Writing gif to %s' % (gif_filename))
+    shape2 = (shape[0] // 2, shape[1] // 2)
+    images = [open_image(filename).resize(shape2) for filename in screenshot_filenames]  # this is wrong...
+
+    #writeGif('solid_bending.gif', images, duration=1/framerate, subRectangles=False)
+    writeGif(gif_filename, images, duration=0.1, dither=0)
+
+Attempt #2 - broken
 ^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: python
@@ -481,21 +544,6 @@ Attempt #1 - broken
         #self.grid.Modified()
 
 
-Attempt #2 - broken
-^^^^^^^^^^^^^^^^^^^
-
-
-.. code-block:: python
-
-    icase = 9
-    out = self.get_result_data_from_icase(icase)
-    obj, i, j, res_name, subcase_id, result_type, vector_size, location, data_format, label2 = out
-    print(obj)
-
-    scale = 1000.
-    xyz = obj.xyz + scale * obj.dxyz[i, :]
-
-
 Attempt #3 - broken
 ^^^^^^^^^^^^^^^^^^^
 
@@ -516,48 +564,4 @@ Attempt #3 - broken
     xyz = obj.xyz + scale * obj.dxyz[i, :]
 
     grid_result_vector = self.set_grid_values(name_vector, case, vector_size, min_value, max_value, norm_value)
-
-
-Attempt #3 - works
-^^^^^^^^^^^^^^^^^^
-
-.. code-block:: python
-
-    from PIL.Image import open as open_image
-    from pyNastran.gui.images2gif import writeGif
-
-    icase = 9
-    out = self.get_result_data_from_icase(icase)
-    obj, i, j, res_name, subcase_id, result_type, vector_size, location, data_format, label2 = out
-
-    xyz_base = obj.xyz
-    nnodes = xyz_base.shape[0]
-    actor = self.geometry_actors['main']
-
-    screenshot_filenames = []
-    scales = np.arange(-1., 1., 0.1) * 100.
-    for scale in scales:
-        screenshot_filename = 'solid_bending_%.0f.png' % scale
-        xyz = xyz_base + scale * obj.dxyz[i, :]
-        for j in range(nnodes):
-            self.grid.GetPoints().SetPoint(j, xyz[j, :])
-
-        self.grid.Modified()
-        actor.Modified()
-        self.rend.Render()
-        self.on_take_screenshot(screenshot_filename, magnification=1)
-        screenshot_filenames.append(screenshot_filename)
-        break
-
-    screenshot_filenames += screenshot_filenames[::-1][1:]
-    gif_filename = 'solid_bending.gif'
-    with open_image(screenshot_filenames[0]) as image:
-        shape = (image.width, image.height)
-
-    print('Writing gif to %s' % (gif_filename))
-    shape2 = (shape[0] // 2, shape[1] // 2)
-    images = [open_image(filename).resize(shape2) for filename in screenshot_filenames]  # this is wrong...
-
-    #writeGif('solid_bending.gif', images, duration=1/framerate, subRectangles=False)
-    writeGif(gif_filename, images, duration=0.1, dither=0)
 
