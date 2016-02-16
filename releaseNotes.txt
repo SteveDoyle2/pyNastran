@@ -51,7 +51,7 @@ Solver
         solve, calculate responses
    - added D matricies for PSHELL, PCOMP, PSOLID
 
------------------------v0.8.0 released 2015/10/25-----------------------
+-----------------------v0.8.0 released 2016/2/20-----------------------
 Major changes:
  - BDF supports unicode
  - 24 new cards
@@ -145,10 +145,10 @@ GUI:
  - added label support with 'p'
  - csv result loading
  - multiple OP2 files
+ - preliminary groups
 
 F06:
- - reworked subcase/label parsing
- - still bad
+ - removed because of problems
 
 -----------------------v0.7.2 released 2015/04/25-----------------------
 Relase notes:
