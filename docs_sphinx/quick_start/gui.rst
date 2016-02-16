@@ -21,7 +21,9 @@ The Graphical User Interface (GUI) looks like:
 
 .. image:: ../../pyNastran/gui/qt.png
 
-.. image:: ../../pyNastran/gui/eigenvectors_groups_legend.png
+A somewhat messy, but more featured image:
+
+.. image:: ../../pyNastran/gui/images/eigenvectors_groups_legend.png
 
 The GUI also has a sidebar and transient support.
 
@@ -81,6 +83,13 @@ The standard way to run the code:
 The **solid_bending.bdf** and **solid_bending.op2** files have been included
 as examples that work in the GUI.  They are inside the "models" folder
 (at the same level as ``setup.py``).
+
+You can also run it like:
+
+  >>> pyNastranGUI model.bdf model1.op2
+
+Here the code will guess based on your file extension what your file format is.
+If you want to load the second OP2, you must use ``-o model2.op2``.
 
 Features
 --------
@@ -282,7 +291,7 @@ Zoom in and hover over an element and press the ``f`` key.
 The model will pan and now rotate around that point.
 Continue to hold ``f`` while the model recenters.
 Eventually, the frame will clip.
-Reset the view by clicking the Undo-looking arrow.
+Reset the view by clicking the Undo-looking arrow at the top.
 
 Modify Groups
 -------------
@@ -305,7 +314,7 @@ Add/Remove use the "Patran-style" syntax:
     100:#
 
     # every other element 1 to 11 - 1, 3, 5, 7, 9, 11
-    # 1:11:2
+    1:11:2
 
 The name of the group may also be changed, but duplicate names are not allowed.
 The "main" group is the entire geometry.
@@ -343,6 +352,8 @@ User Geometry
 
 User geometry is an attempt at creating a simple file format for defining geometry.
 This may be loaded from the command line.  The structure will probably change.
+
+The geometry may be modified from the ``Edit Geometry Properties`` menu.
 
 .. code-block:: console
 
@@ -467,6 +478,15 @@ Now take a screenshot.
 Animation of Mode Shapes
 ------------------------
 
+While it's possible to take multiple screenshots of geometry with
+different scale factors, it's tedious.  Additionally, you can only
+plot displacement-type results (e.g. displacement, eigenvector) and
+not result types like Node ID or stress unless you write a script.
+Additionally, scripts may be used to plot complex mode shapes.
+
+Writing a script makes taking 20 images and create an animation
+takes about 10 seconds.
+
 .. image:: ../../pyNastran/gui/images/solid_bending.gif
 
 
@@ -503,8 +523,10 @@ Animation of Mode Shapes
         shape = (image.width, image.height)
 
     print('Writing gif to %s' % (gif_filename))
+
+    # down-res the image so we use less space
     shape2 = (shape[0] // 2, shape[1] // 2)
-    images = [open_image(filename).resize(shape2) for filename in screenshot_filenames]  # this is wrong...
+    images = [open_image(filename).resize(shape2) for filename in screenshot_filenames]
 
     #writeGif('solid_bending.gif', images, duration=1/framerate, subRectangles=False)
     writeGif(gif_filename, images, duration=0.1, dither=0)
