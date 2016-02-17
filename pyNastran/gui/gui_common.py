@@ -39,6 +39,7 @@ from pyNastran.gui.menus.camera import CameraWindow
 from pyNastran.gui.menus.application_log import PythonConsoleWidget, ApplicationLogWidget
 from pyNastran.gui.menus.manage_actors import EditGeometryProperties
 from pyNastran.gui.menus.groups_modify import GroupsModify, Group
+from pyNastran.gui.menus.picker_text_menu import ModifyLabelPropertiesMenu
 
 from pyNastran.gui.testing_methods import CoordProperties
 #from pyNastran.gui.menus.multidialog import MultiFileDialog
@@ -312,11 +313,11 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                 ('load_csv_user_points', 'Load CSV User Points', 'user_points.png', None, 'Loads user defined points ', self.on_load_user_points),
 
                 ('back_color', 'Change background color', 'tcolorpick.png', None, 'Choose a background color', self.change_background_color),
-                ('label_color', 'Change label color', 'tcolorpick.png', None, 'Choose a label color', self.change_label_color),
+                #('label_color', 'Change label color', 'tcolorpick.png', None, 'Choose a label color', self.change_label_color),
                 ('text_color', 'Change text color', 'tcolorpick.png', None, 'Choose a text color', self.change_text_color),
 
                 ('label_clear', 'Clear current labels', '', None, 'Clear current labels', self.clear_labels),
-                ('label_resize', 'Resize labels', '', None, 'Resize labels', self.resize_labels),
+                ('label_modify', 'Modify label color/size', '', None, 'Edit Label Properties', self.on_set_label_size_color),
                 ('label_reset', 'Clear all labels', '', None, 'Clear all labels', self.reset_labels),
 
                 ('legend', 'Modify legend', 'legend.png', None, 'Set Legend', self.set_legend),
@@ -431,7 +432,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         menu_view = [
             'screenshot', '', 'wireframe', 'surface', 'camera_reset', '',
             'back_color', 'text_color', '',
-            'label_color', 'label_clear', 'label_reset', '',
+            'label_modify', 'label_clear', 'label_reset', '',
             'legend', 'geo_properties']
         if self.is_groups:
             menu_view += ['modify_groups', 'create_groups_by_property_id']
@@ -711,19 +712,17 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             call_func(color)
 
     def set_background_color(self, color):
-        """Set the background color"""
+        """
+        Set the background color
+
+        Parameters
+        ----------
+        color : (float, float, float)
+            RGB values as floats
+        """
         self.background_color = color
         self.rend.SetBackground(*color)
         self.log_command('set_background_color(%s, %s, %s)' % color)
-
-    def set_label_color(self, color):
-        """Set the label color"""
-        self.label_color = color
-        for follower_actors in itervalues(self.label_actors):
-            for follower_actor in follower_actors:
-                prop = follower_actor.GetProperty()
-                prop.SetColor(*color)
-        self.log_command('set_label_color(%s, %s, %s)' % color)
 
     def set_text_color(self, color):
         """Set the text color"""
@@ -759,6 +758,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             http://www.vtk.org/doc/nightly/html/classvtkTransform.html#ad58b847446d791391e32441b98eff151
         """
         coord_id = self.coord_id
+        self.dim_max = dim_max
         scale = 0.05 * dim_max
 
         transform = vtk.vtkTransform()
@@ -1786,8 +1786,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         if PY2:
             self.restoreGeometry(settings.value("mainWindowGeometry").toByteArray())
         if self.reset_settings:
-            self.background_color = nice_blue
-            self.label_color = red
+            self.background_color = grey
+            self.label_color = black
             self.text_color = white
             self.resize(1100, 700)
         else:
@@ -2128,7 +2128,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.node_picker.AddObserver("EndPickEvent", annotate_point_picker)
 
         #self.cell_picker.AddObserver("EndPickEvent", on_cell_picker)
-        #self.node_picker.AddObserver("EndPickEvent", on_node_picker)
+        #self.node_picker.AddObserver("EndPickEvent", on_node_picker)p
 
     def convert_units(self, result_name, result_value, xyz):
         #self.input_units
@@ -2371,13 +2371,13 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                 else:
                     raise NotImplementedError(geom_actor)
 
-
     def _update_text_size(self, magnify=1.0):
+        """Internal method for updating the bottom-left text when we go to take a picture"""
         text_size = int(14 * magnify)
         for itext, text_actor in iteritems(self.text_actors):
             text_prop = text_actor.GetTextProperty()
             text_prop.SetFontSize(text_size)
-        self.itext += 1
+        self.itext += 1  # TODO: why is htis here?
 
     def add_geometry(self):
         """
@@ -3156,6 +3156,128 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         if show_log:
             self.log_command('on_set_camera_data([%s, %s, %s, %s, %s, %s, %s, %s])'
                              % (position, focal_point, view_angle, view_up, clip_range, parallel_scale, parallel_proj, distance))
+
+    #---------------------------------------------------------------------------------------
+    # LABEL SIZE/COLOR
+    def on_set_label_size_color(self):
+        """
+        Opens a dialog box to set:
+
+        +--------+----------+
+        |  Name  |  String  |
+        +--------+----------+
+        |  Min   |  Float   |
+        +--------+----------+
+        |  Max   |  Float   |
+        +--------+----------+
+        | Format | pyString |
+        +--------+----------+
+        """
+        if not hasattr(self, 'case_keys'):
+            self.log_error('No model has been loaded.')
+            return
+
+        data = {
+            'size' : self.label_text_size,
+            'color' : self.label_color,
+            'dim_max' : self.dim_max,
+            'clicked_ok' : False,
+            'clicked_cancel' : False,
+            'close' : False,
+        }
+        #print(data)
+        if not self._label_window_shown:
+            self._label_window = ModifyLabelPropertiesMenu(data, win_parent=self)
+            self._label_window.show()
+            self._label_window_shown = True
+            self._label_window.exec_()
+        else:
+            self._label_window.activateWindow()
+
+        if 'clicked_ok' not in data:
+            self._label_window.activateWindow()
+            return
+
+        if data['clicked_ok']:
+            #self.on_update_geometry_properties(data)
+            #self._save_geometry_properties(data)
+            del self._label_window
+            self._label_window_shown = False
+        elif data['clicked_cancel']:
+            #self.on_update_geometry_properties(self.geometry_properties)
+            del self._label_window
+            self._label_window_shown = False
+
+
+        if data['close']:
+            #if not self._label_window._updated_legend:
+                #self._apply_legend(data)
+            self._label_window_shown = False
+            del self._label_window
+        else:
+            self._label_window.activateWindow()
+
+    def set_label_size_color(self, size=None, color=None):
+        """
+        Parameters
+        ----------
+        size : float
+            label size
+        color : (float, float, float)
+            RGB values
+        """
+        if size is not None:
+            assert isinstance(size, (int, float)), 'size=%r' % size
+            self.set_label_size(size)
+        if color is not None:
+            assert len(color) == 3, color
+            assert isinstance(color[0], float), 'color=%r' % color
+            self.set_label_color(color)
+
+    @property
+    def label_text_size(self):
+        return self.dim_max * 0.01 * self.label_scale
+
+    @label_text_size.setter
+    def label_text_size(self, label_text_size):
+        #self.label_text_size = self.dim_max * 0.01 * self.label_scale
+        #a = b * c * d
+        #d = a / bc
+        self.label_scale = label_text_size / (self.dim_max * 0.01)
+
+    def set_label_size(self, size, render=True):
+        """Updates the size of all the labels"""
+        assert size >= 0., size
+        self.label_text_size = size
+        for result_name, follower_actors in iteritems(self.label_actors):
+            for follower_actor in follower_actors:
+                follower_actor.SetScale(size)
+                follower_actor.Modified()
+        if render:
+            self.vtk_interactor.GetRenderWindow().Render()
+            self.log_command('set_label_size(%s)' % size)
+
+
+    def set_label_color(self, color, render=True):
+        """
+        Set the label color
+
+        Parameters
+        ----------
+        color : (float, float, float)
+            RGB values as floats
+        """
+        if np.allclose(self.label_color, color):
+            return
+        self.label_color = color
+        for follower_actors in itervalues(self.label_actors):
+            for follower_actor in follower_actors:
+                prop = follower_actor.GetProperty()
+                prop.SetColor(*color)
+
+        if render:
+            self.vtk_interactor.GetRenderWindow().Render()
+            self.log_command('set_label_color(%s, %s, %s)' % color)
 
     #---------------------------------------------------------------------------------------
     # CLIPPING MENU
