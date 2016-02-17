@@ -1,17 +1,12 @@
-See the "bdf_xxx.txt" or "op2_xxx.txt" files for a list of the BDF/OP2 features that
-are supported.  They're nice and long :)
-
 This document discusses the major features (and limitations) added in each
 version of the software.  See the HTML documentation for more information.
 
 If you like it/want to help leave some feedback on the
-Dicussion Page:     https://groups.google.com/forum/#!forum/pynastran-discuss
-Developer Dicussion https://groups.google.com/forum/#!forum/pynastran-dev
+Dicussion Page:       https://groups.google.com/forum/#!forum/pynastran-discuss
+Developer Dicussion:  https://groups.google.com/forum/#!forum/pynastran-dev
 
 If you have a bug/want a new feature or card, leave some feedback on the
 Issues List:     https://github.com/SteveDoyle2/pyNastran/issues
-
-This code was written entirely in Python and should install easily.
 
 *** Not done....
 
@@ -36,9 +31,9 @@ Overall OP2
       - ***no temperature, stress, element forces, energy
 
 
-Overall F06 Reader/Writer
-Added F06 Reader
-Added F06 Writer
+Overall F06
+F06 Reader
+F06 Writer
 
 Solver
    - not released
@@ -97,6 +92,7 @@ BDF:
    - renumbering
    - parsing of "SET 1 THRU 10 EXCEPT, 8, 11, 12" in case control deck
  - fixes:
+   - PBEAM has been reworked
    - SUPORT1 dropping extra cards with same sid
    - fixed bug in SPCAX with init
    - fixed bug in CBUSH with GB of None
@@ -137,18 +133,18 @@ OP2:
 OP2 Issues:
  - not all NX tables supported; some still cause crashes
  - PLOTEL support is likely still buggy
+ - XYPLOT can cause crashes
 
 GUI:
+ - nodal/elemental results at the same time
  - added displacement deflection results
  - improved legend control
  - added sub-grids (e.g. SPCs) & sub-grid control menu
  - added label support with 'p'
  - csv result loading
  - multiple OP2 files
+ - added scripting dock
  - preliminary groups
-
-F06:
- - removed because of problems
 
 -----------------------v0.7.2 released 2015/04/25-----------------------
 Relase notes:

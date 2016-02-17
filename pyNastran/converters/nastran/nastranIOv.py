@@ -53,7 +53,7 @@ from pyNastran.bdf.cards.elements.bars import LineElement
 from pyNastran.bdf.cards.elements.springs import SpringElement
 
 from pyNastran.converters.nastran.displacements import NastranDisplacementResults
-from pyNastran.gui.gui_result import GuiResult
+from pyNastran.gui.gui_objects.gui_result import GuiResult
 
 from pyNastran.op2.op2 import OP2
 #from pyNastran.f06.f06_formatting import get_key0
