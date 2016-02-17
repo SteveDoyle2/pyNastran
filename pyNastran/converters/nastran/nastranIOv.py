@@ -2241,23 +2241,23 @@ class NastranIO(object):
             # subcase_id, resultType, vector_size, location, dataFormat
             eid_dim_res = GuiResult(0, header='ElementDim', title='ElementDim',
                                     location='centroid', scalar=element_dim)
-            nx_res = GuiResult(0, header='NormalX', title='NormalX',
-                               location='centroid', scalar=normals[:, 0], data_format='%.2f')
-            ny_res = GuiResult(0, header='NormalY', title='NormalY',
-                               location='centroid', scalar=normals[:, 1], data_format='%.2f')
-            nz_res = GuiResult(0, header='NormalZ', title='NormalZ',
-                               location='centroid', scalar=normals[:, 2], data_format='%.2f')
-
             cases[icase] = (eid_dim_res, (0, 'ElementDim'))
-            cases[icase + 1] = (nx_res, (0, 'NormalX'))
-            cases[icase + 2] = (ny_res, (0, 'NormalY'))
-            cases[icase + 3] = (nz_res, (0, 'NormalZ'))
-
             form0.append(('ElementDim', icase, []))
-            form0.append(('NormalX', icase + 1, []))
-            form0.append(('NormalY', icase + 2, []))
-            form0.append(('NormalZ', icase + 3, []))
-            icase += 4
+            icase += 1
+            if np.abs(normals.max()) > 0.:
+                nx_res = GuiResult(0, header='NormalX', title='NormalX',
+                                   location='centroid', scalar=normals[:, 0], data_format='%.2f')
+                ny_res = GuiResult(0, header='NormalY', title='NormalY',
+                                   location='centroid', scalar=normals[:, 1], data_format='%.2f')
+                nz_res = GuiResult(0, header='NormalZ', title='NormalZ',
+                                   location='centroid', scalar=normals[:, 2], data_format='%.2f')
+                cases[icase] = (nx_res, (0, 'NormalX'))
+                cases[icase + 1] = (ny_res, (0, 'NormalY'))
+                cases[icase + 2] = (nz_res, (0, 'NormalZ'))
+                form0.append(('NormalX', icase, []))
+                form0.append(('NormalY', icase + 1, []))
+                form0.append(('NormalZ', icase + 2, []))
+                icase += 3
 
             if npabs(xoffset).max() > 0.0 or npabs(yoffset).max() > 0.0 or npabs(zoffset).max() > 0.0:
                 # offsets

@@ -2158,7 +2158,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             # 1 point = 1/72"
             # SetScale works on model scale size
             #follower.SetScale(0.5)
-            follower.SetScale(self.dim_max * 0.01 * self.label_scale)
+            follower.SetScale(self.dim_max * 0.02 * self.label_scale)
 
             prop = follower.GetProperty()
             prop.SetColor(self.label_color)
@@ -3181,9 +3181,9 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             'size' : self.label_text_size,
             'color' : self.label_color,
             'dim_max' : self.dim_max,
-            'clicked_ok' : False,
-            'clicked_cancel' : False,
-            'close' : False,
+            #'clicked_ok' : False,
+            #'clicked_cancel' : False,
+            #'close' : False,
         }
         #print(data)
         if not self._label_window_shown:
@@ -3194,24 +3194,11 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         else:
             self._label_window.activateWindow()
 
-        if 'clicked_ok' not in data:
+        if 'close' not in data:
             self._label_window.activateWindow()
             return
 
-        if data['clicked_ok']:
-            #self.on_update_geometry_properties(data)
-            #self._save_geometry_properties(data)
-            del self._label_window
-            self._label_window_shown = False
-        elif data['clicked_cancel']:
-            #self.on_update_geometry_properties(self.geometry_properties)
-            del self._label_window
-            self._label_window_shown = False
-
-
         if data['close']:
-            #if not self._label_window._updated_legend:
-                #self._apply_legend(data)
             self._label_window_shown = False
             del self._label_window
         else:
@@ -3236,14 +3223,14 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
     @property
     def label_text_size(self):
-        return self.dim_max * 0.01 * self.label_scale
+        return self.dim_max * 0.02 * self.label_scale
 
     @label_text_size.setter
     def label_text_size(self, label_text_size):
-        #self.label_text_size = self.dim_max * 0.01 * self.label_scale
+        #self.label_text_size = self.dim_max * 0.02 * self.label_scale
         #a = b * c * d
         #d = a / bc
-        self.label_scale = label_text_size / (self.dim_max * 0.01)
+        self.label_scale = label_text_size / (self.dim_max * 0.02)
 
     def set_label_size(self, size, render=True):
         """Updates the size of all the labels"""

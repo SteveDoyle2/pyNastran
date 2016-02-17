@@ -2,7 +2,7 @@
 based on manage_actors.py
 """
 from __future__ import print_function
-from math import log10, ceil
+from math import log10, ceil, floor
 from six import iteritems
 from PyQt4 import QtCore, QtGui
 
@@ -21,7 +21,7 @@ class ModifyLabelPropertiesMenu(QtGui.QDialog):
         assert isinstance(self.int_color[0], int), self.int_color
 
         self._size = data['size']
-        self.out_data = {}
+        self.out_data = data
         self.dim_max = data['dim_max']
 
         QtGui.QDialog.__init__(self, win_parent)
@@ -29,6 +29,9 @@ class ModifyLabelPropertiesMenu(QtGui.QDialog):
         self.create_widgets()
         self.create_layout()
         self.set_connections()
+        width = 260
+        height = 130
+        self.resize(width, height)
         #self.show()
 
     def create_widgets(self):
@@ -49,21 +52,22 @@ class ModifyLabelPropertiesMenu(QtGui.QDialog):
                                       "}")
 
 
-        # Max
+        # Size
         self.size = QtGui.QLabel("Size:")
         self.size_edit = QtGui.QDoubleSpinBox(self)
         self.size_edit.setRange(0.0, self.dim_max)
 
-        self.size_edit.setDecimals(int(ceil(log10(self.dim_max))))
+        log_dim = log10(self.dim_max)
+        decimals = int(ceil(abs(log_dim)))
+        decimals = max(3, decimals)
+        self.size_edit.setDecimals(decimals)
         self.size_edit.setSingleStep(self.dim_max / 100.)
         self.size_edit.setValue(self._size)
 
-        #self.size_button = QtGui.QPushButton("Default")
-
         # closing
         #self.apply_button = QtGui.QPushButton("Apply")
-        self.ok_button = QtGui.QPushButton("OK")
-        self.cancel_button = QtGui.QPushButton("Cancel")
+        #self.ok_button = QtGui.QPushButton("OK")
+        self.cancel_button = QtGui.QPushButton("Close")
 
     def create_layout(self):
         grid = QtGui.QGridLayout()
@@ -74,11 +78,10 @@ class ModifyLabelPropertiesMenu(QtGui.QDialog):
 
         grid.addWidget(self.size, 1, 0)
         grid.addWidget(self.size_edit, 1, 1)
-        #grid.addWidget(self.max_button, 1, 2)
 
         ok_cancel_box = QtGui.QHBoxLayout()
         #ok_cancel_box.addWidget(self.apply_button)
-        ok_cancel_box.addWidget(self.ok_button)
+        #ok_cancel_box.addWidget(self.ok_button)
         ok_cancel_box.addWidget(self.cancel_button)
 
         vbox = QtGui.QVBoxLayout()
@@ -118,7 +121,7 @@ class ModifyLabelPropertiesMenu(QtGui.QDialog):
         self.connect(self.color_edit, QtCore.SIGNAL('clicked()'), self.on_color)
 
         #self.connect(self.apply_button, QtCore.SIGNAL('clicked()'), self.on_apply)
-        self.connect(self.ok_button, QtCore.SIGNAL('clicked()'), self.on_ok)
+        #self.connect(self.ok_button, QtCore.SIGNAL('clicked()'), self.on_ok)
         self.connect(self.cancel_button, QtCore.SIGNAL('clicked()'), self.on_cancel)
         self.connect(self, QtCore.SIGNAL('triggered()'), self.closeEvent)
 
@@ -170,12 +173,15 @@ class ModifyLabelPropertiesMenu(QtGui.QDialog):
     def on_ok(self):
         self.out_data['clicked_ok'] = True
         self.out_data['clicked_cancel'] = False
+        self.out_data['close'] = True
         passed = self.on_apply()
         if passed:
             self.close()
             #self.destroy()
 
     def on_cancel(self):
+        self.out_data['clicked_cancel'] = True
+        self.out_data['close'] = True
         self.close()
 
 
