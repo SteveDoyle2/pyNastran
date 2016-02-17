@@ -944,13 +944,19 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
         # initialize geometry_actors
         self.geometry_actors['main'] = self.geom_actor
+        #self.geometry_actors['anti-main'] = self.not_selected_actor
 
         # bar scale set so you can't edit the bar scale
         white = (255, 255, 255)
         geom_props = AltGeometry(
             self, 'main', color=white, line_width=1, opacity=1.0, point_size=1,
             bar_scale=0.0, representation='main', is_visible=True)
+        anti_geom_props = AltGeometry(
+            self, 'anti-main', color=white, line_width=1, opacity=0.3, point_size=1,
+            bar_scale=0.0, representation='main', is_visible=True)
+
         self.geometry_properties['main'] = geom_props
+        #self.geometry_properties['anti-main'] = anti_geom_props
 
         #self.addAltGeometry()
         self.rend.GetActiveCamera().ParallelProjectionOn()
@@ -1149,15 +1155,15 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
         # update for indices
         i = np.searchsorted(all_eids, eids)
+
+        #eids_off = np.setdiff1d(all_eids, eids)
+        #j = np.setdiff1d(all_eids, eids_off)
+
         self.show_ids_mask(i)
 
     def hide_eids(self, eids):
         """hides the specified element IDs"""
         all_eids = self.get_all_eids()
-
-        # remove eids that are out of range
-        # I don't think I need this...
-        #eids = np.intersect1d(all_eids, eids)
 
         # A-B
         eids = np.setdiff1d(all_eids, eids)
@@ -1171,8 +1177,10 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.log_command('create_groups_by_property_id()')
 
     def _create_groups_by_name(self, name, prefix):
-        eids = self.find_result_by_name('ElementID')
-        elements_pound = eids.max()
+        #eids = self.find_result_by_name('ElementID')
+        #elements_pound = eids.max()
+        eids = self.groups['main'].element_ids
+        elements_pound = self.groups['main'].elements_pound
 
         result = self.find_result_by_name(name)
         ures = np.unique(result)
@@ -1188,6 +1196,18 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             self.log_info('creating group=%r' % name)
             self.groups[name] = group
 
+    def create_group_with_name(self, name, eids):
+        elements_pound = self.groups['main'].elements_pound
+        element_str = ''
+        group = Group(
+            name, element_str, elements_pound,
+            editable=True)
+
+        # TODO: make sure all the eids exist
+        group.element_ids = eids
+        self.log_command('create_group_with_name(%r, %r)' % (name, eids))
+        self.groups[name] = group
+
     def find_result_by_name(self, desired_name):
         for icase in range(self.ncases):
             name, result = self.get_name_result_data(icase)
@@ -1197,17 +1217,17 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
     def show_ids_mask(self, ids_to_show):
         flip_flag = True == self._show_flag
-        self._update_ids_mask(ids_to_show, flip_flag, show_flag=True)
-        self._update_ids_mask(ids_to_show, False, show_flag=True)
+        self._update_ids_mask(ids_to_show, flip_flag, show_flag=True, render=False)
+        self._update_ids_mask(ids_to_show, False, show_flag=True, render=True)
         self._show_flag = True
 
     def hide_ids_mask(self, ids_to_hide):
         flip_flag = False == self._show_flag
-        self._update_ids_mask(ids_to_hide, flip_flag, show_flag=False)
-        self._update_ids_mask(ids_to_hide, False, show_flag=False)
+        self._update_ids_mask(ids_to_hide, flip_flag, show_flag=False, render=False)
+        self._update_ids_mask(ids_to_hide, False, show_flag=False, render=True)
         self._show_flag = False
 
-    def _update_ids_mask(self, ids_to_show, flip_flag=True, show_flag=True):
+    def _update_ids_mask(self, ids_to_show, flip_flag=True, show_flag=True, render=True):
         ids = vtk.vtkIdTypeArray()
         ids.SetNumberOfComponents(1)
         #ids.SetNumberOfValues(len(ids_to_show))
@@ -1234,9 +1254,15 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         #ids.Update()
         #self.shown_ids.Modified()
         self.grid_selected.ShallowCopy(self.extract_selection.GetOutput())
-        self.update_all()
+        if 0:
+            self.selection_node.GetProperties().Set(vtk.vtkSelectionNode.INVERSE(), 1)
+            self.extract_selection.Update()
 
-    def update_all(self):
+            #self.grid_not_selected = vtk.vtkUnstructuredGrid()
+            self.grid_not_selected.ShallowCopy(self.extract_selection.GetOutput())
+        self.update_all(render=render)
+
+    def update_all(self, render=True):
         self.grid_selected.Modified()
 
         #selection_node.Update()
@@ -1245,8 +1271,10 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.selection.Modified()
         self.extract_selection.Update()
         self.extract_selection.Modified()
+
         #grid_selected.Update()
         self.grid_selected.Modified()
+        #self.grid_not_selected.Modified()
         self.grid_mapper.Update()
         self.grid_mapper.Modified()
         #selected_actor.Update()
@@ -1264,14 +1292,12 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.rend.Modified()
 
         self.geom_actor.Modified()
-        self.vtk_interactor.Render()
+        self.not_selected_actor.Modified()
 
-        render_window = self.vtk_interactor.GetRenderWindow()
-        #render_window.Update()
-        render_window.Render()
-        #if flip_flag:
-            #self._update_ids_mask(
-                #eids_to_show, flip_flag=False, show_flag=show_flag)
+        if render:
+            self.vtk_interactor.Render()
+            render_window = self.vtk_interactor.GetRenderWindow()
+            render_window.Render()
 
 
     def _setup_element_mask(self):
@@ -1282,24 +1308,16 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         """
         ids = vtk.vtkIdTypeArray()
         ids.SetNumberOfComponents(1)
-        #ids_to_show = np.arange(172)
-        #ids.Allocate(len(ids_to_show))
-        #for eid in ids_to_show:
-            #ids.InsertNextValue(eid)
 
         self.selection_node = vtk.vtkSelectionNode()
         self.selection_node.SetFieldType(vtk.vtkSelectionNode.CELL)
         self.selection_node.SetContentType(vtk.vtkSelectionNode.INDICES)
-        #if self._show_flag:
-            #self.selection_node.GetProperties().Set(vtk.vtkSelectionNode.INVERSE(), 1)
         self.selection_node.SetSelectionList(ids)
 
         self.selection = vtk.vtkSelection()
-        self.selection.DebugOn()
         self.selection.AddNode(self.selection_node)
 
         self.extract_selection = vtk.vtkExtractSelection()
-        self.extract_selection.DebugOn()
         if vtk.VTK_MAJOR_VERSION <= 5:
             self.extract_selection.SetInput(0, self.grid)
             self.extract_selection.SetInput(1, self.selection)
@@ -1310,8 +1328,26 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
         # In selection
         self.grid_selected = vtk.vtkUnstructuredGrid()
-        self.grid_selected.DebugOn()
         self.grid_selected.ShallowCopy(self.extract_selection.GetOutput())
+
+        #if 0:
+        self.selection_node.GetProperties().Set(vtk.vtkSelectionNode.INVERSE(), 1)
+        self.extract_selection.Update()
+
+        self.grid_not_selected = vtk.vtkUnstructuredGrid()
+        self.grid_not_selected.ShallowCopy(self.extract_selection.GetOutput())
+
+        self.not_selected_mapper = vtk.vtkDataSetMapper()
+        if vtk.VTK_MAJOR_VERSION <= 5:
+            self.not_selected_mapper.SetInputConnection(self.grid_not_selected.GetProducerPort())
+        else:
+            self.not_selected_mapper.SetInputData(self.grid_not_selected)
+
+        self.not_selected_actor = vtk.vtkLODActor()
+        self.not_selected_actor.DragableOff()
+        self.not_selected_actor.PickableOff()
+        self.not_selected_actor.SetMapper(self.not_selected_mapper)
+
 
     def create_text(self, position, label, text_size=18):
         text_actor = vtk.vtkTextActor()
@@ -2732,12 +2768,16 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             #eids = []
             #self.hide_elements_mask(eids)
             elements_pound = self.element_ids[-1]
-            group = Group(
+            main_group = Group(
                 'main', '', elements_pound,
                 editable=False)
-            group.element_ids = self.element_ids
-            self.groups['main'] = group
-            self.post_group(group)
+            anti_main_group = Group(
+                'anti-main', '', elements_pound,
+                editable=False)
+            main_group.element_ids = self.element_ids
+            self.groups['main'] = main_group
+            self.groups['anti_main'] = anti_main_group
+            self.post_group(main_group)
             #self.show_elements_mask(np.arange(self.nElements))
 
     def get_result_by_cell_id(self, cell_id, world_position):

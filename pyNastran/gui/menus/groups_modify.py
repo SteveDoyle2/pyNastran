@@ -16,23 +16,12 @@ class ColorDisplay(QtGui.QWidget):
     """
     def __init__(self, parent, default_color=None):
         super(ColorDisplay, self).__init__(parent)
-        #if default_color is None:
-        #default_color = 'red'
-        #print("default color", default_color)
         self.color = default_color
-        #self.color = QtGui.QColor(*default_color)
-        #self.color = (0.1, 0.2, 0.3)
-        #self.color = None
-        #self.color = 'red'
-        #self.color = QtGui.QColor((0.1, 0.2, 0.3))
-        #self.update()
         self.setColor(self.color)
 
     def setColor(self, color):
-        #print('setColor -> %s' % str(color))
         if color is not None:
             color = [int(255 * i) for i in color]
-        #print('qcolor input -> %s' % str(color))
         self.color = QtGui.QColor(*color)
         self.update()
 
@@ -69,10 +58,7 @@ class GroupsModify(QtGui.QDialog):
         self.win_parent = win_parent
         self.out_data = data
 
-        #self.keys = sorted(data.keys())
-        #self.keys = data.keys()
-        #keys = self.keys
-        print(data)
+        #print(data)
         self.keys = [group.name for key, group in sorted(iteritems(data))]
         self.active_key = self.keys.index(group_active)
 
@@ -85,11 +71,6 @@ class GroupsModify(QtGui.QDialog):
         self._default_name = group_obj.name
         self._default_elements = group_obj.element_str
         self.elements_pound = group_obj.elements_pound
-
-        #self._default_coords = data['coords']
-        #self._default_color = data['color']
-        #self.coords_pound = data['coords_pound']
-
 
         self.table = QtGui.QListWidget(parent=None)
         self.table.clear()
@@ -111,12 +92,6 @@ class GroupsModify(QtGui.QDialog):
         self.name_edit = QtGui.QLineEdit(str(self._default_name).strip())
         self.name_button = QtGui.QPushButton("Default")
 
-        # Coord
-        #self.coords = QtGui.QLabel("Coord IDs:")
-        #self.coords_edit = QtGui.QLineEdit(str(self._default_coords).strip())
-        #self.coords_button = QtGui.QPushButton("Default")
-
-
         # elements
         self.elements = QtGui.QLabel("Element IDs:")
         self.elements_edit = QtGui.QLineEdit(str(self._default_elements).strip())
@@ -132,26 +107,8 @@ class GroupsModify(QtGui.QDialog):
         self.remove_edit = QtGui.QLineEdit(str(''))
         self.remove_button = QtGui.QPushButton("Remove")
 
-        # color
-        #self.color = QtGui.QLabel("Color:")
-        #self.color_edit = QtGui.QPushButton()
-        #self.color_edit.setColor(self._default_color)
-        #self.color_edit = ColorDisplay(self, self._default_color)
-        #self.color_button = QtGui.QPushButton("Default")
-
         # applies a unique implicitly
         self.eids = parse_patran_syntax(str(self._default_elements), pound=self.elements_pound)
-        #self.cids = parse_patran_syntax(str(self._default_coords), pound=self.coords_pound)
-
-        # continuous / discrete
-        #self.checkbox_continuous = QtGui.QCheckBox("Continuous")
-        #self.checkbox_discrete = QtGui.QCheckBox("Discrete")
-        #self.checkbox_discrete.setChecked(self._default_is_discrete)
-
-        # put these in a group
-        #checkboxs2 = QtGui.QButtonGroup(self)
-        #checkboxs2.addButton(self.checkbox_continuous)
-        #checkboxs2.addButton(self.checkbox_discrete)
 
         # closing
         #self.apply_button = QtGui.QPushButton("Apply")
@@ -187,17 +144,9 @@ class GroupsModify(QtGui.QDialog):
         grid.addWidget(self.name_set, 0, 2)
         grid.addWidget(self.name_button, 0, 3)
 
-        #grid.addWidget(self.coords, 1, 0)
-        #grid.addWidget(self.coords_edit, 1, 1)
-        #grid.addWidget(self.coords_button, 1, 2)
-
         grid.addWidget(self.elements, 2, 0)
         grid.addWidget(self.elements_edit, 2, 1)
         grid.addWidget(self.elements_button, 2, 2)
-
-        #grid.addWidget(self.color, 3, 0)
-        #grid.addWidget(self.color_edit, 3, 1)
-        #grid.addWidget(self.color_button, 3, 2)
 
         grid.addWidget(self.add, 4, 0)
         grid.addWidget(self.add_edit, 4, 1)
@@ -241,23 +190,14 @@ class GroupsModify(QtGui.QDialog):
             self.name_edit.setStyleSheet("QLineEdit{background: white;}")
 
     def set_connections(self):
-        #self.connect(self.name_edit, QtCore.SIGNAL("textChanged(QString)"), self.on_name)
         self.connect(self.name_set, QtCore.SIGNAL('clicked()'), self.on_set_name)
-
         self.connect(self.name_button, QtCore.SIGNAL('clicked()'), self.on_default_name)
-        #self.connect(self.coords_button, QtCore.SIGNAL('clicked()'), self.on_default_coords)
         self.connect(self.elements_button, QtCore.SIGNAL('clicked()'), self.on_default_elements)
 
         self.connect(self.add_button, QtCore.SIGNAL('clicked()'), self.on_add)
         self.connect(self.remove_button, QtCore.SIGNAL('clicked()'), self.on_remove)
-
         self.connect(self.table, QtCore.SIGNAL('itemClicked(QListWidgetItem *)'), self.on_update_active_key)
 
-        #self.connect(self.color_edit, QtCore.SIGNAL('clicked()'), self.on_edit_color)
-        #self.color_edit.clicked.connect(self.on_edit_color)
-
-
-        #self.connect(self.color_button, QtCore.SIGNAL('clicked()'), self.on_default_color)
         #self.connect(self.apply_button, QtCore.SIGNAL('clicked()'), self.on_apply)
         self.connect(self.ok_button, QtCore.SIGNAL('clicked()'), self.on_ok)
         #self.connect(self.cancel_button, QtCore.SIGNAL('clicked()'), self.on_cancel)
@@ -300,7 +240,6 @@ class GroupsModify(QtGui.QDialog):
 
     def recreate_table(self):
         # update gui
-        #self.table.reset()
         self.table.clear()
         self.table.addItems(self.keys)
         item = self.table.item(self.imain)
@@ -406,15 +345,8 @@ class GroupsModify(QtGui.QDialog):
 
     def on_default_name(self):
         name = str(self._default_name)
-        #assert name not in self.keys
         self.name_edit.setText(name)
         self.name_edit.setStyleSheet("QLineEdit{background: white;}")
-        #group = self.out_data[self.active_key]
-        #group.name = name
-
-    #def on_default_coords(self):
-        #self.coords_edit.setText(str(self._default_coords))
-        #self.coords_edit.setStyleSheet("QLineEdit{background: white;}")
 
     def on_default_elements(self):
         element_str = str(self._default_elements)
@@ -422,15 +354,6 @@ class GroupsModify(QtGui.QDialog):
         self.elements_edit.setStyleSheet("QLineEdit{background: white;}")
         group = self.out_data[self.active_key]
         group.element_str = element_str
-
-    #def on_edit_color(self):
-        #c = [int(255 * i) for i in self.text_color]
-        #color = QtGui.QColorDialog.getColor(QtGui.QColor(*c), self, "Choose a text color")
-        #self.color.SetColor(color)
-
-    #def on_default_color(self):
-        #self.color_edit.setColor(self._default_color)
-        #self.elements_edit.setStyleSheet("QLineEdit{background: white;}")
 
     def check_patran_syntax(self, cell, pound=None):
         text = str(cell.text())
@@ -524,14 +447,10 @@ class GroupsModify(QtGui.QDialog):
                                                          pound=self.elements_pound)
         #coords_value, flag2 = self.check_patran_syntax(self.coords_edit,
         #pound=self.coords_pound)
-        #color = self.color
 
         if flag0 and flag1:
             self._default_name = name
             self._default_elements = self.eids
-            #self.out_data['name'] = name
-            #self.out_data['elements'] = elements
-            #self.out_data['coords'] = coords
             self.out_data['clicked_ok'] = True
             return True
         return False
@@ -544,22 +463,27 @@ class GroupsModify(QtGui.QDialog):
     def on_ok(self):
         passed = self.on_validate()
         if passed:
+            self.out_data['close'] = True
             self.close()
             #self.destroy()
 
     def on_cancel(self):
+        clicked_cancel
+        self.out_data['close'] = True
+        self.out_data['clicked_cancel'] = True
         self.close()
+
+    def keyPressEvent(self, event):
+        if event.key() == QtCore.Qt.Key_Escape:
+            self.close()
 
     def on_update_active_key(self, index):
         self.update_active_key(index)
         #str(index.text())
 
     def update_active_key(self, index):
-        old_obj = self.out_data[self.imain]
-
+        #old_obj = self.out_data[self.imain]
         name = str(index.text())
-        #i = self.keys.index(self.active_key)
-
         self._update_active_key_by_name(name)
 
     def _update_active_key_by_name(self, name):
@@ -578,7 +502,8 @@ class GroupsModify(QtGui.QDialog):
         self._default_name = name
         self._apply_cids_eids()
 
-        if name == 'main':
+        self.set_as_main_button.setEnabled(True)
+        if name in ['main', 'anti-main']:
             self.name.setEnabled(False)
             self.name_set.setEnabled(False)
             self.name_edit.setEnabled(False)
@@ -593,6 +518,8 @@ class GroupsModify(QtGui.QDialog):
             self.remove_button.setEnabled(False)
             self.remove_edit.setEnabled(False)
             self.delete_group_button.setEnabled(False)
+            if name == 'anti-main':
+                self.set_as_main_button.setEnabled(False)
             #self.apply_button.setEnabled(False)
             #self.ok_button.setEnabled(False)
         else:
@@ -602,7 +529,7 @@ class GroupsModify(QtGui.QDialog):
             self.name_button.setEnabled(True)
             self.elements.setEnabled(True)
             self.elements_button.setEnabled(True)
-            #self.elements_edit.setEnabled(True)
+
             self.add.setEnabled(True)
             self.add_button.setEnabled(True)
             self.add_edit.setEnabled(True)
@@ -615,11 +542,6 @@ class GroupsModify(QtGui.QDialog):
         # TODO: call default
         #self.elements_edit # obj.eids
 
-
-        #self.bar_scale_edit.setValue(bar_scale)
-        #self.color.setVisible(False)
-        #self.point_size_edit.setEnabled(True)
-        #self.on_apply(force=True)
 
 def _get_collapsed_text(values):
     singles, doubles = collapse_colon_packs(values)
@@ -655,6 +577,7 @@ def _remove(adict, keys, values_to_remove):
         values_remove = unique(hstack(value_stack))
         return setdiff1d(values_to_remove, values_remove)
     return values_to_remove
+
 
 class Group(object):
     def __init__(self, name, element_str, elements_pound, editable=True):
@@ -721,7 +644,6 @@ def main():
     }
     main_window = GroupsModify(d)
     main_window.show()
-    # Enter the main loop
     app.exec_()
 
 if __name__ == "__main__":
