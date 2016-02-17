@@ -12,6 +12,7 @@ from PyQt4 import QtCore, QtGui
 from pyNastran.gui.qt_files.alt_geometry_storage import AltGeometry
 from pyNastran.gui.testing_methods import CoordProperties
 
+
 class CustomQTableView(QtGui.QTableView):
     def __init__(self, *args, **kwargs):
         self.parent2 = args[0]

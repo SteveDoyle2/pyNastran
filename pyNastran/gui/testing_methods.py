@@ -36,6 +36,8 @@ class GuiAttributes(object):
         self._clipping_window_shown = False
         self._edit_geometry_properties_window_shown = False
         self._modify_groups_window_shown = False
+        self._label_window_shown = False
+        #self._label_window = None
         #-------------
         # inputs dict
         self.is_edges = False
