@@ -581,7 +581,7 @@ def parse_patran_syntax_dict(node_sets, pound_dict=None):
 
     .. note:: an identifier (e.g. "e") must be used.
               Use parse_patran_syntax to skip the identifier.
-    .. warning :: case sensitive
+    .. warning:: case sensitive
     """
     data = {}
     try:

@@ -30,6 +30,14 @@ class LineDamper(DamperElement):
         DamperElement.__init__(self)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
         self.nodes = model.Nodes(self.nodes, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
@@ -134,6 +142,14 @@ class CDAMP1(LineDamper):
         return self.pid_ref.b
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by CDAMP1 eid=%s' % self.eid
         self.nodes = model.Nodes(self.nodes, allow_empty_nodes=True, msg=msg)
         self.nodes_ref = self.nodes
@@ -241,6 +257,14 @@ class CDAMP2(LineDamper):
         return self.b
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by CDAMP2 eid=%s' % self.eid
         self.nodes = model.Nodes(self.nodes, allow_empty_nodes=True, msg=msg)
         self.nodes_ref = self.nodes
@@ -333,6 +357,14 @@ class CDAMP3(LineDamper):
         return self.pid_ref.b
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ', which is required by %s eid=%s' % (self.type, self.eid)
         self.nodes = model.Nodes(self.nodes, allow_empty_nodes=True, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
@@ -412,6 +444,14 @@ class CDAMP4(LineDamper):
         return self.b
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ', which is required by %s eid=%s' % (self.type, self.eid)
         self.nodes = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
         self.nodes_ref = self.nodes
@@ -487,6 +527,14 @@ class CDAMP5(LineDamper):
             assert self.pid_ref.type in ['PDAMP5'], 'pid=%i self.pid_ref.type=%s' % (pid, self.pid_ref.type)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ', which is required by %s eid=%s' % (self.type, self.eid)
         self.nodes = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)

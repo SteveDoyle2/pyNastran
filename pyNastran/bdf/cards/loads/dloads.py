@@ -32,6 +32,14 @@ class DLOAD(LoadCombination):
                                  comment=comment)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         load_ids2 = []
         msg = ' which is required by %s=%s' % (self.type, self.sid)
         for load_id in self.load_ids:
@@ -115,6 +123,14 @@ class RLOAD1(TabularLoad):
         return RLOAD1(sid, excite_id, delay, dphase, tc, td, Type, comment=comment)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by RLOAD1 sid=%s' % (self.sid)
         if self.tc > 0:
             self.tc = model.Table(self.tc, msg=msg)
@@ -348,6 +364,14 @@ class RLOAD2(TabularLoad):
         return out
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by RLOAD2=%s' % (self.sid)
         if self.tb:
             self.tb = model.Table(self.tb, msg=msg)
@@ -511,6 +535,14 @@ class TLOAD1(TabularLoad):
         return [self]
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by %s=%s' % (self.type, self.sid)
         if self.tid:
             self.tid = model.Table(self.tid, msg=msg)
@@ -717,6 +749,14 @@ class TLOAD2(TabularLoad):
         return [self]
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by TLOAD2 sid=%s' % (self.sid)
         if isinstance(self.delay, integer_types) and self.delay > 0:
             self.delay = model.DELAY(self.delay_id, msg=msg)

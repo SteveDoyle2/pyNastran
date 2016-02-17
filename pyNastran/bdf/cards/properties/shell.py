@@ -46,9 +46,12 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
 
     def cross_reference(self, model):
         """
-        Links the Material IDs to the materials.
+        Cross links the card so referenced cards can be extracted directly
 
-        :param model: a BDF object
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
         """
         for iply in range(len(self.thicknesses)):
             mid = self.mids[iply]
@@ -931,6 +934,14 @@ class PLPLANE(ShellProperty):
                        comment=comment)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by PLPLANE pid=%s' % self.pid
         self.mid = model.HyperelasticMaterial(self.mid, msg=msg)
         self.cid = model.Coord(self.cid, msg=msg)
@@ -1032,6 +1043,14 @@ class PSHEAR(ShellProperty):
         return self._is_same_fields(fields1, fields2)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by PSHEAR pid=%s' % self.pid
         self.mid = model.Material(self.mid, msg)
         self.mid_ref = self.mid
@@ -1323,6 +1342,14 @@ class PSHELL(ShellProperty):
         return mass_per_area
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by PSHELL pid=%s' % self.pid
         if self.mid1:
             self.mid1 = model.Material(self.mid1, msg)

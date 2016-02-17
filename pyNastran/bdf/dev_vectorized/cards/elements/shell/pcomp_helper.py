@@ -64,6 +64,14 @@ class Property_i(BaseCard):
             return self.mid_ref.mid
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by %s pid=%s' % (self.type, self.pid)
         self.mid = model.Material(self.mid, msg)
         self.mid_ref = self.mid

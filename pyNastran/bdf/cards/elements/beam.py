@@ -223,6 +223,14 @@ class CBEAM(CBAR):
         return field8
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
         self.ga = model.Node(self.ga, msg=msg)
         self.gb = model.Node(self.gb, msg=msg)

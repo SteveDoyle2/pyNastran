@@ -100,6 +100,14 @@ class LoadCombination(Load):  # LOAD, DLOAD
         return cls(sid, scale, scale_factors, load_ids, comment=comment)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         load_ids2 = []
         msg = ' which is required by %s=%s' % (self.type, self.sid)
         for load_id in self.load_ids:
@@ -181,6 +189,14 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
         raise NotImplementedError()
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by %s=%s' % (self.type, self.sid)
         self.lid = model.Load(self.lid, msg=msg)
         self.lid_ref = self.lid
@@ -285,6 +301,14 @@ class DAREA(BaseCard):
         return DAREA(sid, p, c, scale, comment=comment)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ', which is required by %s=%s' % (self.type, self.sid)
         self.p = model.Node(self.node_id, allow_empty_nodes=False, msg=msg)
         self.p_ref = self.p
@@ -374,6 +398,14 @@ class SPCD(Load):
         return _node_ids(self, nodes=self.gids, allow_empty_nodes=True, msg=msg)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ', which is required by %s=%s' % (self.type, self.sid)
         self.gids = model.Nodes(self.gids, allow_empty_nodes=True, msg=msg)
         self.gids_ref = self.gids
@@ -448,6 +480,14 @@ class SLOAD(Load):
         return SLOAD(sid, nids, mags, comment=comment)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by %s=%s' % (self.type, self.sid)
         for (i, nid) in enumerate(self.nids):
             self.nids[i] = model.Node(nid, msg=msg)
@@ -535,6 +575,14 @@ class RFORCE(Load):
                       #idrf, comment=comment)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by RFORCE sid=%s' % self.sid
         if self.nid > 0:
             self.nid = model.Node(self.nid, msg=msg)
@@ -641,6 +689,14 @@ class RANDPS(RandomLoad):
         return RANDPS(sid, j, k, x, y, tid, comment=comment)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         if self.tid:
             msg = ' which is required by RANDPS sid=%s' % (self.sid)
             #self.tid = model.Table(self.tid, msg=msg)

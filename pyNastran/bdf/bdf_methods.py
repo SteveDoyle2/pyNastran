@@ -674,7 +674,7 @@ class BDFMethods(BDFAttributes):
 
         For just force:
 
-        .. code-block :: python
+        .. code-block:: python
 
           eids = []
           nids = [5]

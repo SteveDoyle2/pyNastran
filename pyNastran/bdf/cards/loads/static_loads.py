@@ -402,6 +402,14 @@ class GRAV(BaseCard):
         #return msg
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by GRAV sid=%s' % self.sid
         self.cid = model.Coord(self.cid, msg=msg)
         self.cid_ref = self.cid
@@ -517,6 +525,14 @@ class ACCEL(BaseCard):
         #return(scale_factors, loads)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by ACCEL sid=%s' % self.sid
         self.cid = model.Coord(self.cid, msg=msg)
         self.cid_ref = self.cid
@@ -600,6 +616,14 @@ class ACCEL1(BaseCard):
         return ACCEL1(sid, cid, scale, N, nodes, comment=comment)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by ACCEL1 sid=%s' % self.sid
         self.cid = model.Coord(self.Cid(), msg=msg)
         self.nodes = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
@@ -869,7 +893,12 @@ class FORCE(Force):
 
     def cross_reference(self, model):
         """
-        .. todo:: cross reference and fix repr function
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
         """
         msg = ' which is required by FORCE sid=%s' % self.sid
         self.cid = model.Coord(self.cid, msg=msg)
@@ -962,7 +991,12 @@ class FORCE1(Force):
 
     def cross_reference(self, model):
         """
-        .. todo:: cross reference and fix repr function
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
         """
         msg = ' which is required by FORCE1 sid=%s' % self.sid
         self.node = model.Node(self.node, msg=msg)
@@ -1074,7 +1108,12 @@ class FORCE2(Force):
 
     def cross_reference(self, model):
         """
-        .. todo:: cross reference and fix repr function
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
         """
         msg = ' which is required by FORCE2 sid=%s' % self.sid
         self.node = model.Node(self.node, msg=msg)
@@ -1255,7 +1294,12 @@ class MOMENT(Moment):
 
     def cross_reference(self, model):
         """
-        .. todo:: cross reference and fix repr function
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
         """
         msg = ' which is required by MOMENT sid=%s' % self.sid
         self.node = model.Node(self.node, msg=msg)
@@ -1363,7 +1407,12 @@ class MOMENT1(Moment):
 
     def cross_reference(self, model):
         """
-        .. todo:: cross reference and fix repr function
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
         """
         msg = ' which is required by MOMENT1 sid=%s' % self.sid
         self.node = model.Node(self.node, msg=msg)
@@ -1485,7 +1534,12 @@ class MOMENT2(Moment):
 
     def cross_reference(self, model):
         """
-        .. todo:: cross reference and fix repr function
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
         """
         msg = ' which is required by MOMENT2 sid=%s' % self.sid
         self.node = model.Node(self.node, msg=msg)
@@ -1629,7 +1683,12 @@ class GMLOAD(Load):
 
     def cross_reference(self, model):
         """
-        .. todo:: cross reference and fix repr function
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
         """
         msg = ' which is required by GMLOAD sid=%s' % self.sid
         self.cid = model.Coord(self.Cid(), msg=msg)
@@ -1718,7 +1777,12 @@ class PLOAD(Load):
 
     def cross_reference(self, model):
         """
-        .. todo:: cross reference and fix repr function
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
         """
         pass
 
@@ -1812,7 +1876,12 @@ class PLOAD1(Load):
 
     def cross_reference(self, model):
         """
-        .. todo:: cross reference and fix repr function
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
         """
         msg = ' which is required by PLOAD1 sid=%s' % self.sid
         self.eid = model.Element(self.eid, msg=msg)
@@ -2039,7 +2108,12 @@ class PLOAD2(Load):
 
     def cross_reference(self, model):
         """
-        .. todo:: cross reference and fix repr function
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
         """
         msg = ' which is required by PLOAD2 sid=%s' % self.sid
         self.eids = model.Elements(self.eids, msg=msg)
@@ -2231,6 +2305,14 @@ class PLOAD4(Load):
         return self.cid_ref.cid
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by PLOAD4 sid=%s' % self.sid
         #self.eid = model.Element(self.eid, msg=msg)
         self.cid = model.Coord(self.cid, msg=msg)
@@ -2397,6 +2479,14 @@ class PLOADX1(Load):
         #return PLOADX1(sid, eid, pa, pb, ga, gb, theta, comment=comment)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by PLOADX1 lid=%s' % self.sid
         self.eid = model.Element(self.eid, msg=msg)
         self.ga = model.Node(self.ga, msg=msg)

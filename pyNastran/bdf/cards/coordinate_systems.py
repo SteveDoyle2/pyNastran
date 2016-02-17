@@ -1064,7 +1064,7 @@ class Cord2x(Coord):
 
     def cross_reference(self, model):
         """
-        Links self.rid to a coordinate system.
+        Cross links the card so referenced cards can be extracted directly
 
         Parameters
         ----------
@@ -1193,7 +1193,7 @@ class Cord1x(Coord):
 
     def cross_reference(self, model):
         """
-        Links self.rid to a coordinate system.
+        Cross links the card so referenced cards can be extracted directly
 
         Parameters
         ----------
@@ -1347,6 +1347,14 @@ class CORD3G(Coord):  # not done
         assert self.form in ['EQN', 'TABLE']
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by %s cid=%s' % (self.type, self.cid)
         self.rid = model.Coord(self.rid, msg=msg)
         self.rid_ref = self.rid

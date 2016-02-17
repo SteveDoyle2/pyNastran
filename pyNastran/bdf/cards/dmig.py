@@ -668,7 +668,7 @@ class DMI(NastranMatrix):
 
     def _add_column(self, card=None, data=None, comment=''):
         """
-        .. todo :: support comment
+        .. todo:: support comment
         """
         if not self.is_complex():  # real
             return self._read_real(card)
@@ -753,14 +753,13 @@ class DMI(NastranMatrix):
 
     def raw_fields(self):
         """
-        .. warning ::
+        .. warning:: All the writers are bad because Nastran insists on
+                      making columns a single DMI card.  This makes
+                      writing a card much harder, so there are a lot of
+                      NotImplementedErrors floating about.
 
-          All the writers are bad because Nastran insists on making columns a single
-          DMI card.  This makes writing a card much harder, so there are a lot of
-          NotImplementedErrors floating about.
-
-          This is an invalid method, but is not disabled because it's currently
-          needed for checking results
+                      This is an invalid method, but is not disabled
+                      because it's currently needed for checking results
         """
         list_fields = ['DMI', self.name, 0, self.form, self.tin,
                        self.tout, None, self.nRows, self.nCols]

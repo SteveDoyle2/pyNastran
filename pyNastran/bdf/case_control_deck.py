@@ -112,7 +112,7 @@ class CaseControlDeck(object):
             STRESS(PLOT,SORT1,REAL)
             FORCE(PLOT,SORT1,REAL)
 
-        .. warning :: most case control types are not supported
+        .. warning:: most case control types are not supported
         """
         for isubcase, subcase in iteritems(model.subcases):
             # if isubcase == 0:
@@ -662,7 +662,7 @@ class CaseControlDeck(object):
         :param model: BDF()
             the BDF object
 
-        .. todo :: not done...
+        .. todo:: not done...
         """
         analysis = model.rsolmap_toStr[model.sol]
         model.sol = 200
@@ -707,7 +707,12 @@ class CaseControlDeck(object):
 
     def cross_reference(self, model):
         """
-        Cross references the subcase objects
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
         """
         for isubcase, subcase in sorted(iteritems(self.subcases)):
             subcase.cross_reference(model)

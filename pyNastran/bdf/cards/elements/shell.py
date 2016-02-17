@@ -347,6 +347,14 @@ class CTRIA3(TriShell):
                       TFlag, T1, T2, T3, comment=comment)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by CTRIA3 eid=%s' % self.eid
         self.nodes = model.Nodes(self.node_ids, msg=msg)
         self.pid = model.Property(self.Pid(), msg=msg)
@@ -533,6 +541,14 @@ class CTRIA6(TriShell):
         assert len(nids) == 6, 'error on CTRIA6'
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by CTRIA6 eid=%s' % self.eid
         self.nodes = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
         self.pid = model.Property(self.Pid(), msg=msg)
@@ -716,6 +732,14 @@ class CTRIAR(TriShell):
                       TFlag, T1, T2, T3, comment=comment)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by CTRIAR eid=%s' % self.eid
         self.nodes = model.Nodes(self.nodes, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
@@ -905,6 +929,14 @@ class CTRIAX(TriShell):
         return area
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by CTRIAX eid=%s' % self.eid
         self.nodes = model.Nodes(self.nodes, allow_empty_nodes=True, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
@@ -989,6 +1021,14 @@ class CTRIAX6(TriShell):
         return CTRIAX6(eid, mid, nids, theta, comment=comment)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by CTRIAX6 eid=%s' % self.eid
         self.nodes = model.Nodes(self.nodes, allow_empty_nodes=True, msg=msg)
         self.mid = model.Material(self.mid)
@@ -1285,6 +1325,14 @@ class CSHEAR(QuadShell):
         return CSHEAR(eid, pid, nids, comment=comment)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by CSHEAR eid=%s' % self.eid
         self.nodes = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
         self.pid = model.Property(self.Pid(), msg=msg)
@@ -1517,6 +1565,14 @@ class CQUAD4(QuadShell):
                       TFlag, T1, T2, T3, T4, comment=comment)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by CQUAD4 eid=%s' % self.eid
         self.nodes = model.Nodes(self.nodes, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
@@ -1703,6 +1759,14 @@ class CQUADR(QuadShell):
                       TFlag, T1, T2, T3, T4)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by CQUADR eid=%s' % self.eid
         self.nodes = model.Nodes(self.nodes, allow_empty_nodes=True, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
@@ -1820,6 +1884,14 @@ class CQUAD(QuadShell):
         return CQUAD(eid, pid, nids, comment=comment)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by CQUAD eid=%s' % self.eid
         self.nodes = model.Nodes(self.nodes, allow_empty_nodes=True, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
@@ -1960,6 +2032,14 @@ class CQUAD8(QuadShell):
                       comment=comment)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by CQUAD8 eid=%s' % self.eid
         self.nodes = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
         self.pid = model.Property(self.Pid(), msg=msg)
@@ -2120,6 +2200,14 @@ class CQUADX(QuadShell):
         return CQUADX(eid, pid, nids, comment=comment)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by CQUADX eid=%s' % self.eid
         self.nodes = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
         self.pid = model.Property(self.Pid(), msg=msg)

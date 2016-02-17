@@ -124,7 +124,7 @@ def _filename(filename):
     """
     Prepends some magic data to a filename in order to have long filenames.
 
-    .. warning :: This might be Windows specific.
+    .. warning:: This might be Windows specific.
     """
     if len(filename) > 255:
         return "\\\\?\\" + filename

@@ -364,6 +364,14 @@ class CONROD(RodElement):
         return CONROD(eid, mid, nids, A, j, c, nsm, comment=comment)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
         self.nodes = model.Nodes(self.nodes, msg=msg)
         self.mid = model.Material(self.mid, msg=msg)

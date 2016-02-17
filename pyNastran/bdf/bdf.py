@@ -178,7 +178,7 @@ def _read_bdf(bdf_filename=None,
 
     .. note :: this method will change in order to return an object that
                does not have so many methods
-    .. todo :: finish this
+    .. todo:: finish this
     """
     model = BDF(log=log, debug=debug)
     model.read_bdf(bdf_filename=bdf_filename, xref=xref, punch=punch, encoding=encoding)

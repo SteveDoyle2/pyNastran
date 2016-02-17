@@ -65,6 +65,14 @@ class DCONSTR(OptConstraint):
             return self.uid_ref.tid
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         self.rid = model.dresps[self.Rid()]
         self.rid_ref = self.rid
         if isinstance(self.lid, integer_types):
@@ -422,7 +430,14 @@ class DRESP1(OptConstraint):
         return self.oid
 
     def cross_reference(self, model):
-        #return
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ', which is required by %s oid=%s' % (self.type, self.oid)
         msg += '\n' + str(self)
         if self.ptype in ['ELEM']:
@@ -610,6 +625,14 @@ class DRESP2(OptConstraint):
         return out
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ', which is required by %s ID=%s' % (self.type, self.oid)
         default_values = {}
         for key, vals in sorted(iteritems(self.params)):
@@ -862,6 +885,14 @@ class DCONADD(OptConstraint):
             raise RuntimeError(data)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         self.dconstrs = [model.dconstrs[dcid] for dcid in self.dconstr_ids]
         self.dconstrs_ref = self.dconstrs
 
@@ -973,6 +1004,14 @@ class DVMREL1(OptConstraint):  # similar to DVPREL1
             raise RuntimeError(data)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         self.mid = model.Material(self.mid)
         self.mid_ref = self.mid
 
@@ -1065,6 +1104,14 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
         return self.oid
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         self.pid = model.Property(self.pid)
         self.pid_ref = self.pid
 
@@ -1241,6 +1288,13 @@ class DVPREL2(OptConstraint):
 
     def cross_reference(self, model):
         """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+
         .. todo:: add support for DEQATN cards to finish DVPREL2 xref
         """
         self.pid = model.Property(self.pid)

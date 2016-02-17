@@ -502,7 +502,7 @@ class Subcase(object):
             STRESS(PLOT,SORT1,REAL)
             FORCE(PLOT,SORT1,REAL)
 
-        .. warning :: needs more validation
+        .. warning:: needs more validation
         """
         for key, param in iteritems(self.params):
             value, options, param_type = param

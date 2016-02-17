@@ -7,7 +7,7 @@ import vtk
 from vtk import vtkTriangle
 
 from pyNastran.converters.stl.stl import STL
-from pyNastran.gui.gui_result import GuiResult
+from pyNastran.gui.gui_objects.gui_result import GuiResult
 
 
 class STL_IO(object):

@@ -130,6 +130,14 @@ class PDAMP5(DamperProperty):
         #assert isinstance(b, float), 'b=%r\n%s' % (b, str(self))
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         self.mid = model.Material(self.mid)
         self.mid_ref = self.mid
 
@@ -190,6 +198,14 @@ class PDAMPT(DamperProperty):
         assert isinstance(pid, int), 'pid=%r' % pid
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         self.tbid = model.Table(self.tbid)
         self.tbid_ref = self.tbid
 

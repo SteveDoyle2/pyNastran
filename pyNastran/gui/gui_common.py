@@ -2004,9 +2004,9 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         .. note :: no header line is required
         .. note :: nodes are in the global frame
 
-        .. todo :: support changing the name
-        .. todo :: support changing the color
-        .. todo :: support overwriting points
+        .. todo:: support changing the name
+        .. todo:: support changing the color
+        .. todo:: support overwriting points
         """
         if csv_filename in [None, False]:
             qt_wildcard = '*.csv'

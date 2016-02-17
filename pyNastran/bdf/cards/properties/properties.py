@@ -83,6 +83,14 @@ class PFAST(Property):
                      kr1, kr2, kr3, mass, ge, comment=comment)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by PFAST pid=%s' % self.pid
         if self.mcid != -1:
             self.mcid = model.Coord(self.Mcid(), msg)
@@ -300,6 +308,14 @@ class PLSOLID(SolidProperty):
                                % self.stress_strain)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by PLSOLID pid=%s' % self.pid
         self.mid = model.HyperelasticMaterial(self.mid, msg)
         self.mid_ref = self.mid
@@ -518,6 +534,14 @@ class PRAC2D(CrackProperty):
         assert isinstance(pid, int)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by PRAC2D pid=%s' % self.pid
         self.mid = model.Material(self.mid, msg)  # MAT1, MAT2, MAT8
         self.mid_ref = self.mid
@@ -580,6 +604,14 @@ class PRAC3D(CrackProperty):
         assert isinstance(pid, int)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by PRAC3D pid=%s' % self.pid
         self.mid = model.Material(self.mid, msg)  # MAT1, MAT9
         self.mid_ref = self.mid
@@ -663,6 +695,14 @@ class PCONEAX(Property):
                        comment=comment)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by %s=%s' %(self.type, self.pid)
         if self.mid1 > 0:
             self.mid1 = model.Material(self.mid1, msg=msg)

@@ -9,7 +9,7 @@ from vtk import vtkQuad
 
 from pyNastran.converters.panair.panairGrid import PanairGrid
 from pyNastran.converters.panair.agps import AGPS
-from pyNastran.gui.gui_result import GuiResult
+from pyNastran.gui.gui_objects.gui_result import GuiResult
 
 
 class PanairIO(object):

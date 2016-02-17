@@ -270,11 +270,11 @@ def transform_force_from_local_to_global(force_in_local, gpforce_nids,
         key : cp / cd
         value : transformation matrix
 
-    .. warning :: the function signature will change...
-    .. todo :: doesn't support origin shifts
-    .. todo :: doesn't support moment
-    .. todo :: doesn't support coordinate transforms (e.g. rectangular to cylindrical)
-    .. todo :: sum of moments about a point must have an rxF term to get the
+    .. warning:: the function signature will change...
+    .. todo:: doesn't support origin shifts
+    .. todo:: doesn't support moment
+    .. todo:: doesn't support coordinate transforms (e.g. rectangular to cylindrical)
+    .. todo:: sum of moments about a point must have an rxF term to get the
                same value as Patran.
     """
     force_in_global = zeros(force_in_local.shape, dtype=force_in_local.dtype)
@@ -307,10 +307,10 @@ def transform_force_from_global_to_local(force_in_global, coord_in, coord_out):
     coord_out : CORD()
         the desired local frame
 
-    .. warning :: the function signature will change...
-    .. todo :: doesn't support origin shifts
-    .. todo :: doesn't support moment
-    .. todo :: sum of moments about a point must have an rxF term to get the
+    .. warning:: the function signature will change...
+    .. todo:: doesn't support origin shifts
+    .. todo:: doesn't support moment
+    .. todo:: sum of moments about a point must have an rxF term to get the
                same value as Patran.
     """
     F = force_in_global
