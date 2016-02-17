@@ -39,7 +39,7 @@ from pyNastran.gui.menus.camera import CameraWindow
 from pyNastran.gui.menus.application_log import PythonConsoleWidget, ApplicationLogWidget
 from pyNastran.gui.menus.manage_actors import EditGeometryProperties
 from pyNastran.gui.menus.groups_modify import GroupsModify, Group
-from pyNastran.gui.menus.picker_text_menu import ModifyLabelPropertiesMenu
+from pyNastran.gui.menus.modify_label_properties import ModifyLabelPropertiesMenu
 
 from pyNastran.gui.testing_methods import CoordProperties
 #from pyNastran.gui.menus.multidialog import MultiFileDialog
