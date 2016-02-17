@@ -2714,6 +2714,12 @@ class NastranIO(object):
         form = self._fill_op2_output(op2_filename, cases, model, form, icase)
         self._finish_results_io2(form, cases)
 
+        #name = 'spike'
+        #eids = np.arange(10, 40)
+        #self.create_group_with_name(name, eids)
+        #self.post_group_by_name(name)
+
+
     def _fill_op2_output(self, op2_filename, cases, model, form, icase):
         """
         SOL 101 (Static)
