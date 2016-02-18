@@ -518,7 +518,11 @@ def integer_or_double(card, ifield, fieldname):
     fieldname : str
         name of field
 
-    :returns value:   the value with the proper type
+    Returns
+    -------
+    value : int/float
+        the value with the proper type
+
     :raises SyntaxError: if there's an invalid type
     """
     #assert isinstance(card, BDFCard), type(card)
@@ -870,10 +874,17 @@ def interpret_value(value_raw, card=''):
     """
     Converts a value from nastran format into python format.
 
-    :param raw_value: a string representation of a value
-    :param card:  ???
+    Parameters
+    ----------
+    raw_value : str
+        a string representation of a value
+    card : ???
+        ???
 
-    :returns value: the Nastran reprentation of the value
+    Returns
+    -------
+    value : varies
+        the Nastran reprentation of the value
     """
     if value_raw is None:
         return None

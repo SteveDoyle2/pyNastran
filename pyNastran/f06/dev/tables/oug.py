@@ -149,9 +149,15 @@ class OUG(object):
         Reads real displacement/velocity/spc forces/mpc forces
         Handles GRIDs and SPOINTs.
 
-        :param allow_blanks: Accounting for blank entries (e.g. on eigenvector)
-                             default=False
-        :returns data:       the parsed data
+        Parameters
+        ----------
+        allow_blanks : bool; default=False
+            Accounting for blank entries (e.g. on eigenvector)
+
+        Returns
+        -------
+        data : List[entries]
+            the parsed data
 
         .. todo:: support L, H, and R points
         """
@@ -204,9 +210,15 @@ class OUG(object):
         Reads complex displacement/velocity/spc forces/mpc forces
         Handles GRIDs and SPOINTs.
 
-        :param allow_blanks: Accounting for blank entries (e.g. on eigenvector)
-                             default=False
-        :returns data:       the parsed data
+        Parameters
+        ----------
+        allow_blanks : bool; default=False
+            Accounting for blank entries (e.g. on eigenvector)
+
+        Returns
+        -------
+        data : list[entries]
+            the parsed data
 
         .. todo:: support L, H, and R points
         """

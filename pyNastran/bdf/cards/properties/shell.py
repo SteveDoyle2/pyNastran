@@ -206,10 +206,13 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
     @property
     def material_ids(self):
         """
-            Gets the material IDs of all the plies
+        Gets the material IDs of all the plies
 
-            :returns mids: the material IDs
-            """
+        Returns
+        -------
+        mids : MATx
+            the material IDs
+        """
         mids = []
         for iply in range(self.nplies):
             mids.append(self.Mid(iply))
@@ -219,7 +222,10 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
         """
         Gets the density of the :math:`i^{th}` ply
 
-        :param iply: the ply ID (starts from 0)
+        Parameters
+        ----------
+        iply : int
+            the ply ID (starts from 0)
         """
         iply = self._adjust_ply_id(iply)
         mid_ref = self.mids_ref[iply]

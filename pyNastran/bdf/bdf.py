@@ -1118,7 +1118,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
         .. code-block:: python
 
-            GRID, 1, %xVar, %yVar, %zVar
+          GRID, 1, %xVar, %yVar, %zVar
 
           >>> dict_of_vars = {'xVar': 1.0, 'yVar', 2.0, 'zVar':3.0}
           >>> bdf = BDF()

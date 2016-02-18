@@ -110,8 +110,12 @@ def integrate_line(x, y):
     """
     Integrates a line of length 1.0
 
-    :param x: the independent variable
-    :param y: the dependent variable
+    Parameters
+    ----------
+    x : List[float]
+        the independent variable
+    y : List[float]
+        the dependent variable
 
     :returns integrated_value: the area under the curve
     """
@@ -130,8 +134,13 @@ def integrate_line(x, y):
 def build_spline(x, y):
     """
     Builds a cubic spline or 1st order spline if there are less than 3 terms
-    :param x: the independent variable
-    :param y: the dependent variable
+
+    Parameters
+    ----------
+    x : List[float]
+        the independent variable
+    y : List[float]
+        the dependent variable
 
     :returns splrep: a splrep object (linear or cubic spline depending
                      on the length of x)
@@ -146,8 +155,12 @@ def integrate_positive_line(x, y, minValue=0.):
     """
     Integrates a line of length 1.0
 
-    :param x: the independent variable
-    :param y: the dependent variable
+    Parameters
+    ----------
+    x : List[float]
+        the independent variable
+    y : List[float]
+        the dependent variable
 
     :returns integrated_value: the area under the curve
     """

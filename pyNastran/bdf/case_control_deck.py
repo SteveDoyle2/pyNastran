@@ -149,9 +149,15 @@ class CaseControlDeck(object):
         """
         Checks to see if a subcase exists.
 
-        :param isubcase: the subcase ID
-        :type isubcase: int
-        :returns val: does_subcase_exist (type = bool)
+        Parameters
+        ----------
+        isubcase : int
+            the subcase ID
+
+        Returns
+        -------
+        val : bool
+            does_subcase_exist (type = bool)
         """
         if isubcase in self.subcases:
             return True

@@ -128,14 +128,29 @@ def rainflow_from_csv(input_csv, casenames, features,
 
     This supports multiple features as separate columns.
 
-    :param fname:        a file as described below
-    :param casenames:    allows for case splitting
-    :param features:     columns to parse
+    Parameters
+    ----------
+    fname : str
+        a file as described below
+    casenames : str
+        allows for case splitting
+    features : dict
+       key : int; column id to parse
+       value : str; name
 
-    :param xmax:         the max value for the x (cycle) axis; helps to change the legend
-    :param delimiter:    the delimiter for the output file (doesn't apply to input); default=','
-    :param legend_alpha: the transparency (1=solid, 0=transparent; default=1.0)
-    :returns files:      filenames are of the form icase_icase_name.csv
+    xmax : float
+        the max value for the x (cycle) axis; helps to change the legend
+    delimiter : str; default=','
+        the delimiter for the output file (doesn't apply to input)
+    legend_alpha : float; default=1.0
+        the transparency
+        1=solid
+        0=transparent
+
+    Returns
+    -------
+    files : list[str]
+        filenames are of the form icase_icase_name.csv
 
     Input_csv
     ---------

@@ -181,7 +181,14 @@ class BaseCard(object):
         return self.comment + print_card(list_fields, size=size, is_double=is_double)
 
     def repr_fields(self):
-        """gets the card's fields"""
+        """
+        Gets the fields in their simplified form
+
+        Returns
+        -------
+        fields : List[varies]
+          the fields that define the card
+        """
         return self.raw_fields()
 
     def print_card(self, size=8, is_double=False):

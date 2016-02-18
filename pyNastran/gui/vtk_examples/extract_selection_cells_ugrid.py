@@ -1,10 +1,12 @@
+from __future__ import print_function
 """
 based on:
  - http://www.vtk.org/Wiki/VTK/Examples/Python/PolyData/ExtractSelectionCells
 """
 
 import vtk
-import numpy as np
+import signal
+signal.signal(signal.SIGINT, signal.SIG_DFL)
 
 def main():
     """
@@ -50,10 +52,12 @@ def main():
         [6, 7, 11],
         [6, 11, 10],
     ]
-    ids_to_hide = [2, 3] # remove a single quad
-    ids_to_hide_updated = [2, 3, 4, 5]  # remove two quads
-    ids_to_hide = np.arange(2, 4)
-    print('ids_to_hide =', ids_to_hide)
+    ids_to_show = [0, 1, #2, 3,
+                   4, 5, 6, 7, 8, 9, 10, 11, 12]
+    ids_to_show_updated = [
+        0, 1, #2, 3,
+        #4, 5,
+        6, 7, 8, 9, 10, 11, 12]
 
     nnodes = len(xyzs)
     points = vtk.vtkPoints()
@@ -66,7 +70,7 @@ def main():
 
     for tri in tris:
         elem = vtk.vtkTriangle()
-        (n1, n2, n3)  = tri
+        (n1, n2, n3) = tri
         elem.GetPointIds().SetId(0, n1)
         elem.GetPointIds().SetId(1, n2)
         elem.GetPointIds().SetId(2, n3)
@@ -95,11 +99,11 @@ def main():
 
     ids = vtk.vtkIdTypeArray()
     ids.SetNumberOfComponents(1)
-    ids.Allocate(len(ids_to_hide))
+    ids.Allocate(len(ids_to_show))
 
-    # Specify that we want to hide cells [2, 3]
-    for id_to_hide in ids_to_hide:
-        ids.InsertNextValue(id_to_hide)
+    for id_to_show in ids_to_show:
+        ids.InsertNextValue(id_to_show)
+
 
     selection_node = vtk.vtkSelectionNode()
     selection_node.SetFieldType(vtk.vtkSelectionNode.CELL)
@@ -184,21 +188,48 @@ def main():
     right_renderer.SetViewport(right_viewport)
     right_renderer.SetBackground(.3, .1, .4)
     right_renderer.SetActiveCamera(camera)
+    right_renderer.AddActor(selected_actor)
 
     left_renderer.AddActor(input_actor)
     right_renderer.AddActor(not_selected_actor)
 
+    right_renderer.ResetCamera()
+
+    interactor.Start()
+    #-----------------
     ids.Reset()
-    ids.Allocate(len(ids_to_hide_updated))
-    for ids_to_hide in ids_to_hide_updated:
-        ids.InsertNextValue(ids_to_hide)
+    ids.Allocate(len(ids_to_show_updated))
+    for id_to_show in ids_to_show_updated:
+        ids.InsertNextValue(id_to_show)
     ids.Modified()
     grid_selected.Modified()
 
-    left_renderer.ResetCamera()
+    #ids.Update()
+    ids.Modified()
+    #selection_node.Update()
+    selection_node.Modified()
+    #selection.Update()
+    selection.Modified()
+    extract_selection.Update()
+    extract_selection.Modified()
+    #grid_selected.Update()
+    grid_selected.Modified()
+    selected_mapper.Update()
+    selected_mapper.Modified()
+    #selected_actor.Update()
+    selected_actor.Modified()
 
+    right_renderer.Modified()
+    #right_renderer.Update()
+
+    interactor.Modified()
+    #interactor.Update()
+    #-----------------
     render_window.Render()
-    interactor.Start()
+
+    render_window.Modified()
+    #render_window.Update()
+
 
 if __name__ == '__main__':
     main()

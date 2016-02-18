@@ -665,13 +665,19 @@ def define_coord_ijk(model, Type, cid, origin, rid=0, i=None, j=None, k=None):
 class RectangularCoord(object):
     def coord_to_xyz(self, p):
         """
-        :returns xyz: the point in the local coordinate system
+        Returns
+        -------
+        xyz : (3,) ndarray
+            the point in the local coordinate system
         """
         return p
 
     def xyz_to_coord(self, p):
         """
-        :returns xyz: the delta xyz point in the local coordinate system
+        Returns
+        -------
+        xyz : (3,) ndarray
+            the delta xyz point in the local coordinate system
         """
         return p
 
@@ -705,7 +711,10 @@ class CylindricalCoord(object):
         .. math:: x = R \cos(\theta)
         .. math:: y = R \sin(\theta)
 
-        :returns xyz: the point in the local coordinate system
+        Returns
+        -------
+        xyz : (3,) float ndarray
+            the point in the local coordinate system
         """
         R = p[0]
         theta = radians(p[1])
@@ -715,7 +724,10 @@ class CylindricalCoord(object):
 
     def xyz_to_coord(self, p):
         """
-        :returns xyz: the delta xyz point in the local coordinate system
+        Returns
+        -------
+        xyz : (3,) float ndarray
+            the delta xyz point in the local coordinate system
         """
         (x, y, z) = p
         theta = degrees(atan2(y, x))

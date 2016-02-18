@@ -782,10 +782,10 @@ class AERO(Aero):
         """
         Gets the fields in their simplified form
 
-        :returns fields:
+        Returns
+        -------
+        fields : List[varies]
           the fields that define the card
-        :type fields:
-          LIST
         """
         symXZ = set_blank_if_default(self.symXZ, 0)
         symXY = set_blank_if_default(self.symXY, 0)
@@ -863,10 +863,10 @@ class AEROS(Aero):
         """
         Gets the fields in their unmodified form
 
-        :returns fields:
-          the fields that define the card
-        :type fields:
-          LIST
+        Returns
+        -------
+        fields : list[varies]
+            the fields that define the card
         """
         list_fields = ['AEROS', self.acsid, self.rcsid, self.cRef,
                        self.bRef, self.Sref, self.symXZ, self.symXY]
@@ -876,10 +876,10 @@ class AEROS(Aero):
         """
         Gets the fields in their simplified form
 
-        :returns fields:
+        Returns
+        -------
+        fields : List[varies]
           the fields that define the card
-        :type fields:
-          LIST
         """
         symXZ = set_blank_if_default(self.symXZ, 0)
         symXY = set_blank_if_default(self.symXY, 0)
@@ -980,10 +980,10 @@ class CSSCHD(Aero):
         """
         Gets the fields in their unmodified form
 
-        :returns fields:
-          the fields that define the card
-        :type fields:
-          LIST
+        Returns
+        -------
+        fields : list[varies]
+            the fields that define the card
         """
         list_fields = ['CSSCHD', self.sid, self.AESid(), self.LAlpha(),
                        self.LMach(), self.LSchd()]
@@ -2205,10 +2205,10 @@ class FLFACT(BaseCard):
         """
         Gets the fields in their unmodified form
 
-        :returns fields:
-          the fields that define the card
-        :type fields:
-          LIST
+        Returns
+        -------
+        fields : list[varies]
+            the fields that define the card
         """
         list_fields = ['FLFACT', self.sid] + self.factors
         return list_fields
@@ -2380,10 +2380,10 @@ class FLUTTER(BaseCard):
         """
         Gets the fields in their unmodified form
 
-        :returns fields:
-          the fields that define the card
-        :type fields:
-          LIST
+        Returns
+        -------
+        fields : list[varies]
+            the fields that define the card
         """
         (imethod, nValue) = self._get_raw_nvalue_omax()
         list_fields = ['FLUTTER', self.sid, self.method, self.get_density(),
@@ -2448,10 +2448,10 @@ class GUST(BaseCard):
         """
         Gets the fields in their unmodified form
 
-        :returns fields:
-          the fields that define the card
-        :type fields:
-          LIST
+        Returns
+        -------
+        fields : list[varies]
+            the fields that define the card
         """
         list_fields = ['GUST', self.sid, self.dload, self.wg, self.x0, self.V]
         return list_fields
@@ -2510,10 +2510,10 @@ class MKAERO1(BaseCard):
         """
         Gets the fields in their unmodified form
 
-        :returns fields:
-          the fields that define the card
-        :type fields:
-          LIST
+        Returns
+        -------
+        fields : list[varies]
+            the fields that define the card
         """
         #list_fields = ['MKAERO1']
         #for (i, mach, rfreq) in zip(count(), self.machs, self.rFreqs):
@@ -2577,10 +2577,10 @@ class MKAERO2(BaseCard):
         """
         Gets the fields in their unmodified form
 
-        :returns fields:
-          the fields that define the card
-        :type fields:
-          LIST
+        Returns
+        -------
+        fields : list[varies]
+            the fields that define the card
         """
         list_fields = ['MKAERO2']
         for (i, mach, rfreq) in zip(count(), self.machs, self.rFreqs):
@@ -2702,10 +2702,10 @@ class PAERO1(BaseCard):
         """
         Gets the fields in their unmodified form
 
-        :returns fields:
-          the fields that define the card
-        :type fields:
-          LIST
+        Returns
+        -------
+        fields : list[varies]
+            the fields that define the card
         """
         list_fields = ['PAERO1', self.pid] + self.Bi
         return list_fields
@@ -2816,10 +2816,10 @@ class PAERO2(BaseCard):
         """
         Gets the fields in their unmodified form
 
-        :returns fields:
-          the fields that define the card
-        :type fields:
-          LIST
+        Returns
+        -------
+        fields : list[varies]
+            the fields that define the card
         """
         list_fields = ['PAERO2', self.pid, self.orient, self.width,
                        self.AR, self.lrsb, self.lrib, self.lth1, self.lth2]
@@ -2914,10 +2914,10 @@ class PAERO3(BaseCard):
         """
         Gets the fields in their unmodified form
 
-        :returns fields:
-          the fields that define the card
-        :type fields:
-          LIST
+        Returns
+        -------
+        fields : list[varies]
+            the fields that define the card
         """
         list_fields = ['PAERO3', self.pid, self.nbox, self.ncontrol_surfaces, None]
         for (x, y) in zip(self.x, self.y):
@@ -3030,10 +3030,10 @@ class SPLINE1(Spline):
         """
         Gets the fields in their unmodified form
 
-        :returns fields:
-          the fields that define the card
-        :type fields:
-          LIST
+        Returns
+        -------
+        fields : list[varies]
+            the fields that define the card
         """
         list_fields = ['SPLINE1', self.eid, self.CAero(), self.box1, self.box2,
                        self.Set(), self.dz, self.method, self.usage, self.nelements,
@@ -3153,10 +3153,10 @@ class SPLINE2(Spline):
         """
         Gets the fields in their unmodified form
 
-        :returns fields:
-          the fields that define the card
-        :type fields:
-          LIST
+        Returns
+        -------
+        fields : list[varies]
+            the fields that define the card
         """
         list_fields = ['SPLINE2', self.eid, self.CAero(), self.id1, self.id2,
                        self.Set(), self.dz, self.dtor, self.Cid(), self.dthx,
@@ -3342,10 +3342,10 @@ class SPLINE4(Spline):
         """
         Gets the fields in their unmodified form
 
-        :returns fields:
-          the fields that define the card
-        :type fields:
-          LIST
+        Returns
+        -------
+        fields : list[varies]
+            the fields that define the card
         """
         list_fields = ['SPLINE4', self.eid, self.CAero(), self.AEList(), None,
                        self.Set(), self.dz, self.method, self.usage, self.nelements,
@@ -3480,10 +3480,10 @@ class SPLINE5(Spline):
         """
         Gets the fields in their unmodified form
 
-        :returns fields:
-          the fields that define the card
-        :type fields:
-          LIST
+        Returns
+        -------
+        fields : list[varies]
+            the fields that define the card
         """
         list_fields = ['SPLINE5', self.eid, self.CAero(), self.AEList(), None,
                        self.Set(), self.dz, self.dtor, self.Cid(), self.thx,
@@ -3608,10 +3608,10 @@ class TRIM(BaseCard):
         """
         Gets the fields in their unmodified form
 
-        :returns fields:
-          the fields that define the card
-        :type fields:
-          LIST
+        Returns
+        -------
+        fields : list[varies]
+            the fields that define the card
         """
         list_fields = ['TRIM', self.sid, self.mach, self.q]
         for (i, label, ux) in zip(count(), self.labels, self.uxs):

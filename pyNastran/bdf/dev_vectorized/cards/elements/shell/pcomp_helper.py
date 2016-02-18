@@ -46,8 +46,10 @@ class Property_i(BaseCard):
         """
         returns the property ID of an property
 
-        :returns pid: the Property ID
-        :type pid:    int
+        Returns
+        -------
+        pid : int
+            the Property ID
         """
         return self.pid
 
@@ -55,8 +57,10 @@ class Property_i(BaseCard):
         """
         returns the material ID of an element
 
-        :returns mid: the Material ID
-        :type mid:    int
+        Returns
+        -------
+        mid : int
+            the Material ID
         """
         if isinstance(self.mid, integer_types):
             return self.mid
