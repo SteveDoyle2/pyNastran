@@ -464,18 +464,19 @@ class GroupsModify(QtGui.QDialog):
         passed = self.on_validate()
         if passed:
             self.out_data['close'] = True
+            self.out_data['clicked_ok'] = True
+            self.out_data['clicked_cancel'] = False
             self.close()
             #self.destroy()
 
     def on_cancel(self):
-        clicked_cancel
         self.out_data['close'] = True
         self.out_data['clicked_cancel'] = True
         self.close()
 
     def keyPressEvent(self, event):
         if event.key() == QtCore.Qt.Key_Escape:
-            self.close()
+            self.on_cancel()
 
     def on_update_active_key(self, index):
         self.update_active_key(index)

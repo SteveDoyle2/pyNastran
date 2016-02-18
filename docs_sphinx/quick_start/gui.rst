@@ -93,33 +93,30 @@ If you want to load the second OP2, you must use ``-o model2.op2``.
 
 Features
 --------
- * Fringe Plot support
+ * fringe plot support
 
-   - Custom Fringes supported
+   * attach custom CSV (comma-delimited) or .txt (space/tab-delimited)
+     fringes as either node-based or element-based results
 
- * Command line interface
- * Scripting capability
- * High resolution screenshot
- * Snap to Axis
- * Change Background Color
-
-New Features
-------------
+ * command line interface
+ * scripting capability
+ * high resolution screenshot
+ * snap to axis
+ * change Background Color
  * nodal/element-based results at the same time
- * results may be shown alongside geometry
  * show/hide elements
+ * results may be shown alongside geometry
 
    * can edit properties (e.g. color/opacity/size) using
      ``Edit Geometry Properties...`` on the ``View`` menu
    * additional points may be added with the ``-u`` option
+   * attach simplistic custom geometry
 
- * attach custom CSV (comma-delimited) or .txt (space/tab-delimited) files as
-   either node-based or element-based results
- * attach simplistic custom geometry
  * legend is more robust
  * clipping customization menu
  * save view menu
  * edges flippable from menu now
+ * menu for changing label color/size
 
 New Nastran Specific Features
 -----------------------------
@@ -128,6 +125,7 @@ New Nastran Specific Features
  * displacement/eigenvectors now shown as a deformation (real)
 
    * scale editable from legend menu
+   * rotated into global frame
 
  * Edit Geometry Properties
 
@@ -138,16 +136,6 @@ New Nastran Specific Features
    * bar/beam orientation vectors
    * CONM2
 
-Supported Elements
-------------------
- * CQUAD4 / CQUAD8
- * CTRIA3 / CTRIA6
- * CTETRA4 / CTETRA10
- * CHEXA8 / CHEXA20
- * CPENTA6 / CPENTA15
- * CSHEAR
- * CQUADR / CTRIAR
- * CBAR / CBEAM / CROD / CONROD / CELASx (displayed as lines)
 
 BDF Requirements
 ----------------
@@ -227,13 +215,6 @@ may now find a newer driver available from NVIDIA.
 Issues include:
   1. the backfaces of elements not being colored
   2. the GUI not working
-
-Application Log Dislay
-^^^^^^^^^^^^^^^^^^^^^^
-It's possible that the Application Log will not be visible.  This is a PyQt4
-install issue.  Reinstalling may fix the problem, but using one of the
-recommended distributions is both the easiest and most reliable way to fix
-this problem.
 
 
 
