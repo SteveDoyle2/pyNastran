@@ -59,6 +59,14 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
             self.mids[iply] = model.Material(mid, msg)
         self.mids_ref = self.mids
 
+        z1 = self.z0
+        t = self.Thickness()
+        z2 = z1 + t
+        if not ((-1.5*t <= z1 <= 1.5*t) or (-1.5*t <= z2 <= 1.5*t)):
+            msg = '%s pid=%s midsurface: z1=%s z2=%s t=%s not in range of -1.5t < zi < 1.5t' % (
+                self.Type, self.pid, self.z1, self.z2, t)
+            self.log.warning(msg)
+
     def uncross_reference(self):
         for iply in range(len(self.thicknesses)):
             mid = self.Mid(iply)
@@ -1369,6 +1377,14 @@ class PSHELL(ShellProperty):
         if self.mid4:
             self.mid4 = model.Material(self.mid4, msg)
             self.mid4_ref = self.mid4
+        if self.t is not None:
+            z1 = abs(self.z1)
+            z2 = abs(self.z2)
+            t = self.t
+            if not ((-1.5*t <= z1 <= 1.5*t) or (-1.5*t <= z2 <= 1.5*t)):
+                msg = 'PSHELL pid=%s midsurface: z1=%s z2=%s t=%s not in range of -1.5t < zi < 1.5t' % (
+                    self.pid, self.z1, self.z2, t)
+                self.log.warning(msg)
 
     def uncross_reference(self):
         self.mid1 = self.Mid1()
