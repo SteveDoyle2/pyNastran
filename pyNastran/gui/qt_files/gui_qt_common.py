@@ -11,7 +11,7 @@ import vtk
 from vtk.util.numpy_support import numpy_to_vtk
 
 from pyNastran.utils import integer_types
-from pyNastran.gui.names_storage import NamesStorage
+from pyNastran.gui.gui_objects.names_storage import NamesStorage
 from pyNastran.gui.testing_methods import GuiAttributes
 
 

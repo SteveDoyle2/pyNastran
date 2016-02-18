@@ -52,6 +52,9 @@ PyQt4 unique (PySide is broken)
      - color
      - point size
      - line size
+     - opacity
+     - show/hide
+   - coordinate systems
      - show/hide
    - selective editing based on representation
 
@@ -61,10 +64,6 @@ PyQt4 unique (PySide is broken)
    - zoom in to desired view distance and press f  to 
      - cart3d can clip through bounding box to pick nodes/elements
        that are obscured
-
- - global axis
-   - hide support
-   - additional Nastran coordinate systems supported using a script
 
  - minor features
    - default filename for pictures
@@ -83,22 +82,28 @@ PyQt4 unique (PySide is broken)
    - kind of a hackish picking method
    - no nodal/centroidal position picking (e.g. get (x, y, z), not just x or y or z)
 
- - both nodal/centroidal work regardless of self.is_centroidal/self.is_nodal
-
  - results sidebar
    - data is put in a nested tree and cycleResults works (Control+L)
    - multiple nastran subcases
-   - load in secondary CSV results
+   - load in custom CSV results
 
+ - Python console scripting menu
+   - modify unexposed data members
+     - high resolution screenshots
+     - animations
+   - powerful tool for quickly creating a command line script
+   - TODO: syntax highlighting
+   - TODO: font should be courier new or something similar
+
+ - groups
+   - create groups by Nastran properties (Nastran-specific)
+   - show/hide elements by group
+     - TODO: allow selection of more than one group
+     - TODO: show/hide elements based on picking
+     - TODO: improved picking
 
 ----------------------------------------------------
 ---Half Finished---
- - Groups
-   - need to figure out how to show/hide elements from an actor
- - Python console
-   - TODO: syntax highlighting
-   - TODO: font should be courier new or something similar
-   - TODO: button layout
 
 ----------------------------------------------------
 ---Format Specific---
@@ -108,7 +113,6 @@ Nastran
  - load geometry -> .bdf/nas/dat
    - shows CAERO panels
    - change between sub-element and element using dynamic menu
-   - display additional coordinate system IDs
 
  - load results -> op2/f06
    - SOL 101
@@ -123,20 +127,24 @@ Nastran
 
  - rotate loads based on local coordinate system
    - displacement (e.g. force, displacement, velocity) done
-   - TODO: stress (y/z vs. hoop)
+   - TODO: stress (y/z vs. hoop) -> R.T @ stress @ R
 
  - multiple op2 files
- - TODO: show/hide elements based on picking
+
+ - CAERO panels
+   - CAERO panel actor
+   - CAERO subpanel actor
+   - AEFACT flap actor
+   - SPLINE actor
+   - SPLINE points actor
+   - TODO: data label for CAERO cards
+     - as a element number (low priority)
+
  - TODO: different nodal averaging methods (e.g.derive/avg, avg/derive)
  - TODO: interface loads
- - TODO: show/hide nodes/elements based on element ID for:
- - TODO: data label for CAERO cards
-   - as a element numbr
-   - as a color (e.g. element ID for the CAERO card)
  - secondary actors
-   - wireframes/surfaces - CAEROx panels; CAEROx subpanels; CAEROx flaps
-   - points - SPC; MPC; SUPORT1; CONM2
-   - lines - bars orientation
+   - CAERO, 123 SPCs, MPC/RBE, SUPORT1, SUPORT, CONM2
+   - bars orientation
 
 Cart3d
 ======
@@ -148,7 +156,7 @@ Cart3d
  - results
    - nodal -> Mach, Cp, rho, rhoU, rhoV, rhoW, rhoE, U, V, W, E
    - NOTE: centroidal main results removed becase nodal & centroidal
-           are now supported, so there's no need to see results 
+           are now supported, so there's no need to see the results 
  - secondary actors
    - box with inflow/outflow/symmetry/farfield boundary condtions as colors
 
@@ -243,11 +251,12 @@ Surf
 
 #-------------------------
 #BUGS
+ - Press OK/Cancel/Close to close window; don't use Escape
 
 Qt
 =======
 - cycling doesn't print out the COMMAND it used
-- probable bug in caclulation of iCase during cycling
+- probable bug in caclulation of icase during cycling
 - results selector window doesn't update on cycling
 - loading a new geometry over a result doesn't overwrite the old name
 - legend cancel doesn't return to baseline state (should it?)
@@ -297,5 +306,5 @@ surf
  - usm3d surface/boundary layer/incomplete volume
  - load file from * with a specific file type
  - zoom/rotate/snap hotkeys
- - unbreak hotkeys (p, r, ???)
+ - unbreak hotkeys (p, r, X, Y, Z, ???)
  - explcit pulldown for formats

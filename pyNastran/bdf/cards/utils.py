@@ -59,7 +59,7 @@ def wipe_empty_fields_off(fields):
     Removes any trailing Nones from the card.
     Also converts empty strings to None.
 
-    .. warning :: doesn't allows floats & ints.
+    .. warning:: doesn't allows floats & ints.
     """
     nfields = len(fields)
     for i, field in enumerate(reversed(fields)):

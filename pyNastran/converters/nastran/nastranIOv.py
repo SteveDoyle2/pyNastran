@@ -53,7 +53,7 @@ from pyNastran.bdf.cards.elements.bars import LineElement
 from pyNastran.bdf.cards.elements.springs import SpringElement
 
 from pyNastran.converters.nastran.displacements import NastranDisplacementResults
-from pyNastran.gui.gui_result import GuiResult
+from pyNastran.gui.gui_objects.gui_result import GuiResult
 
 from pyNastran.op2.op2 import OP2
 #from pyNastran.f06.f06_formatting import get_key0
@@ -568,7 +568,7 @@ class NastranIO(object):
             subcase = model.case_control_deck.subcases[subcase_id]
 
             subtitle = ''
-            if subcase.has_parameter('SUBTITLE'):
+            if 'SUBTITLE' in subcase:
                 subtitle, options = subcase.get_parameter('SUBTITLE')
                 del options
 

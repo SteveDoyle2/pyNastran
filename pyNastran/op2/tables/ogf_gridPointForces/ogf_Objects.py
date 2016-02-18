@@ -264,10 +264,10 @@ class RealGridPointForcesArray(ScalarObject):
         itime : int; default=0
             the time to extract loads for
 
-        .. warning :: the function signature will change...
-        .. todo :: sum of moments about a point must have an rxF term to get the
+        .. warning:: the function signature will change...
+        .. todo:: sum of moments about a point must have an rxF term to get the
                    same value as Patran.
-        .. todo :: doesn't support transient/frequency/modal based results
+        .. todo:: doesn't support transient/frequency/modal based results
         """
         panel_eids = asarray(panel_eids)
         panel_nids = asarray(panel_nids)

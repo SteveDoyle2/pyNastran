@@ -86,6 +86,14 @@ class RROD(RigidElement):
         return self.gb_ref.nid
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
         self.ga = model.Node(self.Ga(), msg=msg)
         self.gb = model.Node(self.Gb(), msg=msg)
@@ -214,6 +222,14 @@ class RBAR(RigidElement):
         return self.gb_ref.nid
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
         self.ga = model.Node(self.Ga(), msg=msg)
         self.gb = model.Node(self.Gb(), msg=msg)
@@ -315,6 +331,14 @@ class RBAR1(RigidElement):
         return [self.Gb()]
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
         self.ga = model.Node(self.Ga(), msg=msg)
         self.gb = model.Node(self.Gb(), msg=msg)
@@ -412,6 +436,14 @@ class RBE1(RigidElement):  # maybe not done, needs testing
         return RBE1(eid, Gni, Cni, Gmi, Cmi, alpha, comment=comment)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
         self.Gni = model.Nodes(self.Gni, allow_empty_nodes=True, msg=msg)
         self.Gmi = model.Nodes(self.Gmi, allow_empty_nodes=True, msg=msg)
@@ -649,6 +681,14 @@ class RBE2(RigidElement):
         return msg
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
         self.Gmi = model.Nodes(self.Gmi_node_ids, allow_empty_nodes=True, msg=msg)
         self.gn = model.Node(self.Gn(), msg=msg)
@@ -866,6 +906,14 @@ class RBE3(RigidElement):
         return self._nodeIDs(nodes=self.Gmi, allow_empty_nodes=True)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
         assert self.Gmi is not None
         self.Gmi = model.Nodes(self.Gmi, allow_empty_nodes=True, msg=msg)

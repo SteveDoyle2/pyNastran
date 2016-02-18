@@ -473,6 +473,14 @@ class PBEAM(IntegratedLineProperty):
         return mass_per_length
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by PBEAM mid=%s' % self.mid
         self.mid = model.Material(self.mid, msg=msg)
         self.mid_ref = self.mid
@@ -808,6 +816,13 @@ class PBEAML(IntegratedLineProperty):
 
     def cross_reference(self, model):
         """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+
         .. warning:: For structural problems, PBEAML entries must
                      reference a MAT1 material entry
         .. warning:: For heat-transfer problems, the MID must
@@ -965,6 +980,14 @@ class PBCOMP(LineProperty):
         return self.nsm + self.mid_ref.Rho() * self.A
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by PBCOMP mid=%s' % self.mid
         self.mid = model.Material(self.mid, msg=msg)
         self.mid_ref = self.mid

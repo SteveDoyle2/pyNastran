@@ -118,6 +118,14 @@ class CMASS1(PointMassElement):
         assert c2 is None or isinstance(c2, integer_types), 'c2=%r' % c2
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by CMASS1 eid=%s' % self.eid
         if isinstance(self.g1, integer_types):
             self.g1 = model.Node(self.g1, msg=msg)
@@ -297,6 +305,14 @@ class CMASS2(PointMassElement):
         return c
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by CMASS2 eid=%s' % self.eid
         if isinstance(self.g1, integer_types):
             self.g1 = model.Node(self.g1, msg=msg)
@@ -408,7 +424,12 @@ class CMASS3(PointMassElement):
 
     def cross_reference(self, model):
         """
-        Links up the propertiy ID
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
         """
         msg = ' which is required by CMASS3 eid=%s' % self.eid
         #self.s1 = model.Node(self.s1, msg=msg)
@@ -495,6 +516,14 @@ class CMASS4(PointMassElement):
         return self._is_same_fields(fields1, fields2)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         #self.s1 = model.Node(self.s1)
         #self.s2 = model.Node(self.s2)
         pass
@@ -689,6 +718,14 @@ class CONM1(PointMassElement):
         return self.cid_ref.cid
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by CONM1 eid=%s' % self.eid
         self.nid = model.Node(self.Nid(), msg=msg)
         self.cid = model.Coord(self.Cid(), msg=msg)
@@ -937,6 +974,14 @@ class CONM2(PointMassElement):
         return X2
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by CONM2 eid=%s' % self.eid
         self.nid = model.Node(self.nid, msg=msg)
         self.nid_ref = self.nid

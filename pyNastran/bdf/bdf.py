@@ -3,6 +3,8 @@
 """
 Main BDF class.  Defines:
   - BDF
+
+see https://docs.plm.automation.siemens.com/tdoc/nxnastran/10/help/#uid:index
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
@@ -178,7 +180,7 @@ def _read_bdf(bdf_filename=None,
 
     .. note :: this method will change in order to return an object that
                does not have so many methods
-    .. todo :: finish this
+    .. todo:: finish this
     """
     model = BDF(log=log, debug=debug)
     model.read_bdf(bdf_filename=bdf_filename, xref=xref, punch=punch, encoding=encoding)

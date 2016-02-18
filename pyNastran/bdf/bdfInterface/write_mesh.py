@@ -834,9 +834,9 @@ class WriteMesh(BDFAttributes):
         """
         Writes the NODE-type cards
 
-        .. warning :: doesn't consider coordinate systems;
+        .. warning:: doesn't consider coordinate systems;
                       it could, but you'd need 20 new coordinate systems
-        .. warning :: doesn't mirror SPOINTs, EPOINTs
+        .. warning:: doesn't mirror SPOINTs, EPOINTs
         """
         if self.spoints:
             msg = []

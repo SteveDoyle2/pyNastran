@@ -138,6 +138,14 @@ class CELAS1(SpringElement):
         return self.pid_ref.k
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ', which is required by %s eid=%s' % (self.type, self.eid)
         self.nodes = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
         self.pid = model.Property(self.Pid(), msg=msg)
@@ -234,6 +242,14 @@ class CELAS2(SpringElement):
         return [tuple(sorted(self.node_ids))]
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ', which is required by %s eid=%s' % (self.type, self.eid)
         self.nodes = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
         self.nodes_ref = self.nodes
@@ -379,6 +395,14 @@ class CELAS3(SpringElement):
         return self.pid_ref.k
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ', which is required by %s eid=%s' % (self.type, self.eid)
         self.nodes = model.Nodes(self.node_ids, msg=msg)
         self.pid = model.Property(self.Pid(), msg=msg)
@@ -479,6 +503,14 @@ class CELAS4(SpringElement):
         return []
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ', which is required by %s eid=%s' % (self.type, self.eid)
         self.nodes = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
         self.nodes_ref = self.nodes

@@ -190,12 +190,12 @@ class XPoint(Node):
 
     def cross_reference(self, model):
         """
-        Cross links the card
+        Cross links the card so referenced cards can be extracted directly
 
-        :param model:
-          the BDF object
-        :type model:
-          BDF
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
         """
         pass
 
@@ -335,12 +335,12 @@ class XPoints(Node):
 
     def cross_reference(self, model):
         """
-        Cross links the card
+        Cross links the card so referenced cards can be extracted directly
 
-        :param model:
-          the BDF object
-        :type model:
-          BDF
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
         """
         pass
 
@@ -503,12 +503,12 @@ class GRDSET(Node):
 
     def cross_reference(self, model):
         """
-        Cross links the card
+        Cross links the card so referenced cards can be extracted directly
 
-        :param model:
-          the BDF object
-        :type model:
-          BDF
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
         """
         msg = ' which is required by the GRDSET'
         self.cp = model.Coord(self.cp, msg=msg)
@@ -1075,7 +1075,7 @@ class GRID(Node):
 
     def cross_reference(self, model, grdset=None):
         """
-        Cross links the card
+        Cross links the card so referenced cards can be extracted directly
 
         Parameters
         ----------
@@ -1418,10 +1418,12 @@ class POINT(Node):
 
     def cross_reference(self, model):
         """
-        Cross links the card
+        Cross links the card so referenced cards can be extracted directly
 
-        :param model:  the BDF object
-        :type model:   BDF()
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
         """
         self.cp = model.Coord(self.cp)
         self.cp_ref = self.cp

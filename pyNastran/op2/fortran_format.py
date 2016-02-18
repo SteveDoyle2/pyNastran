@@ -64,7 +64,7 @@ class FortranFormat(object):
         endian : str; default=None -> auto determined somewhere else in the code
             the big/little endian {>, <}
 
-        .. warning :: 's' is apparently not Python 3 friendly
+        .. warning:: 's' is apparently not Python 3 friendly
         """
         return self.write_data(sys.stdout, data, types=types, endian=endian)
 

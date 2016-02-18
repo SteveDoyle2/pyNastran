@@ -21,6 +21,14 @@ class TestOP2(Tester):
         #op2.set_results('solidStress.oxx')
         #op2.read_op2(op2_filename, vectorized=False)
 
+    def test_ibulk(self):
+        """this test will fail if IBULK talble doesn't work"""
+        bdf_filename = os.path.abspath(os.path.join(test_path, 'op2', 'test',
+            'examples', 'ibulk', 'model1_sim1-solution_1.op2'))
+        op2_filename = os.path.abspath(os.path.join(test_path, 'op2', 'test',
+            'examples', 'ibulk', 'model1_sim1-solution_1.op2'))
+        op2 = read_op2(op2_filename, debug=False)
+
     def test_set_results(self):
         folder = os.path.abspath(os.path.join(test_path, '..', 'models'))
         op2_filename = os.path.join(folder, 'solid_bending', 'solid_bending.op2')

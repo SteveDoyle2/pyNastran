@@ -62,6 +62,14 @@ class CFAST(Element):
                      comment=comment)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by CFAST eid=%s' % self.eid
         self.pid = model.Property(self.Pid(), msg=msg)
         self.pid_ref = self.pid
@@ -201,6 +209,14 @@ class CGAP(Element):
                                                  cid, self.cid_ref.type)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by CGAP eid=%s' % self.Eid()
         self.ga = model.Node(self.Ga(), msg=msg)
         self.gb = model.Node(self.Gb(), msg=msg)
@@ -279,6 +295,14 @@ class CrackElement(Element):
         pass
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by %s eid=%s' % (self. type, self.eid)
         self.nodes = model.Nodes(self.nodes, allow_empty_nodes=True, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
@@ -472,6 +496,14 @@ class PLOTEL(BaseCard):
         pass
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by PLOTEL eid=%s' % self.Eid()
         node_ids = self.node_ids
         self.nodes = [

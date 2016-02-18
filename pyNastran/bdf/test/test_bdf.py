@@ -531,12 +531,12 @@ def run_fem2(bdf_model, out_model, xref, punch,
                 sol = sol_base
 
             if sol == 101:
-                assert subcase.has_parameter('SPC'), subcase
+                assert 'SPC' in subcase, subcase
                 assert True in subcase.has_parameter('LOAD', 'TEMPERATURE(LOAD)'), subcase
             elif sol == 103:
-                assert subcase.has_parameter('METHOD'), subcase
+                assert 'METHOD' in subcase, subcase
             elif sol == 108: # freq
-                assert subcase.has_parameter('FREQUENCY'), subcase
+                assert 'FREQUENCY' in subcase, subcase
             elif sol == 111:  # time
                 assert any(subcase.has_parameter('TIME', 'TSTEP', 'TSTEPNL')), subcase
             elif sol == 111:  # modal frequency
@@ -550,18 +550,18 @@ def run_fem2(bdf_model, out_model, xref, punch,
                 assert any(subcase.has_parameter('TIME', 'TSTEP', 'TSTEPNL')), subcase
 
             elif sol == 144:
-                assert subcase.has_parameter('SUPORT') or len(fem2.suport1), subcase
-                assert subcase.has_parameter('TRIM'), subcase
+                assert 'SUPORT' in subcase or len(fem2.suport1), subcase
+                assert 'TRIM' in subcase, subcase
             elif sol == 145:
-                assert subcase.has_parameter('METHOD'), subcase
-                assert subcase.has_parameter('FMETHOD'), subcase  # FLUTTER
+                assert 'METHOD'in subcase, subcase
+                assert 'FMETHOD' in subcase, subcase  # FLUTTER
             elif sol == 146:
-                assert subcase.has_parameter('METHOD'), subcase
+                assert 'METHOD'in subcase, subcase
                 assert any(subcase.has_parameter('FREQUENCY', 'TIME', 'TSTEP', 'TSTEPNL')), subcase
-                assert subcase.has_parameter('GUST') or subcase.has_parameter('LOAD'), subcase
+                assert any(subcase.has_parameter('GUST', 'LOAD')), subcase
             elif sol == 200:
-                assert subcase.has_parameter('DESOBJ'), subcase
-                assert subcase.has_parameter('ANALYSIS'), subcase
+                assert 'DESOBJ' in subcase, subcase
+                assert 'ANALYSIS' in subcase, subcase
 
             if 'METHOD' in subcase:
                 method_id = subcase.get_parameter('METHOD')[0]
@@ -595,7 +595,7 @@ def run_fem2(bdf_model, out_model, xref, punch,
                 assert sol in [26, 68, 76, 78, 88, 108, 101, 111, 112, 118, 146], 'sol=%s FREQUENCY' % sol
                 # print(freq)
 
-            # if subcase.has_parameter('LSEQ'):
+            # if 'LSEQ' in subcase:
                 # lseq_id = subcase.get_parameter('LSEQ')[0]
                 # lseq = fem2.loads[lseq_id]
                 # assert sol in [], sol

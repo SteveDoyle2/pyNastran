@@ -270,6 +270,14 @@ class CHBDYG(ThermalElement):
         return []
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by CHBDYG eid=%s' % self.eid
         self.nodes = model.Nodes(self.nodes, allow_empty_nodes=False, msg=msg)
         self.pid = model.Phbdy(self.pid, msg=msg)
@@ -405,6 +413,14 @@ class CHBDYP(ThermalElement):
         return _node_ids(self, nodes=self.nodes, allow_empty_nodes=True, msg='')
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by CHBDYP pid=%s' % self.pid
         self.pid = model.Phbdy(self.pid, msg=msg)
         self.nodes = model.Nodes(self.nodes, allow_empty_nodes=True, msg=msg)
@@ -523,7 +539,7 @@ class PCONV(ThermalProperty):
             raise NotImplementedError(data)
 
     #def cross_reference(self, model):
-    #    pass
+        #pass
 
     def uncross_reference(self):
         pass
@@ -597,7 +613,7 @@ class PCONVM(ThermalProperty):
             raise NotImplementedError(data)
 
     #def cross_reference(self, model):
-    #    pass
+        #pass
 
     def uncross_reference(self):
         pass
@@ -727,6 +743,14 @@ class CONV(ThermalBC):
             raise NotImplementedError(data)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by CONV eid=%s' % self.eid
         ## TODO: eid???
         self.eid_ref = model.Element(self.eid, msg=msg)
@@ -795,6 +819,14 @@ class CONVM(ThermalBC):
             raise NotImplementedError(data)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by CONVM eid=%s' % self.eid
         self.eid = model.CYBDY(self.eid, msg=msg)
         self.pconvm = model.PCONV(self.pconvmID, msg=msg)
@@ -856,7 +888,7 @@ class RADM(ThermalBC):
             assert 0. <= e <= 1.0
 
     #def cross_reference(self, model):
-    #    pass
+        #pass
 
     def repr_fields(self):
         list_fields = ['RADM', self.radmid, self.absorb] + self.emissivity
@@ -908,6 +940,14 @@ class RADBC(ThermalBC):
             raise ValueError(msg)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by RADBC pid=%s' % self.nodamb
         for i, eid in enumerate(self.eids):
             self.eids[i] = model.Element(eid, msg=msg)

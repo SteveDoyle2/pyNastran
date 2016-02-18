@@ -147,6 +147,14 @@ class MATS1(MaterialDependence):
         #return E
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = 'which is required by MATS1 mid=%s' % self.mid
         self.mid = model.Material(self.mid, msg=msg)
         self.mid_ref = self.mid
@@ -228,6 +236,14 @@ class MATT1(MaterialDependence):
         return E
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = 'which is required by MATT1 mid=%s' % self.mid
         self.mid = model.Material(self.mid, msg=msg)
         self.mid_ref = self.mid
@@ -339,6 +355,14 @@ class MATT2(MaterialDependence):
             raise NotImplementedError()
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = 'which is required by MATT2 mid=%s' % self.mid
         self.mid = model.Material(self.mid, msg=msg)
         self.mid_ref = self.mid
@@ -463,6 +487,14 @@ class MATT4(MaterialDependence):
             raise NotImplementedError()
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = 'which is required by MATT4 mid=%s' % self.mid
         self.mid = model.Material(self.mid, msg=msg)
         self.mid_ref = self.mid
@@ -549,6 +581,14 @@ class MATT5(MaterialDependence):
             raise NotImplementedError()
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = 'which is required by MATT5 mid=%s' % self.mid
         self.mid = model.Material(self.mid, msg=msg)
         self.mid_ref = self.mid

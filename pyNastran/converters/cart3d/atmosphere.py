@@ -363,7 +363,7 @@ def atm_kinematic_viscosity_nu(alt, SI=False, debug=False):
     \f[ \large \nu = \frac{\mu}{\rho} \f]
 
     .. see ::  SutherlandVisc
-    .. todo :: better debug
+    .. todo:: better debug
     """
     z = _update_alt(alt, SI)
     rho = atm_density(z)
@@ -425,8 +425,7 @@ def atm_UnitReynoldsNumber2(alt, mach, SI=False, debug=False):
     .. note ::
         this version of Reynolds number directly caculates the base quantities, so multiple
         calls to atm_press and atm_temp are not made
-    .. todo ::
-        units...
+    .. todo:: units...
     """
     z = _update_alt(alt, SI)
     #print "z = ",z
@@ -512,8 +511,8 @@ def sutherland_viscoscity(T):
 
     .. note ::
         prints a warning if T>5400 deg R
-    .. todo ::
-        Consider raising an error instead of writing to stderr and letting the function return an answer.
+    .. todo:: Consider raising an error instead of writing to stderr
+               and letting the function return an answer.
 
     Sutherland's Equation\n
     From Aerodynamics for Engineers 4th Edition\n

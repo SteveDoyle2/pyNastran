@@ -726,6 +726,14 @@ class PBAR(LineProperty):
         return rho * A + nsm
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by PBAR mid=%s' % self.mid
         self.mid = model.Material(self.mid, msg=msg)
         self.mid_ref = self.mid
@@ -921,6 +929,14 @@ class PBARL(LineProperty):
         assert None not in self.dim
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by PBARL mid=%s' % self.mid
         self.mid = model.Material(self.mid, msg=msg)
         self.mid_ref = self.mid
@@ -1327,6 +1343,14 @@ class PBEAM3(LineProperty):  # not done, cleanup
         return self.nsm
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by PBEAM3 mid=%s' % self.mid
         self.mid = model.Material(self.mid, msg=msg)
         self.mid_ref = self.mid
@@ -1437,6 +1461,14 @@ class PBEND(LineProperty):
         #return self.nsm
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by PBEND mid=%s' % self.mid
         self.mid = model.Material(self.mid, msg=msg)
         self.mid_ref = self.mid

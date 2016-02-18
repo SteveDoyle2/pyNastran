@@ -121,6 +121,14 @@ class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
         return mass
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
         self.nodes = model.Nodes(self.nodes, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
@@ -414,6 +422,14 @@ class CBAR(LineElement):
         return x, g0
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         #if self.g0:
         #    self.x = nodes[self.g0].get_position() - nodes[self.ga].get_position()
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
@@ -580,6 +596,14 @@ class CBEAM3(CBAR):
         raise NotImplementedError(data)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
         self.ga = model.Node(self.ga, msg=msg)
         self.gb = model.Node(self.gb, msg=msg)
@@ -754,6 +778,14 @@ class CBEND(LineElement):
         return self.raw_fields()
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
         self.nodes = model.Nodes(self.nodes, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)

@@ -65,6 +65,14 @@ class QVOL(ThermalLoad):
         return [self]
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by QVOL sid=%s' % self.sid
         self.elements = model.Elements(self.elements, msg=msg)
         self.elements_ref = self.elements
@@ -146,6 +154,14 @@ class QBDY1(ThermalLoad):
         return [self]
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by QBDY1 sid=%s' % self.sid
         self.eids = model.Elements(self.eids, msg=msg)
         self.eids_ref = self.eids
@@ -231,6 +247,14 @@ class QBDY2(ThermalLoad):  # not tested
         return [self]
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by QBDY2 sid=%s' % self.sid
         self.eid = model.Element(self.eid, msg=msg)
         self.eid_ref = self.eid
@@ -292,6 +316,14 @@ class QBDY3(ThermalLoad):
             self.eids = list(data[3:])
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by QBDY3 sid=%s' % self.sid
         for i, eid in enumerate(self.eids):
             self.eids[i] = model.Element(eid, msg=msg)

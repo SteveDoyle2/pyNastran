@@ -146,6 +146,14 @@ class PELAST(SpringProperty):
         return PELAST(pid, tkid, tgeid, tknid, comment=comment)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         self.pid = model.Property(self.pid)
         self.pid_ref = self.pid
         if self.tkid > 0:

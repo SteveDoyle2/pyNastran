@@ -898,7 +898,7 @@ class OP4(object):
         endian : str; default=None -> auto determined somewhere else in the code
             the big/little endian {>, <}
 
-        .. warning :: 's' is apparently not Python 3 friendly
+        .. warning:: 's' is apparently not Python 3 friendly
         """
         return self._write_data(sys.stdout, data, types=types, endian=endian)
 

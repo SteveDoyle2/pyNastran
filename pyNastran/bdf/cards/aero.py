@@ -76,6 +76,14 @@ class AECOMP(BaseCard):
             raise NotImplementedError(msg)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ', which is required by AECOMP name=%r' % self.name
         #return
         if self.list_type == 'SET1':
@@ -510,6 +518,14 @@ class AESURF(BaseCard):
         return self.alid2_ref.sid
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         self.cid1 = model.Coord(self.Cid1())
         self.cid1_ref = self.cid1
         if self.cid2 is not None:
@@ -912,10 +928,12 @@ class CSSCHD(Aero):
 
     def cross_reference(self, model):
         """
-        Cross links the card
+        Cross links the card so referenced cards can be extracted directly
 
-        :param model:  the BDF object
-        :type model:   BDF()
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
         """
         msg = ' which is required by ASSCHD sid=%s' % self.sid
         self.aesid = model.AESurf(self.aesid, msg=msg)
@@ -1175,12 +1193,12 @@ class CAERO1(BaseCard):
 
     def cross_reference(self, model):
         """
-        Cross links the card
+        Cross links the card so referenced cards can be extracted directly
 
         Parameters
         ----------
-        model : BDF obj
-            The BDF object.
+        model : BDF()
+            the BDF object
         """
         msg = ' which is required by CAERO1 eid=%s' % self.eid
         self.pid = model.PAero(self.pid, msg=msg)
@@ -1530,12 +1548,12 @@ class CAERO2(BaseCard):
 
     def cross_reference(self, model):
         """
-        Cross links the card
+        Cross links the card so referenced cards can be extracted directly
 
         Parameters
         ----------
-        model : BDF obj
-            The BDF object.
+        model : BDF()
+            the BDF object
         """
         msg = ' which is required by CAERO2 eid=%s' % self.eid
         self.pid = model.PAero(self.pid, msg=msg)  # links to PAERO2
@@ -1630,12 +1648,12 @@ class CAERO3(BaseCard):
 
     def cross_reference(self, model):
         """
-        Cross links the card
+        Cross links the card so referenced cards can be extracted directly
 
         Parameters
         ----------
-        model : BDF obj
-            The BDF object.
+        model : BDF()
+            the BDF object
         """
         msg = ' which is required by CAERO3 eid=%s' % self.eid
         self.pid = model.PAero(self.pid, msg=msg)  # links to PAERO3
@@ -1737,12 +1755,12 @@ class CAERO4(BaseCard):
 
     def cross_reference(self, model):
         """
-        Cross links the card
+        Cross links the card so referenced cards can be extracted directly
 
         Parameters
         ----------
-        model : BDF obj
-            The BDF object.
+        model : BDF()
+            the BDF object
         """
         msg = ' which is required by CAERO4 eid=%s' % self.eid
 
@@ -1843,12 +1861,12 @@ class CAERO5(BaseCard):
 
     def cross_reference(self, model):
         """
-        Cross links the card
+        Cross links the card so referenced cards can be extracted directly
 
         Parameters
         ----------
-        model : BDF obj
-            The BDF object.
+        model : BDF()
+            the BDF object
         """
         msg = ' which is required by CAERO5 eid=%s' % self.eid
         self.pid = model.PAero(self.pid, msg=msg)
@@ -2072,6 +2090,14 @@ class PAERO5(BaseCard):
         return self.ltaus if isinstance(self.ltaus, integer_types) else self.ltaus_ref.aid
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         self.lxis = model.AEFACT(self.lxis_id)
         self.ltaus = model.AEFACT(self.ltaus_id)
 
@@ -2294,10 +2320,12 @@ class FLUTTER(BaseCard):
 
     def cross_reference(self, model):
         """
-        Cross links the card
+        Cross links the card so referenced cards can be extracted directly
 
-        :param model:  the BDF object
-        :type model:   BDF()
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
         """
         msg = ' which is required by FLUTTER sid=%s' % self.sid
         self.density = model.FLFACT(self.density, msg=msg)
@@ -2978,10 +3006,12 @@ class SPLINE1(Spline):
 
     def cross_reference(self, model):
         """
-        Cross links the card
+        Cross links the card so referenced cards can be extracted directly
 
-        :param model:  the BDF object
-        :type model:   BDF()
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
         """
         msg = ' which is required by SPLINE1 eid=%s' % self.eid
         self.caero = model.CAero(self.CAero(), msg=msg)
@@ -3077,10 +3107,12 @@ class SPLINE2(Spline):
 
     def cross_reference(self, model):
         """
-        Cross links the card
+        Cross links the card so referenced cards can be extracted directly
 
-        :param model:  the BDF object
-        :type model:   BDF()
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
         """
         msg = ' which is required by SPLINE2 eid=%s' % self.eid
         self.cid = model.Coord(self.Cid(), msg=msg)
@@ -3283,10 +3315,12 @@ class SPLINE4(Spline):
 
     def cross_reference(self, model):
         """
-        Cross links the card
+        Cross links the card so referenced cards can be extracted directly
 
-        :param model:  the BDF object
-        :type model:   BDF()
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
         """
         msg = ' which is required by SPLINE4 eid=%s' % self.eid
         self.caero = model.CAero(self.CAero(), msg=msg)
@@ -3416,10 +3450,12 @@ class SPLINE5(Spline):
 
     def cross_reference(self, model):
         """
-        Cross links the card
+        Cross links the card so referenced cards can be extracted directly
 
-        :param model:  the BDF object
-        :type model:   BDF()
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
         """
         msg = ' which is required by SPLINE5 eid=%s' % self.eid
         self.cid = model.Coord(self.Cid(), msg=msg)

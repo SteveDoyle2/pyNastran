@@ -345,7 +345,7 @@ class Solver(F06, OP2):
         analysisCases = []
         for (isub, subcase) in sorted(iteritems(cc.subcases)):
             self.log.info(subcase)
-            if subcase.has_parameter('LOAD'):
+            if 'LOAD' in subcase:
                 analysisCases.append(subcase)
                 #print('analyzing subcase = \n%s' % subcase)
             #else:
@@ -360,7 +360,7 @@ class Solver(F06, OP2):
             #print("STRESS value   = %s" % value)
             #print("STRESS options = %s" % options)
 
-            if case.has_parameter('TEMPERATURE(INITIAL)'):
+            if 'TEMPERATURE(INITIAL)' in case:
                 (value, options) = case.get_parameter('TEMPERATURE(INITIAL)')
                 self.log.info('value   = %s' % value)
                 self.log.info('options = %s' % options)
@@ -381,16 +381,16 @@ class Solver(F06, OP2):
 
         isubcase = case.id
         if model.sol in sols:
-            if case.has_parameter('TITLE'):
+            if 'TITLE' in case:
                 (self.title, options) = case.get_parameter('TITLE')
             else:
                 self.title = 'pyNastran Job'
-            if case.has_parameter('SUBTITLE'):
+            if 'SUBTITLE' in case:
                 (self.Subtitle, options) = case.get_parameter('SUBTITLE')
             else:
                 self.Subtitle = 'DEFAULT'
 
-            if case.has_parameter('LABEL'):
+            if 'LABEL' in case:
                 (self.label, options) = case.get_parameter('LABEL')
             else:
                 self.label = ''
@@ -399,7 +399,7 @@ class Solver(F06, OP2):
             # really should be is_f06_stress, is_op2_stress, etc.
             # also should have SET support
             #print(case.params)
-            #if case.has_parameter('DISPLACEMENT'):
+            #if 'DISPLACEMENT' in case:
                 #value, options = case.get_parameter('DISPLACEMENT')
                 #if value == 'ALL':
                     #self.is_displacement = True
@@ -413,7 +413,7 @@ class Solver(F06, OP2):
             self.get_case_parameter(case, 'STRAIN')
             self.get_case_parameter(case, 'FORCE')
 
-            #if case.has_parameter('STRESS'):
+            #if 'STRESS' in case:
                 #value, options = case.get_parameter('STRESS')
                 #if value == 'ALL':
                     #self.is_stress = True
@@ -422,7 +422,7 @@ class Solver(F06, OP2):
                 #else:
                     #raise NotImplementedError('STRESS = %r is not supported' % value)
 
-            #if case.has_parameter('STRAIN'):
+            #if 'STRAIN' in case:
                 #value, options = case.get_parameter('STRAIN')
                 #if value == 'ALL':
                     #self.is_strain = True
@@ -431,7 +431,7 @@ class Solver(F06, OP2):
                 #else:
                     #raise NotImplementedError('STRAIN = %r is not supported' % value)
 
-            #if case.has_parameter('FORCE'):
+            #if 'FORCE' in case:
                 #value, options = case.get_parameter('FORCE')
                 #if value == 'ALL':
                     #self.is_force = True
@@ -461,7 +461,7 @@ class Solver(F06, OP2):
             raise NotImplementedError('model.sol=%s not in %s' % (model.sol, sols.keys()))
 
     def get_case_parameter(self, case, param_name):
-        if case.has_parameter(param_name):
+        if param_name in case:
             value, options = case.get_parameter(param_name)
             if value == 'ALL':
                 save_results = True
@@ -577,7 +577,7 @@ class Solver(F06, OP2):
             coupled_mass = -1
             lumped_mass = True
 
-        if case.has_parameter('METHOD'):
+        if 'METHOD' in case:
             imethod = model.subcase.get_parameter('METHOD')
             self.eigb[imethod]
             self.eigc[imethod]
@@ -621,12 +621,12 @@ class Solver(F06, OP2):
         else:
             coupmass = -1
 
-        if case.has_parameter('FMETHOD'):
+        if 'FMETHOD' in case:
             iflutter = model.subcase.get_parameter('FMETHOD')
             self.flutter[iflutter]
             self.flfact[iflutter]
 
-        if case.has_parameter('METHOD'):
+        if 'METHOD' in case:
             imethod = model.subcase.get_parameter('METHOD')
             self.eigb[imethod]
             self.eigc[imethod]
@@ -1809,7 +1809,7 @@ class Solver(F06, OP2):
 
     def apply_SPCs(self, model, case, nidComponentToID):
         has_spcs = False
-        if not case.has_parameter('SPC'):
+        if not 'SPC' in case:
             spc_ids = self.model.get_SPCx_ids(exclude_spcadd=True)
             has_spcs = True
             ## todo:  is this correct???
@@ -1851,7 +1851,7 @@ class Solver(F06, OP2):
     def apply_MPCs(self, model, case, nidComponentToID):
         isMPC = False
         mp_index = self.mp_index
-        if case.has_parameter('MPC'):
+        if 'MPC' in case:
             # get the value, 1 is the options (MPC has no options)
             mpc_id = case.get_parameter('MPC')[0]
             mpcs = model.MPC(mpc_id)

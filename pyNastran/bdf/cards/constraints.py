@@ -58,6 +58,14 @@ class ConstraintObject(object):
         return self.constraints[spc_id]
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         #return
         #add_constraints2 = {}
         for key, add_constraint in sorted(iteritems(self.add_constraints)):
@@ -179,6 +187,14 @@ class SUPORT1(Constraint):
         return self._nodeIDs(nodes=self.IDs, allow_empty_nodes=True, msg=msg)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ', which is required by SUPORT1'
         self.IDs = model.Nodes(self.IDs, allow_empty_nodes=True, msg=msg)
         self.IDs_ref = self.IDs
@@ -253,6 +269,14 @@ class SUPORT(Constraint):
         return self._nodeIDs(nodes=self.IDs, allow_empty_nodes=True, msg=msg)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ', which is required by %s' % self.type
         self.IDs = model.Nodes(self.IDs, allow_empty_nodes=True, msg=msg)
         self.IDs_ref = self.IDs
@@ -349,6 +373,14 @@ class MPC(Constraint):
         return self._nodeIDs(nodes=self.gids, allow_empty_nodes=True, msg=msg)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ', which is required by MPC=%s' % self.conid
         self.gids = model.Nodes(self.gids, allow_empty_nodes=True, msg=msg)
         self.gids_ref = self.gids
@@ -474,6 +506,14 @@ class SPC(Constraint):
         return self._nodeIDs(nodes=self.gids, allow_empty_nodes=True, msg=msg)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ', which is required by %s=%s' % (self.type, self.conid)
         self.gids = model.Nodes(self.gids, allow_empty_nodes=True, msg=msg)
         self.gids_ref = self.gids
@@ -651,6 +691,14 @@ class SPC1(Constraint):
         return self._nodeIDs(self.nodes, allow_empty_nodes=True, msg=msg)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ', which is required by SPC1; conid=%s' % self.conid
         self.nodes = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
         self.nodes_ref = self.nodes
@@ -723,6 +771,14 @@ class SPCADD(ConstraintADD):
         return spc_ids
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ', which is required by SPCADD=%s' % self.conid
         for i, spc in enumerate(self.sets):
             self.sets[i] = model.SPC(spc, msg=msg)
@@ -790,6 +846,14 @@ class MPCADD(ConstraintADD):
         return mpc_ids
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ', which is required by MPCADD=%s' % self.conid
         for i, mpc in enumerate(self.sets):
             self.sets[i] = model.MPC(mpc, msg=msg)

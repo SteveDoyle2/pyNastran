@@ -182,6 +182,14 @@ class CBUSH(BushElement):
         return self.cid_ref.cid
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by CBUSH eid=%s' % self.eid
         self.ga = model.Node(self.ga, msg=msg)
         self.ga_ref = self.ga
@@ -264,6 +272,14 @@ class CBUSH1D(BushElement):
         return CBUSH1D(eid, pid, ga, gb, cid, comment=comment)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by CBUSH1D eid=%s' % self.eid
         self.ga = model.Node(self.ga, msg=msg)
         self.ga_ref = self.ga
@@ -411,6 +427,14 @@ class CBUSH2D(BushElement):
         return [self.Ga(), self.Gb()]
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by CBUSH2D eid=%s' % self.eid
         self.ga = model.Node(self.ga, msg=msg)
         self.gb = model.Node(self.gb, msg=msg)

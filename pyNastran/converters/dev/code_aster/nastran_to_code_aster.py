@@ -354,7 +354,7 @@ class CodeAsterConverter(BDF):
         for subcase_id, subcase in iteritems(self.subcases):
             if subcase_id == 0:
                 continue
-            if not subcase.has_parameter('MPC'):
+            if not 'MPC' in subcase:
                 continue
             mpc_id = subcase.get_parameter('MPC')[0]
 

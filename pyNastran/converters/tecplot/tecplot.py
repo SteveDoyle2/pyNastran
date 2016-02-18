@@ -111,7 +111,7 @@ class Tecplot(FortranFormat):
          - CHEXA
 
         .. note :: assumes single typed results
-        .. warning :: BLOCK option doesn't work if line length isn't the same...
+        .. warning:: BLOCK option doesn't work if line length isn't the same...
         """
         self.tecplot_filename = tecplot_filename
         assert os.path.exists(tecplot_filename), tecplot_filename

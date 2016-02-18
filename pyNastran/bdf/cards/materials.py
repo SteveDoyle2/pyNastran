@@ -127,6 +127,14 @@ class CREEP(Material):
                      a, b, c, d, e, f, g, comment=comment)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by CREEP pid=%s' % self.mid
         self.mid = model.Material(self.mid, msg=msg)
         self.mid_ref = self.mid
@@ -366,6 +374,14 @@ class MAT1(IsotropicMaterial):
         return msg
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by MAT1 mid=%s' % self.mid
         #self.Mcsid = model.Coord(self.Mcsid, msg=msg)  # used only for PARAM,CURVPLOT
         if self.mid in model.MATS1:
@@ -538,6 +554,14 @@ class MAT2(AnisotropicMaterial):
         return self.rho
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by MAT2 mid=%s' % self.mid
         if self.mid in model.MATT2:
             self.matt2 = model.MATT2[self.mid]  # not using a method...
@@ -775,6 +799,14 @@ class MAT3(OrthotropicMaterial):
                 pass
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         #msg = ' which is required by MAT3 mid=%s' % self.mid
         if self.mid in model.MATT3:
             self.matt3 = model.MATT3[self.mid]  # not using a method...
@@ -888,6 +920,14 @@ class MAT4(ThermalMaterial):
         return self.rho
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         #msg = ' which is required by MAT4 mid=%s' % self.mid
         if self.mid in model.MATT4:
             self.matt4 = model.MATT4[self.mid]  # not using a method...
@@ -992,6 +1032,14 @@ class MAT5(ThermalMaterial):  # also AnisotropicMaterial
                     cp, rho, hgen, comment=comment)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         #msg = ' which is required by MAT5 mid=%s' % self.mid
         if self.mid in model.MATT5:
             self.matt5 = model.MATT5[self.mid]  # not using a method...
@@ -1154,6 +1202,14 @@ class MAT8(OrthotropicMaterial):
                     comment=comment)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         #msg = ' which is required by MATT8 mid=%s' % self.mid
         if self.mid in model.MATT8:
             self.matt8 = model.MATT8[self.mid]  # not using a method...

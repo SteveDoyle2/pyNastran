@@ -312,9 +312,13 @@ class Cord2x(Coord):
 
     def cross_reference(self, model):
         """
-        Links self.rid to a coordinate system.
+        Cross links the card so referenced cards can be extracted directly
 
-        :param model: the BDF object
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+
         .. warning:: Doesn't set rid to the coordinate system if it's in the
                     global.  This isn't a problem.  It's meant to speed up the
                     code in order to resolve extra coordinate systems.
