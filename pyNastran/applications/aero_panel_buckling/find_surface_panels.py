@@ -627,7 +627,7 @@ def write_buckling_bdfs(bdf_model, op2_filename, xyz_cid0, patches, patch_edges_
     #header += '  STRAIN(PLOT,PRINT,VONMISES,FIBER,CENTER) = ALL\n'
     header += '  DISPLACEMENT(PLOT,PRINT) = ALL\n'
     header += '  SPC = 100\n'
-    if subcase.has_parameter('SUBTITLE'):
+    if 'SUBTITLE' not in subcase:
         header += '  SUBTITLE = %s\n' % subcase.get_parameter('SUBTITLE')[0]
 
     #header += '  MPC = 1\n'

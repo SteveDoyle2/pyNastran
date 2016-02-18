@@ -568,7 +568,7 @@ class NastranIO(object):
             subcase = model.case_control_deck.subcases[subcase_id]
 
             subtitle = ''
-            if subcase.has_parameter('SUBTITLE'):
+            if 'SUBTITLE' in subcase:
                 subtitle, options = subcase.get_parameter('SUBTITLE')
                 del options
 

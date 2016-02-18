@@ -1108,7 +1108,7 @@ class BDFMethods(BDFAttributes):
             msg = 'load_case=%s is invalid; ' % loadcase_id
             msg += 'load_cases = %s\n' % self.loads.keys()
             for subcase_id, subcase in iteritems(self.subcases):
-                if subcase.has_parameter('LOAD'):
+                if 'LOAD' in subcase:
                     load_id = subcase.get_parameter('LOAD')[0]
                     msg += '  SUBCASE %i; LOAD=%s\n' % (subcase_id, load_id)
                 else:

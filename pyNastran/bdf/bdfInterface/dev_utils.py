@@ -1205,7 +1205,7 @@ def _update_case_control(model, mapper):
                             #seti, values2, seti_key, param_type))
                         assert len(values2) > 0, values2
                         if isubcase in set_locations and key in set_locations[isubcase]:
-                            # or not global_subcase.has_parameter(key)
+                            # or not key in global_subcase
                             gset = subcase.get_parameter(seti)
                             lset = subcase.get_parameter(seti)
                             #print('gset', gset)
@@ -1218,7 +1218,7 @@ def _update_case_control(model, mapper):
                                 global_subcase.update_parameter_in_subcase(
                                     seti, values2, seti_key, param_type)
                             #subcase.update_parameter_in_subcase(seti, values2, seti_key, param_type)
-                        elif not global_subcase.has_parameter(key):
+                        elif not key not in global_subcase:
                             subcase.update_parameter_in_subcase(
                                 seti, values2, seti_key, param_type)
                         else:
