@@ -38,10 +38,10 @@ included for use.
 .. toctree::
    :maxdepth: 2
 
-   quick_start/index
-   manual/index
+   quick_start_rst/index
+   manual_rst/index
 
-   index/pyNastran
+   index_rst/pyNastran
 
 Indices and tables
 ==================
