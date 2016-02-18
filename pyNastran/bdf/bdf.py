@@ -2753,6 +2753,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             the input filename
 
         ..code-block :: python
+
             $ pyNastran: version=NX
             $ pyNastran: encoding=latin-1
             $ pyNastran: punch=True
