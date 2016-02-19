@@ -11,11 +11,11 @@ Introduction
 
 The Graphical User Interface (GUI) looks like:
 
-.. image:: ../../pyNastran/gui/qt.png
+.. image:: ../../../pyNastran/gui/qt.png
 
 A somewhat messy, but more featured image:
 
-.. image:: ../../pyNastran/gui/images/eigenvectors_groups_legend.png
+.. image:: ../../../pyNastran/gui/images/eigenvectors_groups_legend.png
 
 The GUI also has a sidebar and transient support.
 
@@ -230,7 +230,7 @@ Edit Geometry Properties
 ========================
 The View -> "Edit Geometry Properties" menu brings up:
 
-.. image:: ../../pyNastran/gui/images/edit_geometry_properties.png
+.. image:: ../../../pyNastran/gui/images/edit_geometry_properties.png
 
 This menu allows you to edit the opacity, line width, point size, show/hide various
 things associated with the model.  The geometry auto-updates when changes are made.
@@ -240,7 +240,7 @@ Modify Legend
 =============
 The View -> "Modify Legend" menu brings up:
 
-.. image:: ../../pyNastran/gui/images/legend.png
+.. image:: ../../../pyNastran/gui/images/legend.png
 
 This menu allows you to edit the max/min values of the legend as well as the orientation,
 number format (e.g. float precision) and deflection scale.  Defaults are stored, so
@@ -254,7 +254,7 @@ Hover over an element and press the ``p`` key.  A label will appear.  This label
 appear at the centroid of an elemental result or the closest node to the selected location.
 The value for the current result quantity will appear on the model.
 
-.. image:: ../../pyNastran/gui/images/picking_results.png
+.. image:: ../../../pyNastran/gui/images/picking_results.png
 
 For "NodeID", the xyz of the selcted point and the node in global XYZ space will be shown.
 Labels may be cleared from the ``View`` menu.
@@ -271,7 +271,7 @@ Model Clipping
 ==============
 Clipping let's you see "into" the model.
 
-.. image:: ../../pyNastran/gui/images/clipping.png
+.. image:: ../../../pyNastran/gui/images/clipping.png
 
 Zoom in and hover over an element and press the ``f`` key.
 The model will pan and now rotate around that point.
@@ -283,11 +283,11 @@ Modify Groups
 =============
 The View -> "Modify Groups" menu brings up:
 
-.. image:: ../../pyNastran/gui/images/modify_groups1.png
+.. image:: ../../../pyNastran/gui/images/modify_groups1.png
 
 Had you first clicked View -> "Create Groups by Property ID", you'd get:
 
-.. image:: ../../pyNastran/gui/images/modify_groups2.png
+.. image:: ../../../pyNastran/gui/images/modify_groups2.png
 
 Add/Remove use the "Patran-style" syntax:
 
@@ -315,7 +315,7 @@ The eyeball icon brings up a camera view.  You can set and save multiple camera 
 Additionally, views are written out for scripting.
 You can script an external optimization process and take pictures every so many steps.
 
-.. image:: ../../pyNastran/gui/images/camera_views.png
+.. image:: ../../../pyNastran/gui/images/camera_views.png
 
 
 User Points
@@ -397,7 +397,7 @@ aides in creating models.  The CAERO panels are seen when a model is loaded:
 Additionally, by clicking the ``Toggle CAERO Subpanels`` button
 (the figure is somewhat outdated), the subpanels may be seen:
 
-.. image:: ../../pyNastran/gui/images/caero_subpanels.png
+.. image:: ../../../pyNastran/gui/images/caero_subpanels.png
 
 Additionally, flaps are shown from within the GUI.  SPLINE surfaces
 are also generated and may be seen on the ``View`` -> ``Edit Geometry Properties``
@@ -472,7 +472,7 @@ unless you write a script.
 Additionally, scripts may be used to plot complex mode shapes.
 
 
-.. image:: ../../pyNastran/gui/images/solid_bending.gif
+.. image:: ../../../pyNastran/gui/images/solid_bending.gif
 
 
 .. code-block:: python
