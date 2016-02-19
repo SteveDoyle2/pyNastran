@@ -2084,7 +2084,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                 msg = '%s has a init problem' % card_name
                 print(msg)
                 #raise TypeError(msg)
-                #raise
+                raise
             except (SyntaxError, AssertionError, KeyError, ValueError) as exception:
                 # WARNING: Don't catch RuntimeErrors or a massive memory leak can occur
                 #tpl/cc451.bdf

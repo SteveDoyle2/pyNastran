@@ -663,7 +663,9 @@ def define_coord_ijk(model, Type, cid, origin, rid=0, i=None, j=None, k=None):
 
 
 class RectangularCoord(object):
-    def coord_to_xyz(self, p):
+
+    @classmethod
+    def coord_to_xyz(cls, p):
         """
         Returns
         -------
@@ -672,7 +674,8 @@ class RectangularCoord(object):
         """
         return p
 
-    def xyz_to_coord(self, p):
+    @classmethod
+    def xyz_to_coord(cls, p):
         """
         Returns
         -------
@@ -698,7 +701,9 @@ class CylindricalCoord(object):
     .. _msc:  http://simcompanion.mscsoftware.com/resources/sites/MSC/content/meta/DOCUMENTATION/9000/DOC9188/~secure/refman.pdf?token=WDkwz5Q6v7LTw9Vb5p+nwkbZMJAxZ4rU6BoR7AHZFxi2Tl1QdrbVvWj00qmcC4+S3fnbL4WUa5ovbpBwGDBt+zFPzsGyYC13zvGPg0j/5SrMF6bnWrQoTGyJb8ho1ROYsm2OqdSA9jVceaFHQVc+tJq4b49VogM4dZBxyi/QrHgdUgPFos8BAL9mgju5WGk8yYcFtRzQIxU=
     .. seealso:: `MSC Reference Manual (pdf) <`http://simcompanion.mscsoftware.com/resources/sites/MSC/content/meta/DOCUMENTATION/9000/DOC9188/~secure/refman.pdf?token=WDkwz5Q6v7LTw9Vb5p+nwkbZMJAxZ4rU6BoR7AHZFxi2Tl1QdrbVvWj00qmcC4+S3fnbL4WUa5ovbpBwGDBt+zFPzsGyYC13zvGPg0j/5SrMF6bnWrQoTGyJb8ho1ROYsm2OqdSA9jVceaFHQVc+tJq4b49VogM4dZBxyi/QrHgdUgPFos8BAL9mgju5WGk8yYcFtRzQIxU=>`_.
     """
-    def coord_to_xyz(self, p):
+
+    @classmethod
+    def coord_to_xyz(cls, p):
         r"""
         ::
 
@@ -722,7 +727,8 @@ class CylindricalCoord(object):
         y = R * sin(theta)
         return array([x, y, p[2]], dtype='float64')
 
-    def xyz_to_coord(self, p):
+    @classmethod
+    def xyz_to_coord(cls, p):
         """
         Returns
         -------
@@ -755,7 +761,8 @@ class SphericalCoord(object):
 
     .. seealso:: `MSC Reference Manual (pdf) <`http://simcompanion.mscsoftware.com/resources/sites/MSC/content/meta/DOCUMENTATION/9000/DOC9188/~secure/refman.pdf?token=WDkwz5Q6v7LTw9Vb5p+nwkbZMJAxZ4rU6BoR7AHZFxi2Tl1QdrbVvWj00qmcC4+S3fnbL4WUa5ovbpBwGDBt+zFPzsGyYC13zvGPg0j/5SrMF6bnWrQoTGyJb8ho1ROYsm2OqdSA9jVceaFHQVc+tJq4b49VogM4dZBxyi/QrHgdUgPFos8BAL9mgju5WGk8yYcFtRzQIxU=>`_.
     """
-    def xyz_to_coord(self, p):
+    @classmethod
+    def xyz_to_coord(cls, p):
         r"""
         :returns xyz: the loca XYZ point in the R, \theta, \phi coordinate system
         """
@@ -768,7 +775,8 @@ class SphericalCoord(object):
             theta = 0.
         return array([R, theta, phi], dtype='float64')
 
-    def coord_to_xyz(self, p):
+    @classmethod
+    def coord_to_xyz(cls, p):
         r"""
         :returns xyz: the R, \theta, \phi point in the local XYZ coordinate system
         """
@@ -845,7 +853,8 @@ class Cord2x(Coord):
         return cls(cid, rid, e1, e2, e3, comment=comment)
         #self._finish_setup()
 
-    def add_axes(self, cid, rid=0, origin=None,
+    @classmethod
+    def add_axes(cls, cid, rid=0, origin=None,
                   xaxis=None, yaxis=None, zaxis=None,
                   xyplane=None, yzplane=None, xzplane=None,
                   comment=''):
@@ -873,7 +882,7 @@ class Cord2x(Coord):
                   must be None
         .. note:: the axes and planes are defined in the rid coordinate system
         """
-        assert self.type in ['CORD2R', 'CORD2C', 'CORD2S'], self.type
+        assert cls.type in ['CORD2R', 'CORD2C', 'CORD2S'], cls.type
         if origin is None:
             origin = array([0., 0., 0.], dtype='float64')
         else:
@@ -883,30 +892,30 @@ class Cord2x(Coord):
         if xaxis is not None:
             assert yaxis is None and zaxis is None, 'yaxis=%s zaxis=%s' % (yaxis, zaxis)
             xaxis = _fix_xyz_shape(xaxis, 'xaxis')
-            xaxis = self.coord_to_xyz(xaxis)
+            xaxis = cls.coord_to_xyz(xaxis)
         elif yaxis is not None:
             assert zaxis is None, 'zaxis=%s' % (zaxis)
             yaxis = _fix_xyz_shape(yaxis, 'yaxis')
-            yaxis = self.coord_to_xyz(yaxis)
+            yaxis = cls.coord_to_xyz(yaxis)
         else:
             zaxis = _fix_xyz_shape(zaxis, 'zaxis')
-            zaxis = self.coord_to_xyz(zaxis)
+            zaxis = cls.coord_to_xyz(zaxis)
 
         # check for invalid planes
         if xyplane is not None:
             assert yzplane is None and xzplane is None, 'yzplane=%s xzplane=%s' % (yzplane, xzplane)
             assert xaxis is not None or yaxis is not None, 'xaxis=%s yaxis=%s' % (xaxis, yaxis)
             xyplane = _fix_xyz_shape(xyplane, 'xyplane')
-            xyplane = self.coord_to_xyz(xyplane)
+            xyplane = cls.coord_to_xyz(xyplane)
         elif yzplane is not None:
             assert xzplane is None, 'xzplane=%s' % (xzplane)
             assert yaxis is not None or zaxis is not None, 'yaxis=%s zaxis=%s' % (yaxis, zaxis)
             yzplane = _fix_xyz_shape(yzplane, 'yzplane')
-            yzplane = self.coord_to_xyz(yzplane)
+            yzplane = cls.coord_to_xyz(yzplane)
         else:
             assert xaxis is not None or zaxis is not None, 'xaxis=%s zaxis=%s' % (xaxis, zaxis)
             xzplane = _fix_xyz_shape(xzplane, 'xzplane')
-            xzplane = self.coord_to_xyz(xzplane)
+            xzplane = cls.coord_to_xyz(xzplane)
 
         if xyplane is not None:
             if xaxis is not None:
@@ -944,7 +953,7 @@ class Cord2x(Coord):
                 jhat = cross(k, xzplane) # xzplane is "defining" xaxis
                 j = jhat / norm(jhat)
                 i = cross(j, k)
-        return self.add_ijk(cid, rid, origin, i, j, k, comment=comment)
+        return cls.add_ijk(cid, rid, origin, i, j, k, comment=comment)
 
     @classmethod
     def add_ijk(cls, cid, rid=0, origin=None, i=None, j=None, k=None, comment=''):
@@ -1514,7 +1523,7 @@ class CORD1S(Cord1x, SphericalCoord):
     type = 'CORD1S'
     Type = 'S'
 
-    def __init__(self):
+    def __init__(self, cid, g1, g2, g3, comment=''):
         """
         Intilizes the CORD1S
 

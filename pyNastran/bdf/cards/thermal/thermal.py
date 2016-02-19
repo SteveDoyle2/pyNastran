@@ -12,7 +12,7 @@ from pyNastran.bdf.bdfInterface.assign_type import (fields, integer, double,
     integer_or_blank, double_or_blank, integer_or_string, string, blank)
 
 class ThermalCard(BaseCard):
-    def __init__(self, card, data):
+    def __init__(self, card, data=None):
         pass
 
     def cross_reference(self, model):
@@ -31,8 +31,8 @@ class ThermalBC(ThermalCard):
 class ThermalElement(ThermalCard):
     pid = 0
 
-    def __init__(self, card, data):
-        ThermalCard.__init__(self, card, data)
+    def __init__(self, card):
+        ThermalCard.__init__(self, card)
 
     def nodeIDs(self):
         self.deprecated('self.nodeIDs()', 'self.node_ids','0.8')
@@ -209,7 +209,7 @@ class CHBDYG(ThermalElement):
     """
     type = 'CHBDYG'
 
-    def __init__(self, card=None, comment=''):
+    def __init__(self, card, comment=''):
         ThermalElement.__init__(self, card)
         if comment:
             self._comment = comment

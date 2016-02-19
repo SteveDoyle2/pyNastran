@@ -134,8 +134,7 @@ class TestCoords(unittest.TestCase):
         card = BDFCard(card)
 
         size = 8
-        coord = CORD1R()
-        coord.add_card(card)
+        coord = CORD1R.add_card(card)
         self.assertEqual(coord.Cid(), 2)
         self.assertEqual(coord.Rid(), 0)
         coord.write_card(size, 'dummy')
@@ -410,8 +409,7 @@ class TestCoords(unittest.TestCase):
         cardi = BDFCard(card)
 
         size = 8
-        card = CORD1C()
-        card.add_card(cardi)
+        card = CORD1C.add_card(cardi)
         self.assertEqual(card.Cid(), 2)
         self.assertEqual(card.Rid(), 0)
         card.write_card(size, 'dummy')
@@ -423,8 +421,7 @@ class TestCoords(unittest.TestCase):
         cardi = BDFCard(card)
 
         size = 8
-        card = CORD1S()
-        card.add_card(cardi)
+        card = CORD1S.add_card(cardi)
         self.assertEqual(card.Cid(), 2)
         self.assertEqual(card.Rid(), 0)
         card.write_card(size, 'dummy')
@@ -571,25 +568,25 @@ class TestCoords(unittest.TestCase):
         yz_plane = [0., 1., 1.]
         xy_plane = [1., 1., 0.]
         # x-axis
-        cid2 = CORD2R(cid=0).add_axes(cid=2, rid=0, origin=origin, xaxis=xaxis, yaxis=None, zaxis=None,
-                                      xyplane=None, yzplane=None, xzplane=xz_plane)
+        cid2 = CORD2R.add_axes(cid=2, rid=0, origin=origin, xaxis=xaxis, yaxis=None, zaxis=None,
+                               xyplane=None, yzplane=None, xzplane=xz_plane)
 
-        cid3 = CORD2R(cid=0).add_axes(cid=2, rid=0, origin=origin, xaxis=xaxis, yaxis=None, zaxis=None,
-                                      xyplane=xy_plane, yzplane=None, xzplane=None)
+        cid3 = CORD2R.add_axes(cid=2, rid=0, origin=origin, xaxis=xaxis, yaxis=None, zaxis=None,
+                               xyplane=xy_plane, yzplane=None, xzplane=None)
 
         # y-axis
-        cid4 = CORD2R(cid=0).add_axes(cid=4, rid=0, origin=origin, xaxis=None, yaxis=yaxis, zaxis=None,
-                                      xyplane=xy_plane, yzplane=None, xzplane=None)
+        cid4 = CORD2R.add_axes(cid=4, rid=0, origin=origin, xaxis=None, yaxis=yaxis, zaxis=None,
+                               xyplane=xy_plane, yzplane=None, xzplane=None)
 
-        cid5 = CORD2R(cid=0).add_axes(cid=5, rid=0, origin=origin, xaxis=None, yaxis=yaxis, zaxis=None,
-                                      xyplane=None, yzplane=yz_plane, xzplane=None)
+        cid5 = CORD2R.add_axes(cid=5, rid=0, origin=origin, xaxis=None, yaxis=yaxis, zaxis=None,
+                               xyplane=None, yzplane=yz_plane, xzplane=None)
 
         # z-axis
-        cid4 = CORD2R(cid=0).add_axes(cid=4, rid=0, origin=origin, xaxis=None, yaxis=None, zaxis=zaxis,
-                                      xyplane=None, yzplane=None, xzplane=xz_plane)
+        cid4 = CORD2R.add_axes(cid=4, rid=0, origin=origin, xaxis=None, yaxis=None, zaxis=zaxis,
+                               xyplane=None, yzplane=None, xzplane=xz_plane)
 
-        cid5 = CORD2R(cid=0).add_axes(cid=5, rid=0, origin=origin, xaxis=None, yaxis=None, zaxis=zaxis,
-                                      xyplane=None, yzplane=yz_plane, xzplane=None)
+        cid5 = CORD2R.add_axes(cid=5, rid=0, origin=origin, xaxis=None, yaxis=None, zaxis=zaxis,
+                               xyplane=None, yzplane=yz_plane, xzplane=None)
 
         # ijk
         cid6 = CORD2R.add_ijk(cid=6, rid=0, origin=origin, i=xaxis, j=yaxis, k=None)
