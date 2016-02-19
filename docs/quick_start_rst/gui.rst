@@ -1,21 +1,22 @@
+==============================
 Graphical User Interface (GUI)
 ==============================
 
-Setup Note
-----------
-Download the entire package from Github or just the `GUI
-<https://sourceforge.net/projects/pynastran/files/?source=navbar/>`_ executable.
+.. toctree::
 
-If you download the source, make sure you follow the `Installation Guide
-<https://github.com/SteveDoyle2/pyNastran/wiki/Installation>`_ and use
-**setup.py develop** and not **setup.py install**.
+   Installation
+   bdf
+   test_bdf
+   op2
+   test_op2
+   gui
 
-Python 2.7 with ``vtk==5.10.1`` will probably give you the best looking GUI.
-VTK 6 and 7 probably still have some issues.
-The GUI in Python 3 won't save your settings.
+********
+Overview
+********
 
 Introduction
-------------
+============
 
 The Graphical User Interface (GUI) looks like:
 
@@ -27,8 +28,21 @@ A somewhat messy, but more featured image:
 
 The GUI also has a sidebar and transient support.
 
+Setup Note
+==========
+Download the entire package from Github or just the `GUI
+<https://sourceforge.net/projects/pynastran/files/?source=navbar/>`_ executable.
+
+If you download the source, make sure you follow the `Installation Guide
+<https://github.com/SteveDoyle2/pyNastran/wiki/Installation>`_ and use
+**setup.py develop** and not **setup.py install**.
+
+Python 2.7 with ``vtk==5.10.1`` will probably give you the best looking GUI.
+VTK 6 and 7 probably still have some issues.
+The GUI in Python 3 won't save your settings.
+
 Running the GUI
----------------
+===============
 On the command line:
 
 .. code-block:: console
@@ -92,9 +106,10 @@ Here the code will guess based on your file extension what your file format is.
 If you want to load the second OP2, you must use ``-o model2.op2``.
 
 Features
---------
+========
  * fringe plot support
 
+   * elemental/nodal results
    * attach custom CSV (comma-delimited) or .txt (space/tab-delimited)
      fringes as either node-based or element-based results
 
@@ -103,7 +118,6 @@ Features
  * high resolution screenshot
  * snap to axis
  * change Background Color
- * nodal/element-based results at the same time
  * show/hide elements
  * results may be shown alongside geometry
 
@@ -114,12 +128,12 @@ Features
 
  * legend is more robust
  * clipping customization menu
- * save view menu
- * edges flippable from menu now
- * menu for changing label color/size
+ * save/load view menu
+ * edges flippable from menu
+ * change label color/size menu
 
-New Nastran Specific Features
------------------------------
+Nastran Specific Features
+=========================
  * attach multiple OP2 files
  * supports SPOINTs
  * displacement/eigenvectors now shown as a deformation (real)
@@ -138,18 +152,18 @@ New Nastran Specific Features
 
 
 BDF Requirements
-----------------
+================
  * Entire model can be cross-referenced
  * Same requirements as BDF (include an executive/case control deck, define
    all cross-referenced cards, etc.)
 
 
 Versioning Note
-^^^^^^^^^^^^^^^
+---------------
 The GUI download is typically newer than the latest release version.
 
 Additional Formats
-------------------
+==================
 Some of the results include:
 
    * **Nastran** ASCII input (\*.bdf, \*.nas, \*.dat, \*.pch); binary output (\*.op2)
@@ -202,7 +216,7 @@ Some of the results include:
      * Cp, Mach, T, U, V, W, p, rhoU
 
 Graphical Issues
-^^^^^^^^^^^^^^^^
+----------------
 You'll have the best performance if you run the GUI on Windows with an new
 NVIDIA graphics card and on a desktop.
 
@@ -217,12 +231,12 @@ Issues include:
   2. the GUI not working
 
 
-
+*****************
 Features Overview
-=================
+*****************
 
 Edit Geometry Properties
-------------------------
+========================
 The View -> "Edit Geometry Properties" menu brings up:
 
 .. image:: ../../pyNastran/gui/images/edit_geometry_properties.png
@@ -232,7 +246,7 @@ things associated with the model.  The geometry auto-updates when changes are ma
 
 
 Modify Legend
--------------
+=============
 The View -> "Modify Legend" menu brings up:
 
 .. image:: ../../pyNastran/gui/images/legend.png
@@ -244,7 +258,7 @@ OK/Cancel will close the window.
 
 
 Picking Results
----------------
+===============
 Hover over an element and press the ``p`` key.  A label will appear.  This label will
 appear at the centroid of an elemental result or the closest node to the selected location.
 The value for the current result quantity will appear on the model.
@@ -257,13 +271,13 @@ Text color may also be changed from the ``View`` menu.
 
 
 Focal Point
------------
+===========
 Hover over an element and press the ``f`` key.  The model will now rotate around
 that point.
 
 
 Model Clipping
---------------
+==============
 Clipping let's you see "into" the model.
 
 .. image:: ../../pyNastran/gui/images/clipping.png
@@ -275,7 +289,7 @@ Eventually, the frame will clip.
 Reset the view by clicking the Undo-looking arrow at the top.
 
 Modify Groups
--------------
+=============
 The View -> "Modify Groups" menu brings up:
 
 .. image:: ../../pyNastran/gui/images/modify_groups1.png
@@ -305,7 +319,7 @@ The defaults will be updated when you click ``Set As Main``.  This will also upd
 the bolded/italicided group.
 
 Camera Views
-------------
+============
 The eyeball icon brings up a camera view.  You can set and save multiple camera views.
 Additionally, views are written out for scripting.
 You can script an external optimization process and take pictures every so many steps.
@@ -314,7 +328,7 @@ You can script an external optimization process and take pictures every so many 
 
 
 User Points
------------
+===========
 
 User points allow you to load a CSV of xyz points.
 These may be loaded from within the GUI or from the command line.
@@ -329,7 +343,7 @@ These will show up as points in the GUI with your requested filename.
 
 
 User Geometry
--------------
+=============
 
 User geometry is an attempt at creating a simple file format for defining geometry.
 This may be loaded from the command line.  The structure will probably change.
@@ -370,7 +384,7 @@ The geometry may be modified from the ``Edit Geometry Properties`` menu.
 
 
 Custom Scalar Results
----------------------
+=====================
 Custom Elemental/Nodal CSV/TXT file results may be loaded.  The order and length is
 important.  Results must be in nodal/elemental sorted order.  The following example
 has 3 scalar values with 2 locations.
@@ -382,7 +396,7 @@ has 3 scalar values with 2 locations.
       4.0,     5,     6.0
 
 Custom Results Specific Buttons
--------------------------------
+===============================
 Nastran Static/Dynamic Aero solutions require custom cards that create
 difficult to view, difficult to validate geometry.  The pyNastranGUI
 aides in creating models.  The CAERO panels are seen when a model is loaded:
@@ -398,8 +412,9 @@ Additionally, flaps are shown from within the GUI.  SPLINE surfaces
 are also generated and may be seen on the ``View`` -> ``Edit Geometry Properties``
 menu.
 
+*********
 Scripting
-=========
+*********
 GUI commands are logged to the window with their call signature.
 Scripting may be used to call any function in the GUI class.
 Most of these commands are written to the ``COMMAND`` output.
@@ -413,16 +428,14 @@ For example, you can:
  - high resolution screenshots
  - model introspection
 
-Using the Scripting menu:
-^^^^^^^^^^^^^^^^^^^^^^^^^
-
+Using the scripting menu
+========================
 The scripting menu allows for custom code and experimentation to be written without
 loading a script from a file.  All valid Python is accepted.
 Scripting commands should start with ``self.`` as they're left off from the menu.
 
 Command line scripting
-^^^^^^^^^^^^^^^^^^^^^^
-
+======================
 ``geom_script`` runs after the load_geometry method, while
 ``postscript`` runs after load_results has been performed
 
@@ -438,17 +451,17 @@ Command line scripting
 
 
 High Resolution Screenshots
----------------------------
+===========================
 
 Option #1
-^^^^^^^^^
+---------
 
 .. code-block:: python
 
     self.on_take_screenshot('solid_bending.png', magnification=5)
 
 Option #2
-^^^^^^^^^
+---------
 
 .. code-block:: python
 
@@ -457,7 +470,7 @@ Option #2
 Now take a screenshot.
 
 Animation of Mode Shapes
-------------------------
+========================
 
 While it's possible to take multiple screenshots of geometry with
 different scale factors, it's tedious.  Additionally, you can only
@@ -513,7 +526,7 @@ Additionally, scripts may be used to plot complex mode shapes.
     writeGif(gif_filename, images, duration=0.1, dither=0)
 
 Attempt #2 - broken
-^^^^^^^^^^^^^^^^^^^
+-------------------
 
 .. code-block:: python
 
@@ -548,7 +561,7 @@ Attempt #2 - broken
 
 
 Attempt #3 - broken
-^^^^^^^^^^^^^^^^^^^
+-------------------
 
 .. code-block:: python
 
@@ -572,7 +585,7 @@ Attempt #3 - broken
 
 
 Complex Mode Shapes (not done)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+------------------------------
 
 .. code-block:: python
 

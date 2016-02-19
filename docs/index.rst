@@ -27,7 +27,8 @@ preliminary. At this point, you should just use the OP2 reader. It's faster,
 more robust, and supports more results. The F06 reader is more used as
 a verification tool for the OP2 reader.
 
-The **Python OP4** reader/writer supports reading ASCII/binary sparse and dense matrices, and writing ASCII matrices..
+The **Python OP4** reader/writer supports reading ASCII/binary sparse and dense
+matrices, and writing ASCII matrices..
 
 A simple GUI has been developed that can view BDF models and display static/dynamic
 stress/strain/displacement/eignevectors (they must be real!) results from the OP2.
@@ -36,7 +37,7 @@ included for use.
 
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 4
 
    quick_start_rst/index
    manual_rst/index

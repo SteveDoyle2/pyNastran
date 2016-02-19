@@ -1,5 +1,6 @@
-f06 Package
-===========
+#############
+pyNastran/f06
+#############
 
 This is the pyNastran.f06.rst file.
 

@@ -77,7 +77,7 @@ class NastranIO(object):
         #: coordinate systems can be messy, so this is the
         #: list of coords to show
         self.show_cids = []
-        self.save_data = False
+        self.save_data = True # was False
         self.show_caero_actor = True  # show the caero mesh
         self.show_control_surfaces = True
         self.show_conm = True
@@ -2663,6 +2663,9 @@ class NastranIO(object):
             msg = 'extension=%r is not supported; filename=%r' % (ext, op2_filename)
             raise NotImplementedError(msg)
 
+        if self.save_data:
+            self.model_results = model
+
         #print(model.print_results())
         #self.iSubcaseNameMap[self.isubcase] = [Subtitle, Label]
 
@@ -3043,6 +3046,10 @@ class NastranIO(object):
 
 
 
+    def _fill_gpforces(self, model):
+        pass
+        #[model.grid_point_forces, 'GridPointForces'],  # TODO: this is not really an OUG table
+
     def _fill_op2_oug_oqg(self, cases, model, key, icase,
                           form_dict, header_dict):
         """
@@ -3059,11 +3066,9 @@ class NastranIO(object):
             (model.spc_forces, 'SPC Forces', False),
             (model.mpc_forces, 'MPC Forces', False),
 
-            # untested
             (model.load_vectors, 'LoadVectors', False),
             (model.applied_loads, 'AppliedLoads', False),
             (model.force_vectors, 'ForceVectors', False),
-            #[model.grid_point_forces, 'GridPointForces'],  # TODO: this is buggy...
         ]
         temperature_like = [
             (model.temperatures, 'Temperature'),

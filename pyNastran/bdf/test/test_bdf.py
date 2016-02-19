@@ -23,7 +23,7 @@ import traceback
 from pyNastran.op2.op2 import OP2
 from pyNastran.utils import print_bad_path, integer_types
 from pyNastran.bdf.errors import CrossReferenceError, CardParseSyntaxError, DuplicateIDsError
-from pyNastran.bdf.bdf import BDF, DLOAD, _read_bdf
+from pyNastran.bdf.bdf import BDF, DLOAD, read_bdf
 from pyNastran.bdf.cards.dmig import NastranMatrix
 from pyNastran.bdf.bdf_replacer import BDFReplacer
 from pyNastran.bdf.test.compare_card_content import compare_card_content
@@ -423,7 +423,7 @@ def run_fem1(fem1, bdf_model, mesh_form, xref, punch, sum_load, size, is_double,
                 #fem1.uncross_reference()
                 fem1.cross_reference()
                 fem1._xref = True
-                spike_fem = _read_bdf(fem1.bdf_filename, encoding=encoding)
+                spike_fem = read_bdf(fem1.bdf_filename, encoding=encoding)
 
                 remake = False
                 if remake:

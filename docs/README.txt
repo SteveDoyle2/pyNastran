@@ -1,3 +1,17 @@
+# USER
+#
+
+# Creating the documentation
+
+1.  Install Graphviz - www.graphviz.org - add the bin folder to the path
+2.  >>> pip install requirements_docs.txt
+        - (it's found in the root folder)
+3.  >>> make html
+
+
+#-------------------------------------------------------------------------------
+# DEVELOPER
+#
 # generate the index.rst file
 # and the root directory
 sphinx-quickstart.exe

@@ -1,11 +1,22 @@
 ============
 Installation
 ============
+
+.. toctree::
+
+   Installation
+   bdf
+   test_bdf
+   op2
+   test_op2
+   gui
+
 pyNastran is an easy package to install once you have the required Python
 modules.  It's a pure Python package so you shouldn't have too many problems.
 
+**********************************
 Install Procedure - From a Release
-==================================
+**********************************
 
 Overview
 ========
@@ -18,12 +29,12 @@ Overview
 
 
 Download Python
----------------
+===============
 v0.8 is tested against:
  - Python 2.7.8 (Windows/Linux)
  - Python 3.3 (Linux)
- - Python 3.4 (Windows/Linux)
- - Python 3.5 (Linux)
+ - Python 3.4 (Linux)
+ - Python 3.5 (Windows/Linux)
 
 
 Options include:
@@ -44,7 +55,7 @@ packages will be installed.  With base Python, you need to do that yourself.**
  * the GUI works
 
 Additional packages
--------------------
+===================
 The following packages are required.
 
  * `scipy <http://scipy.org/>`_
@@ -64,7 +75,7 @@ Regarding the GUI, Python 2.7 with ``vtk==5.10.1`` will give you the best
 looking GUI.  The GUI in Python 3 won't save your settings.
 
 Download pyNastran
-------------------
+==================
 
 If you want to most recent official release, either:
 
@@ -81,7 +92,7 @@ If you don't want the gui, use ``setup_no_gui.py`` instead of ``setup.py``.
 
 
 Install pyNastran
------------------
+=================
  * Navigate to pyNastran directory on the command line.  The ``setup.py`` file
    should exist in the current directory.
 
@@ -101,8 +112,9 @@ Install pyNastran
 
 If you don't want the gui for Python 2.7, use ``setup_no_gui.py`` instead of ``setup.py``.
 
+*******************************
 Install Procedure - From Source
-===============================
+*******************************
 
 Overview
 ========
@@ -116,7 +128,7 @@ Overview
  * Install pyNastran
 
 Install extra Python packages
------------------------------
+=============================
 Install Sphinx and alabaster
 
 .. code-block:: console
@@ -125,7 +137,7 @@ Install Sphinx and alabaster
   pip install alabaster
 
 Install Git
------------
+===========
 
  * Download & install `Git <http://git-scm.com/>`_ (required)
  * Download a GUI for Git (optional)
@@ -133,7 +145,7 @@ Install Git
 
 
 Install pyNastran
------------------
+=================
 There are two ways to install the dev version of pyNastran
 
  1. Download the most recent `zip version <https://github.com/SteveDoyle2/pynastran/archive/master.zip>`_
@@ -145,7 +157,7 @@ If you don't want the gui for Python 2.7, use ``setup_no_gui.py`` instead of ``s
 
 
 Cloning pyNastran using TortoiseGit
------------------------------------
+===================================
 Right-click in a folder and select ``Git Clone``.
 
 .. image:: clone.png
@@ -155,7 +167,7 @@ Then click ``OK`` to clone the dev version.
 
 
 Cloning pyNastran Using Command Line
-------------------------------------
+====================================
 Checkout/clone the dev code by typing (preferred):
 
 .. code-block:: console
@@ -171,11 +183,11 @@ To checkout a branch
 
 
 Documentation
--------------
+=============
 Two options for documentation exist.
 
 Build Docs
-^^^^^^^^^^
+----------
 Navigate to ``pyNastran/docs_sphinx`` directory on the command line.
 
 .. code-block:: console
@@ -183,6 +195,6 @@ Navigate to ``pyNastran/docs_sphinx`` directory on the command line.
   >>> make html
 
 Use Web docs
-^^^^^^^^^^^^^^^^^
+------------
 `web docs <http://pynastran-git.readthedocs.org/en/latest/>`_
 

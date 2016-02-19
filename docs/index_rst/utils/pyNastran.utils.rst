@@ -1,5 +1,6 @@
-utils Package
-=============
+###############
+pyNastran/utils
+###############
 
 This is the pyNastran.utils.rst file.
 

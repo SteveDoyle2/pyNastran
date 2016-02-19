@@ -1,32 +1,42 @@
-bdf Package
-===========
+#############
+pyNastran/bdf
+#############
 
 This is the pyNastran.bdf.rst file.
 
+*****************
 :mod:`bdf` Module
------------------
+*****************
 
 .. inheritance-diagram:: pyNastran.bdf.bdf
 
 .. automodule:: pyNastran.bdf.bdf
+    :inherited-members:
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
+..    :private-members:
 
+..    :inherited-members:  # show the inherited members
+..    :private-members:    # show the private members
+..    :members:
+..    :undoc-members:      # include functions without docstrings
+..    :show-inheritance:   #
+
+*************************
 :mod:`bdf_methods` Module
--------------------------
+*************************
 
 .. inheritance-diagram:: pyNastran.bdf.bdf_methods
 
 .. automodule:: pyNastran.bdf.bdf_methods
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
+**************************
 :mod:`bdf_replacer` Module
---------------------------
+**************************
 
 .. inheritance-diagram:: pyNastran.bdf.bdf_replacer
 
@@ -36,36 +46,36 @@ This is the pyNastran.bdf.rst file.
     :undoc-members:
     :show-inheritance:
 
+*******************************
 :mod:`case_control_deck` Module
--------------------------------
+*******************************
 
 .. inheritance-diagram:: pyNastran.bdf.case_control_deck
 
 .. automodule:: pyNastran.bdf.case_control_deck
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
+************************
 :mod:`deprecated` Module
-------------------------
+************************
 
 .. inheritance-diagram:: pyNastran.bdf.deprecated
 
 .. automodule:: pyNastran.bdf.deprecated
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
+*********************
 :mod:`subcase` Module
----------------------
+*********************
 
 .. inheritance-diagram:: pyNastran.bdf.subcase
 
 .. automodule:: pyNastran.bdf.subcase
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 

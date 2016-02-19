@@ -1,5 +1,6 @@
-converters Package
-==================
+####################
+pyNastran/converters
+####################
 
 :mod:`cart3d` Module
 -----------------------

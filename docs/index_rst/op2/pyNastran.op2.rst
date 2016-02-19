@@ -1,5 +1,6 @@
-op2 Package
-===========
+#############
+pyNastran/op2
+#############
 
 This is the pyNastran.op2.rst file.
 
