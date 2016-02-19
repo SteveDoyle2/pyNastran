@@ -9,7 +9,6 @@ pyNastran/op4
 
 .. automodule:: pyNastran.op4.op4
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 

@@ -11,7 +11,6 @@ This is the pyNastran.utils.rst file.
 
 .. automodule:: pyNastran.utils.gui_choices
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -22,7 +21,6 @@ This is the pyNastran.utils.rst file.
 
 .. automodule:: pyNastran.utils.gui_io
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -33,7 +31,6 @@ This is the pyNastran.utils.rst file.
 
 .. automodule:: pyNastran.utils.log
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -42,7 +39,6 @@ This is the pyNastran.utils.rst file.
 
 .. automodule:: pyNastran.utils.mathematics
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -51,7 +47,6 @@ This is the pyNastran.utils.rst file.
 
 .. automodule:: pyNastran.utils.dev
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -60,7 +55,6 @@ This is the pyNastran.utils.rst file.
 
 .. automodule:: pyNastran.utils.__init__
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 

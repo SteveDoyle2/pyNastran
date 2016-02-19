@@ -8,7 +8,6 @@ complex Package
 
 .. automodule:: pyNastran.op2.tables.oes_stressStrain.complex.oes_bars
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -19,7 +18,6 @@ complex Package
 
 .. automodule:: pyNastran.op2.tables.oes_stressStrain.complex.oes_bush
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -30,7 +28,6 @@ complex Package
 
 .. automodule:: pyNastran.op2.tables.oes_stressStrain.complex.oes_bush1d
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -41,7 +38,6 @@ complex Package
 
 .. automodule:: pyNastran.op2.tables.oes_stressStrain.complex.oes_plates
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -52,7 +48,6 @@ complex Package
 
 .. automodule:: pyNastran.op2.tables.oes_stressStrain.complex.oes_rods
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -63,7 +58,6 @@ complex Package
 
 .. automodule:: pyNastran.op2.tables.oes_stressStrain.complex.oes_shear
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -74,7 +68,6 @@ complex Package
 
 .. automodule:: pyNastran.op2.tables.oes_stressStrain.complex.oes_solids
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -85,7 +78,6 @@ complex Package
 
 .. automodule:: pyNastran.op2.tables.oes_stressStrain.complex.oes_springs
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 

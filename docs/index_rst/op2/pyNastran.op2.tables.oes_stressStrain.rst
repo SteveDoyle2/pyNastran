@@ -8,7 +8,6 @@ oes_stressStrain Package
 
 .. automodule:: pyNastran.op2.tables.oes_stressStrain.oes
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -19,7 +18,6 @@ oes_stressStrain Package
 
 .. automodule:: pyNastran.op2.tables.oes_stressStrain.oes_nonlinear
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 

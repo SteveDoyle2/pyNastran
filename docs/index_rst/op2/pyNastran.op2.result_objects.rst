@@ -8,7 +8,6 @@ resultObjects Package
 
 .. automodule:: pyNastran.op2.result_objects.grid_point_weight
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -19,7 +18,6 @@ resultObjects Package
 
 .. automodule:: pyNastran.op2.result_objects.op2_objects
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -30,7 +28,6 @@ resultObjects Package
 
 .. automodule:: pyNastran.op2.result_objects.element_table_object
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -41,7 +38,6 @@ resultObjects Package
 
 .. automodule:: pyNastran.op2.result_objects.table_object
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 

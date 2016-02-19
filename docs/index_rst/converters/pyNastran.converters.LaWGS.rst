@@ -8,7 +8,6 @@ lawgs Package
 
 .. automodule:: pyNastran.converters.LaWGS.wgsIO
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -19,7 +18,6 @@ lawgs Package
 
 .. automodule:: pyNastran.converters.LaWGS.wgsReader
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 

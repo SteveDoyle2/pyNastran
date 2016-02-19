@@ -8,7 +8,6 @@ test Package
 
 .. automodule:: pyNastran.op2.test.all_tests
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -19,7 +18,6 @@ test Package
 
 .. automodule:: pyNastran.op2.test.op2_test
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -30,7 +28,6 @@ test Package
 
 .. automodule:: pyNastran.op2.test.op2_unit_tests
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -41,7 +38,6 @@ test Package
 
 .. automodule:: pyNastran.op2.test.test_op2
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -52,7 +48,6 @@ test Package
 
 .. automodule:: pyNastran.op2.test.__init__
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -63,7 +58,6 @@ test Package
 
 .. automodule:: pyNastran.op2.test.__init__
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 

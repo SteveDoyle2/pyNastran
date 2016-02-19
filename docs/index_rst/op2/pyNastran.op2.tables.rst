@@ -8,7 +8,6 @@ tables Package
 
 .. automodule:: pyNastran.op2.tables.grid_point_weight
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -19,7 +18,6 @@ tables Package
 
 .. automodule:: pyNastran.op2.tables.ogs
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -30,7 +28,6 @@ tables Package
 
 .. automodule:: pyNastran.op2.tables.ogpwg
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 

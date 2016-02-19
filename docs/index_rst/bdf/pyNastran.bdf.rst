@@ -15,13 +15,6 @@ This is the pyNastran.bdf.rst file.
     :members:
     :undoc-members:
     :show-inheritance:
-..    :private-members:
-
-..    :inherited-members:  # show the inherited members
-..    :private-members:    # show the private members
-..    :members:
-..    :undoc-members:      # include functions without docstrings
-..    :show-inheritance:   #
 
 *************************
 :mod:`bdf_methods` Module

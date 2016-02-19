@@ -8,7 +8,6 @@ stl Package
 
 .. automodule:: pyNastran.converters.stl.stl_io
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -19,7 +18,6 @@ stl Package
 
 .. automodule:: pyNastran.converters.stl.stl_reader
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -30,7 +28,6 @@ stl Package
 
 .. automodule:: pyNastran.converters.stl.stl_reshape
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -41,6 +38,5 @@ stl Package
 
 .. automodule:: pyNastran.converters.stl.stl_to_nastran
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:

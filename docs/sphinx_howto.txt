@@ -37,3 +37,16 @@ heading6
 """"""""
    
 #-----------------------------------------------------------------
+
+*****************
+:mod:`bdf` Module
+*****************
+
+.. inheritance-diagram:: pyNastran.bdf.bdf
+
+.. automodule:: pyNastran.bdf.bdf
+    :inherited-members:   # show the inherited members
+    :members:		  # show the private members
+    :undoc-members:
+    :show-inheritance:	  # include functions without docstrings
+			  #

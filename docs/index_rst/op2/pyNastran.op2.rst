@@ -12,7 +12,6 @@ This is the pyNastran.op2.rst file.
 
 .. automodule:: pyNastran.op2.op2
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -23,7 +22,6 @@ This is the pyNastran.op2.rst file.
 
 .. automodule:: pyNastran.op2.op2_scalar
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -34,7 +32,6 @@ This is the pyNastran.op2.rst file.
 
 .. automodule:: pyNastran.op2.fortran_format
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -45,7 +42,6 @@ This is the pyNastran.op2.rst file.
 
 .. automodule:: pyNastran.op2.op2_codes
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -56,7 +52,6 @@ This is the pyNastran.op2.rst file.
 
 .. automodule:: pyNastran.op2.op2_helper
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -67,7 +62,6 @@ This is the pyNastran.op2.rst file.
 
 .. automodule:: pyNastran.op2.op2_common
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -78,7 +72,6 @@ This is the pyNastran.op2.rst file.
 
 .. automodule:: pyNastran.op2.op2_f06_common
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -89,7 +82,6 @@ This is the pyNastran.op2.rst file.
 
 .. automodule:: pyNastran.op2.vector_utils
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 

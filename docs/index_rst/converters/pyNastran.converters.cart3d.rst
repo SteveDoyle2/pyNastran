@@ -8,7 +8,6 @@ cart3d Package
 
 .. automodule:: pyNastran.converters.cart3d.cart3dIO
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -19,7 +18,6 @@ cart3d Package
 
 .. automodule:: pyNastran.converters.cart3d.cart3d_reader
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -30,7 +28,6 @@ cart3d Package
 
 .. automodule:: pyNastran.converters.cart3d.cart3d_to_stl
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -41,7 +38,6 @@ cart3d Package
 
 .. automodule:: pyNastran.converters.cart3d.cart3d_to_nastran
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -52,6 +48,5 @@ cart3d Package
 
 .. automodule:: pyNastran.converters.cart3d.test_cart3d
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:

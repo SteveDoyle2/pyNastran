@@ -8,7 +8,6 @@ nastran Package
 
 .. automodule:: pyNastran.converters.usm3d.iface_format
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -19,7 +18,6 @@ nastran Package
 
 .. automodule:: pyNastran.converters.usm3d.time_accurate_results
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -30,7 +28,6 @@ nastran Package
 
 .. automodule:: pyNastran.converters.usm3d.usm3d_io
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -41,7 +38,6 @@ nastran Package
 
 .. automodule:: pyNastran.converters.usm3d.usm3d_reader
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 

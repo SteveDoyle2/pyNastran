@@ -9,7 +9,6 @@ pyNastran/converters
 
 .. automodule:: pyNastran.converters.cart3d
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -20,7 +19,6 @@ pyNastran/converters
 
 .. automodule:: pyNastran.converters.LaWGS
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -31,7 +29,6 @@ pyNastran/converters
 
 .. automodule:: pyNastran.converters.nastran
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -42,7 +39,6 @@ pyNastran/converters
 
 .. automodule:: pyNastran.converters.panair
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -53,7 +49,6 @@ pyNastran/converters
 
 .. automodule:: pyNastran.converters.shabp
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -65,7 +60,6 @@ pyNastran/converters
 
 .. automodule:: pyNastran.converters.stl
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -76,7 +70,6 @@ pyNastran/converters
 
 .. automodule:: pyNastran.converters.tetgen
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -87,7 +80,6 @@ pyNastran/converters
 
 .. automodule:: pyNastran.converters.usm3d
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 

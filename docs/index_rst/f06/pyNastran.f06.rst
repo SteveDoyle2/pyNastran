@@ -12,7 +12,6 @@ This is the pyNastran.f06.rst file.
 
 .. automodule:: pyNastran.f06.f06_writer
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -24,7 +23,6 @@ This is the pyNastran.f06.rst file.
 
 .. automodule:: pyNastran.f06.f06_formatting
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -35,7 +33,6 @@ This is the pyNastran.f06.rst file.
 
 .. automodule:: pyNastran.f06.errors
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 

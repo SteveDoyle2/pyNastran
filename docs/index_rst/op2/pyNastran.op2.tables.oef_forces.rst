@@ -8,7 +8,6 @@ oef_forces Package
 
 .. automodule:: pyNastran.op2.tables.oef_forces.oef
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -19,7 +18,6 @@ oef_forces Package
 
 .. automodule:: pyNastran.op2.tables.oef_forces.oef_complexForceObjects
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -30,7 +28,6 @@ oef_forces Package
 
 .. automodule:: pyNastran.op2.tables.oef_forces.oef_forceObjects
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -41,7 +38,6 @@ oef_forces Package
 
 .. automodule:: pyNastran.op2.tables.oef_forces.oef_Objects
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -52,7 +48,6 @@ oef_forces Package
 
 .. automodule:: pyNastran.op2.tables.oef_forces.oef_thermalObjects
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 

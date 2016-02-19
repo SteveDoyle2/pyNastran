@@ -8,7 +8,6 @@ oqg_constraintForces Package
 
 .. automodule:: pyNastran.op2.tables.oqg_constraintForces.oqg
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -19,7 +18,6 @@ oqg_constraintForces Package
 
 .. automodule:: pyNastran.op2.tables.oqg_constraintForces.oqg_mpcForces
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -30,7 +28,6 @@ oqg_constraintForces Package
 
 .. automodule:: pyNastran.op2.tables.oqg_constraintForces.oqg_spcForces
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -41,7 +38,6 @@ oqg_constraintForces Package
 
 .. automodule:: pyNastran.op2.tables.oqg_constraintForces.oqg_thermalGradientAndFlux
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 

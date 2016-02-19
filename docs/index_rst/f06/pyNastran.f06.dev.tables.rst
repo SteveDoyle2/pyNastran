@@ -8,7 +8,6 @@ tables Package
 
 .. automodule:: pyNastran.f06.tables.lama
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -19,7 +18,6 @@ tables Package
 
 .. automodule:: pyNastran.f06.tables.max_min
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -30,7 +28,6 @@ tables Package
 
 .. automodule:: pyNastran.f06.tables.oef
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -41,7 +38,6 @@ tables Package
 
 .. automodule:: pyNastran.f06.tables.oes
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -52,7 +48,6 @@ tables Package
 
 .. automodule:: pyNastran.f06.tables.oload_resultant
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -63,7 +58,6 @@ tables Package
 
 .. automodule:: pyNastran.f06.tables.oqg
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -74,7 +68,6 @@ tables Package
 
 .. automodule:: pyNastran.f06.tables.oug
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 

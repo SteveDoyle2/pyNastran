@@ -8,7 +8,6 @@ tetgen Package
 
 .. automodule:: pyNastran.converters.dev.tetgen.tetgen_io
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -19,7 +18,6 @@ tetgen Package
 
 .. automodule:: pyNastran.converters.dev.tetgen.tetgen_reader
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -30,7 +28,6 @@ tetgen Package
 
 .. automodule:: pyNastran.converters.dev.tetgen.to_usm3d
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 

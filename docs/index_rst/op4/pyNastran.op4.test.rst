@@ -8,7 +8,6 @@ test Package
 
 .. automodule:: pyNastran.op4.test.op4_test
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 

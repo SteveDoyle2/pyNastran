@@ -8,7 +8,6 @@ nastran Package
 
 .. automodule:: pyNastran.converters.nastran.bdf_to_p3d
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -19,7 +18,6 @@ nastran Package
 
 .. automodule:: pyNastran.converters.nastran.nastranIOv
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -30,7 +28,6 @@ nastran Package
 
 .. automodule:: pyNastran.converters.nastran.nastran_to_cart3d
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -41,7 +38,6 @@ nastran Package
 
 .. automodule:: pyNastran.converters.nastran.nastran_to_stl
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 

@@ -8,7 +8,6 @@ oee_energy Package
 
 .. automodule:: pyNastran.op2.tables.oee_energy.onr
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -19,7 +18,6 @@ oee_energy Package
 
 .. automodule:: pyNastran.op2.tables.oee_energy.oee_objects
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 

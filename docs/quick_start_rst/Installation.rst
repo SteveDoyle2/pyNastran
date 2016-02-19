@@ -2,15 +2,6 @@
 Installation
 ============
 
-.. toctree::
-
-   Installation
-   bdf
-   test_bdf
-   op2
-   test_op2
-   gui
-
 pyNastran is an easy package to install once you have the required Python
 modules.  It's a pure Python package so you shouldn't have too many problems.
 

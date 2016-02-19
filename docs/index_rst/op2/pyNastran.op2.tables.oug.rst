@@ -8,7 +8,6 @@ oug Package
 
 .. automodule:: pyNastran.op2.tables.oug.oug
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -19,7 +18,6 @@ oug Package
 
 .. automodule:: pyNastran.op2.tables.oug.oug_accelerations
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -30,7 +28,6 @@ oug Package
 
 .. automodule:: pyNastran.op2.tables.oug.oug_displacements
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -41,7 +38,6 @@ oug Package
 
 .. automodule:: pyNastran.op2.tables.oug.oug_eigenvectors
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -52,7 +48,6 @@ oug Package
 
 .. automodule:: pyNastran.op2.tables.oug.oug_Objects
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -63,7 +58,6 @@ oug Package
 
 .. automodule:: pyNastran.op2.tables.oug.oug_temperatures
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -74,7 +68,6 @@ oug Package
 
 .. automodule:: pyNastran.op2.tables.oug.oug_velocities
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 

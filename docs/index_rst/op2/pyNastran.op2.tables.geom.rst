@@ -8,7 +8,6 @@ geom Package
 
 .. automodule:: pyNastran.op2.tables.geom.dit
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -19,7 +18,6 @@ geom Package
 
 .. automodule:: pyNastran.op2.tables.geom.dynamics
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -30,7 +28,6 @@ geom Package
 
 .. automodule:: pyNastran.op2.tables.geom.geom1
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -41,7 +38,6 @@ geom Package
 
 .. automodule:: pyNastran.op2.tables.geom.geom2
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -52,7 +48,6 @@ geom Package
 
 .. automodule:: pyNastran.op2.tables.geom.geom3
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -63,7 +58,6 @@ geom Package
 
 .. automodule:: pyNastran.op2.tables.geom.geom4
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -74,7 +68,6 @@ geom Package
 
 .. automodule:: pyNastran.op2.tables.geom.ept
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
@@ -85,7 +78,6 @@ geom Package
 
 .. automodule:: pyNastran.op2.tables.geom.mpt
     :members:
-    :private-members:
     :undoc-members:
     :show-inheritance:
 
