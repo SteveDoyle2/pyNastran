@@ -2,6 +2,7 @@
 from six import b
 from six.moves import range
 from struct import unpack, Struct
+import numpy as np
 
 from pyNastran.bdf.cards.nodes import GRID
 from pyNastran.bdf.cards.coordinate_systems import (
@@ -38,8 +39,8 @@ class GEOM1(object):
     def _read_fake(self, data, n):
         return len(data)
 
-    def _read_geom1_4(self, data):
-        return self._read_geom_4(self._geom1_map, data)
+    def _read_geom1_4(self, data, ndata):
+        return self._read_geom_4(self._geom1_map, data, ndata)
 
     def __init__(self):
         self.card_count = {}
@@ -105,7 +106,8 @@ class GEOM1(object):
             (cid, one, two, g1, g2, g3) = out
             assert one in [1, 2], one
             assert two in [1, 2], two
-            self.binary_debug.write('  CORD1C=%s\n' % str(out))
+            if self.is_debug_file:
+                self.binary_debug.write('  CORD1C=%s\n' % str(out))
             data_in = [cid, g1, g2, g3]
             coord = CORD1C(None, None, data_in)
             self.add_coord(coord)
@@ -123,7 +125,8 @@ class GEOM1(object):
             edata = data[n:n + 24]  # 6*4
             out = s.unpack(edata)
             (cid, one1, one2, g1, g2, g3) = out
-            self.binary_debug.write('  CORD1R=%s\n' % str(out))
+            if self.is_debug_file:
+                self.binary_debug.write('  CORD1R=%s\n' % str(out))
             assert one1 == 1, one1
             assert one2 == 1, one2
             data_in = [cid, g1, g2, g3]
@@ -143,7 +146,8 @@ class GEOM1(object):
             edata = data[n:n + 24]  # 6*4
             out = s.unpack(edata)
             (cid, three, one, g1, g2, g3) = out
-            self.binary_debug.write('  CORD1S=%s\n' % str(out))
+            if self.is_debug_file:
+                self.binary_debug.write('  CORD1S=%s\n' % str(out))
             assert three == 3, three
             assert one == 1, one
             data_in = [cid, g1, g2, g3]
@@ -169,7 +173,8 @@ class GEOM1(object):
             data_in = [cid, rid, a1, a2, a3, b1, b2, b3, c1, c2, c3]
             coord = CORD2C()
             coord.add_op2_data(data)
-            self.binary_debug.write('  CORD2C=%s\n' % str(out))
+            if self.is_debug_file:
+                self.binary_debug.write('  CORD2C=%s\n' % str(out))
             self.add_coord(coord, allow_overwrites=True)
             n += 52
         self._increase_card_count('CORD2C', nentries)
@@ -188,9 +193,9 @@ class GEOM1(object):
             assert two == 2, two
             data_in = [cid, rid, a1, a2, a3, b1, b2, b3, c1, c2, c3]
             #print("cid=%s rid=%s a1=%s a2=%s a3=%s b1=%s b2=%s b3=%s c1=%s c2=%s c3=%s" %(cid,rid,a1,a2,a3,b1,b2,b3,c1,c2,c3))
-            self.binary_debug.write('  CORD2R=%s\n' % data_in)
-            coord = CORD2R()
-            coord.add_op2_data(data)
+            if self.is_debug_file:
+                self.binary_debug.write('  CORD2R=%s\n' % data_in)
+            coord = CORD2R.add_op2_data(data_in)
             self.add_coord(coord, allow_overwrites=True)
             n += 52
         self._increase_card_count('CORD2R', nentries)
@@ -207,7 +212,8 @@ class GEOM1(object):
             out = s.unpack(edata)
             (cid, sixty5, eight, rid, a1, a2, a3, b1, b2, b3, c1, c2, c3) = out
             data_in = [cid, rid, a1, a2, a3, b1, b2, b3, c1, c2, c3]
-            self.binary_debug.write('  CORD2S=%s\n' % str(out))
+            if self.is_debug_file:
+                self.binary_debug.write('  CORD2S=%s\n' % str(out))
             coord = CORD2S()
             coord.add_op2_data(data_in)
             self.add_coord(coord, allow_overwrites=True)
@@ -228,7 +234,8 @@ class GEOM1(object):
             (cid, n1, n2, n3) = out
             coord = CORD3G()
             coord.add_op2_data(out)
-            self.binary_debug.write('  CORD3G=%s\n' % str(out))
+            if self.is_debug_file:
+                self.binary_debug.write('  CORD3G=%s\n' % str(out))
             self.add_coord(coord, allow_overwrites=True)
             n += 16
         self._increase_card_count('CORD3G', nentries)
@@ -243,13 +250,14 @@ class GEOM1(object):
         for i in range(nentries):
             edata = data[n:n + 32]
             out = s.unpack(edata)
-            (nID, cp, x1, x2, x3, cd, ps, seid) = out
-            self.binary_debug.write('  GRID=%s\n' % str(out))
-            if cd >= 0 and nID < 10000000:
-                node = GRID(None, out)
+            (nid, cp, x1, x2, x3, cd, ps, seid) = out
+            if self.is_debug_file:
+                self.binary_debug.write('  GRID=%s\n' % str(out))
+            if cd >= 0 and nid < 10000000:
+                node = GRID(nid, cp, np.array([x1, x2, x3]), cd, ps, seid)
                 self.add_node(node)
             else:
-                self.log.debug("*nID=%s cp=%s x1=%-5.2f x2=%-5.2f x3=%-5.2f cd=%-2s ps=%s seid=%s" % (nID, cp, x1, x2, x3, cd, ps, seid))
+                self.log.debug("*nid=%s cp=%s x1=%-5.2f x2=%-5.2f x3=%-5.2f cd=%-2s ps=%s seid=%s" % (nid, cp, x1, x2, x3, cd, ps, seid))
             n += ntotal
         return n
 

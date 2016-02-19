@@ -26,11 +26,11 @@ from pyNastran import is_release
 from pyNastran.op2.op2 import OP2, FatalError, SortCodeError, DeviceCodeError
 
 try:
-    #from pyNastran.op2.op2_geom import OP2Geom
+    from pyNastran.op2.op2_geom import OP2Geom
     is_geom = True
 except ImportError:
     is_geom = False
-    #raise
+    raise
 
 
 # we need to check the memory usage
@@ -333,9 +333,12 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
             print("---stats for %s---" % op2_filename)
             print(op2.get_op2_stats(short=short_stats))
             op2.print_subcase_key()
+
+        assert write_bdf == True, write_bdf
         if write_bdf:
+            print("**********write_bdf=True")
             op2.write_bdf(bdf_filename)
-            os.remove(bdf_filename)
+            #os.remove(bdf_filename)
         if compare:
             assert op2 == op2_nv
 

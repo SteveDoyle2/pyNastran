@@ -358,10 +358,12 @@ class OP2_Scalar(LAMA, ONR, OGPF,
     def set_as_nx(self):
         self.is_nx = True
         self.is_msc = False
+        self._nastran_format = 'msc'
 
     def set_as_msc(self):
         self.is_nx = False
         self.is_msc = True
+        self._nastran_format = 'nx'
 
     def __init__(self, debug=False, log=None, debug_file=None):
         """

@@ -17,8 +17,8 @@ class GEOM4(object):
     def add_suport(self, constraint):
         raise RuntimeError('this should be overwritten')
 
-    def _read_geom4_4(self, data):
-        return self._read_geom_4(self._geom4_map, data)
+    def _read_geom4_4(self, data, ndata):
+        return self._read_geom_4(self._geom4_map, data, ndata)
 
     def __init__(self):
         self.card_count = {}
@@ -231,7 +231,8 @@ class GEOM4(object):
             n += 12
             out = unpack('4i', edata)
             (sid, g, thru_flag, n1) = out
-            self.binary_debug.write('  SPC1=%s\n' % str(out))
+            if self.is_debug_file:
+                self.binary_debug.write('  SPC1=%s\n' % str(out))
             edata = data[n:n + 12]
 
             nids = [n1]
@@ -244,7 +245,8 @@ class GEOM4(object):
                 n2 = self.struct_i.unpack(data[n:n+4])
                 n += 4
                 nids.append(n2)
-            self.binary_debug.write('   nids=%s\n' % str(nids[1:]))
+            if self.is_debug_file:
+                self.binary_debug.write('   nids=%s\n' % str(nids[1:]))
             nentries += 1
             constraint = SPC1(None, [sid, g, nids])
             self.add_constraint_SPC(constraint)
@@ -266,7 +268,8 @@ class GEOM4(object):
             edata = data[n:n + 20]
             out = s.unpack(edata)
             (sid, ID, c, xxx, dx) = out
-            self.binary_debug.write('  SPCD=%s\n' % str(out))
+            if self.is_debug_file:
+                self.binary_debug.write('  SPCD=%s\n' % str(out))
 
             constraint = SPCD(None, [sid, ID, c, dx])
             self.add_constraint_SPC(constraint)
@@ -317,7 +320,9 @@ class GEOM4(object):
         nentries = len(data) // 8  # 2*4
         s = Struct(b(self._endian + '2i'))
         for i in range(nentries):
-            self.add_suport(SUPORT(None, list(s.unpack(data[n:n + 8])))) # extracts [sid, c]
+            data_in = list(s.unpack(data[n:n + 8]))
+            suport = SUPORT.add_op2_data(data_in)
+            self.add_suport(suport) # extracts [sid, c]
             n += 8
         return n
 

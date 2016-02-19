@@ -25,8 +25,8 @@ class MPT(object):
     def add_thermal_material(self, material, allow_overwrites=True):
         raise RuntimeError('this should be overwritten')
 
-    def _read_mpt_4(self, data):
-        return self._read_geom_4(self._mpt_map, data)
+    def _read_mpt_4(self, data, ndata):
+        return self._read_geom_4(self._mpt_map, data, ndata)
 
     def __init__(self):
         self.card_count = {}
@@ -277,28 +277,34 @@ class MPT(object):
         return n
 
     def _readMATT1(self, data, n):
-        self.binary_debug.write('skipping MATT1 in MPT\n')
+        if self.is_debug_file:
+            self.binary_debug.write('skipping MATT1 in MPT\n')
         return len(data)
 
     def _readMATT2(self, data, n):
-        self.binary_debug.write('skipping MATT2 in MPT\n')
+        if self.is_debug_file:
+            self.binary_debug.write('skipping MATT2 in MPT\n')
         return len(data)
 
     def _readMATT3(self, data, n):
-        self.binary_debug.write('skipping MATT3 in MPT\n')
+        if self.is_debug_file:
+            self.binary_debug.write('skipping MATT3 in MPT\n')
         return len(data)
 
     def _readMATT4(self, data, n):
-        self.binary_debug.write('skipping MATT4 in MPT\n')
+        if self.is_debug_file:
+            self.binary_debug.write('skipping MATT4 in MPT\n')
         return len(data)
 
     def _readMATT5(self, data, n):
-        self.binary_debug.write('skipping MATT5 in MPT\n')
+        if self.is_debug_file:
+            self.binary_debug.write('skipping MATT5 in MPT\n')
         return len(data)
 
 # MATT8 - unused
     def _readMATT9(self, data, n):
-        self.binary_debug.write('skipping MATT9 in MPT\n')
+        if self.is_debug_file:
+            self.binary_debug.write('skipping MATT9 in MPT\n')
         return len(data)
 
 # MBOLT

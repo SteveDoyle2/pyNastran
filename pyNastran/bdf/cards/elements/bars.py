@@ -315,7 +315,7 @@ class CBAR(LineElement):
         main = data[0]
         flag = data[1][0]
         if flag in [0, 1]:
-            self.g0 = None
+            g0 = None
             x = array([data[1][1],
                        data[1][2],
                        data[1][3]], dtype='float64')
@@ -531,6 +531,10 @@ class CBAR(LineElement):
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
+
+    def write_card_16(self, is_double=False):
+        card = self.repr_fields()
         return self.comment + print_card_16(card)
 
 

@@ -23,8 +23,8 @@ from pyNastran.bdf.cards.nodes import SPOINTs
 
 class GEOM2(object):
 
-    def _read_geom2_4(self, data):
-        return self._read_geom_4(self._geom2_map, data)
+    def _read_geom2_4(self, data, ndata):
+        return self._read_geom_4(self._geom2_map, data, ndata)
 
     def __init__(self):
         self.card_count = {}
@@ -248,7 +248,7 @@ class GEOM2(object):
                            w2a, w3a, w1b, w2b, w3b], [f, g0]]
             else:
                 raise RuntimeError('invalid f value...f=%s' % (f))
-            elem = CBAR(None, data_in)
+            elem = CBAR.add_op2_data(data_in)
             self.addOp2Element(elem)
             n += 64
         self.card_count['CBAR'] = nelements
@@ -258,7 +258,8 @@ class GEOM2(object):
         """
         CBARAO(4001,40,275) - the marker for Record 9
         """
-        self.binary_debug.write('skipping CBARAO in GEOM2\n')
+        if self.is_debug_file:
+            self.binary_debug.write('skipping CBARAO in GEOM2\n')
         return n
 
     def _readCBEAM(self, data, n):
@@ -289,7 +290,7 @@ class GEOM2(object):
                            [f, g0]]
             else:
                 raise RuntimeError('invalid f value...f=%r' % f)
-            elem = CBEAM(None, data_in)
+            elem = CBEAM.add_op2_data(data_in)
             self.addOp2Element(elem)
             n += 72
         self.card_count['CBEAM'] = nelements
@@ -299,35 +300,40 @@ class GEOM2(object):
         """
         CBEAMP(11401,114,9016) - the marker for Record 11
         """
-        self.binary_debug.write('skipping CBEAMP in GEOM2\n')
+        if self.is_debug_file:
+            self.binary_debug.write('skipping CBEAMP in GEOM2\n')
         return n
 
     def _readCBEND(self, data, n):
         """
         CBEND(4601,46,298) - the marker for Record 12
         """
-        self.binary_debug.write('skipping CBEND in GEOM2\n')
+        if self.is_debug_file:
+            self.binary_debug.write('skipping CBEND in GEOM2\n')
         return n
 
     def _readCBUSH(self, data, n):
         """
         CBUSH(2608,26,60) - the marker for Record 13
         """
-        self.binary_debug.write('skipping CBUSH in GEOM2\n')
+        if self.is_debug_file:
+            self.binary_debug.write('skipping CBUSH in GEOM2\n')
         return n
 
     def _readCBUSH1D(self, data, n):
         """
         CBUSH1D(5608,56,218) - the marker for Record 14
         """
-        self.binary_debug.write('skipping CBUSH1D in GEOM2\n')
+        if self.is_debug_file:
+            self.binary_debug.write('skipping CBUSH1D in GEOM2\n')
         return n
 
     def _readCCONE(self, data, n):
         """
         CCONE(2315,23,0) - the marker for Record 15
         """
-        self.binary_debug.write('skipping CCONE in GEOM2\n')
+        if self.is_debug_file:
+            self.binary_debug.write('skipping CCONE in GEOM2\n')
         return n
 
     def _readCDAMP1(self, data, n):
@@ -338,7 +344,8 @@ class GEOM2(object):
         for i in range(nelements):
             edata = data[n:n + 24]  # 6*4
             out = unpack(b(self._endian + '6i'), edata)
-            self.binary_debug.write('  CDAMP1=%s\n' % str(out))
+            if self.is_debug_file:
+                self.binary_debug.write('  CDAMP1=%s\n' % str(out))
             (eid, pid, g1, g2, c1, c2) = out
             elem = CDAMP1(None, out)
             self.addOp2Element(elem)
@@ -354,7 +361,8 @@ class GEOM2(object):
         for i in range(nelements):
             edata = data[n:n + 24]  # 6*4
             out = unpack(b(self._endian + 'if4i'), edata)
-            self.binary_debug.write('  CDAMP2=%s\n' % str(out))
+            if self.is_debug_file:
+                self.binary_debug.write('  CDAMP2=%s\n' % str(out))
             (eid, bdamp, g1, g2, c1, c2) = out
             elem = CDAMP2(None, out)
             self.addOp2Element(elem)
@@ -371,7 +379,8 @@ class GEOM2(object):
         for i in range(nelements):
             edata = data[n:n + 16]  # 4*4
             out = s.unpack(edata)
-            self.binary_debug.write('  CDAMP3=%s\n' % str(out))
+            if self.is_debug_file:
+                self.binary_debug.write('  CDAMP3=%s\n' % str(out))
             (eid, pid, s1, s2) = out
             elem = CDAMP3(None, out)
             self.addOp2Element(elem)
@@ -388,7 +397,8 @@ class GEOM2(object):
         for i in range(nelements):
             edata = data[n:n + 16]  # 4*4
             out = s.unpack(edata)
-            self.binary_debug.write('  CDAMP4=%s\n' % str(out))
+            if self.is_debug_file:
+                self.binary_debug.write('  CDAMP4=%s\n' % str(out))
             (eid, bdamp, s1, s2) = out
             elem = CDAMP4(None, out)
             self.addOp2Element(elem)
@@ -405,7 +415,8 @@ class GEOM2(object):
         for i in range(nelements):
             edata = data[n:n + 16]  # 4*4
             out = s.unpack(edata)
-            self.binary_debug.write('  CDAMP5=%s\n' % str(out))
+            if self.is_debug_file:
+                self.binary_debug.write('  CDAMP5=%s\n' % str(out))
             (eid, pid, s1, s2) = out
             elem = CDAMP5(None, out)
             self.addOp2Element(elem)
@@ -432,9 +443,10 @@ class GEOM2(object):
         for i in range(nelements):
             edata = data[n:n+24]
             out = s.unpack(edata)
-            self.binary_debug.write('  CELAS1=%s\n' % str(out))
+            if self.is_debug_file:
+                self.binary_debug.write('  CELAS1=%s\n' % str(out))
             (eid, pid, g1, g2, c1, c2) = out
-            elem = CELAS1(None, out)
+            elem = CELAS1.add_op2_data(out)
             self.addOp2Element(elem)
             n += ntotal
         self.card_count['CELAS1'] = nelements
@@ -450,7 +462,8 @@ class GEOM2(object):
         for i in range(nelements):
             edata = data[n:n+32]
             out = s1.unpack(edata)
-            self.binary_debug.write('  CELAS2=%s\n' % str(out))
+            if self.is_debug_file:
+                self.binary_debug.write('  CELAS2=%s\n' % str(out))
             (eid, k, g1, g2, c1, c2, ge, s) = out
             elem = CELAS2(None, out)
             self.addOp2Element(elem)
@@ -468,7 +481,8 @@ class GEOM2(object):
         for i in range(nelements):
             edata = data[n:n+16]
             out = s.unpack(edata)
-            self.binary_debug.write('  CELAS3=%s\n' % str(out))
+            if self.is_debug_file:
+                self.binary_debug.write('  CELAS3=%s\n' % str(out))
             (eid, pid, s1, s2) = out
             elem = CELAS3(None, out)
             self.addOp2Element(elem)
@@ -485,7 +499,8 @@ class GEOM2(object):
         for i in range(nelements):
             edata = data[n:n + 16]  # 4*4
             out = s.unpack(edata)
-            self.binary_debug.write('  CELAS4=%s\n' % str(out))
+            if self.is_debug_file:
+                self.binary_debug.write('  CELAS4=%s\n' % str(out))
             (eid, k, s1, s2) = out
             elem = CELAS4(None, out)
             self.addOp2Element(elem)
@@ -559,7 +574,8 @@ class GEOM2(object):
             out = s.unpack(edata)
             (eid, blank, Type, iviewf, iviewb, radmidf, radmidb, blank2,
              g1, g2, g3, g4, g5, g6, g7, g8) = out
-            self.binary_debug.write('  CHBDYG=%s\n' % str(out))
+            if self.is_debug_file:
+                self.binary_debug.write('  CHBDYG=%s\n' % str(out))
             data_in = [eid, Type, iviewf, iviewb, radmidf, radmidb,
                        g1, g2, g3, g4, g5, g6, g7, g8]
             elem = CHBDYG(None, data_in)
@@ -581,7 +597,8 @@ class GEOM2(object):
         for i in range(nelements):
             edata = data[n:n+88]
             out = s.unpack(edata)
-            self.binary_debug.write('  CHEXA=%s\n' % str(out))
+            if self.is_debug_file:
+                self.binary_debug.write('  CHEXA=%s\n' % str(out))
             (eid, pid, g1, g2, g3, g4, g5, g6, g7, g8, g9, g10,
              g11, g12, g13, g14, g15, g16, g17, g18, g19, g20) = out
 
@@ -612,7 +629,8 @@ class GEOM2(object):
         for i in range(nelements):
             edata = data[n:n + 24]  # 6*4
             out = s.unpack(edata)
-            self.binary_debug.write('  CMASS1=%s\n' % str(out))
+            if self.is_debug_file:
+                self.binary_debug.write('  CMASS1=%s\n' % str(out))
             #(eid, pid, g1, g2, c1, c2) = out
             elem = CMASS1(None, out)
             self.addOp2Element(elem)
@@ -629,7 +647,8 @@ class GEOM2(object):
         for i in range(nelements):
             edata = data[n:n + 24]  # 6*4
             out = s.unpack(edata)
-            self.binary_debug.write('  CMASS2=%s\n' % str(out))
+            if self.is_debug_file:
+                self.binary_debug.write('  CMASS2=%s\n' % str(out))
             #(eid, m, g1, g2, c1, c2) = out
             elem = CMASS2(None, out)
             self.addOp2Element(elem)
@@ -646,7 +665,8 @@ class GEOM2(object):
         for i in range(nelements):
             edata = data[n:n + 16]  # 4*4
             out = s.unpack(edata)
-            self.binary_debug.write('  CMASS3=%s\n' % str(out))
+            if self.is_debug_file:
+                self.binary_debug.write('  CMASS3=%s\n' % str(out))
             #(eid, pid, s1, s2) = out
             elem = CMASS3(None, out)
             self.addOp2Element(elem)
@@ -686,7 +706,8 @@ class GEOM2(object):
         for i in range(nelements):
             edata = data[n:n + 96]  # 24*4
             out = s.unpack(edata)
-            self.binary_debug.write('  CONM1=%s\n' % str(out))
+            if self.is_debug_file:
+                self.binary_debug.write('  CONM1=%s\n' % str(out))
             (eid, g, cid, m1, m2a, m2b, m3a, m3b, m3c, m4a, m4b, m4c, m4d,
              m5a, m5b, m5c, m5d, m5e, m6a, m6b, m6c, m6d, m6e, m6f) = out
             elem = CONM1(None, out)
@@ -705,9 +726,10 @@ class GEOM2(object):
         for i in range(nelements):
             edata = data[n:n+52]
             out = s.unpack(edata)
-            self.binary_debug.write('  CONM2=%s\n' % str(out))
+            if self.is_debug_file:
+                self.binary_debug.write('  CONM2=%s\n' % str(out))
             (eid, g, cid, m, x1, x2, x3, i1, i2a, i2b, i3a, i3b, i3c) = out
-            elem = CONM2(None, out)
+            elem = CONM2.add_op2_data(out)
             self.addOp2Element(elem)
             n += ntotal
         self.card_count['CONM2'] = nelements
@@ -723,7 +745,8 @@ class GEOM2(object):
         for i in range(nelements):
             edata = data[n:n+32]
             out = s.unpack(edata)
-            self.binary_debug.write('  CONROD=%s\n' % str(out))
+            if self.is_debug_file:
+                self.binary_debug.write('  CONROD=%s\n' % str(out))
             (eid, n1, n2, mid, a, j, c, nsm) = out
             elem = CONROD(None, out)
             self.addOp2Element(elem)
@@ -742,7 +765,8 @@ class GEOM2(object):
         for i in range(nelements):
             edata = data[n:n+80]
             out = s.unpack(edata)
-            self.binary_debug.write('  CONV=%s; len=%s\n' % (str(out), len(out)))
+            if self.is_debug_file:
+                self.binary_debug.write('  CONV=%s; len=%s\n' % (str(out), len(out)))
             (eid, pconID, flmnd, cntrlnd,
              ta1, ta2, ta3, ta4, ta5, ta6, ta7, ta8,
              wt1, wt2, wt3, wt4, wt5, wt6, wt7, wt8) = out
@@ -766,7 +790,8 @@ class GEOM2(object):
         for i in range(nelements):
             edata = data[n:n+28]
             out = unpack(edata)
-            self.binary_debug.write('  CONVM=%s\n' % str(out))
+            if self.is_debug_file:
+                self.binary_debug.write('  CONVM=%s\n' % str(out))
             (eid, pconID, flmnd, cntrlnd,
              [ta1, ta2, ta3]) = out
             data_in = [eid, pconID, flmnd, cntrlnd,
@@ -788,7 +813,8 @@ class GEOM2(object):
         for i in range(nelements):
             edata = data[n:n + 68]  # 17*4
             out = s.unpack(edata)
-            self.binary_debug.write('  CPENTA=%s\n' % str(out))
+            if self.is_debug_file:
+                self.binary_debug.write('  CPENTA=%s\n' % str(out))
             (eid, pid, g1, g2, g3, g4, g5, g6, g7, g8, g9, g10,
              g11, g12, g13, g14, g15) = out
 
@@ -819,7 +845,8 @@ class GEOM2(object):
         """common method for CQUAD, CQUADX"""
         s = Struct(b(self._endian + '11i'))
         nelements = (len(data) - n) // 44  # 11*4
-        self.binary_debug.write('ndata=%s\n' % (nelements * 44))
+        if self.is_debug_file:
+            self.binary_debug.write('ndata=%s\n' % (nelements * 44))
         for i in range(nelements):
             edata = data[n:n + 44]
             out = s.unpack(edata)
@@ -853,7 +880,8 @@ class GEOM2(object):
             out = s.unpack(edata)
             (eid, pid, n1, n2, n3, n4, theta, zoffs, blank, tflag,
              t1, t2, t3, t4) = out
-            self.binary_debug.write('  %s=%s\n' % (Element.type, str(out)))
+            if self.is_debug_file:
+                self.binary_debug.write('  %s=%s\n' % (Element.type, str(out)))
             #print("eid=%s pid=%s n1=%s n2=%s n3=%s n4=%s theta=%s zoffs=%s blank=%s tflag=%s t1=%s t2=%s t3=%s t4=%s" %(eid,pid,n1,n2,n3,n4,theta,zoffs,blank,tflag,t1,t2,t3,t4))
             data_init = [eid, pid, n1, n2, n3, n4, theta, zoffs,
                         tflag, t1, t2, t3, t4]
@@ -916,7 +944,8 @@ class GEOM2(object):
         for i in range(nelements):
             edata = data[n:n + 16]
             out = s.unpack(edata)
-            self.binary_debug.write('  CROD=%s\n' % str(out))
+            if self.is_debug_file:
+                self.binary_debug.write('  CROD=%s\n' % str(out))
             (eid, pid, n1, n2) = out
             elem = CROD(None, out)
             self.addOp2Element(elem)
@@ -936,7 +965,8 @@ class GEOM2(object):
         for i in range(nelements):
             edata = data[n:n + 24]
             out = s.unpack(edata)
-            self.binary_debug.write('  CSHEAR=%s\n' % str(out))
+            if self.is_debug_file:
+                self.binary_debug.write('  CSHEAR=%s\n' % str(out))
             (eid, pid, n1, n2, n3, n4) = out
             elem = CSHEAR(None, out)
             self.addOp2Element(elem)
@@ -958,7 +988,8 @@ class GEOM2(object):
         for i in range(nelements):
             edata = data[n:n+108]
             out = s.unpack(edata)
-            self.binary_debug.write('  CTETP=%s\n' % str(out))
+            if self.is_debug_file:
+                self.binary_debug.write('  CTETP=%s\n' % str(out))
             (eid, pid, n1, n2, n3, n4, e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12,
              f1, f2, f3, f4, b1, ee1, ee2, ee3, ee4) = out
             #print("out = ",out)
@@ -983,7 +1014,8 @@ class GEOM2(object):
         for i in range(nelements):
             edata = data[n:n + 48]
             out = s.unpack(edata)
-            self.binary_debug.write('  CTETRA=%s\n' % str(out))
+            if self.is_debug_file:
+                self.binary_debug.write('  CTETRA=%s\n' % str(out))
             (eid, pid, n1, n2, n3, n4, n5, n6, n7, n8, n9, n10) = out
             #print("out = ",out)
 
@@ -1017,7 +1049,8 @@ class GEOM2(object):
             #print("eid=%s pid=%s n1=%s n2=%s n3=%s theta=%s zoffs=%s blank1=%s blank2=%s tflag=%s t1=%s t2=%s t3=%s" %(eid,pid,n1,n2,n3,theta,zoffs,blank1,blank2,tflag,t1,t2,t3))
             (eid, pid, n1, n2, n3, theta, zoffs, blank1,
                 blank2, tflag, t1, t2, t3) = out
-            self.binary_debug.write('  CTRIA3=%s\n' % str(out))
+            if self.is_debug_file:
+                self.binary_debug.write('  CTRIA3=%s\n' % str(out))
             data_in = [eid, pid, n1, n2, n3, theta, zoffs, tflag, t1, t2, t3]
             elem = CTRIA3(None, data_in)
             self.addOp2Element(elem)
@@ -1038,7 +1071,8 @@ class GEOM2(object):
         for i in range(nelements):
             edata = data[n:n + 52]
             out = s.unpack(edata)
-            self.binary_debug.write('  CTRIA6=%s\n' % str(out))
+            if self.is_debug_file:
+                self.binary_debug.write('  CTRIA6=%s\n' % str(out))
             #print("eid=%s pid=%s n1=%s n2=%s n3=%s theta=%s zoffs=%s blank1=%s blank2=%s tflag=%s t1=%s t2=%s t3=%s" %(eid,pid,n1,n2,n3,theta,zoffs,blank1,blank2,tflag,t1,t2,t3))
             (eid, pid, n1, n2, n3, n4, n5, n6, theta, t1, t2, t3, tflag) = out
             elem = CTRIA6(None, out)
@@ -1051,13 +1085,15 @@ class GEOM2(object):
 # CTRIAP
 
     def _readCTRIAR(self, data, n):  # 98
-        self.binary_debug.write('skipping CTRIAR in GEOM2\n')
+        if self.is_debug_file:
+            self.binary_debug.write('skipping CTRIAR in GEOM2\n')
         return n
 
 # CTRIAX
 
     def _readCTRIAX6(self, data, n):  # 100
-        self.binary_debug.write('skipping CTRIAX6 in GEOM2\n')
+        if self.is_debug_file:
+            self.binary_debug.write('skipping CTRIAX6 in GEOM2\n')
         return n
 
 # CTRIX3FD
@@ -1072,7 +1108,8 @@ class GEOM2(object):
         for i in range(nelements):
             edata = data[n:n + 16]  # 4*4
             out = s.unpack(edata)
-            self.binary_debug.write('  CTUBE=%s\n' % str(out))
+            if self.is_debug_file:
+                self.binary_debug.write('  CTUBE=%s\n' % str(out))
             (eid, pid, n1, n2) = out
             elem = CTUBE(None, out)
             self.addOp2Element(elem)
@@ -1087,7 +1124,8 @@ class GEOM2(object):
         for i in range(nelements):
             edata = data[n:n + 16]  # 4*4
             out = s.unpack(edata)
-            self.binary_debug.write('  CVISC=%s\n' % str(out))
+            if self.is_debug_file:
+                self.binary_debug.write('  CVISC=%s\n' % str(out))
             #(eid,pid,n1,n2) = out
             elem = CVISC(None, out)
             self.addOp2Element(elem)
@@ -1096,15 +1134,18 @@ class GEOM2(object):
         return n
 
     def _readCWELD(self, data, n):  # 105
-        self.binary_debug.write('skipping CWELD in GEOM2\n')
+        if self.is_debug_file:
+            self.binary_debug.write('skipping CWELD in GEOM2\n')
         return n
 
     def _readCWELDC(self, data, n):  # 106
-        self.binary_debug.write('skipping CWELDC in GEOM2\n')
+        if self.is_debug_file:
+            self.binary_debug.write('skipping CWELDC in GEOM2\n')
         return n
 
     def _readCWELDG(self, data, n):  # 107
-        self.binary_debug.write('skipping CWELDG in GEOM2\n')
+        if self.is_debug_file:
+            self.binary_debug.write('skipping CWELDG in GEOM2\n')
         return n
 
 # CWSEAM
@@ -1114,14 +1155,15 @@ class GEOM2(object):
 # GMINTC
 # GMINTS
     def _readPLOTEL(self, data, n):  # 114
-        self.binary_debug.write('skipping PLOTEL in GEOM2\n')
+        if self.is_debug_file:
+            self.binary_debug.write('skipping PLOTEL in GEOM2\n')
         return n
 # RADBC
 # RADINT
 # SINT
 
-    def add_SPOINT(self, spooint):
-        raise RuntimeError('this should be overwritten')
+    def add_spoint(self, spooint):
+        raise RuntimeError('this should be overwritten by the BDF')
 
     def _readSPOINT(self, data, n):
         """
@@ -1130,14 +1172,16 @@ class GEOM2(object):
         npoints = (len(data) - n) // 4
         fmt = b'%ii' % npoints
         nids = unpack(fmt, data[n:])
-        self.binary_debug.write('SPOINT=%s\n' % str(nids))
-        spoint = SPOINTs(None, list(nids))
-        self.add_SPOINT(spoint)
+        if self.is_debug_file:
+            self.binary_debug.write('SPOINT=%s\n' % str(nids))
+        spoint = SPOINTs.add_op2_data(list(nids))
+        self.add_spoint(spoint)
         self.card_count['SPOINT'] = npoints
         return n
 
     def _readVUBEAM(self, data, n):  # 119
-        self.binary_debug.write('skipping VUBEAM in GEOM2\n')
+        if self.is_debug_file:
+            self.binary_debug.write('skipping VUBEAM in GEOM2\n')
         return n
 
 # VUHEXA

@@ -8,12 +8,12 @@ from pyNastran.bdf.cards.bdf_tables import (TABLED1, TABLED2, TABLED3, TABLEM1,
 
 class DIT(object):
 
-    def _read_dit_4(self, data):
-        return self._read_geom_4(self._dit_map, data)
+    def _read_dit_4(self, data, ndata):
+        return self._read_geom_4(self._dit_map, data, ndata)
 
     def __init__(self):
         self._dit_map = {
-            (1005, 10, 174): self._ead_gust,     # record 1
+            (1005, 10, 174): self._read_gust,     # record 1
             (1105, 11, 133): self._read_tabled1,  # record 4
             (1205, 12, 134): self._read_tabled2,  # record 5
             (1305, 13, 140): self._read_tabled3,  # record 6
@@ -168,7 +168,7 @@ class DIT(object):
         n = self._read_table2(func, data)
         return n
 
-    def _read_tableM3(self, data, n):
+    def _read_tablem3(self, data, n):
         """
         TABLEM3(305,3,95) - the marker for Record 11
         """

@@ -17,8 +17,8 @@ class EPT(object):
     def add_property(self, card, allow_overwrites=True):
         raise RuntimeError('this should be overwritten')
 
-    def _read_ept_4(self, data):
-        return self._read_geom_4(self._ept_map, data)
+    def _read_ept_4(self, data, ndata):
+        return self._read_geom_4(self._ept_map, data, ndata)
 
     def __init__(self):
         self.card_count = {}
@@ -123,7 +123,7 @@ class EPT(object):
             out = s.unpack(edata)
             (pid, mid, a, I1, I2, J, nsm, fe, c1, c2, d1, d2,
                 e1, e2, f1, f2, k1, k2, I12) = out
-            prop = PBAR(None, out)
+            prop = PBAR.add_op2_data(out)
             self._add_op2_property(prop)
             n += ntotal
         self.card_count['PBAR'] = nentries
@@ -211,7 +211,8 @@ class EPT(object):
             edata = data[n:n+20]
             n += 20
             data_in = list(s1.unpack(edata))
-            self.binary_debug.write('  PBEAM=%s\n' % str(data_in))
+            if self.is_debug_file:
+                self.binary_debug.write('  PBEAM=%s\n' % str(data_in))
             (pid, mid, nsegs, ccf, x) = data_in
 
             for i in range(12):
@@ -221,7 +222,8 @@ class EPT(object):
                 (so, xxb, a, i1, i2, i12, j, nsm, c1, c2,
                     d1, d2, e1, e2, f1, f2) = pack
                 data_in.append(pack)
-                self.binary_debug.write('     %s\n' % str(pack))
+                if self.is_debug_file:
+                    self.binary_debug.write('     %s\n' % str(pack))
             edata = data[n:n+44]
 
             data_in = list(s3.unpack(edata))
@@ -234,26 +236,31 @@ class EPT(object):
         return n
 
     def _read_pbeaml(self, data, n):
-        self.binary_debug.write('skipping PBEAML in EPT\n')
+        if self.is_debug_file:
+            self.binary_debug.write('skipping PBEAML in EPT\n')
         return len(data)
 
     def _read_pbend(self, data, n):
-        self.binary_debug.write('skipping PBEND in EPT\n')
+        if self.is_debug_file:
+            self.binary_debug.write('skipping PBEND in EPT\n')
         return len(data)
 
 # PBMSECT
 # PBRSECT
 
     def _read_pbush(self, data, n):
-        self.binary_debug.write('skipping PBUSH in EPT\n')
+        if self.is_debug_file:
+            self.binary_debug.write('skipping PBUSH in EPT\n')
         return len(data)
 
     def _read_pbush1d(self, data, n):
-        self.binary_debug.write('skipping PBUSH1D in EPT\n')
+        if self.is_debug_file:
+            self.binary_debug.write('skipping PBUSH1D in EPT\n')
         return len(data)
 
     def _read_pbusht(self, data, n):
-        self.binary_debug.write('skipping PBUSHT in EPT\n')
+        if self.is_debug_file:
+            self.binary_debug.write('skipping PBUSHT in EPT\n')
         return len(data)
 
     def _read_pcomp(self, data, n):
@@ -304,16 +311,20 @@ class EPT(object):
 
 # PCOMPA
     def _read_pconeax(self, data, n):  # 24
-        self.binary_debug.write('skipping PCONEAX\n')
+        if self.is_debug_file:
+            self.binary_debug.write('skipping PCONEAX\n')
         return len(data)
     def _read_pconv(self, data, n):  # 25
-        self.binary_debug.write('skipping PCONV\n')
+        if self.is_debug_file:
+            self.binary_debug.write('skipping PCONV\n')
         return len(data)
     def _read_pconvm(self, data, n):  # 26
-        self.binary_debug.write('skipping PCONVM\n')
+        if self.is_debug_file:
+            self.binary_debug.write('skipping PCONVM\n')
         return len(data)
     def _read_pdamp(self, data, n):
-        self.binary_debug.write('skipping PDAMP\n')
+        if self.is_debug_file:
+            self.binary_debug.write('skipping PDAMP\n')
         return len(data)
 
 # PDAMPT
@@ -337,8 +348,9 @@ class EPT(object):
             edata = data[n:n+16]
             out = s.unpack(edata)
             #(pid,k,ge,s) = out
-            self.binary_debug.write('  PELAS=%s\n' % str(out))
-            prop = PELAS(data=out)
+            if self.is_debug_file:
+                self.binary_debug.write('  PELAS=%s\n' % str(out))
+            prop = PELAS.add_op2_data(out)
             self._add_op2_property(prop)
             n += ntotal
         self.card_count['PELAS'] = nproperties
@@ -356,7 +368,8 @@ class EPT(object):
         for i in range(nproperties):
             edata = data[n:n+44]
             out = s.unpack(edata)
-            self.binary_debug.write('  PGAP=%s\n' % str(out))
+            if self.is_debug_file:
+                self.binary_debug.write('  PGAP=%s\n' % str(out))
             #(pid,u0,f0,ka,kb,kt,mu1,mu2,tmax,mar,trmin) = out
             prop = PGAP(None, out)
             self._add_op2_property(prop)
@@ -384,7 +397,8 @@ class EPT(object):
             edata = data[n:n + 8]
             out = s.unpack(edata)
             #out = (pid,mass)
-            self.binary_debug.write('  PMASS=%s\n' % str(out))
+            if self.is_debug_file:
+                self.binary_debug.write('  PMASS=%s\n' % str(out))
             prop = PMASS(data=out)
             self._add_op2_property(prop)
             n += 8
@@ -402,7 +416,8 @@ class EPT(object):
             out = s.unpack(edata)
             (pid, mid, a, j, c, nsm) = out
             prop = PROD(None, out)
-            self.binary_debug.write('  PROD=%s\n' % str(out))
+            if self.is_debug_file:
+                self.binary_debug.write('  PROD=%s\n' % str(out))
             self._add_op2_property(prop)
             n += ntotal
         self.card_count['PROD'] = nproperties
@@ -418,7 +433,8 @@ class EPT(object):
             edata = data[n:n+24]
             out = s.unpack(edata)
             (pid, mid, t, nsm, f1, f2) = out
-            self.binary_debug.write('  PSHEAR=%s\n' % str(out))
+            if self.is_debug_file:
+                self.binary_debug.write('  PSHEAR=%s\n' % str(out))
             prop = PSHEAR(data=out)
             self._add_op2_property(prop)
             n += 24
@@ -436,7 +452,8 @@ class EPT(object):
             edata = data[n:n+44]
             out = s.unpack(edata)
             (pid, mid1, t, mid2, bk, mid3, ts, nsm, z1, z2, mid4) = out
-            self.binary_debug.write('  PSHELL=%s\n' % str(out))
+            if self.is_debug_file:
+                self.binary_debug.write('  PSHELL=%s\n' % str(out))
             prop = PSHELL(None, out)
 
             if max(pid, mid1, mid2, mid3, mid4) > 1e8:
@@ -461,7 +478,8 @@ class EPT(object):
             out = s.unpack(edata)
             #(pid, mid, cid, inp, stress, isop, fctn) = out
             #data_in = [pid, mid, cid, inp, stress, isop, fctn]
-            self.binary_debug.write('  PSOLID=%s\n' % str(out))
+            if self.is_debug_file:
+                self.binary_debug.write('  PSOLID=%s\n' % str(out))
             prop = PSOLID(None, out)
             self._add_op2_property(prop)
             n += ntotal
@@ -486,7 +504,8 @@ class EPT(object):
             out = s.unpack(edata)
             (pid, mid, OD, t, nsm) = out
             data_in = [pid, mid, OD, t, nsm]
-            self.binary_debug.write('  PTUBE=%s\n' % str(out))
+            if self.is_debug_file:
+                self.binary_debug.write('  PTUBE=%s\n' % str(out))
             prop = PTUBE(None, data_in)
             self._add_op2_property(prop)
             n += 20
@@ -505,7 +524,8 @@ class EPT(object):
         for i in range(nproperties):
             edata = data[n:n+12]
             out = s.unpack(edata)
-            self.binary_debug.write('  PVISC=%s\n' % str(out))
+            if self.is_debug_file:
+                self.binary_debug.write('  PVISC=%s\n' % str(out))
             #(pid,ce,cr) = out
             prop = PVISC(data=out)
             self._add_op2_property(prop)

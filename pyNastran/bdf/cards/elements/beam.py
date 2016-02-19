@@ -147,6 +147,7 @@ class CBEAM(CBAR):
 
         is_offt = True  #: .. todo:: is this correct???
         #offt = str(data[6]) # GGG
+        bit = None # ????
         offt = 'GGG'  #: .. todo:: is this correct???
 
         pa = main[6]
@@ -305,4 +306,8 @@ class CBEAM(CBAR):
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
+
+    def write_card_16(self, is_double=False):
+        card = self.repr_fields()
         return self.comment + print_card_16(card)
