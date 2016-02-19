@@ -187,7 +187,7 @@ class EPT(object):
 
             #prin( "len(out) = ",len(out)))
             #print("PBARL = %s" % data_in)
-            prop = PBARL(None, data_in)  # last value is nsm
+            prop = PBARL.add_op2_data(data_in)  # last value is nsm
             self._add_op2_property(prop)
             #print(self.show_data(data[n-8:-100]))
             break
@@ -286,10 +286,11 @@ class EPT(object):
             Theta = []
             Sout = []
             if nlayers < 0:
-                isSymmetrical = 'YES'
+                is_symmetrical = 'YES'
                 nlayers = abs(nlayers)
             #print("nlayers = ",nlayers)
-            assert 0 < nlayers < 100, 'pid=%s nlayers=%s z0=%s nms=%s sb=%s ft=%s Tref=%s ge=%s' % (pid, nlayers, z0, nsm, sb, ft, Tref, ge)
+            assert 0 < nlayers < 100, 'pid=%s nlayers=%s z0=%s nms=%s sb=%s ft=%s Tref=%s ge=%s' % (
+                pid, nlayers, z0, nsm, sb, ft, Tref, ge)
 
             idata = 0
             for ilayer in range(nlayers):
@@ -300,10 +301,11 @@ class EPT(object):
                 Sout.append(sout)
                 idata += 16
 
-            data_in = [pid, z0, nsm, sb, ft, Tref, ge,
-                      isSymmetrical, Mid, T, Theta, Sout]
+            data_in = [
+                pid, z0, nsm, sb, ft, Tref, ge,
+                is_symmetrical, Mid, T, Theta, Sout]
             #print("PCOMP = %s" % (data_in))
-            prop = PCOMP(None, data_in)
+            prop = PCOMP.add_op2_data(data_in)
             self._add_op2_property(prop)
             nproperties += 1
         self.card_count['PCOMP'] = nproperties
@@ -371,7 +373,7 @@ class EPT(object):
             if self.is_debug_file:
                 self.binary_debug.write('  PGAP=%s\n' % str(out))
             #(pid,u0,f0,ka,kb,kt,mu1,mu2,tmax,mar,trmin) = out
-            prop = PGAP(None, out)
+            prop = PGAP.add_op2_data(out)
             self._add_op2_property(prop)
         return n
 
@@ -415,7 +417,7 @@ class EPT(object):
             edata = data[n:n+24]
             out = s.unpack(edata)
             (pid, mid, a, j, c, nsm) = out
-            prop = PROD(None, out)
+            prop = PROD.add_op2_data(out)
             if self.is_debug_file:
                 self.binary_debug.write('  PROD=%s\n' % str(out))
             self._add_op2_property(prop)
@@ -435,7 +437,7 @@ class EPT(object):
             (pid, mid, t, nsm, f1, f2) = out
             if self.is_debug_file:
                 self.binary_debug.write('  PSHEAR=%s\n' % str(out))
-            prop = PSHEAR(data=out)
+            prop = PSHEAR.add_op2_data(out)
             self._add_op2_property(prop)
             n += 24
         self.card_count['PSHEAR'] = nproperties
@@ -454,7 +456,7 @@ class EPT(object):
             (pid, mid1, t, mid2, bk, mid3, ts, nsm, z1, z2, mid4) = out
             if self.is_debug_file:
                 self.binary_debug.write('  PSHELL=%s\n' % str(out))
-            prop = PSHELL(None, out)
+            prop = PSHELL.add_op2_data(out)
 
             if max(pid, mid1, mid2, mid3, mid4) > 1e8:
                 #print("PSHELL = ",out)
@@ -480,7 +482,7 @@ class EPT(object):
             #data_in = [pid, mid, cid, inp, stress, isop, fctn]
             if self.is_debug_file:
                 self.binary_debug.write('  PSOLID=%s\n' % str(out))
-            prop = PSOLID(None, out)
+            prop = PSOLID.add_op2_data(out)
             self._add_op2_property(prop)
             n += ntotal
         self.card_count['PSOLID'] = nproperties
@@ -506,7 +508,7 @@ class EPT(object):
             data_in = [pid, mid, OD, t, nsm]
             if self.is_debug_file:
                 self.binary_debug.write('  PTUBE=%s\n' % str(out))
-            prop = PTUBE(None, data_in)
+            prop = PTUBE.add_op2_data(data_in)
             self._add_op2_property(prop)
             n += 20
         self.card_count['PTUBE'] = nproperties
@@ -527,7 +529,7 @@ class EPT(object):
             if self.is_debug_file:
                 self.binary_debug.write('  PVISC=%s\n' % str(out))
             #(pid,ce,cr) = out
-            prop = PVISC(data=out)
+            prop = PVISC.add_op2_data(out)
             self._add_op2_property(prop)
             n += 12
         self.card_count['PVISC'] = nproperties

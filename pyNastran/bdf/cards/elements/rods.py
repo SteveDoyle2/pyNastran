@@ -107,7 +107,7 @@ class CROD(RodElement):
         return CROD(eid, pid, nids, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data):
+    def add_op2_data(cls, data, comment=''):
         eid = data[0]
         pid = data[1]
         nids = data[2:4]
@@ -236,7 +236,7 @@ class CTUBE(RodElement):
         return CTUBE(eid, pid, nids, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data):
+    def add_op2_data(cls, data, comment=''):
         eid = data[0]
         pid = data[1]
         nids = data[2:4]
@@ -353,7 +353,7 @@ class CONROD(RodElement):
         return CONROD(eid, mid, nids, A, j, c, nsm, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data):
+    def add_op2_data(cls, data, comment=''):
         eid = data[0]
         nids = data[1:3]
         mid = data[3]

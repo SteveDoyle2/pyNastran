@@ -1112,29 +1112,34 @@ class Cord1x(Coord):
         """Gets the reference coordinate system self.rid"""
         return self.rid
 
-    def __init__(self):
+    def __init__(self, cid, g1, g2, g3, comment=''):
         Coord.__init__(self)
-        self.g1 = None
-        self.g2 = None
-        self.g3 = None
+        if comment:
+            self._comment = comment
 
-    def add_card(self, card, icard=0, comment=''):
+        #: the coordinate ID
+        self.cid = cid
+        #: a Node at the origin
+        self.g1 = g1
+        #: a Node on the z-axis
+        self.g2 = g2
+        #: a Node on the xz-plane
+        self.g3 = g3
+
+        assert g1 != g2
+        assert g1 != g3
+        assert g2 != g3
+
+    @classmethod
+    def add_card(cls, card, icard=0, comment=''):
         #self.isResolved = False
         assert icard == 0 or icard == 1, 'icard=%r' % (icard)
         ncoord = 4 * icard  # 0 if the 1st coord, 4 if the 2nd
 
-        #: the coordinate ID
-        self.cid = integer(card, 1 + ncoord, 'cid')
-        #: a Node at the origin
-        self.g1 = integer(card, 2 + ncoord, 'g1')
-        #: a Node on the z-axis
-        self.g2 = integer(card, 3 + ncoord, 'g2')
-        #: a Node on the xz-plane
-        self.g3 = integer(card, 4 + ncoord, 'g3')
-
-        assert self.g1 != self.g2
-        assert self.g1 != self.g3
-        assert self.g2 != self.g3
+        cid = integer(card, 1 + ncoord, 'cid')
+        g1 = integer(card, 2 + ncoord, 'g1')
+        g2 = integer(card, 3 + ncoord, 'g2')
+        g3 = integer(card, 4 + ncoord, 'g3')
 
         #self.e1 = None
         #self.e2 = None
@@ -1142,13 +1147,16 @@ class Cord1x(Coord):
         #self.i = None
         #self.j = None
         #self.k = None
+        return cls(cid, g1, g2, g3, comment=comment)
 
-    def add_op2_data(self, data):
-        self.cid = data[0]
-        self.g1 = data[1]
-        self.g2 = data[2]
-        self.g3 = data[3]
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        cid = data[0]
+        g1 = data[1]
+        g2 = data[2]
+        g3 = data[3]
         assert len(data) == 4, 'data = %s' % (data)
+        return cls(cid, g1, g2, g3, comment=comment)
 
     def to_CORD2x(self, model, rid=0):
         """
@@ -1441,7 +1449,7 @@ class CORD1R(Cord1x, RectangularCoord):
     type = 'CORD1R'
     Type = 'R'
 
-    def __init__(self):
+    def __init__(self, cid, g1, g2, g3, comment=''):
         """
         Intilizes the CORD1R
 
@@ -1461,7 +1469,7 @@ class CORD1R(Cord1x, RectangularCoord):
         card : List
             a list version of the fields (1 CORD1R only)
         """
-        Cord1x.__init__(self)
+        Cord1x.__init__(self, cid, g1, g2, g3, comment=comment)
 
     def raw_fields(self):
         list_fields = ['CORD1R', self.cid] + self.node_ids
@@ -1472,7 +1480,7 @@ class CORD1C(Cord1x, CylindricalCoord):
     type = 'CORD1C'
     Type = 'C'
 
-    def __init__(self):
+    def __init__(self, cid, g1, g2, g3, comment=''):
         """
         Intilizes the CORD1R
 
@@ -1486,7 +1494,16 @@ class CORD1C(Cord1x, CylindricalCoord):
                        (there are possibly 2 coordinates on 1 card)
         :param data:   a list version of the fields (1 CORD1R only)
         """
-        Cord1x.__init__(self)
+        Cord1x.__init__(self, cid, g1, g2, g3, comment=comment)
+
+    #@classmethod
+    #def add_op2_data(cls, data, comment):
+        #self.cid = data[0]
+        #self.g1 = data[1]
+        #self.g2 = data[2]
+        #self.g3 = data[3]
+        #assert len(data) == 4, 'data = %s' % (data)
+        #bbbb
 
     def raw_fields(self):
         list_fields = ['CORD1C', self.cid] + self.node_ids
@@ -1512,7 +1529,7 @@ class CORD1S(Cord1x, SphericalCoord):
                        (there are possibly 2 coordinates on 1 card)
         :param data:   a list version of the fields (1 CORD1S only)
         """
-        Cord1x.__init__(self)
+        Cord1x.__init__(self, cid, g1, g2, g3, comment=comment)
 
     def raw_fields(self):
         list_fields = ['CORD1S', self.cid] + self.node_ids

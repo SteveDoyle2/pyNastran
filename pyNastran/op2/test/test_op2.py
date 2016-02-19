@@ -334,9 +334,7 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
             print(op2.get_op2_stats(short=short_stats))
             op2.print_subcase_key()
 
-        assert write_bdf == True, write_bdf
         if write_bdf:
-            print("**********write_bdf=True")
             op2.write_bdf(bdf_filename)
             #os.remove(bdf_filename)
         if compare:

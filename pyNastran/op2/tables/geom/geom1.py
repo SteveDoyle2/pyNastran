@@ -109,7 +109,7 @@ class GEOM1(object):
             if self.is_debug_file:
                 self.binary_debug.write('  CORD1C=%s\n' % str(out))
             data_in = [cid, g1, g2, g3]
-            coord = CORD1C(None, None, data_in)
+            coord = CORD1C.add_op2_data(data_in)
             self.add_coord(coord)
             n += 24
         self._increase_card_count('CORD1C', nentries)
@@ -130,7 +130,7 @@ class GEOM1(object):
             assert one1 == 1, one1
             assert one2 == 1, one2
             data_in = [cid, g1, g2, g3]
-            coord = CORD1R(None, None, data_in)
+            coord = CORD1R.add_op2_data(data_in)
             self.add_coord(coord)
             n += 24
         self._increase_card_count('CORD1R', nentries)
@@ -151,8 +151,7 @@ class GEOM1(object):
             assert three == 3, three
             assert one == 1, one
             data_in = [cid, g1, g2, g3]
-            coord = CORD1S()
-            coord.add_op2_data(data_in)
+            coord = CORD1S.add_op2_data(data_in)
             self.add_coord(coord, allow_overwrites=True)
             n += 24
         self._increase_card_count('CORD1S', nentries)
@@ -171,8 +170,7 @@ class GEOM1(object):
             assert two1 == 2, two1
             assert two2 == 2, two2
             data_in = [cid, rid, a1, a2, a3, b1, b2, b3, c1, c2, c3]
-            coord = CORD2C()
-            coord.add_op2_data(data)
+            coord = CORD2C.add_op2_data(data_in)
             if self.is_debug_file:
                 self.binary_debug.write('  CORD2C=%s\n' % str(out))
             self.add_coord(coord, allow_overwrites=True)
@@ -214,8 +212,7 @@ class GEOM1(object):
             data_in = [cid, rid, a1, a2, a3, b1, b2, b3, c1, c2, c3]
             if self.is_debug_file:
                 self.binary_debug.write('  CORD2S=%s\n' % str(out))
-            coord = CORD2S()
-            coord.add_op2_data(data_in)
+            coord = CORD2S.add_op2_data(data_in)
             self.add_coord(coord, allow_overwrites=True)
             n += 52
         self._increase_card_count('CORD2S', nentries)
@@ -232,8 +229,7 @@ class GEOM1(object):
             edata = data[n:n + 16]  # 4*4
             out = s.unpack(edata)
             (cid, n1, n2, n3) = out
-            coord = CORD3G()
-            coord.add_op2_data(out)
+            coord = CORD3G.add_op2_data(out)
             if self.is_debug_file:
                 self.binary_debug.write('  CORD3G=%s\n' % str(out))
             self.add_coord(coord, allow_overwrites=True)

@@ -5,7 +5,7 @@ import sys
 import os
 import pyNastran
 pkg_path = pyNastran.__path__[0]
-manual_path = os.path.abspath(os.path.join(pkg_path, '..', 'docs_sphinx', 'manual')) # , 'py_to_rst.py'
+manual_path = os.path.abspath(os.path.join(pkg_path, '..', 'docs', 'manual')) # , 'py_to_rst.py'
 sys.path.append(manual_path)
 
 #print(sys.path)

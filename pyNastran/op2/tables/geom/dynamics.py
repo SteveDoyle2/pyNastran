@@ -92,14 +92,16 @@ class DYNAMICS(object):
 
     def _read_dphase(self, data, n):
         """DPHASE(77,19,184) - Record 5"""
-        self.binary_debug.write('skipping DPHASE in DYNAMICS\n')
+        if self.is_debug_file:
+            self.binary_debug.write('skipping DPHASE in DYNAMICS\n')
         return len(data)
 
 #DYNRED(4807,48,306)
 
     def _read_eigb(self, data, n):
         """EIGB(107,1,86) - Record 7"""
-        self.binary_debug.write('skipping EIGB in DYNAMICS\n')
+        if self.is_debug_file:
+            self.binary_debug.write('skipping EIGB in DYNAMICS\n')
         return len(data)
 
     def _read_eigc(self, data, n):

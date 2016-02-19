@@ -1840,30 +1840,24 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
     def _prepare_cord1r(self, card, card_obj, comment=''):
         """adds a CORD1R"""
-        class_instance = CORD1R()
-        class_instance.add_card(card_obj, comment=comment)
+        class_instance = CORD1R.add_card(card_obj, comment=comment)
         self.add_coord(class_instance)
         if card_obj.field(5):
-            class_instance = CORD1R()
-            class_instance.add_card(card_obj, icard=1, comment=comment)
+            class_instance = CORD1R.add_card(card_obj, icard=1, comment=comment)
             self.add_coord(class_instance)
 
     def _prepare_cord1c(self, card, card_obj, comment=''):
         """adds a CORD1C"""
-        class_instance = CORD1C()
-        class_instance.add_card(card_obj, comment=comment)
+        class_instance = CORD1C.add_card(card_obj, comment=comment)
         if card_obj.field(5):
-            class_instance = CORD1C()
-            class_instance.add_card(card_obj, icard=1, comment=comment)
+            class_instance = CORD1C.add_card(card_obj, icard=1, comment=comment)
             self.add_coord(class_instance)
 
     def _prepare_cord1s(self, card, card_obj, comment=''):
         """adds a CORD1S"""
-        class_instance = CORD1S()
-        class_instance.add_card(card_obj, comment=comment)
+        class_instance = CORD1S.add_card(card_obj, comment=comment)
         if card_obj.field(5):
-            class_instance = CORD1S()
-            class_instance.add_card(card_obj, icard=1, comment=comment)
+            class_instance = CORD1S.add_card(card_obj, icard=1, comment=comment)
             self.add_coord(class_instance)
 
     def _prepare_ctetra(self, card, card_obj, comment=''):

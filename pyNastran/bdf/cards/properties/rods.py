@@ -50,7 +50,7 @@ class PROD(Property):
         return PROD(pid, mid, A, j, c, nsm, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data):
+    def add_op2_data(cls, data, comment=''):
         pid = data[0]
         mid = data[1]
         A = data[2]
@@ -168,7 +168,7 @@ class PTUBE(Property):
         return PTUBE(pid, mid, OD1, t, nsm, OD2, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data):
+    def add_op2_data(cls, data, comment=''):
         pid = data[0]
         mid = data[1]
         OD1 = data[2]

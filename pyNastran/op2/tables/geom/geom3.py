@@ -23,22 +23,22 @@ class GEOM3(object):
     def __init__(self):
         self.card_count = {}
         self._geom3_map = {
-            (4201, 42,  18): ['FORCE', self._readFORCE],   # record 3
-            (4001, 40,  20): ['FORCE1', self._readFORCE1],  # record 4
-            (4101, 41,  22): ['FORCE2', self._readFORCE2],  # record 5
-            (4401, 44,  26): ['GRAV', self._readGRAV],    # record 7 - buggy
-            (4551, 61,  84): ['LOAD', self._readLOAD],        # record 8
+            (4201, 42,  18): ['FORCE', self._read_force],   # record 3
+            (4001, 40,  20): ['FORCE1', self._read_force1],  # record 4
+            (4101, 41,  22): ['FORCE2', self._read_force2],  # record 5
+            (4401, 44,  26): ['GRAV', self._read_grav],    # record 7 - buggy
+            (4551, 61,  84): ['LOAD', self._read_load],        # record 8
             (3709, 37, 331): ['LOADCYH', self._readLOADCYH], # record 9 - not done
-            (3609, 36, 188): ['LSEQ', self._readLSEQ],       # record 12 - not done
-            (4801, 48,  19): ['MOMENT', self._readMOMENT],    # record 13 - not tested
-            (4601, 46,  21): ['MOMENT1', self._readMOMENT1],  # record 14 - not tested
-            (4701, 47,  23): ['MOMENT2', self._readMOMENT2],  # record 15 - not tested
-            (5101, 51,  24): ['PLOAD', self._readPLOAD],      # record 16 - not done
-            (6909, 69, 198): ['PLOAD1', self._readPLOAD1],     # record 17 - buggy
-            (6802, 68, 199): ['PLOAD2', self._readPLOAD2],     # record 18 - buggy
-            (7109, 81, 255): ['PLOAD3', self._readPLOAD3],   # record 19 - not done
-            (7209, 72, 299): ['PLOAD4', self._readPLOAD4],     # record 20 - buggy - g1/g3/g4
-            (7309, 73, 351): ['PLOADX1', self._readPLOADX1], # record 22
+            (3609, 36, 188): ['LSEQ', self._read_lseq],       # record 12 - not done
+            (4801, 48,  19): ['MOMENT', self._read_moment],    # record 13 - not tested
+            (4601, 46,  21): ['MOMENT1', self._read_moment1],  # record 14 - not tested
+            (4701, 47,  23): ['MOMENT2', self._read_moment2],  # record 15 - not tested
+            (5101, 51,  24): ['PLOAD', self._read_pload],      # record 16 - not done
+            (6909, 69, 198): ['PLOAD1', self._read_pload1],     # record 17 - buggy
+            (6802, 68, 199): ['PLOAD2', self._read_pload2],     # record 18 - buggy
+            (7109, 81, 255): ['PLOAD3', self._read_pload3],   # record 19 - not done
+            (7209, 72, 299): ['PLOAD4', self._read_pload4],     # record 20 - buggy - g1/g3/g4
+            (7309, 73, 351): ['PLOADX1', self._read_ploadx1], # record 22
             (4509, 45, 239): ['QBDY1', self._readQBDY1],     # record 24
             (4909, 49, 240): ['QBDY2', self._readQBDY2],     # record 25
             (2109, 21, 414): ['QBDY3', self._readQBDY3],     # record 26
@@ -73,7 +73,7 @@ class GEOM3(object):
 # ACCEL
 # ACCEL1
 
-    def _readFORCE(self, data, n):
+    def _read_force(self, data, n):
         """
         FORCE(4201,42,18) - the marker for Record 3
         """
@@ -91,7 +91,7 @@ class GEOM3(object):
             n += 28
         return n
 
-    def _readFORCE1(self, data, n):
+    def _read_force1(self, data, n):
         """
         FORCE1(4001,40,20) - the marker for Record 4
         """
@@ -105,13 +105,13 @@ class GEOM3(object):
             (sid, g, f, n1, n2) = out
             if self.is_debug_file:
                 self.binary_debug.write('  FORCE1=%s\n' % str(out))
-            load = FORCE1(None, [sid, g, f, n1, n2])
+            load = FORCE1.add_op2_data([sid, g, f, n1, n2])
             self.add_load(load)
             n += 20
         self.card_count['FORCE1'] = nentries
         return n
 
-    def _readFORCE2(self, data, n):
+    def _read_force2(self, data, n):
         """
         FORCE2(4101,41,22) - the marker for Record 5
         """
@@ -124,7 +124,7 @@ class GEOM3(object):
             (sid, g, f, n1, n2, n3, n4) = out
             if self.is_debug_file:
                 self.binary_debug.write('  FORCE2=%s\n' % str(out))
-            load = FORCE2(None, [sid, g, f, n1, n2, n3, n4])
+            load = FORCE2.add_op2_data([sid, g, f, n1, n2, n3, n4])
             self.add_load(load)
             n += 28
         self.card_count['FORCE2'] = nentries
@@ -132,7 +132,7 @@ class GEOM3(object):
 
 # GMLOAD
 
-    def _readGRAV(self, data, n):
+    def _read_grav(self, data, n):
         """
         GRAV(4401,44,26) - the marker for Record 7
         """
@@ -144,13 +144,13 @@ class GEOM3(object):
             edata = data[n:n + 28]
             out = s.unpack(edata)
             (sid, cid, a, n1, n2, n3, mb) = out
-            grav = GRAV(None, out)
+            grav = GRAV.add_op2_data(out)
             self.add_load(grav)
             n += 28
         self.card_count['GRAV'] = nentries
         return n
 
-    def _readLOAD(self, data, n):
+    def _read_load(self, data, n):
         """
         (4551, 61, 84) - the marker for Record 8
         .. todo:: add object
@@ -202,12 +202,12 @@ class GEOM3(object):
 # LOADCYN
 # LOADCYT
 
-    def _readLSEQ(self, data, n):
+    def _read_lseq(self, data, n):
         if self.is_debug_file:
             self.binary_debug.write('skipping LSEQ in GEOM3\n')
         return n
 
-    def _readMOMENT(self, data, n):
+    def _read_moment(self, data, n):
         """
         MOMENT(4801,48,19) - the marker for Record 13
         """
@@ -221,13 +221,13 @@ class GEOM3(object):
             if self.is_debug_file:
                 self.binary_debug.write('  MOMENT=%s\n' % str(out))
             (sid, g, cid, m, n1, n2, n3) = out
-            load = MOMENT(None, out)
+            load = MOMENT.add_op2_data(out)
             self.add_load(load)
             n += 28
         self.card_count['MOMENT'] = nentries
         return n
 
-    def _readMOMENT1(self, data, n):
+    def _read_moment1(self, data, n):
         """
         MOMENT1(4601,46,21) - the marker for Record 14
         """
@@ -246,7 +246,7 @@ class GEOM3(object):
         self.card_count['MOMENT1'] = nentries
         return n
 
-    def _readMOMENT2(self, data, n):
+    def _read_moment2(self, data, n):
         """
         MOMENT2(4701,47,23) - the marker for Record 15
         """
@@ -260,18 +260,18 @@ class GEOM3(object):
                 self.binary_debug.write('  MOMENT2=%s\n' % str(out))
             (sid, g, m, n1, n2, n3, n4) = out
 
-            load = MOMENT2(None, out)
+            load = MOMENT2.add_op2_data(out)
             self.add_load(load)
             n += 28
         self.card_count['MOMENT2'] = nentries
         return n
 
-    def _readPLOAD(self, data, n):
+    def _read_pload(self, data, n):
         return n
 
-    def _readPLOAD1(self, data, n):
+    def _read_pload1(self, data, n):
         """
-        PLOAD2(6802,68,199) - the marker for Record 17
+        PLOAD1(????) - the marker for Record 17
         """
         #print("reading PLOAD1")
         ntotal = 32  # 8*4
@@ -284,13 +284,13 @@ class GEOM3(object):
                 self.binary_debug.write('  PLOAD1=%s\n' % str(out))
             (sid, eid, Type, scale, x1, p1, x2, p2) = out
             #print("PLOAD1 = ", out)
-            load = PLOAD1(None, out)
+            load = PLOAD1.add_op2_data(out)
             self.add_load(load)
             n += 32
         self.card_count['PLOAD1'] = nentries
         return n
 
-    def _readPLOAD2(self, data, n):
+    def _read_pload2(self, data, n):
         """
         PLOAD2(6802,68,199) - the marker for Record 18
         """
@@ -303,13 +303,13 @@ class GEOM3(object):
             if self.is_debug_file:
                 self.binary_debug.write('  PLOAD2=%s\n' % str(out))
             (sid, p, eid) = out
-            load = PLOAD2(None, out)
+            load = PLOAD2.add_op2_data(out)
             self.add_load(load)
             n += 12
         self.card_count['PLOAD2'] = nentries
         return n
 
-    def _readPLOAD3(self, data, n):
+    def _read_pload3(self, data, n):
         """
         PLOAD3(7109,71,255) - the marker for Record 19
         """
@@ -328,7 +328,7 @@ class GEOM3(object):
         self.card_count['PLOAD3'] = nentries
         return n
 
-    def _readPLOAD4(self, data, n):  ## inconsistent with DMAP
+    def _read_pload4(self, data, n):  ## inconsistent with DMAP
         """
         PLOAD4(7209,72,299) - the marker for Record 20
         """
@@ -351,16 +351,18 @@ class GEOM3(object):
             sdrlB = None
             ldirA = None
             ldirB = None
-            load = PLOAD4(None, [sid, eid, [p1, p2, p3, p4], g1, g34,
-                                 cid, [n1, n2, n3], sdrlA, sdrlB, ldirA, ldirB])
+            load = PLOAD4.add_op2_data(
+                [sid, eid, [p1, p2, p3, p4], g1, g34,
+                 cid, [n1, n2, n3], sdrlA, sdrlB, ldirA, ldirB])
             self.add_load(load)
             n += 48
         self.card_count['PLOAD4'] = nentries
         return n
 
 # PLOADX - obsolete
-    def _readPLOADX1(self, data, n):
-        self.binary_debug.write('skipping PLOADX1 in GEOM3\n')
+    def _read_ploadx1(self, data, n):
+        if self.is_debug_file:
+            self.binary_debug.write('skipping PLOADX1 in GEOM3\n')
         return n
 
 # PRESAX

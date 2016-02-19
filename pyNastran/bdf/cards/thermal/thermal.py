@@ -209,50 +209,52 @@ class CHBDYG(ThermalElement):
     """
     type = 'CHBDYG'
 
-    def __init__(self, card=None, data=None, comment=''):
-        ThermalElement.__init__(self, card, data)
+    def __init__(self, card=None, comment=''):
+        ThermalElement.__init__(self, card)
         if comment:
             self._comment = comment
-        if card:
-            #: Surface element ID
-            self.eid = integer(card, 1, 'eid')
-            # no field 2
+        #: Surface element ID
+        self.eid = integer(card, 1, 'eid')
+        # no field 2
 
-            #: Surface type
-            self.Type = string(card, 3, 'Type')
-            assert self.Type in ['REV', 'AREA3', 'AREA4', 'AREA6', 'AREA8']
+        #: Surface type
+        self.Type = string(card, 3, 'Type')
+        assert self.Type in ['REV', 'AREA3', 'AREA4', 'AREA6', 'AREA8']
 
-            #: A VIEW entry identification number for the front face
-            self.iViewFront = integer_or_blank(card, 4, 'iViewFront', 0)
+        #: A VIEW entry identification number for the front face
+        self.iViewFront = integer_or_blank(card, 4, 'iViewFront', 0)
 
-            #: A VIEW entry identification number for the back face
-            self.iViewBack = integer_or_blank(card, 8, 'iViewBack', 0)
+        #: A VIEW entry identification number for the back face
+        self.iViewBack = integer_or_blank(card, 8, 'iViewBack', 0)
 
-            #: RADM identification number for front face of surface element
-            #: (Integer > 0)
-            self.radMidFront = integer_or_blank(card, 6, 'radMidFront', 0)
+        #: RADM identification number for front face of surface element
+        #: (Integer > 0)
+        self.radMidFront = integer_or_blank(card, 6, 'radMidFront', 0)
 
-            #: RADM identification number for back face of surface element
-            #: (Integer > 0)
-            self.radMidBack = integer_or_blank(card, 7, 'radMidBack', 0)
-            # no field 8
+        #: RADM identification number for back face of surface element
+        #: (Integer > 0)
+        self.radMidBack = integer_or_blank(card, 7, 'radMidBack', 0)
+        # no field 8
 
-            #: Grid point IDs of grids bounding the surface (Integer > 0)
-            self.nodes = []
-            n = 1
-            for i in range(9, len(card)):
-                grid = integer_or_blank(card, i, 'grid%i' % n)
-                if grid is not None:
-                    self.nodes.append(grid)
-            assert len(self.nodes) > 0, 'card=%s' % card
-        else:
-            self.eid = data[0]
-            self.Type = data[1]
-            self.iViewFront = data[2]
-            self.iViewBack = data[3]
-            self.radMidFront = data[4]
-            self.radMidBack = data[5]
-            self.nodes = data[6:14]
+        #: Grid point IDs of grids bounding the surface (Integer > 0)
+        self.nodes = []
+        n = 1
+        for i in range(9, len(card)):
+            grid = integer_or_blank(card, i, 'grid%i' % n)
+            if grid is not None:
+                self.nodes.append(grid)
+        assert len(self.nodes) > 0, 'card=%s' % card
+
+    def add_op2_data(self, data, comment=''):
+        if comment:
+            self._comment = comment
+        self.eid = data[0]
+        self.Type = data[1]
+        self.iViewFront = data[2]
+        self.iViewBack = data[3]
+        self.radMidFront = data[4]
+        self.radMidBack = data[5]
+        self.nodes = data[6:14]
 
     def _verify(self, xref=False):
         eid = self.Eid()

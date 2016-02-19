@@ -32,15 +32,15 @@ class MPT(object):
         self.card_count = {}
         self.bigMaterials = {}
         self._mpt_map = {
-            (1003, 10, 245): ['CREEP', self._readCREEP],  # record 1
+            (1003, 10, 245): ['CREEP', self._read_creep],  # record 1
 
-            ( 203,  2,  78): ['MAT2', self._readMAT2],    # record 3
-            (1403, 14, 122): ['MAT3', self._readMAT3],    # record 4
-            (2103, 21, 234): ['MAT4', self._readMAT4],    # record 5
-            (2203, 22, 235): ['MAT5', self._readMAT5],    # record 6
-            (2503, 25, 288): ['MAT8', self._readMAT8],    # record 7
-            (2603, 26, 300): ['MAT9', self._readMAT9],    # record 8 - buggy
-            (2801, 28, 365): ['MAT10', self._readMAT10],  # record 9
+            ( 203,  2,  78): ['MAT2', self._read_mat2],    # record 3
+            (1403, 14, 122): ['MAT3', self._read_mat3],    # record 4
+            (2103, 21, 234): ['MAT4', self._read_mat4],    # record 5
+            (2203, 22, 235): ['MAT5', self._read_mat5],    # record 6
+            (2503, 25, 288): ['MAT8', self._read_mat8],    # record 7
+            (2603, 26, 300): ['MAT9', self._read_mat9],    # record 8 - buggy
+            (2801, 28, 365): ['MAT10', self._read_mat10],  # record 9
             (4506, 45, 374): ['MATHP', self._readMATHP],  # record 11
             (503,  5,   90): ['MATS1', self._readMATS1],  # record 12
             (703,   7,  91): ['MATT1', self._readMATT1],   # record 13 - not done
@@ -68,7 +68,7 @@ class MPT(object):
         self.add_structural_material(mat, allow_overwrites=True)
         #print(str(mat)[:-1])
 
-    def _readCREEP(self, data, n):
+    def _read_creep(self, data, n):
         """
         CREEP(1003,10,245) - record 1
         """
@@ -85,7 +85,7 @@ class MPT(object):
         self.card_count['CREEP'] = nmaterials
         return n
 
-    def _readMAT1(self, data, n):
+    def _read_mat1(self, data, n):
         """
         MAT1(103,1,77) - record 2
         """
@@ -97,12 +97,12 @@ class MPT(object):
             edata = data[n:n+48]
             out = s.unpack(edata)
             (mid, E, G, nu, rho, A, TRef, ge, St, Sc, Ss, mcsid) = out
-            self.addOp2Material(MAT1(None, out))
+            self.addOp2Material(MAT1.add_op2_data(out))
             n += ntotal
         self.card_count['MAT1'] = nmaterials
         return n
 
-    def _readMAT2(self, data, n):
+    def _read_mat2(self, data, n):
         """
         MAT2(203,2,78) - record 3
         """
@@ -116,7 +116,7 @@ class MPT(object):
             (mid, g1, g2, g3, g4, g5, g6, rho, aj1, aj2, aj3,
              TRef, ge, St, Sc, Ss, mcsid) = out
             #print "MAT2 = ",out
-            mat = MAT2(None, out)
+            mat = MAT2.add_op2_data(out)
 
             if mid > 1e8 or mid < 0:  # just a checker for out of range materials
                 self.bigMaterials[mid] = mat
@@ -126,7 +126,7 @@ class MPT(object):
         self.card_count['MAT2'] = nmaterials
         return n
 
-    def _readMAT3(self, data, n):
+    def _read_mat3(self, data, n):
         """
         MAT3(1403,14,122) - record 4
         """
@@ -137,14 +137,14 @@ class MPT(object):
             out = s.unpack(data[n:n+64])
             (mid, ex, eth, ez, nuxth, nuthz, nuzx, rho, gzx,
              blank, ax, ath, az, TRef, ge, blank) = out
-            mat = MAT3(None, [mid, ex, eth, ez, nuxth, nuthz,
-                              nuzx, rho, gzx, ax, ath, az, TRef, ge])
+            mat = MAT3.add_op2_data([mid, ex, eth, ez, nuxth, nuthz,
+                                     nuzx, rho, gzx, ax, ath, az, TRef, ge])
             self.addOp2Material(mat)
             n += 64
         self.card_count['MAT3'] = nmaterials
         return n
 
-    def _readMAT4(self, data, n):
+    def _read_mat4(self, data, n):
         """
         MAT4(2103,21,234) - record 5
         """
@@ -154,12 +154,12 @@ class MPT(object):
         for i in range(nmaterials):
             out = s.unpack(data[n:n+44])
             (mid, k, cp, rho, h, mu, hgen, refenth, tch, tdelta, qlat) = out
-            self.add_thermal_material(MAT4(None, out), allow_overwrites=True)
+            self.add_thermal_material(MAT4.add_op2_data(out), allow_overwrites=True)
             n += 44
         self.card_count['MAT4'] = nmaterials
         return n
 
-    def _readMAT5(self, data, n):
+    def _read_mat5(self, data, n):
         """
         MAT5(2203,22,235) - record 6
         """
@@ -169,12 +169,12 @@ class MPT(object):
         for i in range(nmaterials):
             out = s.unpack(data[n:n+40])
             (mid, k1, k2, k3, k4, k5, k6, cp, rho, hgen) = out
-            self.add_thermal_material(MAT5(None, out), allow_overwrites=True)
+            self.add_thermal_material(MAT5.add_op2_data(out), allow_overwrites=True)
             n += 40
         self.card_count['MAT5'] = nmaterials
         return n
 
-    def _readMAT8(self, data, n):
+    def _read_mat8(self, data, n):
         """
         MAT8(2503,25,288) - record 7
         """
@@ -185,12 +185,12 @@ class MPT(object):
             out = s.unpack(data[n:n+76])
             (mid, E1, E2, nu12, G12, G1z, G2z, rho, a1, a2,
              TRef, Xt, Xc, Yt, Yc, S, ge, f12, strn) = out
-            self.addOp2Material(MAT8(None, out))
+            self.addOp2Material(MAT8.add_op2_data(out))
             n += 76
         self.card_count['MAT8'] = nmaterials
         return n
 
-    def _readMAT9(self, data, n):
+    def _read_mat9(self, data, n):
         """
         MAT9(2603,26,300) - record 9
         .. todo:: buggy
@@ -206,12 +206,12 @@ class MPT(object):
                        rho, [a1, a2, a3, a4, a5, a6],
                        TRef, ge]
             #print "data_in = ",data_in
-            self.addOp2Material(MAT9(None, data_in))
+            self.addOp2Material(MAT9.add_op2_data(data_in))
             n += 140
         self.card_count['MAT9'] = nmaterials
         return n
 
-    def _readMAT10(self, data, n):
+    def _read_mat10(self, data, n):
         """
         MAT10(2801,28,365) - record 9
         """
@@ -223,7 +223,7 @@ class MPT(object):
             edata = data[n:n+20]
             out = s.unpack(edata)
             (mid, bulk, rho, c, ge) = out
-            self.addOp2Material(MAT10(None, out))
+            self.addOp2Material(MAT10.add_op2_data(out))
         self.card_count['MAT10'] = nmaterials
         return n
 

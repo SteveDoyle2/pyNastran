@@ -310,8 +310,8 @@ class CTRIA3(TriShell):
             T2 = 1.0
         if T3 == -1.0:
             T3 = 1.0
-            return CTRIA3(eid, pid, nids, zOffset, thetaMcid,
-                          TFlag, T1, T2, T3, comment=comment)
+        return CTRIA3(eid, pid, nids, zOffset, thetaMcid,
+                      TFlag, T1, T2, T3, comment=comment)
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -525,20 +525,21 @@ class CTRIA6(TriShell):
         return CTRIA6(eid, pid, nids, thetaMcid, zOffset,
                       TFlag, T1, T2, T3, comment=comment)
 
-    def add_op2_data(self, data, comment=''):
-        if comment:
-            self._comment = comment
-        self.eid = data[0]
-        self.pid = data[1]
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        eid = data[0]
+        pid = data[1]
         nids = data[2:8]
-        self.thetaMcid = data[8]
-        self.zOffset = data[8]
-        self.T1 = data[9]
-        self.T2 = data[10]
-        self.T3 = data[11]
-        self.TFlag = data[12]
-        self.prepare_node_ids(nids, allow_empty_nodes=True)
-        assert len(nids) == 6, 'error on CTRIA6'
+        thetaMcid = data[8]
+        zOffset = data[8]
+        T1 = data[9]
+        T2 = data[10]
+        T3 = data[11]
+        TFlag = data[12]
+        #prepare_node_ids(nids, allow_empty_nodes=True)
+        #assert len(nids) == 6, 'error on CTRIA6'
+        return CTRIA6(eid, pid, nids, thetaMcid, zOffset,
+                      TFlag, T1, T2, T3, comment=comment)
 
     def cross_reference(self, model):
         """
