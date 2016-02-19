@@ -50,7 +50,7 @@ class PROD(Property):
         return PROD(pid, mid, A, j, c, nsm, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data):
+    def add_op2_data(cls, data, comment=''):
         pid = data[0]
         mid = data[1]
         A = data[2]
@@ -95,6 +95,14 @@ class PROD(Property):
         return self.mid_ref.Rho()
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by PROD mid=%s' % self.mid
         self.mid = model.Material(self.mid, msg=msg)
         self.mid_ref = self.mid
@@ -147,7 +155,7 @@ class PTUBE(Property):
         self.nsm = nsm
 
     @classmethod
-    def add_card(self, card, comment=''):
+    def add_card(cls, card, comment=''):
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')
         OD1 = double(card, 3, 'OD1')
@@ -160,7 +168,7 @@ class PTUBE(Property):
         return PTUBE(pid, mid, OD1, t, nsm, OD2, comment=comment)
 
     @classmethod
-    def add_op2_data(self, data):
+    def add_op2_data(cls, data, comment=''):
         pid = data[0]
         mid = data[1]
         OD1 = data[2]
@@ -187,6 +195,14 @@ class PTUBE(Property):
         return self.nsm
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by PTUBE mid=%s' % self.mid
         self.mid = model.Material(self.mid, msg=msg)
         self.mid_ref = self.mid

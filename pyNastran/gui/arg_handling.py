@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 import sys
 from six import iteritems
@@ -34,11 +35,21 @@ def determine_format(input):
 
 def run_docopt():
     msg  = "Usage:\n"
+    msg += "  pyNastranGUI [-f FORMAT] INPUT [-o OUTPUT]\n"
+    msg += '               [-s SHOT] [-m MAGNIFY]\n'  #  [-r XYZ]
+    msg += '               [-g GSCRIPT] [-p PSCRIPT]\n'
+    msg += '               [-u POINTS_FNAME...] [--user_geom GEOM_FNAME...]\n'
+    msg += '               [-q] [--groups]\n'
+    msg += "  pyNastranGUI [-f FORMAT] INPUT OUTPUT [-o OUTPUT]\n"
+    msg += '               [-s SHOT] [-m MAGNIFY]\n'  #  [-r XYZ]
+    msg += '               [-g GSCRIPT] [-p PSCRIPT]\n'
+    msg += '               [-u POINTS_FNAME...] [--user_geom GEOM_FNAME...]\n'
+    msg += '               [-q] [--groups]\n'
     msg += "  pyNastranGUI [-f FORMAT] [-i INPUT] [-o OUTPUT...]\n"
-    msg += '                  [-s SHOT] [-m MAGNIFY]\n'  #  [-r XYZ]
-    msg += '                  [-g GSCRIPT] [-p PSCRIPT]\n'
-    msg += '                  [-u POINTS_FNAME...]\n'
-    msg += '                  [-c][-q]\n'
+    msg += '                [-s SHOT] [-m MAGNIFY]\n'  #  [-r XYZ]
+    msg += '                [-g GSCRIPT] [-p PSCRIPT]\n'
+    msg += '                [-u POINTS_FNAME...] [--user_geom GEOM_FNAME...]\n'
+    msg += '                [-q] [--groups]\n'
     msg += '  pyNastranGUI -h | --help\n'
     msg += '  pyNastranGUI -v | --version\n'
     msg += "\n"
@@ -48,15 +59,16 @@ def run_docopt():
     msg += "                                           plot3d, stl, tetgen, usm3d)\n"
     msg += "  -i INPUT, --input INPUT     path to input file\n"
     msg += "  -o OUTPUT, --output OUTPUT  path to output file\n"
-    msg += "  -c, --console               disable HTML console output\n"
     #msg += "  -r XYZ, --rotation XYZ      [x, y, z, -x, -y, -z] default is ???\n"
 
     #if mode != 'qt':
-    msg += "  -g GSCRIPT, --geomscript GSCRIPT  path to geometry script file (runs before load geometry)\n"
-    msg += "  -p PSCRIPT, --postscript PSCRIPT  path to post script file (runs after load geometry)\n"
-    msg += "  -s SHOT, --shots SHOT       path to screenshot (only 1 for now)\n"
-    msg += "  -m MAGNIFY, --magnify       how much should the resolution on a picture be magnified [default: 5]\n"
-    msg += "  -u POINTS_FNAME, --user_points POINTS_FNAME               add user specified points to an alternate grid (repeatable)\n"
+    msg += "  -g GSCRIPT, --geomscript GSCRIPT     path to geometry script file (runs before load geometry)\n"
+    msg += "  -p PSCRIPT, --postscript PSCRIPT     path to post script file (runs after load geometry)\n"
+    msg += "  -s SHOT, --shots SHOT                path to screenshot (only 1 for now)\n"
+    msg += "  -m MAGNIFY, --magnify                how much should the resolution on a picture be magnified [default: 5]\n"
+    msg += "  --groups                             enables groups\n"
+    msg += "  --user_geom GEOM_FNAME POINTS_FNAME  add user specified points to an alternate grid (repeatable)\n"
+    msg += "  -u POINTS_FNAME, --user_points POINTS_FNAME  add user specified points to an alternate grid (repeatable)\n"
 
     msg += "  -q, --quiet                 prints debug messages (default=True)\n"
     #if mode != 'qt':
@@ -67,17 +79,23 @@ def run_docopt():
     data = docopt(msg, version=ver)
     #print(data)
 
-    format  = data['--format']
-    input = data['--input']
-    output = data['--output']
+    input_format = data['--format']
+
+    input_filenames = []
+    if data['INPUT']:
+        input_filenames += [data['INPUT']]
+    if data['--input']:
+        input_filenames += [data['--input']]
+
+    output_filenames = []
+    if data['OUTPUT']:
+        output_filenames += [data['OUTPUT']]
+    if data['--output']:
+        output_filenames += data['--output']
     debug = not(data['--quiet'])
 
-    if input and not format:
-        format = determine_format(input)
-
-    console = True
-    if '--console' in data:
-        console = not data['--console']
+    if input_filenames and not input_format:
+        input_format = determine_format(input_filenames[0])
 
     shots = []
     if '--shots' in data:
@@ -100,6 +118,7 @@ def run_docopt():
         rotation = data['--rotation']
 
     user_points = data['--user_points']
+    user_geom = data['--user_geom']
 
     for key, value in sorted(iteritems(data)):
         print(key, value)
@@ -109,16 +128,16 @@ def run_docopt():
         #print("shots2 = %r" % shots, type(shots))
         shots = shots.split(';')[0]
 
+    is_groups = data['--groups']
     #assert data['--console'] == False, data['--console']
-    return (format, input, output, console, shots,
-            magnify, rotation, geom_script, post_script, debug, user_points)
+    return (input_format, input_filenames, output_filenames, shots,
+            magnify, rotation, geom_script, post_script, debug, user_points, user_geom, is_groups)
 
 
 def get_inputs():
-    format = None
-    input = None
-    console = True
-    output = None
+    input_format = None
+    input_filename = None
+    output_filename = None
     debug = True
 
     magnify = 5
@@ -127,25 +146,28 @@ def get_inputs():
     geom_script = None
     post_script = None
     user_points = None
+    user_geom = None
+    is_groups = False
 
     if sys.version_info < (2, 6):
         print("requires Python 2.6+ to use command line arguments...")
     else:
         if len(sys.argv) > 1:
-            (format, input, output, console, shots, magnify,
-             rotation, geom_script, post_script, debug, user_points) = run_docopt()
+            (input_format, input_filename, output_filename, shots, magnify,
+             rotation, geom_script, post_script, debug, user_points, user_geom, is_groups) = run_docopt()
 
     inputs = {
-        'format' : format,
-        'input' : input,
-        'output' : output,
-        'console' : console,
+        'format' : input_format,
+        'input' : input_filename,
+        'output' : output_filename,
         'shots' : shots,
         'magnify' : magnify,
         'rotation' : rotation,
         'debug' : debug,
         'geomscript' : geom_script,
         'postscript' : post_script,
-        'user_points' : user_points
+        'user_points' : user_points,
+        'user_geom' : user_geom,
+        'is_groups' : is_groups,
     }
     return inputs

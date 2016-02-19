@@ -106,7 +106,7 @@ class XrefMesh(BDFAttributes):
         """
         Performs cross referencing in a way that skips data gracefully.
 
-        .. warning :: not fully implemented
+        .. warning:: not fully implemented
         """
         self._cross_reference_nodes()
         self._cross_reference_coordinates()

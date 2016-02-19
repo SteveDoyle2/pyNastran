@@ -663,15 +663,24 @@ def define_coord_ijk(model, Type, cid, origin, rid=0, i=None, j=None, k=None):
 
 
 class RectangularCoord(object):
-    def coord_to_xyz(self, p):
+
+    @classmethod
+    def coord_to_xyz(cls, p):
         """
-        :returns xyz: the point in the local coordinate system
+        Returns
+        -------
+        xyz : (3,) ndarray
+            the point in the local coordinate system
         """
         return p
 
-    def xyz_to_coord(self, p):
+    @classmethod
+    def xyz_to_coord(cls, p):
         """
-        :returns xyz: the delta xyz point in the local coordinate system
+        Returns
+        -------
+        xyz : (3,) ndarray
+            the delta xyz point in the local coordinate system
         """
         return p
 
@@ -692,7 +701,9 @@ class CylindricalCoord(object):
     .. _msc:  http://simcompanion.mscsoftware.com/resources/sites/MSC/content/meta/DOCUMENTATION/9000/DOC9188/~secure/refman.pdf?token=WDkwz5Q6v7LTw9Vb5p+nwkbZMJAxZ4rU6BoR7AHZFxi2Tl1QdrbVvWj00qmcC4+S3fnbL4WUa5ovbpBwGDBt+zFPzsGyYC13zvGPg0j/5SrMF6bnWrQoTGyJb8ho1ROYsm2OqdSA9jVceaFHQVc+tJq4b49VogM4dZBxyi/QrHgdUgPFos8BAL9mgju5WGk8yYcFtRzQIxU=
     .. seealso:: `MSC Reference Manual (pdf) <`http://simcompanion.mscsoftware.com/resources/sites/MSC/content/meta/DOCUMENTATION/9000/DOC9188/~secure/refman.pdf?token=WDkwz5Q6v7LTw9Vb5p+nwkbZMJAxZ4rU6BoR7AHZFxi2Tl1QdrbVvWj00qmcC4+S3fnbL4WUa5ovbpBwGDBt+zFPzsGyYC13zvGPg0j/5SrMF6bnWrQoTGyJb8ho1ROYsm2OqdSA9jVceaFHQVc+tJq4b49VogM4dZBxyi/QrHgdUgPFos8BAL9mgju5WGk8yYcFtRzQIxU=>`_.
     """
-    def coord_to_xyz(self, p):
+
+    @classmethod
+    def coord_to_xyz(cls, p):
         r"""
         ::
 
@@ -705,7 +716,10 @@ class CylindricalCoord(object):
         .. math:: x = R \cos(\theta)
         .. math:: y = R \sin(\theta)
 
-        :returns xyz: the point in the local coordinate system
+        Returns
+        -------
+        xyz : (3,) float ndarray
+            the point in the local coordinate system
         """
         R = p[0]
         theta = radians(p[1])
@@ -713,9 +727,13 @@ class CylindricalCoord(object):
         y = R * sin(theta)
         return array([x, y, p[2]], dtype='float64')
 
-    def xyz_to_coord(self, p):
+    @classmethod
+    def xyz_to_coord(cls, p):
         """
-        :returns xyz: the delta xyz point in the local coordinate system
+        Returns
+        -------
+        xyz : (3,) float ndarray
+            the delta xyz point in the local coordinate system
         """
         (x, y, z) = p
         theta = degrees(atan2(y, x))
@@ -743,7 +761,8 @@ class SphericalCoord(object):
 
     .. seealso:: `MSC Reference Manual (pdf) <`http://simcompanion.mscsoftware.com/resources/sites/MSC/content/meta/DOCUMENTATION/9000/DOC9188/~secure/refman.pdf?token=WDkwz5Q6v7LTw9Vb5p+nwkbZMJAxZ4rU6BoR7AHZFxi2Tl1QdrbVvWj00qmcC4+S3fnbL4WUa5ovbpBwGDBt+zFPzsGyYC13zvGPg0j/5SrMF6bnWrQoTGyJb8ho1ROYsm2OqdSA9jVceaFHQVc+tJq4b49VogM4dZBxyi/QrHgdUgPFos8BAL9mgju5WGk8yYcFtRzQIxU=>`_.
     """
-    def xyz_to_coord(self, p):
+    @classmethod
+    def xyz_to_coord(cls, p):
         r"""
         :returns xyz: the loca XYZ point in the R, \theta, \phi coordinate system
         """
@@ -756,7 +775,8 @@ class SphericalCoord(object):
             theta = 0.
         return array([R, theta, phi], dtype='float64')
 
-    def coord_to_xyz(self, p):
+    @classmethod
+    def coord_to_xyz(cls, p):
         r"""
         :returns xyz: the R, \theta, \phi point in the local XYZ coordinate system
         """
@@ -771,11 +791,7 @@ class SphericalCoord(object):
 
 class Cord2x(Coord):
 
-    def __init__(self):
-        Coord.__init__(self)
-        self.rid = None
-
-    def add(self, cid, rid=0, origin=None, zaxis=None, xzplane=None, comment=''):
+    def __init__(self, cid, rid=0, origin=None, zaxis=None, xzplane=None, comment=''):
         """
         This method emulates the CORD2x card.
 
@@ -794,11 +810,11 @@ class Cord2x(Coord):
 
         .. note :: no type checking
         """
+        Coord.__init__(self)
         if comment:
             self._comment = comment
         self.cid = cid
         self.rid = rid
-
         if origin is None:
             self.e1 = array([0., 0., 0.], dtype='float64')
         else:
@@ -815,9 +831,33 @@ class Cord2x(Coord):
             self.e3 = np.asarray(xzplane)
         self._finish_setup()
 
-    def add_axes(self, cid, rid=0, origin=None,
-                 xaxis=None, yaxis=None, zaxis=None,
-                 xyplane=None, yzplane=None, xzplane=None):
+    @classmethod
+    def _add(cls, cid, rid=0, origin=None, zaxis=None, xzplane=None, comment=''):
+        cid = cid
+        rid = rid
+
+        if origin is None:
+            e1 = array([0., 0., 0.], dtype='float64')
+        else:
+            e1 = np.asarray(origin)
+
+        if zaxis is None:
+            e2 = array([0., 0., 1.], dtype='float64')
+        else:
+            e2 = np.asarray(zaxis)
+
+        if xzplane is None:
+            e3 = array([1., 0., 0.], dtype='float64')
+        else:
+            e3 = np.asarray(xzplane)
+        return cls(cid, rid, e1, e2, e3, comment=comment)
+        #self._finish_setup()
+
+    @classmethod
+    def add_axes(cls, cid, rid=0, origin=None,
+                  xaxis=None, yaxis=None, zaxis=None,
+                  xyplane=None, yzplane=None, xzplane=None,
+                  comment=''):
         """
         Create a coordinate system based on a defined axis and point on the
         plane.  This is the generalized version of the CORD2x card.
@@ -842,7 +882,7 @@ class Cord2x(Coord):
                   must be None
         .. note:: the axes and planes are defined in the rid coordinate system
         """
-        assert self.type in ['CORD2R', 'CORD2C', 'CORD2S'], self.type
+        assert cls.type in ['CORD2R', 'CORD2C', 'CORD2S'], cls.type
         if origin is None:
             origin = array([0., 0., 0.], dtype='float64')
         else:
@@ -852,30 +892,30 @@ class Cord2x(Coord):
         if xaxis is not None:
             assert yaxis is None and zaxis is None, 'yaxis=%s zaxis=%s' % (yaxis, zaxis)
             xaxis = _fix_xyz_shape(xaxis, 'xaxis')
-            xaxis = self.coord_to_xyz(xaxis)
+            xaxis = cls.coord_to_xyz(xaxis)
         elif yaxis is not None:
             assert zaxis is None, 'zaxis=%s' % (zaxis)
             yaxis = _fix_xyz_shape(yaxis, 'yaxis')
-            yaxis = self.coord_to_xyz(yaxis)
+            yaxis = cls.coord_to_xyz(yaxis)
         else:
             zaxis = _fix_xyz_shape(zaxis, 'zaxis')
-            zaxis = self.coord_to_xyz(zaxis)
+            zaxis = cls.coord_to_xyz(zaxis)
 
         # check for invalid planes
         if xyplane is not None:
             assert yzplane is None and xzplane is None, 'yzplane=%s xzplane=%s' % (yzplane, xzplane)
             assert xaxis is not None or yaxis is not None, 'xaxis=%s yaxis=%s' % (xaxis, yaxis)
             xyplane = _fix_xyz_shape(xyplane, 'xyplane')
-            xyplane = self.coord_to_xyz(xyplane)
+            xyplane = cls.coord_to_xyz(xyplane)
         elif yzplane is not None:
             assert xzplane is None, 'xzplane=%s' % (xzplane)
             assert yaxis is not None or zaxis is not None, 'yaxis=%s zaxis=%s' % (yaxis, zaxis)
             yzplane = _fix_xyz_shape(yzplane, 'yzplane')
-            yzplane = self.coord_to_xyz(yzplane)
+            yzplane = cls.coord_to_xyz(yzplane)
         else:
             assert xaxis is not None or zaxis is not None, 'xaxis=%s zaxis=%s' % (xaxis, zaxis)
             xzplane = _fix_xyz_shape(xzplane, 'xzplane')
-            xzplane = self.coord_to_xyz(xzplane)
+            xzplane = cls.coord_to_xyz(xzplane)
 
         if xyplane is not None:
             if xaxis is not None:
@@ -913,9 +953,10 @@ class Cord2x(Coord):
                 jhat = cross(k, xzplane) # xzplane is "defining" xaxis
                 j = jhat / norm(jhat)
                 i = cross(j, k)
-        self.add_ijk(cid, rid, origin, i, j, k)
+        return cls.add_ijk(cid, rid, origin, i, j, k, comment=comment)
 
-    def add_ijk(self, cid, rid=0, origin=None, i=None, j=None, k=None):
+    @classmethod
+    def add_ijk(cls, cid, rid=0, origin=None, i=None, j=None, k=None, comment=''):
         """
         Create a coordinate system based on 2 or 3 perpendicular unit vectors
 
@@ -934,7 +975,7 @@ class Cord2x(Coord):
         k : (3,) ndarray
             defines the k unit vector
         """
-        Type = self.type
+        Type = cls.type
         assert Type in ['CORD2R', 'CORD2C', 'CORD2S'], Type
         if origin is None:
             origin = array([0., 0., 0.], dtype='float64')
@@ -960,52 +1001,51 @@ class Cord2x(Coord):
                 raise RuntimeError('j or k are None; j=%s k=%s' % (j, k))
 
         # origin
-        self.e1 = origin
+        e1 = origin
         # point on z axis
-        self.e2 = origin + k
+        e2 = origin + k
 
         # point on x-z plane / point on x axis
-        self.e3 = origin + i
-        self._finish_setup()
+        e3 = origin + i
+        return cls(cid, rid, e1, e2, e3, comment=comment)
 
-    def add_op2_data(self, data):
-        self.cid = data[0]
-        self.rid = data[1]
-        self.e1 = array(data[2:5], dtype='float64')
-        self.e2 = array(data[5:8], dtype='float64')
-        self.e3 = array(data[8:11], dtype='float64')
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        cid = data[0]
+        rid = data[1]
+        e1 = array(data[2:5], dtype='float64')
+        e2 = array(data[5:8], dtype='float64')
+        e3 = array(data[8:11], dtype='float64')
         assert len(data) == 11, 'data = %s' % (data)
-        self._finish_setup()
+        return cls(cid, rid, e1, e2, e3, comment=comment)
 
-    def add_card(self, card, comment=''):
+    @classmethod
+    def add_card(cls, card, comment=''):
         """
         Defines the CORD2x class
         """
-        if comment:
-            self._comment = comment
-        self.isResolved = False
-
         #: coordinate system ID
-        self.cid = integer(card, 1, 'cid')
+        cid = integer(card, 1, 'cid')
         #: reference coordinate system ID
-        self.rid = integer_or_blank(card, 2, 'rid', 0)
+        rid = integer_or_blank(card, 2, 'rid', 0)
 
         #: origin in a point relative to the rid coordinate system
-        self.e1 = array([double_or_blank(card, 3, 'e1x', 0.0),
-                         double_or_blank(card, 4, 'e1y', 0.0),
-                         double_or_blank(card, 5, 'e1z', 0.0)],
-                        dtype='float64')
+        origin = array([double_or_blank(card, 3, 'e1x', 0.0),
+                        double_or_blank(card, 4, 'e1y', 0.0),
+                        double_or_blank(card, 5, 'e1z', 0.0)],
+                       dtype='float64')
         #: z-axis in a point relative to the rid coordinate system
-        self.e2 = array([double_or_blank(card, 6, 'e2x', 0.0),
-                         double_or_blank(card, 7, 'e2y', 0.0),
-                         double_or_blank(card, 8, 'e2z', 0.0)],
-                        dtype='float64')
+        zaxis = array([double_or_blank(card, 6, 'e2x', 0.0),
+                       double_or_blank(card, 7, 'e2y', 0.0),
+                       double_or_blank(card, 8, 'e2z', 0.0)],
+                      dtype='float64')
         #: a point on the xz-plane relative to the rid coordinate system
-        self.e3 = array([double_or_blank(card, 9, 'e3x', 0.0),
+        xzplane = array([double_or_blank(card, 9, 'e3x', 0.0),
                          double_or_blank(card, 10, 'e3y', 0.0),
                          double_or_blank(card, 11, 'e3z', 0.0)],
                         dtype='float64')
-        self._finish_setup()
+        return cls(cid, rid, origin, zaxis, xzplane, comment=comment)
+        #self._finish_setup()
 
     def _finish_setup(self):
         assert len(self.e1) == 3, self.e1
@@ -1045,7 +1085,7 @@ class Cord2x(Coord):
 
     def cross_reference(self, model):
         """
-        Links self.rid to a coordinate system.
+        Cross links the card so referenced cards can be extracted directly
 
         Parameters
         ----------
@@ -1081,29 +1121,34 @@ class Cord1x(Coord):
         """Gets the reference coordinate system self.rid"""
         return self.rid
 
-    def __init__(self):
+    def __init__(self, cid, g1, g2, g3, comment=''):
         Coord.__init__(self)
-        self.g1 = None
-        self.g2 = None
-        self.g3 = None
+        if comment:
+            self._comment = comment
 
-    def add_card(self, card, icard=0, comment=''):
+        #: the coordinate ID
+        self.cid = cid
+        #: a Node at the origin
+        self.g1 = g1
+        #: a Node on the z-axis
+        self.g2 = g2
+        #: a Node on the xz-plane
+        self.g3 = g3
+
+        assert g1 != g2
+        assert g1 != g3
+        assert g2 != g3
+
+    @classmethod
+    def add_card(cls, card, icard=0, comment=''):
         #self.isResolved = False
         assert icard == 0 or icard == 1, 'icard=%r' % (icard)
         ncoord = 4 * icard  # 0 if the 1st coord, 4 if the 2nd
 
-        #: the coordinate ID
-        self.cid = integer(card, 1 + ncoord, 'cid')
-        #: a Node at the origin
-        self.g1 = integer(card, 2 + ncoord, 'g1')
-        #: a Node on the z-axis
-        self.g2 = integer(card, 3 + ncoord, 'g2')
-        #: a Node on the xz-plane
-        self.g3 = integer(card, 4 + ncoord, 'g3')
-
-        assert self.g1 != self.g2
-        assert self.g1 != self.g3
-        assert self.g2 != self.g3
+        cid = integer(card, 1 + ncoord, 'cid')
+        g1 = integer(card, 2 + ncoord, 'g1')
+        g2 = integer(card, 3 + ncoord, 'g2')
+        g3 = integer(card, 4 + ncoord, 'g3')
 
         #self.e1 = None
         #self.e2 = None
@@ -1111,13 +1156,16 @@ class Cord1x(Coord):
         #self.i = None
         #self.j = None
         #self.k = None
+        return cls(cid, g1, g2, g3, comment=comment)
 
-    def add_op2_data(self, data):
-        self.cid = data[0]
-        self.g1 = data[1]
-        self.g2 = data[2]
-        self.g3 = data[3]
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        cid = data[0]
+        g1 = data[1]
+        g2 = data[2]
+        g3 = data[3]
         assert len(data) == 4, 'data = %s' % (data)
+        return cls(cid, g1, g2, g3, comment=comment)
 
     def to_CORD2x(self, model, rid=0):
         """
@@ -1151,14 +1199,13 @@ class Cord1x(Coord):
         data = [type1, self.cid, rid1, list(p1) + list(p2) + list(p3)]
 
         if self.type == 'CORD1R':
-            coord = CORD2R()
+            coord = CORD2R.add_op2_data(data=data, comment=self.comment)
         elif self.type == 'CORD1C':
-            coord = CORD2C()
+            coord = CORD2C.add_op2_data(data=data, comment=self.comment)
         elif self.type == 'CORD1S':
-            coord = CORD2S()
+            coord = CORD2S.add_op2_data(data=data, comment=self.comment)
         else:
             raise RuntimeError('coordinate type of \n%s is %s' % (str(self), type1))
-        coord.add_op2_data(data=data, comment=self.comment)
         model.coords[self.cid] = coord
 
     def _verify(self, xref):
@@ -1175,7 +1222,7 @@ class Cord1x(Coord):
 
     def cross_reference(self, model):
         """
-        Links self.rid to a coordinate system.
+        Cross links the card so referenced cards can be extracted directly
 
         Parameters
         ----------
@@ -1329,6 +1376,14 @@ class CORD3G(Coord):  # not done
         assert self.form in ['EQN', 'TABLE']
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by %s cid=%s' % (self.type, self.cid)
         self.rid = model.Coord(self.rid, msg=msg)
         self.rid_ref = self.rid
@@ -1403,7 +1458,7 @@ class CORD1R(Cord1x, RectangularCoord):
     type = 'CORD1R'
     Type = 'R'
 
-    def __init__(self):
+    def __init__(self, cid, g1, g2, g3, comment=''):
         """
         Intilizes the CORD1R
 
@@ -1423,7 +1478,7 @@ class CORD1R(Cord1x, RectangularCoord):
         card : List
             a list version of the fields (1 CORD1R only)
         """
-        Cord1x.__init__(self)
+        Cord1x.__init__(self, cid, g1, g2, g3, comment=comment)
 
     def raw_fields(self):
         list_fields = ['CORD1R', self.cid] + self.node_ids
@@ -1434,7 +1489,7 @@ class CORD1C(Cord1x, CylindricalCoord):
     type = 'CORD1C'
     Type = 'C'
 
-    def __init__(self):
+    def __init__(self, cid, g1, g2, g3, comment=''):
         """
         Intilizes the CORD1R
 
@@ -1448,7 +1503,16 @@ class CORD1C(Cord1x, CylindricalCoord):
                        (there are possibly 2 coordinates on 1 card)
         :param data:   a list version of the fields (1 CORD1R only)
         """
-        Cord1x.__init__(self)
+        Cord1x.__init__(self, cid, g1, g2, g3, comment=comment)
+
+    #@classmethod
+    #def add_op2_data(cls, data, comment):
+        #self.cid = data[0]
+        #self.g1 = data[1]
+        #self.g2 = data[2]
+        #self.g3 = data[3]
+        #assert len(data) == 4, 'data = %s' % (data)
+        #bbbb
 
     def raw_fields(self):
         list_fields = ['CORD1C', self.cid] + self.node_ids
@@ -1459,7 +1523,7 @@ class CORD1S(Cord1x, SphericalCoord):
     type = 'CORD1S'
     Type = 'S'
 
-    def __init__(self):
+    def __init__(self, cid, g1, g2, g3, comment=''):
         """
         Intilizes the CORD1S
 
@@ -1474,7 +1538,7 @@ class CORD1S(Cord1x, SphericalCoord):
                        (there are possibly 2 coordinates on 1 card)
         :param data:   a list version of the fields (1 CORD1S only)
         """
-        Cord1x.__init__(self)
+        Cord1x.__init__(self, cid, g1, g2, g3, comment=comment)
 
     def raw_fields(self):
         list_fields = ['CORD1S', self.cid] + self.node_ids
@@ -1485,7 +1549,7 @@ class CORD2R(Cord2x, RectangularCoord):
     type = 'CORD2R'
     Type = 'R'
 
-    def __init__(self):
+    def __init__(self, cid, rid=0, origin=None, zaxis=None, xzplane=None, comment=''):
         """
         Intilizes the CORD2R
 
@@ -1503,7 +1567,7 @@ class CORD2R(Cord2x, RectangularCoord):
 
         .. note :: no type checking
         """
-        Cord2x.__init__(self)
+        Cord2x.__init__(self, cid, rid, origin, zaxis, xzplane, comment=comment)
 
     def _verify(self, xref):
         """
@@ -1528,7 +1592,7 @@ class CORD2C(Cord2x, CylindricalCoord):
     type = 'CORD2C'
     Type = 'C'
 
-    def __init__(self):
+    def __init__(self, cid, rid=0, origin=None, zaxis=None, xzplane=None, comment=''):
         """
         Intilizes the CORD2C
 
@@ -1543,7 +1607,7 @@ class CORD2C(Cord2x, CylindricalCoord):
         :param card: a BDFCard object
         :param data: a list version of the fields (1 CORD2C only)
         """
-        Cord2x.__init__(self)
+        Cord2x.__init__(self, cid, rid, origin, zaxis, xzplane, comment=comment)
 
     def raw_fields(self):
         rid = set_blank_if_default(self.Rid(), 0)
@@ -1556,7 +1620,7 @@ class CORD2S(Cord2x, SphericalCoord):
     type = 'CORD2S'
     Type = 'S'
 
-    def __init__(self):
+    def __init__(self, cid, rid=0, origin=None, zaxis=None, xzplane=None, comment=''):
         """
         Intilizes the CORD2S
 
@@ -1571,7 +1635,7 @@ class CORD2S(Cord2x, SphericalCoord):
         :param card: a BDFCard object
         :param data: a list version of the fields (1 CORD2S only)
         """
-        Cord2x.__init__(self)
+        Cord2x.__init__(self, cid, rid, origin, zaxis, xzplane, comment=comment)
 
     def raw_fields(self):
         rid = set_blank_if_default(self.Rid(), 0)

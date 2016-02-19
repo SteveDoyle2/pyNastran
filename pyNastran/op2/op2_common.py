@@ -325,18 +325,18 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
                 self.binary_debug.write('    sort_method = %s\n' % sort_method)
             self.binary_debug.write('  recordi = [%s]\n\n' % msg)
 
-    def _read_geom_4(self, mapper, data):
+    def _read_geom_4(self, mapper, data, ndata):
         if self.read_mode == 1:
-            return len(data)
+            return ndata
         if not self.make_geom:
-            return len(data)
+            return ndata
         n = 0
         keys = unpack(b'3i', data[n:n+12])
         n += 12
         if len(data) == 12:
             #print('*self.istream = %s' % self.istream)
             #print('self.isubtable = %s' % self.isubtable)
-            self.istream -= 1
+            #self.istream -= 1 ## TODO: removed because it doesn't exist???
             self.isubtable_old = self.isubtable
             return n
 
@@ -370,7 +370,8 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
             name, func = mapper[keys]
         except KeyError:
             return n
-        self.binary_debug.write('  found keys=%s -> name=%-6s - %s\n' % (str(keys), name, self.table_name))
+        if self.is_debug_file:
+            self.binary_debug.write('  found keys=%s -> name=%-6s - %s\n' % (str(keys), name, self.table_name))
         print("  found keys=(%5s,%4s,%4s) name=%-6s - %s" % (keys[0], keys[1], keys[2], name, self.table_name))
 
         n = func(data, n)  # gets all the grid/mat cards

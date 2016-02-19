@@ -1134,8 +1134,15 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         """
         Applies the dynamic syntax for %varName
 
-        :param key:  the uppercased key
-        :returns value: the dynamic value defined by dict_of_vars
+        Parameters
+        ----------
+        key : str
+            the uppercased key
+
+        Returns
+        -------
+        value : varies
+            the dynamic value defined by dict_of_vars
 
         .. seealso:: :func: `set_dynamic_syntax`
         """
@@ -1423,8 +1430,14 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         """
         Returns the name of the card defined by the provided lines
 
-        :param lines: the lines of the card
-        :returns cardname: the name of the card
+        Parameters
+        lines : List[str]
+            the lines of the card
+
+        Returns
+        -------
+        cardname : str
+            the name of the card
         """
         card_name = lines[0][:8].rstrip('\t, ').split(',')[0].split('\t')[0].strip('*\t ')
         if len(card_name) == 0:

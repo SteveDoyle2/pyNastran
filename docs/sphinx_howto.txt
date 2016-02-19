@@ -1,0 +1,52 @@
+Style Guide
+-----------
+http://documentation-style-guide-sphinx.readthedocs.org/en/latest/style-guide.html
+https://github.com/benoitbryon/documentation-style-guide-sphinx/blob/master/docs/style-guide.txt
+
+Toc Tree
+--------
+http://www.sphinx-doc.org/en/stable/markup/toctree.html
+
+Overview
+--------
+http://docutils.sourceforge.net/docs/ref/rst/restructuredtext.html
+
+#-----------------------------------------------------------------
+Headings
+
+headings should be self-consistent within a file, not globally
+
+########
+heading1
+########
+
+********
+heading2
+********
+
+heading3
+========
+
+heading4
+--------
+
+heading5
+^^^^^^^^
+
+heading6
+""""""""
+   
+#-----------------------------------------------------------------
+
+*****************
+:mod:`bdf` Module
+*****************
+
+.. inheritance-diagram:: pyNastran.bdf.bdf
+
+.. automodule:: pyNastran.bdf.bdf
+    :inherited-members:   # show the inherited members
+    :members:		  # show the private members
+    :undoc-members:
+    :show-inheritance:	  # include functions without docstrings
+			  #

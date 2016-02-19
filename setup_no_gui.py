@@ -32,29 +32,29 @@ py_packages = []
 try:
     import numpy as np
     ver = np.lib.NumpyVersion(np.__version__)
-    if ver < '1.9.0':
-        print("np.__version__ = %r < '1.9.0'" % np.__version__)
-        py_packages.append('numpy >= 1.9.0')
+    if ver < '1.9.2':
+        print("np.__version__ = %r < '1.9.2'" % np.__version__)
+        py_packages.append('numpy >= 1.9.2')
 except ImportError:
-    py_packages.append('numpy >= 1.9.0')
+    py_packages.append('numpy >= 1.9.2')
 
 try:
     import scipy
     ver = scipy.version.short_version
-    if ver < '0.15.0':
-        print("scipy.version.short_version = %r < '0.15.0'" % scipy.version.short_version)
-        py_packages.append('scipy >= 0.15.0')
+    if ver < '0.16.0':
+        print("scipy.version.short_version = %r < '0.16.0'" % scipy.version.short_version)
+        py_packages.append('scipy >= 0.16.0')
 except ImportError:
-    py_packages.append('scipy >= 0.15.0')
+    py_packages.append('scipy >= 0.16.0')
 
 try:
     import six
     sver = [int(val) for val in six.__version__.split('-')[0].split('.')]
-    if sver < [1, 8, 0]:
-        print("six.__version__ = %r < '1.8.0'" % six.__version__)
-        py_packages.append('six >= 1.8.0')
+    if sver < [1, 9, 0]:
+        print("six.__version__ = %r < '1.9.0'" % six.__version__)
+        py_packages.append('six >= 1.9.0')
 except ImportError:
-    py_packages.append('six >= 1.8.0')
+    py_packages.append('six >= 1.9.0')
 
 try:
     import docopt
@@ -68,15 +68,15 @@ except ImportError:
 
 
 #py_packages = [
-#    'numpy >= 1.9.0',
-#    'scipy >= 0.15.0',
+#    'numpy >= 1.9.2',
+#    'scipy >= 0.16.0',
 #]
 
 install_requires = py_packages + [
     # -*- Extra requirements: -*-
     #'docopt == 0.6.2',
     ##'matplotlib >= 1.3.0',
-    #'six >= 1.8.0',
+    #'six >= 1.9.0',
     ##'cython',
 ] + py2_packages,
 

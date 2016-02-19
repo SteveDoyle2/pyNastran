@@ -10,14 +10,13 @@ Multi-segment beams are IntegratedLineProperty objects.
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 #import sys
-from itertools import count
+from six import integer_types
 from numpy import pi, array
 
 from pyNastran.bdf.field_writer_8 import set_blank_if_default, set_default_if_blank
 from pyNastran.bdf.cards.base_card import Property
-from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
-    double, double_or_blank, string, string_or_blank, blank,
-    integer_or_double, double_string_or_blank, fields, integer_double_string_or_blank)
+from pyNastran.bdf.bdfInterface.assign_type import (integer, double,
+    double_or_blank, string, string_or_blank, blank, integer_or_double)
 from pyNastran.utils.mathematics import integrate_line, integrate_positive_line
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
@@ -283,7 +282,8 @@ class LineProperty(Property):
             I2 = 1 / 12. * dim[1] * dim[0] ** 3
             I12 = 0.
         else:
-            msg = 'I1_I2_I12; Type=%s is not supported for %s class...' % (self.Type, self.type)
+            msg = 'I1_I2_I12; Type=%s is not supported for %s class...' % (
+                self.Type, self.type)
             raise NotImplementedError(msg)
         return(I1, I2, I12)
 
@@ -291,9 +291,15 @@ def _bar_areaL(class_name, Type, dim):
     """
     Area(x) method for the PBARL and PBEAML classes (pronounced **Area-L**)
 
-    :param dim:    a list of the dimensions associated with **Type**
-    :returns Area: Area of the given cross section defined
-                   by **self.Type**
+    Parameters
+    ----------
+    dim : List[float]
+        a list of the dimensions associated with **Type**
+
+    Returns
+    -------
+    Area : float
+        Area of the given cross section defined by **self.Type**
 
     .. note:: internal method
     """
@@ -568,7 +574,9 @@ class IntegratedLineProperty(LineProperty):
 class PBAR(LineProperty):
     type = 'PBAR'
 
-    def __init__(self):
+    def __init__(self, pid, mid, A=0., i1=0., i2=0., i12=0., j=0., nsm=0.,
+                 c1=0., c2=0., d1=0., d2=0., e1=0., e2=0., f1=0., f2=0.,
+                 k1=1.e8, k2=1.e8, comment=''):
         """
         .. todo::
             support solution 600 default
@@ -584,36 +592,44 @@ class PBAR(LineProperty):
         +------+-----+-----+-----+----+----+----+-----+-----+
         """
         LineProperty.__init__(self)
-
-    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
         #: property ID -> use Pid()
-        self.pid = integer(card, 1, 'pid')
+        self.pid = pid
         #: material ID -> use Mid()
-        self.mid = integer(card, 2, 'mid')
+        self.mid = mid
         #: Area -> use Area()
-        self.A = double_or_blank(card, 3, 'A', 0.0)
+        self.A = A
         #: I1 -> use I1()
-        self.i1 = double_or_blank(card, 4, 'I1', 0.0)
+        self.i1 = i1
         #: I2 -> use I2()
-        self.i2 = double_or_blank(card, 5, 'I2', 0.0)
+        self.i2 = i2
+
+        #: I12 -> use I12()
+        self.i12 = i12
 
         #: Polar Moment of Inertia J -> use J()
         #: default=1/2(I1+I2) for SOL=600, otherwise 0.0
         #: .. todo:: support SOL 600 default
-        self.j = double_or_blank(card, 6, 'J', 0.0)
-        #: nonstructral mass -> use Nsm()
-        self.nsm = double_or_blank(card, 7, 'nsm', 0.0)
+        self.j = j
 
-        self.C1 = double_or_blank(card, 9, 'C1', 0.0)
-        self.C2 = double_or_blank(card, 10, 'C2', 0.0)
-        self.D1 = double_or_blank(card, 11, 'D1', 0.0)
-        self.D2 = double_or_blank(card, 12, 'D2', 0.0)
-        self.E1 = double_or_blank(card, 13, 'E1', 0.0)
-        self.E2 = double_or_blank(card, 14, 'E2', 0.0)
-        self.F1 = double_or_blank(card, 15, 'F1', 0.0)
-        self.F2 = double_or_blank(card, 16, 'F2', 0.0)
+        #: nonstructral mass -> use Nsm()
+        self.nsm = nsm
+
+        self.c1 = c1
+        self.c2 = c2
+        self.d1 = d1
+        self.d2 = d2
+        self.e1 = e1
+        self.e2 = e2
+        self.f1 = f1
+        self.f2 = f2
+
+        # K1/K2 must be blank
+        #: default=infinite; assume 1e8
+        self.k1 = k1
+        #: default=infinite; assume 1e8
+        self.k2 = k2
 
         if self.i1 < 0.:
             raise RuntimeError('I1=%r must be greater than or equal to 0.0' % self.i1)
@@ -622,48 +638,71 @@ class PBAR(LineProperty):
         if self.j < 0.:
             raise RuntimeError('J=%r must be greater than or equal to 0.0' % self.j)
 
-        #: I12 -> use I12()
-        self.i12 = double_or_blank(card, 19, 'I12', 0.0)
+    @classmethod
+    def add_card(cls, card, comment=''):
+        pid = integer(card, 1, 'pid')
+        mid = integer(card, 2, 'mid')
+        A = double_or_blank(card, 3, 'A', 0.0)
+        i1 = double_or_blank(card, 4, 'I1', 0.0)
+        i2 = double_or_blank(card, 5, 'I2', 0.0)
 
-        if self.A == 0.0:
-            # K1/K2 must be blank
-            #: default=infinite; assume 1e8
-            self.K1 = blank(card, 17, 'K1')
-            #: default=infinite; assume 1e8
-            self.K2 = blank(card, 18, 'K2')
-        elif self.i12 != 0.0:
+        j = double_or_blank(card, 6, 'J', 0.0)
+        nsm = double_or_blank(card, 7, 'nsm', 0.0)
+
+        c1 = double_or_blank(card, 9, 'C1', 0.0)
+        c2 = double_or_blank(card, 10, 'C2', 0.0)
+        d1 = double_or_blank(card, 11, 'D1', 0.0)
+        d2 = double_or_blank(card, 12, 'D2', 0.0)
+        e1 = double_or_blank(card, 13, 'E1', 0.0)
+        e2 = double_or_blank(card, 14, 'E2', 0.0)
+        f1 = double_or_blank(card, 15, 'F1', 0.0)
+        f2 = double_or_blank(card, 16, 'F2', 0.0)
+
+        i12 = double_or_blank(card, 19, 'I12', 0.0)
+
+        if A == 0.0:
+            k1 = blank(card, 17, 'K1')
+            k2 = blank(card, 18, 'K2')
+        elif i12 != 0.0:
             # K1 / K2 are ignored
-            self.K1 = None
-            self.K2 = None
+            k1 = None
+            k2 = None
         else:
             #: default=infinite; assume 1e8
-            self.K1 = double_or_blank(card, 17, 'K1', 1e8)
+            k1 = double_or_blank(card, 17, 'K1', 1e8)
             #: default=infinite; assume 1e8
-            self.K2 = double_or_blank(card, 18, 'K2', 1e8)
+            k2 = double_or_blank(card, 18, 'K2', 1e8)
 
         assert len(card) <= 20, 'len(PBAR card) = %i' % len(card)
+        return PBAR(pid, mid, A, i1, i2, i12, j, nsm,
+                    c1, c2, d1, d2, e1, e2,
+                    f1, f2, k1, k2, comment=comment)
 
-    def add_op2_data(self, card, comment=''):
-        self.pid = data[0]
-        self.mid = data[1]
-        self.A = data[2]
-        self.i1 = data[3]
-        self.i2 = data[4]
-        self.j = data[5]
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        pid = data[0]
+        mid = data[1]
+        A = data[2]
+        i1 = data[3]
+        i2 = data[4]
+        j = data[5]
 
-        self.nsm = data[6]
+        nsm = data[6]
         #self.fe  = data[7] #: .. todo:: not documented....
-        self.C1 = data[8]
-        self.C2 = data[9]
-        self.D1 = data[10]
-        self.D2 = data[11]
-        self.E1 = data[12]
-        self.E2 = data[13]
-        self.F1 = data[14]
-        self.F2 = data[15]
-        self.K1 = data[16]
-        self.K2 = data[17]
-        self.i12 = data[18]
+        c1 = data[8]
+        c2 = data[9]
+        d1 = data[10]
+        d2 = data[11]
+        e1 = data[12]
+        e2 = data[13]
+        f1 = data[14]
+        f2 = data[15]
+        k1 = data[16]
+        k2 = data[17]
+        i12 = data[18]
+        return PBAR(pid, mid, A, i1, i2, i12, j, nsm,
+                    c1, c2, d1, d2, e1, e2,
+                    f1, f2, k1, k2, comment=comment)
 
     def _verify(self, xref=False):
         pid = self.Pid()
@@ -693,6 +732,14 @@ class PBAR(LineProperty):
         return rho * A + nsm
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by PBAR mid=%s' % self.mid
         self.mid = model.Material(self.mid, msg=msg)
         self.mid_ref = self.mid
@@ -739,8 +786,8 @@ class PBAR(LineProperty):
 
     def raw_fields(self):
         list_fields = ['PBAR', self.pid, self.Mid(), self.A, self.i1, self.i2,
-                       self.j, self.nsm, None, self.C1, self.C2, self.D1, self.D2,
-                       self.E1, self.E2, self.F1, self.F2, self.K1, self.K2,
+                       self.j, self.nsm, None, self.c1, self.c2, self.d1, self.d2,
+                       self.e1, self.e2, self.f1, self.f2, self.k1, self.k2,
                        self.i12]
         return list_fields
 
@@ -752,23 +799,23 @@ class PBAR(LineProperty):
         j = set_blank_if_default(self.j, 0.0)
         nsm = set_blank_if_default(self.nsm, 0.0)
 
-        C1 = set_blank_if_default(self.C1, 0.0)
-        C2 = set_blank_if_default(self.C2, 0.0)
+        c1 = set_blank_if_default(self.c1, 0.0)
+        c2 = set_blank_if_default(self.c2, 0.0)
 
-        D1 = set_blank_if_default(self.D1, 0.0)
-        D2 = set_blank_if_default(self.D2, 0.0)
+        d1 = set_blank_if_default(self.d1, 0.0)
+        d2 = set_blank_if_default(self.d2, 0.0)
 
-        E1 = set_blank_if_default(self.E1, 0.0)
-        E2 = set_blank_if_default(self.E2, 0.0)
+        e1 = set_blank_if_default(self.e1, 0.0)
+        e2 = set_blank_if_default(self.e2, 0.0)
 
-        F1 = set_blank_if_default(self.F1, 0.0)
-        F2 = set_blank_if_default(self.F2, 0.0)
+        f1 = set_blank_if_default(self.f1, 0.0)
+        f2 = set_blank_if_default(self.f2, 0.0)
 
-        K1 = set_blank_if_default(self.K1, 1e8)
-        K2 = set_blank_if_default(self.K2, 1e8)
+        k1 = set_blank_if_default(self.k1, 1e8)
+        k2 = set_blank_if_default(self.k2, 1e8)
 
         list_fields = ['PBAR', self.pid, self.Mid(), self.A, i1, i2, j, nsm,
-                       None, C1, C2, D1, D2, E1, E2, F1, F2, K1, K2, i12]
+                       None, c1, c2, d1, d2, e1, e2, f1, f2, k1, k2, i12]
         return list_fields
 
     def write_card(self, size=8, is_double=False):
@@ -816,56 +863,62 @@ class PBARL(LineProperty):
         "DBOX": 10,  # was 12
     }  # for GROUP="MSCBML0"
 
-    def __init__(self):
+    def __init__(self, pid, mid, group, Type, dim, nsm=0., comment=''):
         LineProperty.__init__(self)
-
-    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
 
         #: Property ID
-        self.pid = integer(card, 1, 'pid')
+        self.pid = pid
         #: Material ID
-        self.mid = integer(card, 2, 'mid')
-        self.group = string_or_blank(card, 3, 'group', 'MSCBMLO')
+        self.mid = mid
+        self.group = group
         #: Section Type (e.g. 'ROD', 'TUBE', 'I', 'H')
-        self.Type = string(card, 4, 'Type')
+        self.Type = Type
+        self.dim = dim
+        #: non-structural mass
+        self.nsm = nsm
+        self._validate_input()
 
-        ndim = self.valid_types[self.Type]
-        j = 9 + ndim + 1
+    @classmethod
+    def add_card(cls, card, comment=''):
+        pid = integer(card, 1, 'pid')
+        mid = integer(card, 2, 'mid')
+        group = string_or_blank(card, 3, 'group', 'MSCBMLO')
+        Type = string(card, 4, 'Type')
 
-        dims = []
+        ndim = cls.valid_types[Type]
+        #j = 9 + ndim + 1
+
+        dim = []
         #dim_old = None  ## TODO: is there a default?
         for i in range(ndim):
             #dim = double_or_blank(card, 9 + i, 'dim%i' % (i + 1))
-            dim = double(card, 9 + i, 'dim%i' % (i + 1))
-            dims.append(dim)
+            dimi = double(card, 9 + i, 'dim%i' % (i + 1))
+            dim.append(dimi)
 
         #: dimension list
-        self.dim = dims
-        assert len(dims) == ndim, 'PBARL ndim=%s len(dims)=%s' % (ndim, len(dims))
+        assert len(dim) == ndim, 'PBARL ndim=%s len(dims)=%s' % (ndim, len(dim))
         #assert len(dims) == len(self.dim), 'PBARL ndim=%s len(dims)=%s' % (ndim, len(self.dim))
 
-        #: non-structural mass
-        self.nsm = double_or_blank(card, 9 + ndim + 1, 'nsm', 0.0)
-        self._validate_input()
+        nsm = double_or_blank(card, 9 + ndim + 1, 'nsm', 0.0)
+        return PBARL(pid, mid, group, Type, dim, nsm, comment=comment)
 
-    def add_op2_data(self, data, comment=''):
-        if comment:
-            self._comment = comment
-        self.pid = data[0]
-        self.mid = data[1]
-        self.group = data[2].strip()
-        self.Type = data[3].strip()
-        self.dim = list(data[4:-1])
-        self.nsm = data[-1]
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        pid = data[0]
+        mid = data[1]
+        group = data[2].strip()
+        Type = data[3].strip()
+        dim = list(data[4:-1])
+        nsm = data[-1]
         #print("group = %r" % self.group)
         #print("Type  = %r" % self.Type)
         #print("dim = ",self.dim)
         #print(str(self))
         #print("*PBARL = ",data)
         #raise NotImplementedError('not finished...')
-        self._validate_input()
+        return PBARL(pid, mid, group, Type, dim, nsm, comment=comment)
 
     def _validate_input(self):
         if self.Type not in self.valid_types:
@@ -882,6 +935,14 @@ class PBARL(LineProperty):
         assert None not in self.dim
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by PBARL mid=%s' % self.mid
         self.mid = model.Material(self.mid, msg=msg)
         self.mid_ref = self.mid
@@ -953,7 +1014,6 @@ class PBARL(LineProperty):
             msg = 'I11 for Type=%r dim=%r on PBARL is not supported' % (self.Type, self.dim)
             raise NotImplementedError(msg)
         return Ix
-        raise RuntimeError('who is calling this...')
 
     #def I12(self):
         #return self.I12()
@@ -1146,10 +1206,12 @@ class PBARL(LineProperty):
             #cy = d / 2.
             (d, b1, b2, t, s1, s2) = self.dim
             if b1 != b2:
-                msg = 'J for Type=%r dim=%r on PBARL b1 != b2 is not supported' % (self.Type, self.dim)
+                msg = 'J for Type=%r dim=%r on PBARL b1 != b2 is not supported' % (
+                    self.Type, self.dim)
                 raise NotImplementedError(msg)
             if s1 != s2:
-                msg = 'J for Type=%r dim=%r on PBARL s1 != s2 is not supported' % (self.Type, self.dim)
+                msg = 'J for Type=%r dim=%r on PBARL s1 != s2 is not supported' % (
+                    self.Type, self.dim)
                 raise NotImplementedError(msg)
             h = d - b1 - b2
             s = s1
@@ -1167,15 +1229,17 @@ class PBARL(LineProperty):
             #(b, d, t, s) = self.dim
             #h = d - 2 * s
             (b, d, s, t) = self.dim
-            # if b1 != b2:
-                # msg = 'J for Type=%r dim=%r on PBARL b1 != b2 is not supported' % (self.Type, self.dim)
-                # raise NotImplementedError(msg)
-            # if s1 != s2:
-                # msg = 'J for Type=%r dim=%r on PBARL s1 != s2 is not supported' % (self.Type, self.dim)
-                # raise NotImplementedError(msg)
-            # h = d - b1 - b2
-            # s = s1
-            # b = b1
+            #if b1 != b2:
+                #msg = 'J for Type=%r dim=%r on PBARL b1 != b2 is not supported' % (
+                    #self.Type, self.dim)
+                #raise NotImplementedError(msg)
+            #if s1 != s2:
+                #msg = 'J for Type=%r dim=%r on PBARL s1 != s2 is not supported' % (
+                    #self.Type, self.dim)
+                #raise NotImplementedError(msg)
+            #h = d - b1 - b2
+            #s = s1
+            #b = b1
 
             # http://www.engineersedge.com/material_science/moment-inertia-gyration-6.htm
             y = d**2*t+s**2*(b-t)/(2*(b*s+h*t))
@@ -1215,7 +1279,7 @@ class PBARL(LineProperty):
         istart += len(self.dim)
 
         msg += self.CA_Section(iface, istart, self.dim)
-        iFace += 1
+        iface += 1
         msg2 += 'Cut_%s = geompy.MakeCut(Face_%i, Face_%i)\n' % (
             icut + 1, iface + 1, iface + 2)
         msg2 += "geompy.addToStudy(Cut_%i,  'Cut_%i')\n" % (
@@ -1285,6 +1349,14 @@ class PBEAM3(LineProperty):  # not done, cleanup
         return self.nsm
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by PBEAM3 mid=%s' % self.mid
         self.mid = model.Material(self.mid, msg=msg)
         self.mid_ref = self.mid
@@ -1395,6 +1467,14 @@ class PBEND(LineProperty):
         #return self.nsm
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by PBEND mid=%s' % self.mid
         self.mid = model.Material(self.mid, msg=msg)
         self.mid_ref = self.mid

@@ -253,13 +253,18 @@ class CAERO1(VectorizedCard):
         """
         Gets the positions of a list of nodes
 
-        :param nids_to_get:  the node IDs to get as an NDARRAY
-        :param node_ids:     the node IDs that contains all the nids_to_get
-                             as an NDARRAY
-        :param grids_cid_0:  the GRIDs as an (N, )  NDARRAY
+        Parameters
+        ----------
+        nids_to_get : (n,) ndarray
+            the node IDs to get
+        node_ids : (n,) ndarray
+            the node IDs that contains all the nids_to_get
+        grids_cid0 : (n,3) ndarray
+            the GRIDs in CID=0
 
-        :returns grids2_cid_0 : the corresponding positins of the requested
-                                GRIDs
+        Returns
+        -------
+        grids2_cid0 : the corresponding positins of the requested GRIDs
         """
         grids2_cid_0 = grids_cid0[searchsorted(nids_to_get, node_ids), :]
         return grids2_cid_0

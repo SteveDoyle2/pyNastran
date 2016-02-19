@@ -9,7 +9,9 @@ test_path = pyNastran.__path__[0]
 
 from pyNastran.bdf.bdf import BDF
 from pyNastran.op2.op2 import OP2, FatalError, read_op2
+from pyNastran.op2.op2_geom import read_op2_geom
 from pyNastran.op2.test.test_op2 import run_op2
+
 from pyNastran.bdf.test.bdf_unit_tests import Tester
 from pyNastran.op2.tables.oef_forces.oef_forceObjects import RealPlateBilinearForceArray, RealPlateForceArray
 from pyNastran.op2.export_to_vtk import export_to_vtk_filename
@@ -20,6 +22,14 @@ class TestOP2(Tester):
         #op2 = OP2()
         #op2.set_results('solidStress.oxx')
         #op2.read_op2(op2_filename, vectorized=False)
+
+    def test_ibulk(self):
+        """this test will fail if IBULK talble doesn't work"""
+        bdf_filename = os.path.abspath(os.path.join(test_path, 'op2', 'test',
+            'examples', 'ibulk', 'model1_sim1-solution_1.op2'))
+        op2_filename = os.path.abspath(os.path.join(test_path, 'op2', 'test',
+            'examples', 'ibulk', 'model1_sim1-solution_1.op2'))
+        op2 = read_op2(op2_filename, debug=False)
 
     def test_set_results(self):
         folder = os.path.abspath(os.path.join(test_path, '..', 'models'))
@@ -57,7 +67,7 @@ class TestOP2(Tester):
             os.remove(debug_file)
 
         read_op2(op2_filename)
-        run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, isubcases=[],
+        run_op2(op2_filename, write_bdf=write_bdf, isubcases=[],
                 write_f06=write_f06,
                 debug=debug, stop_on_failure=True, binary_debug=True, quiet=True)
         assert os.path.exists(debug_file), os.listdir(folder)
@@ -76,8 +86,19 @@ class TestOP2(Tester):
         op2_filename = os.path.join('solid_bending.op2')
         folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'solid_bending'))
         op2_filename = os.path.join(folder, op2_filename)
-
         op2 = read_op2(op2_filename)
+
+    def test_op2_solid_bending_02_geom(self):
+        op2_filename = os.path.join('solid_bending.op2')
+        folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'solid_bending'))
+        op2_filename = os.path.join(folder, op2_filename)
+        op2 = read_op2_geom(op2_filename)
+
+    def test_op2_solid_shell_bar_01_geom(self):
+        op2_filename = os.path.join('static_solid_shell_bar.op2')
+        folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'sol_101_elements'))
+        op2_filename = os.path.join(folder, op2_filename)
+        op2 = read_op2_geom(op2_filename)
 
     def test_op2_solid_shell_bar_01(self):
         op2_filename = os.path.join('static_solid_shell_bar.op2')

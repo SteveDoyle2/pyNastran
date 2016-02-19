@@ -46,8 +46,10 @@ class Property_i(BaseCard):
         """
         returns the property ID of an property
 
-        :returns pid: the Property ID
-        :type pid:    int
+        Returns
+        -------
+        pid : int
+            the Property ID
         """
         return self.pid
 
@@ -55,8 +57,10 @@ class Property_i(BaseCard):
         """
         returns the material ID of an element
 
-        :returns mid: the Material ID
-        :type mid:    int
+        Returns
+        -------
+        mid : int
+            the Material ID
         """
         if isinstance(self.mid, integer_types):
             return self.mid
@@ -64,6 +68,14 @@ class Property_i(BaseCard):
             return self.mid_ref.mid
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by %s pid=%s' % (self.type, self.pid)
         self.mid = model.Material(self.mid, msg)
         self.mid_ref = self.mid

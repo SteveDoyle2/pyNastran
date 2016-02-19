@@ -147,6 +147,7 @@ class CBEAM(CBAR):
 
         is_offt = True  #: .. todo:: is this correct???
         #offt = str(data[6]) # GGG
+        bit = None # ????
         offt = 'GGG'  #: .. todo:: is this correct???
 
         pa = main[6]
@@ -223,6 +224,14 @@ class CBEAM(CBAR):
         return field8
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
         self.ga = model.Node(self.ga, msg=msg)
         self.gb = model.Node(self.gb, msg=msg)
@@ -297,4 +306,8 @@ class CBEAM(CBAR):
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
+
+    def write_card_16(self, is_double=False):
+        card = self.repr_fields()
         return self.comment + print_card_16(card)

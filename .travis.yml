@@ -77,8 +77,11 @@ install:
 # Run test
 script:
   #- nosetests --with-cov --cov YOUR_PACKAGE_NAME_HERE --cov-config .coveragerc --logging-level=INFO
-  - "python pyNastran/all_tests.py"
+  - "python pyNastran/all_tests_no_gui.py"
 
+# https://github.com/z4r/python-coveralls
 # Calculate coverage
+#after_success:
+#  - coveralls
 #after_success:
 #  - coveralls --config_file .coveragerc

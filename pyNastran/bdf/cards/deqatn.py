@@ -148,6 +148,14 @@ class DEQATN(BaseCard):  # needs work...
         self.nargs = nargs
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         # TODO: get deafults from DTABLE
         # TODO: get limits from DCONSTR
         self.dtable = model.dtable

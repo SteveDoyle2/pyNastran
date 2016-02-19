@@ -82,7 +82,7 @@ class Usm3dIO(object):
         bcmap_to_bc_name = None
         self._fill_usm3d_results(cases, bcs, mapbc, bcmap_to_bc_name, loads)
 
-    def load_usm3d_geometry(self, cogsg_filename, dirname, plot=True):
+    def load_usm3d_geometry(self, cogsg_filename, dirname, name='main', plot=True):
         #print("load_usm3d_geometry...")
         skip_reading = self.removeOldGeometry(cogsg_filename)
         if skip_reading:
@@ -141,7 +141,7 @@ class Usm3dIO(object):
         points.SetNumberOfPoints(self.nNodes)
         #self.gridResult.Allocate(self.nNodes, 1000)
         #vectorReselt.SetNumberOfComponents(3)
-        self.nidMap = {}
+        self.nid_map = {}
         #elem.SetNumberOfPoints(nNodes)
         if 0:
             fraction = 1. / self.nNodes  # so you can color the nodes by ID

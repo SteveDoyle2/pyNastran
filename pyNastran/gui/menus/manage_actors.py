@@ -10,6 +10,8 @@ from six import iteritems
 from PyQt4 import QtCore, QtGui
 #from pyNastran.gui.qt_files.menu_utils import eval_float_from_string
 from pyNastran.gui.qt_files.alt_geometry_storage import AltGeometry
+from pyNastran.gui.testing_methods import CoordProperties
+
 
 class CustomQTableView(QtGui.QTableView):
     def __init__(self, *args, **kwargs):
@@ -51,11 +53,32 @@ class Model(QtCore.QAbstractTableModel):
         self.items = items
         self.header_labels = header_labels
 
+    #def adding_row(index):
+        ## http://stackoverflow.com/questions/13109128/pyqt-qabstracttablemodel-never-updates-when-rows-are-added
+        #self.beginInsertRows(self.createIndex(0, 0), index, index)
+        #print 'adding ', index
+
+
     def rowCount(self, parent=QtCore.QModelIndex()):
         return len(self.items)
 
     def columnCount(self, parent=QtCore.QModelIndex()):
         return 1
+
+
+    def change_data(self, items):
+        #self.emit(SIGNAL("LayoutAboutToBeChanged()"))
+        self.items = items
+        #self.emit(SIGNAL("LayoutChanged()"))
+        self.select()
+
+        #self.dataChanged.emit(self.createIndex(0, 0),
+                              #self.createIndex(self.rowCount(0),
+                                               #self.columnCount(0)))
+        #self.emit(SIGNAL("DataChanged(QModelIndex,QModelIndex)"),
+                  #self.createIndex(0, 0),
+                  #self.createIndex(self.rowCount(0),
+                                   #self.columnCount(0)))
 
     def data(self, index, role):
         if not index.isValid():
@@ -82,7 +105,7 @@ class Model(QtCore.QAbstractTableModel):
             self.close()
 
 
-class EditGroupProperties(QtGui.QDialog):
+class EditGeometryProperties(QtGui.QDialog):
     def __init__(self, data, win_parent=None):
         """
         +------------------+
@@ -105,7 +128,7 @@ class EditGroupProperties(QtGui.QDialog):
         +-------------------------+
         """
         QtGui.QDialog.__init__(self, win_parent)
-        self.setWindowTitle('Edit Group Properties')
+        self.setWindowTitle('Edit Geometry Properties')
 
         #default
         self.win_parent = win_parent
@@ -117,8 +140,8 @@ class EditGroupProperties(QtGui.QDialog):
         nrows = len(keys)
         self.active_key = 'main'#keys[0]
 
-        self._use_old_table = False
         items = keys
+
         header_labels = ['Groups']
         table_model = Model(items, header_labels, self)
         view = CustomQTableView(self) #Call your custom QTableView here
@@ -136,10 +159,8 @@ class EditGroupProperties(QtGui.QDialog):
         show = actor_obj.is_visible
         self.representation = actor_obj.representation
 
-        table = self.table
-        #headers = [QtCore.QString('Groups')]
-
-        header = table.horizontalHeader()
+        # table
+        header = self.table.horizontalHeader()
         header.setStretchLastSection(True)
 
         self._default_is_apply = False
@@ -240,58 +261,91 @@ class EditGroupProperties(QtGui.QDialog):
         self.active_key = name
         self.name_edit.setText(name)
         obj = self.out_data[name]
-        line_width = obj.line_width
-        point_size = obj.point_size
-        bar_scale = obj.bar_scale
-        opacity = obj.opacity
-        representation = obj.representation
-        is_visible = obj.is_visible
+        if isinstance(obj, CoordProperties):
+            #line_width = 0
+            #point_size = 0
+            #bar_scale = 0.0
+            opacity = 1.0
+            representation = 'coord'
+            is_visible = obj.is_visible
+        elif isinstance(obj, AltGeometry):
+            line_width = obj.line_width
+            point_size = obj.point_size
+            bar_scale = obj.bar_scale
+            opacity = obj.opacity
+            representation = obj.representation
+            is_visible = obj.is_visible
 
-        self.color_edit.setStyleSheet("QPushButton {"
-                                      "background-color: rgb(%s, %s, %s);" % tuple(obj.color) +
-                                      #"border:1px solid rgb(255, 170, 255); "
-                                      "}")
-        self.line_width_edit.setValue(line_width)
-        self.point_size_edit.setValue(point_size)
-        self.bar_scale_edit.setValue(bar_scale)
+            self.color_edit.setStyleSheet("QPushButton {"
+                                          "background-color: rgb(%s, %s, %s);" % tuple(obj.color) +
+                                          #"border:1px solid rgb(255, 170, 255); "
+                                          "}")
+            self.line_width_edit.setValue(line_width)
+            self.point_size_edit.setValue(point_size)
+            self.bar_scale_edit.setValue(bar_scale)
+        else:
+            raise NotImplementedError(obj)
 
         if self.representation != representation:
             self.representation = representation
 
-            if name == 'main':
-                self.color.setEnabled(False)
-                self.color_edit.setEnabled(False)
-                self.point_size.setEnabled(False)
-                self.point_size_edit.setEnabled(False)
-                self.line_width.setEnabled(True)
-                self.line_width_edit.setEnabled(True)
-                self.bar_scale.setEnabled(False)
-                self.bar_scale_edit.setEnabled(False)
+            if self.representation == 'coord':
+                self.color.setVisible(False)
+                self.color_edit.setVisible(False)
+                self.line_width.setVisible(False)
+                self.line_width_edit.setVisible(False)
+                self.point_size.setVisible(False)
+                self.point_size_edit.setVisible(False)
+                self.bar_scale.setVisible(False)
+                self.bar_scale_edit.setVisible(False)
+                self.opacity.setVisible(False)
+                self.opacity_edit.setVisible(False)
             else:
-                self.color.setEnabled(True)
-                self.color_edit.setEnabled(True)
+                self.color.setVisible(True)
+                self.color_edit.setVisible(True)
+                self.line_width.setVisible(True)
+                self.line_width_edit.setVisible(True)
+                self.point_size.setVisible(True)
+                self.point_size_edit.setVisible(True)
+                self.bar_scale.setVisible(True)
+                self.bar_scale_edit.setVisible(True)
+                self.opacity.setVisible(True)
+                self.opacity_edit.setVisible(True)
 
-                if self.representation in ['point', 'wire+point']:
-                    self.point_size.setEnabled(True)
-                    self.point_size_edit.setEnabled(True)
-                else:
+                if name == 'main':
+                    self.color.setEnabled(False)
+                    self.color_edit.setEnabled(False)
                     self.point_size.setEnabled(False)
                     self.point_size_edit.setEnabled(False)
-
-                if self.representation in ['wire', 'wire+point']:
                     self.line_width.setEnabled(True)
                     self.line_width_edit.setEnabled(True)
-                else:
-                    self.line_width.setEnabled(False)
-                    self.line_width_edit.setEnabled(False)
-
-                if bar_scale == 0.0:
                     self.bar_scale.setEnabled(False)
                     self.bar_scale_edit.setEnabled(False)
                 else:
-                    self.bar_scale.setEnabled(True)
-                    self.bar_scale_edit.setEnabled(True)
-                    #self.bar_scale_edit.setSingleStep(bar_scale / 10.)
+                    self.color.setEnabled(True)
+                    self.color_edit.setEnabled(True)
+
+                    if self.representation in ['point', 'wire+point']:
+                        self.point_size.setEnabled(True)
+                        self.point_size_edit.setEnabled(True)
+                    else:
+                        self.point_size.setEnabled(False)
+                        self.point_size_edit.setEnabled(False)
+
+                    if self.representation in ['wire', 'wire+point']:
+                        self.line_width.setEnabled(True)
+                        self.line_width_edit.setEnabled(True)
+                    else:
+                        self.line_width.setEnabled(False)
+                        self.line_width_edit.setEnabled(False)
+
+                    if bar_scale == 0.0:
+                        self.bar_scale.setEnabled(False)
+                        self.bar_scale_edit.setEnabled(False)
+                    else:
+                        self.bar_scale.setEnabled(True)
+                        self.bar_scale_edit.setEnabled(True)
+                        #self.bar_scale_edit.setSingleStep(bar_scale / 10.)
 
             #if self.representation in ['wire', 'surface']:
 

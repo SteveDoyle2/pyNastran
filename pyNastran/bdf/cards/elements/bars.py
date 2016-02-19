@@ -121,6 +121,14 @@ class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
         return mass
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
         self.nodes = model.Nodes(self.nodes, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
@@ -307,7 +315,7 @@ class CBAR(LineElement):
         main = data[0]
         flag = data[1][0]
         if flag in [0, 1]:
-            self.g0 = None
+            g0 = None
             x = array([data[1][1],
                        data[1][2],
                        data[1][3]], dtype='float64')
@@ -414,6 +422,14 @@ class CBAR(LineElement):
         return x, g0
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         #if self.g0:
         #    self.x = nodes[self.g0].get_position() - nodes[self.ga].get_position()
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
@@ -517,6 +533,10 @@ class CBAR(LineElement):
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)
 
+    def write_card_16(self, is_double=False):
+        card = self.repr_fields()
+        return self.comment + print_card_16(card)
+
 
 class CBEAM3(CBAR):
     """
@@ -580,6 +600,14 @@ class CBEAM3(CBAR):
         raise NotImplementedError(data)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
         self.ga = model.Node(self.ga, msg=msg)
         self.gb = model.Node(self.gb, msg=msg)
@@ -665,42 +693,51 @@ class CBEND(LineElement):
             else:
                 raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
-    def __init__(self):
+    def __init__(self, eid, pid, ga, gb, g0, x, geom, comment=''):
         LineElement.__init__(self)
-
-    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        self.eid = integer(card, 1, 'eid')
-        self.pid = integer_or_blank(card, 2, 'pid', self.eid)
-        self.ga = integer(card, 3, 'ga')
-        self.gb = integer(card, 4, 'gb')
+        self.eid = eid
+        self.pid = pid
+        self.ga = ga
+        self.gb = gb
+        self.g0 = g0
+        self.x = x
+        self.geom = geom
+        assert self.geom in [1, 2, 3, 4], 'geom is invalid geom=%r' % self.geom
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        eid = integer(card, 1, 'eid')
+        pid = integer_or_blank(card, 2, 'pid', eid)
+        ga = integer(card, 3, 'ga')
+        gb = integer(card, 4, 'gb')
         x1_g0 = integer_double_or_blank(card, 5, 'x1_g0', 0.0)
         if isinstance(x1_g0, integer_types):
-            self.g0 = x1_g0
-            self.x = None
+            g0 = x1_g0
+            x = None
         elif isinstance(x1_g0, float):
-            self.g0 = None
-            self.x = array([double_or_blank(card, 5, 'x1', 0.0),
-                            double_or_blank(card, 6, 'x2', 0.0),
-                            double_or_blank(card, 7, 'x3', 0.0)], dtype='float64')
-            if norm(self.x) == 0.0:
+            g0 = None
+            x = array([double_or_blank(card, 5, 'x1', 0.0),
+                       double_or_blank(card, 6, 'x2', 0.0),
+                       double_or_blank(card, 7, 'x3', 0.0)], dtype='float64')
+            if norm(x) == 0.0:
                 msg = 'G0 vector defining plane 1 is not defined.\n'
-                msg += 'G0 = %s\n' % self.g0
-                msg += 'X  = %s\n' % self.x
+                msg += 'G0 = %s\n' % g0
+                msg += 'X  = %s\n' % x
                 raise RuntimeError(msg)
         else:
             raise ValueError('invalid x1Go=%r on CBEND' % x1_g0)
-        self.geom = integer(card, 8, 'geom')
+        geom = integer(card, 8, 'geom')
 
         assert len(card) == 9, 'len(CBEND card) = %i' % len(card)
-        assert self.geom in [1, 2, 3, 4], 'geom is invalid geom=%r' % self.geom
+        return CBEND(eid, pid, ga, gb, g0, x, geom, comment=comment)
         self._validate_input()
 
-    def add_op2_data(self, data, comment=''):
-        if comment:
-            self._comment = comment
-        raise NotImplementedError(data)
+    #def add_op2_data(self, data, comment=''):
+        #if comment:
+            #self._comment = comment
+        #raise NotImplementedError(data)
 
     def _validate_input(self):
         if self.g0 in [self.ga, self.gb]:
@@ -745,6 +782,14 @@ class CBEND(LineElement):
         return self.raw_fields()
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
         self.nodes = model.Nodes(self.nodes, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)

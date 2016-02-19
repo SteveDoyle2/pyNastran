@@ -22,7 +22,7 @@ class ThermalLoadDefault(ThermalCard):
 
 
 class ThermalLoad(ThermalCard):
-    def __init__(self, card, data):
+    def __init__(self):
         pass
 
 class QVOL(ThermalLoad):
@@ -31,24 +31,31 @@ class QVOL(ThermalLoad):
     """
     type = 'QVOL'
 
-    def __init__(self, card, data=None, comment=''):
-        ThermalLoad.__init__(self, card, data)
+    def __init__(self, sid, qvol, control_point, elements, comment=''):
+        ThermalLoad.__init__(self)
         if comment:
             self._comment = comment
-        if card:
-            #: Load set identification number. (Integer > 0)
-            self.sid = integer(card, 1, 'sid')
+        #: Load set identification number. (Integer > 0)
+        self.sid = sid
+        self.qvol = qvol
+        self.control_point = control_point
+        self.elements = elements
 
-            self.qvol = double(card, 2, 'qvol')
-            self.control_point = integer_or_blank(card, 3, 'control_id', 0)
+    @classmethod
+    def add_card(self, card, comment=''):
+        sid = integer(card, 1, 'sid')
 
-            i = 1
-            eids = []
-            for ifield in range(4, len(card)):
-                eid = integer_or_string(card, ifield, 'eid_%i' % i)
-                eids.append(eid)
-                i += 1
-            self.elements = expand_thru_by(eids)
+        qvol = double(card, 2, 'qvol')
+        control_point = integer_or_blank(card, 3, 'control_id', 0)
+
+        i = 1
+        eids = []
+        for ifield in range(4, len(card)):
+            eid = integer_or_string(card, ifield, 'eid_%i' % i)
+            eids.append(eid)
+            i += 1
+        elements = expand_thru_by(eids)
+        return QVOL(sid, qvol, control_point, elements, comment=comment)
 
     def getLoads(self):
         self.deprecated('getLoads()', 'get_loads()', '0.8')
@@ -58,6 +65,14 @@ class QVOL(ThermalLoad):
         return [self]
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by QVOL sid=%s' % self.sid
         self.elements = model.Elements(self.elements, msg=msg)
         self.elements_ref = self.elements
@@ -106,7 +121,7 @@ class QBDY1(ThermalLoad):
     type = 'QBDY1'
 
     def __init__(self, card=None, data=None, comment=''):
-        ThermalLoad.__init__(self, card, data)
+        ThermalLoad.__init__(self)
         if comment:
             self._comment = comment
         if card:
@@ -139,6 +154,14 @@ class QBDY1(ThermalLoad):
         return [self]
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by QBDY1 sid=%s' % self.sid
         self.eids = model.Elements(self.eids, msg=msg)
         self.eids_ref = self.eids
@@ -190,7 +213,7 @@ class QBDY2(ThermalLoad):  # not tested
     type = 'QBDY2'
 
     def __init__(self, card=None, data=None, comment=''):
-        ThermalLoad.__init__(self, card, data)
+        ThermalLoad.__init__(self)
         if comment:
             self._comment = comment
         if card:
@@ -224,6 +247,14 @@ class QBDY2(ThermalLoad):  # not tested
         return [self]
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by QBDY2 sid=%s' % self.sid
         self.eid = model.Element(self.eid, msg=msg)
         self.eid_ref = self.eid
@@ -263,7 +294,7 @@ class QBDY3(ThermalLoad):
     type = 'QBDY3'
 
     def __init__(self, card=None, data=None, comment=''):
-        ThermalLoad.__init__(self, card, data)
+        ThermalLoad.__init__(self)
         if comment:
             self._comment = comment
         if card:
@@ -285,6 +316,14 @@ class QBDY3(ThermalLoad):
             self.eids = list(data[3:])
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by QBDY3 sid=%s' % self.sid
         for i, eid in enumerate(self.eids):
             self.eids[i] = model.Element(eid, msg=msg)
@@ -354,7 +393,7 @@ class QHBDY(ThermalLoad):
     }
 
     def __init__(self, card=None, data=None, comment=''):
-        ThermalLoad.__init__(self, card, data)
+        ThermalLoad.__init__(self)
         if comment:
             self._comment = comment
         if card:
@@ -431,7 +470,7 @@ class TEMP(ThermalLoad):
     type = 'TEMP'
 
     def __init__(self, card=None, data=None, comment=''):
-        ThermalLoad.__init__(self, card, data)
+        ThermalLoad.__init__(self)
         if comment:
             self._comment = comment
         if card:

@@ -5,11 +5,16 @@ def slice_to_iter(ids):
     """
     Simplifies possible slice-like inputs
 
-    :param ids:
+    Parameters
+    ----------
+    ids : list
         a list of values that will be iterated over and may be a slice
-    :returns ids2:
+
+    Returns
+    -------
+    ids2 : list/ndarray/range
         an iterable as list, ndarray, range
-    :returns int_flag:
+    int_flag : bool
         when integers are passed in, we can return a single object at the end,
         but need a flag to remember
 
@@ -56,8 +61,15 @@ def unique2d(a):
     Gets the unique pairs in a 2D vector where the pairs are defined:
     (column 0, column 1).
 
-    :param a:   (n,2) ndarray
-    :returns u: the unique values in a
+    Parameters
+    ----------
+    a : (n,2) ndarray
+        the input data
+
+    Returns
+    -------
+    u : (m,2)
+        the unique values in a
 
     .. note:: this is intended to be used to find unique rows of
               element-id/property-id or property-id/material-id pairs

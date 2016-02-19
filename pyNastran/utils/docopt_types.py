@@ -23,7 +23,7 @@ def docopt_types(doc, argv=None, help=True, version=None, options_first=False, t
     options_first : bool (default: False)
         Set to True to require options preceed positional arguments,
         i.e. to forbid options and positional arguments intermix.
-    types_default : dict (default:None)
+    type_defaults : dict (default:None)
         key : name of argument
         value : type, default
 
@@ -66,9 +66,9 @@ def docopt_types(doc, argv=None, help=True, version=None, options_first=False, t
 
     """
     data = docopt(doc, argv=None, help=True, version=None, options_first=False)
-    if types_defaults:
+    if type_defaults:
         data2 = data
-        for key, (type_func, default) in sorted(types_defaults.items()):
+        for key, (type_func, default) in sorted(type_defaults.items()):
             try:
                 value_in = data[key]
             except KeyError:

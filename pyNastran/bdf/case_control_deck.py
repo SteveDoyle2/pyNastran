@@ -112,14 +112,14 @@ class CaseControlDeck(object):
             STRESS(PLOT,SORT1,REAL)
             FORCE(PLOT,SORT1,REAL)
 
-        .. warning :: most case control types are not supported
+        .. warning:: most case control types are not supported
         """
         for isubcase, subcase in iteritems(model.subcases):
             # if isubcase == 0:
                 # continue
             subcase.suppress_output()
 
-    def has_parameter(self, isubcase, param_name):
+    def has_parameter(self, isubcase, *param_names):
         """
         Checks to see if a parameter (e.g. STRESS) is defined in a certain
         subcase ID.
@@ -128,7 +128,7 @@ class CaseControlDeck(object):
         :param param_name: the parameter name to look for
         """
         if self.has_subcase(isubcase):
-            return self.subcases[isubcase].has_parameter(param_name.upper())
+            return any(self.subcases[isubcase].has_parameter(*param_names))
 
     def get_subcase_parameter(self, isubcase, param_name):
         """
@@ -149,9 +149,15 @@ class CaseControlDeck(object):
         """
         Checks to see if a subcase exists.
 
-        :param isubcase: the subcase ID
-        :type isubcase: int
-        :returns val: does_subcase_exist (type = bool)
+        Parameters
+        ----------
+        isubcase : int
+            the subcase ID
+
+        Returns
+        -------
+        val : bool
+            does_subcase_exist (type = bool)
         """
         if isubcase in self.subcases:
             return True
@@ -662,7 +668,7 @@ class CaseControlDeck(object):
         :param model: BDF()
             the BDF object
 
-        .. todo :: not done...
+        .. todo:: not done...
         """
         analysis = model.rsolmap_toStr[model.sol]
         model.sol = 200
@@ -707,7 +713,12 @@ class CaseControlDeck(object):
 
     def cross_reference(self, model):
         """
-        Cross references the subcase objects
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
         """
         for isubcase, subcase in sorted(iteritems(self.subcases)):
             subcase.cross_reference(model)

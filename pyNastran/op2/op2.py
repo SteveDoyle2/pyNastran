@@ -154,7 +154,7 @@ def read_op2(op2_filename=None, combine=True,
     model : OP2()
         an OP2 object
 
-    .. todo :: creates the OP2 object without all the read methods
+    .. todo:: creates the OP2 object without all the read methods
 
     .. note :: this method will change in order to return an object that
                does not have so many methods
@@ -192,6 +192,8 @@ class OP2(OP2_Scalar):
          (.. seealso:: import logging)
         debug_file : str; default=None (No debug)
             sets the filename that will be written to
+        mode : str; default='msc'
+            {msc, nx}
         """
         self.encoding = 'utf-8'
         self.set_mode(mode)

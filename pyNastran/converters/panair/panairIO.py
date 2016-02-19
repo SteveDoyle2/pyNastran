@@ -9,7 +9,7 @@ from vtk import vtkQuad
 
 from pyNastran.converters.panair.panairGrid import PanairGrid
 from pyNastran.converters.panair.agps import AGPS
-from pyNastran.gui.gui_result import GuiResult
+from pyNastran.gui.gui_objects.gui_result import GuiResult
 
 
 class PanairIO(object):
@@ -23,8 +23,8 @@ class PanairIO(object):
                 'Panair (*agps)', self.load_panair_results)
         return data
 
-    def load_panair_geometry(self, panair_filename, dirname, plot=True):
-        self.nidMap = {}
+    def load_panair_geometry(self, panair_filename, dirname, name='main', plot=True):
+        self.nid_map = {}
 
         #key = self.case_keys[self.icase]
         #case = self.result_cases[key]
@@ -71,7 +71,7 @@ class PanairIO(object):
         mmax = amax(nodes, axis=0)
         mmin = amin(nodes, axis=0)
         dim_max = (mmax - mmin).max()
-        self.update_axes_length(dim_max)
+        self.create_global_axes(dim_max)
         for nid, node in enumerate(nodes):
             points.InsertPoint(nid, *node)
 

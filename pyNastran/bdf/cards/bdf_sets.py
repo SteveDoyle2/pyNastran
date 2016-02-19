@@ -121,6 +121,14 @@ class ABCQSet(Set):
             self.components.append(component)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by %s' % self.type
         self.IDs = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
         self.IDs_ref = self.IDs
@@ -178,6 +186,14 @@ class SuperABCQSet(Set):
             self.components.append(component)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by %s seid=%s' % (self.type, self.seid)
         self.IDs = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
         self.IDs_ref = self.IDs
@@ -305,6 +321,14 @@ class ABQSet1(Set):
         self.IDs = expand_thru(IDs)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by %s' % self.type
         self.IDs = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
         self.IDs_ref = self.IDs
@@ -367,6 +391,14 @@ class SuperABQSet1(Set):
         self.IDs = expand_thru(IDs)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by %s seid=%s' % (self.type, self.seid)
         self.IDs = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
         self.IDs_ref = self.IDs
@@ -452,6 +484,14 @@ class CSET1(Set):
         self.IDs = expand_thru(IDs)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by %s name=%s' % (self.type, self.name)
         self.IDs = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
         self.IDs_ref = self.IDs
@@ -559,6 +599,17 @@ class SET1(Set):
 
     def cross_reference(self, model, xref_type, allow_empty_nodes=False):
         """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        xref_type : str
+            {'Node'}
+        allow_empty_nodes : bool; default=False
+            do all nodes need to exist?
+
         SPLINEx, ACMODL, PANEL, AECOMP, XYOUTPUT
 
         - nodes
@@ -904,6 +955,14 @@ class USET(Set):
             self.IDs.append(ID)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by %s name=%s' % (self.type, self.name)
         self.IDs = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
         self.IDs_ref = self.IDs
@@ -965,6 +1024,14 @@ class USET1(ABQSet1):
         self.IDs = expand_thru(IDs)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by %s name=%s' % (self.type, self.name)
         self.IDs = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
         self.IDs_ref = self.IDs

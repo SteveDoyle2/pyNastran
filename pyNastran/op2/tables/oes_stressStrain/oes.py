@@ -43,8 +43,9 @@ from pyNastran.op2.tables.oes_stressStrain.complex.oes_shear import ComplexShear
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_solids import ComplexSolidStressArray, ComplexSolidStrainArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_springs import ComplexSpringStressArray, ComplexSpringStrainArray
 
-# TODO: vectorize 2
-from pyNastran.op2.tables.oes_stressStrain.oes_nonlinear import (RealNonlinearRodArray, HyperelasticQuad,
+# TODO: vectorize 1
+from pyNastran.op2.tables.oes_stressStrain.oes_nonlinear import (RealNonlinearRodArray,
+                                                                 HyperelasticQuad,
                                                                  RealNonlinearPlateArray)
 
 
@@ -2545,19 +2546,11 @@ class OES(OP2Common):
                 ntotal = 52  # 4*13
                 nelements = ndata // ntotal
 
-                if 0:
-                    if self.read_mode == 1:
-                        return ndata
-                    if self.is_stress():
-                        self.create_transient_object(slot, NonlinearQuad)
-                    else:
-                        self.create_transient_object(slot, NonlinearQuad)
-                else:
-                    obj_vector_real = RealNonlinearPlateArray
-                    auto_return, is_vectorized = self._create_oes_object4(
-                        nelements, result_name, slot, obj_vector_real)
-                    if auto_return:
-                        return nelements * self.num_wide * 4
+                obj_vector_real = RealNonlinearPlateArray
+                auto_return, is_vectorized = self._create_oes_object4(
+                    nelements, result_name, slot, obj_vector_real)
+                if auto_return:
+                    return nelements * self.num_wide * 4
 
                 obj = self.obj
                 if self.use_vector and is_vectorized:
@@ -2601,20 +2594,12 @@ class OES(OP2Common):
                 # TODO: vectorize
                 ntotal = 100  # 4*25
                 nelements = ndata // ntotal
-                if 0:
-                    if self.read_mode == 1:
-                        return ndata
-                    if self.is_stress():
-                        self.create_transient_object(slot, NonlinearQuad)
-                    else:
-                        self.create_transient_object(slot, NonlinearQuad)
-                else:
-                    obj_vector_real = RealNonlinearPlateArray
-                    auto_return, is_vectorized = self._create_oes_object4(
-                        nelements, result_name, slot, obj_vector_real)
-                    if auto_return:
-                        self._data_factor = 2
-                        return nelements * self.num_wide * 4
+                obj_vector_real = RealNonlinearPlateArray
+                auto_return, is_vectorized = self._create_oes_object4(
+                    nelements, result_name, slot, obj_vector_real)
+                if auto_return:
+                    self._data_factor = 2
+                    return nelements * self.num_wide * 4
 
                 obj = self.obj
                 is_vectorized = False
@@ -2753,10 +2738,11 @@ class OES(OP2Common):
                         if self.is_debug_file:
                             self.binary_debug.write('  eid=%i; layer=%i; C=[%s]\n' % (eid, layer, ', '.join(['%r' % di for di in out])))
 
-                        if eid != eid_old:  # originally initialized to None, the buffer doesnt reset it, so it is the old value
-                            obj.add_new_eid(etype, dt, eid, layer, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)
+                        if eid != eid_old:
+                            # originally initialized to None, the buffer doesnt reset it, so it is the old value
+                            obj.add_new_eid_sort1(etype, dt, eid, layer, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)
                         else:
-                            obj.add(dt, eid, layer, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)
+                            obj.add_sort1(dt, eid, layer, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)
                         eid_old = eid
                         n += 44
                     self.eid_old = eid_old
@@ -2876,21 +2862,18 @@ class OES(OP2Common):
                 # TODO: vectorize object
                 return ndata
 
-                if 0:
-                    if self.read_mode == 1:
-                        return ndata
-                    if self.is_stress():
-                        self.create_transient_object(self.ctriax_stress, ComplexTriaxStress)  # undefined
-                        raise NotImplementedError('ComplexTriaxStress')
-                    else:
-                        self.create_transient_object(self.ctriax_strain, ComplexTriaxStrain)  # undefined
-                        raise NotImplementedError('ComplexTriaxStrain')
+                if self.is_stress():
+                    raise NotImplementedError('ComplexTriaxStressArray')
+                    obj_vector_complex = ComplexTriaxStressArray
                 else:
-                    auto_return, is_vectorized = self._create_oes_object4(
-                        nelements, result_name, slot, obj_vector_real)
-                    if auto_return:
-                        self._data_factor = 4
-                        return nelements * self.num_wide * 4
+                    raise NotImplementedError('ComplexTriaxStrainArray')
+                    obj_vector_complex = ComplexTriaxStrainArray
+
+                auto_return, is_vectorized = self._create_oes_object4(
+                    nelements, result_name, slot, obj_vector_complex)
+                if auto_return:
+                    self._data_factor = 4
+                    return nelements * self.num_wide * 4
 
                 obj = self.obj
                 nnodes_all = 4
@@ -3177,7 +3160,7 @@ class OES(OP2Common):
 
                 if self.is_stress():
                     auto_return, is_vectorized = self._create_oes_object4(
-                        nelements, result_name, slot, ComplexBush1DStressArray) # undefined
+                        nelements, result_name, slot, ComplexCBush1DStressArray)
                 else:
                     raise NotImplementedError('self.cbush1d_stress_strain; complex strain')
 

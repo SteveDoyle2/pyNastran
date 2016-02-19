@@ -41,23 +41,23 @@ class PDAMP(DamperProperty):
         DamperProperty.__init__(self)
         if comment:
             self._comment = comment
+        # 3 PDAMP properties can be defined on 1 PDAMP card
+        #: Property ID
         self.pid = pid
+        # these are split into 2 separate cards
+        #: Force per unit velocity (Real)
         self.b = b
 
     @classmethod
-    def add_card(self, comment=''):
+    def add_card(cls, card, icard, comment=''):
         noffset = icard * 2
-        # 3 PDAMP properties can be defined on 1 PDAMP card
-        #: Property ID
-        pid = integer(card, 1 + nOffset, 'pid')
+        pid = integer(card, 1 + noffset, 'pid')
 
-        # these are split into 2 separate cards
-        #: Force per unit velocity (Real)
-        b = double(card, 2 + nOffset, 'b')
+        b = double(card, 2 + noffset, 'b')
         return PDAMP(pid, b, comment=comment)
 
     @classmethod
-    def add_card(self, data, comment=''):
+    def add_op2_data(cls, data, comment=''):
         pid = data[0]
         b = data[1]
         return PDAMP(pid, b, comment=comment)
@@ -109,7 +109,7 @@ class PDAMP5(DamperProperty):
         self.b = b
 
     @classmethod
-    def add_card(self, comment=''):
+    def add_card(cls, card, comment=''):
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')
         b = double(card, 3, 'b')
@@ -117,7 +117,7 @@ class PDAMP5(DamperProperty):
         return PDAMP5(pid, mid, b, comment=comment)
 
     @classmethod
-    def add_card(self, data, comment=''):
+    def add_op2_data(cls, data, comment=''):
         pid = data[0]
         mid = data[1]
         b = data[2]
@@ -130,6 +130,14 @@ class PDAMP5(DamperProperty):
         #assert isinstance(b, float), 'b=%r\n%s' % (b, str(self))
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         self.mid = model.Material(self.mid)
         self.mid_ref = self.mid
 
@@ -172,14 +180,15 @@ class PDAMPT(DamperProperty):
         #: damping force per-unit velocity versus frequency relationship
         self.tbid = tbid
 
-    def add_card(self, comment=''):
+    @classmethod
+    def add_card(cls, card, comment=''):
         pid = integer(card, 1, 'pid')
         tbid = integer_or_blank(card, 2, 'tbid', 0)
         assert len(card) <= 3, 'len(PDAMPT card) = %i' % len(card)
         return PDAMPT(pid, tbid, comment=comment)
 
     @classmethod
-    def add_card(self, data, comment=''):
+    def add_op2_data(cls, data, comment=''):
         pid = data[0]
         tbid = data[1]
         return PDAMPT(pid, tbid, comment=comment)
@@ -189,6 +198,14 @@ class PDAMPT(DamperProperty):
         assert isinstance(pid, int), 'pid=%r' % pid
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         self.tbid = model.Table(self.tbid)
         self.tbid_ref = self.tbid
 
@@ -232,14 +249,14 @@ class PVISC(DamperProperty):
         self.cr = cr
 
     @classmethod
-    def add_card(self, card, icard=0, comment=''):
+    def add_card(cls, card, icard=0, comment=''):
         pid = integer(card, 1 + 4 * icard, 'pid')
         ce = double(card, 2 + 4 * icard, 'ce')
         cr = double_or_blank(card, 3 + 4 * icard, 'cr', 0.)
         return PVISC(pid, ce, cr, comment=comment)
 
     @classmethod
-    def add_op2_data(self, data, comment=''):
+    def add_op2_data(cls, data, comment=''):
         pid = data[0]
         ce = data[1]
         cr = data[2]

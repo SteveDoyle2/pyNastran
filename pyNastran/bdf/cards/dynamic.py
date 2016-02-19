@@ -69,6 +69,14 @@ class DELAY(BaseCard):
         return self.nodes, self.components, self.delays
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ', which is required by DELAY sid=%s' % self.sid
         for i, nid in enumerate(self.nodes):
             self.nodes[i] = model.Node(self.node_id)
@@ -149,6 +157,14 @@ class DPHASE(BaseCard):
         self.delays += delay.delays
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ', which is required by DPHASE sid=%s' % self.sid
         for i, nid in enumerate(self.nodes):
             self.nodes[i] = model.Node(self.node_id)

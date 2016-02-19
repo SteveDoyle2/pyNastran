@@ -61,7 +61,11 @@ class BDFReplacer(BDF):
         is_list : bool; default=True
             changes card_lines from a list of lines to
             a list of fields
-        :returns card_object: the card object representation of card
+
+        Returns
+        -------
+        card_object : BDFCard()
+            the card object representation of card
 
         .. note:: this is a very useful method for interfacing with the code
         .. note:: the cardObject is not a card-type object...so not a GRID

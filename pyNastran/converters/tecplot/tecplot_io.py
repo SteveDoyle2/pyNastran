@@ -25,7 +25,7 @@ class TecplotIO(object):
     #def removeOldGeometry(self, filename):
         #self._remove_old_cart3d_geometry(filename)
 
-    def load_tecplot_geometry(self, tecplot_filename, dirname, plot=True):
+    def load_tecplot_geometry(self, tecplot_filename, dirname, name='main', plot=True):
         #key = self.case_keys[self.icase]
         #case = self.result_cases[key]
 
@@ -89,7 +89,7 @@ class TecplotIO(object):
         points.SetNumberOfPoints(nnodes)
         #self.gridResult.Allocate(self.nNodes, 1000)
         #vectorReselt.SetNumberOfComponents(3)
-        #self.nidMap = {}
+        #self.nid_map = {}
         #elem.SetNumberOfPoints(nNodes)
 
         #assert nodes is not None
@@ -98,7 +98,7 @@ class TecplotIO(object):
         mmax = amax(nodes, axis=0)
         mmin = amin(nodes, axis=0)
         dim_max = (mmax - mmin).max()
-        self.update_axes_length(dim_max)
+        self.create_global_axes(dim_max)
         for i in range(nnodes):
             points.InsertPoint(i, nodes[i, :])
 

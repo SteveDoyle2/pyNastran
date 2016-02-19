@@ -366,6 +366,7 @@ class LegendPropertiesWindow(QtGui.QDialog):
             format_value = '%i'
 
         if flag0 and flag1 and flag2 and flag3 and flag4:
+            assert isinstance(scale_value, float), scale_value
             self.out_data['name'] = name_value
             self.out_data['min'] = min_value
             self.out_data['max'] = max_value

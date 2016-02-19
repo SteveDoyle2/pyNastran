@@ -254,8 +254,9 @@ class CodeAsterConverter(BDF):
 
     def ca_material_field(self):
         """
-        @code
-        MtrlFld=AFFE_MATERIAU(MAILLAGE=MESH,
+        .. code-block:: ptyhon
+
+          MtrlFld=AFFE_MATERIAU(MAILLAGE=MESH,
                               AFFE=(_F(GROUP_MA=('P32','P33','P42','P43','P46','P47','P48','P49','P61','P62','P63','P64','P65','P74',
                                                  'P75',),
                                        MATER=M3,),
@@ -353,7 +354,7 @@ class CodeAsterConverter(BDF):
         for subcase_id, subcase in iteritems(self.subcases):
             if subcase_id == 0:
                 continue
-            if not subcase.has_parameter('MPC'):
+            if not 'MPC' in subcase:
                 continue
             mpc_id = subcase.get_parameter('MPC')[0]
 

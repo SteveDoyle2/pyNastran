@@ -41,7 +41,7 @@ class AECOMP(BaseCard):
     """
     +--------+-------+----------+-------+-------+-------+-------+-------+-------+
     |   1    |   2   |    3     |   4   |   5   |   6   |   7   |   8   |   9   |
-    +--------+-------+----------+-------+-------+-------+-------+-------+-------+
+    +========+=======+==========+=======+=======+=======+=======+=======+=======+
     | AECOMP | NAME  | LISTTYPE | LIST1 | LIST2 | LIST3 | LIST4 | LIST5 | LIST6 |
     +--------+-------+----------+-------+-------+-------+-------+-------+-------+
     |        | LIST7 |  -etc.-  |       |       |       |       |       |       |
@@ -76,6 +76,14 @@ class AECOMP(BaseCard):
             raise NotImplementedError(msg)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ', which is required by AECOMP name=%r' % self.name
         #return
         if self.list_type == 'SET1':
@@ -119,6 +127,8 @@ class AEFACT(BaseCard):
     Defines real numbers for aeroelastic analysis.
 
     +--------+-----+----+--------+-----+----+----+----+----+
+    |   1    |   2 |  3 |    4   |  5  |  6 |  7 | 8  |  9 |
+    +========+=====+====+========+=====+====+====+====+====+
     | AEFACT | SID | D1 | D2     | D3  | D4 | D5 | D6 | D7 |
     +--------+-----+----+--------+-----+----+----+----+----+
     |        | D8  | D9 | -etc.- |     |    |    |    |    |
@@ -176,6 +186,8 @@ class AELINK(BaseCard):
     .. math:: u^D + \Sigma_{i=1}^n C_i u_i^I = 0.0
 
     +--------+-------+-------+--------+----+-------+----+-------+----+
+    |   1    |   2   |   3   |   4    |  5 |   6   |  7 |   8   |  9 |
+    +========+=======+=======+========+====+=======+====+=======+====+
     | AELINK | ID    | LABLD | LABL1  | C1 | LABL2 | C2 | LABL3 | C3 |
     +--------+-------+-------+--------+----+-------+----+-------+----+
     |        | LABL4 | C4    | etc.   |    |       |    |       |    |
@@ -239,7 +251,9 @@ class AELIST(BaseCard):
     with the AESURF Bulk Data entry for static aeroelasticity.
 
     +---------+------+------+------+------+------+------+------+------+
-    |  AELIST |  SID | E1   | E2   | E3   | E4   | E5   | E6   | E7   |
+    |    1    |   2  |   3  |  4   |   5  |   6  |  7   |  8   |  9   |
+    +=========+======+======+======+======+======+======+======+======+
+    |  AELIST |  SID |  E1  |  E2  |  E3  |  E4  |  E5  |  E6  |  E7  |
     +---------+------+------+------+------+------+------+------+------+
     |         |  E8  | etc. |      |      |      |      |      |      |
     +---------+------+------+------+------+------+------+------+------+
@@ -310,6 +324,8 @@ class AEPARM(BaseCard):
     from AEDW, AEFORCE and AEPRESS input data.
 
     +--------+----+--------+-------+
+    |    1   | 2  |    3   |   4   |
+    +========+====+========+=======+
     | AEPARM | ID | LABEL  | UNITS |
     +--------+----+--------+-------+
     | AEPARM | 5  | THRUST | LBS   |
@@ -360,6 +376,8 @@ class AESTAT(BaseCard):
     aeroelasticity.
 
     +--------+------+--------+
+    |    1   |   2  |    3   |
+    +========+======+========+
     | AESTAT | ID   | LABEL  |
     +--------+------+--------+
     | AESTAT | 5001 | ANGLEA |
@@ -414,7 +432,9 @@ class AESURF(BaseCard):
     of the control surface can be specified using an AESURFS entry.
 
     +--------+--------+-------+-------+-------+--------+--------+--------+--------+
-    | AESURF |  ID    | LABEL | CID1  | ALID1 | CID2   | ALID2  | EFF    | LDW    |
+    |    1   |   2    |   3   |   4   |   5   |   6    |    7   |   8    |   9    |
+    +========+========+=======+=======+=======+========+========+========+========+
+    | AESURF |   ID   | LABEL | CID1  | ALID1 | CID2   | ALID2  |  EFF   |  LDW   |
     +--------+--------+-------+-------+-------+--------+--------+--------+--------+
     |        |  CREFC | CREFS | PLLIM | PULIM | HMLLIM | HMULIM | TQLLIM | TQULIM |
     +--------+--------+-------+-------+-------+--------+--------+--------+--------+
@@ -498,6 +518,14 @@ class AESURF(BaseCard):
         return self.alid2_ref.sid
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         self.cid1 = model.Coord(self.Cid1())
         self.cid1_ref = self.cid1
         if self.cid2 is not None:
@@ -560,6 +588,21 @@ class AESURF(BaseCard):
         return list_fields
 
     def write_card(self, size=8, is_double=False):
+        """
+        Writes the card with the specified width and precision
+
+        Parameters
+        ----------
+        size : int (default=8)
+            size of the field; {8, 16}
+        is_double : bool (default=False)
+            is this card double precision
+
+        Returns
+        -------
+        msg : str
+            the string representation of the card
+        """
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
@@ -575,7 +618,7 @@ class AESURFS(BaseCard):  # not integrated
 
     +---------+------+-------+---+-------+---+-------+
     |    1    |  2   |   3   | 4 |   5   | 6 |   7   |
-    +---------+------+-------+---+-------+---+-------+
+    +=========+======+=======+===+=======+===+=======+
     | AESURFS | ID   | LABEL |   | LIST1 |   | LIST2 |
     +---------+------+-------+---+-------+---+-------+
     | AESURFS | 6001 | ELEV  |   | 6002  |   | 6003  |
@@ -683,7 +726,7 @@ class AERO(Aero):
 
     +------+-------+----------+------+--------+-------+-------+
     | 1    | 2     | 3        | 4    | 5      | 6     | 7     |
-    +------+-------+----------+------+--------+-------+-------+
+    +======+=======+==========+======+========+=======+=======+
     | AERO | ACSID | VELOCITY | REFC | RHOREF | SYMXZ | SYMXY |
     +------+-------+----------+------+--------+-------+-------+
     | AERO | 3     | 1.3+4    | 100. |  1.-5  | 1     | -1    |
@@ -739,10 +782,10 @@ class AERO(Aero):
         """
         Gets the fields in their simplified form
 
-        :returns fields:
+        Returns
+        -------
+        fields : List[varies]
           the fields that define the card
-        :type fields:
-          LIST
         """
         symXZ = set_blank_if_default(self.symXZ, 0)
         symXY = set_blank_if_default(self.symXY, 0)
@@ -751,6 +794,21 @@ class AERO(Aero):
         return list_fields
 
     def write_card(self, size=8, is_double=False):
+        """
+        Writes the card with the specified width and precision
+
+        Parameters
+        ----------
+        size : int (default=8)
+            size of the field; {8, 16}
+        is_double : bool (default=False)
+            is this card double precision
+
+        Returns
+        -------
+        msg : str
+            the string representation of the card
+        """
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
@@ -761,7 +819,7 @@ class AEROS(Aero):
 
     +-------+-------+-------+------+------+-------+------+-------+
     | 1     | 2     | 3     | 4    | 5    | 6     | 7    |   8   |
-    +-------+-------+-------+------+------+-------+------+-------+
+    +=======+=======+=======+======+======+=======+======+=======+
     | AEROS | ACSID | RCSID | REFC | REFB | REFS  |SYMXZ | SYMXY |
     +-------+-------+-------+------+------+-------+------+-------+
 
@@ -805,10 +863,10 @@ class AEROS(Aero):
         """
         Gets the fields in their unmodified form
 
-        :returns fields:
-          the fields that define the card
-        :type fields:
-          LIST
+        Returns
+        -------
+        fields : list[varies]
+            the fields that define the card
         """
         list_fields = ['AEROS', self.acsid, self.rcsid, self.cRef,
                        self.bRef, self.Sref, self.symXZ, self.symXY]
@@ -818,10 +876,10 @@ class AEROS(Aero):
         """
         Gets the fields in their simplified form
 
-        :returns fields:
+        Returns
+        -------
+        fields : List[varies]
           the fields that define the card
-        :type fields:
-          LIST
         """
         symXZ = set_blank_if_default(self.symXZ, 0)
         symXY = set_blank_if_default(self.symXY, 0)
@@ -841,7 +899,7 @@ class CSSCHD(Aero):
 
     +--------+-----+-------+--------+-------+-------+
     |    1   |  2  |   3   |   4    |   5   |   6   |
-    +--------+-----+-------+--------+-------+-------+
+    +========+=====+=======+========+=======+=======+
     | CSSCHD | SlD | AESID | LALPHA | LMACH | LSCHD |
     +--------+-----+-------+--------+-------+-------+
     """
@@ -870,10 +928,12 @@ class CSSCHD(Aero):
 
     def cross_reference(self, model):
         """
-        Cross links the card
+        Cross links the card so referenced cards can be extracted directly
 
-        :param model:  the BDF object
-        :type model:   BDF()
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
         """
         msg = ' which is required by ASSCHD sid=%s' % self.sid
         self.aesid = model.AESurf(self.aesid, msg=msg)
@@ -920,10 +980,10 @@ class CSSCHD(Aero):
         """
         Gets the fields in their unmodified form
 
-        :returns fields:
-          the fields that define the card
-        :type fields:
-          LIST
+        Returns
+        -------
+        fields : list[varies]
+            the fields that define the card
         """
         list_fields = ['CSSCHD', self.sid, self.AESid(), self.LAlpha(),
                        self.LMach(), self.LSchd()]
@@ -942,7 +1002,7 @@ class CAERO1(BaseCard):
 
     +--------+-----+-----+----+-------+--------+--------+--------+------+
     |   1    |  2  |  3  | 4  |   5   |   6    |    7   |   8    |   9  |
-    +--------+-----+-----+----+-------+--------+--------+--------+------+
+    +========+=====+=====+====+=======+========+========+========+======+
     | CAERO1 | EID | PID | CP | NSPAN | NCHORD |  LSPAN | LCHORD | IGID |
     +--------+-----+-----+----+-------+--------+--------+--------+------+
     |        |  X1 | Y1  | Z1 | X12   | X4     | Y4     | Z4     | X43  |
@@ -1133,12 +1193,12 @@ class CAERO1(BaseCard):
 
     def cross_reference(self, model):
         """
-        Cross links the card
+        Cross links the card so referenced cards can be extracted directly
 
         Parameters
         ----------
-        model : BDF obj
-            The BDF object.
+        model : BDF()
+            the BDF object
         """
         msg = ' which is required by CAERO1 eid=%s' % self.eid
         self.pid = model.PAero(self.pid, msg=msg)
@@ -1488,12 +1548,12 @@ class CAERO2(BaseCard):
 
     def cross_reference(self, model):
         """
-        Cross links the card
+        Cross links the card so referenced cards can be extracted directly
 
         Parameters
         ----------
-        model : BDF obj
-            The BDF object.
+        model : BDF()
+            the BDF object
         """
         msg = ' which is required by CAERO2 eid=%s' % self.eid
         self.pid = model.PAero(self.pid, msg=msg)  # links to PAERO2
@@ -1588,12 +1648,12 @@ class CAERO3(BaseCard):
 
     def cross_reference(self, model):
         """
-        Cross links the card
+        Cross links the card so referenced cards can be extracted directly
 
         Parameters
         ----------
-        model : BDF obj
-            The BDF object.
+        model : BDF()
+            the BDF object
         """
         msg = ' which is required by CAERO3 eid=%s' % self.eid
         self.pid = model.PAero(self.pid, msg=msg)  # links to PAERO3
@@ -1695,12 +1755,12 @@ class CAERO4(BaseCard):
 
     def cross_reference(self, model):
         """
-        Cross links the card
+        Cross links the card so referenced cards can be extracted directly
 
         Parameters
         ----------
-        model : BDF obj
-            The BDF object.
+        model : BDF()
+            the BDF object
         """
         msg = ' which is required by CAERO4 eid=%s' % self.eid
 
@@ -1801,12 +1861,12 @@ class CAERO5(BaseCard):
 
     def cross_reference(self, model):
         """
-        Cross links the card
+        Cross links the card so referenced cards can be extracted directly
 
         Parameters
         ----------
-        model : BDF obj
-            The BDF object.
+        model : BDF()
+            the BDF object
         """
         msg = ' which is required by CAERO5 eid=%s' % self.eid
         self.pid = model.PAero(self.pid, msg=msg)
@@ -2030,6 +2090,14 @@ class PAERO5(BaseCard):
         return self.ltaus if isinstance(self.ltaus, integer_types) else self.ltaus_ref.aid
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         self.lxis = model.AEFACT(self.lxis_id)
         self.ltaus = model.AEFACT(self.ltaus_id)
 
@@ -2078,7 +2146,7 @@ class FLFACT(BaseCard):
     """
     +--------+-----+----+------+----+----+----+----+----+
     |   1    |  2  |  3 |   4  | 5  | 6  | 7  | 8  | 9  |
-    +--------+-----+----+------+----+----+----+----+----+
+    +========+=====+====+======+====+====+====+====+====+
     | FLFACT | SID | F1 | F2   | F3 | F4 | F5 | F6 | F7 |
     +--------+-----+----+------+----+----+----+----+----+
     |        | F8  | F9 | etc. |    |    |    |    |    |
@@ -2086,15 +2154,15 @@ class FLFACT(BaseCard):
 
     +--------+-----+----+------+-----+
     |   1    |  2  |  3 |   4  | 5   |
-    +--------+-----+----+------+-----+
-    | FLFACT | 97  | .3 |.7    | 3.5 |
+    +========+=====+====+======+=====+
+    | FLFACT | 97  | .3 |  .7  | 3.5 |
     +--------+-----+----+------+-----+
 
     # delta quantity approach
 
     +--------+-----+-------+------+-------+----+--------+
     |   1    |  2  |  3    |   4  |   5   | 6  |     7  |
-    +--------+-----+-------+------+-------+----+--------+
+    +========+=====+=======+======+=======+====+========+
     | FLFACT | SID | F1    | THRU | FNF   | NF | FMID   |
     +--------+-----+-------+------+-------+----+--------+
     | FLFACT | 201 | 0.200 | THRU | 0.100 | 11 | 0.1333 |
@@ -2137,10 +2205,10 @@ class FLFACT(BaseCard):
         """
         Gets the fields in their unmodified form
 
-        :returns fields:
-          the fields that define the card
-        :type fields:
-          LIST
+        Returns
+        -------
+        fields : list[varies]
+            the fields that define the card
         """
         list_fields = ['FLFACT', self.sid] + self.factors
         return list_fields
@@ -2156,7 +2224,7 @@ class FLUTTER(BaseCard):
 
     +---------+-----+--------+------+------+-------+-------+-------------+------+
     |    1    |  2  |   3    |  4   |  5   |   6   |   7   |      8      |  9   |
-    +---------+-----+--------+------+------+-------+-------+-------------+------+
+    +=========+=====+========+======+======+=======+=======+=============+======+
     | FLUTTER | SID | METHOD | DENS | MACH | RFREQ | IMETH | NVALUE/OMAX | EPS  |
     +---------+-----+--------+------+------+-------+-------+-------------+------+
     | FLUTTER | 19  | K      | 119  | 219  | 319   |     S | 5           | 1.-4 |
@@ -2252,10 +2320,12 @@ class FLUTTER(BaseCard):
 
     def cross_reference(self, model):
         """
-        Cross links the card
+        Cross links the card so referenced cards can be extracted directly
 
-        :param model:  the BDF object
-        :type model:   BDF()
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
         """
         msg = ' which is required by FLUTTER sid=%s' % self.sid
         self.density = model.FLFACT(self.density, msg=msg)
@@ -2310,10 +2380,10 @@ class FLUTTER(BaseCard):
         """
         Gets the fields in their unmodified form
 
-        :returns fields:
-          the fields that define the card
-        :type fields:
-          LIST
+        Returns
+        -------
+        fields : list[varies]
+            the fields that define the card
         """
         (imethod, nValue) = self._get_raw_nvalue_omax()
         list_fields = ['FLUTTER', self.sid, self.method, self.get_density(),
@@ -2338,7 +2408,7 @@ class GUST(BaseCard):
 
     +------+-----+-------+-----+-----+------+
     |   1  |  2  |   3   |  4  |  5  |  6   |
-    +------+-----+-------+-----+-----+------+
+    +======+=====+=======+=====+=====+======+
     | GUST | SID | DLOAD | WG  | X0  | V    |
     +------+-----+-------+-----+-----+------+
     | GUST | 133 | 61    | 1.0 | 0.  | 1.+4 |
@@ -2378,10 +2448,10 @@ class GUST(BaseCard):
         """
         Gets the fields in their unmodified form
 
-        :returns fields:
-          the fields that define the card
-        :type fields:
-          LIST
+        Returns
+        -------
+        fields : list[varies]
+            the fields that define the card
         """
         list_fields = ['GUST', self.sid, self.dload, self.wg, self.x0, self.V]
         return list_fields
@@ -2398,7 +2468,7 @@ class MKAERO1(BaseCard):
 
     +---------+----+----+----+----+----+----+----+----+
     |    1    |  2 | 3  |  4 | 5  | 6  | 7  | 8  | 9  |
-    +---------+----+----+----+----+----+----+----+----+
+    +=========+====+====+====+====+====+====+====+====+
     | MKAERO1 | m1 | m2 | m3 | m4 | m5 | m6 | m7 | m8 |
     +---------+----+----+----+----+----+----+----+----+
     |         | k1 | k2 | k3 | k4 | k5 | k6 | k7 | k8 |
@@ -2440,10 +2510,10 @@ class MKAERO1(BaseCard):
         """
         Gets the fields in their unmodified form
 
-        :returns fields:
-          the fields that define the card
-        :type fields:
-          LIST
+        Returns
+        -------
+        fields : list[varies]
+            the fields that define the card
         """
         #list_fields = ['MKAERO1']
         #for (i, mach, rfreq) in zip(count(), self.machs, self.rFreqs):
@@ -2472,7 +2542,7 @@ class MKAERO2(BaseCard):
 
     +---------+----+----+----+----+----+----+----+----+
     |    1    | 2  | 3  | 4  | 5  | 6  | 7  | 8  | 9  |
-    +---------+----+----+----+----+----+----+----+----+
+    +=========+====+====+====+====+====+====+====+====+
     | MKAERO2 | m1 | k1 | m2 | k2 | m3 | k3 | m4 | k4 |
     +---------+----+----+----+----+----+----+----+----+
     """
@@ -2507,10 +2577,10 @@ class MKAERO2(BaseCard):
         """
         Gets the fields in their unmodified form
 
-        :returns fields:
-          the fields that define the card
-        :type fields:
-          LIST
+        Returns
+        -------
+        fields : list[varies]
+            the fields that define the card
         """
         list_fields = ['MKAERO2']
         for (i, mach, rfreq) in zip(count(), self.machs, self.rFreqs):
@@ -2632,10 +2702,10 @@ class PAERO1(BaseCard):
         """
         Gets the fields in their unmodified form
 
-        :returns fields:
-          the fields that define the card
-        :type fields:
-          LIST
+        Returns
+        -------
+        fields : list[varies]
+            the fields that define the card
         """
         list_fields = ['PAERO1', self.pid] + self.Bi
         return list_fields
@@ -2746,10 +2816,10 @@ class PAERO2(BaseCard):
         """
         Gets the fields in their unmodified form
 
-        :returns fields:
-          the fields that define the card
-        :type fields:
-          LIST
+        Returns
+        -------
+        fields : list[varies]
+            the fields that define the card
         """
         list_fields = ['PAERO2', self.pid, self.orient, self.width,
                        self.AR, self.lrsb, self.lrib, self.lth1, self.lth2]
@@ -2844,10 +2914,10 @@ class PAERO3(BaseCard):
         """
         Gets the fields in their unmodified form
 
-        :returns fields:
-          the fields that define the card
-        :type fields:
-          LIST
+        Returns
+        -------
+        fields : list[varies]
+            the fields that define the card
         """
         list_fields = ['PAERO3', self.pid, self.nbox, self.ncontrol_surfaces, None]
         for (x, y) in zip(self.x, self.y):
@@ -2936,10 +3006,12 @@ class SPLINE1(Spline):
 
     def cross_reference(self, model):
         """
-        Cross links the card
+        Cross links the card so referenced cards can be extracted directly
 
-        :param model:  the BDF object
-        :type model:   BDF()
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
         """
         msg = ' which is required by SPLINE1 eid=%s' % self.eid
         self.caero = model.CAero(self.CAero(), msg=msg)
@@ -2958,10 +3030,10 @@ class SPLINE1(Spline):
         """
         Gets the fields in their unmodified form
 
-        :returns fields:
-          the fields that define the card
-        :type fields:
-          LIST
+        Returns
+        -------
+        fields : list[varies]
+            the fields that define the card
         """
         list_fields = ['SPLINE1', self.eid, self.CAero(), self.box1, self.box2,
                        self.Set(), self.dz, self.method, self.usage, self.nelements,
@@ -3035,10 +3107,12 @@ class SPLINE2(Spline):
 
     def cross_reference(self, model):
         """
-        Cross links the card
+        Cross links the card so referenced cards can be extracted directly
 
-        :param model:  the BDF object
-        :type model:   BDF()
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
         """
         msg = ' which is required by SPLINE2 eid=%s' % self.eid
         self.cid = model.Coord(self.Cid(), msg=msg)
@@ -3079,10 +3153,10 @@ class SPLINE2(Spline):
         """
         Gets the fields in their unmodified form
 
-        :returns fields:
-          the fields that define the card
-        :type fields:
-          LIST
+        Returns
+        -------
+        fields : list[varies]
+            the fields that define the card
         """
         list_fields = ['SPLINE2', self.eid, self.CAero(), self.id1, self.id2,
                        self.Set(), self.dz, self.dtor, self.Cid(), self.dthx,
@@ -3241,10 +3315,12 @@ class SPLINE4(Spline):
 
     def cross_reference(self, model):
         """
-        Cross links the card
+        Cross links the card so referenced cards can be extracted directly
 
-        :param model:  the BDF object
-        :type model:   BDF()
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
         """
         msg = ' which is required by SPLINE4 eid=%s' % self.eid
         self.caero = model.CAero(self.CAero(), msg=msg)
@@ -3266,10 +3342,10 @@ class SPLINE4(Spline):
         """
         Gets the fields in their unmodified form
 
-        :returns fields:
-          the fields that define the card
-        :type fields:
-          LIST
+        Returns
+        -------
+        fields : list[varies]
+            the fields that define the card
         """
         list_fields = ['SPLINE4', self.eid, self.CAero(), self.AEList(), None,
                        self.Set(), self.dz, self.method, self.usage, self.nelements,
@@ -3374,10 +3450,12 @@ class SPLINE5(Spline):
 
     def cross_reference(self, model):
         """
-        Cross links the card
+        Cross links the card so referenced cards can be extracted directly
 
-        :param model:  the BDF object
-        :type model:   BDF()
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
         """
         msg = ' which is required by SPLINE5 eid=%s' % self.eid
         self.cid = model.Coord(self.Cid(), msg=msg)
@@ -3402,10 +3480,10 @@ class SPLINE5(Spline):
         """
         Gets the fields in their unmodified form
 
-        :returns fields:
-          the fields that define the card
-        :type fields:
-          LIST
+        Returns
+        -------
+        fields : list[varies]
+            the fields that define the card
         """
         list_fields = ['SPLINE5', self.eid, self.CAero(), self.AEList(), None,
                        self.Set(), self.dz, self.dtor, self.Cid(), self.thx,
@@ -3530,10 +3608,10 @@ class TRIM(BaseCard):
         """
         Gets the fields in their unmodified form
 
-        :returns fields:
-          the fields that define the card
-        :type fields:
-          LIST
+        Returns
+        -------
+        fields : list[varies]
+            the fields that define the card
         """
         list_fields = ['TRIM', self.sid, self.mach, self.q]
         for (i, label, ux) in zip(count(), self.labels, self.uxs):

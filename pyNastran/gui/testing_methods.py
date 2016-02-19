@@ -14,8 +14,10 @@ class GuiAttributes(object):
         """
         self.case_keys = {}
         self.res_widget = res_widget
+        self._show_flag = True
 
         self.is_testing = False
+        self.is_groups = False
         self._logo = None
         self._script_path = None
         self._icon_path = ''
@@ -32,7 +34,10 @@ class GuiAttributes(object):
         # window variables
         self._legend_window_shown = False
         self._clipping_window_shown = False
-        self._edit_group_properties_window_shown = False
+        self._edit_geometry_properties_window_shown = False
+        self._modify_groups_window_shown = False
+        self._label_window_shown = False
+        #self._label_window = None
         #-------------
         # inputs dict
         self.is_edges = False
@@ -80,13 +85,17 @@ class GuiAttributes(object):
         self.geometry_actors = OrderedDict()
         self.alt_grids = {} #additional grids
 
+        # coords
+        self.transform = {}
+        self.axes = {}
+
         #geom = Geom(color, line_thickness, etc.)
         #self.geometry_properties = {
         #    'name' : Geom(),
         #}
         self.geometry_properties = OrderedDict()
 
-        self.iText = 0
+        self.itext = 0
 
         self.pick_state = 'node/centroid' # if self.is_centroidal else 'nodal'
         self.label_actors = {}
@@ -104,6 +113,28 @@ class GuiAttributes(object):
 
         self.nvalues = 9
         self.dim_max = 1.0
+        self.nid_maps = {}
+        self.eid_maps = {}
+        self.name = 'main'
+
+        self.groups = {}
+        self.group_active = 'main'
+
+    @property
+    def nid_map(self):
+        return self.nid_maps[self.name]
+
+    @nid_map.setter
+    def nid_map(self, nid_map):
+        self.nid_maps[self.name] = nid_map
+
+    @property
+    def eid_map(self):
+        return self.eid_maps[self.name]
+
+    @eid_map.setter
+    def eid_map(self, eid_map):
+        self.eid_maps[self.name] = eid_map
 
     @property
     def displacement_scale_factor(self):
@@ -157,6 +188,15 @@ class GuiAttributes(object):
 
 
 
+
+class CoordProperties(object):
+    def __init__(self, label, Type, is_visible, scale):
+        self.label = label
+        #self.axes = axes
+        self.Type = Type
+        self.is_visible = is_visible
+        self.representation = 'coord'
+        self.scale = scale
 
 class GeometryProperty(object):
     def __init__(self):
@@ -252,6 +292,8 @@ class GUIMethods(GuiAttributes):
         pass
     def turn_text_off(self):
         pass
+    def create_global_axes(self, dim_max):
+        pass
     def update_axes_length(self, value):
         self.dim_max = value
     def passer(self):
@@ -295,6 +337,5 @@ class GUIMethods(GuiAttributes):
     #test.cycle_results = cycle_results
     #test.turn_text_on =  turn_text_on
     #test.turn_text_off = turn_text_off
-    #test.update_axes_length = update_axes_length
     #test.cycle_results_explicit = passer
 

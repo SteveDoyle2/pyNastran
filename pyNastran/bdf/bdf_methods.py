@@ -674,7 +674,7 @@ class BDFMethods(BDFAttributes):
 
         For just force:
 
-        .. code-block :: python
+        .. code-block:: python
 
           eids = []
           nids = [5]
@@ -1108,7 +1108,7 @@ class BDFMethods(BDFAttributes):
             msg = 'load_case=%s is invalid; ' % loadcase_id
             msg += 'load_cases = %s\n' % self.loads.keys()
             for subcase_id, subcase in iteritems(self.subcases):
-                if subcase.has_parameter('LOAD'):
+                if 'LOAD' in subcase:
                     load_id = subcase.get_parameter('LOAD')[0]
                     msg += '  SUBCASE %i; LOAD=%s\n' % (subcase_id, load_id)
                 else:
@@ -1791,6 +1791,8 @@ class BDFMethods(BDFAttributes):
         with open(skin_filename, 'w') as bdf_file:
             bdf_file.write('$ pyNastran: punch=True\n')
             for nid in sorted(nids_to_write):
+                if nid is None:
+                    continue
                 node = self.nodes[nid]
                 bdf_file.write(node.write_card(size=size, is_double=is_double))
 

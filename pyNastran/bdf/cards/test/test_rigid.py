@@ -12,8 +12,7 @@ class TestRigid(unittest.TestCase):
         ]
         card = bdf.process_card(lines)
         card = BDFCard(card)
-        rbe = RBE3()
-        rbe.add_card(card)
+        rbe = RBE3.add_card(card)
         fields = rbe.raw_fields()
         msg = print_card_8(fields).rstrip()
         lines_expected = [
@@ -36,8 +35,7 @@ class TestRigid(unittest.TestCase):
         ]
         card = bdf.process_card(lines)
         card = BDFCard(card)
-        rbe = RBE2()
-        rbe.add_card(card)
+        rbe = RBE2.add_card(card)
         fields = rbe.raw_fields()
         msg = print_card_8(fields).rstrip()
         #print(msg)
@@ -61,8 +59,7 @@ class TestRigid(unittest.TestCase):
         ]
         card = bdf.process_card(lines)
         card = BDFCard(card)
-        rbe = RBE2()
-        rbe.add_card(card)
+        rbe = RBE2.add_card(card)
         fields = rbe.raw_fields()
         msg = print_card_8(fields).rstrip()
         lines_expected = [
@@ -86,8 +83,7 @@ class TestRigid(unittest.TestCase):
         card = bdf.process_card(lines)
         #print(print_card_8(card))
         card = BDFCard(card)
-        rbe = RBE1()
-        rbe.add_card(card)
+        rbe = RBE1.add_card(card)
         fields = rbe.raw_fields()
         msg = print_card_8(fields).rstrip()
 
@@ -114,8 +110,7 @@ class TestRigid(unittest.TestCase):
         card = bdf.process_card(lines)
         #print(print_card_8(card))
         card = BDFCard(card)
-        rbe = RBE1()
-        rbe.add_card(card)
+        rbe = RBE1.add_card(card)
         fields = rbe.raw_fields()
         msg = print_card_8(fields).rstrip()
 
@@ -142,8 +137,7 @@ class TestRigid(unittest.TestCase):
         ]
         card = bdf.process_card(lines)
         card = BDFCard(card)
-        rbe = RBE1()
-        rbe.add_card(card)
+        rbe = RBE1.add_card(card)
         fields = rbe.raw_fields()
         msg = print_card_8(fields).rstrip()
 

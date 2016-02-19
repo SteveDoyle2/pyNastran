@@ -154,11 +154,6 @@ class RealCompositePlateArray(OES_Object):
                     raise ValueError(msg)
         return True
 
-    def add_new_eid(self, eType, dt, eid, layer, o11, o22, t12, t1z, t2z,
-                    angle, major, minor, ovm):
-        self.add_new_eid_sort1(eType, dt, eid, layer, o11, o22, t12, t1z, t2z,
-                               angle, major, minor, ovm)
-
     def add_new_eid_sort1(self, etype, dt, eid, layer, o11, o22, t12, t1z, t2z,
                           angle, major, minor, ovm):
         self._times[self.itime] = dt
@@ -167,16 +162,9 @@ class RealCompositePlateArray(OES_Object):
         self.itotal += 1
         self.ielement += 1
 
-    def add(self, dt, eid, layer, o11, o22, t12, t1z, t2z, angle,
-                 major, minor, ovm):
-        self.add_sort1(dt, eid, layer, o11, o22, t12, t1z, t2z, angle,
-                       major, minor, ovm)
-
     def add_sort1(self, dt, eid, layer, o11, o22, t12, t1z, t2z, angle,
                   major, minor, ovm):
         assert eid is not None
-        #if isinstance(nodeID, string_types):
-            #nodeID = 0
         self.element_layer[self.itotal, :] = [eid, layer]
         self.data[self.itime, self.itotal, :] = [o11, o22, t12, t1z, t2z, angle, major, minor, ovm]
         self.itotal += 1
@@ -333,7 +321,7 @@ class RealCompositePlateStressArray(RealCompositePlateArray, StressObject):
     def is_stress(self):
         return True
 
-    def isStrain(self):
+    def is_strain(self):
         return False
 
     def get_headers(self):
@@ -353,7 +341,7 @@ class RealCompositePlateStrainArray(RealCompositePlateArray, StrainObject):
     def is_stress(self):
         return False
 
-    def isStrain(self):
+    def is_strain(self):
         return True
 
     def get_headers(self):

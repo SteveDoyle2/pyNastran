@@ -253,8 +253,7 @@ class BDFAttributes(object):
         origin  = array([0., 0., 0.])
         zaxis = array([0., 0., 1.])
         xzplane = array([1., 0., 0.])
-        coord = CORD2R()
-        coord.add(cid=0, rid=0, origin=origin, zaxis=zaxis, xzplane=xzplane)
+        coord = CORD2R(cid=0, rid=0, origin=origin, zaxis=zaxis, xzplane=xzplane)
         self.coords = {0 : coord}
 
         # --------------------------- constraints ----------------------------

@@ -103,7 +103,7 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
     http://vtk.1045678.n5.nabble.com/Speed-up-cell-allocation-td5733208.html#a5733214
     """
     def __init__(self, inputs):
-        html_logging = inputs['console']
+        html_logging = True
         fmt_order = [
             # results
             'nastran', 'cart3d', 'panair', 'shabp', 'usm3d', 'openvsp', 'tecplot',
@@ -198,16 +198,8 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
             'w      - view model as a wireframe',
             'f      - set rotation center (zoom out when picking',
             '         to disable clipping)',
-            ]
-
-        about_vtk = []
-        if self.vtk_version[0] < 6:
-            about_vtk = [
-                'e      - view model edges',
-                'b      - change edge color from scalar/black',
-            ]
-
-        about = about + about_vtk + [
+            'e      - view model edges',
+            'b      - change edge color from scalar/black',
             '',
             'Reload Model:  using the same filename, reload the model',
         ]
@@ -251,9 +243,15 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
         settings = QtCore.QSettings()
         settings.setValue("main_WindowGeometry", self.saveGeometry())
         settings.setValue("mainWindowState", self.saveState())
-        settings.setValue("backgroundColor", self.background_col)
-        settings.setValue("textColor", self.text_col)
-        settings.setValue("labelColor", self.label_col)
+        settings.setValue("backgroundColor", self.background_color)
+        settings.setValue("textColor", self.text_color)
+        settings.setValue("labelColor", self.label_color)
+
+        #screen_shape = QtGui.QDesktopWidget().screenGeometry()
+        main_window = self.window()
+        width = main_window.frameGeometry().width()
+        height = main_window.frameGeometry().height()
+        settings.setValue('screen_shape', (width, height))
         QtGui.qApp.quit()
 
 

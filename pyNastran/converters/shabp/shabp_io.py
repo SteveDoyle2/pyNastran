@@ -20,8 +20,8 @@ class ShabpIO(object):
                 'Shabp (*.out)', self.load_shabp_results)
         return data
 
-    def load_shabp_geometry(self, shabpFilename, dirname, plot=True):
-        self.nidMap = {}
+    def load_shabp_geometry(self, shabpFilename, dirname, name='main', plot=True):
+        self.nid_map = {}
 
         #key = self.case_keys[self.icase]
         #case = self.result_cases[key]
@@ -68,7 +68,7 @@ class ShabpIO(object):
         mmax = amax(nodes, axis=0)
         mmin = amin(nodes, axis=0)
         dim_max = (mmax - mmin).max()
-        self.update_axes_length(dim_max)
+        self.create_global_axes(dim_max)
         for nid, node in enumerate(nodes):
             points.InsertPoint(nid, *node)
 

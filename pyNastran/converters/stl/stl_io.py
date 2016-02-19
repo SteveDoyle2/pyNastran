@@ -7,7 +7,7 @@ import vtk
 from vtk import vtkTriangle
 
 from pyNastran.converters.stl.stl import STL
-from pyNastran.gui.gui_result import GuiResult
+from pyNastran.gui.gui_objects.gui_result import GuiResult
 
 
 class STL_IO(object):
@@ -20,7 +20,7 @@ class STL_IO(object):
                 None, None)
         return data
 
-    def load_stl_geometry(self, stl_filename, dirname, plot=True):
+    def load_stl_geometry(self, stl_filename, dirname, name='main', plot=True):
         print("load_stl_geometry...")
         skip_reading = self.removeOldGeometry(stl_filename)
         if skip_reading:
@@ -48,7 +48,7 @@ class STL_IO(object):
         points.SetNumberOfPoints(self.nNodes)
         #self.gridResult.Allocate(self.nNodes, 1000)
         #vectorReselt.SetNumberOfComponents(3)
-        self.nidMap = {}
+        self.nid_map = {}
         #elem.SetNumberOfPoints(nNodes)
         if 0:
             fraction = 1. / self.nNodes  # so you can color the nodes by ID
@@ -70,7 +70,7 @@ class STL_IO(object):
         self.log.info('ymax=%s ymin=%s' % (ymax, ymin))
         self.log.info('zmax=%s zmin=%s' % (zmax, zmin))
         dim_max = max(xmax-xmin, ymax-ymin, zmax-zmin)
-        self.update_axes_length(dim_max)
+        self.create_global_axes(dim_max)
 
 
         nid = 0

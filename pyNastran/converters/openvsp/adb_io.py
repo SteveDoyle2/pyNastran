@@ -22,8 +22,8 @@ class ADB_IO(object):
         return data
 
     def _remove_old_adb_geometry(self, fileName):
-        self.eidMap = {}
-        self.nidMap = {}
+        self.eid_map = {}
+        self.nid_map = {}
         if fileName is None:
             #self.emptyResult = vtk.vtkFloatArray()
             #self.vectorResult = vtk.vtkFloatArray()
@@ -51,7 +51,7 @@ class ADB_IO(object):
         self.scalarBar.Modified()
         return skip_reading
 
-    def load_vsp_aero_geometry(self, adb_filename, dirname, plot=True):
+    def load_vsp_aero_geometry(self, adb_filename, dirname, name='main', plot=True):
         #key = self.case_keys[self.icase]
         #case = self.result_cases[key]
 
@@ -90,7 +90,7 @@ class ADB_IO(object):
         points.SetNumberOfPoints(self.nNodes)
         #self.gridResult.Allocate(self.nNodes, 1000)
         #vectorReselt.SetNumberOfComponents(3)
-        self.nidMap = {}
+        self.nid_map = {}
 
         assert nodes is not None
 
@@ -99,7 +99,7 @@ class ADB_IO(object):
         mmax = amax(nodes, axis=0)
         mmin = amin(nodes, axis=0)
         dim_max = (mmax - mmin).max()
-        self.update_axes_length(dim_max)
+        self.create_global_axes(dim_max)
 
         for i in range(nxyz_nodes):
             points.InsertPoint(nid, nodes[i, :])

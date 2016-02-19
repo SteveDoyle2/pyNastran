@@ -4,6 +4,8 @@ import numpy as np
 from numpy import zeros, unique, array_equal, empty
 from pyNastran.op2.result_objects.op2_objects import ScalarObject
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header, write_imag_floats_13e
+from pyNastran.op2.vector_utils import transform_force_from_local_to_global, transform_force_from_global_to_local
+
 try:
     import pandas as pd
 except ImportError:
@@ -239,6 +241,58 @@ class RealGridPointForcesArray(ScalarObject):
                     if i > 0:
                         raise ValueError(msg)
         return True
+
+    def extract_gpforcei(self, panel_nids, panel_eids, coord_in, coord_out,
+                         nid_cd, i_transform, beta_transforms, itime=0):
+        """
+        Parameters
+        ----------
+        panel_nids : (Nn, ) int ndarray
+            all the nodes to consider
+        panel_eids : (Ne, ) int ndarray
+            all the elements to consider
+        coord_in : CORD2R()
+            the input coordinate system
+        coord_out : CORD2R()
+            the output coordinate system
+        nid_cd : (M, 2) int ndarray
+            the (BDF.point_ids, cd) array
+        i_transform : dict[cd] = (Mi, ) intndarray
+            the mapping for nid_cd
+        beta_transforms : dict[cd] = (3, 3) float ndarray
+            the mapping for nid_cd
+        itime : int; default=0
+            the time to extract loads for
+
+        .. warning:: the function signature will change...
+        .. todo:: sum of moments about a point must have an rxF term to get the
+                   same value as Patran.
+        .. todo:: doesn't support transient/frequency/modal based results
+        """
+        panel_eids = asarray(panel_eids)
+        panel_nids = asarray(panel_nids)
+
+        # todo handle multiple values for itime
+        gpforce_nids = self.node_element[itime, :, 0]
+        gpforce_eids = self.node_element[itime, :, 1]
+        # TODO: remove 0s in gpforce_nids/gpforce_eids to handle transient results
+        #       be careful of the sum row
+
+        assert isinstance(panel_eids[0], int), type(panel_eids[0])
+        assert isinstance(panel_nids[0], int), type(panel_nids[0])
+        is_in = in1d(gpforce_nids, panel_nids, assume_unique=False)
+        is_in2 = in1d(gpforce_eids[is_in], panel_eids, assume_unique=False)
+        irange = arange(len(gpforce_nids), dtype='int32')[is_in][is_in2]
+        force_local = self.data[itime, irange, :]
+
+        # TODO: smash force_local from nelements per node to 1 line per node
+        force_global = transform_force_from_local_to_global(force_local, gpforce_nids, nid_cd,
+                                                            i_transform, beta_transforms)
+        force_in_global = force_global[:, :3]
+        total_force_global = force_in_global.sum(axis=0)
+
+        total_force_local = transform_force_from_global_to_local(total_force_global, coord_in, coord_out)
+        return total_force_global, total_force_local
 
     def add(self, dt, node_id, eid, ename, t1, t2, t3, r1, r2, r3):
         assert isinstance(node_id, int), node_id

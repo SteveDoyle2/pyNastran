@@ -133,10 +133,10 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
     .. warning:: I doubt SPOINTs/EPOINTs work correctly
     .. warning:: xref not fully implemented (assumes cid=0)
 
-    .. todo :: node_set stil does work on the all the nodes in the big
+    .. todo:: node_set stil does work on the all the nodes in the big
                kdtree loop, which is very inefficient
-    .. todo :: remove_collapsed_elements is not supported
-    .. todo :: avoid_collapsed_elements is not supported
+    .. todo:: remove_collapsed_elements is not supported
+    .. todo:: avoid_collapsed_elements is not supported
     """
     assert isinstance(tol, float), tol
     if node_set is not None:
@@ -496,8 +496,8 @@ def bdf_merge(bdf_filenames, bdf_filename_out=None, renumber=True, encoding=None
       properties: PSHELL, PCOMP, PSOLID, PMASS
       materials:  MAT1, MAT8
 
-    .. todo :: doesn't support SPOINTs/EPOINTs
-    .. warning :: still very preliminary
+    .. todo:: doesn't support SPOINTs/EPOINTs
+    .. warning:: still very preliminary
     """
     if not isinstance(bdf_filenames, (list, tuple)):
         raise TypeError('bdf_filenames is not a list/tuple...%s' % str(bdf_filenames))
@@ -616,8 +616,8 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
     is_double : bool; default=False
         the field precision to write
 
-    .. todo :: bdf_model option for bdf_filename hasn't been tested
-    .. todo :: add support for subsets (e.g. renumber only a subset of nodes/elements)
+    .. todo:: bdf_model option for bdf_filename hasn't been tested
+    .. todo:: add support for subsets (e.g. renumber only a subset of nodes/elements)
     ..warning :: spoints might be problematic...check
     ..warning :: still in development, but it usually brutally crashes if it's not supported
     ..warning :: be careful of unsupported cards
@@ -1205,7 +1205,7 @@ def _update_case_control(model, mapper):
                             #seti, values2, seti_key, param_type))
                         assert len(values2) > 0, values2
                         if isubcase in set_locations and key in set_locations[isubcase]:
-                            # or not global_subcase.has_parameter(key)
+                            # or not key in global_subcase
                             gset = subcase.get_parameter(seti)
                             lset = subcase.get_parameter(seti)
                             #print('gset', gset)
@@ -1218,7 +1218,7 @@ def _update_case_control(model, mapper):
                                 global_subcase.update_parameter_in_subcase(
                                     seti, values2, seti_key, param_type)
                             #subcase.update_parameter_in_subcase(seti, values2, seti_key, param_type)
-                        elif not global_subcase.has_parameter(key):
+                        elif not key not in global_subcase:
                             subcase.update_parameter_in_subcase(
                                 seti, values2, seti_key, param_type)
                         else:
@@ -1287,7 +1287,7 @@ def extract_surface_patches(bdf_filename, starting_eids, theta_tols=40.):
     groups : List[Set[int]]
         the list of element ids in each group
 
-    .. warning :: only supports CTRIA3 & CQUAD4
+    .. warning:: only supports CTRIA3 & CQUAD4
     """
     from numpy import zeros, float32, arccos, dot, degrees
 
@@ -1404,12 +1404,12 @@ def split_model_by_material_id(bdf_filename, bdf_filename_base, encoding=None, s
     is__double : bool; default=False
         should double precision be used
 
-    .. warning :: only considers elements with materials (so no CBUSH, but yes to CONROD)
-    .. warning :: PSHELL only considers mid1 (not mid2, mid3, mid4)
-    .. warning :: doesn't consider PCOMPs
-    .. warning :: doesn't consider SPCs/loads/etc.
+    .. warning:: only considers elements with materials (so no CBUSH, but yes to CONROD)
+    .. warning:: PSHELL only considers mid1 (not mid2, mid3, mid4)
+    .. warning:: doesn't consider PCOMPs
+    .. warning:: doesn't consider SPCs/loads/etc.
 
-    .. warning :: hasn't really been tested
+    .. warning:: hasn't really been tested
     """
     model = BDF()
     model.read_bdf(bdf_filename, xref=True, encoding=encoding)

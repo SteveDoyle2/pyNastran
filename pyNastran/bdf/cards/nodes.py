@@ -190,12 +190,12 @@ class XPoint(Node):
 
     def cross_reference(self, model):
         """
-        Cross links the card
+        Cross links the card so referenced cards can be extracted directly
 
-        :param model:
-          the BDF object
-        :type model:
-          BDF
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
         """
         pass
 
@@ -290,35 +290,37 @@ class XPoints(Node):
         """dummy method for EPOINTs/SPOINTs classes"""
         raise NotImplementedError('This method should be overwritten by the parent class')
 
-    def __init__(self):
+    def __init__(self, ids, comment=''):
         Node.__init__(self)
-
-    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
+        self.points = ids
 
+    @classmethod
+    def add_card(cls, card, comment=''):
         fields = []
         for i in range(1, len(card)):
             field = integer_or_string(card, i, 'ID%i' % i)
             fields.append(field)
-        self.points = set(expand_thru(fields))
+        points = set(expand_thru(fields))
+        return cls(points, comment=comment)
 
-    def add_op2_data(self, data, comment=''):
-        if comment:
-            self._comment = comment
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
         fields = data
         assert isinstance(data, list), data
         assert isinstance(data[0], int), data
-        self.points = set(expand_thru(fields))
+        points = set(expand_thru(fields))
+        return cls(points, comment=comment)
 
     def __len__(self):
         """
         Returns the number of degrees of freedom for the EPOINTs/SPOINTs class
 
-        :returns ndofs:
-          the number of degrees of freedom
-        :type ndofs:
-          int
+        Returns
+        -------
+        ndofs : int
+            the number of degrees of freedom
         """
         return len(self.points)
 
@@ -333,12 +335,12 @@ class XPoints(Node):
 
     def cross_reference(self, model):
         """
-        Cross links the card
+        Cross links the card so referenced cards can be extracted directly
 
-        :param model:
-          the BDF object
-        :type model:
-          BDF
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
         """
         pass
 
@@ -385,20 +387,18 @@ class SPOINTs(XPoints):
     """
     type = 'SPOINT'
 
-    def __init__(self):
+    def __init__(self, ids, comment=''):
         """
         Creates the SPOINTs card that contains many SPOINTs
 
         Parameters
         ----------
-        card : BDFCard()
-            a BDFCard object
-        data : List[int]
-            a list with the SPOINT fields defined in OP2 format
+        ids : List[int]
+            SPOINT ids
         comment : str
             a comment for the card
         """
-        XPoints.__init__(self)
+        XPoints.__init__(self, ids, comment=comment)
 
     def create_spointi(self):
         """
@@ -424,20 +424,18 @@ class EPOINTs(XPoints):
     """
     type = 'EPOINT'
 
-    def __init__(self):
+    def __init__(self, ids, comment=''):
         """
         Creates the EPOINTs card that contains many EPOINTs
 
         Parameters
         ----------
-        card : BDFCard()
-            a BDFCard object
-        data : List[int]
-            a list with the EPOINT fields defined in OP2 format
+        ids : List[int]
+            EPOINT ids
         comment : str
             a comment for the card
         """
-        XPoints.__init__(self)
+        XPoints.__init__(self, ids, comment=comment)
 
     def create_epointi(self):
         """
@@ -505,12 +503,12 @@ class GRDSET(Node):
 
     def cross_reference(self, model):
         """
-        Cross links the card
+        Cross links the card so referenced cards can be extracted directly
 
-        :param model:
-          the BDF object
-        :type model:
-          BDF
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
         """
         msg = ' which is required by the GRDSET'
         self.cp = model.Coord(self.cp, msg=msg)
@@ -529,8 +527,10 @@ class GRDSET(Node):
         """
         Gets the output coordinate system
 
-        :returns cd: the output coordinate system
-        :type cd:    int
+        Returns
+        -------
+        cd : int
+            the output coordinate system
         """
         if isinstance(self.cd, integer_types):
             return self.cd
@@ -541,8 +541,10 @@ class GRDSET(Node):
         """
         Gets the analysis coordinate system
 
-        :returns cp: the analysis coordinate system
-        :type cp:    int
+        Returns
+        -------
+        cp : int
+            the analysis coordinate system
         """
         if isinstance(self.cp, integer_types):
             return self.cp
@@ -553,7 +555,10 @@ class GRDSET(Node):
         """
         Gets the GRID-based SPC
 
-        :returns ps: the GRID-based SPC
+        Returns
+        -------
+        ps : str
+            the GRID-based SPC
         """
         return self.ps
 
@@ -561,8 +566,10 @@ class GRDSET(Node):
         """
         Gets the Superelement ID
 
-        :returns seid: the Superelement ID
-        :type seid:    int
+        Returns
+        -------
+        seid : int
+            the Superelement ID
         """
         if isinstance(self.seid, integer_types):
             return self.seid
@@ -685,8 +692,10 @@ class GRIDB(Node):
         """
         Verifies all methods for this object work
 
-        :param xref: has this model been cross referenced
-        :type xref:  bool
+        Returns
+        -------
+        xref : bool
+            has this model been cross referenced
         """
         pass
 
@@ -694,8 +703,10 @@ class GRIDB(Node):
         """
         Gets the output coordinate system
 
-        :returns cd: the output coordinate system
-        :type cd:    int
+        Returns
+        -------
+        cd : int
+            the output coordinate system
         """
         if isinstance(self.cd, integer_types):
             return self.cd
@@ -1077,7 +1088,7 @@ class GRID(Node):
 
     def cross_reference(self, model, grdset=None):
         """
-        Cross links the card
+        Cross links the card so referenced cards can be extracted directly
 
         Parameters
         ----------
@@ -1362,10 +1373,12 @@ class POINT(Node):
         """
         Updates the POINT location
 
-        :param xyz:  the location of the node.
-        :type xyz:   TYPE = NDARRAY.  SIZE=(3,)
-        :param cp:   the analysis coordinate system.  (default=0; global)
-        :type cp:    int
+        Parameters
+        ----------
+        xyz : (3,) float ndarray
+            the location of the node
+        cp : int; default=0 (global)
+            the analysis coordinate system
         """
         self.xyz = xyz
         msg = ' which is required by POINT nid=%s' % self.nid
@@ -1375,8 +1388,10 @@ class POINT(Node):
         """
         Gets the point in the global XYZ coordinate system.
 
-        :returns position: the position of the POINT in the globaly
-                           coordinate system
+        Returns
+        -------
+        position : (3,) float ndarray
+            the position of the POINT in the globaly coordinate system
         """
         p = self.cp.transform_node_to_global(self.xyz)
         return p
@@ -1386,13 +1401,17 @@ class POINT(Node):
         Gets the location of the POINT which started in some arbitrary
         system and returns it in the desired coordinate system
 
-        :param model: the BDF model object
-        :type model:  BDF()
-        :param cid:   the desired coordinate ID
-        :type cid:    int
-        :returns xyz: the position of the POINT in an arbitrary
-                      coordinate system
-        :type xyz:    TYPE = NDARRAY.  SIZE=(3,)
+        Parameters
+        ----------
+        model : BDF()
+            the BDF model object
+        cid : int
+            the desired coordinate ID
+
+        Returns
+        -------
+        xyz : (3,) ndarray
+            the position of the POINT in an arbitrary coordinate system
         """
         if cid == self.Cp(): # same coordinate system
             return self.xyz
@@ -1410,8 +1429,10 @@ class POINT(Node):
         """
         Gets the analysis coordinate system
 
-        :returns cp: the analysis coordinate system
-        :type cp:    int
+        Returns
+        -------
+        cp : int
+            the analysis coordinate system
         """
         if isinstance(self.cp, integer_types):
             return self.cp
@@ -1420,10 +1441,12 @@ class POINT(Node):
 
     def cross_reference(self, model):
         """
-        Cross links the card
+        Cross links the card so referenced cards can be extracted directly
 
-        :param model:  the BDF object
-        :type model:   BDF()
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
         """
         self.cp = model.Coord(self.cp)
         self.cp_ref = self.cp
@@ -1436,10 +1459,10 @@ class POINT(Node):
         """
         Gets the fields in their unmodified form
 
-        :returns fields:
-          the fields that define the card
-        :type fields:
-          LIST
+        Returns
+        -------
+        fields : list[varies]
+            the fields that define the card
         """
         list_fields = ['POINT', self.nid, self.Cp()] + list(self.xyz)
         return list_fields

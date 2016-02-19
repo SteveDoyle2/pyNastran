@@ -94,8 +94,7 @@ class PBUSH(BushingProperty):
                 break
             istart += 8
         return PBUSH(pid, k_fields, b_fields, ge_fields, rcv_fields,
-                     #comment=comment)
-                     )
+                     comment=comment)
 
     def add_op2_data(self, data, comment=''):
         if comment:
@@ -425,6 +424,21 @@ class PBUSH2D(BushingProperty):
             raise NotImplementedError()
 
     def write_card(self, size=8, is_double=False):
+        """
+        Writes the card with the specified width and precision
+
+        Parameters
+        ----------
+        size : int (default=8)
+            size of the field; {8, 16}
+        is_double : bool (default=False)
+            is this card double precision
+
+        Returns
+        -------
+        msg : str
+            the string representation of the card
+        """
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -439,13 +453,14 @@ class PBUSHT(BushingProperty):
         BushingProperty.__init__(self)
         if comment:
             self._comment = comment
+        self.pid = pid
         self.k_tables = k_tables
         self.b_tables = b_tables
         self.ge_tables = ge_tables
         self.kn_tables = kn_tables
 
     @classmethod
-    def add_card(cls, comment=''):
+    def add_card(cls, card, comment=''):
         k_tables = []
         b_tables = []
         ge_tables = []

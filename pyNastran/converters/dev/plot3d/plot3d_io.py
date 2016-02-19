@@ -20,9 +20,9 @@ class Plot3d_io(object):
                 None, None)
         return data
 
-    def load_plot3d_geometry(self, p3d_filename, dirname):
+    def load_plot3d_geometry(self, p3d_filename, dirname, name='main'):
         print("load_plot3d_geometry")
-        self.nidMap = {}
+        self.nid_map = {}
 
         #key = self.case_keys[self.icase]
         #case = self.result_cases[key]

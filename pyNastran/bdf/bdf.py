@@ -3,6 +3,8 @@
 """
 Main BDF class.  Defines:
   - BDF
+
+see https://docs.plm.automation.siemens.com/tdoc/nxnastran/10/help/#uid:index
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
@@ -130,11 +132,11 @@ from pyNastran.bdf.field_writer_16 import print_field_16
 
 
 
-def _read_bdf(bdf_filename=None,
+def read_bdf(bdf_filename=None,
               xref=True, punch=False, encoding=None,
               log=None, debug=True, mode='msc'):
     """
-    Creates the BDF object without all the read methods
+    Creates the BDF object
 
     Parameters
     ----------
@@ -178,63 +180,64 @@ def _read_bdf(bdf_filename=None,
 
     .. note :: this method will change in order to return an object that
                does not have so many methods
-    .. todo :: finish this
+    .. todo:: finish this
     """
     model = BDF(log=log, debug=debug)
     model.read_bdf(bdf_filename=bdf_filename, xref=xref, punch=punch, encoding=encoding)
 
-    ## TODO: remove all the extra methods
+    if 0:
+        ## TODO: remove all the extra methods
 
-    keys_to_suppress = [
-        'convectionProperties', 'creepMaterials', 'hyperelasticMaterials',
-        'rigidElements', 'thermalMaterials']
-    method_names = model.object_methods(keys_to_skip=keys_to_suppress)
+        keys_to_suppress = [
+            'convectionProperties', 'creepMaterials', 'hyperelasticMaterials',
+            'rigidElements', 'thermalMaterials']
+        method_names = model.object_methods(keys_to_skip=keys_to_suppress)
 
-    methods_to_remove = [
-        ''
-        'process_card', 'read_bdf', 'fill_dmigs', 'disable_cards', 'set_dynamic_syntax',
-        'create_card_object', 'create_card_object_fields', 'create_card_object_list',
+        methods_to_remove = [
+            ''
+            'process_card', 'read_bdf', 'fill_dmigs', 'disable_cards', 'set_dynamic_syntax',
+            'create_card_object', 'create_card_object_fields', 'create_card_object_list',
 
-        'add_AECOMP', 'add_AEFACT', 'add_AELINK', 'add_AELIST', 'add_AEPARM', 'add_AERO',
-        'add_AEROS', 'add_AESTAT', 'add_AESURF', 'add_ASET', 'add_BCRPARA', 'add_BCTADD',
-        'add_BCTPARA', 'add_BCTSET', 'add_BSET', 'add_BSURF', 'add_BSURFS', 'add_CAERO',
-        'add_CSET', 'add_CSSCHD', 'add_DAREA', 'add_DCONADD', 'add_DCONSTR', 'add_DDVAL',
-        'add_DELAY', 'add_DEQATN', 'add_DESVAR', 'add_DLINK', 'add_DMI', 'add_DMIG',
-        'add_DMIJ', 'add_DMIJI', 'add_DMIK', 'add_DPHASE', 'add_DRESP', 'add_DTABLE',
-        'add_DVMREL', 'add_DVPREL', 'add_EPOINT', 'add_FLFACT', 'add_FLUTTER', 'add_FREQ',
-        'add_GUST', 'add_LSEQ', 'add_MKAERO', 'add_MONPNT', 'add_NLPARM', 'add_NLPCI',
-        'add_PAERO', 'add_PARAM', 'add_PBUSHT', 'add_PDAMPT', 'add_PELAST', 'add_PHBDY',
-        'add_QSET', 'add_SEBSET', 'add_SECSET', 'add_SEQSET', 'add_SESET', 'add_SET',
-        'add_SEUSET', 'add_SPLINE', 'add_spoint', 'add_TEMPD', 'add_TF', 'add_TRIM',
-        'add_TSTEP', 'add_TSTEPNL', 'add_USET',
+            'add_AECOMP', 'add_AEFACT', 'add_AELINK', 'add_AELIST', 'add_AEPARM', 'add_AERO',
+            'add_AEROS', 'add_AESTAT', 'add_AESURF', 'add_ASET', 'add_BCRPARA', 'add_BCTADD',
+            'add_BCTPARA', 'add_BCTSET', 'add_BSET', 'add_BSURF', 'add_BSURFS', 'add_CAERO',
+            'add_CSET', 'add_CSSCHD', 'add_DAREA', 'add_DCONADD', 'add_DCONSTR', 'add_DDVAL',
+            'add_DELAY', 'add_DEQATN', 'add_DESVAR', 'add_DLINK', 'add_DMI', 'add_DMIG',
+            'add_DMIJ', 'add_DMIJI', 'add_DMIK', 'add_DPHASE', 'add_DRESP', 'add_DTABLE',
+            'add_DVMREL', 'add_DVPREL', 'add_EPOINT', 'add_FLFACT', 'add_FLUTTER', 'add_FREQ',
+            'add_GUST', 'add_LSEQ', 'add_MKAERO', 'add_MONPNT', 'add_NLPARM', 'add_NLPCI',
+            'add_PAERO', 'add_PARAM', 'add_PBUSHT', 'add_PDAMPT', 'add_PELAST', 'add_PHBDY',
+            'add_QSET', 'add_SEBSET', 'add_SECSET', 'add_SEQSET', 'add_SESET', 'add_SET',
+            'add_SEUSET', 'add_SPLINE', 'add_spoint', 'add_TEMPD', 'add_TF', 'add_TRIM',
+            'add_TSTEP', 'add_TSTEPNL', 'add_USET',
 
-        'add_card', 'add_card_fields', 'add_card_lines', 'add_cmethod', 'add_constraint',
-        'add_constraint_MPC', 'add_constraint_MPCADD',
-        'add_constraint_SPC', 'add_constraint_SPCADD',
-        'add_convection_property', 'add_coord', 'add_creep_material', 'add_damper', 'add_dload',
-        'add_dload_entry', 'add_element', 'add_hyperelastic_material', 'add_load', 'add_mass',
-        'add_material_dependence', 'add_method', 'add_node', 'add_plotel', 'add_property',
-        'add_property_mass', 'add_random_table', 'add_rigid_element', 'add_structural_material',
-        'add_suport', 'add_suport1', 'add_table', 'add_table_sdamping', 'add_thermal_BC',
-        'add_thermal_element', 'add_thermal_load', 'add_thermal_material',
+            'add_card', 'add_card_fields', 'add_card_lines', 'add_cmethod', 'add_constraint',
+            'add_constraint_MPC', 'add_constraint_MPCADD',
+            'add_constraint_SPC', 'add_constraint_SPCADD',
+            'add_convection_property', 'add_coord', 'add_creep_material', 'add_damper', 'add_dload',
+            'add_dload_entry', 'add_element', 'add_hyperelastic_material', 'add_load', 'add_mass',
+            'add_material_dependence', 'add_method', 'add_node', 'add_plotel', 'add_property',
+            'add_property_mass', 'add_random_table', 'add_rigid_element', 'add_structural_material',
+            'add_suport', 'add_suport1', 'add_table', 'add_table_sdamping', 'add_thermal_BC',
+            'add_thermal_element', 'add_thermal_load', 'add_thermal_material',
 
-        'set_as_msc',
-        'set_as_nx',
+            'set_as_msc',
+            'set_as_nx',
 
-        'pop_parse_errors',
-        #'pop_xref_errors',
-        'set_error_storage',
-        'is_reject',
-    ]
-    for method_name in method_names:
-        if method_name not in methods_to_remove + keys_to_suppress:
-            #print(method_name)
-            pass
-        else:
-            ## TODO: doesn't work...
-            #delattr(model, method_name)
-            pass
-    model.get_bdf_stats()
+            'pop_parse_errors',
+            #'pop_xref_errors',
+            'set_error_storage',
+            'is_reject',
+        ]
+        for method_name in method_names:
+            if method_name not in methods_to_remove + keys_to_suppress:
+                #print(method_name)
+                pass
+            else:
+                ## TODO: doesn't work...
+                #delattr(model, method_name)
+                pass
+        model.get_bdf_stats()
     return model
 
 
@@ -575,7 +578,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         #del self.log
         #del self.spcObject
         #del self.mpcObject
-        #del self._card_parser, self._card_parser_b
+        #del self._card_parser, self._card_parser_prepare
 
         #try:
             #del self.log
@@ -795,6 +798,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
             for (card_obj, comment) in card_comments:
                 card._add_column(card_obj, comment=comment)
+            card.finalize()
 
         self._dmig_temp = defaultdict(list)
 
@@ -1115,7 +1119,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
         .. code-block:: python
 
-            GRID, 1, %xVar, %yVar, %zVar
+          GRID, 1, %xVar, %yVar, %zVar
 
           >>> dict_of_vars = {'xVar': 1.0, 'yVar', 2.0, 'zVar':3.0}
           >>> bdf = BDF()
@@ -1284,12 +1288,14 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
     def _make_card_parser(self):
         """creates the card parser variables that are used by add_card"""
-        self._card_parser_new = {
+        self._card_parser = {
             'GRID' : (GRID, self.add_node),
+            'SPOINT' : (SPOINTs, self.add_spoint),
+            'EPOINT' : (EPOINTs, self.add_epoint),
 
-            #'CORD2R' : (CORD2R, self.add_coord),
-            #'CORD2C' : (CORD2C, self.add_coord),
-            #'CORD2S' : (CORD2S, self.add_coord),
+            'CORD2R' : (CORD2R, self.add_coord),
+            'CORD2C' : (CORD2C, self.add_coord),
+            'CORD2S' : (CORD2S, self.add_coord),
 
             'PLOTEL' : (PLOTEL, self.add_plotel),
 
@@ -1300,8 +1306,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'PTUBE' : (PTUBE, self.add_property),
 
             'CBAR' : (CBAR, self.add_element),
-            #'PBAR' : (PBAR, self.add_property),
-            #'PBARL' : (PBARL, self.add_property),
+            'PBAR' : (PBAR, self.add_property),
+            'PBARL' : (PBARL, self.add_property),
 
             'CBEAM' : (CBEAM, self.add_element),
             #'PBEAM' : (PBEAM, self.add_property),
@@ -1316,18 +1322,18 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
             'CTRIA3' : (CTRIA3, self.add_element),
             'CQUAD4' : (CQUAD4, self.add_element),
-            #'CQUAD' : (CQUAD, self.add_element),
-            #'CQUAD8' : (CQUAD8, self.add_element),
-            #'CQUADX' : (CQUADX, self.add_element),
-            #'CQUADR' : (CQUADR, self.add_element),
+            'CQUAD' : (CQUAD, self.add_element),
+            'CQUAD8' : (CQUAD8, self.add_element),
+            'CQUADX' : (CQUADX, self.add_element),
+            'CQUADR' : (CQUADR, self.add_element),
             'CTRIA6' : (CTRIA6, self.add_element),
             'CTRIAR' : (CTRIAR, self.add_element),
-            #'CTRIAX' : (CTRIAX, self.add_element),
-            #'CTRIAX6' : (CTRIAX6, self.add_element),
-            #'PCOMPG' : (PCOMPG, self.add_property),
-            #'PLPLANE' : (PLPLANE, self.add_property),
-            #'PCOMP' : (PCOMP, self.add_property),
+            'CTRIAX' : (CTRIAX, self.add_element),
+            'CTRIAX6' : (CTRIAX6, self.add_element),
+            'PCOMP' : (PCOMP, self.add_property),
+            'PCOMPG' : (PCOMPG, self.add_property),
             'PSHELL' : (PSHELL, self.add_property),
+            'PLPLANE' : (PLPLANE, self.add_property),
 
             'CSHEAR' : (CSHEAR, self.add_element),
             'PSHEAR' : (PSHEAR, self.add_property),
@@ -1349,140 +1355,16 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'CDAMP5' : (CDAMP5, self.add_damper),
             'PDAMP5' : (PDAMP5, self.add_property),
 
-            #'CFAST' : (CFAST, self.add_damper),
-            #'PFAST' : (PFAST, self.add_property),
-
-            #'CGAP' : (CGAP, self.add_element),
-            #'PGAP' : (PGAP, self.add_property),
-
-            'CBUSH' : (CBUSH, self.add_damper),
-            'PBUSH' : (PBUSH, self.add_property),
-            'CBUSH1D' : (CBUSH1D, self.add_damper),
-            'CBUSH2D' : (CBUSH2D, self.add_damper),
-
-            #'CRAC2D' : (CRAC2D, self.add_element),
-            #'PRAC2D' : (PRAC2D, self.add_property),
-
-            #'CRAC3D' : (CRAC3D, self.add_element),
-            #'PRAC3D' : (PRAC3D, self.add_property),
-
-            'PDAMPT' : (PDAMPT, self.add_PDAMPT),
-            'PBUSHT' : (PBUSHT, self.add_PBUSHT),
-
-            #'PCONEAX' : (PCONEAX, self.add_property),
-
-            #'RBAR' : (RBAR, self.add_rigid_element),
-            #'RBAR1' : (RBAR1, self.add_rigid_element),
-            #'RBE1' : (RBE1, self.add_rigid_element),
-            #'RBE2' : (RBE2, self.add_rigid_element),
-            #'RBE3' : (RBE3, self.add_rigid_element),
-            #'RROD' : (RROD, self.add_rigid_element),
-
-
-            ## there is no MAT6 or MAT7
-            'MAT1' : (MAT1, self.add_structural_material),
-            #'MAT2' : (MAT2, self.add_structural_material),
-            #'MAT3' : (MAT3, self.add_structural_material),
-            #'MAT8' : (MAT8, self.add_structural_material),
-            #'MAT9' : (MAT9, self.add_structural_material),
-            #'MAT10' : (MAT10, self.add_structural_material),
-            #'MAT11' : (MAT11, self.add_structural_material),
-            #'EQUIV' : (EQUIV, self.add_structural_material),
-
-            ##'MATHE' : (MATHE, self.add_hyperelastic_material),
-            #'MATHP' : (MATHP, self.add_hyperelastic_material),
-            'MAT4' : (MAT4, self.add_thermal_material),
-            'MAT5' : (MAT5, self.add_thermal_material),
-
-            ## hasnt been verified, links up to MAT1, MAT2, MAT9 w/ same MID
-            #'CREEP' : (CREEP, self.add_creep_material),
-
-            #'CONM1' : (CONM1, self.add_mass),
-            #'CONM2' : (CONM2, self.add_mass),
-            #'CMASS1' : (CMASS1, self.add_mass),
-            #'CMASS2' : (CMASS2, self.add_mass),
-            #'CMASS3' : (CMASS3, self.add_mass),
-            ## CMASS4 - added later because documentation is wrong
-
-            #'MPC' : (MPC, self.add_constraint_MPC),
-            #'MPCADD' : (MPCADD, self.add_constraint_MPC),
-
-            #'SPC' : (SPC, self.add_constraint_SPC),
-            #'SPC1' : (SPC1, self.add_constraint_SPC),
-            #'SPCAX' : (SPCAX, self.add_constraint_SPC),
-            #'SPCADD' : (SPCADD, self.add_constraint_SPC),
-            'GMSPC' : (GMSPC, self.add_constraint_SPC),
-
-            #'SUPORT' : (SUPORT, self.add_suport), # pseudo-constraint
-            #'SUPORT1' : (SUPORT1, self.add_suport1),  # pseudo-constraint
-
-            'FORCE' : (FORCE, self.add_load),
-            'FORCE1' : (FORCE1, self.add_load),
-            'FORCE2' : (FORCE2, self.add_load),
-            'MOMENT' : (MOMENT, self.add_load),
-            'MOMENT1' : (MOMENT1, self.add_load),
-            'MOMENT2' : (MOMENT2, self.add_load),
-
-            #'GRAV' : (GRAV, self.add_load),
-            #'ACCEL' : (ACCEL, self.add_load),
-            #'ACCEL1' : (ACCEL1, self.add_load),
-            #'LOAD' : (LOAD, self.add_load),
-            #'PLOAD' : (PLOAD, self.add_load),
-            #'PLOAD1' : (PLOAD1, self.add_load),
-            #'PLOAD2' : (PLOAD2, self.add_load),
-            #'PLOAD4' : (PLOAD4, self.add_load),
-            #'PLOADX1' : (PLOADX1, self.add_load),
-            #'RFORCE' : (RFORCE, self.add_load),
-            #'SLOAD' : (SLOAD, self.add_load),
-            #'RANDPS' : (RANDPS, self.add_load),
-            #'GMLOAD' : (GMLOAD, self.add_load),
-            #'SPCD' : (SPCD, self.add_load),  # enforced displacement
-            #'QVOL' : (QVOL, self.add_load),  # thermal
-
-            #'DLOAD' : (DLOAD, self.add_dload),
-            #'TLOAD1' : (TLOAD1, self.add_dload_entry),
-            #'TLOAD2' : (TLOAD2, self.add_dload_entry),
-            #'RLOAD1' : (RLOAD1, self.add_dload_entry),
-            #'RLOAD2' : (RLOAD2, self.add_dload_entry),
-
-            #'DOPTPRM' : (DOPTPRM, self._add_doptprm),
-            #'SPOINT' : (SPOINTs, self.add_spoint),
-            #'EPOINT' : (EPOINTs, self.add_epoint),
-            # BCTSET
-        }
-        self._card_parser_a = {
-            'CORD2R' : (CORD2R, self.add_coord),
-            'CORD2C' : (CORD2C, self.add_coord),
-            'CORD2S' : (CORD2S, self.add_coord),
-
-            'PBAR' : (PBAR, self.add_property),
-            'PBARL' : (PBARL, self.add_property),
-
-            'PBEAM' : (PBEAM, self.add_property),
-            'PBEAML' : (PBEAML, self.add_property),
-            'PBCOMP' : (PBCOMP, self.add_property),
-
-            'CBEAM3' : (CBEAM3, self.add_element),
-            #'PBEAM3' : (PBEAM3, self.add_property),
-
-            'CBEND' : (CBEND, self.add_element),
-            #'PBEND' : (PBEND, self.add_property),
-
-            'CQUAD' : (CQUAD, self.add_element),
-            'CQUAD8' : (CQUAD8, self.add_element),
-            'CQUADX' : (CQUADX, self.add_element),
-            'CQUADR' : (CQUADR, self.add_element),
-            'CTRIAX' : (CTRIAX, self.add_element),
-            'CTRIAX6' : (CTRIAX6, self.add_element),
-            'PCOMPG' : (PCOMPG, self.add_property),
-            'PLPLANE' : (PLPLANE, self.add_property),
-            'PCOMP' : (PCOMP, self.add_property),
-
             'CFAST' : (CFAST, self.add_damper),
             'PFAST' : (PFAST, self.add_property),
 
             'CGAP' : (CGAP, self.add_element),
             'PGAP' : (PGAP, self.add_property),
+
+            'CBUSH' : (CBUSH, self.add_damper),
+            'PBUSH' : (PBUSH, self.add_property),
+            'CBUSH1D' : (CBUSH1D, self.add_damper),
+            'CBUSH2D' : (CBUSH2D, self.add_damper),
 
             'CRAC2D' : (CRAC2D, self.add_element),
             'PRAC2D' : (PRAC2D, self.add_property),
@@ -1492,7 +1374,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
             'PDAMPT' : (PDAMPT, self.add_PDAMPT),
             'PBUSHT' : (PBUSHT, self.add_PBUSHT),
-            'PBUSH1D' : (PBUSH1D, self.add_property),
 
             'PCONEAX' : (PCONEAX, self.add_property),
 
@@ -1504,7 +1385,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'RROD' : (RROD, self.add_rigid_element),
 
 
-            # there is no MAT6 or MAT7
+            ## there is no MAT6 or MAT7
+            'MAT1' : (MAT1, self.add_structural_material),
             'MAT2' : (MAT2, self.add_structural_material),
             'MAT3' : (MAT3, self.add_structural_material),
             'MAT8' : (MAT8, self.add_structural_material),
@@ -1513,18 +1395,20 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'MAT11' : (MAT11, self.add_structural_material),
             'EQUIV' : (EQUIV, self.add_structural_material),
 
-            #'MATHE' : (MATHE, self.add_hyperelastic_material),
+            ##'MATHE' : (MATHE, self.add_hyperelastic_material),
             'MATHP' : (MATHP, self.add_hyperelastic_material),
+            'MAT4' : (MAT4, self.add_thermal_material),
+            'MAT5' : (MAT5, self.add_thermal_material),
 
-            # hasnt been verified, links up to MAT1, MAT2, MAT9 w/ same MID
+            ## hasnt been verified, links up to MAT1, MAT2, MAT9 w/ same MID
             'CREEP' : (CREEP, self.add_creep_material),
 
-            'CONM1' : (CONM1, self.add_mass),
+            #'CONM1' : (CONM1, self.add_mass),
             'CONM2' : (CONM2, self.add_mass),
             'CMASS1' : (CMASS1, self.add_mass),
             'CMASS2' : (CMASS2, self.add_mass),
             'CMASS3' : (CMASS3, self.add_mass),
-            # CMASS4 - added later because documentation is wrong
+            ## CMASS4 - added later because documentation is wrong
 
             'MPC' : (MPC, self.add_constraint_MPC),
             'MPCADD' : (MPCADD, self.add_constraint_MPC),
@@ -1533,9 +1417,17 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'SPC1' : (SPC1, self.add_constraint_SPC),
             'SPCAX' : (SPCAX, self.add_constraint_SPC),
             'SPCADD' : (SPCADD, self.add_constraint_SPC),
+            'GMSPC' : (GMSPC, self.add_constraint_SPC),
 
             'SUPORT' : (SUPORT, self.add_suport), # pseudo-constraint
             'SUPORT1' : (SUPORT1, self.add_suport1),  # pseudo-constraint
+
+            'FORCE' : (FORCE, self.add_load),
+            'FORCE1' : (FORCE1, self.add_load),
+            'FORCE2' : (FORCE2, self.add_load),
+            'MOMENT' : (MOMENT, self.add_load),
+            'MOMENT1' : (MOMENT1, self.add_load),
+            'MOMENT2' : (MOMENT2, self.add_load),
 
             'GRAV' : (GRAV, self.add_load),
             'ACCEL' : (ACCEL, self.add_load),
@@ -1560,11 +1452,29 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'RLOAD2' : (RLOAD2, self.add_dload_entry),
 
             'DOPTPRM' : (DOPTPRM, self._add_doptprm),
-            'SPOINT' : (SPOINTs, self.add_spoint),
-            'EPOINT' : (EPOINTs, self.add_epoint),
             # BCTSET
         }
-        self._card_parser = {
+        self._card_parser_a = {
+            'PBEAM' : (PBEAM, self.add_property),
+            'PBEAML' : (PBEAML, self.add_property),
+            'PBCOMP' : (PBCOMP, self.add_property),
+
+            'CBEAM3' : (CBEAM3, self.add_element),
+            #'PBEAM3' : (PBEAM3, self.add_property),
+            #'PBEND' : (PBEND, self.add_property),
+
+            'PBUSH1D' : (PBUSH1D, self.add_property),
+
+            # there is no MAT6 or MAT7
+            #'MATHE' : (MATHE, self.add_hyperelastic_material),
+
+            'CONM1' : (CONM1, self.add_mass),
+            # BCTSET
+
+            # not added to new
+            'LSEQ' : (LSEQ, self.add_LSEQ),
+        }
+        self._card_parser_b = {
             # CTETRA - added later
             # CHEXA  - added later
             # CPENTA - added later
@@ -1572,7 +1482,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'CIHEX1' : (CIHEX1, self.add_element),
             'PIHEX' : (PIHEX, self.add_property),
 
-            'LSEQ' : (LSEQ, self.add_LSEQ),
             'PHBDY' : (PHBDY, self.add_PHBDY),
             'AERO' : (AERO, self.add_AERO),
             'AEROS' : (AEROS, self.add_AEROS),
@@ -1733,7 +1642,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'BSURF' : (BSURF, self.add_BSURF),
             'BSURFS' : (BSURFS, self.add_BSURFS),
         }
-        self._card_parser_b = {
+        self._card_parser_prepare = {
             'CTETRA' : self._prepare_ctetra,
             'CPYRAM' : self._prepare_cpyram,
             'CPENTA' : self._prepare_cpenta,
@@ -1931,30 +1840,24 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
     def _prepare_cord1r(self, card, card_obj, comment=''):
         """adds a CORD1R"""
-        class_instance = CORD1R()
-        class_instance.add_card(card_obj, comment=comment)
+        class_instance = CORD1R.add_card(card_obj, comment=comment)
         self.add_coord(class_instance)
         if card_obj.field(5):
-            class_instance = CORD1R()
-            class_instance.add_card(card_obj, icard=1, comment=comment)
+            class_instance = CORD1R.add_card(card_obj, icard=1, comment=comment)
             self.add_coord(class_instance)
 
     def _prepare_cord1c(self, card, card_obj, comment=''):
         """adds a CORD1C"""
-        class_instance = CORD1C()
-        class_instance.add_card(card_obj, comment=comment)
+        class_instance = CORD1C.add_card(card_obj, comment=comment)
         if card_obj.field(5):
-            class_instance = CORD1C()
-            class_instance.add_card(card_obj, icard=1, comment=comment)
+            class_instance = CORD1C.add_card(card_obj, icard=1, comment=comment)
             self.add_coord(class_instance)
 
     def _prepare_cord1s(self, card, card_obj, comment=''):
         """adds a CORD1S"""
-        class_instance = CORD1S()
-        class_instance.add_card(card_obj, comment=comment)
+        class_instance = CORD1S.add_card(card_obj, comment=comment)
         if card_obj.field(5):
-            class_instance = CORD1S()
-            class_instance.add_card(card_obj, icard=1, comment=comment)
+            class_instance = CORD1S.add_card(card_obj, icard=1, comment=comment)
             self.add_coord(class_instance)
 
     def _prepare_ctetra(self, card, card_obj, comment=''):
@@ -2130,10 +2033,11 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             except:
                 print(print_card_16(card_obj).rstrip())
 
-        if card_name in self._card_parser_new:
-            card_class, add_card_function = self._card_parser_new[card_name]
+        if card_name in self._card_parser:
+            #print(card_name)
+            card_class, add_card_function = self._card_parser[card_name]
             try:
-                class_instance = card_class.add_card(card_obj, comment='')
+                class_instance = card_class.add_card(card_obj, comment=comment)
                 add_card_function(class_instance)
             except (SyntaxError, AssertionError, KeyError, ValueError) as exception:
                 #raise
@@ -2148,6 +2052,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                     self.pop_parse_errors()
 
         elif card_name in self._card_parser_a:
+            #print('*', card_name)
             card_class, add_card_function = self._card_parser_a[card_name]
             try:
                 class_instance = card_class()
@@ -2170,15 +2075,16 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                 if self._iparse_errors > self._nparse_errors:
                     self.pop_parse_errors()
 
-        elif card_name in self._card_parser:
-            card_class, add_card_function = self._card_parser[card_name]
+        elif card_name in self._card_parser_b:
+            card_class, add_card_function = self._card_parser_b[card_name]
+            #print('b', card_name)
             try:
                 class_instance = card_class(card_obj, comment=comment)
             except TypeError:
                 msg = '%s has a init problem' % card_name
                 print(msg)
                 #raise TypeError(msg)
-                #raise
+                raise
             except (SyntaxError, AssertionError, KeyError, ValueError) as exception:
                 # WARNING: Don't catch RuntimeErrors or a massive memory leak can occur
                 #tpl/cc451.bdf
@@ -2192,8 +2098,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                 return
             add_card_function(class_instance)
 
-        elif card_name in self._card_parser_b:
-            add_card_function = self._card_parser_b[card_name]
+        elif card_name in self._card_parser_prepare:
+            add_card_function = self._card_parser_prepare[card_name]
             try:
                 add_card_function(card, card_obj)
             except (SyntaxError, AssertionError, KeyError, ValueError) as exception:
@@ -2780,7 +2686,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         else:
             for card in cards:
                 card_name, comment, card_lines = card
-                if card_name == None:
+                if card_name is None:
                     msg = 'card_name = %r\n' % card_name
                     msg += 'card_lines = %s' % card_lines
                     raise RuntimeError(msg)
@@ -2844,6 +2750,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             the input filename
 
         ..code-block :: python
+
             $ pyNastran: version=NX
             $ pyNastran: encoding=latin-1
             $ pyNastran: punch=True

@@ -187,7 +187,7 @@ def integer_double_string_or_blank(card, ifield, fieldname, default=None):
 
 def fields(f, card, fieldname, i, j=None):
     """
-    .. todo :: improve fieldname
+    .. todo:: improve fieldname
     """
     assert isinstance(card, BDFCard), type(card)
     assert isinstance(fieldname, string_types), type(fieldname)
@@ -518,7 +518,11 @@ def integer_or_double(card, ifield, fieldname):
     fieldname : str
         name of field
 
-    :returns value:   the value with the proper type
+    Returns
+    -------
+    value : int/float
+        the value with the proper type
+
     :raises SyntaxError: if there's an invalid type
     """
     #assert isinstance(card, BDFCard), type(card)
@@ -796,7 +800,10 @@ def string(card, ifield, fieldname):
         msg = ('%s = %r (field #%s) on card must be an string with a character (not %s).\n'
                'card=%s' % (fieldname, value, ifield, dtype, card))
         raise SyntaxError(msg)
-
+#    if '=' in svalue or '*' in svalue:
+#        msg = ('%s = %r (field #%s) on card must be an string with a character (not replicated).\n'
+#               'card=%s' % (fieldname, value, ifield, card))
+#        raise SyntaxError(msg)
     if svalue:  # string
         return str(svalue.upper())
     dtype = _get_dtype(svalue)
@@ -836,6 +843,10 @@ def string_or_blank(card, ifield, fieldname, default=None):
         dtype = _get_dtype(svalue)
         raise SyntaxError('%s = %r (field #%s) on card must be an string or blank (not %s).\n'
                           'card=%s' % (fieldname, svalue, ifield, dtype, card))
+#    if '=' in svalue or '*' in svalue:
+#        msg = ('%s = %r (field #%s) on card must be an string with a character (not replicated).\n'
+#               'card=%s' % (fieldname, value, ifield, card))
+#        raise SyntaxError(msg)
 
     if svalue:  # string
         return str(svalue.upper())
@@ -863,10 +874,17 @@ def interpret_value(value_raw, card=''):
     """
     Converts a value from nastran format into python format.
 
-    :param raw_value: a string representation of a value
-    :param card:  ???
+    Parameters
+    ----------
+    raw_value : str
+        a string representation of a value
+    card : ???
+        ???
 
-    :returns value: the Nastran reprentation of the value
+    Returns
+    -------
+    value : varies
+        the Nastran reprentation of the value
     """
     if value_raw is None:
         return None

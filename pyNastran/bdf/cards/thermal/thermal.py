@@ -12,7 +12,7 @@ from pyNastran.bdf.bdfInterface.assign_type import (fields, integer, double,
     integer_or_blank, double_or_blank, integer_or_string, string, blank)
 
 class ThermalCard(BaseCard):
-    def __init__(self, card, data):
+    def __init__(self, card, data=None):
         pass
 
     def cross_reference(self, model):
@@ -31,8 +31,8 @@ class ThermalBC(ThermalCard):
 class ThermalElement(ThermalCard):
     pid = 0
 
-    def __init__(self, card, data):
-        ThermalCard.__init__(self, card, data)
+    def __init__(self, card):
+        ThermalCard.__init__(self, card)
 
     def nodeIDs(self):
         self.deprecated('self.nodeIDs()', 'self.node_ids','0.8')
@@ -209,50 +209,52 @@ class CHBDYG(ThermalElement):
     """
     type = 'CHBDYG'
 
-    def __init__(self, card=None, data=None, comment=''):
-        ThermalElement.__init__(self, card, data)
+    def __init__(self, card, comment=''):
+        ThermalElement.__init__(self, card)
         if comment:
             self._comment = comment
-        if card:
-            #: Surface element ID
-            self.eid = integer(card, 1, 'eid')
-            # no field 2
+        #: Surface element ID
+        self.eid = integer(card, 1, 'eid')
+        # no field 2
 
-            #: Surface type
-            self.Type = string(card, 3, 'Type')
-            assert self.Type in ['REV', 'AREA3', 'AREA4', 'AREA6', 'AREA8']
+        #: Surface type
+        self.Type = string(card, 3, 'Type')
+        assert self.Type in ['REV', 'AREA3', 'AREA4', 'AREA6', 'AREA8']
 
-            #: A VIEW entry identification number for the front face
-            self.iViewFront = integer_or_blank(card, 4, 'iViewFront', 0)
+        #: A VIEW entry identification number for the front face
+        self.iViewFront = integer_or_blank(card, 4, 'iViewFront', 0)
 
-            #: A VIEW entry identification number for the back face
-            self.iViewBack = integer_or_blank(card, 8, 'iViewBack', 0)
+        #: A VIEW entry identification number for the back face
+        self.iViewBack = integer_or_blank(card, 8, 'iViewBack', 0)
 
-            #: RADM identification number for front face of surface element
-            #: (Integer > 0)
-            self.radMidFront = integer_or_blank(card, 6, 'radMidFront', 0)
+        #: RADM identification number for front face of surface element
+        #: (Integer > 0)
+        self.radMidFront = integer_or_blank(card, 6, 'radMidFront', 0)
 
-            #: RADM identification number for back face of surface element
-            #: (Integer > 0)
-            self.radMidBack = integer_or_blank(card, 7, 'radMidBack', 0)
-            # no field 8
+        #: RADM identification number for back face of surface element
+        #: (Integer > 0)
+        self.radMidBack = integer_or_blank(card, 7, 'radMidBack', 0)
+        # no field 8
 
-            #: Grid point IDs of grids bounding the surface (Integer > 0)
-            self.nodes = []
-            n = 1
-            for i in range(9, len(card)):
-                grid = integer_or_blank(card, i, 'grid%i' % n)
-                if grid is not None:
-                    self.nodes.append(grid)
-            assert len(self.nodes) > 0, 'card=%s' % card
-        else:
-            self.eid = data[0]
-            self.Type = data[1]
-            self.iViewFront = data[2]
-            self.iViewBack = data[3]
-            self.radMidFront = data[4]
-            self.radMidBack = data[5]
-            self.nodes = data[6:14]
+        #: Grid point IDs of grids bounding the surface (Integer > 0)
+        self.nodes = []
+        n = 1
+        for i in range(9, len(card)):
+            grid = integer_or_blank(card, i, 'grid%i' % n)
+            if grid is not None:
+                self.nodes.append(grid)
+        assert len(self.nodes) > 0, 'card=%s' % card
+
+    def add_op2_data(self, data, comment=''):
+        if comment:
+            self._comment = comment
+        self.eid = data[0]
+        self.Type = data[1]
+        self.iViewFront = data[2]
+        self.iViewBack = data[3]
+        self.radMidFront = data[4]
+        self.radMidBack = data[5]
+        self.nodes = data[6:14]
 
     def _verify(self, xref=False):
         eid = self.Eid()
@@ -270,6 +272,14 @@ class CHBDYG(ThermalElement):
         return []
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by CHBDYG eid=%s' % self.eid
         self.nodes = model.Nodes(self.nodes, allow_empty_nodes=False, msg=msg)
         self.pid = model.Phbdy(self.pid, msg=msg)
@@ -405,6 +415,14 @@ class CHBDYP(ThermalElement):
         return _node_ids(self, nodes=self.nodes, allow_empty_nodes=True, msg='')
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by CHBDYP pid=%s' % self.pid
         self.pid = model.Phbdy(self.pid, msg=msg)
         self.nodes = model.Nodes(self.nodes, allow_empty_nodes=True, msg=msg)
@@ -523,7 +541,7 @@ class PCONV(ThermalProperty):
             raise NotImplementedError(data)
 
     #def cross_reference(self, model):
-    #    pass
+        #pass
 
     def uncross_reference(self):
         pass
@@ -597,7 +615,7 @@ class PCONVM(ThermalProperty):
             raise NotImplementedError(data)
 
     #def cross_reference(self, model):
-    #    pass
+        #pass
 
     def uncross_reference(self):
         pass
@@ -727,6 +745,14 @@ class CONV(ThermalBC):
             raise NotImplementedError(data)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by CONV eid=%s' % self.eid
         ## TODO: eid???
         self.eid_ref = model.Element(self.eid, msg=msg)
@@ -795,6 +821,14 @@ class CONVM(ThermalBC):
             raise NotImplementedError(data)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by CONVM eid=%s' % self.eid
         self.eid = model.CYBDY(self.eid, msg=msg)
         self.pconvm = model.PCONV(self.pconvmID, msg=msg)
@@ -856,7 +890,7 @@ class RADM(ThermalBC):
             assert 0. <= e <= 1.0
 
     #def cross_reference(self, model):
-    #    pass
+        #pass
 
     def repr_fields(self):
         list_fields = ['RADM', self.radmid, self.absorb] + self.emissivity
@@ -908,6 +942,14 @@ class RADBC(ThermalBC):
             raise ValueError(msg)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by RADBC pid=%s' % self.nodamb
         for i, eid in enumerate(self.eids):
             self.eids[i] = model.Element(eid, msg=msg)

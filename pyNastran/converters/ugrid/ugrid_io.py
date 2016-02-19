@@ -28,7 +28,7 @@ class UGRID_IO(object):
             None, None)
         return data
 
-    def load_ugrid_geometry(self, ugrid_filename, dirname, plot=True):
+    def load_ugrid_geometry(self, ugrid_filename, dirname, name='main', plot=True):
         #skip_reading = self.remove_old_openfoam_geometry(openfoam_filename)
         #if skip_reading:
         #    return
@@ -86,7 +86,7 @@ class UGRID_IO(object):
         mmax = amax(nodes, axis=0)
         mmin = amin(nodes, axis=0)
         dim_max = (mmax - mmin).max()
-        self.update_axes_length(dim_max)
+        self.create_global_axes(dim_max)
         self.log.info('max = %s' % mmax)
         self.log.info('min = %s' % mmin)
 
