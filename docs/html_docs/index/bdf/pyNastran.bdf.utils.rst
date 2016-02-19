@@ -12,7 +12,6 @@ This is the pyNastran.bdf.rst file.
     :members:
     :private-members:
     :undoc-members:
-    :show-inheritance:
 
 :mod:`write_path` Module
 ------------------------
@@ -23,6 +22,5 @@ This is the pyNastran.bdf.rst file.
     :members:
     :private-members:
     :undoc-members:
-    :show-inheritance:
 
 

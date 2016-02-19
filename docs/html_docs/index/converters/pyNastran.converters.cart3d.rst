@@ -29,7 +29,6 @@ cart3d Package
 .. automodule:: pyNastran.converters.cart3d.cart3d_to_stl
     :members:
     :undoc-members:
-    :show-inheritance:
 
 :mod:`cart3d_to_nastran` Module
 -------------------------------
@@ -39,7 +38,6 @@ cart3d Package
 .. automodule:: pyNastran.converters.cart3d.cart3d_to_nastran
     :members:
     :undoc-members:
-    :show-inheritance:
 
 :mod:`test_cart3d` Module
 -------------------------------

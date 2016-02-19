@@ -392,7 +392,7 @@ Nastran Static/Dynamic Aero solutions require custom cards that create
 difficult to view, difficult to validate geometry.  The pyNastranGUI
 aides in creating models.  The CAERO panels are seen when a model is loaded:
 
-.. image:: ../../pyNastran/gui/images/caero.png
+.. image:: ../../../pyNastran/gui/images/caero.png
 
 Additionally, by clicking the ``Toggle CAERO Subpanels`` button
 (the figure is somewhat outdated), the subpanels may be seen:

@@ -94,4 +94,5 @@ pyNastran/converters
     pyNastran.converters.shabp
     pyNastran.converters.stl
     pyNastran.converters.tetgen
+    pyNastran.converters.tecplot
     pyNastran.converters.usm3d
