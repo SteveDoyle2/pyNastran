@@ -11,6 +11,7 @@ from pyNastran.bdf.cards.base_card import (BaseCard, expand_thru_by,
 from pyNastran.bdf.bdfInterface.assign_type import (fields, integer, double,
     integer_or_blank, double_or_blank, integer_or_string, string, blank)
 
+
 class ThermalCard(BaseCard):
     def __init__(self, card, data=None):
         pass
