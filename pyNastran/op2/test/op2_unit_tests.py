@@ -6,6 +6,7 @@ from six import iteritems
 
 import pyNastran
 test_path = pyNastran.__path__[0]
+from numpy import dot, array_equal
 
 from pyNastran.bdf.bdf import BDF
 from pyNastran.op2.op2 import OP2, FatalError, read_op2
@@ -99,6 +100,184 @@ class TestOP2(Tester):
         folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'sol_101_elements'))
         op2_filename = os.path.join(folder, op2_filename)
         op2 = read_op2_geom(op2_filename)
+
+
+    def test_op2_solid_shell_bar_01_gpforce(self):
+        folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'sol_101_elements'))
+        bdf_filename = os.path.join(folder, 'static_solid_shell_bar.bdf')
+        op2_filename = os.path.join(folder, 'static_solid_shell_bar.op2')
+        op2 = read_op2_geom(op2_filename)
+
+        i_transform, beta_transforms = op2.get_displcement_index_transforms()
+        op2.transform_displacements_to_global(i_transform, beta_transforms)
+
+        gpforce = op2.grid_point_forces[1]
+
+        #model = BDF(debug=False)
+        #model.read_bdf(bdf_filename)
+        panel_eids = [1]
+        panel_nids = [1] # , 2, 3, 4
+        op2.cross_reference(xref_elements=False,
+                            xref_nodes_with_elements=False,
+                            xref_properties=False,
+                            xref_masses=False,
+                            xref_materials=False,
+                            xref_loads=False,
+                            xref_constraints=False,
+                            xref_aero=False,
+                            xref_sets=False,
+                            xref_optimization=False)
+        xyz_cid0 = op2.get_xyz_in_coord(cid=0)
+
+        coord_out = op2.coords[0]
+        #print(op2.get_bdf_stats())
+        nid_cd = np.array([[nid, node.Cd()] for nid, node in sorted(iteritems(op2.nodes))])
+        out = gpforce.extract_gpforcei(
+            panel_nids, panel_eids,
+            coord_out, op2.coords,
+            nid_cd, i_transform, beta_transforms,
+            xyz_cid0, itime=0)
+        total_force_global, total_moment_global, total_force_local, total_moment_local = out
+        print(total_force_global)
+        print(total_moment_global)
+
+    def test_op2_solid_shell_bar_01_gpforce2(self):
+        folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'sol_101_elements'))
+        bdf_filename = os.path.join(folder, 'static_solid_shell_bar.bdf')
+        op2_filename = os.path.join(folder, 'static_solid_shell_bar.op2')
+        op2 = read_op2_geom(op2_filename)
+
+        i_transform, beta_transforms = op2.get_displcement_index_transforms()
+        op2.transform_displacements_to_global(i_transform, beta_transforms)
+
+        gpforce = op2.grid_point_forces[1]
+
+        #model = BDF(debug=False)
+        #model.read_bdf(bdf_filename)
+        panel_eids = [1]
+        panel_nids = [1, 2, 3, 4]
+        op2.cross_reference(xref_elements=False,
+                            xref_nodes_with_elements=False,
+                            xref_properties=False,
+                            xref_masses=False,
+                            xref_materials=False,
+                            xref_loads=False,
+                            xref_constraints=False,
+                            xref_aero=False,
+                            xref_sets=False,
+                            xref_optimization=False)
+        xyz_cid0 = op2.get_xyz_in_coord(cid=0)
+
+        # we're going to flip x and y forces
+        card = ['CORD2C', 1, 0,
+                0., 0., 0., # origin
+                0., 0., 1., # zaxis
+                0., 1., 0., # x-axis
+                ]
+
+        op2.add_card(card, card[0])
+        coord_out = op2.coords[1]
+        #print(op2.get_bdf_stats())
+        nid_cd = np.array([[nid, node.Cd()] for nid, node in sorted(iteritems(op2.nodes))])
+
+        out = gpforce.extract_gpforcei(
+            panel_nids, panel_eids,
+            coord_out, op2.coords,
+            nid_cd, i_transform, beta_transforms,
+            xyz_cid0, itime=0)
+        total_force_global, total_moment_global, total_force_local, total_moment_local = out
+
+    def test_op2_solid_shell_bar_01_gpforce_xyz(self):
+        folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'sol_101_elements'))
+        bdf_filename = os.path.join(folder, 'solid_shell_bar_xyz.bdf')
+        op2_filename = os.path.join(folder, 'solid_shell_bar_xyz.op2')
+        op2 = read_op2_geom(op2_filename)
+
+        i_transform, beta_transforms = op2.get_displcement_index_transforms()
+        op2.transform_displacements_to_global(i_transform, beta_transforms)
+
+        gpforce = op2.grid_point_forces[1]
+
+        #model = BDF(debug=False)
+        #model.read_bdf(bdf_filename)
+        panel_eids = [1]
+        panel_nids = [2] # transformi
+        op2.cross_reference(xref_elements=False,
+                            xref_nodes_with_elements=False,
+                            xref_properties=False,
+                            xref_masses=False,
+                            xref_materials=False,
+                            xref_loads=False,
+                            xref_constraints=False,
+                            xref_aero=False,
+                            xref_sets=False,
+                            xref_optimization=False)
+        xyz_cid0 = op2.get_xyz_in_coord(cid=0)
+
+        coord_out = op2.coords[0]
+
+        nid_cd = np.array([[nid, node.Cd()] for nid, node in sorted(iteritems(op2.nodes))])
+
+        out = gpforce.extract_gpforcei(
+            panel_nids, panel_eids,
+            coord_out, op2.coords,
+            nid_cd, i_transform, beta_transforms,
+            xyz_cid0, itime=0)
+        total_force_global, total_moment_global, total_force_local, total_moment_local = out
+        print(total_force_global, np.linalg.norm(total_force_global))
+        print(total_moment_global)
+        #print(total_force_local)
+        #print(total_moment_local)
+
+    def test_op2_solid_shell_bar_01_gpforce_radial(self):
+        folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'sol_101_elements'))
+        bdf_filename = os.path.join(folder, 'static_solid_shell_bar_radial.bdf')
+        op2_filename = os.path.join(folder, 'static_solid_shell_bar_radial.op2')
+        op2 = read_op2_geom(op2_filename)
+
+        i_transform, beta_transforms = op2.get_displcement_index_transforms()
+        op2.transform_displacements_to_global(i_transform, beta_transforms)
+
+        gpforce = op2.grid_point_forces[1]
+
+        #model = BDF(debug=False)
+        #model.read_bdf(bdf_filename)
+        panel_eids = [1]
+        panel_nids = [1, 2, 3, 4]
+        op2.cross_reference(xref_elements=False,
+                            xref_nodes_with_elements=False,
+                            xref_properties=False,
+                            xref_masses=False,
+                            xref_materials=False,
+                            xref_loads=False,
+                            xref_constraints=False,
+                            xref_aero=False,
+                            xref_sets=False,
+                            xref_optimization=False)
+        xyz_cid0 = op2.get_xyz_in_coord(cid=0)
+
+        # we're going to flip x and y forces
+        card = ['CORD2C', 1, 0,
+                0., 0., 0., # origin
+                0., 0., 1., # zaxis
+                0., 1., 0., # x-axis
+                ]
+
+        op2.add_card(card, card[0])
+        coord_out = op2.coords[0]
+        #print(op2.get_bdf_stats())
+        nid_cd = np.array([[nid, node.Cd()] for nid, node in sorted(iteritems(op2.nodes))])
+
+        out = gpforce.extract_gpforcei(
+            panel_nids, panel_eids,
+            coord_out, op2.coords,
+            nid_cd, i_transform, beta_transforms,
+            xyz_cid0, itime=0)
+        total_force_global, total_moment_global, total_force_local, total_moment_local = out
+        print(total_force_global)
+        print(total_moment_global)
+        #print(total_force_local)
+        #print(total_moment_local)
 
     def test_op2_solid_shell_bar_01(self):
         op2_filename = os.path.join('static_solid_shell_bar.op2')
@@ -863,16 +1042,15 @@ class TestOP2(Tester):
             # the OP2 doesn't have a trailing zero marker
             pass
 
-        from numpy import dot, array, array_equal
         # M rows, Ncols
-        A = array([
+        A = np.array([
             [1., 0.],
             [3., 6.],
             [5., 0.],
             [0., 8.],
         ], dtype='float32')
         B = A
-        mydof = array([
+        mydof = np.array([
             -1.0, 1.0, 1.0, -1.0, 1.0,
             2.0, -1.0, 1.0, 3.0, -1.0, 1.0, 4.0, -1.0,
             1.0, 5.0, -1.0, 1.0, 6.0, -1.0, 2.0, 1.0,
@@ -881,7 +1059,7 @@ class TestOP2(Tester):
         ])
         BTA = dot(B.T, A)
         ATB = dot(A.T, B)
-        ATB_expected = array([
+        ATB_expected = np.array([
             [35., 18.],
             [18., 100.]
         ], dtype='float32')

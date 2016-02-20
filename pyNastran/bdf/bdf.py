@@ -22,6 +22,7 @@ if PY2:
 else:
     import pickle
 
+import numpy as np
 from numpy import unique, array, where, in1d
 
 from pyNastran.bdf.utils import _parse_pynastran_header
@@ -2000,6 +2001,35 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         card_obj, card = self.create_card_object(card_lines, card_name,
                                                  is_list=False, has_none=has_none)
         self._add_card_helper(card_obj, card_name, card_name, comment)
+
+    def get_xyz_in_coord(self, cid=0, dtype='float32'):
+        """
+        Gets the xyz points (including SPOINTS) in the desired coordinate frame
+
+        .. warning:: Only suppoprt cid=0
+        """
+        assert cid == 0, cid
+        nnodes = len(self.nodes)
+        nspoints = 0
+        spoints = None
+        if self.spoints:
+            spoints = self.spoints.points
+            nspoints = len(spoints)
+
+        xyz_cid0 = np.zeros((nnodes + nspoints, 3), dtype=dtype)
+        if nspoints:
+            nids = self.nodes.keys()
+            newpoints = nids + list(spoints)
+            newpoints.sort()
+            for i, nid in enumerate(newpoints):
+                if nid not in spoints:
+                    node = self.nodes[nid]
+                    xyz_cid0[i, :] = node.get_position()
+        else:
+            for i, (nid, node) in enumerate(sorted(iteritems(self.nodes))):
+                xyz = node.get_position()
+                xyz_cid0[i, :] = xyz
+        return xyz_cid0
 
     def _add_card_helper(self, card_obj, card, card_name, comment=''):
         """

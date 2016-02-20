@@ -1,5 +1,7 @@
 from __future__ import print_function
 from struct import calcsize
+
+import numpy as np
 from numpy import array, where, zeros, asarray, dot, arccos, sqrt, pi
 from numpy import cos, unique, cross, abs as npabs
 
@@ -346,6 +348,344 @@ def transform_force_from_global_to_local(force_in_global, coord_in, coord_out):
 
     #return Fxyz_local_2, Mxyz_local_2
     return Fxyz_local_2
+
+
+def transform_force_moment_from_global_to_local(force_in_global, moment_in_global,
+                                                coord_in, coord_out, coords,
+                                                xyz_cid0, offset):
+    """
+    Transforms force/moment from global to local.
+
+    Supports cylindrical/spherical coordinate systems.
+
+    Parameters
+    ----------
+    force_in_global : (N, 3) ndarray
+        forces in the global frame
+    moment_in_global : (N, 3) ndarray
+        moments in the global frame
+    coord_in : CORD()
+        the global coordinate system object
+    coord_out : CORD()
+        the desired local frame
+    xyz_cid0 : (n, 3) ndarray
+        the nodes in the global frame
+    offset : (3, ) ndarray
+        the offset vector
+
+    .. warning:: the function signature will change...
+    .. todo:: doesn't support origin shifts
+    .. todo:: sum of moments about a point must have an rxF term to get the
+               same value as Patran.
+    """
+    delta = xyz_cid0 - offset
+
+    F = force_in_global
+    M = zeros(3, dtype=force_in_global.dtype)
+    cp = coord_in
+    coord_to = coord_out  # this is really cd
+    r = cp.origin - coord_to.origin
+
+    #cp_cid = cp.cid
+    if cp.cid != 0:
+        assert cp.Type == 'R', 'Only rectangular coordinate systems are supported'
+        Fxyz_local_1 = cp.coord_to_xyz(F)
+        Mxyz_local_1 = cp.coord_to_xyz(M)
+        Fxyz_global = dot(Fxyz_local_1, cp.beta())
+        Fxyz_local_2 = dot(dot(Fxyz_local_1, cp.beta()), coord_to.beta().T)
+    else:
+        Fxyz_local_1 = F
+        Mxyz_local_1 = M
+        Fxyz_global = Fxyz_local_1
+        Fxyz_local_2 = dot(Fxyz_local_1, coord_to.beta().T)
+
+
+    # find the moment about the new origin due to the force
+    if npabs(r).max() > 0.:
+        Mxyz_global = cross(r, Fxyz_global)
+        dMxyz_local_2 = cross(r, Fxyz_local_2)
+        Mxyz_local_2 = Mxyz_local_1 + dMxyz_local_2
+    else:
+        Mxyz_local_2 = r
+
+    # rotate the delta moment into the local frame
+    M_local = coord_to.xyz_to_coord(Mxyz_local_2)
+
+    #delta = xyz_cid0 - offset
+    #moment_offset = np.cross(delta, Fxyz_global) # is this right?
+
+
+    #assert coord_to.Type == 'R', 'Only rectangular coordinate systems are supported'
+
+    #return Fxyz_local_2, Mxyz_local_2
+    return Fxyz_local_2, M_local # + moment_offset
+
+
+def transform_force_moment_from_local_to_global(force_in_local, moment_in_local,
+                                                coord_in, coord_out, coords,
+                                                nid_cd, i_transform, beta_transforms): # , xyz_cid0, offset
+    """
+    Transforms force/moment from global to local.
+
+    Supports cylindrical/spherical coordinate systems.
+
+    Parameters
+    ----------
+    force_in_local : (N, 3) ndarray
+        forces in the local frame
+    moment_in_local : (N, 3) ndarray
+        moments in the local frame
+    coord_in : CORD()
+        the global coordinate system object
+    coord_out : CORD()
+        the desired local frame
+    #xyz_cid0 : (n, 3) ndarray
+    #    the nodes in the global frame
+    #offset : (3, ) ndarray
+    #    the offset vector
+
+    .. warning:: the function signature will change...
+    .. todo:: sum of moments about a point must have an rxF term to get the
+               same value as Patran.
+    """
+    force_in_global = zeros(force_in_local.shape, dtype=force_in_local.dtype)
+    moment_in_global = zeros(moment_in_local.shape, dtype=moment_in_local.dtype)
+
+    #assert coord_out.Type == 'R', 'Only rectangular coordinate systems are supported'
+
+    nids = nid_cd[:, 0]
+    cds = nid_cd[:, 1]
+    ucds = unique(cds)
+    for cd in ucds:
+        if cd == 0:
+            i = where(cds == cd)[0]
+            nidsi = nids[i]
+            #force_in_global[:, :3] = force_in_local[i, :3]
+            #force_in_global[:, 3:] = force_in_local[i, 3:]
+        else:
+            raise NotImplementedError(ucds)
+    return force_in_global, moment_in_global
+
+if 0:
+    delta = xyz_cid0 - offset
+    moment_offset = np.cross(delta, Fxyz_global)
+
+    F = force_in_global
+    M = zeros(3, dtype=force_in_global.dtype)
+    cp = coord_in
+    coord_to = coord_out  # this is really cd
+    r = cp.origin - coord_to.origin
+
+    #cp_cid = cp.cid
+    if cp.cid != 0:
+        # local coord
+        assert cp.Type == 'R', 'Only rectangular coordinate systems are supported'
+        Fxyz_local_1 = cp.coord_to_xyz(F)
+        Mxyz_local_1 = cp.coord_to_xyz(M)
+        Fxyz_global = dot(Fxyz_local_1, cp.beta())
+        Fxyz_local_2 = dot(dot(Fxyz_local_1, cp.beta()), coord_to.beta().T)
+    else:
+        # global coord
+        Fxyz_local_1 = F
+        Mxyz_local_1 = M
+        Fxyz_global = Fxyz_local_1
+        Fxyz_local_2 = dot(Fxyz_local_1, coord_to.beta().T)
+
+
+    # find the moment about the new origin due to the force
+    if npabs(r).max() > 0.:
+        Mxyz_global = cross(r, Fxyz_global)
+        dMxyz_local_2 = cross(r, Fxyz_local_2)
+        Mxyz_local_2 = Mxyz_local_1 + dMxyz_local_2
+    else:
+        Mxyz_local_2 = r
+
+
+    # rotate the delta moment into the local frame
+    M_local = coord_to.xyz_to_coord(Mxyz_local_2)
+
+    return Fxyz_local_2, Mxyz_local_2
+
+
+def transform_force_moment(force_in_local, moment_in_local,
+                           coord_out, coords,
+                           nid_cd, i_transform, beta_transforms,
+                           xyz_cid0, summation_point_cid0=None):
+    """
+    Transforms force/moment from global to local and returns all the forces.
+
+    Supports cylindrical/spherical coordinate systems.
+
+    Parameters
+    ----------
+    force : (N, 3) ndarray
+        forces in the local frame
+    moment : (N, 3) ndarray
+        moments in the local frame
+    coord_out : CORD()
+        the desired local frame
+    xyz_cid0 : (n, 3) ndarray
+        the nodes in the global frame
+    summation_point_cid0 : (3, ) ndarray
+        the summation point in the global frame
+
+    .. warning:: the function signature will change...
+    .. todo:: sum of moments about a point must have an rxF term to get the
+               same value as Patran.
+
+    Fglobal = Flocal @ T
+    Flocal = T.T @ Fglobal
+    Flocal2 = T2.T @ (Flocal1 @ T1)
+
+    """
+    force_out = zeros(force_in_local.shape, dtype=force_in_local.dtype)
+    moment_out = zeros(force_in_local.shape, dtype=force_in_local.dtype)
+
+    #assert coord_out.Type == 'R', 'Only rectangular coordinate systems are supported'
+
+    nids = nid_cd[:, 0]
+    cds = nid_cd[:, 1]
+    ucds = unique(cds)
+
+    coord_out_cid = coord_out.cid
+    coord_out_T = coord_out.beta()
+    #print(coord_out_T)
+
+    #if summation_point_cid0 is None:
+    summation_point_cid0 = np.array([0., 0., 0.])
+
+    for cd in ucds:
+        i = where(cds == cd)[0]
+        #nidsi = nids[i]
+        #summation_point_cid0 = np.array([10., 10., 10.])
+        analysis_coord = coords[cd]
+        #summation_point_cid0 = analysis_coord.origin
+        #print('summation_point =', summation_point_cid0)
+        print(analysis_coord)
+        cd_T = analysis_coord.beta()
+        #print(cd_T)
+
+        # rxF from local_in to global to local_out
+        force_in_locali = force_in_local[i, :]
+        print('force_in_locali =\n', force_in_locali)
+        moment_in_locali = moment_in_local[i, :]
+
+        #if 0:
+            #if analysis_coord.Type == 'R':
+                #pass
+            #elif analysis_coord.Type == 'C':
+                ##R = force_in_locali[:, 0]
+                ##theta = force_in_locali[:, 1]
+                #force_in_locali = analysis_coord.coord_to_xyz_array(force_in_locali)
+                #print(force_in_locali.shape)
+            #else:
+                #raise RuntimeError(analysis_coord)
+        #force_in_locali = analysis_coord.coord_to_xyz_array(force_in_locali)
+
+        force_in_globali = dot(force_in_locali, cd_T.T)
+        moment_in_globali = dot(moment_in_locali, cd_T.T)
+        force_outi = dot(coord_out_T, force_in_globali.T).T
+        moment_outi = dot(coord_out_T, moment_in_globali.T).T
+
+        # matrix multiplcation is NOT communitive
+        #transformi = dot(coord_out_T, cd_T.T)
+        #force_outi = dot(transformi, force_in_locali.T).T
+        print('force_in_globali =\n', force_in_globali)
+        print('force_outi =\n', force_outi)
+        print('moment_outi =\n', moment_outi)
+
+        force_out[i, :] = force_outi
+        moment_out[i, :] = moment_outi
+        if summation_point_cid0 is not None:
+            print('xyz =', xyz_cid0[i, :])
+            delta = xyz_cid0[i, :] - summation_point_cid0[np.newaxis, :]
+            #delta_minus_origin = delta - analysis_coord.origin
+            #delta_in_cid = dot(delta_minus_origin, cd_T.T)
+            rxf = cross(delta, force_in_globali)
+            rxf_in_cid = dot(coord_out_T, rxf.T).T
+            print('rxf =\n', rxf)
+            print('rxf_sum =', rxf.sum(axis=0), np.linalg.norm(rxf.sum(axis=0)))
+            print('rxf_in_cid =', rxf_in_cid.sum(axis=0), np.linalg.norm(rxf_in_cid.sum(axis=0)))
+            moment_out[i, :] += rxf_in_cid
+
+    print('end')
+    return -force_out, -moment_out
+
+def transform_force_moment_sum(force_in_local, moment_in_local,
+                               coord_out, coords,
+                               nid_cd, i_transform, beta_transforms,
+                               xyz_cid0, summation_point_cid0=None):
+    """
+    Transforms force/moment from global to local and returns a sum of forces/moments.
+
+    Supports cylindrical/spherical coordinate systems.
+
+    Parameters
+    ----------
+    force : (N, 3) ndarray
+        forces in the local frame
+    moment : (N, 3) ndarray
+        moments in the local frame
+    coord_out : CORD()
+        the desired local frame
+    xyz_cid0 : (n, 3) ndarray
+        the nodes in the global frame
+    summation_point_cid0 : (3, ) ndarray
+        the summation point in the global frame
+
+    .. warning:: the function signature will change...
+    .. todo:: sum of moments about a point must have an rxF term to get the
+               same value as Patran.
+
+    Fglobal = Flocal @ T
+    Flocal = T.T @ Fglobal
+    Flocal2 = T2.T @ (Flocal1 @ T1)
+
+    """
+    force_out = zeros(force_in_local.shape, dtype=force_in_local.dtype)
+    moment_out = zeros(force_in_local.shape, dtype=force_in_local.dtype)
+    force_sum = np.zeros(3)
+    moment_sum = np.zeros(3)
+    #assert coord_out.Type == 'R', 'Only rectangular coordinate systems are supported'
+
+    nids = nid_cd[:, 0]
+    cds = nid_cd[:, 1]
+    ucds = unique(cds)
+
+    coord_out_cid = coord_out.cid
+    coord_out_T = coord_out.beta().T
+
+    if summation_point_cid0 is None:
+        summation_point_cid0 = coord_out.origin
+        #summation_point_cid0 = np.array([0., 0., 0.])
+
+    #summation_point_cid0 = np.array([10., 10., 10.])
+    for cd in ucds:
+        i = where(cds == cd)[0]
+        #nidsi = nids[i]
+        analysis_coord = coords[cd]
+        cd_T = analysis_coord.beta()
+
+        # rxF from local_in to global to local_out
+        force_in_locali = force_in_local[i, :]
+        moment_in_locali = moment_in_local[i, :]
+        force_in_globali = dot(force_in_locali, cd_T)
+
+        # matrix multiplcation is NOT communitive
+        forcei = dot(coord_out_T, dot(force_in_globali, cd_T).T).T
+        momenti = dot(coord_out_T, dot(moment_in_locali, cd_T).T).T
+        force_out[i, :] = forcei
+        moment_out[i, :] = momenti
+        force_sum += forcei.sum(axis=0)
+        moment_sum += momenti.sum(axis=0)
+
+        if summation_point_cid0 is not None:
+            delta = xyz_cid0[i, :] - summation_point_cid0[np.newaxis, :]
+            rxf = cross(delta, force_in_globali)
+            moment_out[i, :] += rxf
+            moment_sum += rxf.sum(axis=0)
+
+    return force_out, moment_out, force_sum, moment_sum
 
 
 if __name__ == '__main__':  # pragma: no cover

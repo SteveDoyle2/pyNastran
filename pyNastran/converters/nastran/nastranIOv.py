@@ -267,6 +267,37 @@ class NastranIO(object):
                 del i
         return skip_reading
 
+    def get_xyz_in_coord(self, points, cid=0, dtype='float32'):
+        nid_map = self.nid_map
+        assert cid == 0, cid
+        nnodes = len(model.nodes)
+        nspoints = 0
+        spoints = None
+        if model.spoints:
+            spoints = model.spoints.points
+            nspoints = len(spoints)
+
+        xyz_cid0 = zeros((nnodes + nspoints, 3), dtype=dtype)
+        if nspoints:
+            nids = model.nodes.keys()
+            newpoints = nids + list(spoints)
+            newpoints.sort()
+            for i, nid in enumerate(newpoints):
+                if nid in spoints:
+                    nid_map[nid] = i
+                else:
+                    node = model.nodes[nid]
+                    xyz_cid0[i, :] = node.get_position()
+                    nid_map[nid] = i
+                points.InsertPoint(i, *xyz_cid0[i, :])
+        else:
+            for i, (nid, node) in enumerate(sorted(iteritems(model.nodes))):
+                xyz = node.get_position()
+                xyz_cid0[i, :] = xyz
+                points.InsertPoint(i, *xyz)
+                nid_map[nid] = i
+        return xyz_cid0
+
     def load_nastran_geometry(self, bdf_filename, dirname, name='main', plot=True):
         self.eid_maps[name] = {}
         self.nid_maps[name] = {}
@@ -435,26 +466,7 @@ class NastranIO(object):
         if self.save_data:
             self.model = model
 
-        nid_map = self.nid_map
-        xyz_cid0 = zeros((nnodes + nspoints, 3), dtype='float32')
-        if nspoints:
-            nids = model.nodes.keys()
-            newpoints = nids + list(spoints)
-            newpoints.sort()
-            for i, nid in enumerate(newpoints):
-                if nid in spoints:
-                    nid_map[nid] = i
-                else:
-                    node = model.nodes[nid]
-                    xyz_cid0[i, :] = node.get_position()
-                    nid_map[nid] = i
-                points.InsertPoint(i, *xyz_cid0[i, :])
-        else:
-            for i, (nid, node) in enumerate(sorted(iteritems(model.nodes))):
-                xyz = node.get_position()
-                xyz_cid0[i, :] = xyz
-                points.InsertPoint(i, *xyz)
-                nid_map[nid] = i
+        xyz_cid0 = self.get_xyz_in_coord(points, cid=0, dtype='float32')
         self.xyz_cid0 = xyz_cid0
 
         maxi = xyz_cid0.max(axis=0)

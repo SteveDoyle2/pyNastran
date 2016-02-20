@@ -728,6 +728,31 @@ class CylindricalCoord(object):
         return array([x, y, p[2]], dtype='float64')
 
     @classmethod
+    def coord_to_xyz_array(cls, p):
+        r"""
+        ::
+
+          y       R
+          |     /
+          |   /
+          | / theta
+          *------------x
+
+        .. math:: x = R \cos(\theta)
+        .. math:: y = R \sin(\theta)
+
+        Returns
+        -------
+        xyz : (3,) float ndarray
+            the point in the local coordinate system
+        """
+        R = p[:, 0]
+        theta = np.radians(p[:, 1])
+        x = R * np.cos(theta)
+        y = R * np.sin(theta)
+        return array([x, y, p[:, 2]], dtype='float64').T
+
+    @classmethod
     def xyz_to_coord(cls, p):
         """
         Returns
@@ -1457,6 +1482,7 @@ class CORD3G(Coord):  # not done
 class CORD1R(Cord1x, RectangularCoord):
     type = 'CORD1R'
     Type = 'R'
+    int_type = 0
 
     def __init__(self, cid, g1, g2, g3, comment=''):
         """
@@ -1488,6 +1514,7 @@ class CORD1R(Cord1x, RectangularCoord):
 class CORD1C(Cord1x, CylindricalCoord):
     type = 'CORD1C'
     Type = 'C'
+    int_type = 1
 
     def __init__(self, cid, g1, g2, g3, comment=''):
         """
@@ -1522,6 +1549,7 @@ class CORD1C(Cord1x, CylindricalCoord):
 class CORD1S(Cord1x, SphericalCoord):
     type = 'CORD1S'
     Type = 'S'
+    int_type = 2
 
     def __init__(self, cid, g1, g2, g3, comment=''):
         """
@@ -1548,6 +1576,7 @@ class CORD1S(Cord1x, SphericalCoord):
 class CORD2R(Cord2x, RectangularCoord):
     type = 'CORD2R'
     Type = 'R'
+    int_type = 0
 
     def __init__(self, cid, rid=0, origin=None, zaxis=None, xzplane=None, comment=''):
         """
@@ -1591,6 +1620,7 @@ class CORD2R(Cord2x, RectangularCoord):
 class CORD2C(Cord2x, CylindricalCoord):
     type = 'CORD2C'
     Type = 'C'
+    int_type = 1
 
     def __init__(self, cid, rid=0, origin=None, zaxis=None, xzplane=None, comment=''):
         """
@@ -1619,6 +1649,7 @@ class CORD2C(Cord2x, CylindricalCoord):
 class CORD2S(Cord2x, SphericalCoord):
     type = 'CORD2S'
     Type = 'S'
+    int_type = 2
 
     def __init__(self, cid, rid=0, origin=None, zaxis=None, xzplane=None, comment=''):
         """
