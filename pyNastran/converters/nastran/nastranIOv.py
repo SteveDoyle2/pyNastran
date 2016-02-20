@@ -3857,7 +3857,7 @@ class NastranIO(object):
                 samin = np.amin([smaxa, smaxb], axis=0)
                 assert len(samax) == len(i), len(samax)
                 assert len(samin) == len(i)
-                savm = np.amax(np.npabs(
+                savm = np.amax(np.abs(
                     [smina, sminb,
                      smaxa, smaxb, axial]), axis=0)
 

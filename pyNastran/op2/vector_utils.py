@@ -87,7 +87,7 @@ def abs_max_min_global(values):
                      values.min()])
 
     # we figure out the absolute max/min
-    abs_vals = npabs(values2)
+    abs_vals = np.abs(values2)
     abs_val = abs_vals.max()
 
     # find the location of the absolute max value
