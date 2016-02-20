@@ -7,6 +7,7 @@ from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header, w
 from pyNastran.op2.vector_utils import (transform_force_from_local_to_global, transform_force_from_global_to_local,
                                         transform_force_moment_from_local_to_global, transform_force_moment_from_global_to_local,
                                         transform_force_moment)
+from pyNastran.utils import integer_types
 
 try:
     import pandas as pd
@@ -288,8 +289,8 @@ class RealGridPointForcesArray(ScalarObject):
         # TODO: remove 0s in gpforce_nids/gpforce_eids to handle transient results
         #       be careful of the sum row
 
-        assert isinstance(panel_eids[0], int), type(panel_eids[0])
-        assert isinstance(panel_nids[0], int), type(panel_nids[0])
+        assert isinstance(panel_eids[0], integer_types), type(panel_eids[0])
+        assert isinstance(panel_nids[0], integer_types), type(panel_nids[0])
         is_in = np.in1d(gpforce_nids, panel_nids, assume_unique=False)
         is_in2 = np.in1d(gpforce_eids[is_in], panel_eids, assume_unique=False)
         irange = np.arange(len(gpforce_nids), dtype='int32')[is_in][is_in2]
