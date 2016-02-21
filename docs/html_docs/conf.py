@@ -411,5 +411,12 @@ epub_copyright = u'2012, Steven Doyle, Al Danial, Marcin Gasiorek'
 def passer(app, what, name, obj, options, lines):
     pass
 
+def purge_todos(app, env, docname):
+    """http://www.sphinx-doc.org/en/stable/extdev/tutorial.html"""
+    if not hasattr(env, 'todo_all_todos'):
+        return
+    env.todo_all_todos = [todo for todo in env.todo_all_todos
+                          if todo['docname'] != docname]
 def setup(app):
     app.connect('autodoc-process-docstring', passer)
+    app.connect('env-purge-doc', purge_todos)
