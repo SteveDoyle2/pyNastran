@@ -309,8 +309,6 @@ def transform_force_moment(force_in_local, moment_in_local,
     """
     Transforms force/moment from global to local and returns all the forces.
 
-    Supports cylindrical/spherical coordinate systems.
-
     Parameters
     ----------
     force : (N, 3) ndarray
@@ -328,13 +326,16 @@ def transform_force_moment(force_in_local, moment_in_local,
     logger : logger; default=None
         a logger object that gets used when debug=True
 
-    .. warning:: the function signature will change...
-    .. todo:: sum of moments about a point must have an rxF term to get the
-               same value as Patran.
+    Returns
+    -------
+    force_out : (n, 3) float ndarray
+        the ith float components in the coord_out coordinate frame
+    moment_out : (n, 3) float ndarray
+        the ith moment components about the summation point in the coord_out coordinate frame
 
-    Fglobal = Flocal @ T
-    Flocal = T.T @ Fglobal
-    Flocal2 = T2.T @ (Flocal1 @ T1)
+    .. todo:: doesn't seem to handle cylindrical/spherical systems
+
+    https://flexiblelearning.auckland.ac.nz/sportsci303/13_3/forceplate_manual.pdf
     """
     assert logger is not None
     #print('nid_cd*\n', nid_cd)
@@ -421,7 +422,6 @@ def transform_force_moment(force_in_local, moment_in_local,
             #print('rxf_in_cid =', rxf_in_cid.sum(axis=0), np.linalg.norm(rxf_in_cid.sum(axis=0)))
             moment_out[i, :] += rxf_in_cid
         #print('------------')
-
     #print('end')
     return -force_out, -moment_out
 
@@ -432,8 +432,6 @@ def transform_force_moment_sum(force_in_local, moment_in_local,
                                debug=False, logger=None):
     """
     Transforms force/moment from global to local and returns a sum of forces/moments.
-
-    Supports cylindrical/spherical coordinate systems.
 
     Parameters
     ----------
@@ -452,14 +450,18 @@ def transform_force_moment_sum(force_in_local, moment_in_local,
     logger : logger; default=None
         a logger object that gets used when debug=True
 
+    Returns
+    -------
+    force_out : (n, 3) float ndarray
+        the ith float components in the coord_out coordinate frame
+    moment_out : (n, 3) float ndarray
+        the ith moment components about the summation point in the coord_out coordinate frame
+    force_out_sum : (3, ) float ndarray
+        the sum of forces in the coord_out coordinate frame
+    moment_out_sum : (3, ) float ndarray
+        the sum of moments about the summation point in the coord_out coordinate frame
 
-    .. warning:: the function signature will change...
-    .. todo:: sum of moments about a point must have an rxF term to get the
-               same value as Patran.
-
-    Fglobal = Flocal @ T
-    Flocal = T.T @ Fglobal
-    Flocal2 = T2.T @ (Flocal1 @ T1)
+    .. todo:: doesn't seem to handle cylindrical/spherical systems
     """
     assert logger is not None
     out = transform_force_moment(
@@ -469,51 +471,6 @@ def transform_force_moment_sum(force_in_local, moment_in_local,
         summation_point_cid0=summation_point_cid0, debug=debug, logger=logger)
     force_out, moment_out = out
     return force_out, moment_out, force_out.sum(axis=0), moment_out.sum(axis=0)
-
-    #force_out = zeros(force_in_local.shape, dtype=force_in_local.dtype)
-    #moment_out = zeros(force_in_local.shape, dtype=force_in_local.dtype)
-    #force_sum = np.zeros(3)
-    #moment_sum = np.zeros(3)
-    ##assert coord_out.Type == 'R', 'Only rectangular coordinate systems are supported'
-    #aaa
-    #nids = nid_cd[:, 0]
-    #cds = nid_cd[:, 1]
-    #ucds = unique(cds)
-
-    #coord_out_cid = coord_out.cid
-    #coord_out_T = coord_out.beta().T
-
-    #if summation_point_cid0 is None:
-        ##summation_point_cid0 = coord_out.origin
-        #summation_point_cid0 = np.array([0., 0., 0.])
-
-    ##summation_point_cid0 = np.array([10., 10., 10.])
-    #for cd in ucds:
-        #i = where(cds == cd)[0]
-        ##nidsi = nids[i]
-        #analysis_coord = coords[cd]
-        #cd_T = analysis_coord.beta()
-
-        ## rxF from local_in to global to local_out
-        #force_in_locali = force_in_local[i, :]
-        #moment_in_locali = moment_in_local[i, :]
-        #force_in_globali = dot(force_in_locali, cd_T)
-
-        ## matrix multiplcation is NOT communitive
-        #forcei = dot(coord_out_T, dot(force_in_globali, cd_T).T).T
-        #momenti = dot(coord_out_T, dot(moment_in_locali, cd_T).T).T
-        #force_out[i, :] = forcei
-        #moment_out[i, :] = momenti
-        #force_sum += forcei.sum(axis=0)
-        #moment_sum += momenti.sum(axis=0)
-
-        #if summation_point_cid0 is not None:
-            #delta = xyz_cid0[i, :] - summation_point_cid0[np.newaxis, :]
-            #rxf = cross(delta, force_in_globali)
-            #moment_out[i, :] += rxf
-            #moment_sum += rxf.sum(axis=0)
-
-    #return force_out, moment_out, force_sum, moment_sum
 
 
 if __name__ == '__main__':  # pragma: no cover

@@ -174,6 +174,19 @@ def read_op2(op2_filename=None, combine=True,
     #obj.get_op2_stats()
     return model
 
+
+#import sys
+#class CrashObject(object):
+    #def __init__(self):
+        #pass
+    #def write(self, msg):
+        #if 'DEBUG' not in msg and 'INFO' not in msg:
+            #raise RuntimeError(msg)
+    #def flush(self):
+        #pass
+#sys.stdout = CrashObject()
+
+
 #class OP2(OP2_Scalar, OP2Writer):
 class OP2(OP2_Scalar):
 

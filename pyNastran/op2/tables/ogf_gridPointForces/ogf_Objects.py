@@ -243,13 +243,15 @@ class RealGridPointForcesArray(ScalarObject):
         return True
 
     def extract_interface_loads(
-        self, panel_nids, panel_eids,
+        self, nids, eids,
         coord_out, coords, nid_cd, i_transform, beta_transforms,
         xyz_cid0, summation_point, itime=0, debug=True, logger=None):
         """
+        Extracts Patran-style interface loads
+
         Parameters
         ----------
-        panel_nids : (Nn, ) int ndarray
+        nids : (Nn, ) int ndarray
             all the nodes to consider
         panel_eids : (Ne, ) int ndarray
             all the elements to consider
@@ -276,17 +278,25 @@ class RealGridPointForcesArray(ScalarObject):
         logger : logger; default=None
             a logger object that gets used when debug=True
 
-        .. warning:: the function signature will change...
-        .. todo:: sum of moments about a point must have an rxF term to get the
-                   same value as Patran.
-        .. todo:: doesn't support transient/frequency/modal based results
+        Returns
+        -------
+        force_out : (n, 3) float ndarray
+            the ith float components in the coord_out coordinate frame
+        moment_out : (n, 3) float ndarray
+            the ith moment components about the summation point in the coord_out coordinate frame
+        force_out_sum : (3, ) float ndarray
+            the sum of forces in the coord_out coordinate frame
+        moment_out_sum : (3, ) float ndarray
+            the sum of moments about the summation point in the coord_out coordinate frame
+
+        .. todo:: doesn't seem to handle cylindrical/spherical systems
         """
         if summation_point is not None:
             summation_point = np.asarray(summation_point)
         #assert coord_in.Type == 'R', 'Only rectangular coordinate systems are supported; coord_in=\n%s' % str(coord_in)
         #assert coord_out.Type == 'R', 'Only rectangular coordinate systems are supported; coord_out=\n%s' % str(coord_out)
-        panel_eids = np.asarray(panel_eids)
-        panel_nids = np.asarray(panel_nids)
+        eids = np.asarray(eids)
+        nids = np.asarray(nids)
 
         # todo handle multiple values for itime
         gpforce_nids = self.node_element[itime, :, 0]
@@ -294,17 +304,21 @@ class RealGridPointForcesArray(ScalarObject):
         # TODO: remove 0s in gpforce_nids/gpforce_eids to handle transient results
         #       be careful of the sum row
 
-        assert isinstance(panel_eids[0], integer_types), type(panel_eids[0])
-        assert isinstance(panel_nids[0], integer_types), type(panel_nids[0])
-        is_in = np.in1d(gpforce_nids, panel_nids, assume_unique=False)
-        is_in2 = np.in1d(gpforce_eids[is_in], panel_eids, assume_unique=False)
+        assert isinstance(eids[0], integer_types), type(eids[0])
+        assert isinstance(nids[0], integer_types), type(nids[0])
+        is_in = np.in1d(gpforce_nids, nids, assume_unique=False)
+        is_in2 = np.in1d(gpforce_eids[is_in], eids, assume_unique=False)
         irange = np.arange(len(gpforce_nids), dtype='int32')[is_in][is_in2]
         if debug:
             logger.debug('gpforce_eids =' % gpforce_eids[is_in])
             logger.debug('nids = %s' % gpforce_nids[irange])
             logger.debug('eids = %s' % gpforce_eids[irange])
 
-        is_in3 = np.in1d(nid_cd[:, 0], panel_nids, assume_unique=False)
+        try:
+            is_in3 = np.in1d(nid_cd[:, 0], nids, assume_unique=False)
+        except IndexError:
+            msg = 'nids_cd=%s nids=%s' % (nid_cd, nids)
+            raise IndexError(msg)
         #print(nid_cd[is_in3, :])
         force_global = self.data[itime, irange, :3]
         moment_global = self.data[itime, irange, 3:]
@@ -314,8 +328,6 @@ class RealGridPointForcesArray(ScalarObject):
                                      xyz_cid0[is_in3, :], summation_point_cid0=summation_point,
                                      debug=debug, logger=logger)
         return out
-        #total_force_local, total_moment_local = out
-        #return total_force_local.sum(axis=0), total_moment_local.sum(axis=0), None, None
 
     def add(self, dt, node_id, eid, ename, t1, t2, t3, r1, r2, r3):
         assert isinstance(node_id, int), node_id
