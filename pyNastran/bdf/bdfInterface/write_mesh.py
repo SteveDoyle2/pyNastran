@@ -154,6 +154,15 @@ class WriteMesh(BDFAttributes):
             #j += nelements
         bdf_file.write('ENDDATA\n')
 
+    def get_encoding(self, encoding=None):
+        if encoding is not None:
+            pass
+        else:
+            encoding = self._encoding
+            if encoding is None:
+                encoding = sys.getdefaultencoding()
+        return encoding
+
     def write_bdf(self, out_filename=None, encoding=None,
                   size=8, is_double=False,
                   interspersed=False, enddata=None, close=True):
@@ -190,13 +199,7 @@ class WriteMesh(BDFAttributes):
         #self.write_caero_model()
         out_filename = self._output_helper(out_filename,
                                            interspersed, size, is_double)
-        if encoding is not None:
-            pass
-        else:
-            encoding = self._encoding
-            if encoding is None:
-                encoding = sys.getdefaultencoding()
-
+        encoding = self.get_encoding(encoding)
         #assert encoding.lower() in ['ascii', 'latin1', 'utf8'], encoding
 
         if hasattr(out_filename, 'read') and hasattr(out_filename, 'write'):
@@ -457,7 +460,7 @@ class WriteMesh(BDFAttributes):
                 msg.append(spline.write_card(size, is_double))
             for (unused_id, trim) in sorted(iteritems(self.trims)):
                 msg.append(trim.write_card(size, is_double))
-            for (unused_id, monitor_point) in sorted(iteritems(self.monitor_points)):
+            for monitor_point in self.monitor_points:
                 msg.append(monitor_point.write_card(size, is_double))
 
             for (unused_id, aero) in sorted(iteritems(self.aero)):

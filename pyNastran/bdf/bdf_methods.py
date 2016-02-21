@@ -16,8 +16,10 @@ reading/writing/accessing of BDF data.  Such methods include:
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import iteritems, string_types
+from six import iteritems, string_types, PY2
 from six.moves import zip
+from codecs import open
+
 from collections import defaultdict
 from copy import deepcopy
 import multiprocessing as mp
@@ -237,7 +239,7 @@ class BDFMethods(BDFAttributes):
         return (mass, cg, I)
 
     def _mass_properties_new(self, reference_point=None,
-                        sym_axis=None, scale=None, xyz_cid0=None):
+                             sym_axis=None, scale=None, xyz_cid0=None):
         """
         half implemented, not tested, should be faster someday...
         don't use this
@@ -512,12 +514,14 @@ class BDFMethods(BDFAttributes):
 
         self.log.debug("Creating %i-process pool!" % num_cpus)
         pool = mp.Pool(num_cpus)
+        no_mass_elements = [
+            'CBUSH', 'CBUSH1D',
+            'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
+            'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5',
+        ]
         result = pool.imap(_mass_properties_mass_mp_func,
                            [(element) for element in elements
-                            if element.type not in ['CBUSH', 'CBUSH1D',
-                                                    'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
-                                                    'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5',
-                                                    ]])
+                            if element.type not in no_mass_elements])
         result2 = pool.imap(_mass_properties_mass_mp_func, [(element) for element in masses])
 
         mass = zeros((nelements), 'float64')
@@ -1746,8 +1750,9 @@ class BDFMethods(BDFAttributes):
         is_double : bool; default=False
             double precision flag
         """
-        if (len(self.element_ids) == 0 or len(self.material_ids) == 0 or
-            len(self.property_ids) == 0):
+        encoding = self.get_encoding(encoding)
+        if(len(self.element_ids) == 0 or len(self.material_ids) == 0 or
+           len(self.property_ids) == 0):
             return
         eid_set, face_map = self.get_solid_skin_faces()
         if len(eid_set) == 0:
@@ -1788,7 +1793,12 @@ class BDFMethods(BDFAttributes):
         eid_shell = max(self.elements) + 1
         pid_shell = max(self.properties) + 1
         mid_shell = max(self.materials) + 1
-        with open(skin_filename, 'w') as bdf_file:
+
+        if PY2:
+            wb = 'wb'
+        else:
+            wb = 'w'
+        with open(skin_filename, wb, encoding=encoding) as bdf_file:
             bdf_file.write('$ pyNastran: punch=True\n')
             for nid in sorted(nids_to_write):
                 if nid is None:

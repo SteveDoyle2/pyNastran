@@ -1,5 +1,5 @@
 from __future__ import print_function
-from six import iteritems
+from six import iteritems, PY2
 
 import os
 import sys
@@ -42,14 +42,10 @@ def run_lots_of_files(files, debug=True, save_cases=True, skip_files=None,
             #sys.exit('end of test...test_f06.py')
 
     if save_cases:
-        f = open('failedCases.in', 'wb')
-        for f06file in failed_cases:
-            f.write('%s\n' % (f06file))
-        f.close()
+        with open('failed_cases.in', 'wb') as failed_cases_file:
+            for f06file in failed_cases:
+                failed_cases_file.write('%s\n' % (f06file))
     print("dt = %s seconds" % (time.time() - t0))
-
-    #f06 = F06('test_tet10_subcase_1.f06')
-    #f06.readF06()
 
     sys.exit('-----done with all models %s/%s=%.2f%%  nfailed=%s-----' % (
         npassed, ntotal, 100. * npassed / float(ntotal), ntotal - npassed))
@@ -177,13 +173,14 @@ def main():
     for key, value in sorted(iteritems(data)):
         print("%-12s = %r" % (key.strip('--'), value))
 
-    if os.path.exists('skippedCards.out'):
-        os.remove('skippedCards.out')
-    run_f06(data['F06_FILENAME'],
-            write_f06 = data['--write_f06'],
-            debug     = not(data['--quiet']),
-            is_vector = data['--vector'],
-            stop_on_failure = True
+    if os.path.exists('skipped_cards.out'):
+        os.remove('skipped_cards.out')
+    run_f06(
+        data['F06_FILENAME'],
+        write_f06=data['--write_f06'],
+        debug=not(data['--quiet']),
+        is_vector=data['--vector'],
+        stop_on_failure=True
     )
 
 if __name__ == '__main__':  # pragma: no cover

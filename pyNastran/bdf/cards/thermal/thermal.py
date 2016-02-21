@@ -98,7 +98,7 @@ class CHBDYE(ThermalElement):
     }
 
     def __init__(self, card=None, data=None, comment=''):
-        ThermalElement.__init__(self, card, data)
+        ThermalElement.__init__(self, card)
         if comment:
             self._comment = comment
         if card:
@@ -339,7 +339,7 @@ class CHBDYP(ThermalElement):
     type = 'CHBDYP'
 
     def __init__(self, card=None, data=None, comment=''):
-        ThermalElement.__init__(self, card, data)
+        ThermalElement.__init__(self, card)
         if comment:
             self._comment = comment
         if card:

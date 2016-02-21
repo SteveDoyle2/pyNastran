@@ -550,7 +550,10 @@ def run_fem2(bdf_model, out_model, xref, punch,
                 assert any(subcase.has_parameter('TIME', 'TSTEP', 'TSTEPNL')), subcase
 
             elif sol == 144:
-                assert 'SUPORT' in subcase or len(fem2.suport1), subcase
+                assert 'SUPORT1' in subcase or len(fem2.suport), subcase
+                if 'SUPORT1' in subcase:
+                    value, options = subcase.get_parameter('SUPORT1')
+                    assert value in fem2.suport1, fem2.suport1
                 assert 'TRIM' in subcase, subcase
             elif sol == 145:
                 assert 'METHOD'in subcase, subcase

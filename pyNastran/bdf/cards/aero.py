@@ -2636,6 +2636,8 @@ class MONPNT1(BaseCard):
         card = self.repr_fields()
         return self.comment + msg
 
+    def __repr__(self):
+        return self.write_card()
 
 class PAERO1(BaseCard):
     """

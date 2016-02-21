@@ -286,11 +286,11 @@ class CBAR(LineElement):
         pid = integer_or_blank(card, 2, 'pid', eid)
         ga = integer(card, 3, 'ga')
         gb = integer(card, 4, 'gb')
-        x, g0 = self._init_x_g0(card, eid)
+        x, g0 = cls._init_x_g0(card, eid)
 
         # doesn't exist in NX nastran
         offt = string_or_blank(card, 8, 'offt', 'GGG')
-        #print('self.offt = %r' % (self.offt))
+        #print('cls.offt = %r' % (cls.offt))
 
         pa = integer_or_blank(card, 9, 'pa', 0)
         pb = integer_or_blank(card, 10, 'pb', 0)
@@ -791,16 +791,20 @@ class CBEND(LineElement):
             the BDF object
         """
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
-        self.nodes = model.Nodes(self.nodes, msg=msg)
+        self.ga = model.Node(self.ga, msg=msg)
+        self.gb = model.Node(self.gb, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
         #self.g0 = model.nodes[self.g0]
-        self.nodes_ref = self.nodes
+        self.ga_ref = self.ga
+        self.gb_ref = self.gb
         self.pid_ref = self.pid
 
     def uncross_reference(self):
-        self.nodes = self.node_ids
+        node_ids = self.node_ids
+        self.ga = node_ids[0]
+        self.gb = node_ids[1]
         self.pid = self.Pid()
-        del self.nodes_ref, self.pid_ref
+        del self.ga_ref, self.gb_ref, self.pid_ref
 
     def write_card(self, size, is_double):
         card = self.repr_fields()

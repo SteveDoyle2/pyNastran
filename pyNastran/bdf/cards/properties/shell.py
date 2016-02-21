@@ -65,7 +65,7 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
         if not ((-1.5*t <= z1 <= 1.5*t) or (-1.5*t <= z2 <= 1.5*t)):
             msg = '%s pid=%s midsurface: z1=%s z2=%s t=%s not in range of -1.5t < zi < 1.5t' % (
                 self.Type, self.pid, self.z1, self.z2, t)
-            self.log.warning(msg)
+            model.log.warning(msg)
 
     def uncross_reference(self):
         for iply in range(len(self.thicknesses)):
@@ -1384,7 +1384,7 @@ class PSHELL(ShellProperty):
             if not ((-1.5*t <= z1 <= 1.5*t) or (-1.5*t <= z2 <= 1.5*t)):
                 msg = 'PSHELL pid=%s midsurface: z1=%s z2=%s t=%s not in range of -1.5t < zi < 1.5t' % (
                     self.pid, self.z1, self.z2, t)
-                self.log.warning(msg)
+                model.log.warning(msg)
 
     def uncross_reference(self):
         self.mid1 = self.Mid1()

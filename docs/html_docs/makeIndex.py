@@ -33,9 +33,8 @@ def get_classes(filenames):
     d = {}
     for filename in filenames:
         #print "filename =", filename
-        f = open(filename, 'r')
-        lines = f.readlines()
-        f.close()
+        with open(filename, 'r') as f:
+            lines = f.readlines()
 
         for line in lines:
             if 'class' in line:

@@ -365,7 +365,7 @@ class BDFAttributes(object):
         #: stores PAEROx
         self.paeros = {}
         # stores MONPNT1
-        self.monitor_points = {}
+        self.monitor_points = []
         #: stores AERO
         self.aero = {}
         #: stores AEROS

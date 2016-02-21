@@ -564,13 +564,29 @@ class CaseControlDeck(object):
             key = update_param_name(key.strip().upper())
             verify_card(key, value, options, line)
             assert key.upper() == key, key
-        elif equals_count > 2:
+        elif equals_count > 2 and '(' in line and 'FLSPOUT' not in line:
             #GROUNDCHECK(PRINT,SET=(G,N,N+AUTOSPC,F,A),DATAREC=NO)=YES
             #print('****', lines)
             assert len(lines) == 1, lines
             line = lines[0]
-            key, value_options = line.split('(', 1)
-            options_paren, value = value_options.rsplit('=', 1)
+            try:
+                key, value_options = line.split('(', 1)
+            except ValueError:
+                msg = 'Expected a "(", but did not find one.\n'
+                msg += 'Looking for something of the form:\n'
+                msg += '   GROUNDCHECK(PRINT,SET=(G,N,N+AUTOSPC,F,A),DATAREC=NO)=YES\n'
+                msg += '%r' % line
+                raise ValueError(msg)
+
+            try:
+                options_paren, value = value_options.rsplit('=', 1)
+            except ValueError:
+                msg = 'Expected a "=", but did not find one.\n'
+                msg += 'Looking for something of the form:\n'
+                msg += '   GROUNDCHECK(PRINT,SET=(G,N,N+AUTOSPC,F,A),DATAREC=NO)=YES\n'
+                msg += 'value_options=%r\n' % value_options
+                msg += '%r' % line
+                raise ValueError(msg)
             options_paren = options_paren.strip()
 
             value = value.strip()
@@ -617,6 +633,7 @@ class CaseControlDeck(object):
             else:
                 options = str_options.split(',')
             param_type = 'STRESS-type'
+            key = key.upper()
             #print('options =', options)
             #asdf
         elif line_upper.startswith('BEGIN'):  # begin bulk
@@ -649,7 +666,7 @@ class CaseControlDeck(object):
             param_type = 'KEY-type'
             assert key.upper() == key, key
         i += 1
-        assert key.upper() == key, key
+        assert key.upper() == key, 'key=%s param_type=%s' % (key, param_type)
 
         return (i, key, value, options, param_type)
 

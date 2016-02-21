@@ -65,7 +65,7 @@ def run(regenerate=True, run_nastran=False, debug=False, sum_load=True):
         files2 += files
         files2.sort()
     else:
-        files2 = get_failed_files('failedCases.in')
+        files2 = get_failed_files('failed_cases.in')
 
     files = remove_marc_files(files2)
     files = [fname for fname in files
@@ -101,7 +101,7 @@ def run(regenerate=True, run_nastran=False, debug=False, sum_load=True):
         write = 'wb'
     else:
         write = 'w'
-    with open('failedCases.in', write) as failed_cases_file:
+    with open('failed_cases.in', write) as failed_cases_file:
         for fname in failed_files:
             failed_cases_file.write('%s\n' % fname)
     sys.exit('finished...')

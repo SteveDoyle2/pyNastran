@@ -570,10 +570,10 @@ class AddMethods(BDFAttributes):
 
     def add_MONPNT(self, monitor_point):
         key = monitor_point.name
-        assert key not in self.monitor_points, '\nmonitor_point=\n|%s| oldMNTPNT=\n|%s|' % (
+        assert key not in self.monitor_points, '\nmonitor_point=\n%soldMNTPNT=\n%s' % (
             monitor_point, self.monitor_points[key])
-        self.monitor_points[key] = monitor_point
-        self._type_to_id_map[monitor_point.type].append(key)
+        self.monitor_points.append(monitor_point)
+        self._type_to_id_map[monitor_point.type].append(len(self.monitor_points) - 1)
 
     def add_SPLINE(self, spline):
         assert spline.eid not in self.splines
@@ -613,7 +613,7 @@ class AddMethods(BDFAttributes):
 
     def add_DCONSTR(self, dconstr):
         key = (dconstr.oid, dconstr.rid)
-        assert key not in self.dconstrs
+        assert key not in self.dconstrs, 'key=%r DCONSTR=\n%s' % (key, dconstr)
         assert dconstr.oid > 0
         assert dconstr.rid > 0
         self.dconstrs[key] = dconstr
