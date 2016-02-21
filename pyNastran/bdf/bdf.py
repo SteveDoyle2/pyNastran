@@ -2328,7 +2328,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         else:
             return msg
 
-    def get_displcement_index_transforms(self):
+    def get_displacement_index_transforms(self):
         """
         Get index and transformation matricies for nodes with
         their output in coordinate systems other than the global.
@@ -2351,7 +2351,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         # assume GRID 5 has a CD=50
         >>> model.point_ids
         [1, 2, 5]
-        >>> i_transform, beta_transforms = model.get_displcement_index_transforms()
+        >>> i_transform, beta_transforms = model.get_displacement_index_transforms()
         >>> i_transform[10]
         [0, 1]
         >>> beta_transforms[10]

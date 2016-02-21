@@ -600,7 +600,7 @@ class OP2(OP2_Scalar):
         for nodes with their output in coordinate systems other than the
         global.
 
-        Used in combination with ``BDF.get_displcement_index_transforms``
+        Used in combination with ``BDF.get_displacement_index_transforms``
 
         Parameters
         ----------

@@ -108,7 +108,7 @@ class TestOP2(Tester):
         op2_filename = os.path.join(folder, 'static_solid_shell_bar.op2')
         op2 = read_op2_geom(op2_filename)
 
-        i_transform, beta_transforms = op2.get_displcement_index_transforms()
+        i_transform, beta_transforms = op2.get_displacement_index_transforms()
         op2.transform_displacements_to_global(i_transform, beta_transforms)
 
         gpforce = op2.grid_point_forces[1]
@@ -166,7 +166,7 @@ class TestOP2(Tester):
         op2_filename = os.path.join(folder, 'solid_shell_bar_xyz.op2')
         op2 = read_op2_geom(op2_filename)
 
-        i_transform, beta_transforms = op2.get_displcement_index_transforms()
+        i_transform, beta_transforms = op2.get_displacement_index_transforms()
         op2.transform_displacements_to_global(i_transform, beta_transforms)
 
         gpforce = op2.grid_point_forces[1]
@@ -225,7 +225,7 @@ class TestOP2(Tester):
         op2_filename = os.path.join(folder, 'static_solid_shell_bar_radial.op2')
         op2 = read_op2_geom(op2_filename)
 
-        i_transform, beta_transforms = op2.get_displcement_index_transforms()
+        i_transform, beta_transforms = op2.get_displacement_index_transforms()
         op2.transform_displacements_to_global(i_transform, beta_transforms)
 
         gpforce = op2.grid_point_forces[1]

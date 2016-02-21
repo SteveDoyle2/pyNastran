@@ -352,7 +352,7 @@ class NastranIO(object):
 
 
         # get indicies and transformations for displacements
-        self.i_transform, self.transforms = model.get_displcement_index_transforms()
+        self.i_transform, self.transforms = model.get_displacement_index_transforms()
 
 
         nnodes = len(model.nodes)
