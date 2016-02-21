@@ -23,7 +23,6 @@ else:
     import pickle
 
 import numpy as np
-from numpy import unique, array, where, in1d
 
 from pyNastran.bdf.utils import _parse_pynastran_header
 from pyNastran.utils import object_attributes, print_bad_path
@@ -812,7 +811,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             msg = ''
             if self._duplicate_elements:
                 duplicate_eids = [elem.eid for elem in self._duplicate_elements]
-                uduplicate_eids = unique(duplicate_eids)
+                uduplicate_eids = np.unique(duplicate_eids)
                 msg += 'self.elements IDs are not unique=%s\n' % uduplicate_eids
                 for eid in uduplicate_eids:
                     msg += 'old_element=\n%s\n' % self.elements[eid].print_repr_card()
@@ -826,7 +825,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
             if self._duplicate_properties:
                 duplicate_pids = [prop.pid for prop in self._duplicate_properties]
-                uduplicate_pids = unique(duplicate_pids)
+                uduplicate_pids = np.unique(duplicate_pids)
                 msg += 'self.properties IDs are not unique=%s\n' % uduplicate_pids
                 for pid in duplicate_pids:
                     msg += 'old_property=\n%s\n' % self.properties[pid].print_repr_card()
@@ -839,7 +838,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
             if self._duplicate_masses:
                 duplicate_eids = [elem.eid for elem in self._duplicate_masses]
-                uduplicate_eids = unique(duplicate_eids)
+                uduplicate_eids = np.unique(duplicate_eids)
                 msg += 'self.massses IDs are not unique=%s\n' % uduplicate_eids
                 for eid in uduplicate_eids:
                     msg += 'old_mass=\n%s\n' % self.masses[eid].print_repr_card()
@@ -852,7 +851,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
             if self._duplicate_materials:
                 duplicate_mids = [mat.mid for mat in self._duplicate_materials]
-                uduplicate_mids = unique(duplicate_mids)
+                uduplicate_mids = np.unique(duplicate_mids)
                 msg += 'self.materials IDs are not unique=%s\n' % uduplicate_mids
                 for mid in uduplicate_mids:
                     msg += 'old_material=\n%s\n' % self.materials[mid].print_repr_card()
@@ -865,7 +864,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
             if self._duplicate_thermal_materials:
                 duplicate_mids = [mat.mid for mat in self._duplicate_thermal_materials]
-                uduplicate_mids = unique(duplicate_mids)
+                uduplicate_mids = np.unique(duplicate_mids)
                 msg += 'self.thermal_materials IDs are not unique=%s\n' % uduplicate_mids
                 for mid in uduplicate_mids:
                     msg += 'old_thermal_material=\n%s\n' % self.thermal_materials[mid].print_repr_card()
@@ -878,7 +877,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
             if self._duplicate_coords:
                 duplicate_cids = [coord.cid for coord in self._duplicate_coords]
-                uduplicate_cids = unique(duplicate_cids)
+                uduplicate_cids = np.unique(duplicate_cids)
                 msg += 'self.coords IDs are not unique=%s\n' % uduplicate_cids
                 for cid in uduplicate_cids:
                     msg += 'old_coord=\n%s\n' % self.coords[cid].print_repr_card()
@@ -2368,8 +2367,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         nids_transform = {}
         i_transform = {}
         beta_transforms = {}
-        if len(self.coords) < 2:
+        if len(self.coords) == 1:  # was ncords > 2; changed b/c seems dangerous
             return i_transform, beta_transforms
+
         for nid, node in sorted(iteritems(self.nodes)):
             cid_d = node.Cd()
             if cid_d:
@@ -2377,10 +2377,10 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                     nids_transform[cid_d] = []
                 nids_transform[cid_d].append(nid)
 
-        nids_all = array(sorted(self.point_ids))
+        nids_all = np.array(sorted(self.point_ids))
         for cid in sorted(iterkeys(nids_transform)):
-            nids = array(nids_transform[cid])
-            i_transform[cid] = where(in1d(nids_all, nids))[0]
+            nids = np.array(nids_transform[cid])
+            i_transform[cid] = np.where(np.in1d(nids_all, nids))[0]
             beta_transforms[cid] = self.coords[cid].beta()
         return i_transform, beta_transforms
 

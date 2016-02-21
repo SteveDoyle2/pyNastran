@@ -4,9 +4,7 @@ import numpy as np
 from numpy import zeros, unique, array_equal, empty
 from pyNastran.op2.result_objects.op2_objects import ScalarObject
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header, write_imag_floats_13e
-from pyNastran.op2.vector_utils import (transform_force_from_local_to_global, transform_force_from_global_to_local,
-                                        transform_force_moment_from_local_to_global, transform_force_moment_from_global_to_local,
-                                        transform_force_moment)
+from pyNastran.op2.vector_utils import transform_force_moment, transform_force_moment_sum
 from pyNastran.utils import integer_types
 
 try:
@@ -84,7 +82,6 @@ class RealGridPointForcesArray(ScalarObject):
         self._times = zeros(self.ntimes, dtype=dtype)
 
         if self.is_unique:
-            #raise NotImplementedError('not unique')
             self.node_element = zeros((self.ntimes, self.ntotal, 2), dtype='int32')
             self.element_names = empty((self.ntimes, self.ntotal), dtype='U8')
         else:
@@ -245,10 +242,10 @@ class RealGridPointForcesArray(ScalarObject):
                         raise ValueError(msg)
         return True
 
-    def extract_gpforcei(self, panel_nids, panel_eids,
-                         coord_out, coords,
-                         nid_cd, i_transform, beta_transforms,
-                         xyz_cid0, itime=0):
+    def extract_interface_loads(
+        self, panel_nids, panel_eids,
+        coord_out, coords, nid_cd, i_transform, beta_transforms,
+        xyz_cid0, summation_point, itime=0, debug=True, logger=None):
         """
         Parameters
         ----------
@@ -270,14 +267,22 @@ class RealGridPointForcesArray(ScalarObject):
             the mapping for nid_cd
         xyz_cid0 : (nnodes + nspoints, 3) ndarray
             the grid locations in coordinate system 0
+        summation_point : (3, ) float ndarray
+            the summation point in output??? coordinate system
         itime : int; default=0
             the time to extract loads for
+        debug : bool; default=False
+            debugging flag
+        logger : logger; default=None
+            a logger object that gets used when debug=True
 
         .. warning:: the function signature will change...
         .. todo:: sum of moments about a point must have an rxF term to get the
                    same value as Patran.
         .. todo:: doesn't support transient/frequency/modal based results
         """
+        if summation_point is not None:
+            summation_point = np.asarray(summation_point)
         #assert coord_in.Type == 'R', 'Only rectangular coordinate systems are supported; coord_in=\n%s' % str(coord_in)
         #assert coord_out.Type == 'R', 'Only rectangular coordinate systems are supported; coord_out=\n%s' % str(coord_out)
         panel_eids = np.asarray(panel_eids)
@@ -294,50 +299,23 @@ class RealGridPointForcesArray(ScalarObject):
         is_in = np.in1d(gpforce_nids, panel_nids, assume_unique=False)
         is_in2 = np.in1d(gpforce_eids[is_in], panel_eids, assume_unique=False)
         irange = np.arange(len(gpforce_nids), dtype='int32')[is_in][is_in2]
+        if debug:
+            logger.debug('gpforce_eids =' % gpforce_eids[is_in])
+            logger.debug('nids = %s' % gpforce_nids[irange])
+            logger.debug('eids = %s' % gpforce_eids[irange])
 
-        if 0:
-            force_local = self.data[itime, irange, :3]
-            total_moment_local = np.array([0., 0., 0.], dtype=force_local.dtype)
-
-            # TODO: smash force_local from nelements per node to 1 line per node
-            force_in_global = transform_force_from_local_to_global(
-                force_local, gpforce_nids, nid_cd,
-                i_transform, beta_transforms)
-            total_force_global = force_in_global.sum(axis=0)
-            total_force_local = transform_force_from_global_to_local(
-                total_force_global, coord_in, coord_out)
-            return total_force_global, total_moment_global, total_force_local, total_moment_local
-        elif 0:
-            force_local = self.data[itime, irange, :3]
-            moment_local = self.data[itime, irange, 3:]
-
-            out = transform_force_moment_from_local_to_global(
-                force_local, moment_local,
-                coord_in, coord_out, coords,
-                nid_cd, i_transform, beta_transforms)
-            force_in_global, moment_in_global = out
-
-            total_force_global = force_in_global.sum(axis=0)
-            total_moment_global = moment_in_global.sum(axis=0)
-
-            offset = np.array([0., 0., 0.])
-            out = transform_force_moment_from_global_to_local(
-                total_force_global, total_moment_global,
-                coord_in, coord_out, coords,
-                xyz_cid0, offset
-            )
-            total_force_local, total_moment_local = out
-            return total_force_global, total_moment_global, total_force_local, total_moment_local
-        else:
-            force_global = self.data[itime, irange, :3]
-            moment_global = self.data[itime, irange, 3:]
-            out = transform_force_moment(force_global, moment_global,
-                                         coord_out, coords, nid_cd[irange, :],
-                                         i_transform, beta_transforms,
-                                         xyz_cid0, summation_point_cid0=None)
-
-            total_force_local, total_moment_local = out
-            return total_force_local.sum(axis=0), total_moment_local.sum(axis=0), None, None
+        is_in3 = np.in1d(nid_cd[:, 0], panel_nids, assume_unique=False)
+        #print(nid_cd[is_in3, :])
+        force_global = self.data[itime, irange, :3]
+        moment_global = self.data[itime, irange, 3:]
+        out = transform_force_moment_sum(force_global, moment_global,
+                                     coord_out, coords, nid_cd[is_in3, :],
+                                     i_transform, beta_transforms,
+                                     xyz_cid0[is_in3, :], summation_point_cid0=summation_point,
+                                     debug=debug, logger=logger)
+        return out
+        #total_force_local, total_moment_local = out
+        #return total_force_local.sum(axis=0), total_moment_local.sum(axis=0), None, None
 
     def add(self, dt, node_id, eid, ename, t1, t2, t3, r1, r2, r3):
         assert isinstance(node_id, int), node_id
@@ -432,15 +410,26 @@ class RealGridPointForcesArray(ScalarObject):
                 r2 = self.data[itime, :, 4]
                 r3 = self.data[itime, :, 5]
 
-                nids = self.node_element[itime, 0]
-                eids = self.node_element[itime, 1]
+                nids = self.node_element[itime, :, 0]
+                eids = self.node_element[itime, :, 1]
                 enames = self.element_names[itime, :]
 
                 zero = ' '
                 ntotal = self._ntotals[itime]
+                #print(self._ntotals)
+                assert len(eids) == len(nids)
+                assert len(enames) == len(nids), 'enames=%s nnids=%s' % (len(enames), len(nids))
+                assert len(t1) == len(nids)
+                assert len(t2) == len(nids)
+                assert len(t3) == len(nids)
+                assert len(r1) == len(nids)
+                assert len(r2) == len(nids)
+                assert len(nids) == ntotal, 'len(nids)=%s ntotal=%s' % (len(nids), ntotal)
+
                 for (i, nid, eid, ename, t1i, t2i, t3i, r1i, r2i, r3i) in zip(
                      range(ntotal), nids, eids, enames, t1, t2, t3, r1, r2, r3):
 
+                    #print(nid, eid, ename, t1i)
                     vals = [t1i, t2i, t3i, r1i, r2i, r3i]
                     vals2 = write_floats_13e(vals)
                     [f1, f2, f3, m1, m2, m3] = vals2
