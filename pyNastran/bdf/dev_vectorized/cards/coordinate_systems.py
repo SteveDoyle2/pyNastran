@@ -350,7 +350,7 @@ class Cord1x(Coord):
         Coord.__init__(self, card, data, comment)
         self.isResolved = False
         if nCoord is not None:
-            assert nCoord == 0 or nCoord == 1, 'nCoord=|%s|' % (nCoord)
+            assert nCoord in (0, 1), 'nCoord=%r' % (nCoord)
             nCoord *= 4  # 0 if the 1st coord, 4 if the 2nd
 
             #: the coordinate ID

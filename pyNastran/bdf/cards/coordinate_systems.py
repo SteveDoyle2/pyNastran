@@ -1167,7 +1167,7 @@ class Cord1x(Coord):
     @classmethod
     def add_card(cls, card, icard=0, comment=''):
         #self.isResolved = False
-        assert icard == 0 or icard == 1, 'icard=%r' % (icard)
+        assert icard in (0, 1), 'icard=%r' % (icard)
         ncoord = 4 * icard  # 0 if the 1st coord, 4 if the 2nd
 
         cid = integer(card, 1 + ncoord, 'cid')

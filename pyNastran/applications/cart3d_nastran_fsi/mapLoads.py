@@ -515,7 +515,7 @@ class LoadMapping(object):
         return (pierced_elements, npiercings)
 
     def is_inside(self, u, v):
-        if (0. <= u and u <= 1.) and (0. <= v and v <= 1.):
+        if (0. <= u <= 1.) and (0. <= v <= 1.):
             return True
         return False
 

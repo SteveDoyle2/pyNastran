@@ -1182,9 +1182,9 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
     def _make_tables(self):
         return
-        global RESULT_TABLES, NX_RESULT_TABLES, MSC_RESULT_TABLES
-        table_mapper = self._get_table_mapper()
-        RESULT_TABLES = table_mapper.keys()
+        #global RESULT_TABLES, NX_RESULT_TABLES, MSC_RESULT_TABLES
+        #table_mapper = self._get_table_mapper()
+        #RESULT_TABLES = table_mapper.keys()
 
     def _read_tables(self, table_name):
         """

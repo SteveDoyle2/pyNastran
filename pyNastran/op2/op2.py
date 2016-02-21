@@ -558,7 +558,6 @@ class OP2(OP2_Scalar):
                 case_keys = sorted(case_keys)
             except TypeError:
                 self.log.error('result.keys() = %s' % case_keys)
-                pass
 
             if len(result) == 0:
                 continue

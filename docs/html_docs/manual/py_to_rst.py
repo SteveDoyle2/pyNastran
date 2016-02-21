@@ -251,7 +251,6 @@ def create_rst_from_python(py_filename, rst_filename, debug=False):
                     pass
                 else:
                     print(line)
-                    pass
                     #raise RuntimeError(line)
             else:
                 raise RuntimeError('c', line)
