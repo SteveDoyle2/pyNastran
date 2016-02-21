@@ -98,62 +98,61 @@ def get_doc(filenames):
         if len(files) == 0:
             continue
 
-        f = open(fpath, 'wb')
-        f.write(msg)
-        for fname in files:
-            if os.path.getsize(fname) == 0:
-                continue
-            assert os.path.exists(fname), fname
-
-            fnamebase = os.path.basename(fname)
-            fnamebase2 = fnamebase[:-3]
-
-            fname2 = fname[:-3]
-            fname2 = fname2.strip('/.')
-
-            modname = fnamebase2
-            automodname = fname2.replace('\\', '.')
-
-            #print "fname = ", fname
-            print("fname2 = ", fname2)
-
-            if modname in mods_skip:
-                continue
-
-            msg = ':mod:`%s` Module\n' % modname  # `loads\  # fname2
-            msg += '-' * (len(msg)-1) + '\n'
-            msg += '\n'
-            msg += '.. inheritance-diagram:: %s\n' % automodname
-            msg += '\n'
-            msg += '.. automodule:: %s\n' % automodname # pyNastran.bdf.bdfInterface.bdf_card, pyNastran.bdf.cards.loads.static_loads
-            msg += '    :members:\n'
-            msg += '    :private-members:\n'
-            msg += '    :undoc-members:\n'
-            msg += '    :show-inheritance:\n'
-
-            #msg += '    :autofunction:\n'
-            #msg += '    :autodata:\n'
-            #msg += '    :automethod:\n'
-            #msg += '    :autoattribute:\n'
-
-            msg += '\n'
+        with open(fpath, 'wb') as f:
             f.write(msg)
+            for fname in files:
+                if os.path.getsize(fname) == 0:
+                    continue
+                assert os.path.exists(fname), fname
 
-        dirs = get_sub_dirs(dirname)
-        if dirs:
-            msg += 'Subpackages\n'
-            msg += '-----------\n'
-            msg += '\n'
-            msg += '.. toctree::\n'
-            msg += '\n'
-            for diri in dirs:
-                diri2 = diri.strip('/.')
-                diri2 = diri2.replace('\\', '.')
-                print("diri2 =", diri2)
-                msg += '    %s\n' % diri2
-            msg += '\n'
-            f.write(msg)
-        f.close()
+                fnamebase = os.path.basename(fname)
+                fnamebase2 = fnamebase[:-3]
+
+                fname2 = fname[:-3]
+                fname2 = fname2.strip('/.')
+
+                modname = fnamebase2
+                automodname = fname2.replace('\\', '.')
+
+                #print "fname = ", fname
+                print("fname2 = ", fname2)
+
+                if modname in mods_skip:
+                    continue
+
+                msg = ':mod:`%s` Module\n' % modname  # `loads\  # fname2
+                msg += '-' * (len(msg)-1) + '\n'
+                msg += '\n'
+                msg += '.. inheritance-diagram:: %s\n' % automodname
+                msg += '\n'
+                msg += '.. automodule:: %s\n' % automodname # pyNastran.bdf.bdfInterface.bdf_card, pyNastran.bdf.cards.loads.static_loads
+                msg += '    :members:\n'
+                msg += '    :private-members:\n'
+                msg += '    :undoc-members:\n'
+                msg += '    :show-inheritance:\n'
+
+                #msg += '    :autofunction:\n'
+                #msg += '    :autodata:\n'
+                #msg += '    :automethod:\n'
+                #msg += '    :autoattribute:\n'
+
+                msg += '\n'
+                f.write(msg)
+
+            dirs = get_sub_dirs(dirname)
+            if dirs:
+                msg += 'Subpackages\n'
+                msg += '-----------\n'
+                msg += '\n'
+                msg += '.. toctree::\n'
+                msg += '\n'
+                for diri in dirs:
+                    diri2 = diri.strip('/.')
+                    diri2 = diri2.replace('\\', '.')
+                    print("diri2 =", diri2)
+                    msg += '    %s\n' % diri2
+                msg += '\n'
+                f.write(msg)
 
 def get_sub_dirs(dirname):
     maybe_dirs = os.listdir(dirname)
