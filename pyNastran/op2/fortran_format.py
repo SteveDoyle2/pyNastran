@@ -103,29 +103,29 @@ class FortranFormat(object):
             assert endian is not None, endian
 
         if 's' in types:
-            strings = unpack(b'%s%is' % (endian, n), data)
+            strings = unpack(b('%s%is' % (endian, n)), data)
             f.write("strings = %s\n" % str(strings))
         if 'i' in types:
-            ints = unpack(b'%s%ii' % (endian, nints), data)
+            ints = unpack(b('%s%ii' % (endian, nints)), data)
             f.write("ints    = %s\n" % str(ints))
         if 'f' in types:
-            floats = unpack(b'%s%if' % (endian, nints), data)
+            floats = unpack(b('%s%if' % (endian, nints)), data)
             f.write("floats  = %s\n" % str(floats))
         if 'd' in types:
-            doubles = unpack(b'%s%id' % (endian, ndoubles), data[:ndoubles*8])
+            doubles = unpack(b('%s%id' % (endian, ndoubles)), data[:ndoubles*8])
             f.write("doubles  = %s\n" % str(doubles))
 
         if 'l' in types:
-            longs = unpack(b'%s%il' % (endian, nints), data)
+            longs = unpack(b('%s%il' % (endian, nints)), data)
             f.write("long  = %s\n" % str(longs))
         if 'I' in types:
-            ints2 = unpack(b'%s%iI' % (endian, nints), data)
+            ints2 = unpack(b('%s%iI' % (endian, nints)), data)
             f.write("unsigned int = %s\n" % str(ints2))
         if 'L' in types:
-            longs2 = unpack(b'%s%iL' % (endian, nints), data)
+            longs2 = unpack(b('%s%iL' % (endian, nints)), data)
             f.write("unsigned long = %s\n" % str(longs2))
         if 'q' in types:
-            longs = unpack(b'%s%iq' % (endian, ndoubles), data[:ndoubles*8])
+            longs = unpack(b('%s%iq' % (endian, ndoubles)), data[:ndoubles*8])
             f.write("long long = %s\n" % str(longs))
         return strings, ints, floats
 

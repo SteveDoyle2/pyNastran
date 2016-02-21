@@ -553,7 +553,13 @@ class OP2(OP2_Scalar):
             if result_type == 'eigenvalues':
                 continue
             result = getattr(self, result_type)
-            case_keys = sorted(result.keys())
+            case_keys = list(result.keys())
+            try:
+                case_keys = sorted(case_keys)
+            except TypeError:
+                self.log.error('result.keys() = %s' % case_keys)
+                pass
+
             if len(result) == 0:
                 continue
             for isubcase in unique_isubcases:

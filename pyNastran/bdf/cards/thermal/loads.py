@@ -42,7 +42,7 @@ class QVOL(ThermalLoad):
         self.elements = elements
 
     @classmethod
-    def add_card(self, card, comment=''):
+    def add_card(cls, card, comment=''):
         sid = integer(card, 1, 'sid')
 
         qvol = double(card, 2, 'qvol')

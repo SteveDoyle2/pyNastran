@@ -68,9 +68,8 @@ class LoadMapping(object):
 
     #@entryExit
     def load_mapping_matrix(self):
-        infile = open(self.mapfile, 'r')
-        self.mapping_matrix = cPickle.loads(infile)
-        infile.close()
+        with open(self.mapfile, 'r') as infile:
+            self.mapping_matrix = cPickle.loads(infile)
 
     #@entryExit
     def save_mapping_matrix(self):

@@ -93,14 +93,14 @@ class CBEAM(CBAR):
         self._validate_input()
 
     @classmethod
-    def add_card(self, card, comment=''):
+    def add_card(cls, card, comment=''):
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', eid)
         ga = integer(card, 3, 'ga')
         gb = integer(card, 4, 'gb')
 
-        x, g0 = self._init_x_g0(card, eid)
-        is_offt, offt, bit = self._init_offt_bit(card, eid)# offt doesn't exist in NX nastran
+        x, g0 = cls._init_x_g0(card, eid)
+        is_offt, offt, bit = cls._init_offt_bit(card, eid)# offt doesn't exist in NX nastran
         pa = integer_or_blank(card, 9, 'pa', 0)
         pb = integer_or_blank(card, 10, 'pb', 0)
 

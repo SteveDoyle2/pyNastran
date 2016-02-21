@@ -162,7 +162,6 @@ class SHABP(ShabpOut):
                     row.append([x1, y1, z1])
                 elif t1 in [0, 2]:
                     row.append([x1, y1, z1])
-                    pass
                 elif t1 == 3:
                     row.append([x1, y1, z1])
                     patch.append(row)
@@ -182,7 +181,6 @@ class SHABP(ShabpOut):
                     row.append([x2, y2, z2])
                 elif t2 in [0, 2]:
                     row.append([x2, y2, z2])
-                    pass
                 elif t2 == 3:
                     row.append([x2, y2, z2])
                     patch.append(row)
@@ -371,7 +369,6 @@ class SHABP(ShabpOut):
         i += 1
         if val1 == '10':
             #print "****10****"
-            pass
             i += 1
         elif val1 == '13':
             #print "****13****"

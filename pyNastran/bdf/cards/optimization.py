@@ -117,20 +117,28 @@ class DCONSTR(OptConstraint):
 
 class DESVAR(OptConstraint):
     type = 'DESVAR'
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self, oid, label, xinit, xlb, xub, delx, ddval, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            self.oid = integer(card, 1, 'oid')
-            self.label = string(card, 2, 'label')
-            self.xinit = double(card, 3, 'xinit')
-            self.xlb = double_or_blank(card, 4, 'xlb', -1e20)
-            self.xub = double_or_blank(card, 5, 'xub', 1e20)
-            self.delx = double_or_blank(card, 6, 'delx', 1e20)
-            self.ddval = integer_or_blank(card, 7, 'ddval')
-            assert len(card) <= 8, 'len(DESVAR card) = %i' % len(card)
-        else:
-            raise NotImplementedError(data)
+        self.oid = oid
+        self.label = label
+        self.xinit = xinit
+        self.xlb = xlb
+        self.xub = xub
+        self.delx = delx
+        self.ddval = ddval
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        oid = integer(card, 1, 'oid')
+        label = string(card, 2, 'label')
+        xinit = double(card, 3, 'xinit')
+        xlb = double_or_blank(card, 4, 'xlb', -1e20)
+        xub = double_or_blank(card, 5, 'xub', 1e20)
+        delx = double_or_blank(card, 6, 'delx', 1e20)
+        ddval = integer_or_blank(card, 7, 'ddval')
+        assert len(card) <= 8, 'len(DESVAR card) = %i' % len(card)
+        return DESVAR(oid, label, xinit, xlb, xub, delx, ddval, comment=comment)
 
     def OptID(self):
         return self.oid
@@ -265,7 +273,7 @@ class DOPTPRM(OptConstraint):
         self.params = params
 
     @classmethod
-    def add_card(self, card, comment=''):
+    def add_card(cls, card, comment=''):
         nfields = len(card) - 1
         params = {}
         for i in range(0, nfields, 2):
@@ -273,8 +281,8 @@ class DOPTPRM(OptConstraint):
             default_value = None
             if param is None:
                 continue
-            if param in self.defaults:
-                default_value = self.defaults[param]
+            if param in cls.defaults:
+                default_value = cls.defaults[param]
             val = integer_double_or_blank(card, i + 2, '%s_value' % param, default_value)
             params[param] = val
         return DOPTPRM(params, comment=comment)

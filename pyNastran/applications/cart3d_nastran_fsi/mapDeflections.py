@@ -21,7 +21,6 @@ from pyNastran.utils.log import get_logger
 debug = True
 log = get_logger(None, 'debug' if debug else 'info')
 
-#------------------------------------------------------------------
 
 class DeflectionReader(object):
     def __init__(self, op2_filename='fem.op2', isubcase=1):
@@ -321,11 +320,10 @@ def write_proper_tets(workpath, properTets):
     if not os.path.exists(outfilename):
         log.info("writing tets...")
         msg = '#PointID    tetID\n'
-        for key, value in properTets.items():
+        for key, value in iteritems(properTets):
             msg += "%5s  %5s\n" % (key, value)
-        outfile = open(outfilename, 'wb')
-        outfile.write(msg)
-        outfile.close()
+        with open(outfilename, 'wb') as outfile:
+            outfile.write(msg)
 
 def test_Tet():
     b = [10., 0., 0.]

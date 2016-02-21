@@ -381,11 +381,11 @@ class RBE1(RigidElement):  # maybe not done, needs testing
         self.alpha = alpha
 
     @classmethod
-    def add_card(self, card, comment=''):
+    def add_card(cls, card, comment=''):
         eid = integer(card, 1, 'eid')
-        iUm = card.index('UM')
-        if iUm > 0:
-            assert string(card, iUm, 'UM') == 'UM'
+        ium = card.index('UM')
+        if ium > 0:
+            assert string(card, ium, 'UM') == 'UM'
 
         #assert isinstance(card[-1], string_types), 'card[-1]=%r type=%s' %(card[-1], type(card[-1]))
         alpha_last = integer_double_or_string(card, -1, 'alpha_last')
@@ -403,7 +403,7 @@ class RBE1(RigidElement):  # maybe not done, needs testing
         Cni = []
         Gmi = []
         Cmi = []
-        while offset + i < iUm - 1:
+        while offset + i < ium - 1:
             #print('field(%s) = %s' % (offset + i, card.field(offset + i)))
             gni = integer_or_blank(card, offset + i, 'gn%i' % n)
             cni = components_or_blank(card, offset + i + 1, 'cn%i' % n)
@@ -419,7 +419,7 @@ class RBE1(RigidElement):  # maybe not done, needs testing
 
         # loop till alpha, no field9,field10
         n = 1
-        offset = iUm + 1
+        offset = ium + 1
         i = 0
 
         # dont grab alpha

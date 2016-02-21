@@ -11,37 +11,39 @@ from pyNastran.f06.f06 import F06, FatalError
 #from pyNastran.op2.test.test_op2 import parseTableNamesFromF06, getFailedFiles
 
 
-def run_lots_of_files(files, debug=True, saveCases=True, skipFiles=[],
-                      stopOnFailure=False, nStart=0, nStop=1000000000):
+def run_lots_of_files(files, debug=True, save_cases=True, skip_files=None,
+                      stop_on_failure=False, nstart=0, nstop=1000000000):
+    if skip_files is None:
+        skip_files = []
     n = ''
-    iSubcases = []
-    failedCases = []
-    nFailed = 0
-    nTotal = 0
-    nPassed = 0
+    isubcases = []
+    failed_cases = []
+    nfailed = 0
+    ntotal = 0
+    npassed = 0
     t0 = time.time()
-    for i, f06file in enumerate(files[nStart:nStop], nStart):  # 149
+    for i, f06file in enumerate(files[nstart:nstop], nstart):  # 149
         base_name = os.path.basename(f06file)
-        #if baseName not in skipFiles and not base_name.startswith('acms') and i not in nSkip:
-        if base_name not in skipFiles:
+        #if baseName not in skip_files and not base_name.startswith('acms') and i not in nSkip:
+        if base_name not in skip_files:
             print("%" * 80)
             print('file=%s\n' % f06file)
             n = '%s ' % i
             sys.stderr.write('%sfile=%s\n' % (n, f06file))
-            nTotal += 1
-            is_passed = run_f06(f06file, iSubcases=iSubcases, debug=debug,
-                                stopOnFailure=stopOnFailure)  # True/False
+            ntotal += 1
+            is_passed = run_f06(f06file, isubcases=isubcases, debug=debug,
+                                stop_on_failure=stop_on_failure)  # True/False
             if not is_passed:
                 sys.stderr.write('**file=%s\n' % f06file)
-                failedCases.append(f06file)
-                nFailed += 1
+                failed_cases.append(f06file)
+                nfailed += 1
             else:
-                nPassed += 1
+                npassed += 1
             #sys.exit('end of test...test_f06.py')
 
-    if saveCases:
+    if save_cases:
         f = open('failedCases.in', 'wb')
-        for f06file in failedCases:
+        for f06file in failed_cases:
             f.write('%s\n' % (f06file))
         f.close()
     print("dt = %s seconds" % (time.time() - t0))
@@ -49,17 +51,20 @@ def run_lots_of_files(files, debug=True, saveCases=True, skipFiles=[],
     #f06 = F06('test_tet10_subcase_1.f06')
     #f06.readF06()
 
-    sys.exit('-----done with all models %s/%s=%.2f%%  nFailed=%s-----' % (nPassed, nTotal, 100. * nPassed / float(nTotal), nTotal - nPassed))
+    sys.exit('-----done with all models %s/%s=%.2f%%  nfailed=%s-----' % (
+        npassed, ntotal, 100. * npassed / float(ntotal), ntotal - npassed))
 
 
-def run_f06(f06_filename, iSubcases=[], write_f06=True, is_vector=False,
-            debug=False, stopOnFailure=True):
-    isPassed = False
+def run_f06(f06_filename, isubcases=None, write_f06=True, is_vector=False,
+            debug=False, stop_on_failure=True):
+    if isubcases is None:
+        isubcases = []
+    is_passed = False
     #stopOnFailure = False
     #debug = True
     try:
         f06 = F06(debug=debug)
-        #f06.set_subcases(iSubcases)  # TODO not supported
+        #f06.set_subcases(isubcases)  # TODO not supported
 
         #f06.read_bdf(f06.bdf_filename, includeDir=None, xref=False)
         f06.read_f06(f06_filename, vectorized=is_vector)
@@ -78,7 +83,7 @@ def run_f06(f06_filename, iSubcases=[], write_f06=True, is_vector=False,
         #print f06.case_control_deck.getF06Data()
         #print f06.print_results()
         #print f06.case_control_deck.getF06Data()
-        isPassed = True
+        is_passed = True
     except KeyboardInterrupt:
         sys.stdout.flush()
         print_exc(file=sys.stdout)
@@ -89,55 +94,55 @@ def run_f06(f06_filename, iSubcases=[], write_f06=True, is_vector=False,
     #except IOError: # missing file
         #pass
     #except AssertionError:
-    #    isPassed = True
+    #    is_passed = True
     except FatalError:  # remove this later...
-        isPassed = True
+        is_passed = True
     #except InvalidFormatCodeError:
-    #    isPassed = True
+    #    is_passed = True
     #except RuntimeError: #InvalidAnalysisCode
-    #    isPassed = True
+    #    is_passed = True
     #except SyntaxError: #Invalid Markers
-    #    isPassed = True
+    #    is_passed = True
     except SystemExit:
         #print_exc(file=sys.stdout)
         #sys.exit('stopping on sys.exit')
         raise
     #except NameError:  # variable isnt defined
-    #    if stopOnFailure:
+    #    if stop_on_failure:
     #        raise
     #    else:
-    #        isPassed = True
+    #        is_passed = True
     #except AttributeError:  # missing function
-    #    if stopOnFailure:
+    #    if stop_on_failure:
     #        raise
     #    else:
-    #        isPassed = True
+    #        is_passed = True
     #except KeyError:
     #    raise
     #except TypeError:  # numpy error
-    #    isPassed = True
+    #    is_passed = True
     #except IndexError: # bad bdf
-    #    isPassed = True
+    #    is_passed = True
     #except IOError:  # missing bdf file
-        #isPassed = False
+        #is_passed = False
         #raise
     #except SyntaxError: #Invalid Subcase
-    #    isPassed = True
+    #    is_passed = True
     #except SyntaxError: # Param Parse:
-    #    isPassed = True
+    #    is_passed = True
     #except NotImplementedError:
-        #isPassed = True
+        #is_passed = True
     #except InvalidFieldError: # bad bdf field
-    #    isPassed = True
+    #    is_passed = True
     except:
         #print e
         print_exc(file=sys.stdout)
-        if stopOnFailure:
+        if stop_on_failure:
             raise
         else:
-            isPassed = False
-    #print("isPassed = %s" % isPassed)
-    return isPassed
+            is_passed = False
+    #print("is_passed = %s" % is_passed)
+    return is_passed
 
 
 def main():
@@ -178,7 +183,7 @@ def main():
             write_f06 = data['--write_f06'],
             debug     = not(data['--quiet']),
             is_vector = data['--vector'],
-            stopOnFailure = True
+            stop_on_failure = True
     )
 
 if __name__ == '__main__':  # pragma: no cover

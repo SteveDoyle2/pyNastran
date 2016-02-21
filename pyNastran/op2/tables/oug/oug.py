@@ -555,7 +555,7 @@ class OUG(OP2Common):
         """
         table_code = 7
         """
-        if self.table_name in [b'OUGV1', b'OUGV2', 'BOUGV1', 'BOPHIG']:
+        if self.table_name in [b'OUGV1', b'OUGV2', b'BOUGV1', b'BOPHIG']:
             result_name = 'eigenvectors'
         elif self.table_name == b'RADCONS':
             result_name = 'eigenvectors_RADCONS'

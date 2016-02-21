@@ -1883,7 +1883,6 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         elif name == 'AERO':
             self.add_AERO(card_obj)
             #self.aero.add(card_obj, comment=comment)
-            pass
         elif name == 'AEROS':
             #self.aeros.add(card_obj, comment=comment)
             pass

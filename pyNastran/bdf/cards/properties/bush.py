@@ -70,7 +70,7 @@ class PBUSH(BushingProperty):
             self.et = rcv[3]
 
     @classmethod
-    def add_card(self, card, comment=''):
+    def add_card(cls, card, comment=''):
         k_fields = []
         b_fields = []
         ge_fields = []
@@ -83,32 +83,32 @@ class PBUSH(BushingProperty):
         while istart < nfields:
             pname = string(card, istart, 'pname')
             if   pname == 'K':
-                k_fields = self._read_k(card, istart)
+                k_fields = cls._read_k(card, istart)
             elif pname == 'B':
-                b_fields = self._read_b(card, istart)
+                b_fields = cls._read_b(card, istart)
             elif pname == 'GE':
-                ge_fields = self._read_ge(card, istart)
+                ge_fields = cls._read_ge(card, istart)
             elif pname == 'RCV':
-                rcv_fields = self._read_rcv(card, istart)
+                rcv_fields = cls._read_rcv(card, istart)
             else:
                 break
             istart += 8
         return PBUSH(pid, k_fields, b_fields, ge_fields, rcv_fields,
                      comment=comment)
 
-    def add_op2_data(self, data, comment=''):
-        if comment:
-            self._comment = comment
-        self.pid = data[0]
-        self.b = data[1]
-        raise NotImplementedError('PBUSH data...')
+    #@classmethod
+    #def add_op2_data(cls, data, comment=''):
+        #pid = data[0]
+        #b = data[1]
+        #return PBUSH(pid, k_fields, b_fields, ge_fields, rcv_fields,
+                     #comment=comment)
 
     def _verify(self, xref=False):
         pid = self.Pid()
         assert isinstance(pid, integer_types), 'pid=%r' % pid
 
     @classmethod
-    def _read_k(self, card, istart):
+    def _read_k(cls, card, istart):
         # Flag indicating that the next 1 to 6 fields are stiffness values in
         # the element coordinate system.
         #self.k = string(card, istart, 'k')
@@ -119,7 +119,7 @@ class PBUSH(BushingProperty):
         return Ki
 
     @classmethod
-    def _read_b(self, card, istart):
+    def _read_b(cls, card, istart):
         # Flag indicating that the next 1 to 6 fields are force-per-velocity
         # damping.
         #self.b = string(card, istart, 'b')
@@ -131,7 +131,7 @@ class PBUSH(BushingProperty):
         return Bi
 
     @classmethod
-    def _read_ge(self, card, istart):
+    def _read_ge(cls, card, istart):
         # Flag indicating that the next fields, 1 through 6 are structural
         # damping constants. See Remark 7. (Character)
         #self.ge = string(card, istart, 'ge')
@@ -142,7 +142,7 @@ class PBUSH(BushingProperty):
         return GEi
 
     @classmethod
-    def _read_rcv(self, card, istart):
+    def _read_rcv(cls, card, istart):
         # Flag indicating that the next 1 to 4 fields are stress or strain
         # coefficients. (Character)
         #self.rcv = string(card, istart, 'rcv')

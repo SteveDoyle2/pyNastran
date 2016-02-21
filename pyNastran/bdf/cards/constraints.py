@@ -149,7 +149,7 @@ class SUPORT1(Constraint):
         assert len(self.IDs) == len(self.Cs)
 
     @classmethod
-    def add_card(self, card, comment=''):
+    def add_card(cls, card, comment=''):
         conid = integer(card, 1, 'conid')  # really a support id sid
 
         nfields = len(card)

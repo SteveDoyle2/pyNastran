@@ -1452,6 +1452,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'RLOAD2' : (RLOAD2, self.add_dload_entry),
 
             'DOPTPRM' : (DOPTPRM, self._add_doptprm),
+            'DESVAR' : (DESVAR, self.add_DESVAR),
             # BCTSET
         }
         self._card_parser_a = {
@@ -1506,7 +1507,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
             'SESET' : (SESET, self.add_SESET),
             'DCONSTR' : (DCONSTR, self.add_DCONSTR),
-            'DESVAR' : (DESVAR, self.add_DESVAR),
             'DDVAL' : (DDVAL, self.add_DDVAL),
             'DLINK' : (DLINK, self.add_DLINK),
             'PARAM' : (PARAM, self.add_PARAM),

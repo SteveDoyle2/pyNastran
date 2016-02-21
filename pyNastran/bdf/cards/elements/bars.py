@@ -281,7 +281,7 @@ class CBAR(LineElement):
         assert self.offt[2] in ['G', 'O', 'E'], msg
 
     @classmethod
-    def add_card(self, card, comment=''):
+    def add_card(cls, card, comment=''):
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', eid)
         ga = integer(card, 3, 'ga')
@@ -400,7 +400,7 @@ class CBAR(LineElement):
         return (self.ga_ref.get_position() + self.gb_ref.get_position()) / 2.
 
     @classmethod
-    def _init_x_g0(self, card, eid):
+    def _init_x_g0(cls, card, eid):
         field5 = integer_double_or_blank(card, 5, 'g0_x1', 0.0)
         if isinstance(field5, integer_types):
             g0 = field5
@@ -417,7 +417,7 @@ class CBAR(LineElement):
                 raise RuntimeError(msg)
         else:
             msg = ('field5 on %s (G0/X1) is the wrong type...id=%s field5=%s '
-                   'type=%s' % (self.type, eid, field5, type(field5)))
+                   'type=%s' % (cls.type, eid, field5, type(field5)))
             raise RuntimeError(msg)
         return x, g0
 
@@ -563,14 +563,14 @@ class CBEAM3(CBAR):
         self.s = s
 
     @classmethod
-    def add_card(self, card, comment=''):
+    def add_card(cls, card, comment=''):
         eid = integer(card, 1, 'eid')
-        pid = integer_or_blank(card, 2, 'pid', self.eid)
+        pid = integer_or_blank(card, 2, 'pid', eid)
         ga = integer(card, 3, 'ga')
         gb = integer(card, 4, 'gb')
         gc = integer(card, 5, 'gc')
 
-        self._init_x_g0(card, eid)
+        cls._init_x_g0(card, eid)
 
         wa = array([double_or_blank(card, 9, 'w1a', 0.0),
                     double_or_blank(card, 10, 'w2a', 0.0),

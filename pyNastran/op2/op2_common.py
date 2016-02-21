@@ -697,7 +697,7 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
             assert nnodes > 0
 
             flag = 'freq/dt/mode'
-            s = Struct(self._endian + self._analysis_code_fmt + b'i6f')
+            s = Struct(b(self._endian + self._analysis_code_fmt + 'i6f'))
             assert eid > 0, self.code_information()
             for inode in range(nnodes):
                 edata = data[n:n+32]

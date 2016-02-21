@@ -582,7 +582,6 @@ class TestF06(unittest.TestCase):
                     for nid, ovmi in sorted(iteritems(ovm)):
                         for ilayer, ovmii in enumerate(ovmi):
                             print("%8s %8s %6s %8s" % (eid, nid, ilayer, ovmii))
-                            pass
             else:
                 #print("%3s %3s %6s %8s" % ('eID', 'NID', 'iLayer', 'MaxShear'))
                 #vonMises = 'MAX SHEAR'

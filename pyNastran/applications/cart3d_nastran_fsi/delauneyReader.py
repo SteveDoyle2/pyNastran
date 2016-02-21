@@ -307,16 +307,14 @@ class DelauneyReader(object):
         determines the volume for testing.
         """
         log.info("---reading Delauney Tetrahedralization file...%r" % self.infilename)
-        infile = open(self.infilename, 'r')
-        lines = infile.readlines()
-        infile.close()
+        with open(self.infilename, 'r') as infile:
+            lines = infile.readlines()
 
         slines = []
         for line in lines:
             sline = line.strip().split()
             if sline:
                 slines.append(sline)
-        infile.close()
 
         #log.info('slines[0] = %s' % (slines[0]))
         ngrids, nelements = self.ints(slines[0])
