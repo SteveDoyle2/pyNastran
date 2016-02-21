@@ -1330,20 +1330,22 @@ class Cord1x(Coord):
 class GMCORD(BaseCard):
     type = 'GMCORD'
 
-    def __init__(self):
-        self.cid = None
-        self.entity = None
-        self.gm_ids = None
-
-    def add_card(self, card, comment=''):
+    def __init__(self, cid, entity, gm_ids, comment=''):
         if comment:
             self._comment = comment
-        self.cid = integer(card, 1, 'cid')
-        self.entity = string(card, 2, 'entity')
-        self.gm_ids = [
+        self.cid = cid
+        self.entity = entity
+        self.gm_ids = gm_ids
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        cid = integer(card, 1, 'cid')
+        entity = string(card, 2, 'entity')
+        gm_ids = [
             integer(card, 3, 'GM_ID1'),
             integer_or_blank(card, 4, 'GM_ID2'),
         ]
+        return GMCORD(cid, entity, gm_ids, comment=comment)
 
     def cross_reference(self, model):
         pass

@@ -10,7 +10,8 @@ All static loads are defined in this file.  This includes:
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import integer_types
+import sys
+from six import integer_types, PY3
 from six.moves import zip, range
 
 #from pyNastran.bdf.errors import CrossReferenceError
@@ -111,6 +112,7 @@ class LoadCombination(Load):  # LOAD, DLOAD
         load_ids2 = []
         msg = ' which is required by %s=%s' % (self.type, self.sid)
         for load_id in self.load_ids:
+            assert load_id != self.sid, 'Type=%s sid=%s load_id=%s creates a recursion error' % (self.type, self.sid, load_id)
             load_id2 = model.Load(load_id, msg=msg)
             assert isinstance(load_id2, list), load_id2
             load_ids2.append(load_id2)
@@ -156,7 +158,14 @@ class LoadCombination(Load):  # LOAD, DLOAD
                 try:
                     loads += load.get_loads()
                 except RuntimeError:
-                    raise RuntimeError('recursion error on load=\n%s' % str(load))
+                    if PY3:
+                        print('recursion error on load=\n%s' % str(load))
+                        raise
+                    try:
+                        msg = 'recursion error on load=\n%s' % str(load)
+                    except RuntimeError:
+                        msg = 'Recursion Error on load=%s Type=%s' % (load.sid, load.type)
+                    raise RuntimeError(msg)
             #loads += self.ID  #: :: todo:  what does this mean, was uncommented
         return loads
 

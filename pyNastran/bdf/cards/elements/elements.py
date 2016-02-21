@@ -87,7 +87,12 @@ class CFAST(Element):
         self.gs = self.Gs()
         self.ga = self.Ga()
         self.gb = self.Gb()
-        del self.gs_ref, self.ga_ref, self.gb_ref
+        if self.gs:
+            del self.gs_ref
+        if self.ga:
+            del self.ga_ref
+        if self.gb:
+            del self.gb_ref
 
     def raw_fields(self):
         list_fields = ['CFAST', self.eid, self.Pid(), self.Type, self.ida, self.idb,

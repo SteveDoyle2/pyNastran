@@ -1172,7 +1172,11 @@ def expand_thru_case_control(set_value):
                 set_value2.add(ivalue)
 
     list_values = list(set_value2)
-    list_values.sort()
+    try:
+        list_values.sort()
+    except TypeError:
+        msg = 'sort error: list_values=%s'  % (list_values)
+        raise TypeError(msg)
 
     #print('end of expansion', list_values)
     return list_values

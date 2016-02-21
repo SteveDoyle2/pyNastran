@@ -864,6 +864,7 @@ def get_element_stats(fem1, fem2, quiet=False):
                     raise TypeError('allLoads should return a list...%s'
                                     % (type(all_loads)))
             except:
+                raise
                 print("load statistics not available - load.type=%s "
                       "load.sid=%s" % (load.type, load.sid))
                 raise

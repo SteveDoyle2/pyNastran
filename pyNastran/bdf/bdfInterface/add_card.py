@@ -518,7 +518,6 @@ class AddMethods(BDFAttributes):
     def add_AECOMP(self, aecomp):
         key = aecomp.name
         assert key not in self.aecomps, '\naecomp=\n%s oldAECOMP=\n%s' % (aecomp, self.aecomps[key])
-        assert key >= 0
         self.aecomps[key] = aecomp
         self._type_to_id_map[aecomp.type].append(key)
 
