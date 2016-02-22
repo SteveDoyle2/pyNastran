@@ -14,9 +14,9 @@ tetgen Package
 :mod:`tetgen_reader` Module
 -------------------------------
 
-.. inheritance-diagram:: pyNastran.converters.dev.tetgen.tetgen_reader
+.. inheritance-diagram:: pyNastran.converters.dev.tetgen.tetgen
 
-.. automodule:: pyNastran.converters.dev.tetgen.tetgen_reader
+.. automodule:: pyNastran.converters.dev.tetgen.tetgen
     :members:
     :undoc-members:
     :show-inheritance:

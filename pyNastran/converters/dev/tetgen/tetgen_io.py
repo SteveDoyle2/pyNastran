@@ -6,7 +6,7 @@ import os
 import vtk
 from vtk import vtkTriangle, vtkTetra
 
-from pyNastran.converters.dev.tetgen.tetgen_reader import TetgenReader
+from pyNastran.converters.dev.tetgen.tetgen import Tetgen
 
 
 class TetgenIO(object):
@@ -25,7 +25,7 @@ class TetgenIO(object):
         if skip_reading:
             return
 
-        model = TetgenReader(log=self.log, debug=False)
+        model = Tetgen(log=self.log, debug=False)
 
         base_filename, ext = os.path.splitext(smesh_filename)
         node_filename = base_filename + '.node'
