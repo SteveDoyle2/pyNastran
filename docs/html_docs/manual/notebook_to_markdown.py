@@ -9,8 +9,8 @@ pkg_path = pyNastran.__path__[0]
 
 def create_rst_from_ipython_notebooks():
     curdir = os.getcwd()
-    notebook_dir = os.path.join(pkg_path, '..', 'quick_start', 'demo')
-    pydocs_dir = os.path.join(pkg_path, '..', 'docs_sphinx', 'manual', 'py_docs')
+    notebook_dir = os.path.join(pkg_path, '..', 'docs', 'quick_start', 'demo')
+    pydocs_dir = os.path.join(pkg_path, '..', 'docs', 'html_docs', 'quick_start')
 
     assert os.path.exists(pydocs_dir), print_bad_path(quick_start_pydocs_dir)
     assert os.path.exists(notebook_dir), print_bad_path(notebook_dir)

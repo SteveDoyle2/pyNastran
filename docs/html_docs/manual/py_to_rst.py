@@ -92,8 +92,8 @@ def create_html_from_rst(rst_filename, html_filename):
 
 
 def create_rst_from_python_files():
-    quick_start_pydocs_dir = os.path.join(pkg_path, '..', 'quick_start', 'py_docs')
-    pydocs_dir = os.path.join(pkg_path, '..', 'docs_sphinx', 'manual', 'py_docs')
+    quick_start_pydocs_dir = os.path.join(pkg_path, '..', 'docs', 'quick_start', 'py_docs')
+    pydocs_dir = os.path.join(pkg_path, '..', 'docs', 'html_docs', 'quck_start')
     if not os.path.exists(pydocs_dir):
         os.makedirs(pydocs_dir)
 
@@ -105,34 +105,34 @@ def create_rst_from_python_files():
         print(fname2)
         shutil.copyfile(fname1, fname2)
     return
-    fnames = [
-        os.path.join('py_docs', fname) for fname in os.listdir('py_docs')
-        if '__init__' not in fname
-        and fname.endswith('.py')
-        and not fname.endswith('.pyc')
-        and not fname.endswith('.html')
-        and not fname.endswith('.txt')
-        #and not fname.endswith('.rst')
-    ]
+    #fnames = [
+        #os.path.join('py_docs', fname) for fname in os.listdir('py_docs')
+        #if '__init__' not in fname
+        #and fname.endswith('.py')
+        #and not fname.endswith('.pyc')
+        #and not fname.endswith('.html')
+        #and not fname.endswith('.txt')
+        ##and not fname.endswith('.rst')
+    #]
 
-    print(fnames)
-    for py_filename in fnames:
-        root = os.path.splitext(py_filename)[0]
-        base = os.path.splitext(os.path.basename(py_filename))[0]
+    #print(fnames)
+    #for py_filename in fnames:
+        #root = os.path.splitext(py_filename)[0]
+        #base = os.path.splitext(os.path.basename(py_filename))[0]
 
-        rst_filename = base + '.rst'
-        html_filename = root + '.html'
-        print(rst_filename)
-        #print(py_filename)
-        create_rst_from_python(py_filename, rst_filename)
-        create_html_from_rst(rst_filename, html_filename)
+        #rst_filename = base + '.rst'
+        #html_filename = root + '.html'
+        #print(rst_filename)
+        ##print(py_filename)
+        #create_rst_from_python(py_filename, rst_filename)
+        #create_html_from_rst(rst_filename, html_filename)
 
-    print(os.path.abspath(py_filename))
-    for py_filename in fnames:
-        root = os.path.splitext(py_filename)[0]
-        base = os.path.splitext(os.path.basename(py_filename))[0]
-        rst_filename = base + '.rst'
-        print('ran %s; saved %s' % (py_filename, rst_filename))
+    #print(os.path.abspath(py_filename))
+    #for py_filename in fnames:
+        #root = os.path.splitext(py_filename)[0]
+        #base = os.path.splitext(os.path.basename(py_filename))[0]
+        #rst_filename = base + '.rst'
+        #print('ran %s; saved %s' % (py_filename, rst_filename))
 
 
 def create_rst_from_python(py_filename, rst_filename, debug=False):
