@@ -16,11 +16,85 @@ from pyNastran.utils import is_binary_file as file_is_binary
 from pyNastran.utils.mathematics import print_matrix #, print_annotated_matrix
 
 
-def read_op4(op4_filename=None, matrix_names=None, precision='default'):
+def read_op4(op4_filename=None, matrix_names=None, precision='default',
+             debug=False):
     """
-    See ``OP4.read_op4``
+    Reads a NASTRAN OUTPUT4 file, and stores the
+    matrices as the output arguments.  The number of
+    matrices read is defined by the list matrix_names.  By default, all
+    matrices will be read.  The resulting output is a dictionary of
+    matrices that are accessed by their name.
+
+    .. code-block:: python
+
+      >>> from pyNastran.op4.op4 import OP4
+      >>> op4 = OP4()
+
+      # get all the matrices
+      >>> matrices = op4.read_op4(op4_filename)
+      >>> (formA, A) = matrices['A']
+      >>> (formB, B) = matrices['B']
+      >>> (formC, C) = matrices['C']
+
+      # or to reduce memory usage
+      >>> matrices = op4.read_op4(op4_filename, matrix_names=['A', 'B'])
+      >>> (formA, A) = matrices['A']
+      >>> (formB, B) = matrices['B']
+
+      # or because you only want A
+      >>> matrices = op4.read_op4(op4_filename, matrix_names='A')
+      >>> (formA, A) = matrices['A']
+
+      # get all the matrices, but select the file using a file dialog
+      >>> matrices = op4.read_op4()
+      >>>
+
+    Parameters
+    ----------
+    op4_filename : str / None
+        an OP4 filename.  Type=STRING.
+    matrix_names : List[str], str / None
+        matrix name(s) (None -> all)
+    precision : str; {'default', 'single', 'double'}
+        specifies if the matrices are in single or double precsion
+        which means the format will be whatever the file is in
+
+    Returns
+    -------
+    matricies : dict[str] = (int, matrix)
+        dictionary of matrices where the key is the name and the value is [form, matrix]
+
+        +------+----------------+
+        | Form |   Definition   |
+        +======+================+
+        |  1   | Square         |
+        +------+----------------+
+        |  2   | Rectangular    |
+        +------+----------------+
+        |  3   | Diagonal       |
+        +------+----------------+
+        |  6   | Symmetric      |
+        +------+----------------+
+        |  8   | Id entity      |
+        +------+----------------+
+        |  9   | Pseudoidentity |
+        +------+----------------+
+
+        +--------+-------------------------+
+        |  Type  | Object                  |
+        +========+=========================+
+        | Dense  | NUMPY.NDARRAY           |
+        +--------+-------------------------+
+        | Sparse | SCIPY.SPARSE.COO_MATRIX |
+        +--------+-------------------------+
+
+    .. note:: based off the MATLAB code SAVEOP4 developed by ATA-E and
+              later UCSD.
+    .. note:: it's strongly recommended that you convert sparse matrices to
+              another format before doing math on them.  This is standard
+              with sparse matrices.
     """
-    op4 = OP4(log=None, debug=True)
+    op4 = OP4(log=None, debug=debug)
     return op4.read_op4(op4_filename, matrix_names, precision)
 
 
@@ -38,82 +112,7 @@ class OP4(object):
 
     def read_op4(self, op4_filename=None, matrix_names=None, precision='default'):
         """
-        Reads a NASTRAN OUTPUT4 file, and stores the
-        matrices as the output arguments.  The number of
-        matrices read is defined by the list matrix_names.  By default, all
-        matrices will be read.  The resulting output is a dictionary of
-        matrices that are accessed by their name.
-
-        .. code-block:: python
-
-          >>> from pyNastran.op4.op4 import OP4
-          >>> op4 = OP4()
-
-          # get all the matrices
-          >>> matrices = op4.read_op4(op4_filename)
-          >>> (formA, A) = matrices['A']
-          >>> (formB, B) = matrices['B']
-          >>> (formC, C) = matrices['C']
-
-          # or to reduce memory usage
-          >>> matrices = op4.read_op4(op4_filename, matrix_names=['A', 'B'])
-          >>> (formA, A) = matrices['A']
-          >>> (formB, B) = matrices['B']
-
-          # or because you only want A
-          >>> matrices = op4.read_op4(op4_filename, matrix_names='A')
-          >>> (formA, A) = matrices['A']
-
-          # get all the matrices, but select the file using a file dialog
-          >>> matrices = op4.read_op4()
-          >>>
-
-        Parameters
-        ----------
-        op4_filename : str / None
-            an OP4 filename.  Type=STRING.
-        matrix_names : List[str], str / None
-            matrix name(s) (None -> all)
-        precision : str; {'default', 'single', 'double'}
-            specifies if the matrices are in single or double precsion
-            which means the format will be whatever the file is in
-
-        Returns
-        -------
-        matricies : dict[str] = (int, matrix)
-            dictionary of matrices where the key is the name and the value is [form, matrix]
-
-            +------+----------------+
-            | Form |   Definition   |
-            +======+================+
-            |  1   | Square         |
-            +------+----------------+
-            |  2   | Rectangular    |
-            +------+----------------+
-            |  3   | Diagonal       |
-            +------+----------------+
-            |  6   | Symmetric      |
-            +------+----------------+
-            |  8   | Id entity      |
-            +------+----------------+
-            |  9   | Pseudoidentity |
-            +------+----------------+
-
-            +--------+-------------------------+
-            |  Type  | Object                  |
-            +========+=========================+
-            | Dense  | NUMPY.NDARRAY           |
-            +--------+-------------------------+
-            | Sparse | SCIPY.SPARSE.COO_MATRIX |
-            +--------+-------------------------+
-
-        .. note:: based off the MATLAB code SAVEOP4 developed by ATA-E and
-                  later UCSD.
-        .. note:: it's strongly recommended that you convert sparse matrices to
-                  another format before doing math on them.  This is standard
-                  with sparse matrices.
-
-        .. warning:: sparse binary is buggy right now
+        See ``read_op4``
         """
         if not precision in ('default', 'single', 'double'):
             msg = "precision=%r and must be 'single', 'double', or 'default'" % precision

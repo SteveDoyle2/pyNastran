@@ -10,8 +10,8 @@ sys.path.append(manual_path)
 
 #print(sys.path)
 from notebook_to_markdown import create_rst_from_ipython_notebooks
-#create_rst_from_ipython_notebooks()
-
+create_rst_from_ipython_notebooks()
+sys.exit()
 
 #bdf
 from pyNastran.bdf.test.all_tests import *
