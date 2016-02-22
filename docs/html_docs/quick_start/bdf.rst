@@ -452,36 +452,3 @@ convert to elements instead of element IDs
     CTRIA3        11       4      17      14       1
     $
     CBEAM         12       5      14      18      0.      1.      0.     GGG
-
----------------------
-Example 1: Read/Write
----------------------
-this example will demonstate:
-
- - reading the BDF
-
- - getting some basic information
-
- - writing the BDF
-
-our model
-
-.. code-block:: python
-
-    >>> import pyNastran
-    >>> pkg_path = pyNastran.__path__[0]
-    >>> test_path = os.path.join(pkg_path, '..', 'models', 'solid_bending')
-    >>> bdf_filename = os.path.join(test_path, 'solid_bending.bdf')
-    >>> bdf_filename2 = os.path.join(test_path, 'solid_bending2.bdf')
-    >>> bdf_filename2 = 'solid_bending2.bdf'
-
-instantiate the model
-
-.. code-block:: python
-
-    >>> from pyNastran.bdf.bdf import BDF
-    >>> model = BDF()
-    >>> model.read_bdf(bdf_filename)
-    >>> model.sol = 103
-    >>> model.write_bdf(bdf_filename2)
-

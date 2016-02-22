@@ -40,9 +40,9 @@ included for use.
    :maxdepth: 4
 
    quick_start/index
+   index/pyNastran
 ..   manual/index
 
-   index/pyNastran
 
 Indices and tables
 ==================
