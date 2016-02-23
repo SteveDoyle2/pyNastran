@@ -344,7 +344,7 @@ def double(card, ifield, fieldname):
 
             # 1.0+3, 1.0-3
             sign = ''
-            if '+' in svalue[0] or '-' in svalue[0]:
+            if svalue[0] in ('+', '-'):
                 sign = svalue[0]
                 svalue = svalue[1:]
             if '+' in svalue:
@@ -932,7 +932,7 @@ def interpret_value(value_raw, card=''):
         return value_in
 
     val0 = value_in[0]
-    if '-' == val0 or '+' == val0:
+    if val0 in ('+', '-'):
         # truncate the sign for now
         value_left = value_in[1:]
     else:
