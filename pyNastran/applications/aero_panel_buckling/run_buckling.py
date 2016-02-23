@@ -9,8 +9,8 @@ from pyNastran.applications.aero_panel_buckling.run_patch_buckling_helper import
 
 def run_panel_buckling(bdf_filename='model_144.bdf', op2_filename='model_144.op2',
                        isubcase=1, workpath=None,
-                       build_model=False,
-                       run_nastran=False, nastran_keywords=None, overwrite_op2_if_exists=True,
+                       build_model=True, rebuild_patches=True,
+                       run_nastran=True, nastran_keywords=None, overwrite_op2_if_exists=True,
                        op2_filenames=None):
     """
     Step 1 - Setup
@@ -19,7 +19,7 @@ def run_panel_buckling(bdf_filename='model_144.bdf', op2_filename='model_144.op2
         the path to the SOL 144 model
     op2_filename : str
         the path to the SOL 144 solution
-    build_model : bool; default=False
+    build_model : bool; default=True
         builds the patch model
     isubcase : int; default=1
         the case to analyze
@@ -28,7 +28,7 @@ def run_panel_buckling(bdf_filename='model_144.bdf', op2_filename='model_144.op2
 
     Step 2 - Run Jobs
     =================
-    run_nastran : bool; default=False
+    run_nastran : bool; default=True
         runs Nastran
     nastran_keywords : dict; default=None
         key : nastran key
@@ -57,7 +57,7 @@ def run_panel_buckling(bdf_filename='model_144.bdf', op2_filename='model_144.op2
     # isubcase=2 -> 2.5g pullup at Mach=0.85 at 11 km
     if build_model:
         find_surface_panels(bdf_filename, op2_filename, isubcase=isubcase, consider_pids=True,
-                            rebuild_patches=False, workpath=workpath)
+                            rebuild_patches=rebuild_patches, workpath=workpath)
         split_model_by_pid_panel(workpath)
 
     regions_filename = os.path.join(workpath, 'regions.txt')

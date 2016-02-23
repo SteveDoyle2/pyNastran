@@ -7,7 +7,7 @@ from numpy import where, unique, array, zeros, searchsorted, log10, array_equal
 
 from pyNastran.bdf.bdf import BDF
 from pyNastran.op2.op2 import OP2, FatalError
-from pyNastran.applications.mesh.surface.run_patch_buckling import load_sym_regions_map
+from pyNastran.applications.aero_panel_buckling.run_patch_buckling_helper import load_sym_regions_map
 
 
 def load_regions(regions_filename):
