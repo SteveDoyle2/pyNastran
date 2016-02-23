@@ -65,20 +65,21 @@ def run_panel_buckling(bdf_filename='model_144.bdf', op2_filename='model_144.op2
     regions_to_pid_map, regions_to_eids_map = load_regions(regions_filename)
 
     # hardcoded...
-    offset = 74305
-    min_region_eid = {}
-    sym_regions_map = {}
-    min_region_eid_sym = {}
-    for region_id, eids in iteritems(regions_to_eids_map):
-        eid_min = min(eids)
-        if eid_min < offset:
-            min_region_eid[region_id] = eid_min
-        else:
-            min_region_eid_sym[eid_min] = region_id
+    if 0:
+        offset = 74305
+        min_region_eid = {}
+        sym_regions_map = {}
+        min_region_eid_sym = {}
+        for region_id, eids in iteritems(regions_to_eids_map):
+            eid_min = min(eids)
+            if eid_min < offset:
+                min_region_eid[region_id] = eid_min
+            else:
+                min_region_eid_sym[eid_min] = region_id
 
-    for region_id, eid_min in iteritems(min_region_eid):
-        sym_region_id = min_region_eid_sym[eid_min + offset]
-        sym_regions_map[region_id] = sym_region_id
+        for region_id, eid_min in iteritems(min_region_eid):
+            sym_region_id = min_region_eid_sym[eid_min + offset]
+            sym_regions_map[region_id] = sym_region_id
 
     write_maps = False
     if write_maps:
@@ -118,7 +119,8 @@ def run_panel_buckling(bdf_filename='model_144.bdf', op2_filename='model_144.op2
         bdf_filenames2.append(bdf_filename2)
 
     if run_nastran:
-        run_bdfs(bdf_filenames2, nastran_keywords=nastran_keywords, overwrite_op2_if_exists=overwrite_op2_if_exists)
+        run_bdfs(bdf_filenames2, nastran_keywords=nastran_keywords,
+                 overwrite_op2_if_exists=overwrite_op2_if_exists)
 
     #sym_regions_filename = 'sym_regions_map.csv'
     sym_regions_filename = None
