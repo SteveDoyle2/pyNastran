@@ -1,10 +1,80 @@
 from __future__ import print_function
 from struct import calcsize
+from itertools import count
 
 import numpy as np
 from numpy import array, where, zeros, asarray, dot, arccos, sqrt, pi
 from numpy import cos, unique, cross, abs as npabs
 
+def sortedsum1d(ids, values, axis=None):
+    """
+    Sums the values in a sorted 1d/2d array.
+
+    Parameters
+    ----------
+    ids : (n, ) int ndarray
+        the integer values in a sorted order that indicate what is to
+        be summed
+    values : (n, m) float ndarray
+        the values to be summed
+        Presumably m is 2 because this function is intended to be used
+        for summing forces and moments
+    axis : None or int or tuple of ints, optional
+        Axis or axes along which a sum is performed. The default
+        (axis=None) is perform a sum over all the dimensions of the
+        input array. axis may be negative, in which case it counts
+        from the last to the first axis.
+        If this is a tuple of ints, a sum is performed on multiple
+        axes, instead of a single axis or all the axes as before.
+
+        Not actually supported...
+
+    Returns
+    -------
+    out : (nunique, m) float ndarray
+        the summed values
+
+    1D Example
+    ----------
+    For an set  of arrays, there are 5 values in sorted order.
+
+    ..code-block :: python
+
+       ids = [1, 1, 2, 2, 3, 3, 3, 4, 5, 5, 5]
+       values = 1.0 * ids
+
+    We want to sum the values such that:
+    ..code-block :: python
+        out = [2.0, 4.0, 9.0, 4.0, 15.0]
+
+    2D Example
+    ----------
+    ..code-block :: python
+
+       ids = [1, 1, 2, 2, 3, 3, 3, 4, 5, 5, 5]
+       values = [
+           [1.0, 1.0, 2.0, 2.0, 3.0, 3.0],
+           [1.0, 1.0, 2.0, 2.0, 3.0, 3.0],
+       ]
+
+
+    values = 1.0 * ids
+    For 2D
+    Todo
+    ----
+    This could probably be more efficient
+    Doesn't support axis
+    """
+    uids = np.unique(ids)
+    i1 = np.searchsorted(ids, uids, side='left') # left is the default
+    i2 = np.searchsorted(ids, uids, side='right')
+    print(i1, i2)
+    out = zeros(values.shape, dtype=values.dtype)
+
+    for i, i1i, i2i in zip(count(), i1, i2):
+        print(i, i1i, i2i)
+        out[i, :] = values[i1i:i2i, :].sum(axis=axis)
+    return out
 
 def iformat(format_old, precision=2):
     """
@@ -305,6 +375,7 @@ def transform_force_moment(force_in_local, moment_in_local,
                            coord_out, coords,
                            nid_cd, i_transform, beta_transforms,
                            xyz_cid0, summation_point_cid0=None,
+                           consider_rxf=True,
                            debug=False, logger=None):
     """
     Transforms force/moment from global to local and returns all the forces.
@@ -321,6 +392,8 @@ def transform_force_moment(force_in_local, moment_in_local,
         the nodes in the global frame
     summation_point_cid0 : (3, ) ndarray
         the summation point in the global frame
+    consider_rxf : bool; default=True
+        considers the r x F term
     debug : bool; default=False
         debugging flag
     logger : logger; default=None
@@ -336,11 +409,20 @@ def transform_force_moment(force_in_local, moment_in_local,
     .. todo:: doesn't seem to handle cylindrical/spherical systems
 
     https://flexiblelearning.auckland.ac.nz/sportsci303/13_3/forceplate_manual.pdf
+
+    xyz0 = T_1_to_0 @ xyz1
+    xyz1 = T_1_to_0.T @ xyz0
+
+    xyz2 = T_2_to_0.T @ xyz0
+    xyz2 = T_2_to_0.T @ T_1_to_0 @ xyz1
     """
+    debug = True
     assert logger is not None
     #print('nid_cd*\n', nid_cd)
-    force_out = zeros(force_in_local.shape, dtype=force_in_local.dtype)
-    moment_out = zeros(force_in_local.shape, dtype=force_in_local.dtype)
+    dtype = force_in_local.dtype
+    dtype = 'float64'
+    force_out = zeros(force_in_local.shape, dtype=dtype)
+    moment_out = zeros(force_in_local.shape, dtype=dtype)
 
     #assert coord_out.Type == 'R', 'Only rectangular coordinate systems are supported'
 
@@ -350,34 +432,38 @@ def transform_force_moment(force_in_local, moment_in_local,
 
     coord_out_cid = coord_out.cid
     coord_out_T = coord_out.beta()
-    #print(coord_out_T)
-
-    if summation_point_cid0 is None:
-        summation_point_cid0 = np.array([0., 0., 0.])
-
 
     if debug:
         logger.debug(coord_out)
-        for ii in range(xyz_cid0.shape[0]):
-            logger.debug('***i=%s xyz=%s nid=%s cd=%s' % (
-                ii, xyz_cid0[ii, :], nid_cd[ii, 0], nid_cd[ii, 1]))
+        if consider_rxf:
+            for ii in range(xyz_cid0.shape[0]):
+                logger.debug('***i=%s xyz=%s nid=%s cd=%s' % (
+                    ii, xyz_cid0[ii, :], nid_cd[ii, 0], nid_cd[ii, 1]))
         logger.debug('------------')
+
+    if consider_rxf and summation_point_cid0 is None:
+        summation_point_cid0 = np.array([0., 0., 0.])
 
     for cd in ucds:
         i = where(cds == cd)[0]
         nidsi = nids[i]
-        #print('i =', i)
-        #print('nids =', nidsi)
         analysis_coord = coords[cd]
+        if debug:
+            logger.debug('i = %s' % i)
+            logger.debug('nids = %s' % nidsi)
         #summation_point_cid0 = analysis_coord.origin
         #print('summation_point =', summation_point_cid0)
         #print(analysis_coord)
         cd_T = analysis_coord.beta()
         #print(cd_T)
 
-        # rxF from local_in to global to local_out
         force_in_locali = force_in_local[i, :]
         moment_in_locali = moment_in_local[i, :]
+        force_in_locali.astype('float64')
+        moment_in_locali.astype('float64')
+
+        if debug:
+            logger.debug('force_input =%s' % force_in_locali)
 
         if 1:
             if analysis_coord.Type == 'R':
@@ -385,50 +471,74 @@ def transform_force_moment(force_in_local, moment_in_local,
             elif analysis_coord.Type == 'C':
                 #R = force_in_locali[:, 0]
                 #theta = force_in_locali[:, 1]
+                #print(analysis_coord.origin)
                 force_in_locali = analysis_coord.coord_to_xyz_array(force_in_locali)
+                moment_in_locali = analysis_coord.coord_to_xyz_array(moment_in_locali)
                 logger.debug('cylindrical')
             else:
                 raise RuntimeError(analysis_coord)
-        #force_in_locali = analysis_coord.coord_to_xyz_array(force_in_locali)
-        #print('coord_out_T\n', coord_out_T)
-        force_in_globali = dot(force_in_locali, cd_T)
-        moment_in_globali = dot(moment_in_locali, cd_T)
-        force_outi = dot(coord_out_T, force_in_globali.T).T
-        moment_outi = dot(coord_out_T, moment_in_globali.T).T
 
-        # matrix multiplcation is NOT communitive
-        #transformi = dot(coord_out_T, cd_T.T)
-        #force_outi = dot(transformi, force_in_locali.T).T
+        #print('coord_out_T\n', coord_out_T)
+
+        # is this:
+        #  1.  cd_T.T and coord_out_T
+        #  2.  cd_T and coord_out_T.T
+        #  3.  reverse it all...
+        if 0:
+            force_in_globali = dot(cd_T, force_in_locali.T)
+            moment_in_globali = dot(cd_T, moment_in_locali.T)
+            force_outi = dot(coord_out_T.T, force_in_globali).T
+            moment_outi = dot(coord_out_T.T, moment_in_globali).T
+        elif 0:
+            force_in_globali = dot(cd_T.T, force_in_locali.T)
+            moment_in_globali = dot(cd_T.T, moment_in_locali.T)
+            force_outi = dot(coord_out_T, force_in_globali).T
+            moment_outi = dot(coord_out_T, moment_in_globali).T
+        else:
+            # old
+            force_in_globali = dot(force_in_locali, cd_T).T
+            moment_in_globali = dot(moment_in_locali, cd_T).T
+            #force_outi = dot(coord_out_T, force_in_globali).T
+            #moment_outi = dot(coord_out_T, moment_in_globali).T
+            force_outi = dot(coord_out_T, force_in_globali).T
+            moment_outi = dot(coord_out_T, moment_in_globali).T
+
         if debug:
-            logger.debug('force_in_locali =%s' % force_in_locali)
-            logger.debug('force_in_globali =%s' % force_in_globali)
-            logger.debug('force_outi =%s' % force_outi)
-            logger.debug('moment_outi =%s' % moment_outi)
+            logger.debug('force_in_locali =%s' % force_in_locali.T)
+            logger.debug('force_in_globali = %s' % force_in_globali.T)
+            logger.debug('force_outi = %s' % force_outi)
+            #logger.debug('moment_outi = %s' % moment_outi)
 
         force_out[i, :] = force_outi
         moment_out[i, :] = moment_outi
-        if summation_point_cid0 is not None:
-            #print('xyz =', xyz_cid0[i, :])
-            #print('sum=',summation_point_cid0)
+
+        # rxF from local_in to global to local_out
+        if consider_rxf:
             delta = xyz_cid0[i, :] - summation_point_cid0[np.newaxis, :]
             #delta_minus_origin = delta - analysis_coord.origin
             #delta_in_cid = dot(delta_minus_origin, cd_T.T)
             if debug:
                 logger.debug('delta = %s' % delta)
-            rxf = cross(delta, force_in_globali)
+            rxf = cross(delta, force_in_globali.T)
+
+            if debug:
+                logger.debug('rxf = %s' % rxf)
             rxf_in_cid = dot(coord_out_T, rxf.T).T
-            #print('rxf =\n', rxf)
-            #print('rxf_sum =', rxf.sum(axis=0), np.linalg.norm(rxf.sum(axis=0)))
-            #print('rxf_in_cid =', rxf_in_cid.sum(axis=0), np.linalg.norm(rxf_in_cid.sum(axis=0)))
+            if debug:
+                logger.debug('rxf_in_cid = %s' % rxf_in_cid)
+
             moment_out[i, :] += rxf_in_cid
         #print('------------')
-    #print('end')
+    force_out = coord_out.xyz_to_coord_array(force_out)
+    moment_out = coord_out.xyz_to_coord_array(moment_out)
     return -force_out, -moment_out
+
 
 def transform_force_moment_sum(force_in_local, moment_in_local,
                                coord_out, coords,
                                nid_cd, i_transform, beta_transforms,
                                xyz_cid0, summation_point_cid0=None,
+                               consider_rxf=True,
                                debug=False, logger=None):
     """
     Transforms force/moment from global to local and returns a sum of forces/moments.
@@ -445,6 +555,8 @@ def transform_force_moment_sum(force_in_local, moment_in_local,
         the nodes in the global frame
     summation_point_cid0 : (3, ) ndarray
         the summation point in the global frame
+    consider_rxf : bool; default=True
+        considers the r x F term
     debug : bool; default=False
         debugging flag
     logger : logger; default=None
@@ -468,7 +580,8 @@ def transform_force_moment_sum(force_in_local, moment_in_local,
         force_in_local, moment_in_local,
         coord_out, coords,  nid_cd,
         i_transform, beta_transforms, xyz_cid0,
-        summation_point_cid0=summation_point_cid0, debug=debug, logger=logger)
+        summation_point_cid0=summation_point_cid0, consider_rxf=consider_rxf,
+        debug=debug, logger=logger)
     force_out, moment_out = out
     return force_out, moment_out, force_out.sum(axis=0), moment_out.sum(axis=0)
 

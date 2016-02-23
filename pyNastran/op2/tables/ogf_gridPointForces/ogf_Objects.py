@@ -4,7 +4,7 @@ import numpy as np
 from numpy import zeros, unique, array_equal, empty
 from pyNastran.op2.result_objects.op2_objects import ScalarObject
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header, write_imag_floats_13e
-from pyNastran.op2.vector_utils import transform_force_moment, transform_force_moment_sum
+from pyNastran.op2.vector_utils import transform_force_moment, transform_force_moment_sum, sortedsum1d
 from pyNastran.utils import integer_types
 
 try:
@@ -242,6 +242,96 @@ class RealGridPointForcesArray(ScalarObject):
                         raise ValueError(msg)
         return True
 
+    def extract_freebody_loads(
+        self, eids,
+        coord_out, coords, nid_cd, i_transform, beta_transforms,
+        itime=0, debug=True, logger=None):
+        """
+        Extracts Patran-style freebody loads
+
+        Parameters
+        ----------
+        panel_eids : (Ne, ) int ndarray
+            all the elements to consider
+        coord_out : CORD2R()
+            the output coordinate system
+        coords : dict[int] = CORDx
+            all the coordinate systems
+            key : int
+            value : CORDx
+        nid_cd : (M, 2) int ndarray
+            the (BDF.point_ids, cd) array
+        i_transform : dict[cd] = (Mi, ) int ndarray
+            the mapping for nid_cd
+        beta_transforms : dict[cd] = (3, 3) float ndarray
+            the mapping for nid_cd
+        summation_point : (3, ) float ndarray
+            the summation point in output??? coordinate system
+        itime : int; default=0
+            the time to extract loads for
+        debug : bool; default=False
+            debugging flag
+        logger : logger; default=None
+            a logger object that gets used when debug=True
+
+        Returns
+        -------
+        force_out : (n, 3) float ndarray
+            the ith float components in the coord_out coordinate frame
+        moment_out : (n, 3) float ndarray
+            the ith moment components about the summation point in the coord_out coordinate frame
+
+        .. todo:: doesn't seem to handle cylindrical/spherical systems
+        .. warning:: not done
+        """
+        eids = np.asarray(eids)
+        #nids = np.asarray(nids)
+
+        # todo handle multiple values for itime
+        gpforce_nids = self.node_element[itime, :, 0]
+        gpforce_eids = self.node_element[itime, :, 1]
+        # TODO: remove 0s in gpforce_nids/gpforce_eids to handle transient results
+        #       be careful of the sum row
+
+        assert isinstance(eids[0], integer_types), type(eids[0])
+
+        is_in = np.in1d(gpforce_eids, eids, assume_unique=False)
+        irange = np.arange(len(gpforce_nids), dtype='int32')[is_in]
+        nids = gpforce_nids[irange]
+
+        if debug:
+            logger.debug('gpforce_eids =' % gpforce_eids[is_in])
+            logger.debug('nids = %s' % gpforce_nids[irange])
+            logger.debug('eids = %s' % gpforce_eids[irange])
+
+        try:
+            is_in3 = np.in1d(nid_cd[:, 0], nids, assume_unique=False)
+        except IndexError:
+            msg = 'nids_cd=%s nids=%s' % (nid_cd, nids)
+            raise IndexError(msg)
+
+        force_global = self.data[itime, irange, :3]
+        moment_global = self.data[itime, irange, 3:]
+
+        #data_global = sortedsum1d(nids, self.data[itime, irange, :], axis=0)
+        #force_global2 = data_global[:, :3]
+        #moment_global2 = data_global[:, 3:]
+        force_global = sortedsum1d(nids, force_global)
+        moment_global = sortedsum1d(nids, moment_global)
+        #print(force_global)
+        #print(force_global2)
+        #assert np.array_equal(force_global, force_global2)
+        #assert np.array_equal(moment_global, moment_global2)
+
+        force, moment = transform_force_moment(
+            force_global, moment_global,
+            coord_out, coords, nid_cd[is_in3, :],
+            i_transform, beta_transforms,
+            xyz_cid0=None, summation_point_cid0=None,
+            consider_rxf=False,
+            debug=debug, logger=logger)
+        return force, moment
+
     def extract_interface_loads(
         self, nids, eids,
         coord_out, coords, nid_cd, i_transform, beta_transforms,
@@ -253,7 +343,7 @@ class RealGridPointForcesArray(ScalarObject):
         ----------
         nids : (Nn, ) int ndarray
             all the nodes to consider
-        panel_eids : (Ne, ) int ndarray
+        eids : (Ne, ) int ndarray
             all the elements to consider
         coord_out : CORD2R()
             the output coordinate system
@@ -263,7 +353,7 @@ class RealGridPointForcesArray(ScalarObject):
             value : CORDx
         nid_cd : (M, 2) int ndarray
             the (BDF.point_ids, cd) array
-        i_transform : dict[cd] = (Mi, ) intndarray
+        i_transform : dict[cd] = (Mi, ) int ndarray
             the mapping for nid_cd
         beta_transforms : dict[cd] = (3, 3) float ndarray
             the mapping for nid_cd
@@ -290,6 +380,14 @@ class RealGridPointForcesArray(ScalarObject):
             the sum of moments about the summation point in the coord_out coordinate frame
 
         .. todo:: doesn't seem to handle cylindrical/spherical systems
+        .. todo:: Add support for:
+                  2D output style:
+                    - This would allow for shell problems to have loads applied
+                      in the plane of the shells
+                    - This would require normals
+                  1D output style:
+                    - Make loads in the direction of the element
+                  This process can't be done for 0D or 3D elements
         """
         if summation_point is not None:
             summation_point = np.asarray(summation_point)
@@ -298,11 +396,13 @@ class RealGridPointForcesArray(ScalarObject):
         eids = np.asarray(eids)
         nids = np.asarray(nids)
 
-        # todo handle multiple values for itime
+        # TODO: Handle multiple values for itime
+        #       Is this even possible?
         gpforce_nids = self.node_element[itime, :, 0]
         gpforce_eids = self.node_element[itime, :, 1]
-        # TODO: remove 0s in gpforce_nids/gpforce_eids to handle transient results
-        #       be careful of the sum row
+        # TODO: Remove 0s in gpforce_nids/gpforce_eids to handle transient results
+        #       be careful of the sum row.
+        #       Do I even need to do this?
 
         assert isinstance(eids[0], integer_types), type(eids[0])
         assert isinstance(nids[0], integer_types), type(nids[0])
@@ -319,7 +419,7 @@ class RealGridPointForcesArray(ScalarObject):
         except IndexError:
             msg = 'nids_cd=%s nids=%s' % (nid_cd, nids)
             raise IndexError(msg)
-        #print(nid_cd[is_in3, :])
+
         force_global = self.data[itime, irange, :3]
         moment_global = self.data[itime, irange, 3:]
         out = transform_force_moment_sum(force_global, moment_global,
@@ -328,6 +428,118 @@ class RealGridPointForcesArray(ScalarObject):
                                      xyz_cid0[is_in3, :], summation_point_cid0=summation_point,
                                      debug=debug, logger=logger)
         return out
+
+    def find_centroid_of_load(self, f, m):
+        raise NotImplementedError()
+
+    def shear_moment_diagram(self, xyz_cid0, eids, nids, element_centroids_cid0,
+                             coord, coords, stations,
+                             idir=0, itime=0, debug=False, logger=None):
+        """
+        Computes a series of forces/moments at various stations along a structure.
+
+        Parameters
+        ----------
+        eids : (nelements, ) int ndarray
+            an array of element ids to consider
+        nids_eids : (nnodes, ) int ndarray
+            an array of node ids corresponding to eids
+        #nids_xyz : (nnodes, ) int ndarray
+        #    an array of node ids corresponding to xyz_cid0
+        xyz_cid0 : (nnodes, 3) float ndarray
+            all the nodes in the model xyz position in the global frame
+        element_centroids_cid0 : (nelements, 3) float ndarray
+            an array of element centroids
+        coord_out : CORD2R()
+            the output coordinate system
+        coords : dict[int] = CORDx
+            all the coordinate systems
+            key : int
+            value : CORDx
+        nid_cd : (M, 2) int ndarray
+            the (BDF.point_ids, cd) array
+        i_transform : dict[cd] = (Mi, ) int ndarray
+            the mapping for nid_cd
+        beta_transforms : dict[cd] = (3, 3) float ndarray
+            the mapping for nid_cd
+        stations : (nstations, ) float ndarray
+            the station to sum forces/moments about
+            be careful of picking exactly on symmetry planes/boundaries
+            of elements or nodes
+            this list should be sorted (negative to positive)
+        idir : int; default=0
+            the axis of the coordinate system to consider
+
+        Procedure
+        ---------
+        1.  Clip elements based on centroid.
+            Elements that are less than the ith station are kept.
+        2.  Get the nodes for those elements.
+        3a. Extract the freebody loads and sum them about the
+            summation point (todo).
+        3b. Extract the interface loads and sum them about the
+            summation point.
+
+        Example
+        -------
+        Imagine a swept aircraft wing.  Define a coordinate system
+        in the primary direction of the sweep.  Note that station 0
+        doesn't have to be perfectly at the root of the wing.
+
+        Create stations from this point.
+
+        TODO
+        ----
+        Not Tested...Does 3b work?  Can 3a give the right answer?
+        """
+        assert coord_out.type in ['CORD2R', 'CORD1R'], coord_out.type
+        beta = coord_out.beta()
+        element_centroids_coord = np.dot(beta, element_centroids_cid0)  # TODO: verify
+        xyz_coord = np.dot(beta, xyz_cid0)  # TODO: verify
+        x_centroid = element_centroids_coord[:, idir]
+        x_coord = xyz_coord[:, idir]
+
+        eids = np.unique(eids)
+        force_sum = zeros((nstations, 3), dtype='float32')
+        moment_sum = zeros((nstations, 3), dtype='float32')
+
+        for istation, station in enumerate(stations):
+            # we're picking the elements on one side of the centroid
+            # and nodes on the other side
+
+            # Calculate the nodes on the boundary.
+            # If we make a cutting plane and find all the nodes on
+            # one side of the cutting plane, we can take all the
+            # nodes within some tolerance of the station direction and
+            # find the free nodes
+            i = np.where(x_centroid <= station)
+            j = np.where(x_coord >= station)
+
+            # summation point creation
+            offset = np.zeros(3, dtype='float64')
+            offset[idir] = station
+            summation_point = coord_out.origin + offset
+
+            if 0:
+                # I don't think this will work...
+                forcei, momenti = extract_freebody_loads(
+                    eids[i],
+                    coord_out, coords, nid_cd, i_transform, beta_transforms,
+                    xyz_cid0, summation_point, itime=itime, debug=debug, logger=logger)
+
+                force_sum[istation, :] = forcei.sum(axis=0)
+                # TODO: extract_freebody_loads doesn't sum forces/moments
+                #       sum loads about summation point
+                moment_sum[istation, :] = momenti.sum(axis=0)
+            else:
+                forcei, momenti, force_sumi, moment_sumi = self.extract_interface_loads(
+                    eids[i], nids[j],
+                    coord_out, coords, nid_cd, i_transform, beta_transforms,
+                    xyz_cid0, summation_point, itime=itime, debug=debug, logger=logger)
+
+                force_sum[istation, :] = forcei_sum
+                moment_sum[istation, :] = momenti_sum
+        return force_sum, moment_sum
 
     def add(self, dt, node_id, eid, ename, t1, t2, t3, r1, r2, r3):
         assert isinstance(node_id, int), node_id
@@ -405,15 +617,12 @@ class RealGridPointForcesArray(ScalarObject):
 
         ntimes = self.data.shape[0]
         if self.is_unique:
-            #print('RealGridPointForcesArray.write_f06 with is_unique=True is not supported')
-
             for itime in range(ntimes):
                 dt = self._times[itime]
                 header = _eigenvalue_header(self, header, itime, ntimes, dt)
                 f.write(''.join(header + msg))
 
                 #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
-
                 #[t1, t2, t3, r1, r2, r3]
                 t1 = self.data[itime, :, 0]
                 t2 = self.data[itime, :, 1]
