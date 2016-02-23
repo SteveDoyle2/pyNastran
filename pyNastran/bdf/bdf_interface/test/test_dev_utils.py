@@ -11,7 +11,7 @@ from numpy import array, intersect1d
 #root_path = pyNastran.__path__[0]
 #test_path = os.path.join(root_path, 'bdf', 'test', 'unit')
 from pyNastran.bdf.bdf import BDF
-from pyNastran.bdf.bdfInterface.dev_utils import bdf_equivalence_nodes
+from pyNastran.bdf.bdf_interface.dev_utils import bdf_equivalence_nodes
 from codecs import open as codec_open
 
 

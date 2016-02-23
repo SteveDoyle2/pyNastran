@@ -5,7 +5,7 @@ from pyNastran.utils import integer_types
 from pyNastran.bdf.dev_vectorized.cards.elements.property import Property
 
 from pyNastran.bdf.field_writer_8 import print_card_8
-from pyNastran.bdf.bdfInterface.assign_type import (integer,
+from pyNastran.bdf.bdf_interface.assign_type import (integer,
     integer_double_or_blank, double_or_blank)
 
 class PBAR(Property):

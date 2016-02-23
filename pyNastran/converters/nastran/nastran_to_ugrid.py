@@ -125,7 +125,7 @@ def main():
             pid += 1
 
     import sys
-    from pyNastran.bdf.bdfInterface.dev_utils import bdf_renumber
+    from pyNastran.bdf.bdf_interface.dev_utils import bdf_renumber
     bdf_filename = sys.argv[1]
     ugrid_filename_out = sys.argv[2]
     # bdf_model = BDF()

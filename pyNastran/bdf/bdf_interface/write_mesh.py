@@ -14,7 +14,7 @@ from pyNastran.bdf.utils import print_filename
 from pyNastran.utils.gui_io import save_file_dialog
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
-from pyNastran.bdf.bdfInterface.attributes import BDFAttributes
+from pyNastran.bdf.bdf_interface.attributes import BDFAttributes
 
 
 class WriteMesh(BDFAttributes):

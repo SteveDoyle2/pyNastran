@@ -6,7 +6,7 @@ from numpy import array, zeros, unique, searchsorted, arange
 from pyNastran.bdf.dev_vectorized.cards.elements.property import Property
 
 from pyNastran.bdf.field_writer_8 import print_card_8
-from pyNastran.bdf.bdfInterface.assign_type import (integer,
+from pyNastran.bdf.bdf_interface.assign_type import (integer,
     double, double_or_blank)
 
 

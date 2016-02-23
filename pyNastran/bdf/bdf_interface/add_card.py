@@ -1,7 +1,7 @@
 # pylint: disable=R0902,R0904,R0914
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from pyNastran.bdf.bdfInterface.attributes import BDFAttributes
+from pyNastran.bdf.bdf_interface.attributes import BDFAttributes
 
 
 class AddMethods(BDFAttributes):

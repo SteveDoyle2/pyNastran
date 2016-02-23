@@ -3,7 +3,7 @@ from six.moves import zip, range
 from itertools import count
 from numpy import argsort, array, zeros, unique, searchsorted, asarray, int64, where
 
-from pyNastran.bdf.bdfInterface.assign_type import (double_or_blank,
+from pyNastran.bdf.bdf_interface.assign_type import (double_or_blank,
     components, components_or_blank, integer_double_or_blank, blank, integer)
 
 from pyNastran.bdf.field_writer_8 import (print_card_8, set_blank_if_default,

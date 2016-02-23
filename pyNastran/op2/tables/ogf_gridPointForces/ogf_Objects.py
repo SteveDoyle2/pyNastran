@@ -430,6 +430,38 @@ class RealGridPointForcesArray(ScalarObject):
         return out
 
     def find_centroid_of_load(self, f, m):
+        """
+        Mx = ry*Fz - rz*Fy
+        My = rz*Fx - rx*Fz
+        Mz = rx*Fy - ry*Fx
+
+        {M} = [F]{r}
+        [F] = [
+            [  0, -Fy, Fz],
+            [-Fz,   0, Fx],
+            [ Fy, -Fx,  0],
+        ]
+        {r} = [F]^-1 {M}
+
+        When the determinant of [F] is nonzero:
+           Life is easy
+
+        When the determinant of [F] is zero:
+        When Fx != Fy != Fz and they don't equal 0
+        there are 3 solutions:
+            where M=[0, 0, 0]
+
+        det([F]) = 0:
+           [F]{x} = [lambda]{x}
+        where one of the eigenvalues is 0? (the trivial case)
+        and
+
+
+        However, [F] is singular, so let rx=0:
+        Mx = ry*Fz - rz*Fy
+        My = rz*Fx
+        Mz = -ry*Fx
+        """
         raise NotImplementedError()
 
     def shear_moment_diagram(self, xyz_cid0, eids, nids, element_centroids_cid0,

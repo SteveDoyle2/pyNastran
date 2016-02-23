@@ -11,7 +11,7 @@ from numpy import arange, cross, abs, searchsorted, array, ones, eye
 from numpy.linalg import norm
 
 from pyNastran.bdf.field_writer_8 import print_card_8
-from pyNastran.bdf.bdfInterface.assign_type import integer
+from pyNastran.bdf.bdf_interface.assign_type import integer
 
 from pyNastran.bdf.dev_vectorized.cards.elements.solid.solid_element import SolidElement
 

@@ -1,5 +1,5 @@
 from pyNastran.bdf.bdf import BDF
-from pyNastran.bdf.bdfInterface.dev_utils import remove_unassociated_nodes
+from pyNastran.bdf.bdf_interface.dev_utils import remove_unassociated_nodes
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.converters.tecplot.tecplot import Tecplot
 from numpy import unique

@@ -35,7 +35,7 @@ from pyNastran.bdf.cards.utils import wipe_empty_fields
 from pyNastran.utils import _filename
 from pyNastran.utils.log import get_logger2
 
-from pyNastran.bdf.bdfInterface.assign_type import (integer,
+from pyNastran.bdf.bdf_interface.assign_type import (integer,
                                                     integer_or_string, string)
 
 from pyNastran.bdf.cards.elements.elements import CFAST, CGAP, CRAC2D, CRAC3D, PLOTEL
@@ -122,11 +122,11 @@ from pyNastran.bdf.cards.bdf_tables import (TABLED1, TABLED2, TABLED3, TABLED4,
 from pyNastran.bdf.cards.contact import BCRPARA, BCTADD, BCTSET, BSURF, BSURFS, BCTPARA
 from pyNastran.bdf.case_control_deck import CaseControlDeck
 from pyNastran.bdf.bdf_methods import BDFMethods
-from pyNastran.bdf.bdfInterface.get_card import GetMethods
-from pyNastran.bdf.bdfInterface.add_card import AddMethods
-from pyNastran.bdf.bdfInterface.bdf_card import BDFCard
-from pyNastran.bdf.bdfInterface.write_mesh import WriteMesh
-from pyNastran.bdf.bdfInterface.cross_reference import XrefMesh
+from pyNastran.bdf.bdf_interface.get_card import GetMethods
+from pyNastran.bdf.bdf_interface.add_card import AddMethods
+from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
+from pyNastran.bdf.bdf_interface.write_mesh import WriteMesh
+from pyNastran.bdf.bdf_interface.cross_reference import XrefMesh
 from pyNastran.bdf.errors import CrossReferenceError, DuplicateIDsError, CardParseSyntaxError
 from pyNastran.bdf.field_writer_16 import print_field_16
 

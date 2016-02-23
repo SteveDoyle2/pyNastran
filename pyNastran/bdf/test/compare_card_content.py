@@ -4,7 +4,7 @@ from six.moves import zip, range
 from itertools import count
 
 from pyNastran.bdf.cards.utils import wipe_empty_fields_typed
-from pyNastran.bdf.bdfInterface.assign_type import interpret_value
+from pyNastran.bdf.bdf_interface.assign_type import interpret_value
 from pyNastran.bdf.field_writer_8 import print_field_8, print_card_8
 from pyNastran.bdf.field_writer_16 import print_field_16
 
