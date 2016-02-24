@@ -114,7 +114,7 @@ class CaseControlDeck(object):
 
         .. warning:: most case control types are not supported
         """
-        for isubcase, subcase in iteritems(model.subcases):
+        for isubcase, subcase in iteritems(self.subcases):
             # if isubcase == 0:
                 # continue
             subcase.suppress_output()
@@ -690,7 +690,8 @@ class CaseControlDeck(object):
         analysis = model.rsolmap_toStr[model.sol]
         model.sol = 200
 
-        subcase.add_parameter_to_global_subcase('ANALYSIS', analysis)
+        subcase0 = self.subcases[0]
+        subcase0.add_parameter_to_global_subcase('ANALYSIS', analysis)
         #subcase.add_parameter_to_global_subcase('DESSUB', dessub)
 
     def _add_parameter_to_subcase(self, key, value, options, param_type, isubcase):
@@ -806,6 +807,35 @@ def verify_card2(key, value, options, line):
 
     # these may only be integers
     #print("key =", key)
+
+    pass_headers = [
+        'SUBTITLE', 'TITLE',
+        'A2GG', 'M2GG', 'K2GG',
+        'K2PP', 'M2PP',
+        'K42GG',
+
+        'XMIN', 'XMAX', 'XTITLE', 'XPAPE', 'XPAPER', 'XAXIS', 'XGRID', 'XGRID LINES', 'XLOG',
+        'YMIN', 'YMAX', 'YTITLE', 'YPAPE', 'YPAPER', 'YAXIS', 'YGRID', 'YGRID LINES', 'YLOG',
+        'XTMIN', 'XTMAX', 'XTGRID', 'XTTITLE', 'XTAXIS', 'XTGRID LINES', 'XTLOG',
+        'YTMIN', 'YTMAX', 'YTGRID', 'YTTITLE', 'YTAXIS', 'YTGRID LINES', 'YTLOG',
+        'XBMIN', 'XBMAX', 'XBGRID', 'XBAXIS', 'XBGRID LINES', 'XBTITLE', 'XBLOG',
+        'YBMIN', 'YBMAX', 'YBGRID', 'YBAXIS', 'YBGRID LINES', 'YBTITLE', 'YBLOG',
+
+        'RIGHT TICS', 'UPPER TICS',
+        'TRIGHT TICS',
+        'BRIGHT TICS',
+
+        'PLOTTER', 'XYPLOT',
+
+        'PTITLE',
+        'HOUTPUT', 'PLOTID', '', '', '', '', '',
+        'AXISYMMETRIC', 'CURVELINESYMBOL', 'CURVELINESYMB', 'AECONFIG',
+        'B2GG', 'B2PP', 'AESYMXZ', 'TEMP', 'DSAPRT', 'MEFFMASS',
+        'MAXMIN', 'RESVEC', 'MODESELECT', 'RIGID', 'TCURVE',
+        'SUPER', 'MAXI DEFO', 'P2G',
+        'EXTSEOUT', 'FLSTCNT PREFDB', 'AESYMXY',
+        'DSYM', '', '', ''
+    ]
     if key in ['BCONTACT', 'CURVELINESYMBOL']:
         try:
             value2 = int(value)
@@ -858,33 +888,7 @@ def verify_card2(key, value, options, line):
         pass
 
     # weird cards
-    elif key in [
-        'SUBTITLE', 'TITLE',
-        'A2GG', 'M2GG', 'K2GG',
-        'K2PP', 'M2PP',
-        'K42GG',
-
-        'XMIN', 'XMAX', 'XTITLE', 'XPAPE', 'XPAPER', 'XAXIS', 'XGRID', 'XGRID LINES', 'XLOG',
-        'YMIN', 'YMAX', 'YTITLE', 'YPAPE', 'YPAPER', 'YAXIS', 'YGRID', 'YGRID LINES', 'YLOG',
-        'XTMIN', 'XTMAX', 'XTGRID', 'XTTITLE', 'XTAXIS', 'XTGRID LINES', 'XTLOG',
-        'YTMIN', 'YTMAX', 'YTGRID', 'YTTITLE', 'YTAXIS', 'YTGRID LINES', 'YTLOG',
-        'XBMIN', 'XBMAX', 'XBGRID', 'XBAXIS', 'XBGRID LINES', 'XBTITLE', 'XBLOG',
-        'YBMIN', 'YBMAX', 'YBGRID', 'YBAXIS', 'YBGRID LINES', 'YBTITLE', 'YBLOG',
-
-        'RIGHT TICS', 'UPPER TICS',
-        'TRIGHT TICS',
-        'BRIGHT TICS',
-
-        'PLOTTER', 'XYPLOT',
-
-        'PTITLE',
-        'HOUTPUT', 'PLOTID', '', '', '', '', '',
-        'AXISYMMETRIC', 'CURVELINESYMBOL', 'CURVELINESYMB', 'AECONFIG',
-        'B2GG', 'B2PP', 'AESYMXZ', 'TEMP', 'DSAPRT', 'MEFFMASS',
-        'MAXMIN', 'RESVEC', 'MODESELECT', 'RIGID', 'TCURVE',
-        'SUPER', 'MAXI DEFO', 'P2G',
-        'EXTSEOUT', 'FLSTCNT PREFDB', 'AESYMXY',
-        'DSYM', '', '', '']:
+    elif key in pass_headers:
         pass
     elif key == 'ANALYSIS':
         assert value in ['HEAT', 'ANALYSIS', 'MFREQ', 'STATICS', 'MODES', 'DFREQ',

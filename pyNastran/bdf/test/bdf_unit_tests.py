@@ -37,8 +37,7 @@ class TestBDF(Tester):
 
     def test_object_attributes_02(self):
         model = BDF()
-        keys = ['thermalMaterials', 'hyperelasticMaterials', 'rigidElements',
-                'creepMaterials', 'convectionProperties']
+        keys = []
         object_attributes(model, mode='public', keys_to_skip=keys)
 
     def test_object_attributes_03(self):
@@ -54,8 +53,7 @@ class TestBDF(Tester):
 
     def test_object_methods_02(self):
         model = BDF()
-        keys = ['thermalMaterials', 'hyperelasticMaterials', 'rigidElements',
-                'creepMaterials', 'convectionProperties']
+        keys = []
         object_methods(model, mode="public", keys_to_skip=keys)
 
     def test_object_methods_03(self):

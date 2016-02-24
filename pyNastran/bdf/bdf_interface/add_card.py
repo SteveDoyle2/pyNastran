@@ -401,13 +401,13 @@ class AddMethods(BDFAttributes):
             self.bcs[key] = [bc]
             self._type_to_id_map[bc.type].append(key)
 
-    def add_constraint_MPCADD(self, constraint):
-        raise RuntimeError('is this used?')
-        key = constraint.conid
-        if key in self.mpcadds:
-            raise RuntimeError('must have unique MPCADD IDs')
-        self.mpcadds[key] = constraint
-        self._type_to_id_map[constraint.type].append(key)
+    #def add_constraint_MPCADD(self, constraint):
+        #raise RuntimeError('is this used?')
+        #key = constraint.conid
+        #if key in self.mpcadds:
+            #raise RuntimeError('must have unique MPCADD IDs')
+        #self.mpcadds[key] = constraint
+        #self._type_to_id_map[constraint.type].append(key)
 
     def add_constraint_MPC(self, constraint):
         key = constraint.conid
@@ -417,13 +417,13 @@ class AddMethods(BDFAttributes):
             self.mpcs[key] = [constraint]
             self._type_to_id_map[constraint.type].append(key)
 
-    def add_constraint_SPCADD(self, constraint):
-        raise RuntimeError('is this used?')
-        key = constraint.conid
-        if key in self.spcadds:
-            raise RuntimeError('must have unique SPCADD IDs')
-        self.spcadds[key] = constraint
-        self._type_to_id_map[constraint.type].append(key)
+    #def add_constraint_SPCADD(self, constraint):
+        #raise RuntimeError('is this used?')
+        #key = constraint.conid
+        #if key in self.spcadds:
+            #raise RuntimeError('must have unique SPCADD IDs')
+        #self.spcadds[key] = constraint
+        #self._type_to_id_map[constraint.type].append(key)
 
     def add_constraint_SPC(self, constraint):
         key = constraint.conid

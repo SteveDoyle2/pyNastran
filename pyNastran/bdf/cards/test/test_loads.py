@@ -67,6 +67,7 @@ class TestLoads(unittest.TestCase):
             (22, 26), (26, 22),
         ]
 
+        msg = ''
         for isubcase, subcase in sorted(iteritems(model_b.subcases)):
             if isubcase == 0:
                 continue
@@ -223,11 +224,11 @@ class TestLoads(unittest.TestCase):
             fm = -case.data[0, :, :].sum(axis=0)
             assert len(fm) == 6, fm
             if not allclose(f[0], fm[0]):
-                print('%-2i Fx f=%s fexpected=%s face=%s' % (isubcase, f, fm, face))
+                print('%-2i Fx f=%s fexpected=%s' % (isubcase, f, fm))
             if not allclose(f[1], fm[1]):
-                print('%-2i Fy f=%s fexpected=%s face=%s' % (isubcase, f, fm, face))
+                print('%-2i Fy f=%s fexpected=%s' % (isubcase, f, fm))
             if not allclose(f[2], fm[2]):
-                print('%-2i Fz f=%s fexpected=%s face=%s' % (isubcase, f, fm, face))
+                print('%-2i Fz f=%s fexpected=%s' % (isubcase, f, fm))
 
     def test_pload4_ctetra(self):
         bdf_filename = os.path.join(test_path, '..', 'models', 'pload4', 'ctetra.bdf')

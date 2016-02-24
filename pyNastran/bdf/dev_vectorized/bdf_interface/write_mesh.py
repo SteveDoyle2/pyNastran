@@ -158,7 +158,7 @@ class WriteMesh(object):
             assert 'BEGIN BULK' in msg, msg
             outfile.write(''.join(msg))
 
-    def _write_elements_properties(self, f, size):
+    def _write_elements_properties(self, outfile, size):
         """
         Writes the elements and properties in and interspersed order
         """
@@ -203,10 +203,10 @@ class WriteMesh(object):
 
         #pids_set = None
         if pids_all is None:
-            f.write('$MISSING_ELEMENTS because there are no properties\n')
+            outfile.write('$MISSING_ELEMENTS because there are no properties\n')
             for t in etypes:
                 #print "t.type =", t.type
-                t.write_card(f, size=size)
+                t.write_card(outfile, size=size)
             return
 
         # there are properties

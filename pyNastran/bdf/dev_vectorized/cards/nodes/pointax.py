@@ -48,7 +48,7 @@ class POINTAX(object):
                 self.phi[i] = double_or_blank(card, 3, 'phi', 0.)
 
     def positions(self, node_ids=None):
-        raise NotImplementedError()
+        raise NotImplementedError('POINTAX.positions')
         if node_ids is None:
             node_ids = self.node_id
         xyz = xyz.copy()

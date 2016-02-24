@@ -133,8 +133,8 @@ from pyNastran.bdf.field_writer_16 import print_field_16
 
 
 def read_bdf(bdf_filename=None,
-              xref=True, punch=False, encoding=None,
-              log=None, debug=True, mode='msc'):
+             xref=True, punch=False, encoding=None,
+             log=None, debug=True, mode='msc'):
     """
     Creates the BDF object
 
@@ -188,13 +188,10 @@ def read_bdf(bdf_filename=None,
     if 0:
         ## TODO: remove all the extra methods
 
-        keys_to_suppress = [
-            'convectionProperties', 'creepMaterials', 'hyperelasticMaterials',
-            'rigidElements', 'thermalMaterials']
+        keys_to_suppress = []
         method_names = model.object_methods(keys_to_skip=keys_to_suppress)
 
         methods_to_remove = [
-            ''
             'process_card', 'read_bdf', 'fill_dmigs', 'disable_cards', 'set_dynamic_syntax',
             'create_card_object', 'create_card_object_fields', 'create_card_object_list',
 
@@ -615,8 +612,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'nnodes', 'ncoords', 'nelements', 'nproperties',
             'nmaterials', 'ncaeros',
 
-            'convectionProperties', 'creepMaterials', 'hyperelasticMaterials',
-            'rigidElements', 'thermalMaterials', 'point_ids', 'subcases',
+            'point_ids', 'subcases',
             '_card_parser', '_card_parser_b',
         ]
         for key in object_attributes(self, mode="all", keys_to_skip=keys_to_skip):
@@ -2222,10 +2218,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             # SETx - list
             'sets', 'asets', 'bsets', 'csets', 'qsets',
             'se_bsets', 'se_csets', 'se_qsets',
-
-            # deprecated
-            'hyperelasticMaterials', 'creepMaterials', 'thermalMaterials',
-            'rigidElements', 'convectionProperties',
         ])
 
         ## TODO: why are some of these ignored?
@@ -2242,12 +2234,11 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'case_control_lines', 'cards_to_read', 'card_count',
             'isStructured', 'uniqueBulkDataCards',
             'nCardLinesMax', 'model_type', 'includeDir',
-            'cardsToWrite', 'solMethod', 'log', 'doneReading',
+            'solMethod', 'log',
             'linesPack', 'lineNumbers', 'iSolLine',
             'reject_count', '_relpath', 'isOpened',
             #'foundEndData',
-            'specialCards',
-            'infilesPack'])
+            'specialCards',])
 
         unsupported_types = ignored_types.union(ignored_types2)
         all_params = object_attributes(self, keys_to_skip=unsupported_types)

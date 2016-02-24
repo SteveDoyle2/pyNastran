@@ -779,8 +779,8 @@ class MAT3(OrthotropicMaterial):
         az = data[11]
         TRef = data[12]
         ge = data[13]
-        return MAT3(mid, ex, eth, ez, nuxth, nuthz, nuzx, rho, gzx, ax, ath,
-                    TRef, ge, comment=comment)
+        return MAT3(mid, ex, eth, ez, nuxth, nuthz, nuzx, rho, gzx,
+                    ax, ath, az, TRef, ge, comment=comment)
 
     def get_density(self):
         return self.rho

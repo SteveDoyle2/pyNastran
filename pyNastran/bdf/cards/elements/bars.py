@@ -595,10 +595,6 @@ class CBEAM3(CBAR):
         return CBEAM3(eid, pid, ga, gb, gc, x, g0,
                       wa, wb, wc, tw, s, comment='')
 
-    @classmethod
-    def add_card(cls, data, comment=''):
-        raise NotImplementedError(data)
-
     def cross_reference(self, model):
         """
         Cross links the card so referenced cards can be extracted directly

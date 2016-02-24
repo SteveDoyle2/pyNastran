@@ -481,7 +481,7 @@ class CSET1(Set):
         for ifield in range(2, len(card)):
             integer_or_string(card, ifield, 'ID' % ii)
             ii += 1
-        self.IDs = expand_thru(IDs)
+        self.IDs = expand_thru(IDs2)
 
     def cross_reference(self, model):
         """

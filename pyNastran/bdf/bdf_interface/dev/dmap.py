@@ -49,6 +49,7 @@ lines2 = []
 code = ""
 echo = True
 level = 0
+spaces = ''
 for line in lines:
     line = ' '.join(line.split())
 
@@ -110,7 +111,7 @@ for line in lines:
             pre, b, c, resflag = sline
             resflg = int(resflag)
             if pre.startswith('FREQMASS,'):
-                asdf
+                raise NotImplementedError('FREQMASS')
             elif pre.startswith(',,LAMA'):
                 code += spaces + 'LAMX = LAMA\n'
                 if resflag == 1:

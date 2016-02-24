@@ -238,7 +238,7 @@ class BDFMethods(BDFAttributes):
             cg /= mass
         return (mass, cg, I)
 
-    def _mass_properties_new(self, reference_point=None,
+    def _mass_properties_new(self, elements, masses, reference_point=None,
                              sym_axis=None, scale=None, xyz_cid0=None):
         """
         half implemented, not tested, should be faster someday...
@@ -255,6 +255,9 @@ class BDFMethods(BDFAttributes):
         else:
             xyz = xyz_cid0
 
+            mass = 0.
+            cg = array([0., 0., 0.])
+            I = array([0., 0., 0., 0., 0., 0., ])
         if isinstance(reference_point, string_types):
             if reference_point == 'cg':
                 mass = 0.

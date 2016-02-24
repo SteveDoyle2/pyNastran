@@ -11,7 +11,7 @@ class TestNodes(unittest.TestCase):
         ps = ''
         seid = 0
         datai = [nid, cp, 0., 0., 0., cd, ps, seid]
-        n1 = GRID(data=datai)
+        n1 = GRID.add_op2_data(datai)
         #print n1
 
         msg = n1.write_card(size=8)
@@ -53,7 +53,7 @@ class TestNodes(unittest.TestCase):
         seid = 4
         datai = ['GRID', nid, cp, 0., 0., 0., cd, ps, seid]
         card = BDFCard(datai)
-        n1 = GRID(card=card)
+        n1 = GRID.add_card(card)
 
         x = 0.1
         y = 0.2
@@ -68,7 +68,7 @@ class TestNodes(unittest.TestCase):
         n1.update_field(3, x)
         n1.update_field(4, y)
         n1.update_field(5, z)
-        print('ps = %r' % n1.ps)
+        #print('ps = %r' % n1.ps)
         self.assertEqual(n1.xyz[0], x)
         self.assertEqual(n1.xyz[1], y)
         self.assertEqual(n1.xyz[2], z)
@@ -89,31 +89,31 @@ class TestNodes(unittest.TestCase):
         #      12345678 2345678 2345678 2345678 2345678 2345678
         msg = 'SPOINT         1       3       5\n'
         card = BDFCard(['SPOINT', 1, 3, 5])
-        s1 = SPOINT(card)
-        assert list(s1.spoints) == [1, 3, 5], '\n%s' % list(s1.spoints)
+        s1 = SPOINT.add_card(card)
+        assert list(s1.points) == [1, 3, 5], '\n%s' % list(s1.spoints)
         assert s1.write_card() == msg, '\n%s---\n%s' % (s1.write_card(), msg)
 
         #      12345678 2345678 2345678 2345678 2345678 2345678
         msg = 'SPOINT         1    THRU       5\n'
         card = BDFCard(['SPOINT', 1, 'THRU', 5])
-        s2 = SPOINT(card)
-        assert list(s2.spoints) == [1, 2, 3, 4, 5], '\n%s' % list(s2.spoints)
+        s2 = SPOINT.add_card(card)
+        assert list(s2.points) == [1, 2, 3, 4, 5], '\n%s' % list(s2.spoints)
         #assert s2.write_card() == msg, '\n%s---\n%s' % (s2.write_card(), msg)
 
         #       12345678 2345678 2345678 2345678 2345678 2345678
         msg = 'SPOINT         7\n'
         msg += 'SPOINT         1    THRU       5\n'
         card = BDFCard(['SPOINT', 1, 2, 3, 4, 5, 7])
-        s3 = SPOINT(card)
-        assert list(s3.spoints) == [1, 2, 3, 4, 5, 7], '\n%s' % list(s3.spoints)
+        s3 = SPOINT.add_card(card)
+        assert list(s3.points) == [1, 2, 3, 4, 5, 7], '\n%s' % list(s3.spoints)
         #assert s3.write_card() == msg, '\n%s---\n%s' % (s3.write_card(), msg)
 
         #       12345678 2345678 2345678 2345678 2345678 2345678
         msg = 'SPOINT         7\n'
         msg += 'SPOINT         1    THRU       5\n'
         card = BDFCard(['SPOINT', 1, 'THRU', 5, 7])
-        s4 = SPOINT(card)
-        assert list(s4.spoints) == [1, 2, 3, 4, 5, 7], '\n%s' % list(s4.spoints)
+        s4 = SPOINT.add_card(card)
+        assert list(s4.points) == [1, 2, 3, 4, 5, 7], '\n%s' % list(s4.spoints)
         #assert s4.write_card() == msg, '\n%s---\n%s' % (s4.write_card(), msg)
 
 
@@ -121,8 +121,8 @@ class TestNodes(unittest.TestCase):
         msg = 'SPOINT         7\n'
         msg += 'SPOINT         1    THRU       5\n'
         card = BDFCard(['SPOINT', 1, 'THRU', 5, 7])
-        s5 = SPOINT(card)
-        assert list(s5.spoints) == [1, 2, 3, 4, 5, 7], '\n%s' % list(s5.spoints)
+        s5 = SPOINT.add_card(card)
+        assert list(s5.points) == [1, 2, 3, 4, 5, 7], '\n%s' % list(s5.spoints)
         assert s5.write_card() == msg, '\n%s---\n%s' % (s5.write_card(), msg)
 
 

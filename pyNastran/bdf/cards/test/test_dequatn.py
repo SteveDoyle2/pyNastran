@@ -217,7 +217,7 @@ class TestDEQATN(unittest.TestCase):
         s.getvalue()
         s.close()
 
-    def test_deqatn_8(self):
+    def test_deqatn_9(self):
         """
         per nast/tpl/ptdmi1.dat
         """
@@ -243,7 +243,7 @@ class TestDEQATN(unittest.TestCase):
         out = eq.func(1.0, 2.0)
         print(out)
 
-    def test_deqatn_9(self):
+    def test_deqatn_10(self):
         """
         per nast/tpl/ptdmi1.dat
         """

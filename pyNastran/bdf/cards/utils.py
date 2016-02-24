@@ -103,24 +103,24 @@ def wipe_empty_fields(fields):
     # print('fields2', fields)
     return fields
 
-def _wipe_empty_fields(card):
-    """
-    For testing:
-        this method is:   wipe_empty_fields
-        the one above is: wipe_empty_fields_new
+#def _wipe_empty_fields(card):
+    #"""
+    #For testing:
+        #this method is:   wipe_empty_fields
+        #the one above is: wipe_empty_fields_new
 
-    In general:
-        this method is     _wipe_empty_fields
-        the  one above is: wipe_empty_fields
-    """
-    typed = wipe_empty_fields_typed(card)
-    untyped = wipe_empty_fields_new(card)  # the above method is wipe_empty_fields_new
-    untyped = wipe_empty_fields_new(card)  # the above method is wipe_empty_fields_new
-    if typed != untyped:
-        msg = 'typed   = %s\n' % typed
-        msg += 'untyped = %s\n' % untyped
-        print(msg)
-    return untyped
+    #In general:
+        #this method is     _wipe_empty_fields
+        #the  one above is: wipe_empty_fields
+    #"""
+    #typed = wipe_empty_fields_typed(card)
+    #untyped = wipe_empty_fields_new(card)  # the above method is wipe_empty_fields_new
+    #untyped = wipe_empty_fields_new(card)  # the above method is wipe_empty_fields_new
+    #if typed != untyped:
+        #msg = 'typed   = %s\n' % typed
+        #msg += 'untyped = %s\n' % untyped
+        #print(msg)
+    #return untyped
 
 def wipe_empty_fields_typed(card):
     """
