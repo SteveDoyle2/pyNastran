@@ -97,7 +97,7 @@ class CHEXA8(SolidElement):
         assert len(card) == 11, 'len(CHEXA8 card) = %i' % len(card)
         self.i += 1
 
-    def get_mass_matrix(self, i, model, positions, index0s):
+    def get_mass_matrix(self, i, model, positions, index0s, is_lumped=True):
         nnodes = 8
         ndof = 3 * nnodes
         pid = self.property_id[i]

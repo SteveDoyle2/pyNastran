@@ -4,7 +4,7 @@ from numpy import array
 
 from pyNastran.utils import object_attributes, object_methods
 from pyNastran.bdf.utils import deprecated
-from pyNastran.bdf.case_control_deck import CaseControlDeck
+#from pyNastran.bdf.case_control_deck import CaseControlDeck
 from pyNastran.bdf.cards.coordinate_systems import CORD2R
 from pyNastran.bdf.cards.constraints import ConstraintObject
 
@@ -38,8 +38,7 @@ class BDFAttributes(object):
             'nnodes', 'ncoords', 'nelements', 'nproperties',
             'nmaterials', 'ncaeros',
 
-            'convectionProperties', 'creepMaterials', 'hyperelasticMaterials',
-            'rigidElements', 'thermalMaterials', 'point_ids', 'subcases',
+            'point_ids', 'subcases',
             '_card_parser', '_card_parser_b',
             'object_methods', 'object_attributes',
         ]
@@ -58,8 +57,7 @@ class BDFAttributes(object):
             'nnodes', 'ncoords', 'nelements', 'nproperties',
             'nmaterials', 'ncaeros',
 
-            'convectionProperties', 'creepMaterials', 'hyperelasticMaterials',
-            'rigidElements', 'thermalMaterials', 'point_ids', 'subcases',
+            'point_ids', 'subcases',
             '_card_parser', '_card_parser_b',
             'object_methods', 'object_attributes',
         ]
@@ -748,54 +746,3 @@ class BDFAttributes(object):
     @property
     def caero_ids(self):
         return self.caeros.keys()
-
-    #--------------------
-    @property
-    def hyperelasticMaterials(self):
-        self.deprecated('hyperelasticMaterials', 'hyperelastic_materials', '0.8')
-        return self.hyperelastic_materials
-
-    @property
-    def convectionProperties(self):
-        self.deprecated('convectionProperties', 'convection_properties', '0.8')
-        return self.convection_properties
-
-    @property
-    def creepMaterials(self):
-        self.deprecated('creepMaterials', 'creep_materials', '0.8')
-        return self.creep_materials
-
-    @property
-    def rigidElements(self):
-        self.deprecated('rigidElements', 'rigid_elements', '0.8')
-        return self.creep_materials
-
-    @property
-    def thermalMaterials(self):
-        self.deprecated('thermalMaterials', 'thermal_materials', '0.8')
-        return self.thermal_materials
-#-----------------------------------
-    @hyperelasticMaterials.setter
-    def hyperelasticMaterials(self, key, value):
-        self.deprecated('hyperelasticMaterials', 'hyperelastic_materials', '0.8')
-        self.hyperelastic_materials[key] = value
-
-    @convectionProperties.setter
-    def convectionProperties(self, key, value):
-        self.deprecated('convectionProperties', 'convection_properties', '0.8')
-        self.convection_properties[key] = value
-
-    @creepMaterials.setter
-    def creepMaterials(self, key, value):
-        self.deprecated('creepMaterials', 'creep_materials', '0.8')
-        self.creep_materials[key] = value
-
-    @rigidElements.setter
-    def rigidElements(self, key, value):
-        self.deprecated('rigidElements', 'rigid_elements', '0.8')
-        self.creep_materials[key] = value
-
-    @thermalMaterials.setter
-    def thermalMaterials(self, key, value):
-        self.deprecated('thermalMaterials', 'thermal_materials', '0.8')
-        return self.thermal_materials

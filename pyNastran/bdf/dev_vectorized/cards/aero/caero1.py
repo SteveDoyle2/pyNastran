@@ -242,11 +242,12 @@ class CAERO1(VectorizedCard):
         v12 = p2 - p1
         v13 = p3 - p1
         v123 = cross(v12, v13)
+        normi = np.norm(v123, axis=0)
 
         A = None
-        normal = v123 / n
+        normal = v123 / normi
         if calculate_area:
-            A = 0.5 * n
+            A = 0.5 * normi
         return A, normal
 
     def _positions(self, nids_to_get, node_ids, grids_cid0):

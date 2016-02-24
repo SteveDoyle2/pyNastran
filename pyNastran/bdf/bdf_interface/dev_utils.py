@@ -295,7 +295,7 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
     #replacer = unique(ieq[slots])  ## TODO: turn this back on?
 
     skip_nodes = []
-    for (islot, irow, icol) in zip(count(), irows, icols):
+    for (irow, icol) in zip(irows, icols):
         inid2 = ieq[irow, icol]
         nid1 = nids[irow]
         nid2 = nids[inid2]

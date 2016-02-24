@@ -297,6 +297,8 @@ def find_ribs_and_spars(xyz_cid0, edge_to_eid_map, eid_to_edge_map,
                 print('ipatch=%s len(patch)=%s; patch=%s' % (new_patch_count, len(patch), patch))
                 sys.stdout.flush()
                 new_patch_count += 1
+                if len(patch) == 1:
+                    break
                 patches.append(list(patch))
                 assert len(patch) > 1, len(patch)
             else:
@@ -555,6 +557,7 @@ def create_plate_buckling_models(model, op2_filename, mode, isubcase=1,
     """
     # cleanup
     if workpath != '':
+        print('workpath =', workpath)
         if not os.path.exists(workpath):
             os.makedirs(workpath)
         os.chdir(workpath)
@@ -627,7 +630,7 @@ def write_buckling_bdfs(bdf_model, op2_filename, xyz_cid0, patches, patch_edges_
     #header += '  STRAIN(PLOT,PRINT,VONMISES,FIBER,CENTER) = ALL\n'
     header += '  DISPLACEMENT(PLOT,PRINT) = ALL\n'
     header += '  SPC = 100\n'
-    if 'SUBTITLE' not in subcase:
+    if 'SUBTITLE' in subcase:
         header += '  SUBTITLE = %s\n' % subcase.get_parameter('SUBTITLE')[0]
 
     #header += '  MPC = 1\n'
@@ -650,6 +653,7 @@ def write_buckling_bdfs(bdf_model, op2_filename, xyz_cid0, patches, patch_edges_
     header += 'EIGB,%s,INV,%s,%s,%s\n' % (method, eig1, eig2, nroots)
 
     out_model = OP2()
+    print('**** workpath', workpath)
     out_model.read_op2(op2_filename)
     if mode == 'displacement':
         #print('out_model.displacements =', out_model.displacements)

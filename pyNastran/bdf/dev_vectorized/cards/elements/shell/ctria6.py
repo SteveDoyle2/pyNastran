@@ -75,9 +75,9 @@ class CTRIA6(ShellElement):
             for (eid, pid, n, zoffset, t_flag, thickness) in zip(
                 self.element_id[i], self.property_id[i], self.node_ids[i],
                 self.zoffset[i], self.t_flag[i], self.thickness[i]):
-                thetaMcid = None
+                theta_mcid = None
                 #TFlag = None
-                card = ['CTRIA6', eid, pid, ] + list(n) + [thetaMcid, zOffset,
+                card = ['CTRIA6', eid, pid, ] + list(n) + [theta_mcid, zoffset,
                         None] + [None, TFlag] + list(t)
                 f.write(print_card_8(card))
 

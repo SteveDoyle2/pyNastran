@@ -359,7 +359,7 @@ class GRID(VectorizedCard):
         return msg
 
     def __getitem__(self, node_id):
-        raise NotImplmementedError()
+        raise NotImplmementedError('Grid getitem')
         return self.slice_by_index(i)
 
     def slice_by_node_id(self, node_id=None):

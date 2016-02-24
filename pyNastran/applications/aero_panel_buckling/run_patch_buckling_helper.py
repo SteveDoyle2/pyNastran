@@ -23,8 +23,17 @@ def run_nastran(fname, keywords=None):
         Default keywords are `'mem=1024mb'`, `'old=no'`, and `'news=no'`
     """
     if keywords is None:
-        keywords = ['old=no','news=no'] # ['mem=1024mb','old=no','news=no']
-    return subprocess.call(['nastran', fname] + keywords)
+        keywords_list = ['old=no', 'news=no'] # ['mem=1024mb','old=no','news=no']
+    else:
+        if isinstance(keywords, (list, tuple)):
+            keywords_list = keywords
+        else:
+            keywords_list = []
+            for keyword, value in keywords.items():
+                keywords_list.append('%s=%s' % (keyword, value))
+
+    call_args = ['nastran', fname] + keywords_list
+    return subprocess.call(call_args)
 
 def run_bdfs_batch(bdf_filenames, workpath='results', mem='100mb', auth=None, overwrite_op2_if_exists=False):
     #print(bdf_filenames)
@@ -70,7 +79,8 @@ def run_bdfs_batch(bdf_filenames, workpath='results', mem='100mb', auth=None, ov
     print('Done running patch jobs.')
 
 
-def run_bdfs(bdf_filenames, workpath='results', nastran_keywords=None, overwrite_op2_if_exists=False):
+def run_bdfs(bdf_filenames, workpath='results', nastran_keywords=None,
+             overwrite_op2_if_exists=False):
     #print(bdf_filenames)
     print('Start running patch jobs.')
     for bdf_filename in bdf_filenames:
@@ -82,7 +92,7 @@ def run_bdfs(bdf_filenames, workpath='results', nastran_keywords=None, overwrite
             #cmd = 'nastran %s scr=yes bat=no old=no' % (basename) # shell version
 
             call_args = ['nastran', bdf_filename, 'scr=yes', 'bat=no', 'old=no']
-            for key, value in nastran_keywords:
+            for key, value in nastran_keywords.items():
                 call_args.append('%s=%s' % (key, value))
 
             subprocess.call(call_args)

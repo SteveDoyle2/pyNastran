@@ -1,3 +1,6 @@
+from six import iteritems
+
+
 def AJJ(model, xyz=None):
     if xyz is None:
         xyz = {}

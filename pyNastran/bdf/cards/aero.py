@@ -170,8 +170,8 @@ class AEFACT(BaseCard):
         fields : List[int/float/str]
             the fields that define the card
         """
-        fields = ['AEFACT', self.sid] + list(self.Di)
-        return fields
+        list_fields = ['AEFACT', self.sid] + list(self.Di)
+        return list_fields
 
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
@@ -212,11 +212,11 @@ class AELINK(BaseCard):
             #: linking coefficient (real)
             self.Cis = []
 
-            fields = [interpret_value(field) for field in card[3:]]
+            list_fields = [interpret_value(field) for field in card[3:]]
             assert len(fields) % 2 == 0, 'fields=%s' % fields
             for i in range(0, len(fields), 2):
                 independentLabel = fields[i]
-                Ci = fields[i + 1]
+                Ci = list_fields[i + 1]
                 self.independentLabels.append(independentLabel)
                 self.Cis.append(Ci)
         else:
@@ -235,10 +235,10 @@ class AELINK(BaseCard):
         fields : List[int/float/str]
             the fields that define the card
         """
-        fields = ['AELINK', self.id, self.label]
+        list_fields = ['AELINK', self.id, self.label]
         for (ivar, ival) in zip(self.independentLabels, self.Cis):
-            fields += [ivar, ival]
-        return fields
+            list_fields += [ivar, ival]
+        return list_fields
 
     def write_card(self, size=8, is_double=False):
         card = self.raw_fields()
@@ -948,9 +948,9 @@ class CSSCHD(Aero):
 
     def uncross_reference(self):
         self.aesid = self.AESid()
-        self.LAlpha = self.LAlpha()
-        self.LMach = self.LMach()
-        self.LSchd = self.LSchd()
+        self.lAlpha = self.LAlpha()
+        self.lMach = self.LMach()
+        self.lSchd = self.LSchd()
         del self.aesid_ref
         del self.lAlpha_ref
         del self.lMach_ref
@@ -1974,6 +1974,11 @@ class CAERO5(BaseCard):
             return self.pid
         return self.pid_ref.pid
 
+    def LSpan(self):
+        if isinstance(self.lspan, integer_types):
+            return self.lspan
+        return self.lspan_ref.sid
+
     def repr_fields(self):
         """
         Gets the fields in their simplified form
@@ -2480,8 +2485,8 @@ class MKAERO1(BaseCard):
         if comment:
             self._comment = comment
         if card:
-            fields = [interpret_value(field) for field in card[1:]]
-            nfields = len(fields) - 8
+            list_fields = [interpret_value(field) for field in card[1:]]
+            nfields = len(list_fields) - 8
             self.machs = []
             self.rFreqs = []
             for i in range(1, 1 + nfields):
@@ -2552,8 +2557,8 @@ class MKAERO2(BaseCard):
         if comment:
             self._comment = comment
         if card:
-            fields = card.fields(1)
-            nfields = len(fields)
+            list_fields = card.fields(1)
+            nfields = len(list_fields)
             self.machs = []
             self.rFreqs = []
             for i in range(1, 1 + nfields, 2):

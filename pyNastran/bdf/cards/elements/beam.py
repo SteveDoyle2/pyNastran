@@ -1,6 +1,6 @@
 # pylint: disable=R0904,R0902,E1101,E1103,C0111,C0302,C0103,W0101
 from six import string_types
-from numpy import array, cross
+import numpy as np
 from numpy.linalg import norm
 
 from pyNastran.utils import integer_types
@@ -104,13 +104,13 @@ class CBEAM(CBAR):
         pa = integer_or_blank(card, 9, 'pa', 0)
         pb = integer_or_blank(card, 10, 'pb', 0)
 
-        wa = array([double_or_blank(card, 11, 'w1a', 0.0),
-                         double_or_blank(card, 12, 'w2a', 0.0),
-                         double_or_blank(card, 13, 'w3a', 0.0)], 'float64')
+        wa = np.array([double_or_blank(card, 11, 'w1a', 0.0),
+                       double_or_blank(card, 12, 'w2a', 0.0),
+                       double_or_blank(card, 13, 'w3a', 0.0)], 'float64')
 
-        wb = array([double_or_blank(card, 14, 'w1b', 0.0),
-                         double_or_blank(card, 15, 'w2b', 0.0),
-                         double_or_blank(card, 16, 'w3b', 0.0)], 'float64')
+        wb = np.array([double_or_blank(card, 14, 'w1b', 0.0),
+                       double_or_blank(card, 15, 'w2b', 0.0),
+                       double_or_blank(card, 16, 'w3b', 0.0)], 'float64')
 
         sa = integer_or_blank(card, 17, 'sa', 0)
         sb = integer_or_blank(card, 18, 'sb', 0)
@@ -131,9 +131,9 @@ class CBEAM(CBAR):
         flag = data[1][0]
         if flag in [0, 1]:
             g0 = None
-            x = array([data[1][1],
-                            data[1][2],
-                            data[1][3]], dtype='float64')
+            x = np.array([data[1][1],
+                          data[1][2],
+                          data[1][3]], dtype='float64')
         else:
             g0 = data[1][1]
             x = None
@@ -153,8 +153,8 @@ class CBEAM(CBAR):
         pa = main[6]
         pb = main[7]
 
-        wa = array([main[8], main[9], main[10]], 'float64')
-        wb = array([main[11], main[12], main[13]], 'float64')
+        wa = np.array([main[8], main[9], main[10]], 'float64')
+        wb = np.array([main[11], main[12], main[13]], 'float64')
         return CBEAM(eid, pid, ga, gb, x, g0, is_offt, offt, bit,
                      pa, pb, wa, wb, sa, sb, comment=comment)
 
@@ -167,7 +167,7 @@ class CBEAM(CBAR):
         return [self.ga, self.gb]
 
     @classmethod
-    def _init_offt_bit(self, card, eid):
+    def _init_offt_bit(cls, card, eid):
         """
         offt doesn't exist in NX nastran
         """
@@ -184,14 +184,13 @@ class CBEAM(CBAR):
             is_offt = True
             bit = None
             offt = field8
-            #print("self.offt = ", self.offt)
             msg = 'invalid offt parameter of CBEAM...offt=%s' % offt
             assert offt[0] in ['G', 'B', 'O', 'E'], msg
             assert offt[1] in ['G', 'B', 'O', 'E'], msg
             assert offt[2] in ['G', 'B', 'O', 'E'], msg
         else:
             msg = ('field8 on %s card is not a string(offt) or bit '
-                   '(float)...field8=%s\n' % (self.type, field8))
+                   '(float)...field8=%s\n' % (cls.type, field8))
             raise RuntimeError("Card Instantiation: %s" % msg)
         return is_offt, offt, bit
 

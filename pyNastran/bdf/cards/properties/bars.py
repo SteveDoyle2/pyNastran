@@ -1218,7 +1218,7 @@ class PBARL(LineProperty):
             b = b1
             Ixx = (b*d**3-h**3*(b-t)) / 12.
             Iyy = (2.*s*b**3 + h*t**3) / 12.
-        elif self.Type == 'T': # test
+        #elif self.Type == 'T': # test
             # http://www.amesweb.info/SectionalPropertiesTabs/SectionalPropertiesTbeam.aspx
             # http://www.amesweb.info/SectionalPropertiesTabs/SectionalPropertiesTbeam.aspx
             # d - outside height
@@ -1228,7 +1228,7 @@ class PBARL(LineProperty):
             # s - web thickness
             #(b, d, t, s) = self.dim
             #h = d - 2 * s
-            (b, d, s, t) = self.dim
+            #(b, d, s, t) = self.dim
             #if b1 != b2:
                 #msg = 'J for Type=%r dim=%r on PBARL b1 != b2 is not supported' % (
                     #self.Type, self.dim)
@@ -1242,9 +1242,9 @@ class PBARL(LineProperty):
             #b = b1
 
             # http://www.engineersedge.com/material_science/moment-inertia-gyration-6.htm
-            y = d**2*t+s**2*(b-t)/(2*(b*s+h*t))
-            Ixx = (t*y**3 + b*(d-y)**3 - (b-t)*(d-y-s)**3)/3.
-            Iyy = t**3*(h-s)/12. + b**3*s/12.
+            #y = d**2*t+s**2*(b-t)/(2*(b*s+h*t))
+            #Ixx = (t*y**3 + b*(d-y)**3 - (b-t)*(d-y-s)**3)/3.
+            #Iyy = t**3*(h-s)/12. + b**3*s/12.
             #A = b*s + h*t
 
         elif self.Type == 'C':
@@ -1259,7 +1259,7 @@ class PBARL(LineProperty):
             #cx = (2.*b**2*s + h*t**2)/(2*b*d - 2*h*(b-t))
             #cy = d / 2.
             Ixx = (b * d**3 - h **3 * (b-t)) / 12.
-            Iyx = (2.*s*b**3 + h*t**3)/3 - A*cx**2
+            #Iyx = (2.*s*b**3 + h*t**3)/3 - A*cx**2
         else:
             msg = 'J for Type=%r dim=%r on PBARL is not supported' % (self.Type, self.dim)
             raise NotImplementedError(msg)

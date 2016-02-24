@@ -215,8 +215,7 @@ class TriShell(ShellElement):
         (n1, n2, n3) = self.get_node_positions()
         a = n1 - n2
         b = n1 - n3
-        area = Area(a, b)
-        0.5 * norm(cross(a, b))
+        area = 0.5 * norm(cross(a, b))
         return area
 
     def Normal(self):
@@ -1733,7 +1732,7 @@ class CQUADR(QuadShell):
         T4 = double_or_blank(card, 14, 'T4', 1.0)
         assert len(card) <= 15, 'len(CQUADR card) = %i' % len(card)
         return CQUADR(eid, pid, nids, thetaMcid, zOffset,
-                      TFlag, T1, T2, T3, T4)
+                      TFlag, T1, T2, T3, T4, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -1757,7 +1756,7 @@ class CQUADR(QuadShell):
         if T4 == -1.0:
             T4 = 1.0
         return CQUADR(eid, pid, nids, thetaMcid, zOffset,
-                      TFlag, T1, T2, T3, T4)
+                      TFlag, T1, T2, T3, T4, comment=comment)
 
     def cross_reference(self, model):
         """

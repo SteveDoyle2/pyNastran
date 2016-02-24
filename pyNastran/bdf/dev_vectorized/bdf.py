@@ -1638,8 +1638,6 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
                     card_name = 'CHEXA8'
                 else:
                     card_name = 'CHEXA20'
-
-
         self._increase_card_count(card_name)
 
     def add_card(self, card_lines, card_name, comment='', is_list=True):

@@ -384,8 +384,8 @@ class Coord(BaseCard):
         """
         if self.cid == 0:
             return np.array([[1., 0., 0.],
-                          [0., 1., 0.],
-                          [0., 0., 1.]], dtype='float64')
+                             [0., 1., 0.],
+                             [0., 0., 1.]], dtype='float64')
         matrix = np.vstack([self.i, self.j, self.k])
         return matrix
 
@@ -483,8 +483,8 @@ def define_spherical_cutting_plane(model, origin, rid, cids, thetas, phis):
 
     # create the spherical coordinate system
     origin = _fix_xyz_shape(origin, 'origin')
-    e2 = origin + array([0., 0., 1.])
-    e3 = origin + array([1., 0., 0.])
+    e2 = origin + np.array([0., 0., 1.])
+    e3 = origin + np.array([1., 0., 0.])
     card = ['CORD2S', rid, 0] + list(origin) + list(e2) + list(e3)
     model.add_card(card, card[0], is_list=True)
 
@@ -633,7 +633,7 @@ def define_coord_ijk(model, Type, cid, origin, rid=0, i=None, j=None, k=None):
     # create cross vectors
     if i is None:
         if j is not None and k is not None:
-            i = cross(k, j)
+            i = np.cross(k, j)
         else:
             raise RuntimeError('i, j and k are None')
     else:
@@ -842,7 +842,7 @@ class SphericalCoord(object):
             theta = degrees(acos(z / R))
         else:
             theta = 0.
-        return array([R, theta, phi], dtype='float64')
+        return np.array([R, theta, phi], dtype='float64')
 
     @classmethod
     def xyz_to_coord_array(cls, p):
@@ -859,7 +859,7 @@ class SphericalCoord(object):
         i = np.where(R == 0.0)
         if len(i):
             theta[i] = 0.0
-        return array([R, theta, phi], dtype='float64').T
+        return np.array([R, theta, phi], dtype='float64').T
 
     @classmethod
     def coord_to_xyz(cls, p):
@@ -920,17 +920,17 @@ class Cord2x(Coord):
         self.cid = cid
         self.rid = rid
         if origin is None:
-            self.e1 = array([0., 0., 0.], dtype='float64')
+            self.e1 = np.array([0., 0., 0.], dtype='float64')
         else:
             self.e1 = np.asarray(origin)
 
         if zaxis is None:
-            self.e2 = array([0., 0., 1.], dtype='float64')
+            self.e2 = np.array([0., 0., 1.], dtype='float64')
         else:
             self.e2 = np.asarray(zaxis)
 
         if xzplane is None:
-            self.e3 = array([1., 0., 0.], dtype='float64')
+            self.e3 = np.array([1., 0., 0.], dtype='float64')
         else:
             self.e3 = np.asarray(xzplane)
         self._finish_setup()
@@ -959,9 +959,9 @@ class Cord2x(Coord):
 
     @classmethod
     def add_axes(cls, cid, rid=0, origin=None,
-                  xaxis=None, yaxis=None, zaxis=None,
-                  xyplane=None, yzplane=None, xzplane=None,
-                  comment=''):
+                 xaxis=None, yaxis=None, zaxis=None,
+                 xyplane=None, yzplane=None, xzplane=None,
+                 comment=''):
         """
         Create a coordinate system based on a defined axis and point on the
         plane.  This is the generalized version of the CORD2x card.
@@ -1521,11 +1521,11 @@ class CORD3G(Coord):  # not done
                 ct = cos(radians(theta))
                 st = sin(radians(theta))
                 if rotation == 1:
-                    p = dot(self.rotation_x(ct, st), p)
+                    p = np.dot(self.rotation_x(ct, st), p)
                 elif rotation == 2:
-                    p = dot(self.rotation_y(ct, st), p)
+                    p = np.dot(self.rotation_y(ct, st), p)
                 elif rotation == 3:
-                    p = dot(self.rotation_z(ct, st), p)
+                    p = np.dot(self.rotation_z(ct, st), p)
                 else:
                     raise RuntimeError('rotation=%s rotations=%s' % (rotation, rotations))
         elif self.method_es == 'S':
