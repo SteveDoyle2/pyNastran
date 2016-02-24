@@ -2028,7 +2028,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             for i, (nid, node) in enumerate(sorted(iteritems(self.nodes))):
                 xyz = node.get_position()
                 xyz_cid0[i, :] = xyz
-        print(xyz_cid0)
         return xyz_cid0
 
     def _add_card_helper(self, card_obj, card, card_name, comment=''):
