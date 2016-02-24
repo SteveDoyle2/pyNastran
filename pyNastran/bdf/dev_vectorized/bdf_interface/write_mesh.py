@@ -251,7 +251,7 @@ class WriteMesh(object):
             self.model.log.debug("pids_unique = %s" % pids_unique)
             pids_unique.sort()
             if len(pids_unique) > 0:
-                f.write('$ELEMENTS_WITH_PROPERTIES\n')
+                outfile.write('$ELEMENTS_WITH_PROPERTIES\n')
 
             for pid in pids_all:
                 i = where(pid==pids)[0]
@@ -260,7 +260,7 @@ class WriteMesh(object):
                 for t in ptypes:
                     if t.n and pid in t.property_id:
                         self.model.log.debug("prop.type = %s" % t.type)
-                        t.write_card(f, size=size, property_ids=[pid])
+                        t.write_card(outfile, size=size, property_ids=[pid])
                         pids_set.remove(pid)
                 n = 0
                 for t in etypes:
@@ -282,7 +282,7 @@ class WriteMesh(object):
                     else:
                         continue
                     try:
-                        t.write_card(f, size=size, element_ids=eids3)
+                        t.write_card(outfile, size=size, element_ids=eids3)
                     except TypeError:
                         print("t.type = %s" % t.type)
                         raise
@@ -294,18 +294,18 @@ class WriteMesh(object):
         # missing properties
         if pids_set:
             pids_list = list(pids_set)
-            f.write('$UNASSOCIATED_PROPERTIES\n')
+            outfile.write('$UNASSOCIATED_PROPERTIES\n')
             for pid in pids_list:
                 for t in ptypes:
                     if t.n and pid in t.property_id:
-                        t.write_card(f, size=size, property_ids=[pid])
+                        t.write_card(outfile, size=size, property_ids=[pid])
 
         #.. todo:: finish...
-        f.write('$UNASSOCIATED_ELEMENTS\n')
+        outfile.write('$UNASSOCIATED_ELEMENTS\n')
         # missing elements...
 
-    def write_elements_properties(self, f, size, is_double, interspersed):
-        self.elements.write_card(f, size=size, is_double=is_double,
+    def write_elements_properties(self, outfile, size, is_double, interspersed):
+        self.elements.write_card(outfile, size=size, is_double=is_double,
                                  include_properties=True, interspersed=interspersed)
 
     def _write_aero(self, outfile, size, is_double):

@@ -3,8 +3,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six.moves import range
 
-from numpy import matrix, zeros, array, transpose, dot, ones
-from numpy import eye, allclose, cross
+from numpy import array
 from numpy.linalg import norm
 
 from pyNastran.utils import integer_types

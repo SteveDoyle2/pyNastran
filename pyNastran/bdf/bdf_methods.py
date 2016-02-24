@@ -255,9 +255,9 @@ class BDFMethods(BDFAttributes):
         else:
             xyz = xyz_cid0
 
-            mass = 0.
-            cg = array([0., 0., 0.])
-            I = array([0., 0., 0., 0., 0., 0., ])
+        mass = 0.
+        cg = array([0., 0., 0.])
+        I = array([0., 0., 0., 0., 0., 0., ])
         if isinstance(reference_point, string_types):
             if reference_point == 'cg':
                 mass = 0.

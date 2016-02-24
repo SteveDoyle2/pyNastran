@@ -36,7 +36,7 @@ from pyNastran.utils import _filename
 from pyNastran.utils.log import get_logger2
 
 from pyNastran.bdf.bdf_interface.assign_type import (integer,
-                                                    integer_or_string, string)
+                                                     integer_or_string, string)
 
 from pyNastran.bdf.cards.elements.elements import CFAST, CGAP, CRAC2D, CRAC3D, PLOTEL
 from pyNastran.bdf.cards.properties.properties import (PFAST, PGAP, PLSOLID, PSOLID,

@@ -406,7 +406,7 @@ class DRESP1(OptConstraint):
         if rtype == 'DISP' and ptype is None:
             msg = 'fields=%s\n' % (self.raw_fields())
             msg += 'rtype=%r ptype=%r region=%s A=%r B=%r\n' % (self.rtype, self.ptype, self.region,
-                                                           self.atta, self.attb)
+                                                                self.atta, self.attb)
             assert isinstance(self.atta, int), self.atta
             assert self.attb is None, self.attb
             assert len(self.atti) == 1, self.atti

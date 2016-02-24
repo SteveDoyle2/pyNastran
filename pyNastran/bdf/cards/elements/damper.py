@@ -16,7 +16,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from pyNastran.utils import integer_types
 from pyNastran.bdf.cards.base_card import Element
 from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_blank,
-                                                    double)
+                                                     double)
 from pyNastran.bdf.field_writer_8 import print_card_8
 
 

@@ -65,7 +65,7 @@ class CHEXA20(SolidElement):
             self.element_id = array([], dtype='int32')
             self.property_id = array([], dtype='int32')
 
-    def get_mass_matrix(self, i, model, positions, index0s):
+    def get_mass_matrix(self, i, model, positions, index0s, is_lumped=True):
         nnodes = 8
         ndof = 3 * nnodes
         pid = self.property_id[i]

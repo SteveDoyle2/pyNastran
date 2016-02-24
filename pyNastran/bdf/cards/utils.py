@@ -69,7 +69,7 @@ def wipe_empty_fields_off(fields):
     # print('fields =', fields[:nfields-i])
 
     # has the potential issue of not returning embedded Nones
-    return [field.strip() if isinstance(field, string_types) else field for field in fields[:nfields-i] ]
+    return [field.strip() if isinstance(field, string_types) else field for field in fields[:nfields-i]]
     # return [field.strip() if field.strip() else None for field in fields[:nfields-i] ] # fails on ints/Nones
 
 def wipe_empty_fields(fields):

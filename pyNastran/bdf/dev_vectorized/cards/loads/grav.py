@@ -118,7 +118,7 @@ class GRAV(object):
             for (lid, cid, scale, N, mb) in zip(
                  self.load_id, self.coord_id, self.scale, self.N, self.mb):
 
-                card = ['GRAV', lid, cid, scale, N[0], N[1], n[2], mb]
+                card = ['GRAV', lid, cid, scale, N[0], N[1], N[2], mb]
                 if size == 8:
                     f.write(print_card_8(card))
                 else:

@@ -3,7 +3,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import string_types
 
-from numpy import array
+import numpy as np
 from numpy.linalg import norm
 
 from pyNastran.utils import integer_types
@@ -181,9 +181,10 @@ class CBAROR(object):
         elif isinstance(field5, float):
             self.is_g0 = False
             self.g0 = None
-            self.x = array([field5,
-                            double_or_blank(card, 6, 'x2', 0.0),
-                            double_or_blank(card, 7, 'x3', 0.0)], dtype='float64')
+            self.x = np.array([field5,
+                               double_or_blank(card, 6, 'x2', 0.0),
+                               double_or_blank(card, 7, 'x3', 0.0)],
+                              dtype='float64')
         self.offt = string_or_blank(card, 8, 'offt', 'GGG')
         assert len(card) <= 9, 'len(CBAROR card) = %i' % len(card)
 
@@ -295,13 +296,13 @@ class CBAR(LineElement):
         pa = integer_or_blank(card, 9, 'pa', 0)
         pb = integer_or_blank(card, 10, 'pb', 0)
 
-        wa = array([double_or_blank(card, 11, 'w1a', 0.0),
-                    double_or_blank(card, 12, 'w2a', 0.0),
-                    double_or_blank(card, 13, 'w3a', 0.0)], dtype='float64')
+        wa = np.array([double_or_blank(card, 11, 'w1a', 0.0),
+                       double_or_blank(card, 12, 'w2a', 0.0),
+                       double_or_blank(card, 13, 'w3a', 0.0)], dtype='float64')
 
-        wb = array([double_or_blank(card, 14, 'w1b', 0.0),
-                    double_or_blank(card, 15, 'w2b', 0.0),
-                    double_or_blank(card, 16, 'w3b', 0.0)], dtype='float64')
+        wb = np.array([double_or_blank(card, 14, 'w1b', 0.0),
+                       double_or_blank(card, 15, 'w2b', 0.0),
+                       double_or_blank(card, 16, 'w3b', 0.0)], dtype='float64')
         assert len(card) <= 17, 'len(CBAR card) = %i' % len(card)
         return CBAR(eid, pid, ga, gb, x, g0,
                     offt, pa, pb, wa, wb, comment=comment)
@@ -316,9 +317,9 @@ class CBAR(LineElement):
         flag = data[1][0]
         if flag in [0, 1]:
             g0 = None
-            x = array([data[1][1],
-                       data[1][2],
-                       data[1][3]], dtype='float64')
+            x = np.array([data[1][1],
+                          data[1][2],
+                          data[1][3]], dtype='float64')
         else:
             g0 = data[1][1]
             x = None
@@ -332,8 +333,8 @@ class CBAR(LineElement):
         pa = main[4]
         pb = main[5]
 
-        wa = array([main[6], main[7], main[8]], dtype='float64')
-        wb = array([main[9], main[10], main[11]], dtype='float64')
+        wa = np.array([main[6], main[7], main[8]], dtype='float64')
+        wb = np.array([main[9], main[10], main[11]], dtype='float64')
         return CBAR(eid, pid, ga, gb, x, g0,
                     offt, pa, pb, wa, wb, comment=comment)
 
@@ -407,9 +408,9 @@ class CBAR(LineElement):
             x = None
         elif isinstance(field5, float):
             g0 = None
-            x = array([field5,
-                            double_or_blank(card, 6, 'x2', 0.0),
-                            double_or_blank(card, 7, 'x3', 0.0)], dtype='float64')
+            x = np.array([field5,
+                          double_or_blank(card, 6, 'x2', 0.0),
+                          double_or_blank(card, 7, 'x3', 0.0)], dtype='float64')
             if norm(x) == 0.0:
                 msg = 'G0 vector defining plane 1 is not defined.\n'
                 msg += 'G0 = %s\n' % g0
@@ -572,25 +573,25 @@ class CBEAM3(CBAR):
 
         cls._init_x_g0(card, eid)
 
-        wa = array([double_or_blank(card, 9, 'w1a', 0.0),
-                    double_or_blank(card, 10, 'w2a', 0.0),
-                    double_or_blank(card, 11, 'w3a', 0.0)], dtype='float64')
+        wa = np.array([double_or_blank(card, 9, 'w1a', 0.0),
+                       double_or_blank(card, 10, 'w2a', 0.0),
+                       double_or_blank(card, 11, 'w3a', 0.0)], dtype='float64')
 
-        wb = array([double_or_blank(card, 12, 'w1b', 0.0),
-                    double_or_blank(card, 13, 'w2b', 0.0),
-                    double_or_blank(card, 14, 'w3b', 0.0)], dtype='float64')
+        wb = np.array([double_or_blank(card, 12, 'w1b', 0.0),
+                       double_or_blank(card, 13, 'w2b', 0.0),
+                       double_or_blank(card, 14, 'w3b', 0.0)], dtype='float64')
 
-        wc = array([double_or_blank(card, 15, 'w1c', 0.0),
-                    double_or_blank(card, 16, 'w2c', 0.0),
-                    double_or_blank(card, 17, 'w3c', 0.0)], dtype='float64')
+        wc = np.array([double_or_blank(card, 15, 'w1c', 0.0),
+                       double_or_blank(card, 16, 'w2c', 0.0),
+                       double_or_blank(card, 17, 'w3c', 0.0)], dtype='float64')
 
-        tw = array([double_or_blank(card, 18, 0., 'twa'),
-                    double_or_blank(card, 19, 0., 'twb'),
-                    double_or_blank(card, 20, 0., 'twc')], dtype='float64')
+        tw = np.array([double_or_blank(card, 18, 0., 'twa'),
+                       double_or_blank(card, 19, 0., 'twb'),
+                       double_or_blank(card, 20, 0., 'twc')], dtype='float64')
 
-        s = array([integer_or_blank(card, 21, 'sa'),
-                   integer_or_blank(card, 22, 'sb'),
-                   integer_or_blank(card, 23, 'sc')], dtype='float64')
+        s = np.array([integer_or_blank(card, 21, 'sa'),
+                      integer_or_blank(card, 22, 'sb'),
+                      integer_or_blank(card, 23, 'sc')], dtype='float64')
         assert len(card) <= 24, 'len(CBEAM3 card) = %i' % len(card)
         return CBEAM3(eid, pid, ga, gb, gc, x, g0,
                       wa, wb, wc, tw, s, comment='')
@@ -714,9 +715,9 @@ class CBEND(LineElement):
             x = None
         elif isinstance(x1_g0, float):
             g0 = None
-            x = array([double_or_blank(card, 5, 'x1', 0.0),
-                       double_or_blank(card, 6, 'x2', 0.0),
-                       double_or_blank(card, 7, 'x3', 0.0)], dtype='float64')
+            x = np.array([double_or_blank(card, 5, 'x1', 0.0),
+                          double_or_blank(card, 6, 'x2', 0.0),
+                          double_or_blank(card, 7, 'x3', 0.0)], dtype='float64')
             if norm(x) == 0.0:
                 msg = 'G0 vector defining plane 1 is not defined.\n'
                 msg += 'G0 = %s\n' % g0

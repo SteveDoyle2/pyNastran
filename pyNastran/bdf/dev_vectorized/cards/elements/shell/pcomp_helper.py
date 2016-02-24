@@ -7,7 +7,7 @@ from pyNastran.utils import integer_types
                                                     #double_or_blank, integer_double_or_blank, blank, string_or_blank)
 from pyNastran.bdf.bdf_interface.assign_type import integer, double_or_blank, string_or_blank, integer_or_blank
 from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8
-from pyNastran.bdf.fieldWriter import print_card
+from pyNastran.bdf.field_writer import print_card
 
 
 class BaseCard(object):
