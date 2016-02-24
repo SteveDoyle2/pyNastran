@@ -19,7 +19,7 @@ All cards are Material objects.
 from pyNastran.utils import integer_types
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.cards.bdf_tables import Table
-from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
+from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_blank,
     double, double_or_blank, string, blank)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16

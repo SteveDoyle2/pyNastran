@@ -2,7 +2,7 @@ from six.moves import zip, range
 
 #from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.field_writer_8 import print_card_8
-from pyNastran.bdf.bdfInterface.assign_type import (integer,
+from pyNastran.bdf.bdf_interface.assign_type import (integer,
     double)
 
 

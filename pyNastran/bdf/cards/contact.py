@@ -10,7 +10,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from six import iteritems
 
 from pyNastran.bdf.cards.base_card import BaseCard, expand_thru_by, collapse_thru_by
-from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
+from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_blank,
     integer_string_or_blank, double_or_blank, integer_double_or_blank,
     string, string_or_blank)
 from pyNastran.bdf.field_writer_8 import print_card_8

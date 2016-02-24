@@ -19,7 +19,7 @@ from numpy.linalg import norm
 
 from pyNastran.bdf.cards.elements.elements import Element
 from pyNastran.utils.mathematics import Area
-from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank)
+from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_blank)
 
 
 _chexa_mapper = {

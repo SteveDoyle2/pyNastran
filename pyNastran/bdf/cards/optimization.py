@@ -11,7 +11,7 @@ from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import (BaseCard, expand_thru_by)
 from pyNastran.bdf.cards.deqatn import fortran_to_python, fortran_to_python_short
     #collapse_thru_by_float, condense, build_thru_float)
-from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
+from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_blank,
     integer_or_string, integer_string_or_blank, double, double_or_blank, string,
     string_or_blank, integer_double_or_blank, integer_double_string_or_blank,
     double_string_or_blank, interpret_value)

@@ -18,7 +18,7 @@ from numpy import array, unique, argsort, mean
 
 from pyNastran.bdf.cards.properties.bars import IntegratedLineProperty, LineProperty, _bar_areaL
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
-from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
+from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_blank,
     double, double_or_blank, string, string_or_blank,
     double_string_or_blank, integer_double_string_or_blank)
 from pyNastran.utils.mathematics import integrate_line, integrate_positive_line

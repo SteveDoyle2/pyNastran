@@ -11,7 +11,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
 from pyNastran.bdf.cards.base_card import Property
-from pyNastran.bdf.bdfInterface.assign_type import (integer,
+from pyNastran.bdf.bdf_interface.assign_type import (integer,
     double, double_or_blank, string)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16

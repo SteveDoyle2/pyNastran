@@ -8,7 +8,7 @@ import numpy as np
 from pyNastran.utils import integer_types
 from pyNastran.bdf.deprecated import GetMethodsDeprecated
 from pyNastran.bdf.cards.nodes import SPOINT, EPOINT
-from pyNastran.bdf.bdfInterface.attributes import BDFAttributes
+from pyNastran.bdf.bdf_interface.attributes import BDFAttributes
 
 
 class GetMethods(GetMethodsDeprecated, BDFAttributes):

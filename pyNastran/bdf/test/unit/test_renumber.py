@@ -1,6 +1,6 @@
 from __future__ import print_function
 from pyNastran.bdf.bdf import BDF
-from pyNastran.bdf.bdfInterface.dev_utils import bdf_renumber
+from pyNastran.bdf.bdf_interface.dev_utils import bdf_renumber
 from pyNastran.utils.dev import get_files_of_type
 import unittest
 import os

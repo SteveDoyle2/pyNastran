@@ -30,7 +30,7 @@ from pyNastran.bdf.field_writer_double import print_card_double
 
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.utils.dev import list_print
-from pyNastran.bdf.bdfInterface.assign_type import (integer,
+from pyNastran.bdf.bdf_interface.assign_type import (integer,
     integer_or_blank, double, components, string, string_or_blank,
     double_or_string)
 

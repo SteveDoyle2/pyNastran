@@ -67,7 +67,7 @@ from six import iteritems, itervalues
 from collections import defaultdict
 import traceback
 from numpy import zeros, argsort, arange, array_equal
-from pyNastran.bdf.bdfInterface.attributes import BDFAttributes
+from pyNastran.bdf.bdf_interface.attributes import BDFAttributes
 
 class XrefMesh(BDFAttributes):
     """
