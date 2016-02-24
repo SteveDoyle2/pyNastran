@@ -19,7 +19,7 @@ from numpy.linalg import norm
 
 from pyNastran.bdf.cards.elements.elements import Element
 from pyNastran.utils.mathematics import Area
-from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_blank)
+from pyNastran.bdf.bdf_interface.assign_type import integer, integer_or_blank
 
 
 _chexa_mapper = {
@@ -171,13 +171,6 @@ class SolidElement(Element):
     def raw_fields(self):
         list_fields = [self.type, self.eid, self.Pid()] + self.node_ids
         return list_fields
-
-    #def write_card(self, size=8, is_double=False):
-        #card = self.raw_fields()
-        #msg2 = self.write_card()
-        ##msg1 = self.comment + print_card_8(card)
-        ##assert msg1 == msg2, 'write_card != write_card\n%s---\n%s\n%r\n%r' % (msg1, msg2, msg1, msg2)
-        #return msg2
 
 class CHEXA8(SolidElement):
     """
@@ -667,7 +660,7 @@ class CPENTA6(SolidElement):
         pack2 = mapper[pack]
         if len(pack2) == 3:
             (n1, n2, n3) = pack2
-            faceNodeIDs = [n1, n2, n3]
+            face_node_ids = [n1, n2, n3]
             n1i = nids.index(n1 - 1)
             n2i = nids.index(n2 - 1)
             n3i = nids.index(n3 - 1)
@@ -681,13 +674,13 @@ class CPENTA6(SolidElement):
             n2i = nids.index(n2 - 1)
             n3i = nids.index(n3 - 1)
             n4i = nids.index(n4 - 1)
-            faceNodeIDs = [n1, n2, n3, n4]
+            face_node_ids = [n1, n2, n3, n4]
             p1 = self.nodes_ref[n1i].get_position()
             p2 = self.nodes_ref[n2i].get_position()
             p3 = self.nodes_ref[n3i].get_position()
             p4 = self.nodes_ref[n4i].get_position()
             A = 0.5 * norm(cross(p1 - p3, p2 - p4))
-        return [faceNodeIDs, A]
+        return [face_node_ids, A]
 
     def _verify(self, xref=False):
         eid = self.Eid()
@@ -1559,18 +1552,18 @@ class CTETRA10(SolidElement):
             for i in range(3):
                 assert isinstance(c[i], float)
 
-    def N_10(self, g1, g2, g3, g4):
-        N1 = g1 * (2 * g1 - 1)
-        N2 = g2 * (2 * g2 - 1)
-        N3 = g3 * (2 * g3 - 1)
-        N4 = g4 * (2 * g4 - 1)
-        N5 = 4 * g1 * g2
-        N6 = 4 * g2 * g3
-        N7 = 4 * g3 * g1
-        N8 = 4 * g1 * g4
-        N9 = 4 * g2 * g4
-        N10 = 4 * g3 * g4
-        return (N1, N2, N3, N4, N5, N6, N7, N8, N9, N10)
+    #def N_10(self, g1, g2, g3, g4):
+        #N1 = g1 * (2 * g1 - 1)
+        #N2 = g2 * (2 * g2 - 1)
+        #N3 = g3 * (2 * g3 - 1)
+        #N4 = g4 * (2 * g4 - 1)
+        #N5 = 4 * g1 * g2
+        #N6 = 4 * g2 * g3
+        #N7 = 4 * g3 * g1
+        #N8 = 4 * g1 * g4
+        #N9 = 4 * g2 * g4
+        #N10 = 4 * g3 * g4
+        #return (N1, N2, N3, N4, N5, N6, N7, N8, N9, N10)
 
     def Volume(self):
         """
@@ -1590,9 +1583,9 @@ class CTETRA10(SolidElement):
         (n1, n2, n3, n4, n5, n6, n7, n8, n9, n10) = self.get_node_positions()
         return (n1 + n2 + n3 + n4) / 4.
 
-    def getFaceNodes(self, nidOpposite, nid=None):
+    def getFaceNodes(self, nid_opposite, nid=None):
         nids = self.node_ids[:4]
-        indx = nids.index(nidOpposite)
+        indx = nids.index(nid_opposite)
         nids.pop(indx)
         return nids
 

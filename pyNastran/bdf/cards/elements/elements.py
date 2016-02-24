@@ -15,8 +15,9 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 
 from pyNastran.utils import integer_types
 from pyNastran.bdf.cards.base_card import Element, BaseCard
-from pyNastran.bdf.bdf_interface.assign_type import (fields, integer, integer_or_blank,
-    integer_double_or_blank, double_or_blank, string)  # double
+from pyNastran.bdf.bdf_interface.assign_type import (
+    fields, integer, integer_or_blank, integer_double_or_blank,
+    double_or_blank, string)
 from pyNastran.bdf.field_writer_8 import print_card_8
 
 
@@ -297,7 +298,7 @@ class CrackElement(Element):
     type = 'Crack'
 
     def __init__(self):
-        pass
+        self.eid = 0
 
     def cross_reference(self, model):
         """

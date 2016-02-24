@@ -12,15 +12,15 @@ All rigid elements are RigidElement and Element objects.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from itertools import count
 from six import string_types
 from six.moves import zip, range
-from itertools import count
 
 from pyNastran.utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8
 from pyNastran.bdf.cards.base_card import Element
-from pyNastran.bdf.bdf_interface.assign_type import (integer,
-    integer_or_double, integer_double_or_blank, integer_or_blank,
+from pyNastran.bdf.bdf_interface.assign_type import (
+    integer, integer_or_double, integer_double_or_blank, integer_or_blank,
     double_or_blank, integer_double_or_string, components, components_or_blank,
     blank, string)
 from pyNastran.bdf.field_writer_16 import print_card_16
@@ -746,8 +746,8 @@ class RBE3(RigidElement):
     """
     type = 'RBE3'
 
-    def __init__(self, eid, refgrid, refc, Gmi, Cmi,
-                 weights, comps, Gijs, alpha, comment=''):
+    def __init__(self, eid, refgrid, refc, weights, comps, Gijs,
+                 Gmi, Cmi, alpha, comment=''):
         """
         eid
         refgrid
@@ -764,13 +764,30 @@ class RBE3(RigidElement):
         self.refgrid = refgrid
         self.refc = refc
 
-        self.Gmi = Gmi
-        self.Cmi = Cmi
-
         #self.WtCG_groups = []
+        if not len(weights) == len(comps) and len(weights) == len(Gijs):
+            msg = 'len(weights)=%s len(comps)=%s len(Gijs)=%s' % (
+                len(weights), len(comps), len(Gijs))
+            raise RuntimeError(msg)
+
         self.weights = weights
         self.comps = comps
-        self.Gijs = Gijs
+        # allow for Gijs as a list or list of lists
+        if isinstance(Gijs[0], integer_types):
+            Gijs2 = []
+            for Gij in Gijs:
+                assert isinstance(Gij, integer_types), 'Gij=%s type=%s' % (Gij, type(Gij))
+                Gijs2.append([Gij])
+            self.Gijs = Gijs2
+        else:
+            # default
+            self.Gijs = Gijs
+
+        if not len(Gmi) == len(Cmi):
+            msg = 'len(Gmi)=%s len(Cmi)=%s' % (len(Gmi), len(Cmi))
+            raise RuntimeError(msg)
+        self.Gmi = Gmi
+        self.Cmi = Cmi
 
         self.alpha = alpha
 
@@ -862,8 +879,8 @@ class RBE3(RigidElement):
         else:
             #: thermal expansion coefficient
             alpha = 0.0
-        return RBE3(eid, refgrid, refc, Gmi, Cmi,
-                    weights, comps, Gijs, alpha, comment=comment)
+        return RBE3(eid, refgrid, refc, weights, comps, Gijs,
+                    Gmi, Cmi, alpha, comment=comment)
 
     @property
     def WtCG_groups(self):
@@ -935,7 +952,7 @@ class RBE3(RigidElement):
         for i, Gij in enumerate(self.Gijs):
             gij = []
             for giji in Gij:
-                gij.append(Giji.nid)
+                gij.append(giji.nid)
             Gij.append(gij)
         self.Gijs = Gij
         del self.Gmi_ref, self.refgrid_ref, self.Gijs_ref

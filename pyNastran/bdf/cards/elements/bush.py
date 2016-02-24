@@ -14,8 +14,9 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from pyNastran.utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import Element
-from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_blank,
-    integer_double_or_blank, double_or_blank, string_or_blank)
+from pyNastran.bdf.bdf_interface.assign_type import (
+    integer, integer_or_blank, integer_double_or_blank, double_or_blank,
+    string_or_blank)
 from pyNastran.bdf.field_writer_8 import print_card_8
 
 
@@ -125,9 +126,10 @@ class CBUSH(BushElement):
         assert len(card) <= 14, 'len(CBUSH card) = %i' % len(card)
         return CBUSH(eid, pid, ga, gb, x, g0, cid, s, ocid, si, comment=comment)
 
-    def add_op2_data(cls, data, comment=''):
-        eid = data[0]
-        raise NotImplementedError('CBUSH data...')
+    #@classmethod
+    #def add_op2_data(cls, data, comment=''):
+        #eid = data[0]
+        #raise NotImplementedError('CBUSH data...')
 
     def Eid(self):
         return self.eid

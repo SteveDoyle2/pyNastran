@@ -20,8 +20,8 @@ from numpy.linalg import eigh
 from pyNastran.utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8
 from pyNastran.bdf.cards.base_card import Element
-from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_blank,
-                                                    double_or_blank)
+from pyNastran.bdf.bdf_interface.assign_type import (
+    integer, integer_or_blank, double_or_blank)
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
 
@@ -413,13 +413,11 @@ class CMASS3(PointMassElement):
     def node_ids(self):
         return [self.s1, self.s2]
 
-    def _is_same_card(self, elem, debug=False):
+    def _is_same_card(self, elem):
         if self.type != elem.type:
             return False
         fields1 = [self.eid, self.Pid(), self.s1, self.s2]
         fields2 = [elem.eid, elem.Pid(), elem.s1, elem.s2]
-        if debug:
-            print("fields1=%s fields2=%s" % (fields1, fields2))
         return self._is_same_fields(fields1, fields2)
 
     def cross_reference(self, model):
@@ -506,13 +504,11 @@ class CMASS4(PointMassElement):
     def node_ids(self):
         return [self.s1, self.s2]
 
-    def _is_same_card(self, elem, debug=False):
+    def _is_same_card(self, elem):
         if self.type != elem.type:
             return False
         fields1 = [self.eid, self.mass, self.s1, self.s2]
         fields2 = [elem.eid, elem.mass, elem.s1, elem.s2]
-        if debug:
-            print("fields1=%s fields2=%s" % (fields1, fields2))
         return self._is_same_fields(fields1, fields2)
 
     def cross_reference(self, model):
@@ -933,7 +929,7 @@ class CONM2(PointMassElement):
             # transform to global
             #dx = self.cid_ref.transform_node_to_global(self.X)
             matrix = self.cid_ref.beta()
-            raise NotImplementedError('CONM2 intertia method is not implemented.')
+            raise NotImplementedError('CONM2 intertia method for CID != 0 is not implemented.')
             A2 = A * matrix
             return A2  # correct for offset using dx???
 

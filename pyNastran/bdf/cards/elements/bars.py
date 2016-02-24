@@ -9,8 +9,9 @@ from numpy.linalg import norm
 from pyNastran.utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import Element
-from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_blank,
-    integer_double_or_blank, double_or_blank, string_or_blank)
+from pyNastran.bdf.bdf_interface.assign_type import (
+    integer, integer_or_blank, integer_double_or_blank, double_or_blank,
+    string_or_blank)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 
@@ -359,19 +360,22 @@ class CBAR(LineElement):
 
     def Mid(self):
         if isinstance(self.pid, integer_types):
-            raise RuntimeError('Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self)))
+            msg = 'Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self))
+            raise RuntimeError(msg)
         return self.pid_ref.Mid()
 
     def Area(self):
         if isinstance(self.pid, integer_types):
-            raise RuntimeError('Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self)))
+            msg = 'Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self))
+            raise RuntimeError(msg)
         A = self.pid_ref.Area()
         assert isinstance(A, float)
         return A
 
     def J(self):
         if isinstance(self.pid, integer_types):
-            raise RuntimeError('Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self)))
+            msg = 'Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self))
+            raise RuntimeError(msg)
         j = self.pid_ref.J()
         assert isinstance(j, float), 'J=%r for CBAR eid=%s pid=%s pidType=%s' % (j, self.eid, self.pid_ref.pid, self.pid_ref.type)
         return j
@@ -384,14 +388,16 @@ class CBAR(LineElement):
 
     def Nsm(self):
         if isinstance(self.pid, integer_types):
-            raise RuntimeError('Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self)))
+            msg = 'Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self))
+            raise RuntimeError(msg)
         nsm = self.pid_ref.Nsm()
         assert isinstance(nsm, float)
         return nsm
 
     def I1(self):
         if isinstance(self.pid, integer_types):
-            raise RuntimeError('Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self)))
+            msg = 'Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self))
+            raise RuntimeError(msg)
         return self.pid_ref.I1()
 
     def I2(self):
@@ -539,7 +545,7 @@ class CBAR(LineElement):
         return self.comment + print_card_16(card)
 
 
-class CBEAM3(CBAR):
+class CBEAM3(LineElement):  # was CBAR
     """
     Defines a three-node beam element
     """
@@ -571,7 +577,7 @@ class CBEAM3(CBAR):
         gb = integer(card, 4, 'gb')
         gc = integer(card, 5, 'gc')
 
-        cls._init_x_g0(card, eid)
+        x, g0 = cls._init_x_g0(card, eid)
 
         wa = np.array([double_or_blank(card, 9, 'w1a', 0.0),
                        double_or_blank(card, 10, 'w2a', 0.0),
@@ -625,10 +631,50 @@ class CBEAM3(CBAR):
 
     def Length(self):
         """
-        .. math:: L = g_b - g_a
+        # TODO: consider w1a and w1b in the length formulation
+        # TODO: add gc to length formula
         """
         L = norm(self.gb_ref.get_position() - self.ga_ref.get_position())
+        assert isinstance(L, float)
         return L
+
+    def Area(self):
+        if isinstance(self.pid, integer_types):
+            msg = 'Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self))
+            raise RuntimeError(msg)
+        A = self.pid_ref.Area()
+        assert isinstance(A, float)
+        return A
+
+    def Nsm(self):
+        if isinstance(self.pid, integer_types):
+            msg = 'Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self))
+            raise RuntimeError(msg)
+        nsm = self.pid_ref.Nsm()
+        assert isinstance(nsm, float)
+        return nsm
+
+    def Ga(self):
+        if isinstance(self.ga, integer_types):
+            return self.ga
+        else:
+            return self.ga_ref.nid
+
+    def Gb(self):
+        if isinstance(self.gb, integer_types):
+            return self.gb
+        else:
+            return self.gb_ref.nid
+
+    def Gc(self):
+        if isinstance(self.gc, integer_types):
+            return self.gc
+        else:
+            return self.gc_ref.nid
+
+    @property
+    def node_ids(self):
+        return [self.Ga(), self.Gb(), self.Gc()]
 
     def raw_fields(self):
         (x1, x2, x3) = self.getX_G0_defaults()
@@ -702,6 +748,7 @@ class CBEND(LineElement):
         self.x = x
         self.geom = geom
         assert self.geom in [1, 2, 3, 4], 'geom is invalid geom=%r' % self.geom
+        self._validate_input()
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -729,7 +776,6 @@ class CBEND(LineElement):
 
         assert len(card) == 9, 'len(CBEND card) = %i' % len(card)
         return CBEND(eid, pid, ga, gb, g0, x, geom, comment=comment)
-        self._validate_input()
 
     #def add_op2_data(self, data, comment=''):
         #if comment:
@@ -763,7 +809,8 @@ class CBEND(LineElement):
 
     def Area(self):
         if isinstance(self.pid, integer_types):
-            raise RuntimeError('Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self)))
+            msg = 'Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self))
+            raise RuntimeError(msg)
         return self.pid_ref.Area()
 
     def _verify(self, xref):
@@ -803,7 +850,7 @@ class CBEND(LineElement):
         self.pid = self.Pid()
         del self.ga_ref, self.gb_ref, self.pid_ref
 
-    def write_card(self, size, is_double):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)

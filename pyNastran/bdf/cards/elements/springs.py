@@ -11,14 +11,11 @@ All spring elements are SpringElement and Element objects.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-#import sys
-from numpy import array, zeros, dot, transpose
-from numpy.linalg import norm
 
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import Element
-from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_blank,
-                                       double, double_or_blank)
+from pyNastran.bdf.bdf_interface.assign_type import (
+    integer, integer_or_blank, double, double_or_blank)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 
@@ -129,13 +126,11 @@ class CELAS1(SpringElement):
             #for nodeID, node in zip(nodeIDs, self.nodes):
                 #assert node.node.nid
 
-    def _is_same_card(self, elem, debug=False):
+    def _is_same_card(self, elem):
         if self.type != elem.type:
             return False
         fields1 = [self.eid] + self.nodes + [self.pid, self.c1, self.c2]
         fields2 = [elem.eid] + elem.nodes + [elem.pid, elem.c1, elem.c2]
-        if debug:
-            print("fields1=%s fields2=%s" % (fields1, fields2))
         return self._is_same_fields(fields1, fields2)
 
     def K(self):
@@ -282,13 +277,11 @@ class CELAS2(SpringElement):
             #for node_id, node in zip(node_id, self.nodes):
                 #assert node.node.nid
 
-    def _is_same_card(self, elem, debug=False):
+    def _is_same_card(self, elem):
         if self.type != elem.type:
             return False
         fields1 = [self.eid] + self.node_ids + [self.k, self.c1, self.c2]
         fields2 = [elem.eid] + elem.node_ids + [elem.k, elem.c1, elem.c2]
-        if debug:
-            print("fields1=%s fields2=%s" % (fields1, fields2))
         return self._is_same_fields(fields1, fields2)
 
     def K(self):
@@ -318,9 +311,6 @@ class CELAS2(SpringElement):
         else:
             raise ValueError('unsupported value of c1=%s' % self.c1)
         return msg
-
-    def get_edge_ids(self):
-        return [tuple(sorted(self.node_ids))]
 
     def raw_fields(self):
         nodes = self.node_ids
@@ -377,13 +367,11 @@ class CELAS3(SpringElement):
         s2 = data[3]
         return CELAS3(eid, pid, s1, s2, comment=comment)
 
-    def _is_same_card(self, elem, debug=False):
+    def _is_same_card(self, elem):
         if self.type != elem.type:
             return False
         fields1 = [self.eid, self.pid, self.s1, self.s2]
         fields2 = [elem.eid, elem.pid, elem.s1, elem.s2]
-        if debug:
-            print("fields1=%s fields2=%s" % (fields1, fields2))
         return self._is_same_fields(fields1, fields2)
 
     def K(self):
@@ -473,13 +461,11 @@ class CELAS4(SpringElement):
         s2 = data[3]
         return CELAS4(eid, k, s1, s2, comment=comment)
 
-    def _is_same_card(self, elem, debug=False):
+    def _is_same_card(self, elem):
         if self.type != elem.type:
             return False
         fields1 = [self.eid, self.k, self.s1, self.s2]
         fields2 = [elem.eid, elem.k, elem.s1, elem.s2]
-        if debug:
-            print("fields1=%s fields2=%s" % (fields1, fields2))
         return self._is_same_fields(fields1, fields2)
 
     def K(self):

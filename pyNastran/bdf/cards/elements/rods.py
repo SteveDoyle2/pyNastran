@@ -10,8 +10,8 @@ from pyNastran.utils import integer_types
 from pyNastran.utils.dev import list_print
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import Element #, Mid
-from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_blank,
-    double, double_or_blank)
+from pyNastran.bdf.bdf_interface.assign_type import (
+    integer, integer_or_blank, double, double_or_blank)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 
@@ -475,16 +475,17 @@ class CONROD(RodElement):
         #return msg
 
     def raw_fields(self):
-        list_fields = ['CONROD', self.eid] + self.node_ids + [
-                  self.Mid(), self.A, self.j, self.c, self.nsm]
+        list_fields = [
+            'CONROD', self.eid] + self.node_ids + [
+                self.Mid(), self.A, self.j, self.c, self.nsm]
         return list_fields
 
     def repr_fields(self):
         j = set_blank_if_default(self.j, 0.0)
         c = set_blank_if_default(self.c, 0.0)
         nsm = set_blank_if_default(self.nsm, 0.0)
-        list_fields = ['CONROD', self.eid] + self.node_ids + [self.Mid(),
-                  self.A, j, c, nsm]
+        list_fields = [
+            'CONROD', self.eid] + self.node_ids + [self.Mid(), self.A, j, c, nsm]
         return list_fields
 
     def write_card(self, size=8, is_double=False):

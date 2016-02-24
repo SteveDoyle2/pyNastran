@@ -17,8 +17,8 @@ from six.moves import zip, range
 #from pyNastran.bdf.errors import CrossReferenceError
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import BaseCard, _node_ids
-from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_blank,
-    double, double_or_blank, components_or_blank)
+from pyNastran.bdf.bdf_interface.assign_type import (
+    integer, integer_or_blank, double, double_or_blank, components_or_blank)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
@@ -190,12 +190,12 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
         self.tid = integer_or_blank(card, 4, 'tid')
         assert len(card) <= 5, 'len(LSEQ card) = %i' % len(card)
 
-    def add_op2_data(self, data, comment=''):
-        self.sid = data[0]
-        self.excite_id = data[1]
-        self.lid = data[2]
-        self.tid = data[3]
-        raise NotImplementedError()
+    #def add_op2_data(self, data, comment=''):
+        #self.sid = data[0]
+        #self.excite_id = data[1]
+        #self.lid = data[2]
+        #self.tid = data[3]
+        #raise NotImplementedError()
 
     def cross_reference(self, model):
         """

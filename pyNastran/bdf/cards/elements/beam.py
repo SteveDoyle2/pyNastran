@@ -5,8 +5,8 @@ from numpy.linalg import norm
 
 from pyNastran.utils import integer_types
 from pyNastran.bdf.cards.elements.bars import CBAR, LineElement
-from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_blank,
-    double_or_blank, integer_double_string_or_blank)
+from pyNastran.bdf.bdf_interface.assign_type import (
+    integer, integer_or_blank, double_or_blank, integer_double_string_or_blank)
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
@@ -59,7 +59,9 @@ class CBEAM(CBAR):
                 if n == 5:
                     self.g0 = value
                 else:  # offt
-                    raise KeyError('Field %r=%r is an invalid %s entry or is unsupported.' % (n, value, self.type))
+                    msg = 'Field %r=%r is an invalid %s entry or is unsupported.' % (
+                        n, value, self.type)
+                    raise KeyError(msg)
             else:
                 if n == 5:
                     self.x[0] = value
@@ -68,7 +70,9 @@ class CBEAM(CBAR):
                 elif n == 7:
                     self.x[2] = value
                 else:
-                    raise KeyError('Field %r=%r is an invalid %s entry or is unsupported.' % (n, value, self.type))
+                    msg = 'Field %r=%r is an invalid %s entry or is unsupported.' % (
+                        n, value, self.type)
+                    raise KeyError(msg)
 
     def __init__(self, eid, pid, ga, gb, x, g0, is_offt, offt, bit,
                  pa, pb, wa, wb, sa, sb, comment=''):
