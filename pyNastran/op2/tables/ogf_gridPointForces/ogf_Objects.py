@@ -82,6 +82,7 @@ class RealGridPointForcesArray(ScalarObject):
         self._times = zeros(self.ntimes, dtype=dtype)
 
         if self.is_unique:
+            assert isinstance(self.ntotal, int), self.ntotal
             self.node_element = zeros((self.ntimes, self.ntotal, 2), dtype='int32')
             self.element_names = empty((self.ntimes, self.ntotal), dtype='U8')
         else:
@@ -409,6 +410,12 @@ class RealGridPointForcesArray(ScalarObject):
         is_in = np.in1d(gpforce_nids, nids, assume_unique=False)
         is_in2 = np.in1d(gpforce_eids[is_in], eids, assume_unique=False)
         irange = np.arange(len(gpforce_nids), dtype='int32')[is_in][is_in2]
+        if irange.size == 0:
+            msg = 'no nodes/elements found\n'
+            msg += 'eids=%s\n' % (eids)
+            msg += 'gpforce_eids=%s\n' % (gpforce_eids)
+            raise RuntimeError(msg)
+
         if debug:
             logger.debug('gpforce_eids =' % gpforce_eids[is_in])
             logger.debug('nids = %s' % gpforce_nids[irange])
