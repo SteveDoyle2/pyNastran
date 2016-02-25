@@ -1455,31 +1455,43 @@ class CORD3G(Coord):  # not done
     """
     type = 'CORD3G'
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self, cid, method_es, method_int, form, thetas, rid, comment=''):
         """
         Intilizes the CORD3G
 
         :param card: a list version of the fields
         """
-        Coord.__init__(self, card, data, comment)
+        Coord.__init__(self, card, comment)
+        self.cid = cid
+        self.method_es = method_es
+        self.method_int = method_int
+        self.form = form
+        self.thetas = thetas
+        self.rid = rid
 
-        self.cid = integer(card, 1, 'cid')
-        method = string_or_blank(card, 2, 'E313')
-        self.method_es = method[0]
-        self.method_int = int(method[1:])
-        assert self.methodES in ['E', 'S'] # Euler / Space-Fixed
-        assert 0 < self.methodInt < 1000
-
-        self.form = string_or_blank(card, 3, 'form', 'EQN')
-        self.thetas = [integer(card, 4, 'theta1'),
-                       integer(card, 5, 'theta2'),
-                       integer(card, 6, 'theta3')]
+        assert 0 < self.method_int < 1000
         assert len(self.thetas) == 3, 'thetas=%s' % (self.thetas)
-        self.rid = integer_or_blank(card, 7, 'cidRef')
-        assert len(card) <= 8, 'len(CORD3G card) = %i' % len(card)
 
         # EQN for DEQATN, TABLE for TABLE3D
         assert self.form in ['EQN', 'TABLE']
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        self.cid = integer(card, 1, 'cid')
+        method = string_or_blank(card, 2, 'E313')
+        method_es = method[0]
+        method_int = int(method[1:])
+        assert self.methodES in ['E', 'S'] # Euler / Space-Fixed
+
+        form = string_or_blank(card, 3, 'form', 'EQN')
+        thetas = [integer(card, 4, 'theta1'),
+                  integer(card, 5, 'theta2'),
+                  integer(card, 6, 'theta3')]
+        rid = integer_or_blank(card, 7, 'cidRef')
+        assert len(card) <= 8, 'len(CORD3G card) = %i' % len(card)
+
+        return CORD3G(cid, method_es, method_int, form, thetas, rid,
+                      comment=comment)
 
     def cross_reference(self, model):
         """
