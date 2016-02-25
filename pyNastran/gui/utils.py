@@ -44,10 +44,13 @@ def check_for_newer_version(window=None, pop_msg=False):
     minor = int(minor)
     rev = int(rev)
     tuple_latest_version = (major, minor, rev)
+    #print('tuple_latest_version = %s' % str(tuple_latest_version))  # (0,7,2)
+    #print('tuple_current_version = %s' % str(tuple_current_version))  # (0,8,0)
 
     if tuple_current_version < tuple_latest_version or (is_dev and tuple_current_version <= tuple_latest_version):
         print('pyNastran %s is now availible; current=%s' % (version, pyNastran.__version__))
-
+    #print('*pyNastran %s is now availible; current=%s' % (version, pyNastran.__version__))
+    return version
 
 def load_csv(out_filename):
     """
@@ -90,9 +93,11 @@ def load_csv(out_filename):
         headers2 = []
         fmts = []
         dtype_fmts = []
+        int_cols = []
+        float_cols = []
         #ints = ('(int32)', '(int64)')
         #floats = ('(float32)', '(float64)')
-        for header in headers:
+        for iheader, header in enumerate(headers):
             # TODO: works for making a \n, but screws up the sidebar
             #       and scale
             header2 = header.strip()#.replace('\\n', '\n')
@@ -108,11 +113,13 @@ def load_csv(out_filename):
                         dtype_fmt = 'int'
                         header2 = header2_temp
                         fmt = fmt_temp
+                        int_cols.append(iheader)
                     elif 'g' in fmt or 'e' in fmt or 'f' in fmt or 's' in fmt:
                         #print('trying... %r' % (fmt % 1.1))
                         dtype_fmt = 'float'
                         header2 = header2_temp
                         fmt = fmt_temp
+                        float_cols.append(iheader)
 
             ##print('header2 = %r' % header2)
             dtype_fmts.append(dtype_fmt)
@@ -125,19 +132,33 @@ def load_csv(out_filename):
 
         formats = ','.join(dtype_fmts)
         if ext in ['.dat', '.txt']:
-            A = loadtxt(file_obj, dtype=formats)
+            delimiter = None
         elif ext == '.csv':
-            A = loadtxt(file_obj, dtype=formats, delimiter=',')
+            delimiter = ','
         else:
             raise NotImplementedError('extension=%r is not supported (use .dat, .txt, or .csv)' % ext)
 
-    if len(A.shape) == 1:
-        A = A.reshape(A.shape[0], 1)
-    nrows, ncols = A.shape
+        assert (len(int_cols) + len(float_cols)) == len(headers)
+
+        method = 1
+        A = loadtxt(file_obj, dtype=formats, delimiter=delimiter)
+        #if int_cols:
+            #ints = np.loadtxt(file_obj, delimiter=delimiter, usecols=int_cols)
+        #if float_cols:
+            #floats = np.loadtxt(file_obj, delimiter=delimiter, usecols=float_cols)
+
+    if method == 1:
+        if len(A.shape) == 1:
+            A = A.reshape(A.shape[0], 1)
+        nrows, ncols = A.shape
+
     if ncols != len(headers):
         msg = 'Error loading csv/txt file\n'
         msg += 'ncols != len(headers); ncols=%s; len(headers)=%s\n' % (ncols, len(headers))
-        msg += 'headers = %s' % headers
+        msg += 'headers = %s\n' % headers
+        msg += 'fmts = %s\n' % fmts
+        msg += 'dtype_fmts = %s\n' % dtype_fmts
+        msg += 'header_line=%r' % (header_line)
         raise SyntaxError(msg)
     return A, nrows, ncols, fmts, headers
 
@@ -176,3 +197,7 @@ def load_user_geom(fname):
     quads = np.array(quads, dtype='int32')
     bars = np.array(bars, dtype='int32')
     return grid_ids, xyz, bars, tris, quads
+
+if __name__ == '__main__':
+    check_for_newer_version(window=None, pop_msg=True)
+
