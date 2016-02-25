@@ -1276,19 +1276,14 @@ class OEF(OP2Common):
                         eids = ints[:, 0] // 10
                         assert eids.min() > 0, eids.min()
                         assert 0 not in eids, eids
-                        #print('eids =', eids)
                         eids2 = np.repeat(eids, 11)
-                        #print('eids2 =', eids2)
 
                         ints2 = ints[:, 1:].reshape(nelements * 11, 16)
                         nids = ints2[:, 0]
 
-                        obj.element[ielement:ielement2] = eids
+                        obj.element[itotal:itotal2] = eids2
                         obj.element_node[itotal:itotal2, 0] = eids2
                         obj.element_node[itotal:itotal2, 1] = nids
-                        #print(itotal2, itotal, len(eids2))
-                        #print(obj.element_node)
-                        #print(obj.element)
 
                     #[nid, sd, bm1r, bm2r, ts1r, ts2r, afr, ttrqr, wtrqr,
                     #          bm1i, bm2i, ts1i, ts2i, afi, ttrqi, wtrqi]

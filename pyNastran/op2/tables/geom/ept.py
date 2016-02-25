@@ -11,9 +11,10 @@ from pyNastran.bdf.bdf import (NSM, PBAR, PBARL, PBEAM,
                                PVISC, PELAS, PMASS,
                                PTUBE, PGAP)
 # PCOMPG, PBUSH1D, PBEAML, PBEAM3, PBUSH,
+from pyNastran.op2.tables.geom.geom_common import GeomCommon
 
 
-class EPT(object):
+class EPT(GeomCommon):
     def add_property(self, card, allow_overwrites=True):
         raise RuntimeError('this should be overwritten')
 
@@ -21,7 +22,7 @@ class EPT(object):
         return self._read_geom_4(self._ept_map, data, ndata)
 
     def __init__(self):
-        self.card_count = {}
+        GeomCommon.__init__(self)
         self.bigProperties = {}
         self._ept_map = {
             (3201,32,55):    ['NSM',    self._read_nsm],     # record 2  - needs an object holder (e.g. self.elements/self.properties)
@@ -50,7 +51,6 @@ class EPT(object):
             (1802,  18,  31): ['PVISC',   self._read_pvisc],   # record 59
             (10201,102, 400): ['PVAL',   self._read_pval],     # record 58 - not done
             (2606,  26, 289): ['VIEW',   self._read_view],     # record 62 - not done
-            (2706,   27, 287): ['', self._read_fake],    # record
             (702,     7,  38): ['', self._read_fake],    # record
             (10301, 103, 399): ['', self._read_fake],
             (5403, 55, 349): ['', self._read_fake],

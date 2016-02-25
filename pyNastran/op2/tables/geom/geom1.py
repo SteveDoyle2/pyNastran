@@ -1,7 +1,7 @@
 #pylint: disable=C0301,C0103,W0612,R0914,C0326
+from struct import unpack, Struct
 from six import b
 from six.moves import range
-from struct import unpack, Struct
 import numpy as np
 
 from pyNastran.bdf.cards.nodes import GRID
@@ -9,8 +9,9 @@ from pyNastran.bdf.cards.coordinate_systems import (
     CORD1R, CORD1C, CORD1S,
     CORD2R, CORD2C, CORD2S,
     CORD3G)
+from pyNastran.op2.tables.geom.geom_common import GeomCommon
 
-class GEOM1(object):
+class GEOM1(GeomCommon):
     def _is_same_fields(self, fields1, fields2):
         for (field1, field2) in zip(fields1, fields2):
             if not is_same(field1, field2):
@@ -28,22 +29,19 @@ class GEOM1(object):
             for i, (v1, v2) in enumerate(zip(fields1, fields2)):
                 if v1 != v2:
                     print('i=%s v1=%r v2=%r fields1=%s\nfields2=%s' % (
-                          i, v1, v2, fields1, fields2))
+                        i, v1, v2, fields1, fields2))
         else:
             self._type_to_id_map[node.type].append(key)
         self.nodes[key] = node
 
     def add_coord(self, coord, allow_overwrites=True):
-        raise RuntimeError('this should be overwritten')
-
-    def _read_fake(self, data, n):
-        return len(data)
+        raise RuntimeError('this should be overwritten by the BDF class')
 
     def _read_geom1_4(self, data, ndata):
         return self._read_geom_4(self._geom1_map, data, ndata)
 
     def __init__(self):
-        self.card_count = {}
+        GeomCommon.__init__(self)
         self._geom1_map = {
             (1701,  17,  6): ['CORD1C', self._read_cord1c],  # record 1
             (1801,  18,  5): ['CORD1R', self._read_cord1r],  # record 2
@@ -186,7 +184,7 @@ class GEOM1(object):
         for i in range(nentries):
             edata = data[n:n + 52]  # 13*4
             (cid, one, two, rid, a1, a2, a3, b1, b2, b3, c1,
-                c2, c3) = unpack(b(self._endian + '4i9f'), edata)
+             c2, c3) = unpack(b(self._endian + '4i9f'), edata)
             assert one == 1, one
             assert two == 2, two
             data_in = [cid, rid, a1, a2, a3, b1, b2, b3, c1, c2, c3]

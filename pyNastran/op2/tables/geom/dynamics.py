@@ -1,14 +1,14 @@
 from struct import unpack
 
 from pyNastran.bdf.cards.loads.loads import DAREA
+from pyNastran.op2.tables.geom.geom_common import GeomCommon
 
-
-class DYNAMICS(object):
+class DYNAMICS(GeomCommon):
     def _read_dynamics_4(self, data, ndata):
         return self._read_geom_4(self._dynamics_map, data, ndata)
 
     def __init__(self):
-        self.card_count = {}
+        GeomCommon.__init__(self)
         self._dynamics_map = {
             (5307, 53, 379) : ['ACSRCE', self._read_fake], # 1
             #(27, 17, 182): ['DAREA', self._read_darea],  # 2

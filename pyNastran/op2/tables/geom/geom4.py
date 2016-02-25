@@ -1,27 +1,28 @@
 #pylint: disable=C0301,C0111,C0103,W0613
+from struct import unpack, Struct
 from six import b
 from six.moves import range
-from struct import unpack, Struct
 
 #from pyNastran.bdf.cards.constraints import SPC,SPCADD
 from pyNastran.bdf.cards.elements.rigid import RBE2
 from pyNastran.bdf.cards.constraints import SUPORT, SPC, SPC1
 from pyNastran.bdf.cards.loads.loads import SPCD
+from pyNastran.op2.tables.geom.geom_common import GeomCommon
 
 
-class GEOM4(object):
+class GEOM4(GeomCommon):
     def add_constraint_SPC(self, constraint):
-        raise RuntimeError('this should be overwritten')
+        raise RuntimeError('this should be overwritten by the BDF class')
     def add_rigid_element(self, constraint):
-        raise RuntimeError('this should be overwritten')
+        raise RuntimeError('this should be overwritten by the BDF class')
     def add_suport(self, constraint):
-        raise RuntimeError('this should be overwritten')
+        raise RuntimeError('this should be overwritten by the BDF class')
 
     def _read_geom4_4(self, data, ndata):
         return self._read_geom_4(self._geom4_map, data, ndata)
 
     def __init__(self):
-        self.card_count = {}
+        GeomCommon.__init__(self)
         self._geom4_map = {
             (5561,   76, 215): ['ASET', self._read_aset],      # record 1  - not done
             (5571,   77, 216): ['ASET1', self._read_aset1],    # record 2  - not done
@@ -149,16 +150,15 @@ class GEOM4(object):
         self.log.debug('skipping RBE2 in GEOM4\n')
         return n
         #n=0
-        #nData = len(data)  # 5*4
+        #ndata = len(data)  # 5*4
         if 1:
             edata = data[:12]
             (eid, gn, cm, gm) = unpack(b(self._endian + '4i'), edata)
 
             edata = data[12:-4]
             nGm = len(edata) // 4
-            iFormat = 'i' * nGm
-            iFormat = bytes(iFormat)
-            Gm = list(unpack(iFormat, edata))
+            iformat = bytes('i' * nGm)
+            Gm = list(unpack(iformat, edata))
             alpha, = unpack(b(self._endian + 'f'), data[-4:])
         elem = RBE2(None, [eid, gn, cm, Gm, alpha])
         self.add_rigid_element(elem)
@@ -221,8 +221,6 @@ class GEOM4(object):
 
     def _read_spc1(self, data, n):
         """SPC1(5481,58,12) - Record 45"""
-        self.log.debug('skipping SPC1 in GEOM4\n')
-        #return n
         n2 = n
         #nentries = (len(data) - n - 12) // 4  # 5*4
         nentries = 0
@@ -248,7 +246,7 @@ class GEOM4(object):
             if self.is_debug_file:
                 self.binary_debug.write('   nids=%s\n' % str(nids[1:]))
             nentries += 1
-            constraint = SPC1(None, [sid, g, nids])
+            constraint = SPC1.add_op2_data([sid, g, nids])
             self.add_constraint_SPC(constraint)
         self.card_count['SPC1'] = nentries
         return n
@@ -271,7 +269,7 @@ class GEOM4(object):
             if self.is_debug_file:
                 self.binary_debug.write('  SPCD=%s\n' % str(out))
 
-            constraint = SPCD(None, [sid, ID, c, dx])
+            constraint = SPCD.add_op2_data([sid, ID, c, dx])
             self.add_constraint_SPC(constraint)
             n += 20
         self.card_count['SPCD'] = nentries
@@ -295,10 +293,6 @@ class GEOM4(object):
 
     def _readSPCEB(self, data, n):
         self.log.debug('skipping SPCEB in GEOM4\n')
-        return n
-
-    def _read_spcf(self, data, n):
-        self.log.debug('skipping SPCF in GEOM4\n')
         return n
 
     def _read_spcfb(self, data, n):

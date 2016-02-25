@@ -1,7 +1,7 @@
 # pylint: disable=W0612,C0103,C0301,C0302,C0303,W0613,C0111,R0914,C0326,R0201
+from struct import unpack, Struct
 from six import b
 from six.moves import range
-from struct import unpack, Struct
 
 from pyNastran.bdf.cards.elements.elements import CGAP
 from pyNastran.bdf.cards.elements.damper import (CDAMP1, CDAMP2, CDAMP3,
@@ -19,15 +19,16 @@ from pyNastran.bdf.cards.elements.solid import (CTETRA4, CTETRA10, CPENTA6,
                                                 CPENTA15, CHEXA8, CHEXA20)
 from pyNastran.bdf.cards.thermal.thermal import CHBDYG, CONV  # , CONVM, CHBDYP
 from pyNastran.bdf.cards.nodes import SPOINTs
+from pyNastran.op2.tables.geom.geom_common import GeomCommon
 
 
-class GEOM2(object):
+class GEOM2(GeomCommon):
 
     def _read_geom2_4(self, data, ndata):
         return self._read_geom_4(self._geom2_map, data, ndata)
 
     def __init__(self):
-        self.card_count = {}
+        GeomCommon.__init__(self)
         self._geom2_map = {
             (2408,   24,  180): ['CBAR', self._read_cbar],       # record 8
             (4001,   40,  275): ['CBARAO', self._read_cbarao],   # record 9  - not done
@@ -248,7 +249,7 @@ class GEOM2(object):
                 (eid, pid, ga, gb, g0, junk, junk, f, pa,
                  pb, w1a, w2a, w3a, w1b, w2b, w3b) = out
                 data_in = [[eid, pid, ga, gb, pa, pb, w1a,
-                           w2a, w3a, w1b, w2b, w3b], [f, g0]]
+                            w2a, w3a, w1b, w2b, w3b], [f, g0]]
             else:
                 raise RuntimeError('invalid f value...f=%s' % (f))
             elem = CBAR.add_op2_data(data_in)
@@ -801,8 +802,9 @@ class GEOM2(object):
                 self.binary_debug.write('  CONVM=%s\n' % str(out))
             (eid, pconID, flmnd, cntrlnd,
              [ta1, ta2, ta3]) = out
-            data_in = [eid, pconID, flmnd, cntrlnd,
-                      [ta1, ta2, ta3]]
+            data_in = [
+                eid, pconID, flmnd, cntrlnd,
+                [ta1, ta2, ta3]]
             elem = CONVM(None, data_in)  # undefined
             self.addOp2Element(elem)
             n += ntotal
@@ -892,8 +894,9 @@ class GEOM2(object):
             if self.is_debug_file:
                 self.binary_debug.write('  %s=%s\n' % (Element.type, str(out)))
             #print("eid=%s pid=%s n1=%s n2=%s n3=%s n4=%s theta=%s zoffs=%s blank=%s tflag=%s t1=%s t2=%s t3=%s t4=%s" %(eid,pid,n1,n2,n3,n4,theta,zoffs,blank,tflag,t1,t2,t3,t4))
-            data_init = [eid, pid, n1, n2, n3, n4, theta, zoffs,
-                        tflag, t1, t2, t3, t4]
+            data_init = [
+                eid, pid, n1, n2, n3, n4, theta, zoffs,
+                tflag, t1, t2, t3, t4]
             elem = Element.add_op2_data(data_init)
             self.addOp2Element(elem)
             n += 56
@@ -916,7 +919,7 @@ class GEOM2(object):
             if self.is_debug_file:
                 self.binary_debug.write('  CQUAD8=%s\n' % str(out))
             (eid, pid, n1, n2, n3, n4, n5, n6, n7, n8, t1, t2,
-                t3, t4, theta, tflag) = out
+             t3, t4, theta, tflag) = out
             #print("eid=%s pid=%s n1=%s n2=%s n3=%s n4=%s theta=%s zoffs=%s tflag=%s t1=%s t2=%s t3=%s t4=%s" %(eid,pid,n1,n2,n3,n4,theta,zoffs,tflag,t1,t2,t3,t4))
             #data_init = [eid,pid,n1,n2,n3,n4,theta,zoffs,tflag,t1,t2,t3,t4]
             elem = CQUAD8.add_op2_data(out)
@@ -1058,7 +1061,7 @@ class GEOM2(object):
             out = s.unpack(edata)
             #print("eid=%s pid=%s n1=%s n2=%s n3=%s theta=%s zoffs=%s blank1=%s blank2=%s tflag=%s t1=%s t2=%s t3=%s" %(eid,pid,n1,n2,n3,theta,zoffs,blank1,blank2,tflag,t1,t2,t3))
             (eid, pid, n1, n2, n3, theta, zoffs, blank1,
-                blank2, tflag, t1, t2, t3) = out
+             blank2, tflag, t1, t2, t3) = out
             if self.is_debug_file:
                 self.binary_debug.write('  CTRIA3=%s\n' % str(out))
             data_in = [eid, pid, n1, n2, n3, theta, zoffs, tflag, t1, t2, t3]

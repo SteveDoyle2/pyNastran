@@ -1,7 +1,7 @@
 #pylint: disable=C0103,C0111,C0301,W0612,W0613,R0914,C0326,R0201
+from struct import unpack, Struct
 from six import b
 from six.moves import range
-from struct import unpack, Struct
 import numpy as np
 
 from pyNastran.bdf.cards.loads.static_loads import (
@@ -10,18 +10,19 @@ from pyNastran.bdf.cards.loads.static_loads import (
     LOAD, PLOAD1, PLOAD2,  #PLOAD3,
     PLOAD4)  # PLOAD3,
 from pyNastran.bdf.cards.thermal.loads import QBDY1, QBDY2, QBDY3, TEMP, TEMPD
+from pyNastran.op2.tables.geom.geom_common import GeomCommon
 
-class GEOM3(object):
+class GEOM3(GeomCommon):
     def add_thermal_load(self, load):
-        raise RuntimeError('this should be overwritten')
+        raise RuntimeError('this should be overwritten by the BDF class')
     def add_load(self, load):
-        raise RuntimeError('this should be overwritten')
+        raise RuntimeError('this should be overwritten by the BDF class')
 
     def _read_geom3_4(self, data, ndata):
         return self._read_geom_4(self._geom3_map, data, ndata)
 
     def __init__(self):
-        self.card_count = {}
+        GeomCommon.__init__(self)
         self._geom3_map = {
             (4201, 42,  18): ['FORCE', self._read_force],   # record 3
             (4001, 40,  20): ['FORCE1', self._read_force1],  # record 4

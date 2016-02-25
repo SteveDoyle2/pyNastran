@@ -9,27 +9,28 @@ from pyNastran.bdf.cards.materials import (CREEP, MAT1, MAT2, MAT3, MAT4, MAT5,
                                            MAT8, MAT9, MAT10, MATHP)
 from pyNastran.bdf.cards.material_deps import MATT1, MATS1
 from pyNastran.bdf.cards.dynamic import NLPARM, TSTEP, TSTEPNL
+from pyNastran.op2.tables.geom.geom_common import GeomCommon
 
 
-class MPT(object):
+class MPT(GeomCommon):
     def add_TSTEPNL(self, card, allow_overwrites=True):
-        raise RuntimeError('this should be overwritten')
+        raise RuntimeError('this should be overwritten by the BDF class')
     def add_NLPARM(self, card, allow_overwrites=True):
-        raise RuntimeError('this should be overwritten')
+        raise RuntimeError('this should be overwritten by the BDF class')
     def add_material_dependence(self, material, allow_overwrites=True):
-        raise RuntimeError('this should be overwritten')
+        raise RuntimeError('this should be overwritten by the BDF class')
     def add_creep_material(self, material, allow_overwrites=True):
-        raise RuntimeError('this should be overwritten')
+        raise RuntimeError('this should be overwritten by the BDF class')
     def add_structural_material(self, material, allow_overwrites=True):
-        raise RuntimeError('this should be overwritten')
+        raise RuntimeError('this should be overwritten by the BDF class')
     def add_thermal_material(self, material, allow_overwrites=True):
-        raise RuntimeError('this should be overwritten')
+        raise RuntimeError('this should be overwritten by the BDF class')
 
     def _read_mpt_4(self, data, ndata):
         return self._read_geom_4(self._mpt_map, data, ndata)
 
     def __init__(self):
-        self.card_count = {}
+        GeomCommon.__init__(self)
         self.bigMaterials = {}
         self._mpt_map = {
             (1003, 10, 245): ['CREEP', self._read_creep],  # record 1

@@ -4,14 +4,16 @@ from struct import unpack
 from pyNastran.bdf.cards.aero import GUST
 from pyNastran.bdf.cards.bdf_tables import (TABLED1, TABLED2, TABLED3, TABLEM1,
                                         TABLEM2, TABLEM3, TABLEM4)
+from pyNastran.op2.tables.geom.geom_common import GeomCommon
 
 
-class DIT(object):
+class DIT(GeomCommon):
 
     def _read_dit_4(self, data, ndata):
         return self._read_geom_4(self._dit_map, data, ndata)
 
     def __init__(self):
+        GeomCommon.__init__(self)
         self._dit_map = {
             (1005, 10, 174): self._read_gust,     # record 1
             (1105, 11, 133): self._read_tabled1,  # record 4

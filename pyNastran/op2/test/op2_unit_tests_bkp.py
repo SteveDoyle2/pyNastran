@@ -190,7 +190,7 @@ class TestOP2(Tester):
 
     def test_op2_solid_shell_bar_01_gpforce_xyz(self):
         folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'sol_101_elements'))
-        #bdf_filename = os.path.join(folder, 'solid_shell_bar_xyz.bdf')
+        bdf_filename = os.path.join(folder, 'solid_shell_bar_xyz.bdf')
         op2_filename = os.path.join(folder, 'solid_shell_bar_xyz.op2')
         op2 = read_op2_geom(op2_filename)
 
@@ -211,7 +211,6 @@ class TestOP2(Tester):
         xyz_cid0 = op2.get_xyz_in_coord(cid=0)
         nid_cd = np.array([[nid, node.Cd()] for nid, node in sorted(iteritems(op2.nodes))])
 
-        bdf_filename = os.path.join(folder, 'solid_shell_bar_xyz.bdf')
         model = BDF(debug=False)
         model.read_bdf(bdf_filename)
 
@@ -246,7 +245,6 @@ class TestOP2(Tester):
                 np.abs(total_moment_local_expected - total_moment_local))
             self.assertTrue(np.allclose(total_moment_local_expected, total_moment_local, atol=0.005), msg), msg
 
-    #@unittest.expectedFailure
     def test_op2_solid_shell_bar_01_gpforce_global_radial(self):
         folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'sol_101_elements'))
         bdf_filename = os.path.join(folder, 'static_solid_shell_bar_global_radial.bdf')
@@ -403,7 +401,6 @@ class TestOP2(Tester):
                 np.abs(total_moment_local_expected - total_moment_local))
             self.assertTrue(np.allclose(total_moment_local_expected, total_moment_local, atol=0.005), msg), msg
 
-    #@unittest.expectedFailure
     def test_op2_solid_shell_bar_01_gpforce_global_radial_cd(self):
         folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'sol_101_elements'))
         bdf_filename = os.path.join(folder, 'static_solid_shell_bar_global_radial_cd.bdf')
@@ -514,19 +511,6 @@ class TestOP2(Tester):
                             xref_optimization=False)
         xyz_cid0 = op2.get_xyz_in_coord(cid=0)
 
-        # cid=0; eid=[1]; nid=[1]; sum=[0., 0., 0.]
-        #           fmag          mmag      fx      fy        fz       mx        my       mz
-        # F1      = [2589.95,     0.0,  -37.18,  32.00, -2589.44,     0.0,      0.0,     0.0]
-        # F1Total = [2589.95,     0.0,  -37.18,  32.00, -2589.44,     0.0,      0.0,     0.0]
-
-        # cid=0; eid=[3]; nid=[1]; sum=[0., 0., 0.]
-        #           fmag          mmag      fx      fy        fz       mx        my       mz
-        # F3      = [2589.95,     0.0,  -26.34, -44.15, -2589.44,     0.0,      0.0,     0.0]
-        # F3Total = [2589.95,   3662.70,-26.34, -44.15, -2589.44, 2589.44,  2589.44,  -70.49]
-
-        # cid=0; eid=[3]; nid=[1,2,3,4]; sum=[0., 0., 0.]
-        #           fmag          mmag      fx      fy        fz       mx        my       mz
-        # Total = [110000,     7071.07,     0.0,    0.0,   -10000, -5000.0,   5000.0,     0.0]
         nid_cd = np.array([[nid, node.Cd()] for nid, node in sorted(iteritems(op2.nodes))])
 
         data = _get_gpforce_data()
