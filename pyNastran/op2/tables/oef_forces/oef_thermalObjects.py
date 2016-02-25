@@ -86,14 +86,8 @@ class Real1DHeatFluxArray(ScalarObject):  # 1-ROD, 2-BEAM, 3-TUBE, 10-CONROD, 34
         self.data_frame.index.names = ['ElementID', 'Item']
 
     def __eq__(self, table):
+        self._eq_header(table)
         assert self.is_sort1() == table.is_sort1()
-        assert self.nonlinear_factor == table.nonlinear_factor
-        assert self.ntotal == table.ntotal
-        assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
-        assert self.approach_code == table.approach_code
-        if self.nonlinear_factor is not None:
-            assert np.array_equal(self._times, table._times), 'ename=%s-%s times=%s table.times=%s' % (
-                self.element_name, self.element_type, self._times, table._times)
         if not np.array_equal(self.element, table.element):
             assert self.element.shape == table.element.shape, 'element shape=%s table.shape=%s' % (self.element.shape, table.element.shape)
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
@@ -279,14 +273,8 @@ class RealHeatFluxVU3DArray(ScalarObject):  # 189-VUQUAD 190-VUTRIA,191-VUBEAM
         self.data_frame.index.names = ['ElementID', 'Node', 'Item']
 
     def __eq__(self, table):
+        self._eq_header(table)
         assert self.is_sort1() == table.is_sort1()
-        assert self.nonlinear_factor == table.nonlinear_factor
-        assert self.ntotal == table.ntotal
-        assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
-        assert self.approach_code == table.approach_code
-        if self.nonlinear_factor is not None:
-            assert np.array_equal(self._times, table._times), 'ename=%s-%s times=%s table.times=%s' % (
-                self.element_name, self.element_type, self._times, table._times)
         if not np.array_equal(self.element_parent, table.element_parent):
             assert self.element_parent.shape == table.element_parent.shape, 'element_parent shape=%s table.shape=%s' % (
                 self.element_parent.shape, table.element_parent.shape)
@@ -552,14 +540,8 @@ class RealHeatFluxVUArray(ScalarObject):  # 189-VUQUAD 190-VUTRIA,191-VUBEAM
         self.data_frame.index.names = ['ElementID', 'Node', 'Item']
 
     def __eq__(self, table):
+        self._eq_header(table)
         assert self.is_sort1() == table.is_sort1()
-        assert self.nonlinear_factor == table.nonlinear_factor
-        assert self.ntotal == table.ntotal
-        assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
-        assert self.approach_code == table.approach_code
-        if self.nonlinear_factor is not None:
-            assert np.array_equal(self._times, table._times), 'ename=%s-%s times=%s table.times=%s' % (
-                self.element_name, self.element_type, self._times, table._times)
         if not np.array_equal(self.element_parent_coord_icord, table.element_parent_coord_icord):
             assert self.element_parent_coord_icord.shape == table.element_parent_coord_icord.shape, 'element_parent_coord_icord shape=%s table.shape=%s' % (
                 self.element_parent_coord_icord.shape, table.element_parent_coord_icord.shape)
@@ -849,14 +831,8 @@ class RealHeatFluxVUBeamArray(ScalarObject):  # 191-VUBEAM
         #print(self.data_frame)
 
     def __eq__(self, table):
+        self._eq_header(table)
         assert self.is_sort1() == table.is_sort1()
-        assert self.nonlinear_factor == table.nonlinear_factor
-        assert self.ntotal == table.ntotal
-        assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
-        assert self.approach_code == table.approach_code
-        if self.nonlinear_factor is not None:
-            assert np.array_equal(self._times, table._times), 'ename=%s-%s times=%s table.times=%s' % (
-                self.element_name, self.element_type, self._times, table._times)
         if not np.array_equal(self.element_parent_coord, table.element_parent_coord):
             assert self.element_parent_coord.shape == table.element_parent_coord.shape, 'element_parent_coord shape=%s table.shape=%s' % (
                 self.element_parent_coord.shape, table.element_parent_coord.shape)
@@ -1176,23 +1152,8 @@ class RealConvHeatFluxArray(ScalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
         self.data_frame.index.names = ['ElementID', 'Node', 'Item']
 
     def __eq__(self, table):
+        self._eq_header(table)
         assert self.is_sort1() == table.is_sort1()
-        assert self.nonlinear_factor == table.nonlinear_factor
-        assert self.ntotal == table.ntotal
-        assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
-        assert self.approach_code == table.approach_code
-        if self.nonlinear_factor is not None:
-            assert np.array_equal(self._times, table._times), 'ename=%s-%s times=%s table.times=%s' % (
-                self.element_name, self.element_type, self._times, table._times)
-        if not np.array_equal(self.element_node, table.element_node):
-            assert self.element_node.shape == table.element_node.shape, 'element_node shape=%s table.shape=%s' % (self.element_node.shape, table.element_node.shape)
-            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
-            msg += '%s\n' % str(self.code_information())
-            msg += 'Eid, Nid\n'
-            for (eid1, nid1), (eid2, nid2) in zip(self.element_node, table.element_node):
-                msg += '%s, %s\n' % (eid1, nid1, eid2, nid2)
-            print(msg)
-            raise ValueError(msg)
         if not np.array_equal(self.data, table.data):
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
@@ -1366,23 +1327,8 @@ class RealChbdyHeatFluxArray(ScalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
         self.data_frame.index.names = ['ElementID', 'Item']
 
     def __eq__(self, table):
+        self._eq_header(table)
         assert self.is_sort1() == table.is_sort1()
-        assert self.nonlinear_factor == table.nonlinear_factor
-        assert self.ntotal == table.ntotal
-        assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
-        assert self.approach_code == table.approach_code
-        if self.nonlinear_factor is not None:
-            assert np.array_equal(self._times, table._times), 'ename=%s-%s times=%s table.times=%s' % (
-                self.element_name, self.element_type, self._times, table._times)
-        if not np.array_equal(self.element, table.element):
-            assert self.element.shape == table.element.shape, 'element shape=%s table.shape=%s' % (self.element.shape, table.element.shape)
-            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
-            msg += '%s\n' % str(self.code_information())
-            msg += 'Eid Nid\n'
-            for (eid1, nid1), (eid2, nid2) in zip(self.element, table.element):
-                msg += '(%s, %s), (%s, %s)\n' % (eid1, nid1, eid2, nid2)
-            print(msg)
-            raise ValueError(msg)
         if not np.array_equal(self.data, table.data):
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())

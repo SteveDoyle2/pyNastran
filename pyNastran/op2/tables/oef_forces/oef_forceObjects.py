@@ -671,6 +671,8 @@ class RealCBeamForceArray(ScalarObject):
         i_node_zero = np.where(self.element_node[:, 1] != 0)[0]
         assert i_node_zero.max() > 0, 'CBEAM element_node hasnt been filled'
         i = np.union1d(i_sd_zero, i_node_zero)
+
+        #self.nelements = len(self.element) // 11
         self.element = self.element[i]
         self.element_node = self.element_node[i, :]
         self.data = self.data[:, i, :]
@@ -696,23 +698,9 @@ class RealCBeamForceArray(ScalarObject):
         #print(self.data_frame)
 
     def __eq__(self, table):
+        self._eq_header(table)
         assert self.is_sort1() == table.is_sort1()
-        assert self.nonlinear_factor == table.nonlinear_factor
-        assert self.ntotal == table.ntotal
-        assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
-        assert self.approach_code == table.approach_code
-        if self.nonlinear_factor is not None:
-            assert np.array_equal(self._times, table._times), 'ename=%s-%s times=%s table.times=%s' % (
-                self.element_name, self.element_type, self._times, table._times)
-        if not np.array_equal(self.element_node, table.element_node):
-            assert self.element_node.shape == table.element_node.shape, 'shape=%s element_node.shape=%s' % (
-                self.element_node.shape, table.element_node.shape)
-            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
-            msg += '%s\n' % str(self.code_information())
-            for (eid1, nid1), (eid2, nid2) in zip(self.element_node, table.element_node):
-                msg += '%s, %s\n' % (eid1, nid1, eid2, eid2)
-            print(msg)
-            raise ValueError(msg)
+
         if not np.array_equal(self.data, table.data):
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
@@ -1364,23 +1352,8 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
 
     def __eq__(self, table):
         assert self.is_sort1() == table.is_sort1()
-        assert self.nonlinear_factor == table.nonlinear_factor
-        assert self.ntotal == table.ntotal
-        assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
-        assert self.approach_code == table.approach_code
-        if self.nonlinear_factor is not None:
-            assert np.array_equal(self._times, table._times), 'ename=%s-%s times=%s table.times=%s' % (
-                self.element_name, self.element_type, self._times, table._times)
-        if not np.array_equal(self.element, table.element):
-            assert self.element.shape == table.element.shape, 'element shape=%s table.shape=%s' % (
-                self.element.shape, table.element.shape)
-            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
-            msg += '%s\n' % str(self.code_information())
-            msg += '(Eid)\n'
-            for eid1, eid2 in zip(self.element_node, table.element_node):
-                msg += '%s, %s\n' % (eid1, eid2)
-            print(msg)
-            raise ValueError(msg)
+
+        self._eq_header(table)
         if not np.array_equal(self.data, table.data):
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
@@ -1598,23 +1571,9 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
         #print(self.data_frame)
 
     def __eq__(self, table):
+        self._eq_header(table)
         assert self.is_sort1() == table.is_sort1()
-        assert self.nonlinear_factor == table.nonlinear_factor
-        assert self.ntotal == table.ntotal
-        assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
-        assert self.approach_code == table.approach_code
-        if self.nonlinear_factor is not None:
-            assert np.array_equal(self._times, table._times), 'ename=%s-%s times=%s table.times=%s' % (
-                self.element_name, self.element_type, self._times, table._times)
-        if not np.array_equal(self.element_node, table.element_node):
-            assert self.element_node.shape == table.element_node.shape, 'element_node shape=%s table.shape=%s' % (self.element_node.shape, table.element_node.shape)
-            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
-            msg += '%s\n' % str(self.code_information())
-            msg += '(Eid, Nid)\n'
-            for (eid1, nid1), (eid2, nid2) in zip(self.element_node, table.element_node):
-                msg += '(%s, %s)    (%s, %s)\n' % (eid1, nid1, eid2, nid2)
-            print(msg)
-            raise ValueError(msg)
+
         if not np.array_equal(self.data, table.data):
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
@@ -1976,23 +1935,9 @@ class RealCBarForceArray(ScalarObject):  # 34-CBAR
         return page_num
 
     def __eq__(self, table):
+        self._eq_header(table)
         assert self.is_sort1() == table.is_sort1()
-        assert self.nonlinear_factor == table.nonlinear_factor
-        assert self.ntotal == table.ntotal
-        assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
-        assert self.approach_code == table.approach_code
-        if self.nonlinear_factor is not None:
-            assert np.array_equal(self._times, table._times), 'ename=%s-%s times=%s table.times=%s' % (
-                self.element_name, self.element_type, self._times, table._times)
-        if not np.array_equal(self.element, table.element):
-            assert self.element.shape == table.element.shape, 'element shape=%s table.shape=%s' % (self.element.shape, table.element.shape)
-            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
-            msg += '%s\n' % str(self.code_information())
-            msg += 'Eid\n'
-            for eid, eid2 in zip(self.element, table.element):
-                msg += '%s, %s\n' % (eid, eid2)
-            print(msg)
-            raise ValueError(msg)
+
         if not np.array_equal(self.data, table.data):
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
@@ -2092,23 +2037,9 @@ class RealConeAxForceArray(ScalarObject):
         #print(self.data_frame)
 
     def __eq__(self, table):
+        self._eq_header(table)
         assert self.is_sort1() == table.is_sort1()
-        assert self.nonlinear_factor == table.nonlinear_factor
-        assert self.ntotal == table.ntotal
-        assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
-        assert self.approach_code == table.approach_code
-        if self.nonlinear_factor is not None:
-            assert np.array_equal(self._times, table._times), 'ename=%s-%s times=%s table.times=%s' % (
-                self.element_name, self.element_type, self._times, table._times)
-        if not np.array_equal(self.element, table.element):
-            assert self.element.shape == table.element.shape, 'element shape=%s table.shape=%s' % (self.element.shape, table.element.shape)
-            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
-            msg += '%s\n' % str(self.code_information())
-            msg += 'Eid\n'
-            for eid1, eid2 in zip(self.element, table.element):
-                msg += '%s, %s\n' % (eid1, eid2)
-            print(msg)
-            raise ValueError(msg)
+
         if not np.array_equal(self.data, table.data):
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
@@ -2399,23 +2330,8 @@ class RealCBar100ForceArray(RealForceObject):  # 100-CBAR
         return page_num
 
     def __eq__(self, table):
+        self._eq_header(table)
         assert self.is_sort1() == table.is_sort1()
-        assert self.nonlinear_factor == table.nonlinear_factor
-        assert self.ntotal == table.ntotal
-        assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
-        assert self.approach_code == table.approach_code
-        if self.nonlinear_factor is not None:
-            assert np.array_equal(self._times, table._times), 'ename=%s-%s times=%s table.times=%s' % (
-                self.element_name, self.element_type, self._times, table._times)
-        if not np.array_equal(self.element, table.element):
-            assert self.element.shape == table.element.shape, 'element shape=%s table.shape=%s' % (self.element.shape, table.element.shape)
-            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
-            msg += '%s\n' % str(self.code_information())
-            msg += 'Eid\n'
-            for eid, eid2 in zip(self.element, table.element):
-                msg += '%s, %s\n' % (eid, eid2)
-            print(msg)
-            raise ValueError(msg)
         if not np.array_equal(self.data, table.data):
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
@@ -2508,23 +2424,8 @@ class RealCGapForceArray(ScalarObject):  # 38-CGAP
             self.data_frame.index.names = ['ElementID', 'Item']
 
     def __eq__(self, table):
+        self._eq_header(table)
         assert self.is_sort1() == table.is_sort1()
-        assert self.nonlinear_factor == table.nonlinear_factor
-        assert self.ntotal == table.ntotal
-        assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
-        assert self.approach_code == table.approach_code
-        if self.nonlinear_factor is not None:
-            assert np.array_equal(self._times, table._times), 'ename=%s-%s times=%s table.times=%s' % (
-                self.element_name, self.element_type, self._times, table._times)
-        if not np.array_equal(self.element, table.element):
-            assert self.element.shape == table.element.shape, 'element shape=%s table.shape=%s' % (self.element.shape, table.element.shape)
-            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
-            msg += '%s\n' % str(self.code_information())
-            msg += 'Eid\n'
-            for eid, eid2 in zip(self.element, table.element):
-                msg += '%s, %s\n' % (eid, eid2)
-            print(msg)
-            raise ValueError(msg)
         if not np.array_equal(self.data, table.data):
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
@@ -2800,14 +2701,8 @@ class RealBendForceArray(RealForceObject):  # 69-CBEND
         return page_num - 1
 
     def __eq__(self, table):
+        self._eq_header(table)
         assert self.is_sort1() == table.is_sort1()
-        assert self.nonlinear_factor == table.nonlinear_factor
-        assert self.ntotal == table.ntotal
-        assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
-        assert self.approach_code == table.approach_code
-        if self.nonlinear_factor is not None:
-            assert np.array_equal(self._times, table._times), 'ename=%s-%s times=%s table.times=%s' % (
-                self.element_name, self.element_type, self._times, table._times)
         if not np.array_equal(self.element_nodes, table.element_nodes):
             assert self.element_nodes.shape == table.element_nodes.shape, 'element_nodes shape=%s table.shape=%s' % (self.element_nodes.shape, table.element_nodes.shape)
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
@@ -2911,23 +2806,8 @@ class RealSolidPressureForceArray(ScalarObject):  # 77-PENTA_PR,78-TETRA_PR
         self.data = zeros((self.ntimes, self.ntotal, 7), dtype='float32')
 
     def __eq__(self, table):
+        self._eq_header(table)
         assert self.is_sort1() == table.is_sort1()
-        assert self.nonlinear_factor == table.nonlinear_factor
-        assert self.ntotal == table.ntotal
-        assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
-        assert self.approach_code == table.approach_code
-        if self.nonlinear_factor is not None:
-            assert np.array_equal(self._times, table._times), 'ename=%s-%s times=%s table.times=%s' % (
-                self.element_name, self.element_type, self._times, table._times)
-        if not np.array_equal(self.element, table.element):
-            assert self.element.shape == table.element.shape, 'element shape=%s table.shape=%s' % (self.element.shape, table.element.shape)
-            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
-            msg += '%s\n' % str(self.code_information())
-            msg += 'Eid\n'
-            for eid1, eid2 in zip(self.element, table.element):
-                msg += '%s, %s\n' % (eid1, eid2)
-            print(msg)
-            raise ValueError(msg)
         if not np.array_equal(self.data, table.data):
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())

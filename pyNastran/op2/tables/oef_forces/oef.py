@@ -1137,7 +1137,7 @@ class OEF(OP2Common):
             self._results._found_result(result_name)
             slot = getattr(self, result_name)
             if self.format_code == 1 and self.num_wide == 9:  # real centroid ???
-                aaa
+                raise RuntimeError('is this used?')
                 auto_return, is_vectorized = self._create_oes_object4(
                     nelements, result_name, slot, RealCBeamForceArray)
                 if auto_return:
@@ -1210,7 +1210,7 @@ class OEF(OP2Common):
                         ints2 = ints[:, 1:].reshape(nelements * 11, 9)
                         nids = ints2[:, 0]
 
-                        obj.element[ielement:ielement2] = eids
+                        obj.element[itotal:itotal2] = eids2
                         obj.element_node[itotal:itotal2, 0] = eids2
                         obj.element_node[itotal:itotal2, 1] = nids
 

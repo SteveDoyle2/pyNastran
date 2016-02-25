@@ -59,14 +59,8 @@ class TableArray(ScalarObject):  # displacement style table
         self._nnodes = 0  # result specific
 
     def __eq__(self, table):
+        self._eq_header(table)
         assert self.is_sort1() == table.is_sort1()
-        assert self.nonlinear_factor == table.nonlinear_factor
-        assert self.ntotal == table.ntotal
-        assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
-        assert self.approach_code == table.approach_code
-        if self.nonlinear_factor is not None:
-            assert np.array_equal(self._times, table._times), 'class_name=%s times=%s table.times=%s' % (
-                self.class_name, self._times, table._times)
         if not np.array_equal(self.node_gridtype, table.node_gridtype):
             assert self.node_gridtype.shape == table.node_gridtype.shape, 'shape=%s table.shape=%s' % (self.node_gridtype.shape, table.node_gridtype.shape)
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)

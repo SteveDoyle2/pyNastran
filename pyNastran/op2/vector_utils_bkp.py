@@ -686,6 +686,9 @@ def transform_force_moment_sum(force_in_local, moment_in_local,
         summation_point_cid0=summation_point_cid0, consider_rxf=consider_rxf,
         debug=debug, logger=logger)
     force_out, moment_out = out
+    if debug:
+        logger.debug('force_sum = %s' % force_out.sum(axis=0))
+        logger.debug('moment_sum = %s' % moment_out.sum(axis=0))
     return force_out, moment_out, force_out.sum(axis=0), moment_out.sum(axis=0)
 
 

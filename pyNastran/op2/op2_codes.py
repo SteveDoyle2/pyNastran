@@ -1,6 +1,6 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-
+from six import string_types
 
 class Op2Codes(object):
     def __init__(self):
@@ -988,8 +988,12 @@ class Op2Codes(object):
         msg += "  random_code   = %-3s\n" % (random_code)
 
         if element_type is not None:
-            msg += "  element_type  = %-3s %s\n" % (
-                element_type, self.get_element_type(element_type))
+            if isinstance(element_type, string_types):
+                etype = element_type
+            else:
+                etype = self.get_element_type(element_type)
+            msg += "  element_type  = %-3s %s\n" % (element_type, etype)
+
         if s_word:  # stress code
             msg += "  s_code        = %-3s %s\n" % (s_code, s_word)
         if thermal is not None:

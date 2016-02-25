@@ -64,11 +64,36 @@ class BaseScalarObject(Op2Codes):
     def _eq_header(self, table):
         assert self.nonlinear_factor == table.nonlinear_factor
         assert self.ntotal == table.ntotal
-        assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
+        assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (
+            self.table_name, table.table_name)
         assert self.approach_code == table.approach_code
-        if self.nonlinear_factor is not None:
-            assert np.array_equal(self._times, table._times), 'ename=%s-%s times=%s table.times=%s' % (
-                self.element_name, self.element_type, self._times, table._times)
+
+        if hasattr(self, 'element_name'):
+            if self.nonlinear_factor is not None:
+                assert np.array_equal(self._times, table._times), 'ename=%s-%s times=%s table.times=%s' % (
+                    self.element_name, self.element_type, self._times, table._times)
+
+        if hasattr(self, 'element'):
+            if not np.array_equal(self.element, table.element):
+                assert self.element.shape == table.element.shape, 'shape=%s element.shape=%s' % (
+                    self.element.shape, table.element.shape)
+                msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+                msg += '%s\nEid\n' % str(self.code_information())
+                for eid1, eid2 in zip(self.element, table.element):
+                    msg += '%s, %s\n' % (eid1, eid2)
+                print(msg)
+                raise ValueError(msg)
+
+        if hasattr(self, 'element_node'):
+            if not np.array_equal(self.element_node, table.element_node):
+                assert self.element_node.shape == table.element_node.shape, 'shape=%s element_node.shape=%s' % (
+                    self.element_node.shape, table.element_node.shape)
+                msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+                msg += '%s\n' % str(self.code_information())
+                for (eid1, nid1), (eid2, nid2) in zip(self.element_node, table.element_node):
+                    msg += '%s, %s\n' % (eid1, nid1, eid2, eid2)
+                print(msg)
+                raise ValueError(msg)
 
     @property
     def class_name(self):
