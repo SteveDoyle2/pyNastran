@@ -19,11 +19,11 @@ def run_nastran(fname, keywords=None):
     -----------
     fname : string
         Filename of the Nastran .bdf file
-    keywords : list of strings, optional
+    keywords : dict/list of strings, optional
         Default keywords are `'mem=1024mb'`, `'old=no'`, and `'news=no'`
     """
     if keywords is None:
-        keywords_list = ['old=no', 'news=no'] # ['mem=1024mb','old=no','news=no']
+        keywords_list = [] # [‘scr=yes’, ‘bat=no’ mem=1024mb','old=no','news=no']
     else:
         if isinstance(keywords, (list, tuple)):
             keywords_list = keywords

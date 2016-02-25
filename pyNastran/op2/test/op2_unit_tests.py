@@ -225,8 +225,7 @@ class TestOP2(Tester):
 
         #bdf_filename = os.path.join(folder, 'solid_shell_bar_xyz.bdf')
         #model = BDF(debug=False)
-        #model.read_bdf(bdf_filename)
-        #model.cross_reference()
+        #model.read_bdf(bdf_filename, xref=True)
 
         op2.cross_reference(xref_elements=False,
                             xref_nodes_with_elements=False,
@@ -270,7 +269,6 @@ class TestOP2(Tester):
                 case, total_moment_local_expected, total_moment_local)
             self.assertTrue(np.allclose(total_moment_local_expected, total_moment_local, atol=0.005), msg), msg
 
-    @unittest.expectedFailure
     def test_op2_solid_shell_bar_01_gpforce_xyz(self):
         folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'sol_101_elements'))
         bdf_filename = os.path.join(folder, 'solid_shell_bar_xyz.bdf')
@@ -294,15 +292,14 @@ class TestOP2(Tester):
         xyz_cid0 = op2.get_xyz_in_coord(cid=0)
         nid_cd = np.array([[nid, node.Cd()] for nid, node in sorted(iteritems(op2.nodes))])
 
-        model = BDF(debug=False)
-        model.read_bdf(bdf_filename)
+        #model = BDF(debug=False)
+        #model.read_bdf(bdf_filename)
 
         data = _get_gpforce_data()
         coords = op2.coords
+        print(op2.coords)
         for datai in data:
             eids, nids, cid, summation_point, total_force_local_expected, total_moment_local_expected = datai
-            if cid not in coords:
-                continue
             coord_out = coords[cid]
             op2.log.debug('*' * 30 + 'Next Test' + '*' * 30)
             out = gpforce.extract_interface_loads(
@@ -582,10 +579,9 @@ class TestOP2(Tester):
                 np.abs(total_moment_local_expected - total_moment_local))
             self.assertTrue(np.allclose(total_moment_local_expected, total_moment_local, atol=0.005), msg), msg
 
-    @unittest.expectedFailure
     def test_op2_solid_shell_bar_01_gpforce_radial(self):
         folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'sol_101_elements'))
-        bdf_filename = os.path.join(folder, 'static_solid_shell_bar_radial.bdf')
+        #bdf_filename = os.path.join(folder, 'static_solid_shell_bar_radial.bdf')
         op2_filename = os.path.join(folder, 'static_solid_shell_bar_radial.op2')
         op2 = read_op2_geom(op2_filename)
 
@@ -612,8 +608,6 @@ class TestOP2(Tester):
         coords = op2.coords
         for i, datai in enumerate(data):
             eids, nids, cid, summation_point, total_force_local_expected, total_moment_local_expected = datai
-            if cid not in coords:
-                continue
             coord_out = coords[cid]
             op2.log.debug('*' * 30 + 'Next Test #%s' % i + '*' * 30)
             out = gpforce.extract_interface_loads(
@@ -1449,35 +1443,47 @@ def _get_gpforce_data():
     data = [
         #eids, nids, cid, summation_point
         #[1], [1], 0, [0., 0., 0.],
-        [[1], [1, 2, 3, 4], 0, [0., 0., 0.], [0.0, 0.0, -10000.0], [-5000.0, 5000.0, 0.0],],  # total
+        #[[1], [1, 2, 3, 4], 0, [0., 0., 0.], [0.0, 0.0, -10000.0], [-5000.0, 5000.0, 0.0],],  # total; good for gpforce
 
         # cid=0; eid=[1]; nid=[3]; sum=[0., 0., 0.] - done
         #               fmag     mmag       fx      fy       fz       mx       my       mz
         # F2      = [2589.95,     0.0,  26.34, -44.15, -2589.44,     0.0,     0.0,     0.0]  # ith
         # F2Total = [2589.95, 3862.70,  26.34, -44.15, -2589.44, -2589.44, 2589.44, -70.49]  # total
-        [[1], [3], 0, [0., 0., 0.], [26.34, -44.15, -2589.44], [-2589.44, 2589.44, -70.49],],
+        #[[1], [3], 0, [0., 0., 0.], [26.34, -44.15, -2589.44], [-2589.44, 2589.44, -70.49],], # good for gpforce; failing for xyz (cid 11)
 
         # cid=0; eid=[1]; nid=[1]; sum=[0., 0., 0.]
         #                            fx      fy       fz       mx       my       mz
+        [[1], [1], 0, [0., 0., 0.], [-37.18, 32.00, -2589.44], [0.0, 0.0, 0.0],],  # only 1 line b/c no moment; good for gpforce; failing for xyz (cid 11)
+
+        # cid=0/1/2/3; eid=[1]; nid=[1]; sum=[0., 0., 0.]
         [[1], [1], 0, [0., 0., 0.], [-37.18, 32.00, -2589.44], [0.0, 0.0, 0.0],],  # only 1 line b/c no moment
+        [[1], [1], 1, [0., 0., 0.], [-37.18, 32.00, -2589.44], [0.0, 0.0, 0.0],],  # only 1 line b/c no moment
+        [[1], [1], 2, [0., 0., 0.], [-37.18, 32.00, -2589.44], [0.0, 0.0, 0.0],],  # only 1 line b/c no moment
+        [[1], [1], 3, [0., 0., 0.], [-37.18, 32.00, -2589.44], [0.0, 0.0, 0.0],],  # only 1 line b/c no moment
 
         # cid=1; eid=[1]; nid=[1]; sum=[0., 0., 0.]
         #               fmag     mmag      fx      fy       fz       mx       my       mz
         # F1      = [2589.90,     0.0,1853.64, 567.74, 1717.35,     0.0,     0.0,     0.0]  # ith
         # F1Total = [2589.90,     0.0,1853.64, 567.74, 1717.35,     0.0,     0.0,     0.0]  # total
-        [[1], [1], 1, [0., 0., 0.], [1853.64, 567.74, 1717.35], [0.0, 0.0, 0.0],],
+        [[1], [1], 11, [0., 0., 0.], [1853.64, 567.74, 1717.35], [0.0, 0.0, 0.0],], # good; failing for gpforce
+        [[1], [1], 12, [0., 0., 0.], [1853.64, 567.74, 1717.35], [0.0, 0.0, 0.0],], # good; failing for gpforce
+        [[1], [1], 13, [0., 0., 0.], [1853.64, 567.74, 1717.35], [0.0, 0.0, 0.0],], # good; failing for gpforce
 
         # cid=1; eid=[1]; nid=[2]; sum=[0., 0., 0.]
         #               fmag     mmag       fx      fy       fz       mx       my       mz
         # F2      = [2411.67,     0.0, 1710.67, 634.80, 1577.03,     0.0,     0.0,     0.0]  # ith
         # F2Total = [2411.67, 2410.58, 1710.67, 634.80, 1577.03, 1698.38, -570.22, -1612.84] # total
-        [[1], [2], 1, [0., 0., 0.], [1710.67, 634.80, 1577.03], [1698.38, -570.22, -1612.84],],
+        [[1], [2], 11, [0., 0., 0.], [1710.67, 634.60, 1577.03], [1698.38, -570.22, -1612.84],],
 
         # cid=1; eid=[1]; nid=[3]; sum=[0., 0., 0.]
         #           fmag          mmag     fx       fy       fz       mx        my       mz
         # F3      = [2589.95,     0.0, 1799.79, 645.58, 1746.94,     0.0,      0.0,     0.0]  # ith
         # F3Total = [2589.95, 3862.70, 1799.79, 645.58, 1746.94, 1880.85, -3035.07, -816.15]  # total
-        [[1], [3], 1, [0., 0., 0.], [1799.79, 645.58, 1746.94], [1880.85, -3035.07, -816.15]],
+        [[1], [3], 11, [0., 0., 0.], [1799.79, 645.58, 1746.94], [1880.85, -3035.07, -816.15]],
+
+        #[[1], [1], 11, [0., 0., 0.], [1853.64, 567.74, 1717.35], [0., 0., 0.],],
+        #[[1], [1], 12, [0., 0., 0.], [1938.05, -47.57, 1717.35], [0., 0., 0.],],
+        #[[1], [1], 13, [0., 0., 0.], [2069.00, 1557.11, -47.57], [0., 0., 0.],],
     ]
     return data
 
