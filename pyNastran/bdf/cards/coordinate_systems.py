@@ -1269,6 +1269,7 @@ class Cord1x(Coord):
         g2 = data[2]
         g3 = data[3]
         assert len(data) == 4, 'data = %s' % (data)
+        print('cid =', cid)
         return cls(cid, g1, g2, g3, comment=comment)
 
     def to_CORD2x(self, model, rid=0):

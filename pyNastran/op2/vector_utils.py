@@ -572,31 +572,37 @@ def transform_force_moment(force_in_local, moment_in_local,
 
         print('i =', i)
         print('force_in_local =', force_in_local)
-        force_in_locali = -force_in_local[i, :].T
-        moment_in_locali = -moment_in_local[i, :].T
-        force_in_locali.astype('float64')
-        moment_in_locali.astype('float64')
-
-        if debug:
-            logger.debug('i = %s' % i)
-            logger.debug('nids = %s' % nidsi)
-            logger.debug('force_input =%s' % force_in_locali)
+        #force_in_locali.astype('float64')
+        #moment_in_locali.astype('float64')
 
         # rotate loads from an arbitrary coordinate system to local xyz
-        #force_in_locali = analysis_coord.coord_to_xyz_array(force_in_locali).T
-        #moment_in_locali = analysis_coord.coord_to_xyz_array(moment_in_locali).T
+        if 1:
+            force_in_locali = -force_in_local[i, :]
+            moment_in_locali = -moment_in_local[i, :]
+        else:
+            force_in_locali = -force_in_local[i, :].T
+            moment_in_locali = -moment_in_local[i, :].T
+            force_in_locali = analysis_coord.coord_to_xyz_array(force_in_locali.T).T
+            moment_in_locali = analysis_coord.coord_to_xyz_array(moment_in_locali.T).T
+
+
+            if debug:
+                logger.debug('i = %s' % i)
+                logger.debug('nids = %s' % nidsi)
+                logger.debug('force_input =%s' % force_in_locali)
 
         # rotate the forces/moments into a coordinate system coincident
         # with the local frame and with the same primary directions
         # as the global frame
-        force_in_globali = dot(beta_cd, force_in_locali)
-        moment_in_globali = dot(beta_cd, moment_in_locali)
+        force_in_globali = dot(force_in_locali, beta_cd)
+        print('force_in_globali = %s' % force_in_globali)
+        moment_in_globali = dot(moment_in_locali, beta_cd)
 
         # rotate the forces and moments into a coordinate system coincident
         # with the output frame and with the same primary directions
         # as the output frame
-        force_outi = dot(beta_out, force_in_globali)
-        moment_outi = dot(beta_out, moment_in_globali)
+        force_outi = dot(force_in_globali, beta_out)
+        moment_outi = dot(moment_in_globali, beta_out)
 
         if debug:
             logger.debug('force_in_locali =%s' % force_in_locali.T)
@@ -606,17 +612,17 @@ def transform_force_moment(force_in_local, moment_in_local,
 
         # these are in the local XYZ coordinates
         # we'll do the final transform later
-        force_out[i, :] = force_outi.T
-        moment_out[i, :] = moment_outi.T
+        force_out[i, :] = force_outi
+        moment_out[i, :] = moment_outi
 
         # Now we need to consider the "r x F" term.
         # We calculate it in the global xyz frame about the summation
         # point.  Then we transform it to the output XYZ frame
         if consider_rxf:
             delta = xyz_cid0[i, :] - summation_point_cid0[np.newaxis, :]
-            rxf = cross(delta, force_in_globali.T).T
+            rxf = cross(delta, force_in_globali)
 
-            rxf_in_cid = dot(beta_out, rxf).T
+            rxf_in_cid = dot(rxf, beta_out)
             if debug:
                 logger.debug('delta = %s' % delta)
                 logger.debug('rxf = %s' % rxf.T)

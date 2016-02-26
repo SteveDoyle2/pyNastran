@@ -85,7 +85,6 @@ class GEOM1(GeomCommon):
             (14101, 141, 403): ['SWLDPRM', self._read_fake],  # record 34
 
             (1101,   11,  66): ['', self._read_fake],  # record
-            (2201,   22,  10): ['', self._read_fake],  # record
             (3901,   39,  50): ['', self._read_fake],  # record
             (13301, 133, 509): ['', self._read_fake],  # record
             (1127,   11, 461) : ['SELOAD', self._read_fake],  # record NX
