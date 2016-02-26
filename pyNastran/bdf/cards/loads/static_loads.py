@@ -28,8 +28,8 @@ from pyNastran.utils import integer_types
 from pyNastran.bdf.cards.loads.loads import Load, LoadCombination
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import BaseCard, expand_thru, expand_thru_by, range
-from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_blank,
-    double, double_or_blank, string, string_or_blank,
+from pyNastran.bdf.bdf_interface.assign_type import (
+    integer, integer_or_blank, double, double_or_blank, string, string_or_blank,
     integer_or_string, fields, integer_string_or_blank, integer_or_double)
 from pyNastran.bdf.field_writer_8 import print_card_8, print_float_8, set_string8_blank_if_default
 from pyNastran.bdf.field_writer_16 import print_card_16, print_float_16, set_string16_blank_if_default
@@ -2286,7 +2286,7 @@ class PLOAD4(Load):
             (face_node_ids, area) = elem.getFaceNodesAndArea(self, nid, nid_opposite)
         else:
             face_node_ids = elem.node_ids
-            Area = elem.Area()
+            area = elem.Area()
         n = len(face_node_ids)
 
         elem = self.eids_ref[0]
@@ -2294,7 +2294,7 @@ class PLOAD4(Load):
         vectors = []
         for (nid, p) in zip(face_node_ids, self.pressures):
             #: .. warning:: only supports normal pressures
-            vectors.append(vector * p * Area / n)  # Force_i
+            vectors.append(vector * p * area / n)  # Force_i
 
         is_load = None
         return (is_load, face_node_ids, vectors)
@@ -2525,8 +2525,9 @@ class PLOADX1(Load):
         return [self]
 
     def raw_fields(self):
-        list_fields = ['PLOADX1', self.sid, self.eid, self.pa, self.pb,
-                  self.Ga(), self.Gb(), self.theta]
+        list_fields = [
+            'PLOADX1', self.sid, self.eid, self.pa, self.pb,
+            self.Ga(), self.Gb(), self.theta]
         return list_fields
 
     def repr_fields(self):

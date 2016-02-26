@@ -18,9 +18,9 @@ from numpy import array, unique, argsort, mean
 
 from pyNastran.bdf.cards.properties.bars import IntegratedLineProperty, LineProperty, _bar_areaL
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
-from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_blank,
-    double, double_or_blank, string, string_or_blank,
-    double_string_or_blank, integer_double_string_or_blank)
+from pyNastran.bdf.bdf_interface.assign_type import (
+    integer, integer_or_blank, double, double_or_blank,
+    string, string_or_blank, double_string_or_blank)
 from pyNastran.utils.mathematics import integrate_line, integrate_positive_line
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
@@ -100,7 +100,7 @@ class PBEAM(IntegratedLineProperty):
         # we'll do a check for warping later; cwa/cwb -> j > 0.0
         assert self.j[0] >= 0., self.j
 
-        if not (i1a*i2a - i12a **2 > 0.):
+        if not(i1a*i2a - i12a **2 > 0.):
             msg = 'I1 * I2 - I12^2=0 and must be greater than 0.0 at End A\n'
             msg += 'i1=%s i2=%s i12=%s i1*i2-i12^2=%s'  % (i1a, i2a, i12a, i1a*i2a-i12a**2)
             raise ValueError(msg)
@@ -181,7 +181,7 @@ class PBEAM(IntegratedLineProperty):
 
                     # we'll do a check for warping later; cwa/cwb -> j > 0.0
                     assert self.j[-1] >= 0., self.j
-                    if not (i1 * i2 - i12 ** 2 > 0.):
+                    if not(i1 * i2 - i12 ** 2 > 0.):
                         msg = 'I1 * I2 - I12^2=0 and must be greater than 0.0 at End B\n'
                         msg += 'xxb=1.0 i1=%s i2=%s i12=%s'  % (i1, i2, i12)
                         raise ValueError(msg)
@@ -910,7 +910,7 @@ class PBEAML(IntegratedLineProperty):
         #list_fields[3] = group
         return list_fields
 
-    def write_card(self, size, is_double):
+    def write_card(self, size=8, is_double=False):
         """.. todo:: having bug with PBEAML"""
         card = self.repr_fields()
         if size == 8:

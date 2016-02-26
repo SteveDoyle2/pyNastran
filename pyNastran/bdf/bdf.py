@@ -1451,6 +1451,47 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'DOPTPRM' : (DOPTPRM, self._add_doptprm),
             'DESVAR' : (DESVAR, self.add_DESVAR),
             # BCTSET
+
+            #'PHBDY' : (PHBDY, self.add_PHBDY),
+            'AERO' : (AERO, self.add_AERO),
+            'AEROS' : (AEROS, self.add_AEROS),
+            'AECOMP' : (AECOMP, self.add_AECOMP),
+            'AEFACT' : (AEFACT, self.add_AEFACT),
+            'AELINK' : (AELINK, self.add_AELINK),
+            'AELIST' : (AELIST, self.add_AELIST),
+            'AEPARM' : (AEPARM, self.add_AEPARM),
+            'AESTAT' : (AESTAT, self.add_AESTAT),
+            'AESURF' : (AESURF, self.add_AESURF),
+            #'AESURFS' : (AESURFS, self.add_AESURF),
+
+            #'TRIM' : (TRIM, self.add_TRIM),
+            #'FLUTTER' : (FLUTTER, self.add_FLUTTER),
+            #'FLFACT' : (FLFACT, self.add_FLFACT),
+            #'GUST' : (GUST, self.add_GUST),
+            #'CSSCHD' : (CSSCHD, self.add_CSSCHD),
+            #'NLPARM' : (NLPARM, self.add_NLPARM),
+            #'NLPCI' : (NLPCI, self.add_NLPCI),
+            #'TSTEP' : (TSTEP, self.add_TSTEP),
+            #'TSTEPNL' : (TSTEPNL, self.add_TSTEPNL),
+
+            #'CAERO1' : (CAERO1, self.add_CAERO),
+            #'CAERO2' : (CAERO2, self.add_CAERO),
+            #'CAERO3' : (CAERO3, self.add_CAERO),
+            #'CAERO4' : (CAERO4, self.add_CAERO),
+            #'CAERO5' : (CAERO5, self.add_CAERO),
+
+            #'PAERO1' : (PAERO1, self.add_PAERO),
+            #'PAERO2' : (PAERO2, self.add_PAERO),
+            #'PAERO3' : (PAERO3, self.add_PAERO),
+            ##'PAERO4' : (PAERO4, self.add_PAERO),
+            'PAERO5' : (PAERO5, self.add_PAERO),
+
+            #'SPLINE1' : (SPLINE1, self.add_SPLINE),
+            #'SPLINE2' : (SPLINE2, self.add_SPLINE),
+            #'SPLINE3' : (SPLINE3, self.add_SPLINE),
+            #'SPLINE4' : (SPLINE4, self.add_SPLINE),
+            #'SPLINE5' : (SPLINE5, self.add_SPLINE),
+
         }
         self._card_parser_a = {
             'PBEAM' : (PBEAM, self.add_property),
@@ -1481,15 +1522,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'PIHEX' : (PIHEX, self.add_property),
 
             'PHBDY' : (PHBDY, self.add_PHBDY),
-            'AERO' : (AERO, self.add_AERO),
-            'AEROS' : (AEROS, self.add_AEROS),
-            'AECOMP' : (AECOMP, self.add_AECOMP),
-            'AEFACT' : (AEFACT, self.add_AEFACT),
-            'AELINK' : (AELINK, self.add_AELINK),
-            'AELIST' : (AELIST, self.add_AELIST),
-            'AEPARM' : (AEPARM, self.add_AEPARM),
-            'AESTAT' : (AESTAT, self.add_AESTAT),
-            'AESURF' : (AESURF, self.add_AESURF),
             'AESURFS' : (AESURFS, self.add_AESURF),
 
             'TRIM' : (TRIM, self.add_TRIM),
@@ -1546,7 +1578,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'PAERO2' : (PAERO2, self.add_PAERO),
             'PAERO3' : (PAERO3, self.add_PAERO),
             #'PAERO4' : (PAERO4, self.add_PAERO),
-            'PAERO5' : (PAERO5, self.add_PAERO),
 
             'SPLINE1' : (SPLINE1, self.add_SPLINE),
             'SPLINE2' : (SPLINE2, self.add_SPLINE),

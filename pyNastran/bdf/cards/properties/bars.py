@@ -13,10 +13,11 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from six import integer_types
 from numpy import pi, array
 
-from pyNastran.bdf.field_writer_8 import set_blank_if_default, set_default_if_blank
+from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import Property
-from pyNastran.bdf.bdf_interface.assign_type import (integer, double,
-    double_or_blank, string, string_or_blank, blank, integer_or_double)
+from pyNastran.bdf.bdf_interface.assign_type import (
+    integer, double, double_or_blank, string, string_or_blank,
+    blank, integer_or_double)
 from pyNastran.utils.mathematics import integrate_line, integrate_positive_line
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
@@ -1300,7 +1301,7 @@ class PBARL(LineProperty):
                        None, None, None] + self.dim + [self.nsm]
         return list_fields
 
-    def write_card(self, size, is_double):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)

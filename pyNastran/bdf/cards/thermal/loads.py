@@ -12,8 +12,9 @@ from pyNastran.bdf.cards.utils import wipe_empty_fields
 from pyNastran.bdf.cards.thermal.thermal import ThermalCard
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import expand_thru, expand_thru_by, collapse_thru_by, BaseCard
-from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_blank,
-    double, double_or_blank, integer_or_string, string, fields)
+from pyNastran.bdf.bdf_interface.assign_type import (
+    integer, integer_or_blank, double, double_or_blank, integer_or_string,
+    string, fields)
 
 
 class ThermalLoadDefault(ThermalCard):
@@ -498,7 +499,7 @@ class TEMP(ThermalLoad):
 
     def add(self, temp_obj):
         assert self.sid == temp_obj.sid
-        for (gid, temp) in iteritems(self.tempObj.temperatures):
+        for (gid, temp) in iteritems(temp_obj.temperatures):
             self.temperatures[gid] = temp
 
     def cross_reference(self, model):

@@ -10,7 +10,6 @@ All static loads are defined in this file.  This includes:
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-import sys
 from six import integer_types, PY3
 from six.moves import zip, range
 
@@ -41,10 +40,6 @@ class Load(BaseCard):
     @property
     def node_ids(self):
         return self._nodeIDs()
-
-    @node_ids.setter
-    def node_ids(self, value):
-        raise ValueError("You cannot set node IDs like this...modify the node objects")
 
     def _nodeIDs(self, nodes=None):
         """returns nodeIDs for repr functions"""

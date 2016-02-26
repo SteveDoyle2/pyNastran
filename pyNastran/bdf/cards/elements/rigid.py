@@ -949,7 +949,7 @@ class RBE3(RigidElement):
         self.refgrid = self.ref_grid_id
 
         Gij = []
-        for i, Gij in enumerate(self.Gijs):
+        for Gij in self.Gijs:
             gij = []
             for giji in Gij:
                 gij.append(giji.nid)

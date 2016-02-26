@@ -68,8 +68,8 @@ def volume4(n1, n2, n3, n4):
 
     .. math:: V = \frac{(a-d) \cdot \left( (b-d) \times (c-d) \right) }{6}
     """
-    V = -dot(n1 - n4, cross(n2 - n4, n3 - n4)) / 6.
-    return V
+    volume = -dot(n1 - n4, cross(n2 - n4, n3 - n4)) / 6.
+    return volume
 
 
 def area_centroid(n1, n2, n3, n4):
@@ -248,28 +248,28 @@ class CHEXA8(SolidElement):
         for i, nid in enumerate(self.node_ids):
             assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
         if xref:
-            c = self.Centroid()
-            v = self.Volume()
-            assert isinstance(v, float)
+            centroid = self.Centroid()
+            volume = self.Volume()
+            assert isinstance(volume, float)
             for i in range(3):
-                assert isinstance(c[i], float)
+                assert isinstance(centroid[i], float)
 
     def Centroid(self):
         """
         Averages the centroids at the two faces
         """
         (n1, n2, n3, n4, n5, n6, n7, n8) = self.get_node_positions()
-        A1, c1 = area_centroid(n1, n2, n3, n4)
-        A2, c2 = area_centroid(n5, n6, n7, n8)
-        c = (c1 + c2) / 2.
-        return c
+        c1 = area_centroid(n1, n2, n3, n4)[1]
+        c2 = area_centroid(n5, n6, n7, n8)[1]
+        centroid = (c1 + c2) / 2.
+        return centroid
 
     def Volume(self):
         (n1, n2, n3, n4, n5, n6, n7, n8) = self.get_node_positions()
-        (A1, c1) = area_centroid(n1, n2, n3, n4)
-        (A2, c2) = area_centroid(n5, n6, n7, n8)
-        V = (A1 + A2) / 2. * norm(c1 - c2)
-        return abs(V)
+        (area1, c1) = area_centroid(n1, n2, n3, n4)
+        (area2, c2) = area_centroid(n5, n6, n7, n8)
+        volume = (area1 + area2) / 2. * norm(c1 - c2)
+        return abs(volume)
 
     def nodeIDs(self):
         self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
@@ -484,11 +484,11 @@ class CHEXA20(SolidElement):
         for i, nid in enumerate(self.node_ids):
             assert nid is None or isinstance(nid, int), 'nid%i is not an integer/blank; nid=%s' %(i, nid)
         if xref:
-            c = self.Centroid()
-            v = self.Volume()
-            assert isinstance(v, float)
+            centroid = self.Centroid()
+            volume = self.Volume()
+            assert isinstance(volume, float)
             for i in range(3):
-                assert isinstance(c[i], float)
+                assert isinstance(centroid[i], float)
 
     def Centroid(self):
         """
@@ -498,10 +498,10 @@ class CHEXA20(SolidElement):
          n6, n7, n8, n9, n10,
          n11, n12, n13, n14, n15,
          n16, n17, n18, n19, n20) = self.get_node_positions()
-        (A1, c1) = area_centroid(n1, n2, n3, n4)
-        (A2, c2) = area_centroid(n5, n6, n7, n8)
-        c = (c1 + c2) / 2.
-        return c
+        c1 = area_centroid(n1, n2, n3, n4)[1]
+        c2 = area_centroid(n5, n6, n7, n8)[1]
+        centroid = (c1 + c2) / 2.
+        return centroid
 
     def Volume(self):
         """
@@ -511,10 +511,10 @@ class CHEXA20(SolidElement):
          n6, n7, n8, n9, n10,
          n11, n12, n13, n14, n15,
          n16, n17, n18, n19, n20) = self.get_node_positions()
-        (A1, c1) = area_centroid(n1, n2, n3, n4)
-        (A2, c2) = area_centroid(n5, n6, n7, n8)
-        V = (A1 + A2) / 2. * norm(c1 - c2)
-        return abs(V)
+        (area1, c1) = area_centroid(n1, n2, n3, n4)
+        (area2, c2) = area_centroid(n5, n6, n7, n8)
+        volume = (area1 + area2) / 2. * norm(c1 - c2)
+        return abs(volume)
 
     def nodeIDs(self):
         self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
@@ -667,7 +667,7 @@ class CPENTA6(SolidElement):
             p1 = self.nodes_ref[n1i].get_position()
             p2 = self.nodes_ref[n2i].get_position()
             p3 = self.nodes_ref[n3i].get_position()
-            A = 0.5 * norm(cross(p1 - p2, p1 - p3))
+            area = 0.5 * norm(cross(p1 - p2, p1 - p3))
         else:
             (n1, n2, n3, n4) = pack2
             n1i = nids.index(n1 - 1)
@@ -679,8 +679,8 @@ class CPENTA6(SolidElement):
             p2 = self.nodes_ref[n2i].get_position()
             p3 = self.nodes_ref[n3i].get_position()
             p4 = self.nodes_ref[n4i].get_position()
-            A = 0.5 * norm(cross(p1 - p3, p2 - p4))
-        return [face_node_ids, A]
+            area = 0.5 * norm(cross(p1 - p3, p2 - p4))
+        return [face_node_ids, area]
 
     def _verify(self, xref=False):
         eid = self.Eid()
@@ -691,18 +691,18 @@ class CPENTA6(SolidElement):
         for i, nid in enumerate(nids):
             assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
         if xref:
-            c = self.Centroid()
-            v = self.Volume()
-            assert isinstance(v, float)
+            centroid = self.Centroid()
+            volume = self.Volume()
+            assert isinstance(volume, float)
             for i in range(3):
-                assert isinstance(c[i], float)
+                assert isinstance(centroid[i], float)
 
     def Centroid(self):
         (n1, n2, n3, n4, n5, n6) = self.get_node_positions()
         c1 = (n1 + n2 + n3) / 3.
         c2 = (n4 + n5 + n6) / 3.
-        c = (c1 + c2) / 2.
-        return c
+        centroid = (c1 + c2) / 2.
+        return centroid
 
     def Volume(self):
         (n1, n2, n3, n4, n5, n6) = self.get_node_positions()
@@ -710,8 +710,8 @@ class CPENTA6(SolidElement):
         area2 = 0.5 * norm(cross(n6 - n4, n5 - n4))
         c1 = (n1 + n2 + n3) / 3.
         c2 = (n4 + n5 + n6) / 3.
-        V = (area1 + area2) / 2. * norm(c1 - c2)
-        return abs(V)
+        volume = (area1 + area2) / 2. * norm(c1 - c2)
+        return abs(volume)
 
     def raw_fields(self):
         list_fields = ['CPENTA', self.eid, self.Pid()] + self._nodeIDs(allow_empty_nodes=False)
@@ -969,11 +969,11 @@ class CPENTA15(SolidElement):
         for i, nid in enumerate(nids):
             assert nid is None or isinstance(nid, int), 'nid%i is not an integer/blank; nid=%s' %(i, nid)
         if xref:
-            c = self.Centroid()
-            v = self.Volume()
-            assert isinstance(v, float)
+            centroid = self.Centroid()
+            volume = self.Volume()
+            assert isinstance(volume, float)
             for i in range(3):
-                assert isinstance(c[i], float)
+                assert isinstance(centroid[i], float)
 
     def Centroid(self):
         """
@@ -984,8 +984,8 @@ class CPENTA15(SolidElement):
          n11, n12, n13, n14, n15) = self.get_node_positions()
         c1 = (n1 + n2 + n3) / 3.
         c2 = (n4 + n5 + n6) / 3.
-        c = (c1 - c2) / 2.
-        return c
+        centroid = (c1 - c2) / 2.
+        return centroid
 
     def Volume(self):
         """
@@ -994,13 +994,13 @@ class CPENTA15(SolidElement):
         (n1, n2, n3, n4, n5,
          n6, n7, n8, n9, n10,
          n11, n12, n13, n14, n15) = self.get_node_positions()
-        A1 = Area(n3 - n1, n2 - n1)
-        A2 = Area(n6 - n4, n5 - n4)
+        area1 = Area(n3 - n1, n2 - n1)
+        area2 = Area(n6 - n4, n5 - n4)
         c1 = (n1 + n2 + n3) / 3.
         c2 = (n4 + n5 + n6) / 3.
 
-        V = (A1 + A2) / 2. * norm(c1 - c2)
-        return abs(V)
+        volume = (area1 + area2) / 2. * norm(c1 - c2)
+        return abs(volume)
 
     def nodeIDs(self):
         self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
@@ -1099,29 +1099,29 @@ class CPYRAM5(SolidElement):
         for i, nid in enumerate(nids):
             assert nid is None or isinstance(nid, int), 'nid%i is not an integer/blank; nid=%s' %(i, nid)
         if xref:
-            c = self.Centroid()
-            v = self.Volume()
-            assert isinstance(v, float)
+            centroid = self.Centroid()
+            volume = self.Volume()
+            assert isinstance(volume, float)
             for i in range(3):
-                assert isinstance(c[i], float)
+                assert isinstance(centroid[i], float)
 
     def Centroid(self):
         """
         .. seealso:: CPYRAM5.Centroid
         """
         (n1, n2, n3, n4, n5) = self.get_node_positions()
-        A1, c1 = area_centroid(n1, n2, n3, n4)
-        c = (c1 + n5) / 2.
-        return c
+        c1 = area_centroid(n1, n2, n3, n4)[1]
+        centroid = (c1 + n5) / 2.
+        return centroid
 
     def Volume(self):
         """
         .. seealso:: CPYRAM5.Volume
         """
         (n1, n2, n3, n4, n5) = self.get_node_positions()
-        A1, c1 = area_centroid(n1, n2, n3, n4)
-        V = A1 / 3. * norm(c1 - n5)
-        return abs(V)
+        area1, c1 = area_centroid(n1, n2, n3, n4)
+        volume = area1 / 3. * norm(c1 - n5)
+        return abs(volume)
 
     def nodeIDs(self):
         self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
@@ -1237,11 +1237,11 @@ class CPYRAM13(SolidElement):
         for i, nid in enumerate(nids):
             assert nid is None or isinstance(nid, int), 'nid%i is not an integer/blank; nid=%s' %(i, nid)
         if xref:
-            c = self.Centroid()
-            v = self.Volume()
-            assert isinstance(v, float)
+            centroid = self.Centroid()
+            volume = self.Volume()
+            assert isinstance(volume, float)
             for i in range(3):
-                assert isinstance(c[i], float)
+                assert isinstance(centroid[i], float)
 
     def Centroid(self):
         """
@@ -1250,9 +1250,9 @@ class CPYRAM13(SolidElement):
         (n1, n2, n3, n4, n5,
          n6, n7, n8, n9, n10,
          n11, n12, n13) = self.get_node_positions()
-        A1, c1 = area_centroid(n1, n2, n3, n4)
-        c = (c1 + n5) / 2.
-        return c
+        c1 = area_centroid(n1, n2, n3, n4)[1]
+        centroid = (c1 + n5) / 2.
+        return centroid
 
     def Volume(self):
         """
@@ -1261,9 +1261,9 @@ class CPYRAM13(SolidElement):
         (n1, n2, n3, n4, n5,
          n6, n7, n8, n9, n10,
          n11, n12, n13) = self.get_node_positions()
-        A1, c1 = area_centroid(n1, n2, n3, n4)
-        V = A1 / 2. * norm(c1 - n5)
-        return abs(V)
+        area1, c1 = area_centroid(n1, n2, n3, n4)
+        volume = area1 / 2. * norm(c1 - n5)
+        return abs(volume)
 
     def nodeIDs(self):
         self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
@@ -1343,11 +1343,11 @@ class CTETRA4(SolidElement):
         for i, nid in enumerate(nids):
             assert isinstance(nid, int), 'nid%i is not an integer; nid=%s' %(i, nid)
         if xref:
-            c = self.Centroid()
-            v = self.Volume()
-            assert isinstance(v, float)
+            centroid = self.Centroid()
+            volume = self.Volume()
+            assert isinstance(volume, float)
             for i in range(3):
-                assert isinstance(c[i], float)
+                assert isinstance(centroid[i], float)
 
     def get_edge_ids(self):
         """
@@ -1546,11 +1546,11 @@ class CTETRA10(SolidElement):
         for i, nid in enumerate(nids):
             assert nid is None or isinstance(nid, int), 'nid%i is not an integer/blank; nid=%s' % (i, nid)
         if xref:
-            c = self.Centroid()
-            v = self.Volume()
-            assert isinstance(v, float)
+            centroid = self.Centroid()
+            volume = self.Volume()
+            assert isinstance(volume, float)
             for i in range(3):
-                assert isinstance(c[i], float)
+                assert isinstance(centroid[i], float)
 
     #def N_10(self, g1, g2, g3, g4):
         #N1 = g1 * (2 * g1 - 1)

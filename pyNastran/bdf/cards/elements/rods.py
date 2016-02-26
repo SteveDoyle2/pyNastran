@@ -3,11 +3,9 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six.moves import range
 
-from numpy import array
 from numpy.linalg import norm
 
 from pyNastran.utils import integer_types
-from pyNastran.utils.dev import list_print
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import Element #, Mid
 from pyNastran.bdf.bdf_interface.assign_type import (

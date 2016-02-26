@@ -18,8 +18,8 @@ from pyNastran.utils import integer_types
 from pyNastran.bdf.deprecated import DeprecatedCompositeShellProperty
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import Property, Material
-from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_blank, double,
-    double_or_blank, string_or_blank)
+from pyNastran.bdf.bdf_interface.assign_type import (
+    integer, integer_or_blank, double, double_or_blank, string_or_blank)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_8 import is_same
@@ -595,7 +595,7 @@ class PCOMP(CompositeShellProperty):
             theta = double_or_blank(card, i + 2, 'theta', 0.0)
             sout = string_or_blank(card, i + 3, 'sout', 'NO')
 
-            if not t > 0.:
+            if t <= 0.:
                 msg = ('thickness of PCOMP layer is invalid pid=%s'
                        ' iLayer=%s t=%s ply=[mid,t,theta,'
                        'sout]=%s' % (pid, iply, t, ply))

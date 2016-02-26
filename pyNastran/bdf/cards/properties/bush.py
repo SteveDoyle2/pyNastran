@@ -13,8 +13,9 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 
 from pyNastran.utils import integer_types
 from pyNastran.bdf.cards.base_card import Property
-from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_blank,
-    double, double_or_blank, string, string_or_blank, blank, fields)
+from pyNastran.bdf.bdf_interface.assign_type import (
+    integer, integer_or_blank, double, double_or_blank, string,
+    string_or_blank, blank, fields)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 
@@ -395,10 +396,10 @@ class PBUSH1D(BushingProperty):
             else:
                 msg = 'var=%s not supported PBUSH1D field...' % var
                 raise RuntimeError(msg)
-            nSpaces = 8 - (len(list_fields) - 1) % 8
+            nspaces = 8 - (len(list_fields) - 1) % 8
 
-            if nSpaces < 8:
-                list_fields += [None] * (nSpaces)
+            if nspaces < 8:
+                list_fields += [None] * (nspaces)
         return list_fields
 
     def repr_fields(self):
