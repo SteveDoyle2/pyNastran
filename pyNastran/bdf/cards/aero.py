@@ -223,9 +223,9 @@ class AELINK(BaseCard):
         Cis = []
 
         list_fields = [interpret_value(field) for field in card[3:]]
-        assert len(fields) % 2 == 0, 'fields=%s' % fields
-        for i in range(0, len(fields), 2):
-            independent_label = fields[i]
+        assert len(list_fields) % 2 == 0, 'list_fields=%s' % list_fields
+        for i in range(0, len(list_fields), 2):
+            independent_label = list_fields[i]
             Ci = list_fields[i + 1]
             independent_labels.append(independent_label)
             Cis.append(Ci)
@@ -410,19 +410,19 @@ class AESTAT(BaseCard):
         self.id = id
         self.label = label
 
-        @classmethod
-        def add_card(cls, card, comment=''):
-            id = integer(card, 1, 'ID')
-            label = string(card, 2, 'label')
-            assert len(card) <= 3, 'len(AESTAT card) = %i' % len(card)
-            return AESTAT(id, label, comment=comment)
+    @classmethod
+    def add_card(cls, card, comment=''):
+        id = integer(card, 1, 'ID')
+        label = string(card, 2, 'label')
+        assert len(card) <= 3, 'len(AESTAT card) = %i' % len(card)
+        return AESTAT(id, label, comment=comment)
 
-        @classmethod
-        def add_op2_data(self, data, comment=''):
-            id = data[0]
-            label = data[1]
-            assert len(data) == 2, 'data = %s' % data
-            return AESTAT(id, label, comment=comment)
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        id = data[0]
+        label = data[1]
+        assert len(data) == 2, 'data = %s' % data
+        return AESTAT(id, label, comment=comment)
 
     def cross_reference(self, model):
         pass
@@ -1997,15 +1997,15 @@ class CAERO5(BaseCard):
             # piston theory
             pass
         elif self.ntheory == 1:
-            gamma = 1.4
+            raise NotImplementedError('ntheory=%s' % self.ntheory)
+            #gamma = 1.4
             #Lambda = 0.
-            c1 = 1.
-
-            secL = 1 / np.cos(Lambda)
-            secL2 = secL ** 2
-            ma2_secL2 = mach ** 2 - secL2
-            c1 = mach / ma2_secL2 ** 0.5
-            c2 = (mach ** 4 * (gamma + 1) - 4 * secL2 * ma2_secL2) / (4 * ma2_secL2 ** 2)
+            #c1 = 1.
+            #secL = 1 / np.cos(Lambda)
+            #secL2 = secL ** 2
+            #ma2_secL2 = mach ** 2 - secL2
+            #c1 = mach / ma2_secL2 ** 0.5
+            #c2 = (mach ** 4 * (gamma + 1) - 4 * secL2 * ma2_secL2) / (4 * ma2_secL2 ** 2)
         else:
             gamma = 1.4
 
