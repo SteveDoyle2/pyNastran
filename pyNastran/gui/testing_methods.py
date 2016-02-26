@@ -120,6 +120,9 @@ class GuiAttributes(object):
         self.groups = {}
         self.group_active = 'main'
 
+    def create_coordinate_system(self, dim_max, label='', origin=None, matrix_3x3=None, Type='xyz'):
+        pass
+
     @property
     def nid_map(self):
         return self.nid_maps[self.name]

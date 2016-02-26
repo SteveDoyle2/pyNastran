@@ -6,12 +6,13 @@ import numpy as np
 from numpy import loadtxt
 import pyNastran
 
-def check_for_newer_version(window=None, pop_msg=False):
+def check_for_newer_version():
     """
     Checks to see if a newer version of pyNastran has been released.
     Only checks this for the GUI.
     """
-    current_version = pyNastran.__version__
+    is_newer = False
+    version_current = pyNastran.__version__
     target_url = 'https://raw.githubusercontent.com/SteveDoyle2/pyNastran/master/README.md'
     try:
         # it's a file like object and works just like a file
@@ -21,25 +22,25 @@ def check_for_newer_version(window=None, pop_msg=False):
     except: #  urllib2.URLError
         #print(help(urllib))
         #raise
-        return
+        return None, None, False
     for btye_line in data: # files are iterable
         line_lower = btye_line.lower().decode('utf-8')
         if 'has been released' in line_lower:
             sline = line_lower.split()
-            version = [slot for slot in sline if slot.startswith('v')][0][1:]
+            version_latest = [slot for slot in sline if slot.startswith('v')][0][1:]
             break
 
     is_dev = False
-    if 'dev' in current_version:
+    if 'dev' in version_current:
         is_dev = True
 
-    major, minor, rev = current_version.split('+')[0].split('.')
+    major, minor, rev = version_current.split('+')[0].split('.')
     major = int(major)
     minor = int(minor)
     rev = int(rev)
     tuple_current_version = (major, minor, rev)
 
-    major, minor, rev = version.split('_')[0].split('.')
+    major, minor, rev = version_latest.split('_')[0].split('.')
     major = int(major)
     minor = int(minor)
     rev = int(rev)
@@ -47,10 +48,13 @@ def check_for_newer_version(window=None, pop_msg=False):
     #print('tuple_latest_version = %s' % str(tuple_latest_version))  # (0,7,2)
     #print('tuple_current_version = %s' % str(tuple_current_version))  # (0,8,0)
 
+    #is_newer = True
     if tuple_current_version < tuple_latest_version or (is_dev and tuple_current_version <= tuple_latest_version):
-        print('pyNastran %s is now availible; current=%s' % (version, pyNastran.__version__))
-    #print('*pyNastran %s is now availible; current=%s' % (version, pyNastran.__version__))
-    return version
+        print('pyNastran %s is now availible; current=%s' % (version_latest, version_current))
+        is_newer = True
+    #print('*pyNastran %s is now availible; current=%s' % (version_latest, version_current))
+    return version_latest, version_current, is_newer
+
 
 def load_csv(out_filename):
     """
@@ -199,5 +203,5 @@ def load_user_geom(fname):
     return grid_ids, xyz, bars, tris, quads
 
 if __name__ == '__main__':
-    check_for_newer_version(window=None, pop_msg=True)
+    check_for_newer_version(window=None)
 

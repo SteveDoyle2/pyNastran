@@ -16,10 +16,6 @@ from PyQt4 import QtCore, QtGui
 import pyNastran
 from pyNastran.gui.utils import check_for_newer_version
 
-
-window = None
-check_for_newer_version(window, pop_msg=True)
-
 print("Using PyQt4")
 fmode = 1
 #except ImportError:
@@ -139,6 +135,15 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
 
         self.setup_gui()
         self.setup_post(inputs)
+        self._check_for_latest_version()
+
+    def _check_for_latest_version(self):
+        version_latest, version_current, is_newer = check_for_newer_version()
+        if is_newer:
+            url = pyNastran.__website__
+            from pyNastran.gui.menus.download import DownloadWindow
+            win = DownloadWindow(url, version_latest, win_parent=self)
+            win.show()
 
     def mousePressEvent(self, ev):
         if not self.run_vtk:
