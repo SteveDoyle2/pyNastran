@@ -485,6 +485,8 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
                         if hasattr(prop, 'mid') and prop.Mid() in mids:
                             if pid not in mid_to_pids_map[mid]:
                                 mid_to_pids_map[mid].append(pid)
+            elif prop.type in ['PBUSH']:
+                pass
             else:
                 if hasattr(prop, 'Mids'):
                     mids = prop.Mids()
