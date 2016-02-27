@@ -606,6 +606,7 @@ class OES(OP2Common):
             (53, 3, 37) : ('ctriax_stress', 'ComplexTriaxStress'),
 
             (102, 1, 7, b'OES1X1') : ('cbush_stress', RealBushStressArray),
+			(102, 1, 7, b'OES1X') : ('cbush_stress', RealBushStressArray),
             (102, 1, 7, b'OES1') : ('cbush_stress', RealBushStressArray),
             (102, 2, 13, b'OES1X') : ('cbush_stress', ComplexCBushStressArray),
             (102, 3, 13, b'OES1X') : ('cbush_stress', ComplexCBushStressArray),
