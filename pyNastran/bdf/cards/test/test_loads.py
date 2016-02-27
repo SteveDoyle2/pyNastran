@@ -498,7 +498,7 @@ class TestLoads(unittest.TestCase):
         card = BDFCard(card)
 
         size = 8
-        card = AESTAT(card)
+        card = AESTAT.add_card(card)
         card.write_card(size, 'dummy')
         card.raw_fields()
 

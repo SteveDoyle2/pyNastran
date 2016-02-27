@@ -595,7 +595,7 @@ class CONM1(PointMassElement):
         else:
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
-    def __init__(self):
+    def __init__(self, eid, nid, cid, mass, comment=''):
         """
         Concentrated Mass Element Connection, General Form
         Defines a 6 x 6 symmetric mass matrix at a geometric grid point
@@ -618,18 +618,19 @@ class CONM1(PointMassElement):
                 [                    M66]
         """
         PointMassElement.__init__(self)
-        self.mass_matrix = zeros((6, 6))
-
-    def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
-        m = self.mass_matrix
-        #self.nids = [card[1]]
-        #del self.nids
-        #self.pid = None
-        self.eid = integer(card, 1, 'eid')
-        self.nid = integer(card, 2, 'nid')
-        self.cid = integer_or_blank(card, 3, 'cid', 0)
+        self.mass_matrix = zeros((6, 6))
+        self.eid = eid
+        self.nid = nid
+        self.cid = cid
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        m = zeros((6, 6))
+        eid = integer(card, 1, 'eid')
+        nid = integer(card, 2, 'nid')
+        cid = integer_or_blank(card, 3, 'cid', 0)
 
         m[0, 0] = double_or_blank(card, 4, 'M11', 0.)
         m[1, 0] = double_or_blank(card, 5, 'M21', 0.)
@@ -653,16 +654,16 @@ class CONM1(PointMassElement):
         m[5, 4] = double_or_blank(card, 23, 'M65', 0.)
         m[5, 5] = double_or_blank(card, 24, 'M66', 0.)
         assert len(card) <= 25, 'len(CONM1 card) = %i' % len(card)
+        return CONM1(eid, nid, cid, m, comment=comment)
 
-    def add_op2_data(self, data, comment=''):
-        if comment:
-            self._comment = comment
-        m = self.mass_matrix
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        m = zeros((6, 6))
         (eid, nid, cid, m1, m2a, m2b, m3a, m3b, m3c, m4a, m4b, m4c, m4d,
          m5a, m5b, m5c, m5d, m5e, m6a, m6b, m6c, m6d, m6e, m6f) = data
-        self.eid = eid
-        self.nid = nid
-        self.cid = cid
+        eid = eid
+        nid = nid
+        cid = cid
         m[0, 0] = m1   # M11
         m[1, 0] = m2a  # M21
         m[1, 1] = m2b  # M22
@@ -684,6 +685,7 @@ class CONM1(PointMassElement):
         m[5, 3] = m6d  # M64
         m[5, 4] = m6e  # M65
         m[5, 5] = m6f  # M66
+        return CONM1(eid, nid, cid, m, comment=comment)
 
     def _verify(self, xref=False):
         eid = self.Eid()

@@ -223,9 +223,9 @@ class AELINK(BaseCard):
         Cis = []
 
         list_fields = [interpret_value(field) for field in card[3:]]
-        assert len(fields) % 2 == 0, 'fields=%s' % fields
-        for i in range(0, len(fields), 2):
-            independent_label = fields[i]
+        assert len(list_fields) % 2 == 0, 'list_fields=%s' % list_fields
+        for i in range(0, len(list_fields), 2):
+            independent_label = list_fields[i]
             Ci = list_fields[i + 1]
             independent_labels.append(independent_label)
             Cis.append(Ci)
@@ -240,7 +240,7 @@ class AELINK(BaseCard):
 
         Returns
         -------
-        fields : List[int/float/str]
+        list_fields : List[int/float/str]
             the fields that define the card
         """
         list_fields = ['AELINK', self.id, self.label]
@@ -410,19 +410,19 @@ class AESTAT(BaseCard):
         self.id = id
         self.label = label
 
-        @classmethod
-        def add_card(cls, card, comment=''):
-            id = integer(card, 1, 'ID')
-            label = string(card, 2, 'label')
-            assert len(card) <= 3, 'len(AESTAT card) = %i' % len(card)
-            return AESTAT(id, label, comment=comment)
+    @classmethod
+    def add_card(cls, card, comment=''):
+        id = integer(card, 1, 'ID')
+        label = string(card, 2, 'label')
+        assert len(card) <= 3, 'len(AESTAT card) = %i' % len(card)
+        return AESTAT(id, label, comment=comment)
 
-        @classmethod
-        def add_op2_data(self, data, comment=''):
-            id = data[0]
-            label = data[1]
-            assert len(data) == 2, 'data = %s' % data
-            return AESTAT(id, label, comment=comment)
+    @classmethod
+    def add_op2_data(self, data, comment=''):
+        id = data[0]
+        label = data[1]
+        assert len(data) == 2, 'data = %s' % data
+        return AESTAT(id, label, comment=comment)
 
     def cross_reference(self, model):
         pass
@@ -678,21 +678,31 @@ class AESURFS(BaseCard):  # not integrated
     """
     type = 'AESURFS'
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self, id, label, list1, list2, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            self.id = integer(card, 1, 'ID')
-            self.label = string(card, 2, 'label')
-            self.list1 = integer(card, 4, 'list1')
-            self.list2 = integer(card, 6, 'list2')
-            assert len(card) <= 7, 'len(AESURFS card) = %i' % len(card)
-        else:
-            self.id = data[0]
-            self.label = data[1]
-            self.list1 = data[2]
-            self.list2 = data[3]
-            assert len(data) == 4, 'data = %s' % data
+        self.id = id
+        self.label = label
+        self.list1 = list1
+        self.list2 = list2
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        id = integer(card, 1, 'ID')
+        label = string(card, 2, 'label')
+        list1 = integer(card, 4, 'list1')
+        list2 = integer(card, 6, 'list2')
+        assert len(card) <= 7, 'len(AESURFS card) = %i' % len(card)
+        return AESURFS(id, label, list1, list2, comment=comment)
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        id = data[0]
+        label = data[1]
+        list1 = data[2]
+        list2 = data[3]
+        assert len(data) == 4, 'data = %s' % data
+        return AESURFS(id, label, list1, list2, comment=comment)
 
     def uncross_reference(self):
         pass
@@ -1156,7 +1166,8 @@ class CAERO1(BaseCard):
         else:
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self, eid, pid, cp, nspan, lspan, nchord, lchord, igid,
+                 p1, x12, p4, x43, comment=''):
         r"""
         ::
 
@@ -1171,54 +1182,64 @@ class CAERO1(BaseCard):
         """
         if comment:
             self._comment = comment
-        if card:
-            #: Element identification number
-            self.eid = integer(card, 1, 'eid')
+        #: Element identification number
+        self.eid = eid
 
-            #: Property identification number of a PAERO2 entry.
-            self.pid = integer(card, 2, 'pid')
+        #: Property identification number of a PAERO2 entry.
+        self.pid = pid
 
-            #: Coordinate system for locating point 1.
-            self.cp = integer_or_blank(card, 3, 'cp', 0)
+        #: Coordinate system for locating point 1.
+        self.cp = cp
+        self.nspan = nspan
+        self.lspan = lspan
+        self.nchord = nchord
+        self.lchord = lchord
+        self.igid = igid
+        self.p1 = p1
+        self.x12 = x12
+        self.p4 = p4
+        self.x43 = x43
 
-            self.nspan = integer_or_blank(card, 4, 'nspan', 0)
-            self.nchord = integer_or_blank(card, 5, 'nchord', 0)
+        if self.nspan == 0 and self.lspan == 0:
+            msg = 'NSPAN or LSPAN must be greater than 0'
+            raise ValueError(msg)
+        if self.nspan != 0 and self.lspan != 0:
+            msg = 'Either NSPAN or LSPAN must 0'
+            raise ValueError(msg)
 
-            self.lspan = integer_or_blank(card, 6, 'lspan', 0)
-            self.lchord = integer_or_blank(card, 7, 'lchord', 0)
+        if self.nchord == 0 and self.lchord == 0:
+            msg = 'NCHORD or LCHORD must be greater than 0'
+            raise ValueError(msg)
+        if self.nchord != 0 and self.lchord != 0:
+            msg = 'Either NCHORD or LCHORD must 0'
+            raise ValueError(msg)
 
-            self.igid = integer(card, 8, 'igid')
+    @classmethod
+    def add_card(cls, card, comment=''):
+        eid = integer(card, 1, 'eid')
+        pid = integer(card, 2, 'pid')
+        cp = integer_or_blank(card, 3, 'cp', 0)
+        nspan = integer_or_blank(card, 4, 'nspan', 0)
+        nchord = integer_or_blank(card, 5, 'nchord', 0)
+        lspan = integer_or_blank(card, 6, 'lspan', 0)
+        lchord = integer_or_blank(card, 7, 'lchord', 0)
+        igid = integer(card, 8, 'igid')
 
-            self.p1 = np.array([
-                double_or_blank(card, 9, 'x1', 0.0),
-                double_or_blank(card, 10, 'y1', 0.0),
-                double_or_blank(card, 11, 'z1', 0.0)])
-            self.x12 = double_or_blank(card, 12, 'x12', 0.)
+        p1 = np.array([
+            double_or_blank(card, 9, 'x1', 0.0),
+            double_or_blank(card, 10, 'y1', 0.0),
+            double_or_blank(card, 11, 'z1', 0.0)])
+        x12 = double_or_blank(card, 12, 'x12', 0.)
 
-            self.p4 = np.array([
-                double_or_blank(card, 13, 'x4', 0.0),
-                double_or_blank(card, 14, 'y4', 0.0),
-                double_or_blank(card, 15, 'z4', 0.0)])
-            self.x43 = double_or_blank(card, 16, 'x43', 0.)
+        p4 = np.array([
+            double_or_blank(card, 13, 'x4', 0.0),
+            double_or_blank(card, 14, 'y4', 0.0),
+            double_or_blank(card, 15, 'z4', 0.0)])
+        x43 = double_or_blank(card, 16, 'x43', 0.)
 
-            if self.nspan == 0 and self.lspan == 0:
-                msg = 'NSPAN or LSPAN must be greater than 0'
-                raise ValueError(msg)
-            if self.nspan != 0 and self.lspan != 0:
-                msg = 'Either NSPAN or LSPAN must 0'
-                raise ValueError(msg)
-
-            if self.nchord == 0 and self.lchord == 0:
-                msg = 'NCHORD or LCHORD must be greater than 0'
-                raise ValueError(msg)
-            if self.nchord != 0 and self.lchord != 0:
-                msg = 'Either NCHORD or LCHORD must 0'
-                raise ValueError(msg)
-
-            assert len(card) <= 17, 'len(CAERO1 card) = %i' % len(card)
-        else:
-            msg = '%s has not implemented data parsing' % self.type
-            raise NotImplementedError(msg)
+        assert len(card) <= 17, 'len(CAERO1 card) = %i' % len(card)
+        return CAERO1(eid, pid, cp, nspan, lspan, nchord, lchord, igid,
+                      p1, x12, p4, x43, comment=comment)
 
     def _init_ids(self):
         """
@@ -1773,35 +1794,48 @@ class CAERO3(BaseCard):
 
 class CAERO4(BaseCard):
     type = 'CAERO4'
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self, eid, pid, cp, nspan, lspan, p1, x12, p4, x43,
+                 comment=''):
         if comment:
             self._comment = comment
-        if card:
-            #: Element identification number
-            self.eid = integer(card, 1, 'eid')
-            #: Property identification number of a PAERO4 entry.
-            self.pid = integer(card, 2, 'pid')
-            #: Coordinate system for locating point 1.
-            self.cp = integer_or_blank(card, 3, 'cp', 0)
 
-            self.nspan = integer_or_blank(card, 4, 'nspan', 0)
-            self.lspan = integer_or_blank(card, 5, 'lspan', 0)
+        #: Element identification number
+        self.eid = eid
 
-            self.p1 = np.array([
-                double_or_blank(card, 9, 'x1', 0.0),
-                double_or_blank(card, 10, 'y1', 0.0),
-                double_or_blank(card, 11, 'z1', 0.0)])
-            self.x12 = double_or_blank(card, 12, 'x12', 0.)
+        #: Property identification number of a PAERO4 entry.
+        self.pid = pid
 
-            self.p4 = np.array([
-                double_or_blank(card, 13, 'x4', 0.0),
-                double_or_blank(card, 14, 'y4', 0.0),
-                double_or_blank(card, 15, 'z4', 0.0)])
-            self.x43 = double_or_blank(card, 16, 'x43', 0.)
-            assert len(card) <= 17, 'len(CAERO4 card) = %i' % len(card)
-        else:
-            msg = '%s has not implemented data parsing' % self.type
-            raise NotImplementedError(msg)
+        #: Coordinate system for locating point 1.
+        self.cp = cp
+        self.nspan = nspan
+        self.lspan = lspan
+        self.p1 = p1
+        self.x12 = x12
+        self.p4 = p4
+        self.x43 = x43
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        eid = integer(card, 1, 'eid')
+        pid = integer(card, 2, 'pid')
+        cp = integer_or_blank(card, 3, 'cp', 0)
+        nspan = integer_or_blank(card, 4, 'nspan', 0)
+        lspan = integer_or_blank(card, 5, 'lspan', 0)
+
+        p1 = np.array([
+            double_or_blank(card, 9, 'x1', 0.0),
+            double_or_blank(card, 10, 'y1', 0.0),
+            double_or_blank(card, 11, 'z1', 0.0)])
+        x12 = double_or_blank(card, 12, 'x12', 0.)
+
+        p4 = np.array([
+            double_or_blank(card, 13, 'x4', 0.0),
+            double_or_blank(card, 14, 'y4', 0.0),
+            double_or_blank(card, 15, 'z4', 0.0)])
+        x43 = double_or_blank(card, 16, 'x43', 0.)
+        assert len(card) <= 17, 'len(CAERO4 card) = %i' % len(card)
+        return CAERO4(eid, pid, cp, nspan, lspan, p1, x12, p4, x43,
+                      comment=comment)
 
     def get_points(self):
         p1 = self.cp_ref.transform_node_to_global(self.p1)
@@ -1878,43 +1912,59 @@ class CAERO4(BaseCard):
 
 class CAERO5(BaseCard):
     type = 'CAERO5'
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self, eid, pid, cp, nspan, lspan, ntheory, nthick,
+                 p1, x12, p4, x43, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            #: Element identification number
-            self.eid = integer(card, 1, 'eid')
-            #: Property identification number of a PAERO5 entry.
-            self.pid = integer(card, 2, 'pid')
-            #: Coordinate system for locating point 1.
-            self.cp = integer_or_blank(card, 3, 'cp', 0)
-            self.nspan = integer_or_blank(card, 4, 'nspan', 0)
-            self.lspan = integer_or_blank(card, 5, 'lspan', 0)
-            self.ntheory = integer_or_blank(card, 6, 'ntheory')
-            self.nthick = integer_or_blank(card, 7, 'nthick')
-            # 8 - blank
-            self.p1 = np.array([
-                double_or_blank(card, 9, 'x1', 0.0),
-                double_or_blank(card, 10, 'y1', 0.0),
-                double_or_blank(card, 11, 'z1', 0.0)])
-            self.x12 = double(card, 12, 'x12')
-            assert self.x12 > 0., 'x12=%s' % self.x12
-            self.p4 = np.array([
-                double_or_blank(card, 13, 'x4', 0.0),
-                double_or_blank(card, 14, 'y4', 0.0),
-                double_or_blank(card, 15, 'z4', 0.0)])
-            self.x43 = double_or_blank(card, 16, 'x43', 0.0)
-            assert len(card) <= 17, 'len(CAERO3 card) = %i' % len(card)
-        else:
-            msg = '%s has not implemented data parsing' % self.type
-            raise NotImplementedError(msg)
 
+        #: Element identification number
+        self.eid = eid
+
+        #: Property identification number of a PAERO5 entry.
+        self.pid = pid
+
+        #: Coordinate system for locating point 1.
+        self.cp = cp
+        self.nspan = nspan
+        self.lspan = lspan
+        self.ntheory = ntheory
+        self.nthick = nthick
+        self.p1 = p1
+        self.x12 = x12
+        self.p4 = p4
+        self.x43 = x43
+
+        assert self.x12 > 0., 'x12=%s' % self.x12
         if not (self.nspan > 0 or self.lspan > 0):
             msg = 'nspan=%r or lspan=%r must be > 0' % (self.nspan, self.lspan)
             raise ValueError(msg)
         if not (self.x12 > 0.0 or self.x43 > 0.0):
             msg = 'x12=%r or x43=%r must be > 0.0' % (self.x12, self.x43)
             raise ValueError(msg)
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        eid = integer(card, 1, 'eid')
+        pid = integer(card, 2, 'pid')
+        cp = integer_or_blank(card, 3, 'cp', 0)
+        nspan = integer_or_blank(card, 4, 'nspan', 0)
+        lspan = integer_or_blank(card, 5, 'lspan', 0)
+        ntheory = integer_or_blank(card, 6, 'ntheory')
+        nthick = integer_or_blank(card, 7, 'nthick')
+        # 8 - blank
+        p1 = np.array([
+            double_or_blank(card, 9, 'x1', 0.0),
+            double_or_blank(card, 10, 'y1', 0.0),
+            double_or_blank(card, 11, 'z1', 0.0)])
+        x12 = double(card, 12, 'x12')
+        p4 = np.array([
+            double_or_blank(card, 13, 'x4', 0.0),
+            double_or_blank(card, 14, 'y4', 0.0),
+            double_or_blank(card, 15, 'z4', 0.0)])
+        x43 = double_or_blank(card, 16, 'x43', 0.0)
+        assert len(card) <= 17, 'len(CAERO3 card) = %i' % len(card)
+        return CAERO5(eid, pid, cp, nspan, lspan, ntheory, nthick,
+                      p1, x12, p4, x43, comment=comment)
 
     def cross_reference(self, model):
         """
@@ -2550,25 +2600,25 @@ class MKAERO1(BaseCard):
     """
     type = 'MKAERO1'
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self, machs, reduced_freqs, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            list_fields = [interpret_value(field) for field in card[1:]]
-            nfields = len(list_fields) - 8
-            self.machs = []
-            self.rFreqs = []
-            for i in range(1, 1 + nfields):
-                self.machs.append(double_or_blank(card, i, 'mach'))
-                self.rFreqs.append(double_or_blank(card, i + 8, 'rFreq'))
-            self.machs = wipe_empty_fields(self.machs)
-            self.v = wipe_empty_fields(self.rFreqs)
-        else:
-            msg = '%s has not implemented data parsing' % self.type
-            raise NotImplementedError(msg)
+        self.machs = machs
+        self.reduced_freqs = reduced_freqs
 
-        #print("machs  = ",self.machs)
-        #print("rFreqs = ",self.rFreqs)
+    @classmethod
+    def add_card(cls, card, comment=''):
+        list_fields = [interpret_value(field) for field in card[1:]]
+        nfields = len(list_fields) - 8
+        machs = []
+        reduced_freqs = []
+        for i in range(1, 1 + nfields):
+            machs.append(double_or_blank(card, i, 'mach'))
+            reduced_freqs.append(double_or_blank(card, i + 8, 'rFreq'))
+
+        machs = wipe_empty_fields(machs)
+        reduced_freqs = wipe_empty_fields(reduced_freqs)
+        return MKAERO1(machs, reduced_freqs, comment=comment)
 
     def uncross_reference(self):
         pass
@@ -2577,8 +2627,8 @@ class MKAERO1(BaseCard):
         self.getMach_rFreqs()
         for m in mkaero.machs:
             self.machs.append(m)
-        for f in mkaero.rFreqs:
-            self.rFreqs.append(f)
+        for f in mkaero.reduced_freqs:
+            self.reduced_freqs.append(f)
 
     def raw_fields(self):
         """
@@ -2590,13 +2640,13 @@ class MKAERO1(BaseCard):
             the fields that define the card
         """
         #list_fields = ['MKAERO1']
-        #for (i, mach, rfreq) in zip(count(), self.machs, self.rFreqs):
+        #for (i, mach, rfreq) in zip(count(), self.machs, self.reduced_freqs):
         #    list_fields += [mach, rfreq]
         machs = [None] * 8
         freqs = [None] * 8
         for i, mach in enumerate(self.machs):
             machs[i] = mach
-        for i, freq in enumerate(self.rFreqs):
+        for i, freq in enumerate(self.reduced_freqs):
             freqs[i] = freq
         list_fields = ['MKAERO1'] + machs + freqs
         return list_fields
@@ -2622,20 +2672,21 @@ class MKAERO2(BaseCard):
     """
     type = 'MKAERO2'
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self, machs, reduced_freqs, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            list_fields = card.fields(1)
-            nfields = len(list_fields)
-            self.machs = []
-            self.rFreqs = []
-            for i in range(1, 1 + nfields, 2):
-                self.machs.append(double(card, i, 'mach'))
-                self.rFreqs.append(double(card, i + 1, 'rFreq'))
-        else:
-            msg = '%s has not implemented data parsing' % self.type
-            raise NotImplementedError(msg)
+        self.machs = machs
+        self.reduced_freqs = reduced_freqs
+
+    def add_card(cls, card, comment=''):
+        list_fields = card.fields(1)
+        nfields = len(list_fields)
+        machs = []
+        reduced_freqs = []
+        for i in range(1, 1 + nfields, 2):
+            machs.append(double(card, i, 'mach'))
+            reduced_freqs.append(double(card, i + 1, 'rFreq'))
+        return MKAERO2(machs, reduced_freqs, comment=comment)
 
     def uncross_reference(self):
         pass
@@ -2644,8 +2695,8 @@ class MKAERO2(BaseCard):
         self.getMach_rFreqs()
         for m in mkaero.machs:
             self.machs.append(m)
-        for f in mkaero.rFreqs:
-            self.rFreqs.append(f)
+        for f in mkaero.reduced_freqs:
+            self.reduced_freqs.append(f)
 
     def raw_fields(self):
         """
@@ -2657,12 +2708,12 @@ class MKAERO2(BaseCard):
             the fields that define the card
         """
         list_fields = ['MKAERO2']
-        for (i, mach, rfreq) in zip(count(), self.machs, self.rFreqs):
+        for (i, mach, rfreq) in zip(count(), self.machs, self.reduced_freqs):
             list_fields += [mach, rfreq]
         return list_fields
 
     def getMach_rFreqs(self):
-        return self.machs, self.rFreqs
+        return self.machs, self.reduced_freqs
 
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
@@ -2746,24 +2797,26 @@ class PAERO1(BaseCard):
         """
         self.Bi[n - 1] = value
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self, pid, Bi, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            self.pid = integer(card, 1, 'pid')
-            Bi = [interpret_value(field) for field in card[2:]]
-            self.Bi = []
+        self.pid = pid
+        self.Bi = Bi
 
-            for bi in Bi:
-                if isinstance(bi, int) and bi >= 0:
-                    self.Bi.append(bi)
-                elif bi is not None:
-                    raise RuntimeError('invalid Bi value on PAERO1 bi=|%r|' % (bi))
-                #else:
-                #    pass
-        else:
-            msg = '%s has not implemented data parsing' % self.type
-            raise NotImplementedError(msg)
+    @classmethod
+    def add_card(cls, card, comment=''):
+        self.pid = integer(card, 1, 'pid')
+        Bi = [interpret_value(field) for field in card[2:]]
+        Bi2 = []
+
+        for bi in Bi:
+            if isinstance(bi, int) and bi >= 0:
+                Bi2.append(bi)
+            elif bi is not None:
+                raise RuntimeError('invalid Bi value on PAERO1 bi=|%r|' % (bi))
+            #else:
+            #    pass
+        return PAERO1(pid, Bi, comment=comment)
 
     def cross_reference(self, model):
         pass

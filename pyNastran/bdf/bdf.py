@@ -1400,7 +1400,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             ## hasnt been verified, links up to MAT1, MAT2, MAT9 w/ same MID
             'CREEP' : (CREEP, self.add_creep_material),
 
-            #'CONM1' : (CONM1, self.add_mass),
+            'CONM1' : (CONM1, self.add_mass),
             'CONM2' : (CONM2, self.add_mass),
             'CMASS1' : (CMASS1, self.add_mass),
             'CMASS2' : (CMASS2, self.add_mass),
@@ -1448,6 +1448,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'RLOAD1' : (RLOAD1, self.add_dload_entry),
             'RLOAD2' : (RLOAD2, self.add_dload_entry),
 
+
             'DOPTPRM' : (DOPTPRM, self._add_doptprm),
             'DESVAR' : (DESVAR, self.add_DESVAR),
             # BCTSET
@@ -1462,7 +1463,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'AEPARM' : (AEPARM, self.add_AEPARM),
             'AESTAT' : (AESTAT, self.add_AESTAT),
             'AESURF' : (AESURF, self.add_AESURF),
-            #'AESURFS' : (AESURFS, self.add_AESURF),
+            'AESURFS' : (AESURFS, self.add_AESURF),
 
             #'TRIM' : (TRIM, self.add_TRIM),
             #'FLUTTER' : (FLUTTER, self.add_FLUTTER),
@@ -1474,13 +1475,13 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             #'TSTEP' : (TSTEP, self.add_TSTEP),
             #'TSTEPNL' : (TSTEPNL, self.add_TSTEPNL),
 
-            #'CAERO1' : (CAERO1, self.add_CAERO),
+            'CAERO1' : (CAERO1, self.add_CAERO),
             #'CAERO2' : (CAERO2, self.add_CAERO),
             #'CAERO3' : (CAERO3, self.add_CAERO),
-            #'CAERO4' : (CAERO4, self.add_CAERO),
-            #'CAERO5' : (CAERO5, self.add_CAERO),
+            'CAERO4' : (CAERO4, self.add_CAERO),
+            'CAERO5' : (CAERO5, self.add_CAERO),
 
-            #'PAERO1' : (PAERO1, self.add_PAERO),
+            'PAERO1' : (PAERO1, self.add_PAERO),
             #'PAERO2' : (PAERO2, self.add_PAERO),
             #'PAERO3' : (PAERO3, self.add_PAERO),
             ##'PAERO4' : (PAERO4, self.add_PAERO),
@@ -1492,12 +1493,20 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             #'SPLINE4' : (SPLINE4, self.add_SPLINE),
             #'SPLINE5' : (SPLINE5, self.add_SPLINE),
 
+            #'MONPNT1' : (MONPNT1, self.add_MONPNT),
+            'MKAERO1' : (MKAERO1, self.add_MKAERO),
+            'MKAERO2' : (MKAERO2, self.add_MKAERO),
+
+            'TF' : (TF, self.add_TF),
+            #'DELAY' : (DELAY, self.add_DELAY),
+            #'DCONADD' : (DCONADD, self.add_DCONADD),
+
             #'DTABLE' : (DTABLE, self.add_DTABLE),
-            #'DRESP1' : (DRESP1, self.add_DRESP),
-            #'DRESP2' : (DRESP2, self.add_DRESP), # deqatn
-            #'DRESP3' : (DRESP3, self.add_DRESP),
+            'DRESP1' : (DRESP1, self.add_DRESP),
+            'DRESP2' : (DRESP2, self.add_DRESP), # deqatn
+            'DRESP3' : (DRESP3, self.add_DRESP),
             'DVPREL1' : (DVPREL1, self.add_DVPREL),
-            #'DVPREL2' : (DVPREL2, self.add_DVPREL), # deqatn
+            'DVPREL2' : (DVPREL2, self.add_DVPREL), # deqatn
             #'DVMREL1' : (DVMREL1, self.add_DVMREL),
             #'DVMREL2' : (DVMREL2, self.add_DVMREL), # deqatn
             #DVCREL1
@@ -1516,8 +1525,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
             # there is no MAT6 or MAT7
             #'MATHE' : (MATHE, self.add_hyperelastic_material),
-
-            'CONM1' : (CONM1, self.add_mass),
             # BCTSET
 
             # not added to new
@@ -1532,7 +1539,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'PIHEX' : (PIHEX, self.add_property),
 
             'PHBDY' : (PHBDY, self.add_PHBDY),
-            'AESURFS' : (AESURFS, self.add_AESURF),
 
             'TRIM' : (TRIM, self.add_TRIM),
             'FLUTTER' : (FLUTTER, self.add_FLUTTER),
@@ -1550,7 +1556,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'DLINK' : (DLINK, self.add_DLINK),
             'PARAM' : (PARAM, self.add_PARAM),
 
-            'TF' : (TF, self.add_TF),
             'DELAY' : (DELAY, self.add_DELAY),
             'DCONADD' : (DCONADD, self.add_DCONADD),
 
@@ -1578,13 +1583,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'PCONV' : (PCONV, self.add_convection_property),
             'PCONVM' : (PCONVM, self.add_convection_property),
 
-            'CAERO1' : (CAERO1, self.add_CAERO),
             'CAERO2' : (CAERO2, self.add_CAERO),
             'CAERO3' : (CAERO3, self.add_CAERO),
-            'CAERO4' : (CAERO4, self.add_CAERO),
-            'CAERO5' : (CAERO5, self.add_CAERO),
 
-            'PAERO1' : (PAERO1, self.add_PAERO),
             'PAERO2' : (PAERO2, self.add_PAERO),
             'PAERO3' : (PAERO3, self.add_PAERO),
             #'PAERO4' : (PAERO4, self.add_PAERO),
@@ -1594,10 +1595,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'SPLINE3' : (SPLINE3, self.add_SPLINE),
             'SPLINE4' : (SPLINE4, self.add_SPLINE),
             'SPLINE5' : (SPLINE5, self.add_SPLINE),
-
             'MONPNT1' : (MONPNT1, self.add_MONPNT),
-            'MKAERO1' : (MKAERO1, self.add_MKAERO),
-            'MKAERO2' : (MKAERO2, self.add_MKAERO),
 
             #'SESUP' : (SESUP, self.add_SESUP),  # pseudo-constraint
 
@@ -1637,10 +1635,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             #'SEUSET1' : (SEUSET1, self.add_SEUSET),
 
             'DTABLE' : (DTABLE, self.add_DTABLE),
-            'DRESP1' : (DRESP1, self.add_DRESP),
-            'DRESP2' : (DRESP2, self.add_DRESP), # deqatn
-            'DRESP3' : (DRESP3, self.add_DRESP),
-            'DVPREL2' : (DVPREL2, self.add_DVPREL), # deqatn
             'DVMREL1' : (DVMREL1, self.add_DVMREL),
             #'DVMREL2' : (DVMREL2, self.add_DVMREL), # deqatn
             #DVCREL1

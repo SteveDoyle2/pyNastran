@@ -564,15 +564,27 @@ class NLPCI(BaseCard):
 
 class TF(BaseCard):
     type = 'TF'
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self, sid, nid0, c, b0, b1, b2, grids1, components1, a, comment=''):
         if comment:
             self._comment = comment
-        self.sid = integer(card, 1, 'sid')
-        self.nid0 = integer(card, 2, 'nid0')
-        self.c = components(card, 3, 'components_0')
-        self.b0 = double_or_blank(card, 4, 'b0', 0.)
-        self.b1 = double_or_blank(card, 5, 'b1', 0.)
-        self.b2 = double_or_blank(card, 6, 'b2', 0.)
+        self.sid = sid
+        self.nid0 = nid0
+        self.c = c
+        self.b0 = b0
+        self.b1 = b1
+        self.b2 = b2
+        self.grids1 = grids1
+        self.components1 = components1
+        self.a = a
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        sid = integer(card, 1, 'sid')
+        nid0 = integer(card, 2, 'nid0')
+        c = components(card, 3, 'components_0')
+        b0 = double_or_blank(card, 4, 'b0', 0.)
+        b1 = double_or_blank(card, 5, 'b1', 0.)
+        b2 = double_or_blank(card, 6, 'b2', 0.)
 
         nfields = len(card) - 9
         nrows = nfields // 8
@@ -594,6 +606,8 @@ class TF(BaseCard):
             self.components1.append(component1)
             self.a.append([a0, a1, a2])
         assert len(self.grids1) > 0, len(self.grids1)
+        return TF(sid, nid0, c, b0, b1, b2, grids1, components1, a,
+                  comment=comment)
 
     def raw_fields(self):
         list_fields = ['TF', self.sid, self.nid0, self.c, self.b0, self.b1, self.b2, None, None]

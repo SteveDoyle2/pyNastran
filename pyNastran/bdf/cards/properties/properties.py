@@ -318,7 +318,7 @@ class PLSOLID(SolidProperty):
             the BDF object
         """
         msg = ' which is required by PLSOLID pid=%s' % self.pid
-        self.mid = model.HyperelasticMaterial(self.mid, msg)
+        self.mid = model.HyperelasticMaterial(self.mid, msg) # MATHP, MATHE
         self.mid_ref = self.mid
 
     def uncross_reference(self):

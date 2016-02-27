@@ -442,7 +442,7 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
         for eid in self.element_ids:
             element = self.Element(eid)
             element_type = element.type
-            if element_type in ['CONROD', 'CONM2']:
+            if element_type in ['CONROD', 'CONM2', 'CELAS2', 'CELAS4', 'CDAMP2', 'CDAMP4']:
                 continue
             if hasattr(element, 'pid'):
                 pid = element.Pid()
@@ -490,11 +490,10 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
                         if hasattr(prop, 'mid') and prop.Mid() in mids:
                             if pid not in mid_to_pids_map[mid]:
                                 mid_to_pids_map[mid].append(pid)
-            elif prop_type in ['PGAP', 'PELAS', 'PVISC', 'PBUSH', 'PDAMP']:
+            elif prop_type in ['PGAP', 'PELAS', 'PVISC', 'PBUSH', 'PDAMP', 'PFAST']:
                 pass
             elif prop_type in ['PSHELL']:
                 mids = prop.material_ids
-                print(mids)
                 for i, mid in enumerate(mids):
                     if mid is None:
                         continue
@@ -587,7 +586,7 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
         return self.materials.keys()
 
     def get_material_ids(self):
-        return self.materials.keys() + self.thermal_materials.keys()
+        return self.materials.keys() + self.thermal_materials.keys() + self.hyperelastic_materials.keys()
 
     def get_thermal_material_ids(self):
         return self.thermal_materials.keys()
