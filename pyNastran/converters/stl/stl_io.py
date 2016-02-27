@@ -22,7 +22,7 @@ class STL_IO(object):
 
     def load_stl_geometry(self, stl_filename, dirname, name='main', plot=True):
         print("load_stl_geometry...")
-        skip_reading = self.removeOldGeometry(stl_filename)
+        skip_reading = self._remove_old_geometry(stl_filename)
         if skip_reading:
             return
 
@@ -116,7 +116,7 @@ class STL_IO(object):
         #cases[(ID, icase, 'Region', 1, 'centroid', '%i')] = regions
         itime = 0
         eids = arange(1, nelements + 1, dtype='int32')
-        nids = arange(1, nnodes+1, dtype='int32')
+        nids = arange(1, nnodes + 1, dtype='int32')
         if 0:
             cases[(ID, icase, 'ElementID', 1, 'centroid', '%i', '')] = eids
             cases[(ID, icase + 1, 'NodeID', 1, 'node', '%i', '')] = nids

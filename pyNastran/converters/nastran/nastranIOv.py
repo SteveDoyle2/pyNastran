@@ -237,6 +237,9 @@ class NastranIO(object):
             else:
                 print('skipping cid=%s; use a script and set self.show_cids=[%s] to view' % (cid, cid))
 
+    def _remove_old_geometry(self, bdf_filename):
+        return self._remove_old_nastran_geometry(bdf_filename)
+
     def _remove_old_nastran_geometry(self, bdf_filename):
         # skip_reading = self.removeOldGeometry(bdf_filename)
         skip_reading = False

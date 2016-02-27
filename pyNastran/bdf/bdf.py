@@ -8,19 +8,14 @@ see https://docs.plm.automation.siemens.com/tdoc/nxnastran/10/help/#uid:index
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import string_types, iteritems, itervalues, iterkeys, PY2
-from collections import defaultdict
-
-from codecs import open as codec_open
-# import io
 import os
 import sys
 import traceback
+from codecs import open as codec_open
+from collections import defaultdict
 
-if PY2:
-    import cPickle as pickle
-else:
-    import pickle
+from six import string_types, iteritems, itervalues, iterkeys, PY2
+from six.moves.cPickle import load, dump
 
 import numpy as np
 

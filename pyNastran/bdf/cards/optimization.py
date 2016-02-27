@@ -346,7 +346,7 @@ class DLINK(OptConstraint):
             ci = double(card, j + 1, 'Ci' + str(i))
             idvs.append(idv)
             Ci.append(ci)
-        return DLINK(oid, ddvid, c0, cmult, IDv, Ci, comment=comment)
+        return DLINK(oid, ddvid, c0, cmult, idvs, Ci, comment=comment)
 
     def raw_fields(self):
         list_fields = ['DLINK', self.oid, self.ddvid, self.c0, self.cmult]
@@ -469,6 +469,16 @@ class DRESP1(OptConstraint):
         """
         msg = ', which is required by %s oid=%s' % (self.type, self.oid)
         msg += '\n' + str(self)
+
+        op2_results = [
+            'VOLUME', 'LAMA', 'FRSPCF', 'TRIM', 'ESE', 'SPCFORCE', 'FRMASS',
+            'CFAILURE', 'CSTRAT', 'STRESS', 'DIVERG', 'TOTSE', 'COMP',
+            'TACCL', 'RMSACCL',
+            'RMSVELO',
+            'PSDDISP', 'RMSDISP',
+            'TFORC', 'FRFORC',
+            'TSPCF',
+        ]
         if self.ptype in ['ELEM']:
             self.atti = model.Elements(self.atti, msg=msg)
             self.atti_ref = self.atti
@@ -487,14 +497,7 @@ class DRESP1(OptConstraint):
                             'FRACCL', 'PSDACCL']:
             self.atti = model.Nodes(self.atti, msg=msg)
             self.atti_ref = self.atti
-        elif self.rtype in ['VOLUME', 'LAMA', 'FRSPCF', 'TRIM', 'ESE', 'SPCFORCE', 'FRMASS',
-                            'CFAILURE', 'CSTRAT', 'STRESS', 'DIVERG', 'TOTSE', 'COMP',
-                            'TACCL', 'RMSACCL',
-                            'RMSVELO',
-                            'PSDDISP', 'RMSDISP',
-                            'TFORC', 'FRFORC',
-                            'TSPCF',
-                            ]:
+        elif self.rtype in op2_results:
             pass
         else:
             msg = 'rtype=%r ptype=%r\n' % (self.rtype, self.ptype)
@@ -511,6 +514,15 @@ class DRESP1(OptConstraint):
         #if self.rtype in ['ELEM']:
             #self.atti = model.Elements(self.atti, msg=msg)
             #pass
+        op2_results = [
+            'VOLUME', 'CEIG', 'LAMA', 'FREQ', 'FRSPCF', 'TRIM', 'ESE', 'SPCFORCE', 'FRMASS',
+            'CFAILURE', 'CSTRAT', 'STRESS', 'DIVERG', 'TOTSE', 'COMP',
+            'TACCL', 'RMSACCL',
+            'PSDDISP', 'RMSDISP',
+            'TVELO', 'RMSVELO',
+            'TFORC', 'FRFORC',
+            'TSPCF',
+        ]
         if self.ptype in ['PSHELL', 'PBAR', 'PROD', 'PCOMP',
                           'PSOLID', 'PELAS', 'PBARL', 'PBEAM',
                           'PBEAML', 'PSHEAR', 'PTUBE',
@@ -530,14 +542,7 @@ class DRESP1(OptConstraint):
                             'FRACCL', 'PSDACCL']:
             #self.atti = model.Nodes(self.atti, msg=msg)
             data = [node if isinstance(node, integer_types) else node.nid for node in self.atti]
-        elif self.rtype in ['VOLUME', 'CEIG', 'LAMA', 'FREQ', 'FRSPCF', 'TRIM', 'ESE', 'SPCFORCE', 'FRMASS',
-                            'CFAILURE', 'CSTRAT', 'STRESS', 'DIVERG', 'TOTSE', 'COMP',
-                            'TACCL', 'RMSACCL',
-                            'PSDDISP', 'RMSDISP',
-                            'TVELO', 'RMSVELO',
-                            'TFORC', 'FRFORC',
-                            'TSPCF',
-                            ]:
+        elif self.rtype in op2_results:
             data = self.atti
             for value in data:
                 assert not isinstance(value, BaseCard), 'rtype=%s value=%s' % (self.rtype, value)
@@ -1061,9 +1066,8 @@ class DVMREL1(OptConstraint):  # similar to DVPREL1
             coeffs.append(end_fields[i + 1])
         if nfields % 2 == 1:
             print(card)
-            print("dvids = %s" % (self.dvids))
-            print("coeffs = %s" % (self.coeffs))
-            print(str(self))
+            print("dvids = %s" % (dvids))
+            print("coeffs = %s" % (coeffs))
             raise RuntimeError('invalid DVMREL1...')
         return DVMREL1(oid, Type, mid, mpName, mpMin, mpMax, c0,
                        dvids, coeffs, comment=comment)
