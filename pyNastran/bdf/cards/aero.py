@@ -2543,23 +2543,34 @@ class GUST(BaseCard):
         1: 'sid', 2:'dload', 3:'wg', 4:'x0', 5:'V',
     }
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self, sid, dload, wg, x0, V, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            self.sid = integer(card, 1, 'sid')
-            self.dload = integer(card, 2, 'dload')
-            self.wg = double(card, 3, 'wg')
-            self.x0 = double(card, 4, 'x0')
-            self.V = double_or_blank(card, 4, 'V')
-            assert len(card) <= 6, 'len(GUST card) = %i' % len(card)
-        else:
-            self.sid = data[0]
-            self.dload = data[1]
-            self.wg = data[2]
-            self.x0 = data[3]
-            self.V = data[4]
-            assert len(data) == 5, 'data = %s' % data
+        self.sid = sid
+        self.dload = dload
+        self.wg = wg
+        self.x0 = x0
+        self.V = V
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        self.sid = integer(card, 1, 'sid')
+        self.dload = integer(card, 2, 'dload')
+        self.wg = double(card, 3, 'wg')
+        self.x0 = double(card, 4, 'x0')
+        self.V = double_or_blank(card, 4, 'V')
+        assert len(card) <= 6, 'len(GUST card) = %i' % len(card)
+        return GUST(sid, dload, wg, x0, V, comment=comment)
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        self.sid = data[0]
+        self.dload = data[1]
+        self.wg = data[2]
+        self.x0 = data[3]
+        self.V = data[4]
+        assert len(data) == 5, 'data = %s' % data
+        return GUST(sid, dload, wg, x0, V, comment=comment)
 
     #def Angle(self):
         #angle = self.wg*self.t*(t-(x-self.x0)/self.V) # T is the tabular
@@ -3688,52 +3699,61 @@ class TRIM(BaseCard):
                 ni += 1
         raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self, sid, mach, q, labels, uxs, aeqr=0.0, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            #: Trim set identification number. (Integer > 0)
-            self.sid = integer(card, 1, 'sid')
-            #: Mach number. (Real > 0.0 and != 1.0)
-            self.mach = double(card, 2, 'mach')
-            assert self.mach >= 0.0 and self.mach != 1.0, 'mach = %s' % self.mach
-            #: Dynamic pressure. (Real > 0.0)
-            self.q = double(card, 3, 'q')
-            assert self.q > 0.0, 'q=%s' % self.q
-            #: The label identifying aerodynamic trim variables defined on an
-            #: AESTAT or AESURF entry.
-            self.labels = []
-            #: The magnitude of the aerodynamic extra point degree-of-freedom.
-            #: (Real)
-            self.uxs = []
-            #: Flag to request a rigid trim analysis (Real > 0.0 and < 1.0;
-            #: Default = 1.0. A value of 0.0 provides a rigid trim analysis,
-            #: not supported
+        #: Trim set identification number. (Integer > 0)
+        self.sid = sid
+        #: Mach number. (Real > 0.0 and != 1.0)
+        self.mach = mach
+        #: Dynamic pressure. (Real > 0.0)
+        self.q = q
 
-            label = string_or_blank(card, 4, 'label1')
-            if label:
-                ux = double(card, 5, 'ux1')
-                self.uxs.append(ux)
-                self.labels.append(label)
+        #: The label identifying aerodynamic trim variables defined on an
+        #: AESTAT or AESURF entry.
+        self.labels = labels
 
-            label = string_or_blank(card, 6, 'label2')
-            if label:
-                ux = double(card, 7, 'ux1')
-                self.uxs.append(ux)
-                self.labels.append(label)
-            self.aeqr = double_or_blank(card, 8, 'aeqr')
+        #: The magnitude of the aerodynamic extra point degree-of-freedom.
+        #: (Real)
+        self.uxs = uxs
 
-            i = 9
-            n = 3
-            while i < len(card):
-                label = string(card, i, 'label%i' % n)
-                ux = double(card, i + 1, 'ux%i' % n)
-                self.labels.append(label)
-                self.uxs.append(ux)
-                i += 2
-        else:
-            msg = '%s has not implemented data parsing' % self.type
-            raise NotImplementedError(msg)
+        #: Flag to request a rigid trim analysis (Real > 0.0 and < 1.0;
+        #: Default = 1.0. A value of 0.0 provides a rigid trim analysis,
+        #: not supported
+        self.aeqr = aeqr
+        assert self.mach >= 0.0 and self.mach != 1.0, 'mach = %s' % self.mach
+        assert self.q > 0.0, 'q=%s' % self.q
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        sid = integer(card, 1, 'sid')
+        mach = double(card, 2, 'mach')
+        q = double(card, 3, 'q')
+        labels = []
+        uxs = []
+
+        label = string_or_blank(card, 4, 'label1')
+        if label:
+            ux = double(card, 5, 'ux1')
+            uxs.append(ux)
+            labels.append(label)
+
+        label = string_or_blank(card, 6, 'label2')
+        if label:
+            ux = double(card, 7, 'ux1')
+            uxs.append(ux)
+            labels.append(label)
+        aeqr = double_or_blank(card, 8, 'aeqr', 0.0)
+
+        i = 9
+        n = 3
+        while i < len(card):
+            label = string(card, i, 'label%i' % n)
+            ux = double(card, i + 1, 'ux%i' % n)
+            labels.append(label)
+            uxs.append(ux)
+            i += 2
+        return TRIM(sid, mach, q, labels, uxs, aeqr, comment=comment)
 
     def raw_fields(self):
         """

@@ -166,21 +166,24 @@ class DESVAR(OptConstraint):
 class DDVAL(OptConstraint):
     type = 'DDVAL'
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self, oid, ddvals, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            self.oid = integer(card, 1, 'oid')
-            n = 1
-            ddvals = []
-            for i in range(2, len(card)):
-                ddval = double_string_or_blank(card, i, 'DDVAL%s' % n)
-                if ddval:
-                    ddvals.append(ddval)
-            self.ddvals = expand_thru_by(ddvals)
-            self.ddvals.sort()
-        else:
-            raise NotImplementedError(data)
+        self.oid = oid
+        self.ddvals = ddvals
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        oid = integer(card, 1, 'oid')
+        n = 1
+        ddvals = []
+        for i in range(2, len(card)):
+            ddval = double_string_or_blank(card, i, 'DDVAL%s' % n)
+            if ddval:
+                ddvals.append(ddval)
+        ddvals = expand_thru_by(ddvals)
+        ddvals.sort()
+        return DDVAL(oid, ddvals, comment=comment)
 
     def raw_fields(self):
         self.ddvals.sort()
@@ -305,7 +308,7 @@ class DOPTPRM(OptConstraint):
 class DLINK(OptConstraint):
     type = 'DLINK'
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self, oid, ddvid, c0, cmult, IDv, Ci, comment=''):
         """
         Multiple Design Variable Linking
         Relates one design variable to one or more other design variables.
@@ -318,25 +321,32 @@ class DLINK(OptConstraint):
         """
         if comment:
             self._comment = comment
-        if card:
-            self.oid = integer(card, 1, 'oid')
-            self.ddvid = integer(card, 2, 'ddvid')
-            self.c0 = double_or_blank(card, 3, 'c0', 0.)
-            self.cmult = double_or_blank(card, 4, 'cmult', 1.)
+        self.oid = oid
+        self.ddvid = ddvid
+        self.c0 = c0
+        self.cmult = cmult
+        self.IDv = IDv
+        self.Ci = Ci
 
-            nfields = len(card) - 4
-            n = nfields // 2
-            self.IDv = []
-            self.Ci = []
+    @classmethod
+    def add_card(cls, card, comment=''):
+        oid = integer(card, 1, 'oid')
+        ddvid = integer(card, 2, 'ddvid')
+        c0 = double_or_blank(card, 3, 'c0', 0.)
+        cmult = double_or_blank(card, 4, 'cmult', 1.)
 
-            for i in range(n):
-                j = 2 * i + 5
-                IDv = integer(card, j, 'IDv' + str(i))
-                Ci = double(card, j + 1, 'Ci' + str(i))
-                self.IDv.append(IDv)
-                self.Ci.append(Ci)
-        else:
-            raise RuntimeError(data)
+        nfields = len(card) - 4
+        n = nfields // 2
+        idvs = []
+        Ci = []
+
+        for i in range(n):
+            j = 2 * i + 5
+            idv = integer(card, j, 'IDv' + str(i))
+            ci = double(card, j + 1, 'Ci' + str(i))
+            idvs.append(idv)
+            Ci.append(ci)
+        return DLINK(oid, ddvid, c0, cmult, IDv, Ci, comment=comment)
 
     def raw_fields(self):
         list_fields = ['DLINK', self.oid, self.ddvid, self.c0, self.cmult]
@@ -995,50 +1005,68 @@ class DSCREEN(OptConstraint):
 class DVMREL1(OptConstraint):  # similar to DVPREL1
     type = 'DVMREL1'
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self, oid, Type, mid, mpName, mpMin, mpMax, c0,
+                 dvids, coeffs, comment=''):
         """
         Design Variable to Material Relation
-        Defines the relation between a material property and design variables.::
+        Defines the relation between a material property and design variables.
 
-          DVMREL1 ID TYPE MID MPNAME MPMIN MPMAX C0
-                  DVID1 COEF1 DVID2 COEF2 DVID3 COEF3 -etc.-
+
+        +---------+-------+-------+-------+--------+-------+-------+--------+
+        |    1    |   2   |   3   |   4   |    5   |   6   |   7   |    8   |
+        +=========+=======+=======+=======+========+=======+=======+========+
+        | DVMREL1 |  ID   | TYPE  |  MID  | MPNAME | MPMIN | MPMAX |   C0   |
+        +---------+-------+-------+-------+--------+-------+-------+--------+
+        |         | DVID1 | COEF1 | DVID2 | COEF2  | DVID3 | COEF3 | -etc.- |
+        +---------+-------+-------+-------+--------+-------+-------+--------+
         """
         if comment:
             self._comment = comment
-        if card:
-            self.oid = integer(card, 1, 'oid')
-            self.Type = string(card, 2, 'Type')
-            self.mid = integer(card, 3, 'mid')
-            self.mpName = string(card, 4, 'mpName')
-            #if self.mpName in ['E', 'RHO', 'NU']:  positive values
-                #self.mpMin = double_or_blank(card, 5, 'mpMin', 1e-15)
-            #else: # negative
-                #self.mpMin = double_or_blank(card, 5, 'mpMin', -1e-35)
-            self.mpMin = double_or_blank(card, 5, 'mpMin')  #: .. todo:: bad default
-            self.mpMax = double_or_blank(card, 6, 'mpMax', 1e20)
-            self.c0 = double_or_blank(card, 7, 'c0', 0.0)
+        self.oid = oid
+        self.Type = Type
+        self.mid = mid
+        self.mpName = mpName
+        self.mpMax = mpMax
+        self.mpMin = mpMin
+        self.c0 = c0
+        self.dvids = dvids
+        self.coeffs = coeffs
 
-            self.dvids = []
-            self.coeffs = []
-            end_fields = [interpret_value(field) for field in card[9:]]
-            #print "end_fields = ",end_fields
-            nfields = len(end_fields) - 1
-            if nfields % 2 == 1:
-                end_fields.append(None)
-                nfields += 1
+    @classmethod
+    def add_card(cls, card, comment=''):
+        oid = integer(card, 1, 'oid')
+        Type = string(card, 2, 'Type')
+        mid = integer(card, 3, 'mid')
+        mpName = string(card, 4, 'mpName')
+        #if self.mpName in ['E', 'RHO', 'NU']:  positive values
+            #self.mpMin = double_or_blank(card, 5, 'mpMin', 1e-15)
+        #else: # negative
+            #self.mpMin = double_or_blank(card, 5, 'mpMin', -1e-35)
+        mpMin = double_or_blank(card, 5, 'mpMin')  #: .. todo:: bad default
+        mpMax = double_or_blank(card, 6, 'mpMax', 1e20)
+        c0 = double_or_blank(card, 7, 'c0', 0.0)
 
-            i = 0
-            for i in range(0, nfields, 2):
-                self.dvids.append(end_fields[i])
-                self.coeffs.append(end_fields[i + 1])
-            if nfields % 2 == 1:
-                print(card)
-                print("dvids = %s" % (self.dvids))
-                print("coeffs = %s" % (self.coeffs))
-                print(str(self))
-                raise RuntimeError('invalid DVMREL1...')
-        else:
-            raise RuntimeError(data)
+        dvids = []
+        coeffs = []
+        end_fields = [interpret_value(field) for field in card[9:]]
+        #print "end_fields = ",end_fields
+        nfields = len(end_fields) - 1
+        if nfields % 2 == 1:
+            end_fields.append(None)
+            nfields += 1
+
+        i = 0
+        for i in range(0, nfields, 2):
+            dvids.append(end_fields[i])
+            coeffs.append(end_fields[i + 1])
+        if nfields % 2 == 1:
+            print(card)
+            print("dvids = %s" % (self.dvids))
+            print("coeffs = %s" % (self.coeffs))
+            print(str(self))
+            raise RuntimeError('invalid DVMREL1...')
+        return DVMREL1(oid, Type, mid, mpName, mpMin, mpMax, c0,
+                       dvids, coeffs, comment=comment)
 
     def cross_reference(self, model):
         """

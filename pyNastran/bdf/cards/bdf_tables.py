@@ -147,20 +147,25 @@ class TableObj(object):
 
 class DTABLE(BaseCard):
     type = 'DTABLE'
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self, default_values, comment=''):
         if comment:
             self._comment = comment
+        self.default_values = default_values
+
+    @classmethod
+    def add_card(cls, card, comment=''):
         nfields = len(card) - 1
         assert nfields % 2 == 0, nfields
 
-        self.default_values = {}
+        default_values = {}
         j = 1
         for i in range(1, nfields + 1, 2):
             label = string(card, i, 'label_%i' % j)
             value = double(card, i + 1, 'value_%i' % j)
-            assert label not in self.default_values, 'label_%i=%r is not unique' % (j, label)
-            self.default_values[label] = value
+            assert label not in default_values, 'label_%i=%r is not unique' % (j, label)
+            default_values[label] = value
             j += 1
+        return DTABLE(default_values, comment=comment)
 
     def __getitem__(self, key):
         return self.default_values[key]

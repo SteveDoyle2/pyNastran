@@ -1426,10 +1426,11 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'MOMENT1' : (MOMENT1, self.add_load),
             'MOMENT2' : (MOMENT2, self.add_load),
 
+            'LSEQ' : (LSEQ, self.add_LSEQ),
+            'LOAD' : (LOAD, self.add_load),
             'GRAV' : (GRAV, self.add_load),
             'ACCEL' : (ACCEL, self.add_load),
             'ACCEL1' : (ACCEL1, self.add_load),
-            'LOAD' : (LOAD, self.add_load),
             'PLOAD' : (PLOAD, self.add_load),
             'PLOAD1' : (PLOAD1, self.add_load),
             'PLOAD2' : (PLOAD2, self.add_load),
@@ -1465,10 +1466,10 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'AESURF' : (AESURF, self.add_AESURF),
             'AESURFS' : (AESURFS, self.add_AESURF),
 
-            #'TRIM' : (TRIM, self.add_TRIM),
+            'TRIM' : (TRIM, self.add_TRIM),
             #'FLUTTER' : (FLUTTER, self.add_FLUTTER),
             #'FLFACT' : (FLFACT, self.add_FLFACT),
-            #'GUST' : (GUST, self.add_GUST),
+            'GUST' : (GUST, self.add_GUST),
             #'CSSCHD' : (CSSCHD, self.add_CSSCHD),
             #'NLPARM' : (NLPARM, self.add_NLPARM),
             #'NLPCI' : (NLPCI, self.add_NLPCI),
@@ -1500,14 +1501,17 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'TF' : (TF, self.add_TF),
             #'DELAY' : (DELAY, self.add_DELAY),
             #'DCONADD' : (DCONADD, self.add_DCONADD),
+            #'DCONSTR' : (DCONSTR, self.add_DCONSTR),
+            'DDVAL' : (DDVAL, self.add_DDVAL),
+            'DLINK' : (DLINK, self.add_DLINK),
 
-            #'DTABLE' : (DTABLE, self.add_DTABLE),
+            'DTABLE' : (DTABLE, self.add_DTABLE),
             'DRESP1' : (DRESP1, self.add_DRESP),
             'DRESP2' : (DRESP2, self.add_DRESP), # deqatn
             'DRESP3' : (DRESP3, self.add_DRESP),
             'DVPREL1' : (DVPREL1, self.add_DVPREL),
             'DVPREL2' : (DVPREL2, self.add_DVPREL), # deqatn
-            #'DVMREL1' : (DVMREL1, self.add_DVMREL),
+            'DVMREL1' : (DVMREL1, self.add_DVMREL),
             #'DVMREL2' : (DVMREL2, self.add_DVMREL), # deqatn
             #DVCREL1
             # DVCREL2 - deqatn
@@ -1526,9 +1530,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             # there is no MAT6 or MAT7
             #'MATHE' : (MATHE, self.add_hyperelastic_material),
             # BCTSET
-
-            # not added to new
-            'LSEQ' : (LSEQ, self.add_LSEQ),
         }
         self._card_parser_b = {
             # CTETRA - added later
@@ -1540,10 +1541,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
             'PHBDY' : (PHBDY, self.add_PHBDY),
 
-            'TRIM' : (TRIM, self.add_TRIM),
             'FLUTTER' : (FLUTTER, self.add_FLUTTER),
             'FLFACT' : (FLFACT, self.add_FLFACT),
-            'GUST' : (GUST, self.add_GUST),
             'CSSCHD' : (CSSCHD, self.add_CSSCHD),
             'NLPARM' : (NLPARM, self.add_NLPARM),
             'NLPCI' : (NLPCI, self.add_NLPCI),
@@ -1552,8 +1551,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
             'SESET' : (SESET, self.add_SESET),
             'DCONSTR' : (DCONSTR, self.add_DCONSTR),
-            'DDVAL' : (DDVAL, self.add_DDVAL),
-            'DLINK' : (DLINK, self.add_DLINK),
             'PARAM' : (PARAM, self.add_PARAM),
 
             'DELAY' : (DELAY, self.add_DELAY),
@@ -1634,8 +1631,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             #'SEUSET' : (SEUSET, self.add_SEUSET),
             #'SEUSET1' : (SEUSET1, self.add_SEUSET),
 
-            'DTABLE' : (DTABLE, self.add_DTABLE),
-            'DVMREL1' : (DVMREL1, self.add_DVMREL),
             #'DVMREL2' : (DVMREL2, self.add_DVMREL), # deqatn
             #DVCREL1
             # DVCREL2 - deqatn

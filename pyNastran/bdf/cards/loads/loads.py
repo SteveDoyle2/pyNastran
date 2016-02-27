@@ -173,17 +173,22 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
     """
     type = 'LSEQ'
 
-    def __init__(self):
-        pass
-
-    def add_card(self, card, comment=''):
+    def __init__(self, sid, excite_id, lid, tid, comment=''):
         if comment:
             self._comment = comment
-        self.sid = integer(card, 1, 'sid')
-        self.excite_id = integer(card, 2, 'excite_id')
-        self.lid = integer(card, 3, 'lid')
-        self.tid = integer_or_blank(card, 4, 'tid')
+        self.sid = sid
+        self.excite_id = excite_id
+        self.lid = lid
+        self.tid = tid
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        sid = integer(card, 1, 'sid')
+        excite_id = integer(card, 2, 'excite_id')
+        lid = integer(card, 3, 'lid')
+        tid = integer_or_blank(card, 4, 'tid')
         assert len(card) <= 5, 'len(LSEQ card) = %i' % len(card)
+        return LSEQ(sid, excite_id, lid, tid, comment=comment)
 
     #def add_op2_data(self, data, comment=''):
         #self.sid = data[0]
