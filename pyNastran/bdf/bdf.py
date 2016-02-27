@@ -1492,6 +1492,16 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             #'SPLINE4' : (SPLINE4, self.add_SPLINE),
             #'SPLINE5' : (SPLINE5, self.add_SPLINE),
 
+            #'DTABLE' : (DTABLE, self.add_DTABLE),
+            #'DRESP1' : (DRESP1, self.add_DRESP),
+            #'DRESP2' : (DRESP2, self.add_DRESP), # deqatn
+            #'DRESP3' : (DRESP3, self.add_DRESP),
+            'DVPREL1' : (DVPREL1, self.add_DVPREL),
+            #'DVPREL2' : (DVPREL2, self.add_DVPREL), # deqatn
+            #'DVMREL1' : (DVMREL1, self.add_DVMREL),
+            #'DVMREL2' : (DVMREL2, self.add_DVMREL), # deqatn
+            #DVCREL1
+            # DVCREL2 - deqatn
         }
         self._card_parser_a = {
             'PBEAM' : (PBEAM, self.add_property),
@@ -1627,14 +1637,10 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             #'SEUSET1' : (SEUSET1, self.add_SEUSET),
 
             'DTABLE' : (DTABLE, self.add_DTABLE),
-
             'DRESP1' : (DRESP1, self.add_DRESP),
             'DRESP2' : (DRESP2, self.add_DRESP), # deqatn
             'DRESP3' : (DRESP3, self.add_DRESP),
-
-            'DVPREL1' : (DVPREL1, self.add_DVPREL),
             'DVPREL2' : (DVPREL2, self.add_DVPREL), # deqatn
-
             'DVMREL1' : (DVMREL1, self.add_DVMREL),
             #'DVMREL2' : (DVMREL2, self.add_DVMREL), # deqatn
             #DVCREL1

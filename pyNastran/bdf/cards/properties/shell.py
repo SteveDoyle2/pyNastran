@@ -1292,7 +1292,19 @@ class PSHELL(ShellProperty):
         return z
 
     def materials(self):
-        return [self.mid1, self.mid2, self.mid3, self.mid4]
+        materials = []
+        for i in range(1, 5):
+            name = 'mid%i_ref' % i
+            if hasattr(self, name):
+                mat = getattr(self, name)
+                materials.append(mat)
+            else:
+                materials.append(None)
+        return materials
+
+    @property
+    def material_ids(self):
+        return [self.Mid1(), self.Mid2(), self.Mid3(), self.Mid4()]
 
     #@property
     #def mid(self):

@@ -1065,7 +1065,8 @@ class DVMREL1(OptConstraint):  # similar to DVPREL1
 class DVPREL1(OptConstraint):  # similar to DVMREL1
     type = 'DVPREL1'
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self, oid, Type, pid, pNameFid, pMin, pMax, c0, dvids, coeffs,
+                       comment=''):
         """
         +---------+--------+--------+--------+-----+
         | DVPREL1 | 200000 | PCOMP  | 2000   |  T2 |
@@ -1075,38 +1076,59 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
         """
         if comment:
             self._comment = comment
-        if card:
-            self.oid = integer(card, 1, 'oid')
-            self.Type = string(card, 2, 'Type')
-            self.pid = integer(card, 3, 'pid')
-            self.pNameFid = integer_or_string(card, 4, 'pName_FID')
+        self.oid = oid
+        self.Type = Type
+        self.pid = pid
+        self.pNameFid = pNameFid
+        self.pMin = pMin
+        self.pMax = pMax
+        self.c0 = c0
+        self.dvids = dvids
+        self.coeffs = coeffs
 
-            #: Minimum value allowed for this property.
-            #: .. todo:: bad default (see DVMREL1)
-            self.pMin = double_or_blank(card, 5, 'pMin')
-            self.pMax = double_or_blank(card, 6, 'pMax', 1e20)
-            self.c0 = double_or_blank(card, 7, 'c0', 0.0)
+    @classmethod
+    def add_card(cls, card, comment=''):
+        oid = integer(card, 1, 'oid')
+        Type = string(card, 2, 'Type')
+        pid = integer(card, 3, 'pid')
+        pNameFid = integer_or_string(card, 4, 'pName_FID')
 
-            self.dvids = []
-            self.coeffs = []
-            endFields = [interpret_value(field) for field in card[9:]]
+        #: Minimum value allowed for this property.
+        #: .. todo:: bad default (see DVMREL1)
+        pMin = double_or_blank(card, 5, 'pMin')
+        pMax = double_or_blank(card, 6, 'pMax', 1e20)
+        c0 = double_or_blank(card, 7, 'c0', 0.0)
 
-            nfields = len(endFields) - 1
-            if nfields % 2 == 1:
-                endFields.append(None)
-                nfields += 1
-            i = 0
-            for i in range(0, nfields, 2):
-                self.dvids.append(endFields[i])
-                self.coeffs.append(endFields[i + 1])
-            if nfields % 2 == 1:
-                print(card)
-                print("dvids = %s" % (self.dvids))
-                print("coeffs = %s" % (self.coeffs))
-                print(str(self))
-                raise RuntimeError('invalid DVPREL1...')
-        else:
-            raise RuntimeError(data)
+        dvids = []
+        coeffs = []
+        end_fields = [interpret_value(field) for field in card[9:]]
+
+        nfields = len(end_fields) - 1
+        if nfields % 2 == 1:
+            end_fields.append(None)
+            nfields += 1
+        i = 0
+        for i in range(0, nfields, 2):
+            dvids.append(end_fields[i])
+            coeffs.append(end_fields[i + 1])
+        if nfields % 2 == 1:
+            print(card)
+            print("dvids = %s" % (dvids))
+            print("coeffs = %s" % (coeffs))
+            raise RuntimeError('invalid DVPREL1...')
+        return DVPREL1(oid, Type, pid, pNameFid, pMin, pMax, c0, dvids, coeffs,
+                       comment=comment)
+
+    def _verify(self, xref):
+        """
+        Verifies all methods for this object work
+
+        Parameters
+        ----------
+        xref : bool
+            has this model been cross referenced
+        """
+        pass
 
     def OptID(self):
         return self.oid
