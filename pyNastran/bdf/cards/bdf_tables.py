@@ -42,7 +42,7 @@ class Table(BaseCard):
         if axis == 0:
             axisType = 'LINEAR'
         else:
-            raise ValueError('axis=|%s|' % axis)
+            raise ValueError('axis=%r' % axis)
         return axisType
 
     def parse_fields(self, xy, nrepeated, is_data=False):
@@ -127,15 +127,15 @@ class TableObj(object):
         if 1:  # hardcoded b/c ENDT has been removed
             return xy
 
-        foundENDT = False
+        found_ENDT = False
         for value in xy:
             if isinstance(value, string_types) and 'ENDT' in value.upper():
-                foundENDT = True
+                found_ENDT = True
             else:
                 xy2.append(value)
 
         if not is_data:
-            assert foundENDT == True, xy
+            assert found_ENDT == True, xy
         return xy2
 
     def fields(self):
@@ -190,6 +190,7 @@ class DTABLE(BaseCard):
 
 class TABLED1(Table):
     type = 'TABLED1'
+    #def __init__(self, tid, xaxis, yaxis, xy, comment=''):
     def __init__(self, card=None, data=None, comment=''):
         Table.__init__(self, card, data)
         if comment:
@@ -208,11 +209,11 @@ class TABLED1(Table):
                 n = 9 + i * 2
                 if card.field(n) == 'ENDT':
                     break
-                x = double_or_string(card, n, 'x' + str(i + 1))
-                y = double_or_string(card, n + 1, 'y' + str(i + 1))
-                if x == 'SKIP' or y == 'SKIP':
+                xi = double_or_string(card, n, 'x' + str(i + 1))
+                yi = double_or_string(card, n + 1, 'y' + str(i + 1))
+                if xi == 'SKIP' or yi == 'SKIP':
                     continue
-                xy += [x, y]
+                xy += [xi, yi]
             string(card, nfields, 'ENDT')
             is_data = False
         else:

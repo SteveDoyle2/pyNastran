@@ -64,7 +64,7 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
         z2 = z1 + t
         if not ((-1.5*t <= z1 <= 1.5*t) or (-1.5*t <= z2 <= 1.5*t)):
             msg = '%s pid=%s midsurface: z1=%s z2=%s t=%s not in range of -1.5t < zi < 1.5t' % (
-                self.Type, self.pid, self.z1, self.z2, t)
+                self.type, self.pid, z1, z2, t)
             model.log.warning(msg)
 
     def uncross_reference(self):

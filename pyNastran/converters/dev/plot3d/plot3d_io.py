@@ -27,7 +27,7 @@ class Plot3d_io(object):
         #key = self.case_keys[self.icase]
         #case = self.result_cases[key]
 
-        skip_reading = self.removeOldGeometry(p3d_filename)
+        skip_reading = self._remove_old_geometry(p3d_filename)
         if skip_reading:
             return
 

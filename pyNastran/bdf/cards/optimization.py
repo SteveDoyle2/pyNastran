@@ -27,24 +27,36 @@ class OptConstraint(BaseCard):
 
 class DCONSTR(OptConstraint):
     type = 'DCONSTR'
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self, oid, rid, lid, uid, lowfq, highfq, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            self.oid = integer(card, 1, 'oid')
-            self.rid = integer(card, 2, 'rid')
-            self.lid = integer_double_or_blank(card, 3, 'lid', -1e20)
-            self.uid = integer_double_or_blank(card, 4, 'uid', 1e20)
-            self.lowfq = double_or_blank(card, 5, 'lowfq', 0.0)
-            self.highfq = double_or_blank(card, 6, 'highfq', 1e20)
-            assert len(card) <= 7, 'len(DCONSTR card) = %i' % len(card)
-        else:
-            self.oid = data[0]
-            self.rid = data[1]
-            self.lid = data[2]
-            self.uid = data[3]
-            self.lowfq = data[4]
-            self.highfq = data[5]
+        self.oid = oid
+        self.rid = rid
+        self.lid = lid
+        self.uid = uid
+        self.lowfq = lowfq
+        self.highfq = highfq
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        oid = integer(card, 1, 'oid')
+        rid = integer(card, 2, 'rid')
+        lid = integer_double_or_blank(card, 3, 'lid', -1e20)
+        uid = integer_double_or_blank(card, 4, 'uid', 1e20)
+        lowfq = double_or_blank(card, 5, 'lowfq', 0.0)
+        highfq = double_or_blank(card, 6, 'highfq', 1e20)
+        assert len(card) <= 7, 'len(DCONSTR card) = %i' % len(card)
+        return DCONSTR(oid, rid, lid, uid, lowfq, highfq, comment=comment)
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        oid = data[0]
+        rid = data[1]
+        lid = data[2]
+        uid = data[3]
+        lowfq = data[4]
+        highfq = data[5]
+        return DCONSTR(oid, rid, lid, uid, lowfq, highfq, comment=comment)
 
     def Rid(self):
         if isinstance(self.rid, integer_types):
@@ -923,18 +935,21 @@ class DRESP3(OptConstraint):
 class DCONADD(OptConstraint):
     type = 'DCONADD'
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self, dcid, dconstrs, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            self.dcid = integer(card, 1, 'dcid')
-            self.dconstrs = []
+        self.dcid = dcid
+        self.dconstrs = dconstrs
 
-            for i in range(1, len(card)):
-                dconstr = integer(card, i, 'dconstr_%i' % i)
-                self.dconstrs.append(dconstr)
-        else:
-            raise RuntimeError(data)
+    @classmethod
+    def add_card(cls, card, comment=''):
+        dcid = integer(card, 1, 'dcid')
+        dconstrs = []
+
+        for i in range(1, len(card)):
+            dconstr = integer(card, i, 'dconstr_%i' % i)
+            dconstrs.append(dconstr)
+        return DCONADD(dcid, dconstrs, comment=comment)
 
     def cross_reference(self, model):
         """

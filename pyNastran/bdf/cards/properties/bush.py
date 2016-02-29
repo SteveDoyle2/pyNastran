@@ -188,8 +188,21 @@ class PBUSH(BushingProperty):
 class PBUSH1D(BushingProperty):
     type = 'PBUSH1D'
 
+    #def __init__(self, pid, k, c, m, sa, se, comment=''):
     def __init__(self):
         BushingProperty.__init__(self)
+        #if comment:
+            #self._comment = comment
+
+        #: Property ID
+        #self.pid = pid
+        #self.k = k
+        #self.c = c
+        #self.m = m
+
+        #self.sa = sa
+        #self.se = se
+
         # SPRING parameters
         self.springType = None
         self.springIDT = None
@@ -225,25 +238,24 @@ class PBUSH1D(BushingProperty):
         self.shockIDETSD = None
         self.shockIDECSD = None
 
+    #@classmethod
     def add_card(self, card, comment=''):
         if comment:
             self._comment = comment
+        pid = integer(card, 1, 'pid')
+        k = double_or_blank(card, 2, 'k', 0.0)
+        c = double_or_blank(card, 3, 'c', 0.0)
+        m = double_or_blank(card, 4, 'm', 0.0)
 
-        #: Property ID
-        self.pid = integer(card, 1, 'pid')
-        self.k = double_or_blank(card, 2, 'k', 0.0)
-        self.c = double_or_blank(card, 3, 'c', 0.0)
-        self.m = double_or_blank(card, 4, 'm', 0.0)
-
-        self.sa = double_or_blank(card, 6, 'sa', 0.0)
-        self.se = double_or_blank(card, 7, 'se', 0.0)
+        sa = double_or_blank(card, 6, 'sa', 0.0)
+        se = double_or_blank(card, 7, 'se', 0.0)
 
         nfields = card.nfields
         self.vars = []
         istart = 9
         while istart < nfields:
             pname = string(card, istart, 'pname')
-            if   pname == 'SHOCKA':
+            if pname == 'SHOCKA':
                 istart = self._read_shock(card, istart)
             elif pname == 'SPRING':
                 self._read_spring(card, istart)
@@ -255,12 +267,20 @@ class PBUSH1D(BushingProperty):
                 break
             istart += 8
 
-    def add_op2_data(self, data, comment=''):
-        if comment:
-            self._comment = comment
-        self.pid = data[0]
-        self.b = data[1]
-        raise NotImplementedError('PBUSH1D data...')
+        self.pid = pid
+        self.k = k
+        self.c = c
+        self.m = m
+
+        self.sa = sa
+        self.se = se
+        #return PBUSH1D(pid, k, c, m, sa, se, vars, comment=comment)
+
+    #@classmethod
+    #def add_op2_data(cls, data, comment=''):
+        #pid = data[0]
+        #b = data[1]
+        #raise NotImplementedError('PBUSH1D data...')
 
     def _verify(self, xref=False):
         pid = self.Pid()

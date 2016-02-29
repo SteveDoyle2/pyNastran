@@ -121,31 +121,37 @@ class QBDY1(ThermalLoad):
     """
     type = 'QBDY1'
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self, sid, qFlux, eids, comment=''):
         ThermalLoad.__init__(self)
         if comment:
             self._comment = comment
-        if card:
-            #: Load set identification number. (Integer > 0)
-            self.sid = integer(card, 1, 'sid')
+        #: Load set identification number. (Integer > 0)
+        self.sid = sid
+        #: Heat flux into element (FLOAT)
+        self.qFlux = qFlux
+        #: CHBDYj element identification numbers (Integer)
+        #: .. todo:: use expand_thru_by ???
+        assert len(eids) > 0
+        self.eids = expand_thru(eids)
 
-            #: Heat flux into element (FLOAT)
-            self.qFlux = double(card, 2, 'qFlux')
-            eids = []
-            j = 1
-            for i in range(3, len(card)):
-                eid = integer_or_string(card, i, 'eid%i' % j)
-                eids.append(eid)
-                j += 1
-            #: CHBDYj element identification numbers (Integer)
-            assert len(eids) > 0
+    @classmethod
+    def add_card(cls, card, comment=''):
+        sid = integer(card, 1, 'sid')
+        qFlux = double(card, 2, 'qFlux')
+        eids = []
+        j = 1
+        for i in range(3, len(card)):
+            eid = integer_or_string(card, i, 'eid%i' % j)
+            eids.append(eid)
+            j += 1
+        return QBDY1(sid, qFlux, eids, comment=comment)
 
-            #: .. todo:: use expand_thru_by ???
-            self.eids = expand_thru(eids)
-        else:
-            self.sid = data[0]
-            self.qFlux = data[1]
-            self.eids = data[2:]
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        sid = data[0]
+        qFlux = data[1]
+        eids = data[2:]
+        return QBDY1(sid, qFlux, eids, comment=comment)
 
     def getLoads(self):
         self.deprecated('getLoads()', 'get_loads()', '0.8')
@@ -213,32 +219,41 @@ class QBDY2(ThermalLoad):  # not tested
     """
     type = 'QBDY2'
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self, sid, eid, qFlux, comment=''):
         ThermalLoad.__init__(self)
         if comment:
             self._comment = comment
-        if card:
-            #: Load set identification number. (Integer > 0)
-            self.sid = integer(card, 1, 'sid')
 
-            #: Identification number of an CHBDYj element. (Integer > 0)
-            self.eid = integer(card, 2, 'eid')
+        #: Load set identification number. (Integer > 0)
+        self.sid = sid
+        #: Identification number of an CHBDYj element. (Integer > 0)
+        self.eid = eid
+        #: Heat flux at the i-th grid point on the referenced CHBDYj
+        #: element. (Real or blank)
+        self.qFlux = qFlux
 
-            qFlux = []
-            j = 1
-            for i in range(3, len(card)):
-                q = double_or_blank(card, i, 'qFlux%i' % j)
-                qFlux.append(q)
-                j += 1
+    @classmethod
+    def add_card(cls, card, comment=''):
+        sid = integer(card, 1, 'sid')
+        eid = integer(card, 2, 'eid')
 
-            assert len(qFlux) > 0
-            #: Heat flux at the i-th grid point on the referenced CHBDYj
-            #: element. (Real or blank)
-            self.qFlux = wipe_empty_fields(qFlux)
-        else:
-            self.sid = data[0]
-            self.eid = data[1]
-            self.qFlux = data[2]
+        qFlux = []
+        j = 1
+        for i in range(3, len(card)):
+            q = double_or_blank(card, i, 'qFlux%i' % j)
+            qFlux.append(q)
+            j += 1
+
+        assert len(qFlux) > 0
+        qFlux = wipe_empty_fields(qFlux)
+        return QBDY2(sid, eid, qFlux, comment=comment)
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        sid = data[0]
+        eid = data[1]
+        qFlux = data[2]
+        return QBDY2(sid, eid, qFlux, comment=comment)
 
     def getLoads(self):
         self.deprecated('getLoads()', 'get_loads()', '0.8')
@@ -294,27 +309,40 @@ class QBDY3(ThermalLoad):
     """
     type = 'QBDY3'
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self, sid, Q0, cntrlnd, eids, comment=''):
         ThermalLoad.__init__(self)
         if comment:
             self._comment = comment
-        if card:
-            #: Load set identification number. (Integer > 0)
-            self.sid = integer(card, 1, 'sid')
-            #: Heat flux into element
-            self.Q0 = double(card, 2, 'Q0')
-            #: Control point for thermal flux load. (Integer > 0; Default = 0)
-            self.cntrlnd = integer_or_blank(card, 3, 'cntrlnd', 0)
 
-            nfields = card.nfields
-            eids = fields(integer_or_string, card, 'eid', i=4, j=nfields)
-            #: CHBDYj element identification numbers
-            self.eids = expand_thru_by(eids)
-        else:
-            self.sid = data[0]
-            self.Q0 = data[1]
-            self.cntrlnd = data[2]
-            self.eids = list(data[3:])
+        #: Load set identification number. (Integer > 0)
+        self.sid = sid
+
+        #: Heat flux into element
+        self.Q0 = Q0
+
+        #: Control point for thermal flux load. (Integer > 0; Default = 0)
+        self.cntrlnd = cntrlnd
+
+        #: CHBDYj element identification numbers
+        self.eids = expand_thru_by(eids)
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        sid = integer(card, 1, 'sid')
+        Q0 = double(card, 2, 'Q0')
+        cntrlnd = integer_or_blank(card, 3, 'cntrlnd', 0)
+
+        nfields = card.nfields
+        eids = fields(integer_or_string, card, 'eid', i=4, j=nfields)
+        return QBDY3(sid, Q0, cntrlnd, eids, comment=comment)
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        sid = data[0]
+        Q0 = data[1]
+        cntrlnd = data[2]
+        eids = list(data[3:])
+        return QBDY3(sid, Q0, cntrlnd, eids, comment=comment)
 
     def cross_reference(self, model):
         """
@@ -393,40 +421,54 @@ class QHBDY(ThermalLoad):
         'AREA8' : 8,
     }
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self, sid, flag, Q0, af, grids, comment=''):
         ThermalLoad.__init__(self)
         if comment:
             self._comment = comment
-        if card:
-            #: Load set identification number. (Integer > 0)
-            self.sid = integer(card, 1, 'eid')
 
-            self.flag = string(card, 2, 'flag')
-            assert self.flag in ['POINT', 'LINE', 'REV', 'AREA3', 'AREA4',
-                                 'AREA6', 'AREA8']
+        #: Load set identification number. (Integer > 0)
+        self.sid = sid
+        self.flag = flag
+        assert flag in ['POINT', 'LINE', 'REV', 'AREA3', 'AREA4',
+                        'AREA6', 'AREA8']
 
-            #: Magnitude of thermal flux into face. Q0 is positive for heat
-            #: into the surface. (Real)
-            self.Q0 = double(card, 3, 'Q0')
+        #: Magnitude of thermal flux into face. Q0 is positive for heat
+        #: into the surface. (Real)
+        self.Q0 = Q0
 
-            #: Area factor depends on type. (Real > 0.0 or blank)
-            self.af = double_or_blank(card, 4, 'af')
-            nfields = card.nfields
+        #: Area factor depends on type. (Real > 0.0 or blank)
+        self.af = af
 
-            nnodes = self.flag_to_nnodes[self.flag]
+        #: Grid point identification of connected grid points.
+        #: (Integer > 0 or blank)
+        self.grids = grids
 
-            #: Grid point identification of connected grid points.
-            #: (Integer > 0 or blank)
-            self.grids = []
-            for i in range(nnodes):
-                grid = integer(card, 5 + i, 'grid%i' % (i + 1))
-                self.grids.append(grid)
-        else:
-            self.sid = data[0]
-            self.flag = data[1]
-            self.Q0 = data[2]
-            self.af = data[3]
-            self.grids = data[4:]
+    @classmethod
+    def add_card(cls, card, comment=''):
+        sid = integer(card, 1, 'eid')
+
+        flag = string(card, 2, 'flag')
+        assert flag in ['POINT', 'LINE', 'REV', 'AREA3', 'AREA4',
+                        'AREA6', 'AREA8']
+
+        Q0 = double(card, 3, 'Q0')
+        af = double_or_blank(card, 4, 'af')
+        nnodes = cls.flag_to_nnodes[flag]
+
+        grids = []
+        for i in range(nnodes):
+            grid = integer(card, 5 + i, 'grid%i' % (i + 1))
+            grids.append(grid)
+        return QHBDY(sid, flag, Q0, af, grids, comment=comment)
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        sid = data[0]
+        flag = data[1]
+        Q0 = data[2]
+        af = data[3]
+        grids = data[4:]
+        return QHBDY(sid, flag, Q0, af, grids, comment=comment)
 
     def getLoads(self):
         self.deprecated('getLoads()', 'get_loads()', '0.8')
@@ -470,32 +512,40 @@ class TEMP(ThermalLoad):
     """
     type = 'TEMP'
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self, sid, temperatures, comment=''):
         ThermalLoad.__init__(self)
         if comment:
             self._comment = comment
-        if card:
-            #: Load set identification number. (Integer > 0)
-            self.sid = integer(card, 1, 'sid')
+        #: Load set identification number. (Integer > 0)
+        self.sid = sid
 
-            nfields = len(card)
-            assert nfields <= 8, 'len(card)=%i card=%s' % (len(card), card)
+        #: dictionary of temperatures where the key is the grid ID (Gi)
+        #: and the value is the temperature (Ti)
+        self.temperatures = temperatures
 
-            ntemps = (nfields -2) // 2
-            assert nfields % 2 == 0, card
+    @classmethod
+    def add_card(cls, card, comment=''):
+        sid = integer(card, 1, 'sid')
 
-            #: dictionary of temperatures where the key is the grid ID (Gi)
-            #: and the value is the temperature (Ti)
-            self.temperatures = {}
-            for i in range(ntemps):
-                n = i * 2 + 2
-                gi = integer(card, n, 'g' + str(i))
-                Ti = double(card, n + 1, 'T' + str(i))
-                self.temperatures[gi] = Ti
-        else:
-            #print "TEMP data = ",data
-            self.sid = data[0]
-            self.temperatures = {data[1]: data[2]}
+        nfields = len(card)
+        assert nfields <= 8, 'len(card)=%i card=%s' % (len(card), card)
+
+        ntemps = (nfields -2) // 2
+        assert nfields % 2 == 0, card
+
+        temperatures = {}
+        for i in range(ntemps):
+            n = i * 2 + 2
+            gi = integer(card, n, 'g' + str(i))
+            Ti = double(card, n + 1, 'T' + str(i))
+            temperatures[gi] = Ti
+        return TEMP(sid, temperatures, comment=comment)
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        sid = data[0]
+        temperatures = {data[1]: data[2]}
+        return TEMP(sid, temperatures, comment=comment)
 
     def add(self, temp_obj):
         assert self.sid == temp_obj.sid
@@ -518,7 +568,7 @@ class TEMP(ThermalLoad):
         for i, (gid, temp) in enumerate(sorted(iteritems(self.temperatures))):
             list_fields += [gid, temp]
             if i % 3 == 2 and ntemps > i:  # start a new TEMP card
-                list_fields += [None, 'TEMP', self.lid]
+                list_fields += [None, 'TEMP', self.sid]
         return list_fields
 
     def repr_fields(self):
@@ -555,19 +605,27 @@ class TEMPD(BaseCard):
     """
     type = 'TEMPD'
 
-    def __init__(self, card=None, icard=0, data=None, comment=''):
+    def __init__(self, sid, temperature, comment=''):
         BaseCard.__init__(self)
         if comment:
             self._comment = comment
-        if card:
-            nfields = len(card) - 1
-            assert nfields % 2 == 0
-            i = 2 * icard
-            self.sid = integer(card, i + 1, 'sid')
-            self.temperature = double(card, i + 2, 'temp')
-        else:
-            self.sid = data[0]
-            self.temperature = data[1]
+        self.sid = sid
+        self.temperature = temperature
+
+    @classmethod
+    def add_card(cls, card, icard=0, comment=''):
+        nfields = len(card) - 1
+        assert nfields % 2 == 0
+        i = 2 * icard
+        sid = integer(card, i + 1, 'sid')
+        temperature = double(card, i + 2, 'temp')
+        return TEMPD(sid, temperature, comment=comment)
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        sid = data[0]
+        temperature = data[1]
+        return TEMPD(sid, temperature, comment=comment)
 
     def add(self, tempd_obj):
         for (lid, tempd) in iteritems(tempd_obj.temperatures):
