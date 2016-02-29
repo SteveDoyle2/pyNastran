@@ -410,7 +410,6 @@ class TestOP2(Tester):
                 np.abs(total_moment_local_expected - total_moment_local))
             self.assertTrue(np.allclose(total_moment_local_expected, total_moment_local, atol=0.005), msg), msg
 
-    @unittest.expectedFailure
     def test_op2_solid_shell_bar_01_gpforce_global2_radial(self):
         folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'sol_101_elements'))
         bdf_filename = os.path.join(folder, 'static_solid_shell_bar_global2_radial.bdf')
@@ -579,6 +578,7 @@ class TestOP2(Tester):
                 np.abs(total_moment_local_expected - total_moment_local))
             self.assertTrue(np.allclose(total_moment_local_expected, total_moment_local, atol=0.005), msg), msg
 
+    @unittest.expectedFailure
     def test_op2_solid_shell_bar_01_gpforce_radial(self):
         folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'sol_101_elements'))
         #bdf_filename = os.path.join(folder, 'static_solid_shell_bar_radial.bdf')

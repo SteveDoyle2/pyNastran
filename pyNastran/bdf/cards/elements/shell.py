@@ -2244,6 +2244,17 @@ class CQUADX(QuadShell):
     def node_ids(self):
         return self._nodeIDs(allow_empty_nodes=True)
 
+    def _verify(self, xref):
+        """
+        Verifies all methods for this object work
+
+        Parameters
+        ----------
+        xref : bool
+            has this model been cross referenced
+        """
+        pass
+
     def raw_fields(self):
         list_fields = ['CQUADX', self.eid, self.Pid()] + self.node_ids
         return list_fields

@@ -286,7 +286,7 @@ class GUIMethods(GuiAttributes):
         level = 'debug' if self.debug else 'info'
         self.log = get_logger(log=None, level=level)
 
-    def removeOldGeometry(self, filename):
+    def _remove_old_geometry(self, filename):
         skip_reading = False
         return skip_reading
     def cycle_results(self):

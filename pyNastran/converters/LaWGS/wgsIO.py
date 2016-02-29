@@ -23,7 +23,7 @@ class LaWGS_IO(object):
         #key = self.case_keys[self.icase]
         #case = self.result_cases[key]
 
-        skip_reading = self.removeOldGeometry(lawgsFileName)
+        skip_reading = self._remove_old_geometry(lawgsFileName)
         if skip_reading:
             return
 

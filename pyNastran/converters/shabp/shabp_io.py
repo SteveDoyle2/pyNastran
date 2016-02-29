@@ -26,7 +26,7 @@ class ShabpIO(object):
         #key = self.case_keys[self.icase]
         #case = self.result_cases[key]
 
-        skip_reading = self.removeOldGeometry(shabpFilename)
+        skip_reading = self._remove_old_geometry(shabpFilename)
         if skip_reading:
             return
 

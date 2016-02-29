@@ -84,7 +84,7 @@ class Usm3dIO(object):
 
     def load_usm3d_geometry(self, cogsg_filename, dirname, name='main', plot=True):
         #print("load_usm3d_geometry...")
-        skip_reading = self.removeOldGeometry(cogsg_filename)
+        skip_reading = self._remove_old_geometry(cogsg_filename)
         if skip_reading:
             return
 

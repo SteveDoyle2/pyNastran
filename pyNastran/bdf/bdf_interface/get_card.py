@@ -418,7 +418,7 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
             for nid in sorted(self.spoints.spoints):  # SPOINTs
                 nid_to_elements_map[nid] = []
 
-        for (_, element) in iteritems(self.elements):  # load the mapper
+        for (eid, element) in iteritems(self.elements):  # load the mapper
             try:
                 # not supported for 0-D and 1-D elements
                 nids = element.node_ids
@@ -434,20 +434,24 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
         """
         Returns a dictionary that maps a property ID to a list of elemnents
         """
-        pidToEidsMap = {}
+        pid_to_eids_map = {}
         pids = self.property_ids
         for pid in pids:
-            pidToEidsMap[pid] = []
+            pid_to_eids_map[pid] = []
 
         for eid in self.element_ids:
             element = self.Element(eid)
-
+            element_type = element.type
+            if element_type in ['CONROD', 'CONM2', 'CELAS2', 'CELAS4', 'CDAMP2', 'CDAMP4']:
+                continue
             if hasattr(element, 'pid'):
                 pid = element.Pid()
-                if pid == 0:  # CONM2
-                    continue
-                pidToEidsMap[pid].append(eid)
-        return pidToEidsMap
+                try:
+                    pid_to_eids_map[pid].append(eid)
+                except KeyError:
+                    print(element)
+                    raise KeyError('pid=%s is invalid for card=\n%s' % (pid, str(element)))
+        return pid_to_eids_map
 
     def get_material_id_to_property_ids_map(self):
         """
@@ -475,7 +479,8 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
 
         for pid in self.property_ids:
             prop = self.Property(pid)
-            if prop.type in ['PCOMP', 'PCOMPG']:
+            prop_type = prop.type
+            if prop_type in ['PCOMP', 'PCOMPG']:
                 mids = prop.Mids()
 
                 for mid in mids:
@@ -485,14 +490,25 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
                         if hasattr(prop, 'mid') and prop.Mid() in mids:
                             if pid not in mid_to_pids_map[mid]:
                                 mid_to_pids_map[mid].append(pid)
+            elif prop_type in ['PGAP', 'PELAS', 'PVISC', 'PBUSH', 'PDAMP', 'PFAST']:
+                pass
+            elif prop_type in ['PSHELL']:
+                mids = prop.material_ids
+                for i, mid in enumerate(mids):
+                    if mid is None:
+                        continue
+                    try:
+                        mid_to_pids_map[mid].append(pid)
+                    except KeyError:
+                        print(prop)
+                        raise KeyError('i=%s mid=%s is invalid for card=\n%s' % (i, mid, str(prop)))
             else:
-                if hasattr(prop, 'Mids'):
-                    mids = prop.Mids()
-                else:
-                    mids = [prop.Mid()]
-
-                for mid in mids:
+                mid = prop.Mid()
+                try:
                     mid_to_pids_map[mid].append(pid)
+                except KeyError:
+                    print(prop)
+                    raise KeyError('mid=%s is invalid for card=\n%s' % (mid, str(prop)))
         return mid_to_pids_map
 
     def Element(self, eid, msg=''):
@@ -570,7 +586,7 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
         return self.materials.keys()
 
     def get_material_ids(self):
-        return self.materials.keys() + self.thermal_materials.keys()
+        return self.materials.keys() + self.thermal_materials.keys() + self.hyperelastic_materials.keys()
 
     def get_thermal_material_ids(self):
         return self.thermal_materials.keys()

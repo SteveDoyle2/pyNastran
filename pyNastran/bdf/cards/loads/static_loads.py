@@ -627,6 +627,8 @@ class ACCEL1(BaseCard):
         msg = ' which is required by ACCEL1 sid=%s' % self.sid
         self.cid = model.Coord(self.Cid(), msg=msg)
         self.nodes = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
+        self.cid_ref = self.cid
+        self.nodes_ref = self.nodes
 
     def Cid(self):
         if isinstance(self.cid, integer_types):

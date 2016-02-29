@@ -576,14 +576,16 @@ def transform_force_moment(force_in_local, moment_in_local,
         #moment_in_locali.astype('float64')
 
         # rotate loads from an arbitrary coordinate system to local xyz
-        if 1:
+        if 0:
             force_in_locali = -force_in_local[i, :]
             moment_in_locali = -moment_in_local[i, :]
         else:
-            force_in_locali = -force_in_local[i, :].T
-            moment_in_locali = -moment_in_local[i, :].T
-            force_in_locali = analysis_coord.coord_to_xyz_array(force_in_locali.T).T
-            moment_in_locali = analysis_coord.coord_to_xyz_array(moment_in_locali.T).T
+            force_in_locali = -force_in_local[i, :]
+            moment_in_locali = -moment_in_local[i, :]
+            print(analysis_coord)
+            print(force_in_locali)
+            force_in_locali = analysis_coord.coord_to_xyz_array(force_in_locali)
+            moment_in_locali = analysis_coord.coord_to_xyz_array(moment_in_locali)
 
 
             if debug:

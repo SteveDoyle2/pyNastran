@@ -326,28 +326,34 @@ class XrefMesh(BDFAttributes):
             dvprel.uncross_reference()
 
 
-    def convert(self, units_to):
+    def convert(self, units_to, units=None):
         """
+        Converts a model from a set of defined units
         Parameters
         ----------
         xref : bool
            cross references the model (default=True)
-
+        units_to : dict
+            ???
+        units : dict
+            overwrites self.units
         TODO: not done...
         """
         # units_start = 'in'
         # units_end = 'mm'
         # xyz_scale = in_to_mm
         # xyz_scale = 25.4
-        xyz_scale, mass_scale, weight_scale = get_scale_factors(self.units, units_to)
+        if units is None:
+            units = self.units
+        xyz_scale, mass_scale, weight_scale = get_scale_factors(units, units_to)
         self._convert_nodes(xyz_scale)
         self._convert_coordinates(xyz_scale)
-        self._convert_elements(xyz_scale, mass_scale)
-        self._convert_properties(xyz_scale, mass_scale)
+        self._convert_elements(xyz_scale, mass_scale, weight_scale)
+        self._convert_properties(xyz_scale, mass_scale, weight_scale)
         #self._convert_masses()
         self._convert_materials(xyz_scale, mass_scale, weight_scale)
 
-        #self._convert_aero()
+        self._convert_aero(xyz_scale)
         #self._convert_constraints()
         self._convert_loads(xyz_scale, weight_scale)
         #self._convert_sets()
@@ -367,26 +373,34 @@ class XrefMesh(BDFAttributes):
                 continue
             #print(coord.object_methods())
             #print(dir(coord))
-            if coord.rid_ref.type in ['CORD1R', 'CORD2R']:
+            if coord.type in ['CORD1C', 'CORD1S', 'CORD2C', 'CORD2S']:
                 coord.origin *= xyz_scale
+                coord.e1 *= xyz_scale
+            if coord.type in ['CORD1R', 'CORD2R']:
+                coord.origin *= xyz_scale
+                coord.e1 *= xyz_scale
+                coord.e2 *= xyz_scale
+                coord.e3 *= xyz_scale
             else:
-                # only scale R
-                coord.origin[0] *= xyz_scale
+                raise NotImplementedError(coord)
 
-    def _convert_elements(self, xyz_scale, mass_scale):
+    def _convert_elements(self, xyz_scale, mass_scale, weight_scale):
         area_scale = xyz_scale ** 2
         moi_scale = xyz_scale ** 4
         nsm_scale = mass_scale
         tri_shells = ['CTRIA3', 'CTRIAX', 'CTRIAX6']
         quad_shells = ['CQUAD4', 'CQUAD', 'CQUAD8', 'CQUADX', 'CQUADX8']
         skip_elements = ['CTETRA', 'CPENTA', 'CHEXA', 'CPYRAM', 'CROD']
-        spring_elements  = ['CELAS1', 'CELAS2', 'CELAS3', 'CELAS4']
+        spring_elements = ['CELAS1', 'CELAS2', 'CELAS3', 'CELAS4']
+        skip_elements = ['CELAS2', 'CELAS4']
+        stiffness_scale = weight_scale / xyz_scale
         for elem in itervalues(self.elements):
             elem_type = elem.type
             if elem_type in skip_elements:
                 continue
             if elem_type in spring_elements:
                 # TODO: scale k from lb/in to N/in
+                elem.k *= stiffness_scale
                 continue
             elif elem_type in tri_shells:
                 # thickness
@@ -395,7 +409,8 @@ class XrefMesh(BDFAttributes):
                 elem.T3 *= xyz_scale
 
                 # nsm
-                elem.nsm *= nsm_scale
+                #elem.nsm *= nsm_scale
+
             elif elem_type in quad_shells:
                 # thickness
                 elem.T1 *= xyz_scale
@@ -403,7 +418,8 @@ class XrefMesh(BDFAttributes):
                 elem.T3 *= xyz_scale
                 elem.T4 *= xyz_scale
                 # nsm
-                elem.nsm *= nsm_scale
+                #elem.nsm *= nsm_scale
+
             elif elem_type == 'CONROD':
                 elem.area *= area_scale
                 elem.nsm *= nsm_scale
@@ -416,10 +432,11 @@ class XrefMesh(BDFAttributes):
             else:
                 raise NotImplementedError(elem)
 
-    def _convert_properties(self, xyz_scale, mass_scale):
+    def _convert_properties(self, xyz_scale, mass_scale, weight_scale):
         area_scale = xyz_scale ** 2
         moi_scale = xyz_scale ** 4
         nsm_scale = mass_scale
+        stiffness_scale = weight_scale / xyz_scale
 
         skip_properties = ['PSOLID']
         for prop in itervalues(self.properties):
@@ -427,22 +444,24 @@ class XrefMesh(BDFAttributes):
             if prop_type in skip_properties:
                 continue
             elif prop_type == 'PELAS':
-                # TODO: stiffness
-                pass
+                prop.k *= stiffness_scale
             elif prop_type == 'PROD':
                 prop.area *= area_scale
                 prop.moi *= moi_scale
             elif prop_type == 'PBAR':
                 prop.area *= area_scale
                 prop.moi *= moi_scale
+            elif prop_type == 'PBARL':
+                prop.dim = [d * xyz_scale for d in prop.dim]
+                prop.nsm *= mass_scale
+
             elif prop_type == 'PBEAM':
                 prop.area *= area_scale
                 prop.moi *= moi_scale
             elif prop_type == 'PSHELL':
                 prop.t *= xyz_scale
             elif prop_type in ['PCOMP', 'PCOMPG']:
-                for layer in prop.layers:
-                    layer.t *= xyz_scale
+                prop.thicknesses = [t * xyz_scale for t in prop.thicknesses]
             else:
                 raise NotImplementedError(prop_type)
 
@@ -455,6 +474,14 @@ class XrefMesh(BDFAttributes):
                 mat.e *= pressure_scale
                 mat.g *= pressure_scale
                 mat.rho *= density_scale
+            elif mat_type == 'MAT8':
+                mat.e11 *= pressure_scale
+                mat.e22 *= pressure_scale
+                mat.g12 *= pressure_scale
+                mat.g1z *= pressure_scale
+                mat.g2z *= pressure_scale
+                mat.rho *= density_scale
+
             else:
                 raise NotImplementedError(mat)
 
@@ -474,6 +501,37 @@ class XrefMesh(BDFAttributes):
                     load.mag *= moment_scale
                 else:
                     raise NotImplementedError(load)
+
+    def _convert_aero(self, xyz_scale):
+        """
+        Converts the aero cards
+          - CAEROx, PAEROx, SPLINEx, AECOMP, AELIST, AEPARAM, AESTAT, AESURF, AESURFS
+        """
+        for caero in itervalues(self.caeros):
+            if caero.type in ['CAERO1']:
+                caero.p1 *= xyz_scale
+                caero.p4 *= xyz_scale
+                caero.x12 *= xyz_scale
+                caero.x43 *= xyz_scale
+            else:
+                raise NotImplementedError(caero)
+        #for paero in itervalues(self.paeros):
+            #paero.cross_reference(self)
+
+        #for spline in itervalues(self.splines):
+            #spline.convert(self)
+        #for aecomp in itervalues(self.aecomps):
+            #aecomp.cross_reference(self)
+        #for aelist in itervalues(self.aelists):
+            #aelist.cross_reference(self)
+        #for aeparam in itervalues(self.aeparams):
+            #aeparam.cross_reference(self)
+        #for aestat in itervalues(self.aestats):
+            #aestat.cross_reference(self)
+        #for aesurf in itervalues(self.aesurf):
+            #aesurf.cross_reference(self)
+        #for aesurfs in itervalues(self.aesurfs):
+            #aesurfs.cross_reference(self)
 
     def cross_reference(self, xref=True,
                         xref_elements=True,
@@ -975,6 +1033,10 @@ class XrefMesh(BDFAttributes):
             # pyram warp <= 0.707
 
 def get_scale_factors(units_from, units_to):
+    """
+    [length, mass, time]
+    [in, lb, s]
+    """
     scales = []
     # in-lb-s
     # m-kg-s

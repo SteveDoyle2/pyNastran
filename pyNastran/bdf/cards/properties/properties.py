@@ -318,7 +318,7 @@ class PLSOLID(SolidProperty):
             the BDF object
         """
         msg = ' which is required by PLSOLID pid=%s' % self.pid
-        self.mid = model.HyperelasticMaterial(self.mid, msg)
+        self.mid = model.HyperelasticMaterial(self.mid, msg) # MATHP, MATHE
         self.mid_ref = self.mid
 
     def uncross_reference(self):
@@ -366,9 +366,25 @@ class PSOLID(SolidProperty):
         self.cordm = cordm
         #valid_integration = ['THREE', 'TWO', 'FULL', 'BUBBLE',
         #                     2, 3, None, 'REDUCED']
+
+        # note that None is supposed to vary depending on element type
+        # 0-BUBBLE (not for midside nodes)
+        # 1-GAUSS
+        # 2-TWO
+        # 3-THREE
         self.integ = integ
+
+        # blank/GRID
+        # 1-GAUSS
         self.stress = stress
+
+        # note that None is supposed to vary depending on element type
+        # 0-REDUCED
+        # 1-FULL
         self.isop = isop
+
+        # PFLUID
+        # SMECH
         self.fctn = fctn
 
     @classmethod
@@ -381,8 +397,8 @@ class PSOLID(SolidProperty):
         isop = integer_string_or_blank(card, 6, 'isop')
         fctn = string_or_blank(card, 7, 'fctn', 'SMECH')
         assert len(card) <= 8, 'len(PSOLID card) = %i' % len(card)
-        return PSOLID(pid, mid, cordm, integ, stress, isop,
-                      fctn, comment=comment)
+        return cls(pid, mid, cordm, integ, stress, isop,
+                   fctn, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -447,8 +463,10 @@ class PSOLID(SolidProperty):
 
 class PIHEX(PSOLID):
     type = 'PIHEX'
-    def __init__(self, card=None, data=None, comment=''):
-        PSOLID.__init__(self, card, data, comment)
+    def __init__(self, pid, mid, cordm=0, integ=None, stress=None, isop=None,
+                 fctn='SMECH', comment=''):
+        PSOLID.__init__(self, pid, mid, cordm, integ, stress, isop,
+                 fctn, comment=comment)
 
     def raw_fields(self):
         fields = ['PIHEX', self.pid, self.Mid(), self.cordm, self.integ,

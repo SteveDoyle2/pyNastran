@@ -110,7 +110,8 @@ class CFAST(Element):
     def Gs(self):
         if isinstance(self.gs, integer_types):
             return self.gs
-        return self.gs_ref.nid
+        elif self.gs is not None:
+            return self.gs_ref.nid
 
     def Ga(self):
         if isinstance(self.ga, integer_types) or self.ga is None:
@@ -121,6 +122,17 @@ class CFAST(Element):
         if isinstance(self.gb, integer_types) or self.gb is None:
             return self.gb
         return self.gb_ref.nid
+
+    def _verify(self, xref):
+        """
+        Verifies all methods for this object work
+
+        Parameters
+        ----------
+        xref : bool
+            has this model been cross referenced
+        """
+        pass
 
     @property
     def node_ids(self):
