@@ -237,6 +237,8 @@ class XrefMesh(BDFAttributes):
             #aesurf.uncross_reference()
         for aesurfs in itervalues(self.aesurfs):
             aesurfs.uncross_reference()
+        for flutter in itervalues(self.flutters):
+            flutter.uncross_reference(self)
 
     def _uncross_reference_constraints(self):
         """
@@ -345,7 +347,16 @@ class XrefMesh(BDFAttributes):
         # xyz_scale = 25.4
         if units is None:
             units = self.units
-        xyz_scale, mass_scale, weight_scale = get_scale_factors(units, units_to)
+        xyz_scale, mass_scale, weight_scale, gravity_scale = get_scale_factors(units, units_to)
+
+        if 'WTMASS' in self.params:
+            param = self.params['WTMASS']
+            value0 = param.values[0]
+            param.values = [value0 * gravity_scale]
+        else:
+            card = ['PARAM', 'WTMASS', gravity_scale]
+            self.add_card(card, 'PARAM')
+
         self._convert_nodes(xyz_scale)
         self._convert_coordinates(xyz_scale)
         self._convert_elements(xyz_scale, mass_scale, weight_scale)
@@ -357,7 +368,7 @@ class XrefMesh(BDFAttributes):
         #self._convert_constraints()
         self._convert_loads(xyz_scale, weight_scale)
         #self._convert_sets()
-        #self._convert_optimization()
+        self._convert_optimization(xyz_scale, mass_scale, weight_scale)
 
     def _convert_nodes(self, xyz_scale):
         for node in itervalues(self.nodes):
@@ -375,12 +386,12 @@ class XrefMesh(BDFAttributes):
             #print(dir(coord))
             if coord.type in ['CORD1C', 'CORD1S', 'CORD2C', 'CORD2S']:
                 coord.origin *= xyz_scale
-                coord.e1 *= xyz_scale
+                #coord.e1 *= xyz_scale
             if coord.type in ['CORD1R', 'CORD2R']:
                 coord.origin *= xyz_scale
-                coord.e1 *= xyz_scale
-                coord.e2 *= xyz_scale
-                coord.e3 *= xyz_scale
+                #coord.e1 *= xyz_scale
+                #coord.e2 *= xyz_scale
+                #coord.e3 *= xyz_scale
             else:
                 raise NotImplementedError(coord)
 
@@ -404,19 +415,30 @@ class XrefMesh(BDFAttributes):
                 continue
             elif elem_type in tri_shells:
                 # thickness
-                elem.T1 *= xyz_scale
-                elem.T2 *= xyz_scale
-                elem.T3 *= xyz_scale
+                elem.zOffset *= xyz_scale
+                if elem.TFlag == 0:
+                    if elem.T1 is not None:
+                        elem.T1 *= xyz_scale
+                        elem.T2 *= xyz_scale
+                        elem.T3 *= xyz_scale
 
                 # nsm
                 #elem.nsm *= nsm_scale
 
             elif elem_type in quad_shells:
                 # thickness
-                elem.T1 *= xyz_scale
-                elem.T2 *= xyz_scale
-                elem.T3 *= xyz_scale
-                elem.T4 *= xyz_scale
+                # TFlag=blank/0 - Ti value: Ti is specified thickness
+                #                 Ti blank: Ti is PSHELL value
+                # TFlag=0
+                # TFlag=1 - thicknesses are relative (Ti default=1.0)
+                #
+                elem.zOffset *= xyz_scale
+                if elem.TFlag == 0:
+                    if elem.T1 is not None:
+                        elem.T1 *= xyz_scale
+                        elem.T2 *= xyz_scale
+                        elem.T3 *= xyz_scale
+                        elem.T4 *= xyz_scale
                 # nsm
                 #elem.nsm *= nsm_scale
 
@@ -449,8 +471,11 @@ class XrefMesh(BDFAttributes):
                 prop.area *= area_scale
                 prop.moi *= moi_scale
             elif prop_type == 'PBAR':
-                prop.area *= area_scale
-                prop.moi *= moi_scale
+                prop.A *= area_scale
+                prop.i1 *= moi_scale
+                prop.i2 *= moi_scale
+                prop.i12 *= moi_scale
+                prop.nsm *= mass_scale
             elif prop_type == 'PBARL':
                 prop.dim = [d * xyz_scale for d in prop.dim]
                 prop.nsm *= mass_scale
@@ -460,8 +485,10 @@ class XrefMesh(BDFAttributes):
                 prop.moi *= moi_scale
             elif prop_type == 'PSHELL':
                 prop.t *= xyz_scale
+                prop.nsm *= mass_scale
             elif prop_type in ['PCOMP', 'PCOMPG']:
                 prop.thicknesses = [t * xyz_scale for t in prop.thicknesses]
+                prop.nsm *= mass_scale
             else:
                 raise NotImplementedError(prop_type)
 
@@ -532,6 +559,80 @@ class XrefMesh(BDFAttributes):
             #aesurf.cross_reference(self)
         #for aesurfs in itervalues(self.aesurfs):
             #aesurfs.cross_reference(self)
+
+    def _convert_optimization(self, xyz_scale, mass_scale, weight_scale):
+        """cross references the optimization objects"""
+        pressure_scale = weight_scale / xyz_scale ** 2
+        #for key, deqatn in iteritems(self.dequations):
+            #deqatn.cross_reference(self)
+        #for key, dresp in iteritems(self.dresps):
+            #dresp.cross_reference(self)
+        #for key, desvar in iteritems(self.desvars):
+
+            #desvar.xinit *= scale
+            #desvar.xlb *= scale
+            #desvar.xub *= scale
+            #desvar.delx *= scale
+            #raise NotImplementedError(desvar)
+        for key, dconstr in iteritems(self.dconstrs):
+            otype = dconstr.type
+            if otype == 'DCONSTR':
+                dresp = dconstr.rid
+                if dresp.type == 'DRESP1':
+                    property_type = dresp.ptype
+                    response_type = dresp.rtype
+                    assert len(dresp.atti) == 1, dresp.atti
+                    for atti in dresp.atti:
+                        label = dresp.label
+                        atti_type = atti.type
+                        if response_type == 'STRESS':
+                            scale = pressure_scale
+                        else:
+                            raise RuntimeError(atti)
+                        #if atti
+                        #if property_type == 'PSHELL':
+                            #if rst
+                else:
+                    raise NotImplementedError(dresp)
+                dconstr.lid *= scale
+                dconstr.uid *= scale
+            else:
+                raise NotImplementedError(dconstr)
+
+        for key, dvcrel in iteritems(self.dvcrels):
+            raise NotImplementedError(dvcrel)
+        for key, dvmrel in iteritems(self.dvmrels):
+            raise NotImplementedError(dvmrel)
+        for key, dvprel in iteritems(self.dvprels):
+            if dvprel.type == 'DVPREL1':
+                #print(dvprel)
+                prop_type = dvprel.Type
+                desvars = dvprel.dvids
+                var_to_change = dvprel.pNameFid
+                assert len(desvars) == 1, len(desvars)
+
+                if prop_type == 'PSHELL':
+                    if var_to_change == 'T':
+                        scale = xyz_scale
+                        for desvar in desvars:
+                            desvar.xlb *= scale
+                            desvar.xlb *= scale
+                            if desvar.delx is not None:
+                                desvar.xlb *= scale
+                            if desvar.ddval is not None:
+                                msg = 'DESVAR id=%s DDVAL is not None\n%s' % str(desvar)
+                            assert desvar.ddval is None, desvar
+                    else:
+                        raise NotImplementedError(dvprel)
+                else:
+                    raise NotImplementedError(dvprel)
+            else:
+                raise NotImplementedError(dvprel)
+            dvprel.pMax *= scale
+            dvprel.pMin *= scale
+            #print('------------')
+            #print(dvprel)
+            #pass
 
     def cross_reference(self, xref=True,
                         xref_elements=True,
@@ -677,6 +778,8 @@ class XrefMesh(BDFAttributes):
             #aesurf.cross_reference(self)
         for aesurfs in itervalues(self.aesurfs):
             aesurfs.cross_reference(self)
+        for flutter in itervalues(self.flutters):
+            flutter.cross_reference(self)
 
         if 0:  # only support CAERO1
             ncaeros = len(self.caeros)
@@ -1053,9 +1156,13 @@ def get_scale_factors(units_from, units_to):
     time_scale = 1.0
     xyz_scale = convert_length(length_from, length_to)
 
-    mass_scale = convert_mass(mass_from, mass_to)
-    weight_scale = mass_scale * xyz_scale / time_scale ** 2
-    return xyz_scale, mass_scale, weight_scale
+    mass_scale, weight_scale, gravity_scale = convert_mass(mass_from, mass_to)
+    weight_scale /= time_scale ** 2   # doesn't consider cm/mm
+    gravity_scale /= time_scale ** 2  # doesn't consider cm/mm
+    # 4.448N = 1 lbm
+    # 1 slug = 14.5939 kg
+    # 1g = 32.174 ft/s^2 = 386.088 = 9.80665 m/s^2
+    return xyz_scale, mass_scale, weight_scale, gravity_scale
 
 
 def convert_length(length_from, length_to):
@@ -1068,10 +1175,10 @@ def convert_length(length_from, length_to):
         elif length_from == 'm':
             #xyz_scale *= 1.0
             pass
-        elif length_from == 'cm':
-            xyz_scale *= 100.0
-        elif length_from == 'mm':
-            xyz_scale *= 1000.0
+        #elif length_from == 'cm':
+            #xyz_scale *= 100.0
+        #elif length_from == 'mm':
+            #xyz_scale *= 1000.0
         else:
             raise NotImplementedError(length_from)
 
@@ -1082,29 +1189,35 @@ def convert_length(length_from, length_to):
         elif length_to == 'm':
             #xyz_scale /= 1.0
             pass
-        elif length_to == 'cm':
-            xyz_scale /= 100.0
-        elif length_to == 'mm':
-            xyz_scale /= 1000.0
+        #elif length_to == 'cm':
+            #xyz_scale /= 100.0
+        #elif length_to == 'mm':
+            #xyz_scale /= 1000.0
         else:
             raise NotImplementedError(length_to)
     return xyz_scale
 
 def convert_mass(mass_from, mass_to):
     mass_scale = 1.0
+    weight_scale = 1.0
+    gravity_scale = 1.0
     if mass_from != mass_to:
         if mass_from == 'kg':
             pass
-        elif mass_from == 'lb':
-            mass_scale *= 0.453592
+        elif mass_from == 'lbm':
+            mass_scale *= 0.45359237
+            weight_scale *= 4.4482216152605
+            gravity_scale *= 0.3048
         else:
             raise NotImplementedError(mass_from)
 
         if mass_to == 'kg':
             pass
-        elif mass_to == 'lb':
-            mass_scale /= 0.453592
+        elif mass_to == 'lbm':
+            mass_scale /= 0.45359237
+            weight_scale /= 4.4482216152605
+            gravity_scale /= 0.3048
         else:
             raise NotImplementedError(mass_to)
 
-    return mass_scale
+    return mass_scale, weight_scale, gravity_scale

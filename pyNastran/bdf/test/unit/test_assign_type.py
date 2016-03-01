@@ -262,10 +262,12 @@ class Test(ExtendedTestCase):
             double_or_string(BDFCard([1.]), 1, 'field')
 
     def test_double_string_or_blank(self):
-        pass
         # out of range
         #with self.assertRaises(SyntaxError):
-            #double_string_or_blank(BDFCard([1.]  ), 1, 'field')
+        self.assertEqual(1., double_string_or_blank(BDFCard([1.]), 0, 'field'))
+        self.assertEqual(1., double_string_or_blank(BDFCard(['1.']), 0, 'field'))
+        self.assertEqual('CAT', double_string_or_blank(BDFCard(['CAT']), 0, 'field'))
+        self.assertEqual(None, double_string_or_blank(BDFCard([None]), 0, 'field'))
 
     def test_integer_or_double(self):
         # out of range

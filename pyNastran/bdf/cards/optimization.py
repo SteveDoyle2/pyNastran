@@ -28,13 +28,25 @@ class OptConstraint(BaseCard):
 class DCONSTR(OptConstraint):
     type = 'DCONSTR'
     def __init__(self, oid, rid, lid, uid, lowfq, highfq, comment=''):
+        """
+        +---------+------+-----+------------+------------+-------+--------+
+        |   1     |   2  |  3  |     4      |      5     |   6   |   7    |
+        +=========+======+=====+============+============+=======+========+
+        | DCONSTR | DCID | RID | LALLOW/LID | UALLOW/UID | LOWFQ | HIGHFQ |
+        +---------+------+-----+------------+------------+-------+--------+
+        """
         if comment:
             self._comment = comment
         self.oid = oid
+        # DRESP entry
         self.rid = rid
+        # lower bound
         self.lid = lid
+        # upper bound
         self.uid = uid
+        # low end of frequency range (Hz)
         self.lowfq = lowfq
+        # high end of frequency range (Hz)
         self.highfq = highfq
 
     @classmethod
@@ -129,6 +141,13 @@ class DCONSTR(OptConstraint):
 
 class DESVAR(OptConstraint):
     type = 'DESVAR'
+    """
+    +--------+----+-------+-------+-----+-----+-------+-------+
+    |    1   |  2 |    3  |   4   |  5  |  6  |    7  |   8   |
+    +========+====+=======+=======+=====+=====+=======+=======+
+    | DESVAR | ID | LABEL | XINIT | XLB | XUB | DELXV | DDVAL |
+    +--------+----+-------+-------+-----+-----+-------+-------+
+    """
     def __init__(self, oid, label, xinit, xlb, xub, delx, ddval, comment=''):
         if comment:
             self._comment = comment
@@ -137,7 +156,10 @@ class DESVAR(OptConstraint):
         self.xinit = xinit
         self.xlb = xlb
         self.xub = xub
+        # controls change for a single optimization cycle
+        # taken from DOPTPRM if None
         self.delx = delx
+        # DDVAL id if you want discrete values
         self.ddval = ddval
 
     @classmethod
@@ -1144,6 +1166,14 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
     def __init__(self, oid, Type, pid, pNameFid, pMin, pMax, c0, dvids, coeffs,
                  comment=''):
         """
+        +---------+--------+--------+--------+-----------+-------+--------+-----+---+
+        |   1     |    2   |   3    |    4   |     5     |   6   |   7    |  8  | 9 |
+        +=========+========+========+========+===========+=======+========+=====+===+
+        | DVPREL1 |   ID   |  TYPE  |  PID   | PNAME/FID | PMIN  |  PMAX  |  C0 |   |
+        +---------+--------+--------+--------+-----------+-------+--------+-----+---+
+        |         | DVID1  | COEF1  | DVID2  |   COEF2   | DVID3 | -etc.- |     |   |
+        +---------+--------+--------+--------+-----------+-------+--------+-----+---+
+
         +---------+--------+--------+--------+-----+
         | DVPREL1 | 200000 | PCOMP  | 2000   |  T2 |
         +---------+--------+--------+--------+-----+
@@ -1153,13 +1183,29 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
         if comment:
             self._comment = comment
         self.oid = oid
+
+        # property type (e.g. PSHELL/PCOMP)
         self.Type = Type
+
+        # property id
         self.pid = pid
+
+        # the field type (e.g. 'T' on a PSHELL or the field id)
         self.pNameFid = pNameFid
+
+        # min value for 'T'
         self.pMin = pMin
+
+        # max value for 'T'
         self.pMax = pMax
+
+        # offset coefficient
         self.c0 = c0
+
+        # DESVAR id
         self.dvids = dvids
+
+        # scale factor for DESVAR
         self.coeffs = coeffs
 
     @classmethod
@@ -1218,8 +1264,10 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
         model : BDF()
             the BDF object
         """
+        msg = ', which is required by DVPREL1 name=%r' % self.type
         self.pid = model.Property(self.pid)
         self.pid_ref = self.pid
+        self.dvids = [model.desvars[dvid] for dvid in self.dvids]
 
     def uncross_reference(self):
         self.pid = self.Pid()
@@ -1233,10 +1281,16 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
             return self.pid
         return self.pid_ref.pid
 
+    @property
+    def desvar_ids(self):
+        if isinstance(self.dvids[0], int):
+            return self.dvids
+        return [desvar.oid for desvar in self.dvids]
+
     def raw_fields(self):
         list_fields = ['DVPREL1', self.oid, self.Type, self.Pid(),
                        self.pNameFid, self.pMin, self.pMax, self.c0, None]
-        for (dvid, coeff) in zip(self.dvids, self.coeffs):
+        for (dvid, coeff) in zip(self.desvar_ids, self.coeffs):
             list_fields.append(dvid)
             list_fields.append(coeff)
         return list_fields
@@ -1246,7 +1300,7 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
         c0 = set_blank_if_default(self.c0, 0.)
         list_fields = ['DVPREL1', self.oid, self.Type, self.Pid(),
                        self.pNameFid, self.pMin, pMax, c0, None]
-        for (dvid, coeff) in zip(self.dvids, self.coeffs):
+        for (dvid, coeff) in zip(self.desvar_ids, self.coeffs):
             list_fields.append(dvid)
             list_fields.append(coeff)
         return list_fields

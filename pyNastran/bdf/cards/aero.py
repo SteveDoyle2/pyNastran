@@ -25,6 +25,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from itertools import count
 from six.moves import zip, range
+from six import string_types
 
 import numpy as np
 
@@ -2353,17 +2354,20 @@ class FLFACT(BaseCard):
         sid = integer(card, 1, 'sid')
         assert len(card) > 2, 'len(FLFACT card)=%s; card=%s' % (len(card), card)
         field3 = double_string_or_blank(card, 3, 'THRU')
-        if field3 == 'THRU':
+        if isinstance(field3, float):
+            factors = fields(double, card, 'factors', i=2, j=len(card))
+        elif isinstance(field3, string_types) and field3 == 'THRU':
             f1 = double(card, 2, 'f1')
             fnf = double(card, 4, 'fnf')
-            nf = double(card, 5, 'nf')
-            fmid = double(card, 6, 'fmid')
-            assert len(card) == 7, 'len(FLFACT card)=%s; card=%s' % (len(card), card)
+            nf = integer(card, 5, 'nf')
+            fmid_default = (f1 + fnf) / 2.
+            fmid = double_or_blank(card, 6, 'fmid', fmid_default)
+            assert len(card) <= 7, 'len(FLFACT card)=%s; card=%s' % (len(card), card)
             i = np.linspace(0, nf, nf, endpoint=False)
             factors = ((f1*(fnf - fmid) * (nf - 1) + fnf * (fmid - f1) * i) /
                           ((fnf - fmid) * (nf - 1) +       (fmid - f1) * i))
         else:
-            factors = fields(double, card, 'factors', i=2, j=len(card))
+            raise SyntaxError('expected a float or string for FLFACT field 3; value=%r' % field3)
         return FLFACT(sid, factors, comment=comment)
 
     @classmethod
@@ -2384,7 +2388,7 @@ class FLFACT(BaseCard):
         fields : list[varies]
             the fields that define the card
         """
-        list_fields = ['FLFACT', self.sid] + self.factors
+        list_fields = ['FLFACT', self.sid] + list(self.factors)
         return list_fields
 
     def write_card(self, size=8, is_double=False):
@@ -2520,8 +2524,8 @@ class FLUTTER(BaseCard):
         """
         msg = ' which is required by FLUTTER sid=%s' % self.sid
         self.density = model.FLFACT(self.density, msg=msg)
-        self.mach = model.FLFACT(self.density, msg=msg)
-        self.reduced_freq_velocity = model.FLFACT(self.density, msg=msg)
+        self.mach = model.FLFACT(self.mach, msg=msg)
+        self.reduced_freq_velocity = model.FLFACT(self.reduced_freq_velocity, msg=msg)
 
         self.density_ref = self.density
         self.mach_ref = self.mach

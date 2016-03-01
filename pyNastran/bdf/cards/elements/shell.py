@@ -331,9 +331,9 @@ class CTRIA3(TriShell):
             blank(card, 9, 'blank')
 
             TFlag = integer_or_blank(card, 10, 'TFlag', 0)
-            T1 = double_or_blank(card, 11, 'T1', 1.0)
-            T2 = double_or_blank(card, 12, 'T2', 1.0)
-            T3 = double_or_blank(card, 13, 'T3', 1.0)
+            T1 = double_or_blank(card, 11, 'T1')
+            T2 = double_or_blank(card, 12, 'T2')
+            T3 = double_or_blank(card, 13, 'T3')
             assert len(card) <= 14, 'len(CTRIA3 card) = %i' % len(card)
         else:
             thetaMcid = 0.0
@@ -509,9 +509,9 @@ class CTRIA6(TriShell):
             thetaMcid = integer_double_or_blank(card, 9, 'thetaMcid', 0.0)
             zOffset = double_or_blank(card, 10, 'zOffset', 0.0)
 
-            T1 = double_or_blank(card, 11, 'T1', 1.0)
-            T2 = double_or_blank(card, 12, 'T2', 1.0)
-            T3 = double_or_blank(card, 13, 'T3', 1.0)
+            T1 = double_or_blank(card, 11, 'T1')
+            T2 = double_or_blank(card, 12, 'T2')
+            T3 = double_or_blank(card, 13, 'T3')
             TFlag = integer_or_blank(card, 14, 'TFlag', 0)
             assert len(card) <= 15, 'len(CTRIA6 card) = %i' % len(card)
         else:
@@ -724,9 +724,9 @@ class CTRIAR(TriShell):
         blank(card, 10, 'blank')
 
         TFlag = integer_or_blank(card, 10, 'TFlag', 0)
-        T1 = double_or_blank(card, 11, 'T1', 1.0)
-        T2 = double_or_blank(card, 12, 'T2', 1.0)
-        T3 = double_or_blank(card, 13, 'T3', 1.0)
+        T1 = double_or_blank(card, 11, 'T1')
+        T2 = double_or_blank(card, 12, 'T2')
+        T3 = double_or_blank(card, 13, 'T3')
         assert len(card) <= 14, 'len(CTRIAR card) = %i' % len(card)
         return CTRIAR(eid, pid, nids, thetaMcid, zOffset,
                       TFlag, T1, T2, T3, comment=comment)
@@ -1546,10 +1546,10 @@ class CQUAD4(QuadShell):
             zOffset = double_or_blank(card, 8, 'zOffset', 0.0)
             blank(card, 9, 'blank')
             TFlag = integer_or_blank(card, 10, 'TFlag', 0)
-            T1 = double_or_blank(card, 11, 'T1', 1.0)
-            T2 = double_or_blank(card, 12, 'T2', 1.0)
-            T3 = double_or_blank(card, 13, 'T3', 1.0)
-            T4 = double_or_blank(card, 14, 'T4', 1.0)
+            T1 = double_or_blank(card, 11, 'T1')
+            T2 = double_or_blank(card, 12, 'T2')
+            T3 = double_or_blank(card, 13, 'T3')
+            T4 = double_or_blank(card, 14, 'T4')
             assert len(card) <= 15, 'len(CQUAD4 card) = %i' % len(card)
         else:
             thetaMcid = 0.0
@@ -1724,10 +1724,10 @@ class CQUADR(QuadShell):
         zOffset = double_or_blank(card, 8, 'zOffset', 0.0)
 
         TFlag = integer_or_blank(card, 10, 'TFlag', 0)
-        T1 = double_or_blank(card, 11, 'T1', 1.0)
-        T2 = double_or_blank(card, 12, 'T2', 1.0)
-        T3 = double_or_blank(card, 13, 'T3', 1.0)
-        T4 = double_or_blank(card, 14, 'T4', 1.0)
+        T1 = double_or_blank(card, 11, 'T1')
+        T2 = double_or_blank(card, 12, 'T2')
+        T3 = double_or_blank(card, 13, 'T3')
+        T4 = double_or_blank(card, 14, 'T4')
         assert len(card) <= 15, 'len(CQUADR card) = %i' % len(card)
         return CQUADR(eid, pid, nids, thetaMcid, zOffset,
                       TFlag, T1, T2, T3, T4, comment=comment)
@@ -1989,10 +1989,10 @@ class CQUAD8(QuadShell):
                 integer_or_blank(card, 9, 'n7', 0),
                 integer_or_blank(card, 10, 'n8', 0)]
         if len(card) > 11:
-            T1 = double_or_blank(card, 11, 'T1', 1.0)
-            T2 = double_or_blank(card, 12, 'T2', 1.0)
-            T3 = double_or_blank(card, 13, 'T3', 1.0)
-            T4 = double_or_blank(card, 14, 'T4', 1.0)
+            T1 = double_or_blank(card, 11, 'T1')
+            T2 = double_or_blank(card, 12, 'T2')
+            T3 = double_or_blank(card, 13, 'T3')
+            T4 = double_or_blank(card, 14, 'T4')
             thetaMcid = integer_double_or_blank(card, 15, 'thetaMcid', 0.0)
             zOffset = double_or_blank(card, 16, 'zOffset', 0.0)
             TFlag = integer_or_blank(card, 17, 'TFlag', 0)
