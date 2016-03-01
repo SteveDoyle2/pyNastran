@@ -1122,7 +1122,10 @@ class PSHEAR(ShellProperty):
 
 class PSHELL(ShellProperty):
     """
+
     +--------+-------+------+--------+------+----------+------+------+---------+
+    |   1    |   2   |   3  |    4   |  5   |    6     |   7  |  8   |    9    |
+    +========+=======+======+========+======+==========+======+======+=========+
     | PSHELL |  PID  | MID1 |   T    | MID2 | 12I/T**3 | MID3 | TS/T |   NSM   |
     +--------+-------+------+--------+------+----------+------+------+---------+
     |        |  Z1   |  Z2  |  MID4  |      |          |      |      |         |
@@ -1160,6 +1163,10 @@ class PSHELL(ShellProperty):
         #:
         #: ..math:: I = \frac{12I}{t^3} I_{plate}
         self.twelveIt3 = twelveIt3
+
+        #: Transverse shear thickness ratio, . Ratio of the shear thickness,
+        #: ts/t, to the membrane thickness of the shell, t.
+        #: The default value is for a homogeneous shell.
         self.tst = tst
 
         #: Non-structural Mass

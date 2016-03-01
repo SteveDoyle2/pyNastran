@@ -348,6 +348,8 @@ class DLINK(OptConstraint):
         Relates one design variable to one or more other design variables.
 
         +-------+------+-------+--------+-------+------+----+------+----+
+        |   1   |   2  |   3   |   4    |   5   |   6  |  7 |   8  | 9  |
+        +=======+======+=======+========+=======+======+====+======+====+
         | DLINK |  ID  | DDVID |   C0   | CMULT | IDV1 | C1 | IDV2 | C2 |
         +-------+------+-------+--------+-------+------+----+------+----+
         |       | IDV3 |   C3  | -etc.- |       |      |    |      |    |
@@ -1217,7 +1219,7 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
 
         #: Minimum value allowed for this property.
         #: .. todo:: bad default (see DVMREL1)
-        pMin = double_or_blank(card, 5, 'pMin')
+        pMin = double_or_blank(card, 5, 'pMin', None)
         pMax = double_or_blank(card, 6, 'pMax', 1e20)
         c0 = double_or_blank(card, 7, 'c0', 0.0)
 

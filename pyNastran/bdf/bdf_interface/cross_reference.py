@@ -347,7 +347,8 @@ class XrefMesh(BDFAttributes):
         # xyz_scale = 25.4
         if units is None:
             units = self.units
-        xyz_scale, mass_scale, weight_scale, gravity_scale = get_scale_factors(units, units_to)
+        xyz_scale, mass_scale, time_scale, weight_scale, gravity_scale = get_scale_factors(
+            units, units_to)
 
         if 'WTMASS' in self.params:
             param = self.params['WTMASS']
@@ -364,7 +365,7 @@ class XrefMesh(BDFAttributes):
         #self._convert_masses()
         self._convert_materials(xyz_scale, mass_scale, weight_scale)
 
-        self._convert_aero(xyz_scale)
+        self._convert_aero(xyz_scale, time_scale, weight_scale)
         #self._convert_constraints()
         self._convert_loads(xyz_scale, weight_scale)
         #self._convert_sets()
@@ -454,6 +455,16 @@ class XrefMesh(BDFAttributes):
             else:
                 raise NotImplementedError(elem)
 
+        for elem in itervalues(self.masses):
+            elem_type = elem.type
+            if elem_type == 'CONM2':
+                elem.mass *= mass_scale
+                elem.X *= xyz_scale
+                elem.I = [moi * mass_scale * xyz_scale ** 2 # I = m * r^2
+                          for moi in elem.I]
+            else:
+                raise NotImplementedError(elem)
+
     def _convert_properties(self, xyz_scale, mass_scale, weight_scale):
         area_scale = xyz_scale ** 2
         moi_scale = xyz_scale ** 4
@@ -481,14 +492,33 @@ class XrefMesh(BDFAttributes):
                 prop.nsm *= mass_scale
 
             elif prop_type == 'PBEAM':
-                prop.area *= area_scale
+                prop.A *= area_scale
                 prop.moi *= moi_scale
+                prop.i1 *= moi_scale
+                prop.i2 *= moi_scale
+                prop.i12 *= moi_scale
+                prop.i2 *= moi_scale
+                prop.j *= moi_scale
+                prop.nsm *= mass_scale
+                prop.c1 *= xyz_scale
+                prop.c2 *= xyz_scale
+                prop.d1 *= xyz_scale
+                prop.d2 *= xyz_scale
+                prop.e1 *= xyz_scale
+                prop.e2 *= xyz_scale
+                prop.f1 *= xyz_scale
+                prop.f2 *= xyz_scale
+
             elif prop_type == 'PSHELL':
                 prop.t *= xyz_scale
                 prop.nsm *= mass_scale
+                prop.z1 *= xyz_scale
+                prop.z2 *= xyz_scale
+                prop.twelveIt3 /= xyz_scale ** 3
             elif prop_type in ['PCOMP', 'PCOMPG']:
                 prop.thicknesses = [t * xyz_scale for t in prop.thicknesses]
                 prop.nsm *= mass_scale
+                prop.z0 *= xyz_scale
             else:
                 raise NotImplementedError(prop_type)
 
@@ -508,7 +538,6 @@ class XrefMesh(BDFAttributes):
                 mat.g1z *= pressure_scale
                 mat.g2z *= pressure_scale
                 mat.rho *= density_scale
-
             else:
                 raise NotImplementedError(mat)
 
@@ -520,20 +549,45 @@ class XrefMesh(BDFAttributes):
             assert isinstance(loads, list), loads
             for load in loads: # list
                 load_type = load.type
-                if load_type in ['LOAD']:
+                if load_type == 'LOAD':
                     pass
                 elif load_type == 'FORCE':
                     load.mag *= force_scale
                 elif load_type == 'MOMENT':
                     load.mag *= moment_scale
+                #elif load_type == 'PLOAD1':
+                    #load.mag *= moment_scale
+                #elif load_type == 'PLOAD2':
+                    #load.mag *= moment_scale
+                #elif load_type == 'PLOAD4':
+                    #load.mag *= moment_scale
                 else:
                     raise NotImplementedError(load)
 
-    def _convert_aero(self, xyz_scale):
+    def _convert_aero(self, xyz_scale, time_scale, weight_scale):
         """
         Converts the aero cards
           - CAEROx, PAEROx, SPLINEx, AECOMP, AELIST, AEPARAM, AESTAT, AESURF, AESURFS
         """
+        area_scale = xyz_scale ** 2
+        velocity_scale = xyz_scale / time_scale
+        pressure_scale = weight_scale / xyz_scale ** 2
+        density_scale = weight_scale / xyz_scale ** 3
+        for aero in itervalues(self.aero):
+        #if hasattr(self, 'aero'):
+            #aero = self.aero
+            print(aero.object_attributes())
+            aero.refc *= xyz_scale
+            aero.refb *= xyz_scale
+            aero.sref *= area_scale
+            aero.velocity *= velocity_scale
+        for aeros in itervalues(self.aeros):
+            #print(aeros)
+            #print(aeros.object_attributes())
+            aeros.cref *= xyz_scale
+            aeros.bref *= xyz_scale
+            aeros.sref *= area_scale
+
         for caero in itervalues(self.caeros):
             if caero.type in ['CAERO1']:
                 caero.p1 *= xyz_scale
@@ -544,7 +598,8 @@ class XrefMesh(BDFAttributes):
                 raise NotImplementedError(caero)
         #for paero in itervalues(self.paeros):
             #paero.cross_reference(self)
-
+        for trim in itervalues(self.trims):
+            trim.q *= pressure_scale
         #for spline in itervalues(self.splines):
             #spline.convert(self)
         #for aecomp in itervalues(self.aecomps):
@@ -559,6 +614,15 @@ class XrefMesh(BDFAttributes):
             #aesurf.cross_reference(self)
         #for aesurfs in itervalues(self.aesurfs):
             #aesurfs.cross_reference(self)
+
+        # update only the FLFACTs corresponding to density
+        flfact_ids = set([])
+        for flutter in itervalues(self.flutters):
+            flfact = flutter.density
+            flfact_ids.add(flfact.sid)
+        for flfact_id in flfact_ids: # density
+            flfact = self.flfacts[flfact_id]
+            flfact.factors *= density_scale
 
     def _convert_optimization(self, xyz_scale, mass_scale, weight_scale):
         """cross references the optimization objects"""
@@ -615,10 +679,15 @@ class XrefMesh(BDFAttributes):
                     if var_to_change == 'T':
                         scale = xyz_scale
                         for desvar in desvars:
-                            desvar.xlb *= scale
-                            desvar.xlb *= scale
-                            if desvar.delx is not None:
+
+                            desvar.xinit *= scale
+                            if desvar.xlb != -1e20:
                                 desvar.xlb *= scale
+                            if desvar.xub != 1e20:
+                                desvar.xub *= scale
+                            #if desvar.delx != 1e20:
+                            if desvar.delx is not None and desvar.delx != 1e20:
+                                desvar.delx *= scale
                             if desvar.ddval is not None:
                                 msg = 'DESVAR id=%s DDVAL is not None\n%s' % str(desvar)
                             assert desvar.ddval is None, desvar
@@ -628,8 +697,10 @@ class XrefMesh(BDFAttributes):
                     raise NotImplementedError(dvprel)
             else:
                 raise NotImplementedError(dvprel)
-            dvprel.pMax *= scale
-            dvprel.pMin *= scale
+            if dvprel.pMax != 1e20:
+                dvprel.pMax *= scale
+            if dvprel.pMin is not None:
+                dvprel.pMin *= scale
             #print('------------')
             #print(dvprel)
             #pass
@@ -1162,7 +1233,7 @@ def get_scale_factors(units_from, units_to):
     # 4.448N = 1 lbm
     # 1 slug = 14.5939 kg
     # 1g = 32.174 ft/s^2 = 386.088 = 9.80665 m/s^2
-    return xyz_scale, mass_scale, weight_scale, gravity_scale
+    return xyz_scale, mass_scale, time_scale, weight_scale, gravity_scale
 
 
 def convert_length(length_from, length_to):

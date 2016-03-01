@@ -804,6 +804,8 @@ class CONM2(PointMassElement):
            node ID
         cid : int
            coordinate frame of the offset (-1=absolute coordinates)
+        mass : float
+           the mass of the CONM2
         X : ???
             offset vector relative to nid
         I : ???

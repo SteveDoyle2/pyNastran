@@ -482,12 +482,12 @@ class AddMethods(BDFAttributes):
         self.aero[key] = aero
         self._type_to_id_map[aero.type].append(key)
 
-    def add_AEROS(self, aero):
-        key = aero.acsid
-        assert key not in self.aeros, '\naeros=\n%s oldAEROS=\n%s' % (aero, self.aeros[key])
+    def add_AEROS(self, aeros):
+        key = aeros.acsid
+        assert key not in self.aeros, '\naeros=\n%s oldAEROS=\n%s' % (aeros, self.aeros[key])
         assert key >= 0
-        self.aeros[key] = aero
-        self._type_to_id_map[aero.type].append(key)
+        self.aeros[key] = aeros
+        self._type_to_id_map[aeros.type].append(key)
 
     def add_AEFACT(self, aefact, allow_overwrites=False):
         key = aefact.sid
