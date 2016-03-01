@@ -4,11 +4,11 @@ Defines the GUI IO file for Nastran.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import iteritems, itervalues
-from six.moves import zip, range
 import os
 from copy import deepcopy
 from collections import defaultdict, OrderedDict
+from six import iteritems, itervalues
+from six.moves import zip, range
 
 
 #VTK_TRIANGLE = 5
@@ -2119,6 +2119,7 @@ class NastranIO(object):
         ]
         # subcase_id, resultType, vector_size, location, dataFormat
         if len(model.properties):
+
             pid_res = GuiResult(0, header='PropertyID', title='PropertyID',
                                 location='centroid', scalar=pids)
             cases[icase] = (pid_res, (0, 'PropertyID'))
@@ -2188,6 +2189,13 @@ class NastranIO(object):
             form0.append(('Thickness', icase, []))
             form0.append(('MaterialID', icase + 1, []))
             icase += 2
+
+
+
+        icase = self._build_optimization(model, pids, upids, nelements, cases, form0, icase)
+
+            #mid_eids_skip = []
+            #for pid in upids:
 
         if 1:
             i = 0
@@ -2286,8 +2294,54 @@ class NastranIO(object):
                 icase += 3
 
             self.normals = normals
-
         return nid_to_pid_map, icase, cases, form
+
+    def _build_optimization(self, model, pids, upids, nelements, cases, form0, icase):
+        if len(model.properties):
+            #dvmrel_init = np.zeros(nelements, dtype='int32')
+            #dvgrel_init = np.zeros(nelements, dtype='int32')
+            dvprel_t_init = np.zeros(nelements, dtype='float32')
+            for key, dvprel in iteritems(model.dvprels):
+                if dvprel.type == 'DVPREL1':
+                    prop_type = dvprel.Type
+                    desvars = dvprel.dvids
+                    pid = dvprel.pid.pid
+                    var_to_change = dvprel.pNameFid
+                    assert len(desvars) == 1, len(desvars)
+
+                    if prop_type == 'PSHELL':
+                        if var_to_change == 'T':
+                            i = np.where(pids == pid)
+                            assert len(i) > 0, i
+                            for desvar in desvars:
+                                xinit = desvar.xinit
+                                if desvar.xlb != -1e20:
+                                    desvar.xlb
+                                if desvar.xub != 1e20:
+                                    desvar.xub
+                                if desvar.delx is not None and desvar.delx != 1e20:
+                                    desvar.delx
+                                if desvar.ddval is not None:
+                                    msg = 'DESVAR id=%s DDVAL is not None\n%s' % str(desvar)
+                                assert desvar.ddval is None, desvar
+                            dvprel_t_init[i] = xinit
+                        else:
+                            raise NotImplementedError(dvprel)
+                    else:
+                        raise NotImplementedError(dvprel)
+                else:
+                    raise NotImplementedError(dvprel)
+                if dvprel.pMax != 1e20:
+                    dvprel.pMax
+                if dvprel.pMin is not None:
+                    dvprel.pMin
+
+            t_res = GuiResult(0, header='DVPREL Init - t', title='DVPREL Init - t',
+                              location='centroid', scalar=dvprel_t_init)
+            cases[icase] = (t_res, (0, 'DVPREL Init - t'))
+            form0.append(('DVPREL Init - t', icase, []))
+            icase += 1
+        return icase
 
     def _plot_pressures(self, model, cases, form0, icase, subcase_id, subcase):
         """

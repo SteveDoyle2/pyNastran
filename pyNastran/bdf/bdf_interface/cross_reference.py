@@ -385,16 +385,24 @@ class XrefMesh(BDFAttributes):
                 continue
             #print(coord.object_methods())
             #print(dir(coord))
-            if coord.type in ['CORD1C', 'CORD1S', 'CORD2C', 'CORD2S']:
+            #if coord.type in ['CORD1C', 'CORD1S', 'CORD2C', 'CORD2S']:
+            #print('coord.rid =', coord.rid)
+            if coord.rid == 0:
+                pass
+            elif coord.rid.type in ['CORD1R', 'CORD2R']:
                 coord.origin *= xyz_scale
+            elif coord.rid.type in ['CORD1C', 'CORD1S', 'CORD2C', 'CORD2S']:
+                coord.origin[0] *= xyz_scale
+            else:
+                raise NotImplementedError(coord)
                 #coord.e1 *= xyz_scale
-            if coord.type in ['CORD1R', 'CORD2R']:
-                coord.origin *= xyz_scale
+            #elif coord.type in ['CORD1R', 'CORD2R']:
+                #coord.origin *= xyz_scale
                 #coord.e1 *= xyz_scale
                 #coord.e2 *= xyz_scale
                 #coord.e3 *= xyz_scale
-            else:
-                raise NotImplementedError(coord)
+            #else:
+                #raise NotImplementedError(coord)
 
     def _convert_elements(self, xyz_scale, mass_scale, weight_scale):
         area_scale = xyz_scale ** 2
