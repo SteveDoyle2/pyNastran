@@ -1255,16 +1255,18 @@ class PSHELL(ShellProperty):
 
         mids = [mid for mid in [self.mid1, self.mid2, self.mid3, self.mid4]
                 if mid is not None]
+        material_ids = self.material_ids
         assert len(mids) > 0
         if xref:
             assert isinstance(self.mid, Material), 'mid=%r' % self.mid
 
             for i, mid in enumerate(mids):
+                if mid == 0:
+                    continue
                 if i == 1: # mid2
                     if isinstance(mid, integer_types):
                         assert mid == -1, mid
                         continue
-
                 assert isinstance(mid, Material), 'mid=%r' % mid
                 assert mid.type in ['MAT1', 'MAT2', 'MAT4', 'MAT5', 'MAT8'], 'pid.type=%s mid.type=%s' % (self.type, mid.type)
                 if mid.type == 'MAT1':
@@ -1449,18 +1451,28 @@ class PSHELL(ShellProperty):
     def repr_fields(self):
         twelveIt3 = set_blank_if_default(self.twelveIt3, 1.0)
         tst = set_blank_if_default(self.tst, 0.833333)
+        tst2 = set_blank_if_default(self.tst, 0.83333)
+        if tst or tst2 is None:
+            tst = None
         nsm = set_blank_if_default(self.nsm, 0.0)
-
         if self.t is not None:
-            tOver2 = self.t / 2.
-            z1 = set_blank_if_default(self.z1, -tOver2)
-            z2 = set_blank_if_default(self.z2, tOver2)
+            t_over_2 = self.t / 2.
+            z1 = set_blank_if_default(self.z1, -t_over_2)
+            z2 = set_blank_if_default(self.z2, t_over_2)
         else:
             z1 = self.z1
             z2 = self.z2
 
-        list_fields = ['PSHELL', self.pid, self.Mid1(), self.t, self.Mid2(),
-                       twelveIt3, self.Mid3(), tst, nsm, z1, z2, self.Mid4()]
+        mid1 = self.Mid1()
+        mid2 = self.Mid2()
+        mid3 = self.Mid3()
+        mid4 = self.Mid4()
+        mid1 = None if mid1 == 0 else mid1
+        mid2 = None if mid2 == 0 else mid2
+        mid3 = None if mid3 == 0 else mid3
+        mid4 = None if mid4 == 0 else mid4
+        list_fields = ['PSHELL', self.pid, mid1, self.t, mid2,
+                       twelveIt3, mid3, tst, nsm, z1, z2, mid4]
         return list_fields
 
     def write_card(self, size=8, is_double=False):
