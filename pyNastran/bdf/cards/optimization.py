@@ -1210,6 +1210,9 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
         # scale factor for DESVAR
         self.coeffs = coeffs
 
+        assert len(coeffs) > 0, 'len(coeffs)=%s' % len(coeffs)
+        assert len(coeffs) == len(dvids), 'len(coeffs)=%s len(dvids)=%s' % (len(coeffs), len(dvids))
+
     @classmethod
     def add_card(cls, card, comment=''):
         oid = integer(card, 1, 'oid')

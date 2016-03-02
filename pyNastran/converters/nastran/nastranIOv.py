@@ -2191,8 +2191,10 @@ class NastranIO(object):
             icase += 2
 
 
-
-        icase = self._build_optimization(model, pids, upids, nelements, cases, form0, icase)
+        try:
+            icase = self._build_optimization(model, pids, upids, nelements, cases, form0, icase)
+        except:
+            pass
 
             #mid_eids_skip = []
             #for pid in upids:
@@ -2301,30 +2303,43 @@ class NastranIO(object):
             #dvmrel_init = np.zeros(nelements, dtype='int32')
             #dvgrel_init = np.zeros(nelements, dtype='int32')
             dvprel_t_init = np.zeros(nelements, dtype='float32')
+            dvprel_t_min = np.zeros(nelements, dtype='float32')
+            dvprel_t_max = np.zeros(nelements, dtype='float32')
+
             for key, dvprel in iteritems(model.dvprels):
                 if dvprel.type == 'DVPREL1':
                     prop_type = dvprel.Type
                     desvars = dvprel.dvids
+                    coeffs = dvprel.coeffs
                     pid = dvprel.pid.pid
                     var_to_change = dvprel.pNameFid
                     assert len(desvars) == 1, len(desvars)
 
                     if prop_type == 'PSHELL':
+                        i = np.where(pids == pid)
+                        assert len(i) > 0, i
                         if var_to_change == 'T':
-                            i = np.where(pids == pid)
-                            assert len(i) > 0, i
-                            for desvar in desvars:
-                                xinit = desvar.xinit
+                            value = 0.
+                            lower_bound = 0.
+                            upper_bound = 0.
+                            for desvar, coeff in zip(desvars, coeffs):
+                                xiniti = desvar.xinit
                                 if desvar.xlb != -1e20:
-                                    desvar.xlb
+                                    xiniti = max(xiniti, desvar.xlb)
+                                    lower_bound = desvar.xlb
                                 if desvar.xub != 1e20:
-                                    desvar.xub
+                                    xiniti = min(xiniti, desvar.xub)
+                                    upper_bound = desvar.xub
                                 if desvar.delx is not None and desvar.delx != 1e20:
                                     desvar.delx
                                 if desvar.ddval is not None:
                                     msg = 'DESVAR id=%s DDVAL is not None\n%s' % str(desvar)
                                 assert desvar.ddval is None, desvar
+                                xinit = coeff * xiniti
                             dvprel_t_init[i] = xinit
+                            dvprel_t_min[i] = lower_bound
+                            dvprel_t_max[i] = upper_bound
+
                         else:
                             raise NotImplementedError(dvprel)
                     else:
@@ -2336,11 +2351,19 @@ class NastranIO(object):
                 if dvprel.pMin is not None:
                     dvprel.pMin
 
-            t_res = GuiResult(0, header='DVPREL Init - t', title='DVPREL Init - t',
-                              location='centroid', scalar=dvprel_t_init)
-            cases[icase] = (t_res, (0, 'DVPREL Init - t'))
+            t_init_res = GuiResult(0, header='DVPREL Init - t', title='DVPREL Init - t',
+                                   location='centroid', scalar=dvprel_t_init)
+            t_min_res = GuiResult(0, header='DVPREL Min - t', title='DVPREL Min - t',
+                                  location='centroid', scalar=dvprel_t_min)
+            t_max_res = GuiResult(0, header='DVPREL Max - t', title='DVPREL Max - t',
+                                  location='centroid', scalar=dvprel_t_max)
+            cases[icase] = (t_init_res, (0, 'DVPREL Init - t'))
+            cases[icase + 1] = (t_min_res, (0, 'DVPREL Min - t'))
+            cases[icase + 2] = (t_max_res, (0, 'DVPREL Max - t'))
             form0.append(('DVPREL Init - t', icase, []))
-            icase += 1
+            form0.append(('DVPREL Min - t', icase + 1, []))
+            form0.append(('DVPREL Max - t', icase + 2, []))
+            icase += 3
         return icase
 
     def _plot_pressures(self, model, cases, form0, icase, subcase_id, subcase):
