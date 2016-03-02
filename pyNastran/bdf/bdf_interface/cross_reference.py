@@ -589,6 +589,7 @@ class XrefMesh(BDFAttributes):
             aero.refb *= xyz_scale
             aero.sref *= area_scale
             aero.velocity *= velocity_scale
+            assert np.allclose(aero.density, 1.0), aero
         for aeros in itervalues(self.aeros):
             #print(aeros)
             #print(aeros.object_attributes())
