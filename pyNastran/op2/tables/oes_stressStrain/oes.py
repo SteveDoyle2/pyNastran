@@ -6,9 +6,9 @@ Defines the Real/Complex Stresses/Strains created by:
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from struct import Struct
 from six import b
 from six.moves import range
-from struct import Struct
 from numpy import fromstring, radians, sin, cos, vstack, repeat, array
 import numpy as np
 
@@ -45,7 +45,7 @@ from pyNastran.op2.tables.oes_stressStrain.complex.oes_springs import ComplexSpr
 
 # TODO: vectorize 1
 from pyNastran.op2.tables.oes_stressStrain.oes_nonlinear import (RealNonlinearRodArray,
-                                                                 HyperelasticQuad,
+                                                                 HyperelasticQuad, # vectorize
                                                                  RealNonlinearPlateArray)
 
 
@@ -606,7 +606,7 @@ class OES(OP2Common):
             (53, 3, 37) : ('ctriax_stress', 'ComplexTriaxStress'),
 
             (102, 1, 7, b'OES1X1') : ('cbush_stress', RealBushStressArray),
-			(102, 1, 7, b'OES1X') : ('cbush_stress', RealBushStressArray),
+            (102, 1, 7, b'OES1X') : ('cbush_stress', RealBushStressArray),
             (102, 1, 7, b'OES1') : ('cbush_stress', RealBushStressArray),
             (102, 2, 13, b'OES1X') : ('cbush_stress', ComplexCBushStressArray),
             (102, 3, 13, b'OES1X') : ('cbush_stress', ComplexCBushStressArray),
@@ -906,10 +906,10 @@ class OES(OP2Common):
                     obj.itotal = itotal2
                     obj.ielement = ielement2
                 else:
-                    s = Struct(b(self._endian + 'i4f'))
+                    struct1 = Struct(b(self._endian + 'i4f'))
                     for i in range(nelements):
                         edata = data[n:n+ntotal]
-                        out = s.unpack(edata)
+                        out = struct1.unpack(edata)
                         (eid_device, axial, axial_margin, torsion, torsion_margin) = out
                         eid = eid_device // 10
                         if self.is_debug_file:
@@ -923,8 +923,6 @@ class OES(OP2Common):
                     nelements, result_name, slot, obj_vector_complex)
                 if auto_return:
                     return nelements * self.num_wide * 4
-
-                s = Struct(b(self._endian + 'i4f'))
 
                 obj = self.obj
                 if self.use_vector and is_vectorized:
@@ -955,9 +953,10 @@ class OES(OP2Common):
                     obj.itotal = itotal2
                     obj.ielement = ielement2
                 else:
+                    struct1 = Struct(b(self._endian + 'i4f'))
                     for i in range(nelements):
                         edata = data[n:n + ntotal]
-                        out = s.unpack(edata)
+                        out = struct1.unpack(edata)
                         (eid_device, axial_real, axial_imag, torsion_real, torsion_imag) = out
                         eid = eid_device // 10
 
@@ -1016,7 +1015,7 @@ class OES(OP2Common):
                     self._data_factor = 11
                     return nelements * self.num_wide * 4
                 obj = self.obj
-                s = self.struct_i
+                #s = self.struct_i
                 nnodes = 10  # 11-1
                 ntotal = self.num_wide * 4
                 n1 = 44
@@ -1057,7 +1056,7 @@ class OES(OP2Common):
                     #self.create_transient_object(self.beamStrain, RealBeamStrain)
 
                 nelements = ndata // ntotal
-                s = self.struct_i
+                #s = self.struct_i
 
                 nnodes = 10  # 11-1
                 ntotal = self.num_wide * 4
@@ -1141,10 +1140,10 @@ class OES(OP2Common):
                     obj.itotal = itotal2
                     obj.ielement = ielement2
                 else:
-                    s = Struct(b(self._endian + 'i3f'))
+                    struct1 = Struct(b(self._endian + 'i3f'))
                     for i in range(nelements):
                         edata = data[n:n + ntotal]
-                        out = s.unpack(edata)  # num_wide=5
+                        out = struct1.unpack(edata)  # num_wide=5
                         if self.is_debug_file:
                             self.binary_debug.write('CSHEAR-4 - %s\n' % str(out))
 
@@ -1189,10 +1188,10 @@ class OES(OP2Common):
                     obj.itotal = itotal2
                     obj.ielement = ielement2
                 else:
-                    s = Struct(b(self._endian + 'i4f'))
+                    struct1 = Struct(b(self._endian + 'i4f'))
                     for i in range(nelements):
                         edata = data[n:n + ntotal]
-                        out = s.unpack(edata)  # num_wide=5
+                        out = struct1.unpack(edata)  # num_wide=5
                         if self.is_debug_file:
                             self.binary_debug.write('CSHEAR-4 - %s\n' % str(out))
                         (eid_device, etmaxr, etmaxi, etavgr, etavgi) = out
@@ -1277,10 +1276,10 @@ class OES(OP2Common):
                     obj.itotal = itotal2
                     obj.ielement = ielement2
                 else:
-                    s = Struct(b(self._endian + 'if'))
+                    struct1 = Struct(b(self._endian + 'if'))
                     for i in range(nelements):
                         edata = data[n:n+ntotal]
-                        out = s.unpack(edata)
+                        out = struct1.unpack(edata)
                         (eid_device, ox) = out
                         eid = eid_device // 10
                         if self.is_debug_file:
@@ -1327,10 +1326,10 @@ class OES(OP2Common):
                     obj.itotal = itotal2
                     obj.ielement = ielement2
                 else:
-                    s = Struct(b(self._endian + 'i2f'))
+                    struct1 = Struct(b(self._endian + 'i2f'))
                     for i in range(nelements):
                         edata = data[n:n + ntotal]
-                        out = s.unpack(edata)
+                        out = struct1.unpack(edata)
                         (eid_device, axial_real, axial_imag) = out
                         eid = eid_device // 10
 
@@ -1409,10 +1408,10 @@ class OES(OP2Common):
                     obj.itotal = ielement2
                     obj.ielement = ielement2
                 else:
-                    s = Struct(b(self._endian + 'i15f'))
+                    struct1 = Struct(b(self._endian + 'i15f'))
                     for i in range(nelements):
                         edata = data[n:n+ntotal]
-                        out = s.unpack(edata)
+                        out = struct1.unpack(edata)
                         (eid_device,
                          s1a, s2a, s3a, s4a, axial, smaxa, smina, margin_tension,
                          s1b, s2b, s3b, s4b, smaxb, sminb, margin_compression) = out
@@ -1458,7 +1457,7 @@ class OES(OP2Common):
                         assert eids.min() > 0, eids.min()
                         obj.element[itotal:itotal2] = eids
 
-                    isave1 = [1, 2, 3, 4, 5,  11, 12, 13, 14]
+                    isave1 = [1, 2, 3, 4, 5, 11, 12, 13, 14]
                     isave2 = [6, 7, 8, 9, 10, 15, 16, 17, 18]
                     if is_magnitude_phase:
                         mag = floats[:, isave1]
@@ -1474,11 +1473,11 @@ class OES(OP2Common):
                     obj.itotal = itotal2
                     obj.ielement = ielement2
                 else:
-                    s = Struct(b(self._endian + 'i18f'))
+                    struct1 = Struct(b(self._endian + 'i18f'))
                     for i in range(nelements):
                         edata = data[n:n+ntotal]
                         n += ntotal
-                        out = s.unpack(edata)
+                        out = struct1.unpack(edata)
                         (eid_device,
                          s1ar, s2ar, s3ar, s4ar, axialr,
                          s1ai, s2ai, s3ai, s4ai, axiali,
@@ -1901,11 +1900,11 @@ class OES(OP2Common):
                     obj.itotal = itotal2
                     obj.ielement = ielement2
                 else:
-                    s = Struct(b(self._endian + 'i16f'))
+                    struct1 = Struct(b(self._endian + 'i16f'))
                     cen = 0 # CEN/4
                     for i in range(nelements):
                         edata = data[n:n+ntotal]
-                        out = s.unpack(edata)
+                        out = struct1.unpack(edata)
 
                         (eid_device,
                          fd1, sx1, sy1, txy1, angle1, major1, minor1, max_shear1,
@@ -2101,10 +2100,10 @@ class OES(OP2Common):
                     n = nbytes
                 else:
                     cen = 0 # 'CEN/3'
-                    s = Struct(b(self._endian + 'i16f'))
+                    struct1 = Struct(b(self._endian + 'i16f'))
                     for i in range(nelements):
                         edata = data[n:n + ntotal]
-                        out = s.unpack(edata)
+                        out = struct1.unpack(edata)
                         (eid_device,
                          fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,
                          fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,) = out
@@ -2169,11 +2168,11 @@ class OES(OP2Common):
                     obj.itotal = itotal2
                     obj.ielement = ielement2
                 else:
-                    s = Struct(b(self._endian + 'i14f'))
+                    struct1 = Struct(b(self._endian + 'i14f'))
                     cen = 0 # CEN/3
                     for i in range(nelements):
                         edata = data[n:n + ntotal]
-                        out = s.unpack(edata)
+                        out = struct1.unpack(edata)
                         (eid_device,
                          fd1, sx1r, sx1i, sy1r, sy1i, txy1r, txy1i,
                          fd2, sx2r, sx2i, sy2r, sy2i, txy2r, txy2i,) = out
@@ -2575,10 +2574,10 @@ class OES(OP2Common):
                     obj.ielement = ielement2
                     obj.itotal = ielement2
                 else:
-                    s = Struct(b(self._endian + 'i12f'))  # 1+12=13
+                    struct1 = Struct(b(self._endian + 'i12f'))  # 1+12=13
                     for i in range(nelements):
                         edata = data[n:n + ntotal]
-                        out = s.unpack(edata)
+                        out = struct1.unpack(edata)
                         if self.is_debug_file:
                             self.binary_debug.write('CQUADNL-90 - %s\n' % str(out))
 
@@ -2626,10 +2625,10 @@ class OES(OP2Common):
                     obj.itotal = ielement2
                 else:
                     etype = self.element_type
-                    s = Struct(b(self._endian + 'i24f')) # 1+24=25
+                    struct1 = Struct(b(self._endian + 'i24f')) # 1+24=25
                     for i in range(nelements):
                         edata = data[n:n + ntotal]
-                        out = s.unpack(edata)
+                        out = struct1.unpack(edata)
                         if self.is_debug_file:
                             self.binary_debug.write('CQUADNL-90 - %s\n' % str(out))
                         (eid_device,
@@ -2725,14 +2724,14 @@ class OES(OP2Common):
                     #[o1, o2, t12, t1z, t2z, angle, major, minor, ovm]
                     obj.data[obj.itime, istart:iend, :] = floats[:, 2:]
                 else:
-                    s = Struct(b(self._endian + 'ii9f')) # 11
+                    struct1 = Struct(b(self._endian + 'ii9f')) # 11
                     eid_old = 0
                     if hasattr(self, 'eid_old'):
                         eid_old = self.eid_old
 
                     for i in range(nelements):
                         edata = data[n:n+44]  # 4*11
-                        out = s.unpack(edata)
+                        out = struct1.unpack(edata)
                         (eid_device, layer, o1, o2, t12, t1z, t2z, angle, major, minor, ovm) = out
                         eid = eid_device // 10
 
@@ -2749,7 +2748,7 @@ class OES(OP2Common):
                     self.eid_old = eid_old
             elif self.format_code in [2, 3] and self.num_wide == 9:  # TODO: imag? - not done...
                 # TODO: vectorize
-                aaa
+                raise NotImplementedError('imaginary composite stress?')
                 msg = self.code_information()
                 nelements = ndata // ntotal
                 auto_return, is_vectorized = self._create_oes_object4(
@@ -3009,10 +3008,10 @@ class OES(OP2Common):
                     #[tx, ty, tz, rx, ry, rz]
                     obj.data[obj.itime, istart:iend, :] = floats[:, 1:]
                 else:
-                    s = Struct(b(self._endian + 'i6f'))
+                    struct1 = Struct(b(self._endian + 'i6f'))
                     for i in range(nelements):
                         edata = data[n:n + ntotal]
-                        out = s.unpack(edata)  # num_wide=7
+                        out = struct1.unpack(edata)  # num_wide=7
                         if self.is_debug_file:
                             self.binary_debug.write('CBUSH-102 - %s\n' % str(out))
 
@@ -3063,10 +3062,10 @@ class OES(OP2Common):
                     obj.itotal = itotal2
                     obj.ielement = ielement2
                 else:
-                    s = Struct(b(self._endian + 'i12f'))
+                    struct1 = Struct(b(self._endian + 'i12f'))
                     for i in range(nelements):
                         edata = data[n:n + ntotal]
-                        out = s.unpack(edata)  # num_wide=7
+                        out = struct1.unpack(edata)  # num_wide=7
                         if self.is_debug_file:
                             self.binary_debug.write('CBUSH-102 - %s\n' % str(out))
 
@@ -3141,10 +3140,10 @@ class OES(OP2Common):
                     obj.ielement = itotal2
                     obj.itotal = itotal2
                 else:
-                    s = Struct(b(self._endian + 'i6fi'))
+                    struct1 = Struct(b(self._endian + 'i6fi'))
                     for i in range(nelements):
                         edata = data[n:n + 32]
-                        out = s.unpack(edata)  # num_wide=25
+                        out = struct1.unpack(edata)  # num_wide=25
                         if self.is_debug_file:
                             self.binary_debug.write('CBUSH1D-40 - %s\n' % (str(out)))
                         (eid_device, fe, ue, ve, ao, ae, ep, fail) = out
@@ -3201,11 +3200,11 @@ class OES(OP2Common):
                     obj.ielement = itotal2
                     obj.itotal = itotal2
                 else:
-                    s = Struct(b(self._endian + 'i8f'))
+                    struct1 = Struct(b(self._endian + 'i8f'))
                     for i in range(nelements):
                         edata = data[n:n+ntotal]
 
-                        out = s.unpack(edata)  # num_wide=25
+                        out = struct1.unpack(edata)  # num_wide=25
                         (eid_device,
                          fer, uer, aor, aer,
                          fei, uei, aoi, aei) = out
@@ -3287,10 +3286,10 @@ class OES(OP2Common):
                     # eff_plastic_creep_strain, eff_creep_strain, linear_torsional_stresss]
                     obj.data[obj.itime, istart:iend, :] = floats[:, 1:]
                 else:
-                    s = Struct(b(self._endian + 'i6f'))  # 1+6=7
+                    struct1 = Struct(b(self._endian + 'i6f'))  # 1+6=7
                     for i in range(nelements):
                         edata = data[n:n+ntotal]
-                        out = s.unpack(edata)
+                        out = struct1.unpack(edata)
 
                         (eid_device, axial_stress, equiv_stress, total_strain,
                          eff_plastic_creep_strain, eff_creep_strain, linear_torsional_stresss) = out
@@ -3353,10 +3352,10 @@ class OES(OP2Common):
                     obj.itotal = ielement2
                     obj.ielement = ielement2
                 else:
-                    s = Struct(b(self._endian + 'i2f'))
+                    struct1 = Struct(b(self._endian + 'i2f'))
                     for i in range(nelements):
                         edata = data[n:n+ntotal]
-                        out = s.unpack(edata)  # num_wide=3
+                        out = struct1.unpack(edata)  # num_wide=3
                         (eid_device, force, stress) = out
                         eid = eid_device // 10
                         if self.is_debug_file:
@@ -3416,11 +3415,11 @@ class OES(OP2Common):
                     #[cpx, shy, shz, au, shv, shw, slv, slp]
                     obj.data[obj.itime, ielement:ielement2, :] = floats[:, 1:9]
                 else:
-                    s = Struct(b(self._endian + 'i8f4s4s'))
+                    struct1 = Struct(b(self._endian + 'i8f4s4s'))
                     for i in range(nelements):
                         edata = data[n:n + ntotal]
 
-                        out = s.unpack(edata)  # num_wide=25
+                        out = struct1.unpack(edata)  # num_wide=25
                         (eid_device, cpx, shy, shz, au, shv, shw, slv, slp, form1, form2) = out
                         eid = eid_device // 10
                         if self.is_debug_file:
@@ -3470,10 +3469,10 @@ class OES(OP2Common):
                     #self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
 
 
-                s = Struct(b(self._endian + '2i 4s5f 4s5f 4s5f 4s5f i 4s5f 4s5f 4s5f 4s5f'))  # 2 + 6*8 + 1 = 51
+                struct1 = Struct(b(self._endian + '2i 4s5f 4s5f 4s5f 4s5f i 4s5f 4s5f 4s5f 4s5f'))  # 2 + 6*8 + 1 = 51
                 for i in range(nelements):  # num_wide=51
                     edata = data[n:n + 204]
-                    out = s.unpack(edata)
+                    out = struct1.unpack(edata)
 
                     if self.is_debug_file:
                         self.binary_debug.write('BEAMNL-94 - %s\n' % str(out))
@@ -3642,10 +3641,10 @@ class OES(OP2Common):
                     #[sd, sxc, sxd, sxe, sxf, axial, smax, smin, MS]
                     obj.data[obj.itime, istart:iend, :] = floats[:, 1:]
                 else:
-                    s = Struct(b(self._endian + 'i9f'))
+                    struct1 = Struct(b(self._endian + 'i9f'))
                     for i in range(nelements):
                         edata = data[n:n+ntotal]
-                        out = s.unpack(edata)
+                        out = struct1.unpack(edata)
                         (eid_device, sd, sxc, sxd, sxe, sxf, axial, smax, smin, MS) = out
                         eid = eid_device // 10
                         if self.is_debug_file:
@@ -4055,12 +4054,12 @@ class OES(OP2Common):
         ntotal = 36  # 4*9
 
         n = 0
-        s = Struct(b(self._endian + 'i8si3fi4s'))
+        struct1 = Struct(b(self._endian + 'i8si3fi4s'))
         nelements = ndata // ntotal
         obj = self.obj
         for i in range(nelements):
             edata = data[n:n + ntotal]
-            out = s.unpack(edata)  # num_wide=9
+            out = struct1.unpack(edata)  # num_wide=9
             if self.is_debug_file:
                 self.binary_debug.write('CQUAD4-95 - %s\n' % str(out))
             #eid, failure, ply, failureIndexPly, failureIndexBonding, failureIndexMax, flag

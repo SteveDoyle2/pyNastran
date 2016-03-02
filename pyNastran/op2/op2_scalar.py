@@ -863,17 +863,43 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         }
         return table_mapper
 
-    #def _hisadd_3(self, data):
-        #"""
-        #table of design iteration history for current design cycle
-        #HIS table
-        #"""
-        #self.show_data(data, types='ifs')
-        #asf
+    def _hisadd_3(self, data, ndata):
+        """
+        table of design iteration history for current design cycle
+        HIS table
+        """
+        self.show_data(data, types='ifs')
+        asf
 
-    #def _hisadd_4(self, data):
+    def _hisadd_4(self, data, ndata):
+        if self.read_mode == 1:
+            return ndata
+        out = unpack(self._endian + 'iiifffif', data)
+        design_iteration = out[0] # dsiter
+        convergence_type = out[1] # cvtyp
+        # 1 - soft
+        # 2 - hard
+        assert convergence_type in [1, 2], convergence_type
+        convergence_result = out[2] # cvprov
+
+        # 0 - no
+        # 1 - soft
+        # 2 - hard
+        # 3 - ???
+        assert convergence_result in [0, 1, 2, 3], convergence_result
+        initial_obj = out[3] # obji
+        final_obj = out[4] # objo
+        max_constraint_value = out[5] # gmax
+        row_of_max_constraint_value = out[6] # irmax
+        desvar_value = out[7] # xval
+        #if not self._count in self.convergence_history:
+            #self.convergence_history[self._count] = []
+        #self.convergence_history[self._count].append(out)
+        #print(out)
         #self.show_data(data, types='ifs')
-        #asf
+        #print(len(data))
+        assert len(data) == 8 * 4, len(data)
+        return ndata
 
     def _read_aemonpt_3(self, data, ndata):
         sys.exit(self.code_information())
@@ -940,6 +966,52 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
     def _table_passer_r1tabrg(self, data, ndata):
         """auto-table skipper"""
+        if self.read_mode == 0:
+            return
+        #if self._table4_count == 0:
+            #self._count += 1
+        #self._table4_count += 1
+
+        if 0:
+            #self.show_data(data, types='ifs', endian=None)
+            out = unpack(self._endian + 'iii 8s iiii i iiiii', data)
+            #print(out)
+            internal_id = out[0]
+            dresp_id = out[1]
+            Type = out[2]
+            if Type == 1:
+                #                                                  -----    WEIGHT RESPONSE    -----
+                #     ---------------------------------------------------------------------------------------------------------------------------
+                #          INTERNAL    DRESP1    RESPONSE     ROW       COLUMN         LOWER          INPUT         OUTPUT          UPPER
+                #             ID         ID       LABEL        ID         ID           BOUND          VALUE          VALUE          BOUND
+                #     ---------------------------------------------------------------------------------------------------------------------------
+                #               1         1      WEIGHT        3          3              N/A        2.9861E+05    2.9852E+05       N/A
+                #(1, 1, 1, 'WEIGHT  ', 0, 1011, 3, 3, 0, 0, 0, 0, 0, 0)
+                response_label = out[3]
+                row_id = out[4]
+                column_id = out[5]
+
+                dunno_b = out[6]
+                dunno_c = out[7]
+                dunno_d = out[8]
+            elif Type == 6:
+                #                                                 -----    STRESS RESPONSES    -----
+                #     ---------------------------------------------------------------------------------------------------------------------------
+                #        INTERNAL   DRESP1   RESPONSE   ELEMENT    VIEW    COMPONENT      LOWER         INPUT        OUTPUT         UPPER
+                #           ID        ID      LABEL        ID     ELM ID      NO.         BOUND         VALUE         VALUE         BOUND
+                #     ---------------------------------------------------------------------------------------------------------------------------
+                #              21       209  S09L       1447476                  17       N/A        4.8561E+04    5.0000E+04    5.0000E+04
+                # (21, 209, 6, 'S09L    ', 30, 1011, 17, 0, 1447476, 0, 0, 0, 0, 0)
+                response_label = out[3]
+                eid = out[4]
+                dunno_a = out[5]
+                dunno_b = out[6]
+                dunno_c = out[7]
+                dunno_d = out[8]
+            else:
+                raise NotImplementedError(Type)
+            assert len(out) == 14, len(out)
+        #self.response1_table[self._count] = out
         if self._table4_count == 0:
             self._count += 1
         self._table4_count += 1
@@ -1228,8 +1300,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                     self._read_dit()
                 elif table_name == b'TOL':
                     self._read_tol()
-                #elif table_name == b'KELM':
-                    #self._read_kelm()
                 elif table_name == b'PCOMPTS': # blade
                     self._read_pcompts()
                 elif table_name == b'FOL':
@@ -1632,110 +1702,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         #self.show(100)
         self.read_markers([0])
 
-    def _read_kelm(self):
-        """
-        .. todo:: this table follows a totally different pattern...
-        The KELM table stores information about the K matrix???
-        """
-        self.log.debug("table_name = %r" % self.table_name)
-        table_name = self._read_table_name(rewind=False)
-        self.read_markers([-1])
-        data = self._read_record()
-
-        self.read_markers([-2, 1, 0])
-        data = self._read_record()
-        if len(data) == 16:  # KELM
-            table_name, dummy_a, dummy_b = unpack(b(self._endian + '8sii'), data)
-            assert dummy_a == 170, dummy_a
-            assert dummy_b == 170, dummy_b
-        else:
-            raise NotImplementedError(self.show_data(data))
-
-        self.read_markers([-3, 1, 1])
-
-        # data = read_record()
-        for i in range(170//10):
-            self.read_markers([2])
-            data = self.read_block()
-            #print "i=%s n=%s" % (i, self.n)
-
-        self.read_markers([4])
-        data = self.read_block()
-
-        for i in range(7):
-            self.read_markers([2])
-            data = self.read_block()
-            #print "i=%s n=%s" % (i, self.n)
-
-
-        self.read_markers([-4, 1, 1])
-        for i in range(170//10):
-            self.read_markers([2])
-            data = self.read_block()
-            #print "i=%s n=%s" % (i, self.n)
-
-        self.read_markers([4])
-        data = self.read_block()
-
-        for i in range(7):
-            self.read_markers([2])
-            data = self.read_block()
-            #print "i=%s n=%s" % (i, self.n)
-
-        self.read_markers([-5, 1, 1])
-        self.read_markers([600])
-        data = self.read_block()  # 604
-
-        self.read_markers([-6, 1, 1])
-        self.read_markers([188])
-        data = self.read_block()
-
-        self.read_markers([14])
-        data = self.read_block()
-        self.read_markers([16])
-        data = self.read_block()
-        self.read_markers([18])
-        data = self.read_block()
-        self.read_markers([84])
-        data = self.read_block()
-        self.read_markers([6])
-        data = self.read_block()
-
-        self.read_markers([-7, 1, 1])
-        self.read_markers([342])
-        data = self.read_block()
-
-        self.read_markers([-8, 1, 1])
-        data = self.read_block()
-        data = self.read_block()
-        while 1:
-            n = self.get_nmarkers(1, rewind=True)[0]
-            if n not in [2, 4, 6, 8]:
-                #print "n =", n
-                break
-            n = self.get_nmarkers(1, rewind=False)[0]
-            #print n
-            data = self.read_block()
-
-
-        i = -9
-        while i != -13:
-            n = self.get_nmarkers(1, rewind=True)[0]
-
-            self.read_markers([i, 1, 1])
-            while 1:
-                n = self.get_nmarkers(1, rewind=True)[0]
-                if n not in [2, 4, 6, 8]:
-                    #print "n =", n
-                    break
-                n = self.get_nmarkers(1, rewind=False)[0]
-                #print n
-                data = self.read_block()
-            i -= 1
-
-        #print "n=%s" % (self.n)
-        #strings, ints, floats = self.show(100)
-
     def _skip_pcompts(self):
         """
         Reads the PCOMPTS table (poorly).
@@ -2101,7 +2067,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             self.binary_debug.write('---marker0 = %s---\n' % markers)
         self.read_markers([-2, 1, 0])
         data = self._read_record()
-        print('hisadd data2')
+        #print('hisadd data2')
         self.show_data(data)
 
         self.read_markers([-3, 1, 0])
