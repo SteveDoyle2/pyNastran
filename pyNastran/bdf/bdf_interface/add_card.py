@@ -620,21 +620,24 @@ class AddMethods(BDFAttributes):
 
     def add_DESVAR(self, desvar):
         key = desvar.oid
-        assert key not in self.desvars
+        assert key not in self.desvars, 'oid=%s old_DESVAR=\n%snew_DESVAR=\n%s' % (
+            key, self.desvars[key], desvar)
         assert key > 0
         self.desvars[key] = desvar
         self._type_to_id_map[desvar.type].append(key)
 
     def add_DDVAL(self, ddval):
         key = ddval.oid
-        assert key not in self.ddvals
+        assert key not in self.ddvals, 'oid=%s old_DDVAL=\n%snew_DDVAL=\n%s' % (
+            key, self.ddvals[key], ddval)
         assert key > 0
         self.ddvals[key] = ddval
         self._type_to_id_map[ddval.type].append(key)
 
     def add_DLINK(self, dlink):
         key = dlink.oid
-        assert key not in self.dlinks
+        assert key not in self.dlinks, 'oid=%s old_DLINK=\n%snew_DLINK=\n%s' % (
+            key, self.dlinks[key], dlink)
         assert key > 0
         self.dlinks[key] = dlink
         self._type_to_id_map[dlink.type].append(key)
@@ -652,13 +655,16 @@ class AddMethods(BDFAttributes):
 
     def add_DRESP(self, dresp):
         key = dresp.oid
-        assert key not in self.dresps
+        assert key not in self.dresps, 'pid=%s old_DRESPx=\n%snew_DRESPx=\n%s' % (
+                    key, self.dresps[key], dresp)
         assert key > 0
         self.dresps[key] = dresp
         self._type_to_id_map[dresp.type].append(key)
 
     def add_DVMREL(self, dvmrel):
         key = dvmrel.oid
+        assert key not in self.dvmrels, 'pid=%s old_DVMRELx=\n%snew_DVMRELx=\n%s' % (
+                    key, self.dvmrels[key], dvmrel)
         assert key not in self.dvmrels
         assert key > 0
         self.dvmrels[key] = dvmrel
@@ -666,7 +672,8 @@ class AddMethods(BDFAttributes):
 
     def add_DVPREL(self, dvprel):
         key = dvprel.oid
-        assert key not in self.dvprels
+        assert key not in self.dvprels, 'pid=%s old_DVPRELx=\n%snew_DVPRELx=\n%s' % (
+                    key, self.dvprels[key], dvprel)
         assert key > 0
         self.dvprels[key] = dvprel
         self._type_to_id_map[dvprel.type].append(key)

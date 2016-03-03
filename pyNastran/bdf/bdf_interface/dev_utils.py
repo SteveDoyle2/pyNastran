@@ -7,6 +7,7 @@ from itertools import count
 from math import ceil
 from collections import defaultdict
 
+import numpy as np
 from numpy import (array, unique, where, arange, hstack, searchsorted,
                    setdiff1d, intersect1d, asarray)
 from numpy.linalg import norm
@@ -14,6 +15,7 @@ import scipy
 
 from pyNastran.utils import integer_types
 from pyNastran.bdf.bdf import BDF
+from pyNastran.bdf.cards.elements.shell import CTRIA3
 #from pyNastran.bdf.cards.base_card import expand_thru
 from pyNastran.utils import object_attributes
 
@@ -1463,3 +1465,113 @@ def split_model_by_material_id(bdf_filename, bdf_filename_base, encoding=None, s
                 node = model.nodes[nid]
                 bdf_file.write(node.write_card(size=size, is_double=is_double))
             bdf_file.write('ENDDATA\n')
+
+
+def convert_bad_quads_to_tris(model, eids_to_check=None, tol=0.0):
+    """
+    A standard quad is a nice rectangle.  If an edge is collapsed, it's a triangle.
+    Change the element type.
+
+    Parameters
+    ----------
+    model : BDF()
+        a BDF model that has not had it's properties/load xref'd, but is valid
+        such that it could
+    eids : list; (default=None -> all CQUAD4s)
+        the subset of element ids to check
+    tol : float; default=0.0
+        what is classified as "short"
+
+    Warning
+    -------
+    Don't cross reference properties/loads
+
+    TODO:
+    -----
+    check for bad xref
+    """
+    #print('hi@!')
+    out = model.get_card_ids_by_card_types('CQUAD4')
+    cquad4s = out['CQUAD4']
+    if eids_to_check is None:
+        cquad4s_to_check = cquad4s
+    else:
+        cquad4s_to_check = list(set(eids_to_check).intersection(set(cquads)))
+
+    elements = model.elements
+    eids_to_remove = []
+
+    xyz_cid0 = model.get_xyz_in_coord(cid=0)
+    #print(xyz_cid0)
+    nid_cd = np.array([[nid, node.Cd()] for nid, node in sorted(iteritems(model.nodes))])
+    all_nids = nid_cd[:, 0]
+
+    assert len(cquad4s_to_check) > 0, cquad4s_to_check
+    for eid in sorted(cquad4s_to_check):
+        #print('--------------------------------------')
+        #print('eid =', eid)
+        elem = elements[eid]
+        nids = elem.node_ids
+        nids_long = nids + nids
+
+        nids_to_remove = []
+        for inode in range(4):
+            #print()
+            nid0 = nids_long[inode]
+            nid1 = nids_long[inode + 1]
+            edge = [nid0, nid1]
+            i = searchsorted(all_nids, edge)
+            #print('i = %s' % i)
+            xyz = xyz_cid0[i, :]
+            edge_length = np.linalg.norm(xyz[0, :] - xyz[1, :])
+            #print(' edge=(%s,%s) edge_length = %s' % (nid0, nid1, edge_length))
+            #print(xyz)
+            if edge_length <= tol:
+                nids_to_remove.append(nid1)
+
+        if len(nids_to_remove) == 0:
+            continue
+        #print('*eid=%s nids=%s' % (eid, nids))
+        for nid in nids_to_remove:
+            nids.remove(nid)
+
+        if len(nids) < 3:
+            print('found eid=%s is a line/point...removing' % eid)
+            del model.elements[eid]
+            continue
+
+        nids_to_remove = []
+        nids_long = nids + nids
+        for inode in range(3):
+            nid0 = nids_long[inode]
+            nid1 = nids_long[inode + 1]
+            edge = [nid0, nid1]
+            i = searchsorted(all_nids, edge)
+            xyz = xyz_cid0[i, :]
+            edge_length = np.linalg.norm(xyz[0, :] - xyz[1, :])
+            if edge_length <= tol:
+                nids_to_remove.append(nid1)
+
+        for nid in nids_to_remove:
+            nids.remove(nid)
+
+        if len(nids) < 3:
+            print('found eid=%s is a line/point...removing' % eid)
+            del model.elements[eid]
+            continue
+
+        print('found eid=%s is a triangle...replacing QUAD4 with CTRIA3' % eid)
+        #print('  nids2=%s' % (nids))
+        assert elem.TFlag == 0, elem
+        assert elem.T1 is None, elem.T1
+        assert elem.T2 is None, elem.T2
+        assert elem.T3 is None, elem.T3
+        assert elem.T4 is None, elem.T4
+        elem2 = CTRIA3(eid, elem.Pid(), nids, elem.zOffset,
+                       thetaMcid=elem.thetaMcid, TFlag=0, T1=None, T2=None, T3=None,
+                       comment='$ was a CQUAD4\n')
+        del model.elements[eid]
+        model.elements[eid] = elem2
+
+
+
