@@ -184,6 +184,9 @@ class OP2_F06_Common(object):
         #: ESE
         self.eigenvalues = {}
 
+        #self.convergence_history = {}
+        #self.response1_table = {}
+
     def __objects_init__(self):
         """More variable declarations"""
         #: the date the job was run on
@@ -617,6 +620,12 @@ class OP2_F06_Common(object):
         table_types += [
             # LAMA
             'eigenvalues',
+
+            # HISADD
+            #'convergence_history',
+
+            # R1TABRG
+            #'response1_table',
 
             # OEF - Forces - tCode=4 thermal=0
             'crod_force',
