@@ -23,7 +23,7 @@ def run_nastran(fname, keywords=None):
         Default keywords are `'mem=1024mb'`, `'old=no'`, and `'news=no'`
     """
     if keywords is None:
-        keywords_list = [] # [‘scr=yes’, ‘bat=no’ mem=1024mb','old=no','news=no']
+        keywords_list = [] # ['scr=yes', 'bat=no', 'mem=1024mb','old=no','news=no']
     else:
         if isinstance(keywords, (list, tuple)):
             keywords_list = keywords
