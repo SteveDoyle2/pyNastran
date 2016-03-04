@@ -33,7 +33,7 @@ from pyNastran.bdf.field_writer_8 import print_card_8, print_field_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.cards.utils import wipe_empty_fields
 
-def _triangle_area_centroid_normal(nodes):
+def _triangle_area_centroid_normal(nodes, card):
     """
 
     Parameters
@@ -49,6 +49,8 @@ def _triangle_area_centroid_normal(nodes):
         Centroid of triangle.
     unit_normal : ndarray
         Unit normal of triangles.
+    card : CTRIA3(), CTRIA6()
+        the self parameter
 
     ::
 
@@ -72,8 +74,8 @@ def _triangle_area_centroid_normal(nodes):
 
     if not allclose(norm(normal), 1.):
         msg = ('function _triangle_area_centroid_normal, check...\n'
-               'a = {0}\nb = {1}\nnormal = {2}\nlength = {3}\n'.format(
-                   n0 - n1, n0 - n2, normal, length))
+               'a = {0}\nb = {1}\nnormal = {2}\nlength = {3}\n{4}'.format(
+                   n0 - n1, n0 - n2, normal, length, str(card)))
         raise RuntimeError(msg)
     return (0.5 * length, (n0 + n1 + n2) / 3., normal)
 
@@ -202,7 +204,7 @@ class TriShell(ShellElement):
                the normal vector
         """
         (n0, n1, n2) = self.get_node_positions()
-        return _triangle_area_centroid_normal([n0, n1, n2])
+        return _triangle_area_centroid_normal([n0, n1, n2], self)
 
     def get_area(self):
         return self.Area()
@@ -596,7 +598,7 @@ class CTRIA6(TriShell):
         together
         """
         (n1, n2, n3, n4, n5, n6) = self.get_node_positions()
-        return _triangle_area_centroid_normal([n1, n2, n3])
+        return _triangle_area_centroid_normal([n1, n2, n3], self)
 
     def Area(self):
         r"""
@@ -918,7 +920,7 @@ class CTRIAX(TriShell):
         together
         """
         (n1, n2, n3, n4, n5, n6) = self.get_node_positions()
-        return _triangle_area_centroid_normal([n1, n2, n3])
+        return _triangle_area_centroid_normal([n1, n2, n3], self)
 
     def Area(self):
         r"""
@@ -1070,7 +1072,7 @@ class CTRIAX6(TriShell):
         together
         """
         (n0, n1, n2, n3, n4, n5) = self.get_node_positions()
-        return _triangle_area_centroid_normal([n0, n2, n4])
+        return _triangle_area_centroid_normal([n0, n2, n4], self)
 
     def Area(self):
         r"""

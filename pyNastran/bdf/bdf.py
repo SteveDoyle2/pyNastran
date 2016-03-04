@@ -2833,9 +2833,13 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         for key, card in sorted(iteritems(self.elements)):
             try:
                 card._verify(xref)
-            except:
+            except Exception as e:
+                exc_type, exc_value, exc_traceback = sys.exc_info()
+                print(repr(traceback.format_exception(exc_type, exc_value,
+                                                      exc_traceback)))
                 print(str(card))
-                raise
+
+                #raise
         for key, card in sorted(iteritems(self.properties)):
             try:
                 card._verify(xref)
