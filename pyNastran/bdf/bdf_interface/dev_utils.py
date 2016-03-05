@@ -15,7 +15,8 @@ import scipy
 
 from pyNastran.utils import integer_types
 from pyNastran.bdf.bdf import BDF
-from pyNastran.bdf.cards.elements.shell import CTRIA3
+from pyNastran.bdf.cards.nodes import GRID
+from pyNastran.bdf.cards.elements.shell import CTRIA3, CQUAD4
 #from pyNastran.bdf.cards.base_card import expand_thru
 from pyNastran.utils import object_attributes
 
@@ -1467,7 +1468,7 @@ def split_model_by_material_id(bdf_filename, bdf_filename_base, encoding=None, s
             bdf_file.write('ENDDATA\n')
 
 
-def convert_bad_quads_to_tris(model, eids_to_check=None, tol=0.0):
+def convert_bad_quads_to_tris(model, eids_to_check=None, xyz_cid0=None, tol=0.0):
     """
     A standard quad is a nice rectangle.  If an edge is collapsed, it's a triangle.
     Change the element type.
@@ -1479,6 +1480,8 @@ def convert_bad_quads_to_tris(model, eids_to_check=None, tol=0.0):
         such that it could
     eids : list; (default=None -> all CQUAD4s)
         the subset of element ids to check
+    xyz_cid0 : (n, 3) ndarray
+        nodes in cid=0
     tol : float; default=0.0
         what is classified as "short"
 
@@ -1501,7 +1504,8 @@ def convert_bad_quads_to_tris(model, eids_to_check=None, tol=0.0):
     elements = model.elements
     eids_to_remove = []
 
-    xyz_cid0 = model.get_xyz_in_coord(cid=0)
+    if xyz_cid0 is None:
+        xyz_cid0 = model.get_xyz_in_coord(cid=0)
     #print(xyz_cid0)
     nid_cd = np.array([[nid, node.Cd()] for nid, node in sorted(iteritems(model.nodes))])
     all_nids = nid_cd[:, 0]
@@ -1560,7 +1564,7 @@ def convert_bad_quads_to_tris(model, eids_to_check=None, tol=0.0):
             del model.elements[eid]
             continue
 
-        print('found eid=%s is a triangle...replacing QUAD4 with CTRIA3' % eid)
+        print('found eid=%s is a triangle...replacing CQUAD4 with CTRIA3' % eid)
         #print('  nids2=%s' % (nids))
         assert elem.TFlag == 0, elem
         assert elem.T1 is None, elem.T1
@@ -1574,4 +1578,174 @@ def convert_bad_quads_to_tris(model, eids_to_check=None, tol=0.0):
         model.elements[eid] = elem2
 
 
+def create_spar_cap(model, eids, nids, width, nelements=1, symmetric=True, xyz_cid0=None,
+                    vector=None, idir=None):
+    """
+    Builds elements along a line of nodes that are normal to the element face.
 
+    .. code-block:: console
+
+        1    2     3      4     5  D  4  E  6
+        +----+-----+------+     *-----+-----*
+        | A  |   B |   C  |           |
+        +----+-----+------+           |
+             (side view)       (along the axis)
+
+    Nodes at the upper corner of Element A, B, C.
+
+    Parameters
+    ----------
+    xyz_cid0 : (n, 3) ndarray
+        nodes in cid=0
+    width : float
+        the width of the spar cap
+    nelements : int; default=1
+        the number of nodes to create that are normal to the plane
+    vector1 : (float, float, float)
+        overwrite the normal of the normals (not supported)
+    vector2 : (float, float, float)
+        overwrite the normal of the normals (not supported)
+
+    idir : int; default=1
+        A primary direction to which the normals should be consistent (not supported).
+        0 : x
+        1 : y
+        2 : z
+        For an aircraft rib, y would be the preferred direction for the normal.
+        For an aircraft spar, x/z would work.
+
+    Example
+    -------
+    eids = [A, B, C]
+    nids = [1, 2, 3, 4]
+    width = 3.0
+    nodes, elements = create_spar_cap(model, eids, nids, width)
+    nodes
+    >>> [5, 6]
+    elements
+    >>> [D, E]
+    """
+    assert vector1 is None, vector1
+    assert vector2 is None, vector2
+    assert idir is None, idir
+    assert nelements == 1, idir
+
+    if xyz_cid0 is None:
+        xyz_cid0 = model.get_xyz_in_coord(cid=0)
+    #print(xyz_cid0)
+    nid_cd = np.array([[nid, node.Cd()] for nid, node in sorted(iteritems(model.nodes))])
+    all_nids = nid_cd[:, 0]
+
+    width_array = np.linspace(0., width, num=nelements, endpoint=True)[1:]
+
+    nodes = []
+    elements = []
+    nid_start = all_nids.max() + 1
+    eids = np.asarray(eids, dtype='int32')
+    nids = np.asarray(nids, dtype='int32')
+
+    # Create the CQUAD4s
+    map_nid = {}
+    neids = eids.size
+    all_common_nids = set([])
+    normals = np.zeros((neids, 3), dtype='float64')
+    for eid in eids:
+        elem = model.elements[eid]
+        pid = elem.Pid()
+        enids = elem.node_ids
+        common_nids = np.where(np.in1d(enids, nids)) # A in B
+        all_common_nids.update(common_nids)
+        i = searchsorted(all_nids, enids)
+        xyz = xyz_cid0[i, :]
+        etype = elem.type
+        if etype == 'CQUAD4':
+            # 3---2
+            # |   |
+            # 0---1
+            normal = cross(
+                xyz[2, :] - xyz[0, :],
+                xyz[3, :] - xyz[1, :],
+            )
+        elif etype == 'CTRIA3':
+            normal = cross(
+                xyz[1, :] - xyz[0, :],
+                xyz[2, :] - xyz[0, :],
+            )
+        else:
+            raise NotImplementedError(etype)
+        normi = np.linalg.norm(normi)
+        assert np.allclose(normi) == 1., normi
+        normal /= normi
+
+        # add some new nodes
+        nid0, nid1 = common_nids
+        if nid0 not in map_nid:
+            map_nid[nid0] = np.arange(nid_start, nid_start + nelements)
+            nid_start += nelements
+        if nid1 not in map_nid:
+            map_nid[nid1] = np.arange(nid_start, nid_start + nelements)
+            nid_start += nelements
+
+        nid3 = map_nid[nid1][0]
+        nid4 = map_nid[nid0][0]
+        nid0i = nid0
+        nid1i = nid1
+        for ielement in range(nelements):
+            nid3 = map_nid[nid1][ielement]
+            nid4 = map_nid[nid0][ielement]
+            new_nids = [nid0i, nid1i, nid3, nid4]
+            cquad4 = CQUAD4(eid_start, pid, new_nids)
+            elements.append(cquad4)
+            eid_start += 1
+            nid0i = nid3
+            nid1i = nid4
+
+        if symmetric:
+            if nid0 not in map_nid2:
+                map_nid2[nid0] = np.arange(nid_start, nid_start + nelements)
+                nid_start += nelements
+            if nid1 not in map_nid2:
+                map_nid2[nid1] = np.arange(nid_start, nid_start + nelements)
+                nid_start += nelements
+
+            nid3 = map_nid2[nid1][0]
+            nid4 = map_nid2[nid0][0]
+            nid0i = nid0
+            nid1i = nid1
+            for ielement in range(nelements):
+                nid3 = map_nid2[nid1][ielement]
+                nid4 = map_nid2[nid0][ielement]
+                new_nids = [nid0i, nid1i, nid3, nid4]
+                cquad4 = CQUAD4(eid_start, pid, new_nids)
+                elements.append(cquad4)
+                eid_start += 1
+                nid0i = nid3
+                nid1i = nid4
+
+    # Create the GRIDs
+    inids = searchsorted(all_nids, nids)
+    xyz = xyz_cid0[inids, :]
+    for nid in all_common_nids:
+        mapped_nids = map_nid[nid]
+        avg_normal_at_node = np.zeros(3, dtype='float64')
+        node = model.nodes[nid]
+        node_elems = nid.elements
+        nelems = len(node_elems)
+        for elem in node_elems:
+            eid = elem.eid
+            j = searchsorted(eids, eid)
+            avg_normal_at_node += normals[j, :]
+        avg_normal_at_node /= nelems
+
+        for imap, mapped_nid in enumerate(mapped_nids):
+            xyzi = xyz[i, :] + avg_normal_at_node * width_array[i]
+            node1 = GRID(mapped_nid, xyz=xyzi)
+            nodes.append(node1)
+
+        if symmetric:
+            mapped_nids2 = map_nid2[nid]
+            for imap, mapped_nid2 in enumerate(mapped_nids2):
+                xyzi = xyz[i, :] + avg_normal_at_node * width_array[i]
+                node2 = GRID(mapped_nid2, xyz=xyzi)
+                nodes.append(node2)
+    return nodes, elements

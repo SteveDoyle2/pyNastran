@@ -213,7 +213,7 @@ class TestBDF(Tester):
 
         model = read_bdf(bdf_filename)
         units_to = ['m', 'kg', 's']
-        units_from = ['in', 'lb', 's']
+        units_from = ['in', 'lbm', 's']
         #units_to = units_from
         model.convert(units_to, units_from)
         model.write_bdf(bdf_filename_out)
