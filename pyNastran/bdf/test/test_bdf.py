@@ -582,6 +582,10 @@ def validate_case_control(fem2, p0, sol_base, subcase_keys, subcases, sol_200_ma
             assert 'DESOBJ' in subcase, subcase
             assert 'ANALYSIS' in subcase, subcase
             assert 'DESSUB' in subcase, subcase
+            value, options = subcase.get_parameter('DESOBJ')
+            assert value in fem2.dresps, 'value=%s not in dresps' % value
+            value, options = subcase.get_parameter('DESSUB')
+            assert value in fem2.dconstrs, 'value=%s not in dconstrs' % value
         else:
             raise NotImplementedError(subcase)
 

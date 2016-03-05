@@ -2210,7 +2210,10 @@ class NastranIO(object):
             for eid, element in sorted(iteritems(model.elements)):
                 if isinstance(element, ShellElement):
                     element_dimi = 2
-                    normali = element.Normal()
+                    try:
+                        normali = element.Normal()
+                    except RuntimeError:
+                        normali = np.ones(3) * 2.
                     #pid = element.pid
                     pid = element.pid
                     pid_type = pid.type
