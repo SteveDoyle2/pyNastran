@@ -311,7 +311,7 @@ def atm_density(alt, R=1716., SI=False, debug=False):
     SI : bool; default=False
         convert velocity to SI units
     R : float; default=1716.
-        gas constant for air
+        gas constant for air in english units (???)
 
     Returns
     -------

@@ -450,8 +450,7 @@ class WriteMesh(BDFAttributes):
 
     def _write_aero(self, outfile, size=8, is_double=False):
         """Writes the aero cards"""
-        if(self.aero or self.aeros or self.gusts or self.caeros
-           or self.paeros or self.trims or self.monitor_points):
+        if(self.caeros or self.paeros or self.monitor_points):
             msg = ['$AERO\n']
             for (unused_id, caero) in sorted(iteritems(self.caeros)):
                 msg.append(caero.write_card(size, is_double))
@@ -459,18 +458,8 @@ class WriteMesh(BDFAttributes):
                 msg.append(paero.write_card(size, is_double))
             for (unused_id, spline) in sorted(iteritems(self.splines)):
                 msg.append(spline.write_card(size, is_double))
-            for (unused_id, trim) in sorted(iteritems(self.trims)):
-                msg.append(trim.write_card(size, is_double))
             for monitor_point in self.monitor_points:
                 msg.append(monitor_point.write_card(size, is_double))
-
-            for (unused_id, aero) in sorted(iteritems(self.aero)):
-                msg.append(aero.write_card(size, is_double))
-            for (unused_id, aero) in sorted(iteritems(self.aeros)):
-                msg.append(aero.write_card(size, is_double))
-
-            for (unused_id, gust) in sorted(iteritems(self.gusts)):
-                msg.append(gust.write_card(size, is_double))
             outfile.write(''.join(msg))
 
     def _write_aero_control(self, outfile, size=8, is_double=False):
@@ -497,6 +486,48 @@ class WriteMesh(BDFAttributes):
                 msg.append(aefact.write_card(size, is_double))
             outfile.write(''.join(msg))
 
+    def _write_static_aero(self, outfile, size=8, is_double=False):
+        """Writes the static aero cards"""
+        if(self.aeros or self.trims):
+            msg = ['$STATIC AERO\n']
+            # static aero
+            for (unused_id, aero) in sorted(iteritems(self.aeros)):
+                msg.append(aero.write_card(size, is_double))
+            for (unused_id, trim) in sorted(iteritems(self.trims)):
+                msg.append(trim.write_card(size, is_double))
+
+            # gust
+            for (unused_id, aero) in sorted(iteritems(self.aero)):
+                msg.append(aero.write_card(size, is_double))
+            for (unused_id, gust) in sorted(iteritems(self.gusts)):
+                msg.append(gust.write_card(size, is_double))
+            outfile.write(''.join(msg))
+
+    def _write_flutter(self, outfile, size=8, is_double=False):
+        """Writes the flutter cards"""
+        if self.flfacts or self.flutters or self.mkaeros:
+            msg = ['$FLUTTER\n']
+            for (unused_id, flfact) in sorted(iteritems(self.flfacts)):
+                #if unused_id != 0:
+                msg.append(flfact.write_card(size, is_double))
+            for (unused_id, flutter) in sorted(iteritems(self.flutters)):
+                msg.append(flutter.write_card(size, is_double))
+            for mkaero in self.mkaeros:
+                msg.append(mkaero.write_card(size, is_double))
+            outfile.write(''.join(msg))
+
+    def _write_gust(self, outfile, size=8, is_double=False):
+        """Writes the gust cards"""
+        if(self.aero or self.gusts):
+            msg = []
+            msg = ['$GUST\n']
+            # gust
+            for (unused_id, aero) in sorted(iteritems(self.aero)):
+                msg.append(aero.write_card(size, is_double))
+            for (unused_id, gust) in sorted(iteritems(self.gusts)):
+                msg.append(gust.write_card(size, is_double))
+            outfile.write(''.join(msg))
+
     def _write_common(self, outfile, size=8, is_double=False):
         """
         Write the common outputs so none get missed...
@@ -521,7 +552,9 @@ class WriteMesh(BDFAttributes):
         self._write_dynamic(outfile, size, is_double)
         self._write_aero(outfile, size, is_double)
         self._write_aero_control(outfile, size, is_double)
+        self._write_static_aero(outfile, size, is_double)
         self._write_flutter(outfile, size, is_double)
+        self._write_gust(outfile, size, is_double)
         self._write_thermal(outfile, size, is_double)
         self._write_thermal_materials(outfile, size, is_double)
 
@@ -654,19 +687,6 @@ class WriteMesh(BDFAttributes):
             for (unused_id, tfs) in sorted(iteritems(self.transfer_functions)):
                 for tf in tfs:
                     msg.append(tf.write_card(size, is_double))
-            outfile.write(''.join(msg))
-
-    def _write_flutter(self, outfile, size=8, is_double=False):
-        """Writes the flutter cards"""
-        if self.flfacts or self.flutters or self.mkaeros:
-            msg = ['$FLUTTER\n']
-            for (unused_id, flfact) in sorted(iteritems(self.flfacts)):
-                #if unused_id != 0:
-                msg.append(flfact.write_card(size, is_double))
-            for (unused_id, flutter) in sorted(iteritems(self.flutters)):
-                msg.append(flutter.write_card(size, is_double))
-            for mkaero in self.mkaeros:
-                msg.append(mkaero.write_card(size, is_double))
             outfile.write(''.join(msg))
 
     def _write_loads(self, outfile, size=8, is_double=False):

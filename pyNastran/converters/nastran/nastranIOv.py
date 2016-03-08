@@ -2302,7 +2302,8 @@ class NastranIO(object):
         return nid_to_pid_map, icase, cases, form
 
     def _build_optimization(self, model, pids, upids, nelements, cases, form0, icase):
-        if len(model.properties):
+        if len(model.properties) and  len(model.dvprels):
+            # len(model.dvprels) + len(model.dvcrels) + len(model.dvmrels) + len(model.desvars)
             #dvmrel_init = np.zeros(nelements, dtype='int32')
             #dvgrel_init = np.zeros(nelements, dtype='int32')
             dvprel_t_init = np.zeros(nelements, dtype='float32')

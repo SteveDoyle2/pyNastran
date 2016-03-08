@@ -77,7 +77,7 @@ class BDFMethods(BDFAttributes):
             default = <0,0,0>.
         sym_axis : str, optional
             The axis to which the model is symmetric. If AERO cards are used, this can be left blank
-            allowed_values = 'x', 'y', 'z', 'xy', 'yz', 'xz', 'xyz'
+            allowed_values = 'no', x', 'y', 'z', 'xy', 'yz', 'xz', 'xyz'
         scale : float, optional
             The WTMASS scaling value.
             default=None -> PARAM, WTMASS is used
@@ -435,6 +435,8 @@ class BDFMethods(BDFAttributes):
                     raise NotImplementedError('%s is anti-symmetric about the XY plane' % str(aero))
                 if aero.is_anti_symmetric_xz():
                     raise NotImplementedError('%s is anti-symmetric about the XZ plane' % str(aero))
+        else:
+            assert sym_axis in ['no', 'x', 'y', 'z', 'xy', 'yz', 'xz', 'xyz'], 'sym_axis=%r is invalid' % sym_axis
         if sym_axis is not None:
             # either we figured sym_axis out from the AERO cards or the user told us
             self.log.debug('Mass/MOI sym_axis = %r' % sym_axis)

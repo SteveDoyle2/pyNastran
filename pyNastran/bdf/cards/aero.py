@@ -2342,7 +2342,7 @@ class FLFACT(BaseCard):
         #self.fnf = fnf
         #self.nf = nf
         #self.fmid = fmid
-        if len(factors) > 1 and factors[1] == 'THRU':
+        if len(factors) > 1 and isinstance(factors[1], string_types) and factors[1] == 'THRU':
             msg = 'embedded THRUs not supported yet on FLFACT card\n'
             raise NotImplementedError(msg)
             #(a,thru,b,n,dn) = factors
@@ -2737,8 +2737,19 @@ class MKAERO1(BaseCard):
         return self.machs, self.reduced_freqs
 
     def write_card(self, size=8, is_double=False):
-        card = self.repr_fields()
-        return self.comment + print_card_8(card)
+        cards = []
+        list_fields = ['MKAERO2']
+        nvalues = 0
+        for mach, rfreq in zip(self.machs, self.reduced_freqs):
+            list_fields += [mach, rfreq]
+            nvalues += 1
+            if nvalues == 4:
+                cards.append(print_card_8(list_fields))
+                list_fields = ['MKAERO2']
+                nvalues = 0
+        if nvalues:
+            cards.append(print_card_8(list_fields))
+        return self.comment + ''.join(cards)
 
 
 class MKAERO2(BaseCard):
@@ -2799,8 +2810,19 @@ class MKAERO2(BaseCard):
         return self.machs, self.reduced_freqs
 
     def write_card(self, size=8, is_double=False):
-        card = self.repr_fields()
-        return self.comment + print_card_8(card)
+        cards = []
+        list_fields = ['MKAERO2']
+        nvalues = 0
+        for mach, rfreq in zip(self.machs, self.reduced_freqs):
+            list_fields += [mach, rfreq]
+            nvalues += 1
+            if nvalues == 4:
+                cards.append(print_card_8(list_fields))
+                list_fields = ['MKAERO2']
+                nvalues = 0
+        if nvalues:
+            cards.append(print_card_8(list_fields))
+        return self.comment + ''.join(cards)
 
 class MONPNT1(BaseCard):
     type = 'MONPNT1'

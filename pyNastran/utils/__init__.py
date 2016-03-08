@@ -22,6 +22,8 @@ def merge_dicts(dict_list, strict=True):
                 dict_out[key] = value
             elif strict:
                 raise RuntimeError('key=%r exists in multiple dictionaries' % key)
+            else:
+                print('key=%r is dropped?' % key)
     return dict_out
 
 def loadtxt_nice(filename, delimiter=',', skiprows=0, comment='#', dtype=None):

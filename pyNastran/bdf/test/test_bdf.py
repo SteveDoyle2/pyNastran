@@ -596,7 +596,8 @@ def validate_case_control(fem2, p0, sol_base, subcase_keys, subcases, sol_200_ma
             #elif method_id in fem2.cMethods:
                 #method = fem2.cMethods[method_id]
             else:
-                raise RuntimeError('METHOD = %s' % method_id)
+                method_ids = list(fem2.methods.keys())
+                raise RuntimeError('METHOD = %s not in method_ids=%s' % (method_id, method_ids))
 
             assert sol in [5, 76, 101, 103, 105, 106, 107, 108, 110, 111,
                            112, 144, 145, 146, 187], 'sol=%s METHOD' % sol
