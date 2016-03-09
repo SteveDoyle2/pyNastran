@@ -335,7 +335,8 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
             op2.print_subcase_key()
 
         if write_bdf:
-            op2.write_bdf(bdf_filename)
+            op2._nastran_format = 'msc'
+            op2.write_bdf(bdf_filename, size=8)
             #os.remove(bdf_filename)
         if compare:
             assert op2 == op2_nv

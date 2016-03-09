@@ -2685,8 +2685,8 @@ class MKAERO1(BaseCard):
     def __init__(self, machs, reduced_freqs, comment=''):
         if comment:
             self._comment = comment
-        self.machs = machs
-        self.reduced_freqs = reduced_freqs
+        self.machs = np.unique(machs)
+        self.reduced_freqs = np.unique(reduced_freqs)
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -2738,18 +2738,50 @@ class MKAERO1(BaseCard):
 
     def write_card(self, size=8, is_double=False):
         cards = []
-        list_fields = ['MKAERO2']
-        nvalues = 0
-        for mach, rfreq in zip(self.machs, self.reduced_freqs):
-            list_fields += [mach, rfreq]
-            nvalues += 1
-            if nvalues == 4:
-                cards.append(print_card_8(list_fields))
-                list_fields = ['MKAERO2']
-                nvalues = 0
-        if nvalues:
-            cards.append(print_card_8(list_fields))
-        return self.comment + ''.join(cards)
+        nmachs = len(self.machs)
+        nreduced_freqs = len(self.reduced_freqs)
+        if nmachs > 8 or nreduced_freqs > 8:
+            if 1:
+                cards = []
+                mach_sets = []
+                rfreq_sets = []
+                imach = 0
+                ifreq = 0
+                while imach < nmachs:
+                    mach_sets.append(self.machs[imach:imach+8])
+                    imach += 8
+                while ifreq < nreduced_freqs:
+                    rfreq_sets.append(self.reduced_freqs[ifreq:ifreq+8])
+                    ifreq += 8
+                msg = self.comment
+
+                #print('mach_sets =', mach_sets)
+                #print('rfreq_sets =', rfreq_sets)
+                for mach_set in mach_sets:
+                    for rfreq_set in rfreq_sets:
+                        msg += MKAERO1(mach_set, rfreq_set).write_card(size=size, is_double=is_double)
+                return msg
+            else:
+                machs = []
+                reduced_freqs = []
+                for mach in self.machs:
+                    machs += [mach] * nreduced_freqs
+                    reduced_freqs += self.reduced_freqs
+                return self.comment + MKAERO2(machs, reduced_freqs).write_card(
+                    size=size, is_double=is_double)
+
+        list_fields = ['MKAERO1']
+        machs = [None] * 8
+        reduced_freqs = [None] * 8
+        cards = []
+        assert 0 < len(self.machs) <= 8, 'nmachs=%s machs=%s' % (len(self.machs), self.machs)
+        assert 0 < len(self.reduced_freqs) <= 8, 'nrfreqs=%s rfreqs=%s' % (len(self.reduced_freqs), self.reduced_freqs)
+
+        for i, mach in zip(count(), self.machs):
+            machs[i] = mach
+        for i, rfreq in zip(count(), self.reduced_freqs):
+            reduced_freqs[i] = rfreq
+        return self.comment + print_card_8(['MKAERO1'] + machs + reduced_freqs)
 
 
 class MKAERO2(BaseCard):
