@@ -541,7 +541,8 @@ class OES(OP2Common):
             (82, 3, 77, b'OES1X') : ('cquadr_stress', ComplexPlateStressArray),
 
             (64, 1, 87, b'OES1X1') : ('cquad8_stress', RealPlateStressArray), # real
-            (64, 1, 87, b'OES1X') : ('cquad8_stress', RealPlateStressArray), # real
+            (64, 1, 87, b'OES1X') : ('cquad8_stress', RealPlateStressArray),
+            (64, 1, 87, b'OES1') : ('cquad8_stress', RealPlateStressArray),
             (64, 2, 77, b'OES1X') : ('cquad8_stress', ComplexPlateStressArray), # real/imag
             (64, 3, 77, b'OES1X') : ('cquad8_stress', ComplexPlateStressArray), # mag/phase
 
