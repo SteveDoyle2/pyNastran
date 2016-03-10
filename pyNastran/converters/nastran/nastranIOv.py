@@ -2302,13 +2302,14 @@ class NastranIO(object):
         return nid_to_pid_map, icase, cases, form
 
     def _build_optimization(self, model, pids, upids, nelements, cases, form0, icase):
-        if len(model.properties) and  len(model.dvprels):
+        if len(model.properties) and len(model.dvprels):
             # len(model.dvprels) + len(model.dvcrels) + len(model.dvmrels) + len(model.desvars)
             #dvmrel_init = np.zeros(nelements, dtype='int32')
             #dvgrel_init = np.zeros(nelements, dtype='int32')
             dvprel_t_init = np.zeros(nelements, dtype='float32')
             dvprel_t_min = np.zeros(nelements, dtype='float32')
             dvprel_t_max = np.zeros(nelements, dtype='float32')
+            design_region = np.zeros(nelements, dtype='int32')
 
             for key, dvprel in iteritems(model.dvprels):
                 if dvprel.type == 'DVPREL1':
@@ -2321,6 +2322,7 @@ class NastranIO(object):
 
                     if prop_type == 'PSHELL':
                         i = np.where(pids == pid)
+                        design_region[i] = dvprel.oid
                         assert len(i) > 0, i
                         if var_to_change == 'T':
                             value = 0.
@@ -2355,19 +2357,23 @@ class NastranIO(object):
                 if dvprel.pMin is not None:
                     dvprel.pMin
 
+            region_res = GuiResult(0, header='DV Region', title='DV Region',
+                                   location='centroid', scalar=design_region)
             t_init_res = GuiResult(0, header='DVPREL Init - t', title='DVPREL Init - t',
                                    location='centroid', scalar=dvprel_t_init)
             t_min_res = GuiResult(0, header='DVPREL Min - t', title='DVPREL Min - t',
                                   location='centroid', scalar=dvprel_t_min)
             t_max_res = GuiResult(0, header='DVPREL Max - t', title='DVPREL Max - t',
                                   location='centroid', scalar=dvprel_t_max)
-            cases[icase] = (t_init_res, (0, 'DVPREL Init - t'))
-            cases[icase + 1] = (t_min_res, (0, 'DVPREL Min - t'))
-            cases[icase + 2] = (t_max_res, (0, 'DVPREL Max - t'))
-            form0.append(('DVPREL Init - t', icase, []))
-            form0.append(('DVPREL Min - t', icase + 1, []))
-            form0.append(('DVPREL Max - t', icase + 2, []))
-            icase += 3
+            cases[icase] = (region_res, (0, 'DV Region'))
+            cases[icase + 1] = (t_init_res, (0, 'DVPREL Init - t'))
+            cases[icase + 2] = (t_min_res, (0, 'DVPREL Min - t'))
+            cases[icase + 3] = (t_max_res, (0, 'DVPREL Max - t'))
+            form0.append(('DV Region', icase, []))
+            form0.append(('DVPREL Init - t', icase + 1, []))
+            form0.append(('DVPREL Min - t', icase + 2, []))
+            form0.append(('DVPREL Max - t', icase + 3, []))
+            icase += 4
         return icase
 
     def _plot_pressures(self, model, cases, form0, icase, subcase_id, subcase):
