@@ -1,6 +1,20 @@
+"""
+Contains the following atmospheric functions:
+
+ - density = atm_density(alt, mach)
+ - mach = atm_mach(alt, velocity)
+ - velocity = atm_velocity(alt, mach)
+ - pressure = atm_pressure(alt)
+ - temperature = atm_temperature(alt)
+ - sos = atm_speed_of_sound(alt)
+ - mu = atm_dynamic_viscosity_mu(alt)
+ - nu = atm_kinematic_viscosity_nu(alt)
+ - eas = atm_equivalent_airspeed(alt, mach)
+"""
+from __future__ import print_function
 import sys
 from math import log, exp
-
+import numpy as np
 
 def _update_alt(z, SI=False, debug=False):
     """
@@ -27,6 +41,7 @@ def _update_alt(z, SI=False, debug=False):
         else:
             print("z = %s [m] = %s [ft]" % (z * _feet_to_meters(True), z2))
     return z2
+
 
 def _feet_to_meters(SI):
     if SI:
@@ -150,7 +165,7 @@ def atm_pressure(alt, SI=False, debug=False):
             print("Patm = %g [Pa] = %g [psf]" % (p * _psf_to_pascals(True), p))
     return p*factor
 
-def atm_dynamic_pressure(alt, Mach, SI=False, debug=False):
+def atm_dynamic_pressure(alt, mach, SI=False, debug=False):
     r"""
     Freestream Dynamic Pressure  \f$ q_{\infty} \f$
 
@@ -158,7 +173,7 @@ def atm_dynamic_pressure(alt, Mach, SI=False, debug=False):
     ----------
     alt : float
         Altitude in feet or meters (SI)
-    Mach : float
+    mach : float
         Mach Number \f$ M \f$
     SI : bool
         returns dynamicPressure in SI units if True (default=False)
@@ -178,7 +193,7 @@ def atm_dynamic_pressure(alt, Mach, SI=False, debug=False):
     """
     z = _update_alt(alt, SI)
     p = atm_pressure(z)
-    q = 0.7 * p * Mach ** 2
+    q = 0.7 * p * mach ** 2
 
     factor = _psf_to_pascals(SI)
     q2 = q * factor
@@ -247,7 +262,7 @@ def atm_velocity(alt, mach, SI=False, debug=False):
 
     \f[ \large V = M a \f]
     """
-    a = atm_SOS(alt, SI)
+    a = atm_speed_of_sound(alt, SI)
     V = mach * a # units=ft/s or m/s
 
     if debug:
@@ -261,7 +276,39 @@ def atm_velocity(alt, mach, SI=False, debug=False):
             print("V = %s [m/s] = %s [ft/s]" % (V * _feet_to_meters(True), V))
     return V
 
-def atm_Mach(alt, V, SI=False, debug=False):
+def atm_equivalent_airspeed(alt, mach, SI=False, debug=False):
+    """
+    EAS = TAS * sqrt(rho/rho0)
+    p = rho * R * T
+    rho = p/(RT)
+    rho/rho0 = p/T * T0/p0
+    TAS = a * M
+    EAS = a * M * sqrt(p/T * T0/p0)
+    """
+    z = _update_alt(alt, SI)
+    a = atm_speed_of_sound(z)
+    #V = mach * a # units=ft/s or m/s
+
+    z0 = 0.
+    T0 = atm_temperature(z0)
+    p0 = atm_pressure(z0)
+
+    T = atm_temperature(z)
+    p = atm_temperature(z)
+
+    eas = a * mach * np.sqrt((p * T0) / (T * p0))
+    if debug:
+        if SI:
+            print("z = %s [m]   = %s [ft]"  % (alt, alt))
+            print("a = %s [m/s] = %s [ft/s]"  % (a, a / _feet_to_meters(True)))
+            #print("V = %s [m/s] = %s [ft/s]"  % (V, V / _feet_to_meters(True)))
+        else:
+            print("z = %s [m]   = %s [ft]" % (alt * _feet_to_meters(True), alt))
+            print("a = %s [m/s] = %s [ft/s]" % (a * _feet_to_meters(True), a))
+            #print("V = %s [m/s] = %s [ft/s]" % (V * _feet_to_meters(True), V))
+    return eas
+
+def atm_mach(alt, V, SI=False, debug=False):
     r"""
     Freestream Mach Number
 
@@ -283,7 +330,7 @@ def atm_Mach(alt, V, SI=False, debug=False):
     """
     z = _update_alt(alt, SI)
     V2 = _update_alt(V, SI)
-    a = atm_SOS(z)
+    a = atm_speed_of_sound(z)
     mach = V2/a
 
     if debug:
@@ -425,7 +472,6 @@ def atm_UnitReynoldsNumber2(alt, mach, SI=False, debug=False):
     .. note ::
         this version of Reynolds number directly caculates the base quantities, so multiple
         calls to atm_press and atm_temp are not made
-    .. todo:: units...
     """
     z = _update_alt(alt, SI)
     #print "z = ",z
@@ -477,7 +523,7 @@ def atm_UnitReynoldsNumber(alt, mach, SI=False, debug=False):
     """
     z = _update_alt(alt, SI)
     rho = atm_density(z)
-    V = atm_Velocity(z, mach)
+    V = atm_velocity(z, mach)
     mu = atm_dynamic_viscosity_mu(z)
 
     ReL = (rho * V) / mu

@@ -2354,7 +2354,11 @@ class FLFACT(BaseCard):
         sid = integer(card, 1, 'sid')
         assert len(card) > 2, 'len(FLFACT card)=%s; card=%s' % (len(card), card)
         field3 = double_string_or_blank(card, 3, 'THRU')
-        if isinstance(field3, float):
+        if field3 is None:
+            f1 = double(card, 2, 'f1')
+            factors = [f1]
+            assert len(card) == 3, 'len(FLFACT card)=%s; card=%s' % (len(card), card)
+        elif isinstance(field3, float):
             factors = fields(double, card, 'factors', i=2, j=len(card))
         elif isinstance(field3, string_types) and field3 == 'THRU':
             f1 = double(card, 2, 'f1')
@@ -2453,10 +2457,14 @@ class FLUTTER(BaseCard):
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
     def __init__(self, sid, method, density, mach, reduced_freq_velocity,
-                 imethod, nvalue, omax, epsilon, comment=''):
+                 imethod='L', nvalue=None, omax=None, epsilon=None, comment=''):
         if comment:
             self._comment = comment
         self.sid = sid
+        if method in ['PK', 'PKNL', 'PKNLS']:
+            imethod = 'L'
+        else:
+            assert imethod in ['S', 'L', None], imethod
         self.method = method
         self.density = density
         self.mach = mach
@@ -2471,29 +2479,32 @@ class FLUTTER(BaseCard):
     def add_card(cls, card, comment=''):
         sid = integer(card, 1, 'sid')
         method = string(card, 2, 'method')
-        density = integer(card, 3, 'density')
-        mach = integer(card, 4, 'mach')
-        reduced_freq_velocity = integer(card, 5, 'reduced_freq_velocity')
+        density_id = integer(card, 3, 'density')
+        mach_id = integer(card, 4, 'mach')
+        reduced_freq_velocity_id = integer(card, 5, 'reduced_freq_velocity')
 
         if method in ['K', 'KE']:
             imethod = string_or_blank(card, 6, 'imethod', 'L')
             nvalue = integer_or_blank(card, 7, 'nvalue')
             omax = None
-            assert imethod in ['L', 'S'], 'imethod = %s' % imethod
+            assert imethod in ['L', 'S'], 'imethod = %s' % imethod  # linear-surface
         elif method in ['PKS', 'PKNLS']:
             imethod = None
             nvalue = None
             omax = double_or_blank(card, 7, 'omax')
-        else:
+        elif method in ['PKNL']:
             nvalue = integer_or_blank(card, 7, 'nvalue')
             omax = None
             imethod = None
+        else:
+            raise NotImplementedError('FLUTTER method=%r' % method)
 
+        assert method in ['K', 'KE', 'PKS', 'PKNL', 'PKNLS', None], method
         epsilon = double_or_blank(card, 8, 'epsilon')  # not defined in QRG
         assert len(card) <= 9, 'len(FLUTTER card) = %i' % len(card)
-        return FLUTTER(sid, method, density, mach, reduced_freq_velocity,
-                       imethod, nvalue, omax,
-                       epsilon, comment=comment)
+        return FLUTTER(sid, method, density_id, mach_id, reduced_freq_velocity_id,
+                       imethod=imethod, nvalue=nvalue, omax=omax,
+                       epsilon=epsilon, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
