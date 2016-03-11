@@ -42,6 +42,36 @@ def _update_alt(z, SI=False, debug=False):
             print("z = %s [m] = %s [ft]" % (z * _feet_to_meters(True), z2))
     return z2
 
+def get_alt_for_density(density):
+    """
+    Gets the altitude associated with a given air density.
+
+    Parameters
+    ----------
+    density : float
+        the air density in slug/ft^3
+
+    Returns
+    -------
+    alt : float
+        the altitude in feet
+    """
+    dalt = 500.
+    alt_old = 0.
+    alt_final = 5000.
+    n = 0
+
+    # Newton's method
+    while abs(alt_final - alt_old) > 5. and n < 20:
+        alt_old = alt_final
+        alt1 = alt_old
+        alt2 = alt_old + dalt
+        rho1 = atm_density(alt1)
+        rho2 = atm_density(alt2)
+        m = dalt / (rho2 - rho1)
+        alt_final = m * (density - rho1) + alt1
+        n += 1
+    return alt_final
 
 def _feet_to_meters(SI):
     if SI:

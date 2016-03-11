@@ -2872,8 +2872,14 @@ class NastranIO(object):
             form_time = []
             is_data, is_static, is_real, times = self._get_times(model, key)
 
+            ncases_old = icase
             icase = self._fill_op2_oug_oqg(cases, model, key, icase,
                                            disp_dict, header_dict)
+            ncases = icase - ncases_old
+            assert ncases > 0, ncases
+            for itime, dt in enumerate(times):
+                key_itime.append((key, itime))
+
             for itime, dt in enumerate(times):
                 ncases_old = icase
                 icase = self._fill_op2_stress(
@@ -3154,6 +3160,7 @@ class NastranIO(object):
                 print('str(%s) has no data...' % case.__class.__name__)
                 continue
             if not case.is_real():
+                print('complex results not supported...')
                 continue
             # transient
             if case.nonlinear_factor is not None:
@@ -3284,7 +3291,6 @@ class NastranIO(object):
                 cases[icase] = (temp_res, (0, name))
                 form_dict[(key, itime)].append((name, icase, []))
                 icase += 1
-
         return icase
 
     def clear_nastran(self):
