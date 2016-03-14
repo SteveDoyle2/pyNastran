@@ -29,18 +29,18 @@ def _update_alt(z, SI=False, debug=False):
 
     Returns
     -------
-    z2 : float
+    alt2 : float
         altitude in feet
     """
     factor = _feet_to_meters(SI) # ft/s to m/s
-    z2 = z / factor
+    alt2 = z / factor
 
     if debug:
         if SI:
             print("z = %s [m] = %s [ft]"  % (z, z2))
         else:
             print("z = %s [m] = %s [ft]" % (z * _feet_to_meters(True), z2))
-    return z2
+    return alt2
 
 def get_alt_for_density(density):
     """
@@ -117,12 +117,12 @@ def get_alt_for_eas_mach(equivalent_airspeed, mach, SI=False):
         alt2 = alt_old + dalt
         T1 = atm_temperature(alt1)
         T2 = atm_temperature(alt2)
-        p1 = atm_pressure(alt1)
-        p2 = atm_pressure(alt2)
-        a1 = np.sqrt(1.4 * R * T1)
-        a2 = np.sqrt(1.4 * R * T2)
-        eas1 = a1 * mach * np.sqrt(p1 / T1) * k
-        eas2 = a2 * mach * np.sqrt(p2 / T2) * k
+        press1 = atm_pressure(alt1)
+        press2 = atm_pressure(alt2)
+        sos1 = np.sqrt(1.4 * R * T1)
+        sos2 = np.sqrt(1.4 * R * T2)
+        eas1 = sos1 * mach * np.sqrt(press1 / T1) * k
+        eas2 = sos2 * mach * np.sqrt(press2 / T2) * k
         m = dalt / (eas2 - eas1)
         alt_final = m * (equivalent_airspeed - eas1) + alt1
         n += 1
@@ -184,9 +184,9 @@ def get_alt_for_pressure(pressure, SI=False):
         alt_old = alt_final
         alt1 = alt_old
         alt2 = alt_old + dalt
-        p1 = atm_pressure(alt1)
-        p2 = atm_pressure(alt2)
-        m = dalt / (p2 - p1)
+        press1 = atm_pressure(alt1)
+        press2 = atm_pressure(alt2)
+        m = dalt / (press2 - press1)
         alt_final = m * (pressure - p1) + alt1
         n += 1
 
@@ -310,11 +310,12 @@ def atm_pressure(alt, SI=False, debug=False):
     factor = _psf_to_pascals(SI)
 
     if debug:
+        ft_to_m = _feet_to_meters(True)
         if SI:
             print("z    = %s [m]  = %s [ft]" % (alt, z))
             print("Patm = %g [Pa] = %g [psf]" % (p * factor, p))
         else:
-            print("z    = %s [m]  = %s [ft]" % (alt * _feet_to_meters(True), z))
+            print("z    = %s [m]  = %s [ft]" % (alt * ft_to_m, z))
             print("Patm = %g [Pa] = %g [psf]" % (p * _psf_to_pascals(True), p))
     return p*factor
 
@@ -352,12 +353,13 @@ def atm_dynamic_pressure(alt, mach, SI=False, debug=False):
     q2 = q * factor
 
     if debug:
+        ft_to_m = _feet_to_meters(True)
         if SI:
             print("z = %s [m]   = %s [ft]" % (alt, z))
             print("p = %s [psf] = %s [Pa]" % (p, p * factor))
             print("q = %s [psf] = %s [Pa]" % (q, q2))
         else:
-            print("z = %s [m]   = %s [ft]" % (alt * _feet_to_meters(True), z))
+            print("z = %s [m]   = %s [ft]" % (alt * ft_to_m, z))
             print("p = %s [psf] = %s [Pa]" % (p, p * _psf_to_pascals(True)))
             print("q = %s [psf] = %s [Pa]" % (q, q * _psf_to_pascals(True)))
     return q2
@@ -389,12 +391,13 @@ def atm_speed_of_sound(alt, SI=False, gamma=1.4, debug=False):
     a2 = a * factor
 
     if debug:
+        ft_to_m = _feet_to_meters(True)
         if SI:
             print("z = %s [m]   = %s [ft]" % (alt, z))
             print("T = %s [K]   = %s [R]" % (T / 1.8, T))
             print("a = %s [m/s] = %s [ft/s]" % (a2, a))
         else:
-            print("z = %s [m]   = %s [ft]" % (alt * _feet_to_meters(True), z))
+            print("z = %s [m]   = %s [ft]" % (alt * ft_to_m, z))
             print("T = %s [K]   = %s [R]" % (T / 1.8, T))
             print("a = %s [m/s] = %s [ft/s]" % (a * _feet_to_meters(True), a2))
     return a2
@@ -419,14 +422,15 @@ def atm_velocity(alt, mach, SI=False, debug=False):
     V = mach * a # units=ft/s or m/s
 
     if debug:
+        ft_to_m = _feet_to_meters(True)
         if SI:
             print("z = %s [m]   = %s [ft]"  % (alt, alt))
-            print("a = %s [m/s] = %s [ft/s]"  % (a, a / _feet_to_meters(True)))
-            print("V = %s [m/s] = %s [ft/s]"  % (V, V / _feet_to_meters(True)))
+            print("a = %s [m/s] = %s [ft/s]"  % (a, a / ft_to_m))
+            print("V = %s [m/s] = %s [ft/s]"  % (V, V / ft_to_m))
         else:
-            print("z = %s [m]   = %s [ft]" % (alt * _feet_to_meters(True), alt))
-            print("a = %s [m/s] = %s [ft/s]" % (a * _feet_to_meters(True), a))
-            print("V = %s [m/s] = %s [ft/s]" % (V * _feet_to_meters(True), V))
+            print("z = %s [m]   = %s [ft]" % (alt * ft_to_m, alt))
+            print("a = %s [m/s] = %s [ft/s]" % (a * ft_to_m, a))
+            print("V = %s [m/s] = %s [ft/s]" % (V * ft_to_m, V))
     return V
 
 def atm_equivalent_airspeed(alt, mach, SI=False, debug=False):
@@ -452,21 +456,18 @@ def atm_equivalent_airspeed(alt, mach, SI=False, debug=False):
     eas = a * mach * np.sqrt((p * T0) / (T * p0))
     if SI:
         ft_to_m = _feet_to_meters(True)
-        #print('ft_to_m = ', ft_to_m)
-        #print('eas[ft/s] =', eas)
         eas *= ft_to_m
-        #print('eas2[m/s] =', eas)
 
     if debug:
-        ft_to_m = _feet_to_meters(True)
         if SI:
             print("z = %s [m]   = %s [ft]"  % (alt, z))
             print("a = %s [m/s] = %s [ft/s]"  % (a * ft_to_m, a))
-            #print("V = %s [m/s] = %s [ft/s]"  % (V, V / _feet_to_meters(True)))
+            print("eas = %s [m/s] = %s [ft/s]"  % (eas, eas / ft_to_m))
         else:
+            ft_to_m = _feet_to_meters(True)
             print("z = %s [m]   = %s [ft]" % (alt * ft_to_m, alt))
             print("a = %s [m/s] = %s [ft/s]" % (a * ft_to_m, a))
-            #print("V = %s [m/s] = %s [ft/s]" % (V * _feet_to_meters(True), V))
+            print("eas = %s [m/s] = %s [ft/s]" % (eas * ft_to_m, eas))
     return eas
 
 def atm_mach(alt, V, SI=False, debug=False):
@@ -495,14 +496,15 @@ def atm_mach(alt, V, SI=False, debug=False):
     mach = V2/a
 
     if debug:
+        ft_to_m = _feet_to_meters(True)
         if SI:
             print("z = %s [m]   = %s [ft]"  % (alt, z))
-            print("a = %s [m/s] = %s [ft/s]"  % (a * _feet_to_meters(True), a))
-            print("M = %s"  %(mach))
+            print("a = %s [m/s] = %s [ft/s]"  % (a * ft_to_m, a))
+            print("M = %s"  % (mach))
         else:
-            print("z = %s [m] = %s [ft]" % (alt * _feet_to_meters(True), z))
-            print("a = %s [m/s] = %s [ft/s]" % (a * _feet_to_meters(True), a))
-            print("M = %s" %(mach))
+            print("z = %s [m] = %s [ft]" % (alt * ft_to_m, z))
+            print("a = %s [m/s] = %s [ft/s]" % (a * ft_to_m, a))
+            print("M = %s" % (mach))
 
     return mach
 
@@ -539,13 +541,14 @@ def atm_density(alt, R=1716., SI=False, debug=False):
 
     if debug:
         rho = P / (R * T)
+        ft_to_m = _feet_to_meters(True)
         if SI:
             print("z    = %s [m] = %s [ft]" % (alt, z))
             print("Patm = %g [Pa] = %g [psf]" % (P * _psf_to_pascals(True), P))
             print("T    = %s [K] = %s [R]" % (T / 1.8, T))
             print("rho  = %e [kg/m^3] = %e [slug/ft^3]" % (rho * 515.378818, rho))
         else:
-            print("z    = %s [m] = %s [ft]" % (alt * _feet_to_meters(True), z))
+            print("z    = %s [m] = %s [ft]" % (alt * ft_to_m, z))
             print("Patm = %g [Pa] = %g [psf]" % (P * _psf_to_pascals(True), P))
             print("T    = %s [K] = %s [R]" % (T / 1.8, T))
             print("rho  = %e [kg/m^3] = %e [slug/ft^3]" % (rho * 515.378818, rho))
