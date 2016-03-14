@@ -10,30 +10,7 @@ import numpy as np
 
 from pyNastran.bdf.bdf import BDF
 from pyNastran.op2.op2 import OP2
-
-def run_nastran(fname, keywords=None):
-    """
-    Call a nastran subprocess with the given filename
-
-    Parameters
-    -----------
-    fname : string
-        Filename of the Nastran .bdf file
-    keywords : dict/list of strings, optional
-        Default keywords are `'mem=1024mb'`, `'old=no'`, and `'news=no'`
-    """
-    if keywords is None:
-        keywords_list = [] # ['scr=yes', 'bat=no', 'mem=1024mb','old=no','news=no']
-    else:
-        if isinstance(keywords, (list, tuple)):
-            keywords_list = keywords
-        else:
-            keywords_list = []
-            for keyword, value in keywords.items():
-                keywords_list.append('%s=%s' % (keyword, value))
-
-    call_args = ['nastran', fname] + keywords_list
-    return subprocess.call(call_args)
+from pyNastran.utils.nastran_utils import run_nastran
 
 def run_bdfs_batch(bdf_filenames, workpath='results', mem='100mb', auth=None, overwrite_op2_if_exists=False):
     #print(bdf_filenames)
