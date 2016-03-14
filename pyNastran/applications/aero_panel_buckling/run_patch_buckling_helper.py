@@ -2,7 +2,7 @@ import os
 from copy import deepcopy
 from six import iteritems, string_types
 import glob
-import subprocess
+#import subprocess
 import time
 
 import matplotlib.pyplot as plt
@@ -10,7 +10,7 @@ import numpy as np
 
 from pyNastran.bdf.bdf import BDF
 from pyNastran.op2.op2 import OP2
-from pyNastran.utils.nastran_utils import run_nastran
+#from pyNastran.utils.nastran_utils import run_nastran
 
 def run_bdfs_batch(bdf_filenames, workpath='results', mem='100mb', auth=None, overwrite_op2_if_exists=False):
     #print(bdf_filenames)

@@ -601,7 +601,29 @@ def create_plate_buckling_models(model, op2_filename, mode, isubcase=1,
 
 def write_buckling_bdfs(bdf_model, op2_filename, xyz_cid0, patches, patch_edges_array,
                         isubcase=1, mode='displacement', workpath='results'):
+    """
+    Creates a series of buckling BDFs
 
+    Parameters
+    ----------
+    bdf_model : BDF()
+        the BDF object
+    op2_filename : str
+        the name of the OP2 to analyze
+    xyz_cid0 : (nnodes, 3) ndarray
+        the nodes in the global CID=0 frame
+    patches : ???
+        ???
+    patch_edges_array : ???
+        ???
+    isubcase : int; default=1
+        the subcase to analyze
+    mode : str; default='displacement'
+        'displacement' : map displacements from the OP2 to the new BDFs
+        'load' : map the grid point forces from the OP2 to the new BDFs
+    workpath : str; default='results'
+        the location of where the output files should be placed
+    """
     # TODO: Create 'BDF' of deflected shape that doesn't include the wing up bend from the CAERO1
     #       boxes.  This will allow you to visually see where the wing undulates relative to the
     #       center plane of the wing
@@ -609,48 +631,8 @@ def write_buckling_bdfs(bdf_model, op2_filename, xyz_cid0, patches, patch_edges_
     model = bdf_model
 
     subcase = bdf_model.subcases[isubcase]
-    # TODO: add title, subtitle from the actual load case for cross validation
-    header = ''
-    header += 'SOL 105\n'
-    header += 'CEND\n'
-    header += 'ECHO = NONE\n'
 
-    if subcase.has_parameter('TITLE'):
-        header += '  TITLE = %s\n' % subcase.get_parameter('TITLE')[0]
-        print(subcase.get_parameter('TITLE'))
-    else:
-        header += 'TITLE = BUCKLING\n'
-    header += 'SUBCASE 1\n'
-    # header += '  SUPORT = 1\n'
-    #if mode == 'load':
-    header += '  LOAD = 55\n'
-    header += '  METHOD = 42\n'
-    #header += '  STRESS(PLOT,PRINT,VONMISES,CENTER) = ALL\n'
-    #header += '  SPCFORCES(PLOT,PRINT) = ALL\n'
-    #header += '  STRAIN(PLOT,PRINT,VONMISES,FIBER,CENTER) = ALL\n'
-    header += '  DISPLACEMENT(PLOT,PRINT) = ALL\n'
-    header += '  SPC = 100\n'
-    if 'SUBTITLE' in subcase:
-        header += '  SUBTITLE = %s\n' % subcase.get_parameter('SUBTITLE')[0]
-
-    #header += '  MPC = 1\n'
-    #header += '  TRIM = 1\n'
-    header += 'BEGIN BULK\n'
-    header += 'PARAM,GRDPNT,0\n'
-    header += 'PARAM,COUPMASS,1\n'
-    #header += 'PARAM,AUNITS,0.00259\n'
-    #header += 'PARAM,WTMASS,0.00259\n'
-    #header += 'PARAM,BAILOUT,-1\n'
-    header += 'PARAM,PRTMAXIM,YES\n'
-    header += 'PARAM,POST,-1    \n'
-
-    eig1 = 0.0
-    eig2 = 100.
-    nroots = 20
-    method = 42
-    spc_id = 100
-    load_id = 55
-    header += 'EIGB,%s,INV,%s,%s,%s\n' % (method, eig1, eig2, nroots)
+    header, spc_id, load_id = create_buckling_header(subcase)
 
     out_model = OP2()
     print('**** workpath', workpath)
@@ -878,6 +860,52 @@ def write_buckling_bdfs(bdf_model, op2_filename, xyz_cid0, patches, patch_edges_
         patch_file.close()
         edge_file.close()
     return
+
+def create_buckling_header(subcase):
+    # TODO: add title, subtitle from the actual load case for cross validation
+    header = ''
+    header += 'SOL 105\n'
+    header += 'CEND\n'
+    header += 'ECHO = NONE\n'
+
+    if subcase.has_parameter('TITLE'):
+        header += '  TITLE = %s\n' % subcase.get_parameter('TITLE')[0]
+        print(subcase.get_parameter('TITLE'))
+    else:
+        header += 'TITLE = BUCKLING\n'
+    header += 'SUBCASE 1\n'
+    # header += '  SUPORT = 1\n'
+    #if mode == 'load':
+    header += '  LOAD = 55\n'
+    header += '  METHOD = 42\n'
+    #header += '  STRESS(PLOT,PRINT,VONMISES,CENTER) = ALL\n'
+    #header += '  SPCFORCES(PLOT,PRINT) = ALL\n'
+    #header += '  STRAIN(PLOT,PRINT,VONMISES,FIBER,CENTER) = ALL\n'
+    header += '  DISPLACEMENT(PLOT,PRINT) = ALL\n'
+    header += '  SPC = 100\n'
+    if 'SUBTITLE' in subcase:
+        header += '  SUBTITLE = %s\n' % subcase.get_parameter('SUBTITLE')[0]
+
+    #header += '  MPC = 1\n'
+    #header += '  TRIM = 1\n'
+    header += 'BEGIN BULK\n'
+    header += 'PARAM,GRDPNT,0\n'
+    header += 'PARAM,COUPMASS,1\n'
+    #header += 'PARAM,AUNITS,0.00259\n'
+    #header += 'PARAM,WTMASS,0.00259\n'
+    #header += 'PARAM,BAILOUT,-1\n'
+    header += 'PARAM,PRTMAXIM,YES\n'
+    header += 'PARAM,POST,-1    \n'
+
+    eig1 = 0.0
+    eig2 = 100.
+    nroots = 20
+    method = 42
+    spc_id = 100
+    load_id = 55
+    header += 'EIGB,%s,INV,%s,%s,%s\n' % (method, eig1, eig2, nroots)
+    return header, spc_id, load_id
+
 
 def find_surface_panels(bdf_filename=None, op2_filename=None, isubcase=1,
                         consider_pids=False, rebuild_patches=True,

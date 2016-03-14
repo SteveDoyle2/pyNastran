@@ -60,9 +60,10 @@ def get_alt_for_density(density):
     alt_old = 0.
     alt_final = 5000.
     n = 0
+    tol = 5. # ft
 
     # Newton's method
-    while abs(alt_final - alt_old) > 5. and n < 20:
+    while abs(alt_final - alt_old) > tol and n < 20:
         alt_old = alt_final
         alt1 = alt_old
         alt2 = alt_old + dalt
@@ -71,6 +72,128 @@ def get_alt_for_density(density):
         m = dalt / (rho2 - rho1)
         alt_final = m * (density - rho1) + alt1
         n += 1
+    if n > 18:
+        print('n = %s' % n)
+    return alt_final
+
+
+def get_alt_for_eas_mach(equivalent_airspeed, mach, SI=False):
+    """
+    Gets the altitude associated with a equivalent airspeed.
+
+    Parameters
+    ----------
+    equivalent_airspeed : float
+        the equivalent airspeed in ft/s (SI=m/s)
+    mach : float
+        the mach to hold constant
+    SI : bool
+        should SI units be used; default=False
+
+    Returns
+    -------
+    alt : float
+        the altitude in ft (SI=m)
+    """
+    if SI:
+        equivalent_airspeed /= 0.3048  # m/s to ft/s
+    dalt = 500.
+    alt_old = 0.
+    alt_final = 5000.
+    n = 0
+    tol = 5. # ft
+
+    R = 1716.
+    z0 = 0.
+    T0 = atm_temperature(z0)
+    p0 = atm_pressure(z0)
+    k = np.sqrt(T0 / p0)
+    #eas = a * mach * sqrt((p * T0) / (T * p0)) = a * mach * sqrt(p / T) * k
+
+    # Newton's method
+    while abs(alt_final - alt_old) > tol and n < 20:
+        alt_old = alt_final
+        alt1 = alt_old
+        alt2 = alt_old + dalt
+        T1 = atm_temperature(alt1)
+        T2 = atm_temperature(alt2)
+        p1 = atm_pressure(alt1)
+        p2 = atm_pressure(alt2)
+        a1 = np.sqrt(1.4 * R * T1)
+        a2 = np.sqrt(1.4 * R * T2)
+        eas1 = a1 * mach * np.sqrt(p1 / T1) * k
+        eas2 = a2 * mach * np.sqrt(p2 / T2) * k
+        m = dalt / (eas2 - eas1)
+        alt_final = m * (equivalent_airspeed - eas1) + alt1
+        n += 1
+
+    if n > 18:
+        print('n = %s' % n)
+    if SI:
+        alt_final *= 0.3048  # feet to meters
+    return alt_final
+
+def get_alt_for_q_mach(q, mach, SI=False):
+    """
+    Gets the altitude associated with a equivalent airspeed.
+
+    Parameters
+    ----------
+    q : float
+        the dynamic pressure lb/ft^2 (SI=Pa)
+    mach : float
+        the mach to hold constant
+    SI : bool
+        should SI units be used; default=False
+
+    Returns
+    -------
+    alt : float
+        the altitude in ft (SI=m)
+    """
+    pressure = 2 * q / (1.4 * mach ** 2) # gamma = 1.4
+    alt = get_alt_for_pressure(pressure, SI=SI)
+    return alt
+
+def get_alt_for_pressure(pressure, SI=False):
+    """
+    Gets the altitude associated with a equivalent airspeed.
+
+    Parameters
+    ----------
+    pressure : float
+        the pressure lb/ft^2 (SI=Pa)
+    SI : bool
+        should SI units be used; default=False
+
+    Returns
+    -------
+    alt : float
+        the altitude in ft (SI=m)
+    """
+    if SI:
+        pressure /= 47.880259  # Pa to psf
+    dalt = 500.
+    alt_old = 0.
+    alt_final = 5000.
+    n = 0
+    tol = 5. # ft
+
+    # Newton's method
+    while abs(alt_final - alt_old) > tol and n < 20:
+        alt_old = alt_final
+        alt1 = alt_old
+        alt2 = alt_old + dalt
+        p1 = atm_pressure(alt1)
+        p2 = atm_pressure(alt2)
+        m = dalt / (p2 - p1)
+        alt_final = m * (pressure - p1) + alt1
+        n += 1
+
+    if n > 18:
+        print('n = %s' % n)
+    if SI:
+        alt_final *= 0.3048  # feet to meters
     return alt_final
 
 def _feet_to_meters(SI):
@@ -324,17 +447,25 @@ def atm_equivalent_airspeed(alt, mach, SI=False, debug=False):
     p0 = atm_pressure(z0)
 
     T = atm_temperature(z)
-    p = atm_temperature(z)
+    p = atm_pressure(z)
 
     eas = a * mach * np.sqrt((p * T0) / (T * p0))
+    if SI:
+        ft_to_m = _feet_to_meters(True)
+        #print('ft_to_m = ', ft_to_m)
+        #print('eas[ft/s] =', eas)
+        eas *= ft_to_m
+        #print('eas2[m/s] =', eas)
+
     if debug:
+        ft_to_m = _feet_to_meters(True)
         if SI:
-            print("z = %s [m]   = %s [ft]"  % (alt, alt))
-            print("a = %s [m/s] = %s [ft/s]"  % (a, a / _feet_to_meters(True)))
+            print("z = %s [m]   = %s [ft]"  % (alt, z))
+            print("a = %s [m/s] = %s [ft/s]"  % (a * ft_to_m, a))
             #print("V = %s [m/s] = %s [ft/s]"  % (V, V / _feet_to_meters(True)))
         else:
-            print("z = %s [m]   = %s [ft]" % (alt * _feet_to_meters(True), alt))
-            print("a = %s [m/s] = %s [ft/s]" % (a * _feet_to_meters(True), a))
+            print("z = %s [m]   = %s [ft]" % (alt * ft_to_m, alt))
+            print("a = %s [m/s] = %s [ft/s]" % (a * ft_to_m, a))
             #print("V = %s [m/s] = %s [ft/s]" % (V * _feet_to_meters(True), V))
     return eas
 

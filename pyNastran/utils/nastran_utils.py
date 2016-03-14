@@ -1,3 +1,4 @@
+import subprocess
 
 def run_nastran(fname, keywords=None):
     """
