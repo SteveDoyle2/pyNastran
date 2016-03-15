@@ -2949,7 +2949,7 @@ class NastranIO(object):
                 print(msg.rstrip())
                 print('expected = (%s, %r)\n' % (str(key), itime))
                 continue
-                raise KeyError(msg)
+                #raise KeyError(msg)
             try:
                 header = header.strip()
             except:
