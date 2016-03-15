@@ -2876,7 +2876,7 @@ class NastranIO(object):
             icase = self._fill_op2_oug_oqg(cases, model, key, icase,
                                            disp_dict, header_dict)
             ncases = icase - ncases_old
-            assert ncases > 0, ncases
+            #assert ncases > 0, ncases
             for itime, dt in enumerate(times):
                 key_itime.append((key, itime))
 
@@ -2920,6 +2920,7 @@ class NastranIO(object):
         subcase_id_old = key0[0]
         count_old = key0[3]
         subtitle_old = key0[4]
+
         for key, itime in key_itime:
             print('key =', key)
             subcase_id = key[0]
@@ -2939,7 +2940,16 @@ class NastranIO(object):
                 count_old = count
 
 
-            header = header_dict[(key, itime)]
+            try:
+                header = header_dict[(key, itime)]
+            except KeyError:
+                msg = 'keys =\n'
+                for keyi in header_dict:
+                    msg += '  %s\n' % str(keyi)
+                print(msg.rstrip())
+                print('expected = (%s, %r)\n' % (str(key), itime))
+                continue
+                raise KeyError(msg)
             try:
                 header = header.strip()
             except:

@@ -205,19 +205,6 @@ class TestBDF(Tester):
         self._compare_mass_cg_I(fem1, reference_point=u'cg')
         self._compare_mass_cg_I(fem1, reference_point='cg')
 
-    def test_bdf_07(self):
-        bdf_filename = os.path.abspath(
-            os.path.join(pkg_path, '..', 'models', 'bwb', 'BWB_saero.bdf'))
-        bdf_filename_out = os.path.abspath(
-            os.path.join(pkg_path, '..', 'models', 'bwb', 'BWB_saero.out'))
-
-        model = read_bdf(bdf_filename)
-        units_to = ['m', 'kg', 's']
-        units_from = ['in', 'lbm', 's']
-        #units_to = units_from
-        model.convert(units_to, units_from)
-        model.write_bdf(bdf_filename_out)
-
 class TestBaseCard(Tester):
     def test_base_card_01_collapse_thru(self):
         """

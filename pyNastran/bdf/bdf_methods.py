@@ -24,6 +24,7 @@ from collections import defaultdict
 from copy import deepcopy
 import multiprocessing as mp
 
+import numpy as np
 from numpy import array, cross, zeros, dot, allclose, mean
 from numpy.linalg import norm
 
@@ -43,6 +44,56 @@ def _mass_properties_mass_mp_func(element):
         mass = 0.
     return mass, cg
 
+
+def transform_inertia(mass, xyz_cg, xyz_ref, xyz_ref2, I_ref):
+    """
+    Transforms mass moment of inertia using parallel-axis theorem.
+
+    Parameters
+    ----------
+    mass : float
+        the mass
+    xyz_cg : (3, ) float ndarray
+        the CG location
+    xyz_ref : (3, ) float ndarray
+        the original reference location
+    xyz_ref2 : (3, ) float ndarray
+        the new reference location
+    I_ref : (6, ) float ndarray
+        the mass moment of inertias about the original reference point
+        [Ixx, Iyy, Izz, Ixy, Ixz, Iyz]
+
+    Returns
+    -------
+    I_new : (6, ) float ndarray
+        the mass moment of inertias about the new reference point
+        [Ixx, Iyy, Izz, Ixy, Ixz, Iyz]
+    """
+    xcg, ycg, zcg = xyz_cg
+    xref, yref, zref = xyz_ref
+    xref2, yref2, zref2 = xyz_ref2
+
+    dx1 = xcg - xref
+    dy1 = ycg - yref
+    dz1 = zcg - zref
+
+    dx2 = xref2 - xcg
+    dy2 = yref2 - ycg
+    dz2 = zref2 - zcg
+    print('dx1 = <%s, %s, %s>' % (dx1, dy1, dz1))
+    print('dx2 = <%s, %s, %s>' % (dx2, dy2, dz2))
+
+    # consistent with mass_properties, not CONM2
+    print('I_ref =', I_ref)
+    Ixx_ref, Iyy_ref, Izz_ref, Ixy_ref, Ixz_ref, Iyz_ref = I_ref
+    Ixx2 = Ixx_ref - mass * (dx1**2 - dx2**2)
+    Iyy2 = Iyy_ref - mass * (dy1**2 - dy2**2)
+    Izz2 = Izz_ref - mass * (dz1**2 - dz2**2)
+    Ixy2 = Ixy_ref - mass * (dx1 * dy1 - dx2 * dy2)
+    Ixz2 = Ixz_ref - mass * (dx1 * dz1 - dx2 * dz2)
+    Iyz2 = Iyz_ref - mass * (dy1 * dz1 - dy2 * dz2)
+    I_new = np.array([Ixx2, Iyy2, Izz2, Ixy2, Ixz2, Iyz2])
+    return I_new
 
 class BDFMethods(BDFAttributes):
     """
@@ -417,6 +468,7 @@ class BDFMethods(BDFAttributes):
         if mass:
             cg /= mass
         mass, cg, I = self._apply_mass_symmetry(sym_axis, scale, mass, cg, I)
+        # Ixx, Iyy, Izz, Ixy, Ixz, Iyz = I
         return mass, cg, I
 
     def _apply_mass_symmetry(self, sym_axis, scale, mass, cg, I):
@@ -424,51 +476,77 @@ class BDFMethods(BDFAttributes):
         Scales the mass & moement of inertia based on the symmetry axes
         and the PARAM WTMASS card
         """
-        if sym_axis is None:
+        if isinstance(sym_axis, string_types):
+            sym_axis = [sym_axis]
+        elif isinstance(sym_axis, (list, tuple)):
+            pass
+        else:
+            sym_axis = []
             for key, aero in iteritems(self.aero):
-                sym_axis = ''
                 if aero.is_symmetric_xy():
-                    sym_axis += 'y'
+                    sym_axis.append('xy')
                 if aero.is_symmetric_xz():
-                    sym_axis += 'z'
+                    sym_axis.append('xz')
                 if aero.is_anti_symmetric_xy():
                     raise NotImplementedError('%s is anti-symmetric about the XY plane' % str(aero))
                 if aero.is_anti_symmetric_xz():
                     raise NotImplementedError('%s is anti-symmetric about the XZ plane' % str(aero))
-        else:
-            assert sym_axis in ['no', 'x', 'y', 'z', 'xy', 'yz', 'xz', 'xyz'], 'sym_axis=%r is invalid' % sym_axis
+
+            for key, aero in iteritems(self.aeros):
+                if aero.is_symmetric_xy():
+                    sym_axis.append('xy')
+                if aero.is_symmetric_xz():
+                    sym_axis.append('xz')
+                if aero.is_anti_symmetric_xy():
+                    raise NotImplementedError('%s is anti-symmetric about the XY plane' % str(aero))
+                if aero.is_anti_symmetric_xz():
+                    raise NotImplementedError('%s is anti-symmetric about the XZ plane' % str(aero))
+
+        sym_axis = list(set(sym_axis))
+        short_sym_axis = [sym_axisi.lower() for sym_axisi in sym_axis]
+        is_no = 'no' in short_sym_axis
+        if is_no and len(short_sym_axis) > 1:
+            raise RuntimeError('no can only be used by itself; sym_axis=%s' % (str(sym_axis)))
+        for sym_axisi in sym_axis:
+            assert sym_axisi.lower() in ['no', 'xy', 'yz', 'xz'], 'sym_axis=%r is invalid' % sym_axis
+
         if sym_axis is not None:
             # either we figured sym_axis out from the AERO cards or the user told us
             self.log.debug('Mass/MOI sym_axis = %r' % sym_axis)
 
         if None is not sym_axis:
-            if 'x' in sym_axis:
-                mass *= 2.0
-                I[0] *= 2.0
-                I[1] *= 2.0
-                I[2] *= 2.0
-                I[3] *= 0.0  # Ixy
-                I[4] *= 0.0  # Ixz
-                I[5] *= 2.0  # Iyz
-                cg[0] = 0.0
-            if 'y' in sym_axis:
-                mass *= 2.0
-                I[0] *= 2.0
-                I[1] *= 2.0
-                I[2] *= 2.0
-                I[3] *= 0.0  # Ixy
-                I[4] *= 2.0  # Ixz
-                I[5] *= 0.0  # Iyz
+            if 'xz' in sym_axis:
+                # y intertias are 0
                 cg[1] = 0.0
-            if 'z' in sym_axis:
                 mass *= 2.0
                 I[0] *= 2.0
                 I[1] *= 2.0
                 I[2] *= 2.0
-                I[3] *= 2.0  # Ixy
+                I[3] *= 0.0  # Ixy
+                I[4] *= 2.0  # Ixz; no y
+                I[5] *= 0.0  # Iyz
+
+            if 'xy' in sym_axis:
+                # z intertias are 0
+                cg[2] = 0.0
+                mass *= 2.0
+                I[0] *= 2.0
+                I[1] *= 2.0
+                I[2] *= 2.0
+                I[3] *= 2.0  # Ixy; no z
                 I[4] *= 0.0  # Ixz
                 I[5] *= 0.0  # Iyz
-                cg[2] = 0.0
+
+            if 'yz' in sym_axis:
+                # x intertias are 0
+                cg[0] = 0.0
+                mass *= 2.0
+                I[0] *= 2.0
+                I[1] *= 2.0
+                I[2] *= 2.0
+                I[3] *= 0.0  # Ixy
+                I[4] *= 0.0  # Ixz
+                I[5] *= 2.0  # Iyz; no x
 
         if scale is None and 'WTMASS' in self.params:
             scale = self.params['WTMASS'].values[0]

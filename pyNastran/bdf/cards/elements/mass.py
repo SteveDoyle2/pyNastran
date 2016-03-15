@@ -14,8 +14,7 @@ All mass elements are PointMassElement and Element objects.
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six.moves import range
-from numpy import zeros, array, all as npall
-from numpy.linalg import eigh
+import numpy as np
 
 from pyNastran.utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8
@@ -27,8 +26,8 @@ from pyNastran.bdf.field_writer_double import print_card_double
 
 
 def is_positive_semi_definite(A, tol=1e-8):
-    vals = eigh(A)[0]
-    return npall(vals > -tol), vals
+    vals = np.linalg.eigh(A)[0]
+    return np.all(vals > -tol), vals
 
 class PointElement(Element):
     def __init__(self):
@@ -162,8 +161,8 @@ class CMASS1(PointMassElement):
         If g2 is blank, then the centroid is the location of g1.
         """
         f = 0.
-        p1 = array([0., 0., 0.])
-        p2 = array([0., 0., 0.])
+        p1 = np.array([0., 0., 0.])
+        p2 = np.array([0., 0., 0.])
         if self.g1 is not None:
             p1 = self.g1.get_position()
             f += 1.
@@ -293,8 +292,8 @@ class CMASS2(PointMassElement):
         If g2 is blank, then the centroid is the location of g1.
         """
         f = 0.
-        p1 = array([0., 0., 0.])
-        p2 = array([0., 0., 0.])
+        p1 = np.array([0., 0., 0.])
+        p2 = np.array([0., 0., 0.])
         if self.g1 is not None:
             p1 = self.g1_ref.get_position()
             f += 1.
@@ -595,7 +594,7 @@ class CONM1(PointMassElement):
         else:
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
-    def __init__(self, eid, nid, cid, mass, comment=''):
+    def __init__(self, eid, nid, cid, mass_matrix, comment=''):
         """
         Concentrated Mass Element Connection, General Form
         Defines a 6 x 6 symmetric mass matrix at a geometric grid point
@@ -620,14 +619,14 @@ class CONM1(PointMassElement):
         PointMassElement.__init__(self)
         if comment:
             self._comment = comment
-        self.mass_matrix = zeros((6, 6))
+        self.mass_matrix = mass_matrix
         self.eid = eid
         self.nid = nid
         self.cid = cid
 
     @classmethod
     def add_card(cls, card, comment=''):
-        m = zeros((6, 6))
+        m = np.zeros((6, 6))
         eid = integer(card, 1, 'eid')
         nid = integer(card, 2, 'nid')
         cid = integer_or_blank(card, 3, 'cid', 0)
@@ -658,7 +657,7 @@ class CONM1(PointMassElement):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
-        m = zeros((6, 6))
+        m = np.zeros((6, 6))
         (eid, nid, cid, m1, m2a, m2b, m3a, m3b, m3c, m4a, m4b, m4c, m4d,
          m5a, m5b, m5c, m5d, m5e, m6a, m6b, m6c, m6d, m6e, m6f) = data
         eid = eid
@@ -794,7 +793,7 @@ class CONM2(PointMassElement):
         else:
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
-    def __init__(self, eid, nid, cid, mass, X, I, comment=''):
+    def __init__(self, eid, nid, cid, mass, X=None, I=None, comment=''):
         """
         Parameters
         ----------
@@ -806,10 +805,11 @@ class CONM2(PointMassElement):
            coordinate frame of the offset (-1=absolute coordinates)
         mass : float
            the mass of the CONM2
-        X : ???
-            offset vector relative to nid
-        I : ???
+        X : (3, ) List[float]; default=None -> [0., 0., 0.]
+            xyz offset vector relative to nid
+        I : (6, ) List[float]; default=None -> [0., 0., 0., 0., 0., 0.]
             mass moment of inertia matrix about the CG
+            I11, I21, I22, I31, I32, I33 = I
 
         +-------+--------+-------+-------+---------+------+------+------+-----+
         |   1   |    2   |    3  |   4   |    5    |  6   |  7   |   8  |  9  |
@@ -840,22 +840,27 @@ class CONM2(PointMassElement):
         #: Mass value. (Real)
         self.mass = mass
 
+        if X is None:
+            X = np.zeros(3)
         #: Offset distances from the grid point to the center of gravity of
-        # the mass in the coordinate system defined in field 4, unless
-        # CID = -1, in which case X1, X2, X3 are the coordinates, not
-        # offsets, of the center of gravity of the mass in the basic
+        #: the mass in the coordinate system defined in field 4, unless
+        #: CID = -1, in which case X1, X2, X3 are the coordinates, not
+        #: offsets, of the center of gravity of the mass in the basic
         #: coordinate system. (Real)
-        self.X = X
+        self.X = np.asarray(X)
 
+        if I is None:
+            I = np.zeros(6)
         #: Mass moments of inertia measured at the mass center of gravity in
-        # the coordinate system defined by field 4. If CID = -1, the basic
-        # coordinate system is implied. (Real)
-        self.I = I
+        #: the coordinate system defined by field 4. If CID = -1, the basic
+        #: coordinate system is implied. (Real)
+        #: I11, I21, I22, I31, I32, I33 = I
+        self.I = np.asarray(I)
 
         assert self.mass >= 0., 'mass=%s' % self.mass
 
         I11, I12, I22, I13, I23, I33 = self.I
-        I = array([
+        I = np.array([
             [I11, I12, I13],
             [I12, I22, I23],
             [I13, I23, I33],
@@ -874,16 +879,20 @@ class CONM2(PointMassElement):
         cid = integer_or_blank(card, 3, 'cid', 0)
         mass = double_or_blank(card, 4, 'mass', 0.)
 
-        X = array([double_or_blank(card, 5, 'x1', 0.0),
-                   double_or_blank(card, 6, 'x2', 0.0),
-                   double_or_blank(card, 7, 'x3', 0.0)])
+        X = [
+            double_or_blank(card, 5, 'x1', 0.0),
+            double_or_blank(card, 6, 'x2', 0.0),
+            double_or_blank(card, 7, 'x3', 0.0)
+        ]
 
-        I = array([double_or_blank(card, 9, 'I11', 0.0),
-                   double_or_blank(card, 10, 'I21', 0.0),
-                   double_or_blank(card, 11, 'I22', 0.0),
-                   double_or_blank(card, 12, 'I31', 0.0),
-                   double_or_blank(card, 13, 'I32', 0.0),
-                   double_or_blank(card, 14, 'I33', 0.0)])
+        I = [
+            double_or_blank(card, 9, 'I11', 0.0),
+            double_or_blank(card, 10, 'I21', 0.0),
+            double_or_blank(card, 11, 'I22', 0.0),
+            double_or_blank(card, 12, 'I31', 0.0),
+            double_or_blank(card, 13, 'I32', 0.0),
+            double_or_blank(card, 14, 'I33', 0.0)
+        ]
 
         assert len(card) <= 15, 'len(CONM2 card) = %i' % len(card)
         return CONM2(eid, nid, cid, mass, X, I, comment=comment)
@@ -894,8 +903,8 @@ class CONM2(PointMassElement):
         nid = data[1]
         cid = data[2]
         mass = data[3]
-        X = array(data[4:7])
-        I = array(data[7:])
+        X = data[4:7]
+        I = data[7:]
         return CONM2(eid, nid, cid, mass, X, I, comment=comment)
 
     def _verify(self, xref=False):

@@ -670,6 +670,15 @@ class BDFAttributes(object):
         return self.case_control_deck.subcases
 
     @property
+    def rejects(self):
+        #: lines that were rejected b/c they were for a card that isnt supported
+        return self.reject_lines
+
+    @rejects.setter
+    def rejects(self, rejects):
+        self.reject_lines = rejects
+
+    @property
     def nnodes(self):
         return len(self.nodes)
 

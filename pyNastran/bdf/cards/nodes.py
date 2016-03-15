@@ -850,7 +850,7 @@ class GRID(Node):
         if xyz is None:
             xyz = [0., 0., 0.]
         self.xyz = np.asarray(xyz, dtype='float64')
-        assert xyz.size == 3, xyz.shape
+        assert self.xyz.size == 3, self.xyz.shape
         self.cd = cd
         self.ps = ps
         self.seid = seid

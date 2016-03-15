@@ -10,8 +10,13 @@ from numpy import array, intersect1d
 
 #root_path = pyNastran.__path__[0]
 #test_path = os.path.join(root_path, 'bdf', 'test', 'unit')
+from pyNastran.bdf.cards.elements.mass import CONM2
+from pyNastran.bdf.bdf_interface.dev.convert import convert
+
 from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.bdf.bdf_interface.dev_utils import bdf_equivalence_nodes, convert_bad_quads_to_tris
+import pyNastran
+pkg_path = pyNastran.__path__[0]
 
 
 class DevUtils(unittest.TestCase):
@@ -309,6 +314,39 @@ class DevUtils(unittest.TestCase):
             print(elem)
         #os.remove(bdf_filename)
 
+    def test_convert_01(self):
+        model = BDF()
+        eid = 1000
+        nid = 100
+        cid = 0
+        mass = 247200. # kg
+        X = [30.16, 0., 3.55] # m
+        I11 = 1.39e7 # kg-m^2
+        I22 = 3.66e7
+        I33 = 4.99e7
+        I13 = I12 = I23 = 0.
+        I = I11, I12, I22, I13, I23, I33
+        elem = CONM2(eid, nid, cid, mass, X, I, comment='')
+        model.masses[eid] = elem
+
+        units_to = ['in', 'lbm', 's']
+        units_from = ['m', 'kg', 's']
+        convert(model, units_to, units=units_from)
+        #print(model.masses[eid].write_card_16())
+
+
+    def test_convert_02(self):
+        bdf_filename = os.path.abspath(
+            os.path.join(pkg_path, '..', 'models', 'bwb', 'BWB_saero.bdf'))
+        bdf_filename_out = os.path.abspath(
+            os.path.join(pkg_path, '..', 'models', 'bwb', 'BWB_saero.out'))
+
+        model = read_bdf(bdf_filename)
+        units_to = ['m', 'kg', 's']
+        units_from = ['in', 'lbm', 's']
+        #units_to = units_from
+        convert(model, units_to, units_from)
+        model.write_bdf(bdf_filename_out)
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

@@ -1000,14 +1000,18 @@ class WriteMesh(BDFAttributes):
 
         if self.rejects:
             msg.append('$REJECT_LINES\n')
-        for reject_lines in self.rejects:
-            #if reject_lines[0]=='' or reject_lines[0][0] == ' ':
-                #continue
-            #else:
-            for reject in reject_lines:
-                reject2 = reject.rstrip()
+        for reject_lines in self.reject_lines:
+            if isinstance(reject_lines, (list, tuple)):
+                for reject in reject_lines:
+                    reject2 = reject.rstrip()
+                    if reject2:
+                        msg.append('%s\n' % reject2)
+            elif isinstance(reject_lines, string_types):
+                reject2 = reject_lines.rstrip()
                 if reject2:
                     msg.append('%s\n' % reject2)
+            else:
+                raise TypeError(reject_lines)
         outfile.write(''.join(msg))
 
     def _write_rigid_elements(self, outfile, size=8, is_double=False):

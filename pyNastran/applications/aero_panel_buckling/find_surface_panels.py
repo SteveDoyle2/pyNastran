@@ -15,7 +15,7 @@ from numpy import searchsorted, vstack
 
 from pyNastran.bdf.bdf import BDF
 from pyNastran.op2.op2 import OP2
-from pyNastran.bdf.fieldWriter import print_card_8
+from pyNastran.bdf.field_writer import print_card_8
 
 def get_patch_edges(edge_to_eid_map, xyz_cid0, is_symmetric=True,
                     model=None, consider_pids=False):

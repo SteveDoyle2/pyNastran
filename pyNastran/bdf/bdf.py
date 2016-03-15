@@ -303,7 +303,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         self._is_dynamic_syntax = False
 
         #: lines that were rejected b/c they were for a card that isnt supported
-        self.rejects = []
+        self.reject_lines = []
 
         #: cards that were created, but not processed
         self.reject_cards = []

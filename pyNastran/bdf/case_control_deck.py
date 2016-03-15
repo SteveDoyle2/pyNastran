@@ -90,6 +90,7 @@ class CaseControlDeck(object):
         #self.debug = True
 
         #: stores a single copy of 'BEGIN BULK' or 'BEGIN SUPER'
+        self.reject_lines = []
         self.begin_bulk = ['BEGIN', 'BULK']
 
         # allows BEGIN BULK to be turned off
@@ -764,6 +765,7 @@ class CaseControlDeck(object):
 
         if self.output_lines:
             msg += '\n'.join(self.output_lines) + '\n'
+        msg += '\n'.join(self.reject_lines)
         if self.write_begin_bulk:
             msg += ' '.join(self.begin_bulk) + '\n'
         return msg
