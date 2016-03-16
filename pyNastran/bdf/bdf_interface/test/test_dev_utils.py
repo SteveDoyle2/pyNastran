@@ -277,7 +277,7 @@ class DevUtils(unittest.TestCase):
         assert 40 not in nids, nids
         assert 41 not in nids, nids
         #print(nids)
-        # os.remove(bdf_filename)
+        os.remove(bdf_filename)
         os.remove(bdf_filename_out)
 
     def test_fix_bad_quads(self):
@@ -312,7 +312,7 @@ class DevUtils(unittest.TestCase):
         convert_bad_quads_to_tris(model, tol=0.01)
         for eid, elem in sorted(iteritems(model.elements)):
             print(elem)
-        #os.remove(bdf_filename)
+        os.remove(bdf_filename)
 
     def test_convert_01(self):
         model = BDF()
@@ -347,6 +347,7 @@ class DevUtils(unittest.TestCase):
         #units_to = units_from
         convert(model, units_to, units_from)
         model.write_bdf(bdf_filename_out)
+        os.remove(bdf_filename_out)
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()
