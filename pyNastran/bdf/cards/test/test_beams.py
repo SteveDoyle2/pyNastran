@@ -500,7 +500,7 @@ class TestBeams(unittest.TestCase):
         import os
         if not os.path.exists('pbeam12.op2') and 0:
             os.system('nastran scr=yes bat=no old=no pbeam12.bdf')
-        #os.remove('pbeam12.bdf')
+        os.remove('pbeam12.bdf')
 
         if 0:
             from pyNastran.op2.op2 import OP2
