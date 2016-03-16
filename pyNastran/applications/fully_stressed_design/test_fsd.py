@@ -29,5 +29,23 @@ class TestFSD(unittest.TestCase):
         regions2 = fully_stressed_design(bdf_filename, regions, keywords=keywords)
         self.assertTrue(np.array_equal(i, res), 'A i=%s res=%s' % (i, res))
 
+    def atest_fsd_02(self):
+        bdf_filename = os.path.abspath(os.path.join(test_path, '..', 'models', 'bwb',
+                                                    'BWB_saero.bdf'))
+        keywords = {
+            'scr' : 'yes',
+            'bat' : 'no',
+            'old' : 'no',
+            'parallel'  : '4',
+        }
+        #max_stress = 1.033589E+04
+        target_stress = 30000.0 # 30
+        regions = {
+            4 : [0.0001, 0.7, -target_stress, target_stress],
+        }
+        regions2 = fully_stressed_design(bdf_filename, regions, keywords=keywords)
+        self.assertTrue(np.array_equal(i, res), 'A i=%s res=%s' % (i, res))
+
+
 if __name__ == '__main__':
     unittest.main()

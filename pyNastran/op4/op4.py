@@ -108,6 +108,7 @@ class OP4(object):
         self.n = 0
         self._endian = ''
         self.debug = debug
+        #assert debug == True, debug
         self.log = log
 
     def read_op4(self, op4_filename=None, matrix_names=None, precision='default'):
@@ -533,7 +534,7 @@ class OP4(object):
         """matrix_names must be a list or None, but basically the same"""
         with io.open(op4_filename, mode='rb') as op4:
             self.n = 0
-            self._endian = _determine_endian(op4)
+            self._endian = self._determine_endian(op4)
 
             matrices = {}
             name = 'dummyName'
@@ -614,6 +615,16 @@ class OP4(object):
 
             (ncols, nrows, form, Type, name) = unpack(
                 self._endian + '4i8s', data)
+            if self.debug:
+                print("nrows=%s ncols=%s form=%s Type=%s name=%r" % (
+                    nrows, ncols, form, Type, name))
+        elif record_length == 48:
+            data = op4.read(record_length)
+            self.n += record_length
+
+            #self._show_data(data, types='ifdlqILQs', endian=None)
+            (ncols, nrows, form, Type, name) = unpack(
+                self._endian + '4Q16s', data)
             if self.debug:
                 print("nrows=%s ncols=%s form=%s Type=%s name=%r" % (
                     nrows, ncols, form, Type, name))
@@ -922,6 +933,7 @@ class OP4(object):
             Q - unsigned long long (int; 8 bytes)
         endian : str; default=None -> auto determined somewhere else in the code
             the big/little endian {>, <}
+        types = 'ifdlqILQ'
         """
         n = len(data)
         nints = n // 4
@@ -937,35 +949,38 @@ class OP4(object):
 
         if 's' in types:
             strings = unpack(b'%s%is' % (endian, n), data)
-            f.write("strings = %s\n" % str(strings))
+            f.write("strings(s) = %s\n" % str(strings))
         if 'i' in types:
             ints = unpack(b'%s%ii' % (endian, nints), data)
-            f.write("ints    = %s\n" % str(ints))
+            f.write("ints(i)    = %s\n" % str(ints))
         if 'f' in types:
             floats = unpack(b'%s%if' % (endian, nints), data)
-            f.write("floats  = %s\n" % str(floats))
+            f.write("floats(f)  = %s\n" % str(floats))
         if 'd' in types:
             doubles = unpack(b'%s%id' % (endian, ndoubles), data[:ndoubles*8])
-            f.write("doubles  = %s\n" % str(doubles))
+            f.write("doubles(d)  = %s\n" % str(doubles))
 
         if 'l' in types:
             longs = unpack(b'%s%il' % (endian, nints), data)
-            f.write("long  = %s\n" % str(longs))
+            f.write("long(l)  = %s\n" % str(longs))
         if 'I' in types:
             ints2 = unpack(b'%s%iI' % (endian, nints), data)
-            f.write("unsigned int = %s\n" % str(ints2))
+            f.write("unsigned int(I) = %s\n" % str(ints2))
         if 'L' in types:
             longs2 = unpack(b'%s%iL' % (endian, nints), data)
-            f.write("unsigned long = %s\n" % str(longs2))
+            f.write("unsigned long(L) = %s\n" % str(longs2))
         if 'q' in types:
             longs = unpack(b'%s%iq' % (endian, ndoubles), data[:ndoubles*8])
-            f.write("long long = %s\n" % str(longs))
+            f.write("long long(q) = %s\n" % str(longs))
+        if 'Q' in types:
+            longs = unpack(b'%s%iq' % (endian, ndoubles), data[:ndoubles*8])
+            f.write("unsigned long long(Q) = %s\n" % str(longs))
         return strings, ints, floats
 
-    def _show_ndata(self, n, types='ifs'):
-        return self._write_ndata(sys.stdout, n, types=types)
+    def _show_ndata(self, f, n, types='ifs'):
+        return self._write_ndata(sys.stdout, f, n, types=types)
 
-    def _write_ndata(self, f, n, types='ifs'):
+    def _write_ndata(self, fout, f, n, types='ifs'):
         """
         Useful function for seeing what's going on locally when debugging.
         """
@@ -973,7 +988,7 @@ class OP4(object):
         data = f.read(n)
         self.n = nold
         f.seek(self.n)
-        return self._write_data(f, data, types=types)
+        return self._write_data(fout, data, types=types)
 
     def _read_complex_dense_binary(self, op4, nrows, ncols, matrix_type, is_big_mat):
         """reads a dense complex binary matrix"""
@@ -1503,6 +1518,39 @@ class OP4(object):
         msg += ' 1.0000000000000000E+00\n'
         op4.write(msg)
 
+
+    def _determine_endian(self, op4):
+        """get the endian"""
+        data = op4.read(8)
+        (record_length_big, dum_a) = unpack('>ii', data)
+        (record_length_little, dum_b) = unpack('<ii', data)
+
+        record_length_big2,  = unpack('>Q', data)
+        record_length_little2,  = unpack('<Q', data)
+        print('rc2=%s, %s' % (record_length_big2, record_length_little2))
+
+        if record_length_big == 24:
+            endian = '>'
+            self.large = False
+        elif record_length_little == 24:
+            endian = '<'
+            self.large = False
+        elif record_length_big == 48:
+            endian = '<'
+            self.large = True
+        elif record_length_little == 48:
+            endian = '<'
+            self.large = True
+        else:
+            msg = 'a 24 could not be found as the first word...endian error\n'
+            msg += "record_length_big=%s record_length_little=%s" % (
+                record_length_big, record_length_little)
+            op4.seek(0) # types = 'ifdlqILQ'
+            self._show_ndata(op4, 40, types='ifdlqILQs')
+            raise RuntimeError(msg)
+        op4.seek(0)
+        return endian
+
 def _write_sparse_matrix_ascii(op4, name, A, form=2, is_big_mat=False,
                                precision='default'):
     """
@@ -1613,24 +1661,6 @@ def _write_sparse_matrix_ascii(op4, name, A, form=2, is_big_mat=False,
             op4.write(msg)
     op4.write('%8i%8i%8i\n' % (ncols + 1, 1, 1))
     op4.write(' 1.0000000000000000E+00\n')
-
-def _determine_endian(op4):
-    # get the endian
-    data = op4.read(4)
-    (record_length_big,) = unpack('>i', data)
-    (record_length_little,) = unpack('<i', data)
-
-    if record_length_big == 24:
-        endian = '>'
-    elif record_length_little == 24:
-        endian = '<'
-    else:
-        msg = 'a 24 could not be found as the first word...endian error\n'
-        msg += "record_length_big=%s record_length_little=%s" % (
-            record_length_big, record_length_little)
-        raise RuntimeError(msg)
-    op4.seek(0)
-    return endian
 
 def get_dtype(matrix_type, precision='default'):
     """reset the type if 'default' not selected"""
