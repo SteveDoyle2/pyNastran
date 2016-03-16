@@ -586,6 +586,8 @@ def check_case(sol, subcase, fem2, p0, isubcase):
         if 'SPC' not in subcase:
             _assert_has_spc(subcase, fem2)
         assert 'LOAD' in subcase, subcase
+        assert 'METHOD' in subcase, subcase
+        #assert True in subcase.has_parameter('LOAD', 'TEMPERATURE(LOAD)'), subcase
     elif sol == 106: # freq
         assert 'NLPARM' in subcase, subcase
         assert 'LOAD' in subcase, subcase
@@ -627,17 +629,17 @@ def check_case(sol, subcase, fem2, p0, isubcase):
 
     elif sol == 144:
         assert 'SUPORT1' in subcase or len(fem2.suport), subcase
-        if 'SUPORT1' in subcase:
-            value, options = subcase.get_parameter('SUPORT1')
-            assert value in fem2.suport1, fem2.suport1
         assert 'TRIM' in subcase, subcase
+        assert len(fem2.aeros) > 0, 'An AEROS card is required for STATIC AERO - SOL %i' % sol
     elif sol == 145:
         assert 'METHOD'in subcase, subcase
         assert 'FMETHOD' in subcase, subcase  # FLUTTER
+        assert len(fem2.aero) > 0, 'An AERO card is required for FLUTTER - SOL %i; %s' % (sol, fem2.aero)
     elif sol == 146:
         assert 'METHOD'in subcase, subcase
         assert any(subcase.has_parameter('FREQUENCY', 'TIME', 'TSTEP', 'TSTEPNL')), subcase
         assert any(subcase.has_parameter('GUST', 'LOAD')), subcase
+        assert len(fem2.aero) > 0, 'An AERO card is required for GUST - SOL %i' % sol
     elif sol == 153: # heat?
         if 'SPC' not in subcase:
             _assert_has_spc(subcase, fem2)
@@ -700,6 +702,31 @@ def check_case(sol, subcase, fem2, p0, isubcase):
         msg = 'SOL = %s\n' % (sol)
         msg += str(subcase)
         raise NotImplementedError(msg)
+
+    if any(subcase.has_parameter('TIME', 'TSTEP')):
+        if 'TIME' in subcase:
+            value, options = subcase.get_parameter('TIME')
+        elif 'TSTEP' in subcase:
+            value, options = subcase.get_parameter('TSTEP')
+        else:
+            raise NotImplementedError(subcase)
+        assert value in fem2.tsteps, fem2.tsteps
+
+    if 'TSTEPNL' in subcase:
+        value, options = subcase.get_parameter('TSTEPNL')
+        assert value in fem2.tstepnls, fem2.tstepnls
+
+    if 'SUPORT1' in subcase:
+        value, options = subcase.get_parameter('SUPORT1')
+        assert value in fem2.suport1, fem2.suport1
+
+    if 'TRIM' in subcase:
+        value, options = subcase.get_parameter('TRIM')
+        assert value in fem2.trims, fem2.trims
+
+    if 'DIVERG' in subcase:
+        value, options = subcase.get_parameter('DIVERG')
+        assert value in fem2.divergs, fem2.divergs
 
     if 'METHOD' in subcase:
         method_id = subcase.get_parameter('METHOD')[0]

@@ -70,7 +70,7 @@ from pyNastran.bdf.cards.aero import (AECOMP, AEFACT, AELINK, AELIST, AEPARM, AE
                                       MONPNT1,
                                       FLFACT, FLUTTER, GUST, MKAERO1,
                                       MKAERO2, SPLINE1, SPLINE2, SPLINE3, SPLINE4,
-                                      SPLINE5, TRIM)
+                                      SPLINE5, TRIM, DIVERG)
 from pyNastran.bdf.cards.constraints import (SPC, SPCADD, SPCAX, SPC1,
                                              MPC, MPCADD, SUPORT1, SUPORT, SESUP,
                                              GMSPC)
@@ -193,6 +193,7 @@ def read_bdf(bdf_filename=None,
             'add_AECOMP', 'add_AEFACT', 'add_AELINK', 'add_AELIST', 'add_AEPARM', 'add_AERO',
             'add_AEROS', 'add_AESTAT', 'add_AESURF', 'add_ASET', 'add_BCRPARA', 'add_BCTADD',
             'add_BCTPARA', 'add_BCTSET', 'add_BSET', 'add_BSURF', 'add_BSURFS', 'add_CAERO',
+            'add_DIVERG',
             'add_CSET', 'add_CSSCHD', 'add_DAREA', 'add_DCONADD', 'add_DCONSTR', 'add_DDVAL',
             'add_DELAY', 'add_DEQATN', 'add_DESVAR', 'add_DLINK', 'add_DMI', 'add_DMIG',
             'add_DMIJ', 'add_DMIJI', 'add_DMIK', 'add_DPHASE', 'add_DRESP', 'add_DTABLE',
@@ -434,6 +435,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             #'SPLINE3', 'SPLINE6', 'SPLINE7',
             'TRIM',  ## trims
             'CSSCHD', ## csschds
+            'DIVERG', ## divergs
 
             ## coords
             'CORD1R', 'CORD1C', 'CORD1S',
@@ -1473,8 +1475,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'PCONV' : (PCONV, self.add_convection_property),
             'PCONVM' : (PCONVM, self.add_convection_property),
 
-            'AERO' : (AERO, self.add_AERO),
-            'AEROS' : (AEROS, self.add_AEROS),
+            # aero
             'AECOMP' : (AECOMP, self.add_AECOMP),
             'AEFACT' : (AEFACT, self.add_AEFACT),
             'AELINK' : (AELINK, self.add_AELINK),
@@ -1483,16 +1484,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'AESTAT' : (AESTAT, self.add_AESTAT),
             'AESURF' : (AESURF, self.add_AESURF),
             'AESURFS' : (AESURFS, self.add_AESURF),
-
-            'TRIM' : (TRIM, self.add_TRIM),
-            'FLUTTER' : (FLUTTER, self.add_FLUTTER),
-            'FLFACT' : (FLFACT, self.add_FLFACT),
-            'GUST' : (GUST, self.add_GUST),
-            'CSSCHD' : (CSSCHD, self.add_CSSCHD),
-            #'NLPARM' : (NLPARM, self.add_NLPARM),
-            'NLPCI' : (NLPCI, self.add_NLPCI),
-            'TSTEP' : (TSTEP, self.add_TSTEP),
-            'TSTEPNL' : (TSTEPNL, self.add_TSTEPNL),
 
             'CAERO1' : (CAERO1, self.add_CAERO),
             'CAERO2' : (CAERO2, self.add_CAERO),
@@ -1512,9 +1503,26 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'SPLINE4' : (SPLINE4, self.add_SPLINE),
             'SPLINE5' : (SPLINE5, self.add_SPLINE),
 
-            'MONPNT1' : (MONPNT1, self.add_MONPNT),
+            # SOL 144
+            'AEROS' : (AEROS, self.add_AEROS),
+            'TRIM' : (TRIM, self.add_TRIM),
+            'DIVERG' : (DIVERG, self.add_DIVERG),
+
+            # SOL 145
+            'AERO' : (AERO, self.add_AERO),
+            'FLUTTER' : (FLUTTER, self.add_FLUTTER),
+            'FLFACT' : (FLFACT, self.add_FLFACT),
             'MKAERO1' : (MKAERO1, self.add_MKAERO),
             'MKAERO2' : (MKAERO2, self.add_MKAERO),
+
+            'GUST' : (GUST, self.add_GUST),
+            'CSSCHD' : (CSSCHD, self.add_CSSCHD),
+            'MONPNT1' : (MONPNT1, self.add_MONPNT),
+
+            #'NLPARM' : (NLPARM, self.add_NLPARM),
+            'NLPCI' : (NLPCI, self.add_NLPCI),
+            'TSTEP' : (TSTEP, self.add_TSTEP),
+            'TSTEPNL' : (TSTEPNL, self.add_TSTEPNL),
 
             'TF' : (TF, self.add_TF),
             'DELAY' : (DELAY, self.add_DELAY),

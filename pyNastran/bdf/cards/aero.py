@@ -11,6 +11,7 @@ All aero cards are defined in this file.  This includes:
  * AERO / AEROS
  * CSSCHD
  * CAERO1 / CAERO2 / CAERO3 / CAERO4 / CAERO5
+ * DIVERG
  * FLFACT
  * FLUTTER
  * GUST
@@ -2304,6 +2305,60 @@ class PAERO5(BaseCard):
 
         #return(I1, I2, I3, I4, I5,
                #J1, J2, J3, J4, J5)
+
+class DIVERG(BaseCard):
+    """
+    +--------+-------+----------+-------+-------+-------+-------+-------+-------+
+    |   1    |   2   |    3     |   4   |   5   |   6   |   7   |   8   |   9   |
+    +========+=======+==========+=======+=======+=======+=======+=======+=======+
+    | DIVERG |  SID  |  NROOT   |   M1  |   M2  |   M3  |   M4  |   M5  |   M6  |
+    +--------+-------+----------+-------+-------+-------+-------+-------+-------+
+    |        |   M7  |  -etc.-  |       |       |       |       |       |       |
+    +--------+-------+----------+-------+-------+-------+-------+-------+-------+
+
+    Attributes
+    ----------
+    sid : int
+        The name.
+    nroots : int
+        the number of roots
+    machs : List[float]
+        list of Mach numbers
+    """
+    type = 'DIVERG'
+
+    def __init__(self, sid, nroots, machs, comment=''):
+        if comment:
+            self._comment = comment
+        self.sid = sid
+        self.nroots = nroots
+        self.machs = machs
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        sid = integer(card, 1, 'sid')
+        nroots = integer(card, 2, 'nroot')
+        j = 1
+        machs = []
+        for i in range(3, len(card)):
+            mach = double(card, i, 'Mach_%i' % j)
+            machs.append(mach)
+            j += 1
+        return DIVERG(sid, nroots, machs, comment=comment)
+
+    def cross_reference(self, model):
+        pass
+
+    def uncross_reference(self):
+        pass
+
+    def raw_fields(self):
+        list_fields = ['DIVERG', self.nroots] + list(self.machs)
+        return list_fields
+
+    def write_card(self, size=8, is_double=False):
+        card = self.repr_fields()
+        return self.comment + print_card_8(card)
 
 
 class FLFACT(BaseCard):

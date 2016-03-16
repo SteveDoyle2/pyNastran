@@ -596,6 +596,14 @@ class AddMethods(BDFAttributes):
         self.trims[key] = trim
         self._type_to_id_map[trim.type].append(key)
 
+    def add_DIVERG(self, diverg, allow_overwrites=False):
+        key = diverg.sid
+        if not allow_overwrites:
+            assert key not in self.divergs, 'diverg=%s oldDIVERG=\n%snewDIVERG=\n%s' % (key, self.divergs[key], diverg)
+        assert key > 0, 'key=%r diverg=\n%s' % (key, diverg)
+        self.divergs[diverg] = diverg
+        self._type_to_id_map[diverg.type].append(key)
+
     def add_FLUTTER(self, flutter):
         key = flutter.sid
         assert key not in self.flutters

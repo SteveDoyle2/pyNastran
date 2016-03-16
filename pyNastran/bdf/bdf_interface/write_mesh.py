@@ -488,19 +488,15 @@ class WriteMesh(BDFAttributes):
 
     def _write_static_aero(self, outfile, size=8, is_double=False):
         """Writes the static aero cards"""
-        if(self.aeros or self.trims):
+        if(self.aeros or self.trims or self.divergs):
             msg = ['$STATIC AERO\n']
             # static aero
             for (unused_id, aero) in sorted(iteritems(self.aeros)):
                 msg.append(aero.write_card(size, is_double))
             for (unused_id, trim) in sorted(iteritems(self.trims)):
                 msg.append(trim.write_card(size, is_double))
-
-            # gust
-            for (unused_id, aero) in sorted(iteritems(self.aero)):
-                msg.append(aero.write_card(size, is_double))
-            for (unused_id, gust) in sorted(iteritems(self.gusts)):
-                msg.append(gust.write_card(size, is_double))
+            for (unused_id, diverg) in sorted(iteritems(self.divergs)):
+                msg.append(diverg.write_card(size, is_double))
             outfile.write(''.join(msg))
 
     def _write_flutter(self, outfile, size=8, is_double=False):

@@ -364,10 +364,6 @@ class BDFAttributes(object):
         self.paeros = {}
         # stores MONPNT1
         self.monitor_points = []
-        #: stores AERO
-        self.aero = {}
-        #: stores AEROS
-        self.aeros = {}
 
         #: stores AECOMP
         self.aecomps = {}
@@ -386,18 +382,33 @@ class BDFAttributes(object):
         #: stores CSSCHD
         self.csschds = {}
 
-        #: stores GUST cards
-        self.gusts = {}
+        #: store SPLINE1,SPLINE2,SPLINE4,SPLINE5
+        self.splines = {}
+
+        # ------ SOL 144 ------
+        #: stores AEROS
+        self.aeros = {}
+
+        #: stores TRIM
+        self.trims = {}
+
+        #: stores DIVERG
+        self.divergs = {}
+
+        # ------ SOL 145 ------
+        #: stores AERO
+        self.aero = {}
+
         #: stores FLFACT
         self.flfacts = {}  #: .. todo:: can this be simplified ???
         #: stores FLUTTER
         self.flutters = {}
         #: mkaeros
         self.mkaeros = []
-        #: store SPLINE1,SPLINE2,SPLINE4,SPLINE5
-        self.splines = {}
-        #: stores TRIM
-        self.trims = {}
+
+        # ------ SOL 146 ------
+        #: stores GUST cards
+        self.gusts = {}
 
         # ------------------------- thermal defaults -------------------------
         # BCs
