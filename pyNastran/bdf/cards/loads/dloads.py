@@ -201,11 +201,7 @@ class RLOAD1(TabularLoad):
         elif self.tc == 0:
             c = 0.
         else:
-            cxy = np.array(self.tc.table.table)
-            fc = cxy[:, 0]
-            yc = cxy[:, 1]
-            assert fc.shape == yc.shape, 'fc.shape=%s yc.shape=%s' % (str(fc.shape), str(yc.shape))
-            c = interp1d(fc, yc)(freq)
+            c = self.tc.interpolate(freq)
 
         if isinstance(self.td, float):
             d = float(self.td)
