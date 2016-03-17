@@ -643,12 +643,12 @@ def check_case(sol, subcase, fem2, p0, isubcase):
     elif sol == 153: # heat?
         if 'SPC' not in subcase:
             _assert_has_spc(subcase, fem2)
-        assert 'NLPARAM' in subcase, subcase
+        assert 'NLPARM' in subcase, subcase
         assert any(subcase.has_parameter('LOAD')), subcase
         if 'ANALYSIS' in subcase and subcase.get_parameter('ANALYSIS')[0] == 'HEAT':
             assert 'TEMPERATURE(INITIAL)' in subcase, subcase
     elif sol == 159: #  nonlinear transient; heat?
-        assert 'NLPARAM' in subcase, subcase
+        assert 'NLPARM' in subcase, subcase
         #assert any(subcase.has_parameter('TIME', 'TSTEP', 'TSTEPNL')), subcase
         #assert any(subcase.has_parameter('GUST', 'LOAD')), subcase
         if 'ANALYSIS' in subcase and subcase.get_parameter('ANALYSIS')[0] == 'HEAT':

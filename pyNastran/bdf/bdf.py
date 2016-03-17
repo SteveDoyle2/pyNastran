@@ -1542,6 +1542,23 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             #'DVMREL2' : (DVMREL2, self.add_DVMREL), # deqatn
             #DVCREL1
             # DVCREL2 - deqatn
+
+            'TABLED1' : (TABLED1, self.add_table),
+            'TABLED2' : (TABLED2, self.add_table),
+            'TABLED3' : (TABLED3, self.add_table),
+            'TABLED4' : (TABLED4, self.add_table),
+            'TABLEM1' : (TABLEM1, self.add_table),
+            'TABLEM2' : (TABLEM2, self.add_table),
+            'TABLEM3' : (TABLEM3, self.add_table),
+            'TABLEM4' : (TABLEM4, self.add_table),
+
+            'TABLES1' : (TABLES1, self.add_table),
+            'TABLEST' : (TABLEST, self.add_table),
+
+            'TABDMP1' : (TABDMP1, self.add_table_sdamping),
+            'TABRND1' : (TABRND1, self.add_random_table),
+            'TABRNDG' : (TABRNDG, self.add_random_table),
+
         }
         self._card_parser_a = {
             'PBUSH1D' : (PBUSH1D, self.add_property),
@@ -1603,22 +1620,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             #'DVMREL2' : (DVMREL2, self.add_DVMREL), # deqatn
             #DVCREL1
             # DVCREL2 - deqatn
-
-            'TABLED1' : (TABLED1, self.add_table),
-            'TABLED2' : (TABLED2, self.add_table),
-            'TABLED3' : (TABLED3, self.add_table),
-            'TABLED4' : (TABLED4, self.add_table),
-            'TABLEM1' : (TABLEM1, self.add_table),
-            'TABLEM2' : (TABLEM2, self.add_table),
-            'TABLEM3' : (TABLEM3, self.add_table),
-            'TABLEM4' : (TABLEM4, self.add_table),
-
-            'TABLES1' : (TABLES1, self.add_table),
-            'TABLEST' : (TABLEST, self.add_table),
-
-            'TABDMP1' : (TABDMP1, self.add_table_sdamping),
-            'TABRND1' : (TABRND1, self.add_random_table),
-            'TABRNDG' : (TABRNDG, self.add_random_table),
 
             'EIGB' : (EIGB, self.add_method),
             'EIGR' : (EIGR, self.add_method),

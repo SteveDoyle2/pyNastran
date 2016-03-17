@@ -436,6 +436,7 @@ class CaseControlDeck(object):
         line_upper = line.upper()
 
         #print("line_upper = %r" % line)
+        #print('  equals_count = %s' % equals_count)
         if line_upper.startswith('SUBCASE'):
             #print("line = %r" % line)
             line2 = line.replace('=', '')
@@ -523,8 +524,11 @@ class CaseControlDeck(object):
 
                 # handle TEMPERATURE(INITIAL) and TEMPERATURE(LOAD) cards
                 if key in ['TEMPERATURE', 'TEMP']:
-                    key = 'TEMPERATURE(%s)' % (options[0])
-                    options = []
+                    option = options[0]
+                    if option == '':
+                        option = 'BOTH'
+                    key = 'TEMPERATURE'
+                    options = [option]
                 #print("key=%r options=%s" %(key,options))
 
             #elif ' ' in key and ',' in value:  # SET-type
@@ -560,7 +564,10 @@ class CaseControlDeck(object):
                 pass
             else:  # STRESS-type; TITLE = stuff
                 #print('B ??? line = ',line)
-                pass
+                if key in ['TEMPERATURE', 'TEMP']:
+                    assert len(options) == 0, options
+                    key = 'TEMPERATURE'
+                    options = ['BOTH']
 
             key = update_param_name(key.strip().upper())
             verify_card(key, value, options, line)
