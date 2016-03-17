@@ -136,7 +136,7 @@ class CameraWindow(QtGui.QDialog):
         camera_data = self.cameras[name]
         if self.win_parent is None:
             return
-        self.win_parent.set_camera_data(camera_data)
+        self.win_parent.on_set_camera_data(camera_data)
 
     def save_camera(self, name):
         self.names.append(name)

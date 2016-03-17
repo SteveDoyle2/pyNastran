@@ -3149,7 +3149,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         ]
         return camera_data
 
-    def set_camera_data(self, camera_data, show_log=True):
+    def on_set_camera_data(self, camera_data, show_log=True):
         """
         position : (float, float, float)
             where am I is xyz space

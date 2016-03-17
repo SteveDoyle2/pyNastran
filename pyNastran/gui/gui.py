@@ -238,7 +238,7 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO, LaWGS_IO, S
                 self.cycle_results(Title)
             else:
                 break
-        self.set_camera_data(camera, show_log=False)
+        self.on_set_camera_data(camera, show_log=False)
 
     def closeEvent(self, event):
         """
