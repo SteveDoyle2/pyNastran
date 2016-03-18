@@ -2017,12 +2017,15 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             qt_wildcard = '*.csv'
             title = 'Load User Points'
             csv_filename = self._create_load_file_dialog(qt_wildcard, title)[1]
+            if not csv_filename:
+                return
         if color is None:
             # we mod the num_user_points so we don't go outside the range
             icolor = self.num_user_points % len(self.color_order)
             color = self.color_order[icolor]
         if name is None:
-            name = os.path.basename(csv_filename).rsplit('.', 1)[0]
+            sline = os.path.basename(csv_filename).rsplit('.', 1)
+            name = sline[0]
 
         self._add_user_points(csv_filename, name, color)
         self.num_user_points += 1
@@ -3931,6 +3934,10 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         if name in self.geometry_actors:
             msg = 'Name: %s is already in geometry_actors\nChoose a different name.' % name
             raise ValueError(msg)
+        if len(name) == 0:
+            msg = 'Invalid Name: name=%r' % name
+            raise ValueError(msg)
+
         # create grid
         self.create_alternate_vtk_grid(name, color=color, line_width=5, opacity=1.0,
                                        point_size=1, representation='point')

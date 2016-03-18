@@ -2,16 +2,16 @@
 Takes a 2D mesh of a structure (e.g. an aircraft) and finds the 2D skin panels
 in order to do a buckling analysis.
 """
+# pylint: disable=E1101
 from __future__ import print_function
 import os
 import sys
 import glob
 from copy import deepcopy
+from itertools import count
 from six import iteritems, string_types
 
-from numpy import hstack, unique, allclose, savetxt, array, loadtxt, setdiff1d
-from numpy import zeros, abs as npabs
-from numpy import searchsorted, vstack
+import numpy as np
 
 from pyNastran.bdf.bdf import BDF
 from pyNastran.op2.op2 import OP2
@@ -66,10 +66,10 @@ def get_patch_edges(edge_to_eid_map, xyz_cid0, is_symmetric=True,
         # xz symmetry  (should this actually be yz symmetry????)
         for edge, eids in iteritems(edge_to_eid_map):
             yedge = [True for nid in edge
-                     if allclose(xyz_cid0[nid][1], ymin)]
+                     if np.allclose(xyz_cid0[nid][1], ymin)]
 
             if consider_pids:
-                pids = unique([model.elements[eid].Pid() for eid in eids])
+                pids = np.unique([model.elements[eid].Pid() for eid in eids])
 
             if len(eids) != 2 or len(yedge) > 1 or len(pids) > 1:
                 patch_edges.append(edge)
@@ -80,7 +80,7 @@ def get_patch_edges(edge_to_eid_map, xyz_cid0, is_symmetric=True,
     else:
         for edge, eids in iteritems(edge_to_eid_map):
             if consider_pids:
-                pids = unique([model.elements[eid].Pid() for eid in eids])
+                pids = np.unique([model.elements[eid].Pid() for eid in eids])
 
             if len(eids) != 2 or len(pids):
                 patch_edges.append(edge)
@@ -196,11 +196,19 @@ def find_ribs_and_spars(xyz_cid0, edge_to_eid_map, eid_to_edge_map,
         edge_to_eid_map, xyz_cid0, is_symmetric=is_symmetric,
         model=model, consider_pids=consider_pids)
 
+    _free_edges = np.array(free_edges, dtype='int32')
+    _free_edge_nids = np.unique(_free_edges.ravel())
+
     free_edge_nodes_filename = os.path.join(workpath, 'free_edge_nodes.csv')
     with open(free_edge_nodes_filename, 'w') as free_edge_nodes_file:
-        _free_edges = array(free_edges, dtype='int32')
-        for nid in unique(_free_edges.ravel()):
-            free_edge_nodes_file.write('%s, %s, %s\n' % tuple(xyz_cid0[nid]))
+        free_edge_nodes_file.write('# X, Y, Z\n')
+        free_edge_nodes_file.write('# Node IDs corresponding to free_edge_nodes_xyz.csv\n')
+        np.savetxt(free_edge_nodes_file, _free_edge_nids, fmt='%i', delimiter=',')
+
+    free_edge_nodes_xyz_filename = os.path.join(workpath, 'free_edge_nodes_xyz.csv')
+    with open(free_edge_nodes_xyz_filename, 'w') as free_edge_nodes_xyz_file:
+        for nid in _free_edge_nids:
+            free_edge_nodes_xyz_file.write('%s, %s, %s\n' % tuple(xyz_cid0[nid]))
 
     #with open(free_edge_nodes_filename, 'w') as free_edge_nodes_file:
         #_free_edges = array(free_edges, dtype='int32')
@@ -209,13 +217,17 @@ def find_ribs_and_spars(xyz_cid0, edge_to_eid_map, eid_to_edge_map,
 
     patch_edges_filename = os.path.join(workpath, 'patch_edges.csv')
     patch_edges_array_filename = os.path.join(workpath, 'patch_edges_array.csv')
-    _patch_edges = array(patch_edges, dtype='int32')
-    savetxt(patch_edges_array_filename, _patch_edges, fmt='%i')
+    _patch_edges = np.array(patch_edges, dtype='int32')
+    header = 'Nid1, Nid2\n'
+    header += 'NodeIDs corresponding to patch_edges_array.csv'
+    np.savetxt(patch_edges_array_filename, _patch_edges, delimiter=',', header=header, fmt='%i')
     with open(patch_edges_filename, 'w') as patch_edges_file:
-        for nid in unique(_patch_edges.ravel()):
+        patch_edges_file.write('# X, Y, Z\n')
+        patch_edges_file.write('# xyz corresponding to patch_edges.csv\n')
+        for nid in np.unique(_patch_edges.ravel()):
             patch_edges_file.write('%s, %s, %s\n' % tuple(xyz_cid0[nid]))
 
-    patch_edges_array = array(patch_edges, dtype='int32')
+    patch_edges_array = np.array(patch_edges, dtype='int32')
     all_patch_edges = deepcopy(patch_edges)
     #--------------------------
     # we'll now get the patches
@@ -235,7 +247,7 @@ def find_ribs_and_spars(xyz_cid0, edge_to_eid_map, eid_to_edge_map,
         # get elements on other patches
         used_edges = set([])
         if patches:
-            used_eids = set(unique(hstack(patches)))
+            used_eids = set(np.unique(np.hstack(patches)))
         else:
             used_eids = set([])
         print('new_patch_edge_count=%s patch_edge_count=%s' % (
@@ -401,15 +413,16 @@ def get_next_edges(eid_to_edge_map, edge_to_eid_map,
         #print()
     return edges_to_check_next, patch_len
 
-def save_patch_info(model, xyz_cid0, patch_edges_array, eids_on_edge, patches,
+def save_patch_info(eids, xyz_cid0, patch_edges_array, eids_on_edge, patches,
+                    all_eids=None,
                     workpath='results'):
     """
     Saves the patch data
 
     Parameters
     ----------
-    model : BDF()
-        needed for the list of element ids
+    eids : (nelements, ) int ndarray / List[int]
+        list of element ids
     xyz_cid0 : dict[nid] = xyz
         key : int (node_id)
         value : (3, ) float ndarray of the grid point in cid=0
@@ -420,25 +433,31 @@ def save_patch_info(model, xyz_cid0, patch_edges_array, eids_on_edge, patches,
     patch_edges_array : (n, 2) int ndarray
         all the edges on the geometry as (n1, n2) integer pairs
         where n1 < n2
+    all_eids : (mall_elements, ) int ndarray; default=None
+        all the element ids to merge back in
+        only necessary if we only analyzed a subset of elements
     workpath : str; default='results'
         the working directory
     """
+    if isinstance(eids, np.ndarray):
+        pass
+    elif isinstance(eids, list):
+        eids = np.asarray(eids)
+    else:
+        raise NotImplementedError('eids must be a list/ndarray; type=%s' % (type(eids)))
+
     #savetxt(patch_edges_array_filename, patch_edges_array, fmt='i', delimiter=',',
             #header='# patch edges array\n # n1, n2')
-    unique_nids = unique(array(patch_edges_array, dtype='int32').ravel())
     #patch_edges_array_filename = os.path.join(workpath, 'patch_edges.csv')
 
-    # xyz points of patch
-    nodal_edges_filename = os.path.join(workpath, 'nodal_edges.csv')
-
     # is the element flagged as an edge
-    element_edges_filename = os.path.join(workpath, 'element_edges.txt')
+    element_edges_filename = os.path.join(workpath, 'element_edges.csv')
 
     # what patch is each element part of
-    element_patches_filename = os.path.join(workpath, 'element_patches.txt')
+    element_patches_filename = os.path.join(workpath, 'element_patches.csv')
 
     # what are the element ids in each patch
-    patches_filename = os.path.join(workpath, 'patches.txt')
+    patches_filename = os.path.join(workpath, 'patches.csv')
 
     # what elements are on the edge of a patch
     eids_on_edge_filename = os.path.join(workpath, 'eids_on_edge.txt')
@@ -448,24 +467,30 @@ def save_patch_info(model, xyz_cid0, patch_edges_array, eids_on_edge, patches,
         #for patch_edge in patch_edges_array:
             #patch_edges_array_file.write(str(patch_edge)[1:-1] + '\n')
 
-    savetxt(nodal_edges_filename, [xyz_cid0[nid] for nid in unique_nids], delimiter=',')
+    # xyz points of patch
+    nodal_edges_filename = os.path.join(workpath, 'nodal_edges.csv')
+    unique_nids = np.unique(np.array(patch_edges_array, dtype='int32').ravel())
+    np.savetxt(nodal_edges_filename, [xyz_cid0[nid] for nid in unique_nids],
+               header='xyz points for all patches', delimiter=',')
 
-    eids_all = model.element_ids
-    patch_ids_all = [-10] * len(eids_all)
+    patch_ids_all = np.ones(len(eids), dtype='int32') * -10
     npatches = len(patches)
 
     ipatch = 0
-    for eids in patches:
-        if len(eids) == 1:
+    for patch_eids in patches:
+        if len(patch_eids) == 1:
             continue
-        for eid in eids:
-            i = eids_all.index(eid)
-            patch_ids_all[i] = ipatch
+
+        #for eid in patch_eids:
+            #i = eids.index(eid)
+            #patch_ids_all[i] = ipatch
+        i = np.searchsorted(eids, patch_eids)
+        patch_ids_all[i] = ipatch
         ipatch += 1
 
     with open(element_edges_filename, 'wb') as element_edges_file:
         element_edges_file.write('# eid(%i), is_edge(%i)\n')
-        for eid in eids_all:
+        for eid in eids:
             if eid in eids_on_edge:
                 element_edges_file.write('%s, 1\n' % eid)
             else:
@@ -475,10 +500,14 @@ def save_patch_info(model, xyz_cid0, patch_edges_array, eids_on_edge, patches,
         for eid in eids_on_edge:
             eids_on_edge_file.write('%s\n' % eid)
 
+    if len(eids) != len(patch_ids_all):
+        msg = 'len(eids)=%i len(patch_ids_all)=%i' % (len(eids), len(patch_ids_all))
+        raise ValueError(msg)
     with open(element_patches_filename, 'wb') as element_patches_file:
-        element_patches_file.write('# patch(%i), element_count(%i)\n')
-        for patch_id in patch_ids_all:
-            element_patches_file.write('%s %s\n' % (patch_id, len(patches[patch_id])))
+        element_patches_file.write('# eid(%i), patch(%i), element_count(%i)\n')
+        for (i, eid, patch_id) in zip(count(), eids, patch_ids_all):
+            neids_on_patch = len(patches[patch_id])
+            element_patches_file.write('%s, %s, %s\n' % (eid, patch_id, neids_on_patch))
 
     with open(patches_filename, 'wb') as patches_file:
         patches_file.write('# patch_id(%i), eids(%i)\n')
@@ -512,23 +541,23 @@ def load_patch_info(workpath='results'):
         where n1 < n2
     """
     patch_edges_array_filename = os.path.join(workpath, 'patch_edges_array.csv')
-    patch_edges_array = loadtxt(patch_edges_array_filename, dtype='int32')
+    patch_edges_array = np.loadtxt(patch_edges_array_filename, delimiter=',', dtype='int32')
 
 
     eids_on_edge_filename = os.path.join(workpath, 'eids_on_edge.txt')
-    eids_on_edge = set(loadtxt(eids_on_edge_filename, dtype='int32'))
+    eids_on_edge = set(np.loadtxt(eids_on_edge_filename, dtype='int32'))
     #nodal_edges_filename = os.path.join(workpath, 'nodal_edges.csv')
     #nodal_edges = load_nodal_edges_file(nodal_edges_filename)
 
-    #element_edges_filename = os.path.join(workpath, 'element_edges.txt')
+    #element_edges_filename = os.path.join(workpath, 'element_edges.csv')
     #element_edges = load_element_edges(element_edges_filename)
 
-    #element_patches_filename = os.path.join(workpath, 'element_patches.txt')
+    #element_patches_filename = os.path.join(workpath, 'element_patches.csv')
     #element_patches, _patch_counter = load_element_patches(element_patches_filename)
     #print('patches/element_patches =', element_patches)
 
     # this is patches
-    patches_filename = os.path.join(workpath, 'patches.txt')
+    patches_filename = os.path.join(workpath, 'patches.csv')
     patches = load_patches(patches_filename)
     return patch_edges_array, eids_on_edge, patches
 
@@ -537,9 +566,9 @@ def load_patch_info(workpath='results'):
 #def load_element_edges(element_edges_filename):
 
 def load_element_patches(element_patches_filename):
-    A = loadtxt(element_patches_filename, dtype='int32')
-    element_patches = A[:, 0]
-    counter = A[:, 1]
+    A = np.loadtxt(element_patches_filename, delimiter=',', type='int32')
+    element_patches = A[:, 1]
+    counter = A[:, 2]
     return element_patches, counter
 
 def load_patches(patches_filename):
@@ -609,7 +638,9 @@ def create_plate_buckling_models(model, op2_filename, mode, isubcase=1,
             workpath=workpath, is_symmetric=is_symmetric,
             model=model, consider_pids=consider_pids)
 
-        save_patch_info(model, xyz_cid0, patch_edges_array, eids_on_edge, patches,
+        eids = model.element_ids
+        save_patch_info(eids, xyz_cid0, patch_edges_array, eids_on_edge, patches,
+                        all_eids=None,
                         workpath=workpath)
     else:
         #msg = 'add ability to start from existing patch/edge files; rebuild_patches=%s' % rebuild_patches
@@ -670,7 +701,7 @@ def write_buckling_bdfs(bdf_model, op2_filename, xyz_cid0, patches, patch_edges_
     else:
         raise RuntimeError(mode)
 
-    edge_nids = unique(patch_edges_array.ravel())
+    edge_nids = np.unique(patch_edges_array.ravel())
     #free_nodes = setdiff1d(node_ids_full_model, edge_nids) # A-B
 
     # TODO: support excluded pids
@@ -683,7 +714,7 @@ def write_buckling_bdfs(bdf_model, op2_filename, xyz_cid0, patches, patch_edges_
     if not os.path.exists(edge_dir):
         os.makedirs(edge_dir)
     for ipatch, patch_eids in enumerate(patches):
-        patch_eids_array = array(patch_eids, dtype='int32')
+        patch_eids_array = np.array(patch_eids, dtype='int32')
 
         patch_filename = os.path.join(patch_dir, 'patch_%i.bdf' % ipatch)
         edge_filename = os.path.join(edge_dir, 'edge_%i.csv' % ipatch)
@@ -713,13 +744,13 @@ def write_buckling_bdfs(bdf_model, op2_filename, xyz_cid0, patches, patch_edges_
             os.remove(edge_filename)
             continue
 
-        all_nids_on_patch = unique(hstack(all_nids_on_patch))
+        all_nids_on_patch = np.unique(np.hstack(all_nids_on_patch))
 
         nnodes = len(all_nids_on_patch)
 
         # get nodal cd; write nodes
         if mode == 'load':
-            cd = zeros(nnodes, dtype='int32')
+            cd = np.zeros(nnodes, dtype='int32')
             for i, nid in enumerate(all_nids_on_patch):
                 node = model.nodes[nid]
                 cdi = node.Cd()
@@ -776,10 +807,10 @@ def write_buckling_bdfs(bdf_model, op2_filename, xyz_cid0, patches, patch_edges_
                 n1, n2 = edge
                 if n1 in all_nids_on_patch and n2 in all_nids_on_patch:
                     patch_edge_nids.append(edge)
-            patch_edge_nids = unique(vstack(patch_edge_nids))
+            patch_edge_nids = np.unique(np.vstack(patch_edge_nids))
             #print('patch_edge_nids = %s' % patch_edge_nids)
             #print('node_ids_full_model = %s' % node_ids_full_model)
-            idisp_full_model = searchsorted(node_ids_full_model, patch_edge_nids)
+            idisp_full_model = np.searchsorted(node_ids_full_model, patch_edge_nids)
             nids2 = node_ids_full_model[idisp_full_model]
 
             #print('idisp_full_model = %s' % idisp_full_model)
@@ -814,7 +845,7 @@ def write_buckling_bdfs(bdf_model, op2_filename, xyz_cid0, patches, patch_edges_
             #free_nodes_on_patch = setdiff1d(free_nodes, all_nids_on_patch) # A-B
             #free_nodes_on_patch = in1d(free_nodes, all_nids_on_patch) # A and B
 
-            free_nodes_on_patch = setdiff1d(all_nids_on_patch, edge_nids)
+            free_nodes_on_patch = np.setdiff1d(all_nids_on_patch, edge_nids)
             #print('free_nodes_on_patch =', free_nodes_on_patch)
             if len(free_nodes_on_patch) == 0:
                 print('couldnt find free node for patch_filename=%s' % patch_filename)
@@ -824,7 +855,9 @@ def write_buckling_bdfs(bdf_model, op2_filename, xyz_cid0, patches, patch_edges_
                 #os.remove(edge_filename)
                 continue
             free_node = free_nodes_on_patch[0]
-            assert free_node in all_nids_on_patch, 'free_node=%s is not patch_filename=in %s' % (free_node, patch_filename)
+            if free_node not in all_nids_on_patch:
+                msg = 'free_node=%s is not patch_filename=in %s' % (free_node, patch_filename)
+                raise RuntimeError(msg)
             patch_file.write('FORCE,%i,%i,0,0.000001,1.0,1.0,1.0\n' % (load_id, free_node))
 
             for i, nid in enumerate(patch_edge_nids):
@@ -836,7 +869,7 @@ def write_buckling_bdfs(bdf_model, op2_filename, xyz_cid0, patches, patch_edges_
                 for j in range(3):
                 #for j in range(6):
                     dispi = disp[i, j]
-                    if npabs(dispi) > 0.0:
+                    if np.abs(dispi) > 0.0:
                         # SPCD, sid, g1, c1, d1
                         #patch_file.write(print_card_8(['SPCD', spc_id, nid, j + 1, dispi]))
                         if ipack == 0:
@@ -856,7 +889,7 @@ def write_buckling_bdfs(bdf_model, op2_filename, xyz_cid0, patches, patch_edges_
             # TODO: does this work for vectorized classes?
             for node_id, cdi in zip(all_nids_on_patch[1:], cd[1:]):
                 force = nodal_forces.force_moment[node_id]
-                force_moment_sum = zeros(6, dtype='float32')
+                force_moment_sum = np.zeros(6, dtype='float32')
                 for iload, forcei in enumerate(force):
                     eid = nodal_forces.eids[node_id][iload]
                     element_name = nodal_forces.elemName[node_id][iload]
@@ -866,7 +899,7 @@ def write_buckling_bdfs(bdf_model, op2_filename, xyz_cid0, patches, patch_edges_
                         print(element_name)
                         force_moment_sum += force[iload]
 
-                abs_force_moment_sum = npabs(force_moment_sum)
+                abs_force_moment_sum = np.abs(force_moment_sum)
                 forcei = abs_force_moment_sum[:3]
                 momenti = abs_force_moment_sum[3:]
                 if forcei.sum() > 0.0:
