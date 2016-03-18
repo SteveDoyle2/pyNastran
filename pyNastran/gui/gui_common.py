@@ -1687,7 +1687,11 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
     def _load_csv(self, result_type, out_filename):
         out_filename_short = os.path.basename(out_filename)
-        A, nrows, ncols, fmts, headers = load_csv(out_filename)
+        A, fmt_dict, headers = load_csv(out_filename)
+        #nrows, ncols, fmts
+        header0 = headers[0]
+        result0 = A[header0]
+        nrows = result0.size
 
         if result_type == 'Nodal':
             assert nrows == self.nNodes, 'nrows=%s nnodes=%s' % (nrows, self.nNodes)
@@ -1702,14 +1706,15 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         formi = []
         form = self.get_form()
         icase = len(self.case_keys)
-        islot = self.case_keys[0][0]
-        for icol in range(ncols):
-            datai = A[:, icol]
-            #print('datai =', datai)
-            fmti = fmts[icol]
-            #print('fmti = %r' % fmti)
-            header = headers[icol].strip()
+        islot = 0
+        for case_key in self.case_keys:
+            if isinstance(case_key, tuple):
+                islot = case_key[0]
+                break
 
+        for header in headers:
+            datai = A[header]
+            fmti = fmt_dict[header]
             key = (islot, icase, header, 1, result_type2, fmti, '')
             self.case_keys.append(key)
             self.result_cases[key] = datai
@@ -1720,7 +1725,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             icase += 1
         form.append((out_filename_short, None, formi))
 
-        self.ncases += ncols
+        self.ncases += len(headers)
         #cases[(ID, 2, 'Region', 1, 'centroid', '%i')] = regions
         self.res_widget.update_results(form)
 

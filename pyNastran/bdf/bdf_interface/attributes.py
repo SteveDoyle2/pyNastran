@@ -165,6 +165,7 @@ class BDFAttributes(object):
         self._duplicate_masses = []
         self._duplicate_thermal_materials = []
         self._duplicate_coords = []
+        self.values_to_skip = {}
 
         # ------------------------ structural defaults -----------------------
         #: the analysis type

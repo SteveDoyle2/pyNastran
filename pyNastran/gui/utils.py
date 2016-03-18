@@ -94,47 +94,47 @@ def load_csv(out_filename):
             msg = 'extension=%r is not supported (use .dat, .txt, or .csv)' % ext
             raise NotImplementedError(msg)
 
-        headers2 = []
-        fmts = []
+
+        fmt_dict = {}
+        names = []
         dtype_fmts = []
-        int_cols = []
-        float_cols = []
-        #ints = ('(int32)', '(int64)')
-        #floats = ('(float32)', '(float64)')
         for iheader, header in enumerate(headers):
             # TODO: works for making a \n, but screws up the sidebar
             #       and scale
             header2 = header.strip()#.replace('\\n', '\n')
             dtype_fmt = 'float'
-            fmt = '%.3f'
+
+            str_fmt = '%.3f'
             if header2.endswith(')') and '%' in header2:
                 header2_temp, fmt_temp = header2[:-1].rsplit('(', 1)
                 header2_temp = header2_temp.strip()
+                fmt = fmt_temp.strip()
+                print('fmt_temp = %r' % fmt_temp)
+                #('S1', 'i4', 'f4')
                 if '%' in fmt:
                     #fmt_temp = fmt_temp.replace('%', '%%')
                     if 'i' in fmt:
                         fmt % 5
-                        dtype_fmt = 'int'
-                        header2 = header2_temp
-                        fmt = fmt_temp
-                        int_cols.append(iheader)
+                        dtype_fmt = 'int32'
+                        str_fmt = '%i'
+
                     elif 'g' in fmt or 'e' in fmt or 'f' in fmt or 's' in fmt:
-                        #print('trying... %r' % (fmt % 1.1))
-                        dtype_fmt = 'float'
-                        header2 = header2_temp
-                        fmt = fmt_temp
-                        float_cols.append(iheader)
+                        dtype_fmt = 'float32'
+                        str_fmt = fmt
+                    else:
+                        raise TypeError('iheader=%s header=%r fmt=%r' % (iheader, header2, fmt))
+                else:
+                    # default to float32
+                    dtype_fmt = 'float32'
+            else:
+                dtype_fmt = 'float32'
+                header2_temp = header2
+                print('header2 = %r' % header2)
 
-            ##print('header2 = %r' % header2)
+            names.append(header2_temp)
             dtype_fmts.append(dtype_fmt)
-            fmts.append(fmt)
-            headers2.append(header2)
-        headers = headers2
-        del headers2
-        #print('fmts =', fmts)
-        #print('headers2 =', headers)
+            fmt_dict[header2_temp] = str_fmt
 
-        formats = ','.join(dtype_fmts)
         if ext in ['.dat', '.txt']:
             delimiter = None
         elif ext == '.csv':
@@ -142,29 +142,13 @@ def load_csv(out_filename):
         else:
             raise NotImplementedError('extension=%r is not supported (use .dat, .txt, or .csv)' % ext)
 
-        assert (len(int_cols) + len(float_cols)) == len(headers)
+        dtype = {
+            'names': tuple(names),
+            'formats': tuple(dtype_fmts)
+        }
+        A = loadtxt(file_obj, dtype=dtype, delimiter=delimiter)
 
-        method = 1
-        A = loadtxt(file_obj, dtype=formats, delimiter=delimiter)
-        #if int_cols:
-            #ints = np.loadtxt(file_obj, delimiter=delimiter, usecols=int_cols)
-        #if float_cols:
-            #floats = np.loadtxt(file_obj, delimiter=delimiter, usecols=float_cols)
-
-    if method == 1:
-        if len(A.shape) == 1:
-            A = A.reshape(A.shape[0], 1)
-        nrows, ncols = A.shape
-
-    if ncols != len(headers):
-        msg = 'Error loading csv/txt file\n'
-        msg += 'ncols != len(headers); ncols=%s; len(headers)=%s\n' % (ncols, len(headers))
-        msg += 'headers = %s\n' % headers
-        msg += 'fmts = %s\n' % fmts
-        msg += 'dtype_fmts = %s\n' % dtype_fmts
-        msg += 'header_line=%r' % (header_line)
-        raise SyntaxError(msg)
-    return A, nrows, ncols, fmts, headers
+    return A, fmt_dict, names
 
 
 def load_user_geom(fname):

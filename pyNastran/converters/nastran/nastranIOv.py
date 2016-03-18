@@ -1085,6 +1085,8 @@ class NastranIO(object):
             no_0_16 = np.zeros(self.element_ids.shape, dtype='int32')
         bar_nids = set([])
         for eid in bar_beam_eids:
+            if eid not in self.eid_map:
+                continue
             ieid = self.eid_map[eid]
             elem = model.elements[eid]
             #print(elem)

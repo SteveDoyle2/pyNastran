@@ -19,6 +19,8 @@ def run_nastran(fname, keywords=None):
         else:
             keywords_list = []
             for keyword, value in keywords.items():
+                if value is None:
+                    continue
                 keywords_list.append('%s=%s' % (keyword, value))
 
     call_args = ['nastran', fname] + keywords_list

@@ -368,6 +368,7 @@ def _parse_pynastran_header(line):
             $ pyNastran: nelements=100
             $ pyNastran: skip_cards=PBEAM,CBEAM
             $ pyNastran: units=in,lb,s
+            $ pyNastran: skip elements=12345,6,7,8
 
     If we find:
         ..code-block :: python
@@ -381,7 +382,7 @@ def _parse_pynastran_header(line):
         key = None
         value = None
     elif 'pynastran' in lline:
-        base, word = lline.split(':')
+        base, word = lline.split(':', 1)
         if base.strip() != 'pynastran':
             msg = 'unrecognized pyNastran marker\n'
             msg += 'line=%r' % line
@@ -392,6 +393,8 @@ def _parse_pynastran_header(line):
         if key in EXPECTED_HEADER_KEYS_CHECK:
             assert ' ' not in value, 'value=%r' % value
         elif key in EXPECTED_HEADER_KEYS_NO_CHECK:
+            pass
+        elif 'skip ' in key:
             pass
         else:
             msg = '\nunrecognized pyNastran key=%r type(key)=%s\n' % (key, type(key))

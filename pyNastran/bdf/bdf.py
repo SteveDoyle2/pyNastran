@@ -22,7 +22,7 @@ import numpy as np
 from pyNastran.bdf.utils import _parse_pynastran_header
 from pyNastran.utils import object_attributes, print_bad_path
 from pyNastran.bdf.utils import (to_fields, get_include_filename,
-                                 parse_executive_control_deck)
+                                 parse_executive_control_deck, parse_patran_syntax)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.cards.utils import wipe_empty_fields
@@ -732,6 +732,15 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             else:
                 cards, card_count = self.get_bdf_cards(bulk_data_lines)
             self._parse_cards(cards, card_count)
+
+            if self.values_to_skip:
+                for key, values in iteritems(self.values_to_skip):
+                    dict_values = getattr(self, key)
+                    assert isinstance(dict_values, dict), '%r is an invalid type; only dictionaries are supported' % (key)
+                    for value in values:
+                        del dict_values[value]
+                # TODO: redo get_card_ids_by_card_types & card_count
+
             self.pop_parse_errors()
             self.fill_dmigs()
 
@@ -2808,6 +2817,19 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                         elif key == 'skip_cards':
                             cards = {value.strip() for value in value.upper().split(',')}
                             self.cards_to_read = self.cards_to_read - cards
+                        elif 'skip ' in key:
+                            type_to_skip = key[5:].strip()
+                            #values = [int(value) for value in value.upper().split(',')]
+                            values = parse_patran_syntax(value)
+                            if type_to_skip not in self.object_attributes():
+                                raise RuntimeError('%r is an invalid key' % type_to_skip)
+                            if type_to_skip not in self.values_to_skip:
+                                self.values_to_skip[type_to_skip] = values
+                            else:
+                                self.values_to_skip[type_to_skip] = np.hstack([
+                                    self.values_to_skip[type_to_skip],
+                                    values
+                                ])
                         #elif key == 'skip_elements'
                         #elif key == 'skip_properties'
                         elif key == 'units':

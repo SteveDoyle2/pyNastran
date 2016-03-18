@@ -29,8 +29,13 @@ def get_patch_edges(edge_to_eid_map, xyz_cid0, is_symmetric=True,
     eid_to_edge_map : dict[int] = [(int, int), (int, int), ...]
         maps element ids to edges
     is_symmetric : bool
-        enables yz symmetry;
-        True: half model or model separated by a cntral gap
+        enables an xz symmetry (+/-y is a mirror)
+        (should this actually be yz symmetry????)
+        True: half model or model separated by a central gap
+    model : BDF(); default=None
+        required for consider_pids=True
+    consider_pids : bool; default=False
+        split model by properties
 
     Returns
     -------
@@ -52,10 +57,16 @@ def get_patch_edges(edge_to_eid_map, xyz_cid0, is_symmetric=True,
     if not consider_pids:
         pids = []
     if is_symmetric:
-        # yz symmetry
+
+        key0 = list(xyz_cid0.keys())[0]
+        ymin = xyz_cid0[key0][0]
+        for nid, xyz in iteritems(xyz_cid0):
+            ymin = min(ymin, xyz[1])
+
+        # xz symmetry  (should this actually be yz symmetry????)
         for edge, eids in iteritems(edge_to_eid_map):
             yedge = [True for nid in edge
-                     if allclose(xyz_cid0[nid][0], 0.0)]
+                     if allclose(xyz_cid0[nid][1], ymin)]
 
             if consider_pids:
                 pids = unique([model.elements[eid].Pid() for eid in eids])
@@ -95,6 +106,10 @@ def find_ribs_and_spars(xyz_cid0, edge_to_eid_map, eid_to_edge_map,
         the results directory
     is_symmetric : bool; default=True
         enables yz symmetry
+    model : BDF(); default=None
+        required for consider_pids=True
+    consider_pids : bool; default=False
+        split model by properties
 
     Returns
     -------
@@ -175,6 +190,8 @@ def find_ribs_and_spars(xyz_cid0, edge_to_eid_map, eid_to_edge_map,
     than option #1 because you don't need to caculate/recalculate the
     free edges ater each loop.
     """
+    if not os.path.exists(workpath):
+        os.makedirs(workpath)
     patch_edges, eids_on_edge, free_edges, free_eids = get_patch_edges(
         edge_to_eid_map, xyz_cid0, is_symmetric=is_symmetric,
         model=model, consider_pids=consider_pids)
@@ -391,6 +408,11 @@ def save_patch_info(model, xyz_cid0, patch_edges_array, eids_on_edge, patches,
 
     Parameters
     ----------
+    model : BDF()
+        needed for the list of element ids
+    xyz_cid0 : dict[nid] = xyz
+        key : int (node_id)
+        value : (3, ) float ndarray of the grid point in cid=0
     eids_on_edge : Set[int]
         all the elements on the edges
     patches : List[List[int]]
@@ -442,7 +464,7 @@ def save_patch_info(model, xyz_cid0, patch_edges_array, eids_on_edge, patches,
         ipatch += 1
 
     with open(element_edges_filename, 'wb') as element_edges_file:
-        element_edges_file.write('# eid, is_edge\n')
+        element_edges_file.write('# eid(%i), is_edge(%i)\n')
         for eid in eids_all:
             if eid in eids_on_edge:
                 element_edges_file.write('%s, 1\n' % eid)
@@ -454,12 +476,12 @@ def save_patch_info(model, xyz_cid0, patch_edges_array, eids_on_edge, patches,
             eids_on_edge_file.write('%s\n' % eid)
 
     with open(element_patches_filename, 'wb') as element_patches_file:
-        element_patches_file.write('# patch, element_count\n')
+        element_patches_file.write('# patch(%i), element_count(%i)\n')
         for patch_id in patch_ids_all:
             element_patches_file.write('%s %s\n' % (patch_id, len(patches[patch_id])))
 
     with open(patches_filename, 'wb') as patches_file:
-        patches_file.write('# patch_id, eids\n')
+        patches_file.write('# patch_id(%i), eids(%i)\n')
         for patch_id, patch in enumerate(patches):
             patches_file.write('%s, ' % patch_id)
             patches_file.write(str(patch)[1:-1])
@@ -572,6 +594,7 @@ def create_plate_buckling_models(model, op2_filename, mode, isubcase=1,
     assert isinstance(op2_filename, string_types), 'op2_filename=%r' % op2_filename
     out = model._get_maps(consider_1d=False, consider_2d=True, consider_3d=False)
     (edge_to_eid_map, eid_to_edge_map, nid_to_edge_map) = out
+
 
     xyz_cid0 = {}
     #cds = {}

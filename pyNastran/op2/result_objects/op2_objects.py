@@ -1,6 +1,6 @@
 #pylint: disable=C0301,C0111
 from __future__ import print_function, unicode_literals
-from six import text_type, binary_type, iteritems, PY3
+from six import text_type, binary_type, iteritems, PY3, string_types
 from six.moves import range
 import copy
 from struct import pack
@@ -38,6 +38,8 @@ class BaseScalarObject(Op2Codes):
     def object_attributes(self, mode='public', keys_to_skip=None):
         if keys_to_skip is None:
             keys_to_skip = []
+        elif isinstance(keys_to_skip, string_types):
+            keys_to_skip = [keys_to_skip]
 
         my_keys_to_skip = [
             'object_methods', 'object_attributes',
