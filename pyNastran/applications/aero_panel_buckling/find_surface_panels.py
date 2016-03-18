@@ -687,7 +687,7 @@ def write_buckling_bdfs(model, op2_filename, xyz_cid0, patches, patch_edges_arra
 
     subcase = model.subcases[subcase_id]
 
-    case_control_lines, bulk_data_cards, spc_id, load_id = create_buckling_header(subcase)
+    case_control_lines, bulk_data_cards, spc_id, mpc_id, load_id = create_buckling_header(subcase)
 
     out_model = OP2()
     print('**** workpath', workpath)
@@ -1008,11 +1008,14 @@ def write_buckling_bdf(model, op2_filename, nids_to_constrain,
         subcase = case_control_deck.subcases[subcase_id]
 
         model.sol = 105
-        case_control_lines, bulk_data_cards, spc_id, load_id = create_buckling_header(subcase)
+        case_control_lines, bulk_data_cards, spc_id, mpc_id, load_id = create_buckling_header(subcase)
         if load_id in model.loads:
             del model.loads[load_id]
         if spc_id in model.spcs:
             del model.spcs[spc_id]
+
+
+        dependent_nid_to_components = model.get_dependent_nid_to_components(mpc_id)
 
         if mode == 'displacement':
             displacements = out_model.displacements[subcase_id]
@@ -1056,9 +1059,27 @@ def write_buckling_bdf(model, op2_filename, nids_to_constrain,
             force = ['FORCE', load_id, free_node, cid, 0.000001, 1.0, 1.0, 1.0]
             model.add_card(force, 'FORCE')
 
+            spc1_1 = []
+            spc1_2 = []
+            spc1_3 = []
             for i, nid in enumerate(nids_to_constrain):
+                dofs = ''
+                if nid in dependent_nid_to_components:
+                    dofs = dependent_nid_to_components[nid]
                 for j in range(3):
-                #for j in range(6):
+                    dof = str(j + 1)
+                    if dof in dofs:
+                        print('skipping nid=%s dof=%s' % (nid, dof))
+                        continue
+                    if j == 0:
+                        spc1_1.append(nid)
+                    elif j == 1:
+                        spc1_2.append(nid)
+                    elif j == 2:
+                        spc1_3.append(nid)
+                    else:
+                        raise NotImplementedError(j)
+
                     dispi = disp[i, j]
                     if np.abs(dispi) > 0.0:
                         # SPCD, sid, g1, c1, d1
@@ -1073,8 +1094,19 @@ def write_buckling_bdf(model, op2_filename, nids_to_constrain,
                             spc_pack = []
             if len(spc_pack):
                 model.add_card(spc_pack, 'SPCD')
+
+            if len(spc1_1):
+                spc1 = ['SPC1', spc_id, 1] + spc1_1
+                model.add_card(spc1, 'SPC1')
+            if len(spc1_2):
+                spc1 = ['SPC1', spc_id, 2] + spc1_2
+                model.add_card(spc1, 'SPC1')
+            if len(spc1_3):
+                spc1 = ['SPC1', spc_id, 3] + spc1_3
+                model.add_card(spc1, 'SPC1')
         else:
             raise RuntimeError(mode)
+
         bdf_filename2 = os.path.join(workpath, bdf_filename)
         model.write_bdf(bdf_filename2, size=size, is_double=is_double)
     return bdf_filenames, subcase_ids
@@ -1094,11 +1126,21 @@ def create_buckling_header(subcase):
         case_control.append('TITLE = BUCKLING\n')
     case_control.append('SUBCASE 1\n')
 
-    keys_to_copy = ['SUBTITLE', 'SPC', 'MPC', 'LINE', 'MAXLINES', 'ECHO']
+    keys_to_copy = ['SUBTITLE', 'LINE', 'MAXLINES', 'ECHO']
     for key in keys_to_copy:
         if key in subcase:
             line = '  %s = %s\n' % (key, subcase.get_parameter(key)[0])
             case_control.append(line)
+
+    spc_id = 100
+    if 'SPC' in subcase:
+        spc_id = subcase.get_parameter('SPC')[0]
+    case_control.append('  SPC = %i\n' % spc_id)
+
+    mpc_id = None
+    if 'MPC' in subcase:
+        mpc_id = subcase.get_parameter('SPC')[0]
+        case_control.append('  MPC = %i\n' % mpc_id)
 
     #case_control.append('  SUPORT = 1\n')  # no rigid body modes
     #if mode == 'load':
@@ -1123,10 +1165,9 @@ def create_buckling_header(subcase):
     eig2 = 100.
     nroots = 20
     method = 42
-    spc_id = 100
     load_id = 55
     bulk_data_cards.append(['EIGB', method, 'INV', eig1, eig2, nroots])
-    return case_control, bulk_data_cards, spc_id, load_id
+    return case_control, bulk_data_cards, spc_id, mpc_id, load_id
 
 
 def find_surface_panels(bdf_filename=None, op2_filename=None, isubcase=1,

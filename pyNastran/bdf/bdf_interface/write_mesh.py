@@ -574,16 +574,17 @@ class WriteMesh(BDFAttributes):
             outfile.write(''.join(msg))
 
         if self.spcs or self.spcadds:
+            #msg = ['$SPCs\n']
+            #str_spc = str(self.spcObject) # old
+            #if str_spc:
+                #msg.append(str_spc)
+            #else:
             msg = ['$SPCs\n']
-            str_spc = str(self.spcObject)
-            if str_spc:
-                msg.append(str_spc)
-            else:
-                for (unused_id, spcadd) in sorted(iteritems(self.spcadds)):
-                    msg.append(str(spcadd))
-                for (unused_id, spcs) in sorted(iteritems(self.spcs)):
-                    for spc in spcs:
-                        msg.append(str(spc))
+            for (unused_id, spcadd) in sorted(iteritems(self.spcadds)):
+                msg.append(str(spcadd))
+            for (unused_id, spcs) in sorted(iteritems(self.spcs)):
+                for spc in spcs:
+                    msg.append(str(spc))
             outfile.write(''.join(msg))
 
         if self.mpcs or self.mpcadds:

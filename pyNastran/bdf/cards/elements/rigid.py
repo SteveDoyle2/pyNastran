@@ -541,7 +541,7 @@ class RBE2(RigidElement):
             raise KeyError('Field %r is an invalid %s entry.' % (n, self.type))
         return value
 
-    def __init__(self, eid, gn, cm, Gmi, alpha, comment=''):
+    def __init__(self, eid, gn, cm, Gmi, alpha=0.0, comment=''):
         """
         +-------+-----+-----+-----+------+-------+-----+-----+-----+
         |   1   |  2  |  3  |  4  |  5   |   6   |  7  |  8  |  9  |
@@ -613,6 +613,7 @@ class RBE2(RigidElement):
         assert self.cm is not None, 'cm=%s' % self.cm
         self.gn = self.gn
         self.cm = str(self.cm)
+        assert isinstance(self.alpha, float),  'alpha=%r type=%s' % (self.alpha, type(self.alpha))
 
     def convert_to_MPC(self, mpc_id):
         """
@@ -621,6 +622,8 @@ class RBE2(RigidElement):
         where :math:`u_i` are the base DOFs (max=6)
 
          +------+------+----+----+-----+----+----+----+
+         |   1  |   2  | 3  | 4  |  5  | 6  | 7  | 8  |
+         +======+======+====+====+=====+====+====+====+
          | MPC  | sid  | g1 | c1 | a1  | g2 | c2 | a2 |
          +------+------+----+----+-----+----+----+----+
          | RBE2 | eid  | gn | cm | g1  | g2 | g3 | g4 |
@@ -750,12 +753,28 @@ class RBE3(RigidElement):
                  Gmi, Cmi, alpha, comment=''):
         """
         eid
-        refgrid
-        refc
-        WtCG_groups = [wt, ci, Gij]
-        Gmi
-        Cmi
+        refgrid - dependent
+        refc - independent
+        GiJs - independent
+        Gmi - dependent
+        Cmi - dependent
         alpha
+
+        +------+---------+---------+---------+------+--------+--------+------+--------+
+        |   1  |    2    |    3    |    4    |  5   |    6   |    7   |   8  |    9   |
+        +======+=========+=========+=========+======+========+========+======+========+
+        | RBE3 |   EID   |         | REFGRID | REFC |  WT1   |   C1   | G1,1 |  G1,2  |
+        +------+---------+---------+---------+------+--------+--------+------+--------+
+        |      |   G1,3  |   WT2   |   C2    | G2,1 |  G2,2  | -etc.- | WT3  |   C3   |
+        +------+---------+---------+---------+------+--------+--------+------+--------+
+        |      |   G3,1  |   G3,2  | -etc.-  | WT4  |  C4    |  G4,1  | G4,2 | -etc.- |
+        +------+---------+---------+---------+------+--------+--------+------+--------+
+        |      |   'UM'  |   GM1   |   CM1   | GM2  |  CM2   |  GM3   | CM3  |        |
+        +------+---------+---------+---------+------+--------+--------+------+--------+
+        |      |   GM4   |   CM4   |   GM5   | CM5  | -etc.- |        |      |        |
+        +------+---------+---------+---------+------+--------+--------+------+--------+
+        |      | 'ALPHA' |   ALPHA |         |      |        |        |      |        |
+        +------+---------+---------+---------+------+--------+--------+------+--------+
         """
         RigidElement.__init__(self)
         if comment:

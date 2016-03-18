@@ -150,6 +150,48 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
                 raise RuntimeError(rigid_element.type)
         return rbes
 
+    def get_dependent_nid_to_components(self, mpc_id=None):
+        """
+        Gets a dictionary of the dependent node/components.
+
+        Parameters
+        ----------
+        mpc_id : int; default=None -> no MPCs are checked
+            TODO: add
+
+        Nastran can either define a load/motion at a given node.
+        SPCs define constraints that may not have loads/motions.
+
+        MPCs and rigid elements define independent and dependent nodes on
+        specific DOFs.
+          - independent nodes : loads/motions may be defined
+          - dependent nodes : loads/motions may not be defined
+        """
+        if mpc_id is not None:
+            raise NotImplementedError('MPCs')
+            #mpcs = self.get_mpcs(mpc_id)
+
+        dependent_nid_to_components = {}
+        for eid, rigid_element in iteritems(self.rigid_elements):
+            if rigid_element.type == 'RBE2':
+                dependent_nodes = set(rigid_element.dependent_nodes)
+                components = rigid_element.cm
+                for nid in dependent_nodes:
+                    dependent_nid_to_components[nid] = components
+            elif rigid_element.type == 'RBE3':
+                dependent_nid_to_components[rigid_element.ref_grid_id] = rigid_element.refc
+                for gmi, cmi in zip(rigid_element.Gmi_node_ids, rigid_element.Cmi):
+                    dependent_nid_to_components[gmi] = cmi
+            #if rigid_element.type in ['RBE3', 'RBE2', 'RBE1', 'RBAR']:
+                ##independent_nodes = set(rigid_element.independent_nodes)
+                #dependent_nodes = set(rigid_element.dependent_nodes)
+                #rbe_nids = independent_nodes | dependent_nodes
+                #if nids.intersection(rbe_nids):
+                    #rbes.append(eid)
+            else:
+                raise RuntimeError(rigid_element.type)
+        return dependent_nid_to_components
+
     def get_node_ids_with_element(self, eid, msg=''):
         return self.get_node_ids_with_elements([eid], msg=msg)
 
