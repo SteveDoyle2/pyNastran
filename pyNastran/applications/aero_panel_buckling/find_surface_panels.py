@@ -13,6 +13,7 @@ from six import iteritems, string_types
 
 import numpy as np
 
+from pyNastran.bdf.case_control_deck import CaseControlDeck
 from pyNastran.bdf.bdf import BDF
 from pyNastran.op2.op2 import OP2
 from pyNastran.bdf.field_writer import print_card_8
@@ -650,17 +651,17 @@ def create_plate_buckling_models(model, op2_filename, mode, isubcase=1,
         patch_edges_array, eids_on_edge, patches = load_patch_info(workpath=workpath)
     write_buckling_bdfs(model, op2_filename, xyz_cid0,
                         patches, patch_edges_array,
-                        isubcase=isubcase, mode=mode, workpath=workpath)
+                        subcase_id=isubcase, mode=mode, workpath=workpath)
 
 
-def write_buckling_bdfs(bdf_model, op2_filename, xyz_cid0, patches, patch_edges_array,
-                        isubcase=1, mode='displacement', workpath='results'):
+def write_buckling_bdfs(model, op2_filename, xyz_cid0, patches, patch_edges_array,
+                        subcase_id=1, mode='displacement', workpath='results'):
     """
-    Creates a series of buckling BDFs
+    Creates a series of buckling BDFs from a static analysis
 
     Parameters
     ----------
-    bdf_model : BDF()
+    model : BDF()
         the BDF object
     op2_filename : str
         the name of the OP2 to analyze
@@ -668,9 +669,10 @@ def write_buckling_bdfs(bdf_model, op2_filename, xyz_cid0, patches, patch_edges_
         the nodes in the global CID=0 frame
     patches : ???
         ???
-    patch_edges_array : ???
-        ???
-    isubcase : int; default=1
+    patch_edges_array : (n, 2) int ndarray
+        all the edges on the geometry as (n1, n2) integer pairs
+        where n1 < n2
+    subcase_id : int; default=1
         the subcase to analyze
     mode : str; default='displacement'
         'displacement' : map displacements from the OP2 to the new BDFs
@@ -682,22 +684,21 @@ def write_buckling_bdfs(bdf_model, op2_filename, xyz_cid0, patches, patch_edges_
     #       boxes.  This will allow you to visually see where the wing undulates relative to the
     #       center plane of the wing
     assert mode in ['load', 'displacement'], 'mode=%r' % mode
-    model = bdf_model
 
-    subcase = bdf_model.subcases[isubcase]
+    subcase = model.subcases[subcase_id]
 
-    header, spc_id, load_id = create_buckling_header(subcase)
+    case_control_lines, bulk_data_cards, spc_id, load_id = create_buckling_header(subcase)
 
     out_model = OP2()
     print('**** workpath', workpath)
     out_model.read_op2(op2_filename)
     if mode == 'displacement':
         #print('out_model.displacements =', out_model.displacements)
-        displacements = out_model.displacements[isubcase]
+        displacements = out_model.displacements[subcase_id]
         node_ids_full_model = displacements.node_gridtype[:, 0]
         ## TODO: check for cd != 0
     elif mode == 'load':
-        nodal_forces = out_model.grid_point_forces[isubcase]
+        nodal_forces = out_model.grid_point_forces[subcase_id]
     else:
         raise RuntimeError(mode)
 
@@ -720,7 +721,13 @@ def write_buckling_bdfs(bdf_model, op2_filename, xyz_cid0, patches, patch_edges_
         edge_filename = os.path.join(edge_dir, 'edge_%i.csv' % ipatch)
         patch_file = open(patch_filename, 'w')
         edge_file = open(edge_filename, 'w')
-        patch_file.write(header)
+
+        patch_file.write('SOL 105\n')
+        patch_file.write('CEND\n')
+        patch_file.write(''.join(case_control_lines))
+        patch_file.write('BEGIN BULK\n')
+        for card in bulk_data_cards:
+            patch_file.write(print_card_8(card))
 
         # get list of all nodes on patch_eids_array; write elements
         all_nids_on_patch = []
@@ -903,11 +910,9 @@ def write_buckling_bdfs(bdf_model, op2_filename, xyz_cid0, patches, patch_edges_
                 forcei = abs_force_moment_sum[:3]
                 momenti = abs_force_moment_sum[3:]
                 if forcei.sum() > 0.0:
-                    # write force
                     card = ['FORCE', load_id, node_id, cdi, 1.0, ] + list(forcei)
                     patch_file.write(print_card_8(card))
                 if momenti.sum() > 0.0:
-                    # write moment
                     card = ['MOMENT', load_id, node_id, cdi, 1.0, ] + list(momenti)
                     patch_file.write(print_card_8(card))
         else:
@@ -917,41 +922,202 @@ def write_buckling_bdfs(bdf_model, op2_filename, xyz_cid0, patches, patch_edges_
         edge_file.close()
     return
 
+
+def write_buckling_bdf(model, op2_filename, nids_to_constrain,
+                       bdf_filenames=None,
+                       subcase_ids=None, mode='displacement', size=8, is_double=False,
+                       debug=False,
+                       workpath='results'):
+    """
+    Creates a single buckling BDF from a static analysis
+
+    Parameters
+    ----------
+    model : BDF()
+        the BDF object
+        WARNING: the BDF object will be modified
+    op2_filename : str
+        the name of the OP2 to analyze
+    nids_to_constrain : (nnodes, ) int ndarray
+        the list of nodes IDs to constrain
+
+    bdf_filenames : str; default=None -> ['buckling_%i.bdf']
+        the name of the filename to write
+        %i in default is the subcase_id
+    subcase_ids : List[int]; default=None -> all subcases
+        the subcase_ids to analyze
+    mode : str; default='displacement'
+        'displacement' : map displacements from the OP2 to the new BDFs
+        'load' : map the grid point forces from the OP2 to the new BDFs (TODO: removed for now)
+    workpath : str; default='results'
+        the location of where the output files should be placed
+    size : int; default=8
+        the field width for the output BDF
+    is_double : bool; default=False
+        the large/double precision flag
+    debug : bool; default=False
+        the BDF/OP2 debug flag
+
+    Returns
+    -------
+    bdf_filenames : List[str]
+        the bdf filenames that were created
+    subcase_ids : List[int]
+        the subcase ids that were analyzed from the original BDF (not the new ones)
+    """
+    # TODO: Create 'BDF' of deflected shape that doesn't include the wing up bend from the CAERO1
+    #       boxes.  This will allow you to visually see where the wing undulates relative to the
+    #       center plane of the wing
+    assert mode in ['displacement'], 'mode=%r' % mode
+    if subcase_ids is None:
+        subcase_ids = list(model.subcases.keys())
+    elif isinstance(subcase_ids, int):
+        subcase_ids = [subcase_ids]
+    elif isinstance(subcase_ids, (list, tuple)):
+        pass
+    else:
+        msg = 'subcase_ids=%s; expected List[int]; type=%s' % (subcase_ids, type(subcase_ids))
+        raise TypeError(msg)
+    subcase_ids = np.unique([subcase_id if subcase_id > 0 else 1 for subcase_id in subcase_ids])
+
+    if bdf_filenames is None:
+        bdf_filenames = []
+        for isubcase in subcase_ids:
+            bdf_filenames.append('buckling_%i.bdf' % isubcase)
+    elif isinstance(bdf_filenames, int):
+        bdf_filenames = [bdf_filenames]
+    elif isinstance(bdf_filenames, (list, tuple)):
+        pass
+    else:
+        msg = 'bdf_filenames=%s; expected List[str]; type=%s' % (bdf_filenames, type(bdf_filenames))
+        raise TypeError(msg)
+
+    if len(subcase_ids) != len(bdf_filenames):
+        msg = 'nsubcases != nbdfs; nsubcases=%s nbdfs=%s; subcase_ids=%s bdf_filenames=%s' % (
+            len(subcase_ids), len(bdf_filenames), subcase_ids, bdf_filenames)
+
+    if not os.path.exists(workpath):
+        os.makedirs(workpath)
+
+    out_model = OP2(debug=debug)
+    out_model.read_op2(op2_filename)
+
+    case_control_deck = deepcopy(model.case_control_deck)
+    print('**** workpath', workpath)
+    for subcase_id, bdf_filename in zip(subcase_ids, bdf_filenames):
+        subcase = case_control_deck.subcases[subcase_id]
+
+        model.sol = 105
+        case_control_lines, bulk_data_cards, spc_id, load_id = create_buckling_header(subcase)
+        if load_id in model.loads:
+            del model.loads[load_id]
+        if spc_id in model.spcs:
+            del model.spcs[spc_id]
+
+        if mode == 'displacement':
+            displacements = out_model.displacements[subcase_id]
+            node_ids_full_model = displacements.node_gridtype[:, 0]
+        else:
+            raise RuntimeError(mode)
+
+        #edge_nids = np.unique(patch_edges_array.ravel())
+        #free_nodes = setdiff1d(node_ids_full_model, edge_nids) # A-B
+
+
+        model.case_control_deck = CaseControlDeck(case_control_lines)
+        for card in bulk_data_cards:
+            model.add_card(card, card[0])
+        #nnodes = len(all_nids_on_patch)
+
+        if mode == 'displacement':
+            # the displacement are in the Cd coordinate frame
+            # because we're just carrying along the GRID cards
+            # we shouldn't need to do anything
+
+            nids_extra = np.setdiff1d(nids_to_constrain, node_ids_full_model)
+            assert len(nids_extra) == 0, 'Some nodes dont exist; nids_extra=%s' % str(nids_extra)
+            idisp_full_model = np.searchsorted(node_ids_full_model, nids_to_constrain)
+            #nids2 = node_ids_full_model[idisp_full_model]
+            disp = displacements.data[0, idisp_full_model, :]
+
+            ipack = 0
+            spc_pack = []
+            #$SPCD         100   20028       1.0009906   20028       24.3233-4
+            #$SPCD         100   20028       3.3169889   20028       41.6345-4
+            #$SPCD         100   20028       5.0004592   20028       6-2.092-3
+            #FORCE,1,20036,0,0.000001,1.0,1.0,1.0
+
+            free_nodes = np.setdiff1d(node_ids_full_model, nids_to_constrain)
+            if len(free_nodes) == 0:
+                raise RuntimeError('couldnt find any free_nodes')
+
+            free_node = free_nodes[0]
+            cid = 0
+            force = ['FORCE', load_id, free_node, cid, 0.000001, 1.0, 1.0, 1.0]
+            model.add_card(force, 'FORCE')
+
+            for i, nid in enumerate(nids_to_constrain):
+                for j in range(3):
+                #for j in range(6):
+                    dispi = disp[i, j]
+                    if np.abs(dispi) > 0.0:
+                        # SPCD, sid, g1, c1, d1
+                        if ipack == 0:
+                            # SPCDs are loads, not SPCs.  Don't change this!!!
+                            spc_pack = ['SPCD', load_id, nid, j + 1, dispi]
+                            ipack += 1
+                        else:
+                            spc_pack += [nid, j + 1, dispi]
+                            model.add_card(spc_pack, 'SPCD')
+                            ipack = 0
+                            spc_pack = []
+            if len(spc_pack):
+                model.add_card(spc_pack, 'SPCD')
+        else:
+            raise RuntimeError(mode)
+        bdf_filename2 = os.path.join(workpath, bdf_filename)
+        model.write_bdf(bdf_filename2, size=size, is_double=is_double)
+    return bdf_filenames, subcase_ids
+
+
 def create_buckling_header(subcase):
     # TODO: add title, subtitle from the actual load case for cross validation
-    header = ''
-    header += 'SOL 105\n'
-    header += 'CEND\n'
-    header += 'ECHO = NONE\n'
+    case_control = []
+    #header += 'SOL 105\n'
+    #header += 'CEND\n'
+    case_control.append('ECHO = NONE\n')
 
-    if subcase.has_parameter('TITLE'):
-        header += '  TITLE = %s\n' % subcase.get_parameter('TITLE')[0]
-        print(subcase.get_parameter('TITLE'))
+    if 'TITLE' in subcase:
+        case_control.append('  TITLE = %s\n' % subcase.get_parameter('TITLE')[0])
+        #print(subcase.get_parameter('TITLE'))
     else:
-        header += 'TITLE = BUCKLING\n'
-    header += 'SUBCASE 1\n'
-    # header += '  SUPORT = 1\n'
-    #if mode == 'load':
-    header += '  LOAD = 55\n'
-    header += '  METHOD = 42\n'
-    #header += '  STRESS(PLOT,PRINT,VONMISES,CENTER) = ALL\n'
-    #header += '  SPCFORCES(PLOT,PRINT) = ALL\n'
-    #header += '  STRAIN(PLOT,PRINT,VONMISES,FIBER,CENTER) = ALL\n'
-    header += '  DISPLACEMENT(PLOT,PRINT) = ALL\n'
-    header += '  SPC = 100\n'
-    if 'SUBTITLE' in subcase:
-        header += '  SUBTITLE = %s\n' % subcase.get_parameter('SUBTITLE')[0]
+        case_control.append('TITLE = BUCKLING\n')
+    case_control.append('SUBCASE 1\n')
 
-    #header += '  MPC = 1\n'
+    keys_to_copy = ['SUBTITLE', 'SPC', 'MPC', 'LINE', 'MAXLINES', 'ECHO']
+    for key in keys_to_copy:
+        if key in subcase:
+            line = '  %s = %s\n' % (key, subcase.get_parameter(key)[0])
+            case_control.append(line)
+
+    #case_control.append('  SUPORT = 1\n')  # no rigid body modes
+    #if mode == 'load':
+    case_control.append('  LOAD = 55\n')
+    case_control.append('  METHOD = 42\n')
+    #case_control.append('  STRESS(PLOT,PRINT,VONMISES,CENTER) = ALL\n')
+    #case_control.append('  SPCFORCES(PLOT,PRINT) = ALL\n')
+    #case_control.append('  STRAIN(PLOT,PRINT,VONMISES,FIBER,CENTER) = ALL\n')
+    case_control.append('  DISPLACEMENT(PLOT,PRINT) = ALL\n')
     #header += '  TRIM = 1\n'
-    header += 'BEGIN BULK\n'
-    header += 'PARAM,GRDPNT,0\n'
-    header += 'PARAM,COUPMASS,1\n'
-    #header += 'PARAM,AUNITS,0.00259\n'
-    #header += 'PARAM,WTMASS,0.00259\n'
-    #header += 'PARAM,BAILOUT,-1\n'
-    header += 'PARAM,PRTMAXIM,YES\n'
-    header += 'PARAM,POST,-1    \n'
+
+    bulk_data_cards = []
+    bulk_data_cards.append(['PARAM', 'GRDPNT', 0])
+    bulk_data_cards.append(['PARAM', 'COUPMASS', 1])
+    #bulk_data_cards.append(['PARAM', 'AUNITS', 0.00259])
+    #bulk_data_cards.append(['PARAM', 'WTMASS', 0.00259])
+    #bulk_data_cards.append(['PARAM', 'BAILOUT', -1])
+    bulk_data_cards.append(['PARAM', 'PRTMAXIM', 'YES'])
+    bulk_data_cards.append(['PARAM', 'POST', -1])
 
     eig1 = 0.0
     eig2 = 100.
@@ -959,8 +1125,8 @@ def create_buckling_header(subcase):
     method = 42
     spc_id = 100
     load_id = 55
-    header += 'EIGB,%s,INV,%s,%s,%s\n' % (method, eig1, eig2, nroots)
-    return header, spc_id, load_id
+    bulk_data_cards.append(['EIGB', method, 'INV', eig1, eig2, nroots])
+    return case_control, bulk_data_cards, spc_id, load_id
 
 
 def find_surface_panels(bdf_filename=None, op2_filename=None, isubcase=1,
