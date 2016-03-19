@@ -1004,6 +1004,11 @@ def write_buckling_bdf(model, op2_filename, nids_to_constrain,
 
     case_control_deck = deepcopy(model.case_control_deck)
     print('**** workpath', workpath)
+
+    if model.suport:
+        # we don't need rigid body modes in buckling
+        model.suport = []
+
     for subcase_id, bdf_filename in zip(subcase_ids, bdf_filenames):
         subcase = case_control_deck.subcases[subcase_id]
 
