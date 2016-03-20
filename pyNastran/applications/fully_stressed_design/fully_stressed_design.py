@@ -4,38 +4,69 @@ import shutil
 from six import itervalues, iteritems
 
 import numpy as np
-from pyNastran.bdf.bdf import read_bdf
+from pyNastran.bdf.bdf import read_bdf, BDF
 from pyNastran.op2.op2 import read_op2
-from pyNastran.applications.aero_panel_buckling.run_patch_buckling_helper import run_nastran
+from pyNastran.utils.nastran_utils import run_nastran
 
-def fully_stressed_design(bdf_filename, regions, keywords=None):
+def fully_stressed_design(bdf_filename, keywords=None,
+                          niterations_max=2, alpha=0.9):
     """
     Optimizes shell thickness for minimum weight (ONLY shells)
 
     Parameters
     ----------
-    bdf_filename : str
-        the BDF filename
-    regions : dict[pid]=list[float,float,float,float]
-        the optimization dictionary
+    bdf_filename : str; BDF()
+        the BDF filename or model
 
     Returns
     -------
-    regions2 : dict[pid]=list[float,float,float,float]
-        the "optimized" version of regions
-
-    region = {
-        pid : [tmin, tmax, ovm_min, ovm_max]
-    }
+    desvars : dict[id]=values
+        the "optimization history of the design variables
     """
     force = True
-    regions2 = copy.deepcopy(regions)
 
     iteration = 0
     niterations_max = 10
-    model = read_bdf(bdf_filename)
-    pid_to_eid = model.get_property_id_to_element_ids_map()
 
+    if isinstance(bdf_filename, str):
+        model = read_bdf(bdf_filename)
+    elif isinstance(bdf_filename, BDF):
+        model = bdf_filename
+    else:
+        raise TypeError(bdf_filename)
+
+    doptparm = model.doptprm
+    if doptparm is not None:
+        if 'FSDALP' in doptparm.params:
+            alpha = doptparm.params['FSDALP']
+        else:
+            alpha = doptparm.defaults['FSDALP']
+        if not isinstance(alpha, float):
+            msg = 'FSDALP on DOPTPARM must be an integer; FSDALP=%r' % (alpha)
+            raise TypeError(msg)
+        if not(0. < niterations_max <= 1.):
+            msg = 'FSDALP on DOPTPARM must be between (0. < n <= 1.0); FSDALP=%s' % (alpha)
+            raise ValueError(msg)
+
+        if 'FSDMAX' in doptparm.params:
+            niterations_max = doptparm.params['FSDMAX']
+        else:
+            niterations_max = doptparm.defaults['FSDMAX']
+
+        if not isinstance(niterations_max, int):
+            msg = 'FSDMAX on DOPTPARM must be an integer; FSDMAX=%r' % (niterations_max)
+            raise TypeError(msg)
+        if niterations_max <= 0:
+            msg = 'FSDMAX on DOPTPARM must be > 0; FSDMAX=%s' % (niterations_max)
+            raise ValueError(msg)
+    else:
+        niterations_max = 2
+        alpha = 0.9
+
+
+    dresps_to_consider, desvars_to_consider, dvprels_to_consider = get_inputs(model)
+
+    pid_to_eid = model.get_property_id_to_element_ids_map()
     bdf_filename2 = 'fem_baseline.bdf'
     op2_filename2 = 'fem_baseline.op2'
     shutil.copyfile(bdf_filename, bdf_filename2)
@@ -63,6 +94,8 @@ def fully_stressed_design(bdf_filename, regions, keywords=None):
             eids_requested = pid_to_eid[pid]
             print('eids_requested[pid=%s] = %s' % (pid, eids_requested))
 
+            #def compute_critical_stress(results, subcases)
+        #def compute_critical_stress(results, subcases):
             stress = []
             eid_node = []
             for res in [results.cquad4_stress, results.ctria3_stress]:
@@ -98,6 +131,10 @@ def fully_stressed_design(bdf_filename, regions, keywords=None):
             #print('stressA = %s' % stress)
             stress = np.hstack(stress)
             #print('stressB = %s' % stress)
+
+            # PROD area
+            # PSHELL/PCOMP thickness
+            # PSHEAR thickness
             eid_node = np.vstack(eid_node)
             stress_max = stress.max()
             stress_min = stress.min()
@@ -111,6 +148,7 @@ def fully_stressed_design(bdf_filename, regions, keywords=None):
             tnew = told * stress_max / ovm_max
             tnew = min(tmax, tnew)
             tnew = max(tmin, tnew)
+            #tnew = (oi/omax)**alpha * ti_old
             tratio = tnew / told
             if np.allclose(tratio, 1.):
                 continue
@@ -139,6 +177,74 @@ def fully_stressed_design(bdf_filename, regions, keywords=None):
 
     print('regions2 = %s' % regions2)
     return regions2
+
+def get_inputs(model):
+    # PROD area
+    # PSHELL/PCOMP thickness
+    # PSHEAR thickness
+    dresps_to_consider = []
+    dresp_rtypes_to_skip = ['WEIGHT', 'DISP', 'VOLUME']
+    dresp_rtypes_to_consider = ['VON-MIS']
+
+    assert len(model.dresps) >= 1, len(model.dresps)
+    for dresp in model.dresps:
+        if dresp.type == 'DRESP1':
+            if dresp.response_type in dresp_types_to_skip:
+                continue
+            elif dresp.response_type in ['STRESS', 'STRAIN']:
+                pass
+            else:
+                raise RuntimeError(dresp)
+        else:
+            raise RuntimeError(dresp)
+
+    assert len(model.dconadds) == 0, len(model.dconadds)
+    #for dconstr in model.dconstrs:
+        #if dconstr.
+
+    for dvprel in model.dvprels:
+        if dvprel.type == 'DVPREL1':
+            if dvprel.Type == 'PROD':
+                if dvprel.pNameFid == 'A':
+                    dvprels_to_consider.append(dvprel)
+                else:
+                    raise RuntimeError(dvprel)
+            elif dvprel.Type == 'PSHELL':
+                if dvprel.pNameFid == 'T':
+                    dvprels_to_consider.append(dvprel)
+                else:
+                    raise RuntimeError(dvprel)
+            elif dvprel.Type == 'PSHEAR':
+                if dvprel.pNameFid == 'T':
+                    dvprels_to_consider.append(dvprel)
+                else:
+                    raise RuntimeError(dvprel)
+            elif dvprel.Type == 'PCOMP':
+                if dvprel.pNameFid.startswith('T'): # thickness; TODO: what about theta?
+                    dvprels_to_consider.append(dvprel)
+                elif dvprel.pNameFid in ['ZO']:
+                    continue
+                else:
+                    raise RuntimeError(dvprel)
+            elif dvprel.Type == 'PBARL':
+                if 'DIM' in dvprel.pNameFid: # increased inertia -> lower stress.  TODO: is this always true?
+                    pass
+                else:
+                    raise RuntimeError(dvprel)
+            else:
+                raise RuntimeError(dvprel)
+
+            if len(dvprel.dvids) == 1:
+                desvars_to_consider.append(dvprel.dvids[1])
+                dvprels_to_consider.append(dvprel)
+            #for dvid, coeff in zip(dvprel.dvids, dvprel.coeffs):
+                #if coeff == 1.0
+
+        elif dvprel.type == 'DVPREL2':
+            continue
+        else:
+            raise RuntimeError(dvprel)
+    return dresps_to_consider, desvars_to_consider, dvprels_to_consider
 
 def main():
     regions = {
