@@ -44,6 +44,7 @@ class GEOM4(GeomCommon):
             (7001,   70, 186): ['RSPLINE', self._read_rspline],  # record 31 - not done
             (7201,   72, 398): ['RSSCON', self._read_rsscon],    # record 32 - not done
             (1210,   12, 322): ['SEQSET1', self._read_seqset1],  # record 40 - not done
+            (5110,   51, 256): ['SPCD', self._read_spcd],        # record 44
             (5501,   55,  16): ['SPC', self._read_spc],          # record 44 - buggy
             (5481,   58,  12): ['SPC1', self._read_spc1],        # record 45 - not done
             (5491,   59,  13): ['SPCADD', self._read_spcadd],    # record 46 - not done
@@ -55,7 +56,6 @@ class GEOM4(GeomCommon):
             (1310, 13,    247): ['', self._read_fake],    # record
             (4901, 49, 420017): ['', self._read_fake],    # record
             (5561, 76,      0): ['', self._read_fake],     # record
-            (5110, 51,    256): ['', self._read_fake],     # record
             (610,   6,      0): ['', self._read_fake],     # record
             (5110, 51, 620256): ['', self._read_fake],    # record
             (5501, 55, 620016): ['', self._read_fake],    # record
@@ -219,6 +219,18 @@ class GEOM4(GeomCommon):
             n += 20
         return n
 
+    #def _read_spcd(self, data, n):
+        #"""SPCD(5110,51,256) - Record 44 - dmap2005"""
+        #n = 0
+        #nentries = len(data) // 20  # 5*4
+        #for i in range(nentries):
+            #edata = data[n:n + 20]
+            #(sid, ID, c, xxx, dx) = unpack(b(self._endian + 'iiiif'), edata)
+            #load = SPCD.add_op2_data(sid, ID, c, dx)
+            #self.add_load(load)
+            #n += 20
+        #return n
+
     def _read_spc1(self, data, n):
         """SPC1(5481,58,12) - Record 45"""
         n2 = n
@@ -259,18 +271,22 @@ class GEOM4(GeomCommon):
     def _read_spcd(self, data, n):
         """SPCD(5110,51,256) - Record 47"""
         #self.log.debug('skipping SPCD in GEOM4\n')
+        return len(data)
         n = 0
-        s = Struct(b(self._endian + '4if'))
+        s = Struct(b(self._endian + '4ifi'))
         nentries = len(data) // 20  # 5*4
         for i in range(nentries):
             edata = data[n:n + 20]
+            self.show_data(edata)
             out = s.unpack(edata)
             (sid, ID, c, xxx, dx) = out
+            #print(out)
+            #print()
             if self.is_debug_file:
                 self.binary_debug.write('  SPCD=%s\n' % str(out))
 
             constraint = SPCD.add_op2_data([sid, ID, c, dx])
-            self.add_constraint_SPC(constraint)
+            self.add_load(constraint)
             n += 20
         self.card_count['SPCD'] = nentries
         return n
@@ -315,6 +331,7 @@ class GEOM4(GeomCommon):
         s = Struct(b(self._endian + '2i'))
         for i in range(nentries):
             data_in = list(s.unpack(data[n:n + 8]))
+            print(data_in)
             suport = SUPORT.add_op2_data(data_in)
             self.add_suport(suport) # extracts [sid, c]
             n += 8

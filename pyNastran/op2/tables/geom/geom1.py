@@ -247,6 +247,8 @@ class GEOM1(GeomCommon):
             if self.is_debug_file:
                 self.binary_debug.write('  GRID=%s\n' % str(out))
             if cd >= 0 and nid < 10000000:
+                if ps == 0:
+                    ps = ''
                 node = GRID(nid, cp, np.array([x1, x2, x3]), cd, ps, seid)
                 self.add_node(node)
             else:

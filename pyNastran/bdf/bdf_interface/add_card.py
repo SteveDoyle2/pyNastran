@@ -619,11 +619,15 @@ class AddMethods(BDFAttributes):
         self._type_to_id_map[flfact.type].append(key)
 
     def add_DCONSTR(self, dconstr):
-        key = (dconstr.oid, dconstr.rid)
-        assert key not in self.dconstrs, 'key=%r DCONSTR=\n%s' % (key, dconstr)
+        #key = (dconstr.oid, dconstr.rid)
+        key = dconstr.oid
+        #assert key not in self.dconstrs, 'key=%r DCONSTR=\n%s' % (key, dconstr)
         assert dconstr.oid > 0
         assert dconstr.rid > 0
-        self.dconstrs[key] = dconstr
+        if key in self.dconstrs:
+            self.dconstrs[key].append(dconstr)
+        else:
+            self.dconstrs[key] = [dconstr]
         self._type_to_id_map[dconstr.type].append(key)
 
     def add_DESVAR(self, desvar):

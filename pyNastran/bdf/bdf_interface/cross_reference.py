@@ -765,8 +765,9 @@ class XrefMesh(BDFAttributes):
             deqatn.cross_reference(self)
         for key, dresp in iteritems(self.dresps):
             dresp.cross_reference(self)
-        for key, dconstr in iteritems(self.dconstrs):
-            dconstr.cross_reference(self)
+        for key, dconstrs in iteritems(self.dconstrs):
+            for dconstr in dconstrs:
+                dconstr.cross_reference(self)
 
         for key, dvcrel in iteritems(self.dvcrels):
             dvcrel.cross_reference(self)

@@ -1568,6 +1568,11 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'TABRND1' : (TABRND1, self.add_random_table),
             'TABRNDG' : (TABRNDG, self.add_random_table),
 
+            'EIGB' : (EIGB, self.add_method),
+            'EIGR' : (EIGR, self.add_method),
+            #'EIGRL' : (EIGRL, self.add_method),
+            #'EIGC' : (EIGC, self.add_cmethod),
+            'EIGP' : (EIGP, self.add_cmethod),
         }
         self._card_parser_a = {
             'PBUSH1D' : (PBUSH1D, self.add_property),
@@ -1630,11 +1635,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             #DVCREL1
             # DVCREL2 - deqatn
 
-            'EIGB' : (EIGB, self.add_method),
-            'EIGR' : (EIGR, self.add_method),
             'EIGRL' : (EIGRL, self.add_method),
             'EIGC' : (EIGC, self.add_cmethod),
-            'EIGP' : (EIGP, self.add_cmethod),
 
             'BCRPARA' : (BCRPARA, self.add_BCRPARA),
             'BCTADD' : (BCTADD, self.add_BCTADD),
