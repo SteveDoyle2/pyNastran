@@ -918,8 +918,9 @@ class WriteMesh(BDFAttributes):
             msg = ['$OPTIMIZATION\n']
             for (unused_id, dconadd) in sorted(iteritems(self.dconadds)):
                 msg.append(dconadd.write_card(size, is_double))
-            for (unused_id, dconstr) in sorted(iteritems(self.dconstrs)):
-                msg.append(dconstr.write_card(size, is_double))
+            for (unused_id, dconstrs) in sorted(iteritems(self.dconstrs)):
+                for dconstr in dconstrs:
+                    msg.append(dconstr.write_card(size, is_double))
             for (unused_id, desvar) in sorted(iteritems(self.desvars)):
                 msg.append(desvar.write_card(size, is_double))
             for (unused_id, ddval) in sorted(iteritems(self.ddvals)):

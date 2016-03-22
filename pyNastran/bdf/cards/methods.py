@@ -17,9 +17,10 @@ from six.moves import zip, range
 
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import BaseCard
-from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_blank,
-    double, double_or_blank, string, string_or_blank, components,
-    components_or_blank, integer_double_string_or_blank, blank, interpret_value)
+from pyNastran.bdf.bdf_interface.assign_type import (
+    integer, integer_or_blank, double, double_or_blank, string, string_or_blank,
+    components, components_or_blank, integer_double_string_or_blank, blank,
+    interpret_value)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 
@@ -29,7 +30,7 @@ class Method(BaseCard):
     Generic class for all methods.
     Part of self.methods
     """
-    def __init__(self, card, data):
+    def __init__(self):
         pass
 
 
@@ -39,51 +40,65 @@ class EIGB(Method):
     """
     type = 'EIGB'
 
-    def __init__(self, card=None, data=None, comment=''):
-        Method.__init__(self, card, data)
+    def __init__(self, sid, method, L1, L2, nep, ndp, ndn, norm, G, C, comment=''):
+        Method.__init__(self)
         if comment:
             self._comment = comment
-        if card:
-            #: Set identification number. (Unique Integer > 0)
-            self.sid = integer(card, 1, 'sid')
+        #: Set identification number. (Unique Integer > 0)
+        self.sid = sid
 
-            #: Method of eigenvalue extraction. (Character: 'INV' for inverse
-            #: power method or 'SINV' for enhanced inverse power method.)
-            #: apparently it can also be blank...
-            self.method = string_or_blank(card, 2, 'method')
+        #: Method of eigenvalue extraction. (Character: 'INV' for inverse
+        #: power method or 'SINV' for enhanced inverse power method.)
+        #: apparently it can also be blank...
+        self.method = method
 
-            if self.method not in ['INV', 'SINV', None]:
-                msg = 'method must be INV or SINV.  method=|%s|' % self.method
-                raise RuntimeError(msg)
+        #: Eigenvalue range of interest. (Real, L1 < L2)
+        self.L1 = L1
+        self.L2 = L2
 
-            #: Eigenvalue range of interest. (Real, L1 < L2)
-            self.L1 = double(card, 3, 'L1')
-            self.L2 = double(card, 4, 'L2')
-            if not self.L1 < self.L2:
-                msg = 'L1=%s L2=%s; L1<L2 is requried' % (self.L1, self.L2)
-                raise RuntimeError(msg)
+        #: Estimate of number of roots in positive range not used for
+        #: METHOD = 'SINV'. (Integer > 0)
+        self.nep = nep
 
-            #: Estimate of number of roots in positive range not used for
-            #: METHOD = 'SINV'. (Integer > 0)
-            self.nep = integer_or_blank(card, 5, 'nep', 0)
+        #: Desired number of positive and negative roots.
+        #: (Integer>0; Default = 3*NEP)
+        self.ndp = ndp
+        self.ndn = ndn
 
-            #: Desired number of positive and negative roots.
-            #: (Integer>0; Default = 3*NEP)
-            self.ndp = integer_or_blank(card, 6, 'ndp', 3 * self.nep)
-            self.ndn = integer_or_blank(card, 7, 'ndn', 3 * self.nep)
+        #: Method for normalizing eigenvectors.
+        #: ('MAX' or 'POINT';Default='MAX')
+        self.norm = norm
+        self.G = G
+        self.C = C
+        if not self.L1 < self.L2:
+            msg = 'L1=%s L2=%s; L1<L2 is requried' % (self.L1, self.L2)
+            raise RuntimeError(msg)
+        if self.method not in ['INV', 'SINV', None]:
+            msg = 'method must be INV or SINV.  method=%r' % self.method
+            raise RuntimeError(msg)
 
-            #: Method for normalizing eigenvectors.
-            #: ('MAX' or 'POINT';Default='MAX')
-            self.norm = string_or_blank(card, 9, 'norm', 'MAX')
-            if self.norm == 'POINT':
-                self.G = integer(card, 10, 'G')
-                self.C = components(card, 11, 'C')
-            else:
-                self.G = integer_or_blank(card, 10, 'G')
-                self.C = components_or_blank(card, 11, 'C')
-            assert len(card) <= 12, 'len(EIGB card) = %i' % len(card)
+    @classmethod
+    def add_card(cls, card, comment=''):
+        sid = integer(card, 1, 'sid')
+        method = string_or_blank(card, 2, 'method')
+
+        L1 = double(card, 3, 'L1')
+        L2 = double(card, 4, 'L2')
+
+        nep = integer_or_blank(card, 5, 'nep', 0)
+        ndp = integer_or_blank(card, 6, 'ndp', 3 * nep)
+        ndn = integer_or_blank(card, 7, 'ndn', 3 * nep)
+
+        norm = string_or_blank(card, 9, 'norm', 'MAX')
+        if norm == 'POINT':
+            G = integer(card, 10, 'G')
+            C = components(card, 11, 'C')
         else:
-            raise NotImplementedError('EIGB')
+            G = integer_or_blank(card, 10, 'G')
+            C = components_or_blank(card, 11, 'C')
+        assert len(card) <= 12, 'len(EIGB card) = %i' % len(card)
+        return EIGB(sid, method, L1, L2, nep, ndp, ndn, norm, G, C,
+                    comment=comment)
 
     def cross_reference(self, model):
         pass
@@ -119,7 +134,7 @@ class EIGC(Method):
     type = 'EIGC'
 
     def __init__(self, card=None, data=None, comment=''):
-        Method.__init__(self, card, data)
+        Method.__init__(self)
         if comment:
             self._comment = comment
         # CLAN
@@ -178,7 +193,9 @@ class EIGC(Method):
             if nfields % 8 > 0:
                 nrows += 1
             #if nrows == 0:
-                #raise RuntimeError('invalid row count=0; nfields=%s \ncard=%s\nfields=%s' % (nfields, card, fields))
+                #msg = 'invalid row count=0; nfields=%s \ncard=%s\nfields=%s' % (
+                    #nfields, card, fields)
+                #raise RuntimeError(msg)
 
             if self.method == 'CLAN':
                 self.loadCLAN(nrows, card)
@@ -322,32 +339,41 @@ class EIGP(Method):
     """
     type = 'EIGP'
 
-    def __init__(self, card=None, data=None, comment=''):
-        Method.__init__(self, card, data)
+    def __init__(self, sid, alpha1, omega1, m1, alpha2, omega2, m2, comment=''):
+        Method.__init__(self)
         if comment:
             self._comment = comment
-        if card:
-            #: Set identification number. (Unique Integer > 0)
-            self.sid = integer(card, 1, 'sid')
+        #: Set identification number. (Unique Integer > 0)
+        self.sid = sid
+        #: Coordinates of point in complex plane. (Real)
+        self.alpha1 = alpha1
+        #: Coordinates of point in complex plane. (Real)
+        self.omega1 = omega1
+        #: Multiplicity of complex root at pole defined by point at ALPHAi
+        #: and OMEGAi
+        self.m1 = m1
 
-            #: Coordinates of point in complex plane. (Real)
-            self.alpha1 = double(card, 2, 'alpha1')
-            #: Coordinates of point in complex plane. (Real)
-            self.omega1 = double(card, 3, 'omega1')
-            #: Multiplicity of complex root at pole defined by point at ALPHAi
-            #: and OMEGAi
-            self.m1 = integer(card, 4, 'm1')
+        #: Coordinates of point in complex plane. (Real)
+        self.alpha2 = alpha2
+        #: Coordinates of point in complex plane. (Real)
+        self.omega2 = omega2
+        #: Multiplicity of complex root at pole defined by point at ALPHAi
+        #: and OMEGAi
+        self.m2 = m2
 
-            #: Coordinates of point in complex plane. (Real)
-            self.alpha2 = double(card, 5, 'alpha2')
-            #: Coordinates of point in complex plane. (Real)
-            self.omega2 = double(card, 6, 'omega2')
-            #: Multiplicity of complex root at pole defined by point at ALPHAi
-            #: and OMEGAi
-            self.m2 = integer(card, 7, 'm2')
-            assert len(card) == 8, 'len(EIGP card) = %i' % len(card)
-        else:
-            raise NotImplementedError('EIGP')
+    @classmethod
+    def add_card(cls, card, comment=''):
+        sid = integer(card, 1, 'sid')
+
+        alpha1 = double(card, 2, 'alpha1')
+        omega1 = double(card, 3, 'omega1')
+        m1 = integer(card, 4, 'm1')
+
+        alpha2 = double(card, 5, 'alpha2')
+        omega2 = double(card, 6, 'omega2')
+        m2 = integer(card, 7, 'm2')
+        assert len(card) == 8, 'len(EIGP card) = %i' % len(card)
+        return EIGP(sid, alpha1, omega1, m1, alpha2, omega2, m2, comment=comment)
 
     def cross_reference(self, model):
         pass
@@ -372,56 +398,82 @@ class EIGR(Method):
     Defines data needed to perform real eigenvalue analysis
     """
     type = 'EIGR'
+    allowed_methods = ['LAN', 'AHOU', 'INV', 'SINV', 'GIV', 'MGIV',
+                       'HOU', 'MHOU', 'AGIV']
 
-    def __init__(self, card=None, data=None, comment=''):
-        Method.__init__(self, card, data)
+    def __init__(self, sid, method, f1, f2, ne, nd, norm, G, C, comment=''):
+        Method.__init__(self)
         if comment:
             self._comment = comment
-        if card:
-            #: Set identification number. (Unique Integer > 0)
-            self.sid = integer(card, 1, 'sid')
 
-            #: Method of eigenvalue extraction. (Character: 'INV' for inverse
-            #: power method or 'SINV' for enhanced inverse power method.)
-            self.method = string_or_blank(card, 2, 'method', 'LAN')
-            assert self.method in ['LAN', 'AHOU', 'INV', 'SINV', 'GIV', 'MGIV', 'HOU', 'MHOU', 'AGIV'], 'method=%s' % self.method
+        #: Set identification number. (Unique Integer > 0)
+        self.sid = sid
 
-            #: Frequency range of interest
-            self.f1 = double_or_blank(card, 3, 'f1')
-            self.f2 = double_or_blank(card, 4, 'f2')
+        #: Method of eigenvalue extraction. (Character: 'INV' for inverse
+        #: power method or 'SINV' for enhanced inverse power method.)
+        self.method = method
 
-            #: Estimate of number of roots in range (Required for
-            #: METHOD = 'INV'). Not used by 'SINV' method.
-            self.ne = integer_or_blank(card, 5, 'ne')
+        #: Frequency range of interest
+        self.f1 = f1
+        self.f2 = f2
 
-            #: Desired number of roots (default=600 for SINV 3*ne for INV)
-            if self.method in ['SINV']:
-                self.nd = integer_or_blank(card, 6, 'nd', 600)
-            if self.method in ['INV']:
-                self.nd = integer_or_blank(card, 6, 'nd', 3 * self.ne)
-            elif self.method in ['GIV', 'MGIV', 'HOU', 'MHOU']:
-                self.nd = integer_or_blank(card, 6, 'nd', 0)
-            else:
-                self.nd = integer(card, 6, 'nd')
-            #: Method for normalizing eigenvectors. ('MAX' or 'POINT';
-            #: Default='MAX')
-            self.norm = string_or_blank(card, 9, 'norm', 'MASS')
-            assert self.norm in ['POINT', 'MASS', 'MAX']
+        #: Estimate of number of roots in range (Required for
+        #: METHOD = 'INV'). Not used by 'SINV' method.
+        self.ne = ne
 
-            if self.method == 'POINT':
-                #: Grid or scalar point identification number. Required only if
-                #: NORM='POINT'. (Integer>0)
-                self.G = integer(card, 10, 'G')
+        #: Desired number of roots (default=600 for SINV 3*ne for INV)
+        self.nd = nd
 
-                #: Component number. Required only if NORM='POINT' and G is a
-                #: geometric grid point. (1<Integer<6)
-                self.C = components(card, 11, 'C')
-            else:
-                self.G = blank(card, 10, 'G')
-                self.C = blank(card, 11, 'C')
-            assert len(card) <= 12, 'len(EIGR card) = %i' % len(card)
+        #: Method for normalizing eigenvectors. ('MAX' or 'POINT';
+        #: Default='MAX')
+        self.norm = norm
+
+        #: Grid or scalar point identification number. Required only if
+        #: NORM='POINT'. (Integer>0)
+        self.G = G
+
+        #: Component number. Required only if NORM='POINT' and G is a
+        #: geometric grid point. (1<Integer<6)
+        self.C = C
+
+        if self.method not in self.allowed_methods:
+            msg = 'method=%s; allowed_methods=[%s]' % (
+                self.method, ', '.join(self.allowed_methods))
+            raise ValueError(msg)
+        assert norm in ['POINT', 'MASS', 'MAX']
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        sid = integer(card, 1, 'sid')
+        method = string_or_blank(card, 2, 'method', 'LAN')
+
+        f1 = double_or_blank(card, 3, 'f1')
+        f2 = double_or_blank(card, 4, 'f2')
+        ne = integer_or_blank(card, 5, 'ne')
+
+        if method not in cls.allowed_methods:
+            msg = 'method=%s; allowed_methods=[%s]' % (
+                method, ', '.join(cls.allowed_methods))
+            raise ValueError(msg)
+
+        if method == 'SINV':
+            nd = integer_or_blank(card, 6, 'nd', 600)
+        if method == 'INV':
+            nd = integer_or_blank(card, 6, 'nd', 3 * ne)
+        elif method in ['GIV', 'MGIV', 'HOU', 'MHOU']:
+            nd = integer_or_blank(card, 6, 'nd', 0)
         else:
-            raise NotImplementedError('EIGR')
+            nd = integer(card, 6, 'nd')
+        norm = string_or_blank(card, 9, 'norm', 'MASS')
+
+        if method == 'POINT':
+            G = integer(card, 10, 'G')
+            C = components(card, 11, 'C')
+        else:
+            G = blank(card, 10, 'G')
+            C = blank(card, 11, 'C')
+        assert len(card) <= 12, 'len(EIGR card) = %i' % len(card)
+        return EIGR(sid, method, f1, f2, ne, nd, norm, G, C, comment=comment)
 
     def cross_reference(self, model):
         pass
@@ -453,7 +505,7 @@ class EIGRL(Method):
     type = 'EIGRL'
 
     def __init__(self, card=None, data=None, sol=None, comment=''):
-        Method.__init__(self, card, data)
+        Method.__init__(self)
         if comment:
             self._comment = comment
         if card:

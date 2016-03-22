@@ -1,6 +1,7 @@
 from struct import unpack
 
 from pyNastran.bdf.cards.loads.loads import DAREA
+from pyNastran.bdf.cards.methods import EIGB
 from pyNastran.op2.tables.geom.geom_common import GeomCommon
 
 class DYNAMICS(GeomCommon):
@@ -100,9 +101,24 @@ class DYNAMICS(GeomCommon):
 
     def _read_eigb(self, data, n):
         """EIGB(107,1,86) - Record 7"""
-        if self.is_debug_file:
-            self.binary_debug.write('skipping EIGB in DYNAMICS\n')
-        return len(data)
+        #if self.is_debug_file:
+            #self.binary_debug.write('skipping EIGB in DYNAMICS\n')
+        #return len(data)
+        ntotal = 60
+        nentries = (len(data) - n) // ntotal
+        self._increase_card_count('EIGB', nentries)
+        for i in range(nentries):
+            edata = data[n:n+ntotal]
+            #self.show_data(edata[44:])
+            # int, 8s, 2f, 3i, i, 8s, 4i
+            out = unpack('i8s ff 3i i 8s 4i', edata)
+            sid, method, L1, L2, nep, ndp, ndn, dunno, norm, g, c, dunnoA, dunnoB = out
+
+            method = method.strip()
+            eigb = EIGB(sid, method, L1, L2, nep, ndp, ndn, norm, g, c)
+            self.add_method(eigb)
+            n += ntotal
+        return n
 
     def _read_eigc(self, data, n):
         """EIGC(207,2,87) - Record 8"""
