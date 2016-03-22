@@ -1092,6 +1092,11 @@ class WriteMesh(BDFAttributes):
                 msg.append(table.write_card(size, is_double))
             outfile.write(''.join(msg))
 
+        if self.tables_sdamping:
+            for (unused_id, table) in sorted(iteritems(self.tables_sdamping)):
+                msg.append(table.write_card(size, is_double))
+            outfile.write(''.join(msg))
+
     def _write_thermal(self, outfile, size=8, is_double=False):
         """Writes the thermal cards"""
         # PHBDY
