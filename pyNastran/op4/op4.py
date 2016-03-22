@@ -2,22 +2,23 @@
 Main OP4 class
 """
 from __future__ import print_function
-from six import string_types, iteritems, PY2
-from six.moves import range
 import sys
 import os
 import io
 from struct import pack, unpack, Struct
+from six import string_types, iteritems, PY2
+from six.moves import range
 
 from numpy import array, zeros, float32, float64, complex64, complex128, ndarray
 from scipy.sparse import coo_matrix
 
 from pyNastran.utils import is_binary_file as file_is_binary
 from pyNastran.utils.mathematics import print_matrix #, print_annotated_matrix
+from pyNastran.utils.log import get_logger2
 
 
 def read_op4(op4_filename=None, matrix_names=None, precision='default',
-             debug=False):
+             debug=False, log=None):
     """
     Reads a NASTRAN OUTPUT4 file, and stores the
     matrices as the output arguments.  The number of
@@ -94,7 +95,7 @@ def read_op4(op4_filename=None, matrix_names=None, precision='default',
               another format before doing math on them.  This is standard
               with sparse matrices.
     """
-    op4 = OP4(log=None, debug=debug)
+    op4 = OP4(log=log, debug=debug)
     return op4.read_op4(op4_filename, matrix_names, precision)
 
 
@@ -109,7 +110,7 @@ class OP4(object):
         self._endian = ''
         self.debug = debug
         #assert debug == True, debug
-        self.log = log
+        self.log = get_logger2(log, debug)
 
     def read_op4(self, op4_filename=None, matrix_names=None, precision='default'):
         """
@@ -157,7 +158,9 @@ class OP4(object):
         """
         reads a matrix
         """
+        iline = 0
         line = op4.readline().rstrip()
+        iline += 1
         if line == '':
             op4.close()
             return None, None, None
@@ -168,10 +171,12 @@ class OP4(object):
             is_big_mat = True
         elif nrows > 0:
             is_big_mat = False
+            if nrows > 65535:
+                is_big_mat = True
         else:
             raise RuntimeError('unknown BIGMAT.  nRows=%s' % nrows)
         if self.debug:
-            print('is_big_matrix =', is_big_mat)
+            self.log.info('is_big_matrix = %s' % is_big_mat)
 
         nrows = abs(nrows)
         ncols = int(ncols)
@@ -180,11 +185,16 @@ class OP4(object):
         dtype = get_dtype(matrix_type, precision)
 
         name = line[32:40].strip()
+
+        if self.debug:
+            self.log.info('name=%s shape=(%s,%s) form=%s Type=%s' % (name, nrows, ncols, form, matrix_type))
+        assert ncols > 0, 'ncols=%s' % ncols
         size = line[40:].strip()
         line_size = size.split(',')[1].split('E')[1].split('.')[0]  # 3E23.16 to 23
         line_size = int(line_size)
 
         line = op4.readline().rstrip()
+        iline += 1
         (_icol, irow, _nwords) = line.split()
 
         is_sparse = False
@@ -192,11 +202,11 @@ class OP4(object):
             is_sparse = True
 
         if matrix_type in [1, 2]:  # real
-            A = self._read_real_ascii(op4, nrows, ncols, line_size, line,
-                                      dtype, is_sparse, is_big_mat)
+            A, iline = self._read_real_ascii(op4, iline, nrows, ncols, line_size, line,
+                                             dtype, is_sparse, is_big_mat)
         elif matrix_type in [3, 4]:  # complex
-            A = self._read_complex_ascii(op4, nrows, ncols, line_size, line,
-                                         dtype, is_sparse, is_big_mat)
+            A, iline = self._read_complex_ascii(op4, iline, nrows, ncols, line_size, line,
+                                                dtype, is_sparse, is_big_mat)
         else:
             raise RuntimeError('invalid matrix type.  matrix_type=%s' % matrix_type)
 
@@ -204,11 +214,12 @@ class OP4(object):
             A = None
 
         if self.debug:
-            print("form=%s name=%s A=\n%s" % (form, name, str(A)))
+            self.log.info("form=%s name=%s A=\n%s" % (form, name, str(A)))
         return (name, form, A)
 
-    def _read_real_sparse_ascii(self, op4, nrows, ncols, line_size, line, dtype, is_big_mat):
+    def _read_real_sparse_ascii(self, op4, iline, nrows, ncols, line_size, line, dtype, is_big_mat):
         """reads a sparse real ASCII matrix"""
+        self.log.info('_read_real_sparse_ascii')
         rows = []
         cols = []
         entries = []
@@ -217,6 +228,7 @@ class OP4(object):
         while 1:
             if nloops > 0 and not was_broken:
                 line = op4.readline().rstrip()
+                iline += 1
             was_broken = False
 
             icol, irow, nwords = line.split()
@@ -242,9 +254,9 @@ class OP4(object):
             # next sparse entry
             while (len(sline) == 1 or len(sline) == 2) and 'E' not in line or run_loop:
                 if is_big_mat:
-                    irow = self._get_irow_big_ascii(op4, line, sline, irow)
+                    irow, iline = self._get_irow_big_ascii(op4, iline, line, sline, irow)
                 else:
-                    irow = self._get_irow_small_ascii(op4, line, sline, irow)
+                    irow, iline = self._get_irow_small_ascii(op4, iline, line, sline, irow)
 
                 run_loop = False
                 #iword = 0
@@ -252,6 +264,7 @@ class OP4(object):
                 while nwords:
                     n = 0
                     line = op4.readline().rstrip()
+                    iline += 1
                     nwords_in_line = line.count('E')
                     if nwords_in_line == 0:
                         was_broken = True
@@ -263,7 +276,7 @@ class OP4(object):
                         cols.append(icol)
                         entries.append(word)
                         if self.debug:
-                            print('  irow=%s icol=%s word=%.4g' % (
+                            self.log.debug('  irow=%s icol=%s word=%.4g' % (
                                 irow - 1, icol - 1, float(word)))
                         n += line_size
                         irow += 1
@@ -273,6 +286,7 @@ class OP4(object):
                 nloops += 1
 
         op4.readline()
+        iline += 1
 
         #if rows == []:  # NULL matrix
             #raise NotImplementedError()
@@ -282,16 +296,18 @@ class OP4(object):
         A = coo_matrix((entries, (rows, cols)), shape=(nrows, ncols), dtype=dtype)
         #print("type = %s %s" % (type(A),type(A.todense())))
         #A = A.todense()
-        return A
+        return A, iline
 
-    def _read_real_dense_ascii(self, op4, nrows, ncols, line_size, line, dtype, is_big_mat):
+    def _read_real_dense_ascii(self, op4, iline, nrows, ncols, line_size, line, dtype, is_big_mat):
         """reads a real dense ASCII matrix"""
+        self.log.info('_read_real_dense_ascii')
         A = zeros((nrows, ncols), dtype=dtype)  # Initialize a real matrix
         nloops = 0
         was_broken = False
         while 1:
             if nloops > 0 and not was_broken:
                 line = op4.readline().rstrip()
+                iline += 1
             was_broken = False
 
             (icol, irow, nwords) = line.split()
@@ -323,6 +339,7 @@ class OP4(object):
                 while nwords:
                     n = 0
                     line = op4.readline().rstrip()
+                    iline += 1
                     nwords_in_line = line.count('E')
                     if nwords_in_line == 0:
                         was_broken = True
@@ -338,17 +355,18 @@ class OP4(object):
                 sline = line.strip().split()
                 nloops += 1
         op4.readline()
-        return A
+        iline += 1
+        return A, iline
 
-    def _read_real_ascii(self, op4, nrows, ncols, line_size, line, dtype, is_sparse, is_big_mat):
+    def _read_real_ascii(self, op4, iline, nrows, ncols, line_size, line, dtype, is_sparse, is_big_mat):
         """reads a real ASCII matrix"""
         if is_sparse:
-            A = self._read_real_sparse_ascii(op4, nrows, ncols, line_size, line, dtype, is_big_mat)
+            A, iline = self._read_real_sparse_ascii(op4, iline, nrows, ncols, line_size, line, dtype, is_big_mat)
         else:
-            A = self._read_real_dense_ascii(op4, nrows, ncols, line_size, line, dtype, is_big_mat)
-        return A
+            A, iline = self._read_real_dense_ascii(op4, iline, nrows, ncols, line_size, line, dtype, is_big_mat)
+        return A, iline
 
-    def _read_complex_sparse_ascii(self, op4, nrows, ncols, line_size, line, dtype, is_big_mat):
+    def _read_complex_sparse_ascii(self, op4, iline, nrows, ncols, line_size, line, dtype, is_big_mat):
         """reads a sparse complex ASCII matrix"""
         rows = []
         cols = []
@@ -358,6 +376,7 @@ class OP4(object):
         while 1:
             if nloops > 0 and not was_broken:
                 line = op4.readline().rstrip()
+                iline += 1
             was_broken = False
 
             (icol, irow, nwords) = line.split()
@@ -374,9 +393,9 @@ class OP4(object):
             # next sparse entry
             while (len(sline) == 1 or len(sline) == 2) and 'E' not in line or run_loop:
                 if is_big_mat:
-                    irow = self._get_irow_big_ascii(op4, line, sline, irow)
+                    irow, iline = self._get_irow_big_ascii(op4, iline, line, sline, irow)
                 else:
-                    irow = self._get_irow_small_ascii(op4, line, sline, irow)
+                    irow, iline = self._get_irow_small_ascii(op4, iline, line, sline, irow)
                 run_loop = False
 
                 #i = 0
@@ -385,6 +404,7 @@ class OP4(object):
                 while nwords:
                     n = 0
                     line = op4.readline().rstrip()
+                    iline += 1
                     nwords_in_line = line.count('E')
                     if nwords_in_line == 0:
                         was_broken = True
@@ -411,19 +431,20 @@ class OP4(object):
         cols = array(cols, dtype='int32') - 1
         A = coo_matrix((entries, (rows, cols)), shape=(nrows, ncols), dtype=dtype)
         op4.readline()
-        return A
+        iline += 1
+        return A, iline
 
-    def _read_complex_ascii(self, op4, nrows, ncols, line_size, line, dtype, is_sparse, is_big_mat):
+    def _read_complex_ascii(self, op4, iline, nrows, ncols, line_size, line, dtype, is_sparse, is_big_mat):
         """reads a complex ASCII matrix"""
         if is_sparse:
-            A = self._read_complex_sparse_ascii(op4, nrows, ncols,
-                                                line_size, line, dtype, is_big_mat)
+            A, iline = self._read_complex_sparse_ascii(op4, iline, nrows, ncols,
+                                                       line_size, line, dtype, is_big_mat)
         else:
-            A = self._read_complex_dense_ascii(op4, nrows, ncols,
-                                               line_size, line, dtype, is_big_mat)
-        return A
+            A, iline = self._read_complex_dense_ascii(op4, iline, nrows, ncols,
+                                                      line_size, line, dtype, is_big_mat)
+        return A, iline
 
-    def _read_complex_dense_ascii(self, op4, nrows, ncols, line_size, line, dtype, is_big_mat):
+    def _read_complex_dense_ascii(self, op4, iline, nrows, ncols, line_size, line, dtype, is_big_mat):
         """reads a dense complex ASCII matrix"""
         A = zeros((nrows, ncols), dtype=dtype)  # Initialize a complex matrix
 
@@ -432,6 +453,7 @@ class OP4(object):
         while 1:
             if nloops > 0 and not was_broken:
                 line = op4.readline().rstrip()
+                iline += 1
             was_broken = False
 
             (icol, irow, nwords) = line.split()
@@ -455,6 +477,7 @@ class OP4(object):
                 while nwords:
                     n = 0
                     line = op4.readline().rstrip()
+                    iline += 1
                     nwords_in_line = line.count('E')
                     if nwords_in_line == 0:
                         was_broken = True
@@ -473,23 +496,31 @@ class OP4(object):
                         n += line_size
                     nwords -= nwords_in_line
                 sline = line.strip().split()
+                iline += 1
                 nloops += 1
 
         op4.readline()
-        return A
+        iline += 1
+        return A, iline
 
-    def _get_irow_small_ascii(self, op4, line, sline, irow):
+    def _get_irow_small_ascii(self, op4, iline, line, sline, irow):
         sline = line.strip().split()
         if len(sline) == 1:
             IS = int(line)
         else:
-            IS = int(op4.readline().strip())
+            line = op4.readline().strip()
+            try:
+                IS = int(line)
+            except ValueError:
+                msg = 'Line %i: Failed getting IROW from %r' % (iline, line)
+                raise ValueError(msg)
+            iline += 1
         L = IS // 65536 - 1
         irow = IS - 65536 * (L + 1)
         if self.debug:
-            print('small_mat-next row')
-            print('  IS=%s L=%s irow=%s' % (IS, L, irow))
-        return irow
+            self.log.info('small_mat-next row')
+            self.log.info('  IS=%s L=%s irow=%s' % (IS, L, irow))
+        return irow, iline
 
     def _get_irow_small_binary(self, op4, data):
         if len(data) == 0:
@@ -500,24 +531,25 @@ class OP4(object):
         L = IS // 65536 - 1
         irow = IS - 65536 * (L + 1)
         if self.debug:
-            print('small_mat-next row')
-            print("  IS=%s L=%s irow=%s" % (IS, L, irow))
+            self.log.info('small_mat-next row')
+            self.log.info("  IS=%s L=%s irow=%s" % (IS, L, irow))
             assert IS > 0, IS
             assert L > 0, L
         return irow, L
 
-    def _get_irow_big_ascii(self, op4, line, sline, irow):
+    def _get_irow_big_ascii(self, op4, iline, line, sline, irow):
         sline = line.strip().split()
         if len(sline) == 2:
             pass
         else:
             sline = op4.readline().strip().split()
+            iline += 1
         assert len(sline) == 2, 'sline=%s len(sline)=%s' % (sline, len(sline))
         (idummy, irow) = sline
         irow = int(irow)
         if self.debug:
-            print("idummy=%s irow=%s" % (idummy, irow))
-        return irow
+            self.log.debug("idummy=%s irow=%s" % (idummy, irow))
+        return irow, iline
 
     def _get_irow_big_binary(self, op4, data):
         if len(data) == 0:
@@ -525,7 +557,7 @@ class OP4(object):
             self.n += 8
         idummy, irow = unpack(self._endian + '2i', data)
         if self.debug:
-            print("idummy=%s irow=%s" % (idummy, irow))
+            self.log.debug("idummy=%s irow=%s" % (idummy, irow))
             assert irow < 100, irow
         return (irow, idummy - 1)
 
@@ -578,7 +610,7 @@ class OP4(object):
 
     def read_start_marker(self, op4):
         if self.debug:
-            print('--------------------------------------')
+            self.log.info('--------------------------------------')
         #self.show(op4, 60)
         data = op4.read(4)
         self.n += 4
@@ -592,7 +624,7 @@ class OP4(object):
         if record_length == 16:
             a, icol, irow, nwords = unpack(self._endian + '4i', data)
             if self.debug:
-                print("a=%s icol=%s irow=%s nwords=%s" % (a, icol, irow, nwords))
+                self.log.info("a=%s icol=%s irow=%s nwords=%s" % (a, icol, irow, nwords))
         else:
             raise NotImplementedError('record_length=%s' % record_length)
         return (a, icol, irow, nwords)
@@ -601,13 +633,13 @@ class OP4(object):
         """reads a matrix"""
         #self.show(f, 60)
         if self.debug:
-            print("*************************")
+            self.log.info("*************************")
         data = op4.read(4)
         self.n += 4
         (record_length,) = unpack(self._endian + 'i', data)
         assert self.n == op4.tell(), 'n=%s tell=%s' % (self.n, op4.tell())
         if self.debug:
-            print("record_length = %s" % record_length)
+            self.log.info("record_length = %s" % record_length)
 
         if record_length == 24:
             data = op4.read(record_length)
@@ -616,7 +648,7 @@ class OP4(object):
             (ncols, nrows, form, Type, name) = unpack(
                 self._endian + '4i8s', data)
             if self.debug:
-                print("nrows=%s ncols=%s form=%s Type=%s name=%r" % (
+                self.log.info("nrows=%s ncols=%s form=%s Type=%s name=%r" % (
                     nrows, ncols, form, Type, name))
         elif record_length == 48:
             data = op4.read(record_length)
@@ -626,7 +658,7 @@ class OP4(object):
             (ncols, nrows, form, Type, name) = unpack(
                 self._endian + '4Q16s', data)
             if self.debug:
-                print("nrows=%s ncols=%s form=%s Type=%s name=%r" % (
+                self.log.info("nrows=%s ncols=%s form=%s Type=%s name=%r" % (
                     nrows, ncols, form, Type, name))
         else:
             #msg = record_length #+ self.print_block(data)
@@ -636,23 +668,25 @@ class OP4(object):
         name = name.strip()
         if self.debug:
             if Type == 1:
-                print("Type = Real, Single Precision")
+                self.log.info("Type = Real, Single Precision")
             elif Type == 2:
-                print("Type = Real, Double Precision")
+                self.log.info("Type = Real, Double Precision")
             elif Type == 3:
-                print("Type = Complex, Single Precision")
+                self.log.info("Type = Complex, Single Precision")
             elif Type == 4:
-                print("Type = Complex, Double Precision")
+                self.log.info("Type = Complex, Double Precision")
 
         if nrows < 0:  # if less than 0, big
             is_big_mat = True
             nrows = abs(nrows)
         elif nrows > 0:
             is_big_mat = False
+            if nrows > 65535:
+                is_big_mat = True
         else:
             raise RuntimeError('unknown BIGMAT.  nrows=%s' % nrows)
         if self.debug:
-            print('is_big_matrix =', is_big_mat)
+            self.log.info('is_big_matrix = %s' % is_big_mat)
 
         # jump forward to get irow (needed for check on is_sparse),
         # then jump back
@@ -717,15 +751,15 @@ class OP4(object):
             raise RuntimeError("matrix_type=%s" % matrix_type)
         dtype = get_dtype(matrix_type)
         if self.debug and debug:
-            print('matrix_type = %s' % matrix_type)
-            print('  nwords_per_value = %s' % nwords_per_value)
-            print('  nbytes_per_value = %s' % nbytes_per_value)
-            print('  dtype = %s ' % dtype)
+            self.log.info('matrix_type = %s' % matrix_type)
+            self.log.info('  nwords_per_value = %s' % nwords_per_value)
+            self.log.info('  nbytes_per_value = %s' % nbytes_per_value)
+            self.log.info('  dtype = %s ' % dtype)
         return (nwords_per_value, nbytes_per_value, data_format, dtype)
 
     def _read_real_dense_binary(self, op4, nrows, ncols, matrix_type, is_big_mat):
         if self.debug:
-            print('_read_real_dense_binary')
+            self.log.info('_read_real_dense_binary')
         out = self._get_matrix_info(matrix_type, debug=False)
         (nwords_per_value, _nbytes_per_value, data_format, dtype) = out
         A = zeros((nrows, ncols), dtype=dtype)
@@ -747,7 +781,7 @@ class OP4(object):
             str_values = self._endian + '%i%s' % (nvalues, data_format)
             A[irow-1:irow-1+nvalues, icol-1] = unpack(str_values, data)
             if self.debug:
-                print('A[%s:%s, %s] = %s' % (
+                self.log.info('A[%s:%s, %s] = %s' % (
                     irow - 1,
                     irow - 1 + nvalues,
                     icol-1,
@@ -767,7 +801,7 @@ class OP4(object):
 
     def _read_real_sparse_binary(self, op4, nrows, ncols, matrix_type, is_big_mat):
         if self.debug:
-            print('_read_real_sparse_binary')
+            self.log.info('_read_real_sparse_binary')
         out = self._get_matrix_info(matrix_type, debug=False)
         (nwords_per_value, nbytes_per_value, data_format, dtype) = out
         rows = []
@@ -784,7 +818,7 @@ class OP4(object):
 
             if icol == ncols + 1:
                 if self.debug:
-                    print('breaking on icol=%s ncol+1=%s' % (icol, ncols + 1))
+                    self.log.info('breaking on icol=%s ncol+1=%s' % (icol, ncols + 1))
                 break
 
             if is_big_mat:
@@ -796,15 +830,15 @@ class OP4(object):
 
             if L == -1:
                 if self.debug:
-                    print('breaking on L=-1')
+                    self.log.info('breaking on L=-1')
                 break
 
             if self.debug:
-                print("  next icol")
-                print("    n=%s icol=%s irow=%s nwords=%s" % (
+                self.log.info("  next icol")
+                self.log.info("    n=%s icol=%s irow=%s nwords=%s" % (
                     self.n, icol, irow, nwords))
                 self._show(op4, 100, types='qd')
-                print('**************************************************')
+                self.log.info('**************************************************')
 
             #if nwords == 0 and is_big_mat:
                 #self.n -= 4
@@ -815,7 +849,7 @@ class OP4(object):
             data = op4.read(record_length)
             self.n += record_length
             if self.debug:
-                print("  data_format=%s record_length=%s n_next=%s" % (
+                self.log.info("  data_format=%s record_length=%s n_next=%s" % (
                     data_format, record_length, self.n))
             #if icol == ncols + 1:
                 #break
@@ -834,10 +868,10 @@ class OP4(object):
                 str_values = self._endian + '%i%s' % (nvalues, data_format)
 
                 if self.debug:
-                    print('irow=%s L=%s nwords_per_value=%s nvalues=%s '
+                    self.log.info('irow=%s L=%s nwords_per_value=%s nvalues=%s '
                           'nbytes_per_value=%s' % (
                               irow, L, nwords_per_value, nvalues, nbytes_per_value))
-                    print('str_values = %r' % str_values)
+                    self.log.info('str_values = %r' % str_values)
 
                 value_list = unpack(str_values, data[0:nvalues * nbytes_per_value])
                 assert self.n == op4.tell(), 'n=%s tell=%s' % (self.n, op4.tell())
@@ -845,9 +879,9 @@ class OP4(object):
                 #irow -= 1
                 #icol -= 1
                 if self.debug:
-                    print('rows = %s' % list(i+irow-1 for i in range(nvalues)))
-                    print('cols = %s ' % ([icol-1] * nvalues))
-                    print('value_list = %s' % str(value_list))
+                    self.log.info('rows = %s' % list(i+irow-1 for i in range(nvalues)))
+                    self.log.info('cols = %s ' % ([icol-1] * nvalues))
+                    self.log.info('value_list = %s' % str(value_list))
 
                 rows.extend([i+irow-1 for i in range(nvalues)])
                 irow += nvalues
@@ -857,7 +891,7 @@ class OP4(object):
                 record_length -= nvalues * nbytes_per_value
                 data = data[nvalues * nbytes_per_value:]
                 if self.debug:
-                    print("  record_length=%s nbytes_per_value=%s len(data)=%s" %
+                    self.log.info("  record_length=%s nbytes_per_value=%s len(data)=%s" %
                           (record_length, nbytes_per_value, len(data)))
                     ##print(A)
                     #print("********")  # ,data
@@ -993,7 +1027,7 @@ class OP4(object):
     def _read_complex_dense_binary(self, op4, nrows, ncols, matrix_type, is_big_mat):
         """reads a dense complex binary matrix"""
         if self.debug:
-            print('_read_complex_dense_binary')
+            self.log.info('_read_complex_dense_binary')
         out = self._get_matrix_info(matrix_type, debug=False)
         (nwords_per_value, nbytes_per_value, data_format, dtype) = out
 
@@ -1005,24 +1039,24 @@ class OP4(object):
             assert self.n == op4.tell(), 'n=%s tell=%s' % (self.n, op4.tell())
             (icol, irow, nwords) = self.get_markers_dense(op4)
             if self.debug:
-                print("N=%s icol=%s irow=%s nwords=%s" % (
+                self.log.info("N=%s icol=%s irow=%s nwords=%s" % (
                     self.n, icol, irow, nwords))
-                print("-----------")
+                self.log.info("-----------")
 
             L = nwords
             if icol == ncols + 1:
                 if self.debug:
-                    print('breaking...icol=%s ncols+1=%s' % (
+                    self.log.info('breaking...icol=%s ncols+1=%s' % (
                         icol, ncols + 1))
                 break
 
             if L == -1:
                 if self.debug:
-                    print('breaking...nwords (L) = %s' % nwords)
+                    self.log.info('breaking...nwords (L) = %s' % nwords)
                 break
 
             if self.debug:
-                print("  n=%s icol=%s irow=%s nwords=%s" % (
+                self.log.info("  n=%s icol=%s irow=%s nwords=%s" % (
                     self.n, icol, irow, nwords))
 
             #if nwords == 0 and is_big_mat:
@@ -1034,7 +1068,7 @@ class OP4(object):
             data = op4.read(record_length)
             self.n += record_length
             if self.debug:
-                print("data_format=%s record_length=%s n_next=%s" % (
+                self.log.info("data_format=%s record_length=%s n_next=%s" % (
                     data_format, record_length, self.n))
             if icol == ncols + 1:
                 continue
@@ -1043,10 +1077,10 @@ class OP4(object):
             #nread = nwords // 4
             while record_length >= nbytes_per_value:
                 if self.debug:
-                    print("inner while...")
-                    print("nwords  = %s" % nwords)
-                    print("nvalues = %s" % nvalues)
-                    print("nwords_per_value = %s" % nwords_per_value)
+                    self.log.info("inner while...")
+                    self.log.info("nwords  = %s" % nwords)
+                    self.log.info("nvalues = %s" % nvalues)
+                    self.log.info("nwords_per_value = %s" % nwords_per_value)
 
                 #if nvalues == 0:
                     #assert icol == ncols + 1
@@ -1055,15 +1089,15 @@ class OP4(object):
                 # we have more 2x values for complex numbers
                 str_values = self._endian + '%i%s' % (nvalues * 2, data_format)
                 if self.debug:
-                    print("str_values = %s" % str_values)
-                    print("nvalues*nbytes_per_value=%s len(data)=%s" %
+                    self.log.info("str_values = %s" % str_values)
+                    self.log.info("nvalues*nbytes_per_value=%s len(data)=%s" %
                           (nvalues * nbytes_per_value, len(data)))
                 value_list = unpack(str_values, data[0:nvalues * nbytes_per_value])
                 assert self.n == op4.tell(), 'n=%s tell=%s' % (self.n, op4.tell())
                 #self.show(op4, 4)
                 #print self.print_block(data)
                 if self.debug:
-                    print("value_list = %s" % str(value_list))
+                    self.log.info("value_list = %s" % str(value_list))
 
                 #irow -= 1
                 #icol -= 1
@@ -1074,17 +1108,17 @@ class OP4(object):
                         real_value = value
                     else:
                         if self.debug:
-                            print("A[%s,%s] = %s" % (irow, icol, complex(real_value, value)))
+                            self.log.info("A[%s,%s] = %s" % (irow, icol, complex(real_value, value)))
                         A[irow, icol] = complex(real_value, value)
                         irow += 1
 
                 record_length -= nvalues * nbytes_per_value
                 data = data[nvalues * nbytes_per_value:]
                 if self.debug:
-                    print("record_length=%s nbytes_per_value=%s" % (
+                    self.log.info("record_length=%s nbytes_per_value=%s" % (
                         record_length, nbytes_per_value))
-                    print(print_matrix(A))
-                    print("********", data)
+                    self.log.info(print_matrix(A))
+                    self.log.info("******** %s" % data)
 
         op4.read(4)
         self.n += 4
@@ -1101,7 +1135,7 @@ class OP4(object):
     def _read_complex_sparse_binary(self, op4, nrows, ncols, matrix_type, is_big_mat):
         """reads a sparse complex binary matrix"""
         if self.debug:
-            print('_read_complex_sparse_binary')
+            self.log.info('_read_complex_sparse_binary')
         out = self._get_matrix_info(matrix_type, debug=False)
         (nwords_per_value, nbytes_per_value, data_format, dtype) = out
         rows = []
@@ -1115,9 +1149,9 @@ class OP4(object):
             assert self.n == op4.tell(), 'n=%s tell=%s' % (self.n, op4.tell())
             (icol, irow, nwords) = self.get_markers_sparse(op4, is_big_mat)
             if self.debug:
-                print("n=%s icol=%s irow=%s nwords=%s" % (self.n, icol, irow,
+                self.log.info("n=%s icol=%s irow=%s nwords=%s" % (self.n, icol, irow,
                                                           nwords))
-                print("-----------")
+                self.log.info("-----------")
 
             L = nwords
 
@@ -1133,14 +1167,14 @@ class OP4(object):
 
             if L == -1:
                 if self.debug:
-                    print('breaking on L=-1')
+                    self.log.info('breaking on L=-1')
                 break
 
             if self.debug:
-                print("n=%s icol=%s irow=%s nwords=%s" % (
+                self.log.info("n=%s icol=%s irow=%s nwords=%s" % (
                     self.n, icol, irow, nwords))
                 self._show(op4, 100, types='qf')
-                print('\n\n')
+                self.log.info('\n\n')
 
             #if nwords == 0 and is_big_mat:
                 #self.n -= 4
@@ -1151,7 +1185,7 @@ class OP4(object):
             data = op4.read(record_length)
             self.n += record_length
             if self.debug:
-                print("data_format=%s record_length=%s n_next=%s" % (
+                self.log.info("data_format=%s record_length=%s n_next=%s" % (
                     data_format, record_length, self.n))
             if icol == ncols + 1:
                 continue
@@ -1159,10 +1193,10 @@ class OP4(object):
             nvalues = nwords // nwords_per_value
             while record_length >= nbytes_per_value:
                 if self.debug:
-                    print("inner while...")
-                    print("nwords  = %s" % nwords)
-                    print("nvalues = %s" % nvalues)
-                    print("nwords_per_value = %s" % nwords_per_value)
+                    self.log.info("inner while...")
+                    self.log.info("nwords  = %s" % nwords)
+                    self.log.info("nvalues = %s" % nvalues)
+                    self.log.info("nwords_per_value = %s" % nwords_per_value)
 
                 #if nvalues == 0:
                     #assert icol == ncols + 1
@@ -1171,15 +1205,15 @@ class OP4(object):
                 # we have 2x values for complex
                 str_values = self._endian + '%i%s' % (nvalues * 2, data_format)
                 if self.debug:
-                    print("  str_values = %s" % str_values)
-                    print("  nvalues*nbytes_per_value=%s len(data)=%s" %
+                    self.log.info("  str_values = %s" % str_values)
+                    self.log.info("  nvalues*nbytes_per_value=%s len(data)=%s" %
                           (nvalues * nbytes_per_value, len(data)))
                 value_list = unpack(str_values, data[0:nvalues * nbytes_per_value])
                 assert self.n == op4.tell(), 'n=%s tell=%s' % (self.n, op4.tell())
                 #self.show(op4, 4)
                 #print(self.print_block(data))
                 if self.debug:
-                    print("  value_list = %s" % str(value_list))
+                    self.log.info("  value_list = %s" % str(value_list))
 
                 #irow -= 1
                 #icol -= 1
@@ -1193,7 +1227,7 @@ class OP4(object):
                         real_value = value
                     else:
                         if self.debug:
-                            print("  A[%s,%s] = %s" % (
+                            self.log.info("  A[%s,%s] = %s" % (
                                 irow, icol, complex(real_value, value)))
                         #A[irow, icol] = complex(real_value, value)
                         entries.append(complex(real_value, value))
@@ -1232,7 +1266,7 @@ class OP4(object):
     def get_markers_dense(self, op4):
         a, icol, irow, nwords = self.read_start_marker(op4)
         if self.debug:
-            print("n=%s a=%s icol=%s irow=%s nwords=%s"% (
+            self.log.info("n=%s a=%s icol=%s irow=%s nwords=%s"% (
                 self.n, a, icol, irow, nwords))
         return icol, irow, nwords
 
@@ -1462,7 +1496,7 @@ class OP4(object):
     def _write_dense_matrix_ascii(self, op4, name, A, form=2, precision='default'):
         """writes a dense ASCII matrx"""
         if self.debug:
-            print('_write_dense_matrix_ascii')
+            self.log.info('_write_dense_matrix_ascii')
         matrix_type, nwords_per_value = _get_type_nwv(A[0, 0], precision)
 
         (nrows, ncols) = A.shape
@@ -1525,9 +1559,9 @@ class OP4(object):
         (record_length_big, dum_a) = unpack('>ii', data)
         (record_length_little, dum_b) = unpack('<ii', data)
 
-        record_length_big2,  = unpack('>Q', data)
-        record_length_little2,  = unpack('<Q', data)
-        print('rc2=%s, %s' % (record_length_big2, record_length_little2))
+        record_length_big2, = unpack('>Q', data)
+        record_length_little2, = unpack('<Q', data)
+        self.log.info('rc2=%s, %s' % (record_length_big2, record_length_little2))
 
         if record_length_big == 24:
             endian = '>'
