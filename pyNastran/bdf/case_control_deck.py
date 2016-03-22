@@ -764,8 +764,7 @@ class CaseControlDeck(object):
     def __repr__(self):
         msg = ''
         subcase0 = self.subcases[0]
-        for subcase in itervalues(self.subcases):
-            #print('writing subcase...')
+        for subcase_id, subcase in sorted(iteritems(self.subcases)):
             msg += subcase.write_subcase(subcase0)
         #if len(self.subcases) == 1:
             #msg += 'BEGIN BULK\n'
