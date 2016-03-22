@@ -411,8 +411,8 @@ class DLINK(OptConstraint):
 class DRESP1(OptConstraint):
     type = 'DRESP1'
 
-    def __init__(self, oid, label, rtype, ptype, region,
-                 atta, attb, atti, comment=''):
+    def __init__(self, oid, label, response_type, property_type, region,
+                 atta, attb, atti, comment='', validate=False):
         """
         +--------+-------+---------+--------+--------+--------+-------+------+-------+
         |   1    |  2    |     3   |   4    |   5    |   6    |   7   |   8  |   9   |
@@ -430,28 +430,295 @@ class DRESP1(OptConstraint):
             self._comment = comment
         self.oid = oid
         self.label = label
-        self.rtype = rtype
-        self.ptype = ptype
+
+        # DISP, VONMISES, 14
+        self.response_type = response_type
+
+        # PSHELL, PCOMP, PBAR, etc.
+        self.property_type = property_type
         self.region = region
         self.atta = atta
         self.attb = attb
         self.atti = atti
+        assert isinstance(atti, list), 'atti=%s type=%s' % (atti, type(atti))
+
+        if validate:
+            property_types = [
+                'ELEM',
+                #'PELAS',
+                'PROD',
+                # 'PTUBE',
+                'PBAR', 'PBARL',
+                'PBEAM', #'PBEAML',
+                #'PSHEAR',
+                'PSHELL', 'PCOMP',
+                #'PSOLID',
+                #'PKNL',
+                None,
+            ]
+            stress_types = ['PBARL']
+
+            response_types = [
+                #'WEIGHT', 'VOLUME',
+
+                # static
+                #'DISP', 'STRESS', 'COMP', 'SPCFORCE', 'ESE', 'GPFORCP',
+
+                # aero
+                #'FLUTTER', 'STABDER', 'TRIM', 'DIVERG',
+
+                # ???
+                #'CEIG', 'CSTRAT',
+
+                # modal
+                #'EIGN', 'LAMA',
+
+                # time
+                #'TDISP', 'TVELO', 'TACCL', 'TFORC', 'TSPCF',
+
+                # frequency
+                #'FREQ',
+                #'FRDISP', 'FRVELO', 'FRACCL',
+                #'FRSPCF', 'FRMASS', 'FRFORC', 'FRSTRE',
+
+                # random
+                #'PSDDISP', 'PSDACCL',
+                #'RMSDISP', 'RMSVELO', 'RMSACCL',
+
+                #'CFAILURE', 'TOTSE',
+            ]
+            if property_type not in property_types:
+                if property_type == 'ELEM':
+                    if response_type == 'CFAILURE':
+                        pass
+                    elif response_type == 'STRESS':
+                        pass
+                    else:
+                        msg = 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
+                            property_type, response_type, atta, attb, atti)
+                        raise RuntimeError(msg)
+                elif property_type is stress_properties:
+                    msg = 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
+                        property_type, response_type, atta, attb, atti)
+                    raise RuntimeError(msg)
+                else:
+                    msg = 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
+                        property_type, response_type, atta, attb, atti)
+                    raise RuntimeError(msg)
+            if property_type is None:
+                if response_type in ['WEIGHT']:
+                    assert atta is None, 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
+                        property_type, response_type, atta, attb, atti)
+                    assert attb is None, 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
+                        property_type, response_type, atta, attb, atti)
+                    if len(atti) == 1:
+                        assert atti == ['ALL'], 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
+                            property_type, response_type, atta, attb, atti)
+                    else:
+                        assert len(atti) == 0, 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
+                            property_type, response_type, atta, attb, atti)
+                elif response_type in ['VOLUME']:
+                    assert atta is None, 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
+                        property_type, response_type, atta, attb, atti)
+                    assert attb is None, 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
+                        property_type, response_type, atta, attb, atti)
+                    if len(atti) > 1:
+                        assert atti == [0], 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
+                            property_type, response_type, atta, attb, atti)
+                    else:
+                        assert len(atti) == 0, 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
+                            property_type, response_type, atta, attb, atti)
+                elif response_type == 'FREQ':
+                    assert atta in [1, 3], 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
+                        property_type, response_type, atta, attb, atti)
+                    assert attb is None, 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
+                        property_type, response_type, atta, attb, atti)
+                    assert len(atti) == 0, 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
+                        property_type, response_type, atta, attb, atti)
+
+                elif response_type in ['DISP']:
+                    assert atta in [1, 2, 3, 4, 5], 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
+                        property_type, response_type, atta, attb, atti)
+                    assert attb is None, 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
+                        property_type, response_type, atta, attb, atti)
+                    assert len(atti) == 1, 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
+                        property_type, response_type, atta, attb, atti)
+                elif response_type in ['FRDISP']:
+                    assert atta in [1, 2, 3, 8], 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
+                        property_type, response_type, atta, attb, atti)
+                    assert attb in [None, 'AVG'], 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
+                        property_type, response_type, atta, attb, atti)
+                    assert len(atti) == 1, 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
+                        property_type, response_type, atta, attb, atti)
+                elif response_type in ['RMSDISP', 'RMSACCL']:
+                    assert atta in [1, 2, 3], 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
+                        property_type, response_type, atta, attb, atti)
+                    assert attb in [140, 1000], 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
+                        property_type, response_type, atta, attb, atti)
+                    assert len(atti) == 1, 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
+                        property_type, response_type, atta, attb, atti)
+
+                elif response_type == 'CEIG':
+                    assert atta in [1, 2, 4, 7, 11], 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
+                        property_type, response_type, atta, attb, atti)
+                    assert attb in ['ALPHA', 'OMEGA', None], 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
+                        property_type, response_type, atta, attb, atti)
+                    assert len(atti) == 0, 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
+                        property_type, response_type, atta, attb, atti)
+                elif response_type == 'LAMA':
+                    assert atta in [1], 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
+                        property_type, response_type, atta, attb, atti)
+                    assert attb is None, 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
+                        property_type, response_type, atta, attb, atti)
+                    assert len(atti) == 0, 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
+                        property_type, response_type, atta, attb, atti)
+                elif response_type == 'EIGN': # EIGEN as well?
+                    assert atta in [1, 2, 7, 8], 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
+                        property_type, response_type, atta, attb, atti)
+                    assert attb is None, 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
+                        property_type, response_type, atta, attb, atti)
+                    assert len(atti) == 0, 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
+                        property_type, response_type, atta, attb, atti)
+                elif response_type == 'FLUTTER':
+                    assert atta is None, 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
+                        property_type, response_type, atta, attb, atti)
+                    assert attb is None, 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
+                        property_type, response_type, atta, attb, atti)
+                    assert len(atti) > 0, 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
+                        property_type, response_type, atta, attb, atti)
+                else:
+                    msg = 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
+                        property_type, response_type, atta, attb, atti)
+                    raise RuntimeError(msg)
+
+            elif response_type == 'CFAILURE':
+                if property_type ==  'ELEM':
+                    assert atta in [5], 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
+                        property_type, response_type, atta, attb, atti)
+                    assert attb in [1], 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
+                        property_type, response_type, atta, attb, atti)
+                elif property_type == 'PCOMP':
+                    assert atta in [5], 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
+                        property_type, response_type, atta, attb, atti)
+                    assert attb in [1], 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
+                        property_type, response_type, atta, attb, atti)
+                else:
+                    msg = 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
+                        property_type, response_type, atta, attb, atti)
+                    raise RuntimeError(msg)
+            elif response_type in ['STRESS']:
+                if property_type == 'PBARL':
+                    assert atta in [2, 3, 4], 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
+                        property_type, response_type, atta, attb, atti)
+                    assert attb is None, 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
+                        property_type, response_type, atta, attb, atti)
+                elif property_type == 'PBAR':
+                    assert atta in [6, 7, 8], 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
+                        property_type, response_type, atta, attb, atti)
+                    assert attb is None, 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
+                        property_type, response_type, atta, attb, atti)
+                elif property_type == 'PBEAM':
+                    assert atta in [6], 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
+                        property_type, response_type, atta, attb, atti)
+                    assert attb is None, 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
+                        property_type, response_type, atta, attb, atti)
+                elif property_type == 'PROD':
+                    assert atta in [2, 3, 7], 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
+                        property_type, response_type, atta, attb, atti)
+                    assert attb is None, 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
+                        property_type, response_type, atta, attb, atti)
+                elif property_type == 'PSHELL':
+                    assert atta in [4, 6, 7, 8, 9, 17], 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
+                        property_type, response_type, atta, attb, atti)
+                    assert attb is None, 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
+                        property_type, response_type, atta, attb, atti)
+                elif property_type == 'PCOMP':
+                    assert atta in [9, 17], 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
+                        property_type, response_type, atta, attb, atti)
+                    assert attb is None, 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
+                        property_type, response_type, atta, attb, atti)
+                #elif property_type in stress_types:
+                    #if not isinstance(atta, int):
+                        #msg = 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s; atta should be an integer' % (
+                            #property_type, response_type, atta, attb, atti)
+                        #raise TypeError(msg)
+                    #assert attb is None, 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
+                        #property_type, response_type, atta, attb, atti)
+                else:
+                    msg = 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
+                        property_type, response_type, atta, attb, atti)
+                    raise RuntimeError(msg)
+
+                assert attb is None, 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s; atta should be an integer' % (
+                    property_type, response_type, atta, attb, atti)
+                assert len(atti) > 0, 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
+                    property_type, response_type, atta, attb, atti)
+            elif response_type in ['FORCE']:
+                if property_type == 'PROD':
+                    assert atta in [2], 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
+                        property_type, response_type, atta, attb, atti)
+                    assert attb is None, 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
+                        property_type, response_type, atta, attb, atti)
+                elif response_type in ['FRSTRE']:
+                    if property_type == 'PROD':
+                        assert atta in [4], 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
+                            property_type, response_type, atta, attb, atti)
+                        assert attb is None, 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
+                            property_type, response_type, atta, attb, atti)
+                    else:
+                        msg = 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
+                            property_type, response_type, atta, attb, atti)
+                        raise RuntimeError(msg)
+                    assert len(atti) > 0, 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
+                        property_type, response_type, atta, attb, atti)
+                else:
+                    msg = 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
+                        property_type, response_type, atta, attb, atti)
+                    raise RuntimeError(msg)
+                assert len(atti) > 0, 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
+                    property_type, response_type, atta, attb, atti)
+
+            elif response_type in ['CSTRAIN']:
+                if property_type == 'PCOMP':
+                    assert atta in [3], 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
+                        property_type, response_type, atta, attb, atti)
+                    assert attb in [1], 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
+                        property_type, response_type, atta, attb, atti)
+                else:
+                    msg = 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
+                        property_type, response_type, atta, attb, atti)
+                    raise RuntimeError(msg)
+                assert len(atti) > 0, 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
+                    property_type, response_type, atta, attb, atti)
+            else:
+                msg = 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
+                    property_type, response_type, atta, attb, atti)
+                raise RuntimeError(msg)
+
+    @property
+    def rtype(self):
+        return self.response_type
+
+    @rtype.setter
+    def rtype(self, response_type):
+        self.response_type = response_type
+
+    @property
+    def ptype(self):
+        return self.property_type
+
+    @ptype.setter
+    def ptype(self, property_type):
+        self.property_type = property_type
 
     @classmethod
     def add_card(cls, card, comment=''):
         oid = integer(card, 1, 'oid')
         label = string(card, 2, 'label')
-        rtype = string(card, 3, 'rtype')
+        response_type = string(card, 3, 'rtype')
 
         # elem, pbar, pshell, etc. (ELEM flag or Prop Name)
-        ptype = integer_string_or_blank(card, 4, 'ptype')
-        #if 1:
-            ## incomplete
-            #assert self.ptype in ['ELEM', 'PSHELL', 'PBAR', 'PROD', 'PCOMP',
-                                  #'PSOLID', 'PELAS', 'PBARL', 'PBEAM',
-                                  #'PBEAML', 'PSHEAR', 'PTUBE',
-                                  #'PKNL',
-                                  #None], 'DRESP1 ptype=%s' % self.ptype
+        property_type = integer_string_or_blank(card, 4, 'ptype')
         region = integer_or_blank(card, 5, 'region')
         atta = integer_double_string_or_blank(card, 6, 'atta')
         attb = integer_double_string_or_blank(card, 7, 'attb')
@@ -460,19 +727,20 @@ class DRESP1(OptConstraint):
         for i in range(8, len(card)):
             attii = integer_double_string_or_blank(card, i, 'atti_%i' % (i + 1))
             atti.append(attii)
-        return DRESP1(oid, label, rtype, ptype, region, atta, attb, atti,
-                      comment=comment)
+        return DRESP1(oid, label, response_type, property_type, region, atta, attb, atti,
+                      comment=comment, validate=True)
 
     def _verify(self, xref=True):
         pass
 
     def calculate(self, op2_model, subcase_id):
         rtype = self.rtype
-        ptype = self.ptype
-        if rtype == 'DISP' and ptype is None:
+        property_type = self.property_type
+        if rtype == 'DISP' and property_type is None:
             msg = 'fields=%s\n' % (self.raw_fields())
-            msg += 'rtype=%r ptype=%r region=%s A=%r B=%r\n' % (self.rtype, self.ptype, self.region,
-                                                                self.atta, self.attb)
+            msg += 'rtype=%r ptype=%r region=%s A=%r B=%r\n' % (
+                self.rtype, self.property_type, self.region,
+                self.atta, self.attb)
             assert isinstance(self.atta, int), self.atta
             assert self.attb is None, self.attb
             assert len(self.atti) == 1, self.atti
@@ -491,11 +759,12 @@ class DRESP1(OptConstraint):
             atti = self.atti[0]
             out = case.data[itime, inid, comp - 1]
             print(' DISP[itime=%s, nid=%s, comp=%i] = %s' % (itime, str(nidsi), comp, out))
-        elif ptype == 'ELEM' and 0:
+        elif property_type == 'ELEM' and 0:
             pass
         else:
             msg = 'fields=%s\n' % (self.raw_fields())
-            msg += 'rtype=%r ptype=%r region=%s\n' % (self.rtype, self.ptype, self.region)
+            msg += 'response_type=%r property_type=%r region=%s\n' % (
+                self.response_type, self.property_type, self.region)
             msg += str(self)
             raise NotImplementedError(msg)
         return out
@@ -524,28 +793,28 @@ class DRESP1(OptConstraint):
             'TFORC', 'FRFORC',
             'TSPCF',
         ]
-        if self.ptype in ['ELEM']:
+        if self.property_type in ['ELEM']:
             self.atti = model.Elements(self.atti, msg=msg)
             self.atti_ref = self.atti
-        elif self.ptype in ['PSHELL', 'PBAR', 'PROD', 'PCOMP',
-                            'PSOLID', 'PELAS', 'PBARL', 'PBEAM',
-                            'PBEAML', 'PSHEAR', 'PTUBE',]:
+        elif self.property_type in ['PSHELL', 'PBAR', 'PROD', 'PCOMP',
+                                    'PSOLID', 'PELAS', 'PBARL', 'PBEAM',
+                                    'PBEAML', 'PSHEAR', 'PTUBE',]:
             self.atti = model.Properties(self.atti, msg=msg)
             self.atti_ref = self.atti
-        elif self.rtype in ['FRSTRE']:
+        elif self.response_type in ['FRSTRE']:
             self.atti = model.Properties(self.atti, msg=msg)
             self.atti_ref = self.atti
-        elif self.rtype in ['WEIGHT', 'FLUTTER', 'STABDER', 'CEIG', 'EIGN', 'FREQ']:
+        elif self.response_type in ['WEIGHT', 'FLUTTER', 'STABDER', 'CEIG', 'EIGN', 'FREQ']:
             pass
-        elif self.rtype in ['DISP', 'FRDISP', 'TDISP',
-                            'FRVELO', 'TVELO',
-                            'FRACCL', 'PSDACCL']:
+        elif self.response_type in ['DISP', 'FRDISP', 'TDISP',
+                                    'FRVELO', 'TVELO',
+                                    'FRACCL', 'PSDACCL']:
             self.atti = model.Nodes(self.atti, msg=msg)
             self.atti_ref = self.atti
-        elif self.rtype in op2_results:
+        elif self.response_type in op2_results:
             pass
         else:
-            msg = 'rtype=%r ptype=%r\n' % (self.rtype, self.ptype)
+            msg = 'response_type=%r ptype=%r\n' % (self.response_type, self.property_type)
             msg += str(self)
             raise NotImplementedError(msg)
 
@@ -556,7 +825,7 @@ class DRESP1(OptConstraint):
 
     def atti_values(self):
         #return self.atti
-        #if self.rtype in ['ELEM']:
+        #if self.response_type in ['ELEM']:
             #self.atti = model.Elements(self.atti, msg=msg)
             #pass
         op2_results = [
@@ -568,41 +837,41 @@ class DRESP1(OptConstraint):
             'TFORC', 'FRFORC',
             'TSPCF',
         ]
-        if self.ptype in ['PSHELL', 'PBAR', 'PROD', 'PCOMP',
-                          'PSOLID', 'PELAS', 'PBARL', 'PBEAM',
-                          'PBEAML', 'PSHEAR', 'PTUBE',
-                          'FRSTRE']:
+        if self.property_type in ['PSHELL', 'PBAR', 'PROD', 'PCOMP',
+                                  'PSOLID', 'PELAS', 'PBARL', 'PBEAM',
+                                  'PBEAML', 'PSHEAR', 'PTUBE',
+                                  'FRSTRE']:
             data = [prop if isinstance(prop, integer_types) else prop.pid for prop in self.atti]
             for value in data:
                 assert not isinstance(value, BaseCard), value
-        elif self.rtype in ['FRSTRE']:
+        elif self.response_type in ['FRSTRE']:
             data = [prop if isinstance(prop, integer_types) else prop.pid for prop in self.atti]
             for value in data:
                 #print('atti =', value, type(value))
                 assert not isinstance(value, BaseCard), value
-        elif self.rtype in ['WEIGHT', 'FLUTTER', 'STABDER', 'EIGN', 'FREQ']:
+        elif self.response_type in ['WEIGHT', 'FLUTTER', 'STABDER', 'EIGN', 'FREQ']:
             data = self.atti
-        elif self.rtype in ['DISP', 'FRDISP', 'TDISP',
-                            'FRVELO',
-                            'FRACCL', 'PSDACCL']:
+        elif self.response_type in ['DISP', 'FRDISP', 'TDISP',
+                                    'FRVELO',
+                                    'FRACCL', 'PSDACCL']:
             #self.atti = model.Nodes(self.atti, msg=msg)
             data = [node if isinstance(node, integer_types) else node.nid for node in self.atti]
-        elif self.rtype in op2_results:
+        elif self.response_type in op2_results:
             data = self.atti
             for value in data:
-                assert not isinstance(value, BaseCard), 'rtype=%s value=%s' % (self.rtype, value)
-        elif self.rtype in ['GPFORCP']: # MSC Nastran specific
+                assert not isinstance(value, BaseCard), 'response_type=%s value=%s' % (self.response_type, value)
+        elif self.response_type in ['GPFORCP']: # MSC Nastran specific
             data = self.atti
             for value in data:
                 assert not isinstance(value, BaseCard), value
         else:
-            msg = 'rtype=%s ptype=%s\n' % (self.rtype, self.ptype)
+            msg = 'response_type=%s property_type=%s\n' % (self.response_type, self.property_type)
             #msg += str(self)
             raise NotImplementedError(msg)
         return data
 
     def raw_fields(self):
-        list_fields = ['DRESP1', self.oid, self.label, self.rtype, self.ptype,
+        list_fields = ['DRESP1', self.oid, self.label, self.response_type, self.property_type,
                        self.region, self.atta, self.attb] + self.atti_values()
         #for val in self.atti_values():
             #print(val)
@@ -1279,7 +1548,7 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
             the BDF object
         """
         msg = ', which is required by DVPREL1 name=%r' % self.type
-        self.pid = model.Property(self.pid)
+        self.pid = model.Property(self.pid, msg=msg)
         self.pid_ref = self.pid
         self.dvids = [model.desvars[dvid] for dvid in self.dvids]
 
