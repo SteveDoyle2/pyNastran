@@ -116,7 +116,7 @@ class OP4(object):
         """
         See ``read_op4``
         """
-        if not precision in ('default', 'single', 'double'):
+        if precision not in ('default', 'single', 'double'):
             msg = "precision=%r and must be 'single', 'double', or 'default'" % precision
             raise ValueError(msg)
 
@@ -167,14 +167,7 @@ class OP4(object):
         ncols, nrows, form, matrix_type = line[0:32].split()
         nrows = int(nrows)
 
-        if nrows < 0:  # if less than 0, big
-            is_big_mat = True
-        elif nrows > 0:
-            is_big_mat = False
-            if nrows > 65535:
-                is_big_mat = True
-        else:
-            raise RuntimeError('unknown BIGMAT.  nRows=%s' % nrows)
+        is_big_mat, nrows = get_big_mat_nrows(nrows)
         if self.debug:
             self.log.info('is_big_matrix = %s' % is_big_mat)
 
@@ -187,7 +180,8 @@ class OP4(object):
         name = line[32:40].strip()
 
         if self.debug:
-            self.log.info('name=%s shape=(%s,%s) form=%s Type=%s' % (name, nrows, ncols, form, matrix_type))
+            self.log.info('name=%s shape=(%s,%s) form=%s Type=%s' % (
+                name, nrows, ncols, form, matrix_type))
         assert ncols > 0, 'ncols=%s' % ncols
         size = line[40:].strip()
         line_size = size.split(',')[1].split('E')[1].split('.')[0]  # 3E23.16 to 23
@@ -358,15 +352,19 @@ class OP4(object):
         iline += 1
         return A, iline
 
-    def _read_real_ascii(self, op4, iline, nrows, ncols, line_size, line, dtype, is_sparse, is_big_mat):
+    def _read_real_ascii(self, op4, iline, nrows, ncols, line_size, line, dtype,
+                         is_sparse, is_big_mat):
         """reads a real ASCII matrix"""
         if is_sparse:
-            A, iline = self._read_real_sparse_ascii(op4, iline, nrows, ncols, line_size, line, dtype, is_big_mat)
+            A, iline = self._read_real_sparse_ascii(op4, iline, nrows, ncols,
+                                                    line_size, line, dtype, is_big_mat)
         else:
-            A, iline = self._read_real_dense_ascii(op4, iline, nrows, ncols, line_size, line, dtype, is_big_mat)
+            A, iline = self._read_real_dense_ascii(op4, iline, nrows, ncols,
+                                                   line_size, line, dtype, is_big_mat)
         return A, iline
 
-    def _read_complex_sparse_ascii(self, op4, iline, nrows, ncols, line_size, line, dtype, is_big_mat):
+    def _read_complex_sparse_ascii(self, op4, iline, nrows, ncols, line_size,
+                                   line, dtype, is_big_mat):
         """reads a sparse complex ASCII matrix"""
         rows = []
         cols = []
@@ -434,7 +432,8 @@ class OP4(object):
         iline += 1
         return A, iline
 
-    def _read_complex_ascii(self, op4, iline, nrows, ncols, line_size, line, dtype, is_sparse, is_big_mat):
+    def _read_complex_ascii(self, op4, iline, nrows, ncols, line_size, line,
+                            dtype, is_sparse, is_big_mat):
         """reads a complex ASCII matrix"""
         if is_sparse:
             A, iline = self._read_complex_sparse_ascii(op4, iline, nrows, ncols,
@@ -444,7 +443,8 @@ class OP4(object):
                                                       line_size, line, dtype, is_big_mat)
         return A, iline
 
-    def _read_complex_dense_ascii(self, op4, iline, nrows, ncols, line_size, line, dtype, is_big_mat):
+    def _read_complex_dense_ascii(self, op4, iline, nrows, ncols, line_size, line, dtype,
+                                  is_big_mat):
         """reads a dense complex ASCII matrix"""
         A = zeros((nrows, ncols), dtype=dtype)  # Initialize a complex matrix
 
@@ -523,6 +523,14 @@ class OP4(object):
         return irow, iline
 
     def _get_irow_small_binary(self, op4, data):
+        """
+        Returns
+        -------
+        irow : int
+           the row id
+        L : int
+            the row length
+        """
         if len(data) == 0:
             data = op4.read(4)
             self.n += 4
@@ -552,6 +560,14 @@ class OP4(object):
         return irow, iline
 
     def _get_irow_big_binary(self, op4, data):
+        """
+        Returns
+        -------
+        irow : int
+           the row id
+        L : int
+            ???
+        """
         if len(data) == 0:
             data = op4.read(8)
             self.n += 8
@@ -676,15 +692,8 @@ class OP4(object):
             elif Type == 4:
                 self.log.info("Type = Complex, Double Precision")
 
-        if nrows < 0:  # if less than 0, big
-            is_big_mat = True
-            nrows = abs(nrows)
-        elif nrows > 0:
-            is_big_mat = False
-            if nrows > 65535:
-                is_big_mat = True
-        else:
-            raise RuntimeError('unknown BIGMAT.  nrows=%s' % nrows)
+        is_big_mat, nrows = get_big_mat_nrows(nrows)
+
         if self.debug:
             self.log.info('is_big_matrix = %s' % is_big_mat)
 
@@ -869,8 +878,8 @@ class OP4(object):
 
                 if self.debug:
                     self.log.info('irow=%s L=%s nwords_per_value=%s nvalues=%s '
-                          'nbytes_per_value=%s' % (
-                              irow, L, nwords_per_value, nvalues, nbytes_per_value))
+                                  'nbytes_per_value=%s' % (irow, L, nwords_per_value,
+                                                           nvalues, nbytes_per_value))
                     self.log.info('str_values = %r' % str_values)
 
                 value_list = unpack(str_values, data[0:nvalues * nbytes_per_value])
@@ -891,8 +900,8 @@ class OP4(object):
                 record_length -= nvalues * nbytes_per_value
                 data = data[nvalues * nbytes_per_value:]
                 if self.debug:
-                    self.log.info("  record_length=%s nbytes_per_value=%s len(data)=%s" %
-                          (record_length, nbytes_per_value, len(data)))
+                    self.log.info("  record_length=%s nbytes_per_value=%s len(data)=%s" % (
+                        record_length, nbytes_per_value, len(data)))
                     ##print(A)
                     #print("********")  # ,data
                     #print(self.print_block(data))
@@ -1090,8 +1099,8 @@ class OP4(object):
                 str_values = self._endian + '%i%s' % (nvalues * 2, data_format)
                 if self.debug:
                     self.log.info("str_values = %s" % str_values)
-                    self.log.info("nvalues*nbytes_per_value=%s len(data)=%s" %
-                          (nvalues * nbytes_per_value, len(data)))
+                    self.log.info("nvalues*nbytes_per_value=%s len(data)=%s" % (
+                        nvalues * nbytes_per_value, len(data)))
                 value_list = unpack(str_values, data[0:nvalues * nbytes_per_value])
                 assert self.n == op4.tell(), 'n=%s tell=%s' % (self.n, op4.tell())
                 #self.show(op4, 4)
@@ -1107,9 +1116,10 @@ class OP4(object):
                     if i % 2 == 0:
                         real_value = value
                     else:
+                        ai = complex(real_value, value)
                         if self.debug:
-                            self.log.info("A[%s,%s] = %s" % (irow, icol, complex(real_value, value)))
-                        A[irow, icol] = complex(real_value, value)
+                            self.log.info("A[%s,%s] = %s" % (irow, icol, ai))
+                        A[irow, icol] = ai
                         irow += 1
 
                 record_length -= nvalues * nbytes_per_value
@@ -1149,12 +1159,11 @@ class OP4(object):
             assert self.n == op4.tell(), 'n=%s tell=%s' % (self.n, op4.tell())
             (icol, irow, nwords) = self.get_markers_sparse(op4, is_big_mat)
             if self.debug:
-                self.log.info("n=%s icol=%s irow=%s nwords=%s" % (self.n, icol, irow,
-                                                          nwords))
+                self.log.info("n=%s icol=%s irow=%s nwords=%s" % (
+                    self.n, icol, irow, nwords))
                 self.log.info("-----------")
 
             L = nwords
-
             if icol == ncols + 1:
                 break
 
@@ -1206,8 +1215,8 @@ class OP4(object):
                 str_values = self._endian + '%i%s' % (nvalues * 2, data_format)
                 if self.debug:
                     self.log.info("  str_values = %s" % str_values)
-                    self.log.info("  nvalues*nbytes_per_value=%s len(data)=%s" %
-                          (nvalues * nbytes_per_value, len(data)))
+                    self.log.info("  nvalues*nbytes_per_value=%s len(data)=%s" % (
+                        nvalues * nbytes_per_value, len(data)))
                 value_list = unpack(str_values, data[0:nvalues * nbytes_per_value])
                 assert self.n == op4.tell(), 'n=%s tell=%s' % (self.n, op4.tell())
                 #self.show(op4, 4)
@@ -1695,6 +1704,36 @@ def _write_sparse_matrix_ascii(op4, name, A, form=2, is_big_mat=False,
             op4.write(msg)
     op4.write('%8i%8i%8i\n' % (ncols + 1, 1, 1))
     op4.write(' 1.0000000000000000E+00\n')
+
+def get_big_mat_nrows(nrows):
+    """
+    Parameters
+    ----------
+    nrows : int
+        the number of rows in the matrix
+
+    Returns
+    -------
+    nrows : int
+        the number of rows in the matrix
+    BIGMAT : Input-logical-default=FALSE. BIGMAT is applicable only
+        when IUNIT < 0. BIGMAT=FALSE selects the format that uses a
+        string header as described under Remark 1. But, if the
+        matrix has more than 65535 rows, then BIGMAT will
+        automatically be set to TRUE regardless of the value
+        specified.
+    """
+    if nrows < 0:  # if less than 0, big
+        is_big_mat = True
+        nrows = abs(nrows)
+    elif nrows > 0:
+        is_big_mat = False
+        if nrows > 65535:
+            is_big_mat = True
+            nrows = abs(nrows)
+    else:
+        raise RuntimeError('unknown BIGMAT.  nrows=%s' % nrows)
+    return is_big_mat, nrows
 
 def get_dtype(matrix_type, precision='default'):
     """reset the type if 'default' not selected"""

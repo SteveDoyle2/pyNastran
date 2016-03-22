@@ -246,7 +246,8 @@ class PBEAM(IntegratedLineProperty):
 
         if self.cwa or self.cwb:  # if either is non-zero
             for i, xxb, j in zip(count(), self.xxb, self.j):
-                if self.j[i] <= 0.:
+                if self.j[i] < 0.:
+                    ji = self.j[i]
                     msg = 'Warping Check Error; j[%i] must be greater than 0.0' % i
                     msg += '  cwa=%s cwb=%s\n' % (self.cwa, self.cwb)
                     msg += '  i=%s xxb=%s j=%s; j[%i]=%s\n' % (i, xxb, self.j, i, j)
