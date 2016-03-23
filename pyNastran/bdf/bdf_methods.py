@@ -338,7 +338,7 @@ class BDFMethods(BDFAttributes):
                 prop = elem.pid_ref
                 centroid = (xyz[n1] + xyz[n2] + xyz[n3] + xyz[n4]) / 4.
                 mpa = elem.pid_ref.MassPerArea()
-                area = 0.5 * norm(cross(xyz[n3]-xyz[n1], xyz[n4]-xyz[n2]))
+                area = 0.5 * norm(cross(xyz[n3] - xyz[n1], xyz[n4] - xyz[n2]))
                 m = mpa * area
             elif elem.type in ['CTRIA3', 'CTRIA6']:
                 n1, n2, n3 = elem.node_ids[:3]
@@ -405,10 +405,10 @@ class BDFMethods(BDFAttributes):
                 n1, n2, n3, n4, n5, n6, n7, n8 = elem.node_ids[:8]
                 #(A1, c1) = area_centroid(n1, n2, n3, n4)
                 centroid1 = (xyz[n1] + xyz[n2] + xyz[n3] + xyz[n4]) / 4.
-                area1 = 0.5 * norm(cross(xyz[n3]-xyz[n1], xyz[n4]-xyz[n2]))
+                area1 = 0.5 * norm(cross(xyz[n3] - xyz[n1], xyz[n4] - xyz[n2]))
                 #(A2, c2) = area_centroid(n5, n6, n7, n8)
                 centroid2 = (xyz[n5] + xyz[n6] + xyz[n7] + xyz[n8]) / 4.
-                area2 = 0.5 * norm(cross(xyz[n7]-xyz[n5], xyz[n8]-xyz[n6]))
+                area2 = 0.5 * norm(cross(xyz[n7] - xyz[n5], xyz[n8] - xyz[n6]))
 
                 volume = (area1 + area2) / 2. * norm(centroid1 - centroid2)
                 m = elem.Rho() * volume
