@@ -655,7 +655,9 @@ def create_plate_buckling_models(model, op2_filename, mode, isubcase=1,
 
 
 def write_buckling_bdfs(model, op2_filename, xyz_cid0, patches, patch_edges_array,
-                        subcase_id=1, mode='displacement', workpath='results'):
+                        subcase_id=1,
+                        eig_min=-1.0, eig_max=3., nroots=20,
+                        mode='displacement', workpath='results'):
     """
     Creates a series of buckling BDFs from a static analysis
 
@@ -687,7 +689,7 @@ def write_buckling_bdfs(model, op2_filename, xyz_cid0, patches, patch_edges_arra
 
     subcase = model.subcases[subcase_id]
 
-    case_control_lines, bulk_data_cards, spc_id, mpc_id, load_id = create_buckling_header(subcase)
+    case_control_lines, bulk_data_cards, spc_id, mpc_id, load_id = create_buckling_header(subcase, eig_min, eig_max, nroots)
 
     out_model = OP2()
     print('**** workpath', workpath)
@@ -925,9 +927,11 @@ def write_buckling_bdfs(model, op2_filename, xyz_cid0, patches, patch_edges_arra
 
 def write_buckling_bdf(model, op2_filename, nids_to_constrain,
                        bdf_filenames=None,
-                       subcase_ids=None, mode='displacement', size=8, is_double=False,
+                       subcase_ids=None,
+                       eig_min=-1.0, eig_max=1.1, nroots=100,
+                       mode='displacement', size=8, is_double=False,
                        debug=False,
-                       workpath='results'):
+                       workpath='results', base_buckling='buckling_%i.bdf'):
     """
     Creates a single buckling BDF from a static analysis
 
@@ -983,7 +987,7 @@ def write_buckling_bdf(model, op2_filename, nids_to_constrain,
     if bdf_filenames is None:
         bdf_filenames = []
         for isubcase in subcase_ids:
-            bdf_filenames.append('buckling_%i.bdf' % isubcase)
+            bdf_filenames.append(base_buckling % isubcase)
     elif isinstance(bdf_filenames, int):
         bdf_filenames = [bdf_filenames]
     elif isinstance(bdf_filenames, (list, tuple)):
@@ -1013,7 +1017,7 @@ def write_buckling_bdf(model, op2_filename, nids_to_constrain,
         subcase = case_control_deck.subcases[subcase_id]
 
         model.sol = 105
-        case_control_lines, bulk_data_cards, spc_id, mpc_id, load_id = create_buckling_header(subcase)
+        case_control_lines, bulk_data_cards, spc_id, mpc_id, load_id = create_buckling_header(subcase, eig_min, eig_max, nroots)
         if load_id in model.loads:
             del model.loads[load_id]
         if spc_id in model.spcs:
@@ -1113,11 +1117,12 @@ def write_buckling_bdf(model, op2_filename, nids_to_constrain,
             raise RuntimeError(mode)
 
         bdf_filename2 = os.path.join(workpath, bdf_filename)
+        model.log.info('writing %s'% bdf_filename2)
         model.write_bdf(bdf_filename2, size=size, is_double=is_double)
     return bdf_filenames, subcase_ids
 
 
-def create_buckling_header(subcase):
+def create_buckling_header(subcase, eig_min=0., eig_max=100., nroots=20):
     # TODO: add title, subtitle from the actual load case for cross validation
     case_control = []
     #header += 'SOL 105\n'
@@ -1166,12 +1171,9 @@ def create_buckling_header(subcase):
     bulk_data_cards.append(['PARAM', 'PRTMAXIM', 'YES'])
     bulk_data_cards.append(['PARAM', 'POST', -1])
 
-    eig1 = 0.0
-    eig2 = 100.
-    nroots = 20
     method = 42
     load_id = 55
-    bulk_data_cards.append(['EIGB', method, 'INV', eig1, eig2, nroots])
+    bulk_data_cards.append(['EIGB', method, 'INV', eig_min, eig_max, nroots])
     return case_control, bulk_data_cards, spc_id, mpc_id, load_id
 
 

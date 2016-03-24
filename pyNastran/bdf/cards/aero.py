@@ -2402,7 +2402,7 @@ class FLFACT(BaseCard):
             raise NotImplementedError(msg)
             #(a,thru,b,n,dn) = factors
             #for i in range(
-        self.factors = factors
+        self.factors = np.asarray(factors)
 
     @classmethod
     def add_card(cls, card, comment=''):
