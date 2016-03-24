@@ -673,6 +673,14 @@ class AddMethods(BDFAttributes):
         self.dresps[key] = dresp
         self._type_to_id_map[dresp.type].append(key)
 
+    def add_DVCREL(self, dvcrel):
+        key = dvcrel.oid
+        assert key not in self.dvprels, 'pid=%s old_DVCRELx=\n%snew_DVCRELx=\n%s' % (
+                    key, self.dvcrels[key], dvcrel)
+        assert key > 0
+        self.dvcrels[key] = dvcrel
+        self._type_to_id_map[dvcrel.type].append(key)
+
     def add_DVMREL(self, dvmrel):
         key = dvmrel.oid
         assert key not in self.dvmrels, 'pid=%s old_DVMRELx=\n%snew_DVMRELx=\n%s' % (

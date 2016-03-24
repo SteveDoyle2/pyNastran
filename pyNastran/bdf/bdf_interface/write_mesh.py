@@ -913,8 +913,8 @@ class WriteMesh(BDFAttributes):
         """Writes the optimization cards sorted by ID"""
         if(self.dconadds or self.dconstrs or self.desvars or self.ddvals or
            self.dresps or self.ddvals or
-           self.dvprels or self.dvmrels or self.doptprm or self.dlinks or
-           self.dequations or self.dtable is not None):
+           self.dvprels or self.dvmrels or self.dvcrels or self.doptprm or
+           self.dlinks or self.dequations or self.dtable is not None):
             msg = ['$OPTIMIZATION\n']
             for (unused_id, dconadd) in sorted(iteritems(self.dconadds)):
                 msg.append(dconadd.write_card(size, is_double))
@@ -929,6 +929,9 @@ class WriteMesh(BDFAttributes):
                 msg.append(dlink.write_card(size, is_double))
             for (unused_id, dresp) in sorted(iteritems(self.dresps)):
                 msg.append(dresp.write_card(size, is_double))
+
+            for (unused_id, dvcrel) in sorted(iteritems(self.dvcrels)):
+                msg.append(dvcrel.write_card(size, is_double))
             for (unused_id, dvmrel) in sorted(iteritems(self.dvmrels)):
                 msg.append(dvmrel.write_card(size, is_double))
             for (unused_id, dvprel) in sorted(iteritems(self.dvprels)):

@@ -4,7 +4,6 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from six import iteritems, string_types
 from six.moves import zip, range
 import numpy as np
-from numpy import searchsorted, array
 
 from pyNastran.utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
@@ -750,10 +749,10 @@ class DRESP1(OptConstraint):
             assert comp < 7, comp
             case = op2_model.displacements[subcase_id]
             nids = case.node_gridtype[:, 0]
-            nidsi = array(
+            nidsi = np.array(
                 [node if isinstance(node, integer_types) else node.nid
                  for node in self.atti], dtype='int32')
-            inid = searchsorted(nids, nidsi)[0]
+            inid = np.searchsorted(nids, nidsi)[0]
             itime = 0 #  TODO:  ???
             #print('atti = ', self.atti)
             atti = self.atti[0]
@@ -1324,6 +1323,176 @@ class DSCREEN(OptConstraint):
         return self.comment + print_card_16(card)
 
 
+class DVCREL1(OptConstraint):  # similar to DVMREL1
+    type = 'DVCREL1'
+
+    def __init__(self, oid, Type, eid, cp_name, cp_min, cp_max, c0, dvids, coeffs,
+                 validate=False, comment=''):
+        """
+        +---------+--------+--------+--------+-----------+-------+--------+-----+---+
+        |   1     |    2   |   3    |    4   |     5     |   6   |   7    |  8  | 9 |
+        +=========+========+========+========+===========+=======+========+=====+===+
+        | DVCREL1 |   ID   |  TYPE  |  EID   |   CPNAME  | CPMIN |  CPMAX |  C0 |   |
+        +---------+--------+--------+--------+-----------+-------+--------+-----+---+
+        |         | DVID1  | COEF1  | DVID2  |   COEF2   | DVID3 | -etc.- |     |   |
+        +---------+--------+--------+--------+-----------+-------+--------+-----+---+
+
+        +---------+--------+--------+--------+-------+-----+------+
+        | DVCREL1 | 200000 | CQUAD4 | 1      | ZOFFS |     |  1.0 |
+        +---------+--------+--------+--------+-------+-----+------+
+        |         | 200000 |   1.0  |        |       |     |      |
+        +---------+--------+--------+--------+-------+-----+------+
+        """
+        if comment:
+            self._comment = comment
+        self.oid = oid
+
+        # element type (e.g. CQUAD4)
+        self.Type = Type
+
+        # element id
+        self.eid = eid
+
+        # the connectivity property (X1, X2, X3, ZOFFS, etc.)
+        self.cp_name = cp_name
+
+        # min value
+        self.cp_min = cp_min
+
+        # max value
+        self.cp_max = cp_max
+
+        # offset coefficient
+        self.c0 = c0
+
+        # DESVAR id
+        self.dvids = dvids
+
+        # scale factor for DESVAR
+        self.coeffs = coeffs
+
+        assert len(coeffs) > 0, 'len(coeffs)=%s' % len(coeffs)
+        assert len(coeffs) == len(dvids), 'len(coeffs)=%s len(dvids)=%s' % (len(coeffs), len(dvids))
+        if validate:
+            msg = 'DVCREL1: Type=%r cp_name=%r is invalid' % (Type, cp_name)
+            if Type in ['CQUAD4', 'CTRIA3']:
+                assert cp_name in ['ZOFFS'], msg
+            elif Type in ['CONM2']:
+                assert cp_name in ['X1', 'X2', 'X3'], msg
+            elif Type in ['CBAR']:
+                assert cp_name in [], msg
+            elif Type in ['CBEAM']:
+                assert cp_name in [], msg
+            elif Type in ['CELAS1']:
+                assert cp_name in [], msg
+            elif Type in ['CBUSH']:
+                assert cp_name in [], msg
+            else:
+                raise NotImplementedError(msg)
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        oid = integer(card, 1, 'oid')
+        Type = string(card, 2, 'Type')
+        eid = integer(card, 3, 'eid')
+        cp_name = integer_or_string(card, 4, 'cp_name')
+
+        cp_min = double_or_blank(card, 5, 'cp_min', None)
+        cp_max = double_or_blank(card, 6, 'cp_max', 1e20)
+        c0 = double_or_blank(card, 7, 'c0', 0.0)
+
+        dvids = []
+        coeffs = []
+        end_fields = [interpret_value(field) for field in card[9:]]
+
+        nfields = len(end_fields) - 1
+        if nfields % 2 == 1:
+            end_fields.append(None)
+            nfields += 1
+        i = 0
+        for i in range(0, nfields, 2):
+            dvids.append(end_fields[i])
+            coeffs.append(end_fields[i + 1])
+        if nfields % 2 == 1:
+            print(card)
+            print("dvids = %s" % (dvids))
+            print("coeffs = %s" % (coeffs))
+            raise RuntimeError('invalid DVCREL1...')
+        return DVCREL1(oid, Type, eid, cp_name, cp_min, cp_max, c0, dvids, coeffs,
+                       comment=comment)
+
+    def _verify(self, xref):
+        """
+        Verifies all methods for this object work
+
+        Parameters
+        ----------
+        xref : bool
+            has this model been cross referenced
+        """
+        pass
+
+    def OptID(self):
+        return self.oid
+
+    def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by DVCREL1 name=%r' % self.type
+        self.eid = model.Element(self.eid, msg=msg)
+        self.eid_ref = self.eid
+        self.dvids = [model.Desvar(dvid, msg) for dvid in self.dvids]
+
+    def uncross_reference(self):
+        self.eid = self.Eid()
+        del self.eid_ref
+
+    def calculate(self, op2_model, subcase_id):
+        raise NotImplementedError('\n' + str(self))
+
+    def Eid(self):
+        if isinstance(self.eid, integer_types):
+            return self.eid
+        return self.eid_ref.eid
+
+    @property
+    def desvar_ids(self):
+        if isinstance(self.dvids[0], int):
+            return self.dvids
+        return [desvar.oid for desvar in self.dvids]
+
+    def raw_fields(self):
+        list_fields = ['DVCREL1', self.oid, self.Type, self.Eid(),
+                       self.cp_name, self.cp_min, self.cp_max, self.c0, None]
+        for (dvid, coeff) in zip(self.desvar_ids, self.coeffs):
+            list_fields.append(dvid)
+            list_fields.append(coeff)
+        return list_fields
+
+    def repr_fields(self):
+        cp_max = set_blank_if_default(self.cp_max, 1e20)
+        c0 = set_blank_if_default(self.c0, 0.)
+        list_fields = ['DVCREL1', self.oid, self.Type, self.Eid(),
+                       self.cp_name, self.cp_min, cp_max, c0, None]
+        for (dvid, coeff) in zip(self.desvar_ids, self.coeffs):
+            list_fields.append(dvid)
+            list_fields.append(coeff)
+        return list_fields
+
+    def write_card(self, size=8, is_double=False):
+        card = self.repr_fields()
+        if size == 8:
+            return self.comment + print_card_8(card)
+        else:
+            return self.comment + print_card_16(card)
+
+
 class DVMREL1(OptConstraint):  # similar to DVPREL1
     type = 'DVMREL1'
 
@@ -1444,7 +1613,7 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
     type = 'DVPREL1'
 
     def __init__(self, oid, Type, pid, pNameFid, pMin, pMax, c0, dvids, coeffs,
-                 comment=''):
+                 validate=False, comment=''):
         """
         +---------+--------+--------+--------+-----------+-------+--------+-----+---+
         |   1     |    2   |   3    |    4   |     5     |   6   |   7    |  8  | 9 |
@@ -1491,6 +1660,28 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
         assert len(coeffs) > 0, 'len(coeffs)=%s' % len(coeffs)
         assert len(coeffs) == len(dvids), 'len(coeffs)=%s len(dvids)=%s' % (len(coeffs), len(dvids))
 
+        if validate:
+            msg = 'DVCREL1: Type=%r pNameFid=%r is invalid' % (Type, pNameFid)
+            if Type in ['PSHELL']:
+                #if cp_name in '12I/T**3':
+                    #cp_name =
+                assert pNameFid in ['T'], msg
+            elif Type in ['PBAR']:
+                #if cp_name == 6:
+                    #cp_name =
+                assert pNameFid in [6], msg
+            elif Type in ['PBEAM']:
+                assert pNameFid in [], msg
+            elif Type in ['PBEAML']:
+                assert pNameFid in ['DIM1', 'DIM1(A)', 'DIM(B)'], msg
+            elif Type in ['PELAS']:
+                assert pNameFid in [], msg
+            elif Type in ['PBUSH']:
+                assert pNameFid in [], msg
+            elif Type in ['PBEND']:
+                raise RuntimeError('Nastran does not support the PBEND')
+            else:
+                raise NotImplementedError(msg)
     @classmethod
     def add_card(cls, card, comment=''):
         oid = integer(card, 1, 'oid')
@@ -1550,7 +1741,8 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
         msg = ', which is required by DVPREL1 name=%r' % self.type
         self.pid = model.Property(self.pid, msg=msg)
         self.pid_ref = self.pid
-        self.dvids = [model.desvars[dvid] for dvid in self.dvids]
+        self.dvids = [model.Desvar(dvid, msg) for dvid in self.dvids]
+
 
     def uncross_reference(self):
         self.pid = self.Pid()
