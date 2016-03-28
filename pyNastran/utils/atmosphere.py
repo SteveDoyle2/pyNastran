@@ -133,7 +133,7 @@ def get_alt_for_eas_mach(equivalent_airspeed, mach, SI=False):
         alt_final *= 0.3048  # feet to meters
     return alt_final
 
-def get_alt_for_q_mach(q, mach, SI=False):
+def get_alt_for_mach_q(mach, q, tol=5., SI=False):
     """
     Gets the altitude associated with a equivalent airspeed.
 
@@ -143,6 +143,8 @@ def get_alt_for_q_mach(q, mach, SI=False):
         the dynamic pressure lb/ft^2 (SI=Pa)
     mach : float
         the mach to hold constant
+    tol : float; default=5.
+        tolerance in feet/meters
     SI : bool
         should SI units be used; default=False
 
@@ -152,10 +154,10 @@ def get_alt_for_q_mach(q, mach, SI=False):
         the altitude in ft (SI=m)
     """
     pressure = 2 * q / (1.4 * mach ** 2) # gamma = 1.4
-    alt = get_alt_for_pressure(pressure, SI=SI)
+    alt = get_alt_for_pressure(pressure, tol=tol, SI=SI)
     return alt
 
-def get_alt_for_pressure(pressure, SI=False):
+def get_alt_for_pressure(pressure, tol=5., SI=False):
     """
     Gets the altitude associated with a equivalent airspeed.
 
@@ -163,6 +165,8 @@ def get_alt_for_pressure(pressure, SI=False):
     ----------
     pressure : float
         the pressure lb/ft^2 (SI=Pa)
+    tol : float; default=5.
+        tolerance in feet/meters
     SI : bool
         should SI units be used; default=False
 
@@ -173,11 +177,11 @@ def get_alt_for_pressure(pressure, SI=False):
     """
     if SI:
         pressure /= 47.880259  # Pa to psf
+        tol /= 0.3048  # m to ft
     dalt = 500.
     alt_old = 0.
     alt_final = 5000.
     n = 0
-    tol = 5. # ft
 
     # Newton's method
     while abs(alt_final - alt_old) > tol and n < 20:
@@ -187,7 +191,7 @@ def get_alt_for_pressure(pressure, SI=False):
         press1 = atm_pressure(alt1)
         press2 = atm_pressure(alt2)
         m = dalt / (press2 - press1)
-        alt_final = m * (pressure - p1) + alt1
+        alt_final = m * (pressure - press1) + alt1
         n += 1
 
     if n > 18:
@@ -664,7 +668,7 @@ def atm_UnitReynoldsNumber2(alt, mach, SI=False, debug=False):
         return ReL / .3048  # convert ReL in 1/ft to 1/m
     return ReL
 
-def atm_UnitReynoldsNumber(alt, mach, SI=False, debug=False):
+def atm_unit_reynolds_number(alt, mach, SI=False, debug=False):
     r"""
     Returns the Reynolds Number per unit length
 
