@@ -1450,7 +1450,7 @@ class DVCREL1(OptConstraint):  # similar to DVMREL1
             elif Type in ['CBAR']:
                 assert cp_name in ['X1', 'X2', 'X3'], msg
             elif Type in ['CBEAM']:
-                assert cp_name in [], msg
+                assert cp_name in ['X1', 'X2', 'X3'], msg
             elif Type in ['CELAS1']:
                 assert cp_name in [], msg
             elif Type in ['CBUSH']:

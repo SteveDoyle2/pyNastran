@@ -27,7 +27,8 @@ from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank,
-    string_or_blank, blank, fields, components)
+    string_or_blank, blank, fields,
+)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 
@@ -256,17 +257,13 @@ class FREQ(BaseCard):
         if comment:
             self._comment = comment
         self.sid = sid
-        self.freqs = freqs
-        self.clean_freqs()
+        self.freqs = np.unique(freqs)
 
     @classmethod
     def add_card(cls, card, comment=''):
         sid = integer(card, 1, 'sid')
         freqs = fields(double, card, 'freq', i=2, j=len(card))
         return FREQ(sid, freqs, comment=comment)
-
-    def clean_freqs(self):
-        self.freqs = unique(self.freqs)
 
     def get_freqs(self):
         return self.freqs
@@ -285,7 +282,6 @@ class FREQ(BaseCard):
         #print("self.freqs = ",self.freqs)
         #print("freqs = ",freqs)
         self.freqs = unique(hstack([self.freqs, freqs]))
-        self.clean_freqs()
 
     def add_frequency_object(self, freq):
         """
@@ -330,10 +326,10 @@ class FREQ1(FREQ):
         self.df = df
         self.ndf = ndf
 
-        self.freqs = []
+        freqs = []
         for i in range(ndf):
-            self.freqs.append(f1 + i * df)
-        self.clean_freqs()
+            freqs.append(f1 + i * df)
+        self.freqs = unique(freqs)
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -367,19 +363,19 @@ class FREQ2(FREQ):
     """
     type = 'FREQ2'
 
-    #def __init__(self, sid, f1, f2, ndf, comment=''):
-        #if comment:
-            #self._comment = comment
-        #self.sid = sid
-        #self.f1 = f1
-        #self.f2 = f2
-        #self.ndf = ndf
+    def __init__(self, sid, f1, f2, ndf=1, comment=''):
+        if comment:
+            self._comment = comment
+        self.sid = sid
+        self.f1 = f1
+        self.f2 = f2
+        self.ndf = ndf
 
-        #d = 1. / ndf * log(f2 / f1)
-        #self.freqs = []
-        #for i in range(ndf):
-            #self.freqs.append(f1 * exp(i * d))  # 0 based index
-        #self.clean_freqs()
+        d = 1. / ndf * log(f2 / f1)
+        freqs = []
+        for i in range(ndf):
+            freqs.append(f1 * exp(i * d))  # 0 based index
+        self.freqs = np.uniqe(freqs)
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -388,14 +384,8 @@ class FREQ2(FREQ):
         f2 = double(card, 3, 'f2')
         ndf = integer_or_blank(card, 4, 'nf', 1)
         assert len(card) <= 5, 'len(FREQ2 card) = %i' % len(card)
-
-        d = 1. / ndf * log(f2 / f1)
-        freqs = []
-        for i in range(ndf):
-            freqs.append(f1 * exp(i * d))  # 0 based index
-        freqs = np.unique(freqs)
-
-        return FREQ(sid, freqs, comment=comment)
+        return FREQ2(sid, f1, f2, ndf, comment=comment)
+        #return FREQ(sid, freqs, comment=comment)
 
 
 #class FREQ3(FREQ):
@@ -676,7 +666,7 @@ class TF(BaseCard):
         a = []
         for irow in range(nrows):
             j = irow * 8 + 9
-            ifield = (irow + 1)
+            #ifield = irow + 1
             grid1 = integer(card, j, 'grid_%i' % (irow + 1))
             component1 = components(card, j + 1, 'components_%i' % (irow + 1))
             a0 = double_or_blank(card, j + 2, 'a0_%i' % (irow + 1), 0.)
