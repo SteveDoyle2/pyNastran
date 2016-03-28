@@ -7,7 +7,8 @@ from pyNastran.utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.cards.base_card import (BaseCard, expand_thru_by,
-                                           collapse_thru_by, _node_ids)
+                                           _node_ids)
+from pyNastran.bdf.cards.collpase_card import collapse_thru_by
 from pyNastran.bdf.bdf_interface.assign_type import (
     fields, integer, double, integer_or_blank, double_or_blank,
     integer_or_string, string, blank)

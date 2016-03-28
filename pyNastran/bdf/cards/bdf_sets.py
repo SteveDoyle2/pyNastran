@@ -40,8 +40,9 @@ from six.moves import zip, range
 
 from pyNastran.utils import integer_types
 from pyNastran.bdf.cards.base_card import (
-    BaseCard, _node_ids, expand_thru, collapse_thru, #collapse_thru_packs
+    BaseCard, _node_ids, expand_thru
 )
+from pyNastran.bdf.cards.collpase_card import collapse_thru #collapse_thru_packs
 from pyNastran.bdf.field_writer_8 import print_card_8 #, print_int_card_blocks
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, integer_or_string,

@@ -20,6 +20,8 @@ from numpy import unique, cross, dot, array
 
 import pyNastran
 from pyNastran.bdf.errors import CardParseSyntaxError
+from pyNastran.bdf.cards.collpase_card import collapse_colon_packs
+
 
 is_windows = 'nt' in os.name
 #is_linux = 'posix' in os.name
@@ -535,6 +537,21 @@ def parse_patran_syntax(node_sets, pound=None):
             nodes.append(int(snode))
     return unique(nodes)
 
+def write_patran_syntax_dict(dict_sets):
+    msg = ''
+    for key, dict_set in iteritems(dict_sets):
+        singles, doubles = collapse_colon_packs(dict_set)
+        double_list = ['%s:%s ' % (double[0], double[2])
+                       if len(double) == 3 else '**%s** ' % str(double)
+                       for double in doubles]
+        double_str = ''.join(double_list)
+        msg += '%s %s %s' % (key,
+                             ' '.join(str(single) for single in singles),
+                             double_str,
+                            )
+    assert '%' not in msg, msg
+    return msg
+
 
 def parse_patran_syntax_dict(node_sets, pound_dict=None):
     """
@@ -798,7 +815,7 @@ def PositionWRT(xyz, cid, cid_new, model, is_cid_int=True):
         # transform xyz_1 to xyz_2
         p2_local = dot(
             dot(p1_local, cp_ref.beta()) + cp_ref.origin - coord_to_ref.origin,
-                coord_to_ref.beta().T)
+            coord_to_ref.beta().T)
 
         # convert xyz_2 to R-Theta-Z_2
         xyz_local = coord_to_ref.xyz_to_coord(p2_local)
