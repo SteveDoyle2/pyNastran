@@ -10,9 +10,9 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from six import iteritems
 
 from pyNastran.bdf.cards.base_card import BaseCard, expand_thru_by, collapse_thru_by
-from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_blank,
-    integer_string_or_blank, double_or_blank, integer_double_or_blank,
-    string, string_or_blank)
+from pyNastran.bdf.bdf_interface.assign_type import (
+    integer, integer_or_blank, integer_string_or_blank, double_or_blank,
+    integer_double_or_blank, string, string_or_blank)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 
@@ -50,26 +50,28 @@ class BSURF(BaseCard):
     +-------+------+------+-------+-------+--------+------+------+------+
     """
     type = 'BSURF'
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self, sid, eids, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            #: Set identification number. (Unique Integer > 0)
-            self.sid = integer(card, 1, 'sid')
-            #: Number (float)
-            nfields = card.nfields
-            i = 2
-            eid_data = []
-            while i < nfields:
-                d = integer_string_or_blank(card, i, 'field_%s' % i)
-                if d is not None:
-                    eid_data.append(d)
-                i += 1
-            #: Element identification numbers of shell elements. (Integer > 0)
-            self.eids = expand_thru_by(eid_data)
-        else:
-            msg = '%s has not implemented data parsing' % self.type
-            raise NotImplementedError(msg)
+        #: Set identification number. (Unique Integer > 0)
+        self.sid = sid
+        #: Element identification numbers of shell elements. (Integer > 0)
+        self.eids = eids
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        sid = integer(card, 1, 'sid')
+        #: Number (float)
+        nfields = card.nfields
+        i = 2
+        eid_data = []
+        while i < nfields:
+            d = integer_string_or_blank(card, i, 'field_%s' % i)
+            if d is not None:
+                eid_data.append(d)
+            i += 1
+        eids = expand_thru_by(eid_data)
+        return BSURF(sid, eids, comment=comment)
 
     def raw_fields(self):
         fields = ['BSURF', self.sid]
@@ -125,39 +127,45 @@ class BSURFS(BaseCard):
        BCPROP entries.
     """
     type = 'BSURFS'
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self, id, eids, g1s, g2s, g3s, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            #: Identification number of a contact region. See Remarks 2 and 3.
-            #: (Integer > 0)
-            self.id = integer(card, 1, 'id')
+        #: Identification number of a contact region. See Remarks 2 and 3.
+        #: (Integer > 0)
+        self.id = id
 
-            #: Element identification numbers of solid elements. (Integer > 0)
-            self.eids = []
-            #: Identification numbers of 3 corner grid points on the face (triangular
-            #: or quadrilateral) of the solid element. (Integer > 0)
-            self.g1s = []
-            self.g2s = []
-            self.g3s = []
+        #: Element identification numbers of solid elements. (Integer > 0)
+        self.eids = eids
 
-            n = card.nfields - 5
-            i = 0
-            j = 0
-            while i < n:
-                eid = integer(card, 5 + i, 'eid%s' % j)
-                g1 = integer(card, 5 + i + 1, 'g3_%s' % j)
-                g2 = integer(card, 5 + i + 2, 'g2_%s' % j)
-                g3 = integer(card, 5 + i + 3, 'g1_%s' % j)
-                j += 1
-                i += 4
-                self.eids.append(eid)
-                self.g1s.append(g1)
-                self.g2s.append(g2)
-                self.g3s.append(g3)
-        else:
-            msg = '%s has not implemented data parsing' % self.type
-            raise NotImplementedError(msg)
+        #: Identification numbers of 3 corner grid points on the face (triangular
+        #: or quadrilateral) of the solid element. (Integer > 0)
+        self.g1s = g1s
+        self.g2s = g2s
+        self.g3s = g3s
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        id = integer(card, 1, 'id')
+        eids = []
+        g1s = []
+        g2s = []
+        g3s = []
+
+        n = card.nfields - 5
+        i = 0
+        j = 0
+        while i < n:
+            eid = integer(card, 5 + i, 'eid%s' % j)
+            g1 = integer(card, 5 + i + 1, 'g3_%s' % j)
+            g2 = integer(card, 5 + i + 2, 'g2_%s' % j)
+            g3 = integer(card, 5 + i + 3, 'g1_%s' % j)
+            j += 1
+            i += 4
+            eids.append(eid)
+            g1s.append(g1)
+            g2s.append(g2)
+            g3s.append(g3)
+        return BSURFS(id, eids, g1s, g2s, g3s, comment=comment)
 
     def raw_fields(self):
         fields = ['BSURFS', self.id, None, None, None]
@@ -186,47 +194,54 @@ class BCTSET(BaseCard):
     +--------+-------+------+-------+-------+-------+-------+-----+------+
     """
     type = 'BCTSET'
-    def __init__(self, card=None, data=None, comment='', sol=101):
+    def __init__(self, csid, sids, tids, frictions, min_distances, max_distances, comment='', sol=101):
         if comment:
             self._comment = comment
-        if card:
-            #: CSID Contact set identification number. (Integer > 0)
-            self.csid = integer(card, 1, 'csid')
+        #: CSID Contact set identification number. (Integer > 0)
+        self.csid = csid
+        #: SIDi Source region (contactor) identification number for contact pair i.
+        #: (Integer > 0)
+        self.sids = sids
 
-            #: SIDi Source region (contactor) identification number for contact pair i.
-            #: (Integer > 0)
-            self.sids = []
+        #: TIDi Target region identification number for contact pair i. (Integer > 0)
+        self.tids = tids
 
-            #: TIDi Target region identification number for contact pair i. (Integer > 0)
-            self.tids = []
+        #: FRICi Static coefficient of friction for contact pair i. (Real; Default = 0.0)
+        self.frictions = frictions
 
-            #: FRICi Static coefficient of friction for contact pair i. (Real; Default = 0.0)
-            self.frictions = []
+        #: MINDi Minimum search distance for contact. (Real) (Sol 101 only)
+        self.min_distances = min_distances
 
-            #: MINDi Minimum search distance for contact. (Real) (Sol 101 only)
-            self.min_distances = []
+        #: MAXDi Maximum search distance for contact. (Real) (Sol 101 only)
+        self.max_distances = max_distances
 
-            #: MAXDi Maximum search distance for contact. (Real) (Sol 101 only)
-            self.max_distances = []
+    @classmethod
+    def add_card(cls, card, comment='', sol=101):
+        csid = integer(card, 1, 'csid')
+        sids = []
+        tids = []
+        frictions = []
+        min_distances = []
+        max_distances = []
 
-            nfields = card.nfields
-            i = 2
-            j = 1
-            while i < nfields:
-                self.sids.append(integer(card, i, 'sid%s' % j))
-                self.tids.append(integer(card, i + 1, 'tid%s' % j))
-                self.frictions.append(double_or_blank(card, i + 2, 'fric%s' % j, 0.0))
-                if sol == 101:
-                    self.min_distances.append(double_or_blank(card, i + 3, 'mind%s' % j, 0.0))
-                    self.max_distances.append(double_or_blank(card, i + 4, 'maxd%s' % j, 0.0))
-                else:
-                    self.min_distances.append(None)
-                    self.max_distances.append(None)
-                i += 8
-                j += 1
-        else:
-            msg = '%s has not implemented data parsing' % self.type
-            raise NotImplementedError(msg)
+        nfields = card.nfields
+        i = 2
+        j = 1
+        while i < nfields:
+            sids.append(integer(card, i, 'sid%s' % j))
+            tids.append(integer(card, i + 1, 'tid%s' % j))
+            frictions.append(double_or_blank(card, i + 2, 'fric%s' % j, 0.0))
+            if sol == 101:
+                min_distances.append(double_or_blank(card, i + 3, 'mind%s' % j, 0.0))
+                max_distances.append(double_or_blank(card, i + 4, 'maxd%s' % j, 0.0))
+            else:
+                min_distances.append(None)
+                max_distances.append(None)
+            i += 8
+            j += 1
+        return BCTSET(csid, sids, tids, frictions, min_distances,
+                      max_distances, comment=comment,
+                      sol=sol)
 
     def raw_fields(self):
         fields = ['BCTSET', self.csid]
@@ -251,34 +266,40 @@ class BCRPARA(BaseCard):
     +---------+------+------+--------+------+-----+---+---+---+----+
     """
     type = 'BCRPARA'
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self, crid, surf, offset, Type='FLEX', mgp=0, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            #: CRID Contact region ID. (Integer > 0)
-            self.crid = integer(card, 1, 'crid')
 
-            #: SURF Indicates the contact side. See Remark 1. (Character = "TOP" or
-            #: "BOT"; Default = "TOP")
-            self.surf = string_or_blank(card, 2, 'surf', 'TOP')
+        #: CRID Contact region ID. (Integer > 0)
+        self.crid = crid
 
-            #: Offset distance for the contact region. See Remark 2. (Real > 0.0,
-            #: Default =OFFSET value in BCTPARA entry)
-            self.offset = double_or_blank(card, 3, 'offset')
+        #: SURF Indicates the contact side. See Remark 1. (Character = "TOP" or
+        #: "BOT"; Default = "TOP")
+        self.surf = surf
 
-            #: Indicates whether a contact region is a rigid surface if it is used as a
-            #: target region. See Remarks 3 and 4. (Character = "RIGID" or "FLEX",
-            #: Default = "FLEX"). This is not supported for SOL 101.
-            self.Type = string_or_blank(card, 4, 'type', 'FLEX')
+        #: Offset distance for the contact region. See Remark 2. (Real > 0.0,
+        #: Default =OFFSET value in BCTPARA entry)
+        self.offset = offset
 
-            #: Master grid point for a target contact region with TYPE=RIGID or
-            #: when the rigid-target algorithm is used. The master grid point may be
-            #: used to control the motion of a rigid surface. (Integer > 0,; Default = 0)
-            #: This is not supported for SOL 101.
-            self.mgp = integer_or_blank(card, 5, 'mpg', 0)
-        else:
-            msg = '%s has not implemented data parsing' % self.type
-            raise NotImplementedError(msg)
+        #: Indicates whether a contact region is a rigid surface if it is used as a
+        #: target region. See Remarks 3 and 4. (Character = "RIGID" or "FLEX",
+        #: Default = "FLEX"). This is not supported for SOL 101.
+        self.Type = Type
+
+        #: Master grid point for a target contact region with TYPE=RIGID or
+        #: when the rigid-target algorithm is used. The master grid point may be
+        #: used to control the motion of a rigid surface. (Integer > 0,; Default = 0)
+        #: This is not supported for SOL 101.
+        self.mgp = mgp
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        crid = integer(card, 1, 'crid')
+        surf = string_or_blank(card, 2, 'surf', 'TOP')
+        offset = double_or_blank(card, 3, 'offset')
+        Type = string_or_blank(card, 4, 'type', 'FLEX')
+        mgp = integer_or_blank(card, 5, 'mpg', 0)
+        return BCRPARA(crid, surf, offset, Type=Type, mgp=mgp, comment=comment)
 
     def raw_fields(self):
         fields = ['BCRPARA', self.crid, self.surf, self.offset, self.Type, self.mgp]
@@ -302,71 +323,74 @@ class BCTPARA(BaseCard):
     +---------+--------+--------+--------+--------+--------+--------+--------+----+
     """
     type = 'BCTPARA'
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self, csid, params, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            #: Contact set ID. Parameters defined in this command apply to
-            #: contact set CSID defined by a BCTSET entry. (Integer > 0)
-            self.csid = integer(card, 1, 'csid')
-            i = 2
-            j = 1
-            self.params = {}
-            while i < card.nfields:
-                param = string(card, i, 'param%s' % j)
-                i += 1
-                if param == 'TYPE':
-                    value = integer_or_blank(card, i, 'value%s' % j, 0)
-                    assert value in [0, 1, 2], 'TYPE must be [0, 1, 2]; TYPE=%r' % value
-                elif param == 'NSIDE':
-                    value = integer_or_blank(card, i, 'value%s' % j, 1)
-                    assert value in [1, 2], 'NSIDE must be [1, 2]; NSIDE=%r' % value
-                elif param == 'TBIRTH':
-                    value = double_or_blank(card, i, 'value%s' % j, 0.0)
-                elif param == 'TDEATH':
-                    value = double_or_blank(card, i, 'value%s' % j, 0.0)
-                elif param == 'INIPENE':
-                    value = integer_or_blank(card, i, 'value%s' % j, 0)
-                    assert value in [0, 1, 2, 3], 'INIPENE must be [0, 1, 2]; INIPENE=%r' % value
-                elif param == 'PDEPTH':
-                    value = double_or_blank(card, i, 'value%s' % j, 0.0)
-                elif param == 'SEGNORM':
-                    value = integer_or_blank(card, i, 'value%s' % j, 0)
-                    assert value in [-1, 0, 1], 'SEGNORM must be [-1, 0, 1]; SEGNORM=%r' % value
-                elif param == 'OFFTYPE':
-                    value = integer_or_blank(card, i, 'value%s' % j, 0)
-                    assert value in [0, 1, 2], 'OFFTYPE must be [0, 1, 2]; OFFTYPE=%r' % value
-                elif param == 'OFFSET':
-                    value = double_or_blank(card, i, 'value%s' % j, 0.0)
-                elif param == 'TZPENE':
-                    value = double_or_blank(card, i, 'value%s' % j, 0.0)
 
-                elif param == 'CSTIFF':
-                    value = integer_or_blank(card, i, 'value%s' % j, 0)
-                    assert value in [0, 1], 'CSTIFF must be [0, 1]; CSTIFF=%r' % value
-                elif param == 'TIED':
-                    value = integer_or_blank(card, i, 'value%s' % j, 0)
-                    assert value in [0, 1], 'TIED must be [0, 1]; TIED=%r' % value
-                elif param == 'TIEDTOL':
-                    value = double_or_blank(card, i, 'value%s' % j, 0.0)
-                elif param == 'EXTFAC':
-                    value = double_or_blank(card, i, 'value%s' % j, 0.001)
-                    assert 1.0E-6 <= value <= 0.1, 'EXTFAC must be 1.0E-6 < EXTFAC < 0.1; EXTFAC=%r' % value
-                else:
-                    # FRICMOD, FPARA1/2/3/4/5, EPSN, EPST, CFACTOR1, PENETOL
-                    # NCMOD, TCMOD, RFORCE, LFORCE, RTPCHECK, RTPMAX, XTYPE
-                    # ...
-                    value = integer_double_or_blank(card, i, 'value%s' % j)
-                    assert value is not None, '%s%i must not be None' % (param, j)
+        #: Contact set ID. Parameters defined in this command apply to
+        #: contact set CSID defined by a BCTSET entry. (Integer > 0)
+        self.csid = csid
+        self.params = params
 
-                self.params[param] = value
+    @classmethod
+    def add_card(cls, card, comment=''):
+        csid = integer(card, 1, 'csid')
+        i = 2
+        j = 1
+        params = {}
+        while i < card.nfields:
+            param = string(card, i, 'param%s' % j)
+            i += 1
+            if param == 'TYPE':
+                value = integer_or_blank(card, i, 'value%s' % j, 0)
+                assert value in [0, 1, 2], 'TYPE must be [0, 1, 2]; TYPE=%r' % value
+            elif param == 'NSIDE':
+                value = integer_or_blank(card, i, 'value%s' % j, 1)
+                assert value in [1, 2], 'NSIDE must be [1, 2]; NSIDE=%r' % value
+            elif param == 'TBIRTH':
+                value = double_or_blank(card, i, 'value%s' % j, 0.0)
+            elif param == 'TDEATH':
+                value = double_or_blank(card, i, 'value%s' % j, 0.0)
+            elif param == 'INIPENE':
+                value = integer_or_blank(card, i, 'value%s' % j, 0)
+                assert value in [0, 1, 2, 3], 'INIPENE must be [0, 1, 2]; INIPENE=%r' % value
+            elif param == 'PDEPTH':
+                value = double_or_blank(card, i, 'value%s' % j, 0.0)
+            elif param == 'SEGNORM':
+                value = integer_or_blank(card, i, 'value%s' % j, 0)
+                assert value in [-1, 0, 1], 'SEGNORM must be [-1, 0, 1]; SEGNORM=%r' % value
+            elif param == 'OFFTYPE':
+                value = integer_or_blank(card, i, 'value%s' % j, 0)
+                assert value in [0, 1, 2], 'OFFTYPE must be [0, 1, 2]; OFFTYPE=%r' % value
+            elif param == 'OFFSET':
+                value = double_or_blank(card, i, 'value%s' % j, 0.0)
+            elif param == 'TZPENE':
+                value = double_or_blank(card, i, 'value%s' % j, 0.0)
+
+            elif param == 'CSTIFF':
+                value = integer_or_blank(card, i, 'value%s' % j, 0)
+                assert value in [0, 1], 'CSTIFF must be [0, 1]; CSTIFF=%r' % value
+            elif param == 'TIED':
+                value = integer_or_blank(card, i, 'value%s' % j, 0)
+                assert value in [0, 1], 'TIED must be [0, 1]; TIED=%r' % value
+            elif param == 'TIEDTOL':
+                value = double_or_blank(card, i, 'value%s' % j, 0.0)
+            elif param == 'EXTFAC':
+                value = double_or_blank(card, i, 'value%s' % j, 0.001)
+                assert 1.0E-6 <= value <= 0.1, 'EXTFAC must be 1.0E-6 < EXTFAC < 0.1; EXTFAC=%r' % value
+            else:
+                # FRICMOD, FPARA1/2/3/4/5, EPSN, EPST, CFACTOR1, PENETOL
+                # NCMOD, TCMOD, RFORCE, LFORCE, RTPCHECK, RTPMAX, XTYPE
+                # ...
+                value = integer_double_or_blank(card, i, 'value%s' % j)
+                assert value is not None, '%s%i must not be None' % (param, j)
+
+            params[param] = value
+            i += 1
+            j += 1
+            if j == 4:
                 i += 1
-                j += 1
-                if j == 4:
-                    i += 1
-        else:
-            msg = '%s has not implemented data parsing' % self.type
-            raise NotImplementedError(msg)
+        return BCTPARA(csid, params, comment=comment)
 
     def raw_fields(self):
         fields = ['BCTPARA', self.csid]
@@ -400,27 +424,29 @@ class BCTADD(BaseCard):
        BCTADD entry.
     """
     type = 'BCTADD'
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self, csid, S, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            #: Contact set identification number. (Integer > 0)
-            self.csid = integer(card, 1, 'csid')
+        #: Contact set identification number. (Integer > 0)
+        self.csid = csid
 
-            #: Identification numbers of contact sets defined via BCTSET entries.
-            #: (Integer > 0)
-            self.S = []
+        #: Identification numbers of contact sets defined via BCTSET entries.
+        #: (Integer > 0)
+        self.S = S
 
-            i = 1
-            j = 1
-            while i < card.nfields:
-                s = integer(card, i, 'S%i' % j)
-                self.S.append(s)
-                i += 1
-                j += 1
-        else:
-            msg = '%s has not implemented data parsing' % self.type
-            raise NotImplementedError(msg)
+    @classmethod
+    def add_card(cls, card, comment=''):
+        csid = integer(card, 1, 'csid')
+        S = []
+
+        i = 1
+        j = 1
+        while i < card.nfields:
+            s = integer(card, i, 'S%i' % j)
+            S.append(s)
+            i += 1
+            j += 1
+        return BCTADD(csid, S, comment=comment)
 
     def raw_fields(self):
         fields = ['BCTADD'] + self.S

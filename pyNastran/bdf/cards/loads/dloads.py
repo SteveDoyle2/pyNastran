@@ -10,7 +10,6 @@ All dynamic loads are defined in this file.  This includes:
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six.moves import zip, range
-from scipy.interpolate import interp1d
 import numpy as np
 
 from pyNastran.utils import integer_types
@@ -141,6 +140,9 @@ class RLOAD1(TabularLoad):
         if isinstance(self.delay, integer_types) and self.delay > 0:
             self.delay = model.DELAY(self.delay_id, msg=msg)
             self.delay_ref = self.delay
+        if isinstance(self.dphase, integer_types) and self.dphase > 0:
+            self.dphase = model.dphases[self.dphase]
+            self.dphase_ref = self.dphase
 
     def safe_cross_reference(self, model):
         msg = ' which is required by RLOAD1 sid=%s' % (self.sid)
@@ -153,6 +155,8 @@ class RLOAD1(TabularLoad):
         if isinstance(self.delay, integer_types) and self.delay > 0:
             self.delay = model.DELAY(self.delay_id, msg=msg)
             self.delay_ref = self.delay
+        if isinstance(self.dphase, integer_types) and self.dphase > 0:
+            self.dphase_ref = model.dphases[self.dphase]
 
     def uncross_reference(self):
         self.tc = self.Tc()
@@ -208,19 +212,15 @@ class RLOAD1(TabularLoad):
         elif self.td == 0:
             d = 0.
         else:
-            dxy = np.array(self.td.table.table)
-            fd = dxy[:, 0]
-            yd = dxy[:, 1]
-            assert fd.shape == yd.shape, 'fd.shape=%s yd.shape=%s' % (str(fd.shape), str(yd.shape))
-            d = interp1d(fd, yd)(freq)
+            d = self.td.interpolate(freq)
 
         if isinstance(self.dphase, float):
             dphase = self.dphase
         elif self.dphase == 0 or self.dphase is None:
             dphase = 0.0
         else:
-            #print('DPHASE is not supported')
-            nids, comps, dphases = self.dphase.get_dphase_at_freq(freq)
+            #print('DPHASE is not supported; type=%s' % type(self.dphase))
+            nids, comps, dphases = self.dphase_ref.get_dphase_at_freq(freq)
             assert len(dphases) == 1, dphases
             dphase = dphases[0]
 
@@ -313,22 +313,14 @@ class RLOAD2(TabularLoad):
         elif self.tb == 0:
             b = 0.0
         else:
-            bxy = np.array(self.tb_ref.table.table)
-            fb = bxy[:, 0]
-            yb = bxy[:, 1]
-            assert fb.shape == yb.shape, 'fb.shape=%s yb.shape=%s' % (str(fb.shape), str(yb.shape))
-            b = interp1d(fb, yb)(freq)
+            b = self.tb_ref.interpolate(freq)
 
         if isinstance(self.tp, float):
             p = self.tp
         elif self.tp == 0:
             p = 0.0
         else:
-            pxy = np.array(self.tp_ref.table.table)
-            fp = pxy[:, 0]
-            yp = pxy[:, 1]
-            assert fp.shape == yp.shape, 'fp.shape=%s yp.shape=%s' % (str(fp.shape), str(yp.shape))
-            p = interp1d(fp, yp)(freq)
+            p = self.tp_ref.interpolate(freq)
 
         if isinstance(self.dphase, float):
             dphase = self.dphase
@@ -581,11 +573,10 @@ class TLOAD1(TabularLoad):
 
     def get_load_at_time(self, time, scale=1.):
         # A = 1. # points to DAREA or SPCD
-        xy = np.array(self.tid.table.table)
-        x = xy[:, 0]
-        y = xy[:, 1]
-        assert x.shape == y.shape, 'x.shape=%s y.shape=%s' % (str(x.shape), str(y.shape))
-        f = interp1d(x, y)
+        if isinstance(time, float):
+            time = np.array([time])
+        else:
+            time = np.asarray(time)
 
         if isinstance(self.delay, float):
             tau = self.delay
@@ -595,7 +586,9 @@ class TLOAD1(TabularLoad):
             #raise NotImplementedError('DELAY is not supported')
             tau = self.delay.get_delay_at_time(time)
 
-        resp = f(time - tau)
+        i = np.where(time - tau > 0)
+        time2 = time[i]
+        resp = self.tid_ref.interpolate(time2)
         is_spcd = False
         if self.Type == 'VELO' and is_spcd:
             resp[0] = self.us0
@@ -705,6 +698,11 @@ class TLOAD2(TabularLoad):
                       c, b, us0, vs0, comment=comment)
 
     def get_load_at_time(self, time, scale=1.):
+        if isinstance(time, float):
+            time = np.array([time])
+        else:
+            time = np.asarray(time)
+
         # A = 1. # points to DAREA or SPCD
         #xy = array(self.tid.table.table)
         #x = xy[:, 0]
@@ -718,7 +716,6 @@ class TLOAD2(TabularLoad):
             tau = 0.0
         else:
             tau = self.delay_ref.get_delay_at_time(time)
-        # return f(time - tau)
 
         t1 = self.T1 + tau
         t2 = self.T2 + tau
@@ -726,7 +723,9 @@ class TLOAD2(TabularLoad):
         p = self.phase
         f = np.zeros(time.shape, dtype=time.dtype)
 
-        i = np.where(t1 <= time & time <= t2)[0]
+        i = np.where(t1 <= time)[0]
+        j = np.where(time[i] <= t2)[0]
+        i = i[j]
         f[i] = time[i] ** self.b * np.exp(self.c * time[i]) * np.cos(2 * np.pi * f * time[i] + p)
 
         is_spcd = False

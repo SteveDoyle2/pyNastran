@@ -333,7 +333,7 @@ class DAREA(BaseCard):
 
     @property
     def node_id(self):
-        if isinstance(self.p, int):
+        if isinstance(self.p, integer_types):
             return self.p
         return self.p_ref.nid
 

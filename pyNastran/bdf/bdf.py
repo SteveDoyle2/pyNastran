@@ -98,6 +98,7 @@ from pyNastran.bdf.cards.methods import EIGB, EIGC, EIGR, EIGP, EIGRL
 from pyNastran.bdf.cards.nodes import GRID, GRDSET, SPOINTs, EPOINTs
 from pyNastran.bdf.cards.optimization import (DCONADD, DCONSTR, DESVAR, DDVAL, DOPTPRM, DLINK,
                                               DRESP1, DRESP2, DRESP3,
+                                              DVCREL1,
                                               DVMREL1,
                                               DVPREL1, DVPREL2)
 from pyNastran.bdf.cards.params import PARAM
@@ -451,7 +452,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
             # ---- dynamic cards ---- #
             'DAREA',  ## dareas
-            'PHASE',  ## dphases
+            #'DPHASE',  ## dphases
             'DELAY',  ## delays
             'NLPARM',  ## nlparms
             'NLPCI',  ## nlpcis
@@ -1546,7 +1547,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'DRESP1' : (DRESP1, self.add_DRESP),
             'DRESP2' : (DRESP2, self.add_DRESP), # deqatn
             'DRESP3' : (DRESP3, self.add_DRESP),
-            'DVCREL1' : (DVPREL1, self.add_DVCREL),
+            'DVCREL1' : (DVCREL1, self.add_DVCREL),
             # DVCREL2 - deqatn
             'DVPREL1' : (DVPREL1, self.add_DVPREL),
             'DVPREL2' : (DVPREL2, self.add_DVPREL), # deqatn
@@ -1574,33 +1575,12 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             #'EIGRL' : (EIGRL, self.add_method),
             #'EIGC' : (EIGC, self.add_cmethod),
             'EIGP' : (EIGP, self.add_cmethod),
-        }
-        self._card_parser_a = {
-            'PBUSH1D' : (PBUSH1D, self.add_property),
-            # BCTSET
-        }
-        self._card_parser_b = {
-            'CIHEX1' : (CIHEX1, self.add_element),
-            'NLPARM' : (NLPARM, self.add_NLPARM),
 
-            'SESET' : (SESET, self.add_SESET),
-
-            'MATS1' : (MATS1, self.add_material_dependence),
-            #'MATS3' : (MATS3, self.add_material_dependence),
-            #'MATS8' : (MATS8, self.add_material_dependence),
-            'MATT1' : (MATT1, self.add_material_dependence),
-            'MATT2' : (MATT2, self.add_material_dependence),
-            #'MATT3' : (MATT3, self.add_material_dependence),
-            'MATT4' : (MATT4, self.add_material_dependence),
-            'MATT5' : (MATT5, self.add_material_dependence),
-            #'MATT8' : (MATT8, self.add_material_dependence),
-            #'MATT9' : (MATT9, self.add_material_dependence),
-
-            'CHBDYE' : (CHBDYE, self.add_thermal_element),
-            'CHBDYG' : (CHBDYG, self.add_thermal_element),
-            'CHBDYP' : (CHBDYP, self.add_thermal_element),
-
-            #'SESUP' : (SESUP, self.add_SESUP),  # pseudo-constraint
+            'BCRPARA' : (BCRPARA, self.add_BCRPARA),
+            'BCTADD' : (BCTADD, self.add_BCTADD),
+            'BCTPARA' : (BCTPARA, self.add_BCTPARA),
+            'BSURF' : (BSURF, self.add_BSURF),
+            'BSURFS' : (BSURFS, self.add_BSURFS),
 
             'ASET' : (ASET, self.add_ASET),
             'ASET1' : (ASET1, self.add_ASET),
@@ -1620,6 +1600,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'SET1' : (SET1, self.add_SET),
             'SET3' : (SET3, self.add_SET),
 
+            'SESET' : (SESET, self.add_SESET),
+
             'SEBSET' : (SEBSET, self.add_SEBSET),
             'SEBSET1' : (SEBSET1, self.add_SEBSET),
 
@@ -1629,8 +1611,33 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'SEQSET' : (SEQSET, self.add_SEQSET),
             'SEQSET1' : (SEQSET1, self.add_SEQSET),
 
+            #'SESUP' : (SESUP, self.add_SESUP),  # pseudo-constraint
+
             #'SEUSET' : (SEUSET, self.add_SEUSET),
             #'SEUSET1' : (SEUSET1, self.add_SEUSET),
+        }
+        self._card_parser_a = {
+            'PBUSH1D' : (PBUSH1D, self.add_property),
+            # BCTSET
+        }
+        self._card_parser_b = {
+            'CIHEX1' : (CIHEX1, self.add_element),
+            'NLPARM' : (NLPARM, self.add_NLPARM),
+
+            'MATS1' : (MATS1, self.add_material_dependence),
+            #'MATS3' : (MATS3, self.add_material_dependence),
+            #'MATS8' : (MATS8, self.add_material_dependence),
+            'MATT1' : (MATT1, self.add_material_dependence),
+            'MATT2' : (MATT2, self.add_material_dependence),
+            #'MATT3' : (MATT3, self.add_material_dependence),
+            'MATT4' : (MATT4, self.add_material_dependence),
+            'MATT5' : (MATT5, self.add_material_dependence),
+            #'MATT8' : (MATT8, self.add_material_dependence),
+            #'MATT9' : (MATT9, self.add_material_dependence),
+
+            'CHBDYE' : (CHBDYE, self.add_thermal_element),
+            'CHBDYG' : (CHBDYG, self.add_thermal_element),
+            'CHBDYP' : (CHBDYP, self.add_thermal_element),
 
             #'DVMREL2' : (DVMREL2, self.add_DVMREL), # deqatn
             #DVCREL1
@@ -1638,12 +1645,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
             'EIGRL' : (EIGRL, self.add_method),
             'EIGC' : (EIGC, self.add_cmethod),
-
-            'BCRPARA' : (BCRPARA, self.add_BCRPARA),
-            'BCTADD' : (BCTADD, self.add_BCTADD),
-            'BCTPARA' : (BCTPARA, self.add_BCTPARA),
-            'BSURF' : (BSURF, self.add_BSURF),
-            'BSURFS' : (BSURFS, self.add_BSURFS),
         }
         self._card_parser_prepare = {
             'CTETRA' : self._prepare_ctetra,
@@ -1686,7 +1687,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
     def _prepare_bctset(self, card, card_obj, comment=''):
         """adds a GRDSET"""
-        card = BCTSET(card_obj, comment=comment, sol=self.sol)
+        card = BCTSET.add_card(card_obj, comment=comment, sol=self.sol)
         self.add_BCTSET(card)
 
     def _prepare_grdset(self, card, card_obj, comment=''):
@@ -2074,6 +2075,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                 add_card_function(class_instance)
             except TypeError:
                 msg = 'problem adding %s' % card_obj
+                raise
                 raise TypeError(msg)
             except (SyntaxError, AssertionError, KeyError, ValueError) as exception:
                 #raise
