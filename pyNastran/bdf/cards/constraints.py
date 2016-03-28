@@ -17,14 +17,15 @@ The ConstraintObject contain multiple constraints.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from itertools import count
 from six import iteritems
 from six.moves import zip, range
-from itertools import count
 
 from pyNastran.utils import integer_types
 from pyNastran.bdf.cards.base_card import BaseCard, _node_ids, expand_thru
-from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_blank,
-    double, double_or_blank, components, components_or_blank, string)
+from pyNastran.bdf.bdf_interface.assign_type import (
+    integer, integer_or_blank, double, double_or_blank, components,
+    components_or_blank, string)
 from pyNastran.bdf.field_writer_8 import print_card_8, print_float_8
 from pyNastran.bdf.field_writer_16 import print_float_16, print_card_16
 from pyNastran.bdf.field_writer_double import print_scientific_double
@@ -346,7 +347,8 @@ class MPC(Constraint):
             i += 1
 
             if ifield + 4 > nfields and i != 2:
-                # if G2 is empty (it's ifield+4 because nfields is length based and not loop friendly)
+                # if G2 is empty (it's ifield+4 because nfields is length based
+                # and not loop friendly)
                 break
             grid = integer(card, ifield + 3, 'G%i' % i)
             component = components_or_blank(card, ifield + 4, 'constraint%i' % i, 0)  # scalar point

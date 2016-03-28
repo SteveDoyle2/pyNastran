@@ -465,7 +465,7 @@ class AddMethods(BDFAttributes):
             self._type_to_id_map[darea.type].append(key)
 
     def add_DPHASE(self, dphase, allow_overwrites=False):
-        key = (dphase.sid, dphase.p, dphase.c)
+        key = (dphase.sid, dphase.phase_leads, dphase.components)
         if key in self.dphases and not allow_overwrites:
             if not dphase._is_same_card(self.dphases[key]):
                 assert key not in self.dphases, '\ndphase=\n%s old_DPHASE=\n%s' % (
@@ -790,7 +790,7 @@ class AddMethods(BDFAttributes):
         assert key >= 0
         if key in self.se_sets:
             old_set = self.se_sets[key]
-            set_obj.add_SESET_Object(old_set)
+            set_obj.add_seset(old_set)
         self.se_sets[key] = set_obj
         self._type_to_id_map[set_obj.type].append(key)
 

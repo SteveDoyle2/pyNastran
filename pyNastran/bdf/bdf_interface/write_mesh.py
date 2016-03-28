@@ -5,10 +5,10 @@ This file defines:
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import string_types, iteritems, itervalues, PY2, StringIO
 import sys
-from codecs import open
 import io
+from codecs import open
+from six import string_types, iteritems, itervalues, PY2, StringIO
 
 from pyNastran.bdf.utils import print_filename
 from pyNastran.utils.gui_io import save_file_dialog
@@ -94,6 +94,7 @@ class WriteMesh(BDFAttributes):
         return out_filename
 
     def write_caero_model(self, caero_bdf_filename='caero.bdf'):
+        """write the CAERO cards as CQUAD4s that can be visualized"""
         bdf_file = open(caero_bdf_filename, 'w')
         bdf_file.write('CEND\n')
         bdf_file.write('BEGIN BULK\n')
@@ -120,19 +121,19 @@ class WriteMesh(BDFAttributes):
             bdf_file.write('$ ' + '\n$ '.join(scaero) + '\n')
             points, elements = caero.panel_points_elements()
             npoints = points.shape[0]
-            nelements = elements.shape[0]
+            #nelements = elements.shape[0]
             for ipoint, point in enumerate(points):
                 x, y, z = point
                 bdf_file.write('GRID,%s,,%s,%s,%s\n' % (i + ipoint, x, y, z))
 
             pid = eid
             mid = eid
-            if 0:
-                bdf_file.write('PSHELL,%s,%s,0.1\n' % (pid, mid))
-                bdf_file.write('MAT1,%s,3.0E7,,0.3\n' % mid)
-            else:
-                bdf_file.write('PSHELL,%s,%s,0.1\n' % (1, 1))
-                bdf_file.write('MAT1,%s,3.0E7,,0.3\n' % 1)
+            #if 0:
+                #bdf_file.write('PSHELL,%s,%s,0.1\n' % (pid, mid))
+                #bdf_file.write('MAT1,%s,3.0E7,,0.3\n' % mid)
+            #else:
+            bdf_file.write('PSHELL,%s,%s,0.1\n' % (1, 1))
+            bdf_file.write('MAT1,%s,3.0E7,,0.3\n' % 1)
 
             j = 0
             for elem in elements + i:
@@ -229,8 +230,8 @@ class WriteMesh(BDFAttributes):
             outfile.close()
 
     def write_bdf_symmetric(self, out_filename=None, encoding=None,
-                  size=8, is_double=False,
-                  enddata=None, close=True, plane='xz'):
+                            size=8, is_double=False,
+                            enddata=None, close=True, plane='xz'):
         """
         Writes the BDF.
 
@@ -450,7 +451,7 @@ class WriteMesh(BDFAttributes):
 
     def _write_aero(self, outfile, size=8, is_double=False):
         """Writes the aero cards"""
-        if(self.caeros or self.paeros or self.monitor_points):
+        if self.caeros or self.paeros or self.monitor_points:
             msg = ['$AERO\n']
             for (unused_id, caero) in sorted(iteritems(self.caeros)):
                 msg.append(caero.write_card(size, is_double))
@@ -488,7 +489,7 @@ class WriteMesh(BDFAttributes):
 
     def _write_static_aero(self, outfile, size=8, is_double=False):
         """Writes the static aero cards"""
-        if(self.aeros or self.trims or self.divergs):
+        if self.aeros or self.trims or self.divergs:
             msg = ['$STATIC AERO\n']
             # static aero
             for (unused_id, aero) in sorted(iteritems(self.aeros)):
@@ -514,8 +515,7 @@ class WriteMesh(BDFAttributes):
 
     def _write_gust(self, outfile, size=8, is_double=False):
         """Writes the gust cards"""
-        if(self.aero or self.gusts):
-            msg = []
+        if self.aero or self.gusts:
             msg = ['$GUST\n']
             # gust
             for (unused_id, aero) in sorted(iteritems(self.aero)):
@@ -1082,7 +1082,7 @@ class WriteMesh(BDFAttributes):
 
     def _write_tables(self, outfile, size=8, is_double=False):
         """Writes the TABLEx cards sorted by ID"""
-        if self.tables:
+        if self.tables or self.tables_sdamping:
             msg = ['$TABLES\n']
             for (unused_id, table) in sorted(iteritems(self.tables)):
                 msg.append(table.write_card(size, is_double))
@@ -1093,11 +1093,6 @@ class WriteMesh(BDFAttributes):
         if self.randomTables:
             msg = ['$RANDOM TABLES\n']
             for (unused_id, table) in sorted(iteritems(self.randomTables)):
-                msg.append(table.write_card(size, is_double))
-            outfile.write(''.join(msg))
-
-        if self.tables_sdamping:
-            for (unused_id, table) in sorted(iteritems(self.tables_sdamping)):
                 msg.append(table.write_card(size, is_double))
             outfile.write(''.join(msg))
 

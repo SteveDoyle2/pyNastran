@@ -312,9 +312,12 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
         #if 'GRIDG' in fem1.card_count:
             #print('failed test because mesh adaption (GRIDG)...ignoring')
             #raise
+        #pass
     #except AttributeError:  # only temporarily uncomment this when running lots of tests
         #pass
     #except SyntaxError:  # only temporarily uncomment this when running lots of tests
+        #pass
+    #except KeyError:  # only temporarily uncomment this when running lots of tests
         #pass
     #except AssertionError:  # only temporarily uncomment this when running lots of tests
         #pass
@@ -547,6 +550,7 @@ def _assert_has_spc(subcase, fem):
 def validate_case_control(fem2, p0, sol_base, subcase_keys, subcases, sol_200_map):
     for isubcase in subcase_keys[1:]:  # drop isubcase = 0
         subcase = subcases[isubcase]
+        str(subcase)
         if sol_base == 200:
             analysis = subcase.get_parameter('ANALYSIS')[0]
             sol = sol_200_map[analysis]
@@ -568,25 +572,36 @@ def check_case(sol, subcase, fem2, p0, isubcase):
         assert 'NLPARM' in subcase, subcase
         if 'SPC' not in subcase:
             _assert_has_spc(subcase, fem2)
-        assert True in subcase.has_parameter('LOAD', 'TEMPERATURE(LOAD)'), subcase
+        assert True in subcase.has_parameter('LOAD', 'TEMPERATURE'), subcase
     elif sol == 99:
         assert 'DLOAD' in subcase, subcase
         assert 'LOADSET' in subcase, subcase
         if 'SPC' not in subcase:
             _assert_has_spc(subcase, fem2)
-        assert True in subcase.has_parameter('LOAD', 'TEMPERATURE(LOAD)'), subcase
+        #assert True in subcase.has_parameter('LOAD', 'TEMPERATURE'), subcase
         assert True in subcase.has_parameter('TSTEP', 'TSTEPNL'), subcase
     elif sol == 101:
         if 'SPC' not in subcase:
             _assert_has_spc(subcase, fem2)
-        assert True in subcase.has_parameter('LOAD', 'TEMPERATURE(LOAD)'), subcase
+        assert True in subcase.has_parameter('LOAD', 'TEMPERATURE'), subcase
     elif sol == 103:
         assert 'METHOD' in subcase, subcase
     elif sol == 105: # buckling
         if 'SPC' not in subcase:
             _assert_has_spc(subcase, fem2)
-        assert 'LOAD' in subcase, subcase
-        assert 'METHOD' in subcase, subcase
+        assert 'LOAD' in subcase or 'METHOD' in subcase, subcase
+        if 0:
+            if 'METHOD' not in subcase:
+                subcases = fem2.subcases
+                subcase_ids = [isubcase for isubcase in subcases if isubcase > 0]
+                assert len(subcases) == 2, 'METHOD not in subcase and not 2 subcases\n%s' % subcase
+                subcase_id = subcase.subcase_id
+                if subcase_id == 1 and 'METHOD' in subcases[2]:
+                    pass
+                else:
+                    msg = 'METHOD not in subcase and not 2 subcases\n%s' % subcase
+                    raise RuntimeError(msg)
+
         #assert True in subcase.has_parameter('LOAD', 'TEMPERATURE(LOAD)'), subcase
     elif sol == 106: # freq
         assert 'NLPARM' in subcase, subcase
@@ -644,15 +659,17 @@ def check_case(sol, subcase, fem2, p0, isubcase):
         if 'SPC' not in subcase:
             _assert_has_spc(subcase, fem2)
         assert 'NLPARM' in subcase, subcase
-        assert any(subcase.has_parameter('LOAD')), subcase
         if 'ANALYSIS' in subcase and subcase.get_parameter('ANALYSIS')[0] == 'HEAT':
-            assert 'TEMPERATURE(INITIAL)' in subcase, subcase
+            assert 'TEMPERATURE' in subcase, subcase
+        else:
+            assert any(subcase.has_parameter('LOAD')), subcase
+
     elif sol == 159: #  nonlinear transient; heat?
         assert 'NLPARM' in subcase, subcase
         #assert any(subcase.has_parameter('TIME', 'TSTEP', 'TSTEPNL')), subcase
         #assert any(subcase.has_parameter('GUST', 'LOAD')), subcase
         if 'ANALYSIS' in subcase and subcase.get_parameter('ANALYSIS')[0] == 'HEAT':
-            assert 'TEMPERATURE(INITIAL)' in subcase, subcase
+            assert 'TEMPERATURE' in subcase, subcase
 
     elif sol == 200:
         assert 'DESOBJ' in subcase, subcase

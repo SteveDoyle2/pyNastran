@@ -281,9 +281,16 @@ class TABLED1(Table):
 
         # TODO: handle out of range errors
         xi = self.x[i]
-        xj = self.x[j]
         yi = self.y[i]
-        yj = self.y[j]
+        try:
+            xj = self.x[j]
+            yj = self.y[j]
+        except IndexError:
+            #print('table.x = %s' % self.x)
+            #print('table.y = %s' % self.y)
+            #print('x = %s' % x)
+            #print('yi = %s' % yi)
+            return yi
 
         # TODO: could probably speed this up with log rules
         if self.xaxis == 'LINEAR' and self.yaxis == 'LINEAR':
@@ -651,7 +658,7 @@ class TABLEM2(Table):
             y = double_or_string(card, n + 1, 'y' + str(i + 1))
             if x == 'SKIP' or y == 'SKIP':
                 continue
-            xy += [x, y]
+            xy.append([x, y])
         string(card, nfields, 'ENDT')
         xy = np.array(xy)
         x = xy[:, 0]
@@ -713,7 +720,7 @@ class TABLEM3(Table):
             y = double_or_string(card, n + 1, 'y' + str(i + 1))
             if x == 'SKIP' or y == 'SKIP':
                 continue
-            xy += [x, y]
+            xy.append([x, y])
         string(card, nfields, 'ENDT')
         xy = np.array(xy)
         x = xy[:, 0]
