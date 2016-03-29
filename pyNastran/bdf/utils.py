@@ -542,7 +542,7 @@ def write_patran_syntax_dict(dict_sets):
     for key, dict_set in iteritems(dict_sets):
         singles, doubles = collapse_colon_packs(dict_set)
         double_list = ['%s:%s ' % (double[0], double[2])
-                       if len(double) == 3 else '**%s** ' % str(double)
+                       if len(double) == 3 else '%s:%s:%s ' % (double[0], double[2], double[4])
                        for double in doubles]
         double_str = ''.join(double_list)
         msg += '%s %s %s' % (key,

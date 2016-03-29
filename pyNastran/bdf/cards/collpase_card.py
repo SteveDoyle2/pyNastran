@@ -101,8 +101,8 @@ def condense(value_list):
         try:
             dv = val - last_val
         except TypeError:
-            print("lastVal=%r val=%r" % (last_val, val))
-            print("valueList=%r" % value_list)
+            print("last_val=%r val=%r" % (last_val, val))
+            print("value_list=%r" % value_list)
             raise
 
         # sets up the first item of the pack

@@ -1173,7 +1173,9 @@ def create_buckling_header(subcase, eig_min=0., eig_max=100., nroots=20):
 
     method = 42
     load_id = 55
-    bulk_data_cards.append(['EIGB', method, 'INV', eig_min, eig_max, nroots])
+    # EIGB has severe performance issue
+    #bulk_data_cards.append(['EIGB', method, 'INV', eig_min, eig_max, nroots])
+    bulk_data_cards.append(['EIGRL', eig_min, eig_max, nroots, ])
     return case_control, bulk_data_cards, spc_id, mpc_id, load_id
 
 

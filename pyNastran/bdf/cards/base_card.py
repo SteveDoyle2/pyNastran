@@ -5,6 +5,7 @@ from six.moves import zip, range
 
 from numpy import nan, empty, unique
 
+from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 from pyNastran.utils import object_attributes, object_methods, integer_types
 from pyNastran.bdf.field_writer import print_card
 from pyNastran.bdf.field_writer_8 import is_same
@@ -38,6 +39,12 @@ else:
 class BaseCard(object):
     def __init__(self):
         pass
+
+    def __deepcopy__(self, memo_dict):
+        #raw_fields = self.repr_fields()
+        raw_fields = self.raw_fields()
+        card = BDFCard(raw_fields)
+        return self.add_card(card)
 
     def deprecated(self, old_name, new_name, deprecated_version):
         """deprecates methods"""

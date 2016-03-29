@@ -258,6 +258,15 @@ class TriShell(ShellElement):
 
 
 class CTRIA3(TriShell):
+    """
+    +--------+-------+-------+----+----+----+------------+---------+-----+
+    |   1    |   2   |   3   |  4 |  5 |  6 |     7      |    8    |  9  |
+    +========+=======+=======+=====+===+====+============+=========+=====+
+    | CTRIA3 |  EID  |  PID  | N1 | N2 | N3 | THETA/MCID | ZOFFSET |     |
+    +--------+-------+-------+----+----+----+------------+---------+-----+
+    |        |       | TFLAG | T1 | T2 | T3 |            |         |     |
+    +--------+-------+-------+----+----+----+------------+---------+-----+
+    """
     type = 'CTRIA3'
     aster_type = 'TRIA3'
     calculixType = 'S3'
@@ -1474,6 +1483,15 @@ class CSHEAR(QuadShell):
 
 
 class CQUAD4(QuadShell):
+    """
+    +--------+-------+-------+----+----+----+----+------------+---------+
+    |   1    |   2   |   3   |  4 |  5 |  6 | 7  |     8      |    9    |
+    +========+=======+=======+=====+===+====+====+============+=========+
+    | CQUAD4 |  EID  |  PID  | N1 | N2 | N3 | N4 | THETA/MCID | ZOFFSET |
+    +--------+-------+-------+----+----+----+----+------------+---------+
+    |        |       | TFLAG | T1 | T2 | T3 | T4 |            |         |
+    +--------+-------+-------+----+----+----+----+------------+---------+
+    """
     type = 'CQUAD4'
     aster_type = 'QUAD4 # CQUAD4'
     calculixType = 'S4'
@@ -1643,7 +1661,7 @@ class CQUAD4(QuadShell):
 
     def raw_fields(self):
         list_fields = (['CQUAD4', self.eid, self.Pid()] + self.node_ids +
-                       [self.thetaMcid, self.zOffset, self.TFlag, self.T1, self.T2,
+                       [self.thetaMcid, self.zOffset, None, self.TFlag, self.T1, self.T2,
                         self.T3, self.T4])
         return list_fields
 
