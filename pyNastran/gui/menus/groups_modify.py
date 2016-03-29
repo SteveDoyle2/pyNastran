@@ -6,7 +6,7 @@ from PyQt4 import QtCore, QtGui
 from numpy import setdiff1d, unique, array, hstack, ndarray
 
 from pyNastran.bdf.utils import parse_patran_syntax, parse_patran_syntax_dict
-from pyNastran.bdf.cards.base_card import collapse_colon_packs
+from pyNastran.bdf.cards.collpase_card import collapse_colon_packs
 from pyNastran.gui.menus.manage_actors import CustomQTableView, Model
 
 

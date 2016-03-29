@@ -621,6 +621,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
 
     .. todo:: bdf_model option for bdf_filename hasn't been tested
     .. todo:: add support for subsets (e.g. renumber only a subset of nodes/elements)
+    .. todo:: add support for not renumbering certain types (e.g. nid)
     ..warning :: spoints might be problematic...check
     ..warning :: still in development, but it usually brutally crashes if it's not supported
     ..warning :: be careful of unsupported cards
@@ -695,28 +696,28 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
        - global SET cards won't be renumbered properly
     """
     starting_id_dict_default = {
-        'cid' : 50,
-        'nid' : 101,
-        'eid' : 301,
-        'pid' : 401,
-        'mid' : 501,
-        'spc_id' : 501,
-        'mpc_id' : 601,
-        'load_id' : 701,
-        'dload_id' : 801,
+        'cid' : 1,
+        'nid' : 1,
+        'eid' : 1,
+        'pid' : 1,
+        'mid' : 1,
+        'spc_id' : 1,
+        'mpc_id' : 1,
+        'load_id' : 1,
+        'dload_id' : 1,
 
-        'method_id' : 901,
-        'cmethod_id' : 1001,
-        'spline_id' : 1101,
-        'table_id' : 1201,
-        'flfact_id' : 1301,
-        'flutter_id' : 1401,
-        'freq_id' : 1501,
-        'tstep_id' : 1601,
-        'tstepnl_id' : 1701,
-        'suport_id' : 1801,
-        'suport1_id' : 1901,
-        'tf_id' : 2001,
+        'method_id' : 1,
+        'cmethod_id' : 1,
+        'spline_id' : 1,
+        'table_id' : 1,
+        'flfact_id' : 1,
+        'flutter_id' : 1,
+        'freq_id' : 1,
+        'tstep_id' : 1,
+        'tstepnl_id' : 1,
+        'suport_id' : 1,
+        'suport1_id' : 1,
+        'tf_id' : 1,
     }
     if starting_id_dict is None:
         starting_id_dict = starting_id_dict_default
@@ -783,27 +784,28 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
     #print(spoints_nids)
     #k = 0
 
-    i = nid
-    #banned_nodes = spoints
-    for nidi in spoints_nids:
-        if nidi in spoints:
-            pass
-            #print('sid=%s -> %s' % (nid, i))
-            #i += 1
-        else:
-            while i in spoints:
-                #print('*bump')
+    if 'nid' in starting_id_dict:
+        i = nid
+        #banned_nodes = spoints
+        for nidi in spoints_nids:
+            if nidi in spoints:
+                pass
+                #print('sid=%s -> %s' % (nid, i))
+                #i += 1
+            else:
+                while i in spoints:
+                    #print('*bump')
+                    i += 1
+                #print('nid=%s -> %s' % (nid, i))
+                nid_map[nidi] = i
+                reverse_nid_map[i] = nidi
                 i += 1
-            #print('nid=%s -> %s' % (nid, i))
-            nid_map[nidi] = i
-            reverse_nid_map[i] = nidi
-            i += 1
-    #for nid in sorted(nids):
-        #nid_map[nid] = i
-        #reverse_nid_map[i] = nid
-        #i += 1
-    #print(nid_map)
-    #print(reverse_nid_map)
+        #for nid in sorted(nids):
+            #nid_map[nid] = i
+            #reverse_nid_map[i] = nid
+            #i += 1
+        #print(nid_map)
+        #print(reverse_nid_map)
 
     all_materials = (
         model.materials,
@@ -834,87 +836,94 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
         midi = mids[i]
         mid_map[midi] = mid + i
 
-    #spoints2 = arange(1, len(spoints) + 1)
-    for nid, node in sorted(iteritems(model.nodes)):
-        nid_new = nid_map[nid]
-        node.nid = nid_new
+    if 'nid' in starting_id_dict:
+        #spoints2 = arange(1, len(spoints) + 1)
+        for nid, node in sorted(iteritems(model.nodes)):
+            nid_new = nid_map[nid]
+            node.nid = nid_new
 
-    # properties
-    for pidi, prop in sorted(iteritems(model.properties)):
-        prop.pid = pid
-        pid += 1
-    for pidi, prop in sorted(iteritems(model.properties_mass)):
-        # PMASS
-        prop.pid = pid
-        pid += 1
-    for pidi, prop in sorted(iteritems(model.convection_properties)):
-        # PCONV
-        prop.pid = pid
-        pid += 1
-    for pidi, prop in sorted(iteritems(model.phbdys)):
-        # PHBDY
-        prop.pid = pid
-        pid += 1
+    if 'pid' in starting_id_dict:
+        # properties
+        for pidi, prop in sorted(iteritems(model.properties)):
+            prop.pid = pid
+            pid += 1
+        for pidi, prop in sorted(iteritems(model.properties_mass)):
+            # PMASS
+            prop.pid = pid
+            pid += 1
+        for pidi, prop in sorted(iteritems(model.convection_properties)):
+            # PCONV
+            prop.pid = pid
+            pid += 1
+        for pidi, prop in sorted(iteritems(model.phbdys)):
+            # PHBDY
+            prop.pid = pid
+            pid += 1
 
-    # elements
-    for eidi, element in sorted(iteritems(model.elements)):
-        element.eid = eid
-        eid_map[eidi] = eid
-        eid += 1
-    for eidi, element in sorted(iteritems(model.masses)):
-        # CONM1, CONM2, CMASSx
-        element.eid = eid
-        eid_map[eidi] = eid
-        eid += 1
-    for eidi, elem in sorted(iteritems(model.rigid_elements)):
-        # RBAR/RBAR1/RBE1/RBE2/RBE3
-        elem.eid = eid
-        eid_map[eidi] = eid
-        eid += 1
-    #for eidi, elem in iteritems(model.caeros):
-        #pass
+    if 'eid' in starting_id_dict:
+        # elements
+        for eidi, element in sorted(iteritems(model.elements)):
+            element.eid = eid
+            eid_map[eidi] = eid
+            eid += 1
+        for eidi, element in sorted(iteritems(model.masses)):
+            # CONM1, CONM2, CMASSx
+            element.eid = eid
+            eid_map[eidi] = eid
+            eid += 1
+        for eidi, elem in sorted(iteritems(model.rigid_elements)):
+            # RBAR/RBAR1/RBE1/RBE2/RBE3
+            elem.eid = eid
+            eid_map[eidi] = eid
+            eid += 1
+        #for eidi, elem in iteritems(model.caeros):
+            #pass
 
-    #mid = 1
-    for materials in all_materials:
-        for midi, material in iteritems(materials):
-            mid = mid_map[midi]
-            assert hasattr(material, 'mid')
-            material.mid = mid
+    if 'mid' in starting_id_dict:
+        #mid = 1
+        for materials in all_materials:
+            for midi, material in iteritems(materials):
+                mid = mid_map[midi]
+                assert hasattr(material, 'mid')
+                material.mid = mid
 
-    # spc
-    for spc_idi, spc_group in sorted(iteritems(model.spcs)):
-        for i, spc in enumerate(spc_group):
-            assert hasattr(spc, 'conid')
-            spc.conid = spc_id
-        spc_map[spc_idi] = spc_id
-        spc_id += 1
-    for spc_idi, spcadd in sorted(iteritems(model.spcadds)):
-        assert hasattr(spcadd, 'conid')
-        spcadd.conid = spc_id
-        spc_map[spc_idi] = spc_id
-        spc_id += 1
+    if 'spc_id' in starting_id_dict:
+        # spc
+        for spc_idi, spc_group in sorted(iteritems(model.spcs)):
+            for i, spc in enumerate(spc_group):
+                assert hasattr(spc, 'conid')
+                spc.conid = spc_id
+            spc_map[spc_idi] = spc_id
+            spc_id += 1
+        for spc_idi, spcadd in sorted(iteritems(model.spcadds)):
+            assert hasattr(spcadd, 'conid')
+            spcadd.conid = spc_id
+            spc_map[spc_idi] = spc_id
+            spc_id += 1
 
-    # mpc
-    for mpc_idi, mpc_group in sorted(iteritems(model.mpcs)):
-        for i, mpc in enumerate(mpc_group):
-            assert hasattr(mpc, 'conid')
-            mpc.conid = mpc_id
-        mpc_map[mpc_idi] = mpc_id
-        mpc_id += 1
-    for mpc_idi, mpcadd in sorted(iteritems(model.mpcadds)):
-        assert hasattr(mpcadd, 'conid')
-        mpcadd.conid = mpc_id
-        mpc_map[mpc_idi] = mpc_id
-        mpc_id += 1
+    if 'mpc_id' in starting_id_dict:
+        # mpc
+        for mpc_idi, mpc_group in sorted(iteritems(model.mpcs)):
+            for i, mpc in enumerate(mpc_group):
+                assert hasattr(mpc, 'conid')
+                mpc.conid = mpc_id
+            mpc_map[mpc_idi] = mpc_id
+            mpc_id += 1
+        for mpc_idi, mpcadd in sorted(iteritems(model.mpcadds)):
+            assert hasattr(mpcadd, 'conid')
+            mpcadd.conid = mpc_id
+            mpc_map[mpc_idi] = mpc_id
+            mpc_id += 1
 
-    # coords
-    for cidi, coord in sorted(iteritems(model.coords)):
-        if cidi == 0:
-            cid_map[0] = 0
-            continue
-        coord.cid = cid
-        cid_map[cidi] = cid
-        cid += 1
+    if 'cid' in starting_id_dict:
+        # coords
+        for cidi, coord in sorted(iteritems(model.coords)):
+            if cidi == 0:
+                cid_map[0] = 0
+                continue
+            coord.cid = cid
+            cid_map[cidi] = cid
+            cid += 1
 
     nlparm_map = {}
     nlpci_map = {}
@@ -941,7 +950,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
         (model.nlpcis, 'nlpci_id', nlpci_map),
         (model.tables_sdamping, 'tid', table_sdamping_map),
         (model.dconadds, 'dcid', dconadd_map),
-        (model.dconstrs, 'oid', dconstr_map),
+        #(model.dconstrs, 'oid', dconstr_map),
         (model.dresps, 'oid', dresp_map),
         (model.gusts, 'sid', gust_map),
         (model.trims, 'sid', trim_map),
@@ -972,7 +981,11 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
     for (dict_obj, param_name, mmap) in sorted(data):
         param_id = _roundup(param_id, 1000) + 1
         for idi, param in sorted(iteritems(dict_obj)):
-            msg = '%s has no %r; use %s' % (param.type, param_name, object_attributes(param))
+            try:
+                msg = '%s has no %r; use %s' % (param.type, param_name, object_attributes(param))
+            except AttributeError:
+                print('param = %r' % param)
+                raise
             assert hasattr(param, param_name), msg
             setattr(param, param_name, param_id)
             if mmap is not None:
@@ -1111,6 +1124,7 @@ def _update_case_control(model, mapper):
         'TITLE', 'ECHO', 'ANALYSIS', 'SUBTITLE', 'LABEL', 'SUBSEQ', 'OUTPUT',
         'TCURVE', 'XTITLE', 'YTITLE', 'AECONFIG', 'AESYMXZ', 'MAXLINES', 'PARAM', 'CONTOUR',
         'PTITLE', 'PLOTTER', 'K2PP', 'CSCALE', 'XGRID LINES', 'YGRID LINES', 'YMIN', 'YMAX',
+        'LINE',
         ] + skip_keys_temp
 
     sets_analyzed = set([])
