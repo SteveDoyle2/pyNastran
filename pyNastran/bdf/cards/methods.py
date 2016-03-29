@@ -133,10 +133,40 @@ class EIGC(Method):
     """
     type = 'EIGC'
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self, sid, method, norm, G, C, E, ndo, comment=''):
         Method.__init__(self)
         if comment:
             self._comment = comment
+
+        #: Set identification number. (Unique Integer > 0)
+        self.sid = sid
+
+        #: Method of complex eigenvalue extraction
+        #:   MSC 2014 = [INV, HESS, CLAN, IRAM]
+        #:   NX 8.5 = [INV, HESS, CLAN, ISRR]
+        #:   Autodesk 2015 = [ARNO, HESS, CLAN]
+        self.method = method
+
+        #: Method for normalizing eigenvectors
+        self.norm = norm
+        #: Grid or scalar point identification number. Required only if
+        #: NORM='POINT'. (Integer>0)
+        self.G = G
+
+
+        #: Component number. Required only if NORM='POINT' and G is a
+        #: geometric grid point. (1<Integer<6)
+        self.C = C
+
+        #: Convergence criterion. (Real > 0.0. Default values are:
+        #: 10^-4 for METHOD = "INV",
+        #: 10^-8 for METHOD = "CLAN",
+        #: 10^-8 for METHOD = "ISRR",
+        #: 10^-15 for METHOD = "HESS",
+        #: E is machine dependent for METHOD = "CLAN".)
+        self.E = E
+        self.ndo = ndo
+
         # CLAN
         self.mblkszs = []
         self.iblkszs = []
@@ -150,123 +180,135 @@ class EIGC(Method):
         self.NEJs = []
         self.NDJs = []
 
-        if card:
-            #: Set identification number. (Unique Integer > 0)
-            self.sid = integer(card, 1, 'sid')
-            #: Method of complex eigenvalue extraction
-            #:   MSC 2014 = [INV, HESS, CLAN, IRAM]
-            #:   NX 8.5 = [INV, HESS, CLAN, ISRR]
-            #:   Autodesk 2015 = [ARNO, HESS, CLAN]
-            self.method = string(card, 2, 'method')
-            assert self.method in ['ARNO', 'INV', 'HESS', 'CLAN', 'ISRR', 'IRAM'], (
-                'method=%s is not ARNO, INV, HESS, CLAN, ISRR, IRAM' % self.method)
+        self.alphaAjs = []
+        self.omegaAjs = []
+        #self.alphaBjs = []
+        self.omegaBjs = []
+        #self.LJs = []
+        #self.NEJs = []
+        #self.NDJs = []
 
-            #: Method for normalizing eigenvectors
-            self.norm = string_or_blank(card, 3, 'norm')
-            if self.norm == 'POINT':
-                #: Grid or scalar point identification number. Required only if
-                #: NORM='POINT'. (Integer>0)
-                self.G = integer(card, 4, 'G')
+    @classmethod
+    def add_card(cls, card, comment=''):
+        sid = integer(card, 1, 'sid')
+        method = string(card, 2, 'method')
+        assert method in ['ARNO', 'INV', 'HESS', 'CLAN', 'ISRR', 'IRAM'], (
+            'method=%s is not ARNO, INV, HESS, CLAN, ISRR, IRAM' % method)
 
-                #: Component number. Required only if NORM='POINT' and G is a
-                #: geometric grid point. (1<Integer<6)
-                self.C = components(card, 5, 'C')
-            else:
-                self.G = blank(card, 4, 'G')
-                self.C = blank(card, 5, 'C')
-
-            #: Convergence criterion. (Real > 0.0. Default values are:
-            #: 10^-4 for METHOD = "INV",
-            #: 10^-8 for METHOD = "CLAN",
-            #: 10^-8 for METHOD = "ISRR",
-            #: 10^-15 for METHOD = "HESS",
-            #: E is machine dependent for METHOD = "CLAN".)
-            self.E = double_or_blank(card, 6, 'E')
-            self.ndo = integer_double_string_or_blank(card, 7, 'ND0')
-
-            # ALPHAAJ OMEGAAJ ALPHABJ OMEGABJ LJ NEJ NDJ
-            fields = [interpret_value(field) for field in card[9:]]
-            self.alphaAjs = []
-            self.omegaAjs = []
-            nfields = len(fields)
-            nrows = nfields // 8
-            if nfields % 8 > 0:
-                nrows += 1
-            #if nrows == 0:
-                #msg = 'invalid row count=0; nfields=%s \ncard=%s\nfields=%s' % (
-                    #nfields, card, fields)
-                #raise RuntimeError(msg)
-
-            if self.method == 'CLAN':
-                self.loadCLAN(nrows, card)
-            elif self.method in ['HESS', 'INV']:  # HESS, INV
-                self.loadHESS_INV(nrows, card)
-            elif self.method == 'ISRR':
-                self._load_isrr(nrows, card)
-            else:
-                msg = 'invalid EIGC method...method=%r' % self.method
-                raise RuntimeError(msg)
-            #assert card.nFields() < 8, 'card = %s' % card
+        norm = string_or_blank(card, 3, 'norm')
+        if norm == 'POINT':
+            G = integer(card, 4, 'G')
+            C = components(card, 5, 'C')
         else:
-            raise NotImplementedError('EIGC')
+            G = blank(card, 4, 'G')
+            C = blank(card, 5, 'C')
 
-    def _load_isrr(self, nrows, card):
+        E = double_or_blank(card, 6, 'E')
+        ndo = integer_double_string_or_blank(card, 7, 'ND0')
+
+        # ALPHAAJ OMEGAAJ ALPHABJ OMEGABJ LJ NEJ NDJ
+        fields = [interpret_value(field) for field in card[9:]]
+
+        alphaAjs = []
+        omegaAjs = []
+        nfields = len(fields)
+        nrows = nfields // 8
+        if nfields % 8 > 0:
+            nrows += 1
+        #if nrows == 0:
+            #msg = 'invalid row count=0; nfields=%s \ncard=%s\nfields=%s' % (
+                #nfields, card, fields)
+            #raise RuntimeError(msg)
+
+        if method == 'CLAN':
+            alphaAjs, omegaAjs, mblkszs, iblkszs, ksteps, NJIs = cls.loadCLAN(nrows, card)
+        elif method in ['HESS', 'INV']:  # HESS, INV
+            cls.loadHESS_INV(nrows, method, card)
+        elif method == 'ISRR':
+            cls._load_isrr(nrows, card)
+        else:
+            msg = 'invalid EIGC method...method=%r' % method
+            raise RuntimeError(msg)
+        #assert card.nFields() < 8, 'card = %s' % card
+        return EIGC(sid, method, norm, G, C, E, ndo, comment=comment)
+
+    @classmethod
+    def _load_isrr(cls, nrows, card):
         assert nrows == 1, card
         for irow in range(nrows):
             i = 9 + 8 * irow
-            self.shift_r1 = double_or_blank(card, i, 'SHIFT_R1', 0.0)
-            self.shift_i1 = double_or_blank(card, i + 1, 'SHIFT_I1', 0.0)
+            shift_r1 = double_or_blank(card, i, 'SHIFT_R1', 0.0)
+            shift_i1 = double_or_blank(card, i + 1, 'SHIFT_I1', 0.0)
             #2
             #3
             #4
-            self.isrr_flag = integer_or_blank(card, i + 5, 'ISRR_FLAG', 0)
-            self.nd1 = integer(card, i + 6, 'ND1')
+            isrr_flag = integer_or_blank(card, i + 5, 'ISRR_FLAG', 0)
+            nd1 = integer(card, i + 6, 'ND1')
 
-    def loadCLAN(self, nrows, card):
+    @classmethod
+    def loadCLAN(cls, nrows, card):
+        alphaAjs = []
+        omegaAjs = []
+        mblkszs = []
+        iblkszs = []
+        ksteps = []
+        NJIs = []
         for irow in range(nrows):
             #NDJ_default = None
             i = 9 + 8 * irow
-            self.alphaAjs.append(
+            alphaAjs.append(
                 double_or_blank(card, i, 'alpha' + str(irow), 0.0))
-            self.omegaAjs.append(
+            omegaAjs.append(
                 double_or_blank(card, i + 1, 'omega' + str(irow), 0.0))
-            self.mblkszs.append(
+            mblkszs.append(
                 double_or_blank(card, i + 2, 'mblock' + str(irow), 7))
 
-            self.iblkszs.append(
+            iblkszs.append(
                 integer_or_blank(card, i + 3, 'iblksz' + str(irow), 2))
-            self.ksteps.append(
+            ksteps.append(
                 integer_or_blank(card, i + 4, 'kstep' + str(irow), 5))
-            self.NJIs.append(
+            NJIs.append(
                 integer(card, i + 6, 'NJI' + str(irow)))
+        return alphaAjs, omegaAjs, mblkszs, iblkszs, ksteps, NJIs
 
-    def loadHESS_INV(self, nrows, card):
+    @classmethod
+    def loadHESS_INV(cls, method, nrows, card):
         alphaOmega_default = None
         LJ_default = None
-        if self.method == 'INV':
+        if method == 'INV':
             alphaOmega_default = 0.0
             LJ_default = 1.0
 
+        alphaAjs = []
+        alphaBjs = []
+        omegaAjs = []
+        omegaBjs = []
+        mblkszs = []
+        #iblkszs = []
+        #ksteps = []
+        LJs = []
+        NEJs = []
+        NDJs = []
         for irow in range(nrows):
             NEj = integer(card, 9 + 7 * irow + 5, 'NE%s' % str(irow))
             NDJ_default = None
-            if self.method == 'INV':
+            if method == 'INV':
                 NDJ_default = 3 * NEj
 
             i = 9 + 8 * irow
-            self.alphaAjs.append(
+            alphaAjs.append(
                 double_or_blank(card, i, 'alphaA' + str(irow), alphaOmega_default))
-            self.omegaAjs.append(
+            omegaAjs.append(
                 double_or_blank(card, i + 1, 'omegaA' + str(irow), alphaOmega_default))
-            self.alphaBjs.append(
+            alphaBjs.append(
                 double_or_blank(card, i + 2, 'alphaB' + str(irow), alphaOmega_default))
-            self.omegaBjs.append(
+            omegaBjs.append(
                 double_or_blank(card, i + 3, 'omegaB' + str(irow), alphaOmega_default))
-            self.LJs.append(
+            LJs.append(
                 double_or_blank(card, i + 4, 'LJ' + str(irow), LJ_default))
-            self.NEJs.append(
+            NEJs.append(
                 integer(card, i + 5, 'NEJ' + str(irow)))
-            self.NDJs.append(
+            NDJs.append(
                 integer_or_blank(card, i + 6, 'NDJ' + str(irow), NDJ_default))
 
     def cross_reference(self, model):
@@ -504,62 +546,83 @@ class EIGRL(Method):
     """
     type = 'EIGRL'
 
-    def __init__(self, card=None, data=None, sol=None, comment=''):
+    def __init__(self, sid, v1, v2, nd, msglvl, maxset, shfscl, norm,
+                 options, values, comment=''):
         Method.__init__(self)
         if comment:
             self._comment = comment
-        if card:
-            #: Set identification number. (Unique Integer > 0)
-            self.sid = integer(card, 1, 'sid')
-            #: For vibration analysis: frequency range of interest. For
-            #: buckling analysis: eigenvalue range of interest. See Remark 4.
-            #: (Real or blank, -5 10e16 <= V1 < V2 <= 5.10e16)
-            self.v1 = double_or_blank(card, 2, 'v1')
-            self.v2 = double_or_blank(card, 3, 'v2')
-            #: Number of roots desired
-            self.nd = integer_or_blank(card, 4, 'nd')
-            #: Diagnostic level. (0 < Integer < 4; Default = 0)
-            self.msglvl = integer_or_blank(card, 5, 'msglvl', 0)
-            #: Number of vectors in block or set. Default is machine dependent
-            self.maxset = integer_or_blank(card, 6, 'maxset')
-            #: Estimate of the first flexible mode natural frequency
-            #: (Real or blank)
-            self.shfscl = double_or_blank(card, 7, 'shfscl')
-            #: Method for normalizing eigenvectors (Character: 'MASS' or 'MAX')
-            self.norm = string_or_blank(card, 8, 'norm')
 
-            option_values = [interpret_value(field) for field in card[9:]]
-            self.options = []
-            self.values = []
-            for option_value in option_values:
-                try:
-                    (option, value) = option_value.split('=')
-                except AttributeError:
-                    msg = 'parsing EIGRL card incorrectly; option_values=%s\ncard=%s' % (
-                        option_values, card)
-                    raise RuntimeError(msg)
-                self.options.append(option)
-                self.values.append(value)
+        #: Set identification number. (Unique Integer > 0)
+        self.sid = sid
 
-            #: Method for normalizing eigenvectors
-            if sol in [103, 115, 146]:
-                # normal modes,cyclic normal modes, flutter
-                self.norm = string_or_blank(card, 8, 'norm', 'MASS')
-            elif sol in [105, 110, 111, 116]:
-                # buckling, modal complex eigenvalues,
-                # modal frequency response,cyclic buckling
-                self.norm = string_or_blank(card, 8, 'norm', 'MAX')
-            else:
-                self.norm = string_or_blank(card, 8, 'norm')
+        #: For vibration analysis: frequency range of interest. For
+        #: buckling analysis: eigenvalue range of interest. See Remark 4.
+        #: (Real or blank, -5 10e16 <= V1 < V2 <= 5.10e16)
+        self.v1 = v1
+        self.v2 = v2
 
-            #assert len(card) <= 9, 'len(EIGRL card) = %i' % len(card)
-            assert len(card) <= 10, 'len(EIGRL card) = %i' % len(card)
+        #: Number of roots desired
+        self.nd = nd
 
-            #msg = 'norm=%s sol=%s' % (self.norm, sol)
-            #assert self.norm in ['MASS', 'MAX'],msg
-            #assert card.nFields()<9,'card = %s' %(card.fields(0))
-        else:
-            raise NotImplementedError('EIGRL')
+        #: Diagnostic level. (0 < Integer < 4; Default = 0)
+        self.msglvl = msglvl
+
+        #: Number of vectors in block or set. Default is machine dependent
+        self.maxset = maxset
+
+        #: Estimate of the first flexible mode natural frequency
+        #: (Real or blank)
+        self.shfscl = shfscl
+
+        #: Method for normalizing eigenvectors (Character: 'MASS' or 'MAX')
+        self.norm = norm
+        self.options = options
+        self.values = values
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        sid = integer(card, 1, 'sid')
+        v1 = double_or_blank(card, 2, 'v1')
+        v2 = double_or_blank(card, 3, 'v2')
+        nd = integer_or_blank(card, 4, 'nd')
+        msglvl = integer_or_blank(card, 5, 'msglvl', 0)
+        maxset = integer_or_blank(card, 6, 'maxset')
+        shfscl = double_or_blank(card, 7, 'shfscl')
+        norm = string_or_blank(card, 8, 'norm')
+
+        option_values = [interpret_value(field) for field in card[9:]]
+        options = []
+        values = []
+        for option_value in option_values:
+            try:
+                (option, value) = option_value.split('=')
+            except AttributeError:
+                msg = 'parsing EIGRL card incorrectly; option_values=%s\ncard=%s' % (
+                    option_values, card)
+                raise RuntimeError(msg)
+            options.append(option)
+            values.append(value)
+
+        #: Method for normalizing eigenvectors
+        #if sol in [103, 115, 146]:
+            ## normal modes,cyclic normal modes, flutter
+            #self.norm = string_or_blank(card, 8, 'norm', 'MASS')
+        #elif sol in [105, 110, 111, 116]:
+            ## buckling, modal complex eigenvalues,
+            ## modal frequency response,cyclic buckling
+            #self.norm = string_or_blank(card, 8, 'norm', 'MAX')
+        #else:
+        norm = string_or_blank(card, 8, 'norm')
+
+        #assert len(card) <= 9, 'len(EIGRL card) = %i' % len(card)
+        assert len(card) <= 10, 'len(EIGRL card) = %i' % len(card)
+
+        #msg = 'norm=%s sol=%s' % (self.norm, sol)
+        #assert self.norm in ['MASS', 'MAX'],msg
+        #assert card.nFields()<9,'card = %s' %(card.fields(0))
+        return EIGRL(sid, v1, v2, nd, msglvl, maxset, shfscl, norm,
+                     options, values, comment=comment)
+
 
     def cross_reference(self, model):
         pass

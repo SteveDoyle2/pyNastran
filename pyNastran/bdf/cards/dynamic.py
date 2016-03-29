@@ -27,7 +27,7 @@ from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank,
-    string_or_blank, blank, fields,
+    string_or_blank, blank, fields, components as fcomponents
 )
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
@@ -487,66 +487,89 @@ class NLPARM(BaseCard):
     """
     type = 'NLPARM'
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self, nlparm_id, ninc=10, dt=0.0, kMethod='AUTO', kStep=5,
+                 maxIter=25, conv='PW', intOut='NO',
+                 epsU=0.01, epsP=0.01, epsW=0.01, maxDiv=3, maxQn=None, maxLs=4,
+                 fStress=0.2, lsTol=0.5, maxBisect=5, maxR=20., rTolB=20., comment=''):
         if comment:
             self._comment = comment
-        if card:
-            self.nlparm_id = integer(card, 1, 'nlparm_id')
-            self.ninc = integer_or_blank(card, 2, 'ninc', 10)
-            self.dt = double_or_blank(card, 3, 'dt', 0.0)
-            self.kMethod = string_or_blank(card, 4, 'kMethod', 'AUTO')
-            self.kStep = integer_or_blank(card, 5, 'kStep', 5)
-            self.maxIter = integer_or_blank(card, 6, 'maxIter', 25)
-            self.conv = string_or_blank(card, 7, 'conv', 'PW')
-            self.intOut = string_or_blank(card, 8, 'intOut', 'NO')
+        self.nlparm_id = nlparm_id
+        self.ninc = ninc
+        self.dt = dt
+        self.kMethod = kMethod
+        self.kStep = kStep
+        self.maxIter = maxIter
+        self.conv = conv
+        self.intOut = intOut
 
-            # line 2
-            self.epsU = double_or_blank(card, 9, 'epsU', 0.01)
-            self.epsP = double_or_blank(card, 10, 'epsP', 0.01)
-            self.epsW = double_or_blank(card, 11, 'epsW', 0.01)
-            self.maxDiv = integer_or_blank(card, 12, 'maxDiv', 3)
+        # line 2
+        self.epsP = epsP
+        self.epsU = epsU
+        self.epsW = epsW
+        self.maxDiv = maxDiv
+        self.maxQn = maxQn
+        self.maxLs = maxLs
+        self.fStress = fStress
+        self.lsTol = lsTol
 
-            if self.kMethod == 'PFNT':
-                self.maxQn = integer_or_blank(card, 13, 'maxQn', 0)
+        # line 3
+        self.maxBisect = maxBisect
+        self.maxR = maxR
+        self.rTolB = rTolB
+
+        if self.maxQn is None:
+            if kMethod == 'PFNT':
+                self.maxQn = 0
             else:
-                self.maxQn = integer_or_blank(card, 13, 'maxQn', self.maxIter)
+                self.maxQn = maxIter
 
-            self.maxLs = integer_or_blank(card, 14, 'maxLs', 4)
-            self.fStress = double_or_blank(card, 15, 'fStress', 0.2)
-            self.lsTol = double_or_blank(card, 16, 'lsTol', 0.5)
+    @classmethod
+    def add_card(cls, card, comment=''):
+        nlparm_id = integer(card, 1, 'nlparm_id')
+        ninc = integer_or_blank(card, 2, 'ninc', 10)
+        dt = double_or_blank(card, 3, 'dt', 0.0)
+        kMethod = string_or_blank(card, 4, 'kMethod', 'AUTO')
+        kStep = integer_or_blank(card, 5, 'kStep', 5)
+        maxIter = integer_or_blank(card, 6, 'maxIter', 25)
+        conv = string_or_blank(card, 7, 'conv', 'PW')
+        intOut = string_or_blank(card, 8, 'intOut', 'NO')
 
-            # line 3
-            self.maxBisect = integer_or_blank(card, 17, '', 5)
-            self.maxR = double_or_blank(card, 21, 'maxR', 20.)
-            self.rTolB = double_or_blank(card, 23, 'rTolB', 20.)
-            assert len(card) <= 24, 'len(NLPARM card) = %i' % len(card)
+        # line 2
+        epsU = double_or_blank(card, 9, 'epsU', 0.01)
+        epsP = double_or_blank(card, 10, 'epsP', 0.01)
+        epsW = double_or_blank(card, 11, 'epsW', 0.01)
+        maxDiv = integer_or_blank(card, 12, 'maxDiv', 3)
+
+        if kMethod == 'PFNT':
+            maxQn = integer_or_blank(card, 13, 'maxQn', 0)
         else:
-            (nlparm_id, ninc, dt, kMethod, kStep, maxIter, conv, intOut, epsU, epsP,
-             epsW, maxDiv, maxQn, maxLs, fStress, lsTol, maxBisect, maxR,
-             rTolB) = data
-            self.nlparm_id = nlparm_id
-            self.ninc = ninc
-            self.dt = dt
-            self.kMethod = kMethod
-            self.kStep = kStep
-            self.maxIter = maxIter
-            self.conv = conv
-            self.intOut = intOut
+            maxQn = integer_or_blank(card, 13, 'maxQn', maxIter)
 
-            # line 2
-            self.epsU = epsU
-            self.epsP = epsP
-            self.epsW = epsW
-            self.maxDiv = maxDiv
-            self.maxQn = maxQn
-            self.maxLs = maxLs
-            self.fStress = fStress
-            self.lsTol = lsTol
+        maxLs = integer_or_blank(card, 14, 'maxLs', 4)
+        fStress = double_or_blank(card, 15, 'fStress', 0.2)
+        lsTol = double_or_blank(card, 16, 'lsTol', 0.5)
 
-            # line 3
-            self.maxBisect = maxBisect
-            self.maxR = maxR
-            self.rTolB = rTolB
+        # line 3
+        maxBisect = integer_or_blank(card, 17, '', 5)
+        maxR = double_or_blank(card, 21, 'maxR', 20.)
+        rTolB = double_or_blank(card, 23, 'rTolB', 20.)
+        assert len(card) <= 24, 'len(NLPARM card) = %i' % len(card)
+        return NLPARM(nlparm_id, ninc, dt, kMethod, kStep, maxIter, conv,
+                      intOut, epsU, epsP, epsW, maxDiv,
+                      maxQn, maxLs, fStress,
+                      lsTol, maxBisect, maxR,
+                      rTolB, comment=comment)
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        (nlparm_id, ninc, dt, kMethod, kStep, maxIter, conv, intOut, epsU, epsP,
+         epsW, maxDiv, maxQn, maxLs, fStress, lsTol, maxBisect, maxR,
+         rTolB) = data
+        return NLPARM(nlparm_id, ninc, dt, kMethod, kStep, maxIter, conv,
+                      intOut, epsU, epsP, epsW, maxDiv,
+                      maxQn, maxLs, fStress,
+                      lsTol, maxBisect, maxR,
+                      rTolB, comment=comment)
 
     def raw_fields(self):
         list_fields = ['NLPARM', self.nlparm_id, self.ninc, self.dt, self.kMethod,
@@ -651,7 +674,7 @@ class TF(BaseCard):
     def add_card(cls, card, comment=''):
         sid = integer(card, 1, 'sid')
         nid0 = integer(card, 2, 'nid0')
-        c = components(card, 3, 'components_0')
+        c = fcomponents(card, 3, 'components_0')
         b0 = double_or_blank(card, 4, 'b0', 0.)
         b1 = double_or_blank(card, 5, 'b1', 0.)
         b2 = double_or_blank(card, 6, 'b2', 0.)
@@ -668,7 +691,7 @@ class TF(BaseCard):
             j = irow * 8 + 9
             #ifield = irow + 1
             grid1 = integer(card, j, 'grid_%i' % (irow + 1))
-            component1 = components(card, j + 1, 'components_%i' % (irow + 1))
+            component1 = fcomponents(card, j + 1, 'components_%i' % (irow + 1))
             a0 = double_or_blank(card, j + 2, 'a0_%i' % (irow + 1), 0.)
             a1 = double_or_blank(card, j + 3, 'a1_%i' % (irow + 1), 0.)
             a2 = double_or_blank(card, j + 4, 'a2_%i' % (irow + 1), 0.)
