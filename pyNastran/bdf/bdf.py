@@ -1413,6 +1413,17 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'MAT4' : (MAT4, self.add_thermal_material),
             'MAT5' : (MAT5, self.add_thermal_material),
 
+            'MATS1' : (MATS1, self.add_material_dependence),
+            #'MATS3' : (MATS3, self.add_material_dependence),
+            #'MATS8' : (MATS8, self.add_material_dependence),
+            'MATT1' : (MATT1, self.add_material_dependence),
+            'MATT2' : (MATT2, self.add_material_dependence),
+            #'MATT3' : (MATT3, self.add_material_dependence),
+            'MATT4' : (MATT4, self.add_material_dependence),
+            'MATT5' : (MATT5, self.add_material_dependence),
+            #'MATT8' : (MATT8, self.add_material_dependence),
+            #'MATT9' : (MATT9, self.add_material_dependence),
+
             ## hasnt been verified, links up to MAT1, MAT2, MAT9 w/ same MID
             'CREEP' : (CREEP, self.add_creep_material),
 
@@ -1480,9 +1491,10 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'QBDY3' : (QBDY3, self.add_thermal_load),
             'QHBDY' : (QHBDY, self.add_thermal_load),
             'PHBDY' : (PHBDY, self.add_PHBDY),
-            #'CHBDYE' : (CHBDYE, self.add_thermal_element),
-            #'CHBDYG' : (CHBDYG, self.add_thermal_element),
-            #'CHBDYP' : (CHBDYP, self.add_thermal_element),
+
+            'CHBDYE' : (CHBDYE, self.add_thermal_element),
+            'CHBDYG' : (CHBDYG, self.add_thermal_element),
+            'CHBDYP' : (CHBDYP, self.add_thermal_element),
             'PCONV' : (PCONV, self.add_convection_property),
             'PCONVM' : (PCONVM, self.add_convection_property),
 
@@ -1572,8 +1584,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
             'EIGB' : (EIGB, self.add_method),
             'EIGR' : (EIGR, self.add_method),
-            #'EIGRL' : (EIGRL, self.add_method),
-            #'EIGC' : (EIGC, self.add_cmethod),
+            'EIGRL' : (EIGRL, self.add_method),
+            'EIGC' : (EIGC, self.add_cmethod),
             'EIGP' : (EIGP, self.add_cmethod),
 
             'BCRPARA' : (BCRPARA, self.add_BCRPARA),
@@ -1615,6 +1627,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
             #'SEUSET' : (SEUSET, self.add_SEUSET),
             #'SEUSET1' : (SEUSET1, self.add_SEUSET),
+
+            'NLPARM' : (NLPARM, self.add_NLPARM),
         }
         self._card_parser_a = {
             'PBUSH1D' : (PBUSH1D, self.add_property),
@@ -1622,29 +1636,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         }
         self._card_parser_b = {
             'CIHEX1' : (CIHEX1, self.add_element),
-            'NLPARM' : (NLPARM, self.add_NLPARM),
-
-            'MATS1' : (MATS1, self.add_material_dependence),
-            #'MATS3' : (MATS3, self.add_material_dependence),
-            #'MATS8' : (MATS8, self.add_material_dependence),
-            'MATT1' : (MATT1, self.add_material_dependence),
-            'MATT2' : (MATT2, self.add_material_dependence),
-            #'MATT3' : (MATT3, self.add_material_dependence),
-            'MATT4' : (MATT4, self.add_material_dependence),
-            'MATT5' : (MATT5, self.add_material_dependence),
-            #'MATT8' : (MATT8, self.add_material_dependence),
-            #'MATT9' : (MATT9, self.add_material_dependence),
-
-            'CHBDYE' : (CHBDYE, self.add_thermal_element),
-            'CHBDYG' : (CHBDYG, self.add_thermal_element),
-            'CHBDYP' : (CHBDYP, self.add_thermal_element),
-
-            #'DVMREL2' : (DVMREL2, self.add_DVMREL), # deqatn
-            #DVCREL1
-            # DVCREL2 - deqatn
-
-            'EIGRL' : (EIGRL, self.add_method),
-            'EIGC' : (EIGC, self.add_cmethod),
         }
         self._card_parser_prepare = {
             'CTETRA' : self._prepare_ctetra,
@@ -2260,29 +2251,29 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         # loads
         for (lid, loads) in sorted(iteritems(self.loads)):
             msg.append('bdf.loads[%s]' % lid)
-            groups = {}
+            groups_dict = {}
             for load in loads:
-                groups[load.type] = groups.get(load.type, 0) + 1
-            for name, count_name in sorted(iteritems(groups)):
+                groups_dict[load.type] = groups_dict.get(load.type, 0) + 1
+            for name, count_name in sorted(iteritems(groups_dict)):
                 msg.append('  %-8s %s' % (name + ':', count_name))
             msg.append('')
 
         # dloads
         for (lid, loads) in sorted(iteritems(self.dloads)):
             msg.append('bdf.dloads[%s]' % lid)
-            groups = {}
+            groups_dict = {}
             for load in loads:
-                groups[load.type] = groups.get(load.type, 0) + 1
-            for name, count_name in sorted(iteritems(groups)):
+                groups_dict[load.type] = groups_dict.get(load.type, 0) + 1
+            for name, count_name in sorted(iteritems(groups_dict)):
                 msg.append('  %-8s %s' % (name + ':', count_name))
             msg.append('')
 
         for (lid, loads) in sorted(iteritems(self.dload_entries)):
             msg.append('bdf.dload_entries[%s]' % lid)
-            groups = {}
+            groups_dict = {}
             for load in loads:
-                groups[load.type] = groups.get(load.type, 0) + 1
-            for name, count_name in sorted(iteritems(groups)):
+                groups_dict[load.type] = groups_dict.get(load.type, 0) + 1
+            for name, count_name in sorted(iteritems(groups_dict)):
                 msg.append('  %-8s %s' % (name + ':', count_name))
             msg.append('')
 
