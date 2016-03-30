@@ -621,7 +621,6 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
 
     .. todo:: bdf_model option for bdf_filename hasn't been tested
     .. todo:: add support for subsets (e.g. renumber only a subset of nodes/elements)
-    .. todo:: add support for not renumbering certain types (e.g. nid)
     ..warning :: spoints might be problematic...check
     ..warning :: still in development, but it usually brutally crashes if it's not supported
     ..warning :: be careful of unsupported cards
@@ -694,6 +693,48 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
        - STATSUB
        - SUBCASE
        - global SET cards won't be renumbered properly
+
+    Example 1 - Renumber Everything; Start from 1
+    ---------------------------------------------
+    bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
+                 round_ids=False)
+
+    Example 2 - Renumber Everything; Start Material IDs from 100
+    ------------------------------------------------------------
+    starting_id_dict = {
+        'mid' : 100,
+    }
+    bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
+                 starting_ids_dict=starting_ids_dict, round_ids=False)
+
+    Example 3 - Only Renumber Material IDs
+    --------------------------------------
+    starting_id_dict = {
+        'cid' : None,
+        'nid' : None,
+        'eid' : None,
+        'pid' : None,
+        'mid' : 1,
+        'spc_id' : None,
+        'mpc_id' : None,
+        'load_id' : None,
+        'dload_id' : None,
+
+        'method_id' : None,
+        'cmethod_id' : None,
+        'spline_id' : None,
+        'table_id' : None,
+        'flfact_id' : None,
+        'flutter_id' : None,
+        'freq_id' : None,
+        'tstep_id' : None,
+        'tstepnl_id' : None,
+        'suport_id' : None,
+        'suport1_id' : None,
+        'tf_id' : None,
+    }
+    bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
+                 starting_ids_dict=starting_ids_dict, round_ids=False)
     """
     starting_id_dict_default = {
         'cid' : 1,
@@ -730,7 +771,10 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
         assert isinstance(key, string_types), key
         assert key in starting_id_dict_default, 'key=%s is invalid' % (key)
         assert isidentifier(key), 'key=%s is invalid' % key
-        assert isinstance(value, integer_types), 'value=%s must be an integer; type(value)=%s' % (value, type(value))
+        if value is None:
+            pass
+        else:
+            assert isinstance(value, integer_types), 'value=%s must be an integer; type(value)=%s' % (value, type(value))
         call = '%s = %s' % (key, value)
 
         # this exec is safe because we checked the identifier
@@ -784,7 +828,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
     #print(spoints_nids)
     #k = 0
 
-    if 'nid' in starting_id_dict:
+    if 'nid' in starting_id_dict and nid is not None:
         i = nid
         #banned_nodes = spoints
         for nidi in spoints_nids:
@@ -806,6 +850,10 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
             #i += 1
         #print(nid_map)
         #print(reverse_nid_map)
+    else:
+        for nid in spoints_nids:
+            nid_map[nid] = nid
+            reverse_nid_map[nid] = nid
 
     all_materials = (
         model.materials,
@@ -825,24 +873,26 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
         model.MATS3,
         model.MATS8,
     )
-    mids = []
-    for materials in all_materials:
-        mids += materials.keys()
-    mids = unique(mids)
-    mids.sort()
-    nmaterials = len(mids)
 
-    for i in range(nmaterials):
-        midi = mids[i]
-        mid_map[midi] = mid + i
+    if mid is not None:
+        mids = []
+        for materials in all_materials:
+            mids += materials.keys()
+        mids = unique(mids)
+        mids.sort()
+        nmaterials = len(mids)
 
-    if 'nid' in starting_id_dict:
+        for i in range(nmaterials):
+            midi = mids[i]
+            mid_map[midi] = mid + i
+
+    if 'nid' in starting_id_dict and nid is not None:
         #spoints2 = arange(1, len(spoints) + 1)
         for nid, node in sorted(iteritems(model.nodes)):
             nid_new = nid_map[nid]
             node.nid = nid_new
 
-    if 'pid' in starting_id_dict:
+    if 'pid' in starting_id_dict and pid is not None:
         # properties
         for pidi, prop in sorted(iteritems(model.properties)):
             prop.pid = pid
@@ -860,7 +910,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
             prop.pid = pid
             pid += 1
 
-    if 'eid' in starting_id_dict:
+    if 'eid' in starting_id_dict and eid is not None:
         # elements
         for eidi, element in sorted(iteritems(model.elements)):
             element.eid = eid
@@ -879,7 +929,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
         #for eidi, elem in iteritems(model.caeros):
             #pass
 
-    if 'mid' in starting_id_dict:
+    if 'mid' in starting_id_dict and mid is not None:
         #mid = 1
         for materials in all_materials:
             for midi, material in iteritems(materials):
@@ -887,7 +937,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
                 assert hasattr(material, 'mid')
                 material.mid = mid
 
-    if 'spc_id' in starting_id_dict:
+    if 'spc_id' in starting_id_dict and spc_id is not None:
         # spc
         for spc_idi, spc_group in sorted(iteritems(model.spcs)):
             for i, spc in enumerate(spc_group):
@@ -900,8 +950,13 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
             spcadd.conid = spc_id
             spc_map[spc_idi] = spc_id
             spc_id += 1
+    else:
+        for spc_id in model.spcs:
+            spc_map[spc_id] = spc_id
+        for spc_id in model.spcadds:
+            spc_map[spc_id] = spc_id
 
-    if 'mpc_id' in starting_id_dict:
+    if 'mpc_id' in starting_id_dict and mpc_id is not None:
         # mpc
         for mpc_idi, mpc_group in sorted(iteritems(model.mpcs)):
             for i, mpc in enumerate(mpc_group):
@@ -914,8 +969,13 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
             mpcadd.conid = mpc_id
             mpc_map[mpc_idi] = mpc_id
             mpc_id += 1
+    else:
+        for mpc_id in model.mpcs:
+            mpc_map[mpc_id] = mpc_id
+        for mpc_id in model.mpcadds:
+            mpc_map[mpc_id] = mpc_id
 
-    if 'cid' in starting_id_dict:
+    if 'cid' in starting_id_dict and cid is not None:
         # coords
         for cidi, coord in sorted(iteritems(model.coords)):
             if cidi == 0:
@@ -1595,7 +1655,7 @@ def convert_bad_quads_to_tris(model, eids_to_check=None, xyz_cid0=None, tol=0.0)
 
 
 def create_spar_cap(model, eids, nids, width, nelements=1, symmetric=True, xyz_cid0=None,
-                    vector=None, idir=None):
+                    vector=None, idir=None, eid_start=1):
     """
     Builds elements along a line of nodes that are normal to the element face.
 
@@ -1678,12 +1738,12 @@ def create_spar_cap(model, eids, nids, width, nelements=1, symmetric=True, xyz_c
             # 3---2
             # |   |
             # 0---1
-            normal = cross(
+            normal = np.cross(
                 xyz[2, :] - xyz[0, :],
                 xyz[3, :] - xyz[1, :],
             )
         elif etype == 'CTRIA3':
-            normal = cross(
+            normal = np.cross(
                 xyz[1, :] - xyz[0, :],
                 xyz[2, :] - xyz[0, :],
             )
