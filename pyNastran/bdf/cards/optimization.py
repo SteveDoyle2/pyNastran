@@ -27,7 +27,7 @@ class OptConstraint(BaseCard):
 
 class DCONSTR(OptConstraint):
     type = 'DCONSTR'
-    def __init__(self, oid, rid, lid=1.e20, uid=1.e20, lowfq=0., highfq=1.e20, comment=''):
+    def __init__(self, oid, dresp_id, lid=1.e20, uid=1.e20, lowfq=0., highfq=1.e20, comment=''):
         """
         +---------+------+-----+------------+------------+-------+--------+
         |   1     |   2  |  3  |     4      |      5     |   6   |   7    |
@@ -39,7 +39,7 @@ class DCONSTR(OptConstraint):
             self._comment = comment
         self.oid = oid
         # DRESP entry
-        self.rid = rid
+        self.dresp_id = dresp_id
         # lower bound
         self.lid = lid
         # upper bound
@@ -52,13 +52,13 @@ class DCONSTR(OptConstraint):
     @classmethod
     def add_card(cls, card, comment=''):
         oid = integer(card, 1, 'oid')
-        rid = integer(card, 2, 'rid')
+        dresp_id = integer(card, 2, 'dresp_id')
         lid = integer_double_or_blank(card, 3, 'lid', -1e20)
         uid = integer_double_or_blank(card, 4, 'uid', 1e20)
         lowfq = double_or_blank(card, 5, 'lowfq', 0.0)
         highfq = double_or_blank(card, 6, 'highfq', 1e20)
         assert len(card) <= 7, 'len(DCONSTR card) = %i' % len(card)
-        return DCONSTR(oid, rid, lid, uid, lowfq, highfq, comment=comment)
+        return DCONSTR(oid, dresp_id, lid, uid, lowfq, highfq, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -70,11 +70,14 @@ class DCONSTR(OptConstraint):
         highfq = data[5]
         return DCONSTR(oid, rid, lid, uid, lowfq, highfq, comment=comment)
 
-    def Rid(self):
-        if isinstance(self.rid, integer_types):
-            return self.rid
+    def DRespID(self):
+        if isinstance(self.dresp_id, integer_types):
+            return self.dresp_id
         else:
-            return self.rid_ref.oid
+            return self.dresp_id_ref.dresp_id
+
+    def Rid(self):
+        return self.DRespID()
 
     def Lid(self):
         if isinstance(self.lid, (integer_types, float)):
@@ -98,8 +101,8 @@ class DCONSTR(OptConstraint):
             the BDF object
         """
         msg = ' which is required by %s oid=%s' % (self.type, self.oid)
-        self.rid = model.DResp(self.Rid(), msg)
-        self.rid_ref = self.rid
+        self.dresp_id = model.DResp(self.DRespID(), msg)
+        self.dresp_id_ref = self.dresp_id
         if isinstance(self.lid, integer_types):
             self.lid = model.Table(self.lid, msg)
             self.lid_ref = self.lid
@@ -108,7 +111,7 @@ class DCONSTR(OptConstraint):
             self.uid_ref = self.uid
 
     def uncross_reference(self):
-        self.rid = self.Rid()
+        self.dresp_id = self.DRespID()
         self.lid = self.Lid()
         self.uid = self.Uid()
 
@@ -119,7 +122,7 @@ class DCONSTR(OptConstraint):
         del self.rid_ref
 
     def raw_fields(self):
-        list_fields = ['DCONSTR', self.oid, self.Rid(), self.Lid(),
+        list_fields = ['DCONSTR', self.oid, self.DRespID(), self.Lid(),
                        self.Uid(), self.lowfq, self.highfq]
         return list_fields
 
@@ -128,7 +131,7 @@ class DCONSTR(OptConstraint):
         uid = set_blank_if_default(self.Uid(), 1e20)
         lowfq = set_blank_if_default(self.lowfq, 0.0)
         highfq = set_blank_if_default(self.highfq, 1e20)
-        list_fields = ['DCONSTR', self.oid, self.Rid(), lid, uid, lowfq, highfq]
+        list_fields = ['DCONSTR', self.oid, self.DRespID(), lid, uid, lowfq, highfq]
         return list_fields
 
     def write_card(self, size=8, is_double=False):
@@ -149,10 +152,10 @@ class DESVAR(OptConstraint):
     | DESVAR | OID | LABEL | XINIT | XLB | XUB | DELXV | DDVAL |
     +--------+-----+-------+-------+-----+-----+-------+-------+
     """
-    def __init__(self, oid, label, xinit, xlb, xub, delx=None, ddval=None, comment=''):
+    def __init__(self, desvar_id, label, xinit, xlb, xub, delx=None, ddval=None, comment=''):
         if comment:
             self._comment = comment
-        self.oid = oid
+        self.desvar_id = desvar_id
         #: user-defined name for printing purposes
         self.label = label
         self.xinit = xinit
@@ -166,7 +169,7 @@ class DESVAR(OptConstraint):
 
     @classmethod
     def add_card(cls, card, comment=''):
-        oid = integer(card, 1, 'oid')
+        desvar_id = integer(card, 1, 'desvar_id')
         label = string(card, 2, 'label')
         xinit = double(card, 3, 'xinit')
         xlb = double_or_blank(card, 4, 'xlb', -1e20)
@@ -174,13 +177,16 @@ class DESVAR(OptConstraint):
         delx = double_or_blank(card, 6, 'delx', 1e20)
         ddval = integer_or_blank(card, 7, 'ddval')
         assert len(card) <= 8, 'len(DESVAR card) = %i' % len(card)
-        return DESVAR(oid, label, xinit, xlb, xub, delx, ddval, comment=comment)
+        return DESVAR(desvar_id, label, xinit, xlb, xub, delx, ddval, comment=comment)
 
     def OptID(self):
-        return self.oid
+        return self.DesvarID()
+
+    def DesvarID():
+        return self.desvar_id
 
     def raw_fields(self):
-        list_fields = ['DESVAR', self.oid, self.label, self.xinit, self.xlb,
+        list_fields = ['DESVAR', self.desvar_id, self.label, self.xinit, self.xlb,
                        self.xub, self.delx, self.ddval]
         return list_fields
 
@@ -188,7 +194,7 @@ class DESVAR(OptConstraint):
         xlb = set_blank_if_default(self.xlb, -1e20)
         xub = set_blank_if_default(self.xub, 1e20)
         delx = set_blank_if_default(self.delx, 1e20)
-        list_fields = ['DESVAR', self.oid, self.label, self.xinit, xlb,
+        list_fields = ['DESVAR', self.desvar_id, self.label, self.xinit, xlb,
                        xub, delx, self.ddval]
         return list_fields
 
@@ -722,7 +728,7 @@ def validate_dresp1(property_type, response_type, atta, attb, atti):
 class DRESP1(OptConstraint):
     type = 'DRESP1'
 
-    def __init__(self, oid, label, response_type, property_type, region,
+    def __init__(self, dresp_id, label, response_type, property_type, region,
                  atta, attb, atti, comment='', validate=False):
         """
         +--------+-------+---------+--------+--------+--------+-------+------+-------+
@@ -739,7 +745,7 @@ class DRESP1(OptConstraint):
         """
         if comment:
             self._comment = comment
-        self.oid = oid
+        self.dresp_id = dresp_id
         self.label = label
 
         # DISP, VONMISES, 14
@@ -832,7 +838,10 @@ class DRESP1(OptConstraint):
         return out
 
     def OptID(self):
-        return self.oid
+        return self.DRespID()
+
+    def DRespID(self):
+        return self.dresp_id
 
     def cross_reference(self, model):
         """
@@ -843,7 +852,7 @@ class DRESP1(OptConstraint):
         model : BDF()
             the BDF object
         """
-        msg = ', which is required by %s oid=%s' % (self.type, self.oid)
+        msg = ', which is required by %s dresp_id=%s' % (self.type, self.dresp_id)
         msg += '\n' + str(self)
 
         op2_results = [
@@ -933,7 +942,7 @@ class DRESP1(OptConstraint):
         return data
 
     def raw_fields(self):
-        list_fields = ['DRESP1', self.oid, self.label, self.response_type, self.property_type,
+        list_fields = ['DRESP1', self.dresp_id, self.label, self.response_type, self.property_type,
                        self.region, self.atta, self.attb] + self.atti_values()
         #for val in self.atti_values():
             #print(val)
@@ -951,7 +960,7 @@ class DRESP1(OptConstraint):
 class DRESP2(OptConstraint):
     type = 'DRESP2'
 
-    def __init__(self, oid, label, dequation, region, method,
+    def __init__(self, dresp_id, label, dequation, region, method,
                  c1, c2, c3, params, comment=''):
         """
         Design Sensitivity Equation Response Quantities
@@ -962,7 +971,7 @@ class DRESP2(OptConstraint):
             self._comment = comment
         self.func = None
         self.dequation_str = None
-        self.oid = oid
+        self.dresp_id = dresp_id
         self.label = label
         self.dequation = dequation
         self.region = region
@@ -974,7 +983,7 @@ class DRESP2(OptConstraint):
 
     @classmethod
     def add_card(cls, card, comment=''):
-        oid = integer(card, 1, 'oid')
+        dresp_id = integer(card, 1, 'dresp_id')
         label = string(card, 2, 'label')
         dequation = integer_or_string(card, 3, 'dequation_id')
         region = integer_or_blank(card, 4, 'region')
@@ -1003,11 +1012,14 @@ class DRESP2(OptConstraint):
         #print("--Params--")
         #for key, value_list in sorted(iteritems(self.params)):
             #print("  key=%s params=%s" %(key, value_list))
-        return DRESP2(oid, label, dequation, region, method,
+        return DRESP2(dresp_id, label, dequation, region, method,
                       c1, c2, c3, params, comment=comment)
 
     def OptID(self):
-        return self.oid
+        return self.DRespID()
+
+    def DRespID(self):
+        return self.dresp_id
 
     def _verify(self, xref=True):
         pass
@@ -1052,7 +1064,7 @@ class DRESP2(OptConstraint):
         model : BDF()
             the BDF object
         """
-        msg = ', which is required by %s ID=%s' % (self.type, self.oid)
+        msg = ', which is required by %s ID=%s' % (self.type, self.dresp_id)
         default_values = {}
         for key, vals in sorted(iteritems(self.params)):
             j, name = key
@@ -1180,7 +1192,7 @@ class DRESP2(OptConstraint):
         return list_fields
 
     def raw_fields(self):
-        list_fields = ['DRESP2', self.oid, self.label, self.DEquation(),
+        list_fields = ['DRESP2', self.dresp_id, self.label, self.DEquation(),
                        self.region, self.method, self.c1, self.c2, self.c3]
         list_fields += self._pack_params()
         return list_fields
@@ -1190,7 +1202,7 @@ class DRESP2(OptConstraint):
         c1 = set_blank_if_default(self.c1, 100.)
         c2 = set_blank_if_default(self.c2, 0.005)
 
-        list_fields = ['DRESP2', self.oid, self.label, self.DEquation(),
+        list_fields = ['DRESP2', self.dresp_id, self.label, self.DEquation(),
                        self.region, method, c1, c2, self.c3]
         list_fields += self._pack_params()
         return list_fields
@@ -1207,11 +1219,11 @@ class DRESP2(OptConstraint):
 class DRESP3(OptConstraint):
     type = 'DRESP3'
 
-    def __init__(self, oid, label, group, Type, region, params,
+    def __init__(self, dresp_id, label, group, Type, region, params,
                  comment=''):
         if comment:
             self._comment = comment
-        self.oid = oid
+        self.dresp_id = dresp_id
         self.label = label
         self.group = group
         self.Type = Type
@@ -1220,7 +1232,7 @@ class DRESP3(OptConstraint):
 
     @classmethod
     def add_card(cls, card, comment=''):
-        oid = integer(card, 1, 'ID')
+        dresp_id = integer(card, 1, 'dresp_id')
         label = string(card, 2, 'label')
         group = string(card, 3, 'group')
         Type = string(card, 4, 'Type')
@@ -1242,7 +1254,7 @@ class DRESP3(OptConstraint):
             #    pass
         params[key] = value_list
         del params['$NULL$']
-        return DRESP3(oid, label, group, Type, region, params,
+        return DRESP3(dresp_id, label, group, Type, region, params,
                       comment=comment)
 
     def _get_values(self, name, values_list):
@@ -1323,7 +1335,7 @@ class DRESP3(OptConstraint):
             try:
                 (i, j) = pack_length[key]
             except KeyError:
-                msg = 'INVALID DRESP3 key=%r fields=%s ID=%s' % (key, value_list, self.oid)
+                msg = 'INVALID DRESP3 key=%r fields=%s ID=%s' % (key, value_list, self.dresp_id)
                 raise KeyError(msg)
             list_fields += build_table_lines(fields2, nstart=i, nend=j)
         return list_fields
@@ -1371,14 +1383,14 @@ class DRESP3(OptConstraint):
 
     def raw_fields(self):
         list_fields = [
-            'DRESP3', self.oid, self.label, self.group, self.Type, self.region,
+            'DRESP3', self.dresp_id, self.label, self.group, self.Type, self.region,
             None, None, None]
         list_fields += self._pack_params()
         return list_fields
 
     def repr_fields(self):
         list_fields = [
-            'DRESP3', self.oid, self.label, self.group, self.Type, self.region,
+            'DRESP3', self.dresp_id, self.label, self.group, self.Type, self.region,
             None, None, None]
         list_fields += self._pack_params()
         return list_fields
@@ -2044,7 +2056,7 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
     def desvar_ids(self):
         if isinstance(self.dvids[0], int):
             return self.dvids
-        return [desvar.oid for desvar in self.dvids]
+        return [desvar.desvar_id for desvar in self.dvids]
 
     def raw_fields(self):
         list_fields = ['DVPREL1', self.oid, self.Type, self.Pid(),
