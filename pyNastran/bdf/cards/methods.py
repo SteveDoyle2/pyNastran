@@ -221,9 +221,9 @@ class EIGC(Method):
             #raise RuntimeError(msg)
 
         if method == 'CLAN':
-            alphaAjs, omegaAjs, mblkszs, iblkszs, ksteps, NJIs = cls.loadCLAN(nrows, card)
+            alphaAjs, omegaAjs, mblkszs, iblkszs, ksteps, NJIs = cls._load_clan(nrows, card)
         elif method in ['HESS', 'INV']:  # HESS, INV
-            cls.loadHESS_INV(nrows, method, card)
+            cls._load_hess_inv(nrows, method, card)
         elif method == 'ISRR':
             cls._load_isrr(nrows, card)
         else:
@@ -232,8 +232,8 @@ class EIGC(Method):
         #assert card.nFields() < 8, 'card = %s' % card
         return EIGC(sid, method, norm, G, C, E, ndo, comment=comment)
 
-    @classmethod
-    def _load_isrr(cls, nrows, card):
+    @staticmethod
+    def _load_isrr(nrows, card):
         assert nrows == 1, card
         for irow in range(nrows):
             i = 9 + 8 * irow
@@ -245,8 +245,8 @@ class EIGC(Method):
             isrr_flag = integer_or_blank(card, i + 5, 'ISRR_FLAG', 0)
             nd1 = integer(card, i + 6, 'ND1')
 
-    @classmethod
-    def loadCLAN(cls, nrows, card):
+    @staticmethod
+    def _load_clan(nrows, card):
         alphaAjs = []
         omegaAjs = []
         mblkszs = []
@@ -271,8 +271,8 @@ class EIGC(Method):
                 integer(card, i + 6, 'NJI' + str(irow)))
         return alphaAjs, omegaAjs, mblkszs, iblkszs, ksteps, NJIs
 
-    @classmethod
-    def loadHESS_INV(cls, method, nrows, card):
+    @staticmethod
+    def _load_hess_inv(nrows, method, card):
         alphaOmega_default = None
         LJ_default = None
         if method == 'INV':

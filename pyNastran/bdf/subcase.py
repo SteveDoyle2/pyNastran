@@ -1166,7 +1166,7 @@ def expand_thru_case_control(set_value):
                     else:
                         raise RuntimeError(ivalue)
                 else:
-                    raise RuntimeError(ivalue)
+                    raise RuntimeError('expected data of the form: 10 THRU 20 or 10 THRU 20 BY 5; actual=\n%r' % ivalue)
             else:
                 assert add_mode is True, add_mode
                 set_value2.add(ivalue)

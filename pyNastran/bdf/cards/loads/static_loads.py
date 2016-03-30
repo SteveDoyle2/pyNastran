@@ -2528,7 +2528,7 @@ class PLOADX1(Load):
 
     def raw_fields(self):
         list_fields = [
-            'PLOADX1', self.sid, self.eid, self.pa, self.pb,
+            'PLOADX1', self.sid, self.Eid(), self.pa, self.pb,
             self.Ga(), self.Gb(), self.theta]
         return list_fields
 

@@ -61,7 +61,11 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
 
         z1 = self.z0
         t = self.Thickness()
-        z2 = z1 + t
+        try:
+            z2 = z1 + t
+        except TypeError:
+            msg = 'Type=%s z1=%s t=%s; z2=z1+t is undefined' % (self.type, z1, t)
+            raise TypeError(msg)
         if not ((-1.5*t <= z1 <= 1.5*t) or (-1.5*t <= z2 <= 1.5*t)):
             msg = '%s pid=%s midsurface: z1=%s z2=%s t=%s not in range of -1.5t < zi < 1.5t' % (
                 self.type, self.pid, z1, z2, t)
@@ -546,9 +550,9 @@ class PCOMP(CompositeShellProperty):
         self.thicknesses = thicknesses
         self.thetas = thetas
         self.souts = souts
-        self.z0 = z0
         if z0 is None:
-            self.z0 = -0.5 * self.Thickness()
+            z0 = -0.5 * self.Thickness()
+        self.z0 = z0
 
         assert self.ft in ['HILL', 'HOFF', 'TSAI', 'STRN', 0.0, None], 'ft=%r' % self.ft
         assert self.lam in [None, 'SYM', 'MEM', 'BEND', 'SMEAR', 'SMCORE', 'NO'], 'lam=%r is invalid' % self.lam
@@ -794,9 +798,9 @@ class PCOMPG(CompositeShellProperty):
         self.thetas = thetas
         self.global_ply_ids = global_ply_ids
         self.souts = souts
-        self.z0 = z0
         if z0 is None:
             z0 = -0.5 * self.Thickness()
+        self.z0 = z0
 
         assert self.ft in ['HILL', 'HOFF', 'TSAI', 'STRN', None], 'ft=%r' % self.ft
         assert self.lam in [None, 'SYM', 'MEM', 'BEND', 'SMEAR', 'SMCORE'], 'lam=%r is invalid' % self.lam

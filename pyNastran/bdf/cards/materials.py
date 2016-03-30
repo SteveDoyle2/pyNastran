@@ -1013,7 +1013,7 @@ class MAT5(ThermalMaterial):  # also AnisotropicMaterial
         rho = double_or_blank(card, 9, 'rho', 1.0)
         hgen = double_or_blank(card, 10, 'hgen', 1.0)
         assert len(card) <= 11, 'len(MAT5 card) = %i' % len(card)
-        return MAT5(mid, kxx, kxz, kyy, kyz, kzz,
+        return MAT5(mid, kxx, kxy, kxz, kyy, kyz, kzz,
                     cp, rho, hgen, comment=comment)
 
     @classmethod

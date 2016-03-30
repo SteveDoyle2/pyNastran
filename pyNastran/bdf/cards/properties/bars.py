@@ -203,7 +203,7 @@ class LineProperty(Property):
 
             h3 = dim[4]
             w3 = dim[1]
-            y3 = -dim[0] / 2. + h3
+            #y3 = -dim[0] / 2. + h3
             sections.append([w3, h3, 0., y1])
 
             h2 = dim[0] - h1 - h3

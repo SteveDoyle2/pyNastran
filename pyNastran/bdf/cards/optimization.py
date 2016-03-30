@@ -8,7 +8,7 @@ import numpy as np
 from pyNastran.utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import (BaseCard, expand_thru_by)
-from pyNastran.bdf.cards.deqatn import fortran_to_python, fortran_to_python_short
+from pyNastran.bdf.cards.deqatn import fortran_to_python_short
     #collapse_thru_by_float, condense, build_thru_float)
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, integer_or_string, integer_string_or_blank,
@@ -818,7 +818,7 @@ class DRESP1(OptConstraint):
             #print('atti = ', self.atti)
             atti = self.atti[0]
             out = case.data[itime, inid, comp - 1]
-            print(' DISP[itime=%s, nid=%s, comp=%i] = %s' % (itime, str(nidsi), comp, out))
+            #print(' DISP[itime=%s, nid=%s, comp=%i] = %s' % (itime, str(nidsi), comp, out))
         elif property_type == 'ELEM' and 0:
             pass
         else:
@@ -1036,9 +1036,9 @@ class DRESP2(OptConstraint):
                     argsi.append(arg)
             else:
                 raise NotImplementedError('  TODO: xref %s' % str(key))
-        print('DRESP2 args = %s' % argsi)
+        #op2_model.log.info('DRESP2 args = %s' % argsi)
         out = self.func(*argsi)
-        print('  deqatn out = %s' % out)
+        op2_model.log.info('  deqatn out = %s' % out)
         return out
 
     def cross_reference(self, model):
@@ -1222,7 +1222,7 @@ class DRESP3(OptConstraint):
         label = string(card, 2, 'label')
         group = string(card, 3, 'group')
         Type = string(card, 4, 'Type')
-        region = integer(card, 5, 'Type')
+        region = integer_or_blank(card, 5, 'region')
 
         i = 0
         list_fields = [interpret_value(field) for field in card[9:]]
@@ -1243,9 +1243,62 @@ class DRESP3(OptConstraint):
         return DRESP3(oid, label, group, Type, region, params,
                       comment=comment)
 
+    def _get_values(self, name, values_list):
+        out = []
+        if name in ['DRESP1', 'DRESP2']:
+            for i, val in enumerate(values_list):
+                #self.params[key][i] = model.DResp(val, msg)
+                if isinstance(val, int):
+                    out.append(val)
+                else:
+                    out.append(val.OptID())
+
+        elif name in ['DVCREL1', 'DVCREL2']:
+            for i, val in enumerate(values_list):
+                if isinstance(val, int):
+                    out.append(val)
+                else:
+                    out.append(val.OptID())
+
+        elif name in ['DVMREL1', 'DVMREL2']:
+            for i, val in enumerate(values_list):
+                if isinstance(val, int):
+                    out.append(val)
+                else:
+                    out.append(val.OptID())
+
+        elif name in ['DVPREL1', 'DVPREL2']:
+            for i, val in enumerate(values_list):
+                if isinstance(val, int):
+                    out.append(val)
+                else:
+                    out.append(val.OptID())
+        elif name == 'DESVAR':
+            for i, val in enumerate(values_list):
+                if isinstance(val, int):
+                    out.append(val)
+                else:
+                    out.append(val.OptID())
+        elif name == 'DNODE':
+            #print(values_list)
+            for i in range(0, len(values_list), 2):
+                val = values_list[i]
+                if isinstance(val, int):
+                    out.append(val)
+                else:
+                    out.append(val.nid)
+                out.append(values_list[i+1])
+
+        elif name == 'DTABLE':
+            out = values_list
+        else:
+            raise NotImplementedError('  TODO: _get_values %s' % str(name))
+            out = values_list
+        return out
+
     def _pack_params(self):
         # # the amount of padding at the [beginning,end] of the 2nd line
-        packLength = {
+        pack_length = {
             'DESVAR' : [1, 0],
             'DTABLE' : [1, 0],
             'DFRFNC' : [1, 0],
@@ -1262,26 +1315,69 @@ class DRESP3(OptConstraint):
         }
         list_fields = []
         for key, value_list in sorted(iteritems(self.params)):
-            fields2 = [key] + value_list
+            value_list2 = self._get_values(key, value_list)
+            fields2 = [key] + value_list2
+
             try:
-                (i, j) = packLength[key]
+                (i, j) = pack_length[key]
             except KeyError:
-                msg = 'INVALID DRESP2 key=%r fields=%s ID=%s' % (key, value_list, self.oid)
+                msg = 'INVALID DRESP3 key=%r fields=%s ID=%s' % (key, value_list, self.oid)
                 raise KeyError(msg)
             list_fields += build_table_lines(fields2, nstart=i, nend=j)
         return list_fields
 
+    def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ', which is required by %s ID=%s' % (self.type, self.oid)
+        default_values = {}
+        for name, vals in sorted(iteritems(self.params)):
+            if name in ['DRESP1', 'DRESP2']:
+                for i, val in enumerate(vals):
+                    self.params[name][i] = model.DResp(val, msg)
+            elif name in ['DVMREL1', 'DVMREL2']:
+                for i, val in enumerate(vals):
+                    self.params[name][i] = model.DVmrel(val, msg)
+            elif name in ['DVPREL1', 'DVPREL2']:
+                for i, val in enumerate(vals):
+                    self.params[name][i] = model.DVprel(val, msg)
+            elif name == 'DESVAR':
+                for i, val in enumerate(vals):
+                    self.params[name][i] = model.Desvar(val, msg)
+            elif name == 'DTABLE':
+                self.dtable = model.dtable
+                for i, val in enumerate(vals):
+                    default_values[val] = self.dtable[val]
+            else:
+                raise NotImplementedError('  TODO: xref %s' % str(name))
+        self.params_ref = self.params
+
+        #if isinstance(self.DEquation(), int):
+            #self.dequation = model.DEQATN(self.dequation, msg=msg)
+            #self.dequation_ref = self.dequation
+            #self.func = self.dequation_ref.func
+        #elif isinstance(self.dequation, str):
+            #self.func = fortran_to_python_short(self.dequation, default_values)
+        #else:
+            #raise NotImplementedError(self.dequation)
+
     def raw_fields(self):
         list_fields = [
             'DRESP3', self.oid, self.label, self.group, self.Type, self.region,
-            None, None, None, None]
+            None, None, None]
         list_fields += self._pack_params()
         return list_fields
 
     def repr_fields(self):
         list_fields = [
             'DRESP3', self.oid, self.label, self.group, self.Type, self.region,
-            None, None, None, None]
+            None, None, None]
         list_fields += self._pack_params()
         return list_fields
 
@@ -2137,13 +2233,13 @@ class DVPREL2(OptConstraint):
             for label in self.labels: # DTABLE
                 arg = self.dtable[label]
                 argsi.append(arg)
-        print('DVPREL2; args = %s' % argsi)
+        #op2_model.log.info('DVPREL2; args = %s' % argsi)
 
-        print('dvids  =', self.dvids)
-        print('labels =', self.labels)
-        print('%s[%r] = %s' % (self.Type, self.pNameFid, out))
+        #op2_model.log.info('dvids  =', self.dvids)
+        #op2_model.log.info('labels =', self.labels)
+        #op2_model.log.info('%s[%r] = %s' % (self.Type, self.pNameFid, out))
         out = self.func(*argsi)
-        print('  deqatn out = %s' % out)
+        op2_model.log.info('  deqatn out = %s' % out)
         return out
         #raise NotImplementedError('\n' + str(self))
 

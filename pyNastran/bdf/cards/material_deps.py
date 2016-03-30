@@ -353,13 +353,14 @@ class MATT2(MaterialDependence):
     """
     type = 'MATT2'
 
-    def __init__(self, G11_table, G12_table, G13_table, G22_table, G23_table,
+    def __init__(self, mid, G11_table, G12_table, G13_table, G22_table, G23_table,
                  G33_table, rho_table, A1_table, A2_table, A3_table,
                  ge_table, st_table, sc_table, ss_table, comment=''):
         MaterialDependence.__init__(self)
         if comment:
             self._comment = comment
 
+        self.mid = mid
         self._G11_table = G11_table
         self._G12_table = G12_table
         self._G13_table = G13_table
@@ -374,11 +375,13 @@ class MATT2(MaterialDependence):
         self._st_table = st_table
         self._sc_table = sc_table
         self._ss_table = ss_table
+        print(self)
 
 
     @classmethod
     def add_card(cls, card, comment=''):
         mid = integer(card, 1, 'mid')
+        print('***mid = ', mid)
         G11_table = integer_or_blank(card, 2, 'T(G11)')
         G12_table = integer_or_blank(card, 3, 'T(G12)')
         G13_table = integer_or_blank(card, 4, 'T(G13)')
@@ -395,7 +398,7 @@ class MATT2(MaterialDependence):
         ss_table = integer_or_blank(card, 16, 'T(ss)')
 
         assert len(card) <= 17, 'len(MATT2 card) = %i' % len(card)
-        return MATT2(G11_table, G12_table, G13_table, G22_table, G23_table,
+        return MATT2(mid, G11_table, G12_table, G13_table, G22_table, G23_table,
                      G33_table, rho_table, A1_table,
                      A2_table, A3_table, ge_table,
                      st_table, sc_table, ss_table,
@@ -490,6 +493,7 @@ class MATT2(MaterialDependence):
             self.A2_table(), self.A3_table(), None, self.ge_table(),
             self.st_table(), self.sc_table(), self.ss_table()
         ]
+        print('list_fields =', list_fields)
         return list_fields
 
     def repr_fields(self):

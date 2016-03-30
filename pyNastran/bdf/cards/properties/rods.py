@@ -15,8 +15,8 @@ from numpy import pi
 
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import Property
-from pyNastran.bdf.bdf_interface.assign_type import (integer,
-    double, double_or_blank)
+from pyNastran.bdf.bdf_interface.assign_type import (
+    integer, double, double_or_blank)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 
@@ -108,7 +108,7 @@ class PROD(Property):
         msg += "    POUTRE=_F(GROUP_MA='P%s', # PROD\n" % (self.pid)
         msg += "              SECTION='CERCLE',  # circular section\n"
         msg += "              CARA=('R')   # radius\n"
-        msg += "              VALE=(%g),),\n" % (self.Radius())
+        #msg += "              VALE=(%g),),\n" % (self.Radius())
 
         msg += "              SECTION='GENERALE',\n"
         msg += "              CARA=('A', 'JX')\n"

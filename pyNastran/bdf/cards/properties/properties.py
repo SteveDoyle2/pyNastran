@@ -466,7 +466,7 @@ class PIHEX(PSOLID):
     def __init__(self, pid, mid, cordm=0, integ=None, stress=None, isop=None,
                  fctn='SMECH', comment=''):
         PSOLID.__init__(self, pid, mid, cordm, integ, stress, isop,
-                 fctn, comment=comment)
+                        fctn, comment=comment)
 
     def raw_fields(self):
         fields = ['PIHEX', self.pid, self.Mid(), self.cordm, self.integ,

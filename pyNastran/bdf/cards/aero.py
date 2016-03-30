@@ -1263,7 +1263,12 @@ class CAERO1(BaseCard):
         self.box_ids = np.zeros((nchord, nspan), dtype='int32')
         for ichord in range(nchord):
             for ispan in range(nspan):
-                self.box_ids[ichord, ispan] = self.eid + ichord + ispan * nchord
+                try:
+                    self.box_ids[ichord, ispan] = self.eid + ichord + ispan * nchord
+                except OverflowError:
+                    msg = 'eid=%s ichord=%s ispan=%s nchord=%s' % (
+                        self.eid, ichord, ispan, nchord)
+                    raise OverflowError(msg)
 
     #def Points(self):
         #self.deprecated('Points()', 'get_points()', '0.7')
@@ -2547,14 +2552,18 @@ class FLUTTER(BaseCard):
             imethod = None
             nvalue = None
             omax = double_or_blank(card, 7, 'omax')
-        elif method in ['PKNL']:
+        elif method == 'PKNL':
+            nvalue = integer_or_blank(card, 7, 'nvalue')
+            omax = None
+            imethod = None
+        elif method == 'PK':
             nvalue = integer_or_blank(card, 7, 'nvalue')
             omax = None
             imethod = None
         else:
             raise NotImplementedError('FLUTTER method=%r' % method)
 
-        assert method in ['K', 'KE', 'PKS', 'PKNL', 'PKNLS', None], method
+        assert method in ['K', 'KE', 'PK', 'PKS', 'PKNL', 'PKNLS', None], method
         epsilon = double_or_blank(card, 8, 'epsilon')  # not defined in QRG
         assert len(card) <= 9, 'len(FLUTTER card) = %i' % len(card)
         return FLUTTER(sid, method, density_id, mach_id, reduced_freq_velocity_id,
@@ -2825,7 +2834,8 @@ class MKAERO1(BaseCard):
                 #print('rfreq_sets =', rfreq_sets)
                 for mach_set in mach_sets:
                     for rfreq_set in rfreq_sets:
-                        msg += MKAERO1(mach_set, rfreq_set).write_card(size=size, is_double=is_double)
+                        msg += MKAERO1(mach_set, rfreq_set).write_card(
+                            size=size, is_double=is_double)
                 return msg
             else:
                 machs = []
@@ -2840,8 +2850,12 @@ class MKAERO1(BaseCard):
         machs = [None] * 8
         reduced_freqs = [None] * 8
         cards = []
-        assert 0 < len(self.machs) <= 8, 'nmachs=%s machs=%s' % (len(self.machs), self.machs)
-        assert 0 < len(self.reduced_freqs) <= 8, 'nrfreqs=%s rfreqs=%s' % (len(self.reduced_freqs), self.reduced_freqs)
+        if not 0 < len(self.machs) <= 8:
+            msg = 'nmachs=%s machs=%s' % (len(self.machs), self.machs)
+            raise ValueError(msg)
+        if not 0 < len(self.reduced_freqs) <= 8:
+            msg = 'nrfreqs=%s rfreqs=%s' % (len(self.reduced_freqs), self.reduced_freqs)
+            raise ValueError(msg)
 
         for i, mach in zip(count(), self.machs):
             machs[i] = mach
@@ -3150,8 +3164,8 @@ class PAERO2(BaseCard):
         lth2 = integer_or_blank(card, 8, 'lth2')
         thi = []
         thn = []
-        fields = [interpret_value(field) for field in card[9:]]
-        nfields = len(fields)
+        list_fields = [interpret_value(field) for field in card[9:]]
+        nfields = len(list_fields)
         for i in range(9, 9 + nfields, 2):
             thi.append(integer(card, i, 'lth'))
             thn.append(integer(card, i + 1, 'thn'))

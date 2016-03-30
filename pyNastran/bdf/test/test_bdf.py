@@ -119,7 +119,7 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
     filenames2 = []
     diff_cards = []
     for filename in filenames:
-        if filename.endswith(('.bdf', '.dat', '.nas')):
+        if filename.endswith(('.bdf', '.dat', '.nas')) and 'pyNastran_crash' not in filename and 'skin_file' not in filename:
             filenames2.append(filename)
 
     failed_files = []

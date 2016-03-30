@@ -508,15 +508,15 @@ class CSET1(Set):
 
     @classmethod
     def add_card(cls, card, comment=''):
-        if string_or_blank(card, 2, 'C') == 'ALL':
+        if integer_string_or_blank(card, 2, 'C') == 'ALL':
             components = '123456'
         else:
-            components = components(card, 1, 'components')
+            components = fcomponents(card, 1, 'components')
 
         ids = []
         ii = 1
         for ifield in range(2, len(card)):
-            idi = integer_or_string(card, ifield, 'ID' % ii)
+            idi = integer_or_string(card, ifield, 'ID%i' % ii)
             ids.append(idi)
             ii += 1
         return CSET1(ids, components, comment=comment)
@@ -1120,7 +1120,7 @@ class USET1(ABQSet1):
 
     def raw_fields(self):
         """gets the "raw" card without any processing as a list for printing"""
-        list_fields = [self.type, self.components] + collapse_thru(self.node_ids)
+        list_fields = [self.type, self.name, self.components] + collapse_thru(self.node_ids)
         return list_fields
 
     def __repr__(self):

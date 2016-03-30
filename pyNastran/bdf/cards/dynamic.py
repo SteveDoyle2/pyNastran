@@ -375,7 +375,7 @@ class FREQ2(FREQ):
         freqs = []
         for i in range(ndf):
             freqs.append(f1 * exp(i * d))  # 0 based index
-        self.freqs = np.uniqe(freqs)
+        self.freqs = np.unique(freqs)
 
     @classmethod
     def add_card(cls, card, comment=''):
