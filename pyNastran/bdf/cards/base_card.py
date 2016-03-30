@@ -5,6 +5,7 @@ from six.moves import zip, range
 
 from numpy import nan, empty, unique
 
+from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 from pyNastran.utils import object_attributes, object_methods, integer_types
 from pyNastran.bdf.field_writer import print_card
 from pyNastran.bdf.field_writer_8 import is_same
@@ -38,6 +39,12 @@ else:
 class BaseCard(object):
     def __init__(self):
         pass
+
+    def __deepcopy__(self, memo_dict):
+        #raw_fields = self.repr_fields()
+        raw_fields = self.raw_fields()
+        card = BDFCard(raw_fields)
+        return self.add_card(card)
 
     def deprecated(self, old_name, new_name, deprecated_version):
         """deprecates methods"""
@@ -111,10 +118,12 @@ class BaseCard(object):
             self._update_field_helper(n, value)
 
     def _update_field_helper(self, n, value):
-        raise IndexError('%s has not overwritten _update_field_helper; out of range' % self.__class__.__name__)
+        msg = '%s has not overwritten _update_field_helper; out of range' % self.__class__.__name__
+        raise IndexError(msg)
 
     def _get_field_helper(self, n):
-        raise IndexError('%s has not overwritten _get_field_helper; out of range' % self.__class__.__name__)
+        msg = '%s has not overwritten _get_field_helper; out of range' % self.__class__.__name__
+        raise IndexError(msg)
 
     def get_field(self, n):
         """
@@ -375,7 +384,8 @@ class Element(BaseCard):
         if allow_empty_nodes:
             nids2 = [nid for nid in nids if nid not in [None, 0]]
             if len(nids2) == 0:
-                msg = '%s requires at least one node id be specified; node_ids=%s' % (self.type, nids2)
+                msg = '%s requires at least one node id be specified; node_ids=%s' % (
+                    self.type, nids2)
                 raise ValueError(msg)
 
             #unique_nodes = unique(nids2)
@@ -530,24 +540,24 @@ def _node_ids(card, nodes=None, allow_empty_nodes=False, msg=''):
             return nodes2
         else:
             try:
-                nodeIDs = []
+                node_ids = []
                 for i, node in enumerate(nodes):
                     #print("node=%r type=%r" % (node, type(node)))
                     if isinstance(node, integer_types):
-                        nodeIDs.append(node)
+                        node_ids.append(node)
                     else:
-                        nodeIDs.append(node.nid)
+                        node_ids.append(node.nid)
 
                 #if isinstance(nodes[0], integer_types):
-                    #nodeIDs = [node for node in nodes]
+                    #node_ids = [node for node in nodes]
                 #else:
-                    #nodeIDs = [node.nid for node in nodes]
+                    #node_ids = [node.nid for node in nodes]
             except:
                 print('type=%s nodes=%s allow_empty_nodes=%s\nmsg=%s' % (
                     card.type, nodes, allow_empty_nodes, msg))
                 raise
-            assert 0 not in nodeIDs, 'nodeIDs = %s' % nodeIDs
-            return nodeIDs
+            assert 0 not in node_ids, 'node_ids = %s' % node_ids
+            return node_ids
     except:
         print('type=%s nodes=%s allow_empty_nodes=%s\nmsg=%s' % (
             card.type, nodes, allow_empty_nodes, msg))
@@ -630,21 +640,21 @@ def expand_thru_by(fields, set_fields=True, sort_fields=False):
     while i < nfields:
         if fields[i] == 'THRU':
             by = 1
-            byCase = False
+            by_case = False
             if i + 2 < nfields and fields[i + 2] == 'BY':
                 by = interpret_value(fields[i + 3])
             else:
                 by = 1
-                byCase = True
+                by_case = True
             min_value = interpret_value(fields[i - 1])
             max_value = interpret_value(fields[i + 1])
-            maxR = int((max_value - min_value) // by + 1)  # max range value
+            max_range = int((max_value - min_value) // by + 1)  # max range value
 
             for j in range(0, maxR):  # +1 is to include final point
                 value = min_value + by * j
                 out.append(value)
 
-            if byCase:  # null/standard case
+            if by_case:  # null/standard case
                 i += 2
             else:     # BY case
                 i += 3
@@ -688,228 +698,3 @@ def expand_thru_exclude(fields):
                 fields_out += sorted_list
             fields_out.append(fields[i])
     return fields_out
-
-
-def collapse_thru_by(fields, get_packs=False):
-    """
-    :param fields:    the list of fields to collapse
-    :param get_packs: get the list of packs so "special" formatting can be done
-
-    fields              packs
-    [1, 2, 3...150]  -> [1, 150, 1]
-    [1, 3, 5...150]  -> [1, 150, 2]
-    """
-    assert 'THRU' not in fields, fields
-    fields.sort()
-    packs = condense(fields)
-    if get_packs:
-        return packs
-    fields2 = build_thru(packs)
-    #assert fields == expand_thru_by(fields2)  # why doesn't this work?
-    return fields2
-
-
-def collapse_thru_by_float(fields):
-    assert 'THRU' not in fields, fields
-    fields.sort()
-    packs = condense(fields)
-    fields2 = build_thru_float(packs)
-    #assert fields == expand_thru_by(fields2)  # why doesn't this work?
-    return fields2
-
-
-def collapse_thru(fields):
-    assert 'THRU' not in fields, fields
-    fields.sort()
-    packs = condense(fields)
-    fields2 = build_thru(packs, max_dv=1)
-    #assert fields == expand_thru_by(fields2), fields2  # why doesn't this work?
-    return fields2
-
-
-def collapse_thru_packs(fields):
-    assert 'THRU' not in fields, fields
-    fields.sort()
-    packs = condense(fields)
-    singles, doubles = build_thru_packs(packs, max_dv=1)
-
-    #assert fields == expand_thru_by(fields2), fields2  # why doesn't this work?
-    return singles, doubles
-
-
-def collapse_colon_packs(fields):
-    fields.sort()
-    packs = condense(fields)
-    singles, doubles = build_thru_packs(packs, max_dv=None)
-    doubles2 = []
-    for double in doubles:
-        if len(double) == 3:
-            double[1] = ':'
-        elif len(double) == 5:
-            double[1] = ':'
-            double[3] = ':'
-        else:
-            raise RuntimeError(double)
-        doubles2.append(double)
-    return singles, doubles2
-
-
-def condense(value_list):
-    """
-    Builds a list of packs (list of 3 values representing the first, last,
-    and delta values for condensing a SET card.
-
-    .. seealso:: build_thru
-    """
-    if len(value_list) == 0:
-        return []
-    if len(value_list) == 1:
-        return [[value_list[0], value_list[0], 1]]
-    value_list.sort()
-    packs = []
-
-    dv_old = None
-    first_val = value_list[0]
-    last_val = first_val
-
-    for val in value_list[1:]:
-        try:
-            dv = val - last_val
-        except TypeError:
-            print("lastVal=%r val=%r" % (last_val, val))
-            print("valueList=%r" % value_list)
-            raise
-
-        # sets up the first item of the pack
-        if dv_old is None:
-            dv_old = dv
-
-        # fill up the pack
-        if dv_old == dv:
-            last_val = val
-        else:
-            packs.append([first_val, last_val, dv_old])
-            last_val = val
-            dv_old = None
-            first_val = val
-
-    # fills the last pack
-    if dv_old == dv:
-        packs.append([first_val, val, dv])
-    else:
-        packs.append([first_val, val, dv_old])
-    return packs
-
-
-def build_thru_packs(packs, max_dv=1):
-    """
-    # invalid
-    SET1,4000, 1, 3, THRU, 10, 20, THRU, 30
-
-    # valid
-    SET1,4000, 1
-    SET1,4000, 3,  THRU, 10
-    SET1,4000, 20, THRU, 30
-
-    returns
-      singles = [1]
-      doubles = [[3, 'THRU', 10], [20, 'THRU', 30]]
-    """
-    singles = []
-    doubles = []
-    for (first_val, last_val, by) in packs:
-        if first_val == last_val:
-            singles.append(first_val)
-        else:
-            if by == 1:
-                if last_val - first_val < 3: # dont make extra THRU cards
-                    singlei = list(range(first_val, last_val + 1, 1))
-                    singles += singlei
-                else:
-                    double = [first_val, 'THRU', last_val]
-                    doubles.append(double)
-            else:
-                diff = last_val - first_val
-                if max_dv == 1 or diff == by:
-                    singlei = list(range(first_val, last_val + by, by))
-                    singles += singlei
-                else:
-                    double = [first_val, 'THRU', last_val, 'BY', by]
-                    doubles.append(double)
-    return singles, doubles
-
-
-def build_thru(packs, max_dv=None):
-    """
-    Takes a pack [1,7,2] and converts it into fields used by a SET card.
-    The values correspond to the first value, last value, and delta in the
-    list.  This means that [1,1001,2] represents 500 values.
-    [1,1001,1] represents 1001 values and will be written as [1,THRU,1001]..
-
-    :param packs: list of packs (list of 3 values: [first, last, delta] )
-    :param maxDV: integer defining the max allowable delta between two values
-            (default=None; no limit)
-    """
-    fields = []
-    for (first_val, last_val, dv) in packs:
-        if first_val == last_val:
-            fields.append(first_val)
-        elif dv == 1:
-            if last_val - first_val > 2:
-                fields.append(first_val)
-                fields.append('THRU')
-                fields.append(last_val)
-            elif last_val - first_val == 2:
-                fields.append(first_val)
-                fields.append(first_val + 1)
-                fields.append(last_val)
-            else:
-                fields.append(first_val)
-                fields.append(last_val)
-        else:
-            if max_dv is None:
-                if last_val - first_val > 4 * dv:
-                    fields.append(first_val)
-                    fields.append('THRU')
-                    fields.append(last_val)
-                    fields.append('BY')
-                    fields.append(dv)
-                else:
-                    fields += list(range(first_val, last_val + dv, dv))
-            else:
-                for v in range(first_val, last_val + dv, dv):
-                    fields.append(v)
-    return fields
-
-
-def build_thru_float(packs, max_dv=None):
-    """
-    Takes a pack [1,7,2] and converts it into fields used by a SET card.
-    The values correspond to the first value, last value, and delta in the
-    list.  This means that [1,1001,2] represents 500 values.
-    [1,1001,1] represents 1001 values and will be written as [1,THRU,1001].
-
-    Parameters
-    ----------
-    packs : List[ List[int, int, int], ... ]
-        list of packs
-        pack : List[int, int, int]
-            list of [first, last, delta]
-    max_dv : int/None; default=None
-        integer defining the max allowable delta between two values
-        (default=None; no limit)
-    """
-    fields = []
-    for (first_val, last_val, dv) in packs:
-        if last_val - first_val > 4 * dv:
-            fields.append(first_val)
-            fields.append('THRU')
-            fields.append(last_val)
-            fields.append('BY')
-            fields.append(dv)
-        else:
-            nv = int(round((last_val - first_val) / dv)) + 1
-            for i in range(nv):
-                v = first_val + i * dv
-                fields.append(v)
-    return fields

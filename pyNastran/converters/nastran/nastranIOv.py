@@ -600,7 +600,7 @@ class NastranIO(object):
                 # such that we have z fighting, so based on the aero index,
                 # we calculate a z offset.
                 setg = spline.setg_ref
-                structure_points = setg.get_IDs()
+                structure_points = setg.get_ids()
 
                 try:
                     aero_box_ids = spline.aero_element_ids

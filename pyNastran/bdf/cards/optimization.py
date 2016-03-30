@@ -27,7 +27,7 @@ class OptConstraint(BaseCard):
 
 class DCONSTR(OptConstraint):
     type = 'DCONSTR'
-    def __init__(self, oid, rid, lid, uid, lowfq, highfq, comment=''):
+    def __init__(self, oid, rid, lid=1.e20, uid=1.e20, lowfq=0., highfq=1.e20, comment=''):
         """
         +---------+------+-----+------------+------------+-------+--------+
         |   1     |   2  |  3  |     4      |      5     |   6   |   7    |
@@ -97,13 +97,14 @@ class DCONSTR(OptConstraint):
         model : BDF()
             the BDF object
         """
-        self.rid = model.dresps[self.Rid()]
+        msg = ' which is required by %s oid=%s' % (self.type, self.oid)
+        self.rid = model.DResp(self.Rid(), msg)
         self.rid_ref = self.rid
         if isinstance(self.lid, integer_types):
-            self.lid = model.Table(self.lid)
+            self.lid = model.Table(self.lid, msg)
             self.lid_ref = self.lid
         if isinstance(self.uid, integer_types):
-            self.uid = model.Table(self.uid)
+            self.uid = model.Table(self.uid, msg)
             self.uid_ref = self.uid
 
     def uncross_reference(self):
@@ -142,22 +143,23 @@ class DCONSTR(OptConstraint):
 class DESVAR(OptConstraint):
     type = 'DESVAR'
     """
-    +--------+----+-------+-------+-----+-----+-------+-------+
-    |    1   |  2 |    3  |   4   |  5  |  6  |    7  |   8   |
-    +========+====+=======+=======+=====+=====+=======+=======+
-    | DESVAR | ID | LABEL | XINIT | XLB | XUB | DELXV | DDVAL |
-    +--------+----+-------+-------+-----+-----+-------+-------+
+    +--------+-----+-------+-------+-----+-----+-------+-------+
+    |    1   |  2  |    3  |   4   |  5  |  6  |    7  |   8   |
+    +========+=====+=======+=======+=====+=====+=======+=======+
+    | DESVAR | OID | LABEL | XINIT | XLB | XUB | DELXV | DDVAL |
+    +--------+-----+-------+-------+-----+-----+-------+-------+
     """
-    def __init__(self, oid, label, xinit, xlb, xub, delx, ddval, comment=''):
+    def __init__(self, oid, label, xinit, xlb, xub, delx=None, ddval=None, comment=''):
         if comment:
             self._comment = comment
         self.oid = oid
+        #: user-defined name for printing purposes
         self.label = label
         self.xinit = xinit
         self.xlb = xlb
         self.xub = xub
         # controls change for a single optimization cycle
-        # taken from DOPTPRM if None
+        # taken from DOPTPRM if None; else default=1.
         self.delx = delx
         # DDVAL id if you want discrete values
         self.ddval = ddval
@@ -1488,7 +1490,7 @@ class DSCREEN(OptConstraint):
 class DVCREL1(OptConstraint):  # similar to DVMREL1
     type = 'DVCREL1'
 
-    def __init__(self, oid, Type, eid, cp_name, cp_min, cp_max, c0, dvids, coeffs,
+    def __init__(self, oid, Type, eid, cp_name, cp_min, cp_max, dvids, coeffs, c0=0.,
                  validate=False, comment=''):
         """
         +---------+--------+--------+--------+-----------+-------+--------+-----+---+
@@ -1582,7 +1584,7 @@ class DVCREL1(OptConstraint):  # similar to DVMREL1
             print("dvids = %s" % (dvids))
             print("coeffs = %s" % (coeffs))
             raise RuntimeError('invalid DVCREL1...')
-        return DVCREL1(oid, Type, eid, cp_name, cp_min, cp_max, c0, dvids, coeffs,
+        return DVCREL1(oid, Type, eid, cp_name, cp_min, cp_max, dvids, coeffs, c0=0.,
                        comment=comment)
 
     def _verify(self, xref):
@@ -1660,8 +1662,8 @@ class DVCREL1(OptConstraint):  # similar to DVMREL1
 class DVMREL1(OptConstraint):  # similar to DVPREL1
     type = 'DVMREL1'
 
-    def __init__(self, oid, Type, mid, mp_name, mp_min, mp_max, c0,
-                 dvids, coeffs, validate=False, comment=''):
+    def __init__(self, oid, Type, mid, mp_name, mp_min, mp_max,
+                 dvids, coeffs, c0=0., validate=False, comment=''):
         """
         Design Variable to Material Relation
         Defines the relation between a material property and design variables.
@@ -1737,8 +1739,8 @@ class DVMREL1(OptConstraint):  # similar to DVPREL1
             print("dvids = %s" % (dvids))
             print("coeffs = %s" % (coeffs))
             raise RuntimeError('invalid DVMREL1...')
-        return DVMREL1(oid, Type, mid, mpName, mpMin, mpMax, c0,
-                       dvids, coeffs, comment=comment)
+        return DVMREL1(oid, Type, mid, mpName, mpMin, mpMax,
+                       dvids, coeffs, c0=0., comment=comment)
 
     def cross_reference(self, model):
         """
@@ -1811,7 +1813,7 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
     ]
     allowed_masses = ['CONM2', 'CMASS2', 'CMASS4']
     allowed_properties_mass = ['PMASS']
-    def __init__(self, oid, Type, pid, pNameFid, pMin, pMax, c0, dvids, coeffs,
+    def __init__(self, oid, Type, pid, pNameFid, pMin, pMax, dvids, coeffs, c0=0.0,
                  validate=False, comment=''):
         """
         +---------+--------+--------+--------+-----------+-------+--------+-----+---+
@@ -1975,7 +1977,7 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
             print("dvids = %s" % (dvids))
             print("coeffs = %s" % (coeffs))
             raise RuntimeError('invalid DVPREL1...')
-        return DVPREL1(oid, Type, pid, pNameFid, pMin, pMax, c0, dvids, coeffs,
+        return DVPREL1(oid, Type, pid, pNameFid, pMin, pMax, dvids, coeffs, c0=c0,
                        comment=comment)
 
     def _verify(self, xref):
