@@ -2018,10 +2018,10 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
         msg = ', which is required by DVPREL1 name=%r' % self.type
         if self.Type in self.allowed_properties:
             self.pid = model.Property(self.pid, msg=msg)
-        elif self.Type in self.allowed_elements:
-            self.pid = model.Element(self.pid, msg=msg)
-        elif self.Type in self.allowed_masses:
-            self.pid = model.masses[self.pid]
+        #elif self.Type in self.allowed_elements:
+            #self.pid = model.Element(self.pid, msg=msg)
+        #elif self.Type in self.allowed_masses:
+            #self.pid = model.masses[self.pid]
         elif self.Type in self.allowed_properties_mass:
             self.pid = model.properties_mass[self.pid]
         else:
@@ -2042,10 +2042,10 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
             return self.pid
         if self.Type in self.allowed_properties:
             pid = self.pid_ref.pid
-        elif self.Type in self.allowed_elements:
-            pid = self.pid_ref.eid
-        elif self.Type in self.allowed_masses:
-            pid = self.pid_ref.eid
+        #elif self.Type in self.allowed_elements:
+            #pid = self.pid_ref.eid
+        #elif self.Type in self.allowed_masses:
+            #pid = self.pid_ref.eid
         elif self.Type in self.allowed_properties_mass:
             pid = self.pid_ref.pid
         else:

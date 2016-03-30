@@ -414,16 +414,16 @@ class XrefMesh(BDFAttributes):
 
         for spcs in itervalues(self.spcs):
             for spc in spcs:
-                self.spcObject.append(spc)
+                #self.spcObject.append(spc)
                 spc.cross_reference(self)
 
         for mpcadd in itervalues(self.mpcadds):
-            self.mpcObject.Add(mpcadd)
+            #self.mpcObject.Add(mpcadd)
             mpcadd.cross_reference(self)
 
         for mpcs in itervalues(self.mpcs):
             for mpc in mpcs:
-                self.mpcObject.append(mpc)
+                #self.mpcObject.append(mpc)
                 mpc.cross_reference(self)
 
         for suport in self.suport:

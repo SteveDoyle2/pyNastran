@@ -492,34 +492,51 @@ class WriteMesh(BDFAttributes):
         if self.aeros or self.trims or self.divergs:
             msg = ['$STATIC AERO\n']
             # static aero
-            for (unused_id, aero) in sorted(iteritems(self.aeros)):
-                msg.append(aero.write_card(size, is_double))
+            for (unused_id, aeros) in sorted(iteritems(self.aeros)):
+                msg.append(aeros.write_card(size, is_double))
             for (unused_id, trim) in sorted(iteritems(self.trims)):
                 msg.append(trim.write_card(size, is_double))
             for (unused_id, diverg) in sorted(iteritems(self.divergs)):
                 msg.append(diverg.write_card(size, is_double))
             outfile.write(''.join(msg))
 
-    def _write_flutter(self, outfile, size=8, is_double=False):
+    def _find_aero_location(self):
+        """Determines where the AERO card should be written"""
+        write_aero_in_flutter = False
+        write_aero_in_gust = False
+        if self.aero:
+            if self.flfacts or self.flutters or self.mkaeros:
+                write_aero_in_flutter = True
+            elif self.gusts:
+                write_aero_in_gust = True
+            else:
+                # an AERO card exists, but no FLUTTER, FLFACT, MKAEROx or GUST card
+                write_aero_in_flutter = True
+        return write_aero_in_flutter, write_aero_in_gust
+
+
+    def _write_flutter(self, outfile, size=8, is_double=False, write_aero_in_flutter=True):
         """Writes the flutter cards"""
-        if self.flfacts or self.flutters or self.mkaeros:
+        if (write_aero_in_flutter and self.aero) or self.flfacts or self.flutters or self.mkaeros:
             msg = ['$FLUTTER\n']
-            for (unused_id, flfact) in sorted(iteritems(self.flfacts)):
-                #if unused_id != 0:
-                msg.append(flfact.write_card(size, is_double))
+            if write_aero_in_flutter:
+                for (unused_id, aero) in sorted(iteritems(self.aero)):
+                    msg.append(aero.write_card(size, is_double))
             for (unused_id, flutter) in sorted(iteritems(self.flutters)):
                 msg.append(flutter.write_card(size, is_double))
+            for (unused_id, flfact) in sorted(iteritems(self.flfacts)):
+                msg.append(flfact.write_card(size, is_double))
             for mkaero in self.mkaeros:
                 msg.append(mkaero.write_card(size, is_double))
             outfile.write(''.join(msg))
 
-    def _write_gust(self, outfile, size=8, is_double=False):
+    def _write_gust(self, outfile, size=8, is_double=False, write_aero_in_gust=True):
         """Writes the gust cards"""
-        if self.aero or self.gusts:
+        if (write_aero_in_gust and self.aero) or self.gusts:
             msg = ['$GUST\n']
-            # gust
-            for (unused_id, aero) in sorted(iteritems(self.aero)):
-                msg.append(aero.write_card(size, is_double))
+            if write_aero_in_gust:
+                for (unused_id, aero) in sorted(iteritems(self.aero)):
+                    msg.append(aero.write_card(size, is_double))
             for (unused_id, gust) in sorted(iteritems(self.gusts)):
                 msg.append(gust.write_card(size, is_double))
             outfile.write(''.join(msg))
@@ -549,8 +566,11 @@ class WriteMesh(BDFAttributes):
         self._write_aero(outfile, size, is_double)
         self._write_aero_control(outfile, size, is_double)
         self._write_static_aero(outfile, size, is_double)
-        self._write_flutter(outfile, size, is_double)
-        self._write_gust(outfile, size, is_double)
+
+        write_aero_in_flutter, write_aero_in_gust = self._find_aero_location()
+        self._write_flutter(outfile, size, is_double, write_aero_in_flutter)
+        self._write_gust(outfile, size, is_double, write_aero_in_gust)
+
         self._write_thermal(outfile, size, is_double)
         self._write_thermal_materials(outfile, size, is_double)
 

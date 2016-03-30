@@ -264,8 +264,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         self.active_filenames = []
         self.active_filename = None
         self.include_dir = ''
-        self._encoding = None
-        self.punch = None
         self.dumplines = False
 
         # this flag will be flipped to True someday (and then removed), but
@@ -309,12 +307,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
         #: cards that were created, but not processed
         self.reject_cards = []
-
-        #: list of execive control deck lines
-        self.executive_control_lines = []
-
-        #: list of case control deck lines
-        self.case_control_lines = []
 
         # self.__init_attributes()
 

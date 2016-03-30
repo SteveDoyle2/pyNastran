@@ -6,7 +6,7 @@ from pyNastran.utils import object_attributes, object_methods
 from pyNastran.bdf.utils import deprecated
 #from pyNastran.bdf.case_control_deck import CaseControlDeck
 from pyNastran.bdf.cards.coordinate_systems import CORD2R
-from pyNastran.bdf.cards.constraints import ConstraintObject
+#from pyNastran.bdf.cards.constraints import ConstraintObject
 
 class BDFAttributes(object):
 
@@ -77,6 +77,15 @@ class BDFAttributes(object):
           1.  http://www.mscsoftware.com/support/library/conf/wuc87/p02387.pdf
         """
         self.bdf_filename = None
+        self.punch = None
+        self._encoding = None
+
+        #: list of execive control deck lines
+        self.executive_control_lines = []
+
+        #: list of case control deck lines
+        self.case_control_lines = []
+
         self._auto_reject = False
         self._solmap_to_value = {
             'NONLIN': 101,  # 66 -> 101 per Reference 1
@@ -249,7 +258,7 @@ class BDFAttributes(object):
         #self.random = {} # Case Control RANDOM = 100
 
         #: stores coordinate systems
-        origin  = array([0., 0., 0.])
+        origin = array([0., 0., 0.])
         zaxis = array([0., 0., 1.])
         xzplane = array([1., 0., 0.])
         coord = CORD2R(cid=0, rid=0, origin=origin, zaxis=zaxis, xzplane=xzplane)
@@ -263,9 +272,9 @@ class BDFAttributes(object):
         self.se_suport = []
 
         #: stores SPCADD, SPC, SPC1, SPCAX, GMSPC
-        self.spcObject = ConstraintObject()
+        #self.spcObject = ConstraintObject()
         #: stores MPCADD,MPC
-        self.mpcObject = ConstraintObject()
+        #self.mpcObject = ConstraintObject()
 
         self.spcs = {}
         self.spcadds = {}
