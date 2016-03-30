@@ -518,10 +518,12 @@ class TestLoads(unittest.TestCase):
         card = BDFCard(card)
 
         size = 8
-        card = SET1(card)
+        card = SET1.add_card(card)
         card.write_card(size, 'dummy')
         card.raw_fields()
 
+        card2 = SET1(1100, [100, 101], is_skin=False, comment='')
+        card2.write_card(size, 'dummy')
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()
