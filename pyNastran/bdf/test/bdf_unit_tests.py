@@ -7,7 +7,7 @@ from numpy.linalg import norm
 
 import pyNastran
 from pyNastran.utils import object_attributes, object_methods
-from pyNastran.bdf.cards.base_card import collapse_thru_by
+from pyNastran.bdf.cards.collpase_card import collapse_thru_by
 from pyNastran.bdf.bdf import BDF, read_bdf
 
 pkg_path = pyNastran.__path__[0]
