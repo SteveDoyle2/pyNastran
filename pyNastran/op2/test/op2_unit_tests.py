@@ -14,7 +14,7 @@ from pyNastran.op2.op2_geom import read_op2_geom
 from pyNastran.op2.test.test_op2 import run_op2
 
 from pyNastran.bdf.test.bdf_unit_tests import Tester
-from pyNastran.op2.tables.oef_forces.oef_forceObjects import RealPlateBilinearForceArray, RealPlateForceArray
+from pyNastran.op2.tables.oef_forces.oef_force_objects import RealPlateBilinearForceArray, RealPlateForceArray
 from pyNastran.op2.export_to_vtk import export_to_vtk_filename
 from pyNastran.op2.vector_utils import filter1d
 
@@ -128,7 +128,7 @@ class TestOP2(Tester):
             [4., 2., 5.],
             [3., 3., 3.],
         ])
-        from pyNastran.op2.tables.ogf_gridPointForces.ogf_Objects import RealGridPointForcesArray
+        from pyNastran.op2.tables.ogf_gridPointForces.ogf_objects import RealGridPointForcesArray
         data_code = {
             'nonlinear_factor' : None,
             'sort_bits' : [0, 0, 0],

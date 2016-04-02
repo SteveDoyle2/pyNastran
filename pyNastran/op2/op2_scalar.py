@@ -23,7 +23,7 @@ from pyNastran.op2.tables.grid_point_weight import GridPointWeight
 
 from pyNastran.op2.tables.lama_eigenvalues.lama import LAMA
 from pyNastran.op2.tables.oee_energy.onr import ONR
-from pyNastran.op2.tables.opg_appliedLoads.ogpf import OGPF
+from pyNastran.op2.tables.ogf_gridPointForces.ogpf import OGPF
 
 from pyNastran.op2.tables.oef_forces.oef import OEF
 from pyNastran.op2.tables.oes_stressStrain.oes import OES

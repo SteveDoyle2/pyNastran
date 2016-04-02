@@ -22,7 +22,7 @@ from pyNastran.op2.tables.oes_stressStrain.real.oes_beams import (RealBeamStress
                                                                   RealNonlinearBeamStressArray)
 from pyNastran.op2.tables.oes_stressStrain.real.oes_bush import RealBushStressArray, RealBushStrainArray
 from pyNastran.op2.tables.oes_stressStrain.real.oes_bush1d import RealBush1DStressArray
-from pyNastran.op2.tables.oes_stressStrain.real.oes_compositePlates import RealCompositePlateStressArray, RealCompositePlateStrainArray
+from pyNastran.op2.tables.oes_stressStrain.real.oes_composite_plates import RealCompositePlateStressArray, RealCompositePlateStrainArray
 from pyNastran.op2.tables.oes_stressStrain.real.oes_gap import NonlinearGapStressArray
 from pyNastran.op2.tables.oes_stressStrain.real.oes_plates import (RealPlateStressArray, RealPlateStrainArray,
                                                                    RealCPLSTRNPlateStressArray, RealCPLSTRNPlateStrainArray)
