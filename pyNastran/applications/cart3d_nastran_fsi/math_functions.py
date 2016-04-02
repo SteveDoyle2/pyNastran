@@ -4,7 +4,6 @@ from six import string_types
 from numpy import array, cross, allclose
 from numpy.linalg import norm, solve
 
-#------------------------------------------------------------------
 def is_list_ranged(a, List, b):
     """
     Returns true if a<= x <= b
@@ -29,7 +28,7 @@ def is_float_ranged(a, x, b):
             return False
     return True
 
-#------------------------------------------------------------------
+
 def printMatrix(A):
     msg = ''
     for row in A:
@@ -59,7 +58,7 @@ def ListPrint(listA):
     msg += ' ]'
     return msg
 
-#------------------------------------------------------------------
+
 def pierce_plane_vector(p0, p1, p2, pA, pB, pierced_elements):
     """
     http://en.wikipedia.org/wiki/Line-plane_intersection
@@ -89,6 +88,7 @@ def distance(x, y):
     """Finds the euclidian/spherical (2D/3D) distance between 2 points"""
     return norm(x - y)
 
+
 def shepard_SMS_weight(n, nodes):
     """
     a = (R-hi/R*hi)^2
@@ -113,6 +113,7 @@ def shepard_SMS_weight(n, nodes):
     aWeights = array(aWeights)
     weights = aWeights / sum(aWeights)
     return weights
+
 
 def shepard_weight(n, nodes):
     """
@@ -143,6 +144,7 @@ def shepard_weight(n, nodes):
     weights = invDists / invDistSum
     return weights
 
+
 def area_weight(n, n1, n2, n3):
     """
     Finds the weightings based on the barycentric coordinates weighted average method
@@ -161,6 +163,7 @@ def area_weight(n, n1, n2, n3):
     #x = (a1 * x1 + a2 * x2 + a3 * x3) / a
     return w1, w2, w3
 
+
 def get_triangle_weights(n, n1, n2, n3):
     """
     Returns the weighting for each node such that:
@@ -172,8 +175,10 @@ def get_triangle_weights(n, n1, n2, n3):
     #w1, w2, w3 = areaWeight(n, n1, n2, n3)
     return w1, w2, w3
 
+
 def Area(a, b):
     return 0.5 * norm(cross(a, b))
+
 
 def AreaNormal(nodes):
     """
@@ -208,6 +213,7 @@ def Triangle_AreaCentroidNormal(nodes):
     centroid = Centroid(n1, n2, n3)
     return area, centroid, normal
 
+
 def Normal(a, b):
     """finds the unit normal vector of 2 vectors"""
     vector = cross(a, b)
@@ -216,12 +222,12 @@ def Normal(a, b):
     assert allclose(norm(normal), 1.)
     return normal
 
+
 def Centroid(A, B, C):
     """returns the centroid of a triangle"""
     centroid = (A + B + C) / 3.
     return centroid
 
-#------------------------------------------------------------------
 
 def main():
     n1 = array([0., 0., 0.])

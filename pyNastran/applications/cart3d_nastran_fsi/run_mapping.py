@@ -7,8 +7,8 @@ import copy
 import shutil
 from numpy import allclose
 
-from pyNastran.applications.cart3d_nastran_fsi.mapLoads import run_map_loads
-from pyNastran.applications.cart3d_nastran_fsi.runSpline import run_map_deflections
+from pyNastran.applications.cart3d_nastran_fsi.map_loads import run_map_loads
+from pyNastran.applications.cart3d_nastran_fsi.run_spline import run_map_deflections
 
 from pyNastran.utils.log import get_logger
 debug = True
