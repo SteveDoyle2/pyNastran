@@ -603,7 +603,7 @@ def bdf_merge(bdf_filenames, bdf_filename_out=None, renumber=True, encoding=None
 
 
 def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
-                 starting_id_dict=None):
+                 starting_id_dict=None, round_ids=False):
     """
     Renumbers a BDF
 
@@ -951,7 +951,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
         (model.tables_sdamping, 'tid', table_sdamping_map),
         (model.dconadds, 'dcid', dconadd_map),
         #(model.dconstrs, 'oid', dconstr_map),
-        (model.dresps, 'oid', dresp_map),
+        (model.dresps, 'dresp_id', dresp_map),
         (model.gusts, 'sid', gust_map),
         (model.trims, 'sid', trim_map),
         (model.tics, 'sid', tic_map),
@@ -979,7 +979,10 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
     )
     param_id = 9999
     for (dict_obj, param_name, mmap) in sorted(data):
-        param_id = _roundup(param_id, 1000) + 1
+        if round_ids:
+            param_id = _roundup(param_id, 1000) + 1
+        else:
+            param_id = 1
         for idi, param in sorted(iteritems(dict_obj)):
             try:
                 msg = '%s has no %r; use %s' % (param.type, param_name, object_attributes(param))
@@ -1021,7 +1024,6 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
             dload.sid = dload_id
         dload_map[dload_idi] = dload_id
         dload_id += 1
-
 
     # loads
     for load_idi, loads in sorted(iteritems(model.loads)):

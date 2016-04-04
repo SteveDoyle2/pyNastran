@@ -882,21 +882,21 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
             raise KeyError('oid=%s not found%s.  Allowed DCONSTRs=%s'
                            % (oid, msg, np.unique(list(self.dconstrs.keys()))))
 
-    def DResp(self, rid, msg=''):
-        """gets a DRESP"""
+    def DResp(self, dresp_id, msg=''):
+        """gets a DRESPx"""
         try:
-            return self.dresps[rid]
+            return self.dresps[dresp_id]
         except KeyError:
-            raise KeyError('rid=%s not found%s.  Allowed DRESPx=%s'
-                           % (rid, msg, np.unique(list(self.dresps.keys()))))
+            raise KeyError('dresp_id=%s not found%s.  Allowed DRESPx=%s'
+                           % (dresp_id, msg, np.unique(list(self.dresps.keys()))))
 
-    def Desvar(self, oid, msg=''):
+    def Desvar(self, desvar_id, msg=''):
         """gets a DESVAR"""
         try:
-            return self.desvars[oid]
+            return self.desvars[desvar_id]
         except KeyError:
-            raise KeyError('oid=%s not found%s.  Allowed DESVARs=%s'
-                           % (oid, msg, np.unique(list(self.desvars.keys()))))
+            raise KeyError('desvar_id=%s not found%s.  Allowed DESVARs=%s'
+                           % (desvar_id, msg, np.unique(list(self.desvars.keys()))))
 
     def DDVal(self, oid, msg=''):
         """gets a DDVAL"""

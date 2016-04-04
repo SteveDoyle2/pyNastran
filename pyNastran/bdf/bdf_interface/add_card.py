@@ -623,7 +623,7 @@ class AddMethods(BDFAttributes):
         key = dconstr.oid
         #assert key not in self.dconstrs, 'key=%r DCONSTR=\n%s' % (key, dconstr)
         assert dconstr.oid > 0
-        assert dconstr.rid > 0
+        #assert dconstr.dresp_id > 0
         if key in self.dconstrs:
             self.dconstrs[key].append(dconstr)
         else:
@@ -631,7 +631,7 @@ class AddMethods(BDFAttributes):
         self._type_to_id_map[dconstr.type].append(key)
 
     def add_DESVAR(self, desvar):
-        key = desvar.oid
+        key = desvar.desvar_id
         assert key not in self.desvars, 'oid=%s old_DESVAR=\n%snew_DESVAR=\n%s' % (
             key, self.desvars[key], desvar)
         assert key > 0
@@ -666,7 +666,7 @@ class AddMethods(BDFAttributes):
             self._type_to_id_map[dconadd.type].append(key)
 
     def add_DRESP(self, dresp):
-        key = dresp.oid
+        key = dresp.dresp_id
         assert key not in self.dresps, 'pid=%s old_DRESPx=\n%snew_DRESPx=\n%s' % (
                     key, self.dresps[key], dresp)
         assert key > 0
