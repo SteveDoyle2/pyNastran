@@ -41,14 +41,17 @@ from pyNastran.bdf.bdf import (BDF,
                                CAERO1, CAERO3, CAERO4, CAERO5, # CAERO2,
                                CQUAD4, CQUAD8, CQUADR, CSHEAR,
                                CTRIA3, CTRIA6, CTRIAR, CTRIAX6,
-                               CTETRA4, CTETRA10, CPENTA6, CPENTA15,
-                               CHEXA8, CHEXA20, CIHEX1,
-                               CPYRAM5, CPYRAM13,
                                CONM2,
                                LOAD)
+
 from pyNastran.bdf.cards.elements.shell import ShellElement
 from pyNastran.bdf.cards.elements.bars import LineElement
 from pyNastran.bdf.cards.elements.springs import SpringElement
+from pyNastran.bdf.cards.elements.solid import (
+    CTETRA4, CTETRA10, CPENTA6, CPENTA15,
+    CHEXA8, CHEXA20, CIHEX1,
+    CPYRAM5, CPYRAM13,
+)
 
 from pyNastran.converters.nastran.displacements import NastranDisplacementResults
 from pyNastran.gui.gui_objects.gui_result import GuiResult
