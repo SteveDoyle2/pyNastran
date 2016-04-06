@@ -279,24 +279,24 @@ class GEOM2(GeomCommon):
             # per DMAP: F = FE bit-wise AND with 3
             f = fe & 3
             if f == 0:  # basic cid
-                self.log.info('CBEAM: fe=%s f=%s; basic cid' % (fe, f))
                 out = unpack(b(self._endian + '6i3f3i6f'), edata)
                 (eid, pid, ga, gb, sa, sb, x1, x2, x3, fe, pa,
                  pb, w1a, w2a, w3a, w1b, w2b, w3b) = out
+                self.log.info('CBEAM: eid=%s fe=%s f=%s; basic cid' % (eid, fe, f))
                 data_in = [[eid, pid, ga, gb, sa, sb, pa, pb, w1a, w2a, w3a, w1b, w2b, w3b],
                            [f, x1, x2, x3]]
             elif f == 1:  # global cid
-                self.log.info('CBEAM: fe=%s f=%s; global cid' % (fe, f))
                 out = unpack(b(self._endian + '6i3f3i6f'), edata)
                 (eid, pid, ga, gb, sa, sb, x1, x2, x3, fe, pa,
                  pb, w1a, w2a, w3a, w1b, w2b, w3b) = out
+                self.log.info('CBEAM: eid=%s fe=%s f=%s; global cid' % (eid, fe, f))
                 data_in = [[eid, pid, ga, gb, sa, sb, pa, pb, w1a, w2a, w3a, w1b, w2b, w3b],
                            [f, x1, x2, x3]]
             elif f == 2:  # grid option
-                self.log.info('CBEAM: fe=%s f=%s; grid option' % (fe, f))
                 out = unpack(b(self._endian + '12i6f'), edata)
                 (eid, pid, ga, gb, sa, sb, g0, xx, xx, fe, pa,
                  pb, w1a, w2a, w3a, w1b, w2b, w3b) = out
+                self.log.info('CBEAM: eid=%s fe=%s f=%s; grid option' % (eid, fe, f))
                 data_in = [[eid, pid, ga, gb, sa, sb, pa, pb, w1a, w2a, w3a, w1b, w2b, w3b],
                            [f, g0]]
             else:

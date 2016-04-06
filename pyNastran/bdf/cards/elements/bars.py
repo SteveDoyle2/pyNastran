@@ -468,9 +468,11 @@ class CBAR(LineElement):
             return self.gb_ref.nid
 
     def getX_G0_defaults(self):
-        if self.g0:
+        if self.g0 is not None:
             return (self.g0, None, None)
         else:
+            #print('x =', self.x)
+            #print('g0 =', self.g0)
             #x1 = set_blank_if_default(self.x[0], 0.0)
             #x2 = set_blank_if_default(self.x[1], 0.0)
             #x3 = set_blank_if_default(self.x[2], 0.0)

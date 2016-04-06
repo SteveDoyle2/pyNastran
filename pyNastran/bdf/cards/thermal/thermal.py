@@ -292,6 +292,10 @@ class CHBDYG(ThermalElement):
             Type = 'AREA4'
         elif Type == 4:
             Type = 'AREA3'
+        #elif Type == 7:
+            #Type = 'AREA6'
+        elif Type == 9:
+            Type = 'AREA8'
         assert Type in ['REV', 'AREA3', 'AREA4', 'AREA6', 'AREA8'], 'Type=%r data=%s' % (Type, data)
         return CHBDYG(eid, Type, nodes,
                       iViewFront=iViewFront, iViewBack=iViewBack,
