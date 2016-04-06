@@ -123,24 +123,42 @@ class CBEAM(CBAR):
                      pa, pb, wa, wb, sa, sb, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, f, comment=''):
         #: .. todo:: verify
+        assert len(data) == 2, 'data=%s len(data)=%s' % (data, len(data))
         #data = [[eid,pid,ga,gb,sa,sb, pa,pb,w1a,w2a,w3a,w1b,w2b,w3b],
         #        [f,g0]]
         #data = [[eid,pid,ga,gb,sa,sb, pa,pb,w1a,w2a,w3a,w1b,w2b,w3b],
         #        [f,x1,x2,x3]]
 
-        main = data[0]
-
-        flag = data[1][0]
-        if flag in [0, 1]:
+        main, aft = data
+        flag = aft[0]
+        assert f == flag, 'f=%s flag=%s' % (f, flag)
+        if flag == 0:
+            # basic cid
+            #data_in = [[eid, pid, ga, gb, sa, sb, pa, pb, w1a, w2a, w3a, w1b, w2b, w3b],
+                       #[f, x1, x2, x3]]
+            assert len(aft) == 4, 'f=%s aft=%s len(aft)=%s' % (f, aft, len(aft))
+            x1, x2, x3 = aft[1:]
             g0 = None
-            x = np.array([data[1][1],
-                          data[1][2],
-                          data[1][3]], dtype='float64')
-        else:
+            x = np.array([x1, x2, x3], dtype='float64')
+        elif flag == 1:
+            # global cid
+            #data_in = [[eid, pid, ga, gb, sa, sb, pa, pb, w1a, w2a, w3a, w1b, w2b, w3b],
+                       #[f, x1, x2, x3]]
+            assert len(aft) == 4, 'f=%s aft=%s len(aft)=%s' % (f, aft, len(aft))
+            g0 = None
+            x1, x2, x3 = aft[1:]
+            x = np.array([x1, x2, x3], dtype='float64')
+        elif flag == 2:
+            # grid option
+            #data_in = [[eid, pid, ga, gb, sa, sb, pa, pb, w1a, w2a, w3a, w1b, w2b, w3b],
+                       #[f, g0]]
+            assert len(aft) == 2, 'f=%s aft=%s len(aft)=%s' % (f, aft, len(aft))
             g0 = data[1][1]
             x = None
+        else:
+            raise NotImplementedError()
 
         eid = main[0]
         pid = main[1]

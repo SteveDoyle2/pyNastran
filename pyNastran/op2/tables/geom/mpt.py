@@ -20,7 +20,7 @@ class MPT(GeomCommon):
 
     def __init__(self):
         GeomCommon.__init__(self)
-        self.bigMaterials = {}
+        self.big_materials = {}
         self._mpt_map = {
             (1003, 10, 245): ['CREEP', self._read_creep],  # record 1
 
@@ -68,7 +68,7 @@ class MPT(GeomCommon):
             out = s.unpack(edata)
             (mid, T0, exp, form, tidkp, tidcp, tidcs, thresh,
              Type, ag1, ag2, ag3, ag4, ag5, ag6, ag7) = out
-            self.add_creep_material(CREEP(None, out), allow_overwrites=True)
+            self.add_creep_material(CREEP.add_op2_data(out), allow_overwrites=True)
             n += 64
         self.card_count['CREEP'] = nmaterials
         return n
@@ -107,7 +107,7 @@ class MPT(GeomCommon):
             mat = MAT2.add_op2_data(out)
 
             if mid > 1e8 or mid < 0:  # just a checker for out of range materials
-                self.bigMaterials[mid] = mat
+                self.big_materials[mid] = mat
             else:
                 self.add_op2_material(mat)
             n += ntotal
@@ -242,7 +242,7 @@ class MPT(GeomCommon):
                 out2 = s2.unpack(edata)
                 (tab1, tab2, tab3, tab4, x1, x2, x3, tab5) = out2
                 data.append(out2)
-            self.add_op2_material(MATHP(None, data_in))
+            self.add_op2_material(MATHP.add_op2_data(data_in))
             nmaterials += 1
         self.card_count['MATHP'] = nmaterials
         return n
@@ -260,7 +260,7 @@ class MPT(GeomCommon):
             out = s.unpack(edata)
             (mid, tid, Type, h, yf, hr, limit1, limit2, a, bmat, c) = out
             data_in = [mid, tid, Type, h, yf, hr, limit1, limit2]
-            self.add_material_dependence(MATS1(None, data_in), allow_overwrites=True)
+            self.add_material_dependence(MATS1.add_op2_data(data_in), allow_overwrites=True)
         self.card_count['MATS1'] = nmaterials
         return n
 
@@ -348,13 +348,14 @@ class MPT(GeomCommon):
             out = s.unpack(edata)
             #(sid,ninc,dt,kMethod,kStep,maxIter,conv,intOut,epsU,epsP,epsW,
             # maxDiv,maxQn,maxLs,fStress,lsTol,maxBisect,maxR,rTolB) = out
-            self.add_NLPARM(NLPARM(None, out))
+            self.add_NLPARM(NLPARM.add_op2_data(out))
             n += ntotal
         self.card_count['NLPARM'] = nentries
         return n
 
     def _readNLPCI(self, data, n):
-        self.binary_debug.write('skipping NLPCI in MPT\n')
+        if self.is_debug_file:
+            self.binary_debug.write('skipping NLPCI in MPT\n')
         return len(data)
 
     def _readTSTEPNL(self, data, n):
@@ -370,7 +371,7 @@ class MPT(GeomCommon):
             out = s.unpack(edata)
             #(sid,ndt,dt,no,kMethod,kStep,maxIter,conv,epsU,epsP,epsW,
             # maxDiv,maxQn,maxLs,fStress,lsTol,maxBisect,adjust,mStep,rb,maxR,uTol,rTolB) = out
-            self.add_TSTEPNL(TSTEPNL(None, out))
+            self.add_TSTEPNL(TSTEPNL.add_op2_data(out))
             n += ntotal
         self.card_count['TSTEPNL'] = nentries
         return n

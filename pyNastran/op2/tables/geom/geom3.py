@@ -435,7 +435,7 @@ class GEOM3(GeomCommon):
                 self.binary_debug.write('  TEMP=%s\n' % str(out))
             (sid, g, T) = out
             if g < 10000000:
-                load = TEMP(None, out)
+                load = TEMP.add_op2_data(out)
                 self.add_thermal_load(load)
             else:
                 self.log.debug('TEMP = %s' % (out))

@@ -372,7 +372,7 @@ class AddMethods(BDFAttributes):
 
     def add_thermal_load(self, load):  # same function at the moment...
         key = load.sid
-        assert key > 0, key
+        assert key > 0, 'key=%s; load=%s\n' % (key, load)
         if key in self.loads:
             self.loads[key].append(load)
         else:
@@ -381,7 +381,7 @@ class AddMethods(BDFAttributes):
 
     def add_PHBDY(self, prop):
         key = prop.pid
-        assert key > 0, key
+        assert key > 0, 'key=%s; prop=%s\n' % (key, prop)
         assert key not in self.phbdys, key
         self.phbdys[key] = prop
         self._type_to_id_map[prop.type].append(key)
@@ -701,7 +701,7 @@ class AddMethods(BDFAttributes):
     def add_NLPARM(self, nlparm):
         key = nlparm.nlparm_id
         assert key not in self.nlparms
-        assert key > 0
+        assert key > 0, 'key=%s; nlparm=%s\n' % (key, nlparm)
         self.nlparms[key] = nlparm
         self._type_to_id_map[nlparm.type].append(key)
 

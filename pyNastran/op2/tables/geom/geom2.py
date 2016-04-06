@@ -274,28 +274,34 @@ class GEOM2(GeomCommon):
         nelements = (len(data) - n) // 72
         for i in range(nelements):
             edata = data[n:n + 72]  # 18*4
-            f, = self.struct_i.unpack(edata[40:44])
-            if   f == 0:  # basic cid
+            fe, = self.struct_i.unpack(edata[40:44])
+
+            # per DMAP: F = FE bit-wise AND with 3
+            f = fe & 3
+            if f == 0:  # basic cid
+                self.log.info('CBEAM: fe=%s f=%s; basic cid' % (fe, f))
                 out = unpack(b(self._endian + '6i3f3i6f'), edata)
-                (eid, pid, ga, gb, sa, sb, x1, x2, x3, f, pa,
+                (eid, pid, ga, gb, sa, sb, x1, x2, x3, fe, pa,
                  pb, w1a, w2a, w3a, w1b, w2b, w3b) = out
                 data_in = [[eid, pid, ga, gb, sa, sb, pa, pb, w1a, w2a, w3a, w1b, w2b, w3b],
                            [f, x1, x2, x3]]
             elif f == 1:  # global cid
+                self.log.info('CBEAM: fe=%s f=%s; global cid' % (fe, f))
                 out = unpack(b(self._endian + '6i3f3i6f'), edata)
-                (eid, pid, ga, gb, sa, sb, x1, x2, x3, f, pa,
+                (eid, pid, ga, gb, sa, sb, x1, x2, x3, fe, pa,
                  pb, w1a, w2a, w3a, w1b, w2b, w3b) = out
                 data_in = [[eid, pid, ga, gb, sa, sb, pa, pb, w1a, w2a, w3a, w1b, w2b, w3b],
                            [f, x1, x2, x3]]
             elif f == 2:  # grid option
+                self.log.info('CBEAM: fe=%s f=%s; grid option' % (fe, f))
                 out = unpack(b(self._endian + '12i6f'), edata)
-                (eid, pid, ga, gb, sa, sb, g0, xx, xx, f, pa,
+                (eid, pid, ga, gb, sa, sb, g0, xx, xx, fe, pa,
                  pb, w1a, w2a, w3a, w1b, w2b, w3b) = out
                 data_in = [[eid, pid, ga, gb, sa, sb, pa, pb, w1a, w2a, w3a, w1b, w2b, w3b],
                            [f, g0]]
             else:
                 raise RuntimeError('invalid f value...f=%r' % f)
-            elem = CBEAM.add_op2_data(data_in)
+            elem = CBEAM.add_op2_data(data_in, f)
             self.add_op2_element(elem)
             n += 72
         self.card_count['CBEAM'] = nelements

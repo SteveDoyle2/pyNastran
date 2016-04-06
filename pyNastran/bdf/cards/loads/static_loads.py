@@ -1530,8 +1530,11 @@ class MOMENT2(Moment):
         g2 = data[4]
         g3 = data[5]
         g4 = data[6]
-        xyz = array(data[7:10])
-        assert len(xyz) == 3, 'xyz=%s' % str(xyz)
+        assert len(data) == 7, data
+        #xyz = array(data[7:10])
+        #print('data =', data)
+        #assert len(xyz) == 3, 'xyz=%s' % str(xyz)
+        xyz = None
         return MOMENT2(sid, node, mag, g1, g2, g3, g4, xyz, comment=comment)
 
     def cross_reference(self, model):

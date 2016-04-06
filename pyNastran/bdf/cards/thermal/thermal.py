@@ -248,10 +248,11 @@ class CHBDYG(ThermalElement):
         #: RADM identification number for back face of surface element
         #: (Integer > 0)
         self.radMidBack = radMidBack
-        assert self.Type in ['REV', 'AREA3', 'AREA4', 'AREA6', 'AREA8']
 
         #: Grid point IDs of grids bounding the surface (Integer > 0)
         self.nodes = nodes
+
+        assert self.Type in ['REV', 'AREA3', 'AREA4', 'AREA6', 'AREA8'], 'Type=%r' % Type
         assert len(nodes) > 0, nodes
 
     @classmethod
@@ -286,7 +287,12 @@ class CHBDYG(ThermalElement):
         iViewBack = data[3]
         radMidFront = data[4]
         radMidBack = data[5]
-        nodes = data[6:14]
+        nodes = [datai for datai in data[6:14] if datai > 0]
+        if Type == 5:
+            Type = 'AREA4'
+        elif Type == 4:
+            Type = 'AREA3'
+        assert Type in ['REV', 'AREA3', 'AREA4', 'AREA6', 'AREA8'], 'Type=%r data=%s' % (Type, data)
         return CHBDYG(eid, Type, nodes,
                       iViewFront=iViewFront, iViewBack=iViewBack,
                       radMidFront=radMidFront, radMidBack=radMidBack,
@@ -801,7 +807,7 @@ class CONV(ThermalBC):
     """
     type = 'CONV'
 
-    def __init__(self, eid, pconID, film_node, cntrlnd, ta, comment=''):
+    def __init__(self, eid, pconid, film_node, cntrlnd, ta, comment=''):
         ThermalBC.__init__(self)
         if comment:
             self._comment = comment
@@ -809,10 +815,9 @@ class CONV(ThermalBC):
         #: CHBDYG, CHBDYE, or CHBDYP surface element identification number.
         #: (Integer > 0)
         self.eid = eid
-        assert self.eid > 0
 
         #: Convection property identification number of a PCONV entry
-        self.pconID = pconID
+        self.pconid = pconid
 
         #: Point for film convection fluid property temperature
         self.film_node = film_node
@@ -824,27 +829,39 @@ class CONV(ThermalBC):
         #: higher.  (Integer > 0 for TA1 and Integer > 0 for TA2 through TA8;
         #: Default for TA2 through TA8 is TA1.)
         self.ta = ta
+        assert self.eid > 0, 'eid=%s\n%s' % (eid, str(self))
 
     @classmethod
     def add_card(cls, card, comment=''):
         eid = integer(card, 1, 'eid')
-        pconID = integer(card, 2, 'pconID')
+        pconid = integer(card, 2, 'pconid')
         film_node = integer_or_blank(card, 3, 'film_node', 0)
         cntrlnd = integer_or_blank(card, 4, 'cntrlnd', 0)
 
         TA1 = integer(card, 5, 'TA1')
-        assert TA1 > 0
+        assert TA1 > 0, TA1
 
-        TA2 = integer_or_blank(card, 6, 'ta2', TA1)
-        TA3 = integer_or_blank(card, 7, 'ta3', TA1)
-        TA4 = integer_or_blank(card, 8, 'ta4', TA1)
-        TA5 = integer_or_blank(card, 9, 'ta5', TA1)
-        TA6 = integer_or_blank(card, 10, 'ta6', TA1)
-        TA7 = integer_or_blank(card, 11, 'ta7', TA1)
-        TA8 = integer_or_blank(card, 12, 'ta8', TA1)
-        ta = [TA1, TA2, TA3, TA4, TA5, TA6, TA7, TA8]
+        ta2 = integer_or_blank(card, 6, 'ta2', TA1)
+        ta3 = integer_or_blank(card, 7, 'ta3', TA1)
+        ta4 = integer_or_blank(card, 8, 'ta4', TA1)
+        ta5 = integer_or_blank(card, 9, 'ta5', TA1)
+        ta6 = integer_or_blank(card, 10, 'ta6', TA1)
+        ta7 = integer_or_blank(card, 11, 'ta7', TA1)
+        ta8 = integer_or_blank(card, 12, 'ta8', TA1)
+        ta = [ta1, ta2, ta3, ta4, ta5, ta6, ta7, ta8]
         assert len(card) <= 13, 'len(CONV card) = %i' % len(card)
-        return CONV(eid, pconID, film_node, cntrlnd, ta, comment=comment)
+        return CONV(eid, pconid, film_node, cntrlnd, ta, comment=comment)
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        #data_in = [eid, pconid, flmnd, cntrlnd,
+                   #[ta1, ta2, ta3, ta5, ta6, ta7, ta8],
+                   #[wt1, wt2, wt3, wt5, wt6, wt7, wt8]]
+        eid, pconid, film_node, cntrlnd, ta, aft = data
+        #ta1, ta2, ta3, ta5, ta6, ta7, ta8 = ta
+        #wt1, wt2, wt3, wt5, wt6, wt7, wt8 = aft
+
+        return CONV(eid, pconid, film_node, cntrlnd, ta, comment=comment)
 
     def cross_reference(self, model):
         """
@@ -870,7 +887,7 @@ class CONV(ThermalBC):
         return self.ta[i]
 
     def raw_fields(self):
-        list_fields = ['CONV', self.eid, self.pconID, self.film_node,
+        list_fields = ['CONV', self.eid, self.pconid, self.film_node,
                        self.cntrlnd] + self.ta
         return list_fields
 
@@ -882,7 +899,7 @@ class CONV(ThermalBC):
         ta = [ta0]
         for tai in self.ta[1:]:
             ta.append(set_blank_if_default(tai, ta0))
-        list_fields = ['CONV', self.eid, self.pconID, film_node, cntrlnd] + ta
+        list_fields = ['CONV', self.eid, self.pconid, film_node, cntrlnd] + ta
         return list_fields
 
     def write_card(self, size=8, is_double=False):
