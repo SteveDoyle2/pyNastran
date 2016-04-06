@@ -43,7 +43,8 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
 
         #if reset_type_to_slot_map or self._type_to_slot_map is None:
             #self._type_to_slot_map = rslot_map
-
+        if reset_type_to_slot_map:
+            self._reset_type_to_slot_map()
         #out = {
             #(key) : (self._type_to_id_map[key] if key in self.card_count else [])
             #for key in card_types
@@ -58,6 +59,41 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
                                        str(sorted(self.card_count.keys())))
                 out[key] = []
         return out
+
+    def _reset_type_to_slot_map(self):
+        rslot_map = defaultdict(list)
+        for dict_name, card_names in iteritems(self._slot_to_type_map):
+            print('card_names=%s dict_name=%s' % (card_names, dict_name))
+            card_name0 = card_names[0]
+            if card_name0 in ['DTABLE', 'GRDSET', 'SESUP', 'DOPTPRM', 'MONPNT1', 'SUPORT', 'MKAERO1',
+                              'MATHP']:
+                pass
+            else:
+                adict = getattr(self, dict_name)
+                if isinstance(adict, dict):
+                    for key, card in iteritems(adict):
+                        if isinstance(card, list):
+                            alist = card
+                            for cardi in alist:
+                                rslot_map[cardi.type].append(key)
+                            #raise NotImplementedError('%s; names=%s \ncard=%s' % (type(card), card_names, card))
+                        else:
+                            rslot_map[card.type].append(key)
+                elif isinstance(adict, list):
+                    alist = adict
+                    for value in alist:
+                        if isinstance(value, list):
+                            raise NotImplementedError('%s; names=%s value=%s' % (type(value), card_names, value))
+                        else:
+                            if value.type in ['CSET1', 'CSET']:
+                                pass
+                                #rslot_map[value.type] = value.
+                            else:
+                                raise NotImplementedError('list; names=%s' % card_names)
+                else:
+                    raise NotImplementedError('%s; names=%s' % (type(adict), card_names))
+        rslot_map
+        return rslot_map
 
     def get_cards_by_card_types(self, card_types, reset_type_to_slot_map=False,
                                 stop_on_missing_card=False):

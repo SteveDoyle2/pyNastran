@@ -40,9 +40,8 @@ from pyNastran.bdf.cards.properties.properties import (PFAST, PGAP, PLSOLID, PSO
 from pyNastran.bdf.cards.elements.springs import (CELAS1, CELAS2, CELAS3, CELAS4,)
 from pyNastran.bdf.cards.properties.springs import PELAS, PELAST
 
-from pyNastran.bdf.cards.elements.solid import (CTETRA4, CTETRA10, CPYRAM5, CPYRAM13,
-                                                CPENTA6, CPENTA15,
-                                                CHEXA8, CHEXA20, CIHEX1)
+from pyNastran.bdf.cards.elements.solid import (CTETRA, CPYRAM, CPENTA, CPENTA,
+                                                CHEXA, CIHEX1)
 from pyNastran.bdf.cards.elements.rigid import RBAR, RBAR1, RBE1, RBE2, RBE3, RROD
 
 from pyNastran.bdf.cards.elements.shell import (CQUAD, CQUAD4, CQUAD8, CQUADR, CQUADX,
@@ -178,60 +177,61 @@ def read_bdf(bdf_filename=None,
                does not have so many methods
     .. todo:: finish this
     """
-    model = BDF(log=log, debug=debug)
+    model = BDF(log=log, debug=debug, mode=mode)
     model.read_bdf(bdf_filename=bdf_filename, xref=xref, punch=punch, encoding=encoding)
 
-    if 0:
-        ## TODO: remove all the extra methods
+    #if 0:
+        ### TODO: remove all the extra methods
 
-        keys_to_suppress = []
-        method_names = model.object_methods(keys_to_skip=keys_to_suppress)
+        #keys_to_suppress = []
+        #method_names = model.object_methods(keys_to_skip=keys_to_suppress)
 
-        methods_to_remove = [
-            'process_card', 'read_bdf', 'fill_dmigs', 'disable_cards', 'set_dynamic_syntax',
-            'create_card_object', 'create_card_object_fields', 'create_card_object_list',
+        #methods_to_remove = [
+            #'process_card', 'read_bdf', 'fill_dmigs', 'disable_cards', 'set_dynamic_syntax',
+            #'create_card_object', 'create_card_object_fields', 'create_card_object_list',
 
-            'add_AECOMP', 'add_AEFACT', 'add_AELINK', 'add_AELIST', 'add_AEPARM', 'add_AERO',
-            'add_AEROS', 'add_AESTAT', 'add_AESURF', 'add_ASET', 'add_BCRPARA', 'add_BCTADD',
-            'add_BCTPARA', 'add_BCTSET', 'add_BSET', 'add_BSURF', 'add_BSURFS', 'add_CAERO',
-            'add_DIVERG',
-            'add_CSET', 'add_CSSCHD', 'add_DAREA', 'add_DCONADD', 'add_DCONSTR', 'add_DDVAL',
-            'add_DELAY', 'add_DEQATN', 'add_DESVAR', 'add_DLINK', 'add_DMI', 'add_DMIG',
-            'add_DMIJ', 'add_DMIJI', 'add_DMIK', 'add_DPHASE', 'add_DRESP', 'add_DTABLE',
-            'add_DVMREL', 'add_DVPREL', 'add_EPOINT', 'add_FLFACT', 'add_FLUTTER', 'add_FREQ',
-            'add_GUST', 'add_LSEQ', 'add_MKAERO', 'add_MONPNT', 'add_NLPARM', 'add_NLPCI',
-            'add_PAERO', 'add_PARAM', 'add_PBUSHT', 'add_PDAMPT', 'add_PELAST', 'add_PHBDY',
-            'add_QSET', 'add_SEBSET', 'add_SECSET', 'add_SEQSET', 'add_SESET', 'add_SET',
-            'add_SEUSET', 'add_SPLINE', 'add_spoint', 'add_TEMPD', 'add_TF', 'add_TRIM',
-            'add_TSTEP', 'add_TSTEPNL', 'add_USET',
+            #'add_AECOMP', 'add_AEFACT', 'add_AELINK', 'add_AELIST', 'add_AEPARM', 'add_AERO',
+            #'add_AEROS', 'add_AESTAT', 'add_AESURF', 'add_ASET', 'add_BCRPARA', 'add_BCTADD',
+            #'add_BCTPARA', 'add_BCTSET', 'add_BSET', 'add_BSURF', 'add_BSURFS', 'add_CAERO',
+            #'add_DIVERG',
+            #'add_CSET', 'add_CSSCHD', 'add_DAREA', 'add_DCONADD', 'add_DCONSTR', 'add_DDVAL',
+            #'add_DELAY', 'add_DEQATN', 'add_DESVAR', 'add_DLINK', 'add_DMI', 'add_DMIG',
+            #'add_DMIJ', 'add_DMIJI', 'add_DMIK', 'add_DPHASE', 'add_DRESP', 'add_DTABLE',
+            #'add_DVMREL', 'add_DVPREL', 'add_EPOINT', 'add_FLFACT', 'add_FLUTTER', 'add_FREQ',
+            #'add_GUST', 'add_LSEQ', 'add_MKAERO', 'add_MONPNT', 'add_NLPARM', 'add_NLPCI',
+            #'add_PAERO', 'add_PARAM', 'add_PBUSHT', 'add_PDAMPT', 'add_PELAST', 'add_PHBDY',
+            #'add_QSET', 'add_SEBSET', 'add_SECSET', 'add_SEQSET', 'add_SESET', 'add_SET',
+            #'add_SEUSET', 'add_SPLINE', 'add_spoint', 'add_TEMPD', 'add_TF', 'add_TRIM',
+            #'add_TSTEP', 'add_TSTEPNL', 'add_USET',
 
-            'add_card', 'add_card_fields', 'add_card_lines', 'add_cmethod', 'add_constraint',
-            'add_constraint_MPC', 'add_constraint_MPCADD',
-            'add_constraint_SPC', 'add_constraint_SPCADD',
-            'add_convection_property', 'add_coord', 'add_creep_material', 'add_damper', 'add_dload',
-            'add_dload_entry', 'add_element', 'add_hyperelastic_material', 'add_load', 'add_mass',
-            'add_material_dependence', 'add_method', 'add_node', 'add_plotel', 'add_property',
-            'add_property_mass', 'add_random_table', 'add_rigid_element', 'add_structural_material',
-            'add_suport', 'add_suport1', 'add_table', 'add_table_sdamping', 'add_thermal_BC',
-            'add_thermal_element', 'add_thermal_load', 'add_thermal_material',
+            #'add_card', 'add_card_fields', 'add_card_lines', 'add_cmethod', 'add_constraint',
+            #'add_constraint_MPC', 'add_constraint_MPCADD',
+            #'add_constraint_SPC', 'add_constraint_SPCADD',
+            #'add_convection_property', 'add_coord', 'add_creep_material', 'add_damper',
+            #'add_dload', 'add_dload_entry', 'add_element', 'add_hyperelastic_material',
+            #'add_load', 'add_mass', 'add_material_dependence', 'add_method', 'add_node',
+            #'add_plotel', 'add_property', 'add_property_mass', 'add_random_table',
+            #'add_rigid_element', 'add_structural_material', 'add_suport', 'add_suport1',
+            #'add_table', 'add_table_sdamping', 'add_thermal_BC', 'add_thermal_element',
+            #'add_thermal_load', 'add_thermal_material',
 
-            'set_as_msc',
-            'set_as_nx',
+            #'set_as_msc',
+            #'set_as_nx',
 
-            'pop_parse_errors',
-            #'pop_xref_errors',
-            'set_error_storage',
-            'is_reject',
-        ]
-        for method_name in method_names:
-            if method_name not in methods_to_remove + keys_to_suppress:
-                #print(method_name)
-                pass
-            else:
-                ## TODO: doesn't work...
-                #delattr(model, method_name)
-                pass
-        model.get_bdf_stats()
+            #'pop_parse_errors',
+            ##'pop_xref_errors',
+            #'set_error_storage',
+            #'is_reject',
+        #]
+        #for method_name in method_names:
+            #if method_name not in methods_to_remove + keys_to_suppress:
+                ##print(method_name)
+                #pass
+            #else:
+                ### TODO: doesn't work...
+                ##delattr(model, method_name)
+                #pass
+        #model.get_bdf_stats()
     return model
 
 
@@ -730,7 +730,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             if self.values_to_skip:
                 for key, values in iteritems(self.values_to_skip):
                     dict_values = getattr(self, key)
-                    assert isinstance(dict_values, dict), '%r is an invalid type; only dictionaries are supported' % (key)
+                    if not isinstance(dict_values, dict):
+                        msg = '%r is an invalid type; only dictionaries are supported' % key
+                        raise TypeError(msg)
                     for value in values:
                         del dict_values[value]
                 # TODO: redo get_card_ids_by_card_types & card_count
@@ -1337,11 +1339,11 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'CSHEAR' : (CSHEAR, self.add_element),
             'PSHEAR' : (PSHEAR, self.add_property),
 
-            # CTETRA - added later
-            # CHEXA  - added later
-            # CPENTA - added later
-            # CPYRAM - added later
-            #'CIHEX1' : (CIHEX1, self.add_element),
+            'CTETRA' : (CTETRA, self.add_element),
+            'CPYRAM' : (CPYRAM, self.add_element),
+            'CPENTA' : (CPENTA, self.add_element),
+            'CHEXA' : (CHEXA, self.add_element),
+            'CIHEX1' : (CIHEX1, self.add_element),
             'PIHEX' : (PIHEX, self.add_property),
             'PSOLID' : (PSOLID, self.add_property),
             'PLSOLID' : (PLSOLID, self.add_property),
@@ -1624,17 +1626,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'NLPARM' : (NLPARM, self.add_NLPARM),
             # BCTSET
         }
-        #self._card_parser_a = {
-        #}
-        self._card_parser_b = {
-            'CIHEX1' : (CIHEX1, self.add_element),
-        }
         self._card_parser_prepare = {
-            'CTETRA' : self._prepare_ctetra,
-            'CPYRAM' : self._prepare_cpyram,
-            'CPENTA' : self._prepare_cpenta,
-            'CHEXA' : self._prepare_chexa,
-
             'CORD1R' : self._prepare_cord1r,
             'CORD1C' : self._prepare_cord1c,
             'CORD1S' : self._prepare_cord1s,
@@ -1662,7 +1654,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'CONV' : self._prepare_conv,
             'RADM' : self._prepare_radm,
             'RADBC' : self._prepare_radbc,
-            # GRDSET-will be last card to update from card_parser_b
+            # GRDSET-will be last card to update from _card_parser_prepare
             'GRDSET' : self._prepare_grdset,
 
             'BCTSET' : self._prepare_bctset,
@@ -1848,30 +1840,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         if card_obj.field(5):
             class_instance = CORD1S.add_card(card_obj, icard=1, comment=comment)
             self.add_coord(class_instance)
-
-    def _prepare_ctetra(self, card, card_obj, comment=''):
-        """adds a CTETRA"""
-        card_class = CTETRA4 if card_obj.nfields == 7 else CTETRA10
-        class_instance = card_class(card_obj, comment=comment)
-        self.add_element(class_instance)
-
-    def _prepare_cpyram(self, card, card_obj, comment=''):
-        """adds a CPYRAM"""
-        card_class = CPYRAM5 if card_obj.nfields == 8 else CPYRAM13
-        class_instance = card_class(card_obj, comment=comment)
-        self.add_element(class_instance)
-
-    def _prepare_cpenta(self, card, card_obj, comment=''):
-        """adds a CPENTA"""
-        card_class = CPENTA6 if card_obj.nfields == 9 else CPENTA15
-        class_instance = card_class(card_obj, comment=comment)
-        self.add_element(class_instance)
-
-    def _prepare_chexa(self, card, card_obj, comment=''):
-        """adds a CHEXA"""
-        card_class = CHEXA8 if card_obj.nfields == 11 else CHEXA20
-        class_instance = card_class(card_obj, comment=comment)
-        self.add_element(class_instance)
 
     def add_card(self, card_lines, card_name, comment='', is_list=True, has_none=True):
         """
@@ -2072,52 +2040,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                 self._stored_parse_errors.append((card, var))
                 if self._iparse_errors > self._nparse_errors:
                     self.pop_parse_errors()
-
-        #elif card_name in self._card_parser_a:
-            #card_class, add_card_function = self._card_parser_a[card_name]
-            #try:
-                #class_instance = card_class()
-            #except TypeError:
-                #msg = 'need to update %s class with classmethod' % card_name
-                #raise TypeError(msg)
-
-            #try:
-                #class_instance.add_card(card_obj, comment=comment)
-                #add_card_function(class_instance)
-            #except (SyntaxError, AssertionError, KeyError, ValueError) as exception:
-                ##raise
-                ## WARNING: Don't catch RuntimeErrors or a massive memory leak can occur
-                ##tpl/cc451.bdf
-                ##raise
-                ## NameErrors should be caught
-                #self._iparse_errors += 1
-                #var = traceback.format_exception_only(type(exception), exception)
-                #self._stored_parse_errors.append((card, var))
-                #if self._iparse_errors > self._nparse_errors:
-                    #self.pop_parse_errors()
-
-        elif card_name in self._card_parser_b:
-            card_class, add_card_function = self._card_parser_b[card_name]
-            #print('b', card_name)
-            try:
-                class_instance = card_class(card_obj, comment=comment)
-            except TypeError:
-                msg = '%s has a init problem' % card_name
-                print(msg)
-                #raise TypeError(msg)
-                raise
-            except (SyntaxError, AssertionError, KeyError, ValueError) as exception:
-                # WARNING: Don't catch RuntimeErrors or a massive memory leak can occur
-                #tpl/cc451.bdf
-                #raise
-                # NameErrors should be caught
-                self._iparse_errors += 1
-                var = traceback.format_exception_only(type(exception), exception)
-                self._stored_parse_errors.append((card, var))
-                if self._iparse_errors > self._nparse_errors:
-                    self.pop_parse_errors()
-                return
-            add_card_function(class_instance)
 
         elif card_name in self._card_parser_prepare:
             add_card_function = self._card_parser_prepare[card_name]
@@ -2710,8 +2632,11 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                 if self.is_reject(card_name):
                     if card_name not in self.card_count:
                         if ' ' in card_name:
-                            raise RuntimeError('No spaces allowed in card name %r.  '
-                                               'Should this be a comment?\n%s%s' % (card_name, comment, card_lines))
+                            msg = (
+                                'No spaces allowed in card name %r.  '
+                                'Should this be a comment?\n%s%s' % (
+                                    card_name, comment, card_lines))
+                            raise RuntimeError(msg)
                         if card_name in ['SUBCASE ', 'CEND']:
                             raise RuntimeError('No executive/case control deck was defined.')
                         self.log.info('    rejecting card_name = %s' % card_name)
@@ -2908,7 +2833,7 @@ IGNORE_COMMENTS = (
     'MATERIALS', 'THERMAL MATERIALS',
     'CONSTRAINTS', 'SPCs', 'MPCs', 'RIGID ELEMENTS',
     'LOADS', 'AERO', 'AERO CONTROL SURFACES',
-    'FLUTTER', 'DYNAMIC', 'OPTIMIZATION',
+    'FLUTTER', 'GUST', 'DYNAMIC', 'OPTIMIZATION',
     'COORDS', 'THERMAL', 'TABLES', 'RANDOM TABLES',
     'SETS', 'CONTACT', 'REJECTS', 'REJECT_LINES',
     'PROPERTIES_MASS', 'MASSES')

@@ -172,6 +172,75 @@ class SolidElement(Element):
         list_fields = [self.type, self.eid, self.Pid()] + self.node_ids
         return list_fields
 
+class CHEXA(object):
+    def __init__(self, eid, pid, nids, comment=''):
+        if len(nids) == 8:
+            return CHEXA8(eid, pid, nids, comment=comment)
+        elif len(nids) == 20:
+            return CHEXA20(eid, pid, nids, comment=comment)
+        else:
+            msg = 'len(nids)=%s; expected 8 or 20; nids=%s' % (len(nids), nids)
+            raise RuntimeError(msg)
+
+    @classmethod
+    def add_card(cls, card, comment):
+        if card_obj.nfields == 11:
+            return CHEXA8.add_card(card, comment=comment)
+        else:
+            return CHEXA20.add_card(card, comment=comment)
+
+class CTETRA(object):
+    def __init__(self, eid, pid, nids, comment=''):
+        if len(nids) == 4:
+            return CTETRA4(eid, pid, nids, comment=comment)
+        elif len(nids) == 10:
+            return CTETRA10(eid, pid, nids, comment=comment)
+        else:
+            msg = 'len(nids)=%s; expected 8 or 20; nids=%s' % (len(nids), nids)
+            raise RuntimeError(msg)
+
+    @classmethod
+    def add_card(cls, card, comment):
+        if card_obj.nfields == 7:
+            return CTETRA4.add_card(card, comment=comment)
+        else:
+            return CTETRA10.add_card(card, comment=comment)
+
+class CPENTA(object):
+    def __init__(self, eid, pid, nids, comment=''):
+        if len(nids) == 6:
+            return CPENTA6(eid, pid, nids, comment=comment)
+        elif len(nids) == 15:
+            return CPENTA15(eid, pid, nids, comment=comment)
+        else:
+            msg = 'len(nids)=%s; expected 8 or 20; nids=%s' % (len(nids), nids)
+            raise RuntimeError(msg)
+
+    @classmethod
+    def add_card(cls, card, comment):
+        if card_obj.nfields == 9:
+            return CPENTA6.add_card(card, comment=comment)
+        else:
+            return CPENTA15.add_card(card, comment=comment)
+
+class CPYRAM(object):
+    def __init__(self, eid, pid, nids, comment=''):
+        if len(nids) == 5:
+            return CPYRAM5(eid, pid, nids, comment=comment)
+        elif len(nids) == 13:
+            return CPYRAM13(eid, pid, nids, comment=comment)
+        else:
+            msg = 'len(nids)=%s; expected 8 or 20; nids=%s' % (len(nids), nids)
+            raise RuntimeError(msg)
+
+    @classmethod
+    def add_card(cls, card, comment):
+        if card_obj.nfields == 8:
+            return CPYRAM5.add_card(card, comment=comment)
+        else:
+            return CPYRAM13.add_card(card, comment=comment)
+
+
 class CHEXA8(SolidElement):
     """
     +-------+-----+-----+----+----+----+----+----+----+
@@ -197,33 +266,41 @@ class CHEXA8(SolidElement):
                '*       %16i%16i\n' % tuple(data))
         return self.comment + msg
 
-    def __init__(self, card=None, data=None, comment=''):
-        SolidElement.__init__(self, card, data)
+    def __init__(self, eid, pid, nids, comment=''):
+        SolidElement.__init__(self)
         if comment:
             self._comment = comment
-        if card:
-            #: Element ID
-            self.eid = integer(card, 1, 'eid')
-            #: Property ID
-            self.pid = integer(card, 2, 'pid')
-            nids = [
-                integer(card, 3, 'nid1'),
-                integer(card, 4, 'nid2'),
-                integer(card, 5, 'nid3'),
-                integer(card, 6, 'nid4'),
-                integer(card, 7, 'nid5'),
-                integer(card, 8, 'nid6'),
-                integer(card, 9, 'nid7'),
-                integer(card, 10, 'nid8')
-            ]
-            assert len(card) == 11, 'len(CHEXA8 card) = %i' % len(card)
-        else:
-            self.eid = data[0]
-            self.pid = data[1]
-            nids = data[2:]
-            assert len(data) == 10, 'len(data)=%s data=%s' % (len(data), data)
+        #: Element ID
+        self.eid = eid
+        #: Property ID
+        self.pid = pid
         self.prepare_node_ids(nids)
         assert len(self.nodes) == 8
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        eid = integer(card, 1, 'eid')
+        pid = integer(card, 2, 'pid')
+        nids = [
+            integer(card, 3, 'nid1'),
+            integer(card, 4, 'nid2'),
+            integer(card, 5, 'nid3'),
+            integer(card, 6, 'nid4'),
+            integer(card, 7, 'nid5'),
+            integer(card, 8, 'nid6'),
+            integer(card, 9, 'nid7'),
+            integer(card, 10, 'nid8')
+        ]
+        assert len(card) == 11, 'len(CHEXA8 card) = %i' % len(card)
+        return CHEXA8(eid, pid, nids, comment=comment)
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        eid = data[0]
+        pid = data[1]
+        nids = data[2:]
+        assert len(data) == 10, 'len(data)=%s data=%s' % (len(data), data)
+        return CHEXA8(eid, pid, nids, comment=comment)
 
     def cross_reference(self, model):
         """
@@ -382,42 +459,49 @@ class CHEXA20(SolidElement):
                '*       %16s%16s%16s%16s%16s%16s' % tuple(data))
         return self.comment + msg.rstrip() + '\n'
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self, eid, pid, nids, comment=''):
         SolidElement.__init__(self, card, data)
 
         if comment:
             self._comment = comment
-        if card:
-            #: Element ID
-            self.eid = integer(card, 1, 'eid')
-            #: Property ID
-            self.pid = integer(card, 2, 'pid')
-            nids = [
-                integer(card, 3, 'nid1'), integer(card, 4, 'nid2'),
-                integer(card, 5, 'nid3'), integer(card, 6, 'nid4'),
-                integer(card, 7, 'nid5'), integer(card, 8, 'nid6'),
-                integer(card, 9, 'nid7'), integer(card, 10, 'nid8'),
-                integer_or_blank(card, 11, 'nid9'),
-                integer_or_blank(card, 12, 'nid10'),
-                integer_or_blank(card, 13, 'nid11'),
-                integer_or_blank(card, 14, 'nid12'),
-                integer_or_blank(card, 15, 'nid13'),
-                integer_or_blank(card, 16, 'nid14'),
-                integer_or_blank(card, 17, 'nid15'),
-                integer_or_blank(card, 18, 'nid16'),
-                integer_or_blank(card, 19, 'nid17'),
-                integer_or_blank(card, 20, 'nid18'),
-                integer_or_blank(card, 21, 'nid19'),
-                integer_or_blank(card, 22, 'nid20')
-            ]
-            assert len(card) <= 23, 'len(CHEXA20 card) = %i' % len(card)
-        else:
-            self.eid = data[0]
-            self.pid = data[1]
-            nids = [d if d > 0 else None for d in data[2:]]
+        #: Element ID
+        self.eid = eid
+        #: Property ID
+        self.pid = pid
         self.prepare_node_ids(nids, allow_empty_nodes=True)
         msg = 'len(nids)=%s nids=%s' % (len(nids), nids)
         assert len(self.nodes) <= 20, msg
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        eid = integer(card, 1, 'eid')
+        pid = integer(card, 2, 'pid')
+        nids = [
+            integer(card, 3, 'nid1'), integer(card, 4, 'nid2'),
+            integer(card, 5, 'nid3'), integer(card, 6, 'nid4'),
+            integer(card, 7, 'nid5'), integer(card, 8, 'nid6'),
+            integer(card, 9, 'nid7'), integer(card, 10, 'nid8'),
+            integer_or_blank(card, 11, 'nid9'),
+            integer_or_blank(card, 12, 'nid10'),
+            integer_or_blank(card, 13, 'nid11'),
+            integer_or_blank(card, 14, 'nid12'),
+            integer_or_blank(card, 15, 'nid13'),
+            integer_or_blank(card, 16, 'nid14'),
+            integer_or_blank(card, 17, 'nid15'),
+            integer_or_blank(card, 18, 'nid16'),
+            integer_or_blank(card, 19, 'nid17'),
+            integer_or_blank(card, 20, 'nid18'),
+            integer_or_blank(card, 21, 'nid19'),
+            integer_or_blank(card, 22, 'nid20')
+        ]
+        assert len(card) <= 23, 'len(CHEXA20 card) = %i' % len(card)
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        self.eid = data[0]
+        self.pid = data[1]
+        nids = [d if d > 0 else None for d in data[2:]]
+        return CHEXA20(eid, pid, nids, comment=comment)
 
     def cross_reference(self, model):
         """

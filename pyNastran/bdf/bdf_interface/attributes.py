@@ -51,7 +51,7 @@ class BDFAttributes(object):
 
         my_keys_to_skip = [
             #'case_control_deck',
-            'log', 'mpcObject', 'spcObject',
+            'log', #'mpcObject', 'spcObject',
             'node_ids', 'coord_ids', 'element_ids', 'property_ids',
             'material_ids', 'caero_ids', 'is_long_ids',
             'nnodes', 'ncoords', 'nelements', 'nproperties',

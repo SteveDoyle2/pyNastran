@@ -191,10 +191,22 @@ class DESVAR(OptConstraint):
         return list_fields
 
     def repr_fields(self):
+        """
+        Gets the fields in their simplified form
+
+        Returns
+        -------
+        fields : List[varies]
+          the fields that define the card
+        """
         xlb = set_blank_if_default(self.xlb, -1e20)
         xub = set_blank_if_default(self.xub, 1e20)
         delx = set_blank_if_default(self.delx, 1e20)
-        list_fields = ['DESVAR', self.desvar_id, self.label, self.xinit, xlb,
+
+        label = self.label.strip()
+        if len(label) <= 6:
+            label = ' %6s ' % label
+        list_fields = ['DESVAR', self.desvar_id, label, self.xinit, xlb,
                        xub, delx, self.ddval]
         return list_fields
 
@@ -742,6 +754,33 @@ class DRESP1(OptConstraint):
         +--------+-------+---------+--------+--------+--------+-------+------+-------+
         | DRESP1 |  1S1  | CSTRAIN | PCOMP  |        |        | 1     | 1    | 10000 |
         +--------+-------+---------+--------+--------+--------+-------+------+-------+
+
+        Example 1
+        ---------
+        dresp_id = 103
+        label = 'resp1'
+        response_type = 'STRESS'
+        property_type = 'PSHELL'
+        pid = 3
+        atta = 9 # von mises upper surface stress
+        region = None
+        attb = None
+        atti = [pid]
+        DRESP1(dresp_id, label, response_type, property_type, region, atta, attb, atti)
+
+        Example 2
+        ---------
+        dresp_id = 104
+        label = 'resp2'
+        response_type = 'STRESS'
+        property_type = 'PCOMP'
+        pid = 3
+        layer = 4
+        atta = 9 # von mises upper surface stress
+        region = None
+        attb = layer
+        atti = [pid]
+        DRESP1(dresp_id, label, response_type, property_type, region, atta, attb, atti)
         """
         if comment:
             self._comment = comment
@@ -944,8 +983,22 @@ class DRESP1(OptConstraint):
     def raw_fields(self):
         list_fields = ['DRESP1', self.dresp_id, self.label, self.response_type, self.property_type,
                        self.region, self.atta, self.attb] + self.atti_values()
-        #for val in self.atti_values():
-            #print(val)
+        return list_fields
+
+    def repr_fields(self):
+        """
+        Gets the fields in their simplified form
+
+        Returns
+        -------
+        fields : List[varies]
+          the fields that define the card
+        """
+        label = self.label.strip()
+        if len(label) <= 6:
+            label = ' %6s ' % label
+        list_fields = ['DRESP1', self.dresp_id, self.label, self.response_type, self.property_type,
+                       self.region, self.atta, self.attb] + self.atti_values()
         return list_fields
 
     def write_card(self, size=8, is_double=False):
