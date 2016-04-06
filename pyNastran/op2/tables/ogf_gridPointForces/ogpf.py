@@ -10,7 +10,7 @@ from numpy import fromstring
 
 from pyNastran.op2.op2_helper import polar_to_real_imag
 from pyNastran.op2.op2_common import OP2Common
-from pyNastran.op2.tables.ogf_gridPointForces.ogf_Objects import (
+from pyNastran.op2.tables.ogf_gridPointForces.ogf_objects import (
     RealGridPointForcesArray, ComplexGridPointForcesArray)
 
 

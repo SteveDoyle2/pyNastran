@@ -93,7 +93,7 @@ class BaseScalarObject(Op2Codes):
                 msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
                 msg += '%s\n' % str(self.code_information())
                 for (eid1, nid1), (eid2, nid2) in zip(self.element_node, table.element_node):
-                    msg += '%s, %s\n' % (eid1, nid1, eid2, eid2)
+                    msg += '(%s, %s), (%s, %s)\n' % (eid1, nid1, eid2, eid2)
                 print(msg)
                 raise ValueError(msg)
 

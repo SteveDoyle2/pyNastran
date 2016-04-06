@@ -16,6 +16,11 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.utils import is_binary_file
 from pyNastran.utils.log import get_logger
 
+def read_stl(stl_filename, log=None, debug=False):
+    stl = STL(log=log, debug=debug)
+    stl.read_stl(stl_filename)
+    return stl
+
 
 class STL(object):
     #model_type = 'stl'
@@ -56,38 +61,36 @@ class STL(object):
 
     def write_binary_stl(self, stl_filename):
         """Write an STL binary file."""
-        infile = open(stl_filename, "wb")
+        with open(stl_filename, "wb") as infile:
+            if hasattr(self, 'header'):
+                self.header.ljust(80, '\0')
+                infile.write(self.header)
+            else:
+                header = '%-80s' % stl_filename
+                infile.write(pack('80s', header))
+            #avector = [0., 0., 0.]
+            #bvector = [0., 0., 0.]
+            #cvector = [0., 0., 0.]
+            nelements = self.elements.shape[0]
+            infile.write(pack('i', nelements))
+            elements = self.elements
 
-        if hasattr(self, 'header'):
-            self.header.ljust(80, '\0')
-            infile.write(self.header)
-        else:
-            header = '%-80s' % stl_filename
-            infile.write(pack('80s', header))
-        #avector = [0., 0., 0.]
-        #bvector = [0., 0., 0.]
-        #cvector = [0., 0., 0.]
-        nelements = self.elements.shape[0]
-        infile.write(pack('i', nelements))
-        elements = self.elements
+            p1 = self.nodes[elements[:, 0], :]
+            p2 = self.nodes[elements[:, 1], :]
+            p3 = self.nodes[elements[:, 2], :]
+            avector = p2 - p1
+            bvector = p3 - p1
+            n = cross(avector, bvector)
+            del avector, bvector
+            #n /= norm(n, axis=1)
 
-        p1 = self.nodes[elements[:, 0], :]
-        p2 = self.nodes[elements[:, 1], :]
-        p3 = self.nodes[elements[:, 2], :]
-        avector = p2 - p1
-        bvector = p3 - p1
-        n = cross(avector, bvector)
-        del avector, bvector
-        #n /= norm(n, axis=1)
-
-        s = Struct('12fH')
-        for eid, element in enumerate(elements):
-            data = s.pack(n[eid, 0], n[eid, 1], n[eid, 2],
-                          p1[eid, 0], p1[eid, 1], p1[eid, 2],
-                          p2[eid, 0], p2[eid, 1], p2[eid, 2],
-                          p3[eid, 0], p3[eid, 1], p3[eid, 2], 0)
-            infile.write(data)
-        infile.close()
+            s = Struct('12fH')
+            for eid, element in enumerate(elements):
+                data = s.pack(n[eid, 0], n[eid, 1], n[eid, 2],
+                              p1[eid, 0], p1[eid, 1], p1[eid, 2],
+                              p2[eid, 0], p2[eid, 1], p2[eid, 2],
+                              p3[eid, 0], p3[eid, 1], p3[eid, 2], 0)
+                infile.write(data)
 
     def read_binary_stl(self, stl_filename):
         """Read an STL binary file."""
@@ -136,8 +139,8 @@ class STL(object):
         assert inode > 0, inode
         nnodes = inode + 1 # accounting for indexing
         self.elements = elements
-        nodes = zeros((nnodes, 3), 'float64')
 
+        nodes = zeros((nnodes, 3), 'float64')
         for node, inode in iteritems(nodes_dict):
             nodes[inode] = node
         self.nodes = nodes
@@ -478,31 +481,30 @@ class STL(object):
         node_format = ' facet normal %s %s %s\n' % (float_fmt, float_fmt, float_fmt)
         vertex_format = '     vertex %s %s %s\n' % (float_fmt, float_fmt, float_fmt)
         msg += 'solid %s\n' % solid_name
-        out = open(out_filename, 'wb')
-        out.write(msg)
-
-        nelements = elements.shape[0]
-        normals = self.get_normals(elements)
-        for element, normal in zip(elements, normals):
-            try:
-                p1, p2, p3 = nodes[element]
-            except IndexError:
-                print(element)
-                raise
-
-            #msg  += '  facet normal -6.601157e-001 6.730213e-001 3.336009e-001\n'
-            msg = node_format % tuple(normal)
-            msg += '   outer loop\n'
-            msg += vertex_format % tuple(p1)
-            msg += vertex_format % tuple(p2)
-            msg += vertex_format % tuple(p3)
-            msg += '   endloop\n'
-            msg += ' endfacet\n'
-            #print(msg)
+        with open(out_filename, 'wb') as out:
             out.write(msg)
-        msg = 'endsolid\n'
-        out.write(msg)
-        out.close()
+
+            nelements = elements.shape[0]
+            normals = self.get_normals(elements)
+            for element, normal in zip(elements, normals):
+                try:
+                    p1, p2, p3 = nodes[element]
+                except IndexError:
+                    print(element)
+                    raise
+
+                #msg  += '  facet normal -6.601157e-001 6.730213e-001 3.336009e-001\n'
+                msg = node_format % tuple(normal)
+                msg += '   outer loop\n'
+                msg += vertex_format % tuple(p1)
+                msg += vertex_format % tuple(p2)
+                msg += vertex_format % tuple(p3)
+                msg += '   endloop\n'
+                msg += ' endfacet\n'
+                #print(msg)
+                out.write(msg)
+            msg = 'endsolid\n'
+            out.write(msg)
 
 
     def read_ascii_stl(self, stl_filename):

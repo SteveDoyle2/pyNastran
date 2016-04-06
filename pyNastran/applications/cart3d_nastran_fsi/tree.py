@@ -2,7 +2,7 @@ from __future__ import print_function
 from six.moves import range
 from numpy import array, argsort
 #from numpy.linalg import norm
-from pyNastran.applications.cart3d_nastran_fsi.mathFunctions import distance
+from pyNastran.applications.cart3d_nastran_fsi.math_functions import distance
 
 
 #def load_list(listA):

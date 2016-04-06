@@ -10,7 +10,7 @@ from pyNastran.bdf.bdf import BDF
 from pyNastran.op2.op2 import OP2
 from pyNastran.f06.f06 import F06
 from pyNastran.converters.cart3d.cart3d_reader import Cart3D
-#from pyNastran.applications.cart3d_nastran_fsi.mathFunctions import printMatrix
+#from pyNastran.applications.cart3d_nastran_fsi.math_functions import printMatrix
 
 from pyNastran.utils.log import get_logger
 debug = True

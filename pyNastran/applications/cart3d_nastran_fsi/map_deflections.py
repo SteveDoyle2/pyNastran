@@ -10,8 +10,8 @@ from numpy import argsort
 from numpy.linalg import norm
 
 #from pyNastran.applications.cart3d_nastran_fsi.delauney.premorph import runPremorph
-from pyNastran.applications.cart3d_nastran_fsi.delauneyReader import Tet4, DelauneyReader
-from pyNastran.applications.cart3d_nastran_fsi.mathFunctions import ListPrint
+from pyNastran.applications.cart3d_nastran_fsi.delauney_reader import Tet4, DelauneyReader
+from pyNastran.applications.cart3d_nastran_fsi.math_functions import ListPrint
 #from f06Reader import f06Reader
 
 from pyNastran.op2.op2 import OP2

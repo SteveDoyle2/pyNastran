@@ -650,7 +650,7 @@ def expand_thru_by(fields, set_fields=True, sort_fields=False):
             max_value = interpret_value(fields[i + 1])
             max_range = int((max_value - min_value) // by + 1)  # max range value
 
-            for j in range(0, maxR):  # +1 is to include final point
+            for j in range(0, max_range):  # +1 is to include final point
                 value = min_value + by * j
                 out.append(value)
 

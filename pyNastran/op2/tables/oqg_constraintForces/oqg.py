@@ -9,15 +9,15 @@ This file defines the OUG Table, which contains:
 """
 from pyNastran.op2.op2_common import OP2Common
 
-from pyNastran.op2.tables.oqg_constraintForces.oqg_spcForces import (
+from pyNastran.op2.tables.oqg_constraintForces.oqg_spc_forces import (
     RealSPCForcesArray, ComplexSPCForcesArray,
     #RealSPCForces, ComplexSPCForces
 )
-from pyNastran.op2.tables.oqg_constraintForces.oqg_mpcForces import (
+from pyNastran.op2.tables.oqg_constraintForces.oqg_mpc_forces import (
     RealMPCForcesArray, ComplexMPCForcesArray,
     #RealMPCForces, ComplexMPCForces
 )
-from pyNastran.op2.tables.oqg_constraintForces.oqg_thermalGradientAndFlux import (
+from pyNastran.op2.tables.oqg_constraintForces.oqg_thermal_gradient_and_flux import (
     #RealTemperatureGradientAndFlux,
     RealTemperatureGradientAndFluxArray)
 

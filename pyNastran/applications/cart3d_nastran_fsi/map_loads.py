@@ -10,8 +10,8 @@ from time import time
 from numpy import argsort, mean, array, cross
 
 
-from pyNastran.applications.cart3d_nastran_fsi.mathFunctions import pierce_plane_vector, shepard_weight, Normal, ListPrint
-#from pyNastran.applications.cart3d_nastran_fsi.mathFunctions import get_triangle_weights
+from pyNastran.applications.cart3d_nastran_fsi.math_functions import pierce_plane_vector, shepard_weight, Normal, ListPrint
+#from pyNastran.applications.cart3d_nastran_fsi.math_functions import get_triangle_weights
 from pyNastran.applications.cart3d_nastran_fsi.structural_model import StructuralModel
 from pyNastran.applications.cart3d_nastran_fsi.aero_model import AeroModel
 from pyNastran.applications.cart3d_nastran_fsi.kdtree import KdTree

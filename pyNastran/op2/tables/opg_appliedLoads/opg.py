@@ -4,16 +4,16 @@ Defines the Real/Complex Forces created by:
     OLOAD = ALL
 """
 
-#from pyNastran.op2.tables.opg_appliedLoads.opg_Objects import (#RealAppliedLoads,  #ComplexAppliedLoads,
+#from pyNastran.op2.tables.opg_appliedLoads.opg_objects import (#RealAppliedLoads,  #ComplexAppliedLoads,
                                                                #RealAppliedLoadsVectorArray, ComplexAppliedLoadsVectorArray)
-from pyNastran.op2.tables.opg_appliedLoads.opg_loadVector import (
+from pyNastran.op2.tables.opg_appliedLoads.opg_load_vector import (
     #RealLoadVector, ComplexLoadVector,
     RealLoadVectorArray, ComplexLoadVectorArray,
     #RealThermalLoadVector,
     RealTemperatureVectorArray,
     #RealThermalVelocityArray
 )
-from pyNastran.op2.tables.opg_appliedLoads.opnl_forceVector import RealForceVectorArray#, ComplexForceVectorArray
+from pyNastran.op2.tables.opg_appliedLoads.opnl_force_vector import RealForceVectorArray#, ComplexForceVectorArray
 
 from pyNastran.op2.op2_common import OP2Common
 

@@ -14,7 +14,7 @@ from numpy import hstack, zeros
 from pyNastran.op2.op2_helper import polar_to_real_imag
 from pyNastran.op2.op2_common import OP2Common
 
-from pyNastran.op2.tables.oef_forces.oef_thermalObjects import (
+from pyNastran.op2.tables.oef_forces.oef_thermal_objects import (
     Real1DHeatFluxArray,
     HeatFlux_2D_3DArray,
     RealChbdyHeatFluxArray,
@@ -28,7 +28,7 @@ from pyNastran.op2.tables.oef_forces.oef_thermalObjects import (
     #HeatFlux_VUBEAM,
     #HeatFlux_VU_3D,
 )
-from pyNastran.op2.tables.oef_forces.oef_forceObjects import (
+from pyNastran.op2.tables.oef_forces.oef_force_objects import (
     RealRodForceArray, RealViscForceArray,
     RealCBarForceArray, RealCBar100ForceArray,
     RealCBushForceArray,
@@ -45,7 +45,7 @@ from pyNastran.op2.tables.oef_forces.oef_forceObjects import (
     # TODO: vectorize 2
     #RealForce_VU_2D, RealForce_VU,
 )
-from pyNastran.op2.tables.oef_forces.oef_complexForceObjects import (
+from pyNastran.op2.tables.oef_forces.oef_complex_force_objects import (
     ComplexRodForceArray,
     ComplexCBarForceArray,
     ComplexCBeamForceArray,
