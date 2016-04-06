@@ -278,6 +278,7 @@ class CHBDYG(ThermalElement):
                       radMidFront=radMidFront, radMidBack=radMidBack,
                       comment=comment)
 
+    @classmethod
     def add_op2_data(self, data, comment=''):
         eid = data[0]
         Type = data[1]

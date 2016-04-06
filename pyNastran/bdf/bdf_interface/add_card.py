@@ -581,7 +581,7 @@ class AddMethods(BDFAttributes):
         self.splines[key] = spline
         self._type_to_id_map[spline.type].append(key)
 
-    def add_GUST(self, gust):
+    def add_gust(self, gust):
         key = gust.sid
         assert key not in self.gusts
         assert key > 0

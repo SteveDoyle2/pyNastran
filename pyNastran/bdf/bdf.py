@@ -1531,7 +1531,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'MKAERO1' : (MKAERO1, self.add_MKAERO),
             'MKAERO2' : (MKAERO2, self.add_MKAERO),
 
-            'GUST' : (GUST, self.add_GUST),
+            'GUST' : (GUST, self.add_gust),
             'CSSCHD' : (CSSCHD, self.add_CSSCHD),
             'MONPNT1' : (MONPNT1, self.add_MONPNT),
 

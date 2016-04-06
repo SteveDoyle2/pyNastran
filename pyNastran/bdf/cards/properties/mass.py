@@ -40,25 +40,35 @@ class NSM(PointProperty):
         'PSHELL', 'PCOMP', 'PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PBCOMP',
         'PROD', 'CONROD', 'PBEND', 'PSHEAR', 'PTUBE', 'PCONEAX', 'PRAC2D']
 
-    def __init__(self, card=None, icard=0, data=None, comment=''):
+    def __init__(self, sid, Type, id, value, comment=''):
         PointProperty.__init__(self, card, data)
         if comment:
             self._comment = comment
-        if card:
-            noffset = 2 * icard
-            self.sid = integer(card, 1, 'sid')
-            self.Type = string(card, 2, 'Type')
-            self.id = integer(card, 3 + noffset, 'id')
-            self.value = double(card, 4 + noffset, 'value')
-        else:
-            self.sid = data[0]
-            #sid=9  propSet=PBEA ID=538976333 value=0.0
-            #sid=10 propSet=PDUM ID=538976312 value=2.80259692865e-45
-            #sid=10 propSet=ELEM ID=542395973 value=0.0
-            self.Type = data[1]
-            self.id = data[2]
-            self.value = data[3]
+        self.sid = sid
+        self.Type = Type
+        self.id = id
+        self.value = value
         assert self.Type in self.validProperties
+
+    @classmethod
+    def add_card(cls, card, icard=0, comment=''):
+        noffset = 2 * icard
+        sid = integer(card, 1, 'sid')
+        Type = string(card, 2, 'Type')
+        id = integer(card, 3 + noffset, 'id')
+        value = double(card, 4 + noffset, 'value')
+        return NSM(sid, Type, id, value, comment=comment)
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        sid = data[0]
+        #sid=9  prop_set=PBEA ID=538976333 value=0.0
+        #sid=10 prop_set=PDUM ID=538976312 value=2.80259692865e-45
+        #sid=10 prop_set=ELEM ID=542395973 value=0.0
+        Type = data[1]
+        id = data[2]
+        value = data[3]
+        return NSM(sid, Type, id, value, comment=comment)
 
     def raw_fields(self):
         #nodes = self.node_ids

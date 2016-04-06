@@ -1,4 +1,4 @@
-# pylint: disable=W0612,C0103,C0301,C0302,C0303,W0613,C0111,R0914,C0326,R0201
+# pylint: disable=W0612,C0103,C0302,W0613,C0111,R0914,R0201
 from struct import unpack, Struct
 from six import b
 from six.moves import range
@@ -23,6 +23,7 @@ from pyNastran.op2.tables.geom.geom_common import GeomCommon
 
 
 class GEOM2(GeomCommon):
+    """defines methods for reading op2 elements"""
 
     def _read_geom2_4(self, data, ndata):
         return self._read_geom_4(self._geom2_map, data, ndata)
@@ -30,18 +31,18 @@ class GEOM2(GeomCommon):
     def __init__(self):
         GeomCommon.__init__(self)
         self._geom2_map = {
-            (2408,   24,  180): ['CBAR', self._read_cbar],       # record 8
-            (4001,   40,  275): ['CBARAO', self._read_cbarao],   # record 9  - not done
-            (5408,   54,  261): ['CBEAM', self._read_cbeam],     # record 10
-            (11401, 114, 9016): ['CBEAMP', self._read_cbeamp],   # record 11 - not done
-            (4601,   46,  298): ['CBEND', self._read_cbend],     # record 12 - not done
-            (2608,  26,   60): ['CBUSH', self._read_cbush],      # record 13 - not done
-            (5608,   56,  218): ['CBUSH1D', self._read_cbush1d], # record 14 - not done
-            (2315,   23,  146): ['CCONE', self._read_ccone],     # record 15 - not done
-            (201,     2,   69): ['CDAMP1', self._read_cdamp1],      # record 16
-            (301,     3,   70): ['CDAMP2', self._read_cdamp2],      # record 17
-            (401,     4,   71): ['CDAMP3', self._read_cdamp3],      # record 18
-            (501,     5,   72): ['CDAMP4', self._read_cdamp4],      # record 19
+            (2408, 24, 180): ['CBAR', self._read_cbar],         # record 8
+            (4001, 40, 275): ['CBARAO', self._read_cbarao],     # record 9  - not done
+            (5408, 54, 261): ['CBEAM', self._read_cbeam],       # record 10
+            (11401, 114, 9016): ['CBEAMP', self._read_cbeamp],  # record 11 - not done
+            (4601, 46, 298): ['CBEND', self._read_cbend],     # record 12 - not done
+            (2608, 26, 60): ['CBUSH', self._read_cbush],      # record 13 - not done
+            (5608, 56, 218): ['CBUSH1D', self._read_cbush1d], # record 14 - not done
+            (2315, 23, 146): ['CCONE', self._read_ccone],     # record 15 - not done
+            (201, 2, 69): ['CDAMP1', self._read_cdamp1],      # record 16
+            (301, 3, 70): ['CDAMP2', self._read_cdamp2],      # record 17
+            (401, 4, 71): ['CDAMP3', self._read_cdamp3],      # record 18
+            (501, 5, 72): ['CDAMP4', self._read_cdamp4],      # record 19
             (10608, 106, 404): ['CDAMPS', self._read_cdamp5], # record 20
 
             (601, 6, 73): ['CELAS1', self._read_celas1],      # record 29
@@ -51,41 +52,41 @@ class GEOM2(GeomCommon):
             # record 33
             # record 34
             # record 35
-            (8515, 85, 209): ['CFLUID2', self._readCFLUID2],   # record 35 - not done
-            (8615, 86, 210): ['CFLUID3', self._readCFLUID3],   # record 36 - not done
-            (8715, 87, 211): ['CFLUID4', self._readCFLUID4],   # record 37 - not done
-            (1908, 19, 104): ['CGAP', self._read_cgap],       # record 39 - buggy
+            (8515, 85, 209): ['CFLUID2', self._read_cfluid2],  # record 35 - not done
+            (8615, 86, 210): ['CFLUID3', self._read_cfluid3],  # record 36 - not done
+            (8715, 87, 211): ['CFLUID4', self._read_cfluid4],  # record 37 - not done
+            (1908, 19, 104): ['CGAP', self._read_cgap],        # record 39 - buggy
             # record 40
             # record 41
             # record 42
-            (10808, 108, 406): ['CHBDYG', self._readCHBDYG], # record 43
-            (10908, 109, 407): ['CHBDYP', self._readCHBDYP], # record 44 - not done
-            (7308,  73,  253): ['CHEXA', self._readCHEXA],     # record 45
-            (1001,  10,   65): ['CMASS1', self._read_cmass1],    # record 51
-            (1101,  11,   66): ['CMASS2', self._read_cmass2],    # record 52
-            (1201,  12,   67): ['CMASS3', self._read_cmass3],    # record 53
-            (1301,  13,   68): ['CMASS4', self._read_cmass4],    # record 54
-            (2508,  25,    0): ['CMFREE', self._readCMFREE],     # record 55 - not done
-            (1401,  14,   63): ['CONM1', self._read_conm1],      # record 56 - not done
-            (1501,  15,   64): ['CONM2', self._read_conm2],      # record 57
-            (1601,  16,   47): ['CONROD', self._read_conrod],    # record 58
-            (12701, 127, 408): ['CONV', self._readCONV],     # record 59 - not tested
-            (8908,  89, 422): ['CONVM', self._readCONVM],     # record 60 - not tested
+            (10808, 108, 406): ['CHBDYG', self._read_chbdyg], # record 43
+            (10908, 109, 407): ['CHBDYP', self._read_chbdyp], # record 44 - not done
+            (7308, 73, 253): ['CHEXA', self._read_chexa],     # record 45
+            (1001, 10, 65): ['CMASS1', self._read_cmass1],    # record 51
+            (1101, 11, 66): ['CMASS2', self._read_cmass2],    # record 52
+            (1201, 12, 67): ['CMASS3', self._read_cmass3],    # record 53
+            (1301, 13, 68): ['CMASS4', self._read_cmass4],    # record 54
+            (2508, 25, 0): ['CMFREE', self._read_cmfree],     # record 55 - not done
+            (1401, 14, 63): ['CONM1', self._read_conm1],      # record 56 - not done
+            (1501, 15, 64): ['CONM2', self._read_conm2],      # record 57
+            (1601, 16, 47): ['CONROD', self._read_conrod],    # record 58
+            (12701, 127, 408): ['CONV', self._read_conv],     # record 59 - not tested
+            (8908, 89, 422): ['CONVM', self._read_convm],     # record 60 - not tested
             # record 61
-            (4108,  41, 280): ['CPENTA', self._readCPENTA],   # record 62
+            (4108, 41, 280): ['CPENTA', self._read_cpenta],   # record 62
             # record 63
             # record 64
             # record 65
             # record 66
             # record 67
-            (9108,   91,  507): ['CQUAD', self._readCQUAD],     # record 68 - not tested
-            (2958,   51,  177): ['CQUAD4', self._readCQUAD4],   # record 69 - maybe buggy on theta/Mcsid field
-            (13900, 139, 9989): ['CQUAD4', self._readCQUAD4],# record 70 - maybe buggy on theta/Mcsid field
-            (4701,   47,  326): ['CQUAD8', self._readCQUAD8],   # record 71 - maybe buggy on theta/Mcsid field
+            (9108, 91, 507): ['CQUAD', self._read_cquad],       # record 68 - not tested
+            (2958, 51, 177): ['CQUAD4', self._read_cquad4],     # record 69 - maybe buggy on theta/Mcsid field
+            (13900, 139, 9989): ['CQUAD4', self._read_cquad4],  # record 70 - maybe buggy on theta/Mcsid field
+            (4701, 47, 326): ['CQUAD8', self._read_cquad8],     # record 71 - maybe buggy on theta/Mcsid field
             # record 72
             # record 73
-            (8009,   80,  367): ['CQUADR', self._readCQUADR],   # record 74 - not tested
-            (9008,   90,  508): ['CQUADX', self._readCQUADX],   # record 75 - not tested
+            (8009, 80, 367): ['CQUADR', self._read_cquadr],   # record 74 - not tested
+            (9008, 90, 508): ['CQUADX', self._read_cquadx],   # record 75 - not tested
             # record 76
             # record 77
             # record 78
@@ -96,8 +97,8 @@ class GEOM2(GeomCommon):
             # record 83
             # record 84
             # record 85
-            (12201,122,9013): ['CTETP', self._readCTETP],    # record 86 - not done
-            (5508,  55, 217): ['CTETRA', self._readCTETRA],   # record 87
+            (12201, 122, 9013): ['CTETP', self._read_ctetrap],  # record 86 - not done
+            (5508, 55, 217): ['CTETRA', self._read_ctetra],     # record 87
             # record 88
             # record 89
             # record 90
@@ -128,8 +129,8 @@ class GEOM2(GeomCommon):
             # record 115
             # record 116
             # record 117
-            (5551,  49,  105): ['SPOINT', self._read_spoint],   # record 118
-            (11601,116, 9942): ['VUBEAM', self._read_vubeam],  # record 119 - not done
+            (5551, 49, 105): ['SPOINT', self._read_spoint],     # record 118
+            (11601, 116, 9942): ['VUBEAM', self._read_vubeam],  # record 119 - not done
             (2108, 21, 224): ['', self._read_fake],
             (3101, 31, 61): ['', self._read_fake],
             (4301, 43, 28): ['', self._read_fake],
@@ -209,7 +210,7 @@ class GEOM2(GeomCommon):
     def add_element(self, elem, allow_overwrites=True):
         raise RuntimeError('this should be overwritten')
 
-    def addOp2Element(self, elem):
+    def add_op2_element(self, elem):
         if elem.eid <= 0:
             self.log.debug(elem)
             return
@@ -253,7 +254,7 @@ class GEOM2(GeomCommon):
             else:
                 raise RuntimeError('invalid f value...f=%s' % (f))
             elem = CBAR.add_op2_data(data_in)
-            self.addOp2Element(elem)
+            self.add_op2_element(elem)
             n += 64
         self.card_count['CBAR'] = nelements
         return n
@@ -295,7 +296,7 @@ class GEOM2(GeomCommon):
             else:
                 raise RuntimeError('invalid f value...f=%r' % f)
             elem = CBEAM.add_op2_data(data_in)
-            self.addOp2Element(elem)
+            self.add_op2_element(elem)
             n += 72
         self.card_count['CBEAM'] = nelements
         return n
@@ -352,7 +353,7 @@ class GEOM2(GeomCommon):
                 self.binary_debug.write('  CDAMP1=%s\n' % str(out))
             (eid, pid, g1, g2, c1, c2) = out
             elem = CDAMP1.add_op2_data(out)
-            self.addOp2Element(elem)
+            self.add_op2_element(elem)
             n += 24
         self.card_count['CDAMP1'] = nelements
         return n
@@ -369,7 +370,7 @@ class GEOM2(GeomCommon):
                 self.binary_debug.write('  CDAMP2=%s\n' % str(out))
             (eid, bdamp, g1, g2, c1, c2) = out
             elem = CDAMP2.add_op2_data(out)
-            self.addOp2Element(elem)
+            self.add_op2_element(elem)
             n += 24
         self.card_count['CDAMP2'] = nelements
         return n
@@ -387,7 +388,7 @@ class GEOM2(GeomCommon):
                 self.binary_debug.write('  CDAMP3=%s\n' % str(out))
             (eid, pid, s1, s2) = out
             elem = CDAMP3.add_op2_data(out)
-            self.addOp2Element(elem)
+            self.add_op2_element(elem)
             n += 16
         self.card_count['CDAMP3'] = nelements
         return n
@@ -405,7 +406,7 @@ class GEOM2(GeomCommon):
                 self.binary_debug.write('  CDAMP4=%s\n' % str(out))
             (eid, bdamp, s1, s2) = out
             elem = CDAMP4(None, out)
-            self.addOp2Element(elem)
+            self.add_op2_element(elem)
             n += 16
         self.card_count['CDAMP4'] = nelements
         return n
@@ -423,7 +424,7 @@ class GEOM2(GeomCommon):
                 self.binary_debug.write('  CDAMP5=%s\n' % str(out))
             (eid, pid, s1, s2) = out
             elem = CDAMP5.add_op2_data(out)
-            self.addOp2Element(elem)
+            self.add_op2_element(elem)
             n += 16
         self.card_count['CDAMP5'] = nelements
         return n
@@ -451,7 +452,7 @@ class GEOM2(GeomCommon):
                 self.binary_debug.write('  CELAS1=%s\n' % str(out))
             (eid, pid, g1, g2, c1, c2) = out
             elem = CELAS1.add_op2_data(out)
-            self.addOp2Element(elem)
+            self.add_op2_element(elem)
             n += ntotal
         self.card_count['CELAS1'] = nelements
         return n
@@ -470,7 +471,7 @@ class GEOM2(GeomCommon):
                 self.binary_debug.write('  CELAS2=%s\n' % str(out))
             (eid, k, g1, g2, c1, c2, ge, s) = out
             elem = CELAS2.add_op2_data(out)
-            self.addOp2Element(elem)
+            self.add_op2_element(elem)
             n += ntotal
         self.card_count['CELAS2'] = nelements
         return n
@@ -489,7 +490,7 @@ class GEOM2(GeomCommon):
                 self.binary_debug.write('  CELAS3=%s\n' % str(out))
             (eid, pid, s1, s2) = out
             elem = CELAS3.add_op2_data(out)
-            self.addOp2Element(elem)
+            self.add_op2_element(elem)
             n += ntotal
         self.card_count['CELAS3'] = nelements
         return n
@@ -507,7 +508,7 @@ class GEOM2(GeomCommon):
                 self.binary_debug.write('  CELAS4=%s\n' % str(out))
             (eid, k, s1, s2) = out
             elem = CELAS4.add_op2_data(out)
-            self.addOp2Element(elem)
+            self.add_op2_element(elem)
             n += 16
         self.card_count['CELAS4'] = nelements
         return n
@@ -515,19 +516,19 @@ class GEOM2(GeomCommon):
 # CFAST
 # CFASTP
 
-    def _readCFLUID2(self, data, n):
+    def _read_cfluid2(self, data, n):
         """
         CFLUID2(8515,85,209) - the marker for Record 35
         """
         return n
 
-    def _readCFLUID3(self, data, n):
+    def _read_cfluid3(self, data, n):
         """
         CFLUID3(8615,86,210) - the marker for Record 36
         """
         return n
 
-    def _readCFLUID4(self, data, n):
+    def _read_cfluid4(self, data, n):
         """
         CFLUID4(8715,87,211) - the marker for Record 37
         """
@@ -556,7 +557,7 @@ class GEOM2(GeomCommon):
 
             data_in = [eid, pid, ga, gb, g0, x1, x2, x3, cid]
             elem = CGAP.add_op2_data(data_in)
-            self.addOp2Element(elem)
+            self.add_op2_element(elem)
             n += 36
         self.card_count['CGAP'] = nelements
         return n
@@ -566,7 +567,7 @@ class GEOM2(GeomCommon):
 # CHBDYE
 # CHBDYG
 
-    def _readCHBDYG(self, data, n):
+    def _read_chbdyg(self, data, n):
         """
         CHBDYG(10808,108,406) - the marker for Record 43
         """
@@ -582,18 +583,17 @@ class GEOM2(GeomCommon):
                 self.binary_debug.write('  CHBDYG=%s\n' % str(out))
             data_in = [eid, Type, iviewf, iviewb, radmidf, radmidb,
                        g1, g2, g3, g4, g5, g6, g7, g8]
-            elem = CHBDYG()
-            elem.add_op2_data(data_in)
-            self.addOp2Element(elem)
+            elem = CHBDYG.add_op2_data(data_in)
+            self.add_op2_element(elem)
             n += ntotal
         return n
 
-    def _readCHBDYP(self, data, n):
+    def _read_chbdyp(self, data, n):
         if self.is_debug_file:
             self.binary_debug.write('skipping CHBDYP in GEOM2\n')
         return n
 
-    def _readCHEXA(self, data, n):
+    def _read_chexa(self, data, n):
         """
         CHEXA(7308,73,253) - the marker for Record 45
         """
@@ -612,10 +612,10 @@ class GEOM2(GeomCommon):
             big_nodes = [g9, g10, g11, g12, g13, g14, g15, g16,
                          g17, g18, g19, g20]
             if sum(big_nodes) > 0:
-                elem = CHEXA20(None, data_in + big_nodes)
+                elem = CHEXA20.add_op2_data(data_in + big_nodes)
             else:
-                elem = CHEXA8(None, data_in)
-            self.addOp2Element(elem)
+                elem = CHEXA8.add_op2_data(data_in)
+            self.add_op2_element(elem)
             n += ntotal
         self.card_count['CHEXA'] = nelements
         return n
@@ -639,7 +639,7 @@ class GEOM2(GeomCommon):
                 self.binary_debug.write('  CMASS1=%s\n' % str(out))
             #(eid, pid, g1, g2, c1, c2) = out
             elem = CMASS1.add_op2_data(out)
-            self.addOp2Element(elem)
+            self.add_op2_element(elem)
             n += 24
         self.card_count['CMASS1'] = nelements
         return n
@@ -657,7 +657,7 @@ class GEOM2(GeomCommon):
                 self.binary_debug.write('  CMASS2=%s\n' % str(out))
             #(eid, m, g1, g2, c1, c2) = out
             elem = CMASS2.add_op2_data(out)
-            self.addOp2Element(elem)
+            self.add_op2_element(elem)
             n += 24
         self.card_count['CMASS2'] = nelements
         return n
@@ -675,7 +675,7 @@ class GEOM2(GeomCommon):
                 self.binary_debug.write('  CMASS3=%s\n' % str(out))
             #(eid, pid, s1, s2) = out
             elem = CMASS3.add_op2_data(out)
-            self.addOp2Element(elem)
+            self.add_op2_element(elem)
             n += 16
         self.card_count['CMASS3'] = nelements
         return n
@@ -691,12 +691,12 @@ class GEOM2(GeomCommon):
             out = s.unpack(edata)
             #(eid, m,s 1, s2) = out
             elem = CMASS4.add_op2_data(out)
-            self.addOp2Element(elem)
+            self.add_op2_element(elem)
             n += 16
         self.card_count['CMASS4'] = nelements
         return n
 
-    def _readCMFREE(self, data, n):
+    def _read_cmfree(self, data, n):
         """
         CMFREE(2508,25,0) - the marker for Record 55
         """
@@ -717,9 +717,8 @@ class GEOM2(GeomCommon):
                 self.binary_debug.write('  CONM1=%s\n' % str(out))
             (eid, g, cid, m1, m2a, m2b, m3a, m3b, m3c, m4a, m4b, m4c, m4d,
              m5a, m5b, m5c, m5d, m5e, m6a, m6b, m6c, m6d, m6e, m6f) = out
-            elem = CONM1()
-            elem.add_op2_data(out)
-            self.addOp2Element(elem)
+            elem = CONM1.add_op2_data(out)
+            self.add_op2_element(elem)
             n += 96
         self.card_count['CONM1'] = nelements
         return n
@@ -738,7 +737,7 @@ class GEOM2(GeomCommon):
                 self.binary_debug.write('  CONM2=%s\n' % str(out))
             (eid, g, cid, m, x1, x2, x3, i1, i2a, i2b, i3a, i3b, i3c) = out
             elem = CONM2.add_op2_data(out)
-            self.addOp2Element(elem)
+            self.add_op2_element(elem)
             n += ntotal
         self.card_count['CONM2'] = nelements
         return n
@@ -757,12 +756,12 @@ class GEOM2(GeomCommon):
                 self.binary_debug.write('  CONROD=%s\n' % str(out))
             (eid, n1, n2, mid, a, j, c, nsm) = out
             elem = CONROD.add_op2_data(out)
-            self.addOp2Element(elem)
+            self.add_op2_element(elem)
             n += ntotal
         self.card_count['CONROD'] = nelements
         return n
 
-    def _readCONV(self, data, n):
+    def _read_conv(self, data, n):
         """
         CONV(12701,127,408) - the marker for Record 59
         """
@@ -775,45 +774,45 @@ class GEOM2(GeomCommon):
             out = s.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  CONV=%s; len=%s\n' % (str(out), len(out)))
-            (eid, pconID, flmnd, cntrlnd,
+            (eid, pcon_id, flmnd, cntrlnd,
              ta1, ta2, ta3, ta4, ta5, ta6, ta7, ta8,
              wt1, wt2, wt3, wt4, wt5, wt6, wt7, wt8) = out
-            data_in = [eid, pconID, flmnd, cntrlnd,
+            data_in = [eid, pcon_id, flmnd, cntrlnd,
                        [ta1, ta2, ta3, ta5, ta6, ta7, ta8],
                        [wt1, wt2, wt3, wt5, wt6, wt7, wt8]]
-            elem = CONV(None, data_in)
-            self.addOp2Element(elem)
+            elem = CONV.add_op2_data(data_in)
+            self.add_op2_element(elem)
             n += ntotal
         self.card_count['CONV'] = nelements
         return n
 
-    def _readCONVM(self, data, n):
+    def _read_convm(self, data, n):
         """
         CONVM(8908,89,422) - the marker for Record 60
         """
         return n
-        ntotal = 28  # 7*4
-        s = Struct(b(self._endian + '7i'))
-        nelements = (len(data) - n) // ntotal
-        for i in range(nelements):
-            edata = data[n:n+28]
-            out = unpack(edata)
-            if self.is_debug_file:
-                self.binary_debug.write('  CONVM=%s\n' % str(out))
-            (eid, pconID, flmnd, cntrlnd,
-             [ta1, ta2, ta3]) = out
-            data_in = [
-                eid, pconID, flmnd, cntrlnd,
-                [ta1, ta2, ta3]]
-            elem = CONVM(None, data_in)  # undefined
-            self.addOp2Element(elem)
-            n += ntotal
-        self.card_count['CONVM'] = nelements
-        return n
+        #ntotal = 28  # 7*4
+        #s = Struct(b(self._endian + '7i'))
+        #nelements = (len(data) - n) // ntotal
+        #for i in range(nelements):
+            #edata = data[n:n+28]
+            #out = unpack(edata)
+            #if self.is_debug_file:
+                #self.binary_debug.write('  CONVM=%s\n' % str(out))
+            #(eid, pconID, flmnd, cntrlnd,
+             #[ta1, ta2, ta3]) = out
+            #data_in = [
+                #eid, pconID, flmnd, cntrlnd,
+                #[ta1, ta2, ta3]]
+            #elem = CONVM.add_op2_data(data_in)  # undefined
+            #self.addOp2Element(elem)
+            #n += ntotal
+        #self.card_count['CONVM'] = nelements
+        #return n
 
 # CPENP
 
-    def _readCPENTA(self, data, n):
+    def _read_cpenta(self, data, n):
         """
         CPENTA(4108,41,280) - the marker for Record 62
         """
@@ -828,12 +827,12 @@ class GEOM2(GeomCommon):
              g11, g12, g13, g14, g15) = out
 
             data_in = [eid, pid, g1, g2, g3, g4, g5, g6]
-            bigNodes = [g7, g8, g9, g10, g11, g12, g13, g14, g15]
-            if sum(bigNodes) > 0:
-                elem = CPENTA15(None, data_in + bigNodes)
+            big_nodes = [g7, g8, g9, g10, g11, g12, g13, g14, g15]
+            if sum(big_nodes) > 0:
+                elem = CPENTA15.add_op2_data(data_in + big_nodes)
             else:
-                elem = CPENTA6(None, data_in)
-            self.addOp2Element(elem)
+                elem = CPENTA6.add_op2_data(data_in)
+            self.add_op2_element(elem)
             n += 68
         self.card_count['CPENTA'] = nelements
         return n
@@ -844,13 +843,13 @@ class GEOM2(GeomCommon):
 # CQDX4FD
 # CQDX9FD
 
-    def _readCQUAD(self, data, n):
+    def _read_cquad(self, data, n):
         """
         CQUAD(9108,91,507)  - the marker for Record 68
         """
         return self.run_cquad(data, n, CQUAD)
 
-    def run_cquad(self, data, n, Element):
+    def run_cquad(self, data, n, element):
         """common method for CQUAD, CQUADX"""
         s = Struct(b(self._endian + '11i'))
         nelements = (len(data) - n) // 44  # 11*4
@@ -861,24 +860,25 @@ class GEOM2(GeomCommon):
             out = s.unpack(edata)
             (eid, pid, n1, n2, n3, n4, n5, n6, n7, n8, n9) = out
             if self.is_debug_file:
-                self.binary_debug.write('  %s=%s\n' % (Element.type, str(out)))
-            #print("eid=%s pid=%s n1=%s n2=%s n3=%s n4=%s theta=%s zoffs=%s tflag=%s t1=%s t2=%s t3=%s t4=%s" %(eid,pid,n1,n2,n3,n4,theta,zoffs,tflag,t1,t2,t3,t4))
-            #data_init = [eid,pid,n1,n2,n3,n4,theta,zoffs,tflag,t1,t2,t3,t4]
+                self.binary_debug.write('  %s=%s\n' % (element.type, str(out)))
+            #print("eid=%s pid=%s n1=%s n2=%s n3=%s n4=%s theta=%s zoffs=%s tflag=%s t1=%s t2=%s t3=%s t4=%s" % (
+                #eid, pid, n1, n2, n3, n4, theta, zoffs, tflag, t1, t2, t3, t4))
+            #data_init = [eid, pid, n1, n2, n3, n4, theta, zoffs, tflag, t1, t2, t3, t4]
             data = [eid, pid, n1, n2, n3, n4, n5, n6, n7, n8, n9]
-            elem = Element(None, data)
-            self.addOp2Element(elem)
+            elem = element.add_op2_data(data)
+            self.add_op2_element(elem)
             n += 44
-        self.card_count[Element.type] = nelements
+        self.card_count[element.type] = nelements
         return n
 
-    def _readCQUAD4(self, data, n):
+    def _read_cquad4(self, data, n):
         """
         CQUAD4(2958,51,177)    - the marker for Record 69
         CQUAD4(13900,139,9989) - the marker for Record 70
         """
         return self.run_cquad4(data, n, CQUAD4)
 
-    def run_cquad4(self, data, n, Element):
+    def run_cquad4(self, data, n, element):
         """
         common method for CQUAD4, CQUADR
         """
@@ -892,20 +892,21 @@ class GEOM2(GeomCommon):
             (eid, pid, n1, n2, n3, n4, theta, zoffs, blank, tflag,
              t1, t2, t3, t4) = out
             if self.is_debug_file:
-                self.binary_debug.write('  %s=%s\n' % (Element.type, str(out)))
-            #print("eid=%s pid=%s n1=%s n2=%s n3=%s n4=%s theta=%s zoffs=%s blank=%s tflag=%s t1=%s t2=%s t3=%s t4=%s" %(eid,pid,n1,n2,n3,n4,theta,zoffs,blank,tflag,t1,t2,t3,t4))
+                self.binary_debug.write('  %s=%s\n' % (element.type, str(out)))
+            #print("eid=%s pid=%s n1=%s n2=%s n3=%s n4=%s theta=%s zoffs=%s blank=%s tflag=%s t1=%s t2=%s t3=%s t4=%s" % (
+                #eid, pid, n1, n2, n3, n4, theta, zoffs, blank, tflag, t1, t2, t3, t4))
             data_init = [
                 eid, pid, n1, n2, n3, n4, theta, zoffs,
                 tflag, t1, t2, t3, t4]
-            elem = Element.add_op2_data(data_init)
-            self.addOp2Element(elem)
+            elem = element.add_op2_data(data_init)
+            self.add_op2_element(elem)
             n += 56
-        self.card_count[Element.type] = nelements
+        self.card_count[element.type] = nelements
         return n
 
 # CQUAD4FD
 
-    def _readCQUAD8(self, data, n):
+    def _read_cquad8(self, data, n):
         """
         CQUAD8(4701,47,326)  - the marker for Record 71
         .. warning:: inconsistent with dmap manual
@@ -920,23 +921,24 @@ class GEOM2(GeomCommon):
                 self.binary_debug.write('  CQUAD8=%s\n' % str(out))
             (eid, pid, n1, n2, n3, n4, n5, n6, n7, n8, t1, t2,
              t3, t4, theta, tflag) = out
-            #print("eid=%s pid=%s n1=%s n2=%s n3=%s n4=%s theta=%s zoffs=%s tflag=%s t1=%s t2=%s t3=%s t4=%s" %(eid,pid,n1,n2,n3,n4,theta,zoffs,tflag,t1,t2,t3,t4))
+            #print("eid=%s pid=%s n1=%s n2=%s n3=%s n4=%s theta=%s zoffs=%s tflag=%s t1=%s t2=%s t3=%s t4=%s" %
+                  #(eid, pid, n1, n2, n3, n4, theta, zoffs, tflag, t1, t2, t3, t4))
             #data_init = [eid,pid,n1,n2,n3,n4,theta,zoffs,tflag,t1,t2,t3,t4]
             elem = CQUAD8.add_op2_data(out)
-            self.addOp2Element(elem)
+            self.add_op2_element(elem)
             n += 64
         self.card_count['CQUAD8'] = nelements
         return n
 
 # CQUAD9FD
 # CQUADP
-    def _readCQUADR(self, data, n):
+    def _read_cquadr(self, data, n):
         """
         CQUADR(8009,80,367)  - the marker for Record 74
         """
         return self.run_cquad4(data, n, CQUADR)
 
-    def _readCQUADX(self, data, n):
+    def _read_cquadx(self, data, n):
         """
         CQUADX(9008,90,508)  - the marker for Record 75
         """
@@ -961,7 +963,7 @@ class GEOM2(GeomCommon):
                 self.binary_debug.write('  CROD=%s\n' % str(out))
             (eid, pid, n1, n2) = out
             elem = CROD.add_op2_data(out)
-            self.addOp2Element(elem)
+            self.add_op2_element(elem)
             n += 16
         self.card_count['CROD'] = nelements
         return n
@@ -969,7 +971,7 @@ class GEOM2(GeomCommon):
 # CRROD
 # CSEAM
 
-    def _readCSHEAR(self, data, n):
+    def _read_cshear(self, data, n):
         """
         CSHEAR(3101,31,61)    - the marker for Record 83
         """
@@ -981,8 +983,8 @@ class GEOM2(GeomCommon):
             if self.is_debug_file:
                 self.binary_debug.write('  CSHEAR=%s\n' % str(out))
             (eid, pid, n1, n2, n3, n4) = out
-            elem = CSHEAR(None, out)
-            self.addOp2Element(elem)
+            elem = CSHEAR.add_op2_data(out)
+            self.add_op2_element(elem)
             n += 24
         self.card_count['CSHEAR'] = nelements
         return n
@@ -990,7 +992,7 @@ class GEOM2(GeomCommon):
 # CSLOT3
 # CSLOT4
 
-    def _readCTETP(self, data, n):
+    def _read_ctetrap(self, data, n):
         """
         CTETP(12201,122,9013)    - the marker for Record 86
         .. todo:: create object
@@ -1015,10 +1017,10 @@ class GEOM2(GeomCommon):
             #print("b1  = ",b1)
             #print("ee = ",ee)
             data_in = [eid, pid, n1, n2, n2, n3, n4]
-            elem = CTETRA4(None, data_in)
-            self.addOp2Element(elem)
+            elem = CTETRA4.add_op2_data(data_in)
+            self.add_op2_element(elem)
 
-    def _readCTETRA(self, data, n):
+    def _read_ctetra(self, data, n):
         """
         CTETRA(5508,55,217)    - the marker for Record 87
         """
@@ -1033,12 +1035,12 @@ class GEOM2(GeomCommon):
             #print("out = ",out)
 
             data_in = [eid, pid, n1, n2, n3, n4]
-            bigNodes = [n5, n6, n7, n8, n9, n10]
-            if sum(bigNodes) > 0:
-                elem = CTETRA10(None, data_in + bigNodes)
+            big_nodes = [n5, n6, n7, n8, n9, n10]
+            if sum(big_nodes) > 0:
+                elem = CTETRA10.add_op2_data(data_in + big_nodes)
             else:
-                elem = CTETRA4(None, data_in)
-            self.addOp2Element(elem)
+                elem = CTETRA4.add_op2_data(data_in)
+            self.add_op2_element(elem)
             n += 48
         self.card_count['CTETRA'] = nelements
         return n
@@ -1059,14 +1061,15 @@ class GEOM2(GeomCommon):
         for i in range(nelements):
             edata = data[n:n+52]
             out = s.unpack(edata)
-            #print("eid=%s pid=%s n1=%s n2=%s n3=%s theta=%s zoffs=%s blank1=%s blank2=%s tflag=%s t1=%s t2=%s t3=%s" %(eid,pid,n1,n2,n3,theta,zoffs,blank1,blank2,tflag,t1,t2,t3))
+            #print("eid=%s pid=%s n1=%s n2=%s n3=%s theta=%s zoffs=%s blank1=%s blank2=%s tflag=%s t1=%s t2=%s t3=%s" %
+                  #(eid, pid, n1, n2, n3, theta, zoffs, blank1, blank2, tflag, t1, t2, t3))
             (eid, pid, n1, n2, n3, theta, zoffs, blank1,
              blank2, tflag, t1, t2, t3) = out
             if self.is_debug_file:
                 self.binary_debug.write('  CTRIA3=%s\n' % str(out))
             data_in = [eid, pid, n1, n2, n3, theta, zoffs, tflag, t1, t2, t3]
             elem = CTRIA3.add_op2_data(data_in)
-            self.addOp2Element(elem)
+            self.add_op2_element(elem)
             n += ntotal
         self.card_count['CTRIA3'] = nelements
         return n
@@ -1086,10 +1089,11 @@ class GEOM2(GeomCommon):
             out = s.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  CTRIA6=%s\n' % str(out))
-            #print("eid=%s pid=%s n1=%s n2=%s n3=%s theta=%s zoffs=%s blank1=%s blank2=%s tflag=%s t1=%s t2=%s t3=%s" %(eid,pid,n1,n2,n3,theta,zoffs,blank1,blank2,tflag,t1,t2,t3))
+            #print("eid=%s pid=%s n1=%s n2=%s n3=%s theta=%s zoffs=%s blank1=%s blank2=%s tflag=%s t1=%s t2=%s t3=%s" %
+                  #(eid, pid, n1, n2, n3, theta, zoffs, blank1, blank2, tflag, t1, t2, t3))
             (eid, pid, n1, n2, n3, n4, n5, n6, theta, t1, t2, t3, tflag) = out
             elem = CTRIA6.add_op2_data(out)
-            self.addOp2Element(elem)
+            self.add_op2_element(elem)
             n += 52
         self.card_count['CTRIA6'] = nelements
         return n
@@ -1125,7 +1129,7 @@ class GEOM2(GeomCommon):
                 self.binary_debug.write('  CTUBE=%s\n' % str(out))
             (eid, pid, n1, n2) = out
             elem = CTUBE.add_op2_data(out)
-            self.addOp2Element(elem)
+            self.add_op2_element(elem)
             n += 16
         self.card_count['CTUBE'] = nelements
         return n
@@ -1141,7 +1145,7 @@ class GEOM2(GeomCommon):
                 self.binary_debug.write('  CVISC=%s\n' % str(out))
             #(eid,pid,n1,n2) = out
             elem = CVISC.add_op2_data(out)
-            self.addOp2Element(elem)
+            self.add_op2_element(elem)
             n += 16
         self.card_count['CVISC'] = nelements
         return n

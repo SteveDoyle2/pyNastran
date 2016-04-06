@@ -5,8 +5,10 @@ import time
 from traceback import print_exc
 from six import iteritems
 
+import numpy as np
+
 import pyNastran
-from pyNastran.op4.op4 import OP4
+from pyNastran.op4.op4 import OP4, read_op4
 
 
 def run_lots_of_files(files, write_op4=True,
@@ -67,9 +69,21 @@ def run_op4(op4_filename, write_op4=True, debug=True,
     #debug = True
     try:
         op4 = OP4(debug=debug)
+        op4._new = True
         matrices = op4.read_op4(op4_filename)
-        print(matrices)
-        print('matrices =', matrices.keys())
+
+        if 0:
+            matrices2 = op4.read_op4(op4_filename)
+
+            print(matrices)
+            print('matrices =', matrices.keys())
+
+            assert list(sorted(matrices.keys())) == list(sorted(matrices2.keys()))
+            for key, (form, matrix) in sorted(iteritems(matrices)):
+                form2, matrix2 = matrices2[key]
+                assert form == form2
+                delta = matrix - matrix2
+                assert np.array_equal(matrix, matrix2), 'delta=\n%s' % delta
 
         if write_op4:
             model = os.path.splitext(op4_filename)[0]

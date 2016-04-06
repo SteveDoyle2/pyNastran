@@ -1477,6 +1477,10 @@ class CORD3G(Coord):  # not done
         assert self.form in ['EQN', 'TABLE']
 
     @classmethod
+    def add_op2_data(cls, data, comment=''):
+        raise NotImplementedError(data)
+
+    @classmethod
     def add_card(cls, card, comment=''):
         self.cid = integer(card, 1, 'cid')
         method = string_or_blank(card, 2, 'E313')

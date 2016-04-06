@@ -1,21 +1,22 @@
 # pylint: disable=C0301,W0613,C0103,R0913,R0914,R0904,C0111,R0201,R0902
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import iteritems
-from six.moves import zip, range
 from itertools import count
 from struct import Struct, pack
+from six import b
+from six.moves import zip, range
 
 import numpy as np
-from numpy import sqrt, zeros, where, searchsorted, array_equal
+from numpy import zeros, where, searchsorted
 from numpy.linalg import eigh
 
-from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
-from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header
 try:
     import pandas as pd
 except ImportError:
     pass
+
+from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
+from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header
 
 
 class RealSolidArray(OES_Object):
@@ -146,12 +147,13 @@ class RealSolidArray(OES_Object):
                     (oxx2, oyy2, ozz2, txy2, tyz2, txz2, o12, o22, o32, ovm2) = t2
 
                     if not np.array_equal(t1, t2):
-                        msg += ('(%s, %s)    (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)\n'
-                                '%s      (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)\n' % (
-                            eid, nid,
-                            oxx1, oyy1, ozz1, txy1, tyz1, txz1, o11, o21, o31, ovm1,
-                            ' ' * (len(str(eid)) + len(str(nid)) + 2),
-                            oxx2, oyy2, ozz2, txy2, tyz2, txz2, o12, o22, o32, ovm2))
+                        msg += (
+                            '(%s, %s)    (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)\n'
+                            '%s      (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)\n' % (
+                                eid, nid,
+                                oxx1, oyy1, ozz1, txy1, tyz1, txz1, o11, o21, o31, ovm1,
+                                ' ' * (len(str(eid)) + len(str(nid)) + 2),
+                                oxx2, oyy2, ozz2, txy2, tyz2, txz2, o12, o22, o32, ovm2))
                         i += 1
                         if i > 10:
                             print(msg)
@@ -242,7 +244,7 @@ class RealSolidArray(OES_Object):
         #ind.sort()
         return ind
 
-    def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
+    def write_f06(self, f06, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
         nnodes, msg_temp = _get_f06_header_nnodes(self, is_mag_phase)
@@ -259,7 +261,7 @@ class RealSolidArray(OES_Object):
         for itime in range(ntimes):
             dt = self._times[itime]
             header = _eigenvalue_header(self, header, itime, ntimes, dt)
-            f.write(''.join(header + msg_temp))
+            f06.write(''.join(header + msg_temp))
 
             #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
             oxx = self.data[itime, :, 0]
@@ -293,36 +295,37 @@ class RealSolidArray(OES_Object):
                     [doxx, doyy, dozz, dtxy, dtyz, dtxz, do1, do2, do3, dp, dovm])
 
                 if i % cnnodes == 0:
-                    f.write('0  %8s    %8iGRID CS  %i GP\n' % (deid, cid, nnodes))
-                    f.write('0              %8s  X  %-13s  XY  %-13s   A  %-13s  LX%5.2f%5.2f%5.2f  %-13s   %s\n'
-                            '               %8s  Y  %-13s  YZ  %-13s   B  %-13s  LY%5.2f%5.2f%5.2f\n'
-                            '               %8s  Z  %-13s  ZX  %-13s   C  %-13s  LZ%5.2f%5.2f%5.2f\n'
-                            % ('CENTER', oxxi, txyi, o1i, v[0, 1], v[0, 2], v[0, 0], pi, ovmi,
-                               '', oyyi, tyzi, o2i, v[1, 1], v[1, 2], v[1, 0],
-                               '', ozzi, txzi, o3i, v[2, 1], v[2, 2], v[2, 0]))
+                    f06.write('0  %8s    %8iGRID CS  %i GP\n' % (deid, cid, nnodes))
+                    f06.write('0              %8s  X  %-13s  XY  %-13s   A  %-13s  LX%5.2f%5.2f%5.2f  %-13s   %s\n'
+                              '               %8s  Y  %-13s  YZ  %-13s   B  %-13s  LY%5.2f%5.2f%5.2f\n'
+                              '               %8s  Z  %-13s  ZX  %-13s   C  %-13s  LZ%5.2f%5.2f%5.2f\n'
+                              % ('CENTER', oxxi, txyi, o1i, v[0, 1], v[0, 2], v[0, 0], pi, ovmi,
+                                 '', oyyi, tyzi, o2i, v[1, 1], v[1, 2], v[1, 0],
+                                 '', ozzi, txzi, o3i, v[2, 1], v[2, 2], v[2, 0]))
                 else:
-                    f.write('0              %8s  X  %-13s  XY  %-13s   A  %-13s  LX%5.2f%5.2f%5.2f  %-13s   %s\n'
-                            '               %8s  Y  %-13s  YZ  %-13s   B  %-13s  LY%5.2f%5.2f%5.2f\n'
-                            '               %8s  Z  %-13s  ZX  %-13s   C  %-13s  LZ%5.2f%5.2f%5.2f\n'
-                            % (node_id, oxxi, txyi, o1i, v[0, 1], v[0, 2], v[0, 0], pi, ovmi,
-                               '', oyyi, tyzi, o2i, v[1, 1], v[1, 2], v[1, 0],
-                               '', ozzi, txzi, o3i, v[2, 1], v[2, 2], v[2, 0]))
+                    f06.write('0              %8s  X  %-13s  XY  %-13s   A  %-13s  LX%5.2f%5.2f%5.2f  %-13s   %s\n'
+                              '               %8s  Y  %-13s  YZ  %-13s   B  %-13s  LY%5.2f%5.2f%5.2f\n'
+                              '               %8s  Z  %-13s  ZX  %-13s   C  %-13s  LZ%5.2f%5.2f%5.2f\n'
+                              % (node_id, oxxi, txyi, o1i, v[0, 1], v[0, 2], v[0, 0], pi, ovmi,
+                                 '', oyyi, tyzi, o2i, v[1, 1], v[1, 2], v[1, 0],
+                                 '', ozzi, txzi, o3i, v[2, 1], v[2, 2], v[2, 0]))
                 i += 1
-            f.write(page_stamp % page_num)
+            f06.write(page_stamp % page_num)
             page_num += 1
         return page_num - 1
 
-    def _write_table_3(self, f, fascii, itable=-3, itime=0):
+    def _write_table_3(self, op2, op2_ascii, itable=-3, itime=0):
         import inspect
         frame = inspect.currentframe()
         call_frame = inspect.getouterframes(frame, 2)
-        fascii.write('%s.write_table_3: %s\n' % (self.__class__.__name__, call_frame[1][3]))
+        op2_ascii.write('%s.write_table_3: %s\n' % (self.__class__.__name__, call_frame[1][3]))
 
-        f.write(pack('12i', *[4, itable, 4,
-                             4, 1, 4,
-                             4, 0, 4,
-                             4, 146, 4,
-                             ]))
+        op2.write(pack('12i', *[
+            4, itable, 4,
+            4, 1, 4,
+            4, 0, 4,
+            4, 146, 4,
+        ]))
         approach_code = self.approach_code
         table_code = self.table_code
         isubcase = self.isubcase
@@ -341,10 +344,10 @@ class RealSolidArray(OES_Object):
         num_wide = self.num_wide
         acoustic_flag = 0
         thermal = 0
-        title = '%-128s' % self.title
-        subtitle = '%-128s' % self.subtitle
-        label = '%-128s' % self.label
-        ftable3 = '50i 128s 128s 128s'
+        title = b'%-128s' % self.title
+        subtitle = b'%-128s' % self.subtitle
+        label = b'%-128s' % self.label
+        ftable3 = b'50i 128s 128s 128s'
         oCode = 0
         if self.analysis_code == 1:
             lsdvmn = self.lsdvmn
@@ -359,7 +362,7 @@ class RealSolidArray(OES_Object):
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, thermal, thermal, 0,
-            Title.encode('ascii'), subtitle.encode('ascii'), label.encode('ascii'),
+            title.encode('ascii'), subtitle.encode('ascii'), label.encode('ascii'),
         ]
 
         n = 0
@@ -374,27 +377,27 @@ class RealSolidArray(OES_Object):
         print(fmt)
         print(data)
         #f.write(pack(fascii, '%s header 3c' % self.table_name, fmt, data))
-        fascii.write('%s header 3c = %s\n' % (self.table_name, data))
-        f.write(pack(fmt, *data))
+        op2_ascii.write('%s header 3c = %s\n' % (self.table_name, data))
+        op2.write(pack(fmt, *data))
 
-    def write_op2(self, f, fascii, itable, date, is_mag_phase=False):
-        if self.nnodes != 9:
-            return
+    def write_op2(self, op2, op2_ascii, itable, date, is_mag_phase=False, endian='>'):
+        #if self.nnodes != 9:
+            #return
         import inspect
         frame = inspect.currentframe()
         call_frame = inspect.getouterframes(frame, 2)
-        fascii.write('%s.write_op2: %s\n' % (self.__class__.__name__, call_frame[1][3]))
+        op2_ascii.write('%s.write_op2: %s\n' % (self.__class__.__name__, call_frame[1][3]))
 
         if itable == -1:
-            self._write_table_header(f, fascii, date)
+            self._write_table_header(op2, op2_ascii, date)
             itable = -3
 
-        if isinstance(self.nonlinear_factor, float):
-            op2_format = '%sif' % (7 * self.ntimes)
-            raise NotImplementedError()
-        else:
-            op2_format = 'i21f'
-        s = Struct(op2_format)
+        #if isinstance(self.nonlinear_factor, float):
+            #op2_format = '%sif' % (7 * self.ntimes)
+            #raise NotImplementedError()
+        #else:
+            #op2_format = 'i21f'
+        #s = Struct(op2_format)
         nnodes_expected = self.nnodes
 
         eids2 = self.element_node[:, 0]
@@ -417,18 +420,18 @@ class RealSolidArray(OES_Object):
         assert self.ntimes == 1, self.ntimes
 
         device_code = self.device_code
-        fascii.write('  ntimes = %s\n' % self.ntimes)
+        op2_ascii.write('  ntimes = %s\n' % self.ntimes)
 
-        fmt = '%2i %6f'
+        #fmt = '%2i %6f'
         #print('ntotal=%s' % (ntotal))
         #assert ntotal == 193, ntotal
 
-        struct1 = Struct(b(self._endian + 'ii4si'))
-        struct2 = Struct(b(self._endian + 'i20f'))
+        struct1 = Struct(b(endian + 'ii4si'))
+        struct2 = Struct(b(endian + 'i20f'))
 
         cen = b'GRID'
         for itime in range(self.ntimes):
-            self._write_table_3(f, fascii, itable, itime)
+            self._write_table_3(op2, op2_ascii, itable, itime)
 
             # record 4
             header = [4, -4, 4,
@@ -436,10 +439,10 @@ class RealSolidArray(OES_Object):
                       4, 0, 4,
                       4, ntotal, 4,
                       4 * ntotal]
-            f.write(pack('%ii' % len(header), *header))
-            fascii.write('r4 [4, 0, 4]\n')
-            fascii.write('r4 [4, %s, 4]\n' % (itable - 1))
-            fascii.write('r4 [4, %i, 4]\n' % (4 * ntotal))
+            op2.write(pack('%ii' % len(header), *header))
+            op2_ascii.write('r4 [4, 0, 4]\n')
+            op2_ascii.write('r4 [4, %s, 4]\n' % (itable - 1))
+            op2_ascii.write('r4 [4, %i, 4]\n' % (4 * ntotal))
 
             oxx = self.data[itime, :, 0]
             oyy = self.data[itime, :, 1]
@@ -453,11 +456,11 @@ class RealSolidArray(OES_Object):
             ovm = self.data[itime, :, 9]
             p = (o1 + o2 + o3) / -3.
 
-            print('eids3', eids3)
+            #print('eids3', eids3)
             cnnodes = nnodes_expected + 1
             for i, deid, node_id, doxx, doyy, dozz, dtxy, dtyz, dtxz, do1, do2, do3, dp, dovm in zip(
                 count(), eids2, nodes, oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, p, ovm):
-                print('  eid =', deid, node_id)
+                #print('  eid =', deid, node_id)
 
                 j = where(eids3 == deid)[0]
                 assert len(j) > 0, j
@@ -476,34 +479,34 @@ class RealSolidArray(OES_Object):
 
                 if i % cnnodes == 0:
                     data = [deid * 10 + self.device_code, cid, cen, nnodes_expected]
-                    fascii.write('  eid=%s cid=%s cen=%s nnodes = %s\n' % tuple(data))
-                    f.write(
-                        #struct1.pack(*data)
-                        pack(b'2i 4s i', *data)
+                    op2_ascii.write('  eid=%s cid=%s cen=%s nnodes = %s\n' % tuple(data))
+                    op2.write(
+                        struct1.pack(*data)
+                        #pack(b'2i 4s i', *data)
                     )
                 #else:
-                fascii.write('  nid=%i\n' % data[0])
+                op2_ascii.write('    nid=%i\n' % node_id)
 
                 data = [node_id,
                         doxx, dtxy, do1, v[0, 1], v[0, 2], v[0, 0], dp, dovm,
                         doyy, dtyz, do2, v[1, 1], v[1, 2], v[1, 0],
                         dozz, dtxz, do3, v[2, 1], v[2, 2], v[2, 0], ]
-                fascii.write('    oxx, txy, o1, v01, v02, v00, p, ovm = %s\n' % data[1:8])
-                fascii.write('    oyy, tyz, o2, v11, v12, v10         = %s\n' % data[8:14])
-                fascii.write('    ozz, txz, o3, v21, v22, v20         = %s\n' % data[14:])
-                f.write(struct2.pack(*data))
+                op2_ascii.write('      oxx, txy, o1, v01, v02, v00, p, ovm = %s\n' % data[1:8])
+                op2_ascii.write('      oyy, tyz, o2, v11, v12, v10         = %s\n' % data[8:14])
+                op2_ascii.write('      ozz, txz, o3, v21, v22, v20         = %s\n' % data[14:])
+                op2.write(struct2.pack(*data))
                 i += 1
 
             itable -= 2
             header = [4 * ntotal,]
-            f.write(pack('i', *header))
-            fascii.write('footer = %s' % header)
+            op2.write(pack('i', *header))
+            op2_ascii.write('footer = %s' % header)
         header = [
             4, itable, 4,
             4, 1, 4,
             4, 0, 4,
         ]
-        f.write(pack('%ii' % len(header), *header))
+        op2.write(pack('%ii' % len(header), *header))
 
 
 class RealSolidStressArray(RealSolidArray, StressObject):

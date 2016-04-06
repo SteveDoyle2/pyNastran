@@ -399,10 +399,10 @@ class RealTableArray(TableArray):  # displacement style table
         num_wide = self.num_wide
         acoustic_flag = 0
         thermal = 0
-        title = '%-128s' % self.title
-        subtitle = '%-128s' % self.subtitle
-        label = '%-128s' % self.label
-        ftable3 = '50i 128s 128s 128s'
+        title = b'%-128s' % bytes(self.title)
+        subtitle = b'%-128s' % bytes(self.subtitle)
+        label = b'%-128s' % bytes(self.label)
+        ftable3 = b'50i 128s 128s 128s'
         oCode = 0
         if self.analysis_code == 1:
             lsdvmn = self.lsdvmn

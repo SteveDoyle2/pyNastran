@@ -11,7 +11,7 @@ from pyNastran.op2.op2_codes import Op2Codes
 from pyNastran.utils import object_attributes, object_methods
 
 #from pyNastran.utils import list_print
-#from pyNastran.op2.write_utils import write_table_header
+from pyNastran.op2.write_utils import write_table_header
 
 class BaseScalarObject(Op2Codes):
     def __init__(self):
@@ -420,7 +420,7 @@ class ScalarObject(BaseScalarObject):
         fascii.write('%s            = %s\n' % (blank, data_c))
         f.write(pack('<6i', *data))
 
-        table1_fmt = '<9i'
+        table1_fmt = b'<9i'
         table1 = [
             28,
             1, 2, 3, 4, 5, 6, 7,
@@ -438,9 +438,16 @@ class ScalarObject(BaseScalarObject):
             4, 7, 4,
         ]
         fascii.write('%s header2a = %s\n' % (self.table_name, data))
-        f.write(pack('12i', *data))
+        print('data =', data, len(data))
+        f.write(pack(b'<12i', *data))
 
         month, day, year = date
+        try:
+            subtable_name = self.subtable_name
+        except AttributeError:
+            print('attrs =', self.object_attributes())
+
+        self.subtable_name = b'OUG1    '
         table2 = [
             28,  # 4i -> 13i
             b'%-8s' % self.subtable_name, month, day, year - 2000, 0, 1,   # subtable,todays date 3/6/2014, 0, 1  ( year=year-2000)

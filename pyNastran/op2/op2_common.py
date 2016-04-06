@@ -406,7 +406,7 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
                     real_obj, complex_obj,
                     real_vector, complex_vector,
                     node_elem, random_code=None, is_cid=False):
-
+        raise RuntimeError('is this still used?')
         assert isinstance(result_name, string_types), 'result_name=%r' % result_name
         assert isinstance(storage_obj, dict), 'storage_obj=%r' % storage_obj
         #assert real_obj is None

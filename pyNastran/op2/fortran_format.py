@@ -340,6 +340,8 @@ class FortranFormat(object):
             self.isubtable -= 1
             self.read_markers([self.isubtable, 1, 0])
             markers = self.get_nmarkers(1, rewind=True)
+        if self.is_debug_file:
+            self.binary_debug.write('breaking on marker=%r\n' % str(markers))
 
         # we've finished reading all subtables, but have one last marker to read
         self.read_markers([0])

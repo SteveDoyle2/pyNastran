@@ -1394,18 +1394,18 @@ class MOMENT1(Moment):
         assert len(card) == 6, 'len(MOMENT1 card) = %i' % len(card)
         return MOMENT1(sid, node, mag, g1, g2, comment=comment)
 
-    #@classmethod
-    #def add_op2_data(cls, data, comment=''):
-        #sid = data[0]
-        #node = data[1]
-        #mag = data[2]
-        #g1 = data[3]
-        #g2 = data[4]
-        #g3 = data[5]
-        #g4 = data[6]
-        #xyz = data[7:10]
-        #raise NotImplementedError('MOMENT1 is probably wrong')
-        #assert len(xyz) == 3, 'xyz=%s' % str(xyz)
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        sid = data[0]
+        node = data[1]
+        mag = data[2]
+        g1 = data[3]
+        g2 = data[4]
+        g3 = data[5]
+        g4 = data[6]
+        xyz = data[7:10]
+        raise NotImplementedError('MOMENT1 is probably wrong')
+        assert len(xyz) == 3, 'xyz=%s' % str(xyz)
 
     def cross_reference(self, model):
         """

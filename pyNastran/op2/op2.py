@@ -111,6 +111,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import iteritems, string_types, itervalues
 import os
+import sys
 
 from numpy import unique
 
@@ -125,7 +126,7 @@ from pyNastran.op2.op2_f06_common import Op2F06Attributes
 
 def read_op2(op2_filename=None, combine=True,
              log=None, debug=True, debug_file=None, build_dataframe=False,
-             skip_undefined_matrices=True, mode='msc'):
+             skip_undefined_matrices=True, mode='msc', encoding=None):
     """
     Creates the OP2 object without calling the OP2 class.
 
@@ -148,6 +149,8 @@ def read_op2(op2_filename=None, combine=True,
      (.. seealso:: import logging)
     debug_file : str; default=None (No debug)
         sets the filename that will be written to
+    encoding : str
+        the unicode encoding (default=None; system default)
 
     Returns
     -------
@@ -161,7 +164,8 @@ def read_op2(op2_filename=None, combine=True,
     """
     model = OP2(log=log, debug=debug, debug_file=debug_file, mode=mode)
     model.read_op2(op2_filename=op2_filename, build_dataframe=build_dataframe,
-                   skip_undefined_matrices=skip_undefined_matrices, combine=combine)
+                   skip_undefined_matrices=skip_undefined_matrices, combine=combine,
+                   encoding=encoding)
 
     ## TODO: this will go away when OP2 is refactored
     ## TODO: many methods will be missing, but it's a start...
@@ -208,7 +212,7 @@ class OP2(OP2_Scalar):
         mode : str; default='msc'
             {msc, nx}
         """
-        self.encoding = 'utf-8'
+        self.encoding = None
         self.set_mode(mode)
         make_geom = False
         assert make_geom == False, make_geom
@@ -332,7 +336,7 @@ class OP2(OP2_Scalar):
         self.ask = ask
 
     def read_op2(self, op2_filename=None, combine=True, build_dataframe=False,
-                 skip_undefined_matrices=False):
+                 skip_undefined_matrices=False, encoding=None):
         """
         Starts the OP2 file reading
 
@@ -348,7 +352,13 @@ class OP2(OP2_Scalar):
             builds a pandas DataFrame for op2 objects
         skip_undefined_matrices : bool; default=False
              True : prevents matrix reading crashes
+        encoding : str
+            the unicode encoding (default=None; system default)
         """
+        if encoding is None:
+            encoding = sys.getdefaultencoding()
+        self.encoding = encoding
+
         self.skip_undefined_matrices = skip_undefined_matrices
         assert self.ask in [True, False], self.ask
         self.is_vectorized = True

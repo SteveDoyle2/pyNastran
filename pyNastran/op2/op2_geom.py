@@ -14,7 +14,7 @@ from pyNastran.op2.op2 import OP2
 
 def read_op2_geom(op2_filename=None, combine=True,
              log=None, debug=True, debug_file=None, build_dataframe=False,
-             skip_undefined_matrices=True, mode='msc'):
+             skip_undefined_matrices=True, mode='msc', encoding=None):
     """
     Creates the OP2 object without calling the OP2 class.
 
@@ -37,6 +37,8 @@ def read_op2_geom(op2_filename=None, combine=True,
      (.. seealso:: import logging)
     debug_file : str; default=None (No debug)
         sets the filename that will be written to
+    encoding : str
+        the unicode encoding (default=None; system default)
 
     Returns
     -------
@@ -50,7 +52,8 @@ def read_op2_geom(op2_filename=None, combine=True,
     """
     model = OP2Geom(log=log, debug=debug, debug_file=debug_file, mode=mode)
     model.read_op2(op2_filename=op2_filename, build_dataframe=build_dataframe,
-                   skip_undefined_matrices=skip_undefined_matrices, combine=combine)
+                   skip_undefined_matrices=skip_undefined_matrices, combine=combine,
+                   encoding=encoding)
     return model
 
 class OP2Geom(OP2, BDF,

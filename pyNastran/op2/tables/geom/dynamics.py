@@ -5,6 +5,7 @@ from pyNastran.bdf.cards.methods import EIGB
 from pyNastran.op2.tables.geom.geom_common import GeomCommon
 
 class DYNAMICS(GeomCommon):
+    """defines methods for reading op2 dynamics loads/methods"""
     def _read_dynamics_4(self, data, ndata):
         return self._read_geom_4(self._dynamics_map, data, ndata)
 
@@ -74,7 +75,7 @@ class DYNAMICS(GeomCommon):
             edata = data[n:n+ntotal]
             out = unpack('iiff', edata)
             #(sid,p,c,a) = out
-            darea = DAREA(data=out)
+            darea = DAREA.add_op2_data(data=out)
             self.add_DAREA(darea)
             n += ntotal
         return n

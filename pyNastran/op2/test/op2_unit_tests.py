@@ -15,6 +15,7 @@ from pyNastran.op2.test.test_op2 import run_op2
 
 from pyNastran.bdf.test.bdf_unit_tests import Tester
 from pyNastran.op2.tables.oef_forces.oef_force_objects import RealPlateBilinearForceArray, RealPlateForceArray
+from pyNastran.op2.tables.ogf_gridPointForces.ogf_objects import RealGridPointForcesArray
 from pyNastran.op2.export_to_vtk import export_to_vtk_filename
 from pyNastran.op2.vector_utils import filter1d
 
@@ -72,9 +73,8 @@ class TestOP2(Tester):
         self.assertEqual(len(op2.displacements), 1, len(op2.displacements))
 
     def test_op2_solid_bending_01(self):
-        op2_filename = os.path.join('solid_bending.op2')
         folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'solid_bending'))
-        op2_filename = os.path.join(folder, op2_filename)
+        op2_filename = os.path.join(folder, 'solid_bending.op2')
         make_geom = False
         write_bdf = False
         write_f06 = True
@@ -103,21 +103,36 @@ class TestOP2(Tester):
         os.remove(debug_file)
 
     def test_op2_solid_bending_02(self):
-        op2_filename = os.path.join('solid_bending.op2')
         folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'solid_bending'))
-        op2_filename = os.path.join(folder, op2_filename)
+        op2_filename = os.path.join(folder, 'solid_bending.op2')
         op2 = read_op2(op2_filename, debug=False)
 
     def test_op2_solid_bending_02_geom(self):
-        op2_filename = os.path.join('solid_bending.op2')
         folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'solid_bending'))
-        op2_filename = os.path.join(folder, op2_filename)
+        op2_filename = os.path.join(folder, 'solid_bending.op2')
         op2 = read_op2_geom(op2_filename, debug=False)
 
+    def _test_op2_solid_bending_03(self):
+        folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'solid_bending'))
+        op2_filename = os.path.join(folder, 'solid_bending.op2')
+        op2_filename_debug = os.path.join(folder, 'solid_bending.debug.out')
+        op2_filename_out = os.path.join(folder, 'solid_bending_out.op2')
+        op2_filename_debug_out = os.path.join(folder, 'solid_bending_out.debug.out')
+        #debug_file = 'solid_bending.debug.out'
+        model, ext = os.path.splitext(op2_filename)
+        debug_file = model + '.debug.out'
+
+        op2 = read_op2_geom(op2_filename, debug_file=op2_filename_debug)
+        from pyNastran.op2.dev.op2_writer import OP2Writer
+        op2w = OP2Writer()
+        op2w.write_op2(op2_filename_out, obj=op2, is_mag_phase=False,
+                       delete_objects=True)
+        op2b = read_op2_geom(op2_filename_out, debug_file=op2_filename_debug_out)
+
+
     def test_op2_solid_shell_bar_01_geom(self):
-        op2_filename = os.path.join('static_solid_shell_bar.op2')
         folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'sol_101_elements'))
-        op2_filename = os.path.join(folder, op2_filename)
+        op2_filename = os.path.join(folder, 'static_solid_shell_bar.op2')
         op2 = read_op2_geom(op2_filename, debug=False)
 
 
@@ -128,7 +143,6 @@ class TestOP2(Tester):
             [4., 2., 5.],
             [3., 3., 3.],
         ])
-        from pyNastran.op2.tables.ogf_gridPointForces.ogf_objects import RealGridPointForcesArray
         data_code = {
             'nonlinear_factor' : None,
             'sort_bits' : [0, 0, 0],

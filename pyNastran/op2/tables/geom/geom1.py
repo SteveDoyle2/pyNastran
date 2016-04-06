@@ -12,11 +12,12 @@ from pyNastran.bdf.cards.coordinate_systems import (
 from pyNastran.op2.tables.geom.geom_common import GeomCommon
 
 class GEOM1(GeomCommon):
-    def _is_same_fields(self, fields1, fields2):
-        for (field1, field2) in zip(fields1, fields2):
-            if not is_same(field1, field2):
-                return False
-        return True
+    """defines methods for reading op2 nodes/coords"""
+    #def _is_same_fields(self, fields1, fields2):
+        #for (field1, field2) in zip(fields1, fields2):
+            #if not is_same(field1, field2):
+                #return False
+        #return True
 
     def add_node(self, node, allow_overwrites=False):
         """GRDSET creates duplicate nodes...what about duplicate nodes?"""
@@ -34,21 +35,18 @@ class GEOM1(GeomCommon):
             self._type_to_id_map[node.type].append(key)
         self.nodes[key] = node
 
-    def add_coord(self, coord, allow_overwrites=True):
-        raise RuntimeError('this should be overwritten by the BDF class')
-
     def _read_geom1_4(self, data, ndata):
         return self._read_geom_4(self._geom1_map, data, ndata)
 
     def __init__(self):
         GeomCommon.__init__(self)
         self._geom1_map = {
-            (1701,  17,  6): ['CORD1C', self._read_cord1c],  # record 1
-            (1801,  18,  5): ['CORD1R', self._read_cord1r],  # record 2
-            (1901,  19,  7): ['CORD1S', self._read_cord1s],  # record 3
-            (2001,  20,  9): ['CORD2C', self._read_cord2c],  # record 4
-            (2101,  21,  8): ['CORD2R', self._read_cord2r],  # record 5
-            (2201,  22, 10): ['CORD2S', self._read_cord2s],  # record 6
+            (1701, 17, 6): ['CORD1C', self._read_cord1c],    # record 1
+            (1801, 18, 5): ['CORD1R', self._read_cord1r],    # record 2
+            (1901, 19, 7): ['CORD1S', self._read_cord1s],    # record 3
+            (2001, 20, 9): ['CORD2C', self._read_cord2c],    # record 4
+            (2101, 21, 8): ['CORD2R', self._read_cord2r],    # record 5
+            (2201, 22, 10): ['CORD2S', self._read_cord2s],   # record 6
             (14301,143,651): ['CORD3G', self._read_cord3g],  # record 7
 
             (4501,  45,  1): ['GRID',   self._read_grid],    # record 17
@@ -187,7 +185,8 @@ class GEOM1(GeomCommon):
             assert one == 1, one
             assert two == 2, two
             data_in = [cid, rid, a1, a2, a3, b1, b2, b3, c1, c2, c3]
-            #print("cid=%s rid=%s a1=%s a2=%s a3=%s b1=%s b2=%s b3=%s c1=%s c2=%s c3=%s" %(cid,rid,a1,a2,a3,b1,b2,b3,c1,c2,c3))
+            #print("cid=%s rid=%s a1=%s a2=%s a3=%s b1=%s b2=%s b3=%s c1=%s c2=%s c3=%s" %
+                  #(cid, rid, a1, a2, a3, b1, b2, b3, c1, c2, c3))
             if self.is_debug_file:
                 self.binary_debug.write('  CORD2R=%s\n' % data_in)
             coord = CORD2R.add_op2_data(data_in)
@@ -252,7 +251,8 @@ class GEOM1(GeomCommon):
                 node = GRID(nid, cp, np.array([x1, x2, x3]), cd, ps, seid)
                 self.add_node(node)
             else:
-                self.log.debug("*nid=%s cp=%s x1=%-5.2f x2=%-5.2f x3=%-5.2f cd=%-2s ps=%s seid=%s" % (nid, cp, x1, x2, x3, cd, ps, seid))
+                self.log.debug("*nid=%s cp=%s x1=%-5.2f x2=%-5.2f x3=%-5.2f cd=%-2s ps=%s seid=%s" %
+                               (nid, cp, x1, x2, x3, cd, ps, seid))
             n += ntotal
         return n
 

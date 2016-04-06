@@ -1,11 +1,11 @@
-#pylint: disable=C0301,W0612,C0111,R0201,C0103,W0613,R0914,C0326
+#pylint: disable=C0301,W0612,C0111,R0201,C0103,W0613,R0914
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from struct import unpack, Struct
 from six import b
 from six.moves import range
-from struct import unpack, Struct
 
-from pyNastran.bdf.bdf import (NSM, PBAR, PBARL, PBEAM,
+from pyNastran.bdf.bdf import (NSM, PBAR, PBARL, #PBEAM,
                                PROD, PSHELL, PSHEAR,
                                PCOMP, PSOLID,
                                PVISC, PELAS, PMASS,
@@ -15,8 +15,7 @@ from pyNastran.op2.tables.geom.geom_common import GeomCommon
 
 
 class EPT(GeomCommon):
-    def add_property(self, card, allow_overwrites=True):
-        raise RuntimeError('this should be overwritten')
+    """defines methods for reading op2 properties"""
 
     def _read_ept_4(self, data, ndata):
         return self._read_geom_4(self._ept_map, data, ndata)
@@ -25,33 +24,33 @@ class EPT(GeomCommon):
         GeomCommon.__init__(self)
         self.bigProperties = {}
         self._ept_map = {
-            (3201,32,55):    ['NSM',    self._read_nsm],     # record 2  - needs an object holder (e.g. self.elements/self.properties)
-            (52,   20, 181): ['PBAR',   self._read_pbar],    # record 11 - buggy
-            (9102, 91,  52): ['PBARL',  self._read_pbarl],   # record 12 - almost there...
-            (2706, 27, 287): ['PCOMP',  self._read_pcomp],   # record 22 - buggy
-            (302,   3,  46): ['PELAS',  self._read_pelas],   # record 39
-            (2102, 21, 121): ['PGAP',   self._read_pgap],    # record 42
-            (902,   9,  29): ['PROD',   self._read_prod],    # record 49
-            (1002, 10,  42): ['PSHEAR', self._read_pshear],  # record 50
-            (2402, 24, 281): ['PSOLID', self._read_psolid],  # record 51
-            (2302, 23, 283): ['PSHELL', self._read_pshell],  # record 52
-            (1602, 16,  30): ['PTUBE',  self._read_ptube],   # record 56
+            (3201, 32, 55): ['NSM', self._read_nsm],          # record 2  - needs an object holder (e.g. self.elements/self.properties)
+            (52, 20, 181): ['PBAR', self._read_pbar],         # record 11 - buggy
+            (9102, 91, 52): ['PBARL', self._read_pbarl],      # record 12 - almost there...
+            (2706, 27, 287): ['PCOMP', self._read_pcomp],     # record 22 - buggy
+            (302, 3, 46): ['PELAS', self._read_pelas],        # record 39
+            (2102, 21, 121): ['PGAP', self._read_pgap],       # record 42
+            (902, 9, 29): ['PROD', self._read_prod],          # record 49
+            (1002, 10, 42): ['PSHEAR', self._read_pshear],    # record 50
+            (2402, 24, 281): ['PSOLID', self._read_psolid],   # record 51
+            (2302, 23, 283): ['PSHELL', self._read_pshell],   # record 52
+            (1602, 16, 30): ['PTUBE', self._read_ptube],      # record 56
 
-            (5402,  54, 262): ['PBEAM',   self._read_pbeam],   # record 14 - not done
-            (9202,  92,  53): ['PBEAML',  self._read_pbeaml],  # record 15 - not done
-            (2502,  25, 248): ['PBEND',   self._read_pbend],   # record 16 - not done
-            (1402,  14,  37): ['PBUSH', self._read_pbush],    # record 19 - not done
-            (3101,  31, 219): ['PBUSH1D', self._read_pbush1d], # record 20 - not done
-            (152,   19, 147): ['PCONEAX', self._read_pconeax], # record 24 - not done
-            (11001,110, 411): ['PCONV',   self._read_pconv],   # record 25 - not done
+            (5402, 54, 262): ['PBEAM', self._read_pbeam],      # record 14 - not done
+            (9202, 92, 53): ['PBEAML', self._read_pbeaml],     # record 15 - not done
+            (2502, 25, 248): ['PBEND', self._read_pbend],      # record 16 - not done
+            (1402, 14, 37): ['PBUSH', self._read_pbush],       # record 19 - not done
+            (3101, 31, 219): ['PBUSH1D', self._read_pbush1d],  # record 20 - not done
+            (152, 19, 147): ['PCONEAX', self._read_pconeax],   # record 24 - not done
+            (11001, 110, 411): ['PCONV', self._read_pconv],    # record 25 - not done
             # record 26
-            (202,    2,  45): ['PDAMP',   self._read_pdamp],   # record 27 - not done
-            (2802,  28, 236): ['PHBDY',   self._read_phbdy],   # record 43 - not done
-            (402,    4,  44): ['PMASS',   self._read_pmass],   # record 48
-            (1802,  18,  31): ['PVISC',   self._read_pvisc],   # record 59
-            (10201,102, 400): ['PVAL',   self._read_pval],     # record 58 - not done
-            (2606,  26, 289): ['VIEW',   self._read_view],     # record 62 - not done
-            (702,     7,  38): ['', self._read_fake],    # record
+            (202, 2, 45): ['PDAMP', self._read_pdamp],      # record 27 - not done
+            (2802, 28, 236): ['PHBDY', self._read_phbdy],   # record 43 - not done
+            (402, 4, 44): ['PMASS', self._read_pmass],      # record 48
+            (1802, 18, 31): ['PVISC', self._read_pvisc],    # record 59
+            (10201, 102, 400): ['PVAL', self._read_pval],   # record 58 - not done
+            (2606, 26, 289): ['VIEW', self._read_view],     # record 62 - not done
+            (702, 7, 38): ['', self._read_fake],            # record
             (10301, 103, 399): ['', self._read_fake],
             (5403, 55, 349): ['', self._read_fake],
             (6902, 69, 165): ['', self._read_fake],
@@ -96,9 +95,9 @@ class EPT(GeomCommon):
             edata = data[:16]
             data = data[16:]
             out = s.unpack(edata)
-            (sid, propSet, ID, value) = out
+            (sid, prop_set, ID, value) = out
             #print("sid=%s propSet=%s ID=%s value=%s" %(sid,propSet,ID,value))
-            prop = NSM(None, None, [sid, propSet, ID, value])
+            prop = NSM.add_op2_data([sid, prop_set, ID, value])
             #self._add_op2_property(prop)
         return n
 
@@ -122,7 +121,7 @@ class EPT(GeomCommon):
             edata = data[n:n+76]
             out = s.unpack(edata)
             (pid, mid, a, I1, I2, J, nsm, fe, c1, c2, d1, d2,
-                e1, e2, f1, f2, k1, k2, I12) = out
+             e1, e2, f1, f2, k1, k2, I12) = out
             prop = PBAR.add_op2_data(out)
             self._add_op2_property(prop)
             n += ntotal
@@ -220,7 +219,7 @@ class EPT(GeomCommon):
                 n += 64
                 pack = s2.unpack(edata)
                 (so, xxb, a, i1, i2, i12, j, nsm, c1, c2,
-                    d1, d2, e1, e2, f1, f2) = pack
+                 d1, d2, e1, e2, f1, f2) = pack
                 data_in.append(pack)
                 if self.is_debug_file:
                     self.binary_debug.write('     %s\n' % str(pack))
