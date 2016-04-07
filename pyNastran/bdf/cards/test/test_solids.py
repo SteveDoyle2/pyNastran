@@ -2,7 +2,7 @@ from __future__ import print_function
 import unittest
 
 from pyNastran.bdf.bdf import BDF, BDFCard
-from pyNastran.bdf.bdf import CPENTA15
+from pyNastran.bdf.cards.elements.solid import CPENTA15
 
 bdf = BDF(debug=False)
 
@@ -18,7 +18,7 @@ class TestSolids(unittest.TestCase):
         card = BDFCard(card)
 
         size = 8
-        card = CPENTA15(card)
+        card = CPENTA15.add_card(card)
         card.write_card(size, 'dummy')
         node_ids = card.node_ids
         assert node_ids == [201, 202, 203, 205, 206, 207,
