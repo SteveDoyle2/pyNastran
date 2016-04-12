@@ -469,7 +469,7 @@ class BDFMethods(BDFAttributes):
                 cg[2] = 0.0
 
         if scale is None and 'WTMASS' in self.params:
-            scale = self.params['WTMASS'].values[0]
+            scale = float(self.params['WTMASS'].values[0])
             if scale != 1.0:
                 self.log.info('WTMASS scale = %r' % scale)
         elif scale is None:
