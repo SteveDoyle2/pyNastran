@@ -580,9 +580,7 @@ class CHEXA20(SolidElement):
         .. seealso:: CHEXA8.Centroid
         """
         (n1, n2, n3, n4, n5,
-         n6, n7, n8, n9, n10,
-         n11, n12, n13, n14, n15,
-         n16, n17, n18, n19, n20) = self.get_node_positions()
+         n6, n7, n8) = self.get_node_positions()[:8]
         c1 = area_centroid(n1, n2, n3, n4)[1]
         c2 = area_centroid(n5, n6, n7, n8)[1]
         centroid = (c1 + c2) / 2.
@@ -593,7 +591,7 @@ class CHEXA20(SolidElement):
         .. seealso:: CHEXA8.Volume
         """
         (n1, n2, n3, n4, n5,
-         n6, n7, n8) = self.get_node_positions()[:9]
+         n6, n7, n8) = self.get_node_positions()[:8]
         (area1, c1) = area_centroid(n1, n2, n3, n4)
         (area2, c2) = area_centroid(n5, n6, n7, n8)
         volume = (area1 + area2) / 2. * norm(c1 - c2)
@@ -1078,7 +1076,7 @@ class CPENTA15(SolidElement):
         """
         .. seealso:: CPENTA6.Centroid
         """
-        (n1, n2, n3, n4, n5, n6) = self.get_node_positions()[:7]
+        (n1, n2, n3, n4, n5, n6) = self.get_node_positions()[:6]
         c1 = (n1 + n2 + n3) / 3.
         c2 = (n4 + n5 + n6) / 3.
         centroid = (c1 - c2) / 2.
@@ -1088,9 +1086,7 @@ class CPENTA15(SolidElement):
         """
         .. seealso:: CPENTA6.Volume
         """
-        (n1, n2, n3, n4, n5,
-         n6, n7, n8, n9, n10,
-         n11, n12, n13, n14, n15) = self.get_node_positions()
+        (n1, n2, n3, n4, n5, n6) = self.get_node_positions()[:6]
         area1 = Area(n3 - n1, n2 - n1)
         area2 = Area(n6 - n4, n5 - n4)
         c1 = (n1 + n2 + n3) / 3.
@@ -1700,7 +1696,7 @@ class CTETRA10(SolidElement):
 
         .. seealso:: CTETRA4.Volume
         """
-        (n1, n2, n3, n4, n5, n6, n7, n8, n9, n10) = self.get_node_positions()
+        (n1, n2, n3, n4) = self.get_node_positions()[:4]
         return volume4(n1, n2, n3, n4)
 
     def Centroid(self):
@@ -1709,7 +1705,7 @@ class CTETRA10(SolidElement):
 
         .. seealso:: CTETRA4.Centroid
         """
-        (n1, n2, n3, n4, n5, n6, n7, n8, n9, n10) = self.get_node_positions()
+        (n1, n2, n3, n4) = self.get_node_positions()[:4]
         return (n1 + n2 + n3 + n4) / 4.
 
     def getFaceNodes(self, nid_opposite, nid=None):

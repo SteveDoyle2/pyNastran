@@ -29,6 +29,7 @@ from numpy import array, cross, zeros, dot, allclose, mean
 from numpy.linalg import norm
 
 from pyNastran.utils import integer_types
+from pyNastran.bdf.cards.params import PARAM
 from pyNastran.bdf.cards.loads.static_loads import Moment, Force, LOAD
 from pyNastran.bdf.bdf_interface.attributes import BDFAttributes
 from pyNastran.bdf.field_writer_8 import print_card_8
@@ -278,7 +279,8 @@ class BDFMethods(BDFAttributes):
                 except:
                     # PLPLANE
                     if element.pid_ref.type == 'PSHELL':
-                        self.log.warning('p=%s reference_point=%s type(reference_point)=%s' % (p, reference_point, type(reference_point)))
+                        self.log.warning('p=%s reference_point=%s type(reference_point)=%s' % (
+                            p, reference_point, type(reference_point)))
                         raise
                     self.log.warning("could not get the inertia for element/property\n%s%s" % (
                         element, element.pid_ref))
@@ -549,7 +551,9 @@ class BDFMethods(BDFAttributes):
                 I[5] *= 2.0  # Iyz; no x
 
         if scale is None and 'WTMASS' in self.params:
-            scale = self.params['WTMASS'].values[0]
+            param = self.params['WTMASS']
+            #assert isinstance(param, PARAM), 'param=%s' % param
+            scale = param.values[0]
             if scale != 1.0:
                 self.log.info('WTMASS scale = %r' % scale)
         elif scale is None:
@@ -1616,7 +1620,7 @@ class BDFMethods(BDFAttributes):
         # return self.unresolve_grids(fem_old)
 
     def get_reduced_mpcs(self, mpc_id):
-        mpcs = self.mpcs[mpc_id]
+        mpcs = self.MPC(mpc_id)
         mpcs2 = []
         for mpc in mpcs:
             if mpc.type == 'MPCADD':
@@ -1638,7 +1642,8 @@ class BDFMethods(BDFAttributes):
         return mpcs2
 
     def get_reduced_spcs(self, spc_id):
-        spcs = self.spcs[spc_id]
+        spcs = self.SPC(spc_id)
+
         spcs2 = []
         for spc in spcs:
             if spc.type == 'SPCADD':

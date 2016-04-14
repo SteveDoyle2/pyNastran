@@ -280,7 +280,7 @@ class CHBDYG(ThermalElement):
                       comment=comment)
 
     @classmethod
-    def add_op2_data(self, data, comment=''):
+    def add_op2_data(cls, data, comment=''):
         eid = data[0]
         Type = data[1]
         iViewFront = data[2]
@@ -842,16 +842,16 @@ class CONV(ThermalBC):
         film_node = integer_or_blank(card, 3, 'film_node', 0)
         cntrlnd = integer_or_blank(card, 4, 'cntrlnd', 0)
 
-        TA1 = integer(card, 5, 'TA1')
-        assert TA1 > 0, TA1
+        ta1 = integer(card, 5, 'TA1')
+        assert ta1 > 0, ta1
 
-        ta2 = integer_or_blank(card, 6, 'ta2', TA1)
-        ta3 = integer_or_blank(card, 7, 'ta3', TA1)
-        ta4 = integer_or_blank(card, 8, 'ta4', TA1)
-        ta5 = integer_or_blank(card, 9, 'ta5', TA1)
-        ta6 = integer_or_blank(card, 10, 'ta6', TA1)
-        ta7 = integer_or_blank(card, 11, 'ta7', TA1)
-        ta8 = integer_or_blank(card, 12, 'ta8', TA1)
+        ta2 = integer_or_blank(card, 6, 'ta2', ta1)
+        ta3 = integer_or_blank(card, 7, 'ta3', ta1)
+        ta4 = integer_or_blank(card, 8, 'ta4', ta1)
+        ta5 = integer_or_blank(card, 9, 'ta5', ta1)
+        ta6 = integer_or_blank(card, 10, 'ta6', ta1)
+        ta7 = integer_or_blank(card, 11, 'ta7', ta1)
+        ta8 = integer_or_blank(card, 12, 'ta8', ta1)
         ta = [ta1, ta2, ta3, ta4, ta5, ta6, ta7, ta8]
         assert len(card) <= 13, 'len(CONV card) = %i' % len(card)
         return CONV(eid, pconid, film_node, cntrlnd, ta, comment=comment)

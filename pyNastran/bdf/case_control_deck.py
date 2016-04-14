@@ -82,7 +82,7 @@ class CaseControlDeck(object):
             'NLSTATICS' : 400,
             'LNSTATICS' : 400,
             'MTRAN' : 112,
-            'DCEIG' : None,
+            'DCEIG' : 107,
         }
         # 'HEAT', 'ANALYSIS', 'MFREQ', 'STATICS', 'MODES', 'DFREQ',
         # 'MTRAN', 'BUCK', 'MCEIG', 'DCEIG', 'SAERO', 'NLSTATIC', 'NLSTAT',

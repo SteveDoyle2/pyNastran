@@ -748,22 +748,24 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
                            % (delay_id, msg, np.unique(list(self.delays.keys()))))
 
     #--------------------
-    def MPC(self, conid, msg=''):
+    def MPC(self, mpc_id, msg=''):
         """gets an MPC"""
-        assert isinstance(conid, integer_types), 'conid=%s is not an integer\n' % conid
-        if conid in self.mpcs:
-            constraint = self.mpcs[conid]
+        assert isinstance(mpc_id, integer_types), 'mpc_id=%s is not an integer\n' % mpc_id
+        if mpc_id in self.mpcs:
+            constraint = self.mpcs[mpc_id]
         else:
-            raise KeyError('cannot find MPC ID=%r.\n%s' % (conid, msg))
+            raise KeyError('cannot find MPC ID=%r%s.\nAllowed MPCs=%s' % (
+                mpc_id, msg, np.unique(list(self.mpcs.keys()))))
         return constraint
 
-    def SPC(self, conid, msg=''):
+    def SPC(self, spc_id, msg=''):
         """gets an SPC"""
-        assert isinstance(conid, integer_types), 'conid=%s is not an integer\n' % conid
-        if conid in self.spcs:
-            constraint = self.spcs[conid]
+        assert isinstance(spc_id, integer_types), 'spc_id=%s is not an integer\n' % spc_id
+        if spc_id in self.spcs:
+            constraint = self.spcs[spc_id]
         else:
-            raise KeyError('cannot find SPC ID=%r.\n%s' % (conid, msg))
+            raise KeyError('cannot find SPC ID=%r%s.\nAllowed SPCs=%s' % (
+                spc_id, msg, np.unique(list(self.spcs.keys()))))
         return constraint
 
     #--------------------

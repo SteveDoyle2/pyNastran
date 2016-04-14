@@ -12,7 +12,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from six.moves import zip, range
 import numpy as np
 
-from pyNastran.utils import integer_types
+from pyNastran.utils import integer_types, integer_float_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double_or_blank, integer_string_or_blank,
@@ -140,9 +140,9 @@ class RLOAD1(TabularLoad):
         if isinstance(self.delay, integer_types) and self.delay > 0:
             self.delay = model.DELAY(self.delay_id, msg=msg)
             self.delay_ref = self.delay
-        if isinstance(self.dphase, integer_types) and self.dphase > 0:
-            self.dphase = model.dphases[self.dphase]
-            self.dphase_ref = self.dphase
+        #if isinstance(self.dphase, integer_types) and self.dphase > 0:
+            #self.dphase = model.dphases[self.dphase]
+            #self.dphase_ref = self.dphase
 
     def safe_cross_reference(self, model):
         msg = ' which is required by RLOAD1 sid=%s' % (self.sid)
@@ -155,8 +155,8 @@ class RLOAD1(TabularLoad):
         if isinstance(self.delay, integer_types) and self.delay > 0:
             self.delay = model.DELAY(self.delay_id, msg=msg)
             self.delay_ref = self.delay
-        if isinstance(self.dphase, integer_types) and self.dphase > 0:
-            self.dphase_ref = model.dphases[self.dphase]
+        #if isinstance(self.dphase, integer_types) and self.dphase > 0:
+            #self.dphase_ref = model.dphases[self.dphase]
 
     def uncross_reference(self):
         self.tc = self.Tc()
@@ -567,7 +567,7 @@ class TLOAD1(TabularLoad):
     def delay_id(self):
         if self.delay in [0, 0.]:
             return 0
-        elif isinstance(self.delay, integer_types):
+        elif isinstance(self.delay, integer_float_types):
             return self.delay
         return self.delay_ref.sid
 

@@ -308,11 +308,13 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
         if not dev:
             raise
         print('failed test because DuplicateIDsError...ignoring')
-    #except RuntimeError:  # only temporarily uncomment this when running lots of tests
-        #if 'GRIDG' in fem1.card_count:
-            #print('failed test because mesh adaption (GRIDG)...ignoring')
-            #raise
-        #pass
+    except RuntimeError as e:  # only temporarily uncomment this when running lots of tests
+        if not dev:
+            raise
+        if 'GRIDG' in fem1.card_count:
+            print('failed test because mesh adaption (GRIDG)...ignoring')
+            print(e)
+        pass
     #except AttributeError:  # only temporarily uncomment this when running lots of tests
         #pass
     #except SyntaxError:  # only temporarily uncomment this when running lots of tests
@@ -551,9 +553,13 @@ def validate_case_control(fem2, p0, sol_base, subcase_keys, subcases, sol_200_ma
     for isubcase in subcase_keys[1:]:  # drop isubcase = 0
         subcase = subcases[isubcase]
         str(subcase)
+        assert sol_base is not None, sol_base
         if sol_base == 200:
             analysis = subcase.get_parameter('ANALYSIS')[0]
             sol = sol_200_map[analysis]
+            if sol is None:
+                msg = 'sol=%s analysis=%r' % (sol, analysis)
+                raise NotImplementedError(msg)
         else:
             sol = sol_base
         check_case(sol, subcase, fem2, p0, isubcase)
@@ -1123,7 +1129,7 @@ def main():
     msg += 'Options:\n'
     msg += '  -q, --quiet    prints debug messages (default=False)\n'
     msg += '  -x, --xref     disables cross-referencing and checks of the BDF.\n'
-    msg += '                  (default=False -> on)\n'
+    msg += '                 (default=True -> on)\n'
     msg += '  -p, --punch    disables reading the executive and case control decks in the BDF\n'
     msg += '                 (default=False -> reads entire deck)\n'
     msg += '  -c, --check    disables BDF checks.  Checks run the methods on \n'
@@ -1131,7 +1137,7 @@ def main():
     msg += '                 card is fully not supported (default=False)\n'
     msg += '  -l, --large    writes the BDF in large field, single precision format (default=False)\n'
     msg += '  -d, --double   writes the BDF in large field, double precision format (default=False)\n'
-    msg += '  -L, --loads    Disables forces/moments summation for the different subcases (default=False)\n'
+    msg += '  -L, --loads    Disables forces/moments summation for the different subcases (default=True)\n'
     msg += '  -r, --reject   rejects all cards with the appropriate values applied (default=False)\n'
     msg += '  -D, --dumplines  Writes the BDF exactly as read with the INCLUDES processed (pyNastran_dump.bdf)\n'
     msg += '  -i, --dictsort  Writes the BDF with exactly as read with the INCLUDES processed (pyNastran_dict.bdf)\n'
@@ -1154,6 +1160,8 @@ def main():
     }
     data = docopt_types(msg, version=ver, type_defaults=type_defaults)
 
+    data['--xref'] = not data['--xref']
+    data['--loads'] = not data['--loads']
     for key, value in sorted(iteritems(data)):
         print("%-12s = %r" % (key.strip('--'), value))
 
@@ -1181,14 +1189,14 @@ def main():
             '.',
             data['BDF_FILENAME'],
             debug=not(data['--quiet']),
-            xref=not(data['--xref']),
+            xref=['--xref'],
             # xref_safe=data['--xref_safe'],
             check=not(data['--check']),
             punch=data['--punch'],
             reject=data['--reject'],
             size=size,
             is_double=is_double,
-            sum_load=not data['--loads'],
+            sum_load=data['--loads'],
             stop=data['--stop'],
             quiet=data['--quiet'],
             dumplines=data['--dumplines'],
@@ -1219,14 +1227,14 @@ def main():
             '.',
             data['BDF_FILENAME'],
             debug=not(data['--quiet']),
-            xref=not(data['--xref']),
+            xref=data['--xref'],
             # xref_safe=data['--xref_safe'],
             check=not(data['--check']),
             punch=data['--punch'],
             reject=data['--reject'],
             size=size,
             is_double=is_double,
-            sum_load=not data['--loads'],
+            sum_load=data['--loads'],
             stop=data['--stop'],
             quiet=data['--quiet'],
             dumplines=data['--dumplines'],

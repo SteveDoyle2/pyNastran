@@ -312,6 +312,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
         #: the list of possible cards that will be parsed
         self.cards_to_read = set([
+            '/',
             'ECHOON', 'ECHOOFF',
             'PARAM',
 
@@ -706,44 +707,42 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             self.punch = True
         self._parse_primary_file_header(bdf_filename)
 
-        try:
-            self.log.debug('---starting BDF.read_bdf of %s---' % self.bdf_filename)
-            executive_control_lines, case_control_lines, \
-                bulk_data_lines = self._get_lines(self.bdf_filename, self.punch)
+        self.log.debug('---starting BDF.read_bdf of %s---' % self.bdf_filename)
+        executive_control_lines, case_control_lines, \
+            bulk_data_lines = self._get_lines(self.bdf_filename, self.punch)
 
-            self.case_control_lines = case_control_lines
-            self.executive_control_lines = executive_control_lines
+        self.case_control_lines = case_control_lines
+        self.executive_control_lines = executive_control_lines
 
-            sol, method, isol_line = parse_executive_control_deck(executive_control_lines)
-            self.update_solution(sol, method, isol_line)
+        sol, method, isol_line = parse_executive_control_deck(executive_control_lines)
+        self.update_solution(sol, method, isol_line)
 
-            self.case_control_deck = CaseControlDeck(self.case_control_lines, self.log)
-            self.case_control_deck.solmap_toValue = self._solmap_to_value
-            self.case_control_deck.rsolmap_toStr = self.rsolmap_toStr
+        self.case_control_deck = CaseControlDeck(self.case_control_lines, self.log)
+        self.case_control_deck.solmap_toValue = self._solmap_to_value
+        self.case_control_deck.rsolmap_toStr = self.rsolmap_toStr
 
-            if self._is_cards_dict:
-                cards, card_count = self.get_bdf_cards_dict(bulk_data_lines)
-            else:
-                cards, card_count = self.get_bdf_cards(bulk_data_lines)
-            self._parse_cards(cards, card_count)
+        if self._is_cards_dict:
+            cards, card_count = self.get_bdf_cards_dict(bulk_data_lines)
+        else:
+            cards, card_count = self.get_bdf_cards(bulk_data_lines)
+        self._parse_cards(cards, card_count)
 
-            if self.values_to_skip:
-                for key, values in iteritems(self.values_to_skip):
-                    dict_values = getattr(self, key)
-                    if not isinstance(dict_values, dict):
-                        msg = '%r is an invalid type; only dictionaries are supported' % key
-                        raise TypeError(msg)
-                    for value in values:
-                        del dict_values[value]
-                # TODO: redo get_card_ids_by_card_types & card_count
+        if self.values_to_skip:
+            for key, values in iteritems(self.values_to_skip):
+                dict_values = getattr(self, key)
+                if not isinstance(dict_values, dict):
+                    msg = '%r is an invalid type; only dictionaries are supported' % key
+                    raise TypeError(msg)
+                for value in values:
+                    del dict_values[value]
+            # TODO: redo get_card_ids_by_card_types & card_count
 
-            self.pop_parse_errors()
-            self.fill_dmigs()
+        self.pop_parse_errors()
+        self.fill_dmigs()
 
-            self.cross_reference(xref=xref)
-            self._xref = xref
-        except:
-            raise
+        self.cross_reference(xref=xref)
+        self._xref = xref
+
         self.log.debug('---finished BDF.read_bdf of %s---' % self.bdf_filename)
         self.pop_xref_errors()
 
@@ -892,7 +891,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             if self._stop_on_xref_error:
                 msg += 'There are parsing errors.\n\n'
                 for (card, an_error) in self._stored_parse_errors:
-                    #msg += '%scard=%s\n' % (an_error[0], card)
+                    msg += '%scard=%s\n' % (an_error[0], card)
                     msg += 'xref errror: %s\n\n'% an_error[0]
                     is_error = True
 
@@ -902,10 +901,10 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
     def pop_xref_errors(self):
         """raises an error if there are cross-reference errors"""
+        is_error = False
         if self._stop_on_xref_error:
             if self._ixref_errors == 1 and self._nxref_errors == 0:
                 raise
-            is_error = False
             if self._stored_xref_errors:
                 msg = 'There are cross-reference errors.\n\n'
                 for (card, an_error) in self._stored_xref_errors:
@@ -1077,7 +1076,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         Parameters
         ----------
         sol : int
-            the solution type (101,103, etc)
+            the solution type (101, 103, etc)
         method : str
             the solution method (only for SOL=600)
         isol_line : int
@@ -1286,7 +1285,16 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
     def _make_card_parser(self):
         """creates the card parser variables that are used by add_card"""
+        class Crash(object):
+            def __init__(self):
+                pass
+            @classmethod
+            def add_card(cls, card, comment=''):
+                raise NotImplementedError(card)
+
         self._card_parser = {
+            #'=' : (Crash, None),
+            '/' : (Crash, None),
             'GRID' : (GRID, self.add_node),
             'SPOINT' : (SPOINTs, self.add_spoint),
             'EPOINT' : (EPOINTs, self.add_epoint),
@@ -2027,7 +2035,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                 add_card_function(class_instance)
             except TypeError:
                 msg = 'problem adding %s' % card_obj
-                raise
+                #raise
                 raise TypeError(msg)
             except (SyntaxError, AssertionError, KeyError, ValueError) as exception:
                 #raise
@@ -2036,10 +2044,14 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                 #raise
                 # NameErrors should be caught
                 self._iparse_errors += 1
+                #self.log.error(card_obj)
                 var = traceback.format_exception_only(type(exception), exception)
                 self._stored_parse_errors.append((card, var))
                 if self._iparse_errors > self._nparse_errors:
                     self.pop_parse_errors()
+                #raise
+            #except AssertionError as exception:
+                #self.log.error(card_obj)
 
         elif card_name in self._card_parser_prepare:
             add_card_function = self._card_parser_prepare[card_name]
@@ -2052,10 +2064,14 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                 #raise
                 # NameErrors should be caught
                 self._iparse_errors += 1
+                self.log.error(card_obj)
                 var = traceback.format_exception_only(type(exception), exception)
                 self._stored_parse_errors.append((card, var))
                 if self._iparse_errors > self._nparse_errors:
                     self.pop_parse_errors()
+            #except AssertionError as exception:
+                #self.log.error(card_obj)
+                #raise
         else:
             #raise RuntimeError(card_obj)
             self.reject_cards.append(card_obj)

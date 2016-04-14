@@ -182,7 +182,7 @@ class DESVAR(OptConstraint):
     def OptID(self):
         return self.DesvarID()
 
-    def DesvarID():
+    def DesvarID(self):
         return self.desvar_id
 
     def raw_fields(self):
@@ -916,9 +916,11 @@ class DRESP1(OptConstraint):
             self.atti_ref = self.atti
         elif self.response_type in ['WEIGHT', 'FLUTTER', 'STABDER', 'CEIG', 'EIGN', 'FREQ']:
             pass
-        elif self.response_type in ['DISP', 'FRDISP', 'TDISP',
-                                    'FRVELO', 'TVELO',
-                                    'FRACCL', 'PSDACCL']:
+        elif self.response_type in ['DISP',
+                                    'TDISP',
+                                    'TVELO',
+                                    'FRDISP', 'FRVELO', 'FRACCL',
+                                    'PSDVELO', 'PSDACCL']:
             self.atti = model.Nodes(self.atti, msg=msg)
             self.atti_ref = self.atti
         elif self.response_type in op2_results:
@@ -955,17 +957,20 @@ class DRESP1(OptConstraint):
             for value in data:
                 assert not isinstance(value, BaseCard), value
         elif self.response_type in ['FRSTRE']:
-            data = [prop if isinstance(prop, integer_types) else prop.pid for prop in self.atti]
+            data = [prop if isinstance(prop, integer_types) else prop.Pid() for prop in self.atti]
             for value in data:
-                #print('atti =', value, type(value))
                 assert not isinstance(value, BaseCard), value
         elif self.response_type in ['WEIGHT', 'FLUTTER', 'STABDER', 'EIGN', 'FREQ']:
             data = self.atti
-        elif self.response_type in ['DISP', 'FRDISP', 'TDISP',
-                                    'FRVELO',
-                                    'FRACCL', 'PSDACCL']:
+        elif self.response_type in ['DISP',
+                                    'TDISP', 'TVELO',
+                                    'FRDISP', 'FRVELO', 'FRACCL',
+                                    'PSDVELO', 'PSDACCL']:
             #self.atti = model.Nodes(self.atti, msg=msg)
             data = [node if isinstance(node, integer_types) else node.nid for node in self.atti]
+        elif self.response_type in ['FRFORC',  'TFORC',
+                                    'STRESS', 'ESE', 'CFAILURE']:
+            data = [elem if isinstance(elem, integer_types) else elem.eid for elem in self.atti]
         elif self.response_type in op2_results:
             data = self.atti
             for value in data:
@@ -1135,6 +1140,7 @@ class DRESP2(OptConstraint):
                     self.params[key][i] = model.Desvar(val, msg)
             elif name == 'DTABLE':
                 self.dtable = model.dtable
+                print(model.dtable)
                 for i, val in enumerate(vals):
                     default_values[val] = self.dtable[val]
             else:
