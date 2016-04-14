@@ -7,8 +7,10 @@ import io
 
 if PY2:
     integer_types = (int, long, int32, int64)
+    integer_float_types = (int, long, int32, int64, float)
 else:
     integer_types = (int, int32, int64)
+    integer_float_types = (int, int32, int64, float)
 
 
 def merge_dicts(dict_list, strict=True):
