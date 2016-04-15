@@ -1,25 +1,11 @@
 from __future__ import print_function
-from six import iteritems, itervalues, string_types, PY2
-from six.moves import zip, range
-
 import os
-from itertools import count
 from math import ceil
 from collections import defaultdict
+from functools import reduce
 
-import numpy as np
-from numpy import (array, unique, where, arange, hstack, searchsorted,
-                   setdiff1d, intersect1d, asarray)
-from numpy.linalg import norm
-import scipy
-
-from pyNastran.utils import integer_types
-from pyNastran.bdf.bdf import BDF
-from pyNastran.bdf.cards.nodes import GRID
-from pyNastran.bdf.cards.elements.shell import CTRIA3, CQUAD4
-#from pyNastran.bdf.cards.base_card import expand_thru
-from pyNastran.utils import object_attributes
-
+from six import iteritems, itervalues, string_types, PY2
+from six.moves import zip, range
 
 if PY2:
     import re
@@ -33,6 +19,22 @@ else:
         """Is the string a valid Python variable name?"""
         assert dotted is False, dotted
         return string.isidentifier()
+
+import numpy as np
+from numpy import (array, unique, where, arange, hstack, searchsorted,
+                   setdiff1d, intersect1d, asarray)
+from numpy.linalg import norm
+import scipy
+
+from pyNastran.utils import integer_types
+from pyNastran.bdf.bdf import BDF
+from pyNastran.bdf.cards.nodes import GRID
+from pyNastran.bdf.cards.elements.shell import CTRIA3, CQUAD4
+#from pyNastran.bdf.cards.base_card import expand_thru
+from pyNastran.utils import object_attributes
+from pyNastran.bdf.bdf_interface.dev.set_operations import intersect1d_multi
+from pyNastran.bdf.cards.elements.rigid import RBE3
+
 
 def remove_unassociated_nodes(bdf_filename, bdf_filename_out, renumber=False,
                               size=8, is_double=False):
@@ -81,69 +83,12 @@ def remove_unassociated_nodes(bdf_filename, bdf_filename_out, renumber=False,
     else:
         model.write_bdf(bdf_filename_out, size=size, is_double=is_double)
 
-
-def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
-                          renumber_nodes=False, neq_max=4, xref=True,
-                          node_set=None,
-                          size=8, is_double=False,
-                          remove_collapsed_elements=False, avoid_collapsed_elements=False,
-                          crash_on_collapse=False, debug=True):
-    """
-    Equivalences nodes; keeps the lower node id; creates two nodes with the same
-
-    Parameters
-    ----------
-    bdf_filename : str / BDF
-        str : bdf file path
-        BDF : a BDF model that is fully valid (see xref)
-    bdf_filename_out : str
-        a bdf_filename to write
-    tol : float
-        the spherical tolerance
-    renumber_nodes : bool
-        should the nodes be renumbered (default=False)
-    neq_max : int
-        the number of "close" points (default=4)
-    xref bool: bool
-        does the model need to be cross_referenced
-        (default=True; only applies to model option)
-    node_set : List[int] / (n, ) ndarray
-        the list/array of nodes to consider (not supported with renumber_nodes=True)
-    size : int; {8, 16}; default=8
-        the bdf write precision
-    is_double : bool; default=False
-        the field precision to write
-    crash_on_collapse : bool; default=False
-        stop if nodes have been collapsed
-           False: blindly move on
-           True: rereads the BDF which catches doubled nodes (temporary);
-                 in the future collapse=True won't need to double read;
-                 an alternative is to do Patran's method of avoiding collapse)
-    remove_collapsed_elements : bool; default=False (unsupported)
-        True  : 1D/2D/3D elements will not be collapsed;
-                CELASx/CDAMP/MPC/etc. are not considered
-        False : no elements will be removed
-    avoid_collapsed_elements : bool; default=False (unsupported)
-        True  : only collapses that don't break 1D/2D/3D elements will be considered;
-                CELASx/CDAMP/MPC/etc. are considered
-        False : element can be collapsed
-
-    Returns
-    -------
-    model : BDF()
-        The BDF model corresponding to bdf_filename_out
-
-    .. warning:: I doubt SPOINTs/EPOINTs work correctly
-    .. warning:: xref not fully implemented (assumes cid=0)
-
-    .. todo:: node_set stil does work on the all the nodes in the big
-               kdtree loop, which is very inefficient
-    .. todo:: remove_collapsed_elements is not supported
-    .. todo:: avoid_collapsed_elements is not supported
-    """
+def _eq_nodes_setup(bdf_filename, tol,
+                    renumber_nodes=False, xref=True,
+                    node_set=None, debug=True):
+    """helper function for `bdf_equivalence_nodes`"""
     assert isinstance(tol, float), tol
     if node_set is not None:
-
         if renumber_nodes:
             raise NotImplementedError('node_set is not None & renumber_nodes=True')
 
@@ -167,10 +112,10 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
     needs_get_position = True if coord_ids == [0] else False
 
     # quads / tris
-    nids_quads = []
-    eids_quads = []
-    nids_tris = []
-    eids_tris = []
+    #nids_quads = []
+    #eids_quads = []
+    #nids_tris = []
+    #eids_tris = []
 
     # map the node ids to the slot in the nids array
     renumber_nodes = False
@@ -187,7 +132,10 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
         # these are all the nodes that are requested from node_set that are missing
         #   thus len(diff_nodes) == 0
         diff_nodes = setdiff1d(node_set, all_nids)
-        assert len(diff_nodes) == 0, 'The following nodes cannot be found, but are included in the reduced set; nids=%s' % diff_nodes
+        if len(diff_nodes) != 0:
+            msg = ('The following nodes cannot be found, but are included'
+                   ' in the reduced set; nids=%s' % diff_nodes)
+            raise RuntimeError(msg)
 
         # A & B
         # the nodes to analyze are the union of all the nodes and the desired set
@@ -201,7 +149,8 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
             for nid in all_nids:
                 nid_map[inode] = nid
                 inode += 1
-        #nids = array([node.nid for nid, node in sorted(iteritems(model.nodes)) if nid in node_set], dtype='int32')
+        #nids = array([node.nid for nid, node in sorted(iteritems(model.nodes))
+                      #if nid in node_set], dtype='int32')
 
     else:
         if renumber_nodes:
@@ -278,7 +227,11 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
     else:
         inew = slice(None)
     #assert np.array_equal(nids[inew], nids_new), 'some nodes are not defined'
+    return nodes_xyz, model, nids, inew
 
+
+def _eq_nodes_build_tree(nodes_xyz, nids, tol, inew=None, node_set=None, neq_max=4):
+    """helper function for `bdf_equivalence_nodes`"""
     # build the kdtree
     try:
         kdt = scipy.spatial.cKDTree(nodes_xyz)
@@ -294,10 +247,171 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
 
     # get the ids of the duplicate nodes
     slots = where(ieq[:, :] < nnodes)
+    return kdt, ieq, slots
+
+def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
+                          renumber_nodes=False, neq_max=4, xref=True,
+                          node_set=None,
+                          size=8, is_double=False,
+                          remove_collapsed_elements=False,
+                          avoid_collapsed_elements=False,
+                          crash_on_collapse=False, debug=True):
+    """
+    Equivalences nodes; keeps the lower node id; creates two nodes with the same
+
+    Parameters
+    ----------
+    bdf_filename : str / BDF
+        str : bdf file path
+        BDF : a BDF model that is fully valid (see xref)
+    bdf_filename_out : str
+        a bdf_filename to write
+    tol : float
+        the spherical tolerance
+    renumber_nodes : bool
+        should the nodes be renumbered (default=False)
+    neq_max : int
+        the number of "close" points (default=4)
+    xref bool: bool
+        does the model need to be cross_referenced
+        (default=True; only applies to model option)
+    node_set : List[int] / (n, ) ndarray
+        the list/array of nodes to consider (not supported with renumber_nodes=True)
+    size : int; {8, 16}; default=8
+        the bdf write precision
+    is_double : bool; default=False
+        the field precision to write
+    crash_on_collapse : bool; default=False
+        stop if nodes have been collapsed
+           False: blindly move on
+           True: rereads the BDF which catches doubled nodes (temporary);
+                 in the future collapse=True won't need to double read;
+                 an alternative is to do Patran's method of avoiding collapse)
+    remove_collapsed_elements : bool; default=False (unsupported)
+        True  : 1D/2D/3D elements will not be collapsed;
+                CELASx/CDAMP/MPC/etc. are not considered
+        False : no elements will be removed
+    avoid_collapsed_elements : bool; default=False (unsupported)
+        True  : only collapses that don't break 1D/2D/3D elements will be considered;
+                CELASx/CDAMP/MPC/etc. are considered
+        False : element can be collapsed
+
+    Returns
+    -------
+    model : BDF()
+        The BDF model corresponding to bdf_filename_out
+
+    .. warning:: I doubt SPOINTs/EPOINTs work correctly
+    .. warning:: xref not fully implemented (assumes cid=0)
+
+    .. todo:: node_set stil does work on the all the nodes in the big
+               kdtree loop, which is very inefficient
+    .. todo:: remove_collapsed_elements is not supported
+    .. todo:: avoid_collapsed_elements is not supported
+    """
+    nodes_xyz, model, nids, inew = _eq_nodes_setup(
+        bdf_filename, tol, renumber_nodes=renumber_nodes,
+        xref=xref, node_set=node_set, debug=debug)
+    ieq, slots = _eq_nodes_build_tree(nodes_xyz, nids, tol,
+                                      inew=inew, node_set=node_set,
+                                      neq_max=neq_max)[1:]
+
+    nid_pairs = _eq_nodes_find_pairs(nids, slots, ieq, node_set=node_set)
+    _eq_nodes_final(nid_pairs, model, tol, node_set=node_set)
+
+    if bdf_filename_out is not None:
+        model.write_bdf(bdf_filename_out, size=size, is_double=is_double)
+    if crash_on_collapse:
+        # lazy way to make sure there aren't any collapsed nodes
+        model2 = BDF(debug=debug)
+        model2.read_bdf(bdf_filename_out)
+    return model
+
+def create_rbe3s_between_close_nodes(bdf_filename, bdf_filename_out, tol,
+                                     renumber_nodes=False, neq_max=4, xref=True,
+                                     node_set=None, size=8, is_double=False,
+                                     debug=True):
+    """
+    Creates semi-rigid RBE3 elements between two nodes within tolerance.
+
+    Parameters
+    ----------
+    bdf_filename : str / BDF
+        str : bdf file path
+        BDF : a BDF model that is fully valid (see xref)
+    bdf_filename_out : str
+        a bdf_filename to write
+    tol : float
+        the spherical tolerance
+    renumber_nodes : bool
+        should the nodes be renumbered (default=False)
+    neq_max : int
+        the number of "close" points (default=4)
+    xref bool: bool
+        does the model need to be cross_referenced
+        (default=True; only applies to model option)
+    node_set : List[int] / (n, ) ndarray
+        the list/array of nodes to consider (not supported with renumber_nodes=True)
+    size : int; {8, 16}; default=8
+        the bdf write precision
+    is_double : bool; default=False
+        the field precision to write
+
+    Returns
+    -------
+    model : BDF()
+        The BDF model corresponding to bdf_filename_out
+
+    .. warning:: I doubt SPOINTs/EPOINTs work correctly
+    .. warning:: xref not fully implemented (assumes cid=0)
+
+    .. todo:: node_set stil does work on the all the nodes in the big
+               kdtree loop, which is very inefficient
+    """
+    nodes_xyz, model, nids, inew = _eq_nodes_setup(
+        bdf_filename, tol, renumber_nodes=renumber_nodes,
+        xref=xref, node_set=node_set, debug=debug)
+
+    eid = 1
+    if len(model.rigid_elements):
+        eid = max(model.rigid_elements) + 1
+
+    ieq, slots = _eq_nodes_build_tree(nodes_xyz, nids, tol,
+                                      inew=inew, node_set=node_set,
+                                      neq_max=neq_max)[1:]
+
+    nid_pairs = _eq_nodes_find_pairs(nids, slots, ieq, node_set=node_set)
+
+    for (nid1, nid2) in nid_pairs:
+        node1 = model.nodes[nid1]
+        node2 = model.nodes[nid2]
+
+        # TODO: doesn't use get position...
+        distance = norm(node1.xyz - node2.xyz)
+        if distance < tol:
+            continue
+        refgrid = nid1
+        refc = '123456'
+        weights = [1.0]
+        comps = ['123456']
+        Gijs = [[nid2]]
+        rbe3 = RBE3(eid, refgrid, refc, weights, comps, Gijs,
+                    comment='')
+        model.rigid_elements[eid] = rbe3
+        eid += 1
+    #_eq_nodes_final(nid_pairs, model, tol, node_set=node_set)
+
+    if bdf_filename_out is not None:
+        model.write_bdf(bdf_filename_out, size=size, is_double=is_double)
+    return model
+
+def _eq_nodes_find_pairs(nids, slots, ieq, node_set=None):
+    """helper function for `bdf_equivalence_nodes`"""
     irows, icols = slots
     #replacer = unique(ieq[slots])  ## TODO: turn this back on?
 
-    skip_nodes = []
+    #skip_nodes = []
+    nid_pairs = []
     for (irow, icol) in zip(irows, icols):
         inid2 = ieq[irow, icol]
         nid1 = nids[irow]
@@ -307,6 +421,12 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
         if node_set is not None:
             if nid1 not in node_set and nid2 not in node_set:
                 continue
+        nid_pairs.append((nid1, nid2))
+    return nid_pairs
+
+def _eq_nodes_final(nid_pairs, model, tol, node_set=None):
+    """apply nodal equivalencing to model"""
+    for (nid1, nid2) in nid_pairs:
         node1 = model.nodes[nid1]
         node2 = model.nodes[nid2]
 
@@ -339,16 +459,8 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
         assert node2.ps == node1.ps
         assert node2.seid == node1.seid
         # node2.new_nid = node1.nid
-        skip_nodes.append(nid2)
-
-    if bdf_filename_out is not None:
-        model.write_bdf(bdf_filename_out, size=size, is_double=is_double)
-    if crash_on_collapse:
-        # lazy way to make sure there aren't any collapsed nodes
-        model2 = BDF(debug=debug)
-        model2.read_bdf(bdf_filename_out)
-    return model
-
+        #skip_nodes.append(nid2)
+    return
 
 #def slice_model(model):
     #"""
@@ -774,7 +886,9 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
         if value is None:
             pass
         else:
-            assert isinstance(value, integer_types), 'value=%s must be an integer; type(value)=%s' % (value, type(value))
+            if not isinstance(value, integer_types):
+                msg = 'value=%s must be an integer; type(value)=%s' % (value, type(value))
+                raise TypeError(msg)
         call = '%s = %s' % (key, value)
 
         # this exec is safe because we checked the identifier
@@ -821,7 +935,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
     spoints_nids = spoints + nids
     spoints_nids.sort()
     i = 1
-    nnodes = len(spoints_nids)
+    #nnodes = len(spoints_nids)
 
     i = 1
     #j = 1
@@ -1237,7 +1351,8 @@ def _update_case_control(model, mapper):
                             msg = 'Could not find id=%s in %s dictionary\n' % (value, key)
                             msg += str(kmap)
                             raise KeyError(msg)
-                        subcase.update_parameter_in_subcase(key, value2, options, param_type)
+                        subcase.update_parameter_in_subcase(
+                            key, value2, options, param_type)
 
                     elif key in elemental_quantities + nodal_quantities:
                         #msg += '  allowed_keys=%s' % sorted(kmap.keys())
@@ -1246,17 +1361,21 @@ def _update_case_control(model, mapper):
                             if seti_key in sets_analyzed:
                                 continue
                             sets_analyzed.add(seti_key)
-                            msgi = 'seti_key=%s must be an integer; type(seti_key)=%s\n'  % (seti_key, type(seti_key))
-                            msgi += '  key=%r value=%r options=%r param_type=%r\n' % (key, value, options, param_type)
+                            msgi = 'seti_key=%s must be an integer; type(seti_key)=%s\n'  % (
+                                seti_key, type(seti_key))
+                            msgi += '  key=%r value=%r options=%r param_type=%r\n' % (
+                                key, value, options, param_type)
                             msgi += '  seti=%r\n' % seti
                             #print(msgi)
                             assert isinstance(seti_key, int), msgi
 
-                            #print('key=%s options=%s param_type=%s value=%s' % (key, options, param_type, value))
+                            #print('key=%s options=%s param_type=%s value=%s' % (
+                                #key, options, param_type, value))
                             #print(seti2)
                         else:
                             seti2 = [value]
-                            print('key=%s options=%s param_type=%s value=%s' % (key, options, param_type, value))
+                            print('key=%s options=%s param_type=%s value=%s' % (
+                                key, options, param_type, value))
                             raise NotImplementedError(key)
 
                         values2 = []
@@ -1292,16 +1411,19 @@ def _update_case_control(model, mapper):
                             if gset != lset:
                                 msg = 'gset=%s lset=%s' % (str(gset), str(lset))
                                 raise NotImplementedError(msg)
-                                #subcase.update_parameter_in_subcase(seti, values2, seti_key, param_type)
+                                #subcase.update_parameter_in_subcase(
+                                    #seti, values2, seti_key, param_type)
                             else:
                                 global_subcase.update_parameter_in_subcase(
                                     seti, values2, seti_key, param_type)
-                            #subcase.update_parameter_in_subcase(seti, values2, seti_key, param_type)
+                            #subcase.update_parameter_in_subcase(
+                                #seti, values2, seti_key, param_type)
                         elif not key not in global_subcase:
                             subcase.update_parameter_in_subcase(
                                 seti, values2, seti_key, param_type)
                         else:
-                            global_subcase.update_parameter_in_subcase(seti, values2, seti_key, param_type)
+                            global_subcase.update_parameter_in_subcase(
+                                seti, values2, seti_key, param_type)
                     else:
                         #pass
                         #print('key=%s seti2=%s' % (key, seti2))
@@ -1336,13 +1458,55 @@ def get_free_edges(bdf_filename, eids=None):
         model = bdf_filename
 
     free_edges = []
-    out = model._get_maps(eids, map_names=None)
-    (edge_to_eid_map, eid_to_edge_map, nid_to_edge_map) = out
+    out = model._get_maps(eids, map_names=None,
+                          consider_0d=False, consider_0d_rigid=False,
+                          consider_1d=False, consider_2d=True, consider_3d=False)
+    edge_to_eid_map = out[0]
     for edge, eids in iteritems(edge_to_eid_map):
         if len(eids) == 2:
             continue
         free_edges.append(edge)
     return free_edges
+
+def get_joints(model, pid_sets):
+    """
+    Gets the nodes at the joints of multiple property id sets
+
+    Parameters
+    ----------
+    model : BDF()
+        a BDF object
+    pid_sets : List[pid_set, pid_set]
+        set of properties IDs to boolean
+        pid_set : List[int, int, int]
+            set of property ids to boolean
+
+    Example
+    -------
+    For a set of ribs, spars, and skins:
+     - ribs intersect spars
+     - ribs and spars intersect skins
+
+    We want the nodes on the skin at the intersections.
+    pid_sets = [
+        [rib1_pid, rib2_pid, rib3_pid, ...],
+        [spar1_pid, spar2_pid, spar3_pid, ...],
+        [skin],
+    ]
+    """
+    nid_sets = defaultdict(set)
+    for eid, elem in model.elements:
+        pid = elem.Pid()
+        nid_sets[pid].update(elem.node_ids)
+
+    nid_array_sets = []
+    for i, pid_set in enumerate(pid_sets):
+        nid_array_sets[i] = np.unique(
+            np.hstack([nid_sets[pid] for pid in pid_set])
+        )
+    joint_nids = reduce(np.intersect1d, nid_array_sets)
+    #joint_nids = intersect1d_multi(nid_array_sets, assume_unique=True)
+    return joint_nids
 
 def extract_surface_patches(bdf_filename, starting_eids, theta_tols=40.):
     """
@@ -1396,8 +1560,8 @@ def extract_surface_patches(bdf_filename, starting_eids, theta_tols=40.):
     #print('shell_eids = %s' % shell_eids)
 
     # get neighboring shell elements
-    out = model._get_maps(eids=shell_eids)
-    (edge_to_eid_map, eid_to_edge_map, nid_to_edge_map) = out
+    out_map = model._get_maps(eids=shell_eids)
+    edge_to_eid_map = out_map[0]
 
     eid_to_eid_map = defaultdict(set)
     if 1:
@@ -1466,7 +1630,8 @@ def extract_surface_patches(bdf_filename, starting_eids, theta_tols=40.):
     return model, groups
 
 
-def split_model_by_material_id(bdf_filename, bdf_filename_base, encoding=None, size=8, is_double=False):
+def split_model_by_material_id(bdf_filename, bdf_filename_base,
+                               encoding=None, size=8, is_double=False):
     """
     Splits a model based on the material ID
 
@@ -1515,7 +1680,9 @@ def split_model_by_material_id(bdf_filename, bdf_filename_base, encoding=None, s
                 mid1 = pid.Mid1()
                 mid_to_eids_map[mid1].add(eid)
             else:
-                model.log.warning('skipping eid=%s elem.type=%s pid=%s prop.type=%s' % (eid, etype, pid.pid, ptype))
+                msg = 'skipping eid=%s elem.type=%s pid=%s prop.type=%s' % (
+                    eid, etype, pid.pid, ptype)
+                model.log.warning(msg)
         elif etype in elements_without_properties_with_materials:
             mid = elem.Mid()
             mid_to_eids_map[mid].add(eid)
@@ -1569,49 +1736,41 @@ def convert_bad_quads_to_tris(model, eids_to_check=None, xyz_cid0=None, tol=0.0)
     -----
     check for bad xref
     """
-    #print('hi@!')
     out = model.get_card_ids_by_card_types('CQUAD4')
     cquad4s = out['CQUAD4']
     if eids_to_check is None:
         cquad4s_to_check = cquad4s
     else:
-        cquad4s_to_check = list(set(eids_to_check).intersection(set(cquads)))
+        cquad4s_to_check = list(set(eids_to_check).intersection(set(cquad4s)))
 
     elements = model.elements
     eids_to_remove = []
 
     if xyz_cid0 is None:
         xyz_cid0 = model.get_xyz_in_coord(cid=0)
-    #print(xyz_cid0)
     nid_cd = np.array([[nid, node.Cd()] for nid, node in sorted(iteritems(model.nodes))])
     all_nids = nid_cd[:, 0]
 
     assert len(cquad4s_to_check) > 0, cquad4s_to_check
     for eid in sorted(cquad4s_to_check):
-        #print('--------------------------------------')
-        #print('eid =', eid)
         elem = elements[eid]
         nids = elem.node_ids
         nids_long = nids + nids
 
         nids_to_remove = []
         for inode in range(4):
-            #print()
             nid0 = nids_long[inode]
             nid1 = nids_long[inode + 1]
             edge = [nid0, nid1]
             i = searchsorted(all_nids, edge)
-            #print('i = %s' % i)
             xyz = xyz_cid0[i, :]
             edge_length = np.linalg.norm(xyz[0, :] - xyz[1, :])
-            #print(' edge=(%s,%s) edge_length = %s' % (nid0, nid1, edge_length))
-            #print(xyz)
             if edge_length <= tol:
                 nids_to_remove.append(nid1)
 
         if len(nids_to_remove) == 0:
             continue
-        #print('*eid=%s nids=%s' % (eid, nids))
+
         for nid in nids_to_remove:
             nids.remove(nid)
 
@@ -1655,7 +1814,7 @@ def convert_bad_quads_to_tris(model, eids_to_check=None, xyz_cid0=None, tol=0.0)
 
 
 def create_spar_cap(model, eids, nids, width, nelements=1, symmetric=True, xyz_cid0=None,
-                    vector=None, idir=None, eid_start=1):
+                    vector1=None, vector2=None, idir=None, eid_start=1):
     """
     Builds elements along a line of nodes that are normal to the element face.
 
@@ -1722,6 +1881,7 @@ def create_spar_cap(model, eids, nids, width, nelements=1, symmetric=True, xyz_c
 
     # Create the CQUAD4s
     map_nid = {}
+    map_nid2 = {}
     neids = eids.size
     all_common_nids = set([])
     normals = np.zeros((neids, 3), dtype='float64')
@@ -1749,8 +1909,8 @@ def create_spar_cap(model, eids, nids, width, nelements=1, symmetric=True, xyz_c
             )
         else:
             raise NotImplementedError(etype)
-        normi = np.linalg.norm(normi)
-        assert np.allclose(normi) == 1., normi
+        normi = np.linalg.norm(normal)
+        assert np.allclose(normi, 1.0), normi
         normal /= normi
 
         # add some new nodes

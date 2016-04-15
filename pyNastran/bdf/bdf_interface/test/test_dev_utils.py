@@ -116,7 +116,7 @@ class DevUtils(unittest.TestCase):
         tol = 0.2
         node_set = [2, 3]
         # Node 2 is not defined, so crash
-        with self.assertRaises(AssertionError):
+        with self.assertRaises(RuntimeError):
             # node 2 is not defined because it should be node 20
             bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
                                   renumber_nodes=False, neq_max=4, xref=True,

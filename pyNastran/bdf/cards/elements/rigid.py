@@ -750,7 +750,7 @@ class RBE3(RigidElement):
     type = 'RBE3'
 
     def __init__(self, eid, refgrid, refc, weights, comps, Gijs,
-                 Gmi, Cmi, alpha, comment=''):
+                 Gmi=None, Cmi=None, alpha=0.0, comment=''):
         """
         eid
         refgrid - dependent
@@ -899,7 +899,7 @@ class RBE3(RigidElement):
             #: thermal expansion coefficient
             alpha = 0.0
         return RBE3(eid, refgrid, refc, weights, comps, Gijs,
-                    Gmi, Cmi, alpha, comment=comment)
+                    Gmi=Gmi, Cmi=Cmi, alpha=alpha, comment=comment)
 
     @property
     def WtCG_groups(self):
