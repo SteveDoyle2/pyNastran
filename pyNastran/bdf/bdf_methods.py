@@ -831,10 +831,33 @@ class BDFMethods(BDFAttributes):
 
         unsupported_types = set([])
         for load, scale in zip(loads2, scale_factors2):
-            if isinstance(load, Force):  # FORCE, FORCE1, FORCE2
+            if load.type == 'FORCE':
+                if load.node_id not in nids:
+                    continue
+                if load.Cid() != 0:
+                    cp = load.cid
+                    #from pyNastran.bdf.bdf import CORD2R
+                    #cp = CORD2R()
+                    f = load.mag * cp.transform_vector_to_global(load.xyz) * scale
+                else:
+                    f = load.mag * load.xyz * scale
+
+                node = self.Node(load.node_id)
+                r = xyz[node.nid] - p
+                m = cross(r, f)
+                F += f * scale
+                M += m * scale
+
+            elif isinstance(load, Force):  # FORCE1, FORCE2
                 if load.nodeIDs not in nids:
                     continue
-                f = load.mag * load.xyz * scale
+                if load.Cid() != 0:
+                    cp = load.cid
+                    #from pyNastran.bdf.bdf import CORD2R
+                    #cp = CORD2R()
+                    f = load.mag * cp.transform_vector_to_global(load.xyz) * scale
+                else:
+                    f = load.mag * load.xyz * scale
                 node = self.Node(load.node)
                 r = xyz[node.nid] - p
                 m = cross(r, f)
@@ -843,8 +866,12 @@ class BDFMethods(BDFAttributes):
             elif isinstance(load, Moment):  # MOMENT, MOMENT1, MOMENT2
                 if load.nodeIDs not in nids:
                     continue
-                m = load.mag * load.xyz
-                M += m * scale
+                if load.Cid() != 0:
+                    cp = load.cid
+                    m = cp.transform_vector_to_global(load.xyz)
+                else:
+                    m = load.xyz
+                M += load.mag * m * scale
 
             elif load.type == 'PLOAD':
                 nodes = load.node_ids
@@ -1238,8 +1265,22 @@ class BDFMethods(BDFAttributes):
 
         unsupported_types = set([])
         for load, scale in zip(loads2, scale_factors2):
-            if load.type in ['FORCE', 'FORCE1']:
-                f = load.mag * load.xyz
+            if load.type == 'FORCE':
+                if load.Cid() != 0:
+                    cp = load.cid
+                    #from pyNastran.bdf.bdf import CORD2R
+                    #cp = CORD2R()
+                    f = load.mag * cp.transform_vector_to_global(load.xyz) * scale
+                else:
+                    f = load.mag * load.xyz * scale
+
+                node = self.Node(load.node_id)
+                r = xyz[node.nid] - p
+                m = cross(r, f)
+                F += f * scale
+                M += m * scale
+            elif load.type == 'FORCE1':
+                f = load.mag * load.xyz * scale
                 node = self.Node(load.node_id)
                 r = xyz[node.nid] - p
                 m = cross(r, f)
@@ -1253,8 +1294,15 @@ class BDFMethods(BDFAttributes):
                 F += f
                 M += m
             elif load.type in ['MOMENT', 'MOMENT1', 'MOMENT2']:
-                m = load.mag * load.xyz
+                if load.Cid() != 0:
+                    cp = load.cid
+                    #from pyNastran.bdf.bdf import CORD2R
+                    #cp = CORD2R()
+                    m = load.mag * cp.transform_vector_to_global(load.xyz) * scale
+                else:
+                    m = load.mag * load.xyz * scale
                 M += m * scale
+
             elif load.type == 'PLOAD':
                 nodes = load.node_ids
                 nnodes = len(nodes)
