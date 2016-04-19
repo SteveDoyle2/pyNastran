@@ -1260,6 +1260,8 @@ class CAERO1(BaseCard):
         Fill `self.box_ids` with the sub-box ids. Shape is (nchord, nspan)
         """
         nchord, nspan = self.shape
+        assert nchord >= 1, 'nchord=%s' % nchord
+        assert nspan >= 1, 'nspan=%s' % nspan
         self.box_ids = np.zeros((nchord, nspan), dtype='int32')
         for ichord in range(nchord):
             for ispan in range(nspan):
