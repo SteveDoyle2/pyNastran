@@ -1039,6 +1039,10 @@ class FORCE1(Force):
         return self.g2_ref.nid
 
     @property
+    def node_ids(self):
+        return [self.node_id, self.G1(), self.G2()]
+
+    @property
     def node_id(self):
         if isinstance(self.node, integer_types):
             return self.node
@@ -1449,6 +1453,10 @@ class MOMENT1(Moment):
 
         self.xyz = self.g2_ref.get_position() - self.g1_ref.get_position()
         self.normalize()
+
+    @property
+    def node_ids(self):
+        return [self.node_id, self.G1(), self.G2()]
 
     def get_node_id(self):
         if isinstance(self.node, integer_types):

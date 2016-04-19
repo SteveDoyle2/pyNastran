@@ -132,6 +132,8 @@ CPYRAM  (done)
 
 PSOLID  (done)
 PLSOLID (done)
+PIHEX   (done)
+PCOMPS  (done)
 
 ----Cracks (Elements/Properties)----:
 CRAC2D (done)

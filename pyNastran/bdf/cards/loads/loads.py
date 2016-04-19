@@ -31,12 +31,6 @@ class Load(BaseCard):
         self.cid = None
         self.nodes = None
 
-    def Cid(self):
-        if isinstance(self.cid, integer_types):
-            return self.cid
-        else:
-            return self.cid_ref.cid
-
     @property
     def node_ids(self):
         return self._nodeIDs()
