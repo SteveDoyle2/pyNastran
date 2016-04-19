@@ -373,21 +373,57 @@ class TestLoadSum(unittest.TestCase):
         from pyNastran.bdf.bdf import CORD2C, GRID, FORCE
         model.nodes[1] = GRID(1, cp=1, xyz=[0., 0., 0.], cd=0, ps='', seid=0,
                               comment='')
+        cid = 1
+        origin = [0., 0., 0.]
+        zaxis = [0., 0., 1.]
+        xaxis = [1., 0., 0.]
+        model.coords[1] = CORD2C(cid, rid=0, origin=origin, zaxis=zaxis,
+                                 xzplane=xaxis, comment='')
         sid = 1
         node = 1
         cid = 1
-        mag = 2.0
+        mag = 1.1
         xyz = [1., 0., 0.]
         radial_force = FORCE(sid, node, cid, mag, xyz, comment='')
         model.add_card_class(radial_force)
 
         sid = 2
         xyz = [1., 90., 0.]
+        mag = 2.2
         theta_force = FORCE(sid, node, cid, mag, xyz, comment='')
-
-        card = None
         model.add_card_class(theta_force)
-        #model.add_card()
+        model.cross_reference()
+
+        p0 = 1
+        eids = None
+        nids = None
+
+        loadcase_id = 1
+        F, M = model.sum_forces_moments(p0, loadcase_id, include_grav=False,
+                                        xyz_cid0=None)
+        F2, M2 = model.sum_forces_moments_elements(p0, loadcase_id, eids, nids,
+                                                   include_grav=False,
+                                                   xyz_cid0=None)
+        assert np.allclose(F, F2), 'F=%s F2=%s' % (F, F2)
+        assert np.allclose(M, M2), 'M=%s M2=%s' % (M, M2)
+
+        F1_expected = np.array([1.1, 0., 0.])
+        M1_expected = np.array([0., 0., 0.])
+        self.assertTrue(allclose(F1_expected, F), 'loadcase_id=%s F_expected=%s F=%s' % (loadcase_id, F1_expected, F))
+        self.assertTrue(allclose(M1_expected, M), 'loadcase_id=%s M_expected=%s M=%s' % (loadcase_id, M1_expected, M))
+
+        loadcase_id = 2
+        F, M = model.sum_forces_moments(p0, loadcase_id, include_grav=False,
+                                        xyz_cid0=None)
+        F2, M2 = model.sum_forces_moments_elements(p0, loadcase_id, eids, nids,
+                                                   include_grav=False,
+                                                   xyz_cid0=None)
+        assert np.allclose(F, F2), 'F=%s F2=%s' % (F, F2)
+        assert np.allclose(M, M2), 'M=%s M2=%s' % (M, M2)
+        F2_expected = np.array([0., 2.2, 0.])
+        M2_expected = np.array([0., 0., 0.])
+        self.assertTrue(allclose(F2_expected, F), 'loadcase_id=%s F_expected=%s F=%s' % (loadcase_id, F2_expected, F))
+        self.assertTrue(allclose(M2_expected, M), 'loadcase_id=%s M_expected=%s M=%s' % (loadcase_id, M2_expected, M))
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

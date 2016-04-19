@@ -3942,6 +3942,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.create_alternate_vtk_grid(name, color=color, line_width=5, opacity=1.0,
                                        point_size=1, representation='point')
 
+        assert os.path.exists(points_filename), print_bad_path(points_filename)
         # read input file
         try:
             user_points = np.loadtxt(points_filename, delimiter=',')

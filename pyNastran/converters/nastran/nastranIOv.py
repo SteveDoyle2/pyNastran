@@ -567,19 +567,7 @@ class NastranIO(object):
         self._add_alt_actors(self.alt_grids)
 
         # set default representation
-        if 'caero_control_surfaces' in self.geometry_actors:
-            self.geometry_properties['caero_control_surfaces'].opacity = 0.5
-
-            self.geometry_actors['caero'].Modified()
-            self.geometry_actors['caero_subpanels'].Modified()
-            if has_control_surface:
-                self.geometry_actors['caero_control_surfaces'].Modified()
-            if hasattr(self.geometry_actors['caero'], 'Update'):
-                self.geometry_actors['caero'].Update()
-            if hasattr(self.geometry_actors['caero_subpanels'], 'Update'):
-                self.geometry_actors['caero_subpanels'].Update()
-            if has_control_surface and hasattr(self.geometry_actors['caero_subpanels'], 'Update'):
-                self.geometry_actors['caero_control_surfaces'].Update()
+        self._set_caero_representation(has_control_surface)
 
         for grid_name in ['suport', 'spc', 'mpc', 'mpc_dependent', 'mpc_independent']:
             if grid_name in self.geometry_actors:
@@ -591,6 +579,22 @@ class NastranIO(object):
         else:
             self._set_results([form], cases)
 
+    def _set_caero_representation(self, has_control_surface):
+        if 'caero_control_surfaces' in self.geometry_actors:
+            self.geometry_properties['caero_control_surfaces'].opacity = 0.5
+
+            if 'caero' not in self.geometry_actors:
+                return
+            self.geometry_actors['caero'].Modified()
+            self.geometry_actors['caero_subpanels'].Modified()
+            if has_control_surface:
+                self.geometry_actors['caero_control_surfaces'].Modified()
+            if hasattr(self.geometry_actors['caero'], 'Update'):
+                self.geometry_actors['caero'].Update()
+            if hasattr(self.geometry_actors['caero_subpanels'], 'Update'):
+                self.geometry_actors['caero_subpanels'].Update()
+            if has_control_surface and hasattr(self.geometry_actors['caero_subpanels'], 'Update'):
+                self.geometry_actors['caero_control_surfaces'].Update()
 
     def create_splines(self, model, box_id_to_caero_element_map, caero_points):
         if model.splines:
@@ -640,9 +644,19 @@ class NastranIO(object):
         points = vtk.vtkPoints()
         points.SetNumberOfPoints(ncaeros_points)
 
+        max_cpoints = []
+        min_cpoints = []
         for eid, element in sorted(iteritems(model.caeros)):
             if isinstance(element, (CAERO1, CAERO3, CAERO4, CAERO5)):
                 cpoints = element.get_points()
+                max_cpoints.append(np.array(cpoints).max(axis=0))
+                min_cpoints.append(np.array(cpoints).min(axis=0))
+                if eid == 10100:
+                    print('---cpoints---')
+                    for point in cpoints:
+                        print(point)
+                if eid == 10100:
+                    continue
                 elem = vtkQuad()
                 elem.GetPointIds().SetId(0, j)
                 elem.GetPointIds().SetId(1, j + 1)
@@ -656,6 +670,8 @@ class NastranIO(object):
                 j += 4
             else:
                 self.log_info("skipping %s" % element.type)
+        self.log_info('CAERO.max = %s' % np.vstack(max_cpoints).max(axis=0))
+        self.log_info('CAERO.min = %s' % np.vstack(min_cpoints).min(axis=0))
         self.alt_grids['caero'].SetPoints(points)
         return j
 
@@ -674,7 +690,8 @@ class NastranIO(object):
                 pointsi, elementsi = element.panel_points_elements()
                 for ipoint, pointii in enumerate(pointsi):
                     points.InsertPoint(j + ipoint, *pointii)
-
+                if eid == 10100:
+                    continue
                 elem = vtkQuad()
                 for elementi in elementsi:
                     elem = vtkQuad()
@@ -713,17 +730,25 @@ class NastranIO(object):
         points.SetNumberOfPoints(ncaero_sub_points)
 
         vtk_type = vtkQuad().GetCellType()
+        #print('cs_box_ids =', cs_box_ids)
         for ibox, box_id in enumerate(cs_box_ids):
             try:
                 elementi = box_id_to_caero_element_map[box_id]
             except KeyError:
+                print('cant find box_id=%i' % box_id)
                 continue
             pointsi = caero_points[elementi]
+            area = np.linalg.norm(np.cross(pointsi[2] - pointsi[0], pointsi[3] - pointsi[1])) / 2.
+            if area == 0.0:
+                print('box_id=%i has 0 area' % box_id)
+                continue
             for ipoint, point in enumerate(pointsi):
+                #print('point[%i, %i] = %s; A=%s' % (ibox, ipoint, point, area))
                 # shift z to remove z-fighting with caero in surface representation
                 point[1] += zfighting_offset
                 point[2] += zfighting_offset
                 points.InsertPoint(j + ipoint, *point)
+            print('')
             elem = vtkQuad()
             elem.GetPointIds().SetId(0, j)
             elem.GetPointIds().SetId(1, j + 1)
@@ -731,6 +756,10 @@ class NastranIO(object):
             elem.GetPointIds().SetId(3, j + 3)
             self.alt_grids[name].InsertNextCell(vtk_type, elem.GetPointIds())
             j += ipoint + 1
+
+        #if missing_boxes:
+            #msg = 'Missing CAERO AELIST boxes: ' + str(missing_boxes)
+            #self.log_error(msg)
         self.alt_grids[name].SetPoints(points)
         return j
 

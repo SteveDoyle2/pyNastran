@@ -771,6 +771,11 @@ def check_case(sol, subcase, fem2, p0, isubcase):
     if 'LOAD' in subcase:
         loadcase_id = subcase.get_parameter('LOAD')[0]
         force, moment = fem2.sum_forces_moments(p0, loadcase_id, include_grav=False)
+        eids = None
+        nids = None
+        force2, moment2 = fem2.sum_forces_moments_elements(p0, loadcase_id, eids, nids, include_grav=False)
+        assert np.allclose(force, force2), 'force=%s force2=%s' % (force, force2)
+        assert np.allclose(moment, moment2), 'moment=%s moment2=%s' % (moment, moment2)
         print('  isubcase=%i F=%s M=%s' % (isubcase, force, moment))
         assert sol in [1, 5, 24, 61, 64, 66, 101, 103, 105, 106, 107,
                        108, 109, 110, 112, 144, 145, 153, 400, 601

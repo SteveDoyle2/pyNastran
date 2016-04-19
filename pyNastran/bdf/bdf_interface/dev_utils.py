@@ -1495,15 +1495,19 @@ def get_joints(model, pid_sets):
     ]
     """
     nid_sets = defaultdict(set)
-    for eid, elem in model.elements:
+    for eid, elem in iteritems(model.elements):
         pid = elem.Pid()
         nid_sets[pid].update(elem.node_ids)
 
     nid_array_sets = []
     for i, pid_set in enumerate(pid_sets):
-        nid_array_sets[i] = np.unique(
-            np.hstack([nid_sets[pid] for pid in pid_set])
+        inside = np.hstack([list(nid_sets[pid]) for pid in pid_set])
+        print('inside =', inside)
+        nid_array_set = np.unique(
+            inside
         )
+        nid_array_sets.append(nid_array_set)
+        #print('nid_array_set =', nid_array_set)
     joint_nids = reduce(np.intersect1d, nid_array_sets)
     #joint_nids = intersect1d_multi(nid_array_sets, assume_unique=True)
     return joint_nids
