@@ -831,17 +831,35 @@ class BDFMethods(BDFAttributes):
 
         unsupported_types = set([])
         for load, scale in zip(loads2, scale_factors2):
-            if isinstance(load, Force):  # FORCE, FORCE1, FORCE2
+            if load.type == 'FORCE':
+                if load.node_id not in nids:
+                    continue
+                f = load.mag * load.xyz
+                node = self.Node(load.node_id)
+                r = xyz[node.nid] - p
+                m = cross(r, f)
+                F += f * scale
+                M += m * scale
+            elif load.type == 'FORCE1':
+                if load.nodeIDs not in nids:
+                    continue
+                f = load.mag * load.xyz
+                node = self.Node(load.node_id)
+                r = xyz[node.nid] - p
+                m = cross(r, f)
+                F += f * scale
+                M += m * scale
+            elif load.type == 'FORCE2':
                 if load.nodeIDs not in nids:
                     continue
                 f = load.mag * load.xyz * scale
-                node = self.Node(load.node)
+                node = self.Node(load.node_id)
                 r = xyz[node.nid] - p
                 m = cross(r, f)
                 F += f
                 M += m
-            elif isinstance(load, Moment):  # MOMENT, MOMENT1, MOMENT2
-                if load.nodeIDs not in nids:
+            elif load.type in ['MOMENT', 'MOMENT1', 'MOMENT2']:
+                if load.node_id not in nids:
                     continue
                 m = load.mag * load.xyz
                 M += m * scale
