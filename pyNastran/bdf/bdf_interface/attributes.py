@@ -484,7 +484,7 @@ class BDFAttributes(object):
 
                 'PSHELL', 'PCOMP', 'PCOMPG', 'PSHEAR',
                 'PSOLID', 'PLSOLID', 'PVISC', 'PRAC2D', 'PRAC3D',
-                'PIHEX',
+                'PIHEX', 'PCOMPS',
             ],
             'pdampt' : ['PDAMPT',],
             'pelast' : ['PELAST',],

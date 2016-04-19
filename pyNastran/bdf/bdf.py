@@ -35,7 +35,8 @@ from pyNastran.bdf.bdf_interface.assign_type import (integer,
 
 from pyNastran.bdf.cards.elements.elements import CFAST, CGAP, CRAC2D, CRAC3D, PLOTEL
 from pyNastran.bdf.cards.properties.properties import (PFAST, PGAP, PLSOLID, PSOLID,
-                                                       PRAC2D, PRAC3D, PCONEAX, PIHEX)
+                                                       PRAC2D, PRAC3D, PCONEAX, PIHEX,
+                                                       PCOMPS)
 
 from pyNastran.bdf.cards.elements.springs import (CELAS1, CELAS2, CELAS3, CELAS4,)
 from pyNastran.bdf.cards.properties.springs import PELAS, PELAST
@@ -357,7 +358,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
             'PSHELL', 'PCOMP', 'PCOMPG', 'PSHEAR',
             'PSOLID', 'PLSOLID', 'PVISC', 'PRAC2D', 'PRAC3D',
-            'PIHEX',
+            'PIHEX', 'PCOMPS',
             # PQUAD4
 
             ## pdampt
@@ -1355,6 +1356,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'PIHEX' : (PIHEX, self.add_property),
             'PSOLID' : (PSOLID, self.add_property),
             'PLSOLID' : (PLSOLID, self.add_property),
+            'PCOMPS' : (PCOMPS, self.add_property),
 
             'CELAS1' : (CELAS1, self.add_element),
             'CELAS2' : (CELAS2, self.add_element),

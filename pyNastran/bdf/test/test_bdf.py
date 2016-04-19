@@ -16,6 +16,7 @@ import warnings
 from six import iteritems
 import numpy
 from numpy import array
+import numpy as np
 warnings.simplefilter('always')
 
 numpy.seterr(all='raise')

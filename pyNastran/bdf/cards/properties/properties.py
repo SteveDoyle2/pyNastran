@@ -336,6 +336,112 @@ class PLSOLID(SolidProperty):
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)
 
+class PCOMPS(SolidProperty):
+    type = 'PCOMPS'
+    _field_map = {
+        #1: 'pid', 2:'mid', 3:'cordm', 4:'integ', 5:'stress',
+        #6:'isop', 7:'fctn',
+    }
+
+    def __init__(self, pid, cordm, psdir, sb, nb, tref, ge,
+                 global_ply_ids, mids, thicknesses, thetas, failure_theories,
+                 interlaminar_failure_theories, souts, comment=''):
+        SolidProperty.__init__(self)
+        self.pid = pid
+        self.cordm = cordm
+        self.psdir = psdir
+        self.sb = sb
+        self.nb = nb
+        self.tref = tref
+        self.ge = ge
+        assert psdir in [12, 13, 21, 23, 31, 32], psdir
+        self.global_ply_ids = global_ply_ids
+        self.mids = mids
+        self.thicknesses = thicknesses
+        self.thetas = thetas
+        self.failure_theories = failure_theories
+        self.interlaminar_failure_theories = interlaminar_failure_theories
+        self.souts = souts
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        pid = integer(card, 1, 'pid')
+        cordm = integer_or_blank(card, 2, 'cordm', 0)
+        psdir = integer_or_blank(card, 3, 'psdir', 13)
+        sb = double_or_blank(card, 4, 'sb')
+        nb = double_or_blank(card, 5, 'nb')
+        tref = double_or_blank(card, 6, 'tref', 0.0)
+        ge = double_or_blank(card, 7, 'ge', 0.0)
+        nfields = len(card) - 1
+        #nrows =
+        ifield = 9
+        global_ply_ids = []
+        mids = []
+        thicknesses = []
+        thetas = []
+        failure_theories = []
+        interlaminar_failure_theories = []
+        souts = []
+        iply = 1
+        while ifield < nfields:
+            global_ply_id = integer(card, ifield, 'global_ply_id_%i' % iply)
+            mid = integer(card, ifield + 1, 'mid_%i' % iply)
+            t = double(card, ifield + 2, 'thickness_%i' % iply)
+            theta = double(card, ifield + 3, 'theta_%i' % iply)
+            ft = string_or_blank(card, ifield + 4, 'failure_theory_%i' % iply)
+            ift = string_or_blank(card, ifield + 5, 'interlaminar_failure_theory_%i' % iply)
+            sout = string_or_blank(card, ifield + 6, 'sout_%i' % iply, 'NO')
+            global_ply_ids.append(global_ply_id)
+            mids.append(mid)
+            thicknesses.append(t)
+            thetas.append(theta)
+            failure_theories.append(ft)
+            interlaminar_failure_theories.append(ift)
+            souts.append(sout)
+            iply += 1
+            ifield += 8
+        assert len(card) <= ifield, 'len(PCOMPS card) = %i' % len(card)
+        return PCOMPS(pid, cordm, psdir, sb, nb, tref, ge,
+                      global_ply_ids, mids, thicknesses, thetas, failure_theories,
+                      interlaminar_failure_theories, souts,
+                      comment=comment)
+
+    def cross_reference(self, model):
+        msg = ' which is required by PSOLID pid=%s' % self.pid
+        self.mids_ref = []
+        for mid in self.mids:
+            mid_ref = model.Material(mid, msg=msg)
+            self.mids_ref.append(mid_ref)
+
+    def raw_fields(self):
+        fields = ['PCOMPS', self.pid, self.cordm, self.psdir, self.sb,
+                  self.nb, self.tref, self.ge, None]
+        for glply, mid, t, theta, ft, ift, sout in zip(self.global_ply_ids,
+                                                       self.mids, self.thicknesses, self.thetas,
+                                                       self.failure_theories,
+                                                       self.interlaminar_failure_theories,
+                                                       self.souts):
+            fields += [glply, mid, t, theta, ft, ift, sout, None]
+        return fields
+
+    def repr_fields(self):
+        #cordm = set_blank_if_default(self.cordm, 0)
+        #fctn = set_blank_if_default(self.fctn, 'SMECH')
+        fields = ['PCOMPS', self.pid, self.cordm, self.psdir, self.sb,
+                  self.nb, self.tref, self.ge, None]
+        for glply, mid, t, theta, ft, ift, sout in zip(self.global_ply_ids,
+                                                       self.mids, self.thicknesses, self.thetas,
+                                                       self.failure_theories,
+                                                       self.interlaminar_failure_theories,
+                                                       self.souts):
+            fields += [glply, mid, t, theta, ft, ift, sout, None]
+        return fields
+
+    def write_card(self, size=8, is_double=False):
+        card = self.repr_fields()
+        # this card has integers & strings, so it uses...
+        return self.comment + print_card_8(card)
+
 class PSOLID(SolidProperty):
     """
     +--------+-----+-----+-------+-----+--------+---------+------+
@@ -353,6 +459,19 @@ class PSOLID(SolidProperty):
         1: 'pid', 2:'mid', 3:'cordm', 4:'integ', 5:'stress',
         6:'isop', 7:'fctn',
     }
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        pid = integer(card, 1, 'pid')
+        mid = integer(card, 2, 'mid')
+        cordm = integer_or_blank(card, 3, 'cordm', 0)
+        integ = integer_string_or_blank(card, 4, 'integ')
+        stress = integer_string_or_blank(card, 5, 'stress')
+        isop = integer_string_or_blank(card, 6, 'isop')
+        fctn = string_or_blank(card, 7, 'fctn', 'SMECH')
+        assert len(card) <= 8, 'len(PSOLID card) = %i' % len(card)
+        return cls(pid, mid, cordm, integ, stress, isop,
+                   fctn, comment=comment)
 
     def __init__(self, pid, mid, cordm=0, integ=None, stress=None, isop=None,
                  fctn='SMECH', comment=''):

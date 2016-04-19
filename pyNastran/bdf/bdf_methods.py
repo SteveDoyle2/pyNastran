@@ -845,10 +845,10 @@ class BDFMethods(BDFAttributes):
                 node = self.Node(load.node_id)
                 r = xyz[node.nid] - p
                 m = cross(r, f)
-                F += f * scale
-                M += m * scale
+                F += f
+                M += m
 
-            elif load.type in ['FORCE1', 'FORCE2']:
+            elif load.type == 'FORCE1':
                 if load.nodeIDs not in nids:
                     continue
                 if load.Cid() != 0:
@@ -863,7 +863,40 @@ class BDFMethods(BDFAttributes):
                 m = cross(r, f)
                 F += f
                 M += m
-            elif load.type in ['MOMENT', 'MOMENT1', 'MOMENT2']:  # MOMENT, MOMENT1, MOMENT2
+            elif load.type == 'FORCE2':
+                if load.nodeIDs not in nids:
+                    continue
+                if load.Cid() != 0:
+                    cp = load.cid
+                    #from pyNastran.bdf.bdf import CORD2R
+                    #cp = CORD2R()
+                    f = load.mag * cp.transform_vector_to_global(load.xyz) * scale
+                else:
+                    f = load.mag * load.xyz * scale
+                node = self.Node(load.node_id)
+                r = xyz[node.nid] - p
+                m = cross(r, f)
+                F += f
+                M += m
+            elif load.type == 'MOMENT':
+                if load.node_id not in nids:
+                    continue
+                if load.Cid() != 0:
+                    cp = load.cid
+                    m = cp.transform_vector_to_global(load.xyz)
+                else:
+                    m = load.xyz
+                M += load.mag * m * scale
+            elif load.type == 'MOMENT1':
+                if load.nodeIDs not in nids:
+                    continue
+                if load.Cid() != 0:
+                    cp = load.cid
+                    m = cp.transform_vector_to_global(load.xyz)
+                else:
+                    m = load.xyz
+                M += load.mag * m * scale
+            elif load.type == 'MOMENT2':
                 if load.nodeIDs not in nids:
                     continue
                 if load.Cid() != 0:
@@ -1293,7 +1326,7 @@ class BDFMethods(BDFAttributes):
                 m = cross(r, f)
                 F += f
                 M += m
-            elif load.type in ['MOMENT', 'MOMENT1', 'MOMENT2']:
+            elif load.type == 'MOMENT':
                 if load.Cid() != 0:
                     cp = load.cid
                     #from pyNastran.bdf.bdf import CORD2R
@@ -1301,7 +1334,25 @@ class BDFMethods(BDFAttributes):
                     m = load.mag * cp.transform_vector_to_global(load.xyz) * scale
                 else:
                     m = load.mag * load.xyz * scale
-                M += m * scale
+                M += m
+            elif load.type == 'MOMENT1':
+                if load.Cid() != 0:
+                    cp = load.cid
+                    #from pyNastran.bdf.bdf import CORD2R
+                    #cp = CORD2R()
+                    m = load.mag * cp.transform_vector_to_global(load.xyz) * scale
+                else:
+                    m = load.mag * load.xyz * scale
+                M += m
+            elif load.type == 'MOMENT2':
+                if load.Cid() != 0:
+                    cp = load.cid
+                    #from pyNastran.bdf.bdf import CORD2R
+                    #cp = CORD2R()
+                    m = load.mag * cp.transform_vector_to_global(load.xyz) * scale
+                else:
+                    m = load.mag * load.xyz * scale
+                M += m
 
             elif load.type == 'PLOAD':
                 nodes = load.node_ids
@@ -1915,8 +1966,11 @@ class BDFMethods(BDFAttributes):
                     elem = self.elements[eid]
                     pid = elem.Pid()
                     prop = self.properties[pid] # PSOLID
-                    mid = prop.Mid()
-                    mid_set_to_write.add(mid)
+                    try:
+                        mid = prop.Mid()
+                        mid_set_to_write.add(mid)
+                    except AttributeError:
+                        continue
         else:
             raise RuntimeError('write_solids=False write_shells=False')
 
@@ -1979,7 +2033,10 @@ class BDFMethods(BDFAttributes):
 
                     pid = elem.Pid()
                     prop = self.properties[pid]
-                    mid = prop.Mid()
+                    try:
+                        mid = prop.Mid()
+                    except AttributeError:
+                        continue
                     imid = mids_to_write.index(mid)
 
                     if nface == 3:

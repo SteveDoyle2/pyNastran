@@ -57,7 +57,7 @@ class PELAS(SpringProperty):
 
     @classmethod
     def add_card(cls, card, icard=0, comment=''):
-        noffset = icard * 5
+        noffset = icard * 4
         pid = integer(card, 1 + noffset, 'pid')
         k = double(card, 2 + noffset, 'k')
         ge = double_or_blank(card, 3 + noffset, 'ge', 0.)
