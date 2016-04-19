@@ -12,6 +12,8 @@ else:
     integer_types = (int, int32, int64)
     integer_float_types = (int, int32, int64, float)
 
+def b(s):
+    return s.encode("latin-1")
 
 def merge_dicts(dict_list, strict=True):
     """merges two or more dictionaries"""
