@@ -903,10 +903,15 @@ class BDFMethods(BDFAttributes):
                     m = load.xyz
                 M += load.mag * m * scale
             elif load.type == 'MOMENT1':
-                #if load.node_ids not in nids:
-                    #continue
-                m = load.xyz
-                M += load.mag * m * scale
+                found_nid = False
+                for nid in load.node_ids:
+                    if nid not in nids:
+                        found_nid = True
+                        break
+                if found_nid:
+                    continue
+                m = load.mag * load.xyz * scale
+                M += m
             elif load.type == 'MOMENT2':
                 found_nid = False
                 for nid in load.node_ids:
@@ -915,9 +920,8 @@ class BDFMethods(BDFAttributes):
                         break
                 if found_nid:
                     continue
-
-                m = cp.transform_vector_to_global(load.xyz)
-                M += load.mag * m * scale
+                m = load.mag * load.xyz * scale
+                M += m
 
             elif load.type == 'PLOAD':
                 nodes = load.node_ids
