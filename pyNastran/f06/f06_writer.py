@@ -213,7 +213,7 @@ class F06Writer(OP2_F06_Common):
                 self._results.add('stress')
             elif 'strain' in result.lower():
                 self._results.add('strain')
-            elif 'spc_forces' == result or 'mpc_forces' == result or 'constraint_forces' == result:
+            elif result in ('spc_forces', 'mpc_forces', 'constraint_forces'):
                 self._results.add('constraint_forces')
             elif 'force' in result.lower(): # could use more validation...
                 self._results.add('element_forces')

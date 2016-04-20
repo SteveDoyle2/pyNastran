@@ -14,7 +14,7 @@ from pyNastran.bdf.field_writer_8 import set_blank_if_default
 #from pyNastran.bdf.field_writer_8 import set_string8_blank_if_default
 #from pyNastran.bdf.field_writer_16 import set_string16_blank_if_default
 
-from pyNastran.bdf.bdfInterface.assign_type import (integer, string, double_or_blank, string_or_blank, fields)
+from pyNastran.bdf.bdf_interface.assign_type import (integer, string, double_or_blank, string_or_blank, fields)
 from pyNastran.bdf.dev_vectorized.utils import slice_to_iter
 
 

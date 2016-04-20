@@ -1,58 +1,48 @@
 #pylint: disable=C0111,C0103,C0301,W0612,W0613,R0914,R0201
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from struct import unpack, Struct
 from six import b
 from six.moves import range
-from struct import unpack, Struct
 
 from pyNastran.bdf.cards.materials import (CREEP, MAT1, MAT2, MAT3, MAT4, MAT5,
                                            MAT8, MAT9, MAT10, MATHP)
-from pyNastran.bdf.cards.material_deps import MATT1, MATS1
-from pyNastran.bdf.cards.dynamic import NLPARM, TSTEP, TSTEPNL
+from pyNastran.bdf.cards.material_deps import MATS1 # MATT1
+from pyNastran.bdf.cards.dynamic import NLPARM, TSTEPNL # TSTEP
+from pyNastran.op2.tables.geom.geom_common import GeomCommon
 
 
-class MPT(object):
-    def add_TSTEPNL(self, card, allow_overwrites=True):
-        raise RuntimeError('this should be overwritten')
-    def add_NLPARM(self, card, allow_overwrites=True):
-        raise RuntimeError('this should be overwritten')
-    def add_material_dependence(self, material, allow_overwrites=True):
-        raise RuntimeError('this should be overwritten')
-    def add_creep_material(self, material, allow_overwrites=True):
-        raise RuntimeError('this should be overwritten')
-    def add_structural_material(self, material, allow_overwrites=True):
-        raise RuntimeError('this should be overwritten')
-    def add_thermal_material(self, material, allow_overwrites=True):
-        raise RuntimeError('this should be overwritten')
+class MPT(GeomCommon):
+    """defines methods for reading op2 materials & time-stepping methods"""
 
     def _read_mpt_4(self, data, ndata):
         return self._read_geom_4(self._mpt_map, data, ndata)
 
     def __init__(self):
-        self.card_count = {}
-        self.bigMaterials = {}
+        GeomCommon.__init__(self)
+        self.big_materials = {}
         self._mpt_map = {
             (1003, 10, 245): ['CREEP', self._read_creep],  # record 1
 
-            ( 203,  2,  78): ['MAT2', self._read_mat2],    # record 3
+            (203, 2, 78): ['MAT2', self._read_mat2],       # record 3
             (1403, 14, 122): ['MAT3', self._read_mat3],    # record 4
             (2103, 21, 234): ['MAT4', self._read_mat4],    # record 5
             (2203, 22, 235): ['MAT5', self._read_mat5],    # record 6
             (2503, 25, 288): ['MAT8', self._read_mat8],    # record 7
             (2603, 26, 300): ['MAT9', self._read_mat9],    # record 8 - buggy
             (2801, 28, 365): ['MAT10', self._read_mat10],  # record 9
-            (4506, 45, 374): ['MATHP', self._readMATHP],  # record 11
-            (503,  5,   90): ['MATS1', self._readMATS1],  # record 12
-            (703,   7,  91): ['MATT1', self._readMATT1],   # record 13 - not done
-            (803,   8, 102): ['MATT2', self._readMATT2],   # record 14 - not done
+            (4506, 45, 374): ['MATHP', self._readMATHP],   # record 11
+            (503, 5, 90): ['MATS1', self._readMATS1],      # record 12
+            (703, 7, 91): ['MATT1', self._readMATT1],      # record 13 - not done
+            (803, 8, 102): ['MATT2', self._readMATT2],     # record 14 - not done
             (1503, 14, 189): ['MATT3', self._readMATT3],   # record 15 - not done
             (2303, 23, 237): ['MATT4', self._readMATT4],   # record 16 - not done
             (2403, 24, 238): ['MATT5', self._readMATT5],   # record 17 - not done
             (2703, 27, 301): ['MATT9', self._readMATT9],   # record 19 - not done
-            (8802, 88, 413): ['RADM', self._readRADM],    # record 25 - not done
+            (8802, 88, 413): ['RADM', self._readRADM],     # record 25 - not done
             # record 26
-            (3003, 30, 286): ['NLPARM', self._readNLPARM],  # record 27
-            (3104, 32, 350): ['NLPCI', self._readNLPCI],   # record 28
+            (3003, 30, 286): ['NLPARM', self._readNLPARM],   # record 27
+            (3104, 32, 350): ['NLPCI', self._readNLPCI],     # record 28
             (3103, 31, 337): ['TSTEPNL', self._readTSTEPNL], # record 29
             (3303, 33, 988) : ['', self._read_fake],
 
@@ -60,11 +50,9 @@ class MPT(object):
             (8902, 89, 423) : ['', self._read_fake],
             (9002, 90, 410) : ['', self._read_fake],
             (2903, 29, 371) : ['', self._read_fake],
-
-
         }
 
-    def addOp2Material(self, mat):
+    def add_op2_material(self, mat):
         self.add_structural_material(mat, allow_overwrites=True)
         #print(str(mat)[:-1])
 
@@ -80,7 +68,7 @@ class MPT(object):
             out = s.unpack(edata)
             (mid, T0, exp, form, tidkp, tidcp, tidcs, thresh,
              Type, ag1, ag2, ag3, ag4, ag5, ag6, ag7) = out
-            self.add_creep_material(CREEP(None, out), allow_overwrites=True)
+            self.add_creep_material(CREEP.add_op2_data(out), allow_overwrites=True)
             n += 64
         self.card_count['CREEP'] = nmaterials
         return n
@@ -97,7 +85,7 @@ class MPT(object):
             edata = data[n:n+48]
             out = s.unpack(edata)
             (mid, E, G, nu, rho, A, TRef, ge, St, Sc, Ss, mcsid) = out
-            self.addOp2Material(MAT1.add_op2_data(out))
+            self.add_op2_material(MAT1.add_op2_data(out))
             n += ntotal
         self.card_count['MAT1'] = nmaterials
         return n
@@ -119,9 +107,9 @@ class MPT(object):
             mat = MAT2.add_op2_data(out)
 
             if mid > 1e8 or mid < 0:  # just a checker for out of range materials
-                self.bigMaterials[mid] = mat
+                self.big_materials[mid] = mat
             else:
-                self.addOp2Material(mat)
+                self.add_op2_material(mat)
             n += ntotal
         self.card_count['MAT2'] = nmaterials
         return n
@@ -139,7 +127,7 @@ class MPT(object):
              blank, ax, ath, az, TRef, ge, blank) = out
             mat = MAT3.add_op2_data([mid, ex, eth, ez, nuxth, nuthz,
                                      nuzx, rho, gzx, ax, ath, az, TRef, ge])
-            self.addOp2Material(mat)
+            self.add_op2_material(mat)
             n += 64
         self.card_count['MAT3'] = nmaterials
         return n
@@ -185,7 +173,7 @@ class MPT(object):
             out = s.unpack(data[n:n+76])
             (mid, E1, E2, nu12, G12, G1z, G2z, rho, a1, a2,
              TRef, Xt, Xc, Yt, Yc, S, ge, f12, strn) = out
-            self.addOp2Material(MAT8.add_op2_data(out))
+            self.add_op2_material(MAT8.add_op2_data(out))
             n += 76
         self.card_count['MAT8'] = nmaterials
         return n
@@ -206,7 +194,7 @@ class MPT(object):
                        rho, [a1, a2, a3, a4, a5, a6],
                        TRef, ge]
             #print "data_in = ",data_in
-            self.addOp2Material(MAT9.add_op2_data(data_in))
+            self.add_op2_material(MAT9.add_op2_data(data_in))
             n += 140
         self.card_count['MAT9'] = nmaterials
         return n
@@ -223,7 +211,7 @@ class MPT(object):
             edata = data[n:n+20]
             out = s.unpack(edata)
             (mid, bulk, rho, c, ge) = out
-            self.addOp2Material(MAT10.add_op2_data(out))
+            self.add_op2_material(MAT10.add_op2_data(out))
         self.card_count['MAT10'] = nmaterials
         return n
 
@@ -254,7 +242,7 @@ class MPT(object):
                 out2 = s2.unpack(edata)
                 (tab1, tab2, tab3, tab4, x1, x2, x3, tab5) = out2
                 data.append(out2)
-            self.addOp2Material(MATHP(None, data_in))
+            self.add_op2_material(MATHP.add_op2_data(data_in))
             nmaterials += 1
         self.card_count['MATHP'] = nmaterials
         return n
@@ -272,7 +260,7 @@ class MPT(object):
             out = s.unpack(edata)
             (mid, tid, Type, h, yf, hr, limit1, limit2, a, bmat, c) = out
             data_in = [mid, tid, Type, h, yf, hr, limit1, limit2]
-            self.add_material_dependence(MATS1(None, data_in), allow_overwrites=True)
+            self.add_material_dependence(MATS1.add_op2_data(data_in), allow_overwrites=True)
         self.card_count['MATS1'] = nmaterials
         return n
 
@@ -326,23 +314,23 @@ class MPT(object):
             data = data[4:]
             number, = s.unpack(edata)
 
-            iFormat = 'if%if' % (number + 1)
-            edataLen = len(strings) * 4
+            iformat = 'if%if' % (number + 1)
+            edata_len = len(strings) * 4
 
-            edata = data[:edataLen]
-            data = data[edataLen:]
-            iFormat = bytes(iFormat)
-            pack = list(unpack(iFormat, edata))
+            edata = data[:edata_len]
+            data = data[edata_len:]
+            iformat = bytes(iformat)
+            pack = list(unpack(iformat, edata))
             packs = []
 
             while data:
-                edata = data[:edataLen]
-                data = data[edataLen:]
-                pack = list(unpack(iFormat, edata))
+                edata = data[:edata_len]
+                data = data[edata_len:]
+                pack = list(unpack(iformat, edata))
                 packs.append(pack)
 
             #mat = RADM(None, packs)
-            #self.addOp2Material(mat)
+            #self.add_op2_material(mat)
             return n
 
 # RADMT
@@ -360,13 +348,14 @@ class MPT(object):
             out = s.unpack(edata)
             #(sid,ninc,dt,kMethod,kStep,maxIter,conv,intOut,epsU,epsP,epsW,
             # maxDiv,maxQn,maxLs,fStress,lsTol,maxBisect,maxR,rTolB) = out
-            self.add_NLPARM(NLPARM(None, out))
+            self.add_NLPARM(NLPARM.add_op2_data(out))
             n += ntotal
         self.card_count['NLPARM'] = nentries
         return n
 
     def _readNLPCI(self, data, n):
-        self.binary_debug.write('skipping NLPCI in MPT\n')
+        if self.is_debug_file:
+            self.binary_debug.write('skipping NLPCI in MPT\n')
         return len(data)
 
     def _readTSTEPNL(self, data, n):
@@ -382,7 +371,7 @@ class MPT(object):
             out = s.unpack(edata)
             #(sid,ndt,dt,no,kMethod,kStep,maxIter,conv,epsU,epsP,epsW,
             # maxDiv,maxQn,maxLs,fStress,lsTol,maxBisect,adjust,mStep,rb,maxR,uTol,rTolB) = out
-            self.add_TSTEPNL(TSTEPNL(None, out))
+            self.add_TSTEPNL(TSTEPNL.add_op2_data(out))
             n += ntotal
         self.card_count['TSTEPNL'] = nentries
         return n

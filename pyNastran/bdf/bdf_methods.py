@@ -16,18 +16,22 @@ reading/writing/accessing of BDF data.  Such methods include:
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import iteritems, string_types
+from six import iteritems, string_types, PY2
 from six.moves import zip
+from codecs import open
+
 from collections import defaultdict
 from copy import deepcopy
 import multiprocessing as mp
 
+import numpy as np
 from numpy import array, cross, zeros, dot, allclose, mean
 from numpy.linalg import norm
 
 from pyNastran.utils import integer_types
+from pyNastran.bdf.cards.params import PARAM
 from pyNastran.bdf.cards.loads.static_loads import Moment, Force, LOAD
-from pyNastran.bdf.bdfInterface.attributes import BDFAttributes
+from pyNastran.bdf.bdf_interface.attributes import BDFAttributes
 from pyNastran.bdf.field_writer_8 import print_card_8
 
 
@@ -41,6 +45,56 @@ def _mass_properties_mass_mp_func(element):
         mass = 0.
     return mass, cg
 
+
+def transform_inertia(mass, xyz_cg, xyz_ref, xyz_ref2, I_ref):
+    """
+    Transforms mass moment of inertia using parallel-axis theorem.
+
+    Parameters
+    ----------
+    mass : float
+        the mass
+    xyz_cg : (3, ) float ndarray
+        the CG location
+    xyz_ref : (3, ) float ndarray
+        the original reference location
+    xyz_ref2 : (3, ) float ndarray
+        the new reference location
+    I_ref : (6, ) float ndarray
+        the mass moment of inertias about the original reference point
+        [Ixx, Iyy, Izz, Ixy, Ixz, Iyz]
+
+    Returns
+    -------
+    I_new : (6, ) float ndarray
+        the mass moment of inertias about the new reference point
+        [Ixx, Iyy, Izz, Ixy, Ixz, Iyz]
+    """
+    xcg, ycg, zcg = xyz_cg
+    xref, yref, zref = xyz_ref
+    xref2, yref2, zref2 = xyz_ref2
+
+    dx1 = xcg - xref
+    dy1 = ycg - yref
+    dz1 = zcg - zref
+
+    dx2 = xref2 - xcg
+    dy2 = yref2 - ycg
+    dz2 = zref2 - zcg
+    print('dx1 = <%s, %s, %s>' % (dx1, dy1, dz1))
+    print('dx2 = <%s, %s, %s>' % (dx2, dy2, dz2))
+
+    # consistent with mass_properties, not CONM2
+    print('I_ref =', I_ref)
+    Ixx_ref, Iyy_ref, Izz_ref, Ixy_ref, Ixz_ref, Iyz_ref = I_ref
+    Ixx2 = Ixx_ref - mass * (dx1**2 - dx2**2)
+    Iyy2 = Iyy_ref - mass * (dy1**2 - dy2**2)
+    Izz2 = Izz_ref - mass * (dz1**2 - dz2**2)
+    Ixy2 = Ixy_ref - mass * (dx1 * dy1 - dx2 * dy2)
+    Ixz2 = Ixz_ref - mass * (dx1 * dz1 - dx2 * dz2)
+    Iyz2 = Iyz_ref - mass * (dy1 * dz1 - dy2 * dz2)
+    I_new = np.array([Ixx2, Iyy2, Izz2, Ixy2, Ixz2, Iyz2])
+    return I_new
 
 class BDFMethods(BDFAttributes):
     """
@@ -75,7 +129,7 @@ class BDFMethods(BDFAttributes):
             default = <0,0,0>.
         sym_axis : str, optional
             The axis to which the model is symmetric. If AERO cards are used, this can be left blank
-            allowed_values = 'x', 'y', 'z', 'xy', 'yz', 'xz', 'xyz'
+            allowed_values = 'no', x', 'y', 'z', 'xy', 'yz', 'xz', 'xyz'
         scale : float, optional
             The WTMASS scaling value.
             default=None -> PARAM, WTMASS is used
@@ -225,7 +279,8 @@ class BDFMethods(BDFAttributes):
                 except:
                     # PLPLANE
                     if element.pid_ref.type == 'PSHELL':
-                        self.log.warning('p=%s reference_point=%s type(reference_point)=%s' % (p, reference_point, type(reference_point)))
+                        self.log.warning('p=%s reference_point=%s type(reference_point)=%s' % (
+                            p, reference_point, type(reference_point)))
                         raise
                     self.log.warning("could not get the inertia for element/property\n%s%s" % (
                         element, element.pid_ref))
@@ -236,8 +291,8 @@ class BDFMethods(BDFAttributes):
             cg /= mass
         return (mass, cg, I)
 
-    def _mass_properties_new(self, reference_point=None,
-                        sym_axis=None, scale=None, xyz_cid0=None):
+    def _mass_properties_new(self, elements, masses, reference_point=None,
+                             sym_axis=None, scale=None, xyz_cid0=None):
         """
         half implemented, not tested, should be faster someday...
         don't use this
@@ -253,6 +308,9 @@ class BDFMethods(BDFAttributes):
         else:
             xyz = xyz_cid0
 
+        mass = 0.
+        cg = array([0., 0., 0.])
+        I = array([0., 0., 0., 0., 0., 0., ])
         if isinstance(reference_point, string_types):
             if reference_point == 'cg':
                 mass = 0.
@@ -282,7 +340,7 @@ class BDFMethods(BDFAttributes):
                 prop = elem.pid_ref
                 centroid = (xyz[n1] + xyz[n2] + xyz[n3] + xyz[n4]) / 4.
                 mpa = elem.pid_ref.MassPerArea()
-                area = 0.5 * norm(cross(xyz[n3]-xyz[n1], xyz[n4]-xyz[n2]))
+                area = 0.5 * norm(cross(xyz[n3] - xyz[n1], xyz[n4] - xyz[n2]))
                 m = mpa * area
             elif elem.type in ['CTRIA3', 'CTRIA6']:
                 n1, n2, n3 = elem.node_ids[:3]
@@ -349,10 +407,10 @@ class BDFMethods(BDFAttributes):
                 n1, n2, n3, n4, n5, n6, n7, n8 = elem.node_ids[:8]
                 #(A1, c1) = area_centroid(n1, n2, n3, n4)
                 centroid1 = (xyz[n1] + xyz[n2] + xyz[n3] + xyz[n4]) / 4.
-                area1 = 0.5 * norm(cross(xyz[n3]-xyz[n1], xyz[n4]-xyz[n2]))
+                area1 = 0.5 * norm(cross(xyz[n3] - xyz[n1], xyz[n4] - xyz[n2]))
                 #(A2, c2) = area_centroid(n5, n6, n7, n8)
                 centroid2 = (xyz[n5] + xyz[n6] + xyz[n7] + xyz[n8]) / 4.
-                area2 = 0.5 * norm(cross(xyz[n7]-xyz[n5], xyz[n8]-xyz[n6]))
+                area2 = 0.5 * norm(cross(xyz[n7] - xyz[n5], xyz[n8] - xyz[n6]))
 
                 volume = (area1 + area2) / 2. * norm(centroid1 - centroid2)
                 m = elem.Rho() * volume
@@ -412,6 +470,7 @@ class BDFMethods(BDFAttributes):
         if mass:
             cg /= mass
         mass, cg, I = self._apply_mass_symmetry(sym_axis, scale, mass, cg, I)
+        # Ixx, Iyy, Izz, Ixy, Ixz, Iyz = I
         return mass, cg, I
 
     def _apply_mass_symmetry(self, sym_axis, scale, mass, cg, I):
@@ -419,52 +478,82 @@ class BDFMethods(BDFAttributes):
         Scales the mass & moement of inertia based on the symmetry axes
         and the PARAM WTMASS card
         """
-        if sym_axis is None:
+        if isinstance(sym_axis, string_types):
+            sym_axis = [sym_axis]
+        elif isinstance(sym_axis, (list, tuple)):
+            pass
+        else:
+            sym_axis = []
             for key, aero in iteritems(self.aero):
-                sym_axis = ''
                 if aero.is_symmetric_xy():
-                    sym_axis += 'y'
+                    sym_axis.append('xy')
                 if aero.is_symmetric_xz():
-                    sym_axis += 'z'
+                    sym_axis.append('xz')
                 if aero.is_anti_symmetric_xy():
                     raise NotImplementedError('%s is anti-symmetric about the XY plane' % str(aero))
                 if aero.is_anti_symmetric_xz():
                     raise NotImplementedError('%s is anti-symmetric about the XZ plane' % str(aero))
+
+            for key, aero in iteritems(self.aeros):
+                if aero.is_symmetric_xy():
+                    sym_axis.append('xy')
+                if aero.is_symmetric_xz():
+                    sym_axis.append('xz')
+                if aero.is_anti_symmetric_xy():
+                    raise NotImplementedError('%s is anti-symmetric about the XY plane' % str(aero))
+                if aero.is_anti_symmetric_xz():
+                    raise NotImplementedError('%s is anti-symmetric about the XZ plane' % str(aero))
+
+        sym_axis = list(set(sym_axis))
+        short_sym_axis = [sym_axisi.lower() for sym_axisi in sym_axis]
+        is_no = 'no' in short_sym_axis
+        if is_no and len(short_sym_axis) > 1:
+            raise RuntimeError('no can only be used by itself; sym_axis=%s' % (str(sym_axis)))
+        for sym_axisi in sym_axis:
+            assert sym_axisi.lower() in ['no', 'xy', 'yz', 'xz'], 'sym_axis=%r is invalid' % sym_axis
+
         if sym_axis is not None:
             # either we figured sym_axis out from the AERO cards or the user told us
             self.log.debug('Mass/MOI sym_axis = %r' % sym_axis)
 
         if None is not sym_axis:
-            if 'x' in sym_axis:
-                mass *= 2.0
-                I[0] *= 2.0
-                I[1] *= 2.0
-                I[2] *= 2.0
-                I[3] *= 0.0  # Ixy
-                I[4] *= 0.0  # Ixz
-                I[5] *= 2.0  # Iyz
-                cg[0] = 0.0
-            if 'y' in sym_axis:
-                mass *= 2.0
-                I[0] *= 2.0
-                I[1] *= 2.0
-                I[2] *= 2.0
-                I[3] *= 0.0  # Ixy
-                I[4] *= 2.0  # Ixz
-                I[5] *= 0.0  # Iyz
+            if 'xz' in sym_axis:
+                # y intertias are 0
                 cg[1] = 0.0
-            if 'z' in sym_axis:
                 mass *= 2.0
                 I[0] *= 2.0
                 I[1] *= 2.0
                 I[2] *= 2.0
-                I[3] *= 2.0  # Ixy
+                I[3] *= 0.0  # Ixy
+                I[4] *= 2.0  # Ixz; no y
+                I[5] *= 0.0  # Iyz
+
+            if 'xy' in sym_axis:
+                # z intertias are 0
+                cg[2] = 0.0
+                mass *= 2.0
+                I[0] *= 2.0
+                I[1] *= 2.0
+                I[2] *= 2.0
+                I[3] *= 2.0  # Ixy; no z
                 I[4] *= 0.0  # Ixz
                 I[5] *= 0.0  # Iyz
-                cg[2] = 0.0
+
+            if 'yz' in sym_axis:
+                # x intertias are 0
+                cg[0] = 0.0
+                mass *= 2.0
+                I[0] *= 2.0
+                I[1] *= 2.0
+                I[2] *= 2.0
+                I[3] *= 0.0  # Ixy
+                I[4] *= 0.0  # Ixz
+                I[5] *= 2.0  # Iyz; no x
 
         if scale is None and 'WTMASS' in self.params:
-            scale = self.params['WTMASS'].values[0]
+            param = self.params['WTMASS']
+            #assert isinstance(param, PARAM), 'param=%s' % param
+            scale = param.values[0]
             if scale != 1.0:
                 self.log.info('WTMASS scale = %r' % scale)
         elif scale is None:
@@ -512,12 +601,14 @@ class BDFMethods(BDFAttributes):
 
         self.log.debug("Creating %i-process pool!" % num_cpus)
         pool = mp.Pool(num_cpus)
+        no_mass_elements = [
+            'CBUSH', 'CBUSH1D',
+            'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
+            'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5',
+        ]
         result = pool.imap(_mass_properties_mass_mp_func,
                            [(element) for element in elements
-                            if element.type not in ['CBUSH', 'CBUSH1D',
-                                                    'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
-                                                    'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5',
-                                                    ]])
+                            if element.type not in no_mass_elements])
         result2 = pool.imap(_mass_properties_mass_mp_func, [(element) for element in masses])
 
         mass = zeros((nelements), 'float64')
@@ -740,20 +831,97 @@ class BDFMethods(BDFAttributes):
 
         unsupported_types = set([])
         for load, scale in zip(loads2, scale_factors2):
-            if isinstance(load, Force):  # FORCE, FORCE1, FORCE2
-                if load.nodeIDs not in nids:
+            #if load.type not in ['FORCE1']:
+                #continue
+            #print(load.type)
+            if load.type == 'FORCE':
+                if load.node_id not in nids:
                     continue
-                f = load.mag * load.xyz * scale
-                node = self.Node(load.node)
+                if load.Cid() != 0:
+                    cp = load.cid
+                    #from pyNastran.bdf.bdf import CORD2R
+                    #cp = CORD2R()
+                    f = load.mag * cp.transform_vector_to_global(load.xyz) * scale
+                else:
+                    f = load.mag * load.xyz * scale
+
+                node = self.Node(load.node_id)
                 r = xyz[node.nid] - p
                 m = cross(r, f)
                 F += f
                 M += m
-            elif isinstance(load, Moment):  # MOMENT, MOMENT1, MOMENT2
-                if load.nodeIDs not in nids:
+
+            elif load.type == 'FORCE1':
+                found_nid = False
+                for nid in load.node_ids:
+                    if nid not in nids:
+                        found_nid = True
+                        break
+                if found_nid:
                     continue
-                m = load.mag * load.xyz
-                M += m * scale
+
+                f = load.mag * load.xyz * scale
+                node = self.Node(load.node_id)
+                r = xyz[node.nid] - p
+                m = cross(r, f)
+                F += f
+                M += m
+            elif load.type == 'FORCE2':
+                found_nid = False
+                for nid in load.node_ids:
+                    if nid not in nids:
+                        found_nid = True
+                        break
+                if found_nid:
+                    continue
+
+                if load.Cid() != 0:
+                    cp = load.cid
+                    #from pyNastran.bdf.bdf import CORD2R
+                    #cp = CORD2R()
+                    f = load.mag * cp.transform_vector_to_global(load.xyz) * scale
+                else:
+                    f = load.mag * load.xyz * scale
+                node = self.Node(load.node_id)
+                r = xyz[node.nid] - p
+                m = cross(r, f)
+                F += f
+                M += m
+            elif load.type == 'MOMENT':
+                found_nid = False
+                for nid in load.node_ids:
+                    if nid not in nids:
+                        found_nid = True
+                        break
+                if found_nid:
+                    continue
+
+                if load.Cid() != 0:
+                    cp = load.cid
+                    m = cp.transform_vector_to_global(load.xyz)
+                else:
+                    m = load.xyz
+                M += load.mag * m * scale
+            elif load.type == 'MOMENT1':
+                found_nid = False
+                for nid in load.node_ids:
+                    if nid not in nids:
+                        found_nid = True
+                        break
+                if found_nid:
+                    continue
+                m = load.mag * load.xyz * scale
+                M += m
+            elif load.type == 'MOMENT2':
+                found_nid = False
+                for nid in load.node_ids:
+                    if nid not in nids:
+                        found_nid = True
+                        break
+                if found_nid:
+                    continue
+                m = load.mag * load.xyz * scale
+                M += m
 
             elif load.type == 'PLOAD':
                 nodes = load.node_ids
@@ -1147,13 +1315,29 @@ class BDFMethods(BDFAttributes):
 
         unsupported_types = set([])
         for load, scale in zip(loads2, scale_factors2):
-            if load.type in ['FORCE', 'FORCE1']:
-                f = load.mag * load.xyz
+            #if load.type not in ['FORCE1']:
+                #continue
+            if load.type == 'FORCE':
+                if load.Cid() != 0:
+                    cp = load.cid
+                    #from pyNastran.bdf.bdf import CORD2R
+                    #cp = CORD2R()
+                    f = load.mag * cp.transform_vector_to_global(load.xyz) * scale
+                else:
+                    f = load.mag * load.xyz * scale
+
                 node = self.Node(load.node_id)
                 r = xyz[node.nid] - p
                 m = cross(r, f)
-                F += f * scale
-                M += m * scale
+                F += f
+                M += m
+            elif load.type == 'FORCE1':
+                f = load.mag * load.xyz * scale
+                node = self.Node(load.node_id)
+                r = xyz[node.nid] - p
+                m = cross(r, f)
+                F += f
+                M += m
             elif load.type == 'FORCE2':
                 f = load.mag * load.xyz * scale
                 node = self.Node(load.node_id)
@@ -1161,9 +1345,22 @@ class BDFMethods(BDFAttributes):
                 m = cross(r, f)
                 F += f
                 M += m
-            elif load.type in ['MOMENT', 'MOMENT1', 'MOMENT2']:
-                m = load.mag * load.xyz
-                M += m * scale
+            elif load.type == 'MOMENT':
+                if load.Cid() != 0:
+                    cp = load.cid
+                    #from pyNastran.bdf.bdf import CORD2R
+                    #cp = CORD2R()
+                    m = load.mag * cp.transform_vector_to_global(load.xyz) * scale
+                else:
+                    m = load.mag * load.xyz * scale
+                M += m
+            elif load.type == 'MOMENT1':
+                m = load.mag * load.xyz * scale
+                M += m
+            elif load.type == 'MOMENT2':
+                m = load.mag * load.xyz * scale
+                M += m
+
             elif load.type == 'PLOAD':
                 nodes = load.node_ids
                 nnodes = len(nodes)
@@ -1529,7 +1726,7 @@ class BDFMethods(BDFAttributes):
         # return self.unresolve_grids(fem_old)
 
     def get_reduced_mpcs(self, mpc_id):
-        mpcs = self.mpcs[mpc_id]
+        mpcs = self.MPC(mpc_id)
         mpcs2 = []
         for mpc in mpcs:
             if mpc.type == 'MPCADD':
@@ -1551,7 +1748,8 @@ class BDFMethods(BDFAttributes):
         return mpcs2
 
     def get_reduced_spcs(self, spc_id):
-        spcs = self.spcs[spc_id]
+        spcs = self.SPC(spc_id)
+
         spcs2 = []
         for spc in spcs:
             if spc.type == 'SPCADD':
@@ -1746,8 +1944,9 @@ class BDFMethods(BDFAttributes):
         is_double : bool; default=False
             double precision flag
         """
-        if (len(self.element_ids) == 0 or len(self.material_ids) == 0 or
-            len(self.property_ids) == 0):
+        encoding = self.get_encoding(encoding)
+        if(len(self.element_ids) == 0 or len(self.material_ids) == 0 or
+           len(self.property_ids) == 0):
             return
         eid_set, face_map = self.get_solid_skin_faces()
         if len(eid_set) == 0:
@@ -1774,8 +1973,11 @@ class BDFMethods(BDFAttributes):
                     elem = self.elements[eid]
                     pid = elem.Pid()
                     prop = self.properties[pid] # PSOLID
-                    mid = prop.Mid()
-                    mid_set_to_write.add(mid)
+                    try:
+                        mid = prop.Mid()
+                        mid_set_to_write.add(mid)
+                    except AttributeError:
+                        continue
         else:
             raise RuntimeError('write_solids=False write_shells=False')
 
@@ -1788,7 +1990,12 @@ class BDFMethods(BDFAttributes):
         eid_shell = max(self.elements) + 1
         pid_shell = max(self.properties) + 1
         mid_shell = max(self.materials) + 1
-        with open(skin_filename, 'w') as bdf_file:
+
+        if PY2:
+            wb = 'wb'
+        else:
+            wb = 'w'
+        with open(skin_filename, wb, encoding=encoding) as bdf_file:
             bdf_file.write('$ pyNastran: punch=True\n')
             for nid in sorted(nids_to_write):
                 if nid is None:
@@ -1833,7 +2040,10 @@ class BDFMethods(BDFAttributes):
 
                     pid = elem.Pid()
                     prop = self.properties[pid]
-                    mid = prop.Mid()
+                    try:
+                        mid = prop.Mid()
+                    except AttributeError:
+                        continue
                     imid = mids_to_write.index(mid)
 
                     if nface == 3:
@@ -1856,3 +2066,68 @@ class BDFMethods(BDFAttributes):
                 #for pid, prop in iteritems(self.properties):
                     #bdf_file.write(prop.write_card(size=size, is_double=is_double))
             bdf_file.write('ENDDATA\n')
+
+    def remove_unassociated_properties(model, reset_type_to_slot_map=True):
+        pids_used = set()
+        #elem_types = ['']
+        card_types = list(model.card_count.keys())
+        card_map = model.get_card_ids_by_card_types(card_types=card_types,
+                                                    reset_type_to_slot_map=reset_type_to_slot_map,
+                                                    stop_on_missing_card=True)
+        skip_cards = [
+            'GRID', 'PARAM',
+            'MAT1', 'MAT2', 'MAT3', 'MAT4', 'MAT5', 'MAT8', 'MAT9', 'MAT10', 'MAT11',
+            'CORD2R', 'CORD2C', 'CORD2S', 'CORD1R', 'CORD1C', 'CORD1S',
+
+            'PSHELL', 'PCOMP', 'PBAR', 'PBARL', 'PBEAM', 'PROD', 'PELAS', 'PBUSH',
+            'PBUSH1D', 'PBUSH2D', 'PSOLID', 'PRAC2D', 'PRAC3D',
+
+            'CONM2',
+            'RBE2', 'RBE3',
+
+            'CAERO1', 'CAERO2', 'CAERO3', 'CAERO4', 'CAERO5',
+            'PAERO1', 'PAERO2', 'PAERO3', 'PAERO4', 'PAERO5',
+            'SPLINE1', 'SPLINE2', 'SPLINE3', 'SPLINE4', 'SPLINE5',
+            'AEROS', 'TRIM', 'DIVERG',
+            'AERO', 'MKAERO1', 'MKAERO2', 'FLFACT', 'FLUTTER', 'GUST',
+            'AELIST', 'AESURF', 'AE'
+            'SET1',
+            'CONROD',
+            'EIGRL', 'EIGB', 'EIGC', 'EIGR',
+            'MPC', 'MPCADD', 'SPC1', 'SPCADD', 'SPCAX', 'SPCD',
+            'PLOAD4',
+            'DCONSTR', 'DESVAR',
+            'ENDDATA',
+        ]
+        for card_type, ids in iteritems(card_map):
+            if card_type in ['CTETRA', 'CPENTA', 'CPYRAM', 'CHEXA']:
+                for eid in ids:
+                    elem = model.elements[eid]
+                    pids_used.add(elem.Pid())
+            elif card_type in ['CTRIA3', 'CQUAD4', 'CBAR', 'CBEAM', 'CROD']:
+                for eid in ids:
+                    elem = model.elements[eid]
+                    pids_used.add(elem.Pid())
+            elif card_type in skip_cards:
+                pass
+            elif card_type == 'DRESP1':
+                for dresp_id in ids:
+                    dresp = model.dresps[dresp_id]
+                    if dresp.property_type in ['PSHELL', 'PCOMP', 'PBAR', 'PBARL', 'PBEAM', 'PROD']:
+                        pids_used.update(dresp.atti_values())
+                    elif dresp.property_type is None:
+                        pass
+                    else:
+                        raise NotImplementedError(dresp)
+            elif card_type == 'DVPREL1':
+                for dvprel_id in ids:
+                    dvprel = model.dvprels[dvprel_id]
+                    if dvprel.Type in ['PSHELL', 'PCOMP', 'PBAR', 'PBARL', 'PBEAM', 'PROD']:
+                        pids_used.add(dvprel.Pid())
+            else:
+                raise NotImplementedError(card_type)
+        all_pids = model.properties.keys()
+        pids_to_remove = np.setdiff1d(all_pids, pids_used)
+        for pid in pids_to_remove:
+            del model.properties
+

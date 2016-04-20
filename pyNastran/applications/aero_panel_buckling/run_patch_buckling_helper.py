@@ -1,34 +1,25 @@
+from __future__ import print_function
 import os
-from copy import deepcopy
-from six import iteritems, string_types
+#from copy import deepcopy
+#from six import iteritems, string_types
 import glob
 import subprocess
-import time
+#import time
 
 import matplotlib.pyplot as plt
 import numpy as np
 
 from pyNastran.bdf.bdf import BDF
 from pyNastran.op2.op2 import OP2
-
-def run_nastran(fname, keywords=None):
-    """
-    Call a nastran subprocess with the given filename
-
-    Parameters
-    -----------
-    fname : string
-        Filename of the Nastran .bdf file
-    keywords : list of strings, optional
-        Default keywords are `'mem=1024mb'`, `'old=no'`, and `'news=no'`
-    """
-    if keywords is None:
-        keywords = ['old=no','news=no'] # ['mem=1024mb','old=no','news=no']
-    return subprocess.call(['nastran', fname] + keywords)
+#from pyNastran.utils.nastran_utils import run_nastran
 
 def run_bdfs_batch(bdf_filenames, workpath='results', mem='100mb', auth=None, overwrite_op2_if_exists=False):
     #print(bdf_filenames)
     print('Start running patch jobs.')
+    nastran_keywords = {
+        'mem' : mem,
+        'auth' : auth,
+    }
 
     run_filename = os.path.join(workpath, 'run_jobs.sh')
     run_file = open(run_filename, 'wb')
@@ -53,6 +44,8 @@ def run_bdfs_batch(bdf_filenames, workpath='results', mem='100mb', auth=None, ov
             #cmd = 'nastran results/%s scr=yes' % (basename) # shell version
             cmd = 'nastran %s scr=yes bat=no old=no' % (basename) # shell version
             for key, value in nastran_keywords:
+                if value is None:
+                    continue
                 cmd += ' %s=%s' % (key, value)
 
             #subprocess.call(['nastran', bdf_filename, 'scr=yes', 'bat=no', 'old=no'])
@@ -70,7 +63,8 @@ def run_bdfs_batch(bdf_filenames, workpath='results', mem='100mb', auth=None, ov
     print('Done running patch jobs.')
 
 
-def run_bdfs(bdf_filenames, workpath='results', nastran_keywords=None, overwrite_op2_if_exists=False):
+def run_bdfs(bdf_filenames, workpath='results', nastran_keywords=None,
+             overwrite_op2_if_exists=False):
     #print(bdf_filenames)
     print('Start running patch jobs.')
     for bdf_filename in bdf_filenames:
@@ -82,7 +76,7 @@ def run_bdfs(bdf_filenames, workpath='results', nastran_keywords=None, overwrite
             #cmd = 'nastran %s scr=yes bat=no old=no' % (basename) # shell version
 
             call_args = ['nastran', bdf_filename, 'scr=yes', 'bat=no', 'old=no']
-            for key, value in nastran_keywords:
+            for key, value in nastran_keywords.items():
                 call_args.append('%s=%s' % (key, value))
 
             subprocess.call(call_args)
@@ -105,27 +99,38 @@ def load_sym_regions_map(sym_regions_filename):
         symregion_to_region_map[sym_region_id] = region_id
     return region_to_symregion_map, symregion_to_region_map
 
+def get_eigenvalues(op2_filename, debug=False):
+    model2 = OP2(debug=debug)
+    model2.read_op2(op2_filename)
+    cases = model2.eigenvectors.keys()
+    isubcase = cases[0]
+    eigenvector = model2.eigenvectors[isubcase]
+    try:
+        eigrs = eigenvector.eigrs
+        #eigrs = d._eigrs
+    except AttributeError:
+        msg = '%s.object_attributes() = %s' % (
+            eigenvector.class_name, str(eigenvector.object_attributes(keys_to_skip='class_name')))
+        raise RuntimeError(msg)
+    return eigrs
 
-def get_eigs():
+def get_eigs(debug=False):
     patch_files = glob.glob('patch_*.bdf')
     patch_numbers = []
     evals = []
-    for pf in patch_files:
-        pn = pf.split('_')[1].split('.')[0]
-        patch_numbers.append(int(pn))
-        model = BDF()
-        model.read_bdf(pf)
-        # eids = model.elements.keys()
-        model2 = OP2()
-        op2_path = ''.join([pf[:-4], '.op2'])
-        model2.read_op2(op2_path)
-        cases = model2.eigenvectors.keys()
-        isubcase = cases[0]
-        d = model2.eigenvectors[isubcase]
-        eigrs = d._eigrs
-        min_eval = eigrs.min()
-        evals.append(min_eval)
-        print('Patch:', pn, 'Min eigenvalue: ', min_eval)
+    for patch_filename in patch_files:
+        patch_number = patch_filename.split('_')[1].split('.')[0]
+        patch_numbers.append(int(patch_number))
+        model = BDF(debug=debug)
+        model.read_bdf(patch_filename)
+        #eids = model.elements.keys()
+        op2_filename = ''.join([patch_filename[:-4], '.op2'])
+        eigenvalues = np.array(get_eigenvalues(op2_filename, debug=debug))
+        i = np.where(eigenvalues > 0.0)
+        min_eigenvalue = eigenvalues[i].min()
+        evals.append(min_eigenvalue)
+        print('Patch:%s  Min eigenvalue:%s' % (patch_number, min_eigenvalue))
+
     fig = plt.figure(figsize=(12, 9))
     plt.plot(patch_numbers, evals, label='Eigenvalues')
     plt.xticks(fontsize=12, y=-0.01)

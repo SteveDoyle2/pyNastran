@@ -11,6 +11,7 @@ All aero cards are defined in this file.  This includes:
  * AERO / AEROS
  * CSSCHD
  * CAERO1 / CAERO2 / CAERO3 / CAERO4 / CAERO5
+ * DIVERG
  * FLFACT
  * FLUTTER
  * GUST
@@ -23,17 +24,19 @@ All cards are BaseCard objects.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six.moves import zip, range
 from itertools import count
+from six.moves import zip, range
+from six import string_types
 
 import numpy as np
 
 from pyNastran.utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8, print_float_8
 from pyNastran.bdf.cards.base_card import BaseCard, expand_thru
-from pyNastran.bdf.bdfInterface.assign_type import (fields,
-    integer, integer_or_blank, double, double_or_blank, string, string_or_blank,
-    integer_or_string, double_string_or_blank, blank, interpret_value, components)
+from pyNastran.bdf.bdf_interface.assign_type import (
+    fields, integer, integer_or_blank, double, double_or_blank, string,
+    string_or_blank, integer_or_string, double_string_or_blank, blank,
+    interpret_value, components)
 from pyNastran.bdf.cards.utils import wipe_empty_fields
 
 
@@ -58,22 +61,25 @@ class AECOMP(BaseCard):
     """
     type = 'AECOMP'
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self, name, list_type, lists, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            self.name = string(card, 1, 'name')
-            self.list_type = string(card, 2, 'list_type')
-            assert self.list_type in ['SET1', 'AELIST'] or self.list_type.startswith('CAERO'), self.list_type
-            j = 1
-            self.lists = []
-            for i in range(3, len(card)):
-                list_i = integer(card, i, '%s_%i' % (self.list_type, j))
-                self.lists.append(list_i)
-                j += 1
-        else:
-            msg = '%s has not implemented data parsing' % self.type
-            raise NotImplementedError(msg)
+        self.name = name
+        self.list_type = list_type
+        self.lists = lists
+        assert list_type in ['SET1', 'AELIST'] or list_type.startswith('CAERO'), list_type
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        name = string(card, 1, 'name')
+        list_type = string(card, 2, 'list_type')
+        j = 1
+        lists = []
+        for i in range(3, len(card)):
+            list_i = integer(card, i, '%s_%i' % (list_type, j))
+            lists.append(list_i)
+            j += 1
+        return AECOMP(name, list_type, lists, comment=comment)
 
     def cross_reference(self, model):
         """
@@ -103,13 +109,13 @@ class AECOMP(BaseCard):
     def get_lists(self):
         if self.list_type == 'SET1':
             lists = [set1 if isinstance(set1, integer_types)
-                          else set1.sid for set1 in self.lists]
+                     else set1.sid for set1 in self.lists]
         elif self.list_type == 'AELIST':
             lists = [aelist if isinstance(aelist, integer_types)
-                          else aelist.sid for aelist in self.lists]
+                     else aelist.sid for aelist in self.lists]
         elif self.list_type == 'CAERO':
             lists = [caero if isinstance(caero, integer_types)
-                          else caero.eid for caero in self.lists]
+                     else caero.eid for caero in self.lists]
         else:
             raise NotImplementedError(self.list_type)
         return lists
@@ -140,23 +146,23 @@ class AEFACT(BaseCard):
     """
     type = 'AEFACT'
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self, sid, Di, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            #: Set identification number. (Unique Integer > 0)
-            self.sid = integer(card, 1, 'sid')
+        #: Set identification number. (Unique Integer > 0)
+        self.sid = sid
+        #: Number (float)
+        self.Di = np.array(Di, dtype='float64')
 
-            Di = []
-            for i in range(2, len(card)):
-                di = double(card, i, 'Di_%i' % (i - 1))
-                Di.append(di)
+    @classmethod
+    def add_card(cls, card, comment=''):
+        sid = integer(card, 1, 'sid')
 
-            #: Number (float)
-            self.Di = np.array(Di, dtype='float64')
-        else:
-            msg = '%s has not implemented data parsing' % self.type
-            raise NotImplementedError(msg)
+        Di = []
+        for i in range(2, len(card)):
+            di = double(card, i, 'Di_%i' % (i - 1))
+            Di.append(di)
+        return AEFACT(sid, Di, comment=comment)
 
     def uncross_reference(self):
         pass
@@ -170,8 +176,8 @@ class AEFACT(BaseCard):
         fields : List[int/float/str]
             the fields that define the card
         """
-        fields = ['AEFACT', self.sid] + list(self.Di)
-        return fields
+        list_fields = ['AEFACT', self.sid] + list(self.Di)
+        return list_fields
 
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
@@ -199,29 +205,33 @@ class AELINK(BaseCard):
     """
     type = 'AELINK'
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self, id, label, independent_labels, Cis, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            #: an ID=0 is applicable to the global subcase, ID=1 only subcase 1
-            self.id = integer(card, 1, 'ID')
-            #: defines the dependent variable name (string)
-            self.label = string(card, 2, 'label')
-            #: defines the independent variable name (string)
-            self.independentLabels = []
-            #: linking coefficient (real)
-            self.Cis = []
+        #: an ID=0 is applicable to the global subcase, ID=1 only subcase 1
+        self.id = id
+        #: defines the dependent variable name (string)
+        self.label = label
+        #: defines the independent variable name (string)
+        self.independent_labels = independent_labels
+        #: linking coefficient (real)
+        self.Cis = Cis
 
-            fields = [interpret_value(field) for field in card[3:]]
-            assert len(fields) % 2 == 0, 'fields=%s' % fields
-            for i in range(0, len(fields), 2):
-                independentLabel = fields[i]
-                Ci = fields[i + 1]
-                self.independentLabels.append(independentLabel)
-                self.Cis.append(Ci)
-        else:
-            msg = '%s has not implemented data parsing' % self.type
-            raise NotImplementedError(msg)
+    @classmethod
+    def add_card(cls, card, comment=''):
+        id = integer(card, 1, 'ID')
+        label = string(card, 2, 'label')
+        independent_labels = []
+        Cis = []
+
+        list_fields = [interpret_value(field) for field in card[3:]]
+        assert len(list_fields) % 2 == 0, 'list_fields=%s' % list_fields
+        for i in range(0, len(list_fields), 2):
+            independent_label = list_fields[i]
+            Ci = list_fields[i + 1]
+            independent_labels.append(independent_label)
+            Cis.append(Ci)
+        return AELINK(id, label, independent_labels, Cis, comment=comment)
 
     def uncross_reference(self):
         pass
@@ -232,13 +242,13 @@ class AELINK(BaseCard):
 
         Returns
         -------
-        fields : List[int/float/str]
+        list_fields : List[int/float/str]
             the fields that define the card
         """
-        fields = ['AELINK', self.id, self.label]
-        for (ivar, ival) in zip(self.independentLabels, self.Cis):
-            fields += [ivar, ival]
-        return fields
+        list_fields = ['AELINK', self.id, self.label]
+        for (ivar, ival) in zip(self.independent_labels, self.Cis):
+            list_fields += [ivar, ival]
+        return list_fields
 
     def write_card(self, size=8, is_double=False):
         card = self.raw_fields()
@@ -274,21 +284,21 @@ class AELIST(BaseCard):
     """
     type = 'AELIST'
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self, sid, elements, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            #: Set identification number. (Integer > 0)
-            self.sid = integer(card, 1, 'sid')
+        #: Set identification number. (Integer > 0)
+        self.sid = sid
+        #: List of aerodynamic boxes generated by CAERO1 entries to define a
+        #: surface. (Integer > 0 or 'THRU')
+        self.elements = expand_thru(elements)
+        self.elements.sort()
 
-            #: List of aerodynamic boxes generated by CAERO1 entries to define a
-            #: surface. (Integer > 0 or 'THRU')
-            eids = fields(integer_or_string, card, 'eid', i=2, j=len(card))
-            self.elements = expand_thru(eids)
-            self.clean_ids()
-        else:
-            msg = '%s has not implemented data parsing' % self.type
-            raise NotImplementedError(msg)
+    @classmethod
+    def add_card(cls, card, comment=''):
+        sid = integer(card, 1, 'sid')
+        elements = fields(integer_or_string, card, 'eid', i=2, j=len(card))
+        return AELIST(sid, elements, comment=comment)
 
     def cross_reference(self, model):
         pass
@@ -336,19 +346,28 @@ class AEPARM(BaseCard):
         1: 'id', 2:'label', 3:'units'
     }
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self, id, label, units, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            self.id = integer(card, 1, 'id')
-            self.label = string(card, 2, 'lable')
-            self.units = string(card, 3, 'units')
-            assert len(card) <= 4, 'len(AEPARM card) = %i' % len(card)
-        else:
-            self.id = data[0]
-            self.label = data[1]
-            self.units = data[2]
-            assert len(data) == 3, 'data = %s' % data
+        self.id = id
+        self.label = label
+        self.units = units
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        id = integer(card, 1, 'id')
+        label = string(card, 2, 'lable')
+        units = string(card, 3, 'units')
+        assert len(card) <= 4, 'len(AEPARM card) = %i' % len(card)
+        return AEPARM(id, label, units, comment=comment)
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        id = data[0]
+        label = data[1]
+        units = data[2]
+        assert len(data) == 3, 'data = %s' % data
+        return AEPARM(id, label, units, comment=comment)
 
     def uncross_reference(self):
         pass
@@ -388,17 +407,25 @@ class AESTAT(BaseCard):
     _field_map = {
         1: 'id', 2:'label',
     }
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self, id, label, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            self.id = integer(card, 1, 'ID')
-            self.label = string(card, 2, 'label')
-            assert len(card) <= 3, 'len(AESTAT card) = %i' % len(card)
-        else:
-            self.id = data[0]
-            self.label = data[1]
-            assert len(data) == 2, 'data = %s' % data
+        self.id = id
+        self.label = label
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        id = integer(card, 1, 'ID')
+        label = string(card, 2, 'label')
+        assert len(card) <= 3, 'len(AESTAT card) = %i' % len(card)
+        return AESTAT(id, label, comment=comment)
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        id = data[0]
+        label = data[1]
+        assert len(data) == 2, 'data = %s' % data
+        return AESTAT(id, label, comment=comment)
 
     def cross_reference(self, model):
         pass
@@ -446,56 +473,84 @@ class AESURF(BaseCard):
         13:'hmllim', 14:'hmulim', 15:'tqllim', '16':'tqulim',
     }
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self, aesid, label, cid1, alid1, cid2, alid2, eff, ldw,
+                 crefc, crefs, pllim, pulim, hmllim, hmulim, tqllim, tqulim,
+                 comment=''):
         if comment:
             self._comment = comment
-        if card:
-            #: Controller identification number
-            self.aesid = integer(card, 1, 'aesid')
-            #: Controller name.
-            self.label = string(card, 2, 'label')
+        #: Controller identification number
+        self.aesid = aesid
+        #: Controller name.
+        self.label = label
 
-            #: Identification number of a rectangular coordinate system with a
-            #: y-axis that defines the hinge line of the control surface
-            #: component.
-            self.cid1 = integer(card, 3, 'cid1')
-            #: Identification of an AELIST Bulk Data entry that identifies all
-            #: aerodynamic elements that make up the control surface
-            #: component. (Integer > 0)
-            self.alid1 = integer(card, 4, 'alid1')
+        #: Identification number of a rectangular coordinate system with a
+        #: y-axis that defines the hinge line of the control surface
+        #: component.
+        self.cid1 = cid1
+        #: Identification of an AELIST Bulk Data entry that identifies all
+        #: aerodynamic elements that make up the control surface
+        #: component. (Integer > 0)
+        self.alid1 = alid1
 
-            self.cid2 = integer_or_blank(card, 5, 'cid2')
-            self.alid2 = integer_or_blank(card, 6, 'alid2')
+        self.cid2 = cid2
+        self.alid2 = alid2
 
-            #: Control surface effectiveness. See Remark 4. (Real != 0.0;
-            #: Default=1.0)
-            self.eff = double_or_blank(card, 7, 'eff', 1.0)
-            #: Linear downwash flag. See Remark 2.
-            #: (Character, one of LDW or NOLDW; Default=LDW).
-            self.ldw = string_or_blank(card, 8, 'ldw', 'LDW')
-            #: Reference chord length for the control surface. (Real>0.0;
-            #: Default=1.0)
-            self.crefc = double_or_blank(card, 9, 'crefc', 1.0)
-            #: Reference surface area for the control surface. (Real>0.0;
-            #: Default=1.0)
-            self.crefs = double_or_blank(card, 10, 'crefs', 1.0)
-            #: Lower and upper deflection limits for the control surface in
-            #: radians. (Real, Default = +/- pi/2)
-            self.pllim = double_or_blank(card, 11, 'pllim', -np.pi / 2.)
-            self.pulim = double_or_blank(card, 12, 'pulim', np.pi / 2.)
-            #: Lower and upper hinge moment limits for the control surface in
-            #: force-length units. (Real, Default = no limit) -> 1e8
-            self.hmllim = double_or_blank(card, 13, 'hmllim')
-            self.hmulim = double_or_blank(card, 14, 'hmulim')
-            #: Set identification numbers of TABLEDi entries that provide the
-            #: lower and upper deflection limits for the control surface as a
-            #: function of the dynamic pressure. (Integer>0, Default = no limit)
-            self.tqllim = integer_or_blank(card, 15, 'tqllim')
-            self.tqulim = integer_or_blank(card, 16, 'tqulim')
-            assert len(card) <= 17, 'len(AESURF card) = %i' % len(card)
-        else:
-            msg = '%s has not implemented data parsing' % self.type
-            raise NotImplementedError(msg)
+        #: Control surface effectiveness. See Remark 4. (Real != 0.0;
+        #: Default=1.0)
+        self.eff = eff
+        #: Linear downwash flag. See Remark 2.
+        #: (Character, one of LDW or NOLDW; Default=LDW).
+        self.ldw = ldw
+        #: Reference chord length for the control surface. (Real>0.0;
+        #: Default=1.0)
+        self.crefc = crefc
+        #: Reference surface area for the control surface. (Real>0.0;
+        #: Default=1.0)
+        self.crefs = crefs
+
+        #: Lower and upper deflection limits for the control surface in
+        #: radians. (Real, Default = +/- pi/2)
+        self.pllim = pllim
+        self.pulim = pulim
+
+        #: Lower and upper hinge moment limits for the control surface in
+        #: force-length units. (Real, Default = no limit) -> 1e8
+        self.hmllim = hmllim
+        self.hmulim = hmulim
+
+        #: Set identification numbers of TABLEDi entries that provide the
+        #: lower and upper deflection limits for the control surface as a
+        #: function of the dynamic pressure. (Integer>0, Default = no limit)
+        self.tqllim = tqllim
+        self.tqulim = tqulim
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        aesid = integer(card, 1, 'aesid')
+        label = string(card, 2, 'label')
+
+        cid1 = integer(card, 3, 'cid1')
+        alid1 = integer(card, 4, 'alid1')
+
+        cid2 = integer_or_blank(card, 5, 'cid2')
+        alid2 = integer_or_blank(card, 6, 'alid2')
+
+        eff = double_or_blank(card, 7, 'eff', 1.0)
+        ldw = string_or_blank(card, 8, 'ldw', 'LDW')
+        crefc = double_or_blank(card, 9, 'crefc', 1.0)
+        crefs = double_or_blank(card, 10, 'crefs', 1.0)
+
+        pllim = double_or_blank(card, 11, 'pllim', -np.pi / 2.)
+        pulim = double_or_blank(card, 12, 'pulim', np.pi / 2.)
+
+        hmllim = double_or_blank(card, 13, 'hmllim')
+        hmulim = double_or_blank(card, 14, 'hmulim')
+        tqllim = integer_or_blank(card, 15, 'tqllim')
+        tqulim = integer_or_blank(card, 16, 'tqulim')
+        assert len(card) <= 17, 'len(AESURF card) = %i' % len(card)
+        return AESURF(aesid, label, cid1, alid1, cid2, alid2, eff, ldw,
+                      crefc, crefs, pllim, pulim, hmllim, hmulim,
+                      tqllim, tqulim, comment=comment)
 
     def Cid1(self):
         if isinstance(self.cid1, integer_types):
@@ -626,21 +681,31 @@ class AESURFS(BaseCard):  # not integrated
     """
     type = 'AESURFS'
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self, id, label, list1, list2, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            self.id = integer(card, 1, 'ID')
-            self.label = string(card, 2, 'label')
-            self.list1 = integer(card, 4, 'list1')
-            self.list2 = integer(card, 6, 'list2')
-            assert len(card) <= 7, 'len(AESURFS card) = %i' % len(card)
-        else:
-            self.id = data[0]
-            self.label = data[1]
-            self.list1 = data[2]
-            self.list2 = data[3]
-            assert len(data) == 4, 'data = %s' % data
+        self.id = id
+        self.label = label
+        self.list1 = list1
+        self.list2 = list2
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        id = integer(card, 1, 'ID')
+        label = string(card, 2, 'label')
+        list1 = integer(card, 4, 'list1')
+        list2 = integer(card, 6, 'list2')
+        assert len(card) <= 7, 'len(AESURFS card) = %i' % len(card)
+        return AESURFS(id, label, list1, list2, comment=comment)
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        id = data[0]
+        label = data[1]
+        list1 = data[2]
+        list2 = data[3]
+        assert len(data) == 4, 'data = %s' % data
+        return AESURFS(id, label, list1, list2, comment=comment)
 
     def uncross_reference(self):
         pass
@@ -665,59 +730,35 @@ class AESURFS(BaseCard):  # not integrated
 
 class Aero(BaseCard):
     """Base class for AERO and AEROS cards."""
-    def __init__(self, card, data):
-        self.symXY = None
-        self.symXZ = None
-
-    #def IsSymmetricalXY(self):
-        #self.deprecated('IsSymmetricalXY()', 'is_symmetric_xy()', '0.7')
-        #return self.is_symmetric_xy()
-
-    #def IsSymmetricalXZ(self):
-        #self.deprecated('IsSymmetricalXZ()', 'is_symmetric_xz()', '0.7')
-        #return self.is_symmetric_xz()
-
-    #def IsAntiSymmetricalXY(self):
-        #self.deprecated('IsAntiSymmetricalXY()', 'is_anti_symmetric_xy()', '0.7')
-        #return self.is_anti_symmetric_xy()
-
-    #def IsAntiSymmetricalXZ(self):
-        #self.deprecated('IsAntiSymmetricalXZ()', 'is_anti_symmetric_xz()', '0.7')
-        #return self.is_anti_symmetric_xz()
-
-    #def EnableGroundEffect(self):
-        #self.deprecated('EnableGroundEffect()', 'set_ground_effect(True)', '0.7')
-        #self.set_ground_effect(True)
-
-    #def DisableGroundEffect(self):
-        #self.deprecated('DisableGroundEffect()', 'set_ground_effect(False)', '0.7')
-        #self.set_ground_effect(False)
+    def __init__(self):
+        self.sym_xy = None
+        self.sym_xz = None
 
     def is_symmetric_xy(self):
-        if self.symXY == 1:
+        if self.sym_xy == 1:
             return True
         return False
 
     def is_symmetric_xz(self):
-        if self.symXZ == 1:
+        if self.sym_xz == 1:
             return True
         return False
 
     def is_anti_symmetric_xy(self):
-        if self.symXY == -1:
+        if self.sym_xy == -1:
             return True
         return False
 
     def is_anti_symmetric_xz(self):
-        if self.symXY == -1:
+        if self.sym_xy == -1:
             return True
         return False
 
     def set_ground_effect(self, enable):
         if enable:
-            self.symXY = -1
+            self.sym_xy = -1
         else:
-            self.symXY = 1
+            self.sym_xy = 1
 
 
 class AERO(Aero):
@@ -738,26 +779,40 @@ class AERO(Aero):
         6:'symXY',
     }
 
-    def __init__(self, card=None, data=None, comment=''):
-        Aero.__init__(self, card, data)
+    def __init__(self, acsid, velocity, cref, rho_ref, sym_xz, sym_xy, comment=''):
+        Aero.__init__(self)
         if comment:
             self._comment = comment
-        if card:
-            self.acsid = integer_or_blank(card, 1, 'acsid', 0)
-            self.velocity = double_or_blank(card, 2, 'velocity')
-            self.cRef = double(card, 3, 'cRef')
-            self.rhoRef = double(card, 4, 'rhoRef')
-            self.symXZ = integer_or_blank(card, 5, 'symXZ', 0)
-            self.symXY = integer_or_blank(card, 6, 'symXY', 0)
-            assert len(card) <= 7, 'len(AERO card) = %i' % len(card)
-        else:
-            self.acsid = data[0]
-            self.velocity = data[1]
-            self.cRef = data[2]
-            self.rhoRef = data[3]
-            self.symXZ = data[4]
-            self.symXY = data[5]
-            assert len(data) == 6, 'data = %s' % data
+        self.acsid = acsid
+        self.velocity = velocity
+        self.cref = cref
+        self.rho_ref = rho_ref
+        self.sym_xz = sym_xz
+        self.sym_xy = sym_xy
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        acsid = integer_or_blank(card, 1, 'acsid', 0)
+        velocity = double_or_blank(card, 2, 'velocity')
+        cref = double(card, 3, 'cRef')
+        rho_ref = double(card, 4, 'rhoRef')
+        sym_xz = integer_or_blank(card, 5, 'symXZ', 0)
+        sym_xy = integer_or_blank(card, 6, 'symXY', 0)
+        assert len(card) <= 7, 'len(AERO card) = %i' % len(card)
+        return AERO(acsid, velocity, cref, rho_ref, sym_xz, sym_xy,
+                    comment=comment)
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        acsid = data[0]
+        velocity = data[1]
+        cref = data[2]
+        rho_ref = data[3]
+        sym_xz = data[4]
+        sym_xy = data[5]
+        assert len(data) == 6, 'data = %s' % data
+        return AERO(acsid, velocity, cref, rho_ref, sym_xz, sym_xy,
+                    comment=comment)
 
         # T is the tabular function
         #angle = self.wg*self.t*(t-(x-self.x0)/self.V)
@@ -774,8 +829,8 @@ class AERO(Aero):
         fields : List[int/float/str]
            the fields that define the card
         """
-        list_fields = ['AERO', self.acsid, self.velocity, self.cRef,
-                       self.rhoRef, self.symXZ, self.symXY]
+        list_fields = ['AERO', self.acsid, self.velocity, self.cref,
+                       self.rho_ref, self.sym_xz, self.sym_xy]
         return list_fields
 
     def repr_fields(self):
@@ -787,10 +842,10 @@ class AERO(Aero):
         fields : List[varies]
           the fields that define the card
         """
-        symXZ = set_blank_if_default(self.symXZ, 0)
-        symXY = set_blank_if_default(self.symXY, 0)
-        list_fields = ['AERO', self.acsid, self.velocity, self.cRef,
-                       self.rhoRef, symXZ, symXY]
+        sym_xz = set_blank_if_default(self.sym_xz, 0)
+        sym_xy = set_blank_if_default(self.sym_xy, 0)
+        list_fields = ['AERO', self.acsid, self.velocity, self.cref,
+                       self.rho_ref, sym_xz, sym_xy]
         return list_fields
 
     def write_card(self, size=8, is_double=False):
@@ -833,28 +888,43 @@ class AEROS(Aero):
         6:'symXZ', 7:'symXY',
     }
 
-    def __init__(self, card=None, data=None, comment=''):
-        Aero.__init__(self, card, data)
+    def __init__(self, acsid, rcsid, cref, bref, sref, sym_xz, sym_xy, comment=''):
+        Aero.__init__(self)
         if comment:
             self._comment = comment
-        if card:
-            self.acsid = integer_or_blank(card, 1, 'acsid', 0)
-            self.rcsid = integer_or_blank(card, 2, 'rcsid', 0)
-            self.cRef = double(card, 3, 'cRef')
-            self.bRef = double(card, 4, 'bRef')
-            self.Sref = double(card, 5, 'Sref')
-            self.symXZ = integer_or_blank(card, 6, 'symXZ', 0)
-            self.symXY = integer_or_blank(card, 7, 'symXY', 0)
-            assert len(card) <= 8, 'len(AEROS card) = %i' % len(card)
-        else:
-            self.acsid = data[0]
-            self.rcsid = data[1]
-            self.cRef = data[2]
-            self.bRef = data[3]
-            self.Sref = data[4]
-            self.symXZ = data[5]
-            self.symXY = data[6]
-            assert len(data) == 7, 'data = %s' % data
+        self.acsid = acsid
+        self.rcsid = rcsid
+        self.cref = cref
+        self.bref = bref
+        self.sref = sref
+        self.sym_xz = sym_xz
+        self.sym_xy = sym_xy
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        acsid = integer_or_blank(card, 1, 'acsid', 0)
+        rcsid = integer_or_blank(card, 2, 'rcsid', 0)
+        cref = double(card, 3, 'cRef')
+        bref = double(card, 4, 'bRef')
+        sref = double(card, 5, 'Sref')
+        sym_xz = integer_or_blank(card, 6, 'sym_xz', 0)
+        sym_xy = integer_or_blank(card, 7, 'sym_xy', 0)
+        assert len(card) <= 8, 'len(AEROS card) = %i' % len(card)
+        return AEROS(acsid, rcsid, cref, bref, sref, sym_xz, sym_xy,
+                     comment=comment)
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        acsid = data[0]
+        rcsid = data[1]
+        cref = data[2]
+        bref = data[3]
+        sref = data[4]
+        sym_xz = data[5]
+        sym_xy = data[6]
+        assert len(data) == 7, 'data = %s' % data
+        return AEROS(acsid, rcsid, cref, bref, sref, sym_xz, sym_xy,
+                     comment=comment)
 
     def uncross_reference(self):
         pass
@@ -868,8 +938,8 @@ class AEROS(Aero):
         fields : list[varies]
             the fields that define the card
         """
-        list_fields = ['AEROS', self.acsid, self.rcsid, self.cRef,
-                       self.bRef, self.Sref, self.symXZ, self.symXY]
+        list_fields = ['AEROS', self.acsid, self.rcsid, self.cref,
+                       self.bref, self.sref, self.sym_xz, self.sym_xy]
         return list_fields
 
     def repr_fields(self):
@@ -881,10 +951,10 @@ class AEROS(Aero):
         fields : List[varies]
           the fields that define the card
         """
-        symXZ = set_blank_if_default(self.symXZ, 0)
-        symXY = set_blank_if_default(self.symXY, 0)
-        list_fields = ['AEROS', self.acsid, self.rcsid, self.cRef,
-                       self.bRef, self.Sref, symXZ, symXY]
+        sym_xz = set_blank_if_default(self.sym_xz, 0)
+        sym_xy = set_blank_if_default(self.sym_xy, 0)
+        list_fields = ['AEROS', self.acsid, self.rcsid, self.cref,
+                       self.bref, self.sref, sym_xz, sym_xy]
         return list_fields
 
     def write_card(self, size=8, is_double=False):
@@ -908,23 +978,34 @@ class CSSCHD(Aero):
         1: 'sid', 2:'aesid', 3:'lAlpha', 4:'lMach', 5:'lSchd',
     }
 
-    def __init__(self, card=None, data=None, comment=''):
-        Aero.__init__(self, card, data)
+    def __init__(self, sid, aesid, lAlpha, lMach, lSchd, comment=''):
+        Aero.__init__(self)
         if comment:
             self._comment = comment
-        if card:
-            self.sid = integer(card, 1, 'sid')
-            self.aesid = integer(card, 2, 'aesid')             # AESURF
-            self.lAlpha = integer_or_blank(card, 3, 'lAlpha')  # AEFACT
-            self.lMach = integer_or_blank(card, 4, 'lMach')    # AEFACT
-            self.lSchd = integer(card, 5, 'lSchd')             # AEFACT
-            assert len(card) <= 6, 'len(CSSCHD card) = %i' % len(card)
-        else:
-            self.sid = data[0]
-            self.aesid = data[1]  # AESURF
-            self.lAlpha = data[2]  # AEFACT
-            self.lMach = data[3]  # AEFACT
-            self.lSchd = data[4]  # AEFACT
+        self.sid = sid
+        self.aesid = aesid
+        self.lAlpha = lAlpha
+        self.lMach = lMach
+        self.lSchd = lSchd
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        sid = integer(card, 1, 'sid')
+        aesid = integer(card, 2, 'aesid')             # AESURF
+        lAlpha = integer_or_blank(card, 3, 'lAlpha')  # AEFACT
+        lMach = integer_or_blank(card, 4, 'lMach')    # AEFACT
+        lSchd = integer(card, 5, 'lSchd')             # AEFACT
+        assert len(card) <= 6, 'len(CSSCHD card) = %i' % len(card)
+        return CSSCHD(sid, aesid, lAlpha, lMach, lSchd, comment=comment)
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        sid = data[0]
+        aesid = data[1]  # AESURF
+        lAlpha = data[2]  # AEFACT
+        lMach = data[3]  # AEFACT
+        lSchd = data[4]  # AEFACT
+        return CSSCHD(sid, aesid, lAlpha, lMach, lSchd, comment=comment)
 
     def cross_reference(self, model):
         """
@@ -948,9 +1029,9 @@ class CSSCHD(Aero):
 
     def uncross_reference(self):
         self.aesid = self.AESid()
-        self.LAlpha = self.LAlpha()
-        self.LMach = self.LMach()
-        self.LSchd = self.LSchd()
+        self.lAlpha = self.LAlpha()
+        self.lMach = self.LMach()
+        self.lSchd = self.LSchd()
         del self.aesid_ref
         del self.lAlpha_ref
         del self.lMach_ref
@@ -1099,7 +1180,8 @@ class CAERO1(BaseCard):
         else:
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self, eid, pid, cp, nspan, lspan, nchord, lchord, igid,
+                 p1, x12, p4, x43, comment=''):
         r"""
         ::
 
@@ -1114,64 +1196,81 @@ class CAERO1(BaseCard):
         """
         if comment:
             self._comment = comment
-        if card:
-            #: Element identification number
-            self.eid = integer(card, 1, 'eid')
+        #: Element identification number
+        self.eid = eid
 
-            #: Property identification number of a PAERO2 entry.
-            self.pid = integer(card, 2, 'pid')
+        #: Property identification number of a PAERO2 entry.
+        self.pid = pid
 
-            #: Coordinate system for locating point 1.
-            self.cp = integer_or_blank(card, 3, 'cp', 0)
+        #: Coordinate system for locating point 1.
+        self.cp = cp
+        self.nspan = nspan
+        self.lspan = lspan
+        self.nchord = nchord
+        self.lchord = lchord
+        self.igid = igid
+        self.p1 = p1
+        self.x12 = x12
+        self.p4 = p4
+        self.x43 = x43
 
-            self.nspan = integer_or_blank(card, 4, 'nspan', 0)
-            self.nchord = integer_or_blank(card, 5, 'nchord', 0)
+        if self.nspan == 0 and self.lspan == 0:
+            msg = 'NSPAN or LSPAN must be greater than 0'
+            raise ValueError(msg)
+        if self.nspan != 0 and self.lspan != 0:
+            msg = 'Either NSPAN or LSPAN must 0'
+            raise ValueError(msg)
 
-            self.lspan = integer_or_blank(card, 6, 'lspan', 0)
-            self.lchord = integer_or_blank(card, 7, 'lchord', 0)
+        if self.nchord == 0 and self.lchord == 0:
+            msg = 'NCHORD or LCHORD must be greater than 0'
+            raise ValueError(msg)
+        if self.nchord != 0 and self.lchord != 0:
+            msg = 'Either NCHORD or LCHORD must 0'
+            raise ValueError(msg)
 
-            self.igid = integer(card, 8, 'igid')
+    @classmethod
+    def add_card(cls, card, comment=''):
+        eid = integer(card, 1, 'eid')
+        pid = integer(card, 2, 'pid')
+        cp = integer_or_blank(card, 3, 'cp', 0)
+        nspan = integer_or_blank(card, 4, 'nspan', 0)
+        nchord = integer_or_blank(card, 5, 'nchord', 0)
+        lspan = integer_or_blank(card, 6, 'lspan', 0)
+        lchord = integer_or_blank(card, 7, 'lchord', 0)
+        igid = integer(card, 8, 'igid')
 
-            self.p1 = np.array([
-                double_or_blank(card, 9, 'x1', 0.0),
-                double_or_blank(card, 10, 'y1', 0.0),
-                double_or_blank(card, 11, 'z1', 0.0)])
-            self.x12 = double_or_blank(card, 12, 'x12', 0.)
+        p1 = np.array([
+            double_or_blank(card, 9, 'x1', 0.0),
+            double_or_blank(card, 10, 'y1', 0.0),
+            double_or_blank(card, 11, 'z1', 0.0)])
+        x12 = double_or_blank(card, 12, 'x12', 0.)
 
-            self.p4 = np.array([
-                double_or_blank(card, 13, 'x4', 0.0),
-                double_or_blank(card, 14, 'y4', 0.0),
-                double_or_blank(card, 15, 'z4', 0.0)])
-            self.x43 = double_or_blank(card, 16, 'x43', 0.)
+        p4 = np.array([
+            double_or_blank(card, 13, 'x4', 0.0),
+            double_or_blank(card, 14, 'y4', 0.0),
+            double_or_blank(card, 15, 'z4', 0.0)])
+        x43 = double_or_blank(card, 16, 'x43', 0.)
 
-            if self.nspan == 0 and self.lspan == 0:
-                msg = 'NSPAN or LSPAN must be greater than 0'
-                raise ValueError(msg)
-            if self.nspan != 0 and self.lspan != 0:
-                msg = 'Either NSPAN or LSPAN must 0'
-                raise ValueError(msg)
-
-            if self.nchord == 0 and self.lchord == 0:
-                msg = 'NCHORD or LCHORD must be greater than 0'
-                raise ValueError(msg)
-            if self.nchord != 0 and self.lchord != 0:
-                msg = 'Either NCHORD or LCHORD must 0'
-                raise ValueError(msg)
-
-            assert len(card) <= 17, 'len(CAERO1 card) = %i' % len(card)
-        else:
-            msg = '%s has not implemented data parsing' % self.type
-            raise NotImplementedError(msg)
+        assert len(card) <= 17, 'len(CAERO1 card) = %i' % len(card)
+        return CAERO1(eid, pid, cp, nspan, lspan, nchord, lchord, igid,
+                      p1, x12, p4, x43, comment=comment)
 
     def _init_ids(self):
         """
         Fill `self.box_ids` with the sub-box ids. Shape is (nchord, nspan)
         """
         nchord, nspan = self.shape
+        assert nchord >= 1, 'nchord=%s' % nchord
+        assert nspan >= 1, 'nspan=%s' % nspan
         self.box_ids = np.zeros((nchord, nspan), dtype='int32')
         for ichord in range(nchord):
             for ispan in range(nspan):
-                self.box_ids[ichord, ispan] = self.eid + ichord + ispan * nchord
+                try:
+                    self.box_ids[ichord, ispan] = self.eid + ichord + ispan * nchord
+                except OverflowError:
+                    msg = 'eid=%s ichord=%s ispan=%s nchord=%s' % (
+                        self.eid, ichord, ispan, nchord)
+                    raise OverflowError(msg)
 
     #def Points(self):
         #self.deprecated('Points()', 'get_points()', '0.7')
@@ -1456,7 +1555,8 @@ class CAERO2(BaseCard):
         else:
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self, eid, pid, cp, nsb, nint, lsb, lint, igid,
+                 p1, x12, comment=''):
         """
         ::
 
@@ -1470,58 +1570,72 @@ class CAERO2(BaseCard):
         """
         if comment:
             self._comment = comment
-        if card:
-            #: Element identification number
-            self.eid = integer(card, 1, 'eid')
+        #: Element identification number
+        self.eid = eid
 
-            #: Property identification number of a PAERO2 entry.
-            self.pid = integer(card, 2, 'pid')
+        #: Property identification number of a PAERO2 entry.
+        self.pid = pid
 
-            #: Coordinate system for locating point 1.
-            self.cp = integer_or_blank(card, 3, 'cp', 0)
+        #: Coordinate system for locating point 1.
+        self.cp = cp
 
-            #: Number of slender body elements. If NSB > 0, then NSB equal
-            #: divisions are assumed; if zero or blank, specify a list of
-            #: divisions in LSB. (Integer >= 0)
-            self.nsb = integer_or_blank(card, 4, 'nsb', 0)
+        #: Number of slender body elements. If NSB > 0, then NSB equal
+        #: divisions are assumed; if zero or blank, specify a list of
+        #: divisions in LSB. (Integer >= 0)
+        self.nsb = nsb
 
-            #: Number of interference elements. If NINT > 0, then NINT equal
-            #: divisions are assumed; if zero or blank, specify a list of
-            #: divisions in LINT. (Integer >= 0)
-            self.nint = integer_or_blank(card, 5, 'nint', 0)
+        #: Number of interference elements. If NINT > 0, then NINT equal
+        #: divisions are assumed; if zero or blank, specify a list of
+        #: divisions in LINT. (Integer >= 0)
+        self.nint = nint
 
-            if self.nsb == 0:
-                #: ID of an AEFACT Bulk Data entry for slender body division
-                #: points; used only if NSB is zero or blank. (Integer >= 0)
-                self.lsb = integer(card, 6, 'nsb=%s lsb' % self.nsb)
-            else:
-                self.lsb = blank(card, 6, 'nsb=%s lsb' % self.nsb)
+        #: ID of an AEFACT Bulk Data entry for slender body division
+        #: points; used only if NSB is zero or blank. (Integer >= 0)
+        self.lsb = lsb
 
-            if self.nint == 0:
-                #: ID of an AEFACT data entry containing a list of division
-                #: points for interference elements; used only if NINT is zero
-                #: or blank. (Integer > 0)
-                self.lint = integer(card, 7, 'nint=%s lint' % self.nint)
-            else:
-                self.lint = blank(card, 7, 'nint=%s lint' % self.nint)
+        #: ID of an AEFACT data entry containing a list of division
+        #: points for interference elements; used only if NINT is zero
+        #: or blank. (Integer > 0)
+        self.lint = lint
 
-            #: Interference group identification. Aerodynamic elements with
-            #: different IGIDs are uncoupled. (Integer >= 0)
-            self.igid = integer(card, 8, 'igid')
+        #: Interference group identification. Aerodynamic elements with
+        #: different IGIDs are uncoupled. (Integer >= 0)
+        self.igid = igid
 
-            #: Location of point 1 in coordinate system CP
-            self.p1 = np.array([
-                double_or_blank(card, 9, 'x1', 0.0),
-                double_or_blank(card, 10, 'y1', 0.0),
-                double_or_blank(card, 11, 'z1', 0.0)])
+        #: Location of point 1 in coordinate system CP
+        self.p1 = p1
 
-            #: Length of body in the x-direction of the aerodynamic coordinate
-            #: system.  (Real > 0)
-            self.x12 = double_or_blank(card, 12, 'x12', 0.)
-            assert len(card) <= 13, 'len(CAERO2 card) = %i' % len(card)
+        #: Length of body in the x-direction of the aerodynamic coordinate
+        #: system.  (Real > 0)
+        self.x12 = x12
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        eid = integer(card, 1, 'eid')
+        pid = integer(card, 2, 'pid')
+        cp = integer_or_blank(card, 3, 'cp', 0)
+        nsb = integer_or_blank(card, 4, 'nsb', 0)
+        nint = integer_or_blank(card, 5, 'nint', 0)
+
+        if nsb == 0:
+            lsb = integer(card, 6, 'nsb=%s lsb' % nsb)
         else:
-            msg = '%s has not implemented data parsing' % self.type
-            raise NotImplementedError(msg)
+            lsb = blank(card, 6, 'nsb=%s lsb' % nsb)
+
+        if nint == 0:
+            lint = integer(card, 7, 'nint=%s lint' % nint)
+        else:
+            lint = blank(card, 7, 'nint=%s lint' % nint)
+        igid = integer(card, 8, 'igid')
+
+        p1 = np.array([
+            double_or_blank(card, 9, 'x1', 0.0),
+            double_or_blank(card, 10, 'y1', 0.0),
+            double_or_blank(card, 11, 'z1', 0.0)])
+        x12 = double_or_blank(card, 12, 'x12', 0.)
+        assert len(card) <= 13, 'len(CAERO2 card) = %i' % len(card)
+        return CAERO2(eid, pid, cp, nsb, nint, lsb, lint, igid, p1, x12,
+                      comment=comment)
 
     #def Points(self):
         #self.deprecated('Points()', 'get_points()', '0.7')
@@ -1617,34 +1731,46 @@ class CAERO2(BaseCard):
 
 class CAERO3(BaseCard):
     type = 'CAERO3'
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self, eid, pid, cp, list_w, list_c1, list_c2,
+                 p1, x12, p4, x43, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            #: Element identification number
-            self.eid = integer(card, 1, 'eid')
-            #: Property identification number of a PAERO3 entry.
-            self.pid = integer(card, 2, 'pid')
-            #: Coordinate system for locating point 1.
-            self.cp = integer_or_blank(card, 3, 'cp', 0)
-            self.list_w = integer(card, 4, 'list_w')
-            self.list_c1 = integer_or_blank(card, 5, 'list_c1')
-            self.list_c2 = integer_or_blank(card, 6, 'list_c2')
-            self.p1 = np.array([
-                double_or_blank(card, 9, 'x1', 0.0),
-                double_or_blank(card, 10, 'y1', 0.0),
-                double_or_blank(card, 11, 'z1', 0.0)])
-            self.x12 = double(card, 12, 'x12')
-            assert self.x12 > 0., 'x12=%s' % self.x12
-            self.p4 = np.array([
-                double_or_blank(card, 13, 'x4', 0.0),
-                double_or_blank(card, 14, 'y4', 0.0),
-                double_or_blank(card, 15, 'z4', 0.0)])
-            self.x43 = double_or_blank(card, 16, 'x43', 0.0)
-            assert len(card) <= 17, 'len(CAERO3 card) = %i' % len(card)
-        else:
-            msg = '%s has not implemented data parsing' % self.type
-            raise NotImplementedError(msg)
+        #: Element identification number
+        self.eid = eid
+        #: Property identification number of a PAERO3 entry.
+        self.pid = pid
+        #: Coordinate system for locating point 1.
+        self.cp = cp
+        self.list_w = list_w
+        self.list_c1 = list_c1
+        self.list_c2 = list_c2
+        self.p1 = p1
+        self.x12 = x12
+        self.p4 = p4
+        self.x43 = x43
+        assert self.x12 > 0., 'x12=%s' % self.x12
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        eid = integer(card, 1, 'eid')
+        pid = integer(card, 2, 'pid')
+        cp = integer_or_blank(card, 3, 'cp', 0)
+        list_w = integer(card, 4, 'list_w')
+        list_c1 = integer_or_blank(card, 5, 'list_c1')
+        list_c2 = integer_or_blank(card, 6, 'list_c2')
+        p1 = np.array([
+            double_or_blank(card, 9, 'x1', 0.0),
+            double_or_blank(card, 10, 'y1', 0.0),
+            double_or_blank(card, 11, 'z1', 0.0)])
+        x12 = double(card, 12, 'x12')
+        p4 = np.array([
+            double_or_blank(card, 13, 'x4', 0.0),
+            double_or_blank(card, 14, 'y4', 0.0),
+            double_or_blank(card, 15, 'z4', 0.0)])
+        x43 = double_or_blank(card, 16, 'x43', 0.0)
+        assert len(card) <= 17, 'len(CAERO3 card) = %i' % len(card)
+        return CAERO3(eid, pid, cp, list_w, list_c1, list_c2,
+                      p1, x12, p4, x43, comment=comment)
 
     def cross_reference(self, model):
         """
@@ -1716,35 +1842,48 @@ class CAERO3(BaseCard):
 
 class CAERO4(BaseCard):
     type = 'CAERO4'
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self, eid, pid, cp, nspan, lspan, p1, x12, p4, x43,
+                 comment=''):
         if comment:
             self._comment = comment
-        if card:
-            #: Element identification number
-            self.eid = integer(card, 1, 'eid')
-            #: Property identification number of a PAERO4 entry.
-            self.pid = integer(card, 2, 'pid')
-            #: Coordinate system for locating point 1.
-            self.cp = integer_or_blank(card, 3, 'cp', 0)
 
-            self.nspan = integer_or_blank(card, 4, 'nspan', 0)
-            self.lspan = integer_or_blank(card, 5, 'lspan', 0)
+        #: Element identification number
+        self.eid = eid
 
-            self.p1 = np.array([
-                double_or_blank(card, 9, 'x1', 0.0),
-                double_or_blank(card, 10, 'y1', 0.0),
-                double_or_blank(card, 11, 'z1', 0.0)])
-            self.x12 = double_or_blank(card, 12, 'x12', 0.)
+        #: Property identification number of a PAERO4 entry.
+        self.pid = pid
 
-            self.p4 = np.array([
-                double_or_blank(card, 13, 'x4', 0.0),
-                double_or_blank(card, 14, 'y4', 0.0),
-                double_or_blank(card, 15, 'z4', 0.0)])
-            self.x43 = double_or_blank(card, 16, 'x43', 0.)
-            assert len(card) <= 17, 'len(CAERO4 card) = %i' % len(card)
-        else:
-            msg = '%s has not implemented data parsing' % self.type
-            raise NotImplementedError(msg)
+        #: Coordinate system for locating point 1.
+        self.cp = cp
+        self.nspan = nspan
+        self.lspan = lspan
+        self.p1 = p1
+        self.x12 = x12
+        self.p4 = p4
+        self.x43 = x43
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        eid = integer(card, 1, 'eid')
+        pid = integer(card, 2, 'pid')
+        cp = integer_or_blank(card, 3, 'cp', 0)
+        nspan = integer_or_blank(card, 4, 'nspan', 0)
+        lspan = integer_or_blank(card, 5, 'lspan', 0)
+
+        p1 = np.array([
+            double_or_blank(card, 9, 'x1', 0.0),
+            double_or_blank(card, 10, 'y1', 0.0),
+            double_or_blank(card, 11, 'z1', 0.0)])
+        x12 = double_or_blank(card, 12, 'x12', 0.)
+
+        p4 = np.array([
+            double_or_blank(card, 13, 'x4', 0.0),
+            double_or_blank(card, 14, 'y4', 0.0),
+            double_or_blank(card, 15, 'z4', 0.0)])
+        x43 = double_or_blank(card, 16, 'x43', 0.)
+        assert len(card) <= 17, 'len(CAERO4 card) = %i' % len(card)
+        return CAERO4(eid, pid, cp, nspan, lspan, p1, x12, p4, x43,
+                      comment=comment)
 
     def get_points(self):
         p1 = self.cp_ref.transform_node_to_global(self.p1)
@@ -1821,43 +1960,59 @@ class CAERO4(BaseCard):
 
 class CAERO5(BaseCard):
     type = 'CAERO5'
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self, eid, pid, cp, nspan, lspan, ntheory, nthick,
+                 p1, x12, p4, x43, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            #: Element identification number
-            self.eid = integer(card, 1, 'eid')
-            #: Property identification number of a PAERO5 entry.
-            self.pid = integer(card, 2, 'pid')
-            #: Coordinate system for locating point 1.
-            self.cp = integer_or_blank(card, 3, 'cp', 0)
-            self.nspan = integer_or_blank(card, 4, 'nspan', 0)
-            self.lspan = integer_or_blank(card, 5, 'lspan', 0)
-            self.ntheory = integer_or_blank(card, 6, 'ntheory')
-            self.nthick = integer_or_blank(card, 7, 'nthick')
-            # 8 - blank
-            self.p1 = np.array([
-                double_or_blank(card, 9, 'x1', 0.0),
-                double_or_blank(card, 10, 'y1', 0.0),
-                double_or_blank(card, 11, 'z1', 0.0)])
-            self.x12 = double(card, 12, 'x12')
-            assert self.x12 > 0., 'x12=%s' % self.x12
-            self.p4 = np.array([
-                double_or_blank(card, 13, 'x4', 0.0),
-                double_or_blank(card, 14, 'y4', 0.0),
-                double_or_blank(card, 15, 'z4', 0.0)])
-            self.x43 = double_or_blank(card, 16, 'x43', 0.0)
-            assert len(card) <= 17, 'len(CAERO3 card) = %i' % len(card)
-        else:
-            msg = '%s has not implemented data parsing' % self.type
-            raise NotImplementedError(msg)
 
+        #: Element identification number
+        self.eid = eid
+
+        #: Property identification number of a PAERO5 entry.
+        self.pid = pid
+
+        #: Coordinate system for locating point 1.
+        self.cp = cp
+        self.nspan = nspan
+        self.lspan = lspan
+        self.ntheory = ntheory
+        self.nthick = nthick
+        self.p1 = p1
+        self.x12 = x12
+        self.p4 = p4
+        self.x43 = x43
+
+        assert self.x12 > 0., 'x12=%s' % self.x12
         if not (self.nspan > 0 or self.lspan > 0):
             msg = 'nspan=%r or lspan=%r must be > 0' % (self.nspan, self.lspan)
             raise ValueError(msg)
         if not (self.x12 > 0.0 or self.x43 > 0.0):
             msg = 'x12=%r or x43=%r must be > 0.0' % (self.x12, self.x43)
             raise ValueError(msg)
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        eid = integer(card, 1, 'eid')
+        pid = integer(card, 2, 'pid')
+        cp = integer_or_blank(card, 3, 'cp', 0)
+        nspan = integer_or_blank(card, 4, 'nspan', 0)
+        lspan = integer_or_blank(card, 5, 'lspan', 0)
+        ntheory = integer_or_blank(card, 6, 'ntheory')
+        nthick = integer_or_blank(card, 7, 'nthick')
+        # 8 - blank
+        p1 = np.array([
+            double_or_blank(card, 9, 'x1', 0.0),
+            double_or_blank(card, 10, 'y1', 0.0),
+            double_or_blank(card, 11, 'z1', 0.0)])
+        x12 = double(card, 12, 'x12')
+        p4 = np.array([
+            double_or_blank(card, 13, 'x4', 0.0),
+            double_or_blank(card, 14, 'y4', 0.0),
+            double_or_blank(card, 15, 'z4', 0.0)])
+        x43 = double_or_blank(card, 16, 'x43', 0.0)
+        assert len(card) <= 17, 'len(CAERO3 card) = %i' % len(card)
+        return CAERO5(eid, pid, cp, nspan, lspan, ntheory, nthick,
+                      p1, x12, p4, x43, comment=comment)
 
     def cross_reference(self, model):
         """
@@ -1940,15 +2095,15 @@ class CAERO5(BaseCard):
             # piston theory
             pass
         elif self.ntheory == 1:
-            gamma = 1.4
+            raise NotImplementedError('ntheory=%s' % self.ntheory)
+            #gamma = 1.4
             #Lambda = 0.
-            c1 = 1.
-
-            secL = 1 / np.cos(Lambda)
-            secL2 = secL ** 2
-            ma2_secL2 = mach ** 2 - secL2
-            c1 = mach / ma2_secL2 ** 0.5
-            c2 = (mach ** 4 * (gamma + 1) - 4 * secL2 * ma2_secL2) / (4 * ma2_secL2 ** 2)
+            #c1 = 1.
+            #secL = 1 / np.cos(Lambda)
+            #secL2 = secL ** 2
+            #ma2_secL2 = mach ** 2 - secL2
+            #c1 = mach / ma2_secL2 ** 0.5
+            #c2 = (mach ** 4 * (gamma + 1) - 4 * secL2 * ma2_secL2) / (4 * ma2_secL2 ** 2)
         else:
             gamma = 1.4
 
@@ -1973,6 +2128,11 @@ class CAERO5(BaseCard):
         if isinstance(self.pid, integer_types):
             return self.pid
         return self.pid_ref.pid
+
+    def LSpan(self):
+        if isinstance(self.lspan, integer_types):
+            return self.lspan
+        return self.lspan_ref.sid
 
     def repr_fields(self):
         """
@@ -2040,7 +2200,8 @@ def points_elements_from_quad_points(p1, p2, p3, p4, x, y):
 
 
 class PAERO5(BaseCard):
-    def __init__(self, card=None, data=None):
+    def __init__(self, pid, nalpha, lalpha, nxis, lxis, ntaus, ltaus,
+                 caoci, comment=''):
         """
         +--------+-------+--------+--------+---------+-------+-------+-------+
         | PAERO5 | PID   | NALPHA | LALPHA | NXIS    | LXIS  | NTAUS | LTAUS |
@@ -2054,33 +2215,44 @@ class PAERO5(BaseCard):
         |        |  0.0  |  0.0   |  5.25  | 3.99375 |  0.0  |       |       |
         +--------+-------+--------+--------+---------+-------+-------+-------+
         """
-        if card:
-            self.pid = integer(card, 1, 'property_id')
-            self.nalpha = integer_or_blank(card, 2, 'nalpha', default=0)
-            self.lalpha = integer_or_blank(card, 3, 'lalpha', default=0)
+        if comment:
+            self._comment = comment
+        self.pid = pid
+        self.nalpha = nalpha
+        self.lalpha = lalpha
 
-            # number of dimensionless chord coordinates in zeta ()
-            self.nxis = integer_or_blank(card, 4, 'nxis', default=0)
+        # number of dimensionless chord coordinates in zeta ()
+        self.nxis = nxis
+        # ID of AEFACT that lists zeta
+        self.lxis = lxis
 
-            # ID of AEFACT that lists zeta
-            self.lxis = integer_or_blank(card, 5, 'lxis', default=0)
+        # number of dimensionless thickess coordinates in tau
+        self.ntaus = ntaus
+        # ID of AEFACT that lists thickness ratios (t/c)
+        self.ltaus = ltaus
 
-            # number of dimensionless thickess coordinates in tau
-            self.ntaus = integer_or_blank(card, 6, 'ntaus', default=0)
+        # ca/c - control surface chord / strip chord
+        self.caoci = np.array(caoci, dtype='float64')
 
-            # ID of AEFACT that lists thickness ratios (t/c)
-            self.ltaus = integer_or_blank(card, 7, 'ltaus', default=0)
+    @classmethod
+    def add_card(cls, card, comment=''):
+        pid = integer(card, 1, 'property_id')
+        nalpha = integer_or_blank(card, 2, 'nalpha', default=0)
+        lalpha = integer_or_blank(card, 3, 'lalpha', default=0)
 
-            # ca/c - control surface chord / strip chord
-            caoci = []
-            j = 0
-            for n, i in enumerate(range(9, len(card))):
-                ca = double(card, i, 'ca/ci_%i' % (n+1))
-                caoci.append(ca)
-            self.caoci = np.array(caoci, dtype='float64')
-        else:
-            raise NotImplementedError('data')
+        nxis = integer_or_blank(card, 4, 'nxis', default=0)
+        lxis = integer_or_blank(card, 5, 'lxis', default=0)
 
+        ntaus = integer_or_blank(card, 6, 'ntaus', default=0)
+        ltaus = integer_or_blank(card, 7, 'ltaus', default=0)
+
+        caoci = []
+        #j = 0
+        for n, i in enumerate(range(9, len(card))):
+            ca = double(card, i, 'ca/ci_%i' % (n+1))
+            caoci.append(ca)
+        return PAERO5(pid, nalpha, lalpha, nxis, lxis, ntaus, ltaus, caoci,
+                      comment=comment)
     @property
     def lxis_id(self):
         return self.lxis if isinstance(self.lxis, integer_types) else self.lxis_ref.aid
@@ -2141,6 +2313,60 @@ class PAERO5(BaseCard):
         #return(I1, I2, I3, I4, I5,
                #J1, J2, J3, J4, J5)
 
+class DIVERG(BaseCard):
+    """
+    +--------+-------+----------+-------+-------+-------+-------+-------+-------+
+    |   1    |   2   |    3     |   4   |   5   |   6   |   7   |   8   |   9   |
+    +========+=======+==========+=======+=======+=======+=======+=======+=======+
+    | DIVERG |  SID  |  NROOT   |   M1  |   M2  |   M3  |   M4  |   M5  |   M6  |
+    +--------+-------+----------+-------+-------+-------+-------+-------+-------+
+    |        |   M7  |  -etc.-  |       |       |       |       |       |       |
+    +--------+-------+----------+-------+-------+-------+-------+-------+-------+
+
+    Attributes
+    ----------
+    sid : int
+        The name.
+    nroots : int
+        the number of roots
+    machs : List[float]
+        list of Mach numbers
+    """
+    type = 'DIVERG'
+
+    def __init__(self, sid, nroots, machs, comment=''):
+        if comment:
+            self._comment = comment
+        self.sid = sid
+        self.nroots = nroots
+        self.machs = machs
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        sid = integer(card, 1, 'sid')
+        nroots = integer(card, 2, 'nroot')
+        j = 1
+        machs = []
+        for i in range(3, len(card)):
+            mach = double(card, i, 'Mach_%i' % j)
+            machs.append(mach)
+            j += 1
+        return DIVERG(sid, nroots, machs, comment=comment)
+
+    def cross_reference(self, model):
+        pass
+
+    def uncross_reference(self):
+        pass
+
+    def raw_fields(self):
+        list_fields = ['DIVERG', self.nroots] + list(self.machs)
+        return list_fields
+
+    def write_card(self, size=8, is_double=False):
+        card = self.repr_fields()
+        return self.comment + print_card_8(card)
+
 
 class FLFACT(BaseCard):
     """
@@ -2170,33 +2396,51 @@ class FLFACT(BaseCard):
     """
     type = 'FLFACT'
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self, sid, factors, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            self.sid = integer(card, 1, 'sid')
-            assert len(card) > 2, 'len(FLFACT card)=%s; card=%s' % (len(card), card)
-            field3 = double_string_or_blank(card, 3, 'THRU')
-            if field3 == 'THRU':
-                f1 = double(card, 2, 'f1')
-                fnf = double(card, 4, 'fnf')
-                nf = double(card, 5, 'nf')
-                fmid = double(card, 6, 'fmid')
-                assert len(card) == 7, 'len(FLFACT card)=%s; card=%s' % (len(card), card)
-                i = np.linspace(0, nf, nf, endpoint=False)
-                self.factors = ((f1*(fnf - fmid) * (nf - 1) + fnf * (fmid - f1) * i) /
-                                   ((fnf - fmid) * (nf - 1) +       (fmid - f1) * i))
-            else:
-                self.factors = fields(double, card, 'factors', i=2, j=len(card))
+        self.sid = sid
+        #self.f1 = f1
+        #self.fnf = fnf
+        #self.nf = nf
+        #self.fmid = fmid
+        if len(factors) > 1 and isinstance(factors[1], string_types) and factors[1] == 'THRU':
+            msg = 'embedded THRUs not supported yet on FLFACT card\n'
+            raise NotImplementedError(msg)
+            #(a,thru,b,n,dn) = factors
+            #for i in range(
+        self.factors = np.asarray(factors)
 
-            if len(self.factors) > 1 and self.factors[1] == 'THRU':
-                msg = 'embedded THRUs not supported yet on FLFACT card\n'
-                raise NotImplementedError(msg)
-                #(a,thru,b,n,dn) = factors
-                #for i in range(
+    @classmethod
+    def add_card(cls, card, comment=''):
+        sid = integer(card, 1, 'sid')
+        assert len(card) > 2, 'len(FLFACT card)=%s; card=%s' % (len(card), card)
+        field3 = double_string_or_blank(card, 3, 'THRU')
+        if field3 is None:
+            f1 = double(card, 2, 'f1')
+            factors = [f1]
+            assert len(card) == 3, 'len(FLFACT card)=%s; card=%s' % (len(card), card)
+        elif isinstance(field3, float):
+            factors = fields(double, card, 'factors', i=2, j=len(card))
+        elif isinstance(field3, string_types) and field3 == 'THRU':
+            f1 = double(card, 2, 'f1')
+            fnf = double(card, 4, 'fnf')
+            nf = integer(card, 5, 'nf')
+            fmid_default = (f1 + fnf) / 2.
+            fmid = double_or_blank(card, 6, 'fmid', fmid_default)
+            assert len(card) <= 7, 'len(FLFACT card)=%s; card=%s' % (len(card), card)
+            i = np.linspace(0, nf, nf, endpoint=False)
+            factors = ((f1*(fnf - fmid) * (nf - 1) + fnf * (fmid - f1) * i) /
+                          ((fnf - fmid) * (nf - 1) +       (fmid - f1) * i))
         else:
-            self.sid = data[0]
-            self.factors = data[1:]
+            raise SyntaxError('expected a float or string for FLFACT field 3; value=%r' % field3)
+        return FLFACT(sid, factors, comment=comment)
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        sid = data[0]
+        factors = data[1:]
+        return FLFACT(sid, factors, comment=comment)
 
     def uncross_reference(self):
         pass
@@ -2210,7 +2454,7 @@ class FLFACT(BaseCard):
         fields : list[varies]
             the fields that define the card
         """
-        list_fields = ['FLFACT', self.sid] + self.factors
+        list_fields = ['FLFACT', self.sid] + list(self.factors)
         return list_fields
 
     def write_card(self, size=8, is_double=False):
@@ -2246,11 +2490,11 @@ class FLUTTER(BaseCard):
         """
         if n == 7:
             if self.method in ['K', 'KE']:
-                value = self.nValue
+                value = self.nvalue
             elif self.method in ['PKS', 'PKNLS']:
                 value = self.omax
             else:
-                value = self.nValue
+                value = self.nvalue
             return value
         else:
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
@@ -2266,57 +2510,85 @@ class FLUTTER(BaseCard):
         """
         if n == 7:
             if self.method in ['K', 'KE']:
-                self.nValue = value
+                self.nvalue = value
             elif self.method in ['PKS', 'PKNLS']:
                 self.omax = value
             else:
-                self.nValue = value
+                self.nvalue = value
         else:
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self, sid, method, density, mach, reduced_freq_velocity,
+                 imethod='L', nvalue=None, omax=None, epsilon=None, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            self.sid = integer(card, 1, 'sid')
-            self.method = string(card, 2, 'method')
-            self.density = integer(card, 3, 'density')
-            self.mach = integer(card, 4, 'mach')
-            self.rfreq_vel = integer(card, 5, 'rfreq_vel')
-
-            if self.method in ['K', 'KE']:
-                self.imethod = string_or_blank(card, 6, 'imethod', 'L')
-                self.nValue = integer_or_blank(card, 7, 'nValue')
-                self.omax = None
-                assert self.imethod in ['L', 'S'], 'imethod = %s' % self.imethod
-            elif self.method in ['PKS', 'PKNLS']:
-                self.imethod = None
-                self.nValue = None
-                self.omax = double_or_blank(card, 7, 'omax')
-            else:
-                self.nValue = integer_or_blank(card, 7, 'nValue')
-                self.omax = None
-                self.imethod = None
-
-            self.epsilon = double_or_blank(card, 8, 'epsilon')  # not defined in QRG
-            assert len(card) <= 9, 'len(FLUTTER card) = %i' % len(card)
-
+        self.sid = sid
+        if method in ['PK', 'PKNL', 'PKNLS']:
+            imethod = 'L'
         else:
-            assert len(data) == 8, 'FLUTTER = %s' % data
-            self.sid = data[0]
-            self.method = data[1]
-            self.density = data[2]
-            self.mach = data[3]
-            self.rfreq_vel = data[4]
-            self.method = data[5]
-            self.imethod = data[6]
-            self.nValue = data[7]
-            self.omax = data[8]
-            self.epsilon = None
-            msg = '%s has not implemented data parsing' % self.type
-            raise NotImplementedError(msg)
+            assert imethod in ['S', 'L', None], imethod
+        self.method = method
+        self.density = density
+        self.mach = mach
+        self.reduced_freq_velocity = reduced_freq_velocity
+        self.imethod = imethod
+        self.nvalue = nvalue
+        self.omax = omax
+        self.epsilon = epsilon
+        assert method in ['K', 'PK', 'PKNL', 'PKS', 'PKNLS', 'KE'], 'method = %s' % method
 
-        assert self.method in ['K', 'PK', 'PKNL', 'PKS', 'PKNLS', 'KE'], 'method = %s' % self.method
+    @classmethod
+    def add_card(cls, card, comment=''):
+        sid = integer(card, 1, 'sid')
+        method = string(card, 2, 'method')
+        density_id = integer(card, 3, 'density')
+        mach_id = integer(card, 4, 'mach')
+        reduced_freq_velocity_id = integer(card, 5, 'reduced_freq_velocity')
+
+        if method in ['K', 'KE']:
+            imethod = string_or_blank(card, 6, 'imethod', 'L')
+            nvalue = integer_or_blank(card, 7, 'nvalue')
+            omax = None
+            assert imethod in ['L', 'S'], 'imethod = %s' % imethod  # linear-surface
+        elif method in ['PKS', 'PKNLS']:
+            imethod = None
+            nvalue = None
+            omax = double_or_blank(card, 7, 'omax')
+        elif method == 'PKNL':
+            nvalue = integer_or_blank(card, 7, 'nvalue')
+            omax = None
+            imethod = None
+        elif method == 'PK':
+            nvalue = integer_or_blank(card, 7, 'nvalue')
+            omax = None
+            imethod = None
+        else:
+            raise NotImplementedError('FLUTTER method=%r' % method)
+
+        assert method in ['K', 'KE', 'PK', 'PKS', 'PKNL', 'PKNLS', None], method
+        epsilon = double_or_blank(card, 8, 'epsilon')  # not defined in QRG
+        assert len(card) <= 9, 'len(FLUTTER card) = %i' % len(card)
+        return FLUTTER(sid, method, density_id, mach_id, reduced_freq_velocity_id,
+                       imethod=imethod, nvalue=nvalue, omax=omax,
+                       epsilon=epsilon, comment=comment)
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        assert len(data) == 8, 'FLUTTER = %s' % data
+        sid = data[0]
+        method = data[1]
+        density = data[2]
+        mach = data[3]
+        reduced_freq_velocity = data[4]
+        method = data[5]
+        imethod = data[6]
+        nvalue = data[7]
+        omax = data[8]
+        epsilon = None
+        return FLUTTER(sid, method, density, mach, reduced_freq_velocity,
+                       imethod, nvalue, omax,
+                       epsilon, comment=comment)
+
 
     def cross_reference(self, model):
         """
@@ -2329,18 +2601,18 @@ class FLUTTER(BaseCard):
         """
         msg = ' which is required by FLUTTER sid=%s' % self.sid
         self.density = model.FLFACT(self.density, msg=msg)
-        self.mach = model.FLFACT(self.density, msg=msg)
-        self.rfreq_val = model.FLFACT(self.density, msg=msg)
+        self.mach = model.FLFACT(self.mach, msg=msg)
+        self.reduced_freq_velocity = model.FLFACT(self.reduced_freq_velocity, msg=msg)
 
         self.density_ref = self.density
         self.mach_ref = self.mach
-        self.rfreq_val = self.rfreq_val
+        self.reduced_freq_velocity_ref = self.reduced_freq_velocity
 
     def uncross_reference(self):
         self.density = self.get_density()
         self.mach = self.get_mach()
-        self.rfreq_val = self.get_rfreq_vel()
-        del self.density_ref, self.mach_ref, self.rfreq_val
+        self.reduced_freq_velocity = self.get_rfreq_vel()
+        del self.density_ref, self.mach_ref, self.reduced_freq_velocity
 
     def get_density(self):
         if isinstance(self.density, integer_types):
@@ -2353,28 +2625,28 @@ class FLUTTER(BaseCard):
         return self.mach_ref.sid
 
     def get_rfreq_vel(self):
-        if isinstance(self.rfreq_vel, integer_types):
-            return self.rfreq_vel
-        return self.rfreq_vel_ref.sid
+        if isinstance(self.reduced_freq_velocity, integer_types):
+            return self.reduced_freq_velocity
+        return self.reduced_freq_velocity_ref.sid
 
     def _get_raw_nvalue_omax(self):
         if self.method in ['K', 'KE']:
             #assert self.imethod in ['L', 'S'], 'imethod = %s' % self.imethod
-            return(self.imethod, self.nValue)
+            return(self.imethod, self.nvalue)
         elif self.method in ['PKS', 'PKNLS']:
             return(self.imethod, self.omax)
         else:
-            return(self.imethod, self.nValue)
+            return(self.imethod, self.nvalue)
 
     def _repr_nvalue_omax(self):
         if self.method in ['K', 'KE']:
             imethod = set_blank_if_default(self.imethod, 'L')
             #assert self.imethod in ['L', 'S'], 'imethod = %s' % self.imethods
-            return (imethod, self.nValue)
+            return (imethod, self.nvalue)
         elif self.method in ['PKS', 'PKNLS']:
             return(self.imethod, self.omax)
         else:
-            return(self.imethod, self.nValue)
+            return(self.imethod, self.nvalue)
 
     def raw_fields(self):
         """
@@ -2385,9 +2657,9 @@ class FLUTTER(BaseCard):
         fields : list[varies]
             the fields that define the card
         """
-        (imethod, nValue) = self._get_raw_nvalue_omax()
+        (imethod, nvalue) = self._get_raw_nvalue_omax()
         list_fields = ['FLUTTER', self.sid, self.method, self.get_density(),
-                       self.get_mach(), self.get_rfreq_vel(), imethod, nValue, self.epsilon]
+                       self.get_mach(), self.get_rfreq_vel(), imethod, nvalue, self.epsilon]
         return list_fields
 
     #def repr_fields(self):
@@ -2419,23 +2691,34 @@ class GUST(BaseCard):
         1: 'sid', 2:'dload', 3:'wg', 4:'x0', 5:'V',
     }
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self, sid, dload, wg, x0, V, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            self.sid = integer(card, 1, 'sid')
-            self.dload = integer(card, 2, 'dload')
-            self.wg = double(card, 3, 'wg')
-            self.x0 = double(card, 4, 'x0')
-            self.V = double_or_blank(card, 4, 'V')
-            assert len(card) <= 6, 'len(GUST card) = %i' % len(card)
-        else:
-            self.sid = data[0]
-            self.dload = data[1]
-            self.wg = data[2]
-            self.x0 = data[3]
-            self.V = data[4]
-            assert len(data) == 5, 'data = %s' % data
+        self.sid = sid
+        self.dload = dload
+        self.wg = wg
+        self.x0 = x0
+        self.V = V
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        sid = integer(card, 1, 'sid')
+        dload = integer(card, 2, 'dload')
+        wg = double(card, 3, 'wg')
+        x0 = double(card, 4, 'x0')
+        V = double_or_blank(card, 4, 'V')
+        assert len(card) <= 6, 'len(GUST card) = %i' % len(card)
+        return GUST(sid, dload, wg, x0, V, comment=comment)
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        sid = data[0]
+        dload = data[1]
+        wg = data[2]
+        x0 = data[3]
+        V = data[4]
+        assert len(data) == 5, 'data = %s' % data
+        return GUST(sid, dload, wg, x0, V, comment=comment)
 
     #def Angle(self):
         #angle = self.wg*self.t*(t-(x-self.x0)/self.V) # T is the tabular
@@ -2476,25 +2759,25 @@ class MKAERO1(BaseCard):
     """
     type = 'MKAERO1'
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self, machs, reduced_freqs, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            fields = [interpret_value(field) for field in card[1:]]
-            nfields = len(fields) - 8
-            self.machs = []
-            self.rFreqs = []
-            for i in range(1, 1 + nfields):
-                self.machs.append(double_or_blank(card, i, 'mach'))
-                self.rFreqs.append(double_or_blank(card, i + 8, 'rFreq'))
-            self.machs = wipe_empty_fields(self.machs)
-            self.v = wipe_empty_fields(self.rFreqs)
-        else:
-            msg = '%s has not implemented data parsing' % self.type
-            raise NotImplementedError(msg)
+        self.machs = np.unique(machs)
+        self.reduced_freqs = np.unique(reduced_freqs)
 
-        #print("machs  = ",self.machs)
-        #print("rFreqs = ",self.rFreqs)
+    @classmethod
+    def add_card(cls, card, comment=''):
+        list_fields = [interpret_value(field) for field in card[1:]]
+        nfields = len(list_fields) - 8
+        machs = []
+        reduced_freqs = []
+        for i in range(1, 1 + nfields):
+            machs.append(double_or_blank(card, i, 'mach'))
+            reduced_freqs.append(double_or_blank(card, i + 8, 'rFreq'))
+
+        machs = wipe_empty_fields(machs)
+        reduced_freqs = wipe_empty_fields(reduced_freqs)
+        return MKAERO1(machs, reduced_freqs, comment=comment)
 
     def uncross_reference(self):
         pass
@@ -2503,8 +2786,8 @@ class MKAERO1(BaseCard):
         self.getMach_rFreqs()
         for m in mkaero.machs:
             self.machs.append(m)
-        for f in mkaero.rFreqs:
-            self.rFreqs.append(f)
+        for f in mkaero.reduced_freqs:
+            self.reduced_freqs.append(f)
 
     def raw_fields(self):
         """
@@ -2516,23 +2799,71 @@ class MKAERO1(BaseCard):
             the fields that define the card
         """
         #list_fields = ['MKAERO1']
-        #for (i, mach, rfreq) in zip(count(), self.machs, self.rFreqs):
+        #for (i, mach, rfreq) in zip(count(), self.machs, self.reduced_freqs):
         #    list_fields += [mach, rfreq]
         machs = [None] * 8
         freqs = [None] * 8
         for i, mach in enumerate(self.machs):
             machs[i] = mach
-        for i, freq in enumerate(self.rFreqs):
+        for i, freq in enumerate(self.reduced_freqs):
             freqs[i] = freq
         list_fields = ['MKAERO1'] + machs + freqs
         return list_fields
 
     def getMach_rFreqs(self):
-        return self.machs, self.rFreqs
+        return self.machs, self.reduced_freqs
 
     def write_card(self, size=8, is_double=False):
-        card = self.repr_fields()
-        return self.comment + print_card_8(card)
+        cards = []
+        nmachs = len(self.machs)
+        nreduced_freqs = len(self.reduced_freqs)
+        if nmachs > 8 or nreduced_freqs > 8:
+            if 1:
+                cards = []
+                mach_sets = []
+                rfreq_sets = []
+                imach = 0
+                ifreq = 0
+                while imach < nmachs:
+                    mach_sets.append(self.machs[imach:imach+8])
+                    imach += 8
+                while ifreq < nreduced_freqs:
+                    rfreq_sets.append(self.reduced_freqs[ifreq:ifreq+8])
+                    ifreq += 8
+                msg = self.comment
+
+                #print('mach_sets =', mach_sets)
+                #print('rfreq_sets =', rfreq_sets)
+                for mach_set in mach_sets:
+                    for rfreq_set in rfreq_sets:
+                        msg += MKAERO1(mach_set, rfreq_set).write_card(
+                            size=size, is_double=is_double)
+                return msg
+            else:
+                machs = []
+                reduced_freqs = []
+                for mach in self.machs:
+                    machs += [mach] * nreduced_freqs
+                    reduced_freqs += self.reduced_freqs
+                return self.comment + MKAERO2(machs, reduced_freqs).write_card(
+                    size=size, is_double=is_double)
+
+        list_fields = ['MKAERO1']
+        machs = [None] * 8
+        reduced_freqs = [None] * 8
+        cards = []
+        if not 0 < len(self.machs) <= 8:
+            msg = 'nmachs=%s machs=%s' % (len(self.machs), self.machs)
+            raise ValueError(msg)
+        if not 0 < len(self.reduced_freqs) <= 8:
+            msg = 'nrfreqs=%s rfreqs=%s' % (len(self.reduced_freqs), self.reduced_freqs)
+            raise ValueError(msg)
+
+        for i, mach in zip(count(), self.machs):
+            machs[i] = mach
+        for i, rfreq in zip(count(), self.reduced_freqs):
+            reduced_freqs[i] = rfreq
+        return self.comment + print_card_8(['MKAERO1'] + machs + reduced_freqs)
 
 
 class MKAERO2(BaseCard):
@@ -2548,20 +2879,22 @@ class MKAERO2(BaseCard):
     """
     type = 'MKAERO2'
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self, machs, reduced_freqs, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            fields = card.fields(1)
-            nfields = len(fields)
-            self.machs = []
-            self.rFreqs = []
-            for i in range(1, 1 + nfields, 2):
-                self.machs.append(double(card, i, 'mach'))
-                self.rFreqs.append(double(card, i + 1, 'rFreq'))
-        else:
-            msg = '%s has not implemented data parsing' % self.type
-            raise NotImplementedError(msg)
+        self.machs = machs
+        self.reduced_freqs = reduced_freqs
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        list_fields = card.fields(1)
+        nfields = len(list_fields)
+        machs = []
+        reduced_freqs = []
+        for i in range(1, 1 + nfields, 2):
+            machs.append(double(card, i, 'mach'))
+            reduced_freqs.append(double(card, i + 1, 'rFreq'))
+        return MKAERO2(machs, reduced_freqs, comment=comment)
 
     def uncross_reference(self):
         pass
@@ -2570,8 +2903,8 @@ class MKAERO2(BaseCard):
         self.getMach_rFreqs()
         for m in mkaero.machs:
             self.machs.append(m)
-        for f in mkaero.rFreqs:
-            self.rFreqs.append(f)
+        for f in mkaero.reduced_freqs:
+            self.reduced_freqs.append(f)
 
     def raw_fields(self):
         """
@@ -2583,39 +2916,57 @@ class MKAERO2(BaseCard):
             the fields that define the card
         """
         list_fields = ['MKAERO2']
-        for (i, mach, rfreq) in zip(count(), self.machs, self.rFreqs):
+        for (i, mach, rfreq) in zip(count(), self.machs, self.reduced_freqs):
             list_fields += [mach, rfreq]
         return list_fields
 
     def getMach_rFreqs(self):
-        return self.machs, self.rFreqs
+        return self.machs, self.reduced_freqs
 
     def write_card(self, size=8, is_double=False):
-        card = self.repr_fields()
-        return self.comment + print_card_8(card)
+        cards = []
+        list_fields = ['MKAERO2']
+        nvalues = 0
+        for mach, rfreq in zip(self.machs, self.reduced_freqs):
+            list_fields += [mach, rfreq]
+            nvalues += 1
+            if nvalues == 4:
+                cards.append(print_card_8(list_fields))
+                list_fields = ['MKAERO2']
+                nvalues = 0
+        if nvalues:
+            cards.append(print_card_8(list_fields))
+        return self.comment + ''.join(cards)
 
 class MONPNT1(BaseCard):
     type = 'MONPNT1'
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self, name, label, axes, comp, cid, xyz, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            self.name = string(card, 1, 'name')
+        self.name = name
+        self.label = label
+        self.axes = axes
+        self.comp = comp
+        self.cid = cid
+        self.xyz = xyz
 
-            label_fields = [labeli for labeli in card[2:8] if labeli is not None]
-            self.label = ''.join(label_fields).strip()
-            assert len(self.label) <= 56, self.label
+    @classmethod
+    def add_card(cls, card, comment=''):
+        name = string(card, 1, 'name')
 
-            self.axes = components(card, 9, 'axes')
-            self.comp = string(card, 10, 'comp')
-            self.cid = integer_or_blank(card, 11, 'cid', 0)
-            self.xyz = [
-                double_or_blank(card, 12, 'x', default=0.0),
-                double_or_blank(card, 13, 'y', default=0.0),
-                double_or_blank(card, 14, 'z', default=0.0),
-            ]
-        else:
-            raise NotImplementedError(card)
+        label_fields = [labeli for labeli in card[2:8] if labeli is not None]
+        label = ''.join(label_fields).strip()
+        assert len(label) <= 56, label
+
+        axes = components(card, 9, 'axes')
+        comp = string(card, 10, 'comp')
+        cid = integer_or_blank(card, 11, 'cid', 0)
+        xyz = [
+            double_or_blank(card, 12, 'x', default=0.0),
+            double_or_blank(card, 13, 'y', default=0.0),
+            double_or_blank(card, 14, 'z', default=0.0),
+        ]
+        return MONPNT1(name, label, axes, comp, cid, xyz, comment=comment)
 
     def uncross_reference(self):
         pass
@@ -2636,6 +2987,8 @@ class MONPNT1(BaseCard):
         card = self.repr_fields()
         return self.comment + msg
 
+    def __repr__(self):
+        return self.write_card()
 
 class PAERO1(BaseCard):
     """
@@ -2670,24 +3023,26 @@ class PAERO1(BaseCard):
         """
         self.Bi[n - 1] = value
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self, pid, Bi, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            self.pid = integer(card, 1, 'pid')
-            Bi = [interpret_value(field) for field in card[2:]]
-            self.Bi = []
+        self.pid = pid
+        self.Bi = Bi
 
-            for bi in Bi:
-                if isinstance(bi, int) and bi >= 0:
-                    self.Bi.append(bi)
-                elif bi is not None:
-                    raise RuntimeError('invalid Bi value on PAERO1 bi=|%r|' % (bi))
-                #else:
-                #    pass
-        else:
-            msg = '%s has not implemented data parsing' % self.type
-            raise NotImplementedError(msg)
+    @classmethod
+    def add_card(cls, card, comment=''):
+        pid = integer(card, 1, 'pid')
+        Bi = [interpret_value(field) for field in card[2:]]
+        Bi2 = []
+
+        for bi in Bi:
+            if isinstance(bi, int) and bi >= 0:
+                Bi2.append(bi)
+            elif bi is not None:
+                raise RuntimeError('invalid Bi value on PAERO1 bi=|%r|' % (bi))
+            #else:
+            #    pass
+        return PAERO1(pid, Bi, comment=comment)
 
     def cross_reference(self, model):
         pass
@@ -2766,45 +3121,58 @@ class PAERO2(BaseCard):
         else:
             self.thn[spot] = value
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self, pid, orient, width, AR, lrsb, lrib, lth1, lth2,
+                 thi, thn, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            #: Property identification number. (Integer > 0)
-            self.pid = integer(card, 1, 'pid')
-            #: Orientation flag. Type of motion allowed for bodies. Refers to
-            #: the aerodynamic coordinate system of ACSID. See AERO entry.
-            #: (Character = 'Z', 'Y', or 'ZY')
-            self.orient = string(card, 2, 'orient')
-            #: Reference half-width of body and the width of the constant width
-            #: interference tube. (Real > 0.0)
-            self.width = double(card, 3, 'width')
-            #: Aspect ratio of the interference tube (height/width). float>0.
-            self.AR = double(card, 4, 'AR')
-            #: Identification number of an AEFACT entry containing a list of
-            #: slender body half-widths at the end points of the slender body
-            #: elements. If blank, the value of WIDTH will be used.
-            #: (Integer > 0 or blank)
-            self.lrsb = integer_or_blank(card, 5, 'lrsb')
-            #: Identification number of an AEFACT entry containing a list of
-            #: slender body half-widths at the end points of the interference
-            #: elements. If blank, the value of WIDTH will be used.
-            #: (Integer > 0 or blank)
-            self.lrib = integer_or_blank(card, 6, 'lrib')
-            #: dentification number of AEFACT entries for defining ? arrays for
-            #: interference calculations. (Integer >= 0)
-            self.lth1 = integer_or_blank(card, 7, 'lth1')
-            self.lth2 = integer_or_blank(card, 8, 'lth2')
-            self.thi = []
-            self.thn = []
-            fields = [interpret_value(field) for field in card[9:]]
-            nfields = len(fields)
-            for i in range(9, 9 + nfields, 2):
-                self.thi.append(integer(card, i, 'lth'))
-                self.thn.append(integer(card, i + 1, 'thn'))
-        else:
-            msg = '%s has not implemented data parsing' % self.type
-            raise NotImplementedError(msg)
+        #: Property identification number. (Integer > 0)
+        self.pid = pid
+        #: Orientation flag. Type of motion allowed for bodies. Refers to
+        #: the aerodynamic coordinate system of ACSID. See AERO entry.
+        #: (Character = 'Z', 'Y', or 'ZY')
+        self.orient = orient
+        #: Reference half-width of body and the width of the constant width
+        #: interference tube. (Real > 0.0)
+        self.width = width
+        #: Aspect ratio of the interference tube (height/width). float>0.
+        self.AR = AR
+        #: Identification number of an AEFACT entry containing a list of
+        #: slender body half-widths at the end points of the slender body
+        #: elements. If blank, the value of WIDTH will be used.
+        #: (Integer > 0 or blank)
+        self.lrsb = lrsb
+        #: Identification number of an AEFACT entry containing a list of
+        #: slender body half-widths at the end points of the interference
+        #: elements. If blank, the value of WIDTH will be used.
+        #: (Integer > 0 or blank)
+        self.lrib = lrib
+        #: dentification number of AEFACT entries for defining ? arrays for
+        #: interference calculations. (Integer >= 0)
+        self.lth1 = lth1
+        self.lth2 = lth2
+
+        self.thi = thi
+        self.thn = thn
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        pid = integer(card, 1, 'pid')
+        orient = string(card, 2, 'orient')
+        width = double(card, 3, 'width')
+        AR = double(card, 4, 'AR')
+        lrsb = integer_or_blank(card, 5, 'lrsb')
+        lrib = integer_or_blank(card, 6, 'lrib')
+        lth1 = integer_or_blank(card, 7, 'lth1')
+        lth2 = integer_or_blank(card, 8, 'lth2')
+        thi = []
+        thn = []
+        list_fields = [interpret_value(field) for field in card[9:]]
+        nfields = len(list_fields)
+        for i in range(9, 9 + nfields, 2):
+            thi.append(integer(card, i, 'lth'))
+            thn.append(integer(card, i + 1, 'thn'))
+        return PAERO2(pid, orient, width, AR, lrsb, lrib, lth1, lth2,
+                      thi, thn, comment=comment)
 
     def cross_reference(self, model):
         pass
@@ -2881,28 +3249,33 @@ class PAERO3(BaseCard):
         else:
             self.y[spot] = value
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self, pid, nbox, ncontrol_surfaces, x, y, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            #: Property identification number. (Integer > 0)
-            self.pid = integer(card, 1, 'pid')
-            self.nbox = integer(card, 2, 'nbox')
-            self.ncontrol_surfaces = integer(card, 3, 'ncontrol_surfaces')
-            self.x = []
-            self.y = []
-            nfields = card.nfields
+        #: Property identification number. (Integer > 0)
+        self.pid = pid
+        self.nbox = nbox
+        self.ncontrol_surfaces = ncontrol_surfaces
+        self.x = x
+        self.y = y
 
-            j = 0
-            for i in range(6, nfields, 2):
-                x = double(card, i, 'x%i' % j)
-                y = double(card, i + 1, 'y%i' % j)
-                self.x.append(x)
-                self.y.append(y)
-                j += 1
-        else:
-            msg = '%s has not implemented data parsing' % self.type
-            raise NotImplementedError(msg)
+    @classmethod
+    def add_card(cls, card, comment=''):
+        pid = integer(card, 1, 'pid')
+        nbox = integer(card, 2, 'nbox')
+        ncontrol_surfaces = integer(card, 3, 'ncontrol_surfaces')
+        x = []
+        y = []
+        nfields = card.nfields
+
+        j = 0
+        for i in range(6, nfields, 2):
+            xi = double(card, i, 'x%i' % j)
+            yi = double(card, i + 1, 'y%i' % j)
+            x.append(xi)
+            y.append(yi)
+            j += 1
+        return PAERO3(pid, nbox, ncontrol_surfaces, x, y, comment=comment)
 
     def cross_reference(self, model):
         pass
@@ -2930,7 +3303,7 @@ class PAERO3(BaseCard):
 
 
 class Spline(BaseCard):
-    def __init__(self, card, data):
+    def __init__(self):
         pass
 
 
@@ -2955,40 +3328,59 @@ class SPLINE1(Spline):
         7: 'method', 8:'usage', 9:'nelements', 10:'melements',
     }
 
-    def __init__(self, card=None, data=None, comment=''):
-        Spline.__init__(self, card, data)
+    def __init__(self, eid, caero, box1, box2, setg, dz, method, usage,
+                 nelements, melements, comment=''):
+        Spline.__init__(self)
         if comment:
             self._comment = comment
-        if card:
-            self.eid = integer(card, 1, 'eid')
-            self.caero = integer(card, 2, 'caero')
-            self.box1 = integer(card, 3, 'box1')
-            self.box2 = integer(card, 4, 'box2')
-            self.setg = integer(card, 5, 'setg')
-            self.dz = double_or_blank(card, 6, 'dz', 0.0)
-            self.method = string_or_blank(card, 7, 'method', 'IPS')
-            self.usage = string_or_blank(card, 8, 'usage', 'BOTH')
-            self.nelements = integer_or_blank(card, 9, 'nelements', 10)
-            self.melements = integer_or_blank(card, 10, 'melements', 10)
-            assert self.nelements > 0, 'nelements = %s' % self.nelements
-            assert self.melements > 0, 'melements = %s' % self.melements
-            assert len(card) <= 11, 'len(SPLINE1 card) = %i' % len(card)
-        else:
-            self.eid = data[0]
-            self.caero = data[1]
-            self.box1 = data[2]
-            self.box2 = data[3]
-            self.setg = data[4]
-            self.dz = data[5]
-            self.method = data[6]
-            self.usage = data[7]
-            self.nelements = data[8]
-            self.melements = data[9]
-            assert len(data) == 10, 'data = %s' % data
+        self.eid = eid
+        self.caero = caero
+        self.box1 = box1
+        self.box2 = box2
+        self.setg = setg
+        self.dz = dz
+        self.method = method
+        self.usage = usage
+        self.nelements = nelements
+        self.melements = melements
 
+        assert self.nelements > 0, 'nelements = %s' % self.nelements
+        assert self.melements > 0, 'melements = %s' % self.melements
         assert self.box2 >= self.box1, 'box1=%s box2=%s' % (self.box1, self.box2)
         assert self.method in ['IPS', 'TPS', 'FPS'], 'method = %s' % self.method
         assert self.usage in ['FORCE', 'DISP', 'BOTH'], 'usage = %s' % self.usage
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        eid = integer(card, 1, 'eid')
+        caero = integer(card, 2, 'caero')
+        box1 = integer(card, 3, 'box1')
+        box2 = integer(card, 4, 'box2')
+        setg = integer(card, 5, 'setg')
+        dz = double_or_blank(card, 6, 'dz', 0.0)
+        method = string_or_blank(card, 7, 'method', 'IPS')
+        usage = string_or_blank(card, 8, 'usage', 'BOTH')
+        nelements = integer_or_blank(card, 9, 'nelements', 10)
+        melements = integer_or_blank(card, 10, 'melements', 10)
+        assert len(card) <= 11, 'len(SPLINE1 card) = %i' % len(card)
+        return SPLINE1(eid, caero, box1, box2, setg, dz, method, usage,
+                       nelements, melements, comment=comment)
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        eid = data[0]
+        caero = data[1]
+        box1 = data[2]
+        box2 = data[3]
+        setg = data[4]
+        dz = data[5]
+        method = data[6]
+        usage = data[7]
+        nelements = data[8]
+        melements = data[9]
+        assert len(data) == 10, 'data = %s' % data
+        return SPLINE1(eid, caero, box1, box2, setg, dz, method, usage,
+                       nelements, melements, comment=comment)
 
     @property
     def aero_element_ids(self):
@@ -3082,28 +3474,42 @@ class SPLINE2(Spline):
         7: 'dtor', 8:'cid', 9:'dthx', 10:'dthy',
     }
 
-    def __init__(self, card=None, data=None, comment=''):
-        Spline.__init__(self, card, data)
+    def __init__(self, eid, caero, id1, id2, setg, dz, dtor, cid,
+                 dthx, dthy, usage, comment=''):
+        Spline.__init__(self)
         if comment:
             self._comment = comment
-        if card:
-            self.eid = integer(card, 1, 'eid')
-            self.caero = integer(card, 2, 'caero')
-            self.id1 = integer(card, 3, 'id1')
-            self.id2 = integer(card, 4, 'id2')
-            self.setg = integer(card, 5, 'setg')
-            self.dz = double_or_blank(card, 6, 'dz', 0.0)
-            self.dtor = double_or_blank(card, 7, 'dtor', 1.0)
-            self.cid = integer_or_blank(card, 8, 'cid', 0)
-            self.dthx = double_or_blank(card, 9, 'dthx')
-            self.dthy = double_or_blank(card, 10, 'dthy')
-            assert self.id2 >= self.id1, 'id2=%s id1=%s' % (self.id2, self.id1)
 
-            self.usage = string_or_blank(card, 12, 'usage', 'BOTH')
-            assert len(card) <= 13, 'len(SPLINE2 card) = %i' % len(card)
-        else:
-            msg = '%s has not implemented data parsing' % self.type
-            raise NotImplementedError(msg)
+        self.eid = eid
+        self.caero = caero
+        self.id1 = id1
+        self.id2 = id2
+        self.setg = setg
+        self.dz = dz
+        self.dtor = dtor
+        self.cid = cid
+        self.dthx = dthx
+        self.dthy = dthy
+        self.usage = usage
+        assert self.id2 >= self.id1, 'id2=%s id1=%s' % (self.id2, self.id1)
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        eid = integer(card, 1, 'eid')
+        caero = integer(card, 2, 'caero')
+        id1 = integer(card, 3, 'id1')
+        id2 = integer(card, 4, 'id2')
+        setg = integer(card, 5, 'setg')
+        dz = double_or_blank(card, 6, 'dz', 0.0)
+        dtor = double_or_blank(card, 7, 'dtor', 1.0)
+        cid = integer_or_blank(card, 8, 'cid', 0)
+        dthx = double_or_blank(card, 9, 'dthx')
+        dthy = double_or_blank(card, 10, 'dthy')
+
+        usage = string_or_blank(card, 12, 'usage', 'BOTH')
+        assert len(card) <= 13, 'len(SPLINE2 card) = %i' % len(card)
+        return SPLINE2(eid, caero, id1, id2, setg, dz, dtor, cid,
+                       dthx, dthy, usage, comment=comment)
 
     def cross_reference(self, model):
         """
@@ -3183,51 +3589,65 @@ class SPLINE3(Spline):
         7: 'a1', 8:'usage',
     }
 
-    def __init__(self, card=None, data=None, comment=''):
-        Spline.__init__(self, card, data)
+    def __init__(self, eid, caero, box_id, components, g1, c1, a1, usage,
+                 Gi, ci, ai, comment=''):
+        Spline.__init__(self)
         if comment:
             self._comment = comment
-        if card:
-            self.eid = integer(card, 1, 'eid')
-            self.caero = integer(card, 2, 'caero')
-            self.box_id = integer(card, 3, 'box_id')
-            self.components = integer(card, 4, 'comp')
-            assert self.components in [1, 2, 3, 4, 5, 6], self.components
-            self.g1 = integer(card, 5, 'G1')
-            self.c1 = integer(card, 5, 'C1')
-            self.a1 = double(card, 5, 'A1')
-            assert self.c1 in [0, 1, 2, 3, 4, 5, 6], self.components
-            self.usage = string_or_blank(card, 8, 'usage', 'BOTH')
-            assert self.usage in ['FORCE', 'DISP', 'BOTH'], self.usage
+        self.eid = eid
+        self.caero = caero
+        self.box_id = box_id
+        self.components = components
+        self.g1 = g1
+        self.c1 = c1
+        self.a1 = a1
+        self.usage = usage
+        self.Gi = Gi
+        self.ci = ci
+        self.ai = ai
+        assert components in [1, 2, 3, 4, 5, 6], components
+        assert c1 in [0, 1, 2, 3, 4, 5, 6], self.components
+        assert usage in ['FORCE', 'DISP', 'BOTH'], self.usage
 
-            nfields = len(card) - 1
-            nrows = nfields // 8
-            if nfields % 8:
-                nrows += 1
+    @classmethod
+    def add_card(cls, card, comment=''):
+        eid = integer(card, 1, 'eid')
+        caero = integer(card, 2, 'caero')
+        box_id = integer(card, 3, 'box_id')
+        components = integer(card, 4, 'comp')
+        g1 = integer(card, 5, 'G1')
+        c1 = integer(card, 5, 'C1')
+        a1 = double(card, 5, 'A1')
+        usage = string_or_blank(card, 8, 'usage', 'BOTH')
 
-            i = 1
-            self.Gi = []
-            self.ci = []
-            self.ai = []
-            for irow in range(1, nrows):
-                j = 1 + nrows * 8
-                gi = integer(card, j, 'Gi_' % i)
-                ci = integer(card, j + 1, 'Ci_' % i)
-                ai = double(card, j + 2, 'Ai_' % i)
-                self.Gi.append(gi)
-                self.ci.append(ci)
-                self.ai.append(ai)
-                if card[j + 3] or card[j + 4] or card[j + 5]:
-                    i += 1
-                    gi = integer(card, j, 'Gi_' % i)
-                    ci = integer(card, j + 1, 'Ci_' % i)
-                    ai = double(card, j + 2, 'Ai_' % i)
-                    self.Gi.append(gi)
-                    self.ci.append(ci)
-                    self.ai.append(ai)
+        nfields = len(card) - 1
+        nrows = nfields // 8
+        if nfields % 8:
+            nrows += 1
+
+        i = 1
+        Gi = []
+        ci = []
+        ai = []
+        for irow in range(1, nrows):
+            j = 1 + nrows * 8
+            gii = integer(card, j, 'Gi_' % i)
+            cii = integer(card, j + 1, 'Ci_' % i)
+            aii = double(card, j + 2, 'Ai_' % i)
+            Gi.append(gii)
+            ci.append(cii)
+            ai.append(aii)
+            if card[j + 3] or card[j + 4] or card[j + 5]:
                 i += 1
-        else:
-            raise NotImplementedError()
+                gii = integer(card, j, 'Gi_' % i)
+                cii = integer(card, j + 1, 'Ci_' % i)
+                aii = double(card, j + 2, 'Ai_' % i)
+                Gi.append(gii)
+                ci.append(cii)
+                ai.append(aii)
+            i += 1
+        return SPLINE3(eid, caero, box_id, components, g1, c1, a1, usage,
+                       Gi, ci, ai, comment=comment)
 
     def cross_reference(self, model):
         pass
@@ -3236,7 +3656,9 @@ class SPLINE3(Spline):
         pass
 
     def raw_fields(self):
-        list_fields = ['SPLINE3', self.eid, self.caero, self.box_id, self.g1, self.c1, self.a1, self.usage]
+        list_fields = [
+            'SPLINE3', self.eid, self.caero, self.box_id,
+            self.g1, self.c1, self.a1, self.usage]
         for g, c, a in zip(self.Gi, self.ci, self.ai):
             list_fields += [g, c, a, None]
         return list_fields
@@ -3263,36 +3685,54 @@ class SPLINE4(Spline):
         7: 'method', 8:'usage', 9:'nelements', 10:'melements',
     }
 
-    def __init__(self, card=None, data=None, comment=''):
-        Spline.__init__(self, card, data)
+    def __init__(self, eid, caero, aelist, setg, dz, method, usage,
+                 nelements, melements, comment=''):
+        Spline.__init__(self)
         if comment:
             self._comment = comment
-        if card:
-            self.eid = integer(card, 1, 'eid')
-            self.caero = integer(card, 2, 'caero')
-            self.aelist = integer(card, 3, 'aelist')
-            # None
-            self.setg = integer(card, 5, 'setg')
-            self.dz = double_or_blank(card, 6, 'dz', 0.0)
-            self.method = string_or_blank(card, 7, 'method', 'IPS')
-            self.usage = string_or_blank(card, 8, 'usage', 'BOTH')
-            self.nelements = integer_or_blank(card, 9, 'nelements', 10)
-            self.melements = integer_or_blank(card, 10, 'melements', 10)
-            assert len(card) <= 11, 'len(SPLINE4 card) = %i' % len(card)
-        else:
-            self.eid = data[0]
-            self.caero = data[1]
-            self.aelist = data[2]
-            self.setg = data[3]
-            self.dz = data[4]
-            self.method = data[5]
-            self.usage = data[6]
-            self.nelements = data[7]
-            self.melements = data[8]
-            assert len(data) == 9, 'data = %s' % (data)
+        self.eid = eid
+        self.caero = caero
+        self.aelist = aelist
+        self.setg = setg
+        self.dz = dz
+        self.method = method
+        self.usage = usage
+        self.nelements = nelements
+        self.melements = melements
 
-        assert self.method in ['IPS', 'TPS', 'FPS'], 'method = %s' % self.method
-        assert self.usage in ['FORCE', 'DISP', 'BOTH'], 'uasge = %s' % self.usage
+    @classmethod
+    def add_card(cls, card, comment=''):
+        eid = integer(card, 1, 'eid')
+        caero = integer(card, 2, 'caero')
+        aelist = integer(card, 3, 'aelist')
+        # None
+        setg = integer(card, 5, 'setg')
+        dz = double_or_blank(card, 6, 'dz', 0.0)
+        method = string_or_blank(card, 7, 'method', 'IPS')
+        usage = string_or_blank(card, 8, 'usage', 'BOTH')
+        nelements = integer_or_blank(card, 9, 'nelements', 10)
+        melements = integer_or_blank(card, 10, 'melements', 10)
+        assert len(card) <= 11, 'len(SPLINE4 card) = %i' % len(card)
+        return SPLINE4(eid, caero, aelist, setg, dz, method, usage,
+                       nelements, melements, comment=comment)
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        eid = data[0]
+        caero = data[1]
+        aelist = data[2]
+        setg = data[3]
+        dz = data[4]
+        method = data[5]
+        usage = data[6]
+        nelements = data[7]
+        melements = data[8]
+        assert len(data) == 9, 'data = %s' % (data)
+        return SPLINE4(eid, caero, aelist, setg, dz, method, usage,
+                       nelements, melements, comment=comment)
+
+        assert method in ['IPS', 'TPS', 'FPS'], 'method = %s' % method
+        assert usage in ['FORCE', 'DISP', 'BOTH'], 'uasge = %s' % usage
 
     def CAero(self):
         if isinstance(self.caero, integer_types):
@@ -3394,35 +3834,51 @@ class SPLINE5(Spline):
         13 : 'meth', 15 : 'ftype', 16 : 'rcore',
     }
 
-    def __init__(self, card=None, data=None, comment=''):
-        Spline.__init__(self, card, data)
+    def __init__(self, eid, caero, aelist, setg, dz, dtor, cid,
+                 thx, thy, usage, method, ftype, rcore, comment=''):
+        Spline.__init__(self)
         if comment:
             self._comment = comment
-        if card:
-            self.eid = integer(card, 1, 'eid')
-            self.caero = integer(card, 2, 'caero')
-            self.aelist = integer(card, 3, 'aelist')
-            # None
-            self.setg = integer(card, 5, 'setq')
-            self.dz = double_or_blank(card, 6, 'dz', 0.0)
-            self.dtor = double_or_blank(card, 7, 'dtor', 1.0)
-            self.cid = integer_or_blank(card, 8, 'cid', 0)
-            self.thx = double(card, 9, 'thx')
-            self.thy = double(card, 10, 'thy')
-            self.usage = string_or_blank(card, 12, 'usage', 'BOTH')
-            self.meth = string_or_blank(card, 13, 'meth', 'BEAM')  # per nast/tpl/fmondsp.dat, METH can be a double(0.0) ???
-            self.ftype = string_or_blank(card, 15, 'ftype', 'WF2')
-            self.rcore = double_or_blank(card, 16, 'rcore')
-            assert self.meth in ['BEAM', 'RIS'], self.meth
-            assert self.ftype in ['WF0', 'WF2'], self.ftype
 
+        self.eid = eid
+        self.caero = caero
+        self.aelist = aelist
+        self.setg = setg
+        self.dz = dz
+        self.dtor = dtor
+        self.cid = cid
+        self.thx = thx
+        self.thy = thy
+        self.usage = usage
+        self.meth = method
+        self.ftype = ftype
+        self.rcore = rcore
+        assert method in ['BEAM', 'RIS'], method
+        assert ftype in ['WF0', 'WF2'], ftype
 
-            self.usage = string_or_blank(card, 12, 'usage', 'BOTH')
-            assert len(card) <= 16, 'len(SPLINE5 card) = %i\n%s' % (len(card), card)
-        else:
-            msg = '%s has not implemented data parsing' % self.type
-            raise NotImplementedError(msg)
+    @classmethod
+    def add_card(cls, card, comment=''):
+        eid = integer(card, 1, 'eid')
+        caero = integer(card, 2, 'caero')
+        aelist = integer(card, 3, 'aelist')
+        # None
+        setg = integer(card, 5, 'setq')
+        dz = double_or_blank(card, 6, 'dz', 0.0)
+        dtor = double_or_blank(card, 7, 'dtor', 1.0)
+        cid = integer_or_blank(card, 8, 'cid', 0)
+        thx = double(card, 9, 'thx')
+        thy = double(card, 10, 'thy')
+        usage = string_or_blank(card, 12, 'usage', 'BOTH')
+        # per nast/tpl/fmondsp.dat, METH can be a double(0.0) ???
+        method = string_or_blank(card, 13, 'meth', 'BEAM')
+        ftype = string_or_blank(card, 15, 'ftype', 'WF2')
+        rcore = double_or_blank(card, 16, 'rcore')
 
+        usage = string_or_blank(card, 12, 'usage', 'BOTH')
+        assert len(card) <= 16, 'len(SPLINE5 card) = %i\n%s' % (len(card), card)
+        return SPLINE5(eid, caero, aelist, setg, dz, dtor, cid, thx, thy,
+                       usage, method, ftype, rcore,
+                       comment=comment)
     @property
     def aero_element_ids(self):
         return self.aelist_ref.elements
@@ -3557,52 +4013,61 @@ class TRIM(BaseCard):
                 ni += 1
         raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self, sid, mach, q, labels, uxs, aeqr=0.0, comment=''):
         if comment:
             self._comment = comment
-        if card:
-            #: Trim set identification number. (Integer > 0)
-            self.sid = integer(card, 1, 'sid')
-            #: Mach number. (Real > 0.0 and != 1.0)
-            self.mach = double(card, 2, 'mach')
-            assert self.mach >= 0.0 and self.mach != 1.0, 'mach = %s' % self.mach
-            #: Dynamic pressure. (Real > 0.0)
-            self.q = double(card, 3, 'q')
-            assert self.q > 0.0, 'q=%s' % self.q
-            #: The label identifying aerodynamic trim variables defined on an
-            #: AESTAT or AESURF entry.
-            self.labels = []
-            #: The magnitude of the aerodynamic extra point degree-of-freedom.
-            #: (Real)
-            self.uxs = []
-            #: Flag to request a rigid trim analysis (Real > 0.0 and < 1.0;
-            #: Default = 1.0. A value of 0.0 provides a rigid trim analysis,
-            #: not supported
+        #: Trim set identification number. (Integer > 0)
+        self.sid = sid
+        #: Mach number. (Real > 0.0 and != 1.0)
+        self.mach = mach
+        #: Dynamic pressure. (Real > 0.0)
+        self.q = q
 
-            label = string_or_blank(card, 4, 'label1')
-            if label:
-                ux = double(card, 5, 'ux1')
-                self.uxs.append(ux)
-                self.labels.append(label)
+        #: The label identifying aerodynamic trim variables defined on an
+        #: AESTAT or AESURF entry.
+        self.labels = labels
 
-            label = string_or_blank(card, 6, 'label2')
-            if label:
-                ux = double(card, 7, 'ux1')
-                self.uxs.append(ux)
-                self.labels.append(label)
-            self.aeqr = double_or_blank(card, 8, 'aeqr')
+        #: The magnitude of the aerodynamic extra point degree-of-freedom.
+        #: (Real)
+        self.uxs = uxs
 
-            i = 9
-            n = 3
-            while i < len(card):
-                label = string(card, i, 'label%i' % n)
-                ux = double(card, i + 1, 'ux%i' % n)
-                self.labels.append(label)
-                self.uxs.append(ux)
-                i += 2
-        else:
-            msg = '%s has not implemented data parsing' % self.type
-            raise NotImplementedError(msg)
+        #: Flag to request a rigid trim analysis (Real > 0.0 and < 1.0;
+        #: Default = 1.0. A value of 0.0 provides a rigid trim analysis,
+        #: not supported
+        self.aeqr = aeqr
+        assert self.mach >= 0.0 and self.mach != 1.0, 'mach = %s' % self.mach
+        assert self.q > 0.0, 'q=%s' % self.q
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        sid = integer(card, 1, 'sid')
+        mach = double(card, 2, 'mach')
+        q = double(card, 3, 'q')
+        labels = []
+        uxs = []
+
+        label = string_or_blank(card, 4, 'label1')
+        if label:
+            ux = double(card, 5, 'ux1')
+            uxs.append(ux)
+            labels.append(label)
+
+        label = string_or_blank(card, 6, 'label2')
+        if label:
+            ux = double(card, 7, 'ux1')
+            uxs.append(ux)
+            labels.append(label)
+        aeqr = double_or_blank(card, 8, 'aeqr', 0.0)
+
+        i = 9
+        n = 3
+        while i < len(card):
+            label = string(card, i, 'label%i' % n)
+            ux = double(card, i + 1, 'ux%i' % n)
+            labels.append(label)
+            uxs.append(ux)
+            i += 2
+        return TRIM(sid, mach, q, labels, uxs, aeqr, comment=comment)
 
     def raw_fields(self):
         """

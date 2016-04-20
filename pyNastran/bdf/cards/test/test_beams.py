@@ -24,8 +24,7 @@ class TestBeams(unittest.TestCase):
         card = bdf.process_card(lines)
         #print(print_card_8(card))
         cardi = BDFCard(card)
-        card2 = PBEAM()
-        card2.add_card(cardi)
+        card2 = PBEAM.add_card(cardi)
         fields = card2.raw_fields()
 
         lines_expected = [
@@ -67,8 +66,7 @@ class TestBeams(unittest.TestCase):
 
         card = bdf.process_card(lines)
         cardi = BDFCard(card)
-        card2 = PBEAM()
-        card2.add_card(cardi)
+        card2 = PBEAM.add_card(cardi)
         fields = card2.raw_fields()
 
         lines_expected = [
@@ -97,8 +95,7 @@ class TestBeams(unittest.TestCase):
 
         card = bdf.process_card(lines)
         cardi = BDFCard(card)
-        card2 = PBEAM()
-        card2.add_card(cardi)
+        card2 = PBEAM.add_card(cardi)
         fields = card2.raw_fields()
 
         lines_expected = [
@@ -121,8 +118,7 @@ class TestBeams(unittest.TestCase):
 
         card = bdf.process_card(lines)
         cardi = BDFCard(card)
-        card2 = PBEAM()
-        card2.add_card(cardi)
+        card2 = PBEAM.add_card(cardi)
         fields = card2.raw_fields()
         lines_expected = [
             'PBEAM         39       6     2.9     3.5    5.97      0.      0.      0.',
@@ -141,8 +137,7 @@ class TestBeams(unittest.TestCase):
         card = bdf.process_card(lines)
         #print(print_card_8(card))
         cardi = BDFCard(card)
-        card2 = PBEAM()
-        card2.add_card(cardi)
+        card2 = PBEAM.add_card(cardi)
         fields = card2.raw_fields()
         msg = print_card_8(fields)
 
@@ -206,8 +201,7 @@ class TestBeams(unittest.TestCase):
 
         card = bdf.process_card(lines)
         cardi = BDFCard(card)
-        card2 = PBEAM()
-        card2.add_card(cardi)
+        card2 = PBEAM.add_card(cardi)
         fields = card2.raw_fields()
 
         lines_expected = [
@@ -228,8 +222,7 @@ class TestBeams(unittest.TestCase):
         ]
         card = bdf.process_card(lines)
         cardi = BDFCard(card)
-        card2 = PBEAM()
-        card2.add_card(cardi)
+        card2 = PBEAM.add_card(cardi)
 
         #if 0:
             #fields = card2.raw_fields()
@@ -272,8 +265,7 @@ class TestBeams(unittest.TestCase):
 
         card = bdf.process_card(lines)
         cardi = BDFCard(card)
-        card2 = PBEAM()
-        card2.add_card(cardi)
+        card2 = PBEAM.add_card(cardi)
 
         if 1:
             fields = card2.raw_fields()
@@ -310,8 +302,7 @@ class TestBeams(unittest.TestCase):
         card = bdf.process_card(lines)
         cardi = BDFCard(card)
         #with self.assertRaises(AssertionError):  # A=0, I12=0, K1=0
-        pbeam = PBEAM()
-        pbeam.add_card(cardi)
+        pbeam = PBEAM.add_card(cardi)
         fields2 = pbeam.repr_fields()
         assert fields == fields
 
@@ -509,7 +500,7 @@ class TestBeams(unittest.TestCase):
         import os
         if not os.path.exists('pbeam12.op2') and 0:
             os.system('nastran scr=yes bat=no old=no pbeam12.bdf')
-        #os.remove('pbeam12.bdf')
+        os.remove('pbeam12.bdf')
 
         if 0:
             from pyNastran.op2.op2 import OP2

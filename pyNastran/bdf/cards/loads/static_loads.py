@@ -28,8 +28,8 @@ from pyNastran.utils import integer_types
 from pyNastran.bdf.cards.loads.loads import Load, LoadCombination
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import BaseCard, expand_thru, expand_thru_by, range
-from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
-    double, double_or_blank, string, string_or_blank,
+from pyNastran.bdf.bdf_interface.assign_type import (
+    integer, integer_or_blank, double, double_or_blank, string, string_or_blank,
     integer_or_string, fields, integer_string_or_blank, integer_or_double)
 from pyNastran.bdf.field_writer_8 import print_card_8, print_float_8, set_string8_blank_if_default
 from pyNastran.bdf.field_writer_16 import print_card_16, print_float_16, set_string16_blank_if_default
@@ -627,6 +627,8 @@ class ACCEL1(BaseCard):
         msg = ' which is required by ACCEL1 sid=%s' % self.sid
         self.cid = model.Coord(self.Cid(), msg=msg)
         self.nodes = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
+        self.cid_ref = self.cid
+        self.nodes_ref = self.nodes
 
     def Cid(self):
         if isinstance(self.cid, integer_types):
@@ -1037,6 +1039,10 @@ class FORCE1(Force):
         return self.g2_ref.nid
 
     @property
+    def node_ids(self):
+        return [self.node_id, self.G1(), self.G2()]
+
+    @property
     def node_id(self):
         if isinstance(self.node, integer_types):
             return self.node
@@ -1392,18 +1398,18 @@ class MOMENT1(Moment):
         assert len(card) == 6, 'len(MOMENT1 card) = %i' % len(card)
         return MOMENT1(sid, node, mag, g1, g2, comment=comment)
 
-    #@classmethod
-    #def add_op2_data(cls, data, comment=''):
-        #sid = data[0]
-        #node = data[1]
-        #mag = data[2]
-        #g1 = data[3]
-        #g2 = data[4]
-        #g3 = data[5]
-        #g4 = data[6]
-        #xyz = data[7:10]
-        #raise NotImplementedError('MOMENT1 is probably wrong')
-        #assert len(xyz) == 3, 'xyz=%s' % str(xyz)
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        sid = data[0]
+        node = data[1]
+        mag = data[2]
+        g1 = data[3]
+        g2 = data[4]
+        g3 = data[5]
+        g4 = data[6]
+        xyz = data[7:10]
+        raise NotImplementedError('MOMENT1 is probably wrong')
+        assert len(xyz) == 3, 'xyz=%s' % str(xyz)
 
     def cross_reference(self, model):
         """
@@ -1447,6 +1453,10 @@ class MOMENT1(Moment):
 
         self.xyz = self.g2_ref.get_position() - self.g1_ref.get_position()
         self.normalize()
+
+    @property
+    def node_ids(self):
+        return [self.node_id, self.G1(), self.G2()]
 
     def get_node_id(self):
         if isinstance(self.node, integer_types):
@@ -1528,8 +1538,11 @@ class MOMENT2(Moment):
         g2 = data[4]
         g3 = data[5]
         g4 = data[6]
-        xyz = array(data[7:10])
-        assert len(xyz) == 3, 'xyz=%s' % str(xyz)
+        assert len(data) == 7, data
+        #xyz = array(data[7:10])
+        #print('data =', data)
+        #assert len(xyz) == 3, 'xyz=%s' % str(xyz)
+        xyz = None
         return MOMENT2(sid, node, mag, g1, g2, g3, g4, xyz, comment=comment)
 
     def cross_reference(self, model):
@@ -2286,7 +2299,7 @@ class PLOAD4(Load):
             (face_node_ids, area) = elem.getFaceNodesAndArea(self, nid, nid_opposite)
         else:
             face_node_ids = elem.node_ids
-            Area = elem.Area()
+            area = elem.Area()
         n = len(face_node_ids)
 
         elem = self.eids_ref[0]
@@ -2294,7 +2307,7 @@ class PLOAD4(Load):
         vectors = []
         for (nid, p) in zip(face_node_ids, self.pressures):
             #: .. warning:: only supports normal pressures
-            vectors.append(vector * p * Area / n)  # Force_i
+            vectors.append(vector * p * area / n)  # Force_i
 
         is_load = None
         return (is_load, face_node_ids, vectors)
@@ -2525,8 +2538,9 @@ class PLOADX1(Load):
         return [self]
 
     def raw_fields(self):
-        list_fields = ['PLOADX1', self.sid, self.eid, self.pa, self.pb,
-                  self.Ga(), self.Gb(), self.theta]
+        list_fields = [
+            'PLOADX1', self.sid, self.Eid(), self.pa, self.pb,
+            self.Ga(), self.Gb(), self.theta]
         return list_fields
 
     def repr_fields(self):

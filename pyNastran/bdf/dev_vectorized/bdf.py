@@ -138,7 +138,7 @@ from .bdf_interface.write_mesh import WriteMesh
 from .bdf_interface.cross_reference import XRefMesh
 
 # old
-from pyNastran.bdf.bdfInterface.bdf_card import BDFCard
+from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 
 # sets
 from pyNastran.bdf.cards.bdf_sets import SET1, SET3
@@ -1638,8 +1638,6 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
                     card_name = 'CHEXA8'
                 else:
                     card_name = 'CHEXA20'
-
-
         self._increase_card_count(card_name)
 
     def add_card(self, card_lines, card_name, comment='', is_list=True):
@@ -1883,7 +1881,6 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         elif name == 'AERO':
             self.add_AERO(card_obj)
             #self.aero.add(card_obj, comment=comment)
-            pass
         elif name == 'AEROS':
             #self.aeros.add(card_obj, comment=comment)
             pass

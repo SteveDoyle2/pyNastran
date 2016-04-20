@@ -6,6 +6,7 @@ from six import iteritems
 
 import pyNastran
 test_path = pyNastran.__path__[0]
+from numpy import dot, array_equal
 
 from pyNastran.bdf.bdf import BDF
 from pyNastran.op2.op2 import OP2, FatalError, read_op2
@@ -13,8 +14,10 @@ from pyNastran.op2.op2_geom import read_op2_geom
 from pyNastran.op2.test.test_op2 import run_op2
 
 from pyNastran.bdf.test.bdf_unit_tests import Tester
-from pyNastran.op2.tables.oef_forces.oef_forceObjects import RealPlateBilinearForceArray, RealPlateForceArray
+from pyNastran.op2.tables.oef_forces.oef_force_objects import RealPlateBilinearForceArray, RealPlateForceArray
+from pyNastran.op2.tables.ogf_gridPointForces.ogf_objects import RealGridPointForcesArray
 from pyNastran.op2.export_to_vtk import export_to_vtk_filename
+from pyNastran.op2.vector_utils import filter1d
 
 
 class TestOP2(Tester):
@@ -22,6 +25,24 @@ class TestOP2(Tester):
         #op2 = OP2()
         #op2.set_results('solidStress.oxx')
         #op2.read_op2(op2_filename, vectorized=False)
+
+    def test_filter1d(self):
+        a = np.array([1., 2., 0.1])
+        i = filter1d(a, zero_tol=0.5)
+        res = np.array([0, 1])
+        self.assertTrue(np.array_equal(i, res), 'A i=%s res=%s' % (i, res))
+
+        a = np.array([1., 2., 0.1])
+        b = np.array([1., -0.1, 0.1])
+        res = np.array([0, 1])
+        i = filter1d(a, b, zero_tol=0.5)
+        self.assertTrue(np.array_equal(i, res), 'B i=%s res=%s' % (i, res))
+
+        a = np.array([1., 2., 0.1])
+        b = np.array([1., -0.1, 0.1])
+        i = filter1d(a, b, zero_tol=1.1)
+        res = np.array([1])
+        self.assertTrue(np.array_equal(i, res), 'C i=%s res=%s' % (i, res))
 
     def test_ibulk(self):
         """this test will fail if IBULK talble doesn't work"""
@@ -52,9 +73,8 @@ class TestOP2(Tester):
         self.assertEqual(len(op2.displacements), 1, len(op2.displacements))
 
     def test_op2_solid_bending_01(self):
-        op2_filename = os.path.join('solid_bending.op2')
         folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'solid_bending'))
-        op2_filename = os.path.join(folder, op2_filename)
+        op2_filename = os.path.join(folder, 'solid_bending.op2')
         make_geom = False
         write_bdf = False
         write_f06 = True
@@ -83,22 +103,296 @@ class TestOP2(Tester):
         os.remove(debug_file)
 
     def test_op2_solid_bending_02(self):
-        op2_filename = os.path.join('solid_bending.op2')
         folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'solid_bending'))
-        op2_filename = os.path.join(folder, op2_filename)
-        op2 = read_op2(op2_filename)
+        op2_filename = os.path.join(folder, 'solid_bending.op2')
+        op2 = read_op2(op2_filename, debug=False)
 
     def test_op2_solid_bending_02_geom(self):
-        op2_filename = os.path.join('solid_bending.op2')
         folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'solid_bending'))
-        op2_filename = os.path.join(folder, op2_filename)
-        op2 = read_op2_geom(op2_filename)
+        op2_filename = os.path.join(folder, 'solid_bending.op2')
+        op2 = read_op2_geom(op2_filename, debug=False)
+
+    def _test_op2_solid_bending_03(self):
+        folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'solid_bending'))
+        op2_filename = os.path.join(folder, 'solid_bending.op2')
+        op2_filename_debug = os.path.join(folder, 'solid_bending.debug.out')
+        op2_filename_out = os.path.join(folder, 'solid_bending_out.op2')
+        op2_filename_debug_out = os.path.join(folder, 'solid_bending_out.debug.out')
+        #debug_file = 'solid_bending.debug.out'
+        model, ext = os.path.splitext(op2_filename)
+        debug_file = model + '.debug.out'
+
+        op2 = read_op2_geom(op2_filename, debug_file=op2_filename_debug)
+        from pyNastran.op2.dev.op2_writer import OP2Writer
+        op2w = OP2Writer()
+        op2w.write_op2(op2_filename_out, obj=op2, is_mag_phase=False,
+                       delete_objects=True)
+        op2b = read_op2_geom(op2_filename_out, debug_file=op2_filename_debug_out)
+
 
     def test_op2_solid_shell_bar_01_geom(self):
-        op2_filename = os.path.join('static_solid_shell_bar.op2')
         folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'sol_101_elements'))
-        op2_filename = os.path.join(folder, op2_filename)
+        op2_filename = os.path.join(folder, 'static_solid_shell_bar.op2')
+        op2 = read_op2_geom(op2_filename, debug=False)
+
+
+    def test_gpforce_01(self):
+        nids = np.array([1, 2, 3])
+        xyz_cid0 = np.array([
+            [1., 1., 1.],
+            [4., 2., 5.],
+            [3., 3., 3.],
+        ])
+        data_code = {
+            'nonlinear_factor' : None,
+            'sort_bits' : [0, 0, 0],
+            'analysis_code' : 1,
+            'is_msc' : True,
+            'format_code' : 1,
+            'table_code' : 1,
+            'data_names' : 'cat',
+            'device_code' : 1,
+            #'tcode' : 1,
+        }
+        is_sort1 = True
+        isubcase = 1
+        dt = 0.0
+        gpforce = RealGridPointForcesArray(data_code, is_sort1, isubcase, dt)
+        gpforce.ntimes = 1
+        gpforce.ntotal = 3
+        gpforce._ntotals = [3]
+
+        gpforce.build()
+        gpforce.data[0, :, :] = np.array([
+            [3., 7., 11., 0., 0., 0.,], # fx, fy, fz, mx, my, mz
+            [3., 7., 11., 0., 0., 0.,],
+            [3., 7., 11., 0., 0., 0.,],
+        ])
+        gpforce.node_element[0, :, :] = np.array([
+            [1, 1],
+            [2, 1],
+            [3, 1],
+        ])
+        op2 = OP2()
+        summation_point = [0., 0., 0.]
+        beta_transforms = None
+        i_transform = None
+        nid_cd = np.array([
+            [1, 0],
+            [2, 0],
+            [3, 0],
+        ])
+        from pyNastran.bdf.bdf import CORD2R
+        coord_out = CORD2R(cid=0)
+        coords = {0 : coord_out}
+
+        #eids = [1]
+        #nids = [1]
+        #gpforce.extract_interface_loads(
+            #nids, eids, coord_out, coords, nid_cd,
+            #i_transform,
+            #beta_transforms,
+            #xyz_cid0,
+            #summation_point,
+            #itime=0,
+            #debug=True,
+            #logger=op2.log)
+
+        #print('------------')
+        #eids = [1]
+        #nids = [2]
+        #gpforce.extract_interface_loads(
+            #nids, eids, coord_out, coords, nid_cd,
+            #i_transform,
+            #beta_transforms,
+            #xyz_cid0,
+            #summation_point,
+            #itime=0,
+            #debug=True,
+            #logger=op2.log)
+        print('------------')
+
+        eids = [1]
+        nids = [1, 2]
+        gpforce.extract_interface_loads(
+            nids, eids, coord_out, coords, nid_cd,
+            i_transform,
+            beta_transforms,
+            xyz_cid0,
+            summation_point,
+            itime=0,
+            debug=True,
+            logger=op2.log)
+
+        #print(gpforce)
+
+    def test_op2_solid_shell_bar_01_gpforce(self):
+        folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'sol_101_elements'))
+        #bdf_filename = os.path.join(folder, 'static_solid_shell_bar.bdf')
+        op2_filename = os.path.join(folder, 'static_solid_shell_bar.op2')
+        op2 = read_op2_geom(op2_filename, debug=False)
+
+        i_transform, beta_transforms = op2.get_displacement_index_transforms()
+        op2.transform_displacements_to_global(i_transform, beta_transforms)
+
+        gpforce = op2.grid_point_forces[1]
+
+        #bdf_filename = os.path.join(folder, 'solid_shell_bar_xyz.bdf')
+        #model = BDF(debug=False)
+        #model.read_bdf(bdf_filename, xref=True)
+
+        op2.cross_reference(xref_elements=False,
+                            xref_nodes_with_elements=False,
+                            xref_properties=False,
+                            xref_masses=False,
+                            xref_materials=False,
+                            xref_loads=False,
+                            xref_constraints=False,
+                            xref_aero=False,
+                            xref_sets=False,
+                            xref_optimization=False)
+        xyz_cid0 = op2.get_xyz_in_coord(cid=0)
+        nid_cd = np.array([[nid, node.Cd()] for nid, node in sorted(iteritems(op2.nodes))])
+        coords = op2.coords
+
+        data = _get_gpforce_data()
+        for datai in data:
+            eids, nids, cid, summation_point, total_force_local_expected, total_moment_local_expected = datai
+            if cid not in coords:
+                continue
+            #op2.log.debug('*' * 30 + 'Next Test' + '*' * 30)
+            coord_out = coords[cid]
+            out = gpforce.extract_interface_loads(
+                nids, eids,
+                coord_out, coords,
+                nid_cd, i_transform, beta_transforms,
+                xyz_cid0, summation_point, itime=0, debug=False, logger=op2.log)
+            total_force_global, total_moment_global, total_force_local, total_moment_local = out
+
+            #op2.log.debug('***********')
+            #op2.log.debug('force = %s; %s' % (total_force_global, np.linalg.norm(total_force_global)))
+            #op2.log.debug('moment = %s; %s' % (total_moment_global, np.linalg.norm(total_moment_global)))
+
+            case = 'eids=%s nids=%s cid=%s summation_point=%s' % (
+                eids, nids, cid, summation_point)
+            msg = '%s\ntotal_force_local_expected=%s total_force_local=%s' % (
+                case, total_force_local_expected, total_force_local)
+            self.assertTrue(np.allclose(total_force_local_expected, total_force_local, atol=0.005), msg), msg
+
+            msg = '%s\ntotal_moment_local_expected=%s total_moment_local=%s' % (
+                case, total_moment_local_expected, total_moment_local)
+            self.assertTrue(np.allclose(total_moment_local_expected, total_moment_local, atol=0.005), msg), msg
+
+    def test_op2_solid_shell_bar_01_gpforce_xyz(self):
+        folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'sol_101_elements'))
+        bdf_filename = os.path.join(folder, 'solid_shell_bar_xyz.bdf')
+        op2_filename = os.path.join(folder, 'solid_shell_bar_xyz.op2')
+        op2 = read_op2_geom(op2_filename, debug=False)
+
+        i_transform, beta_transforms = op2.get_displacement_index_transforms()
+        op2.transform_displacements_to_global(i_transform, beta_transforms)
+
+        gpforce = op2.grid_point_forces[1]
+        op2.cross_reference(xref_elements=False,
+                            xref_nodes_with_elements=False,
+                            xref_properties=False,
+                            xref_masses=False,
+                            xref_materials=False,
+                            xref_loads=False,
+                            xref_constraints=False,
+                            xref_aero=False,
+                            xref_sets=False,
+                            xref_optimization=False)
+        xyz_cid0 = op2.get_xyz_in_coord(cid=0)
+        nid_cd = np.array([[nid, node.Cd()] for nid, node in sorted(iteritems(op2.nodes))])
+
+        #model = BDF(debug=False)
+        #model.read_bdf(bdf_filename)
+
+        data = _get_gpforce_data()
+        coords = op2.coords
+        print(op2.coords)
+        for datai in data:
+            eids, nids, cid, summation_point, total_force_local_expected, total_moment_local_expected = datai
+            coord_out = coords[cid]
+            op2.log.debug('*' * 30 + 'Next Test' + '*' * 30)
+            out = gpforce.extract_interface_loads(
+                nids, eids,
+                coord_out, coords,
+                nid_cd, i_transform, beta_transforms,
+                xyz_cid0, summation_point, itime=0, debug=False, logger=op2.log)
+            total_force_global, total_moment_global, total_force_local, total_moment_local = out
+
+            op2.log.debug('***********')
+            op2.log.debug('force = %s; %s' % (total_force_global, np.linalg.norm(total_force_global)))
+            op2.log.debug('moment = %s; %s' % (total_moment_global, np.linalg.norm(total_moment_global)))
+
+            case = 'eids=%s nids=%s cid=%s summation_point=%s' % (
+                eids, nids, cid, summation_point)
+            msg = '%s\ntotal_force_local_expected=%s total_force_local=%s delta=%s' % (
+                case, total_force_local_expected, total_force_local,
+                np.abs(total_force_local_expected - total_force_local))
+            self.assertTrue(np.allclose(total_force_local_expected, total_force_local, atol=0.2), msg), msg
+
+            msg = '%s\ntotal_moment_local_expected=%s total_moment_local=%s delta=%s' % (
+                case, total_moment_local_expected, total_moment_local,
+                np.abs(total_moment_local_expected - total_moment_local))
+            self.assertTrue(np.allclose(total_moment_local_expected, total_moment_local, atol=0.005), msg), msg
+
+    @unittest.expectedFailure
+    def test_op2_solid_shell_bar_01_gpforce_radial(self):
+        folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'sol_101_elements'))
+        #bdf_filename = os.path.join(folder, 'static_solid_shell_bar_radial.bdf')
+        op2_filename = os.path.join(folder, 'static_solid_shell_bar_radial.op2')
         op2 = read_op2_geom(op2_filename)
+
+        i_transform, beta_transforms = op2.get_displacement_index_transforms()
+        op2.transform_displacements_to_global(i_transform, beta_transforms)
+
+        gpforce = op2.grid_point_forces[1]
+
+        op2.cross_reference(xref_elements=False,
+                            xref_nodes_with_elements=False,
+                            xref_properties=False,
+                            xref_masses=False,
+                            xref_materials=False,
+                            xref_loads=False,
+                            xref_constraints=False,
+                            xref_aero=False,
+                            xref_sets=False,
+                            xref_optimization=False)
+        xyz_cid0 = op2.get_xyz_in_coord(cid=0)
+
+        nid_cd = np.array([[nid, node.Cd()] for nid, node in sorted(iteritems(op2.nodes))])
+
+        data = _get_gpforce_data()
+        coords = op2.coords
+        for i, datai in enumerate(data):
+            eids, nids, cid, summation_point, total_force_local_expected, total_moment_local_expected = datai
+            coord_out = coords[cid]
+            op2.log.debug('*' * 30 + 'Next Test #%s' % i + '*' * 30)
+            out = gpforce.extract_interface_loads(
+                nids, eids,
+                coord_out, coords,
+                nid_cd, i_transform, beta_transforms,
+                xyz_cid0, summation_point, itime=0, debug=False, logger=op2.log)
+            total_force_global, total_moment_global, total_force_local, total_moment_local = out
+
+            op2.log.debug('***********')
+            op2.log.debug('force = %s; %s' % (total_force_global, np.linalg.norm(total_force_global)))
+            op2.log.debug('moment = %s; %s' % (total_moment_global, np.linalg.norm(total_moment_global)))
+
+            case = 'eids=%s nids=%s cid=%s summation_point=%s' % (
+                eids, nids, cid, summation_point)
+            msg = '%s\ntotal_force_local_expected=%s total_force_local=%s delta=%s' % (
+                case, total_force_local_expected, total_force_local,
+                np.abs(total_force_local_expected - total_force_local))
+            self.assertTrue(np.allclose(total_force_local_expected, total_force_local, atol=0.2), msg), msg
+
+            msg = '%s\ntotal_moment_local_expected=%s total_moment_local=%s delta=%s' % (
+                case, total_moment_local_expected, total_moment_local,
+                np.abs(total_moment_local_expected - total_moment_local))
+            self.assertTrue(np.allclose(total_moment_local_expected, total_moment_local, atol=0.005), msg), msg
 
     def test_op2_solid_shell_bar_01(self):
         op2_filename = os.path.join('static_solid_shell_bar.op2')
@@ -140,11 +434,10 @@ class TestOP2(Tester):
         assert cbar_stress.nelements == 1, cbar_stress.nelements
         assert cbar_stress.data.shape == (1, 1, 15), cbar_stress.data.shape
 
-        # TODO: not vectorized
-        #cbeam_force = op2.cbeam_force[isubcase]
-        #cbeam_force.build_dataframe()
-        #assert cbeam_force.nelements == 11, cbeam_force.nelements
-        #assert cbeam_force.data.shape == (1, 11, 8), cbeam_force.data.shape
+        cbeam_force = op2.cbeam_force[isubcase]
+        cbeam_force.build_dataframe()
+        assert cbeam_force.nelements == 1, cbeam_force.nelements
+        assert cbeam_force.data.shape == (1, 2, 8), cbeam_force.data.shape
 
         cbeam_stress = op2.cbeam_stress[isubcase]
         cbeam_stress.build_dataframe()
@@ -210,7 +503,7 @@ class TestOP2(Tester):
 
         if os.path.exists(debug_file):
             os.remove(debug_file)
-        read_op2(op2_filename)
+        read_op2(op2_filename, debug=False)
         op2, is_passed = run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, isubcases=[],
                                  write_f06=write_f06,
                                  debug=debug, stop_on_failure=True, binary_debug=True, quiet=True)
@@ -282,7 +575,7 @@ class TestOP2(Tester):
 
         if os.path.exists(debug_file):
             os.remove(debug_file)
-        read_op2(op2_filename)
+        read_op2(op2_filename, debug=False)
         op2, is_passed = run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, isubcases=[],
                                  write_f06=write_f06,
                                  debug=debug, stop_on_failure=True, binary_debug=True, quiet=True)
@@ -354,7 +647,7 @@ class TestOP2(Tester):
 
         if os.path.exists(debug_file):
             os.remove(debug_file)
-        read_op2(op2_filename)
+        read_op2(op2_filename, debug=False)
         op2, is_passed = run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, isubcases=[],
                                  write_f06=write_f06,
                                  debug=debug, stop_on_failure=True, binary_debug=True, quiet=True)
@@ -388,9 +681,9 @@ class TestOP2(Tester):
         assert cbar_stress.data.shape == (7, 1, 9), cbar_stress.data.shape
 
         #print(op2.cbeam_stress.keys())
-        # cbeam_stress = op2.cbeam_stress[isubcase]
-        # assert cbeam_stress.nelements == 11, cbeam_stress.nelements  # TODO: wrong
-        # assert cbeam_stress.data.shape == (7, 11, 8), cbeam_stress.data.shape
+        #cbeam_stress = op2.cbeam_stress[isubcase]
+        #assert cbeam_stress.nelements == 2, cbeam_stress.nelements
+        #assert cbeam_stress.data.shape == (7, 2, 8), cbeam_stress.data.shape
 
         cquad4_stress = op2.cquad4_stress[isubcase]
         #cquad4_stress.build_dataframe()
@@ -455,7 +748,7 @@ class TestOP2(Tester):
 
         if os.path.exists(debug_file):
             os.remove(debug_file)
-        read_op2(op2_filename)
+        read_op2(op2_filename, debug=debug)
         op2, is_passed = run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, isubcases=[],
                                  write_f06=write_f06,
                                  debug=debug, stop_on_failure=True, binary_debug=True, quiet=True)
@@ -863,16 +1156,15 @@ class TestOP2(Tester):
             # the OP2 doesn't have a trailing zero marker
             pass
 
-        from numpy import dot, array, array_equal
         # M rows, Ncols
-        A = array([
+        A = np.array([
             [1., 0.],
             [3., 6.],
             [5., 0.],
             [0., 8.],
         ], dtype='float32')
         B = A
-        mydof = array([
+        mydof = np.array([
             -1.0, 1.0, 1.0, -1.0, 1.0,
             2.0, -1.0, 1.0, 3.0, -1.0, 1.0, 4.0, -1.0,
             1.0, 5.0, -1.0, 1.0, 6.0, -1.0, 2.0, 1.0,
@@ -881,7 +1173,7 @@ class TestOP2(Tester):
         ])
         BTA = dot(B.T, A)
         ATB = dot(A.T, B)
-        ATB_expected = array([
+        ATB_expected = np.array([
             [35., 18.],
             [18., 100.]
         ], dtype='float32')
@@ -907,6 +1199,54 @@ class TestOP2(Tester):
                 print(msg)
                 print('==========================')
                 #raise RuntimeError(msg)
+
+def _get_gpforce_data():
+    data = [
+        #eids, nids, cid, summation_point
+        #[1], [1], 0, [0., 0., 0.],
+        #[[1], [1, 2, 3, 4], 0, [0., 0., 0.], [0.0, 0.0, -10000.0], [-5000.0, 5000.0, 0.0],],  # total; good for gpforce
+
+        # cid=0; eid=[1]; nid=[3]; sum=[0., 0., 0.] - done
+        #               fmag     mmag       fx      fy       fz       mx       my       mz
+        # F2      = [2589.95,     0.0,  26.34, -44.15, -2589.44,     0.0,     0.0,     0.0]  # ith
+        # F2Total = [2589.95, 3862.70,  26.34, -44.15, -2589.44, -2589.44, 2589.44, -70.49]  # total
+        #[[1], [3], 0, [0., 0., 0.], [26.34, -44.15, -2589.44], [-2589.44, 2589.44, -70.49],], # good for gpforce; failing for xyz (cid 11)
+
+        # cid=0; eid=[1]; nid=[1]; sum=[0., 0., 0.]
+        #                            fx      fy       fz       mx       my       mz
+        [[1], [1], 0, [0., 0., 0.], [-37.18, 32.00, -2589.44], [0.0, 0.0, 0.0],],  # only 1 line b/c no moment; good for gpforce; failing for xyz (cid 11)
+
+        # cid=0/1/2/3; eid=[1]; nid=[1]; sum=[0., 0., 0.]
+        [[1], [1], 0, [0., 0., 0.], [-37.18, 32.00, -2589.44], [0.0, 0.0, 0.0],],  # only 1 line b/c no moment
+        [[1], [1], 1, [0., 0., 0.], [-37.18, 32.00, -2589.44], [0.0, 0.0, 0.0],],  # only 1 line b/c no moment
+        [[1], [1], 2, [0., 0., 0.], [-37.18, 32.00, -2589.44], [0.0, 0.0, 0.0],],  # only 1 line b/c no moment
+        [[1], [1], 3, [0., 0., 0.], [-37.18, 32.00, -2589.44], [0.0, 0.0, 0.0],],  # only 1 line b/c no moment
+
+        # cid=1; eid=[1]; nid=[1]; sum=[0., 0., 0.]
+        #               fmag     mmag      fx      fy       fz       mx       my       mz
+        # F1      = [2589.90,     0.0,1853.64, 567.74, 1717.35,     0.0,     0.0,     0.0]  # ith
+        # F1Total = [2589.90,     0.0,1853.64, 567.74, 1717.35,     0.0,     0.0,     0.0]  # total
+        [[1], [1], 11, [0., 0., 0.], [1853.64, 567.74, 1717.35], [0.0, 0.0, 0.0],], # good; failing for gpforce
+        [[1], [1], 12, [0., 0., 0.], [1853.64, 567.74, 1717.35], [0.0, 0.0, 0.0],], # good; failing for gpforce
+        [[1], [1], 13, [0., 0., 0.], [1853.64, 567.74, 1717.35], [0.0, 0.0, 0.0],], # good; failing for gpforce
+
+        # cid=1; eid=[1]; nid=[2]; sum=[0., 0., 0.]
+        #               fmag     mmag       fx      fy       fz       mx       my       mz
+        # F2      = [2411.67,     0.0, 1710.67, 634.80, 1577.03,     0.0,     0.0,     0.0]  # ith
+        # F2Total = [2411.67, 2410.58, 1710.67, 634.80, 1577.03, 1698.38, -570.22, -1612.84] # total
+        [[1], [2], 11, [0., 0., 0.], [1710.67, 634.60, 1577.03], [1698.38, -570.22, -1612.84],],
+
+        # cid=1; eid=[1]; nid=[3]; sum=[0., 0., 0.]
+        #           fmag          mmag     fx       fy       fz       mx        my       mz
+        # F3      = [2589.95,     0.0, 1799.79, 645.58, 1746.94,     0.0,      0.0,     0.0]  # ith
+        # F3Total = [2589.95, 3862.70, 1799.79, 645.58, 1746.94, 1880.85, -3035.07, -816.15]  # total
+        [[1], [3], 11, [0., 0., 0.], [1799.79, 645.58, 1746.94], [1880.85, -3035.07, -816.15]],
+
+        #[[1], [1], 11, [0., 0., 0.], [1853.64, 567.74, 1717.35], [0., 0., 0.],],
+        #[[1], [1], 12, [0., 0., 0.], [1938.05, -47.57, 1717.35], [0., 0., 0.],],
+        #[[1], [1], 13, [0., 0., 0.], [2069.00, 1557.11, -47.57], [0., 0., 0.],],
+    ]
+    return data
 
 
 if __name__ == '__main__':  # pragma: no cover

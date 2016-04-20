@@ -1,7 +1,7 @@
 from struct import pack, unpack
 
 from pyNastran.utils.log import get_logger
-from pyNastran.converters.dev.tetgen.tetgen_reader import Tetgen
+from pyNastran.converters.dev.tetgen.tetgen import Tetgen
 from pyNastran.converters.usm3d.usm3d_reader import write_usm3d_volume
 
 

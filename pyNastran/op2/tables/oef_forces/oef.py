@@ -14,7 +14,7 @@ from numpy import hstack, zeros
 from pyNastran.op2.op2_helper import polar_to_real_imag
 from pyNastran.op2.op2_common import OP2Common
 
-from pyNastran.op2.tables.oef_forces.oef_thermalObjects import (
+from pyNastran.op2.tables.oef_forces.oef_thermal_objects import (
     Real1DHeatFluxArray,
     HeatFlux_2D_3DArray,
     RealChbdyHeatFluxArray,
@@ -28,7 +28,7 @@ from pyNastran.op2.tables.oef_forces.oef_thermalObjects import (
     #HeatFlux_VUBEAM,
     #HeatFlux_VU_3D,
 )
-from pyNastran.op2.tables.oef_forces.oef_forceObjects import (
+from pyNastran.op2.tables.oef_forces.oef_force_objects import (
     RealRodForceArray, RealViscForceArray,
     RealCBarForceArray, RealCBar100ForceArray,
     RealCBushForceArray,
@@ -45,7 +45,7 @@ from pyNastran.op2.tables.oef_forces.oef_forceObjects import (
     # TODO: vectorize 2
     #RealForce_VU_2D, RealForce_VU,
 )
-from pyNastran.op2.tables.oef_forces.oef_complexForceObjects import (
+from pyNastran.op2.tables.oef_forces.oef_complex_force_objects import (
     ComplexRodForceArray,
     ComplexCBarForceArray,
     ComplexCBeamForceArray,
@@ -1137,7 +1137,7 @@ class OEF(OP2Common):
             self._results._found_result(result_name)
             slot = getattr(self, result_name)
             if self.format_code == 1 and self.num_wide == 9:  # real centroid ???
-                aaa
+                raise RuntimeError('is this used?')
                 auto_return, is_vectorized = self._create_oes_object4(
                     nelements, result_name, slot, RealCBeamForceArray)
                 if auto_return:
@@ -1210,7 +1210,7 @@ class OEF(OP2Common):
                         ints2 = ints[:, 1:].reshape(nelements * 11, 9)
                         nids = ints2[:, 0]
 
-                        obj.element[ielement:ielement2] = eids
+                        obj.element[itotal:itotal2] = eids2
                         obj.element_node[itotal:itotal2, 0] = eids2
                         obj.element_node[itotal:itotal2, 1] = nids
 
@@ -1276,19 +1276,14 @@ class OEF(OP2Common):
                         eids = ints[:, 0] // 10
                         assert eids.min() > 0, eids.min()
                         assert 0 not in eids, eids
-                        #print('eids =', eids)
                         eids2 = np.repeat(eids, 11)
-                        #print('eids2 =', eids2)
 
                         ints2 = ints[:, 1:].reshape(nelements * 11, 16)
                         nids = ints2[:, 0]
 
-                        obj.element[ielement:ielement2] = eids
+                        obj.element[itotal:itotal2] = eids2
                         obj.element_node[itotal:itotal2, 0] = eids2
                         obj.element_node[itotal:itotal2, 1] = nids
-                        #print(itotal2, itotal, len(eids2))
-                        #print(obj.element_node)
-                        #print(obj.element)
 
                     #[nid, sd, bm1r, bm2r, ts1r, ts2r, afr, ttrqr, wtrqr,
                     #          bm1i, bm2i, ts1i, ts2i, afi, ttrqi, wtrqi]

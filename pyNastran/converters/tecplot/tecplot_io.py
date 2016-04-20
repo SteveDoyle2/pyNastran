@@ -22,9 +22,6 @@ class TecplotIO(object):
                 None, None)
         return data
 
-    #def removeOldGeometry(self, filename):
-        #self._remove_old_cart3d_geometry(filename)
-
     def load_tecplot_geometry(self, tecplot_filename, dirname, name='main', plot=True):
         #key = self.case_keys[self.icase]
         #case = self.result_cases[key]

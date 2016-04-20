@@ -1,6 +1,6 @@
 #pylint: disable=C0301,C0111
 from __future__ import print_function, unicode_literals
-from six import text_type, binary_type, iteritems, PY3
+from six import text_type, binary_type, iteritems, PY3, string_types
 from six.moves import range
 import copy
 from struct import pack
@@ -11,7 +11,7 @@ from pyNastran.op2.op2_codes import Op2Codes
 from pyNastran.utils import object_attributes, object_methods
 
 #from pyNastran.utils import list_print
-#from pyNastran.op2.write_utils import write_table_header
+from pyNastran.op2.write_utils import write_table_header
 
 class BaseScalarObject(Op2Codes):
     def __init__(self):
@@ -38,6 +38,8 @@ class BaseScalarObject(Op2Codes):
     def object_attributes(self, mode='public', keys_to_skip=None):
         if keys_to_skip is None:
             keys_to_skip = []
+        elif isinstance(keys_to_skip, string_types):
+            keys_to_skip = [keys_to_skip]
 
         my_keys_to_skip = [
             'object_methods', 'object_attributes',
@@ -64,11 +66,36 @@ class BaseScalarObject(Op2Codes):
     def _eq_header(self, table):
         assert self.nonlinear_factor == table.nonlinear_factor
         assert self.ntotal == table.ntotal
-        assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
+        assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (
+            self.table_name, table.table_name)
         assert self.approach_code == table.approach_code
-        if self.nonlinear_factor is not None:
-            assert np.array_equal(self._times, table._times), 'ename=%s-%s times=%s table.times=%s' % (
-                self.element_name, self.element_type, self._times, table._times)
+
+        if hasattr(self, 'element_name'):
+            if self.nonlinear_factor is not None:
+                assert np.array_equal(self._times, table._times), 'ename=%s-%s times=%s table.times=%s' % (
+                    self.element_name, self.element_type, self._times, table._times)
+
+        if hasattr(self, 'element'):
+            if not np.array_equal(self.element, table.element):
+                assert self.element.shape == table.element.shape, 'shape=%s element.shape=%s' % (
+                    self.element.shape, table.element.shape)
+                msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+                msg += '%s\nEid\n' % str(self.code_information())
+                for eid1, eid2 in zip(self.element, table.element):
+                    msg += '%s, %s\n' % (eid1, eid2)
+                print(msg)
+                raise ValueError(msg)
+
+        if hasattr(self, 'element_node'):
+            if not np.array_equal(self.element_node, table.element_node):
+                assert self.element_node.shape == table.element_node.shape, 'shape=%s element_node.shape=%s' % (
+                    self.element_node.shape, table.element_node.shape)
+                msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+                msg += '%s\n' % str(self.code_information())
+                for (eid1, nid1), (eid2, nid2) in zip(self.element_node, table.element_node):
+                    msg += '(%s, %s), (%s, %s)\n' % (eid1, nid1, eid2, eid2)
+                print(msg)
+                raise ValueError(msg)
 
     @property
     def class_name(self):
@@ -393,7 +420,7 @@ class ScalarObject(BaseScalarObject):
         fascii.write('%s            = %s\n' % (blank, data_c))
         f.write(pack('<6i', *data))
 
-        table1_fmt = '<9i'
+        table1_fmt = b'<9i'
         table1 = [
             28,
             1, 2, 3, 4, 5, 6, 7,
@@ -411,9 +438,16 @@ class ScalarObject(BaseScalarObject):
             4, 7, 4,
         ]
         fascii.write('%s header2a = %s\n' % (self.table_name, data))
-        f.write(pack('12i', *data))
+        print('data =', data, len(data))
+        f.write(pack(b'<12i', *data))
 
         month, day, year = date
+        try:
+            subtable_name = self.subtable_name
+        except AttributeError:
+            print('attrs =', self.object_attributes())
+
+        self.subtable_name = b'OUG1    '
         table2 = [
             28,  # 4i -> 13i
             b'%-8s' % self.subtable_name, month, day, year - 2000, 0, 1,   # subtable,todays date 3/6/2014, 0, 1  ( year=year-2000)

@@ -10,14 +10,14 @@ All static loads are defined in this file.  This includes:
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import integer_types
+from six import integer_types, PY3
 from six.moves import zip, range
 
 #from pyNastran.bdf.errors import CrossReferenceError
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import BaseCard, _node_ids
-from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
-    double, double_or_blank, components_or_blank)
+from pyNastran.bdf.bdf_interface.assign_type import (
+    integer, integer_or_blank, double, double_or_blank, components_or_blank)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
@@ -31,19 +31,9 @@ class Load(BaseCard):
         self.cid = None
         self.nodes = None
 
-    def Cid(self):
-        if isinstance(self.cid, integer_types):
-            return self.cid
-        else:
-            return self.cid_ref.cid
-
     @property
     def node_ids(self):
         return self._nodeIDs()
-
-    @node_ids.setter
-    def node_ids(self, value):
-        raise ValueError("You cannot set node IDs like this...modify the node objects")
 
     def _nodeIDs(self, nodes=None):
         """returns nodeIDs for repr functions"""
@@ -111,6 +101,7 @@ class LoadCombination(Load):  # LOAD, DLOAD
         load_ids2 = []
         msg = ' which is required by %s=%s' % (self.type, self.sid)
         for load_id in self.load_ids:
+            assert load_id != self.sid, 'Type=%s sid=%s load_id=%s creates a recursion error' % (self.type, self.sid, load_id)
             load_id2 = model.Load(load_id, msg=msg)
             assert isinstance(load_id2, list), load_id2
             load_ids2.append(load_id2)
@@ -156,7 +147,14 @@ class LoadCombination(Load):  # LOAD, DLOAD
                 try:
                     loads += load.get_loads()
                 except RuntimeError:
-                    raise RuntimeError('recursion error on load=\n%s' % str(load))
+                    if PY3:
+                        print('recursion error on load=\n%s' % str(load))
+                        raise
+                    try:
+                        msg = 'recursion error on load=\n%s' % str(load)
+                    except RuntimeError:
+                        msg = 'Recursion Error on load=%s Type=%s' % (load.sid, load.type)
+                    raise RuntimeError(msg)
             #loads += self.ID  #: :: todo:  what does this mean, was uncommented
         return loads
 
@@ -169,24 +167,29 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
     """
     type = 'LSEQ'
 
-    def __init__(self):
-        pass
-
-    def add_card(self, card, comment=''):
+    def __init__(self, sid, excite_id, lid, tid, comment=''):
         if comment:
             self._comment = comment
-        self.sid = integer(card, 1, 'sid')
-        self.excite_id = integer(card, 2, 'excite_id')
-        self.lid = integer(card, 3, 'lid')
-        self.tid = integer_or_blank(card, 4, 'tid')
-        assert len(card) <= 5, 'len(LSEQ card) = %i' % len(card)
+        self.sid = sid
+        self.excite_id = excite_id
+        self.lid = lid
+        self.tid = tid
 
-    def add_op2_data(self, data, comment=''):
-        self.sid = data[0]
-        self.excite_id = data[1]
-        self.lid = data[2]
-        self.tid = data[3]
-        raise NotImplementedError()
+    @classmethod
+    def add_card(cls, card, comment=''):
+        sid = integer(card, 1, 'sid')
+        excite_id = integer(card, 2, 'excite_id')
+        lid = integer(card, 3, 'lid')
+        tid = integer_or_blank(card, 4, 'tid')
+        assert len(card) <= 5, 'len(LSEQ card) = %i' % len(card)
+        return LSEQ(sid, excite_id, lid, tid, comment=comment)
+
+    #def add_op2_data(self, data, comment=''):
+        #self.sid = data[0]
+        #self.excite_id = data[1]
+        #self.lid = data[2]
+        #self.tid = data[3]
+        #raise NotImplementedError()
 
     def cross_reference(self, model):
         """
@@ -324,7 +327,7 @@ class DAREA(BaseCard):
 
     @property
     def node_id(self):
-        if isinstance(self.p, int):
+        if isinstance(self.p, integer_types):
             return self.p
         return self.p_ref.nid
 
@@ -550,7 +553,7 @@ class RFORCE(Load):
         self.idrf = idrf
 
     @classmethod
-    def add_card(self, card, comment=''):
+    def add_card(cls, card, comment=''):
         sid = integer(card, 1, 'sid')
         nid = integer_or_blank(card, 2, 'nid', 0)
         cid = integer_or_blank(card, 3, 'cid', 0)

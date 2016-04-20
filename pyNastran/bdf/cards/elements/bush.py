@@ -14,8 +14,9 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from pyNastran.utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import Element
-from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
-    integer_double_or_blank, double_or_blank, string_or_blank)
+from pyNastran.bdf.bdf_interface.assign_type import (
+    integer, integer_or_blank, integer_double_or_blank, double_or_blank,
+    string_or_blank)
 from pyNastran.bdf.field_writer_8 import print_card_8
 
 
@@ -125,9 +126,10 @@ class CBUSH(BushElement):
         assert len(card) <= 14, 'len(CBUSH card) = %i' % len(card)
         return CBUSH(eid, pid, ga, gb, x, g0, cid, s, ocid, si, comment=comment)
 
-    def add_op2_data(cls, data, comment=''):
-        eid = data[0]
-        raise NotImplementedError('CBUSH data...')
+    #@classmethod
+    #def add_op2_data(cls, data, comment=''):
+        #eid = data[0]
+        #raise NotImplementedError('CBUSH data...')
 
     def Eid(self):
         return self.eid
@@ -254,7 +256,7 @@ class CBUSH1D(BushElement):
         self.cid = cid
 
     @classmethod
-    def add_card(cls, comment=''):
+    def add_card(cls, card, comment=''):
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', eid)
         ga = integer(card, 3, 'ga')
@@ -263,13 +265,14 @@ class CBUSH1D(BushElement):
         assert len(card) <= 6, 'len(CBUSH1D card) = %i' % len(card)
         return CBUSH1D(eid, pid, ga, gb, cid, comment=comment)
 
-    def add_op2_data(cls, data, comment=''):
-        eid = data[0]
-        pid = data[1]
-        ga = data[2]
-        gb = data[3]
-        raise NotImplementedError(data)
-        return CBUSH1D(eid, pid, ga, gb, cid, comment=comment)
+    #@classmethod
+    #def add_op2_data(cls, data, comment=''):
+        #eid = data[0]
+        #pid = data[1]
+        #ga = data[2]
+        #gb = data[3]
+        #raise NotImplementedError(data)
+        #return CBUSH1D(eid, pid, ga, gb, cid, comment=comment)
 
     def cross_reference(self, model):
         """
@@ -372,7 +375,7 @@ class CBUSH2D(BushElement):
             raise RuntimeError(msg)
 
     @classmethod
-    def add_card(cls, comment=''):
+    def add_card(cls, card, comment=''):
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid')
         ga = integer(card, 3, 'ga')
@@ -383,14 +386,14 @@ class CBUSH2D(BushElement):
         assert len(card) <= 8, 'len(CBUSH2D card) = %i' % len(card)
         return CBUSH2D(eid, pid, ga, gb, cid, plane, sptid, comment=comment)
 
-    @classmethod
-    def add_card(cls, data, comment=''):
-        eid = data[0]
-        pid = data[1]
-        ga = data[2]
-        gb = data[3]
-        raise NotImplementedError(data)
-        return CBUSH2D(eid, pid, ga, gb, cid, plane, sptid, comment=comment)
+    #@classmethod
+    #def add_op2_data(cls, data, comment=''):
+        #eid = data[0]
+        #pid = data[1]
+        #ga = data[2]
+        #gb = data[3]
+        #raise NotImplementedError(data)
+        #return CBUSH2D(eid, pid, ga, gb, cid, plane, sptid, comment=comment)
 
     def _verify(self, xref=False):
         ga = self.Ga()

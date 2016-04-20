@@ -1,7 +1,7 @@
-#pylint: disable=C0103,C0111,C0301,W0612,W0613,R0914,C0326,R0201
+#pylint: disable=C0103,C0111,C0301,W0612,W0613,R0914,C0326
+from struct import unpack, Struct
 from six import b
 from six.moves import range
-from struct import unpack, Struct
 import numpy as np
 
 from pyNastran.bdf.cards.loads.static_loads import (
@@ -10,47 +10,45 @@ from pyNastran.bdf.cards.loads.static_loads import (
     LOAD, PLOAD1, PLOAD2,  #PLOAD3,
     PLOAD4)  # PLOAD3,
 from pyNastran.bdf.cards.thermal.loads import QBDY1, QBDY2, QBDY3, TEMP, TEMPD
+from pyNastran.op2.tables.geom.geom_common import GeomCommon
 
-class GEOM3(object):
-    def add_thermal_load(self, load):
-        raise RuntimeError('this should be overwritten')
-    def add_load(self, load):
-        raise RuntimeError('this should be overwritten')
+class GEOM3(GeomCommon):
+    """defines methods for reading op2 loads"""
 
     def _read_geom3_4(self, data, ndata):
         return self._read_geom_4(self._geom3_map, data, ndata)
 
     def __init__(self):
-        self.card_count = {}
+        GeomCommon.__init__(self)
         self._geom3_map = {
-            (4201, 42,  18): ['FORCE', self._read_force],   # record 3
+            (4201, 42,  18): ['FORCE', self._read_force],    # record 3
             (4001, 40,  20): ['FORCE1', self._read_force1],  # record 4
             (4101, 41,  22): ['FORCE2', self._read_force2],  # record 5
-            (4401, 44,  26): ['GRAV', self._read_grav],    # record 7 - buggy
+            (4401, 44,  26): ['GRAV', self._read_grav],      # record 7 - buggy
             (4551, 61,  84): ['LOAD', self._read_load],        # record 8
-            (3709, 37, 331): ['LOADCYH', self._readLOADCYH], # record 9 - not done
-            (3609, 36, 188): ['LSEQ', self._read_lseq],       # record 12 - not done
+            (3709, 37, 331): ['LOADCYH', self._read_loadcyh],  # record 9 - not done
+            (3609, 36, 188): ['LSEQ', self._read_lseq],        # record 12 - not done
             (4801, 48,  19): ['MOMENT', self._read_moment],    # record 13 - not tested
             (4601, 46,  21): ['MOMENT1', self._read_moment1],  # record 14 - not tested
             (4701, 47,  23): ['MOMENT2', self._read_moment2],  # record 15 - not tested
             (5101, 51,  24): ['PLOAD', self._read_pload],      # record 16 - not done
-            (6909, 69, 198): ['PLOAD1', self._read_pload1],     # record 17 - buggy
-            (6802, 68, 199): ['PLOAD2', self._read_pload2],     # record 18 - buggy
-            (7109, 81, 255): ['PLOAD3', self._read_pload3],   # record 19 - not done
-            (7209, 72, 299): ['PLOAD4', self._read_pload4],     # record 20 - buggy - g1/g3/g4
-            (7309, 73, 351): ['PLOADX1', self._read_ploadx1], # record 22
-            (4509, 45, 239): ['QBDY1', self._readQBDY1],     # record 24
-            (4909, 49, 240): ['QBDY2', self._readQBDY2],     # record 25
-            (2109, 21, 414): ['QBDY3', self._readQBDY3],     # record 26
-            (5509, 55, 190): ['RFORCE', self._readRFORCE],   # record 30 - not done
-            (5401, 54,  25): ['SLOAD', self._readSLOAD],      # record 31 - not done
-            (5701, 57,  27): ['TEMP', self._readTEMP],        # record 32
-            (5641, 65,  98): ['TEMPD', self._readTEMPD],      # record 33
-            (8409, 84, 204): ['TEMPRB', self._readTEMPRB],   # record 40 - not done
-            (8109, 81, 201): ['TEMPP1', self._readTEMPP1],   # record 37 - not done
-            (8209, 82, 202): ['TEMPP2', self._readTEMPP2],   # record 38 - not done
-            (8309, 83, 203): ['TEMPP3', self._readTEMPP3],   # record 39 - not done
-            (8409, 84, 204): ['TEMP4', self._readTEMPP4],     # record 40 - not done
+            (6909, 69, 198): ['PLOAD1', self._read_pload1],    # record 17 - buggy
+            (6802, 68, 199): ['PLOAD2', self._read_pload2],    # record 18 - buggy
+            (7109, 81, 255): ['PLOAD3', self._read_pload3],    # record 19 - not done
+            (7209, 72, 299): ['PLOAD4', self._read_pload4],    # record 20 - buggy - g1/g3/g4
+            (7309, 73, 351): ['PLOADX1', self._read_ploadx1],  # record 22
+            (4509, 45, 239): ['QBDY1', self._read_qbdy1],      # record 24
+            (4909, 49, 240): ['QBDY2', self._read_qbdy2],      # record 25
+            (2109, 21, 414): ['QBDY3', self._read_qbdy3],      # record 26
+            (5509, 55, 190): ['RFORCE', self._read_rforce],    # record 30 - not done
+            (5401, 54,  25): ['SLOAD', self._read_sload],      # record 31 - not done
+            (5701, 57,  27): ['TEMP', self._read_temp],        # record 32
+            (5641, 65,  98): ['TEMPD', self._read_tempd],      # record 33
+            (8409, 84, 204): ['TEMPRB', self._read_temprb],    # record 40 - not done
+            (8109, 81, 201): ['TEMPP1', self._read_tempp1],    # record 37 - not done
+            (8209, 82, 202): ['TEMPP2', self._read_tempp2],    # record 38 - not done
+            (8309, 83, 203): ['TEMPP3', self._read_tempp3],    # record 39 - not done
+            (8409, 84, 204): ['TEMP4', self._read_tempp4],     # record 40 - not done
             (2309, 23, 416): ['', self._read_fake],
             (4309, 43, 233): ['', self._read_fake],
             (6609, 66, 9031): ['', self._read_fake],
@@ -194,7 +192,7 @@ class GEOM3(object):
         self.card_count['LOAD'] = nentries
         return n
 
-    def _readLOADCYH(self, data, n):
+    def _read_loadcyh(self, data, n):
         if self.is_debug_file:
             self.binary_debug.write('skipping LOADCYG in GEOM3\n')
         return n
@@ -240,7 +238,7 @@ class GEOM3(object):
             if self.is_debug_file:
                 self.binary_debug.write('  MOMENT1=%s\n' % str(out))
             (sid, g, m, n1, n2) = out
-            load = MOMENT1(None, out)
+            load = MOMENT1.add_op2_data(out)
             self.add_load(load)
             n += 20
         self.card_count['MOMENT1'] = nentries
@@ -322,7 +320,7 @@ class GEOM3(object):
             if self.is_debug_file:
                 self.binary_debug.write('  PLOAD3=%s\n' % str(out))
             (sid, p, eid, n1, n2) = out
-            load = PLOAD3(None, out)  # undefined
+            load = PLOAD3.add_op2_data(out)  # undefined
             self.add_load(load)
             n += 20
         self.card_count['PLOAD3'] = nentries
@@ -367,7 +365,7 @@ class GEOM3(object):
 
 # PRESAX
 
-    def _readQBDY1(self, data, n):
+    def _read_qbdy1(self, data, n):
         """
         QBDY1(4509,45,239) - the marker for Record 24
         """
@@ -380,13 +378,13 @@ class GEOM3(object):
             if self.is_debug_file:
                 self.binary_debug.write('  QBDY1=%s\n' % str(out))
             (sid, q0, eid) = out
-            load = QBDY1(None, out)
+            load = QBDY1.add_op2_data(out)
             self.add_thermal_load(load)
             n += 12
         self.card_count['QBDY1'] = nentries
         return n
 
-    def _readQBDY2(self, data, n):
+    def _read_qbdy2(self, data, n):
         """
         QBDY2(4909,49,240) - the marker for Record 25
         """
@@ -399,13 +397,13 @@ class GEOM3(object):
             if self.is_debug_file:
                 self.binary_debug.write('  QBDY2=%s\n' % str(out))
             (sid, eid, q1, q2, q3, q4, q5, q6, q7, q8) = out
-            load = QBDY2(None, out)
+            load = QBDY2.add_op2_data(out)
             self.add_thermal_load(load)
             n += 40
         self.card_count['QBDY2'] = nentries
         return n
 
-    def _readQBDY3(self, data, n):
+    def _read_qbdy3(self, data, n):
         """
         QBDY3(2109,21,414) - the marker for Record 26
         """
@@ -416,13 +414,13 @@ class GEOM3(object):
             edata = data[n:n + 16]
             out = unpack('ifii', edata)
             (sid, q0, cntrlnd, eid) = out
-            load = QBDY3(None, out)
+            load = QBDY3.add_op2_data(out)
             self.add_thermal_load(load)
             n += 16
         self.card_count['QBDY3'] = nentries
         return n
 
-    def _readTEMP(self, data, n):
+    def _read_temp(self, data, n):
         """
         TEMP(5701,57,27) - the marker for Record 32
         .. warning:: buggy
@@ -437,7 +435,7 @@ class GEOM3(object):
                 self.binary_debug.write('  TEMP=%s\n' % str(out))
             (sid, g, T) = out
             if g < 10000000:
-                load = TEMP(None, out)
+                load = TEMP.add_op2_data(out)
                 self.add_thermal_load(load)
             else:
                 self.log.debug('TEMP = %s' % (out))
@@ -445,7 +443,7 @@ class GEOM3(object):
         self.card_count['TEMP'] = nentries
         return n
 
-    def _readTEMPD(self, data, n):
+    def _read_tempd(self, data, n):
         """
         TEMPD(5641,65,98) - the marker for Record 33
         .. todo:: add object
@@ -469,12 +467,12 @@ class GEOM3(object):
 # QVECT
 # QVOL
 
-    def _readRFORCE(self, data, n):
+    def _read_rforce(self, data, n):
         if self.is_debug_file:
             self.binary_debug.write('skipping RFORCE in GEOM3\n')
         return n
 
-    def _readSLOAD(self, data, n):
+    def _read_sload(self, data, n):
         if self.is_debug_file:
             self.binary_debug.write('skipping SLOAD in GEOM3\n')
         return n
@@ -485,28 +483,28 @@ class GEOM3(object):
 # TEMPF
 # TEMP1C
 
-    def _readTEMPP1(self, data, n):
+    def _read_tempp1(self, data, n):
         if self.is_debug_file:
             self.binary_debug.write('skipping TEMPP1 in GEOM3\n')
         return n
 
-    def _readTEMPP2(self, data, n):
+    def _read_tempp2(self, data, n):
         if self.is_debug_file:
             self.binary_debug.write('skipping TEMPP2 in GEOM3\n')
         return n
 
-    def _readTEMPP3(self, data, n):
+    def _read_tempp3(self, data, n):
         if self.is_debug_file:
             self.binary_debug.write('skipping TEMPP3 in GEOM3\n')
         return n
 
-    def _readTEMPP4(self, data, n):
+    def _read_tempp4(self, data, n):
         """
         TEMPP4(4201,42,18) - the marker for Record 40
         """
         return n
 
-    def _readTEMPRB(self, data, n):
+    def _read_temprb(self, data, n):
         if self.is_debug_file:
             self.binary_debug.write('skipping TEMPRB in GEOM3\n')
         return n

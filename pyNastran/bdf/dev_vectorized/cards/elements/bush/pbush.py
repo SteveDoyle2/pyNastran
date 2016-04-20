@@ -6,7 +6,7 @@ from pyNastran.bdf.dev_vectorized.utils import slice_to_iter
 
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
-from pyNastran.bdf.bdfInterface.assign_type import integer
+from pyNastran.bdf.bdf_interface.assign_type import integer
 from pyNastran.bdf.cards.properties.bush import PBUSH as vPBUSH
 
 class PBUSH(object):

@@ -15,7 +15,6 @@ class ElementsRod(object):
 
         :param model: the BDF object
         """
-        aaa
         self.model = model
 
         self.crod = CROD(self.model)

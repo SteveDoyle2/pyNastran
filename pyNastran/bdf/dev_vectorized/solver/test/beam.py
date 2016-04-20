@@ -26,7 +26,7 @@ def build_global_stiffness(elements):
 
     for element in elements:
         nodes = element.nodes
-        K = element.getStiffness()
+        K = element.get_stiffness()
 
         # put in global stiffness matrix
         for (i, inode) in enumerate(nodes):  # row
@@ -39,7 +39,7 @@ def build_global_stiffness(elements):
 # Ke = integral(B.T*E*B,dV)
 
 
-class tri(object):
+class Tri(object):
     def __init__(self):
         pass
 
@@ -57,15 +57,15 @@ class tri(object):
 #    pass
 
 
-def doProblem(elements):
+def do_problem(elements):
     Kg = build_global_stiffness()     # global  stiffness (Kg)
-    Kr = applyBoundaryConditions()  # reduced stiffness (Kr)
+    Kr = apply_boundary_conditions()  # reduced stiffness (Kr)
 
     #F = K*x
-    F = getForces()
+    F = get_forces()
     x = solve(Kr, F)  # deflections
 
-    (stress, strain) = recoverStressStrain(elements, x)
+    (stress, strain) = recover_stress_Strain(elements, x)
 
 
 def frame3d():
@@ -92,23 +92,23 @@ def frame3d():
     Ixb = 450.
     Iyb = 32.
 
-    c1 = rod(p5, p1, 5, 1, Ac, Jc, Ixc, Iyc)
-    c2 = rod(p6, p2, 6, 2, Ac, Jc, Ixc, Iyc)
-    c3 = rod(p7, p3, 7, 3, Ac, Jc, Ixc, Iyc)
-    c4 = rod(p8, p4, 8, 4, Ac, Jc, Ixc, Iyc)
+    c1 = Rod(p5, p1, 5, 1, Ac, Jc, Ixc, Iyc)
+    c2 = Rod(p6, p2, 6, 2, Ac, Jc, Ixc, Iyc)
+    c3 = Rod(p7, p3, 7, 3, Ac, Jc, Ixc, Iyc)
+    c4 = Rod(p8, p4, 8, 4, Ac, Jc, Ixc, Iyc)
 
-    b1 = rod(p1, p2, 1, 2, Ab, Jb, Ixb, Iyb)
-    b2 = rod(p2, p3, 2, 3, Ab, Jb, Ixb, Iyb)
-    b3 = rod(p3, p4, 3, 4, Ab, Jb, Ixb, Iyb)
-    b4 = rod(p4, p1, 4, 1, Ab, Jb, Ixb, Iyb)
+    b1 = Rod(p1, p2, 1, 2, Ab, Jb, Ixb, Iyb)
+    b2 = Rod(p2, p3, 2, 3, Ab, Jb, Ixb, Iyb)
+    b3 = Rod(p3, p4, 3, 4, Ab, Jb, Ixb, Iyb)
+    b4 = Rod(p4, p1, 4, 1, Ab, Jb, Ixb, Iyb)
 
-    b5 = rod(p5, p6, 5, 6, Ab, Jb, Ixb, Iyb)
-    b6 = rod(p6, p7, 6, 7, Ab, Jb, Ixb, Iyb)
-    b7 = rod(p7, p8, 7, 8, Ab, Jb, Ixb, Iyb)
-    b8 = rod(p8, p5, 8, 5, Ab, Jb, Ixb, Iyb)
+    b5 = Rod(p5, p6, 5, 6, Ab, Jb, Ixb, Iyb)
+    b6 = Rod(p6, p7, 6, 7, Ab, Jb, Ixb, Iyb)
+    b7 = Rod(p7, p8, 7, 8, Ab, Jb, Ixb, Iyb)
+    b8 = Rod(p8, p5, 8, 5, Ab, Jb, Ixb, Iyb)
 
 
-class rod(object):
+class Rod(object):
     def __init__(self, pA, pB, a, b, A, J, Ix, Iy):
         self.pA = pA
         self.pB = pB
@@ -157,7 +157,7 @@ def fKx(K, x):
     return f
 
 
-def beamStiffness(r, A, E, I):
+def beam_stiffness(r, A, E, I):
     Ke = matrix(zeros((6, 6), 'd'))
     AE = A * E
     EI = E * I

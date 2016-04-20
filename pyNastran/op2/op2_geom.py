@@ -14,7 +14,7 @@ from pyNastran.op2.op2 import OP2
 
 def read_op2_geom(op2_filename=None, combine=True,
              log=None, debug=True, debug_file=None, build_dataframe=False,
-             skip_undefined_matrices=True, mode='msc'):
+             skip_undefined_matrices=True, mode='msc', encoding=None):
     """
     Creates the OP2 object without calling the OP2 class.
 
@@ -37,6 +37,8 @@ def read_op2_geom(op2_filename=None, combine=True,
      (.. seealso:: import logging)
     debug_file : str; default=None (No debug)
         sets the filename that will be written to
+    encoding : str
+        the unicode encoding (default=None; system default)
 
     Returns
     -------
@@ -50,7 +52,8 @@ def read_op2_geom(op2_filename=None, combine=True,
     """
     model = OP2Geom(log=log, debug=debug, debug_file=debug_file, mode=mode)
     model.read_op2(op2_filename=op2_filename, build_dataframe=build_dataframe,
-                   skip_undefined_matrices=skip_undefined_matrices, combine=combine)
+                   skip_undefined_matrices=skip_undefined_matrices, combine=combine,
+                   encoding=encoding)
     return model
 
 class OP2Geom(OP2, BDF,
@@ -94,35 +97,35 @@ class OP2Geom(OP2, BDF,
         table_mapper = OP2._get_table_mapper(self)
 
         # geometry
-        table_mapper['GEOM1'] = [self._read_geom1_4, self._read_geom1_4]
-        table_mapper['GEOM2'] = [self._read_geom2_4, self._read_geom2_4]
-        table_mapper['GEOM3'] = [self._read_geom3_4, self._read_geom3_4]
-        table_mapper['GEOM4'] = [self._read_geom4_4, self._read_geom4_4]
+        table_mapper[b'GEOM1'] = [self._read_geom1_4, self._read_geom1_4]
+        table_mapper[b'GEOM2'] = [self._read_geom2_4, self._read_geom2_4]
+        table_mapper[b'GEOM3'] = [self._read_geom3_4, self._read_geom3_4]
+        table_mapper[b'GEOM4'] = [self._read_geom4_4, self._read_geom4_4]
 
         # superelements
-        table_mapper['GEOM1S'] = [self._read_geom1_4, self._read_geom1_4]
-        table_mapper['GEOM2S'] = [self._read_geom2_4, self._read_geom2_4]
-        table_mapper['GEOM3S'] = [self._read_geom3_4, self._read_geom3_4]
-        table_mapper['GEOM4S'] = [self._read_geom4_4, self._read_geom4_4]
+        table_mapper[b'GEOM1S'] = [self._read_geom1_4, self._read_geom1_4]
+        table_mapper[b'GEOM2S'] = [self._read_geom2_4, self._read_geom2_4]
+        table_mapper[b'GEOM3S'] = [self._read_geom3_4, self._read_geom3_4]
+        table_mapper[b'GEOM4S'] = [self._read_geom4_4, self._read_geom4_4]
 
-        table_mapper['GEOM1N'] = [self._read_geom1_4, self._read_geom1_4]
-        table_mapper['GEOM2N'] = [self._read_geom2_4, self._read_geom2_4]
-        table_mapper['GEOM3N'] = [self._read_geom3_4, self._read_geom3_4]
-        table_mapper['GEOM4N'] = [self._read_geom4_4, self._read_geom4_4]
+        table_mapper[b'GEOM1N'] = [self._read_geom1_4, self._read_geom1_4]
+        table_mapper[b'GEOM2N'] = [self._read_geom2_4, self._read_geom2_4]
+        table_mapper[b'GEOM3N'] = [self._read_geom3_4, self._read_geom3_4]
+        table_mapper[b'GEOM4N'] = [self._read_geom4_4, self._read_geom4_4]
 
-        table_mapper['GEOM1OLD'] = [self._read_geom1_4, self._read_geom1_4]
-        table_mapper['GEOM2OLD'] = [self._read_geom2_4, self._read_geom2_4]
-        table_mapper['GEOM3OLD'] = [self._read_geom3_4, self._read_geom3_4]
-        table_mapper['GEOM4OLD'] = [self._read_geom4_4, self._read_geom4_4]
+        table_mapper[b'GEOM1OLD'] = [self._read_geom1_4, self._read_geom1_4]
+        table_mapper[b'GEOM2OLD'] = [self._read_geom2_4, self._read_geom2_4]
+        table_mapper[b'GEOM3OLD'] = [self._read_geom3_4, self._read_geom3_4]
+        table_mapper[b'GEOM4OLD'] = [self._read_geom4_4, self._read_geom4_4]
 
-        table_mapper['EPT'] = [self._read_ept_4, self._read_ept_4]
-        table_mapper['EPTS'] = [self._read_ept_4, self._read_ept_4]
-        table_mapper['EPTOLD'] = [self._read_ept_4, self._read_ept_4]
+        table_mapper[b'EPT'] = [self._read_ept_4, self._read_ept_4]
+        table_mapper[b'EPTS'] = [self._read_ept_4, self._read_ept_4]
+        table_mapper[b'EPTOLD'] = [self._read_ept_4, self._read_ept_4]
 
-        table_mapper['MPT'] = [self._read_mpt_4, self._read_mpt_4]
-        table_mapper['MPTS'] = [self._read_mpt_4, self._read_mpt_4]
+        table_mapper[b'MPT'] = [self._read_mpt_4, self._read_mpt_4]
+        table_mapper[b'MPTS'] = [self._read_mpt_4, self._read_mpt_4]
 
-        table_mapper['DYNAMIC'] = [self._read_dynamics_4, self._read_dynamics_4]
-        table_mapper['DYNAMICS'] = [self._read_dynamics_4, self._read_dynamics_4]
-        table_mapper['DIT'] = [self._read_dit_4, self._read_dit_4]   # table objects (e.g. TABLED1)
+        table_mapper[b'DYNAMIC'] = [self._read_dynamics_4, self._read_dynamics_4]
+        table_mapper[b'DYNAMICS'] = [self._read_dynamics_4, self._read_dynamics_4]
+        table_mapper[b'DIT'] = [self._read_dit_4, self._read_dit_4]   # table objects (e.g. TABLED1)
         return table_mapper

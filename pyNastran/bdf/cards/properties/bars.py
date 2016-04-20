@@ -13,10 +13,11 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from six import integer_types
 from numpy import pi, array
 
-from pyNastran.bdf.field_writer_8 import set_blank_if_default, set_default_if_blank
+from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import Property
-from pyNastran.bdf.bdfInterface.assign_type import (integer, double,
-    double_or_blank, string, string_or_blank, blank, integer_or_double)
+from pyNastran.bdf.bdf_interface.assign_type import (
+    integer, double, double_or_blank, string, string_or_blank,
+    blank, integer_or_double)
 from pyNastran.utils.mathematics import integrate_line, integrate_positive_line
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
@@ -202,7 +203,7 @@ class LineProperty(Property):
 
             h3 = dim[4]
             w3 = dim[1]
-            y3 = -dim[0] / 2. + h3
+            #y3 = -dim[0] / 2. + h3
             sections.append([w3, h3, 0., y1])
 
             h2 = dim[0] - h1 - h3
@@ -1218,7 +1219,7 @@ class PBARL(LineProperty):
             b = b1
             Ixx = (b*d**3-h**3*(b-t)) / 12.
             Iyy = (2.*s*b**3 + h*t**3) / 12.
-        elif self.Type == 'T': # test
+        #elif self.Type == 'T': # test
             # http://www.amesweb.info/SectionalPropertiesTabs/SectionalPropertiesTbeam.aspx
             # http://www.amesweb.info/SectionalPropertiesTabs/SectionalPropertiesTbeam.aspx
             # d - outside height
@@ -1228,7 +1229,7 @@ class PBARL(LineProperty):
             # s - web thickness
             #(b, d, t, s) = self.dim
             #h = d - 2 * s
-            (b, d, s, t) = self.dim
+            #(b, d, s, t) = self.dim
             #if b1 != b2:
                 #msg = 'J for Type=%r dim=%r on PBARL b1 != b2 is not supported' % (
                     #self.Type, self.dim)
@@ -1242,9 +1243,9 @@ class PBARL(LineProperty):
             #b = b1
 
             # http://www.engineersedge.com/material_science/moment-inertia-gyration-6.htm
-            y = d**2*t+s**2*(b-t)/(2*(b*s+h*t))
-            Ixx = (t*y**3 + b*(d-y)**3 - (b-t)*(d-y-s)**3)/3.
-            Iyy = t**3*(h-s)/12. + b**3*s/12.
+            #y = d**2*t+s**2*(b-t)/(2*(b*s+h*t))
+            #Ixx = (t*y**3 + b*(d-y)**3 - (b-t)*(d-y-s)**3)/3.
+            #Iyy = t**3*(h-s)/12. + b**3*s/12.
             #A = b*s + h*t
 
         elif self.Type == 'C':
@@ -1259,7 +1260,7 @@ class PBARL(LineProperty):
             #cx = (2.*b**2*s + h*t**2)/(2*b*d - 2*h*(b-t))
             #cy = d / 2.
             Ixx = (b * d**3 - h **3 * (b-t)) / 12.
-            Iyx = (2.*s*b**3 + h*t**3)/3 - A*cx**2
+            #Iyx = (2.*s*b**3 + h*t**3)/3 - A*cx**2
         else:
             msg = 'J for Type=%r dim=%r on PBARL is not supported' % (self.Type, self.dim)
             raise NotImplementedError(msg)
@@ -1300,7 +1301,7 @@ class PBARL(LineProperty):
                        None, None, None] + self.dim + [self.nsm]
         return list_fields
 
-    def write_card(self, size, is_double):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)

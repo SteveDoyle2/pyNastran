@@ -3,7 +3,7 @@ from numpy import arange, searchsorted, array, eye, ones
 from numpy.linalg import norm
 
 from pyNastran.bdf.field_writer_8 import print_card_8
-from pyNastran.bdf.bdfInterface.assign_type import integer, integer_or_blank
+from pyNastran.bdf.bdf_interface.assign_type import integer, integer_or_blank
 
 from pyNastran.bdf.dev_vectorized.cards.elements.solid.chexa8 import quad_area_centroid, volume8
 from pyNastran.bdf.dev_vectorized.cards.elements.solid.solid_element import SolidElement
@@ -65,7 +65,7 @@ class CHEXA20(SolidElement):
             self.element_id = array([], dtype='int32')
             self.property_id = array([], dtype='int32')
 
-    def get_mass_matrix(self, i, model, positions, index0s):
+    def get_mass_matrix(self, i, model, positions, index0s, is_lumped=True):
         nnodes = 8
         ndof = 3 * nnodes
         pid = self.property_id[i]

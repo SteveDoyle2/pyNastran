@@ -296,6 +296,8 @@ class CaseControlTest(unittest.TestCase):
         with codec_open(bdf_filename, 'r', encoding='ascii') as f:
             lines = f.readlines()
             compare_lines(self, lines, lines_expected, has_endline=True)
+        os.remove(bdf_filename)
+        os.remove(bdf_filename2)
 
     def test_case_control_09(self):
         lines = [

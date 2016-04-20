@@ -20,6 +20,8 @@ from numpy import unique, cross, dot, array
 
 import pyNastran
 from pyNastran.bdf.errors import CardParseSyntaxError
+from pyNastran.bdf.cards.collpase_card import collapse_colon_packs
+
 
 is_windows = 'nt' in os.name
 #is_linux = 'posix' in os.name
@@ -35,7 +37,8 @@ _REMOVED_LINES = [
     '$MATERIALS', '$THERMAL MATERIALS',
     '$CONSTRAINTS', '$SPCs', '$MPCs', '$RIGID ELEMENTS',
     '$LOADS', '$AERO', '$AERO CONTROL SURFACES',
-    '$FLUTTER', '$DYNAMIC', '$OPTIMIZATION',
+    '$STATIC AERO', '$FLUTTER', '$GUST',
+    '$DYNAMIC', '$OPTIMIZATION',
     '$COORDS', '$THERMAL', '$TABLES', '$RANDOM TABLES',
     '$SETS', '$CONTACT', '$REJECTS', '$REJECT_LINES',
     '$PROPERTIES_MASS', '$MASSES',
@@ -368,6 +371,7 @@ def _parse_pynastran_header(line):
             $ pyNastran: nelements=100
             $ pyNastran: skip_cards=PBEAM,CBEAM
             $ pyNastran: units=in,lb,s
+            $ pyNastran: skip elements=12345,6,7,8
 
     If we find:
         ..code-block :: python
@@ -381,7 +385,7 @@ def _parse_pynastran_header(line):
         key = None
         value = None
     elif 'pynastran' in lline:
-        base, word = lline.split(':')
+        base, word = lline.split(':', 1)
         if base.strip() != 'pynastran':
             msg = 'unrecognized pyNastran marker\n'
             msg += 'line=%r' % line
@@ -392,6 +396,8 @@ def _parse_pynastran_header(line):
         if key in EXPECTED_HEADER_KEYS_CHECK:
             assert ' ' not in value, 'value=%r' % value
         elif key in EXPECTED_HEADER_KEYS_NO_CHECK:
+            pass
+        elif 'skip ' in key:
             pass
         else:
             msg = '\nunrecognized pyNastran key=%r type(key)=%s\n' % (key, type(key))
@@ -531,6 +537,21 @@ def parse_patran_syntax(node_sets, pound=None):
         else:
             nodes.append(int(snode))
     return unique(nodes)
+
+def write_patran_syntax_dict(dict_sets):
+    msg = ''
+    for key, dict_set in iteritems(dict_sets):
+        singles, doubles = collapse_colon_packs(dict_set)
+        double_list = ['%s:%s ' % (double[0], double[2])
+                       if len(double) == 3 else '%s:%s:%s ' % (double[0], double[2], double[4])
+                       for double in doubles]
+        double_str = ''.join(double_list)
+        msg += '%s %s %s' % (key,
+                             ' '.join(str(single) for single in singles),
+                             double_str,
+                            )
+    assert '%' not in msg, msg
+    return msg
 
 
 def parse_patran_syntax_dict(node_sets, pound_dict=None):
@@ -795,7 +816,7 @@ def PositionWRT(xyz, cid, cid_new, model, is_cid_int=True):
         # transform xyz_1 to xyz_2
         p2_local = dot(
             dot(p1_local, cp_ref.beta()) + cp_ref.origin - coord_to_ref.origin,
-                coord_to_ref.beta().T)
+            coord_to_ref.beta().T)
 
         # convert xyz_2 to R-Theta-Z_2
         xyz_local = coord_to_ref.xyz_to_coord(p2_local)

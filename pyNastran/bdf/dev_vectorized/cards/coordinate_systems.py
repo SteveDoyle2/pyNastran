@@ -20,12 +20,12 @@ from numpy.linalg import norm
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.utils.dev import list_print
-from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
+from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_blank,
     double_or_blank, string_or_blank)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
-asdf
+raise RuntimeError('is this used')
 
 def normalize(v):
     r"""
@@ -350,7 +350,7 @@ class Cord1x(Coord):
         Coord.__init__(self, card, data, comment)
         self.isResolved = False
         if nCoord is not None:
-            assert nCoord == 0 or nCoord == 1, 'nCoord=|%s|' % (nCoord)
+            assert nCoord in (0, 1), 'nCoord=%r' % (nCoord)
             nCoord *= 4  # 0 if the 1st coord, 4 if the 2nd
 
             #: the coordinate ID

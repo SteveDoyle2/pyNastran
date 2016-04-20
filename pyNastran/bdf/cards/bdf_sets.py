@@ -1,16 +1,3 @@
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
-from six import string_types
-from six.moves import zip, range
-
-from pyNastran.utils import integer_types
-from pyNastran.bdf.cards.base_card import (BaseCard, _node_ids, expand_thru,
-    collapse_thru, collapse_thru_packs)
-from pyNastran.bdf.field_writer_8 import print_card_8, print_int_card_blocks
-from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
-    components, components_or_blank, fields, integer_or_string, string,
-    string_or_blank, integer_string_or_blank)
-
 """
 All constraint cards are defined in this file.  This includes:
 
@@ -46,27 +33,43 @@ The superelement sets start with SE:
 |  SEBSETi   | BSETi           |
 +------------+-----------------+
 """
+from __future__ import (nested_scopes, generators, division, absolute_import,
+                        print_function, unicode_literals)
+from six import string_types
+from six.moves import zip, range
+
+from pyNastran.utils import integer_types
+from pyNastran.bdf.cards.base_card import (
+    BaseCard, _node_ids, expand_thru
+)
+from pyNastran.bdf.cards.collpase_card import collapse_thru #collapse_thru_packs
+from pyNastran.bdf.field_writer_8 import print_card_8 #, print_int_card_blocks
+from pyNastran.bdf.bdf_interface.assign_type import (
+    integer, integer_or_blank, integer_or_string,
+    components as fcomponents, components_or_blank as fcomponents_or_blank,
+    fields, string, string_or_blank, integer_string_or_blank)
+
 
 class Set(BaseCard):
     """Generic Class all SETx cards inherit from"""
 
-    def __init__(self, card, data):
+    def __init__(self):
         #:  Unique identification number. (Integer > 0)
         self.sid = None
         #:  list of IDs in the SETx
-        self.IDs = None
+        self.ids = []
 
     def clean_ids(self):
         """eliminates duplicate IDs from self.IDs and sorts self.IDs"""
-        self.IDs = list(set(self.IDs))
-        self.IDs.sort()
+        self.ids = list(set(self.ids))
+        self.ids.sort()
 
-    def cleanIDs(self):
-        self.clean_ids()
+    #def cleanIDs(self):
+        #self.clean_ids()
 
-    def SetIDs(self):
-        """gets the IDs of the SETx"""
-        return collapse_thru(self.node_ids)
+    #def SetIDs(self):
+        #"""gets the IDs of the SETx"""
+        #return collapse_thru(self.ids)
 
     def repr_fields(self):
         list_fields = self.raw_fields()
@@ -82,13 +85,13 @@ class Set(BaseCard):
 
 class SetSuper(Set):
     """Generic Class all Superelement SETx cards inherit from."""
-    def __init__(self, card, data):
-        Set.__init__(self, card, data)
+    def __init__(self):
+        Set.__init__(self)
         #:  Superelement identification number. Must be a primary superelement.
         #:  (Integer >= 0)
         self.seid = None
         #:  list of IDs in the SESETx
-        self.IDs = None
+        self.ids = None
 
 
 class ABCQSet(Set):
@@ -103,22 +106,28 @@ class ABCQSet(Set):
     | ASET | 16  |  2 |  23 | 3516 |  1  | 4  |     |    |
     +------+-----+----+-----+------+-----+----+-----+----+
     """
-    def __init__(self, card=None, data=None, comment=''):
-        Set.__init__(self, card, data)
+    type = 'ABCQSet'
+    def __init__(self, ids, components, comment=''):
+        Set.__init__(self)
         if comment:
             self._comment = comment
-
         #:  Identifiers of grids points. (Integer > 0)
-        self.IDs = []
-        self.components = []
+        self.ids = ids
+        self.components = components
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        ids = []
+        components = []
 
         nterms = len(card) // 2
         for n in range(nterms):
             i = n * 2 + 1
-            ID = integer(card, i, 'ID' + str(n))
-            component = components(card, i + 1, 'component' + str(n))
-            self.IDs.append(ID)
-            self.components.append(component)
+            idi = integer(card, i, 'ID' + str(n))
+            component = fcomponents(card, i + 1, 'component' + str(n))
+            ids.append(idi)
+            components.append(component)
+        return cls(ids, components, comment=comment)
 
     def cross_reference(self, model):
         """
@@ -130,23 +139,23 @@ class ABCQSet(Set):
             the BDF object
         """
         msg = ' which is required by %s' % self.type
-        self.IDs = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
-        self.IDs_ref = self.IDs
+        self.ids = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
+        self.ids_ref = self.ids
 
     def uncross_reference(self):
-        self.IDs = self.node_ids
-        del self.IDs_ref
+        self.ids = self.node_ids
+        del self.ids_ref
 
     @property
     def node_ids(self):
         msg = ' which is required by %s' % self.type
-        return _node_ids(self, self.IDs, allow_empty_nodes=True, msg=msg)
+        return _node_ids(self, self.ids, allow_empty_nodes=True, msg=msg)
 
     def raw_fields(self):
         """gets the "raw" card without any processing as a list for printing"""
         list_fields = [self.type]  # ASET, BSET
-        for (ID, comp) in zip(self.node_ids, self.components):
-            list_fields += [ID, comp]
+        for (idi, comp) in zip(self.node_ids, self.components):
+            list_fields += [idi, comp]
         return list_fields
 
     def __repr__(self):
@@ -166,24 +175,31 @@ class SuperABCQSet(Set):
     | SEBSET | 100  | 16  |  2 |  23 | 3516 |  1  | 4   |     |
     +--------+------+-----+----+-----+------+-----+-----+-----+
     """
-    def __init__(self, card=None, data=None, comment=''):
-        Set.__init__(self, card, data)
+    type = 'SuperABCQSet'
+    def __init__(self, seid, ids, components, comment=''):
+        Set.__init__(self)
         if comment:
             self._comment = comment
 
-        self.seid = integer(card, 1, 'seid')
-
+        self.seid = seid
         #:  Identifiers of grids points. (Integer > 0)
-        self.IDs = []
-        self.components = []
+        self.ids = ids
+        self.components = components
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        seid = integer(card, 1, 'seid')
+        ids = []
+        components = []
 
         nterms = len(card) // 2
         for n in range(nterms):
             i = n * 2 + 2
-            ID = integer(card, i, 'ID' + str(n))
-            component = components(card, i + 1, 'component' + str(n))
-            self.IDs.append(ID)
-            self.components.append(component)
+            idi = integer(card, i, 'ID' + str(n))
+            component = fcomponents(card, i + 1, 'component' + str(n))
+            ids.append(idi)
+            components.append(component)
+        return cls(seid, ids, components, comment=comment)
 
     def cross_reference(self, model):
         """
@@ -195,23 +211,23 @@ class SuperABCQSet(Set):
             the BDF object
         """
         msg = ' which is required by %s seid=%s' % (self.type, self.seid)
-        self.IDs = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
-        self.IDs_ref = self.IDs
+        self.ids = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
+        self.ids_ref = self.ids
 
     def uncross_reference(self):
-        self.IDs = self.node_ids
-        del self.IDs_ref
+        self.ids = self.node_ids
+        del self.ids_ref
 
     @property
     def node_ids(self):
         msg = ' which is required by %s seid=%s' % (self.type, self.seid)
-        return _node_ids(self, self.IDs, allow_empty_nodes=True, msg=msg)
+        return _node_ids(self, self.ids, allow_empty_nodes=True, msg=msg)
 
     def raw_fields(self):
         """gets the "raw" card without any processing as a list for printing"""
         list_fields = [self.type, self.seid]  # SEASET, SEBSET
-        for (ID, comp) in zip(self.node_ids, self.components):
-            list_fields += [ID, comp]
+        for (idi, comp) in zip(self.node_ids, self.components):
+            list_fields += [idi, comp]
         return list_fields
 
     def __repr__(self):
@@ -231,8 +247,8 @@ class ASET(ABCQSet):
     """
     type = 'ASET'
 
-    def __init__(self, card=None, data=None, comment=''):
-        ABCQSet.__init__(self, card, data, comment)
+    def __init__(self, IDs, components, comment=''):
+        ABCQSet.__init__(self, IDs, components, comment)
 
 class BSET(ABCQSet):
     """
@@ -247,8 +263,8 @@ class BSET(ABCQSet):
     """
     type = 'BSET'
 
-    def __init__(self, card=None, data=None, comment=''):
-        ABCQSet.__init__(self, card, data, comment)
+    def __init__(self, IDs, components, comment=''):
+        ABCQSet.__init__(self, IDs, components, comment)
 
 
 class CSET(ABCQSet):
@@ -264,8 +280,8 @@ class CSET(ABCQSet):
     """
     type = 'CSET'
 
-    def __init__(self, card=None, data=None, comment=''):
-        ABCQSet.__init__(self, card, data, comment)
+    def __init__(self, IDs, components, comment=''):
+        ABCQSet.__init__(self, IDs, components, comment)
 
 
 class QSET(ABCQSet):
@@ -281,8 +297,8 @@ class QSET(ABCQSet):
     """
     type = 'QSET'
 
-    def __init__(self, card=None, data=None, comment=''):
-        ABCQSet.__init__(self, card, data, comment)
+    def __init__(self, IDs, components, comment=''):
+        ABCQSet.__init__(self, IDs, components, comment)
 
 
 class ABQSet1(Set):
@@ -299,26 +315,34 @@ class ABQSet1(Set):
     | ASET1 |  C  | ID1 | THRU | ID2  |     |     |     |     |
     +-------+-----+-----+------+------+-----+-----+-----+-----+
     """
-    def __init__(self, card=None, data=None, comment=''):
-        Set.__init__(self, card, data)
+    type = 'ABQSet1'
+    def __init__(self, components, ids, comment=''):
+        Set.__init__(self)
         if comment:
             self._comment = comment
+
         #:  Component number. (Integer zero or blank for scalar points or any
         #:  unique combination of the Integers 1 through 6 for grid points with
         #:  no embedded blanks.)
-        self.components = components_or_blank(card, 1, 'components', 0)
-
-        nfields = len(card)
-        IDs = []
-        i = 1
-        for ifield in range(2, nfields):
-            ID = integer_string_or_blank(card, ifield, 'ID%i' % i)
-            if ID:
-                i += 1
-                IDs.append(ID)
+        self.components = components
 
         #:  Identifiers of grids points. (Integer > 0)
-        self.IDs = expand_thru(IDs)
+        self.ids = expand_thru(ids)
+
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        components = fcomponents_or_blank(card, 1, 'components', 0)
+
+        nfields = len(card)
+        ids = []
+        i = 1
+        for ifield in range(2, nfields):
+            idi = integer_string_or_blank(card, ifield, 'ID%i' % i)
+            if idi:
+                i += 1
+                ids.append(idi)
+        return cls(components, ids, comment=comment)
 
     def cross_reference(self, model):
         """
@@ -330,17 +354,21 @@ class ABQSet1(Set):
             the BDF object
         """
         msg = ' which is required by %s' % self.type
-        self.IDs = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
-        self.IDs_ref = self.IDs
+        self.ids = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
+        self.ids_ref = self.ids
 
     def uncross_reference(self):
-        self.IDs = self.node_ids
-        del self.IDs_ref
+        self.ids = self.node_ids
+        del self.ids_ref
+
+    #@property
+    #def node_ids(self):
+        #return self.get_ids()
 
     @property
     def node_ids(self):
         msg = ' which is required by %s' % self.type
-        return _node_ids(self, self.IDs, allow_empty_nodes=True, msg=msg)
+        return _node_ids(self, self.ids, allow_empty_nodes=True, msg=msg)
 
     def raw_fields(self):
         """gets the "raw" card without any processing as a list for printing"""
@@ -366,29 +394,36 @@ class SuperABQSet1(Set):
     | SEBSET1  | SEID |  C  | ID1  | THRU | ID2 |     |     |     |
     +----------+------+-----+------+------+-----+-----+-----+-----+
     """
-
-    def __init__(self, card=None, data=None, comment=''):
-        Set.__init__(self, card, data)
+    type = 'SuperABQSet1'
+    def __init__(self, seid, components, ids, comment=''):
+        Set.__init__(self)
         if comment:
             self._comment = comment
+        self.seid = seid
 
-        self.seid = integer(card, 1, 'seid')
         #:  Component number. (Integer zero or blank for scalar points or any
         #:  unique combination of the Integers 1 through 6 for grid points with
         #:  no embedded blanks.)
-        self.components = components_or_blank(card, 2, 'components', 0)
-
-        nfields = len(card)
-        IDs = []
-        i = 1
-        for ifield in range(3, nfields):
-            ID = integer_string_or_blank(card, ifield, 'ID%i' % i)
-            if ID:
-                i += 1
-                IDs.append(ID)
+        self.components = components
 
         #:  Identifiers of grids points. (Integer > 0)
-        self.IDs = expand_thru(IDs)
+        self.ids = expand_thru(ids)
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        seid = integer(card, 1, 'seid')
+        components = fcomponents_or_blank(card, 2, 'components', 0)
+
+        nfields = len(card)
+        ids = []
+        i = 1
+        for ifield in range(3, nfields):
+            idi = integer_string_or_blank(card, ifield, 'ID%i' % i)
+            if idi:
+                i += 1
+                ids.append(idi)
+        ids = expand_thru(ids)
+        return cls(seid, components, ids, comment=comment)
 
     def cross_reference(self, model):
         """
@@ -400,17 +435,17 @@ class SuperABQSet1(Set):
             the BDF object
         """
         msg = ' which is required by %s seid=%s' % (self.type, self.seid)
-        self.IDs = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
-        self.IDs_ref = self.IDs
+        self.ids = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
+        self.ids_ref = self.ids
 
     def uncross_reference(self):
-        self.IDs = self.node_ids
-        del self.IDs_ref
+        self.ids = self.node_ids
+        del self.ids_ref
 
     @property
     def node_ids(self):
         msg = ' which is required by %s seid=%s' % (self.type, self.seid)
-        return _node_ids(self, self.IDs, allow_empty_nodes=True, msg=msg)
+        return _node_ids(self, self.ids, allow_empty_nodes=True, msg=msg)
 
     def raw_fields(self):
         """gets the "raw" card without any processing as a list for printing"""
@@ -436,15 +471,15 @@ class ASET1(ABQSet1):
     """
     type = 'ASET1'
 
-    def __init__(self, card=None, data=None, comment=''):
-        ABQSet1.__init__(self, card, data, comment)
+    def __init__(self, components, IDs, comment=''):
+        ABQSet1.__init__(self, components, IDs, comment)
 
 
 class BSET1(ABQSet1):
     type = 'BSET1'
 
-    def __init__(self, card=None, data=None, comment=''):
-        ABQSet1.__init__(self, card, data, comment)
+    def __init__(self, components, IDs, comment=''):
+        ABQSet1.__init__(self, components, IDs, comment)
 
 
 class CSET1(Set):
@@ -464,24 +499,28 @@ class CSET1(Set):
     """
     type = 'CSET1'
 
-    def __init__(self, card=None, data=None, comment=''):
-        Set.__init__(self, card, data)
+    def __init__(self, ids, components, comment=''):
+        Set.__init__(self)
         if comment:
             self._comment = comment
-
         #:  Identifiers of grids points. (Integer > 0)
-        self.IDs = []
-        if string_or_blank(card, 2, 'C') == 'ALL':
-            self.components = '123456'
-        else:
-            self.components = components(card, 1, 'components')
+        self.ids = expand_thru(ids)
+        self.components = components
 
-        IDs2 = []
+    @classmethod
+    def add_card(cls, card, comment=''):
+        if integer_string_or_blank(card, 2, 'C') == 'ALL':
+            components = '123456'
+        else:
+            components = fcomponents(card, 1, 'components')
+
+        ids = []
         ii = 1
         for ifield in range(2, len(card)):
-            integer_or_string(card, ifield, 'ID' % ii)
+            idi = integer_or_string(card, ifield, 'ID%i' % ii)
+            ids.append(idi)
             ii += 1
-        self.IDs = expand_thru(IDs)
+        return CSET1(ids, components, comment=comment)
 
     def cross_reference(self, model):
         """
@@ -492,18 +531,18 @@ class CSET1(Set):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by %s name=%s' % (self.type, self.name)
-        self.IDs = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
-        self.IDs_ref = self.IDs
+        msg = ' which is required by %s' % (self.type)
+        self.ids = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
+        self.ids_ref = self.ids
 
     def uncross_reference(self):
-        self.IDs = self.node_ids
-        del self.IDs_ref
+        self.ids = self.node_ids
+        del self.ids_ref
 
     @property
     def node_ids(self):
-        msg = ' which is required by %s name=%s' % (self.type, self.name)
-        return _node_ids(self, self.IDs, allow_empty_nodes=True, msg=msg)
+        msg = ' which is required by %s' % (self.type)
+        return _node_ids(self, self.ids, allow_empty_nodes=True, msg=msg)
 
     def raw_fields(self):
         """gets the "raw" card without any processing as a list for printing"""
@@ -522,8 +561,8 @@ class QSET1(ABQSet1):
     """
     type = 'QSET1'
 
-    def __init__(self, card=None, data=None, comment=''):
-        ABQSet1.__init__(self, card, data, comment)
+    def __init__(self, components, IDs, comment=''):
+        ABQSet1.__init__(self, components, IDs, comment)
 
 
 class SET1(Set):
@@ -532,43 +571,50 @@ class SET1(Set):
     numbers.
 
     +------+--------+--------+-----+------+-----+-----+------+-----+
-    | SET1 | SID    |   ID1  | ID2 | ID3  | ID4 | ID5 | ID6  | ID7 |
+    | SET1 |  SID   |   ID1  | ID2 | ID3  | ID4 | ID5 | ID6  | ID7 |
     +------+--------+--------+-----+------+-----+-----+------+-----+
     |      |  ID8   | -etc.- |     |      |     |     |      |     |
     +------+--------+--------+-----+------+-----+-----+------+-----+
-    | SET1 |  3     |   31   | 62  |  93  | 124 | 16  |  17  | 18  |
+    | SET1 |   3    |   31   | 62  |  93  | 124 | 16  |  17  | 18  |
     +------+--------+--------+-----+------+-----+-----+------+-----+
     |      |   19   |        |     |      |     |     |      |     |
     +------+--------+--------+-----+------+-----+-----+------+-----+
-    | SET1 |  6     |  29    | 32  | THRU | 50  | 61  | THRU | 70  |
+    | SET1 |   6    |   29   | 32  | THRU | 50  | 61  | THRU | 70  |
     +------+--------+--------+-----+------+-----+-----+------+-----+
     |      |   17   |  57    |     |      |     |     |      |     |
     +------+--------+--------+-----+------+-----+-----+------+-----+
     """
     type = 'SET1'
 
-    def __init__(self, card=None, data=None, comment=''):
-        Set.__init__(self, card, data)
+    def __init__(self, sid, ids, is_skin=False, comment=''):
+        Set.__init__(self)
         if comment:
             self._comment = comment
         #:  Unique identification number. (Integer > 0)
-        self.sid = integer(card, 1, 'sid')
-
-        self.IDs = []
-        IDs = fields(integer_or_string, card, 'ID', i=2, j=len(card))
-
-        self.is_skin = False
-        i = 0
-        if isinstance(IDs[0], string_types) and IDs[0] == 'SKIN':
-            self.is_skin = True
-            i += 1
+        self.sid = sid
 
         #:  List of structural grid point or element identification numbers.
         #:  (Integer > 0 or 'THRU'; for the 'THRU' option, ID1 < ID2 or 'SKIN';
         #:  in field 3)
-        self.IDs = expand_thru(IDs[i:])
+        self.ids = expand_thru(ids)
         self.clean_ids()
+
+        self.is_skin = is_skin
         self.xref_type = None
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        sid = integer(card, 1, 'sid')
+
+        ids = fields(integer_or_string, card, 'ID', i=2, j=len(card))
+
+        is_skin = False
+        i = 0
+        if isinstance(ids[0], string_types) and ids[0] == 'SKIN':
+            is_skin = True
+            i += 1
+
+        return SET1(sid, ids[i:], is_skin=is_skin, comment=comment)
 
     #def __eq__(self, set1):
         #assert self.type == set1.type, 'type=%s set1.type=%s' % (self.type, set1.type)
@@ -579,23 +625,23 @@ class SET1(Set):
         #return False
 
     def symmetric_difference(self, set1):
-        s1 = set(self.get_IDs())
-        s2 = set(set1.get_IDs())
-        return s1.symmetric_difference(s2)
+        ids1 = set(self.get_ids())
+        ids2 = set(set1.get_ids())
+        return ids1.symmetric_difference(ids2)
 
     def add_set(self, set1):
-        self.IDs += set1.get_IDs()
+        self.ids += set1.get_ids()
         self.clean_ids()
 
-    def IsSkin(self):
-        return self.is_skin
+    #def IsSkin(self):
+        #return self.is_skin
 
     def raw_fields(self):
         skin = []
         if self.is_skin:
             skin = ['SKIN']
-        ids = self.get_IDs()
-        return ['SET1', self.sid] + skin + self.get_IDs()
+        ids = self.get_ids()
+        return ['SET1', self.sid] + skin + self.get_ids()
 
     def cross_reference(self, model, xref_type, allow_empty_nodes=False):
         """
@@ -623,28 +669,28 @@ class SET1(Set):
         """
         msg = 'which is required by SET1 sid=%s' % self.sid
         if xref_type == 'Node':
-            self.IDs = model.Nodes(self.get_IDs(), msg)
+            self.ids = model.Nodes(self.get_ids(), msg)
         else:
             raise NotImplementedError("xref_type=%r and must be ['Node']" % xref_type)
         self.xref_type = xref_type
 
     def uncross_reference(self):
         if self.xref_type == 'Node':
-            self.IDs = self.get_IDs()
-            del self.IDs_ref
+            self.ids = self.get_ids()
+            del self.ids_ref
             self.xref_type = None
         else:
             raise NotImplementedError("xref_type=%r and must be ['Node']" % self.xref_type)
 
-    def get_IDs(self):
+    def get_ids(self):
         if self.xref_type is None:
-            IDs = self.IDs
+            ids = self.ids
         elif self.xref_type == 'Node':
-            IDs = [node if isinstance(node, integer_types) else node.nid
-                   for node in self.IDs]
+            ids = [node if isinstance(node, integer_types) else node.nid
+                   for node in self.ids]
         else:
-            raise NotImplementedError("xref_type=%r and must be ['Node']" % xref_type)
-        return IDs
+            raise NotImplementedError("xref_type=%r and must be ['Node']" % self.xref_type)
+        return ids
 
     def write_card(self, size=8, is_double=False):
         skin = []
@@ -652,23 +698,23 @@ class SET1(Set):
             skin = ['SKIN']
 
         # checked in NX 2014 / MSC 2005.1
-        return self.comment + print_card_8(['SET1', self.sid] + skin + self.get_IDs())
+        return self.comment + print_card_8(['SET1', self.sid] + skin + self.get_ids())
 
         # I thought this worked in the new MSC Nastran...
         # Doesn't work in NX 2014 / MSC 2005.1 (multiple duplicate sids).
         # It may work with one sid, with singles and doubles on one card.
-        field_packs = []
-        singles, doubles = collapse_thru_packs(self.get_IDs())
-        if singles:
-            field_packs.append(['SET1', self.sid] + skin + singles)
-        if doubles:
-            for pack in doubles:
-                field_packs.append(['SET1', self.sid] + skin + pack)
+        #field_packs = []
+        #singles, doubles = collapse_thru_packs(self.get_ids())
+        #if singles:
+            #field_packs.append(['SET1', self.sid] + skin + singles)
+        #if doubles:
+            #for pack in doubles:
+                #field_packs.append(['SET1', self.sid] + skin + pack)
 
-        msg = []
-        for field_pack in field_packs:
-            msg.append(print_card_8(field_pack))
-        return ''.join(msg)
+        #msg = []
+        #for field_pack in field_packs:
+            #msg.append(print_card_8(field_pack))
+        #return ''.join(msg)
 
 
 class SET3(Set):
@@ -688,36 +734,42 @@ class SET3(Set):
     """
     type = 'SET3'
 
-    def __init__(self, card=None, data=None, comment=''):
-        Set.__init__(self, card, data)
+    def __init__(self, sid, desc, ids, comment=''):
+        Set.__init__(self)
         if comment:
             self._comment = comment
         #:  Unique identification number. (Integer > 0)
-        self.sid = integer(card, 1, 'sid')
+        self.sid = sid
 
         #:  Set description (Character). Valid options are 'GRID', 'ELEM',
         #:  'POINT' and 'PROP'.
-        self.desc = string(card, 2, 'desc')
-        if self.desc == 'ELEM':
-            self.desc = 'ELEMENT'
+        if desc == 'ELEM':
+            desc = 'ELEMENT'
+        self.desc = desc
         assert self.desc in ['GRID', 'POINT', 'ELEMENT', 'PROP'], 'desc = %r' % self.desc
 
         #:  Identifiers of grids points, elements, points or properties.
         #:  (Integer > 0)
-        self.IDs = []
-        IDs = fields(integer_or_string, card, 'ID', i=3, j=len(card))
-        self.IDs = expand_thru(IDs)
-        self.clean_ids()
+        self.ids = expand_thru(ids)
 
-    def union(self, s2):
-        assert self.desc == s2.desc, 'self.desc=%r set2.desc=%r' % (self.desc, s2.desc)
-        ids1 = set(self.IDs)
-        ids2 = set(s2.IDs)
-        self.IDs = list(ids1.union(ids2))
+    @classmethod
+    def add_card(cls, card, comment=''):
+        sid = integer(card, 1, 'sid')
+        desc = string(card, 2, 'desc')
+        ids = fields(integer_or_string, card, 'ID', i=3, j=len(card))
+        return SET3(sid, desc, ids, comment=comment)
 
-    def symmetric_difference(self, s2):
-        ids1 = set(self.IDs)
-        ids2 = set(s2.IDs)
+    def union(self, set3):
+        assert self.type == set3.type, 'type=%r set3.type=%r' % (self.type, set3.type)
+        assert self.desc == set3.desc, 'self.desc=%r set3.desc=%r' % (self.desc, set3.desc)
+        ids1 = set(self.ids)
+        ids2 = set(set3.ids)
+        self.ids = list(ids1.union(ids2))
+
+    def symmetric_difference(self, set3):
+        assert self.type == set3.type, 'type=%r set3.type=%r' % (self.type, set3.type)
+        ids1 = set(self.ids)
+        ids2 = set(set3.ids)
         return ids1.symmetric_difference(ids2)
 
     def is_grid(self):
@@ -742,7 +794,7 @@ class SET3(Set):
 
     def SetIDs(self):
         """gets the IDs of the SETx"""
-        return collapse_thru(self.IDs)
+        return collapse_thru(self.ids)
 
     def raw_fields(self):
         """Gets the "raw" card without any processing as a list for printing"""
@@ -766,28 +818,31 @@ class SESET(SetSuper):
     """
     type = 'SESET'
 
-    def __init__(self, card=None, data=None, comment=''):
-        SetSuper.__init__(self, card, data)
+    def __init__(self, seid, ids, comment=''):
+        SetSuper.__init__(self)
         if comment:
             self._comment = comment
-        self.seid = integer_or_blank(card, 1, 'seid', 0)
+        self.seid = seid
         #:  Grid or scalar point identification number.
         #:  (0 < Integer < 1000000; G1 < G2)
-        self.IDs = []
-
-        IDs = fields(integer_or_string, card, 'ID', i=2, j=len(card))
-        self.IDs = expand_thru(IDs)
+        self.ids = expand_thru(ids)
         self.clean_ids()
 
-    def add_SESET_Object(self, seset):
-        self.IDs += seset.IDs
+    @classmethod
+    def add_card(cls, card, comment=''):
+        seid = integer_or_blank(card, 1, 'seid', 0)
+        ids = fields(integer_or_string, card, 'ID', i=2, j=len(card))
+        return SESET(seid, ids, comment=comment)
+
+    def add_seset(self, seset):
+        self.ids += seset.ids
         self.clean_ids()
 
     def raw_fields(self):
-        return ['SESET', self.seid] + collapse_thru(self.IDs)
+        return ['SESET', self.seid] + collapse_thru(self.ids)
 
     def __repr__(self):
-        thru_fields = collapse_thru(self.IDs)
+        thru_fields = collapse_thru(self.ids)
         #list_fields = ['SESET', self.seid]
 
         cards = []
@@ -822,40 +877,40 @@ class SEBSET(SuperABCQSet):
     """
     type = 'SEBSET'
 
-    def __init__(self, card=None, data=None, comment=''):
-        SuperABCQSet.__init__(self, card, data, comment)
+    def __init__(self, seid, IDs, components, comment=''):
+        SuperABCQSet.__init__(self, seid, IDs, components, comment)
 
 class SEBSET1(SuperABQSet1):
     type = 'SEBSET1'
 
-    def __init__(self, card=None, data=None, comment=''):
-        SuperABQSet1.__init__(self, card, data, comment)
+    def __init__(self, seid, components, IDs, comment=''):
+        SuperABQSet1.__init__(self, seid, components, IDs, comment)
 
 
 class SECSET(SuperABCQSet):
     type = 'SECSET'
 
-    def __init__(self, card=None, data=None, comment=''):
-        SuperABCQSet.__init__(self, card, data, comment)
+    def __init__(self, seid, components, IDs, comment=''):
+        SuperABCQSet.__init__(self, seid, components, IDs, comment)
 
 class SECSET1(SuperABQSet1):
     type = 'SECSET1'
 
-    def __init__(self, card=None, data=None, comment=''):
-        SuperABQSet1.__init__(self, card, data, comment)
+    def __init__(self, seid, components, IDs, comment=''):
+        SuperABQSet1.__init__(self, seid, components, IDs, comment)
 
 
 class SEQSET(SuperABCQSet):
     type = 'SEQSET'
 
-    def __init__(self, card=None, data=None, comment=''):
-        SuperABCQSet.__init__(self, card, data, comment)
+    def __init__(self, seid, IDs, components, comment=''):
+        SuperABCQSet.__init__(self, seid, IDs, components, comment)
 
 class SEQSET1(SuperABQSet1):
     type = 'SEQSET1'
 
-    def __init__(self, card=None, data=None, comment=''):
-        SuperABQSet1.__init__(self, card, data, comment)
+    def __init__(self, seid, components, IDs, comment=''):
+        SuperABQSet1.__init__(self, seid, components, IDs, comment)
 
 
 class SEQSEP(SetSuper):  # not integrated...is this an SESET ???
@@ -866,25 +921,31 @@ class SEQSEP(SetSuper):  # not integrated...is this an SESET ???
     """
     type = 'SEQSEP'
 
-    def __init__(self, card=None, data=None, comment=''):
-        SetSuper.__init__(self, card, data)
+    def __init__(self, ssid, psid, ids, comment=''):
+        SetSuper.__init__(self)
         if comment:
             self._comment = comment
         #: Identification number for secondary superelement. (Integer >= 0).
-        self.ssid = integer(card, 1, 'ssid')
+        self.ssid = ssid
+
         #: Identification number for the primary superelement. (Integer >= 0).
-        self.psid = integer(card, 2, 'psid')
+        self.psid = psid
+
         #: Exterior grid point identification numbers for the primary
         #: superelement. (Integer > 0)
-        self.IDs = []
-
-        IDs = fields(integer_or_string, card, i=3, j=len(card))
-        self.IDs = expand_thru(IDs)
+        self.ids = expand_thru(ids)
         self.clean_ids()
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        ssid = integer(card, 1, 'ssid')
+        psid = integer(card, 2, 'psid')
+        ids = fields(integer_or_string, card, 'ID', i=3, j=len(card))
+        return SEQSEP(ssid, psid, ids, comment=comment)
 
     def raw_fields(self):
         """gets the "raw" card without any processing as a list for printing"""
-        list_fields = ['SEQSEP', self.ssid, self.psid] + self.SetIDs()
+        list_fields = ['SEQSEP', self.ssid, self.psid] + self.get_ids()
         return list_fields
 
 
@@ -901,26 +962,29 @@ class RADSET(Set):  # not integrated
     """
     type = 'RADSET'
 
-    def __init__(self, card=None, data=None, comment=''):
-        Set.__init__(self, card, data)
+    def __init__(self, seid, ids, comment=''):
+        Set.__init__(self)
         if comment:
             self._comment = comment
-        self.seid = integer(card, 1, 'seid')
+        self.seid = seid
         #: Grid or scalar point identification number.
         #: (0 < Integer < 1000000; G1 < G2)
-        self.IDs = []
-
-        IDs = fields(integer_or_string, card, 'ID', i=2, j=len(card))
-        self.IDs = expand_thru(IDs)
+        self.ids = expand_thru(ids)
         self.clean_ids()
 
-    def addRadsetObject(self, radset):
-        self.IDs += radset.IDs
+    @classmethod
+    def add_card(cls, card, comment=''):
+        seid = integer(card, 1, 'seid')
+        ids = fields(integer_or_string, card, 'ID', i=2, j=len(card))
+        return RADSET(seid, ids, comment=comment)
+
+    def add_radset(self, radset):
+        self.ids += radset.ids
         self.clean_ids()
 
     def raw_fields(self):
         """gets the "raw" card without any processing as a list for printing"""
-        list_fields = ['RADSET', self.seid] + self.SetIDs()
+        list_fields = ['RADSET', self.seid] + self.get_ids()
         return list_fields
 
 
@@ -935,24 +999,29 @@ class USET(Set):
     +------+-------+-----+------+-----+----+-----+----+
     """
     type = 'USET'
-    def __init__(self, card=None, data=None, comment=''):
-        Set.__init__(self, card, data)
+    def __init__(self, name, components, ids, comment=''):
+        Set.__init__(self)
         if comment:
             self._comment = comment
-
-        self.name = string(card, 1, 'name')
-
+        self.name = name
         #:  Identifiers of grids points. (Integer > 0)
-        self.components = []
-        self.IDs = []
+        self.components = components
+        self.ids = ids
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        name = string(card, 1, 'name')
+        components = []
+        ids = []
 
         nsets = (len(card) - 1) // 2
-        for n in range(nsets):
-            i = n * 2 + 2
-            ID = integer(card, i, 'node_id' + str(n))
-            component = components(card, i + 1, 'component' + str(n))
-            self.components.append(component)
-            self.IDs.append(ID)
+        for iset in range(nsets):
+            i = iset * 2 + 2
+            idi = integer(card, i, 'node_id' + str(iset))
+            component = fcomponents(card, i + 1, 'component' + str(iset))
+            components.append(component)
+            ids.append(idi)
+        return USET(name, components, ids, comment=comment)
 
     def cross_reference(self, model):
         """
@@ -964,25 +1033,25 @@ class USET(Set):
             the BDF object
         """
         msg = ' which is required by %s name=%s' % (self.type, self.name)
-        self.IDs = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
-        self.IDs_ref = self.IDs
+        self.ids = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
+        self.ids_ref = self.ids
 
     def uncross_reference(self):
-        self.IDs = self.node_ids
-        del self.IDs_ref
+        self.ids = self.node_ids
+        del self.ids_ref
 
     @property
     def node_ids(self):
         msg = ' which is required by %s name=%s' % (self.type, self.name)
-        return _node_ids(self, self.IDs, allow_empty_nodes=True, msg=msg)
+        return _node_ids(self, self.ids, allow_empty_nodes=True, msg=msg)
 
     def raw_fields(self):
         """
         gets the "raw" card without any processing as a list for printing
         """
         list_fields = ['USET', self.name]
-        for (component, ID) in zip(self.components, self.node_ids):
-            list_fields += [ID, component]
+        for (component, idi) in zip(self.components, self.node_ids):
+            list_fields += [idi, component]
         return list_fields
 
 class USET1(ABQSet1):
@@ -999,29 +1068,34 @@ class USET1(ABQSet1):
     """
     type = 'USET1'
 
-    def __init__(self, card=None, data=None, comment=''):
-        Set.__init__(self, card, data)
+    def __init__(self, name, components, ids, comment=''):
+        Set.__init__(self)
         if comment:
             self._comment = comment
-
-        self.name = string(card, 1, 'name')
+        self.name = name
 
         #:  Component number. (Integer zero or blank for scalar points or any
         #:  unique combination of the Integers 1 through 6 for grid points with
         #:  no embedded blanks.)
-        self.components = components_or_blank(card, 2, 'components', 0)
-
-        nfields = len(card)
-        IDs = []
-        i = 1
-        for ifield in range(3, nfields):
-            ID = integer_string_or_blank(card, ifield, 'ID%i' % i)
-            if ID:
-                i += 1
-                IDs.append(ID)
+        self.components = components
 
         #:  Identifiers of grids points. (Integer > 0)
-        self.IDs = expand_thru(IDs)
+        self.ids = expand_thru(ids)
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        name = string(card, 1, 'name')
+        components = fcomponents_or_blank(card, 2, 'components', 0)
+
+        nfields = len(card)
+        ids = []
+        i = 1
+        for ifield in range(3, nfields):
+            idi = integer_string_or_blank(card, ifield, 'ID%i' % i)
+            if idi:
+                i += 1
+                ids.append(idi)
+        return USET1(name, components, ids, comment=comment)
 
     def cross_reference(self, model):
         """
@@ -1033,21 +1107,21 @@ class USET1(ABQSet1):
             the BDF object
         """
         msg = ' which is required by %s name=%s' % (self.type, self.name)
-        self.IDs = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
-        self.IDs_ref = self.IDs
+        self.ids = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
+        self.ids_ref = self.ids
 
     def uncross_reference(self):
-        self.IDs = self.node_ids
-        del self.IDs_ref
+        self.ids = self.node_ids
+        del self.ids_ref
 
     @property
     def node_ids(self):
         msg = ' which is required by %s name=%s' % (self.type, self.name)
-        return _node_ids(self, self.IDs, allow_empty_nodes=True, msg=msg)
+        return _node_ids(self, self.ids, allow_empty_nodes=True, msg=msg)
 
     def raw_fields(self):
         """gets the "raw" card without any processing as a list for printing"""
-        list_fields = [self.type, self.components] + collapse_thru(self.node_ids)
+        list_fields = [self.type, self.name, self.components] + collapse_thru(self.node_ids)
         return list_fields
 
     def __repr__(self):

@@ -190,7 +190,7 @@ class EditGeometryProperties(QtGui.QDialog):
         self.opacity = QtGui.QLabel("Opacity:")
         self.opacity_edit = QtGui.QDoubleSpinBox(self)
         self.opacity_edit.setRange(0.1, 1.0)
-        self.opacity_edit.setDecimals(1)
+        self.opacity_edit.setDecimals(2)
         self.opacity_edit.setSingleStep(0.1)
         self.opacity_edit.setValue(opacity)
 

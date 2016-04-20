@@ -1,0 +1,145 @@
+SOL 101
+CEND
+TITLE = MSC.Nastran job
+ECHO = NONE
+$ Direct Text Input for Global Case Control Data
+SUBCASE 1
+$ Subcase name : Default
+   SUBTITLE=Default
+   SPC = 2
+   LOAD = 123458
+   GPFORCE(PLOT,PRINT)=ALL
+BEGIN BULK
+PARAM    POST    -1
+PARAM    AUTOSPC NO
+PARAM   PRTMAXIM YES
+$ Direct Text Input for Bulk Data
+$ Pset: "shell" will be imported as: "pshell.1"
+CHEXA    1       2       2       3       4       1       8       5
+         6       7
+CPENTA   2       2       6       8       5       10      11      9
+CPENTA   3       2       6       7       8       10      12      11
+CTETRA   4       2       10      11      9       13
+CTETRA   5       2       10      12      11      13
+$ pshells
+CQUAD4   6       4       4       1       14      15
+CQUAD4   7       4       3       2       17      16
+CTRIA3   8       4       4       3       16
+CTRIA3   9       4       16      15      4
+CTRIA3   10      4       1       2       17
+CTRIA3   11      4       17      14      1
+$
+CBEAM    12      5       18      22      0.     1.       0.
+CBAR     13      1       19      23      0.     1.       0.
+CROD     14      3       20      24
+CROD     15      3       21      25
+$
+$ pcomps
+CQUAD4   16      6      14      15       19      18
+CQUAD4   17      7      17      16       20      21
+CTRIA3   18      6      18      14       17
+CTRIA3   19      6      18      17       21
+CTRIA3   20      7      19      15       16
+CTRIA3   21      7      19      16       20
+$ Elements and Element Properties for region : solid
+$PBEAM*                 5               1             .25        .0052083
+$*               .0052083                        .0087949
+$*                   -.25            -.25             .25            -.25
+$*                    .25             .25            -.25             .25
+$*                    YES              1.             .25        .0052083
+$*               .0052083        .0052083                        .0087949
+$*                                   -.25            -.25             .25
+$*                   -.25             .25             .25            -.25
+$*                .850116         .850116
+$*
+$            YES      1.     .25.0052083.0052083.0052083      0..0087949
+$             YES      1.     .25.0052083.0052083.0      .0087949
+$	YES	1.	.25	.005208	.005208	.0	.0087949
+PBEAM          5       1     .25.0052083.0052083        .0087949
+            -.25    -.25     .25    -.25     .25     .25    -.25     .25
+             YES      1.     .25 .005208 .005208      0..0087949      0.
+        .0087949      0.    -.25    -.25     .25    -.25     .25     .25
+         .850116.8501160      0.      0.      0.      0.      0.      0.
+              0.      0.      0.      0.      0.      0.      0.      0.
+PBAR     1       1      0.25    .0052083.0052083.0088021
+PSOLID   2       1       0
+PROD     3       1      .1      .0088021 1.
+PSHELL   4       1      .25      1               1
+PCOMP,6,,,,,,,
+,1,0.1
+,1,0.2
+,1,0.3
+,1,0.4
+PCOMP,7,,,,,,,
+,1,0.1,,,1,0.2
+,1,0.3,,,1,0.4
+,1,0.5
+$ Pset: "solid" will be imported as: "psolid.2"
+$ Referenced Material Records
+$ Material Record : 300M
+$ Description of Material : Date: 12-Dec-05           Time: 15:45:24
+MAT1     1      2.9+7   1.1+7   .32     .283
+$ Nodes of the Entire Model
+
+$						#
+GRID     13             .5      .5      3.      1
+$
+GRID     5              1.      1.      1.       11
+GRID     6               0.     1.      1.	 11
+GRID     7               0.      0.     1.	 11
+GRID     8              1.       0.     1.	 11
+$
+GRID     12              0.      0.     2.	 11
+GRID     10              0.     1.      2.	 11
+GRID     9              1.      1.      2.	 11
+GRID     11             1.       0.     2.	 11
+$
+GRID     1               0.      0.      0.	 11
+GRID     4               0.     1.       0.	 11
+GRID     3              1.      1.       0.	 11
+GRID     2              1.       0.      0.	 11
+$
+GRID     14              0.      0.     -1.	 11
+GRID     15              0.     1.      -1.	 11
+GRID     16             1.      1.      -1.	 11
+GRID     17             1.       0.     -1.	 11
+$
+GRID     18              0.      0.     -2.	 11
+GRID     19              0.     1.      -2.	 11
+GRID     20             1.      1.      -2.	 11
+GRID     21             1.       0.     -2.	 11
+$
+GRID     22              0.      0.     -3.	 11
+GRID     23              0.     1.      -3.	 11
+GRID     24             1.      1.      -3.	 11
+GRID     25             1.       0.     -3.	 11
+
+$ Loads for Load Case : Default
+SPCADD   2       123456
+LOAD     123458 1.      1.       10000
+$ Displacement Constraints of Load Set : 123456
+SPC1     123456  123456  22      23      24      25
+SPC1     123456     456  5       thru    13
+$ Nodal Forces of Load Set : 10000
+FORCE    10000   13      0      10000.   0.      0.     1.
+$ Referenced Coordinate Frames
+$ global xyz
+CORD2R   1       0       0.      0.      0.      0.      0.      1.
+         1.      0.      0.
+$ global cylindrical
+CORD2C   2       0       0.      0.      0.      0.      0.      1.
+         1.      0.      0.
+$ global spherical
+CORD2S   3       0       0.      0.      0.      0.      0.      1.
+         1.      0.      0.
+
+$ local xyz
+CORD2R   11      0       1.      2.      3.      0.      0.      1.
+         0.      1.      0.
+$ local cylindrical
+CORD2C   12      0       1.      2.      3.      0.      0.      1.
+         0.      1.      0.
+$ local spherical
+CORD2S   13      0       1.      2.      3.      0.      0.      1.
+         0.      1.      0.
+ENDDATA 58e050da

@@ -39,7 +39,7 @@ def remove_marc_files(filenames):
         # names.append(os.readlink('/proc/self/fd/%d' % fd))
     # return names
 
-def run(regenerate=True, run_nastran=False, debug=False, sum_load=True):
+def run(regenerate=True, run_nastran=False, debug=False, sum_load=True, xref=True):
     """Runs the full BDF test suite"""
     # F:\work\pyNastran\pyNastran\master2\pyNastran\bdf\test
     files = get_files_of_type('tests', '.bdf')
@@ -65,7 +65,7 @@ def run(regenerate=True, run_nastran=False, debug=False, sum_load=True):
         files2 += files
         files2.sort()
     else:
-        files2 = get_failed_files('failedCases.in')
+        files2 = get_failed_files('failed_cases.in')
 
     files = remove_marc_files(files2)
     files = [fname for fname in files
@@ -82,7 +82,6 @@ def run(regenerate=True, run_nastran=False, debug=False, sum_load=True):
     print("nFiles = %s" % len(files))
     cid = None
     check = True
-    xref = True
     debug = False
     size = [8]
     is_double = [False]
@@ -101,7 +100,7 @@ def run(regenerate=True, run_nastran=False, debug=False, sum_load=True):
         write = 'wb'
     else:
         write = 'w'
-    with open('failedCases.in', write) as failed_cases_file:
+    with open('failed_cases.in', write) as failed_cases_file:
         for fname in failed_files:
             failed_cases_file.write('%s\n' % fname)
     sys.exit('finished...')
@@ -113,7 +112,7 @@ def main():
 
     msg = "Usage:\n"
     is_release = False
-    msg += "bdf_test [-r] [-n] [-s S...] [-e E] [-L]\n"
+    msg += "bdf_test [-r] [-n] [-s S...] [-e E] [-L] [-x]\n"
     msg += "  bdf_test -h | --help\n"
     msg += "  bdf_test -v | --version\n"
     msg += "\n"
@@ -123,11 +122,13 @@ def main():
     #msg += "  OP2_FILENAME         Path to OP2 file\n"
     #msg += "\n"
     msg += "Options:\n"
-    msg += "  -r, --regenerate      Dumps the OP2 as a readable text file\n"
-    msg += "  -n, --run_nastran     Runs Nastran\n"
-    msg += "  -L, --sum_loads       Disables static/dynamic loads sum\n"
-    msg += "  -s S, --size S        Sets the field size\n"
+    msg += "  -r, --regenerate   Dumps the OP2 as a readable text file\n"
+    msg += "  -n, --run_nastran  Runs Nastran\n"
+    msg += "  -L, --sum_loads    Disables static/dynamic loads sum\n"
+    msg += "  -s S, --size S     Sets the field size\n"
     msg += '  -e E, --nerrors E  Allow for cross-reference errors (default=100)\n'
+    msg += '  -x, --xref         disables cross-referencing and checks of the BDF.\n'
+    msg += '                     (default=False -> on)\n'
     #msg += "  -c, --disablecompare  Doesn't do a validation of the vectorized result\n"
     #msg += "  -z, --is_mag_phase    F06 Writer writes Magnitude/Phase instead of\n"
     #msg += "                        Real/Imaginary (still stores Real/Imag); [default: False]\n"
@@ -139,7 +140,9 @@ def main():
     regenerate = data['--regenerate']
     run_nastran = data['--run_nastran']
     sum_load = not data['--sum_loads']
-    run(regenerate=regenerate, run_nastran=run_nastran, sum_load=sum_load)
+    xref = not data['--xref']
+    run(regenerate=regenerate, run_nastran=run_nastran, sum_load=sum_load,
+        xref=xref)
 
 if __name__ == '__main__':  # pragma: no cover
     main()

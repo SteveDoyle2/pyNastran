@@ -17,100 +17,18 @@ The ConstraintObject contain multiple constraints.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from itertools import count
 from six import iteritems
 from six.moves import zip, range
-from itertools import count
 
 from pyNastran.utils import integer_types
 from pyNastran.bdf.cards.base_card import BaseCard, _node_ids, expand_thru
-from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
-    double, double_or_blank, components, components_or_blank, string)
+from pyNastran.bdf.bdf_interface.assign_type import (
+    integer, integer_or_blank, double, double_or_blank, components,
+    components_or_blank, string)
 from pyNastran.bdf.field_writer_8 import print_card_8, print_float_8
 from pyNastran.bdf.field_writer_16 import print_float_16, print_card_16
 from pyNastran.bdf.field_writer_double import print_scientific_double
-
-
-class ConstraintObject(object):
-    def __init__(self):
-        self.constraints = {}  # SPC, SPC1, SPCAX, etc...
-        self.add_constraints = {}  # SPCADD
-
-    def Add(self, ADD_Constraint):
-        """Bad name, but adds an SPCADD or MPCADD"""
-        key = ADD_Constraint.conid
-        if key in self.add_constraints:
-            print("already has key...key=%s\n%s" % (key, str(ADD_Constraint)))
-        else:
-            self.add_constraints[key] = ADD_Constraint
-
-    def append(self, constraint):
-        key = constraint.conid
-        if key in self.constraints:
-            #print("already has key...key=%s\n%s" %(key,str(constraint)))
-            self.constraints[key].append(constraint)
-        else:
-            self.constraints[key] = [constraint]
-
-    def _spc(self, spc_id):
-        """could be an spcadd/mpcadd or spc/mpc,spc1,spcd,spcax,suport1"""
-        if spc_id in self.add_constraints:
-            return self.add_constraints[spc_id]
-        return self.constraints[spc_id]
-
-    def cross_reference(self, model):
-        """
-        Cross links the card so referenced cards can be extracted directly
-
-        Parameters
-        ----------
-        model : BDF()
-            the BDF object
-        """
-        #return
-        #add_constraints2 = {}
-        for key, add_constraint in sorted(iteritems(self.add_constraints)):
-            for i, spc_id in enumerate(add_constraint.sets):
-                add_constraint.sets[i] = self._spc(spc_id)
-            self.add_constraints[key] = add_constraint
-        #self.add_constraints = add_constraints2
-
-        constraints2 = {}
-        for key, constraints in sorted(iteritems(self.constraints)):
-            constraints2[key] = []
-            for constraint in constraints:
-                constraints2[key].append(constraint.cross_reference(model))
-        self.constraints = constraints2
-
-    def ConstraintID(self):
-        if isinstance(self.conid, integer_types):
-            return self.conid
-        return self.conid.conid
-
-    def get_constraint_ids(self):
-        ids = []
-        for key, constraints in sorted(iteritems(self.add_constraints)):
-            con_id = constraints.ConID()
-            ids.append(con_id)
-
-        for key, constraints in sorted(iteritems(self.constraints)):
-            for constraint in constraints:
-                con_id = constraint.ConID()
-                ids.append(con_id)
-
-        ids = list(set(ids))
-        ids.sort()
-        return ids
-
-    def __repr__(self):
-        msg = ''
-        # write the SPCADD/MPCADD cards
-        for key, add_constraint in sorted(iteritems(self.add_constraints)):
-            msg += str(add_constraint)
-
-        for key, constraints in sorted(iteritems(self.constraints)):
-            for constraint in constraints:
-                msg += str(constraint)
-        return msg
 
 
 class Constraint(BaseCard):
@@ -149,7 +67,7 @@ class SUPORT1(Constraint):
         assert len(self.IDs) == len(self.Cs)
 
     @classmethod
-    def add_card(self, card, comment=''):
+    def add_card(cls, card, comment=''):
         conid = integer(card, 1, 'conid')  # really a support id sid
 
         nfields = len(card)
@@ -346,7 +264,8 @@ class MPC(Constraint):
             i += 1
 
             if ifield + 4 > nfields and i != 2:
-                # if G2 is empty (it's ifield+4 because nfields is length based and not loop friendly)
+                # if G2 is empty (it's ifield+4 because nfields is length based
+                # and not loop friendly)
                 break
             grid = integer(card, ifield + 3, 'G%i' % i)
             component = components_or_blank(card, ifield + 4, 'constraint%i' % i, 0)  # scalar point

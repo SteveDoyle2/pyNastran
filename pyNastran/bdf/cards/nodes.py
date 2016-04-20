@@ -35,8 +35,9 @@ from pyNastran.bdf.field_writer_8 import set_string8_blank_if_default
 from pyNastran.bdf.field_writer_16 import set_string16_blank_if_default
 
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
-from pyNastran.bdf.cards.base_card import BaseCard, expand_thru, collapse_thru_packs
-from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
+from pyNastran.bdf.cards.base_card import BaseCard, expand_thru
+from pyNastran.bdf.cards.collpase_card import collapse_thru_packs
+from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_blank,
     double, double_or_blank, blank, integer_or_string)
 from pyNastran.bdf.field_writer_8 import print_card_8, print_float_8, print_int_card
 from pyNastran.bdf.field_writer_16 import print_float_16, print_card_16
@@ -850,7 +851,7 @@ class GRID(Node):
         if xyz is None:
             xyz = [0., 0., 0.]
         self.xyz = np.asarray(xyz, dtype='float64')
-        assert xyz.size == 3, xyz.shape
+        assert self.xyz.size == 3, self.xyz.shape
         self.cd = cd
         self.ps = ps
         self.seid = seid

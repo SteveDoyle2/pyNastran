@@ -132,6 +132,8 @@ CPYRAM  (done)
 
 PSOLID  (done)
 PLSOLID (done)
+PIHEX   (done)
+PCOMPS  (done)
 
 ----Cracks (Elements/Properties)----:
 CRAC2D (done)
@@ -295,6 +297,7 @@ SPLINE7
 
 CSSCHD  (done)
 TRIM    (done)
+DIVERG  (done)
 
 ----Dynamic----:
 EPOINT  (done)
@@ -327,7 +330,7 @@ DRESP3   (done)
 
 
 DVGRID
-DVCREL1         # element  DV
+DVCREL1  (done) # element  DV
 DVCREL2
 DVPREL1  (done) # property DV
 DVPREL2  (done)

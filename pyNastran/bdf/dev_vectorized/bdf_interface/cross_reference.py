@@ -57,7 +57,6 @@ class XRefMesh(object):
 
             self.elements_shell.build()
             self.elements_solid.build()
-            ddc
 
             self.pelas.build()
             #self.properties_rod.build()

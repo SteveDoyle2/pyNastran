@@ -15,13 +15,12 @@ from six.moves import zip, range
 from math import sqrt, degrees, radians, atan2, acos, sin, cos
 
 import numpy as np
-from numpy import array, cross, dot, transpose, zeros, vstack, ndarray
 from numpy.linalg import norm
 
 from pyNastran.utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import BaseCard
-from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
+from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_blank,
     double_or_blank, string_or_blank, string)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
@@ -112,10 +111,10 @@ class Coord(BaseCard):
             raise RuntimeError(msg)
 
         if self.Cid() == 0:
-            self.origin = array([0., 0., 0.], dtype='float64')
-            self.i = array([1., 0., 0.], dtype='float64')
-            self.j = array([0., 1., 0.], dtype='float64')
-            self.k = array([0., 0., 1.], dtype='float64')
+            self.origin = np.array([0., 0., 0.], dtype='float64')
+            self.i = np.array([1., 0., 0.], dtype='float64')
+            self.j = np.array([0., 1., 0.], dtype='float64')
+            self.k = np.array([0., 0., 1.], dtype='float64')
             return
 
         if not self.isResolved and self.type in ['CORD2R', 'CORD2C', 'CORD2S']:
@@ -167,7 +166,7 @@ class Coord(BaseCard):
 
         try:
             # j = (k cross e13) normalized
-            self.j = normalize(cross(self.k, e13))
+            self.j = normalize(np.cross(self.k, e13))
         except RuntimeError:
             print("---InvalidUnitVectorError---")
             print("Cp  = %s" % (self.Cid()))
@@ -182,13 +181,13 @@ class Coord(BaseCard):
             print("k   = norm(e12)")
             print("k   = %s\n" % (self.k))
             print("j*  = cross(k, e13)")
-            print("j*  = %s" % (cross(self.k, e13)))
+            print("j*  = %s" % (np.cross(self.k, e13)))
             print("j   = norm(cross(k, e13))\n")
             raise
 
         try:
             #: i = j cross k
-            self.i = cross(self.j, self.k)
+            self.i = np.cross(self.j, self.k)
         except RuntimeError:
             print("---InvalidUnitVectorError---")
             print("Cp  = %s" % (self.Cid()))
@@ -270,10 +269,10 @@ class Coord(BaseCard):
             msg = "Local unit vectors haven't been set.\nType=%r cid=%s rid=%s" % (
                 self.type, self.cid, self.rid)
             raise RuntimeError(msg)
-        matrix = vstack([self.i, self.j, self.k])
+        matrix = np.vstack([self.i, self.j, self.k])
 
         # rotate point p2 from the local frame to the global frame
-        p3 = dot(p2, matrix)
+        p3 = np.dot(p2, matrix)
         return p3
 
     def transform_node_to_global(self, xyz):
@@ -334,7 +333,7 @@ class Coord(BaseCard):
         """
         if self.origin is None:
             raise RuntimeError('Origin=%s; Cid=%s Rid=%s' % (self.origin, self.cid, self.Rid()))
-        xyz_coord = dot(xyz - self.origin, transpose(beta))
+        xyz_coord = np.dot(xyz - self.origin, np.transpose(beta))
         xyz_local = self.xyz_to_coord(xyz_coord)
         return xyz_local
 
@@ -373,7 +372,7 @@ class Coord(BaseCard):
         see transform_node_to_local, but set the origin to <0, 0, 0>
         """
         beta = self.beta()
-        xyz_coord = dot(xyz, transpose(beta))
+        xyz_coord = np.dot(xyz, np.transpose(beta))
         xyz_local = self.xyz_to_coord(xyz_coord)
         return xyz_local
 
@@ -384,10 +383,10 @@ class Coord(BaseCard):
         .. math:: [\lambda] = [B_{ij}]
         """
         if self.cid == 0:
-            return array([[1., 0., 0.],
-                          [0., 1., 0.],
-                          [0., 0., 1.]], dtype='float64')
-        matrix = vstack([self.i, self.j, self.k])
+            return np.array([[1., 0., 0.],
+                             [0., 1., 0.],
+                             [0., 0., 1.]], dtype='float64')
+        matrix = np.vstack([self.i, self.j, self.k])
         return matrix
 
     def beta_n(self, n):
@@ -398,7 +397,7 @@ class Coord(BaseCard):
         """
         assert n < 10, 'n=%r' % n
         matrix = self.beta()
-        t = zeros((3*n, 3*n), dtype='float64')  # transformation matrix
+        t = np.zeros((3*n, 3*n), dtype='float64')  # transformation matrix
         for i in range(n):
             t[i*3:i*3+2, i*3:i*3+2] = matrix[0:2, 0:2]
         return t
@@ -437,7 +436,7 @@ def _fix_xyz_shape(xyz, name='xyz'):
     Checks the shape of a grid point location and fixes it if possible
     """
     xyz = np.asarray(xyz)
-    if not isinstance(xyz, ndarray):
+    if not isinstance(xyz, np.ndarray):
         msg = '%s must be type ndarray; type=%s' % (name, type(xyz))
         raise TypeError(msg)
     if xyz.shape == (1, 3):
@@ -484,8 +483,8 @@ def define_spherical_cutting_plane(model, origin, rid, cids, thetas, phis):
 
     # create the spherical coordinate system
     origin = _fix_xyz_shape(origin, 'origin')
-    e2 = origin + array([0., 0., 1.])
-    e3 = origin + array([1., 0., 0.])
+    e2 = origin + np.array([0., 0., 1.])
+    e3 = origin + np.array([1., 0., 0.])
     card = ['CORD2S', rid, 0] + list(origin) + list(e2) + list(e3)
     model.add_card(card, card[0], is_list=True)
 
@@ -567,39 +566,39 @@ def define_coord_e123(model, Type, cid, origin, rid=0,
     if xyplane is not None:
         if xaxis is not None:
             i = xaxis / norm(xaxis)
-            khat = cross(i, xyplane)  # xyplane is "defining" yaxis
+            khat = np.cross(i, xyplane)  # xyplane is "defining" yaxis
             k = khat / norm(khat)
-            j = cross(k, i)
+            j = np.cross(k, i)
         elif yaxis is not None:
             j = yaxis / norm(yaxis)
-            khat = cross(xyplane, j)  # xyplane is "defining" xaxis
+            khat = np.cross(xyplane, j)  # xyplane is "defining" xaxis
             k = khat / norm(khat)
-            i = cross(j, k)
+            i = np.cross(j, k)
 
     elif yzplane is not None:
         if yaxis is not None:
             j = yaxis / norm(yaxis)
-            ihat = cross(j, yzplane)  # yzplane is "defining" zaxis
+            ihat = np.cross(j, yzplane)  # yzplane is "defining" zaxis
             i = ihat / norm(ihat)
-            k = cross(i, j)
+            k = np.cross(i, j)
         elif zaxis is not None:
             k = zaxis / norm(zaxis)
-            ihat = cross(yzplane, zaxis)  # yzplane is "defining" yaxis
+            ihat = np.cross(yzplane, zaxis)  # yzplane is "defining" yaxis
             i = ihat / norm(ihat)
-            j = cross(k, i)
+            j = np.cross(k, i)
 
     elif xzplane is not None:
         if xaxis is not None:
             i = xaxis / norm(xaxis)
-            jhat = cross(xzplane, i)  # xzplane is "defining" zaxis
+            jhat = np.cross(xzplane, i)  # xzplane is "defining" zaxis
             j = jhat / norm(jhat)
-            k = cross(i, j)
+            k = np.cross(i, j)
         elif zaxis is not None:
             # standard
             k = zaxis / norm(zaxis)
-            jhat = cross(k, xzplane) # xzplane is "defining" xaxis
+            jhat = np.cross(k, xzplane) # xzplane is "defining" xaxis
             j = jhat / norm(jhat)
-            i = cross(j, k)
+            i = np.cross(j, k)
     define_coord_ijk(model, Type, cid, origin, rid, i, j, k)
 
 
@@ -634,7 +633,7 @@ def define_coord_ijk(model, Type, cid, origin, rid=0, i=None, j=None, k=None):
     # create cross vectors
     if i is None:
         if j is not None and k is not None:
-            i = cross(k, j)
+            i = np.cross(k, j)
         else:
             raise RuntimeError('i, j and k are None')
     else:
@@ -643,9 +642,9 @@ def define_coord_ijk(model, Type, cid, origin, rid=0, i=None, j=None, k=None):
             # all 3 vectors are defined
             pass
         elif j is None:
-            j = cross(k, i)
+            j = np.cross(k, i)
         elif k is None:
-            k = cross(i, j)
+            k = np.cross(i, j)
         else:
             raise RuntimeError('j or k are None; j=%s k=%s' % (j, k))
 
@@ -680,6 +679,26 @@ class RectangularCoord(object):
         Returns
         -------
         xyz : (3,) ndarray
+            the delta xyz point in the local coordinate system
+        """
+        return p
+
+    @classmethod
+    def coord_to_xyz_array(cls, p):
+        """
+        Returns
+        -------
+        xyz : (n, 3) ndarray
+            the point in the local coordinate system
+        """
+        return p
+
+    @classmethod
+    def xyz_to_coord_array(cls, p):
+        """
+        Returns
+        -------
+        xyz : (n, 3) ndarray
             the delta xyz point in the local coordinate system
         """
         return p
@@ -725,7 +744,32 @@ class CylindricalCoord(object):
         theta = radians(p[1])
         x = R * cos(theta)
         y = R * sin(theta)
-        return array([x, y, p[2]], dtype='float64')
+        return np.array([x, y, p[2]], dtype='float64')
+
+    @classmethod
+    def coord_to_xyz_array(cls, p):
+        r"""
+        ::
+
+          y       R
+          |     /
+          |   /
+          | / theta
+          *------------x
+
+        .. math:: x = R \cos(\theta)
+        .. math:: y = R \sin(\theta)
+
+        Returns
+        -------
+        xyz : (3,) float ndarray
+            the point in the local coordinate system
+        """
+        R = p[:, 0]
+        theta = np.radians(p[:, 1])
+        x = R * np.cos(theta)
+        y = R * np.sin(theta)
+        return np.array([x, y, p[:, 2]], dtype='float64').T
 
     @classmethod
     def xyz_to_coord(cls, p):
@@ -738,7 +782,32 @@ class CylindricalCoord(object):
         (x, y, z) = p
         theta = degrees(atan2(y, x))
         R = sqrt(x * x + y * y)
-        return array([R, theta, z], dtype='float64')
+        return np.array([R, theta, z], dtype='float64')
+
+    @classmethod
+    def xyz_to_coord_array(cls, p):
+        r"""
+        ::
+
+          y       R
+          |     /
+          |   /
+          | / theta
+          *------------x
+
+        .. math:: x = R \cos(\theta)
+        .. math:: y = R \sin(\theta)
+
+        Returns
+        -------
+        xyz : (3,) float ndarray
+            the point in the local coordinate system
+        """
+        x = p[:, 0]
+        y = p[:, 1]
+        theta = np.degrees(np.arctan(y, x))
+        R = np.sqrt(x * x + y * y)
+        return np.array([R, theta, p[:, 2]], dtype='float64').T
 
 
 class SphericalCoord(object):
@@ -773,12 +842,32 @@ class SphericalCoord(object):
             theta = degrees(acos(z / R))
         else:
             theta = 0.
-        return array([R, theta, phi], dtype='float64')
+        return np.array([R, theta, phi], dtype='float64')
+
+    @classmethod
+    def xyz_to_coord_array(cls, p):
+        r"""
+        :returns xyz: the loca XYZ point in the R, \theta, \phi coordinate system
+        """
+        x = p[:, 0]
+        y = p[:, 1]
+        z = p[:, 2]
+        R = np.sqrt(x * x + y * y + z * z)
+        phi = np.degrees(np.arctan2(y, x))
+        theta = np.degrees(np.arccos(z / R))
+
+        i = np.where(R == 0.0)
+        if len(i):
+            theta[i] = 0.0
+        return np.array([R, theta, phi], dtype='float64').T
 
     @classmethod
     def coord_to_xyz(cls, p):
-        r"""
-        :returns xyz: the R, \theta, \phi point in the local XYZ coordinate system
+        """
+        Returns
+        -------
+        xyz : (3,) float ndarray
+            the R, \theta, \phi in the local coordinate system
         """
         R = p[0]
         theta = radians(p[1])
@@ -786,8 +875,23 @@ class SphericalCoord(object):
         x = R * sin(theta) * cos(phi)
         y = R * sin(theta) * sin(phi)
         z = R * cos(theta)
-        return array([x, y, z], dtype='float64')
+        return np.array([x, y, z], dtype='float64')
 
+    @classmethod
+    def coord_to_xyz_array(cls, p):
+        """
+        Returns
+        -------
+        xyz : (3,) float ndarray
+            the R, \theta, \phi in the local coordinate system
+        """
+        R = p[:, 0]
+        theta = np.radians(p[:, 1])
+        phi = np.radians(p[:, 2])
+        x = R * np.sin(theta) * np.cos(phi)
+        y = R * np.sin(theta) * np.sin(phi)
+        z = R * np.cos(theta)
+        return np.array([x, y, z], dtype='float64').T
 
 class Cord2x(Coord):
 
@@ -816,17 +920,17 @@ class Cord2x(Coord):
         self.cid = cid
         self.rid = rid
         if origin is None:
-            self.e1 = array([0., 0., 0.], dtype='float64')
+            self.e1 = np.array([0., 0., 0.], dtype='float64')
         else:
             self.e1 = np.asarray(origin)
 
         if zaxis is None:
-            self.e2 = array([0., 0., 1.], dtype='float64')
+            self.e2 = np.array([0., 0., 1.], dtype='float64')
         else:
             self.e2 = np.asarray(zaxis)
 
         if xzplane is None:
-            self.e3 = array([1., 0., 0.], dtype='float64')
+            self.e3 = np.array([1., 0., 0.], dtype='float64')
         else:
             self.e3 = np.asarray(xzplane)
         self._finish_setup()
@@ -837,17 +941,17 @@ class Cord2x(Coord):
         rid = rid
 
         if origin is None:
-            e1 = array([0., 0., 0.], dtype='float64')
+            e1 = np.array([0., 0., 0.], dtype='float64')
         else:
             e1 = np.asarray(origin)
 
         if zaxis is None:
-            e2 = array([0., 0., 1.], dtype='float64')
+            e2 = np.array([0., 0., 1.], dtype='float64')
         else:
             e2 = np.asarray(zaxis)
 
         if xzplane is None:
-            e3 = array([1., 0., 0.], dtype='float64')
+            e3 = np.array([1., 0., 0.], dtype='float64')
         else:
             e3 = np.asarray(xzplane)
         return cls(cid, rid, e1, e2, e3, comment=comment)
@@ -855,9 +959,9 @@ class Cord2x(Coord):
 
     @classmethod
     def add_axes(cls, cid, rid=0, origin=None,
-                  xaxis=None, yaxis=None, zaxis=None,
-                  xyplane=None, yzplane=None, xzplane=None,
-                  comment=''):
+                 xaxis=None, yaxis=None, zaxis=None,
+                 xyplane=None, yzplane=None, xzplane=None,
+                 comment=''):
         """
         Create a coordinate system based on a defined axis and point on the
         plane.  This is the generalized version of the CORD2x card.
@@ -884,7 +988,7 @@ class Cord2x(Coord):
         """
         assert cls.type in ['CORD2R', 'CORD2C', 'CORD2S'], cls.type
         if origin is None:
-            origin = array([0., 0., 0.], dtype='float64')
+            origin = np.array([0., 0., 0.], dtype='float64')
         else:
             origin = _fix_xyz_shape(origin, 'origin')
 
@@ -920,39 +1024,39 @@ class Cord2x(Coord):
         if xyplane is not None:
             if xaxis is not None:
                 i = xaxis / norm(xaxis)
-                khat = cross(i, xyplane)  # xyplane is "defining" yaxis
+                khat = np.cross(i, xyplane)  # xyplane is "defining" yaxis
                 k = khat / norm(khat)
-                j = cross(k, i)
+                j = np.cross(k, i)
             elif yaxis is not None:
                 j = yaxis / norm(yaxis)
-                khat = cross(xyplane, j)  # xyplane is "defining" xaxis
+                khat = np.cross(xyplane, j)  # xyplane is "defining" xaxis
                 k = khat / norm(khat)
-                i = cross(j, k)
+                i = np.cross(j, k)
 
         elif yzplane is not None:
             if yaxis is not None:
                 j = yaxis / norm(yaxis)
-                ihat = cross(j, yzplane)  # yzplane is "defining" zaxis
+                ihat = np.cross(j, yzplane)  # yzplane is "defining" zaxis
                 i = ihat / norm(ihat)
-                k = cross(i, j)
+                k = np.cross(i, j)
             elif zaxis is not None:
                 k = zaxis / norm(zaxis)
-                ihat = cross(yzplane, zaxis)  # yzplane is "defining" yaxis
+                ihat = np.cross(yzplane, zaxis)  # yzplane is "defining" yaxis
                 i = ihat / norm(ihat)
-                j = cross(k, i)
+                j = np.cross(k, i)
 
         elif xzplane is not None:
             if xaxis is not None:
                 i = xaxis / norm(xaxis)
-                jhat = cross(xzplane, i)  # xzplane is "defining" zaxis
+                jhat = np.cross(xzplane, i)  # xzplane is "defining" zaxis
                 j = jhat / norm(jhat)
-                k = cross(i, j)
+                k = np.cross(i, j)
             elif zaxis is not None:
                 # standard
                 k = zaxis / norm(zaxis)
-                jhat = cross(k, xzplane) # xzplane is "defining" xaxis
+                jhat = np.cross(k, xzplane) # xzplane is "defining" xaxis
                 j = jhat / norm(jhat)
-                i = cross(j, k)
+                i = np.cross(j, k)
         return cls.add_ijk(cid, rid, origin, i, j, k, comment=comment)
 
     @classmethod
@@ -978,14 +1082,14 @@ class Cord2x(Coord):
         Type = cls.type
         assert Type in ['CORD2R', 'CORD2C', 'CORD2S'], Type
         if origin is None:
-            origin = array([0., 0., 0.], dtype='float64')
+            origin = np.array([0., 0., 0.], dtype='float64')
         else:
             origin = _fix_xyz_shape(origin, 'origin')
 
         # create cross vectors
         if i is None:
             if j is not None and k is not None:
-                i = cross(k, j)
+                i = np.cross(k, j)
             else:
                 raise RuntimeError('i, j and k are None')
         else:
@@ -994,9 +1098,9 @@ class Cord2x(Coord):
                 # all 3 vectors are defined
                 pass
             elif j is None:
-                j = cross(k, i)
+                j = np.cross(k, i)
             elif k is None:
-                k = cross(i, j)
+                k = np.cross(i, j)
             else:
                 raise RuntimeError('j or k are None; j=%s k=%s' % (j, k))
 
@@ -1013,9 +1117,9 @@ class Cord2x(Coord):
     def add_op2_data(cls, data, comment=''):
         cid = data[0]
         rid = data[1]
-        e1 = array(data[2:5], dtype='float64')
-        e2 = array(data[5:8], dtype='float64')
-        e3 = array(data[8:11], dtype='float64')
+        e1 = np.array(data[2:5], dtype='float64')
+        e2 = np.array(data[5:8], dtype='float64')
+        e3 = np.array(data[8:11], dtype='float64')
         assert len(data) == 11, 'data = %s' % (data)
         return cls(cid, rid, e1, e2, e3, comment=comment)
 
@@ -1030,20 +1134,20 @@ class Cord2x(Coord):
         rid = integer_or_blank(card, 2, 'rid', 0)
 
         #: origin in a point relative to the rid coordinate system
-        origin = array([double_or_blank(card, 3, 'e1x', 0.0),
-                        double_or_blank(card, 4, 'e1y', 0.0),
-                        double_or_blank(card, 5, 'e1z', 0.0)],
-                       dtype='float64')
+        origin = np.array([double_or_blank(card, 3, 'e1x', 0.0),
+                           double_or_blank(card, 4, 'e1y', 0.0),
+                           double_or_blank(card, 5, 'e1z', 0.0)],
+                          dtype='float64')
         #: z-axis in a point relative to the rid coordinate system
-        zaxis = array([double_or_blank(card, 6, 'e2x', 0.0),
-                       double_or_blank(card, 7, 'e2y', 0.0),
-                       double_or_blank(card, 8, 'e2z', 0.0)],
-                      dtype='float64')
+        zaxis = np.array([double_or_blank(card, 6, 'e2x', 0.0),
+                          double_or_blank(card, 7, 'e2y', 0.0),
+                          double_or_blank(card, 8, 'e2z', 0.0)],
+                         dtype='float64')
         #: a point on the xz-plane relative to the rid coordinate system
-        xzplane = array([double_or_blank(card, 9, 'e3x', 0.0),
-                         double_or_blank(card, 10, 'e3y', 0.0),
-                         double_or_blank(card, 11, 'e3z', 0.0)],
-                        dtype='float64')
+        xzplane = np.array([double_or_blank(card, 9, 'e3x', 0.0),
+                            double_or_blank(card, 10, 'e3y', 0.0),
+                            double_or_blank(card, 11, 'e3z', 0.0)],
+                           dtype='float64')
         return cls(cid, rid, origin, zaxis, xzplane, comment=comment)
         #self._finish_setup()
 
@@ -1142,7 +1246,7 @@ class Cord1x(Coord):
     @classmethod
     def add_card(cls, card, icard=0, comment=''):
         #self.isResolved = False
-        assert icard == 0 or icard == 1, 'icard=%r' % (icard)
+        assert icard in (0, 1), 'icard=%r' % (icard)
         ncoord = 4 * icard  # 0 if the 1st coord, 4 if the 2nd
 
         cid = integer(card, 1 + ncoord, 'cid')
@@ -1165,6 +1269,7 @@ class Cord1x(Coord):
         g2 = data[2]
         g3 = data[3]
         assert len(data) == 4, 'data = %s' % (data)
+        print('cid =', cid)
         return cls(cid, g1, g2, g3, comment=comment)
 
     def to_CORD2x(self, model, rid=0):
@@ -1305,20 +1410,22 @@ class Cord1x(Coord):
 class GMCORD(BaseCard):
     type = 'GMCORD'
 
-    def __init__(self):
-        self.cid = None
-        self.entity = None
-        self.gm_ids = None
-
-    def add_card(self, card, comment=''):
+    def __init__(self, cid, entity, gm_ids, comment=''):
         if comment:
             self._comment = comment
-        self.cid = integer(card, 1, 'cid')
-        self.entity = string(card, 2, 'entity')
-        self.gm_ids = [
+        self.cid = cid
+        self.entity = entity
+        self.gm_ids = gm_ids
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        cid = integer(card, 1, 'cid')
+        entity = string(card, 2, 'entity')
+        gm_ids = [
             integer(card, 3, 'GM_ID1'),
             integer_or_blank(card, 4, 'GM_ID2'),
         ]
+        return GMCORD(cid, entity, gm_ids, comment=comment)
 
     def cross_reference(self, model):
         pass
@@ -1349,31 +1456,47 @@ class CORD3G(Coord):  # not done
     """
     type = 'CORD3G'
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self, cid, method_es, method_int, form, thetas, rid, comment=''):
         """
         Intilizes the CORD3G
 
         :param card: a list version of the fields
         """
-        Coord.__init__(self, card, data, comment)
+        Coord.__init__(self, card, comment)
+        self.cid = cid
+        self.method_es = method_es
+        self.method_int = method_int
+        self.form = form
+        self.thetas = thetas
+        self.rid = rid
 
-        self.cid = integer(card, 1, 'cid')
-        method = string_or_blank(card, 2, 'E313')
-        self.method_es = method[0]
-        self.method_int = int(method[1:])
-        assert self.methodES in ['E', 'S'] # Euler / Space-Fixed
-        assert 0 < self.methodInt < 1000
-
-        self.form = string_or_blank(card, 3, 'form', 'EQN')
-        self.thetas = [integer(card, 4, 'theta1'),
-                       integer(card, 5, 'theta2'),
-                       integer(card, 6, 'theta3')]
+        assert 0 < self.method_int < 1000
         assert len(self.thetas) == 3, 'thetas=%s' % (self.thetas)
-        self.rid = integer_or_blank(card, 7, 'cidRef')
-        assert len(card) <= 8, 'len(CORD3G card) = %i' % len(card)
 
         # EQN for DEQATN, TABLE for TABLE3D
         assert self.form in ['EQN', 'TABLE']
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        raise NotImplementedError(data)
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        self.cid = integer(card, 1, 'cid')
+        method = string_or_blank(card, 2, 'E313')
+        method_es = method[0]
+        method_int = int(method[1:])
+        assert self.methodES in ['E', 'S'] # Euler / Space-Fixed
+
+        form = string_or_blank(card, 3, 'form', 'EQN')
+        thetas = [integer(card, 4, 'theta1'),
+                  integer(card, 5, 'theta2'),
+                  integer(card, 6, 'theta3')]
+        rid = integer_or_blank(card, 7, 'cidRef')
+        assert len(card) <= 8, 'len(CORD3G card) = %i' % len(card)
+
+        return CORD3G(cid, method_es, method_int, form, thetas, rid,
+                      comment=comment)
 
     def cross_reference(self, model):
         """
@@ -1415,11 +1538,11 @@ class CORD3G(Coord):  # not done
                 ct = cos(radians(theta))
                 st = sin(radians(theta))
                 if rotation == 1:
-                    p = dot(self.rotation_x(ct, st), p)
+                    p = np.dot(self.rotation_x(ct, st), p)
                 elif rotation == 2:
-                    p = dot(self.rotation_y(ct, st), p)
+                    p = np.dot(self.rotation_y(ct, st), p)
                 elif rotation == 3:
-                    p = dot(self.rotation_z(ct, st), p)
+                    p = np.dot(self.rotation_z(ct, st), p)
                 else:
                     raise RuntimeError('rotation=%s rotations=%s' % (rotation, rotations))
         elif self.method_es == 'S':
@@ -1430,21 +1553,21 @@ class CORD3G(Coord):  # not done
         return p
 
     def rotation_x(self, ct, st):
-        matrix = array([[1., 0., 0.],
-                        [ct, 0., -st],
-                        [-st, 0., ct]])
+        matrix = np.array([[1., 0., 0.],
+                           [ct, 0., -st],
+                           [-st, 0., ct]])
         return matrix
 
     def rotation_y(self, ct, st):
-        matrix = array([[ct, 0., st],
-                        [0., 1., 0.],
-                        [-st, 0., ct]])
+        matrix = np.array([[ct, 0., st],
+                           [0., 1., 0.],
+                           [-st, 0., ct]])
         return matrix
 
     def rotation_z(self, ct, st):
-        matrix = array([[ct, st, 0.],
-                        [-st, ct, 0.],
-                        [0., 0., 1.]])
+        matrix = np.array([[ct, st, 0.],
+                           [-st, ct, 0.],
+                           [0., 0., 1.]])
         return matrix
 
     def raw_fields(self):
@@ -1457,6 +1580,7 @@ class CORD3G(Coord):  # not done
 class CORD1R(Cord1x, RectangularCoord):
     type = 'CORD1R'
     Type = 'R'
+    int_type = 0
 
     def __init__(self, cid, g1, g2, g3, comment=''):
         """

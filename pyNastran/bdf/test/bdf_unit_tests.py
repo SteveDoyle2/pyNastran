@@ -7,8 +7,8 @@ from numpy.linalg import norm
 
 import pyNastran
 from pyNastran.utils import object_attributes, object_methods
-from pyNastran.bdf.cards.base_card import collapse_thru_by
-from pyNastran.bdf.bdf import BDF
+from pyNastran.bdf.cards.collpase_card import collapse_thru_by
+from pyNastran.bdf.bdf import BDF, read_bdf
 
 pkg_path = pyNastran.__path__[0]
 test_path = os.path.join(pkg_path, 'bdf', 'test')
@@ -37,8 +37,7 @@ class TestBDF(Tester):
 
     def test_object_attributes_02(self):
         model = BDF()
-        keys = ['thermalMaterials', 'hyperelasticMaterials', 'rigidElements',
-                'creepMaterials', 'convectionProperties']
+        keys = []
         object_attributes(model, mode='public', keys_to_skip=keys)
 
     def test_object_attributes_03(self):
@@ -54,8 +53,7 @@ class TestBDF(Tester):
 
     def test_object_methods_02(self):
         model = BDF()
-        keys = ['thermalMaterials', 'hyperelasticMaterials', 'rigidElements',
-                'creepMaterials', 'convectionProperties']
+        keys = []
         object_methods(model, mode="public", keys_to_skip=keys)
 
     def test_object_methods_03(self):
@@ -120,7 +118,6 @@ class TestBDF(Tester):
             assert len(fem.properties) == 1, 'len(properties) = %i' % len(fem.properties)
         self._compare_mass_cg_I(fem1)
         self._compare_mass_cg_I(fem1, reference_point=u'cg')
-
 
     def test_bdf_03(self):
         bdf_filename = os.path.join('cbush', 'cbush.dat')
@@ -207,7 +204,6 @@ class TestBDF(Tester):
         self._compare_mass_cg_I(fem1)
         self._compare_mass_cg_I(fem1, reference_point=u'cg')
         self._compare_mass_cg_I(fem1, reference_point='cg')
-
 
 class TestBaseCard(Tester):
     def test_base_card_01_collapse_thru(self):

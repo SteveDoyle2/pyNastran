@@ -9,7 +9,7 @@ from numpy import (array, zeros, searchsorted, where, unique,
 from pyNastran.utils import integer_types
 #from pyNastran.bdf.dev_vectorized.utils import slice_to_iter
 #from pyNastran.bdf.field_writer_8 import set_blank_if_default
-from pyNastran.bdf.fieldWriter import print_card_8
+from pyNastran.bdf.field_writer import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 
 from pyNastran.bdf.dev_vectorized.cards.elements.property import Property

@@ -1,61 +1,58 @@
 #pylint: disable=C0301,C0111,C0103,W0613
+from __future__ import print_function
+from struct import unpack, Struct
 from six import b
 from six.moves import range
-from struct import unpack, Struct
 
 #from pyNastran.bdf.cards.constraints import SPC,SPCADD
 from pyNastran.bdf.cards.elements.rigid import RBE2
 from pyNastran.bdf.cards.constraints import SUPORT, SPC, SPC1
 from pyNastran.bdf.cards.loads.loads import SPCD
+from pyNastran.op2.tables.geom.geom_common import GeomCommon
 
 
-class GEOM4(object):
-    def add_constraint_SPC(self, constraint):
-        raise RuntimeError('this should be overwritten')
-    def add_rigid_element(self, constraint):
-        raise RuntimeError('this should be overwritten')
-    def add_suport(self, constraint):
-        raise RuntimeError('this should be overwritten')
+class GEOM4(GeomCommon):
+    """defines methods for reading op2 constraints"""
 
     def _read_geom4_4(self, data, ndata):
         return self._read_geom_4(self._geom4_map, data, ndata)
 
     def __init__(self):
-        self.card_count = {}
+        GeomCommon.__init__(self)
         self._geom4_map = {
-            (5561,   76, 215): ['ASET', self._read_aset],      # record 1  - not done
-            (5571,   77, 216): ['ASET1', self._read_aset1],    # record 2  - not done
-            (10200, 102, 473): ['BNDGRID', self._read_bndgrid],# record 3  - not done
-            (1510,   15, 328): ['CYAX', self._read_cyax],      # record 8  - not done
-            (5210,   52, 257): ['CYJOIN', self._read_cyjoin],  # record 9  - not done
-            (1710,   17, 330): ['CYSYM', self._read_cysym],    # record 11 - not done
-            (4901,   49,  17): ['MPC', self._read_mpc],        # record 16 - not done
-            (4891,   60,  83): ['MPCADD', self._read_mpcadd],  # record 17 - not done
-            (4951,   63,  92): ['OMIT1', self._read_omit1],    # record 19 - not done
+            (5561, 76, 215): ['ASET', self._read_aset],          # record 1  - not done
+            (5571, 77, 216): ['ASET1', self._read_aset1],        # record 2  - not done
+            (10200, 102, 473): ['BNDGRID', self._read_bndgrid],  # record 3  - not done
+            (1510, 15, 328): ['CYAX', self._read_cyax],          # record 8  - not done
+            (5210, 52, 257): ['CYJOIN', self._read_cyjoin],      # record 9  - not done
+            (1710, 17, 330): ['CYSYM', self._read_cysym],        # record 11 - not done
+            (4901, 49, 17): ['MPC', self._read_mpc],             # record 16 - not done
+            (4891, 60, 83): ['MPCADD', self._read_mpcadd],       # record 17 - not done
+            (4951, 63, 92): ['OMIT1', self._read_omit1],         # record 19 - not done
 
-            (610,     6, 316): ['QSET1', self._read_qset1],    # record 21 - not done
-            (6601,   66, 292): ['RBAR', self._read_rbar],      # record 22 - not done
-            (6801,   68, 294): ['RBE1', self._read_rbe1],      # record 23 - not done
-            (6901,   69, 295): ['RBE2', self._read_rbe2],      # record 24 - buggy
-            (7101,   71, 187): ['RBE3', self._read_rbe3],      # record 25 - not done
+            (610, 6, 316): ['QSET1', self._read_qset1],          # record 21 - not done
+            (6601, 66, 292): ['RBAR', self._read_rbar],          # record 22 - not done
+            (6801, 68, 294): ['RBE1', self._read_rbe1],          # record 23 - not done
+            (6901, 69, 295): ['RBE2', self._read_rbe2],          # record 24 - buggy
+            (7101, 71, 187): ['RBE3', self._read_rbe3],          # record 25 - not done
 
-            (6501,   65, 291): ['RROD', self._read_rrod],        # record 30 - not done
-            (7001,   70, 186): ['RSPLINE', self._read_rspline],  # record 31 - not done
-            (7201,   72, 398): ['RSSCON', self._read_rsscon],    # record 32 - not done
-            (1210,   12, 322): ['SEQSET1', self._read_seqset1],  # record 40 - not done
-            (5501,   55,  16): ['SPC', self._read_spc],          # record 44 - buggy
-            (5481,   58,  12): ['SPC1', self._read_spc1],        # record 45 - not done
-            (5491,   59,  13): ['SPCADD', self._read_spcadd],    # record 46 - not done
-            (5110,   51, 256): ['SPCD', self._read_spcd],        # record 47 - buggy
-            (5601,   56,  14): ['SUPORT', self._read_suport],    # record 59 - not done
+            (6501, 65, 291): ['RROD', self._read_rrod],          # record 30 - not done
+            (7001, 70, 186): ['RSPLINE', self._read_rspline],    # record 31 - not done
+            (7201, 72, 398): ['RSSCON', self._read_rsscon],      # record 32 - not done
+            (1210, 12, 322): ['SEQSET1', self._read_seqset1],    # record 40 - not done
+            (5110, 51, 256): ['SPCD', self._read_spcd],          # record 44
+            (5501, 55, 16): ['SPC', self._read_spc],             # record 44 - buggy
+            (5481, 58, 12): ['SPC1', self._read_spc1],           # record 45 - not done
+            (5491, 59, 13): ['SPCADD', self._read_spcadd],       # record 46 - not done
+            (5110, 51, 256): ['SPCD', self._read_spcd],          # record 47 - buggy
+            (5601, 56, 14): ['SUPORT', self._read_suport],       # record 59 - not done
             (10100, 101, 472): ['SUPORT1', self._read_suport1],  # record 60 - not done
-            (2010,   20, 193) : ['USET', self._read_uset], # Record 62 -- USET(2010,20,193)
+            (2010, 20, 193) : ['USET', self._read_uset],         # Record 62 -- USET(2010,20,193)
 
-            (1310, 13,    247): ['', self._read_fake],    # record
+            (1310, 13, 247): ['', self._read_fake],       # record
             (4901, 49, 420017): ['', self._read_fake],    # record
-            (5561, 76,      0): ['', self._read_fake],     # record
-            (5110, 51,    256): ['', self._read_fake],     # record
-            (610,   6,      0): ['', self._read_fake],     # record
+            (5561, 76, 0): ['', self._read_fake],         # record
+            (610, 6, 0): ['', self._read_fake],           # record
             (5110, 51, 620256): ['', self._read_fake],    # record
             (5501, 55, 620016): ['', self._read_fake],    # record
             (5001, 50, 15): ['', self._read_fake],    # record
@@ -149,18 +146,17 @@ class GEOM4(object):
         self.log.debug('skipping RBE2 in GEOM4\n')
         return n
         #n=0
-        #nData = len(data)  # 5*4
+        #ndata = len(data)  # 5*4
         if 1:
             edata = data[:12]
             (eid, gn, cm, gm) = unpack(b(self._endian + '4i'), edata)
 
             edata = data[12:-4]
             nGm = len(edata) // 4
-            iFormat = 'i' * nGm
-            iFormat = bytes(iFormat)
-            Gm = list(unpack(iFormat, edata))
+            iformat = bytes('i' * nGm)
+            Gm = list(unpack(iformat, edata))
             alpha, = unpack(b(self._endian + 'f'), data[-4:])
-        elem = RBE2(None, [eid, gn, cm, Gm, alpha])
+        elem = RBE2.add_op2_data([eid, gn, cm, Gm, alpha])
         self.add_rigid_element(elem)
         data = data[-1:]
 
@@ -219,10 +215,20 @@ class GEOM4(object):
             n += 20
         return n
 
+    #def _read_spcd(self, data, n):
+        #"""SPCD(5110,51,256) - Record 44 - dmap2005"""
+        #n = 0
+        #nentries = len(data) // 20  # 5*4
+        #for i in range(nentries):
+            #edata = data[n:n + 20]
+            #(sid, ID, c, xxx, dx) = unpack(b(self._endian + 'iiiif'), edata)
+            #load = SPCD.add_op2_data(sid, ID, c, dx)
+            #self.add_load(load)
+            #n += 20
+        #return n
+
     def _read_spc1(self, data, n):
         """SPC1(5481,58,12) - Record 45"""
-        self.log.debug('skipping SPC1 in GEOM4\n')
-        #return n
         n2 = n
         #nentries = (len(data) - n - 12) // 4  # 5*4
         nentries = 0
@@ -248,7 +254,7 @@ class GEOM4(object):
             if self.is_debug_file:
                 self.binary_debug.write('   nids=%s\n' % str(nids[1:]))
             nentries += 1
-            constraint = SPC1(None, [sid, g, nids])
+            constraint = SPC1.add_op2_data([sid, g, nids])
             self.add_constraint_SPC(constraint)
         self.card_count['SPC1'] = nentries
         return n
@@ -261,18 +267,22 @@ class GEOM4(object):
     def _read_spcd(self, data, n):
         """SPCD(5110,51,256) - Record 47"""
         #self.log.debug('skipping SPCD in GEOM4\n')
+        return len(data)
         n = 0
-        s = Struct(b(self._endian + '4if'))
+        s = Struct(b(self._endian + '4ifi'))
         nentries = len(data) // 20  # 5*4
         for i in range(nentries):
             edata = data[n:n + 20]
+            self.show_data(edata)
             out = s.unpack(edata)
             (sid, ID, c, xxx, dx) = out
+            #print(out)
+            #print()
             if self.is_debug_file:
                 self.binary_debug.write('  SPCD=%s\n' % str(out))
 
-            constraint = SPCD(None, [sid, ID, c, dx])
-            self.add_constraint_SPC(constraint)
+            constraint = SPCD.add_op2_data([sid, ID, c, dx])
+            self.add_load(constraint)
             n += 20
         self.card_count['SPCD'] = nentries
         return n
@@ -297,10 +307,6 @@ class GEOM4(object):
         self.log.debug('skipping SPCEB in GEOM4\n')
         return n
 
-    def _read_spcf(self, data, n):
-        self.log.debug('skipping SPCF in GEOM4\n')
-        return n
-
     def _read_spcfb(self, data, n):
         self.log.debug('skipping SPCFB in GEOM4\n')
         return n
@@ -321,6 +327,7 @@ class GEOM4(object):
         s = Struct(b(self._endian + '2i'))
         for i in range(nentries):
             data_in = list(s.unpack(data[n:n + 8]))
+            print(data_in)
             suport = SUPORT.add_op2_data(data_in)
             self.add_suport(suport) # extracts [sid, c]
             n += 8

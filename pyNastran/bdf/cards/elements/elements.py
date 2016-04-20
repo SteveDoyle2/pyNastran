@@ -15,8 +15,9 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 
 from pyNastran.utils import integer_types
 from pyNastran.bdf.cards.base_card import Element, BaseCard
-from pyNastran.bdf.bdfInterface.assign_type import (fields, integer, integer_or_blank,
-    integer_double_or_blank, double_or_blank, string)  # double
+from pyNastran.bdf.bdf_interface.assign_type import (
+    fields, integer, integer_or_blank, integer_double_or_blank,
+    double_or_blank, string)
 from pyNastran.bdf.field_writer_8 import print_card_8
 
 
@@ -87,7 +88,12 @@ class CFAST(Element):
         self.gs = self.Gs()
         self.ga = self.Ga()
         self.gb = self.Gb()
-        del self.gs_ref, self.ga_ref, self.gb_ref
+        if self.gs:
+            del self.gs_ref
+        if self.ga:
+            del self.ga_ref
+        if self.gb:
+            del self.gb_ref
 
     def raw_fields(self):
         list_fields = ['CFAST', self.eid, self.Pid(), self.Type, self.ida, self.idb,
@@ -104,7 +110,8 @@ class CFAST(Element):
     def Gs(self):
         if isinstance(self.gs, integer_types):
             return self.gs
-        return self.gs_ref.nid
+        elif self.gs is not None:
+            return self.gs_ref.nid
 
     def Ga(self):
         if isinstance(self.ga, integer_types) or self.ga is None:
@@ -115,6 +122,17 @@ class CFAST(Element):
         if isinstance(self.gb, integer_types) or self.gb is None:
             return self.gb
         return self.gb_ref.nid
+
+    def _verify(self, xref):
+        """
+        Verifies all methods for this object work
+
+        Parameters
+        ----------
+        xref : bool
+            has this model been cross referenced
+        """
+        pass
 
     @property
     def node_ids(self):
@@ -292,7 +310,7 @@ class CrackElement(Element):
     type = 'Crack'
 
     def __init__(self):
-        pass
+        self.eid = 0
 
     def cross_reference(self, model):
         """

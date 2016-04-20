@@ -261,10 +261,10 @@ class TestReadWrite(unittest.TestCase):
         self.assertEqual(model.nnodes, 5, 'nnodes=%s' % model.nnodes)
 
     def test_include_04(self):
-        if PY2:
-            wb = 'wb'
-        else:
-            wb = 'w'
+        #if PY2:
+            #wb = 'wb'
+        #else:
+            #wb = 'w'
 
         with codec_open('include4.bdf', 'w') as f:
             f.write('$ pyNastran: punch=True\n')
@@ -281,6 +281,7 @@ class TestReadWrite(unittest.TestCase):
 
         os.remove('include4.out.bdf')
         os.remove('include4b.inc')
+        #os.remove('include4.inc')
         # os.remove('c.bdf')
         # os.remove('executive_control.inc')
         # os.remove('case_control.inc')
@@ -289,10 +290,10 @@ class TestReadWrite(unittest.TestCase):
         self.assertEqual(model.nnodes, 1, 'nnodes=%s' % model.nnodes)
 
     def test_include_05(self):
-        if PY2:
-            wb = 'wb'
-        else:
-            wb = 'w'
+        #if PY2:
+            #wb = 'wb'
+        #else:
+            #wb = 'w'
 
         with codec_open('include5.bdf', 'w') as f:
             f.write('$ pyNastran: punch=True\n')

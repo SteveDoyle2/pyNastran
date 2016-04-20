@@ -27,13 +27,13 @@ from pyNastran.utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default, set_default_if_blank
 from pyNastran.bdf.cards.base_card import Element
 from pyNastran.utils.mathematics import Area, centroid_triangle
-from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
-    double_or_blank, integer_double_or_blank, blank)
-from pyNastran.bdf.field_writer_8 import print_card_8, print_field_8, print_float_or_int_8
+from pyNastran.bdf.bdf_interface.assign_type import (
+    integer, integer_or_blank, double_or_blank, integer_double_or_blank, blank)
+from pyNastran.bdf.field_writer_8 import print_card_8, print_field_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.cards.utils import wipe_empty_fields
 
-def _triangle_area_centroid_normal(nodes):
+def _triangle_area_centroid_normal(nodes, card):
     """
 
     Parameters
@@ -49,6 +49,8 @@ def _triangle_area_centroid_normal(nodes):
         Centroid of triangle.
     unit_normal : ndarray
         Unit normal of triangles.
+    card : CTRIA3(), CTRIA6()
+        the self parameter
 
     ::
 
@@ -72,8 +74,8 @@ def _triangle_area_centroid_normal(nodes):
 
     if not allclose(norm(normal), 1.):
         msg = ('function _triangle_area_centroid_normal, check...\n'
-               'a = {0}\nb = {1}\nnormal = {2}\nlength = {3}\n'.format(
-                   n0 - n1, n0 - n2, normal, length))
+               'a = {0}\nb = {1}\nnormal = {2}\nlength = {3}\n{4}'.format(
+                   n0 - n1, n0 - n2, normal, length, str(card)))
         raise RuntimeError(msg)
     return (0.5 * length, (n0 + n1 + n2) / 3., normal)
 
@@ -202,7 +204,7 @@ class TriShell(ShellElement):
                the normal vector
         """
         (n0, n1, n2) = self.get_node_positions()
-        return _triangle_area_centroid_normal([n0, n1, n2])
+        return _triangle_area_centroid_normal([n0, n1, n2], self)
 
     def get_area(self):
         return self.Area()
@@ -215,8 +217,7 @@ class TriShell(ShellElement):
         (n1, n2, n3) = self.get_node_positions()
         a = n1 - n2
         b = n1 - n3
-        area = Area(a, b)
-        0.5 * norm(cross(a, b))
+        area = 0.5 * norm(cross(a, b))
         return area
 
     def Normal(self):
@@ -257,6 +258,15 @@ class TriShell(ShellElement):
 
 
 class CTRIA3(TriShell):
+    """
+    +--------+-------+-------+----+----+----+------------+---------+-----+
+    |   1    |   2   |   3   |  4 |  5 |  6 |     7      |    8    |  9  |
+    +========+=======+=======+=====+===+====+============+=========+=====+
+    | CTRIA3 |  EID  |  PID  | N1 | N2 | N3 | THETA/MCID | ZOFFSET |     |
+    +--------+-------+-------+----+----+----+------------+---------+-----+
+    |        |       | TFLAG | T1 | T2 | T3 |            |         |     |
+    +--------+-------+-------+----+----+----+------------+---------+-----+
+    """
     type = 'CTRIA3'
     aster_type = 'TRIA3'
     calculixType = 'S3'
@@ -332,9 +342,9 @@ class CTRIA3(TriShell):
             blank(card, 9, 'blank')
 
             TFlag = integer_or_blank(card, 10, 'TFlag', 0)
-            T1 = double_or_blank(card, 11, 'T1', 1.0)
-            T2 = double_or_blank(card, 12, 'T2', 1.0)
-            T3 = double_or_blank(card, 13, 'T3', 1.0)
+            T1 = double_or_blank(card, 11, 'T1')
+            T2 = double_or_blank(card, 12, 'T2')
+            T3 = double_or_blank(card, 13, 'T3')
             assert len(card) <= 14, 'len(CTRIA3 card) = %i' % len(card)
         else:
             thetaMcid = 0.0
@@ -510,9 +520,9 @@ class CTRIA6(TriShell):
             thetaMcid = integer_double_or_blank(card, 9, 'thetaMcid', 0.0)
             zOffset = double_or_blank(card, 10, 'zOffset', 0.0)
 
-            T1 = double_or_blank(card, 11, 'T1', 1.0)
-            T2 = double_or_blank(card, 12, 'T2', 1.0)
-            T3 = double_or_blank(card, 13, 'T3', 1.0)
+            T1 = double_or_blank(card, 11, 'T1')
+            T2 = double_or_blank(card, 12, 'T2')
+            T3 = double_or_blank(card, 13, 'T3')
             TFlag = integer_or_blank(card, 14, 'TFlag', 0)
             assert len(card) <= 15, 'len(CTRIA6 card) = %i' % len(card)
         else:
@@ -597,7 +607,7 @@ class CTRIA6(TriShell):
         together
         """
         (n1, n2, n3, n4, n5, n6) = self.get_node_positions()
-        return _triangle_area_centroid_normal([n1, n2, n3])
+        return _triangle_area_centroid_normal([n1, n2, n3], self)
 
     def Area(self):
         r"""
@@ -725,9 +735,9 @@ class CTRIAR(TriShell):
         blank(card, 10, 'blank')
 
         TFlag = integer_or_blank(card, 10, 'TFlag', 0)
-        T1 = double_or_blank(card, 11, 'T1', 1.0)
-        T2 = double_or_blank(card, 12, 'T2', 1.0)
-        T3 = double_or_blank(card, 13, 'T3', 1.0)
+        T1 = double_or_blank(card, 11, 'T1')
+        T2 = double_or_blank(card, 12, 'T2')
+        T3 = double_or_blank(card, 13, 'T3')
         assert len(card) <= 14, 'len(CTRIAR card) = %i' % len(card)
         return CTRIAR(eid, pid, nids, thetaMcid, zOffset,
                       TFlag, T1, T2, T3, comment=comment)
@@ -910,13 +920,16 @@ class CTRIAX(TriShell):
                 assert isinstance(c[i], float)
                 assert isinstance(n[i], float)
 
+    def flipNormal(self):
+        pass
+
     def AreaCentroidNormal(self):
         """
         Returns area, centroid, normal as it's more efficient to do them
         together
         """
         (n1, n2, n3, n4, n5, n6) = self.get_node_positions()
-        return _triangle_area_centroid_normal([n1, n2, n3])
+        return _triangle_area_centroid_normal([n1, n2, n3], self)
 
     def Area(self):
         r"""
@@ -1068,7 +1081,7 @@ class CTRIAX6(TriShell):
         together
         """
         (n0, n1, n2, n3, n4, n5) = self.get_node_positions()
-        return _triangle_area_centroid_normal([n0, n2, n4])
+        return _triangle_area_centroid_normal([n0, n2, n4], self)
 
     def Area(self):
         r"""
@@ -1376,23 +1389,18 @@ class CSHEAR(QuadShell):
         a = n1 - n2
         b = n2 - n4
         area1 = Area(a, b)
-        c1 = centroid_triangle(n1, n2, n4)
 
         a = n2 - n4
         b = n2 - n3
         area2 = Area(a, b)
-        c2 = centroid_triangle(n2, n3, n4)
 
         area = area1 + area2
-        centroid = (c1 * area1 + c2 * area2) / area
+        centroid = (n1 + n2 + n3 + n4) / 4.
         return(area, centroid)
 
     def Centroid(self):
-        (area, centroid) = self.AreaCentroid()
-
         (n1, n2, n3, n4) = self.get_node_positions()
-        centroid2 = (n1 + n2 + n3 + n4) / 4.
-        assert centroid == centroid2, 'CSHEAR eid=%s centroid=%s centroid2=%s' % (self.eid, centroid, centroid2)
+        centroid = (n1 + n2 + n3 + n4) / 4.
         return centroid
 
     def _verify(self, xref=True):
@@ -1475,6 +1483,15 @@ class CSHEAR(QuadShell):
 
 
 class CQUAD4(QuadShell):
+    """
+    +--------+-------+-------+----+----+----+----+------------+---------+
+    |   1    |   2   |   3   |  4 |  5 |  6 | 7  |     8      |    9    |
+    +========+=======+=======+=====+===+====+====+============+=========+
+    | CQUAD4 |  EID  |  PID  | N1 | N2 | N3 | N4 | THETA/MCID | ZOFFSET |
+    +--------+-------+-------+----+----+----+----+------------+---------+
+    |        |       | TFLAG | T1 | T2 | T3 | T4 |            |         |
+    +--------+-------+-------+----+----+----+----+------------+---------+
+    """
     type = 'CQUAD4'
     aster_type = 'QUAD4 # CQUAD4'
     calculixType = 'S4'
@@ -1549,10 +1566,10 @@ class CQUAD4(QuadShell):
             zOffset = double_or_blank(card, 8, 'zOffset', 0.0)
             blank(card, 9, 'blank')
             TFlag = integer_or_blank(card, 10, 'TFlag', 0)
-            T1 = double_or_blank(card, 11, 'T1', 1.0)
-            T2 = double_or_blank(card, 12, 'T2', 1.0)
-            T3 = double_or_blank(card, 13, 'T3', 1.0)
-            T4 = double_or_blank(card, 14, 'T4', 1.0)
+            T1 = double_or_blank(card, 11, 'T1')
+            T2 = double_or_blank(card, 12, 'T2')
+            T3 = double_or_blank(card, 13, 'T3')
+            T4 = double_or_blank(card, 14, 'T4')
             assert len(card) <= 15, 'len(CQUAD4 card) = %i' % len(card)
         else:
             thetaMcid = 0.0
@@ -1644,7 +1661,7 @@ class CQUAD4(QuadShell):
 
     def raw_fields(self):
         list_fields = (['CQUAD4', self.eid, self.Pid()] + self.node_ids +
-                       [self.thetaMcid, self.zOffset, self.TFlag, self.T1, self.T2,
+                       [self.thetaMcid, self.zOffset, None, self.TFlag, self.T1, self.T2,
                         self.T3, self.T4])
         return list_fields
 
@@ -1727,13 +1744,13 @@ class CQUADR(QuadShell):
         zOffset = double_or_blank(card, 8, 'zOffset', 0.0)
 
         TFlag = integer_or_blank(card, 10, 'TFlag', 0)
-        T1 = double_or_blank(card, 11, 'T1', 1.0)
-        T2 = double_or_blank(card, 12, 'T2', 1.0)
-        T3 = double_or_blank(card, 13, 'T3', 1.0)
-        T4 = double_or_blank(card, 14, 'T4', 1.0)
+        T1 = double_or_blank(card, 11, 'T1')
+        T2 = double_or_blank(card, 12, 'T2')
+        T3 = double_or_blank(card, 13, 'T3')
+        T4 = double_or_blank(card, 14, 'T4')
         assert len(card) <= 15, 'len(CQUADR card) = %i' % len(card)
         return CQUADR(eid, pid, nids, thetaMcid, zOffset,
-                      TFlag, T1, T2, T3, T4)
+                      TFlag, T1, T2, T3, T4, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -1757,7 +1774,7 @@ class CQUADR(QuadShell):
         if T4 == -1.0:
             T4 = 1.0
         return CQUADR(eid, pid, nids, thetaMcid, zOffset,
-                      TFlag, T1, T2, T3, T4)
+                      TFlag, T1, T2, T3, T4, comment=comment)
 
     def cross_reference(self, model):
         """
@@ -1992,10 +2009,10 @@ class CQUAD8(QuadShell):
                 integer_or_blank(card, 9, 'n7', 0),
                 integer_or_blank(card, 10, 'n8', 0)]
         if len(card) > 11:
-            T1 = double_or_blank(card, 11, 'T1', 1.0)
-            T2 = double_or_blank(card, 12, 'T2', 1.0)
-            T3 = double_or_blank(card, 13, 'T3', 1.0)
-            T4 = double_or_blank(card, 14, 'T4', 1.0)
+            T1 = double_or_blank(card, 11, 'T1')
+            T2 = double_or_blank(card, 12, 'T2')
+            T3 = double_or_blank(card, 13, 'T3')
+            T4 = double_or_blank(card, 14, 'T4')
             thetaMcid = integer_double_or_blank(card, 15, 'thetaMcid', 0.0)
             zOffset = double_or_blank(card, 16, 'zOffset', 0.0)
             TFlag = integer_or_blank(card, 17, 'TFlag', 0)
@@ -2246,6 +2263,17 @@ class CQUADX(QuadShell):
     @property
     def node_ids(self):
         return self._nodeIDs(allow_empty_nodes=True)
+
+    def _verify(self, xref):
+        """
+        Verifies all methods for this object work
+
+        Parameters
+        ----------
+        xref : bool
+            has this model been cross referenced
+        """
+        pass
 
     def raw_fields(self):
         list_fields = ['CQUADX', self.eid, self.Pid()] + self.node_ids

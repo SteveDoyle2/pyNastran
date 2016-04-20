@@ -111,6 +111,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import iteritems, string_types, itervalues
 import os
+import sys
 
 from numpy import unique
 
@@ -125,7 +126,7 @@ from pyNastran.op2.op2_f06_common import Op2F06Attributes
 
 def read_op2(op2_filename=None, combine=True,
              log=None, debug=True, debug_file=None, build_dataframe=False,
-             skip_undefined_matrices=True, mode='msc'):
+             skip_undefined_matrices=True, mode='msc', encoding=None):
     """
     Creates the OP2 object without calling the OP2 class.
 
@@ -148,6 +149,8 @@ def read_op2(op2_filename=None, combine=True,
      (.. seealso:: import logging)
     debug_file : str; default=None (No debug)
         sets the filename that will be written to
+    encoding : str
+        the unicode encoding (default=None; system default)
 
     Returns
     -------
@@ -161,7 +164,8 @@ def read_op2(op2_filename=None, combine=True,
     """
     model = OP2(log=log, debug=debug, debug_file=debug_file, mode=mode)
     model.read_op2(op2_filename=op2_filename, build_dataframe=build_dataframe,
-                   skip_undefined_matrices=skip_undefined_matrices, combine=combine)
+                   skip_undefined_matrices=skip_undefined_matrices, combine=combine,
+                   encoding=encoding)
 
     ## TODO: this will go away when OP2 is refactored
     ## TODO: many methods will be missing, but it's a start...
@@ -173,6 +177,19 @@ def read_op2(op2_filename=None, combine=True,
         #setattr(obj, attr_name, attr)
     #obj.get_op2_stats()
     return model
+
+
+#import sys
+#class CrashObject(object):
+    #def __init__(self):
+        #pass
+    #def write(self, msg):
+        #if 'DEBUG' not in msg and 'INFO' not in msg:
+            #raise RuntimeError(msg)
+    #def flush(self):
+        #pass
+#sys.stdout = CrashObject()
+
 
 #class OP2(OP2_Scalar, OP2Writer):
 class OP2(OP2_Scalar):
@@ -195,7 +212,7 @@ class OP2(OP2_Scalar):
         mode : str; default='msc'
             {msc, nx}
         """
-        self.encoding = 'utf-8'
+        self.encoding = None
         self.set_mode(mode)
         make_geom = False
         assert make_geom == False, make_geom
@@ -319,7 +336,7 @@ class OP2(OP2_Scalar):
         self.ask = ask
 
     def read_op2(self, op2_filename=None, combine=True, build_dataframe=False,
-                 skip_undefined_matrices=False):
+                 skip_undefined_matrices=False, encoding=None):
         """
         Starts the OP2 file reading
 
@@ -335,7 +352,13 @@ class OP2(OP2_Scalar):
             builds a pandas DataFrame for op2 objects
         skip_undefined_matrices : bool; default=False
              True : prevents matrix reading crashes
+        encoding : str
+            the unicode encoding (default=None; system default)
         """
+        if encoding is None:
+            encoding = sys.getdefaultencoding()
+        self.encoding = encoding
+
         self.skip_undefined_matrices = skip_undefined_matrices
         assert self.ask in [True, False], self.ask
         self.is_vectorized = True
@@ -540,7 +563,12 @@ class OP2(OP2_Scalar):
             if result_type == 'eigenvalues':
                 continue
             result = getattr(self, result_type)
-            case_keys = sorted(result.keys())
+            case_keys = list(result.keys())
+            try:
+                case_keys = sorted(case_keys)
+            except TypeError:
+                self.log.error('result.keys() = %s' % case_keys)
+
             if len(result) == 0:
                 continue
             for isubcase in unique_isubcases:
@@ -587,7 +615,7 @@ class OP2(OP2_Scalar):
         for nodes with their output in coordinate systems other than the
         global.
 
-        Used in combination with ``BDF.get_displcement_index_transforms``
+        Used in combination with ``BDF.get_displacement_index_transforms``
 
         Parameters
         ----------

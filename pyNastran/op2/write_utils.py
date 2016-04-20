@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 from struct import Struct, pack
 
 def _write_markers(f, fascii, markers):
@@ -13,10 +14,11 @@ def _write_markers(f, fascii, markers):
 def write_table_header(f, fascii, table_name):
     table0 = [
         4, 2, 4,
-        8, table_name, 8,
+        8, bytes(table_name), 8,
         #4, 0, 4,
     ]
     assert len(table_name) == 8, table_name
     table0_format = '<4i 8s i'
-    f.write(pack(table0_format, *table0))
+    st = Struct(table0_format)
+    f.write(st.pack(*table0))
     fascii.write('OUG header0 = %s\n' % table0)

@@ -1,10 +1,11 @@
 from six.moves import zip
 
+import numpy as np
 from numpy import array, zeros, arange, searchsorted, cross
 
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
-from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
+from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_blank,
     double_or_blank)
 
 
@@ -189,10 +190,11 @@ class CTRIAX6(object):
         v12 = p2 - p1
         v13 = p3 - p1
         v123 = cross(v12, v13)
+        normi = np.linalg.norm(v123)
         if calculate_normal or calculate_area:
-            normal = v123 / n
+            normal = v123 / normi
         if calculate_area:
-            A = 0.5 * n
+            A = 0.5 * normi
         if calculate_mass:
             t = self.model.pid.get_thickness_by_property_id(self.pid)
             massi = A * t

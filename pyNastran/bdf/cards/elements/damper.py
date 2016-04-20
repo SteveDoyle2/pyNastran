@@ -15,8 +15,8 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 
 from pyNastran.utils import integer_types
 from pyNastran.bdf.cards.base_card import Element
-from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
-                                                    double)
+from pyNastran.bdf.bdf_interface.assign_type import (
+    integer, integer_or_blank, double)
 from pyNastran.bdf.field_writer_8 import print_card_8
 
 
@@ -560,10 +560,6 @@ class CDAMP5(LineDamper):
     @property
     def node_ids(self):
         return self._nodeIDs(allow_empty_nodes=True)
-
-    @node_ids.setter
-    def node_ids(self, value):
-        raise ValueError("You cannot set node IDs like this...modify the node objects")
 
     def raw_fields(self):
         nodes = self.node_ids

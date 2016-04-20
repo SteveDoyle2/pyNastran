@@ -28,26 +28,29 @@ from pyNastran.op2.op2 import OP2
 from pyNastran.utils.log import get_logger
 
 # Tables
-from pyNastran.op2.tables.oug.oug_displacements import RealDisplacement
+from pyNastran.op2.tables.oug.oug_displacements import RealDisplacementArray
 #from pyNastran.op2.tables.oqg_constraintForces.oqg_spcForces import SPCForcesObject
 #from pyNastran.op2.tables.oqg_constraintForces.oqg_mpcForces import MPCForcesObject
 from pyNastran.f06.tables.oload_resultant import OLOAD_Resultant
 
 # springs
-from pyNastran.op2.tables.oes_stressStrain.real.oes_springs import RealCelasStress, RealCelasStrain
-from pyNastran.op2.tables.oef_forces.oef_forceObjects import RealSpringForce
+from pyNastran.op2.tables.oes_stressStrain.real.oes_springs import RealSpringStressArray, RealSpringStrainArray
+from pyNastran.op2.tables.oef_forces.oef_forceObjects import RealSpringForceArray
 
 # rods
-from pyNastran.op2.tables.oes_stressStrain.real.oes_rods import RealRodStress, RealRodStrain, ConrodStress, ConrodStrain, CtubeStress, CtubeStrain
-from pyNastran.op2.tables.oef_forces.oef_forceObjects import RealRodForce, RealConrodForce, RealCtubeForce
+from pyNastran.op2.tables.oes_stressStrain.real.oes_rods import (
+    RealRodStressArray, RealRodStrainArray,
+    ConrodStress, ConrodStrain,
+    CtubeStress, CtubeStrain)
+from pyNastran.op2.tables.oef_forces.oef_forceObjects import RealRodForceArray #, RealConrodForce, RealCtubeForce
 
 # shear
 from pyNastran.op2.tables.oes_stressStrain.real.oes_shear import RealShearStress, RealShearStrain
-from pyNastran.op2.tables.oef_forces.oef_forceObjects import RealCShearForce
+from pyNastran.op2.tables.oef_forces.oef_forceObjects import RealCShearForceArray
 
 # beams
 from pyNastran.op2.tables.oes_stressStrain.real.oes_beams import RealBeamStress, RealBeamStrain
-from pyNastran.op2.tables.oef_forces.oef_forceObjects import RealCBeamForce
+from pyNastran.op2.tables.oef_forces.oef_forceObjects import RealCBeamForceArray
 
 
 class Solver(F06, OP2):

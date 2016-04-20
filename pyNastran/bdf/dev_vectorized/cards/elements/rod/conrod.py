@@ -6,7 +6,7 @@ from numpy.linalg import norm
 
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
-from pyNastran.bdf.bdfInterface.assign_type import integer, double, double_or_blank
+from pyNastran.bdf.bdf_interface.assign_type import integer, double, double_or_blank
 
 from pyNastran.bdf.dev_vectorized.cards.elements.rod.rod_element import RodElement
 
@@ -157,12 +157,14 @@ class CONROD(RodElement):
         return A
 
     def get_E_by_element_id(self, element_id=None):
+        i = self.get_element_index_by_element_id(element_id, msg='')
         mat = self.model.materials.mat1.slice_by_material_id(self.material_id[i])
         E = mat.E()
         G = mat.G()
         return E
 
     def get_G_by_element_id(self, element_id=None):
+        i = self.get_element_index_by_element_id(element_id, msg='')
         mat = self.model.materials.mat1.slice_by_material_id(self.material_id[i])
         E = mat.E()
         G = mat.G()

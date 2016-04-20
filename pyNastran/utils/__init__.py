@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from six import PY2, string_types
+from six import PY2, string_types, iteritems
 from types import MethodType
 import os
 from numpy import ndarray, array, loadtxt, int32, int64
@@ -7,8 +7,28 @@ import io
 
 if PY2:
     integer_types = (int, long, int32, int64)
+    integer_float_types = (int, long, int32, int64, float)
 else:
     integer_types = (int, int32, int64)
+    integer_float_types = (int, int32, int64, float)
+
+def b(s):
+    return s.encode("latin-1")
+
+def merge_dicts(dict_list, strict=True):
+    """merges two or more dictionaries"""
+    assert isinstance(dict_list, list), type(dict_list)
+    dict_out = {}
+    for adict in dict_list:
+        assert isinstance(adict, dict), adict
+        for key, value in iteritems(adict):
+            if key not in dict_out:
+                dict_out[key] = value
+            elif strict:
+                raise RuntimeError('key=%r exists in multiple dictionaries' % key)
+            else:
+                print('key=%r is dropped?' % key)
+    return dict_out
 
 def loadtxt_nice(filename, delimiter=',', skiprows=0, comment='#', dtype=None):
     """

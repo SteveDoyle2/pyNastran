@@ -88,7 +88,6 @@ class Ansys(object):
                         raise NotImplementedError(fmt_line)
                     print(line)
                     asdf
-                pass
             else:
                 if line.startswith('/'):
                     print(line)

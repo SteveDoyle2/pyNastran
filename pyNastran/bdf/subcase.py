@@ -3,11 +3,12 @@
 Subcase creation/extraction class
 """
 from __future__ import print_function
-from six import string_types, iteritems, PY2
+from six import string_types, iteritems
 from numpy import ndarray
 
 from pyNastran.utils import integer_types
-from pyNastran.bdf.cards.base_card import collapse_thru_packs, deprecated
+from pyNastran.bdf.cards.base_card import deprecated
+from pyNastran.bdf.cards.collpase_card import collapse_thru_packs
 
 int_cards = (
     # these are cards that look like:
@@ -808,56 +809,56 @@ class Subcase(object):
         #print "msg = |%r|" %(msg)
         return msg
 
-    def cross_reference(self, model):
-        """
-        Method crossReference:
+    #def cross_reference(self, model):
+        #"""
+        #Method crossReference:
 
-        Parameters
-        ----------
-        model : BDF()
-            the BDF object
+        #Parameters
+        #----------
+        #model : BDF()
+            #the BDF object
 
-        .. note:: this is not integrated and probably never will be as it's
-          not really that necessary.  it's only really useful when running an
-          analysis.
-        """
-        raise NotImplementedError()
+        #.. note:: this is not integrated and probably never will be as it's
+          #not really that necessary.  it's only really useful when running an
+          #analysis.
+        #"""
+        #raise NotImplementedError()
         #print("keys = %s" % (sorted(self.params.keys())))
-        if 'LOAD' in self.params:
-            load_id = self.params['LOAD'][0]
-            load_obj = model.loads[load_id]
-            load_obj.cross_reference(model)
-        if 'SUPORT' in self.params:
-            pass
-        if 'MPC' in self.params:
-            #mpcID = self.params['MPC'][0]
-            #mpcObj = model.mpcs[mpcID]
-            #mpcObj.cross_reference(model)
-            pass
-        if 'SPC' in self.params:
-            #spcID = self.params['SPC'][0]
-            #print "SPC ID = ",spcID
-            #spcObj = model.spcObject
-            #spcObj.cross_reference(spcID, model)
-            pass
-        if 'TSTEPNL' in self.params:
-            tstepnl_id = self.params['TSTEPNL'][0]
-            tstepnl_obj = model.tstepnl[tstepnl_id]
-            tstepnl_obj.cross_reference(model)
-        if 'NLPARM' in self.params:
-            nlparm_id = self.params['NLPARM'][0]
-            nlparm_obj = model.nlparms[nlparm_id]
-            nlparm_obj.cross_reference(model)
-        if 'TRIM' in self.params:
-            trim_id = self.params['TRIM'][0]
-            trim_obj = model.trims[trim_id]
-            trim_obj.cross_reference(model)
-        if 'GUST' in self.params:
-            gust_id = self.params['GUST'][0]
-            gust_obj = model.gusts[gust_id]
-            gust_obj.cross_reference(model)
-        if 'DLOAD' in self.params:  # ???
-            pass
+        #if 'LOAD' in self.params:
+            #load_id = self.params['LOAD'][0]
+            #load_obj = model.loads[load_id]
+            #load_obj.cross_reference(model)
+        #if 'SUPORT' in self.params:
+            #pass
+        #if 'MPC' in self.params:
+            ##mpcID = self.params['MPC'][0]
+            ##mpcObj = model.mpcs[mpcID]
+            ##mpcObj.cross_reference(model)
+            #pass
+        #if 'SPC' in self.params:
+            ##spcID = self.params['SPC'][0]
+            ##print "SPC ID = ",spcID
+            ##spcObj = model.spcObject
+            ##spcObj.cross_reference(spcID, model)
+            #pass
+        #if 'TSTEPNL' in self.params:
+            #tstepnl_id = self.params['TSTEPNL'][0]
+            #tstepnl_obj = model.tstepnl[tstepnl_id]
+            #tstepnl_obj.cross_reference(model)
+        #if 'NLPARM' in self.params:
+            #nlparm_id = self.params['NLPARM'][0]
+            #nlparm_obj = model.nlparms[nlparm_id]
+            #nlparm_obj.cross_reference(model)
+        #if 'TRIM' in self.params:
+            #trim_id = self.params['TRIM'][0]
+            #trim_obj = model.trims[trim_id]
+            #trim_obj.cross_reference(model)
+        #if 'GUST' in self.params:
+            #gust_id = self.params['GUST'][0]
+            #gust_obj = model.gusts[gust_id]
+            #gust_obj.cross_reference(model)
+        #if 'DLOAD' in self.params:  # ???
+            #pass
 
     def finish_subcase(self):
         """
@@ -1166,18 +1167,21 @@ def expand_thru_case_control(set_value):
                     else:
                         raise RuntimeError(ivalue)
                 else:
-                    raise RuntimeError(ivalue)
+                    raise RuntimeError('expected data of the form: 10 THRU 20 or 10 THRU 20 BY 5; actual=\n%r' % ivalue)
             else:
                 assert add_mode is True, add_mode
                 set_value2.add(ivalue)
 
     list_values = list(set_value2)
-    list_values.sort()
+    try:
+        list_values.sort()
+    except TypeError:
+        msg = 'sort error: list_values=%s'  % (list_values)
+        raise TypeError(msg)
 
     #print('end of expansion', list_values)
     return list_values
 
-import operator
 
 def write_set(value, options, spaces=''):
     """

@@ -22,7 +22,7 @@ from numpy import zeros, array
 from pyNastran.utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import Material
-from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
+from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_blank,
     double, double_or_blank, string_or_blank, blank)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
@@ -779,8 +779,8 @@ class MAT3(OrthotropicMaterial):
         az = data[11]
         TRef = data[12]
         ge = data[13]
-        return MAT3(mid, ex, eth, ez, nuxth, nuthz, nuzx, rho, gzx, ax, ath,
-                    TRef, ge, comment=comment)
+        return MAT3(mid, ex, eth, ez, nuxth, nuthz, nuzx, rho, gzx,
+                    ax, ath, az, TRef, ge, comment=comment)
 
     def get_density(self):
         return self.rho
@@ -1013,7 +1013,7 @@ class MAT5(ThermalMaterial):  # also AnisotropicMaterial
         rho = double_or_blank(card, 9, 'rho', 1.0)
         hgen = double_or_blank(card, 10, 'hgen', 1.0)
         assert len(card) <= 11, 'len(MAT5 card) = %i' % len(card)
-        return MAT5(mid, kxx, kxz, kyy, kyz, kzz,
+        return MAT5(mid, kxx, kxy, kxz, kyy, kyz, kzz,
                     cp, rho, hgen, comment=comment)
 
     @classmethod

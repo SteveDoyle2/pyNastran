@@ -1,6 +1,6 @@
 from six.moves import zip
 from numpy import where, zeros, unique, dot, transpose, arange
-from pyNastran.bdf.bdfInterface.assign_type import double_or_blank, integer_or_blank, integer
+from pyNastran.bdf.bdf_interface.assign_type import double_or_blank, integer_or_blank, integer
 
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16

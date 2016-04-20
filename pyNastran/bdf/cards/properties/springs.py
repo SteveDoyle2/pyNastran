@@ -13,8 +13,8 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from pyNastran.utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import Property
-from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
-                                                    double, double_or_blank)
+from pyNastran.bdf.bdf_interface.assign_type import (
+    integer, integer_or_blank, double, double_or_blank)
 from pyNastran.bdf.field_writer_8 import print_card_8
 
 
@@ -57,7 +57,7 @@ class PELAS(SpringProperty):
 
     @classmethod
     def add_card(cls, card, icard=0, comment=''):
-        noffset = icard * 5
+        noffset = icard * 4
         pid = integer(card, 1 + noffset, 'pid')
         k = double(card, 2 + noffset, 'k')
         ge = double_or_blank(card, 3 + noffset, 'ge', 0.)

@@ -328,6 +328,8 @@ DMI         W2GJ       1       1 1.54685.1353939.1312423.0986108.0621382
         assert array_equal(w2gj.GCi, w2gj_new.GCi)
         assert array_equal(w2gj.GCj, w2gj_new.GCj)
         assert array_equal(w2gj.Real, w2gj_new.Real)
+        os.remove('dmi.bdf')
+        os.remove('dmi_out.bdf')
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

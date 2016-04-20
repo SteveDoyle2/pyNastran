@@ -1687,7 +1687,11 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
     def _load_csv(self, result_type, out_filename):
         out_filename_short = os.path.basename(out_filename)
-        A, nrows, ncols, fmts, headers = load_csv(out_filename)
+        A, fmt_dict, headers = load_csv(out_filename)
+        #nrows, ncols, fmts
+        header0 = headers[0]
+        result0 = A[header0]
+        nrows = result0.size
 
         if result_type == 'Nodal':
             assert nrows == self.nNodes, 'nrows=%s nnodes=%s' % (nrows, self.nNodes)
@@ -1702,14 +1706,15 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         formi = []
         form = self.get_form()
         icase = len(self.case_keys)
-        islot = self.case_keys[0][0]
-        for icol in range(ncols):
-            datai = A[:, icol]
-            #print('datai =', datai)
-            fmti = fmts[icol]
-            #print('fmti = %r' % fmti)
-            header = headers[icol].strip()
+        islot = 0
+        for case_key in self.case_keys:
+            if isinstance(case_key, tuple):
+                islot = case_key[0]
+                break
 
+        for header in headers:
+            datai = A[header]
+            fmti = fmt_dict[header]
             key = (islot, icase, header, 1, result_type2, fmti, '')
             self.case_keys.append(key)
             self.result_cases[key] = datai
@@ -1720,7 +1725,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             icase += 1
         form.append((out_filename_short, None, formi))
 
-        self.ncases += ncols
+        self.ncases += len(headers)
         #cases[(ID, 2, 'Region', 1, 'centroid', '%i')] = regions
         self.res_widget.update_results(form)
 
@@ -2012,12 +2017,15 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             qt_wildcard = '*.csv'
             title = 'Load User Points'
             csv_filename = self._create_load_file_dialog(qt_wildcard, title)[1]
+            if not csv_filename:
+                return
         if color is None:
             # we mod the num_user_points so we don't go outside the range
             icolor = self.num_user_points % len(self.color_order)
             color = self.color_order[icolor]
         if name is None:
-            name = os.path.basename(csv_filename).rsplit('.', 1)[0]
+            sline = os.path.basename(csv_filename).rsplit('.', 1)
+            name = sline[0]
 
         self._add_user_points(csv_filename, name, color)
         self.num_user_points += 1
@@ -3149,7 +3157,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         ]
         return camera_data
 
-    def set_camera_data(self, camera_data, show_log=True):
+    def on_set_camera_data(self, camera_data, show_log=True):
         """
         position : (float, float, float)
             where am I is xyz space
@@ -3926,10 +3934,15 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         if name in self.geometry_actors:
             msg = 'Name: %s is already in geometry_actors\nChoose a different name.' % name
             raise ValueError(msg)
+        if len(name) == 0:
+            msg = 'Invalid Name: name=%r' % name
+            raise ValueError(msg)
+
         # create grid
         self.create_alternate_vtk_grid(name, color=color, line_width=5, opacity=1.0,
                                        point_size=1, representation='point')
 
+        assert os.path.exists(points_filename), print_bad_path(points_filename)
         # read input file
         try:
             user_points = np.loadtxt(points_filename, delimiter=',')

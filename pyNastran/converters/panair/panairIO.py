@@ -29,7 +29,7 @@ class PanairIO(object):
         #key = self.case_keys[self.icase]
         #case = self.result_cases[key]
 
-        skip_reading = self.removeOldGeometry(panair_filename)
+        skip_reading = self._remove_old_geometry(panair_filename)
         if skip_reading:
             return
 

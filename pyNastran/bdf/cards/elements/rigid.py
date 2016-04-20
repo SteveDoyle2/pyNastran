@@ -12,15 +12,15 @@ All rigid elements are RigidElement and Element objects.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from itertools import count
 from six import string_types
 from six.moves import zip, range
-from itertools import count
 
 from pyNastran.utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8
 from pyNastran.bdf.cards.base_card import Element
-from pyNastran.bdf.bdfInterface.assign_type import (integer,
-    integer_or_double, integer_double_or_blank, integer_or_blank,
+from pyNastran.bdf.bdf_interface.assign_type import (
+    integer, integer_or_double, integer_double_or_blank, integer_or_blank,
     double_or_blank, integer_double_or_string, components, components_or_blank,
     blank, string)
 from pyNastran.bdf.field_writer_16 import print_card_16
@@ -381,11 +381,11 @@ class RBE1(RigidElement):  # maybe not done, needs testing
         self.alpha = alpha
 
     @classmethod
-    def add_card(self, card, comment=''):
+    def add_card(cls, card, comment=''):
         eid = integer(card, 1, 'eid')
-        iUm = card.index('UM')
-        if iUm > 0:
-            assert string(card, iUm, 'UM') == 'UM'
+        ium = card.index('UM')
+        if ium > 0:
+            assert string(card, ium, 'UM') == 'UM'
 
         #assert isinstance(card[-1], string_types), 'card[-1]=%r type=%s' %(card[-1], type(card[-1]))
         alpha_last = integer_double_or_string(card, -1, 'alpha_last')
@@ -403,7 +403,7 @@ class RBE1(RigidElement):  # maybe not done, needs testing
         Cni = []
         Gmi = []
         Cmi = []
-        while offset + i < iUm - 1:
+        while offset + i < ium - 1:
             #print('field(%s) = %s' % (offset + i, card.field(offset + i)))
             gni = integer_or_blank(card, offset + i, 'gn%i' % n)
             cni = components_or_blank(card, offset + i + 1, 'cn%i' % n)
@@ -419,7 +419,7 @@ class RBE1(RigidElement):  # maybe not done, needs testing
 
         # loop till alpha, no field9,field10
         n = 1
-        offset = iUm + 1
+        offset = ium + 1
         i = 0
 
         # dont grab alpha
@@ -533,7 +533,7 @@ class RBE2(RigidElement):
         value : int/float/str
             the value for the appropriate field
         """
-        if n > 3 and n <= 3 + len(self.Gmi):
+        if 3 < n <= 3 + len(self.Gmi):
             self.Gmi[n - 4] = value
         elif n == 4 + len(self.Gmi):
             self.alpha = value
@@ -541,7 +541,7 @@ class RBE2(RigidElement):
             raise KeyError('Field %r is an invalid %s entry.' % (n, self.type))
         return value
 
-    def __init__(self, eid, gn, cm, Gmi, alpha, comment=''):
+    def __init__(self, eid, gn, cm, Gmi, alpha=0.0, comment=''):
         """
         +-------+-----+-----+-----+------+-------+-----+-----+-----+
         |   1   |  2  |  3  |  4  |  5   |   6   |  7  |  8  |  9  |
@@ -613,6 +613,7 @@ class RBE2(RigidElement):
         assert self.cm is not None, 'cm=%s' % self.cm
         self.gn = self.gn
         self.cm = str(self.cm)
+        assert isinstance(self.alpha, float),  'alpha=%r type=%s' % (self.alpha, type(self.alpha))
 
     def convert_to_MPC(self, mpc_id):
         """
@@ -621,6 +622,8 @@ class RBE2(RigidElement):
         where :math:`u_i` are the base DOFs (max=6)
 
          +------+------+----+----+-----+----+----+----+
+         |   1  |   2  | 3  | 4  |  5  | 6  | 7  | 8  |
+         +======+======+====+====+=====+====+====+====+
          | MPC  | sid  | g1 | c1 | a1  | g2 | c2 | a2 |
          +------+------+----+----+-----+----+----+----+
          | RBE2 | eid  | gn | cm | g1  | g2 | g3 | g4 |
@@ -746,16 +749,32 @@ class RBE3(RigidElement):
     """
     type = 'RBE3'
 
-    def __init__(self, eid, refgrid, refc, Gmi, Cmi,
-                 weights, comps, Gijs, alpha, comment=''):
+    def __init__(self, eid, refgrid, refc, weights, comps, Gijs,
+                 Gmi=None, Cmi=None, alpha=0.0, comment=''):
         """
         eid
-        refgrid
-        refc
-        WtCG_groups = [wt, ci, Gij]
-        Gmi
-        Cmi
+        refgrid - dependent
+        refc - independent
+        GiJs - independent
+        Gmi - dependent
+        Cmi - dependent
         alpha
+
+        +------+---------+---------+---------+------+--------+--------+------+--------+
+        |   1  |    2    |    3    |    4    |  5   |    6   |    7   |   8  |    9   |
+        +======+=========+=========+=========+======+========+========+======+========+
+        | RBE3 |   EID   |         | REFGRID | REFC |  WT1   |   C1   | G1,1 |  G1,2  |
+        +------+---------+---------+---------+------+--------+--------+------+--------+
+        |      |   G1,3  |   WT2   |   C2    | G2,1 |  G2,2  | -etc.- | WT3  |   C3   |
+        +------+---------+---------+---------+------+--------+--------+------+--------+
+        |      |   G3,1  |   G3,2  | -etc.-  | WT4  |  C4    |  G4,1  | G4,2 | -etc.- |
+        +------+---------+---------+---------+------+--------+--------+------+--------+
+        |      |   'UM'  |   GM1   |   CM1   | GM2  |  CM2   |  GM3   | CM3  |        |
+        +------+---------+---------+---------+------+--------+--------+------+--------+
+        |      |   GM4   |   CM4   |   GM5   | CM5  | -etc.- |        |      |        |
+        +------+---------+---------+---------+------+--------+--------+------+--------+
+        |      | 'ALPHA' |   ALPHA |         |      |        |        |      |        |
+        +------+---------+---------+---------+------+--------+--------+------+--------+
         """
         RigidElement.__init__(self)
         if comment:
@@ -764,13 +783,30 @@ class RBE3(RigidElement):
         self.refgrid = refgrid
         self.refc = refc
 
-        self.Gmi = Gmi
-        self.Cmi = Cmi
-
         #self.WtCG_groups = []
+        if not len(weights) == len(comps) and len(weights) == len(Gijs):
+            msg = 'len(weights)=%s len(comps)=%s len(Gijs)=%s' % (
+                len(weights), len(comps), len(Gijs))
+            raise RuntimeError(msg)
+
         self.weights = weights
         self.comps = comps
-        self.Gijs = Gijs
+        # allow for Gijs as a list or list of lists
+        if isinstance(Gijs[0], integer_types):
+            Gijs2 = []
+            for Gij in Gijs:
+                assert isinstance(Gij, integer_types), 'Gij=%s type=%s' % (Gij, type(Gij))
+                Gijs2.append([Gij])
+            self.Gijs = Gijs2
+        else:
+            # default
+            self.Gijs = Gijs
+
+        if not len(Gmi) == len(Cmi):
+            msg = 'len(Gmi)=%s len(Cmi)=%s' % (len(Gmi), len(Cmi))
+            raise RuntimeError(msg)
+        self.Gmi = Gmi
+        self.Cmi = Cmi
 
         self.alpha = alpha
 
@@ -862,8 +898,8 @@ class RBE3(RigidElement):
         else:
             #: thermal expansion coefficient
             alpha = 0.0
-        return RBE3(eid, refgrid, refc, Gmi, Cmi,
-                    weights, comps, Gijs, alpha, comment=comment)
+        return RBE3(eid, refgrid, refc, weights, comps, Gijs,
+                    Gmi=Gmi, Cmi=Cmi, alpha=alpha, comment=comment)
 
     @property
     def WtCG_groups(self):
@@ -932,10 +968,10 @@ class RBE3(RigidElement):
         self.refgrid = self.ref_grid_id
 
         Gij = []
-        for i, Gij in enumerate(self.Gijs):
+        for Gij in self.Gijs:
             gij = []
             for giji in Gij:
-                gij.append(Giji.nid)
+                gij.append(giji.nid)
             Gij.append(gij)
         self.Gijs = Gij
         del self.Gmi_ref, self.refgrid_ref, self.Gijs_ref

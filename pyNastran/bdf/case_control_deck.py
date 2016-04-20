@@ -82,7 +82,7 @@ class CaseControlDeck(object):
             'NLSTATICS' : 400,
             'LNSTATICS' : 400,
             'MTRAN' : 112,
-            'DCEIG' : None,
+            'DCEIG' : 107,
         }
         # 'HEAT', 'ANALYSIS', 'MFREQ', 'STATICS', 'MODES', 'DFREQ',
         # 'MTRAN', 'BUCK', 'MCEIG', 'DCEIG', 'SAERO', 'NLSTATIC', 'NLSTAT',
@@ -90,6 +90,7 @@ class CaseControlDeck(object):
         #self.debug = True
 
         #: stores a single copy of 'BEGIN BULK' or 'BEGIN SUPER'
+        self.reject_lines = []
         self.begin_bulk = ['BEGIN', 'BULK']
 
         # allows BEGIN BULK to be turned off
@@ -114,7 +115,7 @@ class CaseControlDeck(object):
 
         .. warning:: most case control types are not supported
         """
-        for isubcase, subcase in iteritems(model.subcases):
+        for isubcase, subcase in iteritems(self.subcases):
             # if isubcase == 0:
                 # continue
             subcase.suppress_output()
@@ -435,6 +436,7 @@ class CaseControlDeck(object):
         line_upper = line.upper()
 
         #print("line_upper = %r" % line)
+        #print('  equals_count = %s' % equals_count)
         if line_upper.startswith('SUBCASE'):
             #print("line = %r" % line)
             line2 = line.replace('=', '')
@@ -522,8 +524,11 @@ class CaseControlDeck(object):
 
                 # handle TEMPERATURE(INITIAL) and TEMPERATURE(LOAD) cards
                 if key in ['TEMPERATURE', 'TEMP']:
-                    key = 'TEMPERATURE(%s)' % (options[0])
-                    options = []
+                    option = options[0]
+                    if option == '':
+                        option = 'BOTH'
+                    key = 'TEMPERATURE'
+                    options = [option]
                 #print("key=%r options=%s" %(key,options))
 
             #elif ' ' in key and ',' in value:  # SET-type
@@ -559,18 +564,37 @@ class CaseControlDeck(object):
                 pass
             else:  # STRESS-type; TITLE = stuff
                 #print('B ??? line = ',line)
-                pass
+                if key in ['TEMPERATURE', 'TEMP']:
+                    assert len(options) == 0, options
+                    key = 'TEMPERATURE'
+                    options = ['BOTH']
 
             key = update_param_name(key.strip().upper())
             verify_card(key, value, options, line)
             assert key.upper() == key, key
-        elif equals_count > 2:
+        elif equals_count > 2 and '(' in line and 'FLSPOUT' not in line:
             #GROUNDCHECK(PRINT,SET=(G,N,N+AUTOSPC,F,A),DATAREC=NO)=YES
             #print('****', lines)
             assert len(lines) == 1, lines
             line = lines[0]
-            key, value_options = line.split('(', 1)
-            options_paren, value = value_options.rsplit('=', 1)
+            try:
+                key, value_options = line.split('(', 1)
+            except ValueError:
+                msg = 'Expected a "(", but did not find one.\n'
+                msg += 'Looking for something of the form:\n'
+                msg += '   GROUNDCHECK(PRINT,SET=(G,N,N+AUTOSPC,F,A),DATAREC=NO)=YES\n'
+                msg += '%r' % line
+                raise ValueError(msg)
+
+            try:
+                options_paren, value = value_options.rsplit('=', 1)
+            except ValueError:
+                msg = 'Expected a "=", but did not find one.\n'
+                msg += 'Looking for something of the form:\n'
+                msg += '   GROUNDCHECK(PRINT,SET=(G,N,N+AUTOSPC,F,A),DATAREC=NO)=YES\n'
+                msg += 'value_options=%r\n' % value_options
+                msg += '%r' % line
+                raise ValueError(msg)
             options_paren = options_paren.strip()
 
             value = value.strip()
@@ -617,6 +641,7 @@ class CaseControlDeck(object):
             else:
                 options = str_options.split(',')
             param_type = 'STRESS-type'
+            key = key.upper()
             #print('options =', options)
             #asdf
         elif line_upper.startswith('BEGIN'):  # begin bulk
@@ -649,7 +674,7 @@ class CaseControlDeck(object):
             param_type = 'KEY-type'
             assert key.upper() == key, key
         i += 1
-        assert key.upper() == key, key
+        assert key.upper() == key, 'key=%s param_type=%s' % (key, param_type)
 
         return (i, key, value, options, param_type)
 
@@ -673,7 +698,8 @@ class CaseControlDeck(object):
         analysis = model.rsolmap_toStr[model.sol]
         model.sol = 200
 
-        subcase.add_parameter_to_global_subcase('ANALYSIS', analysis)
+        subcase0 = self.subcases[0]
+        subcase0.add_parameter_to_global_subcase('ANALYSIS', analysis)
         #subcase.add_parameter_to_global_subcase('DESSUB', dessub)
 
     def _add_parameter_to_subcase(self, key, value, options, param_type, isubcase):
@@ -738,14 +764,14 @@ class CaseControlDeck(object):
     def __repr__(self):
         msg = ''
         subcase0 = self.subcases[0]
-        for subcase in itervalues(self.subcases):
-            #print('writing subcase...')
+        for subcase_id, subcase in sorted(iteritems(self.subcases)):
             msg += subcase.write_subcase(subcase0)
         #if len(self.subcases) == 1:
             #msg += 'BEGIN BULK\n'
 
         if self.output_lines:
             msg += '\n'.join(self.output_lines) + '\n'
+        msg += '\n'.join(self.reject_lines)
         if self.write_begin_bulk:
             msg += ' '.join(self.begin_bulk) + '\n'
         return msg
@@ -789,6 +815,35 @@ def verify_card2(key, value, options, line):
 
     # these may only be integers
     #print("key =", key)
+
+    pass_headers = [
+        'SUBTITLE', 'TITLE',
+        'A2GG', 'M2GG', 'K2GG',
+        'K2PP', 'M2PP',
+        'K42GG',
+
+        'XMIN', 'XMAX', 'XTITLE', 'XPAPE', 'XPAPER', 'XAXIS', 'XGRID', 'XGRID LINES', 'XLOG',
+        'YMIN', 'YMAX', 'YTITLE', 'YPAPE', 'YPAPER', 'YAXIS', 'YGRID', 'YGRID LINES', 'YLOG',
+        'XTMIN', 'XTMAX', 'XTGRID', 'XTTITLE', 'XTAXIS', 'XTGRID LINES', 'XTLOG',
+        'YTMIN', 'YTMAX', 'YTGRID', 'YTTITLE', 'YTAXIS', 'YTGRID LINES', 'YTLOG',
+        'XBMIN', 'XBMAX', 'XBGRID', 'XBAXIS', 'XBGRID LINES', 'XBTITLE', 'XBLOG',
+        'YBMIN', 'YBMAX', 'YBGRID', 'YBAXIS', 'YBGRID LINES', 'YBTITLE', 'YBLOG',
+
+        'RIGHT TICS', 'UPPER TICS',
+        'TRIGHT TICS',
+        'BRIGHT TICS',
+
+        'PLOTTER', 'XYPLOT',
+
+        'PTITLE',
+        'HOUTPUT', 'PLOTID', '', '', '', '', '',
+        'AXISYMMETRIC', 'CURVELINESYMBOL', 'CURVELINESYMB', 'AECONFIG',
+        'B2GG', 'B2PP', 'AESYMXZ', 'TEMP', 'DSAPRT', 'MEFFMASS',
+        'MAXMIN', 'RESVEC', 'MODESELECT', 'RIGID', 'TCURVE',
+        'SUPER', 'MAXI DEFO', 'P2G',
+        'EXTSEOUT', 'FLSTCNT PREFDB', 'AESYMXY',
+        'DSYM', '', '', ''
+    ]
     if key in ['BCONTACT', 'CURVELINESYMBOL']:
         try:
             value2 = int(value)
@@ -841,33 +896,7 @@ def verify_card2(key, value, options, line):
         pass
 
     # weird cards
-    elif key in [
-        'SUBTITLE', 'TITLE',
-        'A2GG', 'M2GG', 'K2GG',
-        'K2PP', 'M2PP',
-        'K42GG',
-
-        'XMIN', 'XMAX', 'XTITLE', 'XPAPE', 'XPAPER', 'XAXIS', 'XGRID', 'XGRID LINES', 'XLOG',
-        'YMIN', 'YMAX', 'YTITLE', 'YPAPE', 'YPAPER', 'YAXIS', 'YGRID', 'YGRID LINES', 'YLOG',
-        'XTMIN', 'XTMAX', 'XTGRID', 'XTTITLE', 'XTAXIS', 'XTGRID LINES', 'XTLOG',
-        'YTMIN', 'YTMAX', 'YTGRID', 'YTTITLE', 'YTAXIS', 'YTGRID LINES', 'YTLOG',
-        'XBMIN', 'XBMAX', 'XBGRID', 'XBAXIS', 'XBGRID LINES', 'XBTITLE', 'XBLOG',
-        'YBMIN', 'YBMAX', 'YBGRID', 'YBAXIS', 'YBGRID LINES', 'YBTITLE', 'YBLOG',
-
-        'RIGHT TICS', 'UPPER TICS',
-        'TRIGHT TICS',
-        'BRIGHT TICS',
-
-        'PLOTTER', 'XYPLOT',
-
-        'PTITLE',
-        'HOUTPUT', 'PLOTID', '', '', '', '', '',
-        'AXISYMMETRIC', 'CURVELINESYMBOL', 'CURVELINESYMB', 'AECONFIG',
-        'B2GG', 'B2PP', 'AESYMXZ', 'TEMP', 'DSAPRT', 'MEFFMASS',
-        'MAXMIN', 'RESVEC', 'MODESELECT', 'RIGID', 'TCURVE',
-        'SUPER', 'MAXI DEFO', 'P2G',
-        'EXTSEOUT', 'FLSTCNT PREFDB', 'AESYMXY',
-        'DSYM', '', '', '']:
+    elif key in pass_headers:
         pass
     elif key == 'ANALYSIS':
         assert value in ['HEAT', 'ANALYSIS', 'MFREQ', 'STATICS', 'MODES', 'DFREQ',

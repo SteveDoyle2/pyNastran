@@ -1133,7 +1133,6 @@ class F06(OES, OEF, OUG, OQG, LAMA, MAX_MIN, F06Writer):
                     # markers have multiple words in "stupid" format ('CAT' -> 'C A T'),
                     # so spaced tables 'CAT DOG' -> 'C A T  D O G')
                     print("marker = %r" % marker)
-                pass
                 #print('Title  = %r' % self.subtitle)
 
             if marker in self.markers:

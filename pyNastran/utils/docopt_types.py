@@ -65,7 +65,7 @@ def docopt_types(doc, argv=None, help=True, version=None, options_first=False, t
       at https://github.com/docopt/docopt#readme
 
     """
-    data = docopt(doc, argv=None, help=True, version=None, options_first=False)
+    data = docopt(doc, argv=argv, help=help, version=version, options_first=options_first)
     if type_defaults:
         data2 = data
         for key, (type_func, default) in sorted(type_defaults.items()):
