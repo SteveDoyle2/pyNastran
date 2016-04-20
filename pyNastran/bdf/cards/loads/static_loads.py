@@ -1049,8 +1049,7 @@ class FORCE1(Force):
         return self.node_ref.nid
 
     def raw_fields(self):
-        (node, g1, g2) = self._nodeIDs([self.node, self.g1, self.g2])
-        list_fields = ['FORCE1', self.sid, node, self.mag, g1, g2]
+        list_fields = ['FORCE1', self.sid, self.node_id, self.mag, self.G1(), self.G2()]
         return list_fields
 
     def repr_fields(self):
@@ -1464,7 +1463,8 @@ class MOMENT1(Moment):
         """all the nodes referenced by the load"""
         return [self.node_id, self.G1(), self.G2()]
 
-    def get_node_id(self):
+    @property
+    def node_id(self):
         if isinstance(self.node, integer_types):
             return self.node
         return self.node_ref.nid
@@ -1480,10 +1480,7 @@ class MOMENT1(Moment):
         return self.g2_ref.nid
 
     def raw_fields(self):
-        node = self.get_node_id()
-        g1 = self.G1()
-        g2 = self.G2()
-        list_fields = ['MOMENT1', self.sid, node, self.mag, g1, g2]
+        list_fields = ['MOMENT1', self.sid, self.node_id, self.mag, self.G1(), self.G2()]
         return list_fields
 
     def repr_fields(self):
