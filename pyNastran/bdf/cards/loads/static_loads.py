@@ -1324,6 +1324,11 @@ class MOMENT(Moment):
         del self.node_ref, self.cid_ref
 
     @property
+    def node_ids(self):
+        """all the nodes referenced by the load"""
+        return [self.node_id]
+
+    @property
     def node_id(self):
         if isinstance(self.node, integer_types):
             return self.node
@@ -1456,6 +1461,7 @@ class MOMENT1(Moment):
 
     @property
     def node_ids(self):
+        """all the nodes referenced by the load"""
         return [self.node_id, self.G1(), self.G2()]
 
     def get_node_id(self):
@@ -1629,11 +1635,15 @@ class MOMENT2(Moment):
             return self.g4
         return self.g4_ref.nid
 
+    @property
+    def node_ids(self):
+        """all the nodes referenced by the load"""
+        return [self.NodeID(), self.G1(), self.G2(), self.G3(), self.G4()]
+
     def raw_fields(self):
-        nids = [self.node, self.g1, self.g2, self.g3, self.g4]
-        (node, g1, g2, g3, g4) = self._nodeIDs(nodes=nids)
-        assert isinstance(g1, integer_types), g1
-        list_fields = ['MOMENT2', self.sid, node, self.mag, g1, g2, g3, g4]
+        list_fields = [
+            'MOMENT2', self.sid, self.NodeID(), self.mag,
+            self.G1(), self.G2(), self.G3(), self.G4()]
         return list_fields
 
     def repr_fields(self):
@@ -1715,6 +1725,11 @@ class GMLOAD(Load):
     def uncross_reference(self):
         self.cid = self.Cid()
         del self.cid_ref
+
+    def Cid(self):
+        if isinstance(self.cid, integer_types):
+            return self.cid
+        return self.cid_ref.cid
 
     #def G1(self):
         #if isinstance(self.g1, (integer_types, float)):

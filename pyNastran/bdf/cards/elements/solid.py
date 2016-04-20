@@ -153,10 +153,10 @@ class SolidElement(Element):
         Returns the density
         """
         try:
-            return self.pid_ref.mid_ref.rho
+            return self.pid_ref.Rho()
         except AttributeError:
             print("self.pid = %s" % (self.pid))
-            print("self.pid_ref.mid_ref = %s" % (str(self.pid_ref.mid_ref)))
+            #print("self.pid_ref.mid_ref = %s" % (str(self.pid_ref.mid_ref)))
             raise
 
     def _is_same_card(self, elem, debug=False):
