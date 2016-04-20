@@ -30,6 +30,7 @@ from pyNastran.bdf.cards.utils import wipe_empty_fields
 from pyNastran.utils import _filename
 from pyNastran.utils.log import get_logger2
 
+from pyNastran.bdf.write_path import write_include
 from pyNastran.bdf.bdf_interface.assign_type import (integer,
                                                      integer_or_string, string)
 
@@ -178,7 +179,7 @@ def read_bdf(bdf_filename=None,
     .. todo:: finish this
     """
     model = BDF(log=log, debug=debug, mode=mode)
-    model.read_bdf(bdf_filename=bdf_filename, xref=xref, punch=punch, encoding=encoding)
+    model.read_bdf(bdf_filename=bdf_filename, xref=xref, punch=punch, read_includes=False, encoding=encoding)
 
     #if 0:
         ### TODO: remove all the extra methods
@@ -259,6 +260,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         """
         assert debug in [True, False, None], 'debug=%r' % debug
         self.echo = False
+        self.read_includes = True
 
         # file management parameters
         self.active_filenames = []
@@ -669,7 +671,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         self._stop_on_xref_error = stop_on_xref_error
 
     def read_bdf(self, bdf_filename=None,
-                 xref=True, punch=False, encoding=None):
+                 xref=True, punch=False, read_includes=True, encoding=None):
         """
         Read method for the bdf files
 
@@ -681,6 +683,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             should the bdf be cross referenced (default=True)
         punch : bool
             indicates whether the file is a punch file (default=False)
+        read_includes : bool
+            indicates whether INCLUDE files should be read (default=True)
         encoding : str
             the unicode encoding (default=None; system default)
 
@@ -700,7 +704,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             bdf.elements = 10
             etc.
         """
-        self._read_bdf_helper(bdf_filename, encoding, punch)
+        self._read_bdf_helper(bdf_filename, encoding, punch, read_includes)
 
 
         if bdf_filename.lower().endswith('.pch'):  # .. todo:: should this be removed???
@@ -746,7 +750,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         self.log.debug('---finished BDF.read_bdf of %s---' % self.bdf_filename)
         self.pop_xref_errors()
 
-    def _read_bdf_helper(self, bdf_filename, encoding, punch):
+    def _read_bdf_helper(self, bdf_filename, encoding, punch, read_includes):
         """creates the file loading if bdf_filename is None"""
         #self.set_error_storage(nparse_errors=None, stop_on_parsing_error=True,
         #                       nxref_errors=None, stop_on_xref_error=True)
@@ -771,6 +775,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         self.bdf_filename = bdf_filename
 
         self.punch = punch
+        self.read_includes = read_includes
+        self.active_filenames = []
 
     def fill_dmigs(self):
         """fills the DMIx cards with the column data that's been stored"""
@@ -2487,35 +2493,39 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                     #include_lines = [line] + lines[i+1:j]
                 #print(include_lines)
                 bdf_filename2 = get_include_filename(include_lines, include_dir=self.include_dir)
+                if self.read_includes:
+                    try:
+                        self._open_file_checks(bdf_filename2)
+                    except IOError:
+                        crash_name = 'pyNastran_crash.bdf'
+                        self._dump_file(crash_name, lines, j)
+                        msg = 'There was an invalid filename found while parsing.\n'
+                        msg += 'Check the end of %r\n' % crash_name
+                        msg += 'bdf_filename2 = %r' % bdf_filename2
+                        #msg += 'len(bdf_filename2) = %s' % len(bdf_filename2)
+                        raise IOError(msg)
 
-                try:
-                    self._open_file_checks(bdf_filename2)
-                except IOError:
-                    crash_name = 'pyNastran_crash.bdf'
-                    self._dump_file(crash_name, lines, j)
-                    msg = 'There was an invalid filename found while parsing.\n'
-                    msg += 'Check the end of %r\n' % crash_name
-                    msg += 'bdf_filename2 = %r' % bdf_filename2
-                    #msg += 'len(bdf_filename2) = %s' % len(bdf_filename2)
-                    raise IOError(msg)
+                    with self._open_file(bdf_filename2, basename=False) as bdf_file:
+                        #print('bdf_file.name = %s' % bdf_file.name)
+                        lines2 = bdf_file.readlines()
 
-                with self._open_file(bdf_filename2, basename=False) as bdf_file:
-                    #print('bdf_file.name = %s' % bdf_file.name)
-                    lines2 = bdf_file.readlines()
+                    #print('lines2 = %s' % lines2)
+                    nlines += len(lines2)
 
-                #print('lines2 = %s' % lines2)
-                nlines += len(lines2)
+                    #line2 = lines[j].split('$')
+                    #if not line2[0].isalpha():
+                        #print('** %s' % line2)
 
-                #line2 = lines[j].split('$')
-                #if not line2[0].isalpha():
-                    #print('** %s' % line2)
-
-                include_comment = '\n$ INCLUDE processed:  %s\n' % bdf_filename2
-                #for line in lines2:
-                    #print("  ?%s" % line.rstrip())
-                lines = lines[:i] + [include_comment] + lines2 + lines[j:]
-                #for line in lines:
-                    #print("  *%s" % line.rstrip())
+                    include_comment = '\n$ INCLUDE processed:  %s\n' % bdf_filename2
+                    #for line in lines2:
+                        #print("  ?%s" % line.rstrip())
+                    lines = lines[:i] + [include_comment] + lines2 + lines[j:]
+                    #for line in lines:
+                        #print("  *%s" % line.rstrip())
+                else:
+                    lines = lines[:i] + lines[j:]
+                    self.reject_lines.append(include_lines)
+                    #self.reject_lines.append(write_include(bdf_filename2))
             i += 1
 
         if self.dumplines:

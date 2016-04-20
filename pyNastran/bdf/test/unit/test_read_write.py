@@ -343,6 +343,25 @@ class TestReadWrite(unittest.TestCase):
             lines = f.readlines()
             compare_lines(self, lines, lines_expected, has_endline=False)
 
+
+    def test_include_stop(self):
+        with codec_open('a.bdf', 'w') as f:
+            f.write('CEND\n')
+            f.write('BEGIN BULK\n')
+            f.write("INCLUDE 'b.bdf'\n\n")
+            f.write('GRID,1,,1.0\n')
+        model = BDF()
+        with self.assertRaises(IOError):
+            model.read_bdf(bdf_filename='a.bdf', xref=True, punch=False,
+                           read_includes=True,
+                           encoding=None)
+        model.read_bdf(bdf_filename='a.bdf', xref=True, punch=False,
+                       read_includes=False,
+                       encoding=None)
+        model.write_bdf('out.bdf')
+        os.remove('a.bdf')
+        os.remove('out.bdf')
+
     def test_read_bad_01(self):
         model = BDF(debug=False)
         model.active_filenames = ['fake.file']
