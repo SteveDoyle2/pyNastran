@@ -11,7 +11,7 @@ from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import Element
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, integer_double_or_blank, double_or_blank,
-    string_or_blank)
+    integer_string_or_blank, string_or_blank)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 
@@ -291,7 +291,7 @@ class CBAR(LineElement):
         x, g0 = cls._init_x_g0(card, eid)
 
         # doesn't exist in NX nastran
-        offt = string_or_blank(card, 8, 'offt', 'GGG')
+        offt = integer_string_or_blank(card, 8, 'offt', 'GGG')
         #print('cls.offt = %r' % (cls.offt))
 
         pa = integer_or_blank(card, 9, 'pa', 0)
@@ -783,6 +783,47 @@ class CBEND(LineElement):
         #if comment:
             #self._comment = comment
         #raise NotImplementedError(data)
+
+    def Length(self):
+        # TODO: consider w1a and w1b in the length formulation
+        L = norm(self.gb_ref.get_position() - self.ga_ref.get_position())
+        assert isinstance(L, float)
+        return L
+
+        #prop = self.pid_ref
+        #bend_radius = prop.rb
+        #theta_bend = prop.thetab
+        #length_oa = None
+        if self.geom == 1:
+            #The center of curvature lies on the line AO
+            #(or its extension) or vector .
+            pass
+        elif self.geom == 2:
+            # The tangent of centroid arc at end A is
+            # parallel to line AO or vector . Point O (or
+            # vector) and the arc must be on the
+            # same side of the chord .
+            pass
+        elif self.geom == 3:
+            # The bend radius (RB) is specified on the
+            # PBEND entry: Points A, B, and O (or
+            # vector ) define a plane parallel or
+            # coincident with the plane of the element
+            # arc. Point O (or vector ) lies on the
+            # opposite side of line AB from the center of
+            # the curvature.
+            pass
+        elif self.geom == 4:
+            # THETAB is specified on the PBEND entry.
+            # Points A, B, and O (or vector ) define a
+            # plane parallel or coincident with the plane
+            # of the element arc. Point O (or vector )
+            # lies on the opposite side of line AB from the
+            # center of curvature.
+            pass
+        else:
+            raise RuntimeError('geom=%r is not supported on the CBEND' % geom)
+        return L
 
     def _validate_input(self):
         if self.g0 in [self.ga, self.gb]:

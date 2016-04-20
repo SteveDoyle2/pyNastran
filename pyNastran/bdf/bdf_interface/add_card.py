@@ -441,6 +441,10 @@ class AddMethods(BDFAttributes):
             self.spcs[key] = [constraint]
             self._type_to_id_map[constraint.type].append(key)
 
+    def add_sesuport(self, se_suport):
+        self._type_to_id_map[suport.type].append(len(self.suport))
+        self.se_suport.append(se_suport)
+
     def add_suport(self, suport):
         self._type_to_id_map[suport.type].append(len(self.suport))
         self.suport.append(suport)

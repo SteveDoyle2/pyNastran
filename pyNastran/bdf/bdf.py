@@ -14,7 +14,7 @@ import traceback
 from codecs import open as codec_open
 from collections import defaultdict
 
-from six import string_types, iteritems, itervalues, iterkeys, PY2
+from six import string_types, iteritems, itervalues, iterkeys
 from six.moves.cPickle import load, dump
 
 import numpy as np
@@ -41,8 +41,7 @@ from pyNastran.bdf.cards.properties.properties import (PFAST, PGAP, PLSOLID, PSO
 from pyNastran.bdf.cards.elements.springs import (CELAS1, CELAS2, CELAS3, CELAS4,)
 from pyNastran.bdf.cards.properties.springs import PELAS, PELAST
 
-from pyNastran.bdf.cards.elements.solid import (CTETRA, CPYRAM, CPENTA, CPENTA,
-                                                CHEXA, CIHEX1)
+from pyNastran.bdf.cards.elements.solid import (CTETRA, CPYRAM, CPENTA, CHEXA, CIHEX1)
 from pyNastran.bdf.cards.elements.rigid import RBAR, RBAR1, RBE1, RBE2, RBE3, RROD
 
 from pyNastran.bdf.cards.elements.shell import (CQUAD, CQUAD4, CQUAD8, CQUADR, CQUADX,
@@ -1448,6 +1447,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'SPCADD' : (SPCADD, self.add_constraint_SPC),
             'GMSPC' : (GMSPC, self.add_constraint_SPC),
 
+            'SESUP' : (SESUP, self.add_sesuport), # pseudo-constraint
             'SUPORT' : (SUPORT, self.add_suport), # pseudo-constraint
             'SUPORT1' : (SUPORT1, self.add_suport1),  # pseudo-constraint
 
@@ -1661,6 +1661,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'PDAMP' : self._prepare_pdamp,
 
             'TEMPD' : self._prepare_tempd,
+            'CONVM' : self._prepare_convm,
             'CONV' : self._prepare_conv,
             'RADM' : self._prepare_radm,
             'RADBC' : self._prepare_radbc,
@@ -1685,6 +1686,11 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         if card_obj.field(5):
             self.add_damper(CDAMP4(card_obj, 1, comment=''))
         return card_obj
+
+    def _prepare_convm(self, card, card_obj, comment=''):
+        """adds a CONVM"""
+        boundary_condition = CONVM.add_card(card_obj, comment=comment)
+        self.add_thermal_BC(boundary_condition, boundary_condition.eid)
 
     def _prepare_conv(self, card, card_obj, comment=''):
         """adds a CONV"""
@@ -2102,10 +2108,11 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
         card_name = class_instance.type
         if card_name in self._card_parser:
-            card_class, add_card_function = self._card_parser[card_name]
+            add_card_function = self._card_parser[card_name][1]
             add_card_function(class_instance)
 
         elif card_name in self._card_parser_prepare:
+            # TODO: could be faster...
             comment = class_instance.comment
             class_instance.comment = ''
             card_lines = str(class_instance).split('\n')
