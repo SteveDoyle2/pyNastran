@@ -397,7 +397,7 @@ class BDFAttributes(object):
 
         # ------ SOL 144 ------
         #: stores AEROS
-        self.aeros = {}
+        self.aeros = None
 
         #: stores TRIM
         self.trims = {}
@@ -407,7 +407,7 @@ class BDFAttributes(object):
 
         # ------ SOL 145 ------
         #: stores AERO
-        self.aero = {}
+        self.aero = None
 
         #: stores FLFACT
         self.flfacts = {}  #: .. todo:: can this be simplified ???

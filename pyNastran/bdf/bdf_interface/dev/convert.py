@@ -255,21 +255,21 @@ def _convert_aero(model, xyz_scale, time_scale, weight_scale):
     velocity_scale = xyz_scale / time_scale
     pressure_scale = weight_scale / xyz_scale ** 2
     density_scale = weight_scale / xyz_scale ** 3
-    for aero in itervalues(model.aero):
+    if model.aero:
     #if hasattr(model, 'aero'):
         #aero = model.aero
-        print(aero.object_attributes())
-        aero.refc *= xyz_scale
-        aero.refb *= xyz_scale
-        aero.sref *= area_scale
-        aero.velocity *= velocity_scale
-        assert np.allclose(aero.density, 1.0), aero
-    for aeros in itervalues(model.aeros):
+        print(model.aero.object_attributes())
+        model.aero.refc *= xyz_scale
+        model.aero.refb *= xyz_scale
+        model.aero.sref *= area_scale
+        model.aero.velocity *= velocity_scale
+        assert np.allclose(model.aero.density, 1.0), model.aero
+    if model.aeros:
         #print(aeros)
         #print(aeros.object_attributes())
-        aeros.cref *= xyz_scale
-        aeros.bref *= xyz_scale
-        aeros.sref *= area_scale
+        model.aeros.cref *= xyz_scale
+        model.aeros.bref *= xyz_scale
+        model.aeros.sref *= area_scale
 
     for caero in itervalues(model.caeros):
         if caero.type in ['CAERO1']:
