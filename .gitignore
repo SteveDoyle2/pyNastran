@@ -12,7 +12,7 @@
 *.rar
 *.out
 *.log
-*.tar.gz
+*.tar.gz 
 *.zip
 *.csv
 

@@ -484,25 +484,25 @@ class BDFMethods(BDFAttributes):
             pass
         else:
             sym_axis = []
-            for key, aero in iteritems(self.aero):
-                if aero.is_symmetric_xy():
+            if self.aero is not None:
+                if self.aero.is_symmetric_xy():
                     sym_axis.append('xy')
-                if aero.is_symmetric_xz():
+                if self.aero.is_symmetric_xz():
                     sym_axis.append('xz')
-                if aero.is_anti_symmetric_xy():
+                if self.aero.is_anti_symmetric_xy():
                     raise NotImplementedError('%s is anti-symmetric about the XY plane' % str(aero))
-                if aero.is_anti_symmetric_xz():
+                if self.aero.is_anti_symmetric_xz():
                     raise NotImplementedError('%s is anti-symmetric about the XZ plane' % str(aero))
 
-            for key, aero in iteritems(self.aeros):
-                if aero.is_symmetric_xy():
+            if self.aeros is not None:
+                if self.aeros.is_symmetric_xy():
                     sym_axis.append('xy')
-                if aero.is_symmetric_xz():
+                if self.aeros.is_symmetric_xz():
                     sym_axis.append('xz')
-                if aero.is_anti_symmetric_xy():
-                    raise NotImplementedError('%s is anti-symmetric about the XY plane' % str(aero))
-                if aero.is_anti_symmetric_xz():
-                    raise NotImplementedError('%s is anti-symmetric about the XZ plane' % str(aero))
+                if self.aeros.is_anti_symmetric_xy():
+                    raise NotImplementedError('%s is anti-symmetric about the XY plane' % str(aeros))
+                if self.aeros.is_anti_symmetric_xz():
+                    raise NotImplementedError('%s is anti-symmetric about the XZ plane' % str(aeros))
 
         sym_axis = list(set(sym_axis))
         short_sym_axis = [sym_axisi.lower() for sym_axisi in sym_axis]

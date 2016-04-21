@@ -347,8 +347,8 @@ def compare_optimization_content(fem1, fem2):
 def compare_aero_content(fem1, fem2):
     assert len(fem1.caeros) == len(fem2.caeros)
     assert len(fem1.paeros) == len(fem2.paeros)
-    assert len(fem1.aero) == len(fem2.aero)
-    assert len(fem1.aeros) == len(fem2.aeros)
+    assert fem1.aero is None == fem2.aero is None
+    assert fem1.aeros is None == fem2.aeros is None
     assert len(fem1.aeparams) == len(fem2.aeparams)
     assert len(fem1.aelinks) == len(fem2.aelinks)
     assert len(fem1.aelists) == len(fem2.aelists)
@@ -371,14 +371,14 @@ def compare_aero_content(fem1, fem2):
         card2 = fem2.paeros[key]
         assert_fields(card1, card2)
 
-    for key in fem1.aero:
-        card1 = fem1.aero[key]
-        card2 = fem2.aero[key]
+    if fem1.aero is not None:
+        card1 = fem1.aero
+        card2 = fem2.aero
         assert_fields(card1, card2)
 
-    for key in fem1.aeros:
-        card1 = fem1.aeros[key]
-        card2 = fem2.aeros[key]
+    if fem1.aeros is not None:
+        card1 = fem1.aeros
+        card2 = fem2.aeros
         assert_fields(card1, card2)
 
     for key in fem1.aeparams:

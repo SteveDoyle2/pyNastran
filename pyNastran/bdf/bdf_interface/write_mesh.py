@@ -492,8 +492,7 @@ class WriteMesh(BDFAttributes):
         if self.aeros or self.trims or self.divergs:
             msg = ['$STATIC AERO\n']
             # static aero
-            for (unused_id, aeros) in sorted(iteritems(self.aeros)):
-                msg.append(aeros.write_card(size, is_double))
+            msg.append(self.aeros.write_card(size, is_double))
             for (unused_id, trim) in sorted(iteritems(self.trims)):
                 msg.append(trim.write_card(size, is_double))
             for (unused_id, diverg) in sorted(iteritems(self.divergs)):
@@ -520,8 +519,7 @@ class WriteMesh(BDFAttributes):
         if (write_aero_in_flutter and self.aero) or self.flfacts or self.flutters or self.mkaeros:
             msg = ['$FLUTTER\n']
             if write_aero_in_flutter:
-                for (unused_id, aero) in sorted(iteritems(self.aero)):
-                    msg.append(aero.write_card(size, is_double))
+                msg.append(self.aero.write_card(size, is_double))
             for (unused_id, flutter) in sorted(iteritems(self.flutters)):
                 msg.append(flutter.write_card(size, is_double))
             for (unused_id, flfact) in sorted(iteritems(self.flfacts)):

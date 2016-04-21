@@ -808,21 +808,37 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
             raise KeyError('aefact=%s not found%s.  Allowed AEFACT=%s'
                            % (aefact, msg, np.unique(list(self.aefacts.keys()))))
 
-    def Aero(self, acsid, msg=''):
-        """gets an AERO"""
-        try:
-            return self.aero[acsid]
-        except KeyError:
-            raise KeyError('acsid=%s not found%s.  Allowed AERO=%s'
-                           % (acsid, msg, np.unique(list(self.aero.keys()))))
+    def Acsid(self, msg=''):
+        """gets the aerodynamic system coordinate"""
+        if self.aero is not None:
+            acsid_aero = self.aero.Acsid()
+        if self.aeros is not None:
+            acsid_aeros = self.aeros.Acsid()
 
-    def Aeros(self, acsid, msg=''):
-        """gets an AEROS"""
-        try:
-            return self.aeros[acsid]
-        except KeyError:
-            raise KeyError('acsid=%s not found%s.  Allowed AEROS=%s'
-                           % (acsid, msg, np.unique(list(self.aeros.keys()))))
+        if self.aero is not None:
+            if self.aeros is not None:
+                assert acsid_aero == acsid_aeros, 'AERO acsid=%s, AEROS acsid=%s' % (acsid_aero,
+                                                                                     acsid_aeros)
+            return self.coords[acsid_aero]
+        elif self.aeros is not None:
+            return self.coords[acsid_aeros]
+        else:
+            msg = 'neither AERO nor AEROS cards exist.'
+            raise RuntimeError(msg)
+
+    def Aero(self, msg=''):
+        """gets the AERO"""
+        if self.aero is not None:
+            return self.aero
+        else:
+            raise RuntimeError('no AERO card found%s.' % (msg))
+
+    def Aeros(self, msg=''):
+        """gets the AEROS"""
+        if self.aeros is not None:
+            return self.aeros
+        else:
+            raise RuntimeError('no AEROS card found%s.' % (msg))
 
     def Spline(self, eid, msg=''):
         """gets a SPLINEx"""

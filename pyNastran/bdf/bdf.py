@@ -2181,7 +2181,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'methods', 'cMethods',
 
             # aero
-            'caeros', 'paeros', 'aero', 'aeros', 'aecomps', 'aefacts', 'aelinks',
+            'caeros', 'paeros', 'aecomps', 'aefacts', 'aelinks',
             'aelists', 'aeparams', 'aesurfs', 'aestats', 'gusts', 'flfacts',
             'flutters', 'splines', 'trims',
 
@@ -2259,6 +2259,16 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             for name, count_name in sorted(iteritems(groups_dict)):
                 msg.append('  %-8s %s' % (name + ':', count_name))
             msg.append('')
+
+        # aero
+        if self.aero:
+            msg.append('bdf:aero')
+            msg.append('  %-8s %s' % ('AERO:', 1))
+
+        # aeros
+        if self.aeros:
+            msg.append('bdf:aeros')
+            msg.append('  %-8s %s' % ('AEROS:', 1))
 
         #mkaeros
         if self.mkaeros:
