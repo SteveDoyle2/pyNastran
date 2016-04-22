@@ -2,16 +2,20 @@
 """
 Main BDF class.  Defines:
   - BDF
+
+see https://docs.plm.automation.siemens.com/tdoc/nxnastran/10/help/#uid:index
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import string_types, iteritems
-import io
 import os
 import sys
 import traceback
 from collections import defaultdict
 
+from six import string_types, iteritems
+import io
+
+import numpy as np
 from numpy import unique, array
 
 from pyNastran.bdf.field_writer_8 import print_card_8
@@ -125,10 +129,10 @@ from .cards.constraints.mpcadd import MPCADD
 
 #from pyNastran.bdf.dev_vectorized.cards.coordinateSystems import (CORD1R, CORD1C, CORD1S,
                                                                   #CORD2R, CORD2C, CORD2S, CORD3G)
-#from .cards.coordinateSystems import (CORD1R, CORD1C, CORD1S,
+#from .cards.coordinate_systems import (CORD1R, CORD1C, CORD1S,
 #                                      CORD2R, CORD2C, CORD2S, CORD3G) old...
 from pyNastran.bdf.cards.params import PARAM
-from pyNastran.bdf.caseControlDeck import CaseControlDeck
+from pyNastran.bdf.case_control_deck import CaseControlDeck
 from .bdf_methods import BDFMethods
 from .bdf_interface.get_methods import GetMethods
 from .bdf_interface.add_card import AddCard
@@ -185,10 +189,15 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         """
         Initializes the BDF object
 
-        :param debug: used to set the logger if no logger is passed in; bool
-        :param log:   a python logging module object
-        :param precision:  string of 'single'/'float32' or
-          'double'/'float64' that is used by all the objects
+        Parameters
+        debug : bool; default=True
+            used to set the logger if no logger is passed in
+        log : logger; default=None -> logger
+            a python logging module object
+        precision : str; default='double'
+            'single'/'float32'
+            'double'/'float64'
+            that is used by all the objects
         """
         assert debug in [True, False], 'debug=%r' % debug
 
@@ -420,12 +429,12 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             'ENDDATA',
         ])
 
-        caseControlCards = set(['FREQ', 'GUST', 'MPC', 'SPC', 'NLPARM', 'NSM',
-                                'TEMP', 'TSTEPNL', 'INCLUDE'])
-        self.uniqueBulkDataCards = self.cards_to_read.difference(caseControlCards)
+        case_control_cards = set(['FREQ', 'GUST', 'MPC', 'SPC', 'NLPARM', 'NSM',
+                                  'TEMP', 'TSTEPNL', 'INCLUDE'])
+        self._unique_bulk_data_cards = self.cards_to_read.difference(case_control_cards)
 
         #: / is the delete from restart card
-        self.specialCards = ['DEQATN', '/']
+        self.special_cards = ['DEQATN', '/']
 
     def set_precision(self, precision='double'):
         """
@@ -445,10 +454,20 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         """
         Method for removing broken cards from the reader
 
-        :param cards: a list/set of cards that should not be read
+        Paramters
+        ---------
+        cards : List[str]; Set[str]
+            a list/set of cards that should not be read
+
+        .. python ::
+
+            bdfModel.disable_cards(['DMIG', 'PCOMP'])
         """
-        disableSet = set(cards)
-        self.cards_to_read.difference(disableSet)
+        if isinstance(cards, string_types):
+            disable_set = set([cards])
+        else:
+            disable_set = set(cards)
+        self.cards_to_read = self.cards_to_read.difference(disable_set)
 
     def __init_attributes(self):
         """
@@ -1067,15 +1086,20 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         sol, method, iSolLine = parse_executive_control_deck(self.executive_control_lines)
         self.update_solution(sol, method, iSolLine)
 
-    def update_solution(self, sol, method, iSolLine):
+    def update_solution(self, sol, method, isol_line):
         """
         Updates the overall solution type (e.g. 101,200,600)
 
-        :param sol:      the solution type (101,103, etc)
-        :param method:   the solution method (only for SOL=600)
-        :param iSolLine: the line to put the SOL/method on
+        Parameters
+        ----------
+        sol : int
+            the solution type (101, 103, etc)
+        method : str
+            the solution method (only for SOL=600)
+        isol_line : int
+            the line to put the SOL/method on
         """
-        self.iSolLine = iSolLine
+        self.iSolLine = isol_line
         # the integer of the solution type (e.g. SOL 101)
         if sol is None:
             self.sol = None
@@ -1085,14 +1109,16 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         try:
             self.sol = int(sol)
         except ValueError:
-            self.sol = self._solmap_to_value[sol]
+            try:
+                self.sol = self._solmap_to_value[sol]
+            except KeyError:
+                self.sol = sol
 
         if self.sol == 600:
             #: solution 600 method modifier
             self.solMethod = method.strip()
             self.log.debug("sol=%s method=%s" % (self.sol, self.solMethod))
-        else:
-            # very common
+        else:  # very common
             self.solMethod = None
 
     def set_dynamic_syntax(self, dict_of_vars):
@@ -1100,21 +1126,24 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         Uses the OpenMDAO syntax of %varName in an embedded BDF to
         update the values for an optimization study.
 
-        :param dict_of_vars: dictionary of 7 character variable names to map.
+        Parameters
+        ----------
+        dict_of_vars : dict[str] = int/float/str
+            dictionary of 7 character variable names to map.
 
-        ::
+        .. code-block:: python
 
           GRID, 1, %xVar, %yVar, %zVar
 
-        >>> dict_of_vars = {'xVar': 1.0, 'yVar', 2.0, 'zVar':3.0}
-        >>> bdf = BDF()
-        >>> bdf.set_dynamic_syntax(dict_of_vars)
-        >>> bdf,read_bdf(bdf_filename, xref=True)
-        >>>
+          >>> dict_of_vars = {'xVar': 1.0, 'yVar', 2.0, 'zVar':3.0}
+          >>> bdf = BDF()
+          >>> bdf.set_dynamic_syntax(dict_of_vars)
+          >>> bdf,read_bdf(bdf_filename, xref=True)
+          >>>
 
-        ..  note:: Case sensitivity is supported.
-        ..  note:: Variables should be 7 characters or less to fit in an
-                   8-character field.
+        .. note:: Case sensitivity is supported.
+        .. note:: Variables should be 7 characters or less to fit in an
+                     8-character field.
         .. warning:: Type matters!
         """
         self.dict_of_vars = {}
@@ -1715,7 +1744,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             #self.log.debug('icard = %i' % icard)
 
         if name == 'PARAM':
-            param = PARAM(card_obj, comment=comment)
+            param = PARAM.add_card(card_obj, comment=comment)
             self.add_PARAM(param)
         elif name == 'BCRPARA':
             pass
@@ -2657,8 +2686,8 @@ def _clean_comment(comment, end=-1):
 
     Returns
     -------
-    comment2 : str
-        the updated comment
+    updated_comment : str
+        the comment
     """
     if comment[:end] in ['$EXECUTIVE CONTROL DECK',
                          '$CASE CONTROL DECK',

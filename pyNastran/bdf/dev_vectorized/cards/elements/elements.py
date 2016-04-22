@@ -2,7 +2,7 @@ from __future__ import print_function
 from numpy import (array, zeros, searchsorted, unique, argsort,
                    hstack, where, vstack, ones, intersect1d, setdiff1d,
                    nan, full, ravel, ndarray, asarray)
-from six import iteritems
+from six import iteritems, integer_types
 from six.moves import zip
 from numpy.linalg import norm
 
