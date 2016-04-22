@@ -701,7 +701,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         """
         self._read_bdf_helper(bdf_filename, encoding, punch)
 
-
         if bdf_filename.lower().endswith('.pch'):  # .. todo:: should this be removed???
             self.punch = True
         self._parse_primary_file_header(bdf_filename)
