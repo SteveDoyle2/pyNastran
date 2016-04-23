@@ -480,18 +480,16 @@ class AddMethods(BDFAttributes):
             self._type_to_id_map[dphase.type].append(key)
 
     def add_AERO(self, aero):
-        key = aero.acsid
-        assert key not in self.aero, '\naero=\n%s oldAERO=\n%s' % (aero, self.aero[key])
-        assert key >= 0
-        self.aero[key] = aero
-        self._type_to_id_map[aero.type].append(key)
+        # only one AERRO card allowed
+        assert self.aero is None, '\naero=\n%s oldAERO=\n%s' % (aero, self.aero)
+        self.aero = aero
+        #self._type_to_id_map[aero.type].append(key)
 
     def add_AEROS(self, aeros):
-        key = aeros.acsid
-        assert key not in self.aeros, '\naeros=\n%s oldAEROS=\n%s' % (aeros, self.aeros[key])
-        assert key >= 0
-        self.aeros[key] = aeros
-        self._type_to_id_map[aeros.type].append(key)
+        # only one AERROS card allowed
+        assert self.aeros is None, '\naeros=\n%s oldAEROS=\n%s' % (aeros, self.aeros)
+        self.aeros = aeros
+        #self._type_to_id_map[aeros.type].append(key)
 
     def add_AEFACT(self, aefact, allow_overwrites=False):
         key = aefact.sid

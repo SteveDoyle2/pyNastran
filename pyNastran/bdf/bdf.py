@@ -30,6 +30,7 @@ from pyNastran.bdf.cards.utils import wipe_empty_fields
 from pyNastran.utils import _filename
 from pyNastran.utils.log import get_logger2
 
+from pyNastran.bdf.write_path import write_include
 from pyNastran.bdf.bdf_interface.assign_type import (integer,
                                                      integer_or_string, string)
 
@@ -177,7 +178,7 @@ def read_bdf(bdf_filename=None,
     .. todo:: finish this
     """
     model = BDF(log=log, debug=debug, mode=mode)
-    model.read_bdf(bdf_filename=bdf_filename, xref=xref, punch=punch, encoding=encoding)
+    model.read_bdf(bdf_filename=bdf_filename, xref=xref, punch=punch, read_includes=False, encoding=encoding)
 
     #if 0:
         ### TODO: remove all the extra methods
@@ -258,6 +259,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         """
         assert debug in [True, False, None], 'debug=%r' % debug
         self.echo = False
+        self.read_includes = True
 
         # file management parameters
         self.active_filenames = []
@@ -668,7 +670,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         self._stop_on_xref_error = stop_on_xref_error
 
     def read_bdf(self, bdf_filename=None,
-                 xref=True, punch=False, encoding=None):
+                 xref=True, punch=False, read_includes=True, encoding=None):
         """
         Read method for the bdf files
 
@@ -680,6 +682,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             should the bdf be cross referenced (default=True)
         punch : bool
             indicates whether the file is a punch file (default=False)
+        read_includes : bool
+            indicates whether INCLUDE files should be read (default=True)
         encoding : str
             the unicode encoding (default=None; system default)
 
@@ -699,7 +703,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             bdf.elements = 10
             etc.
         """
-        self._read_bdf_helper(bdf_filename, encoding, punch)
+        self._read_bdf_helper(bdf_filename, encoding, punch, read_includes)
+
         self._parse_primary_file_header(bdf_filename)
 
         self.log.debug('---starting BDF.read_bdf of %s---' % self.bdf_filename)
@@ -741,7 +746,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         self.log.debug('---finished BDF.read_bdf of %s---' % self.bdf_filename)
         self.pop_xref_errors()
 
-    def _read_bdf_helper(self, bdf_filename, encoding, punch):
+    def _read_bdf_helper(self, bdf_filename, encoding, punch, read_includes):
         """creates the file loading if bdf_filename is None"""
         #self.set_error_storage(nparse_errors=None, stop_on_parsing_error=True,
         #                       nxref_errors=None, stop_on_xref_error=True)
@@ -769,6 +774,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
         #: is this a punch file (no executive control deck)
         self.punch = punch
+        self.read_includes = read_includes
+        self.active_filenames = []
 
     def fill_dmigs(self):
         """fills the DMIx cards with the column data that's been stored"""
@@ -2173,7 +2180,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'methods', 'cMethods',
 
             # aero
-            'caeros', 'paeros', 'aero', 'aeros', 'aecomps', 'aefacts', 'aelinks',
+            'caeros', 'paeros', 'aecomps', 'aefacts', 'aelinks',
             'aelists', 'aeparams', 'aesurfs', 'aestats', 'gusts', 'flfacts',
             'flutters', 'splines', 'trims',
 
@@ -2251,6 +2258,16 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             for name, count_name in sorted(iteritems(groups_dict)):
                 msg.append('  %-8s %s' % (name + ':', count_name))
             msg.append('')
+
+        # aero
+        if self.aero:
+            msg.append('bdf:aero')
+            msg.append('  %-8s %s' % ('AERO:', 1))
+
+        # aeros
+        if self.aeros:
+            msg.append('bdf:aeros')
+            msg.append('  %-8s %s' % ('AEROS:', 1))
 
         #mkaeros
         if self.mkaeros:
@@ -2485,7 +2502,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                     #include_lines = [line] + lines[i+1:j]
                 #print(include_lines)
                 bdf_filename2 = get_include_filename(include_lines, include_dir=self.include_dir)
-
+                if self.read_includes:
                 try:
                     self._open_file_checks(bdf_filename2)
                 except IOError:
@@ -2514,6 +2531,10 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                 lines = lines[:i] + [include_comment] + lines2 + lines[j:]
                 #for line in lines:
                     #print("  *%s" % line.rstrip())
+                else:
+                    lines = lines[:i] + lines[j:]
+                    self.reject_lines.append(include_lines)
+                    #self.reject_lines.append(write_include(bdf_filename2))
             i += 1
 
         if self.dumplines:

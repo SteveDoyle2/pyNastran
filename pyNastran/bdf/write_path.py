@@ -22,14 +22,14 @@ def write_include(filename, is_windows=True):
 
     For a model that will run on Linux:
 
-    ..code-blocK:: python
+    ..code-block:: python
 
       fname = r'/opt/NASA/test1/test2/test3/test4/formats/pynastran_v0.6/pyNastran/bdf/model.inc'
       write_include(fname, is_windows=False)
 
     We want:
 
-    ..code-blocK:: python
+    ..code-block:: python
 
       INCLUDE /opt/NASA/test1/test2/test3/test4/formats/pynastran_v0.6/
               pyNastran/bdf/model.inc
