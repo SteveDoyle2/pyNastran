@@ -567,13 +567,17 @@ class Elements(object):
         return out[0] if int_flag else out
 
     def allocate(self, card_count):
+        print('elements.allocate()')
         etypes = self._get_element_types(nlimit=False)
         for etype in etypes:
+            netype = card_count[etype]
             if hasattr(etype, 'type'):
                 if etype.type in card_count:
-                    self.model.log.debug('allocate %s' % etype.type)
+                    self.model.log.debug('allocate %s->%s' % (etype.type, netype))
                     etype.allocate(card_count[etype.type])
                     del card_count[etype.type]
+                else:
+                    self.model.log.debug('skipping %s->%s' % (etype.type, netype))
             else:
                 # ElementsSpring
                 self.model.log.debug('allocate %s' % etype.__class__.__name__)
@@ -583,7 +587,7 @@ class Elements(object):
         for ptype in ptypes:
             if hasattr(ptype, 'type'):
                 if ptype.type in card_count:
-                    self.model.log.debug('allocate %s' % ptype.type)
+                    self.model.log.debug('allocate %s->%s' % (ptype.type, card_count[ptype]))
                     ptype.allocate(card_count[ptype.type])
                     del card_count[ptype.type]
                 #else:
@@ -633,7 +637,9 @@ class Elements(object):
         if nlimit:
             types2 = []
             for etype in types:
-                if etype.n > 0:
+                if not nlimit:
+                    types2.append(etype)
+                elif etype.n > 0:
                     types2.append(etype)
             types = types2
         return types

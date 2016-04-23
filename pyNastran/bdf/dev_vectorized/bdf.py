@@ -10,20 +10,22 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 import os
 import sys
 import traceback
+from codecs import open as codec_open
 from collections import defaultdict
-
-from six import string_types, iteritems
 import io
 
+from six import string_types, iteritems
+
 import numpy as np
-from numpy import unique, array
 
+import pyNastran
 from pyNastran.bdf.field_writer_8 import print_card_8
-from pyNastran.bdf.utils import (to_fields, get_include_filename,
+from pyNastran.bdf.utils import (
+    to_fields, get_include_filename,
     parse_executive_control_deck, clean_empty_lines)
-from pyNastran.bdf.cards.methods import (EIGB, EIGC, EIGR, EIGP, EIGRL)
+from pyNastran.bdf.cards.methods import EIGB, EIGC, EIGR, EIGP, EIGRL
 
-from pyNastran.utils import print_bad_path
+from pyNastran.utils import _filename, print_bad_path
 from pyNastran.utils.dev import list_print, object_attributes
 from pyNastran.utils.log import get_logger
 from pyNastran.utils.gui_io import load_file_dialog
@@ -96,6 +98,8 @@ from pyNastran.bdf.dev_vectorized.cards.aero.spline1 import SPLINE1
 from pyNastran.bdf.dev_vectorized.cards.aero.trim import TRIM
 from pyNastran.bdf.dev_vectorized.cards.aero.aero import AERO
 from pyNastran.bdf.dev_vectorized.cards.aero.aeros import AEROS
+#from pyNastran.bdf.cards.aero import AEFACT, AELIST, AELINK, AEPARM, AESTAT, AESURF, AESURFS
+from pyNastran.bdf.cards.aero import AEFACT, AELIST, AELINK, AEPARM, AESTAT, AESURF
 
 #===========================
 
@@ -108,8 +112,9 @@ from pyNastran.bdf.dev_vectorized.cards.loads.loads import Loads
 from pyNastran.bdf.dev_vectorized.cards.loads.temp import TEMPs
 #=============================
 # dynamic
-from pyNastran.bdf.dev_vectorized.cards.nonlinear.nlpci import NLPCI
-from pyNastran.bdf.dev_vectorized.cards.nonlinear.nlparm import NLPARM
+#from pyNastran.bdf.dev_vectorized.cards.nonlinear.nlpci import NLPCI
+#from pyNastran.bdf.dev_vectorized.cards.nonlinear.nlparm import NLPARM
+from pyNastran.bdf.cards.dynamic import NLPARM, NLPCI, TSTEP, TSTEPNL
 
 #=============================
 
@@ -201,10 +206,6 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         """
         assert debug in [True, False], 'debug=%r' % debug
 
-        #: a hackish parameter that allows us to read the BDF twice and
-        #: know which round we're on
-        self.inspect = False
-
         self.set_precision(precision)
 
         # file management parameters
@@ -291,6 +292,14 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         #: ECHOON and ECHOOFF will toggle this in the BDF
         self.echo = False
 
+        self._is_cards_dict = True
+
+        # file management parameters
+        self.active_filenames = []
+        self.active_filename = None
+        self.include_dir = ''
+        self.dumplines = False
+
         self.__init_attributes()
 
         #: the list of possible cards that will be parsed
@@ -307,13 +316,18 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             # 'CELAS5',
             'CBUSH', 'CBUSH1D', 'CBUSH2D',
 
+            # dampers
             'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5',
             'CFAST',
 
             'CBAR', 'CROD', 'CTUBE', 'CBEAM', 'CBEAM3', 'CONROD', 'CBEND',
             'CTRIA3', 'CTRIA6', 'CTRIAR', 'CTRIAX', 'CTRIAX6',
             'CQUAD4', 'CQUAD8', 'CQUADR', 'CQUADX', 'CQUAD',
+
             'CTETRA', 'CPENTA', 'CHEXA',
+            'CTETRA4', 'CPYRAM5', 'CPENTA6', 'CHEXA8',
+            'CTETRA10', 'CPYRAM13', 'CPENTA15', 'CHEXA20',
+
             'CSHEAR', 'CVISC', 'CRAC2D', 'CRAC3D',
             'CGAP',
 
@@ -387,18 +401,20 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
 
             # direct matrix input cards
             'DMIG', 'DMIJ', 'DMIJI', 'DMIK', 'DMI',
-            'DEQATN',
 
             # optimization cards
+            'DEQATN',
             'DCONSTR', 'DESVAR', 'DDVAL', 'DRESP1', 'DRESP2',
             'DVPREL1', 'DVPREL2',
             'DOPTPRM', 'DVMREL1', 'DLINK', 'DRESP3',
             #'DSCREEN',
 
-            # sets
-            'ASET', 'BSET', 'CSET', 'QSET',  # 'USET',
-            'ASET1', 'BSET1', 'CSET1', 'QSET1',  # 'USET1',
-            'SET1', 'SET3',
+            'SET1', 'SET3',  ## sets
+            'ASET', 'ASET1',  ## asets
+            'BSET', 'BSET1',  ## bsets
+            'CSET', 'CSET1',  ## csets
+            'QSET', 'QSET1',  ## qsets
+            'USET', 'USET1',  ## usets
 
             # super-element sets
             'SESET',
@@ -410,6 +426,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             'TABDMP1',
             'TABLES1', 'TABLEST',
             'TABRND1', 'TABRNDG',
+            #------------------------------------------------------------------
 
             # initial conditions - sid (set ID)
             #'TIC',  (in tables.py)
@@ -421,8 +438,12 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             'EIGC', 'EIGP',
 
             #: contact
-            'BCTPARA',
-            'BCRPARA', 'BCTADD', 'BCTSET', 'BSURF', 'BSURFS',
+            'BCTPARA',  ## bctpara
+            'BCRPARA',  ## bcrpara
+            'BCTADD',  ## bctadds
+            'BCTSET',  ## bctsets
+            'BSURF',  ## bsurf
+            'BSURFS',  ## bsurfs
 
             # other
             'INCLUDE',  # '='
@@ -878,51 +899,21 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         self.bsurf = {}
         self.bsurfs = {}
 
-    def _verify_bdf(self):
-        """
-        Cross reference verification method.
-        """
-        xref = self._xref
-        #for key, card in sorted(iteritems(self.params)):
-            #try:
-            #card._verify(xref)
-        for key, card in sorted(iteritems(self.nodes)):
-            try:
-                card._verify(xref)
-            except:
-                print(str(card))
-                raise
-        for key, card in sorted(iteritems(self.coords)):
-            try:
-                card._verify(xref)
-            except:
-                print(str(card))
-                raise
-        if 0:
-            for key, card in sorted(iteritems(self.elements)):
-                try:
-                    card._verify(xref)
-                except:
-                    print(str(card))
-                    raise
-            for key, card in sorted(iteritems(self.properties)):
-                try:
-                    card._verify(xref)
-                except:
-                    print(str(card))
-                    raise
-        self.materials._verify(xref)
-
-    def read_bdf(self, bdf_filename=None, include_dir=None,
-                 xref=True, punch=False):
+    def read_bdf(self, bdf_filename=None,
+                 xref=True, punch=False, encoding=None):
         """
         Read method for the bdf files
 
-        :param bdf_filename: the input bdf (default=None; popup a dialog)
-        :param include_dir:  the relative path to any include files
-                             (default=None if no include files)
-        :param xref:  should the bdf be cross referenced (default=True)
-        :param punch: indicates whether the file is a punch file (default=False)
+        Parameters
+        ----------
+        bdf_filename : str / None
+            the input bdf (default=None; popup a dialog)
+        xref :  bool
+            should the bdf be cross referenced (default=True)
+        punch : bool
+            indicates whether the file is a punch file (default=False)
+        encoding : str
+            the unicode encoding (default=None; system default)
 
         .. todo:: this is out of date
         >>> bdf = BDF()
@@ -938,70 +929,126 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         bdf.elements = 10
         etc.
         """
+        self._read_bdf_helper(bdf_filename, encoding, punch)
+
+
+        self.log.debug('---starting BDF.read_bdf of %s---' % self.bdf_filename)
+        executive_control_lines, case_control_lines, \
+            bulk_data_lines = self._get_lines(self.bdf_filename, self.punch)
+
+        self.case_control_lines = case_control_lines
+        self.executive_control_lines = executive_control_lines
+
+        sol, method, isol_line = parse_executive_control_deck(executive_control_lines)
+        self.update_solution(sol, method, isol_line)
+
+        self.case_control_deck = CaseControlDeck(self.case_control_lines, self.log)
+        self.case_control_deck.solmap_toValue = self._solmap_to_value
+        self.case_control_deck.rsolmap_toStr = self.rsolmap_toStr
+
+        if self._is_cards_dict:
+            cards, card_count = self.get_bdf_cards_dict(bulk_data_lines)
+        else:
+            cards, card_count = self.get_bdf_cards(bulk_data_lines)
+        self._parse_cards(cards, card_count)
+
+        #if not self.inspect:
+            #import time
+            #t0 = time.time()
+            #bdf_temp = BDF(debug=False)
+            #bdf_temp.inspect = True
+            #bdf_temp.add_card = bdf_temp._add_card
+            #bdf_temp.add_reject = bdf_temp._add_reject
+            #bdf_temp.read_bdf(bdf_filename=bdf_filename, include_dir=include_dir, xref=False, punch=punch)
+            #print('card_count = %s' % bdf_temp.card_count)
+            #self.allocate(bdf_temp.card_count)
+            #del bdf_temp
+            #print('dt = %s' % (time.time() - t0))
+
+        #try:
+            #self._open_file(self.bdf_filename)
+            #self.log.debug('---starting BDF.read_bdf of %s---' % self.bdf_filename)
+            #if not punch:
+                #self.log.debug('---reading executive & case control decks---')
+                #self._read_executive_control_deck()
+                #self._read_case_control_deck()
+            #else:
+                #self.log.debug('---skipping executive & case control decks---')
+
+            #self._read_bulk_data_deck()
+            #self.build(xref=xref)
+            #self._xref = xref
+            #self._cleanup_file_streams()
+        #except:
+            #self._cleanup_file_streams()
+            #raise
+        self.fill_dmigs()
+        self.log.debug('---finished BDF.read_bdf of %s---' % self.bdf_filename)
+
+    def _read_bdf_helper(self, bdf_filename, encoding, punch):
+        """creates the file loading if bdf_filename is None"""
+        if encoding is None:
+            encoding = sys.getdefaultencoding()
+        self._encoding = encoding
         if bdf_filename is None:
             from pyNastran.utils.gui_io import load_file_dialog
-            wildcard_wx = "Nastran BDF (*.bdf; *.dat; *.nas; *.pch)|" \
+            wildcard_wx = "Nastran BDF (*.bdf; *.dat; *.nas; *.pch, *.ecd)|" \
                 "*.bdf;*.dat;*.nas;*.pch|" \
                 "All files (*.*)|*.*"
-            wildcard_qt = "Nastran BDF (*.bdf *.dat *.nas *.pch);;All files (*)"
-            title = 'Please select a BDF/DAT/PCH to load'
-            bdf_filename = load_file_dialog(title, wildcard_wx, wildcard_qt)
+            wildcard_qt = "Nastran BDF (*.bdf *.dat *.nas *.pch *.ecd);;All files (*)"
+            title = 'Please select a BDF/DAT/PCH/ECD to load'
+            bdf_filename = load_file_dialog(title, wildcard_wx, wildcard_qt)[0]
             assert bdf_filename is not None, bdf_filename
-
-        #: the active filename (string)
-        self.bdf_filename = bdf_filename
-        if include_dir is None:
-            include_dir = os.path.dirname(bdf_filename)
-
-        #: the directory of the 1st BDF (include BDFs are relative to this one)
-        self.include_dir = include_dir
 
         if not os.path.exists(bdf_filename):
             msg = 'cannot find bdf_filename=%r\n%s' % (bdf_filename, print_bad_path(bdf_filename))
             raise IOError(msg)
-        if bdf_filename.lower().endswith('.pch'):
+        if bdf_filename.lower().endswith('.pch'):  # .. todo:: should this be removed???
             punch = True
 
+        #: the active filename (string)
+        self.bdf_filename = bdf_filename
+
         #: is this a punch file (no executive control deck)
-        self._punch = punch
-        if not self.inspect:
-            import time
-            t0 = time.time()
-            bdf_temp = BDF(debug=False)
-            bdf_temp.inspect = True
-            bdf_temp.add_card = bdf_temp._add_card
-            bdf_temp.add_reject = bdf_temp._add_reject
-            bdf_temp.read_bdf(bdf_filename=bdf_filename, include_dir=include_dir, xref=False, punch=punch)
-            print('card_count = %s' % bdf_temp.card_count)
-            self.allocate(bdf_temp.card_count)
-            del bdf_temp
-            print('dt = %s' % (time.time() - t0))
+        self.punch = punch
 
-        try:
-            self._open_file(self.bdf_filename)
-            self.log.debug('---starting BDF.read_bdf of %s---' % self.bdf_filename)
-            if not punch:
-                self.log.debug('---reading executive & case control decks---')
-                self._read_executive_control_deck()
-                self._read_case_control_deck()
+    def fill_dmigs(self):
+        """fills the DMIx cards with the column data that's been stored"""
+        for name, card_comments in iteritems(self._dmig_temp):
+            card0, comment0 = card_comments[0]
+            card_name = card0[0]
+            card_name = card_name.rstrip(' *').upper()
+
+            if card_name == 'DMIG':
+                # if field2 == 'UACCEL':  # special DMIG card
+                card = self.dmigs[name]
+            elif card_name == 'DMI':
+                card = self.dmis[name]
+            elif card_name == 'DMIJ':
+                card = self.dmijs[name]
+            elif card_name == 'DMIJI':
+                card = self.dmijis[name]
+            elif card_name == 'DMIK':
+                card = self.dmiks[name]
             else:
-                self.log.debug('---skipping executive & case control decks---')
+                raise NotImplementedError(card_name)
 
-            self._read_bulk_data_deck()
-            self.build(xref=xref)
-            self._xref = xref
-            self._cleanup_file_streams()
-        except:
-            self._cleanup_file_streams()
-            raise
-        self.log.debug('---finished BDF.read_bdf of %s---' % self.bdf_filename)
+            for (card_obj, comment) in card_comments:
+                card._add_column(card_obj, comment=comment)
+            card.finalize()
 
-    def allocate(self, card_count):
+        self._dmig_temp = defaultdict(list)
+
+    def allocate(self, card_count, cards):
         """
         Sets the size of the card objects.
 
-        :param card_count: dictionary of {card_name : ncards}, where
-          card_name is a string and ncards is an int
+        Parameters
+        ----------
+        card_count : dict
+            dictionary of {card_name : ncards}
+            card_name : string
+            ncards : int
 
         .. note::  Sometimes there are cards that have 2 cards per line.
                    Depending on the card (e.g. CELASx)
@@ -1019,6 +1066,74 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         """
         self.grid.allocate(card_count)
         self.coords.allocate(card_count=card_count)
+
+        card_splits = [
+            # card_name, card_name1, nfields1, card_name2
+            ('CTETRA', 'CTETRA4', 7, self.elements_solid.ctetra4, 'CTETRA10', self.elements_solid.ctetra10),
+            #('CYPRAM', 'CPYRAM5', self.elements_solid.cpyram5, 8, 'CPYRAM13', self.elements_solid.cpyram12),
+            ('CPENTA', 'CPENTA6', self.elements_solid.cpenta6, 9, 'CPENTA15', self.elements_solid.cpenta15),
+            ('CHEXA', 'CHEXA8', self.elements_solid.chexa8, 11, 'CHEXA20', self.elements_solid.chexa20),
+        ]
+        for (card_name, card_name1, slot1, nfields1, card_name2, slot2) in card_splits:
+            if card_name in card_count:
+                cards1 = [] # CTETRA4, CPENTA6, CHEXA8, CPYRAM5
+                cards2 = [] # CTETRA10, CPENTA15, CHEXA20, CPYRAM15
+                cardsi = cards[card_name]
+                #assert len(cardsi) == 2, cardsi
+                is_list = False
+                has_none = False
+                for comment, card_lines in cardsi:
+                    card_obj, card = self.create_card_object(card_lines, card_name,
+                                                             is_list=is_list, has_none=has_none)
+                    if len(card_obj) == nfields1:
+                        cards1.append((comment, card_obj))
+                    else:
+                        cards2.append((comment, card_obj))
+
+                count1 = len(cards1)
+                if count1:
+                    card_count[card_name1] = count1
+                    #cards[card_name1] = cards1
+                    self.log.info(' allocating %s->%s' % (card_name1, count1))
+                    slot1.allocate(count1)
+                    for comment, card_obj in cards1:
+                        self._add_card_object(card_name1, card_obj, comment=comment)
+
+                count2 = len(cards2)
+                if count2:
+                    slot2.allocate(count2)
+                    card_count[card_name1] = count2
+                    self.log.info(' allocating %s->%s' % (card_name2, count2))
+                    for comment, card_obj in cards2:
+                        self._add_card_object(card_name2, card_obj, comment=comment)
+
+                del card_count[card_name]
+                del cards[card_name]
+        print(cards.keys())
+
+
+
+
+        #if card_name in ['CTETRA', 'CPENTA', 'CHEXA']:
+            #card = self.process_card(card_lines)
+            #if card_name == 'CTETRA':
+                #if len(card) == 7:
+                    #card_name = 'CTETRA4'
+                #else:
+                    #card_name = 'CTETRA10'
+            #elif card_name == 'CPENTA':
+                #if len(card) == 9:
+                    #card_name = 'CPENTA6'
+                #else:
+                    #card_name = 'CPENTA15'
+            #elif card_name == 'CHEXA':
+                #if len(card) == 11:
+                    #card_name = 'CHEXA8'
+                #else:
+                    #card_name = 'CHEXA20'
+        #self._increase_card_count(card_name)
+
+
         self.elements.allocate(card_count)
         self.materials.allocate(card_count)
         self.loads.allocate(card_count)
@@ -1034,22 +1149,6 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             self.aero.allocate(card_count['AERO'])
         if 'AEROS' in card_count:
             self.aeros.allocate(card_count['AEROS'])
-
-
-    def _cleanup_file_streams(self):
-        """
-        This function is required to prevent too many files being opened.
-        The while loop closes them.
-        """
-        self._break_comment = False  # speeds up self._get_line()
-        while self._get_line():
-            pass
-        self._stored_Is = {}
-        self._stored_lines = {}
-        self._stored_comments = {}
-        self._line_streams = {}
-        self._card_streams = {}
-        #del self._break_comment
 
     def _read_executive_control_deck(self):
         """Reads the executive control deck"""
@@ -1085,6 +1184,161 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
 
         sol, method, iSolLine = parse_executive_control_deck(self.executive_control_lines)
         self.update_solution(sol, method, iSolLine)
+
+    def get_bdf_cards(self, bulk_data_lines):
+        """Parses the BDF lines into a list of card_lines"""
+        cards = []
+        #cards = defaultdict(list)
+        card_count = defaultdict(int)
+        full_comment = ''
+        card_lines = []
+        old_card_name = None
+        backup_comment = ''
+        nlines = len(bulk_data_lines)
+        for i, line in enumerate(bulk_data_lines):
+            #print('    backup=%r' % backup_comment)
+            comment = ''
+            if '$' in line:
+                line, comment = line.split('$', 1)
+            card_name = line.split(',', 1)[0].split('\t', 1)[0][:8].rstrip().upper()
+            if card_name and card_name[0] not in ['+', '*']:
+                if old_card_name:
+                    if self.echo:
+                        self.log.info('Reading %s:\n' %
+                                      old_card_name + full_comment + ''.join(card_lines))
+
+                    # old dictionary version
+                    # cards[old_card_name].append([full_comment, card_lines])
+
+                    # new list version
+                    cards.append([old_card_name, full_comment, card_lines])
+
+                    card_count[old_card_name] += 1
+                    card_lines = []
+                    full_comment = ''
+
+                    if old_card_name == 'ECHOON':
+                        self.echo = True
+                    elif old_card_name == 'ECHOOFF':
+                        self.echo = False
+                old_card_name = card_name.rstrip(' *')
+                if old_card_name == 'ENDDATA':
+                    self.card_count['ENDDATA'] = 1
+                    if nlines - i > 1:
+                        nleftover = nlines - i - 1
+                        msg = 'exiting due to ENDDATA found with %i lines left' % nleftover
+                        self.log.debug(msg)
+                    return cards, card_count
+                #print("card_name = %s" % card_name)
+
+            comment = _clean_comment(comment)
+            if line.rstrip():
+                card_lines.append(line)
+                if backup_comment:
+                    if comment:
+                        full_comment += backup_comment + '$' + comment + '\n'
+                    else:
+                        full_comment += backup_comment
+                    backup_comment = ''
+                elif comment:
+                    full_comment += '$' + comment + '\n'
+                    backup_comment = ''
+
+            elif comment:
+                backup_comment += '$' + comment + '\n'
+                #print('add backup=%r' % backup_comment)
+            #elif comment:
+                #backup_comment += '$' + comment + '\n'
+
+        if card_lines:
+            if self.echo:
+                self.log.info('Reading %s:\n' % old_card_name + full_comment + ''.join(card_lines))
+            #print('end_add %s' % card_lines)
+
+            # old dictionary version
+            #cards[old_card_name].append([backup_comment + full_comment, card_lines])
+
+            # new list version
+            cards.append([old_card_name, backup_comment + full_comment, card_lines])
+            card_count[old_card_name] += 1
+        return cards, card_count
+
+    def get_bdf_cards_dict(self, bulk_data_lines):
+        """Parses the BDF lines into a list of card_lines"""
+        cards = defaultdict(list)
+        card_count = defaultdict(int)
+        full_comment = ''
+        card_lines = []
+        old_card_name = None
+        backup_comment = ''
+        nlines = len(bulk_data_lines)
+        for i, line in enumerate(bulk_data_lines):
+            #print('    backup=%r' % backup_comment)
+            comment = ''
+            if '$' in line:
+                line, comment = line.split('$', 1)
+            card_name = line.split(',', 1)[0].split('\t', 1)[0][:8].rstrip().upper()
+            if card_name and card_name[0] not in ['+', '*']:
+                if old_card_name:
+                    if self.echo:
+                        self.log.info('Reading %s:\n' %
+                                      old_card_name + full_comment + ''.join(card_lines))
+
+                    # old dictionary version
+                    cards[old_card_name].append([full_comment, card_lines])
+
+                    # new list version
+                    #cards.append([old_card_name, full_comment, card_lines])
+
+                    card_count[old_card_name] += 1
+                    card_lines = []
+                    full_comment = ''
+
+                    if old_card_name == 'ECHOON':
+                        self.echo = True
+                    elif old_card_name == 'ECHOOFF':
+                        self.echo = False
+                old_card_name = card_name.rstrip(' *')
+                if old_card_name == 'ENDDATA':
+                    self.card_count['ENDDATA'] = 1
+                    if nlines - i > 1:
+                        nleftover = nlines - i - 1
+                        msg = 'exiting due to ENDDATA found with %i lines left' % nleftover
+                        self.log.debug(msg)
+                    return cards, card_count
+                #print("card_name = %s" % card_name)
+
+            comment = _clean_comment(comment)
+            if line.rstrip():
+                card_lines.append(line)
+                if backup_comment:
+                    if comment:
+                        full_comment += backup_comment + '$' + comment + '\n'
+                    else:
+                        full_comment += backup_comment
+                    backup_comment = ''
+                elif comment:
+                    full_comment += '$' + comment + '\n'
+                    backup_comment = ''
+
+            elif comment:
+                backup_comment += '$' + comment + '\n'
+                #print('add backup=%r' % backup_comment)
+            #elif comment:
+                #backup_comment += '$' + comment + '\n'
+
+        if card_lines:
+            if self.echo:
+                self.log.info('Reading %s:\n' % old_card_name + full_comment + ''.join(card_lines))
+            #print('end_add %s' % card_lines)
+
+            # old dictionary version
+            cards[old_card_name].append([backup_comment + full_comment, card_lines])
+
+            # new list version
+            #cards.append([old_card_name, backup_comment + full_comment, card_lines])
+            card_count[old_card_name] += 1
+        return cards, card_count
 
     def update_solution(self, sol, method, isol_line):
         """
@@ -1159,30 +1413,6 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             self.dict_of_vars[key] = value
         self._is_dynamic_syntax = True
 
-    def _parse_dynamic_syntax(self, key):
-        """
-        Applies the dynamic syntax for %varName
-
-        Parameters
-        ----------
-        key : str
-            the uppercased key
-
-        Returns
-        -------
-        value : varies
-            the dynamic value defined by dict_of_vars
-
-        .. seealso:: :func: `set_dynamic_syntax`
-        """
-        key = key[1:].strip()
-        self.log.debug("dynamic key = %r" % key)
-        #self.dict_of_vars = {'P5':0.5,'ONEK':1000.}
-        if key not in self.dict_of_vars:
-            msg = "key=%r not found in keys=%s" % (key, self.dict_of_vars.keys())
-            raise KeyError(msg)
-        return self.dict_of_vars[key]
-
     def _is_case_control_deck(self, line):
         """
         .. todo:: not done...
@@ -1192,9 +1422,9 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             raise SyntaxError('invalid Case Control Deck card...CEND...')
         if '=' in line_upper or ' ' in line_upper:
             return True
-        for card in self.uniqueBulkDataCards:
-            lenCard = len(card)
-            if card in line_upper[:lenCard]:
+        for card in self.unique_bulk_data_cards:
+            len_card = len(card)
+            if card in line_upper[:len_card]:
                 return False
         return True
 
@@ -1275,186 +1505,6 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             self.reject_count[card_name] += 1
         return True
 
-    def _open_file(self, bdf_filename):
-        """
-        Opens the primary bdf/dat file and all subsequent INCLUDE files.
-
-        Parameters
-        ----------
-        bdf_filename : str
-            the name of the bdf/dat file to open
-
-        .. note:: Doesn't allow reuse of the same bdf/dat file twice.
-        """
-        if len(self.active_filenames) > 1:
-            bdf_filename = os.path.join(self.include_dir, str(bdf_filename))
-        if not os.path.exists(bdf_filename):
-            msg = 'No such bdf_filename: %r\n' % bdf_filename
-            msg += 'cwd: %r' % os.getcwd()
-            raise IOError(msg)
-
-        if bdf_filename in self.active_filenames:
-            msg = 'bdf_filename=%s is already active.\nactive_filenames=%s' \
-                % (bdf_filename, self.active_filenames)
-            raise RuntimeError(msg)
-        self.log.info('opening %r' % bdf_filename)
-
-        self._ifile += 1
-        self.active_filename = bdf_filename
-        self.active_filenames.append(bdf_filename)
-
-        self._stored_Is[self._ifile] = []
-        self._stored_lines[self._ifile] = []
-        self._stored_comments[self._ifile] = []
-
-        line_gen = self._stream_line()
-        self._line_streams[self._ifile] = line_gen
-        self._card_streams[self._ifile] = self._stream_card(line_gen)
-
-
-    def _close_file(self):
-        """
-        handles closing the file stream and resetting the active file
-        """
-        self.log.info('closing %r' % self.active_filename)
-        if self._ifile == 0:
-            self._ifile = -1
-            self.active_filename = None
-            return
-        del self._stored_Is[self._ifile]
-        del self._stored_lines[self._ifile]
-        del self._stored_comments[self._ifile]
-        del self._line_streams[self._ifile]
-        del self._card_streams[self._ifile]
-        self._ifile -= 1
-
-        self.active_filenames.pop()
-        self.active_filename = self.active_filenames[-1]
-
-    def _stream_card(self, line_stream):
-        """
-        Returns the next Bulk Data Card in the BDF
-
-        Parameters
-        ----------
-        line_stream :
-            the generator for the file
-
-        Returns
-        -------
-        lines : List[str]
-            the lines of the card
-        comment : str
-            the comment for the card
-        cardname : str
-            the name of the card
-        """
-        for (i, line, comment) in line_stream:
-            #-----------------------------------------------------------------
-            # get the first line of the card
-            Is = []
-            lines = []
-            comments = []
-
-            comment = _clean_comment(comment)
-            if comment:
-                comments.append(comment)
-
-            # If the first line is valid, continue.
-            # Otherwise, keep getting lines until one isn't blank.
-            if line:
-                Is.append(i)
-                lines.append(line)
-            else:
-                while len(line) == 0:
-                    # you cant have an empty first line
-                    (i, line, comment) = self._get_line()
-                    if line:
-                        break
-
-                    comment = _clean_comment(comment)
-                    if comment:
-                        comments.append(comment)
-                Is.append(i)
-                lines.append(line)
-                if comment:
-                    comments.append(comment)
-            assert len(lines) == 1, lines
-
-            #-----------------------------------------------------------------
-            # get another line
-            try:
-                (i, line, comment) = self._get_line()
-            except TypeError:
-                lines2 = clean_empty_lines(lines)
-                yield lines2, ''.join(comments)
-
-            #-----------------------------------------------------------------
-            # We define a continuation by either a regular,
-            # large field, small field, tab, or CSV formatted line.
-            # Large field - a * is in the first character
-            # Small field - a + or ' ' is in the first character
-            #               or the line is blank
-            # Tab - tab separated value; large or small formatted line
-            # CSV - comma separated value; large or small formatted line
-
-            # If the line is a continuation line, keep going.
-            #in_loop = False
-
-            Is2 = []
-            lines2 = []
-            comments2 = []
-            while len(line) == 0 or line[0] in [' ', '*', '+', ',', '\t']:
-                in_loop = True
-                if len(line):
-                    if Is2:
-                        Is += Is2
-                        lines += lines2
-                        comments += comments2
-                    Is.append(i)
-                    lines.append(line)
-
-                    Is2 = []
-                    lines2 = []
-                    comments2 = []
-                    comment = _clean_comment(comment)
-                    if comment:
-                        comments.append(comment)
-                else:
-                    Is2.append(i)
-                    lines2.append(line)
-                    comment = _clean_comment(comment)
-                    if comment:
-                        comments2.append(comment)
-
-                try:
-                    (i, line, comment) = self._get_line()
-                except TypeError:
-                    lines2 = clean_empty_lines(lines)
-                    comment = ''.join(comments+comments2)
-                    yield lines2, comment
-
-            # the extra lines we grabbed in the while loop should go on the
-            # next card
-            if Is2:
-                self._stored_Is[self._ifile] = Is2
-                self._stored_lines[self._ifile] = lines2
-                self._stored_comments[self._ifile] = comments2
-
-            #-----------------------------------------------------------------
-            # We maybe got one too many lines
-            if line[0] not in [' ', '*', '+', ',', '\t']:
-                self._stored_Is[self._ifile].append(i)
-                self._stored_lines[self._ifile].append(line)
-                comment = _clean_comment(comment)
-                if comment:
-                    self._stored_comments[self._ifile].append(comment)
-
-            lines2 = clean_empty_lines(lines)
-            comment = ''.join(comments)
-            yield lines2, comment
-        return
-
     def _get_card_name(self, lines):
         """
         Returns the name of the card defined by the provided lines
@@ -1484,7 +1534,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         self.log.debug("reading Bulk Data Deck...")
         self._break_comment = True
         n = 1
-        isEndData = False
+        is_end_data = False
         icard = 1
         while self.active_filename: # or self._stored_lines:
             try:
@@ -1580,30 +1630,6 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         except KeyError:
             return
 
-    def _stream_line(self):
-        """
-        Uses generators to open the file and stream the next line into
-        a (line_number, comment, and line).
-        """
-        with open(self.active_filename, 'r') as f:
-            for n, line in enumerate(f):
-                line = line.rstrip('\t\r\n ')
-                comment = ''
-                if self._break_comment and '$' in line:
-                    i = line.index('$')
-                    comment = line[i:] + '\n'
-                    line = line[:i].rstrip('\t ')
-                yield n, line, comment
-
-                while self._stored_lines[self._ifile]:
-                    comment = ''
-                    i2 = self._stored_Is[self._ifile].pop(0)
-                    line2 = self._stored_lines[self._ifile].pop(0)
-                    if self._stored_comments:
-                        comment = ''.join(self._stored_comments[self._ifile])
-                        self._stored_comments[self._ifile] = []
-                    yield i2, line2, comment
-
     def process_card(self, card_lines):
         """
         Parameters
@@ -1630,6 +1656,36 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         card[0] = card_name
         return card
 
+    def create_card_object(self, card_lines, card_name, is_list=True, has_none=True):
+        """
+        Creates a BDFCard object, which is really just a list that
+        allows indexing past the last field
+        """
+        card_name = card_name.upper()
+        self._increase_card_count(card_name)
+        if card_name in ['DEQATN']:
+            card_obj = card_lines
+            card = card_lines
+        else:
+            if is_list:
+                fields = card_lines
+            else:
+                fields = to_fields(card_lines, card_name)
+
+            # apply OPENMDAO syntax
+            if self._is_dynamic_syntax:
+                fields = [print_field_16(self._parse_dynamic_syntax(field)) if '%' in
+                          field.strip()[0:1] else print_field_16(field) for field in fields]
+                has_none = False
+
+            if has_none:
+                card = wipe_empty_fields([print_field_16(field) for field in fields])
+            else:
+                #card = remove_trailing_fields(fields)
+                card = wipe_empty_fields(fields)
+            card_obj = BDFCard(card, has_none=False)
+        return card_obj, card
+
     def write_sorted_card(self, card, n):
         """
         1-        CELAS2  1       3.      1       1       2       1               7.0
@@ -1643,33 +1699,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             self.f06.write('%-110s\n' % msg)
         #return msg
 
-    def _add_card(self, card_lines, card_name, comment='', is_list=True):
-        """
-        Counts the cards that will be used in the allocate method.
-        This is the inspect=False version of add_card.
-
-        .. seealso:: self.add_card
-        """
-        if card_name in ['CTETRA', 'CPENTA', 'CHEXA']:
-            card = self.process_card(card_lines)
-            if card_name == 'CTETRA':
-                if len(card) == 7:
-                    card_name = 'CTETRA4'
-                else:
-                    card_name = 'CTETRA10'
-            elif card_name == 'CPENTA':
-                if len(card) == 9:
-                    card_name = 'CPENTA6'
-                else:
-                    card_name = 'CPENTA15'
-            elif card_name == 'CHEXA':
-                if len(card) == 11:
-                    card_name = 'CHEXA8'
-                else:
-                    card_name = 'CHEXA20'
-        self._increase_card_count(card_name)
-
-    def add_card(self, card_lines, card_name, comment='', is_list=True):
+    def add_card(self, card_lines, card_name, comment='', is_list=True, has_none=True):
         """
         Adds a card object to the BDF object.
 
@@ -1724,6 +1754,9 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
                 card = wipe_empty_fields(fields)
             card_obj = BDFCard(card)
 
+        self._add_card_object(card_name, card_obj, comment=comment)
+
+    def _add_card_object(self, card_name, card_obj, comment=''):
         # function that gets by name the initialized object (from global scope)
 
         name = card_name # card[0]
@@ -1803,23 +1836,20 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
 
         #========================
         # elements_solid
-        elif name == 'CTETRA':
-            if len(card) == 7:
-                self.elements_solid.add_ctetra4(card_obj, comment=comment)
-            else: # length=13
-                self.elements_solid.add_ctetra10(card_obj, comment=comment)
-        elif name == 'CPENTA':
-            if len(card) == 9:
-                self.elements_solid.add_cpenta6(card_obj, comment=comment)
-            else:
-                self.model.log.debug('len(CPENTA) = %s' % len(card_obj))
-                self.elements_solid.add_cpenta15(card_obj, comment=comment)
-        elif name == 'CHEXA':
-            if len(card) == 11:
-                self.elements_solid.add_chexa8(card_obj, comment=comment)
-            else:
-                self.model.log.debug('len(CHEXA) = %s' % len(card_obj))
-                self.elements_solid.add_chexa20(card_obj, comment=comment)
+        elif name == 'CTETRA4':
+            self.elements_solid.add_ctetra4(card_obj, comment=comment)
+        elif name == 'CTETRA10':
+            self.elements_solid.add_ctetra10(card_obj, comment=comment)
+        elif name == 'CPENTA6':
+            self.elements_solid.add_cpenta6(card_obj, comment=comment)
+        elif name == 'CPENTA15':
+            self.model.log.debug('len(CPENTA) = %s' % len(card_obj))
+            self.elements_solid.add_cpenta15(card_obj, comment=comment)
+        elif name == 'CHEXA8':
+            self.elements_solid.add_chexa8(card_obj, comment=comment)
+        elif name == 'CHEXA20':
+            self.model.log.debug('len(CHEXA) = %s' % len(card_obj))
+            self.elements_solid.add_chexa20(card_obj, comment=comment)
 
         elif name == 'PSOLID':
             self.properties_solid.add_psolid(card_obj, comment=comment)
@@ -2331,23 +2361,21 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         return
 
     def add_AERO(self, card_obj, comment=''):
-        aero = AERO(card_obj, comment=comment)
-        key = aero.acsid
-        assert key not in self.aero, '\naero=\n%s oldAERO=\n%s' % (
-            aero, self.aero[key])
-        assert key >= 0
-        self.aero[key] = aero
+        assert self.aero is None, self.aero
+        aero = AERO.add_card(card_obj, comment=comment)
+        #assert key not in self.aero, '\naero=\n%s oldAERO=\n%s' % (
+            #aero, self.aero[key])
+        self.aero = aero
 
     def add_AEROS(self, card_obj, comment=''):
-        aero = AEROS(card_obj, comment=comment)
-        key = aero.acsid
-        assert key not in self.aeros, '\naeros=\n%s oldAEROS=\n%s' % (
-            aero, self.aeros[key])
-        assert key >= 0
-        self.aeros[key] = aero
+        assert self.aeros is None, self.aero
+        aero = AEROS.add_card(card_obj, comment=comment)
+        #assert key not in self.aeros, '\naeros=\n%s oldAEROS=\n%s' % (
+            #aero, self.aeros[key])
+        self.aeros = aero
 
     def add_AEFACT(self, card_obj, comment='', allow_overwrites=False):
-        aefact = AEFACT(card_obj, comment=comment)
+        aefact = AEFACT.add_card(card_obj, comment=comment)
         key = aefact.sid
         if key in self.aefacts and not allow_overwrites:
             if not aefact._is_same_card(self.aefacts[key]):
@@ -2365,7 +2393,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         self.aelists[key] = aelist
 
     def add_AELINK(self, card_obj, comment=''):
-        aelink = AELINK(card_obj, comment=comment)
+        aelink = AELINK.add_card(card_obj, comment=comment)
         key = aelink.id
         assert key >= 0
         if key not in self.aelinks:
@@ -2374,7 +2402,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         #assert key not in self.aestats,'\naestat=%s oldAESTAT=\n%s' %(aestat,self.aestats[key])
 
     def add_AEPARM(self, card_obj, comment=''):
-        aeparam = AEPARM(card_obj, comment=comment)
+        aeparam = AEPARM.add_card(card_obj, comment=comment)
         key = aeparam.id
         assert key not in self.aeparams, '\naeparam=\n%s oldAESTAT=\n%s' % (
             aeparam, self.aeparams[key])
@@ -2382,7 +2410,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         self.aeparams[key] = aeparam
 
     def add_AESTAT(self, card_obj, comment=''):
-        aero = AESTAT(card_obj, comment=comment)
+        aero = AESTAT.add_card(card_obj, comment=comment)
         key = aestat.id
         assert key not in self.aestats, '\naestat=\n%s oldAESTAT=\n%s' % (
             aestat, self.aestats[key])
@@ -2390,7 +2418,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         self.aestats[key] = aestat
 
     def add_AESURF(self, card_obj, comment=''):
-        aesurf = AESURF(card_obj, comment=comment)
+        aesurf = AESURF.add_card(card_obj, comment=comment)
         key = aesurf.aesid
         assert key not in self.aesurfs, '\naesurf=\n%s oldAESURF=\n%s' % (
             aesurf, self.aesurfs[key])
@@ -2481,7 +2509,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         spc_ids = []
         for spc_type, spc in iteritems(spcs):
             spc_ids.extend(spc.keys())
-        return unique(spc_ids)
+        return np.unique(spc_ids)
 
     def SPC(self, spc_id, resolve=True, used_ids=None):
         """
@@ -2657,13 +2685,405 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             #print("f massii =", massii)
             massi.extend(massii)
 
-        massi = array(massi)
+        massi = np.array(massi)
         total = True
         if total:
             mass = massi.sum()
         else:
             mass = massi
         return mass
+
+    def _get_lines(self, bdf_filename, punch=False):
+        """
+        Opens the bdf and extracts the lines
+
+        Parameters
+        ----------
+
+        bdf_filename : str
+            the main bdf_filename
+        punch : bool, optional
+            is this a punch file (default=False; no executive/case control decks)
+
+        Returns
+        -------
+        executive_control_lines : list[str]
+            the executive control deck as a list of strings
+        case_control_lines : list[str]
+            the case control deck as a list of strings
+        bulk_data_lines : list[str]
+            the bulk data deck as a list of strings
+        """
+        #: the directory of the 1st BDF (include BDFs are relative to this one)
+        self.include_dir = os.path.dirname(os.path.abspath(bdf_filename))
+
+        with self._open_file(bdf_filename, basename=True) as bdf_file:
+            try:
+                lines = bdf_file.readlines()
+            except:
+                self._show_bad_file(bdf_filename)
+
+        nlines = len(lines)
+
+        i = 0
+        while i < nlines:
+            try:
+                line = lines[i].rstrip('\r\n\t')
+            except IndexError:
+                break
+            uline = line.upper()
+            if uline.startswith('INCLUDE'):
+                j = i + 1
+                line_base = line.split('$')[0]
+                include_lines = [line_base.strip()]
+                # print('----------------------')
+
+                line_base = line_base[8:].strip()
+                if line_base.startswith("'") and line_base.endswith("'"):
+                    pass
+                else:
+                    while not line.split('$')[0].endswith("'") and j < nlines:
+                        # print('j=%s nlines=%s less?=%s'  % (j, nlines, j < nlines))
+                        try:
+                            line = lines[j].split('$')[0].strip()
+                        except IndexError:
+                            # print('bdf_filename=%r' % bdf_filename)
+                            crash_name = 'pyNastran_crash.bdf'
+                            self._dump_file(crash_name, lines, i+1)
+                            msg = 'There was an invalid filename found while parsing (index).\n'
+                            msg += 'Check the end of %r\n' % crash_name
+                            msg += 'bdf_filename2 = %r' % bdf_filename
+                            raise IndexError(msg)
+                        # print('endswith_quote=%s; %r' % (line.split('$')[0].strip().endswith(""), line.strip()))
+                        include_lines.append(line.strip())
+                        j += 1
+                    # print('j=%s nlines=%s less?=%s'  % (j, nlines, j < nlines))
+
+                    #print('*** %s' % line)
+                    #bdf_filename2 = line[7:].strip(" '")
+                    #include_lines = [line] + lines[i+1:j]
+                #print(include_lines)
+                bdf_filename2 = get_include_filename(include_lines, include_dir=self.include_dir)
+
+                try:
+                    self._open_file_checks(bdf_filename2)
+                except IOError:
+                    crash_name = 'pyNastran_crash.bdf'
+                    self._dump_file(crash_name, lines, j)
+                    msg = 'There was an invalid filename found while parsing.\n'
+                    msg += 'Check the end of %r\n' % crash_name
+                    msg += 'bdf_filename2 = %r' % bdf_filename2
+                    #msg += 'len(bdf_filename2) = %s' % len(bdf_filename2)
+                    raise IOError(msg)
+
+                with self._open_file(bdf_filename2, basename=False) as bdf_file:
+                    #print('bdf_file.name = %s' % bdf_file.name)
+                    lines2 = bdf_file.readlines()
+
+                #print('lines2 = %s' % lines2)
+                nlines += len(lines2)
+
+                #line2 = lines[j].split('$')
+                #if not line2[0].isalpha():
+                    #print('** %s' % line2)
+
+                include_comment = '\n$ INCLUDE processed:  %s\n' % bdf_filename2
+                #for line in lines2:
+                    #print("  ?%s" % line.rstrip())
+                lines = lines[:i] + [include_comment] + lines2 + lines[j:]
+                #for line in lines:
+                    #print("  *%s" % line.rstrip())
+            i += 1
+
+        if self.dumplines:
+            self._dump_file('pyNastran_dump.bdf', lines, i)
+        return _lines_to_decks(lines, i, punch)
+
+    def _open_file(self, bdf_filename, basename=False, check=True):
+        """
+        Opens a new bdf_filename with the proper encoding and include directory
+
+        Parameters
+        ----------
+        bdf_filename : str
+            the filename to open
+        basename : bool (default=False)
+            should the basename of bdf_filename be appended to the include directory
+        """
+        if basename:
+            bdf_filename_inc = os.path.join(self.include_dir, os.path.basename(bdf_filename))
+        else:
+            bdf_filename_inc = os.path.join(self.include_dir, bdf_filename)
+
+        self._validate_open_file(bdf_filename, bdf_filename_inc, check)
+
+
+        self.log.debug('opening %r' % bdf_filename_inc)
+        self.active_filenames.append(bdf_filename_inc)
+
+        #print('ENCODING - _open_file=%r' % self._encoding)
+        bdf_file = codec_open(_filename(bdf_filename_inc), 'r', encoding=self._encoding)
+        return bdf_file
+
+    def _validate_open_file(self, bdf_filename, bdf_filename_inc, check):
+        """
+        checks that the file doesn't have obvious errors
+         - hasn't been used
+         - not a directory
+         - is a file
+
+        Parameters
+        ----------
+        bdf_filename : str
+           the current bdf filename
+        bdf_filename_inc : str
+           the next bdf filename
+
+        Raises
+        ------
+        RuntimeError : file is active
+        IOError : Invalid file type
+        """
+        if check:
+            if not os.path.exists(_filename(bdf_filename_inc)):
+                msg = 'No such bdf_filename: %r\n' % bdf_filename_inc
+                msg += 'cwd: %r\n' % os.getcwd()
+                msg += 'include_dir: %r\n' % self.include_dir
+                msg += print_bad_path(bdf_filename_inc)
+                raise IOError(msg)
+            elif bdf_filename_inc.endswith('.op2'):
+                raise IOError('Invalid filetype: bdf_filename=%r' % bdf_filename_inc)
+
+            bdf_filename = bdf_filename_inc
+            if bdf_filename in self.active_filenames:
+                msg = 'bdf_filename=%s is already active.\nactive_filenames=%s' \
+                    % (bdf_filename, self.active_filenames)
+                raise RuntimeError(msg)
+            elif os.path.isdir(_filename(bdf_filename)):
+                current_filename = self.active_filename if len(self.active_filenames) > 0 else 'None'
+                raise IOError('Found a directory: bdf_filename=%r\ncurrent_file=%s' % (
+                    bdf_filename_inc, current_filename))
+            elif not os.path.isfile(_filename(bdf_filename)):
+                raise IOError('Not a file: bdf_filename=%r' % bdf_filename)
+
+    def _parse_cards(self, cards, card_count):
+        """creates card objects and adds the parsed cards to the deck"""
+        #print('card_count = %s' % card_count)
+        #print(type(cards))
+        if isinstance(cards, dict): # self._is_cards_dict = True
+            self.allocate(card_count, cards)
+            print('cards.keys() = ', cards.keys())
+            for card_name, card in sorted(iteritems(cards)):
+                if self.is_reject(card_name):
+                    self.log.info('    rejecting card_name = %s' % card_name)
+                    self.log.info('    rejecting card = %s' % card)
+                    for cardi in card:
+                        self._increase_card_count(card_name)
+                        print(cardi[0])
+                        print(cardi[1])
+                        adf
+                        self.rejects.append([cardi[0]] + cardi[1])
+                else:
+                    self.log.info('    card_name = %s' % card_name)
+                    self.log.info('    card = %s' % card)
+                    self.log.info('    len(card) = %s' % len(card))
+                    for comment, card_lines in card:
+                        self.log.info('    card_lines = %s' % card_lines)
+                        self.add_card(card_lines, card_name, comment=comment,
+                                      is_list=True, has_none=False)
+                        #self._add_card_object(card_name, card_lines, comment=comment)
+        else:
+            for card in cards:
+                card_name, comment, card_lines = card
+                if card_name is None:
+                    msg = 'card_name = %r\n' % card_name
+                    msg += 'card_lines = %s' % card_lines
+                    raise RuntimeError(msg)
+                if self.is_reject(card_name):
+                    if card_name not in self.card_count:
+                        if ' ' in card_name:
+                            msg = (
+                                'No spaces allowed in card name %r.  '
+                                'Should this be a comment?\n%s%s' % (
+                                    card_name, comment, card_lines))
+                            raise RuntimeError(msg)
+                        if card_name in ['SUBCASE ', 'CEND']:
+                            raise RuntimeError('No executive/case control deck was defined.')
+                        self.log.info('    rejecting card_name = %s' % card_name)
+                    self._increase_card_count(card_name)
+                    self.rejects.append([comment] + card_lines)
+                else:
+                    self.add_card(card_lines, card_name, comment=comment,
+                                  is_list=False, has_none=False)
+
+    def _parse_dynamic_syntax(self, key):
+        """
+        Applies the dynamic syntax for %varName
+
+        Parameters
+        ----------
+        key : str
+            the uppercased key
+
+        Returns
+        -------
+        value : int/float/str
+            the dynamic value defined by dict_of_vars
+
+        .. seealso:: :func: `set_dynamic_syntax`
+        """
+        key = key.strip()[1:]
+        self.log.debug("dynamic key = %r" % key)
+        #self.dict_of_vars = {'P5':0.5,'ONEK':1000.}
+        if key not in self.dict_of_vars:
+            msg = "key=%r not found in keys=%s" % (key, self.dict_of_vars.keys())
+            raise KeyError(msg)
+        return self.dict_of_vars[key]
+
+    def _parse_primary_file_header(self, bdf_filename):
+        """
+        Extract encoding, nastran_format, and punch from the primary BDF.
+
+        Parameters
+        ----------
+        bdf_filename : str
+            the input filename
+
+        ..code-block :: python
+
+            $ pyNastran: version=NX
+            $ pyNastran: encoding=latin-1
+            $ pyNastran: punch=True
+            $ pyNastran: dumplines=True
+            $ pyNastran: nnodes=10
+            $ pyNastran: nelements=100
+            $ pyNastran: skip_cards=PBEAM,CBEAM
+            $ pyNastran: units=in,lb,s
+
+        ..warning :: pyNastran lines must be at the top of the file
+        """
+        with open(bdf_filename, 'r') as bdf_file:
+            check_header = True
+            while check_header:
+                try:
+                    line = bdf_file.readline()
+                except:
+                    break
+
+                if line.startswith('$'):
+                    key, value = _parse_pynastran_header(line)
+
+                    if key:
+                        #print('pyNastran key=%s value=%s' % (key, value))
+                        if key == 'version':
+                            self.nastran_format = value
+                        elif key == 'encoding':
+                            self._encoding = value
+                        elif key == 'punch':
+                            self.punch = True if value == 'true' else False
+                        elif key in ['nnodes', 'nelements']:
+                            pass
+                        elif key == 'dumplines':
+                            self.dumplines = True if value == 'true' else False
+                        elif key == 'skip_cards':
+                            cards = {value.strip() for value in value.upper().split(',')}
+                            self.cards_to_read = self.cards_to_read - cards
+                        elif 'skip ' in key:
+                            type_to_skip = key[5:].strip()
+                            #values = [int(value) for value in value.upper().split(',')]
+                            values = parse_patran_syntax(value)
+                            if type_to_skip not in self.object_attributes():
+                                raise RuntimeError('%r is an invalid key' % type_to_skip)
+                            if type_to_skip not in self.values_to_skip:
+                                self.values_to_skip[type_to_skip] = values
+                            else:
+                                self.values_to_skip[type_to_skip] = np.hstack([
+                                    self.values_to_skip[type_to_skip],
+                                    values
+                                ])
+                        #elif key == 'skip_elements'
+                        #elif key == 'skip_properties'
+                        elif key == 'units':
+                            self.units = [value.strip() for value in value.upper().split(',')]
+                        else:
+                            raise NotImplementedError(key)
+                    else:
+                        break
+                else:
+                    break
+
+    def _verify_bdf(self):
+        """
+        Cross reference verification method.
+        """
+        xref = self._xref
+        #for key, card in sorted(iteritems(self.params)):
+            #card._verify(xref)
+        for key, card in sorted(iteritems(self.nodes)):
+            try:
+                card._verify(xref)
+            except:
+                print(str(card))
+                raise
+        for key, card in sorted(iteritems(self.coords)):
+            try:
+                card._verify(xref)
+            except:
+                print(str(card))
+                raise
+        #if 0:
+            #for key, card in sorted(iteritems(self.elements)):
+                #try:
+                    #card._verify(xref)
+                #except:
+                    #print(str(card))
+                    #raise
+            #for key, card in sorted(iteritems(self.properties)):
+                #try:
+                    #card._verify(xref)
+                #except:
+                    #print(str(card))
+                    #raise
+        self.materials._verify(xref)
+
+
+def _lines_to_decks(lines, i, punch):
+    """
+    Splits the lines into their deck.
+    """
+    executive_control_lines = []
+    case_control_lines = []
+    bulk_data_lines = []
+
+    if punch:
+        bulk_data_lines = lines
+    else:
+        flag = 1
+        for i, line in enumerate(lines):
+            if flag == 1:
+                #line = line.upper()
+                if line.upper().startswith('CEND'):
+                    assert flag == 1
+                    flag = 2
+                executive_control_lines.append(line.rstrip())
+            elif flag == 2:
+                uline = line.upper()
+                if 'BEGIN' in uline and ('BULK' in uline or 'SUPER' in uline):
+                    assert flag == 2
+                    flag = 3
+                case_control_lines.append(line.rstrip())
+            else:
+                break
+        for line in lines[i:]:
+            bulk_data_lines.append(line.rstrip())
+    del lines
+    #for line in bulk_data_lines:
+        #print(line)
+
+    # clean comments
+    executive_control_lines = [_clean_comment(line) for line in executive_control_lines]
+    case_control_lines = [_clean_comment(line) for line in case_control_lines]
+    return executive_control_lines, case_control_lines, bulk_data_lines
 
 def reduce_types(types):
     types2 = []
@@ -2721,7 +3141,6 @@ def _clean_comment(comment, end=-1):
 
 if __name__ == '__main__':  # pragma: no cover
     bdf = BDF()
-    import pyNastran
     pkg_path = pyNastran.__path__[0]
     bdfname = sys.argv[1]
     #print("bdfname =", bdfname)

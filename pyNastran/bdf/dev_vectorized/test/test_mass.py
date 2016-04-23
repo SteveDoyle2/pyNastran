@@ -81,7 +81,7 @@ class TestMass(unittest.TestCase):
     def test_mass_shell_1(self):  # passes
         model = BDF(debug=False, log=None)
         bdfname = os.path.join(testpath, 'test_mass.dat')
-        model.read_bdf(bdfname, include_dir=None, xref=True)
+        model.read_bdf(bdfname, xref=True)
 
         ###########
         # QUADS
@@ -174,7 +174,7 @@ class TestMass(unittest.TestCase):
     def test_bad_01(self):
         model = BDF(debug=False, log=None)
         bdfname = os.path.join(testpath, 'test_mass.dat')
-        model.read_bdf(bdfname, include_dir=None, xref=True)
+        model.read_bdf(bdfname, xref=True)
 
         # this passes silently
         print(model.elements[['cat']])
@@ -190,7 +190,7 @@ class TestMass(unittest.TestCase):
     def test_combo_1(self):
         model = BDF(debug=False, log=None)
         bdfname = os.path.join(testpath, 'test_mass.dat')
-        model.read_bdf(bdfname, include_dir=None, xref=True)
+        model.read_bdf(bdfname, xref=True)
 
         # these are valid
         eids, mass = model.elements.get_mass_by_element_id([8, 9])
@@ -221,7 +221,7 @@ class TestMass(unittest.TestCase):
     def test_mass_solid_1(self):  # passes
         model = BDF(debug=False, log=None)
         bdfname = os.path.join(testpath, 'test_mass.dat')
-        model.read_bdf(bdfname, include_dir=None, xref=True)
+        model.read_bdf(bdfname, xref=True)
 
         # hexa - psolid - nsm = 0
         #print(model.elements[7:8])
