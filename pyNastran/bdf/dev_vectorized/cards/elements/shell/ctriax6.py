@@ -214,3 +214,6 @@ class CTRIAX6(object):
         """
         grids2_cid_0 = grids_cid0[searchsorted(nids_to_get, node_ids), :]
         return grids2_cid_0
+
+    def __repr__(self):
+        return '<%s object; n=%s>' % (self.type, self.n)

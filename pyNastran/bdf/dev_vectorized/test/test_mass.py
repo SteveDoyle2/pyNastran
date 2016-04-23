@@ -46,7 +46,7 @@ class TestMass(unittest.TestCase):
         assert mat is None
 
     def verify_psolid_element(self, element, mass, volume, centroid, rho, E=None, G=None, nu=None):
-        assert not isinstance(element, list), element
+        #assert not isinstance(element, list), element
         #print(object_methods(element, 'all'))
         self.assertAlmostEqual(element.get_volume_by_element_id(), volume, msg='volume=%s expected=%s' % (element.get_volume_by_element_id(), volume))
         self.assertTrue(all(element.get_centroid_by_element_id()[0] == centroid), msg='centroid=%s expected=%s' % (element.get_centroid_by_element_id(), centroid))
@@ -233,6 +233,7 @@ class TestMass(unittest.TestCase):
         #hexa = model.get_elements(7)
         #print(hexa)
         hexa = model.elements[7]
+        print('hexa =', hexa)
         mass = 0.2
         volume = 2. # l * w * h = 1 * 1 * 2
         rho = 0.1

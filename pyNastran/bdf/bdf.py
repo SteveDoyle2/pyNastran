@@ -700,9 +700,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             etc.
         """
         self._read_bdf_helper(bdf_filename, encoding, punch)
-
-        if bdf_filename.lower().endswith('.pch'):  # .. todo:: should this be removed???
-            self.punch = True
         self._parse_primary_file_header(bdf_filename)
 
         self.log.debug('---starting BDF.read_bdf of %s---' % self.bdf_filename)
@@ -764,10 +761,13 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         if not os.path.exists(bdf_filename):
             msg = 'cannot find bdf_filename=%r\n%s' % (bdf_filename, print_bad_path(bdf_filename))
             raise IOError(msg)
+        if bdf_filename.lower().endswith('.pch'):  # .. todo:: should this be removed???
+            punch = True
 
         #: the active filename (string)
         self.bdf_filename = bdf_filename
 
+        #: is this a punch file (no executive control deck)
         self.punch = punch
 
     def fill_dmigs(self):

@@ -35,10 +35,14 @@ class ElementsShell(object):
 
     def allocate(self, card_count):
         etypes = self._get_types(nlimit=False)
+        self.model.log.info('    card_count=%s' % str(card_count))
+
         for etype in etypes:
+            self.model.log.info('    allocate? %s' % etype.type)
             if etype.type in card_count:
-                self.model.log.debug('    allocate %s' % etype.type)
-                etype.allocate(card_count[etype.type])
+                netype = card_count[etype.type]
+                self.model.log.info('    allocate %s->%s' % (etype.type, netype))
+                etype.allocate(netype)
             #else:
                 #assert hasattr(etype, 'allocate'), '%s doesnt support allocate' % etype.type
 
@@ -207,6 +211,7 @@ class ElementsShell(object):
                 if etype.n > 0:
                     types2.append(etype)
             types = types2
+        self.model.log.info('types = %s' % types)
         return types
 
     def get_stats(self):
@@ -222,3 +227,6 @@ class ElementsShell(object):
         types = self._get_types()
         for elems in types:
             elems._verify(xref=xref)
+
+    def __repr__(self):
+        return '<%s object; n=%s>' % (self.__class__.__name__, self.n)

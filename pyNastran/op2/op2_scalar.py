@@ -358,12 +358,20 @@ class OP2_Scalar(LAMA, ONR, OGPF,
     def set_as_nx(self):
         self.is_nx = True
         self.is_msc = False
+        self.is_optistruct = False
         self._nastran_format = 'msc'
 
     def set_as_msc(self):
         self.is_nx = False
         self.is_msc = True
+        self.is_optistruct = False
         self._nastran_format = 'nx'
+
+    def set_as_optistruct(self):
+        self.is_nx = False
+        self.is_msc = False
+        self.is_optistruct = True
+        self._nastran_format = 'optistruct'
 
     def __init__(self, debug=False, log=None, debug_file=None):
         """
@@ -1190,6 +1198,9 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 self.set_table_type()
             elif version == b'XXXXXXXX':
                 self.set_as_msc()
+                self.set_table_type()
+            elif version == b'OS12.210':
+                self.set_as_optistruct()
                 self.set_table_type()
             else:
                 raise RuntimeError('unknown version=%r' % version)
