@@ -1729,7 +1729,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
     def _prepare_dequatn(self, card, card_obj, comment=''):
         """adds a DEQATN"""
         if hasattr(self, 'test_deqatn') or 1:
-            self.add_DEQATN(DEQATN(card_obj, comment=comment))
+            self.add_DEQATN(DEQATN.add_card(card_obj, comment=comment))
         else:
             if comment:
                 self.rejects.append([comment])
@@ -2503,34 +2503,34 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                 #print(include_lines)
                 bdf_filename2 = get_include_filename(include_lines, include_dir=self.include_dir)
                 if self.read_includes:
-                try:
-                    self._open_file_checks(bdf_filename2)
-                except IOError:
-                    crash_name = 'pyNastran_crash.bdf'
-                    self._dump_file(crash_name, lines, j)
-                    msg = 'There was an invalid filename found while parsing.\n'
-                    msg += 'Check the end of %r\n' % crash_name
-                    msg += 'bdf_filename2 = %r' % bdf_filename2
-                    #msg += 'len(bdf_filename2) = %s' % len(bdf_filename2)
-                    raise IOError(msg)
+                    try:
+                        self._open_file_checks(bdf_filename2)
+                    except IOError:
+                        crash_name = 'pyNastran_crash.bdf'
+                        self._dump_file(crash_name, lines, j)
+                        msg = 'There was an invalid filename found while parsing.\n'
+                        msg += 'Check the end of %r\n' % crash_name
+                        msg += 'bdf_filename2 = %r' % bdf_filename2
+                        #msg += 'len(bdf_filename2) = %s' % len(bdf_filename2)
+                        raise IOError(msg)
 
-                with self._open_file(bdf_filename2, basename=False) as bdf_file:
-                    #print('bdf_file.name = %s' % bdf_file.name)
-                    lines2 = bdf_file.readlines()
+                    with self._open_file(bdf_filename2, basename=False) as bdf_file:
+                        #print('bdf_file.name = %s' % bdf_file.name)
+                        lines2 = bdf_file.readlines()
 
-                #print('lines2 = %s' % lines2)
-                nlines += len(lines2)
+                    #print('lines2 = %s' % lines2)
+                    nlines += len(lines2)
 
-                #line2 = lines[j].split('$')
-                #if not line2[0].isalpha():
-                    #print('** %s' % line2)
+                    #line2 = lines[j].split('$')
+                    #if not line2[0].isalpha():
+                        #print('** %s' % line2)
 
-                include_comment = '\n$ INCLUDE processed:  %s\n' % bdf_filename2
-                #for line in lines2:
-                    #print("  ?%s" % line.rstrip())
-                lines = lines[:i] + [include_comment] + lines2 + lines[j:]
-                #for line in lines:
-                    #print("  *%s" % line.rstrip())
+                    include_comment = '\n$ INCLUDE processed:  %s\n' % bdf_filename2
+                    #for line in lines2:
+                        #print("  ?%s" % line.rstrip())
+                    lines = lines[:i] + [include_comment] + lines2 + lines[j:]
+                    #for line in lines:
+                        #print("  *%s" % line.rstrip())
                 else:
                     lines = lines[:i] + lines[j:]
                     self.reject_lines.append(include_lines)

@@ -821,6 +821,59 @@ class TestOP2(Tester):
         assert os.path.exists(debug_file), os.listdir(folder)
         os.remove(debug_file)
 
+    def test_op2_optistruct_01(self):
+        """
+        Optistruct 2012 Tables : CASECC, GEOM1S, GEOM2S, GEOM3S, GEOM4S, EPTS, MPTS,
+                                OUGV1, OES1X
+        """
+        op2_filename = os.path.abspath(
+            os.path.join(test_path, '..', 'models', 'optistruct', 'hm14.op2'))
+        make_geom = False
+        write_bdf = False
+        write_f06 = True
+        debug = False
+        #debug_file = 'solid_bending.debug.out'
+        model, ext = os.path.splitext(op2_filename)
+        debug_file = model + '.debug.out'
+
+        if os.path.exists(debug_file):
+            os.remove(debug_file)
+        read_op2(op2_filename, debug=debug)
+        op2, is_passed = run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, isubcases=[],
+                                 write_f06=write_f06,
+                                 debug=debug, stop_on_failure=True, binary_debug=True, quiet=True)
+        isubcase = 1
+        # rod_force = op2.crod_force[isubcase]
+        # assert rod_force.nelements == 2, rod_force.nelements
+        # assert rod_force.data.shape == (7, 2, 2), rod_force.data.shape
+
+
+        # isubcases = [(1, 1, 1, 0, 'DEFAULT'), (1, 8, 1, 0, 'DEFAULT')]
+        # isubcase = isubcases[1]
+
+        #assert len(op2.rod_force) == 0
+        assert len(op2.crod_stress) == 0
+
+        assert len(op2.cbar_force) == 0
+        assert len(op2.cbar_stress) == 0
+        assert len(op2.cbeam_stress) == 0
+
+        assert len(op2.cquad4_stress) == 0
+        assert len(op2.ctria3_stress) == 0
+
+        ctetra_stress = op2.ctetra_stress[isubcase]
+        ctetra_stress.build_dataframe()
+        assert ctetra_stress.nelements == 3951, ctetra_stress.nelements
+        assert ctetra_stress.data.shape == (1, 19755, 10), ctetra_stress.data.shape
+
+        assert len(op2.cpenta_stress) == 0
+        assert len(op2.chexa_stress) == 0
+
+        assert len(op2.grid_point_forces) == 0
+
+        assert os.path.exists(debug_file), os.listdir(folder)
+        os.remove(debug_file)
+
     def test_op2_plate_py_01(self):
         op2_filename = os.path.join('plate_py', 'plate_py.op2')
         folder = os.path.abspath(os.path.join(test_path, '..', 'models'))

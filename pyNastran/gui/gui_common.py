@@ -2348,7 +2348,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                 magnify = self.magnify if self.magnify > magnify_min else magnify_min
             else:
                 magnify = magnification
-
+            assert isinstance(magnify, integer_types), 'magnify=%r type=%s' % (magnify, type(magnify))
             self._update_text_size(magnify=magnify)
             render_large.SetMagnification(magnify)
 
