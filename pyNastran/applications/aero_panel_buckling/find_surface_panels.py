@@ -15,11 +15,11 @@ import numpy as np
 
 from pyNastran.bdf.case_control_deck import CaseControlDeck
 from pyNastran.bdf.bdf import BDF
-from pyNastran.op2.op2 import OP2
+from pyNastran.op2.op2 import OP2, read_op2
 from pyNastran.bdf.field_writer import print_card_8
 
 def get_patch_edges(edge_to_eid_map, xyz_cid0, is_symmetric=True,
-                    model=None, consider_pids=False):
+                    bdf_model=None, consider_pids=False):
     """
     Find all the edges of any patch
 
@@ -33,7 +33,7 @@ def get_patch_edges(edge_to_eid_map, xyz_cid0, is_symmetric=True,
         enables an xz symmetry (+/-y is a mirror)
         (should this actually be yz symmetry????)
         True: half model or model separated by a central gap
-    model : BDF(); default=None
+    bdf_model : BDF(); default=None
         required for consider_pids=True
     consider_pids : bool; default=False
         split model by properties
@@ -70,7 +70,7 @@ def get_patch_edges(edge_to_eid_map, xyz_cid0, is_symmetric=True,
                      if np.allclose(xyz_cid0[nid][1], ymin)]
 
             if consider_pids:
-                pids = np.unique([model.elements[eid].Pid() for eid in eids])
+                pids = np.unique([bdf_model.elements[eid].Pid() for eid in eids])
 
             if len(eids) != 2 or len(yedge) > 1 or len(pids) > 1:
                 patch_edges.append(edge)
@@ -81,7 +81,7 @@ def get_patch_edges(edge_to_eid_map, xyz_cid0, is_symmetric=True,
     else:
         for edge, eids in iteritems(edge_to_eid_map):
             if consider_pids:
-                pids = np.unique([model.elements[eid].Pid() for eid in eids])
+                pids = np.unique([bdf_model.elements[eid].Pid() for eid in eids])
 
             if len(eids) != 2 or len(pids):
                 patch_edges.append(edge)
@@ -90,7 +90,7 @@ def get_patch_edges(edge_to_eid_map, xyz_cid0, is_symmetric=True,
 
 def find_ribs_and_spars(xyz_cid0, edge_to_eid_map, eid_to_edge_map,
                         workpath='results', is_symmetric=True,
-                        model=None, consider_pids=False):
+                        bdf_model=None, consider_pids=False):
     """
     Extracts rib/spar/skin patches based on geometry.  You can have a
     single property id and this will still work.
@@ -107,7 +107,7 @@ def find_ribs_and_spars(xyz_cid0, edge_to_eid_map, eid_to_edge_map,
         the results directory
     is_symmetric : bool; default=True
         enables yz symmetry
-    model : BDF(); default=None
+    bdf_model : BDF(); default=None
         required for consider_pids=True
     consider_pids : bool; default=False
         split model by properties
@@ -195,7 +195,7 @@ def find_ribs_and_spars(xyz_cid0, edge_to_eid_map, eid_to_edge_map,
         os.makedirs(workpath)
     patch_edges, eids_on_edge, free_edges, free_eids = get_patch_edges(
         edge_to_eid_map, xyz_cid0, is_symmetric=is_symmetric,
-        model=model, consider_pids=consider_pids)
+        bdf_model=bdf_model, consider_pids=consider_pids)
 
     _free_edges = np.array(free_edges, dtype='int32')
     _free_edge_nids = np.unique(_free_edges.ravel())
@@ -585,7 +585,7 @@ def load_patches(patches_filename):
         patches.append(patch)
     return patches
 
-def create_plate_buckling_models(model, op2_filename, mode, isubcase=1,
+def create_plate_buckling_models(bdf_model, op2_model, mode, isubcase=1,
                                  workpath='results', is_symmetric=True,
                                  rebuild_patches=True, consider_pids=False):
     """
@@ -593,10 +593,10 @@ def create_plate_buckling_models(model, op2_filename, mode, isubcase=1,
 
     Parameters
     ----------
-    model : BDF()
+    bdf_model : BDF()
         a bdf object
-    op2_filename : str
-        the path to an OP2 file
+    op2_model : OP2()
+        the OP2 object
     mode : str
         'load' : extract loads from the op2 and apply interface loads to
             each patch and constrain a boundary node
@@ -621,14 +621,13 @@ def create_plate_buckling_models(model, op2_filename, mode, isubcase=1,
 
     #-------------------------
     assert mode in ['load', 'displacement'], 'mode=%r' % mode
-    assert isinstance(op2_filename, string_types), 'op2_filename=%r' % op2_filename
-    out = model._get_maps(consider_1d=False, consider_2d=True, consider_3d=False)
+    out = bdf_model._get_maps(consider_1d=False, consider_2d=True, consider_3d=False)
     (edge_to_eid_map, eid_to_edge_map, nid_to_edge_map) = out
 
 
     xyz_cid0 = {}
     #cds = {}
-    for nid, node in iteritems(model.nodes):
+    for nid, node in iteritems(bdf_model.nodes):
         xyz_cid0[nid] = node.get_position()
         #cds[nid] = node.Cd()
 
@@ -637,24 +636,25 @@ def create_plate_buckling_models(model, op2_filename, mode, isubcase=1,
         patch_edges_array, eids_on_edge, patches = find_ribs_and_spars(
             xyz_cid0, edge_to_eid_map, eid_to_edge_map,
             workpath=workpath, is_symmetric=is_symmetric,
-            model=model, consider_pids=consider_pids)
+            bdf_model=bdf_model, consider_pids=consider_pids)
 
-        eids = model.element_ids
+        eids = bdf_model.element_ids
         save_patch_info(eids, xyz_cid0, patch_edges_array, eids_on_edge, patches,
                         all_eids=None,
                         workpath=workpath)
     else:
-        #msg = 'add ability to start from existing patch/edge files; rebuild_patches=%s' % rebuild_patches
+        msg = ('add ability to start from existing patch/edge files; '
+               'rebuild_patches=%s' % rebuild_patches)
         #raise NotImplementedError(msg)
 
         #workpath = 'results'
         patch_edges_array, eids_on_edge, patches = load_patch_info(workpath=workpath)
-    write_buckling_bdfs(model, op2_filename, xyz_cid0,
+    write_buckling_bdfs(bdf_model, op2_model, xyz_cid0,
                         patches, patch_edges_array,
                         subcase_id=isubcase, mode=mode, workpath=workpath)
 
 
-def write_buckling_bdfs(model, op2_filename, xyz_cid0, patches, patch_edges_array,
+def write_buckling_bdfs(bdf_model, op2_model, xyz_cid0, patches, patch_edges_array,
                         subcase_id=1,
                         eig_min=-1.0, eig_max=3., nroots=20,
                         mode='displacement', workpath='results'):
@@ -663,10 +663,10 @@ def write_buckling_bdfs(model, op2_filename, xyz_cid0, patches, patch_edges_arra
 
     Parameters
     ----------
-    model : BDF()
+    bdf_model : BDF()
         the BDF object
-    op2_filename : str
-        the name of the OP2 to analyze
+    op2_model : OP2()
+        the OP2 object
     xyz_cid0 : (nnodes, 3) ndarray
         the nodes in the global CID=0 frame
     patches : ???
@@ -687,20 +687,19 @@ def write_buckling_bdfs(model, op2_filename, xyz_cid0, patches, patch_edges_arra
     #       center plane of the wing
     assert mode in ['load', 'displacement'], 'mode=%r' % mode
 
-    subcase = model.subcases[subcase_id]
+    subcase = bdf_model.subcases[subcase_id]
 
-    case_control_lines, bulk_data_cards, spc_id, mpc_id, load_id = create_buckling_header(subcase, eig_min, eig_max, nroots)
+    (case_control_lines, bulk_data_cards, spc_id, mpc_id,
+     load_id) = create_buckling_header(subcase, eig_min, eig_max, nroots)
 
-    out_model = OP2()
     print('**** workpath', workpath)
-    out_model.read_op2(op2_filename)
     if mode == 'displacement':
-        #print('out_model.displacements =', out_model.displacements)
-        displacements = out_model.displacements[subcase_id]
+        #print('op2_model.displacements =', op2_model.displacements)
+        displacements = op2_model.displacements[subcase_id]
         node_ids_full_model = displacements.node_gridtype[:, 0]
         ## TODO: check for cd != 0
     elif mode == 'load':
-        nodal_forces = out_model.grid_point_forces[subcase_id]
+        nodal_forces = op2_model.grid_point_forces[subcase_id]
     else:
         raise RuntimeError(mode)
 
@@ -735,7 +734,7 @@ def write_buckling_bdfs(model, op2_filename, xyz_cid0, patches, patch_edges_arra
         all_nids_on_patch = []
         pids_on_patch = set([])
         for eid in patch_eids_array:
-            elem = model.elements[eid]
+            elem = bdf_model.elements[eid]
             node_ids = elem.node_ids
 
             all_nids_on_patch.append(node_ids)
@@ -761,27 +760,27 @@ def write_buckling_bdfs(model, op2_filename, xyz_cid0, patches, patch_edges_arra
         if mode == 'load':
             cd = np.zeros(nnodes, dtype='int32')
             for i, nid in enumerate(all_nids_on_patch):
-                node = model.nodes[nid]
+                node = bdf_model.nodes[nid]
                 cdi = node.Cd()
                 patch_file.write(str(node))
                 cd[i] = cdi
         elif mode == 'displacement':
             for i, nid in enumerate(all_nids_on_patch):
-                node = model.nodes[nid]
+                node = bdf_model.nodes[nid]
                 patch_file.write(str(node))
         else:
             raise NotImplementedError(mode)
 
-        # model._write_common(patch_file, size=8, is_double=False)
+        # bdf_model._write_common(patch_file, size=8, is_double=False)
         size = 8
         is_double = False
-        model._write_coords(patch_file, size, is_double)
-        model._write_materials(patch_file, size, is_double)
+        bdf_model._write_coords(patch_file, size, is_double)
+        bdf_model._write_materials(patch_file, size, is_double)
 
         for pid in pids_on_patch:
-            prop = model.properties[pid]
+            prop = bdf_model.properties[pid]
             patch_file.write(prop.write_card(size=size, is_double=is_double))
-            #model._write_properties(patch_file, size, is_double)
+            #bdf_model._write_properties(patch_file, size, is_double)
 
         # msg = ['                                          G R I D   P O I N T   F O R C E   B A L A N C E\n',
             # '  POINT-ID    ELEMENT-ID    SOURCE         T1             T2             T3             R1             R2             R3\n', ]
@@ -1003,8 +1002,7 @@ def write_buckling_bdf(model, op2_filename, nids_to_constrain,
     if not os.path.exists(workpath):
         os.makedirs(workpath)
 
-    out_model = OP2(debug=debug)
-    out_model.read_op2(op2_filename)
+    op2_model = read_op2(op2_filename, debug=debug)
 
     case_control_deck = deepcopy(model.case_control_deck)
     print('**** workpath', workpath)
@@ -1017,7 +1015,8 @@ def write_buckling_bdf(model, op2_filename, nids_to_constrain,
         subcase = case_control_deck.subcases[subcase_id]
 
         model.sol = 105
-        case_control_lines, bulk_data_cards, spc_id, mpc_id, load_id = create_buckling_header(subcase, eig_min, eig_max, nroots)
+        (case_control_lines, bulk_data_cards, spc_id, mpc_id,
+         load_id) = create_buckling_header(subcase, eig_min, eig_max, nroots)
         if load_id in model.loads:
             del model.loads[load_id]
         if spc_id in model.spcs:
@@ -1027,7 +1026,7 @@ def write_buckling_bdf(model, op2_filename, nids_to_constrain,
         dependent_nid_to_components = model.get_dependent_nid_to_components(mpc_id)
 
         if mode == 'displacement':
-            displacements = out_model.displacements[subcase_id]
+            displacements = op2_model.displacements[subcase_id]
             node_ids_full_model = displacements.node_gridtype[:, 0]
         else:
             raise RuntimeError(mode)
@@ -1179,43 +1178,55 @@ def create_buckling_header(subcase, eig_min=0., eig_max=100., nroots=20):
     return case_control, bulk_data_cards, spc_id, mpc_id, load_id
 
 
-def find_surface_panels(bdf_filename=None, op2_filename=None, isubcase=1,
+def get_bdf_object(bdf_filename, xref=True):
+    """
+    Loads a BDF from a string or just uses the existing BDF object.
+
+    .. note:: For a model object, assumes that the object is correctly
+              created (in regards to xref).
+    """
+    if isinstance(bdf_filename, string_types):
+        model = BDF()
+        if not os.path.exists('model.obj') or 1:
+            model.read_bdf(bdf_filename, xref=False)
+            #model.save('model.obj')
+        else:
+            model.load('model.obj')
+        model.cross_reference(xref=xref)
+    elif isinstance(bdf_filename, BDF):
+        model = bdf_filename
+    else:
+        raise TypeError('type(bdf_filename)=%s' % type(bdf_filename))
+    return model
+
+def get_op2_object(op2_filename):
+    """
+    Loads a BDF from a string or just uses the existing BDF object.
+
+    .. note:: For a model object, assumes that the object is correctly
+              created (in regards to xref).
+    """
+    if isinstance(op2_filename, string_types):
+        model = read_op2(op2_filename)
+    elif isinstance(op2_filename, OP2):
+        model = op2_filename
+    else:
+        raise TypeError('type(op2_filename)=%s' % type(op2_filename))
+    return model
+
+def find_surface_panels(bdf_filename, op2_filename, isubcase=1,
                         consider_pids=False, rebuild_patches=True,
                         workpath='results'):
     """prevents bleedover of data"""
-    model = BDF()
-    #bdf_filename = r'F:\work\pyNastran\pyNastran\master2\pyNastran\applications\mesh\surface\BWB_afl_static_analysis_short.bdf'
-    #op2_filename = r'F:\work\pyNastran\pyNastran\master2\pyNastran\applications\mesh\surface\BWB_afl_static_analysis_short.op2'
+    bdf_model = get_bdf_object(bdf_filename)
+    op2_model = get_op2_object(op2_filename)
 
-    if bdf_filename is None:
-        bdf_filename = 'model_144.bdf'
-    if op2_filename is None:
-        op2_filename = 'model_144.op2'
-
-    #bdf_filename = r'F:\work\pyNastran\pyNastran\master2\models\solid_bending\solid_bending.bdf'
-    if 0:
-        if not os.path.exists(bdf_filename):
-            bdf_filename = os.path.join(os.path.expanduser('~'),
-                                        'Desktop', 'move', '3_LoadCases_Final',
-                                        'BWB_afl_static_analysis_short.bdf')
-            op2_filename = os.path.join(os.path.expanduser('~'),
-                                        'Desktop', 'move', '3_LoadCases_Final',
-                                        'BWB_afl_static_analysis_short.op2')
-            assert os.path.exists(bdf_filename), bdf_filename
-
-    if not os.path.exists('model.obj') or 1:
-        model.read_bdf(bdf_filename, xref=False)
-        #model.save('model.obj')
-    else:
-        model.load('model.obj')
-    model.cross_reference()
-
-    #create_plate_buckling_models(model, op2_filename, 'load')
-    create_plate_buckling_models(model, op2_filename, 'displacement',
+    #create_plate_buckling_models(model, op2_model, 'load')
+    create_plate_buckling_models(bdf_model, op2_model, 'displacement',
                                  workpath=workpath, isubcase=isubcase,
                                  consider_pids=consider_pids,
                                  rebuild_patches=rebuild_patches)
 
 
-if __name__ == '__main__':
-    find_surface_panels()
+#if __name__ == '__main__':
+    #find_surface_panels()

@@ -1,16 +1,21 @@
 from __future__ import print_function
 import glob
 import os
-from six import iteritems
 from collections import defaultdict
+
+from six import iteritems
 from numpy import where, unique, array, zeros, searchsorted, log10, array_equal
 
 from pyNastran.bdf.bdf import BDF
 from pyNastran.op2.op2 import OP2, FatalError
-from pyNastran.applications.aero_panel_buckling.run_patch_buckling_helper import load_sym_regions_map
+from pyNastran.applications.aero_panel_buckling.run_patch_buckling_helper import (
+    load_sym_regions_map)
 
 
 def load_regions(regions_filename):
+    """
+    Loads a regions.csv file
+    """
     with open(regions_filename, 'r') as regions_file:
         lines = regions_file.readlines()
 
@@ -27,7 +32,11 @@ def load_regions(regions_filename):
     return regions_to_pid_map, regions_to_eids_map
 
 
-def load_regions_and_create_eigenvalue_csv(bdf_filename, op2_filenames, regions_filename, sym_regions_filename=None):
+def load_regions_and_create_eigenvalue_csv(bdf_model, op2_filenames,
+                                           regions_filename, sym_regions_filename=None):
+    """
+    loads a BDF and a series of OP2 filenames and creates an eigenvalue buckling plot
+    """
     #patch_numbers = []
     #evals = []
 
@@ -35,7 +44,8 @@ def load_regions_and_create_eigenvalue_csv(bdf_filename, op2_filenames, regions_
     is_sym_regions = False
     if sym_regions_filename is not None:
         is_sym_regions = True
-        region_to_symregion_map, symregion_to_region_map = load_sym_regions_map(sym_regions_filename)
+        region_to_symregion_map, symregion_to_region_map = load_sym_regions_map(
+            sym_regions_filename)
     msg = ''
     for op2_filename in op2_filenames:
         if not os.path.exists(op2_filename):
@@ -59,8 +69,8 @@ def load_regions_and_create_eigenvalue_csv(bdf_filename, op2_filenames, regions_
             continue
         cases = model2.eigenvectors.keys()
         isubcase = cases[0]
-        d = model2.eigenvectors[isubcase]
-        eigrs = array(d.eigrs)
+        eigenvector = model2.eigenvectors[isubcase]
+        eigrs = array(eigenvector.eigrs)
         #print('eigrs =', eigrs, type(eigrs))
 
         i = where(eigrs > 0.0)[0]
@@ -78,12 +88,12 @@ def load_regions_and_create_eigenvalue_csv(bdf_filename, op2_filenames, regions_
             elif patch_id in region_to_symregion_map:
                 sym_patch_id = region_to_symregion_map[patch_id]
             else:
-                asdf
+                raise RuntimeError("can this happen???")
             min_eigenvalue_by_patch_id[sym_patch_id] = min_eigenvalue
     print(msg)
-    model = BDF()
-    model.read_bdf(bdf_filename)
-    all_eids = unique(model.elements.keys())
+    #model = BDF()
+    #model.read_bdf(bdf_filename)
+    all_eids = unique(bdf_model.elements.keys())
     neids = len(all_eids)
 
     eigenvalues = zeros(neids, dtype='float32')
@@ -97,8 +107,9 @@ def load_regions_and_create_eigenvalue_csv(bdf_filename, op2_filenames, regions_
             pid = values[0]
             regions_patch_id = values[1]
             eids = values[2:]
-            i  = searchsorted(all_eids, eids) # [0] ???
-            assert array_equal(all_eids[i], eids), 'iline=%s pid=%s patch_id=%s' % (iline, pid, regions_patch_id)
+            i = searchsorted(all_eids, eids) # [0] ???
+            assert array_equal(all_eids[i], eids), 'iline=%s pid=%s patch_id=%s' % (
+                iline, pid, regions_patch_id)
             if regions_patch_id not in min_eigenvalue_by_patch_id:
                 print('missing pid=%s' % pid)
                 continue
@@ -112,7 +123,7 @@ def load_regions_and_create_eigenvalue_csv(bdf_filename, op2_filenames, regions_
             if log10_eig < 0:
                 is_buckled = 1.
             else:
-                is_buckled = 0
+                is_buckled = 0.
             eig = 10 ** log10_eig
             eig = min([eig, 1.1])
             eigenvalue_file.write('%f, %f, %i\n' % (log10_eig, eig, is_buckled))
@@ -130,11 +141,11 @@ def split_model_by_pid_panel(workpath='results'):
         ipanel = int(sline)
         #print('ipanel = %s' % ipanel)
 
-        model = BDF()
-        model.read_bdf(patch_filename, xref=False)
+        bdf_model = BDF()
+        bdf_model.read_bdf(patch_filename, xref=False)
 
         eids = defaultdict(list)
-        for eid, elem in iteritems(model.elements):
+        for eid, elem in iteritems(bdf_model.elements):
             pid = elem.pid
             key = (pid, ipanel)
             pid_panel[key].append(eid)
@@ -198,7 +209,8 @@ def main():
     #split_model_by_pid_panel(workpath)
 
     sym_regions_filename = 'sym_regions_map.csv'
-    load_regions_and_create_eigenvalue_csv(bdf_filename, op2_filenames, 'regions.txt', sym_regions_filename=sym_regions_filename)
+    load_regions_and_create_eigenvalue_csv(bdf_filename, op2_filenames,
+                                           'regions.txt', sym_regions_filename=sym_regions_filename)
 
 if __name__ == '__main__':
     main()

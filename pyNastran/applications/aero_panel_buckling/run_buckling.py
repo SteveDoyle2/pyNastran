@@ -3,8 +3,9 @@ import glob
 from six import iteritems
 
 from pyNastran.applications.aero_panel_buckling.find_surface_panels import find_surface_panels
-from pyNastran.applications.aero_panel_buckling.split_model import split_model_by_pid_panel, load_regions, load_regions_and_create_eigenvalue_csv
-from pyNastran.applications.aero_panel_buckling.run_patch_buckling_helper import run_bdfs, load_sym_regions_map
+from pyNastran.applications.aero_panel_buckling.split_model import (
+    split_model_by_pid_panel, load_regions, load_regions_and_create_eigenvalue_csv)
+from pyNastran.applications.aero_panel_buckling.run_patch_buckling_helper import run_bdfs#, load_sym_regions_map
 
 
 def run_panel_buckling(bdf_filename='model_144.bdf', op2_filename='model_144.op2',
@@ -15,10 +16,12 @@ def run_panel_buckling(bdf_filename='model_144.bdf', op2_filename='model_144.op2
     """
     Step 1 - Setup
     ==============
-    bdf_filename : str
-        the path to the SOL 144 model
-    op2_filename : str
+    bdf_filename/bdf_model : str/BDF(); default=model_144.bdf
+        str : the path to the SOL 144 model
+        BDF : a BDF model
+    op2_filename/op2_model : str/OP2(); default=model_144.op2
         the path to the SOL 144 solution
+        OP2 : an OP2 model
     build_model : bool; default=True
         builds the patch model
     isubcase : int; default=1
@@ -128,7 +131,8 @@ def run_panel_buckling(bdf_filename='model_144.bdf', op2_filename='model_144.op2
         op2_filenames = glob.glob(r'Y:\work\panel_buckling\patches\patch_*.op2')
 
     split_model_by_pid_panel(workpath)
-    load_regions_and_create_eigenvalue_csv(bdf_filename, op2_filenames, 'regions.txt', sym_regions_filename=sym_regions_filename)
+    load_regions_and_create_eigenvalue_csv(bdf_filename, op2_filenames,
+                                           'regions.txt', sym_regions_filename=sym_regions_filename)
 
 if __name__ == '__main__':
     run_panel_buckling()
