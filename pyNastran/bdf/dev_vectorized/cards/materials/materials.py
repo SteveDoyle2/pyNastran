@@ -73,7 +73,7 @@ class Materials(object):
         names = self._get_type_names()
         for name, mat in zip(names, types):
             if name in card_count:
-                self.model.log.info('    allocate %s' % name)
+                self.model.log.info('    allocate %s->%s' % (name, card_count[name]))
                 n = card_count[name]
                 mat.allocate(n)
                 self.n += n

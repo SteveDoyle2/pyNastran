@@ -213,8 +213,9 @@ class NastranIO(object):
 
     def _create_coord(self, dim_max, cid, coord, cid_type):
         origin = coord.origin
-        beta = coord.beta()
-        self.create_coordinate_system(dim_max, label='%s' % cid, origin=origin, matrix_3x3=beta, Type=cid_type)
+        beta = coord.beta().T
+        self.create_coordinate_system(dim_max, label='%s' % cid, origin=origin, matrix_3x3=beta,
+                                      Type=cid_type)
 
     def _create_nastran_coords(self, model, dim_max):
         cid_types = {

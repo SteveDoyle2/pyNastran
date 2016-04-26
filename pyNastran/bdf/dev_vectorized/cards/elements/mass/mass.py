@@ -154,5 +154,8 @@ class Mass(object):
         for elems in types:
             elems._verify(xref=xref)
 
+    #def __repr__(self):
+        #return '\n'.join(self.get_stats())
+
     def __repr__(self):
-        return '\n'.join(self.get_stats())
+        return '<%s object; n=%s>' % (self.__class__.__name__, self.n)

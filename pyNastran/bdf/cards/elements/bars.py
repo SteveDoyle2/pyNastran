@@ -268,7 +268,10 @@ class CBAR(LineElement):
         self._validate_input()
 
     def _validate_input(self):
-        if not isinstance(self.offt, string_types):
+        if isinstance(self.offt, integer_types):
+            assert self.offt in [1, 2], 'invalid offt; offt=%i' % self.offt
+            raise NotImplementedError('invalid offt; offt=%i' % self.offt)
+        elif not isinstance(self.offt, string_types):
             raise SyntaxError('invalid offt expected a string of length 3 '
                               'offt=%r; Type=%s' % (self.offt, type(self.offt)))
 

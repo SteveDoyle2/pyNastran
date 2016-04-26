@@ -35,9 +35,8 @@ from pyNastran.bdf.bdf_interface.assign_type import (integer,
                                                      integer_or_string, string)
 
 from pyNastran.bdf.cards.elements.elements import CFAST, CGAP, CRAC2D, CRAC3D, PLOTEL
-from pyNastran.bdf.cards.properties.properties import (PFAST, PGAP, PLSOLID, PSOLID,
-                                                       PRAC2D, PRAC3D, PCONEAX, PIHEX,
-                                                       PCOMPS)
+from pyNastran.bdf.cards.properties.properties import PFAST, PGAP, PRAC2D, PRAC3D, PCONEAX
+from pyNastran.bdf.cards.properties.solid import PLSOLID, PSOLID, PIHEX, PCOMPS
 
 from pyNastran.bdf.cards.elements.springs import (CELAS1, CELAS2, CELAS3, CELAS4,)
 from pyNastran.bdf.cards.properties.springs import PELAS, PELAST
@@ -706,9 +705,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         """
         self._read_bdf_helper(bdf_filename, encoding, punch, read_includes)
 
-
-        if bdf_filename.lower().endswith('.pch'):  # .. todo:: should this be removed???
-            self.punch = True
         self._parse_primary_file_header(bdf_filename)
 
         self.log.debug('---starting BDF.read_bdf of %s---' % self.bdf_filename)
@@ -770,10 +766,13 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         if not os.path.exists(bdf_filename):
             msg = 'cannot find bdf_filename=%r\n%s' % (bdf_filename, print_bad_path(bdf_filename))
             raise IOError(msg)
+        if bdf_filename.lower().endswith('.pch'):  # .. todo:: should this be removed???
+            punch = True
 
         #: the active filename (string)
         self.bdf_filename = bdf_filename
 
+        #: is this a punch file (no executive control deck)
         self.punch = punch
         self.read_includes = read_includes
         self.active_filenames = []
@@ -1209,6 +1208,19 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         """
         Creates a BDFCard object, which is really just a list that
         allows indexing past the last field
+
+        Parameters
+        ----------
+        card_lines: list[str]
+            the list of the card fields
+            input is list of card_lines -> ['GRID, 1, 2, 3.0, 4.0, 5.0']
+        card_name : str
+            the card_name -> 'GRID'
+        is_list : bool; default=True
+            True : this is a list of fields
+            False : this is a list of lines
+        has_none : bool; default=True
+            can there be trailing Nones in the card data (e.g. ['GRID, 1, 2, 3.0, 4.0, 5.0, '])
         """
         card_name = card_name.upper()
         self._increase_card_count(card_name)
@@ -1719,9 +1731,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         if card_obj.field(3):
             self.add_TEMPD(TEMPD.add_card(card_obj, 1, comment=''))
             if card_obj.field(5):
-                self.add_TEMPD(TEMPD.add_card(card_obj, 3, comment=''))
+                self.add_TEMPD(TEMPD.add_card(card_obj, 2, comment=''))
                 if card_obj.field(7):
-                    self.add_TEMPD(TEMPD.add_card(card_obj, 4, comment=''))
+                    self.add_TEMPD(TEMPD.add_card(card_obj, 3, comment=''))
 
     def _add_doptprm(self, doptprm, comment=''):
         """adds a DOPTPRM"""
@@ -1730,7 +1742,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
     def _prepare_dequatn(self, card, card_obj, comment=''):
         """adds a DEQATN"""
         if hasattr(self, 'test_deqatn') or 1:
-            self.add_DEQATN(DEQATN(card_obj, comment=comment))
+            self.add_DEQATN(DEQATN.add_card(card_obj, comment=comment))
         else:
             if comment:
                 self.rejects.append([comment])
@@ -1878,6 +1890,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         is_list : bool, optional
             False : input is a list of card fields -> ['GRID', 1, None, 3.0, 4.0, 5.0]
             True :  input is list of card_lines -> ['GRID, 1,, 3.0, 4.0, 5.0']
+        has_none : bool; default=True
+            can there be trailing Nones in the card data (e.g. ['GRID', 1, 2, 3.0, 4.0, 5.0, None])
+            can there be trailing Nones in the card data (e.g. ['GRID, 1, 2, 3.0, 4.0, 5.0, '])
 
         Returns
         -------
@@ -1945,6 +1960,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             the card_name -> 'GRID'
         comment : str
             an optional the comment for the card
+        has_none : bool; default=True
+            can there be trailing Nones in the card data (e.g. ['GRID', 1, 2, 3.0, 4.0, 5.0, None])
 
         Returns
         -------
@@ -1954,7 +1971,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         card_name = card_name.upper()
         card_obj, card = self.create_card_object(card_lines, card_name,
                                                  is_list=True, has_none=has_none)
-        self._add_card_helper(card_obj, card_name, card_name, comment)
+        self._add_card_helper(card_obj, card, card_name, comment)
 
     def add_card_lines(self, card_lines, card_name, comment='', has_none=True):
         """
@@ -1967,13 +1984,10 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             input is list of card_lines -> ['GRID, 1, 2, 3.0, 4.0, 5.0']
         card_name : str
             the card_name -> 'GRID'
-        comment : str
+        comment : str; default=''
             an optional the comment for the card
-
-        Returns
-        -------
-        card_object : BDFCard()
-            the card object representation of card
+        has_none : bool; default=True
+            can there be trailing Nones in the card data (e.g. ['GRID, 1, 2, 3.0, 4.0, 5.0, '])
         """
         card_name = card_name.upper()
         card_obj, card = self.create_card_object(card_lines, card_name,
@@ -1984,30 +1998,57 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         """
         Gets the xyz points (including SPOINTS) in the desired coordinate frame
 
-        .. warning:: Only suppoprt cid=0
+        Parameters
+        ----------
+        cid : int; default=0
+            the desired coordinate system
+        dtype : str; default='float32'
+            the data type of the xyz coordinates
+
+        Returns
+        -------
+        xyz : (n, 3) ndarray
+            the xyz points in the cid coordinate frame
+
+        .. warning:: doesn't support EPOINTs
         """
-        assert cid == 0, cid
         nnodes = len(self.nodes)
         nspoints = 0
         spoints = None
         if self.spoints:
             spoints = self.spoints.points
             nspoints = len(spoints)
+        if self.epoints is not None:
+            raise NotImplementedError('EPOINTs')
 
         assert nnodes + nspoints > 0, 'nnodes=%s nspoints=%s' % (nnodes, nspoints)
         xyz_cid0 = np.zeros((nnodes + nspoints, 3), dtype=dtype)
-        if nspoints:
-            nids = self.nodes.keys()
-            newpoints = nids + list(spoints)
-            newpoints.sort()
-            for i, nid in enumerate(newpoints):
-                if nid not in spoints:
-                    node = self.nodes[nid]
-                    xyz_cid0[i, :] = node.get_position()
+        if cid == 0:
+            if nspoints:
+                nids = self.nodes.keys()
+                newpoints = nids + list(spoints)
+                newpoints.sort()
+                for i, nid in enumerate(newpoints):
+                    if nid not in spoints:
+                        node = self.nodes[nid]
+                        xyz_cid0[i, :] = node.get_position()
+            else:
+                for i, (nid, node) in enumerate(sorted(iteritems(self.nodes))):
+                    xyz = node.get_position()
+                    xyz_cid0[i, :] = xyz
         else:
-            for i, (nid, node) in enumerate(sorted(iteritems(self.nodes))):
-                xyz = node.get_position()
-                xyz_cid0[i, :] = xyz
+            if nspoints:
+                nids = self.nodes.keys()
+                newpoints = nids + list(spoints)
+                newpoints.sort()
+                for i, nid in enumerate(newpoints):
+                    if nid not in spoints:
+                        node = self.nodes[nid]
+                        xyz_cid0[i, :] = node.get_position_wrt(model, cid)
+            else:
+                for i, (nid, node) in enumerate(sorted(iteritems(self.nodes))):
+                    xyz = node.get_position_wrt(model, cid)
+                    xyz_cid0[i, :] = xyz
         return xyz_cid0
 
     def _add_card_helper(self, card_obj, card, card_name, comment=''):
@@ -2018,8 +2059,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         ----------
         card_object : BDFCard()
             the card object representation of card
-        card : ???
-            ???
+        card : List[str]
+            the fields of the card object; used for rejection and special cards
         card_name : str
             the card_name -> 'GRID'
         comment : str
@@ -2181,7 +2222,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'methods', 'cMethods',
 
             # aero
-            'caeros', 'paeros', 'aero', 'aeros', 'aecomps', 'aefacts', 'aelinks',
+            'caeros', 'paeros', 'aecomps', 'aefacts', 'aelinks',
             'aelists', 'aeparams', 'aesurfs', 'aestats', 'gusts', 'flfacts',
             'flutters', 'splines', 'trims',
 
@@ -2259,6 +2300,16 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             for name, count_name in sorted(iteritems(groups_dict)):
                 msg.append('  %-8s %s' % (name + ':', count_name))
             msg.append('')
+
+        # aero
+        if self.aero:
+            msg.append('bdf:aero')
+            msg.append('  %-8s %s' % ('AERO:', 1))
+
+        # aeros
+        if self.aeros:
+            msg.append('bdf:aeros')
+            msg.append('  %-8s %s' % ('AEROS:', 1))
 
         #mkaeros
         if self.mkaeros:

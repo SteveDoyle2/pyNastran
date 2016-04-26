@@ -733,6 +733,14 @@ class Aero(BaseCard):
     def __init__(self):
         self.sym_xy = None
         self.sym_xz = None
+        self.acsid = None
+        self.acsid_ref = None
+
+    def Acsid(self):
+        try:
+            return self.acsid_ref.cid
+        except AttributeError:
+            return self.acsid
 
     def is_symmetric_xy(self):
         if self.sym_xy == 1:
@@ -790,6 +798,18 @@ class AERO(Aero):
         self.sym_xz = sym_xz
         self.sym_xy = sym_xy
 
+    def cross_reference(self, model):
+        """
+        Cross refernece aerdynamic coordinate system.
+
+        Parameters
+        ----------
+        model : BDF
+            The BDF object.
+        """
+        msg = ' which is required by AERO'
+        self.acsid_ref = model.Coord(self.acsid, msg=msg)
+
     @classmethod
     def add_card(cls, card, comment=''):
         acsid = integer_or_blank(card, 1, 'acsid', 0)
@@ -818,7 +838,7 @@ class AERO(Aero):
         #angle = self.wg*self.t*(t-(x-self.x0)/self.V)
 
     def uncross_reference(self):
-        pass
+        self.acsid_ref = None
 
     def raw_fields(self):
         """
@@ -900,6 +920,18 @@ class AEROS(Aero):
         self.sym_xz = sym_xz
         self.sym_xy = sym_xy
 
+    def cross_reference(self, model):
+        """
+        Cross refernece aerdynamic coordinate system.
+
+        Parameters
+        ----------
+        model : BDF
+            The BDF object.
+        """
+        msg = ' which is required by AEROS'
+        self.acsid_ref = model.Coord(self.acsid, msg=msg)
+
     @classmethod
     def add_card(cls, card, comment=''):
         acsid = integer_or_blank(card, 1, 'acsid', 0)
@@ -927,7 +959,7 @@ class AEROS(Aero):
                      comment=comment)
 
     def uncross_reference(self):
-        pass
+        self.acsid_ref = None
 
     def raw_fields(self):
         """
@@ -1305,6 +1337,8 @@ class CAERO1(BaseCard):
         self.pid_ref = self.pid
         self.cp_ref = self.cp
 
+        self.ascid_ref = model.Acsid(msg=msg)
+
         if self.nchord == 0:
             assert isinstance(self.lchord, integer_types), self.lchord
             self.lchord = model.AEFact(self.lchord, msg)
@@ -1351,8 +1385,8 @@ class CAERO1(BaseCard):
         """
         p1 = self.cp_ref.transform_node_to_global(self.p1)
         p4 = self.cp_ref.transform_node_to_global(self.p4)
-        p2 = p1 + np.array([self.x12, 0., 0.])
-        p3 = p4 + np.array([self.x43, 0., 0.])
+        p2 = p1 + self.ascid_ref.transform_vector_to_global(np.array([self.x12, 0., 0.]))
+        p3 = p4 + self.ascid_ref.transform_vector_to_global(np.array([self.x43, 0., 0.]))
         return [p1, p2, p3, p4]
 
     @property

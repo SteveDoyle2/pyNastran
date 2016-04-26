@@ -90,3 +90,6 @@ class ElementsSpring(object):
         types = self._get_types()
         for elems in types:
             elems._verify(xref=xref)
+
+    def __repr__(self):
+        return '<%s object; n=%s>' % (self.__class__.__name__, self.n)
