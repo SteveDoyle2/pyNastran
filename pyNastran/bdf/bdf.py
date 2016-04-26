@@ -178,7 +178,7 @@ def read_bdf(bdf_filename=None,
     .. todo:: finish this
     """
     model = BDF(log=log, debug=debug, mode=mode)
-    model.read_bdf(bdf_filename=bdf_filename, xref=xref, punch=punch, read_includes=False, encoding=encoding)
+    model.read_bdf(bdf_filename=bdf_filename, xref=xref, punch=punch, read_includes=True, encoding=encoding)
 
     #if 0:
         ### TODO: remove all the extra methods
