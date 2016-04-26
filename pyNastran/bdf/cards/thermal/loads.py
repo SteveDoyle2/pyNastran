@@ -603,6 +603,12 @@ class TEMPD(BaseCard):
     """
     Defines a temperature value for all grid points of the structural model
     that have not been given a temperature on a TEMP entry
+
+    +-------+------+----+------+----+------+----+------+----+
+    |   1   |  2   | 3  |  4   |  5 |  6   | 7  |  8   | 9  |
+    +=======+======+====+======+====+======+====+======+====+
+    | TEMPD | SID1 | T1 | SID2 | T2 | SID3 | T3 | SID4 | T4 |
+    +-------+------+----+------+----+------+----+------+----+
     """
     type = 'TEMPD'
 

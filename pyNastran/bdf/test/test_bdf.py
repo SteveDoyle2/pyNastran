@@ -803,6 +803,10 @@ def check_case(sol, subcase, fem2, p0, isubcase):
         mpc_id = subcase.get_parameter('MPC')[0]
         fem2.get_mpcs(mpc_id)
 
+    if 'SDAMPING' in subcase:
+        sdamping_id = subcase.get_parameter('SDAMPING')[0]
+        sdamping_table = fem2.tables_sdamping[sdamping_id]
+
     if 'DLOAD' in subcase:
         assert sol in [26, 68, 76, 78, 88, 99, 103, 108, 109, 111, 112, 118, 129, 146,
                        153, 159, 400, 601], 'sol=%s DLOAD' % sol
