@@ -2120,14 +2120,23 @@ class NastranIO(object):
         nids_set = True
         if nids_set:
             nids = np.zeros(self.nNodes, dtype='int32')
+            cds = np.zeros(self.nNodes, dtype='int32')
             for (nid, nid2) in iteritems(self.nid_map):
                 nids[nid2] = nid
+                cds[nid2] = model.nodes[nid].Cd()  # doesn't handle SPOINTs
 
             nid_res = GuiResult(0, header='NodeID', title='NodeID',
                                 location='node', scalar=nids)
             cases[icase] = (nid_res, (0, 'NodeID'))
             form0.append(('NodeID', icase, []))
             icase += 1
+
+            if len(np.unique(cds)) > 1:
+                cd_res = GuiResult(0, header='NodeCd', title='NodeCd',
+                                   location='node', scalar=cds)
+                cases[icase] = (cd_res, (0, 'NodeCd'))
+                form0.append(('NodeCd', icase, []))
+                icase += 1
             self.node_ids = nids
 
         # set to True to enable elementIDs as a result

@@ -59,6 +59,7 @@ class GuiAttributes(object):
         self.out_filename = None
         self.dirname = ''
         self.last_dir = '' # last visited directory while opening file
+        self._default_python_file = None
 
         #-------------
         # internal params
