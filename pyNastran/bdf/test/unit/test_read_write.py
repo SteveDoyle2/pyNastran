@@ -5,7 +5,7 @@ from codecs import open as codec_open
 
 import os
 import pyNastran
-from pyNastran.bdf.bdf import BDF
+from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.bdf.test.test_case_control_deck import compare_lines
 
 root_path = pyNastran.__path__[0]
@@ -312,17 +312,23 @@ class TestReadWrite(unittest.TestCase):
         model = BDF(log=log, debug=False)
         model.read_bdf('include5.bdf')
         assert model.echo == False, model.echo
-        #model.write_bdf('include4.out.bdf')
+        #model.write_bdf('include5.out.bdf')
 
-        os.remove('include5.bdf')
-        #os.remove('include5.out.bdf')
-        os.remove('include5b.inc')
         # os.remove('c.bdf')
         # os.remove('executive_control.inc')
         # os.remove('case_control.inc')
 
         self.assertEqual(len(model.nodes), 4)
         self.assertEqual(model.nnodes, 4, 'nnodes=%s' % model.nnodes)
+
+        model2 = read_bdf(bdf_filename='include5.bdf', xref=True, punch=False,
+                          encoding=None)
+        self.assertEqual(len(model2.nodes), 4)
+        self.assertEqual(model2.nnodes, 4, 'nnodes=%s' % model.nnodes)
+        os.remove('include5.bdf')
+        #os.remove('include5.out.bdf')
+        os.remove('include5b.inc')
+
 
     def test_encoding_write(self):
 
@@ -355,6 +361,9 @@ class TestReadWrite(unittest.TestCase):
             model.read_bdf(bdf_filename='a.bdf', xref=True, punch=False,
                            read_includes=True,
                            encoding=None)
+        with self.assertRaises(IOError):
+            read_bdf(bdf_filename='a.bdf', xref=True, punch=False,
+                     encoding=None)
         model.read_bdf(bdf_filename='a.bdf', xref=True, punch=False,
                        read_includes=False,
                        encoding=None)
