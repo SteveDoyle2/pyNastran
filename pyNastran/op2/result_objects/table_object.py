@@ -1,11 +1,11 @@
 from __future__ import print_function, unicode_literals
+from struct import Struct, pack
 from six import iteritems
 from six.moves import zip, range
-from struct import Struct, pack
 
 import numpy as np
 from numpy import array, zeros, abs, angle, float32, searchsorted, unique, where
-from numpy import allclose, asarray, vstack, swapaxes, hstack, array_equal
+from numpy import allclose, asarray, vstack, swapaxes, hstack
 
 from pyNastran.op2.result_objects.op2_objects import ScalarObject
 from pyNastran.f06.f06_formatting import write_floats_13e, write_imag_floats_13e, write_float_12E
@@ -387,10 +387,10 @@ class RealTableArray(TableArray):  # displacement style table
         fascii.write('%s.write_table_3: %s\n' % (self.__class__.__name__, call_frame[1][3]))
 
         f.write(pack('12i', *[4, itable, 4,
-                             4, 1, 4,
-                             4, 0, 4,
-                             4, 146, 4,
-                             ]))
+                              4, 1, 4,
+                              4, 0, 4,
+                              4, 146, 4,
+                              ]))
         approach_code = self.approach_code
         table_code = self.table_code
         isubcase = self.isubcase
@@ -572,16 +572,16 @@ class RealTableArray(TableArray):  # displacement style table
                 vals2 = write_floats_13e(vals)
                 (dx, dy, dz, rx, ry, rz) = vals2
                 if sgridtype == 'G':
-                    f.write('%14s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (write_float_12E(dt),
-                            sgridtype, dx, dy, dz, rx, ry, rz))
+                    f.write('%14s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
+                        write_float_12E(dt), sgridtype, dx, dy, dz, rx, ry, rz))
                 elif sgridtype == 'S':
                     f.write('%14s %6s     %s\n' % (node_id, sgridtype, dx))
                 elif sgridtype == 'H':
-                    f.write('%14s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (write_float_12E(dt),
-                            sgridtype, dx, dy, dz, rx, ry, rz))
+                    f.write('%14s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
+                        write_float_12E(dt), sgridtype, dx, dy, dz, rx, ry, rz))
                 elif sgridtype == 'L':
-                    f.write('%14s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (write_float_12E(dt),
-                            sgridtype, dx, dy, dz, rx, ry, rz))
+                    f.write('%14s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
+                        write_float_12E(dt), sgridtype, dx, dy, dz, rx, ry, rz))
                 else:
                     raise NotImplementedError(sgridtype)
             f.write(page_stamp % page_num)
@@ -836,7 +836,7 @@ class ComplexTableArray(TableArray):  # displacement style table
                             '  %12s %6s     %-13s\n' % (sdt, sgridtype, dxr, '', '', dxi))
                 else:
                     msg = 'nid=%s dt=%s type=%s dx=%s dy=%s dz=%s rx=%s ry=%s rz=%s' % (
-                    node_id, dt, sgridtype, t1i, t2i, t3i, r1i, r2i, r3i)
+                        node_id, dt, sgridtype, t1i, t2i, t3i, r1i, r2i, r3i)
                     raise NotImplementedError(msg)
             f.write(page_stamp % page_num)
             page_num += 1
@@ -879,7 +879,7 @@ class ComplexTableArray(TableArray):  # displacement style table
                             '  %12s %6s     %-13s\n' % (sdt, sgridtype, dxr, '', '', dxi))
                 else:
                     msg = 'nid=%s dt=%s type=%s dx=%s dy=%s dz=%s rx=%s ry=%s rz=%s' % (
-                    node_id, dt, sgridtype, t1i, t2i, t3i, r1i, r2i, r3i)
+                        node_id, dt, sgridtype, t1i, t2i, t3i, r1i, r2i, r3i)
                     raise NotImplementedError(msg)
             f.write(page_stamp % page_num)
             page_num += 1
