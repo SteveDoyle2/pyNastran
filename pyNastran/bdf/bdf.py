@@ -622,6 +622,37 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         self.case_control_deck = CaseControlDeck(self.case_control_lines, log=self.log)
         self.log.debug('done loading!')
 
+    def replace_cards(self, replace_model):
+        """
+        Replaces the common cards from the current (self) model from the
+        ones in the new replace_model.  The intention is that you're
+        going to replace things like PSHELLs and DESVARs from a pch file
+        in order to update your BDF with the optimized geometry.
+
+        .. todo:: only does a subset of cards.
+        .. note:: loads/spcs (not supported) are tricky because you
+                  can't replace cards one-to-one...not sure what to do
+        """
+        for nid, node in iteritems(replace_model.nodes):
+            self.nodes[nid] = node
+        for eid, elem in iteritems(replace_model.elements):
+            self.elements[eid] = elem
+        for eid, elem in iteritems(replace_model.rigid_elements):
+            self.rigid_elements[eid] = elem
+        for pid, prop in iteritems(replace_model.properties):
+            self.properties[pid] = prop
+        for mid, mat in iteritems(replace_model.materials):
+            self.materials[mid] = mat
+
+        for dvid, desvar in iteritems(replace_model.desvars):
+            self.desvars[dvid] = desvar
+        for dvid, dvprel in iteritems(replace_model.dvprels):
+            self.dvprels[dvid] = dvprel
+        for dvid, dvmrel in iteritems(replace_model.dvmrels):
+            self.dvmrels[dvid] = dvmrel
+        for dvid, dvcrel in iteritems(replace_model.dvcrels):
+            self.dvcrels[dvid] = dvcrel
+
     def disable_cards(self, cards):
         """
         Method for removing broken cards from the reader
