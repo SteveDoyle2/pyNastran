@@ -1,5 +1,6 @@
 from __future__ import print_function
 import os
+import sys
 #from copy import deepcopy
 #from six import iteritems, string_types
 import glob
@@ -9,6 +10,7 @@ import subprocess
 import matplotlib.pyplot as plt
 import numpy as np
 
+from pyNastran.utils import print_bad_path
 from pyNastran.bdf.bdf import BDF
 from pyNastran.op2.op2 import OP2
 #from pyNastran.utils.nastran_utils import run_nastran
@@ -65,10 +67,20 @@ def run_bdfs_batch(bdf_filenames, workpath='results', mem='100mb', auth=None, ov
 
 def run_bdfs(bdf_filenames, workpath='results', nastran_keywords=None,
              overwrite_op2_if_exists=False):
+    assert os.path.exists(workpath), print_bad_path(workpath)
+
+    curdir = os.getcwd()
+    print('switching from %r to %r' % (curdir, workpath))
+    os.chdir(workpath)
+
     #print(bdf_filenames)
     print('Start running patch jobs.')
+    sys.stdout.flush()
+    op2_filenames = []
+    assert len(bdf_filenames) > 0, 'bdf_filenames=%s' % bdf_filenames
     for bdf_filename in bdf_filenames:
         basename = os.path.basename(bdf_filename)
+        assert os.path.exists(bdf_filename)
         patch_id_str = basename.split('_')[1].split('.')[0]
         patch_id = int(patch_id_str)
         op2_filename = 'patch_%s.op2' % patch_id
@@ -77,10 +89,17 @@ def run_bdfs(bdf_filenames, workpath='results', nastran_keywords=None,
 
             call_args = ['nastran', bdf_filename, 'scr=yes', 'bat=no', 'old=no']
             for key, value in nastran_keywords.items():
-                call_args.append('%s=%s' % (key, value))
+                if key not in ['scr', 'bat', 'old']:
+                    call_args.append('%s=%s' % (key, value))
+            print(call_args)
+            sys.stdout.flush()
+            op2_filenames.append(os.path.join(workpath, op2_filename))
 
             subprocess.call(call_args)
     print('Done running patch jobs.')
+    print('switching from %r to %r' % (workpath, curdir))
+    os.chdir(curdir)
+    return op2_filenames
 
 
 def load_sym_regions_map(sym_regions_filename):

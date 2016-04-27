@@ -2,7 +2,8 @@ import os
 import glob
 from six import iteritems
 
-from pyNastran.applications.aero_panel_buckling.find_surface_panels import find_surface_panels
+from pyNastran.applications.aero_panel_buckling.find_surface_panels import (
+    find_surface_panels, get_bdf_object, get_op2_object)
 from pyNastran.applications.aero_panel_buckling.split_model import (
     split_model_by_pid_panel, load_regions, load_regions_and_create_eigenvalue_csv)
 from pyNastran.applications.aero_panel_buckling.run_patch_buckling_helper import run_bdfs#, load_sym_regions_map
@@ -57,10 +58,19 @@ def run_panel_buckling(bdf_filename='model_144.bdf', op2_filename='model_144.op2
     if workpath is None:
         workpath = os.path.join(os.getcwd(), 'results')
 
+    bdf_model = get_bdf_object(bdf_filename)
+    if op2_filename is not None:
+        op2_model = get_op2_object(op2_filename)
+    else:
+        op2_model = None
+
+    bdf_model.log.info('build_model=%s rebuild_patches=%s' % (build_model, rebuild_patches))
+
     # isubcase=2 -> 2.5g pullup at Mach=0.85 at 11 km
     if build_model:
-        find_surface_panels(bdf_filename, op2_filename, isubcase=isubcase, consider_pids=True,
-                            rebuild_patches=rebuild_patches, workpath=workpath)
+        patch_filenames, edge_filenames = find_surface_panels(
+            bdf_model, op2_model, isubcase=isubcase, consider_pids=True,
+            rebuild_patches=rebuild_patches, workpath=workpath)
         split_model_by_pid_panel(workpath)
 
     regions_filename = os.path.join(workpath, 'regions.txt')
@@ -110,20 +120,36 @@ def run_panel_buckling(bdf_filename='model_144.bdf', op2_filename='model_144.op2
                 ipanel += 1
 
     bdf_filenames2 = []
-    bdf_filenames = glob.glob('%s/patches/patch_*.bdf' % workpath)
-    assert len(bdf_filenames) > 0, bdf_filenames
-    #print(bdf_filenames)
+    #bdf_filenames = glob.glob('%s/patches/patch_*.bdf' % workpath)
+    patch_dir = os.path.join(workpath, 'patches')
+    bdf_filenames = [fname for fname in os.listdir(patch_dir)]
     for bdf_filename2 in bdf_filenames:
         basename = os.path.basename(bdf_filename2)
-        patch_id_str = basename.split('_')[1].split('.')[0]
-        patch_id = int(patch_id_str)
+        print('basename = %r' % basename)
+        #print('basename[:6] = %r' % basename[:6])
+        #print('basename[-5:] = %r' % basename[-4:])
+        if basename[:6] == 'patch_' and basename[-4:] == '.bdf':
+            bdf_filenames2.append(basename)
+        else:
+            print('***skipping %r' % basename)
+
+    assert len(bdf_filenames) > 0, bdf_filenames
+    #print(bdf_filenames)
+    #bdf_filenames2 = bdf_filenames
+    for bdf_filename2 in bdf_filenames2:
+        print(bdf_filename2)
+        #basename = os.path.basename(bdf_filename2)
+        #patch_id_str = basename.split('_')[1].split('.')[0]
+        #patch_id = int(patch_id_str)
         #op2_filename = 'patch_%s.op2' % patch_id
         #if patch_id in sym_regions_map:
-        bdf_filenames2.append(bdf_filename2)
+        #bdf_filenames2.append(bdf_filename2)
 
     if run_nastran:
-        run_bdfs(bdf_filenames2, nastran_keywords=nastran_keywords,
-                 overwrite_op2_if_exists=overwrite_op2_if_exists)
+        print('calling run_bdfs...')
+        op2_filenames = run_bdfs(
+            bdf_filenames2, nastran_keywords=nastran_keywords,
+            workpath=patch_dir, overwrite_op2_if_exists=overwrite_op2_if_exists)
 
     #sym_regions_filename = 'sym_regions_map.csv'
     sym_regions_filename = None
@@ -131,8 +157,9 @@ def run_panel_buckling(bdf_filename='model_144.bdf', op2_filename='model_144.op2
         op2_filenames = glob.glob(r'Y:\work\panel_buckling\patches\patch_*.op2')
 
     split_model_by_pid_panel(workpath)
-    load_regions_and_create_eigenvalue_csv(bdf_filename, op2_filenames,
-                                           'regions.txt', sym_regions_filename=sym_regions_filename)
+    load_regions_and_create_eigenvalue_csv(
+        bdf_filename, op2_filenames,
+        'regions.txt', sym_regions_filename=sym_regions_filename)
 
 if __name__ == '__main__':
     run_panel_buckling()
