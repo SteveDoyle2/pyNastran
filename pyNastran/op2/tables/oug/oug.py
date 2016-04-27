@@ -393,10 +393,10 @@ class OUG(OP2Common):
             if self._results.is_not_saved(result_name):
                 return ndata
             self._results._found_result(result_name)
-            n = self._read_table_vectorized(data, ndata, result_name, storage_obj,
-                                            RealTemperatureArray, None,
-                                            'node', random_code=self.random_code,
-                                            is_cid=is_cid)
+            n = self._read_scalar_table_vectorized(data, ndata, result_name, storage_obj,
+                                                   RealTemperatureArray, None,
+                                                   'node', random_code=self.random_code,
+                                                   is_cid=is_cid)
         elif self.thermal == 2:
             result_name = 'displacement_scaled_response_spectra_ABS'
             storage_obj = self.displacement_scaled_response_spectra_ABS

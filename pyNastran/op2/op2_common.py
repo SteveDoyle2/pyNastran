@@ -529,6 +529,68 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
         #n = self._not_implemented_or_skip(data, ndata, msg)
         return n
 
+    def _read_scalar_table_vectorized(self, data, ndata, result_name, storage_obj,
+                               real_vector, complex_vector,
+                               node_elem, random_code=None, is_cid=False):
+
+        assert isinstance(result_name, string_types), 'result_name=%r' % result_name
+        assert isinstance(storage_obj, dict), 'storage_obj=%r' % storage_obj
+        #print('self.num_wide =', self.num_wide)
+        #print('random...%s' % self.isRandomResponse())
+        #if not self.isRandomResponse():
+        is_vectorized = True
+        if self.format_code == 1 and self.num_wide == 8:  # real/random
+            # real
+            nnodes = ndata // 32  # 8*4
+            auto_return = self._create_table_vector(
+                result_name, nnodes, storage_obj, real_vector, is_cid=is_cid)
+            if auto_return:
+                return ndata
+
+            self._fix_format_code(format_code=1)
+            if self.is_sort1():
+                if self.nonlinear_factor is None:
+                    n = self._read_real_scalar_table_static(data, is_vectorized, nnodes, result_name, node_elem, is_cid=is_cid)
+                else:
+                    n = self._read_real_scalar_table_sort1(data, is_vectorized, nnodes, result_name, node_elem, is_cid=is_cid)
+            else:
+                n = self._read_real_scalar_table_sort2(data, is_vectorized, nnodes, result_name, node_elem, is_cid=is_cid)
+                #n = ndata
+                #msg = self.code_information()
+                #n = self._not_implemented_or_skip(data, ndata, msg)
+        elif self.format_code in [2, 3] and self.num_wide == 14:  # real or real/imaginary or mag/phase
+            raise NotImplementedError('real/imaginary or mag/phase')
+            # complex
+            nnodes = ndata // 56  # 14*4
+            if self.is_debug_file:
+                self.binary_debug.write('nnodes=%s' % nnodes)
+            auto_return = self._create_table_vector(
+                result_name, nnodes, storage_obj, complex_vector)
+            if auto_return:
+                return ndata
+            if self.is_sort1():
+                if self.is_magnitude_phase():
+                    n = self._read_complex_table_sort1_mag(data, is_vectorized, nnodes, result_name, node_elem)
+                else:
+                    n = self._read_complex_table_sort1_imag(data, is_vectorized, nnodes, result_name, node_elem)
+            else:
+                if self.is_magnitude_phase():
+                    n = self._read_complex_table_sort2_mag(data, is_vectorized, nnodes, result_name, node_elem)
+                else:
+                    n = self._read_complex_table_sort2_imag(data, is_vectorized, nnodes, result_name, node_elem)
+                #msg = self.code_information()
+                #n = self._not_implemented_or_skip(data, ndata, msg)
+        else:
+            #msg = 'COMPLEX/PHASE is included in:\n'
+            #msg += '  DISP(PLOT)=ALL\n'
+            #msg += '  but the result type is REAL\n'
+            msg = self.code_information()
+            n = self._not_implemented_or_skip(data, ndata, msg)
+        #else:
+        #msg = 'invalid random_code=%s num_wide=%s' % (random_code, self.num_wide)
+        #n = self._not_implemented_or_skip(data, ndata, msg)
+        return n
+
     def function_code(self, value):
         """
         This is a new specification from NX that's really important and
@@ -554,6 +616,165 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
         #elif self._function_code == 7:
             #raise NotImplementedError(self.function_code)
         raise NotImplementedError(self.function_code)
+
+    def _read_real_scalar_table_static(self, data, is_vectorized, nnodes, result_name, flag, is_cid=False):
+        """
+        With a static (e.g. SOL 101) result, reads a complex OUG-style
+        table created by:
+              DISP(PLOT,SORT1,REAL) = ALL
+        """
+        return self._read_real_table_static(data, is_vectorized, nnodes,
+                                            result_name, flag, is_cid=is_cid)
+        raise NotImplementedError()
+        if self.is_debug_file:
+            self.binary_debug.write('  _read_real_scalar_table_static\n')
+        assert flag in ['node', 'elem'], flag
+        dt = self.nonlinear_factor
+        assert self.obj is not None
+        obj = self.obj
+
+        if self.use_vector and is_vectorized:
+            n = nnodes * 4 * 8
+            itotal2 = obj.itotal + nnodes
+            #print('ndata=%s n=%s nnodes=%s' % (ndata, n, nnodes))
+            ints = fromstring(data, dtype=self.idtype).reshape(nnodes, 8)
+            floats = fromstring(data, dtype=self.fdtype).reshape(nnodes, 8)
+            obj._times[obj.itime] = dt
+            #self.node_gridtype[self.itotal, :] = [node_id, grid_type]
+            #self.data[self.itime, self.itotal, :] = [v1, v2, v3, v4, v5, v6]
+            #obj.node_gridtype[obj.itotal:itotal2, :] = ints[:, 0:1]
+            nids = ints[:, 0] // 10
+            assert nids.min() > 0, nids.min()
+            obj.node_gridtype[obj.itotal:itotal2, 0] = nids
+            obj.node_gridtype[obj.itotal:itotal2, 1] = ints[:, 1]
+            obj.data[obj.itime, obj.itotal:itotal2, 0] = floats[:, 2]
+            obj.itotal = itotal2
+        else:
+            n = 0
+            s = Struct(b(self._endian + '2i6f'))
+            for inode in range(nnodes):
+                out = s.unpack(data[n:n+32])
+                eid_device, grid_type, tx = out[:3]
+                eid = eid_device // 10
+                if self.is_debug_file:
+                    self.binary_debug.write('  %s=%i; %s\n' % (flag, eid, str(out)))
+                #print(out)
+                obj.add(eid, grid_type, tx, 0., 0., 0., 0., 0.)
+                n += 32
+        return n
+
+    def _read_real_scalar_table_sort1(self, data, is_vectorized, nnodes, result_name, flag, is_cid=False):
+        """
+        With a real transient result (e.g. SOL 109/159), reads a
+        real OUG-style table created by:
+              DISP(PLOT,SORT1,REAL) = ALL
+        """
+        return self._read_real_table_sort1(data, is_vectorized, nnodes,
+                                           result_name, flag, is_cid=is_cid)
+        raise NotImplementedError()
+        # print('result_name=%s use_vector=%s is_vectorized=%s' % (result_name, self.use_vector, is_vectorized))
+        if self.is_debug_file:
+            self.binary_debug.write('  _read_real_scalar_table_sort1\n')
+        #assert flag in ['node', 'elem'], flag
+        #assert self.obj is not None
+        dt = self.nonlinear_factor
+        obj = self.obj
+        if self.use_vector and is_vectorized:
+            itime = obj.itime
+            n = nnodes * 4 * 8
+            itotal = obj.itotal
+            itotal2 = itotal + nnodes
+
+            is_mask = False
+            if obj.itime == 0:
+                ints = fromstring(data, dtype=self.idtype).reshape(nnodes, 8)
+                #ints = floats[:, :2].view('int32')
+                #from numpy import array_equal
+                #assert array_equal(ints, intsB)
+
+                nids = ints[:, 0] // 10
+                assert nids.min() > 0, nids.min()
+                obj.node_gridtype[itotal:itotal2, 0] = nids
+                obj.node_gridtype[itotal:itotal2, 1] = ints[:, 1]
+                #obj.Vn = ones(floats.shape, dtype=bool)
+                #obj.Vn[itotal:itotal2, :2] = False
+                #print(obj.Vn)
+                if obj.nonlinear_factor is not None and is_mask:
+                    raise NotImplementedError('masking1')
+                    float_mask = np.arange(nnodes * 8, dtype=np.int32).reshape(nnodes, 8)[:, 2:]
+                    obj.float_mask = float_mask
+
+            if obj.nonlinear_factor is not None and is_mask:
+                raise NotImplementedError('masking2')
+                results = fromstring(data, dtype=self.fdtype)[obj.float_mask]
+            else:
+                floats = fromstring(data, dtype=self.fdtype).reshape(nnodes, 8)
+                obj.data[obj.itime, obj.itotal:itotal2, 0] = floats[:, 2]
+            obj._times[itime] = dt
+            obj.itotal = itotal2
+        else:
+            n = 0
+            assert nnodes > 0, nnodes
+            s = Struct(b(self._endian + '2i6f'))
+            for inode in range(nnodes):
+                out = s.unpack(data[n:n+32])
+                eid_device, grid_type, tx = out[:3]
+                eid = eid_device // 10
+                if self.is_debug_file:
+                    self.binary_debug.write('  %s=%i; %s\n' % (flag, eid, str(out)))
+                obj.add_sort1(dt, eid, grid_type, tx)
+                n += 32
+        return n
+
+    def _read_real_scalar_table_sort2(self, data, is_vectorized, nnodes, result_name, flag, is_cid=False):
+        """
+        With a real transient result (e.g. SOL 109/159), reads a
+        real OUG-style table created by:
+              DISP(PLOT,SORT2,REAL) = ALL
+        """
+        return self._read_real_table_sort2(data, is_vectorized, nnodes,
+                                           result_name, flag, is_cid=is_cid)
+        raise NotImplementedError()
+        if self.is_debug_file:
+            self.binary_debug.write('  _read_real_scalar_table_sort2\n')
+        assert flag in ['node', 'elem'], flag
+        eid = self.nonlinear_factor
+        #assert self.obj is not None
+
+        obj = self.obj
+        if self.use_vector and is_vectorized and 0:  # TODO: not done....
+            itime = obj.itime
+            n = nnodes * 4 * 8
+            itotal = obj.itotal
+            itotal2 = itotal + nnodes
+            if obj.itime == 0:
+                ints = fromstring(data, dtype=self.idtype).reshape(nnodes, 8)
+                #nids = ints[:, 0] // 10
+                nids = ones(nnodes, dtype='int32') * eid
+                assert nids.min() > 0, nids.min()
+                obj.node_gridtype[itotal:itotal2, 0] = nids
+                obj.node_gridtype[itotal:itotal2, 1] = ints[:, 1]
+
+            floats = fromstring(data, dtype=self.fdtype).reshape(nnodes, 8)
+            obj._times[itime] = floats[:, 0]
+            obj.data[obj.itime, itotal:itotal2, :] = floats[:, 2]
+            obj.itotal = itotal2
+        else:
+            n = 0
+            assert nnodes > 0
+
+            flag = 'freq/dt/mode'
+            s = Struct(b(self._endian + self._analysis_code_fmt + 'i6f'))
+            assert eid > 0, self.code_information()
+            for inode in range(nnodes):
+                edata = data[n:n+32]
+                out = s.unpack(edata)
+                (dt, grid_type, tx) = out[:3]
+                if self.is_debug_file:
+                    self.binary_debug.write('  %s=%i; %s\n' % (flag, dt, str(out)))
+                obj.add_sort2(dt, eid, grid_type, tx)
+                n += 32
+        return n
 
     def _read_real_table_static(self, data, is_vectorized, nnodes, result_name, flag, is_cid=False):
         """
