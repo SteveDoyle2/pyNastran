@@ -3955,6 +3955,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             #raise
 
         npoints = user_points.shape[0]
+        if npoints == 0:
+            raise RuntimeError('npoints=0 in %r' % points_filename)
         if len(user_points.shape) == 1:
             user_points = user_points.reshape(1, npoints)
 

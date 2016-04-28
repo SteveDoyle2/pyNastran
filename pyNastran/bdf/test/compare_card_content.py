@@ -347,8 +347,8 @@ def compare_optimization_content(fem1, fem2):
 def compare_aero_content(fem1, fem2):
     assert len(fem1.caeros) == len(fem2.caeros)
     assert len(fem1.paeros) == len(fem2.paeros)
-    assert fem1.aero is None == fem2.aero is None
-    assert fem1.aeros is None == fem2.aeros is None
+    assert (fem1.aero is None) == (fem2.aero is None), 'fem1.aero_is_None=%s fem2.aero_is_None=%s' % (fem1.aero is None, fem2.aero is None)
+    assert (fem1.aeros is None) == (fem2.aeros is None), 'fem1.aeros_is_None=%s fem2.aeros_is_None=%s' % (fem1.aeros is None, fem2.aeros is None)
     assert len(fem1.aeparams) == len(fem2.aeparams)
     assert len(fem1.aelinks) == len(fem2.aelinks)
     assert len(fem1.aelists) == len(fem2.aelists)
