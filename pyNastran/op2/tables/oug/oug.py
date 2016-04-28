@@ -25,7 +25,7 @@ from pyNastran.op2.tables.oug.oug_accelerations import (
     RealAccelerationArray, ComplexAccelerationArray)
 
 from pyNastran.op2.tables.oug.oug_temperatures import (
-    RealTemperatureArray)
+    RealTemperatureArray, RealScalarTemperatureArray)
 
 from pyNastran.op2.tables.oug.oug_eigenvectors import (
     RealEigenvectorArray, ComplexEigenvectorArray,
@@ -394,7 +394,7 @@ class OUG(OP2Common):
                 return ndata
             self._results._found_result(result_name)
             n = self._read_scalar_table_vectorized(data, ndata, result_name, storage_obj,
-                                                   RealTemperatureArray, None,
+                                                   RealScalarTemperatureArray, None,
                                                    'node', random_code=self.random_code,
                                                    is_cid=is_cid)
         elif self.thermal == 2:

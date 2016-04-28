@@ -23,7 +23,7 @@ except ImportError:
 
 import pyNastran
 from pyNastran import is_release
-from pyNastran.op2.op2 import OP2, FatalError, SortCodeError, DeviceCodeError
+from pyNastran.op2.op2 import OP2, FatalError, SortCodeError, DeviceCodeError, FortranMarkerError
 
 try:
     from pyNastran.op2.op2_geom import OP2Geom
@@ -416,7 +416,12 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
             #raise
         #else:
             #is_passed = True
-
+    except RuntimeError:
+        pass
+    except ValueError:
+        pass
+    except FortranMarkerError:
+        pass
     except IOError: # missing file; this block should be commented
         #if stopOnFailure:
             #raise

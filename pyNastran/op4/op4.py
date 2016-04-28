@@ -9,6 +9,7 @@ from struct import pack, unpack, Struct
 from six import string_types, iteritems, PY2
 from six.moves import range
 
+import numpy as np
 from numpy import array, zeros, float32, float64, complex64, complex128, ndarray
 from scipy.sparse import coo_matrix
 
@@ -111,6 +112,7 @@ class OP4(object):
         self.debug = debug
         #assert debug == True, debug
         self.log = get_logger2(log, debug)
+        self._new = False
 
     def read_op4(self, op4_filename=None, matrix_names=None, precision='default'):
         """
@@ -171,7 +173,6 @@ class OP4(object):
         if self.debug:
             self.log.info('is_big_matrix = %s' % is_big_mat)
 
-        nrows = abs(nrows)
         ncols = int(ncols)
         form = int(form)
         matrix_type = int(matrix_type)
@@ -292,6 +293,92 @@ class OP4(object):
         #A = A.todense()
         return A, iline
 
+    def _read_real_sparse_ascii_new(self, op4, iline, nrows, ncols, line_size, line, dtype, is_big_mat):
+        """reads a sparse real ASCII matrix"""
+        self.log.info('_read_real_sparse_ascii')
+        rows = []
+        cols = []
+        entries = []
+        nloops = 0
+        was_broken = False
+        while 1:
+            if nloops > 0 and not was_broken:
+                line = op4.readline().rstrip()
+                iline += 1
+            was_broken = False
+
+            icol, irow, nwords = line.split()
+            icol = int(icol)
+
+            if icol > ncols:
+                break
+
+            irow = int(irow)
+            nwords = int(nwords)
+
+            # This loop condition is overly complicated, but the first time
+            # it will always execute.
+            # Later if there is a sparse continuation line marker of
+            # 1 (very large) integer, there will be no scientific notation value.
+            # There also may be another sparse marker with 2 values.  These are not large.
+            # The scientific check prevents you from getting stuck in an infinite
+            # loop b/c no lines are read if there was one float value.
+            # The check for 1 (or 2) integers is to prevent the check for 3 integers
+            # which starts a new column.  We only want to continue a column.
+            run_loop = True
+            sline = line.strip().split()
+            # next sparse entry
+            jrow1 = len(rows)
+            while (len(sline) == 1 or len(sline) == 2) and 'E' not in line or run_loop:
+                if is_big_mat:
+                    irow, iline = self._get_irow_big_ascii(op4, iline, line, sline, irow)
+                else:
+                    irow, iline = self._get_irow_small_ascii(op4, iline, line, sline, irow)
+
+                run_loop = False
+                is_done_reading_row = False
+                while nwords:
+                    line = op4.readline().rstrip()
+                    iline += 1
+                    nwords_in_line = line.count('E')
+                    if nwords_in_line == 0:
+                        was_broken = True
+                        break
+
+                    irows = list(range(irow, irow + nwords_in_line))
+                    n = 0
+                    for i in range(nwords_in_line):
+                        word = line[n:n + line_size]
+                        entries.append(word)
+                        n += line_size
+                    rows.extend(irows)
+                    #icols = [icol] * nwords_in_line
+                    #cols.extend(icols)
+                    irow += nwords_in_line
+                    #assert len(rows) == len(cols), 'rows=%s\ncols=%s' % (rows, cols)
+                    #assert len(rows) == len(entries)
+                    nwords -= nwords_in_line
+                sline = line.strip().split()
+                nloops += 1
+            jrow2 = len(rows)
+
+            icols = [icol] * (jrow2 - jrow1)
+            cols.append(icols)
+
+        op4.readline()
+        iline += 1
+
+        #if rows == []:  # NULL matrix
+            #raise NotImplementedError()
+
+        cols = np.hstack(cols)
+        rows = array(rows, dtype='int32') - 1
+        cols = array(cols, dtype='int32') - 1
+        A = coo_matrix((entries, (rows, cols)), shape=(nrows, ncols), dtype=dtype)
+        #print("type = %s %s" % (type(A),type(A.todense())))
+        #A = A.todense()
+        return A, iline
+
     def _read_real_dense_ascii(self, op4, iline, nrows, ncols, line_size, line, dtype, is_big_mat):
         """reads a real dense ASCII matrix"""
         self.log.info('_read_real_dense_ascii')
@@ -356,8 +443,12 @@ class OP4(object):
                          is_sparse, is_big_mat):
         """reads a real ASCII matrix"""
         if is_sparse:
-            A, iline = self._read_real_sparse_ascii(op4, iline, nrows, ncols,
-                                                    line_size, line, dtype, is_big_mat)
+            if self._new:
+                A, iline = self._read_real_sparse_ascii_new(op4, iline, nrows, ncols,
+                                                            line_size, line, dtype, is_big_mat)
+            else:
+                A, iline = self._read_real_sparse_ascii(op4, iline, nrows, ncols,
+                                                        line_size, line, dtype, is_big_mat)
         else:
             A, iline = self._read_real_dense_ascii(op4, iline, nrows, ncols,
                                                    line_size, line, dtype, is_big_mat)
@@ -1734,6 +1825,7 @@ def get_big_mat_nrows(nrows):
     else:
         raise RuntimeError('unknown BIGMAT.  nrows=%s' % nrows)
     return is_big_mat, nrows
+
 
 def get_dtype(matrix_type, precision='default'):
     """reset the type if 'default' not selected"""

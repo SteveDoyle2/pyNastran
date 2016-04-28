@@ -623,9 +623,9 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
         table created by:
               DISP(PLOT,SORT1,REAL) = ALL
         """
-        return self._read_real_table_static(data, is_vectorized, nnodes,
-                                            result_name, flag, is_cid=is_cid)
-        raise NotImplementedError()
+        #return self._read_real_table_static(data, is_vectorized, nnodes,
+                                            #result_name, flag, is_cid=is_cid)
+        #raise NotImplementedError()
         if self.is_debug_file:
             self.binary_debug.write('  _read_real_scalar_table_static\n')
         assert flag in ['node', 'elem'], flag
@@ -659,7 +659,7 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
                 if self.is_debug_file:
                     self.binary_debug.write('  %s=%i; %s\n' % (flag, eid, str(out)))
                 #print(out)
-                obj.add(eid, grid_type, tx, 0., 0., 0., 0., 0.)
+                obj.add(eid, grid_type, tx)
                 n += 32
         return n
 
@@ -669,9 +669,9 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
         real OUG-style table created by:
               DISP(PLOT,SORT1,REAL) = ALL
         """
-        return self._read_real_table_sort1(data, is_vectorized, nnodes,
-                                           result_name, flag, is_cid=is_cid)
-        raise NotImplementedError()
+        #return self._read_real_table_sort1(data, is_vectorized, nnodes,
+                                           #result_name, flag, is_cid=is_cid)
+        #raise NotImplementedError()
         # print('result_name=%s use_vector=%s is_vectorized=%s' % (result_name, self.use_vector, is_vectorized))
         if self.is_debug_file:
             self.binary_debug.write('  _read_real_scalar_table_sort1\n')
@@ -732,9 +732,9 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
         real OUG-style table created by:
               DISP(PLOT,SORT2,REAL) = ALL
         """
-        return self._read_real_table_sort2(data, is_vectorized, nnodes,
-                                           result_name, flag, is_cid=is_cid)
-        raise NotImplementedError()
+        #return self._read_real_table_sort2(data, is_vectorized, nnodes,
+                                           #result_name, flag, is_cid=is_cid)
+        #raise NotImplementedError()
         if self.is_debug_file:
             self.binary_debug.write('  _read_real_scalar_table_sort2\n')
         assert flag in ['node', 'elem'], flag

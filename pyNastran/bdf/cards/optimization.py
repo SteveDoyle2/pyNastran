@@ -1139,6 +1139,9 @@ class DRESP2(OptConstraint):
                 for i, val in enumerate(vals):
                     self.params[key][i] = model.Desvar(val, msg)
             elif name == 'DTABLE':
+                print('model.table =')
+                print(model.bdf_filename)
+                print(model.dtable)
                 self.dtable = model.dtable
                 print(model.dtable)
                 for i, val in enumerate(vals):
