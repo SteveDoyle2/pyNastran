@@ -124,7 +124,8 @@ def load_regions_and_create_eigenvalue_csv(bdf_model, op2_filenames,
         isubcase = cases[0]
         eigenvector = model2.eigenvectors[isubcase]
         eigrs = np.array(eigenvector.eigrs)
-        #print('eigrs =', eigrs, type(eigrs))
+        #cycles = (eigrs * 2 * np.pi) ** 2.
+        #print('eigrs =', eigrs)
 
         #----------------------------------
         # calculate what's basically a reserve factor (RF); margin = reserve_factor - 1
@@ -142,18 +143,22 @@ def load_regions_and_create_eigenvalue_csv(bdf_model, op2_filenames,
             #max_eigenvalue = np.log10(eigi)
 
         # lambda < 0
-        j = np.where(eigrs < 0.0)[0]
-        if len(j) == 0:
-            neg_eigenvalue = eig_default  # TODO: no buckling eigenvalue...wat?
-            neg_reserve_factor = eig_default
+        if 0:
+            j = np.where(eigrs < 0.0)[0]
+            if len(j) == 0:
+                neg_eigenvalue = eig_default  # TODO: no buckling eigenvalue...wat?
+                neg_reserve_factor = eig_default
+            else:
+                neg_eigenvalue = np.abs(eigrs[j]).min()
+                neg_reserve_factor = neg_eigenvalue / abs(eig_min)
+                #min_eigenvalue = np.log10(eigi)
         else:
-            neg_eigenvalue = np.abs(eigrs[j]).min()
-            neg_reserve_factor = neg_eigenvalue / abs(eig_min)
-            #min_eigenvalue = np.log10(eigi)
+            neg_reserve_factor = 10.
+            neg_eigenvalue = 10.
 
         #evals.append(min_eval)
-        bdf_model.log.info('Patch=%s  tension     (lambda > 0); lambda=%.3f RF=%.3f' % (patch_id, pos_eigenvalue, pos_reserve_factor))
-        bdf_model.log.info('Patch=%s  compression (lambda < 0); lambda=%.3f RF=%.3f' % (patch_id, neg_eigenvalue, neg_reserve_factor))
+        bdf_model.log.info('Patch=%s  compression (lambda > 0); lambda=%.3f RF=%.3f' % (patch_id, pos_eigenvalue, pos_reserve_factor))
+        #bdf_model.log.info('Patch=%s  tension    (lambda < 0); lambda=%.3f RF=%.3f' % (patch_id, neg_eigenvalue, neg_reserve_factor))
         reserve_factor = min(neg_reserve_factor, pos_reserve_factor, eig_default)
         assert reserve_factor > 0.
         min_eigenvalue_by_patch_id[patch_id] = reserve_factor
