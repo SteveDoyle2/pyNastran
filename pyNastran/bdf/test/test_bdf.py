@@ -652,16 +652,16 @@ def check_case(sol, subcase, fem2, p0, isubcase):
     elif sol == 144:
         assert 'SUPORT1' in subcase or len(fem2.suport), subcase
         assert 'TRIM' in subcase, subcase
-        assert len(fem2.aeros) > 0, 'An AEROS card is required for STATIC AERO - SOL %i' % sol
+        assert fem2.aeros is not None, 'An AEROS card is required for STATIC AERO - SOL %i' % sol
     elif sol == 145:
         assert 'METHOD'in subcase, subcase
         assert 'FMETHOD' in subcase, subcase  # FLUTTER
-        assert len(fem2.aero) > 0, 'An AERO card is required for FLUTTER - SOL %i; %s' % (sol, fem2.aero)
+        assert fem2.aero is not None, 'An AERO card is required for FLUTTER - SOL %i; %s' % (sol, fem2.aero)
     elif sol == 146:
         assert 'METHOD'in subcase, subcase
         assert any(subcase.has_parameter('FREQUENCY', 'TIME', 'TSTEP', 'TSTEPNL')), subcase
         assert any(subcase.has_parameter('GUST', 'LOAD')), subcase
-        assert len(fem2.aero) > 0, 'An AERO card is required for GUST - SOL %i' % sol
+        assert fem2.aero is not None, 'An AERO card is required for GUST - SOL %i' % sol
     elif sol == 153: # heat?
         if 'SPC' not in subcase:
             _assert_has_spc(subcase, fem2)

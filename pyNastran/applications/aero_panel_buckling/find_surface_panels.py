@@ -692,13 +692,15 @@ def create_plate_buckling_models(bdf_model, op2_model, mode, isubcase=1,
     patch_filenames, edge_filenames = write_buckling_bdfs(
         bdf_model, op2_model, xyz_cid0,
         patches, patch_edges_array,
-        subcase_id=isubcase, mode=mode, workpath=workpath)
+        subcase_id=isubcase,
+        eig_min=-1.0, eig_max=3.0, nroots=20,
+        mode=mode, workpath=workpath)
     return patch_filenames, edge_filenames
 
 
 def write_buckling_bdfs(bdf_model, op2_model, xyz_cid0, patches, patch_edges_array,
                         subcase_id=1,
-                        eig_min=-1.0, eig_max=3., nroots=20,
+                        eig_min=-1.0, eig_max=3.0, nroots=20,
                         mode='displacement', workpath='results'):
     """
     Creates a series of buckling BDFs from a static analysis
@@ -1245,7 +1247,8 @@ def create_buckling_header(subcase, eig_min=0., eig_max=100., nroots=20):
     load_id = 55
     # EIGB has severe performance issue
     #bulk_data_cards.append(['EIGB', method, 'INV', eig_min, eig_max, nroots])
-    bulk_data_cards.append(['EIGRL', method, eig_min, eig_max, nroots, ])
+    assert isinstance(nroots, int), 'EIGRL method=%s eig_min=%s eig_max=%s nroots=%s' % (method, eig_min, eig_max, nroots)
+    bulk_data_cards.append(['EIGRL', method, eig_min, eig_max, nroots])
     return case_control, bulk_data_cards, spc_id, mpc_id, load_id
 
 
