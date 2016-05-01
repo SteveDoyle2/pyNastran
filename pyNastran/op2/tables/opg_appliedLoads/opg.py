@@ -23,7 +23,6 @@ class OPG(OP2Common):
         pass
 
     def _read_opg1_3(self, data, ndata):
-        three = self.parse_approach_code(data)
         self.words = [
             'aCode', 'tCode', '???', 'isubcase',
             '???', '???', '???', 'dLoadID',
@@ -186,9 +185,9 @@ class OPG(OP2Common):
                                  #RealThermalLoadVector, ComplexThermalLoadVectorVector,
                                  #RealTemperatureVectorArray, ComplexThermalLoadVectorArray,
                                  #'node', random_code=self.random_code)
-            n = self._read_table_vectorized(data, ndata, result_name, storage_obj,
-                                            RealTemperatureVectorArray, ComplexThermalLoadVectorArray,
-                                            'node', random_code=self.random_code)
+            n = self._read_scalar_table_vectorized(data, ndata, result_name, storage_obj,
+                                                   RealTemperatureVectorArray, ComplexThermalLoadVectorArray,
+                                                   'node', random_code=self.random_code)
 
         else:
             raise NotImplementedError(self.thermal)

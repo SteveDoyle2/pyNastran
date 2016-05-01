@@ -25,7 +25,7 @@ from pyNastran.op2.tables.oug.oug_accelerations import (
     RealAccelerationArray, ComplexAccelerationArray)
 
 from pyNastran.op2.tables.oug.oug_temperatures import (
-    RealTemperatureArray, RealScalarTemperatureArray)
+    RealTemperatureArray)
 
 from pyNastran.op2.tables.oug.oug_eigenvectors import (
     RealEigenvectorArray, ComplexEigenvectorArray,
@@ -394,7 +394,7 @@ class OUG(OP2Common):
                 return ndata
             self._results._found_result(result_name)
             n = self._read_scalar_table_vectorized(data, ndata, result_name, storage_obj,
-                                                   RealScalarTemperatureArray, None,
+                                                   RealTemperatureArray, None,
                                                    'node', random_code=self.random_code,
                                                    is_cid=is_cid)
         elif self.thermal == 2:
@@ -471,7 +471,7 @@ class OUG(OP2Common):
                                  #RealThermalVelocityVector, None,
                                  #None, None,
                                  #'node', random_code=self.random_code)
-            n = self._read_table_vectorized(data, ndata, result_name, storage_obj,
+            n = self._read_scalar_table_vectorized(data, ndata, result_name, storage_obj,
                                             RealThermalVelocityVectorArray, None,
                                             'node', random_code=self.random_code)
 
@@ -524,6 +524,7 @@ class OUG(OP2Common):
             if self._results.is_not_saved(result_name):
                 return ndata
             self._results._found_result(result_name)
+            raise NotImplementedError(self.code_information())
             n = self._read_table(data, ndata, result_name, storage_obj,
                                  None, None,
                                  None, None, 'node', random_code=self.random_code)

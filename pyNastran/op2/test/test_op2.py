@@ -266,7 +266,7 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
         creates a very cryptic developer debug file showing exactly what was parsed
     quiet : bool; default=False
         dunno???
-    stopOnFailure : bool; default=True
+    stop_on_failure : bool; default=True
         is this used???
     """
     op2 = None
@@ -412,18 +412,18 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
 
     #except RuntimeError: # the op2 is bad, not my fault; comment this
         #is_passed = True
-        #if stopOnFailure:
+        #if stop_on_failure:
             #raise
         #else:
             #is_passed = True
-    except RuntimeError:
-        pass
-    except ValueError:
-        pass
-    except FortranMarkerError:
-        pass
+    #except RuntimeError:
+        #pass
+    #except ValueError:
+        #pass
+    #except FortranMarkerError:
+        #pass
     except IOError: # missing file; this block should be commented
-        #if stopOnFailure:
+        #if stop_on_failure:
             #raise
         if not dev:
             raise
@@ -433,7 +433,7 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
     #except NotImplementedError:  # this block should be commented
         #is_passed = True
     except FatalError:  # this block should be commented
-        #if stopOnFailure:
+        #if stop_on_failure:
             #raise
         if not dev:
             raise
@@ -451,14 +451,14 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
         #sys.exit('stopping on sys.exit')
         raise
     #except NameError:  # variable isnt defined
-    #    if stopOnFailure:
+    #    if stop_on_failure:
     #        raise
     #    else:
     #        is_passed = True
     #except IndexError: # this block should be commented
         #is_passed = True
     #except SyntaxError: #Param Parse; this block should be commented
-        #if stopOnFailure:
+        #if stop_on_failure:
             #raise
         #is_passed = True
     except:

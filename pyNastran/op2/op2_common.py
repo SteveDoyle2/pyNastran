@@ -623,9 +623,6 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
         table created by:
               DISP(PLOT,SORT1,REAL) = ALL
         """
-        #return self._read_real_table_static(data, is_vectorized, nnodes,
-                                            #result_name, flag, is_cid=is_cid)
-        #raise NotImplementedError()
         if self.is_debug_file:
             self.binary_debug.write('  _read_real_scalar_table_static\n')
         assert flag in ['node', 'elem'], flag
@@ -648,6 +645,7 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
             obj.node_gridtype[obj.itotal:itotal2, 0] = nids
             obj.node_gridtype[obj.itotal:itotal2, 1] = ints[:, 1]
             obj.data[obj.itime, obj.itotal:itotal2, 0] = floats[:, 2]
+            assert np.abs(floats[:, 3:]).max() == 0, '%s is not a scalar result...' % obj.__class__.__name__
             obj.itotal = itotal2
         else:
             n = 0
@@ -669,9 +667,6 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
         real OUG-style table created by:
               DISP(PLOT,SORT1,REAL) = ALL
         """
-        #return self._read_real_table_sort1(data, is_vectorized, nnodes,
-                                           #result_name, flag, is_cid=is_cid)
-        #raise NotImplementedError()
         # print('result_name=%s use_vector=%s is_vectorized=%s' % (result_name, self.use_vector, is_vectorized))
         if self.is_debug_file:
             self.binary_debug.write('  _read_real_scalar_table_sort1\n')
@@ -710,6 +705,7 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
             else:
                 floats = fromstring(data, dtype=self.fdtype).reshape(nnodes, 8)
                 obj.data[obj.itime, obj.itotal:itotal2, 0] = floats[:, 2]
+                assert np.abs(floats[:, 3:]).max() == 0, '%s is not a scalar result...' % obj.__class__.__name__
             obj._times[itime] = dt
             obj.itotal = itotal2
         else:
@@ -732,9 +728,6 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
         real OUG-style table created by:
               DISP(PLOT,SORT2,REAL) = ALL
         """
-        #return self._read_real_table_sort2(data, is_vectorized, nnodes,
-                                           #result_name, flag, is_cid=is_cid)
-        #raise NotImplementedError()
         if self.is_debug_file:
             self.binary_debug.write('  _read_real_scalar_table_sort2\n')
         assert flag in ['node', 'elem'], flag
@@ -758,6 +751,7 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
             floats = fromstring(data, dtype=self.fdtype).reshape(nnodes, 8)
             obj._times[itime] = floats[:, 0]
             obj.data[obj.itime, itotal:itotal2, :] = floats[:, 2]
+            assert np.abs(floats[:, 3:]).max() == 0, '%s is not a scalar result...' % obj.__class__.__name__
             obj.itotal = itotal2
         else:
             n = 0

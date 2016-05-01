@@ -1,4 +1,5 @@
 from pyNastran.op2.result_objects.table_object import RealTableArray, ComplexTableArray
+from pyNastran.op2.result_objects.scalar_table_object import RealScalarTableArray
 
 
 class RealLoadVectorArray(RealTableArray):  # table_code=2, sort_code=0, thermal=0
@@ -34,9 +35,9 @@ class ComplexLoadVectorArray(ComplexTableArray):
             words, header, page_stamp, page_num, f, is_mag_phase, is_sort1)
 
 
-class RealTemperatureVectorArray(RealTableArray):
+class RealTemperatureVectorArray(RealScalarTableArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        RealTableArray.__init__(self, data_code, is_sort1, isubcase, dt)
+        RealScalarTableArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
     def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
@@ -55,10 +56,9 @@ class RealTemperatureVectorArray(RealTableArray):
         return self._write_f06_block(words, header, page_stamp, page_num, f, write_words,
                                      is_mag_phase=is_mag_phase, is_sort1=is_sort1)
 
-
-class RealThermalVelocityVectorArray(RealTableArray):
+class RealThermalVelocityVectorArray(RealScalarTableArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        RealTableArray.__init__(self, data_code, is_sort1, isubcase, dt)
+        RealScalarTableArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
     def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
