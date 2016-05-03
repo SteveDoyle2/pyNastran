@@ -14,6 +14,7 @@ def run_panel_buckling(bdf_filename='model_144.bdf', op2_filename='model_144.op2
                        build_model=True, rebuild_patches=True, create_regions_filename=True,
                        run_nastran=True, nastran_keywords=None, overwrite_op2_if_exists=True,
                        op2_filenames=None,
+                       mode='displacement',
                        eig_min=-1.0, eig_max=1.0, eig_default=3.0):
     """
     Step 1 - Setup
@@ -78,7 +79,7 @@ def run_panel_buckling(bdf_filename='model_144.bdf', op2_filename='model_144.op2
     patch_dir = os.path.join(workpath, 'patches')
     if build_model:
         patch_filenames, edge_filenames = find_surface_panels(
-            bdf_model, op2_model, isubcase=isubcase, consider_pids=True,
+            bdf_model, op2_model, mode=mode, isubcase=isubcase, consider_pids=True,
             rebuild_patches=rebuild_patches, workpath=workpath)
         create_regions_filename = True
     else:

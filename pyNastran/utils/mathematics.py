@@ -319,17 +319,6 @@ def solve_tridag(A, D):
 
 Area = lambda a, b: 0.5 * norm(cross(a, b))
 
-def centroid_triangle(n1, n2, n3):
-    """
-    Calculates the centroid of a triangle
-
-    :param n1: NDARRAY of node 1
-    :param n2: NDARRAY of node 2
-    :param n3: NDARRAY of node 3
-    """
-    centroid = (n1 + n2 + n3) / 3.
-    return centroid
-
 def gauss(n):
     r"""
     A quadrature rule: an approximation of the definite integral of a function.

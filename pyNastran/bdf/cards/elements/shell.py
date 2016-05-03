@@ -26,7 +26,6 @@ from numpy.linalg import norm
 from pyNastran.utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default, set_default_if_blank
 from pyNastran.bdf.cards.base_card import Element
-from pyNastran.utils.mathematics import Area, centroid_triangle
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double_or_blank, integer_double_or_blank, blank)
 from pyNastran.bdf.field_writer_8 import print_card_8, print_field_8
@@ -248,7 +247,7 @@ class TriShell(ShellElement):
           CG = \frac{1}{3} (n_0+n_1+n_2)
         """
         n1, n2, n3 = self.get_node_positions()
-        centroid = centroid_triangle(n1, n2, n3)
+        centroid = (n1 + n2 + n3) / 3.
         return centroid
 
     def uncross_reference(self):
@@ -638,7 +637,7 @@ class CTRIA6(TriShell):
           CG = \frac{1}{3} (n_1+n_2+n_3)
         """
         (n1, n2, n3, n4, n5, n6) = self.get_node_positions()
-        centroid = centroid_triangle(n1, n2, n3)
+        centroid = (n1 + n2 + n3) / 3.
         return centroid
 
     def flipNormal(self):
@@ -872,7 +871,7 @@ class CTRIAX(TriShell):
         self.eid = eid
         #: Property ID
         self.pid = pid
-        self.thetaMcid = thetaMcid
+        #self.thetaMcid = thetaMcid
         assert len(nids) == 6, 'error on CTRIAX'
         self.prepare_node_ids(nids, allow_empty_nodes=True)
 
@@ -971,13 +970,13 @@ class CTRIAX(TriShell):
         return self._nodeIDs(allow_empty_nodes=True)
 
     def raw_fields(self):
-        list_fields = ['CTRIAX', self.eid, self.Pid()] + self.node_ids + [self.thetaMcid]
+        list_fields = ['CTRIAX', self.eid, self.Pid()] + self.node_ids #+ [self.thetaMcid]
         return list_fields
 
     def repr_fields(self):
         thetaMcid = set_blank_if_default(self.thetaMcid, 0.0)
         nodeIDs = self.node_ids
-        list_fields = ['CTRIAX', self.eid, self.Pid()] + nodeIDs + [thetaMcid]
+        list_fields = ['CTRIAX', self.eid, self.Pid()] + nodeIDs #+ [thetaMcid]
         return list_fields
 
     def write_card(self, size=8, is_double=False):
@@ -992,8 +991,16 @@ class CTRIAX(TriShell):
 
 
 class CTRIAX6(TriShell):
-    r"""
-    Nodes defined in a non-standard way::
+    """
+    +--------+-------+-------+----+----+----+----+----+-----+
+    |   1    |   2   |   3   |  4 |  5 |  6 |  7 |  8 |  9  |
+    +========+=======+=======+=====+===+====+====+====+=====+
+    | CTRIAX6 |  EID |  MID  | N1 | N2 | N3 | G4 | G5 | G6  |
+    +--------+-------+-------+----+----+----+----+----+-----+
+    |        |       | THETA |    |    |    |    |    |     |
+    +--------+-------+-------+----+----+----+----+----+-----+
+
+    Nodes are defined in a non-standard way::
 
            5
           / \
@@ -2136,12 +2143,12 @@ class CQUAD8(QuadShell):
         a = n1 - n2
         b = n2 - n4
         area1 = Area(a, b)
-        c1 = centroid_triangle(n1, n2, n4)
+        c1 = (n1 + n2 + n4) / 3.
 
         a = n2 - n4
         b = n2 - n3
         area2 = Area(a, b)
-        c2 = centroid_triangle(n2, n3, n4)
+        c2 = (n2 + n3 + n4) / 3.
 
         area = area1 + area2
         centroid = (c1 * area1 + c2 * area2) / area

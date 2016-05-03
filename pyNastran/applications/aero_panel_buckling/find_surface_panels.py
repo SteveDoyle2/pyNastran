@@ -619,8 +619,8 @@ def load_patches(patches_filename):
     return patches
 
 def create_plate_buckling_models(bdf_model, op2_model, mode, isubcase=1,
-                                 workpath='results', is_symmetric=True,
-                                 rebuild_patches=True, consider_pids=False):
+                                 workpath='results',
+                                 is_symmetric=True, rebuild_patches=True, consider_pids=False):
     """
     Create the input decks for buckling
 
@@ -693,7 +693,7 @@ def create_plate_buckling_models(bdf_model, op2_model, mode, isubcase=1,
         bdf_model, op2_model, xyz_cid0,
         patches, patch_edges_array,
         subcase_id=isubcase,
-        eig_min=-1.0, eig_max=3.0, nroots=20,
+        eig_min=-1.0, eig_max=3.0, nroots=5,
         mode=mode, workpath=workpath)
     return patch_filenames, edge_filenames
 
@@ -761,7 +761,7 @@ def write_buckling_bdfs(bdf_model, op2_model, xyz_cid0, patches, patch_edges_arr
         node_ids_full_model = displacements.node_gridtype[:, 0]
         ## TODO: check for cd != 0
     elif mode == 'load':
-        nodal_forces = op2_model.grid_point_forces[subcase_id]
+        gp_loads = op2_model.grid_point_forces[subcase_id]
     else:
         raise RuntimeError(mode)
 
@@ -861,7 +861,7 @@ def write_buckling_bdfs(bdf_model, op2_model, xyz_cid0, patches, patch_edges_arr
         zero = ' '
         if 0:
             msg = []
-            self = nodal_forces
+            self = gp_loads
             for ekey, force in sorted(iteritems(self.force_moment)):
                 for iload, forcei in enumerate(force):
                     (f1, f2, f3, m1, m2, m3) = forcei
@@ -965,27 +965,47 @@ def write_buckling_bdfs(bdf_model, op2_model, xyz_cid0, patches, patch_edges_arr
                 patch_file.write(print_card_8(spc_pack))
 
         elif mode == 'load':
-            # TODO: does this work for vectorized classes?
+            # TODO: support itime != 0
+            gp_force_moment = gp_loads.data[0, :, :]
+            gp_node_elem = gp_loads.node_element[0, :, :]
+            gp_nodes = gp_node_elem[:, 0]
+            #patch_file.write('$ all_nids_on_patch[0] = %i\n' % all_nids_on_patch[0])
+
+            spc1 = ['SPC1', spc_id, 123456] + [all_nids_on_patch[0]]
+            #patch_file.write('SPC1,%i,123456,%i\n' % (spc_id, n1))
+            patch_file.write(print_card_8(spc1))
+
             for node_id, cdi in zip(all_nids_on_patch[1:], cd[1:]):
-                force = nodal_forces.force_moment[node_id]
-                force_moment_sum = np.zeros(6, dtype='float32')
-                for iload, forcei in enumerate(force):
-                    eid = nodal_forces.eids[node_id][iload]
-                    element_name = nodal_forces.elemName[node_id][iload]
-                    if eid not in patch_eids_array: # neighboring element
-                        force_moment_sum += force[iload]
-                    elif eid == 0 and element_name != '*TOTALS*':
-                        print(element_name)
-                        force_moment_sum += force[iload]
+                print('node_id=%s cdi=%s' % (node_id, cdi))
+                #from pyNastran.op2.tables.ogf_gridPointForces.ogf_objects import RealGridPointForcesArray
+                #gp_loads = RealGridPointForcesArray(data_code, is_sort1,
+                                                       #isubcase,
+                                                       #dt)
+                i = np.where(node_id == gp_nodes)[0]
+                force_moment_sum = gp_force_moment[i, :].sum(axis=0)
+                assert len(force_moment_sum) == 6, force_moment_sum
+                if 0:
+                    #force = gp_loads.force_moment[node_id]
+                    force_moment_sum = np.zeros(6, dtype='float32')
+                    for iload, forcei in enumerate(force):
+                        eid = gp_loads.eids[node_id][iload]
+                        element_name = gp_loads.elemName[node_id][iload]
+                        if eid not in patch_eids_array: # neighboring element
+                            force_moment_sum += force[iload]
+                        elif eid == 0 and element_name != '*TOTALS*':
+                            #print(element_name)
+                            force_moment_sum += force[iload]
 
                 abs_force_moment_sum = np.abs(force_moment_sum)
                 forcei = abs_force_moment_sum[:3]
                 momenti = abs_force_moment_sum[3:]
                 if forcei.sum() > 0.0:
-                    card = ['FORCE', load_id, node_id, cdi, 1.0, ] + list(forcei)
+                    assert len(force_moment_sum[:3]) == 3, len(force_moment_sum[:3])
+                    card = ['FORCE', load_id, node_id, cdi, 1.0, ] + list(force_moment_sum[:3])
                     patch_file.write(print_card_8(card))
                 if momenti.sum() > 0.0:
-                    card = ['MOMENT', load_id, node_id, cdi, 1.0, ] + list(momenti)
+                    assert len(force_moment_sum[3:]) == 3, len(force_moment_sum[3:])
+                    card = ['MOMENT', load_id, node_id, cdi, 1.0, ] + list(force_moment_sum[3:])
                     patch_file.write(print_card_8(card))
         else:
             raise RuntimeError(mode)
@@ -1290,6 +1310,7 @@ def get_op2_object(op2_filename):
 
 def find_surface_panels(bdf_filename, op2_filename, isubcase=1,
                         consider_pids=False, rebuild_patches=True,
+                        mode='displacement',
                         workpath='results'):
     """
     prevents bleedover of data
@@ -1306,7 +1327,7 @@ def find_surface_panels(bdf_filename, op2_filename, isubcase=1,
 
     #create_plate_buckling_models(model, op2_model, 'load')
     patch_filenames, edge_filenames = create_plate_buckling_models(
-        bdf_model, op2_model, 'displacement',
+        bdf_model, op2_model, mode,
         workpath=workpath, isubcase=isubcase,
         consider_pids=consider_pids,
         rebuild_patches=rebuild_patches)
