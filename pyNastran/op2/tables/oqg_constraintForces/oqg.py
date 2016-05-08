@@ -318,6 +318,10 @@ class OQG(OP2Common):
             raise NotImplementedError(msg)
 
         if self.thermal == 0:
+            if self.isubcase not in self.case_control_deck.subcases:
+                self.subcase = self.case_control_deck.create_new_subcase(self.isubcase)
+            self.subcase.add_op2_data(self.data_code, 'SPCFORCES')
+
             result_name = 'spc_forces'
             storage_obj = self.spc_forces
             if self._results.is_not_saved(result_name):
@@ -328,6 +332,10 @@ class OQG(OP2Common):
                                             'node', random_code=self.random_code)
         elif self.thermal == 1:
             #'finite element temperature gradients and fluxes'
+            if self.isubcase not in self.case_control_deck.subcases:
+                self.subcase = self.case_control_deck.create_new_subcase(self.isubcase)
+            self.subcase.add_op2_data(self.data_code, 'FLUX')
+
             result_name = 'thermal_gradient_and_flux'
             storage_obj = self.thermal_gradient_and_flux
             if self._results.is_not_saved(result_name):
@@ -355,6 +363,10 @@ class OQG(OP2Common):
         """
         table_code = 39
         """
+        if self.isubcase not in self.case_control_deck.subcases:
+            self.subcase = self.case_control_deck.create_new_subcase(self.isubcase)
+        self.subcase.add_op2_data(self.data_code, 'MPCFORCES')
+
         if self.table_name == b'OQMG1':
             result_name = 'mpc_forces'
         elif self.table_name == b'RAQEATC':

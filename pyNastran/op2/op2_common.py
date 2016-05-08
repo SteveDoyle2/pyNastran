@@ -1240,6 +1240,8 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
 
         if not hasattr(self, 'subtable_name'):
             self.data_code['subtable_name'] = self.subtable_name
+
+        self.data_code['table_name'] = self.table_name
         self.data_code['approach_code'] = approach_code
 
         #: the local subcase ID

@@ -5,7 +5,7 @@ from struct import unpack, Struct
 from six import b
 from six.moves import range
 
-from pyNastran.bdf.bdf import (NSM, PBAR, PBARL, #PBEAM,
+from pyNastran.bdf.bdf import (NSM, PBAR, PBARL, PBEAM,
                                PROD, PSHELL, PSHEAR,
                                PCOMP, PSOLID,
                                PVISC, PELAS, PMASS,
@@ -206,6 +206,7 @@ class EPT(GeomCommon):
         s3 = Struct(b(self._endian + '11f'))
         ntotal = 1072  # 44+12*84+20
         nproperties = (len(data) - n) // ntotal
+        assert nproperties > 0, self.show_data(data)
         for i in range(nproperties):
             edata = data[n:n+20]
             n += 20
@@ -228,8 +229,9 @@ class EPT(GeomCommon):
             data_in = list(s3.unpack(edata))
             #(k1,k2,s1,s2,nsia,nsib,cwa,cwb,m1a,m2a,m1b,m2b,n1a,n2a,n1b,n2b) = pack
 
-            # prop = PBEAM(None, data_in)
-            # self._add_op2_property(prop)
+            prop = PBEAM.add_op2_data(data_in)
+            self._add_op2_property(prop)
+            print(prop)
             #sys.exit('ept-PBEAM')
         self.card_count['PBEAM'] = nproperties
         return n
@@ -267,43 +269,43 @@ class EPT(GeomCommon):
         PCOMP(2706,27,287) - the marker for Record 22
         """
         nproperties = 0
-        n2 = n
         s1 = Struct(b(self._endian + '2i3fi2f'))
         s2 = Struct(b(self._endian + 'i2fi'))
-        while n2 < n:  #len(data) >= 32:  # 8*4 - dynamic
-            #print("len(data) = %s" % len(data))
-            #print(self.print_block(data[0:200]))
-            isSymmetrical = 'NO'
-            edata = data[n:n+32]
-            out = s1.unpack(edata)
-            self.binary_debug.write('  PCOMP=%s\n' % str(out))
-            (pid, nlayers, z0, nsm, sb, ft, Tref, ge,) = out
 
-            edata = data[n:n+16 * (nlayers)]
+        ndata = len(data)
+        while n < (ndata - 32):
+            out = s1.unpack(data[n:n+32])
+            (pid, nlayers, z0, nsm, sb, ft, Tref, ge) = out
+            if self.debug:
+                self.log.debug('PCOMP pid=%s nlayers=%s z0=%s nsm=%s sb=%s ft=%s Tref=%s ge=%s' % tuple(out))
+            assert nlayers > 0, out
+            assert isinstance(nlayers, int), out
+            n += 32
+
             Mid = []
             T = []
             Theta = []
             Sout = []
+            is_symmetrical = 'NO'
             if nlayers < 0:
                 is_symmetrical = 'YES'
                 nlayers = abs(nlayers)
-            #print("nlayers = ",nlayers)
+
             assert 0 < nlayers < 100, 'pid=%s nlayers=%s z0=%s nms=%s sb=%s ft=%s Tref=%s ge=%s' % (
                 pid, nlayers, z0, nsm, sb, ft, Tref, ge)
-
-            idata = 0
             for ilayer in range(nlayers):
-                (mid, t, theta, sout) = s2.unpack(edata[idata:idata+16])
+                (mid, t, theta, sout) = s2.unpack(data[n:n+16])
                 Mid.append(mid)
                 T.append(t)
                 Theta.append(theta)
                 Sout.append(sout)
-                idata += 16
+                if self.debug:
+                    self.binary_debug.write('  mid=%s t=%s theta=%s sout=%s' % (mid, t, theta, sout))
+                n += 16
 
             data_in = [
                 pid, z0, nsm, sb, ft, Tref, ge,
                 is_symmetrical, Mid, T, Theta, Sout]
-            #print("PCOMP = %s" % (data_in))
             prop = PCOMP.add_op2_data(data_in)
             self._add_op2_property(prop)
             nproperties += 1

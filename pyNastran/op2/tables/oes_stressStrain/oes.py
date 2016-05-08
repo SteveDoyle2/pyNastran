@@ -228,6 +228,13 @@ class OES(OP2Common):
         #print "element_name =", self.element_name
         assert isinstance(self.format_code, int), self.format_code
         assert self.is_stress() == True, self.code_information()
+        self.data_code['is_stress_flag'] = True
+        self.data_code['is_strain_flag'] = False
+
+        if self.isubcase not in self.case_control_deck.subcases:
+            self.subcase = self.case_control_deck.create_new_subcase(self.isubcase)
+        self.subcase.add_op2_data(self.data_code, 'STRESS/STRAIN')
+
         if self.is_sort1():
             n = self._read_oes1_4_sort1(data, ndata)
         else:
@@ -343,6 +350,13 @@ class OES(OP2Common):
             #self.binary_debug.write('  element_name = %r\n' % self.element_name)
         #print "element_name =", self.element_name
         assert self.is_strain() == True, self.code_information()
+        self.data_code['is_stress_flag'] = False
+        self.data_code['is_strain_flag'] = True
+
+        if self.isubcase not in self.case_control_deck.subcases:
+            self.subcase = self.case_control_deck.create_new_subcase(self.isubcase)
+        self.subcase.add_op2_data(self.data_code, 'STRESS/STRAIN')
+
         if self.is_sort1():
             n = self._read_ostr1_4_sort1(data, ndata)
         else:

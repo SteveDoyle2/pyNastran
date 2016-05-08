@@ -23,7 +23,7 @@ class MPT(GeomCommon):
         self.big_materials = {}
         self._mpt_map = {
             (1003, 10, 245): ['CREEP', self._read_creep],  # record 1
-
+            (103, 1, 77): ['MAT1', self._read_mat1],       # record 3-msc-dmap2014
             (203, 2, 78): ['MAT2', self._read_mat2],       # record 3
             (1403, 14, 122): ['MAT3', self._read_mat3],    # record 4
             (2103, 21, 234): ['MAT4', self._read_mat4],    # record 5
@@ -31,19 +31,19 @@ class MPT(GeomCommon):
             (2503, 25, 288): ['MAT8', self._read_mat8],    # record 7
             (2603, 26, 300): ['MAT9', self._read_mat9],    # record 8 - buggy
             (2801, 28, 365): ['MAT10', self._read_mat10],  # record 9
-            (4506, 45, 374): ['MATHP', self._readMATHP],   # record 11
-            (503, 5, 90): ['MATS1', self._readMATS1],      # record 12
-            (703, 7, 91): ['MATT1', self._readMATT1],      # record 13 - not done
-            (803, 8, 102): ['MATT2', self._readMATT2],     # record 14 - not done
-            (1503, 14, 189): ['MATT3', self._readMATT3],   # record 15 - not done
-            (2303, 23, 237): ['MATT4', self._readMATT4],   # record 16 - not done
-            (2403, 24, 238): ['MATT5', self._readMATT5],   # record 17 - not done
-            (2703, 27, 301): ['MATT9', self._readMATT9],   # record 19 - not done
-            (8802, 88, 413): ['RADM', self._readRADM],     # record 25 - not done
+            (4506, 45, 374): ['MATHP', self._read_mathp],   # record 11
+            (503, 5, 90): ['MATS1', self._read_mats1],      # record 12
+            (703, 7, 91): ['MATT1', self._read_matt1],      # record 13 - not done
+            (803, 8, 102): ['MATT2', self._read_matt2],     # record 14 - not done
+            (1503, 14, 189): ['MATT3', self._read_matt3],   # record 15 - not done
+            (2303, 23, 237): ['MATT4', self._read_matt4],   # record 16 - not done
+            (2403, 24, 238): ['MATT5', self._read_matt5],   # record 17 - not done
+            (2703, 27, 301): ['MATT9', self._read_matt9],   # record 19 - not done
+            (8802, 88, 413): ['RADM', self._read_radm],     # record 25 - not done
             # record 26
-            (3003, 30, 286): ['NLPARM', self._readNLPARM],   # record 27
-            (3104, 32, 350): ['NLPCI', self._readNLPCI],     # record 28
-            (3103, 31, 337): ['TSTEPNL', self._readTSTEPNL], # record 29
+            (3003, 30, 286): ['NLPARM', self._read_nlparm],   # record 27
+            (3104, 32, 350): ['NLPCI', self._read_nlpci],     # record 28
+            (3103, 31, 337): ['TSTEPNL', self._read_tstepnl], # record 29
             (3303, 33, 988) : ['', self._read_fake],
 
             (903, 9, 336) : ['', self._read_fake],
@@ -217,7 +217,7 @@ class MPT(GeomCommon):
 
 # MAT11 - unused
 
-    def _readMATHP(self, data, n):
+    def _read_mathp(self, data, n):
         """MATHP(4506,45,374) - Record 11"""
         #print "reading MATHP"
         nmaterials = 0
@@ -241,13 +241,13 @@ class MPT(GeomCommon):
                 n += 32
                 out2 = s2.unpack(edata)
                 (tab1, tab2, tab3, tab4, x1, x2, x3, tab5) = out2
-                data.append(out2)
+                data_in.append(out2)
             self.add_op2_material(MATHP.add_op2_data(data_in))
             nmaterials += 1
         self.card_count['MATHP'] = nmaterials
         return n
 
-    def _readMATS1(self, data, n):
+    def _read_mats1(self, data, n):
         """
         MATS1(503,5,90) - record 12
         """
@@ -264,33 +264,33 @@ class MPT(GeomCommon):
         self.card_count['MATS1'] = nmaterials
         return n
 
-    def _readMATT1(self, data, n):
+    def _read_matt1(self, data, n):
         if self.is_debug_file:
             self.binary_debug.write('skipping MATT1 in MPT\n')
         return len(data)
 
-    def _readMATT2(self, data, n):
+    def _read_matt2(self, data, n):
         if self.is_debug_file:
             self.binary_debug.write('skipping MATT2 in MPT\n')
         return len(data)
 
-    def _readMATT3(self, data, n):
+    def _read_matt3(self, data, n):
         if self.is_debug_file:
             self.binary_debug.write('skipping MATT3 in MPT\n')
         return len(data)
 
-    def _readMATT4(self, data, n):
+    def _read_matt4(self, data, n):
         if self.is_debug_file:
             self.binary_debug.write('skipping MATT4 in MPT\n')
         return len(data)
 
-    def _readMATT5(self, data, n):
+    def _read_matt5(self, data, n):
         if self.is_debug_file:
             self.binary_debug.write('skipping MATT5 in MPT\n')
         return len(data)
 
 # MATT8 - unused
-    def _readMATT9(self, data, n):
+    def _read_matt9(self, data, n):
         if self.is_debug_file:
             self.binary_debug.write('skipping MATT9 in MPT\n')
         return len(data)
@@ -301,7 +301,7 @@ class MPT(GeomCommon):
 # NLAUTO
 # RADBND
 
-    def _readRADM(self, data, n):
+    def _read_radm(self, data, n):
         """
         RADM(8802,88,413) - record 25
         .. todo:: add object
@@ -335,7 +335,7 @@ class MPT(GeomCommon):
 
 # RADMT
 
-    def _readNLPARM(self, data, n):
+    def _read_nlparm(self, data, n):
         """
         NLPARM(3003,30,286) - record 27
         """
@@ -353,12 +353,12 @@ class MPT(GeomCommon):
         self.card_count['NLPARM'] = nentries
         return n
 
-    def _readNLPCI(self, data, n):
+    def _read_nlpci(self, data, n):
         if self.is_debug_file:
             self.binary_debug.write('skipping NLPCI in MPT\n')
         return len(data)
 
-    def _readTSTEPNL(self, data, n):
+    def _read_tstepnl(self, data, n):
         """
         TSTEPNL(3103,31,337) - record 29
         """
