@@ -345,7 +345,10 @@ class NastranIO(object):
             model._clear_results()
             model.read_op2(op2_filename=bdf_filename)
             model.cross_reference(xref=True, xref_loads=xref_loads,
-                                  xref_constraints=False)
+                                  xref_constraints=False,
+                                  xref_nodes_with_elements=False)
+            #model.safe_cross_reference(xref=True, xref_loads=xref_loads,
+                                       #xref_constraints=False)
         else:  # read the bdf/punch
             model = BDF(log=self.log, debug=True)
             self.model_type = 'nastran'
@@ -354,7 +357,8 @@ class NastranIO(object):
             # model.cross_reference(xref=True, xref_loads=xref_loads,
                                   # xref_constraints=False)
             model.safe_cross_reference(xref=True, xref_loads=xref_loads,
-                                       xref_constraints=False)
+                                       xref_constraints=False,
+                                       xref_nodes_with_elements=False)
 
 
         # get indicies and transformations for displacements
@@ -1122,8 +1126,8 @@ class NastranIO(object):
                 continue
             ieid = self.eid_map[eid]
             elem = model.elements[eid]
-            #print(elem)
             pid = elem.pid
+            assert not isinstance(pid, integer_types), elem
             if pid.type in ['PBAR', 'PBEAM']:
                 bar_type = 'bar'
             elif pid.type in ['PBEAM']:
@@ -2000,8 +2004,7 @@ class NastranIO(object):
                 elem.GetPointIds().SetId(4, nid_map[node_ids[4]])
                 self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
 
-            elif (isinstance(element, LineElement) or
-                  isinstance(element, SpringElement) or
+            elif (isinstance(element, (LineElement, SpringElement)) or
                   element.type in ['CBUSH', 'CBUSH1D', 'CFAST', 'CROD', 'CONROD',
                                    'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
                                    'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5',
@@ -2061,7 +2064,8 @@ class NastranIO(object):
 
                 self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
             else:
-                print('removing eid=%s; %s' % (eid, elem.type))
+                print('removing\n%s' % (elem))
+                print('removing eid=%s; %s' % (eid, element.type))
                 del self.eid_map[eid]
                 self.log_info("skipping %s" % element.type)
                 continue
