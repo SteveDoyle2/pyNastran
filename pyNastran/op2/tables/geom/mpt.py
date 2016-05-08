@@ -31,6 +31,7 @@ class MPT(GeomCommon):
             (2503, 25, 288): ['MAT8', self._read_mat8],    # record 7
             (2603, 26, 300): ['MAT9', self._read_mat9],    # record 8 - buggy
             (2801, 28, 365): ['MAT10', self._read_mat10],  # record 9
+            (2903, 29, 371) : ['MAT11', self._read_mat11],  # record ???
             (4506, 45, 374): ['MATHP', self._read_mathp],   # record 11
             (503, 5, 90): ['MATS1', self._read_mats1],      # record 12
             (703, 7, 91): ['MATT1', self._read_matt1],      # record 13 - not done
@@ -49,7 +50,6 @@ class MPT(GeomCommon):
             (903, 9, 336) : ['', self._read_fake],
             (8902, 89, 423) : ['', self._read_fake],
             (9002, 90, 410) : ['', self._read_fake],
-            (2903, 29, 371) : ['', self._read_fake],
         }
 
     def add_op2_material(self, mat):
@@ -183,19 +183,21 @@ class MPT(GeomCommon):
         MAT9(2603,26,300) - record 9
         .. todo:: buggy
         """
-        #print "reading MAT9"
-        s = Struct(b(self._endian + '22i9f4i'))
-        nmaterials = (len(data) - n) // 140
+        s = Struct(b(self._endian + 'i 27f 4i'))
+        nmaterials = (len(data) - n) // 128
         for i in range(nmaterials):
-            out = s.unpack(data[n:n+140])
-            (mid, g1, g2, g3, g4, g5, g6, g7, g8, g9, g10, g11, g12, g13, g14, g15, g16, g17, g18, g19, g20, g21,
-             rho, a1, a2, a3, a4, a5, a6, TRef, ge, blank1, blank2, blank3, blank4) = out
-            data_in = [mid, [g1, g2, g3, g4, g5, g6, g7, g8, g9, g10, g11, g12, g13, g14, g15, g16, g17, g18, g19, g20, g21],
+            out = s.unpack(data[n:n+128])
+            assert len(out) == 32, out
+            (mid, g1, g2, g3, g4, g5, g6, g7, g8, g9, g10,
+             g11, g12, g13, g14, g15, g16, g17, g18, g19, g20, g21,
+             rho, a1, a2, a3, a4, a5, a6, TRef, ge,
+             blank1) = out
+            data_in = [mid, [g1, g2, g3, g4, g5, g6, g7, g8, g9, g10,
+                             g11, g12, g13, g14, g15, g16, g17, g18, g19, g20, g21],
                        rho, [a1, a2, a3, a4, a5, a6],
                        TRef, ge]
-            #print "data_in = ",data_in
             self.add_op2_material(MAT9.add_op2_data(data_in))
-            n += 140
+            n += 128
         self.card_count['MAT9'] = nmaterials
         return n
 
@@ -203,19 +205,38 @@ class MPT(GeomCommon):
         """
         MAT10(2801,28,365) - record 9
         """
-        #print "reading MAT10"
-        ntotal = 44  # 5*4
+        #self.log.debug("reading MAT10")
+        ntotal = 20  # 5*4
         s = Struct(b(self._endian + 'i4f'))
         nmaterials = (len(data) - n) // ntotal
+        assert nmaterials > 0, nmaterials
         for i in range(nmaterials):
             edata = data[n:n+20]
             out = s.unpack(edata)
             (mid, bulk, rho, c, ge) = out
             self.add_op2_material(MAT10.add_op2_data(out))
+            n += 20
         self.card_count['MAT10'] = nmaterials
         return n
 
-# MAT11 - unused
+    def _read_mat11(self, data, n):
+        """
+        MAT11(2903,29,371)
+        """
+        ntotal = 80  # 20*4
+        s = Struct(b(self._endian + 'i 15f 4s 4s 4s 4s'))
+        nmaterials = (len(data) - n) // ntotal
+        assert nmaterials > 0, nmaterials
+        for i in range(nmaterials):
+            edata = data[n:n+80]
+            out = s.unpack(edata)
+            (mid, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23,
+             rho, a1, a2, a3, tref, ge,
+             blank1, blank2, blank3, blank4) = out
+            self.add_op2_material(MAT10.add_op2_data(out))
+            n += 80
+        self.card_count['MAT11'] = nmaterials
+        return n
 
     def _read_mathp(self, data, n):
         """MATHP(4506,45,374) - Record 11"""
@@ -233,10 +254,10 @@ class MPT(GeomCommon):
              a30, a21, a12, a03, d3,
              a40, a31, a22, a13, a04, d4,
              a50, a41, a32, a23, a14, a05, d5,
-             continueFlag) = out1
+             continue_flag) = out1
             data_in = [out1]
 
-            if continueFlag:
+            if continue_flag:
                 edata = data[n:n+32]  # 7*4
                 n += 32
                 out2 = s2.unpack(edata)

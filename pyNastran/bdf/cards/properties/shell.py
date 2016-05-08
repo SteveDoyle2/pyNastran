@@ -1059,7 +1059,7 @@ class PSHEAR(ShellProperty):
         f1 = double_or_blank(card, 5, 'f1', 0.0)
         f2 = double_or_blank(card, 6, 'f2', 0.0)
         assert len(card) <= 7, 'len(PSHEAR card) = %i' % len(card)
-        return PSHEAR(pid, mid, t, nsm, f1, f2, comment=comment)
+        return PSHEAR(pid, t, mid, nsm, f1, f2, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):

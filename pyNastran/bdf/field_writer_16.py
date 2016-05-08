@@ -221,9 +221,14 @@ def print_card_16(fields, wipe_fields=True):
     """
     Prints a nastran-style card with 16-character width fields.
 
-    :param fields: all the fields in the BDF card (no trailing Nones)
-    :param wipe_fields:  some cards (e.g. PBEAM) have ending fields
-                         that need to be there, others cannot have them.
+    Parameters
+    ----------
+    fields : List[varies]
+        all the fields in the BDF card (no trailing Nones)
+    wipe_fields : bool; default=True
+        some cards (e.g. PBEAM) have ending fields
+        that need to be there, others cannot have them.
+
     .. note:: An internal field value of None or '' will be treated as
               a blank field
     .. note:: A large field format follows the  8-16-16-16-16-8 = 80

@@ -1409,11 +1409,7 @@ class MOMENT1(Moment):
         mag = data[2]
         g1 = data[3]
         g2 = data[4]
-        g3 = data[5]
-        g4 = data[6]
-        xyz = data[7:10]
-        raise NotImplementedError('MOMENT1 is probably wrong')
-        assert len(xyz) == 3, 'xyz=%s' % str(xyz)
+        return MOMENT1(sid, node, mag, g1, g2, comment=comment)
 
     def cross_reference(self, model):
         """
@@ -1791,14 +1787,12 @@ class PLOAD(Load):
         assert len(card) <= 7, 'len(PLOAD card) = %i' % len(card)
         return PLOAD(sid, p, nodes, comment=comment)
 
-    #@classmethod
-    #def add_op2_data(cls, data, comment=''):
-        #sid = data[0]
-        #p = data[1]
-        #nodes = data[2:]
-        #print("PLOAD = %s" % data)
-        #raise NotImplementedError('PLOAD')
-        #return PLOAD(sid, p, nodes, comment=comment)
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        sid = data[0]
+        p = data[1]
+        nodes = data[2:]
+        return PLOAD(sid, p, nodes, comment=comment)
 
     def cross_reference(self, model):
         """

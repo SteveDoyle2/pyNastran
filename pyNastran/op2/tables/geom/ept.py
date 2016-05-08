@@ -9,7 +9,7 @@ from pyNastran.bdf.bdf import (NSM, PBAR, PBARL, PBEAM,
                                PROD, PSHELL, PSHEAR,
                                PCOMP, PSOLID,
                                PVISC, PELAS, PMASS,
-                               PTUBE, PGAP)
+                               PTUBE, PGAP, PDAMP)
 # PCOMPG, PBUSH1D, PBEAML, PBEAM3, PBUSH,
 from pyNastran.op2.tables.geom.geom_common import GeomCommon
 
@@ -89,7 +89,7 @@ class EPT(GeomCommon):
         NSM(3201,32,55) - the marker for Record 2
         .. todo:: this isnt a property...
         """
-        return n
+        return len(data)
         s = Struct(b(self._endian + 'i4sif'))
         while len(data) >= 16:  # 4*4
             edata = data[:16]
@@ -192,7 +192,7 @@ class EPT(GeomCommon):
             break
         self._increase_card_count('PBARL')
         #assert len(data) == n
-        return len(data)
+        return n
 
 # PBCOMP
 
@@ -201,38 +201,59 @@ class EPT(GeomCommon):
         PBEAM(5402,54,262) - the marker for Record 14
         .. todo:: add object
         """
-        s1 = Struct(b(self._endian + '4if'))
-        s2 = Struct(b(self._endian + '16f'))
-        s3 = Struct(b(self._endian + '11f'))
+        struct1 = Struct(b(self._endian + '4if'))
+        struct2 = Struct(b(self._endian + '16f'))
+        struct3 = Struct(b(self._endian + '16f'))
         ntotal = 1072  # 44+12*84+20
         nproperties = (len(data) - n) // ntotal
-        assert nproperties > 0, self.show_data(data)
-        for i in range(nproperties):
+        print('')
+        #assert nproperties > 0, 'ndata-n=%s n=%s datai\n%s' % (len(data)-n, n, self.show_data(data[n:100+n]))
+        ndata = len(data)
+        while n < ndata:
+        #while 1: #for i in range(nproperties):
             edata = data[n:n+20]
             n += 20
-            data_in = list(s1.unpack(edata))
+            data_in = list(struct1.unpack(edata))
             if self.is_debug_file:
-                self.binary_debug.write('  PBEAM=%s\n' % str(data_in))
-            (pid, mid, nsegs, ccf, x) = data_in
+                self.log.info('PBEAM pid=%s mid=%s nsegments=%s ccf=%s x=%s\n' % tuple(data_in))
+            (pid, mid, nsegments, ccf, x) = data_in
+            self.log.info('PBEAM pid=%s mid=%s nsegments=%s ccf=%s x=%s' % tuple(data_in))
 
-            for i in range(12):
+            # Constant cross-section flag: 1=yes and 0=no
+            # what is 2?
+            assert ccf in [0, 1, 2], '  PBEAM pid=%s mid=%s nsegments=%s ccf=%s x=%s\n' % tuple(data_in)
+            for i in range(11):
                 edata = data[n:n+64]
+                if len(edata) != 64:
+                    endpack = []
+                    raise RuntimeError('PBEAM unexpected length i=%s...' % i)
                 n += 64
-                pack = s2.unpack(edata)
+                pack = struct2.unpack(edata)
                 (so, xxb, a, i1, i2, i12, j, nsm, c1, c2,
                  d1, d2, e1, e2, f1, f2) = pack
                 data_in.append(pack)
                 if self.is_debug_file:
                     self.binary_debug.write('     %s\n' % str(pack))
-            edata = data[n:n+44]
+                self.log.info('    i=%-2s' % i + ' so=%s xxb=%s a=%s i1=%s i2=%s i12=%s j=%s nsm=%s '
+                              'c=[%s,%s] d=[%s,%s] e=[%s,%s] f=[%s,%s]' % (tuple(pack)))
+            edata = data[n:n+64]
+            if len(edata) != 64:
+                endpack = []
+                raise RuntimeError('PBEAM unexpected length 2...')
+                #break
+            else:
+                endpack = struct3.unpack(edata)
+                n += 64
 
-            data_in = list(s3.unpack(edata))
-            #(k1,k2,s1,s2,nsia,nsib,cwa,cwb,m1a,m2a,m1b,m2b,n1a,n2a,n1b,n2b) = pack
+            assert len(endpack) == 16, endpack
+            (k1, k2, s1, s2, nsia, nsib, cwa, cwb, # 8
+             m1a, m2a, m1b, m2b, n1a, n2a, n1b, n2b ) = endpack # 8 -> 16
+            self.log.info('    k=[%s,%s] s=[%s,%s] nsi=[%s,%s] cw=[%s,%s] '
+                          'ma=[%s,%s] mb=[%s,%s] na=[%s,%s] nb=[%s,%s]' % (tuple(endpack)))
+            data_in.append(endpack)
 
             prop = PBEAM.add_op2_data(data_in)
             self._add_op2_property(prop)
-            print(prop)
-            #sys.exit('ept-PBEAM')
         self.card_count['PBEAM'] = nproperties
         return n
 
@@ -278,7 +299,6 @@ class EPT(GeomCommon):
             (pid, nlayers, z0, nsm, sb, ft, Tref, ge) = out
             if self.debug:
                 self.log.debug('PCOMP pid=%s nlayers=%s z0=%s nsm=%s sb=%s ft=%s Tref=%s ge=%s' % tuple(out))
-            assert nlayers > 0, out
             assert isinstance(nlayers, int), out
             n += 32
 
@@ -290,6 +310,7 @@ class EPT(GeomCommon):
             if nlayers < 0:
                 is_symmetrical = 'YES'
                 nlayers = abs(nlayers)
+            assert nlayers > 0, out
 
             assert 0 < nlayers < 100, 'pid=%s nlayers=%s z0=%s nms=%s sb=%s ft=%s Tref=%s ge=%s' % (
                 pid, nlayers, z0, nsm, sb, ft, Tref, ge)
@@ -326,9 +347,20 @@ class EPT(GeomCommon):
             self.binary_debug.write('skipping PCONVM\n')
         return len(data)
     def _read_pdamp(self, data, n):
-        if self.is_debug_file:
-            self.binary_debug.write('skipping PDAMP\n')
-        return len(data)
+        """
+        PDAMP(202,2,45) - the marker for Record ???
+        """
+        ntotal = 8  # 2*4
+        s = Struct(b(self._endian + 'if'))
+        nentries = (len(data) - n) // ntotal
+        for i in range(nentries):
+            out = s.unpack(data[n:n+8])
+            #(pid, b) = out
+            prop = PDAMP.add_op2_data(out)
+            self._add_op2_property(prop)
+            n += ntotal
+        self.card_count['PDAMP'] = nentries
+        return n
 
 # PDAMPT
 # PDAMP5
