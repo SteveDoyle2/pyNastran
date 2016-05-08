@@ -40,8 +40,8 @@ class LineDamper(DamperElement):
         """
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
         self.nodes = model.Nodes(self.nodes, msg=msg)
-        self.pid = model.Property(self.pid, msg=msg)
         self.nodes_ref = self.nodes
+        self.pid = model.Property(self.pid, msg=msg)
         self.pid_ref = self.pid
 
     def uncross_reference(self):
@@ -367,8 +367,8 @@ class CDAMP3(LineDamper):
         """
         msg = ', which is required by %s eid=%s' % (self.type, self.eid)
         self.nodes = model.Nodes(self.nodes, allow_empty_nodes=True, msg=msg)
-        self.pid = model.Property(self.pid, msg=msg)
         self.nodes_ref = self.nodes
+        self.pid = model.Property(self.pid, msg=msg)
         self.pid_ref = self.pid
 
     def uncross_reference(self):
@@ -538,8 +538,8 @@ class CDAMP5(LineDamper):
         """
         msg = ', which is required by %s eid=%s' % (self.type, self.eid)
         self.nodes = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
-        self.pid = model.Property(self.pid, msg=msg)
         self.nodes_ref = self.nodes
+        self.pid = model.Property(self.pid, msg=msg)
         self.pid_ref = self.pid
 
     def uncross_reference(self):

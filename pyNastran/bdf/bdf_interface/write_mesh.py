@@ -303,9 +303,9 @@ class WriteMesh(BDFAttributes):
         if self.punch is None:
             # writing a mesh without using read_bdf
             if self.executive_control_lines or self.case_control_deck:
-                self.punch = True
-            else:
                 self.punch = False
+            else:
+                self.punch = True
 
         if self.nastran_format:
             outfile.write('$pyNastran: version=%s\n' % self.nastran_format)

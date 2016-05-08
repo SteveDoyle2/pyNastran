@@ -632,6 +632,9 @@ class PCOMP(CompositeShellProperty):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        #data_in = [
+            #pid, z0, nsm, sb, ft, Tref, ge,
+            #is_symmetrical, Mid, T, Theta, Sout]
         pid = data[0]
         z0 = data[1]
         nsm = data[2]
@@ -653,8 +656,12 @@ class PCOMP(CompositeShellProperty):
         for (mid, t, theta, sout) in zip(Mid, T, Theta, Sout):
             if sout == 0:
                 sout = 'NO'
-            elif sout == 1:  #: .. todo:: not sure  0=NO,1=YES (most likely)
+            elif sout == 1:
                 sout = 'YES'
+            #elif sout == 2:  #: .. todo:: what?!!
+                #sout = 'YES'
+            #elif sout == 3:  #: .. todo:: what?!!
+                #sout = 'YES'
             else:
                 raise RuntimeError('unsupported sout.  sout=%r and must be 0 or 1.'
                                    '\nPCOMP = %s' % (sout, data))
@@ -662,6 +669,19 @@ class PCOMP(CompositeShellProperty):
             thicknesses.append(t)
             thetas.append(theta)
             souts.append(sout)
+        if ft == 0:
+            ft = None
+        elif ft == 1:
+            ft = 'HILL'
+        elif ft == 2:
+            ft = 'HOFF'
+        elif ft == 3:
+            ft = 'TSAI'
+        elif ft == 4:
+            ft = 'STRN'
+        else:
+            raise RuntimeError('unsupported ft.  pid=%s ft=%r.'
+                               '\nPCOMP = %s' % (pid, ft, data))
         return PCOMP(pid, mids, thicknesses, thetas, souts,
                      nsm, sb, ft, TRef, ge, lam, z0, comment=comment)
 
@@ -1049,7 +1069,8 @@ class PSHEAR(ShellProperty):
         nsm = data[3]
         f1 = data[4]
         f2 = data[5]
-        return PSHEAR(pid, mid, t, nsm, f1, f2, comment=comment)
+        assert isinstance(mid, integer_types), data
+        return PSHEAR(pid, t, mid, nsm, f1, f2, comment=comment)
 
     def _is_same_card(self, prop, debug=False):
         if self.type != prop.type:
@@ -1091,6 +1112,7 @@ class PSHEAR(ShellProperty):
         return mass_per_area
 
     def _verify(self, xref=False):
+        print('xref =', xref)
         pid = self.Pid()
         midi = self.Mid()
 

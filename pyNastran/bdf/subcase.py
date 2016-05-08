@@ -95,6 +95,121 @@ class Subcase(object):
         #    stress_code += 16  material coord (1) vs element (0)
         return stress_code
 
+    def add_op2_data(self, data_code, msg):
+        #subtable_name = data_code['subtable_name']
+        table_name = data_code['table_name']
+        table_code = data_code['table_code']
+        sort_code = data_code['sort_code']
+        device_code = data_code['device_code']
+        #print(data_code)
+        #print('table_name=%r table_code=%s sort_code=%r device_code=%r' % (
+            #table_name, table_code, sort_code, device_code))
+        table_name = table_name.strip()
+        #if 'TITLE' in
+        #print(data_code)
+        options = []
+        if data_code['title']:
+            self.add('TITLE', data_code['title'], options, 'STRING-type')
+        if data_code['subtitle']:
+            self.add('SUBTITLE', data_code['subtitle'], options, 'STRING-type')
+        if data_code['label']:
+            self.add('LABEL', data_code['label'], options, 'STRING-type')
+
+        if table_name in ['OUGV1', 'BOUGV1', 'OUGV2']:
+            if table_code == 1:
+                thermal = data_code['thermal']
+                if thermal == 0:
+                    self.add('DISPLACEMENT', 'ALL', options, 'STRESS-type')
+                elif thermal == 1:
+                    self.add('ANALYSIS', 'HEAT', options, 'KEY-type')
+                else:
+                    print(msg)
+                    raise NotImplementedError(data_code)
+            elif table_code == 7:
+                self.add('VECTOR', 'ALL', options, 'STRESS-type')
+            elif table_code == 10:
+                self.add('VELOCITY', 'ALL', options, 'STRESS-type')
+            elif table_code == 11:
+                self.add('ACCELERATION', 'ALL', options, 'STRESS-type')
+            else:
+                print(msg)
+                raise NotImplementedError(data_code)
+        elif table_name == 'TOUGV1':
+            thermal = data_code['thermal']
+            if thermal == 1:
+                self.add('ANALYSIS', 'HEAT', options, 'KEY-type')
+            else:
+                print(msg)
+                raise NotImplementedError(data_code)
+        elif table_name == 'ROUGV1':
+            thermal = data_code['thermal']
+            if thermal == 0:
+                self.add('DISPLACEMENT', 'ALL', options, 'STRESS-type')
+            else:
+                print(msg)
+                raise NotImplementedError(data_code)
+        elif table_name == 'BOPHIG':
+            if table_code == 7:
+                self.add('ANALYSIS', 'HEAT', options, 'KEY-type')
+            else:
+                print(msg)
+                raise NotImplementedError(data_code)
+        elif table_name == 'OUPV1':
+            if table_code == 1:
+                self.add('SDISPLACEMENT', 'ALL', options, 'STRESS-type')
+            elif table_code == 10:
+                self.add('SVELOCITY', 'ALL', options, 'STRESS-type')
+            elif table_code == 11:
+                self.add('SACCELERATION', 'ALL', options, 'STRESS-type')
+            else:
+                print(msg)
+                raise NotImplementedError(data_code)
+
+        elif table_name in ['OQG1', 'OQG2']:
+            if table_code == 3:
+                self.add('SPCFORCES', 'ALL', options, 'STRESS-type')
+            else:
+                print(msg)
+                raise NotImplementedError(data_code)
+        elif table_name == 'OQMG1':
+            if table_code in [3, 39]:
+                self.add('MPCFORCES', 'ALL', options, 'STRESS-type')
+            else:
+                print(msg)
+                raise NotImplementedError(data_code)
+        elif table_name in ['OGPFB1']:
+            if table_code == 19:
+                self.add('GPFORCE', 'ALL', options, 'STRESS-type')
+            else:
+                print(msg)
+                raise NotImplementedError(data_code)
+        elif table_name in ['OES1', 'OES1X', 'OES1X1', 'OES1C', 'OESCP',
+                            'OESNLXD', 'OESNLXR', 'OESNLBR', 'OESTRCP']:
+            #assert data_code['is_stress_flag'] == True, data_code
+            if table_code == 5:
+                self.add('STRESS', 'ALL', options, 'STRESS-type')
+            else:
+                print(msg)
+                raise NotImplementedError(data_code)
+        elif table_name in ['OESRT']:
+            #assert data_code['is_stress_flag'] == True, data_code
+            if table_code == 25:
+                self.add('STRESS', 'ALL', options, 'STRESS-type')
+            else:
+                print(msg)
+                raise NotImplementedError(data_code)
+        elif table_name in ['OSTR1X', 'OSTR1C']:
+            assert data_code['is_strain_flag'] == True, data_code
+            if table_code == 5:
+                self.add('STRAIN', 'ALL', options, 'STRESS-type')
+            else:
+                print(msg)
+                raise NotImplementedError(data_code)
+        else:
+            print(msg)
+            raise NotImplementedError(data_code)
+        #print(self)
+
     def get_format_code(self, options, value):
         """
         Gets the format code that will be used by the op2 based on
@@ -560,11 +675,11 @@ class Subcase(object):
         self.add(key, value, options, param_type)
 
     def add(self, key, value, options, param_type):
-        assert param_type in ['SET-type', 'CSV-type', 'SUBCASE-type', 'KEY-type', 'STRESS-type',], param_type
+        assert param_type in ['SET-type', 'CSV-type', 'SUBCASE-type', 'KEY-type', 'STRESS-type', 'STRING-type'], param_type
         self._add_data(key, value, options, param_type)
 
     def update(self, key, value, options, param_type):
-        assert param_type in ['SET-type', 'CSV-type', 'SUBCASE-type', 'KEY-type', 'STRESS-type',], param_type
+        assert param_type in ['SET-type', 'CSV-type', 'SUBCASE-type', 'KEY-type', 'STRESS-type', 'STRING-type'], param_type
         assert key in self.params, 'key=%r is not in isubcase=%s' % (key, self.id)
         self._add_data(key, value, options, param_type)
 
@@ -728,7 +843,7 @@ class Subcase(object):
             #else:  global subcase ID=0 and is not printed
             #    pass
         elif param_type == 'KEY-type':
-            #print "KEY-TYPE:  |%s|" %(value)
+            #print (KEY-TYPE:  %r" % value)
             assert value is not None, param
             if ',' in value:
                 sline = value.split(',')
@@ -738,7 +853,7 @@ class Subcase(object):
                 msg += msgi
             else:
                 msgi = spaces + '%s\n' % value
-                assert len(msgi) < 68, 'len(msg)=%s; msg=\n%s' % (len(msgi), msgi)
+                #assert len(msgi) < 68, 'len(msg)=%s; msg=\n%s' % (len(msgi), msgi)
                 msg += msgi
         elif param_type == 'STRING-type':
             msgi = spaces + '%s = %s\n' % (key, value)
@@ -751,9 +866,9 @@ class Subcase(object):
             msg += msgi
         elif param_type == 'STRESS-type':
             str_options = ','.join(options)
-            #print("str_options = |%s|" %(str_options))
+            #print("str_options = %r" % (str_options))
             #print("STRESSTYPE key=%s value=%s options=%s"
-            #    %(key, value, options))
+            #    % (key, value, options))
             if value is None:
                 val = ''
             else:
@@ -795,7 +910,7 @@ class Subcase(object):
             msg = ('\nkey=%r param=%r\n'
                    'allowed_params=[SET-type, STRESS-type, STRING-type, SUBCASE-type, KEY-type]\n'
                    'CSV-type     -> PARAM,FIXEDB,-1\n'
-                   'KEY-type     -> ???\n'
+                   'KEY-type     -> ???\n' # the catch all
                    'SET-type     -> SET 99 = 1234\n'
                    'SUBCASE-type -> ???\n'
                    'STRESS-type  -> DISP(PLOT, SORT1)=ALL\n'
@@ -806,7 +921,7 @@ class Subcase(object):
                    ''% (key, param))
             raise NotImplementedError(msg)
 
-        #print "msg = |%r|" %(msg)
+        #print("msg = %r" % (msg))
         return msg
 
     #def cross_reference(self, model):

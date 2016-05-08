@@ -1050,13 +1050,12 @@ class CSSCHD(Aero):
         """
         msg = ' which is required by ASSCHD sid=%s' % self.sid
         self.aesid = model.AESurf(self.aesid, msg=msg)
-        self.lAlpha = model.AEFact(self.lAlpha, msg=msg)
-        self.lMach = model.AEFact(self.lMach, msg=msg)
-        self.lSchd = model.AEFact(self.lSchd, msg=msg)
-
         self.aesid_ref = self.aesid
+        self.lAlpha = model.AEFact(self.lAlpha, msg=msg)
         self.lAlpha_ref = self.lAlpha
+        self.lMach = model.AEFact(self.lMach, msg=msg)
         self.lMach_ref = self.lMach
+        self.lSchd = model.AEFact(self.lSchd, msg=msg)
         self.lSchd_ref = self.lSchd
 
     def uncross_reference(self):
@@ -1333,8 +1332,8 @@ class CAERO1(BaseCard):
         """
         msg = ' which is required by CAERO1 eid=%s' % self.eid
         self.pid = model.PAero(self.pid, msg=msg)
-        self.cp = model.Coord(self.cp, msg=msg)
         self.pid_ref = self.pid
+        self.cp = model.Coord(self.cp, msg=msg)
         self.cp_ref = self.cp
 
         self.ascid_ref = model.Acsid(msg=msg)
@@ -1705,11 +1704,10 @@ class CAERO2(BaseCard):
         """
         msg = ' which is required by CAERO2 eid=%s' % self.eid
         self.pid = model.PAero(self.pid, msg=msg)  # links to PAERO2
-        self.cp = model.Coord(self.cp, msg=msg)
-        #self.lsb = model.AeFact(self.lsb, msg=msg) # not added
-
         self.pid_ref = self.pid
+        self.cp = model.Coord(self.cp, msg=msg)
         self.cp_ref = self.cp
+        #self.lsb = model.AeFact(self.lsb, msg=msg) # not added
 
     def uncross_reference(self):
         self.pid = self.Pid()
@@ -1817,13 +1815,12 @@ class CAERO3(BaseCard):
         """
         msg = ' which is required by CAERO3 eid=%s' % self.eid
         self.pid = model.PAero(self.pid, msg=msg)  # links to PAERO3
+        self.pid_ref = self.pid
         self.cp = model.Coord(self.cp, msg=msg)
+        self.cp_ref = self.cp
         #self.list_w = model.AEFact(self.list_w, msg=msg)   # not added
         #self.list_c1 = model.AEFact(self.list_c1, msg=msg) # not added
         #self.list_c2 = model.AEFact(self.list_c2, msg=msg) # not added
-
-        self.pid_ref = self.pid
-        self.cp_ref = self.cp
 
     def uncross_reference(self):
         self.pid = self.Pid()
@@ -2059,11 +2056,10 @@ class CAERO5(BaseCard):
         """
         msg = ' which is required by CAERO5 eid=%s' % self.eid
         self.pid = model.PAero(self.pid, msg=msg)
-        self.cp = model.Coord(self.cp, msg=msg)
-        self.lspan = model.AEFact(self.lspan, msg=msg)
-
         self.pid_ref = self.pid
+        self.cp = model.Coord(self.cp, msg=msg)
         self.cp_ref = self.cp
+        self.lspan = model.AEFact(self.lspan, msg=msg)
         self.lspan_ref = self.lspan
 
     def uncross_reference(self):
@@ -2635,11 +2631,10 @@ class FLUTTER(BaseCard):
         """
         msg = ' which is required by FLUTTER sid=%s' % self.sid
         self.density = model.FLFACT(self.density, msg=msg)
-        self.mach = model.FLFACT(self.mach, msg=msg)
-        self.reduced_freq_velocity = model.FLFACT(self.reduced_freq_velocity, msg=msg)
-
         self.density_ref = self.density
+        self.mach = model.FLFACT(self.mach, msg=msg)
         self.mach_ref = self.mach
+        self.reduced_freq_velocity = model.FLFACT(self.reduced_freq_velocity, msg=msg)
         self.reduced_freq_velocity_ref = self.reduced_freq_velocity
 
     def uncross_reference(self):
@@ -3441,10 +3436,9 @@ class SPLINE1(Spline):
         """
         msg = ' which is required by SPLINE1 eid=%s' % self.eid
         self.caero = model.CAero(self.CAero(), msg=msg)
+        self.caero_ref = self.caero
         self.setg = model.Set(self.Set(), msg=msg)
         self.setg.cross_reference(model, 'Node')
-
-        self.caero_ref = self.caero
         self.setg_ref = self.setg
 
     def uncross_reference(self):
@@ -3556,12 +3550,11 @@ class SPLINE2(Spline):
         """
         msg = ' which is required by SPLINE2 eid=%s' % self.eid
         self.cid = model.Coord(self.Cid(), msg=msg)
+        self.cid_ref = self.cid
         self.caero = model.CAero(self.CAero(), msg=msg)
+        self.caero_ref = self.caero
         self.setg = model.Set(self.Set(), msg=msg)
         self.setg.cross_reference(model, 'Node')
-
-        self.cid_ref = self.cid
-        self.caero_ref = self.caero
         self.setg_ref = self.setg
 
     def uncross_reference(self):
@@ -3949,14 +3942,13 @@ class SPLINE5(Spline):
         """
         msg = ' which is required by SPLINE5 eid=%s' % self.eid
         self.cid = model.Coord(self.Cid(), msg=msg)
-        self.caero = model.CAero(self.CAero(), msg=msg)
-        self.setg = model.Set(self.Set(), msg=msg)
-        self.aelist = model.AEList(self.AEList(), msg=msg)
-        self.setg.cross_reference(model, 'Node')
-
         self.cid_ref = self.cid
+        self.caero = model.CAero(self.CAero(), msg=msg)
         self.caero_ref = self.caero
+        self.setg = model.Set(self.Set(), msg=msg)
         self.setg_ref = self.setg
+        self.setg.cross_reference(model, 'Node')
+        self.aelist = model.AEList(self.AEList(), msg=msg)
         self.aelist_ref = self.aelist
 
     def uncross_reference(self):

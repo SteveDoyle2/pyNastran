@@ -2267,6 +2267,10 @@ class PLOAD4(Load):
 
         g1 = data[3]
         g34 = data[4]
+        if g1 == 0:
+            g1 = None
+        if g1 == 34:
+            g34 = None
         cid = data[5]
         NVector = data[6]
 

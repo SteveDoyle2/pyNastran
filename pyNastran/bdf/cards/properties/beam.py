@@ -530,7 +530,24 @@ class PBEAM(IntegratedLineProperty):
             m2a, m1b, m2b, n1a, n2a, n1b, n2b,
             comment=comment)
 
-    def add_op2_data(self, data, comment=''):
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        (pid, mid, nsegs, ccf, x) = data[:5]
+
+        rows = data[5:]
+        assert len(rows) == 13, len(rows)
+        for pack in rows[:-1]:
+            (so, xxb, a, i1, i2, i12, j, nsm, c1, c2,
+             d1, d2, e1, e2, f1, f2) = pack
+
+
+        (k1, k2, s1, s2, nsia, nsib, cwa, cwb,
+         m1a, m2a, m1b, m2b, n1a, n2a, n1b, n2b) = pack
+        return PBEAM(pid, mid, xxb, so, area, i1, i2, i12, j, nsm,
+                     c1, c2, d1, d2, e1, e2,
+                     f1, f2, k1, k2, s1, s2,
+                     nsia, nsib, cwa, cwb, m1a, m2a, m1b,
+                     m2b, n1a, n2a, n1b, n2b, comment=comment)
         raise NotImplementedError(data)
 
     #def Area(self):
@@ -614,7 +631,8 @@ class PBEAM(IntegratedLineProperty):
         msg += "              VALE=(%g,  %g,  %g,  %g),\n" % (a, iy, iz, j)
 
         msg += "              ORIENTATION=_F( \n"
-        msg += "                  CARA=('VECT_Y'), # direction of beam ???\n"  ## .. todo:: is this correct
+        ## .. todo:: is this correct
+        msg += "                  CARA=('VECT_Y'), # direction of beam ???\n"
         msg += "                  VALE=(1.0,0.0,0.0,)"
 
         if [self.n1a, self.n1b] != [0., 0.]:

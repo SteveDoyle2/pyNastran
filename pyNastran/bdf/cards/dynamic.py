@@ -886,6 +886,10 @@ class TSTEPNL(BaseCard):
          max_div, max_qn, max_ls, fstress, max_bisect,
          adjust, mstep, rb, max_r, utol, rtol_b) = data
 
+        if method == '1':
+            method = 'AUTO'
+        else:
+            raise NotImplementedError('method=%r data=%s' % (method, data))
         min_iter = None  # not listed in DMAP 2005
         return TSTEPNL(
             sid, ndt, dt, no, method, kstep, max_iter, conv,

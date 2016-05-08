@@ -367,8 +367,8 @@ class CTRIA3(TriShell):
         """
         msg = ' which is required by CTRIA3 eid=%s' % self.eid
         self.nodes = model.Nodes(self.node_ids, msg=msg)
-        self.pid = model.Property(self.Pid(), msg=msg)
         self.nodes_ref = self.nodes
+        self.pid = model.Property(self.Pid(), msg=msg)
         self.pid_ref = self.pid
 
     def uncross_reference(self):
@@ -1593,8 +1593,8 @@ class CQUAD4(QuadShell):
         """
         msg = ' which is required by CQUAD4 eid=%s' % self.eid
         self.nodes = model.Nodes(self.nodes, msg=msg)
-        self.pid = model.Property(self.pid, msg=msg)
         self.nodes_ref = self.nodes
+        self.pid = model.Property(self.pid, msg=msg)
         self.pid_ref = self.pid
 
     def uncross_reference(self):
@@ -1787,8 +1787,8 @@ class CQUADR(QuadShell):
         """
         msg = ' which is required by CQUADR eid=%s' % self.eid
         self.nodes = model.Nodes(self.nodes, allow_empty_nodes=True, msg=msg)
-        self.pid = model.Property(self.pid, msg=msg)
         self.nodes_ref = self.nodes
+        self.pid = model.Property(self.pid, msg=msg)
         self.pid_ref = self.pid
 
     def uncross_reference(self):
@@ -1912,8 +1912,8 @@ class CQUAD(QuadShell):
         """
         msg = ' which is required by CQUAD eid=%s' % self.eid
         self.nodes = model.Nodes(self.nodes, allow_empty_nodes=True, msg=msg)
-        self.pid = model.Property(self.pid, msg=msg)
         self.nodes_ref = self.nodes
+        self.pid = model.Property(self.pid, msg=msg)
         self.pid_ref = self.pid
 
     def uncross_reference(self):
@@ -2060,8 +2060,8 @@ class CQUAD8(QuadShell):
         """
         msg = ' which is required by CQUAD8 eid=%s' % self.eid
         self.nodes = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
-        self.pid = model.Property(self.Pid(), msg=msg)
         self.nodes_ref = self.nodes
+        self.pid = model.Property(self.Pid(), msg=msg)
         self.pid_ref = self.pid
 
     def uncross_reference(self):
@@ -2228,8 +2228,8 @@ class CQUADX(QuadShell):
         """
         msg = ' which is required by CQUADX eid=%s' % self.eid
         self.nodes = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
-        self.pid = model.Property(self.Pid(), msg=msg)
         self.nodes_ref = self.nodes
+        self.pid = model.Property(self.Pid(), msg=msg)
         self.pid_ref = self.pid
 
     def uncross_reference(self):
