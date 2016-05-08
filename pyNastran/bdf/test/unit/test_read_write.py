@@ -337,7 +337,7 @@ class TestReadWrite(unittest.TestCase):
         mesh.write_bdf('out.bdf')
         lines_expected = [
             '$pyNastran: version=msc',
-            '$pyNastran: punch=False',
+            '$pyNastran: punch=True',
             '$pyNastran: encoding=ascii' if PY2 else '$pyNastran: encoding=utf-8\n',
             '$pyNastran: nnodes=1',
             '$pyNastran: nelements=0',

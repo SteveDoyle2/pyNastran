@@ -55,8 +55,8 @@ class PBEAM(IntegratedLineProperty):
         #assert min(so) in [0., 1.], so  # YES, NO
         #assert max(so) == 1.0, so
         #print('xxb', xxb)
-        assert min(xxb) == 0.0, xxb  # x/L
-        assert max(xxb) == 1.0, xxb
+        assert 0. <= min(xxb) <= 0.0, xxb  # x/L
+        assert 0. <= max(xxb) <= 1.0, xxb
         assert isinstance(area, list), area
         assert isinstance(i1, list), i1
         assert isinstance(i2, list), i2
