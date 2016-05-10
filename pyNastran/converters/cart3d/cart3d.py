@@ -1,5 +1,5 @@
 from __future__ import print_function, unicode_literals
-from six import iteritems, b
+from six import iteritems, b, PY2
 from six.moves import zip, range
 import sys
 from struct import Struct, pack, unpack
@@ -116,8 +116,11 @@ class Cart3dIO(object):
             outfile.write(floats)
             outfile.write(four)
         else:
-            print(points.shape)
-            savetxt(outfile, points, fmt=float_fmt)
+            if isinstance(float_fmt, str):
+                fmt = float_fmt
+            else:
+                fmt = float_fmt.encode('latin1')
+            savetxt(outfile, points, fmt)
 
     def _write_elements(self, outfile, elements, is_binary, int_fmt='%6i'):
         min_e = elements.min()
@@ -132,7 +135,11 @@ class Cart3dIO(object):
             outfile.write(ints)
             outfile.write(four)
         else:
-            savetxt(outfile, elements, int_fmt)
+            if isinstance(int_fmt, str):
+                fmt = int_fmt
+            else:
+                fmt = int_fmt.encode('latin1')
+            savetxt(outfile, elements, fmt)
 
     def _write_regions(self, outfile, regions, is_binary):
         if is_binary:
@@ -146,7 +153,7 @@ class Cart3dIO(object):
 
             outfile.write(four)
         else:
-            savetxt(outfile, regions, '%i')
+            savetxt(outfile, regions, b'%i')
 
     def _write_loads(self, outfile, loads, is_binary, float_fmt='%6.6f'):
         if is_binary:
@@ -722,7 +729,10 @@ class Cart3D(Cart3dIO):
         if is_binary:
             form = 'wb'
         else:
-            form = 'wb'
+            if PY2:
+                form = 'w'
+            else:
+                form = 'wb'
         with codec_open(outfilename, form) as outfile:
             int_fmt = self._write_header(outfile, self.points, self.elements, is_loads, is_binary)
             self._write_points(outfile, self.points, is_binary, float_fmt)
