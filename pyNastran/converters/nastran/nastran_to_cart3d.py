@@ -1,4 +1,5 @@
 from six import iteritems
+from codecs import open as codec_open
 from numpy import zeros, ones, arange, array, searchsorted, array_equal
 
 from pyNastran.bdf.bdf import BDF
@@ -33,7 +34,7 @@ def nastran_to_cart3d(bdf, log=None, debug=False):
     regions = zeros(nelements, 'int32')
 
     i = 0
-    nids = array(bdf.nodes.keys(), dtype='int32')
+    nids = array(list(bdf.nodes.keys()), dtype='int32')
     nids_expected = arange(1, len(nids) + 1)
 
     if array_equal(nids, nids_expected):
@@ -95,7 +96,7 @@ def nastran_to_cart3d_filename(bdf_filename, cart3d_filename, log=None, debug=Fa
     nnodes = len(model.nodes)
     nelements = len(model.elements)
 
-    f = open(cart3d_filename, 'wb')
+    f = codec_open(cart3d_filename, 'w', encoding='utf8')
     f.write('%s %s\n' % (nnodes, nelements))
     node_id_shift = {}
     i = 1
@@ -124,8 +125,8 @@ def nastran_to_cart3d_filename(bdf_filename, cart3d_filename, log=None, debug=Fa
         n2 = node_id_shift[n2]
         n3 = node_id_shift[n3]
         mid = element.Mid()
-        f.write('%s %s %s\n' % (n1, n2, n3))
-        mids += '%s ' % mid
+        f.write('%i %i %i\n' % (n1, n2, n3))
+        mids += '%i ' % mid
         if j != 0 and j % 20 == 0:
             mids += '\n'
         j += 1

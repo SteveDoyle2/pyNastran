@@ -1,17 +1,19 @@
-from __future__ import print_function
+from __future__ import print_function, unicode_literals
 from six import iteritems, b
 from six.moves import zip, range
 import sys
 from struct import Struct, pack, unpack
 from math import ceil
 from collections import defaultdict
+from codecs import open as codec_open
 
 from numpy import zeros, where, savetxt, sqrt, amax, amin
 from numpy import arange, ravel, cross
 from numpy.linalg import norm
 
-from pyNastran.utils import is_binary_file
+from pyNastran.utils import is_binary_file, _filename
 from pyNastran.utils.log import get_logger
+
 
 def comp2tri(self, in_filenames, out_filename,
              is_binary=False, float_fmt='%6.7f'):
@@ -55,7 +57,7 @@ def comp2tri(self, in_filenames, out_filename,
     points = vstack(points)
     elements = vstack(elements)
     regions = vstack(regions)
-    self.write_cart3d(out_filename,
+    model.write_cart3d(out_filename,
                       points, elements, regions,
                       loads=None, is_binary=False, float_fmt=float_fmt)
 
@@ -67,6 +69,7 @@ class Cart3dIO(object):
     def __init__(self, log=None, debug=False):
         self.log = get_logger(log, 'debug' if debug else 'info')
         self._endian = b''
+        self._encoding = 'latin1'
         self.n = 0
         self.infile = None
         # self.readHalf = False
@@ -91,9 +94,9 @@ class Cart3dIO(object):
             int_fmt = None
         else:
             if is_loads:
-                msg = "%s %s 6\n" % (npoints, nelements)
+                msg = b"%i %i 6\n" % (npoints, nelements)
             else:
-                msg = "%s %s\n" % (npoints, nelements)
+                msg = b"%i %i\n" % (npoints, nelements)
 
             # take the max value, string it, and length it
             # so 123,456 is length 6
@@ -103,26 +106,27 @@ class Cart3dIO(object):
 
     def _write_points(self, outfile, points, is_binary, float_fmt='%6.6f'):
         if is_binary:
-            four = pack('>i', 4)
+            four = pack(b'>i', 4)
             outfile.write(four)
 
             npoints = points.shape[0]
-            fmt = '>%if' % (npoints * 3)
+            fmt = b'>%if' % (npoints * 3)
             floats = pack(fmt, *ravel(points))
 
             outfile.write(floats)
             outfile.write(four)
         else:
-            savetxt(outfile, points, float_fmt)
+            print(points.shape)
+            savetxt(outfile, points, fmt=float_fmt)
 
     def _write_elements(self, outfile, elements, is_binary, int_fmt='%6i'):
         min_e = elements.min()
         assert min_e == 1, 'min(elements)=%s' % min_e
         if is_binary:
-            four = pack('>i', 4)
+            four = pack(b'>i', 4)
             outfile.write(four)
             nelements = elements.shape[0]
-            fmt = '>%ii' % (nelements * 3)
+            fmt = b'>%ii' % (nelements * 3)
             ints = pack(fmt, *ravel(elements))
 
             outfile.write(ints)
@@ -136,7 +140,7 @@ class Cart3dIO(object):
             outfile.write(four)
 
             nregions = len(regions)
-            fmt = '>%ii' % nregions
+            fmt = b'>%ii' % nregions
             ints = pack(fmt, *regions)
             outfile.write(ints)
 
@@ -281,10 +285,10 @@ class Cart3dIO(object):
 
         so4 = size // 4  # size over 4
         if so4 == 3:
-            (npoints, nelements, nresults) = unpack(b(self._endian + 'iii'), data)
+            (npoints, nelements, nresults) = unpack(self._endian + b'iii', data)
             self.log.info("npoints=%s nelements=%s nresults=%s" % (npoints, nelements, nresults))
         elif so4 == 2:
-            (npoints, nelements) = unpack(b(self._endian + 'ii'), data)
+            (npoints, nelements) = unpack(self._endian + b'ii', data)
             nresults = 0
             self.log.info("npoints=%s nelements=%s" % (npoints, nelements))
         else:
@@ -299,7 +303,7 @@ class Cart3dIO(object):
 
         n = 0
         points = zeros(npoints * 3, dtype='float32')
-        s = Struct(b(self._endian + '3000f')) # 3000 floats; 1000 points
+        s = Struct(self._endian + b'3000f') # 3000 floats; 1000 points
         while size > 12000:  # 12k = 4 bytes/float*3 floats/point*1000 points
             data = self.infile.read(4 * 3000)
 
@@ -312,7 +316,7 @@ class Cart3dIO(object):
 
         if size > 0:
             data = self.infile.read(size)
-            bin_format = b(self._endian + '%if' % (size // 4))
+            bin_format = self._endian + b'%if' % (size // 4)
 
             node_xyzs = unpack(bin_format, data)
             points[n:] = node_xyzs
@@ -328,7 +332,7 @@ class Cart3dIO(object):
         elements = zeros(nelements * 3, dtype='int32')
 
         n = 0
-        s = Struct(b(self._endian + '3000i'))
+        s = Struct(self._endian + b'3000i')
         while size > 12000:  # 4k is 1000 elements
             data = self.infile.read(4 * 3000)
             nodes = s.unpack(data)
@@ -339,7 +343,7 @@ class Cart3dIO(object):
         assert size >= 0, 'size=%s' % size
         if size > 0:
             data = self.infile.read(size)
-            bin_format = b(self._endian + '%ii' % (size // 4))
+            bin_format = self._endian + b'%ii' % (size // 4)
 
             nodes = unpack(bin_format, data)
             elements[n:] = nodes
@@ -350,7 +354,7 @@ class Cart3dIO(object):
 
     def _read_regions_binary(self, nelements):
         size = nelements * 4  # 12=3*4 all the elements
-        s = Struct(b(self._endian + '3000i'))
+        s = Struct(self._endian + b'3000i')
 
         regions = zeros(nelements, dtype='int32')
 
@@ -371,7 +375,7 @@ class Cart3dIO(object):
         assert size >= 0, 'size=%s' % size
         if size > 0:
             data = self.infile.read(size)
-            bin_format = b(self._endian + '%ii') % (size // 4)
+            bin_format = self._endian + b'%ii' % (size // 4)
             try:
                 region_data = unpack(bin_format, data)
             except:
@@ -692,7 +696,7 @@ class Cart3D(Cart3dIO):
                 self.regions = self._read_regions_binary(nelements)
                 # TODO: loads
         else:
-            with open(infilename, 'r') as self.infile:
+            with codec_open(_filename(infilename), 'r', encoding=self._encoding) as self.infile:
                 npoints, nelements, nresults = self._read_header_ascii()
                 self.points = self._read_points_ascii(npoints)
                 self.elements = self._read_elements_ascii(nelements)
@@ -715,16 +719,19 @@ class Cart3D(Cart3dIO):
             is_loads = True
 
         self.log.info("---writing cart3d file...%r---" % outfilename)
-        outfile = open(outfilename, 'wb')
+        if is_binary:
+            form = 'wb'
+        else:
+            form = 'wb'
+        with codec_open(outfilename, form) as outfile:
+            int_fmt = self._write_header(outfile, self.points, self.elements, is_loads, is_binary)
+            self._write_points(outfile, self.points, is_binary, float_fmt)
+            self._write_elements(outfile, self.elements, is_binary, int_fmt)
+            self._write_regions(outfile, self.regions, is_binary)
 
-        int_fmt = self._write_header(outfile, self.points, self.elements, is_loads, is_binary)
-        self._write_points(outfile, self.points, is_binary, float_fmt)
-        self._write_elements(outfile, self.elements, is_binary, int_fmt)
-        self._write_regions(outfile, self.regions, is_binary)
-
-        if is_loads:
-            assert is_binary is False, 'is_binary=%r is not supported for loads' % is_binary
-            self._write_loads(outfile, self.loads, is_binary, float_fmt)
+            if is_loads:
+                assert is_binary is False, 'is_binary=%r is not supported for loads' % is_binary
+                self._write_loads(outfile, self.loads, is_binary, float_fmt)
         outfile.close()
 
 

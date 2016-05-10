@@ -98,6 +98,7 @@ class Subcase(object):
     def add_op2_data(self, data_code, msg):
         #subtable_name = data_code['subtable_name']
         table_name = data_code['table_name']
+        table_name = table_name if isinstance(table_name, str) else table_name.decode('latin1')
         table_code = data_code['table_code']
         sort_code = data_code['sort_code']
         device_code = data_code['device_code']
