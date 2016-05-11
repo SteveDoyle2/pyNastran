@@ -356,10 +356,8 @@ class NastranIO(object):
             model.safe_cross_reference(xref=True, xref_loads=xref_loads,
                                        xref_constraints=False)
 
-
         # get indicies and transformations for displacements
         self.i_transform, self.transforms = model.get_displacement_index_transforms()
-
 
         nnodes = len(model.nodes)
         nspoints = 0
@@ -749,7 +747,7 @@ class NastranIO(object):
                 point[1] += zfighting_offset
                 point[2] += zfighting_offset
                 points.InsertPoint(j + ipoint, *point)
-            print('')
+            #print('')
             elem = vtkQuad()
             elem.GetPointIds().SetId(0, j)
             elem.GetPointIds().SetId(1, j + 1)
@@ -1721,6 +1719,7 @@ class NastranIO(object):
         nelements = len(model.elements)
         pids = np.zeros(nelements, 'int32')
         mids = np.zeros(nelements, 'int32')
+        material_coord = np.zeros(nelements, 'int32')
 
         # pids_good = []
         # pids_to_keep = []
@@ -1739,6 +1738,7 @@ class NastranIO(object):
             self.eid_map[eid] = i
             pid = 0
             if isinstance(element, (CTRIA3, CTRIAR)):
+                material_coord[i] = 0 if isinstance(element.thetaMcid, float) else element.thetaMcid
                 elem = vtkTriangle()
                 node_ids = element.node_ids
                 pid = element.Pid()
@@ -1752,6 +1752,7 @@ class NastranIO(object):
                 elem.GetPointIds().SetId(2, nid_map[node_ids[2]])
                 self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
             elif isinstance(element, CTRIA6):
+                material_coord[i] = element.thetaMcid
                 node_ids = element.node_ids
                 pid = element.Pid()
                 self.eid_to_nid_map[eid] = node_ids[:3]
@@ -1770,6 +1771,7 @@ class NastranIO(object):
                 elem.GetPointIds().SetId(2, nid_map[node_ids[2]])
                 self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
             elif isinstance(element, CTRIAX6):
+                material_coord[i] = element.thetaMcid
                 # midside nodes are required, nodes out of order
                 node_ids = element.node_ids
                 pid = element.Pid()
@@ -1801,6 +1803,8 @@ class NastranIO(object):
                 self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
 
             elif isinstance(element, (CQUAD4, CSHEAR, CQUADR)):
+                material_coord[i] = 0 if isinstance(element.thetaMcid, float) else element.thetaMcid
+                #print('eid=%s theta=%s' % (eid, material_coord[i]))
                 node_ids = element.node_ids
                 pid = element.Pid()
                 for nid in node_ids:
@@ -1814,6 +1818,7 @@ class NastranIO(object):
                 elem.GetPointIds().SetId(3, nid_map[node_ids[3]])
                 self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
             elif isinstance(element, CQUAD8):
+                material_coord[i] = element.thetaMcid
                 node_ids = element.node_ids
                 pid = element.Pid()
                 for nid in node_ids:
@@ -2341,6 +2346,13 @@ class NastranIO(object):
                 form0.append(('OffsetY', icase + 1, []))
                 form0.append(('OffsetZ', icase + 2, []))
                 icase += 3
+
+            if np.abs(material_coord).max() > 0:
+                material_coord_res = GuiResult(0, header='MaterialCoord', title='MaterialCoord',
+                                               location='centroid', scalar=material_coord, data_format='%i')
+                cases[icase] = (material_coord_res, (0, 'MaterialCoord'))
+                form0.append(('MaterialCoord', icase, []))
+                icase += 1
 
             self.normals = normals
         return nid_to_pid_map, icase, cases, form
