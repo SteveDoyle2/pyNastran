@@ -40,8 +40,8 @@ class LineDamper(DamperElement):
         """
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
         self.nodes = model.Nodes(self.nodes, msg=msg)
-        self.pid = model.Property(self.pid, msg=msg)
         self.nodes_ref = self.nodes
+        self.pid = model.Property(self.pid, msg=msg)
         self.pid_ref = self.pid
 
     def uncross_reference(self):
@@ -88,11 +88,8 @@ class CDAMP1(LineDamper):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
-        eid = data[0]
-        pid = data[1]
-        nids = [data[2], data[4]]
-        c1 = data[3]
-        c2 = data[5]
+        eid, pid, g1, g2, c1, c2 = data
+        nids = [g1, g2]
         return CDAMP1(eid, pid, nids, c1, c2, comment=comment)
 
     def _validate_input(self):
@@ -229,8 +226,8 @@ class CDAMP2(LineDamper):
     def add_op2_data(cls, data, comment=''):
         eid = data[0]
         b = data[1]
-        nids = [data[2], data[4]]
-        c1 = data[3]
+        nids = [data[2], data[3]]
+        c1 = data[4]
         c2 = data[5]
         return CDAMP2(eid, b, nids, c1, c2, comment=comment)
 
@@ -367,8 +364,8 @@ class CDAMP3(LineDamper):
         """
         msg = ', which is required by %s eid=%s' % (self.type, self.eid)
         self.nodes = model.Nodes(self.nodes, allow_empty_nodes=True, msg=msg)
-        self.pid = model.Property(self.pid, msg=msg)
         self.nodes_ref = self.nodes
+        self.pid = model.Property(self.pid, msg=msg)
         self.pid_ref = self.pid
 
     def uncross_reference(self):
@@ -406,26 +403,34 @@ class CDAMP4(LineDamper):
         else:
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
-    def __init__(self, card=None, icard=0, data=None, comment=''):
+    def __init__(self, b, nids, comment=''):
         LineDamper.__init__(self)
         if comment:
             self._comment = comment
-        if card:
-            ioffset = icard * 4
-            self.eid = integer(card, 1 + ioffset, 'eid')
-            #: Value of the scalar damper (Real)
-            self.b = double(card, 2 + ioffset, 'b')
-            nids = [
-                integer_or_blank(card, 3 + ioffset, 'n1', 0),
-                integer_or_blank(card, 4 + ioffset, 'n2', 0)
-            ]
-            assert len(card) <= 9, 'len(CDAMP4 card) = %i' % len(card)
-        else:
-            self.eid = data[0]
-            self.b = data[1]
-            nids = [data[2], data[3]]
+        self.b = b
+        self.nids = nids
         self.prepare_node_ids(nids, allow_empty_nodes=True)
         assert len(self.nodes) == 2
+
+    @classmethod
+    def add_card(cls, card, icard=0, comment=''):
+        ioffset = icard * 4
+        eid = integer(card, 1 + ioffset, 'eid')
+        #: Value of the scalar damper (Real)
+        b = double(card, 2 + ioffset, 'b')
+        nids = [
+            integer_or_blank(card, 3 + ioffset, 'n1', 0),
+            integer_or_blank(card, 4 + ioffset, 'n2', 0)
+        ]
+        assert len(card) <= 9, 'len(CDAMP4 card) = %i' % len(card)
+        return CDAMP4(eid, b, nids, comment=comment)
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        eid = data[0]
+        b = data[1]
+        nids = [data[2], data[3]]
+        return CDAMP4(eid, b, nids, comment=comment)
 
     def _verify(self, xref=True):
         eid = self.Eid()
@@ -538,8 +543,8 @@ class CDAMP5(LineDamper):
         """
         msg = ', which is required by %s eid=%s' % (self.type, self.eid)
         self.nodes = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
-        self.pid = model.Property(self.pid, msg=msg)
         self.nodes_ref = self.nodes
+        self.pid = model.Property(self.pid, msg=msg)
         self.pid_ref = self.pid
 
     def uncross_reference(self):

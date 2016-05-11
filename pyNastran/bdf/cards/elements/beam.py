@@ -255,11 +255,10 @@ class CBEAM(CBAR):
         """
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
         self.ga = model.Node(self.ga, msg=msg)
-        self.gb = model.Node(self.gb, msg=msg)
-        self.pid = model.Property(self.pid, msg=msg)
-
         self.ga_ref = self.ga
+        self.gb = model.Node(self.gb, msg=msg)
         self.gb_ref = self.gb
+        self.pid = model.Property(self.pid, msg=msg)
         self.pid_ref = self.pid
         if self.g0:
             g0 = model.nodes[self.g0]

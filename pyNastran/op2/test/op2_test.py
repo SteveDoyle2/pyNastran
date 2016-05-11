@@ -133,7 +133,7 @@ if __name__ == '__main__':
     msg += "  -t, --short_stats     Short get_op2_stats printout\n"
     msg += "  -g, --geometry        Reads the OP2 for geometry, which can be written out\n"
     msg += "  -n, --write_bdf       Writes the bdf to fem.test_op2.bdf (default=False)\n" # n is for NAS
-    msg += "  -s, --save_cases      Save the cases (default=True)\n" # n is for NAS
+    msg += "  -s, --save_cases      Disables saving of the cases (default=False)\n"
     #msg += "  -z, --is_mag_phase    F06 Writer writes Magnitude/Phase instead of\n"
     #msg += "                        Real/Imaginary (still stores Real/Imag); [default: False]\n"
     #msg += "  -s <sub>, --subcase   Specify one or more subcases to parse; (e.g. 2_5)\n"

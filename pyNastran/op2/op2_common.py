@@ -11,7 +11,7 @@ import numpy as np
 
 from pyNastran import is_release
 from pyNastran.f06.f06_writer import F06Writer
-from pyNastran.op2.op2_codes import Op2Codes
+from pyNastran.op2.op2_codes import Op2Codes, get_scode_word
 from pyNastran.op2.op2_helper import polar_to_real_imag
 
 from pyNastran.op2.errors import SortCodeError, MultipleSolutionNotImplementedError # DeviceCodeError,
@@ -305,14 +305,39 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
                 self.labels[code] = self.label
 
     def _write_debug_bits(self):
+        """
+        s_code =  0 -> stress_bits = [0,0,0,0,0]
+        s_code =  1 -> stress_bits = [0,0,0,0,1]
+        s_code =  2 -> stress_bits = [0,0,0,1,0]
+        s_code =  3 -> stress_bits = [0,0,0,1,1]
+        etc.
+        s_code = 32 -> stress_bits = [1,1,1,1,1]
+
+        stress_bits[0] = 0 -> isMaxShear=True       isVonMises=False
+        stress_bits[0] = 1 -> isMaxShear=False      isVonMises=True
+
+        stress_bits[1] = 0 -> is_stress=True        is_strain=False
+        stress_bits[2] = 0 -> isFiberCurvature=True isFiberDistance=False
+        stress_bits[3] = 0 -> duplicate of Bit[1] (stress/strain)
+        stress_bits[4] = 0 -> material coordinate system flag
+        """
         if self.is_debug_file:
             msg = ''
             for i, param in enumerate(self.words):
-                if param == '???':
+                if param == 's_code':
+                    s_word = get_scode_word(self.s_code, self.stress_bits)
+                    self.binary_debug.write('  s_code         = %s -> %s\n' % (self.s_code, s_word))
+                    self.binary_debug.write('    stress_bits[0] = %i -> is_von_mises    =%-5s vs is_max_shear\n' % (self.stress_bits[0], self.is_von_mises()))
+                    self.binary_debug.write('    stress_bits[1] = %i -> is_strain       =%-5s vs is_stress\n' % (self.stress_bits[1], self.is_strain()))
+                    self.binary_debug.write('    stress_bits[2] = %i -> strain_curvature=%-5s vs fiber_dist\n' % (self.stress_bits[2], self.is_curvature()))
+                    self.binary_debug.write('    stress_bits[3] = %i -> is_strain       =%-5s vs is_stress\n' % (self.stress_bits[3], self.is_strain()))
+                    self.binary_debug.write('    stress_bits[4] = %i -> material coordinate system flag=%s vs ???\n' % (self.stress_bits[4], self.stress_bits[4]))
+                elif param == '???':
                     param = 0
                 msg += '%s, ' % param
                 if i % 5 == 4:
                     msg += '\n             '
+
             if hasattr(self, 'format_code'):
                 if self.is_complex():
                     self.binary_debug.write('\n  %-14s = %i -> is_mag_phase vs is_real_imag vs. is_random\n' % ('format_code', self.format_code))
@@ -323,6 +348,12 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
                 self.binary_debug.write('    sort_bits[2] = %i -> is_real  =%s vs real/imag\n' % (self.sort_bits[2], self.is_real()))
                 sort_method, is_real, is_random = self._table_specs()
                 self.binary_debug.write('    sort_method = %s\n' % sort_method)
+            if hasattr(self, 'stress_bits'):
+                if self.is_complex():
+                    self.binary_debug.write('\n  %-14s = %i -> is_mag_phase vs is_real_imag vs. is_random\n' % ('format_code', self.format_code))
+                else:
+                    self.binary_debug.write('  %-14s = %i\n' % ('format_code', self.format_code))
+
             self.binary_debug.write('  recordi = [%s]\n\n' % msg)
 
     def _read_geom_4(self, mapper, data, ndata):
@@ -1240,6 +1271,8 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
 
         if not hasattr(self, 'subtable_name'):
             self.data_code['subtable_name'] = self.subtable_name
+
+        self.data_code['table_name'] = self.table_name
         self.data_code['approach_code'] = approach_code
 
         #: the local subcase ID
@@ -1483,6 +1516,27 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
         #if self.stress_bits[1] == 0:
             #return True
         #return False
+
+    def is_curvature(self):
+        if self.is_stress():
+            curvature_flag = False
+        else:
+            # strain only
+            curvature_flag = True if self.stress_bits[2] == 0 else False
+        if self.s_code in [10, 11, 20, 27]:
+            assert curvature_flag, curvature_flag
+            return True
+        assert not curvature_flag, curvature_flag
+        return False
+
+    def is_fiber_distance(self):
+        return not self.is_curvature()
+
+    def is_max_shear(self):
+        return True if self.stress_bits[4] == 0 else False
+
+    def is_von_mises(self):
+        return not self.is_max_shear()
 
     def is_stress(self):
         return not self.is_strain()

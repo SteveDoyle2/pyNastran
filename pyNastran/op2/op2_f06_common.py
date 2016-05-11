@@ -8,6 +8,8 @@ from pyNastran.op2.tables.grid_point_weight import GridPointWeight
 from pyNastran.f06.f06_formatting import get_key0
 from pyNastran.utils import object_attributes, integer_types
 from pyNastran.bdf.cards.base_card import deprecated
+from pyNastran.bdf.case_control_deck import CaseControlDeck
+
 try:
     import pandas as pd
 except ImportError:
@@ -20,6 +22,7 @@ class OP2_F06_Common(object):
         #: subcaseID
         self.iSubcaseNameMap = {}
         self.subtitles = defaultdict(list)
+        self.case_control_deck = CaseControlDeck([], log=self.log)
         self.labels = {}
 
         self.make_geom = False

@@ -406,7 +406,7 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
           pids = [1, 2, 3]
           eids_list = model.get_element_ids_list_with_pids(pids)
         """
-        assert isinstance(pids, list), pids
+        assert isinstance(pids, (list, tuple)), pids
         eids2 = []
         for eid, element in sorted(iteritems(self.elements)):
             pid = element.Pid()
@@ -436,7 +436,7 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
           model = BDF()
           model.read_bdf(bdf_filename)
           pids = [4, 5, 6]
-          eids_dict = model.get_element_ids_with_pids(pids, mode='dict')
+          eids_dict = model.get_element_ids_dict_with_pids(pids)
         """
         assert isinstance(pids, (list, tuple)), pids
         eids2 = {}
@@ -767,6 +767,140 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
             raise KeyError('cannot find SPC ID=%r%s.\nAllowed SPCs=%s' % (
                 spc_id, msg, np.unique(list(self.spcs.keys()))))
         return constraint
+
+    def get_reduced_mpcs(self, mpc_id):
+        """get all MPCs that are part of a set"""
+        mpcs = self.MPC(mpc_id)
+        mpcs2 = []
+        for mpc in mpcs:
+            if mpc.type == 'MPCADD':
+                for mpci in mpc.sets:
+                    if isinstance(mpci, list):
+                        for mpcii in mpci:
+                            if isinstance(mpcii, int):
+                                mpciii = mpcii
+                            else:
+                                mpciii = mpcii.conid
+                            mpcs2i = self.get_reduced_mpcs(mpciii)
+                            mpcs2 += mpcs2i
+                    else:
+                        assert isinstance(mpci, int), mpci
+                        mpcs2i = self.get_reduced_mpcs(mpci)
+                        mpcs2 += mpcs2i
+            else:
+                mpcs2.append(mpc)
+        return mpcs2
+
+    def get_reduced_spcs(self, spc_id):
+        """get all SPCs that are part of a set"""
+        spcs = self.SPC(spc_id)
+        spcs2 = []
+        for spc in spcs:
+            if spc.type == 'SPCADD':
+                for spci in spc.sets:
+                    if isinstance(spci, list):
+                        for spcii in spci:
+                            if isinstance(spcii, int):
+                                spciii = spcii
+                            else:
+                                spciii = spcii.conid
+                            spcs2i = self.get_reduced_spcs(spciii)
+                            spcs2 += spcs2i
+                    else:
+                        # print('spci =', spci)
+                        # print(spci.object_attributes())
+                        assert isinstance(spci, int), spci
+                        spcs2i = self.get_reduced_spcs(spci)
+                        spcs2 += spcs2i
+            else:
+                spcs2.append(spc)
+        return spcs2
+
+    def get_spcs(self, spc_id, consider_nodes=False):
+        """
+        Gets the SPCs in a semi-usable form.
+
+        Parameters
+        ----------
+        spc_id : int
+            the desired SPC ID
+        consider_nodes : bool; default=False
+            True : consider the GRID card PS field
+            False: consider the GRID card PS field
+
+        Returns
+        -------
+        nids : List[int]
+            the constrained nodes
+        comps : List[str]
+            the components that are constrained on each node
+
+        Considers:
+          - SPC
+          - SPC1
+          - SPCADD
+
+        Doesn't consider:
+          - non-zero enforced value on SPC
+        """
+        spcs = self.get_reduced_spcs(spc_id)
+        #self.spcs[key] = [constraint]
+        nids = []
+        comps = []
+        for spc in spcs:
+            if spc.type == 'SPC1':
+                nodes = spc.nodes
+                nnodes = len(nodes)
+                nids += nodes
+                comps += [str(spc.constraints)] * nnodes
+            elif spc.type == 'SPC':
+                for nid, comp, enforced in zip(spc.gids, spc.constraints, spc.enforced):
+                    nids.append(nid)
+                    comps.append(comp)
+            else:
+                self.log.warning('not considering:\n%s' % str(spc))
+                #raise NotImplementedError(spc.type)
+
+        if consider_nodes and final_flag:
+            for nid, node in iteritems(self.nodes):
+                if node.ps:
+                    nids.append(nid)
+                    comps.append(node.ps)
+
+        return nids, comps
+
+    def get_mpcs(self, mpc_id):
+        """
+        Gets the MPCs in a semi-usable form.
+
+        Parameters
+        ----------
+        mpc_id : int
+            the desired MPC ID
+
+        Returns
+        -------
+        nids : List[int]
+            the constrained nodes
+        comps : List[str]
+            the components that are constrained on each node
+
+        Considers:
+          - MPC
+          - MPCADD
+        """
+        mpcs = self.get_reduced_mpcs(mpc_id)
+        nids = []
+        comps = []
+        for mpc in mpcs:
+            if mpc.type == 'MPC':
+                for nid, comp, enforced in zip(mpc.gids, mpc.constraints, mpc.enforced):
+                    nids.append(nid)
+                    comps.append(comp)
+            else:
+                self.log.warning('not considering:\n%s' % str(mpc))
+                #raise NotImplementedError(mpc.type)
+        return nids, comps
 
     #--------------------
     # Sets

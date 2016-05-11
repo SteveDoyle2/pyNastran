@@ -1,6 +1,8 @@
+from __future__ import print_function, unicode_literals
 from six.moves import zip
 from numpy import unique
 
+from codecs import open as codec_open
 from pyNastran.bdf.bdf import BDF
 from pyNastran.converters.cart3d.cart3d import Cart3D
 from pyNastran.bdf.field_writer_8 import print_card_8
@@ -87,7 +89,7 @@ def cart3d_to_nastran_filename(cart3d_filename, bdf_filename, log=None, debug=Fa
     #bdf.elements = cart3d.elements
     #bdf.write_bdf(bdf_filename)
     #return
-    f = open(bdf_filename, 'wb')
+    f = codec_open(bdf_filename, 'w')
     f.write('CEND\n')
     f.write('BEGIN BULK\n')
     f.write('$Nodes\n')

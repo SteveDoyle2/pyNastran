@@ -440,11 +440,10 @@ class CBUSH2D(BushElement):
         """
         msg = ' which is required by CBUSH2D eid=%s' % self.eid
         self.ga = model.Node(self.ga, msg=msg)
-        self.gb = model.Node(self.gb, msg=msg)
-        self.pid = model.Property(self.pid)
-
         self.ga_ref = self.ga
+        self.gb = model.Node(self.gb, msg=msg)
         self.gb_ref = self.gb
+        self.pid = model.Property(self.pid)
         self.pid_ref = self.pid
         if self.cid is not None:
             self.cid = model.Coord(self.cid, msg=msg)

@@ -1731,9 +1731,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
     def _prepare_cdamp4(self, card, card_obj, comment=''):
         """adds a CDAMP4"""
-        self.add_damper(CDAMP4(card_obj, comment=comment))
+        self.add_damper(CDAMP4.add_card(card_obj, comment=comment))
         if card_obj.field(5):
-            self.add_damper(CDAMP4(card_obj, 1, comment=''))
+            self.add_damper(CDAMP4.add_card(card_obj, 1, comment=''))
         return card_obj
 
     def _prepare_convm(self, card, card_obj, comment=''):

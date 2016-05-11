@@ -366,8 +366,8 @@ class CTRIA3(TriShell):
         """
         msg = ' which is required by CTRIA3 eid=%s' % self.eid
         self.nodes = model.Nodes(self.node_ids, msg=msg)
-        self.pid = model.Property(self.Pid(), msg=msg)
         self.nodes_ref = self.nodes
+        self.pid = model.Property(self.Pid(), msg=msg)
         self.pid_ref = self.pid
 
     def uncross_reference(self):
@@ -517,7 +517,7 @@ class CTRIA6(TriShell):
         ]
         if len(card) > 9:
             thetaMcid = integer_double_or_blank(card, 9, 'thetaMcid', 0.0)
-            zOffset = double_or_blank(card, 10, 'zOffset', 0.0)
+            zoffset = double_or_blank(card, 10, 'zOffset', 0.0)
 
             T1 = double_or_blank(card, 11, 'T1')
             T2 = double_or_blank(card, 12, 'T2')
@@ -526,12 +526,12 @@ class CTRIA6(TriShell):
             assert len(card) <= 15, 'len(CTRIA6 card) = %i' % len(card)
         else:
             thetaMcid = 0.0
-            zOffset = 0.0
+            zoffset = 0.0
             T1 = 1.0
             T2 = 1.0
             T3 = 1.0
             TFlag = 0
-        return CTRIA6(eid, pid, nids, thetaMcid, zOffset,
+        return CTRIA6(eid, pid, nids, thetaMcid, zoffset,
                       TFlag, T1, T2, T3, comment=comment)
 
     @classmethod
@@ -540,14 +540,18 @@ class CTRIA6(TriShell):
         pid = data[1]
         nids = data[2:8]
         thetaMcid = data[8]
-        zOffset = data[8]
-        T1 = data[9]
-        T2 = data[10]
-        T3 = data[11]
-        TFlag = data[12]
+        zoffset = data[9]
+        T1 = data[10]
+        T2 = data[11]
+        T3 = data[12]
+        TFlag = data[13]
+        assert isinstance(T1, float), data
+        assert isinstance(T2, float), data
+        assert isinstance(T3, float), data
+        assert isinstance(TFlag, int), data
         #prepare_node_ids(nids, allow_empty_nodes=True)
-        #assert len(nids) == 6, 'error on CTRIA6'
-        return CTRIA6(eid, pid, nids, thetaMcid, zOffset,
+        assert len(nids) == 6, 'error on CTRIA6'
+        return CTRIA6(eid, pid, nids, thetaMcid, zoffset,
                       TFlag, T1, T2, T3, comment=comment)
 
     def cross_reference(self, model):
@@ -658,6 +662,7 @@ class CTRIA6(TriShell):
 
     def _get_repr_defaults(self):
         zOffset = set_blank_if_default(self.zOffset, 0.0)
+        assert isinstance(self.TFlag, int), self.TFlag
         TFlag = set_blank_if_default(self.TFlag, 0)
         thetaMcid = set_blank_if_default(self.thetaMcid, 0.0)
 
@@ -676,14 +681,14 @@ class CTRIA6(TriShell):
 
     def raw_fields(self):
         list_fields = (['CTRIA6', self.eid, self.Pid()] + self.node_ids +
-                       [self.thetaMcid, self.zOffset, None] + [None, self.TFlag,
-                                                               self.T1, self.T2, self.T3])
+                       [self.thetaMcid, self.zOffset,
+                        self.T1, self.T2, self.T3, self.TFlag,])
         return list_fields
 
     def repr_fields(self):
         (thetaMcid, zOffset, TFlag, T1, T2, T3) = self._get_repr_defaults()
         list_fields = (['CTRIA6', self.eid, self.Pid()] + self.node_ids +
-                       [thetaMcid, zOffset, None] + [None, TFlag, T1, T2, T3])
+                       [thetaMcid, zOffset, T1, T2, T3, TFlag])
         return list_fields
 
     def write_card(self, size=8, is_double=False):
@@ -1600,8 +1605,8 @@ class CQUAD4(QuadShell):
         """
         msg = ' which is required by CQUAD4 eid=%s' % self.eid
         self.nodes = model.Nodes(self.nodes, msg=msg)
-        self.pid = model.Property(self.pid, msg=msg)
         self.nodes_ref = self.nodes
+        self.pid = model.Property(self.pid, msg=msg)
         self.pid_ref = self.pid
 
     def uncross_reference(self):
@@ -1794,8 +1799,8 @@ class CQUADR(QuadShell):
         """
         msg = ' which is required by CQUADR eid=%s' % self.eid
         self.nodes = model.Nodes(self.nodes, allow_empty_nodes=True, msg=msg)
-        self.pid = model.Property(self.pid, msg=msg)
         self.nodes_ref = self.nodes
+        self.pid = model.Property(self.pid, msg=msg)
         self.pid_ref = self.pid
 
     def uncross_reference(self):
@@ -1919,8 +1924,8 @@ class CQUAD(QuadShell):
         """
         msg = ' which is required by CQUAD eid=%s' % self.eid
         self.nodes = model.Nodes(self.nodes, allow_empty_nodes=True, msg=msg)
-        self.pid = model.Property(self.pid, msg=msg)
         self.nodes_ref = self.nodes
+        self.pid = model.Property(self.pid, msg=msg)
         self.pid_ref = self.pid
 
     def uncross_reference(self):
@@ -2067,8 +2072,8 @@ class CQUAD8(QuadShell):
         """
         msg = ' which is required by CQUAD8 eid=%s' % self.eid
         self.nodes = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
-        self.pid = model.Property(self.Pid(), msg=msg)
         self.nodes_ref = self.nodes
+        self.pid = model.Property(self.Pid(), msg=msg)
         self.pid_ref = self.pid
 
     def uncross_reference(self):
@@ -2235,8 +2240,8 @@ class CQUADX(QuadShell):
         """
         msg = ' which is required by CQUADX eid=%s' % self.eid
         self.nodes = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
-        self.pid = model.Property(self.Pid(), msg=msg)
         self.nodes_ref = self.nodes
+        self.pid = model.Property(self.Pid(), msg=msg)
         self.pid_ref = self.pid
 
     def uncross_reference(self):

@@ -408,8 +408,21 @@ class SPC(Constraint):
     def add_op2_data(cls, data, comment=''):
         conid = data[0]
         gids = [data[1]]
-        constraints = [data[2]]
+        constraint = data[2]
+        assert 0 <= constraint <= 123456, data
         enforced = [data[3]]
+        assert conid > 0, data
+        assert gids[0] > 0, data
+        constraint_str = str(constraint)
+        assert len(constraint_str) <= 6, data
+        constraints = [constraint_str]
+        #if constraints[0] == 0:
+            #constraints[0] = 0
+        #if constraints[0] == 16:
+            #constraints[0] = '16'
+        #else:
+            #raise RuntimeError('SPC; constraints=%s data=%s' % (constraints, data))
+        #assert 0 < constraints[0] > 1000, data
         return SPC(conid, gids, constraints, enforced, comment=comment)
 
     #def get_node_dofs(self, model):
@@ -602,6 +615,9 @@ class SPC1(Constraint):
         conid = data[0]
         constraints = data[1]
         nodes = data[2:]
+        assert conid > 0, data
+        for nid in nodes:
+            assert nid > 0, data
         return SPC1(conid, constraints, nodes, comment=comment)
 
     @property

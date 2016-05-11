@@ -99,7 +99,11 @@ class CaseControlDeck(object):
 
         self.lines = lines
         self.subcases = {0: Subcase(id=0)}
-        self._read(self.lines)
+        try:
+            self._read(self.lines)
+        except:
+            print('\n'.join(self.lines))
+            raise
 
     def suppress_output(self):
         """
@@ -168,18 +172,30 @@ class CaseControlDeck(object):
         """
         Method create_new_subcase:
 
-        :param isubcase: the subcase ID
-        :type isubcase: int
-        .. warning:: be careful you dont add data to the global subcase
-                     after running this...is this True???
+        Parameters
+        ----------
+        isubcase : int
+            the subcase ID
+
+        Returns
+        -------
+        subcase : Subcase()
+            the new subcase
+
+        Warning
+        -------
+        - be careful you dont add data to the global subcase
+          after running this...is this True???
         """
         #print("creating subcase=%s" % isubcase)
         if self.has_subcase(isubcase):
             sys.stderr.write('subcase=%s already exists...skipping\n' %
                              isubcase)
-        self.copy_subcase(i_from_subcase=0, i_to_subcase=isubcase,
-                          overwrite_subcase=True)
+            return self.subcases[isubcase]
+        subcase = self.copy_subcase(i_from_subcase=0, i_to_subcase=isubcase,
+                                    overwrite_subcase=True)
         #self.subcases[isubcase] = Subcase(id=isubcase)
+        return subcase
 
     def delete_subcase(self, isubcase):
         """
@@ -196,10 +212,19 @@ class CaseControlDeck(object):
         """
         Overwrites the parameters from one subcase to another.
 
-        :param i_from_subcase:    the Subcase to pull the data from
-        :param i_to_subcase:      the Subcase to map the data to
-        :param overwrite_subcase: NULLs i_to_subcase before copying
-                                  i_from_subcase
+        Parameters
+        ----------
+        i_from_subcase : int
+            the Subcase to pull the data from
+        i_to_subcase : int
+            the Subcase to map the data to
+        overwrite_subcase : bool; default=True
+            NULLs i_to_subcase before copying i_from_subcase
+
+        Returns
+        -------
+        subcase : Subcase()
+            the new subcase
         """
         #print("copying subcase from=%s to=%s overwrite=%s" % (i_from_subcase, i_to_subcase, overwrite_subcase))
         if not self.has_subcase(i_from_subcase):
@@ -224,6 +249,7 @@ class CaseControlDeck(object):
                 if key == 'BEGIN':
                     pass
                 subcase_to[key] = copy.deepcopy(param)
+        return subcase_to
 
     def get_subcase_list(self):
         """
@@ -336,7 +362,7 @@ class CaseControlDeck(object):
                 i += 1
                 lines2.append(lines[i])
                 #comment = lines[i][72:]
-            (j, key, value, options, paramType) = self._parse_entry(lines2)
+            (j, key, value, options, param_type) = self._parse_entry(lines2)
             i += 1
 
             line_upper = line.upper()
@@ -357,16 +383,16 @@ class CaseControlDeck(object):
                 post = line_upper.split('OUTPUT')[1].strip('( )')
                 options = [post]
                 value = None
-                paramType = 'STRESS-type'
+                param_type = 'STRESS-type'
 
                 isubcase = self._add_parameter_to_subcase(key, value, options,
-                                                          paramType, isubcase)
+                                                          param_type, isubcase)
                 self.output_lines.append(line)
                 continue
-            #print("key=%-12r icase=%i value=%r options=%r paramType=%r" %(key,
-            #    isubcase, value, options, paramType))
+            #print("key=%-12r icase=%i value=%r options=%r param_type=%r" %(key,
+            #    isubcase, value, options, param_type))
             isubcase = self._add_parameter_to_subcase(key, value, options,
-                                                      paramType, isubcase)
+                                                      param_type, isubcase)
 
         #print(str(self))
         self.finish_subcases()

@@ -371,8 +371,8 @@ class CONROD(RodElement):
         """
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
         self.nodes = model.Nodes(self.nodes, msg=msg)
-        self.mid = model.Material(self.mid, msg=msg)
         self.nodes_ref = self.nodes
+        self.mid = model.Material(self.mid, msg=msg)
         self.mid_ref = self.mid
 
     def uncross_reference(self):

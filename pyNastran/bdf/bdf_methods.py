@@ -693,12 +693,13 @@ class BDFMethods(BDFAttributes):
 
         .. warning:: hasnt been tested well...
         """
-        debug = False
         for (nid, node_old) in iteritems(model_old.nodes):
             coord = node_old.cp_ref
-            (p, matrix) = coord.transformToGlobal(self.xyz, debug=debug)
-            p2 = coord.transformToLocal(p, matrix, debug=debug)
-            self.nodes[nid].UpdatePosition(self, p2, coord.cid)
+            raise RuntimeError('what is self.xyz?')
+            p = coord.transform_node_to_global(self.xyz)
+            beta = coord.beta()
+            p2 = coord.transform_node_to_local(p, beta)
+            self.nodes[nid].set_position(self, p2, coord.cid)
 
     #def __gravity_load(self, loadcase_id):
         #"""
@@ -1686,177 +1687,6 @@ class BDFMethods(BDFAttributes):
         for Type in unsupported_types:
             self.log.debug('case=%s loadtype=%r not supported' % (loadcase_id, Type))
         return (F, M)
-
-    # def MassProperties(self):
-        # """
-        # .. seealso:: mass_properties
-        # """
-        # self.deprecated('MassProperties()', 'mass_properties()', '0.7')
-        # return self.mass_properties()
-
-    # def Mass(self):
-        # """
-        # .. seealso:: mass
-        # """
-        # self.deprecated('Mass()', 'mass_properties()[0]', '0.7')
-        # mass = self.mass_properties()[0]
-        # return mass
-
-    # def mass(self, element_ids=None, sym_axis=None):
-        # """Calculates mass in the global coordinate system"""
-        # self.deprecated('mass()', 'mass_properties()[0]', '0.7')
-        # mass = self.mass_properties(element_ids=element_ids,
-                                    # reference_point=None,
-                                    # sym_axis=sym_axis,
-                                    # num_cpus=1)[0]
-        # return mass
-
-    # def resolveGrids(self, cid=0):
-        # """
-        # .. seealso:: resolve_grids
-        # """
-        # self.deprecated('resolveGrids(cid)', 'resolve_grids(cid)', '0.7')
-        # return self.resolve_grids(cid)
-
-    # def unresolveGrids(self, fem_old):
-        # """
-        # .. seealso:: unresolve_grids
-        # """
-        # self.deprecated('unresolveGrids(fem_old)', 'unresolve_grids(fem_old)', '0.7')
-        # return self.unresolve_grids(fem_old)
-
-    def get_reduced_mpcs(self, mpc_id):
-        mpcs = self.MPC(mpc_id)
-        mpcs2 = []
-        for mpc in mpcs:
-            if mpc.type == 'MPCADD':
-                for mpci in mpc.sets:
-                    if isinstance(mpci, list):
-                        for mpcii in mpci:
-                            if isinstance(mpcii, int):
-                                mpciii = mpcii
-                            else:
-                                mpciii = mpcii.conid
-                            mpcs2i = self.get_reduced_mpcs(mpciii)
-                            mpcs2 += mpcs2i
-                    else:
-                        assert isinstance(mpci, int), mpci
-                        mpcs2i = self.get_reduced_mpcs(mpci)
-                        mpcs2 += mpcs2i
-            else:
-                mpcs2.append(mpc)
-        return mpcs2
-
-    def get_reduced_spcs(self, spc_id):
-        spcs = self.SPC(spc_id)
-
-        spcs2 = []
-        for spc in spcs:
-            if spc.type == 'SPCADD':
-                for spci in spc.sets:
-                    if isinstance(spci, list):
-                        for spcii in spci:
-                            if isinstance(spcii, int):
-                                spciii = spcii
-                            else:
-                                spciii = spcii.conid
-                            spcs2i = self.get_reduced_spcs(spciii)
-                            spcs2 += spcs2i
-                    else:
-                        # print('spci =', spci)
-                        # print(spci.object_attributes())
-                        assert isinstance(spci, int), spci
-                        spcs2i = self.get_reduced_spcs(spci)
-                        spcs2 += spcs2i
-            else:
-                spcs2.append(spc)
-        return spcs2
-
-    def get_spcs(self, spc_id, consider_nodes=False):
-        """
-        Gets the SPCs in a semi-usable form.
-
-        Parameters
-        ----------
-        spc_id : int
-            the desired SPC ID
-        consider_nodes : bool; default=False
-            True : consider the GRID card PS field
-            False: consider the GRID card PS field
-
-        Returns
-        -------
-        nids : List[int]
-            the constrained nodes
-        comps : List[str]
-            the components that are constrained on each node
-
-        Considers:
-          - SPC
-          - SPC1
-          - SPCADD
-
-        Doesn't consider:
-          - non-zero enforced value on SPC
-        """
-        spcs = self.get_reduced_spcs(spc_id)
-        #self.spcs[key] = [constraint]
-        nids = []
-        comps = []
-        for spc in spcs:
-            if spc.type == 'SPC1':
-                nodes = spc.nodes
-                nnodes = len(nodes)
-                nids += nodes
-                comps += [str(spc.constraints)] * nnodes
-            elif spc.type == 'SPC':
-                for nid, comp, enforced in zip(spc.gids, spc.constraints, spc.enforced):
-                    nids.append(nid)
-                    comps.append(comp)
-            else:
-                self.log.warning('not considering:\n%s' % str(spc))
-                #raise NotImplementedError(spc.type)
-
-        if consider_nodes and final_flag:
-            for nid, node in iteritems(self.nodes):
-                if node.ps:
-                    nids.append(nid)
-                    comps.append(node.ps)
-
-        return nids, comps
-
-    def get_mpcs(self, mpc_id):
-        """
-        Gets the MPCs in a semi-usable form.
-
-        Parameters
-        ----------
-        mpc_id : int
-            the desired MPC ID
-
-        Returns
-        -------
-        nids : List[int]
-            the constrained nodes
-        comps : List[str]
-            the components that are constrained on each node
-
-        Considers:
-          - MPC
-          - MPCADD
-        """
-        mpcs = self.get_reduced_mpcs(mpc_id)
-        nids = []
-        comps = []
-        for mpc in mpcs:
-            if mpc.type == 'MPC':
-                for nid, comp, enforced in zip(mpc.gids, mpc.constraints, mpc.enforced):
-                    nids.append(nid)
-                    comps.append(comp)
-            else:
-                self.log.warning('not considering:\n%s' % str(mpc))
-                #raise NotImplementedError(mpc.type)
-        return nids, comps
 
     def skin_solid_elements(self, element_ids=None):
         """

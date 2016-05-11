@@ -132,9 +132,9 @@ class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
         """
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
         self.nodes = model.Nodes(self.nodes, msg=msg)
+        self.nodes_ref = self.nodes
         self.pid = model.Property(self.pid, msg=msg)
         #self.g0 = model.nodes[self.g0]
-        self.nodes_ref = self.nodes
         self.pid_ref = self.pid
 
     def uncross_reference(self):
@@ -444,10 +444,10 @@ class CBAR(LineElement):
         #    self.x = nodes[self.g0].get_position() - nodes[self.ga].get_position()
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
         self.ga = model.Node(self.ga, msg=msg)
-        self.gb = model.Node(self.gb, msg=msg)
-        self.pid = model.Property(self.pid, msg=msg)
         self.ga_ref = self.ga
+        self.gb = model.Node(self.gb, msg=msg)
         self.gb_ref = self.gb
+        self.pid = model.Property(self.pid, msg=msg)
         self.pid_ref = self.pid
         if model.is_nx:
             assert self.offt == 'GGG', 'NX only support offt=GGG; offt=%r' % self.offt
@@ -618,13 +618,12 @@ class CBEAM3(LineElement):  # was CBAR
         """
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
         self.ga = model.Node(self.ga, msg=msg)
-        self.gb = model.Node(self.gb, msg=msg)
-        self.gc = model.Node(self.gc, msg=msg)
-        self.pid = model.Property(self.pid, msg=msg)
-
         self.ga_ref = self.ga
+        self.gb = model.Node(self.gb, msg=msg)
         self.gb_ref = self.gb
+        self.gc = model.Node(self.gc, msg=msg)
         self.gc_ref = self.gc
+        self.pid = model.Property(self.pid, msg=msg)
         self.pid_ref = self.pid
 
     def uncross_reference(self):
