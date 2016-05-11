@@ -17,7 +17,16 @@ class OES_Object(ScalarObject):
         #print self.data_code
 
     def is_curvature(self):
-        return True if self.stress_bits[2] == 1 else False
+        if self.is_stress():
+            curvature_flag = False
+        else:
+            # strain only
+            curvature_flag = True if self.stress_bits[2] == 0 else False
+        if self.s_code in [10, 11, 20, 27]:
+            assert curvature_flag, curvature_flag
+            return True
+        assert not curvature_flag, curvature_flag
+        return False
 
     def is_fiber_distance(self):
         return not self.is_curvature()

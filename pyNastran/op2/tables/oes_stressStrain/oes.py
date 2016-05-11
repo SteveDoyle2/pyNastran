@@ -183,8 +183,10 @@ class OES(OP2Common):
         #if self.element_type not in self.element_mapper:
             #return self._not_implemented_or_skip(data, ndata, self.code_information())
 
-        self._write_debug_bits()
         self._parse_stress_code()
+        self._write_debug_bits()
+        if self.is_debug_file:
+            self.binary_debug.write('catttt!')
         assert isinstance(self.format_code, int), self.format_code
         #print('self.nonlinear_factor =', self.nonlinear_factor)
         #assert self.num_wide != 146, self.code_information()
@@ -201,7 +203,7 @@ class OES(OP2Common):
         stress_bits[0] = 0 -> isMaxShear=True       isVonMises=False
         stress_bits[0] = 1 -> isMaxShear=False      isVonMises=True
 
-        stress_bits[1] = 0 -> is_stress=True        isStrain=False
+        stress_bits[1] = 0 -> is_stress=True        is_strain=False
         stress_bits[2] = 0 -> isFiberCurvature=True isFiberDistance=False
         stress_bits[3] = 0 -> duplicate of Bit[1] (stress/strain)
         stress_bits[4] = 0 -> material coordinate system flag
