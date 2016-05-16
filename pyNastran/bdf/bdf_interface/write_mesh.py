@@ -492,7 +492,8 @@ class WriteMesh(BDFAttributes):
         if self.aeros or self.trims or self.divergs:
             msg = ['$STATIC AERO\n']
             # static aero
-            msg.append(self.aeros.write_card(size, is_double))
+            if self.aeros:
+                msg.append(self.aeros.write_card(size, is_double))
             for (unused_id, trim) in sorted(iteritems(self.trims)):
                 msg.append(trim.write_card(size, is_double))
             for (unused_id, diverg) in sorted(iteritems(self.divergs)):
