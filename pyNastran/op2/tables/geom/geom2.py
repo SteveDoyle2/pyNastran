@@ -17,7 +17,7 @@ from pyNastran.bdf.cards.elements.mass import (CONM1, CONM2, CMASS1, CMASS2,
                                                CMASS3, CMASS4)
 from pyNastran.bdf.cards.elements.solid import (CTETRA4, CTETRA10, CPENTA6,
                                                 CPENTA15, CHEXA8, CHEXA20)
-from pyNastran.bdf.cards.thermal.thermal import CHBDYG, CONV  # , CONVM, CHBDYP
+from pyNastran.bdf.cards.thermal.thermal import CHBDYG, CONV, CHBDYP # , CONVM
 from pyNastran.bdf.cards.nodes import SPOINTs
 from pyNastran.op2.tables.geom.geom_common import GeomCommon
 
@@ -580,7 +580,6 @@ class GEOM2(GeomCommon):
 # CHACAB
 # CHACBR
 # CHBDYE
-# CHBDYG
 
     def _read_chbdyg(self, data, n):
         """
@@ -600,8 +599,9 @@ class GEOM2(GeomCommon):
             data_in = [eid, Type, iviewf, iviewb, radmidf, radmidb,
                        g1, g2, g3, g4, g5, g6, g7, g8]
             elem = CHBDYG.add_op2_data(data_in)
-            self.add_op2_element(elem)
+            self.add_thermal_element(elem)
             n += ntotal
+        self.card_count['CHBDYG'] = nelements
         return n
 
     def _read_chbdyp(self, data, n):
@@ -621,9 +621,10 @@ class GEOM2(GeomCommon):
             self.log.debug('  CHBDYP=%s' % str(out))
             data_in = [eid, pid, Type, iviewf, iviewb, g1, g2, g0, radmidf, radmidb,
              dislin, ce, e1, e2, e3]
-            #elem = CHBDYP.add_op2_data(data_in)
-            #self.add_op2_element(elem)
+            elem = CHBDYP.add_op2_data(data_in)
+            self.add_thermal_element(elem)
             n += ntotal
+        self.card_count['CHBDYP'] = nelements
         return n
 
     def _read_chexa(self, data, n):

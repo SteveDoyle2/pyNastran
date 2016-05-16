@@ -401,11 +401,10 @@ class PBEAM(IntegratedLineProperty):
                 e2.append(e2i)
                 f1.append(f1i)
                 f2.append(f2i)
-            if irow != 0:
-                assert min(xxb) == 0.0, 'pid=%s x/xb=%s' % (pid, xxb)
-                assert max(xxb) == 1.0, 'pid=%s x/xb=%s' % (pid, xxb)
-                assert len(xxb) == len(unique(xxb)), xxb
-            #ifield += 8
+        if irow != 0:
+            assert min(xxb) == 0.0, 'pid=%s x/xb=%s' % (pid, xxb)
+            assert max(xxb) == 1.0, 'pid=%s x/xb=%s' % (pid, xxb)
+            assert len(xxb) == len(unique(xxb)), xxb
 
         # calculate:
         #    k1, k2, s1, s2
@@ -545,17 +544,13 @@ class PBEAM(IntegratedLineProperty):
             (soi, xxbi, areai, i1i, i2i, i12i, ji, nsmi, c1i, c2i,
              d1i, d2i, e1i, e2i, f1i, f2i) = pack
             if i > 0 and allclose(xxbi, 0.0):
+                #print('PBEAM - skipping i=%s x/xb=%s' % (i, xxbi))
                 continue
             if i > 0 and i != 10 and allclose(xxbi, 1.0):
+                #print('PBEAM - skipping i=%s x/xb=%s' % (i, xxbi))
                 continue
             area.append(areai)
             xxb.append(xxbi)
-            if soi == 0.0:
-                soi = 'NO'
-            elif soi == 1.0:
-                soi = 'YES'
-            else:
-                raise NotImplementedError('PBEAM pid=%s i=%s x/xb=%s soi=%s' % (pid, i, xxbi, soi))
             iis.append(i)
             so.append(soi)
             i1.append(i1i)
@@ -573,6 +568,7 @@ class PBEAM(IntegratedLineProperty):
             f2.append(f2i)
         #print('*i = %s' % iis)
         #print('*xxb = %s' % xxb)
+        #print('*i1 = %s' % i1)
 
         (k1, k2, s1, s2, nsia, nsib, cwa, cwb,
          m1a, m2a, m1b, m2b, n1a, n2a, n1b, n2b) = data[-1]
@@ -752,7 +748,6 @@ class PBEAM(IntegratedLineProperty):
              f2) in zip(self.so, self.xxb, self.A, self.i1, self.i2, self.i12,
                         self.j, self.nsm, self.c1, self.c2, self.d1, self.d2,
                         self.e1, self.e2, self.f1, self.f2):
-
             i1 = set_blank_if_default(i1, 0.0)
             i2 = set_blank_if_default(i2, 0.0)
             i12 = set_blank_if_default(i12, 0.0)

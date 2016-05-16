@@ -9,7 +9,7 @@ from pyNastran.bdf.bdf import (NSM, PBAR, PBARL, PBEAM,
                                PROD, PSHELL, PSHEAR,
                                PCOMP, PSOLID,
                                PVISC, PELAS, PMASS,
-                               PTUBE, PGAP, PDAMP)
+                               PTUBE, PGAP, PDAMP, PHBDY)
 # PCOMPG, PBUSH1D, PBEAML, PBEAM3, PBUSH,
 from pyNastran.op2.tables.geom.geom_common import GeomCommon
 
@@ -50,32 +50,33 @@ class EPT(GeomCommon):
             (1802, 18, 31): ['PVISC', self._read_pvisc],    # record 59
             (10201, 102, 400): ['PVAL', self._read_pval],   # record 58 - not done
             (2606, 26, 289): ['VIEW', self._read_view],     # record 62 - not done
-            (702, 7, 38): ['', self._read_fake],            # record
-            (10301, 103, 399): ['', self._read_fake],
-            (5403, 55, 349): ['', self._read_fake],
-            (6902, 69, 165): ['', self._read_fake],
-            (3002, 30, 415): ['', self._read_fake],
-            (13301, 133, 509): ['', self._read_fake],
-            (6802, 68, 164): ['', self._read_fake],
-            (4606, 46, 375): ['', self._read_fake],
-            (1302, 13, 34): ['', self._read_fake],
-            (4706, 47, 376): ['', self._read_fake],
-            (8702, 87, 412): ['', self._read_fake],
-            (2902, 29, 420): ['', self._read_fake],
-            (1502, 15, 36): ['', self._read_fake],
             (3201, 32, 991) : ['', self._read_fake],  # record
             (3301, 33, 992) : ['', self._read_fake],  # record
-            (3301, 33, 56): ['', self._read_fake],
-            (3401, 34, 57) : ['', self._read_fake],    # record
             (3701, 37, 995) : ['', self._read_fake],    # record
-            (1202, 12, 33): ['', self._read_fake],  # record
-            (12001, 120, 480): ['', self._read_fake],  # record
-            (12101, 121, 484): ['', self._read_fake],  # record
-            (3501, 35, 58): ['', self._read_fake],  # record
-            (3601, 36, 62): ['', self._read_fake],  # record
-            (8300, 83, 382): ['', self._read_fake],  # record
-            (8500, 85, 384): ['', self._read_fake],  # record
             (15006, 150, 604): ['', self._read_fake],  # record
+
+            (702, 7, 38): ['PBUSHT', self._read_fake],  # record 1
+            (3301, 33, 56): ['NSM1', self._read_fake],  # record 3
+            (3401, 34, 57) : ['NSMADD', self._read_fake],    # record 5
+            (3501, 35, 58): ['NSML', self._read_fake],  # record 6
+            (3601, 36, 62): ['NSML1', self._read_fake],  # record 7
+            (1502, 15, 36): ['PAABSF', self._read_fake],  # record 8
+            (8300, 83, 382): ['PACABS', self._read_fake],  # record 9
+            (8500, 85, 384): ['PACBAR', self._read_fake],  # record 10
+            (5403, 55, 349): ['PBCOMP', self._read_fake],  # record 13
+            (13301, 133, 509): ['PBMSECT', self._read_fake],  # record 17
+            (2902, 29, 420): ['PCONVM', self._read_fake],  # record 26
+            (1202, 12, 33): ['PDAMPT', self._read_fake],  # record 28
+            (8702, 87, 412): ['PDAMP5', self._read_fake],  # record 29
+            (6802, 68, 164): ['PDUM8', self._read_fake],  # record 37
+            (6902, 69, 165): ['PDUM9', self._read_fake],  # record 38
+            (1302, 13, 34): ['PELAST', self._read_fake],  # record 41
+            (12001, 120, 480): ['PINTC', self._read_fake],  # record 44
+            (12101, 121, 484): ['PINTS', self._read_fake],  # record 45
+            (4606, 46, 375): ['PLPLANE', self._read_fake],  # record 46
+            (4706, 47, 376): ['PLSOLID', self._read_fake],  # record 47
+            (10301, 103, 399): ['PSET', self._read_fake],  # record 57
+            (3002, 30, 415): ['VIEW3D', self._read_fake],  # record 63
         }
 
     def _add_op2_property(self, prop):
@@ -229,13 +230,23 @@ class EPT(GeomCommon):
                     raise RuntimeError('PBEAM unexpected length i=%s...' % i)
                 n += 64
                 pack = struct2.unpack(edata)
-                (so, xxb, a, i1, i2, i12, j, nsm, c1, c2,
+                (soi, xxb, a, i1, i2, i12, j, nsm, c1, c2,
                  d1, d2, e1, e2, f1, f2) = pack
-                data_in.append(pack)
+
+                if soi == 0.0:
+                    so_str = 'NO'
+                elif soi == 1.0:
+                    so_str = 'YES'
+                else:
+                    raise NotImplementedError('PBEAM pid=%s i=%s x/xb=%s soi=%s' % (pid, i, xxbi, soi))
+
+                pack2 = (so_str, xxb, a, i1, i2, i12, j, nsm, c1, c2,
+                         d1, d2, e1, e2, f1, f2)
+                data_in.append(pack2)
                 if self.is_debug_file:
                     self.binary_debug.write('     %s\n' % str(pack))
-                self.log.info('    i=%-2s' % i + ' so=%s xxb=%s a=%s i1=%s i2=%s i12=%s j=%s nsm=%s '
-                              'c=[%s,%s] d=[%s,%s] e=[%s,%s] f=[%s,%s]' % (tuple(pack)))
+                self.log.info('    i=%-2s' % i + ' so=%s xxb=%.1f a=%g i1=%g i2=%g i12=%g j=%g nsm=%g '
+                              'c=[%s,%s] d=[%s,%s] e=[%s,%s] f=[%s,%s]' % (tuple(pack2)))
             edata = data[n:n+64]
             if len(edata) != 64:
                 endpack = []
@@ -306,9 +317,11 @@ class EPT(GeomCommon):
             T = []
             Theta = []
             Sout = []
+
+            # None, 'SYM', 'MEM', 'BEND', 'SMEAR', 'SMCORE', 'NO'
             is_symmetrical = 'NO'
             if nlayers < 0:
-                is_symmetrical = 'YES'
+                is_symmetrical = 'SYM'
                 nlayers = abs(nlayers)
             assert nlayers > 0, out
 
@@ -320,7 +333,7 @@ class EPT(GeomCommon):
                 T.append(t)
                 Theta.append(theta)
                 Sout.append(sout)
-                if self.debug:
+                if self.is_debug_file:
                     self.binary_debug.write('  mid=%s t=%s theta=%s sout=%s' % (mid, t, theta, sout))
                 n += 16
 
@@ -408,10 +421,27 @@ class EPT(GeomCommon):
             #(pid,u0,f0,ka,kb,kt,mu1,mu2,tmax,mar,trmin) = out
             prop = PGAP.add_op2_data(out)
             self._add_op2_property(prop)
+        #self.card_count['PGAP'] = nproperties
         return n
 
     def _read_phbdy(self, data, n):
-        return len(data)
+        """
+        PHBDY(2802,28,236) - the marker for Record 43
+        """
+        s = Struct(b(self._endian + 'ifff'))
+        nproperties = (len(data) - n) // 16
+        for i in range(nproperties):
+            edata = data[n:n+16]
+            out = s.unpack(edata)
+            if self.is_debug_file:
+                self.binary_debug.write('  PHBDY=%s\n' % str(out))
+            #(pid, af, d1, d2) = out
+            prop = PHBDY.add_op2_data(out)
+            self.add_PHBDY(prop)
+            n += 16
+        self.card_count['PHBDY'] = nproperties
+        return n
+
     def _read_pintc(self, data, n):
         return len(data)
     def _read_pints(self, data, n):

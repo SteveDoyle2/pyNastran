@@ -381,10 +381,14 @@ class AddMethods(BDFAttributes):
 
     def add_PHBDY(self, prop):
         key = prop.pid
-        assert key > 0, 'key=%s; prop=%s\n' % (key, prop)
-        assert key not in self.phbdys, key
-        self.phbdys[key] = prop
-        self._type_to_id_map[prop.type].append(key)
+        if key in self.phbdys:
+            if not prop._is_same_card(self.phbdys[key]):
+                assert key not in self.phbdys, 'pid=%s\nold_PHBDY=\n%snew_PHDBY=\n%s' % (
+                    key, self.phbdys[key], prop)
+        else:
+            assert key > 0, 'pid=%s prop=\n%s' % (key, prop)
+            self.phbdys[key] = prop
+            self._type_to_id_map[prop.type].append(key)
 
     def add_convection_property(self, prop):
         key = prop.pconid

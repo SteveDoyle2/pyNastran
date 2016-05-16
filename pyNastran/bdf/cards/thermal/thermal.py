@@ -22,8 +22,8 @@ class ThermalCard(BaseCard):
         raise NotImplementedError('%s has not defined the cross_reference '
                                   'method' % self.type)
 
-    def _is_same_card(self, obj, debug=False):
-        return False
+    #def _is_same_card(self, obj, debug=False):
+        #return False
 
 
 class ThermalBC(ThermalCard):
@@ -304,9 +304,7 @@ class CHBDYG(ThermalElement):
 
     def _verify(self, xref=False):
         eid = self.Eid()
-        pid = self.Pid()
         assert isinstance(eid, int)
-        assert isinstance(pid, int)
 
     @property
     def node_ids(self):
@@ -328,21 +326,16 @@ class CHBDYG(ThermalElement):
         """
         msg = ' which is required by CHBDYG eid=%s' % self.eid
         self.nodes = model.Nodes(self.nodes, allow_empty_nodes=False, msg=msg)
-        self.pid = model.Phbdy(self.pid, msg=msg)
         self.nodes_ref = self.nodes
-        self.pid_ref = self.pid
 
     def safe_cross_reference(self, model):
         msg = ' which is required by CHBDYG eid=%s' % self.eid
         self.nodes = model.Nodes(self.nodes, allow_empty_nodes=False, msg=msg)
-        self.pid = model.Phbdy(self.pid, msg=msg)
         self.nodes_ref = self.nodes
-        self.pid_ref = self.pid
 
     def uncross_reference(self):
         self.nodes = self.node_ids
-        self.pid = self.Pid()
-        del self.nodes_ref, self.pid_ref
+        del self.nodes_ref
 
     def Eid(self):
         return self.eid
@@ -470,6 +463,34 @@ class CHBDYP(ThermalElement):
         return CHBDYP(eid, pid, Type, g1, g2, g0=g0, gmid=gmid, ce=ce,
                       iViewFront=iViewFront, iViewBack=iViewBack,
                       radMidFront=radMidFront, radMidBack=radMidBack,
+                      e1=e1, e2=e2, e3=e3, comment=comment)
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        [eid, pid, Type, iviewf, iviewb, g1, g2, g0, radmidf, radmidb,
+         dislin, ce, e1, e2, e3] = data
+        #eid = data[0]
+        #Type = data[1]
+        #iViewFront = data[2]
+        #iViewBack = data[3]
+        #radMidFront = data[4]
+        #radMidBack = data[5]
+        #nodes = [datai for datai in data[6:14] if datai > 0]
+        if Type == 1:
+            Type = 'POINT'
+        elif Type == 2:
+            Type = 'LINE'
+        elif Type == 7:
+            Type = 'FTUBE'
+        else:
+            raise NotImplementedError('CHBDYP Type=%r data=%s' % (Type, data))
+        #assert Type in ['REV', 'AREA3', 'AREA4', 'AREA6', 'AREA8'], 'Type=%r data=%s' % (Type, data)
+
+        assert dislin == 0, 'CHBDYP dislin=%r data=%s' % (dislin, data)
+        gmid = dislin
+        return CHBDYP(eid, pid, Type, g1, g2, g0=g0, gmid=gmid, ce=ce,
+                      iViewFront=iviewf, iViewBack=iviewb,
+                      radMidFront=radmidf, radMidBack=radmidb,
                       e1=e1, e2=e2, e3=e3, comment=comment)
 
     @property
@@ -778,6 +799,16 @@ class PHBDY(ThermalProperty):
         d2 = double_or_blank(card, 4, 'd2', d1)
         assert len(card) <= 5, 'len(PHBDY card) = %i' % len(card)
         return PHBDY(pid, af, d1, d2, comment=comment)
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        pid = data[0]
+        af = data[1]
+        d1 = data[2]
+        d2 = data[3]
+        assert len(data) == 4, 'data = %s' % data
+        return PHBDY(pid, af, d1, d2, comment=comment)
+
     #def cross_reference(self, model):
         #pass
 

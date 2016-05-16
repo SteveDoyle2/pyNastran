@@ -183,7 +183,7 @@ class MPT(GeomCommon):
         MAT9(2603,26,300) - record 9
         .. todo:: buggy
         """
-        s = Struct(b(self._endian + 'i 27f 4i'))
+        s = Struct(b(self._endian + 'i 30f i'))
         nmaterials = (len(data) - n) // 128
         for i in range(nmaterials):
             out = s.unpack(data[n:n+128])
@@ -192,6 +192,7 @@ class MPT(GeomCommon):
              g11, g12, g13, g14, g15, g16, g17, g18, g19, g20, g21,
              rho, a1, a2, a3, a4, a5, a6, TRef, ge,
              blank1) = out
+            assert blank1 == 0, blank1
             data_in = [mid, [g1, g2, g3, g4, g5, g6, g7, g8, g9, g10,
                              g11, g12, g13, g14, g15, g16, g17, g18, g19, g20, g21],
                        rho, [a1, a2, a3, a4, a5, a6],

@@ -172,6 +172,18 @@ class Subcase(object):
             else:
                 print(msg)
                 raise NotImplementedError(data_code)
+        elif table_name in ['OEF1X', 'OEF1']:
+            if table_code in [4]:
+                self.add('FORCE', 'ALL', options, 'STRESS-type')
+            else:
+                print(msg)
+                raise NotImplementedError(data_code)
+        elif table_name in ['OEFIT']:
+            if table_code in [25]:
+                self.add('FORCE', 'ALL', options, 'STRESS-type')
+            else:
+                print(msg)
+                raise NotImplementedError(data_code)
         elif table_name == 'OQMG1':
             if table_code in [3, 39]:
                 self.add('MPCFORCES', 'ALL', options, 'STRESS-type')

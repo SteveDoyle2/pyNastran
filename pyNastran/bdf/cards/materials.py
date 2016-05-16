@@ -1441,13 +1441,20 @@ class MAT9(AnisotropicMaterial):
         G55 = data[1][18]
         G56 = data[1][19]
         G66 = data[1][20]
+        for gi in data[1]:
+            assert isinstance(gi, float), data[1]
         rho = data[2]
         A = data[3]
-        TRef = data[4]
+        tref = data[4]
         ge = data[5]
+        assert isinstance(rho, float), rho
+        assert isinstance(tref, float), tref
+        assert isinstance(ge, float), ge
+        for ai in A:
+            assert isinstance(ai, float), A
         return MAT9(mid, G11, G12, G13, G14, G15, G16, G22, G23, G24, G25,
                     G26, G33, G34, G35, G36, G44, G45, G46,
-                    G55, G56, G66, rho, A, TRef, ge,
+                    G55, G56, G66, rho, A, tref, ge,
                     comment=comment)
 
     def _verify(self, xref):

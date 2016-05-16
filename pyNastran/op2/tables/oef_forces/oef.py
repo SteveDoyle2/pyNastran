@@ -311,6 +311,9 @@ class OEF(OP2Common):
     def _read_oef1_4(self, data, ndata):
         """Table 4 parser for OEF1 table"""
         if self.thermal == 0:
+            if self.isubcase not in self.case_control_deck.subcases:
+                self.subcase = self.case_control_deck.create_new_subcase(self.isubcase)
+            self.subcase.add_op2_data(self.data_code, 'FORCE')
             n = self._read_oef1_loads(data, ndata)
         elif self.thermal == 1:
             n = self._read_oef1_thermal(data, ndata)
