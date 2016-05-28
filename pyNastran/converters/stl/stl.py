@@ -1,22 +1,29 @@
 #pylint:  disable=C0111
 from __future__ import print_function
+import copy
+from struct import unpack, Struct, pack
+
 from six import iteritems
 from six.moves import zip, range
-from copy import deepcopy
-#from struct import pack
 
-from numpy import array, zeros, ndarray, cross, where, vstack, unique
-from numpy import arctan2, cos, sin, transpose, pi
-from numpy.linalg import norm
+import numpy as np
 import scipy
 
-from struct import unpack, Struct, pack
 
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.utils import is_binary_file
 from pyNastran.utils.log import get_logger
 
 def read_stl(stl_filename, log=None, debug=False):
+    """
+
+    Reads an STL file
+
+    Parameters
+    ----------
+    stl_filename : str
+        the filename to read
+    """
     stl = STL(log=log, debug=debug)
     stl.read_stl(stl_filename)
     return stl
@@ -32,19 +39,44 @@ class STL(object):
 
         self.nodes = None
         self.elements = None
-        self.header = None
+        self.header = ''
         self.infilename = None
 
-    def write_stl(self, out_filename, is_binary=False, float_fmt='%6.12f'):
-        self.log.info("---writing STL file...%r---" % out_filename)
+    def write_stl(self, stl_out_filename, is_binary=False, float_fmt='%6.12f',
+                  normalize_normal_vectors=False):
+        """
+        Writes an STL file
+
+        Parameters
+        ----------
+        stl_out_filename : str
+            the filename to write
+        is_binary : bool; default=False
+            should a binary file be written
+        float_fmt : str; default='%6.12f'
+            the format to use if an ASCII file is used
+        normalize_normal_vectors : bool; default=False
+            should the vectors be normalized
+        """
+        self.log.info("---writing STL file...%r---" % stl_out_filename)
         assert len(self.nodes) > 0
         solid_name = 'dummy_name'
         if is_binary:
-            self.write_binary_stl(out_filename)
+            self.write_binary_stl(stl_out_filename,
+                                  normalize_normal_vectors=normalize_normal_vectors)
         else:
-            self.write_stl_ascii(out_filename, solid_name, float_fmt=float_fmt)
+            self.write_stl_ascii(stl_out_filename, solid_name, float_fmt=float_fmt,
+                                 normalize_normal_vectors=normalize_normal_vectors)
 
     def read_stl(self, stl_filename):
+        """
+        Reads an STL file
+
+        Parameters
+        ----------
+        stl_filename : str
+            the filename to read
+        """
         self.infilename = stl_filename
         self.log.info("---starting reading STL file...%r---" % self.infilename)
 
@@ -53,20 +85,29 @@ class STL(object):
         else:
             self.read_ascii_stl(stl_filename)
 
-        #self.log.info("nPoints=%s  nElements=%s" % (self.nPoints, self.nElements))
+        #self.log.info("nodes=%s  nelements=%s" % (self.nodes, self.nelements))
         self.log.info("---finished reading STL file...%r---" % self.infilename)
-        #assert self.nPoints > 0, 'nPoints=%s' % self.nPoints
-        #assert self.nElements > 0, 'nElements=%s' % self.nElements
+        #assert self.nodes > 0, 'nodes=%s' % self.nodes
+        #assert self.nelements > 0, 'nelements=%s' % self.nelements
 
 
-    def write_binary_stl(self, stl_filename):
-        """Write an STL binary file."""
-        with open(stl_filename, "wb") as infile:
+    def write_binary_stl(self, stl_filename, normalize_normal_vectors=False):
+        """
+        Write an STL binary file
+
+        Parameters
+        ----------
+        stl_filename : str
+            the filename to read
+        normalize_normal_vectors : bool; default=False
+            should the vectors be normalized
+        """
+        with open(stl_filename, 'wb') as infile:
             if hasattr(self, 'header'):
                 self.header.ljust(80, '\0')
-                infile.write(self.header)
+                infile.write('%-80s' % self.header[:80])
             else:
-                header = '%-80s' % stl_filename
+                header = '%-80s' % stl_filename[:80]
                 infile.write(pack('80s', header))
             #avector = [0., 0., 0.]
             #bvector = [0., 0., 0.]
@@ -80,9 +121,10 @@ class STL(object):
             p3 = self.nodes[elements[:, 2], :]
             avector = p2 - p1
             bvector = p3 - p1
-            n = cross(avector, bvector)
+            n = np.cross(avector, bvector)
             del avector, bvector
-            #n /= norm(n, axis=1)
+            if normalize_normal_vectors:
+                n /= np.linalg.norm(n, axis=1)[:, np.newaxis]
 
             s = Struct('12fH')
             for eid, element in enumerate(elements):
@@ -93,18 +135,25 @@ class STL(object):
                 infile.write(data)
 
     def read_binary_stl(self, stl_filename):
-        """Read an STL binary file."""
+        """
+        Read an STL binary file
+
+        Parameters
+        ----------
+        stl_filename : str
+            the filename to read
+        """
         with open(stl_filename, 'rb') as infile:
             data = infile.read()
 
         self.header = data[:80]
-        print('header = %r' % self.header.rstrip())
         nelements, = unpack('i', data[80:84])
         j = 84
 
         inode = 0
         nodes_dict = {}
-        elements = zeros((nelements, 3), 'int32')
+        assert nelements > 0, 'nelements=%s' % nelements
+        elements = np.zeros((nelements, 3), 'int32')
 
         s = Struct('12fH')
         for ielement in range(nelements):
@@ -140,7 +189,7 @@ class STL(object):
         nnodes = inode + 1 # accounting for indexing
         self.elements = elements
 
-        nodes = zeros((nnodes, 3), 'float64')
+        nodes = np.zeros((nnodes, 3), 'float64')
         for node, inode in iteritems(nodes_dict):
             nodes[inode] = node
         self.nodes = nodes
@@ -158,15 +207,15 @@ class STL(object):
         p3 = nodes[elements[:, 2]]
         v12 = p2 - p1
         v13 = p3 - p1
-        v123 = cross(v12, v13)
-        normals_norm = norm(v123, axis=1)
-        inan = where(normals_norm == 0)[0]
+        v123 = np.cross(v12, v13)
+        normals_norm = np.linalg.norm(v123, axis=1)
+        inan = np.where(normals_norm == 0)[0]
         return v123, normals_norm, inan
 
     def remove_elements_with_bad_normals(self, elements, nodes=None):
         v123, normals_norm, inan = self._get_normals_data(elements, nodes=nodes)
         if len(inan):
-            inotnan = where(normals_norm != 0)[0]
+            inotnan = np.where(normals_norm != 0)[0]
             self.elements = elements[inotnan, :]
             normals_norm = normals_norm[inotnan]
             v123 = v123[inotnan]
@@ -220,8 +269,8 @@ class STL(object):
                 msg += 'Failed Elements: %s; n=%s\n' % (inan, len(inan))
                 raise RuntimeError(msg)
         else:
-            inotnan = where(normals_norm != 0)[0]
-            normals_norm[inan] = array([1., 0., 0.])
+            inotnan = np.where(normals_norm != 0)[0]
+            normals_norm[inan] = np.array([1., 0., 0.])
             elements = elements[inotnan, :]
             normals_norm = normals_norm[inotnan]
             v123 = v123[inotnan]
@@ -293,12 +342,12 @@ class STL(object):
                 eid += 1
             del eid, n1, n2, n3
 
-        normals_at_nodes = zeros(nodes.shape, 'float64')
+        normals_at_nodes = np.zeros(nodes.shape, 'float64')
         eid = 0
         for nid, elementsi in iteritems(nid_to_eid):
             pe = normals[elementsi]
             m = pe.mean(axis=0)
-            normals_at_nodes[nid] = m/norm(m)
+            normals_at_nodes[nid] = m / np.linalg.norm(m)
             eid += 1
         return normals_at_nodes
 
@@ -309,30 +358,30 @@ class STL(object):
         kdt = scipy.spatial.KDTree(self.nodes)
 
         # find the node ids of interest
-        nids_new = unique(self.elements.ravel())
+        nids_new = np.unique(self.elements.ravel())
         nids_new.sort()
 
         # check the closest 10 nodes for equality
         deq, ieq = kdt.query(self.nodes[nids_new, :], k=10, distance_upper_bound=tol)
 
         # get the ids of the duplicate nodes
-        slots = where(ieq[:, 1:] < nnodes)
-        replacer = unique(ieq[slots])
+        slots = np.where(ieq[:, 1:] < nnodes)
+        replacer = np.unique(ieq[slots])
 
         # update the duplcated node id with it's partner
         # we'll pick the minimum ID
         for r in replacer:
-            ip = where(ieq[r, :] < nnodes)[0]
+            ip = np.where(ieq[r, :] < nnodes)[0]
             possible = ieq[r, ip]
 
             # node 11 can become node 10, but node 10 cannot become node 11
-            ip2 = where(r > possible)[0]
+            ip2 = np.where(r > possible)[0]
 
             if len(ip2):
                 # replace the node ids
                 possible2 = possible[ip2]
                 r_new_nid = possible2.min()
-                ireplace = where(self.elements == r)
+                ireplace = np.where(self.elements == r)
                 self.elements[ireplace] = r_new_nid
 
     def project_boundary_layer(self, nodes, elements, volume_bdfname):
@@ -366,31 +415,25 @@ class STL(object):
         b = 1.0
         a = 1.1
         N = 13
-        r = array(range(N))
+        r = np.array(range(N))
         #r = 1100
 
-        deltaNs = b * a**r * delta
-        self.log.info('deltaNs = %s' % deltaNs)
-        if not isinstance(deltaNs, ndarray):
-            deltaNs = array([deltaNs])
-        N = len(deltaNs)
-        #print "N = ", N
+        delta_ns = b * a**r * delta
+        self.log.info('delta_ns = %s' % delta_ns)
+        if not isinstance(delta_ns, np.ndarray):
+            delta_ns = np.array([delta_ns])
+        N = len(delta_ns)
 
         nid = 0
-        #print "deltaNs =", deltaNs
         nnodes = nodes.shape[0]
-        nodes2 = zeros((nnodes * (N+1), 3), 'float64')
+        nodes2 = np.zeros((nnodes * (N+1), 3), 'float64')
         nodes2[:nnodes, :] = nodes
 
         nelements = elements.shape[0]
-        elements2 = zeros((nelements * (N+1), 3), 'int32')
+        elements2 = np.zeros((nelements * (N+1), 3), 'int32')
         elements2[:nelements, :] = elements
-        #print "nodes.shape =", nodes.shape
-        #print "nodes2.shape =", nodes2.shape
-        #print "elements2.shape =", elements2.shape
 
         ni = 0
-        #print "nelements =", nelements
         cid = None
         nid = 1
         eid2 = 1
@@ -404,7 +447,7 @@ class STL(object):
                 bdf.write(print_card_8(card))
                 nid += 1
 
-            for deltaN in deltaNs:
+            for deltaN in delta_ns:
                 outer_points = nodes + normals_at_nodes * deltaN
                 nodes2[ni*nnodes : (ni+1)*nnodes, :] = outer_points
 
@@ -462,7 +505,8 @@ class STL(object):
         return nodes2, elements2
 
 
-    def write_stl_ascii(self, out_filename, solid_name, float_fmt='%.6f'):
+    def write_stl_ascii(self, out_filename, solid_name, float_fmt='%.6f',
+                        normalize_normal_vectors=False):
         """
         solid solid_name
          facet normal -6.601157e-001 6.730213e-001 3.336009e-001
@@ -582,8 +626,8 @@ class STL(object):
 
         assert inode > 0, inode
         nnodes = inode + 1 # accounting for indexing
-        self.elements = array(elements, 'int32')
-        nodes = zeros((nnodes, 3), 'float64')
+        self.elements = np.array(elements, 'int32')
+        nodes = np.zeros((nnodes, 3), 'float64')
 
         for node, inode in iteritems(nodes_dict):
             nodes[inode] = node
@@ -601,18 +645,18 @@ class STL(object):
 
     def flip_axes(self, axes, scale):
         if axes == 'xy':
-            x = deepcopy(self.nodes[:, 0])
-            y = deepcopy(self.nodes[:, 1])
+            x = copy.deepcopy(self.nodes[:, 0])
+            y = copy.deepcopy(self.nodes[:, 1])
             self.nodes[:, 0] = y * scale
             self.nodes[:, 1] = x * scale
         elif axes == 'yz':
-            y = deepcopy(self.nodes[:, 1])
-            z = deepcopy(self.nodes[:, 2])
+            y = copy.deepcopy(self.nodes[:, 1])
+            z = copy.deepcopy(self.nodes[:, 2])
             self.nodes[:, 1] = z * scale
             self.nodes[:, 2] = y * scale
         elif axes == 'xz':
-            x = deepcopy(self.nodes[:, 0])
-            z = deepcopy(self.nodes[:, 2])
+            x = copy.deepcopy(self.nodes[:, 0])
+            z = copy.deepcopy(self.nodes[:, 2])
             self.nodes[:, 0] = z * scale
             self.nodes[:, 2] = x * scale
 
@@ -643,23 +687,23 @@ class STL(object):
             raise RuntimeError(xyz)
 
         # the nodes on the symmetry plane
-        i = where(self.nodes[:, xyzi] < tol)[0]
+        i = np.where(self.nodes[:, xyzi] < tol)[0]
 
         # smash the symmetry nodes to 0.0
         self.nodes[i, xyzi] = 0.
-        nodes_sym = deepcopy(self.nodes)
+        nodes_sym = copy.deepcopy(self.nodes)
         nodes_sym[:, xyzi] *= -1.
 
         # we're lazy and duplicating all the nodes
         # but will only write out a subset of them
-        nodes = vstack([self.nodes, nodes_sym])
+        nodes = np.vstack([self.nodes, nodes_sym])
 
         # create the symmetrical elements
         elements2 = []
         elements3 = []
         for element in self.elements:
             epoints = nodes[element, xyzi][0]
-            je = where(epoints <= tol)[0]
+            je = np.where(epoints <= tol)[0]
             if len(je) < 3:  # not a symmetry element, so we save it
                 elements2.append(element)
 
@@ -672,7 +716,7 @@ class STL(object):
                 elements3.append(element3)
 
         self.nodes = nodes
-        self.elements = array(elements2 + elements3, dtype='int32')
+        self.elements = np.array(elements2 + elements3, dtype='int32')
 
 
 def _rotate_model(stl):  # pragma: no cover
@@ -683,20 +727,20 @@ def _rotate_model(stl):  # pragma: no cover
         x, y, z = nodes[:, 0], nodes[:, 1], nodes[:, 2]
         #i = where(y > 0.0)[0]
         R = x**2 + y**2
-        theta = arctan2(y, x)
-        iRz = where(R == 0)[0]
+        theta = np.arctan2(y, x)
+        iRz = np.where(R == 0)[0]
         theta[iRz] = 0.0
 
         min_theta = min(theta)
-        dtheta = max(theta) - pi/4
+        dtheta = max(theta) - np.pi / 4
         theta2 = theta + min_theta
 
-        x2 = R * cos(theta2)
-        y2 = R * sin(theta2)
-        #print "x.shape", x.shape, y2.shape
-        nodes_rotated = transpose(vstack([x2, y2, z]))
-        #print "nodes.shape", nodes_rotated.shape
-        #print nodes_rotated
+        x2 = R * np.cos(theta2)
+        y2 = R * np.sin(theta2)
+        #print("x.shape", x.shape, y2.shape)
+        nodes_rotated = np.transpose(np.vstack([x2, y2, z]))
+        #print("nodes.shape", nodes_rotated.shape)
+        #print(nodes_rotated)
 
     if 0:
         # project the volume
