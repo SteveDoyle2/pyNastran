@@ -76,10 +76,18 @@ def load_csv(out_filename):
                 msg += '# var1 var2\n'
                 msg += '1 2\n'
                 msg += '3 4\n'
+                msg += '\nor:\n'
+                msg += '# var1(%i) var2(%f)\n'
+                msg += '1 2.1\n'
+                msg += '3 4.2\n'
             elif ext == '.csv':
                 msg += '# var1, var2\n'
                 msg += '1, 2\n'
                 msg += '3, 4\n'
+                msg += '\nor:\n'
+                msg += '# var1(%i), var2(%f)\n'
+                msg += '1, 2.1\n'
+                msg += '3, 4.2\n'
             else:
                 msg = 'extension=%r is not supported (use .dat, .txt, or .csv)' % ext
                 raise NotImplementedError(msg)
@@ -87,13 +95,13 @@ def load_csv(out_filename):
 
         header_line = header_line.lstrip('# \t').strip()
         if ext in ['.dat', '.txt']:
-            headers = header_line.split(' ')
+            headers = header_line.split()
         elif ext == '.csv':
             headers = header_line.split(',')
         else:
             msg = 'extension=%r is not supported (use .dat, .txt, or .csv)' % ext
             raise NotImplementedError(msg)
-
+        headers = [header.strip() for header in headers if header.strip()]
 
         fmt_dict = {}
         names = []
@@ -109,7 +117,6 @@ def load_csv(out_filename):
                 header2_temp, fmt_temp = header2[:-1].rsplit('(', 1)
                 header2_temp = header2_temp.strip()
                 fmt = fmt_temp.strip()
-                print('fmt_temp = %r' % fmt_temp)
                 #('S1', 'i4', 'f4')
                 if '%' in fmt:
                     #fmt_temp = fmt_temp.replace('%', '%%')
@@ -129,7 +136,6 @@ def load_csv(out_filename):
             else:
                 dtype_fmt = 'float32'
                 header2_temp = header2
-                print('header2 = %r' % header2)
 
             names.append(header2_temp)
             dtype_fmts.append(dtype_fmt)
@@ -144,14 +150,54 @@ def load_csv(out_filename):
 
         dtype = {
             'names': tuple(names),
-            'formats': tuple(dtype_fmts)
+            'formats': tuple(dtype_fmts),
         }
-        A = loadtxt(file_obj, dtype=dtype, delimiter=delimiter)
+        try:
+            A = loadtxt(file_obj, dtype=dtype, delimiter=delimiter)
+        except:
+            msg = 'extension=%r nheaders=%s delimiter=%r dtype=%s' % (ext, len(names), delimiter, dtype)
+            raise RuntimeError(msg)
 
     return A, fmt_dict, names
 
 
 def load_user_geom(fname):
+    """
+    Loads a file of the form:
+
+    # all supported cards
+    #  - GRID
+    #  - BAR
+    #  - TRI
+    #  - QUAD
+    #
+    # doesn't support:
+    #  - solid elements
+    #  - element properties
+    #  - custom colors
+    #  - coordinate systems
+    #  - materials
+    #  - loads
+    #  - results
+
+    #    id  x    y    z
+    GRID, 1, 0.2, 0.3, 0.3
+    GRID, 2, 1.2, 0.3, 0.3
+    GRID, 3, 2.2, 0.3, 0.3
+    GRID, 4, 5.2, 0.3, 0.3
+    grid, 5, 5.2, 1.3, 2.3  # case insensitive
+
+    #    ID, nodes
+    BAR,  1, 1, 2
+
+    #   eid, n1,n2,n3,n4
+    TRI,  2, 1, 2, 3
+    # this is a comment
+
+    #   eid, n1,n2,n3,n4
+    QUAD, 3, 1, 5, 3, 4
+    QUAD, 4, 1, 2, 3, 4  # this is after a blank line
+    """
     with open(fname, 'r') as f:
         lines = f.readlines()
 
@@ -178,6 +224,8 @@ def load_user_geom(fname):
             elif line2.startswith('QUAD'):
                 assert len(sline) == 6, sline
                 quads.append(sline[1:])
+            else:
+                print(sline)
 
     grid_ids = np.array(grid_ids, dtype='int32')
     xyz = np.array(xyz, dtype='float32')
