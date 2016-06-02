@@ -181,21 +181,28 @@ class BDFMethods(BDFAttributes):
         if reference_point is None:
             reference_point = array([0., 0., 0.])
 
-        if element_ids is None:
+        # if neither element_id nor mass_ids are specified, use everything
+        if element_ids is None and mass_ids is None:
             elements = self.elements.values()
-        else:
-            elements = [element for eid, element in self.elements.items() if eid in element_ids]
-
-        if mass_ids is None:
             masses = self.masses.values()
+
+        # if either element_id or mass_ids are specified and the other is not, use only the
+        # specified ids
         else:
-            masses = [mass for eid, mass in self.masses.items() if eid in mass_ids]
+            if element_ids is None:
+                elements = []
+            else:
+                elements = [element for eid, element in self.elements.items() if eid in element_ids]
+            if mass_ids is None:
+                masses = []
+            else:
+                masses = [mass for eid, mass in self.masses.items() if eid in mass_ids]
+
         nelements = len(elements) + len(masses)
 
         num_cpus = 1
         if num_cpus > 1:
-            mass, cg, I = self._mass_properties_mp(num_cpus, elements, masses,
-                                                   nelements,
+            mass, cg, I = self._mass_properties_mp(num_cpus, elements, masses, nelements,
                                                    reference_point=reference_point)
         else:
             mass, cg, I = self._mass_properties_sp(elements, masses,
