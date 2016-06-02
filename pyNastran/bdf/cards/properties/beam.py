@@ -13,7 +13,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from itertools import count
 from six.moves import zip, range
-from numpy import array, unique, argsort, mean
+from numpy import array, unique, argsort, mean, allclose
 
 from pyNastran.bdf.cards.properties.bars import IntegratedLineProperty, LineProperty, _bar_areaL
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
@@ -33,32 +33,6 @@ class PBEAM(IntegratedLineProperty):
         #'I1(B)',
     #}
 
-    def set_optimization_value(self, name_str, value):
-        if name_str == 'I1(A)':
-            self.i1[0] = value
-        elif name_str == 'I1(B)':
-            self.i1[-1] = value
-
-        elif name_str == 'I2(A)':
-            self.i1[-1] = value
-        elif name_str == 'I2(B)':
-            self.i2[-1] = value
-        else:
-            raise NotImplementedError(name_str)
-
-    def get_optimization_value(self, name_str):
-        if name_str == 'I1(A)':
-            return self.i1[0]
-        elif name_str == 'I1(B)':
-            return self.i1[-1]
-
-        elif name_str == 'I2(A)':
-            return self.i2[-1]
-        elif name_str == 'I2(B)':
-            return self.i2[-1]
-        else:
-            raise NotImplementedError(name_str)
-
     def __init__(self, pid, mid, xxb, so, area, i1, i2, i12, j, nsm,
                  c1, c2, d1, d2, e1, e2, f1, f2,
                  k1, k2, s1, s2, nsia, nsib, cwa, cwb,
@@ -77,6 +51,12 @@ class PBEAM(IntegratedLineProperty):
         self.mid = mid
 
         assert isinstance(xxb, list), xxb
+        assert isinstance(so, list), so
+        #assert min(so) in [0., 1.], so  # YES, NO
+        #assert max(so) == 1.0, so
+        #print('xxb', xxb)
+        assert 0. <= min(xxb) <= 0.0, xxb  # x/L
+        assert 0. <= max(xxb) <= 1.0, xxb
         assert isinstance(area, list), area
         assert isinstance(i1, list), i1
         assert isinstance(i2, list), i2
@@ -86,21 +66,21 @@ class PBEAM(IntegratedLineProperty):
         # at least one cross section is required; even if it's empty
         # xxb[0] isn't explicitly used
         #: Section position
-        self.xxb = xxb
+        #self.xxb = xxb
         #: Output flag
-        self.so = so
+        #self.so = so
         #: Area
-        self.A = area
+        #self.A = area
         #: Moment of Inertia about the 1 axis :math:`I_1`
-        self.i1 = i1
+        #self.i1 = i1
         #: Moment of Inertia about the 2 axis  :math:`I_2`
-        self.i2 = i2
+        #self.i2 = i2
         #: Moment of Inertia about the 12 axis  :math:`I_{12}`
-        self.i12 = i12
+        #self.i12 = i12
         #: Polar Moment of Inertia :math:`J`
-        self.j = j
+        #self.j = j
         #: Non-structural mass :math:`nsm`
-        self.nsm = nsm
+        #self.nsm = nsm
 
         assert isinstance(c1, list), c1
         assert isinstance(c2, list), c2
@@ -110,14 +90,14 @@ class PBEAM(IntegratedLineProperty):
         assert isinstance(e2, list), e2
         assert isinstance(f1, list), f1
         assert isinstance(f2, list), f2
-        self.c1 = c1
-        self.c2 = c2
-        self.d1 = d1
-        self.d2 = d2
-        self.e1 = e1
-        self.e2 = e2
-        self.f1 = f1
-        self.f2 = f2
+        #self.c1 = c1
+        #self.c2 = c2
+        #self.d1 = d1
+        #self.d2 = d2
+        #self.e1 = e1
+        #self.e2 = e2
+        #self.f1 = f1
+        #self.f2 = f2
 
 
         #: Shear stiffness factor K in K*A*G for plane 1.
@@ -127,6 +107,7 @@ class PBEAM(IntegratedLineProperty):
 
         #: Shear relief coefficient due to taper for plane 1.
         self.s1 = s1
+        #assert self.s1 == 0., self.s1
         #: Shear relief coefficient due to taper for plane 2.
         self.s2 = s2
         #: non structural mass moment of inertia per unit length
@@ -166,9 +147,10 @@ class PBEAM(IntegratedLineProperty):
 
         # sort xxb
         ixxb = argsort(xxb)
-
         self.so = array(so, dtype='|U8')[ixxb]
         self.xxb = array(xxb, dtype='float64')[ixxb]
+        #print('ixxb = %s' % ixxb)
+        #print('i12 = %s' % i12)
 
         self.A = array(area, dtype='float64')[ixxb]
         self.i1 = array(i1, dtype='float64')[ixxb]
@@ -419,11 +401,10 @@ class PBEAM(IntegratedLineProperty):
                 e2.append(e2i)
                 f1.append(f1i)
                 f2.append(f2i)
-            if irow != 0:
-                assert min(xxb) == 0.0, xxb
-                assert max(xxb) == 1.0, xxb
-                assert len(xxb) == len(unique(xxb)), xxb
-            #ifield += 8
+        if irow != 0:
+            assert min(xxb) == 0.0, 'pid=%s x/xb=%s' % (pid, xxb)
+            assert max(xxb) == 1.0, 'pid=%s x/xb=%s' % (pid, xxb)
+            assert len(xxb) == len(unique(xxb)), xxb
 
         # calculate:
         #    k1, k2, s1, s2
@@ -530,8 +511,98 @@ class PBEAM(IntegratedLineProperty):
             m2a, m1b, m2b, n1a, n2a, n1b, n2b,
             comment=comment)
 
-    def add_op2_data(self, data, comment=''):
-        raise NotImplementedError(data)
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        (pid, mid, nsegs, ccf, x) = data[:5]
+
+        rows = data[5:]
+        if len(rows) != 12:
+            msg = 'PBEAM: len(rows)=%s expected=13\n' % len(rows)
+            for datai in data:
+                msg += '    %s\n' % str(datai)
+            raise SyntaxError(msg)
+        area = []
+        so = []
+        xxb = []
+        i1 = []
+        i2 = []
+        i12 = []
+        j = []
+        nsm = []
+        c1 = []
+        c2 = []
+        d1 = []
+        d2 = []
+        e1 = []
+        e2 = []
+        f1 = []
+        f2 = []
+        ## TODO: PBEAM:op2 handle repeated x/xb = 0.0, 1.0
+
+        iis = []
+        for i, pack in enumerate(rows[:-1]):
+            (soi, xxbi, areai, i1i, i2i, i12i, ji, nsmi, c1i, c2i,
+             d1i, d2i, e1i, e2i, f1i, f2i) = pack
+            if i > 0 and allclose(xxbi, 0.0):
+                #print('PBEAM - skipping i=%s x/xb=%s' % (i, xxbi))
+                continue
+            if i > 0 and i != 10 and allclose(xxbi, 1.0):
+                #print('PBEAM - skipping i=%s x/xb=%s' % (i, xxbi))
+                continue
+            area.append(areai)
+            xxb.append(xxbi)
+            iis.append(i)
+            so.append(soi)
+            i1.append(i1i)
+            i2.append(i2i)
+            i12.append(i12i)
+            j.append(ji)
+            nsm.append(nsmi)
+            c1.append(c1i)
+            c2.append(c2i)
+            d1.append(d1i)
+            d2.append(d2i)
+            e1.append(e1i)
+            e2.append(e2i)
+            f1.append(f1i)
+            f2.append(f2i)
+        #print('*i = %s' % iis)
+        #print('*xxb = %s' % xxb)
+        #print('*i1 = %s' % i1)
+
+        (k1, k2, s1, s2, nsia, nsib, cwa, cwb,
+         m1a, m2a, m1b, m2b, n1a, n2a, n1b, n2b) = data[-1]
+        return PBEAM(pid, mid, xxb, so, area, i1, i2, i12, j, nsm,
+                     c1, c2, d1, d2, e1, e2,
+                     f1, f2, k1, k2, s1, s2,
+                     nsia, nsib, cwa, cwb, m1a, m2a, m1b,
+                     m2b, n1a, n2a, n1b, n2b, comment=comment)
+
+    def set_optimization_value(self, name_str, value):
+        if name_str == 'I1(A)':
+            self.i1[0] = value
+        elif name_str == 'I1(B)':
+            self.i1[-1] = value
+
+        elif name_str == 'I2(A)':
+            self.i1[-1] = value
+        elif name_str == 'I2(B)':
+            self.i2[-1] = value
+        else:
+            raise NotImplementedError(name_str)
+
+    def get_optimization_value(self, name_str):
+        if name_str == 'I1(A)':
+            return self.i1[0]
+        elif name_str == 'I1(B)':
+            return self.i1[-1]
+
+        elif name_str == 'I2(A)':
+            return self.i2[-1]
+        elif name_str == 'I2(B)':
+            return self.i2[-1]
+        else:
+            raise NotImplementedError(name_str)
 
     #def Area(self):
     #    """.. warning:: area field not supported fully on PBEAM card"""
@@ -614,7 +685,8 @@ class PBEAM(IntegratedLineProperty):
         msg += "              VALE=(%g,  %g,  %g,  %g),\n" % (a, iy, iz, j)
 
         msg += "              ORIENTATION=_F( \n"
-        msg += "                  CARA=('VECT_Y'), # direction of beam ???\n"  ## .. todo:: is this correct
+        ## .. todo:: is this correct
+        msg += "                  CARA=('VECT_Y'), # direction of beam ???\n"
         msg += "                  VALE=(1.0,0.0,0.0,)"
 
         if [self.n1a, self.n1b] != [0., 0.]:
@@ -676,7 +748,6 @@ class PBEAM(IntegratedLineProperty):
              f2) in zip(self.so, self.xxb, self.A, self.i1, self.i2, self.i12,
                         self.j, self.nsm, self.c1, self.c2, self.d1, self.d2,
                         self.e1, self.e2, self.f1, self.f2):
-
             i1 = set_blank_if_default(i1, 0.0)
             i2 = set_blank_if_default(i2, 0.0)
             i12 = set_blank_if_default(i12, 0.0)

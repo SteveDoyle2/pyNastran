@@ -5,7 +5,7 @@ from codecs import open as codec_open
 
 import os
 import pyNastran
-from pyNastran.bdf.bdf import BDF
+from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.bdf.test.test_case_control_deck import compare_lines
 
 root_path = pyNastran.__path__[0]
@@ -312,17 +312,23 @@ class TestReadWrite(unittest.TestCase):
         model = BDF(log=log, debug=False)
         model.read_bdf('include5.bdf')
         assert model.echo == False, model.echo
-        #model.write_bdf('include4.out.bdf')
+        #model.write_bdf('include5.out.bdf')
 
-        os.remove('include5.bdf')
-        #os.remove('include5.out.bdf')
-        os.remove('include5b.inc')
         # os.remove('c.bdf')
         # os.remove('executive_control.inc')
         # os.remove('case_control.inc')
 
         self.assertEqual(len(model.nodes), 4)
         self.assertEqual(model.nnodes, 4, 'nnodes=%s' % model.nnodes)
+
+        model2 = read_bdf(bdf_filename='include5.bdf', xref=True, punch=False,
+                          encoding=None)
+        self.assertEqual(len(model2.nodes), 4)
+        self.assertEqual(model2.nnodes, 4, 'nnodes=%s' % model.nnodes)
+        os.remove('include5.bdf')
+        #os.remove('include5.out.bdf')
+        os.remove('include5b.inc')
+
 
     def test_encoding_write(self):
 
@@ -331,7 +337,7 @@ class TestReadWrite(unittest.TestCase):
         mesh.write_bdf('out.bdf')
         lines_expected = [
             '$pyNastran: version=msc',
-            '$pyNastran: punch=False',
+            '$pyNastran: punch=True',
             '$pyNastran: encoding=ascii' if PY2 else '$pyNastran: encoding=utf-8\n',
             '$pyNastran: nnodes=1',
             '$pyNastran: nelements=0',
@@ -342,6 +348,28 @@ class TestReadWrite(unittest.TestCase):
         with codec_open(bdf_filename, 'r', encoding='ascii') as f:
             lines = f.readlines()
             compare_lines(self, lines, lines_expected, has_endline=False)
+
+
+    def test_include_stop(self):
+        with codec_open('a.bdf', 'w') as f:
+            f.write('CEND\n')
+            f.write('BEGIN BULK\n')
+            f.write("INCLUDE 'b.bdf'\n\n")
+            f.write('GRID,1,,1.0\n')
+        model = BDF()
+        with self.assertRaises(IOError):
+            model.read_bdf(bdf_filename='a.bdf', xref=True, punch=False,
+                           read_includes=True,
+                           encoding=None)
+        with self.assertRaises(IOError):
+            read_bdf(bdf_filename='a.bdf', xref=True, punch=False,
+                     encoding=None)
+        model.read_bdf(bdf_filename='a.bdf', xref=True, punch=False,
+                       read_includes=False,
+                       encoding=None)
+        model.write_bdf('out.bdf')
+        os.remove('a.bdf')
+        os.remove('out.bdf')
 
     def test_read_bad_01(self):
         model = BDF(debug=False)

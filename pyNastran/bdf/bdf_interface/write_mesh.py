@@ -303,9 +303,9 @@ class WriteMesh(BDFAttributes):
         if self.punch is None:
             # writing a mesh without using read_bdf
             if self.executive_control_lines or self.case_control_deck:
-                self.punch = True
-            else:
                 self.punch = False
+            else:
+                self.punch = True
 
         if self.nastran_format:
             outfile.write('$pyNastran: version=%s\n' % self.nastran_format)
@@ -492,7 +492,8 @@ class WriteMesh(BDFAttributes):
         if self.aeros or self.trims or self.divergs:
             msg = ['$STATIC AERO\n']
             # static aero
-            msg.append(self.aeros.write_card(size, is_double))
+            if self.aeros:
+                msg.append(self.aeros.write_card(size, is_double))
             for (unused_id, trim) in sorted(iteritems(self.trims)):
                 msg.append(trim.write_card(size, is_double))
             for (unused_id, diverg) in sorted(iteritems(self.divergs)):

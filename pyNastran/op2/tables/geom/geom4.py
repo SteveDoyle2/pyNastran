@@ -75,17 +75,17 @@ class GEOM4(GeomCommon):
     def _read_aset(self, data, n):
         """ASET(5561,76,215) - Record 1"""
         self.log.debug('skipping ASET in GEOM4\n')
-        return n
+        return len(data)
 
     def _read_aset1(self, data, n):
         """ASET1(5571,77,216) - Record 2"""
         self.log.debug('skipping ASET1 in GEOM4\n')
-        return n
+        return len(data)
 
     def _read_bndgrid(self, data, n):
         """BNDGRID(10200,102,473) - Record 3 """
         self.log.debug('skipping BNDGRID in GEOM4\n')
-        return n
+        return len(data)
 
 # BSET
 # BSET1
@@ -95,18 +95,18 @@ class GEOM4(GeomCommon):
     def _read_cyax(self, data, n):
         """CYAX(1510,15,328) - Record 8 """
         self.log.debug('skipping CYAX in GEOM4\n')
-        return n
+        return len(data)
 
     def _read_cyjoin(self, data, n):
         """CYJOIN(5210,52,257) - Record 9 """
         self.log.debug('skipping CYJOIN in GEOM4\n')
-        return n
+        return len(data)
 
 # CYSUP
     def _read_cysym(self, data, n):
         """CYSYM(1710,17,330) - Record 11"""
         self.log.debug('skipping CYSYM in GEOM4\n')
-        return n
+        return len(data)
 
 # EGENDT
 # GMBC
@@ -114,37 +114,37 @@ class GEOM4(GeomCommon):
     def _read_mpc(self, data, n):
         """MPC(4901,49,17) - Record 16"""
         self.log.debug('skipping MPC in GEOM4\n')
-        return n
+        return len(data)
 
     def _read_mpcadd(self, data, n):
         """MPCADD(4891,60,83) - Record 17"""
         self.log.debug('skipping MPCADD in GEOM4\n')
-        return n
+        return len(data)
 
     def _read_omit1(self, data, n):
         """OMIT1(4951,63,92) - Record 19"""
         self.log.debug('skipping OMIT1 in GEOM4\n')
-        return n
+        return len(data)
 
     def _read_qset1(self, data, n):
         """QSET1(610, 6, 316) - Record 21"""
         self.log.debug('skipping QSET1 in GEOM4\n')
-        return n
+        return len(data)
 
     def _read_rbar(self, data, n):
         """RBAR(6601,66,292) - Record 22"""
         self.log.debug('skipping RBAR in GEOM4\n')
-        return n
+        return len(data)
 
     def _read_rbe1(self, data, n):
         """RBE1(6801,68,294) - Record 23"""
         self.log.debug('skipping RBE1 in GEOM4\n')
-        return n
+        return len(data)
 
     def _read_rbe2(self, data, n):
         """RBE2(6901,69,295) - Record 24"""
         self.log.debug('skipping RBE2 in GEOM4\n')
-        return n
+        return len(data)
         #n=0
         #ndata = len(data)  # 5*4
         if 1:
@@ -163,7 +163,7 @@ class GEOM4(GeomCommon):
     def _read_rbe3(self, data, n):
         """RBE3(7101,71,187) - Record 25"""
         self.log.debug('skipping RBE3 in GEOM4\n')
-        return n
+        return len(data)
 
 # RBJOINT
 # RBJSTIF
@@ -172,17 +172,17 @@ class GEOM4(GeomCommon):
     def _read_rrod(self, data, n):
         """RROD(6501,65,291) - Record 30"""
         self.log.debug('skipping RROD in GEOM4\n')
-        return n
+        return len(data)
 
     def _read_rspline(self, data, n):
         """RSPLINE(7001,70,186) - Record 31"""
         self.log.debug('skipping RSPLINE in GEOM4\n')
-        return n
+        return len(data)
 
     def _read_rsscon(self, data, n):
         """RSSCON(7201,72,398) - Record 32"""
         self.log.debug('skipping RSSCON in GEOM4\n')
-        return n
+        return len(data)
 
 # RTRPLT
 # RWELD
@@ -195,7 +195,7 @@ class GEOM4(GeomCommon):
     def _read_seqset1(self, data, n):
         """SEQSET1(1210,12,322) - Record 40"""
         self.log.debug('skipping SEQSET1 in GEOM4\n')
-        return n
+        return len(data)
 
 # SESUP
 # SEUSET
@@ -204,15 +204,17 @@ class GEOM4(GeomCommon):
     def _read_spc(self, data, n):
         """SPC(5501,55,16) - Record 44"""
         #self.log.debug('skipping SPC in GEOM4\n')
-        n = 0
-        nentries = len(data) // 20  # 5*4
+        #n = 0
+        ntotal = 16
+        nentries = (len(data) - n) // ntotal
+        #nentries = len(data) // 16  # 4*4
         for i in range(nentries):
-            edata = data[n:n + 20]
-            (sid, ID, c, xxx, dx) = unpack(b(self._endian + 'iiiif'), edata)
-
+            edata = data[n:n + 16]
+            (sid, ID, c, dx) = unpack(b(self._endian + 'iiif'), edata)
+            self.log.debug('SPC sid=%s id=%s c=%s dx=%s' % (sid, ID, c, dx))
             constraint = SPC.add_op2_data([sid, ID, c, dx])
             self.add_constraint_SPC(constraint)
-            n += 20
+            n += 16
         return n
 
     #def _read_spcd(self, data, n):
@@ -247,12 +249,15 @@ class GEOM4(GeomCommon):
                 nodes = unpack(b(self._endian + '%ii' % nnodes), data[n:])
                 nids += list(nodes)
                 n += 4 * nentries
-            else:
+            elif thru_flag == 1:
                 n2 = self.struct_i.unpack(data[n:n+4])
                 n += 4
                 nids.append(n2)
+            else:
+                raise NotImplementedError('SPC1; thru_flag=%s' % thru_flag)
             if self.is_debug_file:
                 self.binary_debug.write('   nids=%s\n' % str(nids[1:]))
+            self.log.debug('   nids=%s\n' % str(nids[1:]))
             nentries += 1
             constraint = SPC1.add_op2_data([sid, g, nids])
             self.add_constraint_SPC(constraint)
@@ -262,15 +267,14 @@ class GEOM4(GeomCommon):
     def _read_spcadd(self, data, n):
         """SPCADD(5491,59,13) - Record 46"""
         self.log.debug('skipping SPCADD in GEOM4\n')
-        return n
+        return len(data)
 
     def _read_spcd(self, data, n):
         """SPCD(5110,51,256) - Record 47"""
         #self.log.debug('skipping SPCD in GEOM4\n')
         return len(data)
-        n = 0
         s = Struct(b(self._endian + '4ifi'))
-        nentries = len(data) // 20  # 5*4
+        nentries = (len(data) - n) // 20 # 5*4
         for i in range(nentries):
             edata = data[n:n + 20]
             self.show_data(edata)
@@ -289,31 +293,31 @@ class GEOM4(GeomCommon):
 
     def _read_spcde(self, data, n):
         self.log.debug('skipping SPCDE in GEOM4\n')
-        return n
+        return len(data)
 
     def _read_spcf(self, data, n):
         self.log.debug('skipping SPCDF in GEOM4\n')
-        return n
+        return len(data)
 
     def _read_spcdg(self, data, n):
         self.log.debug('skipping SPCDG in GEOM4\n')
-        return n
+        return len(data)
 
     def _read_spce(self, data, n):
         self.log.debug('skipping SPCE in GEOM4\n')
-        return n
+        return len(data)
 
     def _readSPCEB(self, data, n):
         self.log.debug('skipping SPCEB in GEOM4\n')
-        return n
+        return len(data)
 
     def _read_spcfb(self, data, n):
         self.log.debug('skipping SPCFB in GEOM4\n')
-        return n
+        return len(data)
 
     def _read_spcgb(self, data, n):
         self.log.debug('skipping SPCGB in GEOM4\n')
-        return n
+        return len(data)
 
 # SPCGRID
 # SPCOFF
@@ -322,8 +326,7 @@ class GEOM4(GeomCommon):
     def _read_suport(self, data, n):
         """SUPORT(5601,56, 14) - Record 59"""
         #self.log.debug('skipping SUPORT in GEOM4\n')
-        n = 0
-        nentries = len(data) // 8  # 2*4
+        nentries = (len(data) - n) // 8 # 2*4
         s = Struct(b(self._endian + '2i'))
         for i in range(nentries):
             data_in = list(s.unpack(data[n:n + 8]))
@@ -336,15 +339,15 @@ class GEOM4(GeomCommon):
     def _read_suport1(self, data, n):
         """SUPORT1(10100,101,472) - Record 60"""
         self.log.debug('skipping SUPORT1 in GEOM4\n')
-        return n
+        return len(data)
 
 # TEMPBC
 
     def _read_uset(self, data, n):
         """USET(2010,20,193) - Record 62"""
         self.log.debug('skipping USET in GEOM4\n')
-        return n
+        return len(data)
 
     def _read_uset1(self, data, n):
         self.log.debug('skipping USET1 in GEOM4\n')
-        return n
+        return len(data)

@@ -71,9 +71,11 @@ class CHEXA8(SolidElement):
         SolidElement.__init__(self, model)
 
     def add(self, card, comment=''):
+        print('chexa8-add')
         i = self.i
         #comment = self._comments[i]
         eid = integer(card, 1, 'element_id')
+
         if comment:
             self._comments[eid] = comment
 

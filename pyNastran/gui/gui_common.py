@@ -989,7 +989,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         if python_file in [None, False]:
             title = 'Choose a Python Script to Run'
             wildcard = "Python (*.py)"
-            infile_name = self._create_load_file_dialog(wildcard, title)[1]
+            infile_name = self._create_load_file_dialog(wildcard, title, self._default_python_file)[1]
             if not infile_name:
                 is_failed = True
                 return is_failed # user clicked cancel
@@ -997,6 +997,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             #python_file = os.path.join(script_path, infile_name)
             python_file = os.path.join(infile_name)
         execfile(python_file)
+        self._default_python_file = python_file
         self.log_command('self.on_run_script(%r)' % python_file)
 
     def on_show_info(self):
@@ -1385,10 +1386,12 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.grid_mapper.SetLookupTable(self.color_function)
         self.rend.AddActor(self.scalarBar)
 
-    def _create_load_file_dialog(self, qt_wildcard, title):
+    def _create_load_file_dialog(self, qt_wildcard, title, default_filename=None):
+        if default_filename is None:
+            default_filename = self.last_dir
         # getOpenFileName return QString and we want Python string
         fname, wildcard_level = QtGui.QFileDialog.getOpenFileNameAndFilter(
-            self, title, self.last_dir, qt_wildcard)
+            self, title, default_filename, qt_wildcard)
         return str(wildcard_level), str(fname)
 
     #def _create_load_file_dialog2(self, qt_wildcard, title):
@@ -2348,7 +2351,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                 magnify = self.magnify if self.magnify > magnify_min else magnify_min
             else:
                 magnify = magnification
-
+            assert isinstance(magnify, integer_types), 'magnify=%r type=%s' % (magnify, type(magnify))
             self._update_text_size(magnify=magnify)
             render_large.SetMagnification(magnify)
 
@@ -3952,6 +3955,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             #raise
 
         npoints = user_points.shape[0]
+        if npoints == 0:
+            raise RuntimeError('npoints=0 in %r' % points_filename)
         if len(user_points.shape) == 1:
             user_points = user_points.reshape(1, npoints)
 

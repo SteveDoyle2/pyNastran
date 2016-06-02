@@ -36,7 +36,7 @@ class TestCart3d(unittest.TestCase):
             "6\n"
         )
         infile_name = os.path.join(test_path, 'flat_full.tri')
-        f = open(infile_name, 'wb')
+        f = open(infile_name, 'w')
         f.write(lines)
         f.close()
 
@@ -73,7 +73,7 @@ class TestCart3d(unittest.TestCase):
             "5. 5. 5. 5. 5.\n"
         )
         infile_name = os.path.join(test_path, 'flat.tri')
-        f = open(infile_name, 'wb')
+        f = open(infile_name, 'w')
         f.write(lines)
         f.close()
 

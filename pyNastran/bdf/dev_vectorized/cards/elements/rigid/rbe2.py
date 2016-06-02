@@ -216,3 +216,6 @@ class RBE2(object):
 
         #card = self.repr_fields()
         #return self.comment + print_card_8(card)
+
+    def __repr__(self):
+        return '<%s object; n=%s>' % (self.type, self.n)

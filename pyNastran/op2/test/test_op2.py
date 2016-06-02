@@ -23,7 +23,7 @@ except ImportError:
 
 import pyNastran
 from pyNastran import is_release
-from pyNastran.op2.op2 import OP2, FatalError, SortCodeError, DeviceCodeError
+from pyNastran.op2.op2 import OP2, FatalError, SortCodeError, DeviceCodeError, FortranMarkerError
 
 try:
     from pyNastran.op2.op2_geom import OP2Geom
@@ -266,7 +266,7 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
         creates a very cryptic developer debug file showing exactly what was parsed
     quiet : bool; default=False
         dunno???
-    stopOnFailure : bool; default=True
+    stop_on_failure : bool; default=True
         is this used???
     """
     op2 = None
@@ -300,6 +300,9 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
     if make_geom:
         op2 = OP2Geom(debug=debug)
         op2_nv = OP2Geom(debug=debug, debug_file=debug_file)
+        op2_bdf = OP2Geom(debug=debug)
+        op2_bdf.set_error_storage(nparse_errors=0, stop_on_parsing_error=True,
+                                  nxref_errors=0, stop_on_xref_error=True)
     else:
         op2 = OP2(debug=debug)
         op2_nv = OP2(debug=debug, debug_file=debug_file) # have to double write this until
@@ -336,7 +339,10 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
 
         if write_bdf:
             op2._nastran_format = 'msc'
+            op2.executive_control_lines = ['CEND\n']
             op2.write_bdf(bdf_filename, size=8)
+            print('bdf_filename = %s' % bdf_filename)
+            op2_bdf.read_bdf(bdf_filename)
             #os.remove(bdf_filename)
         if compare:
             assert op2 == op2_nv
@@ -412,13 +418,18 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
 
     #except RuntimeError: # the op2 is bad, not my fault; comment this
         #is_passed = True
-        #if stopOnFailure:
+        #if stop_on_failure:
             #raise
         #else:
             #is_passed = True
-
-    except IOError: # missing file; this block should be commented
-        #if stopOnFailure:
+    #except RuntimeError:
+        #pass
+    #except ValueError:
+        #pass
+    #except FortranMarkerError:
+        #pass
+    except IOError: # missing file; this block should be uncommented
+        #if stop_on_failure:
             #raise
         if not dev:
             raise
@@ -428,7 +439,7 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
     #except NotImplementedError:  # this block should be commented
         #is_passed = True
     except FatalError:  # this block should be commented
-        #if stopOnFailure:
+        #if stop_on_failure:
             #raise
         if not dev:
             raise
@@ -446,14 +457,14 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
         #sys.exit('stopping on sys.exit')
         raise
     #except NameError:  # variable isnt defined
-    #    if stopOnFailure:
+    #    if stop_on_failure:
     #        raise
     #    else:
     #        is_passed = True
     #except IndexError: # this block should be commented
         #is_passed = True
     #except SyntaxError: #Param Parse; this block should be commented
-        #if stopOnFailure:
+        #if stop_on_failure:
             #raise
         #is_passed = True
     except:

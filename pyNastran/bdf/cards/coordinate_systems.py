@@ -275,6 +275,37 @@ class Coord(BaseCard):
         p3 = np.dot(p2, matrix)
         return p3
 
+    def resolve(self):
+        if not self.isResolved:
+            if isinstance(self.rid, int) and self.rid != 0:
+                raise RuntimeError("BDF has not been cross referenced.")
+            if self.type in ['CORD2R', 'CORD2C', 'CORD2S']:
+                self.rid_ref.setup()
+            else:
+                self.setup()
+
+    def transform_vector_to_global_array(self, p):
+        """
+        Transforms a generalized vector from the local frame to the
+        global frame.
+        """
+        if self.cid == 0:
+            return p
+        self.resolve()
+
+        # the ijk axes arent resolved as R-theta-z, only points
+        p2 = self.coord_to_xyz_array(p)
+
+        if self.i is None:
+            msg = "Local unit vectors haven't been set.\nType=%r cid=%s rid=%s" % (
+                self.type, self.cid, self.rid)
+            raise RuntimeError(msg)
+        matrix = np.vstack([self.i, self.j, self.k])
+
+        # rotate point p2 from the local frame to the global frame
+        p3 = np.dot(p2, matrix)
+        return p3
+
     def transform_node_to_global(self, xyz):
         r"""
         Transforms a point from the local coordinate system to the reference
@@ -306,8 +337,6 @@ class Coord(BaseCard):
         -------
         xyz_global : (1,3) ndarray
             the point in the global frame
-        beta : (6,6) ndarray
-            the rotation matrix
 
         .. warning:: make sure you cross-reference before calling this
         .. warning:: you probably shouldnt call this, call the Node methods
@@ -316,6 +345,11 @@ class Coord(BaseCard):
         if self.cid == 0:
             return xyz
         return self.transform_vector_to_global(xyz) + self.origin
+
+    def _transform_node_to_global_array(self, xyz):
+        if self.cid == 0:
+            return xyz
+        return self.transform_vector_to_global_array(xyz) + self.origin
 
     def _transform_node_to_local(self, xyz, beta):
         """
@@ -328,8 +362,24 @@ class Coord(BaseCard):
         -------
         xyz_local : (1,3) ndarray
             the point in the local frame
-        beta : (6,6) ndarray
-            the rotation matrix
+        """
+        if self.origin is None:
+            raise RuntimeError('Origin=%s; Cid=%s Rid=%s' % (self.origin, self.cid, self.Rid()))
+        xyz_coord = np.dot(xyz - self.origin, np.transpose(beta))
+        xyz_local = self.xyz_to_coord(xyz_coord)
+        return xyz_local
+
+    def _transform_node_to_local_array(self, xyz, beta):
+        """
+        Parameters
+        ----------
+        xyz : (n,3) ndarray
+            the points in the global frame
+
+        Returns
+        -------
+        xyz_local : (1,3) ndarray
+            the point in the local frame
         """
         if self.origin is None:
             raise RuntimeError('Origin=%s; Cid=%s Rid=%s' % (self.origin, self.cid, self.Rid()))
@@ -367,6 +417,13 @@ class Coord(BaseCard):
         beta = self.beta()
         return self._transform_node_to_local(xyz, beta)
 
+    def transform_node_to_local_array(self, xyz):
+        """
+        Transforms the global point p to the local coordinate system
+        """
+        beta = self.beta()
+        return self._transform_node_to_local_array(xyz, beta)
+
     def transform_vector_to_local(self, xyz):
         """
         see transform_node_to_local, but set the origin to <0, 0, 0>
@@ -375,6 +432,20 @@ class Coord(BaseCard):
         xyz_coord = np.dot(xyz, np.transpose(beta))
         xyz_local = self.xyz_to_coord(xyz_coord)
         return xyz_local
+
+    @property
+    def global_to_local(self):
+        r"""
+        Gets the 3 x 3 global to local transform
+        """
+        return self.beta().T
+
+    @property
+    def local_to_global(self):
+        """
+        Gets the 3 x 3 local to global transform
+        """
+        return self.beta()
 
     def beta(self):
         r"""
@@ -1337,13 +1408,12 @@ class Cord1x(Coord):
         msg = ' which is required by %s cid=%s' % (self.type, self.cid)
         #: grid point 1
         self.g1 = model.Node(self.g1, msg=msg)
+        self.g1_ref = self.g1
         #: grid point 2
         self.g2 = model.Node(self.g2, msg=msg)
+        self.g2_ref = self.g2
         #: grid point 3
         self.g3 = model.Node(self.g3, msg=msg)
-
-        self.g1_ref = self.g1
-        self.g2_ref = self.g2
         self.g3_ref = self.g3
 
     def uncross_reference(self):

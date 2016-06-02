@@ -347,6 +347,11 @@ class OUG(OP2Common):
         raise NotImplementedError()
 
     def _read_displacement(self, data, ndata, is_cid):
+        if self.read_mode == 1:
+            if self.isubcase not in self.case_control_deck.subcases:
+                self.subcase = self.case_control_deck.create_new_subcase(self.isubcase)
+            self.subcase.add_op2_data(self.data_code, 'displacement')
+
         if self.table_name in [b'OUG1', b'OUGV1', b'OUGV2', b'OUGV1PAT', b'BOUGV1', b'ROUGV1']:
             assert self.thermal in [0, 1], self.code_information()
             if self.thermal == 0:
@@ -393,10 +398,10 @@ class OUG(OP2Common):
             if self._results.is_not_saved(result_name):
                 return ndata
             self._results._found_result(result_name)
-            n = self._read_table_vectorized(data, ndata, result_name, storage_obj,
-                                            RealTemperatureArray, None,
-                                            'node', random_code=self.random_code,
-                                            is_cid=is_cid)
+            n = self._read_scalar_table_vectorized(data, ndata, result_name, storage_obj,
+                                                   RealTemperatureArray, None,
+                                                   'node', random_code=self.random_code,
+                                                   is_cid=is_cid)
         elif self.thermal == 2:
             result_name = 'displacement_scaled_response_spectra_ABS'
             storage_obj = self.displacement_scaled_response_spectra_ABS
@@ -436,6 +441,10 @@ class OUG(OP2Common):
         """
         table_code = 10
         """
+        if self.read_mode == 1:
+            if self.isubcase not in self.case_control_deck.subcases:
+                self.subcase = self.case_control_deck.create_new_subcase(self.isubcase)
+            self.subcase.add_op2_data(self.data_code, 'velocity')
         if self.table_name in [b'OUGV1', b'OUGV2', b'ROUGV1']:
             result_name = 'velocities'
         elif self.table_name == b'OUPV1':
@@ -471,7 +480,7 @@ class OUG(OP2Common):
                                  #RealThermalVelocityVector, None,
                                  #None, None,
                                  #'node', random_code=self.random_code)
-            n = self._read_table_vectorized(data, ndata, result_name, storage_obj,
+            n = self._read_scalar_table_vectorized(data, ndata, result_name, storage_obj,
                                             RealThermalVelocityVectorArray, None,
                                             'node', random_code=self.random_code)
 
@@ -493,6 +502,11 @@ class OUG(OP2Common):
         """
         table_code = 11
         """
+        if self.read_mode == 1:
+            if self.isubcase not in self.case_control_deck.subcases:
+                self.subcase = self.case_control_deck.create_new_subcase(self.isubcase)
+            self.subcase.add_op2_data(self.data_code, 'acceleration')
+
         if self.table_name in [b'OUGV1', b'OUGV2']:
             result_name = 'accelerations'
             assert self.thermal == 0, self.code_information()
@@ -524,6 +538,7 @@ class OUG(OP2Common):
             if self._results.is_not_saved(result_name):
                 return ndata
             self._results._found_result(result_name)
+            raise NotImplementedError(self.code_information())
             n = self._read_table(data, ndata, result_name, storage_obj,
                                  None, None,
                                  None, None, 'node', random_code=self.random_code)
@@ -555,6 +570,10 @@ class OUG(OP2Common):
         """
         table_code = 7
         """
+        if self.isubcase not in self.case_control_deck.subcases:
+            self.subcase = self.case_control_deck.create_new_subcase(self.isubcase)
+        self.subcase.add_op2_data(self.data_code, 'VECTOR')
+
         if self.table_name in [b'OUGV1', b'OUGV2', b'BOUGV1', b'BOPHIG']:
             result_name = 'eigenvectors'
         elif self.table_name == b'RADCONS':

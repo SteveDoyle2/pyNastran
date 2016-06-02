@@ -11,8 +11,8 @@ from math import ceil, sin, cos, radians
 from numpy import array, zeros, ones
 
 
-from panairGridPatch import PanairPatch, PanairWakePatch, sInt
-#from panairWrite import PanairWrite
+from pyNastran.converters.panair.panairGridPatch import PanairPatch, PanairWakePatch, sInt
+#from pyNastran.converters.panair.panairWrite import PanairWrite
 from pyNastran.utils.log import get_logger
 from pyNastran.utils import print_bad_path
 

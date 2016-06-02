@@ -351,7 +351,11 @@ class PBUSH1D(BushingProperty):
                                        'shockExpVC', shock_exp_vt)
 
         if shock_type == 'TABLE':
-            pass
+            shock_idts = None
+            shock_idets = None
+            shock_idecs = None
+            shock_idetsd = None
+            shock_idecsd = None
             # shock_idts = integer(card, istart + 6, 'shockIDTS')
             # shock_idets = blank(card, istart + 9, 'shockIDETS')
             # shock_idecs = blank(card, istart + 10, 'shockIDECS')
@@ -365,7 +369,6 @@ class PBUSH1D(BushingProperty):
             shock_idetsd = integer(card, istart + 11, 'shockIDETSD')
             shock_idecsd = integer_or_blank(card, istart + 11,
                                             'shockIDECSD', shock_idetsd)
-
             #def DEquation(self):
                 #if isinstance(self.dequation, int):
                     #return self.dequation
@@ -373,11 +376,12 @@ class PBUSH1D(BushingProperty):
         else:
             msg = 'Invalid shockType=%r on card\n%s' % (shock_type, card)
             raise RuntimeError(msg)
-        istart += 8
+
         out = (
             shock_type, shock_cvt, shock_cvc, shock_exp_vt, shock_exp_vc,
             shock_idts, shock_idets, shock_idecs, shock_idetsd, shock_idecsd
         )
+        istart += 8
         return istart, out
 
     @staticmethod

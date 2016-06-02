@@ -528,11 +528,11 @@ class NLPARM(BaseCard):
         nlparm_id = integer(card, 1, 'nlparm_id')
         ninc = integer_or_blank(card, 2, 'ninc', 10)
         dt = double_or_blank(card, 3, 'dt', 0.0)
-        kMethod = string_or_blank(card, 4, 'kMethod', 'AUTO')
+        kmethod = string_or_blank(card, 4, 'kMethod', 'AUTO')
         kStep = integer_or_blank(card, 5, 'kStep', 5)
         maxIter = integer_or_blank(card, 6, 'maxIter', 25)
         conv = string_or_blank(card, 7, 'conv', 'PW')
-        intOut = string_or_blank(card, 8, 'intOut', 'NO')
+        int_out = string_or_blank(card, 8, 'intOut', 'NO')
 
         # line 2
         epsU = double_or_blank(card, 9, 'epsU', 0.01)
@@ -540,7 +540,7 @@ class NLPARM(BaseCard):
         epsW = double_or_blank(card, 11, 'epsW', 0.01)
         maxDiv = integer_or_blank(card, 12, 'maxDiv', 3)
 
-        if kMethod == 'PFNT':
+        if kmethod == 'PFNT':
             maxQn = integer_or_blank(card, 13, 'maxQn', 0)
         else:
             maxQn = integer_or_blank(card, 13, 'maxQn', maxIter)
@@ -554,19 +554,54 @@ class NLPARM(BaseCard):
         maxR = double_or_blank(card, 21, 'maxR', 20.)
         rTolB = double_or_blank(card, 23, 'rTolB', 20.)
         assert len(card) <= 24, 'len(NLPARM card) = %i' % len(card)
-        return NLPARM(nlparm_id, ninc, dt, kMethod, kStep, maxIter, conv,
-                      intOut, epsU, epsP, epsW, maxDiv,
+        return NLPARM(nlparm_id, ninc, dt, kmethod, kStep, maxIter, conv,
+                      int_out, epsU, epsP, epsW, maxDiv,
                       maxQn, maxLs, fStress,
                       lsTol, maxBisect, maxR,
                       rTolB, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
-        (nlparm_id, ninc, dt, kMethod, kStep, maxIter, conv, intOut, epsU, epsP,
+        (nlparm_id, ninc, dt, kmethod, kStep, maxIter, conv, int_out, epsU, epsP,
          epsW, maxDiv, maxQn, maxLs, fStress, lsTol, maxBisect, maxR,
          rTolB) = data
-        return NLPARM(nlparm_id, ninc, dt, kMethod, kStep, maxIter, conv,
-                      intOut, epsU, epsP, epsW, maxDiv,
+
+        if kmethod == 1:
+            kmethod = 'AUTO'
+        elif kmethod == 2:
+            kmethod = 'ITER'
+        elif kmethod == 4:
+            kmethod = 'SEMI'
+        else:
+            raise NotImplementedError('nlparm_id=%s kmethod=%r data=%s' % (nlparm_id, kmethod, data))
+
+        if conv == 1:
+            conv = 'W'
+        elif conv == 2:
+            conv = 'P'
+        elif conv == 3:
+            conv = 'PW'
+        elif conv == 4:
+            conv = 'U'
+        elif conv == 5:
+            conv = 'UW'
+        elif conv == 6:
+            conv = 'UP'
+        elif conv == 7:
+            conv = 'UPW'
+        else:
+            raise NotImplementedError('nlparm_id=%s conv=%r data=%s' % (nlparm_id, conv, data))
+
+        if int_out == 0:
+            int_out = 'NO'
+        elif int_out == 1:
+            int_out = 'YES'
+        elif int_out == 2:
+            int_out = 'ALL'
+        else:
+            raise NotImplementedError('nlparm_id=%s int_out=%r data=%s' % (nlparm_id, int_out, data))
+        return NLPARM(nlparm_id, ninc, dt, kmethod, kStep, maxIter, conv,
+                      int_out, epsU, epsP, epsW, maxDiv,
                       maxQn, maxLs, fStress,
                       lsTol, maxBisect, maxR,
                       rTolB, comment=comment)
@@ -885,6 +920,22 @@ class TSTEPNL(BaseCard):
         (sid, ndt, dt, no, method, kstep, max_iter, conv, eps_u, eps_p, eps_w,
          max_div, max_qn, max_ls, fstress, max_bisect,
          adjust, mstep, rb, max_r, utol, rtol_b) = data
+
+        if method == 1:
+            method = 'AUTO'
+        elif method == 3:
+            method = 'ADAPT'
+        else:
+            raise NotImplementedError('tstepnl=%s method=%r data=%s' % (sid, method, data))
+
+        if conv == 3:
+            conv = 'PW'
+        elif conv == 4:
+            conv = 'U'
+        #elif conv == 3:
+            #conv = 'ADAPT'
+        else:
+            raise NotImplementedError('tstepnl=%s conv=%r data=%s' % (sid, conv, data))
 
         min_iter = None  # not listed in DMAP 2005
         return TSTEPNL(

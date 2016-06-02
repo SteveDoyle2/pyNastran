@@ -1,5 +1,7 @@
 from pyNastran.bdf.field_writer_8 import print_card_8
-from pyNastran.bdf.cards.base_card import expand_thru, collapse_thru
+from pyNastran.bdf.cards.base_card import expand_thru
+from pyNastran.bdf.cards.collpase_card import collapse_thru
+
 from pyNastran.bdf.bdf_interface.assign_type import integer_or_string
 
 class SPOINT(object):

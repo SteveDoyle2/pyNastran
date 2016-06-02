@@ -1,16 +1,22 @@
 from __future__ import print_function
-import glob
+#import glob
 import os
-from six import iteritems
 from collections import defaultdict
-from numpy import where, unique, array, zeros, searchsorted, log10, array_equal
+
+from six import iteritems
+import numpy as np
+#from numpy import where, unique, array, zeros, searchsorted, log10, array_equal
 
 from pyNastran.bdf.bdf import BDF
-from pyNastran.op2.op2 import OP2, FatalError
-from pyNastran.applications.aero_panel_buckling.run_patch_buckling_helper import load_sym_regions_map
+from pyNastran.op2.op2 import OP2, read_op2, FatalError
+from pyNastran.applications.aero_panel_buckling.run_patch_buckling_helper import (
+    load_sym_regions_map)
 
 
 def load_regions(regions_filename):
+    """
+    Loads a regions.csv file
+    """
     with open(regions_filename, 'r') as regions_file:
         lines = regions_file.readlines()
 
@@ -27,66 +33,146 @@ def load_regions(regions_filename):
     return regions_to_pid_map, regions_to_eids_map
 
 
-def load_regions_and_create_eigenvalue_csv(bdf_filename, op2_filenames, regions_filename, sym_regions_filename=None):
+def load_regions_and_create_eigenvalue_csv(bdf_model, op2_filenames,
+                                           regions_filename, sym_regions_filename=None,
+                                           eig_min=-1.0, eig_max=1.0, eig_default=3.0):
+    """
+    loads a BDF and a series of OP2 filenames and creates an eigenvalue buckling plot
+
+    Parameters
+    ----------
+    eig_min : float
+        the required minimum eigenvalue
+    eig_max : float
+        the required maximum eigenvalue
+    eig_default : float
+        the default eigenvalue for cases that do not calculate eigenvectors
+        because there were no eigenvalues in the range
+    regions_filename : str
+        path to regions.txt file
+    sym_regions_filename : str; default=None -> No symmetry
+        path to sym_regions.txt file
+
+    Returns
+    -------
+    min_eigenvalue_by_patch_id : dict
+        key : patch_id : int
+            the integer patch id
+        value : eigenvalue or reserve factor
+           the reserve factor eigenvalue for buckling
+    eigenvalues : (n, ) float ndarray
+        the minimum eigenvalues
+
+    Creates
+    -------
+    eigenvalues_output.csv : file
+        csv of log10(eigenvalue), eigenvalue, is_buckled
+    """
+    bdf_model.log.info('load_regions_and_create_eigenvalue_csv')
     #patch_numbers = []
     #evals = []
+    assert isinstance(bdf_model, BDF), type(bdf_model)
 
     min_eigenvalue_by_patch_id = {}
     is_sym_regions = False
     if sym_regions_filename is not None:
         is_sym_regions = True
-        region_to_symregion_map, symregion_to_region_map = load_sym_regions_map(sym_regions_filename)
+        region_to_symregion_map, symregion_to_region_map = load_sym_regions_map(
+            sym_regions_filename)
     msg = ''
+
+    assert len(op2_filenames) > 0, 'op2_filenames=%s' % op2_filenames
+    print('eig_min=%s eig_max=%s' % (eig_min, eig_max))
     for op2_filename in op2_filenames:
+        bdf_model.log.info('op2_filename = %r' % op2_filename)
         if not os.path.exists(op2_filename):
             print(op2_filename)
             continue
         patch_id_str = op2_filename.split('_')[1].split('.')[0]
         patch_id = int(patch_id_str)
 
-        # = pf.split('_')[1].split('.')[0]
-        #patch_numbers.append(patch_id)
-        #model = BDF()
-        #model.read_bdf(pf)
-        # eids = model.elements.keys()
-        model2 = OP2(debug=False)
-        #op2_path = '%s_.op2' % patch_id)
-        try:
-            model2.read_op2(op2_filename)
-        except FatalError:
-            #os.remove(op2_filename)
-            msg += '%s\n' % op2_filename
-            continue
-        cases = model2.eigenvectors.keys()
-        isubcase = cases[0]
-        d = model2.eigenvectors[isubcase]
-        eigrs = array(d.eigrs)
-        #print('eigrs =', eigrs, type(eigrs))
-
-        i = where(eigrs > 0.0)[0]
-        if len(i) == 0:
-            min_eigenvalue = 0.  # TODO: no buckling eigenvalue...wat?
-        else:
-            min_eigenvalue = log10(eigrs[i].min())
-
-        #evals.append(min_eval)
-        print('Patch:', patch_id, 'Min eigenvalue: ', min_eigenvalue)
-        min_eigenvalue_by_patch_id[patch_id] = min_eigenvalue
+        sym_patch_id = None
         if is_sym_regions:
             if patch_id in symregion_to_region_map:
                 sym_patch_id = symregion_to_region_map[patch_id]
             elif patch_id in region_to_symregion_map:
                 sym_patch_id = region_to_symregion_map[patch_id]
             else:
-                asdf
-            min_eigenvalue_by_patch_id[sym_patch_id] = min_eigenvalue
+                raise RuntimeError("can this happen???")
+
+        # = pf.split('_')[1].split('.')[0]
+        #patch_numbers.append(patch_id)
+        #model = BDF()
+        #model.read_bdf(pf)
+        # eids = model.elements.keys()
+        #op2_path = '%s_.op2' % patch_id)
+        try:
+            model2 = read_op2(op2_filename, combine=True, log=None,
+                              debug=False, mode='msc')
+        except FatalError:
+            #os.remove(op2_filename)
+            print('fatal on %r' % op2_filename)
+            msg += '%s\n' % op2_filename
+            continue
+        cases = model2.eigenvectors.keys()
+        if len(cases) == 0:
+            #assert is_sym_regions == False, is_sym_regions
+            min_eigenvalue_by_patch_id[patch_id] = eig_default
+            min_eigenvalue_by_patch_id[sym_patch_id] = eig_default
+            continue
+
+        isubcase = cases[0]
+        eigenvector = model2.eigenvectors[isubcase]
+        eigrs = np.array(eigenvector.eigrs)
+        #cycles = (eigrs * 2 * np.pi) ** 2.
+        #print('eigrs =', eigrs)
+
+        #----------------------------------
+        # calculate what's basically a reserve factor (RF); margin = reserve_factor - 1
+        # take the minimum of the "tension"/"compression" RFs, which are
+        # compared to different allowables
+
+        # lambda > 0
+        i = np.where(eigrs >= 0.0)[0]
+        if len(i) == 0:
+            pos_eigenvalue = eig_default  # TODO: no buckling eigenvalue...wat?
+            pos_reserve_factor = eig_default
+        else:
+            pos_eigenvalue = eigrs[i].min()
+            pos_reserve_factor = pos_eigenvalue / eig_max
+            #max_eigenvalue = np.log10(eigi)
+
+        # lambda < 0
+        if 0:
+            j = np.where(eigrs < 0.0)[0]
+            if len(j) == 0:
+                neg_eigenvalue = eig_default  # TODO: no buckling eigenvalue...wat?
+                neg_reserve_factor = eig_default
+            else:
+                neg_eigenvalue = np.abs(eigrs[j]).min()
+                neg_reserve_factor = neg_eigenvalue / abs(eig_min)
+                #min_eigenvalue = np.log10(eigi)
+        else:
+            neg_reserve_factor = 10.
+            neg_eigenvalue = 10.
+
+        #evals.append(min_eval)
+        bdf_model.log.info('Patch=%s  compression (lambda > 0); lambda=%.3f RF=%.3f' % (patch_id, pos_eigenvalue, pos_reserve_factor))
+        #bdf_model.log.info('Patch=%s  tension    (lambda < 0); lambda=%.3f RF=%.3f' % (patch_id, neg_eigenvalue, neg_reserve_factor))
+        reserve_factor = min(neg_reserve_factor, pos_reserve_factor, eig_default)
+        assert reserve_factor > 0.
+        min_eigenvalue_by_patch_id[patch_id] = reserve_factor
+        if is_sym_regions:
+            min_eigenvalue_by_patch_id[sym_patch_id] = reserve_factor
     print(msg)
-    model = BDF()
-    model.read_bdf(bdf_filename)
-    all_eids = unique(model.elements.keys())
+
+    bdf_model.log.info('finished parsing eigenvalues...')
+    #model = BDF()
+    #model.read_bdf(bdf_filename)
+    all_eids = np.unique(bdf_model.elements.keys())
     neids = len(all_eids)
 
-    eigenvalues = zeros(neids, dtype='float32')
+    eigenvalues = np.zeros(neids, dtype='float32')
     with open(regions_filename, 'r') as regions_file:
         lines = regions_file.readlines()
 
@@ -97,10 +183,11 @@ def load_regions_and_create_eigenvalue_csv(bdf_filename, op2_filenames, regions_
             pid = values[0]
             regions_patch_id = values[1]
             eids = values[2:]
-            i  = searchsorted(all_eids, eids) # [0] ???
-            assert array_equal(all_eids[i], eids), 'iline=%s pid=%s patch_id=%s' % (iline, pid, regions_patch_id)
+            i = np.searchsorted(all_eids, eids) # [0] ???
+            assert np.array_equal(all_eids[i], eids), 'iline=%s pid=%s patch_id=%s' % (
+                iline, pid, regions_patch_id)
             if regions_patch_id not in min_eigenvalue_by_patch_id:
-                print('missing pid=%s' % pid)
+                bdf_model.log.info('missing pid=%s' % pid)
                 continue
             #patch_id[i] = panel_id
             eigenvalues[i] = min_eigenvalue_by_patch_id[regions_patch_id]
@@ -108,33 +195,39 @@ def load_regions_and_create_eigenvalue_csv(bdf_filename, op2_filenames, regions_
     eigenvalue_filename = 'eigenvalues_output.csv'
     with open(eigenvalue_filename, 'w') as eigenvalue_file:
         eigenvalue_file.write('# log(Eigenvalue), eigenvalue, is_buckled\n')
-        for log10_eig in eigenvalues:
-            if log10_eig < 0:
-                is_buckled = 1.
+        for eig in eigenvalues:
+            eig = max(eig, 0.000001)
+            if eig < 1.0:
+                is_buckled = 1.0
             else:
-                is_buckled = 0
-            eig = 10 ** log10_eig
-            eig = min([eig, 1.1])
+                is_buckled = 0.0
+            log10_eig = np.log10(eig)
             eigenvalue_file.write('%f, %f, %i\n' % (log10_eig, eig, is_buckled))
+    return min_eigenvalue_by_patch_id, eigenvalues
 
 
-def split_model_by_pid_panel(workpath='results'):
-    patch_filenames = glob.glob('%s/patches/patch_*.bdf' % workpath)
-
+def split_model_by_pid_panel(patch_filenames, workpath='results'):
+    """
+    creates a list of element ids for each patch
+    """
     pid_panel = defaultdict(list)
     for patch_filename in patch_filenames:
-        #print(patch_filename)
         basename = os.path.basename(patch_filename)
-        sline = basename.split('.')[0].split('_')[1]
+        try:
+            sline = basename.split('.')[0].split('_')[1]
+        except:
+            print('patch_filename=%r' % patch_filename)
+            print('basename=%r' % basename)
+            raise
         #print('sline', sline)
         ipanel = int(sline)
         #print('ipanel = %s' % ipanel)
 
-        model = BDF()
-        model.read_bdf(patch_filename, xref=False)
+        bdf_model = BDF()
+        bdf_model.read_bdf(patch_filename, xref=False)
 
         eids = defaultdict(list)
-        for eid, elem in iteritems(model.elements):
+        for eid, elem in iteritems(bdf_model.elements):
             pid = elem.pid
             key = (pid, ipanel)
             pid_panel[key].append(eid)
@@ -162,8 +255,7 @@ def split_model_by_pid_panel(workpath='results'):
             regions_file.write('%s\n' % out[1:-1])
             nregions += 1
     assert nregions > 0, nregions
-    # done
-
+    return regions_filename
 
 
 def main():
@@ -197,8 +289,12 @@ def main():
     workpath = 'results'
     #split_model_by_pid_panel(workpath)
 
+    bdf_filename = 'model_144.bdf'
+    op2_filenames = [os.path.join(workpath, op2_filename)
+                     for op2_filename in ['patch_1.op2', 'patch_2.op2']]
     sym_regions_filename = 'sym_regions_map.csv'
-    load_regions_and_create_eigenvalue_csv(bdf_filename, op2_filenames, 'regions.txt', sym_regions_filename=sym_regions_filename)
+    load_regions_and_create_eigenvalue_csv(bdf_filename, op2_filenames,
+                                           'regions.txt', sym_regions_filename=sym_regions_filename)
 
 if __name__ == '__main__':
     main()

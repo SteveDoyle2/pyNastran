@@ -57,7 +57,7 @@ def get_all_files(folders_file, file_type):
     return files2
 
 
-def main(regenerate=True, make_geom=False, write_bdf=False):
+def main(regenerate=True, make_geom=False, write_bdf=False, save_cases=True):
     # works
     files = get_files_of_type('tests', '.op2')
 
@@ -73,7 +73,6 @@ def main(regenerate=True, make_geom=False, write_bdf=False):
     quiet = True
 
     delete_f06 = True
-    save_cases = True
     stop_on_failure = False
     get_skip_cards = False
 
@@ -119,7 +118,7 @@ if __name__ == '__main__':
 
     msg = "Usage:\n"
     is_release = False
-    msg += "op2_test [-r] [-c] [-u] [-t] [-g] [-n]\n"
+    msg += "op2_test [-r] [-s] [-c] [-u] [-t] [-g] [-n]\n"
     msg += "  op2_test -h | --help\n"
     msg += "  op2_test -v | --version\n"
     msg += "\n"
@@ -133,7 +132,8 @@ if __name__ == '__main__':
     msg += "  -c, --disablecompare  Doesn't do a validation of the vectorized result\n"
     msg += "  -t, --short_stats     Short get_op2_stats printout\n"
     msg += "  -g, --geometry        Reads the OP2 for geometry, which can be written out\n"
-    msg += "  -n, --write_bdf      Writes the bdf to fem.test_op2.bdf (default=False)\n" # n is for NAS
+    msg += "  -n, --write_bdf       Writes the bdf to fem.test_op2.bdf (default=False)\n" # n is for NAS
+    msg += "  -s, --save_cases      Disables saving of the cases (default=False)\n"
     #msg += "  -z, --is_mag_phase    F06 Writer writes Magnitude/Phase instead of\n"
     #msg += "                        Real/Imaginary (still stores Real/Imag); [default: False]\n"
     #msg += "  -s <sub>, --subcase   Specify one or more subcases to parse; (e.g. 2_5)\n"
@@ -144,4 +144,5 @@ if __name__ == '__main__':
     regenerate = data['--regenerate']
     make_geom = data['--geometry']
     write_bdf = data['--write_bdf']
-    main(regenerate=regenerate, make_geom=make_geom, write_bdf=write_bdf)
+    save_cases = not data['--save_cases']
+    main(regenerate=regenerate, make_geom=make_geom, write_bdf=write_bdf, save_cases=save_cases)

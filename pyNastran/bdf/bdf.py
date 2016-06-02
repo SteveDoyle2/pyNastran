@@ -30,13 +30,13 @@ from pyNastran.bdf.cards.utils import wipe_empty_fields
 from pyNastran.utils import _filename
 from pyNastran.utils.log import get_logger2
 
+from pyNastran.bdf.write_path import write_include
 from pyNastran.bdf.bdf_interface.assign_type import (integer,
                                                      integer_or_string, string)
 
 from pyNastran.bdf.cards.elements.elements import CFAST, CGAP, CRAC2D, CRAC3D, PLOTEL
-from pyNastran.bdf.cards.properties.properties import (PFAST, PGAP, PLSOLID, PSOLID,
-                                                       PRAC2D, PRAC3D, PCONEAX, PIHEX,
-                                                       PCOMPS)
+from pyNastran.bdf.cards.properties.properties import PFAST, PGAP, PRAC2D, PRAC3D, PCONEAX
+from pyNastran.bdf.cards.properties.solid import PLSOLID, PSOLID, PIHEX, PCOMPS
 
 from pyNastran.bdf.cards.elements.springs import (CELAS1, CELAS2, CELAS3, CELAS4,)
 from pyNastran.bdf.cards.properties.springs import PELAS, PELAST
@@ -178,7 +178,7 @@ def read_bdf(bdf_filename=None,
     .. todo:: finish this
     """
     model = BDF(log=log, debug=debug, mode=mode)
-    model.read_bdf(bdf_filename=bdf_filename, xref=xref, punch=punch, encoding=encoding)
+    model.read_bdf(bdf_filename=bdf_filename, xref=xref, punch=punch, read_includes=True, encoding=encoding)
 
     #if 0:
         ### TODO: remove all the extra methods
@@ -259,6 +259,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         """
         assert debug in [True, False, None], 'debug=%r' % debug
         self.echo = False
+        self.read_includes = True
 
         # file management parameters
         self.active_filenames = []
@@ -621,6 +622,37 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         self.case_control_deck = CaseControlDeck(self.case_control_lines, log=self.log)
         self.log.debug('done loading!')
 
+    def replace_cards(self, replace_model):
+        """
+        Replaces the common cards from the current (self) model from the
+        ones in the new replace_model.  The intention is that you're
+        going to replace things like PSHELLs and DESVARs from a pch file
+        in order to update your BDF with the optimized geometry.
+
+        .. todo:: only does a subset of cards.
+        .. note:: loads/spcs (not supported) are tricky because you
+                  can't replace cards one-to-one...not sure what to do
+        """
+        for nid, node in iteritems(replace_model.nodes):
+            self.nodes[nid] = node
+        for eid, elem in iteritems(replace_model.elements):
+            self.elements[eid] = elem
+        for eid, elem in iteritems(replace_model.rigid_elements):
+            self.rigid_elements[eid] = elem
+        for pid, prop in iteritems(replace_model.properties):
+            self.properties[pid] = prop
+        for mid, mat in iteritems(replace_model.materials):
+            self.materials[mid] = mat
+
+        for dvid, desvar in iteritems(replace_model.desvars):
+            self.desvars[dvid] = desvar
+        for dvid, dvprel in iteritems(replace_model.dvprels):
+            self.dvprels[dvid] = dvprel
+        for dvid, dvmrel in iteritems(replace_model.dvmrels):
+            self.dvmrels[dvid] = dvmrel
+        for dvid, dvcrel in iteritems(replace_model.dvcrels):
+            self.dvcrels[dvid] = dvcrel
+
     def disable_cards(self, cards):
         """
         Method for removing broken cards from the reader
@@ -669,7 +701,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         self._stop_on_xref_error = stop_on_xref_error
 
     def read_bdf(self, bdf_filename=None,
-                 xref=True, punch=False, encoding=None):
+                 xref=True, punch=False, read_includes=True, encoding=None):
         """
         Read method for the bdf files
 
@@ -681,6 +713,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             should the bdf be cross referenced (default=True)
         punch : bool
             indicates whether the file is a punch file (default=False)
+        read_includes : bool
+            indicates whether INCLUDE files should be read (default=True)
         encoding : str
             the unicode encoding (default=None; system default)
 
@@ -700,11 +734,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             bdf.elements = 10
             etc.
         """
-        self._read_bdf_helper(bdf_filename, encoding, punch)
+        self._read_bdf_helper(bdf_filename, encoding, punch, read_includes)
 
-
-        if bdf_filename.lower().endswith('.pch'):  # .. todo:: should this be removed???
-            self.punch = True
         self._parse_primary_file_header(bdf_filename)
 
         self.log.debug('---starting BDF.read_bdf of %s---' % self.bdf_filename)
@@ -746,7 +777,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         self.log.debug('---finished BDF.read_bdf of %s---' % self.bdf_filename)
         self.pop_xref_errors()
 
-    def _read_bdf_helper(self, bdf_filename, encoding, punch):
+    def _read_bdf_helper(self, bdf_filename, encoding, punch, read_includes):
         """creates the file loading if bdf_filename is None"""
         #self.set_error_storage(nparse_errors=None, stop_on_parsing_error=True,
         #                       nxref_errors=None, stop_on_xref_error=True)
@@ -766,11 +797,16 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         if not os.path.exists(bdf_filename):
             msg = 'cannot find bdf_filename=%r\n%s' % (bdf_filename, print_bad_path(bdf_filename))
             raise IOError(msg)
+        if bdf_filename.lower().endswith('.pch'):  # .. todo:: should this be removed???
+            punch = True
 
         #: the active filename (string)
         self.bdf_filename = bdf_filename
 
+        #: is this a punch file (no executive control deck)
         self.punch = punch
+        self.read_includes = read_includes
+        self.active_filenames = []
 
     def fill_dmigs(self):
         """fills the DMIx cards with the column data that's been stored"""
@@ -1203,6 +1239,19 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         """
         Creates a BDFCard object, which is really just a list that
         allows indexing past the last field
+
+        Parameters
+        ----------
+        card_lines: list[str]
+            the list of the card fields
+            input is list of card_lines -> ['GRID, 1, 2, 3.0, 4.0, 5.0']
+        card_name : str
+            the card_name -> 'GRID'
+        is_list : bool; default=True
+            True : this is a list of fields
+            False : this is a list of lines
+        has_none : bool; default=True
+            can there be trailing Nones in the card data (e.g. ['GRID, 1, 2, 3.0, 4.0, 5.0, '])
         """
         card_name = card_name.upper()
         self._increase_card_count(card_name)
@@ -1682,9 +1731,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
     def _prepare_cdamp4(self, card, card_obj, comment=''):
         """adds a CDAMP4"""
-        self.add_damper(CDAMP4(card_obj, comment=comment))
+        self.add_damper(CDAMP4.add_card(card_obj, comment=comment))
         if card_obj.field(5):
-            self.add_damper(CDAMP4(card_obj, 1, comment=''))
+            self.add_damper(CDAMP4.add_card(card_obj, 1, comment=''))
         return card_obj
 
     def _prepare_convm(self, card, card_obj, comment=''):
@@ -1713,9 +1762,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         if card_obj.field(3):
             self.add_TEMPD(TEMPD.add_card(card_obj, 1, comment=''))
             if card_obj.field(5):
-                self.add_TEMPD(TEMPD.add_card(card_obj, 3, comment=''))
+                self.add_TEMPD(TEMPD.add_card(card_obj, 2, comment=''))
                 if card_obj.field(7):
-                    self.add_TEMPD(TEMPD.add_card(card_obj, 4, comment=''))
+                    self.add_TEMPD(TEMPD.add_card(card_obj, 3, comment=''))
 
     def _add_doptprm(self, doptprm, comment=''):
         """adds a DOPTPRM"""
@@ -1724,7 +1773,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
     def _prepare_dequatn(self, card, card_obj, comment=''):
         """adds a DEQATN"""
         if hasattr(self, 'test_deqatn') or 1:
-            self.add_DEQATN(DEQATN(card_obj, comment=comment))
+            self.add_DEQATN(DEQATN.add_card(card_obj, comment=comment))
         else:
             if comment:
                 self.rejects.append([comment])
@@ -1872,6 +1921,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         is_list : bool, optional
             False : input is a list of card fields -> ['GRID', 1, None, 3.0, 4.0, 5.0]
             True :  input is list of card_lines -> ['GRID, 1,, 3.0, 4.0, 5.0']
+        has_none : bool; default=True
+            can there be trailing Nones in the card data (e.g. ['GRID', 1, 2, 3.0, 4.0, 5.0, None])
+            can there be trailing Nones in the card data (e.g. ['GRID, 1, 2, 3.0, 4.0, 5.0, '])
 
         Returns
         -------
@@ -1939,6 +1991,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             the card_name -> 'GRID'
         comment : str
             an optional the comment for the card
+        has_none : bool; default=True
+            can there be trailing Nones in the card data (e.g. ['GRID', 1, 2, 3.0, 4.0, 5.0, None])
 
         Returns
         -------
@@ -1948,7 +2002,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         card_name = card_name.upper()
         card_obj, card = self.create_card_object(card_lines, card_name,
                                                  is_list=True, has_none=has_none)
-        self._add_card_helper(card_obj, card_name, card_name, comment)
+        self._add_card_helper(card_obj, card, card_name, comment)
 
     def add_card_lines(self, card_lines, card_name, comment='', has_none=True):
         """
@@ -1961,13 +2015,10 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             input is list of card_lines -> ['GRID, 1, 2, 3.0, 4.0, 5.0']
         card_name : str
             the card_name -> 'GRID'
-        comment : str
+        comment : str; default=''
             an optional the comment for the card
-
-        Returns
-        -------
-        card_object : BDFCard()
-            the card object representation of card
+        has_none : bool; default=True
+            can there be trailing Nones in the card data (e.g. ['GRID, 1, 2, 3.0, 4.0, 5.0, '])
         """
         card_name = card_name.upper()
         card_obj, card = self.create_card_object(card_lines, card_name,
@@ -1978,30 +2029,57 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         """
         Gets the xyz points (including SPOINTS) in the desired coordinate frame
 
-        .. warning:: Only suppoprt cid=0
+        Parameters
+        ----------
+        cid : int; default=0
+            the desired coordinate system
+        dtype : str; default='float32'
+            the data type of the xyz coordinates
+
+        Returns
+        -------
+        xyz : (n, 3) ndarray
+            the xyz points in the cid coordinate frame
+
+        .. warning:: doesn't support EPOINTs
         """
-        assert cid == 0, cid
         nnodes = len(self.nodes)
         nspoints = 0
         spoints = None
         if self.spoints:
             spoints = self.spoints.points
             nspoints = len(spoints)
+        if self.epoints is not None:
+            raise NotImplementedError('EPOINTs')
 
         assert nnodes + nspoints > 0, 'nnodes=%s nspoints=%s' % (nnodes, nspoints)
         xyz_cid0 = np.zeros((nnodes + nspoints, 3), dtype=dtype)
-        if nspoints:
-            nids = self.nodes.keys()
-            newpoints = nids + list(spoints)
-            newpoints.sort()
-            for i, nid in enumerate(newpoints):
-                if nid not in spoints:
-                    node = self.nodes[nid]
-                    xyz_cid0[i, :] = node.get_position()
+        if cid == 0:
+            if nspoints:
+                nids = self.nodes.keys()
+                newpoints = nids + list(spoints)
+                newpoints.sort()
+                for i, nid in enumerate(newpoints):
+                    if nid not in spoints:
+                        node = self.nodes[nid]
+                        xyz_cid0[i, :] = node.get_position()
+            else:
+                for i, (nid, node) in enumerate(sorted(iteritems(self.nodes))):
+                    xyz = node.get_position()
+                    xyz_cid0[i, :] = xyz
         else:
-            for i, (nid, node) in enumerate(sorted(iteritems(self.nodes))):
-                xyz = node.get_position()
-                xyz_cid0[i, :] = xyz
+            if nspoints:
+                nids = self.nodes.keys()
+                newpoints = nids + list(spoints)
+                newpoints.sort()
+                for i, nid in enumerate(newpoints):
+                    if nid not in spoints:
+                        node = self.nodes[nid]
+                        xyz_cid0[i, :] = node.get_position_wrt(model, cid)
+            else:
+                for i, (nid, node) in enumerate(sorted(iteritems(self.nodes))):
+                    xyz = node.get_position_wrt(model, cid)
+                    xyz_cid0[i, :] = xyz
         return xyz_cid0
 
     def _add_card_helper(self, card_obj, card, card_name, comment=''):
@@ -2012,8 +2090,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         ----------
         card_object : BDFCard()
             the card object representation of card
-        card : ???
-            ???
+        card : List[str]
+            the fields of the card object; used for rejection and special cards
         card_name : str
             the card_name -> 'GRID'
         comment : str
@@ -2497,35 +2575,39 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                     #include_lines = [line] + lines[i+1:j]
                 #print(include_lines)
                 bdf_filename2 = get_include_filename(include_lines, include_dir=self.include_dir)
+                if self.read_includes:
+                    try:
+                        self._open_file_checks(bdf_filename2)
+                    except IOError:
+                        crash_name = 'pyNastran_crash.bdf'
+                        self._dump_file(crash_name, lines, j)
+                        msg = 'There was an invalid filename found while parsing.\n'
+                        msg += 'Check the end of %r\n' % crash_name
+                        msg += 'bdf_filename2 = %r' % bdf_filename2
+                        #msg += 'len(bdf_filename2) = %s' % len(bdf_filename2)
+                        raise IOError(msg)
 
-                try:
-                    self._open_file_checks(bdf_filename2)
-                except IOError:
-                    crash_name = 'pyNastran_crash.bdf'
-                    self._dump_file(crash_name, lines, j)
-                    msg = 'There was an invalid filename found while parsing.\n'
-                    msg += 'Check the end of %r\n' % crash_name
-                    msg += 'bdf_filename2 = %r' % bdf_filename2
-                    #msg += 'len(bdf_filename2) = %s' % len(bdf_filename2)
-                    raise IOError(msg)
+                    with self._open_file(bdf_filename2, basename=False) as bdf_file:
+                        #print('bdf_file.name = %s' % bdf_file.name)
+                        lines2 = bdf_file.readlines()
 
-                with self._open_file(bdf_filename2, basename=False) as bdf_file:
-                    #print('bdf_file.name = %s' % bdf_file.name)
-                    lines2 = bdf_file.readlines()
+                    #print('lines2 = %s' % lines2)
+                    nlines += len(lines2)
 
-                #print('lines2 = %s' % lines2)
-                nlines += len(lines2)
+                    #line2 = lines[j].split('$')
+                    #if not line2[0].isalpha():
+                        #print('** %s' % line2)
 
-                #line2 = lines[j].split('$')
-                #if not line2[0].isalpha():
-                    #print('** %s' % line2)
-
-                include_comment = '\n$ INCLUDE processed:  %s\n' % bdf_filename2
-                #for line in lines2:
-                    #print("  ?%s" % line.rstrip())
-                lines = lines[:i] + [include_comment] + lines2 + lines[j:]
-                #for line in lines:
-                    #print("  *%s" % line.rstrip())
+                    include_comment = '\n$ INCLUDE processed:  %s\n' % bdf_filename2
+                    #for line in lines2:
+                        #print("  ?%s" % line.rstrip())
+                    lines = lines[:i] + [include_comment] + lines2 + lines[j:]
+                    #for line in lines:
+                        #print("  *%s" % line.rstrip())
+                else:
+                    lines = lines[:i] + lines[j:]
+                    self.reject_lines.append(include_lines)
+                    #self.reject_lines.append(write_include(bdf_filename2))
             i += 1
 
         if self.dumplines:

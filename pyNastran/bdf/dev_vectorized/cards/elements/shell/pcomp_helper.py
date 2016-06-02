@@ -14,6 +14,7 @@ class BaseCard(object):
     def __init__(self):
         pass
 
+    @property
     def comment(self):
         if hasattr(self, '_comment'):
             return '%s' % self._comment

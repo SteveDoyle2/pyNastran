@@ -153,10 +153,10 @@ class SolidElement(Element):
         Returns the density
         """
         try:
-            return self.pid_ref.mid_ref.rho
+            return self.pid_ref.Rho()
         except AttributeError:
             print("self.pid = %s" % (self.pid))
-            print("self.pid_ref.mid_ref = %s" % (str(self.pid_ref.mid_ref)))
+            #print("self.pid_ref.mid_ref = %s" % (str(self.pid_ref.mid_ref)))
             raise
 
     def _is_same_card(self, elem, debug=False):
@@ -313,8 +313,8 @@ class CHEXA8(SolidElement):
         """
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
         self.nodes = model.Nodes(self.nodes, allow_empty_nodes=False, msg=msg)
-        self.pid = model.Property(self.pid, msg=msg)
         self.nodes_ref = self.nodes
+        self.pid = model.Property(self.pid, msg=msg)
         self.pid_ref = self.pid
 
     def _verify(self, xref=False):
@@ -515,8 +515,8 @@ class CHEXA20(SolidElement):
         """
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
         self.nodes = model.Nodes(self.nodes, allow_empty_nodes=True, msg=msg)
-        self.pid = model.Property(self.pid, msg=msg)
         self.nodes_ref = self.nodes
+        self.pid = model.Property(self.pid, msg=msg)
         self.pid_ref = self.pid
 
     def get_edge_ids(self):
@@ -684,8 +684,8 @@ class CPENTA6(SolidElement):
         """
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
         self.nodes = model.Nodes(self.nodes, allow_empty_nodes=False, msg=msg)
-        self.pid = model.Property(self.pid, msg=msg)
         self.nodes_ref = self.nodes
+        self.pid = model.Property(self.pid, msg=msg)
         self.pid_ref = self.pid
 
     def get_edge_ids(self):
@@ -1023,8 +1023,8 @@ class CPENTA15(SolidElement):
         """
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
         self.nodes = model.Nodes(self.nodes, allow_empty_nodes=True, msg=msg)
-        self.pid = model.Property(self.pid, msg=msg)
         self.nodes_ref = self.nodes
+        self.pid = model.Property(self.pid, msg=msg)
         self.pid_ref = self.pid
 
     def get_face(self, nid, nid_opposite):
@@ -1168,8 +1168,8 @@ class CPYRAM5(SolidElement):
         """
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
         self.nodes = model.Nodes(self.nodes, allow_empty_nodes=True, msg=msg)
-        self.pid = model.Property(self.pid, msg=msg)
         self.nodes_ref = self.nodes
+        self.pid = model.Property(self.pid, msg=msg)
         self.pid_ref = self.pid
 
     def get_edge_ids(self):
@@ -1314,8 +1314,8 @@ class CPYRAM13(SolidElement):
         """
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
         self.nodes = model.Nodes(self.nodes, allow_empty_nodes=True, msg=msg)
-        self.pid = model.Property(self.pid, msg=msg)
         self.nodes_ref = self.nodes
+        self.pid = model.Property(self.pid, msg=msg)
         self.pid_ref = self.pid
 
     def get_edge_ids(self):
@@ -1447,8 +1447,8 @@ class CTETRA4(SolidElement):
         """
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
         self.nodes = model.Nodes(self.nodes, allow_empty_nodes=False, msg=msg)
-        self.pid = model.Property(self.pid, msg=msg)
         self.nodes_ref = self.nodes
+        self.pid = model.Property(self.pid, msg=msg)
         self.pid_ref = self.pid
 
     def _verify(self, xref=False):
@@ -1641,8 +1641,8 @@ class CTETRA10(SolidElement):
         """
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
         self.nodes = model.Nodes(self.nodes, allow_empty_nodes=True, msg=msg)
-        self.pid = model.Property(self.pid, msg=msg)
         self.nodes_ref = self.nodes
+        self.pid = model.Property(self.pid, msg=msg)
         self.pid_ref = self.pid
 
     def get_edge_ids(self):

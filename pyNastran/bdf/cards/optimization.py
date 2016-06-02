@@ -161,6 +161,10 @@ class DESVAR(OptConstraint):
         self.xinit = xinit
         self.xlb = xlb
         self.xub = xub
+        assert xlb <= xub, 'desvar_id=%s xlb=%s xub=%s' % (desvar_id, xlb, xub)
+        assert xinit >= xlb, 'desvar_id=%s xlb=%s xub=%s' % (desvar_id, xlb, xub)
+        assert xinit <= xub, 'desvar_id=%s xlb=%s xub=%s' % (desvar_id, xlb, xub)
+
         # controls change for a single optimization cycle
         # taken from DOPTPRM if None; else default=1.
         self.delx = delx
@@ -1139,6 +1143,9 @@ class DRESP2(OptConstraint):
                 for i, val in enumerate(vals):
                     self.params[key][i] = model.Desvar(val, msg)
             elif name == 'DTABLE':
+                print('model.table =')
+                print(model.bdf_filename)
+                print(model.dtable)
                 self.dtable = model.dtable
                 print(model.dtable)
                 for i, val in enumerate(vals):

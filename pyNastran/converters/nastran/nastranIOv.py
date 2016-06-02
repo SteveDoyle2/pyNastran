@@ -345,7 +345,10 @@ class NastranIO(object):
             model._clear_results()
             model.read_op2(op2_filename=bdf_filename)
             model.cross_reference(xref=True, xref_loads=xref_loads,
-                                  xref_constraints=False)
+                                  xref_constraints=False,
+                                  xref_nodes_with_elements=False)
+            #model.safe_cross_reference(xref=True, xref_loads=xref_loads,
+                                       #xref_constraints=False)
         else:  # read the bdf/punch
             model = BDF(log=self.log, debug=True)
             self.model_type = 'nastran'
@@ -354,12 +357,11 @@ class NastranIO(object):
             # model.cross_reference(xref=True, xref_loads=xref_loads,
                                   # xref_constraints=False)
             model.safe_cross_reference(xref=True, xref_loads=xref_loads,
-                                       xref_constraints=False)
-
+                                       xref_constraints=False,
+                                       xref_nodes_with_elements=False)
 
         # get indicies and transformations for displacements
         self.i_transform, self.transforms = model.get_displacement_index_transforms()
-
 
         nnodes = len(model.nodes)
         nspoints = 0
@@ -749,7 +751,7 @@ class NastranIO(object):
                 point[1] += zfighting_offset
                 point[2] += zfighting_offset
                 points.InsertPoint(j + ipoint, *point)
-            print('')
+            #print('')
             elem = vtkQuad()
             elem.GetPointIds().SetId(0, j)
             elem.GetPointIds().SetId(1, j + 1)
@@ -1122,8 +1124,8 @@ class NastranIO(object):
                 continue
             ieid = self.eid_map[eid]
             elem = model.elements[eid]
-            #print(elem)
             pid = elem.pid
+            assert not isinstance(pid, integer_types), elem
             if pid.type in ['PBAR', 'PBEAM']:
                 bar_type = 'bar'
             elif pid.type in ['PBEAM']:
@@ -1721,6 +1723,7 @@ class NastranIO(object):
         nelements = len(model.elements)
         pids = np.zeros(nelements, 'int32')
         mids = np.zeros(nelements, 'int32')
+        material_coord = np.zeros(nelements, 'int32')
 
         # pids_good = []
         # pids_to_keep = []
@@ -1739,6 +1742,7 @@ class NastranIO(object):
             self.eid_map[eid] = i
             pid = 0
             if isinstance(element, (CTRIA3, CTRIAR)):
+                material_coord[i] = 0 if isinstance(element.thetaMcid, float) else element.thetaMcid
                 elem = vtkTriangle()
                 node_ids = element.node_ids
                 pid = element.Pid()
@@ -1752,6 +1756,7 @@ class NastranIO(object):
                 elem.GetPointIds().SetId(2, nid_map[node_ids[2]])
                 self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
             elif isinstance(element, CTRIA6):
+                material_coord[i] = element.thetaMcid
                 node_ids = element.node_ids
                 pid = element.Pid()
                 self.eid_to_nid_map[eid] = node_ids[:3]
@@ -1770,6 +1775,7 @@ class NastranIO(object):
                 elem.GetPointIds().SetId(2, nid_map[node_ids[2]])
                 self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
             elif isinstance(element, CTRIAX6):
+                material_coord[i] = element.thetaMcid
                 # midside nodes are required, nodes out of order
                 node_ids = element.node_ids
                 pid = element.Pid()
@@ -1801,6 +1807,8 @@ class NastranIO(object):
                 self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
 
             elif isinstance(element, (CQUAD4, CSHEAR, CQUADR)):
+                material_coord[i] = 0 if isinstance(element.thetaMcid, float) else element.thetaMcid
+                #print('eid=%s theta=%s' % (eid, material_coord[i]))
                 node_ids = element.node_ids
                 pid = element.Pid()
                 for nid in node_ids:
@@ -1814,6 +1822,7 @@ class NastranIO(object):
                 elem.GetPointIds().SetId(3, nid_map[node_ids[3]])
                 self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
             elif isinstance(element, CQUAD8):
+                material_coord[i] = element.thetaMcid
                 node_ids = element.node_ids
                 pid = element.Pid()
                 for nid in node_ids:
@@ -2000,8 +2009,7 @@ class NastranIO(object):
                 elem.GetPointIds().SetId(4, nid_map[node_ids[4]])
                 self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
 
-            elif (isinstance(element, LineElement) or
-                  isinstance(element, SpringElement) or
+            elif (isinstance(element, (LineElement, SpringElement)) or
                   element.type in ['CBUSH', 'CBUSH1D', 'CFAST', 'CROD', 'CONROD',
                                    'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
                                    'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5',
@@ -2061,7 +2069,8 @@ class NastranIO(object):
 
                 self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
             else:
-                print('removing eid=%s; %s' % (eid, elem.type))
+                print('removing\n%s' % (elem))
+                print('removing eid=%s; %s' % (eid, element.type))
                 del self.eid_map[eid]
                 self.log_info("skipping %s" % element.type)
                 continue
@@ -2121,14 +2130,23 @@ class NastranIO(object):
         nids_set = True
         if nids_set:
             nids = np.zeros(self.nNodes, dtype='int32')
+            cds = np.zeros(self.nNodes, dtype='int32')
             for (nid, nid2) in iteritems(self.nid_map):
                 nids[nid2] = nid
+                cds[nid2] = model.nodes[nid].Cd()  # doesn't handle SPOINTs
 
             nid_res = GuiResult(0, header='NodeID', title='NodeID',
                                 location='node', scalar=nids)
             cases[icase] = (nid_res, (0, 'NodeID'))
             form0.append(('NodeID', icase, []))
             icase += 1
+
+            if len(np.unique(cds)) > 1:
+                cd_res = GuiResult(0, header='NodeCd', title='NodeCd',
+                                   location='node', scalar=cds)
+                cases[icase] = (cd_res, (0, 'NodeCd'))
+                form0.append(('NodeCd', icase, []))
+                icase += 1
             self.node_ids = nids
 
         # set to True to enable elementIDs as a result
@@ -2332,6 +2350,13 @@ class NastranIO(object):
                 form0.append(('OffsetY', icase + 1, []))
                 form0.append(('OffsetZ', icase + 2, []))
                 icase += 3
+
+            if np.abs(material_coord).max() > 0:
+                material_coord_res = GuiResult(0, header='MaterialCoord', title='MaterialCoord',
+                                               location='centroid', scalar=material_coord, data_format='%i')
+                cases[icase] = (material_coord_res, (0, 'MaterialCoord'))
+                form0.append(('MaterialCoord', icase, []))
+                icase += 1
 
             self.normals = normals
         return nid_to_pid_map, icase, cases, form

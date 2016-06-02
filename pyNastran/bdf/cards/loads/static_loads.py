@@ -1049,8 +1049,7 @@ class FORCE1(Force):
         return self.node_ref.nid
 
     def raw_fields(self):
-        (node, g1, g2) = self._nodeIDs([self.node, self.g1, self.g2])
-        list_fields = ['FORCE1', self.sid, node, self.mag, g1, g2]
+        list_fields = ['FORCE1', self.sid, self.node_id, self.mag, self.G1(), self.G2()]
         return list_fields
 
     def repr_fields(self):
@@ -1324,6 +1323,11 @@ class MOMENT(Moment):
         del self.node_ref, self.cid_ref
 
     @property
+    def node_ids(self):
+        """all the nodes referenced by the load"""
+        return [self.node_id]
+
+    @property
     def node_id(self):
         if isinstance(self.node, integer_types):
             return self.node
@@ -1405,11 +1409,7 @@ class MOMENT1(Moment):
         mag = data[2]
         g1 = data[3]
         g2 = data[4]
-        g3 = data[5]
-        g4 = data[6]
-        xyz = data[7:10]
-        raise NotImplementedError('MOMENT1 is probably wrong')
-        assert len(xyz) == 3, 'xyz=%s' % str(xyz)
+        return MOMENT1(sid, node, mag, g1, g2, comment=comment)
 
     def cross_reference(self, model):
         """
@@ -1456,9 +1456,11 @@ class MOMENT1(Moment):
 
     @property
     def node_ids(self):
+        """all the nodes referenced by the load"""
         return [self.node_id, self.G1(), self.G2()]
 
-    def get_node_id(self):
+    @property
+    def node_id(self):
         if isinstance(self.node, integer_types):
             return self.node
         return self.node_ref.nid
@@ -1474,10 +1476,7 @@ class MOMENT1(Moment):
         return self.g2_ref.nid
 
     def raw_fields(self):
-        node = self.get_node_id()
-        g1 = self.G1()
-        g2 = self.G2()
-        list_fields = ['MOMENT1', self.sid, node, self.mag, g1, g2]
+        list_fields = ['MOMENT1', self.sid, self.node_id, self.mag, self.G1(), self.G2()]
         return list_fields
 
     def repr_fields(self):
@@ -1629,11 +1628,15 @@ class MOMENT2(Moment):
             return self.g4
         return self.g4_ref.nid
 
+    @property
+    def node_ids(self):
+        """all the nodes referenced by the load"""
+        return [self.NodeID(), self.G1(), self.G2(), self.G3(), self.G4()]
+
     def raw_fields(self):
-        nids = [self.node, self.g1, self.g2, self.g3, self.g4]
-        (node, g1, g2, g3, g4) = self._nodeIDs(nodes=nids)
-        assert isinstance(g1, integer_types), g1
-        list_fields = ['MOMENT2', self.sid, node, self.mag, g1, g2, g3, g4]
+        list_fields = [
+            'MOMENT2', self.sid, self.NodeID(), self.mag,
+            self.G1(), self.G2(), self.G3(), self.G4()]
         return list_fields
 
     def repr_fields(self):
@@ -1716,6 +1719,11 @@ class GMLOAD(Load):
         self.cid = self.Cid()
         del self.cid_ref
 
+    def Cid(self):
+        if isinstance(self.cid, integer_types):
+            return self.cid
+        return self.cid_ref.cid
+
     #def G1(self):
         #if isinstance(self.g1, (integer_types, float)):
             #return self.g1
@@ -1779,14 +1787,12 @@ class PLOAD(Load):
         assert len(card) <= 7, 'len(PLOAD card) = %i' % len(card)
         return PLOAD(sid, p, nodes, comment=comment)
 
-    #@classmethod
-    #def add_op2_data(cls, data, comment=''):
-        #sid = data[0]
-        #p = data[1]
-        #nodes = data[2:]
-        #print("PLOAD = %s" % data)
-        #raise NotImplementedError('PLOAD')
-        #return PLOAD(sid, p, nodes, comment=comment)
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        sid = data[0]
+        p = data[1]
+        nodes = data[2:]
+        return PLOAD(sid, p, nodes, comment=comment)
 
     def cross_reference(self, model):
         """
@@ -2255,6 +2261,10 @@ class PLOAD4(Load):
 
         g1 = data[3]
         g34 = data[4]
+        if g1 == 0:
+            g1 = None
+        if g1 == 34:
+            g34 = None
         cid = data[5]
         NVector = data[6]
 

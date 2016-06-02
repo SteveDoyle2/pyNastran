@@ -164,6 +164,11 @@ class DTABLE(BaseCard):
         if comment:
             self._comment = comment
         self.default_values = default_values
+        print('default_values = %s' % default_values)
+        #for key, value in iteritems(self.default_values):
+            #print(key, type(key))
+        assert len(self.default_values) > 0, self.default_values
+        print(self)
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -178,13 +183,23 @@ class DTABLE(BaseCard):
             assert label not in default_values, 'label_%i=%r is not unique' % (j, label)
             default_values[label] = value
             j += 1
+        assert j >= 2, j
         return DTABLE(default_values, comment=comment)
 
     def __getitem__(self, key):
-        return self.default_values[key]
+        try:
+            item = self.default_values[key]
+        except KeyError:
+            msg = 'expected_key=%r\n' % str(key)
+            for keyi, value in iteritems(self.default_values):
+                msg += 'DTABLE; key=%r value=%r\n' % (keyi, value)
+            raise KeyError(msg)
+        return item
 
     def raw_fields(self):
         list_fields = ['DTABLE']
+        print('***default_values = %s' % self.default_values)
+        assert len(self.default_values) > 0, self.default_values
         for label, value in sorted(iteritems(self.default_values)):
             list_fields += [label, value]
         return list_fields

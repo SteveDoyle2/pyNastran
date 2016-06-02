@@ -317,7 +317,7 @@ class TestBeams(unittest.TestCase):
         lines = [
             'PBEAM          1       1 5.094+7 289940.1.6043+7         271610. 3.73058',
             '            0.',
-            '              NO     1.4 .7489+7 238250.1.3182+7   1.-12 223170.3.458069',
+            '              NO     1.0 .7489+7 238250.1.3182+7   1.-12 223170.3.458069',
             '              0.      0.           .872    .718',
             '              0.  .33936      0. .31983',
         ]
@@ -328,18 +328,30 @@ class TestBeams(unittest.TestCase):
         lines = [
             'PBEAM          2       1 5.094+7 289940.1.6043+7         271610. 3.73058',
             '+',
-            '              NO     1.4 .7489+7 238250.1.3182+7   1.-12 223170.3.458069',
+            '              NO     1.0 .7489+7 238250.1.3182+7   1.-12 223170.3.458069',
             '              0.      0.           .872    .718',
             '              0.  .33936      0. .31983',
         ]
         lines_expected = lines
         model.add_card(lines, 'PBEAM', is_list=False)
 
+        # BAD x/xb value of 1.4 (should be 0 to 1.0)
+        lines = [
+            'PBEAM          2       1 5.094+7 289940.1.6043+7         271610. 3.73058',
+            '+',
+            '              NO     1.4 .7489+7 238250.1.3182+7   1.-12 223170.3.458069',
+            '              0.      0.           .872    .718',
+            '              0.  .33936      0. .31983',
+        ]
+        lines_expected = lines
+        with self.assertRaises(AssertionError):
+            model.add_card(lines, 'PBEAM', is_list=False)
+
         # error - 3 lines after NO
         lines = [
             'PBEAM          3       1 5.094+7 289940.1.6043+7         271610. 3.73058',
             '            0.',
-            '              NO     1.4 .7489+7 238250.1.3182+7   1.-12 223170.3.458069',
+            '              NO     1.0 .7489+7 238250.1.3182+7   1.-12 223170.3.458069',
             '            0.',
             '              0.      0.           .872    .718',
             '              0.  .33936      0. .31983',
@@ -350,7 +362,7 @@ class TestBeams(unittest.TestCase):
         # correct - skipped 2nd line
         lines = [
             'PBEAM          4       1 5.094+7 289940.1.6043+7         271610. 3.73058',
-            '              NO     1.4 .7489+7 238250.1.3182+7   1.-12 223170.3.458069',
+            '              NO     1.0 .7489+7 238250.1.3182+7   1.-12 223170.3.458069',
             '              0.      0.           .872    .718',
             '              0.  .33936      0. .31983',
         ]
@@ -360,7 +372,7 @@ class TestBeams(unittest.TestCase):
         # correct - skipped 2nd line and last line
         lines = [
             'PBEAM          5       1 5.094+7 289940.1.6043+7         271610. 3.73058',
-            '              NO     1.4 .7489+7 238250.1.3182+7   1.-12 223170.3.458069',
+            '              NO     1.0 .7489+7 238250.1.3182+7   1.-12 223170.3.458069',
             '              0.      0.           .872    .718',
         ]
         lines_expected = lines
@@ -369,7 +381,7 @@ class TestBeams(unittest.TestCase):
         # correct - skipped 2nd line and last 2 lines
         lines = [
             'PBEAM          6       1 5.094+7 289940.1.6043+7         271610. 3.73058',
-            '              NO     1.4 .7489+7 238250.1.3182+7   1.-12 223170.3.458069',
+            '              NO     1.0 .7489+7 238250.1.3182+7   1.-12 223170.3.458069',
         ]
         lines_expected = lines
         model.add_card(lines, 'PBEAM', is_list=False)
