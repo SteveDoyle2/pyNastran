@@ -2233,15 +2233,51 @@ class NastranIO(object):
                         print('eids=%s dont have materials' %
                               not_skipped_eids_missing_material_id)
 
-            t_res = GuiResult(0, header='Thickness', title='Thickness',
-                              location='centroid', scalar=thickness)
+            e11 = np.zeros(mids.shape, dtype='float32')
+            e22 = np.zeros(mids.shape, dtype='float32')
+            for umid in np.unique(mids):
+                #if umid == 0:
+                    #continue
+                try:
+                    mat = model.materials[umid]
+                except KeyError:
+                    print('mids = %s' % mids)
+                    print('mids = %s' % model.materials.keys())
+                    raise
+                if mat.type == 'MAT1':
+                    e11i = e22i = mat.e
+                elif mat.type == 'MAT8':
+                    e11i = mat.e11
+                    e22i = mat.e22
+                else:
+                    print('skipping %s' % mat)
+                    continue
+                    #raise NotImplementedError(mat)
+                #print('mid=%s e11=%e e22=%e' % (umid, e11i, e22i))
+                i = np.where(umid == mids)[0]
+                e11[i] = e11i
+                e22[i] = e22i
+
+            if thickness.max() > 0.0:
+                t_res = GuiResult(0, header='Thickness', title='Thickness',
+                                  location='centroid', scalar=thickness)
+                cases[icase] = (t_res, (0, 'Thickness'))
+                form0.append(('Thickness', icase, []))
+                icase += 1
+
             mid_res = GuiResult(0, header='MaterialID', title='MaterialID',
                                 location='centroid', scalar=mids)
-            cases[icase] = (t_res, (0, 'Thickness'))
-            cases[icase + 1] = (mid_res, (0, 'MaterialID'))
-            form0.append(('Thickness', icase, []))
-            form0.append(('MaterialID', icase + 1, []))
-            icase += 2
+            e11_res = GuiResult(0, header='E_11', title='E_11',
+                                location='centroid', scalar=e11)
+            e22_res = GuiResult(0, header='E_22', title='E_22',
+                                location='centroid', scalar=e22)
+            cases[icase] = (mid_res, (0, 'MaterialID'))
+            cases[icase + 1] = (e11_res, (0, 'E_11'))
+            cases[icase + 2] = (e22_res, (0, 'E_22'))
+            form0.append(('MaterialID', icase, []))
+            form0.append(('E_11', icase + 1, []))
+            form0.append(('E_22', icase + 2, []))
+            icase += 3
 
 
         try:
