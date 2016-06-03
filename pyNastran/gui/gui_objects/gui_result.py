@@ -2,6 +2,22 @@ from copy import deepcopy
 
 class GuiResult(object):
     def __init__(self, subcase_id, header, title, location, scalar, data_format=None, uname='GuiResult'):
+        """
+        subcase_id : int
+            the flag that points to self.subcases for a message
+        header : str
+            the sidebar word
+        title : str
+            the legend title
+        location : str
+            node, centroid
+        scalar : (n,) ndarray
+            the data to make a contour plot with
+        data_format : str
+            the type of data result (e.g. '%i', '%.2f', '%.3f')
+        uname : str
+            some unique name for ...
+        """
         self.subcase_id = subcase_id
         #assert self.subcase_id > 0, self.subcase_id
 
@@ -14,6 +30,7 @@ class GuiResult(object):
         self.subcase_id = subcase_id
         self.uname = uname
 
+        assert scalar.shape[0] == scalar.size, 'shape=%s size=%s' % (str(scalar.shape), scalar.size)
         self.scalar = scalar
         #self.data_type = self.dxyz.dtype.str # '<c8', '<f4'
         self.data_type = self.scalar.dtype.str # '<c8', '<f4'
@@ -40,12 +57,15 @@ class GuiResult(object):
     #------------
     # getters
     def get_data_type(self, i, name):
+        #print('Aname=%r data_type=%s fmt=%s' % (self.title, self.data_type, self.data_format))
         return self.data_type
 
     def get_data_format(self, i, name):
+        #print('Bname=%r data_type=%s fmt=%s' % (self.title, self.data_type, self.data_format))
         return self.data_format
 
     def get_location(self, i, name):
+        #print('Cname=%r data_type=%s fmt=%s' % (self.title, self.data_type, self.data_format))
         return self.location
 
     def get_header(self, i, name):

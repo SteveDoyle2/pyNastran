@@ -97,6 +97,9 @@ def run_docopt():
     if input_filenames and not input_format:
         input_format = determine_format(input_filenames[0])
 
+    allowed_formats = ['nastran', 'stl', 'cart3d', 'tecplot', 'ugrid', 'plot3d', 'surf', 'lawgs', 'degen_geom']
+    assert input_format in allowed_formats, 'format=%r is not supported' % input_format
+
     shots = []
     if '--shots' in data:
         shots = data['--shots']
