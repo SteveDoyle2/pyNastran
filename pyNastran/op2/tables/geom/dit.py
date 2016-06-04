@@ -35,7 +35,6 @@ class DIT(GeomCommon):
         """
         GUST(1005,10,174)    - the marker for Record 1
         """
-        #print("reading GUST")
         nentries = (len(data) - n) // 20  # 5*4
         for i in range(nentries):
             edata = data[n:n + 20]
@@ -89,7 +88,6 @@ class DIT(GeomCommon):
         """
         TABLED2(1205,12,134) - the marker for Record 5
         """
-        #print("reading TABLED2")
         cls = TABLED2
         n = self._read_table2(cls, data)
         return n
@@ -121,7 +119,6 @@ class DIT(GeomCommon):
         """
         TABLED3(1305,13,140) - the marker for Record 6
         """
-        #print("reading TABLED3")
         cls = TABLED3
         n = self._read_table3(cls, data)
         return n
@@ -157,7 +154,6 @@ class DIT(GeomCommon):
         """
         self.skippedCardsFile.write('skipping TABLEM1 in DIT\n')
         return
-        #print("reading TABLEM1")
         cls = TABLEM1
         n = self._read_table1(cls, data)
         return n
@@ -166,7 +162,6 @@ class DIT(GeomCommon):
         """
         TABLEM2(205,2,94) - the marker for Record 10
         """
-        #print("reading TABLEM2")
         cls = TABLEM2
         n = self._read_table2(cls, data)
         return n
@@ -175,7 +170,6 @@ class DIT(GeomCommon):
         """
         TABLEM3(305,3,95) - the marker for Record 11
         """
-        #print("reading TABLEM3")
         cls = TABLEM3
         n = self._read_table3(cls, data)
         return n
@@ -184,7 +178,6 @@ class DIT(GeomCommon):
         """
         TABLEM4(405,4,96) - the marker for Record 12
         """
-        #print("reading TABLEM4")
         cls = TABLEM4
         n = self._read_table4(cls, data)
         return n

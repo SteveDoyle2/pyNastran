@@ -82,8 +82,8 @@ class GEOM1(GeomCommon):
             (5801,   58, 324): ['SUPUP', self._read_fake],  # record 33 - CSUPUP in NX; SUPUP in MSC
             (14101, 141, 403): ['SWLDPRM', self._read_fake],  # record 34
 
-            (1101,   11,  66): ['', self._read_fake],  # record
-            (3901,   39,  50): ['', self._read_fake],  # record
+            (1101,   11,  66): ['CMASS2', self._read_fake],  # record
+            (3901,   39,  50): ['CVISC', self._read_fake],  # record
             (13301, 133, 509): ['', self._read_fake],  # record
             (1127,   11, 461) : ['SELOAD', self._read_fake],  # record NX
             #(4501, 45, 1120001) : ['', self._read_fake],  # record

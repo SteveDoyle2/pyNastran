@@ -13,7 +13,6 @@ class DYNAMICS(GeomCommon):
         GeomCommon.__init__(self)
         self._dynamics_map = {
             (5307, 53, 379) : ['ACSRCE', self._read_fake], # 1
-            #(27, 17, 182): ['DAREA', self._read_darea],  # 2
             (27, 17, 182): ['DAREA', self._read_fake],  # 2
 
             (37, 18, 183): ['DELAY', self._read_delay],  # 3
@@ -53,14 +52,14 @@ class DYNAMICS(GeomCommon):
             (7207, 72, 139): ['TLOAD2', self._read_tload2],  # 38
             (8307, 83, 142): ['TSTEP', self._read_tstep],  # 39
 
-            (10701, 107, 117) : ['', self._read_fake],
-            (10801, 108, 242) : ['', self._read_fake],
-            (3807, 38, 505) : ['', self._read_fake],
-            (4807, 48, 306) : ['', self._read_fake],
-            (11001, 110, 310) : ['', self._read_fake],
-            (10901, 109, 260) : ['', self._read_fake],
-            (3307, 33, 129) : ['', self._read_fake],
-            (11101, 111, 368) : ['', self._read_fake],
+            (10701, 107, 117) : ['RGYRO', self._read_fake],
+            (10801, 108, 242) : ['ROTORG', self._read_fake],
+            (3807, 38, 505) : ['NLRSFD', self._read_fake],
+            (4807, 48, 306) : ['DYNRED', self._read_fake],
+            (11001, 110, 310) : ['RSPINT', self._read_fake],
+            (10901, 109, 260) : ['RSPINR', self._read_fake],
+            (3307, 33, 129) : ['NONLIN3', self._read_fake],
+            (11101, 111, 368) : ['UNBALNC', self._read_fake],
         }
 
 #ACSRCE (5307,53,379)

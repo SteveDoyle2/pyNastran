@@ -50,10 +50,10 @@ class EPT(GeomCommon):
             (1802, 18, 31): ['PVISC', self._read_pvisc],    # record 59
             (10201, 102, 400): ['PVAL', self._read_pval],   # record 58 - not done
             (2606, 26, 289): ['VIEW', self._read_view],     # record 62 - not done
-            (3201, 32, 991) : ['', self._read_fake],  # record
-            (3301, 33, 992) : ['', self._read_fake],  # record
-            (3701, 37, 995) : ['', self._read_fake],    # record
-            (15006, 150, 604): ['', self._read_fake],  # record
+            (3201, 32, 991) : ['NSM', self._read_fake],  # record
+            (3301, 33, 992) : ['NSM1', self._read_fake],  # record
+            (3701, 37, 995) : ['NSML1', self._read_fake],    # record
+            (15006, 150, 604): ['PCOMPG', self._read_fake],  # record
 
             (702, 7, 38): ['PBUSHT', self._read_fake],  # record 1
             (3301, 33, 56): ['NSM1', self._read_fake],  # record 3

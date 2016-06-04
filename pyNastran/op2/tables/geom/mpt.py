@@ -45,11 +45,11 @@ class MPT(GeomCommon):
             (3003, 30, 286): ['NLPARM', self._read_nlparm],   # record 27
             (3104, 32, 350): ['NLPCI', self._read_nlpci],     # record 28
             (3103, 31, 337): ['TSTEPNL', self._read_tstepnl], # record 29
-            (3303, 33, 988) : ['', self._read_fake],
+            (3303, 33, 988) : ['MATT11', self._read_fake],
 
-            (903, 9, 336) : ['', self._read_fake],
-            (8902, 89, 423) : ['', self._read_fake],
-            (9002, 90, 410) : ['', self._read_fake],
+            (903, 9, 336) : ['MATT8', self._read_fake],
+            (8902, 89, 423) : ['RADMT', self._read_fake],
+            (9002, 90, 410) : ['RADBND', self._read_fake],
         }
 
     def add_op2_material(self, mat):

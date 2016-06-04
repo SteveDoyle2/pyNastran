@@ -49,27 +49,30 @@ class GEOM4(GeomCommon):
             (10100, 101, 472): ['SUPORT1', self._read_suport1],  # record 60 - not done
             (2010, 20, 193) : ['USET', self._read_uset],         # Record 62 -- USET(2010,20,193)
 
-            (1310, 13, 247): ['', self._read_fake],       # record
+            (1310, 13, 247): ['RELEASE', self._read_fake],       # record
+            (6210, 62, 344): ['SPCOFF1', self._read_fake],    # record
+            (510, 5, 315): ['QSET', self._read_fake],    # record
+            (2110, 21, 194) : ['USET1', self._read_fake],  # record
+            (1010, 10, 320): ['SECSET1', self._read_fake],  # record
+            (5001, 50, 15): ['OMIT', self._read_fake],    # record 22
+
             (4901, 49, 420017): ['', self._read_fake],    # record
             (5561, 76, 0): ['', self._read_fake],         # record
             (610, 6, 0): ['', self._read_fake],           # record
             (5110, 51, 620256): ['', self._read_fake],    # record
             (5501, 55, 620016): ['', self._read_fake],    # record
-            (5001, 50, 15): ['', self._read_fake],    # record
             (410, 4, 0): ['', self._read_fake],    # record
-            (110, 1, 584): ['', self._read_fake],    # record
-            (210, 2, 585): ['', self._read_fake],    # record
-            (6210, 62, 344): ['', self._read_fake],    # record
-            (510, 5, 315): ['', self._read_fake],    # record
-            (6701, 67, 293): ['', self._read_fake],    # record
+            (6701, 67, 293): ['RTRPLT', self._read_fake],    # record 34
             (8801, 88, 9022): ['', self._read_fake],    # record
             (9001, 90, 9024): ['', self._read_fake],    # record
-            (9901, 99, 80): ['', self._read_fake],  # record
-            (1010, 10, 320): ['', self._read_fake],  # record
             (9801, 98, 79): ['', self._read_fake],  # record
+            (9901, 99, 80): ['', self._read_fake],  # record
             (12001, 120, 601) : ['', self._read_fake],  # record
-            (2110, 21, 194) : ['', self._read_fake],  # record
-            (310, 3, 586) : ['', self._read_fake],  # record
+
+            # GEOM4705 - pre MSC 2001
+            (110, 1, 584): ['BNDFIX', self._read_fake],    # record 3
+            (210, 2, 585): ['BNDFIX1', self._read_fake],    # record 4
+            (310, 3, 586) : ['BNDFREE', self._read_fake],  # record 5
         }
 
     def _read_aset(self, data, n):
