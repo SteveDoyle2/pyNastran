@@ -59,7 +59,7 @@ class ADB_IO(object):
         if skip_reading:
             return
 
-        if self.is_centroidal:
+        if 0:
             plot_wakes = False
             #plot_wakes = False  # does this work right?
         else:
@@ -168,9 +168,6 @@ class ADB_IO(object):
 
 
     def _fill_adb_case(self, cases, ID, model, plot_wakes=False):
-        print("is_centroidal=%s isNodal=%s" % (self.is_centroidal, self.is_nodal))
-        assert self.is_centroidal != self.is_nodal
-
         nxyz_nodes = model.nodes.shape[0]
         nxyz_elements = model.tris.shape[0]
         nwake_nodes = model.wake_xyz.shape[0]
@@ -194,7 +191,7 @@ class ADB_IO(object):
         is_normals = False
 
         results_form = []
-        if self.is_centroidal:
+        if 1:
             geometry_form = [
                 ('Region', 0, []),
                 ('ElementID', 1, []),

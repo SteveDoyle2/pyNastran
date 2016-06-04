@@ -306,13 +306,20 @@ class ResultsWindow(QtGui.QWidget):
                 #assert len(elements[0]) == 3, 'len=%s elements[0]=%s\nelements=\n%s\n' % (
                     #len(elements[0]), elements[0], elements)
             for element in elements:
+                #if isinstance(element, str):
+                    #print('elements = %r' % str(elements))
+
+                #print('element = %r' % str(element))
+                if not len(element) == 3:
+                    print('element = %r' % str(element))
                 text, i, children = element
-                #print('text=%s' % text)
+                nchildren = len(children)
+                #print('text=%r' % text)
                 item = QtGui.QStandardItem(text)
                 parent.appendRow(item)
 
                 # TODO: count_check and ???
-                if nelements == 1 and len(children) == 0 and level == 0:
+                if nelements == 1 and nchildren == 0 and level == 0:
                     #self.result_data_window.setEnabled(False)
                     item.setEnabled(False)
                     #print(dir(self.treeView))
@@ -321,9 +328,10 @@ class ResultsWindow(QtGui.QWidget):
                     redo = True
                 else:
                     pass
-                    #print('item=%s count_check=%s nelements=%s len(children)=%s' % (
-                        #text, count_check, nelements, len(children)))
+                    #print('item=%s count_check=%s nelements=%s nchildren=%s' % (
+                        #text, count_check, nelements, nchildren))
                 if children:
+                    assert isinstance(children, list), children
                     self.addItems(item, children, level + 1, count_check=count_check)
             is_single = redo
             return is_single

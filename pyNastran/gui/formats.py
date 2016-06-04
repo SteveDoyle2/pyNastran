@@ -159,3 +159,13 @@ except ImportError:
             pass
     is_openvsp = False
 
+try:
+    from pyNastran.converters.openvsp.degen_geom_io import DegenGeomIO
+    is_degen_geom = True
+except ImportError:
+    raise
+    class DegenGeomIO(object):
+        def __init__(self):
+            pass
+    is_degen_geom = False
+

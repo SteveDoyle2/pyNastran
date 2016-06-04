@@ -388,7 +388,7 @@ def create_rbe3s_between_close_nodes(bdf_filename, bdf_filename_out, tol,
 
         # TODO: doesn't use get position...
         distance = norm(node1.xyz - node2.xyz)
-        if distance < tol:
+        if distance > tol:
             continue
         refgrid = nid1
         refc = '123456'
@@ -1502,7 +1502,6 @@ def get_joints(model, pid_sets):
     nid_array_sets = []
     for i, pid_set in enumerate(pid_sets):
         inside = np.hstack([list(nid_sets[pid]) for pid in pid_set])
-        print('inside =', inside)
         nid_array_set = np.unique(
             inside
         )

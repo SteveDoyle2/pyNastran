@@ -1936,7 +1936,13 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
         # scale factor for DESVAR
         self.coeffs = coeffs
 
-        assert len(coeffs) > 0, 'len(coeffs)=%s' % len(coeffs)
+        if len(coeffs) == 0:
+            msg = 'len(coeffs)=%s len(dvids)=%s\n' % (len(coeffs), len(dvids))
+            msg += "We've added a coeff=1 and desvar_id=1 in order to look at the crashing card\n"
+            self.coeffs = [1]
+            self.dvids = [1]
+            msg += str(self)
+            raise RuntimeError(msg)
         assert len(coeffs) == len(dvids), 'len(coeffs)=%s len(dvids)=%s' % (len(coeffs), len(dvids))
 
         if validate:
@@ -1978,7 +1984,8 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
                     #cp_name =
                 assert pNameFid in ['T', 4, 6], msg
             elif Type == 'PCOMP':
-                assert pNameFid in [3,
+                assert pNameFid in [3, #3-z0
+                                    # 13-t1, 14-theta1, 17-t2, 18-theta2
                                     13, 14, 17, 18,
                                     23, 24, 27, 28,
                                     33, 34, 37, 38,
