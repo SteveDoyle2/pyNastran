@@ -20,8 +20,8 @@ def _update_alt(alt, SI=False, debug=False):
     """
     converts altitude in meters to feet if SI=True
 
-    Paramters
-    ---------
+    Parameters
+    ----------
     z : float
         altitude in feet or meters
     SI : bool; default=False
@@ -225,8 +225,8 @@ def atm_temperature(alt, SI=False, debug=False):
     r"""
     Freestream Temperature \f$ T_{\infty} \f$
 
-    Paramters
-    ---------
+    Parameters
+    ----------
     alt : bool
         Altitude in feet or meters (SI)
     SI : bool; default=False
@@ -257,7 +257,7 @@ def atm_temperature(alt, SI=False, debug=False):
     elif z < 299515.564:
         T = 354.348
     else:
-        print("alt=%i kft > 299.5 kft" % (z / 1000.))
+        #print("alt=%i kft > 299.5 kft" % (z / 1000.))
         T = 354.348
         #raise AtmosphereError("altitude is too high")
 
@@ -275,8 +275,9 @@ def atm_temperature(alt, SI=False, debug=False):
 def atm_pressure(alt, SI=False, debug=False):
     r"""
     Freestream Pressure \f$ p_{\infty} \f$
-    Paramters
-    ---------
+
+    Parameters
+    ----------
     alt : float
         Altitude in feet or meters (SI)
     SI : bool; default=False
@@ -307,7 +308,7 @@ def atm_pressure(alt, SI=False, debug=False):
     elif z < 299515.564:
         lnP = -2.971785 - 5.1533546650E-5 * (z - 249000.304)
     else:
-        print("alt=%i kft > 299.5 kft" % (z / 1000.))
+        #print("alt=%i kft > 299.5 kft" % (z / 1000.))
         lnP = -2.971785 - 5.1533546650E-5 * (z - 249000.304)
 
     p = exp(lnP)

@@ -20,8 +20,8 @@ def _update_alt(alt, alt_units='ft', debug=False):
     """
     Converts altitude alt_units to feet
 
-    Paramters
-    ---------
+    Parameters
+    ----------
     alt : float
         altitude in feet or meters
     alt_units : str; default='ft'
@@ -58,8 +58,8 @@ def _update_velocity(velocity, velocity_units='ft/s', debug=False):
     """
     Converts altitude alt_units to feet
 
-    Paramters
-    ---------
+    Parameters
+    ----------
     velocity : float
         altitude in feet or meters
     velocity_units : str; default='ft/s'
@@ -338,8 +338,8 @@ def atm_temperature(alt, alt_units='ft', temperature_units='R', debug=False):
     r"""
     Freestream Temperature \f$ T_{\infty} \f$
 
-    Paramters
-    ---------
+    Parameters
+    ----------
     alt : bool
         Altitude in feet or meters (SI)
     SI : bool; default=False
@@ -394,8 +394,9 @@ def atm_temperature(alt, alt_units='ft', temperature_units='R', debug=False):
 def atm_pressure(alt, alt_units='ft', pressure_units='psf', debug=False):
     r"""
     Freestream Pressure \f$ p_{\infty} \f$
-    Paramters
-    ---------
+
+    Parameters
+    ----------
     alt : float
         Altitude in feet or meters (SI)
     SI : bool; default=False
