@@ -476,8 +476,8 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         """
         Method for removing broken cards from the reader
 
-        Paramters
-        ---------
+        Parameters
+        ----------
         cards : List[str]; Set[str]
             a list/set of cards that should not be read
 

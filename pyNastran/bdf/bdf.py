@@ -657,8 +657,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         """
         Method for removing broken cards from the reader
 
-        Paramters
-        ---------
+        Parameters
+        ----------
         cards : List[str]; Set[str]
             a list/set of cards that should not be read
 
@@ -2472,8 +2472,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         """
         Prints the 10 lines before the UnicodeDecodeError occurred.
 
-        Paramters
-        ---------
+        Parameters
+        ----------
         bdf_filename : str
             the filename to print the lines of
         """

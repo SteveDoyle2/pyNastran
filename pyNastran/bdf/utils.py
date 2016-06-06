@@ -97,8 +97,8 @@ def to_fields_long(card_lines, card_name):
     Doesn't consider Nastran's rule about 72 character width fields,
     which is nice when you have poorly formatted BDFs.
 
-    Paramters
-    ---------
+    Parameters
+    ----------
     lines : List[str]
         the lines of the BDF card object
     card_name : str
@@ -199,8 +199,8 @@ def to_fields(card_lines, card_name):
     Converts a series of lines in a card into string versions of the field.
     Handles large, small, and CSV formatted cards.
 
-    Paramters
-    ---------
+    Parameters
+    ----------
     lines : List[str]
         the lines of the BDF card object
     card_name : str

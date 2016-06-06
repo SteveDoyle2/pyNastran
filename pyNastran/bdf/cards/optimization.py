@@ -1129,7 +1129,12 @@ class DRESP2(OptConstraint):
         msg = ', which is required by %s ID=%s' % (self.type, self.dresp_id)
         default_values = {}
         for key, vals in sorted(iteritems(self.params)):
-            j, name = key
+            #assert key is not None, str(self)
+            try:
+                j, name = key
+            except:
+                raise RuntimeError(str(self))
+
             if name in ['DRESP1', 'DRESP2']:
                 for i, val in enumerate(vals):
                     self.params[key][i] = model.DResp(val, msg)
@@ -1871,6 +1876,18 @@ class DVMREL1(OptConstraint):  # similar to DVPREL1
         return self.comment + print_card_16(card)
 
 
+def break_word_by_trailing_integer(pNameFid):
+    nums = []
+    for i, letter in enumerate(reversed(pNameFid)):
+        if letter.isdigit():
+            nums.append(letter)
+        else:
+            break
+        num = ''.join(nums[::-1])
+        word = pNameFid[:-i-1]
+        assert len(word)+len(num) == len(pNameFid), 'word=%r num=%r pNameFid=%r' % (word, num, pNameFid)
+        return word, num
+
 class DVPREL1(OptConstraint):  # similar to DVMREL1
     type = 'DVPREL1'
 
@@ -1984,12 +2001,17 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
                     #cp_name =
                 assert pNameFid in ['T', 4, 6], msg
             elif Type == 'PCOMP':
-                assert pNameFid in [3, #3-z0
-                                    # 13-t1, 14-theta1, 17-t2, 18-theta2
-                                    13, 14, 17, 18,
-                                    23, 24, 27, 28,
-                                    33, 34, 37, 38,
-                                    43, 44, 47, 48], msg
+                if isinstance(pNameFid, str):
+                        word, num = break_word_by_trailing_integer(pNameFid)
+                        if word not in ['T', 'THETA']:
+                            raise RuntimeError(msg)
+                else:
+                    assert pNameFid in [3, #3-z0
+                                        # 13-t1, 14-theta1, 17-t2, 18-theta2
+                                        13, 14, 17, 18,
+                                        23, 24, 27, 28,
+                                        33, 34, 37, 38,
+                                        43, 44, 47, 48], msg
             elif Type == 'PCOMPG':
                 assert pNameFid in [15, 25, 75, 85], msg
 
