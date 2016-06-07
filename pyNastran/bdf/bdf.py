@@ -97,8 +97,8 @@ from pyNastran.bdf.cards.methods import EIGB, EIGC, EIGR, EIGP, EIGRL
 from pyNastran.bdf.cards.nodes import GRID, GRDSET, SPOINTs, EPOINTs
 from pyNastran.bdf.cards.optimization import (DCONADD, DCONSTR, DESVAR, DDVAL, DOPTPRM, DLINK,
                                               DRESP1, DRESP2, DRESP3,
-                                              DVCREL1,
-                                              DVMREL1,
+                                              DVCREL1, DVCREL2,
+                                              DVMREL1, DVMREL2,
                                               DVPREL1, DVPREL2)
 from pyNastran.bdf.cards.params import PARAM
 from pyNastran.bdf.cards.bdf_sets import (ASET, BSET, CSET, QSET, USET,
@@ -464,9 +464,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             # optimization cards
             'DEQATN', 'DTABLE',
             'DCONSTR', 'DESVAR', 'DDVAL', 'DRESP1', 'DRESP2', 'DRESP3',
-            'DVCREL1', # DVCREL2
+            'DVCREL1', 'DVCREL2',
             'DVPREL1', 'DVPREL2',
-            'DVMREL1', # DVMREL2
+            'DVMREL1', 'DVMREL2',
             'DOPTPRM', 'DLINK', 'DCONADD',
             #'DSCREEN',
 
@@ -1614,11 +1614,11 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'DRESP2' : (DRESP2, self.add_DRESP), # deqatn
             'DRESP3' : (DRESP3, self.add_DRESP),
             'DVCREL1' : (DVCREL1, self.add_DVCREL),
-            # DVCREL2 - deqatn
+             'DVCREL2' : (DVCREL2, self.add_DVCREL),
             'DVPREL1' : (DVPREL1, self.add_DVPREL),
             'DVPREL2' : (DVPREL2, self.add_DVPREL), # deqatn
             'DVMREL1' : (DVMREL1, self.add_DVMREL),
-            #'DVMREL2' : (DVMREL2, self.add_DVMREL), # deqatn
+            'DVMREL2' : (DVMREL2, self.add_DVMREL), # deqatn
 
             'TABLED1' : (TABLED1, self.add_table),
             'TABLED2' : (TABLED2, self.add_table),

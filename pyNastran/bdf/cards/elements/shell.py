@@ -620,7 +620,7 @@ class CTRIA6(TriShell):
         (n1, n2, n3, n4, n5, n6) = self.get_node_positions()
         a = n1 - n2
         b = n1 - n3
-        area = Area(a, b)
+        area = 0.5 * norm(cross(a, b))
         return area
 
     def Normal(self):
@@ -943,7 +943,7 @@ class CTRIAX(TriShell):
         (n1, n2, n3, n4, n5, n6) = self.get_node_positions()
         a = n1 - n2
         b = n1 - n3
-        area = Area(a, b)
+        area = 0.5 * norm(cross(a, b))
         return area
 
     def cross_reference(self, model):
@@ -1103,7 +1103,7 @@ class CTRIAX6(TriShell):
         (n1, n2, n3, n4, n5, n6) = self.get_node_positions()
         a = n1 - n3
         b = n1 - n5
-        area = Area(a, b)
+        area = 0.5 * norm(cross(a, b))
         return area
 
     def Thickness(self):
@@ -1400,11 +1400,11 @@ class CSHEAR(QuadShell):
         (n1, n2, n3, n4) = self.get_node_positions()
         a = n1 - n2
         b = n2 - n4
-        area1 = Area(a, b)
+        area1 = 0.5 * norm(cross(a, b))
 
         a = n2 - n4
         b = n2 - n3
-        area2 = Area(a, b)
+        area2 = 0.5 * norm(cross(a, b))
 
         area = area1 + area2
         centroid = (n1 + n2 + n3 + n4) / 4.
@@ -1446,7 +1446,7 @@ class CSHEAR(QuadShell):
         (n1, n2, n3, n4) = self.get_node_positions()
         a = n1 - n3
         b = n2 - n4
-        area = Area(a, b)
+        area = 0.5 * norm(cross(a, b))
         return area
 
     def flipNormal(self):
@@ -2147,12 +2147,12 @@ class CQUAD8(QuadShell):
         (n1, n2, n3, n4, n5, n6, n7, n8) = self.get_node_positions()
         a = n1 - n2
         b = n2 - n4
-        area1 = Area(a, b)
+        area1 = 0.5 * norm(cross(a, b))
         c1 = (n1 + n2 + n4) / 3.
 
         a = n2 - n4
         b = n2 - n3
-        area2 = Area(a, b)
+        area2 = 0.5 * norm(cross(a, b))
         c2 = (n2 + n3 + n4) / 3.
 
         area = area1 + area2
@@ -2166,7 +2166,7 @@ class CQUAD8(QuadShell):
         (n1, n2, n3, n4, n5, n6, n7, n8) = self.get_node_positions()
         a = n1 - n3
         b = n2 - n4
-        area = Area(a, b)
+        area = 0.5 * norm(cross(a, b))
         return area
 
     def nodeIDs(self):

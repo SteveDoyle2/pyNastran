@@ -1742,6 +1742,253 @@ class DVCREL1(OptConstraint):  # similar to DVMREL1
             return self.comment + print_card_16(card)
 
 
+class DVCREL2(OptConstraint):
+    type = 'DVCREL2'
+
+    allowed_elements = [
+        #'CELAS2', 'CBAR', 'CBEAM',
+        #'CQUAD4',
+        #'CBUSH',
+        'CDAMP2',
+    ]
+    #allowed_masses = ['CONM2', 'CMASS2', 'CMASS4']
+    #allowed_properties_mass = ['PMASS']
+    def __init__(self, oid, Type, eid, cp_name, cp_min, cp_max, deqation,
+                 dvids, labels, validate=False, comment=''):
+        """
+        +----------+--------+--------+-------+------------+-------+-------+-------+-------+
+        |    1     |    2   |   3    |   4   |      5     |   6   |   7   |   8   |   9   |
+        +==========+========+========+=======+============+=======+=======+=======+=======+
+        | DVCREL2  | ID     | TYPE   | EID   | CPNAME/FID | CPMIN | CPMAX | EQID  |       |
+        +----------+--------+--------+-------+------------+-------+-------+-------+-------+
+        |          | DESVAR | DVID1  | DVID2 |  DVID3     | DVID4 | DVID5 | DVID6 | DVID7 |
+        +----------+--------+--------+-------+------------+-------+-------+-------+-------+
+        |          |        | DVID8  | etc.  |            |       |       |       |       |
+        +----------+--------+--------+-------+------------+-------+-------+-------+-------+
+        |          | DTABLE | LABL1  | LABL2 |  LABL3     | LABL4 | LABL5 | LABL6 | LABL7 |
+        +----------+--------+--------+-------+------------+-------+-------+-------+-------+
+        |          |        | LABL8  | etc.  |            |       |       |       |       |
+        +----------+--------+--------+-------+------------+-------+-------+-------+-------+
+        """
+        if comment:
+            self._comment = comment
+        #: Unique identification number
+        self.oid = oid
+
+        #: Name of an element connectivity entry, such as CBAR, CQUAD4, etc.
+        #: (Character)
+        self.Type = Type
+
+        #: Element Identification number. (Integer > 0)
+        self.eid = eid
+
+        #: Name of connectivity property, such as X1, X2, X3, ZOFFS, etc.
+        #: (Character)
+        self.cp_name = cp_name
+
+        #: Minimum value allowed for this property. If CPNAME references a connectivity
+        #: property that can only be positive, then the default value of CPMIN is 1.0E-15.
+        #: Otherwise, it is -1.0E35. (Real)
+        #: .. todo:: bad default (see DVCREL2)
+        self.cp_min = cp_min
+
+        #: Maximum value allowed for this property. (Real; Default = 1.0E20)
+        self.cp_max = cp_max
+
+        #: DEQATN entry identification number. (Integer > 0)
+        self.dequation = deqation
+        self.dvids = dvids
+        self.labels = labels
+
+        #assert len(coeffs) > 0, 'len(coeffs)=%s' % len(coeffs)
+        #assert len(coeffs) == len(dvids), 'len(coeffs)=%s len(dvids)=%s' % (len(coeffs), len(dvids))
+        if validate:
+            msg = 'DVCREL2: Type=%r cp_name=%r is invalid' % (Type, cp_name)
+            if Type in ['CQUAD4']:
+                assert cp_name in ['T1', 'T2', 'T3', 'T4'], msg # 'ZOFFS',
+            elif Type in ['CTRIA3']:
+                assert cp_name in [], msg
+            elif Type in ['CONM2']:
+                assert cp_name in ['M', 'X1', 'X2', 'X3'], msg
+            elif Type in ['CBAR']:
+                assert cp_name in ['X1', 'X2', 'X3'], msg
+            elif Type in ['CBEAM']:
+                assert cp_name in ['X1', 'X2', 'X3'], msg
+            elif Type in ['CELAS1']:
+                assert cp_name in [], msg
+            elif Type in ['CBUSH']:
+                assert cp_name in ['X1', 'X2', 'X3', 'S', 'S1', 'S2', 'S3'], msg
+            else:
+                raise NotImplementedError(msg)
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        oid = integer(card, 1, 'oid')
+        Type = string(card, 2, 'Type')
+        pid = integer(card, 3, 'pid')
+        pNameFid = integer_or_string(card, 4, 'pName_FID')
+        cp_min = double_or_blank(card, 5, 'cp_min')
+        cp_max = double_or_blank(card, 6, 'cp_max', 1e20)
+        dequation = integer_or_blank(card, 7, 'dequation') #: .. todo:: or blank?
+
+        fields = [interpret_value(field) for field in card[9:]]
+        ioffset = 9
+        iend = len(fields) + ioffset
+
+        try:
+            idesvar = fields.index('DESVAR') + ioffset
+        except ValueError:
+            idesvar = None
+
+        try:
+            idtable = fields.index('DTABLE') + ioffset
+            #iDesMax  = idtable # the index to start parsing DESVAR
+            ides_stop = idtable  # the index to stop  parsing DESVAR
+        except ValueError:
+            idtable = None
+            ides_stop = iend
+
+        dvids = []
+        if idesvar:
+            n = 1
+            for i in range(10, ides_stop):
+                dvid_name = 'DVID' + str(n)
+                dvid = integer_or_blank(card, i, dvid_name)
+                #print("%s = %s" % (dvid_name, dvid))
+                if dvid:
+                    assert dvid is not None
+                    assert dvid is not 'DESVAR'
+                    dvids.append(dvid)
+                    n += 1
+
+        labels = []
+        if idtable:
+            n = 1
+            for i in range(idtable + 1, iend):
+                label_name = 'Label' + str(n)
+                label = string(card, i, label_name)
+                #print("%s = %s" % (label_name, label))
+                if label:
+                    assert label is not 'DTABLE'
+                    labels.append(label)
+        return DVCREL2(oid, Type, pid, pNameFid, cp_min, cp_max, dequation, dvids,
+                       labels, comment=comment)
+
+    def OptID(self):
+        return self.oid
+
+    def Eid(self):
+        if isinstance(self.eid, integer_types):
+            return self.eid
+        elif self.Type in self.allowed_elements:
+            eid = self.eid_ref.eid
+        #elif self.Type in self.allowed_masses:
+            #pid = self.pid_ref.eid
+        #elif self.Type in self.allowed_properties_mass:
+            #pid = self.pid_ref.pid
+        else:
+            raise NotImplementedError('Type=%r is not supported' % self.Type)
+        return eid
+
+    def DEquation(self):
+        if isinstance(self.dequation, integer_types):
+            return self.dequation
+        elif isinstance(self.dequation, string_types):
+            return self.dequation
+        else:
+            #print('dequation=%r; type=%s' % (self.dequation, type(self.dequation)))
+            return self.dequation_ref.equation_id
+
+    def calculate(self, op2_model, subcase_id):
+        """
+        this should really make a call the the DEQATN;
+        see the PBEAM for an example of get/set_opt_value
+        """
+        try:
+            get = self.pid_ref.get_optimization_value(self.pNameFid)
+            out = self.pid_ref.set_optimization_value(self.pNameFid, get)
+        except:
+            print('DVCREL2 calculate : %s[%r] = ???' % (self.Type, self.pNameFid))
+            raise
+
+        argsi = []
+        if self.dvids:
+            for dv in self.dvids: # DESVARS
+                arg = dv.calculate(op2_model, subcase_id)
+                argsi.append(arg)
+        if self.labels:
+            for label in self.labels: # DTABLE
+                arg = self.dtable[label]
+                argsi.append(arg)
+        #op2_model.log.info('DVPREL2; args = %s' % argsi)
+
+        #op2_model.log.info('dvids  =', self.dvids)
+        #op2_model.log.info('labels =', self.labels)
+        #op2_model.log.info('%s[%r] = %s' % (self.Type, self.pNameFid, out))
+        out = self.func(*argsi)
+        op2_model.log.info('  deqatn out = %s' % out)
+        return out
+
+    def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+
+        .. todo:: add support for DEQATN cards to finish DVPREL2 xref
+        """
+        msg = ', which is required by DVCREL2 name=%r' % self.type
+        #if self.Type in self.allowed_elements:
+            #self.pid = model.Element(self.pid, msg=msg)
+        #elif self.Type in self.allowed_masses:
+            #self.pid = model.masses[self.pid]
+        #elif self.Type in self.allowed_properties_mass:
+            #self.pid = model.properties_mass[self.pid]
+        #else:
+            #raise NotImplementedError('Type=%r is not supported' % self.Type)
+        self.dequation = model.DEQATN(self.dequation)
+
+        msg = ', which is required by DVCREL1 name=%r' % self.type
+        self.eid = model.Element(self.eid, msg=msg)
+        self.eid_ref = self.eid
+        #self.dvids = [model.Desvar(dvid, msg) for dvid in self.dvids]
+
+        self.eid_ref = self.eid
+        self.dequation_ref = self.dequation
+        assert self.eid_ref.type in ['CDAMP2'], self.eid.type
+
+    def uncross_reference(self):
+        self.eid = self.Eid()
+        self.dequation = self.DEquation()
+        del self.eid_ref, self.dequation_ref
+
+    def raw_fields(self):
+        list_fields = ['DVCREL2', self.oid, self.Type, self.Eid(),
+                       self.cp_name, self.cp_min, self.cp_max, self.DEquation(), None]
+        if self.dvids:
+            fields2 = ['DESVAR'] + self.dvids
+            list_fields += build_table_lines(fields2, nstart=1, nend=0)
+        if self.labels:
+            fields2 = ['DTABLE'] + self.labels
+            list_fields += build_table_lines(fields2, nstart=1, nend=0)
+        return list_fields
+
+    def repr_fields(self):
+        """
+        .. todo:: finish repr_fields for DVCREL2
+        """
+        return self.raw_fields()
+
+    def write_card(self, size=8, is_double=False):
+        card = self.repr_fields()
+        if size == 8:
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
+
+
 class DVMREL1(OptConstraint):  # similar to DVPREL1
     type = 'DVMREL1'
 
@@ -1873,6 +2120,219 @@ class DVMREL1(OptConstraint):  # similar to DVPREL1
             return self.comment + print_card_8(card)
         if is_double:
             return self.comment + print_card_double(card)
+        return self.comment + print_card_16(card)
+
+class DVMREL2(OptConstraint):
+    type = 'DVMREL2'
+
+    allowed_materials = ['MAT1', 'MAT2']
+    def __init__(self, oid, Type, mid, mp_name, mp_min, mp_max, deqation,
+                 dvids, labels, validate=False, comment=''):
+        """
+        +----------+--------+--------+-------+---------+-------+-------+-------+-------+
+        |    1     |    2   |   3    |   4   |     5   |   6   |   7   |   8   |   9   |
+        +==========+========+========+=======+=========+=======+=======+=======+=======+
+        | DVMREL2  | ID     | TYPE   |  MID  | MPNAME  | MPMIN | MPMAX | EQID  |       |
+        +----------+--------+--------+-------+---------+-------+-------+-------+-------+
+        |          | DESVAR | DVID1  | DVID2 | DVID3   | DVID4 | DVID5 | DVID6 | DVID7 |
+        +----------+--------+--------+-------+---------+-------+-------+-------+-------+
+        |          | DVID8  | -etc.- |       |         |       |       |       |       |
+        +----------+--------+--------+-------+---------+-------+-------+-------+-------+
+        |          | DTABLE | LABL1  | LABL2 | LABL3   | LABL4 | LABL5 | LABL6 | LABL7 |
+        +----------+--------+--------+-------+---------+-------+-------+-------+-------+
+        |          | LABL8  | -etc.- |       |         |       |       |       |       |
+        +----------+--------+--------+-------+---------+-------+-------+-------+-------+
+        """
+        if comment:
+            self._comment = comment
+        #: Unique identification number
+        self.oid = oid
+
+        #: Name of a material entry, such as MAT1, MAT2, etc
+        self.Type = Type
+
+        #: Property entry identification number
+        self.mid = mid
+
+        #: Property name, such as 'E', 'RHO'
+        #: (Character)
+        self.mp_name = mp_name
+
+        #: Minimum value allowed for this property. If MPNAME references a material
+        #: property that can only be positive, then the default value for MPMIN is 1.0E-15.
+        #: Otherwise, it is -1.0E35. (Real)
+        self.mp_min = mp_min
+
+        #: Maximum value allowed for this property. (Real; Default = 1.0E20)
+        self.mp_max = mp_max
+        #: DEQATN entry identification number. (Integer > 0)
+        self.dequation = deqation
+        self.dvids = dvids
+        self.labels = labels
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        oid = integer(card, 1, 'oid')
+        Type = string(card, 2, 'Type')
+        mid = integer(card, 3, 'mid')
+        mp_name = integer_or_string(card, 4, 'mp_name')
+        mp_min = double_or_blank(card, 5, 'mp_min')
+        mp_max = double_or_blank(card, 6, 'mp_max', 1e20)
+        dequation = integer_or_blank(card, 7, 'dequation') #: .. todo:: or blank?
+
+        fields = [interpret_value(field) for field in card[9:]]
+        ioffset = 9
+        iend = len(fields) + ioffset
+
+        try:
+            idesvar = fields.index('DESVAR') + ioffset
+        except ValueError:
+            idesvar = None
+
+        try:
+            idtable = fields.index('DTABLE') + ioffset
+            #iDesMax  = idtable # the index to start parsing DESVAR
+            ides_stop = idtable  # the index to stop  parsing DESVAR
+        except ValueError:
+            idtable = None
+            ides_stop = iend
+
+        dvids = []
+        if idesvar:
+            n = 1
+            for i in range(10, ides_stop):
+                dvid_name = 'DVID' + str(n)
+                dvid = integer_or_blank(card, i, dvid_name)
+                #print("%s = %s" % (dvid_name, dvid))
+                if dvid:
+                    assert dvid is not None
+                    assert dvid is not 'DESVAR'
+                    dvids.append(dvid)
+                    n += 1
+
+        labels = []
+        if idtable:
+            n = 1
+            for i in range(idtable + 1, iend):
+                label_name = 'Label' + str(n)
+                label = string(card, i, label_name)
+                #print("%s = %s" % (label_name, label))
+                if label:
+                    assert label is not 'DTABLE'
+                    labels.append(label)
+        return DVMREL2(oid, Type, mid, mp_name, mp_min, mp_max, dequation, dvids,
+                       labels, comment=comment)
+
+    def OptID(self):
+        return self.oid
+
+    def Mid(self):
+        if isinstance(self.mid, integer_types):
+            return self.mid
+        #if self.Type in self.allowed_properties:
+            #pid = self.pid_ref.pid
+        #elif self.Type in self.allowed_elements:
+            #pid = self.pid_ref.eid
+        #elif self.Type in self.allowed_masses:
+            #pid = self.pid_ref.eid
+        #elif self.Type in self.allowed_properties_mass:
+            #pid = self.pid_ref.pid
+        else:
+            raise NotImplementedError('Type=%r is not supported' % self.Type)
+        return mid
+
+    def DEquation(self):
+        if isinstance(self.dequation, int):
+            return self.dequation
+        return self.dequation_ref.equation_id
+
+    def calculate(self, op2_model, subcase_id):
+        """
+        this should really make a call the the DEQATN;
+        see the PBEAM for an example of get/set_opt_value
+        """
+        try:
+            get = self.mid_ref.get_optimization_value(self.mp_name)
+            out = self.mid_ref.set_optimization_value(self.mp_name, get)
+        except:
+            print('DVMREL2 calculate : %s[%r] = ???' % (self.Type, self.mp_name))
+            raise
+
+        if self.dvids:
+            for dv in self.dvids: # DESVARS
+                arg = dv.calculate(op2_model, subcase_id)
+                argsi.append(arg)
+        if self.labels:
+            for label in self.labels: # DTABLE
+                arg = self.dtable[label]
+                argsi.append(arg)
+        #op2_model.log.info('DVMREL2; args = %s' % argsi)
+
+        #op2_model.log.info('dvids  =', self.dvids)
+        #op2_model.log.info('labels =', self.labels)
+        #op2_model.log.info('%s[%r] = %s' % (self.Type, self.pNameFid, out))
+        out = self.func(*argsi)
+        op2_model.log.info('  deqatn out = %s' % out)
+        return out
+        #raise NotImplementedError('\n' + str(self))
+
+    def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+
+        .. todo:: add support for DEQATN cards to finish DVMREL2 xref
+        """
+        msg = ', which is required by DVMREL2 name=%r' % self.type
+        if self.Type in self.allowed_materials:
+            self.pid = model.Material(self.mid, msg=msg)
+        #elif self.Type in self.allowed_elements:
+            #self.pid = model.Element(self.pid, msg=msg)
+        #elif self.Type in self.allowed_masses:
+            #self.pid = model.masses[self.pid]
+        #elif self.Type in self.allowed_properties_mass:
+            #self.pid = model.properties_mass[self.pid]
+        else:
+            raise NotImplementedError('Type=%r is not supported' % self.Type)
+        self.dequation = model.DEQATN(self.dequation)
+
+        self.pid_ref = self.pid
+        self.dequation_ref = self.dequation
+        #assert self.pid_ref.type not in ['PBEND', 'PBARL', 'PBEAML'], self.pid
+
+    def uncross_reference(self):
+        self.pid = self.Mid()
+        self.dequation = self.DEquation()
+        del self.pid_ref, self.dequation_ref
+
+    #def OptValue(self):  #: .. todo:: not implemented
+        #self.pid_ref.OptValue(self.pNameFid)
+
+    def raw_fields(self):
+        list_fields = ['DVMREL2', self.oid, self.Type, self.Mid(),
+                       self.mp_name, self.mp_min, self.mp_max, self.DEquation(), None]
+        if self.dvids:
+            fields2 = ['DESVAR'] + self.dvids
+            list_fields += build_table_lines(fields2, nstart=1, nend=0)
+        if self.labels:
+            fields2 = ['DTABLE'] + self.labels
+            list_fields += build_table_lines(fields2, nstart=1, nend=0)
+        return list_fields
+
+    def repr_fields(self):
+        """
+        .. todo:: finish repr_fields for DVMREL2
+        """
+        return self.raw_fields()
+
+    def write_card(self, size=8, is_double=False):
+        card = self.repr_fields()
+        if size == 8:
+            return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)
 
 
@@ -2202,17 +2662,19 @@ class DVPREL2(OptConstraint):
     def __init__(self, oid, Type, pid, pNameFid, pMin, pMax, deqation,
                  dvids, labels, validate=False, comment=''):
         """
-       +----------+--------+--------+-------+-----------+-------+-------+-------+-------+
-       | DVPREL2  | ID     | TYPE   | PID   | PNAME/FID | PMIN  | PMAX  | EQID  |       |
-       +----------+--------+--------+-------+-----------+-------+-------+-------+-------+
-       |          | DESVAR | DVID1  | DVID2 | DVID3     | DVID4 | DVID5 | DVID6 | DVID7 |
-       +----------+--------+--------+-------+-----------+-------+-------+-------+-------+
-       |          | DVID8  | -etc.- |       |           |       |       |       |       |
-       +----------+--------+--------+-------+-----------+-------+-------+-------+-------+
-       |          | DTABLE | LABL1  | LABL2 | LABL3     | LABL4 | LABL5 | LABL6 | LABL7 |
-       +----------+--------+--------+-------+-----------+-------+-------+-------+-------+
-       |          | LABL8  | -etc.- |       |           |       |       |       |       |
-       +----------+--------+--------+-------+-----------+-------+-------+-------+-------+
+        +----------+--------+--------+-------+-----------+-------+-------+-------+-------+
+        |    1     |    2   |   3    |   4   |     5     |   6   |   7   |   8   |   9   |
+        +==========+========+========+=======+===========+=======+=======+=======+=======+
+        | DVPREL2  | ID     | TYPE   | PID   | PNAME/FID | PMIN  | PMAX  | EQID  |       |
+        +----------+--------+--------+-------+-----------+-------+-------+-------+-------+
+        |          | DESVAR | DVID1  | DVID2 | DVID3     | DVID4 | DVID5 | DVID6 | DVID7 |
+        +----------+--------+--------+-------+-----------+-------+-------+-------+-------+
+        |          | DVID8  | -etc.- |       |           |       |       |       |       |
+        +----------+--------+--------+-------+-----------+-------+-------+-------+-------+
+        |          | DTABLE | LABL1  | LABL2 | LABL3     | LABL4 | LABL5 | LABL6 | LABL7 |
+        +----------+--------+--------+-------+-----------+-------+-------+-------+-------+
+        |          | LABL8  | -etc.- |       |           |       |       |       |       |
+        +----------+--------+--------+-------+-----------+-------+-------+-------+-------+
         """
         if comment:
             self._comment = comment
