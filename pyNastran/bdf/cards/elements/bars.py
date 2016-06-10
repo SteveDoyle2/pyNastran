@@ -447,6 +447,8 @@ class CBAR(LineElement):
         self.ga_ref = self.ga
         self.gb = model.Node(self.gb, msg=msg)
         self.gb_ref = self.gb
+        self.nodes = model.Nodes([self.ga.nid, self.gb.nid], msg=msg)
+        self.nodes_ref = self.nodes
         self.pid = model.Property(self.pid, msg=msg)
         self.pid_ref = self.pid
         if model.is_nx:
