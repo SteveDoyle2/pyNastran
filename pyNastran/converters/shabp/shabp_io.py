@@ -1,4 +1,5 @@
 from six import iteritems
+import numpy as np
 from numpy import zeros, array, cross, amax, amin
 from numpy.linalg import norm
 
@@ -6,6 +7,7 @@ import vtk
 from vtk import vtkQuad
 
 from pyNastran.converters.shabp.shabp import SHABP
+from pyNastran.gui.gui_objects.gui_result import GuiResult
 
 is_shabp = True
 
@@ -75,7 +77,6 @@ class ShabpIO(object):
         assert len(elements) > 0
         for eid, element in enumerate(elements):
             (p1, p2, p3, p4) = element
-            #print "element = ",element
             elem = vtkQuad()
             elem.GetPointIds().SetId(0, p1)
             elem.GetPointIds().SetId(1, p2)
@@ -83,7 +84,6 @@ class ShabpIO(object):
             elem.GetPointIds().SetId(3, p4)
             self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
 
-        #print("eid = ", eid)
         self.grid.SetPoints(points)
         #self.grid.GetPointData().SetScalars(self.gridResult)
         #print dir(self.grid) #.SetNumberOfComponents(0)
@@ -115,13 +115,18 @@ class ShabpIO(object):
 
         icase = 0
         location_form = [
-            ('centroidX', icase + 5, []),
-            ('centroidY', icase + 6, []),
-            ('centroidZ', icase + 7, []),
+            ('CentroidX', icase + 5, []),
+            ('CentroidY', icase + 6, []),
+            ('CentroidZ', icase + 7, []),
 
-            ('nodeX', icase + 8, []),
-            ('nodeY', icase + 9, []),
-            ('nodeZ', icase + 10, []),
+            ('NodeX', icase + 8, []),
+            ('NodeY', icase + 9, []),
+            ('NodeZ', icase + 10, []),
+        ]
+        normal_form = [
+            ('NormalX', icase + 11, []),
+            ('NormalY', icase + 12, []),
+            ('NormalZ', icase + 13, []),
         ]
 
         geometry_form = [
@@ -131,54 +136,103 @@ class ShabpIO(object):
             ('Shadow', icase + 3, []),
             ('Area', icase + 4, []),
             ('Location', None, location_form),
+            ('Normal', None, normal_form),
         ]
         form = [
             ('Geometry', None, geometry_form),
         ]
-        cases[(ID, icase, 'Component', 1, 'centroid', '%i', '')] = components
-        cases[(ID, icase + 1, 'PatchID', 1, 'centroid', '%i', '')] = patches
-        cases[(ID, icase + 2, 'Impact', 1, 'centroid', '%i', '')] = impact
-        cases[(ID, icase + 3, 'Shadow', 1, 'centroid', '%i', '')] = shadow
+        itime = 0
+        ID = 0
+        components_res = GuiResult(ID, header='Component', title='Component',
+                                   location='centroid', scalar=components)
+        patch_res = GuiResult(ID, header='PatchID', title='PatchID',
+                              location='centroid', scalar=patches)
+        impact_res = GuiResult(ID, header='Impact', title='Impact',
+                               location='centroid', scalar=impact)
+        shadow_res = GuiResult(ID, header='Shadow', title='Shadow',
+                               location='centroid', scalar=shadow)
+
+        cases[icase] = (components_res, (itime, 'Component'))
+        cases[icase+1] = (patch_res, (itime, 'PatchID'))
+        cases[icase+2] = (impact_res, (itime, 'Impact'))
+        cases[icase+3] = (shadow_res, (itime, 'Shadow'))
 
         XYZc = zeros((len(elements), 3), dtype='float32')
-        #Normal = zeros((len(elements),3), dtype='float32')
+        Normal = zeros((len(elements),3), dtype='float32')
         area = zeros(len(elements), dtype='float32')
 
+        if 0:
+            elements = np.array(elements, dtype='int32')
+            p1 = nodes[elements[:, 0]]
+            p2 = nodes[elements[:, 1]]
+            p3 = nodes[elements[:, 2]]
+            p4 = nodes[elements[:, 3]]
+            a = p3 - p1
+            b = p4 - p2
+            n = np.cross(a, b)
+            ni = np.linalg.norm(n, axis=1)
+            assert len(ni) == n.shape[0]
+            i = np.where(ni != 0.0)[0]
+            #n[i] /= ni[:, i]
+            area[i] = 0.5 * ni[i]
+            assert p1.shape == n.shape, n.shape
+
         for i, element in enumerate(elements):
-            p1, p2, p3, p4 = element
-            P1 = array(nodes[p1])
-            P2 = array(nodes[p2])
-            P3 = array(nodes[p3])
-            P4 = array(nodes[p4])
-            a = P3 - P1
-            b = P4 - P2
+            n1, n2, n3, n4 = element
+            p1 = nodes[n1]
+            p2 = nodes[n2]
+            p3 = nodes[n3]
+            p4 = nodes[n4]
+            a = p3 - p1
+            b = p4 - p2
             n = cross(a, b)
             nnorm = norm(n)
-            #normal = n / nnorm
+
+            XYZc[i, :] = (p1 + p2 + p3 + p4) / 4.0
+            if nnorm == 0.:
+                print('p1=%s p2=%s p3=%s p4=%s; area=0' % (p1, p2, p3, p4))
+                continue
+            normal = n / nnorm
             A = 0.5 * nnorm
 
-            XYZc[i, :] = (P1 + P2 + P3 + P4) / 4.0
-            #Normal[i, :] = normal
+            Normal[i, :] = normal
             area[i] = A
-        cases[(ID, icase + 4, 'Area', 1, 'centroid', '%.2f')] = area
-        cases[(ID, icase + 5, 'centroidX', 1, 'centroid', '%.2f', '')] = XYZc[:, 0]
-        cases[(ID, icase + 6, 'centroidY', 1, 'centroid', '%.2f', '')] = XYZc[:, 1]
-        cases[(ID, icase + 7, 'centroidZ', 1, 'centroid', '%.2f', '')] = XYZc[:, 2]
 
-        #cases[(ID, 'normalX', 1, 'centroid', '%.2f')] = Normal[:,0]
-        #cases[(ID, 'normalY', 1, 'centroid', '%.2f')] = Normal[:,1]
-        #cases[(ID, 'normalZ', 1, 'centroid', '%.2f')] = Normal[:,2]
+        area_res = GuiResult(ID, header='Area', title='Area',
+                             location='centroid', scalar=area) # data_format='%.2f
 
-        Xn = zeros(len(nodes), dtype='float32')
-        Yn = zeros(len(nodes), dtype='float32')
-        Zn = zeros(len(nodes), dtype='float32')
-        for i, node in enumerate(nodes):
-            Xn[i] = node[0]
-            Yn[i] = node[1]
-            Zn[i] = node[2]
-        cases[(ID, icase + 8, 'nodeX', 1, 'node', '%.2f', '')] = Xn
-        cases[(ID, icase + 9, 'nodeY', 1, 'node', '%.2f', '')] = Yn
-        cases[(ID, icase + 10, 'nodeZ', 1, 'node', '%.2f', '')] = Zn
+        cenx_res = GuiResult(ID, header='CentroidX', title='CentroidX',
+                           location='centroid', scalar=XYZc[:,0]) # data_format='%.2f
+        ceny_res = GuiResult(ID, header='CentroidY', title='CentroidY',
+                             location='centroid', scalar=XYZc[:,1]) # data_format='%.2f
+        cenz_res = GuiResult(ID, header='CentroidZ', title='CentroidZ',
+                             location='centroid', scalar=XYZc[:,2]) # data_format='%.2f
+
+        nodex_res = GuiResult(ID, header='NodeX', title='NodeX',
+                           location='node', scalar=nodes[:, 0]) # data_format='%.2f
+        nodey_res = GuiResult(ID, header='NodeY', title='NodeY',
+                           location='node', scalar=nodes[:, 1]) # data_format='%.2f
+        nodez_res = GuiResult(ID, header='NodeZ', title='NodeZ',
+                           location='node', scalar=nodes[:, 2]) # data_format='%.2f
+
+        nx_res = GuiResult(ID, header='NormalX', title='NormalX',
+                           location='centroid', scalar=Normal[:,0]) # data_format='%.2f
+        ny_res = GuiResult(ID, header='NormalY', title='NormalY',
+                           location='centroid', scalar=Normal[:,1]) # data_format='%.2f
+        nz_res = GuiResult(ID, header='NormalZ', title='NormalZ',
+                           location='centroid', scalar=Normal[:,2]) # data_format='%.2f
+
+        cases[icase+4] = (area_res, (itime, 'Area'))
+        cases[icase+5] = (cenx_res, (itime, 'CentroidX'))
+        cases[icase+6] = (ceny_res, (itime, 'CentroidY'))
+        cases[icase+7] = (cenz_res, (itime, 'CentroidZ'))
+        cases[icase+8] = (nodex_res, (itime, 'NodeX'))
+        cases[icase+9] = (nodey_res, (itime, 'NodeY'))
+        cases[icase+10] = (nodez_res, (itime, 'NodeZ'))
+
+        cases[icase+11] = (nx_res, (itime, 'NormalX'))
+        cases[icase+12] = (ny_res, (itime, 'NormalY'))
+        cases[icase+13] = (nz_res, (itime, 'NormalZ'))
         return form, cases
 
     def load_shabp_results(self, shabp_filename, dirname):

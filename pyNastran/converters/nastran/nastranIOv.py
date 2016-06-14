@@ -370,7 +370,7 @@ class NastranIO(object):
             spoints = model.spoints.points
             nspoints = len(spoints)
 
-        assert nnodes + nspoints > 0
+        assert nnodes + nspoints > 0, model.card_count
         nelements = model.nelements
         assert nelements > 0
 
