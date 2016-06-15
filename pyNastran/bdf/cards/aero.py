@@ -2472,6 +2472,12 @@ class FLFACT(BaseCard):
         factors = data[1:]
         return FLFACT(sid, factors, comment=comment)
 
+    def max(self):
+        return self.factors.max()
+
+    def min(self):
+        return self.factors.min()
+
     def uncross_reference(self):
         pass
 
