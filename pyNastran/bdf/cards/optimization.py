@@ -258,6 +258,7 @@ class DDVAL(OptConstraint):
 
 
 class DOPTPRM(OptConstraint):
+    """causes a Nastran core dump if FSDMAX is nonzero and there is no stress case"""
     type = 'DOPTPRM'
     defaults = {
         'APRCOD' : 2,
@@ -1094,6 +1095,8 @@ class DRESP2(OptConstraint):
         params = {}
         value_list = []
         j = 0
+
+        ## TODO: fix this massive hack...it's a huge problem...
         for (i, field) in enumerate(fields):
             if i % 8 == 0 and field is not None:
                 if i > 0:
