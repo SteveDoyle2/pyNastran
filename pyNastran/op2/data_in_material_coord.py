@@ -8,6 +8,13 @@ from pyNastran.op2.op2 import OP2
 from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.test.bdf_unit_tests import Tester
 
+force_vectors = ['cquad4_force', 'cquad8_force', 'cquadr_force',
+        'ctria3_force', 'ctria6_force', 'ctriar_force']
+stress_vectors = ['cquad4_stress', 'cquad8_stress', 'cquadr_stress',
+        'ctria3_stress', 'ctria6_stress', 'ctriar_stress']
+strain_vectors = ['cquad4_strain', 'cquad8_strain', 'cquadr_strain',
+        'ctria3_strain', 'ctria6_strain', 'ctriar_strain']
+
 
 def transf_Mohr(Sxx, Syy, Sxy, thetarad):
     """Mohr's Circle-based Plane Stress Transformation
@@ -185,9 +192,3 @@ def data_in_material_coord(bdf, op2, in_place=False):
 
     return op2_new
 
-force_vectors = ['cquad4_force', 'cquad8_force', 'cquadr_force',
-'ctria3_force', 'ctria6_force', 'ctriar_force']
-stress_vectors = ['cquad4_stress', 'cquad8_stress', 'cquadr_stress',
-        'ctria3_stress', 'ctria6_stress', 'ctriar_stress']
-strain_vectors = ['cquad4_strain', 'cquad8_strain', 'cquadr_strain',
-        'ctria3_strain', 'ctria6_strain', 'ctriar_strain']
