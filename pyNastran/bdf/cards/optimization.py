@@ -396,6 +396,7 @@ class DDVAL(OptConstraint):
 
 
 class DOPTPRM(OptConstraint):
+    """causes a Nastran core dump if FSDMAX is nonzero and there is no stress case"""
     type = 'DOPTPRM'
     defaults = {
         'APRCOD' : 2,
@@ -614,6 +615,9 @@ def validate_dresp1(property_type, response_type, atta, attb, atti):
 
         #'CFAILURE', 'TOTSE',
     ]
+    msg = 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
+        property_type, response_type, atta, attb, atti)
+    #print(msg)
     if property_type not in property_types:
         if property_type == 'ELEM':
             if response_type == 'CFAILURE':
@@ -633,7 +637,17 @@ def validate_dresp1(property_type, response_type, atta, attb, atti):
                 #property_type, response_type, atta, attb, atti)
             raise RuntimeError(msg)
 
-    if property_type is None:
+    if response_type == 'FLUTTER':
+        #print(msg)
+        assert property_type in [None, 'PKNL'], 'DRESP1 ptype=%r rtype=%r atta=%r attb=%r atti=%r' % (
+            property_type, response_type, atta, attb, atti)
+        assert atta is None, 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
+            property_type, response_type, atta, attb, atti)
+        assert attb is None, 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
+            property_type, response_type, atta, attb, atti)
+        assert len(atti) == 4, 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
+            property_type, response_type, atta, attb, atti)
+    elif property_type is None:
         if response_type == 'WEIGHT':
             assert atta in [1, 2, 3, 4, 5, 6, None], 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
                 property_type, response_type, atta, attb, atti)
@@ -736,7 +750,9 @@ def validate_dresp1(property_type, response_type, atta, attb, atti):
                 property_type, response_type, atta, attb, atti)
             assert atta > 0, 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
                 property_type, response_type, atta, attb, atti)
-            assert attb is None, 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
+            # 1 -> direct linerization (default)
+            # 2 -> inverse approximation
+            assert attb in [None, 1, 2], 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
                 property_type, response_type, atta, attb, atti)
             assert len(atti) == 0, 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
                 property_type, response_type, atta, attb, atti)
@@ -750,14 +766,6 @@ def validate_dresp1(property_type, response_type, atta, attb, atti):
             assert len(atti) == 0, 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
                 property_type, response_type, atta, attb, atti)
 
-
-        elif response_type == 'FLUTTER':
-            assert atta is None, 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
-                property_type, response_type, atta, attb, atti)
-            assert attb is None, 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
-                property_type, response_type, atta, attb, atti)
-            assert len(atti) == 4, 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
-                property_type, response_type, atta, attb, atti)
         else:
             msg = 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
                 property_type, response_type, atta, attb, atti)
@@ -782,11 +790,12 @@ def validate_dresp1(property_type, response_type, atta, attb, atti):
             property_type, response_type, atta, attb, atti)
         assert len(atti) > 0, 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
             property_type, response_type, atta, attb, atti)
-    elif response_type == 'CSTRAIN':
+    elif response_type in ['CSTRAIN', 'CSTRESS']:
         if attb is None:
             attb = 1
         if property_type == 'PCOMP':
-            assert atta in [3], 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
+            # 11 - max shear stress/strain
+            assert atta in [3, 11], 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
                 property_type, response_type, atta, attb, atti)
             assert len(atti) > 0, 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
                 property_type, response_type, atta, attb, atti)
@@ -829,6 +838,7 @@ def validate_dresp1(property_type, response_type, atta, attb, atti):
             assert attb is None, 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
                 property_type, response_type, atta, attb, atti)
         elif property_type == 'PCOMP':
+            # this is a SMEAR PCOMP, which is basically a PSHELL
             assert atta in [9, 11, 17], 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
                 property_type, response_type, atta, attb, atti)
             assert attb is None, 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
@@ -1057,8 +1067,25 @@ class DRESP1(OptConstraint):
         elif self.response_type in ['FRSTRE']:
             self.atti = model.Properties(self.atti, msg=msg)
             self.atti_ref = self.atti
-        elif self.response_type in ['WEIGHT', 'FLUTTER', 'STABDER', 'CEIG', 'EIGN', 'FREQ']:
+        elif self.response_type in ['WEIGHT','STABDER', 'CEIG', 'EIGN', 'FREQ']:
             pass
+        elif self.response_type == 'FLUTTER':
+            # TODO: SOL-200; add check that FLFACT values exist in the FLFACT card
+            #       referenced by the FLUTTER card for the given subcase
+            if self.property_type == 'PKNL':
+                self.atti = [
+                    model.Set(self.atti[0], msg=msg),
+                    model.FLFACT(self.atti[1], msg=msg),
+                    model.FLFACT(self.atti[2], msg=msg),
+                    model.FLFACT(self.atti[3], msg=msg),
+                ]
+                msgi = 'max density=%s mach=%s velocity=%s' % (self.atti[1].max(), self.atti[2].max(), self.atti[3].max())
+                #print(msgi)
+                self.atti_ref = self.atti
+            else:
+                msg = 'PropertyType=%r is not supported\n' % self.property_type
+                msg += str(self)
+                print(msg)
         elif self.response_type in ['DISP',
                                     'TDISP',
                                     'TVELO',
@@ -1101,12 +1128,22 @@ class DRESP1(OptConstraint):
             data = [prop if isinstance(prop, integer_types) else prop.pid for prop in self.atti]
             for value in data:
                 assert not isinstance(value, BaseCard), value
-        elif self.response_type in ['FRSTRE']:
+        elif self.response_type == 'FRSTRE':
             data = [prop if isinstance(prop, integer_types) else prop.Pid() for prop in self.atti]
             for value in data:
                 assert not isinstance(value, BaseCard), value
-        elif self.response_type in ['WEIGHT', 'FLUTTER', 'STABDER', 'EIGN', 'FREQ']:
+        elif self.response_type in ['WEIGHT', 'STABDER', 'EIGN', 'FREQ']:
             data = self.atti
+        elif self.response_type == 'FLUTTER':
+            if self.property_type == 'PKNL':
+                data = [atti if isinstance(atti, integer_types) else atti.sid for atti in self.atti]
+            else:
+                data = self.atti
+                #msg = 'PropertyType=%r is not supported\n' % self.property_type
+                #msg += str(self)
+                #print(msg)
+                #raise NotImplementedError(msg)
+
         elif self.response_type in ['DISP',
                                     'TDISP', 'TVELO',
                                     'FRDISP', 'FRVELO', 'FRACCL',
@@ -1200,6 +1237,8 @@ class DRESP2(OptConstraint):
         params = {}
         value_list = []
         j = 0
+
+        ## TODO: fix this massive hack...it's a huge problem...
         for (i, field) in enumerate(fields):
             if i % 8 == 0 and field is not None:
                 if i > 0:
