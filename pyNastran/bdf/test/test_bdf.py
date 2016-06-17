@@ -555,15 +555,16 @@ def validate_case_control(fem2, p0, sol_base, subcase_keys, subcases, sol_200_ma
         subcase = subcases[isubcase]
         str(subcase)
         assert sol_base is not None, sol_base
-        if sol_base == 200:
-            analysis = subcase.get_parameter('ANALYSIS')[0]
-            sol = sol_200_map[analysis]
-            if sol is None:
-                msg = 'sol=%s analysis=%r' % (sol, analysis)
-                raise NotImplementedError(msg)
-        else:
-            sol = sol_base
-        check_case(sol, subcase, fem2, p0, isubcase)
+        #print('case\n%s' % subcase)
+        #if sol_base == 200:
+            #analysis = subcase.get_parameter('ANALYSIS')[0]
+            #sol = sol_200_map[analysis]
+            #if sol is None:
+                #msg = 'sol=%s analysis=%r' % (sol, analysis)
+                #raise NotImplementedError(msg)
+        #else:
+            #sol = sol_base
+        check_case(sol_base, subcase, fem2, p0, isubcase)
 
 def check_case(sol, subcase, fem2, p0, isubcase):
     if sol == 24:
@@ -654,9 +655,15 @@ def check_case(sol, subcase, fem2, p0, isubcase):
         assert 'TRIM' in subcase, subcase
         assert fem2.aeros is not None, 'An AEROS card is required for STATIC AERO - SOL %i' % sol
     elif sol == 145:
-        assert 'METHOD'in subcase, subcase
-        assert 'FMETHOD' in subcase, subcase  # FLUTTER
         assert fem2.aero is not None, 'An AERO card is required for FLUTTER - SOL %i; %s' % (sol, fem2.aero)
+
+        assert 'METHOD'in subcase, subcase  # EIGRL
+        #value, options = subcase.get_parameter('METHOD')
+        #assert value in fem2.methods, 'value=%s not in methods' % value
+
+        assert 'FMETHOD' in subcase, subcase  # FLUTTER
+        #value, options = subcase.get_parameter('FMETHOD')
+        #assert value in fem2.flutters, 'value=%s not in flutters' % value
     elif sol == 146:
         assert 'METHOD'in subcase, subcase
         assert any(subcase.has_parameter('FREQUENCY', 'TIME', 'TSTEP', 'TSTEPNL')), subcase
@@ -764,11 +771,11 @@ def check_case(sol, subcase, fem2, p0, isubcase):
 
         assert sol in [5, 76, 101, 103, 105, 106, 107, 108, 110, 111,
                        112, 144, 145, 146, 187], 'sol=%s METHOD' % sol
-    if 'CMETHOD' in subcase:
-        method_id = subcase.get_parameter('CMETHOD')[0]
-        method = fem2.cMethods[method_id]
-        assert sol in [107, 110, 145], 'sol=%s CMETHOD' % sol
 
+    if 'FMETHOD' in subcase:
+        method_id = subcase.get_parameter('FMETHOD')[0]
+        method = fem2.flutters[method_id]
+        assert sol in [145], 'sol=%s FMETHOD' % sol
     if 'LOAD' in subcase:
         loadcase_id = subcase.get_parameter('LOAD')[0]
         force, moment = fem2.sum_forces_moments(p0, loadcase_id, include_grav=False)

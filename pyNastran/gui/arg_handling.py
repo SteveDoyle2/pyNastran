@@ -22,6 +22,7 @@ def determine_format(input):
         'plot3d' : ['.p3d', '.p3da'],
         'surf' : ['.surf'],
         'lawgs' : ['.wgs'],
+        'shabp' : ['.mk5'],
     }
     ext = os.path.splitext(input)[1].lower()
     extension_to_format = {val : key for key, value in iteritems(format_to_extension)
@@ -97,7 +98,7 @@ def run_docopt():
     if input_filenames and not input_format:
         input_format = determine_format(input_filenames[0])
 
-    allowed_formats = ['nastran', 'stl', 'cart3d', 'tecplot', 'ugrid', 'plot3d', 'surf', 'lawgs', 'degen_geom']
+    allowed_formats = ['nastran', 'stl', 'cart3d', 'tecplot', 'ugrid', 'plot3d', 'surf', 'lawgs', 'degen_geom', 'shabp']
     assert input_format in allowed_formats, 'format=%r is not supported' % input_format
 
     shots = []

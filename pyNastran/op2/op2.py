@@ -607,7 +607,7 @@ class OP2(OP2_Scalar):
                     self.log.info('  %s' % str(key))
         #self.log.info('subcase_key = %s' % self.subcase_key)
 
-    def transform_displacements_to_global(self, i_transform, transforms):
+    def transform_displacements_to_global(self, i_transform, transforms, coords=None):
         """
         Transforms the ``data`` of displacement-like results into the
         global coordinate system for those nodes with different output
@@ -659,8 +659,13 @@ class OP2(OP2_Scalar):
                     data = result.data
                     for cid, transform in iteritems(transforms):
                         inode = i_transform[cid]
-                        translation = data[:, inode, :3]
-                        rotation = data[:, inode, 3:]
+                        if coords is None:
+                            translation = data[:, inode, :3]
+                            rotation = data[:, inode, 3:]
+                        else:
+                            coord = coords[cid]
+                            translation = coord.coord_to_xyz_array(data[:, inode, :3])
+                            rotation = coord.coord_to_xyz_array(data[:, inode, 3:])
                         data[:, inode, :3] = translation.dot(transform)
                         data[:, inode, 3:] = rotation.dot(transform)
 

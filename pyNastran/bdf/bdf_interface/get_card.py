@@ -414,7 +414,7 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
                 eids2.append(eid)
         return eids2
 
-    def get_element_ids_dict_with_pids(self, pids):
+    def get_element_ids_dict_with_pids(self, pids=None):
         """
         Gets all the element IDs with a specific property ID.
 
@@ -437,7 +437,14 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
           model.read_bdf(bdf_filename)
           pids = [4, 5, 6]
           eids_dict = model.get_element_ids_dict_with_pids(pids)
+
+          # consider all properties
+          eids_dict = model.get_element_ids_dict_with_pids()
         """
+        if pids is None:
+            pids = model.properties.keys()
+        elif isinstance(pids, int):
+            pids = [int]
         assert isinstance(pids, (list, tuple)), pids
         eids2 = {}
         for pid in pids:

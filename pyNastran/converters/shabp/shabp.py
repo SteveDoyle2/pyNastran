@@ -1,6 +1,6 @@
 from __future__ import print_function
 from six.moves import range
-from numpy import array, zeros, arange, ravel, ones, cross
+from numpy import array, zeros, arange, ones, cross
 from numpy.linalg import norm
 
 from pyNastran.converters.shabp.shabp_results import ShabpOut
@@ -58,8 +58,8 @@ class SHABP(ShabpOut):
                 for irow in range(nrows-1):
                     for jcol in range(ncols-1):
                         i1 = irow*ncols +jcol,
-                        i2 = (irow+1)*ncols +(jcol  ),
-                        i3 = (irow+1)*ncols +(jcol+1),
+                        i2 = (irow+1)*ncols + jcol,
+                        i3 = (irow+1)*ncols + (jcol+1),
                         i4 = irow*ncols +(jcol+1),
                         a = XYZ[i3, :] - XYZ[i1, :]
                         b = XYZ[i4, :] - XYZ[i2, :]
@@ -67,8 +67,6 @@ class SHABP(ShabpOut):
 
             areas[name] = A
             lengths[name] = xmax - xmin
-        #print "areas =", areas
-        #print "lengths =", lengths
         return areas
 
     def get_area_by_component(self, components=None):
@@ -83,7 +81,6 @@ class SHABP(ShabpOut):
             patches = self.component_name_to_patch[name]
             A = self.get_area_by_patch(patches)
             areas[name] = A.sum()
-        #print "areas =", areas
         return areas
 
     def get_area_by_patch(self, ipatches=None):
@@ -117,7 +114,7 @@ class SHABP(ShabpOut):
 
     def read_shabp(self, infilename):
         lines = open(infilename).readlines()
-        if(infilename.lower().endswith(".geo")):
+        if infilename.lower().endswith(".geo"):
             i = 0
         else:  # this supports standard .inp and .mk5 files
             i = 3
@@ -165,7 +162,6 @@ class SHABP(ShabpOut):
                 elif t1 == 3:
                     row.append([x1, y1, z1])
                     patch.append(row)
-                    #print "breaking1"
                     break
                 else:
                     raise RuntimeError()
@@ -184,7 +180,6 @@ class SHABP(ShabpOut):
                 elif t2 == 3:
                     row.append([x2, y2, z2])
                     patch.append(row)
-                    #print "breaking2"
                     break
                 else:
                     raise RuntimeError()
@@ -194,10 +189,12 @@ class SHABP(ShabpOut):
                 #print "***last patch - lines[%i] = %r" % (i, lines[i])
                 break
             #print "lines[%i] = %r" % (i, lines[i])
-        #print "********len(patches) =", len(patches)
         self.trailer = lines[i:]
         self.build_patches(patches)
-        self.parse_trailer()
+        try:
+            self.parse_trailer()
+        except:
+            print('failed parsing trailer')
 
     def build_patches(self, patches):
         X = []
@@ -220,7 +217,6 @@ class SHABP(ShabpOut):
         self.X = X
         self.Y = Y
         self.Z = Z
-        #print "npatches = ", len(self.X)
 
 
     def getPointsElementsRegions(self):
@@ -283,7 +279,7 @@ class SHABP(ShabpOut):
             impact[ielement:ielement+nelementsi] *= impact_val
             shadow[ielement:ielement+nelementsi] *= shadow_val
             elements2[ielement:ielement+nelementsi, :] = elements[:, :] + ipoint
-            #print "  ipatch=%i Cp[%i:%i]" % (ipatch+1, ielement, ielement+nelementsi)
+            #print("  ipatch=%i Cp[%i:%i]" % (ipatch+1, ielement, ielement+nelementsi))
             ipoint += npointsi
             ielement += nelementsi
         return XYZ, elements2, patches, components, impact, shadow

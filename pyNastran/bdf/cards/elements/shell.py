@@ -20,6 +20,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six.moves import range
 
+import numpy as np
 from numpy import cross, allclose
 from numpy.linalg import norm
 
@@ -1608,6 +1609,38 @@ class CQUAD4(QuadShell):
         self.nodes_ref = self.nodes
         self.pid = model.Property(self.pid, msg=msg)
         self.pid_ref = self.pid
+
+    def material_coordinate_system(self, normal=None, xyz1234=None):
+        if normal is None:
+            normal = self.Normal() # k = kmat
+
+        if xyz1234 is None:
+            xyz1 = self.nodes_ref[0].get_position()
+            xyz2 = self.nodes_ref[1].get_position()
+            xyz3 = self.nodes_ref[2].get_position()
+            xyz4 = self.nodes_ref[3].get_position()
+            #centroid = (xyz1 + xyz2 + xyz3 + xyz4) / 4.
+            #centroid = self.Centroid()
+        else:
+            #centroid = xyz1234.sum(axis=1)
+            #assert len(centroid) == 3, centroid
+            xyz1 = xyz1234[:, 0]
+            xyz2 = xyz1234[:, 1]
+            xyz3 = xyz1234[:, 2]
+            xyz4 = xyz1234[:, 3]
+        centroid = (xyz1 + xyz2 + xyz3 + xyz4) / 4.
+
+        if self.thetaMcid is None:
+            raise NotImplementedError('thetaMcid=%r' % self.thetaMcid)
+        if isinstance(self.thetaMcid, integer_types):
+            i = self.thetaMcid_ref.i
+            jmat = np.cross(normal, i) # k x i
+            jmat /= np.linalg.norm(jmat)
+
+            imat = np.cross(jmat, normal)
+        elif isinstance(self.thetaMcid, float):
+            raise NotImplementedError('thetaMcid=%r' % self.thetaMcid)
+        return centroid, imat, jmat, normal
 
     def uncross_reference(self):
         self.nodes = self.node_ids
