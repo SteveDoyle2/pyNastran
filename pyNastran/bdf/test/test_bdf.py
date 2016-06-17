@@ -654,15 +654,14 @@ def check_case(sol, subcase, fem2, p0, isubcase):
         assert 'SUPORT1' in subcase or len(fem2.suport), subcase
         assert 'TRIM' in subcase, subcase
         assert fem2.aeros is not None, 'An AEROS card is required for STATIC AERO - SOL %i' % sol
-        assert value in fem2.flutters, 'value=%s not in flutters' % value
     elif sol == 145:
         assert fem2.aero is not None, 'An AERO card is required for FLUTTER - SOL %i; %s' % (sol, fem2.aero)
 
-        #assert 'METHOD'in subcase, subcase
+        assert 'METHOD'in subcase, subcase  # EIGRL
         #value, options = subcase.get_parameter('METHOD')
         #assert value in fem2.methods, 'value=%s not in methods' % value
 
-        #assert 'FMETHOD' in subcase, subcase  # FLUTTER
+        assert 'FMETHOD' in subcase, subcase  # FLUTTER
         #value, options = subcase.get_parameter('FMETHOD')
         #assert value in fem2.flutters, 'value=%s not in flutters' % value
     elif sol == 146:
@@ -775,7 +774,7 @@ def check_case(sol, subcase, fem2, p0, isubcase):
 
     if 'FMETHOD' in subcase:
         method_id = subcase.get_parameter('FMETHOD')[0]
-        method = fem2.cMethods[method_id]
+        method = fem2.flutters[method_id]
         assert sol in [145], 'sol=%s FMETHOD' % sol
     if 'LOAD' in subcase:
         loadcase_id = subcase.get_parameter('LOAD')[0]

@@ -932,6 +932,8 @@ class DRESP1(OptConstraint):
         elif self.response_type in ['WEIGHT','STABDER', 'CEIG', 'EIGN', 'FREQ']:
             pass
         elif self.response_type == 'FLUTTER':
+            # TODO: SOL-200; add check that FLFACT values exist in the FLFACT card
+            #       referenced by the FLUTTER card for the given subcase
             if self.property_type == 'PKNL':
                 self.atti = [
                     model.Set(self.atti[0], msg=msg),
