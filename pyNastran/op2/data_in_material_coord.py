@@ -87,13 +87,32 @@ def get_eids_from_op2_vector(vector):
 
 
 def data_in_material_coord(bdf, op2, in_place=False):
-    """
+    """Convert OP2 2D element outputs to material coordinates
+
+    Nastran allows the use of 'PARAM,OMID,YES' to print 2D element forces,
+    stresses and strains based on the material direction. However, the
+    convertion only takes place in the F06 output file, whereas the OP2 output
+    file remains in the element coordinate system.
+
+    This function converts the 2D element vectors to the material OP2
+    similarly to most of the post-processing tools (Patran, Femap, HyperView,
+    etc).
 
     Parameters
     ----------
+    bdf : :class:`.BDF` object
+        A :class:`.BDF` object that corresponds to the 'op2'.
+    op2 : :class:`.OP2` object
+        A :class:`.OP2` object that corresponds to the 'bdf'.
     in_place : bool, optional
         If true the original op2 object is modified, otherwise a new one is
         created.
+
+    Returns
+    -------
+    op2_new : :class:`.OP2` object
+        A :class:`.OP2` object with the abovementioned changes.
+
     """
     if in_place:
         op2_new = op2
