@@ -156,40 +156,28 @@ def data_in_material_coord(bdf, op2, in_place=False):
             new_vector.data[:, :, 3][:, check] = Sxy_theta
             thetadeg_new = thetadeg_to_principal(Sxx_theta, Syy_theta, Sxy_theta)
             new_vector.data[:, :, 4][:, check] = thetadeg_new
-            if True:
-                # TODO no need to recompute, keep this only in test routines
-                Sxx_theta, Syy_theta, Sxy_theta = transf_Mohr(Sxx_theta, Syy_theta,
-                        Sxy_theta, np.deg2rad(thetadeg_new))
-                new_vector.data[:, :, 5][:, check] = Sxx_theta
-                new_vector.data[:, :, 6][:, check] = Syy_theta
 
+    for vecname in strain_vectors:
+        op2_vectors = getattr(op2, vecname)
+        new_vectors = getattr(op2_new, vecname)
+        for subcase, vector in op2_vectors.items():
+            new_vector = new_vectors[subcase]
+            eids = get_eids_from_op2_vector(vector)
+            check = eids != 0
+            eids = eids[check]
+            thetadeg = np.array([bdf.elements[eid].thetaMcid for eid in eids])
+            thetarad = np.deg2rad(thetadeg)
 
-    if 0:
-        #FIXME cannot figure out how to do the transformations for strain
-        for vecname in strain_vectors:
-            op2_vectors = getattr(op2, vecname)
-            new_vectors = getattr(op2_new, vecname)
-            for subcase, vector in op2_vectors.items():
-                new_vector = new_vectors[subcase]
-                eids = get_eids_from_op2_vector(vector)
-                check = eids != 0
-                eids = eids[check]
-                modE = np.array([bdf.elements[eid].pid.mid.e for eid in eids])
-                modG = np.array([bdf.elements[eid].pid.mid.g for eid in eids])
-                nu = np.array([bdf.elements[eid].pid.mid.nu for eid in eids])
-                thetadeg = np.array([bdf.elements[eid].thetaMcid for eid in eids])
-                thetarad = np.deg2rad(thetadeg)
-
-                # bottom and top in-plane strains
-                Sxx = vector.data[:, :, 1][:, check] * modE
-                Syy = vector.data[:, :, 2][:, check] * modE
-                Sxy = vector.data[:, :, 3][:, check] * modG
-                Sxx_theta, Syy_theta, Sxy_theta = transf_Mohr(Sxx, Syy, Sxy, thetarad)
-                thetadeg_new = thetadeg_to_principal(Sxx_theta, Syy_theta, Sxy_theta)
-                new_vector.data[:, :, 1][:, check] = Sxx_theta / modE
-                new_vector.data[:, :, 2][:, check] = Syy_theta / modE
-                new_vector.data[:, :, 3][:, check] = Sxy_theta / modG
-                new_vector.data[:, :, 4][:, check] = thetadeg_new
+            # bottom and top in-plane strains
+            exx = vector.data[:, :, 1][:, check]
+            eyy = vector.data[:, :, 2][:, check]
+            exy = vector.data[:, :, 3][:, check] / 2.
+            exx_theta, eyy_theta, exy_theta = transf_Mohr(exx, eyy, exy, thetarad)
+            thetadeg_new = thetadeg_to_principal(exx_theta, eyy_theta, exy_theta)
+            new_vector.data[:, :, 1][:, check] = exx_theta
+            new_vector.data[:, :, 2][:, check] = eyy_theta
+            new_vector.data[:, :, 3][:, check] = exy_theta * 2.
+            new_vector.data[:, :, 4][:, check] = thetadeg_new
 
     return op2_new
 
