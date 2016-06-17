@@ -70,7 +70,6 @@ class TestMaterialCoord(unittest.TestCase):
             data = vector.data
             eids = get_eids_from_op2_vector(vector)
             check = eids != 0
-            np.savetxt(vecname + '.txt', data[:, check][0])
             if not np.allclose(data[:, check], ref_result, rtol=0.001):
                 print('failed %r' % name)
                 is_failed = True
