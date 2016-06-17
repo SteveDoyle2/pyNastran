@@ -64,93 +64,93 @@ def validate_dvmrel(validate, Type, mp_name):
             raise NotImplementedError(msg)
 
 
-def validate_dvprel(Type, pNameFid, validate):
+def validate_dvprel(Type, pname_fid, validate):
     if validate:
-        msg = 'DVPREL1: Type=%r pNameFid=%r is invalid' % (Type, pNameFid)
+        msg = 'DVPREL1: Type=%r pname_fid=%r is invalid' % (Type, pname_fid)
         #if Type == 'CELAS2':
-            #assert pNameFid in ['K', 'GE', 'S'], msg
+            #assert pname_fid in ['K', 'GE', 'S'], msg
         #elif Type == 'CELAS4':
-            #assert pNameFid in ['K'], msg
+            #assert pname_fid in ['K'], msg
         if Type == 'PELAS':
-            assert pNameFid in [3, 4, 'K1', 'GE1'], msg
+            assert pname_fid in [3, 4, 'K1', 'GE1'], msg
         elif Type == 'PELAST':
-            assert pNameFid in [3, 4, 'TKID'], msg
+            assert pname_fid in [3, 4, 'TKID'], msg
 
         elif Type == 'PROD':
-            assert pNameFid in [4, 'A'], msg
+            assert pname_fid in [4, 'A'], msg
         elif Type == 'PTUBE':
-            assert pNameFid in [4, 5], msg
+            assert pname_fid in [4, 5], msg
 
         #elif Type == 'CBAR':
-            #assert pNameFid in ['X1', 'X2'], msg
+            #assert pname_fid in ['X1', 'X2'], msg
         elif Type == 'PBAR':
-            assert pNameFid in [4, 5, 6, 7, 12, 13, 14, 15, 16, 17, 18, 19, 'A', 'I1', 'J'], msg
+            assert pname_fid in [4, 5, 6, 7, 12, 13, 14, 15, 16, 17, 18, 19, 'A', 'I1', 'J'], msg
         elif Type == 'PBARL':
-            assert pNameFid in [12, 13, 14, 15, 16, 17, 'DIM1', 'DIM2'], msg
+            assert pname_fid in [12, 13, 14, 15, 16, 17, 'DIM1', 'DIM2'], msg
 
         #elif Type == 'CBEAM':
-            #assert pNameFid in ['X1', 'X2', 'X3', 'W1A', 'W2A', 'W3A', 'W1B', 'W2B', 'W3B'], msg
+            #assert pname_fid in ['X1', 'X2', 'X3', 'W1A', 'W2A', 'W3A', 'W1B', 'W2B', 'W3B'], msg
         elif Type == 'PBEAM':
-            assert pNameFid in ['I1', 'I2', 'A', 'J',
-                                'I1(B)', 'I2(B)', '-8'], msg # -8
+            assert pname_fid in ['I1', 'I2', 'A', 'J',
+                                 'I1(B)', 'I2(B)', '-8'], msg # -8
         elif Type == 'PBEAML':
-            assert pNameFid in ['DIM1', 'DIM1(A)', 'DIM1(B)', 'I1(B)', 'I2(B)',
-                                'DIM2', 'DIM3', 'DIM4', 'DIM5', 'DIM6', 'NSM'], msg # 'DIM(B)'
+            assert pname_fid in ['DIM1', 'DIM1(A)', 'DIM1(B)', 'I1(B)', 'I2(B)',
+                                 'DIM2', 'DIM3', 'DIM4', 'DIM5', 'DIM6', 'NSM'], msg # 'DIM(B)'
 
         #elif Type == 'CQUAD4':
-            #assert pNameFid in ['T1', 'T2', 'T3', 'T4'], msg
+            #assert pname_fid in ['T1', 'T2', 'T3', 'T4'], msg
         elif Type == 'PSHELL':
             #if cp_name in '12I/T**3':
                 #cp_name =
-            assert pNameFid in ['T', 4, 6], msg
+            assert pname_fid in ['T', 4, 6], msg
         elif Type == 'PCOMP':
-            if isinstance(pNameFid, str):
-                word, num = break_word_by_trailing_integer(pNameFid)
+            if isinstance(pname_fid, str):
+                word, num = break_word_by_trailing_integer(pname_fid)
                 if word not in ['T', 'THETA']:
                     raise RuntimeError(msg)
             else:
-                assert pNameFid in [3, #3-z0
-                                    # 13-t1, 14-theta1, 17-t2, 18-theta2
-                                    13, 14, 17, 18,
-                                    23, 24, 27, 28,
-                                    33, 34, 37, 38,
-                                    43, 44, 47, 48], msg
+                assert pname_fid in [3, #3-z0
+                                     # 13-t1, 14-theta1, 17-t2, 18-theta2
+                                     13, 14, 17, 18,
+                                     23, 24, 27, 28,
+                                     33, 34, 37, 38,
+                                     43, 44, 47, 48], msg
         elif Type == 'PCOMPG':
-            assert pNameFid in [15, 25, 75, 85], msg
+            assert pname_fid in [15, 25, 75, 85], msg
 
         #elif Type == 'CBUSH':
-            #assert pNameFid in ['X1', 'X2', 'X3', 'S', 'S1'], msg
+            #assert pname_fid in ['X1', 'X2', 'X3', 'S', 'S1'], msg
         elif Type == 'PBUSH':
-            assert pNameFid in [18, 'GE1', 'K2', 'B2', '-13', 'GE3', 'GE4', 'GE5', 'GE6'], msg # -13
+            assert pname_fid in [18, 'GE1', 'K2', 'B2', '-13', 'GE3', 'GE4', 'GE5', 'GE6'], msg # -13
         elif Type == 'PBUSH1D':
-            assert pNameFid in ['K', 'C'], msg
+            assert pname_fid in ['K', 'C'], msg
         elif Type == 'PBUSHT':
-            assert pNameFid in ['TBID1', 'TGEID1', 'TGEID2'], msg
+            assert pname_fid in ['TBID1', 'TGEID1', 'TGEID2'], msg
 
         #elif Type == 'CGAP':
-            #assert pNameFid in ['X1', 'X2', 'X3'], msg
+            #assert pname_fid in ['X1', 'X2', 'X3'], msg
         elif Type == 'PGAP':
-            assert pNameFid in [5], msg
+            assert pname_fid in [5], msg
         elif Type == 'PVISC':
-            assert pNameFid in ['CE1'], msg
+            assert pname_fid in ['CE1'], msg
 
         #elif Type == 'CDAMP2':
-            #assert pNameFid in ['B'], msg
+            #assert pname_fid in ['B'], msg
         elif Type == 'PDAMP':
-            assert pNameFid in [3, 'B1'], msg
+            assert pname_fid in [3, 'B1'], msg
 
         #elif Type == 'CMASS2':
-            #assert pNameFid in ['M'], msg
+            #assert pname_fid in ['M'], msg
         #elif Type == 'CMASS4':
-            #assert pNameFid in ['M'], msg
+            #assert pname_fid in ['M'], msg
         elif Type == 'PMASS':
-            assert pNameFid in [3], msg
+            assert pname_fid in [3], msg
 
         #elif Type == 'CONM2':
-            #assert pNameFid in ['M', 'X1', 'X2', 'I11', 'I22'], msg
+            #assert pname_fid in ['M', 'X1', 'X2', 'I11', 'I22'], msg
 
         elif Type == 'PWELD':
-            assert pNameFid in ['D'], msg
+            assert pname_fid in ['D'], msg
 
         elif Type == 'PBEND':
             raise RuntimeError('Nastran does not support the PBEND')
@@ -1067,7 +1067,7 @@ class DRESP1(OptConstraint):
         elif self.response_type in ['FRSTRE']:
             self.atti = model.Properties(self.atti, msg=msg)
             self.atti_ref = self.atti
-        elif self.response_type in ['WEIGHT','STABDER', 'CEIG', 'EIGN', 'FREQ']:
+        elif self.response_type in ['WEIGHT', 'STABDER', 'CEIG', 'EIGN', 'FREQ']:
             pass
         elif self.response_type == 'FLUTTER':
             # TODO: SOL-200; add check that FLFACT values exist in the FLFACT card
@@ -1079,7 +1079,8 @@ class DRESP1(OptConstraint):
                     model.FLFACT(self.atti[2], msg=msg),
                     model.FLFACT(self.atti[3], msg=msg),
                 ]
-                msgi = 'max density=%s mach=%s velocity=%s' % (self.atti[1].max(), self.atti[2].max(), self.atti[3].max())
+                msgi = 'max density=%s mach=%s velocity=%s' % (
+                    self.atti[1].max(), self.atti[2].max(), self.atti[3].max())
                 #print(msgi)
                 self.atti_ref = self.atti
             else:
@@ -1238,7 +1239,15 @@ class DRESP2(OptConstraint):
         value_list = []
         j = 0
 
-        ## TODO: fix this massive hack...it's a huge problem...
+        # DRESP2, dresp_id,
+        #         DRESP1, 10, 20
+        #         DESVAR, 30
+        #         DRESP1, 40
+        # params = {
+        #    (0, 'DRESP1') = [10, 20],
+        #    (1, 'DESVAR') = [30],
+        #    (2, 'DRESP1') = [40],
+        # }
         for (i, field) in enumerate(fields):
             if i % 8 == 0 and field is not None:
                 if i > 0:
@@ -1247,13 +1256,23 @@ class DRESP2(OptConstraint):
                     j += 1
                 key = (j, field)
                 value_list = []
+                name = field
             elif field is not None:
+                if name in ['DESVAR', 'DRESP1', 'DRESP2', 'DVCREL1', 'DVCREL2', 'DVMREL1', 'DVMREL2', 'DVPREL1', 'DVPREL2', 'DNODE']:
+                    ##field = 'cat'
+                    #print('field=%s value=%r type=%r should be an integer...\ncard=%s' % (i+9, field, name, card))
+                    assert isinstance(field, integer_types), 'field=%i value=%r type=%s should be an integer...\ncard=%s' % (i+9, field, name, card)
+                elif name in ['DTABLE']:
+                    #print('field=%s value=%r type=%r should be an string...\ncard=%s' % (i+9, field, name, card))
+                    assert isinstance(field, string_types), 'field=%i value=%r type=%s should be an string...\ncard=%s' % (i+9, field, name, card)
+                else:
+                    raise NotImplementedError(name)
                 value_list.append(field)
         params[key] = value_list
 
-        #print("--Params--")
-        #for key, value_list in sorted(iteritems(self.params)):
-            #print("  key=%s params=%s" %(key, value_list))
+        #print("--DRESP2 Params--")
+        #for key, value_list in sorted(iteritems(params)):
+            #print("  key=%s value_list=%s" %(key, value_list))
         return DRESP2(dresp_id, label, dequation, region, method,
                       c1, c2, c3, params, comment=comment)
 
@@ -1972,7 +1991,7 @@ class DVCREL2(OptConstraint):
         oid = integer(card, 1, 'oid')
         Type = string(card, 2, 'Type')
         pid = integer(card, 3, 'pid')
-        pNameFid = integer_or_string(card, 4, 'pName_FID')
+        cp_name = integer_or_string(card, 4, 'cpName_FID')
         cp_min = double_or_blank(card, 5, 'cp_min')
         cp_max = double_or_blank(card, 6, 'cp_max', 1e20)
         dequation = integer_or_blank(card, 7, 'dequation') #: .. todo:: or blank?
@@ -2017,7 +2036,7 @@ class DVCREL2(OptConstraint):
                 if label:
                     assert label is not 'DTABLE'
                     labels.append(label)
-        return DVCREL2(oid, Type, pid, pNameFid, cp_min, cp_max, dequation, dvids,
+        return DVCREL2(oid, Type, pid, cp_name, cp_min, cp_max, dequation, dvids,
                        labels, comment=comment)
 
     def OptID(self):
@@ -2059,8 +2078,8 @@ class DVCREL2(OptConstraint):
 
         argsi = []
         if self.dvids:
-            for dv in self.dvids: # DESVARS
-                arg = dv.calculate(op2_model, subcase_id)
+            for desvar in self.dvids: # DESVARS
+                arg = desvar.calculate(op2_model, subcase_id)
                 argsi.append(arg)
         if self.labels:
             for label in self.labels: # DTABLE
@@ -2401,8 +2420,8 @@ class DVMREL2(OptConstraint):
             raise
 
         if self.dvids:
-            for dv in self.dvids: # DESVARS
-                arg = dv.calculate(op2_model, subcase_id)
+            for desvar in self.dvids: # DESVARS
+                arg = desvar.calculate(op2_model, subcase_id)
                 argsi.append(arg)
         if self.labels:
             for label in self.labels: # DTABLE
@@ -2478,16 +2497,16 @@ class DVMREL2(OptConstraint):
         return self.comment + print_card_16(card)
 
 
-def break_word_by_trailing_integer(pNameFid):
+def break_word_by_trailing_integer(pname_fid):
     nums = []
-    for i, letter in enumerate(reversed(pNameFid)):
+    for i, letter in enumerate(reversed(pname_fid)):
         if letter.isdigit():
             nums.append(letter)
         else:
             break
         num = ''.join(nums[::-1])
-        word = pNameFid[:-i-1]
-        assert len(word)+len(num) == len(pNameFid), 'word=%r num=%r pNameFid=%r' % (word, num, pNameFid)
+        word = pname_fid[:-i-1]
+        assert len(word)+len(num) == len(pname_fid), 'word=%r num=%r pname_fid=%r' % (word, num, pname_fid)
         return word, num
 
 
@@ -2511,7 +2530,7 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
     ]
     allowed_masses = ['CONM2', 'CMASS2', 'CMASS4']
     allowed_properties_mass = ['PMASS']
-    def __init__(self, oid, Type, pid, pNameFid, pMin, pMax, dvids, coeffs, c0=0.0,
+    def __init__(self, oid, Type, pid, pname_fid, p_min, p_max, dvids, coeffs, c0=0.0,
                  validate=False, comment=''):
         """
         +---------+--------+--------+--------+-----------+-------+--------+-----+---+
@@ -2539,13 +2558,13 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
         self.pid = pid
 
         # the field type (e.g. 'T' on a PSHELL or the field id)
-        self.pNameFid = pNameFid
+        self.pname_fid = pname_fid
 
         # min value for 'T'
-        self.pMin = pMin
+        self.p_min = p_min
 
         # max value for 'T'
-        self.pMax = pMax
+        self.p_max = p_max
 
         # offset coefficient
         self.c0 = c0
@@ -2572,12 +2591,12 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
         oid = integer(card, 1, 'oid')
         Type = string(card, 2, 'Type')
         pid = integer(card, 3, 'pid')
-        pNameFid = integer_or_string(card, 4, 'pName_FID')
+        pname_fid = integer_or_string(card, 4, 'pName_FID')
 
         #: Minimum value allowed for this property.
         #: .. todo:: bad default (see DVMREL1)
-        pMin = double_or_blank(card, 5, 'pMin', None)
-        pMax = double_or_blank(card, 6, 'pMax', 1e20)
+        p_min = double_or_blank(card, 5, 'pMin', None)
+        p_max = double_or_blank(card, 6, 'pMax', 1e20)
         c0 = double_or_blank(card, 7, 'c0', 0.0)
 
         dvids = []
@@ -2597,7 +2616,7 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
             print("dvids = %s" % (dvids))
             print("coeffs = %s" % (coeffs))
             raise RuntimeError('invalid DVPREL1...')
-        return DVPREL1(oid, Type, pid, pNameFid, pMin, pMax, dvids, coeffs, c0=c0,
+        return DVPREL1(oid, Type, pid, pname_fid, p_min, p_max, dvids, coeffs, c0=c0,
                        comment=comment)
 
     def _verify(self, xref):
@@ -2668,17 +2687,17 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
 
     def raw_fields(self):
         list_fields = ['DVPREL1', self.oid, self.Type, self.Pid(),
-                       self.pNameFid, self.pMin, self.pMax, self.c0, None]
+                       self.pname_fid, self.p_min, self.p_max, self.c0, None]
         for (dvid, coeff) in zip(self.desvar_ids, self.coeffs):
             list_fields.append(dvid)
             list_fields.append(coeff)
         return list_fields
 
     def repr_fields(self):
-        pMax = set_blank_if_default(self.pMax, 1e20)
+        p_max = set_blank_if_default(self.p_max, 1e20)
         c0 = set_blank_if_default(self.c0, 0.)
         list_fields = ['DVPREL1', self.oid, self.Type, self.Pid(),
-                       self.pNameFid, self.pMin, pMax, c0, None]
+                       self.pname_fid, self.p_min, p_max, c0, None]
         for (dvid, coeff) in zip(self.desvar_ids, self.coeffs):
             list_fields.append(dvid)
             list_fields.append(coeff)
@@ -2712,7 +2731,7 @@ class DVPREL2(OptConstraint):
     ]
     allowed_masses = ['CONM2', 'CMASS2', 'CMASS4']
     allowed_properties_mass = ['PMASS']
-    def __init__(self, oid, Type, pid, pNameFid, pMin, pMax, deqation,
+    def __init__(self, oid, Type, pid, pname_fid, p_min, p_max, deqation,
                  dvids, labels, validate=False, comment=''):
         """
         +----------+--------+--------+-------+-----------+-------+-------+-------+-------+
@@ -2745,7 +2764,7 @@ class DVPREL2(OptConstraint):
         #: analysis model. Property names that begin with an integer such as
         #: 12I/T**3 may only be referred to by field position.
         #: (Character or Integer 0)
-        self.pNameFid = pNameFid
+        self.pname_fid = pname_fid
 
         #: Minimum value allowed for this property. If FID references a stress
         #: recovery location field, then the default value for PMIN is -1.0+35.
@@ -2753,23 +2772,23 @@ class DVPREL2(OptConstraint):
         #: may be less than zero (for example, field ZO on the PCOMP entry).
         #: (Real; Default = 1.E-15)
         #: .. todo:: bad default (see DVMREL1)
-        self.pMin = pMin
+        self.p_min = p_min
         #: Maximum value allowed for this property. (Real; Default = 1.0E20)
-        self.pMax = pMax
+        self.p_max = p_max
         #: DEQATN entry identification number. (Integer > 0)
         self.dequation = deqation
         self.dvids = dvids
         self.labels = labels
-        validate_dvprel(Type, pNameFid, validate)
+        validate_dvprel(Type, pname_fid, validate)
 
     @classmethod
     def add_card(cls, card, comment=''):
         oid = integer(card, 1, 'oid')
         Type = string(card, 2, 'Type')
         pid = integer(card, 3, 'pid')
-        pNameFid = integer_or_string(card, 4, 'pName_FID')
-        pMin = double_or_blank(card, 5, 'pMin')
-        pMax = double_or_blank(card, 6, 'pMax', 1e20)
+        pname_fid = integer_or_string(card, 4, 'pName_FID')
+        p_min = double_or_blank(card, 5, 'pMin')
+        p_max = double_or_blank(card, 6, 'pMax', 1e20)
         dequation = integer_or_blank(card, 7, 'dequation') #: .. todo:: or blank?
 
         fields = [interpret_value(field) for field in card[9:]]
@@ -2812,7 +2831,7 @@ class DVPREL2(OptConstraint):
                 if label:
                     assert label is not 'DTABLE'
                     labels.append(label)
-        return DVPREL2(oid, Type, pid, pNameFid, pMin, pMax, dequation, dvids,
+        return DVPREL2(oid, Type, pid, pname_fid, p_min, p_max, dequation, dvids,
                        labels, comment=comment)
 
     def OptID(self):
@@ -2844,15 +2863,15 @@ class DVPREL2(OptConstraint):
         see the PBEAM for an example of get/set_opt_value
         """
         try:
-            get = self.pid_ref.get_optimization_value(self.pNameFid)
-            out = self.pid_ref.set_optimization_value(self.pNameFid, get)
+            get = self.pid_ref.get_optimization_value(self.pname_fid)
+            out = self.pid_ref.set_optimization_value(self.pname_fid, get)
         except:
-            print('DVPREL2 calculate : %s[%r] = ???' % (self.Type, self.pNameFid))
+            print('DVPREL2 calculate : %s[%r] = ???' % (self.Type, self.pname_fid))
             raise
 
         if self.dvids:
-            for dv in self.dvids: # DESVARS
-                arg = dv.calculate(op2_model, subcase_id)
+            for desvar in self.dvids: # DESVARS
+                arg = desvar.calculate(op2_model, subcase_id)
                 argsi.append(arg)
         if self.labels:
             for label in self.labels: # DTABLE
@@ -2862,7 +2881,7 @@ class DVPREL2(OptConstraint):
 
         #op2_model.log.info('dvids  =', self.dvids)
         #op2_model.log.info('labels =', self.labels)
-        #op2_model.log.info('%s[%r] = %s' % (self.Type, self.pNameFid, out))
+        #op2_model.log.info('%s[%r] = %s' % (self.Type, self.pname_fid, out))
         out = self.func(*argsi)
         op2_model.log.info('  deqatn out = %s' % out)
         return out
@@ -2917,7 +2936,7 @@ class DVPREL2(OptConstraint):
 
     def raw_fields(self):
         list_fields = ['DVPREL2', self.oid, self.Type, self.Pid(),
-                       self.pNameFid, self.pMin, self.pMax, self.DEquation(), None]
+                       self.pname_fid, self.p_min, self.p_max, self.DEquation(), None]
         if self.dvids:
             fields2 = ['DESVAR'] + self.dvids
             list_fields += build_table_lines(fields2, nstart=1, nend=0)

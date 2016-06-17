@@ -566,9 +566,9 @@ class XrefMesh(BDFAttributes):
         """
         nodes = defaultdict(set)
         for element in itervalues(self.elements):
-            if element.type in ['CONM2']:
-                pass
-            else:
+            #if element.type in ['CONM2']:
+            #    pass
+            #else:
                 if element.nodes is not None:
                     for node in element.nodes:
                         if node is None:
