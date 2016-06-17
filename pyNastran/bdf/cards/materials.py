@@ -255,8 +255,10 @@ class MAT1(IsotropicMaterial):
         """
         Verifies all methods for this object work
 
-        :param xref: has this model been cross referenced
-        :type xref:  bool
+        Parameters
+        ----------
+        xref : bool
+            has this model been cross referenced
         """
         mid = self.Mid()
         E = self.E()
@@ -1730,6 +1732,17 @@ class MAT11(Material):
         ge = data[15]
         return MAT11(mid, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23, rho,
                      a1, a2, a3, TRef, ge, comment=comment)
+
+    def _verify(self, xref):
+        """
+        Verifies all methods for this object work
+
+        Parameters
+        ----------
+        xref : bool
+            has this model been cross referenced
+        """
+        pass
 
     def _validate_input(self):
         msg = 'MAT11 mid=%s does not have ' % self.mid

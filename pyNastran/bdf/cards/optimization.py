@@ -20,6 +20,144 @@ from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
 from pyNastran.bdf.cards.utils import build_table_lines
 
+
+def validate_dvcrel(validate, Type, cp_name):
+    if validate:
+        msg = 'DVCRELx: Type=%r cp_name=%r is invalid' % (Type, cp_name)
+        if Type in ['CQUAD4']:
+            assert cp_name in ['T1', 'T2', 'T3', 'T4'], msg # 'ZOFFS',
+        elif Type in ['CTRIA3']:
+            assert cp_name in [], msg
+        elif Type in ['CONM2']:
+            assert cp_name in ['M', 'X1', 'X2', 'X3'], msg
+        elif Type in ['CBAR']:
+            assert cp_name in ['X1', 'X2', 'X3'], msg
+        elif Type in ['CBEAM']:
+            assert cp_name in ['X1', 'X2', 'X3'], msg
+        elif Type in ['CELAS1']:
+            assert cp_name in [], msg
+        elif Type in ['CBUSH']:
+            assert cp_name in ['X1', 'X2', 'X3', 'S', 'S1', 'S2', 'S3'], msg
+        else:
+            raise NotImplementedError(msg)
+
+
+def validate_dvmrel(validate, Type, mp_name):
+    if validate:
+        msg = 'DVMRELx: Type=%r mp_name=%r is invalid' % (Type, mp_name)
+        if Type in ['MAT1']:
+            assert mp_name in ['E', 'G', 'NU', 'GE', 'RHO', 'A', 'TREF'], msg
+        elif Type == 'MAT2':
+            assert mp_name in ['G11', 'G12', 'G22', 'G33', 'GE', 'RHO',
+                               'A1', 'A2', 'A3', 'TREF'], msg
+        elif Type == 'MAT3':
+            assert mp_name in ['EX', 'ETH', 'EZ', 'NUTH', 'NUXTH', 'NUTHZ', 'NUZX', 'RHO'], msg
+        elif Type == 'MAT8':
+            assert mp_name in ['E1', 'G1Z', 'NU12'], msg
+        elif Type == 'MAT9':
+            assert mp_name in ['G11', 'G22', 'G33', 'G44', 'G55', 'G66', 'RHO'], msg
+        elif Type == 'MAT10':
+            assert mp_name in ['BULK', 'RHO'], msg
+        elif Type == 'MAT11':
+            assert mp_name in ['E1', 'E2', 'E3', 'G12', 'G13', 'G23', 'RHO'], msg
+        else:
+            raise NotImplementedError(msg)
+
+
+def validate_dvprel(Type, pNameFid, validate):
+    if validate:
+        msg = 'DVPREL1: Type=%r pNameFid=%r is invalid' % (Type, pNameFid)
+        #if Type == 'CELAS2':
+            #assert pNameFid in ['K', 'GE', 'S'], msg
+        #elif Type == 'CELAS4':
+            #assert pNameFid in ['K'], msg
+        if Type == 'PELAS':
+            assert pNameFid in [3, 4, 'K1', 'GE1'], msg
+        elif Type == 'PELAST':
+            assert pNameFid in [3, 4, 'TKID'], msg
+
+        elif Type == 'PROD':
+            assert pNameFid in [4, 'A'], msg
+        elif Type == 'PTUBE':
+            assert pNameFid in [4, 5], msg
+
+        #elif Type == 'CBAR':
+            #assert pNameFid in ['X1', 'X2'], msg
+        elif Type == 'PBAR':
+            assert pNameFid in [4, 5, 6, 7, 12, 13, 14, 15, 16, 17, 18, 19, 'A', 'I1', 'J'], msg
+        elif Type == 'PBARL':
+            assert pNameFid in [12, 13, 14, 15, 16, 17, 'DIM1', 'DIM2'], msg
+
+        #elif Type == 'CBEAM':
+            #assert pNameFid in ['X1', 'X2', 'X3', 'W1A', 'W2A', 'W3A', 'W1B', 'W2B', 'W3B'], msg
+        elif Type == 'PBEAM':
+            assert pNameFid in ['I1', 'I2', 'A', 'J',
+                                'I1(B)', 'I2(B)', '-8'], msg # -8
+        elif Type == 'PBEAML':
+            assert pNameFid in ['DIM1', 'DIM1(A)', 'DIM1(B)', 'I1(B)', 'I2(B)',
+                                'DIM2', 'DIM3', 'DIM4', 'DIM5', 'DIM6', 'NSM'], msg # 'DIM(B)'
+
+        #elif Type == 'CQUAD4':
+            #assert pNameFid in ['T1', 'T2', 'T3', 'T4'], msg
+        elif Type == 'PSHELL':
+            #if cp_name in '12I/T**3':
+                #cp_name =
+            assert pNameFid in ['T', 4, 6], msg
+        elif Type == 'PCOMP':
+            if isinstance(pNameFid, str):
+                word, num = break_word_by_trailing_integer(pNameFid)
+                if word not in ['T', 'THETA']:
+                    raise RuntimeError(msg)
+            else:
+                assert pNameFid in [3, #3-z0
+                                    # 13-t1, 14-theta1, 17-t2, 18-theta2
+                                    13, 14, 17, 18,
+                                    23, 24, 27, 28,
+                                    33, 34, 37, 38,
+                                    43, 44, 47, 48], msg
+        elif Type == 'PCOMPG':
+            assert pNameFid in [15, 25, 75, 85], msg
+
+        #elif Type == 'CBUSH':
+            #assert pNameFid in ['X1', 'X2', 'X3', 'S', 'S1'], msg
+        elif Type == 'PBUSH':
+            assert pNameFid in [18, 'GE1', 'K2', 'B2', '-13', 'GE3', 'GE4', 'GE5', 'GE6'], msg # -13
+        elif Type == 'PBUSH1D':
+            assert pNameFid in ['K', 'C'], msg
+        elif Type == 'PBUSHT':
+            assert pNameFid in ['TBID1', 'TGEID1', 'TGEID2'], msg
+
+        #elif Type == 'CGAP':
+            #assert pNameFid in ['X1', 'X2', 'X3'], msg
+        elif Type == 'PGAP':
+            assert pNameFid in [5], msg
+        elif Type == 'PVISC':
+            assert pNameFid in ['CE1'], msg
+
+        #elif Type == 'CDAMP2':
+            #assert pNameFid in ['B'], msg
+        elif Type == 'PDAMP':
+            assert pNameFid in [3, 'B1'], msg
+
+        #elif Type == 'CMASS2':
+            #assert pNameFid in ['M'], msg
+        #elif Type == 'CMASS4':
+            #assert pNameFid in ['M'], msg
+        elif Type == 'PMASS':
+            assert pNameFid in [3], msg
+
+        #elif Type == 'CONM2':
+            #assert pNameFid in ['M', 'X1', 'X2', 'I11', 'I22'], msg
+
+        elif Type == 'PWELD':
+            assert pNameFid in ['D'], msg
+
+        elif Type == 'PBEND':
+            raise RuntimeError('Nastran does not support the PBEND')
+        else:
+            raise NotImplementedError(msg)
+
+
 class OptConstraint(BaseCard):
     def __init__(self):
         pass
@@ -494,6 +632,7 @@ def validate_dresp1(property_type, response_type, atta, attb, atti):
             #msg = 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
                 #property_type, response_type, atta, attb, atti)
             raise RuntimeError(msg)
+
     if property_type is None:
         if response_type == 'WEIGHT':
             assert atta in [1, 2, 3, 4, 5, 6, None], 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
@@ -503,7 +642,7 @@ def validate_dresp1(property_type, response_type, atta, attb, atti):
             if len(atti) == 0:
                 atti = ['ALL']
             for attii in atti:
-                if not attii == 'ALL':
+                if attii != 'ALL':
                     assert isinstance(attii, integer_types), 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
                         property_type, response_type, atta, attb, atti)
                     assert attii >= 0, 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
@@ -543,7 +682,7 @@ def validate_dresp1(property_type, response_type, atta, attb, atti):
                     property_type, response_type, atta, attb, atti)  # remove AVE?
 
             assert len(atti) >= 1, 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
-                    property_type, response_type, atta, attb, atti)
+                property_type, response_type, atta, attb, atti)
             for attii in atti:
                 assert isinstance(attii, integer_types), 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
                     property_type, response_type, atta, attb, atti)
@@ -565,7 +704,7 @@ def validate_dresp1(property_type, response_type, atta, attb, atti):
                     property_type, response_type, atta, attb, atti)
 
             assert len(atti) >= 1, 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
-                    property_type, response_type, atta, attb, atti)
+                property_type, response_type, atta, attb, atti)
             for attii in atti:
                 assert isinstance(attii, integer_types), 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
                     property_type, response_type, atta, attb, atti)
@@ -953,10 +1092,12 @@ class DRESP1(OptConstraint):
             'TFORC', 'FRFORC',
             'TSPCF',
         ]
-        if self.property_type in ['PSHELL', 'PBAR', 'PROD', 'PCOMP',
-                                  'PSOLID', 'PELAS', 'PBARL', 'PBEAM',
-                                  'PBEAML', 'PSHEAR', 'PTUBE',
-                                  'FRSTRE']:
+        if self.property_type in ['ELEM']:
+            data = [elem if isinstance(elem, integer_types) else elem.eid for elem in self.atti]
+        elif self.property_type in ['PSHELL', 'PBAR', 'PROD', 'PCOMP',
+                                    'PSOLID', 'PELAS', 'PBARL', 'PBEAM',
+                                    'PBEAML', 'PSHEAR', 'PTUBE',
+                                    'FRSTRE']:
             data = [prop if isinstance(prop, integer_types) else prop.pid for prop in self.atti]
             for value in data:
                 assert not isinstance(value, BaseCard), value
@@ -972,7 +1113,7 @@ class DRESP1(OptConstraint):
                                     'PSDVELO', 'PSDACCL']:
             #self.atti = model.Nodes(self.atti, msg=msg)
             data = [node if isinstance(node, integer_types) else node.nid for node in self.atti]
-        elif self.response_type in ['FRFORC',  'TFORC',
+        elif self.response_type in ['FRFORC', 'TFORC',
                                     'STRESS', 'ESE', 'CFAILURE']:
             data = [elem if isinstance(elem, integer_types) else elem.eid for elem in self.atti]
         elif self.response_type in op2_results:
@@ -1378,7 +1519,7 @@ class DRESP3(OptConstraint):
             out = values_list
         else:
             raise NotImplementedError('  TODO: _get_values %s' % str(name))
-            out = values_list
+            #out = values_list
         return out
 
     def _pack_params(self):
@@ -1420,7 +1561,7 @@ class DRESP3(OptConstraint):
         model : BDF()
             the BDF object
         """
-        msg = ', which is required by %s ID=%s' % (self.type, self.oid)
+        msg = ', which is required by %s ID=%s' % (self.type, self.dresp_id)
         default_values = {}
         for name, vals in sorted(iteritems(self.params)):
             if name in ['DRESP1', 'DRESP2']:
@@ -1549,7 +1690,7 @@ class DSCREEN(OptConstraint):
         trs = double_or_blank(card, 2, 'trs', -0.5)
         nstr = integer_or_blank(card, 3, 'nstr', 20)
         assert len(card) == 4, 'len(DSCREEN card) = %i' % len(card)
-        return DSCREEN(rType, trs=trs, nstr=nstr)
+        return DSCREEN(rType, trs=trs, nstr=nstr, comment=comment)
 
     def raw_fields(self):
         list_fields = ['DSCREEN', self.rType, self.trs, self.nstr]
@@ -1620,24 +1761,7 @@ class DVCREL1(OptConstraint):  # similar to DVMREL1
 
         assert len(coeffs) > 0, 'len(coeffs)=%s' % len(coeffs)
         assert len(coeffs) == len(dvids), 'len(coeffs)=%s len(dvids)=%s' % (len(coeffs), len(dvids))
-        if validate:
-            msg = 'DVCREL1: Type=%r cp_name=%r is invalid' % (Type, cp_name)
-            if Type in ['CQUAD4']:
-                assert cp_name in ['T1', 'T2', 'T3', 'T4'], msg # 'ZOFFS',
-            elif Type in ['CTRIA3']:
-                assert cp_name in [], msg
-            elif Type in ['CONM2']:
-                assert cp_name in ['M', 'X1', 'X2', 'X3'], msg
-            elif Type in ['CBAR']:
-                assert cp_name in ['X1', 'X2', 'X3'], msg
-            elif Type in ['CBEAM']:
-                assert cp_name in ['X1', 'X2', 'X3'], msg
-            elif Type in ['CELAS1']:
-                assert cp_name in [], msg
-            elif Type in ['CBUSH']:
-                assert cp_name in ['X1', 'X2', 'X3', 'S', 'S1', 'S2', 'S3'], msg
-            else:
-                raise NotImplementedError(msg)
+        validate_dvcrel(validate, Type, cp_name)
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -1802,24 +1926,7 @@ class DVCREL2(OptConstraint):
 
         #assert len(coeffs) > 0, 'len(coeffs)=%s' % len(coeffs)
         #assert len(coeffs) == len(dvids), 'len(coeffs)=%s len(dvids)=%s' % (len(coeffs), len(dvids))
-        if validate:
-            msg = 'DVCREL2: Type=%r cp_name=%r is invalid' % (Type, cp_name)
-            if Type in ['CQUAD4']:
-                assert cp_name in ['T1', 'T2', 'T3', 'T4'], msg # 'ZOFFS',
-            elif Type in ['CTRIA3']:
-                assert cp_name in [], msg
-            elif Type in ['CONM2']:
-                assert cp_name in ['M', 'X1', 'X2', 'X3'], msg
-            elif Type in ['CBAR']:
-                assert cp_name in ['X1', 'X2', 'X3'], msg
-            elif Type in ['CBEAM']:
-                assert cp_name in ['X1', 'X2', 'X3'], msg
-            elif Type in ['CELAS1']:
-                assert cp_name in [], msg
-            elif Type in ['CBUSH']:
-                assert cp_name in ['X1', 'X2', 'X3', 'S', 'S1', 'S2', 'S3'], msg
-            else:
-                raise NotImplementedError(msg)
+        validate_dvcrel(validate, Type, cp_name)
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -1908,7 +2015,7 @@ class DVCREL2(OptConstraint):
             get = self.pid_ref.get_optimization_value(self.pNameFid)
             out = self.pid_ref.set_optimization_value(self.pNameFid, get)
         except:
-            print('DVCREL2 calculate : %s[%r] = ???' % (self.Type, self.pNameFid))
+            print('DVCREL2 calculate : %s[%r] = ???' % (self.Type, self.cp_name))
             raise
 
         argsi = []
@@ -2011,44 +2118,27 @@ class DVMREL1(OptConstraint):  # similar to DVPREL1
         self.oid = oid
         self.Type = Type
         self.mid = mid
-        self.mpName = mp_name
-        self.mpMax = mp_max
-        self.mpMin = mp_min
+        self.mp_name = mp_name
+        self.mp_max = mp_max
+        self.mp_min = mp_min
         self.c0 = c0
         self.dvids = dvids
         self.coeffs = coeffs
 
-        if validate:
-            msg = 'DVMREL1: Type=%r mp_name=%r is invalid' % (Type, mp_name)
-            if Type in ['MAT1']:
-                assert mp_name in ['E', 'G', 'NU', 'GE', 'RHO', 'A', 'TREF'], msg
-            elif Type == 'MAT2':
-                assert mp_name in ['G11', 'G12', 'G22', 'G33', 'GE', 'RHO', 'A1', 'A2', 'A3', 'TREF'], msg
-            elif Type == 'MAT3':
-                assert mp_name in ['EX', 'ETH', 'EZ', 'NUTH', 'NUXTH', 'NUTHZ', 'NUZX', 'RHO'], msg
-            elif Type == 'MAT8':
-                assert mp_name in ['E1', 'G1Z', 'NU12'], msg
-            elif Type == 'MAT9':
-                assert mp_name in ['G11', 'G22', 'G33', 'G44', 'G55', 'G66', 'RHO'], msg
-            elif Type == 'MAT10':
-                assert mp_name in ['BULK', 'RHO'], msg
-            elif Type == 'MAT11':
-                assert mp_name in ['E1', 'E2', 'E3', 'G12', 'G13', 'G23', 'RHO'], msg
-            else:
-                raise NotImplementedError(msg)
+        validate_dvmrel(validate, Type, mp_name)
 
     @classmethod
     def add_card(cls, card, comment=''):
         oid = integer(card, 1, 'oid')
         Type = string(card, 2, 'Type')
         mid = integer(card, 3, 'mid')
-        mpName = string(card, 4, 'mpName')
-        #if self.mpName in ['E', 'RHO', 'NU']:  positive values
-            #self.mpMin = double_or_blank(card, 5, 'mpMin', 1e-15)
+        mp_name = string(card, 4, 'mpName')
+        #if self.mp_name in ['E', 'RHO', 'NU']:  positive values
+            #self.mp_min = double_or_blank(card, 5, 'mpMin', 1e-15)
         #else: # negative
-            #self.mpMin = double_or_blank(card, 5, 'mpMin', -1e-35)
-        mpMin = double_or_blank(card, 5, 'mpMin')  #: .. todo:: bad default
-        mpMax = double_or_blank(card, 6, 'mpMax', 1e20)
+            #self.mp_min = double_or_blank(card, 5, 'mpMin', -1e-35)
+        mp_min = double_or_blank(card, 5, 'mpMin')  #: .. todo:: bad default
+        mp_max = double_or_blank(card, 6, 'mpMax', 1e20)
         c0 = double_or_blank(card, 7, 'c0', 0.0)
 
         dvids = []
@@ -2069,8 +2159,8 @@ class DVMREL1(OptConstraint):  # similar to DVPREL1
             print("dvids = %s" % (dvids))
             print("coeffs = %s" % (coeffs))
             raise RuntimeError('invalid DVMREL1...')
-        return DVMREL1(oid, Type, mid, mpName, mpMin, mpMax,
-                       dvids, coeffs, c0=0., comment=comment)
+        return DVMREL1(oid, Type, mid, mp_name, mp_min, mp_max,
+                       dvids, coeffs, c0=c0, comment=comment)
 
     def cross_reference(self, model):
         """
@@ -2088,6 +2178,17 @@ class DVMREL1(OptConstraint):  # similar to DVPREL1
         self.mid = self.Mid()
         del self.mid_ref
 
+    def _verify(self, xref):
+        """
+        Verifies all methods for this object work
+
+        Parameters
+        ----------
+        xref : bool
+            has this model been cross referenced
+        """
+        pass
+
     def OptID(self):
         return self.oid
 
@@ -2098,17 +2199,17 @@ class DVMREL1(OptConstraint):  # similar to DVPREL1
 
     def raw_fields(self):
         list_fields = ['DVMREL1', self.oid, self.Type, self.Mid(),
-                       self.mpName, self.mpMin, self.mpMax, self.c0, None]
+                       self.mp_name, self.mp_min, self.mp_max, self.c0, None]
         for (dvid, coeff) in zip(self.dvids, self.coeffs):
             list_fields.append(dvid)
             list_fields.append(coeff)
         return list_fields
 
     def repr_fields(self):
-        mpMax = set_blank_if_default(self.mpMax, 1e20)
+        mp_max = set_blank_if_default(self.mp_max, 1e20)
         c0 = set_blank_if_default(self.c0, 0.)
         list_fields = ['DVMREL1', self.oid, self.Type, self.Mid(),
-                       self.mpName, self.mpMin, mpMax, c0, None]
+                       self.mp_name, self.mp_min, mp_max, c0, None]
         for (dvid, coeff) in zip(self.dvids, self.coeffs):
             list_fields.append(dvid)
             list_fields.append(coeff)
@@ -2122,6 +2223,7 @@ class DVMREL1(OptConstraint):  # similar to DVPREL1
             return self.comment + print_card_double(card)
         return self.comment + print_card_16(card)
 
+
 class DVMREL2(OptConstraint):
     type = 'DVMREL2'
 
@@ -2129,19 +2231,19 @@ class DVMREL2(OptConstraint):
     def __init__(self, oid, Type, mid, mp_name, mp_min, mp_max, deqation,
                  dvids, labels, validate=False, comment=''):
         """
-        +----------+--------+--------+-------+---------+-------+-------+-------+-------+
-        |    1     |    2   |   3    |   4   |     5   |   6   |   7   |   8   |   9   |
-        +==========+========+========+=======+=========+=======+=======+=======+=======+
-        | DVMREL2  | ID     | TYPE   |  MID  | MPNAME  | MPMIN | MPMAX | EQID  |       |
-        +----------+--------+--------+-------+---------+-------+-------+-------+-------+
-        |          | DESVAR | DVID1  | DVID2 | DVID3   | DVID4 | DVID5 | DVID6 | DVID7 |
-        +----------+--------+--------+-------+---------+-------+-------+-------+-------+
-        |          | DVID8  | -etc.- |       |         |       |       |       |       |
-        +----------+--------+--------+-------+---------+-------+-------+-------+-------+
-        |          | DTABLE | LABL1  | LABL2 | LABL3   | LABL4 | LABL5 | LABL6 | LABL7 |
-        +----------+--------+--------+-------+---------+-------+-------+-------+-------+
-        |          | LABL8  | -etc.- |       |         |       |       |       |       |
-        +----------+--------+--------+-------+---------+-------+-------+-------+-------+
+        +---------+--------+--------+-------+---------+-------+-------+-------+-------+
+        |    1    |    2   |   3    |   4   |     5   |   6   |   7   |   8   |   9   |
+        +=========+========+========+=======+=========+=======+=======+=======+=======+
+        | DVMREL2 | ID     | TYPE   |  MID  | MPNAME  | MPMIN | MPMAX | EQID  |       |
+        +---------+--------+--------+-------+---------+-------+-------+-------+-------+
+        |         | DESVAR | DVID1  | DVID2 | DVID3   | DVID4 | DVID5 | DVID6 | DVID7 |
+        +---------+--------+--------+-------+---------+-------+-------+-------+-------+
+        |         | DVID8  | -etc.- |       |         |       |       |       |       |
+        +---------+--------+--------+-------+---------+-------+-------+-------+-------+
+        |         | DTABLE | LABL1  | LABL2 | LABL3   | LABL4 | LABL5 | LABL6 | LABL7 |
+        +---------+--------+--------+-------+---------+-------+-------+-------+-------+
+        |         | LABL8  | -etc.- |       |         |       |       |       |       |
+        +---------+--------+--------+-------+---------+-------+-------+-------+-------+
         """
         if comment:
             self._comment = comment
@@ -2169,6 +2271,7 @@ class DVMREL2(OptConstraint):
         self.dequation = deqation
         self.dvids = dvids
         self.labels = labels
+        validate_dvmrel(validate, Type, mp_name)
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -2239,7 +2342,7 @@ class DVMREL2(OptConstraint):
             #pid = self.pid_ref.pid
         else:
             raise NotImplementedError('Type=%r is not supported' % self.Type)
-        return mid
+        #return mid
 
     def DEquation(self):
         if isinstance(self.dequation, int):
@@ -2289,25 +2392,25 @@ class DVMREL2(OptConstraint):
         """
         msg = ', which is required by DVMREL2 name=%r' % self.type
         if self.Type in self.allowed_materials:
-            self.pid = model.Material(self.mid, msg=msg)
+            self.mid = model.Material(self.mid, msg=msg)
         #elif self.Type in self.allowed_elements:
-            #self.pid = model.Element(self.pid, msg=msg)
+            #self.mid = model.Element(self.mid, msg=msg)
         #elif self.Type in self.allowed_masses:
-            #self.pid = model.masses[self.pid]
+            #self.mid = model.masses[self.mid]
         #elif self.Type in self.allowed_properties_mass:
-            #self.pid = model.properties_mass[self.pid]
+            #self.mid = model.properties_mass[self.mid]
         else:
             raise NotImplementedError('Type=%r is not supported' % self.Type)
         self.dequation = model.DEQATN(self.dequation)
 
-        self.pid_ref = self.pid
+        self.mid_ref = self.mid
         self.dequation_ref = self.dequation
         #assert self.pid_ref.type not in ['PBEND', 'PBARL', 'PBEAML'], self.pid
 
     def uncross_reference(self):
-        self.pid = self.Mid()
+        self.mid = self.Mid()
         self.dequation = self.DEquation()
-        del self.pid_ref, self.dequation_ref
+        del self.mid_ref, self.dequation_ref
 
     #def OptValue(self):  #: .. todo:: not implemented
         #self.pid_ref.OptValue(self.pNameFid)
@@ -2347,6 +2450,7 @@ def break_word_by_trailing_integer(pNameFid):
         word = pNameFid[:-i-1]
         assert len(word)+len(num) == len(pNameFid), 'word=%r num=%r pNameFid=%r' % (word, num, pNameFid)
         return word, num
+
 
 class DVPREL1(OptConstraint):  # similar to DVMREL1
     type = 'DVPREL1'
@@ -2422,97 +2526,7 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
             raise RuntimeError(msg)
         assert len(coeffs) == len(dvids), 'len(coeffs)=%s len(dvids)=%s' % (len(coeffs), len(dvids))
 
-        if validate:
-            msg = 'DVPREL1: Type=%r pNameFid=%r is invalid' % (Type, pNameFid)
-            #if Type == 'CELAS2':
-                #assert pNameFid in ['K', 'GE', 'S'], msg
-            #elif Type == 'CELAS4':
-                #assert pNameFid in ['K'], msg
-            if Type == 'PELAS':
-                assert pNameFid in [3, 4, 'K1', 'GE1'], msg
-            elif Type == 'PELAST':
-                assert pNameFid in [3, 4, 'TKID'], msg
-
-            elif Type == 'PROD':
-                assert pNameFid in [4, 'A'], msg
-            elif Type == 'PTUBE':
-                assert pNameFid in [4, 5], msg
-
-            #elif Type == 'CBAR':
-                #assert pNameFid in ['X1', 'X2'], msg
-            elif Type == 'PBAR':
-                assert pNameFid in [4, 5, 6, 7, 12, 13, 14, 15, 16, 17, 18, 19, 'A', 'I1', 'J'], msg
-            elif Type == 'PBARL':
-                assert pNameFid in [12, 13, 14, 15, 16, 17, 'DIM1', 'DIM2'], msg
-
-            #elif Type == 'CBEAM':
-                #assert pNameFid in ['X1', 'X2', 'X3', 'W1A', 'W2A', 'W3A', 'W1B', 'W2B', 'W3B'], msg
-            elif Type == 'PBEAM':
-                assert pNameFid in ['I1', 'I2', 'A', 'J',
-                                    'I1(B)', 'I2(B)', '-8'], msg # -8
-            elif Type == 'PBEAML':
-                assert pNameFid in ['DIM1', 'DIM1(A)', 'DIM1(B)', 'I1(B)', 'I2(B)',
-                                    'DIM2', 'DIM3', 'DIM4', 'DIM5', 'DIM6', 'NSM'], msg # 'DIM(B)'
-
-            #elif Type == 'CQUAD4':
-                #assert pNameFid in ['T1', 'T2', 'T3', 'T4'], msg
-            elif Type == 'PSHELL':
-                #if cp_name in '12I/T**3':
-                    #cp_name =
-                assert pNameFid in ['T', 4, 6], msg
-            elif Type == 'PCOMP':
-                if isinstance(pNameFid, str):
-                        word, num = break_word_by_trailing_integer(pNameFid)
-                        if word not in ['T', 'THETA']:
-                            raise RuntimeError(msg)
-                else:
-                    assert pNameFid in [3, #3-z0
-                                        # 13-t1, 14-theta1, 17-t2, 18-theta2
-                                        13, 14, 17, 18,
-                                        23, 24, 27, 28,
-                                        33, 34, 37, 38,
-                                        43, 44, 47, 48], msg
-            elif Type == 'PCOMPG':
-                assert pNameFid in [15, 25, 75, 85], msg
-
-            #elif Type == 'CBUSH':
-                #assert pNameFid in ['X1', 'X2', 'X3', 'S', 'S1'], msg
-            elif Type == 'PBUSH':
-                assert pNameFid in [18, 'GE1', 'K2', 'B2', '-13', 'GE3', 'GE4', 'GE5', 'GE6'], msg # -13
-            elif Type == 'PBUSH1D':
-                assert pNameFid in ['K', 'C'], msg
-            elif Type == 'PBUSHT':
-                assert pNameFid in ['TBID1', 'TGEID1', 'TGEID2'], msg
-
-            #elif Type == 'CGAP':
-                #assert pNameFid in ['X1', 'X2', 'X3'], msg
-            elif Type == 'PGAP':
-                assert pNameFid in [5], msg
-            elif Type == 'PVISC':
-                assert pNameFid in ['CE1'], msg
-
-            #elif Type == 'CDAMP2':
-                #assert pNameFid in ['B'], msg
-            elif Type == 'PDAMP':
-                assert pNameFid in [3, 'B1'], msg
-
-            #elif Type == 'CMASS2':
-                #assert pNameFid in ['M'], msg
-            #elif Type == 'CMASS4':
-                #assert pNameFid in ['M'], msg
-            elif Type == 'PMASS':
-                assert pNameFid in [3], msg
-
-            #elif Type == 'CONM2':
-                #assert pNameFid in ['M', 'X1', 'X2', 'I11', 'I22'], msg
-
-            elif Type == 'PWELD':
-                assert pNameFid in ['D'], msg
-
-            elif Type == 'PBEND':
-                raise RuntimeError('Nastran does not support the PBEND')
-            else:
-                raise NotImplementedError(msg)
+        validate_dvprel(Type, pNameFid, validate)
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -2707,6 +2721,7 @@ class DVPREL2(OptConstraint):
         self.dequation = deqation
         self.dvids = dvids
         self.labels = labels
+        validate_dvprel(Type, pNameFid, validate)
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -2846,6 +2861,17 @@ class DVPREL2(OptConstraint):
         self.pid = self.Pid()
         self.dequation = self.DEquation()
         del self.pid_ref, self.dequation_ref
+
+    def _verify(self, xref):
+        """
+        Verifies all methods for this object work
+
+        Parameters
+        ----------
+        xref : bool
+            has this model been cross referenced
+        """
+        pass
 
     #def OptValue(self):  #: .. todo:: not implemented
         #self.pid_ref.OptValue(self.pNameFid)

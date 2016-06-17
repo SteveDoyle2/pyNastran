@@ -98,7 +98,7 @@ class DEQATN(BaseCard):  # needs work...
             #print('i=%s join=%s eq=%r' % (i, is_join, eq))
             if is_join:
                 eq = eqi.rstrip() + eq.lstrip()
-            eqi = eq.strip()
+            eqi = eq.strip().replace(' ', '')
             if i == 0 and eqi == '':
                 #self.eqs.append(eqi)
                 continue

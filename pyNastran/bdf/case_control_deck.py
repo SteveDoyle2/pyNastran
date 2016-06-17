@@ -680,7 +680,13 @@ class CaseControlDeck(object):
             param_type = 'BEGIN_BULK-type'
             assert key.upper() == key, key
         elif 'PARAM' in line_upper:  # param
-            sline = line_upper.split(',')
+            if ',' in line_upper:
+                sline = line_upper.split(',')
+            elif '\t' in line_upper:
+                sline = line_upper.split('\t')
+            else:
+                raise SyntaxError("trying to parse %r..." % line)
+
             if len(sline) != 3:
                 raise SyntaxError("trying to parse %r..." % line)
             (key, value, options) = sline

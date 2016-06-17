@@ -13,6 +13,7 @@ F:\work\pyNastran\femap_examples\Support\nast\misc\doc\thermal
 F:\work\pyNastran\femap_examples\Support\nast\misc\sssalter
 F:\work\pyNastran\femap_examples\Support\nast\misc\sssalter\IA
 F:\work\pyNastran\femap_examples\Support\nast\tpl
+F:\Program Files\Siemens\NXNastran\nxn10p1\nxn10p1\nast\tpl
 
 # desktop2
 C:\Users\sdoyle\Dropbox\pyNastran_examples

@@ -17,7 +17,8 @@ from six.moves import zip, range
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import BaseCard, _node_ids
 from pyNastran.bdf.bdf_interface.assign_type import (
-    integer, integer_or_blank, double, double_or_blank, components_or_blank)
+    integer, integer_or_blank, double, double_or_blank, components_or_blank,
+    string_or_blank)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
@@ -256,6 +257,58 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
 
     def raw_fields(self):
         list_fields = ['LSEQ', self.sid, self.excite_id, self.Lid(), self.Tid()]
+        return list_fields
+
+    def repr_fields(self):
+        return self.raw_fields()
+
+    def write_card(self, size=8, is_double=False):
+        card = self.raw_fields()
+        return self.comment + print_card_8(card)
+
+
+class LOADCYN(Load):
+    type = 'LOADCYN'
+
+    def __init__(self, sid, scale, segment_id, scales, load_ids, segment_type=None, comment=''):
+        if comment:
+            self._comment = comment
+        self.sid = sid
+        self.scale = scale
+        self.segment_id = segment_id
+        self.scales = scales
+        self.load_ids = load_ids
+        self.segment_type = segment_type
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        sid = integer(card, 1, 'sid')
+        scale = double(card, 2, 'scale')
+        segment_id = integer(card, 3, 'segment_id')
+        segment_type = string_or_blank(card, 4, 'segment_type')
+
+        scalei = double(card, 5, 'sid1')
+        loadi = integer(card, 6, 'load1')
+        scales = [scalei]
+        load_ids = [loadi]
+
+        scalei = double_or_blank(card, 7, 'sid2')
+        if scalei is not None:
+            loadi = double_or_blank(card, 8, 'load2')
+            scales.append(scaali)
+            load_ids.append(loadi)
+        return LOADCYN(sid, scale, segment_id, scales, load_ids,
+                       segment_type=segment_type, comment=comment)
+
+    def cross_reference(self, model):
+        pass
+
+    def raw_fields(self):
+        end = []
+        for scale, load in zip(self.scales, self.load_ids):
+            end += [scale, load]
+        list_fields = ['LOADCYN', self.sid, self.scale, self.segment_id, self.segment_type
+                       ] + end
         return list_fields
 
     def repr_fields(self):

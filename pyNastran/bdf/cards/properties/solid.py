@@ -186,6 +186,17 @@ class PCOMPS(SolidProperty):
                       interlaminar_failure_theories, souts,
                       comment=comment)
 
+    def _verify(self, xref):
+        """
+        Verifies all methods for this object work
+
+        Parameters
+        ----------
+        xref : bool
+            has this model been cross referenced
+        """
+        pass
+
     def Rho(self):
         """
         Returns the density
