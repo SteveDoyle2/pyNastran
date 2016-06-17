@@ -156,12 +156,6 @@ def data_in_material_coord(bdf, op2, in_place=False):
             new_vector.data[:, :, 3][:, check] = Sxy_theta
             thetadeg_new = thetadeg_to_principal(Sxx_theta, Syy_theta, Sxy_theta)
             new_vector.data[:, :, 4][:, check] = thetadeg_new
-            if True:
-                # TODO no need to recompute, keep this only in test routines
-                Sxx_theta, Syy_theta, Sxy_theta = transf_Mohr(Sxx_theta, Syy_theta,
-                        Sxy_theta, np.deg2rad(thetadeg_new))
-                new_vector.data[:, :, 5][:, check] = Sxx_theta
-                new_vector.data[:, :, 6][:, check] = Syy_theta
 
     for vecname in strain_vectors:
         op2_vectors = getattr(op2, vecname)
