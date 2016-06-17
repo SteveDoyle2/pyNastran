@@ -2584,7 +2584,7 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
             raise RuntimeError(msg)
         assert len(coeffs) == len(dvids), 'len(coeffs)=%s len(dvids)=%s' % (len(coeffs), len(dvids))
 
-        validate_dvprel(Type, pNameFid, validate)
+        validate_dvprel(Type, pname_fid, validate)
 
     @classmethod
     def add_card(cls, card, comment=''):
