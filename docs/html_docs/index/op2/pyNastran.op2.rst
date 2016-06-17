@@ -75,6 +75,16 @@ This is the pyNastran.op2.rst file.
     :undoc-members:
     :show-inheritance:
 
+:mod:`data_in_material_coord` Module
+------------------------------------
+
+.. inheritance-diagram:: pyNastran.op2.data_in_material_coord
+
+.. automodule:: pyNastran.op2.data_in_material_coord
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 :mod:`vector_utils` Module
 --------------------------
 
