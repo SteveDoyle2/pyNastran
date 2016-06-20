@@ -61,7 +61,7 @@ GEOM_TABLES = [
     # EQEXIN - quivalence table between external and internal grid/scalaridentification numbers.
     b'EQEXIN', b'EQEXINS',
     b'ERRORN',
-    b'DESTAB', b'R1TABRG', b'HISADD',
+    b'DESTAB', b'R1TABRG',# b'HISADD',
 
     # eigenvalues
     b'BLAMA', b'LAMA', b'CLAMA',  #CLAMA is new
@@ -350,6 +350,59 @@ AUTODESK_MATRIX_TABLES = [
 RESULT_TABLES = NX_RESULT_TABLES + MSC_RESULT_TABLES
 MATRIX_TABLES = NX_MATRIX_TABLES + MSC_MATRIX_TABLES + AUTODESK_MATRIX_TABLES
 
+class Convergence(object):
+    def __init__(self, ndesign_variables):
+        self.n = 1
+        self._n = 0
+        self.is_built = False
+        self.ndesign_variables = ndesign_variables
+        self.design_iter = []
+        self.iconvergence = []  #      1-soft, 2-hard
+        self.conv_result = []   # 0-no, 1-soft, 2-hard
+        self.obj_initial = []
+        self.obj_final = []
+        self.constraint_max = []
+        self.row_constraint_max = []
+        self.desvar_values = []
+
+    def append(self, design_iter, iconvergence, conv_result, obj_initial, obj_final,
+                 constraint_max, row_constraint_max, desvar_values):
+        if not self.is_built:
+            self.design_iter = np.zeros(self.n, dtype='int32')
+            self.iconvergence = np.zeros(self.n, dtype=object)
+            self.conv_result = np.zeros(self.n, dtype=object)
+            self.obj_initial = np.zeros(self.n, dtype='float32')
+            self.obj_final = np.zeros(self.n, dtype='float32')
+            self.constraint_max = np.zeros(self.n, dtype='float32')
+            self.row_constraint_max = np.zeros(self.n, dtype='int32')
+            self.desvar_values = np.zeros((self.n, self.ndesign_variables), dtype='float32')
+            self.is_built = True
+
+        n = self._n
+        self.design_iter[n] = design_iter
+        self.iconvergence[n] = iconvergence
+        self.conv_result[n] = conv_result
+        self.obj_initial[n] = obj_initial
+        self.obj_final[n] = obj_final
+        self.constraint_max[n] = constraint_max
+        self.row_constraint_max[n] = row_constraint_max
+        self.desvar_values[n, :] = desvar_values
+        self._n += 1
+        #print('self._n =', n)
+        if self.n == self._n:
+            print(self)
+
+    def __repr__(self):
+        msg = 'Convergence()\n'
+        msg += '  shape=(%s, %s)\n' % (self.n, self.ndesign_variables)
+        msg += '  design_iter = %s\n' % self.design_iter
+        msg += '  icovergence = %s\n' % self.iconvergence
+        msg += '  conv_result = %s\n' % self.conv_result
+        msg += '  obj_initial = %s\n' % self.obj_initial
+        msg += '  constraint_max = %s\n' % self.constraint_max
+        msg += '  row_constraint_max = %s\n' % self.row_constraint_max
+        return msg
+
 class OP2_Scalar(LAMA, ONR, OGPF,
                  OEF, OES, OGS, OPG, OQG, OUG, OGPWG, FortranFormat):
     """
@@ -524,8 +577,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             #b'RANCONS': [self._table_passer, self._table_passer], # Constraint mode element strain energy table (ORGY1)
 
 
-            #b'HISADD': [self._hisadd_3, self._hisadd_4],  # optimization history (SOL200)
-            b'HISADD': [self._table_passer, self._table_passer],
             b'R1TABRG': [self._table_passer, self._table_passer_r1tabrg],
             #b'TOL': [self._table_passer, self._table_passer],
 
@@ -871,44 +922,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         }
         return table_mapper
 
-    def _hisadd_3(self, data, ndata):
-        """
-        table of design iteration history for current design cycle
-        HIS table
-        """
-        self.show_data(data, types='ifs')
-        asf
-
-    def _hisadd_4(self, data, ndata):
-        if self.read_mode == 1:
-            return ndata
-        out = unpack(self._endian + 'iiifffif', data)
-        design_iteration = out[0] # dsiter
-        convergence_type = out[1] # cvtyp
-        # 1 - soft
-        # 2 - hard
-        assert convergence_type in [1, 2], convergence_type
-        convergence_result = out[2] # cvprov
-
-        # 0 - no
-        # 1 - soft
-        # 2 - hard
-        # 3 - ???
-        assert convergence_result in [0, 1, 2, 3], convergence_result
-        initial_obj = out[3] # obji
-        final_obj = out[4] # objo
-        max_constraint_value = out[5] # gmax
-        row_of_max_constraint_value = out[6] # irmax
-        desvar_value = out[7] # xval
-        #if not self._count in self.convergence_history:
-            #self.convergence_history[self._count] = []
-        #self.convergence_history[self._count].append(out)
-        #print(out)
-        #self.show_data(data, types='ifs')
-        #print(len(data))
-        assert len(data) == 8 * 4, len(data)
-        return ndata
-
     def _read_aemonpt_3(self, data, ndata):
         sys.exit(self.code_information())
 
@@ -983,11 +996,14 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         if 0:
             #self.show_data(data, types='ifs', endian=None)
             out = unpack(self._endian + 'iii 8s iiii i iiiii', data)
+            #out = unpack(self._endian + 'iii 8s ffff f fffff', data)
             #print(out)
             internal_id = out[0]
             dresp_id = out[1]
             Type = out[2]
             if Type == 1:
+                out = unpack(self._endian + 'iii 8s iiii i iiiii', data)
+                #out = unpack(self._endian + 'iii 8s iiff f fffff', data)
                 #                                                  -----    WEIGHT RESPONSE    -----
                 #     ---------------------------------------------------------------------------------------------------------------------------
                 #          INTERNAL    DRESP1    RESPONSE     ROW       COLUMN         LOWER          INPUT         OUTPUT          UPPER
@@ -999,9 +1015,17 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 row_id = out[4]
                 column_id = out[5]
 
-                dunno_b = out[6]
-                dunno_c = out[7]
-                dunno_d = out[8]
+                dunno_6 = out[6]
+                dunno_7 = out[7]
+                dunno_8 = out[8]
+                dunno_9 = out[9]
+                dunno_10 = out[10]
+                dunno_11 = out[11]
+                dunno_12 = out[12]
+                dunno_13 = out[13]
+                msg = 'WEIGHT - Type=%r response_label=%r row_id=%r column_id=%r 6=%r 7=%r 8=%r 9=%r 10=%r 11=%r 12=%r 13=%r' % (
+                    Type, response_label, row_id, column_id, dunno_6, dunno_7, dunno_8, dunno_9, dunno_10, dunno_11, dunno_12, dunno_13)
+                self.log.debug(msg)
             elif Type == 6:
                 #                                                 -----    STRESS RESPONSES    -----
                 #     ---------------------------------------------------------------------------------------------------------------------------
@@ -1016,6 +1040,12 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 dunno_b = out[6]
                 dunno_c = out[7]
                 dunno_d = out[8]
+            elif Type == 10:  # TODO: DVPREL2?
+                #print(out)
+                pass
+            elif Type == 84: # TODO: FLUTTER (pretty sure...)
+                #print(out)
+                pass
             else:
                 raise NotImplementedError(Type)
             assert len(out) == 14, len(out)
@@ -1299,8 +1329,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                     #self._read_meff()
                 elif table_name == b'INTMOD':
                     self._read_intmod()
-                #elif table_name == b'HISADD':
-                    #self._read_hisadd()
+                elif table_name == b'HISADD':
+                    self._read_hisadd()
                 elif table_name == b'FRL':  # frequency response list
                     self._skip_table(self.table_name)
                 elif table_name == b'EXTDB':
@@ -2061,43 +2091,59 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
 
     def _read_hisadd(self):
-        """preliminary reader for the HISADD table"""
+        """optimization history (SOL200) table"""
         self.table_name = self._read_table_name(rewind=False)
-        #self.log.debug('table_name = %r' % self.table_name)
+        self.log.debug('table_name = %r' % self.table_name)
+
+        if self.read_mode == 1:
+            self.read_markers([-1])
+            self._skip_record()
+            self.read_markers([-2, 1, 0])
+            self._skip_record()
+            self.read_markers([-3, 1, 0])
+
+            if self.convergence_data is None:
+                data = self._read_record()
+                ndvs = len(data) // 4 - 7
+                self.convergence_data = Convergence(ndvs)
+            else:
+                self._skip_record()
+                self.convergence_data.n += 1
+
+            self.read_markers([-4, 1, 0, 0])
+            return
+
         if self.is_debug_file:
             self.binary_debug.write('_read_geom_table - %s\n' % self.table_name)
+        #self.log.info('----marker1----')
         self.read_markers([-1])
         if self.is_debug_file:
             self.binary_debug.write('---markers = [-1]---\n')
-        data = self._read_record()
+        data = self._read_record()  # ()102, 303, 0, 0, 0, 0, 0) date???
         #print('hisadd data1')
-        self.show_data(data)
+        #self.show_data(data)
 
+        #self.log.info('----marker2----')
         markers = self.get_nmarkers(1, rewind=True)
         if self.is_debug_file:
             self.binary_debug.write('---marker0 = %s---\n' % markers)
         self.read_markers([-2, 1, 0])
-        data = self._read_record()
+        data = self._read_record()  # ('HISADD', )
         #print('hisadd data2')
-        self.show_data(data)
+        #self.show_data(data)
 
+        #self.log.info('----marker3----')
         self.read_markers([-3, 1, 0])
-        markers = self.get_nmarkers(1, rewind=False)
-        print('markers =', markers)
-        nbytes = markers[0]*4 + 12
-        data = self.f.read(nbytes)
-        self.n += nbytes
-        self.show_data(data[4:-4])
-        #self.show(100)
-        datai = data[:-4]
+        data = self._read_record()
 
-        irec = data[:32]
         (design_iter, iconvergence, conv_result, obj_intial, obj_final,
-         constraint_max, row_constraint_max, desvar_value) = unpack(b(self._endian + '3i3fif'), irec)
+         constraint_max, row_constraint_max) = unpack(b(self._endian + '3i3fi'), data[:28])
         if iconvergence == 1:
             iconvergence = 'soft'
         elif iconvergence == 2:
             iconvergence = 'hard'
+        else:
+            raise NotImplementedError('iconvergence=%s' % iconvergence)
 
         if conv_result == 0:
             conv_result = 'no'
@@ -2105,23 +2151,19 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             conv_result = 'soft'
         elif conv_result == 2:
             conv_result = 'hard'
+        else:
+            raise NotImplementedError('conv_result=%s' % conv_result)
 
-        print('design_iter=%s iconvergence=%s conv_result=%s obj_intial=%s obj_final=%s constraint_max=%s row_constraint_max=%s desvar_value=%s' % (
-            design_iter, iconvergence, conv_result, obj_intial, obj_final, constraint_max, row_constraint_max, desvar_value))
-        self.show_data(datai[32:])
-        raise NotImplementedError()
-        #for n in [-3, -4, -5, -6, -7, -8,]:
-            #self.read_markers([n, 1, 1])
-            #markers = self.get_nmarkers(1, rewind=False)
-            ##print('markers =', markers)
-            #nbytes = markers[0]*4 + 12
-            #data = self.f.read(nbytes)
-            ##print('intmod data%i' % n)
-            ##self.show_data(data)
-            #self.n += nbytes
+        self.log.debug('design_iter=%s iconvergence=%s conv_result=%s obj_intial=%s obj_final=%s constraint_max=%s row_constraint_max=%s' % (
+            design_iter, iconvergence, conv_result, obj_intial, obj_final, constraint_max, row_constraint_max))
 
-        #n = -9
-        #self.read_markers([n, 1, 0, 0])
+        ndvs = len(data) // 4 - 7
+        desvar_values = unpack('%sf' % ndvs, data[28:])
+
+        self.convergence_data.append(design_iter, iconvergence, conv_result, obj_intial,
+                                    obj_final, constraint_max, row_constraint_max, desvar_values)
+        self.read_markers([-4, 1, 0, 0])
+
 
     def _get_marker_n(self, nmarkers):
         """
