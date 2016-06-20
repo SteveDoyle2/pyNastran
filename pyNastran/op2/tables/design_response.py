@@ -127,8 +127,8 @@ class Convergence(object):
         self.row_constraint_max[n] = row_constraint_max
         self.desvar_values[n, :] = desvar_values
         self._n += 1
-        if self.n == self._n:
-            print(self)
+        #if self.n == self._n:
+            #print(self)
 
     def __repr__(self):
         msg = 'Convergence()\n'
