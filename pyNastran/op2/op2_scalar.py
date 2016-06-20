@@ -37,7 +37,7 @@ from pyNastran.op2.fortran_format import FortranFormat
 
 from pyNastran.utils import is_binary_file
 from pyNastran.utils.log import get_logger
-
+from pyNastran.op2.tables.design_response import WeightResponse, FlutterResponse
 
 GEOM_TABLES = [
     # GEOM2 - Table of Bulk Data entry images related to element connectivity andscalar points
@@ -350,6 +350,7 @@ AUTODESK_MATRIX_TABLES = [
 RESULT_TABLES = NX_RESULT_TABLES + MSC_RESULT_TABLES
 MATRIX_TABLES = NX_MATRIX_TABLES + MSC_MATRIX_TABLES + AUTODESK_MATRIX_TABLES
 
+
 class Convergence(object):
     def __init__(self, ndesign_variables):
         self.n = 1
@@ -388,9 +389,8 @@ class Convergence(object):
         self.row_constraint_max[n] = row_constraint_max
         self.desvar_values[n, :] = desvar_values
         self._n += 1
-        #print('self._n =', n)
-        if self.n == self._n:
-            print(self)
+        #if self.n == self._n:
+            #print(self)
 
     def __repr__(self):
         msg = 'Convergence()\n'
@@ -577,7 +577,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             #b'RANCONS': [self._table_passer, self._table_passer], # Constraint mode element strain energy table (ORGY1)
 
 
-            b'R1TABRG': [self._table_passer, self._table_passer_r1tabrg],
+            b'R1TABRG': [self._table_passer, self._read_r1tabrg],
             #b'TOL': [self._table_passer, self._table_passer],
 
             b'MATPOOL': [self._table_passer, self._table_passer], # DMIG bulk data entries
@@ -985,48 +985,90 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             self.binary_debug.write('  skipping table = %s\n' % self.table_name)
         return ndata
 
-    def _table_passer_r1tabrg(self, data, ndata):
-        """auto-table skipper"""
+    def _read_r1tabrg(self, data, ndata):
+        """
+        Design Responses:
+          - Weight
+          - Flutter Speed
+          - Stress
+          - Strain
+          - Displacement
+        """
         if self.read_mode == 0:
             return
         #if self._table4_count == 0:
             #self._count += 1
         #self._table4_count += 1
 
-        if 0:
+        if self.read_mode == 1:
+            Type, = unpack(self._endian + 'i', data[8:12])
+            assert Type in [1, 6, 10, 84], Type
+            if Type == 1:
+                if self.weight_response is None:
+                    self.weight_response = WeightResponse()
+                else:
+                    self.weight_response.n += 1
+            elif Type == 84:
+                if self.flutter_response is None:
+                    self.flutter_response = FlutterResponse()
+                else:
+                    self.flutter_response.n += 1
+            return
+            #else: # response not added...
+                #pass
+        if 1:
             #self.show_data(data, types='ifs', endian=None)
             out = unpack(self._endian + 'iii 8s iiii i iiiii', data)
-            #out = unpack(self._endian + 'iii 8s ffff f fffff', data)
-            #print(out)
+            # per the R1TAB DMAP page:
+            #   all indicies are downshift by 1
+            #   indices above out[3] are off by +2 because of the 2 field response_label
             internal_id = out[0]
             dresp_id = out[1]
             Type = out[2]
+            response_label = out[3].strip()
+            # -1 for 2 field wide response_label
+            region = out[4]
+            subcase = out[5]
+            type_flag = out[12]  # no meaning per MSC DMAP 2005
+            seid = out[13]
+
             if Type == 1:
-                out = unpack(self._endian + 'iii 8s iiii i iiiii', data)
-                #out = unpack(self._endian + 'iii 8s iiff f fffff', data)
                 #                                                  -----    WEIGHT RESPONSE    -----
                 #     ---------------------------------------------------------------------------------------------------------------------------
                 #          INTERNAL    DRESP1    RESPONSE     ROW       COLUMN         LOWER          INPUT         OUTPUT          UPPER
                 #             ID         ID       LABEL        ID         ID           BOUND          VALUE          VALUE          BOUND
                 #     ---------------------------------------------------------------------------------------------------------------------------
                 #               1         1      WEIGHT        3          3              N/A        2.9861E+05    2.9852E+05       N/A
-                #(1, 1, 1, 'WEIGHT  ', 0, 1011, 3, 3, 0, 0, 0, 0, 0, 0)
-                response_label = out[3]
-                row_id = out[4]
-                column_id = out[5]
+                #(1, 1,    1, 'WEIGHT  ', 0, 1011, 3, 3, 0, 0, 0, 0, 0, 0)
+                #(1, 1000, 1, 'W       ', 0, 1,    3, 3, 0, 0, 0, 0, 0, 0)
+                #print(out)
+                #row_id = out[4]
 
-                dunno_6 = out[6]
-                dunno_7 = out[7]
-                dunno_8 = out[8]
-                dunno_9 = out[9]
-                dunno_10 = out[10]
-                dunno_11 = out[11]
-                dunno_12 = out[12]
-                dunno_13 = out[13]
-                msg = 'WEIGHT - Type=%r response_label=%r row_id=%r column_id=%r 6=%r 7=%r 8=%r 9=%r 10=%r 11=%r 12=%r 13=%r' % (
-                    Type, response_label, row_id, column_id, dunno_6, dunno_7, dunno_8, dunno_9, dunno_10, dunno_11, dunno_12, dunno_13)
-                self.log.debug(msg)
-            elif Type == 6:
+                # these should be blank?
+                row_id = out[6]
+                column_id = out[7]
+
+                seid_weight = out[8]
+
+                assert np.abs(out[8:]).sum() == 0.0, out[8:]
+                #dunno_8 = out[8]
+                #dunno_9 = out[9]
+                #dunno_10 = out[10]
+                #dunno_11 = out[11]
+                #dunno_12 = out[12]
+                #dunno_13 = out[13]
+                #msg = 'WEIGHT - Type=%r response_label=%r row_id=%r column_id=%r 6=%r 7=%r 8=%r 9=%r 10=%r 11=%r 12=%r 13=%r' % (
+                    #Type, response_label, row_id, column_id, dunno_6, dunno_7, dunno_8, dunno_9, dunno_10, dunno_11, dunno_12, dunno_13)
+                #out = unpack(self._endian + 'iii 8s iiff f fffff', data)
+                #print(out)
+                msg = 'WEIGHT - label=%r region=%s subcase=%s row_id=%r column_id=%r' % (
+                    response_label, region, subcase, row_id, column_id)
+                self.weight_response.append(internal_id, dresp_id, response_label, region,
+                                            subcase, type_flag, seid,
+                                            row_id, column_id)
+                #print(msg)
+                #self.log.debug(msg)
+            elif Type == 6:  # STRESS
                 #                                                 -----    STRESS RESPONSES    -----
                 #     ---------------------------------------------------------------------------------------------------------------------------
                 #        INTERNAL   DRESP1   RESPONSE   ELEMENT    VIEW    COMPONENT      LOWER         INPUT        OUTPUT         UPPER
@@ -1034,20 +1076,41 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 #     ---------------------------------------------------------------------------------------------------------------------------
                 #              21       209  S09L       1447476                  17       N/A        4.8561E+04    5.0000E+04    5.0000E+04
                 # (21, 209, 6, 'S09L    ', 30, 1011, 17, 0, 1447476, 0, 0, 0, 0, 0)
-                response_label = out[3]
-                eid = out[4]
-                dunno_a = out[5]
-                dunno_b = out[6]
-                dunno_c = out[7]
-                dunno_d = out[8]
-            elif Type == 10:  # TODO: DVPREL2?
-                #print(out)
-                pass
-            elif Type == 84: # TODO: FLUTTER (pretty sure...)
-                #print(out)
-                pass
+                stress_code = out[6]
+                pid = out[8]
+                msg = 'STRESS - Type=%r label=%r region=%s subcase=%s stress_code=%s pid=%s' % (
+                    Type, response_label, region, subcase, stress_code, pid)
+
+            #elif Type == 5:  # DISP
+                #pass
+            #elif Type == 7:  # STRAIN
+                #pass
+            elif Type == 10:  # CSTRESS
+                stress_code = out[6]
+                ply = out[7]
+                pid = out[8]  # is this element id?
+                msg = 'CSTRESS - label=%r region=%s subcase=%s stress_code=%s ply=%s pid=%s' % (
+                    response_label, region, subcase, stress_code, ply, pid)
+                #print(msg)
+            #elif Type == 10:  # CSTRAIN
+                #pass
+            elif Type == 84:  # FLUTTER  (iii, label, mode, (Ma, V, rho), flutter_id, fff)
+                out = unpack(self._endian + 'iii 8s iii fff i fff', data)
+                mode = out[6]
+                mach = out[7]
+                velocity = out[8]
+                density = out[9]
+                flutter_id = out[10]
+                msg = 'FLUTTER - _count=%s label=%r region=%s subcase=%s mode=%s mach=%s velocity=%s density=%s flutter_id=%s' % (
+                    self._count, response_label, region, subcase, mode, mach, velocity, density, flutter_id)
+                self.flutter_response.append(internal_id, dresp_id, response_label, region,
+                                             subcase, type_flag, seid,
+                                             mode, mach, velocity, density, flutter_id)
+                #print(msg)
+                #self.log.debug(msg)
             else:
-                raise NotImplementedError(Type)
+                self.log.debug('R1TABRG response Type=%s not supported' % Type)
+                #raise NotImplementedError(Type)
             assert len(out) == 14, len(out)
         #self.response1_table[self._count] = out
         if self._table4_count == 0:
@@ -2093,7 +2156,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
     def _read_hisadd(self):
         """optimization history (SOL200) table"""
         self.table_name = self._read_table_name(rewind=False)
-        self.log.debug('table_name = %r' % self.table_name)
 
         if self.read_mode == 1:
             self.read_markers([-1])
@@ -2154,8 +2216,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         else:
             raise NotImplementedError('conv_result=%s' % conv_result)
 
-        self.log.debug('design_iter=%s iconvergence=%s conv_result=%s obj_intial=%s obj_final=%s constraint_max=%s row_constraint_max=%s' % (
-            design_iter, iconvergence, conv_result, obj_intial, obj_final, constraint_max, row_constraint_max))
+        #self.log.debug('design_iter=%s iconvergence=%s conv_result=%s obj_intial=%s obj_final=%s constraint_max=%s row_constraint_max=%s' % (
+            #design_iter, iconvergence, conv_result, obj_intial, obj_final, constraint_max, row_constraint_max))
 
         ndvs = len(data) // 4 - 7
         desvar_values = unpack('%sf' % ndvs, data[28:])

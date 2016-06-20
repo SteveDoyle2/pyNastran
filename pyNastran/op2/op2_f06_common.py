@@ -177,12 +177,20 @@ class OP2_F06_Common(object):
         #: the date the job was run on
         self.date = None
 
+        # SOL 200
+        self.convergence_data = None
+        self.weight_response = None
+        self.stress_response = None
+        self.strain_response = None
+        self.composite_stress_response = None
+        self.composite_strain_response = None
+        self.flutter_response = None
+
         #: Grid Point Weight Table
         #: create with:
         #:   PARAM   GRDPNT    0  (required for F06/OP2)
         #:   PARAM   POSTEXT YES  (required for OP2)
         self.grid_point_weight = GridPointWeight()
-        self.convergence_data = None
         self.oload_resultant = None
 
         #: ESE
