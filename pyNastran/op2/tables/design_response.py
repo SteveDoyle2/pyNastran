@@ -80,6 +80,30 @@ class Convergence(object):
         self.row_constraint_max = []
         self.desvar_values = []
 
+    def get_convergence(self):
+        iconvergence = self.iconvergence[-1] # hard, soft (2)
+        conv_result = self.conv_result[-1] # no, hard, soft (3)
+        # 2*3 = 6
+        if (conv_result, iconvergence) == ('hard', 'hard'):  # sure about this
+            convergence = 'HARD'
+        elif (conv_result, iconvergence) == ('no', 'hard'):  # pretty sure about this...
+            convergence = 'MAX DESIGN CYCLES'
+        elif (conv_result, iconvergence) == ('no', 'soft'):  # is this possible???
+            convergence = 'MAX DESIGN CYCLES'
+
+        # are these possible???
+        # we'll just assume SOFT convergence
+        if (conv_result, iconvergence) == ('hard', 'soft'):  # pretty sure about this...
+            convergence = 'SOFT'
+        elif (conv_result, iconvergence) == ('soft', 'hard'): # is this possible???
+            convergence = 'SOFT'
+        elif (conv_result, iconvergence) == ('soft', 'soft'): # is this possible???
+            convergence = 'SOFT'
+        else:
+            raise NotImplementedError('conv_result=%r iconvergence=%r' % (conv_result, iconvergence))
+        return convergence, (conv_result, iconvergence)
+
+
     def append(self, design_iter, iconvergence, conv_result, obj_initial, obj_final,
                  constraint_max, row_constraint_max, desvar_values):
         if not self.is_built:
@@ -103,8 +127,8 @@ class Convergence(object):
         self.row_constraint_max[n] = row_constraint_max
         self.desvar_values[n, :] = desvar_values
         self._n += 1
-        #if self.n == self._n:
-            #print(self)
+        if self.n == self._n:
+            print(self)
 
     def __repr__(self):
         msg = 'Convergence()\n'
@@ -116,4 +140,3 @@ class Convergence(object):
         msg += '  constraint_max = %s\n' % self.constraint_max
         msg += '  row_constraint_max = %s\n' % self.row_constraint_max
         return msg
-
