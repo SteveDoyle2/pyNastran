@@ -184,7 +184,7 @@ class F06Writer(OP2_F06_Common):
         all_results = ['stress', 'strain', 'element_forces', 'constraint_forces'] + self.get_table_types()
         return all_results
 
-    def _clear_results(self):
+    def clear_results(self):
         self._results.clear()
 
     def add_results(self, results):
@@ -223,7 +223,7 @@ class F06Writer(OP2_F06_Common):
     def set_results(self, results):
         if isinstance(results, string_types):
             results = [results]
-        self._clear_results()
+        self.clear_results()
         self.add_results(results)
 
     def remove_results(self, results):

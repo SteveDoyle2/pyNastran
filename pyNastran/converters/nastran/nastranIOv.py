@@ -342,7 +342,7 @@ class NastranIO(object):
         if ext == '.op2' and is_geom:
             model = OP2Geom(make_geom=True, debug=False, log=self.log,
                             debug_file=None)
-            model._clear_results()
+            model.clear_results()
             model.read_op2(op2_filename=bdf_filename)
             model.cross_reference(xref=True, xref_loads=xref_loads,
                                   xref_constraints=False,

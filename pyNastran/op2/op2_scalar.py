@@ -37,7 +37,7 @@ from pyNastran.op2.fortran_format import FortranFormat
 
 from pyNastran.utils import is_binary_file
 from pyNastran.utils.log import get_logger
-from pyNastran.op2.tables.design_response import WeightResponse, FlutterResponse
+from pyNastran.op2.tables.design_response import WeightResponse, FlutterResponse, Convergence
 
 GEOM_TABLES = [
     # GEOM2 - Table of Bulk Data entry images related to element connectivity andscalar points
@@ -350,58 +350,6 @@ AUTODESK_MATRIX_TABLES = [
 RESULT_TABLES = NX_RESULT_TABLES + MSC_RESULT_TABLES
 MATRIX_TABLES = NX_MATRIX_TABLES + MSC_MATRIX_TABLES + AUTODESK_MATRIX_TABLES
 
-
-class Convergence(object):
-    def __init__(self, ndesign_variables):
-        self.n = 1
-        self._n = 0
-        self.is_built = False
-        self.ndesign_variables = ndesign_variables
-        self.design_iter = []
-        self.iconvergence = []  #      1-soft, 2-hard
-        self.conv_result = []   # 0-no, 1-soft, 2-hard
-        self.obj_initial = []
-        self.obj_final = []
-        self.constraint_max = []
-        self.row_constraint_max = []
-        self.desvar_values = []
-
-    def append(self, design_iter, iconvergence, conv_result, obj_initial, obj_final,
-                 constraint_max, row_constraint_max, desvar_values):
-        if not self.is_built:
-            self.design_iter = np.zeros(self.n, dtype='int32')
-            self.iconvergence = np.zeros(self.n, dtype=object)
-            self.conv_result = np.zeros(self.n, dtype=object)
-            self.obj_initial = np.zeros(self.n, dtype='float32')
-            self.obj_final = np.zeros(self.n, dtype='float32')
-            self.constraint_max = np.zeros(self.n, dtype='float32')
-            self.row_constraint_max = np.zeros(self.n, dtype='int32')
-            self.desvar_values = np.zeros((self.n, self.ndesign_variables), dtype='float32')
-            self.is_built = True
-
-        n = self._n
-        self.design_iter[n] = design_iter
-        self.iconvergence[n] = iconvergence
-        self.conv_result[n] = conv_result
-        self.obj_initial[n] = obj_initial
-        self.obj_final[n] = obj_final
-        self.constraint_max[n] = constraint_max
-        self.row_constraint_max[n] = row_constraint_max
-        self.desvar_values[n, :] = desvar_values
-        self._n += 1
-        #if self.n == self._n:
-            #print(self)
-
-    def __repr__(self):
-        msg = 'Convergence()\n'
-        msg += '  shape=(%s, %s)\n' % (self.n, self.ndesign_variables)
-        msg += '  design_iter = %s\n' % self.design_iter
-        msg += '  icovergence = %s\n' % self.iconvergence
-        msg += '  conv_result = %s\n' % self.conv_result
-        msg += '  obj_initial = %s\n' % self.obj_initial
-        msg += '  constraint_max = %s\n' % self.constraint_max
-        msg += '  row_constraint_max = %s\n' % self.row_constraint_max
-        return msg
 
 class OP2_Scalar(LAMA, ONR, OGPF,
                  OEF, OES, OGS, OPG, OQG, OUG, OGPWG, FortranFormat):
