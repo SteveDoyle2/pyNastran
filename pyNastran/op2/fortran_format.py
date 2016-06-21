@@ -499,7 +499,10 @@ class FortranFormat(object):
                 #n = record_len
                 #break
             else:
-                data, ndata = self._skip_record_ndata()
+                if self.table_name in ['R1TABRG']:
+                    data, ndata = self._read_record_ndata()
+                else:
+                    data, ndata = self._skip_record_ndata()
                 n = table4_parser(data, ndata)
                 assert isinstance(n, integer_types), 'table_name=%s n=%s' % (self.table_name, n)
 

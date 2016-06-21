@@ -949,19 +949,37 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         #self._table4_count += 1
 
         if self.read_mode == 1:
+            assert data is not None, data
+            assert len(data) > 12, len(data)
             Type, = unpack(self._endian + 'i', data[8:12])
-            assert Type in [1, 6, 10, 84], Type
+            #assert Type in [1, 6, 10, 84], Type
             if Type == 1:
                 if self.weight_response is None:
                     self.weight_response = WeightResponse()
                 else:
                     self.weight_response.n += 1
+            elif Type == 4:
+                #TYPE =4 EIGN or FREQ
+                #8 MODE I Mode number
+                #9 APRX I Approximation code
+                pass
+            elif Type == 5:
+                #TYPE =5 DISP
+                #8 COMP I Displacement component
+                #9 UNDEF None
+                #10 GRID I Grid identification number
+                pass
+            elif Type == 15:
+                # CEIG
+                #8 MODE I Mode number
+                #9 ICODE I 1: Real component or 2: Imaginary component
+                pass
             elif Type == 84:
                 if self.flutter_response is None:
                     self.flutter_response = FlutterResponse()
                 else:
                     self.flutter_response.n += 1
-            return
+            return ndata
             #else: # response not added...
                 #pass
         if 1:
@@ -998,7 +1016,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
                 seid_weight = out[8]
 
-                assert np.abs(out[8:]).sum() == 0.0, out[8:]
+                assert np.abs(out[8:-1]).sum() == 0.0, 'out=%s 8=%s' % (out, out[8:-1])
+                assert out[-1] in [0, 1, 2], out
                 #dunno_8 = out[8]
                 #dunno_9 = out[9]
                 #dunno_10 = out[10]
@@ -1042,6 +1061,21 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 #print(msg)
             #elif Type == 10:  # CSTRAIN
                 #pass
+            elif Type == 24:  # FRSTRE
+                #8 ICODE I Stress item code
+                #9 UNDEF None
+                #10 ELID I Element identification number
+                #11 FREQ RS Frequency
+                #12 IFLAG I Integrated response flag. See Remark 20 of
+                #DRESP1.
+                #Value is -1 to -6, for SUM, AVG, SSQ,
+                pass
+            elif Type == 28:  # RMSACCL
+                #8 COMP I RMS Acceleration component
+                #9 RANDPS I RANDPS entry identification number
+                #10 GRID I Grid identification number
+                #11 DMFREQ RS Dummy frequency for internal use
+                pass
             elif Type == 84:  # FLUTTER  (iii, label, mode, (Ma, V, rho), flutter_id, fff)
                 out = unpack(self._endian + 'iii 8s iii fff i fff', data)
                 mode = out[6]
@@ -2153,7 +2187,9 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         elif iconvergence == 2:
             iconvergence = 'hard'
         else:
-            raise NotImplementedError('iconvergence=%s' % iconvergence)
+            msg = 'iconvergence=%s\n' % iconvergence
+            self.show_data(data, types='ifs', endian=None)
+            raise NotImplementedError(msg)
 
         if conv_result == 0:
             conv_result = 'no'
@@ -2161,9 +2197,14 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             conv_result = 'soft'
         elif conv_result == 2:
             conv_result = 'hard'
+        elif conv_result in [3, 4]:
+            # not sure why this happens, but the field is wrong
+            # it seems to apply to one step before this one
+            conv_result = 'best_design'
         else:
+            self.log.debug('design_iter=%s iconvergence=%s conv_result=%s obj_intial=%s obj_final=%s constraint_max=%s row_constraint_max=%s' % (
+                design_iter, iconvergence, conv_result, obj_intial, obj_final, constraint_max, row_constraint_max))
             raise NotImplementedError('conv_result=%s' % conv_result)
-
         #self.log.debug('design_iter=%s iconvergence=%s conv_result=%s obj_intial=%s obj_final=%s constraint_max=%s row_constraint_max=%s' % (
             #design_iter, iconvergence, conv_result, obj_intial, obj_final, constraint_max, row_constraint_max))
 
