@@ -116,7 +116,7 @@ def nastran_to_tecplot(model):
         msg += '  ntris=%s nquads=%s\n' % (ntris, nquads)
         msg += '  ntets=%s npentas=%s nhexas=%s\n' % (ntets, npentas, nhexas)
         raise NotImplementedError(msg)
-
+    return tecplot
 
 def nastran_to_tecplot_filename(bdf_filename, tecplot_filename, log=None):
     model = BDF(log=log)

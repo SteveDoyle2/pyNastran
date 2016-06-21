@@ -1253,7 +1253,7 @@ class CAERO1(BaseCard):
             raise ValueError(msg)
 
         if self.nchord == 0 and self.lchord == 0:
-            msg = 'NCHORD or LCHORD must be greater than 0'
+            msg = 'NCHORD or LCHORD must be greater than 0\n%s' % str(self)
             raise ValueError(msg)
         if self.nchord != 0 and self.lchord != 0:
             msg = 'Either NCHORD or LCHORD must 0'

@@ -43,7 +43,7 @@ class STL(object):
         self.infilename = None
 
     def write_stl(self, stl_out_filename, is_binary=False, float_fmt='%6.12f',
-                  normalize_normal_vectors=False):
+                  normalize_normal_vectors=False, stop_on_failure=True):
         """
         Writes an STL file
 
@@ -63,10 +63,12 @@ class STL(object):
         solid_name = 'dummy_name'
         if is_binary:
             self.write_binary_stl(stl_out_filename,
-                                  normalize_normal_vectors=normalize_normal_vectors)
+                                  normalize_normal_vectors=normalize_normal_vectors,
+                                  stop_on_failure=stop_on_failure)
         else:
             self.write_stl_ascii(stl_out_filename, solid_name, float_fmt=float_fmt,
-                                 normalize_normal_vectors=normalize_normal_vectors)
+                                 normalize_normal_vectors=normalize_normal_vectors,
+                                 stop_on_failure=stop_on_failure)
 
     def read_stl(self, stl_filename):
         """
@@ -91,7 +93,8 @@ class STL(object):
         #assert self.nelements > 0, 'nelements=%s' % self.nelements
 
 
-    def write_binary_stl(self, stl_filename, normalize_normal_vectors=False):
+    def write_binary_stl(self, stl_filename, normalize_normal_vectors=False,
+                         stop_on_failure=True):
         """
         Write an STL binary file
 
@@ -268,19 +271,34 @@ class STL(object):
                         break
                 msg += 'Failed Elements: %s; n=%s\n' % (inan, len(inan))
                 raise RuntimeError(msg)
+            # we need to divide our (n,3) array in 3 steps
+            normals = v123 # / normals_norm
+            normals[:, 0] /= normals_norm
+            normals[:, 1] /= normals_norm
+            normals[:, 2] /= normals_norm
         else:
-            inotnan = np.where(normals_norm != 0)[0]
+            inotnan = np.where(normals_norm != 0.)[0]
+            inan = np.where(normals_norm == 0.)[0]
             normals_norm[inan] = np.array([1., 0., 0.])
-            elements = elements[inotnan, :]
-            normals_norm = normals_norm[inotnan]
-            v123 = v123[inotnan]
+            #elements = elements[inotnan, :]
+            #normals_norm = normals_norm[inotnan]
+            #v123 = v123[inotnan]
 
-        # we need to divide our (n,3) array in 3 steps
-        normals = v123 # / normals_norm
-        normals[:, 0] /= normals_norm
-        normals[:, 1] /= normals_norm
-        normals[:, 2] /= normals_norm
+            # we need to divide our (n,3) array in 3 steps
+            if 0:
+                normals = v123 # / normals_norm
+                normals[:, 0] /= normals_norm
+                normals[:, 1] /= normals_norm
+                normals[:, 2] /= normals_norm
+                normals[inan, :] = -1.01
+            else:
+                normals = v123 # / normals_norm
+                normals[inotnan, 0] /= normals_norm[inotnan]
+                normals[inotnan, 1] /= normals_norm[inotnan]
+                normals[inotnan, 2] /= normals_norm[inotnan]
+
         return normals
+
 
     def flip_normals(self, i=None):
         """
@@ -506,7 +524,7 @@ class STL(object):
 
 
     def write_stl_ascii(self, out_filename, solid_name, float_fmt='%.6f',
-                        normalize_normal_vectors=False):
+                        normalize_normal_vectors=False, stop_on_failure=True):
         """
         solid solid_name
          facet normal -6.601157e-001 6.730213e-001 3.336009e-001
@@ -529,7 +547,7 @@ class STL(object):
             out.write(msg)
 
             nelements = elements.shape[0]
-            normals = self.get_normals(elements)
+            normals = self.get_normals(elements, stop_on_failure=stop_on_failure)
             for element, normal in zip(elements, normals):
                 try:
                     p1, p2, p3 = nodes[element]
