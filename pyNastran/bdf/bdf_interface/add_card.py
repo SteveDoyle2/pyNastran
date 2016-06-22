@@ -446,7 +446,7 @@ class AddMethods(BDFAttributes):
             self._type_to_id_map[constraint.type].append(key)
 
     def add_sesuport(self, se_suport):
-        self._type_to_id_map[suport.type].append(len(self.suport))
+        self._type_to_id_map[se_suport.type].append(len(self.se_suport))
         self.se_suport.append(se_suport)
 
     def add_suport(self, suport):
@@ -597,7 +597,7 @@ class AddMethods(BDFAttributes):
     def add_TRIM(self, trim, allow_overwrites=False):
         key = trim.sid
         if not allow_overwrites:
-            assert key not in self.trims, 'trim=%s oldTrim=\n%snewProperty=\n%s' % (key, self.trims[key], trim)
+            assert key not in self.trims, 'TRIM=%s  old=\n%snew=\n%s' % (key, self.trims[key], trim)
         assert key > 0, 'key=%r trim=\n%s' % (key, trim)
         self.trims[key] = trim
         self._type_to_id_map[trim.type].append(key)
@@ -605,14 +605,14 @@ class AddMethods(BDFAttributes):
     def add_DIVERG(self, diverg, allow_overwrites=False):
         key = diverg.sid
         if not allow_overwrites:
-            assert key not in self.divergs, 'diverg=%s oldDIVERG=\n%snewDIVERG=\n%s' % (key, self.divergs[key], diverg)
+            assert key not in self.divergs, 'DIVERG=%s  old=\n%snew=\n%s' % (key, self.divergs[key], diverg)
         assert key > 0, 'key=%r diverg=\n%s' % (key, diverg)
         self.divergs[diverg] = diverg
         self._type_to_id_map[diverg.type].append(key)
 
     def add_FLUTTER(self, flutter):
         key = flutter.sid
-        assert key not in self.flutters
+        assert key not in self.flutters, 'FLUTTER=%s old=\n%snew=\n%s' % (key, self.flutters[key], flutter)
         assert key > 0
         self.flutters[key] = flutter
         self._type_to_id_map[flutter.type].append(key)
@@ -638,7 +638,7 @@ class AddMethods(BDFAttributes):
 
     def add_DESVAR(self, desvar):
         key = desvar.desvar_id
-        assert key not in self.desvars, 'oid=%s old_DESVAR=\n%snew_DESVAR=\n%s' % (
+        assert key not in self.desvars, 'DESVAR=%s old=\n%snew=\n%s' % (
             key, self.desvars[key], desvar)
         assert key > 0
         self.desvars[key] = desvar
@@ -646,7 +646,7 @@ class AddMethods(BDFAttributes):
 
     def add_DDVAL(self, ddval):
         key = ddval.oid
-        assert key not in self.ddvals, 'oid=%s old_DDVAL=\n%snew_DDVAL=\n%s' % (
+        assert key not in self.ddvals, 'DDVAL=%s old=\n%snew=\n%s' % (
             key, self.ddvals[key], ddval)
         assert key > 0
         self.ddvals[key] = ddval
@@ -654,7 +654,7 @@ class AddMethods(BDFAttributes):
 
     def add_DLINK(self, dlink):
         key = dlink.oid
-        assert key not in self.dlinks, 'oid=%s old_DLINK=\n%snew_DLINK=\n%s' % (
+        assert key not in self.dlinks, 'DLINK=%s old=\n%snew=\n%s' % (
             key, self.dlinks[key], dlink)
         assert key > 0
         self.dlinks[key] = dlink
@@ -664,7 +664,7 @@ class AddMethods(BDFAttributes):
         key = dconadd.dcid
         if key in self.dconadds and not allow_overwrites:
             if not dconadd._is_same_card(self.dconadds[key]):
-                assert key not in self.dconadds, 'pid=%s old_DCONADD=\n%snew_DCONADD=\n%s' % (
+                assert key not in self.dconadds, 'DCONADD=%s old=\n%snew=\n%s' % (
                     key, self.dconadds[key], dconadd)
         else:
             assert key > 0, 'dcid=%s dconadd=%s' % (key, dconadd)
@@ -673,7 +673,7 @@ class AddMethods(BDFAttributes):
 
     def add_DRESP(self, dresp):
         key = dresp.dresp_id
-        assert key not in self.dresps, 'pid=%s old_DRESPx=\n%snew_DRESPx=\n%s' % (
+        assert key not in self.dresps, 'DRESPx=%s old=\n%snew=\n%s' % (
                     key, self.dresps[key], dresp)
         assert key > 0
         self.dresps[key] = dresp
@@ -681,7 +681,7 @@ class AddMethods(BDFAttributes):
 
     def add_DVCREL(self, dvcrel):
         key = dvcrel.oid
-        assert key not in self.dvprels, 'pid=%s old_DVCRELx=\n%snew_DVCRELx=\n%s' % (
+        assert key not in self.dvprels, 'DVCRELx=%s old\n%snew=\n%s' % (
                     key, self.dvcrels[key], dvcrel)
         assert key > 0
         self.dvcrels[key] = dvcrel
@@ -689,7 +689,7 @@ class AddMethods(BDFAttributes):
 
     def add_DVMREL(self, dvmrel):
         key = dvmrel.oid
-        assert key not in self.dvmrels, 'pid=%s old_DVMRELx=\n%snew_DVMRELx=\n%s' % (
+        assert key not in self.dvmrels, 'DVMRELx=%s old=\n%snew=\n%s' % (
                     key, self.dvmrels[key], dvmrel)
         assert key not in self.dvmrels
         assert key > 0
@@ -698,7 +698,7 @@ class AddMethods(BDFAttributes):
 
     def add_DVPREL(self, dvprel):
         key = dvprel.oid
-        assert key not in self.dvprels, 'pid=%s old_DVPRELx=\n%snew_DVPRELx=\n%s' % (
+        assert key not in self.dvprels, 'DVPRELx=%s old\n%snew=\n%s' % (
                     key, self.dvprels[key], dvprel)
         assert key > 0
         self.dvprels[key] = dvprel
@@ -722,7 +722,7 @@ class AddMethods(BDFAttributes):
         key = tstep.sid
         if key in self.tsteps and not allow_overwrites:
             if not tstep._is_same_card(self.tsteps[key]):
-                assert key not in self.tsteps, 'sid=%s\noldTSTEP=\n%snewTSTEP=\n%s' % (key, self.tsteps[key], tstep)
+                assert key not in self.tsteps, 'TSTEP=%s\nold=\n%snew=\n%s' % (key, self.tsteps[key], tstep)
         else:
             assert key > 0, 'sid=%s tstep=\n%s' % (key, tstep)
             self.tsteps[key] = tstep
@@ -732,7 +732,7 @@ class AddMethods(BDFAttributes):
         key = tstepnl.sid
         if key in self.tstepnls and not allow_overwrites:
             if not tstepnl._is_same_card(self.tstepnls[key]):
-                assert key not in self.tstepnls, 'sid=%s\noldTSTEPNL=\n%snewTSTEPNL=\n%s' % (key, self.tstepnls[key], tstepnl)
+                assert key not in self.tstepnls, 'TSTEPNL=%s\nold=\n%snew=\n%s' % (key, self.tstepnls[key], tstepnl)
         else:
             assert key > 0, 'sid=%s tstepnl=\n%s' % (key, tstepnl)
             self.tstepnls[key] = tstepnl
