@@ -77,6 +77,9 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
         the PARAM,POST,value to run
     sum_load : bool; default=True
         should the loads be summed
+    dev : bool; default=True
+        True : crashes if an Exception occurs
+        False : doesn't crash; useful for running many tests
 
     Usage
     -----
@@ -245,6 +248,9 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
         writes pyNastran_dump.bdf
     dictsort : bool; default=False
         writes pyNastran_dict.bdf
+    dev : bool; default=False
+        True : crashes if an Exception occurs
+        False : doesn't crash; useful for running many tests
     """
     if dynamic_vars is None:
         dynamic_vars = {}

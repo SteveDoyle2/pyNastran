@@ -208,7 +208,7 @@ class AddMethods(BDFAttributes):
         key = tempd.sid
         if key in self.tempds and not allow_overwrites:
             if not tempd._is_same_card(self.tempds[key]):
-                assert key not in self.tempds, 'pid=%s old_TEMPD=\n%snew_TEMPD=\n%s' % (
+                assert key not in self.tempds, 'TEMPD.sid=%s old=\n%snew=\n%s' % (
                     key, self.tempds[key], tempd)
         else:
             assert key > 0, 'sid=%s tempd=%s' % (key, tempd)
@@ -219,7 +219,7 @@ class AddMethods(BDFAttributes):
         key = prop.pid
         if key in self.pbusht and not allow_overwrites:
             if not prop._is_same_card(self.pbusht[key]):
-                assert key not in self.pbusht, 'pid=%s oldProperty=\n%snewProperty=\n%s' % (
+                assert key not in self.pbusht, 'PBUSHT.pid=%s old=\n%snew=\n%s' % (
                     key, self.pbusht[key], prop)
         else:
             assert key > 0, 'pid=%s prop=%s' % (key, prop)
@@ -230,7 +230,7 @@ class AddMethods(BDFAttributes):
         key = prop.pid
         if key in self.pdampt and not allow_overwrites:
             if not prop._is_same_card(self.pdampt[key]):
-                assert key not in self.pdampt, 'pid=%s oldProperty=\n%snewProperty=\n%s' % (
+                assert key not in self.pdampt, 'PDAMPT.pid=%s old=\n%snew=\n%s' % (
                     key, self.pdampt[key], prop)
         else:
             assert key > 0, 'pid=%s prop=%s' % (key, prop)
@@ -243,7 +243,7 @@ class AddMethods(BDFAttributes):
         if key in self.pelast and not allow_overwrites:
             if not prop._is_same_card(self.pelast[key]):
                 #print('pid=%s\noldProperty=\n%snewProperty=\n%s' % (key, self.pelast[key],prop))
-                assert key not in self.pelast, 'pid=%s oldProperty=\n%snewProperty=\n%s' % (
+                assert key not in self.pelast, 'PELAST.pid=%s old=\n%snew=\n%s' % (
                     key, self.pelast[key], prop)
         else:
             self.pelast[key] = prop
@@ -283,7 +283,7 @@ class AddMethods(BDFAttributes):
         assert key > 0, 'mid=%s material=\n%s' % (key, material)
         if key in self.hyperelastic_materials and not allow_overwrites:
             if not material._is_same_card(self.hyperelastic_materials[key]):
-                assert key not in self.hyperelastic_materials, 'mid=%s\noldMaterial=\n%snewMaterial=\n%s' % (key, self.hyperelastic_materials[key], material)
+                assert key not in self.hyperelastic_materials, 'mid=%s\nold=\n%snew=\n%s' % (key, self.hyperelastic_materials[key], material)
         else:
             self.hyperelastic_materials[key] = material
             self._type_to_id_map[material.type].append(key)
@@ -307,7 +307,7 @@ class AddMethods(BDFAttributes):
         slot = mapper[Type]
         if key in slot and not allow_overwrites:
             if not material._is_same_card(slot[key]):
-                assert key not in slot, 'mid=%s Type=%r\noldMaterialDep=\n%snewMaterialDep=\n%s' % (key, Type, slot[key], material)
+                assert key not in slot, 'dMATx.mid=%s Type=%r\nold=\n%snew=\n%s' % (key, Type, slot[key], material)
         else:
             assert key > 0, 'mid=%s material=\n%s' % (key, material)
             slot[key] = material
@@ -321,7 +321,7 @@ class AddMethods(BDFAttributes):
         key = material.mid
         if key in self.thermal_materials and not allow_overwrites:
             if not material._is_same_card(self.creep_materials[key]):
-                assert key not in self.creep_materials, 'mid=%s\noldMaterial=\n%snewMaterial=\n%s' % (key, self.creep_materials[key], material)
+                assert key not in self.creep_materials, 'Material.mid=%s\nold=\n%snew=\n%s' % (key, self.creep_materials[key], material)
         else:
             assert key > 0, 'mid=%s material=\n%s' % (key, material)
             self.creep_materials[key] = material
@@ -383,7 +383,7 @@ class AddMethods(BDFAttributes):
         key = prop.pid
         if key in self.phbdys:
             if not prop._is_same_card(self.phbdys[key]):
-                assert key not in self.phbdys, 'pid=%s\nold_PHBDY=\n%snew_PHDBY=\n%s' % (
+                assert key not in self.phbdys, 'PHBDY.pid=%s\nold=\n%snew=\n%s' % (
                     key, self.phbdys[key], prop)
         else:
             assert key > 0, 'pid=%s prop=\n%s' % (key, prop)
@@ -485,13 +485,13 @@ class AddMethods(BDFAttributes):
 
     def add_AERO(self, aero):
         # only one AERRO card allowed
-        assert self.aero is None, '\naero=\n%s oldAERO=\n%s' % (aero, self.aero)
+        assert self.aero is None, '\naero=\n%s old=\n%s' % (aero, self.aero)
         self.aero = aero
         #self._type_to_id_map[aero.type].append(key)
 
     def add_AEROS(self, aeros):
         # only one AERROS card allowed
-        assert self.aeros is None, '\naeros=\n%s oldAEROS=\n%s' % (aeros, self.aeros)
+        assert self.aeros is None, '\naeros=\n%s old=\n%s' % (aeros, self.aeros)
         self.aeros = aeros
         #self._type_to_id_map[aeros.type].append(key)
 
@@ -499,7 +499,7 @@ class AddMethods(BDFAttributes):
         key = aefact.sid
         if key in self.aefacts and not allow_overwrites:
             if not aefact._is_same_card(self.aefacts[key]):
-                assert key not in self.aefacts, 'sid=%s\noldAEFACT=\n%snewAEFACT=\n%s' % (key, self.aefacts[key], aefact)
+                assert key not in self.aefacts, 'AEFACT.sid=%s\nold=\n%snew=\n%s' % (key, self.aefacts[key], aefact)
         else:
             assert key > 0, 'sid=%s method=\n%s' % (key, aefact)
             self.aefacts[key] = aefact
@@ -507,7 +507,7 @@ class AddMethods(BDFAttributes):
 
     def add_AELIST(self, aelist):
         key = aelist.sid
-        assert key not in self.aelists, '\naelist=\n%s oldAELIST=\n%s' % (aelist, self.aelists[key])
+        assert key not in self.aelists, 'AELIST.sid=%s\nold=\n%snew=\n%s' % (key, self.aelists[key], aelist)
         assert key >= 0
         self.aelists[key] = aelist
         self._type_to_id_map[aelist.type].append(key)
@@ -536,7 +536,7 @@ class AddMethods(BDFAttributes):
 
     def add_AESTAT(self, aestat):
         key = aestat.id
-        assert key not in self.aestats, '\naestat=\n%s oldAESTAT=\n%s' % (
+        assert key not in self.aestats, '\naestat=\n%s old=\n%s' % (
             aestat, self.aestats[key])
         assert key >= 0
         self.aestats[key] = aestat
@@ -544,7 +544,7 @@ class AddMethods(BDFAttributes):
 
     def add_AESURF(self, aesurf):
         key = aesurf.aesid
-        assert key not in self.aesurfs, '\naesurf=\n%s oldAESURF=\n%s' % (
+        assert key not in self.aesurfs, '\naesurf=\n%s old=\n%s' % (
             aesurf, self.aesurfs[key])
         assert key >= 0
         self.aesurfs[key] = aesurf
@@ -552,7 +552,7 @@ class AddMethods(BDFAttributes):
 
     def add_CSSCHD(self, csschd):
         key = csschd.sid
-        assert key not in self.csschds, '\naeros=\n%s oldAEROS=\n%s' % (csschd, self.csschds[key])
+        assert key not in self.csschds, '\nCSSCHD=\n%s old=\n%s' % (csschd, self.csschds[key])
         assert key >= 0
         self.csschds[key] = csschd
         self._type_to_id_map[csschd.type].append(key)

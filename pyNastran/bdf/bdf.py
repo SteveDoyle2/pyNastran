@@ -128,7 +128,7 @@ from pyNastran.bdf.field_writer_16 import print_field_16
 
 
 def read_bdf(bdf_filename=None,
-             xref=True, punch=False, encoding=None,
+             validate=True, xref=True, punch=False, encoding=None,
              log=None, debug=True, mode='msc'):
     """
     Creates the BDF object
@@ -145,6 +145,8 @@ def read_bdf(bdf_filename=None,
     log : logging module object / None
         if log is set, debug is ignored and uses the
         settings the logging object has
+    validate : bool
+        runs various checks on the BDF (default=True)
     xref :  bool
         should the bdf be cross referenced (default=True)
     punch : bool
@@ -178,7 +180,8 @@ def read_bdf(bdf_filename=None,
     .. todo:: finish this
     """
     model = BDF(log=log, debug=debug, mode=mode)
-    model.read_bdf(bdf_filename=bdf_filename, xref=xref, punch=punch, read_includes=True, encoding=encoding)
+    model.read_bdf(bdf_filename=bdf_filename, validate=validate,
+                   xref=xref, punch=punch, read_includes=True, encoding=encoding)
 
     #if 0:
         ### TODO: remove all the extra methods
@@ -700,8 +703,17 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         self._stop_on_parsing_error = stop_on_parsing_error
         self._stop_on_xref_error = stop_on_xref_error
 
+    def validate(self):
+        """runs some checks on the input data beyond just type checking"""
+        #for eid, elem in sorted(iteritems(model.elements)):
+            #elem.validate()
+        for caero_id, caero in sorted(iteritems(self.caeros)):
+            caero.validate()
+        for spline_id, spline in sorted(iteritems(self.splines)):
+            spline.validate()
+
     def read_bdf(self, bdf_filename=None,
-                 xref=True, punch=False, read_includes=True, encoding=None):
+                 validate=True, xref=True, punch=False, read_includes=True, encoding=None):
         """
         Read method for the bdf files
 
@@ -709,6 +721,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         ----------
         bdf_filename : str / None
             the input bdf (default=None; popup a dialog)
+        validate : bool
+            runs various checks on the BDF (default=True)
         xref :  bool
             should the bdf be cross referenced (default=True)
         punch : bool
@@ -770,6 +784,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
         self.pop_parse_errors()
         self.fill_dmigs()
+
+        if validate:
+            self.validate()
 
         self.cross_reference(xref=xref)
         self._xref = xref

@@ -1245,6 +1245,7 @@ class CAERO1(BaseCard):
         self.p4 = p4
         self.x43 = x43
 
+    def validate(self):
         if self.nspan == 0 and self.lspan == 0:
             msg = 'NSPAN or LSPAN must be greater than 0'
             raise ValueError(msg)
@@ -3379,6 +3380,7 @@ class SPLINE1(Spline):
         self.nelements = nelements
         self.melements = melements
 
+    def validate(self):
         assert self.nelements > 0, 'nelements = %s' % self.nelements
         assert self.melements > 0, 'melements = %s' % self.melements
         assert self.box2 >= self.box1, 'box1=%s box2=%s' % (self.box1, self.box2)

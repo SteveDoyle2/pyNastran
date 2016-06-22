@@ -50,6 +50,9 @@ class BaseCard(object):
         """deprecates methods"""
         return deprecated(old_name, new_name, deprecated_version, levels=[0, 1, 2])
 
+    def validate(self):
+        pass
+
     def object_attributes(self, mode='public', keys_to_skip=None):
         if keys_to_skip is None:
             keys_to_skip = []
