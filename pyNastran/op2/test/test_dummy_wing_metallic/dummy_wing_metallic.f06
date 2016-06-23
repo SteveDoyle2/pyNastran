@@ -1,0 +1,618 @@
+1
+ 
+ 
+ 
+ 
+                      Warning: This computer program is protected by copyright law and international treaties.       
+                  Unauthorized use, reproduction or distribution of this computer program, or any portion of it, may 
+                                          result in severe civil and criminal penalties.                             
+                         Copyright (C) 2014 MSC Software Corporation and its licensors. All rights reserved.         
+ 
+ 
+                                              * * * * * * * * * * * * * * * * * * * *
+                                              * * * * * * * * * * * * * * * * * * * *
+                                              * *                                 * *
+                                              * *           MSC Software          * *
+                                              * *               CORP              * *
+                                              * *                                 * *
+                                              * *      M S C   N a s t r a n      * *
+                                              * *                                 * *
+                                              * *                                 * *
+                                              * *                                 * *
+                                              * *     Version 2013.1.1-CL256445   * *
+                                              * *                                 * *
+                                              * *                                 * *
+                                              * *                                 * *
+                                              * *          MAR 14, 2014           * *
+                                              * *                                 * *
+                                              * *       x86-64 Based System       * *
+                                              * *        MODEL Intel x8664        * *
+                                              * *  Linux 3.0.101-0.47.67-default  * *
+                                              * *       Compiled for x8664        * *
+                                              * *                                 * *
+                                              * * * * * * * * * * * * * * * * * * * *
+                                              * * * * * * * * * * * * * * * * * * * *
+1                                                                              JUNE  23, 2016  MSC Nastran  3/14/14   PAGE     1
+                                                                                                                                    
+0        N A S T R A N    F I L E    A N D    S Y S T E M    P A R A M E T E R    E C H O                                           
+0                                                                                                                                   
+                                                                                                                                    
+                                                                                                                                    
+     NASTRAN BUFFSIZE=65537 $(COMMAND LINE[4])                                       
+     NASTRAN PARALLEL=4 $(COMMAND LINE[6])                                           
+     INIT MASTER(S)                                                                  
+     NASTRAN SYSTEM(442)=-1,SYSTEM(319)=1                                            
+1                                                                              JUNE  23, 2016  MSC Nastran  3/14/14   PAGE     2
+                                                                                                                                    
+0        N A S T R A N    E X E C U T I V E    C O N T R O L    E C H O                                                             
+0                                                                                                                                   
+                                                                                                                                    
+                                                                                                                                    
+     ID FEMAP,FEMAP                                                                          
+     SOL SESTATIC                                                                            
+     TIME 10000                                                                              
+     CEND                                                                                    
+1    ANALSE_ESTATICA                                                           JUNE  23, 2016  MSC Nastran  3/14/14   PAGE     3
+                                                                                                                                    
+0                                                                                                                                   
+0                                        C A S E    C O N T R O L    E C H O                                                        
+                 COMMAND                                                                                                            
+                 COUNT                                                                                                              
+                  1        TITLE = ANALSE_ESTATICA                                                               
+                  2        ECHO = NONE                                                                           
+                  3        SET 1 = 1 THRU 22,47 THRU 54,                                                         
+                  4          3631 THRU 3842,3851 THRU 3855,                                              
+                  5          3866 THRU 3879,3954 THRU 6659,                                              
+                  6          9533 THRU 9555,9898 THRU 9938                                               
+                  7                                                                                              
+                  8        SET 2 = 4467, 4468, 4469, 4470, 4471, 4472, 4473                                      
+                  9                                                                                              
+                 10        FORCE(PLOT, PRINT) = 2                                                                
+                 11        STRESS(PLOT, PRINT) = 2                                                               
+                 12        STRAIN(PLOT, PRINT) = 2                                                               
+                 13        SPC = 1                                                                               
+                 14      SUBCASE 1                                                                               
+                 15        SUBTITLE = UP BENDING                                                                 
+                 16        LOAD = 1                                                                              
+                 17      SUBCASE 2                                                                               
+                 18        SUBTITLE = DOWN BENDING                                                               
+                 19        LOAD = 2                                                                              
+                 20      BEGIN BULK                                                                              
+1    ANALSE_ESTATICA                                                           JUNE  23, 2016  MSC Nastran  3/14/14   PAGE     4
+                                                                                                                                    
+0                                                                                                                                   
+                                        M O D E L   S U M M A R Y          BULK = 0
+                                   ENTRY NAME        NUMBER OF ENTRIES
+                                   ----------        -----------------
+                                       CORD2C                        3
+                                       CORD2R                        2
+                                       CORD2S                        3
+                                       CQUAD4                     7930
+                                       CTRIA3                     2334
+                                         GRID                     8968
+                                         MAT1                        1
+                                        PARAM                        6
+                                       PLOAD4                     6318
+                                       PSHELL                      699
+                                         SPC1                        1
+
+ ^^^     
+ ^^^ >>> IFP OPERATIONS COMPLETE <<< 
+ ^^^     
+ *** USER INFORMATION MESSAGE 4109 (OUTPX2)
+     THE LABEL IS XXXXXXXX FOR FORTRAN UNIT 12
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =          7 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          8 RECORDS.)
+                (TOTAL DATA WRITTEN FOR LABEL =         17 WORDS.)
+ *** USER INFORMATION MESSAGE 7555 (GMTSTD)
+     FINITE ELEMENT GEOMETRY CHECK RESULTS EXCEED TOLERANCE LEVELS FOR THE FOLLOWING ELEMENTS.  METRIC VALUES THAT EXCEED
+     TEST TOLERANCE LIMITS ARE IDENTIFIED BY ONE OF THE FOLLOWING FLAGS PLACED TO THE RIGHT OF THE METRIC VALUE.
+        "++++" FOR TEST RESULTS EXCEEDING TOLERANCES.  INFORMATIONAL ONLY.  PROBLEM SOLUTION CONTINUES.  (DEFAULT FLAG)
+        "IGNR" FOR TEST RESULTS EXCEEDING TOLERANCES.  INFORMATIONAL ONLY.  PROBLEM SOLUTION CONTINUES.
+        "WARN" FOR TEST RESULTS EXCEEDING TOLERANCES.  INFORMATIONAL ONLY.  PROBLEM SOLUTION CONTINUES.
+        "FAIL" FOR TEST RESULTS EXCEEDING TOLERANCES.  SEVERE ERROR.        PROBLEM SOLUTION TERMINATES.
+     USER ACTION: USE THE GEOMCHECK (EXECUTIVE CONTROL STATEMENT) KEYWORD=VALUE TO CHANGE TOLERANCE VALUES IF DESIRED.
+     User information:
+       Element Geometry test tolerance levels and message limits can be changed by the GEOMCHECK Executive Control statement.
+       The following keywords are available:
+         Q4_SKEW  - modifies CQUAD4/CQUADR skew angle test tolerance.
+         Q4_TAPER - modifies CQUAD4/CQUADR taper ratio test tolerance.
+         Q4_WARP  - modifies CQUAD4/CQUADR warping coefficient test tolerance.
+         Q4_IAMAX - modifies CQUAD4/CQUADR maximum interior angle test tolerance.
+         Q4_IAMIN - modifies CQUAD4/CQUADR minimum interior angle test tolerance.
+         T3_SKEW  - modifies CTRIA3/CTRIAR skew angle test tolerance.
+         T3_IAMAX - modifies CTRIA3/CTRIAR maximum interior angle test tolerance.
+         TET_AR   - modifies CTETRA aspect ratio test tolerance.
+         TET_EPLR - modifies CTETRA edge node point length ratio test tolerance.
+         TET_EPIA - modifies CTETRA edge node point interior angle test tolerance.
+         TET_DETJ - modifies CTETRA determinant of the Jacobian matrix test tolerance.
+         TET_DETG - modifies CTETRA determinant of the vertex points Jacobian matrix test tolerance.
+         HEX_AR   - modifies CHEXA aspect ratio test tolerance.
+         HEX_EPLR - modifies CHEXA edge node point length ratio test tolerance.
+         HEX_EPIA - modifies CHEXA edge node point interior angle test tolerance.
+         HEX_DETJ - modifies CHEXA determinant of the Jacobian matrix test tolerance.
+         HEX_WARP - modifies CHEXA face warping coefficient test tolerance.
+         PEN_AR   - modifies CPENTA aspect ratio test tolerance.
+         PEN_EPLR - modifies CPENTA edge node point length ratio test tolerance.
+         PEN_EPIA - modifies CPENTA edge node point interior angle test tolerance.
+         PEN_DETJ - modifies CPENTA determinant of the Jacobian matrix test tolerance.
+         PEN_WARP - modifies CPENTA face warping coefficient test tolerance.
+         BEAM_OFF - modifies CBEAM  offset length ratio test tolerance.
+         BAR_OFF  - modifies CBAR   offset length ratio test tolerance.
+         MSGLIMIT - limit the number of messages that are generated.
+         MSGTYPE  - modify the severity level of the test.
+     A MAXIMUM OF        100 SKEW ANGLE (SA)       TOLERANCE LIMIT VIOLATIONS WILL BE IDENTIFIED BY THE FLAG "++++"
+                             PLACED AFTER THE VALUE METRIC FOR THE TEST.
+     A MAXIMUM OF        100 MIN INT. ANGLE (IA)   TOLERANCE LIMIT VIOLATIONS WILL BE IDENTIFIED BY THE FLAG "++++"
+                             PLACED AFTER THE VALUE METRIC FOR THE TEST.
+     A MAXIMUM OF        100 MAX INT. ANGLE (IA)   TOLERANCE LIMIT VIOLATIONS WILL BE IDENTIFIED BY THE FLAG "++++"
+                             PLACED AFTER THE VALUE METRIC FOR THE TEST.
+     A MAXIMUM OF        100 WARPING FACTOR (WF)   TOLERANCE LIMIT VIOLATIONS WILL BE IDENTIFIED BY THE FLAG "++++"
+                             PLACED AFTER THE VALUE METRIC FOR THE TEST.
+     A MAXIMUM OF        100 TAPER RATIO (TR)      TOLERANCE LIMIT VIOLATIONS WILL BE IDENTIFIED BY THE FLAG "++++"
+                             PLACED AFTER THE VALUE METRIC FOR THE TEST.
+     USER INFORMATION: THE MAXIMUM MESSAGE COUNT FOR ANY ONE ELEMENT ERROR TEST COULD BE EXCEEDED BY THE 
+     CUMULATIVE EFFECT OF ALL THE MESSAGES GENERATED FOR ALL OF THE DIFFERENT TESTS PERFORMED.
+1    ANALSE_ESTATICA                                                           JUNE  23, 2016  MSC Nastran  3/14/14   PAGE     5
+                                                                                                                                    
+0                                                                                                                                   
+     TOLERANCE LIMITS ARE:  SA =  30.00, IA(MIN) =  30.00, IA(MAX) = 150.00, WF =   0.05, TR =   0.50 (FLAG = LIMIT VIOLATED)
+ ELEMENT TYPE    ID          SKEW ANGLE      MIN INT. ANGLE    MAX INT. ANGLE    WARPING FACTOR      TAPER RATIO  
+    QUAD4        2279        82.04             70.19            133.40              0.00              0.51 ++++
+    QUAD4        3685        88.25             52.49            127.53              0.00              0.55 ++++
+    QUAD4        3744        88.16             52.42            127.60              0.00              0.62 ++++
+    QUAD4        3794        88.02             52.35            127.65              0.00              0.60 ++++
+    QUAD4        5404        88.30             52.52            127.50              0.00              0.57 ++++
+    QUAD4        5490        79.38             59.39            153.25 ++++         0.00              0.72 ++++
+    QUAD4        6206        80.60             60.18            151.39 ++++         0.00              0.70 ++++
+    QUAD4        6833        47.49             39.43            150.13 ++++         0.00              0.40     
+    QUAD4        7025        40.44             35.57            157.53 ++++         0.00              0.46     
+    QUAD4        7135        61.59             51.79            148.20              0.00              0.52 ++++
+    QUAD4        7398        88.42             58.99            136.44              0.00              0.56 ++++
+    QUAD4        8052        87.46             64.03            136.03              0.00              0.56 ++++
+    QUAD4        8078        89.27             59.95            136.43              0.00              0.60 ++++
+    QUAD4        8087        76.11             50.73            121.10              0.00              0.55 ++++
+    QUAD4        8105        89.23             59.47            138.92              0.00              0.62 ++++
+    QUAD4        8112        70.73             37.79            155.23 ++++         0.00              0.64 ++++
+    QUAD4        8135        88.59             59.24            136.80              0.00              0.60 ++++
+    QUAD4        8593        77.35             58.35            142.92              0.00              0.57 ++++
+    QUAD4        8596        76.40             57.26            144.74              0.00              0.58 ++++
+    QUAD4        8605        81.29             52.26            145.74              0.00              0.73 ++++
+    QUAD4        8630        42.36             28.80 ++++       163.66 ++++         0.00              0.59 ++++
+    QUAD4        8651        36.28             23.75 ++++       168.55 ++++         0.00              0.66 ++++
+    QUAD4        8669        51.07             44.81            157.87 ++++         0.00              0.59 ++++
+    QUAD4        8670        26.97 ++++        22.16 ++++       158.31 ++++         0.00              0.29     
+    QUAD4        8688        49.90             44.30            159.59 ++++         0.00              0.62 ++++
+    QUAD4        8690        25.10 ++++        20.45 ++++       160.24 ++++         0.00              0.33     
+    QUAD4        8708        48.62             43.70            161.35 ++++         0.00              0.64 ++++
+    QUAD4        8710        23.01 ++++        18.68 ++++       162.84 ++++         0.00              0.39     
+    QUAD4        8713        18.31 ++++        14.66 ++++       169.57 ++++         0.00              0.46     
+    QUAD4        8888        78.15             62.89            139.00              0.00              0.53 ++++
+    QUAD4        8891        82.57             54.37            135.31              0.00              0.60 ++++
+    QUAD4        8958        86.98             57.92            136.90              0.00              0.58 ++++
+    QUAD4        9069        74.66             57.07            144.18              0.00              0.56 ++++
+    QUAD4        9071        81.30             53.33            135.90              0.00              0.62 ++++
+    QUAD4        9072        77.85             60.47            141.11              0.00              0.55 ++++
+    QUAD4        9074        82.45             56.03            131.75              0.00              0.59 ++++
+    QUAD4        9109        88.22             59.06            135.48              0.00              0.58 ++++
+    QUAD4        9146        87.75             58.88            133.93              0.00              0.56 ++++
+    QUAD4        9151        88.50             63.44            142.43              0.00              0.65 ++++
+    QUAD4        9295        82.03             57.47            146.68              0.00              0.64 ++++
+    QUAD4        9320        85.94             57.08            136.57              0.00              0.58 ++++
+    QUAD4        9346        65.06             53.38            147.70              0.00              0.54 ++++
+1    ANALSE_ESTATICA                                                           JUNE  23, 2016  MSC Nastran  3/14/14   PAGE     6
+                                                                                                                                    
+0                                                                                                                                   
+     TOLERANCE LIMITS ARE:  SA =  30.00, IA(MIN) =  30.00, IA(MAX) = 150.00, WF =   0.05, TR =   0.50 (FLAG = LIMIT VIOLATED)
+ ELEMENT TYPE    ID          SKEW ANGLE      MIN INT. ANGLE    MAX INT. ANGLE    WARPING FACTOR      TAPER RATIO  
+    QUAD4        9348        87.23             59.66            147.97              0.00              0.68 ++++
+    QUAD4        9384        79.16             65.68            135.95              0.00              0.50 ++++
+    QUAD4        9390        73.00             58.42            149.04              0.00              0.62 ++++
+    QUAD4        9587        73.70             63.15            146.48              0.00              0.60 ++++
+    QUAD4        9942        65.88             48.68            121.62              0.00              0.52 ++++
+    QUAD4        9943        68.46             45.09            120.02              0.00              0.53 ++++
+    QUAD4        9953        69.30             53.14            108.80              0.00              0.53 ++++
+    QUAD4        9954        20.02 ++++        16.03 ++++       166.30 ++++         0.00              0.47     
+    QUAD4       10056        73.18             67.54            139.79              0.00              0.51 ++++
+    QUAD4       10107        75.87             51.01            151.35 ++++         0.00              0.65 ++++
+    QUAD4       10214        83.28             68.62            140.62              0.00              0.61 ++++
+    QUAD4       10339        49.50             40.61            169.48 ++++         0.00              0.80 ++++
+    QUAD4       10450        51.29             46.24            158.28 ++++         0.00              0.62 ++++
+    QUAD4       10484        64.53             53.50            153.01 ++++         0.00              0.62 ++++
+    QUAD4       10520        70.67             62.66            142.56              0.00              0.53 ++++
+    QUAD4       10576        62.26             51.10            170.58 ++++         0.00              0.86 ++++
+    QUAD4       10629        84.07             67.44            143.60              0.00              0.63 ++++
+    QUAD4       10707        68.67             60.12            147.26              0.00              0.57 ++++
+    QUAD4       10751        87.30             66.66            133.17              0.00              0.57 ++++
+    QUAD4       10768        78.65             61.03            139.44              0.00              0.53 ++++
+    QUAD4       10792        77.07             50.04            135.99              0.00              0.67 ++++
+    QUAD4       10801        70.31             57.56            141.06              0.00              0.51 ++++
+    QUAD4       10832        69.44             52.71            158.79 ++++         0.00              0.72 ++++
+    QUAD4       10844        74.58             61.50            152.93 ++++         0.00              0.69 ++++
+    QUAD4       10848        72.15             51.27            112.40              0.00              0.50 ++++
+    QUAD4       10883        69.17             52.85            158.10 ++++         0.00              0.71 ++++
+    QUAD4       11001        64.00             44.14            107.61              0.00              0.55 ++++
+    QUAD4       11025        83.26             55.08            141.25              0.00              0.68 ++++
+    QUAD4       11026        79.49             55.88            124.39              0.00              0.56 ++++
+    QUAD4       11051        63.27             44.20            110.83              0.00              0.51 ++++
+    QUAD4       11087        73.79             48.73            127.14              0.00              0.60 ++++
+    QUAD4       11144        79.83             55.51            118.06              0.00              0.50 ++++
+    QUAD4       11152        65.77             45.05            114.25              0.00              0.52 ++++
+    QUAD4       11166        69.67             59.50            163.30 ++++         0.00              0.79 ++++
+    QUAD4       11212        66.94             57.33            153.09 ++++         0.00              0.64 ++++
+    QUAD4       11341        80.24             57.57            123.42              0.00              0.55 ++++
+    QUAD4       11430        87.31             69.20            130.21              0.00              0.53 ++++
+    QUAD4       11466        61.56             41.97            111.14              0.00              0.55 ++++
+    QUAD4       11470        84.39             57.02            140.57              0.00              0.68 ++++
+    QUAD4       11517        69.02             62.09            142.13              0.00              0.50 ++++
+    QUAD4       11575        77.89             54.13            124.55              0.00              0.58 ++++
+    QUAD4       11611        59.18             46.33            150.65 ++++         0.00              0.60 ++++
+1    ANALSE_ESTATICA                                                           JUNE  23, 2016  MSC Nastran  3/14/14   PAGE     7
+                                                                                                                                    
+0                                                                                                                                   
+     TOLERANCE LIMITS ARE:  SA =  30.00, IA(MIN) =  30.00, IA(MAX) = 150.00, WF =   0.05, TR =   0.50 (FLAG = LIMIT VIOLATED)
+ ELEMENT TYPE    ID          SKEW ANGLE      MIN INT. ANGLE    MAX INT. ANGLE    WARPING FACTOR      TAPER RATIO  
+    QUAD4       11675        76.28             52.02            139.30              0.00              0.50 ++++
+    QUAD4       11693        77.90             61.35            140.73              0.00              0.57 ++++
+    QUAD4       11697        79.79             56.73            122.50              0.00              0.55 ++++
+    QUAD4       11715        86.50             55.45            136.05              0.00              0.55 ++++
+    QUAD4       11728        71.39             46.66            129.81              0.00              0.67 ++++
+    QUAD4       11735        72.74             57.38            151.50 ++++         0.00              0.66 ++++
+    QUAD4       11744        80.54             49.11            135.09              0.00              0.56 ++++
+    QUAD4       11750        84.37             47.21            154.02 ++++         0.00              0.72 ++++
+    QUAD4       11751        44.12             29.38 ++++       148.87              0.00              0.37     
+    QUAD4       11760        74.74             65.45            141.96              0.00              0.55 ++++
+    QUAD4       11777        32.79             23.82 ++++       155.26 ++++         0.00              0.33     
+    QUAD4       11786        88.15             59.54            148.28              0.00              0.70 ++++
+    QUAD4       11793        55.09             32.77            154.95 ++++         0.00              0.54 ++++
+    QUAD4       11805        69.92             43.09            141.48              0.00              0.75 ++++
+    QUAD4       11813        77.24             49.84            134.71              0.00              0.66 ++++
+    QUAD4       11841        64.01             41.75            117.57              0.00              0.62 ++++
+    QUAD4       11844        79.22             62.78            142.97              0.00              0.59 ++++
+    QUAD4       11852        76.65             48.02            146.22              0.00              0.71 ++++
+    QUAD4       11854        83.17             64.06            124.67              0.00              0.54 ++++
+    QUAD4       11883        66.84             50.63            144.34              0.00              0.51 ++++
+    QUAD4       11886        74.14             45.09            150.64 ++++         0.00              0.77 ++++
+    QUAD4       11888        79.77             56.80            120.53              0.00              0.57 ++++
+    QUAD4       11896        89.51             66.26            131.49              0.00              0.55 ++++
+    QUAD4       11899        71.40             45.28            127.70              0.00              0.59 ++++
+    QUAD4       11901        81.83             58.86            120.78              0.00              0.58 ++++
+    QUAD4       11921        84.11             46.05            150.66 ++++         0.00              0.76 ++++
+ *** USER INFORMATION MESSAGE 7555 (GMTSTD)
+     FINITE ELEMENT GEOMETRY CHECK RESULTS EXCEED TOLERANCE LEVELS FOR THE FOLLOWING ELEMENTS.
+     A MAXIMUM OF        100 SKEW ANGLE (SA)       TOLERANCE LIMIT VIOLATIONS WILL BE IDENTIFIED BY THE FLAG "++++"
+                             PLACED AFTER THE VALUE METRIC FOR THE TEST.
+     A MAXIMUM OF        100 MAX INT. ANGLE (IA)   TOLERANCE LIMIT VIOLATIONS WILL BE IDENTIFIED BY THE FLAG "++++"
+                             PLACED AFTER THE VALUE METRIC FOR THE TEST.
+1    ANALSE_ESTATICA                                                           JUNE  23, 2016  MSC Nastran  3/14/14   PAGE     8
+                                                                                                                                    
+0                                                                                                                                   
+     TOLERANCE LIMITS ARE:     SKEW  =  10.00, IA(MAX) = 160.00 (++++ = LIMIT VIOLATED)
+ ELEMENT TYPE    ID          SKEW ANGLE      MAX INT. ANGLE 
+    TRIA3        9948         6.29 ++++       158.61     
+    TRIA3        9957         6.97 ++++       159.33     
+1    ANALSE_ESTATICA                                                           JUNE  23, 2016  MSC Nastran  3/14/14   PAGE     9
+                                                                                                                                    
+0                                                                                                                                   
+
+
+                            E L E M E N T   G E O M E T R Y   T E S T   R E S U L T S   S U M M A R Y
+                                        TOTAL NUMBER OF TIMES TOLERANCES WERE EXCEEDED
+  ELEMENT        SKEW       ASPECT/     MINIMUM      MAXIMUM    SURFACE/FACE    OFFSET     EDGE POINT   EDGE POINT    JACOBIAN  
+    TYPE       ANGLE      TAPER RATIO INTER. ANGLE INTER. ANGLE  WARP FACTOR    RATIO     LENGTH RATIO ANGLE LIMIT  DETERMINANT 
+   QUAD4           5          104            9           32            0          N/A          N/A          N/A          N/A        
+   TRIA3           2          N/A          N/A            0          N/A          N/A          N/A          N/A          N/A        
+
+         N/A IN THE ABOVE TABLE INDICATES TESTS THAT ARE NOT APPLICABLE TO THE ELEMENT TYPE AND WERE NOT PERFORMED.
+         FOR ALL ELEMENTS WHERE GEOMETRY TEST RESULTS HAVE EXCEEDED TOLERANCES,
+
+         QUAD4    ELEMENT ID     8713 PRODUCED SMALLEST SKEW ANGLE       OF      18.31 (TOLERANCE =       30.00).
+         QUAD4    ELEMENT ID    10576 PRODUCED LARGEST  TAPER RATIO      OF       0.86 (TOLERANCE =        0.50).
+         QUAD4    ELEMENT ID     8713 PRODUCED SMALLEST INTERIOR ANGLE   OF      14.66 (TOLERANCE =       30.00).
+         QUAD4    ELEMENT ID    10576 PRODUCED LARGEST  INTERIOR ANGLE   OF     170.58 (TOLERANCE =      150.00).
+         TRIA3    ELEMENT ID     9948 PRODUCED SMALLEST SKEW ANGLE       OF       6.29 (TOLERANCE =       10.00).
+1    ANALSE_ESTATICA                                                           JUNE  23, 2016  MSC Nastran  3/14/14   PAGE    10
+                                                                                                                                    
+0                                                                                                                                   
+                           O U T P U T   F R O M   G R I D   P O I N T   W E I G H T   G E N E R A T O R
+0                                                     REFERENCE POINT =        0
+                                                                M O
+                      *  1.956824E+03  0.000000E+00  0.000000E+00  0.000000E+00  7.593385E+05  1.470586E+07 *
+                      *  0.000000E+00  1.956824E+03  0.000000E+00 -7.593385E+05  0.000000E+00  1.501454E+07 *
+                      *  0.000000E+00  0.000000E+00  1.956824E+03 -1.470586E+07 -1.501454E+07  0.000000E+00 *
+                      *  0.000000E+00 -7.593385E+05 -1.470586E+07  1.665897E+11  1.527896E+11 -7.732089E+09 *
+                      *  7.593385E+05  0.000000E+00 -1.501454E+07  1.527896E+11  1.454116E+11  8.296046E+09 *
+                      *  1.470586E+07  1.501454E+07  0.000000E+00 -7.732089E+09  8.296046E+09  3.110453E+11 *
+                                                                 S
+                                           *  1.000000E+00  0.000000E+00  0.000000E+00 *
+                                           *  0.000000E+00  1.000000E+00  0.000000E+00 *
+                                           *  0.000000E+00  0.000000E+00  1.000000E+00 *
+                               DIRECTION
+                          MASS AXIS SYSTEM (S)     MASS              X-C.G.        Y-C.G.        Z-C.G.
+                                  X            1.956824E+03      0.000000E+00 -7.515167E+03  3.880464E+02
+                                  Y            1.956824E+03      7.672912E+03  0.000000E+00  3.880464E+02
+                                  Z            1.956824E+03      7.672912E+03 -7.515167E+03  0.000000E+00
+                                                                I(S)
+                                           *  5.577805E+10 -3.995281E+10  1.905751E+09 *
+                                           * -3.995281E+10  2.991167E+10 -2.589490E+09 *
+                                           *  1.905751E+09 -2.589490E+09  8.532310E+10 *
+                                                                I(Q)
+                                           *  8.483831E+10                             *
+                                           *                8.544583E+10               *
+                                           *                              7.286809E+08 *
+                                                                 Q
+                                           * -8.076818E-01  4.623609E-02  5.878029E-01 *
+                                           * -5.888782E-01 -1.331155E-02 -8.081121E-01 *
+                                           * -2.953938E-02 -9.988418E-01  3.797892E-02 *
+
+1    ANALSE_ESTATICA                                                           JUNE  23, 2016  MSC Nastran  3/14/14   PAGE    11
+                                                                                                                                    
+0                                                                                                                                   
+1    ANALSE_ESTATICA                                                           JUNE  23, 2016  MSC Nastran  3/14/14   PAGE    12
+                                                                                                                                    
+0                                                                                                                                   
+0 RESULTANTS ABOUT ORIGIN OF SUPERELEMENT BASIC COORDINATE SYSTEM IN SUPERELEMENT BASIC SYSTEM COORDINATES.
+
+0                                                  OLOAD    RESULTANT       
+  SUBCASE/    LOAD
+  DAREA ID    TYPE       T1            T2            T3            R1            R2            R3
+0        1     FX   -9.519060E+01     ----          ----          ----       1.501407E+05  2.376542E+06                             
+               FY       ----       2.888452E+03     ----      -5.910724E+05     ----       2.094036E+07                             
+               FZ       ----          ----       3.864925E+04 -3.234514E+08 -3.162217E+08     ----                                  
+               MX       ----          ----          ----       0.000000E+00     ----          ----                                  
+               MY       ----          ----          ----          ----       0.000000E+00     ----                                  
+               MZ       ----          ----          ----          ----          ----       0.000000E+00                             
+             TOTALS -9.519060E+01  2.888452E+03  3.864925E+04 -3.240425E+08 -3.160716E+08  2.331690E+07
+0        2     FX   -3.166329E+02     ----          ----          ----      -2.324630E+05 -3.846231E+06                             
+               FY       ----      -5.878479E+02     ----       4.272378E+05     ----      -6.930821E+06                             
+               FZ       ----          ----      -1.553491E+04  1.288107E+08  1.262391E+08     ----                                  
+               MX       ----          ----          ----       0.000000E+00     ----          ----                                  
+               MY       ----          ----          ----          ----       0.000000E+00     ----                                  
+               MZ       ----          ----          ----          ----          ----       0.000000E+00                             
+             TOTALS -3.166329E+02 -5.878479E+02 -1.553491E+04  1.292379E+08  1.260066E+08 -1.077705E+07
+1    ANALSE_ESTATICA                                                           JUNE  23, 2016  MSC Nastran  3/14/14   PAGE    13
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+  
+ *** SYSTEM INFORMATION MESSAGE 4159 (DFMSA)
+     THE DECOMPOSITION OF KLL      YIELDS A MAXIMUM MATRIX-TO-FACTOR-DIAGONAL RATIO OF    2.778816E+02
+ *** USER INFORMATION MESSAGE 5293 (SSG3A)
+    FOR DATA BLOCK KLL     
+    LOAD SEQ. NO.             EPSILON              EXTERNAL WORK      EPSILONS LARGER THAN 0.001 ARE FLAGGED WITH ASTERISKS
+    User information:
+    One line of output is printed for each static loading condition.
+    Small values of EPSILON are due to accumulated round-off error. Large
+    values of EPSILON indicate possible singularities in the stiffness
+    matrix.  See Section 9.5.1.
+                1          3.4772604E-10          3.9006576E+07
+                2          1.3380011E-10          6.1362530E+06
+1    ANALSE_ESTATICA                                                           JUNE  23, 2016  MSC Nastran  3/14/14   PAGE    14
+      UP BENDING                                                                                                                    
+0                                                                                                            SUBCASE 1              
+ 
+
+                          F O R C E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )
+ 
+                                           RESULTS IN MATERIAL COORD SYSTEM
+    ELEMENT                - MEMBRANE  FORCES -                        - BENDING  MOMENTS -              - TRANSVERSE SHEAR FORCES -
+      ID              FX            FY            FXY             MX            MY            MXY             QX            QY
+       4467      -3.996924E+02 -6.433741E+00  3.906469E+00    8.739261E+00  8.045446E+01  1.796196E+01    3.519581E-02 -6.601896E-01
+       4468      -4.020010E+02 -2.857926E+00  1.071565E+01    2.441740E+01  1.202987E+02  1.397940E+01    4.279870E-02 -6.303458E-01
+       4469      -4.080558E+02 -3.156306E+00  1.504621E+01    2.271988E+01  1.399611E+02  9.406071E+00   -1.188749E-02 -9.169512E-01
+       4470      -4.176358E+02 -2.900344E+00  1.782549E+01    3.351344E+01  1.420464E+02 -1.818544E+00    3.825822E-01 -1.131109E+00
+       4471      -4.299112E+02 -5.382222E+00  2.201948E+01    2.004142E+01  1.181595E+02  1.182714E+01   -1.445086E-01 -1.929097E+00
+       4473      -4.446208E+02 -7.947596E+00  3.477245E+01    1.152253E+01  8.013010E+01  1.257756E+01   -1.113831E+00 -3.137303E+00
+1    ANALSE_ESTATICA                                                           JUNE  23, 2016  MSC Nastran  3/14/14   PAGE    15
+      UP BENDING                                                                                                                    
+0                                                                                                            SUBCASE 1              
+ 
+                             F O R C E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )
+ 
+                                           RESULTS IN MATERIAL COORD SYSTEM
+    ELEMENT                - MEMBRANE  FORCES -                        - BENDING  MOMENTS -              - TRANSVERSE SHEAR FORCES -
+      ID              FX            FY            FXY             MX            MY            MXY             QX            QY
+       4472      -4.784857E+02 -4.477222E+00  3.737531E+01   -2.592273E+01  6.067093E+01 -1.443456E+01   -7.636575E-01 -5.149865E+00
+1    ANALSE_ESTATICA                                                           JUNE  23, 2016  MSC Nastran  3/14/14   PAGE    16
+      DOWN BENDING                                                                                                                  
+0                                                                                                            SUBCASE 2              
+ 
+
+                          F O R C E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )
+ 
+                                           RESULTS IN MATERIAL COORD SYSTEM
+    ELEMENT                - MEMBRANE  FORCES -                        - BENDING  MOMENTS -              - TRANSVERSE SHEAR FORCES -
+      ID              FX            FY            FXY             MX            MY            MXY             QX            QY
+       4467       1.572169E+02  2.580235E+00 -1.516746E+00   -2.542905E+00 -2.851321E+01 -5.440038E+00   -2.179451E-02  2.267098E-01
+       4468       1.581304E+02  1.036133E+00 -4.123867E+00   -9.472290E+00 -4.434306E+01 -4.982871E+00   -1.595371E-02  1.885529E-01
+       4469       1.605004E+02  1.213408E+00 -5.756765E+00   -8.703011E+00 -5.322420E+01 -4.469715E+00    1.529540E-02  3.053340E-01
+       4470       1.642786E+02  1.171879E+00 -6.898902E+00   -1.314023E+01 -5.526017E+01 -3.130669E-01   -1.422258E-01  4.163294E-01
+       4471       1.691906E+02  2.194371E+00 -8.691828E+00   -7.688596E+00 -4.692420E+01 -5.883124E+00    8.567504E-02  7.729009E-01
+       4473       1.751775E+02  3.240188E+00 -1.394117E+01   -3.328846E+00 -3.117366E+01 -4.595621E+00    4.396809E-01  1.308042E+00
+1    ANALSE_ESTATICA                                                           JUNE  23, 2016  MSC Nastran  3/14/14   PAGE    17
+      DOWN BENDING                                                                                                                  
+0                                                                                                            SUBCASE 2              
+ 
+                             F O R C E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )
+ 
+                                           RESULTS IN MATERIAL COORD SYSTEM
+    ELEMENT                - MEMBRANE  FORCES -                        - BENDING  MOMENTS -              - TRANSVERSE SHEAR FORCES -
+      ID              FX            FY            FXY             MX            MY            MXY             QX            QY
+       4472       1.886595E+02  1.805936E+00 -1.497847E+01    1.150557E+01 -2.232489E+01  7.432513E+00    3.232940E-01  2.105552E+00
+1    ANALSE_ESTATICA                                                           JUNE  23, 2016  MSC Nastran  3/14/14   PAGE    18
+      UP BENDING                                                                                                                    
+0                                                                                                            SUBCASE 1              
+ 
+                           S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )
+  ELEMENT      STRAIN               STRAINS IN MATERIAL COORD SYSTEM            PRINCIPAL  STRAINS (ZERO SHEAR)                 
+    ID.       CURVATURE          NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        VON MISES
+0    4467    0.0              -6.739266E-03   1.922584E-03   1.720865E-04    89.4309    1.923438E-03   -6.740120E-03   5.253276E-03
+            -1.000000E+00     -4.891348E-05   2.472591E-04   1.483602E-04    76.6963    2.647996E-04   -6.645398E-05   2.023550E-04
+0    4468    0.0              -6.796556E-03   1.994903E-03   4.720420E-04    88.4633    2.001235E-03   -6.802887E-03   5.329098E-03
+            -1.000000E+00     -3.708036E-05   3.588946E-04   1.154655E-04    81.8717    3.671403E-04   -4.532602E-05   2.611831E-04
+0    4469    0.0              -6.897624E-03   2.020623E-03   6.628104E-04    87.8748    2.032921E-03   -6.909922E-03   5.413034E-03
+            -1.000000E+00     -6.121210E-05   4.229759E-04   7.769120E-05    85.4421    4.260726E-04   -6.430881E-05   3.077327E-04
+0    4470    0.0              -7.061240E-03   2.073654E-03   7.852426E-04    87.5434    2.090498E-03   -7.078084E-03   5.548420E-03
+            -1.000000E+00     -2.891041E-05   4.193136E-04  -1.502061E-05   -89.0403    4.194395E-04   -2.903621E-05   2.897903E-04
+0    4471    0.0              -7.256606E-03   2.093998E-03   9.699949E-04    87.0388    2.119087E-03   -7.281694E-03   5.693823E-03
+            -1.000000E+00     -4.894322E-05   3.562692E-04   9.768845E-05    83.2229    3.620738E-04   -5.474775E-05   2.615488E-04
+0    4473    0.0              -7.492791E-03   2.125301E-03   1.531784E-03    85.4755    2.185907E-03   -7.553398E-03   5.900773E-03
+            -1.000000E+00     -3.976247E-05   2.435761E-04   1.038867E-04    79.9322    2.527985E-04   -4.898486E-05   1.870115E-04
+1    ANALSE_ESTATICA                                                           JUNE  23, 2016  MSC Nastran  3/14/14   PAGE    19
+      UP BENDING                                                                                                                    
+0                                                                                                            SUBCASE 1              
+ 
+                             S T R A I N S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )
+  ELEMENT      STRAIN               STRAINS IN MATERIAL COORD SYSTEM            PRINCIPAL  STRAINS (ZERO SHEAR)                 
+    ID.       CURVATURE          NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        VON MISES
+0    4472    0.0              -8.084201E-03   2.356230E-03   1.646445E-03    85.5192    2.420742E-03   -8.148713E-03   6.394006E-03
+            -1.000000E+00     -1.401733E-04   2.174450E-04  -1.192250E-04   -80.7812    2.271202E-04   -1.498485E-04   2.191618E-04
+1    ANALSE_ESTATICA                                                           JUNE  23, 2016  MSC Nastran  3/14/14   PAGE    20
+      DOWN BENDING                                                                                                                  
+0                                                                                                            SUBCASE 2              
+ 
+                           S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )
+  ELEMENT      STRAIN               STRAINS IN MATERIAL COORD SYSTEM            PRINCIPAL  STRAINS (ZERO SHEAR)                 
+    ID.       CURVATURE          NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        VON MISES
+0    4467    0.0               2.650602E-03  -7.553984E-04  -6.681520E-05    -0.5619    2.650930E-03   -7.557260E-04   2.065799E-03
+            -1.000000E+00      1.909594E-05  -8.815734E-05  -4.493301E-05   -11.3655    2.361189E-05   -9.267329E-05   7.097433E-05
+0    4468    0.0               2.673929E-03  -7.862034E-04  -1.816632E-04    -1.5027    2.676311E-03   -7.885862E-04   2.097089E-03
+            -1.000000E+00      1.216915E-05  -1.318417E-04  -4.115695E-05    -7.9747    1.505201E-05   -1.347246E-04   9.523105E-05
+0    4469    0.0               2.713182E-03  -7.952463E-04  -2.535951E-04    -2.0671    2.717759E-03   -7.998229E-04   2.129127E-03
+            -1.000000E+00      2.307709E-05  -1.607885E-04  -3.691845E-05    -5.6767    2.491199E-05   -1.626234E-04   1.176024E-04
+0    4470    0.0               2.777407E-03  -8.151540E-04  -3.039082E-04    -2.4177    2.783823E-03   -8.215697E-04   2.181921E-03
+            -1.000000E+00      1.092126E-05  -1.630275E-04  -2.585835E-06    -0.4258    1.093087E-05   -1.630371E-04   1.125121E-04
+0    4471    0.0               2.855434E-03  -8.227971E-04  -3.828895E-04    -2.9714    2.865371E-03   -8.327346E-04   2.240029E-03
+            -1.000000E+00      2.029553E-05  -1.417414E-04  -4.859276E-05    -8.3467    2.386019E-05   -1.453061E-04   1.057254E-04
+0    4473    0.0               2.951554E-03  -8.355086E-04  -6.141317E-04    -4.6056    2.976290E-03   -8.602449E-04   2.324618E-03
+            -1.000000E+00      1.913469E-05  -9.586005E-05  -3.795839E-05    -9.1337    2.218612E-05   -9.891149E-05   7.444660E-05
+1    ANALSE_ESTATICA                                                           JUNE  23, 2016  MSC Nastran  3/14/14   PAGE    21
+      DOWN BENDING                                                                                                                  
+0                                                                                                            SUBCASE 2              
+ 
+                             S T R A I N S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )
+  ELEMENT      STRAIN               STRAINS IN MATERIAL COORD SYSTEM            PRINCIPAL  STRAINS (ZERO SHEAR)                 
+    ID.       CURVATURE          NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        VON MISES
+0    4472    0.0               3.187268E-03  -9.283363E-04  -6.598264E-04    -4.5542    3.213547E-03   -9.546150E-04   2.521540E-03
+            -1.000000E+00      5.782746E-05  -8.188706E-05   6.139024E-05    11.8603    6.427371E-05   -8.833332E-05   8.847196E-05
+1    ANALSE_ESTATICA                                                           JUNE  23, 2016  MSC Nastran  3/14/14   PAGE    22
+      UP BENDING                                                                                                                    
+0                                                                                                            SUBCASE 1              
+ 
+                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )
+  ELEMENT      FIBER               STRESSES IN MATERIAL COORD SYSTEM            PRINCIPAL STRESSES (ZERO SHEAR)                 
+    ID.       DISTANCE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        VON MISES
+0    4467   -4.000000E+00     -4.914224E+01   6.738388E+00   2.172242E+00    87.7772    6.822702E+00   -4.922656E+01   5.296849E+01
+             4.000000E+00     -5.078086E+01  -8.346824E+00  -1.195625E+00   -88.3873   -8.313162E+00   -5.081452E+01   4.721011E+01
+0    4468   -4.000000E+00     -4.796099E+01   1.092077E+01   2.650024E+00    87.4283    1.103979E+01   -4.808002E+01   5.444592E+01
+             4.000000E+00     -5.253925E+01  -1.163525E+01   2.888703E-02    89.9595   -1.163523E+01   -5.253928E+01   4.779589E+01
+0    4469   -4.000000E+00     -4.887698E+01   1.272682E+01   2.762595E+00    87.4375    1.285046E+01   -4.900062E+01   5.653207E+01
+             4.000000E+00     -5.313696E+01  -1.351589E+01   9.989566E-01    88.5566   -1.349072E+01   -5.316213E+01   4.786456E+01
+0    4470   -4.000000E+00     -4.906259E+01   1.295430E+01   2.057698E+00    88.1017    1.302250E+01   -4.913079E+01   5.677346E+01
+             4.000000E+00     -5.534636E+01  -1.367939E+01   2.398675E+00    86.7161   -1.354176E+01   -5.548399E+01   5.010491E+01
+0    4471   -4.000000E+00     -5.186002E+01   1.040468E+01   3.861230E+00    86.4650    1.064321E+01   -5.209855E+01   5.815524E+01
+             4.000000E+00     -5.561778E+01  -1.175023E+01   1.643641E+00    87.8572   -1.168874E+01   -5.567928E+01   5.085261E+01
+0    4473   -4.000000E+00     -5.449737E+01   6.518748E+00   5.525702E+00    84.8669    7.015125E+00   -5.499374E+01   5.881591E+01
+             4.000000E+00     -5.665784E+01  -8.505647E+00   3.167411E+00    86.2527   -8.298191E+00   -5.686530E+01   5.320378E+01
+1    ANALSE_ESTATICA                                                           JUNE  23, 2016  MSC Nastran  3/14/14   PAGE    23
+      UP BENDING                                                                                                                    
+0                                                                                                            SUBCASE 1              
+ 
+                           S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )
+  ELEMENT      FIBER               STRESSES IN MATERIAL COORD SYSTEM            PRINCIPAL STRESSES (ZERO SHEAR)                 
+    ID.       DISTANCE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        VON MISES
+0    4472   -4.000000E+00     -6.224097E+01   5.128247E+00   3.318674E+00    87.1866    5.291333E+00   -6.240405E+01   6.521092E+01
+             4.000000E+00     -5.738046E+01  -6.247552E+00   6.025154E+00    83.3696   -5.547182E+00   -5.808083E+01   5.551548E+01
+1    ANALSE_ESTATICA                                                           JUNE  23, 2016  MSC Nastran  3/14/14   PAGE    24
+      DOWN BENDING                                                                                                                  
+0                                                                                                            SUBCASE 2              
+ 
+                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )
+  ELEMENT      FIBER               STRESSES IN MATERIAL COORD SYSTEM            PRINCIPAL STRESSES (ZERO SHEAR)                 
+    ID.       DISTANCE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        VON MISES
+0    4467   -4.000000E+00      1.941371E+01  -2.350584E+00  -6.995969E-01    -1.8392    1.943618E+01   -2.373049E+00   2.072485E+01
+             4.000000E+00      1.989050E+01   2.995642E+00   3.204103E-01     1.0861    1.989658E+01    2.989568E+00   1.858304E+01
+0    4468   -4.000000E+00      1.887827E+01  -4.027646E+00  -9.826275E-01    -2.4519    1.892035E+01   -4.069722E+00   2.124953E+01
+             4.000000E+00      2.065433E+01   4.286679E+00  -4.833917E-02    -0.1692    2.065447E+01    4.286536E+00   1.887976E+01
+0    4469   -4.000000E+00      1.924664E+01  -4.838093E+00  -1.138631E+00    -2.7007    1.930035E+01   -4.891803E+00   2.215506E+01
+             4.000000E+00      2.087846E+01   5.141445E+00  -3.005598E-01    -1.0938    2.088420E+01    5.135706E+00   1.884861E+01
+0    4470   -4.000000E+00      1.930293E+01  -5.034155E+00  -8.917128E-01    -2.0956    1.933555E+01   -5.066784E+00   2.230482E+01
+             4.000000E+00      2.176672E+01   5.327125E+00  -8.330128E-01    -2.8934    2.180882E+01    5.285023E+00   1.970523E+01
+0    4471   -4.000000E+00      2.042802E+01  -4.124847E+00  -1.638021E+00    -3.8000    2.053681E+01   -4.233644E+00   2.294842E+01
+             4.000000E+00      2.186963E+01   4.673440E+00  -5.349356E-01    -1.7801    2.188625E+01    4.656816E+00   1.996932E+01
+0    4473   -4.000000E+00      2.158511E+01  -2.517507E+00  -2.173486E+00    -5.1118    2.177954E+01   -2.711936E+00   2.325441E+01
+             4.000000E+00      2.220927E+01   3.327554E+00  -1.311807E+00    -3.9553    2.229997E+01    3.236852E+00   2.087065E+01
+1    ANALSE_ESTATICA                                                           JUNE  23, 2016  MSC Nastran  3/14/14   PAGE    25
+      DOWN BENDING                                                                                                                  
+0                                                                                                            SUBCASE 2              
+ 
+                           S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )
+  ELEMENT      FIBER               STRESSES IN MATERIAL COORD SYSTEM            PRINCIPAL STRESSES (ZERO SHEAR)                 
+    ID.       DISTANCE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        VON MISES
+0    4472   -4.000000E+00      2.466108E+01  -1.867217E+00  -1.175510E+00    -2.5322    2.471307E+01   -1.919204E+00   2.572641E+01
+             4.000000E+00      2.250379E+01   2.318701E+00  -2.569107E+00    -7.1408    2.282564E+01    1.996844E+00   2.189562E+01
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK OEF1X    WRITTEN ON FORTRAN UNIT  12 IN BINARY (LTLEND) FORMAT USING NDDL DESCRIPTION FOR OEF1, TRL =
+                    101                63                 6                23                16                 0                 3
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS OEF1X   
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =      131074 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =         146 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          50 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =         767 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK OES1X1   WRITTEN ON FORTRAN UNIT  12 IN BINARY (LTLEND) FORMAT USING NDDL DESCRIPTION FOR OES1X, TRL =
+                    101                63                 6                23                16                 0                 3
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS OES1X1  
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =      131074 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =         146 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          50 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =         879 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK OSTR1X   WRITTEN ON FORTRAN UNIT  12 IN BINARY (LTLEND) FORMAT USING NDDL DESCRIPTION FOR OSTR1, TRL =
+                    101                63                 6                23                16                 0                 3
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS OSTR1X  
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =      131074 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =         146 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          50 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =         879 WORDS.)
+ *** USER INFORMATION MESSAGE 4110 (OUTPX2)
+                                 END-OF-DATA SIMULATION ON FORTRAN UNIT 12
+                                 (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =      1 WORDS.)
+                                       (NUMBER OF FORTRAN RECORDS WRITTEN =      1 RECORDS.)
+                                       (TOTAL DATA WRITTEN FOR EOF MARKER =      1 WORDS.)
+1    ANALSE_ESTATICA                                                           JUNE  23, 2016  MSC Nastran  3/14/14   PAGE    26
+                                                                                                                                    
+0                                                                                                                                   
+ * * * *  D B D I C T   P R I N T  * * * *      SUBDMAP = PRTSUM  ,  DMAP STATEMENT NO.     41
+
+
+
+0                                   * * * *  A N A L Y S I S  S U M M A R Y  T A B L E  * * * *
+0 SEID  PEID PROJ VERS APRCH      SEMG SEMR SEKR SELG SELR MODES DYNRED SOLLIN PVALID SOLNL LOOPID DESIGN CYCLE SENSITIVITY
+ --------------------------------------------------------------------------------------------------------------------------
+     0     0    1    1 '        '    T    T    T    T    T     F      F      T      0     F     -1            0           F
+0SEID = SUPERELEMENT ID.
+ PEID = PRIMARY SUPERELEMENT ID OF IMAGE SUPERELEMENT.
+ PROJ = PROJECT ID NUMBER.
+ VERS = VERSION ID.
+ APRCH = BLANK FOR STRUCTURAL ANALYSIS.  HEAT FOR HEAT TRANSFER ANALYSIS.
+ SEMG = STIFFNESS AND MASS MATRIX GENERATION STEP.
+ SEMR = MASS MATRIX REDUCTION STEP (INCLUDES EIGENVALUE SOLUTION FOR MODES).
+ SEKR = STIFFNESS MATRIX REDUCTION STEP.
+ SELG = LOAD MATRIX GENERATION STEP.
+ SELR = LOAD MATRIX REDUCTION STEP. 
+ MODES = T (TRUE) IF NORMAL MODES OR BUCKLING MODES CALCULATED.
+ DYNRED = T (TRUE) MEANS GENERALIZED DYNAMIC AND/OR COMPONENT MODE REDUCTION PERFORMED.
+ SOLLIN = T (TRUE) IF LINEAR SOLUTION EXISTS IN DATABASE.
+ PVALID = P-DISTRIBUTION ID OF P-VALUE FOR P-ELEMENTS
+ LOOPID = THE LAST LOOPID VALUE USED IN THE NONLINEAR ANALYSIS.  USEFUL FOR RESTARTS.
+ SOLNL = T (TRUE) IF NONLINEAR SOLUTION EXISTS IN DATABASE.
+ DESIGN CYCLE = THE LAST DESIGN CYCLE (ONLY VALID IN OPTIMIZATION).
+ SENSITIVITY = SENSITIVITY MATRIX GENERATION FLAG.
+ 
+ No PARAM values were set in the Control File.
+ 
+1                                        * * * END OF JOB * * *
+ 
+ 
+ No Symbolic Replacement variables or values were specified.
+
