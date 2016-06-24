@@ -129,8 +129,8 @@ def data_in_material_coord(bdf, op2, in_place=False):
     else:
         op2_new = copy.deepcopy(op2)
 
-    eids = np.array(bdf.elements.keys())
-    elems = np.array(bdf.elements.values())
+    eids = np.array(list(bdf.elements.keys()))
+    elems = np.array(list(bdf.elements.values()))
     thetadeg = np.array([check_theta(e.thetaMcid) for e in elems])
     thetarad = np.deg2rad(thetadeg)
 
