@@ -11,16 +11,15 @@ from pyNastran.op2.data_in_material_coord import (data_in_material_coord,
 pkg_path = pyNastran.__path__[0]
 
 
-MODELS = [
-    [3, 'test_flat_plate_metallic', 'flat_plate_metallic'],
-    [1, 'test_dummy_wing_metallic', 'dummy_wing_metallic'],
-    [2, 'test_dummy_wing_metallic', 'dummy_wing_metallic'],
+CASES = [
+    ['test_flat_plate_metallic', 'flat_plate_metallic', 3],
+    ['test_dummy_wing_metallic', 'dummy_wing_metallic', 1],
     ]
 
 
 class TestMaterialCoord(unittest.TestCase):
     def test_force(self):
-        for subcase, folder, prefix in MODELS:
+        for folder, prefix, subcase in CASES:
             is_failed = False
             bdf = BDF(debug=False)
             op2 = OP2(debug=False)
@@ -38,12 +37,12 @@ class TestMaterialCoord(unittest.TestCase):
                 eids = get_eids_from_op2_vector(vector)
                 check = eids != 0
                 if not np.allclose(data[:, check], ref_result, rtol=0.001):
-                    print('failed %r' % name)
+                    print('FAILED %r' % name)
                     is_failed = True
             assert is_failed == False
 
     def test_stress(self):
-        for subcase, folder, prefix in MODELS:
+        for folder, prefix, subcase in CASES:
             is_failed = False
             bdf = BDF(debug=False)
             op2 = OP2(debug=False)
@@ -56,17 +55,18 @@ class TestMaterialCoord(unittest.TestCase):
                 if not os.path.isfile(name):
                     continue
                 ref_result = np.loadtxt(name)
+                print vecname, name
                 vector = getattr(op2_new, vecname)[subcase]
                 data = vector.data
                 eids = get_eids_from_op2_vector(vector)
                 check = eids != 0
                 if not np.allclose(data[:, check], ref_result, rtol=0.001):
-                    print('failed %r' % name)
+                    print('FAILED %r' % name)
                     is_failed = True
             assert is_failed == False
 
     def test_strain(self):
-        for subcase, folder, prefix in MODELS:
+        for folder, prefix, subcase in CASES:
             is_failed = False
             bdf = BDF(debug=False)
             op2 = OP2(debug=False)
@@ -84,7 +84,7 @@ class TestMaterialCoord(unittest.TestCase):
                 eids = get_eids_from_op2_vector(vector)
                 check = eids != 0
                 if not np.allclose(data[:, check], ref_result, rtol=0.001):
-                    print('failed %r' % name)
+                    print('FAILED %r' % name)
                     is_failed = True
             assert is_failed == False
 
