@@ -171,8 +171,8 @@ def data_in_material_coord(bdf, op2, in_place=False):
         for subcase, vector in op2_vectors.items():
             new_vector = new_vectors[subcase]
             veceids = get_eids_from_op2_vector(vector)
-            vecthetarad = np.array([thetarad[eid] for eid in veceids])
             vecthick = np.array([thick_array[eid] for eid in veceids])
+            vecthetarad = np.array([thetarad[eid] for eid in veceids])
 
             # membrane terms
             Sxx = vector.data[:, :, 0] / vecthick
@@ -200,6 +200,13 @@ def data_in_material_coord(bdf, op2, in_place=False):
             new_vector.data[:, :, 6] = Qx_new
             new_vector.data[:, :, 7] = Qy_new
 
+            #TODO implement transformation for corner nodes
+            #     for now we just zero the wrong values
+            if 'quad8' in vecname:
+                for i in [1, 2, 3, 4]:
+                    new_vector.data[:, i, :] = 0
+
+
     for vecname in stress_vectors:
         op2_vectors = getattr(op2, vecname)
         new_vectors = getattr(op2_new, vecname)
@@ -221,6 +228,12 @@ def data_in_material_coord(bdf, op2, in_place=False):
             thetadeg_new = thetadeg_to_principal(Sxx_theta, Syy_theta, Sxy_theta)
             new_vector.data[:, :, 4][:, check] = thetadeg_new
 
+            #TODO implement transformation for corner nodes
+            #     for now we just zero the wrong values
+            if 'quad8' in vecname:
+                for i in [2, 3, 4, 5, 6, 7, 8, 9]:
+                    new_vector.data[:, i, :] = 0
+
     for vecname in strain_vectors:
         op2_vectors = getattr(op2, vecname)
         new_vectors = getattr(op2_new, vecname)
@@ -241,6 +254,12 @@ def data_in_material_coord(bdf, op2, in_place=False):
             new_vector.data[:, :, 2][:, check] = eyy_theta
             new_vector.data[:, :, 3][:, check] = exy_theta * 2.
             new_vector.data[:, :, 4][:, check] = thetadeg_new
+
+            #TODO implement transformation for corner nodes
+            #     for now we just zero the wrong values
+            if 'quad8' in vecname:
+                for i in [2, 3, 4, 5, 6, 7, 8, 9]:
+                    new_vector.data[:, i, :] = 0
 
     return op2_new
 
