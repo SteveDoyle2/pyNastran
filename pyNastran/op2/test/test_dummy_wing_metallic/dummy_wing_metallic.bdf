@@ -18,7 +18,6 @@ SUBCASE 1
   SUBTITLE = UP BENDING
   LOAD = 1
 BEGIN BULK
-PARAM,BAILOUT,-1
 PARAM,OMID,YES
 $ ***************************************************************************
 $   Written by : Femap with NX Nastran
