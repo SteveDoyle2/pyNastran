@@ -223,7 +223,7 @@ def main():
 
 def build():
     from pyNastran.bdf.bdf import BDF, GRID, CQUAD4, PSHELL, PROD, MAT1
-    model = BDF()
+    model = BDF(debug=False)
     xyz1 = [0., 0., 0.]
     xyz2 = [0., 1., 0.]
     xyz3 = [1., 1., 0.]

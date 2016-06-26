@@ -162,10 +162,10 @@ def setup_contact(main_bdf, contact_bdf, contact_surfaces):
             cid = contact_surface['cid']
 
             print("nids_group1 = %s" % nids_group1)
-            #model_left = BDF()
+            #model_left = BDF(debug=False)
             #model_left.read_bdf(left_bdf)
 
-            #model_right = BDF()
+            #model_right = BDF(debug=False)
             #model_right.read_bdf(right_bdf)
 
             # change nodes from cid=0 to cid=N
@@ -297,7 +297,7 @@ def parse_op2(contact_bdf, main_op2, subcase_id, contact_surfaces, eid_groups, n
     return nerrors
 
 if __name__ == '__main__':  # pragma: no cover
-    model = BDF()
+    model = BDF(debug=False)
     model.read_bdf('plate.bdf')
     #model.write_bdf('plate2.bdf')
 
@@ -318,7 +318,7 @@ if __name__ == '__main__':  # pragma: no cover
         split_model(model, nids, func)
         model.write_bdf('plate_split.bdf')
 
-        model2 = BDF()
+        model2 = BDF(debug=False)
         model2.read_bdf('plate_split.bdf')
         assert nnodes + 12 == len(model2.nodes), 'nnodes+12=%s nnodes2=%s' % (nnodes + 12, len(model2.nodes))
         #assert nnodes + 6 == len(model2.nodes), 'nnodes+6=%s nnodes2=%s' % (nnodes + 6, len(model2.nodes))

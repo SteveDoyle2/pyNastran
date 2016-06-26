@@ -191,13 +191,13 @@ def _parse_entry(lines):
 
 if __name__ == '__main__':  # pragma: no cover
     pass
-    #print(_parseEntry(['SET =ALL']))
-    #print(_parseEntry(['SET 77=5']))
-    #print(_parseEntry(['SET 88=5, 6, 7, 8, 9, 10 THRU 55 EXCEPT 15, 16, 77, 78, 79, 100 THRU 300']))
-    #print(_parseEntry(['SET 99=1 THRU 110']))
-    #print(_parseEntry(['SET 2001=M1,M2']))
-    #print(_parseEntry(['SET 101=1.0, 2.0, 3.0']))
+    #print(_parse_entry(['SET =ALL']))
+    #print(_parse_entry(['SET 77=5']))
+    #print(_parse_entry(['SET 88=5, 6, 7, 8, 9, 10 THRU 55 EXCEPT 15, 16, 77, 78, 79, 100 THRU 300']))
+    #print(_parse_entry(['SET 99=1 THRU 110']))
+    #print(_parse_entry(['SET 2001=M1,M2']))
+    #print(_parse_entry(['SET 101=1.0, 2.0, 3.0']))
     #deck = CaseControlDeck(lines)
 
-    #print(_parseEntry(['SET 105=1.009, 10.2, 13.4, 14.0, 15.0']))
-    #print(_parseEntry(['SET 1001=101/T1, 501/T3, 991/R3']))
+    #print(_parse_entry(['SET 105=1.009, 10.2, 13.4, 14.0, 15.0']))
+    #print(_parse_entry(['SET 1001=101/T1, 501/T3, 991/R3']))

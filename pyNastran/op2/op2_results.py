@@ -314,7 +314,7 @@ def sol_101_elements():
         print("nid=%-3s derive/avg=%-8g avg/derive=%-8g diff=%g" % (nid, stressi, vm_avg_derive[nid], stressi - vm_avg_derive[nid]))
 
 def setup(bdf_filename, op2_filename):
-    fem = BDF()
+    fem = BDF(debug=False)
     fem.read_bdf(bdf_filename)
 
     eid_to_nid_map = {}

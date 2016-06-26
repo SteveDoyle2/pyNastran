@@ -18,7 +18,7 @@ class TestSprings(unittest.TestCase):
 
     def test_pelas_02(self):
         fields = ['pelas', 201, 1.e+5, None, None, 202, 2.e+5]
-        model = BDF()
+        model = BDF(debug=False)
         #model.echo = True
         card_name = fields[0]
         model.add_card(fields, card_name, comment='', is_list=True,

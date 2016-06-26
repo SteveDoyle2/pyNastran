@@ -57,7 +57,7 @@ def remove_unassociated_nodes(bdf_filename, bdf_filename_out, renumber=False,
     .. warning only considers elements
     .. renumber=False is not supported
     """
-    model = BDF()
+    model = BDF(debug=False)
     model.read_bdf(bdf_filename, xref=True)
 
     nids_used = set([])
@@ -637,7 +637,7 @@ def bdf_merge(bdf_filenames, bdf_filename_out=None, renumber=True, encoding=None
         #]),
         #'mid' : max(model.material_ids),
     #}
-    model = BDF()
+    model = BDF(debug=False)
     bdf_filename0 = bdf_filenames[0]
     model.read_bdf(bdf_filename0, encoding=encoding)
     model.log.info('primary=%s' % bdf_filename0)
@@ -665,13 +665,13 @@ def bdf_merge(bdf_filenames, bdf_filename_out=None, renumber=True, encoding=None
             #print('  %-3s %s' % (param, val))
 
         model.log.info('secondary=%s' % bdf_filename)
-        model2 = BDF()
+        model2 = BDF(debug=False)
         bdf_dump = 'bdf_merge_temp.bdf'
         #model2.read_bdf(bdf_filename, xref=False)
 
         bdf_renumber(bdf_filename, bdf_dump, starting_id_dict=starting_id_dict,
                      size=size, is_double=is_double)
-        model2 = BDF()
+        model2 = BDF(debug=False)
         model2.read_bdf(bdf_dump)
         os.remove(bdf_dump)
 
@@ -916,7 +916,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
     suport1_map = {}
 
     if isinstance(bdf_filename, string_types):
-        model = BDF()
+        model = BDF(debug=False)
         model.read_bdf(bdf_filename)
     else:
         model = bdf_filename
@@ -1452,7 +1452,7 @@ def get_free_edges(bdf_filename, eids=None):
     assumes no solids/bars
     """
     if isinstance(bdf_filename, string_types):
-        model = BDF()
+        model = BDF(debug=False)
         model.read_bdf(bdf_filename)
     else:
         model = bdf_filename
@@ -1540,7 +1540,7 @@ def extract_surface_patches(bdf_filename, starting_eids, theta_tols=40.):
     if isinstance(theta_tols, (float, float32)):
         theta_tols = [theta_tols] * len(starting_eids)
 
-    model = BDF()
+    model = BDF(debug=False)
     model.read_bdf(bdf_filename)
 
     # get data for all shell elemenst
@@ -1658,7 +1658,7 @@ def split_model_by_material_id(bdf_filename, bdf_filename_base,
 
     .. warning:: hasn't really been tested
     """
-    model = BDF()
+    model = BDF(debug=False)
     model.read_bdf(bdf_filename, xref=True, encoding=encoding)
 
     mid_to_eids_map = defaultdict(set)

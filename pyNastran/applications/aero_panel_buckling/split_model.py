@@ -102,7 +102,7 @@ def load_regions_and_create_eigenvalue_csv(bdf_model, op2_filenames,
 
         # = pf.split('_')[1].split('.')[0]
         #patch_numbers.append(patch_id)
-        #model = BDF()
+        #model = BDF(debug=False)
         #model.read_bdf(pf)
         # eids = model.elements.keys()
         #op2_path = '%s_.op2' % patch_id)
@@ -167,7 +167,7 @@ def load_regions_and_create_eigenvalue_csv(bdf_model, op2_filenames,
     print(msg)
 
     bdf_model.log.info('finished parsing eigenvalues...')
-    #model = BDF()
+    #model = BDF(debug=False)
     #model.read_bdf(bdf_filename)
     all_eids = np.unique(bdf_model.elements.keys())
     neids = len(all_eids)
@@ -223,7 +223,7 @@ def split_model_by_pid_panel(patch_filenames, workpath='results'):
         ipanel = int(sline)
         #print('ipanel = %s' % ipanel)
 
-        bdf_model = BDF()
+        bdf_model = BDF(debug=False)
         bdf_model.read_bdf(patch_filename, xref=False)
 
         eids = defaultdict(list)

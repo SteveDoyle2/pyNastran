@@ -78,7 +78,7 @@ def main():
 
     get_bcs(bdf_filename, pid_map, boundary_conditions, log=None)
     #if flip_normals:
-       #bdf = BDF()
+       #bdf = BDF(debug=False)
        #bdf.read_bdf(bdf_filename, xref=False)
        #bdf.flip_normals()
        #bdf.write_bdf(bdf_filename2)

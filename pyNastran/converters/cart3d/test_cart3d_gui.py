@@ -110,7 +110,7 @@ class TestCart3dGUI(unittest.TestCase):
         with open(bdf_filename, 'w') as f:
             f.write(lines)
 
-        bdf = BDF()
+        bdf = BDF(debug=False)
         bdf.read_bdf(bdf_filename)
         cart3d = nastran_to_cart3d(bdf)
         cart3d.write_cart3d(cart3d_filename)

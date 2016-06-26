@@ -246,6 +246,7 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
     dictsort : bool; default=False
         writes pyNastran_dict.bdf
     """
+    print('debug = %s' % debug)
     if dynamic_vars is None:
         dynamic_vars = {}
 
@@ -368,7 +369,7 @@ def run_nastran(bdf_model, nastran, post=-1, size=8, is_double=False):
             #os.remove(bdf_model2)
 
         # make sure we're writing an OP2
-        bdf = BDF()
+        bdf = BDF(debug=False)
         bdf.read_bdf(bdf_model)
         if 'POST' in bdf.params:
             param_post = bdf.params['POST']
@@ -441,7 +442,7 @@ def run_fem1(fem1, bdf_model, mesh_form, xref, punch, sum_load, size, is_double,
                     fem1.write_bdf('spike_out.bdf')
                     fem1.get_bdf_stats()
 
-                    fem1 = BDF()
+                    fem1 = BDF(debug=False)
                     fem1.load('model.obj')
                     fem1.write_bdf('spike_in.bdf')
                     fem1.log = log

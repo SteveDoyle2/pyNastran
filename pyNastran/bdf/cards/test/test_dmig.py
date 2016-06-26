@@ -306,7 +306,7 @@ DMI         W2GJ       1       1 1.54685.1353939.1312423.0986108.0621382
         """
         with open('dmi.bdf', 'w') as bdf_file:
             bdf_file.write(data)
-        model = BDF()
+        model = BDF(debug=False)
         model.read_bdf('dmi.bdf', punch=True)
         w2gj = model.dmis['W2GJ']
         assert w2gj.shape == (1200, 1), w2gj.shape
@@ -320,7 +320,7 @@ DMI         W2GJ       1       1 1.54685.1353939.1312423.0986108.0621382
 
         model.write_bdf('dmi_out.bdf')
 
-        model2 = BDF()
+        model2 = BDF(debug=False)
         model2.read_bdf('dmi_out.bdf')
         w2gj_new = model.dmis['W2GJ']
         assert w2gj_new.shape == (1200, 1), w2gj_new.shape

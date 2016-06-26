@@ -507,7 +507,7 @@ class TestBeams(unittest.TestCase):
             f.write(case_control_lines)
             model.write_bdf(f, enddata=True)
 
-        model2 = BDF()
+        model2 = BDF(debug=False)
         model2.read_bdf('pbeam12.bdf')
         import os
         if not os.path.exists('pbeam12.op2') and 0:
