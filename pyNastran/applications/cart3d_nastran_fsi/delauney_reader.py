@@ -1,16 +1,17 @@
 from __future__ import print_function
-from six.moves import zip
 import os
-from numpy import array, cross, dot, npabs
+
+from six.moves import zip
+from numpy import array, cross, dot, abs as npabs
 from numpy.linalg import norm, solve #, cond
 
-from pyNastran.applications.cart3d_nastran_fsi.mathFunctions import is_list_ranged, ListPrint, shepard_weight
+from pyNastran.applications.cart3d_nastran_fsi.math_functions import is_list_ranged, ListPrint, shepard_weight
 #from pyNastran.applications.cart3d_nastran_fsi.matTest import fIsNatural
 from pyNastran.bdf.field_writer_8 import print_card_8
 
 from logger import dummyLogger
-loggerObj = dummyLogger()
-log = loggerObj.startLog('debug') # or info
+logger_obj = dummyLogger()
+log = logger_obj.startLog('debug') # or info
 
 #------------------------------------------------------------------
 
@@ -54,8 +55,10 @@ class Tet4(object):
 
 
     def __repr__(self):
-        nodes = "[%3s, %3s, %3s, %3s]" % (self.nodes[0], self.nodes[1], self.nodes[2], self.nodes[3])
-        return "ID=%4s nodes=%s p0=%s p1=%s p2=%s p3=%s" % (self.ID, nodes, self.p0, self.p1, self.p2, self.p3)
+        nodes = "[%3s, %3s, %3s, %3s]" % (
+            self.nodes[0], self.nodes[1], self.nodes[2], self.nodes[3])
+        return "ID=%4s nodes=%s p0=%s p1=%s p2=%s p3=%s" % (
+            self.ID, nodes, self.p0, self.p1, self.p2, self.p3)
 
     def calculate_centroid(self):
         """
@@ -74,7 +77,7 @@ class Tet4(object):
     def abs_volume(self):
         return npabs(self.volume())
 
-    def testVol(self, a, b, c, d):
+    def test_vol(self, a, b, c, d):
         vol = dot(a-d, cross(b-d, c-d)) / 6.
         return vol
 
@@ -89,20 +92,24 @@ class Tet4(object):
             return self._volume
         return self._volume
 
-    def map_deflections2(self, deflections, aeroNode):
+    def map_deflections2(self, deflections, aero_node):
         #A =
         pass
 
-    def map_deflections(self, deflections, aeroNode):
+    def map_deflections(self, deflections, aero_node):
         """
         determines the mapped x,y,z deflections of the aero node
 
-        deflections - deflections at p0,p1,p2,p3
-        aeroNode    - node to find the deflections at
+        Parameters
+        ----------
+        deflections : ???
+            deflections at p0,p1,p2,p3
+        aero_node : ???
+            node to find the deflections at
 
         Solves Ax=b  where A is the nodes, x is the abc coeffs,
                      b is the deflection at the tet node points (x,y,z)
-        then uses x to find the deflection at an arbitrary point m (aeroNode)
+        then uses x to find the deflection at an arbitrary point m (aero_node)
         """
         A = array([[1.]+list(self.p0),
                    [1.]+list(self.p1),
@@ -122,20 +129,20 @@ class Tet4(object):
         #condMax = 1E6  # max allowable condition number before alternate approach
         if 1:
             nodes = [self.p0, self.p1, self.p2, self.p3]
-            weights = shepard_weight(aeroNode, nodes)
+            weights = shepard_weight(aero_node, nodes)
             du = array([0., 0., 0.])
             for (node, weight) in zip(nodes, weights):
                 du += weight * node
         else:
-            ux = self.map_deflection(A, d1, d2, d3, d4, 0, aeroNode, 'x')
-            uy = self.map_deflection(A, d1, d2, d3, d4, 1, aeroNode, 'y')
-            uz = self.map_deflection(A, d1, d2, d3, d4, 2, aeroNode, 'z')
+            ux = self.map_deflection(A, d1, d2, d3, d4, 0, aero_node, 'x')
+            uy = self.map_deflection(A, d1, d2, d3, d4, 1, aero_node, 'y')
+            uz = self.map_deflection(A, d1, d2, d3, d4, 2, aero_node, 'z')
             du = array([ux, uy, uz])
         log.info("vol       = %s" % self.volume())
         log.info("du        = %s" % du)
-        return aeroNode + du
+        return aero_node + du
 
-    def map_deflection(self, A, d1, d2, d3, d4, i, aeroNode, dType='x'):
+    def map_deflection(self, A, d1, d2, d3, d4, i, aero_node, dType='x'):
         """
         see mapDeflections...
         based on the posiition matrix, finds the ith deflection component
@@ -148,11 +155,13 @@ class Tet4(object):
 
         abcd = solve(A, di)
 
-        #ui = abcd*aeroNode # element-wise multiplication...faster, cant make it work; tried dot & transpose too...
+        #ui = abcd*aero_node # element-wise multiplication...faster,
+        # cant make it work; tried dot & transpose too...
         (a, b, c, d) = abcd
-        ui = a + b*aeroNode[0] + c*aeroNode[1] + d*aeroNode[2]
-        isRanged = is_list_ranged(0., abcd, 1.)
-        log.info('isRanged=%s  u%sRatio=%g - a=%g b=%g c=%g d=%g' %(isRanged, dType, npabs(ui/diMax), a, b, c, d))
+        ui = a + b*aero_node[0] + c*aero_node[1] + d*aero_node[2]
+        is_ranged = is_list_ranged(0., abcd, 1.)
+        log.info('is_ranged=%s  u%sRatio=%g - a=%g b=%g c=%g d=%g' %(
+            is_ranged, dType, npabs(ui/diMax), a, b, c, d))
         return ui
 
     def is_internal_node(self, pAero):
@@ -164,8 +173,9 @@ class Tet4(object):
         *---*  0 1
          \*/   2
         """
-        isContained, gammas = fIsNatural(pAero, self.p0, self.p1, self.p2, self.p3, V=self._volume)
-        return isContained, min(gammas)
+        is_contained, gammas = fIsNatural(pAero, self.p0, self.p1, self.p2, self.p3,
+                                          V=self._volume)
+        return is_contained, min(gammas)
 
         #a = Tet4(self.p0, self.p1, self.p2, pAero,ID='a',nodes=[0,1,2,'p'])
         #b = Tet4(self.p0, self.p1, pAero,self.p3, ID='b',nodes=[0,1,'p',3])
@@ -206,8 +216,8 @@ class DelauneyReader(object):
         grids, elements, volume = self.read()
 
         tets = {}
-        for key, elementNeighbors in elements.items():
-            nodes, neighbors = elementNeighbors
+        for key, element_neighbors in elements.items():
+            nodes, neighbors = element_neighbors
             id1, id0, id2, id3 = nodes
 
             grid0 = grids[id0]
@@ -235,11 +245,11 @@ class DelauneyReader(object):
     def test_mapper(self):
         m = array([0., 0., 0.])
         tets, grids, elements, volume = self.build_tets()
-        tetNew = self.find_closest_tet(m, tets)
-        self.updateNode(m, tets)
-        return tetNew
+        tet_new = self.find_closest_tet(m, tets)
+        self.update_node(m, tets)
+        return tet_new
 
-    def updateNode(self, m, tets):
+    def update_node(self, m, tets):
         """
         Takes in a new point m (mid tet point) and a list of tets
         from self.buildTets(), finds the tet the node should go in,
@@ -247,11 +257,11 @@ class DelauneyReader(object):
         tet.
         """
         #m = array([21.18, 0.5, -1.87e-6])
-        tetNew = self.find_closest_tet(m, tets)
+        tet_new = self.find_closest_tet(m, tets)
 
         # def = deflections at p0,p1,p2,p3
-        newAeroNode = tetNew.map_deflections(deflections, m)
-        return newAeroNode
+        new_aero_node = tet_new.map_deflections(deflections, m)
+        return new_aero_node
 
     def find_closest_tet(self, m, tets):
         """
@@ -261,14 +271,14 @@ class DelauneyReader(object):
         m = aeroNode
         tets =
         """
-        startingTet = tets[0]
-        closestTet = self.findClosestTet_recursion(m, startingTet, tets)
+        starting_tet = tets[0]
+        closest_tet = self.find_closest_tet_recursion(m, starting_tet, tets)
         #print("found tet = ", closestTet.ID)
         #v1 = array([1., 0., 0.])
-        return closestTet
+        return closest_tet
 
 
-    def findClosestTet_recursion(self, m, tet0, tets, excluded=None):
+    def find_closest_tet_recursion(self, m, tet0, tets, excluded=None):
         """
         Makes an assumption that there is a direct line from the starting tet
         to the final tet that can be minimized with nearly every subsequent tet.
@@ -292,14 +302,14 @@ class DelauneyReader(object):
         #dists[0] = 9.e9
         #print("dists = ", dists)
 
-        minValue = min(dists)
-        i = dists.index(minValue)
-        tetNew = tets[tet0.neighbors[i]]
+        min_value = min(dists)
+        i = dists.index(min_value)
+        tet_new = tets[tet0.neighbors[i]]
         excluded.append(tet0.ID)
         #print "excluding ID=%s\n" % tet0.ID
 
-        closestTet = self.findClosestTet_recursion(m, tetNew, tets, excluded)
-        return closestTet
+        closest_tet = self.find_closest_tet_recursion(m, tet_new, tets, excluded)
+        return closest_tet
 
     def read(self):
         """
@@ -326,22 +336,22 @@ class DelauneyReader(object):
             grids[node[0]] = node[1:]
             #print("id=%s grid=%s" %(node[0], node[1:]))
 
-        maxX = grids[1][0]
-        maxY = grids[1][1]
-        maxZ = grids[1][2]
+        max_x = grids[1][0]
+        max_y = grids[1][1]
+        max_z = grids[1][2]
 
-        minX = grids[1][0]
-        minY = grids[1][1]
-        minZ = grids[1][2]
+        min_x = grids[1][0]
+        min_y = grids[1][1]
+        min_z = grids[1][2]
 
         for key, grid in grids.items():
-            maxX = max(maxX, grid[0])
-            maxY = max(maxY, grid[1])
-            maxZ = max(maxZ, grid[2])
+            max_x = max(max_x, grid[0])
+            max_y = max(max_y, grid[1])
+            max_z = max(max_z, grid[2])
 
-            minX = min(minX, grid[0])
-            minY = min(minY, grid[1])
-            minZ = min(minZ, grid[2])
+            min_x = min(min_x, grid[0])
+            min_y = min(min_y, grid[1])
+            min_z = min(min_z, grid[2])
 
         elements = {}
         nelements = 1
@@ -359,38 +369,35 @@ class DelauneyReader(object):
 
             #print "e[%s]=%s" %(e[0], e[1:])
 
-        log.info("maxX=%s minX=%s" % (maxX, minX))
-        log.info("maxY=%s minY=%s" % (maxY, minY))
-        log.info("maxZ=%s minZ=%s" % (maxZ, minZ))
-        dx = maxX - minX
-        dy = maxY - minY
-        dz = maxZ - minZ
+        log.info("max_x=%s min_x=%s" % (max_x, min_x))
+        log.info("max_y=%s min_y=%s" % (max_y, min_y))
+        log.info("max_z=%s min_z=%s" % (max_z, min_z))
+        dx = max_x - min_x
+        dy = max_y - min_y
+        dz = max_z - min_z
         volume = dx * dy * dz
         log.info("volume = %s" % volume)
 
         return grids, elements, volume
 
-    def writeTetsAsNastran(self, nodes, tets):
-        tetFilename = 'tet.bdf'
-        outfile = open(tetFilename, 'wb')
-        msg = ''
-        mid = 1 # material id
-        for nid, node in nodes.items():
-            card = ['GRID', ID, 0, node[0], node[1], node[2]]
-            msg += print_card_8(card)
-        outfile.write(msg)
+    def write_tets_as_nastran(self, nodes, tets, tet_filename='tet.bdf'):
+        with open(tet_filename, 'wb') as outfile:
+            msg = ''
+            mid = 1 # material id
+            for nid, node in nodes.items():
+                card = ['GRID', ID, 0, node[0], node[1], node[2]]
+                msg += print_card_8(card)
+            outfile.write(msg)
 
-        msg = ''
-        for i, tet in enumerate(tets):
-            nodes = tet.nodes
-            msg += print_card_8(['CTETRA', tet.ID, mid, nodes[0], nodes[1], nodes[2], nodes[3]])
-            if i % 1000 == 0:
-                outfile.write(msg)
-                msg = ''
-        outfile.write(msg)
-
-        outfile.close()
-        log.info("finished writing %s" % tetFilename)
+            msg = ''
+            for i, tet in enumerate(tets):
+                nodes = tet.nodes
+                msg += print_card_8(['CTETRA', tet.ID, mid, nodes[0], nodes[1], nodes[2], nodes[3]])
+                if i % 1000 == 0:
+                    outfile.write(msg)
+                    msg = ''
+            outfile.write(msg)
+        log.info("finished writing %s" % tet_filename)
 
     def ints(self, values):
         return [int(value) for value in values]
@@ -409,7 +416,7 @@ def run():
     m = array([21.18, 0.5, -1.87347e-6])
     d.find_closest_tet(m, tets)
 
-    d.writeTetsAsNastran(nodes, tets)
+    d.write_tets_as_nastran(nodes, tets)
     #d.read()
     #d.testVolume()
 

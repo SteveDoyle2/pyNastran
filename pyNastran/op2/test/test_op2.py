@@ -115,22 +115,21 @@ except:
 
 def parse_table_names_from_F06(f06_filename):
     """gets the op2 names from the f06"""
-    infile = open(f06_filename, 'r')
+
     marker = 'NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS'
     names = []
-    for line in infile:
-        if marker in line:
-            word = line.replace(marker, '').strip().strip('.')
-            names.append(word)
-    infile.close()
+    with open(f06_filename, 'r') as infile:
+        for line in infile:
+            if marker in line:
+                word = line.replace(marker, '').strip().strip('.')
+                names.append(word)
     return names
 
 
 def get_failed_files(filename):
     """Gets the list of failed files"""
-    infile = open(filename, 'r')
-    lines = infile.readlines()
-    infile.close()
+    with open(filename, 'r') as infile:
+        lines = infile.readlines()
 
     files = []
     for line in lines:

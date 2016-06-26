@@ -13,9 +13,8 @@ lines = [
     'OUTPUT2 A,B,ATB,BTA,MYDOF//0/15$',
     'CEND',
 ]
-f = open('isat.bdf', 'r')
-lines = f.readlines()
-f.close()
+with open('isat.bdf', 'r') as f:
+    lines = f.readlines()
 
 lines2 = []
 append_flag = False

@@ -407,7 +407,7 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
             print("  found keys=(%5s,%4s,%4s) name=%-6s - %s" % (keys[0], keys[1], keys[2], name, self.table_name))
 
         n = func(data, n)  # gets all the grid/mat cards
-        assert n != None, name
+        assert n is not None, name
 
         self.geom_keys = keys
         self.is_start_of_subtable = False

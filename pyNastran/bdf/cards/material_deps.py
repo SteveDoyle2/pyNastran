@@ -117,7 +117,7 @@ class MATS1(MaterialDependence):
             hr = integer_or_blank(card, 6, 'hr', 1)
             limit1 = double(card, 7, 'limit1')
 
-            if yf == 3 or yf == 4:
+            if yf in [3, 4]:
                 limit2 = double(card, 8, 'limit2')
             else:
                 #limit2 = blank(card, 8, 'limit2')

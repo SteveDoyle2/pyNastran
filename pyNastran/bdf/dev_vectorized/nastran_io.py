@@ -672,8 +672,7 @@ class NastranIO(NastranIO_xref):
                     elem.GetPointIds().SetId(7, nidMap[nodeIDs[7]])
                     self.grid.InsertNextCell(elem.GetCellType(),
                                              elem.GetPointIds())
-                elif (isinstance(element, LineElement) or
-                      isinstance(element, SpringElement) or
+                elif (isinstance(element, (LineElement, SpringElement)) or
                       element.type in ['CBUSH', 'CBUSH1D', 'CFAST', 'CROD', 'CONROD',
                                        'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
                                        'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5', 'CVISC', ]):

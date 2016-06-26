@@ -1900,7 +1900,7 @@ class MATHP(HyperelasticMaterial):
                      tab3, tab4, tabd, comment=comment)
 
     @classmethod
-    def add_op2_data(self, data, comment=''):
+    def add_op2_data(data, comment=''):
         if comment:
             self._comment = comment
         main = data[0]
