@@ -25,6 +25,7 @@ All cards are BaseCard objects.
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from itertools import count
+import math
 from six.moves import zip, range
 from six import string_types
 
@@ -908,7 +909,7 @@ class AEROS(Aero):
         6:'symXZ', 7:'symXY',
     }
 
-    def __init__(self, acsid, rcsid, cref, bref, sref, sym_xz, sym_xy, comment=''):
+    def __init__(self, cref, bref, sref, acsid=0, rcsid=0, sym_xz=0, sym_xy=0, comment=''):
         Aero.__init__(self)
         if comment:
             self._comment = comment
@@ -919,6 +920,23 @@ class AEROS(Aero):
         self.sref = sref
         self.sym_xz = sym_xz
         self.sym_xy = sym_xy
+        if self.acsid is None:
+            self.acsid = 0
+        if self.rcsid is None:
+            self.rcsid = 0
+        if self.sym_xz is None:
+            self.sym_xz = 0
+        if self.sym_xy is None:
+            self.sym_xy = 0
+
+    def validate(self):
+        assert isinstance(self.acsid, int), 'acsid=%s type=%s' % (self.acsid, type(self.acsid))
+        assert isinstance(self.rcsid, int), 'rcsid=%s type=%s' % (self.rcsid, type(self.rcsid))
+        assert isinstance(self.cref, float), 'cref=%s type=%s' % (self.cref, type(self.cref))
+        assert isinstance(self.bref, float), 'bref=%s type=%s' % (self.bref, type(self.bref))
+        assert isinstance(self.sref, float), 'sref=%s type=%s' % (self.sref, type(self.sref))
+        assert isinstance(self.sym_xz, int), 'sym_xz=%s type=%s' % (self.sym_xz, type(self.sym_xz))
+        assert isinstance(self.sym_xy, int), 'sym_xy=%s type=%s' % (self.sym_xy, type(self.sym_xy))
 
     def cross_reference(self, model):
         """
@@ -942,7 +960,7 @@ class AEROS(Aero):
         sym_xz = integer_or_blank(card, 6, 'sym_xz', 0)
         sym_xy = integer_or_blank(card, 7, 'sym_xy', 0)
         assert len(card) <= 8, 'len(AEROS card) = %i' % len(card)
-        return AEROS(acsid, rcsid, cref, bref, sref, sym_xz, sym_xy,
+        return AEROS(cref, bref, sref, acsid, rcsid, sym_xz, sym_xy,
                      comment=comment)
 
     @classmethod
@@ -955,7 +973,7 @@ class AEROS(Aero):
         sym_xz = data[5]
         sym_xy = data[6]
         assert len(data) == 7, 'data = %s' % data
-        return AEROS(acsid, rcsid, cref, bref, sref, sym_xz, sym_xy,
+        return AEROS(cref, bref, sref, acsid, rcsid, sym_xz, sym_xy,
                      comment=comment)
 
     def uncross_reference(self):
@@ -1245,6 +1263,17 @@ class CAERO1(BaseCard):
         self.p4 = p4
         self.x43 = x43
 
+        if self.cp is None:
+            self.cp = 0
+        if self.lspan is None:
+            self.lspan = 0
+        if self.nspan is None:
+            self.nspan = 0
+        if self.nchord is None:
+            self.nchord = 0
+        if self.lchord is None:
+            self.lchord = 0
+
     def validate(self):
         if self.nspan == 0 and self.lspan == 0:
             msg = 'NSPAN or LSPAN must be greater than 0'
@@ -1287,6 +1316,64 @@ class CAERO1(BaseCard):
         return CAERO1(eid, pid, cp, nspan, lspan, nchord, lchord, igid,
                       p1, x12, p4, x43, comment=comment)
 
+    @classmethod
+    def add_quad(self, eid, pid, cp, span, chord, igid,
+                 p1, p2, p3, p4, spanwise='y', comment=''):
+        r"""
+        ::
+
+          1
+          | \
+          |   \
+          |     \
+          |      4
+          |      |
+          |      |
+          2------3
+
+        TODO: CP not handled correctly
+        """
+        x12 = p2[0] - p1[0]
+        x43 = p3[0] - p4[0]
+        nspan = 0
+        lspan = 0
+        nchord = 0
+        lchord = 0
+
+        if spanwise.lower() == 'y':
+            dspan = max(
+                p4[1] - p1[1],
+                p3[1] - p2[1]
+            )
+        elif spanwise.lower() == 'z':
+            dspan = max(
+                p4[2] - p1[2],
+                p3[2] - p2[2]
+            )
+        else:
+            raise NotImplementedError('spanwise=%r; expected=[y, z]' % spanwise.lower())
+
+        dx = max(x12, x43)
+        if isinstance(span, int):
+            nspan = span
+        elif isinstance(span, AEFACT):
+            lspan = span.sid
+        elif isinstance(span, float):
+            nspan = int(math.ceil(dspan / span))
+            raise TypeError(span)
+
+        if isinstance(chord, int):
+            nchord = chord
+        elif isinstance(chord, AEFACT):
+            lchord = chord.sid
+        elif isinstance(chord, float):
+            nchord = int(math.ceil(dx / chord))
+        else:
+            raise TypeError(chord)
+
+        return CAERO1(eid, pid, cp, nspan, lspan, nchord, lchord, igid,
+                      p1, x12, p4, x43, comment=comment)
+
     def _init_ids(self):
         """
         Fill `self.box_ids` with the sub-box ids. Shape is (nchord, nspan)
@@ -1315,6 +1402,7 @@ class CAERO1(BaseCard):
     def Cp(self):
         if isinstance(self.cp, integer_types):
             return self.cp
+        print('cp = %s' % self.cp)
         return self.cp_ref.cid
 
     def Pid(self):
@@ -3059,10 +3147,12 @@ class PAERO1(BaseCard):
         """
         self.Bi[n - 1] = value
 
-    def __init__(self, pid, Bi, comment=''):
+    def __init__(self, pid, Bi=None, comment=''):
         if comment:
             self._comment = comment
         self.pid = pid
+        if Bi is None:
+            Bi = []
         self.Bi = Bi
 
     @classmethod
@@ -3075,7 +3165,7 @@ class PAERO1(BaseCard):
             if isinstance(bi, int) and bi >= 0:
                 Bi2.append(bi)
             elif bi is not None:
-                raise RuntimeError('invalid Bi value on PAERO1 bi=|%r|' % (bi))
+                raise RuntimeError('invalid Bi value on PAERO1 bi=%r' % (bi))
             #else:
             #    pass
         return PAERO1(pid, Bi, comment=comment)
@@ -3364,8 +3454,8 @@ class SPLINE1(Spline):
         7: 'method', 8:'usage', 9:'nelements', 10:'melements',
     }
 
-    def __init__(self, eid, caero, box1, box2, setg, dz, method, usage,
-                 nelements, melements, comment=''):
+    def __init__(self, eid, caero, box1, box2, setg, dz=0., method='IPS', usage='BOTH',
+                 nelements=10, melements=10, comment=''):
         Spline.__init__(self)
         if comment:
             self._comment = comment

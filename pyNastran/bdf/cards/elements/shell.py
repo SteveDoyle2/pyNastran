@@ -1636,7 +1636,6 @@ class CQUAD4(QuadShell):
             i = self.thetaMcid_ref.i
             jmat = np.cross(normal, i) # k x i
             jmat /= np.linalg.norm(jmat)
-
             imat = np.cross(jmat, normal)
         elif isinstance(self.thetaMcid, float):
             raise NotImplementedError('thetaMcid=%r' % self.thetaMcid)
