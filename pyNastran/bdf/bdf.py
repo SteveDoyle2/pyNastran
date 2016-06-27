@@ -711,6 +711,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             caero.validate()
         for spline_id, spline in sorted(iteritems(self.splines)):
             spline.validate()
+        if self.aeros is not None:
+            self.aeros.validate()
 
     def read_bdf(self, bdf_filename=None,
                  validate=True, xref=True, punch=False, read_includes=True, encoding=None):
