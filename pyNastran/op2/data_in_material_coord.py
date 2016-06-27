@@ -89,14 +89,15 @@ def get_eids_from_op2_vector(vector):
 
 
 def is_mcid(elem):
-    if isinstance(elem.thetaMcid, integer_types):
+    thetaMcid = getattr(elem, 'thetaMcid', None)
+    if isinstance(thetaMcid, integer_types):
         return True
     else:
         return False
 
 
 def check_theta(elem):
-    theta = elem.thetaMcid
+    theta = getattr(elem, 'thetaMcid', None)
     if theta is None:
         return 0.
     elif isinstance(theta, float):
@@ -225,7 +226,7 @@ def data_in_material_coord(bdf, op2, in_place=False):
             thetarad[mcid] = tmp
 
     thetarad = dict([[eid, theta] for eid, theta in zip(eids, thetarad)])
-    thick_array = dict([[eid, e.pid.t] for eid, e, in zip(eids, elems)])
+    thick_array = dict([[eid, getattr(e.pid, 't', None)] for (eid, e) in zip(eids, elems)])
 
     for vecname in force_vectors:
         op2_vectors = getattr(op2, vecname)
