@@ -152,6 +152,8 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
                     card = slot[idi]
                 except KeyError:
                     msg = 'key=%s id=%s cannot be found' % (key, idi)
+                    msg += 'eid=%s not found.  Allowed=%s' % (
+                        key, np.unique(ids))
                     raise KeyError(msg)
                 except TypeError:
                     msg = 'key=%s id=%s cannot be found' % (key, idi)

@@ -14,12 +14,10 @@ import sys
 import traceback
 import warnings
 from six import iteritems
-import numpy
-from numpy import array
 import numpy as np
 warnings.simplefilter('always')
 
-numpy.seterr(all='raise')
+np.seterr(all='raise')
 
 from pyNastran.op2.op2 import OP2
 from pyNastran.utils import print_bad_path, integer_types
@@ -290,7 +288,8 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
         fem2 = run_fem2(bdf_model, out_model, xref, punch, sum_load, size, is_double, reject,
                         encoding=encoding, debug=debug, log=None)
 
-        diff_cards = compare(fem1, fem2, xref=xref, check=check, print_stats=print_stats, quiet=quiet)
+        diff_cards = compare(fem1, fem2, xref=xref, check=check,
+                             print_stats=print_stats, quiet=quiet)
         test_get_cards_by_card_types(fem2)
         #except:
             #return 1, 2, 3
@@ -524,7 +523,7 @@ def run_fem2(bdf_model, out_model, xref, punch,
     out_model_2 = bdf_model + '_out2'
 
     if xref and sum_load:
-        p0 = array([0., 0., 0.])
+        p0 = np.array([0., 0., 0.])
 
         subcase_keys = fem2.case_control_deck.get_subcase_list()
         subcases = fem2.subcases
@@ -565,9 +564,9 @@ def validate_case_control(fem2, p0, sol_base, subcase_keys, subcases, sol_200_ma
                 #raise NotImplementedError(msg)
         #else:
             #sol = sol_base
-        check_case(sol_base, subcase, fem2, p0, isubcase)
+        check_case(sol_base, subcase, fem2, p0, isubcase, subcases)
 
-def check_case(sol, subcase, fem2, p0, isubcase):
+def check_case(sol, subcase, fem2, p0, isubcase, subcases):
     if sol == 24:
         if 'SPC' not in subcase:
             _assert_has_spc(subcase, fem2)
@@ -689,46 +688,51 @@ def check_case(sol, subcase, fem2, p0, isubcase):
     elif sol == 200:
         assert 'DESOBJ' in subcase, subcase
         assert 'ANALYSIS' in subcase, subcase
-        assert 'DESSUB' in subcase, subcase
         value, options = subcase.get_parameter('DESOBJ')
         assert value in fem2.dresps, 'value=%s not in dresps' % value
-        value, options = subcase.get_parameter('DESSUB')
-        assert value in fem2.dconstrs, 'value=%s not in dconstrs' % value
 
-        value, options = subcase.get_parameter('ANALYSIS')
-        if value == 'STATICS':
+        analysis, options = subcase.get_parameter('ANALYSIS')
+        if analysis != 'STATICS':
+            # BUCKLING
+            if 'DESSUB' not in subcase and 'DESGLB' not in subcase:
+                print('no DESSUB/DESGLB; is this a buckling preload case?')
+            assert 'DESSUB' in subcase or 'DESGLB' in subcase, subcase
+        if 'DESSUB' in subcase:
+            value, options = subcase.get_parameter('DESSUB')
+            assert value in fem2.dconstrs, 'value=%s not in dconstrs' % value
+
+        if analysis == 'STATICS':
             sol = 101
-            check_case(sol, subcase, fem2, p0, isubcase)
-        elif value == 'MODES':
+            check_case(sol, subcase, fem2, p0, isubcase, subcases)
+        elif analysis == 'MODES':
             sol = 103
-            check_case(sol, subcase, fem2, p0, isubcase)
-        elif value == 'BUCK':
+            check_case(sol, subcase, fem2, p0, isubcase, subcases)
+        elif analysis == 'BUCK':
             sol = 105
-            check_case(sol, subcase, fem2, p0, isubcase)
-        #elif value == 'DFREQ':
-            #sol = ???
-            #check_case(sol, subcase, fem2, p0, isubcase)
-        #elif value == 'MFREQ':
-            #sol = ???
-            #check_case(sol, subcase, fem2, p0, isubcase)
-        #elif value == 'MTRAN':
-            #sol = ???
-            #check_case(sol, subcase, fem2, p0, isubcase)
-        elif value == 'SAERO':
+            check_case(sol, subcase, fem2, p0, isubcase, subcases)
+        #elif analysis == 'DFREQ':
+            #sol = 108
+            #check_case(sol, subcase, fem2, p0, isubcase, subcases)
+        elif analysis == 'MFREQ':
+            sol = 111
+            check_case(sol, subcase, fem2, p0, isubcase, subcases)
+        #elif analysis == 'MTRAN':
+            #sol = 112
+            #check_case(sol, subcase, fem2, p0, isubcase, subcases)
+        elif analysis in ['SAERO', 'DIVERGE']:
             sol = 144
-            check_case(sol, subcase, fem2, p0, isubcase)
-        elif value == 'DIVERGE':
-            sol = 144
-            check_case(sol, subcase, fem2, p0, isubcase)
-        elif value == 'FLUTTER':
+            check_case(sol, subcase, fem2, p0, isubcase, subcases)
+        elif analysis == 'FLUTTER':
             sol = 145
-            check_case(sol, subcase, fem2, p0, isubcase)
-        #elif value == 'DCEIG': # direct complex eigenvalues
-        elif value == 'HEAT': # heat transfer analysis
+            check_case(sol, subcase, fem2, p0, isubcase, subcases)
+        #elif analysis == 'DCEIG': # direct complex eigenvalues
+        #elif analysis == 'MCEIG': # modal direct complex eigenvalues
+        elif analysis == 'HEAT': # heat transfer analysis
             sol = 159
-            check_case(sol, subcase, fem2, p0, isubcase)
+            check_case(sol, subcase, fem2, p0, isubcase, subcases)
         else:
-            raise NotImplementedError(subcase)
+            msg = 'analysis = %s\nsubcase =\n%s' % (analysis, subcase)
+            raise NotImplementedError(msg)
 
     else:
         msg = 'SOL = %s\n' % (sol)
@@ -782,13 +786,14 @@ def check_case(sol, subcase, fem2, p0, isubcase):
         force, moment = fem2.sum_forces_moments(p0, loadcase_id, include_grav=False)
         eids = None
         nids = None
-        force2, moment2 = fem2.sum_forces_moments_elements(p0, loadcase_id, eids, nids, include_grav=False)
+        force2, moment2 = fem2.sum_forces_moments_elements(
+            p0, loadcase_id, eids, nids, include_grav=False)
         assert np.allclose(force, force2), 'force=%s force2=%s' % (force, force2)
         assert np.allclose(moment, moment2), 'moment=%s moment2=%s' % (moment, moment2)
         print('  isubcase=%i F=%s M=%s' % (isubcase, force, moment))
         assert sol in [1, 5, 24, 61, 64, 66, 101, 103, 105, 106, 107,
                        108, 109, 110, 112, 144, 145, 153, 400, 601
-                       ], 'sol=%s LOAD' % sol
+                      ], 'sol=%s LOAD' % sol
     else:
         # print('is_load =', subcase.has_parameter('LOAD'))
         pass
@@ -930,7 +935,8 @@ def test_get_cards_by_card_types(model):
 
     # we now have a list of card types we would like to extract
     # we'll get the associated cards
-    card_dict = model.get_cards_by_card_types(card_types, reset_type_to_slot_map=False)
+    card_dict = model.get_cards_by_card_types(card_types,
+                                              reset_type_to_slot_map=False)
     for card_type, cards in iteritems(card_dict):
         for card in cards:
             assert card_type == card.type, 'this should never crash here...card_type=%s card.type=%s' % (card_type, card.type)

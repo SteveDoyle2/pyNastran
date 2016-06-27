@@ -199,6 +199,24 @@ class TestDMIG(unittest.TestCase):
         assert len(a_matrix.GCi) == 3, 'len(GCi)=%s GCi=%s matrix=\n%s' % (len(a_matrix.GCi), a_matrix.GCi, a_matrix)
         assert len(a_matrix.GCj) == 3, 'len(GCj)=%s GCj=%s matrix=\n%s' % (len(a_matrix.GCj), a_matrix.GCj, a_matrix)
 
+    def test_dmig_10(self):
+        """symmetric"""
+        cards = [
+            ['DMIG,AMTRXX,0,6,1,0'],
+            ['DMIG,AMTRXX,2,1, ,2,1,201.0, ,+DM1',
+            '+DM1,2,3,203.0'],
+            ['DMIG,AMTRXX,3,1, ,3,1,301.0, ,+DM2',
+            '+DM2,3,3,303.0'],
+        ]
+        model = BDF(debug=False)
+        for card_lines in cards:
+            model.add_card(card_lines, 'DMIG', is_list=False)
+        model.fill_dmigs()
+        a_matrix = model.dmigs['AMTRXX']
+        assert len(a_matrix.GCi) == 4, 'len(GCi)=%s GCi=%s matrix=\n%s' % (len(a_matrix.GCi), a_matrix.GCi, a_matrix)
+        assert len(a_matrix.GCj) == 4, 'len(GCj)=%s GCj=%s matrix=\n%s' % (len(a_matrix.GCj), a_matrix.GCj, a_matrix)
+        assert a_matrix.shape == (4, 4), 'shape=%s' % str(a_matrix.shape)
+
     def test_dmi_01(self):
         data = """
 DMI         W2GJ       0       2       1       0            1200       1

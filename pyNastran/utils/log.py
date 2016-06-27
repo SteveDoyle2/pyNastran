@@ -122,8 +122,12 @@ class SimpleLogger(object):
 
     def properties(self):
         """Return tuple: line number and filename"""
-        _fr = sys._getframe(3)  # jump to get out of the logger code
-        return (_fr.f_lineno, os.path.basename(_fr.f_globals['__file__']))
+        # jump to get out of the logger code
+        frame = sys._getframe(3)
+        active_file = os.path.basename(frame.f_globals['__file__'])
+        if active_file.endswith('.pyc'):
+            return frame.f_lineno, active_file[:-1]
+        return frame.f_lineno, active_file
 
     def debug(self, msg):
         """
