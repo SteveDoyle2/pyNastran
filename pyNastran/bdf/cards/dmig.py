@@ -420,6 +420,7 @@ def get_row_col_map(GCi, GCj, ifo):
                 cols[GCj] = j
                 cols_reversed[j] = GCj
                 j += 1
+        nrows = len(rows)
     else:
         #print('i0=%s j0=%s' % (i, j))
         nrows = len(GCi)
@@ -609,10 +610,30 @@ def get_matrix(self, is_sparse=False, apply_symmetry=True):
                             msg += 'i=%s row=%s\n' % (i, row)
                         raise RuntimeError(msg)
                 else:
-                    for (gcj, gci, reali) in zip(self.GCj, self.GCi, self.Real):
-                        i = rows[(gci[0], gci[1])]
-                        j = cols[(gcj[0], gcj[1])]
-                        M[i, j] = reali
+                    try:
+                        for (gcj, gci, reali) in zip(self.GCj, self.GCi, self.Real):
+                            i = rows[(gci[0], gci[1])]
+                            j = cols[(gcj[0], gcj[1])]
+                            M[i, j] = reali
+                    except KeyError:
+                        msg = ('name=%s ndim=%s gci=%s gcj=%s matrix_type=%s '
+                               'is_polar=%s is_sparse=%s ncol=%s M.shape=%s\n' % (
+                                   self.name, ndim, str(gci), str(gcj), self.matrix_type,
+                                   self.is_polar(), is_sparse, self.ncol, M.shape))
+                        msg += 'Rows:\n'
+                        for i, row in enumerate(rows):
+                            msg += '  i=%s row=%s\n' % (i, row)
+                        print(msg)
+                        raise KeyError(msg)
+                    except IndexError:
+                        msg = ('name=%s ndim=%s i=%s j=%s matrix_type=%s '
+                               'is_polar=%s is_sparse=%s ncol=%s M.shape=%s\n' % (
+                                   self.name, ndim, i, j, self.matrix_type,
+                                   self.is_polar(), is_sparse, self.ncol, M.shape))
+                        msg += 'Rows:\n'
+                        for i, row in enumerate(rows):
+                            msg += '  i=%s row=%s\n' % (i, row)
+                        raise RuntimeError(msg)
     #print(M)
     return (M, rows_reversed, cols_reversed)
 

@@ -33,9 +33,8 @@ class TestDMIG(unittest.TestCase):
         a_matrix = model.dmigs['REALS']
         assert len(a_matrix.GCi) == 6, 'len(GCi)=%s GCi=%s matrix=\n%s' % (len(a_matrix.GCi), a_matrix.GCi, a_matrix)
         assert len(a_matrix.GCj) == 6, 'len(GCj)=%s GCj=%s matrix=\n%s' % (len(a_matrix.GCj), a_matrix.GCj, a_matrix)
-
-
         self.assertTrue(array_equal(reals_expected, reals_actual))
+        a_matrix.get_matrix()
 
     def test_dmig_2(self):
         model = BDF(debug=False)
@@ -55,6 +54,7 @@ class TestDMIG(unittest.TestCase):
         assert len(a_matrix.GCj) == 6, 'len(GCj)=%s GCj=%s matrix=\n%s' % (len(a_matrix.GCj), a_matrix.GCj, a_matrix)
 
         self.assertTrue(array_equal(REAL_expected, REAL_actual))
+        a_matrix.get_matrix()
 
         #model2 = BDF(debug=False)
         #bdf_name = os.path.join(test_path, 'include_dir', 'include.inc')
@@ -84,6 +84,7 @@ class TestDMIG(unittest.TestCase):
 
         IMAG_expected = array(IMAG_expected_real) + array(IMAG_expected_imag)*1j
         self.assertTrue(array_equal(IMAG_expected, IMAG_actual))
+        a_matrix.get_matrix()
 
     def test_dmig_4(self):
         model = BDF(debug=False)
@@ -112,6 +113,7 @@ class TestDMIG(unittest.TestCase):
         msg += '\n%s_expected\n%s\n----' % ('IMAGS', IMAGS_expected)
         msg += '\n%s_delta\n%s\n----' % ('IMAGS', IMAGS_actual-IMAGS_expected)
         self.assertTrue(array_equal(IMAGS_expected, IMAGS_actual), msg)
+        a_matrix.get_matrix()
 
     def test_dmig_5(self):
         model = BDF(debug=False)
@@ -139,6 +141,7 @@ class TestDMIG(unittest.TestCase):
         msg += '\n%s_expected\n%s\n----' % ('POLE', POLE_expected)
         msg += '\n%s_delta\n%s\n----' % ('POLE', POLE_actual-POLE_expected)
         self.assertTrue(array_equal(POLE_expected, POLE_actual), msg)
+        a_matrix.get_matrix()
 
     def test_dmig_06(self):
         lines = ['DMIG    ENFORCE 0       1       1       0']
@@ -166,6 +169,7 @@ class TestDMIG(unittest.TestCase):
         a_matrix = model.dmigs['A']
         assert len(a_matrix.GCi) == 3, 'len(GCi)=%s GCi=%s matrix=\n%s' % (len(a_matrix.GCi), a_matrix.GCi, a_matrix)
         assert len(a_matrix.GCj) == 3, 'len(GCj)=%s GCj=%s matrix=\n%s' % (len(a_matrix.GCj), a_matrix.GCj, a_matrix)
+        #a_matrix.get_matrix()
 
     def test_dmig_08(self):
         cards = [
@@ -182,6 +186,7 @@ class TestDMIG(unittest.TestCase):
         a_matrix = model.dmigs['A']
         assert len(a_matrix.GCi) == 3, 'len(GCi)=%s GCi=%s matrix=\n%s' % (len(a_matrix.GCi), a_matrix.GCi, a_matrix)
         assert len(a_matrix.GCj) == 3, 'len(GCj)=%s GCj=%s matrix=\n%s' % (len(a_matrix.GCj), a_matrix.GCj, a_matrix)
+        #a_matrix.get_matrix()
 
     def test_dmig_09(self):
         cards = [
@@ -198,6 +203,7 @@ class TestDMIG(unittest.TestCase):
         a_matrix = model.dmigs['A']
         assert len(a_matrix.GCi) == 3, 'len(GCi)=%s GCi=%s matrix=\n%s' % (len(a_matrix.GCi), a_matrix.GCi, a_matrix)
         assert len(a_matrix.GCj) == 3, 'len(GCj)=%s GCj=%s matrix=\n%s' % (len(a_matrix.GCj), a_matrix.GCj, a_matrix)
+        #a_matrix.get_matrix()
 
     def test_dmig_10(self):
         """symmetric"""
@@ -216,6 +222,7 @@ class TestDMIG(unittest.TestCase):
         assert len(a_matrix.GCi) == 4, 'len(GCi)=%s GCi=%s matrix=\n%s' % (len(a_matrix.GCi), a_matrix.GCi, a_matrix)
         assert len(a_matrix.GCj) == 4, 'len(GCj)=%s GCj=%s matrix=\n%s' % (len(a_matrix.GCj), a_matrix.GCj, a_matrix)
         assert a_matrix.shape == (4, 4), 'shape=%s' % str(a_matrix.shape)
+        a_matrix.get_matrix()
 
     def test_dmi_01(self):
         data = """
@@ -328,6 +335,7 @@ DMI         W2GJ       1       1 1.54685.1353939.1312423.0986108.0621382
         model.read_bdf('dmi.bdf', punch=True)
         w2gj = model.dmis['W2GJ']
         assert w2gj.shape == (1200, 1), w2gj.shape
+        w2gj.get_matrix()
 
         real2 = []
         for i, real in enumerate(w2gj.Real):
