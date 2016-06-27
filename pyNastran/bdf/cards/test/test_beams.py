@@ -491,23 +491,23 @@ class TestBeams(unittest.TestCase):
         #assert allclose(cbeam.MassPerLength(), 10.25), cbeam.MassPerLength()
         #assert allclose(mass, 10.25), mass
 
-        f = open('pbeam12.bdf', 'w')
-        case_control_lines = (
-            'SOL 101\n'
-            'CEND\n'
-            'SUBCASE 1\n'
-            '    STRESS(PLOT,SORT1,REAL) = ALL\n'
-            '    SPC = 123456\n'
-            '    LOAD = 100\n'
-            'BEGIN BULK\n'
-            'PARAM,GRDPNT,0\n'
-            'PARAM,POST,-1\n'
-            'PARAM   POSTEXT YES\n'
-        )
-        f.write(case_control_lines)
-        model.write_bdf(f, enddata=True)
-        f.close()
-        model2 = BDF()
+        with open('pbeam12.bdf', 'w') as f:
+            case_control_lines = (
+                'SOL 101\n'
+                'CEND\n'
+                'SUBCASE 1\n'
+                '    STRESS(PLOT,SORT1,REAL) = ALL\n'
+                '    SPC = 123456\n'
+                '    LOAD = 100\n'
+                'BEGIN BULK\n'
+                'PARAM,GRDPNT,0\n'
+                'PARAM,POST,-1\n'
+                'PARAM   POSTEXT YES\n'
+            )
+            f.write(case_control_lines)
+            model.write_bdf(f, enddata=True)
+
+        model2 = BDF(debug=False)
         model2.read_bdf('pbeam12.bdf')
         import os
         if not os.path.exists('pbeam12.op2') and 0:

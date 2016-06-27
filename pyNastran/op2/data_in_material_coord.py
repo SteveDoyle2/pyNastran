@@ -2,12 +2,13 @@ import os
 import copy
 
 import numpy as np
-from numpy import cos, sin
+from numpy import cos, sin, cross
 from numpy.linalg import norm
 
 from pyNastran.op2.op2 import OP2
 from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.test.bdf_unit_tests import Tester
+from pyNastran.utils import integer_types
 
 force_vectors = ['cquad4_force', 'cquad8_force', 'cquadr_force',
         'ctria3_force', 'ctria6_force', 'ctriar_force']
@@ -38,7 +39,7 @@ def transf_Mohr(Sxx, Syy, Sxy, thetarad):
     Sxy = np.asarray(Sxy)
     thetarad = np.asarray(thetarad)
     Scenter = (Sxx + Syy)/2.
-    R = ((Sxx - Scenter)**2 + Sxy**2)**0.5
+    R = np.sqrt((Sxx - Scenter)**2 + Sxy**2)
     thetarad_Mohr = np.arctan2(-Sxy, Sxx - Scenter) + 2*thetarad
     cos_Mohr = cos(thetarad_Mohr)
     Sxx_theta = Scenter + R*cos_Mohr
@@ -87,13 +88,33 @@ def get_eids_from_op2_vector(vector):
     return eids
 
 
-def check_theta(theta):
+def is_mcid(elem):
+    if isinstance(elem.thetaMcid, integer_types):
+        return True
+    else:
+        return False
+
+
+def check_theta(elem):
+    theta = elem.thetaMcid
     if theta is None:
         return 0.
-    elif isinstance(theta, int):
-        raise NotImplementedError('MCID currently not supported')
     elif isinstance(theta, float):
         return theta
+    elif isinstance(theta, integer_types):
+        raise ValueError('MCID is accepted by this function')
+
+
+def angle2vec(v1, v2):
+    den = norm(v1, axis=1) * norm(v2, axis=1)
+    return np.arccos((v1 * v2).sum(axis=1) / den)
+
+
+def calc_imat(normals, csysi):
+    jmat = cross(normals, csysi) # k x i
+    jmat /= norm(jmat)
+    imat = cross(jmat, normals)
+    return imat
 
 
 def data_in_material_coord(bdf, op2, in_place=False):
@@ -131,36 +152,77 @@ def data_in_material_coord(bdf, op2, in_place=False):
 
     eids = np.array(list(bdf.elements.keys()))
     elems = np.array(list(bdf.elements.values()))
-    thetadeg = np.array([check_theta(e.thetaMcid) for e in elems])
+    mcid = np.array([is_mcid(e) for e in elems])
+    elemsmcid = elems[mcid]
+    elemstheta = elems[~mcid]
+
+    thetadeg = np.zeros(elems.shape)
+    thetadeg[~mcid] = np.array([check_theta(e) for e in elemstheta])
     thetarad = np.deg2rad(thetadeg)
 
+    #NOTE separating quad types to get vectorizable "corner"
     quad_types = ['CQUAD4', 'CQUAD8', 'CQUADR']
     for quad_type in quad_types:
-        isquad = np.array([quad_type in e.type for e in elems])
-        if not np.any(isquad):
-            continue
+        # elems with THETA
+        thisquad = np.array([quad_type in e.type for e in elemstheta])
+        if np.any(thisquad):
+            quadelems = elemstheta[thisquad]
+            corner = np.array([e.get_node_positions() for e in quadelems])
+            g1 = corner[:, 0, :]
+            g2 = corner[:, 1, :]
+            g3 = corner[:, 2, :]
+            g4 = corner[:, 3, :]
+            betarad = angle2vec(g3 - g1, g2 - g1)
+            gammarad = angle2vec(g4 - g2, g1 - g2)
+            alpharad = (betarad + gammarad) / 2.
+            tmp = thetarad[~mcid]
+            tmp[thisquad] -= betarad
+            tmp[thisquad] += alpharad
+            thetarad[~mcid] = tmp
 
-        quadelems = elems[isquad]
+        # elems with MCID
+        thisquad = np.array([quad_type in e.type for e in elemsmcid])
+        if np.any(thisquad):
+            quadelems = elemsmcid[thisquad]
+            corner = np.array([e.get_node_positions() for e in quadelems])
+            g1 = corner[:, 0, :]
+            g2 = corner[:, 1, :]
+            g3 = corner[:, 2, :]
+            g4 = corner[:, 3, :]
+            normals = np.array([e.Normal() for e in quadelems])
+            csysi = np.array([bdf.coords[e.thetaMcid].i for e in quadelems])
+            imat = calc_imat(normals, csysi)
+            tmp = thetarad[mcid]
+            tmp[thisquad] = angle2vec(g2 - g1, imat)
+            # getting sign of THETA
+            check_normal = cross(g2 - g1, imat)
+            tmp[thisquad] *= np.sign((check_normal * normals).sum(axis=1))
+            betarad = angle2vec(g3 - g1, g2 - g1)
+            gammarad = angle2vec(g4 - g2, g1 - g2)
+            alpharad = (betarad + gammarad) / 2.
+            tmp[thisquad] -= betarad
+            tmp[thisquad] += alpharad
+            thetarad[mcid] = tmp
 
-        coords = np.array([e.get_node_positions() for e in quadelems])
-        g1 = coords[:, 0, :]
-        g2 = coords[:, 1, :]
-        g3 = coords[:, 2, :]
-        g4 = coords[:, 3, :]
-
-        v1 = g3 - g1
-        v2 = g2 - g1
-        den = norm(v1, axis=1) * norm(v2, axis=1)
-        betarad = np.arccos((v1 * v2).sum(axis=1) / den)
-
-        v1 = g4 - g2
-        v2 = g1 - g2
-        den = norm(v1, axis=1) * norm(v2, axis=1)
-        gammarad = np.arccos((v1 * v2).sum(axis=1) / den)
-
-        alpharad = (betarad + gammarad) / 2.
-        thetarad[isquad] -= betarad
-        thetarad[isquad] += alpharad
+    tria_types = ['CTRIA3', 'CTRIA6', 'CTRIAR']
+    for tria_type in tria_types:
+        # elems with MCID
+        thistria = np.array([tria_type in e.type for e in elemsmcid])
+        if np.any(thistria):
+            triaelems = elemsmcid[thistria]
+            corner = np.array([e.get_node_positions() for e in triaelems])
+            g1 = corner[:, 0, :]
+            g2 = corner[:, 1, :]
+            g3 = corner[:, 2, :]
+            normals = np.array([e.Normal() for e in triaelems])
+            csysi = np.array([bdf.coords[e.thetaMcid].i for e in triaelems])
+            imat = calc_imat(normals, csysi)
+            tmp = thetarad[mcid]
+            tmp[thistria] = angle2vec(g2 - g1, imat)
+            # getting sign of THETA
+            check_normal = cross(g2 - g1, imat)
+            tmp[thistria] *= np.sign((check_normal * normals).sum(axis=1))
+            thetarad[mcid] = tmp
 
     thetarad = dict([[eid, theta] for eid, theta in zip(eids, thetarad)])
     thick_array = dict([[eid, e.pid.t] for eid, e, in zip(eids, elems)])

@@ -16,13 +16,13 @@ CASES = [
     ['test_dummy_wing_metallic', 'dummy_wing_metallic', 1],
     ]
 
-SUMDIFFTOL = 0.2
+RTOL = 0.01
+ATOL = 0.01
 
 
 class TestMaterialCoord(unittest.TestCase):
     def test_force(self):
         for folder, prefix, subcase in CASES:
-            is_failed = False
             bdf = BDF(debug=False)
             op2 = OP2(debug=False)
             basepath = os.path.join(pkg_path, 'op2', 'test', folder)
@@ -32,24 +32,19 @@ class TestMaterialCoord(unittest.TestCase):
             for vecname in force_vectors:
                 name = os.path.join(basepath, '{0}_subcase_{1:02d}.txt'.format(vecname, subcase))
                 if not os.path.isfile(name):
-                    continue
+                    raise AssertionError('Not found reference result {0}'.format(name))
                 ref_result = np.loadtxt(name)
                 vector = getattr(op2_new, vecname)[subcase]
                 data = vector.data
                 eids = get_eids_from_op2_vector(vector)
                 check = eids != 0
                 if 'cquad8' in vecname:
-                    test = abs((data[:, check][:, 0::5, :] - ref_result[0::5]).sum())
+                    assert np.allclose(data[:, check][:, 0::5, :], ref_result[0::5], rtol=RTOL, atol=ATOL)
                 else:
-                    test = abs((data[:, check] - ref_result).sum())
-                if test > SUMDIFFTOL:
-                    print('FAILED %r' % name)
-                    is_failed = True
-            assert is_failed == False
+                    assert np.allclose(data[:, check], ref_result, rtol=RTOL, atol=ATOL)
 
     def test_stress(self):
         for folder, prefix, subcase in CASES:
-            is_failed = False
             bdf = BDF(debug=False)
             op2 = OP2(debug=False)
             basepath = os.path.join(pkg_path, 'op2', 'test', folder)
@@ -59,25 +54,20 @@ class TestMaterialCoord(unittest.TestCase):
             for vecname in stress_vectors:
                 name = os.path.join(basepath, '{0}_subcase_{1:02d}.txt'.format(vecname, subcase))
                 if not os.path.isfile(name):
-                    continue
+                    raise AssertionError('Not found reference result {0}'.format(name))
                 ref_result = np.loadtxt(name)
                 vector = getattr(op2_new, vecname)[subcase]
                 data = vector.data
                 eids = get_eids_from_op2_vector(vector)
                 check = eids != 0
                 if 'cquad8' in vecname:
-                    test = abs((data[:, check][:, 0::10, :] - ref_result[0::10]).sum())
-                    test += abs((data[:, check][:, 1::10, :] - ref_result[1::10]).sum())
+                    assert np.allclose(data[:, check][:, 0::10, :], ref_result[0::10], rtol=RTOL, atol=ATOL)
+                    assert np.allclose(data[:, check][:, 1::10, :], ref_result[1::10], rtol=RTOL, atol=ATOL)
                 else:
-                    test = abs((data[:, check] - ref_result).sum())
-                if test > SUMDIFFTOL:
-                    print('FAILED %r' % name)
-                    is_failed = True
-            assert is_failed == False
+                    assert np.allclose(data[:, check], ref_result, rtol=RTOL, atol=ATOL)
 
     def test_strain(self):
         for folder, prefix, subcase in CASES:
-            is_failed = False
             bdf = BDF(debug=False)
             op2 = OP2(debug=False)
             basepath = os.path.join(pkg_path, 'op2', 'test', folder)
@@ -87,21 +77,17 @@ class TestMaterialCoord(unittest.TestCase):
             for vecname in strain_vectors:
                 name = os.path.join(basepath, '{0}_subcase_{1:02d}.txt'.format(vecname, subcase))
                 if not os.path.isfile(name):
-                    continue
+                    raise AssertionError('Not found reference result {0}'.format(name))
                 ref_result = np.loadtxt(name)
                 vector = getattr(op2_new, vecname)[subcase]
                 data = vector.data
                 eids = get_eids_from_op2_vector(vector)
                 check = eids != 0
                 if 'cquad8' in vecname:
-                    test = abs((data[:, check][:, 0::10, :] - ref_result[0::10]).sum())
-                    test += abs((data[:, check][:, 1::10, :] - ref_result[1::10]).sum())
+                    assert np.allclose(data[:, check][:, 0::10, :], ref_result[0::10], rtol=RTOL, atol=ATOL)
+                    assert np.allclose(data[:, check][:, 1::10, :], ref_result[1::10], rtol=RTOL, atol=ATOL)
                 else:
-                    test = abs((data[:, check] - ref_result).sum())
-                if test > SUMDIFFTOL:
-                    print('FAILED %r' % name)
-                    is_failed = True
-            assert is_failed == False
+                    assert np.allclose(data[:, check], ref_result, rtol=RTOL, atol=ATOL)
 
 
 if __name__ == '__main__':

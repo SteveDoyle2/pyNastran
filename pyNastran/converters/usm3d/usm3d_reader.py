@@ -90,8 +90,9 @@ class Usm3d(object):
         5          3       3         0         0      Sideflow -> Characteristic Inflow/Outflow
         7          1       1         0         0      Symmetry -> Reflection plane
         """
-        mapbc_file = open(mapbc_filename, 'r')
-        lines = mapbc_file.readlines()
+        with open(mapbc_filename, 'r') as mapbc_file:
+            lines = mapbc_file.readlines()
+
         lines2 = []
         for line in lines:
             if len(line.strip().split('#')[0]) > 0:
@@ -104,7 +105,6 @@ class Usm3d(object):
             #self.log.info(sline)
             patch_id, bc, family, surf, surf_ids = sline[:5]
             mapbc[int(patch_id)] = int(bc)
-        mapbc_file.close()
         return mapbc
 
     def read_usm3d(self, basename, dimension_flag, read_loads=True):
@@ -174,11 +174,11 @@ class Usm3d(object):
         #self.read_front(front_file)
         #self.read_face(face_file)
 
-    def read_bc(self, bc_file, stop_after_header=False, get_lbouf=False):
-        print("bc_file = %r" % bc_file)
-        f = open(bc_file, 'r')
-        lines = f.readlines()
-        f.close()
+    def read_bc(self, bc_filename, stop_after_header=False, get_lbouf=False):
+        print("bc_filename = %r" % bc_filename)
+        with open(bc_filename, 'r') as bc_file:
+            lines = f.readlines()
+
         #mbouf,dum1,dum1,igrid
         header = lines[0].strip().split()
 
@@ -439,44 +439,32 @@ class Usm3d(object):
         rhoW = zeros(n, 'float32')
         e = zeros(n, 'float32')
 
-        flo_file = open(flo_filename, 'r')
-        line = flo_file.readline().strip()
-        try:
-            #file is messsed up
-            mach = float(line)
-        except:
-            raise
-            loads['Cp'] = e  # it's 0 anyways...
-            return node_id, loads
+        with open(flo_filename, 'r') as flo_file:
+            line = flo_file.readline().strip()
+            try:
+                #file is messsed up
+                mach = float(line)
+            except:
+                raise
+                loads['Cp'] = e  # it's 0 anyways...
+                return node_id, loads
 
 
-        # determine the number of variables on each line
-        sline1 = flo_file.readline().strip().split()
-        nvars = None
-        if len(sline1) == 6:
-            nvars = 6
-            rhoi, rhoui, rhovi, rhowi, ei = Float(sline1[1:], 5)
-        else:
-            nvars = 5
-            rhoi, rhoui, rhovi, rhowi = Float(sline1[1:], 4)
-            sline2 = flo_file.readline().strip().split()
-            ei = Float(sline2, 1)[0]
+            # determine the number of variables on each line
+            sline1 = flo_file.readline().strip().split()
+            nvars = None
+            if len(sline1) == 6:
+                nvars = 6
+                rhoi, rhoui, rhovi, rhowi, ei = Float(sline1[1:], 5)
+            else:
+                nvars = 5
+                rhoi, rhoui, rhovi, rhowi = Float(sline1[1:], 4)
+                sline2 = flo_file.readline().strip().split()
+                ei = Float(sline2, 1)[0]
 
-        # set the i=0 values
-        if not is_sparse:
-            nmax = n
-            i = 0
-            node_id[i] = sline1[0]
-            rho[i] = rhoi
-            rhoU[i] = rhoui
-            rhoV[i] = rhovi
-            rhoW[i] = rhowi
-            e[i] = ei
-        else:
-            ni = 0
-            node_ids_minus_1 = array(node_ids) - 1
-            nmax = node_ids_minus_1.max() + 1
-            if 0 in node_ids_minus_1:
+            # set the i=0 values
+            if not is_sparse:
+                nmax = n
                 i = 0
                 node_id[i] = sline1[0]
                 rho[i] = rhoi
@@ -484,60 +472,37 @@ class Usm3d(object):
                 rhoV[i] = rhovi
                 rhoW[i] = rhowi
                 e[i] = ei
-                ni += 1
-
-        # loop over the rest of the data in the flo file
-        if node_ids is None:
-            ni = n
-            # extract nodes 1, 2, ... 10, but not 11+
-            if nvars == 6:  # sequential nvars=6
-                for i in range(1, n):
-                    sline1 = flo_file.readline().strip().split()
-                    rhoi, rhoui, rhovi, rhowi, ei = Float(sline1[1:], 5)
+            else:
+                ni = 0
+                node_ids_minus_1 = array(node_ids) - 1
+                nmax = node_ids_minus_1.max() + 1
+                if 0 in node_ids_minus_1:
+                    i = 0
                     node_id[i] = sline1[0]
                     rho[i] = rhoi
                     rhoU[i] = rhoui
                     rhoV[i] = rhovi
                     rhoW[i] = rhowi
                     e[i] = ei
-                    assert len(sline1) == 6, 'len(sline1)=%s' % len(sline1)
-            else:  # sequential nvars=5
-                for i in range(1, n):
-                    sline1 = flo_file.readline().strip().split()
-                    rhoi, rhoui, rhovi, rhowi = Float(sline1[1:], 4)
-                    assert len(sline1) == 5, 'len(sline1)=%s' % len(sline1)
+                    ni += 1
 
-                    sline2 = flo_file.readline().strip().split()
-                    ei = Float(sline2, 1)[0]
-
-                    node_id[i] = sline1[0]
-                    rho[i] = rhoi
-                    rhoU[i] = rhoui
-                    rhoV[i] = rhovi
-                    rhoW[i] = rhowi
-                    e[i] = ei
-                    assert len(sline2) == 1, 'len(sline2)=%s' % len(sline2)
-        else:
-            # extract node 1, 2, and 10
-            if nvars == 6:  # dynamic nvars=6
-                for i in range(1, nmax):
-                    if i in node_ids_minus_1:
+            # loop over the rest of the data in the flo file
+            if node_ids is None:
+                ni = n
+                # extract nodes 1, 2, ... 10, but not 11+
+                if nvars == 6:  # sequential nvars=6
+                    for i in range(1, n):
                         sline1 = flo_file.readline().strip().split()
                         rhoi, rhoui, rhovi, rhowi, ei = Float(sline1[1:], 5)
-
-                        node_id[ni] = sline1[0]
-                        rho[ni] = rhoi
-                        rhoU[ni] = rhoui
-                        rhoV[ni] = rhovi
-                        rhoW[ni] = rhowi
-                        e[ni] = ei
+                        node_id[i] = sline1[0]
+                        rho[i] = rhoi
+                        rhoU[i] = rhoui
+                        rhoV[i] = rhovi
+                        rhoW[i] = rhowi
+                        e[i] = ei
                         assert len(sline1) == 6, 'len(sline1)=%s' % len(sline1)
-                        ni += 1
-                    else:
-                        line1 = flo_file.readline()
-            else:  # dynamic nvars=5
-                for i in range(1, nmax):
-                    if i in node_ids_minus_1:
+                else:  # sequential nvars=5
+                    for i in range(1, n):
                         sline1 = flo_file.readline().strip().split()
                         rhoi, rhoui, rhovi, rhowi = Float(sline1[1:], 4)
                         assert len(sline1) == 5, 'len(sline1)=%s' % len(sline1)
@@ -545,18 +510,52 @@ class Usm3d(object):
                         sline2 = flo_file.readline().strip().split()
                         ei = Float(sline2, 1)[0]
 
-                        node_id[ni] = sline1[0]
-                        rho[ni] = rhoi
-                        rhoU[ni] = rhoui
-                        rhoV[ni] = rhovi
-                        rhoW[ni] = rhowi
-                        e[ni] = ei
+                        node_id[i] = sline1[0]
+                        rho[i] = rhoi
+                        rhoU[i] = rhoui
+                        rhoV[i] = rhovi
+                        rhoW[i] = rhowi
+                        e[i] = ei
                         assert len(sline2) == 1, 'len(sline2)=%s' % len(sline2)
-                        ni += 1
-                    else:
-                        line1 = flo_file.readline()
-                        line2 = flo_file.readline()
-        flo_file.close()
+            else:
+                # extract node 1, 2, and 10
+                if nvars == 6:  # dynamic nvars=6
+                    for i in range(1, nmax):
+                        if i in node_ids_minus_1:
+                            sline1 = flo_file.readline().strip().split()
+                            rhoi, rhoui, rhovi, rhowi, ei = Float(sline1[1:], 5)
+
+                            node_id[ni] = sline1[0]
+                            rho[ni] = rhoi
+                            rhoU[ni] = rhoui
+                            rhoV[ni] = rhovi
+                            rhoW[ni] = rhowi
+                            e[ni] = ei
+                            assert len(sline1) == 6, 'len(sline1)=%s' % len(sline1)
+                            ni += 1
+                        else:
+                            line1 = flo_file.readline()
+                else:  # dynamic nvars=5
+                    for i in range(1, nmax):
+                        if i in node_ids_minus_1:
+                            sline1 = flo_file.readline().strip().split()
+                            rhoi, rhoui, rhovi, rhowi = Float(sline1[1:], 4)
+                            assert len(sline1) == 5, 'len(sline1)=%s' % len(sline1)
+
+                            sline2 = flo_file.readline().strip().split()
+                            ei = Float(sline2, 1)[0]
+
+                            node_id[ni] = sline1[0]
+                            rho[ni] = rhoi
+                            rhoU[ni] = rhoui
+                            rhoV[ni] = rhovi
+                            rhoW[ni] = rhowi
+                            e[ni] = ei
+                            assert len(sline2) == 1, 'len(sline2)=%s' % len(sline2)
+                            ni += 1
+                        else:
+                            line1 = flo_file.readline()
+                            line2 = flo_file.readline()
 
         assert len(rho) == ni
 
@@ -647,78 +646,73 @@ def write_cogsg_volume(model, cogsg_file):
     nnodes = self.nodes.shape[0]
     ntets = self.tets.shape[0]
 
-    outfile = open(cogsg_file, 'wb')
+    with open(cogsg_file, 'wb') as outfile:
+        # file header
+        values = [32 + ntets * 4 * 4,]
+        block_size = pack('>i', *values)
+        outfile.write(block_size)
 
-    # file header
+        header = self.header
+        values_header = [
+            header['inew'],
+            header['nElements'],
+            header['nPoints'],
+            header['nBoundPts'],
+            header['nViscPts'],
+            header['nViscElem'],
+            header['tc'], # d
+            ]
+        #n = 36
+        Format = '>6id'
+        model.log.debug("Format = %r" % Format)
+        data = pack(Format, *values_header)
+        outfile.write(data)
+        #print("outfile.tell = %s" % outfile.tell())
+        #outfile.write(block_size)
+        #--------------------------------------------------------------------------
+        tets = self.tets
 
-    values = [32 + ntets * 4 * 4,]
-    block_size = pack('>i', *values)
-    outfile.write(block_size)
+        # tet header
+        #values = [ntets * 4 * 4]  # n1, n2, n3, n4 -> 4; 4 -> int
+        #block_size = pack('>i', *values)
+        #outfile.write(block_size)
 
-    header = self.header
-    values_header = [
-        header['inew'],
-        header['nElements'],
-        header['nPoints'],
-        header['nBoundPts'],
-        header['nViscPts'],
-        header['nViscElem'],
-        header['tc'], # d
-        ]
-    #n = 36
-    Format = '>6id'
-    model.log.debug("Format = %r" % Format)
-    data = pack(Format, *values_header)
-    outfile.write(data)
-    #print("outfile.tell = %s" % outfile.tell())
-    #outfile.write(block_size)
-    #--------------------------------------------------------------------------
-    tets = self.tets
+        # tets
+        Format = '>%si' % ntets
+        n0 = tets[:, 0] + 1
+        n1 = tets[:, 1] + 1
+        n2 = tets[:, 2] + 1
+        n3 = tets[:, 3] + 1
+        #print("n0 = %s" % n0)
+        outfile.write(pack(Format, *n0))
+        outfile.write(pack(Format, *n1))
+        outfile.write(pack(Format, *n2))
+        outfile.write(pack(Format, *n3))
+        #n += 4 * 8 * ntets
+        #print "outfile.tell 2 = ", outfile.tell(), n
 
-    # tet header
-    #values = [ntets * 4 * 4]  # n1, n2, n3, n4 -> 4; 4 -> int
-    #block_size = pack('>i', *values)
-    #outfile.write(block_size)
+        # tet footer
+        outfile.write(block_size)
+        #--------------------------------------------------------------------------
 
-    # tets
-    Format = '>%si' % ntets
-    n0 = tets[:, 0] + 1
-    n1 = tets[:, 1] + 1
-    n2 = tets[:, 2] + 1
-    n3 = tets[:, 3] + 1
-    #print("n0 = %s" % n0)
-    outfile.write(pack(Format, *n0))
-    outfile.write(pack(Format, *n1))
-    outfile.write(pack(Format, *n2))
-    outfile.write(pack(Format, *n3))
-    #n += 4 * 8 * ntets
-    #print "outfile.tell 2 = ", outfile.tell(), n
+        # nodes header
+        values = [nnodes * 3 * 8]  # xyz -> 3; 8 -> double precision (???)
+        block_size = pack('>i', *values)
+        outfile.write(block_size)
 
-    # tet footer
-    outfile.write(block_size)
-    #--------------------------------------------------------------------------
+        # nodes
+        #npoints = header['nPoints']
+        Format = '>%sd' % nnodes
+        nodes = self.nodes
+        n0 = nodes[:, 0]
+        n1 = nodes[:, 1]
+        n2 = nodes[:, 2]
+        outfile.write(pack(Format, *n0))
+        outfile.write(pack(Format, *n1))
+        outfile.write(pack(Format, *n2))
 
-    # nodes header
-    values = [nnodes * 3 * 8]  # xyz -> 3; 8 -> double precision (???)
-    block_size = pack('>i', *values)
-    outfile.write(block_size)
-
-    # nodes
-    #npoints = header['nPoints']
-    Format = '>%sd' % nnodes
-    nodes = self.nodes
-    n0 = nodes[:, 0]
-    n1 = nodes[:, 1]
-    n2 = nodes[:, 2]
-    outfile.write(pack(Format, *n0))
-    outfile.write(pack(Format, *n1))
-    outfile.write(pack(Format, *n2))
-
-    # nodes footer
-    outfile.write(block_size)
-
-    #--------------------------------------------------------------------------
-    outfile.close()
+        # nodes footer
+        outfile.write(block_size)
 
 
 def main():

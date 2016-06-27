@@ -330,56 +330,55 @@ class LoadMapping(object):
         log.info("build_centroids - aero")
         aero_centroids = self.build_centroids(aero_model)
 
-        map_file = open('mappingMatrix.out', 'wb')
-        map_file.write('# aEID distribution (sEID:  weight)\n')
+        with open('mappingMatrix.out', 'wb') as map_file:
+            map_file.write('# aEID distribution (sEID:  weight)\n')
 
-        t0 = time()
-        nAeroElements = float(len(aElementIDs))
-        log.info("---start piercing---")
-        if debug:
-            log.info("nAeroElements = %s" % nAeroElements)
-        tEst = 1.
-        tLeft = 1.
-        percent_done = 0.
+            t0 = time()
+            nAeroElements = float(len(aElementIDs))
+            log.info("---start piercing---")
+            if debug:
+                log.info("nAeroElements = %s" % nAeroElements)
+            tEst = 1.
+            tLeft = 1.
+            percent_done = 0.
 
-        if 1:
-            num_cpus = 4
-            pool = mp.Pool(num_cpus)
-            result = pool.imap(self.map_loads_mp_func,
-                               [(aEID, aero_model) for aEID in aElementIDs])
+            if 1:
+                num_cpus = 4
+                pool = mp.Pool(num_cpus)
+                result = pool.imap(self.map_loads_mp_func,
+                                   [(aEID, aero_model) for aEID in aElementIDs])
 
-            for j, return_values in enumerate(result):
-                aEID, distribution = return_values
-                #self.mappingMatrix[aEID] = distribution
-                map_file.write('%s %s\n' % (aEID, distribution))
-            pool.close()
-            pool.join()
-        else:
-            for (i, aero_eid) in enumerate(aElementIDs):
-                if i % 1000 == 0 and debug:
-                    log.debug('  piercing %sth element' % i)
-                    log.debug("tEst=%g minutes; tLeft=%g minutes; %.3f%% done" % (
-                        tEst, tLeft, percent_done))
-                    sys.stdout.flush()
+                for j, return_values in enumerate(result):
+                    aEID, distribution = return_values
+                    #self.mappingMatrix[aEID] = distribution
+                    map_file.write('%s %s\n' % (aEID, distribution))
+                pool.close()
+                pool.join()
+            else:
+                for (i, aero_eid) in enumerate(aElementIDs):
+                    if i % 1000 == 0 and debug:
+                        log.debug('  piercing %sth element' % i)
+                        log.debug("tEst=%g minutes; tLeft=%g minutes; %.3f%% done" % (
+                            tEst, tLeft, percent_done))
+                        sys.stdout.flush()
 
-                aElement = aero_model.Element(aero_eid)
-                (aArea, aCentroid, aNormal) = aero_model.get_element_properties(aero_eid)
-                percentDone = i / nAeroElements * 100
-                if debug:
-                    log.info('aEID=%s percentDone=%.2f aElement=%s aArea=%s aCentroid=%s aNormal=%s' %(
-                        aero_eid, percentDone, aElement, aArea, aCentroid, aNormal))
-                pSource = aCentroid
-                (distribution) = self.pierce_elements(aCentroid, aero_eid, pSource, aNormal)
-                #(distribution)  = self.poorMansMapping(aCentroid, aero_eid, pSource, aNormal)
-                self.mapping_matrix[aero_eid] = distribution
-                map_file.write('%s %s\n' % (aero_eid, distribution))
+                    aElement = aero_model.Element(aero_eid)
+                    (aArea, aCentroid, aNormal) = aero_model.get_element_properties(aero_eid)
+                    percentDone = i / nAeroElements * 100
+                    if debug:
+                        log.info('aEID=%s percentDone=%.2f aElement=%s aArea=%s aCentroid=%s aNormal=%s' %(
+                            aero_eid, percentDone, aElement, aArea, aCentroid, aNormal))
+                    pSource = aCentroid
+                    (distribution) = self.pierce_elements(aCentroid, aero_eid, pSource, aNormal)
+                    #(distribution)  = self.poorMansMapping(aCentroid, aero_eid, pSource, aNormal)
+                    self.mapping_matrix[aero_eid] = distribution
+                    map_file.write('%s %s\n' % (aero_eid, distribution))
 
-                dt = (time() - t0) / 60.
-                tEst = dt * nAeroElements / (i + 1)  # dtPerElement*nElements
-                tLeft = tEst - dt
-                percent_done = dt / tEst * 100.
+                    dt = (time() - t0) / 60.
+                    tEst = dt * nAeroElements / (i + 1)  # dtPerElement*nElements
+                    tLeft = tEst - dt
+                    percent_done = dt / tEst * 100.
 
-        map_file.close()
         log.info("---finish piercing---")
         self.run_map_test(self.mapping_matrix)
         #print "mapping_matrix = ", self.mapping_matrix

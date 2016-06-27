@@ -199,6 +199,24 @@ class TestDMIG(unittest.TestCase):
         assert len(a_matrix.GCi) == 3, 'len(GCi)=%s GCi=%s matrix=\n%s' % (len(a_matrix.GCi), a_matrix.GCi, a_matrix)
         assert len(a_matrix.GCj) == 3, 'len(GCj)=%s GCj=%s matrix=\n%s' % (len(a_matrix.GCj), a_matrix.GCj, a_matrix)
 
+    def test_dmig_10(self):
+        """symmetric"""
+        cards = [
+            ['DMIG,AMTRXX,0,6,1,0'],
+            ['DMIG,AMTRXX,2,1, ,2,1,201.0, ,+DM1',
+            '+DM1,2,3,203.0'],
+            ['DMIG,AMTRXX,3,1, ,3,1,301.0, ,+DM2',
+            '+DM2,3,3,303.0'],
+        ]
+        model = BDF(debug=False)
+        for card_lines in cards:
+            model.add_card(card_lines, 'DMIG', is_list=False)
+        model.fill_dmigs()
+        a_matrix = model.dmigs['AMTRXX']
+        assert len(a_matrix.GCi) == 4, 'len(GCi)=%s GCi=%s matrix=\n%s' % (len(a_matrix.GCi), a_matrix.GCi, a_matrix)
+        assert len(a_matrix.GCj) == 4, 'len(GCj)=%s GCj=%s matrix=\n%s' % (len(a_matrix.GCj), a_matrix.GCj, a_matrix)
+        assert a_matrix.shape == (4, 4), 'shape=%s' % str(a_matrix.shape)
+
     def test_dmi_01(self):
         data = """
 DMI         W2GJ       0       2       1       0            1200       1
@@ -306,7 +324,7 @@ DMI         W2GJ       1       1 1.54685.1353939.1312423.0986108.0621382
         """
         with open('dmi.bdf', 'w') as bdf_file:
             bdf_file.write(data)
-        model = BDF()
+        model = BDF(debug=False)
         model.read_bdf('dmi.bdf', punch=True)
         w2gj = model.dmis['W2GJ']
         assert w2gj.shape == (1200, 1), w2gj.shape
@@ -320,7 +338,7 @@ DMI         W2GJ       1       1 1.54685.1353939.1312423.0986108.0621382
 
         model.write_bdf('dmi_out.bdf')
 
-        model2 = BDF()
+        model2 = BDF(debug=False)
         model2.read_bdf('dmi_out.bdf')
         w2gj_new = model.dmis['W2GJ']
         assert w2gj_new.shape == (1200, 1), w2gj_new.shape

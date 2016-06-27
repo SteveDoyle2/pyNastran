@@ -1280,7 +1280,7 @@ def get_bdf_object(bdf_filename, xref=True):
               created (in regards to xref).
     """
     if isinstance(bdf_filename, string_types):
-        model = BDF()
+        model = BDF(debug=False)
         if not os.path.exists('model.obj') or 1:
             model.read_bdf(bdf_filename, xref=False)
             #model.save('model.obj')

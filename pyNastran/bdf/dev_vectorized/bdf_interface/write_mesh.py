@@ -27,7 +27,6 @@ class WriteMesh(object):
         .. todo:: maybe add the write method
         """
         self.cards_to_read = set([])
-        pass
 
     def auto_reject_bdf(self, infile_name):
         """
@@ -37,7 +36,6 @@ class WriteMesh(object):
         .. todo:: maybe add the write method
         """
         self._auto_reject = True
-        pass
 
     def _output_helper(self, out_filename, interspersed, size, precision):
         """

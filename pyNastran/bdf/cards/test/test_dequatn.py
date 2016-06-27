@@ -121,10 +121,9 @@ class TestDEQATN(unittest.TestCase):
         model.add_card(card, 'DEQATN', is_list=False)
         model.cross_reference()
 
-        f = open('junk.bdf', 'wb')
-        model.write_bdf(f, close=False)
-        #s.getvalue()
-        f.close()
+        with open('junk.bdf', 'wb') as f:
+            model.write_bdf(f, close=False)
+            #s.getvalue()
         os.remove('junk.bdf')
 
     def test_deqatn_6(self):

@@ -1216,7 +1216,7 @@ class TestOP2(Tester):
             'BTA' : False,
             'MYDOF' : True,
         }
-        model = BDF()
+        model = BDF(debug=False)
         model.read_bdf(bdf_filename)
 
         dmi_a = model.dmis['A']
@@ -1291,7 +1291,7 @@ class TestOP2(Tester):
             'BTA' : False,
             'MYDOF' : True,
         }
-        model = BDF()
+        model = BDF(debug=False)
         model.read_bdf(bdf_filename)
 
         dmi_a = model.dmis['A']

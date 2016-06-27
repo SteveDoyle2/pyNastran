@@ -698,6 +698,9 @@ class Subcase(object):
 
     def _add_data(self, key, value, options, param_type):
         key = update_param_name(key)
+        if key == 'ANALYSIS' and value == 'FLUT':
+                value = 'FLUTTER'
+
         #print("adding isubcase=%s key=%r value=%r options=%r "
         #      "param_type=%r" %(self.id, key, value, options, param_type))
         if isinstance(value, string_types) and value.isdigit():

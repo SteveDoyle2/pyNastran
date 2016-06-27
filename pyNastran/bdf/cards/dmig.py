@@ -1,10 +1,8 @@
 # pylint: disable=R0902,R0904,R0914
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six.moves import zip, range
 from math import sin, cos, radians, atan2, sqrt, degrees
-#from math import (sin,sinh,cos,cosh,tan,tanh,sqrt,atan,atan2,acosh,acos,asin,
-#                  asinh,atanh) #,atanh2   # going to be used by DEQATN
+from six.moves import zip, range
 
 import numpy as np
 from numpy import array, zeros
@@ -16,8 +14,8 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
 
-from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_blank,
-    double, string, blank, interpret_value)
+from pyNastran.bdf.bdf_interface.assign_type import (
+    integer, integer_or_blank, double, string, interpret_value)
 
 
 class NastranMatrix(BaseCard):
@@ -27,7 +25,19 @@ class NastranMatrix(BaseCard):
     def __init__(self, card=None, data=None, comment=''):
         if comment:
             self._comment = comment
-        if card:
+        #self.ifo = ifo
+        #self.tin = tin
+        #self.tout = tout
+        #self.polar = polar
+        #self.ncol = ncol
+        #self.GCj = GCj
+        #self.GCi = GCi
+        #self.Real = Real
+        #if self.is_complex():
+            #self.Complex = []
+
+    #def add_card_init(self, card, data, comment=''):
+        if card is not None:
             self.name = string(card, 1, 'name')
             #zero
 
@@ -61,6 +71,20 @@ class NastranMatrix(BaseCard):
         if self.is_complex():
             self.Complex = []
 
+    @property
+    def matrix_type(self):
+        if self.ifo == 1:
+            matrix_type = 'square'
+        elif self.ifo == 6:
+            matrix_type = 'symmetric'
+        elif self.ifo in [2, 9]:
+            matrix_type = 'rectangular'
+        else:
+            # technically right, but nulling this will fix bad decks
+            #self.ncol = blank(card, 8, 'ifo=%s; ncol' % self.ifo)
+            raise NotImplementedError('self.ifo=%s is not supported' % self.ifo)
+        return matrix_type
+
     def finalize(self):
         self.GCi = np.asarray(self.GCi)
         self.GCj = np.asarray(self.GCj)
@@ -71,12 +95,18 @@ class NastranMatrix(BaseCard):
     @property
     def shape(self):
         if self.ifo in [1, 6]: # square, symmetric
-            shape = (self.ncol, self.ncol)
+            if self.ncol is not None:
+                shape = (self.ncol, self.ncol)
+            else:
+                nrows, ncols = get_row_col_map(
+                    self.GCi, self.GCj, self.ifo)[:2]
+                shape = (nrows, ncols)
         elif self.ifo in [2, 9]:
             raise NotImplementedError('need to pull the nrows after reading in everything')
-            shape = (self.ncol, self.ncol)
+            #shape = (self.ncol, self.ncol)
         else:
-            raise NotImplementedError('ifo=%s' % ifo)
+            raise NotImplementedError('ifo=%s' % self.ifo)
+        return shape
 
     def write_code_aster(self):
         """
@@ -232,7 +262,8 @@ class NastranMatrix(BaseCard):
         elif self.tin in [3, 4]: # complex
             return True
         msg = ('Matrix %r must have a value of TIN = [1, 2, 3, 4].\n'
-               'TIN defines the type (real, complex) of the matrix.  TIN=%r.' % (self.name, self.tin))
+               'TIN defines the type (real, complex) '
+               'of the matrix.  TIN=%r.' % (self.name, self.tin))
         raise ValueError(msg)
 
     def is_polar(self):
@@ -254,13 +285,10 @@ class NastranMatrix(BaseCard):
             return False
         elif self.polar == 1: # mag, phase
             return True
-        msg = 'Matrix %r must have a value of POLAR = [0, 1].\n' % self.name
-        msg += 'POLAR defines the type (real/imag or mag/phase) complex) of the matrix.  POLAR=%r.' % self.polar
+        msg = ('Matrix %r must have a value of POLAR = [0, 1].\n'
+               'POLAR defines the type (real/imag or mag/phase) complex) '
+               'of the matrix.  POLAR=%r.' % (self.name, self.polar))
         raise ValueError(msg)
-
-    def getDType(self, type_flag):
-        self.deprecated('getDType()', 'get_dtype()', '0.8')
-        return self._get_dtype(type_flag)
 
     @property
     def tin_dtype(self):
@@ -296,7 +324,8 @@ class NastranMatrix(BaseCard):
             if Ci is None:
                 node = model.nodes[Gi]
                 if node.type == 'GRID':
-                    msg = 'Ci on DMIG card must be 1, 2, 3, 4, 5, or 6; Node=%i (GRID); Ci=%s' % (Gi, Ci)
+                    msg = ('Ci on DMIG card must be 1, 2, 3, 4, 5, or 6; '
+                           'Node=%i (GRID); Ci=%s' % (Gi, Ci))
                     raise RuntimeError(msg)
                 elif node.type in ['SPOINT', 'EPOINT']:
                     Ci = 0
@@ -308,7 +337,8 @@ class NastranMatrix(BaseCard):
             if Cj is None:
                 node = model.nodes[Gj]
                 if node.type == 'GRID':
-                    msg = 'Cj on DMIG card must be 1, 2, 3, 4, 5, or 6; Node=%i (GRID); Cj=%s' % (Gj, Cj)
+                    msg = ('Cj on DMIG card must be 1, 2, 3, 4, 5, or 6; '
+                           'Node=%i (GRID); Cj=%s' % (Gj, Cj))
                     raise RuntimeError(msg)
                 elif node.type in ['SPOINT', 'EPOINT']:
                     Cj = 0
@@ -368,6 +398,78 @@ class NastranMatrix(BaseCard):
                     msg += print_card_16(list_fields)
         return msg
 
+def get_row_col_map(GCi, GCj, ifo):
+    rows = {}
+    rows_reversed = {}
+
+    cols = {}
+    cols_reversed = {}
+    ndim = len(GCi.shape)
+    if ndim == 1:
+        i = 0
+        ncols = 1
+        for GCi in GCi:
+            if GCi not in rows:
+                rows[GCi] = i
+                rows_reversed[i] = GCi
+                i += 1
+
+        j = 0
+        for GCj in GCj:
+            if GCj not in cols:
+                cols[GCj] = j
+                cols_reversed[j] = GCj
+                j += 1
+    else:
+        #print('i0=%s j0=%s' % (i, j))
+        nrows = len(GCi)
+        ncols = len(GCj)
+        assert nrows > 0, 'nrows=%s' % nrows
+        #rows_array = np.zeros((nrows, 2), dtype='int32')
+        #cols_array = np.zeros((ncols, 2), dtype='int32')
+        #for i, (nid, comp) in enumerate(GCi):
+            ##print('i=%s nid=%s comp=%s nrows=%s rows_array.shape=%s' % (
+                ##i, nid, comp, nrows, str(rows_array.shape)))
+            #rows_array[i, :] = [nid, comp]
+        #print('rows_array = \n%s' % rows_array)
+
+        #for j, (nid, comp) in enumerate(GCj):
+            #cols_array[j, :] = [nid, comp]
+        #print('cols_array = \n%s' % cols_array)
+
+        i = 0
+        for (nid, comp) in GCi:
+            GCi = (nid, comp)
+            if GCi not in rows:
+                #print('GCi = %s' % str(GCi))
+                rows[GCi] = i
+                rows_reversed[i] = GCi
+                i += 1
+        if ifo == 6:
+            # symmetric:
+            for (nid, comp) in GCj:
+                GCj = (nid, comp)
+                if GCj not in rows:
+                    #print('GCj = %s' % str(GCj))
+                    rows[GCj] = i
+                    rows_reversed[i] = GCj
+                    i += 1
+        else:
+            j = 0
+            for (nid, comp) in GCj:
+                GCj = (nid, comp)
+                if GCj not in cols:
+                    cols[GCj] = j
+                    cols_reversed[j] = GCj
+                    j += 1
+        cols = rows
+        cols_reversed = rows_reversed
+        nrows = len(rows)
+        ncols = len(cols)
+
+    #nrows = len(rows)
+    #ncols = len(cols)
+    return nrows, ncols, ndim, rows, cols, rows_reversed, cols_reversed
 
 def get_matrix(self, is_sparse=False, apply_symmetry=True):
     """
@@ -393,52 +495,25 @@ def get_matrix(self, is_sparse=False, apply_symmetry=True):
 
     .. warning:: is_sparse=True WILL fail
     """
-    i = 0
-    rows = {}
-    rows_reversed = {}
-
-    j = 0
-    cols = {}
-    cols_reversed = {}
-    ndim = len(self.GCi.shape)
-    if ndim == 1:
-        for GCi in self.GCi:
-            if GCi not in rows:
-                rows[GCi] = i
-                rows_reversed[i] = GCi
-                i += 1
-        for GCj in self.GCj:
-            if GCj not in cols:
-                cols[GCj] = j
-                cols_reversed[j] = GCj
-                j += 1
-    else:
-        for (nid, comp) in self.GCi:
-            GCi = (nid, comp)
-            if GCi not in rows:
-                rows[GCi] = i
-                rows_reversed[i] = GCi
-                i += 1
-        for (nid, comp) in self.GCj:
-            GCj = (nid, comp)
-            if GCj not in cols:
-                cols[GCj] = j
-                cols_reversed[j] = GCj
-                j += 1
+    nrows, ncols, ndim, rows, cols, rows_reversed, cols_reversed = get_row_col_map(
+        self.GCi, self.GCj, self.ifo)
+    #print('rows = ', rows)
+    #print('cols = ', cols)
+    #print('i=%s j=%s' % (i, j))
     #nrows = len(rows2)
     #ncols = len(cols2)
 
     #A = ss.lil_matrix((3,3), dtype='d') # double precision
-    #rows=[]
-    #cols=[]
-    #data=[]
+    #rows = []
+    #cols = []
+    #data = []
     #for i in range(3):
-    #    for j in range(3):
-    #        k = float((i+1)*(j+1))
-    #        rows.append(i)
-    #        cols.append(j)
-    #        data.append(k)
-    #        A[i,j] = k
+       #for j in range(3):
+           #k = float((i+1)*(j+1))
+           #rows.append(i)
+           #cols.append(j)
+           #data.append(k)
+           #A[i,j] = k
 
     #is_sparse = False
     if is_sparse:
@@ -473,19 +548,21 @@ def get_matrix(self, is_sparse=False, apply_symmetry=True):
     else:
         if ndim == 1:
             if self.is_complex():
-                M = zeros((i, j), dtype='complex128')
+                M = zeros((nrows, ncols), dtype='complex128')
                 if self.ifo == 6 and apply_symmetry:  # symmetric
-                    for (gcj, gci, reali, complexi) in zip(self.GCj, self.GCi, self.Real, self.Complex):
+                    for (gcj, gci, reali, complexi) in zip(self.GCj, self.GCi,
+                                                           self.Real, self.Complex):
                         i = rows[gci]
                         j = cols[gcj]
                         M[i, j] = complex(reali, complexi)
                         M[j, i] = complex(reali, complexi)
                 else:
-                    for (gcj, gci, reali, complexi) in zip(self.GCj, self.GCi, self.Real, self.Complex):
+                    for (gcj, gci, reali, complexi) in zip(self.GCj, self.GCi,
+                                                           self.Real, self.Complex):
                         i = rows[gci]
                         j = cols[gcj]
             else:
-                M = zeros((i, j), dtype='float64')
+                M = zeros((nrows, ncols), dtype='float64')
                 if self.ifo == 6 and apply_symmetry:  # symmetric
                     for (gcj, gci, reali) in zip(self.GCj, self.GCi, self.Real):
                         i = rows[gci]
@@ -499,26 +576,38 @@ def get_matrix(self, is_sparse=False, apply_symmetry=True):
                         M[i, j] = reali
         else:
             if self.is_complex():
-                M = zeros((i, j), dtype='complex128')
+                M = zeros((nrows, ncols), dtype='complex128')
                 if self.ifo == 6 and apply_symmetry:  # symmetric
-                    for (gcj, gci, reali, complexi) in zip(self.GCj, self.GCi, self.Real, self.Complex):
+                    for (gcj, gci, reali, complexi) in zip(self.GCj, self.GCi,
+                                                           self.Real, self.Complex):
                         i = rows[(gci[0], gci[1])]
                         j = cols[(gcj[0], gcj[1])]
                         M[i, j] = complex(reali, complexi)
                         M[j, i] = complex(reali, complexi)
                 else:
-                    for (gcj, gci, reali, complexi) in zip(self.GCj, self.GCi, self.Real, self.Complex):
+                    for (gcj, gci, reali, complexi) in zip(self.GCj, self.GCi,
+                                                           self.Real, self.Complex):
                         i = rows[(gci[0], gci[1])]
                         j = cols[(gcj[0], gcj[1])]
                         M[i, j] = complex(reali, complexi)
             else:
-                M = zeros((i, j), dtype='float64')
+                M = zeros((nrows, ncols), dtype='float64')
                 if self.ifo == 6 and apply_symmetry:  # symmetric
-                    for (gcj, gci, reali) in zip(self.GCj, self.GCi, self.Real):
-                        i = rows[(gci[0], gci[1])]
-                        j = cols[(gcj[0], gcj[1])]
-                        M[i, j] = reali
-                        M[j, i] = reali
+                    try:
+                        for (gcj, gci, reali) in zip(self.GCj, self.GCi, self.Real):
+                            i = rows[(gci[0], gci[1])]
+                            j = cols[(gcj[0], gcj[1])]
+                            M[i, j] = reali
+                            M[j, i] = reali
+                    except IndexError:
+                        msg = ('name=%s ndim=%s i=%s j=%s matrix_type=%s '
+                               'is_polar=%s ncol=%s M.shape=%s\n' % (
+                                   self.name, ndim, i, j, self.matrix_type,
+                                   self.is_polar(), self.ncol, M.shape))
+                        msg += 'Rows:\n'
+                        for i, row in enumerate(rows):
+                            msg += 'i=%s row=%s\n' % (i, row)
+                        raise RuntimeError(msg)
                 else:
                     for (gcj, gci, reali) in zip(self.GCj, self.GCi, self.Real):
                         i = rows[(gci[0], gci[1])]
@@ -534,6 +623,16 @@ class DMIG(NastranMatrix):
     Defines direct input matrices related to grid, extra, and/or scalar points.
     The matrix is defined by a single header entry and one or more column
     entries. A column entry is required for each column with nonzero elements.
+
+    +--------+-------+-------+-----+-----+------+-------+----+------+
+    |   1    |   2   |   3   |  4  |  5  |   6  |   7   | 8  |  9   |
+    +========+=======+=======+=====+=====+======+=======+====+======+
+    | DMIG   |  NAME |   0   | IFO | TIN | TOUT | POLAR |    | NCOL |
+    +--------+-------+-------+-----+-----+------+-------+----+------+
+    | DMIG   |  NAME |   GJ  |  CJ |     | G1   |  C1   | A1 |  B1  |
+    +--------+-------+-------+-----+-----+------+-------+----+------+
+    |        |  G2   |   C2  | A2  |  B2 |      |       |    |      |
+    +--------+-------+-------+-----+-----+------+-------+----+------+
     """
     type = 'DMIG'
 

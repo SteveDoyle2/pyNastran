@@ -933,7 +933,7 @@ def verify_card2(key, value, options, line):
     elif key == 'ANALYSIS':
         assert value in ['HEAT', 'ANALYSIS', 'MFREQ', 'STATICS', 'MODES', 'DFREQ',
                          'MTRAN', 'BUCK', 'MCEIG', 'DCEIG', 'SAERO', 'NLSTATIC', 'NLSTAT',
-                         'STATIC', 'MTRANS', 'MODE', 'FLUTTER', 'DIVERG', 'NLTRAN', 'FLUT',
+                         'STATIC', 'MTRANS', 'MODE', 'FLUTTER', 'DIVERG', 'NLTRAN',
                          '', '', '', '', ''], 'line=%r is invalid; value=%r' % (line, value)
     elif key == 'AUTOSPC':
         assert value in ['YES'], 'line=%r is invalid; value=%r' % (line, value)

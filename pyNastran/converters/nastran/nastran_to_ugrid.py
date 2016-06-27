@@ -128,7 +128,7 @@ def main():
     from pyNastran.bdf.bdf_interface.dev_utils import bdf_renumber
     bdf_filename = sys.argv[1]
     ugrid_filename_out = sys.argv[2]
-    # bdf_model = BDF()
+    # bdf_model = BDF(debug=False)
     # bdf_model.read_bdf(bdf_filename)
 
     bdf_filename_out = bdf_filename[:-4] + '.re.bdf'
@@ -142,14 +142,14 @@ def main():
         }
         bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
                      starting_id_dict=starting_id_dict)
-        bdf_model = BDF()
+        bdf_model = BDF(debug=False)
         bdf_model.read_bdf(bdf_filename_out, xref=False)
     else:
-        bdf_model = BDF()
+        bdf_model = BDF(debug=False)
         bdf_model.read_bdf(bdf_filename_out, xref=False)
 
 
-    # bdf_model = BDF()
+    # bdf_model = BDF(debug=False)
     # bdf_model.read_bdf(bdf_filename)
     nastran_to_ugrid(bdf_model, ugrid_filename_out) #, properties=properties
 

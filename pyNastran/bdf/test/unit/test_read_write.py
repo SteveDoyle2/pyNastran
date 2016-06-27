@@ -356,7 +356,7 @@ class TestReadWrite(unittest.TestCase):
             f.write('BEGIN BULK\n')
             f.write("INCLUDE 'b.bdf'\n\n")
             f.write('GRID,1,,1.0\n')
-        model = BDF()
+        model = BDF(debug=False)
         with self.assertRaises(IOError):
             model.read_bdf(bdf_filename='a.bdf', xref=True, punch=False,
                            read_includes=True,

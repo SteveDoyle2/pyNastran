@@ -1677,21 +1677,21 @@ class DRESP3(OptConstraint):
 class DCONADD(OptConstraint):
     type = 'DCONADD'
 
-    def __init__(self, dcid, dconstrs, comment=''):
+    def __init__(self, oid, dconstrs, comment=''):
         if comment:
             self._comment = comment
-        self.dcid = dcid
+        self.oid = oid
         self.dconstrs = dconstrs
 
     @classmethod
     def add_card(cls, card, comment=''):
-        dcid = integer(card, 1, 'dcid')
+        oid = integer(card, 1, 'dcid')
         dconstrs = []
 
         for i in range(1, len(card)):
             dconstr = integer(card, i, 'dconstr_%i' % i)
             dconstrs.append(dconstr)
-        return DCONADD(dcid, dconstrs, comment=comment)
+        return DCONADD(oid, dconstrs, comment=comment)
 
     def cross_reference(self, model):
         """
@@ -1702,8 +1702,8 @@ class DCONADD(OptConstraint):
         model : BDF()
             the BDF object
         """
-        self.dconstrs = [model.dconstrs[dcid] for dcid in self.dconstr_ids]
-        self.dconstrs_ref = self.dconstrs
+        #self.dconstrs = [model.dconstrs[oid] for oid in self.dconstr_ids]
+        self.dconstrs_ref = [model.dconstrs[oid] for oid in self.dconstr_ids]
 
     def uncross_reference(self):
         self.dconstrs = self.dconstr_ids
@@ -1711,11 +1711,31 @@ class DCONADD(OptConstraint):
 
     @property
     def dconstr_ids(self):
-        return [dconstr if isinstance(dconstr, integer_types) else dconstr.oid
-                for dconstr in self.dconstrs]
+        ids = []
+        for dconstr in self.dconstrs:
+            if isinstance(dconstr, list):
+                for dconstri in dconstr:
+                    if isinstance(dconstri, integer_types):
+                        ids.append(dconstri)
+                    elif isinstance(dconstri, DCONSTR):
+                        ids.append(dconstri.oid)
+                        break
+                    else:
+                        print("type=%s; dconstri=%s\n" % (type(dconstri), dconstri))
+                        raise NotImplementedError(dconstri)
+            elif isinstance(dconstr, integer_types):
+                ids.append(dconstr)
+            #elif isinstance(dconstr, DCONSTR):
+                #ids.append(dconstr.oid)
+            else:
+                print("type=%s; dconstr=%s\n" % (type(dconstr), dconstr))
+                raise NotImplementedError(dconstr)
+        return ids
+        #return [dconstr if isinstance(dconstr, integer_types) else dconstr.oid
+                #for dconstr in self.dconstrs]
 
     def raw_fields(self):
-        list_fields = ['DCONADD', self.dcid] + self.dconstr_ids
+        list_fields = ['DCONADD', self.oid] + self.dconstr_ids
         return list_fields
 
     def write_card(self, size=8, is_double=False):

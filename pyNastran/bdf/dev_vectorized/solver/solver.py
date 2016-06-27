@@ -326,7 +326,7 @@ class Solver(F06, OP2):
         #------------------------------------------
         # start of analysis
 
-        self.model = BDF()
+        self.model = BDF(debug=False)
         self.model.cards_to_read = get_cards()
         self.model.f06 = self.f06_file
 

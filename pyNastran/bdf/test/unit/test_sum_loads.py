@@ -1,11 +1,13 @@
-from six import iteritems
+from __future__ import print_function
 import os
 import unittest
+from six import iteritems
 from numpy import array, allclose, cross
 import numpy as np
 
 import pyNastran
 from pyNastran.bdf.bdf import BDF
+from pyNastran.bdf.bdf import CORD2C, GRID, FORCE
 model_path = os.path.join(pyNastran.__path__[0], '..', 'models')
 
 log = None
@@ -369,8 +371,7 @@ class TestLoadSum(unittest.TestCase):
             self.assertTrue(allclose(M1_expected, M), 'loadcase_id=%s M_expected=%s M=%s' % (loadcase_id, M1_expected, M))
 
     def test_loads_sum_radial_01(self):
-        model = BDF()
-        from pyNastran.bdf.bdf import CORD2C, GRID, FORCE
+        model = BDF(debug=False)
         model.nodes[1] = GRID(1, cp=1, xyz=[0., 0., 0.], cd=0, ps='', seid=0,
                               comment='')
         cid = 1

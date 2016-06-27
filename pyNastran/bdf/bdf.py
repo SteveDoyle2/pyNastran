@@ -1624,7 +1624,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'TF' : (TF, self.add_TF),
             'DELAY' : (DELAY, self.add_DELAY),
 
-            'DCONADD' : (DCONADD, self.add_DCONADD),
+            'DCONADD' : (DCONADD, self.add_DCONSTR),
             'DCONSTR' : (DCONSTR, self.add_DCONSTR),
             'DDVAL' : (DDVAL, self.add_DDVAL),
             'DLINK' : (DLINK, self.add_DLINK),

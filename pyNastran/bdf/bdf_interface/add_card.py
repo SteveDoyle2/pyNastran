@@ -627,7 +627,7 @@ class AddMethods(BDFAttributes):
     def add_DCONSTR(self, dconstr):
         #key = (dconstr.oid, dconstr.rid)
         key = dconstr.oid
-        #assert key not in self.dconstrs, 'key=%r DCONSTR=\n%s' % (key, dconstr)
+        #assert key not in self.dconstrs, 'key=%r DCONSTR/DCONADD=\n%s' % (key, dconstr)
         assert dconstr.oid > 0
         #assert dconstr.dresp_id > 0
         if key in self.dconstrs:
@@ -635,6 +635,17 @@ class AddMethods(BDFAttributes):
         else:
             self.dconstrs[key] = [dconstr]
         self._type_to_id_map[dconstr.type].append(key)
+
+    #def add_DCONADD(self, dconadd, allow_overwrites=False):
+        #key = dconadd.oid
+        #if key in self.dconstrs and not allow_overwrites:
+            #if not dconadd._is_same_card(self.dconstrs[key]):
+                #assert key not in self.dconstrs, 'DCONADD=%s old=\n%snew=\n%s' % (
+                    #key, self.dconstrs[key], dconadd)
+        #else:
+            #assert key > 0, 'dcid=%s dconadd=%s' % (key, dconadd)
+            #self.dconstrs[key] = dconadd
+            #self._type_to_id_map[dconadd.type].append(key)
 
     def add_DESVAR(self, desvar):
         key = desvar.desvar_id
@@ -659,17 +670,6 @@ class AddMethods(BDFAttributes):
         assert key > 0
         self.dlinks[key] = dlink
         self._type_to_id_map[dlink.type].append(key)
-
-    def add_DCONADD(self, dconadd, allow_overwrites=False):
-        key = dconadd.dcid
-        if key in self.dconadds and not allow_overwrites:
-            if not dconadd._is_same_card(self.dconadds[key]):
-                assert key not in self.dconadds, 'DCONADD=%s old=\n%snew=\n%s' % (
-                    key, self.dconadds[key], dconadd)
-        else:
-            assert key > 0, 'dcid=%s dconadd=%s' % (key, dconadd)
-            self.dconadds[key] = dconadd
-            self._type_to_id_map[dconadd.type].append(key)
 
     def add_DRESP(self, dresp):
         key = dresp.dresp_id

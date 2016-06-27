@@ -597,8 +597,7 @@ class BDFAttributes(object):
             # optimzation
             'dequations' : ['DEQATN'],
             'dtable' : ['DTABLE'],
-            'dconadds' : ['DCONADD'],
-            'dconstrs' : ['DCONSTR'],
+            'dconstrs' : ['DCONSTR', 'DCONADD'],
             'desvars' : ['DESVAR'],
             'ddvals' : ['DDVAL'],
             'dlinks' : ['DLINK'],
