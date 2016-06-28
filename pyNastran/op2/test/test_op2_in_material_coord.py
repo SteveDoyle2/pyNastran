@@ -13,8 +13,8 @@ pkg_path = pyNastran.__path__[0]
 
 CASES = [
     ['test_flat_plate_metallic', 'flat_plate_metallic', 3],
-    ['test_flat_plate_composite', 'flat_plate_composite', 1],
     ['test_dummy_wing_metallic', 'dummy_wing_metallic', 1],
+    ['test_flat_plate_composite', 'flat_plate_composite', 1],
     ]
 
 RTOL = 0.01
@@ -31,11 +31,13 @@ class TestMaterialCoord(unittest.TestCase):
             op2.read_op2(os.path.join(basepath, prefix + '.op2'))
             op2_new = data_in_material_coord(bdf, op2)
             for vecname in force_vectors:
+                vector = getattr(op2_new, vecname).get(subcase)
+                if vector is None:
+                    continue
                 name = os.path.join(basepath, '{0}_subcase_{1:02d}.txt'.format(vecname, subcase))
                 if not os.path.isfile(name):
                     raise AssertionError('Not found reference result {0}'.format(name))
                 ref_result = np.loadtxt(name)
-                vector = getattr(op2_new, vecname)[subcase]
                 data = vector.data
                 eids = get_eids_from_op2_vector(vector)
                 check = eids != 0
@@ -43,6 +45,7 @@ class TestMaterialCoord(unittest.TestCase):
                     assert np.allclose(data[:, check][:, 0::5, :], ref_result[0::5], rtol=RTOL, atol=ATOL)
                 else:
                     assert np.allclose(data[:, check], ref_result, rtol=RTOL, atol=ATOL)
+            print('OK')
 
     def test_stress(self):
         for folder, prefix, subcase in CASES:
@@ -53,11 +56,13 @@ class TestMaterialCoord(unittest.TestCase):
             op2.read_op2(os.path.join(basepath, prefix + '.op2'))
             op2_new = data_in_material_coord(bdf, op2)
             for vecname in stress_vectors:
+                vector = getattr(op2_new, vecname).get(subcase)
+                if vector is None:
+                    continue
                 name = os.path.join(basepath, '{0}_subcase_{1:02d}.txt'.format(vecname, subcase))
                 if not os.path.isfile(name):
                     raise AssertionError('Not found reference result {0}'.format(name))
                 ref_result = np.loadtxt(name)
-                vector = getattr(op2_new, vecname)[subcase]
                 data = vector.data
                 eids = get_eids_from_op2_vector(vector)
                 check = eids != 0
@@ -66,6 +71,7 @@ class TestMaterialCoord(unittest.TestCase):
                     assert np.allclose(data[:, check][:, 1::10, :], ref_result[1::10], rtol=RTOL, atol=ATOL)
                 else:
                     assert np.allclose(data[:, check], ref_result, rtol=RTOL, atol=ATOL)
+            print('OK')
 
     def test_strain(self):
         for folder, prefix, subcase in CASES:
@@ -76,11 +82,13 @@ class TestMaterialCoord(unittest.TestCase):
             op2.read_op2(os.path.join(basepath, prefix + '.op2'))
             op2_new = data_in_material_coord(bdf, op2)
             for vecname in strain_vectors:
+                vector = getattr(op2_new, vecname).get(subcase)
+                if vector is None:
+                    continue
                 name = os.path.join(basepath, '{0}_subcase_{1:02d}.txt'.format(vecname, subcase))
                 if not os.path.isfile(name):
                     raise AssertionError('Not found reference result {0}'.format(name))
                 ref_result = np.loadtxt(name)
-                vector = getattr(op2_new, vecname)[subcase]
                 data = vector.data
                 eids = get_eids_from_op2_vector(vector)
                 check = eids != 0
@@ -89,6 +97,7 @@ class TestMaterialCoord(unittest.TestCase):
                     assert np.allclose(data[:, check][:, 1::10, :], ref_result[1::10], rtol=RTOL, atol=ATOL)
                 else:
                     assert np.allclose(data[:, check], ref_result, rtol=RTOL, atol=ATOL)
+            print('OK')
 
 
 if __name__ == '__main__':

@@ -104,7 +104,7 @@
   
   
   
-1                                                                              JUNE  27, 2016  MSC Nastran 11/27/13   PAGE     1
+1                                                                              JUNE  28, 2016  MSC Nastran 11/27/13   PAGE     1
                                                                                                                                     
 0        N A S T R A N    F I L E    A N D    S Y S T E M    P A R A M E T E R    E C H O                                           
 0
@@ -117,7 +117,7 @@
      NASTRAN BUFFSIZE=264065 $(C:/MSC.SOFTWARE/MSC_NASTRAN/20131/CONF/NAST20131.RCF[2
      INIT MASTER(S)                                                                  
      NASTRAN SYSTEM(442)=-1,SYSTEM(319)=1                                            
-1                                                                              JUNE  27, 2016  MSC Nastran 11/27/13   PAGE     2
+1                                                                              JUNE  28, 2016  MSC Nastran 11/27/13   PAGE     2
                                                                                                                                     
 0        N A S T R A N    E X E C U T I V E    C O N T R O L    E C H O                                                             
 0                                                                                                                                   
@@ -127,7 +127,7 @@
      SOL SESTATIC                                                                            
      TIME 10000                                                                              
      CEND                                                                                    
-1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  27, 2016  MSC Nastran 11/27/13   PAGE     3
+1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  28, 2016  MSC Nastran 11/27/13   PAGE     3
                                                                                                                                     
 0                                                                                                                                   
 0                                        C A S E    C O N T R O L    E C H O                                                        
@@ -135,15 +135,15 @@
                  COUNT                                                                                                              
                   1        TITLE = NX NASTRAN STATIC ANALYSIS SET                                                
                   2        ECHO = NONE                                                                           
-                  3        FORCE(PRINT,CORNER) = ALL                                                             
-                  4        STRESS(PRINT,CORNER) = ALL                                                            
-                  5        STRAIN(PRINT,FIBER,CORNER) = ALL                                                      
+                  3        FORCE(PLOT,PRINT,CORNER) = ALL                                                        
+                  4        STRESS(PLOT,PRINT,CORNER) = ALL                                                       
+                  5        STRAIN(PLOT,PRINT,FIBER,CORNER) = ALL                                                 
                   6        SPC = 1                                                                               
                   7        LOAD = 1                                                                              
                   8      SUBCASE 1                                                                               
                   9        SUBTITLE = COMBINED LOADING                                                           
                  10      BEGIN BULK                                                                              
-1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  27, 2016  MSC Nastran 11/27/13   PAGE     4
+1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  28, 2016  MSC Nastran 11/27/13   PAGE     4
                                                                                                                                     
 0                                                                                                                                   
                                         M O D E L   S U M M A R Y          BULK = 0
@@ -165,7 +165,7 @@
  ^^^     
  ^^^ >>> IFP OPERATIONS COMPLETE <<< 
  ^^^     
-1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  27, 2016  MSC Nastran 11/27/13   PAGE     5
+1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  28, 2016  MSC Nastran 11/27/13   PAGE     5
                                                                                                                                     
 0                                                                                                                                   
  *** USER INFORMATION MESSAGE 4109 (OUTPX2)
@@ -222,13 +222,13 @@
                              PLACED AFTER THE VALUE METRIC FOR THE TEST.
      USER INFORMATION: THE MAXIMUM MESSAGE COUNT FOR ANY ONE ELEMENT ERROR TEST COULD BE EXCEEDED BY THE 
      CUMULATIVE EFFECT OF ALL THE MESSAGES GENERATED FOR ALL OF THE DIFFERENT TESTS PERFORMED.
-1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  27, 2016  MSC Nastran 11/27/13   PAGE     6
+1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  28, 2016  MSC Nastran 11/27/13   PAGE     6
                                                                                                                                     
 0                                                                                                                                   
      TOLERANCE LIMITS ARE:  SA =  30.00, IA(MIN) =  30.00, IA(MAX) = 150.00, WF =   0.05, TR =   0.50 (FLAG = LIMIT VIOLATED)
  ELEMENT TYPE    ID          SKEW ANGLE      MIN INT. ANGLE    MAX INT. ANGLE    WARPING FACTOR      TAPER RATIO  
     QUAD4          20        63.69             51.71            149.47              0.00              0.56 ++++
-1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  27, 2016  MSC Nastran 11/27/13   PAGE     7
+1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  28, 2016  MSC Nastran 11/27/13   PAGE     7
                                                                                                                                     
 0                                                                                                                                   
 
@@ -243,7 +243,7 @@
          FOR ALL ELEMENTS WHERE GEOMETRY TEST RESULTS HAVE EXCEEDED TOLERANCES,
 
          QUAD4    ELEMENT ID       20 PRODUCED LARGEST  TAPER RATIO      OF       0.56 (TOLERANCE =        0.50).
-1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  27, 2016  MSC Nastran 11/27/13   PAGE     8
+1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  28, 2016  MSC Nastran 11/27/13   PAGE     8
                                                                                                                                     
 0                                                                                                                                   
                            O U T P U T   F R O M   G R I D   P O I N T   W E I G H T   G E N E R A T O R
@@ -277,10 +277,10 @@
                                            * -3.811694E-03  9.999927E-01  0.000000E+00 *
                                            *  0.000000E+00  0.000000E+00  1.000000E+00 *
 
-1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  27, 2016  MSC Nastran 11/27/13   PAGE     9
+1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  28, 2016  MSC Nastran 11/27/13   PAGE     9
                                                                                                                                     
 0                                                                                                                                   
-1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  27, 2016  MSC Nastran 11/27/13   PAGE    10
+1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  28, 2016  MSC Nastran 11/27/13   PAGE    10
                                                                                                                                     
 0                                                                                                                                   
 0 RESULTANTS ABOUT ORIGIN OF SUPERELEMENT BASIC COORDINATE SYSTEM IN SUPERELEMENT BASIC SYSTEM COORDINATES.
@@ -295,7 +295,7 @@
                MY       ----          ----          ----          ----       0.000000E+00     ----                                  
                MZ       ----          ----          ----          ----          ----       0.000000E+00                             
              TOTALS -1.000001E+03  1.000000E+02  2.000000E+04  1.000000E+04 -2.000000E+04  6.000007E+02
-1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  27, 2016  MSC Nastran 11/27/13   PAGE    11
+1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  28, 2016  MSC Nastran 11/27/13   PAGE    11
                                                                                                                                     
 0                                                                                                            SUBCASE 1              
 0                                         G R I D   P O I N T   S I N G U L A R I T Y   T A B L E
@@ -327,7 +327,7 @@
                                64        G      6         0.00E+00          B        F         SB       S    *
                                65        G      6         0.00E+00          B        F         SB       S    *
                                66        G      6         0.00E+00          B        F         SB       S    *
-1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  27, 2016  MSC Nastran 11/27/13   PAGE    12
+1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  28, 2016  MSC Nastran 11/27/13   PAGE    12
                                                                                                                                     
 0                                                                                                            SUBCASE 1              
   
@@ -342,7 +342,7 @@
     values of EPSILON indicate possible singularities in the stiffness
     matrix.  See Section 9.5.1.
                 1          2.2881816E-13          2.1171898E+05
-1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  27, 2016  MSC Nastran 11/27/13   PAGE    13
+1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  28, 2016  MSC Nastran 11/27/13   PAGE    13
       COMBINED LOADING                                                                                                              
 0                                                                                                            SUBCASE 1              
  
@@ -393,7 +393,7 @@
                   21 -1.982569E+02  3.345885E+01 -1.026687E+02  1.350798E+03  6.416704E+02 -5.451526E+01  1.216624E+02 -2.029987E+02
                   31 -3.058032E+02 -3.005301E+00 -1.636368E+02  1.575678E+03  6.733298E+02 -5.720947E+01  1.216624E+02 -2.029987E+02
 0        11    CEN/4  9.017073E+00 -2.108283E+02  2.159166E+02 -1.781019E+02 -3.079821E+02 -6.959126E+01 -3.300726E+03 -3.005620E+03
-1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  27, 2016  MSC Nastran 11/27/13   PAGE    14
+1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  28, 2016  MSC Nastran 11/27/13   PAGE    14
       COMBINED LOADING                                                                                                              
 0                                                                                                            SUBCASE 1              
  
@@ -445,7 +445,7 @@
 0        20    CEN/4 -1.760708E+01 -1.320325E+01 -2.398173E+01  8.123598E+02  1.756944E+02 -1.865308E+02 -4.176474E+03 -1.542141E+03
                   36 -2.887641E+01 -2.496136E+01 -2.920142E+01  9.151038E+02 -4.527378E+01 -2.894299E+02 -4.176474E+03 -1.542141E+03
                   35 -3.472627E+01 -4.212412E+00 -2.936796E+01  4.797827E+02  3.937977E+02 -1.140257E+02 -4.176474E+03 -1.542141E+03
-1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  27, 2016  MSC Nastran 11/27/13   PAGE    15
+1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  28, 2016  MSC Nastran 11/27/13   PAGE    15
       COMBINED LOADING                                                                                                              
 0                                                                                                            SUBCASE 1              
  
@@ -487,7 +487,7 @@
                   41 -2.524077E+01 -3.953301E+01 -3.476769E+01  6.920892E+02  5.530831E+02  1.168448E+02 -1.096676E+03 -6.543779E+02
                   21 -1.376128E+02 -3.179068E+01 -5.611740E+01  9.431944E+02  5.358013E+02  1.254318E+02 -1.096676E+03 -6.543779E+02
                   33 -1.356170E+02 -7.327614E+00 -5.108909E+01  9.884252E+02  4.633669E+02  8.649535E+01 -1.096676E+03 -6.543779E+02
-1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  27, 2016  MSC Nastran 11/27/13   PAGE    16
+1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  28, 2016  MSC Nastran 11/27/13   PAGE    16
       COMBINED LOADING                                                                                                              
 0                                                                                                            SUBCASE 1              
  
@@ -531,7 +531,7 @@
                   22 -3.052320E+02  7.744626E+01 -9.934305E+01  1.837697E+03  2.839665E+02 -4.498932E+01  1.217958E+03  2.727777E+03
                   21  1.553468E+02  1.352889E+01 -2.642711E+01 -1.115106E+03  8.828429E+02  6.953492E+02  1.897600E+03  3.936114E+03
                   41 -1.534254E+02 -6.039655E+01 -3.427477E+01  2.988089E+03  5.474335E+02  3.355092E+02  1.986445E+03  1.470730E+03
-1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  27, 2016  MSC Nastran 11/27/13   PAGE    17
+1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  28, 2016  MSC Nastran 11/27/13   PAGE    17
       COMBINED LOADING                                                                                                              
 0                                                                                                            SUBCASE 1              
  
@@ -563,7 +563,7 @@
 0        5    2   9.70115E+09 -1.31310E+08  5.58144E+08   -3.95247E+06  2.07285E+05    3.24  9.73273E+09 -1.62892E+08  4.94781E+09
 0        5    3  -2.36096E+09  2.56821E+08 -2.79021E+08   -4.29043E+06  2.87258E+05  -83.98  2.86230E+08 -2.39037E+09  1.33830E+09
 0        5    4  -2.08732E+06  1.01046E+04  1.44721E+05   -4.29043E+06  2.87258E+05   86.07  2.00432E+04 -2.09726E+06  1.05865E+06
-1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  27, 2016  MSC Nastran 11/27/13   PAGE    18
+1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  28, 2016  MSC Nastran 11/27/13   PAGE    18
       COMBINED LOADING                                                                                                              
 0                                                                                                            SUBCASE 1              
  
@@ -595,7 +595,7 @@
 0        9    6  -5.47177E+09 -1.05992E+09 -4.35514E+08    1.48666E+05 -4.75577E+05  -84.42 -1.01734E+09 -5.51435E+09  2.24850E+09
 0        9    7  -7.08522E+09 -1.64007E+09  5.71951E+08    3.22324E-10  9.56588E-09   84.07 -1.58065E+09 -7.14465E+09  2.78200E+09
 0       10    1   9.51011E+09  1.84482E+09 -5.71282E+08    1.36641E+05 -6.77572E+04   -4.24  9.55245E+09  1.80247E+09  3.87499E+09
-1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  27, 2016  MSC Nastran 11/27/13   PAGE    19
+1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  28, 2016  MSC Nastran 11/27/13   PAGE    19
       COMBINED LOADING                                                                                                              
 0                                                                                                            SUBCASE 1              
  
@@ -627,7 +627,7 @@
 0       14    3   4.05127E+09  7.01980E+07  2.54675E+07    1.47554E+06  7.51240E+06    0.37  4.05144E+09  7.00351E+07  1.99070E+09
 0       14    4   1.22791E+06 -8.01463E+04  8.03946E+03    1.47554E+06  7.51240E+06    0.35  1.22796E+06 -8.01957E+04  6.54080E+05
 0       14    5  -4.05147E+09 -7.02398E+07 -2.56755E+07    1.35932E+06  5.42093E+06  -89.63 -7.00743E+07 -4.05163E+09  1.99078E+09
-1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  27, 2016  MSC Nastran 11/27/13   PAGE    20
+1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  28, 2016  MSC Nastran 11/27/13   PAGE    20
       COMBINED LOADING                                                                                                              
 0                                                                                                            SUBCASE 1              
  
@@ -659,7 +659,7 @@
 0       17    7   7.52014E+09 -7.40415E+07  5.07588E+08    4.77492E-09  2.86482E-09    3.81  7.55391E+09 -1.07818E+08  3.83087E+09
 0       18    1   6.61067E+09  7.38286E+08 -2.84945E+08   -1.89384E+05 -2.30838E+04   -2.77  6.62446E+09  7.24492E+08  2.94998E+09
 0       18    2   3.04941E+09  5.52909E+08  9.15676E+07   -2.28451E+05 -1.01080E+05    2.10  3.05276E+09  5.49555E+08  1.25160E+09
-1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  27, 2016  MSC Nastran 11/27/13   PAGE    21
+1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  28, 2016  MSC Nastran 11/27/13   PAGE    21
       COMBINED LOADING                                                                                                              
 0                                                                                                            SUBCASE 1              
  
@@ -691,7 +691,7 @@
 0       21    4  -1.38377E+05  7.36149E+02  5.34791E+03   -2.06706E+06 -8.82092E+06   87.80  9.41435E+02 -1.38583E+05  6.97620E+04
 0       21    5  -3.72185E+09  1.29036E+08 -1.75477E+08   -1.90424E+06 -6.36515E+06  -87.40  1.37015E+08 -3.72983E+09  1.93342E+09
 0       21    6   6.21264E+09 -3.52667E+08  3.50961E+08   -1.57860E+06 -1.45362E+06    3.05  6.23134E+09 -3.71375E+08  3.30136E+09
-1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  27, 2016  MSC Nastran 11/27/13   PAGE    22
+1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  28, 2016  MSC Nastran 11/27/13   PAGE    22
       COMBINED LOADING                                                                                                              
 0                                                                                                            SUBCASE 1              
  
@@ -723,7 +723,7 @@
 0       29    1   2.46008E+09  1.05981E+09 -1.44783E+08   -8.25021E+05  3.07340E+05   -5.84  2.47489E+09  1.04499E+09  7.14950E+08
 0       29    2   5.08406E+09  5.52511E+08  3.46132E+08   -9.95212E+05  1.34579E+06    4.34  5.11035E+09  5.26225E+08  2.29206E+09
 0       29    3   3.87368E+09  2.16697E+08 -1.73075E+08   -1.08031E+06  1.86501E+06   -2.70  3.88186E+09  2.08524E+08  1.83667E+09
-1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  27, 2016  MSC Nastran 11/27/13   PAGE    23
+1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  28, 2016  MSC Nastran 11/27/13   PAGE    23
       COMBINED LOADING                                                                                                              
 0                                                                                                            SUBCASE 1              
  
@@ -741,7 +741,7 @@
 0       30    5  -5.14893E+09 -2.89394E+08  1.66642E+08   -1.48577E+06 -9.56418E+05   88.04 -2.83686E+08 -5.15464E+09  2.43548E+09
 0       30    6  -6.80233E+09 -7.35105E+08 -3.33294E+08   -1.23169E+06 -2.18419E+05  -86.87 -7.16851E+08 -6.82058E+09  3.05186E+09
 0       30    7  -5.92698E+09 -1.29391E+09  1.90014E+08   -2.67043E-09  4.39334E-09   87.66 -1.28613E+09 -5.93476E+09  2.32432E+09
-1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  27, 2016  MSC Nastran 11/27/13   PAGE    24
+1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  28, 2016  MSC Nastran 11/27/13   PAGE    24
       COMBINED LOADING                                                                                                              
 0                                                                                                            SUBCASE 1              
  
@@ -773,7 +773,7 @@
 0       22    2  -4.14899E+09  1.65928E+08  2.90195E+08    3.59376E+06 -4.55695E+06   86.17  1.85357E+08 -4.16842E+09  2.17689E+09
 0       22    3   1.91301E+09 -9.53692E+07 -1.45096E+08    3.90104E+06 -6.31508E+06   -4.11  1.92344E+09 -1.05798E+08  1.01462E+09
 0       22    4  -9.21597E+04 -1.64354E+02 -2.05438E+03    3.90104E+06 -6.31508E+06  -88.72 -1.18500E+02 -9.22056E+04  4.60435E+04
-1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  27, 2016  MSC Nastran 11/27/13   PAGE    25
+1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  28, 2016  MSC Nastran 11/27/13   PAGE    25
       COMBINED LOADING                                                                                                              
 0                                                                                                            SUBCASE 1              
  
@@ -804,7 +804,7 @@
 0       27    5  -6.18229E+09 -3.33720E+08  2.24030E+08    7.55366E+05  1.74904E+06   87.81 -3.25151E+08 -6.19086E+09  2.93285E+09
 0       27    6  -7.71506E+09 -8.75369E+08 -4.48073E+08    6.26192E+05  3.99433E+05  -86.27 -8.46140E+08 -7.74429E+09  3.44908E+09
 0       27    7  -5.78598E+09 -1.57184E+09  2.52736E+08    1.35765E-09 -8.03430E-09   86.58 -1.55674E+09 -5.80108E+09  2.12217E+09
-1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  27, 2016  MSC Nastran 11/27/13   PAGE    26
+1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  28, 2016  MSC Nastran 11/27/13   PAGE    26
                                                                                                                                     
 0                                                                                                                                   
 0                                                                                                                                   
@@ -818,7 +818,7 @@
      (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =        1771 WORDS.)
            (NUMBER OF FORTRAN RECORDS WRITTEN =          30 RECORDS.)
            (TOTAL DATA WRITTEN FOR DATA BLOCK =        2643 WORDS.)
-1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  27, 2016  MSC Nastran 11/27/13   PAGE    27
+1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  28, 2016  MSC Nastran 11/27/13   PAGE    27
       COMBINED LOADING                                                                                                              
 0                                                                                                            SUBCASE 1              
  
@@ -850,7 +850,7 @@
 0        5    2   6.83362E-02 -3.41550E-02  1.09440E-01   -7.74994E-04  4.06441E-05   23.44  9.20599E-02 -5.78786E-02  1.49939E-01
 0        5    3  -1.70727E-02  3.41587E-02 -5.47100E-02   -8.41260E-04  5.63252E-05  -66.56  4.60191E-02 -2.89332E-02  7.49523E-02
 0        5    4  -1.46677E-05  5.26285E-06  2.83766E-05   -8.41260E-04  5.63252E-05   62.54  1.26358E-05 -2.20407E-05  3.46765E-05
-1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  27, 2016  MSC Nastran 11/27/13   PAGE    28
+1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  28, 2016  MSC Nastran 11/27/13   PAGE    28
       COMBINED LOADING                                                                                                              
 0                                                                                                            SUBCASE 1              
  
@@ -882,7 +882,7 @@
 0        9    6  -3.63157E-02 -1.11079E-01 -8.53949E-02    2.91503E-05 -9.32505E-05  -24.40 -1.69482E-02 -1.30446E-01  1.13498E-01
 0        9    7  -4.64982E-02 -1.74592E-01  1.12147E-01    6.32008E-20  1.87566E-18   20.60 -2.54202E-02 -1.95670E-01  1.70250E-01
 0       10    1   6.31127E-02  1.93361E-01 -1.12016E-01    2.67923E-05 -1.32857E-05  -69.65  2.14133E-01  4.23413E-02  1.71792E-01
-1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  27, 2016  MSC Nastran 11/27/13   PAGE    29
+1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  28, 2016  MSC Nastran 11/27/13   PAGE    29
       COMBINED LOADING                                                                                                              
 0                                                                                                            SUBCASE 1              
  
@@ -914,7 +914,7 @@
 0       14    3   2.82921E-02  1.08339E-04  4.99362E-03    2.89322E-04  1.47302E-03    5.02  2.85115E-02 -1.11146E-04  2.86227E-02
 0       14    4   8.77442E-06 -1.16250E-05  1.57637E-06    2.89322E-04  1.47302E-03    2.21  8.80483E-06 -1.16554E-05  2.04602E-05
 0       14    5  -2.82933E-02 -1.12766E-04 -5.03442E-03    2.66533E-04  1.06293E-03  -84.94  1.10316E-04 -2.85164E-02  2.86267E-02
-1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  27, 2016  MSC Nastran 11/27/13   PAGE    30
+1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  28, 2016  MSC Nastran 11/27/13   PAGE    30
       COMBINED LOADING                                                                                                              
 0                                                                                                            SUBCASE 1              
  
@@ -946,7 +946,7 @@
 0       17    7   5.29184E-02 -2.32869E-02  9.95270E-02    9.36259E-19  5.61729E-19   26.28  7.74912E-02 -4.78598E-02  1.25351E-01
 0       18    1   4.49400E-02  7.18711E-02 -5.58716E-02   -3.71341E-05 -4.52624E-06  -57.87  8.94173E-02  2.73938E-02  6.20235E-02
 0       18    2   2.03130E-02  5.75609E-02  1.79544E-02   -4.47943E-05 -1.98196E-05   77.13  5.96116E-02  1.82622E-02  4.13494E-02
-1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  27, 2016  MSC Nastran 11/27/13   PAGE    31
+1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  28, 2016  MSC Nastran 11/27/13   PAGE    31
       COMBINED LOADING                                                                                                              
 0                                                                                                            SUBCASE 1              
  
@@ -978,7 +978,7 @@
 0       21    4  -9.72515E-07  3.56514E-07  1.04861E-06   -4.05306E-04 -1.72959E-03   70.86  5.38448E-07 -1.15445E-06  1.69290E-06
 0       21    5  -2.63718E-02  2.21448E-02 -3.44072E-02   -3.73380E-04 -1.24807E-03  -72.33  2.76259E-02 -3.18528E-02  5.94787E-02
 0       21    6   4.42904E-02 -5.27438E-02  6.88158E-02   -3.09529E-04 -2.85024E-04   17.67  5.52528E-02 -6.37062E-02  1.18959E-01
-1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  27, 2016  MSC Nastran 11/27/13   PAGE    32
+1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  28, 2016  MSC Nastran 11/27/13   PAGE    32
       COMBINED LOADING                                                                                                              
 0                                                                                                            SUBCASE 1              
  
@@ -1010,7 +1010,7 @@
 0       29    1   1.51813E-02  1.16983E-01 -2.83888E-02   -1.61769E-04  6.02628E-05  -82.21  1.18925E-01  1.32392E-02  1.05686E-01
 0       29    2   3.45920E-02  5.35172E-02  6.78689E-02   -1.95140E-04  2.63880E-04   52.79  7.92837E-02  8.82550E-03  7.04582E-02
 0       29    3   2.67580E-02  1.72963E-02 -3.39363E-02   -2.11825E-04  3.65688E-04  -37.21  3.96424E-02  4.41182E-03  3.52306E-02
-1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  27, 2016  MSC Nastran 11/27/13   PAGE    33
+1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  28, 2016  MSC Nastran 11/27/13   PAGE    33
       COMBINED LOADING                                                                                                              
 0                                                                                                            SUBCASE 1              
  
@@ -1028,7 +1028,7 @@
 0       30    5  -3.55642E-02 -2.31465E-02  3.26750E-02   -2.91328E-04 -1.87533E-04   55.40 -1.18778E-02 -4.68329E-02  3.49551E-02
 0       30    6  -4.62912E-02 -7.11289E-02 -6.53518E-02   -2.41508E-04 -4.28273E-05  -34.60 -2.37538E-02 -9.36663E-02  6.99126E-02
 0       30    7  -3.90504E-02 -1.37079E-01  3.72576E-02   -5.23615E-19  8.61439E-19   10.41 -3.56297E-02 -1.40500E-01  1.04870E-01
-1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  27, 2016  MSC Nastran 11/27/13   PAGE    34
+1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  28, 2016  MSC Nastran 11/27/13   PAGE    34
       COMBINED LOADING                                                                                                              
 0                                                                                                            SUBCASE 1              
  
@@ -1060,7 +1060,7 @@
 0       22    2  -2.94417E-02  2.72246E-02  5.69011E-02    7.04659E-04 -8.93520E-04   67.44  3.90436E-02 -4.12608E-02  8.03044E-02
 0       22    3   1.36121E-02 -1.47209E-02 -2.84501E-02    7.64911E-04 -1.23825E-03  -22.56  1.95215E-02 -2.06303E-02  4.01518E-02
 0       22    4  -6.46412E-07  1.62195E-07 -4.02819E-07    7.64911E-04 -1.23825E-03  -76.76  2.09585E-07 -6.93802E-07  9.03387E-07
-1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  27, 2016  MSC Nastran 11/27/13   PAGE    35
+1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  28, 2016  MSC Nastran 11/27/13   PAGE    35
       COMBINED LOADING                                                                                                              
 0                                                                                                            SUBCASE 1              
  
@@ -1091,7 +1091,7 @@
 0       27    5  -4.27288E-02 -2.62110E-02  4.39274E-02    1.48111E-04  3.42950E-04   55.30 -1.10047E-02 -5.79350E-02  4.69303E-02
 0       27    6  -5.24208E-02 -8.54577E-02 -8.78575E-02    1.22783E-04  7.83202E-05  -34.70 -2.20074E-02 -1.15871E-01  9.38636E-02
 0       27    7  -3.75148E-02 -1.69302E-01  4.95560E-02    2.66206E-19 -1.57535E-18   10.30 -3.30102E-02 -1.73807E-01  1.40797E-01
-1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  27, 2016  MSC Nastran 11/27/13   PAGE    36
+1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  28, 2016  MSC Nastran 11/27/13   PAGE    36
                                                                                                                                     
 0                                                                                                                                   
 0                                                                                                                                   
@@ -1099,7 +1099,7 @@
                                                                                                                                     
  *** USER INFORMATION MESSAGE 4114 (OUTPX2)
      DATA BLOCK OSTR1C   WRITTEN ON FORTRAN UNIT  12 IN BINARY (LTLEND) FORMAT USING NDDL DESCRIPTION FOR OE, TRL =
-                    101                63                 6                27                16                 0                 1
+                    101                63                 6                28                16                 0                 3
      NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS OSTR1C  
         (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =      131074 WORDS.)
      (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =        1771 WORDS.)
@@ -1107,7 +1107,7 @@
            (TOTAL DATA WRITTEN FOR DATA BLOCK =        2643 WORDS.)
  *** USER INFORMATION MESSAGE 4114 (OUTPX2)
      DATA BLOCK OEF1X    WRITTEN ON FORTRAN UNIT  12 IN BINARY (LTLEND) FORMAT USING NDDL DESCRIPTION FOR OEF1, TRL =
-                    101                63                 6                27                16                 0                 1
+                    101                63                 6                28                16                 0                 3
      NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS OEF1X   
         (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =      131074 WORDS.)
      (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =        1081 WORDS.)
@@ -1118,7 +1118,7 @@
                                  (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =      1 WORDS.)
                                        (NUMBER OF FORTRAN RECORDS WRITTEN =      1 RECORDS.)
                                        (TOTAL DATA WRITTEN FOR EOF MARKER =      1 WORDS.)
-1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  27, 2016  MSC Nastran 11/27/13   PAGE    37
+1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  28, 2016  MSC Nastran 11/27/13   PAGE    37
                                                                                                                                     
 0                                                                                                                                   
  * * * *  D B D I C T   P R I N T  * * * *      SUBDMAP = PRTSUM  ,  DMAP STATEMENT NO.     41
