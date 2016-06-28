@@ -1307,9 +1307,11 @@ class TestOP2(Tester):
         model.read_bdf(bdf_filename)
 
         dmi_a = model.dmis['A']
+        assert dmi_a.shape == (4, 2), 'shape=%s' % (dmi_a.shape)
+        #print('dmi_a\n', dmi_a)
         a, rows_reversed, cols_reversed = dmi_a.get_matrix(is_sparse=False, apply_symmetry=False)
-        print('model.dmi.A =\n%s' % dmi_a)
-        print('model.dmi.A =\n%s' % str(a))
+        #print('model.dmi.A =\n%s' % dmi_a)
+        #print('model.dmi.A =\n%s' % str(a))
         #return
         op2 = OP2(debug=False)
         op2.set_additional_matrices_to_read(matrices)

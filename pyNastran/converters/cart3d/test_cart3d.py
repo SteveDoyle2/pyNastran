@@ -36,9 +36,8 @@ class TestCart3d(unittest.TestCase):
             "6\n"
         )
         infile_name = os.path.join(test_path, 'flat_full.tri')
-        f = open(infile_name, 'w')
-        f.write(lines)
-        f.close()
+        with open(infile_name, 'w') as f:
+            f.write(lines)
 
         cart3d = Cart3D(log=None, debug=False)
         cart3d.read_cart3d(infile_name)
@@ -73,9 +72,8 @@ class TestCart3d(unittest.TestCase):
             "5. 5. 5. 5. 5.\n"
         )
         infile_name = os.path.join(test_path, 'flat.tri')
-        f = open(infile_name, 'w')
-        f.write(lines)
-        f.close()
+        with open(infile_name, 'w') as f:
+            f.write(lines)
 
         cart3d = Cart3D(log=None, debug=False)
         cart3d.read_cart3d(infile_name)

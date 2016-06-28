@@ -18,58 +18,60 @@ class Tetgen(object):
 
     def write_nastran(self, bdf_filename):
         if PY2:
-            f = open(bdf_filename, 'wb')
+            wb = 'wb'
         else:
-            f = open(bdf_filename, 'w')
-        msg = 'CEND\n'
-        msg += 'BEGIN BULK\n'
+            wb = 'w'
 
-        nid = 1
-        cid = None
-        for (x, y, z) in self.nodes:
-            card = ['GRID', nid, cid, x, y, z]
-            msg += print_card_8(card)
-            nid += 1
-        f.write(msg)
+        with open(bdf_filename, wb) as f:
+            msg = 'CEND\n'
+            msg += 'BEGIN BULK\n'
 
-        eid = 1
-        mid = 100
-        if self.tris is not None:
-            pid = 1
-            thickness = 0.1
-            pshell = ['PSHELL', pid, mid, thickness]
-            msg = print_card_8(pshell)
-
-            for n0, n1, n2 in self.tris + 1:
-                card = ['CTRIA3', eid, pid, n0, n1, n2]
+            nid = 1
+            cid = None
+            for (x, y, z) in self.nodes:
+                card = ['GRID', nid, cid, x, y, z]
                 msg += print_card_8(card)
-                eid += 1
-                if eid % 1000 == 0:
-                    f.write(msg)
-                    msg = ''
+                nid += 1
             f.write(msg)
 
-        if self.tets is not None:
-            pid = 2
-            psolid = ['PSOLID', pid, mid]
-            msg = print_card_8(psolid)
-            for n0, n1, n2, n3 in self.tets + 1:
-                card = ['CTETRA', eid, pid, n0, n1, n2, n3]
-                msg += print_card_8(card)
-                eid += 1
-                if eid % 1000 == 0:
-                    f.write(msg)
-                    msg = ''
-            f.write(msg)
+            eid = 1
+            mid = 100
+            if self.tris is not None:
+                pid = 1
+                thickness = 0.1
+                pshell = ['PSHELL', pid, mid, thickness]
+                msg = print_card_8(pshell)
 
-        E = 1e7
-        G = None
-        nu = 0.3
-        rho = 0.1
-        mat1 = ['MAT1', mid, E, G, nu, rho]
-        msg = print_card_8(mat1)
-        f.write(msg)
-        f.write('ENDDATA\n')
+                for n0, n1, n2 in self.tris + 1:
+                    card = ['CTRIA3', eid, pid, n0, n1, n2]
+                    msg += print_card_8(card)
+                    eid += 1
+                    if eid % 1000 == 0:
+                        f.write(msg)
+                        msg = ''
+                f.write(msg)
+
+            if self.tets is not None:
+                pid = 2
+                psolid = ['PSOLID', pid, mid]
+                msg = print_card_8(psolid)
+                for n0, n1, n2, n3 in self.tets + 1:
+                    card = ['CTETRA', eid, pid, n0, n1, n2, n3]
+                    msg += print_card_8(card)
+                    eid += 1
+                    if eid % 1000 == 0:
+                        f.write(msg)
+                        msg = ''
+                f.write(msg)
+
+            E = 1e7
+            G = None
+            nu = 0.3
+            rho = 0.1
+            mat1 = ['MAT1', mid, E, G, nu, rho]
+            msg = print_card_8(mat1)
+            f.write(msg)
+            f.write('ENDDATA\n')
 
     def read_tetgen(self, node_filename, smesh_filename, ele_filename, dimension_flag):
         self.nodes = self.read_nodes(node_filename)
@@ -81,71 +83,68 @@ class Tetgen(object):
             raise RuntimeError('dimension_flag = %r and must be 2 or 3.' % dimension_flag)
 
     def read_smesh(self, smesh_filename):
-        f = open(smesh_filename, 'r')
-        for i in range(6):
-            f.readline()
+        with open(smesh_filename, 'r') as f:
+            for i in range(6):
+                f.readline()
 
-        nelements, zero = f.readline().strip().split() # nelements, 0
-        nelements = int(nelements)
+            nelements, zero = f.readline().strip().split() # nelements, 0
+            nelements = int(nelements)
 
 
-        #print("line =", line)
-        tri_list = []
-        for ielement in range(nelements):
-            sline = f.readline().strip().split()
-            nnodes = sline[0]
-            element_nodes = sline[1:]
-            if nnodes == '3':
-                tri_list.append(element_nodes)
-            else:
-                raise NotImplementedError('nnodes = %s' % nnodes)
-            #print(element_nodes)
-        tri = array(tri_list, 'int32') - 1 # subtract 1 so the node ids start at 0
-        print(tri)
-        f.close()
+            #print("line =", line)
+            tri_list = []
+            for ielement in range(nelements):
+                sline = f.readline().strip().split()
+                nnodes = sline[0]
+                element_nodes = sline[1:]
+                if nnodes == '3':
+                    tri_list.append(element_nodes)
+                else:
+                    raise NotImplementedError('nnodes = %s' % nnodes)
+                #print(element_nodes)
+            tri = array(tri_list, 'int32') - 1 # subtract 1 so the node ids start at 0
+            print(tri)
         return tri
 
     def read_nodes(self, node_filename):
-        f = open(node_filename, 'r')
-        nnodes, three, zero1, zero2 = f.readline().strip().split()
-        assert three == '3', three
-        assert zero1 == '0', zero1
-        assert zero2 == '0', zero2
-        nnodes = int(nnodes)
-        nodes = zeros((nnodes, 3), 'float64')
-        for inode in range(nnodes):
-            nodes[inode] = f.readline().strip().split()[1:]
-        f.close()
+        with open(node_filename, 'r') as f:
+            nnodes, three, zero1, zero2 = f.readline().strip().split()
+            assert three == '3', three
+            assert zero1 == '0', zero1
+            assert zero2 == '0', zero2
+            nnodes = int(nnodes)
+            nodes = zeros((nnodes, 3), 'float64')
+            for inode in range(nnodes):
+                nodes[inode] = f.readline().strip().split()[1:]
         print("nodes =", nodes)
         return nodes
 
     def read_ele(self, ele_filename, form_flag='1'):
         #print("ele_filename =", ele_filename)
-        f = open(ele_filename, 'r')
-        nelements, four, form_flag_enabled = f.readline().strip().split()
-        form_flag_enabled = int(form_flag_enabled)
+        with open(ele_filename, 'r') as f:
+            nelements, four, form_flag_enabled = f.readline().strip().split()
+            form_flag_enabled = int(form_flag_enabled)
 
-        assert four == '4', four
-        nelements = int(nelements)
-        #print("nelements =", nelements)
+            assert four == '4', four
+            nelements = int(nelements)
+            #print("nelements =", nelements)
 
-        if not form_flag_enabled:
-            tets = zeros((nelements, 4), 'int32')
-            for ielement in range(nelements):
-                # eid n1    n2    n3    n4       flip_flag???
-                # 1   13260 15506 16059 16065    -1
-                tets[ielement] = f.readline().strip().split()[1:]
-        else:
-            tets = []
-            for ielement in range(nelements):
-                # eid n1    n2    n3    n4       flip_flag???
-                # 1   13260 15506 16059 16065    -1
-                n0, n1, n2, n3, flag = f.readline().strip().split()[1:]
-                if flag == form_flag:
-                    tets.append((n0, n1, n2, n3))
-            tets = array(tets, 'int32')
+            if not form_flag_enabled:
+                tets = zeros((nelements, 4), 'int32')
+                for ielement in range(nelements):
+                    # eid n1    n2    n3    n4       flip_flag???
+                    # 1   13260 15506 16059 16065    -1
+                    tets[ielement] = f.readline().strip().split()[1:]
+            else:
+                tets = []
+                for ielement in range(nelements):
+                    # eid n1    n2    n3    n4       flip_flag???
+                    # 1   13260 15506 16059 16065    -1
+                    n0, n1, n2, n3, flag = f.readline().strip().split()[1:]
+                    if flag == form_flag:
+                        tets.append((n0, n1, n2, n3))
+                tets = array(tets, 'int32')
 
-        f.close()
         #print("nodes =", nodes)
         return tets - 1
     #self.tet = self.read_ele(ele_filename)

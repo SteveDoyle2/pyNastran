@@ -51,9 +51,8 @@ class TestRenumber(unittest.TestCase):
         msg += '            20      10\n'
 
         msg += 'ENDDATA\n'
-        f = open('renumber_in.bdf', 'w')
-        f.write(msg)
-        f.close()
+        with open('renumber_in.bdf', 'w') as f:
+            f.write(msg)
 
         msg_expected = 'CEND\n'
         msg_expected += 'BEGIN BULK\n'
