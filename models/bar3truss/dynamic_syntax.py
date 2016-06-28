@@ -30,7 +30,7 @@ def main():
         'youngs': 30000000.0,
 
     }
-    model = BDF()
+    model = BDF(debug=False)
     model.set_dynamic_syntax(vars)
     model.read_bdf('vared_bar3.bdf')
     out_bdf = 'out.bdf'

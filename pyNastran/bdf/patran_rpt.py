@@ -58,14 +58,13 @@ def main():
         iz = key_map['X Location']
         iozz = key_map['Z Component']
         csv_filename = 'rpt_%i.csv' % key
-        f = open(csv_filename, 'wb')
-        f.write('#x,ozz\n')
-        for row in rows:
-            z = float(row[iz])
-            ozz = float(row[iozz])
-            print("z=%s ozz=%s" % (z, ozz))
-            f.write('%g,%g\n' % (z, ozz))
-        f.close()
+        with open(csv_filename, 'wb') as f:
+            f.write('#x,ozz\n')
+            for row in rows:
+                z = float(row[iz])
+                ozz = float(row[iozz])
+                print("z=%s ozz=%s" % (z, ozz))
+                f.write('%g,%g\n' % (z, ozz))
 
         ix = 0
         dx = 0.1

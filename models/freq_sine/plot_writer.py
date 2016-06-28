@@ -39,29 +39,28 @@ cases = [
 
 iline = 1
 pch_filename = 'test.pch'
-pch_file = open(pch_filename, 'w')
-for case_line in cases:
-    (obj, nids, comps, output) = case_line
-    title = obj.subtitle
-    times = obj._times
-    for nid in nids:
-        for comp in comps:
-            for outputi in output:
-                msg = '%-59s %20i\n' % (title, iline)
-                iline += 1
-                nid = [nid]
-                data = obj.extract_xyplot(nid, comp, outputi)
-                data = data.reshape(len(data))
-                for idata, (time, datai) in enumerate(zip(times, data)):
-                    msg += '%10i                  %12s        %12s%20i\n' % (idata + 1, write_float_12E(time), write_float_12E(datai), iline)
+with open(pch_filename, 'w') as pch_file:
+    for case_line in cases:
+        (obj, nids, comps, output) = case_line
+        title = obj.subtitle
+        times = obj._times
+        for nid in nids:
+            for comp in comps:
+                for outputi in output:
+                    msg = '%-59s %20i\n' % (title, iline)
                     iline += 1
-                pch_file.write(msg)
-                # print(msg)
+                    nid = [nid]
+                    data = obj.extract_xyplot(nid, comp, outputi)
+                    data = data.reshape(len(data))
+                    for idata, (time, datai) in enumerate(zip(times, data)):
+                        msg += '%10i                  %12s        %12s%20i\n' % (
+                            idata + 1, write_float_12E(time), write_float_12E(datai), iline)
+                        iline += 1
+                    pch_file.write(msg)
+                    # print(msg)
+                    # break
                 # break
             # break
-        # break
-pch_file.close()
-
 
 #acc.extract_xyplot(nids, 1, 'real')
 #acc.extract_xyplot(nids, 1, 'imag')
