@@ -29,7 +29,7 @@ class NastranMatrix(BaseCard):
         #self.tin = tin
         #self.tout = tout
         #self.polar = polar
-        #self.ncol = ncol
+        #self.ncols = ncols
         #self.GCj = GCj
         #self.GCi = GCi
         #self.Real = Real
@@ -53,14 +53,14 @@ class NastranMatrix(BaseCard):
             #: Integer > 0 indicates amplitude, phase format.)
             self.polar = integer_or_blank(card, 6, 'polar', 0)
             if self.ifo == 1: # square
-                self.ncol = integer_or_blank(card, 8, 'ifo=%s; ncol' % (self.ifo))
+                self.ncols = integer_or_blank(card, 8, 'ifo=%s; ncol' % (self.ifo))
             elif self.ifo == 6: # symmetric
-                self.ncol = integer_or_blank(card, 8, 'ifo=%s; ncol' % (self.ifo))
+                self.ncols = integer_or_blank(card, 8, 'ifo=%s; ncol' % (self.ifo))
             elif self.ifo in [2, 9]: # rectangular
-                self.ncol = integer(card, 8, 'ifo=%s; ncol' % (self.ifo))
+                self.ncols = integer(card, 8, 'ifo=%s; ncol' % (self.ifo))
             else:
                 # technically right, but nulling this will fix bad decks
-                #self.ncol = blank(card, 8, 'ifo=%s; ncol' % self.ifo)
+                #self.ncols = blank(card, 8, 'ifo=%s; ncol' % self.ifo)
                 raise NotImplementedError('self.ifo=%s is not supported' % self.ifo)
         else:
             raise NotImplementedError(data)
@@ -70,9 +70,14 @@ class NastranMatrix(BaseCard):
         self.Real = []
         if self.is_complex():
             self.Complex = []
+        assert isinstance(self.ifo, integer_types), 'ifo=%r type=%s' % (self.ifo, type(self.ifo))
+        assert not isinstance(self.ifo, bool), 'ifo=%r type=%s' % (self.ifo, type(self.ifo))
 
     @property
     def matrix_type(self):
+        #print('ifo=%r type=%s' % (self.ifo, type(self.ifo)))
+        assert isinstance(self.ifo, integer_types), 'ifo=%r type=%s' % (self.ifo, type(self.ifo))
+        assert not isinstance(self.ifo, bool), 'ifo=%r type=%s name=%s' % (self.ifo, type(self.ifo), self.name)
         if self.ifo == 1:
             matrix_type = 'square'
         elif self.ifo == 6:
@@ -81,8 +86,8 @@ class NastranMatrix(BaseCard):
             matrix_type = 'rectangular'
         else:
             # technically right, but nulling this will fix bad decks
-            #self.ncol = blank(card, 8, 'ifo=%s; ncol' % self.ifo)
-            raise NotImplementedError('self.ifo=%s is not supported' % self.ifo)
+            #self.ncols = blank(card, 8, 'ifo=%s; ncol' % self.ifo)
+            raise NotImplementedError('self.ifo=%r is not supported' % self.ifo)
         return matrix_type
 
     def finalize(self):
@@ -95,15 +100,15 @@ class NastranMatrix(BaseCard):
     @property
     def shape(self):
         if self.ifo in [1, 6]: # square, symmetric
-            if self.ncol is not None:
-                shape = (self.ncol, self.ncol)
+            if self.ncols is not None:
+                shape = (self.ncols, self.ncols)
             else:
                 nrows, ncols = get_row_col_map(
                     self.GCi, self.GCj, self.ifo)[:2]
                 shape = (nrows, ncols)
         elif self.ifo in [2, 9]:
             raise NotImplementedError('need to pull the nrows after reading in everything')
-            #shape = (self.ncol, self.ncol)
+            #shape = (self.ncols, self.ncols)
         else:
             raise NotImplementedError('ifo=%s' % self.ifo)
         return shape
@@ -354,7 +359,7 @@ class NastranMatrix(BaseCard):
         msg = '\n$' + '-' * 80
         msg += '\n$ %s Matrix %s\n' % (self.type, self.name)
         list_fields = [self.type, self.name, 0, self.ifo, self.tin,
-                       self.tout, self.polar, None, self.ncol]
+                       self.tout, self.polar, None, self.ncols]
         if size == 8:
             msg += print_card_8(list_fields)
         else:
@@ -407,7 +412,8 @@ def get_row_col_map(GCi, GCj, ifo):
     ndim = len(GCi.shape)
     if ndim == 1:
         i = 0
-        ncols = 1
+        #nrows = np.unique(GCi)
+        #ncols = np.unique(GCj)
         for GCi in GCi:
             if GCi not in rows:
                 rows[GCi] = i
@@ -420,12 +426,10 @@ def get_row_col_map(GCi, GCj, ifo):
                 cols[GCj] = j
                 cols_reversed[j] = GCj
                 j += 1
-        nrows = len(rows)
     else:
         #print('i0=%s j0=%s' % (i, j))
-        nrows = len(GCi)
-        ncols = len(GCj)
-        assert nrows > 0, 'nrows=%s' % nrows
+        #nrows = len(GCi)
+        #ncols = len(GCj)
         #rows_array = np.zeros((nrows, 2), dtype='int32')
         #cols_array = np.zeros((ncols, 2), dtype='int32')
         #for i, (nid, comp) in enumerate(GCi):
@@ -447,7 +451,7 @@ def get_row_col_map(GCi, GCj, ifo):
                 rows_reversed[i] = GCi
                 i += 1
         if ifo == 6:
-            # symmetric:
+            # symmetric
             for (nid, comp) in GCj:
                 GCj = (nid, comp)
                 if GCj not in rows:
@@ -465,11 +469,11 @@ def get_row_col_map(GCi, GCj, ifo):
                     j += 1
         cols = rows
         cols_reversed = rows_reversed
-        nrows = len(rows)
-        ncols = len(cols)
 
-    #nrows = len(rows)
-    #ncols = len(cols)
+    nrows = len(rows)
+    ncols = len(cols)
+    assert nrows > 0, 'nrows=%s' % nrows
+    assert ncols > 0, 'ncols=%s' % ncols
     return nrows, ncols, ndim, rows, cols, rows_reversed, cols_reversed
 
 def get_matrix(self, is_sparse=False, apply_symmetry=True):
@@ -571,10 +575,20 @@ def get_matrix(self, is_sparse=False, apply_symmetry=True):
                         M[i, j] = reali
                         M[j, i] = reali
                 else:
-                    for (gcj, gci, reali) in zip(self.GCj, self.GCi, self.Real):
-                        i = rows[gci]
-                        j = cols[gcj]
-                        M[i, j] = reali
+                    try:
+                        for (gcj, gci, reali) in zip(self.GCj, self.GCi, self.Real):
+                            i = rows[gci]
+                            j = cols[gcj]
+                            M[i, j] = reali
+                    except IndexError:
+                        msg = ('name=%s ndim=%s i=%s j=%s matrix_type=%s '
+                               'is_polar=%s is_sparse=%s ncols=%s M.shape=%s\n' % (
+                                   self.name, ndim, i, j, self.matrix_type,
+                                   self.is_polar(), is_sparse, self.ncols, M.shape))
+                        msg += 'Rows:\n'
+                        for i, row in enumerate(rows):
+                            msg += '  i=%s row=%s\n' % (i, row)
+                        raise RuntimeError(msg)
         else:
             if self.is_complex():
                 M = zeros((nrows, ncols), dtype='complex128')
@@ -602,9 +616,9 @@ def get_matrix(self, is_sparse=False, apply_symmetry=True):
                             M[j, i] = reali
                     except IndexError:
                         msg = ('name=%s ndim=%s i=%s j=%s matrix_type=%s '
-                               'is_polar=%s ncol=%s M.shape=%s\n' % (
+                               'is_polar=%s ncols=%s M.shape=%s\n' % (
                                    self.name, ndim, i, j, self.matrix_type,
-                                   self.is_polar(), self.ncol, M.shape))
+                                   self.is_polar(), self.ncols, M.shape))
                         msg += 'Rows:\n'
                         for i, row in enumerate(rows):
                             msg += 'i=%s row=%s\n' % (i, row)
@@ -617,9 +631,9 @@ def get_matrix(self, is_sparse=False, apply_symmetry=True):
                             M[i, j] = reali
                     except KeyError:
                         msg = ('name=%s ndim=%s gci=%s gcj=%s matrix_type=%s '
-                               'is_polar=%s is_sparse=%s ncol=%s M.shape=%s\n' % (
+                               'is_polar=%s is_sparse=%s ncols=%s M.shape=%s\n' % (
                                    self.name, ndim, str(gci), str(gcj), self.matrix_type,
-                                   self.is_polar(), is_sparse, self.ncol, M.shape))
+                                   self.is_polar(), is_sparse, self.ncols, M.shape))
                         msg += 'Rows:\n'
                         for i, row in enumerate(rows):
                             msg += '  i=%s row=%s\n' % (i, row)
@@ -627,9 +641,9 @@ def get_matrix(self, is_sparse=False, apply_symmetry=True):
                         raise KeyError(msg)
                     except IndexError:
                         msg = ('name=%s ndim=%s i=%s j=%s matrix_type=%s '
-                               'is_polar=%s is_sparse=%s ncol=%s M.shape=%s\n' % (
+                               'is_polar=%s is_sparse=%s ncols=%s M.shape=%s\n' % (
                                    self.name, ndim, i, j, self.matrix_type,
-                                   self.is_polar(), is_sparse, self.ncol, M.shape))
+                                   self.is_polar(), is_sparse, self.ncols, M.shape))
                         msg += 'Rows:\n'
                         for i, row in enumerate(rows):
                             msg += '  i=%s row=%s\n' % (i, row)
@@ -739,6 +753,17 @@ class DMI(NastranMatrix):
     type = 'DMI'
 
     def __init__(self, card=None, data=None, comment=''):
+        """
+        +--------+-------+-------+------+---------+----------+-----------+-----------+------+
+        |   1    |   2   |   3   |   4  |    5    |    6     |     7     | 8         |  9   |
+        +========+=======+=======+======+=========+==========+===========+===========+======+
+        | DMI    |  NAME |   0   | FORM |   TIN   |   TOUT   |           |     M     |  N   |
+        +--------+-------+-------+------+---------+----------+-----------+-----------+------+
+        | DMI    |  NAME |   J   |  I1  | A(I1,J) |  A(I1,J) | A(I1+1,J) | A(I1+2,J) | etc. |
+        +--------+-------+-------+------+---------+----------+-----------+-----------+------+
+        |        |  I2   |  etc. |      |         |          |           |           |      |
+        +--------+-------+-------+------+---------+----------+-----------+-----------+------+
+        """
         if comment:
             self._comment = comment
         if card:
@@ -757,8 +782,8 @@ class DMI(NastranMatrix):
             #: 0-Set by cell precision
             self.tout = integer_or_blank(card, 5, 'tout', 0)
 
-            self.nRows = integer(card, 7, 'nrows')
-            self.nCols = integer(card, 8, 'ncols')
+            self.nrows = integer(card, 7, 'nrows')
+            self.ncols = integer(card, 8, 'ncols')
 
             assert len(card) == 9, 'len(DMI card) = %i' % len(card)
         else:
@@ -778,13 +803,39 @@ class DMI(NastranMatrix):
         if self.is_complex():
             self.Complex = np.asarray(self.Complex)
 
+    def is_polar(self):
+        if self.tin in [1, 2]:
+            is_polar = False
+        elif self.tin in [3, 4]:
+            is_polar = False # TODO: could be wrong...
+        else:
+            raise NotImplementedError('nrows=%s ncols=%s' % (self.nrows, self.ncols))
+        return is_polar
+
     @property
     def shape(self):
-        return (self.nRows, self.nCols)
+        return (self.nrows, self.ncols)
 
     @property
     def ifo(self):
-        return self.nRows == self.nCols
+        """
+        ifo
+        #: 4-Lower Triangular; 5=Upper Triangular; 6=Symmetric; 8=Identity (m=nRows, n=m)
+
+        #: Form of the matrix:  1=Square (not symmetric); 2=Rectangular;
+        #: 3=Diagonal (m=nRows,n=1);  4=Lower Triangular; 5=Upper Triangular;
+        #: 6=Symmetric; 8=Identity (m=nRows, n=m)
+        self.form = integer(card, 3, 'form')
+        """
+        return self.form
+        #if self.nrows == self.ncols:
+            ## symmetric
+            #ifo = 6
+        ##elif self.nrows > 1 and self.ncols > 1:
+            ##ifo = 2
+        #else:
+            #raise NotImplementedError('form=%r nrows=%s ncols=%s' % (self.form, self.nrows, self.ncols))
+        #return ifo
 
     def _add_column(self, card=None, data=None, comment=''):
         """
@@ -882,7 +933,7 @@ class DMI(NastranMatrix):
                       because it's currently needed for checking results
         """
         list_fields = ['DMI', self.name, 0, self.form, self.tin,
-                       self.tout, None, self.nRows, self.nCols]
+                       self.tout, None, self.nrows, self.ncols]
 
         if self.is_complex():
             for (gci, gcj, reali, imagi) in zip(self.GCi, self.GCj, self.Real, self.Complex):
@@ -951,7 +1002,7 @@ class DMI(NastranMatrix):
         msg = '\n$' + '-' * 80
         msg += '\n$ %s Matrix %s\n' % ('DMI', self.name)
         list_fields = ['DMI', self.name, 0, self.form, self.tin,
-                       self.tout, None, self.nRows, self.nCols]
+                       self.tout, None, self.nrows, self.ncols]
         msg += print_card_8(list_fields)
 
         if self.is_complex():
