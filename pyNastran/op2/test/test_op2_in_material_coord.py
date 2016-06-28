@@ -13,6 +13,7 @@ pkg_path = pyNastran.__path__[0]
 
 CASES = [
     ['test_flat_plate_metallic', 'flat_plate_metallic', 3],
+    ['test_flat_plate_composite', 'flat_plate_composite', 1],
     ['test_dummy_wing_metallic', 'dummy_wing_metallic', 1],
     ]
 
