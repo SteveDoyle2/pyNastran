@@ -168,6 +168,10 @@ class AEFACT(BaseCard):
     def uncross_reference(self):
         pass
 
+    @property
+    def data(self):
+        return self.Di
+
     def raw_fields(self):
         """
         Gets the fields in their unmodified form
@@ -1804,11 +1808,97 @@ class CAERO2(BaseCard):
         del self.pid_ref, self.cp_ref
 
     def get_points(self):
+        """
+        creates a 1D representation of the CAERO2
+        """
         p1 = self.cp_ref.transform_node_to_global(self.p1)
         p2 = p1 + np.array([self.x12, 0., 0.])
         #print("x12 = %s" % self.x12)
         #print("pcaero[%s] = %s" % (self.eid, [p1,p2]))
         return [p1, p2]
+
+    def get_points_elements_3d(self):
+        """
+        gets the points/elements in 3d space as CQUAD4s
+        """
+        paero2 = self.pid_ref
+
+        #print('paero2 - pid=%s lrsb=%s lrib=%s' % (paero2.pid, paero2.lrsb, paero2.lrib))
+        radii = paero2.lrsb_ref.data
+        if paero2.lrib is not None:
+            lrib = paero2.lrib_ref.data
+        #theta_interference1 = paero2.theta1
+        #theta_interference2 = paero2.theta2
+        yzs = []
+        p1, p2 = self.get_points()
+        L = p2 - p1
+        nx = self.nsb
+        #nx = 10
+        dx = L / (nx - 1)
+        dx = dx[0]
+        x0 = p1[0]
+
+        # I think this just lets you know what directions it can pivot in
+        # and therefore doesn't affect visualization
+        #assert paero2.orient == 'ZY', paero2.orient
+        aspect_ratio = paero2.AR
+
+        xi = 0.
+        xs = []
+        ys = []
+        zs = []
+        assert len(radii) == nx, 'len(radii)=%s nx=%s' % (len(radii), nx)
+        for i, radius in enumerate(radii):
+            print('  station=%s xi=%.4f radius=%s' % (i, xi, radius))
+            yz = self.create_ellipse(aspect_ratio, radius)
+            yzs.append(yz)
+            y = yz[:, 0]
+            z = yz[:, 1]
+            ntheta = yz.shape[0]
+            #print('')
+            x = np.ones(ntheta) * xi
+            xs.append(x)
+            ys.append(y)
+            zs.append(z)
+            xi += dx
+        #print('yz.shape=%s xs.shape=%s' % (str(np.array(yzs).shape), str(np.array(xs).shape)))
+        #xyz = np.hstack([yzs, xs])
+        #print('xs =', xs)
+        #print('ys =', ys)
+        xyz = np.vstack([
+            np.hstack(xs),
+            np.hstack(ys),
+            np.hstack(zs),
+        ]).T + p1
+        R = np.linalg.norm(xyz[:, [1, 2]], axis=1)
+        print('xyz.shape =', xyz.shape)
+        #print('xyz =', xyz)
+        #print('R =', R)
+
+        ny = ntheta
+        elems = elements_from_quad(nx, ny)
+        #print('elems =\n', elems)
+        return xyz, elems
+
+    @staticmethod
+    def create_ellipse(aspect_ratio, radius, thetas=None):
+        """
+        a : major radius
+        b : minor radius
+        """
+        a = radius
+        b = radius * aspect_ratio
+        #print('a=%s b=%s' % (a, b))
+        assert aspect_ratio == 1.0, 'thetas is really the eccentric anomaly angle...'
+        if thetas is None:
+            thetas = np.radians(np.linspace(0., 360., 17)) # 4,8,12,16,... becomes 5,9,13,17,...
+            #assert len(thetas) == 8, len(thetas)
+        ntheta = len(thetas)
+        x = a * np.cos(thetas)
+        y = b * np.sin(thetas)
+        xy = np.vstack([x, y]).T
+        assert xy.shape == (ntheta, 2), xy.shape
+        return xy
 
     def set_points(self, points):
         self.p1 = points[0]
@@ -2275,14 +2365,30 @@ class CAERO5(BaseCard):
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
-
-def points_elements_from_quad_points(p1, p2, p3, p4, x, y):
-    nx = x.shape[0]
-    ny = y.shape[0]
+def elements_from_quad(nx, ny):
     assert nx > 1
     assert ny > 1
 
     nelements = (nx - 1) * (ny - 1)
+    npoints = nx * ny
+
+    # create a matrix with the point counter
+    ipoints = np.arange(npoints, dtype='int32').reshape((nx, ny))
+
+    # move around the CAERO quad and apply ipoints
+    elements = np.zeros((nelements, 4), dtype='int32')
+    elements[:, 0] = ipoints[:-1, :-1].ravel()  # (i,  j  )
+    elements[:, 1] = ipoints[1:, :-1].ravel()   # (i+1,j  )
+    elements[:, 2] = ipoints[1:, 1:].ravel()    # (i+1,j+1)
+    elements[:, 3] = ipoints[:-1, 1:].ravel()   # (i,j+1  )
+    return elements
+
+def points_elements_from_quad_points(p1, p2, p3, p4, x, y):
+    nx = x.shape[0]
+    ny = y.shape[0]
+    elements = elements_from_quad(nx, ny)
+
+    #nelements = (nx - 1) * (ny - 1)
     npoints = nx * ny
 
     # shape the vectors so we can multiply them
@@ -2310,11 +2416,11 @@ def points_elements_from_quad_points(p1, p2, p3, p4, x, y):
     ipoints = np.arange(npoints, dtype='int32').reshape((nx, ny))
 
     # move around the CAERO quad and apply ipoints
-    elements = np.zeros((nelements, 4), dtype='int32')
-    elements[:, 0] = ipoints[:-1, :-1].ravel()  # (i,  j  )
-    elements[:, 1] = ipoints[1:, :-1].ravel()   # (i+1,j  )
-    elements[:, 2] = ipoints[1:, 1:].ravel()    # (i+1,j+1)
-    elements[:, 3] = ipoints[:-1, 1:].ravel()   # (i,j+1  )
+    #elements = np.zeros((nelements, 4), dtype='int32')
+    #elements[:, 0] = ipoints[:-1, :-1].ravel()  # (i,  j  )
+    #elements[:, 1] = ipoints[1:, :-1].ravel()   # (i+1,j  )
+    #elements[:, 2] = ipoints[1:, 1:].ravel()    # (i+1,j+1)
+    #elements[:, 3] = ipoints[:-1, 1:].ravel()   # (i,j+1  )
     return points, elements
 
 
@@ -3216,10 +3322,15 @@ class PAERO2(BaseCard):
         """
         Gets complicated parameters on the PAERO2 card
 
-        :param n:     the field number to update
-        :type n:      int
-        :param value: the value for the appropriate field
-        :type field:  varies
+        Parameters
+        ----------
+        n : int
+            the field number to update
+
+        Returns
+        -------
+        value : varies
+            the value for the appropriate field
         """
         nnew = n - 8
         spot = nnew // 2
@@ -3234,10 +3345,12 @@ class PAERO2(BaseCard):
         """
         Updates complicated parameters on the PAERO2 card
 
-        :param n:     the field number to update
-        :type n:      int
-        :param value: the value for the appropriate field
-        :type field:  varies
+        Parameters
+        ----------
+        n : int
+            the field number to update
+        value : varies
+            the value for the appropriate field
         """
         nnew = n - 8
         spot = nnew // 2
@@ -3280,6 +3393,10 @@ class PAERO2(BaseCard):
         self.thi = thi
         self.thn = thn
 
+    def validate(self):
+        assert self.orient in ['Z', 'Y', 'ZY'], 'orient=%r' % self.orient
+        assert isinstance(self.AR, float), 'AR=%r type=%s' % (self.AR, type(self.AR))
+
     @classmethod
     def add_card(cls, card, comment=''):
         pid = integer(card, 1, 'pid')
@@ -3301,10 +3418,17 @@ class PAERO2(BaseCard):
                       thi, thn, comment=comment)
 
     def cross_reference(self, model):
-        pass
+        msg = ' which is required by PAERO2 eid=%s' % self.pid
+        if self.lrsb is not None:
+            self.lrsb_ref = model.AEFact(self.lrsb, msg=msg)
+        if self.lrib is not None:
+            self.lrib_ref = model.AEFact(self.lrib, msg=msg)
 
     def uncross_reference(self):
-        pass
+        self.lrsb = self.lrsb.aefact_id
+        self.lrib = self.lrib.aefact_id
+        del self.lrsb_ref
+        del self.lrib_ref
 
     def raw_fields(self):
         """
