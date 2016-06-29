@@ -1834,8 +1834,8 @@ class CAERO2(BaseCard):
         L = p2 - p1
         nx = self.nsb
         #nx = 10
-        dx = L / (nx - 1)
-        dx = dx[0]
+        dxyz = L / (nx - 1)
+        dx, dy, dz = dxyz
         x0 = p1[0]
 
         # I think this just lets you know what directions it can pivot in
@@ -1849,11 +1849,11 @@ class CAERO2(BaseCard):
         zs = []
         assert len(radii) == nx, 'len(radii)=%s nx=%s' % (len(radii), nx)
         for i, radius in enumerate(radii):
-            print('  station=%s xi=%.4f radius=%s' % (i, xi, radius))
+            #print('  station=%s xi=%.4f radius=%s' % (i, xi, radius))
             yz = self.create_ellipse(aspect_ratio, radius)
             yzs.append(yz)
-            y = yz[:, 0]
-            z = yz[:, 1]
+            y = yz[:, 0] + dy
+            z = yz[:, 1] + dz
             ntheta = yz.shape[0]
             #print('')
             x = np.ones(ntheta) * xi
@@ -1871,7 +1871,7 @@ class CAERO2(BaseCard):
             np.hstack(zs),
         ]).T + p1
         R = np.linalg.norm(xyz[:, [1, 2]], axis=1)
-        print('xyz.shape =', xyz.shape)
+        #print('xyz.shape =', xyz.shape)
         #print('xyz =', xyz)
         #print('R =', R)
 

@@ -386,6 +386,8 @@ class NastranIO(object):
                 npoints, ncelements = caero.get_npanel_points_elements()
                 ncaeros_sub += npoints
                 ncaero_sub_points += ncelements
+            elif isinstance(caero, CAERO2):
+                pass
             else:
                 print('%r doesnt support panel_points_elements' % caero.type)
         #ncaeros = model.ncaeros
