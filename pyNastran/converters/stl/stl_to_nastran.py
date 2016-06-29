@@ -19,49 +19,48 @@ def stl_to_nastran_filename(stl_filename, bdf_filename,
 
     nodal_normals = model.get_normals_at_nodes(model.elements)
 
-    bdf = open(bdf_filename, 'wb')
-    bdf.write('CEND\n')
-    #bdf.write('LOAD = %s\n' % load_id)
-    bdf.write('BEGIN BULK\n')
-    nid2 = 1
-    magnitude = 100.
+    with open(bdf_filename, 'w') as bdf:
+        bdf.write('CEND\n')
+        #bdf.write('LOAD = %s\n' % load_id)
+        bdf.write('BEGIN BULK\n')
+        nid2 = 1
+        magnitude = 100.
 
-    if size == 8:
-        print_card = print_card_8
-    elif size == 16:
-        if is_double:
-            print_card = print_card_16
-        else:
-            print_card = print_card_double
+        if size == 8:
+            print_card = print_card_8
+        elif size == 16:
+            if is_double:
+                print_card = print_card_16
+            else:
+                print_card = print_card_double
 
-    for x, y, z in model.nodes:
-        card = ['GRID', nid, cid, x, y, z]
-        bdf.write(print_card_16(card))
+        for x, y, z in model.nodes:
+            card = ['GRID', nid, cid, x, y, z]
+            bdf.write(print_card_16(card))
 
-        #nx, ny, nz = nodal_normals[nid2 - 1]
-        #card = ['FORCE', load_id, nid, cid, magnitude, nx, ny, nz]
-        #bdf.write(print_card_8(card))
-        nid += 1
-        nid2 += 1
+            #nx, ny, nz = nodal_normals[nid2 - 1]
+            #card = ['FORCE', load_id, nid, cid, magnitude, nx, ny, nz]
+            #bdf.write(print_card_8(card))
+            nid += 1
+            nid2 += 1
 
-    eid = nelements_offset + 1
-    for (n1, n2, n3) in (model.elements + (nnodes_offset + 1)):
-        card = ['CTRIA3', eid, pid, n1, n2, n3]
+        eid = nelements_offset + 1
+        for (n1, n2, n3) in (model.elements + (nnodes_offset + 1)):
+            card = ['CTRIA3', eid, pid, n1, n2, n3]
+            bdf.write(print_card_8(card))
+            eid += 1
+
+        t = 0.1
+        card = ['PSHELL', pid, mid, t]
         bdf.write(print_card_8(card))
-        eid += 1
 
-    t = 0.1
-    card = ['PSHELL', pid, mid, t]
-    bdf.write(print_card_8(card))
+        E = 1e7
+        G = None
+        nu = 0.3
+        card = ['MAT1', mid, E, G, nu]
+        bdf.write(print_card_8(card))
 
-    E = 1e7
-    G = None
-    nu = 0.3
-    card = ['MAT1', mid, E, G, nu]
-    bdf.write(print_card_8(card))
-
-    bdf.write('ENDDATA\n')
-    bdf.close()
+        bdf.write('ENDDATA\n')
 
 def main():
     import os

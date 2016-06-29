@@ -2,10 +2,9 @@
 """the interface for bdf_test"""
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import PY2
 import os
 import sys
-#import time
+from six import PY2
 
 import pyNastran
 from pyNastran.bdf.test.test_bdf import run_lots_of_files
@@ -58,6 +57,7 @@ def run(regenerate=True, run_nastran=False, debug=False, sum_load=True, xref=Tru
     else:
         nastran = ''
 
+    failed_cases_filename = 'failed_cases%s%s.in' % (sys.version_info[:2])
     if regenerate:
         files2 = get_all_files(folders_file, '.bdf')
         files2 += get_all_files(folders_file, '.nas')
@@ -65,7 +65,8 @@ def run(regenerate=True, run_nastran=False, debug=False, sum_load=True, xref=Tru
         files2 += files
         files2.sort()
     else:
-        files2 = get_failed_files('failed_cases.in')
+        print('failed_cases_filename = %r' % failed_cases_filename)
+        files2 = get_failed_files(failed_cases_filename)
 
     files = remove_marc_files(files2)
     files = [fname for fname in files
@@ -100,7 +101,7 @@ def run(regenerate=True, run_nastran=False, debug=False, sum_load=True, xref=Tru
         write = 'wb'
     else:
         write = 'w'
-    with open('failed_cases.in', write) as failed_cases_file:
+    with open(failed_cases_filename, write) as failed_cases_file:
         for fname in failed_files:
             failed_cases_file.write('%s\n' % fname)
     sys.exit('finished...')

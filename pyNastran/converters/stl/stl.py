@@ -108,10 +108,10 @@ class STL(object):
         with open(stl_filename, 'wb') as infile:
             if hasattr(self, 'header'):
                 self.header.ljust(80, '\0')
-                infile.write('%-80s' % self.header[:80])
+                header = '%-80s' % self.header[:80]
             else:
                 header = '%-80s' % stl_filename[:80]
-                infile.write(pack('80s', header))
+            infile.write(pack(b'80s', header.encode('ascii')))
             #avector = [0., 0., 0.]
             #bvector = [0., 0., 0.]
             #cvector = [0., 0., 0.]
@@ -543,7 +543,7 @@ class STL(object):
         node_format = ' facet normal %s %s %s\n' % (float_fmt, float_fmt, float_fmt)
         vertex_format = '     vertex %s %s %s\n' % (float_fmt, float_fmt, float_fmt)
         msg += 'solid %s\n' % solid_name
-        with open(out_filename, 'wb') as out:
+        with open(out_filename, 'w') as out:
             out.write(msg)
 
             nelements = elements.shape[0]
