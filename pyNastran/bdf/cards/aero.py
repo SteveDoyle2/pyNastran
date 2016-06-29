@@ -1834,9 +1834,8 @@ class CAERO2(BaseCard):
         L = p2 - p1
         nx = self.nsb
         #nx = 10
-        dxyz = L / (nx - 1)
+        dxyz = L / nx
         dx, dy, dz = dxyz
-        x0 = p1[0]
 
         # I think this just lets you know what directions it can pivot in
         # and therefore doesn't affect visualization
@@ -1847,7 +1846,8 @@ class CAERO2(BaseCard):
         xs = []
         ys = []
         zs = []
-        assert len(radii) == nx, 'len(radii)=%s nx=%s' % (len(radii), nx)
+        #Rs = []
+        assert len(radii) == (nx + 1), 'len(radii)=%s nx=%s' % (len(radii), nx)
         for i, radius in enumerate(radii):
             #print('  station=%s xi=%.4f radius=%s' % (i, xi, radius))
             yz = self.create_ellipse(aspect_ratio, radius)
@@ -1860,6 +1860,7 @@ class CAERO2(BaseCard):
             xs.append(x)
             ys.append(y)
             zs.append(z)
+            #Rs.append(np.sqrt(y**2 + z**2))
             xi += dx
         #print('yz.shape=%s xs.shape=%s' % (str(np.array(yzs).shape), str(np.array(xs).shape)))
         #xyz = np.hstack([yzs, xs])
@@ -1870,13 +1871,13 @@ class CAERO2(BaseCard):
             np.hstack(ys),
             np.hstack(zs),
         ]).T + p1
-        R = np.linalg.norm(xyz[:, [1, 2]], axis=1)
+        #R = np.hstack(Rs)
         #print('xyz.shape =', xyz.shape)
         #print('xyz =', xyz)
         #print('R =', R)
 
         ny = ntheta
-        elems = elements_from_quad(nx, ny)
+        elems = elements_from_quad(nx+1, ny)
         #print('elems =\n', elems)
         return xyz, elems
 
@@ -1885,17 +1886,35 @@ class CAERO2(BaseCard):
         """
         a : major radius
         b : minor radius
+
+        Parameters
+        ----------
+        aspect_ratio : float
+            AR = height/width
+
+        https://en.wikipedia.org/wiki/Ellipse#Polar_form_relative_to_center
+
+        .. math::
+
+            r(\theta )={\frac {ab}{\sqrt {(b\cos \theta )^{2}+(a\sin \theta )^{2}}}}
+
+        R(theta) = a*b / ((b*cos(theta))**2 + (a*sin(theta))**2)
         """
+        if thetas is None: # 41
+            thetas = np.radians(np.linspace(0., 360., 17)) # 4,8,12,16,... becomes 5,9,13,17,...
+        ntheta = len(thetas)
+
+
         a = radius
         b = radius * aspect_ratio
-        #print('a=%s b=%s' % (a, b))
-        assert aspect_ratio == 1.0, 'thetas is really the eccentric anomaly angle...'
-        if thetas is None:
-            thetas = np.radians(np.linspace(0., 360., 17)) # 4,8,12,16,... becomes 5,9,13,17,...
-            #assert len(thetas) == 8, len(thetas)
-        ntheta = len(thetas)
-        x = a * np.cos(thetas)
-        y = b * np.sin(thetas)
+        if a == 0.0 and b == 0.0:
+            xy = np.zeros((ntheta, 2)) # this is just R
+            return xy
+
+        R = a*b / np.sqrt((b*np.cos(thetas))**2 + (a*np.sin(thetas))**2)
+        x = R * np.cos(thetas)
+        y = R * np.sin(thetas)
+
         xy = np.vstack([x, y]).T
         assert xy.shape == (ntheta, 2), xy.shape
         return xy

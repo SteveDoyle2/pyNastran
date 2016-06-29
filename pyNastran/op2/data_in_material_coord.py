@@ -145,6 +145,11 @@ def data_in_material_coord(bdf, op2, in_place=False):
     op2_new : :class:`.OP2` object
         A :class:`.OP2` object with the abovementioned changes.
 
+    Warning
+    -------
+     - doesn't handle composite stresses/strains/forces
+     - doesn't handle solid stresses/strains/forces (e.g. MAT11)
+     - zeros out data for CQUAD8s
     """
     if in_place:
         op2_new = op2
