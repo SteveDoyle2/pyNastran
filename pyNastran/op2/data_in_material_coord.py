@@ -226,7 +226,6 @@ def data_in_material_coord(bdf, op2, in_place=False):
             thetarad[mcid] = tmp
 
     thetarad = dict([[eid, theta] for eid, theta in zip(eids, thetarad)])
-    thick_array = dict([[eid, getattr(e.pid, 't', None)] for (eid, e) in zip(eids, elems)])
 
     for vecname in force_vectors:
         op2_vectors = getattr(op2, vecname)
@@ -234,26 +233,25 @@ def data_in_material_coord(bdf, op2, in_place=False):
         for subcase, vector in op2_vectors.items():
             new_vector = new_vectors[subcase]
             veceids = get_eids_from_op2_vector(vector)
-            vecthick = np.array([thick_array[eid] for eid in veceids])
             vecthetarad = np.array([thetarad[eid] for eid in veceids])
 
             # membrane terms
-            Sxx = vector.data[:, :, 0] / vecthick
-            Syy = vector.data[:, :, 1] / vecthick
-            Sxy = vector.data[:, :, 2] / vecthick
+            Sxx = vector.data[:, :, 0]
+            Syy = vector.data[:, :, 1]
+            Sxy = vector.data[:, :, 2]
             Sxx_theta, Syy_theta, Sxy_theta = transf_Mohr(Sxx, Syy, Sxy, vecthetarad)
-            new_vector.data[:, :, 0] = Sxx_theta * vecthick
-            new_vector.data[:, :, 1] = Syy_theta * vecthick
-            new_vector.data[:, :, 2] = Sxy_theta * vecthick
+            new_vector.data[:, :, 0] = Sxx_theta
+            new_vector.data[:, :, 1] = Syy_theta
+            new_vector.data[:, :, 2] = Sxy_theta
 
             # bending terms
-            Sxx = vector.data[:, :, 3] / vecthick
-            Syy = vector.data[:, :, 4] / vecthick
-            Sxy = vector.data[:, :, 5] / vecthick
+            Sxx = vector.data[:, :, 3]
+            Syy = vector.data[:, :, 4]
+            Sxy = vector.data[:, :, 5]
             Sxx_theta, Syy_theta, Sxy_theta = transf_Mohr(Sxx, Syy, Sxy, vecthetarad)
-            new_vector.data[:, :, 3] = Sxx_theta * vecthick
-            new_vector.data[:, :, 4] = Syy_theta * vecthick
-            new_vector.data[:, :, 5] = Sxy_theta * vecthick
+            new_vector.data[:, :, 3] = Sxx_theta
+            new_vector.data[:, :, 4] = Syy_theta
+            new_vector.data[:, :, 5] = Sxy_theta
 
             # transverse terms
             Qx = vector.data[:, :, 6]
