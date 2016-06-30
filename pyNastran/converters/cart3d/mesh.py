@@ -187,36 +187,35 @@ class Cart3d_Mesher(Cart3D):
             ih1 += nelements
             ih2 += nelements
 
-        f = open(bdf_filename, 'wb')
-        f.write('CEND\n')
-        f.write('BEGIN BULK\n')
+        with open(bdf_filename, 'wb') as f:
+            f.write('CEND\n')
+            f.write('BEGIN BULK\n')
 
-        pents += 1
-        cid = None
-        for nid, grid in enumerate(nodes):
-            if nid % 5000 == 0:
-                print('writing nid=%s' % (nid + 1))
+            pents += 1
+            cid = None
+            for nid, grid in enumerate(nodes):
+                if nid % 5000 == 0:
+                    print('writing nid=%s' % (nid + 1))
 
-            card = ['GRID', nid + 1, cid, ] + list(grid)
-            f.write(print_card_16(card))
+                card = ['GRID', nid + 1, cid, ] + list(grid)
+                f.write(print_card_16(card))
 
-        pid = 0
-        mid = 1
-        for eid, penta in enumerate(pents):
-            if (eid + 1) % nelements == 1:
-                pid += 1
-                card = ['PSOLID', pid, mid]
+            pid = 0
+            mid = 1
+            for eid, penta in enumerate(pents):
+                if (eid + 1) % nelements == 1:
+                    pid += 1
+                    card = ['PSOLID', pid, mid]
+                    f.write(print_card_8(card))
+                    print('bumping pid -> %s' % pid)
+                if eid % 5000 == 0:
+                    print('writing eid=%s' % (eid + 1))
+                card = ['CPENTA', eid + 1, pid, ] + list(penta)
                 f.write(print_card_8(card))
-                print('bumping pid -> %s' % pid)
-            if eid % 5000 == 0:
-                print('writing eid=%s' % (eid + 1))
-            card = ['CPENTA', eid + 1, pid, ] + list(penta)
-            f.write(print_card_8(card))
 
-        card = ['MAT1', mid, 1.0e7, None, 0.3]
-        f.write(print_card_8(card))
-        f.write('ENDDATA\n')
-        f.close()
+            card = ['MAT1', mid, 1.0e7, None, 0.3]
+            f.write(print_card_8(card))
+            f.write('ENDDATA\n')
 
 def main():
     cart3d_filename = 'threePlugs_bin.tri'

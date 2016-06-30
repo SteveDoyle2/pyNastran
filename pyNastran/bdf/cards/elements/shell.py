@@ -1146,7 +1146,25 @@ class CTRIAX6(TriShell):
 
     @property
     def node_ids(self):
+        """
+             5
+            / \
+           6   4
+         /       \
+        1----2----3
+        """
         return self._nodeIDs(allow_empty_nodes=True)
+
+    def get_edge_ids(self):
+        """
+        Return the edge IDs
+        """
+        node_ids = self.node_ids
+        return [
+            tuple(sorted([node_ids[0], node_ids[2]])),
+            tuple(sorted([node_ids[2], node_ids[4]])),
+            tuple(sorted([node_ids[4], node_ids[0]]))
+        ]
 
     def raw_fields(self):
         list_fields = (['CTRIAX6', self.eid, self.Mid(), self.Pid()] +

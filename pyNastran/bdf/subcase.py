@@ -9,6 +9,7 @@ from numpy import ndarray
 from pyNastran.utils import integer_types
 from pyNastran.bdf.cards.base_card import deprecated
 from pyNastran.bdf.cards.collpase_card import collapse_thru_packs
+from pyNastran.bdf.bdf_interface.assign_type import interpret_value
 
 int_cards = (
     # these are cards that look like:
@@ -1239,69 +1240,80 @@ def expand_thru_case_control(set_value):
             set_value2.add(ivalue)
             continue
         ivalue = ivalue.strip()
-        if ivalue.isdigit():
-            ivalue = int(ivalue)
-            if not imin < ivalue < imax:
-                add_mode = True
-                #print('break...')
-            if add_mode:
-                #print('adding %s' % ivalue)
-                set_value2.add(ivalue)
-            else:
-                #print('removing %s' % ivalue)
-                set_value2.remove(ivalue)
-                imin = ivalue
+        #print('  ivalue=%r; type=%s' % (ivalue, type(ivalue)))
+        if '/' in ivalue:
+            set_value2.add(ivalue)
         else:
-            if set_value is 'EXCLUDE':
-                msg = ('EXCLUDE is not supported on CaseControlDeck '
-                       'SET card\n')
-                raise RuntimeError(msg)
-            elif 'THRU' in ivalue:
-                svalues = ivalue.split()
-                if len(svalues) == 3:
-                    assert add_mode is True, add_mode
-                    imin, thru, imax = svalues
-                    assert thru == 'THRU', thru
-                    imin = int(imin)
-                    imax = int(imax)
-                    assert imax > imin, 'imin=%s imax=%s' % (imin, imax)
-                    for jthru in range(imin, imax + 1):
-                        set_value2.add(jthru)
-
-                elif len(svalues) == 4:
-                    imin, thru, imax, by_except = svalues
-                    imin = int(imin)
-                    imax = int(imax)
-                    assert imax > imin, 'imin=%s imax=%s' % (imin, imax)
-                    assert by_except == 'EXCEPT', by_except
-
-                    for jthru in range(imin, imax + 1):
-                        set_value2.add(jthru)
-                    add_mode = False
-
-                elif len(svalues) == 5:
-                    imin, thru, imax, by_except, increment_except = svalues
-                    imin = int(imin)
-                    imax = int(imax)
-                    assert imax > imin, 'imin=%s imax=%s' % (imin, imax)
-                    increment_except = int(increment_except)
-                    if by_except == 'BY':
-                        for jthru in range(imin, imax + 1, by_except):
-                            set_value2.add(jthru)
-                        add_mode = True
-                    elif by_except == 'EXCEPT':
-                        for jthru in range(imin, imax + 1):
-                            if jthru == increment_except:
-                                continue
-                            set_value2.add(jthru)
-                        add_mode = False
-                    else:
-                        raise RuntimeError(ivalue)
+            ivalue = interpret_value(ivalue, card=str(set_value))
+            if isinstance(ivalue, integer_types):
+                #print('  isdigit')
+                #ivalue = int(ivalue)
+                if not imin < ivalue < imax:
+                    add_mode = True
+                    #print('  break...\n')
+                if add_mode:
+                    #print('  adding %s' % ivalue)
+                    set_value2.add(ivalue)
                 else:
-                    raise RuntimeError('expected data of the form: 10 THRU 20 or 10 THRU 20 BY 5; actual=\n%r' % ivalue)
-            else:
+                    #print('  removing %s' % ivalue)
+                    set_value2.remove(ivalue)
+                    imin = ivalue
+            elif isinstance(ivalue, float):
                 assert add_mode is True, add_mode
                 set_value2.add(ivalue)
+            elif isinstance(ivalue, string_types):
+                #print('  not digit')
+                if set_value is 'EXCLUDE':
+                    msg = ('EXCLUDE is not supported on CaseControlDeck '
+                           'SET card\n')
+                    raise RuntimeError(msg)
+                elif 'THRU' in ivalue:
+                    svalues = ivalue.split()
+                    #print('  svalues=%s' % svalues)
+                    if len(svalues) == 3:
+                        assert add_mode is True, add_mode
+                        imin, thru, imax = svalues
+                        assert thru == 'THRU', thru
+                        imin = int(imin)
+                        imax = int(imax)
+                        assert imax > imin, 'imin=%s imax=%s' % (imin, imax)
+                        for jthru in range(imin, imax + 1):
+                            set_value2.add(jthru)
+
+                    elif len(svalues) == 4:
+                        imin, thru, imax, by_except = svalues
+                        imin = int(imin)
+                        imax = int(imax)
+                        assert imax > imin, 'imin=%s imax=%s' % (imin, imax)
+                        assert by_except == 'EXCEPT', by_except
+
+                        for jthru in range(imin, imax + 1):
+                            set_value2.add(jthru)
+                        add_mode = False
+
+                    elif len(svalues) == 5:
+                        imin, thru, imax, by_except, increment_except = svalues
+                        imin = int(imin)
+                        imax = int(imax)
+                        assert imax > imin, 'imin=%s imax=%s' % (imin, imax)
+                        increment_except = int(increment_except)
+                        if by_except == 'BY':
+                            for jthru in range(imin, imax + 1, by_except):
+                                set_value2.add(jthru)
+                            add_mode = True
+                        elif by_except == 'EXCEPT':
+                            for jthru in range(imin, imax + 1):
+                                if jthru == increment_except:
+                                    continue
+                                set_value2.add(jthru)
+                            add_mode = False
+                        else:
+                            raise RuntimeError(ivalue)
+                    else:
+                        raise RuntimeError('expected data of the form: 10 THRU 20 or 10 THRU 20 BY 5; actual=\n%r' % ivalue)
+                else:
+                    assert add_mode is True, add_mode
+                    set_value2.add(ivalue)
 
     list_values = list(set_value2)
     try:

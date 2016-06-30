@@ -120,11 +120,11 @@ class PanairPatch(object):
         return (self.nrows - 1) * (self.ncols - 1)
 
     def nPoints(self):
-        return (self.nrows) * (self.ncols)
+        return self.nrows * self.ncols
 
     def get_panel_points(self, ipanel):
         r = ipanel % (self.nrows - 1)
-        c = ipanel / (self.nrows - 1)
+        c = ipanel // (self.nrows - 1)
 
         #print "r=%s c=%s" %(r,c)
         p1 = self.get_point(r, c)
@@ -135,7 +135,7 @@ class PanairPatch(object):
 
     def get_panel_point_IDs(self, ipanel):
         r = ipanel % (self.nrows - 1)
-        c = ipanel / (self.nrows - 1)
+        c = ipanel // (self.nrows - 1)
 
         #print "r=%s c=%s" %(r,c)
         p1 = self.get_point_ID(r, c)
@@ -209,8 +209,8 @@ class PanairPatch(object):
         return col * self.nrows + row
 
     def get_ipoint(self, ipoint):
-        irow = ipoint / (self.ncols)
-        icol = ipoint % (self.ncols)
+        irow = ipoint // self.ncols
+        icol = ipoint % self.ncols
         #self.log.debug("ipoint=%s irow=%s icol=%s" % (ipoint, irow, icol))
         return self.get_point(irow, icol)
 

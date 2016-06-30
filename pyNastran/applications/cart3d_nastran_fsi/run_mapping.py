@@ -20,7 +20,7 @@ def validate_inputs(inputs):
     Mach = inputs['Mach']
     pInf = inputs['pInf']
     qInf = inputs['qInf']
-    Sref = inputs['Sref']0
+    Sref = inputs['Sref']
     Lref = inputs['Lref']
     xref = inputs['xref']
     isubcase = inputs['isubcase']
