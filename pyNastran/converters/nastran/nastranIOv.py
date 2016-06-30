@@ -991,7 +991,8 @@ class NastranIO(object):
             return {}
 
         node_ids_c1 = defaultdict(str)
-        for card in sorted(spcs):
+        print('spcs = ', spcs)
+        for card in spcs:  # used to be sorted(spcs)
             if card.type == 'SPC':
                 for nid, c1 in zip(card.gids, card.constraints):
                     assert nid is not None, card.gids
