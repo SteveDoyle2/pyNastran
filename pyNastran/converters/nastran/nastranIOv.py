@@ -38,7 +38,7 @@ from vtk import (vtkTriangle, vtkQuad, vtkTetra, vtkWedge, vtkHexahedron,
 #from pyNastran import is_release
 from pyNastran.utils import integer_types
 from pyNastran.bdf.bdf import (BDF,
-                               CAERO1, CAERO3, CAERO4, CAERO5, # CAERO2,
+                               CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
                                CQUAD4, CQUAD8, CQUADR, CSHEAR,
                                CTRIA3, CTRIA6, CTRIAR, CTRIAX6,
                                CONM2,
@@ -386,10 +386,22 @@ class NastranIO(object):
                 npoints, ncelements = caero.get_npanel_points_elements()
                 ncaeros_sub += npoints
                 ncaero_sub_points += ncelements
+            elif isinstance(caero, CAERO2):
+                pass
             else:
                 print('%r doesnt support panel_points_elements' % caero.type)
-        ncaeros = model.ncaeros
-        ncaeros_points = ncaeros * 4
+        #ncaeros = model.ncaeros
+
+        ncaeros_points = 0
+        ncaeros = 0
+        for caero in model.caeros:
+            if isinstance(caero, (CAERO1, CAERO3, CAERO4, CAERO5)):
+                ncaeros_points += 4
+                ncaeros += 1
+            elif isinstance(caero, CAERO2):
+                points, elems = caero.get_points_elements_3d()
+                ncaeros_points += points.shape[0]
+                ncaeros += elems.shape[0]
 
         box_id_to_caero_element_map = {}
         num_prev = 0
@@ -649,17 +661,14 @@ class NastranIO(object):
 
         max_cpoints = []
         min_cpoints = []
+        caero_grid = self.alt_grids['caero']
         for eid, element in sorted(iteritems(model.caeros)):
             if isinstance(element, (CAERO1, CAERO3, CAERO4, CAERO5)):
+                # wing panel
                 cpoints = element.get_points()
                 max_cpoints.append(np.array(cpoints).max(axis=0))
                 min_cpoints.append(np.array(cpoints).min(axis=0))
-                if eid == 10100:
-                    print('---cpoints---')
-                    for point in cpoints:
-                        print(point)
-                if eid == 10100:
-                    continue
+
                 elem = vtkQuad()
                 elem.GetPointIds().SetId(0, j)
                 elem.GetPointIds().SetId(1, j + 1)
@@ -669,8 +678,48 @@ class NastranIO(object):
                 points.InsertPoint(j + 1, *cpoints[1])
                 points.InsertPoint(j + 2, *cpoints[2])
                 points.InsertPoint(j + 3, *cpoints[3])
-                self.alt_grids['caero'].InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                caero_grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
                 j += 4
+            elif isinstance(element, CAERO2):
+                # slender body
+                if 0:
+                    # 1D version
+                    cpoints = element.get_points()
+                    max_cpoints.append(np.array(cpoints).max(axis=0))
+                    min_cpoints.append(np.array(cpoints).min(axis=0))
+
+                    elem = vtk.vtkLine()
+                    elem.GetPointIds().SetId(0, j)
+                    elem.GetPointIds().SetId(1, j + 1)
+
+                    print(', '.join(dir(elem)))
+                    prop = elem.GetProperty()
+                    #print(dir(prop))
+
+                    points.InsertPoint(j, *cpoints[0])
+                    points.InsertPoint(j + 1, *cpoints[1])
+                    j += 2
+                    caero_grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                else:
+                    # 3D version
+                    xyz, elems = element.get_points_elements_3d()
+                    for elemi in elems:
+                        elem = vtkQuad()
+                        elem.GetPointIds().SetId(0, j)
+                        elem.GetPointIds().SetId(1, j + 1)
+                        elem.GetPointIds().SetId(2, j + 2)
+                        elem.GetPointIds().SetId(3, j + 3)
+                        n1, n2, n3, n4 = elemi
+
+                        points.InsertPoint(j, *xyz[n1])
+                        points.InsertPoint(j + 1, *xyz[n2])
+                        points.InsertPoint(j + 2, *xyz[n3])
+                        points.InsertPoint(j + 3, *xyz[n4])
+                        caero_grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                        j += 4
+                        #print('caero:\n', element)
+                        #print('nids:\n', n1, n2, n3, n4)
+                        #print('xyz:\n', xyz[n1], xyz[n2], xyz[n3], xyz[n4])
             else:
                 self.log_info("skipping %s" % element.type)
         self.log_info('CAERO.max = %s' % np.vstack(max_cpoints).max(axis=0))
@@ -2236,8 +2285,8 @@ class NastranIO(object):
             e11 = np.zeros(mids.shape, dtype='float32')
             e22 = np.zeros(mids.shape, dtype='float32')
             for umid in np.unique(mids):
-                #if umid == 0:
-                    #continue
+                if umid == 0:
+                    continue
                 try:
                     mat = model.materials[umid]
                 except KeyError:

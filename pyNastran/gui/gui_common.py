@@ -40,6 +40,7 @@ from pyNastran.gui.menus.application_log import PythonConsoleWidget, Application
 from pyNastran.gui.menus.manage_actors import EditGeometryProperties
 from pyNastran.gui.menus.groups_modify import GroupsModify, Group
 from pyNastran.gui.menus.modify_label_properties import ModifyLabelPropertiesMenu
+from pyNastran.gui.menus.modify_picker_properties import ModifyPickerPropertiesMenu
 
 from pyNastran.gui.testing_methods import CoordProperties
 #from pyNastran.gui.menus.multidialog import MultiFileDialog
@@ -320,6 +321,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                 ('label_modify', 'Modify label color/size', '', None, 'Edit Label Properties', self.on_set_label_size_color),
                 ('label_reset', 'Clear all labels', '', None, 'Clear all labels', self.reset_labels),
 
+                ('picker_modify', 'Modify picker size', '', None, 'Edit Label Properties', self.on_set_picker_size),
+
                 ('legend', 'Modify legend', 'legend.png', None, 'Set Legend', self.set_legend),
                 ('clipping', 'Set clipping', '', None, 'Set Clipping', self.set_clipping),
                 #('axis', 'Show/Hide Axis', 'axis.png', None, 'Show/Hide Global Axis', self.on_show_hide_axes),
@@ -432,7 +435,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         menu_view = [
             'screenshot', '', 'wireframe', 'surface', 'camera_reset', '',
             'back_color', 'text_color', '',
-            'label_modify', 'label_clear', 'label_reset', '',
+            'label_modify', 'label_clear', 'label_reset', 'picker_modify', '',
             'legend', 'geo_properties']
         if self.is_groups:
             menu_view += ['modify_groups', 'create_groups_by_property_id']
@@ -2039,7 +2042,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         # cell picker
         self.cell_picker = vtk.vtkCellPicker()
         self.node_picker = vtk.vtkPointPicker()
-        #self.cell_picker.SetTolerance(0.0005)
+        self.cell_picker.SetTolerance(0.0005)
 
     def _cell_centroid_pick(self, cell_id, world_position):
         duplicate_key = None
@@ -2828,6 +2831,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             xyz = world_position
         elif cell_type in [24]: # CTETRA10
             xyz = world_position
+        elif cell_type in [3]: # CBAR
+            xyz = world_position
         else:
             #self.log.error(msg)
             msg = 'cell_type=%s nnodes=%s; result_name=%s result_values=%s' % (
@@ -3316,6 +3321,74 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         if render:
             self.vtk_interactor.GetRenderWindow().Render()
             self.log_command('set_label_color(%s, %s, %s)' % color)
+
+    #---------------------------------------------------------------------------------------
+    # PICKER MENU
+    def on_set_picker_size(self):
+        """
+        Opens a dialog box to set:
+
+        +--------+----------+
+        |  Name  |  String  |
+        +--------+----------+
+        |  Min   |  Float   |
+        +--------+----------+
+        |  Max   |  Float   |
+        +--------+----------+
+        | Format | pyString |
+        +--------+----------+
+        """
+        #if not hasattr(self, 'case_keys'):
+            #self.log_error('No model has been loaded.')
+            #return
+
+        #print('size =', self.element_picker_size)
+        size = 10.
+        size = self.get_element_picker_size()
+        data = {
+            'size' : size,
+            'dim_max' : self.dim_max,
+            #'clicked_ok' : False,
+            #'clicked_cancel' : False,
+            #'close' : False,
+        }
+        #print(data)
+        if not self._picker_window_shown:
+            self._picker_window = ModifyPickerPropertiesMenu(data, win_parent=self)
+            self._picker_window.show()
+            self._picker_window_shown = True
+            self._picker_window.exec_()
+        else:
+            self._picker_window.activateWindow()
+
+        if 'close' not in data:
+            self._picker_window.activateWindow()
+            return
+
+        if data['close']:
+            self._picker_window_shown = False
+            del self._picker_window
+        else:
+            self._picker_window.activateWindow()
+
+    def get_element_picker_size(self):
+        return self.cell_picker.GetTolerance()
+
+    @property
+    def element_picker_size(self):
+        return self.get_element_picker_size()
+
+    @element_picker_size.setter
+    def element_picker_size(self, size):
+        """sets the element picker size"""
+        self.cell_picker.SetTolerance(size)
+
+    def set_element_picker_size(self, size):
+        """Updates the element picker size"""
+
+        assert size >= 0., size
+        self.element_picker_size = size
+
 
     #---------------------------------------------------------------------------------------
     # CLIPPING MENU
