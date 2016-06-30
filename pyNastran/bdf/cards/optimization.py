@@ -1262,9 +1262,11 @@ class DRESP2(OptConstraint):
                     ##field = 'cat'
                     #print('field=%s value=%r type=%r should be an integer...\ncard=%s' % (i+9, field, name, card))
                     assert isinstance(field, integer_types), 'field=%i value=%r type=%s should be an integer...\ncard=%s' % (i+9, field, name, card)
-                elif name in ['DTABLE']:
+                elif name == 'DTABLE':
                     #print('field=%s value=%r type=%r should be an string...\ncard=%s' % (i+9, field, name, card))
                     assert isinstance(field, string_types), 'field=%i value=%r type=%s should be an string...\ncard=%s' % (i+9, field, name, card)
+                elif name == 'DFRFNC':
+                    pass
                 else:
                     raise NotImplementedError(name)
                 value_list.append(field)
