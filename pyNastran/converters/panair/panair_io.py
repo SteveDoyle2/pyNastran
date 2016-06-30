@@ -149,6 +149,8 @@ class PanairIO(object):
 
         # centroidal
         nelements = len(elements)
+        #print('nelements = ', nelements)
+        #print('nnodes = ', nodes.shape)
         Xc = zeros(nelements, dtype='float32')
         Yc = zeros(nelements, dtype='float32')
         Zc = zeros(nelements, dtype='float32')
@@ -156,6 +158,7 @@ class PanairIO(object):
         normal = zeros((nelements, 3), dtype='float32')
         for i, element in enumerate(elements):
             p1i, p2i, p3i, p4i = element
+            #print('element = ', element)
             p1 = array(nodes[p1i])
             p2 = array(nodes[p2i])
             p3 = array(nodes[p3i])

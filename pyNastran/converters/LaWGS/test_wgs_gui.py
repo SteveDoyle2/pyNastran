@@ -1,7 +1,7 @@
 import os
 
 from pyNastran.gui.testing_methods import GUIMethods
-from pyNastran.converters.LaWGS.wgsIO import LaWGS_IO
+from pyNastran.converters.LaWGS.wgs_io import LaWGS_IO
 import pyNastran
 
 pkg_path = pyNastran.__path__[0]

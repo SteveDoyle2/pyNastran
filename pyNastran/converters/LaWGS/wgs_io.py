@@ -3,7 +3,7 @@ from six import iteritems
 import vtk
 from vtk import vtkQuad
 from numpy import array, arange, cross
-from pyNastran.converters.LaWGS.wgsReader import LaWGS
+from pyNastran.converters.LaWGS.wgs_reader import LaWGS
 
 
 class LaWGS_IO(object):

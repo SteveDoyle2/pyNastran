@@ -176,38 +176,38 @@ class PanairGrid(object):
         else:
             wb = 'w'
 
-        with open(out_filename, wb) as outfile:
-            outfile.write(self.title_section)
-            outfile.write(self.write_data_check())
-            outfile.write(self.symmetry_section)
+        with open(out_filename, wb) as panair_file:
+            panair_file.write(self.title_section)
+            panair_file.write(self.write_data_check())
+            panair_file.write(self.symmetry_section)
 
-            outfile.write(self.write_mach())
-            outfile.write(self.write_cases())
-            outfile.write(self.write_alphas())
-            outfile.write(self.write_reference_quantities())
+            panair_file.write(self.write_mach())
+            panair_file.write(self.write_cases())
+            panair_file.write(self.write_alphas())
+            panair_file.write(self.write_reference_quantities())
 
-            #outfile.write(self.alphaSection)
-            #outfile.write(self.caseSection)
+            #panair_file.write(self.alphaSection)
+            #panair_file.write(self.caseSection)
             for patch_name, patch in sorted(iteritems(self.patches)):
-                outfile.write(str(patch))
+                panair_file.write(str(patch))
 
-            outfile.write(self.xyz_section)
-            outfile.write(self.streamline_section)
-            outfile.write(self.flow_section)
-            outfile.write(self.sectional_prop_section)
-            outfile.write(self.grid_section)
-            outfile.write(self.write_printout())
+            panair_file.write(self.xyz_section)
+            panair_file.write(self.streamline_section)
+            panair_file.write(self.flow_section)
+            panair_file.write(self.sectional_prop_section)
+            panair_file.write(self.grid_section)
+            panair_file.write(self.write_printout())
 
-            outfile.write(self.pea_section)
-            outfile.write(self.write_liberalized_abutments())
-            outfile.write(self.write_end())
+            panair_file.write(self.pea_section)
+            panair_file.write(self.write_liberalized_abutments())
+            panair_file.write(self.write_end())
 
     def remove_comments(self, lines):
         lines2 = []
         for line in lines:
             line = line.rstrip().lower()
             if '=' in line:
-                #print "line -> |%s|" %(line)
+                #print "line -> %r" % (line)
                 if '=' is not line[0]:
                     self.log.debug("line[0] -> %s" % line[0])
                     line = line.split('=')[0]

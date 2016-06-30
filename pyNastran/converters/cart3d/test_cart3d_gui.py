@@ -4,7 +4,7 @@ import unittest
 import pyNastran
 from pyNastran.gui.testing_methods import GUIMethods
 from pyNastran.bdf.bdf import BDF
-from pyNastran.converters.cart3d.cart3dIO import Cart3dIO
+from pyNastran.converters.cart3d.cart3d_io import Cart3dIO
 from pyNastran.converters.cart3d.cart3d import Cart3D
 from pyNastran.converters.nastran.nastran_to_cart3d import nastran_to_cart3d, nastran_to_cart3d_filename
 
