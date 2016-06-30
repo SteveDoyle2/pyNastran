@@ -7,7 +7,7 @@ from numpy.linalg import norm
 import vtk
 from vtk import vtkQuad
 
-from pyNastran.converters.panair.panairGrid import PanairGrid
+from pyNastran.converters.panair.panair_grid import PanairGrid
 from pyNastran.converters.panair.agps import AGPS
 from pyNastran.gui.gui_objects.gui_result import GuiResult
 
