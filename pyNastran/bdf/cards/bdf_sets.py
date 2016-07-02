@@ -610,6 +610,7 @@ class SET1(Set):
 
         is_skin = False
         i = 0
+        assert len(card) > 2, card
         if isinstance(ids[0], string_types) and ids[0] == 'SKIN':
             is_skin = True
             i += 1

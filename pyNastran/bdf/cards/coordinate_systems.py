@@ -1310,9 +1310,10 @@ class Cord1x(Coord):
         #: a Node on the xz-plane
         self.g3 = g3
 
-        assert g1 != g2
-        assert g1 != g3
-        assert g2 != g3
+    def validate(self):
+        assert self.g1 != self.g2, str(self)
+        assert self.g1 != self.g3, str(self)
+        assert self.g2 != self.g3, str(self)
 
     @classmethod
     def add_card(cls, card, icard=0, comment=''):

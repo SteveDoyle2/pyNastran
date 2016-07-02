@@ -707,6 +707,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         """runs some checks on the input data beyond just type checking"""
         #for eid, elem in sorted(iteritems(model.elements)):
             #elem.validate()
+        for cid, coord in sorted(iteritems(self.coords)):
+            coord.validate()
         for caero_id, caero in sorted(iteritems(self.caeros)):
             caero.validate()
         for spline_id, spline in sorted(iteritems(self.splines)):
