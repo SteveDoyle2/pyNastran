@@ -54,7 +54,7 @@ def compare_card_content(fem1, fem2):
         'coords',
         'spcs', 'spcadds', 'mpcs', 'mpcadds', 'dareas',
         'nlparms', 'tsteps', 'tstepnls', 'dmigs', 'dequations', 'frequencies', 'sets', 'setsSuper',
-        'tables', 'randomTables', 'methods', 'cMethods']
+        'tables', 'random_tables', 'methods', 'cMethods']
     for name in check_obj_names:
         check_length(fem1, fem2, name)
 
@@ -171,9 +171,9 @@ def compare_card_content(fem1, fem2):
         card2 = fem2.tables[key]
         assert_fields(card1, card2)
 
-    for key in fem1.randomTables:
-        card1 = fem1.randomTables[key]
-        card2 = fem2.randomTables[key]
+    for key in fem1.random_tables:
+        card1 = fem1.random_tables[key]
+        card2 = fem2.random_tables[key]
         assert_fields(card1, card2, key)
 
     for key in fem1.methods:

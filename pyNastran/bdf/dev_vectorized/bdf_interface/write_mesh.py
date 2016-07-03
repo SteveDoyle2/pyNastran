@@ -631,9 +631,9 @@ class WriteMesh(object):
                 msg.append(table.write_card(size, card_writer))
             outfile.write(''.join(msg))
 
-        if self.randomTables:
+        if self.random_tables:
             msg = ['$RANDOM TABLES\n']
-            for (unused_id, table) in sorted(iteritems(self.randomTables)):
+            for (unused_id, table) in sorted(iteritems(self.random_tables)):
                 msg.append(table.write_card(size, card_writer))
             outfile.write(''.join(msg))
 

@@ -705,6 +705,10 @@ class TF(BaseCard):
         self.components1 = components1
         self.a = a
 
+    def validate(self):
+        pass
+        #assert len(self.grids1) > 0, 'ngrids1=%s\n%s' % (len(self.grids1), str(self))
+
     @classmethod
     def add_card(cls, card, comment=''):
         sid = integer(card, 1, 'sid')
@@ -733,7 +737,6 @@ class TF(BaseCard):
             grids1.append(grid1)
             components1.append(component1)
             a.append([a0, a1, a2])
-        assert len(grids1) > 0, len(grids1)
         return TF(sid, nid0, c, b0, b1, b2, grids1, components1, a,
                   comment=comment)
 

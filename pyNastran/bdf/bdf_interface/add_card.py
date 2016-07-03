@@ -819,10 +819,10 @@ class AddMethods(BDFAttributes):
 
     def add_random_table(self, table):
         key = table.tid
-        assert key not in self.randomTables, '\nTable=\n%s oldTable=\n%s' % (
-            table, self.randomTables[key])
+        assert key not in self.random_tables, '\nTable=\n%s old=\n%s' % (
+            table, self.random_tables[key])
         assert key > 0
-        self.randomTables[key] = table
+        self.random_tables[key] = table
         self._type_to_id_map[table.type].append(key)
 
     def add_method(self, method, allow_overwrites=False):

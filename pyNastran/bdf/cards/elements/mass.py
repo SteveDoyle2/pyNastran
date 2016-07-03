@@ -902,7 +902,7 @@ class CONM2(PointMassElement):
             double_or_blank(card, 14, 'I33', 0.0)
         ]
 
-        assert len(card) <= 15, 'len(CONM2 card) = %i' % len(card)
+        assert len(card) <= 15, 'len(CONM2 card) = %i\ncard=%s' % (len(card), card)
         return CONM2(eid, nid, cid, mass, X, I, comment=comment)
 
     @classmethod

@@ -1109,9 +1109,9 @@ class WriteMesh(BDFAttributes):
                 msg.append(table.write_card(size, is_double))
             outfile.write(''.join(msg))
 
-        if self.randomTables:
+        if self.random_tables:
             msg = ['$RANDOM TABLES\n']
-            for (unused_id, table) in sorted(iteritems(self.randomTables)):
+            for (unused_id, table) in sorted(iteritems(self.random_tables)):
                 msg.append(table.write_card(size, is_double))
             outfile.write(''.join(msg))
 

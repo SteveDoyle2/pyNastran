@@ -88,6 +88,7 @@ class MATS1(MaterialDependence):
         #: Mohr-Coulomb and Drucker-Prager yield criteria
         self.limit2 = limit2
 
+    def validate(self):
         if self.Type not in ['NLELAST', 'PLASTIC']:
             raise ValueError('MATS1 Type must be [NLELAST, PLASTIC]; Type=%r' % self.Type)
 
@@ -243,7 +244,7 @@ class MATT1(MaterialDependence):
         sc_table = integer_or_blank(card, 10, 'T(sc)')
         ss_table = integer_or_blank(card, 11, 'T(ss)')
 
-        assert len(card) <= 11, 'len(MATT1 card) = %i' % len(card)
+        assert len(card) <= 11, 'len(MATT1 card) = %i\ncard=%s' % (len(card), card)
         return MATT1(mid, E_table, G_table, nu_table, rho_table, A_table,
                      ge_table, st_table, sc_table,
                      ss_table, comment=comment)
@@ -375,8 +376,6 @@ class MATT2(MaterialDependence):
         self._st_table = st_table
         self._sc_table = sc_table
         self._ss_table = ss_table
-        print(self)
-
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -397,7 +396,7 @@ class MATT2(MaterialDependence):
         sc_table = integer_or_blank(card, 15, 'T(sc)')
         ss_table = integer_or_blank(card, 16, 'T(ss)')
 
-        assert len(card) <= 17, 'len(MATT2 card) = %i' % len(card)
+        assert len(card) <= 17, 'len(MATT2 card) = %i\ncard=%s' % (len(card), card)
         return MATT2(mid, G11_table, G12_table, G13_table, G22_table, G23_table,
                      G33_table, rho_table, A1_table,
                      A2_table, A3_table, ge_table,
@@ -540,7 +539,7 @@ class MATT4(MaterialDependence):
         mu_table = integer_or_blank(card, 6, 'T(mu)')
         Hgen_table = integer_or_blank(card, 7, 'T(HGEN)')
 
-        assert len(card) <= 8, 'len(MATT4 card) = %i' % len(card)
+        assert len(card) <= 8, 'len(MATT4 card) = %i\ncard=%s' % (len(card), card)
         return MATT4(mid, k_table, cp_table, H_table, mu_table,
                      Hgen_table, comment=comment)
 
@@ -645,7 +644,7 @@ class MATT5(MaterialDependence):
         cp_table = integer_or_blank(card, 9, 'T(Kyz)')
         hgen_table = integer_or_blank(card, 11, 'T(HGEN)')
 
-        assert len(card) <= 12, 'len(MATT5 card) = %i' % len(card)
+        assert len(card) <= 12, 'len(MATT5 card) = %i\ncard=%s' % (len(card), card)
         return MATT5(mid, kxx_table, kxy_table, kxz_table, kyy_table,
                      kyz_table, kzz_table, cp_table, hgen_table,
                      comment=comment)
@@ -792,7 +791,7 @@ class MATT8(MaterialDependence):
         GE_table = integer_or_blank(card, 17, 'T(GE)')
         F12_table = integer_or_blank(card, 18, 'T(F12)')
 
-        assert len(card) <= 19, 'len(MATT8 card) = %i' % len(card)
+        assert len(card) <= 19, 'len(MATT8 card) = %i\ncard=%s' % (len(card), card)
         return MATT8(mid, E1_table, E2_table, Nu12_table, G12_table,
                      G1z_table, G2z_table, rho_table,
                      A1_table, A2_table, Xt_table,

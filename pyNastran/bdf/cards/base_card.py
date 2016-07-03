@@ -383,9 +383,13 @@ class Element(BaseCard):
 
     def prepare_node_ids(self, nids, allow_empty_nodes=False):
         """Verifies all node IDs exist and that they're integers"""
-        self.nodes = []
+        self.nodes = nids
+        self.validate_node_ids(allow_empty_nodes)
+
+    def validate_node_ids(self, allow_empty_nodes=False):
+        nodes = []
         if allow_empty_nodes:
-            nids2 = [nid for nid in nids if nid not in [None, 0]]
+            nids2 = [nid for nid in self.nodes if nid not in [None, 0]]
             if len(nids2) == 0:
                 msg = '%s requires at least one node id be specified; node_ids=%s' % (
                     self.type, nids2)
@@ -397,21 +401,22 @@ class Element(BaseCard):
                 #raise IndexError(msg)
         else:
             pass
-            #unique_nodes = unique(nids)
-            #if len(nids) != len(unique_nodes):
-                #msg = '%s requires that all node ids be unique; node_ids=%s' % (self.type, nids)
+            #unique_nodes = unique(self.nodes)
+            #if len(self.nodes) != len(unique_nodes):
+                #msg = '%s requires that all node ids be unique; node_ids=%s' % (self.type, self.nodes)
                 #raise IndexError(msg)
 
-        for nid in nids:
+        for nid in self.nodes:
             if isinstance(nid, integer_types):
-                self.nodes.append(nid)
+                nodes.append(nid)
             elif nid is None and allow_empty_nodes:
-                self.nodes.append(None)
+                nodes.append(None)
             else:  # string???
-                #self.nodes.append(int(nid))
+                #nodes.append(int(nid))
                 msg = 'this element may have missing nodes...\n'
-                msg += 'nids=%s allow_empty_nodes=False;\ntype(nid)=%s' % (nids, type(nid))
+                msg += 'nids=%s allow_empty_nodes=False;\ntype(nid)=%s' % (self.nodes, type(nid))
                 raise RuntimeError(msg)
+        self.nodes = nodes
 
     @property  # I think this means you can just call it as an attribute...
     def faces(self):
@@ -532,8 +537,7 @@ def _node_ids(card, nodes=None, allow_empty_nodes=False, msg=''):
 
         if allow_empty_nodes:
             nodes2 = []
-            for i, node in enumerate(nodes):
-                #print("node=%r type=%r" % (node, type(node)))
+            for node in nodes:
                 if node == 0 or node is None:
                     nodes2.append(None)
                 elif isinstance(node, integer_types):
@@ -544,8 +548,7 @@ def _node_ids(card, nodes=None, allow_empty_nodes=False, msg=''):
         else:
             try:
                 node_ids = []
-                for i, node in enumerate(nodes):
-                    #print("node=%r type=%r" % (node, type(node)))
+                for node in nodes:
                     if isinstance(node, integer_types):
                         node_ids.append(node)
                     else:

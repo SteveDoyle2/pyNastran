@@ -81,7 +81,7 @@ from pyNastran.bdf.cards.deqatn import DEQATN
 from pyNastran.bdf.cards.dynamic import (DELAY, DPHASE, FREQ, FREQ1, FREQ2, FREQ4, TSTEP,
                                          TSTEPNL, NLPARM, NLPCI, TF)
 from pyNastran.bdf.cards.loads.loads import LSEQ, SLOAD, DAREA, RANDPS, RFORCE, SPCD, LOADCYN
-from pyNastran.bdf.cards.loads.dloads import DLOAD, TLOAD1, TLOAD2, RLOAD1, RLOAD2
+from pyNastran.bdf.cards.loads.dloads import ACSRCE, DLOAD, TLOAD1, TLOAD2, RLOAD1, RLOAD2
 from pyNastran.bdf.cards.loads.static_loads import (LOAD, GRAV, ACCEL, ACCEL1, FORCE,
                                                     FORCE1, FORCE2, MOMENT, MOMENT1, MOMENT2,
                                                     PLOAD, PLOAD1, PLOAD2, PLOAD4, PLOADX1,
@@ -400,7 +400,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
             ## loads
             'LOAD', 'LSEQ', 'LOADCYN', 'RANDPS',
-            'DLOAD', 'SLOAD', 'TLOAD1', 'TLOAD2', 'RLOAD1', 'RLOAD2',
+            'DLOAD', 'SLOAD', 'ACSRCE', 'TLOAD1', 'TLOAD2', 'RLOAD1', 'RLOAD2',
             'FORCE', 'FORCE1', 'FORCE2',
             'MOMENT', 'MOMENT1', 'MOMENT2',
             'GRAV', 'ACCEL', 'ACCEL1',
@@ -507,7 +507,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             ## modal damping table - tables_sdamping
             'TABDMP1',
 
-            ## randomTables
+            ## random_tables
             # PSD=func(freq); used by RANDPS card
             'TABRND1',
             # gust for aeroelastic response; used by RANDPS card
@@ -707,14 +707,262 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         """runs some checks on the input data beyond just type checking"""
         #for eid, elem in sorted(iteritems(model.elements)):
             #elem.validate()
+        for nid, node in sorted(iteritems(self.nodes)):
+            node.validate()
         for cid, coord in sorted(iteritems(self.coords)):
             coord.validate()
-        for caero_id, caero in sorted(iteritems(self.caeros)):
-            caero.validate()
-        for spline_id, spline in sorted(iteritems(self.splines)):
-            spline.validate()
+        for eid, elem in sorted(iteritems(self.elements)):
+            elem.validate()
+        for pid, prop in sorted(iteritems(self.properties)):
+            prop.validate()
+
+        for eid, elem in sorted(iteritems(self.rigid_elements)):
+            elem.validate()
+        for eid, plotel in sorted(iteritems(self.plotels)):
+            plotel.validate()
+        for eid, mass in sorted(iteritems(self.masses)):
+            mass.validate()
+        for pid, property_mass in sorted(iteritems(self.properties_mass)):
+            property_mass.validate()
+
+        #------------------------------------------------
+        for mid, mat in sorted(iteritems(self.materials)):
+            mat.validate()
+        for mid, mat in sorted(iteritems(self.thermal_materials)):
+            mat.validate()
+        for mid, mat in sorted(iteritems(self.MATS1)):
+            mat.validate()
+        for mid, mat in sorted(iteritems(self.MATS3)):
+            mat.validate()
+        for mid, mat in sorted(iteritems(self.MATS8)):
+            mat.validate()
+        for mid, mat in sorted(iteritems(self.MATT1)):
+            mat.validate()
+        for mid, mat in sorted(iteritems(self.MATT2)):
+            mat.validate()
+        for mid, mat in sorted(iteritems(self.MATT3)):
+            mat.validate()
+        for mid, mat in sorted(iteritems(self.MATT4)):
+            mat.validate()
+        for mid, mat in sorted(iteritems(self.MATT5)):
+            mat.validate()
+        for mid, mat in sorted(iteritems(self.MATT8)):
+            mat.validate()
+        for mid, mat in sorted(iteritems(self.MATT9)):
+            mat.validate()
+        for mid, mat in sorted(iteritems(self.creep_materials)):
+            mat.validate()
+        for mid, mat in sorted(iteritems(self.hyperelastic_materials)):
+            mat.validate()
+
+        #------------------------------------------------
+        for key, loads in sorted(iteritems(self.loads)):
+            for load in loads:
+                load.validate()
+        for key, tic in sorted(iteritems(self.tics)):
+            tic.validate()
+        for key, dloads in sorted(iteritems(self.dloads)):
+            for dload in dloads:
+                dload.validate()
+        for key, dload_entries in sorted(iteritems(self.dload_entries)):
+            for dload_entry in dload_entries:
+                dload_entry.validate()
+
+        #------------------------------------------------
+        for key, nlpci in sorted(iteritems(self.nlpcis)):
+            nlpci.validate()
+        for key, nlparm in sorted(iteritems(self.nlparms)):
+            nlparm.validate()
+        for key, tstep in sorted(iteritems(self.tsteps)):
+            tstep.validate()
+        for key, tstepnl in sorted(iteritems(self.tstepnls)):
+            tstepnl.validate()
+        for key, transfer_functions in sorted(iteritems(self.transfer_functions)):
+            for tf in transfer_functions:
+                tf.validate()
+        for key, delay in sorted(iteritems(self.delays)):
+            delay.validate()
+
+        #------------------------------------------------
         if self.aeros is not None:
             self.aeros.validate()
+        for caero_id, caero in sorted(iteritems(self.caeros)):
+            caero.validate()
+        for key, paero in sorted(iteritems(self.paeros)):
+            paero.validate()
+        for spline_id, spline in sorted(iteritems(self.splines)):
+            spline.validate()
+
+        for key, aecomp in sorted(iteritems(self.aecomps)):
+            aecomp.validate()
+        for key, aefact in sorted(iteritems(self.aefacts)):
+            aefact.validate()
+        for key, aelink in sorted(iteritems(self.aelinks)):
+            aelink.validate()
+        for key, aeparam in sorted(iteritems(self.aeparams)):
+            aeparam.validate()
+        for key, aesurf in sorted(iteritems(self.aesurfs)):
+            aesurf.validate()
+        for key, aestat in sorted(iteritems(self.aestats)):
+            aestat.validate()
+        for key, trim in sorted(iteritems(self.trims)):
+            trim.validate()
+        for key, diverg in sorted(iteritems(self.divergs)):
+            diverg.validate()
+        for key, csschd in sorted(iteritems(self.csschds)):
+            csschd.validate()
+        #self.monitor_points = []
+
+        #------------------------------------------------
+        if self.aero is not None:
+            self.aero.validate()
+        for key, flfact in sorted(iteritems(self.flfacts)):
+            flfact.validate()
+        for key, flutter in sorted(iteritems(self.flutters)):
+            flutter.validate()
+        for key, gust in sorted(iteritems(self.gusts)):
+            gust.validate()
+        #self.mkaeros = []
+
+        #------------------------------------------------
+        for key, bcs in sorted(iteritems(self.bcs)):
+            for bc in bcs:
+                bc.validate()
+        for key, phbdy in sorted(iteritems(self.phbdys)):
+            phbdy.validate()
+        for key, convection_property in sorted(iteritems(self.convection_properties)):
+            convection_property.validate()
+        for key, tempd in sorted(iteritems(self.tempds)):
+            tempd.validate()
+        #------------------------------------------------
+        for key, bcrpara in sorted(iteritems(self.bcrparas)):
+            bcrpara.validate()
+        for key, bctadd in sorted(iteritems(self.bctadds)):
+            bctadd.validate()
+        for key, bctpara in sorted(iteritems(self.bctparas)):
+            bctpara.validate()
+        for key, bctset in sorted(iteritems(self.bctsets)):
+            bctset.validate()
+        for key, bsurf in sorted(iteritems(self.bsurf)):
+            bsurf.validate()
+        for key, bsurfs in sorted(iteritems(self.bsurfs)):
+            bsurfs.validate()
+
+
+        #------------------------------------------------
+        for key, suport1 in sorted(iteritems(self.suport1)):
+            suport1.validate()
+        for suport in self.suport:
+            suport.validate()
+        for se_suport in self.se_suport:
+            se_suport.validate()
+
+        for key, spcs in sorted(iteritems(self.spcs)):
+            for spc in spcs:
+                spc.validate()
+        for key, spcadd in sorted(iteritems(self.spcadds)):
+            spcadd.validate()
+
+        for key, mpcs in sorted(iteritems(self.mpcs)):
+            for mpc in mpcs:
+                mpc.validate()
+        for key, mpcadd in sorted(iteritems(self.mpcadds)):
+            mpcadd.validate()
+
+        #------------------------------------------------
+        for key, darea in sorted(iteritems(self.dareas)):
+            darea.validate()
+        for key, dphase in sorted(iteritems(self.dphases)):
+            dphases.validate()
+
+        for pid, pbusht in sorted(iteritems(self.pbusht)):
+            pbusht.validate()
+        for pid, pdampt in sorted(iteritems(self.pdampt)):
+            pdampt.validate()
+        for pid, pelast in sorted(iteritems(self.pelast)):
+            pelast.validate()
+
+        for pid, frequency in sorted(iteritems(self.frequencies)):
+            frequency.validate()
+        #------------------------------------------------
+        for key, dmi in sorted(iteritems(self.dmis)):
+            dmi.validate()
+        for key, dmig in sorted(iteritems(self.dmigs)):
+            dmig.validate()
+        for key, dmij in sorted(iteritems(self.dmijs)):
+            dmij.validate()
+        for key, dmiji in sorted(iteritems(self.dmijis)):
+            dmiji.validate()
+        for key, dmik in sorted(iteritems(self.dmiks)):
+            dmik.validate()
+        #------------------------------------------------
+        for key, sets in sorted(iteritems(self.sets)):
+            sets.validate()
+        for key, uset in sorted(iteritems(self.usets)):
+            for useti in uset:
+                useti.validate()
+
+        for aset in self.asets:
+            aset.validate()
+        for bset in self.bsets:
+            bset.validate()
+        for cset in self.csets:
+            cset.validate()
+        for qset in self.qsets:
+            qset.validate()
+
+        for key, se_set in sorted(iteritems(self.se_sets)):
+            se_set.validate()
+        for key, se_uset in sorted(iteritems(self.se_usets)):
+            se_uset.validate()
+        for se_bset in self.se_bsets:
+            se_bset.validate()
+        for se_cset in self.se_csets:
+            se_cset.validate()
+        for se_qset in self.se_qsets:
+            se_qset.validate()
+        #------------------------------------------------
+        for key, table in sorted(iteritems(self.tables)):
+            table.validate()
+        for key, random_table in sorted(iteritems(self.random_tables)):
+            random_table.validate()
+        for key, table_sdamping in sorted(iteritems(self.tables_sdamping)):
+            table_sdamping.validate()
+        #------------------------------------------------
+        for key, method in sorted(iteritems(self.methods)):
+            method.validate()
+        for key, cmethod in sorted(iteritems(self.cMethods)):
+            cmethod.validate()
+        #------------------------------------------------
+        for key, dconadd in sorted(iteritems(self.dconadds)):
+            dconadd.validate()
+        for key, dconstrs in sorted(iteritems(self.dconstrs)):
+            for dconstr in dconstrs:
+                dconstr.validate()
+        for key, desvar in sorted(iteritems(self.desvars)):
+            desvar.validate()
+        for key, ddval in sorted(iteritems(self.ddvals)):
+            ddval.validate()
+        for key, dlink in sorted(iteritems(self.dlinks)):
+            dlink.validate()
+        for key, dresp in sorted(iteritems(self.dresps)):
+            dresp.validate()
+
+        if self.dtable is not None:
+            self.dtable.validate()
+        if self.doptprm is not None:
+            self.doptprm.validate()
+        for key, dequation in sorted(iteritems(self.dequations)):
+            dequation.validate()
+        for key, dvprel in sorted(iteritems(self.dvprels)):
+            dvprel.validate()
+        for key, dvmrel in sorted(iteritems(self.dvmrels)):
+            dvmrel.validate()
+        for key, dvcrel in sorted(iteritems(self.dvcrels)):
+            dvcrel.validate()
+        for key, dscreen in sorted(iteritems(self.dscreen)):
+            dscreen.validate()
+        #------------------------------------------------
 
     def read_bdf(self, bdf_filename=None,
                  validate=True, xref=True, punch=False, read_includes=True, encoding=None):
@@ -1547,6 +1795,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'QVOL' : (QVOL, self.add_load),  # thermal
 
             'DLOAD' : (DLOAD, self.add_dload),
+            'ACSRCE' : (ACSRCE, self.add_dload_entry),
             'TLOAD1' : (TLOAD1, self.add_dload_entry),
             'TLOAD2' : (TLOAD2, self.add_dload_entry),
             'RLOAD1' : (RLOAD1, self.add_dload_entry),
@@ -2143,7 +2392,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                 add_card_function(class_instance)
             except TypeError:
                 msg = 'problem adding %s' % card_obj
-                #raise
+                raise
                 raise TypeError(msg)
             except (SyntaxError, AssertionError, KeyError, ValueError) as exception:
                 #raise
@@ -2269,7 +2518,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'se_usets',
 
             # tables
-            'tables', 'randomTables',
+            'tables', 'random_tables',
 
             # methods
             'methods', 'cMethods',

@@ -251,7 +251,7 @@ class BDFAttributes(object):
 
         # stores DLOAD entries.
         self.dloads = {}
-        # stores RLOAD1, RLOAD2, TLOAD1, TLOAD2, and ACSRCE entries.
+        # stores ACSRCE, RLOAD1, RLOAD2, TLOAD1, TLOAD2, and ACSRCE entries.
         self.dload_entries = {}
 
         #self.gusts  = {} # Case Control GUST = 100
@@ -322,8 +322,8 @@ class BDFAttributes(object):
         # ----------------------------------------------------------------
         #: tables
         self.tables = {}
-        #: randomTables
-        self.randomTables = {}
+        #: random_tables
+        self.random_tables = {}
         #: TABDMP1
         self.tables_sdamping = {}
 
@@ -536,7 +536,7 @@ class BDFAttributes(object):
                 ],
             'dloads' : ['DLOAD', ],
             # stores RLOAD1, RLOAD2, TLOAD1, TLOAD2, and ACSRCE entries.
-            'dload_entries' : ['TLOAD1', 'TLOAD2', 'RLOAD1', 'RLOAD2',],
+            'dload_entries' : ['ACSRCE', 'TLOAD1', 'TLOAD2', 'RLOAD1', 'RLOAD2',],
 
             # aero cards
             'aero' : ['AERO'],
@@ -632,7 +632,7 @@ class BDFAttributes(object):
                 'TABLES1', 'TABLEST',
                 ],
             'tables_sdamping' : ['TABDMP1'],
-            'randomTables' : ['TABRND1', 'TABRNDG',],
+            'random_tables' : ['TABRND1', 'TABRNDG',],
 
             # initial conditions - sid (set ID)
             ##'TIC',  (in bdf_tables.py)

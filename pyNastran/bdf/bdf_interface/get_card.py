@@ -1174,10 +1174,10 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
 
     def RandomTable(self, tid, msg=''):
         try:
-            return self.randomTables[tid]
+            return self.random_tables[tid]
         except KeyError:
             raise KeyError('tid=%s not found%s.  Allowed TABLEs=%s'
-                           % (tid, msg, np.unique(list(self.randomTables.keys()))))
+                           % (tid, msg, np.unique(list(self.random_tables.keys()))))
 
     #--------------------
     # NONLINEAR CARDS

@@ -491,7 +491,8 @@ class CaseControlDeck(object):
             value = line[eindex + 1:].strip()
             options = []
             param_type = 'STRING-type'
-        elif line_upper.startswith('SET ') and equals_count == 1:
+        elif (line_upper.startswith('SET ') or line_upper.startswith('SETMC ')
+              ) and equals_count == 1:
             # would have been caught by STRESS-type
             sline = line_upper.split('=')
             assert len(sline) == 2, sline

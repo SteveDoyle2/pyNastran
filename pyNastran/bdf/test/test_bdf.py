@@ -311,21 +311,35 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
         if not dev:
             raise
         print('failed test because CardParseSyntaxError...ignoring')
-    except DuplicateIDsError:  # only temporarily uncomment this when running lots of tests
-        if not dev:
-            raise
-        print('failed test because DuplicateIDsError...ignoring')
-    except RuntimeError as e:  # only temporarily uncomment this when running lots of tests
-        if not dev:
-            raise
-        if 'GRIDG' in fem1.card_count:
-            print('failed test because mesh adaption (GRIDG)...ignoring')
+    except DuplicateIDsError as e:
+        # only temporarily uncomment this when running lots of tests
+        if 'GRIDG' in fem1.card_count or 'CGEN' in fem1.card_count or 'SPCG' in fem1.card_count:
+            print('failed test because mesh adaption (GRIDG,CGEN,SPCG)...ignoring')
             print(e)
-        pass
+        elif not dev:
+            raise
+        else:
+            print('failed test because DuplicateIDsError...ignoring')
+    except RuntimeError as e:
+        # only temporarily uncomment this when running lots of tests
+        if not dev:
+            raise
+        if 'GRIDG' in fem1.card_count or 'CGEN' in fem1.card_count or 'SPCG' in fem1.card_count:
+            print('failed test because mesh adaption (GRIDG,CGEN,SPCG)...ignoring')
+            print(e)
+        else:
+            raise
     #except AttributeError:  # only temporarily uncomment this when running lots of tests
         #pass
-    #except SyntaxError:  # only temporarily uncomment this when running lots of tests
-        #pass
+    except SyntaxError as e:
+        # only temporarily uncomment this when running lots of tests
+        if not dev:
+            raise
+        if 'GRIDG' in fem1.card_count or 'CGEN' in fem1.card_count or 'SPCG' in fem1.card_count:
+            print('failed test because mesh adaption (GRIDG,CGEN,SPCG)...ignoring')
+            print(e)
+        else:
+            raise
     #except KeyError:  # only temporarily uncomment this when running lots of tests
         #pass
     #except AssertionError:  # only temporarily uncomment this when running lots of tests
@@ -424,6 +438,8 @@ def run_fem1(fem1, bdf_model, mesh_form, xref, punch, sum_load, size, is_double,
         double flag
     cid : int / None
         cid flag
+    encoding : str; default=None
+        the file encoding
     """
     assert os.path.exists(bdf_model), print_bad_path(bdf_model)
     try:
@@ -463,14 +479,13 @@ def run_fem1(fem1, bdf_model, mesh_form, xref, punch, sum_load, size, is_double,
     except:
         print("failed reading %r" % bdf_model)
         raise
-    #fem1.sumForces()
 
     if fem1._auto_reject:
         out_model = bdf_model + '.rej'
     else:
         out_model = bdf_model + '_out'
-        if cid is not None and xref:
-            fem1.resolve_grids(cid=cid)
+        #if cid is not None and xref:
+            #fem1.resolve_grids(cid=cid)
 
         if mesh_form == 'combined':
             fem1.write_bdf(out_model, interspersed=False, size=size, is_double=is_double)
@@ -544,7 +559,7 @@ def run_fem2(bdf_model, out_model, xref, punch,
             validate_case_control(fem2, p0, sol_base, subcase_keys, subcases, sol_200_map)
 
     fem2.write_bdf(out_model_2, interspersed=False, size=size, is_double=is_double)
-    #fem2.writeAsCTRIA3(out_model_2)
+    #fem2.write_as_ctria3(out_model_2)
     os.remove(out_model_2)
     return fem2
 
@@ -664,12 +679,7 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
         assert fem2.aero is not None, 'An AERO card is required for FLUTTER - SOL %i; %s' % (sol, fem2.aero)
 
         assert 'METHOD'in subcase, subcase  # EIGRL
-        #value, options = subcase.get_parameter('METHOD')
-        #assert value in fem2.methods, 'value=%s not in methods' % value
-
         assert 'FMETHOD' in subcase, subcase  # FLUTTER
-        #value, options = subcase.get_parameter('FMETHOD')
-        #assert value in fem2.flutters, 'value=%s not in flutters' % value
     elif sol == 146:
         assert 'METHOD'in subcase, subcase
         assert any(subcase.has_parameter('FREQUENCY', 'TIME', 'TSTEP', 'TSTEPNL')), subcase
@@ -692,17 +702,32 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
             assert 'TEMPERATURE' in subcase, subcase
 
     elif sol == 200:
-        assert 'DESOBJ' in subcase, subcase
+        # local level
+        # DESSUB - Set constraints (DCONSTR, DCONADD) applied for subcase (e.g. STRESS, STRAIN, DAMP)
+        #          optional locally
+        # DESGLB - Set constraints (DCONSTR, DCONADD) applied globally (e.g. WEIGHT, VOLUME, WMPID, FRMASS)
+        #          optional locally
+        # DESOBJ - The objective function (DRESP1, DRESP2, DRESP3)
+        #          required globally
+        # 1 or more DESSUB/DESGLB are required globally
+        # 1 DESOBJ is required
         assert 'ANALYSIS' in subcase, subcase
-        value, options = subcase.get_parameter('DESOBJ')
-        assert value in fem2.dresps, 'value=%s not in dresps' % value
 
         analysis, options = subcase.get_parameter('ANALYSIS')
         if analysis != 'STATICS':
             # BUCKLING
+            if 'DESOBJ' in subcase:
+                value, options = subcase.get_parameter('DESOBJ')
+                assert value in fem2.dresps, 'value=%s not in dresps' % value
+            else:
+                fem2.log.warning('no DESOBJ in this subcase; is this a buckling preload case?')
+                fem2.log.warning('\n%s' % subcase)
+
             if 'DESSUB' not in subcase and 'DESGLB' not in subcase:
-                print('no DESSUB/DESGLB; is this a buckling preload case?')
-            assert 'DESSUB' in subcase or 'DESGLB' in subcase, subcase
+                fem2.log.warning('no DESSUB/DESGLB in this subcase; is this a buckling preload case?')
+                fem2.log.warning('\n%s' % subcase)
+
+            #assert 'DESSUB' in subcase or 'DESGLB' in subcase, subcase
         if 'DESSUB' in subcase:
             value, options = subcase.get_parameter('DESSUB')
             assert value in fem2.dconstrs, 'value=%s not in dconstrs' % value
@@ -716,22 +741,24 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
         elif analysis == 'BUCK':
             sol = 105
             check_case(sol, subcase, fem2, p0, isubcase, subcases)
-        #elif analysis == 'DFREQ':
-            #sol = 108
-            #check_case(sol, subcase, fem2, p0, isubcase, subcases)
+        elif analysis == 'DFREQ':
+            sol = 108
+            check_case(sol, subcase, fem2, p0, isubcase, subcases)
         elif analysis == 'MFREQ':
             sol = 111
             check_case(sol, subcase, fem2, p0, isubcase, subcases)
-        #elif analysis == 'MTRAN':
-            #sol = 112
-            #check_case(sol, subcase, fem2, p0, isubcase, subcases)
+        elif analysis == 'MTRAN':
+            sol = 112
+            check_case(sol, subcase, fem2, p0, isubcase, subcases)
         elif analysis in ['SAERO', 'DIVERGE']:
             sol = 144
             check_case(sol, subcase, fem2, p0, isubcase, subcases)
         elif analysis == 'FLUTTER':
             sol = 145
             check_case(sol, subcase, fem2, p0, isubcase, subcases)
-        #elif analysis == 'DCEIG': # direct complex eigenvalues
+        elif analysis == 'DCEIG': # direct complex eigenvalues
+            sol = 107
+            check_case(sol, subcase, fem2, p0, isubcase, subcases)
         #elif analysis == 'MCEIG': # modal direct complex eigenvalues
         elif analysis == 'HEAT': # heat transfer analysis
             sol = 159
@@ -808,7 +835,6 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
         freq_id = subcase.get_parameter('FREQUENCY')[0]
         freq = fem2.frequencies[freq_id]
         assert sol in [26, 68, 76, 78, 88, 108, 101, 111, 112, 118, 146], 'sol=%s FREQUENCY' % sol
-        # print(freq)
 
     # if 'LSEQ' in subcase:
         # lseq_id = subcase.get_parameter('LSEQ')[0]
@@ -826,11 +852,15 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
         sdamping_id = subcase.get_parameter('SDAMPING')[0]
         sdamping_table = fem2.tables_sdamping[sdamping_id]
 
+    if 'LOADSET' in subcase:
+        loadset_id = subcase.get_parameter('LOADSET')[0]
+        lseq = fem2.loads[loadset_id]
+
     if 'DLOAD' in subcase:
         assert sol in [26, 68, 76, 78, 88, 99, 103, 108, 109, 111, 112, 118, 129, 146,
                        153, 159, 400, 601], 'sol=%s DLOAD' % sol
-        if 'LOADSET' in subcase:
-            raise NotImplementedError('LOADSET & DLOAD -> LSEQ')
+        #if 'LOADSET' in subcase:
+            #raise NotImplementedError('LOADSET & DLOAD -> LSEQ')
         if 'IC' in subcase:
             raise NotImplementedError('IC & DLOAD -> TIC')
 
@@ -850,14 +880,10 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
             dload = fem2.dloads[dload_id]
         else:
             dload = fem2.dload_entries[dload_id]
-        # dload = DLOAD()
-        # print(dload)
-        # for
-        # loads, sf = dload.get_loads()
+
         scale_factors2 = []
         loads2 = []
         for load in dload:
-            # print('DLOAD\n', load)
             if isinstance(load, DLOAD):
                 scale = load.scale
                 scale_factors = []
@@ -881,17 +907,12 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
 
         if sol in [108, 111]:  # direct frequency, modal frequency
             for load2, scale_factor in zip(loads2, scale_factors2):
-                # for
-                #print(load2)
                 freq_id = subcase.get_parameter('FREQ')[0]
                 freq = fem2.frequencies[freq_id]
-                #print('freqs =', freq.freqs)
                 fmax = freq.freqs[-1]
                 force = load2.get_load_at_freq(fmax) * scale_factor
         elif sol in [109, 129]:  # direct transient (time linear), time nonlinear
             for load2, scale_factor in zip(loads2, scale_factors2):
-                # for
-                #print(load2)
                 force = load2.get_load_at_time(0.) * scale_factor
         ### 111
         else:

@@ -367,7 +367,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
 
             # loads
             'LOAD', 'LSEQ', 'RANDPS',
-            'DLOAD', 'SLOAD', 'TLOAD1', 'TLOAD2', 'RLOAD1', 'RLOAD2',
+            'DLOAD', 'SLOAD', 'ACSRCE', 'TLOAD1', 'TLOAD2', 'RLOAD1', 'RLOAD2',
             'FORCE', 'FORCE1', 'FORCE2',
             'MOMENT', 'MOMENT1', 'MOMENT2',
             'GRAV', 'ACCEL', 'ACCEL1',
@@ -812,8 +812,8 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         # ----------------------------------------------------------------
         #: tables
         self.tables = {}
-        #: randomTables
-        self.randomTables = {}
+        #: random_tables
+        self.random_tables = {}
 
         # ----------------------------------------------------------------
         #: EIGB, EIGR, EIGRL methods
@@ -2048,6 +2048,8 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             self.loads.tload2.add(card_obj, comment=comment)
 
         # frequency loads
+        #elif name == 'ACSRCE':
+            #pass
         elif name == 'RLOAD1':
             self.loads.rload1.add(card_obj, comment=comment)
         elif name == 'RLOAD2':

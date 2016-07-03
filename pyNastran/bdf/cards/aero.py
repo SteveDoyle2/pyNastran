@@ -1173,6 +1173,10 @@ class CAERO1(BaseCard):
        xyz location of point 1 (leading edge; inboard)
     p4 : (1, 3) ndarray float
        xyz location of point 4 (leading edge; outboard)
+    x12 : float
+       distance along the flow direction from node 1 to node 2; (typically x, root chord)
+    x43 : float
+       distance along the flow direction from node 4 to node 3; (typically x, tip chord)
     """
     type = 'CAERO1'
     _field_map = {
@@ -1279,18 +1283,23 @@ class CAERO1(BaseCard):
             self.lchord = 0
 
     def validate(self):
+        msg = ''
+        is_failed = False
         if self.nspan == 0 and self.lspan == 0:
-            msg = 'NSPAN or LSPAN must be greater than 0'
-            raise ValueError(msg)
+            msg += 'NSPAN or LSPAN must be greater than 0\n'
+            is_failed = True
         if self.nspan != 0 and self.lspan != 0:
-            msg = 'Either NSPAN or LSPAN must 0'
-            raise ValueError(msg)
+            msg += 'Either NSPAN or LSPAN must 0\n'
+            is_failed = True
 
         if self.nchord == 0 and self.lchord == 0:
-            msg = 'NCHORD or LCHORD must be greater than 0\n%s' % str(self)
-            raise ValueError(msg)
+            msg += 'NCHORD or LCHORD must be greater than 0\n'
+            is_failed = True
         if self.nchord != 0 and self.lchord != 0:
-            msg = 'Either NCHORD or LCHORD must 0'
+            msg += 'Either NCHORD or LCHORD must 0\n'
+            is_failed = True
+        if is_failed:
+            msg += str(self)
             raise ValueError(msg)
 
     @classmethod
@@ -1321,7 +1330,7 @@ class CAERO1(BaseCard):
                       p1, x12, p4, x43, comment=comment)
 
     @classmethod
-    def add_quad(self, eid, pid, cp, span, chord, igid,
+    def add_quad(cls, eid, pid, cp, span, chord, igid,
                  p1, p2, p3, p4, spanwise='y', comment=''):
         r"""
         ::
@@ -1406,7 +1415,6 @@ class CAERO1(BaseCard):
     def Cp(self):
         if isinstance(self.cp, integer_types):
             return self.cp
-        print('cp = %s' % self.cp)
         return self.cp_ref.cid
 
     def Pid(self):
@@ -1763,14 +1771,6 @@ class CAERO2(BaseCard):
         return CAERO2(eid, pid, cp, nsb, nint, lsb, lint, igid, p1, x12,
                       comment=comment)
 
-    #def Points(self):
-        #self.deprecated('Points()', 'get_points()', '0.7')
-        #return self.get_points()
-
-    #def SetPoints(self, points):
-        #self.deprecated('SetPoints(points)', 'set_points(points)', '0.7')
-        #return self.set_points(points)
-
     def Cp(self):
         if isinstance(self.cp, integer_types):
             return self.cp
@@ -1802,6 +1802,8 @@ class CAERO2(BaseCard):
         self.cp_ref = self.cp
         #self.lsb = model.AeFact(self.lsb, msg=msg) # not added
 
+        self.ascid_ref = model.Acsid(msg=msg)
+
     def uncross_reference(self):
         self.pid = self.Pid()
         self.cp = self.Cp()
@@ -1812,7 +1814,8 @@ class CAERO2(BaseCard):
         creates a 1D representation of the CAERO2
         """
         p1 = self.cp_ref.transform_node_to_global(self.p1)
-        p2 = p1 + np.array([self.x12, 0., 0.])
+        p2 = p1 + self.ascid_ref.transform_vector_to_global(np.array([self.x12, 0., 0.]))
+
         #print("x12 = %s" % self.x12)
         #print("pcaero[%s] = %s" % (self.eid, [p1,p2]))
         return [p1, p2]
@@ -1820,6 +1823,8 @@ class CAERO2(BaseCard):
     def get_points_elements_3d(self):
         """
         gets the points/elements in 3d space as CQUAD4s
+
+        TODO: doesn't support the aero coordinate system
         """
         paero2 = self.pid_ref
 
@@ -1899,11 +1904,12 @@ class CAERO2(BaseCard):
             r(\theta )={\frac {ab}{\sqrt {(b\cos \theta )^{2}+(a\sin \theta )^{2}}}}
 
         R(theta) = a*b / ((b*cos(theta))**2 + (a*sin(theta))**2)
+
+        TODO: doesn't support the aero coordinate system
         """
         if thetas is None: # 41
             thetas = np.radians(np.linspace(0., 360., 17)) # 4,8,12,16,... becomes 5,9,13,17,...
         ntheta = len(thetas)
-
 
         a = radius
         b = radius * aspect_ratio
@@ -2405,9 +2411,8 @@ def elements_from_quad(nx, ny):
 def points_elements_from_quad_points(p1, p2, p3, p4, x, y):
     nx = x.shape[0]
     ny = y.shape[0]
-    elements = elements_from_quad(nx, ny)
 
-    #nelements = (nx - 1) * (ny - 1)
+    elements = elements_from_quad(nx, ny)
     npoints = nx * ny
 
     # shape the vectors so we can multiply them
@@ -2429,17 +2434,11 @@ def points_elements_from_quad_points(p1, p2, p3, p4, x, y):
 
     # calculate the point yv% along the span
     points = yv * b + (1 - yv) * a
-    assert points.shape == (npoints, 3), "npoints=%s shape=%s" % (npoints, str(points.shape))
+    assert points.shape == (npoints, 3), 'npoints=%s shape=%s' % (npoints, str(points.shape))
 
     # create a matrix with the point counter
     ipoints = np.arange(npoints, dtype='int32').reshape((nx, ny))
 
-    # move around the CAERO quad and apply ipoints
-    #elements = np.zeros((nelements, 4), dtype='int32')
-    #elements[:, 0] = ipoints[:-1, :-1].ravel()  # (i,  j  )
-    #elements[:, 1] = ipoints[1:, :-1].ravel()   # (i+1,j  )
-    #elements[:, 2] = ipoints[1:, 1:].ravel()    # (i+1,j+1)
-    #elements[:, 3] = ipoints[:-1, 1:].ravel()   # (i,j+1  )
     return points, elements
 
 
@@ -3292,7 +3291,7 @@ class PAERO1(BaseCard):
             elif bi is not None:
                 raise RuntimeError('invalid Bi value on PAERO1 bi=%r' % (bi))
             #else:
-            #    pass
+                #pass
         return PAERO1(pid, Bi, comment=comment)
 
     def cross_reference(self, model):
@@ -3682,6 +3681,13 @@ class SPLINE1(Spline):
         self.setg.cross_reference(model, 'Node')
         self.setg_ref = self.setg
 
+        nnodes = len(self.setg_ref.ids)
+        if nnodes < 3:
+            msg = 'SPLINE1 requires at least 3 nodes; nnodes=%s\n' % (nnodes)
+            msg += str(self)
+            msg += str(self.setg_ref)
+            raise RuntimeError(msg)
+
     def uncross_reference(self):
         self.caero = self.CAero()
         self.setg = self.Set()
@@ -3798,6 +3804,13 @@ class SPLINE2(Spline):
         self.setg.cross_reference(model, 'Node')
         self.setg_ref = self.setg
 
+        nnodes = len(self.setg_ref.ids)
+        if nnodes < 2:
+            msg = 'SPLINE2 requires at least 2 nodes; nnodes=%s\n' % (nnodes)
+            msg += str(self)
+            msg += str(self.setg_ref)
+            raise RuntimeError(msg)
+
     def uncross_reference(self):
         self.cid = self.Cid()
         self.caero = self.CAero()
@@ -3851,14 +3864,21 @@ class SPLINE2(Spline):
 
 
 class SPLINE3(Spline):
+    """
+    Defines a constraint equation for aeroelastic problems.
+    Useful for control surface constraints.
+    """
     type = 'SPLINE3'
     _field_map = {
-        1: 'eid', 2:'caero', 3:'box_id', 5:'g1', 6:'c1',
+        1: 'eid', 2:'caero', 3:'box_id',
         7: 'a1', 8:'usage',
     }
+        #5:'g1', 6:'c1',
+        #9:G2,C2,A2...
 
-    def __init__(self, eid, caero, box_id, components, g1, c1, a1, usage,
-                 Gi, ci, ai, comment=''):
+    def __init__(self, eid, caero, box_id, components,
+                 nids, displacement_components, coeffs,
+                 usage='BOTH', comment=''):
         Spline.__init__(self)
         if comment:
             self._comment = comment
@@ -3866,16 +3886,34 @@ class SPLINE3(Spline):
         self.caero = caero
         self.box_id = box_id
         self.components = components
-        self.g1 = g1
-        self.c1 = c1
-        self.a1 = a1
         self.usage = usage
-        self.Gi = Gi
-        self.ci = ci
-        self.ai = ai
-        assert components in [1, 2, 3, 4, 5, 6], components
-        assert c1 in [0, 1, 2, 3, 4, 5, 6], self.components
-        assert usage in ['FORCE', 'DISP', 'BOTH'], self.usage
+        self.nids = nids
+        self.displacement_components = displacement_components
+        self.coeffs = coeffs
+
+
+
+    def validate(self):
+        is_failed = False
+        msg = ''
+        if self.components not in [0, 1, 2, 3, 4, 5, 6]:
+            msg += 'components=%s must be [0, 1, 2, 3, 4, 5, 6]\n' % (
+                self.components)
+            is_failed = True
+
+        for i, disp_component, coeff  in zip(count(), self.displacement_components, self.coeffs):
+            if disp_component not in [0, 1, 2, 3, 4, 5, 6]:
+                msg += 'i=%s displacement_component=%s must be [0, 1, 2, 3, 4, 5, 6]\n' % (
+                    i, disp_component)
+                is_failed = True
+
+        if self.usage not in ['FORCE', 'DISP', 'BOTH']:
+            msg += 'usage=%r must be in [FORCE, DISP, BOTH]' % self.usage
+            is_failed = True
+
+        if is_failed:
+            msg += str(self)
+            raise RuntimeError(msg)
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -3894,9 +3932,9 @@ class SPLINE3(Spline):
             nrows += 1
 
         i = 1
-        Gi = []
-        ci = []
-        ai = []
+        Gi = [g1]
+        ci = [c1]
+        ai = [a1]
         for irow in range(1, nrows):
             j = 1 + nrows * 8
             gii = integer(card, j, 'Gi_' % i)
@@ -3914,21 +3952,45 @@ class SPLINE3(Spline):
                 ci.append(cii)
                 ai.append(aii)
             i += 1
-        return SPLINE3(eid, caero, box_id, components, g1, c1, a1, usage,
-                       Gi, ci, ai, comment=comment)
+        return SPLINE3(eid, caero, box_id, components, Gi, ci, ai, usage,
+                       comment=comment)
+
+    def CAero(self):
+        if isinstance(self.caero, integer_types):
+            return self.caero
+        return self.caero_ref.eid
+
+    def Set(self):
+        if isinstance(self.setg, integer_types):
+            return self.setg
+        return self.setg_ref.sid
 
     def cross_reference(self, model):
-        pass
+        msg = ' which is required by SPLINE3 eid=%s' % self.eid
+        self.caero = model.CAero(self.CAero(), msg=msg)
+        self.caero_ref = self.caero
+        self.setg = model.Set(self.Set(), msg=msg)
+        self.setg.cross_reference(model, 'Node')
+        self.setg_ref = self.setg
+
+        nnodes = len(self.setg_ref.ids)
+        if nnodes < 3:
+            msg = 'SPLINE3 requires at least 3 nodes; nnodes=%s\n' % (nnodes)
+            msg += str(self)
+            msg += str(self.setg_ref)
+            raise RuntimeError(msg)
 
     def uncross_reference(self):
-        pass
+        self.caero = self.CAero()
+        self.setg = self.Set()
+        del self.caero_ref, self.setg_ref
 
     def raw_fields(self):
         list_fields = [
             'SPLINE3', self.eid, self.caero, self.box_id,
-            self.g1, self.c1, self.a1, self.usage]
-        for g, c, a in zip(self.Gi, self.ci, self.ai):
-            list_fields += [g, c, a, None]
+            self.nids[0], self.displacement_components[0], self.coeffs[0], self.usage]
+        for nid, disp_c, coeff in zip(self.nids[1:], self.displacement_components[1:], self.coeffs[1:]):
+            list_fields += [nid, disp_c, coeff, None]
         return list_fields
 
 
@@ -4039,6 +4101,13 @@ class SPLINE4(Spline):
         self.caero_ref = self.caero
         self.setg_ref = self.setg
         self.aelist_ref = self.aelist
+
+        nnodes = len(self.setg_ref.ids)
+        if nnodes < 3:
+            msg = 'SPLINE4 requires at least 3 nodes; nnodes=%s\n' % (nnodes)
+            msg += str(self)
+            msg += str(self.setg_ref)
+            raise RuntimeError(msg)
 
     def uncross_reference(self):
         self.caero = self.CAero()
@@ -4192,6 +4261,13 @@ class SPLINE5(Spline):
         self.aelist = model.AEList(self.AEList(), msg=msg)
         self.aelist_ref = self.aelist
 
+        nnodes = len(self.setg_ref.ids)
+        if nnodes < 3:
+            msg = 'SPLINE5 requires at least 3 nodes; nnodes=%s\n' % (nnodes)
+            msg += str(self)
+            msg += str(self.setg_ref)
+            raise RuntimeError(msg)
+
     def uncross_reference(self):
         self.cid = self.Cid()
         self.caero = self.CAero()
@@ -4302,6 +4378,8 @@ class TRIM(BaseCard):
         #: Default = 1.0. A value of 0.0 provides a rigid trim analysis,
         #: not supported
         self.aeqr = aeqr
+
+    def validate(self):
         assert self.mach >= 0.0 and self.mach != 1.0, 'mach = %s' % self.mach
         assert self.q > 0.0, 'q=%s' % self.q
 

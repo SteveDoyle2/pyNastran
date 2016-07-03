@@ -64,7 +64,7 @@ def compare_card_content(fem1, fem2):
         'nlparms', 'tsteps', 'tstepnls', 'dmigs', 'dequations', 'frequencies',
         'sets', 'asets', 'bsets', 'csets', 'qsets', 'usets',
         'se_sets', 'se_bsets', 'se_csets', 'se_qsets', 'se_usets',
-        'tables', 'randomTables', 'methods', 'cMethods']
+        'tables', 'random_tables', 'methods', 'cMethods']
     for name in check_obj_names:
         check_length(fem1, fem2, name)
 
@@ -193,7 +193,7 @@ def compare_card_content(fem1, fem2):
     dict_groups = [
         #'se_sets',
         #'usets', 'se_usets',
-        'tables', 'randomTables',
+        'tables', 'random_tables',
         'methods', 'cMethods',
     ]
     #list_groups = [
@@ -222,9 +222,9 @@ def compare_card_content(fem1, fem2):
         #card2 = fem2.tables[key]
         #assert_fields(card1, card2)
 
-    #for key in fem1.randomTables:
-        #card1 = fem1.randomTables[key]
-        #card2 = fem2.randomTables[key]
+    #for key in fem1.random_tables:
+        #card1 = fem1.random_tables[key]
+        #card2 = fem2.random_tables[key]
         #assert_fields(card1, card2)
 
     #for key in fem1.methods:

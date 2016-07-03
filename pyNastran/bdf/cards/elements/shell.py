@@ -721,23 +721,27 @@ class CTRIAR(TriShell):
         self.T1 = T1
         self.T2 = T2
         self.T3 = T3
-        self.prepare_node_ids(nids)
+        self.nodes = nids
         assert len(self.nodes) == 3
+
+    def validate(self):
+        self.validate_node_ids(allow_empty_nodes=False)
 
     @classmethod
     def add_card(cls, card, comment=''):
         eid = integer(card, 1, 'eid')
         pid = integer(card, 2, 'pid')
 
-        nids = [integer(card, 3, 'n1'),
-                integer(card, 4, 'n2'),
-                integer(card, 5, 'n3')]
+        nids = [
+            integer(card, 3, 'n1'),
+            integer(card, 4, 'n2'),
+            integer(card, 5, 'n3')
+        ]
 
         thetaMcid = integer_double_or_blank(card, 6, 'thetaMcid', 0.0)
         zOffset = double_or_blank(card, 7, 'zOffset', 0.0)
         blank(card, 8, 'blank')
         blank(card, 9, 'blank')
-        blank(card, 10, 'blank')
 
         TFlag = integer_or_blank(card, 10, 'TFlag', 0)
         T1 = double_or_blank(card, 11, 'T1')
@@ -867,6 +871,15 @@ class CTRIAR(TriShell):
 
 
 class CTRIAX(TriShell):
+    """
+    +--------+------------+-------+----+----+----+----+----+-----+
+    |   1    |     2      |   3   |  4 |  5 |  6 | 7  |  8 |  9  |
+    +========+============+=======+====+====+====+====+====+=====+
+    | CTRIA3 |    EID     |  PID  | N1 | N2 | N3 | N4 | N5 | N6  |
+    +--------+------------+-------+----+----+----+----+----+-----+
+    |        | THETA/MCID |       |    |    |    |    |    |     |
+    +--------+------------+-------+----+----+----+----+----+-----+
+    """
     type = 'CTRIAX'
     calculixType = 'CAX6'
     def __init__(self, eid, pid, nids, thetaMcid, comment=''):
@@ -877,9 +890,12 @@ class CTRIAX(TriShell):
         self.eid = eid
         #: Property ID
         self.pid = pid
-        #self.thetaMcid = thetaMcid
+        self.thetaMcid = thetaMcid
+        self.nodes = nids
         assert len(nids) == 6, 'error on CTRIAX'
-        self.prepare_node_ids(nids, allow_empty_nodes=True)
+
+    def validate(self):
+        self.validate_node_ids(allow_empty_nodes=True)
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -976,13 +992,13 @@ class CTRIAX(TriShell):
         return self._nodeIDs(allow_empty_nodes=True)
 
     def raw_fields(self):
-        list_fields = ['CTRIAX', self.eid, self.Pid()] + self.node_ids #+ [self.thetaMcid]
+        list_fields = ['CTRIAX', self.eid, self.Pid()] + self.node_ids + [self.thetaMcid]
         return list_fields
 
     def repr_fields(self):
         thetaMcid = set_blank_if_default(self.thetaMcid, 0.0)
         nodeIDs = self.node_ids
-        list_fields = ['CTRIAX', self.eid, self.Pid()] + nodeIDs #+ [thetaMcid]
+        list_fields = ['CTRIAX', self.eid, self.Pid()] + nodeIDs + [thetaMcid]
         return list_fields
 
     def write_card(self, size=8, is_double=False):

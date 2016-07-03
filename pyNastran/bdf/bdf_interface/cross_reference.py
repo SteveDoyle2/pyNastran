@@ -120,14 +120,14 @@ class XrefMesh(BDFAttributes):
         if xref_materials:
             self._cross_reference_materials()
 
+        if xref_sets:
+            self._cross_reference_sets()
         if xref_aero:
             self._cross_reference_aero()
         if xref_constraints:
             self._cross_reference_constraints()
         if xref_loads:
             self._safe_cross_reference_loads(debug=debug)
-        if xref_sets:
-            self._cross_reference_sets()
         if xref_optimization:
             self._cross_reference_optimization()
         if xref_nodes_with_elements:
@@ -267,7 +267,7 @@ class XrefMesh(BDFAttributes):
         FORCE, FORCE1, FORCE2
         MOMENT, MOMENT1, MOMENT2
 
-        DLOAD, RLOAD1, RLOAD2, TLOAD1, TLOAD2
+        DLOAD, ACSRCE, RLOAD1, RLOAD2, TLOAD1, TLOAD2
         DPHASE, DAREA
 
         TEMP

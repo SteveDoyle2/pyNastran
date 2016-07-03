@@ -1180,7 +1180,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
         assert hasattr(table, 'tid')
         table.tid = table_id
         table_id += 1
-    for table_idi, table in sorted(sorted(iteritems(model.randomTables))):
+    for table_idi, table in sorted(sorted(iteritems(model.random_tables))):
         assert hasattr(table, 'tid')
         table.tid = table_id
         table_id += 1
