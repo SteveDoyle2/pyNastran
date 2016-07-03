@@ -37,31 +37,31 @@ class AGPS(object):
                 n, c = lines[i].strip('\n\r n').split('c')
                 n, c = int(n), int(c)
                 if n == ipatch:
-                    #print("saving column")
+                    #print('saving column')
                     # still on same patch
                     patch.append(col)
                 else:
-                    #print("saving patch")
+                    #print('saving patch')
                     patch.append(col)
                     patches.append(patch)
                     # new patch
                     patch = []
                     ipatch += 1
-                    #print("new patch", ipatch)
-                #print("lines[%i] = %r" % (i, (n, c)))
+                    #print('new patch', ipatch)
+                #print('lines[%i] = %r' % (i, (n, c)))
                 i += 1
             col = []
-        #print("*saving patch")
+        #print('*saving patch')
         patches.append(patch)
 
-        #print("len(patches) =", len(patches))
+        #print('len(patches) =', len(patches))
         #assert len(patches) < 20
         # time to parse the patches
         #for ipatch, patch in enumerate(patches):
 
         for ipatch, patch in enumerate(patches):
             if self.debug:
-                print("ipatch=%s" % ipatch)
+                print('ipatch=%s' % ipatch)
             #print("ipatch =", ipatch)
             #print(patch)
             X = []
@@ -87,7 +87,7 @@ class AGPS(object):
                 Y.append(y)
                 Z.append(z)
                 Cp.append(cp)
-                #print("len(cp) = %s" % len(cp))
+                #print('len(cp) = %s' % len(cp))
             #print(X)
             if self.debug:
                 print(len(X))
@@ -101,7 +101,7 @@ class AGPS(object):
             self.pressures[ipatch] = Cp
             #print(Cp.shape)
             if self.debug:
-                print("")
+                print('')
         #for ipatch, Cp in sorted(iteritems(self.pressures)):
             #print(Cp)
 

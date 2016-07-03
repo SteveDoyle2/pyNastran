@@ -42,7 +42,7 @@ class ADB_IO(object):
                 del self.icase
                 del self.iSubcaseNameMap
             except:
-                # print("cant delete geo")
+                # print('cant delete geo')
                 pass
 
             #print(dir(self))
@@ -95,7 +95,7 @@ class ADB_IO(object):
         assert nodes is not None
 
         nid = 0
-        #print("nxyz_nodes=%s" % nxyz_nodes)
+        #print('nxyz_nodes=%s' % nxyz_nodes)
         mmax = amax(nodes, axis=0)
         mmin = amin(nodes, axis=0)
         dim_max = (mmax - mmin).max()

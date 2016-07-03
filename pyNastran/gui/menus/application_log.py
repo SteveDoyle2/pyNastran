@@ -12,8 +12,8 @@ class HtmlLog(QtGui.QTextEdit):
 
 class ApplicationLogWidget(QtGui.QDockWidget):
     def __init__(self, parent=None):
-        QtGui.QDockWidget.__init__(self, "Application log", parent=parent)
-        self.setObjectName("application_log")
+        QtGui.QDockWidget.__init__(self, 'Application log', parent=parent)
+        self.setObjectName('application_log')
         self.log_widget = HtmlLog(parent=self)
         self.setWidget(self.log_widget)
 
@@ -25,8 +25,8 @@ class PythonConsoleWidget(QtGui.QDockWidget):
         hbox = QtGui.QHBoxLayout()
 
         self.enter_data = QtGui.QTextEdit()
-        self.execute_python_button = QtGui.QPushButton("Execute")
-        self.execute_and_clear_python_button = QtGui.QPushButton("Execute and Clear")
+        self.execute_python_button = QtGui.QPushButton('Execute')
+        self.execute_and_clear_python_button = QtGui.QPushButton('Execute and Clear')
         vbox.addWidget(self.enter_data)
         hbox.addWidget(self.execute_python_button)
         hbox.addWidget(self.execute_and_clear_python_button)

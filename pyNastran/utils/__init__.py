@@ -13,7 +13,7 @@ else:
     integer_float_types = (int, int32, int64, float)
 
 def b(s):
-    return s.encode("latin-1")
+    return s.encode('latin-1')
 
 def merge_dicts(dict_list, strict=True):
     """merges two or more dictionaries"""
@@ -98,7 +98,7 @@ def is_binary_file(filename):
     assert os.path.exists(filename), '%r does not exist\n%s' % (filename, print_bad_path(filename))
     with io.open(filename, mode='rb') as fil:
         for chunk in iter(lambda: fil.read(1024), bytes()):
-            if b"\0" in chunk:  # found null byte
+            if b'\0' in chunk:  # found null byte
                 return True
     return False
 
@@ -128,8 +128,8 @@ def print_bad_path(path):
         while path != npath:
             path, npath = npath, os.path.dirname(npath)
             res.append(path)
-        msg = {True: "passed", False: "failed"}
-        return "\n".join(["%s: %s" % (msg[os.path.exists(i)], i[4:]) for i in res])
+        msg = {True: 'passed', False: 'failed'}
+        return '\n'.join(['%s: %s' % (msg[os.path.exists(i)], i[4:]) for i in res])
     else:
         path = os.path.abspath(path)
         npath = os.path.dirname(path)
@@ -137,8 +137,8 @@ def print_bad_path(path):
         while path != npath:
             path, npath = npath, os.path.dirname(npath)
             res.append(path)
-        msg = {True: "passed", False: "failed"}
-        return "\n".join(["%s: %s" % (msg[os.path.exists(i)], i) for i in res])
+        msg = {True: 'passed', False: 'failed'}
+        return '\n'.join(['%s: %s' % (msg[os.path.exists(i)], i) for i in res])
 
 def _filename(filename):
     """
@@ -147,7 +147,7 @@ def _filename(filename):
     .. warning:: This might be Windows specific.
     """
     if len(filename) > 255:
-        return "\\\\?\\" + filename
+        return '\\\\?\\' + filename
     return filename
 
 def __object_attr(obj, mode, keys_to_skip, attr_type):
@@ -155,14 +155,14 @@ def __object_attr(obj, mode, keys_to_skip, attr_type):
     #print('keys_to_skip=%s' % keys_to_skip)
     keys_to_skip = [] if keys_to_skip is None else keys_to_skip
     test = {
-        "public":  lambda k: (not k.startswith('_') and k not in keys_to_skip),
-        "private": lambda k: (k.startswith('_') and not k.startswith('__') and k not in keys_to_skip),
-        "both": lambda k: (not k.startswith('__') and k not in keys_to_skip),
-        "all":  lambda k: (k not in keys_to_skip),
+        'public':  lambda k: (not k.startswith('_') and k not in keys_to_skip),
+        'private': lambda k: (k.startswith('_') and not k.startswith('__') and k not in keys_to_skip),
+        'both': lambda k: (not k.startswith('__') and k not in keys_to_skip),
+        'all':  lambda k: (k not in keys_to_skip),
     }
 
     if not mode in test:
-        print("Wrong mode! Accepted modes: public, private, both, all.")
+        print('Wrong mode! Accepted modes: public, private, both, all.')
         return None
     check = test[mode]
 
@@ -178,7 +178,7 @@ def __object_attr(obj, mode, keys_to_skip, attr_type):
     #                                           attr_type(getattr(obj, k)))])
 
 
-def object_methods(obj, mode = "public", keys_to_skip=None):
+def object_methods(obj, mode = 'public', keys_to_skip=None):
     """
     List the names of methods of a class as strings. Returns public methods
     as default.
@@ -205,7 +205,7 @@ def object_methods(obj, mode = "public", keys_to_skip=None):
     return __object_attr(obj, mode, keys_to_skip, lambda x: isinstance(x, MethodType))
 
 
-def object_attributes(obj, mode="public", keys_to_skip=None):
+def object_attributes(obj, mode='public', keys_to_skip=None):
     """
     List the names of attributes of a class as strings. Returns public
     attributes as default.
@@ -216,10 +216,10 @@ def object_attributes(obj, mode="public", keys_to_skip=None):
         the object for checking
     mode : str
         defines what kind of attributes will be listed
-        * "public" - names that do not begin with underscore
-        * "private" - names that begin with single underscore
-        * "both" - private and public
-        * "all" - all attributes that are defined for the object
+        * 'public' - names that do not begin with underscore
+        * 'private' - names that begin with single underscore
+        * 'both' - private and public
+        * 'all' - all attributes that are defined for the object
 
     Returns
     -------
@@ -243,14 +243,14 @@ def write_object_attributes(name, obj, nspaces=0, nbase=0, is_class=True, debug=
         equals = ':'
 
     if debug:
-        print("attr=%s equals=%r" % (name, equals))
+        print('attr=%s equals=%r' % (name, equals))
     # name
     if isinstance(obj, dict):
         if nspaces == 0:
             msg += '%s %s ' % (name, equals)
         else:
             if isinstance(name, tuple):
-                msg += "%s %s " % (str(name), equals)
+                msg += '%s %s ' % (str(name), equals)
             else:
                 msg += "'%s' %s " % (name, equals)
     elif isinstance(name, string_types):
@@ -264,19 +264,19 @@ def write_object_attributes(name, obj, nspaces=0, nbase=0, is_class=True, debug=
         # else:
             # key = "u'%s'" % name
     elif isinstance(name, (int, float, tuple)) or name is None:
-        key = "%s" % str(name)
+        key = '%s' % str(name)
     else:
         raise RuntimeError('key=%s is not a string.  Type=%s' % (name, type(name)))
 
     if debug:
-        print("name=%s type=%s" % (name, type(obj)))
+        print('name=%s type=%s' % (name, type(obj)))
 
     # write the object
     if isinstance(obj, (int, float)) or obj is None:
         xml += '<name=%s value=%s type=%s>' % (name, obj, type(obj))
         msg += '%s %s %s,\n' % (key, equals, write_value(obj, nspaces, nbase, is_class))
     elif is_string(obj):
-        msg += "%s %s %s,\n" % (key, equals, write_value(obj, nspaces, nbase, is_class))
+        msg += '%s %s %s,\n' % (key, equals, write_value(obj, nspaces, nbase, is_class))
 
     elif isinstance(obj, dict):
         msg += write_dict(obj, nspaces, nbase, is_class) + ',\n'
@@ -289,10 +289,10 @@ def write_object_attributes(name, obj, nspaces=0, nbase=0, is_class=True, debug=
     else:  # generic class
         objectType = obj.__class__.__name__
         #raise RuntimeError('objectType=%s is not supported' % objectType)
-        msg += "%s %s " % (key, equals)
+        msg += '%s %s ' % (key, equals)
         msg += write_class(name, obj, nspaces, nbase) + ',\n'  # comma for class
     if nspaces == 0:
         msg = msg[:-2]
     if debug:
-        print("%r" % msg)
+        print('%r' % msg)
     return msg

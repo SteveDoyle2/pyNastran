@@ -29,7 +29,7 @@ def main():
     # Setup a renderer, render window, and interactor
     renderer = vtk.vtkRenderer()
     renderWindow = vtk.vtkRenderWindow()
-    #renderWindow.SetWindowName("Test")
+    #renderWindow.SetWindowName('Test')
 
     renderWindow.AddRenderer(renderer);
     renderWindowInteractor = vtk.vtkRenderWindowInteractor()

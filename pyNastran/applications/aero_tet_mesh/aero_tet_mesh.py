@@ -92,7 +92,7 @@ def main():
     else:
         nastran_to_stl_filename(bdf_filename, stl_filename, log=log)
         stl_to_nastran_filename(stl_filename, bdf_filename2, log=log)
-    print("----------")
+    print('----------')
     #nastran_to_cart3d(bdf_filename2, cart3d_filename)
     #cart3d = Cart3d()
     #cart3d.read_cart3d(cart3d_filename)
