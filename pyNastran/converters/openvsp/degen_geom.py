@@ -4,7 +4,7 @@ from collections import defaultdict
 
 import numpy as np
 from pyNastran.bdf.field_writer_8 import print_card_8
-from pyNastran.converters.panair.panairGrid import PanairGrid, PanairPatch
+from pyNastran.converters.panair.panair_grid import PanairGrid, PanairPatch
 
 
 class Geom(object):
