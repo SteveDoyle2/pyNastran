@@ -49,6 +49,7 @@ PBMSECT  # arbitrary beam section
 
 # beam3
 CBEAM3  (done)
+PBEAM3
 PBCOMP  (done)
 PBEAM   (done)
 PBEAML  (done)
@@ -56,9 +57,6 @@ PBEAML  (done)
 # bend
 CBEND   (done)
 PBEND   (done)
-
-# beam3
-PBEAM3
 
 
 ----Plates/Shells (Elements/Properties)----:
@@ -148,6 +146,10 @@ PFAST   (done)
 CGAP    (done)
 PGAP    (done)
 
+PBCOMP  (not added)
+
+PLPLANE (???)
+
 ----Rigid Elements----:
 RROD  (done)
 RTRPLT
@@ -224,6 +226,8 @@ MOMENT2 (done)
 DLOAD   (done)
 SLOAD   (done)
 
+LOADCYN (???)
+ACSRCE  (done)
 TLOAD1  (done)
 TLOAD2  (done)
 RLOAD1  (done)
@@ -302,7 +306,7 @@ DIVERG  (done)
 ----Dynamic----:
 EPOINT  (done)
 DAREA   (done)
-PHASE   (done)
+DPHASE  (done)
 DELAY   (done)
 NLPARM  (done)
 NLPCI   (done)
@@ -328,20 +332,20 @@ DRESP1   (done)
 DRESP2   (done)
 DRESP3   (done)
 
-
-DVGRID
-DVCREL1  (done) # element  DV
-DVCREL2
-DVPREL1  (done) # property DV
+DVGRID   (no)
+DVCREL1  (done)  # element  DV
+DVCREL2  (done)
+DVPREL1  (done)  # property DV
 DVPREL2  (done)
-DVMREL1  (done) # material DV
-DVMREL2
+DVMREL1  (done)  # material DV
+DVMREL2  (done)
 
 DOPTPRM  (done)
 DLINK    (done)
 DCONADD  (done)
 
 ---Tables---
+DTABLE
 TABLED1  (done)
 TABLED2  (done)
 TABLED3  (done)
@@ -374,7 +378,6 @@ CSET1  (done)
 QSET1  (done)
 USET1  (done)
 
-SESET  (done)
 SET1   (done)
 SET2
 SET3   (done)
@@ -382,6 +385,7 @@ SET3   (done)
 SEQSEP (done)
 RADSET (done)
 
+SESET  (done)
 SEBSET  (done)
 SECSET  (done)
 SEQSET  (done)
