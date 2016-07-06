@@ -1715,6 +1715,10 @@ class BDFMethods(BDFAttributes):
                 faces = elem.faces
                 #print(faces)
                 for face_id, face in iteritems(faces):
+                    if None in face:
+                        msg = 'There is a None in the face.\n'
+                        msg = 'face_id=%s face=%s\n%s' % (face_id, str(face), str(elem))
+                        raise RuntimeError(msg)
                     eid_faces.append((eid, face))
         return eid_faces
 
@@ -1738,6 +1742,7 @@ class BDFMethods(BDFAttributes):
         for eid, face in eid_faces:
             #print(eid, face)
             raw_face = deepcopy(face)
+            print('face =', face)
             face.sort()
             tface = tuple(face)
             #print(tface)

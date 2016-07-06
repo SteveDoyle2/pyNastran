@@ -197,7 +197,7 @@ class DPHASE(BaseCard):
             the BDF object
         """
         msg = ', which is required by DPHASE sid=%s' % self.sid
-        self.nodes = model.Node(self.node_ids, msg=msg)
+        self.nodes = model.Nodes(self.node_ids, msg=msg)
         self.nodes_ref = self.nodes
 
     def uncross_reference(self):
@@ -233,17 +233,16 @@ class DPHASE(BaseCard):
             list_fields += [nidi, comp, delay]
         return list_fields
 
-    #def write_card(self, size=8, is_double=False):
-        #msg = self.comment
-        #node_ids = self.nodes
-        #if size == 8:
-            #for nid, comp, delay in zip(node_ids, self.components, self.delays):
-                #msg += print_card_8(['DELAY', self.sid, nid, comp, delay])
-        #else:
-            #for nid, comp, delay in zip(node_ids, self.components, self.delays):
-                #msg += print_card_16(['DPHASE', self.sid, nid, comp, delay])
-        #print(msg)
-        #return msg
+    def write_card(self, size=8, is_double=False):
+        msg = self.comment
+        node_ids = self.node_ids
+        if size == 8:
+            for nid, comp, delay in zip(node_ids, self.components, self.phase_leads):
+                msg += print_card_8(['DPHASE', self.sid, nid, comp, delay])
+        else:
+            for nid, comp, delay in zip(node_ids, self.components, self.phase_leads):
+                msg += print_card_16(['DPHASE', self.sid, nid, comp, delay])
+        return msg
 
 
 class FREQ(BaseCard):

@@ -289,9 +289,10 @@ class RLOAD1(TabularLoad):
         if isinstance(self.delay, integer_types) and self.delay > 0:
             self.delay = model.DELAY(self.delay_id, msg=msg)
             self.delay_ref = self.delay
-        #if isinstance(self.dphase, integer_types) and self.dphase > 0:
-            #self.dphase = model.dphases[self.dphase]
-            #self.dphase_ref = self.dphase
+        if isinstance(self.dphase, integer_types) and self.dphase > 0:
+            self.dphase = model.DPHASE(self.dphase, msg=msg)
+            self.dphase_ref = self.dphase
+
 
     def safe_cross_reference(self, model):
         msg = ' which is required by RLOAD1 sid=%s' % (self.sid)
@@ -304,8 +305,9 @@ class RLOAD1(TabularLoad):
         if isinstance(self.delay, integer_types) and self.delay > 0:
             self.delay = model.DELAY(self.delay_id, msg=msg)
             self.delay_ref = self.delay
-        #if isinstance(self.dphase, integer_types) and self.dphase > 0:
-            #self.dphase_ref = model.dphases[self.dphase]
+        if isinstance(self.dphase, integer_types) and self.dphase > 0:
+            self.dphase = model.DPHASE(self.dphase, msg=msg)
+            self.dphase_ref = self.dphase
 
     def uncross_reference(self):
         self.tc = self.Tc()
@@ -343,9 +345,17 @@ class RLOAD1(TabularLoad):
     def delay_id(self):
         if self.delay in [0, 0.0]:
             return 0
-        elif isinstance(self.delay, (integer_types, float)):
+        elif isinstance(self.delay, integer_float_types):
             return self.delay
         return self.delay_ref.sid
+
+    @property
+    def DPhase(self):
+        #if self.dphase in [0, 0.0]:
+            #return 0
+        if isinstance(self.dphase, integer_types):
+            return self.dphase
+        return self.dphase_ref.sid
 
     def get_load_at_freq(self, freq, scale=1.):
         # A = 1. # points to DAREA or SPCD
@@ -369,6 +379,7 @@ class RLOAD1(TabularLoad):
             dphase = 0.0
         else:
             #print('DPHASE is not supported; type=%s' % type(self.dphase))
+            #print('dphase = ', self.dphase)
             nids, comps, dphases = self.dphase_ref.get_dphase_at_freq(freq)
             assert len(dphases) == 1, dphases
             dphase = dphases[0]
@@ -384,13 +395,13 @@ class RLOAD1(TabularLoad):
         return out
 
     def raw_fields(self):
-        list_fields = ['RLOAD1', self.sid, self.excite_id, self.delay_id, self.dphase,
+        list_fields = ['RLOAD1', self.sid, self.excite_id, self.delay_id, self.DPhase,
                        self.Tc(), self.Td(), self.Type]
         return list_fields
 
     def repr_fields(self):
         Type = set_blank_if_default(self.Type, 'LOAD')
-        list_fields = ['RLOAD1', self.sid, self.excite_id, self.delay_id, self.dphase,
+        list_fields = ['RLOAD1', self.sid, self.excite_id, self.delay_id, self.DPhase,
                        self.Tc(), self.Td(), Type]
         return list_fields
 

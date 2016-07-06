@@ -1244,6 +1244,16 @@ def expand_thru_case_control(set_value):
         if '/' in ivalue:
             set_value2.add(ivalue)
         else:
+
+            if 'ALL' in ivalue:
+                msg = ('ALL is not supported on CaseControlDeck '
+                       'SET card\nvalue=%r\nset=%r' % (ivalue, set_value))
+                raise RuntimeError(msg)
+            elif 'EXCEPT' in ivalue:
+                msg = ('EXCEPT is not supported on CaseControlDeck '
+                       'SET card\nvalue=%r\nset=%r' % (ivalue, set_value))
+                raise RuntimeError(msg)
+
             ivalue = interpret_value(ivalue, card=str(set_value))
             if isinstance(ivalue, integer_types):
                 #print('  isdigit')
@@ -1262,7 +1272,7 @@ def expand_thru_case_control(set_value):
                 assert add_mode is True, add_mode
                 set_value2.add(ivalue)
             elif isinstance(ivalue, string_types):
-                #print('  not digit')
+                #print('  not digit=%r' % set_value)
                 if set_value is 'EXCLUDE':
                     msg = ('EXCLUDE is not supported on CaseControlDeck '
                            'SET card\n')
