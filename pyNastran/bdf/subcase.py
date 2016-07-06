@@ -1245,14 +1245,14 @@ def expand_thru_case_control(set_value):
             set_value2.add(ivalue)
         else:
 
-            if 'ALL' in ivalue:
-                msg = ('ALL is not supported on CaseControlDeck '
-                       'SET card\nvalue=%r\nset=%r' % (ivalue, set_value))
-                raise RuntimeError(msg)
-            elif 'EXCEPT' in ivalue:
-                msg = ('EXCEPT is not supported on CaseControlDeck '
-                       'SET card\nvalue=%r\nset=%r' % (ivalue, set_value))
-                raise RuntimeError(msg)
+            #if 'ALL' in ivalue:
+                #msg = ('ALL is not supported on CaseControlDeck '
+                       #'SET card\nvalue=%r\nset=%r' % (ivalue, set_value))
+                #raise RuntimeError(msg)
+            #elif 'EXCEPT' in ivalue:
+                #msg = ('EXCEPT is not supported on CaseControlDeck '
+                       #'SET card\nvalue=%r\nset=%r' % (ivalue, set_value))
+                #raise RuntimeError(msg)
 
             ivalue = interpret_value(ivalue, card=str(set_value))
             if isinstance(ivalue, integer_types):
