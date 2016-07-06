@@ -14,6 +14,7 @@ ECHOOFF (done
 GRID    (done)
 GRDSET  (done)
 SPOINT  (done)
+MONPNT1 (done)
 
 ----Coordinates----:
 CORD1R  (done)
@@ -227,11 +228,13 @@ DLOAD   (done)
 SLOAD   (done)
 
 LOADCYN (???)
-ACSRCE  (done)
 TLOAD1  (done)
 TLOAD2  (done)
 RLOAD1  (done)
 RLOAD2  (done)
+
+----Acoustic----:
+ACSRCE  (done)
 
 ----Thermal Loads----:
 TEMP   (done)
@@ -504,7 +507,6 @@ VIEW3D
 ----Nodes----:
 EGRID
 GRIDG
-MONPNT1 (done)
 MONPNT2
 MONPNT3
 
@@ -518,8 +520,58 @@ RADLST
 RADMTX
 RADSET
 
-----Special----:
+----Parametric Grids/Elements----:
 GENEL
+
+EQUIV
+DELETE
+ACTIVE
+RSPLNG
+
+CGEN
+SPCG
+SETG
+TEMPG
+ETEMP
+LIST
+EDGER
+INSECT
+GRIDMOD
+DISTORT
+
+TRICON
+CBARG
+PGEN
+
+EIDL
+EIDH
+
+GRIDMOD
+GRIDD
+GRIDG
+GRIDU
+EGRID
+
+CURVE
+EDGER
+
+MPOINT
+MDIM
+MLINE
+MAREA
+MTAB
+MFUN
+
+MESHOFF
+MESHON
+
+PLOTG
+PLOTG
+PLOTOPT
+
+PLOADG
+
+
 
 ----Dynamics/Nonlinear---:
 
