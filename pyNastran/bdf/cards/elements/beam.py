@@ -118,7 +118,7 @@ class CBEAM(CBAR):
 
         sa = integer_or_blank(card, 17, 'sa', 0)
         sb = integer_or_blank(card, 18, 'sb', 0)
-        assert len(card) <= 19, 'len(CBEAM card) = %i' % len(card)
+        assert len(card) <= 19, 'len(CBEAM card) = %i\ncard=%s' % (len(card), card)
         return CBEAM(eid, pid, ga, gb, x, g0, is_offt, offt, bit,
                      pa, pb, wa, wb, sa, sb, comment=comment)
 

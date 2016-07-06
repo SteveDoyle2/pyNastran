@@ -96,7 +96,7 @@ class CHEXA8(SolidElement):
         ], dtype='int32')
         assert 0 not in nids, '%s\n%s' % (nids, card)
         self.node_ids[i, :] = nids
-        assert len(card) == 11, 'len(CHEXA8 card) = %i' % len(card)
+        assert len(card) == 11, 'len(CHEXA8 card) = %i\ncard=%s' % (len(card), card)
         self.i += 1
 
     def get_mass_matrix(self, i, model, positions, index0s, is_lumped=True):

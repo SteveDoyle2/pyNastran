@@ -87,7 +87,7 @@ class PLOAD1(object):
             self.p1[i] = double(card, 6, 'p1')
             self.x2[i] = double_or_blank(card, 7, 'x2', self.x1)
             self.p2[i] = double_or_blank(card, 8, 'p2', self.p1)
-            assert len(card) <= 9, 'len(PLOAD1 card) = %i' % len(card)
+            assert len(card) <= 9, 'len(PLOAD1 card) = %i\ncard=%s' % (len(card), card)
 
             if Type not in self.valid_types:
                 msg = '%r is an invalid type on the PLOAD1 card' % Type

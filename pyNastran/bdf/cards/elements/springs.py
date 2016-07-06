@@ -76,7 +76,7 @@ class CELAS1(SpringElement):
         nids = [integer(card, 3, 'g1'), integer_or_blank(card, 5, 'g2', 0)]
         c1 = integer_or_blank(card, 4, 'c1', 0)
         c2 = integer_or_blank(card, 6, 'c2', 0)
-        assert len(card) <= 7, 'len(CELAS1 card) = %i' % len(card)
+        assert len(card) <= 7, 'len(CELAS1 card) = %i\ncard=%s' % (len(card), card)
         return CELAS1(eid, pid, nids, c1, c2, comment=comment)
 
     @classmethod
@@ -208,7 +208,7 @@ class CELAS2(SpringElement):
         c2 = integer_or_blank(card, 6, 'c2', 0)
         ge = double_or_blank(card, 7, 'ge', 0.)
         s = double_or_blank(card, 8, 's', 0.)
-        assert len(card) <= 9, 'len(CELAS2 card) = %i' % len(card)
+        assert len(card) <= 9, 'len(CELAS2 card) = %i\ncard=%s' % (len(card), card)
         return CELAS2(eid, k, nids, c1, c2, ge, s, comment=comment)
 
     @classmethod
@@ -356,7 +356,7 @@ class CELAS3(SpringElement):
 
         s1 = integer_or_blank(card, 3, 's1', 0)
         s2 = integer_or_blank(card, 4, 's2', 0)
-        assert len(card) <= 5, 'len(CELAS3 card) = %i' % len(card)
+        assert len(card) <= 5, 'len(CELAS3 card) = %i\ncard=%s' % (len(card), card)
         return CELAS3(eid, pid, s1, s2, comment=comment)
 
     @classmethod
@@ -450,7 +450,7 @@ class CELAS4(SpringElement):
         k = double(card, 2, 'k')
         s1 = integer_or_blank(card, 3, 's1', 0)
         s2 = integer_or_blank(card, 4, 's2', 0)
-        assert len(card) <= 5, 'len(CELAS4 card) = %i' % len(card)
+        assert len(card) <= 5, 'len(CELAS4 card) = %i\ncard=%s' % (len(card), card)
         return CELAS4(eid, k, s1, s2, comment=comment)
 
     @classmethod

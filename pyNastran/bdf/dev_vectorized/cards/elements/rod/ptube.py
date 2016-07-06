@@ -47,7 +47,7 @@ class PTUBE(Property):
         self.nsm[i] = double_or_blank(card, 5, 'nsm', 0.0)
         OD2 = double_or_blank(card, 6, 'OD2', OD1)
         self.OD[i, :] = [OD1, OD2]
-        assert len(card) <= 7, 'len(PTUBE card) = %i' % len(card)
+        assert len(card) <= 7, 'len(PTUBE card) = %i\ncard=%s' % (len(card), card)
         self.i += 1
 
     def build(self):

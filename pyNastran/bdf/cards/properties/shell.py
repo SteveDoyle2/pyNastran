@@ -1058,7 +1058,7 @@ class PSHEAR(ShellProperty):
         nsm = double_or_blank(card, 4, 'nsm', 0.0)
         f1 = double_or_blank(card, 5, 'f1', 0.0)
         f2 = double_or_blank(card, 6, 'f2', 0.0)
-        assert len(card) <= 7, 'len(PSHEAR card) = %i' % len(card)
+        assert len(card) <= 7, 'len(PSHEAR card) = %i\ncard=%s' % (len(card), card)
         return PSHEAR(pid, t, mid, nsm, f1, f2, comment=comment)
 
     @classmethod
@@ -1239,7 +1239,7 @@ class PSHELL(ShellProperty):
 
         #if self.mid1 is not None and self.mid2 is not None:
         #    assert self.mid4 == None
-        assert len(card) <= 12, 'len(PSHELL card) = %i' % len(card)
+        assert len(card) <= 12, 'len(PSHELL card) = %i\ncard=%s' % (len(card), card)
         return PSHELL(pid, mid1, t, mid2, twelveIt3,
                       mid3, tst, nsm,
                       z1, z2, mid4, comment=comment)

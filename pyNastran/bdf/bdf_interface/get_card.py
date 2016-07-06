@@ -756,6 +756,14 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
             raise KeyError('delay_id=%s not found%s.  Allowed DELAY=%s'
                            % (delay_id, msg, np.unique(list(self.delays.keys()))))
 
+    def DPHASE(self, dphase_id, msg=''):
+        """gets a DPHASE"""
+        try:
+            return self.dphases[dphase_id]
+        except KeyError:
+            raise KeyError('dphase_id=%s not found%s.  Allowed DPHASE=%s'
+                           % (dphase_id, msg, np.unique(list(self.dphases.keys()))))
+
     #--------------------
     def MPC(self, mpc_id, msg=''):
         """gets an MPC"""

@@ -83,7 +83,7 @@ class CDAMP1(LineDamper):
         #: component number
         c1 = integer_or_blank(card, 4, 'c1', 0)
         c2 = integer_or_blank(card, 6, 'c2', 0)
-        assert len(card) <= 7, 'len(CDAMP1 card) = %i' % len(card)
+        assert len(card) <= 7, 'len(CDAMP1 card) = %i\ncard=%s' % (len(card), card)
         return CDAMP1(eid, pid, nids, c1, c2, comment=comment)
 
     @classmethod
@@ -219,7 +219,7 @@ class CDAMP2(LineDamper):
 
         c1 = integer_or_blank(card, 4, 'c1', 0)
         c2 = integer_or_blank(card, 6, 'c2', 0)
-        assert len(card) <= 7, 'len(CDAMP2 card) = %i' % len(card)
+        assert len(card) <= 7, 'len(CDAMP2 card) = %i\ncard=%s' % (len(card), card)
         return CDAMP2(eid, b, nids, c1, c2, comment=comment)
 
     @classmethod
@@ -323,7 +323,7 @@ class CDAMP3(LineDamper):
         pid = integer(card, 2, 'pid')
         nids = [integer_or_blank(card, 3, 's1', 0),
                 integer_or_blank(card, 4, 's2', 0)]
-        assert len(card) <= 5, 'len(CDAMP3 card) = %i' % len(card)
+        assert len(card) <= 5, 'len(CDAMP3 card) = %i\ncard=%s' % (len(card), card)
         return CDAMP3(eid, pid, nids, comment=comment)
 
     @classmethod
@@ -403,10 +403,11 @@ class CDAMP4(LineDamper):
         else:
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
-    def __init__(self, b, nids, comment=''):
+    def __init__(self, eid, b, nids, comment=''):
         LineDamper.__init__(self)
         if comment:
             self._comment = comment
+        self.eid = eid
         self.b = b
         self.nids = nids
         self.prepare_node_ids(nids, allow_empty_nodes=True)
@@ -422,7 +423,7 @@ class CDAMP4(LineDamper):
             integer_or_blank(card, 3 + ioffset, 'n1', 0),
             integer_or_blank(card, 4 + ioffset, 'n2', 0)
         ]
-        assert len(card) <= 9, 'len(CDAMP4 card) = %i' % len(card)
+        assert len(card) <= 9, 'len(CDAMP4 card) = %i\ncard=%s' % (len(card), card)
         return CDAMP4(eid, b, nids, comment=comment)
 
     @classmethod
@@ -508,7 +509,7 @@ class CDAMP5(LineDamper):
         pid = integer(card, 2, 'pid')
         nids = [integer_or_blank(card, 3, 'n1', 0),
                 integer_or_blank(card, 4, 'n2', 0)]
-        assert len(card) <= 5, 'len(CDAMP5 card) = %i' % len(card)
+        assert len(card) <= 5, 'len(CDAMP5 card) = %i\ncard=%s' % (len(card), card)
         return CDAMP5(eid, pid, nids, comment=comment)
 
     @classmethod
@@ -604,7 +605,7 @@ class CVISC(LineDamper):
         pid = integer_or_blank(card, 2, 'pid', eid)
         nids = [integer_or_blank(card, 3, 'n1', 0),
                 integer_or_blank(card, 4, 'n2', 0)]
-        assert len(card) <= 5, 'len(CVISC card) = %i' % len(card)
+        assert len(card) <= 5, 'len(CVISC card) = %i\ncard=%s' % (len(card), card)
         return CVISC(eid, pid, nids, comment=comment)
 
     @classmethod

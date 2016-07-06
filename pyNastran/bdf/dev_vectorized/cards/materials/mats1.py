@@ -133,7 +133,7 @@ class MATS1(Material):
                 #self.limit2[i] = blank(card, 8, 'limit2')
                 #self.limit2[i] = None
                 pass
-        assert len(card) <= 9, 'len(MATS1 card) = %i' % len(card)
+        assert len(card) <= 9, 'len(MATS1 card) = %i\ncard=%s' % (len(card), card)
         self.i += 1
 
     def build(self):

@@ -63,7 +63,7 @@ class PSOLID(Property):
         self.stress[i] = integer_string_or_blank(card, 5, 'stress', '')
         self.isop[i] = integer_string_or_blank(card, 6, 'isop', '')
         self.fctn[i] = string_or_blank(card, 7, 'fctn', 'SMECH')
-        assert len(card) <= 8, 'len(PSOLID card) = %i' % len(card)
+        assert len(card) <= 8, 'len(PSOLID card) = %i\ncard=%s' % (len(card), card)
         self.i += 1
 
     def build(self):

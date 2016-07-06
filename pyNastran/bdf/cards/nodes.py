@@ -101,7 +101,7 @@ class RINGAX(Ring):
 
             #: local SPC constraint
             self.ps = integer_or_blank(card, 7, 'ps')
-            assert len(card) <= 8, 'len(RINGAX card) = %i' % len(card)
+            assert len(card) <= 8, 'len(RINGAX card) = %i\ncard=%s' % (len(card), card)
         else:  # hasn't been validated
             self.nid = data[0]
             self.R = data[1]
@@ -500,7 +500,7 @@ class GRDSET(Node):
 
         #: Superelement ID
         self.seid = integer_or_blank(card, 8, 'seid', 0)
-        assert len(card) <= 9, 'len(GRDSET card) = %i' % len(card)
+        assert len(card) <= 9, 'len(GRDSET card) = %i\ncard=%s' % (len(card), card)
 
     def cross_reference(self, model):
         """
@@ -905,7 +905,7 @@ class GRID(Node):
 
             #: Superelement ID
             seid = integer_or_blank(card, 8, 'seid', 0)
-            assert len(card) <= 9, 'len(GRID card) = %i' % len(card)
+            assert len(card) <= 9, 'len(GRID card) = %i\ncard=%s' % (len(card), card)
         else:
             cd = 0
             ps = ''
@@ -1345,7 +1345,7 @@ class POINT(Node):
 
             #: Superelement ID
             self.seid = blank(card, 8, 'seid', 0)
-            assert len(card) <= 9, 'len(POINT card) = %i' % len(card)
+            assert len(card) <= 9, 'len(POINT card) = %i\ncard=%s' % (len(card), card)
         else:
             self.nid = data[0]
             self.cp = data[1]

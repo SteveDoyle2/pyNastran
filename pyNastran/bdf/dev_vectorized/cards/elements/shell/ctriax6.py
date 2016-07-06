@@ -50,7 +50,7 @@ class CTRIAX6(object):
                 #: theta
                 self.theta[i] = double_or_blank(card, 9, 'theta', 0.0)
 
-                assert len(card) <= 10, 'len(CTRIAX6 card) = %i' % len(card)
+                assert len(card) <= 10, 'len(CTRIAX6 card) = %i\ncard=%s' % (len(card), card)
             i = self.element_id.argsort()
             self.element_id = self.element_id[i]
             self.material_id = self.material_id[i]

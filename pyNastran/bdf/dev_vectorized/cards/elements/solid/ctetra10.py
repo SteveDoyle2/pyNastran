@@ -59,7 +59,7 @@ class CTETRA10(SolidElement):
             integer_or_blank(card, 12, 'node_id_10', 0),
         ], dtype='int32')
         self.node_ids[i, :] = nids
-        assert len(card) <= 13, 'len(CTETRA10 card) = %i' % len(card)
+        assert len(card) <= 13, 'len(CTETRA10 card) = %i\ncard=%s' % (len(card), card)
         self.i += 1
 
     def _verify(self, xref=True):

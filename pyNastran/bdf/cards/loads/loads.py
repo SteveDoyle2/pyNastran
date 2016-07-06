@@ -37,6 +37,7 @@ class Load(BaseCard):
         try:
             return self._nodeIDs()
         except:
+            #raise
             raise RuntimeError('error processing nodes for \n%s' % str(self))
 
     def _nodeIDs(self, nodes=None):
@@ -185,7 +186,7 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
         excite_id = integer(card, 2, 'excite_id')
         lid = integer(card, 3, 'lid')
         tid = integer_or_blank(card, 4, 'tid')
-        assert len(card) <= 5, 'len(LSEQ card) = %i' % len(card)
+        assert len(card) <= 5, 'len(LSEQ card) = %i\ncard=%s' % (len(card), card)
         return LSEQ(sid, excite_id, lid, tid, comment=comment)
 
     #def add_op2_data(self, data, comment=''):
@@ -621,7 +622,7 @@ class RFORCE(Load):
         racc = double_or_blank(card, 9, 'racc', 0.)
         mb = integer_or_blank(card, 10, 'mb', 0)
         idrf = integer_or_blank(card, 11, 'idrf', 0)
-        assert len(card) <= 12, 'len(RFORCE card) = %i' % len(card)
+        assert len(card) <= 12, 'len(RFORCE card) = %i\ncard=%s' % (len(card), card)
         return RFORCE(sid, nid, cid, scale, r1, r2, r3, method, racc, mb,
                       idrf, comment=comment)
 
@@ -744,7 +745,7 @@ class RANDPS(RandomLoad):
         x = double_or_blank(card, 4, 'x', 0.0)
         y = double_or_blank(card, 5, 'y', 0.0)
         tid = integer_or_blank(card, 6, 'tid', 0)
-        assert len(card) <= 7, 'len(RANDPS card) = %i' % len(card)
+        assert len(card) <= 7, 'len(RANDPS card) = %i\ncard=%s' % (len(card), card)
         return RANDPS(sid, j, k, x, y, tid, comment=comment)
 
     def cross_reference(self, model):

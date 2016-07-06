@@ -52,7 +52,7 @@ class CPENTA15(SolidElement):
             integer_or_blank(card, 17, 'node_id_15', 0),
         ], dtype='int32')
         self.node_ids[i, :] = nids
-        assert len(card) <= 17, 'len(CPENTA15 card) = %i' % len(card)
+        assert len(card) <= 17, 'len(CPENTA15 card) = %i\ncard=%s' % (len(card), card)
         self.i += 1
 
     def _verify(self, xref=True):

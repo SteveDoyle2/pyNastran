@@ -76,7 +76,7 @@ class CONROD(RodElement):
         self.J[i] = double_or_blank(card, 6, 'J', 0.0)
         self.c[i] = double_or_blank(card, 7, 'c', 0.0)
         self.nsm[i] = double_or_blank(card, 8, 'non_structural_mass', 0.0)
-        assert len(card) <= 9, 'len(CONROD card) = %i' % len(card)
+        assert len(card) <= 9, 'len(CONROD card) = %i\ncard=%s' % (len(card), card)
         self.i += 1
 
     def build(self):

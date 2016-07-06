@@ -40,7 +40,7 @@ class CELAS1(SpringElement):
                                integer(card, 5, 'n2')]
         self.components[i, :] = [integer_or_blank(card, 4, 'c1', 0),
                                  integer_or_blank(card, 6, 'c2', 0)]
-        assert len(card) <= 7, 'len(CELAS1 card) = %i' % len(card)
+        assert len(card) <= 7, 'len(CELAS1 card) = %i\ncard=%s' % (len(card), card)
         self.i += 1
 
     def build(self):

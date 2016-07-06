@@ -110,7 +110,7 @@ class CBUSH(Element):
         self.si[i, :] = [double_or_blank(card, 11, 's1'),
                    double_or_blank(card, 12, 's2'),
                    double_or_blank(card, 13, 's3')]
-        assert len(card) <= 14, 'len(CBUSH card) = %i' % len(card)
+        assert len(card) <= 14, 'len(CBUSH card) = %i\ncard=%s' % (len(card), card)
         self.i += 1
 
     def build(self):

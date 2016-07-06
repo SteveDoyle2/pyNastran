@@ -38,17 +38,23 @@ class DELAY(BaseCard):
 
     def __init__(self, sid, nodes, components, delays, comment=''):
         """
-        +-------+-----+-----------+-----+------+------+-----+-----+-----+
-        |   1   |  2  |     3     |  4  |  5   |  6   |  7  |  8  |  9  |
-        +=======+=====+===========+=====+======+======+=====+=====+=====+
-        | DELAY | SID | POINT ID1 | C1  | T1   | P2   | C2  | T2  |     |
-        +-------+-----+-----------+-----+------+------+-----+-----+-----+
+        +-------+-----+-----------+-----+--------+------+-----+--------+-----+
+        |   1   |  2  |     3     |  4  |   5    |  6   |  7  |   8    |  9  |
+        +=======+=====+===========+=====+========+======+=====+========+=====+
+        | DELAY | SID | POINT ID1 | C1  | THETA1 | P2   | C2  | THETA2 |     |
+        +-------+-----+-----------+-----+--------+------+-----+--------+-----+
         """
         if comment:
             self._comment = comment
+
+        #: Identification number of DPHASE entry. (Integer > 0)
         self.sid = sid
+        #: Grid, extra, or scalar point identification number. (Integer > 0)
         self.nodes = nodes
+        #: Component number. (Integers 1 through 6 for grid points; zero or blank for extra
+        #: or scalar points)
         self.components = components
+        #: Phase lead (degrees)
         self.delays = delays
 
     @classmethod
@@ -217,15 +223,15 @@ class DPHASE(BaseCard):
             node_ids.append(self.node_id2)
         return node_ids
 
-    #def raw_fields(self):
-        #list_fields = ['DPHASE', self.sid]
-        #for nid, comp, delay in zip(self.nodes, self.components, self.delays):
-            #if isinstance(nid, integer_types):
-                #nidi = nid
-            #else:
-                #nidi = nid.nid
-            #list_fields += [nidi, comp, delay]
-        #return list_fields
+    def raw_fields(self):
+        list_fields = ['DPHASE', self.sid]
+        for nid, comp, delay in zip(self.nodes, self.components, self.phase_leads):
+            if isinstance(nid, integer_types):
+                nidi = nid
+            else:
+                nidi = nid.nid
+            list_fields += [nidi, comp, delay]
+        return list_fields
 
     #def write_card(self, size=8, is_double=False):
         #msg = self.comment
@@ -337,7 +343,7 @@ class FREQ1(FREQ):
         f1 = double_or_blank(card, 2, 'f1', 0.0)
         df = double(card, 3, 'df')
         ndf = integer_or_blank(card, 4, 'ndf', 1)
-        assert len(card) <= 5, 'len(FREQ card) = %i' % len(card)
+        assert len(card) <= 5, 'len(FREQ card) = %i\ncard=%s' % (len(card), card)
         return FREQ1(sid, f1, df, ndf, comment=comment)
 
     def write_card(self, size=8, is_double=False):
@@ -383,7 +389,7 @@ class FREQ2(FREQ):
         f1 = double(card, 2, 'f1')  # default=0.0 ?
         f2 = double(card, 3, 'f2')
         ndf = integer_or_blank(card, 4, 'nf', 1)
-        assert len(card) <= 5, 'len(FREQ2 card) = %i' % len(card)
+        assert len(card) <= 5, 'len(FREQ2 card) = %i\ncard=%s' % (len(card), card)
         return FREQ2(sid, f1, f2, ndf, comment=comment)
         #return FREQ(sid, freqs, comment=comment)
 
@@ -437,7 +443,7 @@ class FREQ4(FREQ):
         f2 = double_or_blank(card, 3, 'f2', 1.e20)
         fspread = double_or_blank(card, 4, 'fspd', 0.1)
         nfm = integer_or_blank(card, 5, 'nfm', 3)
-        assert len(card) <= 6, 'len(FREQ card) = %i' % len(card)
+        assert len(card) <= 6, 'len(FREQ card) = %i\ncard=%s' % (len(card), card)
         return FREQ4(sid, f1, f2, fspread, nfm, comment=comment)
 
     def raw_fields(self):
@@ -553,7 +559,7 @@ class NLPARM(BaseCard):
         maxBisect = integer_or_blank(card, 17, '', 5)
         maxR = double_or_blank(card, 21, 'maxR', 20.)
         rTolB = double_or_blank(card, 23, 'rTolB', 20.)
-        assert len(card) <= 24, 'len(NLPARM card) = %i' % len(card)
+        assert len(card) <= 24, 'len(NLPARM card) = %i\ncard=%s' % (len(card), card)
         return NLPARM(nlparm_id, ninc, dt, kmethod, kStep, maxIter, conv,
                       int_out, epsU, epsP, epsW, maxDiv,
                       maxQn, maxLs, fStress,
@@ -708,6 +714,9 @@ class TF(BaseCard):
     def validate(self):
         pass
         #assert len(self.grids1) > 0, 'ngrids1=%s\n%s' % (len(self.grids1), str(self))
+
+    def cross_reference(self, model):
+        pass
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -911,7 +920,7 @@ class TSTEPNL(BaseCard):
 
         # not listed in all QRGs
         min_iter = integer_or_blank(card, 24, 'minIter')
-        assert len(card) <= 25, 'len(TSTEPNL card) = %i' % len(card)
+        assert len(card) <= 25, 'len(TSTEPNL card) = %i\ncard=%s' % (len(card), card)
         return TSTEPNL(
             sid, ndt, dt, no, method, kstep, max_iter, conv,
             eps_u, eps_p, eps_w, max_div, max_qn, max_ls, fstress,

@@ -123,7 +123,7 @@ class CBUSH(BushElement):
         si = [double_or_blank(card, 11, 's1'),
               double_or_blank(card, 12, 's2'),
               double_or_blank(card, 13, 's3')]
-        assert len(card) <= 14, 'len(CBUSH card) = %i' % len(card)
+        assert len(card) <= 14, 'len(CBUSH card) = %i\ncard=%s' % (len(card), card)
         return CBUSH(eid, pid, ga, gb, x, g0, cid, s, ocid, si, comment=comment)
 
     #@classmethod
@@ -262,7 +262,7 @@ class CBUSH1D(BushElement):
         ga = integer(card, 3, 'ga')
         gb = integer_or_blank(card, 4, 'gb')
         cid = integer_or_blank(card, 5, 'cid')
-        assert len(card) <= 6, 'len(CBUSH1D card) = %i' % len(card)
+        assert len(card) <= 6, 'len(CBUSH1D card) = %i\ncard=%s' % (len(card), card)
         return CBUSH1D(eid, pid, ga, gb, cid, comment=comment)
 
     #@classmethod
@@ -383,7 +383,7 @@ class CBUSH2D(BushElement):
         cid = integer_or_blank(card, 5, 'cid', 0)
         plane = string_or_blank(card, 6, 'plane', 'XY')
         sptid = integer_or_blank(card, 7, 'sptid')
-        assert len(card) <= 8, 'len(CBUSH2D card) = %i' % len(card)
+        assert len(card) <= 8, 'len(CBUSH2D card) = %i\ncard=%s' % (len(card), card)
         return CBUSH2D(eid, pid, ga, gb, cid, plane, sptid, comment=comment)
 
     #@classmethod

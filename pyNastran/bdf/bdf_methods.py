@@ -860,12 +860,12 @@ class BDFMethods(BDFAttributes):
                 M += m
 
             elif load.type == 'FORCE1':
-                found_nid = False
+                not_found_nid = False
                 for nid in load.node_ids:
                     if nid not in nids:
-                        found_nid = True
+                        not_found_nid = True
                         break
-                if found_nid:
+                if not_found_nid:
                     continue
 
                 f = load.mag * load.xyz * scale
@@ -875,33 +875,27 @@ class BDFMethods(BDFAttributes):
                 F += f
                 M += m
             elif load.type == 'FORCE2':
-                found_nid = False
+                not_found_nid = False
                 for nid in load.node_ids:
                     if nid not in nids:
-                        found_nid = True
+                        not_found_nid = True
                         break
-                if found_nid:
+                if not_found_nid:
                     continue
 
-                if load.Cid() != 0:
-                    cp = load.cid
-                    #from pyNastran.bdf.bdf import CORD2R
-                    #cp = CORD2R()
-                    f = load.mag * cp.transform_vector_to_global(load.xyz) * scale
-                else:
-                    f = load.mag * load.xyz * scale
+                f = load.mag * load.xyz * scale
                 node = self.Node(load.node_id)
                 r = xyz[node.nid] - p
                 m = cross(r, f)
                 F += f
                 M += m
             elif load.type == 'MOMENT':
-                found_nid = False
+                not_found_nid = False
                 for nid in load.node_ids:
                     if nid not in nids:
-                        found_nid = True
+                        not_found_nid = True
                         break
-                if found_nid:
+                if not_found_nid:
                     continue
 
                 if load.Cid() != 0:
@@ -911,22 +905,22 @@ class BDFMethods(BDFAttributes):
                     m = load.xyz
                 M += load.mag * m * scale
             elif load.type == 'MOMENT1':
-                found_nid = False
+                not_found_nid = False
                 for nid in load.node_ids:
                     if nid not in nids:
-                        found_nid = True
+                        not_found_nid = True
                         break
-                if found_nid:
+                if not_found_nid:
                     continue
                 m = load.mag * load.xyz * scale
                 M += m
             elif load.type == 'MOMENT2':
-                found_nid = False
+                not_found_nid = False
                 for nid in load.node_ids:
                     if nid not in nids:
-                        found_nid = True
+                        not_found_nid = True
                         break
-                if found_nid:
+                if not_found_nid:
                     continue
                 m = load.mag * load.xyz * scale
                 M += m

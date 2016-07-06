@@ -363,7 +363,7 @@ class AEPARM(BaseCard):
         id = integer(card, 1, 'id')
         label = string(card, 2, 'lable')
         units = string(card, 3, 'units')
-        assert len(card) <= 4, 'len(AEPARM card) = %i' % len(card)
+        assert len(card) <= 4, 'len(AEPARM card) = %i\ncard=%s' % (len(card), card)
         return AEPARM(id, label, units, comment=comment)
 
     @classmethod
@@ -422,7 +422,7 @@ class AESTAT(BaseCard):
     def add_card(cls, card, comment=''):
         id = integer(card, 1, 'ID')
         label = string(card, 2, 'label')
-        assert len(card) <= 3, 'len(AESTAT card) = %i' % len(card)
+        assert len(card) <= 3, 'len(AESTAT card) = %i\ncard=%s' % (len(card), card)
         return AESTAT(id, label, comment=comment)
 
     @classmethod
@@ -552,7 +552,7 @@ class AESURF(BaseCard):
         hmulim = double_or_blank(card, 14, 'hmulim')
         tqllim = integer_or_blank(card, 15, 'tqllim')
         tqulim = integer_or_blank(card, 16, 'tqulim')
-        assert len(card) <= 17, 'len(AESURF card) = %i' % len(card)
+        assert len(card) <= 17, 'len(AESURF card) = %i\ncard=%s' % (len(card), card)
         return AESURF(aesid, label, cid1, alid1, cid2, alid2, eff, ldw,
                       crefc, crefs, pllim, pulim, hmllim, hmulim,
                       tqllim, tqulim, comment=comment)
@@ -700,7 +700,7 @@ class AESURFS(BaseCard):  # not integrated
         label = string(card, 2, 'label')
         list1 = integer(card, 4, 'list1')
         list2 = integer(card, 6, 'list2')
-        assert len(card) <= 7, 'len(AESURFS card) = %i' % len(card)
+        assert len(card) <= 7, 'len(AESURFS card) = %i\ncard=%s' % (len(card), card)
         return AESURFS(id, label, list1, list2, comment=comment)
 
     @classmethod
@@ -823,7 +823,7 @@ class AERO(Aero):
         rho_ref = double(card, 4, 'rhoRef')
         sym_xz = integer_or_blank(card, 5, 'symXZ', 0)
         sym_xy = integer_or_blank(card, 6, 'symXY', 0)
-        assert len(card) <= 7, 'len(AERO card) = %i' % len(card)
+        assert len(card) <= 7, 'len(AERO card) = %i\ncard=%s' % (len(card), card)
         return AERO(acsid, velocity, cref, rho_ref, sym_xz, sym_xy,
                     comment=comment)
 
@@ -963,7 +963,7 @@ class AEROS(Aero):
         sref = double(card, 5, 'Sref')
         sym_xz = integer_or_blank(card, 6, 'sym_xz', 0)
         sym_xy = integer_or_blank(card, 7, 'sym_xy', 0)
-        assert len(card) <= 8, 'len(AEROS card) = %i' % len(card)
+        assert len(card) <= 8, 'len(AEROS card) = %i\ncard=%s' % (len(card), card)
         return AEROS(cref, bref, sref, acsid, rcsid, sym_xz, sym_xy,
                      comment=comment)
 
@@ -1049,7 +1049,7 @@ class CSSCHD(Aero):
         lAlpha = integer_or_blank(card, 3, 'lAlpha')  # AEFACT
         lMach = integer_or_blank(card, 4, 'lMach')    # AEFACT
         lSchd = integer(card, 5, 'lSchd')             # AEFACT
-        assert len(card) <= 6, 'len(CSSCHD card) = %i' % len(card)
+        assert len(card) <= 6, 'len(CSSCHD card) = %i\ncard=%s' % (len(card), card)
         return CSSCHD(sid, aesid, lAlpha, lMach, lSchd, comment=comment)
 
     @classmethod
@@ -1325,7 +1325,7 @@ class CAERO1(BaseCard):
             double_or_blank(card, 15, 'z4', 0.0)])
         x43 = double_or_blank(card, 16, 'x43', 0.)
 
-        assert len(card) <= 17, 'len(CAERO1 card) = %i' % len(card)
+        assert len(card) <= 17, 'len(CAERO1 card) = %i\ncard=%s' % (len(card), card)
         return CAERO1(eid, pid, cp, nspan, lspan, nchord, lchord, igid,
                       p1, x12, p4, x43, comment=comment)
 
@@ -1767,7 +1767,7 @@ class CAERO2(BaseCard):
             double_or_blank(card, 10, 'y1', 0.0),
             double_or_blank(card, 11, 'z1', 0.0)])
         x12 = double_or_blank(card, 12, 'x12', 0.)
-        assert len(card) <= 13, 'len(CAERO2 card) = %i' % len(card)
+        assert len(card) <= 13, 'len(CAERO2 card) = %i\ncard=%s' % (len(card), card)
         return CAERO2(eid, pid, cp, nsb, nint, lsb, lint, igid, p1, x12,
                       comment=comment)
 
@@ -2004,7 +2004,7 @@ class CAERO3(BaseCard):
             double_or_blank(card, 14, 'y4', 0.0),
             double_or_blank(card, 15, 'z4', 0.0)])
         x43 = double_or_blank(card, 16, 'x43', 0.0)
-        assert len(card) <= 17, 'len(CAERO3 card) = %i' % len(card)
+        assert len(card) <= 17, 'len(CAERO3 card) = %i\ncard=%s' % (len(card), card)
         return CAERO3(eid, pid, cp, list_w, list_c1, list_c2,
                       p1, x12, p4, x43, comment=comment)
 
@@ -2116,7 +2116,7 @@ class CAERO4(BaseCard):
             double_or_blank(card, 14, 'y4', 0.0),
             double_or_blank(card, 15, 'z4', 0.0)])
         x43 = double_or_blank(card, 16, 'x43', 0.)
-        assert len(card) <= 17, 'len(CAERO4 card) = %i' % len(card)
+        assert len(card) <= 17, 'len(CAERO4 card) = %i\ncard=%s' % (len(card), card)
         return CAERO4(eid, pid, cp, nspan, lspan, p1, x12, p4, x43,
                       comment=comment)
 
@@ -2245,7 +2245,7 @@ class CAERO5(BaseCard):
             double_or_blank(card, 14, 'y4', 0.0),
             double_or_blank(card, 15, 'z4', 0.0)])
         x43 = double_or_blank(card, 16, 'x43', 0.0)
-        assert len(card) <= 17, 'len(CAERO3 card) = %i' % len(card)
+        assert len(card) <= 17, 'len(CAERO3 card) = %i\ncard=%s' % (len(card), card)
         return CAERO5(eid, pid, cp, nspan, lspan, ntheory, nthick,
                       p1, x12, p4, x43, comment=comment)
 
@@ -2816,7 +2816,7 @@ class FLUTTER(BaseCard):
 
         assert method in ['K', 'KE', 'PK', 'PKS', 'PKNL', 'PKNLS', None], method
         epsilon = double_or_blank(card, 8, 'epsilon')  # not defined in QRG
-        assert len(card) <= 9, 'len(FLUTTER card) = %i' % len(card)
+        assert len(card) <= 9, 'len(FLUTTER card) = %i\ncard=%s' % (len(card), card)
         return FLUTTER(sid, method, density_id, mach_id, reduced_freq_velocity_id,
                        imethod=imethod, nvalue=nvalue, omax=omax,
                        epsilon=epsilon, comment=comment)
@@ -2955,7 +2955,7 @@ class GUST(BaseCard):
         wg = double(card, 3, 'wg')
         x0 = double(card, 4, 'x0')
         V = double_or_blank(card, 4, 'V')
-        assert len(card) <= 6, 'len(GUST card) = %i' % len(card)
+        assert len(card) <= 6, 'len(GUST card) = %i\ncard=%s' % (len(card), card)
         return GUST(sid, dload, wg, x0, V, comment=comment)
 
     @classmethod
@@ -3631,7 +3631,7 @@ class SPLINE1(Spline):
         usage = string_or_blank(card, 8, 'usage', 'BOTH')
         nelements = integer_or_blank(card, 9, 'nelements', 10)
         melements = integer_or_blank(card, 10, 'melements', 10)
-        assert len(card) <= 11, 'len(SPLINE1 card) = %i' % len(card)
+        assert len(card) <= 11, 'len(SPLINE1 card) = %i\ncard=%s' % (len(card), card)
         return SPLINE1(eid, caero, box1, box2, setg, dz, method, usage,
                        nelements, melements, comment=comment)
 
@@ -3782,7 +3782,7 @@ class SPLINE2(Spline):
         dthy = double_or_blank(card, 10, 'dthy')
 
         usage = string_or_blank(card, 12, 'usage', 'BOTH')
-        assert len(card) <= 13, 'len(SPLINE2 card) = %i' % len(card)
+        assert len(card) <= 13, 'len(SPLINE2 card) = %i\ncard=%s' % (len(card), card)
         return SPLINE2(eid, caero, id1, id2, setg, dz, dtor, cid,
                        dthx, dthy, usage, comment=comment)
 
@@ -4042,7 +4042,7 @@ class SPLINE4(Spline):
         usage = string_or_blank(card, 8, 'usage', 'BOTH')
         nelements = integer_or_blank(card, 9, 'nelements', 10)
         melements = integer_or_blank(card, 10, 'melements', 10)
-        assert len(card) <= 11, 'len(SPLINE4 card) = %i' % len(card)
+        assert len(card) <= 11, 'len(SPLINE4 card) = %i\ncard=%s' % (len(card), card)
         return SPLINE4(eid, caero, aelist, setg, dz, method, usage,
                        nelements, melements, comment=comment)
 

@@ -125,7 +125,7 @@ class CBEAM(Element):
                          double_or_blank(card, 16, 'w3b', 0.0),]
         self.sa[i] = integer_or_blank(card, 17, 'sa', 0)
         self.sb[i] = integer_or_blank(card, 18, 'sb', 0)
-        assert len(card) <= 19, 'len(CBEAM card) = %i' % len(card)
+        assert len(card) <= 19, 'len(CBEAM card) = %i\ncard=%s' % (len(card), card)
         self.i += 1
 
     def build(self):

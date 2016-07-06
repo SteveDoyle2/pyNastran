@@ -50,7 +50,7 @@ class CPYRAM13(SolidElement):
             integer_or_blank(card, 15, 'node_id_13', 0),
         ], dtype='int32')
         self.node_ids[i, :] = nids
-        assert len(card) <= 17, 'len(CPYRAM13 card) = %i' % len(card)
+        assert len(card) <= 17, 'len(CPYRAM13 card) = %i\ncard=%s' % (len(card), card)
         self.i += 1
 
     def _verify(self, xref=True):

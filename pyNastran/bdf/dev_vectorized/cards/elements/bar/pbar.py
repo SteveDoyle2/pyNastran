@@ -74,7 +74,7 @@ class PBAR(Property):
             if self.A == 0.0 and self.i12 == 0.0:
                 assert self.K1 is None, 'K1 must be blank if A=0.0 and I12=0.0; A=%r I12=%r K1=%r' % (self.A, self.i12, self.K1)
                 assert self.K2 is None, 'K2 must be blank if A=0.0 and I12=0.0; A=%r I12=%r K2=%r' % (self.A, self.i12, self.K2)
-            assert len(card) <= 20, 'len(PBAR card) = %i' % len(card)
+            assert len(card) <= 20, 'len(PBAR card) = %i\ncard=%s' % (len(card), card)
 
         self.i += 1
 

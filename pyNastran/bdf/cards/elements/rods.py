@@ -229,7 +229,7 @@ class CTUBE(RodElement):
         pid = integer_or_blank(card, 2, 'pid', eid)
         nids = [integer(card, 3, 'n1'),
                 integer(card, 4, 'n2')]
-        assert len(card) == 5, 'len(CTUBE card) = %i' % len(card)
+        assert len(card) == 5, 'len(CTUBE card) = %i\ncard=%s' % (len(card), card)
         return CTUBE(eid, pid, nids, comment=comment)
 
     @classmethod

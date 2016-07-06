@@ -50,7 +50,7 @@ class CELAS4(SpringElement):
                                  integer_or_blank(card, 6, 'C2', 0)]
         self.ge[i] = double_or_blank(card, 7, 'ge', 0.)
         self.s[i] = double_or_blank(card, 8, 's', 0.)
-        assert len(card) <= 9, 'len(CELAS4 card) = %i' % len(card) + str(card)
+        assert len(card) <= 9, 'len(CELAS4 card) = %i\ncard=%s' % (len(card), card) + str(card)
         self.i += 1
 
     def build(self):

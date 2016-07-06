@@ -473,7 +473,8 @@ class AddMethods(BDFAttributes):
             self._type_to_id_map[darea.type].append(key)
 
     def add_DPHASE(self, dphase, allow_overwrites=False):
-        key = (dphase.sid, dphase.phase_leads, dphase.components)
+        #key = (dphase.sid, dphase.phase_leads, dphase.components)
+        key = dphase.sid
         if key in self.dphases and not allow_overwrites:
             if not dphase._is_same_card(self.dphases[key]):
                 assert key not in self.dphases, '\ndphase=\n%s old_DPHASE=\n%s' % (

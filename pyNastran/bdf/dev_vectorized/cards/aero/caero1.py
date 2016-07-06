@@ -65,7 +65,7 @@ class CAERO1(VectorizedCard):
                          double_or_blank(card, 14, 'y4', 0.0),
                          double_or_blank(card, 15, 'z4', 0.0)]
         self.x43[i] = double_or_blank(card, 16, 'x43', 0.)
-        assert len(card) <= 17, 'len(CAERO1 card) = %i' % len(card)
+        assert len(card) <= 17, 'len(CAERO1 card) = %i\ncard=%s' % (len(card), card)
         self.i += 1
 
     def allocate(self, ncards):

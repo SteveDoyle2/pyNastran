@@ -33,7 +33,7 @@ class CSHEAR(Element):
                             integer(card, 4, 'n2'),
                             integer(card, 5, 'n3'),
                             integer(card, 6, 'n4')]
-        assert len(card) <= 7, 'len(CSHEAR card) = %i' % len(card)
+        assert len(card) <= 7, 'len(CSHEAR card) = %i\ncard=%s' % (len(card), card)
         self.i += 1
 
     def build(self):

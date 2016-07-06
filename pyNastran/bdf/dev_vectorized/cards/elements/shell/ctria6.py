@@ -49,7 +49,7 @@ class CTRIA6(ShellElement):
             double_or_blank(card, 12, 'T2', 1.0),
             double_or_blank(card, 13, 'T3', 1.0), ]
         self.t_flag[i] = integer_or_blank(card, 14, 'TFlag', 0)
-        assert len(card) <= 15, 'len(CTRIA6 card) = %i' % len(card)
+        assert len(card) <= 15, 'len(CTRIA6 card) = %i\ncard=%s' % (len(card), card)
         self.i += 1
 
     def build(self):

@@ -123,7 +123,7 @@ class MATS1(MaterialDependence):
             else:
                 #limit2 = blank(card, 8, 'limit2')
                 limit2 = None
-        assert len(card) <= 9, 'len(MATS1 card) = %i' % len(card)
+        assert len(card) <= 9, 'len(MATS1 card) = %i\ncard=%s' % (len(card), card)
         return MATS1(mid, tid, Type, h, hr, yf, limit1, limit2, comment=comment)
 
     @classmethod

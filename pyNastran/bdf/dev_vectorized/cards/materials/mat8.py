@@ -76,7 +76,7 @@ class MAT8(Material):
         self.ge[i] = double_or_blank(card, 17, 'ge', 0.0)
         self.F12[i] = double_or_blank(card, 18, 'F12', 0.0)
         self.strn[i] = double_or_blank(card, 19, 'strn', 0.0)
-        assert len(card) <= 20, 'len(MAT8 card) = %i' % len(card)
+        assert len(card) <= 20, 'len(MAT8 card) = %i\ncard=%s' % (len(card), card)
         self.i += 1
 
 

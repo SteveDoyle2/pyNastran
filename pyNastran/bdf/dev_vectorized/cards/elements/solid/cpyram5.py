@@ -56,7 +56,7 @@ class CPYRAM5(SolidElement):
         ], dtype='int32')
         assert 0 not in nids, '%s\n%s' % (nids, card)
         self.node_ids[i, :] = nids
-        assert len(card) == 9, 'len(CPYRAM5 card) = %i' % len(card)
+        assert len(card) == 9, 'len(CPYRAM5 card) = %i\ncard=%s' % (len(card), card)
         self.i += 1
 
     def get_mass_matrix(self, i, model, positions, index0s):

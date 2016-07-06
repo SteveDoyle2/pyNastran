@@ -42,7 +42,7 @@ class PROD(Property):
         j = double_or_blank(card, 4, 'J', 0.0)
         c = double_or_blank(card, 5, 'c', 0.0)
         nsm = double_or_blank(card, 6, 'nsm', 0.0)
-        assert len(card) <= 7, 'len(PROD card) = %i' % len(card)
+        assert len(card) <= 7, 'len(PROD card) = %i\ncard=%s' % (len(card), card)
         return PROD(pid, mid, A, j, c, nsm, comment=comment)
 
     @classmethod
@@ -160,7 +160,7 @@ class PTUBE(Property):
             t = OD1 / 2.
         nsm = double_or_blank(card, 5, 'nsm', 0.0)
         OD2 = double_or_blank(card, 6, 'OD2', OD1)
-        assert len(card) <= 7, 'len(PTUBE card) = %i' % len(card)
+        assert len(card) <= 7, 'len(PTUBE card) = %i\ncard=%s' % (len(card), card)
         return PTUBE(pid, mid, OD1, t, nsm, OD2, comment=comment)
 
     @classmethod

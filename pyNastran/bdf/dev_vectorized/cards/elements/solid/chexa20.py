@@ -50,7 +50,7 @@ class CHEXA20(SolidElement):
             integer_or_blank(card, 22, 'node_id_20', 0)
         ], dtype='int32')
         self.node_ids[i, :] = nids
-        assert len(card) <= 23, 'len(CHEXA20 card) = %i' % len(card)
+        assert len(card) <= 23, 'len(CHEXA20 card) = %i\ncard=%s' % (len(card), card)
         self.i += 1
 
     def build(self):

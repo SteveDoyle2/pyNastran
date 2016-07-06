@@ -449,7 +449,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
             # ---- dynamic cards ---- #
             'DAREA',  ## dareas
-            #'DPHASE',  ## dphases
+            'DPHASE',  ## dphases
             'DELAY',  ## delays
             'NLPARM',  ## nlparms
             'NLPCI',  ## nlpcis
@@ -797,8 +797,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             aecomp.validate()
         for key, aefact in sorted(iteritems(self.aefacts)):
             aefact.validate()
-        for key, aelink in sorted(iteritems(self.aelinks)):
-            aelink.validate()
+        for key, aelinks in sorted(iteritems(self.aelinks)):
+            for aelink in aelinks:
+                aelink.validate()
         for key, aeparam in sorted(iteritems(self.aeparams)):
             aeparam.validate()
         for key, aesurf in sorted(iteritems(self.aesurfs)):
@@ -873,7 +874,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         for key, darea in sorted(iteritems(self.dareas)):
             darea.validate()
         for key, dphase in sorted(iteritems(self.dphases)):
-            dphases.validate()
+            dphase.validate()
 
         for pid, pbusht in sorted(iteritems(self.pbusht)):
             pbusht.validate()
@@ -2149,9 +2150,10 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         """adds a DPHASE"""
         class_instance = DPHASE.add_card(card_obj, comment=comment)
         self.add_DPHASE(class_instance)
-        # if card_obj.field(5):
-            # class_instance = DPHASE(card_obj, icard=1, comment=comment)
-            # self.add_DPHASE(class_instance)
+        #if card_obj.field(5):
+            #print('card_obj = ', card_obj)
+            #class_instance = DPHASE(card_obj, icard=1, comment=comment)
+            #self.add_DPHASE(class_instance)
 
     def _prepare_cord1r(self, card, card_obj, comment=''):
         """adds a CORD1R"""
@@ -2346,10 +2348,10 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                 for i, nid in enumerate(newpoints):
                     if nid not in spoints:
                         node = self.nodes[nid]
-                        xyz_cid0[i, :] = node.get_position_wrt(model, cid)
+                        xyz_cid0[i, :] = node.get_position_wrt(self, cid)
             else:
                 for i, (nid, node) in enumerate(sorted(iteritems(self.nodes))):
-                    xyz = node.get_position_wrt(model, cid)
+                    xyz = node.get_position_wrt(self, cid)
                     xyz_cid0[i, :] = xyz
         return xyz_cid0
 

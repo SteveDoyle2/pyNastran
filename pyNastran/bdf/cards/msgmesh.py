@@ -128,7 +128,7 @@ class CGEN(object):
 
             #: Superelement ID
             seid = integer_or_blank(card, 8, 'seid', 0)
-            assert len(card) <= 9, 'len(GRID card) = %i' % len(card)
+            assert len(card) <= 9, 'len(GRID card) = %i\ncard=%s' % (len(card), card)
         else:
             cd = 0
             ps = ''

@@ -83,7 +83,7 @@ class CMASS1(PointMassElement):
         c1 = integer_or_blank(card, 4, 'c1')
         g2 = integer_or_blank(card, 5, 'g2')
         c2 = integer_or_blank(card, 6, 'c2')
-        assert len(card) <= 7, 'len(CMASS1 card) = %i' % len(card)
+        assert len(card) <= 7, 'len(CMASS1 card) = %i\ncard=%s' % (len(card), card)
         return CMASS1(eid, pid, g1, c1, g2, c2, comment=comment)
 
     @classmethod
@@ -238,7 +238,7 @@ class CMASS2(PointMassElement):
         c1 = integer_or_blank(card, 4, 'c1')
         g2 = integer_or_blank(card, 5, 'g2')
         c2 = integer_or_blank(card, 6, 'c2')
-        assert len(card) <= 7, 'len(CMASS2 card) = %i' % len(card)
+        assert len(card) <= 7, 'len(CMASS2 card) = %i\ncard=%s' % (len(card), card)
         return CMASS2(eid, mass, g1, c1, g2, c2, comment=comment)
 
     @classmethod
@@ -399,7 +399,7 @@ class CMASS3(PointMassElement):
         pid = integer_or_blank(card, 2, 'pid', eid)
         s1 = integer_or_blank(card, 3, 's1')
         s2 = integer_or_blank(card, 4, 's2')
-        assert len(card) <= 5, 'len(CMASS3 card) = %i' % len(card)
+        assert len(card) <= 5, 'len(CMASS3 card) = %i\ncard=%s' % (len(card), card)
         return CMASS3(eid, pid, s1, s2, comment=comment)
 
     @classmethod
@@ -490,7 +490,7 @@ class CMASS4(PointMassElement):
         mass = double_or_blank(card, 2 + ioffset, 'mass', 0.)
         s1 = integer(card, 3 + ioffset, 's1')
         s2 = integer_or_blank(card, 4 + ioffset, 's2', 0)
-        assert len(card) <= 9, 'len(CMASS4 card) = %i' % len(card)
+        assert len(card) <= 9, 'len(CMASS4 card) = %i\ncard=%s' % (len(card), card)
         return CMASS4(eid, mass, s1, s2, comment=comment)
 
     @classmethod
@@ -660,7 +660,7 @@ class CONM1(PointMassElement):
         m[5, 3] = double_or_blank(card, 22, 'M64', 0.)
         m[5, 4] = double_or_blank(card, 23, 'M65', 0.)
         m[5, 5] = double_or_blank(card, 24, 'M66', 0.)
-        assert len(card) <= 25, 'len(CONM1 card) = %i' % len(card)
+        assert len(card) <= 25, 'len(CONM1 card) = %i\ncard=%s' % (len(card), card)
         return CONM1(eid, nid, cid, m, comment=comment)
 
     @classmethod

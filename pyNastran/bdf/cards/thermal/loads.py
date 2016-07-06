@@ -622,7 +622,7 @@ class TEMPD(BaseCard):
     @classmethod
     def add_card(cls, card, icard=0, comment=''):
         nfields = len(card) - 1
-        assert nfields % 2 == 0
+        assert nfields % 2 == 0, 'card=%s' % card
         i = 2 * icard
         sid = integer(card, i + 1, 'sid')
         temperature = double(card, i + 2, 'temp')

@@ -101,7 +101,7 @@ class CREEP(Material):
         e = double_or_blank(card, 14, 'e')
         f = double_or_blank(card, 15, 'f')
         g = double_or_blank(card, 16, 'g')
-        assert len(card) <= 17, 'len(CREEP card) = %i' % len(card)
+        assert len(card) <= 17, 'len(CREEP card) = %i\ncard=%s' % (len(card), card)
         return CREEP(mid, T0, exp, form, tidkp, tidcp, tidcs, thresh, Type,
                      a, b, c, d, e, f, g, comment=comment)
 

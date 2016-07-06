@@ -1564,7 +1564,7 @@ class CORD3G(Coord):  # not done
                   integer(card, 5, 'theta2'),
                   integer(card, 6, 'theta3')]
         rid = integer_or_blank(card, 7, 'cidRef')
-        assert len(card) <= 8, 'len(CORD3G card) = %i' % len(card)
+        assert len(card) <= 8, 'len(CORD3G card) = %i\ncard=%s' % (len(card), card)
 
         return CORD3G(cid, method_es, method_int, form, thetas, rid,
                       comment=comment)

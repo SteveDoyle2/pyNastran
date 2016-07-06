@@ -38,8 +38,10 @@ def remove_marc_files(filenames):
         # names.append(os.readlink('/proc/self/fd/%d' % fd))
     # return names
 
-def run(regenerate=True, run_nastran=False, debug=False, sum_load=True, xref=True):
+def run(regenerate=True, run_nastran=False, debug=False, sum_load=True, xref=True, crash_cards=None):
     """Runs the full BDF test suite"""
+    if crash_cards is None:
+        crash_cards = []
     # F:\work\pyNastran\pyNastran\master2\pyNastran\bdf\test
     files = get_files_of_type('tests', '.bdf')
     files += get_files_of_type('tests', '.dat')
@@ -91,7 +93,7 @@ def run(regenerate=True, run_nastran=False, debug=False, sum_load=True, xref=Tru
                                      check=check, cid=cid,
                                      nastran=nastran,
                                      size=size, is_double=is_double, post=post,
-                                     encoding='latin1')
+                                     encoding='latin1', crash_cards=crash_cards)
     ntotal = len(files)
     nfailed = len(failed_files)
     npassed = ntotal - nfailed
@@ -113,7 +115,7 @@ def main():
 
     msg = "Usage:\n"
     is_release = False
-    msg += "bdf_test [-r] [-n] [-s S...] [-e E] [-L] [-x]\n"
+    msg += "bdf_test [-r] [-n] [-s S...] [-e E] [-L] [-x] [-c C]\n"
     msg += "  bdf_test -h | --help\n"
     msg += "  bdf_test -v | --version\n"
     msg += "\n"
@@ -123,13 +125,14 @@ def main():
     #msg += "  OP2_FILENAME         Path to OP2 file\n"
     #msg += "\n"
     msg += "Options:\n"
-    msg += "  -r, --regenerate   Dumps the OP2 as a readable text file\n"
-    msg += "  -n, --run_nastran  Runs Nastran\n"
-    msg += "  -L, --sum_loads    Disables static/dynamic loads sum\n"
-    msg += "  -s S, --size S     Sets the field size\n"
-    msg += '  -e E, --nerrors E  Allow for cross-reference errors (default=100)\n'
-    msg += '  -x, --xref         disables cross-referencing and checks of the BDF.\n'
-    msg += '                     (default=False -> on)\n'
+    msg += "  -r, --regenerate     Dumps the OP2 as a readable text file\n"
+    msg += '  -c C, --crash_cards  Crash on specific cards (e.g. CGEN)\n'
+    msg += "  -n, --run_nastran    Runs Nastran\n"
+    msg += "  -L, --sum_loads      Disables static/dynamic loads sum\n"
+    msg += "  -s S, --size S       Sets the field size\n"
+    msg += '  -e E, --nerrors E    Allow for cross-reference errors (default=100)\n'
+    msg += '  -x, --xref           disables cross-referencing and checks of the BDF.\n'
+    msg += '                       (default=False -> on)\n'
     #msg += "  -c, --disablecompare  Doesn't do a validation of the vectorized result\n"
     #msg += "  -z, --is_mag_phase    F06 Writer writes Magnitude/Phase instead of\n"
     #msg += "                        Real/Imaginary (still stores Real/Imag); [default: False]\n"
@@ -138,12 +141,17 @@ def main():
         sys.exit(msg)
 
     data = docopt(msg, version=ver)
+    #print(data)
     regenerate = data['--regenerate']
     run_nastran = data['--run_nastran']
     sum_load = not data['--sum_loads']
     xref = not data['--xref']
+
+    crash_cards = []
+    if data['--crash_cards']:
+        crash_cards = data['--crash_cards'].split()
     run(regenerate=regenerate, run_nastran=run_nastran, sum_load=sum_load,
-        xref=xref)
+        xref=xref, crash_cards=crash_cards)
 
 if __name__ == '__main__':  # pragma: no cover
     main()

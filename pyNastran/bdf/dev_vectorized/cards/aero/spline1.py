@@ -76,7 +76,7 @@ class SPLINE1(VectorizedCard):
         self.melements[i] = integer_or_blank(card, 10, 'melements', 10)
         assert self.nelements[i] > 0, 'nelements = %s' % self.nelements[i]
         assert self.melements[i] > 0, 'melements = %s' % self.melements[i]
-        assert len(card) <= 11, 'len(SPLINE1 card) = %i' % len(card)
+        assert len(card) <= 11, 'len(SPLINE1 card) = %i\ncard=%s' % (len(card), card)
         self.i += 1
 
     def add_op2(self, data, comment=''):

@@ -345,7 +345,7 @@ class CTRIA3(TriShell):
             T1 = double_or_blank(card, 11, 'T1')
             T2 = double_or_blank(card, 12, 'T2')
             T3 = double_or_blank(card, 13, 'T3')
-            assert len(card) <= 14, 'len(CTRIA3 card) = %i' % len(card)
+            assert len(card) <= 14, 'len(CTRIA3 card) = %i\ncard=%s' % (len(card), card)
         else:
             thetaMcid = 0.0
             zOffset = 0.0
@@ -524,7 +524,7 @@ class CTRIA6(TriShell):
             T2 = double_or_blank(card, 12, 'T2')
             T3 = double_or_blank(card, 13, 'T3')
             TFlag = integer_or_blank(card, 14, 'TFlag', 0)
-            assert len(card) <= 15, 'len(CTRIA6 card) = %i' % len(card)
+            assert len(card) <= 15, 'len(CTRIA6 card) = %i\ncard=%s' % (len(card), card)
         else:
             thetaMcid = 0.0
             zoffset = 0.0
@@ -747,7 +747,7 @@ class CTRIAR(TriShell):
         T1 = double_or_blank(card, 11, 'T1')
         T2 = double_or_blank(card, 12, 'T2')
         T3 = double_or_blank(card, 13, 'T3')
-        assert len(card) <= 14, 'len(CTRIAR card) = %i' % len(card)
+        assert len(card) <= 14, 'len(CTRIAR card) = %i\ncard=%s' % (len(card), card)
         return CTRIAR(eid, pid, nids, thetaMcid, zOffset,
                       TFlag, T1, T2, T3, comment=comment)
 
@@ -911,7 +911,7 @@ class CTRIAX(TriShell):
             integer_or_blank(card, 8, 'n6'),
             ]
         thetaMcid = integer_double_or_blank(card, 9, 'theta_mcsid', 0.0)
-        assert len(card) <= 10, 'len(CTRIAX card) = %i' % len(card)
+        assert len(card) <= 10, 'len(CTRIAX card) = %i\ncard=%s' % (len(card), card)
         return CTRIAX(eid, pid, nids, thetaMcid, comment=comment)
 
     def _verify(self, xref=True):
@@ -1060,7 +1060,7 @@ class CTRIAX6(TriShell):
         ]
 
         theta = double_or_blank(card, 9, 'theta', 0.0)
-        assert len(card) <= 10, 'len(CTRIAX6 card) = %i' % len(card)
+        assert len(card) <= 10, 'len(CTRIAX6 card) = %i\ncard=%s' % (len(card), card)
         return CTRIAX6(eid, mid, nids, theta, comment=comment)
 
     def cross_reference(self, model):
@@ -1375,7 +1375,7 @@ class CSHEAR(QuadShell):
                 integer_or_blank(card, 4, 'n2'),
                 integer_or_blank(card, 5, 'n3'),
                 integer_or_blank(card, 6, 'n4')]
-        assert len(card) <= 7, 'len(CSHEAR card) = %i' % len(card)
+        assert len(card) <= 7, 'len(CSHEAR card) = %i\ncard=%s' % (len(card), card)
         return CSHEAR(eid, pid, nids, comment=comment)
 
     @classmethod
@@ -1617,7 +1617,7 @@ class CQUAD4(QuadShell):
             T2 = double_or_blank(card, 12, 'T2')
             T3 = double_or_blank(card, 13, 'T3')
             T4 = double_or_blank(card, 14, 'T4')
-            assert len(card) <= 15, 'len(CQUAD4 card) = %i' % len(card)
+            assert len(card) <= 15, 'len(CQUAD4 card) = %i\ncard=%s' % (len(card), card)
         else:
             thetaMcid = 0.0
             zOffset = 0.0
@@ -1826,7 +1826,7 @@ class CQUADR(QuadShell):
         T2 = double_or_blank(card, 12, 'T2')
         T3 = double_or_blank(card, 13, 'T3')
         T4 = double_or_blank(card, 14, 'T4')
-        assert len(card) <= 15, 'len(CQUADR card) = %i' % len(card)
+        assert len(card) <= 15, 'len(CQUADR card) = %i\ncard=%s' % (len(card), card)
         return CQUADR(eid, pid, nids, thetaMcid, zOffset,
                       TFlag, T1, T2, T3, T4, comment=comment)
 
@@ -1976,7 +1976,7 @@ class CQUAD(QuadShell):
                 integer_or_blank(card, 9, 'n7'),
                 integer_or_blank(card, 10, 'n8'),
                 integer_or_blank(card, 11, 'n9')]
-        assert len(card) <= 12, 'len(CQUAD card) = %i' % len(card)
+        assert len(card) <= 12, 'len(CQUAD card) = %i\ncard=%s' % (len(card), card)
         return CQUAD(eid, pid, nids, comment=comment)
 
     def cross_reference(self, model):
@@ -2094,7 +2094,7 @@ class CQUAD8(QuadShell):
             thetaMcid = integer_double_or_blank(card, 15, 'thetaMcid', 0.0)
             zOffset = double_or_blank(card, 16, 'zOffset', 0.0)
             TFlag = integer_or_blank(card, 17, 'TFlag', 0)
-            assert len(card) <= 18, 'len(CQUAD4 card) = %i' % len(card)
+            assert len(card) <= 18, 'len(CQUAD4 card) = %i\ncard=%s' % (len(card), card)
         else:
             thetaMcid = 0.0
             zOffset = 0.0
@@ -2292,7 +2292,7 @@ class CQUADX(QuadShell):
             integer_or_blank(card, 10, 'n8'),
             integer_or_blank(card, 11, 'n9')
         ]
-        assert len(card) <= 12, 'len(CQUADX card) = %i' % len(card)
+        assert len(card) <= 12, 'len(CQUADX card) = %i\ncard=%s' % (len(card), card)
         return CQUADX(eid, pid, nids, comment=comment)
 
     def cross_reference(self, model):

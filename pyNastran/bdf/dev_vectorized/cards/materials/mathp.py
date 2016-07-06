@@ -125,7 +125,7 @@ class MATHP(Material):
         self.tab3[i] = integer_or_blank(card, 51, 'tab3', 0)
         self.tab4[i] = integer_or_blank(card, 52, 'tab4', 0)
         self.tabd[i] = integer_or_blank(card, 56, 'tabd', 0)
-        assert len(card) <= 57, 'len(MATHP card) = %i' % len(card)
+        assert len(card) <= 57, 'len(MATHP card) = %i\ncard=%s' % (len(card), card)
         self.i += 1
 
 

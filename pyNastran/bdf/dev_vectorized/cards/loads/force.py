@@ -97,7 +97,7 @@ class FORCE(object):
                        double_or_blank(card, 6, 'X2', 0.0),
                        double_or_blank(card, 7, 'X3', 0.0)]
                 self.xyz[i] = xyz
-                assert len(card) <= 8, 'len(FORCE card) = %i' % len(card)
+                assert len(card) <= 8, 'len(FORCE card) = %i\ncard=%s' % (len(card), card)
 
             i = self.load_id.argsort()
             self.load_id = self.load_id[i]

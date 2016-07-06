@@ -195,7 +195,7 @@ class DCONSTR(OptConstraint):
         uid = integer_double_or_blank(card, 4, 'uid', 1e20)
         lowfq = double_or_blank(card, 5, 'lowfq', 0.0)
         highfq = double_or_blank(card, 6, 'highfq', 1e20)
-        assert len(card) <= 7, 'len(DCONSTR card) = %i' % len(card)
+        assert len(card) <= 7, 'len(DCONSTR card) = %i\ncard=%s' % (len(card), card)
         return DCONSTR(oid, dresp_id, lid, uid, lowfq, highfq, comment=comment)
 
     @classmethod
@@ -318,7 +318,7 @@ class DESVAR(OptConstraint):
         xub = double_or_blank(card, 5, 'xub', 1e20)
         delx = double_or_blank(card, 6, 'delx', 1e20)
         ddval = integer_or_blank(card, 7, 'ddval')
-        assert len(card) <= 8, 'len(DESVAR card) = %i' % len(card)
+        assert len(card) <= 8, 'len(DESVAR card) = %i\ncard=%s' % (len(card), card)
         return DESVAR(desvar_id, label, xinit, xlb, xub, delx, ddval, comment=comment)
 
     def OptID(self):
@@ -1769,7 +1769,7 @@ class DSCREEN(OptConstraint):
         rType = string(card, 1, 'rType')
         trs = double_or_blank(card, 2, 'trs', -0.5)
         nstr = integer_or_blank(card, 3, 'nstr', 20)
-        assert len(card) == 4, 'len(DSCREEN card) = %i' % len(card)
+        assert len(card) == 4, 'len(DSCREEN card) = %i\ncard=%s' % (len(card), card)
         return DSCREEN(rType, trs=trs, nstr=nstr, comment=comment)
 
     def raw_fields(self):

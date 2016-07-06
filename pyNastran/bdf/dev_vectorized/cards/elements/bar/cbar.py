@@ -140,7 +140,7 @@ class CBAR(Element):
         self.wb[i, :] = [double_or_blank(card, 14, 'w1b', 0.0),
                          double_or_blank(card, 15, 'w2b', 0.0),
                          double_or_blank(card, 16, 'w3b', 0.0),]
-        assert len(card) <= 17, 'len(CBAR card) = %i' % len(card)
+        assert len(card) <= 17, 'len(CBAR card) = %i\ncard=%s' % (len(card), card)
 
         self.i += 1
 

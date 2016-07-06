@@ -291,7 +291,7 @@ class CHEXA8(SolidElement):
             integer(card, 9, 'nid7'),
             integer(card, 10, 'nid8')
         ]
-        assert len(card) == 11, 'len(CHEXA8 card) = %i' % len(card)
+        assert len(card) == 11, 'len(CHEXA8 card) = %i\ncard=%s' % (len(card), card)
         return CHEXA8(eid, pid, nids, comment=comment)
 
     @classmethod
@@ -494,7 +494,7 @@ class CHEXA20(SolidElement):
             integer_or_blank(card, 21, 'nid19'),
             integer_or_blank(card, 22, 'nid20')
         ]
-        assert len(card) <= 23, 'len(CHEXA20 card) = %i' % len(card)
+        assert len(card) <= 23, 'len(CHEXA20 card) = %i\ncard=%s' % (len(card), card)
         return CHEXA20(eid, pid, nids, comment=comment)
 
     @classmethod
@@ -662,7 +662,7 @@ class CPENTA6(SolidElement):
             integer(card, 7, 'nid5'),
             integer(card, 8, 'nid6'),
         ]
-        assert len(card) == 9, 'len(CPENTA6 card) = %i' % len(card)
+        assert len(card) == 9, 'len(CPENTA6 card) = %i\ncard=%s' % (len(card), card)
         return CPENTA6(eid, pid, nids, comment=comment)
 
     @classmethod
@@ -1001,7 +1001,7 @@ class CPENTA15(SolidElement):
             integer_or_blank(card, 16, 'nid14'),
             integer_or_blank(card, 17, 'nid15'),
         ]
-        assert len(card) <= 18, 'len(CPENTA15 card) = %i' % len(card)
+        assert len(card) <= 18, 'len(CPENTA15 card) = %i\ncard=%s' % (len(card), card)
         return CPENTA15(eid, pid, nids, comment=comment)
 
     @classmethod
@@ -1147,7 +1147,7 @@ class CPYRAM5(SolidElement):
         nids = [integer(card, 3, 'nid1'), integer(card, 4, 'nid2'),
                 integer(card, 5, 'nid3'), integer(card, 6, 'nid4'),
                 integer(card, 7, 'nid5')]
-        assert len(card) == 8, 'len(CPYRAM5 1card) = %i' % len(card)
+        assert len(card) == 8, 'len(CPYRAM5 1card) = %i\ncard=%s' % (len(card), card)
         return CPYRAM5(eid, pid, nids, comment=comment)
 
     @classmethod
@@ -1293,7 +1293,7 @@ class CPYRAM13(SolidElement):
             integer_or_blank(card, 14, 'nid12'),
             integer_or_blank(card, 15, 'nid13')
         ]
-        assert len(card) <= 16, 'len(CPYRAM13 1card) = %i' % len(card)
+        assert len(card) <= 16, 'len(CPYRAM13 1card) = %i\ncard=%s' % (len(card), card)
         return CPYRAM13(eid, pid, nids, comment=comment)
 
     @classmethod
@@ -1425,7 +1425,7 @@ class CTETRA4(SolidElement):
                 integer(card, 4, 'nid2'),
                 integer(card, 5, 'nid3'),
                 integer(card, 6, 'nid4'), ]
-        assert len(card) == 7, 'len(CTETRA4 card) = %i' % len(card)
+        assert len(card) == 7, 'len(CTETRA4 card) = %i\ncard=%s' % (len(card), card)
         return CTETRA4(eid, pid, nids, comment=comment)
 
     @classmethod
@@ -1619,7 +1619,7 @@ class CTETRA10(SolidElement):
                 integer_or_blank(card, 10, 'nid8'),
                 integer_or_blank(card, 11, 'nid9'),
                 integer_or_blank(card, 12, 'nid10'), ]
-        assert len(card) <= 13, 'len(CTETRA10 card) = %i' % len(card)
+        assert len(card) <= 13, 'len(CTETRA10 card) = %i\ncard=%s' % (len(card), card)
         return CTETRA10(eid, pid, nids, comment=comment)
 
     @classmethod

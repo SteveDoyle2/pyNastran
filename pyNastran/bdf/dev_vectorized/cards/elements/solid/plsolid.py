@@ -40,7 +40,7 @@ class PLSOLID(Property):
                   % stress_strain
             #raise RuntimeError(msg)
         self.stress_strain[i] = stress_strain
-        assert len(card) <= 4, 'len(PLSOLID card) = %i' % len(card)
+        assert len(card) <= 4, 'len(PLSOLID card) = %i\ncard=%s' % (len(card), card)
         self.i += 1
 
     def build(self):

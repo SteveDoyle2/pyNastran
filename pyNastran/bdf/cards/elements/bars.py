@@ -187,7 +187,7 @@ class CBAROR(object):
                                double_or_blank(card, 7, 'x3', 0.0)],
                               dtype='float64')
         self.offt = string_or_blank(card, 8, 'offt', 'GGG')
-        assert len(card) <= 9, 'len(CBAROR card) = %i' % len(card)
+        assert len(card) <= 9, 'len(CBAROR card) = %i\ncard=%s' % (len(card), card)
 
 
 class CBAR(LineElement):
@@ -307,7 +307,7 @@ class CBAR(LineElement):
         wb = np.array([double_or_blank(card, 14, 'w1b', 0.0),
                        double_or_blank(card, 15, 'w2b', 0.0),
                        double_or_blank(card, 16, 'w3b', 0.0)], dtype='float64')
-        assert len(card) <= 17, 'len(CBAR card) = %i' % len(card)
+        assert len(card) <= 17, 'len(CBAR card) = %i\ncard=%s' % (len(card), card)
         return CBAR(eid, pid, ga, gb, x, g0,
                     offt, pa, pb, wa, wb, comment=comment)
 
@@ -605,7 +605,7 @@ class CBEAM3(LineElement):  # was CBAR
         s = np.array([integer_or_blank(card, 21, 'sa'),
                       integer_or_blank(card, 22, 'sb'),
                       integer_or_blank(card, 23, 'sc')], dtype='float64')
-        assert len(card) <= 24, 'len(CBEAM3 card) = %i' % len(card)
+        assert len(card) <= 24, 'len(CBEAM3 card) = %i\ncard=%s' % (len(card), card)
         return CBEAM3(eid, pid, ga, gb, gc, x, g0,
                       wa, wb, wc, tw, s, comment='')
 
@@ -780,7 +780,7 @@ class CBEND(LineElement):
             raise ValueError('invalid x1Go=%r on CBEND' % x1_g0)
         geom = integer(card, 8, 'geom')
 
-        assert len(card) == 9, 'len(CBEND card) = %i' % len(card)
+        assert len(card) == 9, 'len(CBEND card) = %i\ncard=%s' % (len(card), card)
         return CBEND(eid, pid, ga, gb, g0, x, geom, comment=comment)
 
     #def add_op2_data(self, data, comment=''):

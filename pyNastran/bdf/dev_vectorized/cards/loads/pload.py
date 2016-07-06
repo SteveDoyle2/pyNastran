@@ -57,7 +57,7 @@ class PLOAD(object):
             integer(card, 5, 'n3'),
             integer_or_blank(card, 6, 'n4', 0)])
         self.node_ids.append(node_ids)
-        assert len(card) <= 7, 'len(PLOAD card) = %i' % len(card)
+        assert len(card) <= 7, 'len(PLOAD card) = %i\ncard=%s' % (len(card), card)
         self._comments.append(comment)
 
     def build(self):

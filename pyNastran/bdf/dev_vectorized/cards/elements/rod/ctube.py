@@ -44,7 +44,7 @@ class CTUBE(RodElement):
         self.property_id[i] = integer_or_blank(card, 2, 'property_id', self.element_id[i])
         self.node_ids[i] = [integer(card, 3, 'n1'),
                             integer(card, 4, 'n2')]
-        assert len(card) == 5, 'len(CTUBE card) = %i' % len(card)
+        assert len(card) == 5, 'len(CTUBE card) = %i\ncard=%s' % (len(card), card)
         self.i += 1
 
     def build(self):

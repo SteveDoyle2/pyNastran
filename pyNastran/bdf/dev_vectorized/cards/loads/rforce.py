@@ -106,7 +106,7 @@ class RFORCE(object):
                 self.scale_acc[i] = double_or_blank(card, 9, 'racc', 0.)
                 self.mb[i] = integer_or_blank(card, 10, 'mb', 0)
                 self.idrf[i] = integer_or_blank(card, 11, 'idrf', 0)
-                assert len(card) <= 12, 'len(RFORCE card) = %i' % len(card)
+                assert len(card) <= 12, 'len(RFORCE card) = %i\ncard=%s' % (len(card), card)
 
             i = self.load_id.argsort()
             self.load_id = self.load_id[i]

@@ -41,7 +41,8 @@ def run_all_files_in_folder(folder, debug=False, xref=True, check=True,
 
 def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
                       punch=False, cid=None, nastran='', encoding=None,
-                      size=None, is_double=None, post=None, sum_load=True, dev=True):
+                      size=None, is_double=None, post=None, sum_load=True, dev=True,
+                      crash_cards=None):
     """
     Runs multiple BDFs
 
@@ -78,7 +79,8 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
     dev : bool; default=True
         True : crashes if an Exception occurs
         False : doesn't crash; useful for running many tests
-
+    crash_cards : List[str, str, ...]
+        list of cards that are invalid and automatically crash the run
     Usage
     -----
     All control lists must be the same length.
@@ -140,7 +142,8 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
                                                   is_folder=True, dynamic_vars={},
                                                   nastran=nastran, size=size, is_double=is_double,
                                                   nerrors=0,
-                                                  post=post, sum_load=sum_load, dev=dev)
+                                                  post=post, sum_load=sum_load, dev=dev,
+                                                  crash_cards=crash_cards)
                 del fem1
                 del fem2
             diff_cards += diff_cards
@@ -194,7 +197,8 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
             cid=None, mesh_form='combined', is_folder=False, print_stats=False,
             encoding=None, sum_load=False, size=8, is_double=False,
             reject=False, stop=False, nastran='', post=-1, dynamic_vars=None,
-            quiet=False, dumplines=False, dictsort=False, nerrors=0, dev=False):
+            quiet=False, dumplines=False, dictsort=False, nerrors=0, dev=False,
+            crash_cards=None):
     """
     Runs a single BDF
 
@@ -253,6 +257,8 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
     print('debug = %s' % debug)
     if dynamic_vars is None:
         dynamic_vars = {}
+    if crash_cards is None:
+        crash_cards = []
 
     # TODO: why do we need this?
     bdf_model = str(bdf_filename)
@@ -284,7 +290,7 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
         nastran = ''
         #try:
         out_model, fem1 = run_fem1(fem1, bdf_model, mesh_form, xref, punch, sum_load, size,
-                                   is_double, cid, encoding=encoding)
+                                   is_double, cid, encoding=encoding, crash_cards=crash_cards)
         if stop:
             print('card_count:')
             print('-----------')
@@ -413,7 +419,7 @@ def run_nastran(bdf_model, nastran, post=-1, size=8, is_double=False):
         print(op2.get_op2_stats())
 
 def run_fem1(fem1, bdf_model, mesh_form, xref, punch, sum_load, size, is_double, cid,
-             encoding=None):
+             encoding=None, crash_cards=None):
     """
     Reads/writes the BDF
 
@@ -441,12 +447,17 @@ def run_fem1(fem1, bdf_model, mesh_form, xref, punch, sum_load, size, is_double,
     encoding : str; default=None
         the file encoding
     """
+    if crash_cards is None:
+        crash_cards = []
     assert os.path.exists(bdf_model), print_bad_path(bdf_model)
     try:
         if '.pch' in bdf_model:
             fem1.read_bdf(bdf_model, xref=False, punch=True, encoding=encoding)
         else:
             fem1.read_bdf(bdf_model, xref=False, punch=punch, encoding=encoding)
+            for card in crash_cards:
+                if card in fem1.card_count:
+                    raise RuntimeError('card=%r has been disabled')
             #fem1.geom_check(geom_check=True, xref=False)
             fem1.write_skin_solid_faces('skin_file.bdf', size=16, is_double=False)
             if xref:

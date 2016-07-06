@@ -57,7 +57,7 @@ class CFAST(Element):
         xs = double_or_blank(card, 9, 'xs')
         ys = double_or_blank(card, 10, 'ys')
         zs = double_or_blank(card, 11, 'zs')
-        assert len(card) <= 12, 'len(CFAST card) = %i' % len(card)
+        assert len(card) <= 12, 'len(CFAST card) = %i\ncard=%s' % (len(card), card)
         #if self.Type=='PROP': # PSHELL/PCOMP  ida & idb
         return CFAST(eid, pid, Type, ida, idb, gs, ga, gb, xs, ys, zs,
                      comment=comment)
@@ -190,7 +190,7 @@ class CGAP(Element):
             g0 = None
             x = [None, None, None]
             cid = None
-        assert len(card) <= 9, 'len(CGAP card) = %i' % len(card)
+        assert len(card) <= 9, 'len(CGAP card) = %i\ncard=%s' % (len(card), card)
         return CGAP(eid, pid, ga, gb, x, g0, cid, comment=comment)
 
     @classmethod
@@ -292,9 +292,14 @@ class CGAP(Element):
             return self.gb
         return self.gb_ref.nid
 
+    def G0(self):
+        if isinstance(self.g0, integer_types):
+            return self.g0
+        return self.g0_ref.nid
+
     def raw_fields(self):
         if self.g0 is not None:
-            x = [self.g0, None, None]
+            x = [self.G0(), None, None]
         else:
             x = self.x
         list_fields = (['CGAP', self.eid, self.Pid(), self.Ga(), self.Gb()] + x +
@@ -368,7 +373,7 @@ class CRAC2D(CrackElement):
             integer_or_blank(card, 19, 'n17'),
             integer_or_blank(card, 20, 'n18')
         ]
-        assert len(card) <= 21, 'len(CRAC2D card) = %i' % len(card)
+        assert len(card) <= 21, 'len(CRAC2D card) = %i\ncard=%s' % (len(card), card)
         return CRAC2D(eid, pid, nids, comment=comment)
 
     @classmethod
@@ -433,7 +438,7 @@ class CRAC3D(CrackElement):
         # optional 11-18, 29-36, 37-64
         # all/none 37-46
         nids = fields(integer_or_blank, card, 'nid', 3, 67)  # cap at +3 = 67
-        assert len(card) <= 67, 'len(CRAC3D card) = %i' % len(card)
+        assert len(card) <= 67, 'len(CRAC3D card) = %i\ncard=%s' % (len(card), card)
         return CRAC3D(eid, pid, nids, comment=comment)
 
     @classmethod
@@ -501,7 +506,7 @@ class PLOTEL(BaseCard):
             integer(card, 2, 'g1'),
             integer(card, 3, 'g2'),
         ]
-        assert len(card) <= 4, 'len(CGAP card) = %i' % len(card)
+        assert len(card) <= 4, 'len(CGAP card) = %i\ncard=%s' % (len(card), card)
         return PLOTEL(eid, nodes, comment=comment)
 
     @classmethod

@@ -96,7 +96,7 @@ class GRAV(object):
                 #: the assembly basic coordinate system. See Remark 10.
                 #: (Integer; Default = 0)
                 self.mb[i] = integer_or_blank(card, 7, 'mb', 0)
-                assert len(card) <= 8, 'len(GRAV card) = %i' % len(card)
+                assert len(card) <= 8, 'len(GRAV card) = %i\ncard=%s' % (len(card), card)
 
             i = self.load_id.argsort()
             self.load_id = self.load_id[i]

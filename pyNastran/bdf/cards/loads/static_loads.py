@@ -351,7 +351,7 @@ class GRAV(BaseCard):
                    double_or_blank(card, 5, 'N2', 0.0),
                    double_or_blank(card, 6, 'N3', 0.0)])
         mb = integer_or_blank(card, 7, 'mb', 0)
-        assert len(card) <= 8, 'len(GRAV card) = %i' % len(card)
+        assert len(card) <= 8, 'len(GRAV card) = %i\ncard=%s' % (len(card), card)
         return GRAV(sid, cid, scale, N, mb, comment=comment)
 
     @classmethod
@@ -863,7 +863,7 @@ class FORCE(Force):
         xyz = array([double_or_blank(card, 5, 'X1', 0.0),
                      double_or_blank(card, 6, 'X2', 0.0),
                      double_or_blank(card, 7, 'X3', 0.0)])
-        assert len(card) <= 8, 'len(FORCE card) = %i' % len(card)
+        assert len(card) <= 8, 'len(FORCE card) = %i\ncard=%s' % (len(card), card)
         return FORCE(sid, node, cid, mag, xyz, comment=comment)
 
     @classmethod
@@ -979,7 +979,7 @@ class FORCE1(Force):
         mag = double(card, 3, 'mag')
         g1 = integer(card, 4, 'g1')
         g2 = integer(card, 5, 'g2')
-        assert len(card) == 6, 'len(FORCE1 card) = %i' % len(card)
+        assert len(card) == 6, 'len(FORCE1 card) = %i\ncard=%s' % (len(card), card)
         return FORCE1(sid, node, mag, g1, g2, comment=comment)
 
     @classmethod
@@ -1088,6 +1088,13 @@ class FORCE2(Force):
         self.g3 = g3
         self.g4 = g4
 
+    def validate(self):
+        assert self.g1 is not None, self.g1
+        assert self.g2 is not None, self.g2
+        assert self.g3 is not None, self.g3
+        assert self.g4 is not None, self.g4
+        #print('self.node_ids = ', self.node_ids)
+
     @classmethod
     def add_card(cls, card, comment=''):
         sid = integer(card, 1, 'sid')
@@ -1097,7 +1104,7 @@ class FORCE2(Force):
         g2 = integer(card, 5, 'g2')
         g3 = integer(card, 6, 'g3')
         g4 = integer(card, 7, 'g4')
-        assert len(card) == 8, 'len(FORCE2 card) = %i' % len(card)
+        assert len(card) == 8, 'len(FORCE2 card) = %i\ncard=%s' % (len(card), card)
         return FORCE2(sid, node, mag, g1, g2, g3, g4, comment=comment)
 
     @classmethod
@@ -1228,6 +1235,10 @@ class FORCE2(Force):
             return self.g4
         return self.g4_ref.nid
 
+    @property
+    def node_ids(self):
+        return [self.node_id, self.G1(), self.G2(), self.G3(), self.G4()]
+
     def raw_fields(self):
         (node, g1, g2, g3, g4) = self._nodeIDs([self.node, self.g1, self.g2, self.g3, self.g4])
         list_fields = ['FORCE2', self.sid, node, self.mag, g1, g2, g3, g4]
@@ -1278,7 +1289,7 @@ class MOMENT(Moment):
         xyz = array([double_or_blank(card, 5, 'X1', 0.0),
                      double_or_blank(card, 6, 'X2', 0.0),
                      double_or_blank(card, 7, 'X3', 0.0)])
-        assert len(card) <= 8, 'len(MOMENT card) = %i' % len(card)
+        assert len(card) <= 8, 'len(MOMENT card) = %i\ncard=%s' % (len(card), card)
         assert len(xyz) == 3, 'xyz=%s' % str(xyz)
         return MOMENT(sid, node, cid, mag, xyz, comment=comment)
 
@@ -1399,7 +1410,7 @@ class MOMENT1(Moment):
         mag = double(card, 3, 'mag')
         g1 = integer(card, 4, 'g1')
         g2 = integer(card, 5, 'g2')
-        assert len(card) == 6, 'len(MOMENT1 card) = %i' % len(card)
+        assert len(card) == 6, 'len(MOMENT1 card) = %i\ncard=%s' % (len(card), card)
         return MOMENT1(sid, node, mag, g1, g2, comment=comment)
 
     @classmethod
@@ -1525,7 +1536,7 @@ class MOMENT2(Moment):
         g3 = integer(card, 6, 'g3')
         g4 = integer(card, 7, 'g4')
         xyz = None
-        assert len(card) <= 8, 'len(MOMENT2 card) = %i' % len(card)
+        assert len(card) <= 8, 'len(MOMENT2 card) = %i\ncard=%s' % (len(card), card)
         return MOMENT2(sid, node, mag, g1, g2, g3, g4, xyz, comment=comment)
 
     @classmethod
@@ -1784,7 +1795,7 @@ class PLOAD(Load):
         n4 = integer_or_blank(card, 6, 'n4', 0)
         if n4:
             nodes.append(n4)
-        assert len(card) <= 7, 'len(PLOAD card) = %i' % len(card)
+        assert len(card) <= 7, 'len(PLOAD card) = %i\ncard=%s' % (len(card), card)
         return PLOAD(sid, p, nodes, comment=comment)
 
     @classmethod
@@ -1860,7 +1871,7 @@ class PLOAD1(Load):
         p1 = double(card, 6, 'p1')
         x2 = double_or_blank(card, 7, 'x2', x1)
         p2 = double_or_blank(card, 8, 'p2', p1)
-        assert len(card) <= 9, 'len(PLOAD1 card) = %i' % len(card)
+        assert len(card) <= 9, 'len(PLOAD1 card) = %i\ncard=%s' % (len(card), card)
         return PLOAD1(sid, eid, Type, scale, x1, p1, x2, p2, comment=comment)
 
     @classmethod
@@ -2113,7 +2124,7 @@ class PLOAD2(Load):
             e1 = integer(card, 3, 'Element1')
             e2 = integer(card, 5, 'Element1')
             eids = [i for i in range(e1, e2 + 1)]
-            assert len(card) == 6, 'len(PLOAD2 card) = %i' % len(card)
+            assert len(card) == 6, 'len(PLOAD2 card) = %i\ncard=%s' % (len(card), card)
         else:
             eids = fields(integer, card, 'eid', i=3, j=len(card))
         return PLOAD2(sid, pressure, eids, comment=comment)
@@ -2250,7 +2261,7 @@ class PLOAD4(Load):
                          double_or_blank(card, 12, 'N3', 0.0)])
         sorl = string_or_blank(card, 13, 'sorl', 'SURF')
         ldir = string_or_blank(card, 14, 'ldir', 'NORM')
-        assert len(card) <= 15, 'len(PLOAD4 card) = %i' % len(card)
+        assert len(card) <= 15, 'len(PLOAD4 card) = %i\ncard=%s' % (len(card), card)
         return PLOAD4(sid, eids, pressures, g1, g34, cid, NVector, sorl, ldir, comment=comment)
 
     @classmethod
@@ -2409,10 +2420,14 @@ class PLOAD4(Load):
 
     def get_element_ids(self, eid=None):
         if eid:
-            return self.Eid(eid)
+            eidi = self.Eid(eid)
+            #assert len(str(eidi)) < 20, eidi
+            return eidi
         eids = []
         for element in self.eids:
-            eids.append(self.Eid(element))
+            eidi = self.Eid(element)
+            #assert len(str(eidi)) < 20, eidi
+            eids.append(eidi)
         return eids
 
     @property
@@ -2421,7 +2436,9 @@ class PLOAD4(Load):
 
     def raw_fields(self):
         eids = self.element_ids
+        #print('eids = ', eids)
         eid = eids[0]
+        #print('eid = ', eid)
         cid = set_blank_if_default(self.Cid(), 0)
         sorl = set_blank_if_default(self.sorl, 'SURF')
         ldir = set_blank_if_default(self.ldir, 'NORM')
@@ -2432,14 +2449,15 @@ class PLOAD4(Load):
         list_fields = ['PLOAD4', self.sid, eid, self.pressures[0], p2, p3, p4]
 
         if self.g1 is not None:  # is it a SOLID element
-            nodeIDs = self.nodeIDs([self.g1, self.g34])
-            list_fields += nodeIDs
+            node_ids = self.nodeIDs([self.g1, self.g34])
+            list_fields += node_ids
         else:
             if len(eids) > 1:
                 #print("self.eids = %s" %(self.eids))
                 try:
                     list_fields.append('THRU')
-                    eidi = self.eids[-1]
+                    eidi = eids[-1]
+                    #print('eidi = ', eidi)
                 except:
                     print("g1  = %s" % self.g1)
                     print("g34 = %s" % self.g34)
@@ -2491,7 +2509,7 @@ class PLOADX1(Load):
         ga = integer(card, 5, 'ga')
         gb = integer(card, 6, 'gb')
         theta = double_or_blank(card, 7, 'theta', 0.)
-        assert len(card) <= 8, 'len(PLOADX1 card) = %i' % len(card)
+        assert len(card) <= 8, 'len(PLOADX1 card) = %i\ncard=%s' % (len(card), card)
         return PLOADX1(sid, eid, pa, pb, ga, gb, theta, comment=comment)
 
     #@classmethod

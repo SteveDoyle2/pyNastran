@@ -42,7 +42,7 @@ class PROD(Property):
         self.J[i] = double_or_blank(card, 4, 'J', 0.0)
         self.c[i] = double_or_blank(card, 5, 'c', 0.0)
         self.nsm[i] = double_or_blank(card, 6, 'nsm', 0.0)
-        assert len(card) <= 7, 'len(PROD card) = %i' % len(card)
+        assert len(card) <= 7, 'len(PROD card) = %i\ncard=%s' % (len(card), card)
         self.i += 1
 
     def build(self):

@@ -82,7 +82,7 @@ class PSHELL(Property):
 
         #if self.material_id is not None and self.material_id2 is not None:
         #    assert self.material_id4==None
-        assert len(card) <= 12, 'len(PSHELL card) = %i' % len(card)
+        assert len(card) <= 12, 'len(PSHELL card) = %i\ncard=%s' % (len(card), card)
         self.i += 1
         #self.model.log.debug('self.i = %s' % self.i)
 
