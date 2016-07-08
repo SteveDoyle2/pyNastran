@@ -1449,6 +1449,51 @@ class CAERO1(BaseCard):
             self.lspan_ref = self.lspan
         self._init_ids()
 
+    def safe_cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ' which is required by CAERO1 eid=%s' % self.eid
+        try:
+            self.pid = model.PAero(self.pid, msg=msg)
+            self.pid_ref = self.pid
+        except KeyError:
+            pass
+
+        try:
+            self.cp = model.Coord(self.cp, msg=msg)
+            self.cp_ref = self.cp
+        except KeyError:
+            pass
+
+        try:
+            self.ascid_ref = model.Acsid(msg=msg)
+        except KeyError:
+            pass
+
+        if self.nchord == 0:
+            assert isinstance(self.lchord, integer_types), self.lchord
+            try:
+                self.lchord = model.AEFact(self.lchord, msg)
+                self.lchord_ref = self.lchord
+            except KeyError:
+                pass
+
+        if self.nspan == 0:
+            assert isinstance(self.lspan, integer_types), self.lspan
+            try:
+                self.lspan = model.AEFact(self.lspan, msg)
+                self.lspan_ref = self.lspan
+            except KeyError:
+                pass
+
+        self._init_ids()
+
     #def uncross_reference(self):
         #self.pid = self.Pid()
         #self.cp = self.Cp()
@@ -3295,6 +3340,9 @@ class PAERO1(BaseCard):
         return PAERO1(pid, Bi, comment=comment)
 
     def cross_reference(self, model):
+        pass
+
+    def safe_cross_reference(self, model):
         pass
 
     def uncross_reference(self):

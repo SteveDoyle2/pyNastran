@@ -610,11 +610,14 @@ class SET1(Set):
 
         is_skin = False
         i = 0
-        assert len(card) > 2, card
-        if isinstance(ids[0], string_types) and ids[0] == 'SKIN':
-            is_skin = True
-            i += 1
-
+        if len(ids) > 0:
+            if isinstance(ids[0], string_types) and ids[0] == 'SKIN':
+                is_skin = True
+                i += 1
+        else:
+            #print(card)
+            assert len(card) > 2, card
+            #pass
         return SET1(sid, ids[i:], is_skin=is_skin, comment=comment)
 
     #def __eq__(self, set1):

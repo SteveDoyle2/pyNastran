@@ -451,7 +451,7 @@ class WriteMesh(BDFAttributes):
 
     def _write_aero(self, outfile, size=8, is_double=False):
         """Writes the aero cards"""
-        if self.caeros or self.paeros or self.monitor_points:
+        if self.caeros or self.paeros or self.monitor_points or self.splines:
             msg = ['$AERO\n']
             for (unused_id, caero) in sorted(iteritems(self.caeros)):
                 msg.append(caero.write_card(size, is_double))

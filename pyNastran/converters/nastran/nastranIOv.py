@@ -7,6 +7,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 import os
 from copy import deepcopy
 from collections import defaultdict, OrderedDict
+import traceback
 from six import iteritems, itervalues
 from six.moves import zip, range
 
@@ -991,7 +992,7 @@ class NastranIO(object):
             return {}
 
         node_ids_c1 = defaultdict(str)
-        print('spcs = ', spcs)
+        #print('spcs = ', spcs)
         for card in spcs:  # used to be sorted(spcs)
             if card.type == 'SPC':
                 for nid, c1 in zip(card.gids, card.constraints):
@@ -1756,6 +1757,7 @@ class NastranIO(object):
 
     def map_elements(self, points, nid_map, model, j, dim_max,
                      plot=True, xref_loads=True):
+        xyz_cid0 = self.xyz_cid0
         sphere_size = self._get_sphere_size(dim_max)
 
         # :param i: the element id in grid
@@ -1774,6 +1776,7 @@ class NastranIO(object):
         pids = np.zeros(nelements, 'int32')
         mids = np.zeros(nelements, 'int32')
         material_coord = np.zeros(nelements, 'int32')
+        max_interior_angle = np.zeros(nelements, 'float32')
 
         # pids_good = []
         # pids_to_keep = []
@@ -1791,6 +1794,7 @@ class NastranIO(object):
                 # continue
             self.eid_map[eid] = i
             pid = 0
+            max_theta = 0.0
             if isinstance(element, (CTRIA3, CTRIAR)):
                 material_coord[i] = 0 if isinstance(element.thetaMcid, float) else element.thetaMcid
                 elem = vtkTriangle()
@@ -1801,9 +1805,19 @@ class NastranIO(object):
                     if nid is not None:
                         nid_to_pid_map[nid].append(pid)
 
-                elem.GetPointIds().SetId(0, nid_map[node_ids[0]])
-                elem.GetPointIds().SetId(1, nid_map[node_ids[1]])
-                elem.GetPointIds().SetId(2, nid_map[node_ids[2]])
+                p1, p2, p3 = nid_map[node_ids[0]], nid_map[node_ids[1]], nid_map[node_ids[2]]
+                v21 = xyz_cid0[p2, :] - xyz_cid0[p1, :]
+                v32 = xyz_cid0[p3, :] - xyz_cid0[p2, :]
+                v13 = xyz_cid0[p1, :] - xyz_cid0[p3, :]
+                #if eid:
+
+                theta1 = np.dot(v13, -v21) / (np.linalg.norm(v13) * np.linalg.norm(v21))
+                theta2 = np.dot(v21, -v32) / (np.linalg.norm(v21) * np.linalg.norm(v32))
+                theta3 = np.dot(v32, -v13) / (np.linalg.norm(v32) * np.linalg.norm(v13))
+                max_theta = max(theta1, theta2, theta3)
+                elem.GetPointIds().SetId(0, p1)
+                elem.GetPointIds().SetId(1, p2)
+                elem.GetPointIds().SetId(2, p3)
                 self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
             elif isinstance(element, CTRIA6):
                 material_coord[i] = element.thetaMcid
@@ -1864,7 +1878,23 @@ class NastranIO(object):
                 for nid in node_ids:
                     if nid is not None:
                         nid_to_pid_map[nid].append(pid)
+
                 self.eid_to_nid_map[eid] = node_ids[:4]
+
+                p1, p2, p3, p4 = nid_map[node_ids[0]], nid_map[node_ids[1]], nid_map[node_ids[2]], nid_map[node_ids[3]]
+                v21 = xyz_cid0[p2, :] - xyz_cid0[p1, :]
+                v32 = xyz_cid0[p3, :] - xyz_cid0[p2, :]
+                v43 = xyz_cid0[p4, :] - xyz_cid0[p3, :]
+                v14 = xyz_cid0[p1, :] - xyz_cid0[p4, :]
+                theta1 = np.dot(v14, -v21) / (np.linalg.norm(v14) * np.linalg.norm(v21))
+                theta2 = np.dot(v21, -v32) / (np.linalg.norm(v21) * np.linalg.norm(v32))
+                theta3 = np.dot(v32, -v43) / (np.linalg.norm(v32) * np.linalg.norm(v43))
+                theta4 = np.dot(v43, -v14) / (np.linalg.norm(v43) * np.linalg.norm(v14))
+                max_theta = max(theta1, theta2, theta3, theta4)
+                #theta_deg = np.degrees(max_theta)
+                #assert theta_deg > 1., 'eid=%s theta_deg=%s\n%s\n%s\n%s\n%s\n%s' % (eid, theta_deg, str(element).rstrip(),
+                                                                                #str(model.nodes[node_ids[0]]).rstrip(), str(model.nodes[node_ids[1]]).rstrip(),
+                                                                                #str(model.nodes[node_ids[2]]).rstrip(), str(model.nodes[node_ids[3]]).rstrip())
                 elem = vtkQuad()
                 elem.GetPointIds().SetId(0, nid_map[node_ids[0]])
                 elem.GetPointIds().SetId(1, nid_map[node_ids[1]])
@@ -2137,6 +2167,7 @@ class NastranIO(object):
             else:
                 pids[i] = pid
                 pids_dict[eid] = pid
+            max_interior_angle[i] = max_theta
             i += 1
         assert len(self.eid_map) > 0, self.eid_map
 
@@ -2225,8 +2256,14 @@ class NastranIO(object):
 
             pid_res = GuiResult(0, header='PropertyID', title='PropertyID',
                                 location='centroid', scalar=pids)
+            theta_res = GuiResult(0, header='Max Interior Angle', title='MaxInteriorAngle',
+                                  location='centroid', scalar=np.degrees(max_interior_angle))
             cases[icase] = (pid_res, (0, 'PropertyID'))
             form0.append(('PropertyID', icase, []))
+            icase += 1
+
+            cases[icase] = (theta_res, (0, 'Max Interior Angle'))
+            form0.append(('Max Interior Angle', icase, []))
             icase += 1
 
             upids = np.unique(pids)
@@ -2332,8 +2369,20 @@ class NastranIO(object):
 
         try:
             icase = self._build_optimization(model, pids, upids, nelements, cases, form0, icase)
-        except:
-            pass
+        except Exception as e:
+            import sys
+            import cStringIO
+            s = cStringIO.StringIO()
+            traceback.print_exc(file=s)
+            sout = s.getvalue()
+            self.log_error(sout)
+            print(sout)
+            #traceback.print_exc(file=sys.stdout)
+            #etype, value, tb = sys.exc_info
+            #print(etype, value, tb)
+            #raise RuntimeError('Optimization Parsing Error') from e
+            #traceback.print_tb(e)
+            #print(e)
 
             #mid_eids_skip = []
             #for pid in upids:
@@ -2463,7 +2512,7 @@ class NastranIO(object):
                     desvars = dvprel.dvids
                     coeffs = dvprel.coeffs
                     pid = dvprel.pid.pid
-                    var_to_change = dvprel.pNameFid
+                    var_to_change = dvprel.pname_fid
                     assert len(desvars) == 1, len(desvars)
 
                     if prop_type == 'PSHELL':
@@ -2498,10 +2547,10 @@ class NastranIO(object):
                         raise NotImplementedError(dvprel)
                 else:
                     raise NotImplementedError(dvprel)
-                if dvprel.pMax != 1e20:
-                    dvprel.pMax
-                if dvprel.pMin is not None:
-                    dvprel.pMin
+                if dvprel.p_max != 1e20:
+                    dvprel.p_max
+                if dvprel.p_min is not None:
+                    dvprel.p_min
 
             region_res = GuiResult(0, header='DV Region', title='DV Region',
                                    location='centroid', scalar=design_region)

@@ -519,9 +519,6 @@ def atm_density(alt, R=1716., SI=False, debug=False):
     r"""
     Freestream Density   \f$ \rho_{\infty} \f$
 
-    Parameters
-    ----------
-    Parameters
     ----------
     alt : float
         altitude in feet or meters
