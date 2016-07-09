@@ -10,6 +10,7 @@ import io
 from codecs import open
 from six import string_types, iteritems, itervalues, PY2, StringIO
 
+#from pyNastran.utils import is_file_obj
 from pyNastran.bdf.utils import print_filename
 from pyNastran.utils.gui_io import save_file_dialog
 from pyNastran.bdf.field_writer_8 import print_card_8
@@ -71,7 +72,8 @@ class WriteMesh(BDFAttributes):
             assert out_filename is not None, out_filename
 
         if PY2:
-            if not (hasattr(out_filename, 'read') and hasattr(out_filename, 'write')) or isinstance(out_filename, file) or isinstance(out_filename, StringIO):
+            #if not is_file_obj(out_filename):
+            if not (hasattr(out_filename, 'read') and hasattr(out_filename, 'write')) or isinstance(out_filename, (file, StringIO)):
                 return out_filename
             elif not isinstance(out_filename, string_types):
                 raise TypeError('out_filename=%r must be a string; type=%s' % (out_filename, type(out_filename)))
