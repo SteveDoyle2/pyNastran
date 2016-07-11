@@ -3749,7 +3749,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         if not len(self.geometry_properties):
             self.log_error('No secondary geometries to edit.')
             return
-        print('geometry_properties.keys() =', self.geometry_properties.keys())
+        #print('geometry_properties.keys() =', self.geometry_properties.keys())
         #key = self.case_keys[self.icase]
         #case = self.result_cases[key]
         #if len(key) == 5:

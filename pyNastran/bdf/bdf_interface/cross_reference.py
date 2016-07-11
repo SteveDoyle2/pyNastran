@@ -123,7 +123,7 @@ class XrefMesh(BDFAttributes):
         if xref_sets:
             self._cross_reference_sets()
         if xref_aero:
-            self._cross_reference_aero()
+            self._safe_cross_reference_aero()
         if xref_constraints:
             self._cross_reference_constraints()
         if xref_loads:
@@ -456,6 +456,8 @@ class XrefMesh(BDFAttributes):
             caero.cross_reference(self)
         for paero in itervalues(self.paeros):
             paero.cross_reference(self)
+        for trim in itervalues(self.trims):
+            trim.cross_reference(self)
 
         for spline in itervalues(self.splines):
             spline.cross_reference(self)
@@ -473,6 +475,66 @@ class XrefMesh(BDFAttributes):
             aesurfs.cross_reference(self)
         for flutter in itervalues(self.flutters):
             flutter.cross_reference(self)
+
+        if 0:  # only support CAERO1
+            ncaeros = len(self.caeros)
+            if ncaeros > 1:
+                # we don't need to check the ncaeros=1 case
+                i = 0
+                min_maxs = zeros((ncaeros, 2), dtype='int32')
+                for eid, caero in sorted(iteritems(self.caeros)):
+                    min_maxs[i, :] = caero.min_max_eid
+                    i += 1
+                isort = argsort(min_maxs.ravel())
+                expected = arange(ncaeros * 2, dtype='int32')
+                if not array_equal(isort, expected):
+                    msg = 'CAERO element ids are inconsistent\n'
+                    msg += 'isort = %s' % str(isort)
+                    raise RuntimeError(msg)
+
+            #'AERO',     ## aero
+            #'AEROS',    ## aeros
+            #'GUST',     ## gusts
+            #'FLUTTER',  ## flutters
+            #'FLFACT',   ## flfacts
+            #'MKAERO1', 'MKAERO2',  ## mkaeros
+            #'AECOMP',   ## aecomps
+            #'AEFACT',   ## aefacts
+            #'AELINK',   ## aelinks
+            #'AELIST',   ## aelists
+            #'AEPARAM',  ## aeparams
+            #'AESTAT',   ## aestats
+            #'AESURF',  ## aesurfs
+
+    def _safe_cross_reference_aero(self):
+        """
+        Links up all the aero cards
+          - CAEROx, PAEROx, SPLINEx, AECOMP, AELIST, AEPARAM, AESTAT, AESURF, AESURFS
+        """
+        return self._cross_reference_aero()
+        for caero in itervalues(self.caeros):
+            caero.safe_cross_reference(self)
+        for paero in itervalues(self.paeros):
+            paero.safe_cross_reference(self)
+        for trim in itervalues(self.trims):
+            trim.safe_cross_reference(self)
+
+        for spline in itervalues(self.splines):
+            spline.safe_cross_reference(self)
+        for aecomp in itervalues(self.aecomps):
+            aecomp.safe_cross_reference(self)
+        for aelist in itervalues(self.aelists):
+            aelist.safe_cross_reference(self)
+        for aeparam in itervalues(self.aeparams):
+            aeparam.safe_cross_reference(self)
+        for aestat in itervalues(self.aestats):
+            aestat.safe_cross_reference(self)
+        #for aesurf in itervalues(self.aesurf):
+            #aesurf.safe_cross_reference(self)
+        for aesurfs in itervalues(self.aesurfs):
+            aesurfs.safe_cross_reference(self)
+        for flutter in itervalues(self.flutters):
+            flutter.safe_cross_reference(self)
 
         if 0:  # only support CAERO1
             ncaeros = len(self.caeros)

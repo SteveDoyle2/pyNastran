@@ -315,7 +315,7 @@ class NastranIO(object):
         skip_reading = self._remove_old_nastran_geometry(bdf_filename)
         pink = (0.98, 0.4, 0.93)
         orange = (219/255., 168/255., 13/255.)
-        blue = (0., 0., 1.)
+        #blue = (0., 0., 1.)
         red = (1., 0., 0.)
         # if 0:
             # yellow = (1., 1., 0.)
@@ -694,7 +694,7 @@ class NastranIO(object):
                     elem.GetPointIds().SetId(1, j + 1)
 
                     print(', '.join(dir(elem)))
-                    prop = elem.GetProperty()
+                    #prop = elem.GetProperty()
                     #print(dir(prop))
 
                     points.InsertPoint(j, *cpoints[0])
@@ -765,7 +765,7 @@ class NastranIO(object):
                                        zfighting_offset=0.001, j=0):
         points_list = []
         missing_boxes = []
-        for ibox, box_id in enumerate(cs_box_ids):
+        for box_id in cs_box_ids:
             try:
                 ipoints = box_id_to_caero_element_map[box_id]
             except KeyError:
@@ -823,7 +823,7 @@ class NastranIO(object):
                                    zfighting_offset=0.0, j=0):
         points_list = []
         missing_boxes = []
-        for ibox, box_id in enumerate(aero_box_ids):
+        for box_id in aero_box_ids:
             try:
                 ipoints = box_id_to_caero_element_map[box_id]
             except KeyError:
@@ -1757,6 +1757,103 @@ class NastranIO(object):
 
     def map_elements(self, points, nid_map, model, j, dim_max,
                      plot=True, xref_loads=True):
+        """
+        element checks
+        http://www.altairuniversity.com/wp-content/uploads/2012/04/Student_Guide_211-233.pdf
+
+        Skew:
+          Skew in trias is calculated by finding the minimum angle
+          between the vector from each node to the opposing mid-side
+          and the vector between the two adjacent mid-sides at each
+          node of the element.  Ninety degrees minus the minimum angle
+          found is reported.
+
+          Skew in quads is calculated by finding the minimum angle
+          between two lines joining opposite midsides of the element.
+          Ninety degrees minus the minimum angle found is reported.
+
+        Aspect Ratio:
+          Aspect ratio in two-dimensional elements is calculated by
+          dividing the maximum length side of an element by the minimum
+          length side of the element. The aspect ratio check is
+          performed in the same fashion on all faces of 3D elements.
+
+        Warpage:
+          Warpage in two-dimensional elements is calculated by splitting
+          a quad into two trias and finding the angle between the two
+          planes which the trias form. The quad is then split again,
+          this time using the opposite corners and forming the second
+          set of trias. The angle between the two planes which the trias
+          form is then found. The maximum angle found between the planes
+          is the warpage of the element.
+
+          Warpage in three-dimensional elements is performed in the same
+          fashion on all faces of the element.
+
+        Jacobian:
+          determinant of Jacobian matrix (-1.0 to 1.0; 1.0 is ideal)
+
+        2D Checks:
+
+        Warp angle:
+          Warp angle is the out of plane angle
+          Ideal value = 0 degrees (Acceptable < 100).
+          Warp angle is not applicable for triangular elements.
+          It is defined as the angle between the normals to two planes
+          formed by splitting the quad element along the diagonals.
+          The maximum angle of the two possible angles is reported as
+          the warp angle.
+
+        Aspect"
+          Aspect = maximum element edge length / minimum element edge length
+          Ideal value = 1 (Acceptable < 5).
+
+        Skew:
+          Ideal value = 0 degrees (Acceptable < 45)
+          Skew for quadrilateral element = 90
+          minus the minimum angle between the two lines joining the
+          opposite mid-sides of the element (alpha).
+
+          Skew for triangular element = 90
+          minus the minimum angle between the lines from each node to
+          the opposing mid-side and between the two adjacent mid-sides
+          at each node of the element
+
+        Jacobian:
+          Ideal value = 1.0 (Acceptable > 0.6)
+          In simple terms, the jacobian is a scale factor arising
+          because of the transformation of the coordinate system.
+          Elements are tansformed from the global coordinates to
+          local coordinates (defined at the centroid of every
+          element), for faster analysis times.
+
+        Distortion:
+          Ideal value = 1.0 (Acceptable > 0.6)
+          Distortion is defined as:
+             d = |Jacobian| * AreaLCS / AreaGCS
+          LCS - Local Coordinate system
+          GCS - Global Coordinate system
+
+        Stretch:
+          Ideal value: 1.0 (Acceptable > 0.2)
+          For quadrilateral elements stretch = Lmin * sqrt(2) / dmax
+          Stretch for triangular element = R * sqrt(12) / Lmax
+
+        Included angles:
+          Skew is based on the overall shape of the element and it does
+          not take into account the individual angles of a quadrilateral
+          or triangular element.  Included or interior angle check is
+          applied for individual angles.
+          Quad: Ideal value = 90 (Acceptable = 45 < theta <135)
+          Tria: Ideal value = 60 (Acceptable = 20 < theta < 120)
+
+        Taper:
+          Ideal value = 0 (Acceptable < 0.5)
+          Taper = sum( | (Ai - Aavg) / Aavg |)
+          Aavg = (A1 + A2 + A3 + A4) / 4
+          A1,A2 are one split form of the CQUAD4 and A3,A4 are the quad
+          split in the other direction.
+        """
         xyz_cid0 = self.xyz_cid0
         sphere_size = self._get_sphere_size(dim_max)
 
@@ -1809,12 +1906,52 @@ class NastranIO(object):
                 v21 = xyz_cid0[p2, :] - xyz_cid0[p1, :]
                 v32 = xyz_cid0[p3, :] - xyz_cid0[p2, :]
                 v13 = xyz_cid0[p1, :] - xyz_cid0[p3, :]
-                #if eid:
 
-                theta1 = np.dot(v13, -v21) / (np.linalg.norm(v13) * np.linalg.norm(v21))
-                theta2 = np.dot(v21, -v32) / (np.linalg.norm(v21) * np.linalg.norm(v32))
-                theta3 = np.dot(v32, -v13) / (np.linalg.norm(v32) * np.linalg.norm(v13))
-                max_theta = max(theta1, theta2, theta3)
+                cos_theta1 = np.dot(v21, -v13) / (np.linalg.norm(v21) * np.linalg.norm(v13))
+                cos_theta2 = np.dot(v32, -v21) / (np.linalg.norm(v32) * np.linalg.norm(v21))
+                cos_theta3 = np.dot(v13, -v32) / (np.linalg.norm(v13) * np.linalg.norm(v32))
+                max_theta = np.arccos([cos_theta1, cos_theta2, cos_theta3]).max()
+
+                if 0:
+                    # p_avg =
+                    #  (p1 + p2)/2 = p12
+                    #  (p2 + p3)/2 = p23
+                    #  (p3 + p1)/2 = p31
+                    p_avg = (xyz_cid0[[p1, p2, p3], :] + xyz_cid0[[p2, p3, p1], :]) / 2.
+                    #p_add = (xyz_cid0[[p1, p2, p3], :] + xyz_cid0[[p2, p3, p1], :])
+                    #p_sub = (xyz_cid0[[p1, p2, p3], :] - xyz_cid0[[p2, p3, p1], :])
+
+                    # skew1
+                    v1_skew = v21
+                    v2_skew = p_avg[[2], :] - xyz_cid0[[p1], :]
+                    skew1 = np.dot(v1_skew, v2_skew) / (
+                        np.linalg.norm(v1_skew) * np.linalg.norm(v2_skew))
+
+                    # skew2
+                    v1_skew = v32
+                    v2_skew = p_avg[[2], :] - xyz_cid0[[p2], :]
+                    skew2 = np.dot(v1_skew, v2_skew) / (
+                        np.linalg.norm(v1_skew) * np.linalg.norm(v2_skew))
+
+                    # skew3
+                    v1_skew = v13
+                    v2_skew = p_avg[[3], :] - xyz_cid0[[p3], :]
+                    skew3 = np.dot(v1_skew, v2_skew) / (
+                        np.linalg.norm(v1_skew) * np.linalg.norm(v2_skew))
+                    max_skew = np.arccos([skew1, skew2, skew3]).max()
+
+
+                #theta_deg = np.degrees(np.arccos(max_cos_theta))
+                #if theta_deg < 60.:
+                    #print('p1=%s' % xyz_cid0[p1, :])
+                    #print('p2=%s' % xyz_cid0[p2, :])
+                    #print('p3=%s' % xyz_cid0[p3, :])
+                    #print('theta1=%s' % np.degrees(np.arccos(cos_theta1)))
+                    #print('theta2=%s' % np.degrees(np.arccos(cos_theta2)))
+                    #print('theta3=%s' % np.degrees(np.arccos(cos_theta3)))
+                    #print('max_theta=%s' % theta_deg)
+                    #asdf
+
                 elem.GetPointIds().SetId(0, p1)
                 elem.GetPointIds().SetId(1, p2)
                 elem.GetPointIds().SetId(2, p3)
@@ -1886,21 +2023,18 @@ class NastranIO(object):
                 v32 = xyz_cid0[p3, :] - xyz_cid0[p2, :]
                 v43 = xyz_cid0[p4, :] - xyz_cid0[p3, :]
                 v14 = xyz_cid0[p1, :] - xyz_cid0[p4, :]
-                theta1 = np.dot(v14, -v21) / (np.linalg.norm(v14) * np.linalg.norm(v21))
-                theta2 = np.dot(v21, -v32) / (np.linalg.norm(v21) * np.linalg.norm(v32))
-                theta3 = np.dot(v32, -v43) / (np.linalg.norm(v32) * np.linalg.norm(v43))
-                theta4 = np.dot(v43, -v14) / (np.linalg.norm(v43) * np.linalg.norm(v14))
-                max_theta = max(theta1, theta2, theta3, theta4)
-                #theta_deg = np.degrees(max_theta)
-                #assert theta_deg > 1., 'eid=%s theta_deg=%s\n%s\n%s\n%s\n%s\n%s' % (eid, theta_deg, str(element).rstrip(),
-                                                                                #str(model.nodes[node_ids[0]]).rstrip(), str(model.nodes[node_ids[1]]).rstrip(),
-                                                                                #str(model.nodes[node_ids[2]]).rstrip(), str(model.nodes[node_ids[3]]).rstrip())
+                cos_theta1 = np.dot(v21, -v14) / (np.linalg.norm(v21) * np.linalg.norm(v14))
+                cos_theta2 = np.dot(v32, -v21) / (np.linalg.norm(v32) * np.linalg.norm(v21))
+                cos_theta3 = np.dot(v43, -v32) / (np.linalg.norm(v43) * np.linalg.norm(v32))
+                cos_theta4 = np.dot(v14, -v43) / (np.linalg.norm(v14) * np.linalg.norm(v43))
+                max_theta = np.arccos([cos_theta1, cos_theta2, cos_theta3, cos_theta4]).max()
+
                 elem = vtkQuad()
                 elem.GetPointIds().SetId(0, nid_map[node_ids[0]])
                 elem.GetPointIds().SetId(1, nid_map[node_ids[1]])
                 elem.GetPointIds().SetId(2, nid_map[node_ids[2]])
                 elem.GetPointIds().SetId(3, nid_map[node_ids[3]])
-                self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                self.grid.InsertNextCell(9, elem.GetPointIds())
             elif isinstance(element, CQUAD8):
                 material_coord[i] = element.thetaMcid
                 node_ids = element.node_ids
@@ -1933,7 +2067,7 @@ class NastranIO(object):
                 elem.GetPointIds().SetId(1, nid_map[node_ids[1]])
                 elem.GetPointIds().SetId(2, nid_map[node_ids[2]])
                 elem.GetPointIds().SetId(3, nid_map[node_ids[3]])
-                self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                self.grid.InsertNextCell(10, elem.GetPointIds())
             elif isinstance(element, CTETRA10):
                 node_ids = element.node_ids
                 pid = element.Pid()
@@ -1969,8 +2103,7 @@ class NastranIO(object):
                 elem.GetPointIds().SetId(3, nid_map[node_ids[3]])
                 elem.GetPointIds().SetId(4, nid_map[node_ids[4]])
                 elem.GetPointIds().SetId(5, nid_map[node_ids[5]])
-                self.grid.InsertNextCell(elem.GetCellType(),
-                                         elem.GetPointIds())
+                self.grid.InsertNextCell(13, elem.GetPointIds())
 
             elif isinstance(element, CPENTA15):
                 node_ids = element.node_ids
@@ -2014,7 +2147,7 @@ class NastranIO(object):
                 elem.GetPointIds().SetId(5, nid_map[node_ids[5]])
                 elem.GetPointIds().SetId(6, nid_map[node_ids[6]])
                 elem.GetPointIds().SetId(7, nid_map[node_ids[7]])
-                self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                self.grid.InsertNextCell(12, elem.GetPointIds())
             elif isinstance(element, CHEXA20):
                 node_ids = element.node_ids
                 pid = element.Pid()
@@ -2214,7 +2347,14 @@ class NastranIO(object):
             cds = np.zeros(self.nNodes, dtype='int32')
             for (nid, nid2) in iteritems(self.nid_map):
                 nids[nid2] = nid
-                cds[nid2] = model.nodes[nid].Cd()  # doesn't handle SPOINTs
+                node = model.Node(nid)
+                try:
+                    cds[nid2] = node.Cd()
+                except AttributeError:
+                    # SPOINTs
+                    msg = 'nid=%s does not have a Node Cd\n%s' % (nid, node)
+                    #raise AttributeError(msg)
+                    continue
 
             nid_res = GuiResult(0, header='NodeID', title='NodeID',
                                 location='node', scalar=nids)
@@ -2256,14 +2396,8 @@ class NastranIO(object):
 
             pid_res = GuiResult(0, header='PropertyID', title='PropertyID',
                                 location='centroid', scalar=pids)
-            theta_res = GuiResult(0, header='Max Interior Angle', title='MaxInteriorAngle',
-                                  location='centroid', scalar=np.degrees(max_interior_angle))
             cases[icase] = (pid_res, (0, 'PropertyID'))
             form0.append(('PropertyID', icase, []))
-            icase += 1
-
-            cases[icase] = (theta_res, (0, 'Max Interior Angle'))
-            form0.append(('Max Interior Angle', icase, []))
             icase += 1
 
             upids = np.unique(pids)
@@ -2453,20 +2587,30 @@ class NastranIO(object):
             cases[icase] = (eid_dim_res, (0, 'ElementDim'))
             form0.append(('ElementDim', icase, []))
             icase += 1
-            if np.abs(normals.max()) > 0.:
+
+            is_shell = np.abs(normals.max()) > 0.
+            if is_shell:
                 nx_res = GuiResult(0, header='NormalX', title='NormalX',
                                    location='centroid', scalar=normals[:, 0], data_format='%.2f')
                 ny_res = GuiResult(0, header='NormalY', title='NormalY',
                                    location='centroid', scalar=normals[:, 1], data_format='%.2f')
                 nz_res = GuiResult(0, header='NormalZ', title='NormalZ',
                                    location='centroid', scalar=normals[:, 2], data_format='%.2f')
+
+                # TODO: theta should apply to solids as well,
+                #       but solid elements are not supported right now
+                theta_res = GuiResult(0, header='Max Interior Angle', title='MaxInteriorAngle',
+                                      location='centroid', scalar=np.degrees(max_interior_angle))
+
                 cases[icase] = (nx_res, (0, 'NormalX'))
                 cases[icase + 1] = (ny_res, (0, 'NormalY'))
                 cases[icase + 2] = (nz_res, (0, 'NormalZ'))
+                cases[icase + 3] = (theta_res, (0, 'Max Interior Angle'))
                 form0.append(('NormalX', icase, []))
                 form0.append(('NormalY', icase + 1, []))
                 form0.append(('NormalZ', icase + 2, []))
-                icase += 3
+                form0.append(('Max Interior Angle', icase + 3, []))
+                icase += 4
 
             if np.abs(xoffset).max() > 0.0 or np.abs(yoffset).max() > 0.0 or np.abs(zoffset).max() > 0.0:
                 # offsets
@@ -2488,7 +2632,8 @@ class NastranIO(object):
 
             if np.abs(material_coord).max() > 0:
                 material_coord_res = GuiResult(0, header='MaterialCoord', title='MaterialCoord',
-                                               location='centroid', scalar=material_coord, data_format='%i')
+                                               location='centroid',
+                                               scalar=material_coord, data_format='%i')
                 cases[icase] = (material_coord_res, (0, 'MaterialCoord'))
                 form0.append(('MaterialCoord', icase, []))
                 icase += 1
@@ -2667,7 +2812,8 @@ class NastranIO(object):
 
             if key == 'LOAD':
                 p0 = np.array([0., 0., 0.], dtype='float32')
-                centroidal_pressures, forces, spcd = self._get_forces_moments_array(model, p0, load_case_id, include_grav=False)
+                centroidal_pressures, forces, spcd = self._get_forces_moments_array(
+                    model, p0, load_case_id, include_grav=False)
                 found_load = True
             elif key in temperature_keys:
                 temperatures = self._get_temperatures_array(model, load_case_id)
@@ -2777,7 +2923,8 @@ class NastranIO(object):
                 scale2 = load.mag * scale  # does this need a magnitude?
                 nid = load.node
                 if nid in self.dependents_nodes:
-                    print('    nid=%s is a dependent node and has an FORCE applied\n%s' % (nid, str(load)))
+                    print('    nid=%s is a dependent node and has an FORCE applied\n%s' % (
+                        nid, str(load)))
                 forces[nid_map[nid]] += load.xyz * scale2
 
             elif load.type == 'PLOAD2':
@@ -2801,7 +2948,8 @@ class NastranIO(object):
                         # F += f
                         # M += m
                     else:
-                        self.log.debug('    case=%s etype=%r loadtype=%r not supported' % (load_case_id, elem.type, load.type))
+                        self.log.debug('    case=%s etype=%r loadtype=%r not supported' % (
+                            load_case_id, elem.type, load.type))
 
             elif load.type == 'PLOAD4':
                 # continue  ## TODO: should be removed
@@ -3453,8 +3601,8 @@ class NastranIO(object):
                                        location='node', scalar=loads[:, 4])
                     rz_res = GuiResult(subcase_idi, header=name + 'Rz', title=name + 'Rz',
                                        location='node', scalar=loads[:, 5])
-                    txyz_res = GuiResult(subcase_idi, header=name + 'Txyz', title=name + name + 'Txyz',
-                                         location='node', scalar=nxyz)
+                    txyz_res = GuiResult(subcase_idi, header=name + 'Txyz',
+                                         title=name + name + 'Txyz', location='node', scalar=nxyz)
 
                     cases[icase] = (tx_res, (0, name + 'Tx'))
                     cases[icase + 1] = (ty_res, (0, name + 'Ty'))
@@ -3856,7 +4004,8 @@ class NastranIO(object):
                 header = self._get_nastran_header(case, dt, itime)
                 header_dict[(key, itime)] = header
 
-                #[bending_moment_a1, bending_moment_a2, bending_moment_b1, bending_moment_b2, shear1, shear2, axial, torque]
+                #[bending_moment_a1, bending_moment_a2, bending_moment_b1, bending_moment_b2,
+                # shear1, shear2, axial, torque]
                 #fx[i] = case.data[:, :, 6]
                 #fy[i] = case.data[:, :, 4]
                 #fz[i] = case.data[:, :, 5]

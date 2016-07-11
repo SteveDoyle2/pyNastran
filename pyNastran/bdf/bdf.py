@@ -3250,6 +3250,12 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             except:
                 print(str(card))
                 raise
+        for key, card in sorted(iteritems(self.trims)):
+            try:
+                card._verify(xref)
+            except:
+                print(str(card))
+                raise
 
 IGNORE_COMMENTS = (
     '$EXECUTIVE CONTROL DECK',

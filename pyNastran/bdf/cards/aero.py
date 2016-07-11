@@ -4351,6 +4351,15 @@ class SPLINE5(Spline):
 
 
 class TRIM(BaseCard):
+    """
+    +------+--------+------+--------+--------+-----+--------+-----+----------+
+    |   1  |   2    |   3  |    4   |    5   |  6  |    7   |  8  |     9    |
+    +======+========+=======+=======+========+=====+========+=====+==========+
+    | TRIM |   ID   | MACH |    Q   | LABEL1 | UX1 | LABEL2 | UX2 | IS_RIGID |
+    +------+--------+------+--------+--------+-----+--------+-----+----------+
+    |      | LABEL3 |  UX3 | LABEL4 |   UX4  | ... |        |     |          |
+    +------+--------+------+--------+--------+-----+--------+-----+----------+
+    """
     type = 'TRIM'
     _field_map = {
         1: 'sid', 2:'mach', 3:'q', 8:'aeqr',
@@ -4430,6 +4439,47 @@ class TRIM(BaseCard):
     def validate(self):
         assert self.mach >= 0.0 and self.mach != 1.0, 'mach = %s' % self.mach
         assert self.q > 0.0, 'q=%s' % self.q
+        assert len(set(self.labels)) == len(self.labels), 'not all labels are unique; labels=%s' % str(self.labels)
+
+    def _verify(self, xref):
+        if xref:
+            nsuport_dofs = 0
+            suport_dofs = set()
+            assert isinstance(self.suport, list), type(self.suport)
+            for suport in self.suport:
+                print(str(suport).rstrip())
+                for nid in suport.node_ids:
+                    for Cs in suport.Cs:
+                        for C in Cs:
+                            #print('  nid=%s C=%s' % (nid, C))
+                            dof = (nid, C)
+                            assert dof not in suport_dofs, 'dof=%s suport_dofs=%s' % (str(dof), str(suport_dofs))
+                            suport_dofs.add(dof)
+                            nsuport_dofs += 1
+
+            suport1_dofs = {}
+            assert isinstance(self.suport1, dict), type(self.suport1)
+            for suport_id, suport in sorted(self.suport1.iteritems()):
+                conid = suport.conid
+                IDs = suport.IDs
+                Cs = suport.Cs
+                for ci in Cs:
+                    nsuport_dofs += 1
+
+            aestat_labels = [aestat.label for aestat in self.aestats.values()]
+            ntrim_variables = len(self.labels)
+            for label in self.labels:
+                assert label in aestat_labels, 'label=%r aestats=%s aestat_labels=%s' % (label, self.aestats, aestat_labels)
+            assert ntrim_variables == nsuport_dofs, 'ntrim_variables=%s nsuport_dofs=%s' % (ntrim_variables, nsuport_dofs)
+
+    def cross_reference(self, model):
+        self.suport = model.suport
+        self.suport1 = model.suport1
+        self.aestats = model.aestats
+        self.aelinks = model.aelinks
+
+    def safe_cross_reference(self, model):
+        self.cross_reference(model)
 
     @classmethod
     def add_card(cls, card, comment=''):

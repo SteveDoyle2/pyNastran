@@ -696,6 +696,19 @@ class NLPCI(BaseCard):
 
 
 class TF(BaseCard):
+    """
+    Defines a dynamic transfer function of the form:
+        (B0 + B1 p + B2 *p2)*ud  sum(A0_i + A1_i*p + A2_i*p2)*ui = 0
+
+    +----+-----+-----+------+------+------+--------+----+----+
+    |  1 |  2  |  3  |   4  |   5  |   6  |    7   |  8 |  9 |
+    +====+=====+=====+======+======+======+========+====+====+
+    | TF | SID | GD  |  CD  |  B0  |  B1  |   B2   |    |    |
+    +----+-----+-----+------+------+------+--------+----+----+
+    |    | G_1 | C_1 | A0_1 | A1_1 | A2_1 | -etc.- |    |    |
+    +----+-----+-----+------+------+------+--------+----+----+
+
+    """
     type = 'TF'
     def __init__(self, sid, nid0, c, b0, b1, b2, grids1, components1, a, comment=''):
         if comment:

@@ -148,6 +148,8 @@ class SUPORT(Constraint):
             self._comment = comment
         self.IDs = IDs ## TODO:  IDs reference nodes???
         self.Cs = Cs
+
+    def validate(self):
         assert len(self.IDs) > 0
         assert len(self.IDs) == len(self.Cs)
 
