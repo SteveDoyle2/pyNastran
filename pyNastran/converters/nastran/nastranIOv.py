@@ -1090,7 +1090,7 @@ class NastranIO(object):
                 continue
         return lines
 
-    def _fill_bar_yz(self, dim_max, model, icase, cases, form):
+    def _fill_bar_yz(self, dim_max, model, icase, cases, form, debug=False):
         """
         plots the y, z vectors for CBAR & CBEAM elements
         """
@@ -1140,6 +1140,10 @@ class NastranIO(object):
             # PBEAML specfic
             "L" : [],
         }  # for GROUP="MSCBML0"
+        allowed_types = ['bar']
+
+        # bar_types['bar'] = [ [...], [...], [...] ]
+        #bar_types = defaultdict(lambda : defaultdict(list))
 
         found_bar_types = set([])
         #neids = len(self.element_ids)
@@ -1148,7 +1152,6 @@ class NastranIO(object):
             lines_bar_y = []
             lines_bar_z = []
             bar_types[bar_type] = (eids, lines_bar_y, lines_bar_z)
-
 
         no_axial = np.zeros(self.element_ids.shape, dtype='int32')
         no_torsion = np.zeros(self.element_ids.shape, dtype='int32')
@@ -1281,6 +1284,8 @@ class NastranIO(object):
                 v = elem.x
 
             offt_vector, offt_end_a, offt_end_b = elem.offt
+            if debug:
+                print('offt vector,A,B=%r' % (elem.offt))
             # if offt_end_a == 'G' or (offt_end_a == 'O' and offt_vector == 'G'):
 
             if offt_vector == 'G':
@@ -1359,9 +1364,10 @@ class NastranIO(object):
 
             zhat = z / norm(z)
             yhat = np.cross(zhat, ihat) # j
-            #print('ihat =', ihat)
-            #print('yhat =', yhat)
-            #print('zhat =', zhat)
+            if debug:
+                print('  ihat =', ihat)
+                print('  yhat =', yhat)
+                print('  zhat =', zhat)
             #if eid == 5570:
                 #print('  check - eid=%s yhat=%s zhat=%s v=%s i=%s n%s=%s n%s=%s' % (
                       #eid, yhat, zhat, v, i, nid1, n1, nid2, n2))
@@ -1378,9 +1384,29 @@ class NastranIO(object):
             #print('   yhat=%s len=%s' % (yhat, np.linalg.norm(yhat)))
             #print('   zhat=%s len=%s' % (zhat, np.linalg.norm(zhat)))
             #print('   Li=%s scale=%s' % (Li, scale))
+            assert bar_type in allowed_types, 'bar_type=%r allowed=[%s]' % (bar_type, ', '.join(allowed_types))
+
             bar_types[bar_type][0].append(eid)
             bar_types[bar_type][1].append((centroid, centroid + yhat * Li * scale))
             bar_types[bar_type][2].append((centroid, centroid + zhat * Li * scale))
+            #if len(bar_types[bar_type][0]) > 5:
+                #break
+
+        #print('bar_types =', bar_types)
+        for bar_type in bar_types.keys():
+            if len(bar_types[bar_type][0]) == 0:
+                del bar_types[bar_type]
+
+        debug = False
+        if debug:
+            #np.set_printoptions()
+            for bar_type, data in sorted(bar_types.iteritems()):
+                eids, lines_bar_y, lines_bar_z = data
+                if len(eids):
+                    #print('barsi =', barsi)
+                    #print('bar_type = %r' % bar_type)
+                    for eid, line_y, line_z  in zip(eids, lines_bar_y, lines_bar_z):
+                        print('eid=%s centroid=%s cy=%s cz=%s' % (eid, line_y[0], line_y[1], line_z[1]))
 
         #print('found_bar_types =', found_bar_types)
 
@@ -1395,8 +1421,10 @@ class NastranIO(object):
         geo_form = form[2]
         bar_form = ('CBAR / CBEAM', None, [])
         #print('geo_form =', geo_form)
+        bar_types2 = {}
         for bar_type, data in sorted(iteritems(bar_types)):
             eids, lines_bar_y, lines_bar_z = data
+            #print(data)
             if len(eids):
                 # if bar_type not in ['ROD', 'TUBE']:
                 bar_y = bar_type + '_y'
@@ -1804,7 +1832,7 @@ class NastranIO(object):
           The maximum angle of the two possible angles is reported as
           the warp angle.
 
-        Aspect"
+        Aspect:
           Aspect = maximum element edge length / minimum element edge length
           Ideal value = 1 (Acceptable < 5).
 
@@ -1874,6 +1902,7 @@ class NastranIO(object):
         mids = np.zeros(nelements, 'int32')
         material_coord = np.zeros(nelements, 'int32')
         max_interior_angle = np.zeros(nelements, 'float32')
+        max_warp_angle = np.zeros(nelements, 'float32')
 
         # pids_good = []
         # pids_to_keep = []
@@ -1892,6 +1921,7 @@ class NastranIO(object):
             self.eid_map[eid] = i
             pid = 0
             max_theta = 0.0
+            max_warp = 0.0
             if isinstance(element, (CTRIA3, CTRIAR)):
                 material_coord[i] = 0 if isinstance(element.thetaMcid, float) else element.thetaMcid
                 elem = vtkTriangle()
@@ -2035,6 +2065,20 @@ class NastranIO(object):
                 elem.GetPointIds().SetId(2, nid_map[node_ids[2]])
                 elem.GetPointIds().SetId(3, nid_map[node_ids[3]])
                 self.grid.InsertNextCell(9, elem.GetPointIds())
+
+                if 0:
+                    # warp
+                    v31 = xyz_cid0[p3, :] - xyz_cid0[p1, :]
+                    n1a = np.cross(v21, v31) # v21 x v31
+                    n1b = np.cross(v31, -v14) # v31 x v41
+                    warp1 = np.dot(n1a, n1b) / (np.linalg.norm(n1a) * np.linalg.norm(n1b))
+
+                    v42 = xyz_cid0[p4, :] - xyz_cid0[p2, :]
+                    n2a = np.cross(v32, v42) # v32 x v42
+                    n2b = np.cross(v42, -v21) # v42 x v12
+                    warp2 = np.dot(n2a, n2b) / (np.linalg.norm(n2a) * np.linalg.norm(n2b))
+                    max_warp = max(np.arccos(warp1), np.arccos(warp2))
+
             elif isinstance(element, CQUAD8):
                 material_coord[i] = element.thetaMcid
                 node_ids = element.node_ids
@@ -2301,6 +2345,7 @@ class NastranIO(object):
                 pids[i] = pid
                 pids_dict[eid] = pid
             max_interior_angle[i] = max_theta
+            max_warp_angle[i] = max_warp
             i += 1
         assert len(self.eid_map) > 0, self.eid_map
 
@@ -2488,18 +2533,29 @@ class NastranIO(object):
 
             mid_res = GuiResult(0, header='MaterialID', title='MaterialID',
                                 location='centroid', scalar=mids)
-            e11_res = GuiResult(0, header='E_11', title='E_11',
-                                location='centroid', scalar=e11)
-            e22_res = GuiResult(0, header='E_22', title='E_22',
-                                location='centroid', scalar=e22)
+            #e11_res = GuiResult(0, header='E_11', title='E_11',
+                                #location='centroid', scalar=e11)
             cases[icase] = (mid_res, (0, 'MaterialID'))
-            cases[icase + 1] = (e11_res, (0, 'E_11'))
-            cases[icase + 2] = (e22_res, (0, 'E_22'))
             form0.append(('MaterialID', icase, []))
-            form0.append(('E_11', icase + 1, []))
-            form0.append(('E_22', icase + 2, []))
-            icase += 3
 
+            is_orthotropic = not np.array_equal(e11, e22)
+            if is_orthotropic:
+                e11_res = GuiResult(0, header='E_11', title='E_11',
+                                    location='centroid', scalar=e11, data_format='%.3e')
+                e22_res = GuiResult(0, header='E_22', title='E_22',
+                                    location='centroid', scalar=e22, data_format='%.3e')
+                cases[icase + 1] = (e11_res, (0, 'E_11'))
+                cases[icase + 2] = (e22_res, (0, 'E_22'))
+                form0.append(('E_11', icase + 1, []))
+                form0.append(('E_22', icase + 2, []))
+                icase += 3
+            else:
+                # isotropic
+                e11_res = GuiResult(0, header='E', title='E',
+                                    location='centroid', scalar=e11, data_format='%.3e')
+                cases[icase + 1] = (e11_res, (0, 'E'))
+                form0.append(('E', icase + 1, []))
+                icase += 2
 
         try:
             icase = self._build_optimization(model, pids, upids, nelements, cases, form0, icase)
@@ -2522,7 +2578,7 @@ class NastranIO(object):
             #for pid in upids:
 
         if 1:
-            i = 0
+            #ielement = 0
             nelements = self.element_ids.shape[0]
             normals = np.zeros((nelements, 3), dtype='float32')
             xoffset = np.zeros(nelements, dtype='float32')
@@ -2577,7 +2633,7 @@ class NastranIO(object):
                     print('element.type=%s doesnt have a dimension' % element.type)
 
                 element_dim[ie] = element_dimi
-                i += 1
+                #ielement += 1
 
             # if not a flat plate
             #if min(nxs) == max(nxs) and min(nxs) != 0.0:
@@ -2585,10 +2641,8 @@ class NastranIO(object):
             eid_dim_res = GuiResult(0, header='ElementDim', title='ElementDim',
                                     location='centroid', scalar=element_dim)
             cases[icase] = (eid_dim_res, (0, 'ElementDim'))
-            form0.append(('ElementDim', icase, []))
-            icase += 1
 
-            is_shell = np.abs(normals.max()) > 0.
+            is_shell = np.abs(normals).max() > 0.
             if is_shell:
                 nx_res = GuiResult(0, header='NormalX', title='NormalX',
                                    location='centroid', scalar=normals[:, 0], data_format='%.2f')
@@ -2602,17 +2656,28 @@ class NastranIO(object):
                 theta_res = GuiResult(0, header='Max Interior Angle', title='MaxInteriorAngle',
                                       location='centroid', scalar=np.degrees(max_interior_angle))
 
-                cases[icase] = (nx_res, (0, 'NormalX'))
-                cases[icase + 1] = (ny_res, (0, 'NormalY'))
-                cases[icase + 2] = (nz_res, (0, 'NormalZ'))
-                cases[icase + 3] = (theta_res, (0, 'Max Interior Angle'))
-                form0.append(('NormalX', icase, []))
-                form0.append(('NormalY', icase + 1, []))
-                form0.append(('NormalZ', icase + 2, []))
-                form0.append(('Max Interior Angle', icase + 3, []))
-                icase += 4
+                form_checks = []
+                form0.append(('Element Checks', None, form_checks))
 
-            if np.abs(xoffset).max() > 0.0 or np.abs(yoffset).max() > 0.0 or np.abs(zoffset).max() > 0.0:
+                cases[icase + 1] = (nx_res, (0, 'NormalX'))
+                cases[icase + 2] = (ny_res, (0, 'NormalY'))
+                cases[icase + 3] = (nz_res, (0, 'NormalZ'))
+                cases[icase + 4] = (theta_res, (0, 'Max Interior Angle'))
+
+                form_checks.append(('ElementDim', icase, []))
+                form_checks.append(('NormalX', icase + 1, []))
+                form_checks.append(('NormalY', icase + 2, []))
+                form_checks.append(('NormalZ', icase + 3, []))
+                form_checks.append(('Max Interior Angle', icase + 4, []))
+                icase += 5
+                if max_warp_angle.max() > 0.0:
+                    warp_res = GuiResult(0, header='Max Warp Angle', title='MaxWarpAngle',
+                                         location='centroid', scalar=np.degrees(max_warp_angle))
+                    cases[icase + 4] = (warp_res, (0, 'Max Warp Angle'))
+                    form_checks.append(('Max Warp Angle', icase, []))
+                    icase += 1
+
+                #if np.abs(xoffset).max() > 0.0 or np.abs(yoffset).max() > 0.0 or np.abs(zoffset).max() > 0.0:
                 # offsets
                 offset_x_res = GuiResult(0, header='OffsetX', title='OffsetX',
                                          location='centroid', scalar=xoffset, data_format='%.1f')
@@ -2625,10 +2690,13 @@ class NastranIO(object):
                 cases[icase + 1] = (offset_y_res, (0, 'OffsetY'))
                 cases[icase + 2] = (offset_z_res, (0, 'OffsetZ'))
 
-                form0.append(('OffsetX', icase, []))
-                form0.append(('OffsetY', icase + 1, []))
-                form0.append(('OffsetZ', icase + 2, []))
+                form_checks.append(('OffsetX', icase, []))
+                form_checks.append(('OffsetY', icase + 1, []))
+                form_checks.append(('OffsetZ', icase + 2, []))
                 icase += 3
+            else:
+                form0.append(('ElementDim', icase, []))
+                icase += 1
 
             if np.abs(material_coord).max() > 0:
                 material_coord_res = GuiResult(0, header='MaterialCoord', title='MaterialCoord',
