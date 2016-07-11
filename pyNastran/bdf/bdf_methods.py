@@ -1742,8 +1742,11 @@ class BDFMethods(BDFAttributes):
         for eid, face in eid_faces:
             #print(eid, face)
             raw_face = deepcopy(face)
-            print('face =', face)
-            face.sort()
+            try:
+                face.sort()
+            except:
+                print('face = %s' % str(face))
+                raise
             tface = tuple(face)
             #print(tface)
             face_set[tface] += 1

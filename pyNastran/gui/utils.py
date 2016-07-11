@@ -1,10 +1,14 @@
 from __future__ import print_function
 from six.moves import urllib
 import os
+import sys
+import traceback
+from codecs import open as codec_open
 
 import numpy as np
 from numpy import loadtxt
 import pyNastran
+from pyNastran.utils import _filename, loadtxt_nice
 
 def check_for_newer_version():
     """
@@ -56,7 +60,7 @@ def check_for_newer_version():
     return version_latest, version_current, is_newer
 
 
-def load_csv(out_filename):
+def load_csv(out_filename, encoding='latin1'):
     """
     The GUI CSV loading function.
 
@@ -68,7 +72,7 @@ def load_csv(out_filename):
     if ext not in ['.csv', '.dat', '.txt']:
         raise NotImplementedError('extension=%r is not supported (use .dat, .txt, or .csv)' % ext)
 
-    with open(out_filename, 'r') as file_obj:
+    with codec_open(_filename(out_filename), 'r', encoding=encoding) as file_obj:
         header_line = file_obj.readline().strip()
         if not header_line.startswith('#'):
             msg = 'Expected file of the form:\n'
@@ -153,15 +157,17 @@ def load_csv(out_filename):
             'formats': tuple(dtype_fmts),
         }
         try:
-            A = loadtxt(file_obj, dtype=dtype, delimiter=delimiter)
+            #A = loadtxt(file_obj, dtype=dtype, delimiter=delimiter)
+            A = loadtxt_nice(file_obj, dtype=dtype, delimiter=delimiter)
         except:
+            traceback.print_exc(file=sys.stdout)
             msg = 'extension=%r nheaders=%s delimiter=%r dtype=%s' % (ext, len(names), delimiter, dtype)
             raise RuntimeError(msg)
 
     return A, fmt_dict, names
 
 
-def load_user_geom(fname):
+def load_user_geom(fname, encoding='latin1'):
     """
     Loads a file of the form:
 
@@ -198,7 +204,7 @@ def load_user_geom(fname):
     QUAD, 3, 1, 5, 3, 4
     QUAD, 4, 1, 2, 3, 4  # this is after a blank line
     """
-    with open(fname, 'r') as f:
+    with codec_open(_filename(fname), 'r', encoding=encoding) as f:
         lines = f.readlines()
 
     grid_ids = []
