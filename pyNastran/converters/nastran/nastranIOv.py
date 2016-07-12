@@ -30,6 +30,11 @@ from six.moves import zip, range
 import numpy as np
 from numpy.linalg import norm
 
+#: makes vtk work on certain builds of vtk
+#: we have to call this before vtk; you can't just try-except it
+#: unused_import
+import PyQt4
+
 import vtk
 from vtk import (vtkTriangle, vtkQuad, vtkTetra, vtkWedge, vtkHexahedron,
                  vtkQuadraticTriangle, vtkQuadraticQuad, vtkQuadraticTetra,
