@@ -1,5 +1,7 @@
 from __future__ import print_function, unicode_literals
+import copy
 from struct import Struct, pack
+
 from six import iteritems
 from six.moves import zip, range
 
@@ -766,7 +768,18 @@ class ComplexTableArray(TableArray):  # displacement style table
 
     def write_sort1_as_sort1(self, f, page_num, page_stamp, header, words, is_mag_phase):
         assert self.ntimes == len(self._times), 'ntimes=%s len(self._times)=%s' % (self.ntimes, self._times)
+        words_orig = copy.deepcopy(words)
+
         for itime, dt in enumerate(self._times):
+            if hasattr(self, 'eigrs'):
+                words = copy.deepcopy(words_orig)
+                eigr = self.eigrs[itime]
+                eigi = self.eigis[itime]
+                eigr = 0. if eigr == 0 else eigr
+                eigi = 0. if eigi == 0 else eigi
+                words[0] = words[0] % (eigr, eigi)
+                words[1] = words[1] % (itime + 1)
+
             node = self.node_gridtype[:, 0]
             gridtype = self.node_gridtype[:, 1]
             t1 = self.data[itime, :, 0]

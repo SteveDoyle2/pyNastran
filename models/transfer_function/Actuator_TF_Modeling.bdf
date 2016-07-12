@@ -81,8 +81,8 @@ $ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - $
 
 TITLE   = ACTUATOR TF MODELING
 ECHO    = SORT
-DISP(PLOT) = ALL
-STRESS(PLOT) = ALL
+DISP(PRINT,PLOT) = ALL
+STRESS(PRINT,PLOT) = ALL
 AUTOSPC = NO
 MPC     = 100
 TFL     = 101
