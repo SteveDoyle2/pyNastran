@@ -1140,7 +1140,7 @@ class NastranIO(object):
             # PBEAML specfic
             "L" : [],
         }  # for GROUP="MSCBML0"
-        allowed_types = ['bar']
+        allowed_types = ['BAR', 'BOX', 'BOX1', 'CHAN', 'CHAN1', 'CHAN2', 'CROSS', 'DBOX', 'H', 'HAT', 'HAT1', 'HEXA', 'I', 'I1', 'L', 'ROD', 'T', 'T1', 'T2', 'TUBE', 'TUBE2', 'Z', 'bar', 'beam']
 
         # bar_types['bar'] = [ [...], [...], [...] ]
         #bar_types = defaultdict(lambda : defaultdict(list))
@@ -1399,7 +1399,7 @@ class NastranIO(object):
 
         debug = False
         if debug:
-            #np.set_printoptions()
+            #np.set_printoptions(formatter={'float': '{: 0.3f}'.format})
             for bar_type, data in sorted(bar_types.iteritems()):
                 eids, lines_bar_y, lines_bar_z = data
                 if len(eids):
