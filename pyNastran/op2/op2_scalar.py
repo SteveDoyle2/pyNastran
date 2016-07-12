@@ -942,6 +942,10 @@ class OP2_Scalar(LAMA, ONR, OGPF,
           - Strain
           - Displacement
         """
+        if self._table4_count == 0:
+            self._count += 1
+        self._table4_count += 1
+
         if self.read_mode == 0:
             return
         #if self._table4_count == 0:
@@ -1095,9 +1099,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 #raise NotImplementedError(Type)
             assert len(out) == 14, len(out)
         #self.response1_table[self._count] = out
-        if self._table4_count == 0:
-            self._count += 1
-        self._table4_count += 1
         return ndata
 
     def _validate_op2_filename(self, op2_filename):
