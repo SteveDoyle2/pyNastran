@@ -2906,7 +2906,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             for line in lines[:i]:
                 crash_file.write(line)
 
-    def _increase_card_count(self, card_name, count_name=1):
+    def _increase_card_count(self, card_name, count_num=1):
         """
         Used for testing to check that the number of cards going in is the
         same as each time the model is read verifies proper writing of cards
@@ -2915,7 +2915,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         ----------
         card_name : str
             the card_name -> 'GRID'
-        count_name : int, optional
+        count_num : int, optional
             the amount to increment by (default=1)
 
         >>> bdf.read_bdf(bdf_filename)
@@ -2923,9 +2923,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         50
         """
         if card_name in self.card_count:
-            self.card_count[card_name] += count_name
+            self.card_count[card_name] += count_num
         else:
-            self.card_count[card_name] = count_name
+            self.card_count[card_name] = count_num
 
     def _open_file_checks(self, bdf_filename, basename=False):
         """
