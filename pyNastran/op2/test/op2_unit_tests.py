@@ -136,6 +136,36 @@ class TestOP2(Tester):
         op2_filename = os.path.join(folder, 'static_solid_shell_bar.op2')
         op2 = read_op2_geom(op2_filename, debug=False)
 
+    def test_op2_transfer_function_01(self):
+        folder = os.path.abspath(os.path.join(test_path, '..', 'models'))
+        #bdf_filename = os.path.join(folder, 'transfer_function', 'Actuator_TF_Modeling.bdf')
+        op2_filename = os.path.join(folder, 'transfer_function', 'Actuator_TF_Modeling.op2')
+        op2 = read_op2_geom(op2_filename, debug=False)
+
+        debug = False
+        write_bdf = True
+        write_f06 = True
+        make_geom = True
+        run_op2(op2_filename, write_bdf=write_bdf, make_geom=make_geom, isubcases=[],
+                write_f06=write_f06,
+                debug=debug, stop_on_failure=True, binary_debug=True, quiet=True)
+
+        #fem1, fem2, diff_cards = self.run_bdf(folder, bdf_filename)
+        #diff_cards2 = list(set(diff_cards))
+        #diff_cards2.sort()
+        #assert len(diff_cards2) == 0, diff_cards2
+
+        #for fem in [fem1, fem2]:
+            #assert fem.card_count['CONM2'] == 3, fem.card_count
+            #assert fem.card_count['SPOINT'] == 1, fem.card_count
+            #assert fem.card_count['EPOINT'] == 1, fem.card_count
+            #assert fem.card_count['PARAM'] == 1, fem.card_count
+            #assert fem.card_count['CELAS2'] == 2, fem.card_count
+            #assert fem.card_count['GRID'] == 3, fem.card_count
+            #assert fem.card_count['EIGR'] == 1, fem.card_count
+            #assert fem.card_count['EIGC'] == 1, fem.card_count
+            #assert fem.card_count['MPC'] == 1, fem.card_count
+            #assert fem.card_count['TF'] == 2, fem.card_count
 
     def test_gpforce_01(self):
         nids = np.array([1, 2, 3])

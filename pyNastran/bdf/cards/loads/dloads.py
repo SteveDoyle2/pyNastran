@@ -262,7 +262,7 @@ class RLOAD1(TabularLoad):
         sid = integer(card, 1, 'sid')
         excite_id = integer(card, 2, 'excite_id')
         delay = integer_double_or_blank(card, 3, 'delay', 0)
-        dphase = integer_double_or_blank(card, 4, 'dphase')
+        dphase = integer_double_or_blank(card, 4, 'dphase', 0)
         tc = integer_double_or_blank(card, 5, 'tc', 0)
         td = integer_double_or_blank(card, 6, 'td', 0)
         Type = integer_string_or_blank(card, 7, 'Type', 'LOAD')
@@ -350,7 +350,7 @@ class RLOAD1(TabularLoad):
         return self.delay_ref.sid
 
     @property
-    def DPhase(self):
+    def dphase_id(self):
         #if self.dphase in [0, 0.0]:
             #return 0
         if isinstance(self.dphase, integer_types):
@@ -395,13 +395,13 @@ class RLOAD1(TabularLoad):
         return out
 
     def raw_fields(self):
-        list_fields = ['RLOAD1', self.sid, self.excite_id, self.delay_id, self.DPhase,
+        list_fields = ['RLOAD1', self.sid, self.excite_id, self.delay_id, self.dphase_id,
                        self.Tc(), self.Td(), self.Type]
         return list_fields
 
     def repr_fields(self):
         Type = set_blank_if_default(self.Type, 'LOAD')
-        list_fields = ['RLOAD1', self.sid, self.excite_id, self.delay_id, self.DPhase,
+        list_fields = ['RLOAD1', self.sid, self.excite_id, self.delay_id, self.dphase_id,
                        self.Tc(), self.Td(), Type]
         return list_fields
 
@@ -593,14 +593,22 @@ class RLOAD2(TabularLoad):
             return self.delay
         return self.delay.sid
 
+    @property
+    def dphase_id(self):
+        #if self.dphase in [0, 0.0]:
+            #return 0
+        if isinstance(self.dphase, integer_types):
+            return self.dphase
+        return self.dphase_ref.sid
+
     def raw_fields(self):
-        list_fields = ['RLOAD2', self.sid, self.excite_id, self.delay_id, self.dphase,
+        list_fields = ['RLOAD2', self.sid, self.excite_id, self.delay_id, self.dphase_id,
                        self.Tb(), self.Tp(), self.Type]
         return list_fields
 
     def repr_fields(self):
         Type = set_blank_if_default(self.Type, 0.0)
-        list_fields = ['RLOAD2', self.sid, self.excite_id, self.delay_id, self.dphase,
+        list_fields = ['RLOAD2', self.sid, self.excite_id, self.delay_id, self.dphase_id,
                        self.Tb(), self.Tp(), Type]
         return list_fields
 

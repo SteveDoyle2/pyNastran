@@ -801,8 +801,16 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
         assert value in fem2.suport1, fem2.suport1
 
     if 'TRIM' in subcase:
-        value, options = subcase.get_parameter('TRIM')
-        assert value in fem2.trims, fem2.trims
+        trim_id = subcase.get_parameter('TRIM')[0]
+        assert trim_id in fem2.trims, fem2.trims
+        trim = fem2.trims[trim_id]
+
+        suport1 = None
+        if 'SUPORT1' in subcase:
+            suport_id = subcase.get_parameter('SUPORT1')[0]
+            suport1 = fem2.suport1[suport_id]
+        trim._verify(fem2.suport, suport1, fem2.aestats, fem2.aelinks, fem2.aesurfs, xref=True)
+
 
     if 'DIVERG' in subcase:
         value, options = subcase.get_parameter('DIVERG')

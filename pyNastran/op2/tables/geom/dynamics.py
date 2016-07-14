@@ -1,7 +1,10 @@
-from struct import unpack
+from __future__ import print_function
+from struct import unpack, Struct
 
+from pyNastran.bdf.cards.nodes import EPOINTs
 from pyNastran.bdf.cards.loads.loads import DAREA
 from pyNastran.bdf.cards.methods import EIGB
+from pyNastran.bdf.cards.dynamic import TF
 from pyNastran.op2.tables.geom.geom_common import GeomCommon
 
 class DYNAMICS(GeomCommon):
@@ -46,7 +49,7 @@ class DYNAMICS(GeomCommon):
             (8210, 82, 599): ['ROTORD', self._read_fake],  # 29
             (8410, 84, 600): ['ROTORG', self._read_fake],  # 30
             (5707, 57, 135): ['SEQEP', self._read_fake],  # 31
-            (6207, 62, 136): ['TF', self._read_fake],  # 32
+            (6207, 62, 136): ['TF', self._read_tf],  # 32
             (6607, 66, 137): ['TIC', self._read_fake],  # 33
             (7107, 71, 138): ['TLOAD1', self._read_tload1],  # 37
             (7207, 72, 139): ['TLOAD2', self._read_tload2],  # 38
@@ -146,9 +149,16 @@ class DYNAMICS(GeomCommon):
 
     def _read_epoint(self, data, n):
         """EPOINT(707,7,124) - Record 12"""
+        npoints = (len(data) - n) // 4
+        fmt = b'%ii' % npoints
+        nids = unpack(fmt, data[n:])
         if self.is_debug_file:
-            self.binary_debug.write('skipping EPOINT in DYNAMICS\n')
-        return len(data)
+            self.binary_debug.write('EPOINT=%s\n' % str(nids))
+        epoint = EPOINTs.add_op2_data(list(nids))
+        self.add_epoint(epoint)
+        self.card_count['EPOINT'] = npoints
+        self._increase_card_count('EPOINT', count_num=npoints)
+        return n
 
     def _read_freq(self, data, n):
         """FREQ(1307,13,126) - Record 13"""
@@ -213,8 +223,55 @@ class DYNAMICS(GeomCommon):
 #RSPINR
 #RSPINT
 #SEQEP(5707,57,135)
-#TF
-#TIC
+
+    def _read_tf(self, data, n):
+        nfields = (len(data) - n) // 4
+
+        # subtract of the header (sid, nid, component, b0, b1, b2)
+        # divide by 5 (nid1, component1, a0, a1, a2)
+        #nrows = (nfields - 6) // 5
+        #print('n=%s nrows=%s' % (n, nrows))
+        #print(self.show_data(data))
+        #nid1, component1, a0, a1, a2
+
+        ndata = len(data)
+        struct1 = Struct(b'3i3f')
+        struct2 = Struct(b'2i3f')
+        while n < ndata:
+            n2 = n + 24 # 20=4*6
+            sid, nid, component, b0, b1, b2 = struct1.unpack(data[n:n2])
+            if self.is_debug_file:
+                self.binary_debug.write('TF header -> %s\n' % ([sid, nid, component, b0, b1, b2]))
+
+            nids = []
+            components = []
+            a = []
+            irow = 0
+            while 1:
+                n3 = n2 + 20 # 20=4*5
+                nid1, component1, a0, a1, a2 = struct2.unpack(data[n2:n3])
+
+                if self.is_debug_file:
+                    self.binary_debug.write('  i=%s     -> %s\n' % (irow, [nid1, component1, a0, a1, a2]))
+
+                if nid1 == -1 and component1 == -1:
+                    break
+                assert nid1 > -1
+                assert component1 > -1
+                nids.append(nid1)
+                components.append(component1)
+                a.append([a0, a1, a2])
+                n2 = n3
+                irow += 1
+
+            tf = TF(sid, nid, component, b0, b1, b2, nids, components, a)
+            #if self.is_debug_file:
+                #self.binary_debug.write('%s\n' % str(tf))
+            self.add_TF(tf)
+            self._increase_card_count('TF')
+            n = n3
+        return n
+
 #TIC
 #TIC3
 

@@ -205,6 +205,26 @@ class TestBDF(Tester):
         self._compare_mass_cg_I(fem1, reference_point=u'cg')
         self._compare_mass_cg_I(fem1, reference_point='cg')
 
+    def test_bdf_transfer_function_01(self):
+        bdf_filename = os.path.join('transfer_function', 'Actuator_TF_Modeling.bdf')
+        folder = os.path.abspath(os.path.join(pkg_path, '..', 'models'))
+        fem1, fem2, diff_cards = self.run_bdf(folder, bdf_filename)
+        diff_cards2 = list(set(diff_cards))
+        diff_cards2.sort()
+        assert len(diff_cards2) == 0, diff_cards2
+
+        for fem in [fem1, fem2]:
+            assert fem.card_count['CONM2'] == 3, fem.card_count
+            assert fem.card_count['SPOINT'] == 1, fem.card_count
+            assert fem.card_count['EPOINT'] == 1, fem.card_count
+            assert fem.card_count['PARAM'] == 1, fem.card_count
+            assert fem.card_count['CELAS2'] == 2, fem.card_count
+            assert fem.card_count['GRID'] == 3, fem.card_count
+            assert fem.card_count['EIGR'] == 1, fem.card_count
+            assert fem.card_count['EIGC'] == 1, fem.card_count
+            assert fem.card_count['MPC'] == 1, fem.card_count
+            assert fem.card_count['TF'] == 2, fem.card_count
+
 class TestBaseCard(Tester):
     def test_base_card_01_collapse_thru(self):
         """

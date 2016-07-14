@@ -1021,7 +1021,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 seid_weight = out[8]
 
                 assert np.abs(out[8:-1]).sum() == 0.0, 'out=%s 8=%s' % (out, out[8:-1])
-                assert out[-1] in [0, 1, 2], out
+                assert out[-1] in [0, 1, 2, 3, 4, 5], out
                 #dunno_8 = out[8]
                 #dunno_9 = out[9]
                 #dunno_10 = out[10]
@@ -2187,6 +2187,9 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             iconvergence = 'soft'
         elif iconvergence == 2:
             iconvergence = 'hard'
+        elif iconvergence == 6:
+            self.log.warning('HISADD iconverge=6')
+            iconvergence = '???'
         else:
             msg = 'iconvergence=%s\n' % iconvergence
             self.show_data(data, types='ifs', endian=None)
@@ -2199,6 +2202,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         elif conv_result == 2:
             conv_result = 'hard'
         elif conv_result in [3, 4]:
+            self.log.warning('HISADD conv_result=%s' % conv_result)
             # not sure why this happens, but the field is wrong
             # it seems to apply to one step before this one
             conv_result = 'best_design'

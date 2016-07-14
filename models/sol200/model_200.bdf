@@ -1,7 +1,7 @@
 SOL 200
 CEND
 LINE = 500000
-DISP=ALL
+DISP(PLOT)=ALL
 subcase 1
     analysis = STATICS
     SPC = 1

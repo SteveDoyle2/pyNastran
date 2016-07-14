@@ -710,7 +710,7 @@ class TF(BaseCard):
 
     """
     type = 'TF'
-    def __init__(self, sid, nid0, c, b0, b1, b2, grids1, components1, a, comment=''):
+    def __init__(self, sid, nid0, c, b0, b1, b2, nids, components, a, comment=''):
         if comment:
             self._comment = comment
         self.sid = sid
@@ -719,8 +719,8 @@ class TF(BaseCard):
         self.b0 = b0
         self.b1 = b1
         self.b2 = b2
-        self.grids1 = grids1
-        self.components1 = components1
+        self.nids = nids
+        self.components = components
         self.a = a
 
     def validate(self):
@@ -745,26 +745,26 @@ class TF(BaseCard):
         if nfields % 8 > 0:
             nrows += 1
 
-        grids1 = []
-        components1 = []
+        nids = []
+        components = []
         a = []
         for irow in range(nrows):
             j = irow * 8 + 9
             #ifield = irow + 1
-            grid1 = integer(card, j, 'grid_%i' % (irow + 1))
-            component1 = components_or_blank(card, j + 1, 'components_%i' % (irow + 1), 0)
+            nid = integer(card, j, 'grid_%i' % (irow + 1))
+            component = components_or_blank(card, j + 1, 'components_%i' % (irow + 1), 0)
             a0 = double_or_blank(card, j + 2, 'a0_%i' % (irow + 1), 0.)
             a1 = double_or_blank(card, j + 3, 'a1_%i' % (irow + 1), 0.)
             a2 = double_or_blank(card, j + 4, 'a2_%i' % (irow + 1), 0.)
-            grids1.append(grid1)
-            components1.append(component1)
+            nids.append(nid)
+            components.append(component)
             a.append([a0, a1, a2])
-        return TF(sid, nid0, c, b0, b1, b2, grids1, components1, a,
+        return TF(sid, nid0, c, b0, b1, b2, nids, components, a,
                   comment=comment)
 
     def raw_fields(self):
         list_fields = ['TF', self.sid, self.nid0, self.c, self.b0, self.b1, self.b2, None, None]
-        for grid, c, (a0, a1, a2) in zip(self.grids1, self.components1, self.a):
+        for grid, c, (a0, a1, a2) in zip(self.nids, self.components, self.a):
             list_fields += [grid, c, a0, a1, a2, None, None, None]
         return list_fields
 
