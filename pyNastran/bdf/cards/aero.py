@@ -4441,42 +4441,70 @@ class TRIM(BaseCard):
         assert self.q > 0.0, 'q=%s' % self.q
         assert len(set(self.labels)) == len(self.labels), 'not all labels are unique; labels=%s' % str(self.labels)
 
-    def _verify(self, xref):
+    def _verify(self, suport, suport1, aestats, aelinks, aesurf, xref=True):
         if xref:
             nsuport_dofs = 0
+            nsuport1_dofs = 0
             suport_dofs = set()
-            assert isinstance(self.suport, list), type(self.suport)
-            for suport in self.suport:
-                print(str(suport).rstrip())
-                for nid in suport.node_ids:
-                    for Cs in suport.Cs:
-                        for C in Cs:
-                            #print('  nid=%s C=%s' % (nid, C))
-                            dof = (nid, C)
+            assert isinstance(suport, list), type(suport)
+            for suporti in suport:
+                print(str(suporti).rstrip())
+                for nid in suporti.node_ids:
+                    for cs in suporti.Cs:
+                        for ci in cs:
+                            #print('  nid=%s C=%s' % (nid, ci))
+                            dof = (nid, ci)
                             assert dof not in suport_dofs, 'dof=%s suport_dofs=%s' % (str(dof), str(suport_dofs))
                             suport_dofs.add(dof)
                             nsuport_dofs += 1
 
             suport1_dofs = {}
-            assert isinstance(self.suport1, dict), type(self.suport1)
-            for suport_id, suport in sorted(self.suport1.iteritems()):
-                conid = suport.conid
-                IDs = suport.IDs
-                Cs = suport.Cs
-                for ci in Cs:
-                    nsuport_dofs += 1
+            if suport1:
+                conid = suport1.conid
+                #IDs = suport1.IDs
+                nids = suport1.node_ids
+                #Cs = suport1.Cs
+                #print('SUPORT1 id=%s' % conid)
+                for nid, cs in zip(nids, suport1.Cs):
+                    for ci in cs:
+                        #print('  nid=%s C=%s' % (nid, ci))
+                        nsuport1_dofs += 1
 
-            aestat_labels = [aestat.label for aestat in self.aestats.values()]
+            aesurf_names = [aesurfi.label for aesurfi in aesurf.values()]
+            aestat_labels = [aestat.label for aestat in aestats.values()]
+            naestats = len(aestat_labels)
             ntrim_variables = len(self.labels)
+            naesurfs = len(aesurf_names)
+            ntrim_aesurfs = 0
             for label in self.labels:
-                assert label in aestat_labels, 'label=%r aestats=%s aestat_labels=%s' % (label, self.aestats, aestat_labels)
-            assert ntrim_variables == nsuport_dofs, 'ntrim_variables=%s nsuport_dofs=%s' % (ntrim_variables, nsuport_dofs)
+                assert label in aestat_labels + aesurf_names, 'label=%r aestats=%s aestat_labels=%s aesurf_names=%s' % (label, self.aestats, aestat_labels, aesurf_names)
+                if label in aesurf_names:
+                    #print('AESTAT/AESURF label = %r' % label)
+                    ntrim_aesurfs += 1
+
+            # TODO: this doesn't work for multiple subcases
+            #ntotal_suport_dofs = nsuport_dofs, nsuport1_dofs
+            #ndelta = ntrim_variables - nsuport_dofs - nsuport1_dofs - naesurfs
+            #if ndelta != 0:
+                #msg = 'ntrim_variables - nsuport_dofs - nsuport1_dofs - naesurfs = ndelta = %s; ndelta != 0\n' % ndelta
+                #msg += 'ntrim_variables=%s nsuport_dofs=%s nsuport1_dofs=%s naesurfs=%s' % (
+                    #ntrim_variables, nsuport_dofs, nsuport1_dofs, naesurfs)
+                #raise RuntimeError(msg)
+
+            ndelta = (naestats + naesurfs) - (ntrim_variables + nsuport_dofs + nsuport1_dofs) #+ ntrim_aesurfs
+            if ndelta != 0:
+                msg = '(naestats + naesurfs) - ntrim_variables - nsuport_dofs - nsuport1_dofs - ntrim_aesurfs = ndelta = %s; ndelta != 0\n' % ndelta
+                msg += 'naestats=%s naesurfs=%s ntrim_variables=%s nsuport_dofs=%s nsuport1_dofs=%s ntrim_aesurfs=%s' % (
+                    naestats, naesurfs, ntrim_variables, nsuport_dofs, nsuport1_dofs, ntrim_aesurfs)
+                raise RuntimeError(msg)
 
     def cross_reference(self, model):
-        self.suport = model.suport
-        self.suport1 = model.suport1
-        self.aestats = model.aestats
-        self.aelinks = model.aelinks
+        pass
+        #self.suport = model.suport
+        #self.suport1 = model.suport1
+        #self.aestats = model.aestats
+        #self.aelinks = model.aelinks
+        #self.aesurfs = model.aesurfs
 
     def safe_cross_reference(self, model):
         self.cross_reference(model)

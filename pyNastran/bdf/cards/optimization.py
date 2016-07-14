@@ -2540,6 +2540,7 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
         'PROD', 'PTUBE',
         'PBAR', 'PBARL',
         'PBEAM', 'PBEAML',
+        'PSHEAR',
         'PSHELL', 'PCOMP', 'PCOMPG',
         'PBUSH', 'PBUSH1D',
         'PGAP', 'PVISC',
