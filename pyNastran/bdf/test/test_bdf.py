@@ -809,7 +809,7 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
         if 'SUPORT1' in subcase:
             suport_id = subcase.get_parameter('SUPORT1')[0]
             suport1 = fem2.suport1[suport_id]
-        trim._verify(fem2.suport, suport1, fem2.aestats, fem2.aelinks, fem2.aesurfs, xref=True)
+        trim._verify(fem2.suport, suport1, fem2.aestats, fem2.aeparams, fem2.aelinks, fem2.aesurfs, xref=True)
 
 
     if 'DIVERG' in subcase:

@@ -76,11 +76,11 @@ from pyNastran.bdf.cards.constraints import (SPC, SPCADD, SPCAX, SPC1,
 from pyNastran.bdf.cards.coordinate_systems import (CORD1R, CORD1C, CORD1S,
                                                     CORD2R, CORD2C, CORD2S, CORD3G,
                                                     GMCORD)
-from pyNastran.bdf.cards.dmig import DMIG, DMI, DMIJ, DMIK, DMIJI
+from pyNastran.bdf.cards.dmig import DMIG, DMI, DMIJ, DMIK, DMIJI, DMIG_UACCEL
 from pyNastran.bdf.cards.deqatn import DEQATN
 from pyNastran.bdf.cards.dynamic import (DELAY, DPHASE, FREQ, FREQ1, FREQ2, FREQ4, TSTEP,
                                          TSTEPNL, NLPARM, NLPCI, TF)
-from pyNastran.bdf.cards.loads.loads import LSEQ, SLOAD, DAREA, RANDPS, RFORCE, SPCD, LOADCYN
+from pyNastran.bdf.cards.loads.loads import LSEQ, SLOAD, DAREA, RANDPS, RFORCE, RFORCE1, SPCD, LOADCYN
 from pyNastran.bdf.cards.loads.dloads import ACSRCE, DLOAD, TLOAD1, TLOAD2, RLOAD1, RLOAD2
 from pyNastran.bdf.cards.loads.static_loads import (LOAD, GRAV, ACCEL, ACCEL1, FORCE,
                                                     FORCE1, FORCE2, MOMENT, MOMENT1, MOMENT2,
@@ -405,7 +405,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'MOMENT', 'MOMENT1', 'MOMENT2',
             'GRAV', 'ACCEL', 'ACCEL1',
             'PLOAD', 'PLOAD1', 'PLOAD2', 'PLOAD4',
-            'PLOADX1', 'RFORCE',
+            'PLOADX1', 'RFORCE', 'RFORCE1',
             'GMLOAD', 'SPCD',
             #thermal
             'QVOL',
@@ -421,9 +421,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'AEFACT',   ## aefacts
             'AELINK',   ## aelinks
             'AELIST',   ## aelists
-            'AEPARAM',   ## aeparams
+            'AEPARM',   ## aeparams
             'AESTAT',   ## aestats
-            'AESURF',  ## aesurfs
+            'AESURF', #'AESURFS',  ## aesurfs
             'CAERO1', 'CAERO2', 'CAERO3', 'CAERO4',  ## caeros
             # 'CAERO5',
             'PAERO1', 'PAERO2', 'PAERO3',  ## paeros
@@ -1789,6 +1789,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'PLOAD4' : (PLOAD4, self.add_load),
             'PLOADX1' : (PLOADX1, self.add_load),
             'RFORCE' : (RFORCE, self.add_load),
+            'RFORCE1' : (RFORCE1, self.add_load),
             'SLOAD' : (SLOAD, self.add_load),
             'RANDPS' : (RANDPS, self.add_load),
             'GMLOAD' : (GMLOAD, self.add_load),
@@ -2053,16 +2054,26 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
     def _prepare_dmig(self, card, card_obj, comment=''):
         """adds a DMIG"""
-        # not done...
+        name = string(card_obj, 1, 'name')
         field2 = integer_or_string(card_obj, 2, 'flag')
-        if field2 == 0:
-            card = DMIG(card_obj, comment=comment)
-            self.add_DMIG(card)
-        # elif field2 == 'UACCEL':  # special DMIG card
-            # self.reject_cards(card)
+        #print('name=%r field2=%r' % (name, field2))
+
+        if name == 'UACCEL':  # special DMIG card
+            print(card)
+            print(card_obj)
+            if field2 == 0:
+                print('init')
+                card = DMIG_UACCEL.add_card(card_obj, comment=comment)
+                self.add_DMIG(card)
+            else:
+                self._dmig_temp[name].append((card_obj, comment))
         else:
-            name = string(card_obj, 1, 'name')
-            self._dmig_temp[name].append((card_obj, comment))
+            field2 = integer_or_string(card_obj, 2, 'flag')
+            if field2 == 0:
+                card = DMIG(card_obj, comment=comment)
+                self.add_DMIG(card)
+            else:
+                self._dmig_temp[name].append((card_obj, comment))
 
 
     def _prepare_dmix(self, class_obj, add_method, card_obj, comment=''):
@@ -2420,7 +2431,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                 #raise
                 # WARNING: Don't catch RuntimeErrors or a massive memory leak can occur
                 #tpl/cc451.bdf
-                #raise
+                raise
                 # NameErrors should be caught
                 self._iparse_errors += 1
                 self.log.error(card_obj)

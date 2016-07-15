@@ -699,6 +699,93 @@ class RFORCE(Load):
         return self.comment + print_card_16(card)
 
 
+class RFORCE1(Load):
+    type = 'RFORCE1'
+
+    def __init__(self, sid, nid, scale, r1, r2, r3, racc,
+                 mb, group_id, cid=0, method=2, comment=''):
+        if comment:
+            self._comment = comment
+        self.sid = sid
+        self.nid = nid
+        self.cid = cid
+        self.scale = scale
+        self.r1 = r1
+        self.r2 = r2
+        self.r3 = r3
+        self.method = method
+        self.racc = racc
+        self.mb = mb
+        self.group_id = group_id
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        sid = integer(card, 1, 'sid')
+        nid = integer_or_blank(card, 2, 'nid', 0)
+        cid = integer_or_blank(card, 3, 'cid', 0)
+        scale = double_or_blank(card, 4, 'scale', 1.)
+        r1 = double_or_blank(card, 5, 'r1', 0.)
+        r2 = double_or_blank(card, 6, 'r2', 0.)
+        r3 = double_or_blank(card, 7, 'r3', 0.)
+        method = integer_or_blank(card, 8, 'method', 1)
+        racc = double_or_blank(card, 9, 'racc', 0.)
+        mb = integer_or_blank(card, 10, 'mb', 0)
+        group_id = integer_or_blank(card, 11, 'group_id', 0)
+        assert len(card) <= 12, 'len(RFORCE card) = %i\ncard=%s' % (len(card), card)
+        return RFORCE1(sid, nid, scale, r1, r2, r3, racc, mb,
+                       group_id, cid=cid, method=method, comment=comment)
+
+    def get_loads(self):
+        return [self]
+
+    def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ' which is required by RFORCE1 sid=%s' % self.sid
+        if self.nid > 0:
+            self.nid = model.Node(self.nid, msg=msg)
+            self.nid_ref = self.nid
+        self.cid = model.Coord(self.cid, msg=msg)
+        self.cid_ref = self.cid
+
+    def uncross_reference(self):
+        self.nid = self.Nid()
+        self.cid = self.Cid()
+        if self.nid != 0:
+            del self.nid_ref
+        del self.cid_ref
+
+    def Nid(self):
+        if isinstance(self.nid, integer_types):
+            return self.nid
+        return self.nid_ref.nid
+
+    def Cid(self):
+        if isinstance(self.cid, integer_types):
+            return self.cid
+        return self.cid_ref.cid
+
+    def raw_fields(self):
+        list_fields = ['RFORCE1', self.sid, self.Nid(), self.Cid(), self.scale,
+                       self.r1, self.r2, self.r3, self.method, self.racc,
+                       self.mb, self.group_id]
+        return list_fields
+
+    def write_card(self, size=8, is_double=False):
+        card = self.repr_fields()
+        if size == 8:
+            return self.comment + print_card_8(card)
+        if is_double:
+            return self.comment + print_card_double(card)
+        return self.comment + print_card_16(card)
+
+
 class RandomLoad(BaseCard):
     def __init__(self, card, data):
         pass

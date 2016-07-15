@@ -2292,7 +2292,7 @@ class NastranIO(object):
                         nid_to_pid_map[nid].append(pid)
 
                 if node_ids[0] is None and  node_ids[0] is None: # CELAS2
-                    print('removing CELASx eid=%i -> no node %i' % (eid, node_ids[0]))
+                    print('removing CELASx eid=%i -> no node %s' % (eid, node_ids[0]))
                     del self.eid_map[eid]
                     continue
                 if None in node_ids:  # used to be 0...

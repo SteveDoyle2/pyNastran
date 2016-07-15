@@ -447,7 +447,7 @@ class RLOAD2(TabularLoad):
         sid = integer(card, 1, 'sid')
         excite_id = integer(card, 2, 'excite_id')
         delay = integer_double_or_blank(card, 3, 'delay', 0)
-        dphase = integer_double_or_blank(card, 4, 'dphase')
+        dphase = integer_double_or_blank(card, 4, 'dphase', 0)
         tb = integer_or_blank(card, 5, 'tb', 0)
         tp = integer_or_blank(card, 6, 'tp', 0)
         Type = integer_string_or_blank(card, 7, 'Type', 'LOAD')
@@ -528,10 +528,10 @@ class RLOAD2(TabularLoad):
         if self.tp:
             self.tp = model.Table(self.tp, msg=msg)
             self.tp_ref = self.tp
-        if self.delay > 0:
+        if isinstance(self.delay, integer_types) and self.delay > 0:
             self.delay = model.DELAY(self.delay, msg=msg)
             self.delay_ref = self.delay
-        if self.dphase:
+        if isinstance(self.dphase, integer_types) and self.dphase > 0:
             self.dphase = model.DPHASE(self.dphase, msg=msg)
             self.dphase_ref = self.dphase
 
@@ -597,6 +597,7 @@ class RLOAD2(TabularLoad):
     def dphase_id(self):
         #if self.dphase in [0, 0.0]:
             #return 0
+        print(self.dphase)
         if isinstance(self.dphase, integer_types):
             return self.dphase
         return self.dphase_ref.sid

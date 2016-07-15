@@ -348,7 +348,7 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
                 self.binary_debug.write('    sort_bits[2] = %i -> is_real  =%s vs real/imag\n' % (self.sort_bits[2], self.is_real()))
                 sort_method, is_real, is_random = self._table_specs()
                 self.binary_debug.write('    sort_method = %s\n' % sort_method)
-            if hasattr(self, 'stress_bits'):
+
                 if self.is_complex():
                     self.binary_debug.write('\n  %-14s = %i -> is_mag_phase vs is_real_imag vs. is_random\n' % ('format_code', self.format_code))
                 else:
