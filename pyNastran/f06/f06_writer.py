@@ -1,15 +1,17 @@
 #pylint: disable=W0201,C0301,C0111
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import string_types, iteritems, PY2
+import sys
 import copy
 from datetime import date
 from collections import defaultdict
+from traceback import print_exc
+
+from six import string_types, iteritems, PY2
 
 import pyNastran
 from pyNastran.op2.op2_f06_common import OP2_F06_Common
 from pyNastran.op2.result_set import ResultSet
-
 
 def make_stamp(Title, today=None):
     if 'Title' is None:
@@ -398,6 +400,7 @@ class F06Writer(OP2_F06_Common):
 
     def _write_f06_subcase_based(self, f06, page_stamp, delete_objects=True,
                                  is_mag_phase=False, is_sort1=True, quiet=False):
+        is_failed = False
         header = ['     DEFAULT                                                                                                                        \n',
                   '\n', '']
 
@@ -738,8 +741,13 @@ class F06Writer(OP2_F06_Common):
                         else:
                             print(res_format % (class_name, isubcase, element_name))
 
-                        self.page_num = result.write_f06(f06, header, page_stamp, page_num=self.page_num,
-                                                         is_mag_phase=is_mag_phase, is_sort1=is_sort1)
+                        try:
+                            self.page_num = result.write_f06(f06, header, page_stamp, page_num=self.page_num,
+                                                             is_mag_phase=is_mag_phase, is_sort1=is_sort1)
+                        except:
+                            print_exc(file=sys.stdout)
+                            is_failed = True
+
                         assert isinstance(self.page_num, int), 'pageNum=%r' % str(self.page_num)
                     except:
                         #print("result name = %r" % result.name())
@@ -747,3 +755,5 @@ class F06Writer(OP2_F06_Common):
                     if delete_objects:
                         del result
                     self.page_num += 1
+        if is_failed:
+            raise
