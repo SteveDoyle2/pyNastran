@@ -547,17 +547,30 @@ class OEF(OP2Common):
             # 107-CHBDYE
             # 108-CHBDYG
             # 109-CHBDYP
-            if self.format_code == 1 and self.num_wide == 8:  # real
-                if self.element_type == 107:
-                    result_name = 'chbdye_thermal_load'
-                elif self.element_type == 108:
-                    result_name = 'chbdyg_thermal_load'
-                elif self.element_type == 109:
-                    result_name = 'chbdyp_thermal_load'
-                else:
-                    raise NotImplementedError('element_type=%s element_name=%s' % (
-                        self.element_type, self.element_name))
+            #if self.table_name in ['OEF1X']:
+            if self.element_type == 107:
+                result_name = 'chbdye_thermal_load'
+            elif self.element_type == 108:
+                result_name = 'chbdyg_thermal_load'
+            elif self.element_type == 109:
+                result_name = 'chbdyp_thermal_load'
+            else:
+                raise NotImplementedError('element_type=%s element_name=%s' % (
+                    self.element_type, self.element_name))
+            #elif self.table_name in ['HOEF1']:
+                #if self.element_type == 107:
+                    #result_name = 'chbdye_thermal_flux'
+                #elif self.element_type == 108:
+                    #result_name = 'chbdyg_thermal_flux'
+                #elif self.element_type == 109:
+                    #result_name = 'chbdyp_thermal_flux'
+                #else:
+                    #raise NotImplementedError('element_type=%s element_name=%s' % (
+                        #self.element_type, self.element_name))
+            #else:
+                #raise NotImplementedError(msg)
 
+            if self.format_code == 1 and self.num_wide == 8:  # real
                 #result_name = 'thermalLoad_CHBDY'
                 if self._results.is_not_saved(result_name):
                     return ndata
@@ -608,7 +621,7 @@ class OEF(OP2Common):
                             eid = eid_device // 10
 
                             if self.is_debug_file:
-                                self.binary_debug.write('  %s -> [%s, %s, %s, %s, %s, %s, %s]'
+                                self.binary_debug.write('  %s -> [%s, %s, %s, %s, %s, %s, %s]\n'
                                                         % (eid, eid_device, etype, fapplied, free_conv, force_conv, frad, ftotal))
                             obj.add(dt, eid, etype, fapplied, free_conv, force_conv, frad, ftotal)
             else:

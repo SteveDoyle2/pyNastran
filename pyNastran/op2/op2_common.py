@@ -1712,6 +1712,8 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
                     msg += "There's probably an extra check for read_mode=1...%s" % result_name
                     self.log.error(msg)
                     raise
+                assert self.obj.table_name == self.table_name, 'obj.table_name=%s table_name=%s' % (self.obj.table_name, self.table_name)
+
                 #obj.update_data_code(self.data_code)
                 self.obj.build()
 
