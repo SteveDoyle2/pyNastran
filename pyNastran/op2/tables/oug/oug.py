@@ -41,9 +41,9 @@ class OUG(OP2Common):
         OP2Common.__init__(self)
 
     def update_mode_cycle(self, name):
-        print('name = %r' % name)
         value = getattr(self, name)
         if value == 0.0:
+            #print('table_name=%r mode=%s eigr=%s' % (self.table_name, self.mode, self.eigr))
             value = np.sqrt(np.abs(self.eigr)) / (2. * np.pi)
             setattr(self, name, value)
             self.data_code[name] = value
