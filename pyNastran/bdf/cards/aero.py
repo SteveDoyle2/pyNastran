@@ -362,7 +362,9 @@ class AEPARM(BaseCard):
     def add_card(cls, card, comment=''):
         id = integer(card, 1, 'id')
         label = string(card, 2, 'lable')
-        units = string(card, 3, 'units')
+        units = card.field(3)
+        units = '' if units is None else units
+
         assert len(card) <= 4, 'len(AEPARM card) = %i\ncard=%s' % (len(card), card)
         return AEPARM(id, label, units, comment=comment)
 
@@ -373,6 +375,9 @@ class AEPARM(BaseCard):
         units = data[2]
         assert len(data) == 3, 'data = %s' % data
         return AEPARM(id, label, units, comment=comment)
+
+    def cross_reference(self, model):
+        pass
 
     def uncross_reference(self):
         pass
@@ -686,31 +691,31 @@ class AESURFS(BaseCard):  # not integrated
     """
     type = 'AESURFS'
 
-    def __init__(self, id, label, list1, list2, comment=''):
+    def __init__(self, aesid, label, list1, list2, comment=''):
         if comment:
             self._comment = comment
-        self.id = id
+        self.aesid = aesid
         self.label = label
         self.list1 = list1
         self.list2 = list2
 
     @classmethod
     def add_card(cls, card, comment=''):
-        id = integer(card, 1, 'ID')
+        aesid = integer(card, 1, 'ID')
         label = string(card, 2, 'label')
         list1 = integer(card, 4, 'list1')
         list2 = integer(card, 6, 'list2')
         assert len(card) <= 7, 'len(AESURFS card) = %i\ncard=%s' % (len(card), card)
-        return AESURFS(id, label, list1, list2, comment=comment)
+        return AESURFS(aesid, label, list1, list2, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
-        id = data[0]
+        aesid = data[0]
         label = data[1]
         list1 = data[2]
         list2 = data[3]
         assert len(data) == 4, 'data = %s' % data
-        return AESURFS(id, label, list1, list2, comment=comment)
+        return AESURFS(aesid, label, list1, list2, comment=comment)
 
     def uncross_reference(self):
         pass
@@ -724,7 +729,7 @@ class AESURFS(BaseCard):  # not integrated
         fields : List[int/float/str]
             the fields that define the card
         """
-        list_fields = ['AESURFS', self.id, self.label, None, self.list1, None,
+        list_fields = ['AESURFS', self.aesid, self.label, None, self.list1, None,
                        self.list2]
         return list_fields
 
@@ -2621,7 +2626,6 @@ class DIVERG(BaseCard):
         list of Mach numbers
     """
     type = 'DIVERG'
-
     def __init__(self, sid, nroots, machs, comment=''):
         if comment:
             self._comment = comment
@@ -2648,7 +2652,7 @@ class DIVERG(BaseCard):
         pass
 
     def raw_fields(self):
-        list_fields = ['DIVERG', self.nroots] + list(self.machs)
+        list_fields = ['DIVERG', self.sid, self.nroots] + list(self.machs)
         return list_fields
 
     def write_card(self, size=8, is_double=False):
@@ -4441,7 +4445,7 @@ class TRIM(BaseCard):
         assert self.q > 0.0, 'q=%s' % self.q
         assert len(set(self.labels)) == len(self.labels), 'not all labels are unique; labels=%s' % str(self.labels)
 
-    def _verify(self, suport, suport1, aestats, aelinks, aesurf, xref=True):
+    def _verify(self, suport, suport1, aestats, aeparms, aelinks, aesurf, xref=True):
         if xref:
             nsuport_dofs = 0
             nsuport1_dofs = 0
@@ -4472,30 +4476,37 @@ class TRIM(BaseCard):
 
             aesurf_names = [aesurfi.label for aesurfi in aesurf.values()]
             aestat_labels = [aestat.label for aestat in aestats.values()]
+            aeparm_labels = [aeparm.label for aeparm in aeparms.values()]
             naestats = len(aestat_labels)
-            ntrim_variables = len(self.labels)
+            ntrim = len(self.labels)
             naesurfs = len(aesurf_names)
+            naeparms = len(aeparm_labels)
             ntrim_aesurfs = 0
+            labels = aestat_labels + aesurf_names + aeparm_labels
             for label in self.labels:
-                assert label in aestat_labels + aesurf_names, 'label=%r aestats=%s aestat_labels=%s aesurf_names=%s' % (label, self.aestats, aestat_labels, aesurf_names)
+                if label not in labels:
+                    msg = 'label=%r\n aestat_labels=%s\n aeparm_labels=%s\n aesurf_names=%s' % (
+                        label, aestat_labels, aeparm_labels, aesurf_names)
+                    raise RuntimeError(msg)
+
                 if label in aesurf_names:
                     #print('AESTAT/AESURF label = %r' % label)
                     ntrim_aesurfs += 1
 
             # TODO: this doesn't work for multiple subcases
             #ntotal_suport_dofs = nsuport_dofs, nsuport1_dofs
-            #ndelta = ntrim_variables - nsuport_dofs - nsuport1_dofs - naesurfs
+            #ndelta = ntrim - nsuport_dofs - nsuport1_dofs - naesurfs
             #if ndelta != 0:
-                #msg = 'ntrim_variables - nsuport_dofs - nsuport1_dofs - naesurfs = ndelta = %s; ndelta != 0\n' % ndelta
-                #msg += 'ntrim_variables=%s nsuport_dofs=%s nsuport1_dofs=%s naesurfs=%s' % (
-                    #ntrim_variables, nsuport_dofs, nsuport1_dofs, naesurfs)
+                #msg = 'ntrim - nsuport_dofs - nsuport1_dofs - naesurfs = ndelta = %s; ndelta != 0\n' % ndelta
+                #msg += 'ntrim=%s nsuport_dofs=%s nsuport1_dofs=%s naesurfs=%s' % (
+                    #ntrim, nsuport_dofs, nsuport1_dofs, naesurfs)
                 #raise RuntimeError(msg)
 
-            ndelta = (naestats + naesurfs) - (ntrim_variables + nsuport_dofs + nsuport1_dofs) #+ ntrim_aesurfs
+            ndelta = (naestats + naesurfs + naeparms) - (ntrim + nsuport_dofs + nsuport1_dofs) #+ ntrim_aesurfs
             if ndelta != 0:
-                msg = '(naestats + naesurfs) - ntrim_variables - nsuport_dofs - nsuport1_dofs - ntrim_aesurfs = ndelta = %s; ndelta != 0\n' % ndelta
-                msg += 'naestats=%s naesurfs=%s ntrim_variables=%s nsuport_dofs=%s nsuport1_dofs=%s ntrim_aesurfs=%s' % (
-                    naestats, naesurfs, ntrim_variables, nsuport_dofs, nsuport1_dofs, ntrim_aesurfs)
+                msg = '(naestats + naesurfs) - (ntrim + ntrim_aesurf + nsuport_dofs + nsuport1_dofs) = ndelta = %s; ndelta != 0\n' % ndelta
+                msg += 'naestats=%s naesurfs=%s naeparms=%s ntrim=%s nsuport_dofs=%s nsuport1_dofs=%s ntrim_aesurfs=%s' % (
+                    naestats, naesurfs, naeparms, ntrim, nsuport_dofs, nsuport1_dofs, ntrim_aesurfs)
                 raise RuntimeError(msg)
 
     def cross_reference(self, model):

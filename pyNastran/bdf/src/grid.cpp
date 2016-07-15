@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <sstream>
+#include <iomanip>
 using namespace std;
 
 #include "grid.h"
@@ -9,17 +10,17 @@ using namespace std;
 //#define PI 3.14159
 
 
-string GRID::type="GRID";
+//string GRID::type="GRID";
 
 void GRID::write() {
-    cout << "type  =" << type << endl;
-    cout << "  ID  =" << _id << endl;
-    cout << "  x1  =" << _x1 << endl;
-    cout << "  x2  =" << _x2 << endl;
-    cout << "  x3  =" << _x3 << endl;
-    cout << "  cp  =" << _cp << endl;
-    cout << "  cd  =" << _cd << endl;
-    cout << "  seid=" << _seid << endl;
+    cout << "type  = GRID\n";
+    cout << "  nid =" << nid << endl;
+    cout << "  X   =" << x << endl;
+    cout << "  Y   =" << y << endl;
+    cout << "  Z   =" << z << endl;
+    cout << "  cp  =" << cp << endl;
+    cout << "  cd  =" << cd << endl;
+    cout << "  seid=" << seid << endl;
 }
 
 //int GRID::getCd(void) {
@@ -35,14 +36,14 @@ void GRID::write() {
 //  _cd = 0;
 //}
 
-GRID::GRID(int id, float x1, float x2, float x3, int cp, int seid, int cd) {
-    _id = id;
-    _x1 = x1;
-    _x2 = x2;
-    _x3 = x3;
-    _cp = cp;
-    _seid = seid;
-    _cd = cd;
+GRID::GRID(int Nid, float X, float Y, float Z, int Cp, int Cd, int Seid) {
+    nid = Nid;
+    cp = Cp;
+    x = X;
+    y = Y;
+    z = Z;
+    cd = Cd;
+    seid = Seid;
 
     //_id = integer(id);
     //_x1 = float_or_blank(x1, 0.0);
@@ -52,6 +53,14 @@ GRID::GRID(int id, float x1, float x2, float x3, int cp, int seid, int cd) {
     //_seid = integer_or_blank(seid, 0);
     //_cd = integer_or_blank(cd, 0);
 }
+
+//string GRID::print_card_8(){
+//	stringstream ss = "GRID    " << setw(8) << nid  << cp
+//		<< x << y << z << cd
+//		<< seid;
+//	return ss.str();
+//}
+
 
 //Coord::GRID getCpCoord() {
 //    return model.coord[cp];
@@ -98,7 +107,7 @@ int main1()
 };
 */
 
-int main()
+int gridmain()
 {
     cout << "Hello world!\n";
     //cout << "1 -> " << integer_or_blank(5) << endl;

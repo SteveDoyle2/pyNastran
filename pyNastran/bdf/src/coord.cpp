@@ -1,6 +1,5 @@
-#ifndef _COORD_
-
-#define _COORD_
+//#ifndef _COORD_
+//#define _COORD_
 
 // g++ coord.cpp -o run
 
@@ -12,7 +11,7 @@ using namespace std;
 //#include <coord>
 //#include <bdf>
 #include "coord.h"
-#include "bdf.h"
+//#include "bdf.h"
 
 // constants
 //#define PI 3.14159
@@ -25,12 +24,12 @@ array normalize(array v) {
 */
 
 //------------------------------------------------------------------------
-Coord::Coord(int CID, int RID) {
-    cid = CID;
-    rid = RID;
+//Coord::Coord(int CID, int RID) {
+//    cid = CID;
+//    rid = RID;
     //cid = integer(CID);
     //rid = integer_or_blank(RID);
-}
+//}
 
 /*
 void Coord::setup() {
@@ -52,12 +51,6 @@ Coord::transform_to_local(array p, Matrix matrix) {
 //}
 
 //------------------------------------------------------------------------
-class RectangularCoord {
-    //public:
-        //RectangularCoord(int, int);
-        //XYZtoCoord(array);
-        //coordToXYZ(array);
-};
 
 /*
 array RectangularCoord::XYZtoCoord(array p) {
@@ -68,12 +61,6 @@ array RectangularCoord::coordToXYZ(array p) {
 */
 
 //------------------------------------------------------------------------
-class CylindricalCoord {
-    //public:
-        //CylindricalCoord(int, int);
-        //XYZtoCoord(array);
-        //coordToXYZ(array);
-};
 
 /*
 array CylindricalCoord::XYZtoCoord(array p) {
@@ -93,12 +80,6 @@ array CylindricalCoord::coordToXYZ(array p) {
 */
 
 //------------------------------------------------------------------------
-class SphericalCoord {
-    public:
-        //SphericalCoord(int, int);
-        //XYZtoCoord(array);
-        //coordToXYZ(array);
-};
 
 /*
 array SphericalCoord::XYZtoCoord(array p) {
@@ -125,36 +106,13 @@ array SphericalCoord::coordToXYZ(array p) {
 */
 
 //------------------------------------------------------------------------
-class COORD1R:  public Coord {
-    private:
-        //int cid;
-        //int rid;
-        float g1;
-        float g2;
-        float g3;
 
-    public:
-        static string type;
-        //COORD();
-        COORD1R(int cid, int rid,
-                int G1, int G2, int G3);
-        int getG1(void) {return g1;}
-        int getG2(void) {return g2;}
-        int getG3(void) {return g3;}
+string CORD1R::type="CORD1R";
 
-        Coord getLocation1(BDF model, int cid=0);
-        Coord getLocation2(BDF model, int cid=0);
-        Coord getLocation3(BDF model, int cid=0);
-        void write(void);
-        //~COORD1R();
-
-        //Coord getRidCoord();
-};
-
-string COORD1R::type="COORD1R";
-
-COORD1R::COORD1R(int CID, int RID,
-                 int G1,  int G2, int G3) : Coord(CID, RID) {
+CORD1R::CORD1R(int CID, int RID,
+               int G1, int G2, int G3) {
+	cid = CID;
+	rid = RID;
     g1 = G1;
     g2 = G2;
     g3 = G3;
@@ -171,13 +129,13 @@ Coord COORD1R::getLocation3(BDF model, int cid) {
     return model.coords[g3].Position(cid); }
 */
 
-void COORD1R::write() {
-    cout << "type  =" << type << endl;
-    cout << "  cid =" << cid << endl;
-    cout << "  rid =" << rid << endl;
-    cout << "  g1  =" << g1  << endl;
-    cout << "  g2  =" << g2  << endl;
-    cout << "  g3  =" << g3  << endl;
+void CORD1R::write() {
+    cout << "type  = " << type << endl;
+    cout << "  cid = " << cid << endl;
+    cout << "  rid = " << rid << endl;
+    cout << "  g1  = " << g1  << endl;
+    cout << "  g2  = " << g2  << endl;
+    cout << "  g3  = " << g3  << endl;
 }
 
 //COORD1R::~COORD1R () {
@@ -190,63 +148,37 @@ void COORD1R::write() {
 
 //------------------------------------------------------------------------
 
-class COORD2R  : public Coord {
-    private:
-        float _a1;
-        float _a2;
-        float _a3;
 
-        float _b1;
-        float _b2;
-        float _b3;
+string CORD2R::type="CORD2R";
 
-        float _c1;
-        float _c2;
-        float _c3;
+void CORD2R::write() {
+    cout << "type  = " << type << endl;
+    cout << "  cid = " << cid << endl;
+    cout << "  rid = " << rid << endl;
 
-    public:
-        static string type;
-        COORD2R(int cid, int rid,
-                float a1, float a2, float a3,
-                float b1, float b2, float b3,
-                float c1, float c2, float c3);
-        int getA(void) {return _a1;}
-        int getB(void) {return _b1;}
-        int getC(void) {return _c1;}
+    cout << "  a1  = " << _a1 << endl;
+    cout << "  a2  = " << _a2 << endl;
+    cout << "  a3  = " << _a3 << endl;
 
-        //Coord getRidCoord();
-        void write(void);
-        //~COORD2R();
-};
+    cout << "  b1  = " << _b1 << endl;
+    cout << "  b2  = " << _b2 << endl;
+    cout << "  b3  = " << _b3 << endl;
 
-string COORD2R::type="COORD2R";
-
-void COORD2R::write() {
-    cout << "type  =" << type << endl;
-    cout << "  cid =" << cid << endl;
-    cout << "  rid =" << rid << endl;
-
-    cout << "  a1  =" << _a1 << endl;
-    cout << "  a2  =" << _a2 << endl;
-    cout << "  a3  =" << _a3 << endl;
-
-    cout << "  b1  =" << _b1 << endl;
-    cout << "  b2  =" << _b2 << endl;
-    cout << "  b3  =" << _b3 << endl;
-
-    cout << "  c1  =" << _c1 << endl;
-    cout << "  c2  =" << _c2 << endl;
-    cout << "  c3  =" << _c3 << endl;
+    cout << "  c1  = " << _c1 << endl;
+    cout << "  c2  = " << _c2 << endl;
+    cout << "  c3  = " << _c3 << endl;
 }
 
 //int COORD2R::getCd(void) {
 //  return _cd;
 //}
 
-COORD2R::COORD2R(int CID, int RID,
-                float a1, float a2, float a3,
-                float b1, float b2, float b3,
-                float c1, float c2, float c3) : Coord(CID, RID) {
+CORD2R::CORD2R(int CID, int RID,
+               float a1, float a2, float a3,
+               float b1, float b2, float b3,
+               float c1, float c2, float c3) {
+	cid = CID;
+	rid = RID;
     _a1 = a1;  _a2 = a2;  _a3 = a3;
     _b1 = b1;  _b2 = b2;  _b3 = b3;
     _c1 = c1;  _c2 = c2;  _c3 = c3;
@@ -260,7 +192,7 @@ COORD2R::COORD2R(int CID, int RID,
 //node.getCp()
 
 
-//COORD2R::~COORD2R () {
+//CORD2R::~CORD2R () {
 //  delete cid;
 //  delete rid;
 //  delete _a1;  delete a2;  delete a3;
@@ -268,38 +200,3 @@ COORD2R::COORD2R(int CID, int RID,
 //  delete _c1;  delete c2;  delete c3;
 //}
 
-int main()
-{
-    cout << "Hello world!\n";
-    string bdfname = "fem.bdf";
-    BDF bdf(bdfname);
-    bdf.read();
-    bdf.write();
-    cout << endl;
-
-    int cid, rid, g1, g2, g3;
-    cid = 10;
-    rid = 20;
-    g1 = 1;
-    g2 = 2;
-    g3 = 3;
-
-    COORD1R c1(cid, rid, g1, g2, g3);
-    COORD2R c2(cid, rid,
-               1.1, 2.2, 3.3,
-               4.4, 5.5, 6.6,
-               7.7, 8.8, 9.9);
-    //cout << "g.type="<< g.type << " g.cp=" << g.getCp() << endl;
-    //cout << "cd = " << g.getCd() << endl;
-    c1.write();
-    cout << endl;
-    c2.write();
-    //cout << "1 -> " << integer_or_blank(5) << endl;
-    //cout << "2 -> " << integer_or_blank(5, 6) << endl;
-    //cout << "3 -> " << integer_or_blank("5") << endl;
-    //string mystring = "asdf";
-    //cout << mystring << endl;
-    //g.write();
-    //return 4;
-    return 0;
-};

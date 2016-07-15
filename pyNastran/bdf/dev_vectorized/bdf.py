@@ -100,7 +100,7 @@ from pyNastran.bdf.dev_vectorized.cards.aero.trim import TRIM
 from pyNastran.bdf.dev_vectorized.cards.aero.aero import AERO
 from pyNastran.bdf.dev_vectorized.cards.aero.aeros import AEROS
 #from pyNastran.bdf.cards.aero import AEFACT, AELIST, AELINK, AEPARM, AESTAT, AESURF, AESURFS
-from pyNastran.bdf.cards.aero import AEFACT, AELIST, AELINK, AEPARM, AESTAT, AESURF
+from pyNastran.bdf.cards.aero import AEFACT, AELIST, AELINK, AEPARM, AESTAT, AESURF, AESURFS
 
 #===========================
 
@@ -372,11 +372,11 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             'MOMENT', 'MOMENT1', 'MOMENT2',
             'GRAV', 'ACCEL', 'ACCEL1',
             'PLOAD', 'PLOAD1', 'PLOAD2', 'PLOAD4',
-            'PLOADX1', 'RFORCE',
+            'PLOADX1', 'RFORCE', 'RFORCE1',
 
             # aero cards
             'AERO', 'AEROS', 'GUST', 'FLUTTER', 'FLFACT', 'MKAERO1', 'MKAERO2',
-            'AEFACT', 'AELINK', 'AELIST', 'AEPARAM', 'AESTAT', 'AESURF',
+            'AEFACT', 'AELINK', 'AELIST', 'AEPARAM', 'AESTAT', 'AESURF', 'AESURFS',
             'CAERO1', 'CAERO2', 'CAERO3', 'CAERO4', # 'CAERO5',
             'PAERO1', 'PAERO2',  'PAERO3', # 'PAERO4', 'PAERO5',
             'SPLINE1', 'SPLINE2', 'SPLINE4', 'SPLINE5',
@@ -865,7 +865,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         self.aelists = {}
         #: stores AEPARAM
         self.aeparams = {}
-        #: stores AESURF
+        #: stores AESURF, AESURFS
         self.aesurfs = {}
         #: stores AESTAT
         self.aestats = {}
@@ -1808,8 +1808,8 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             pass
         elif name == 'AESURF':
             pass
-        #elif name == 'AESURFS':
-            #pass
+        elif name == 'AESURFS':
+            pass
         elif name == 'AELIST':
             pass
         elif name == 'AERO':
@@ -2058,6 +2058,8 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         # other
         elif name == 'RFORCE':
             self.loads.rforce.add(card_obj, comment=comment)
+        elif name == 'RFORCE1':
+            self.loads.rforce1.add(card_obj, comment=comment)
         elif name == 'DAREA':
             self.loads.darea.add(card_obj, comment=comment)
 

@@ -138,8 +138,8 @@ class TestOP2(Tester):
 
     def test_op2_transfer_function_01(self):
         folder = os.path.abspath(os.path.join(test_path, '..', 'models'))
-        #bdf_filename = os.path.join(folder, 'transfer_function', 'Actuator_TF_Modeling.bdf')
-        op2_filename = os.path.join(folder, 'transfer_function', 'Actuator_TF_Modeling.op2')
+        #bdf_filename = os.path.join(folder, 'transfer_function', 'actuator_tf_modeling.bdf')
+        op2_filename = os.path.join(folder, 'transfer_function', 'actuator_tf_modeling.op2')
         op2 = read_op2_geom(op2_filename, debug=False)
 
         debug = False

@@ -15,7 +15,7 @@ from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
 
 from pyNastran.bdf.bdf_interface.assign_type import (
-    integer, integer_or_blank, double, string, interpret_value)
+    integer, integer_or_blank, double, string, components, interpret_value)
 
 
 class NastranMatrix(BaseCard):
@@ -651,6 +651,79 @@ def get_matrix(self, is_sparse=False, apply_symmetry=True):
     #print(M)
     return (M, rows_reversed, cols_reversed)
 
+
+class DMIG_UACCEL(BaseCard):
+    type = 'DMIG'
+    name = 'UACCEL'
+    def __init__(self, tin, ncol, comment=''):
+        if comment:
+            self._comment = comment
+        self.tin = tin
+        self.ncol = ncol
+        self.load_sequences = {}
+        print(str(self))
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        tin = integer(card, 4, 'tin')
+        ncol = integer_or_blank(card, 8, 'ncol')
+        return DMIG_UACCEL(tin, ncol)
+
+    def _add_column(self, card, comment=''):
+        load_seq = integer(card, 2, 'load_seq')
+
+        g1 = integer(card, 5, 'nid1')
+        c1 = components(card, 6, 'c1')
+        x1 = double(card, 7, 'x1')
+        assert len(card) <= 8, 'len=%s card=%s' % (len(card), card)
+
+        gcx = [g1, c1, x1]
+        self.load_sequences[load_seq] = [gcx]
+
+    @staticmethod
+    def finalize():
+        pass
+
+    def raw_fields(self):
+        list_fields = [
+            'DMI', 'UACCEL', 0, 9, self.tin, None, None, None, self.ncol
+        ]
+        for lseq, ncx in sorted(self.load_sequences.iteritems()):
+            list_fields += [lseq, None, None]
+            for ncxi in ncx:
+                list_fields += ncxi
+           #for (nid, comp, xi) in ncx:
+        print('list_fields= %s' % list_fields)
+        self.write_card()
+        return list_fields
+
+    def write_card(self, size=8, is_double=False):
+        return self.write_card_8()
+
+    def write_card_8(self):
+        return self._write_card(print_card_8)
+
+    def _write_card(self, func):
+        msg = '\n$' + '-' * 80
+        msg += '\n$ DMIG Matrix UACCEL\n'
+        list_fields = [
+            'DMIG', 'UACCEL', 0, 9, self.tin, None, None, None, self.ncol,
+        ]
+        msg += print_card_8(list_fields)
+
+        list_fields = ['DMIG', 'UACCEL']
+        for lseq, ncx in sorted(self.load_sequences.iteritems()):
+            list_fields += [lseq, None, None]
+            for ncxi in ncx:
+                list_fields +=  ncxi
+        #print('list_fields= %s' % list_fields)
+        msg += print_card_8(list_fields)
+        print(msg)
+        #if self.is_complex():
+            #msg += self._get_complex_fields(func)
+        #else:
+            #msg += self._get_real_fields(func)
+        return msg
 
 
 class DMIG(NastranMatrix):

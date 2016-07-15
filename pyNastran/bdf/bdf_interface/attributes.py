@@ -527,7 +527,7 @@ class BDFAttributes(object):
                 'MOMENT', 'MOMENT1', 'MOMENT2',
                 'GRAV', 'ACCEL', 'ACCEL1',
                 'PLOAD', 'PLOAD1', 'PLOAD2', 'PLOAD4',
-                'PLOADX1', 'RFORCE', 'SLOAD',
+                'PLOADX1', 'RFORCE', 'RFORCE1', 'SLOAD',
                 'GMLOAD', 'SPCD',
 
                 # thermal
@@ -559,6 +559,7 @@ class BDFAttributes(object):
             'csschds' : ['CSSCHD',],
             #'SPLINE3', 'SPLINE6', 'SPLINE7',
             'trims' : ['TRIM',],
+            'divergs' : ['DIVERG'],
 
             # coords
             'coords' : ['CORD1R', 'CORD1C', 'CORD1S',
