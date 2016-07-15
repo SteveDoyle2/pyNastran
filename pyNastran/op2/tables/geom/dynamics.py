@@ -1,5 +1,7 @@
 from __future__ import print_function
 from struct import unpack, Struct
+from six import b
+
 
 from pyNastran.bdf.cards.nodes import EPOINTs
 from pyNastran.bdf.cards.loads.loads import DAREA
@@ -150,7 +152,7 @@ class DYNAMICS(GeomCommon):
     def _read_epoint(self, data, n):
         """EPOINT(707,7,124) - Record 12"""
         npoints = (len(data) - n) // 4
-        fmt = b'%ii' % npoints
+        fmt = b(self._endian + '%ii' % npoints)
         nids = unpack(fmt, data[n:])
         if self.is_debug_file:
             self.binary_debug.write('EPOINT=%s\n' % str(nids))

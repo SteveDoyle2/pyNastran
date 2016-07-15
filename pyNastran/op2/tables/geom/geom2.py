@@ -1240,7 +1240,7 @@ class GEOM2(GeomCommon):
         (5551,49,105)    - the marker for Record 118
         """
         npoints = (len(data) - n) // 4
-        fmt = b'%ii' % npoints
+        fmt = b(self._endian + '%ii' % npoints)
         nids = unpack(fmt, data[n:])
         if self.is_debug_file:
             self.binary_debug.write('SPOINT=%s\n' % str(nids))
