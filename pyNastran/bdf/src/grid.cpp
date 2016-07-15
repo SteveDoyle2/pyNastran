@@ -36,6 +36,9 @@ void GRID::write() {
 //  _cd = 0;
 //}
 
+GRID::GRID() {}
+GRID::~GRID() {}
+
 GRID::GRID(int Nid, float X, float Y, float Z, int Cp, int Cd, int Seid) {
     nid = Nid;
     cp = Cp;

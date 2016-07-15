@@ -14,7 +14,8 @@ class GRID {
         int seid;
         int spc;
 
-
+		GRID();
+		~GRID();
     	GRID(int id, float x1, float x2, float x3, int cp=0, int cd=0, int seid=0);
     	//std::string print_card_8();
     	//void print_card_16();
