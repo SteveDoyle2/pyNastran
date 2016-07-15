@@ -12,6 +12,7 @@ This file defines the OUG Table, which contains:
  * Real Temperature
    - DISPLACEMENT = ALL
 """
+import numpy as np
 from pyNastran import is_release
 from pyNastran.op2.op2_common import OP2Common
 
@@ -38,6 +39,14 @@ class OUG(OP2Common):
 
     def __init__(self):
         OP2Common.__init__(self)
+
+    def update_mode_cycle(self, name):
+        print('name = %r' % name)
+        value = getattr(self, name)
+        if value == 0.0:
+            value = np.sqrt(np.abs(self.eigr)) / (2. * np.pi)
+            setattr(self, name, value)
+            self.data_code[name] = value
 
     def _read_oug1_3(self, data, ndata):
         #self._set_times_dtype()
@@ -81,6 +90,7 @@ class OUG(OP2Common):
             self.eigr = self.add_data_parameter(data, 'eigr', 'f', 6, False)
             # mode or cycle .. todo:: confused on the type - F1???
             self.mode_cycle = self.add_data_parameter(data, 'mode_cycle', 'i', 7, False)
+            self.update_mode_cycle('mode_cycle')
             self.data_names = self.apply_data_code_value('data_names', ['mode', 'eigr', 'mode_cycle'])
         #elif self.analysis_code == 3: # differential stiffness
             #self.lsdvmn = self.get_values(data, 'i', 5) ## load set number

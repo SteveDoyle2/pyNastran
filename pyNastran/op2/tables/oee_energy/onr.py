@@ -95,7 +95,9 @@ class ONR(OP2Common):
             self.setNullNonlinearFactor()
         elif self.analysis_code == 2:  # real eigenvalues
             self.mode = self.add_data_parameter(data, 'mode', 'i', 5)  ## mode number
-            self.data_names = self.apply_data_code_value('data_names', ['mode'])
+            self.cycle = 0.
+            self.update_mode_cycle('cycle')
+            self.data_names = self.apply_data_code_value('data_names', ['mode', 'cycle'])
             #print "mode(5)=%s eigr(6)=%s mode_cycle(7)=%s" %(self.mode,self.eigr,self.mode_cycle)
         #elif self.analysis_code == 3: # differential stiffness
             #self.lsdvmn = self.get_values(data,'i',5) ## load set number

@@ -4502,7 +4502,7 @@ class TRIM(BaseCard):
                     #ntrim, nsuport_dofs, nsuport1_dofs, naesurfs)
                 #raise RuntimeError(msg)
 
-            ndelta = (naestats + naesurfs + naeparms) - (ntrim + nsuport_dofs + nsuport1_dofs) #+ ntrim_aesurfs
+            ndelta = (naestats + naesurfs + naeparms) - (ntrim + nsuport_dofs + nsuport1_dofs) #+ ntrim_aesurfs  - naelinks
             if ndelta != 0:
                 msg = '(naestats + naesurfs) - (ntrim + ntrim_aesurf + nsuport_dofs + nsuport1_dofs) = ndelta = %s; ndelta != 0\n' % ndelta
                 msg += 'naestats=%s naesurfs=%s naeparms=%s ntrim=%s nsuport_dofs=%s nsuport1_dofs=%s ntrim_aesurfs=%s' % (
