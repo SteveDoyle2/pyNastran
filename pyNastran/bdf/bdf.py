@@ -2059,10 +2059,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         #print('name=%r field2=%r' % (name, field2))
 
         if name == 'UACCEL':  # special DMIG card
-            print(card)
-            print(card_obj)
             if field2 == 0:
-                print('init')
                 card = DMIG_UACCEL.add_card(card_obj, comment=comment)
                 self.add_DMIG(card)
             else:
@@ -2431,7 +2428,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                 #raise
                 # WARNING: Don't catch RuntimeErrors or a massive memory leak can occur
                 #tpl/cc451.bdf
-                raise
+                #raise
                 # NameErrors should be caught
                 self._iparse_errors += 1
                 self.log.error(card_obj)
