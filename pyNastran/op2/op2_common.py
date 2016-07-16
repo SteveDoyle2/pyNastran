@@ -151,7 +151,7 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
         if self.format_code == -1:
             if self.is_debug_file:
                 self.write_ndata(self.binary_debug, 100)
-            if self.table_name in ['OESNLXR', 'OESNLBR', 'OESNLXD', 'OESNL1X']:
+            if self.table_name in [b'OESNLXR', b'OESNLBR', b'OESNLXD', b'OESNL1X']:
                 assert self.format_code == -1, self.format_code
                 self.format_code = 1
             else:
@@ -1712,7 +1712,7 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
                     msg += "There's probably an extra check for read_mode=1...%s" % result_name
                     self.log.error(msg)
                     raise
-                assert self.obj.table_name == self.table_name, 'obj.table_name=%s table_name=%s' % (self.obj.table_name, self.table_name)
+                assert self.obj.table_name == self.table_name.decode('utf-8'), 'obj.table_name=%s table_name=%s' % (self.obj.table_name, self.table_name)
 
                 #obj.update_data_code(self.data_code)
                 self.obj.build()
