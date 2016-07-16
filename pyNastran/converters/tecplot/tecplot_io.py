@@ -114,14 +114,14 @@ class TecplotIO(object):
         is_solids = is_tets + is_hexas
         if is_shells:
             is_surface = True
-            self.self._create_tecplot_shells(is_quads, quads, is_tris, tris)
+            self._create_tecplot_shells(is_quads, quads, is_tris, tris)
 
         elif is_solids:
             if 0:
                 tris, quads = model.skin_elements()
                 is_tris = bool(len(tris))
                 is_quads = bool(len(quads))
-                self.self._create_tecplot_shells(is_quads, quads, is_tris, tris)
+                self._create_tecplot_shells(is_quads, quads, is_tris, tris)
             else:
                 if is_tets:
                     elements = tets

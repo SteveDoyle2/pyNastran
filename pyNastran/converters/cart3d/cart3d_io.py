@@ -32,6 +32,27 @@ class Cart3dGeometry(object):
                              'NormalX', 'NormalY', 'NormalZ', ]
         self.subcase_id = subcase_id
 
+        self.min_default = [
+            nodes.min(), elements.min(), regions.min(),
+            cnormals[:, 0].min(), cnormals[:, 1].min(), cnormals[:, 2].min()]
+        self.max_default = [
+            nodes.max(), elements.max(), regions.max(),
+            cnormals[:, 0].max(), cnormals[:, 1].max(), cnormals[:, 2].max()]
+
+        self.min_value = self.min_default
+        self.max_value = self.max_default
+
+    def get_header(self, i, name):
+        """
+        header : str
+            the sidebar word
+        """
+        return name
+
+    def get_min_max(self, i, name):
+        j = self.titles.index(name)
+        return self.min_value[j], self.max_value[j]
+
     def get_location(self, i, name):
         j = self.titles.index(name)
         if name == 'NodeID':
@@ -308,8 +329,10 @@ class Cart3dIO(object):
         self.iSubcaseNameMap = {1: ['Cart3d%s' % note, '']}
         cases = {}
         ID = 1
-        if 0:
+        if 1:
             form, cases, icase = self._fill_cart3d_case2(cases, ID, nodes, elements, regions, model)
+            mach, alpha, beta = self._create_box(cart3d_filename, ID, form, cases, icase, regions)
+            self._fill_cart3d_results(cases, form, icase, ID, loads, model, mach)
         else:
             form, cases, icase = self._fill_cart3d_case(cases, ID, nodes, elements, regions, model)
             mach, alpha, beta = self._create_box(cart3d_filename, ID, form, cases, icase, regions)
@@ -364,12 +387,34 @@ class Cart3dIO(object):
                     yvel[i] = yveli
                     zvel[i] = zveli
                     pressure[i] = pressi
-                cases[(ID, icase, 'Rho', 1, 'centroid', '%.3f')] = rho
-                cases[(ID, icase + 1, 'xVelocity', 1, 'centroid', '%.3f')] = xvel
-                cases[(ID, icase + 2, 'yVelocity', 1, 'centroid', '%.3f')] = yvel
-                cases[(ID, icase + 3, 'zVelocity', 1, 'centroid', '%.3f')] = zvel
-                cases[(ID, icase + 4, 'Mach', 1, 'centroid', '%.3f')] = sqrt(xvel ** 2 + yvel ** 2 + zvel ** 2)
-                cases[(ID, icase + 5, 'Pressure', 1, 'centroid', '%.3f')] = pressure
+
+                mach = sqrt(xvel ** 2 + yvel ** 2 + zvel ** 2)
+
+                rho_res = GuiResult(ID, header='Rho', title='Rho',
+                                    location='centroid', scalar=rho)
+                xvel_res = GuiResult(ID, header='xVelocity', title='xVelocity',
+                                     location='centroid', scalar=xvel)
+                yvel_res = GuiResult(ID, header='yVelocity', title='yVelocity',
+                                     location='centroid', scalar=yvel)
+                zvel_res = GuiResult(ID, header='zVelocity', title='zVelocity',
+                                     location='centroid', scalar=zvel)
+                mach_res = GuiResult(ID, header='Mach', title='Mach',
+                                     location='centroid', scalar=mach)
+                pressure_res = GuiResult(ID, header='Pressure', title='Pressure',
+                                         location='centroid', scalar=pressure)
+
+                cases[icase] = (rho_res, (ID, 'Rho'))
+                cases[icase + 1] = (xvel_res, (ID, 'xVelocity'))
+                cases[icase + 2] = (yvel_res, (ID, 'yVelocity'))
+                cases[icase + 3] = (zvel_res, (ID, 'zVelocity'))
+                cases[icase + 4] = (mach_res, (ID, 'Mach'))
+                cases[icase + 5] = (pressure_res, (ID, 'Pressure'))
+                #cases[(ID, icase, 'Rho', 1, 'centroid', '%.3f')] = rho
+                #cases[(ID, icase + 1, 'xVelocity', 1, 'centroid', '%.3f')] = xvel
+                #cases[(ID, icase + 2, 'yVelocity', 1, 'centroid', '%.3f')] = yvel
+                #cases[(ID, icase + 3, 'zVelocity', 1, 'centroid', '%.3f')] = zvel
+                #cases[(ID, icase + 4, 'Mach', 1, 'centroid', '%.3f')] = mach
+                #cases[(ID, icase + 5, 'Pressure', 1, 'centroid', '%.3f')] = pressure
                 form.append(('Boundary Conditions', None, bc_form))
 
 
@@ -527,7 +572,7 @@ class Cart3dIO(object):
         self.load_cart3d_geometry(cart3d_filename, dirname)
 
     def _fill_cart3d_case2(self, cases, ID, nodes, elements, regions, model):
-        print('_fill_cart3d_case2')
+        #print('_fill_cart3d_case2')
         nelements = elements.shape[0]
         nnodes = nodes.shape[0]
 

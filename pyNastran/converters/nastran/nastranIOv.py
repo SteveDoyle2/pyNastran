@@ -1145,7 +1145,11 @@ class NastranIO(object):
             # PBEAML specfic
             "L" : [],
         }  # for GROUP="MSCBML0"
-        allowed_types = ['BAR', 'BOX', 'BOX1', 'CHAN', 'CHAN1', 'CHAN2', 'CROSS', 'DBOX', 'H', 'HAT', 'HAT1', 'HEXA', 'I', 'I1', 'L', 'ROD', 'T', 'T1', 'T2', 'TUBE', 'TUBE2', 'Z', 'bar', 'beam']
+        allowed_types = [
+            'BAR', 'BOX', 'BOX1', 'CHAN', 'CHAN1', 'CHAN2', 'CROSS', 'DBOX',
+            'H', 'HAT', 'HAT1', 'HEXA', 'I', 'I1', 'L', 'ROD',
+            'T', 'T1', 'T2', 'TUBE', 'TUBE2', 'Z', 'bar', 'beam',
+        ]
 
         # bar_types['bar'] = [ [...], [...], [...] ]
         #bar_types = defaultdict(lambda : defaultdict(list))
@@ -1451,40 +1455,66 @@ class NastranIO(object):
                 is_type[i] = 1.
                 # print('is-type =', is_type.max())
                 bar_form[2].append(['is_%s' % bar_type, icase, []])
-                cases[(0, icase, 'is_%s' % bar_type, 1, 'centroid', '%i', '')] = is_type
+
+                msg = 'is_%s' % bar_type
+                type_res = GuiResult(0, header=msg, title=msg,
+                                     location='centroid', scalar=is_type)
+                cases[icase] = (type_res, (0, msg))
+                #cases[(0, icase, msg, 1, 'centroid', '%i', '')] = is_type
                 icase += 1
 
         if no_axial.max() == 1:
             bar_form[2].append(['No Axial', icase, []])
-            cases[(0, icase, 'No Axial', 1, 'centroid', '%i', '')] = no_axial
+            axial_res = GuiResult(0, header='No Axial', title='No Axial',
+                                 location='centroid', scalar=no_axial)
+            cases[icase] = (axial_res, (0, 'No Axial'))
+            #cases[(0, icase, 'No Axial', 1, 'centroid', '%i', '')] = no_axial
             icase += 1
         if no_torsion.max() == 1:
             bar_form[2].append(['No Torsion', icase, []])
-            cases[(0, icase, 'No Torsion', 1, 'centroid', '%i', '')] = no_torsion
+            torsion_res = GuiResult(0, header='No Torsion', title='No Torsion',
+                                    location='centroid', scalar=no_torsion)
+            cases[icase] = (torsion_res, (0, 'No Torsion'))
+            #cases[(0, icase, 'No Torsion', 1, 'centroid', '%i', '')] = no_torsion
             icase += 1
 
         if 1:
             if no_shear_y.max() == 1:
                 bar_form[2].append(['No Shear Y', icase, []])
-                cases[(0, icase, 'No Shear Y', 1, 'centroid', '%i', '')] = no_shear_y
+                shear_y_res = GuiResult(0, header='No Shear Y', title='No Shear Y',
+                                        location='centroid', scalar=no_shear_y)
+                cases[icase] = (shear_y_res, (0, 'No Shear Y'))
+                #cases[(0, icase, 'No Shear Y', 1, 'centroid', '%i', '')] = no_shear_y
                 icase += 1
             if no_shear_z.max() == 1:
                 bar_form[2].append(['No Shear Z', icase, []])
-                cases[(0, icase, 'No Shear Z', 1, 'centroid', '%i', '')] = no_shear_z
+                shear_z_res = GuiResult(0, header='No Shear Z', title='No Shear Z',
+                                        location='centroid', scalar=no_shear_y)
+                cases[icase] = (shear_z_res, (0, 'No Shear Z'))
+                #cases[(0, icase, 'No Shear Z', 1, 'centroid', '%i', '')] = no_shear_z
                 icase += 1
             if no_bending_y.max() == 1:
                 bar_form[2].append(['No Bending Y', icase, []])
-                cases[(0, icase, 'No Bending Y', 1, 'centroid', '%i', '')] = no_bending_y
+                bending_y_res = GuiResult(0, header='No Bending Z', title='No Bending Z',
+                                          location='centroid', scalar=no_bending_y)
+                cases[icase] = (bending_y_res, (0, 'No Bending Z'))
+                #cases[(0, icase, 'No Bending Y', 1, 'centroid', '%i', '')] = no_bending_y
                 icase += 1
             if no_bending_z.max() == 1:
                 bar_form[2].append(['No Bending Z', icase, []])
-                cases[(0, icase, 'No Bending Z', 1, 'centroid', '%i', '')] = no_bending_z
+                bending_z_res = GuiResult(0, header='No Bending Z', title='No Bending Z',
+                                          location='centroid', scalar=no_bending_z)
+                cases[icase] = (bending_z_res, (0, 'No Bending Z'))
+                #cases[(0, icase, 'No Bending Z', 1, 'centroid', '%i', '')] = no_bending_z
                 icase += 1
 
         if 0:
             if no_bending.max() == 1:
                 bar_form[2].append(['No Bending', icase, []])
-                cases[(0, icase, 'No Bending', 1, 'centroid', '%i', '')] = no_bending
+                bending_res = GuiResult(0, header='No Bending', title='No Bending',
+                                          location='centroid', scalar=no_bending)
+                cases[icase] = (bending_res, (0, 'No Bending'))
+                #cases[(0, icase, 'No Bending', 1, 'centroid', '%i', '')] = no_bending
                 icase += 1
 
             if no_bending_bad.max() == 1:

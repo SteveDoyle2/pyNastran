@@ -198,7 +198,7 @@ class PanairIO(object):
             nx_res = GuiResult(ID, 'normal_x', 'NormalX', 'centroid', normal[:, 0], data_format='%.3f', uname='NormalX')
             ny_res = GuiResult(ID, 'normal_y', 'NormalY', 'centroid', normal[:, 1], data_format='%.3f', uname='NormalY')
             nz_res = GuiResult(ID, 'normal_z', 'NormalZ', 'centroid', normal[:, 2], data_format='%.3f', uname='NormalZ')
-            cenx_res = GuiResult(ID, 'centroid_x', 'Centroidx', 'centroid', Xc, data_format=None, uname='CentroidX')
+            cenx_res = GuiResult(ID, 'centroid_x', 'CentroidX', 'centroid', Xc, data_format=None, uname='CentroidX')
             ceny_res = GuiResult(ID, 'centroid_y', 'CentroidY', 'centroid', Yc, data_format=None, uname='CentroidY')
             cenz_res = GuiResult(ID, 'centroid_z', 'CentroidZ', 'centroid', Zc, data_format=None, uname='CentroidZ')
 
@@ -215,17 +215,17 @@ class PanairIO(object):
             cases[icase + 9] = (cenz_res, (itime, 'CentroidZ'))
 
         # nodal
-        if 0:
-            cases[(ID, icase + 10, 'node_x', 1, 'node', '%.2f', '')] = nodes[:, 0]
-            cases[(ID, icase + 11, 'node_y', 1, 'node', '%.2f', '')] = nodes[:, 1]
-            cases[(ID, icase + 12, 'node_z', 1, 'node', '%.2f', '')] = nodes[:, 2]
-        else:
-            cenx_res = GuiResult(ID, 'node_x', 'NodeX', 'node', nodes[:, 0], data_format='%.2f', uname='node_x')
-            ceny_res = GuiResult(ID, 'node_y', 'NodeY', 'node', nodes[:, 1], data_format='%.2f', uname='node_y')
-            cenz_res = GuiResult(ID, 'node_z', 'NodeZ', 'node', nodes[:, 2], data_format='%.2f', uname='node_z')
-            cases[icase + 10] = (cenx_res, (itime, 'node_x'))
-            cases[icase + 11] = (ceny_res, (itime, 'node_y'))
-            cases[icase + 12] = (cenz_res, (itime, 'node_z'))
+        #if 0:
+            #cases[(ID, icase + 10, 'node_x', 1, 'node', '%.2f', '')] = nodes[:, 0]
+            #cases[(ID, icase + 11, 'node_y', 1, 'node', '%.2f', '')] = nodes[:, 1]
+            #cases[(ID, icase + 12, 'node_z', 1, 'node', '%.2f', '')] = nodes[:, 2]
+        #else:
+        cenx_res = GuiResult(ID, 'node_x', 'NodeX', 'node', nodes[:, 0], data_format='%.2f', uname='node_x')
+        ceny_res = GuiResult(ID, 'node_y', 'NodeY', 'node', nodes[:, 1], data_format='%.2f', uname='node_y')
+        cenz_res = GuiResult(ID, 'node_z', 'NodeZ', 'node', nodes[:, 2], data_format='%.2f', uname='node_z')
+        cases[icase + 10] = (cenx_res, (itime, 'node_x'))
+        cases[icase + 11] = (ceny_res, (itime, 'node_y'))
+        cases[icase + 12] = (cenz_res, (itime, 'node_z'))
 
         return form, cases
 
