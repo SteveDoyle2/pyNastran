@@ -331,7 +331,6 @@ class TestReadWrite(unittest.TestCase):
 
 
     def test_encoding_write(self):
-
         mesh = BDF(debug=False)
         mesh.add_card(['GRID', 100000, 0, 43.91715, -29., .8712984], 'GRID')
         mesh.write_bdf('out.bdf')

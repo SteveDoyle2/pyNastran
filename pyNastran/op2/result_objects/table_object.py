@@ -777,8 +777,19 @@ class ComplexTableArray(TableArray):  # displacement style table
                 eigi = self.eigis[itime]
                 eigr = 0. if eigr == 0 else eigr
                 eigi = 0. if eigi == 0 else eigi
-                words[0] = words[0] % (eigr, eigi)
-                words[1] = words[1] % (itime + 1)
+                if '%' in words[0]:
+                    try:
+                        words[0] = words[0] % (eigr, eigi)
+                    except TypeError:
+                        print('words =', words)
+                        raise
+
+                if '%' in words[0]:
+                    try:
+                        words[1] = words[1] % (itime + 1)
+                    except TypeError:
+                        print('words =', words)
+                        raise
 
             node = self.node_gridtype[:, 0]
             gridtype = self.node_gridtype[:, 1]

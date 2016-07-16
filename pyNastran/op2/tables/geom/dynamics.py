@@ -118,8 +118,11 @@ class DYNAMICS(GeomCommon):
             # int, 8s, 2f, 3i, i, 8s, 4i
             out = unpack('i8s ff 3i i 8s 4i', edata)
             sid, method, L1, L2, nep, ndp, ndn, dunno, norm, g, c, dunnoA, dunnoB = out
-
-            method = method.strip()
+            if self.is_debug_file:
+                self.binary_debug.write('EIGB=%s\n' % str(out))
+            #print('out = %s' % str(out))
+            method = method.strip().decode('latin1')
+            norm = norm.strip().decode('latin1')
             eigb = EIGB(sid, method, L1, L2, nep, ndp, ndn, norm, g, c)
             self.add_method(eigb)
             n += ntotal

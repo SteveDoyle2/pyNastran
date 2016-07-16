@@ -596,7 +596,7 @@ class GEOM2(GeomCommon):
              g1, g2, g3, g4, g5, g6, g7, g8) = out
             if self.is_debug_file:
                 self.binary_debug.write('  CHBDYG=%s\n' % str(out))
-            self.log.debug('  CHBDYG=%s' % str(out))
+            #self.log.debug('  CHBDYG=%s' % str(out))
             data_in = [eid, Type, iviewf, iviewb, radmidf, radmidb,
                        g1, g2, g3, g4, g5, g6, g7, g8]
             elem = CHBDYG.add_op2_data(data_in)
@@ -619,7 +619,7 @@ class GEOM2(GeomCommon):
              dislin, ce, e1, e2, e3) = out
             if self.is_debug_file:
                 self.binary_debug.write('  CHBDYP=%s\n' % str(out))
-            self.log.debug('  CHBDYP=%s' % str(out))
+            #self.log.debug('  CHBDYP=%s' % str(out))
             data_in = [eid, pid, Type, iviewf, iviewb, g1, g2, g0, radmidf, radmidb,
              dislin, ce, e1, e2, e3]
             elem = CHBDYP.add_op2_data(data_in)

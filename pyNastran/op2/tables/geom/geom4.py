@@ -214,7 +214,8 @@ class GEOM4(GeomCommon):
         for i in range(nentries):
             edata = data[n:n + 16]
             (sid, ID, c, dx) = unpack(b(self._endian + 'iiif'), edata)
-            self.log.debug('SPC sid=%s id=%s c=%s dx=%s' % (sid, ID, c, dx))
+            if self.is_debug_file:
+                self.log.debug('SPC sid=%s id=%s c=%s dx=%s' % (sid, ID, c, dx))
             constraint = SPC.add_op2_data([sid, ID, c, dx])
             self.add_constraint_SPC(constraint)
             n += 16

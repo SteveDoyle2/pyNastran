@@ -169,20 +169,21 @@ class EPT(GeomCommon):
 
             out = s.unpack(edata)
             (pid, mid, group, Type, value) = out
-            Type = Type.strip()
+            Type = Type.strip().decode('latin1')
+            group = group.strip().decode('latin1')
             data_in = [pid, mid, group, Type, value]
-            print("pid=%s mid=%s group=%r Type=%r value=%s" %(pid, mid, group, Type, value))
+            #print("pid=%s mid=%s group=%r Type=%r value=%s" %(pid, mid, group, Type, value))
             if pid > 100000000:
                 raise RuntimeError('bad parsing...')
-            expectedLength = valid_types[Type]
-            iFormat = b'%if' % expectedLength
+            expected_length = valid_types[Type]
+            iformat = b'%if' % expected_length
 
-            ndelta = expectedLength * 4
-            data_in += list(unpack(iFormat, data[n:n+ndelta]))
+            ndelta = expected_length * 4
+            data_in += list(unpack(iformat, data[n:n+ndelta]))
             # TODO why do i need the +4???
-            #min_len =  expectedLength * 4 + 4
+            #min_len =  expected_length * 4 + 4
             #if len(data)
-            #data = data[n + expectedLength * 4 + 4:]
+            #data = data[n + expected_length * 4 + 4:]
             n += ndelta
 
             #prin( "len(out) = ",len(out)))

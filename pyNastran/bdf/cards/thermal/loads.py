@@ -220,7 +220,7 @@ class QBDY2(ThermalLoad):  # not tested
     """
     type = 'QBDY2'
 
-    def __init__(self, sid, eid, qFlux, comment=''):
+    def __init__(self, sid, eid, qfluxs, comment=''):
         ThermalLoad.__init__(self)
         if comment:
             self._comment = comment
@@ -231,30 +231,30 @@ class QBDY2(ThermalLoad):  # not tested
         self.eid = eid
         #: Heat flux at the i-th grid point on the referenced CHBDYj
         #: element. (Real or blank)
-        self.qFlux = qFlux
+        self.qFlux = qfluxs
 
     @classmethod
     def add_card(cls, card, comment=''):
         sid = integer(card, 1, 'sid')
         eid = integer(card, 2, 'eid')
 
-        qFlux = []
+        qfluxs = []
         j = 1
         for i in range(3, len(card)):
             q = double_or_blank(card, i, 'qFlux%i' % j)
-            qFlux.append(q)
+            qfluxs.append(q)
             j += 1
 
-        assert len(qFlux) > 0
-        qFlux = wipe_empty_fields(qFlux)
-        return QBDY2(sid, eid, qFlux, comment=comment)
+        assert len(qfluxs) > 0, qfluxs
+        qfluxs = wipe_empty_fields(qfluxs)
+        return QBDY2(sid, eid, qfluxs, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
         sid = data[0]
         eid = data[1]
-        qFlux = data[2]
-        return QBDY2(sid, eid, qFlux, comment=comment)
+        qfluxs = [data[2]]
+        return QBDY2(sid, eid, qfluxs, comment=comment)
 
     def getLoads(self):
         self.deprecated('getLoads()', 'get_loads()', '0.8')

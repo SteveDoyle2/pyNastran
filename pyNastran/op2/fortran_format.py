@@ -499,7 +499,7 @@ class FortranFormat(object):
                 #n = record_len
                 #break
             else:
-                if self.table_name in ['R1TABRG']:
+                if self.table_name in [b'R1TABRG']:
                     data, ndata = self._read_record_ndata()
                 else:
                     data, ndata = self._skip_record_ndata()

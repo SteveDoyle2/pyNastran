@@ -947,7 +947,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         self._table4_count += 1
 
         if self.read_mode == 0:
-            return
+            return ndata
         #if self._table4_count == 0:
             #self._count += 1
         #self._table4_count += 1

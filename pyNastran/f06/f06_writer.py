@@ -744,7 +744,7 @@ class F06Writer(OP2_F06_Common):
                         try:
                             self.page_num = result.write_f06(f06, header, page_stamp, page_num=self.page_num,
                                                              is_mag_phase=is_mag_phase, is_sort1=is_sort1)
-                        except:
+                        except Exception as e:
                             print_exc(file=sys.stdout)
                             is_failed = True
 
@@ -756,4 +756,6 @@ class F06Writer(OP2_F06_Common):
                         del result
                     self.page_num += 1
         if is_failed:
-            raise
+            if PY2:
+                raise
+            raise RuntimeError('Python 3 cannot reraise Exceptions like this...see previous traceback')
