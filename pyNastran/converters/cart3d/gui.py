@@ -47,11 +47,12 @@ except:
 class MainWindow(GuiCommon2, Cart3dIO):
     def __init__(self, inputs):
         html_logging = True
-        GuiCommon2.__init__(self, html_logging, inputs)
+        fmt_order = ['cart3d']
+
+        GuiCommon2.__init__(self, fmt_order, html_logging, inputs)
         Cart3dIO.__init__(self)
         self.base_window_title = "pyCart3d v%s"  % pyNastran.__version__
 
-        fmt_order = ['cart3d']
         self.build_fmts(fmt_order, stop_on_failure=True)
         logo = os.path.join(icon_path, 'logo.png')
         self.set_logo(logo)

@@ -1750,45 +1750,6 @@ class NastranIO(object):
             j += 2
         self.alt_grids[name].SetPoints(points)
 
-    def set_quad_grid(self, name, nodes, elements, color, line_width=5, opacity=1.):
-        """
-        Makes a CQUAD4 grid
-        """
-        self.create_alternate_vtk_grid(name, color=color, line_width=line_width,
-                                       opacity=opacity, representation='wire')
-
-        nnodes = nodes.shape[0]
-        nquads = elements.shape[0]
-        #print(nodes)
-        if nnodes == 0:
-            return
-        if nquads == 0:
-            return
-
-        #print('adding quad_grid %s; nnodes=%s nquads=%s' % (name, nnodes, nquads))
-        points = vtk.vtkPoints()
-        points.SetNumberOfPoints(nnodes)
-        for nid, node in enumerate(nodes):
-            #print(nid, node)
-            points.InsertPoint(nid, *list(node))
-
-        #assert vtkQuad().GetCellType() == 9, elem.GetCellType()
-        self.alt_grids[name].Allocate(nquads, 1000)
-        for element in elements:
-            elem = vtkQuad()
-            point_ids = elem.GetPointIds()
-            point_ids.SetId(0, element[0])
-            point_ids.SetId(1, element[1])
-            point_ids.SetId(2, element[2])
-            point_ids.SetId(3, element[3])
-            self.alt_grids[name].InsertNextCell(9, elem.GetPointIds())
-        self.alt_grids[name].SetPoints(points)
-
-        self._add_alt_actors({name : self.alt_grids[name]})
-
-        #if name in self.geometry_actors:
-        self.geometry_actors[name].Modified()
-
     def _fill_suport(self, suport_id, dim_max, model):
         """creates SUPORT and SUPORT1 nodes"""
         #pink = (0.98, 0.4, 0.93)

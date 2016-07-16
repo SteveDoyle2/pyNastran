@@ -83,8 +83,8 @@ class Cart3dGeometry(object):
         j = self.titles.index(name)
         return self.result_types[j]
 
-    def get_data_fmt(self, i, name):
-        asdf
+    #def get_data_fmt(self, i, name):
+        #asdf
 
     def get_data_format(self, i, name):
         j = self.titles.index(name)
@@ -130,9 +130,6 @@ class Cart3dResult(object):
         self.data_formats = ['%.3g', '%.3g', '%.3g', '%.3g', '%.3g']
         self.titles = ['rho', 'rhoU' 'rhoV', 'rhoW', 'rhoE']
         self.labels = labels
-
-    def get_methods(self, i):
-        return ['node']
 
     def get_result(self, i, method):
         print('method = %r' % method)
