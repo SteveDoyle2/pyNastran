@@ -4,7 +4,8 @@ from six.moves import range
 
 class PanairWrite(object):
     def __init__(self):
-        pass
+        self.noff_body_points = 0
+        self.nstreamlines = 0
 
     def print_abutments(self):
         msg = ''
@@ -16,28 +17,20 @@ class PanairWrite(object):
         msg += '        9   1st p-o-s   0    -1.0       bodyl      12     3.4+\n'
         msg += '            bodyl      12     3.4-      1st p-o-s   0    -1.0\n'
 
-        for patchID, patch in iteritems(self.patches):
-            (p1, x1, y1, z1) = patch.get_edges()
-            self.log.debug("p[%s] = %s" % (patchID, p1))
-            #print "x = ",x1
-            #print "y = ",y1
-            #print "z = ",z1
-
+        for patch_id, patch in iteritems(self.patches):
+            (p1, xyz1) = patch.get_edges()
+            self.log.debug("p[%s] = %s" % (patch_id, p1))
         return msg
 
     def print_options(self):
         msg = ''
         msg += '0            options\n'
-        msg += '            %i = singularity grid print flag\n' % (
-            self.isings)
+        msg += '            %i = singularity grid print flag\n' % (self.isings)
         msg += '            %i = panel geometry print flag\n' % (self.igeomp)
         msg += '            %i = spline data flag  ( 0 ==> off, nonzero ==> on )\n' % (self.isingp)
-        msg += '            %i = control point information print flag\n' % (
-            self.icontp)
-        msg += '            %i = boundary condition data print flag \n' % (
-            self.ibconp)
-        msg += '            %i = edge matching information print flag\n' % (
-            self.iedgep)
+        msg += '            %i = control point information print flag\n' % (self.icontp)
+        msg += '            %i = boundary condition data print flag \n' % (self.ibconp)
+        msg += '            %i = edge matching information print flag\n' % (self.iedgep)
         msg += '            %i = index of control point for which aic-s are printed\n' % (self.ipraic)
         msg += '            %i = edge control point flow properties print flag\n' % (self.nexdgn)
         msg += '            %i = output control flag (-1 ==> no surface flow properties, 0 ==> standard output, 1 ==> short form output )\n' % (self.ioutpr)
@@ -54,7 +47,8 @@ class PanairWrite(object):
         msg += '            %i = abutment/abutment-intersection (short listing) print flag ( 0 ==> suppress, nonzero ==> generate usual print )\n' % (2)
         msg += ' \n'
         msg += '                force and moment reference parameters\n'
-        msg += '   %10s = reference area for force and moment calculations.    (sref)\n' % (fortran_value(self.sref))
+        msg += '   %10s = reference area for force and moment calculations.    (sref)\n' % (
+            fortran_value(self.sref))
         msg += '   %10s = rolling moment reference length  (bref)\n' % (
             fortran_value(self.bref))
         msg += '   %10s = pitching moment reference length (cref)\n' % (
@@ -116,8 +110,6 @@ class PanairWrite(object):
         msg2 = ''
         msg3 = ''
 
-        self.nOffBodyPoints = 0
-        self.nStreamlines = 0
         msg += '        1               ***  quick summary of a502 input  ***\n'
 
         for i, title_line in enumerate(self.title_lines):
@@ -133,27 +125,27 @@ class PanairWrite(object):
         msg += '            0 = off-body calculation type. (0 ==> mass flux, nonzero ==> velocity)\n'
         msg += '            0 = streamline calculation type. (0 ==> mass flux, nonzero ==> velocity)\n'
         msg += '           %2i = number of off-body points.\n' % (
-            self.nOffBodyPoints)
+            self.noff_body_points)
         msg += '           %2i = number of streamlines to be traced.\n' % (
-            self.nStreamlines)
+            self.nstreamlines)
         msg += '0               case summary\n'
         msg += '           %2i = number of cases\n' % (self.ncases)
         msg += '     %f = mach number\n' % (self.mach)
         msg += '     %f = compressibility axis angle of attack (alpc)\n' % (
-            self.alphaC)
+            self.alpha_compressibility)
         msg += '     %f = compressibliity axis angle of sideslip (betc)\n' % (
-            self.betaC)
+            self.beta_compressibility)
 
         msg3 += '0network id&index   #rows   #cols  kt  src  dblt  nlopt1  nropt1  nlopt2  nropt2    ipot   # pts  # pans  cpnorm  cum pt  cum pn\n'
         msg3 += '---------- -----   -----   -----  --  ---  ----  ------  ------  ------  ------    ----    ----    ----  ------  ------  ------\n'
 
         total_points = 0
         total_panels = 0
-        for patch_id in range(self.nPatches()):
+        for patch_id in range(self.npatches):
             patch = self.patch(patch_id)
             msg3 += patch.quick_summary(total_points, total_panels)
-            total_panels += patch.nPanels()
-            total_points += patch.nPoints()
+            total_panels += patch.npanels
+            total_points += patch.npoints
 
         msg2 += '0  case       alpha          beta      mag(f-s-v)\n'
         msg2 += ' ------    ----------    ----------   -----------\n'
@@ -165,12 +157,12 @@ class PanairWrite(object):
 
         msg2 += '0               symmetry options\n'
         msg2 += '            %s = number of planes of symmetry\n' % (
-            self.nSymmetryPlanes)
+            self.nsymmetry_planes)
         msg2 += '            %s = x-z plane of symmetry flag (0 ==> no symmetry, 1==> flow symmetry, -1 ==> flow antisymmetry)\n' % (self.XZsymmetry)
         msg2 += '            %s = x-y plane of symmetry flag (0 ==> no symmetry, 1==> flow symmetry, -1 ==> flow antisymmetry)\n' % (self.XYsymmetry)
         msg2 += '0               configuration summary\n'
         msg2 += '          %3s = total number of networks read in\n' % (
-            self.nNetworks)
+            self.nnetworks)
         msg2 += '         %4s = total number of mesh points\n' % (total_points)
         msg2 += '         %4s = total number of panels\n' % (total_panels)
 
@@ -178,13 +170,13 @@ class PanairWrite(object):
 
     def write_data_check(self):
         msg = '$datacheck\n'
-        msg += '%s.\n' % (self.dataCheck)
+        msg += '%s.\n' % (self.data_check)
         return msg
 
     def write_printout(self):
         msg = '$printout options\n'
-        msg += "%-10s%-10s%-10s%-10s%-10s%-10s\n" % (self.isings, self.igeomp,
-                                                     self.isingp, self.icontp, self.ibconp, self.iedgep)
-        msg += "%-10s%-10s%-10s%-10s%-10s\n" % (self.ipraic,
-                                                self.nexdgn, self.ioutpr, self.ifmcpr, self.icostp)
+        msg += "%-10s%-10s%-10s%-10s%-10s%-10s\n" % (
+            self.isings, self.igeomp, self.isingp, self.icontp, self.ibconp, self.iedgep)
+        msg += "%-10s%-10s%-10s%-10s%-10s\n" % (
+            self.ipraic, self.nexdgn, self.ioutpr, self.ifmcpr, self.icostp)
         return msg

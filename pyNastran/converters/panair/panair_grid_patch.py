@@ -17,9 +17,11 @@ class PanairPatch(object):
 
         self.inetwork = inetwork  # lets it print out in order, does it need a deepcopy???
         self.network_name = network_name.strip()
-        #self.log.debug('network_name=|%s|' % (network_name))
+        #self.log.debug('network_name=%r' % (network_name))
         #self.log.debug("****patch.network_name=%s" % (self.network_name))
         self.kt = kt
+        if cp_norm == '':
+            cp_norm = 0
         self.cp_norm = cp_norm
         self.matchw = 0
         self.xyz = xyz
@@ -58,24 +60,24 @@ class PanairPatch(object):
     def quick_summary(self, cum_pts, cum_pn):
         msg = ''
         if self.kt == 1:
-            src = 1
-            dblt = 12
+            source = 1
+            doublet = 12
             nlopt1 = 5
             nropt1 = 3
             nlopt2 = 7
             nropt2 = -2
             ipot = 2
         elif self.kt == 5:
-            src = 1
-            dblt = 12
+            source = 1
+            doublet = 12
             nlopt1 = 6
             nropt1 = 9
             nlopt2 = 7
             nropt2 = -2
             ipot = 2
         elif self.kt == 18:
-            src = 0
-            dblt = 18
+            source = 0
+            doublet = 18
             nlopt1 = 0
             nropt1 = 9
             nlopt2 = 15
@@ -85,8 +87,8 @@ class PanairPatch(object):
                 nlopt2 = 6
             #self.log.debug("18...matchw = %s" % (self.matchw))
         elif self.kt == 20:
-            src = 0
-            dblt = 20
+            source = 0
+            doublet = 20
             nlopt1 = 0
             nropt1 = 9
             nlopt2 = 6
@@ -98,10 +100,10 @@ class PanairPatch(object):
         pans = self.npanels
         #cumPts=33
         #cumPn =50
-        msg += ' %-10s %4s %7s %7s %3s ' % (self.network_name,
-                                            self.inetwork + 1, self.nrows, self.ncols, self.kt,)
+        msg += ' %-10s %4s %7s %7s %3s ' % (
+            self.network_name, self.inetwork + 1, self.nrows, self.ncols, self.kt)
         msg += '%4s %5s %7s %7s %7s %7s ' % (
-            src, dblt, nlopt1, nropt1, nlopt2, nropt2)
+            source, doublet, nlopt1, nropt1, nlopt2, nropt2)
         msg += '%7s %7s %7s %7s ' % (ipot, pts, pans, self.cp_norm)
         msg += '%7s %7s\n' % (cum_pts, cum_pn)
         return msg
@@ -118,7 +120,7 @@ class PanairPatch(object):
         r = ipanel % (self.nrows - 1)
         c = ipanel // (self.nrows - 1)
 
-        #print "r=%s c=%s" %(r,c)
+        #print "r=%s c=%s" % (r, c)
         p1 = self.get_point(r, c)
         p2 = self.get_point(r, c + 1)
         p3 = self.get_point(r + 1, c + 1)
@@ -129,7 +131,7 @@ class PanairPatch(object):
         r = ipanel % (self.nrows - 1)
         c = ipanel // (self.nrows - 1)
 
-        #print "r=%s c=%s" %(r,c)
+        #print "r=%s c=%s" % (r, c)
         p1 = self.get_point_ID(r, c)
         p2 = self.get_point_ID(r, c + 1)
         p3 = self.get_point_ID(r + 1, c + 1)
@@ -164,7 +166,6 @@ class PanairPatch(object):
         N = np.cross(a, b)
         norm_n = np.linalg.norm(N)
         n = N / norm_n  # normal vector
-
         area = 0.5 * norm_n  # area
 
         u = (p1 + p2 - p3 - p4) / 2.  # longitudinal
@@ -175,7 +176,6 @@ class PanairPatch(object):
         o = np.cross(n, u)  # normal to both vectors in local coordinates
 
         diameter = np.linalg.norm(a - b)
-
         return (area, n, centroid, diameter, u, p, o)
 
     def get_panel_area_normal(self, ipanel):
@@ -188,7 +188,6 @@ class PanairPatch(object):
         return (area, normal)
 
     def get_panel_area(self, ipanel):
-        # ipanel=200
         (p1, p2, p3, p4) = self.get_panel_points(ipanel)
         area = 0.5 * np.linalg.norm(np.cross(p1 - p3, p2 - p4))
         return area
@@ -223,16 +222,9 @@ class PanairPatch(object):
         self.log.info("edge_number=%s" % edge_number)
         self.log.debug("xyz.shape = %s" % (str(self.xyz.shape)))
 
-        #if edge_number == 1:
-            #pass
-            #self.log.debug("self.x[:]\n%54s%s" % ('', self.x[:]))
-            #self.log.debug("self.y[:]\n%54s%s" % ('', self.y[:]))
-            #self.log.debug("self.z[:]\n%54s%s" % ('', self.z[:]))
-            #edge_number = 2
-
         if edge_number == 1:
             xyz = self.xyz[0, :, :] # pretty sure edge 1 is the 0th row
-            p = [iCol for iCol in range(self.ncols)]  # good
+            p = [icol for icol in range(self.ncols)]  # good
         elif edge_number == 2:
             xyz = self.xyz[:, self.ncols - 1, :]  # pretty sure edge 2 is the 0th row
             p = [icol * (self.nrows) + (self.nrows - 1) for icol in range(self.ncols)]
@@ -248,8 +240,8 @@ class PanairPatch(object):
             raise ValueError('invalid edge; edge_number=%s' % edge_number)
 
 
-        #self.log.debug("nRows=%s nCols=%s edge_number=%s" % (
-            #self.nRows, self.nCols, edge_number))
+        #self.log.debug("nrows=%s ncols=%s edge_number=%s" % (
+            #self.nrows, self.ncols, edge_number))
         p = np.arange(self.npoints)
         for point_id in p:
             #point_id = 2
@@ -268,21 +260,19 @@ class PanairPatch(object):
         for edge_id in range(1, 4 + 1):
             (p1, xyz1) = self.get_edge(edge_id)
             nx1 = xyz1.shape[0]
-            p[i:i + nx1] = p1[0:nx1]
-            xyz[i:i + nx1] = xyz1[0:nx1, :]
+            p[i:i + nx1] = p1[:nx1]
+            xyz[i:i + nx1] = xyz1[:nx1, :]
             #self.log.debug("-----")
         return (p, xyz)
 
     def get_elements(self, ipoint):
         #print('nrows=%s ncols=%s' % (self.nrows, self.ncols))
         panels = elements_from_quad(self.ncols, self.nrows)
-        #print('panels2 = %s' % panels2)
         return panels
 
     def get_points(self):
         points = []
-        #self.log.debug("size(X) = %s" %( str( self.x.shape ) ))
-        #print "size(X) = %s" %( str(X.size())
+        #self.log.debug("size(xyz) = %s" %( str( self.xyz.shape ) ))
         self.log.debug('self.inetwork=%s self.network_name=%r' % (self.inetwork, self.network_name))
         for j in range(self.ncols):
             for i in range(self.nrows):
@@ -310,7 +300,7 @@ class PanairPatch(object):
         #self.log.debug(out)
         #print x
         #for c in range(self.nCols):
-        #    nPointsLeft = nFullLines*2 + nPartialLines
+        #    npoints_left = nfull_lines*2 + npartial_lines
         #    for r in range(0, self.nrows, 2)
         return out
 
@@ -344,11 +334,11 @@ class PanairPatch(object):
         header += '%-10s%-10s%50s%-10s\n' % (
             print_float(self.nrows), print_float(self.ncols), '', self.network_name)
 
-        #nfull_lines = nm/2
-        #npartial_lines = nm%2
+        #nfull_lines = nm // 2
+        #npartial_lines = nm % 2
         #nlines = nfull_lines + npartial_lines
 
-        nfull_lines = self.nrows / 2
+        nfull_lines = self.nrows // 2
         npartial_lines = self.nrows % 2
         #nlines = nfull_lines + npartial_lines
 
