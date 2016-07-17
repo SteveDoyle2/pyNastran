@@ -25,7 +25,7 @@ class TestPanair(unittest.TestCase):
         #assert len(cart3d.regions) == 6, 'nregions=%s' % len(cart3d.regions)
         #assert len(cart3d.loads) == 0, 'nloads=%s' % len(cart3d.loads)
         model.write_panair(out_filename)
-        (points, elements, regions) = model.get_points_elements_regions()
+        (points, elements, regions, kt, cp_nrom) = model.get_points_elements_regions()
         os.remove(out_filename)
 
 
