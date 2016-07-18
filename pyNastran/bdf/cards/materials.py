@@ -22,8 +22,8 @@ from numpy import zeros, array
 from pyNastran.utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import Material
-from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_blank,
-    double, double_or_blank, string_or_blank, blank)
+from pyNastran.bdf.bdf_interface.assign_type import (
+    integer, integer_or_blank, double, double_or_blank, string_or_blank, blank)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 
@@ -158,10 +158,10 @@ class CREEP(Material):
         """
         Gets the fields in their simplified form
 
-        :returns fields:
-          the fields that define the card
-        :type fields:
-          LIST
+        Returns
+        -------
+        fields : [varies, ...]
+            the fields that define the card
         """
         thresh = set_blank_if_default(self.thresh, 1e-5)
         exp = set_blank_if_default(self.exp, 4.1e-9)
@@ -426,10 +426,10 @@ class MAT1(IsotropicMaterial):
         """
         Gets the fields in their simplified form
 
-        :returns fields:
-          the fields that define the card
-        :type fields:
-          LIST
+        Returns
+        -------
+        fields : [varies, ...]
+            the fields that define the card
         """
         Gdefault = self.getG_default()
         G = set_blank_if_default(self.g, Gdefault)
@@ -675,10 +675,10 @@ class MAT2(AnisotropicMaterial):
         """
         Gets the fields in their simplified form
 
-        :returns fields:
-          the fields that define the card
-        :type fields:
-          LIST
+        Returns
+        -------
+        fields : [varies, ...]
+            the fields that define the card
         """
         G11 = set_blank_if_default(self.G11, 0.0)
         G12 = set_blank_if_default(self.G12, 0.0)
@@ -824,10 +824,10 @@ class MAT3(OrthotropicMaterial):
         """
         Gets the fields in their simplified form
 
-        :returns fields:
-          the fields that define the card
-        :type fields:
-          LIST
+        Returns
+        -------
+        fields : [varies, ...]
+            the fields that define the card
         """
         ax = set_blank_if_default(self.ax, 0.0)
         ath = set_blank_if_default(self.ath, 0.0)
@@ -1072,10 +1072,10 @@ class MAT5(ThermalMaterial):  # also AnisotropicMaterial
         """
         Gets the fields in their simplified form
 
-        :returns fields:
-          the fields that define the card
-        :type fields:
-          LIST
+        Returns
+        -------
+        fields : [varies, ...]
+            the fields that define the card
         """
         kxx = set_blank_if_default(self.kxx, 0.0)
         kyy = set_blank_if_default(self.kyy, 0.0)
@@ -1286,10 +1286,10 @@ class MAT8(OrthotropicMaterial):
         """
         Gets the fields in their simplified form
 
-        :returns fields:
-          the fields that define the card
-        :type fields:
-          LIST
+        Returns
+        -------
+        fields : [varies, ...]
+            the fields that define the card
         """
         G12 = set_blank_if_default(self.g12, 0.)
         G1z = set_blank_if_default(self.g1z, 1e8)
@@ -1499,10 +1499,10 @@ class MAT9(AnisotropicMaterial):
         """
         Gets the fields in their simplified form
 
-        :returns fields:
-          the fields that define the card
-        :type fields:
-          LIST
+        Returns
+        -------
+        fields : [varies, ...]
+            the fields that define the card
         """
         A = []
         for a in self.A:
@@ -1596,10 +1596,10 @@ class MAT10(Material):
         """
         Gets the fields in their simplified form
 
-        :returns fields:
-          the fields that define the card
-        :type fields:
-          LIST
+        Returns
+        -------
+        fields : [varies, ...]
+            the fields that define the card
         """
         ge = set_blank_if_default(self.ge, 0.0)
         list_fields = ['MAT10', self.mid, self.bulk, self.rho, self.c, ge]
@@ -1766,10 +1766,10 @@ class MAT11(Material):
         """
         Gets the fields in their simplified form
 
-        :returns fields:
-          the fields that define the card
-        :type fields:
-          LIST
+        Returns
+        -------
+        fields : [varies, ...]
+            the fields that define the card
         """
         a1 = set_blank_if_default(self.a1, 0.0)
         a2 = set_blank_if_default(self.a2, 0.0)
@@ -1855,7 +1855,7 @@ class MATHP(HyperelasticMaterial):
         d1 = double_or_blank(card, 4, 'd1', (a10 + a01) * 1000)
         rho = double_or_blank(card, 5, 'rho', 0.)
         av = double_or_blank(card, 6, 'av', 0.)
-        TRef = double_or_blank(card, 7, 'TRef', 0.)
+        tref = double_or_blank(card, 7, 'TRef', 0.)
         ge = double_or_blank(card, 8, 'ge', 0.)
 
         na = integer_or_blank(card, 10, 'na', 1)
@@ -1893,14 +1893,14 @@ class MATHP(HyperelasticMaterial):
         tab4 = integer_or_blank(card, 52, 'tab4')
         tabd = integer_or_blank(card, 56, 'tabd')
         assert len(card) <= 57, 'len(MATHP card) = %i\ncard=%s' % (len(card), card)
-        return MATHP(mid, a10, a01, d1, rho, av, TRef, ge, na, nd, a20, a11,
+        return MATHP(mid, a10, a01, d1, rho, av, tref, ge, na, nd, a20, a11,
                      a02, d2, a30, a21, a12, a03, d3, a40,
                      a31, a22, a13, a04, d4, a50, a41,
                      a32, a23, a14, a05, d5, tab1, tab2,
                      tab3, tab4, tabd, comment=comment)
 
     @classmethod
-    def add_op2_data(data, comment=''):
+    def add_op2_data(cls, data, comment=''):
         if comment:
             self._comment = comment
         main = data[0]
@@ -1909,47 +1909,9 @@ class MATHP(HyperelasticMaterial):
          a30, a21, a12, a03, d3,
          a40, a31, a22, a13, a04, d4,
          a50, a41, a32, a23, a14, a05, d5,
-         continueFlag) = main
+         continue_flag) = main
 
-        self.mid = mid
-        self.a10 = a10
-        self.a01 = a01
-        self.d1 = d1
-        self.rho = rho
-        self.av = av
-        self.TRef = tref
-        self.ge = ge
-
-        self.na = na
-        self.nd = nd
-
-        self.a20 = a20
-        self.a11 = a11
-        self.a02 = a02
-        self.d2 = d2
-
-        self.a30 = a30
-        self.a21 = a21
-        self.a12 = a12
-        self.a03 = a03
-        self.d3 = d3
-
-        self.a40 = a40
-        self.a31 = a31
-        self.a22 = a22
-        self.a13 = a13
-        self.a04 = a04
-        self.d4 = d4
-
-        self.a50 = a50
-        self.a41 = a41
-        self.a32 = a32
-        self.a23 = a23
-        self.a14 = a14
-        self.a05 = a05
-        self.d5 = d5
-
-        if continueFlag:
+        if continue_flag:
             (tab1, tab2, tab3, tab4, x1, x2, x3, tab5) = data[1]
         else:
             tab1 = None
@@ -1958,11 +1920,11 @@ class MATHP(HyperelasticMaterial):
             tab4 = None
             tab5 = None
 
-        self.tab1 = tab1
-        self.tab2 = tab2
-        self.tab3 = tab3
-        self.tab4 = tab4
-        self.tabd = tab5
+        return MATHP(mid, a10, a01, d1, rho, av, tref, ge, na, nd, a20, a11,
+                     a02, d2, a30, a21, a12, a03, d3, a40,
+                     a31, a22, a13, a04, d4, a50, a41,
+                     a32, a23, a14, a05, d5, tab1, tab2,
+                     tab3, tab4, tabd, comment=comment)
 
     def raw_fields(self):
         list_fields = ['MATHP', self.mid, self.a10, self.a01, self.d1, self.rho,
@@ -1983,10 +1945,10 @@ class MATHP(HyperelasticMaterial):
         """
         Gets the fields in their simplified form
 
-        :returns fields:
-          the fields that define the card
-        :type fields:
-          LIST
+        Returns
+        -------
+        fields : [varies, ...]
+            the fields that define the card
         """
         av = set_blank_if_default(self.av, 0.0)
         na = set_blank_if_default(self.na, 0.0)
@@ -2057,7 +2019,8 @@ class EQUIV(Material):
         self.field6 = field6
         self.field7 = field7
 
-    def add_card(self, card, comment=''):
+    @classmethod
+    def add_card(cls, card, comment=''):
         mid = integer(card, 1, 'mid')
         field2 = integer(card, 2, 'field2')
         field3 = integer(card, 3, 'field3')

@@ -126,10 +126,10 @@ class CBUSH(BushElement):
         assert len(card) <= 14, 'len(CBUSH card) = %i\ncard=%s' % (len(card), card)
         return CBUSH(eid, pid, ga, gb, x, g0, cid, s, ocid, si, comment=comment)
 
-    #@classmethod
-    #def add_op2_data(cls, data, comment=''):
-        #eid = data[0]
-        #raise NotImplementedError('CBUSH data...')
+    @classmethod
+    def add_op2_data(cls, data, f, comment=''):
+        ((eid, pid, ga, gb, cid, s, ocid, si), x, g0) = data
+        return CBUSH(eid, pid, ga, gb, x, g0, cid, s, ocid, si, comment=comment)
 
     def Eid(self):
         return self.eid

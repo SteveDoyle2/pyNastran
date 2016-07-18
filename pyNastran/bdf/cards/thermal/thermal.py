@@ -144,6 +144,12 @@ class CHBDYE(ThermalElement):
         return CHBDYE(eid, eid2, side, iViewFront, iViewBack,
                       radMidFront, radMidBack, comment=comment)
 
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        eid, eid2, side, iviewf, iviewb, radmidf, radmidb = data
+        return CHBDYE(eid, eid2, side, iviewf, iviewb,
+                      radmidf, radmidb, comment=comment)
+
     def cross_reference(self, model):
         pass
 
@@ -892,7 +898,8 @@ class CONV(ThermalBC):
         #data_in = [eid, pconid, flmnd, cntrlnd,
                    #[ta1, ta2, ta3, ta5, ta6, ta7, ta8],
                    #[wt1, wt2, wt3, wt5, wt6, wt7, wt8]]
-        eid, pconid, film_node, cntrlnd, ta, aft = data
+        ## weights are unique to MSC nastran
+        eid, pconid, film_node, cntrlnd, ta, weights = data
         #ta1, ta2, ta3, ta5, ta6, ta7, ta8 = ta
         #wt1, wt2, wt3, wt5, wt6, wt7, wt8 = aft
 
@@ -964,18 +971,28 @@ class CONVM(ThermalBC):
         self.ta2 = ta2
         self.mdot = mdot
         assert film_node >= 0
-        assert self.cntmdot > 0
+        if self.cntmdot == 0:
+            if self.mdot is None:
+                self.mdot = 1.0
+        else:
+            assert self.cntmdot > 0
 
     @classmethod
     def add_card(cls, card, comment=''):
         eid = integer(card, 1, 'eid')
         pconvm = integer(card, 2, 'pconvm')
         film_node = integer_or_blank(card, 3, 'film_node', 0)
-        cntmdot = integer(card, 4, 'cntmdot')
+        cntmdot = integer_or_blank(card, 4, 'cntmdot', 0)
         ta1 = integer(card, 5, 'ta1')
         ta2 = integer_or_blank(card, 6, 'ta2', ta1)
         mdot = double_or_blank(card, 7, 'mdot', 1.0)
         assert len(card) <= 8, 'len(CONVM card) = %i\ncard=%s' % (len(card), card)
+        return CONVM(eid, pconvm, film_node, cntmdot, ta1, ta2, mdot,
+                     comment=comment)
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        (eid, pconID, flmnd, cntrlnd, ta1, ta2, mdot) = data
         return CONVM(eid, pconvm, film_node, cntmdot, ta1, ta2, mdot,
                      comment=comment)
 
