@@ -1706,14 +1706,14 @@ class MAT11(Material):
         a2 = double_or_blank(card, 13, 'a2', 0.0)
         a3 = double_or_blank(card, 14, 'a3', 0.0)
 
-        TRef = double_or_blank(card, 15, 'TRef', 0.0)
+        tref = double_or_blank(card, 15, 'TRef', 0.0)
         ge = double_or_blank(card, 16, 'ge', 0.0)
         assert len(card) <= 17, 'len(MAT11 card) = %i\ncard=%s' % (len(card), card)
         return MAT11(mid, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23, rho,
-                     a1, a2, a3, TRef, ge, comment=comment)
+                     a1, a2, a3, tref, ge, comment=comment)
 
     @classmethod
-    def add_data(cls, data, comment=''):
+    def add_op2_data(cls, data, comment=''):
         mid = data[0]
         e1 = data[1]
         e2 = data[2]
@@ -1728,10 +1728,10 @@ class MAT11(Material):
         a1 = data[11]
         a2 = data[12]
         a3 = data[13]
-        TRef = data[14]
+        tref = data[14]
         ge = data[15]
         return MAT11(mid, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23, rho,
-                     a1, a2, a3, TRef, ge, comment=comment)
+                     a1, a2, a3, tref, ge, comment=comment)
 
     def _verify(self, xref):
         """

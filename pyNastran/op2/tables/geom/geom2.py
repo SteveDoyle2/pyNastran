@@ -350,12 +350,13 @@ class GEOM2(GeomCommon):
         CBUSH(2608,26,60) - the marker for Record 13
         """
         nelements = (len(data) - n) // 56
-        struct_obj = Struct(b(self._endian + '4i iii i ifi3f'))
+        struct_obj1 = Struct(b(self._endian + '4i iii i ifi3f'))
+        struct_obj2 = Struct(b(self._endian + '4i fff i ifi3f'))
         for i in range(nelements):
             edata = data[n:n + 56]  # 14*4
-            out = struct_obj.unpack(edata)
+            out = struct_obj1.unpack(edata)
             eid, pid, ga, gb, five, six, seven, f, cid, s, ocid, s1, s2, s3 = out
-            si = s1, s2, s3
+            si = [s1, s2, s3]
             if f == -1: # Use Element CID below for orientation
                 x = [None, None, None]
                 g0 = None
@@ -363,7 +364,10 @@ class GEOM2(GeomCommon):
                 # 5, 6, 7, f
                 #0:4 4:8 8:12 12:16 16:20 20:24 24:28 28:32 32:36
                 #0   1   2    3     4     5     6     7     8
-                x1, x2, x3, f2 = unpack('3f i', edata[20:36])
+                #x1, x2, x3, f2 = unpack('3f i', edata[20:36])
+                out = struct_obj2.unpack(edata)
+                eid, pid, ga, gb, x1, x2, x3, f2, cid, s, ocid, s1, s2, s3 = out
+
                 assert f == f2, 'f=%s f2=%s' % (f, f2)
                 x = [x1, x2, x3]
                 g0 = None
@@ -372,12 +376,13 @@ class GEOM2(GeomCommon):
                 g0 = five
             else:
                 raise RuntimeError('invalid f value...f=%r' % f)
-            end = [x, g0]
-            data_in = [[eid, pid, ga, gb, cid, s, ocid, si], end]
+            if cid == -1:
+                cid = None
+            data_in = [[eid, pid, ga, gb, cid, s, ocid, si], x, g0]
 
             elem = CBUSH.add_op2_data(data_in, f)
             self.add_op2_element(elem)
-            n += 72
+            n += 56
         self.card_count['CBUSH'] = nelements
         return n
 
@@ -616,7 +621,9 @@ class GEOM2(GeomCommon):
                 x2 = None
                 x3 = None
             else:
-                raise NotImplementedError('CGAP - f=%r f2=%r' % (f, f2))
+                assert f == 1, 'CGAP - f=%r f2=%r' % (f, f2)
+                assert f2 == 1, 'CGAP - f=%r f2=%r' % (f, f2)
+                #raise NotImplementedError('CGAP - f=%r f2=%r' % (f, f2))
             data_in = [eid, pid, ga, gb, g0, x1, x2, x3, cid]
             elem = CGAP.add_op2_data(data_in)
             self.add_op2_element(elem)
@@ -862,13 +869,38 @@ class GEOM2(GeomCommon):
         self.card_count['CONROD'] = nelements
         return n
 
+    def _read_conv(self, data, n):
+        """
+        The CONV card is different between MSC and NX Nastran.
+        The MSC version is 8 fields longer.
+        """
+        n0 = n
+        if self.is_nx:
+            try:
+                n, elements = self._read_conv_nx(data, n)
+            except AssertionError:
+                n, elements = self._read_conv_msc(data, n0)
+        else:
+            try:
+                n, elements = self._read_conv_msc(data, n)
+            except AssertionError:
+                n, elements = self._read_conv_nx(data, n0)
+
+        nelements = len(elements)
+        for elem in elements:
+            self.add_thermal_BC(elem, elem.eid)
+
+        self.card_count['CONV'] = nelements
+        return n
+
     def _read_conv_nx(self, data, n):
         """
         CONV(12701,127,408) - the marker for Record 59
         """
         ntotal = 48  # 12*4
-        s = Struct(b(self._endian + '4i 8f'))
+        s = Struct(b(self._endian + '4i 8i'))
         nelements = (len(data) - n) // ntotal
+        elements = []
         for i in range(nelements):
             edata = data[n:n+ntotal]
             out = s.unpack(edata)
@@ -876,6 +908,7 @@ class GEOM2(GeomCommon):
                 self.binary_debug.write('  CONV=%s; len=%s\n' % (str(out), len(out)))
             (eid, pcon_id, flmnd, cntrlnd,
              ta1, ta2, ta3, ta4, ta5, ta6, ta7, ta8) = out
+            assert eid > 0, out
             #assert eid > 0, out
 
             #ta = [ta1, ta2, ta3, ta5, ta6, ta7, ta8]
@@ -885,28 +918,18 @@ class GEOM2(GeomCommon):
                        weights]
 
             elem = CONV.add_op2_data(data_in)
-            #self.add_thermal_BC(elem, elem.eid)
-
+            elements.append(elem)
             n += ntotal
-        self.card_count['CONV'] = nelements
-        return n
-
-    def _read_conv(self, data, n):
-        """
-        The CONV card is different between MSC and NX Nastran.
-        The MSC version is 8 fields longer.
-        """
-        if self.is_nx:
-            return self.read_conv_nx(data, n)
-        return self.read_conv_msc(data, n)
+        return n, elements
 
     def _read_conv_msc(self, data, n):
         """
         CONV(12701,127,408) - the marker for Record 60
         """
         ntotal = 80  # 20*4
-        s = Struct(b(self._endian + '12i8f'))
+        s = Struct(b(self._endian + '12i 8f'))
         nelements = (len(data) - n) // ntotal
+        elements = []
         for i in range(nelements):
             edata = data[n:n+80]
             out = s.unpack(edata)
@@ -915,15 +938,14 @@ class GEOM2(GeomCommon):
             (eid, pcon_id, flmnd, cntrlnd,
              ta1, ta2, ta3, ta4, ta5, ta6, ta7, ta8,
              wt1, wt2, wt3, wt4, wt5, wt6, wt7, wt8) = out
-            #assert eid > 0, out
+            assert eid > 0, out
             data_in = [eid, pcon_id, flmnd, cntrlnd,
                        [ta1, ta2, ta3, ta5, ta6, ta7, ta8],
                        [wt1, wt2, wt3, wt5, wt6, wt7, wt8]]
             elem = CONV.add_op2_data(data_in)
-            self.add_thermal_BC(elem, elem.eid)
+            elements.append(elem)
             n += ntotal
-        self.card_count['CONV'] = nelements
-        return n
+        return n, elements
 
     def _read_convm(self, data, n):
         """
@@ -931,22 +953,24 @@ class GEOM2(GeomCommon):
 
         TODO: MSC has 7 fields in QRG (6 defined in DMAP)
               NX has 6 fields in QRG (6 defined in DMAP)
-              MSC has extra MDOT field
+              MSC has extra MDOT field.
+              I think it's 6...
         """
         #return len(data)
-        ntotal = 28  # 7*4
-        s = Struct(b(self._endian + '7i'))
+        ntotal = 24  # 7*4
+        s = Struct(b(self._endian + '6i'))
         nelements = (len(data) - n) // ntotal
         for i in range(nelements):
-            edata = data[n:n+28]
-            out = unpack(edata)
+            edata = data[n:n+24]
+            out = s.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  CONVM=%s\n' % str(out))
-            (eid, pconID, flmnd, cntrlnd, ta1, ta2, mdot) = out
+            (eid, pconID, flmnd, cntrlnd, ta1, ta2) = out
             assert eid > 0, out  # TODO: I'm not sure that this really has 7 fields...
+            mdot = 0.
             data_in = [eid, pconID, flmnd, cntrlnd, ta1, ta2, mdot]
             elem = CONVM.add_op2_data(data_in)
-            self.add_thermal_BC(elem)
+            self.add_thermal_BC(elem, elem.eid)
             n += ntotal
         self.card_count['CONVM'] = nelements
         return n
@@ -957,10 +981,10 @@ class GEOM2(GeomCommon):
 
         Specific to NX Nastran
         """
-        s = Struct(b(self._endian + '17i'))
-        nelements = (len(data) - n) // 68
+        s = Struct(b(self._endian + '16i'))
+        nelements = (len(data) - n) // 64
         for i in range(nelements):
-            edata = data[n:n + 68]  # 17*4
+            edata = data[n:n + 64]  # 15*4
             out = s.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  CPENTA=%s\n' % str(out))
@@ -974,7 +998,7 @@ class GEOM2(GeomCommon):
             else:
                 elem = CPYRAM5.add_op2_data(data_in)
             self.add_op2_element(elem)
-            n += 68
+            n += 64
         self.card_count['CPENTA'] = nelements
         return n
 
@@ -982,7 +1006,10 @@ class GEOM2(GeomCommon):
 
     def _read_cpenta(self, data, n):
         """
-        CPENTA(4108,41,280) - the marker for Record 62
+        CPENTA(4108,41,280)      - the marker for Record 63
+        CPENPR(7509,75,9992)     - the marker for Record 64
+        CPENT15F(16500,165,9999) - the marker for Record 65
+        CPENT6FD(16000,160,9999) - the marker for Record 66
         """
         s = Struct(b(self._endian + '17i'))
         nelements = (len(data) - n) // 68
@@ -1005,15 +1032,12 @@ class GEOM2(GeomCommon):
         self.card_count['CPENTA'] = nelements
         return n
 
-# CPENPR
-# CPENT15F
-# CPENT6FD
 # CQDX4FD
-# CQDX9FD
+# CQDX9FD - same as CQDX4FD
 
     def _read_cquad(self, data, n):
         """
-        CQUAD(9108,91,507)  - the marker for Record 68
+        CQUAD(9108,91,507)  - the marker for Record 69
         """
         return self.run_cquad(data, n, CQUAD)
 
@@ -1041,8 +1065,8 @@ class GEOM2(GeomCommon):
 
     def _read_cquad4(self, data, n):
         """
-        CQUAD4(2958,51,177)    - the marker for Record 69
-        CQUAD4(13900,139,9989) - the marker for Record 70
+        CQUAD4(2958,51,177)    - the marker for Record 70
+        CQUAD4(13900,139,9989) - the marker for Record 71
         """
         return self.run_cquad4(data, n, CQUAD4)
 
@@ -1076,7 +1100,7 @@ class GEOM2(GeomCommon):
 
     def _read_cquad8(self, data, n):
         """
-        CQUAD8(4701,47,326)  - the marker for Record 71
+        CQUAD8(4701,47,326)  - the marker for Record 72
         .. warning:: inconsistent with dmap manual
         """
         #return n
@@ -1100,17 +1124,17 @@ class GEOM2(GeomCommon):
 
 # CQUAD9FD
 # CQUADP
+
     def _read_cquadr(self, data, n):
         """
-        CQUADR(8009,80,367)  - the marker for Record 74
+        CQUADR(8009,80,367)  - the marker for Record 75
         """
         return self.run_cquad4(data, n, CQUADR)
 
     def _read_cquadx(self, data, n):
         """
-        CQUADX(9008,90,508)  - the marker for Record 75
+        CQUADX(9008,90,508)  - the marker for Record 76
         """
-        #print("reading CQUADX")
         return self.run_cquad4(data, n, CQUADX)
 
 # CRBAR
@@ -1120,7 +1144,7 @@ class GEOM2(GeomCommon):
 
     def _read_crod(self, data, n):
         """
-        CROD(3001,30,48)    - the marker for Record 80
+        CROD(3001,30,48)    - the marker for Record 81
         """
         s = Struct(b(self._endian + '4i'))
         nelements = (len(data) - n) // 16  # 4*4
@@ -1141,7 +1165,7 @@ class GEOM2(GeomCommon):
 
     def _read_cshear(self, data, n):
         """
-        CSHEAR(3101,31,61)    - the marker for Record 83
+        CSHEAR(3101,31,61)    - the marker for Record 84
         """
         s = Struct(b(self._endian + '6i'))
         nelements = (len(data) - n) // 24  # 6*4
@@ -1162,10 +1186,9 @@ class GEOM2(GeomCommon):
 
     def _read_ctetrap(self, data, n):
         """
-        CTETP(12201,122,9013)    - the marker for Record 86
-        .. todo:: create object
+        CTETP(12201,122,9013)    - the marker for Record 87
+        .. todo:: needs work
         """
-        #raise NotImplementedError('needs work...')
         nelements = (len(data) - n) // 108  # 27*4
         s = Struct(b(self._endian + '27i'))
         for i in range(nelements):
@@ -1190,7 +1213,10 @@ class GEOM2(GeomCommon):
 
     def _read_ctetra(self, data, n):
         """
-        CTETRA(5508,55,217)    - the marker for Record 87
+        CTETRA(5508,55,217)      - the marker for Record 88
+        CTETPR(7609,76,9993)     - the marker for Record 89
+        CTETR10F(16600,166,9999) - the marker for Record 90
+        CTETR4FD(16100,161,9999) - the marker for Record 91
         """
         s = Struct(b(self._endian + '12i'))
         nelements = (len(data) - n)// 48  # 12*4
@@ -1213,15 +1239,12 @@ class GEOM2(GeomCommon):
         self.card_count['CTETRA'] = nelements
         return n
 
-# CTETPR
-# CTETR10F
-# CTETR4FD
-# CTQUAD
-# CTTRIA
+# CTQUAD - 92
+# CTTRIA - 93
 
     def _read_ctria3(self, data, n):
         """
-        CTRIA3(5959,59,282)    - the marker for Record 93
+        CTRIA3(5959,59,282)    - the marker for Record 94
         """
         ntotal = 52  # 13*4
         s = Struct(b(self._endian + '5iff3i3f'))
@@ -1243,11 +1266,11 @@ class GEOM2(GeomCommon):
         return n
 
 
-# CTRIAFD
+# CTRIAFD - 95
 
     def _read_ctria6(self, data, n):
         """
-        CTRIA6(4801,48,327)    - the marker for Record 95
+        CTRIA6(4801,48,327)    - the marker for Record 96
         .. warning:: inconsistent with dmap manual
         """
         s = Struct(b(self._endian + '8i 5f i'))
@@ -1271,7 +1294,7 @@ class GEOM2(GeomCommon):
 
     def _read_ctriar(self, data, n):  # 98
         """
-        CTRIAR(9200,92,385)    - the marker for Record 98
+        CTRIAR(9200,92,385)    - the marker for Record 99
         """
         ntotal = 52  # 13*4
         s = Struct(b(self._endian + '5iff3i3f'))
@@ -1292,19 +1315,19 @@ class GEOM2(GeomCommon):
         self.card_count['CTRIA3'] = nelements
         return n
 
-# CTRIAX
+# CTRIAX - 100
 
-    def _read_ctriax6(self, data, n):  # 100
+    def _read_ctriax6(self, data, n):  # 101
         if self.is_debug_file:
             self.binary_debug.write('skipping CTRIAX6 in GEOM2\n')
         return len(data)
 
-# CTRIX3FD
-# CTRIX6FD
+# CTRIX3FD - 102
+# CTRIX6FD - 103
 
     def _read_ctube(self, data, n):
         """
-        CTUBE(3701,37,49)    - the marker for Record 103
+        CTUBE(3701,37,49)    - the marker for Record 104
         """
         s = Struct(b(self._endian + '4i'))
         nelements = (len(data) - n) // 16
@@ -1321,7 +1344,7 @@ class GEOM2(GeomCommon):
         return n
 
     def _read_cvisc(self, data, n):
-        """CVISC(3901,39, 50) - the marker for Record 104"""
+        """CVISC(3901,39,50) - the marker for Record 105"""
         s = Struct(b(self._endian + '4i'))
         nelements = (len(data) - n) // 16
         for i in range(nelements):
@@ -1336,21 +1359,27 @@ class GEOM2(GeomCommon):
         self.card_count['CVISC'] = nelements
         return n
 
-    def _read_cweld(self, data, n):  # 105
+    def _read_cweld(self, data, n):
+        """
+        CWELD(11701,117,559) - Record 106
+        same as CFAST
+        """
         if self.is_debug_file:
             self.binary_debug.write('skipping CWELD in GEOM2\n')
         return len(data)
 
-    def _read_cweldc(self, data, n):  # 106
+    def _read_cweldc(self, data, n):  # 107
         if self.is_debug_file:
             self.binary_debug.write('skipping CWELDC in GEOM2\n')
         return len(data)
 
-    def _read_cweldg(self, data, n):  # 107
+    def _read_cweldg(self, data, n):  # 108
         if self.is_debug_file:
             self.binary_debug.write('skipping CWELDG in GEOM2\n')
         return len(data)
 
+# TDOO: above are checked by DMAP...
+#-------------------------------
 # CWSEAM
 # GENEL
 # GMDNDC

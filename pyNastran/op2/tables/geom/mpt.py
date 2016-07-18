@@ -6,7 +6,7 @@ from six import b
 from six.moves import range
 
 from pyNastran.bdf.cards.materials import (CREEP, MAT1, MAT2, MAT3, MAT4, MAT5,
-                                           MAT8, MAT9, MAT10, MATHP)
+                                           MAT8, MAT9, MAT10, MAT11, MATHP)
 from pyNastran.bdf.cards.material_deps import MATS1 # MATT1
 from pyNastran.bdf.cards.dynamic import NLPARM, TSTEPNL # TSTEP
 from pyNastran.op2.tables.geom.geom_common import GeomCommon
@@ -68,7 +68,8 @@ class MPT(GeomCommon):
             out = s.unpack(edata)
             (mid, T0, exp, form, tidkp, tidcp, tidcs, thresh,
              Type, ag1, ag2, ag3, ag4, ag5, ag6, ag7) = out
-            self.add_creep_material(CREEP.add_op2_data(out), allow_overwrites=True)
+            mat = CREEP.add_op2_data(out)
+            self.add_creep_material(mat, allow_overwrites=True)
             n += 64
         self.card_count['CREEP'] = nmaterials
         return n
@@ -85,7 +86,8 @@ class MPT(GeomCommon):
             edata = data[n:n+48]
             out = s.unpack(edata)
             (mid, E, G, nu, rho, A, TRef, ge, St, Sc, Ss, mcsid) = out
-            self.add_op2_material(MAT1.add_op2_data(out))
+            mat = MAT1.add_op2_data(out)
+            self.add_op2_material(mat)
             n += ntotal
         self.card_count['MAT1'] = nmaterials
         return n
@@ -138,11 +140,12 @@ class MPT(GeomCommon):
         """
         #print "reading MAT4"
         s = Struct(b(self._endian + 'i10f'))
-        nmaterials = (len(data) - n) // 40
+        nmaterials = (len(data) - n) // 44
         for i in range(nmaterials):
             out = s.unpack(data[n:n+44])
             (mid, k, cp, rho, h, mu, hgen, refenth, tch, tdelta, qlat) = out
-            self.add_thermal_material(MAT4.add_op2_data(out), allow_overwrites=True)
+            mat = MAT4.add_op2_data(out)
+            self.add_thermal_material(mat, allow_overwrites=True)
             n += 44
         self.card_count['MAT4'] = nmaterials
         return n
@@ -157,7 +160,8 @@ class MPT(GeomCommon):
         for i in range(nmaterials):
             out = s.unpack(data[n:n+40])
             (mid, k1, k2, k3, k4, k5, k6, cp, rho, hgen) = out
-            self.add_thermal_material(MAT5.add_op2_data(out), allow_overwrites=True)
+            mat = MAT5.add_op2_data(out)
+            self.add_thermal_material(mat, allow_overwrites=True)
             n += 40
         self.card_count['MAT5'] = nmaterials
         return n
@@ -173,7 +177,8 @@ class MPT(GeomCommon):
             out = s.unpack(data[n:n+76])
             (mid, E1, E2, nu12, G12, G1z, G2z, rho, a1, a2,
              TRef, Xt, Xc, Yt, Yc, S, ge, f12, strn) = out
-            self.add_op2_material(MAT8.add_op2_data(out))
+            mat = MAT8.add_op2_data(out)
+            self.add_op2_material(mat)
             n += 76
         self.card_count['MAT8'] = nmaterials
         return n
@@ -197,7 +202,8 @@ class MPT(GeomCommon):
                              g11, g12, g13, g14, g15, g16, g17, g18, g19, g20, g21],
                        rho, [a1, a2, a3, a4, a5, a6],
                        TRef, ge]
-            self.add_op2_material(MAT9.add_op2_data(data_in))
+            mat = MAT9.add_op2_data(data_in)
+            self.add_op2_material(mat)
             n += 128
         self.card_count['MAT9'] = nmaterials
         return n
@@ -215,7 +221,10 @@ class MPT(GeomCommon):
             edata = data[n:n+20]
             out = s.unpack(edata)
             (mid, bulk, rho, c, ge) = out
-            self.add_op2_material(MAT10.add_op2_data(out))
+            assert mid > 0, out
+            mat = MAT10.add_op2_data(out)
+            assert mat.mid > 0, mat
+            self.add_op2_material(mat)
             n += 20
         self.card_count['MAT10'] = nmaterials
         return n
@@ -234,7 +243,9 @@ class MPT(GeomCommon):
             (mid, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23,
              rho, a1, a2, a3, tref, ge,
              blank1, blank2, blank3, blank4) = out
-            self.add_op2_material(MAT10.add_op2_data(out))
+            mat = MAT11.add_op2_data(out)
+            assert mid > 0, mat
+            self.add_op2_material(mat)
             n += 80
         self.card_count['MAT11'] = nmaterials
         return n
@@ -264,7 +275,8 @@ class MPT(GeomCommon):
                 out2 = s2.unpack(edata)
                 (tab1, tab2, tab3, tab4, x1, x2, x3, tab5) = out2
                 data_in.append(out2)
-            self.add_op2_material(MATHP.add_op2_data(data_in))
+                mat = MATHP.add_op2_data(data_in)
+            self.add_op2_material(mat)
             nmaterials += 1
         self.card_count['MATHP'] = nmaterials
         return n
@@ -282,7 +294,8 @@ class MPT(GeomCommon):
             out = s.unpack(edata)
             (mid, tid, Type, h, yf, hr, limit1, limit2, a, bmat, c) = out
             data_in = [mid, tid, Type, h, yf, hr, limit1, limit2]
-            self.add_material_dependence(MATS1.add_op2_data(data_in), allow_overwrites=True)
+            mat = MATS1.add_op2_data(data_in)
+            self.add_material_dependence(mat, allow_overwrites=True)
         self.card_count['MATS1'] = nmaterials
         return n
 

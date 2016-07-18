@@ -11,11 +11,11 @@ class OEF(object):
         #print "headers = %s" % (headers)
         data = self._read_gradient_fluxes_table()
         return
-        if isubcase in self.temperatureGrad:
-            self.temperatureGrad[isubcase].addData(data)
-        else:
-            self.temperatureGrad[isubcase] = TemperatureGradientObject(isubcase, data)
-        self.iSubcases.append(isubcase)
+        #if isubcase in self.temperatureGrad:
+            #self.temperatureGrad[isubcase].addData(data)
+        #else:
+            #self.temperatureGrad[isubcase] = TemperatureGradientObject(isubcase, data)
+        #self.iSubcases.append(isubcase)
 
     def _read_gradient_fluxes_table(self):
         data = []

@@ -327,7 +327,8 @@ class RealElementTableArray(ElementTableArray):  # displacement style table
         for element_id, etypei, t1i, t2i, t3i, r1i, r2i, r3i in zip(element, element_type, t1, t2, t3, r1, r2, r3):
             vals = [t1i, t2i, t3i, r1i, r2i, r3i]
             (dx, dy, dz, rx, ry, rz) = write_floats_13e(vals)
-            f.write('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (element_id, etypei, dx, dy, dz, rx, ry, rz))
+            f.write('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
+                element_id, etypei, dx, dy, dz, rx, ry, rz))
         f.write(page_stamp % page_num)
         return page_num
 
@@ -336,6 +337,7 @@ class RealElementTableArray(ElementTableArray):  # displacement style table
         element_type = self.element_data_type
         times = self._times
 
+        node_id = 0  ## TODO: fix the node id
         for inode, (eid, etypei) in enumerate(zip(element, element_type)):
             t1 = self.data[:, inode, 0].ravel()
             t2 = self.data[:, inode, 1].ravel()
@@ -350,8 +352,8 @@ class RealElementTableArray(ElementTableArray):  # displacement style table
                 vals = [t1i, t2i, t3i, r1i, r2i, r3i]
                 vals2 = write_floats_13e(vals)
                 (dx, dy, dz, rx, ry, rz) = vals2
-                f.write('%14s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (write_float_12E(dt),
-                        etypei, dx, dy, dz, rx, ry, rz))
+                f.write('%14s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
+                    write_float_12E(dt), etypei, dx, dy, dz, rx, ry, rz))
             f.write(page_stamp % page_num)
             page_num += 1
         return page_num
@@ -379,7 +381,8 @@ class RealElementTableArray(ElementTableArray):  # displacement style table
                 vals = [t1i, t2i, t3i, r1i, r2i, r3i]
                 vals2 = write_floats_13e(vals)
                 (dx, dy, dz, rx, ry, rz) = vals2
-                f.write('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (element_id, etypei, dx, dy, dz, rx, ry, rz))
+                f.write('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
+                    element_id, etypei, dx, dy, dz, rx, ry, rz))
             f.write(page_stamp % page_num)
             page_num += 1
         return page_num
@@ -402,8 +405,8 @@ class RealElementTableArray(ElementTableArray):  # displacement style table
                 vals = [t1i, t2i, t3i, r1i, r2i, r3i]
                 vals2 = write_floats_13e(vals)
                 (dx, dy, dz, rx, ry, rz) = vals2
-                f.write('%14s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (write_float_12E(dt),
-                        etypei, dx, dy, dz, rx, ry, rz))
+                f.write('%14s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
+                    write_float_12E(dt), etypei, dx, dy, dz, rx, ry, rz))
             f.write(page_stamp % page_num)
             page_num += 1
         return page_num

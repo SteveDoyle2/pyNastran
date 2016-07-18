@@ -992,8 +992,8 @@ class CONVM(ThermalBC):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
-        (eid, pconID, flmnd, cntrlnd, ta1, ta2, mdot) = data
-        return CONVM(eid, pconvm, film_node, cntmdot, ta1, ta2, mdot,
+        (eid, pconvm_id, film_node, cntrlnd, ta1, ta2, mdot) = data
+        return CONVM(eid, pconvm_id, film_node, cntrlnd, ta1, ta2, mdot,
                      comment=comment)
 
     def cross_reference(self, model):

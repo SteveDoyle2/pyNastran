@@ -97,12 +97,16 @@ class PBUSH(BushingProperty):
         return PBUSH(pid, k_fields, b_fields, ge_fields, rcv_fields,
                      comment=comment)
 
-    #@classmethod
-    #def add_op2_data(cls, data, comment=''):
-        #pid = data[0]
-        #b = data[1]
-        #return PBUSH(pid, k_fields, b_fields, ge_fields, rcv_fields,
-                     #comment=comment)
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        (pid, k1, k2, k3, k4, k5, k6, b1, b2, b3, b4, b5, b6,
+         g1, g2, g3, g4, g5, g6, sa, st, ea, et) = data
+        k_fields = [k1, k2, k3, k4, k5, k6]
+        b_fields = [b1, b2, b3, b4, b5, b6]
+        ge_fields = [g1, g2, g3, g4, g5, g6]
+        rcv_fields = [sa, st, ea, et]
+        return PBUSH(pid, k_fields, b_fields, ge_fields, rcv_fields,
+                     comment=comment)
 
     def _verify(self, xref=False):
         pid = self.Pid()

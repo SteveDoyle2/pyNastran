@@ -249,7 +249,12 @@ class GEOM1(GeomCommon):
                 if ps == 0:
                     ps = ''
                 node = GRID(nid, cp, np.array([x1, x2, x3]), cd, ps, seid)
-                self.add_node(node)
+                self.nodes[nid] = node
+                #if nid in self.nodes:
+                    #self.reject_lines.append(str(node))
+                #else:
+                self.nodes[nid] = node
+                #self.add_node(node)
             else:
                 self.log.debug("*nid=%s cp=%s x1=%-5.2f x2=%-5.2f x3=%-5.2f cd=%-2s ps=%s seid=%s" %
                                (nid, cp, x1, x2, x3, cd, ps, seid))

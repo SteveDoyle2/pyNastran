@@ -1036,7 +1036,6 @@ class ComplexPlateForceArray(ScalarObject):
         else:
             raise NotImplementedError('name=%r type=%s' % (self.element_name, self.element_type))
         return msg
-        return msg
 
     def get_element_index(self, eids):
         # elements are always sorted; nodes are not

@@ -9,7 +9,7 @@ from pyNastran.bdf.bdf import (NSM, PBAR, PBARL, PBEAM,
                                PROD, PSHELL, PSHEAR,
                                PCOMP, PSOLID,
                                PVISC, PELAS, PMASS,
-                               PTUBE, PGAP, PDAMP, PHBDY)
+                               PTUBE, PGAP, PDAMP, PHBDY, PBUSH)
 # PCOMPG, PBUSH1D, PBEAML, PBEAM3, PBUSH,
 from pyNastran.op2.tables.geom.geom_common import GeomCommon
 
@@ -283,9 +283,66 @@ class EPT(GeomCommon):
 # PBRSECT
 
     def _read_pbush(self, data, n):
-        if self.is_debug_file:
-            self.binary_debug.write('skipping PBUSH in EPT\n')
-        return len(data)
+        """
+        The PBUSH card is different between MSC and NX Nastran.
+        The NX version has 23 fields.
+        The MSC version has 24 fields.
+        There's also an 18 field version from pre-MSC/NX 2001.
+        """
+        if self.is_nx:
+            return self._read_pbush_nx(data, n)
+        return self._read_pbush_msc(data, n)
+
+    def _read_pbush_nx(self, data, n):
+        """PBUSH(1402,14,37)"""
+        #if self.table_name == ['EPTS', 'EPT']:
+        ntotal = 72
+        s = Struct(b(self._endian + 'i17f'))
+        nentries = (len(data) - n) // ntotal
+        assert nentries > 0, 'table=%r len=%s' % (self.table_name, len(data) - n)
+        for i in range(nentries):
+            edata = data[n:n+72]
+            out = s.unpack(edata)
+            (pid, k1, k2, k3, k4, k5, k6, b1, b2, b3, b4, b5, b6,
+             g1, sa, st, ea, et) = out
+            g2 = g3 = g4 = g5 = g6 = g1
+            data_in = (pid, k1, k2, k3, k4, k5, k6, b1, b2, b3, b4, b5, b6,
+                       g1, g2, g3, g4, g5, g6, sa, st, ea, et)
+            prop = PBUSH.add_op2_data(data_in)
+            self._add_op2_property(prop)
+            n += ntotal
+        #else:
+            #ntotal = 92  # 23*4
+            #s = Struct(b(self._endian + 'i22f'))
+            #nentries = (len(data) - n) // ntotal
+            #assert nentries > 0, 'table=%r len=%s' % (self.table_name, len(data) - n)
+            #for i in range(nentries):
+                #edata = data[n:n+92]
+                #out = s.unpack(edata)
+                #(pid, k1, k2, k3, k4, k5, k6, b1, b2, b3, b4, b5, b6,
+                 #g1, g2, g3, g4, g5, g6, sa, st, ea, et) = out
+                #prop = PBUSH.add_op2_data(out)
+                #self._add_op2_property(prop)
+                #n += ntotal
+        self.card_count['PBUSH'] = nentries
+        return n
+
+    def _read_pbush_msc(self, data, n):
+        """PBUSH(1402,14,37)"""
+        ntotal = 92  # 23*4
+        s = Struct(b(self._endian + 'i22f'))
+        nentries = (len(data) - n) // ntotal
+        assert nentries > 0, 'table=%r len=%s' % (self.table_name, len(data) - n)
+        for i in range(nentries):
+            edata = data[n:n+92]
+            out = s.unpack(edata)
+            (pid, k1, k2, k3, k4, k5, k6, b1, b2, b3, b4, b5, b6,
+             g1, g2, g3, g4, g5, g6, sa, st, ea, et) = out
+            prop = PBUSH.add_op2_data(out)
+            self._add_op2_property(prop)
+            n += ntotal
+        self.card_count['PBUSH'] = nentries
+        return n
 
     def _read_pbush1d(self, data, n):
         if self.is_debug_file:
