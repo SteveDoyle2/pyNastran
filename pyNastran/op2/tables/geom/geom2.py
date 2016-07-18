@@ -15,12 +15,12 @@ from pyNastran.bdf.cards.elements.bars import CBAR
 from pyNastran.bdf.cards.elements.beam import CBEAM
 from pyNastran.bdf.cards.elements.mass import (CONM1, CONM2, CMASS1, CMASS2,
                                                CMASS3, CMASS4)
-from pyNastran.bdf.cards.elements.solid import (CTETRA4, CTETRA10, CPENTA6,
-                                                CPENTA15, CHEXA8, CHEXA20)
-from pyNastran.bdf.cards.thermal.thermal import CHBDYG, CONV, CHBDYP # , CONVM
+from pyNastran.bdf.cards.elements.solid import (CTETRA4, CPYRAM5, CPENTA6, CHEXA8,
+                                                CTETRA10, CPYRAM13, CPENTA15, CHEXA20,)
+from pyNastran.bdf.cards.thermal.thermal import CHBDYG, CONV, CHBDYP, CHBDYE, CONVM
 from pyNastran.bdf.cards.nodes import SPOINTs
 from pyNastran.op2.tables.geom.geom_common import GeomCommon
-
+from pyNastran.bdf.cards.elements.bush import CBUSH
 
 class GEOM2(GeomCommon):
     """defines methods for reading op2 elements"""
@@ -31,12 +31,18 @@ class GEOM2(GeomCommon):
     def __init__(self):
         GeomCommon.__init__(self)
         self._geom2_map = {
+            # per dmap-nx-10.pdf
+            # BEAMAERO(2601,26,0)
+            # CAABSF(2708,27,59)
+            # CAXIF2(2108,21,224)
+            # CAXIF3(2208,22,225)
+            # CAXIF4(2308,23,226)
             (2408, 24, 180): ['CBAR', self._read_cbar],         # record 8
             (4001, 40, 275): ['CBARAO', self._read_cbarao],     # record 9  - not done
             (5408, 54, 261): ['CBEAM', self._read_cbeam],       # record 10
             (11401, 114, 9016): ['CBEAMP', self._read_cbeamp],  # record 11 - not done
             (4601, 46, 298): ['CBEND', self._read_cbend],     # record 12 - not done
-            (2608, 26, 60): ['CBUSH', self._read_cbush],      # record 13 - not done
+            (2608, 26, 60): ['CBUSH', self._read_cbush],      # record 13
             (5608, 56, 218): ['CBUSH1D', self._read_cbush1d], # record 14 - not done
             (2315, 23, 146): ['CCONE', self._read_ccone],     # record 15 - not done
             (201, 2, 69): ['CDAMP1', self._read_cdamp1],      # record 16
@@ -50,6 +56,7 @@ class GEOM2(GeomCommon):
             (801, 8, 75): ['CELAS3', self._read_celas3],      # record 31
             (901, 9, 76): ['CELAS4', self._read_celas4],      # record 32
             # record 33
+            (9801, 98, 506): ['CFAST', self._read_cfast],     # record 34 - not done
             # record 34
             # record 35
             (8515, 85, 209): ['CFLUID2', self._read_cfluid2],  # record 35 - not done
@@ -142,7 +149,7 @@ class GEOM2(GeomCommon):
             (7609, 76, 9993): ['CTETPR', self._read_fake],
             (8100, 81, 381): ['CHACAB', self._read_fake],
             (8200, 82, 383): ['CHACBR', self._read_fake],
-            (8308, 83, 405): ['CHBDYE', self._read_fake],
+            (8308, 83, 405): ['CHBDYE', self._read_chbdye],
             (11201, 112, 9940): ['VUQUAD4', self._read_fake],
             (12801, 128, 417): ['RADBC', self._read_fake],
             (2708, 27, 59): ['CAABSF', self._read_fake],
@@ -205,7 +212,12 @@ class GEOM2(GeomCommon):
             (3501, 35, 1) : ['', self._read_fake],  # record
             (1001, 100, 10000) : ['', self._read_fake],  # record
             (1118, 1, 1874) : ['', self._read_fake],  # record
-            (7909, 79, 9946) : ['CPYRAMPR', self._read_fake],  # record
+
+            # NX specific
+            (17200, 172, 1000) : ['CPYRAM', self._read_cpyram],
+            (25700,257,9948) : ['CPYRA5FD', self._read_cpyram],
+            (25800,258,9947) : ['CPYRA13F', self._read_cpyram],
+            (7909, 79, 9946) : ['CPYRAMPR', self._read_cpyram],
         }
 
     def add_element(self, elem, allow_overwrites=True):
@@ -337,9 +349,37 @@ class GEOM2(GeomCommon):
         """
         CBUSH(2608,26,60) - the marker for Record 13
         """
-        if self.is_debug_file:
-            self.binary_debug.write('skipping CBUSH in GEOM2\n')
-        return len(data)
+        nelements = (len(data) - n) // 56
+        struct_obj = Struct(b(self._endian + '4i iii i ifi3f'))
+        for i in range(nelements):
+            edata = data[n:n + 56]  # 14*4
+            out = struct_obj.unpack(edata)
+            eid, pid, ga, gb, five, six, seven, f, cid, s, ocid, s1, s2, s3 = out
+            si = s1, s2, s3
+            if f == -1: # Use Element CID below for orientation
+                x = [None, None, None]
+                g0 = None
+            elif f in [0, 1]:
+                # 5, 6, 7, f
+                #0:4 4:8 8:12 12:16 16:20 20:24 24:28 28:32 32:36
+                #0   1   2    3     4     5     6     7     8
+                x1, x2, x3, f2 = unpack('3f i', edata[20:36])
+                assert f == f2, 'f=%s f2=%s' % (f, f2)
+                x = [x1, x2, x3]
+                g0 = None
+            elif f == 2:
+                x = [None, None, None]
+                g0 = five
+            else:
+                raise RuntimeError('invalid f value...f=%r' % f)
+            end = [x, g0]
+            data_in = [[eid, pid, ga, gb, cid, s, ocid, si], end]
+
+            elem = CBUSH.add_op2_data(data_in, f)
+            self.add_op2_element(elem)
+            n += 72
+        self.card_count['CBUSH'] = nelements
+        return n
 
     def _read_cbush1d(self, data, n):
         """
@@ -421,7 +461,7 @@ class GEOM2(GeomCommon):
             if self.is_debug_file:
                 self.binary_debug.write('  CDAMP4=%s\n' % str(out))
             (eid, bdamp, s1, s2) = out
-            elem = CDAMP4(None, out)
+            elem = CDAMP4.add_op2_data(out)
             self.add_op2_element(elem)
             n += 16
         self.card_count['CDAMP4'] = nelements
@@ -529,7 +569,12 @@ class GEOM2(GeomCommon):
         self.card_count['CELAS4'] = nelements
         return n
 
-# CFAST
+    def _read_cfast(self, data, n):
+        """
+        CFAST(9801,98,506) - the marker for Record ???
+        """
+        return len(data)
+
 # CFASTP
 
     def _read_cfluid2(self, data, n):
@@ -570,7 +615,8 @@ class GEOM2(GeomCommon):
                 x1 = None
                 x2 = None
                 x3 = None
-
+            else:
+                raise NotImplementedError('CGAP - f=%r f2=%r' % (f, f2))
             data_in = [eid, pid, ga, gb, g0, x1, x2, x3, cid]
             elem = CGAP.add_op2_data(data_in)
             self.add_op2_element(elem)
@@ -580,7 +626,27 @@ class GEOM2(GeomCommon):
 
 # CHACAB
 # CHACBR
-# CHBDYE
+
+    def _read_chbdye(self, data, n):
+        """
+        CHBDYE(8308,83,405) - the marker for Record ???
+        """
+        ntotal = 28  # 7*4
+        s = Struct(b(self._endian + '7i'))
+        nelements = (len(data) - n) // ntotal
+        for i in range(nelements):
+            edata = data[n:n+28]
+            out = s.unpack(edata)
+            (eid, eid2, side, iviewf, iviewb, radmidf, radmidb) = out
+            if self.is_debug_file:
+                self.binary_debug.write('  CHBDYE=%s\n' % str(out))
+            #self.log.debug('  CHBDYE=%s' % str(out))
+            data_in = [eid, eid2, side, iviewf, iviewb, radmidf, radmidb]
+            elem = CHBDYE.add_op2_data(data_in)
+            self.add_thermal_element(elem)
+            n += ntotal
+        self.card_count['CHBDYE'] = nelements
+        return n
 
     def _read_chbdyg(self, data, n):
         """
@@ -796,11 +862,11 @@ class GEOM2(GeomCommon):
         self.card_count['CONROD'] = nelements
         return n
 
-    def _read_conv(self, data, n):
+    def _read_conv_nx(self, data, n):
         """
         CONV(12701,127,408) - the marker for Record 59
         """
-        ntotal = 12*4  # 20*4
+        ntotal = 48  # 12*4
         s = Struct(b(self._endian + '4i 8f'))
         nelements = (len(data) - n) // ntotal
         for i in range(nelements):
@@ -809,23 +875,34 @@ class GEOM2(GeomCommon):
             if self.is_debug_file:
                 self.binary_debug.write('  CONV=%s; len=%s\n' % (str(out), len(out)))
             (eid, pcon_id, flmnd, cntrlnd,
-             #ta1, ta2, ta3, ta4, ta5, ta6, ta7, ta8,
-             wt1, wt2, wt3, wt4, wt5, wt6, wt7, wt8) = out
+             ta1, ta2, ta3, ta4, ta5, ta6, ta7, ta8) = out
             #assert eid > 0, out
-            data_in = [eid, pcon_id, flmnd, cntrlnd,
-                       #[ta1, ta2, ta3, ta5, ta6, ta7, ta8],
-                       [wt1, wt2, wt3, wt5, wt6, wt7, wt8]]
 
-            #elem = CONV.add_op2_data(data_in)
+            #ta = [ta1, ta2, ta3, ta5, ta6, ta7, ta8]
+            weights = [None] * 8
+            data_in = [eid, pcon_id, flmnd, cntrlnd,
+                       [ta1, ta2, ta3, ta4, ta5, ta6, ta7, ta8],
+                       weights]
+
+            elem = CONV.add_op2_data(data_in)
             #self.add_thermal_BC(elem, elem.eid)
 
             n += ntotal
         self.card_count['CONV'] = nelements
         return n
 
-    def _read_conv_old(self, data, n):
+    def _read_conv(self, data, n):
         """
-        CONV(12701,127,408) - the marker for Record 59
+        The CONV card is different between MSC and NX Nastran.
+        The MSC version is 8 fields longer.
+        """
+        if self.is_nx:
+            return self.read_conv_nx(data, n)
+        return self.read_conv_msc(data, n)
+
+    def _read_conv_msc(self, data, n):
+        """
+        CONV(12701,127,408) - the marker for Record 60
         """
         ntotal = 80  # 20*4
         s = Struct(b(self._endian + '12i8f'))
@@ -851,26 +928,55 @@ class GEOM2(GeomCommon):
     def _read_convm(self, data, n):
         """
         CONVM(8908,89,422) - the marker for Record 60
+
+        TODO: MSC has 7 fields in QRG (6 defined in DMAP)
+              NX has 6 fields in QRG (6 defined in DMAP)
+              MSC has extra MDOT field
         """
-        return len(data)
-        #ntotal = 28  # 7*4
-        #s = Struct(b(self._endian + '7i'))
-        #nelements = (len(data) - n) // ntotal
-        #for i in range(nelements):
-            #edata = data[n:n+28]
-            #out = unpack(edata)
-            #if self.is_debug_file:
-                #self.binary_debug.write('  CONVM=%s\n' % str(out))
-            #(eid, pconID, flmnd, cntrlnd,
-             #[ta1, ta2, ta3]) = out
-            #data_in = [
-                #eid, pconID, flmnd, cntrlnd,
-                #[ta1, ta2, ta3]]
-            #elem = CONVM.add_op2_data(data_in)  # undefined
-            #self.add_thermal_BC(elem)
-            #n += ntotal
-        #self.card_count['CONVM'] = nelements
-        #return n
+        #return len(data)
+        ntotal = 28  # 7*4
+        s = Struct(b(self._endian + '7i'))
+        nelements = (len(data) - n) // ntotal
+        for i in range(nelements):
+            edata = data[n:n+28]
+            out = unpack(edata)
+            if self.is_debug_file:
+                self.binary_debug.write('  CONVM=%s\n' % str(out))
+            (eid, pconID, flmnd, cntrlnd, ta1, ta2, mdot) = out
+            assert eid > 0, out  # TODO: I'm not sure that this really has 7 fields...
+            data_in = [eid, pconID, flmnd, cntrlnd, ta1, ta2, mdot]
+            elem = CONVM.add_op2_data(data_in)
+            self.add_thermal_BC(elem)
+            n += ntotal
+        self.card_count['CONVM'] = nelements
+        return n
+
+    def _read_cpyram(self, data, n):
+        """
+        CPYRAM(17200,172,1000) - the marker for Record ???
+
+        Specific to NX Nastran
+        """
+        s = Struct(b(self._endian + '17i'))
+        nelements = (len(data) - n) // 68
+        for i in range(nelements):
+            edata = data[n:n + 68]  # 17*4
+            out = s.unpack(edata)
+            if self.is_debug_file:
+                self.binary_debug.write('  CPENTA=%s\n' % str(out))
+            (eid, pid, g1, g2, g3, g4, g5, g6, g7, g8, g9, g10,
+             g11, g12, g13, _g14) = out
+
+            data_in = [eid, pid, g1, g2, g3, g4, g5]
+            big_nodes = [g6, g7, g8, g9, g10, g11, g12, g13]
+            if sum(big_nodes) > 0:
+                elem = CPYRAM13.add_op2_data(data_in + big_nodes)
+            else:
+                elem = CPYRAM5.add_op2_data(data_in)
+            self.add_op2_element(elem)
+            n += 68
+        self.card_count['CPENTA'] = nelements
+        return n
 
 # CPENP
 
