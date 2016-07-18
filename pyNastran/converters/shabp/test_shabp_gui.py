@@ -17,19 +17,25 @@ class ShabpGUI(ShabpIO, GUIMethods):
 
 class TestShabpGUI(unittest.TestCase):
 
-    def test_shabp_geometry(self):
-        return
-        #geometry_filename = os.path.join(model_path, 'M100.inp')
-        #agps_filename = os.path.join(model_path, 'agps')
-        #out_filename = os.path.join(model_path, 'panair.out')
+    def _test_shabp_geometry_01(self):
         dirname = None
-
         test = ShabpGUI()
-
-
-        test.load_shabp_geometry('models/NAC6.INP', '')
+        shabp_infilename = os.path.join(model_path, 'models', 'flap_inviscid.mk5')
+        test.load_shabp_geometry(shabp_infilename, '')
         #test.load_nastran_geometry(geometry_filename, None)
         #test.load_shabp_geometry(geometry_filename, dirname)
+
+    def _test_shabp_geometry_02(self):
+        dirname = None
+        test = ShabpGUI()
+        shabp_infilename = os.path.join(model_path, 'models', 'orbiter.mk5')
+        test.load_shabp_geometry(shabp_infilename, '')
+
+    def _test_shabp_geometry_03(self):
+        dirname = None
+        test = ShabpGUI()
+        shabp_infilename = os.path.join(model_path, 'models', 'shuttle.mk5')
+        test.load_shabp_geometry(shabp_infilename, '')
 
     def test_shabp_results(self):
         pass

@@ -179,10 +179,10 @@ class ShabpIO(object):
 
         for i, element in enumerate(elements):
             n1, n2, n3, n4 = element
-            p1 = nodes[n1]
-            p2 = nodes[n2]
-            p3 = nodes[n3]
-            p4 = nodes[n4]
+            p1 = nodes[n1, :]
+            p2 = nodes[n2, :]
+            p3 = nodes[n3, :]
+            p4 = nodes[n4, :]
             a = p3 - p1
             b = p4 - p2
             n = cross(a, b)

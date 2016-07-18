@@ -4,10 +4,13 @@ from numpy import array, zeros, arange, ones, cross
 from numpy.linalg import norm
 
 from pyNastran.converters.shabp.shabp_results import ShabpOut
+#from pyNastran.converters.shabp.parse_trailer import parse_trailer
+from pyNastran.utils.log import get_logger
 
 class SHABP(ShabpOut):
     def __init__(self, log=None, debug=False):
         ShabpOut.__init__(self, log, debug)
+        #self.xyz = {}
         self.X = {}
         self.Y = {}
         self.Z = {}
@@ -18,6 +21,7 @@ class SHABP(ShabpOut):
         self.component_to_params = {}
         self.component_num_to_name = {}
         self.component_name_to_num = {}
+        self.log = get_logger(log, 'debug' if debug else 'info')
 
     def write_shabp(self, out_filename):
         pass
@@ -126,20 +130,53 @@ class SHABP(ShabpOut):
             # C  1001         10        3  patch 1
             header = lines[i]
             #print "%r" % header.strip()
-            name = header[:7].strip()
-            #num = int(header[4:7])
-            nrows = int(header[7:20])
-            ncols = int(header[20:29])
-            name2 = header[29:].strip()
-            #print lines[i].strip()
-            flag = name[4]
+
+            if 1:
+                name = header[:7].strip()
+                #num = int(header[4:7])
+                nrows = int(header[7:20])
+                ncols = int(header[20:29])
+                name2 = header[29:].strip()
+                #print lines[i].strip()
+                flag = name[4]
+            else:
+                stream_cross = header[5]       # heat/tk A-10
+                symmetry = header[16]          # heat/tk A-10
+                scale_factor = header[17]      # heat/tk A-10
+                #nadj1 = header[18:20]  # not used
+                #nadj2 = header[20:22]  # not used
+                #nadj3 = header[22:24]  # not used
+                #nadj4 = header[24:26]  # not used
+
+                vis_type = int(header[26])
+                #if vis_type==0:  print "inviscid_A"
+                #if vis_type==1:  print "neither"
+                #if vis_type==2:  print "viscous_A"
+                #if vis_type==3:  print "inviscid_B"
+
+                name_old = header[:7].strip()
+                self.log.info('name=%r stream_cross=%r symmetry=%r scale_factor=%r vis_type=%r' % (
+                    name, stream_cross, symmetry, scale_factor, vis_type))
+
+                header2 = lines[i+1]
+                xsc = header2[0:10].strip()
+                ysc = header2[10:20].strip()
+                zsc = header2[20:30].strip()
+
+                delx = header2[30:40].strip()
+                dely = header2[40:50].strip()
+                delz = header2[50:60].strip()
+                self.log.info('sc=%s,%s,%s del=%r,%r,%r' % (xsc, ysc, zsc, delx, dely, delz))
+                print(lines[i].strip())
+                flag = name_old[4]
+
             if flag == '1':
                 is_last_patch = True
             elif flag == '0':
                 is_last_patch = False
             else:
                 raise RuntimeError('last patch flag = %r; must be 0 or 1' % flag)
-            #print "name=%r nrows=%i ncols=%i name2=%r" % (name, nrows, ncols, name2)
+            #print("name=%r nrows=%i ncols=%i name2=%r" % (name, nrows, ncols, name2))
 
             i += 2
             row = []
@@ -148,7 +185,9 @@ class SHABP(ShabpOut):
                 line = lines[i]
                 i += 1
 
+                #t1 = int(line[30])    # STAT - status flag - p. 27
                 x1, y1, z1, t1 = line[:10], line[10:20], line[20:30], line[30:31]
+                t1 = line[30]
                 x1 = float(x1)
                 y1 = float(y1)
                 z1 = float(z1)
@@ -162,11 +201,15 @@ class SHABP(ShabpOut):
                 elif t1 == 3:
                     row.append([x1, y1, z1])
                     patch.append(row)
+                    #assert len(row) == nrows, 'len(row)=%s nrows=%s ncols=%s' % (len(row), nrows, ncols)
                     break
                 else:
                     raise RuntimeError()
 
+                if t1 == 3:
+                    break
                 x2, y2, z2, t2 = line[31:41], line[41:51], line[51:61], line[61:62]
+                t2 = line[61]
                 x2 = float(x2)
                 y2 = float(y2)
                 z2 = float(z2)
@@ -184,7 +227,15 @@ class SHABP(ShabpOut):
                 else:
                     raise RuntimeError()
 
-            patches.append(array(patch, dtype='float32'))
+            try:
+                patchi = array(patch, dtype='float32')
+            except:
+                print('patch =', patch)
+                for i, patchi in enumerate(patch):
+                    print('i=%s n=%s patch=%s' % (i, len(patchi), patchi))
+                raise
+
+            patches.append(patchi)
             if is_last_patch:
                 #print "***last patch - lines[%i] = %r" % (i, lines[i])
                 break
@@ -194,15 +245,18 @@ class SHABP(ShabpOut):
         try:
             self.parse_trailer()
         except:
+            #raise
             print('failed parsing trailer')
 
     def build_patches(self, patches):
         X = []
         Y = []
         Z = []
+        #XYZ = []
         for ipatch, patch in enumerate(patches):
             nrows = len(patch)
             ncols = len(patch[0])
+            #xyz = zeros((nrows, ncols, 3), dtype='float32')
             x = zeros((nrows, ncols), dtype='float32')
             y = zeros((nrows, ncols), dtype='float32')
             z = zeros((nrows, ncols), dtype='float32')
@@ -211,12 +265,15 @@ class SHABP(ShabpOut):
                     x[irow, icol] = col[0]
                     y[irow, icol] = col[1]
                     z[irow, icol] = col[2]
+                    #xyz[irow, icol, :] = [col[0], col[1], col[2]]
             X.append(x)
             Y.append(y)
             Z.append(z)
+            #XYZ.append(xyz)
         self.X = X
         self.Y = Y
         self.Z = Z
+        #self.XYZ = XYZ
 
 
     def getPointsElementsRegions(self):
@@ -233,7 +290,7 @@ class SHABP(ShabpOut):
         ielement = 0
         j = 0
         XYZ = zeros((npoints, 3), dtype='float32')
-        elements2 = zeros((nelements, 4), dtype='float32')
+        elements2 = zeros((nelements, 4), dtype='int32')
         components = ones(nelements, dtype='int32')
         patches = ones(nelements, dtype='int32')
         impact = ones(nelements, dtype='int32')
@@ -285,9 +342,17 @@ class SHABP(ShabpOut):
         return XYZ, elements2, patches, components, impact, shadow
 
     def parse_trailer(self):
+        out = parse_trailer(self.trailer)
+        order, component_names, cases, components = out
+        print('order = %s' % order)
+        print('component_names = %s' % component_names)
+        print('cases = %s' % cases)
+        print('components = %s' % components)
+        return out
         #for line in self.trailer:
             #print line.rstrip()
         self.title = self.trailer[0].strip()
+        print('title = %r' % self.title)
         line2 = self.trailer[1]
         npatches = line2[:2]
 
@@ -353,7 +418,7 @@ class SHABP(ShabpOut):
         #i += 1
 
         methods = []
-        #print "methods ", self.trailer[i].strip()
+        print("methods %r" % self.trailer[i].strip())
         for v in self.trailer[i].strip():
             v2 = int(v)
             if v2 > 0:
