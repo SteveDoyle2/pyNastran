@@ -3,7 +3,7 @@
 Subcase creation/extraction class
 """
 from __future__ import print_function
-from six import string_types, iteritems
+from six import string_types, iteritems, PY2, PY3
 from numpy import ndarray
 
 from pyNastran.utils import integer_types
@@ -97,9 +97,20 @@ class Subcase(object):
         return stress_code
 
     def add_op2_data(self, data_code, msg):
+        """
+        >>> self.subcase.add_op2_data(self.data_code, 'VECTOR')
+        """
         #subtable_name = data_code['subtable_name']
         table_name = data_code['table_name']
-        table_name = table_name if isinstance(table_name, str) else table_name.decode('latin1')
+        if PY2 and isinstance(table_name, str):
+            # tablename is a byte string
+            table_name = table_name = table_name.decode('latin1')
+        elif PY3 and not isinstance(table_name, str):
+            # table_name is a byte string
+            table_name = table_name = table_name.decode('latin1')
+        else:
+            raise NotImplementedError('table_name=%r PY2=%s PY3=%s' % (table_name, PY2, PY3))
+
         table_code = data_code['table_code']
         sort_code = data_code['sort_code']
         device_code = data_code['device_code']
@@ -117,7 +128,7 @@ class Subcase(object):
         if data_code['label']:
             self.add('LABEL', data_code['label'], options, 'STRING-type')
 
-        if table_name in ['OUGV1', 'BOUGV1', 'OUGV2']:
+        if table_name in ['OUGV1', 'BOUGV1', 'OUGV2', 'OUG1']:
             if table_code == 1:
                 thermal = data_code['thermal']
                 if thermal == 0:
@@ -125,8 +136,10 @@ class Subcase(object):
                 elif thermal == 1:
                     self.add('ANALYSIS', 'HEAT', options, 'KEY-type')
                 else:
+                    print('Error calling subcase.add_op2_data...')
                     print(msg)
-                    raise NotImplementedError(data_code)
+                    print(data_code)
+                    #raise NotImplementedError(data_code)
             elif table_code == 7:
                 self.add('VECTOR', 'ALL', options, 'STRESS-type')
             elif table_code == 10:
@@ -134,28 +147,36 @@ class Subcase(object):
             elif table_code == 11:
                 self.add('ACCELERATION', 'ALL', options, 'STRESS-type')
             else:
+                print('Error calling subcase.add_op2_data...')
                 print(msg)
-                raise NotImplementedError(data_code)
+                print(data_code)
+                #raise NotImplementedError(data_code)
         elif table_name == 'TOUGV1':
             thermal = data_code['thermal']
             if thermal == 1:
                 self.add('ANALYSIS', 'HEAT', options, 'KEY-type')
             else:
+                print('Error calling subcase.add_op2_data...')
                 print(msg)
-                raise NotImplementedError(data_code)
+                print(data_code)
+                #raise NotImplementedError(data_code)
         elif table_name == 'ROUGV1':
             thermal = data_code['thermal']
             if thermal == 0:
                 self.add('DISPLACEMENT', 'ALL', options, 'STRESS-type')
             else:
+                print('Error calling subcase.add_op2_data...')
                 print(msg)
-                raise NotImplementedError(data_code)
+                print(data_code)
+                #raise NotImplementedError(data_code)
         elif table_name == 'BOPHIG':
             if table_code == 7:
                 self.add('ANALYSIS', 'HEAT', options, 'KEY-type')
             else:
+                print('Error calling subcase.add_op2_data...')
                 print(msg)
-                raise NotImplementedError(data_code)
+                print(data_code)
+                #raise NotImplementedError(data_code)
         elif table_name == 'OUPV1':
             if table_code == 1:
                 self.add('SDISPLACEMENT', 'ALL', options, 'STRESS-type')
@@ -164,39 +185,46 @@ class Subcase(object):
             elif table_code == 11:
                 self.add('SACCELERATION', 'ALL', options, 'STRESS-type')
             else:
+                print('Error calling subcase.add_op2_data...')
                 print(msg)
-                raise NotImplementedError(data_code)
+                print(data_code)
+                #raise NotImplementedError(data_code)
 
         elif table_name in ['OQG1', 'OQG2']:
             if table_code == 3:
                 self.add('SPCFORCES', 'ALL', options, 'STRESS-type')
             else:
                 print(msg)
-                raise NotImplementedError(data_code)
+                print(data_code)
+                #raise NotImplementedError(data_code)
         elif table_name in ['OEF1X', 'OEF1']:
             if table_code in [4]:
                 self.add('FORCE', 'ALL', options, 'STRESS-type')
             else:
                 print(msg)
-                raise NotImplementedError(data_code)
+                print(data_code)
+                #raise NotImplementedError(data_code)
         elif table_name in ['OEFIT']:
             if table_code in [25]:
                 self.add('FORCE', 'ALL', options, 'STRESS-type')
             else:
                 print(msg)
-                raise NotImplementedError(data_code)
+                print(data_code)
+                #raise NotImplementedError(data_code)
         elif table_name == 'OQMG1':
             if table_code in [3, 39]:
                 self.add('MPCFORCES', 'ALL', options, 'STRESS-type')
             else:
                 print(msg)
-                raise NotImplementedError(data_code)
+                print(data_code)
+                #raise NotImplementedError(data_code)
         elif table_name in ['OGPFB1']:
             if table_code == 19:
                 self.add('GPFORCE', 'ALL', options, 'STRESS-type')
             else:
                 print(msg)
-                raise NotImplementedError(data_code)
+                print(data_code)
+                #raise NotImplementedError(data_code)
         elif table_name in ['OES1', 'OES1X', 'OES1X1', 'OES1C', 'OESCP',
                             'OESNLXD', 'OESNLXR', 'OESNLBR', 'OESTRCP']:
             #assert data_code['is_stress_flag'] == True, data_code
@@ -204,24 +232,28 @@ class Subcase(object):
                 self.add('STRESS', 'ALL', options, 'STRESS-type')
             else:
                 print(msg)
-                raise NotImplementedError(data_code)
+                print(data_code)
+                #raise NotImplementedError(data_code)
         elif table_name in ['OESRT']:
             #assert data_code['is_stress_flag'] == True, data_code
             if table_code == 25:
                 self.add('STRESS', 'ALL', options, 'STRESS-type')
             else:
                 print(msg)
-                raise NotImplementedError(data_code)
+                print(data_code)
+                #raise NotImplementedError(data_code)
         elif table_name in ['OSTR1X', 'OSTR1C']:
             assert data_code['is_strain_flag'] == True, data_code
             if table_code == 5:
                 self.add('STRAIN', 'ALL', options, 'STRESS-type')
             else:
                 print(msg)
-                raise NotImplementedError(data_code)
+                print(data_code)
+                #raise NotImplementedError(data_code)
         else:
             print(msg)
-            raise NotImplementedError(data_code)
+            print(data_code)
+            #raise NotImplementedError(data_code)
         #print(self)
 
     def get_format_code(self, options, value):
