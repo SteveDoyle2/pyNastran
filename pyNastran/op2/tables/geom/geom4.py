@@ -6,7 +6,7 @@ from six.moves import range
 
 #from pyNastran.bdf.cards.constraints import SPC,SPCADD
 from pyNastran.bdf.cards.elements.rigid import RBE2
-from pyNastran.bdf.cards.constraints import SUPORT, SPC, SPC1
+from pyNastran.bdf.cards.constraints import SUPORT, SPC, SPC1, SUPORT1
 from pyNastran.bdf.cards.loads.loads import SPCD
 from pyNastran.op2.tables.geom.geom_common import GeomCommon
 
@@ -23,22 +23,45 @@ class GEOM4(GeomCommon):
             (5561, 76, 215): ['ASET', self._read_aset],          # record 1  - not done
             (5571, 77, 216): ['ASET1', self._read_aset1],        # record 2  - not done
             (10200, 102, 473): ['BNDGRID', self._read_bndgrid],  # record 3  - not done
-            (1510, 15, 328): ['CYAX', self._read_cyax],          # record 8  - not done
-            (5210, 52, 257): ['CYJOIN', self._read_cyjoin],      # record 9  - not done
-            (1710, 17, 330): ['CYSYM', self._read_cysym],        # record 11 - not done
-            (4901, 49, 17): ['MPC', self._read_mpc],             # record 16 - not done
-            (4891, 60, 83): ['MPCADD', self._read_mpcadd],       # record 17 - not done
-            (4951, 63, 92): ['OMIT1', self._read_omit1],         # record 19 - not done
 
-            (610, 6, 316): ['QSET1', self._read_qset1],          # record 21 - not done
-            (6601, 66, 292): ['RBAR', self._read_rbar],          # record 22 - not done
-            (6801, 68, 294): ['RBE1', self._read_rbe1],          # record 23 - not done
-            (6901, 69, 295): ['RBE2', self._read_rbe2],          # record 24 - buggy
-            (7101, 71, 187): ['RBE3', self._read_rbe3],          # record 25 - not done
+            (110, 1, 311): ['BSET', self._read_fake],           # record 5  - not done
+            (410, 4, 314): ['BSET1', self._read_fake],          # record 6  - not done
+            (310, 3, 313): ['CSET', self._read_fake],           # record 7  - not done
+            (210, 2, 312): ['CSET1', self._read_fake],          # record 8  - not done
 
-            (6501, 65, 291): ['RROD', self._read_rrod],          # record 30 - not done
-            (7001, 70, 186): ['RSPLINE', self._read_rspline],    # record 31 - not done
-            (7201, 72, 398): ['RSSCON', self._read_rsscon],      # record 32 - not done
+            (1510, 15, 328): ['CYAX', self._read_cyax],          # record 9  - not done
+            (5210, 52, 257): ['CYJOIN', self._read_cyjoin],      # record 10 - not done
+            (1610, 16, 329) : ['CYSUP', self._read_fake],        # record 11 - not done
+            (1710, 17, 330): ['CYSYM', self._read_cysym],        # record 12 - not done
+            (8801, 88, 9022) : ['EGENDT', self._read_fake],      # record 13 - not done
+            (9001, 90, 9024): ['FCENDT', self._read_fake],       # record 14 - not done
+            (8001, 80, 395): ['GMBC', self._read_fake],          # record 15 - not done
+            (7801, 78, 393): ['GMSPC', self._read_fake],         # record 16 - not done
+            #: ['', self._read_fake],
+
+
+            (4901, 49, 17) : ['MPC', self._read_mpc],             # record 17 - not done
+            (4891, 60, 83) : ['MPCADD', self._read_mpcadd],       # record 18 - not done
+            (5001, 50, 15) : ['OMIT', self._read_fake],           # record 19 - not done
+            (4951, 63, 92) : ['OMIT1', self._read_omit1],         # record 20 - not done
+            (510, 5, 315) : ['QSET', self._read_fake],            # record 21 - not done
+            (610, 6, 316) : ['QSET1', self._read_qset1],          # record 22 - not done
+
+            (6601, 66, 292) : ['RBAR', self._read_rbar],          # record 23 - not done
+            (6801, 68, 294) : ['RBE1', self._read_rbe1],          # record 24 - not done
+            (6901, 69, 295) : ['RBE2', self._read_rbe2],          # record 25 - buggy
+            (7101, 71, 187) : ['RBE3', self._read_rbe3],          # record 26 - not done
+            (14201, 142, 652) : ['RBJOINT', self._read_fake],     # record 27 - not done
+            (14301, 143, 653) : ['RBJSTIF', self._read_fake],     # record 28 - not done
+            (1310, 13, 247) : ['RELEASE', self._read_fake],       # record 29 - not done
+            (14101,141,640): ['RPNOM', self._read_fake],          # record 30 - not done
+            (6501, 65, 291): ['RROD', self._read_rrod],          # record 31 - not done
+            (7001, 70, 186): ['RSPLINE', self._read_rspline],    # record 32 - not done
+            (7201, 72, 398): ['RSSCON', self._read_rsscon],      # record 33 - not done
+            #: ['', self._read_fake],
+            #: ['', self._read_fake],
+            #: ['', self._read_fake],
+
             (1210, 12, 322): ['SEQSET1', self._read_seqset1],    # record 40 - not done
             (5110, 51, 256): ['SPCD', self._read_spcd],          # record 44
             (5501, 55, 16): ['SPC', self._read_spc],             # record 44 - buggy
@@ -275,17 +298,16 @@ class GEOM4(GeomCommon):
 
     def _read_spcd(self, data, n):
         """SPCD(5110,51,256) - Record 47"""
-        #self.log.debug('skipping SPCD in GEOM4\n')
+        self.log.debug('skipping SPCD in GEOM4\n')
         return len(data)
         s = Struct(b(self._endian + '4ifi'))
         nentries = (len(data) - n) // 20 # 5*4
         for i in range(nentries):
             edata = data[n:n + 20]
-            self.show_data(edata)
+            #self.show_data(edata)
             out = s.unpack(edata)
             (sid, ID, c, xxx, dx) = out
             #print(out)
-            #print()
             if self.is_debug_file:
                 self.binary_debug.write('  SPCD=%s\n' % str(out))
 
@@ -329,20 +351,52 @@ class GEOM4(GeomCommon):
 
     def _read_suport(self, data, n):
         """SUPORT(5601,56, 14) - Record 59"""
-        #self.log.debug('skipping SUPORT in GEOM4\n')
         nentries = (len(data) - n) // 8 # 2*4
         s = Struct(b(self._endian + '2i'))
         for i in range(nentries):
-            data_in = list(s.unpack(data[n:n + 8]))
-            print(data_in)
-            suport = SUPORT.add_op2_data(data_in)
+            out = list(s.unpack(data[n:n + 8]))
+            if self.is_debug_file:
+                self.binary_debug.write('  SUPORT=%s\n' % str(out))
+                #self.log.info(out)
+            suport = SUPORT.add_op2_data(out)
             self.add_suport(suport) # extracts [sid, c]
             n += 8
         return n
 
     def _read_suport1(self, data, n):
         """SUPORT1(10100,101,472) - Record 60"""
-        self.log.debug('skipping SUPORT1 in GEOM4\n')
+        nfields = (len(data) - n) // 4 - 2
+        out = unpack(b(self._endian + '%ii' % nfields), data[n:n+nfields*4])
+        print(out)
+
+        i = 0
+        nsuports = 0
+        suport = []
+        while i < len(out):
+            if out[i] == -1:
+                assert out[i+1] == -1, out
+                suporti = SUPORT1.add_op2_data(suport)
+                self.add_suport(suporti) # extracts [sid, nid, c]
+                #print(suporti)
+                nsuports += 1
+                if self.is_debug_file:
+                    self.binary_debug.write('  SUPORT1=%s\n' % str(suport))
+                suport = []
+                i += 2
+                continue
+            suport.append(out[i])
+            i += 1
+            #print(suport)
+            assert -1 not in suport, suport
+
+        if self.is_debug_file:
+            self.binary_debug.write('  SUPORT1=%s\n' % str(suport))
+        suporti = SUPORT1.add_op2_data(suport)
+        self.add_suport(suporti) # extracts [sid, nid, c]
+        nsuports += 1
+        self.card_count['SUPOT1'] = nsuports
+
+        assert n+nfields*4+8 == len(data), 'a=%s b=%s' % (n+nfields*4+8, len(data))
         return len(data)
 
 # TEMPBC

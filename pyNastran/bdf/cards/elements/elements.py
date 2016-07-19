@@ -205,6 +205,8 @@ class CGAP(Element):
         x3 = data[7]
         x = [x1, x2, x3]
         cid = data[8]
+        if cid == -1:
+            cid = None
         return CGAP(eid, pid, ga, gb, x, g0, cid, comment=comment)
 
     def _verify(self, xref=True):

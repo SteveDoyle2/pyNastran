@@ -85,11 +85,18 @@ class SUPORT1(Constraint):
             n += 1
         return SUPORT1(conid, IDs, Cs, comment=comment)
 
-    #@classmethod
-    #def add_op2_data(cls, data, comment=''):
-        #msg = '%s has not implemented data parsing' % cls.type
-        #raise NotImplementedError(msg)
-        #return SUPORT1(conid, IDs, Cs, commment=comment)
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        conid = data[0]
+        assert (len(data) - 1) % 2 == 0, data
+        IDs = []
+        Cs = []
+        for i in range(1, len(data), 2):
+            ID = data[i]
+            C = data[i+1]
+            IDs.append(ID)
+            Cs.append(C)
+        return SUPORT1(conid, IDs, Cs, comment=comment)
 
     def add_suport1_to_set(self, suport1):
         assert self.conid == suport1.conid, 'SUPORT1 conid=%s new_conid=%s; they must be the same' % (self.conid, suport1.conid)
