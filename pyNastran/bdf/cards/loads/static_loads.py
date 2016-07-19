@@ -2274,7 +2274,7 @@ class PLOAD4(Load):
         g34 = data[4]
         if g1 == 0:
             g1 = None
-        if g1 == 34:
+        if g34 == 0:
             g34 = None
         cid = data[5]
         NVector = data[6]
@@ -2293,6 +2293,8 @@ class PLOAD4(Load):
             raise RuntimeError(self.sorl)
         if self.ldir not in ['LINE', 'X', 'Y', 'Z', 'TANG', 'NORM']:
             raise RuntimeError(self.ldir)
+        assert self.g1 != 0, str(self)
+        assert self.g34 != 0, str(self)
 
     def get_loads(self):
         return [self]
@@ -2353,10 +2355,10 @@ class PLOAD4(Load):
         #self.eid_ref = self.eid
         self.cid_ref = self.cid
         if self.g1 is not None:
-            self.g1 = model.Node(self.g1, msg=msg)
+            self.g1 = model.Node(self.g1, msg=msg + '; g1')
             self.g1_ref = self.g1
         if self.g34 is not None:
-            self.g34 = model.Node(self.g34, msg=msg)
+            self.g34 = model.Node(self.g34, msg=msg + '; g34')
             self.g34_ref = self.g34
         if self.eids:
             self.eids = model.Elements(self.eids, msg=msg)

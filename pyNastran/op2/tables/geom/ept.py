@@ -77,9 +77,16 @@ class EPT(GeomCommon):
             (4706, 47, 376): ['PLSOLID', self._read_fake],  # record 47
             (10301, 103, 399): ['PSET', self._read_fake],  # record 57
             (3002, 30, 415): ['VIEW3D', self._read_fake],  # record 63
+
+            (13501, 135, 510) : ['PFAST', self._read_pfast_msc],  # MSC-specific
+
+            # NX-specific
+            (3601, 36, 55) : ['PFAST', self._read_pfast_nx],  # NX-specific
         }
 
     def _add_op2_property(self, prop):
+        if prop.pid > 100000000:
+            raise RuntimeError('bad parsing...')
         self.add_property(prop, allow_overwrites=True)
         #print(str(prop)[:-1])
 
@@ -417,6 +424,7 @@ class EPT(GeomCommon):
         if self.is_debug_file:
             self.binary_debug.write('skipping PCONVM\n')
         return len(data)
+
     def _read_pdamp(self, data, n):
         """
         PDAMP(202,2,45) - the marker for Record ???
@@ -462,24 +470,68 @@ class EPT(GeomCommon):
         self.card_count['PELAS'] = nproperties
         return n
 
-# PFAST
+    def _read_pfast_msc(self, data, n):
+        ntotal = 92 # 23*4
+        s = Struct(b(self._endian + 'ifii 4f'))
+        nproperties = (len(data) - n) // ntotal
+        for i in range(nproperties):
+            edata = data[n:n+ntotal]
+            out = s.unpack(edata)
+            if self.is_debug_file:
+                self.binary_debug.write('  PFAST=%s\n' % str(out))
+            (pid, d, mcid, connbeh, conntype, extcon, condtype, weldtype,
+             minlen, maxlen, gmcheck, spcgs, mass, ge, aa, bb, cc, mcid, mflag,
+             kt1, kt2, kt3, kr1, kr2, kr3) = out
+
+            data_in = (pid, d, mcid, mflag, kt1, kt2, kt3,
+                       kr1, kr2, kr3, mass, ge)
+            prop = PFAST.add_op2_data(data_in)
+            self._add_op2_property(prop)
+            n += ntotal
+        self.card_count['PFAST'] = nproperties
+        return n
+
+    def _read_pfast_nx(self, data, n):
+        """
+        PFAST(3601,36,55)
+        NX only
+        """
+        ntotal = 48
+        s = Struct(b(self._endian + 'ifii 4f'))
+        nproperties = (len(data) - n) // ntotal
+        for i in range(nproperties):
+            edata = data[n:n+ntotal]
+            out = s.unpack(edata)
+            if self.is_debug_file:
+                self.binary_debug.write('  PFAST=%s\n' % str(out))
+            (pid, d, mcid, mflag, kt1, kt2, kt3, kr1, kr2, kr3, mass, ge) = out
+
+            data_in = (pid, d, mcid, mflag, kt1, kt2, kt3,
+                       kr1, kr2, kr3, mass, ge)
+            prop = PFAST.add_op2_data(data_in)
+            self._add_op2_property(prop)
+            n += ntotal
+        self.card_count['PFAST'] = nproperties
+        return n
 # PELAST
 
     def _read_pgap(self, data, n):
         """
         PGAP(3201,32,55) - the marker for Record 42
         """
+        ntotal = 44
         s = Struct(b(self._endian + 'i10f'))
-        nproperties = (len(data) - n) // 44
+        nproperties = (len(data) - n) // ntotal
         for i in range(nproperties):
-            edata = data[n:n+44]
+            edata = data[n:n+ntotal]
             out = s.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  PGAP=%s\n' % str(out))
             #(pid,u0,f0,ka,kb,kt,mu1,mu2,tmax,mar,trmin) = out
             prop = PGAP.add_op2_data(out)
             self._add_op2_property(prop)
-        #self.card_count['PGAP'] = nproperties
+            n += ntotal
+        self.card_count['PGAP'] = nproperties
         return n
 
     def _read_phbdy(self, data, n):

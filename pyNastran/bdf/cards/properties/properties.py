@@ -81,6 +81,13 @@ class PFAST(Property):
         return PFAST(pid, d, mcid, mflag, kt1, kt2, kt3,
                      kr1, kr2, kr3, mass, ge, comment=comment)
 
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        (pid, d, mcid, mflag, kt1, kt2, kt3,
+         kr1, kr2, kr3, mass, ge) = data
+        return PFAST(pid, d, mcid, mflag, kt1, kt2, kt3,
+                     kr1, kr2, kr3, mass, ge, comment=comment)
+
     def cross_reference(self, model):
         """
         Cross links the card so referenced cards can be extracted directly

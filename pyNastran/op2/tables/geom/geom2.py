@@ -228,6 +228,10 @@ class GEOM2(GeomCommon):
             self.log.debug(elem)
             raise ValueError(elem)
             #return
+
+        if elem.eid > 100000000:
+            raise RuntimeError('bad parsing...')
+
         if elem.type in ['CTRIA6', 'CQUAD8']:
             for nid in elem.nodes:
                 if nid == -1:
