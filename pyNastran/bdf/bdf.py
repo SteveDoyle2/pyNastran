@@ -2021,7 +2021,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
     def _prepare_radm(self, card, card_obj, comment=''):
         """adds a RADM"""
-        boundary_condition = RADM(card_obj, comment=comment)
+        boundary_condition = RADM.add_card(comment=comment)
         self.add_thermal_BC(boundary_condition, boundary_condition.radmid)
 
     def _prepare_radbc(self, card, card_obj, comment=''):
