@@ -491,7 +491,7 @@ class PLOTEL(BaseCard):
         Defines a 1D dummy element used for plotting.
         +--------+-----+-----+-----+
         |   1    |  2  |  3  |  4  |
-        +--------+-----+-----+-----+
+        +========+=====+=====+=====+
         | PLOTEL | EID | G1  | G2  |
         +--------+-----+-----+-----+
         """
@@ -508,7 +508,7 @@ class PLOTEL(BaseCard):
             integer(card, 2, 'g1'),
             integer(card, 3, 'g2'),
         ]
-        assert len(card) <= 4, 'len(CGAP card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 4, 'len(PLOTEL card) = %i\ncard=%s' % (len(card), card)
         return PLOTEL(eid, nodes, comment=comment)
 
     @classmethod

@@ -3,7 +3,7 @@ from struct import unpack, Struct
 from six import b
 from six.moves import range
 
-from pyNastran.bdf.cards.elements.elements import CGAP
+from pyNastran.bdf.cards.elements.elements import CGAP, PLOTEL
 from pyNastran.bdf.cards.elements.damper import (CDAMP1, CDAMP2, CDAMP3,
                                                  CDAMP4, CDAMP5, CVISC)
 from pyNastran.bdf.cards.elements.springs import CELAS1, CELAS2, CELAS3, CELAS4
@@ -1405,10 +1405,20 @@ class GEOM2(GeomCommon):
 # GMINTC
 # GMINTS
     def _read_plotel(self, data, n):  # 114
-        self.log.debug('skipping PLOTEL in GEOM2\n')
-        if self.is_debug_file:
-            self.binary_debug.write('skipping PLOTEL in GEOM2\n')
-        return len(data)
+        s = Struct(b(self._endian + '3i'))
+        ntotal = 12
+        nelements = (len(data) - n) // ntotal
+        for i in range(nelements):
+            edata = data[n:n + ntotal]  # 4*4
+            out = s.unpack(edata)
+            if self.is_debug_file:
+                self.binary_debug.write('  PLOTEL=%s\n' % str(out))
+            #(eid,n1,n2) = out
+            elem = PLOTEL.add_op2_data(out)
+            self.add_op2_element(elem)
+            n += ntotal
+        self.card_count['PLOTEL'] = nelements
+        return n
 # RADBC
 # RADINT
 # SINT

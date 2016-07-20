@@ -7,6 +7,7 @@ from six.moves import range
 #from pyNastran.bdf.cards.constraints import SPC,SPCADD
 from pyNastran.bdf.cards.elements.rigid import RBE2
 from pyNastran.bdf.cards.constraints import SUPORT, SPC, SPC1, SUPORT1
+from pyNastran.bdf.cards.bdf_sets import ASET, ASET1, QSET, QSET1, SEQSET, SEQSET1
 from pyNastran.bdf.cards.loads.loads import SPCD
 from pyNastran.op2.tables.geom.geom_common import GeomCommon
 
@@ -20,8 +21,8 @@ class GEOM4(GeomCommon):
     def __init__(self):
         GeomCommon.__init__(self)
         self._geom4_map = {
-            (5561, 76, 215): ['ASET', self._read_aset],          # record 1  - not done
-            (5571, 77, 216): ['ASET1', self._read_aset1],        # record 2  - not done
+            (5561, 76, 215): ['ASET', self._read_aset],          # record 1
+            (5571, 77, 216): ['ASET1', self._read_aset1],        # record 2
             (10200, 102, 473): ['BNDGRID', self._read_bndgrid],  # record 3  - not done
 
             (110, 1, 311): ['BSET', self._read_fake],           # record 5  - not done
@@ -44,8 +45,8 @@ class GEOM4(GeomCommon):
             (4891, 60, 83) : ['MPCADD', self._read_mpcadd],       # record 18 - not done
             (5001, 50, 15) : ['OMIT', self._read_fake],           # record 19 - not done
             (4951, 63, 92) : ['OMIT1', self._read_omit1],         # record 20 - not done
-            (510, 5, 315) : ['QSET', self._read_fake],            # record 21 - not done
-            (610, 6, 316) : ['QSET1', self._read_qset1],          # record 22 - not done
+            (510, 5, 315) : ['QSET', self._read_qset],            # record 21
+            (610, 6, 316) : ['QSET1', self._read_qset1],          # record 22
 
             (6601, 66, 292) : ['RBAR', self._read_rbar],          # record 23 - not done
             (6801, 68, 294) : ['RBE1', self._read_rbe1],          # record 24 - not done
@@ -61,8 +62,10 @@ class GEOM4(GeomCommon):
             #: ['', self._read_fake],
             #: ['', self._read_fake],
             #: ['', self._read_fake],
+            (1110, 11, 321): ['SEQSET', self._read_seqset],      # record 40
+            (1210, 12, 322): ['SEQSET1', self._read_seqset1],    # record 41
 
-            (1210, 12, 322): ['SEQSET1', self._read_seqset1],    # record 40 - not done
+            # these ones are not fully marked...
             (5110, 51, 256): ['SPCD', self._read_spcd],          # record 44
             (5501, 55, 16): ['SPC', self._read_spc],             # record 44 - buggy
             (5481, 58, 12): ['SPC1', self._read_spc1],           # record 45 - not done
@@ -100,13 +103,48 @@ class GEOM4(GeomCommon):
 
     def _read_aset(self, data, n):
         """ASET(5561,76,215) - Record 1"""
-        self.log.debug('skipping ASET in GEOM4\n')
-        return len(data)
+        return self._read_xset(data, n, 'ASET', ASET, self.add_ASET)
+
+    def _read_qset(self, data, n):
+        """QSET(610, 6, 316) - Record 21"""
+        return self._read_xset(data, n, 'QSET', QSET, self.add_QSET)
+
+    def _read_xset(self, data, n, card_name, cls, add_method):
+        """common method for ASET, QSET"""
+        s = Struct(b(self._endian + '2i'))
+        ntotal = 8
+        nelements = (len(data) - n) // ntotal
+        for i in range(nelements):
+            edata = data[n:n + ntotal]
+            out = s.unpack(edata)
+            if self.is_debug_file:
+                self.binary_debug.write('  %s=%s\n' % (card_name, str(out)))
+            #(id, component) = out
+            elem = cls.add_op2_data(out)
+            self.add_method(elem)
+            n += ntotal
+            self._increase_card_count(card_name, 1)
+        return n
 
     def _read_aset1(self, data, n):
-        """ASET1(5571,77,216) - Record 2"""
-        self.log.debug('skipping ASET1 in GEOM4\n')
-        return len(data)
+        """ASET1(5571,77,216) - Record 22"""
+        #self.log.debug('skipping ASET1 in GEOM4\n')
+        #return len(data)
+        return self._read_xset1(data, n, 'ASET1', ASET1, self.add_ASET)
+
+    def _read_xset1(self, data, n, card_name, cls, add_method):
+        """common method for ASET1, QSET1"""
+        ndata = len(data)
+        nfields = (ndata - n) // 4
+        fmt = '%ii' % nfields
+        out = unpack(b(self._endian + fmt), data[n:])
+        if self.is_debug_file:
+            self.binary_debug.write('  %s=%s\n' % (card_name, str(out)))
+        card = cls.add_op2_data(out)
+        add_method(card)
+        self._increase_card_count(card_name, 1)
+        return ndata
+
 
     def _read_bndgrid(self, data, n):
         """BNDGRID(10200,102,473) - Record 3 """
@@ -153,9 +191,10 @@ class GEOM4(GeomCommon):
         return len(data)
 
     def _read_qset1(self, data, n):
-        """QSET1(610, 6, 316) - Record 21"""
-        self.log.debug('skipping QSET1 in GEOM4\n')
-        return len(data)
+        """QSET1(610,6,316) - Record 22"""
+        #self.log.debug('skipping QSET1 in GEOM4\n')
+        #return len(data)
+        return self._read_xset1(data, n, 'QSET1', QSET1, self.add_QSET)
 
     def _read_rbar(self, data, n):
         """RBAR(6601,66,292) - Record 22"""
@@ -218,10 +257,17 @@ class GEOM4(GeomCommon):
 # SECSET1
 # SEQSET
 
-    def _read_seqset1(self, data, n):
-        """SEQSET1(1210,12,322) - Record 40"""
-        self.log.debug('skipping SEQSET1 in GEOM4\n')
+    def _read_seqset(self, data, n):
+        """SEQSET(1110,11,321) - Record 40"""
+        self.log.debug('skipping SEQSET in GEOM4\n')
         return len(data)
+        #return self._read_xset(data, n, 'SEQSET', SEQSET, self.add_SEQSET)
+
+    def _read_seqset1(self, data, n):
+        """SEQSET1(1210,12,322) - Record 41"""
+        #self.log.debug('skipping SEQSET1 in GEOM4\n')
+        #return len(data)
+        return self._read_xset1(data, n, 'SEQSET1', SEQSET1, self.add_SEQSET)
 
 # SESUP
 # SEUSET
@@ -367,7 +413,6 @@ class GEOM4(GeomCommon):
         """SUPORT1(10100,101,472) - Record 60"""
         nfields = (len(data) - n) // 4 - 2
         out = unpack(b(self._endian + '%ii' % nfields), data[n:n+nfields*4])
-        print(out)
 
         i = 0
         nsuports = 0

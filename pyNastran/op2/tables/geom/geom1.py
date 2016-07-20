@@ -29,7 +29,7 @@ class GEOM1(GeomCommon):
             #grid, nid, cp, x1, x2, x3, cd, ps, seid
             for i, (v1, v2) in enumerate(zip(fields1, fields2)):
                 if v1 != v2:
-                    print('i=%s v1=%r v2=%r fields1=%s\nfields2=%s' % (
+                    self.log.info('i=%s v1=%r v2=%r fields1=%s\nfields2=%s' % (
                         i, v1, v2, fields1, fields2))
         else:
             self._type_to_id_map[node.type].append(key)
@@ -253,11 +253,12 @@ class GEOM1(GeomCommon):
                 #if nid in self.nodes:
                     #self.reject_lines.append(str(node))
                 #else:
-                self.nodes[nid] = node
+                #self.nodes[nid] = node
                 #self.add_node(node)
             else:
                 self.log.debug("*nid=%s cp=%s x1=%-5.2f x2=%-5.2f x3=%-5.2f cd=%-2s ps=%s seid=%s" %
                                (nid, cp, x1, x2, x3, cd, ps, seid))
+                self.reject_cards.append(str(node))
             n += ntotal
         return n
 
