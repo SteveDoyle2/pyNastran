@@ -33,7 +33,7 @@ class NastranMatrix(BaseCard):
         #self.GCj = GCj
         #self.GCi = GCi
         #self.Real = Real
-        #if self.is_complex():
+        #if self.is_complex:
             #self.Complex = []
 
     #def add_card_init(self, card, data, comment=''):
@@ -68,7 +68,7 @@ class NastranMatrix(BaseCard):
         self.GCj = []
         self.GCi = []
         self.Real = []
-        if self.is_complex():
+        if self.is_complex:
             self.Complex = []
         assert isinstance(self.ifo, integer_types), 'ifo=%r type=%s' % (self.ifo, type(self.ifo))
         assert not isinstance(self.ifo, bool), 'ifo=%r type=%s' % (self.ifo, type(self.ifo))
@@ -94,7 +94,7 @@ class NastranMatrix(BaseCard):
         self.GCi = np.asarray(self.GCi)
         self.GCj = np.asarray(self.GCj)
         self.Real = np.asarray(self.Real)
-        if self.is_complex():
+        if self.is_complex:
             self.Complex = np.asarray(self.Complex)
 
     @property
@@ -165,8 +165,8 @@ class NastranMatrix(BaseCard):
         for i in range(nloops):
             self.GCj.append((Gj, Cj))
 
-        if self.is_complex():
-            if self.is_polar():
+        if self.is_complex:
+            if self.is_polar:
                 for i in range(nloops):
                     n = 5 + 4 * i
                     Gi = integer(card, n, 'Gi')
@@ -210,7 +210,7 @@ class NastranMatrix(BaseCard):
 
         msg = '(len(GCj)=%s len(GCi)=%s' % (len(self.GCj), len(self.GCi))
         assert len(self.GCj) == len(self.GCi), msg
-        #if self.is_complex():
+        #if self.is_complex:
             #self.Complex(double(card, v, 'complex')
 
     def get_matrix(self, is_sparse=False, apply_symmetry=True):
@@ -243,24 +243,26 @@ class NastranMatrix(BaseCard):
         self.name = new_name
 
     def isComplex(self):
-        self.deprecated('isComplex()', 'is_complex()', '0.8')
-        return self.is_complex()
+        self.deprecated('isComplex()', 'is_complex', '0.8')
+        return self.is_complex
 
     def isReal(self):
-        self.deprecated('isReal()', 'is_real()', '0.8')
-        return self.is_real()
+        self.deprecated('isReal()', 'is_real', '0.8')
+        return self.is_real
 
     def isPolar(self):
-        self.deprecated('isPolar()', 'is_polar()', '0.8')
-        return self.is_polar()
+        self.deprecated('isPolar()', 'is_polar', '0.8')
+        return self.is_polar
 
     def getMatrix(self, isSparse=False, applySymmetry=True):
         self.deprecated('getMatrix()', 'get_matrix()', '0.8')
         return self.get_matrix(is_sparse=isSparse, apply_symmetry=applySymmetry)
 
+    @property
     def is_real(self):
-        return not self.is_complex()
+        return not self.is_complex
 
+    @property
     def is_complex(self):
         if self.tin in [1, 2]: # real
             return False
@@ -271,6 +273,7 @@ class NastranMatrix(BaseCard):
                'of the matrix.  TIN=%r.' % (self.name, self.tin))
         raise ValueError(msg)
 
+    @property
     def is_polar(self):
         """
         Used by:
@@ -313,7 +316,7 @@ class NastranMatrix(BaseCard):
         elif type_flag == 4:
             dtype = 'complex128'
         elif type_flag == 0:
-            if self.is_complex():
+            if self.is_complex:
                 dtype = 'complex128'
             else:
                 dtype = 'float64'
@@ -365,8 +368,8 @@ class NastranMatrix(BaseCard):
         else:
             msg += print_card_16(list_fields)
 
-        if self.is_complex():
-            if self.is_polar():
+        if self.is_complex:
+            if self.is_polar:
                 for (GCi, GCj, reali, complexi) in zip(self.GCi, self.GCj, self.Real, self.Complex):
                     magi = sqrt(reali**2 + complexi**2)
                     if reali == 0.0:
@@ -476,6 +479,167 @@ def get_row_col_map(GCi, GCj, ifo):
     assert ncols > 0, 'ncols=%s' % ncols
     return nrows, ncols, ndim, rows, cols, rows_reversed, cols_reversed
 
+def _fill_sparse_matrix(self, nrows, ncols):
+    """helper method for get_matrix"""
+    GCj = array(self.GCj, dtype='int32') - 1
+    GCi = array(self.GCi, dtype='int32') - 1
+    reals = array(self.Real, dtype='float32')
+
+    # TODO: matrix size:  is this correct?
+    nrows = max(GCi) + 1
+    ncols = max(GCj) + 1
+
+    dtype = self._get_dtype(self.tin)
+    # TODO: no check for symmetry
+    # TODO: no check for dtype
+    if self.is_complex:
+        complexs = array(self.Complex, dtype='float32')
+        data = array([reals, complexs]).astype(complex)
+    else:
+        data = reals
+
+    if self.ifo in [1, 6]:
+        nrows = max(nrows, ncols)
+        ncols = nrows
+
+    #A = coo_matrix( (entries,(rows,cols)),shape=(nrows,ncols),dtype=dtype) # test
+    M = coo_matrix((data, (self.GCi, self.GCj)),
+                   shape=(nrows, ncols), dtype=dtype)
+    #M = coo_matrix( (data,(self.GCi,self.GCj)),shape=(i,j)) # old
+    #M = coo_matrix( (data,(self.GCi,self.GCj)),shape=(nrows,ncols))
+    #print(M.todense())
+    #print(M)
+    return M
+
+
+def _fill_dense_rectangular_matrix(self, nrows, ncols, ndim, rows, cols, apply_symmetry):
+    """helper method for get_matrix"""
+    is_sparse = False
+    if self.is_complex:
+        M = zeros((nrows, ncols), dtype='complex128')
+        if self.ifo == 6 and apply_symmetry:  # symmetric
+            for (gcj, gci, reali, complexi) in zip(self.GCj, self.GCi,
+                                                   self.Real, self.Complex):
+                i = rows[(gci[0], gci[1])]
+                j = cols[(gcj[0], gcj[1])]
+                M[i, j] = complex(reali, complexi)
+                M[j, i] = complex(reali, complexi)
+        else:
+            for (gcj, gci, reali, complexi) in zip(self.GCj, self.GCi,
+                                                   self.Real, self.Complex):
+                i = rows[(gci[0], gci[1])]
+                j = cols[(gcj[0], gcj[1])]
+                M[i, j] = complex(reali, complexi)
+    else:
+        M = zeros((nrows, ncols), dtype='float64')
+        if self.ifo == 6 and apply_symmetry:  # symmetric
+            try:
+                for (gcj, gci, reali) in zip(self.GCj, self.GCi, self.Real):
+                    i = rows[(gci[0], gci[1])]
+                    j = cols[(gcj[0], gcj[1])]
+                    M[i, j] = reali
+                    M[j, i] = reali
+            except IndexError:
+                msg = ('name=%s ndim=%s i=%s j=%s matrix_type=%s '
+                       'is_polar=%s ncols=%s M.shape=%s\n' % (
+                           self.name, ndim, i, j, self.matrix_type,
+                           self.is_polar, self.ncols, M.shape))
+                msg += 'Rows:\n'
+                for i, row in enumerate(rows):
+                    msg += 'i=%s row=%s\n' % (i, row)
+                raise RuntimeError(msg)
+        else:
+            try:
+                for (gcj, gci, reali) in zip(self.GCj, self.GCi, self.Real):
+                    i = rows[(gci[0], gci[1])]
+                    j = cols[(gcj[0], gcj[1])]
+                    M[i, j] = reali
+            except KeyError:
+                msg = ('name=%s ndim=%s gci=%s gcj=%s matrix_type=%s '
+                       'is_polar=%s is_sparse=%s ncols=%s M.shape=%s\n' % (
+                           self.name, ndim, str(gci), str(gcj), self.matrix_type,
+                           self.is_polar, is_sparse, self.ncols, M.shape))
+
+                gci2 = (gci[0], gci[1])
+                gcj2 = (gcj[0], gcj[1])
+                if gci2 in rows:
+                    msg += '\ngci/row_key=%s not found' % str(gci2)
+                else:
+                    msg += '\ngci/row_key=%s not found' % str(gci2)
+                    msg += 'Rows:\n'
+                    for i, row in enumerate(rows):
+                        msg += '  i=%s row=%s\n' % (i, row)
+
+                if gcj2 in cols:
+                    msg += '\ngcj/col_key=%s found' % str(gcj2)
+                else:
+                    msg += '\ngcj/col_key=%s not found' % str(gcj2)
+                    msg += 'Cols:\n'
+                    for j, row in enumerate(cols):
+                        msg += '  j=%s row=%s\n' % (j, col)
+
+                msg += '\n'
+                print(msg)
+
+                raise KeyError(msg)
+            except IndexError:
+                msg = ('name=%s ndim=%s i=%s j=%s matrix_type=%s '
+                       'is_polar=%s is_sparse=%s ncols=%s M.shape=%s\n' % (
+                           self.name, ndim, i, j, self.matrix_type,
+                           self.is_polar, is_sparse, self.ncols, M.shape))
+                msg += 'Rows:\n'
+                for i, row in enumerate(rows):
+                    msg += '  i=%s row=%s\n' % (i, row)
+
+                msg += '\nCols:\n'
+                for j, row in enumerate(cols):
+                    msg += '  j=%s row=%s\n' % (j, col)
+                raise RuntimeError(msg)
+    return M
+
+
+def _fill_dense_column_matrix(self, nrows, ncols, ndim, rows, cols, apply_symmetry):
+    """helper method for get_matrix"""
+    is_sparse = False
+    if self.is_complex:
+        M = zeros((nrows, ncols), dtype='complex128')
+        if self.ifo == 6 and apply_symmetry:  # symmetric
+            for (gcj, gci, reali, complexi) in zip(self.GCj, self.GCi,
+                                                   self.Real, self.Complex):
+                i = rows[gci]
+                j = cols[gcj]
+                M[i, j] = complex(reali, complexi)
+                M[j, i] = complex(reali, complexi)
+        else:
+            for (gcj, gci, reali, complexi) in zip(self.GCj, self.GCi,
+                                                   self.Real, self.Complex):
+                i = rows[gci]
+                j = cols[gcj]
+    else:
+        M = zeros((nrows, ncols), dtype='float64')
+        if self.ifo == 6 and apply_symmetry:  # symmetric
+            for (gcj, gci, reali) in zip(self.GCj, self.GCi, self.Real):
+                i = rows[gci]
+                j = cols[gcj]
+                M[i, j] = reali
+                M[j, i] = reali
+        else:
+            try:
+                for (gcj, gci, reali) in zip(self.GCj, self.GCi, self.Real):
+                    i = rows[gci]
+                    j = cols[gcj]
+                    M[i, j] = reali
+            except IndexError:
+                msg = ('name=%s ndim=%s i=%s j=%s matrix_type=%s '
+                       'is_polar=%s is_sparse=%s ncols=%s M.shape=%s\n' % (
+                           self.name, ndim, i, j, self.matrix_type,
+                           self.is_polar, is_sparse, self.ncols, M.shape))
+                msg += 'Rows:\n'
+                for i, row in enumerate(rows):
+                    msg += '  i=%s row=%s\n' % (i, row)
+                raise RuntimeError(msg)
+    return M
+
 def get_matrix(self, is_sparse=False, apply_symmetry=True):
     """
     Builds the Matrix
@@ -488,6 +652,7 @@ def get_matrix(self, is_sparse=False, apply_symmetry=True):
     apply_symmetry: bool
         If the matrix is symmetric (ifo=6), returns a symmetric matrix.
         Supported as there are symmetric matrix routines.
+        TODO: unused...
 
     Returns
     -------
@@ -522,132 +687,13 @@ def get_matrix(self, is_sparse=False, apply_symmetry=True):
 
     #is_sparse = False
     if is_sparse:
-        GCj = array(self.GCj, dtype='int32') - 1
-        GCi = array(self.GCi, dtype='int32') - 1
-        reals = array(self.Real, dtype='float32')
-
-        # TODO: matrix size:  is this correct?
-        nrows = max(GCi) + 1
-        ncols = max(GCj) + 1
-
-        dtype = self._get_dtype(self.tin)
-        # TODO: no check for symmetry
-        # TODO: no check for dtype
-        if self.is_complex():
-            complexs = array(self.Complex, dtype='float32')
-            data = array([reals, complexs]).astype(complex)
-        else:
-            data = reals
-
-        if self.ifo in [1, 6]:
-            nrows = max(nrows, ncols)
-            ncols = nrows
-
-        #A = coo_matrix( (entries,(rows,cols)),shape=(nrows,ncols),dtype=dtype) # test
-        M = coo_matrix((data, (self.GCi, self.GCj)),
-                       shape=(nrows, ncols), dtype=dtype)
-        #M = coo_matrix( (data,(self.GCi,self.GCj)),shape=(i,j)) # old
-        #M = coo_matrix( (data,(self.GCi,self.GCj)),shape=(nrows,ncols))
-        #print(M.todense())
-        #print(M)
+        M = _fill_sparse_matrix(self, nrows, ncols)
     else:
         if ndim == 1:
-            if self.is_complex():
-                M = zeros((nrows, ncols), dtype='complex128')
-                if self.ifo == 6 and apply_symmetry:  # symmetric
-                    for (gcj, gci, reali, complexi) in zip(self.GCj, self.GCi,
-                                                           self.Real, self.Complex):
-                        i = rows[gci]
-                        j = cols[gcj]
-                        M[i, j] = complex(reali, complexi)
-                        M[j, i] = complex(reali, complexi)
-                else:
-                    for (gcj, gci, reali, complexi) in zip(self.GCj, self.GCi,
-                                                           self.Real, self.Complex):
-                        i = rows[gci]
-                        j = cols[gcj]
-            else:
-                M = zeros((nrows, ncols), dtype='float64')
-                if self.ifo == 6 and apply_symmetry:  # symmetric
-                    for (gcj, gci, reali) in zip(self.GCj, self.GCi, self.Real):
-                        i = rows[gci]
-                        j = cols[gcj]
-                        M[i, j] = reali
-                        M[j, i] = reali
-                else:
-                    try:
-                        for (gcj, gci, reali) in zip(self.GCj, self.GCi, self.Real):
-                            i = rows[gci]
-                            j = cols[gcj]
-                            M[i, j] = reali
-                    except IndexError:
-                        msg = ('name=%s ndim=%s i=%s j=%s matrix_type=%s '
-                               'is_polar=%s is_sparse=%s ncols=%s M.shape=%s\n' % (
-                                   self.name, ndim, i, j, self.matrix_type,
-                                   self.is_polar(), is_sparse, self.ncols, M.shape))
-                        msg += 'Rows:\n'
-                        for i, row in enumerate(rows):
-                            msg += '  i=%s row=%s\n' % (i, row)
-                        raise RuntimeError(msg)
+            M = _fill_dense_column_matrix(self, nrows, ncols, ndim, rows, cols, apply_symmetry)
         else:
-            if self.is_complex():
-                M = zeros((nrows, ncols), dtype='complex128')
-                if self.ifo == 6 and apply_symmetry:  # symmetric
-                    for (gcj, gci, reali, complexi) in zip(self.GCj, self.GCi,
-                                                           self.Real, self.Complex):
-                        i = rows[(gci[0], gci[1])]
-                        j = cols[(gcj[0], gcj[1])]
-                        M[i, j] = complex(reali, complexi)
-                        M[j, i] = complex(reali, complexi)
-                else:
-                    for (gcj, gci, reali, complexi) in zip(self.GCj, self.GCi,
-                                                           self.Real, self.Complex):
-                        i = rows[(gci[0], gci[1])]
-                        j = cols[(gcj[0], gcj[1])]
-                        M[i, j] = complex(reali, complexi)
-            else:
-                M = zeros((nrows, ncols), dtype='float64')
-                if self.ifo == 6 and apply_symmetry:  # symmetric
-                    try:
-                        for (gcj, gci, reali) in zip(self.GCj, self.GCi, self.Real):
-                            i = rows[(gci[0], gci[1])]
-                            j = cols[(gcj[0], gcj[1])]
-                            M[i, j] = reali
-                            M[j, i] = reali
-                    except IndexError:
-                        msg = ('name=%s ndim=%s i=%s j=%s matrix_type=%s '
-                               'is_polar=%s ncols=%s M.shape=%s\n' % (
-                                   self.name, ndim, i, j, self.matrix_type,
-                                   self.is_polar(), self.ncols, M.shape))
-                        msg += 'Rows:\n'
-                        for i, row in enumerate(rows):
-                            msg += 'i=%s row=%s\n' % (i, row)
-                        raise RuntimeError(msg)
-                else:
-                    try:
-                        for (gcj, gci, reali) in zip(self.GCj, self.GCi, self.Real):
-                            i = rows[(gci[0], gci[1])]
-                            j = cols[(gcj[0], gcj[1])]
-                            M[i, j] = reali
-                    except KeyError:
-                        msg = ('name=%s ndim=%s gci=%s gcj=%s matrix_type=%s '
-                               'is_polar=%s is_sparse=%s ncols=%s M.shape=%s\n' % (
-                                   self.name, ndim, str(gci), str(gcj), self.matrix_type,
-                                   self.is_polar(), is_sparse, self.ncols, M.shape))
-                        msg += 'Rows:\n'
-                        for i, row in enumerate(rows):
-                            msg += '  i=%s row=%s\n' % (i, row)
-                        print(msg)
-                        raise KeyError(msg)
-                    except IndexError:
-                        msg = ('name=%s ndim=%s i=%s j=%s matrix_type=%s '
-                               'is_polar=%s is_sparse=%s ncols=%s M.shape=%s\n' % (
-                                   self.name, ndim, i, j, self.matrix_type,
-                                   self.is_polar(), is_sparse, self.ncols, M.shape))
-                        msg += 'Rows:\n'
-                        for i, row in enumerate(rows):
-                            msg += '  i=%s row=%s\n' % (i, row)
-                        raise RuntimeError(msg)
+            M = _fill_dense_rectangular_matrix(self, nrows, ncols, ndim, rows, cols, apply_symmetry)
+
     #print(M)
     return (M, rows_reversed, cols_reversed)
 
@@ -715,11 +761,11 @@ class DMIG_UACCEL(BaseCard):
         for lseq, ncx in sorted(self.load_sequences.iteritems()):
             list_fields += [lseq, None, None]
             for ncxi in ncx:
-                list_fields +=  ncxi
+                list_fields += ncxi
         #print('list_fields= %s' % list_fields)
         msg += print_card_8(list_fields)
         print(msg)
-        #if self.is_complex():
+        #if self.is_complex:
             #msg += self._get_complex_fields(func)
         #else:
             #msg += self._get_real_fields(func)
@@ -866,14 +912,14 @@ class DMI(NastranMatrix):
         self.GCi = []
         self.Real = []
 
-        if self.is_complex():
+        if self.is_complex:
             self.Complex = []
 
     def finalize(self):
         self.GCi = np.asarray(self.GCi)
         self.GCj = np.asarray(self.GCj)
         self.Real = np.asarray(self.Real)
-        if self.is_complex():
+        if self.is_complex:
             self.Complex = np.asarray(self.Complex)
 
     def is_polar(self):
@@ -914,7 +960,7 @@ class DMI(NastranMatrix):
         """
         .. todo:: support comment
         """
-        if not self.is_complex():  # real
+        if not self.is_complex:  # real
             return self._read_real(card)
         raise NotImplementedError('complex DMI')
 
@@ -987,9 +1033,11 @@ class DMI(NastranMatrix):
     def rename(self, new_name):
         self.name = new_name
 
+    @property
     def is_real(self):
-        return not self.is_complex()
+        return not self.is_complex
 
+    @property
     def is_complex(self):
         if self.tin in [3, 4]:
             return True
@@ -1008,7 +1056,7 @@ class DMI(NastranMatrix):
         list_fields = ['DMI', self.name, 0, self.form, self.tin,
                        self.tout, None, self.nrows, self.ncols]
 
-        if self.is_complex():
+        if self.is_complex:
             for (gci, gcj, reali, imagi) in zip(self.GCi, self.GCj, self.Real, self.Complex):
                 list_fields += ['DMI', self.name, gcj, gci, reali, imagi]
         else:
@@ -1078,7 +1126,7 @@ class DMI(NastranMatrix):
                        self.tout, None, self.nrows, self.ncols]
         msg += print_card_8(list_fields)
 
-        if self.is_complex():
+        if self.is_complex:
             msg += self._get_complex_fields(func)
         else:
             msg += self._get_real_fields(func)
