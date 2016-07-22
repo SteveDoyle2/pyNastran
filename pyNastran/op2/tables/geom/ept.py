@@ -537,7 +537,7 @@ class EPT(GeomCommon):
         for i in range(nproperties):
             edata = data[n:n+24]
             out = s.unpack(edata)
-            (pid, mid, a, j, c, nsm) = out
+            #(pid, mid, a, j, c, nsm) = out
             prop = PROD.add_op2_data(out)
             if self.is_debug_file:
                 self.binary_debug.write('  PROD=%s\n' % str(out))
@@ -555,7 +555,7 @@ class EPT(GeomCommon):
         for i in range(nproperties):
             edata = data[n:n+24]
             out = s.unpack(edata)
-            (pid, mid, t, nsm, f1, f2) = out
+            #(pid, mid, t, nsm, f1, f2) = out
             if self.is_debug_file:
                 self.binary_debug.write('  PSHEAR=%s\n' % str(out))
             prop = PSHEAR.add_op2_data(out)
