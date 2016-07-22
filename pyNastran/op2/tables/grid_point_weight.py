@@ -101,6 +101,8 @@ class GridPointWeight(object):
         self.Q = Q
 
     def get_stats(self, short=True):
+        if self.reference_point is None:
+            return ''
         if short:
             msg = ('GridPointWeight: ref_point=%s mass=%g; '
                    '[reference_point, M0, S, mass, cg, IS, IQ, Q]\n' % (

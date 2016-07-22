@@ -10,6 +10,7 @@ from vtk import vtkHexahedron, vtkQuad, vtkTriangle, vtkTetra
 
 from pyNastran.converters.tecplot.tecplot import Tecplot
 from pyNastran.converters.tecplot.utils import merge_tecplot_files
+from pyNastran.gui.gui_objects.gui_result import GuiResult
 
 
 class TecplotIO(object):
@@ -255,19 +256,18 @@ class TecplotIO(object):
         eids = arange(1, nelements + 1)
         nids = arange(1, nnodes + 1)
 
+        nid_res = GuiResult(ID, header='NodeID', title='NodeID',
+                            location='node', scalar=nids)
+        eid_res = GuiResult(ID, header=element_id, title=element_id,
+                            location='centroid', scalar=eids)
 
-        if new:
-            cases_new[0] = (ID, nids, 'NodeID', 'node', '%i', '')
-            cases_new[1] = (ID, eids, element_id, 'centroid', '%i', '')
-            #cases_new[2] = (ID, regions, 'Region', 'centroid', '%i')
-        else:
-            cases[(ID, 0, 'NodeID', 1, 'node', '%i', '')] = nids
-            cases[(ID, 1, element_id, 1, 'centroid', '%i', '')] = eids
-            #cases[(ID, 2, 'Region', 1, 'centroid', '%i')] = regions
+        icase = 0
+        cases[icase] = (nid_res, (0, 'NodeID'))
+        cases[icase + 1] = (eid_res, (0, element_id))
+        icase += 2
 
         results = model.results
         if is_results and len(results):
-            i = 2
             for iresult, result_name in enumerate(result_names):
                 if results.shape[1] == 1:
                     nodal_data = results
@@ -275,12 +275,12 @@ class TecplotIO(object):
                 else:
                     nodal_data = results[:, iresult]
 
-                if new:
-                    cases_new[i] = (result, i, result_name, 1, 'node', '%.3f', '')
-                else:
-                    cases[(ID, i, result_name, 1, 'node', '%.3f', '')] = nodal_data
-                results_form.append((result_name, i, []))
-                i += 1
+                node_res = GuiResult(ID, header=result_name, title=result_name,
+                                     location='node', scalar=nodal_data)
+                cases[icase] = (node_res, (0, result_name))
+
+                results_form.append((result_name, icase, []))
+                icase += 1
         form = [
             ('Geometry', None, geometry_form),
         ]
