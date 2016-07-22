@@ -3369,7 +3369,7 @@ class NastranIO(object):
 
 
         for key in keys:
-
+            #print('key = %r' % str(key))
             header_dict[(key, 0)] = '; Static'
 
             formi = []
@@ -3381,8 +3381,10 @@ class NastranIO(object):
                                            disp_dict, header_dict)
             ncases = icase - ncases_old
             #assert ncases > 0, ncases
-            for itime, dt in enumerate(times):
-                key_itime.append((key, itime))
+
+            # makes a double listing; why was it here?
+            #for itime, dt in enumerate(times):
+                #key_itime.append((key, itime))
 
             for itime, dt in enumerate(times):
                 ncases_old = icase
