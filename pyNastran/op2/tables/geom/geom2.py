@@ -3,7 +3,7 @@ from struct import unpack, Struct
 from six import b
 from six.moves import range
 
-from pyNastran.bdf.cards.elements.elements import CGAP
+from pyNastran.bdf.cards.elements.elements import CGAP, PLOTEL
 from pyNastran.bdf.cards.elements.damper import (CDAMP1, CDAMP2, CDAMP3,
                                                  CDAMP4, CDAMP5, CVISC)
 from pyNastran.bdf.cards.elements.springs import CELAS1, CELAS2, CELAS3, CELAS4
@@ -228,6 +228,10 @@ class GEOM2(GeomCommon):
             self.log.debug(elem)
             raise ValueError(elem)
             #return
+
+        if elem.eid > 100000000:
+            raise RuntimeError('bad parsing...')
+
         if elem.type in ['CTRIA6', 'CQUAD8']:
             for nid in elem.nodes:
                 if nid == -1:
@@ -285,6 +289,7 @@ class GEOM2(GeomCommon):
         """
         CBARAO(4001,40,275) - the marker for Record 9
         """
+        self.log.debug('skipping CBARAO in GEOM2\n')
         if self.is_debug_file:
             self.binary_debug.write('skipping CBARAO in GEOM2\n')
         return len(data)
@@ -333,6 +338,7 @@ class GEOM2(GeomCommon):
         """
         CBEAMP(11401,114,9016) - the marker for Record 11
         """
+        self.log.debug('skipping CBEAMP in GEOM2\n')
         if self.is_debug_file:
             self.binary_debug.write('skipping CBEAMP in GEOM2\n')
         return len(data)
@@ -341,6 +347,7 @@ class GEOM2(GeomCommon):
         """
         CBEND(4601,46,298) - the marker for Record 12
         """
+        self.log.debug('skipping CBEND in GEOM2\n')
         if self.is_debug_file:
             self.binary_debug.write('skipping CBEND in GEOM2\n')
         return len(data)
@@ -390,6 +397,7 @@ class GEOM2(GeomCommon):
         """
         CBUSH1D(5608,56,218) - the marker for Record 14
         """
+        self.log.debug('skipping CBUSH1D in GEOM2\n')
         if self.is_debug_file:
             self.binary_debug.write('skipping CBUSH1D in GEOM2\n')
         return len(data)
@@ -398,6 +406,7 @@ class GEOM2(GeomCommon):
         """
         CCONE(2315,23,0) - the marker for Record 15
         """
+        self.log.debug('skipping CCONE in GEOM2\n')
         if self.is_debug_file:
             self.binary_debug.write('skipping CCONE in GEOM2\n')
         return len(data)
@@ -578,6 +587,7 @@ class GEOM2(GeomCommon):
         """
         CFAST(9801,98,506) - the marker for Record ???
         """
+        self.log.debug('skipping CFAST in GEOM2\n')
         return len(data)
 
 # CFASTP
@@ -586,18 +596,21 @@ class GEOM2(GeomCommon):
         """
         CFLUID2(8515,85,209) - the marker for Record 35
         """
+        self.log.debug('skipping CFLUID2 in GEOM2\n')
         return len(data)
 
     def _read_cfluid3(self, data, n):
         """
         CFLUID3(8615,86,210) - the marker for Record 36
         """
+        self.log.debug('skipping CFLUID3 in GEOM2\n')
         return len(data)
 
     def _read_cfluid4(self, data, n):
         """
         CFLUID4(8715,87,211) - the marker for Record 37
         """
+        self.log.debug('skipping CFLUID4 in GEOM2\n')
         return len(data)
 
 # CINT
@@ -808,6 +821,7 @@ class GEOM2(GeomCommon):
         """
         CMFREE(2508,25,0) - the marker for Record 55
         """
+        self.log.debug('skipping CMFREE in GEOM2\n')
         if self.is_debug_file:
             self.binary_debug.write('skipping CMFREE in GEOM2\n')
         return len(data)
@@ -891,6 +905,29 @@ class GEOM2(GeomCommon):
             self.add_thermal_BC(elem, elem.eid)
 
         self.card_count['CONV'] = nelements
+        return n
+
+    def _read_dual_card(self, data, n, nx_read, msc_read, card_name, add_method):
+        """
+        generalization of multi read methods (MSC, NX)
+        """
+        n0 = n
+        if self.is_nx:
+            try:
+                n, elements = self.nx_read(data, n)
+            except AssertionError:
+                n, elements = self.msc_read(data, n0)
+        else:
+            try:
+                n, elements = self.msc_read(data, n)
+            except AssertionError:
+                n, elements = self.nx_read(data, n0)
+
+        nelements = len(elements)
+        for elem in elements:
+            add_method(elem)
+
+        self.card_count[card_name] = nelements
         return n
 
     def _read_conv_nx(self, data, n):
@@ -1318,6 +1355,7 @@ class GEOM2(GeomCommon):
 # CTRIAX - 100
 
     def _read_ctriax6(self, data, n):  # 101
+        self.log.debug('skipping CTRIAX6 in GEOM2\n')
         if self.is_debug_file:
             self.binary_debug.write('skipping CTRIAX6 in GEOM2\n')
         return len(data)
@@ -1364,16 +1402,19 @@ class GEOM2(GeomCommon):
         CWELD(11701,117,559) - Record 106
         same as CFAST
         """
+        self.log.debug('skipping CWELD in GEOM2\n')
         if self.is_debug_file:
             self.binary_debug.write('skipping CWELD in GEOM2\n')
         return len(data)
 
     def _read_cweldc(self, data, n):  # 107
+        self.log.debug('skipping CWELDC in GEOM2\n')
         if self.is_debug_file:
             self.binary_debug.write('skipping CWELDC in GEOM2\n')
         return len(data)
 
     def _read_cweldg(self, data, n):  # 108
+        self.log.debug('skipping CWELDG in GEOM2\n')
         if self.is_debug_file:
             self.binary_debug.write('skipping CWELDG in GEOM2\n')
         return len(data)
@@ -1387,9 +1428,20 @@ class GEOM2(GeomCommon):
 # GMINTC
 # GMINTS
     def _read_plotel(self, data, n):  # 114
-        if self.is_debug_file:
-            self.binary_debug.write('skipping PLOTEL in GEOM2\n')
-        return len(data)
+        s = Struct(b(self._endian + '3i'))
+        ntotal = 12
+        nelements = (len(data) - n) // ntotal
+        for i in range(nelements):
+            edata = data[n:n + ntotal]  # 4*4
+            out = s.unpack(edata)
+            if self.is_debug_file:
+                self.binary_debug.write('  PLOTEL=%s\n' % str(out))
+            #(eid,n1,n2) = out
+            elem = PLOTEL.add_op2_data(out)
+            self.add_op2_element(elem)
+            n += ntotal
+        self.card_count['PLOTEL'] = nelements
+        return n
 # RADBC
 # RADINT
 # SINT
@@ -1412,6 +1464,7 @@ class GEOM2(GeomCommon):
         return n
 
     def _read_vubeam(self, data, n):  # 119
+        self.log.debug('skipping VUBEAM in GEOM2\n')
         if self.is_debug_file:
             self.binary_debug.write('skipping VUBEAM in GEOM2\n')
         return len(data)

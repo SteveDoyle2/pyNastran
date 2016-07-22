@@ -656,6 +656,12 @@ class PCONV(ThermalProperty):
         return PCONV(pconid, mid, form, expf, ftype, tid, chlen, gidin, ce,
                      e1, e2, e3, comment=comment)
 
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        (pconid, mid, form, expf, ftype, tid, chlen, gidin, ce, e1, e2, e3) = data
+        return PCONV(pconid, mid, form, expf, ftype, tid, chlen, gidin, ce,
+                     e1, e2, e3, comment=comment)
+
     #def cross_reference(self, model):
         #pass
 
@@ -1046,24 +1052,35 @@ class RADM(ThermalBC):
     """
     type = 'RADM'
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self, radmid, absorb, emissivity, comment=''):
         ThermalBC.__init__(self)
         if comment:
             self._comment = comment
-        if card:
-            #: Material identification number
-            self.radmid = integer(card, 1, 'radmid')
-            assert self.radmid > 0
 
-            self.absorb = double(card, 2, 'absorb')
-            assert 0. <= self.absorb <= 1.0
+        #: Material identification number
+        self.radmid = radmid
 
-            nfields = card.nfields
-            self.emissivity = fields(double, card, 'emissivity', i=3, j=nfields)
-        else:
-            raise NotImplementedError(data)
+        self.absorb = absorb
+        self.emissivity = emissivity
+
+        assert self.radmid > 0, str(self)
+        assert 0. <= self.absorb <= 1.0, str(self)
         for e in self.emissivity:
-            assert 0. <= e <= 1.0
+            assert 0. <= e <= 1.0, str(self)
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        nfields = card.nfields
+        radmid = integer(card, 1, 'radmid')
+        absorb = double(card, 2, 'absorb')
+        emissivity = fields(double, card, 'emissivity', i=3, j=nfields)
+        return RADM(radmid, absorb, emissivity, comment=comment)
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        radmid, absorb = data[:2]
+        emissivity  = data[2:]
+        return RADM(radmid, absorb, emissivity, comment=comment)
 
     #def cross_reference(self, model):
         #pass

@@ -15,4 +15,6 @@ Quick Start
    
    op4_demo
    gui
+   matlab
+   pandas
 

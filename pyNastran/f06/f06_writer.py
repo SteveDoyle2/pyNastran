@@ -382,7 +382,7 @@ class F06Writer(OP2_F06_Common):
         page_stamp = self.make_stamp(self.title, self.date)
         if self.grid_point_weight.reference_point is not None:
             if not quiet:
-                print("grid_point_weight")
+                print(" grid_point_weight")
             self.page_num = self.grid_point_weight.write_f06(f06, page_stamp, self.page_num)
             assert isinstance(self.page_num, int), self.grid_point_weight.__class__.__name__
 

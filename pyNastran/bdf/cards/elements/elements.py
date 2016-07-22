@@ -205,6 +205,8 @@ class CGAP(Element):
         x3 = data[7]
         x = [x1, x2, x3]
         cid = data[8]
+        if cid == -1:
+            cid = None
         return CGAP(eid, pid, ga, gb, x, g0, cid, comment=comment)
 
     def _verify(self, xref=True):
@@ -489,7 +491,7 @@ class PLOTEL(BaseCard):
         Defines a 1D dummy element used for plotting.
         +--------+-----+-----+-----+
         |   1    |  2  |  3  |  4  |
-        +--------+-----+-----+-----+
+        +========+=====+=====+=====+
         | PLOTEL | EID | G1  | G2  |
         +--------+-----+-----+-----+
         """
@@ -506,7 +508,7 @@ class PLOTEL(BaseCard):
             integer(card, 2, 'g1'),
             integer(card, 3, 'g2'),
         ]
-        assert len(card) <= 4, 'len(CGAP card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 4, 'len(PLOTEL card) = %i\ncard=%s' % (len(card), card)
         return PLOTEL(eid, nodes, comment=comment)
 
     @classmethod

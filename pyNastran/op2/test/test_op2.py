@@ -342,7 +342,13 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
             op2.executive_control_lines = ['CEND\n']
             op2.write_bdf(bdf_filename, size=8)
             print('bdf_filename = %s' % bdf_filename)
-            op2_bdf.read_bdf(bdf_filename)
+            try:
+                op2_bdf.read_bdf(bdf_filename)
+            except:
+                if dev and len(op2_bdf.card_count) == 0:
+                    pass
+                else:
+                    raise
             #os.remove(bdf_filename)
         if compare:
             assert op2 == op2_nv

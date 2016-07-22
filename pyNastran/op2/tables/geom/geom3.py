@@ -9,6 +9,7 @@ from pyNastran.bdf.cards.loads.static_loads import (
     MOMENT, MOMENT1, MOMENT2,
     LOAD, PLOAD, PLOAD1, PLOAD2,  #PLOAD3,
     PLOAD4)  # PLOAD3,
+from pyNastran.bdf.cards.loads.loads import LSEQ, SLOAD #, DAREA, RANDPS, RFORCE, RFORCE1, LOADCYN
 from pyNastran.bdf.cards.thermal.loads import QBDY1, QBDY2, QBDY3, TEMP, TEMPD
 from pyNastran.op2.tables.geom.geom_common import GeomCommon
 
@@ -75,7 +76,6 @@ class GEOM3(GeomCommon):
         """
         FORCE(4201,42,18) - the marker for Record 3
         """
-        #print("reading FORCE")
         ntotal = 28  # 7*4
         nentries = (len(data) - n) // ntotal
         s = Struct(b(self._endian + 'iiiffff'))
@@ -94,7 +94,6 @@ class GEOM3(GeomCommon):
         """
         FORCE1(4001,40,20) - the marker for Record 4
         """
-        #print("reading FORCE1")
         ntotal = 20  # 5*4
         s = Struct(b(self._endian + 'iifii'))
         nentries = (len(data) - n) // ntotal
@@ -114,7 +113,6 @@ class GEOM3(GeomCommon):
         """
         FORCE2(4101,41,22) - the marker for Record 5
         """
-        #print("reading FORCE2")
         ntotal = 28  # 7*4
         s = Struct(b(self._endian + 'iif4i'))
         nentries = (len(data) - n) // ntotal
@@ -135,7 +133,6 @@ class GEOM3(GeomCommon):
         """
         GRAV(4401,44,26) - the marker for Record 7
         """
-        #print("reading GRAV")
         ntotal = 28  # 7*4
         s = Struct(b(self._endian + 'ii4fi'))
         nentries = (len(data) - n) // ntotal
@@ -154,7 +151,6 @@ class GEOM3(GeomCommon):
         (4551, 61, 84) - the marker for Record 8
         .. todo:: add object
         """
-        #print("reading LOAD")
         ntotal = 16  # 4*4
         nentries = (len(data) - n) // ntotal
         count = 0
@@ -194,6 +190,7 @@ class GEOM3(GeomCommon):
         return n
 
     def _read_loadcyh(self, data, n):
+        self.log.debug('skipping LOADCYH in GEOM3\n')
         if self.is_debug_file:
             self.binary_debug.write('skipping LOADCYH in GEOM3\n')
         return len(data)
@@ -202,15 +199,24 @@ class GEOM3(GeomCommon):
 # LOADCYT
 
     def _read_lseq(self, data, n):
-        if self.is_debug_file:
-            self.binary_debug.write('skipping LSEQ in GEOM3\n')
-        return len(data)
+        ntotal = 20  # 5*4
+        s = Struct(b(self._endian + '5i'))
+        nentries = (len(data) - n) // ntotal
+        for i in range(nentries):
+            out = s.unpack(data[n:n + ntotal])
+            (sid, darea, load_id, temperature_id, undef) = out
+            if self.is_debug_file:
+                self.binary_debug.write('  LSEQ=%s\n' % str(out))
+            load = LSEQ.add_op2_data(out)
+            self.add_LSEQ(load)
+            n += ntotal
+        self.card_count['LSEQ'] = nentries
+        return n
 
     def _read_moment(self, data, n):
         """
         MOMENT(4801,48,19) - the marker for Record 13
         """
-        #print("reading MOMENT")
         ntotal = 28
         s = Struct(b(self._endian + '3i4f'))
         nentries = (len(data) - n) // 28  # 7*4
@@ -230,7 +236,6 @@ class GEOM3(GeomCommon):
         """
         MOMENT1(4601,46,21) - the marker for Record 14
         """
-        #print("reading MOMENT1")
         ntotal = 20  # 5*4
         nentries = (len(data) - n) // ntotal
         for i in range(nentries):
@@ -249,7 +254,6 @@ class GEOM3(GeomCommon):
         """
         MOMENT2(4701,47,23) - the marker for Record 15
         """
-        #print("reading MOMENT2")
         ntotal = 28  # 7*4
         nentries = (len(data) - n) // ntotal
         for i in range(nentries):
@@ -288,7 +292,6 @@ class GEOM3(GeomCommon):
         """
         PLOAD1(????) - the marker for Record 17
         """
-        #print("reading PLOAD1")
         ntotal = 32  # 8*4
         s = Struct(b(self._endian + '4i4f'))
         nentries = (len(data) - n) // ntotal
@@ -309,7 +312,6 @@ class GEOM3(GeomCommon):
         """
         PLOAD2(6802,68,199) - the marker for Record 18
         """
-        #print("reading PLOAD2")
         ntotal = 12  # 3*4
         nentries = (len(data) - n) // ntotal
         for i in range(nentries):
@@ -328,7 +330,6 @@ class GEOM3(GeomCommon):
         """
         PLOAD3(7109,71,255) - the marker for Record 19
         """
-        #print("reading PLOAD3")
         ntotal = 20  # 5*4
         nentries = (len(data) - n) // ntotal
         for i in range(nentries):
@@ -347,13 +348,12 @@ class GEOM3(GeomCommon):
         """
         PLOAD4(7209,72,299) - the marker for Record 20
         """
-        #print("reading PLOAD4")
         ntotal = 48  # 13*4
         nentries = (len(data) - n) // ntotal
         for i in range(nentries):
             edata = data[n:n + 48]
                          #iiffffiiifffi   ssssssssssssssss
-            out = unpack('2i4f3i3f', edata)
+            out = unpack('2i 4f 3i 3f', edata)
             if self.is_debug_file:
                 self.binary_debug.write('  PLOAD4=%s\n' % str(out))
             (sid, eid, p1, p2, p3, p4, g1, g34, cid, n1, n2, n3) = out
@@ -376,6 +376,7 @@ class GEOM3(GeomCommon):
 
 # PLOADX - obsolete
     def _read_ploadx1(self, data, n):
+        self.log.debug('skipping PLOADX1 in GEOM3\n')
         if self.is_debug_file:
             self.binary_debug.write('skipping PLOADX1 in GEOM3\n')
         return len(data)
@@ -386,7 +387,6 @@ class GEOM3(GeomCommon):
         """
         QBDY1(4509,45,239) - the marker for Record 24
         """
-        #print("reading QBDY1")
         ntotal = 12  # 3*4
         nentries = (len(data) - n) // ntotal
         for i in range(nentries):
@@ -465,14 +465,14 @@ class GEOM3(GeomCommon):
         ntotal = 8  # 2*4
         nentries = (len(data) - n) // ntotal
         for i in range(nentries):
-            edata = data[n:n + 8]
+            edata = data[n:n + ntotal]
             out = unpack('if', edata)
             if self.is_debug_file:
                 self.binary_debug.write('  TEMPD=%s\n' % str(out))
             (sid, T) = out
             load = TEMPD(None, 0, out)
             #self.add_thermal_load(load)
-            n += 8
+            n += ntotal
         self.card_count['TEMPD'] = nentries
         return n
 
@@ -481,14 +481,26 @@ class GEOM3(GeomCommon):
 # QVOL
 
     def _read_rforce(self, data, n):
+        self.log.debug('skipping RFORCE in GEOM3\n')
         if self.is_debug_file:
             self.binary_debug.write('skipping RFORCE in GEOM3\n')
         return len(data)
 
     def _read_sload(self, data, n):
-        if self.is_debug_file:
-            self.binary_debug.write('skipping SLOAD in GEOM3\n')
-        return len(data)
+        ntotal =  12  # 3*4
+        nentries = (len(data) - n) // ntotal
+        struc = Struct(b(self._endian + '2i f'))
+        for i in range(nentries):
+            edata = data[n:n + ntotal]
+            out = struc.unpack(edata)
+            if self.is_debug_file:
+                self.binary_debug.write('  SLOAD=%s\n' % str(out))
+            #(sid, nid, scale_factor) = out
+            load = SLOAD.add_op2_data(out)
+            self.add_load(load)
+            n += ntotal
+        self.card_count['SLOAD'] = nentries
+        return n
 
 # TEMP(5701,57,27) # 32
 # TEMPD(5641,65,98) # 33
@@ -497,16 +509,19 @@ class GEOM3(GeomCommon):
 # TEMP1C
 
     def _read_tempp1(self, data, n):
+        self.log.debug('skipping TEMPP1 in GEOM3\n')
         if self.is_debug_file:
             self.binary_debug.write('skipping TEMPP1 in GEOM3\n')
         return len(data)
 
     def _read_tempp2(self, data, n):
+        self.log.debug('skipping TEMPP2 in GEOM3\n')
         if self.is_debug_file:
             self.binary_debug.write('skipping TEMPP2 in GEOM3\n')
         return len(data)
 
     def _read_tempp3(self, data, n):
+        self.log.debug('skipping TEMPP3 in GEOM3\n')
         if self.is_debug_file:
             self.binary_debug.write('skipping TEMPP3 in GEOM3\n')
         return len(data)
@@ -515,9 +530,11 @@ class GEOM3(GeomCommon):
         """
         TEMPP4(4201,42,18) - the marker for Record 40
         """
+        self.log.debug('skipping TEMPP4 in GEOM3\n')
         return len(data)
 
     def _read_temprb(self, data, n):
+        self.log.debug('skipping TEMPRB in GEOM3\n')
         if self.is_debug_file:
             self.binary_debug.write('skipping TEMPRB in GEOM3\n')
         return len(data)

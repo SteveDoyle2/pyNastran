@@ -129,6 +129,12 @@ class ABCQSet(Set):
             components.append(component)
         return cls(ids, components, comment=comment)
 
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        ids = [data[0]]
+        components = [data[1]]
+        return cls(ids, components, comment=comment)
+
     def cross_reference(self, model):
         """
         Cross links the card so referenced cards can be extracted directly
@@ -344,6 +350,17 @@ class ABQSet1(Set):
                 ids.append(idi)
         return cls(components, ids, comment=comment)
 
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        components = data[0]
+        thru_flag = data[1]
+        if thru_flag == 0:
+            ids = data[2:]
+        else:
+            assert len(data) == 4, data
+            ids = [data[2], 'THRU', data[3]]
+        return cls(components, ids, comment=comment)
+
     def cross_reference(self, model):
         """
         Cross links the card so referenced cards can be extracted directly
@@ -423,6 +440,18 @@ class SuperABQSet1(Set):
                 i += 1
                 ids.append(idi)
         ids = expand_thru(ids)
+        return cls(seid, components, ids, comment=comment)
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        seid = data[0]
+        components = data[1]
+        thru_flag = data[2]
+        if thru_flag == 0:
+            ids = data[3:]
+        else:
+            assert len(data) == 5, data
+            ids = [data[3], 'THRU', data[4]]
         return cls(seid, components, ids, comment=comment)
 
     def cross_reference(self, model):

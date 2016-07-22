@@ -85,11 +85,18 @@ class SUPORT1(Constraint):
             n += 1
         return SUPORT1(conid, IDs, Cs, comment=comment)
 
-    #@classmethod
-    #def add_op2_data(cls, data, comment=''):
-        #msg = '%s has not implemented data parsing' % cls.type
-        #raise NotImplementedError(msg)
-        #return SUPORT1(conid, IDs, Cs, commment=comment)
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        conid = data[0]
+        assert (len(data) - 1) % 2 == 0, data
+        IDs = []
+        Cs = []
+        for i in range(1, len(data), 2):
+            ID = data[i]
+            C = data[i+1]
+            IDs.append(ID)
+            Cs.append(C)
+        return SUPORT1(conid, IDs, Cs, comment=comment)
 
     def add_suport1_to_set(self, suport1):
         assert self.conid == suport1.conid, 'SUPORT1 conid=%s new_conid=%s; they must be the same' % (self.conid, suport1.conid)
@@ -224,6 +231,15 @@ class SESUP(SUPORT):
 
 
 class MPC(Constraint):
+    """
+    +-----+-----+----+----+-----+----+----+----+-----+
+    |  1  |  2  |  3 |  4 |  5  |  6 |  7 |  8 |  9  |
+    +=====+=====+====+====+=====+====+====+====+=====+
+    | MPC | SID | G1 | C1 |  A1 | G2 | C2 | A2 |     |
+    +-----+-----+----+----+-----+----+----+----+-----+
+    |     |  G3 | C3 | A3 | ... |    |    |    |     |
+    +-----+-----+----+----+-----+----+----+----+-----+
+    """
     type = 'MPC'
 
     def __init__(self, conid, gids, constraints, enforced, comment=''):
@@ -278,11 +294,12 @@ class MPC(Constraint):
             i += 1
         return MPC(conid, gids, constraints, enforced, comment=comment)
 
-    #@classmethod
-    #def add_op2_data(cls, data, comment=''):
-        #msg = '%s has not implemented data parsing' % cls.type
-        #raise NotImplementedError(msg)
-        #return MPC(conid, gids, constraints, enforced, comment=comment)
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        sid,
+        msg = '%s has not implemented data parsing' % cls.type
+        raise NotImplementedError(msg)
+        return MPC(conid, gids, constraints, enforced, comment=comment)
 
     def nodeIDs(self):
         self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')

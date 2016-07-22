@@ -5,11 +5,19 @@ from struct import unpack, Struct
 from six import b
 from six.moves import range
 
-from pyNastran.bdf.bdf import (NSM, PBAR, PBARL, PBEAM,
-                               PROD, PSHELL, PSHEAR,
-                               PCOMP, PSOLID,
-                               PVISC, PELAS, PMASS,
-                               PTUBE, PGAP, PDAMP, PHBDY, PBUSH)
+from pyNastran.bdf.bdf import NSM, PMASS, PHBDY, PBUSH
+
+from pyNastran.bdf.cards.properties.bars import PBAR, PBARL
+from pyNastran.bdf.cards.properties.beam import PBEAM
+from pyNastran.bdf.cards.properties.bush import PBUSH
+from pyNastran.bdf.cards.properties.damper import PDAMP, PVISC
+from pyNastran.bdf.cards.properties.properties import PFAST, PGAP
+from pyNastran.bdf.cards.properties.rods import PROD, PTUBE
+from pyNastran.bdf.cards.properties.shell import PSHEAR, PSHELL, PCOMP
+from pyNastran.bdf.cards.properties.solid import PSOLID
+from pyNastran.bdf.cards.properties.springs import PELAS
+
+from pyNastran.bdf.cards.thermal.thermal import PCONV
 # PCOMPG, PBUSH1D, PBEAML, PBEAM3, PBUSH,
 from pyNastran.op2.tables.geom.geom_common import GeomCommon
 
@@ -77,9 +85,16 @@ class EPT(GeomCommon):
             (4706, 47, 376): ['PLSOLID', self._read_fake],  # record 47
             (10301, 103, 399): ['PSET', self._read_fake],  # record 57
             (3002, 30, 415): ['VIEW3D', self._read_fake],  # record 63
+
+            (13501, 135, 510) : ['PFAST', self._read_pfast_msc],  # MSC-specific
+
+            # NX-specific
+            (3601, 36, 55) : ['PFAST', self._read_pfast_nx],  # NX-specific
         }
 
     def _add_op2_property(self, prop):
+        if prop.pid > 100000000:
+            raise RuntimeError('bad parsing...%s' % str(prop))
         self.add_property(prop, allow_overwrites=True)
         #print(str(prop)[:-1])
 
@@ -90,6 +105,7 @@ class EPT(GeomCommon):
         NSM(3201,32,55) - the marker for Record 2
         .. todo:: this isnt a property...
         """
+        self.log.debug('skipping NSM in EPT\n')
         return len(data)
         s = Struct(b(self._endian + 'i4sif'))
         while len(data) >= 16:  # 4*4
@@ -172,7 +188,8 @@ class EPT(GeomCommon):
             Type = Type.strip().decode('latin1')
             group = group.strip().decode('latin1')
             data_in = [pid, mid, group, Type, value]
-            #print("pid=%s mid=%s group=%r Type=%r value=%s" %(pid, mid, group, Type, value))
+            #print("pid=%s mid=%s group=%r Type=%r value=%s" % (
+                #pid, mid, group, Type, value))
             if pid > 100000000:
                 raise RuntimeError('bad parsing...')
             expected_length = valid_types[Type]
@@ -208,7 +225,6 @@ class EPT(GeomCommon):
         struct3 = Struct(b(self._endian + '16f'))
         ntotal = 1072  # 44+12*84+20
         nproperties = (len(data) - n) // ntotal
-        print('')
         #assert nproperties > 0, 'ndata-n=%s n=%s datai\n%s' % (len(data)-n, n, self.show_data(data[n:100+n]))
         ndata = len(data)
         while n < ndata:
@@ -219,7 +235,7 @@ class EPT(GeomCommon):
             if self.is_debug_file:
                 self.log.info('PBEAM pid=%s mid=%s nsegments=%s ccf=%s x=%s\n' % tuple(data_in))
             (pid, mid, nsegments, ccf, x) = data_in
-            self.log.info('PBEAM pid=%s mid=%s nsegments=%s ccf=%s x=%s' % tuple(data_in))
+            #self.log.info('PBEAM pid=%s mid=%s nsegments=%s ccf=%s x=%s' % tuple(data_in))
 
             # Constant cross-section flag: 1=yes and 0=no
             # what is 2?
@@ -239,15 +255,15 @@ class EPT(GeomCommon):
                 elif soi == 1.0:
                     so_str = 'YES'
                 else:
-                    raise NotImplementedError('PBEAM pid=%s i=%s x/xb=%s soi=%s' % (pid, i, xxbi, soi))
+                    raise NotImplementedError('PBEAM pid=%s i=%s x/xb=%s soi=%s' % (pid, i, xxb, soi))
 
                 pack2 = (so_str, xxb, a, i1, i2, i12, j, nsm, c1, c2,
                          d1, d2, e1, e2, f1, f2)
                 data_in.append(pack2)
                 if self.is_debug_file:
                     self.binary_debug.write('     %s\n' % str(pack))
-                self.log.info('    i=%-2s' % i + ' so=%s xxb=%.1f a=%g i1=%g i2=%g i12=%g j=%g nsm=%g '
-                              'c=[%s,%s] d=[%s,%s] e=[%s,%s] f=[%s,%s]' % (tuple(pack2)))
+                    self.log.info('    i=%-2s' % i + ' so=%s xxb=%.1f a=%g i1=%g i2=%g i12=%g j=%g nsm=%g '
+                                  'c=[%s,%s] d=[%s,%s] e=[%s,%s] f=[%s,%s]' % (tuple(pack2)))
             edata = data[n:n+64]
             if len(edata) != 64:
                 endpack = []
@@ -270,11 +286,13 @@ class EPT(GeomCommon):
         return n
 
     def _read_pbeaml(self, data, n):
+        self.log.debug('skipping PBEAML in EPT\n')
         if self.is_debug_file:
             self.binary_debug.write('skipping PBEAML in EPT\n')
         return len(data)
 
     def _read_pbend(self, data, n):
+        self.log.debug('skipping PBEND in EPT\n')
         if self.is_debug_file:
             self.binary_debug.write('skipping PBEND in EPT\n')
         return len(data)
@@ -345,11 +363,13 @@ class EPT(GeomCommon):
         return n
 
     def _read_pbush1d(self, data, n):
+        self.log.debug('skipping PBUSH1D in EPT\n')
         if self.is_debug_file:
             self.binary_debug.write('skipping PBUSH1D in EPT\n')
         return len(data)
 
     def _read_pbusht(self, data, n):
+        self.log.debug('skipping PBUSHT in EPT\n')
         if self.is_debug_file:
             self.binary_debug.write('skipping PBUSHT in EPT\n')
         return len(data)
@@ -366,7 +386,7 @@ class EPT(GeomCommon):
         while n < (ndata - 32):
             out = s1.unpack(data[n:n+32])
             (pid, nlayers, z0, nsm, sb, ft, Tref, ge) = out
-            if self.debug:
+            if self.binary_debug:
                 self.log.debug('PCOMP pid=%s nlayers=%s z0=%s nsm=%s sb=%s ft=%s Tref=%s ge=%s' % tuple(out))
             assert isinstance(nlayers, int), out
             n += 32
@@ -405,18 +425,41 @@ class EPT(GeomCommon):
         return n
 
 # PCOMPA
-    def _read_pconeax(self, data, n):  # 24
+    def _read_pconeax(self, data, n):
+        """
+        (152,19,147) - Record 24
+        """
+        self.log.debug('skipping PCONEAX in EPT\n')
         if self.is_debug_file:
             self.binary_debug.write('skipping PCONEAX\n')
         return len(data)
-    def _read_pconv(self, data, n):  # 25
-        if self.is_debug_file:
-            self.binary_debug.write('skipping PCONV\n')
-        return len(data)
+
+    def _read_pconv(self, data, n):
+        """
+        (11001,110,411)- Record 25
+        """
+        ntotal = 56  # 14*4
+        s = Struct(b(self._endian + '3if 4i fii 3f'))
+        nentries = (len(data) - n) // ntotal
+        for i in range(nentries):
+            out = s.unpack(data[n:n+ntotal])
+            (pconid, mid, form, expf, ftype, tid, undef1, undef2, chlen,
+             gidin, ce, e1, e2, e3) = out
+            data_in = (pconid, mid, form, expf, ftype, tid, chlen,
+                    gidin, ce, e1, e2, e3)
+
+            prop = PCONV.add_op2_data(data_in)
+            self._add_op2_property(prop)
+            n += ntotal
+        self.card_count['PCONV'] = nentries
+        return n
+
     def _read_pconvm(self, data, n):  # 26
+        self.log.debug('skipping PCONVM in EPT\n')
         if self.is_debug_file:
             self.binary_debug.write('skipping PCONVM\n')
         return len(data)
+
     def _read_pdamp(self, data, n):
         """
         PDAMP(202,2,45) - the marker for Record ???
@@ -425,7 +468,7 @@ class EPT(GeomCommon):
         s = Struct(b(self._endian + 'if'))
         nentries = (len(data) - n) // ntotal
         for i in range(nentries):
-            out = s.unpack(data[n:n+8])
+            out = s.unpack(data[n:n+ntotal])
             #(pid, b) = out
             prop = PDAMP.add_op2_data(out)
             self._add_op2_property(prop)
@@ -462,24 +505,68 @@ class EPT(GeomCommon):
         self.card_count['PELAS'] = nproperties
         return n
 
-# PFAST
+    def _read_pfast_msc(self, data, n):
+        ntotal = 92 # 23*4
+        s = Struct(b(self._endian + 'ifii 4f'))
+        nproperties = (len(data) - n) // ntotal
+        for i in range(nproperties):
+            edata = data[n:n+ntotal]
+            out = s.unpack(edata)
+            if self.is_debug_file:
+                self.binary_debug.write('  PFAST=%s\n' % str(out))
+            (pid, d, mcid, connbeh, conntype, extcon, condtype, weldtype,
+             minlen, maxlen, gmcheck, spcgs, mass, ge, aa, bb, cc, mcid, mflag,
+             kt1, kt2, kt3, kr1, kr2, kr3) = out
+
+            data_in = (pid, d, mcid, mflag, kt1, kt2, kt3,
+                       kr1, kr2, kr3, mass, ge)
+            prop = PFAST.add_op2_data(data_in)
+            self._add_op2_property(prop)
+            n += ntotal
+        self.card_count['PFAST'] = nproperties
+        return n
+
+    def _read_pfast_nx(self, data, n):
+        """
+        PFAST(3601,36,55)
+        NX only
+        """
+        ntotal = 48
+        s = Struct(b(self._endian + 'ifii 4f'))
+        nproperties = (len(data) - n) // ntotal
+        for i in range(nproperties):
+            edata = data[n:n+ntotal]
+            out = s.unpack(edata)
+            if self.is_debug_file:
+                self.binary_debug.write('  PFAST=%s\n' % str(out))
+            (pid, d, mcid, mflag, kt1, kt2, kt3, kr1, kr2, kr3, mass, ge) = out
+
+            data_in = (pid, d, mcid, mflag, kt1, kt2, kt3,
+                       kr1, kr2, kr3, mass, ge)
+            prop = PFAST.add_op2_data(data_in)
+            self._add_op2_property(prop)
+            n += ntotal
+        self.card_count['PFAST'] = nproperties
+        return n
 # PELAST
 
     def _read_pgap(self, data, n):
         """
         PGAP(3201,32,55) - the marker for Record 42
         """
+        ntotal = 44
         s = Struct(b(self._endian + 'i10f'))
-        nproperties = (len(data) - n) // 44
+        nproperties = (len(data) - n) // ntotal
         for i in range(nproperties):
-            edata = data[n:n+44]
+            edata = data[n:n+ntotal]
             out = s.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  PGAP=%s\n' % str(out))
             #(pid,u0,f0,ka,kb,kt,mu1,mu2,tmax,mar,trmin) = out
             prop = PGAP.add_op2_data(out)
             self._add_op2_property(prop)
-        #self.card_count['PGAP'] = nproperties
+            n += ntotal
+        self.card_count['PGAP'] = nproperties
         return n
 
     def _read_phbdy(self, data, n):
@@ -501,12 +588,19 @@ class EPT(GeomCommon):
         return n
 
     def _read_pintc(self, data, n):
+        self.log.debug('skipping PINTC in EPT\n')
         return len(data)
+
     def _read_pints(self, data, n):
+        self.log.debug('skipping PINTS in EPT\n')
         return len(data)
+
     def _read_plplane(self, data, n):
+        self.log.debug('skipping PLPLANE in EPT\n')
         return len(data)
+
     def _read_plsolid(self, data, n):
+        self.log.debug('skipping PLSOLID in EPT\n')
         return len(data)
 
     def _read_pmass(self, data, n):
@@ -636,8 +730,11 @@ class EPT(GeomCommon):
         return n
 
     def _read_pset(self, data, n):
+        self.log.debug('skipping PSET in EPT\n')
         return len(data)
+
     def _read_pval(self, data, n):
+        self.log.debug('skipping PVAL in EPT\n')
         return len(data)
 
     def _read_pvisc(self, data, n):
@@ -659,6 +756,9 @@ class EPT(GeomCommon):
 # PWELD
 # PWSEAM
     def _read_view(self, data, n):
+        self.log.debug('skipping VIEW in EPT\n')
         return len(data)
+
     def _read_view3d(self, data, n):
+        self.log.debug('skipping VIEW3D in EPT\n')
         return len(data)
