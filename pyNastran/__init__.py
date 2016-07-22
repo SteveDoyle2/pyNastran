@@ -1,7 +1,9 @@
 import os
 import sys
 
-if hasattr(sys, '_MEIPASS'):
+# this variable is automatically set by the .spec file
+is_pynastrangui_exe = True
+if is_pynastrangui_exe:
     # pyInstaller
     from pyNastran.version import __version__, __releaseDate__
 else:
