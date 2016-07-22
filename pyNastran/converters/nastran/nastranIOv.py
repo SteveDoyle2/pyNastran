@@ -411,18 +411,22 @@ class NastranIO(object):
 
         box_id_to_caero_element_map = {}
         num_prev = 0
+        ncaeros_sub = 0
         if model.caeros:
             caero_points = []
             for eid, caero in sorted(iteritems(model.caeros)):
+                print('caero\n%s' % caero)
                 if caero.type == 'CAERO1':
+                    ncaeros_sub += 1
                     pointsi, elementsi = caero.panel_points_elements()
                     caero_points.append(pointsi)
                     for i, box_id in enumerate(caero.box_ids.flat):
                         box_id_to_caero_element_map[box_id] = elementsi[i, :] + num_prev
                     num_prev += pointsi.shape[0]
-            caero_points = np.vstack(caero_points)
+            if ncaeros_sub:
+                caero_points = np.vstack(caero_points)
             self.has_caero = True
-        else:
+        if ncaeros_sub == 0:
             caero_points = np.empty((0, 3))
 
         # check for any control surfcaes
@@ -728,8 +732,10 @@ class NastranIO(object):
                         #print('xyz:\n', xyz[n1], xyz[n2], xyz[n3], xyz[n4])
             else:
                 self.log_info("skipping %s" % element.type)
-        self.log_info('CAERO.max = %s' % np.vstack(max_cpoints).max(axis=0))
-        self.log_info('CAERO.min = %s' % np.vstack(min_cpoints).min(axis=0))
+
+        if ncaeros_points:
+            self.log_info('CAERO.max = %s' % np.vstack(max_cpoints).max(axis=0))
+            self.log_info('CAERO.min = %s' % np.vstack(min_cpoints).min(axis=0))
         self.alt_grids['caero'].SetPoints(points)
         return j
 
