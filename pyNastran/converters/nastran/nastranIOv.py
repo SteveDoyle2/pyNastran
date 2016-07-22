@@ -1904,6 +1904,85 @@ class NastranIO(object):
         # pids_to_keep = []
         # pids_btm = []
         # pids_to_drop = []
+
+        # 3
+        # | \
+        # |   \
+        # |     \
+        # 1------2
+
+
+        # these normals point inwards
+        #      4
+        #    / | \
+        #   /  |  \
+        #  3-------2
+        #   \  |   /
+        #    \ | /
+        #      1
+        _ctetra_faces = (
+            (0, 1, 2), # (1, 2, 3),
+            (0, 3, 1), # (1, 4, 2),
+            (0, 3, 2), # (1, 4, 3),
+            (1, 3, 2), # (2, 4, 3),
+        )
+
+        # these normals point inwards
+        #
+        #
+        #
+        #
+        #        /4-----3
+        #       /       /
+        #      /  5    /
+        #    /    \   /
+        #   /      \ /
+        # 1---------2
+        _cpyram_faces = (
+            (0, 1, 2, 3), # (1, 2, 3, 4),
+            (1, 4, 2), # (2, 5, 3),
+            (2, 4, 3), # (3, 5, 4),
+            (0, 3, 4), # (1, 4, 5),
+            (0, 4, 1), # (1, 5, 2),
+        )
+
+        # these normals point inwards
+        #       /6
+        #     /  | \
+        #   /    |   \
+        # 3\     |     \
+        # |  \   /4-----5
+        # |    \/       /
+        # |   /  \     /
+        # |  /    \   /
+        # | /      \ /
+        # 1---------2
+        _cpenta_faces = (
+            (0, 2, 1), # (1, 3, 2),
+            (3, 4, 5), # (4, 5, 6),
+
+            (0, 1, 4, 3), # (1, 2, 5, 4), # bottom
+            (1, 2, 5, 4), # (2, 3, 6, 5), # right
+            (0, 3, 5, 2), # (1, 4, 6, 3), # left
+        )
+
+        # these normals point inwards
+        #      8----7
+        #     /|   /|
+        #    / |  / |
+        #   /  5-/--6
+        # 4-----3   /
+        # |  /  |  /
+        # | /   | /
+        # 1-----2
+        _chexa_faces = (
+            (4, 5, 6, 7), # (5, 6, 7, 8),
+            (0, 3, 2, 1), # (1, 4, 3, 2),
+            (1, 2, 6, 5), # (2, 3, 7, 6),
+            (2, 3, 7, 6), # (3, 4, 8, 7),
+            (0, 4, 7, 3), # (1, 5, 8, 4),
+            (0, 6, 5, 4), # (1, 7, 6, 5),
+        )
         nid_to_pid_map = defaultdict(list)
         for (eid, element) in sorted(iteritems(model.elements)):
             # if element.Pid() >= 82:
@@ -1928,7 +2007,7 @@ class NastranIO(object):
                     if nid is not None:
                         nid_to_pid_map[nid].append(pid)
 
-                p1, p2, p3 = nid_map[node_ids[0]], nid_map[node_ids[1]], nid_map[node_ids[2]]
+                p1, p2, p3 = [nid_map[nid] for nid in node_ids]
                 v21 = xyz_cid0[p2, :] - xyz_cid0[p1, :]
                 v32 = xyz_cid0[p3, :] - xyz_cid0[p2, :]
                 v13 = xyz_cid0[p1, :] - xyz_cid0[p3, :]
@@ -2042,9 +2121,9 @@ class NastranIO(object):
                     if nid is not None:
                         nid_to_pid_map[nid].append(pid)
 
-                self.eid_to_nid_map[eid] = node_ids[:4]
+                self.eid_to_nid_map[eid] = node_ids
 
-                p1, p2, p3, p4 = nid_map[node_ids[0]], nid_map[node_ids[1]], nid_map[node_ids[2]], nid_map[node_ids[3]]
+                p1, p2, p3, p4 = [nid_map[nid] for nid in node_ids]
                 v21 = xyz_cid0[p2, :] - xyz_cid0[p1, :]
                 v32 = xyz_cid0[p3, :] - xyz_cid0[p2, :]
                 v43 = xyz_cid0[p4, :] - xyz_cid0[p3, :]
@@ -2108,6 +2187,8 @@ class NastranIO(object):
                 elem.GetPointIds().SetId(2, nid_map[node_ids[2]])
                 elem.GetPointIds().SetId(3, nid_map[node_ids[3]])
                 self.grid.InsertNextCell(10, elem.GetPointIds())
+                #elem_nid_map = {nid:nid_map[nid] for nid in node_ids[:4]}
+                max_theta = get_max_theta(_ctetra_faces, node_ids[:4], nid_map, xyz_cid0)
             elif isinstance(element, CTETRA10):
                 node_ids = element.node_ids
                 pid = element.Pid()
@@ -2130,6 +2211,7 @@ class NastranIO(object):
                 elem.GetPointIds().SetId(2, nid_map[node_ids[2]])
                 elem.GetPointIds().SetId(3, nid_map[node_ids[3]])
                 self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                max_theta = get_max_theta(_ctetra_faces, node_ids[:4], nid_map, xyz_cid0)
             elif isinstance(element, CPENTA6):
                 elem = vtkWedge()
                 node_ids = element.node_ids
@@ -2144,6 +2226,7 @@ class NastranIO(object):
                 elem.GetPointIds().SetId(4, nid_map[node_ids[4]])
                 elem.GetPointIds().SetId(5, nid_map[node_ids[5]])
                 self.grid.InsertNextCell(13, elem.GetPointIds())
+                max_theta = get_max_theta(_cpenta_faces, node_ids[:6], nid_map, xyz_cid0)
 
             elif isinstance(element, CPENTA15):
                 node_ids = element.node_ids
@@ -2172,6 +2255,7 @@ class NastranIO(object):
                 elem.GetPointIds().SetId(4, nid_map[node_ids[4]])
                 elem.GetPointIds().SetId(5, nid_map[node_ids[5]])
                 self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                max_theta = get_max_theta(_cpenta_faces, node_ids[:6], nid_map, xyz_cid0)
             elif isinstance(element, (CHEXA8, CIHEX1)):
                 node_ids = element.node_ids
                 pid = element.Pid()
@@ -2188,6 +2272,7 @@ class NastranIO(object):
                 elem.GetPointIds().SetId(6, nid_map[node_ids[6]])
                 elem.GetPointIds().SetId(7, nid_map[node_ids[7]])
                 self.grid.InsertNextCell(12, elem.GetPointIds())
+                max_theta = get_max_theta(_chexa_faces, node_ids[:8], nid_map, xyz_cid0)
             elif isinstance(element, CHEXA20):
                 node_ids = element.node_ids
                 pid = element.Pid()
@@ -2221,6 +2306,7 @@ class NastranIO(object):
                 elem.GetPointIds().SetId(6, nid_map[node_ids[6]])
                 elem.GetPointIds().SetId(7, nid_map[node_ids[7]])
                 self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                max_theta = get_max_theta(_chexa_faces, node_ids[:8], nid_map, xyz_cid0)
 
             elif isinstance(element, CPYRAM5):
                 node_ids = element.node_ids
@@ -2235,6 +2321,7 @@ class NastranIO(object):
                 elem.GetPointIds().SetId(3, nid_map[node_ids[3]])
                 elem.GetPointIds().SetId(4, nid_map[node_ids[4]])
                 self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                max_theta = get_max_theta(_cpyram_faces, node_ids[:5], nid_map, xyz_cid0)
             elif isinstance(element, CPYRAM13):
                 node_ids = element.node_ids
                 pid = element.Pid()
@@ -2261,6 +2348,7 @@ class NastranIO(object):
                 elem.GetPointIds().SetId(3, nid_map[node_ids[3]])
                 elem.GetPointIds().SetId(4, nid_map[node_ids[4]])
                 self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                max_theta = get_max_theta(_cpyram_faces, node_ids[:5], nid_map, xyz_cid0)
 
             elif (isinstance(element, (LineElement, SpringElement)) or
                   element.type in ['CBUSH', 'CBUSH1D', 'CFAST', 'CROD', 'CONROD',
@@ -2639,6 +2727,7 @@ class NastranIO(object):
             cases[icase] = (eid_dim_res, (0, 'ElementDim'))
 
             is_shell = np.abs(normals).max() > 0.
+            is_solid = np.abs(max_interior_angle).max() > 0.
             if is_shell:
                 nx_res = GuiResult(0, header='NormalX', title='NormalX',
                                    location='centroid', scalar=normals[:, 0], data_format='%.2f')
@@ -2647,8 +2736,6 @@ class NastranIO(object):
                 nz_res = GuiResult(0, header='NormalZ', title='NormalZ',
                                    location='centroid', scalar=normals[:, 2], data_format='%.2f')
 
-                # TODO: theta should apply to solids as well,
-                #       but solid elements are not supported right now
                 theta_res = GuiResult(0, header='Max Interior Angle', title='MaxInteriorAngle',
                                       location='centroid', scalar=np.degrees(max_interior_angle))
 
@@ -2690,6 +2777,16 @@ class NastranIO(object):
                 form_checks.append(('OffsetY', icase + 1, []))
                 form_checks.append(('OffsetZ', icase + 2, []))
                 icase += 3
+            elif is_solid:
+                form_checks = []
+                form0.append(('Element Checks', None, form_checks))
+                theta_res = GuiResult(0, header='Max Interior Angle', title='MaxInteriorAngle',
+                                      location='centroid', scalar=np.degrees(max_interior_angle))
+                form_checks.append(('ElementDim', icase, []))
+                form_checks.append(('Max Interior Angle', icase + 1, []))
+                cases[icase + 1] = (theta_res, (0, 'Max Interior Angle'))
+                icase += 2
+
             else:
                 form0.append(('ElementDim', icase, []))
                 icase += 1
@@ -4855,3 +4952,42 @@ class NastranIO(object):
         #, case, header, form0
         return icase
 
+def get_max_theta(faces, all_node_ids, nid_map, xyz_cid0):
+    max_thetas = []
+    #print('faces =', faces)
+    #assert len(faces) > 0, 'faces=%s nids=%s' % (faces, all_node_ids)
+    for face in faces:
+        if len(face) == 3:
+            node_ids = all_node_ids[face[0]], all_node_ids[face[1]], all_node_ids[face[2]]
+            p1, p2, p3 = nid_map[node_ids[0]], nid_map[node_ids[1]], nid_map[node_ids[2]]
+            v21 = xyz_cid0[p2, :] - xyz_cid0[p1, :]
+            v32 = xyz_cid0[p3, :] - xyz_cid0[p2, :]
+            v13 = xyz_cid0[p1, :] - xyz_cid0[p3, :]
+
+            cos_theta1 = np.dot(v21, -v13) / (np.linalg.norm(v21) * np.linalg.norm(v13))
+            cos_theta2 = np.dot(v32, -v21) / (np.linalg.norm(v32) * np.linalg.norm(v21))
+            cos_theta3 = np.dot(v13, -v32) / (np.linalg.norm(v13) * np.linalg.norm(v32))
+            max_thetas.extend([cos_theta1, cos_theta2, cos_theta3])
+            #max_theta = np.arccos([cos_theta1, cos_theta2, cos_theta3]).max()
+        elif len(face) == 4:
+            try:
+                node_ids = all_node_ids[face[0]], all_node_ids[face[1]], all_node_ids[face[2]], all_node_ids[face[3]]
+            except:
+                print(face)
+                print(node_ids)
+                raise
+            p1, p2, p3, p4 = nid_map[node_ids[0]], nid_map[node_ids[1]], nid_map[node_ids[2]], nid_map[node_ids[3]]
+            v21 = xyz_cid0[p2, :] - xyz_cid0[p1, :]
+            v32 = xyz_cid0[p3, :] - xyz_cid0[p2, :]
+            v43 = xyz_cid0[p4, :] - xyz_cid0[p3, :]
+            v14 = xyz_cid0[p1, :] - xyz_cid0[p4, :]
+            cos_theta1 = np.dot(v21, -v14) / (np.linalg.norm(v21) * np.linalg.norm(v14))
+            cos_theta2 = np.dot(v32, -v21) / (np.linalg.norm(v32) * np.linalg.norm(v21))
+            cos_theta3 = np.dot(v43, -v32) / (np.linalg.norm(v43) * np.linalg.norm(v32))
+            cos_theta4 = np.dot(v14, -v43) / (np.linalg.norm(v14) * np.linalg.norm(v43))
+            max_thetas.extend([cos_theta1, cos_theta2, cos_theta3, cos_theta4])
+            #max_theta = np.arccos([cos_theta1, cos_theta2, cos_theta3, cos_theta4]).max()
+        else:
+            raise NotImplementedError(face)
+    max_theta = np.arccos(max_thetas).max()
+    return max_theta

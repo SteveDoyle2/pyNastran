@@ -9,6 +9,7 @@ from pyNastran.bdf.cards.loads.static_loads import (
     MOMENT, MOMENT1, MOMENT2,
     LOAD, PLOAD, PLOAD1, PLOAD2,  #PLOAD3,
     PLOAD4)  # PLOAD3,
+from pyNastran.bdf.cards.loads.loads import LSEQ, SLOAD #, DAREA, RANDPS, RFORCE, RFORCE1, LOADCYN
 from pyNastran.bdf.cards.thermal.loads import QBDY1, QBDY2, QBDY3, TEMP, TEMPD
 from pyNastran.op2.tables.geom.geom_common import GeomCommon
 
@@ -198,10 +199,19 @@ class GEOM3(GeomCommon):
 # LOADCYT
 
     def _read_lseq(self, data, n):
-        self.log.debug('skipping LSEQ in GEOM3\n')
-        if self.is_debug_file:
-            self.binary_debug.write('skipping LSEQ in GEOM3\n')
-        return len(data)
+        ntotal = 20  # 5*4
+        s = Struct(b(self._endian + '5i'))
+        nentries = (len(data) - n) // ntotal
+        for i in range(nentries):
+            out = s.unpack(data[n:n + ntotal])
+            (sid, darea, load_id, temperature_id, undef) = out
+            if self.is_debug_file:
+                self.binary_debug.write('  LSEQ=%s\n' % str(out))
+            load = LSEQ.add_op2_data(out)
+            self.add_LSEQ(load)
+            n += ntotal
+        self.card_count['LSEQ'] = nentries
+        return n
 
     def _read_moment(self, data, n):
         """
@@ -455,14 +465,14 @@ class GEOM3(GeomCommon):
         ntotal = 8  # 2*4
         nentries = (len(data) - n) // ntotal
         for i in range(nentries):
-            edata = data[n:n + 8]
+            edata = data[n:n + ntotal]
             out = unpack('if', edata)
             if self.is_debug_file:
                 self.binary_debug.write('  TEMPD=%s\n' % str(out))
             (sid, T) = out
             load = TEMPD(None, 0, out)
             #self.add_thermal_load(load)
-            n += 8
+            n += ntotal
         self.card_count['TEMPD'] = nentries
         return n
 
@@ -477,10 +487,20 @@ class GEOM3(GeomCommon):
         return len(data)
 
     def _read_sload(self, data, n):
-        self.log.debug('skipping SLOAD in GEOM3\n')
-        if self.is_debug_file:
-            self.binary_debug.write('skipping SLOAD in GEOM3\n')
-        return len(data)
+        ntotal =  12  # 3*4
+        nentries = (len(data) - n) // ntotal
+        struc = Struct(b(self._endian + '2i f'))
+        for i in range(nentries):
+            edata = data[n:n + ntotal]
+            out = struc.unpack(edata)
+            if self.is_debug_file:
+                self.binary_debug.write('  SLOAD=%s\n' % str(out))
+            #(sid, nid, scale_factor) = out
+            load = SLOAD.add_op2_data(out)
+            self.add_load(load)
+            n += ntotal
+        self.card_count['SLOAD'] = nentries
+        return n
 
 # TEMP(5701,57,27) # 32
 # TEMPD(5641,65,98) # 33

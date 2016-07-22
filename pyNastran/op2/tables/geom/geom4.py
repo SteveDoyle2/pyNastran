@@ -6,11 +6,12 @@ from six.moves import range
 
 #from pyNastran.bdf.cards.constraints import SPC,SPCADD
 from pyNastran.bdf.cards.elements.rigid import RBE2
-from pyNastran.bdf.cards.constraints import SUPORT, SPC, SPC1, SUPORT1
-from pyNastran.bdf.cards.bdf_sets import ASET, ASET1, QSET, QSET1, SEQSET, SEQSET1
+from pyNastran.bdf.cards.bdf_sets import (
+    ASET, ASET1, QSET, QSET1, USET, USET1, SEQSET, SEQSET1)
 from pyNastran.bdf.cards.loads.loads import SPCD
 from pyNastran.op2.tables.geom.geom_common import GeomCommon
-
+from pyNastran.bdf.cards.constraints import SUPORT1, SUPORT, SPC, SPC1, MPC
+    #SPCADD, SPCAX, MPCADD, SESUP, GMSPC
 
 class GEOM4(GeomCommon):
     """defines methods for reading op2 constraints"""
@@ -55,7 +56,7 @@ class GEOM4(GeomCommon):
             (14201, 142, 652) : ['RBJOINT', self._read_fake],     # record 27 - not done
             (14301, 143, 653) : ['RBJSTIF', self._read_fake],     # record 28 - not done
             (1310, 13, 247) : ['RELEASE', self._read_fake],       # record 29 - not done
-            (14101,141,640): ['RPNOM', self._read_fake],          # record 30 - not done
+            (14101, 141, 640): ['RPNOM', self._read_fake],          # record 30 - not done
             (6501, 65, 291): ['RROD', self._read_rrod],          # record 31 - not done
             (7001, 70, 186): ['RSPLINE', self._read_rspline],    # record 32 - not done
             (7201, 72, 398): ['RSSCON', self._read_rsscon],      # record 33 - not done
@@ -64,13 +65,12 @@ class GEOM4(GeomCommon):
             #: ['', self._read_fake],
             (1110, 11, 321): ['SEQSET', self._read_seqset],      # record 40
             (1210, 12, 322): ['SEQSET1', self._read_seqset1],    # record 41
+            (5110, 51, 256): ['SPCD', self._read_spcd],          # record 48 - buggy
 
             # these ones are not fully marked...
-            (5110, 51, 256): ['SPCD', self._read_spcd],          # record 44
             (5501, 55, 16): ['SPC', self._read_spc],             # record 44 - buggy
             (5481, 58, 12): ['SPC1', self._read_spc1],           # record 45 - not done
             (5491, 59, 13): ['SPCADD', self._read_spcadd],       # record 46 - not done
-            (5110, 51, 256): ['SPCD', self._read_spcd],          # record 47 - buggy
             (5601, 56, 14): ['SUPORT', self._read_suport],       # record 59 - not done
             (10100, 101, 472): ['SUPORT1', self._read_suport1],  # record 60 - not done
             (2010, 20, 193) : ['USET', self._read_uset],         # Record 62 -- USET(2010,20,193)
@@ -111,6 +111,8 @@ class GEOM4(GeomCommon):
 
     def _read_xset(self, data, n, card_name, cls, add_method):
         """common method for ASET, QSET"""
+        self.log.debug('skipping %s in GEOM4\n' % card_name)
+        return len(data)
         s = Struct(b(self._endian + '2i'))
         ntotal = 8
         nelements = (len(data) - n) // ntotal
@@ -132,14 +134,19 @@ class GEOM4(GeomCommon):
         #return len(data)
         return self._read_xset1(data, n, 'ASET1', ASET1, self.add_ASET)
 
-    def _read_xset1(self, data, n, card_name, cls, add_method):
+    def _read_xset1(self, data, n, card_name, cls, add_method, debug=False):
         """common method for ASET1, QSET1"""
+        self.log.debug('skipping %s in GEOM4\n' % card_name)
+        return len(data)
         ndata = len(data)
         nfields = (ndata - n) // 4
         fmt = '%ii' % nfields
         out = unpack(b(self._endian + fmt), data[n:])
         if self.is_debug_file:
             self.binary_debug.write('  %s=%s\n' % (card_name, str(out)))
+        if debug:
+            self.log.info('  %s=%s\n' % (card_name, str(out)))
+        assert -1 not in out, '  %s=%s\n' % (card_name, str(out))
         card = cls.add_op2_data(out)
         add_method(card)
         self._increase_card_count(card_name, 1)
@@ -179,6 +186,40 @@ class GEOM4(GeomCommon):
         """MPC(4901,49,17) - Record 16"""
         self.log.debug('skipping MPC in GEOM4\n')
         return len(data)
+        #self.show_data(data)
+        ndata = len(data)
+        nfields = (ndata-n) // 4
+        print('nfields = %s' % nfields)
+        datan = data[n:]
+        ints = unpack(b(self._endian + '%ii' % nfields), datan)
+        floats = unpack(b(self._endian + '%if' % nfields), datan)
+        i = 0
+        nentries = 0
+        mpc = []
+        j = 0
+        while i < nfields:
+            if ints[i] == -1:
+                assert ints[i+1] == -1, ints
+                assert ints[i+2] == -1, ints
+                mpci = MPC.add_op2_data(mpc)
+                self.add_suport(mpci) # extracts [sid, nid, c]
+                print(mpc)
+                nentries += 1
+                if self.is_debug_file:
+                    self.binary_debug.write('  MPC=%s\n' % str(mpc))
+                mpc = []
+                j = 0
+                i += 2
+                continue
+            if j == 0:
+                mpc = [ints[i], ints[i+1], ints[i+2], floats[i+3]]
+                i = 4
+            i += 1
+            #print(suport)
+            assert -1 not in mpc, mpc
+
+        MPC.add_op2_data(data)
+        aaa
 
     def _read_mpcadd(self, data, n):
         """MPCADD(4891,60,83) - Record 17"""
@@ -267,7 +308,7 @@ class GEOM4(GeomCommon):
         """SEQSET1(1210,12,322) - Record 41"""
         #self.log.debug('skipping SEQSET1 in GEOM4\n')
         #return len(data)
-        return self._read_xset1(data, n, 'SEQSET1', SEQSET1, self.add_SEQSET)
+        return self._read_xset1(data, n, 'SEQSET1', SEQSET1, self.add_SEQSET, debug=True)
 
 # SESUP
 # SEUSET
@@ -343,23 +384,50 @@ class GEOM4(GeomCommon):
         return len(data)
 
     def _read_spcd(self, data, n):
-        """SPCD(5110,51,256) - Record 47"""
-        self.log.debug('skipping SPCD in GEOM4\n')
-        return len(data)
-        s = Struct(b(self._endian + '4ifi'))
-        nentries = (len(data) - n) // 20 # 5*4
+        """common method for reading SPCDs"""
+        self._read_dual_card(data, n, self._read_spcd_nx, self._read_spcd_msc,
+                             'SPCD', self.add_load)
+        #if self.is_nx:
+            #n = self._read_spcd_nx(data, n)
+        #else:
+            #n = self._read_spcd_msc(data, n)
+        return n
+
+    def _read_spcd_nx(self, data, n):
+        """SPCD(5110,51,256) - NX specific"""
+        s = Struct(b(self._endian + '3ifi'))
+        ntotal = 16 # 4*4
+        nentries = (len(data) - n) // ntotal
         for i in range(nentries):
-            edata = data[n:n + 20]
+            edata = data[n:n + ntotal]
+            #self.show_data(edata)
+            out = s.unpack(edata)
+            (sid, ID, c, dx) = out
+            #print(out)
+            if self.is_debug_file:
+                self.binary_debug.write('  SPCD=%s\n' % str(out))
+            constraint = SPCD.add_op2_data([sid, ID, c, dx])
+            self.add_load(constraint)
+            n += ntotal
+        self.card_count['SPCD'] = nentries
+        return n
+
+    def _read_spcd_msc(self, data, n):
+        """SPCD(5110,51,256) - MSC specific - Record 47"""
+        s = Struct(b(self._endian + '4ifi'))
+        ntotal = 20 # 5*4
+        nentries = (len(data) - n) // ntotal
+        for i in range(nentries):
+            edata = data[n:n + ntotal]
             #self.show_data(edata)
             out = s.unpack(edata)
             (sid, ID, c, xxx, dx) = out
             #print(out)
             if self.is_debug_file:
                 self.binary_debug.write('  SPCD=%s\n' % str(out))
-
             constraint = SPCD.add_op2_data([sid, ID, c, dx])
             self.add_load(constraint)
-            n += 20
+            n += ntotal
         self.card_count['SPCD'] = nentries
         return n
 
@@ -447,10 +515,9 @@ class GEOM4(GeomCommon):
 # TEMPBC
 
     def _read_uset(self, data, n):
-        """USET(2010,20,193) - Record 62"""
-        self.log.debug('skipping USET in GEOM4\n')
-        return len(data)
+        """USET(2010,20,193) - Record 63"""
+        return self._read_xset(data, n, 'USET', USET, self.add_USET)
 
     def _read_uset1(self, data, n):
-        self.log.debug('skipping USET1 in GEOM4\n')
-        return len(data)
+        """USET1(2110,21,194) - Record 65"""
+        return self._read_xset1(data, n, 'USET1', USET1, self.add_USET)

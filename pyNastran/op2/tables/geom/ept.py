@@ -5,11 +5,19 @@ from struct import unpack, Struct
 from six import b
 from six.moves import range
 
-from pyNastran.bdf.bdf import (NSM, PBAR, PBARL, PBEAM,
-                               PROD, PSHELL, PSHEAR,
-                               PCOMP, PSOLID,
-                               PVISC, PELAS, PMASS,
-                               PTUBE, PGAP, PDAMP, PHBDY, PBUSH)
+from pyNastran.bdf.bdf import NSM, PMASS, PHBDY, PBUSH
+
+from pyNastran.bdf.cards.properties.bars import PBAR, PBARL
+from pyNastran.bdf.cards.properties.beam import PBEAM
+from pyNastran.bdf.cards.properties.bush import PBUSH
+from pyNastran.bdf.cards.properties.damper import PDAMP, PVISC
+from pyNastran.bdf.cards.properties.properties import PFAST, PGAP
+from pyNastran.bdf.cards.properties.rods import PROD, PTUBE
+from pyNastran.bdf.cards.properties.shell import PSHEAR, PSHELL, PCOMP
+from pyNastran.bdf.cards.properties.solid import PSOLID
+from pyNastran.bdf.cards.properties.springs import PELAS
+
+from pyNastran.bdf.cards.thermal.thermal import PCONV
 # PCOMPG, PBUSH1D, PBEAML, PBEAM3, PBUSH,
 from pyNastran.op2.tables.geom.geom_common import GeomCommon
 
@@ -247,7 +255,7 @@ class EPT(GeomCommon):
                 elif soi == 1.0:
                     so_str = 'YES'
                 else:
-                    raise NotImplementedError('PBEAM pid=%s i=%s x/xb=%s soi=%s' % (pid, i, xxbi, soi))
+                    raise NotImplementedError('PBEAM pid=%s i=%s x/xb=%s soi=%s' % (pid, i, xxb, soi))
 
                 pack2 = (so_str, xxb, a, i1, i2, i12, j, nsm, c1, c2,
                          d1, d2, e1, e2, f1, f2)
@@ -417,17 +425,34 @@ class EPT(GeomCommon):
         return n
 
 # PCOMPA
-    def _read_pconeax(self, data, n):  # 24
+    def _read_pconeax(self, data, n):
+        """
+        (152,19,147) - Record 24
+        """
         self.log.debug('skipping PCONEAX in EPT\n')
         if self.is_debug_file:
             self.binary_debug.write('skipping PCONEAX\n')
         return len(data)
 
-    def _read_pconv(self, data, n):  # 25
-        self.log.debug('skipping PCONV in EPT\n')
-        if self.is_debug_file:
-            self.binary_debug.write('skipping PCONV\n')
-        return len(data)
+    def _read_pconv(self, data, n):
+        """
+        (11001,110,411)- Record 25
+        """
+        ntotal = 56  # 14*4
+        s = Struct(b(self._endian + '3if 4i fii 3f'))
+        nentries = (len(data) - n) // ntotal
+        for i in range(nentries):
+            out = s.unpack(data[n:n+ntotal])
+            (pconid, mid, form, expf, ftype, tid, undef1, undef2, chlen,
+             gidin, ce, e1, e2, e3) = out
+            data_in = (pconid, mid, form, expf, ftype, tid, chlen,
+                    gidin, ce, e1, e2, e3)
+
+            prop = PCONV.add_op2_data(data_in)
+            self._add_op2_property(prop)
+            n += ntotal
+        self.card_count['PCONV'] = nentries
+        return n
 
     def _read_pconvm(self, data, n):  # 26
         self.log.debug('skipping PCONVM in EPT\n')
@@ -443,7 +468,7 @@ class EPT(GeomCommon):
         s = Struct(b(self._endian + 'if'))
         nentries = (len(data) - n) // ntotal
         for i in range(nentries):
-            out = s.unpack(data[n:n+8])
+            out = s.unpack(data[n:n+ntotal])
             #(pid, b) = out
             prop = PDAMP.add_op2_data(out)
             self._add_op2_property(prop)

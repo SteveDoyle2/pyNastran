@@ -907,6 +907,29 @@ class GEOM2(GeomCommon):
         self.card_count['CONV'] = nelements
         return n
 
+    def _read_dual_card(self, data, n, nx_read, msc_read, card_name, add_method):
+        """
+        generalization of multi read methods (MSC, NX)
+        """
+        n0 = n
+        if self.is_nx:
+            try:
+                n, elements = self.nx_read(data, n)
+            except AssertionError:
+                n, elements = self.msc_read(data, n0)
+        else:
+            try:
+                n, elements = self.msc_read(data, n)
+            except AssertionError:
+                n, elements = self.nx_read(data, n0)
+
+        nelements = len(elements)
+        for elem in elements:
+            add_method(elem)
+
+        self.card_count[card_name] = nelements
+        return n
+
     def _read_conv_nx(self, data, n):
         """
         CONV(12701,127,408) - the marker for Record 59
