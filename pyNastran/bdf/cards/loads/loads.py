@@ -189,12 +189,13 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
         assert len(card) <= 5, 'len(LSEQ card) = %i\ncard=%s' % (len(card), card)
         return LSEQ(sid, excite_id, lid, tid, comment=comment)
 
-    #def add_op2_data(self, data, comment=''):
-        #self.sid = data[0]
-        #self.excite_id = data[1]
-        #self.lid = data[2]
-        #self.tid = data[3]
-        #raise NotImplementedError()
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        sid = data[0]
+        excite_id = data[1]
+        lid = data[2]
+        tid = data[3]
+        return LSEQ(sid, excite_id, lid, tid, comment=comment)
 
     def cross_reference(self, model):
         """
@@ -521,7 +522,6 @@ class SLOAD(Load):
 
     @classmethod
     def add_card(cls, card, comment=''):
-
         sid = integer(card, 1, 'sid')
 
         nfields = len(card) - 2
@@ -538,6 +538,11 @@ class SLOAD(Load):
             nids.append(integer(card, j, 'nid' + str(i)))
             mags.append(double(card, j + 1, 'mag' + str(i)))
         return SLOAD(sid, nids, mags, comment=comment)
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        (sid, nid, scale_factor) = data
+        return SLOAD(sid, [nid], [scale_factor], comment=comment)
 
     def cross_reference(self, model):
         """

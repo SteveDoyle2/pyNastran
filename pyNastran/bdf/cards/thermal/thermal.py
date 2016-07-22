@@ -656,6 +656,12 @@ class PCONV(ThermalProperty):
         return PCONV(pconid, mid, form, expf, ftype, tid, chlen, gidin, ce,
                      e1, e2, e3, comment=comment)
 
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        (pconid, mid, form, expf, ftype, tid, chlen, gidin, ce, e1, e2, e3) = data
+        return PCONV(pconid, mid, form, expf, ftype, tid, chlen, gidin, ce,
+                     e1, e2, e3, comment=comment)
+
     #def cross_reference(self, model):
         #pass
 

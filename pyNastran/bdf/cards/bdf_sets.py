@@ -452,7 +452,7 @@ class SuperABQSet1(Set):
         else:
             assert len(data) == 5, data
             ids = [data[3], 'THRU', data[4]]
-        return cls(components, ids, comment=comment)
+        return cls(seid, components, ids, comment=comment)
 
     def cross_reference(self, model):
         """

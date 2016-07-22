@@ -231,6 +231,15 @@ class SESUP(SUPORT):
 
 
 class MPC(Constraint):
+    """
+    +-----+-----+----+----+-----+----+----+----+-----+
+    |  1  |  2  |  3 |  4 |  5  |  6 |  7 |  8 |  9  |
+    +=====+=====+====+====+=====+====+====+====+=====+
+    | MPC | SID | G1 | C1 |  A1 | G2 | C2 | A2 |     |
+    +-----+-----+----+----+-----+----+----+----+-----+
+    |     |  G3 | C3 | A3 | ... |    |    |    |     |
+    +-----+-----+----+----+-----+----+----+----+-----+
+    """
     type = 'MPC'
 
     def __init__(self, conid, gids, constraints, enforced, comment=''):
@@ -285,11 +294,12 @@ class MPC(Constraint):
             i += 1
         return MPC(conid, gids, constraints, enforced, comment=comment)
 
-    #@classmethod
-    #def add_op2_data(cls, data, comment=''):
-        #msg = '%s has not implemented data parsing' % cls.type
-        #raise NotImplementedError(msg)
-        #return MPC(conid, gids, constraints, enforced, comment=comment)
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        sid,
+        msg = '%s has not implemented data parsing' % cls.type
+        raise NotImplementedError(msg)
+        return MPC(conid, gids, constraints, enforced, comment=comment)
 
     def nodeIDs(self):
         self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
