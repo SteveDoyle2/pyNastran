@@ -119,6 +119,8 @@ class RealGridPointForcesArray(ScalarObject):
             node_element = self.node_element.reshape((ntimes * nnodes, 2))
             if self.nonlinear_factor is not None:
                 column_names, column_values = self._build_dataframe_transient_header()
+                #column_names = column_names[0]
+                #column_values = column_values[0]
 
                 column_values2 = []
                 for value in column_values:
@@ -130,6 +132,8 @@ class RealGridPointForcesArray(ScalarObject):
                     column_values2.append(values3)
                 df1 = pd.DataFrame(column_values2).T
                 df1.columns = column_names
+                #df1.columns.names = column_names
+                #self.data_frame.columns.names = column_names
 
                 df2 = pd.DataFrame(node_element)
                 df2.columns = ['NodeID', 'ElementID']

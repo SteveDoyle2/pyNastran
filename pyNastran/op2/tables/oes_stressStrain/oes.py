@@ -236,7 +236,7 @@ class OES(OP2Common):
 
         if self.isubcase not in self.case_control_deck.subcases:
             self.subcase = self.case_control_deck.create_new_subcase(self.isubcase)
-        self.subcase.add_op2_data(self.data_code, 'STRESS/STRAIN')
+        self.subcase.add_op2_data(self.data_code, 'STRESS/STRAIN', self.log)
 
         if self.is_sort1():
             n = self._read_oes1_4_sort1(data, ndata)
@@ -358,7 +358,7 @@ class OES(OP2Common):
 
         if self.isubcase not in self.case_control_deck.subcases:
             self.subcase = self.case_control_deck.create_new_subcase(self.isubcase)
-        self.subcase.add_op2_data(self.data_code, 'STRESS/STRAIN')
+        self.subcase.add_op2_data(self.data_code, 'STRESS/STRAIN', self.log)
 
         if self.is_sort1():
             n = self._read_ostr1_4_sort1(data, ndata)
@@ -3740,7 +3740,9 @@ class OES(OP2Common):
                     msg = 'numwide=%s A=%s B=%s C=%s' % (self.num_wide, numwide_a, numwide_b, numwide_c)
                     raise RuntimeError(self.code_information())
             else:
-                raise RuntimeError(self.code_information())
+                #raise RuntimeError(self.code_information())
+                msg = self.code_information()
+                return self._not_implemented_or_skip(data, ndata, msg)
 
         elif self.element_type == 139:
             # 139-QUAD4FD

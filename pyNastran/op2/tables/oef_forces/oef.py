@@ -315,7 +315,7 @@ class OEF(OP2Common):
         if self.thermal == 0:
             if self.isubcase not in self.case_control_deck.subcases:
                 self.subcase = self.case_control_deck.create_new_subcase(self.isubcase)
-            self.subcase.add_op2_data(self.data_code, 'FORCE')
+            self.subcase.add_op2_data(self.data_code, 'FORCE', self.log)
             n = self._read_oef1_loads(data, ndata)
         elif self.thermal == 1:
             n = self._read_oef1_thermal(data, ndata)
