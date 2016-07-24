@@ -896,8 +896,11 @@ class OP2_F06_Common(object):
                 #self.log.debug(type(key))
                 return key[0]
 
-        table_types = self._get_table_types_testing()
         msg = []
+        if self.grid_point_weight:
+            msg += self.grid_point_weight.get_stats(short=short)
+
+        table_types = self._get_table_types_testing()
         if short:
             no_data_classes = ['RealEigenvalues', 'ComplexEigenvalues', 'BucklingEigenvalues']
             for table_type in table_types:

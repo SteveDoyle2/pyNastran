@@ -4559,12 +4559,17 @@ class TRIM(BaseCard):
         -------
         fields : list[varies]
             the fields that define the card
+
         """
         list_fields = ['TRIM', self.sid, self.mach, self.q]
+        nlabels = len(self.labels)
+        assert nlabels > 0, self.labels
         for (i, label, ux) in zip(count(), self.labels, self.uxs):
             list_fields += [label, ux]
             if i == 1:
                 list_fields += [self.aeqr]
+        if nlabels == 1:
+            list_fields += [None, None, self.aeqr]
         return list_fields
 
     def write_card(self, size=8, is_double=False):
