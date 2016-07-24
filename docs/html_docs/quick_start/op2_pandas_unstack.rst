@@ -2353,7 +2353,7 @@ We actually need to get rid of the extra rows using dropna():
     # mode, eigr, freq, rad, eids, nids # initial
     # nids, eids, eigr, freq, rad, mode # final
     
-    cht2.swaplevel(0,4).swaplevel(1,5).swaplevel(2,5).swaplevel(4, 5)
+    cht.swaplevel(0,4).swaplevel(1,5).swaplevel(2,5).swaplevel(4, 5)
 
 
 
