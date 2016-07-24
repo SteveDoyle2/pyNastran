@@ -94,15 +94,16 @@ You can also run it like:
   >>> pyNastranGUI model.bdf model1.op2
 
 Here the code will guess based on your file extension what your file format is.
-If you want to load the second OP2, you must use ``-o model2.op2``.
+If you want to load a second OP2, you must use ``-o model2.op2``.
 
 Features
 ========
  * fringe plot support
 
    * elemental/nodal results
-   * attach custom CSV (comma-delimited) or .txt (space/tab-delimited)
-     fringes as either node-based or element-based results
+   * custom CSV results
+   
+ * deflection results
 
  * command line interface
  * scripting capability
@@ -169,6 +170,7 @@ Some of the results include:
         * normal
         * shell offset
         * PBAR/PBEAM/PBARL/PBEAML type
+        * maximum interior angle
 
      * results (real only)
 
@@ -378,7 +380,7 @@ Custom Scalar Results
 =====================
 Custom Elemental/Nodal CSV/TXT file results may be loaded.  The order and length is
 important.  Results must be in nodal/elemental sorted order.  The following example
-has 3 scalar values with 2 locations.
+has 3 scalar values with 2 locations.  The model must have **only** two nodes.
 
 .. code-block:: console
 
@@ -424,6 +426,7 @@ Using the scripting menu
 The scripting menu allows for custom code and experimentation to be written without
 loading a script from a file.  All valid Python is accepted.
 Scripting commands should start with ``self.`` as they're left off from the menu.
+Local variables do not need this.
 
 Command line scripting
 ======================
@@ -516,123 +519,124 @@ Additionally, scripts may be used to plot complex mode shapes.
     #writeGif('solid_bending.gif', images, duration=1/framerate, subRectangles=False)
     writeGif(gif_filename, images, duration=0.1, dither=0)
 
-Attempt #2 - broken
--------------------
-
-.. code-block:: python
-
-    import time
-    scales = [-1, 0.5, 0., 0.5, 1.0]
-    title = 'Eigenvector'
-    min_value = -1.0
-    max_value = 1.0
-    is_shown = True
-    is_blue_to_red = True
-    is_horizontal = False
-
-
-    out = self.get_result_data_from_icase(icase)
-    obj, i, j, res_name, subcase_id, result_type, vector_size, location, data_format, label2 = out
-
-    # obj is NastranDisplacementResults
-    min_value, max_value = obj.get_min_max(i, res_name)
-    subtitle, label = self.get_subtitle_label(subcase_id)
-
-    for scale in scales:
-        #self.on_update_legend(title=title, min_value=min_value, max_value=max_value,
-                              #scale=scale_value, data_format=data_format,
-                              #is_blue_to_red=is_blue_to_red,
-                              #is_discrete=is_discrete, is_horizontal=is_horizontal,
-                              #is_shown=is_shown)
-        self._final_grid_update(name_vector, grid_result_vector, obj, i, res_name,
-                                vector_size, subcase_id, result_type, location, subtitle, label,
-                                revert_displaced=False)
-        time.sleep(2)
-        #self.grid.Modified()
-
-
-Attempt #3 - broken
--------------------
-
-.. code-block:: python
-
-    icase = 9
-    out = self.get_result_data_from_icase(icase)
-    obj, i, j, res_name, subcase_id, result_type, vector_size, location, data_format, label2 = out
-    print(obj)
-
-    label = ''
-    min_value, max_value = obj.get_min_max(i, res_name)
-    norm_value = float(max_value - min_value)
-    scale = 100.
-
-    name_vector = (vector_size, subcase_id, result_type, label, min_value, max_value, scale)
-    case = obj
-    xyz = obj.xyz + scale * obj.dxyz[i, :]
-
-    grid_result_vector = self.set_grid_values(name_vector, case, vector_size, min_value, max_value, norm_value)
+.. Attempt #2 - broken
+.. -------------------
+.. 
+.. .. code-block:: python
+.. 
+..     import time
+..     scales = [-1, 0.5, 0., 0.5, 1.0]
+..     title = 'Eigenvector'
+..     min_value = -1.0
+..     max_value = 1.0
+..     is_shown = True
+..     is_blue_to_red = True
+..     is_horizontal = False
+.. 
+.. 
+..     out = self.get_result_data_from_icase(icase)
+..     obj, i, j, res_name, subcase_id, result_type, vector_size, location, data_format, label2 = out
+.. 
+..     # obj is NastranDisplacementResults
+..     min_value, max_value = obj.get_min_max(i, res_name)
+..     subtitle, label = self.get_subtitle_label(subcase_id)
+.. 
+..     for scale in scales:
+..         #self.on_update_legend(title=title, min_value=min_value, max_value=max_value,
+..                               #scale=scale_value, data_format=data_format,
+..                               #is_blue_to_red=is_blue_to_red,
+..                               #is_discrete=is_discrete, is_horizontal=is_horizontal,
+..                               #is_shown=is_shown)
+..         self._final_grid_update(name_vector, grid_result_vector, obj, i, res_name,
+..                                 vector_size, subcase_id, result_type, location, subtitle, label,
+..                                 revert_displaced=False)
+..         time.sleep(2)
+..         #self.grid.Modified()
 
 
+.. Attempt #3 - broken
+.. -------------------
+.. 
+.. .. code-block:: python
+.. 
+..     icase = 9
+..     out = self.get_result_data_from_icase(icase)
+..     obj, i, j, res_name, subcase_id, result_type, vector_size, location, data_format, label2 = out
+..     print(obj)
+.. 
+..     label = ''
+..     min_value, max_value = obj.get_min_max(i, res_name)
+..     norm_value = float(max_value - min_value)
+..     scale = 100.
+.. 
+..     name_vector = (vector_size, subcase_id, result_type, label, min_value, max_value, scale)
+..     case = obj
+..     xyz = obj.xyz + scale * obj.dxyz[i, :]
+.. 
+..     grid_result_vector = self.set_grid_values(name_vector, case, vector_size, min_value, max_value, norm_value)
 
 
-Complex Mode Shapes (not done)
-------------------------------
-
-.. code-block:: python
-
-    from PIL.Image import open as open_image
-    from pyNastran.gui.images2gif import writeGif
-
-    from pyNastran.op2.op2 import read_op2
-    model = read_op2(op2_filename)
-
-    xyz_undef = self.xyz_cid0
-    nnodes = xyz_undef.shape[0]
-
-    #out = self.get_result_data_from_icase(icase)
-    #obj, i, j, res_name, subcase_id, result_type, vector_size, location, data_format, label2 = out
-    actor = self.geometry_actors['main']
-
-    subcase_id = 1
-    imode = 10
-    eigenvectors = model.eigenvectors[subcase_id].data[imode - 1,:,:]
-
-    #-------------------------------------------------------------------
-    mag = np.abs(eigenvectors[:,:3])
-    phase = np.angle(eigenvectors[:,:3])
-    reals = np.real(eigenvectors[:,:3])
-    imags = np.imag(eigenvectors[:,:3])
-
-    nframes = 10
-    amplitude = np.ones(nframes) * 5 * np.exp(np.log(6)/nframes * np.arange(nframes))
-    screenshot_filenames = []
-    for i in range(nframes):
-        screenshot_filename = 'solid_bending_complex_%i.png' % i
-
-        theta = (2*np.pi * i/nframes) % (2*np.pi)
-        defl = amplitude[i] * (reals*np.cos(theta) + imags*np.sin(theta))
-        xyz_def = xyz_undef + defl
-        for j in range(nnodes):
-            self.grid.GetPoints().SetPoint(j, xyz_def[j, :])
-
-        self.grid.Modified()
-        actor.Modified()
-        self.rend.Render()
-        self.on_take_screenshot(screenshot_filename, magnification=1)
-        screenshot_filenames.append(screenshot_filename)
-    screenshot_filenames += screenshot_filenames[::-1][1:]
 
 
-    #-------------------------------------------------------------------
-
-    gif_filename = 'solid_bending_complex.gif'
-    with open_image(screenshot_filenames[0]) as image:
-        shape = (image.width, image.height)
-
-    print('Writing gif to %s' % (gif_filename))
-
-    # down-res the image so we use less space
-    shape2 = (shape[0] // 2, shape[1] // 2)
-    images = [open_image(filename).resize(shape2) for filename in screenshot_filenames]
-
-    writeGif(gif_filename, images, duration=0.1, dither=0)
+.. Complex Mode Shapes (not done)
+.. ------------------------------
+.. 
+.. .. code-block:: python
+.. 
+..     from PIL.Image import open as open_image
+..     from pyNastran.gui.images2gif import writeGif
+.. 
+..     from pyNastran.op2.op2 import read_op2
+..     model = read_op2(op2_filename)
+.. 
+..     xyz_undef = self.xyz_cid0
+..     nnodes = xyz_undef.shape[0]
+.. 
+..     #out = self.get_result_data_from_icase(icase)
+..     #obj, i, j, res_name, subcase_id, result_type, vector_size, location, data_format, label2 = out
+..     actor = self.geometry_actors['main']
+.. 
+..     subcase_id = 1
+..     imode = 10
+..     eigenvectors = model.eigenvectors[subcase_id].data[imode - 1,:,:]
+.. 
+..     #-------------------------------------------------------------------
+..     mag = np.abs(eigenvectors[:,:3])
+..     phase = np.angle(eigenvectors[:,:3])
+..     reals = np.real(eigenvectors[:,:3])
+..     imags = np.imag(eigenvectors[:,:3])
+.. 
+..     nframes = 10
+..     amplitude = np.ones(nframes) * 5 * np.exp(np.log(6)/nframes * np.arange(nframes))
+..     screenshot_filenames = []
+..     for i in range(nframes):
+..         screenshot_filename = 'solid_bending_complex_%i.png' % i
+.. 
+..         theta = (2*np.pi * i/nframes) % (2*np.pi)
+..         defl = amplitude[i] * (reals*np.cos(theta) + imags*np.sin(theta))
+..         xyz_def = xyz_undef + defl
+..         for j in range(nnodes):
+..             self.grid.GetPoints().SetPoint(j, xyz_def[j, :])
+.. 
+..         self.grid.Modified()
+..         actor.Modified()
+..         self.rend.Render()
+..         self.on_take_screenshot(screenshot_filename, magnification=1)
+..         screenshot_filenames.append(screenshot_filename)
+..     screenshot_filenames += screenshot_filenames[::-1][1:]
+.. 
+.. 
+..     #-------------------------------------------------------------------
+.. 
+..     gif_filename = 'solid_bending_complex.gif'
+..     with open_image(screenshot_filenames[0]) as image:
+..         shape = (image.width, image.height)
+.. 
+..     print('Writing gif to %s' % (gif_filename))
+.. 
+..     # down-res the image so we use less space
+..     shape2 = (shape[0] // 2, shape[1] // 2)
+..     images = [open_image(filename).resize(shape2) for filename in screenshot_filenames]
+.. 
+..     writeGif(gif_filename, images, duration=0.1, dither=0)
+.. 

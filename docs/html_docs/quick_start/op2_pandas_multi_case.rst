@@ -2,6 +2,11 @@
 Static & Transient DataFrames in PyNastran
 ==========================================
 
+The iPython notebook for this demo can be found in: -
+docs:raw-latex:`\quick`\_start:raw-latex:`\demo`:raw-latex:`\op`2\_pandas\_multi\_case.ipynb
+-
+https://github.com/SteveDoyle2/pyNastran/tree/master/docs/quick\_start/demo/op2\_pandas\_multi\_case.ipynb
+
 .. code:: python
 
     import os
@@ -15,7 +20,7 @@ Static & Transient DataFrames in PyNastran
 Solid Bending
 -------------
 
-Let's show off combine=True/False. We'll talk about the keys soon.
+Let's show off ``combine=True/False``. We'll talk about the keys soon.
 
 .. code:: python
 

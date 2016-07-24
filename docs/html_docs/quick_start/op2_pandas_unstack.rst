@@ -2,8 +2,13 @@
 Manipulating the Pandas DataFrame
 =================================
 
-pandas unstack
---------------
+The iPython notebook for this demo can be found in: -
+docs:raw-latex:`\quick`\_start:raw-latex:`\demo`:raw-latex:`\op`2\_pandas\_unstack.ipynb
+-
+https://github.com/SteveDoyle2/pyNastran/tree/master/docs/quick\_start/demo/op2\_pandas\_unstack.ipynb
+
+This example will use pandas unstack
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The unstack method on a DataFrame moves on index level from rows to
 columns. First let's read in some data:

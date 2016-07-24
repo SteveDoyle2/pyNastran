@@ -2,8 +2,12 @@
 BDF Demo
 ========
 
+The iPython notebook for this demo can be found in: -
+docs:raw-latex:`\quick`\_start:raw-latex:`\demo`:raw-latex:`\bdf`\_demo.ipynb
+-
+https://github.com/SteveDoyle2/pyNastran/tree/master/docs/quick\_start/demo/bdf\_demo.ipynb
+
 Import pyNastran
-''''''''''''''''
 
 .. code:: python
 
@@ -22,7 +26,7 @@ Import pyNastran
 .. parsed-literal::
 
     f:\work\pynastran\pynastran\master3\pyNastran\__init__.pyc
-    0.8.0+dev.4f504cf
+    0.8.0+dev.c0fdd30
     pkg_path = f:\work\pynastran\pynastran\master3\pyNastran
     
 
@@ -170,42 +174,42 @@ We can use the generic object attributes/methods functions
 
 .. parsed-literal::
 
-    <code object __object_attr at 0000000004469130, file "f:\work\pynastran\pynastran\master3\pyNastran\utils\__init__.py", line 133>
-    <code object object_attributes at 0000000004469330, file "f:\work\pynastran\pynastran\master3\pyNastran\utils\__init__.py", line 188>
-    <code object <module> at 0000000003ED55B0, file "<ipython-input-6-c78a1dd495b4>", line 1>
-    <code object __object_attr at 0000000004469130, file "f:\work\pynastran\pynastran\master3\pyNastran\utils\__init__.py", line 133>
-    <code object object_attributes at 0000000004469330, file "f:\work\pynastran\pynastran\master3\pyNastran\utils\__init__.py", line 188>
-    <code object <module> at 0000000003ED55B0, file "<ipython-input-6-c78a1dd495b4>", line 1>
-    <code object __object_attr at 0000000004469130, file "f:\work\pynastran\pynastran\master3\pyNastran\utils\__init__.py", line 133>
-    <code object object_attributes at 0000000004469330, file "f:\work\pynastran\pynastran\master3\pyNastran\utils\__init__.py", line 188>
-    <code object <module> at 0000000003ED55B0, file "<ipython-input-6-c78a1dd495b4>", line 1>
-    <code object __object_attr at 0000000004469130, file "f:\work\pynastran\pynastran\master3\pyNastran\utils\__init__.py", line 133>
-    <code object object_attributes at 0000000004469330, file "f:\work\pynastran\pynastran\master3\pyNastran\utils\__init__.py", line 188>
-    <code object <module> at 0000000003ED55B0, file "<ipython-input-6-c78a1dd495b4>", line 1>
-    <code object __object_attr at 0000000004469130, file "f:\work\pynastran\pynastran\master3\pyNastran\utils\__init__.py", line 133>
-    <code object object_attributes at 0000000004469330, file "f:\work\pynastran\pynastran\master3\pyNastran\utils\__init__.py", line 188>
-    <code object <module> at 0000000003ED55B0, file "<ipython-input-6-c78a1dd495b4>", line 1>
+    <code object __object_attr at 000000000448F130, file "f:\work\pynastran\pynastran\master3\pyNastran\utils\__init__.py", line 133>
+    <code object object_attributes at 000000000448F330, file "f:\work\pynastran\pynastran\master3\pyNastran\utils\__init__.py", line 188>
+    <code object <module> at 0000000003F345B0, file "<ipython-input-6-c78a1dd495b4>", line 1>
+    <code object __object_attr at 000000000448F130, file "f:\work\pynastran\pynastran\master3\pyNastran\utils\__init__.py", line 133>
+    <code object object_attributes at 000000000448F330, file "f:\work\pynastran\pynastran\master3\pyNastran\utils\__init__.py", line 188>
+    <code object <module> at 0000000003F345B0, file "<ipython-input-6-c78a1dd495b4>", line 1>
+    <code object __object_attr at 000000000448F130, file "f:\work\pynastran\pynastran\master3\pyNastran\utils\__init__.py", line 133>
+    <code object object_attributes at 000000000448F330, file "f:\work\pynastran\pynastran\master3\pyNastran\utils\__init__.py", line 188>
+    <code object <module> at 0000000003F345B0, file "<ipython-input-6-c78a1dd495b4>", line 1>
+    <code object __object_attr at 000000000448F130, file "f:\work\pynastran\pynastran\master3\pyNastran\utils\__init__.py", line 133>
+    <code object object_attributes at 000000000448F330, file "f:\work\pynastran\pynastran\master3\pyNastran\utils\__init__.py", line 188>
+    <code object <module> at 0000000003F345B0, file "<ipython-input-6-c78a1dd495b4>", line 1>
+    <code object __object_attr at 000000000448F130, file "f:\work\pynastran\pynastran\master3\pyNastran\utils\__init__.py", line 133>
+    <code object object_attributes at 000000000448F330, file "f:\work\pynastran\pynastran\master3\pyNastran\utils\__init__.py", line 188>
+    <code object <module> at 0000000003F345B0, file "<ipython-input-6-c78a1dd495b4>", line 1>
     ['MATS1', 'MATS3', 'MATS8', 'MATT1', 'MATT2', 'MATT3', 'MATT4', 'MATT5', 'MATT8', 'MATT9', 'active_filename', 'active_filenames', 'aecomps', 'aefacts', 'aelinks', 'aelists', 'aeparams', 'aero', 'aeros', 'aestats', 'aesurfs', 'asets', 'bcrparas', 'bcs', 'bctadds', 'bctparas', 'bctsets', 'bdf_filename', 'bsets', 'bsurf', 'bsurfs', 'cMethods', 'caero_ids', 'caeros', 'card_count', 'cards_to_read', 'case_control_deck', 'case_control_lines', 'convectionProperties', 'convection_properties', 'coord_ids', 'coords', 'creepMaterials', 'creep_materials', 'csets', 'csschds', 'dareas', 'dconadds', 'dconstrs', 'ddvals', 'debug', 'delays', 'dequations', 'desvars', 'dlinks', 'dload_entries', 'dloads', 'dmigs', 'dmijis', 'dmijs', 'dmiks', 'dmis', 'doptprm', 'dphases', 'dresps', 'dscreen', 'dtable', 'dumplines', 'dvcrels', 'dvmrels', 'dvprels', 'echo', 'element_ids', 'elements', 'epoints', 'executive_control_lines', 'flfacts', 'flutters', 'frequencies', 'gridSet', 'gusts', 'hyperelasticMaterials', 'hyperelastic_materials', 'iSolLine', 'include_dir', 'is_long_ids', 'is_msc', 'is_nx', 'loads', 'log', 'masses', 'material_ids', 'materials', 'methods', 'mkaeros', 'monitor_points', 'mpcObject', 'mpcadds', 'mpcs', 'nastran_format', 'ncaeros', 'ncoords', 'nelements', 'nlparms', 'nlpcis', 'nmaterials', 'nnodes', 'node_ids', 'nodes', 'nproperties', 'paeros', 'params', 'pbusht', 'pdampt', 'pelast', 'phbdys', 'plotels', 'point_ids', 'points', 'properties', 'properties_mass', 'property_ids', 'punch', 'qsets', 'randomTables', 'reject_cards', 'reject_count', 'rejects', 'rigidElements', 'rigid_elements', 'rsolmap_toStr', 'se_bsets', 'se_csets', 'se_qsets', 'se_sets', 'se_suport', 'se_usets', 'sets', 'sol', 'solMethod', 'spcObject', 'spcadds', 'spcs', 'special_cards', 'splines', 'spoints', 'subcases', 'suport', 'suport1', 'tables', 'tables_sdamping', 'tempds', 'thermalMaterials', 'thermal_materials', 'tics', 'transfer_functions', 'trims', 'tstepnls', 'tsteps', 'units', 'usets']
-    <code object __object_attr at 0000000004469130, file "f:\work\pynastran\pynastran\master3\pyNastran\utils\__init__.py", line 133>
-    <code object object_methods at 0000000004469230, file "f:\work\pynastran\pynastran\master3\pyNastran\utils\__init__.py", line 161>
-    <code object <module> at 0000000004020630, file "<ipython-input-6-c78a1dd495b4>", line 2>
-    <code object __object_attr at 0000000004469130, file "f:\work\pynastran\pynastran\master3\pyNastran\utils\__init__.py", line 133>
-    <code object object_methods at 0000000004469230, file "f:\work\pynastran\pynastran\master3\pyNastran\utils\__init__.py", line 161>
-    <code object <module> at 0000000004020630, file "<ipython-input-6-c78a1dd495b4>", line 2>
-    <code object __object_attr at 0000000004469130, file "f:\work\pynastran\pynastran\master3\pyNastran\utils\__init__.py", line 133>
-    <code object object_methods at 0000000004469230, file "f:\work\pynastran\pynastran\master3\pyNastran\utils\__init__.py", line 161>
-    <code object <module> at 0000000004020630, file "<ipython-input-6-c78a1dd495b4>", line 2>
-    <code object __object_attr at 0000000004469130, file "f:\work\pynastran\pynastran\master3\pyNastran\utils\__init__.py", line 133>
-    <code object object_methods at 0000000004469230, file "f:\work\pynastran\pynastran\master3\pyNastran\utils\__init__.py", line 161>
-    <code object <module> at 0000000004020630, file "<ipython-input-6-c78a1dd495b4>", line 2>
-    <code object __object_attr at 0000000004469130, file "f:\work\pynastran\pynastran\master3\pyNastran\utils\__init__.py", line 133>
-    <code object object_methods at 0000000004469230, file "f:\work\pynastran\pynastran\master3\pyNastran\utils\__init__.py", line 161>
-    <code object <module> at 0000000004020630, file "<ipython-input-6-c78a1dd495b4>", line 2>
+    <code object __object_attr at 000000000448F130, file "f:\work\pynastran\pynastran\master3\pyNastran\utils\__init__.py", line 133>
+    <code object object_methods at 000000000448F230, file "f:\work\pynastran\pynastran\master3\pyNastran\utils\__init__.py", line 161>
+    <code object <module> at 000000000405E630, file "<ipython-input-6-c78a1dd495b4>", line 2>
+    <code object __object_attr at 000000000448F130, file "f:\work\pynastran\pynastran\master3\pyNastran\utils\__init__.py", line 133>
+    <code object object_methods at 000000000448F230, file "f:\work\pynastran\pynastran\master3\pyNastran\utils\__init__.py", line 161>
+    <code object <module> at 000000000405E630, file "<ipython-input-6-c78a1dd495b4>", line 2>
+    <code object __object_attr at 000000000448F130, file "f:\work\pynastran\pynastran\master3\pyNastran\utils\__init__.py", line 133>
+    <code object object_methods at 000000000448F230, file "f:\work\pynastran\pynastran\master3\pyNastran\utils\__init__.py", line 161>
+    <code object <module> at 000000000405E630, file "<ipython-input-6-c78a1dd495b4>", line 2>
+    <code object __object_attr at 000000000448F130, file "f:\work\pynastran\pynastran\master3\pyNastran\utils\__init__.py", line 133>
+    <code object object_methods at 000000000448F230, file "f:\work\pynastran\pynastran\master3\pyNastran\utils\__init__.py", line 161>
+    <code object <module> at 000000000405E630, file "<ipython-input-6-c78a1dd495b4>", line 2>
+    <code object __object_attr at 000000000448F130, file "f:\work\pynastran\pynastran\master3\pyNastran\utils\__init__.py", line 133>
+    <code object object_methods at 000000000448F230, file "f:\work\pynastran\pynastran\master3\pyNastran\utils\__init__.py", line 161>
+    <code object <module> at 000000000405E630, file "<ipython-input-6-c78a1dd495b4>", line 2>
     ['AEFact', 'AELIST', 'AELink', 'AEList', 'AEParam', 'AEStat', 'Aero', 'Aeros', 'CAero', 'CMethod', 'Coord', 'DConstr', 'DDVal', 'DELAY', 'DEQATN', 'DLoad', 'DMIG', 'DResp', 'DVcrel', 'DVmrel', 'DVprel', 'Desvar', 'Element', 'Elements', 'FLFACT', 'Flfact', 'Flutter', 'Gust', 'HyperelasticMaterial', 'Load', 'MPC', 'Mass', 'Material', 'Materials', 'Method', 'NLParm', 'Node', 'Nodes', 'PAero', 'Phbdy', 'Properties', 'Property', 'PropertyMass', 'RandomTable', 'RigidElement', 'SET1', 'SPC', 'Set', 'SetSuper', 'Spline', 'StructuralMaterial', 'Table', 'ThermalMaterial', 'add_AECOMP', 'add_AEFACT', 'add_AELINK', 'add_AELIST', 'add_AEPARM', 'add_AERO', 'add_AEROS', 'add_AESTAT', 'add_AESURF', 'add_ASET', 'add_BCRPARA', 'add_BCTADD', 'add_BCTPARA', 'add_BCTSET', 'add_BSET', 'add_BSURF', 'add_BSURFS', 'add_CAERO', 'add_CSET', 'add_CSSCHD', 'add_DAREA', 'add_DCONADD', 'add_DCONSTR', 'add_DDVAL', 'add_DELAY', 'add_DEQATN', 'add_DESVAR', 'add_DLINK', 'add_DMI', 'add_DMIG', 'add_DMIJ', 'add_DMIJI', 'add_DMIK', 'add_DPHASE', 'add_DRESP', 'add_DTABLE', 'add_DVMREL', 'add_DVPREL', 'add_FLFACT', 'add_FLUTTER', 'add_FREQ', 'add_GUST', 'add_LSEQ', 'add_MKAERO', 'add_MONPNT', 'add_NLPARM', 'add_NLPCI', 'add_PAERO', 'add_PARAM', 'add_PBUSHT', 'add_PDAMPT', 'add_PELAST', 'add_PHBDY', 'add_QSET', 'add_SEBSET', 'add_SECSET', 'add_SEQSET', 'add_SESET', 'add_SET', 'add_SEUSET', 'add_SPLINE', 'add_TEMPD', 'add_TF', 'add_TRIM', 'add_TSTEP', 'add_TSTEPNL', 'add_USET', 'add_card', 'add_card_fields', 'add_card_lines', 'add_cmethod', 'add_constraint', 'add_constraint_MPC', 'add_constraint_MPCADD', 'add_constraint_SPC', 'add_constraint_SPCADD', 'add_convection_property', 'add_coord', 'add_creep_material', 'add_damper', 'add_dload', 'add_dload_entry', 'add_element', 'add_epoint', 'add_hyperelastic_material', 'add_load', 'add_mass', 'add_material_dependence', 'add_method', 'add_node', 'add_plotel', 'add_property', 'add_property_mass', 'add_random_table', 'add_rigid_element', 'add_spoint', 'add_structural_material', 'add_suport', 'add_suport1', 'add_table', 'add_table_sdamping', 'add_thermal_BC', 'add_thermal_element', 'add_thermal_load', 'add_thermal_material', 'auto_reject_bdf', 'convert', 'create_card_object', 'create_card_object_fields', 'create_card_object_list', 'cross_reference', 'deprecated', 'disable_cards', 'echo_bdf', 'fill_dmigs', 'geom_check', 'getElementIDsWithPID', 'getNodes', 'get_bdf_cards', 'get_bdf_cards_dict', 'get_bdf_stats', 'get_card_ids_by_card_types', 'get_cards_by_card_types', 'get_displacement_index_transforms', 'get_dload_entries', 'get_element_ids_dict_with_pids', 'get_element_ids_list_with_pids', 'get_encoding', 'get_material_id_to_property_ids_map', 'get_material_ids', 'get_mpcs', 'get_node_id_to_element_ids_map', 'get_node_id_to_elements_map', 'get_node_ids_with_element', 'get_node_ids_with_elements', 'get_property_id_to_element_ids_map', 'get_reduced_mpcs', 'get_reduced_spcs', 'get_rigid_elements_with_node_ids', 'get_solid_skin_faces', 'get_spcs', 'get_structural_material_ids', 'get_thermal_material_ids', 'get_xyz_in_coord', 'is_reject', 'load', 'mass_properties', 'object_attributes', 'object_methods', 'pop_parse_errors', 'pop_xref_errors', 'process_card', 'read_bdf', 'resolve_grids', 'safe_cross_reference', 'save', 'set_as_msc', 'set_as_nx', 'set_dynamic_syntax', 'set_error_storage', 'skin_solid_elements', 'sum_forces_moments', 'sum_forces_moments_elements', 'uncross_reference', 'unresolve_grids', 'update_solution', 'write_bdf', 'write_bdf_symmetric', 'write_caero_model', 'write_skin_solid_faces']
     
 
-Alternatively, we can just use access these functions from pyNastran
-directly
+iPython makes a mess of the output, so we can just use access these
+functions from pyNastran directly
 
 .. code:: python
 
@@ -221,7 +225,7 @@ directly
     
     
 
-Somme other very handy methods that will be used later by ``test_bdf``
+Some other very handy methods that will be used later by ``test_bdf``
 
 .. code:: python
 
@@ -438,7 +442,7 @@ Now let's modify the GRID card and write it out
 Calculating the mass of the structure
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-You can also calcculate the mass of individual groups
+You can also calculate the mass of individual groups
 
 .. code:: python
 

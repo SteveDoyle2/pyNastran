@@ -6,6 +6,18 @@ test_bdf
 read/write a BDF.  Additionally, ``test_bdf`` is very useful when
 debugging bad decks.
 
+It'll crash when ``INCLUDE`` files aren't found.
+
+It'll crash if you have invalid types.
+It'll tell you the card, the field name and number as well.
+
+It'll crash if you have missing nodes, coordinate systems, elements, 
+properties, materials, loads, optimization cards, etc.
+
+It'll crash if your TRIM card that's referenced in your Case Control is
+over/underdefined (by looking at the data on your AESTAT, AESURF, AELINK,
+AEPARM, SUPORT1, and SUPORT cards), but not if it's unused.
+
 Afterwards, you can then use a program like
 `Beyond Compare <http://scootersoftware.com/>`_ to see the differences.
 Most of the changes you'll see are related to positioning of cards,
@@ -209,7 +221,7 @@ which will:
 
     - types of each card field
     - validate values of strings (e.g. HAT is a valid PBARL)
-    - check range of certain values (e.g. CONM2 must be positive definite)
+    - check range of certain values (e.g. CONM2 must be positive semidefinite)
 
  3. cross-reference the model
    - Passing requires all traced cards exist:
@@ -247,5 +259,4 @@ which will:
  7. compare it to the original
 
  8. calculate mass/forces/moments for all the subcases
-
 

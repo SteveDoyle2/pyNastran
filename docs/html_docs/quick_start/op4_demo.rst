@@ -2,6 +2,11 @@
 OP4 Demo
 --------
 
+The iPython notebook for this demo can be found in: -
+docs:raw-latex:`\quick`\_start:raw-latex:`\demo`:raw-latex:`\op`4\_demo.ipynb
+-
+https://github.com/SteveDoyle2/pyNastran/tree/master/docs/quick\_start/demo/op4\_demo.ipynb
+
 The OP4 is a Nastran input/output format that can store matrices.
 
 The OP2 can as well, but is less validated in regards to matrices.
