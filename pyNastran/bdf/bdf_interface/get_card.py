@@ -446,7 +446,7 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
           eids_dict = model.get_element_ids_dict_with_pids()
         """
         if pids is None:
-            pids = model.properties.keys()
+            pids = self.properties.keys()
         elif isinstance(pids, int):
             pids = [int]
         assert isinstance(pids, (list, tuple)), pids
