@@ -135,7 +135,7 @@ class BaseScalarObject(Op2Codes):
         for name in data_names:
             #if name == primary_name:
             #times = self.da
-            times = getattr(self, name + 's')
+            times = np.array(getattr(self, name + 's'))
             if name == 'mode':
                 column_names.append('Mode')
                 column_values.append(times)
@@ -177,7 +177,7 @@ class BaseScalarObject(Op2Codes):
                 column_values.append(times)
                 eigr = np.array(self.eigrs)
                 eigi = np.array(self.eigis)
-                damping = -eigr / np.sqrt(np.array(eigr) ** 2 + eigi ** 2)
+                damping = -eigr / np.sqrt(eigr ** 2 + eigi ** 2)
                 column_names.append('Damping (-eigr/sqrt(eigr^2+eigi^2); check)')
                 column_values.append(times)
                 #calculate_damping
