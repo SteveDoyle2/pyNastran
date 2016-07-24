@@ -23,3 +23,5 @@ The easist way to install pyNastran is to:
  - run setup.py in the root pyNastran folder
    >>> python setup.py develop
 
+See the following link for more info:
+http://pynastran-git.readthedocs.io/en/latest/quick_start/Installation.html

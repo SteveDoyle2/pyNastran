@@ -22,7 +22,7 @@ Overview
 Download Python
 ===============
 v0.8 is tested against:
- - Python 2.7.8 (Windows/Linux)
+ - Python 2.7.12 (Windows/Linux)
  - Python 3.3 (Linux)
  - Python 3.4 (Linux)
  - Python 3.5 (Windows/Linux)
@@ -43,7 +43,7 @@ packages will be installed.  With base Python, you need to do that yourself.**
 
  * pyNastran is mainly tested against 2.7
  * not everything in the OP2 has been switched over to unicode from bytes
- * the GUI works
+ * the GUI saves your state
 
 Additional packages
 ===================
@@ -60,7 +60,7 @@ PyNastran's package requirements are tested with packages no older than 1 year
 at the time of release.  If you require an older version, try changing version
 requirements in ``setup.py``.  It shouldn't be that different, but pyNastran does
 make use of numpy's "new" axis option in ``numpy.linalg.norm`` and there was a
-major bug fix in Python 2.7.8, so buyer beware.
+major bug fix in Python 2.7.7, so buyer beware.
 
 Regarding the GUI, Python 2.7 with ``vtk==5.10.1`` will give you the best
 looking GUI.  The GUI in Python 3 won't save your settings.

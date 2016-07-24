@@ -48,10 +48,10 @@ def run_docopt():
     msg += '               [-u POINTS_FNAME...] [--user_geom GEOM_FNAME...]\n'
     msg += '               [-q] [--groups]\n'
     msg += "  pyNastranGUI [-f FORMAT] [-i INPUT] [-o OUTPUT...]\n"
-    msg += '                [-s SHOT] [-m MAGNIFY]\n'  #  [-r XYZ]
-    msg += '                [-g GSCRIPT] [-p PSCRIPT]\n'
-    msg += '                [-u POINTS_FNAME...] [--user_geom GEOM_FNAME...]\n'
-    msg += '                [-q] [--groups]\n'
+    msg += '               [-s SHOT] [-m MAGNIFY]\n'  #  [-r XYZ]
+    msg += '               [-g GSCRIPT] [-p PSCRIPT]\n'
+    msg += '               [-u POINTS_FNAME...] [--user_geom GEOM_FNAME...]\n'
+    msg += '               [-q] [--groups]\n'
     msg += '  pyNastranGUI -h | --help\n'
     msg += '  pyNastranGUI -v | --version\n'
     msg += "\n"
