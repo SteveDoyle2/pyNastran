@@ -381,7 +381,7 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
         """
         nodes = []
         for nid in nids:
-            nodes.append(self.Node(nid, allow_empty_nodes, msg))
+            nodes.append(self.Node(nid, allow_empty_nodes=allow_empty_nodes, msg=msg))
         return nodes
 
     #--------------------

@@ -676,7 +676,7 @@ class SET1(Set):
         ids = self.get_ids()
         return ['SET1', self.sid] + skin + self.get_ids()
 
-    def cross_reference(self, model, xref_type, allow_empty_nodes=False):
+    def cross_reference(self, model, xref_type, msg='', allow_empty_nodes=False):
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -700,9 +700,9 @@ class SET1(Set):
         - elements
           - ACMODL (optional)
         """
-        msg = 'which is required by SET1 sid=%s' % self.sid
+        msg = ' which is required by SET1 sid=%s%s' % (self.sid, msg)
         if xref_type == 'Node':
-            self.ids = model.Nodes(self.get_ids(), msg)
+            self.ids = model.Nodes(self.get_ids(), msg=msg)
         else:
             raise NotImplementedError("xref_type=%r and must be ['Node']" % xref_type)
         self.xref_type = xref_type
