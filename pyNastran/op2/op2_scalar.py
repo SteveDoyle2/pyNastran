@@ -1557,7 +1557,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             return self._skip_matrix()
 
         allowed_forms = [1, 2, 3, 4, 5, 6, 8, 9, 10, 11, 13, 15]
-        print('----------------------------------------------------------------')
+        #self.log.debug('----------------------------------------------------------------')
         table_name = self._read_table_name(rewind=False, stop_on_failure=True)
         self.read_markers([-1])
         data = self._read_record()
@@ -1603,18 +1603,18 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         else:
             #raise RuntimeError('tout = %s' % tout)
             dtype = '????'
-            print('unexpected tout: matrix_num=%s form=%s mrows=%s ncols=%s tout=%s nvalues=%s g=%s'  % (
+            self.log.warning('unexpected tout: matrix_num=%s form=%s mrows=%s ncols=%s tout=%s nvalues=%s g=%s'  % (
                 matrix_num, form, mrows, ncols, tout, nvalues, g))
 
         if form == 1:
             if ncols != mrows:
-                print('unexpected size; form=%s mrows=%s ncols=%s' % (form, mrows, ncols))
+                self.log.warning('unexpected size; form=%s mrows=%s ncols=%s' % (form, mrows, ncols))
         elif form not in allowed_forms:
             self.log.error('name=%r matrix_num=%s form=%s mrows=%s ncols=%s tout=%s nvalues=%s g=%s' % (
                 table_name, matrix_num, form, mrows, ncols, tout, nvalues, g))
             raise RuntimeError('form=%s; allowed=%s' % (form, allowed_forms))
-        self.log.info('name=%r matrix_num=%s form=%s mrows=%s ncols=%s tout=%s nvalues=%s g=%s' % (
-            table_name, matrix_num, form, mrows, ncols, tout, nvalues, g))
+        #self.log.info('name=%r matrix_num=%s form=%s mrows=%s ncols=%s tout=%s nvalues=%s g=%s' % (
+            #table_name, matrix_num, form, mrows, ncols, tout, nvalues, g))
 
         self.read_markers([-2, 1, 0])
         data = self._read_record()
@@ -1691,7 +1691,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                         matrix = coo_matrix((real_array, (GCi, GCj)),
                                             shape=(mrows, ncols), dtype=dtype)
                         matrix = matrix.todense()
-                        self.log.info('created %s' % self.table_name)
+                        #self.log.info('created %s' % self.table_name)
                     elif tout in [3, 4]:
                         real_array = np.array(reals, dtype=dtype)
                         nvalues_matrix = real_array.shape[0] // 2
@@ -1712,7 +1712,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                         matrix = None
                         self.log.warning('what is the dtype?')
                     else:
-                        print('dtype =', dtype)
+                        #print('dtype =', dtype)
                         real_array = np.array(reals, dtype=dtype)
                         self.log.debug('shape=%s mrows=%s ncols=%s' % (str(real_array.shape), mrows, ncols))
                         if len(reals) == mrows * ncols:

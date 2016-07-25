@@ -360,7 +360,7 @@ class OUG(OP2Common):
         if self.read_mode == 1:
             if self.isubcase not in self.case_control_deck.subcases:
                 self.subcase = self.case_control_deck.create_new_subcase(self.isubcase)
-            self.subcase.add_op2_data(self.data_code, 'displacement')
+            self.subcase.add_op2_data(self.data_code, 'displacement', self.log)
 
         if self.table_name in [b'OUG1', b'OUGV1', b'OUGV2', b'OUGV1PAT', b'BOUGV1', b'ROUGV1']:
             assert self.thermal in [0, 1], self.code_information()
@@ -454,7 +454,7 @@ class OUG(OP2Common):
         if self.read_mode == 1:
             if self.isubcase not in self.case_control_deck.subcases:
                 self.subcase = self.case_control_deck.create_new_subcase(self.isubcase)
-            self.subcase.add_op2_data(self.data_code, 'velocity')
+            self.subcase.add_op2_data(self.data_code, 'velocity', self.log)
         if self.table_name in [b'OUGV1', b'OUGV2', b'ROUGV1']:
             result_name = 'velocities'
         elif self.table_name == b'OUPV1':
@@ -515,7 +515,7 @@ class OUG(OP2Common):
         if self.read_mode == 1:
             if self.isubcase not in self.case_control_deck.subcases:
                 self.subcase = self.case_control_deck.create_new_subcase(self.isubcase)
-            self.subcase.add_op2_data(self.data_code, 'acceleration')
+            self.subcase.add_op2_data(self.data_code, 'acceleration', self.log)
 
         if self.table_name in [b'OUGV1', b'OUGV2']:
             result_name = 'accelerations'
@@ -582,7 +582,7 @@ class OUG(OP2Common):
         """
         if self.isubcase not in self.case_control_deck.subcases:
             self.subcase = self.case_control_deck.create_new_subcase(self.isubcase)
-        self.subcase.add_op2_data(self.data_code, 'VECTOR')
+        self.subcase.add_op2_data(self.data_code, 'VECTOR', self.log)
 
         if self.table_name in [b'OUGV1', b'OUGV2', b'BOUGV1', b'BOPHIG']:
             result_name = 'eigenvectors'

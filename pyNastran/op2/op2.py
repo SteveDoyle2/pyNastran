@@ -420,6 +420,7 @@ class OP2(OP2_Scalar):
                 i += 1
                 if class_name in no_sort2_classes:
                     try:
+                        obj.build_dataframe()
                         obj.object_methods()
                     except:
                         self.log.error('build_dataframe is broken for %s' % class_name)
@@ -432,6 +433,7 @@ class OP2(OP2_Scalar):
                     obj.build_dataframe()
                 except NotImplementedError:
                     self.log.warning('build_dataframe is broken for %s' % class_name)
+                    #raise
                 except:
                     self.log.error('build_dataframe is broken for %s' % class_name)
                     raise

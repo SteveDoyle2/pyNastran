@@ -2671,6 +2671,7 @@ class NastranIO(object):
             #ielement = 0
             nelements = self.element_ids.shape[0]
             normals = np.zeros((nelements, 3), dtype='float32')
+            offset = np.zeros(nelements, dtype='float32')
             xoffset = np.zeros(nelements, dtype='float32')
             yoffset = np.zeros(nelements, dtype='float32')
             zoffset = np.zeros(nelements, dtype='float32')
@@ -2703,6 +2704,7 @@ class NastranIO(object):
 
                     ie = self.eid_map[eid]
                     normals[ie, :] = normali
+                    offset[ie] = zi
                     xoffset[ie] = zi * normali[0]
                     yoffset[ie] = zi * normali[1]
                     zoffset[ie] = zi * normali[2]
@@ -2768,21 +2770,25 @@ class NastranIO(object):
 
                 #if np.abs(xoffset).max() > 0.0 or np.abs(yoffset).max() > 0.0 or np.abs(zoffset).max() > 0.0:
                 # offsets
+                offset_res = GuiResult(0, header='Offset', title='Offset',
+                                         location='centroid', scalar=offset, data_format='%g')
                 offset_x_res = GuiResult(0, header='OffsetX', title='OffsetX',
-                                         location='centroid', scalar=xoffset, data_format='%.1f')
+                                         location='centroid', scalar=xoffset, data_format='%g')
                 offset_y_res = GuiResult(0, header='OffsetY', title='OffsetY',
-                                         location='centroid', scalar=yoffset, data_format='%.1f')
+                                         location='centroid', scalar=yoffset, data_format='%g')
                 offset_z_res = GuiResult(0, header='OffsetZ', title='OffsetZ',
-                                         location='centroid', scalar=zoffset, data_format='%.1f')
+                                         location='centroid', scalar=zoffset, data_format='%g')
 
-                cases[icase] = (offset_x_res, (0, 'OffsetX'))
-                cases[icase + 1] = (offset_y_res, (0, 'OffsetY'))
-                cases[icase + 2] = (offset_z_res, (0, 'OffsetZ'))
+                cases[icase] = (offset_res, (0, 'Offset'))
+                cases[icase + 1] = (offset_x_res, (0, 'OffsetX'))
+                cases[icase + 2] = (offset_y_res, (0, 'OffsetY'))
+                cases[icase + 3] = (offset_z_res, (0, 'OffsetZ'))
 
-                form_checks.append(('OffsetX', icase, []))
-                form_checks.append(('OffsetY', icase + 1, []))
-                form_checks.append(('OffsetZ', icase + 2, []))
-                icase += 3
+                form_checks.append(('Offset', icase, []))
+                form_checks.append(('OffsetX', icase + 1, []))
+                form_checks.append(('OffsetY', icase + 2, []))
+                form_checks.append(('OffsetZ', icase + 3, []))
+                icase += 4
             elif is_solid:
                 form_checks = []
                 form0.append(('Element Checks', None, form_checks))

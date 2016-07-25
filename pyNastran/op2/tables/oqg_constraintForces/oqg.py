@@ -321,7 +321,7 @@ class OQG(OP2Common):
         if self.thermal == 0:
             if self.isubcase not in self.case_control_deck.subcases:
                 self.subcase = self.case_control_deck.create_new_subcase(self.isubcase)
-            self.subcase.add_op2_data(self.data_code, 'SPCFORCES')
+            self.subcase.add_op2_data(self.data_code, 'SPCFORCES, self.log')
 
             result_name = 'spc_forces'
             storage_obj = self.spc_forces
@@ -335,7 +335,7 @@ class OQG(OP2Common):
             #'finite element temperature gradients and fluxes'
             if self.isubcase not in self.case_control_deck.subcases:
                 self.subcase = self.case_control_deck.create_new_subcase(self.isubcase)
-            self.subcase.add_op2_data(self.data_code, 'FLUX')
+            self.subcase.add_op2_data(self.data_code, 'FLUX', self.log)
 
             result_name = 'thermal_gradient_and_flux'
             storage_obj = self.thermal_gradient_and_flux
@@ -366,7 +366,7 @@ class OQG(OP2Common):
         """
         if self.isubcase not in self.case_control_deck.subcases:
             self.subcase = self.case_control_deck.create_new_subcase(self.isubcase)
-        self.subcase.add_op2_data(self.data_code, 'MPCFORCES')
+        self.subcase.add_op2_data(self.data_code, 'MPCFORCES', self.log)
 
         if self.table_name == b'OQMG1':
             result_name = 'mpc_forces'

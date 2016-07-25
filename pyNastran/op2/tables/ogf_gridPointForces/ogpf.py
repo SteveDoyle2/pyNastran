@@ -35,7 +35,7 @@ class OGPF(OP2Common):
         """
         if self.isubcase not in self.case_control_deck.subcases:
             self.subcase = self.case_control_deck.create_new_subcase(self.isubcase)
-        self.subcase.add_op2_data(self.data_code, 'GPFORCE')
+        self.subcase.add_op2_data(self.data_code, 'GPFORCE', self.log)
 
         dt = self.nonlinear_factor
         n = 0

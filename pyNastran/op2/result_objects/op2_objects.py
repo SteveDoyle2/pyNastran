@@ -119,7 +119,7 @@ class BaseScalarObject(Op2Codes):
     def _build_dataframe_transient_header(self):
         """builds the header for the Pandas DataFrame/table"""
         assert isinstance(self.name, (text_type, binary_type)), 'name=%s type=%s' % (self.name, type(self.name))
-        name = self.name #data_code['name']
+        #name = self.name #data_code['name']
         times = self._times
         utimes = np.unique(times)
         if not len(times) == len(utimes):
@@ -131,43 +131,85 @@ class BaseScalarObject(Op2Codes):
         column_names = []
         column_values = []
 
-        if name == 'mode':
-            column_names.append('Mode')
-            column_values.append(times)
-            if hasattr(self, 'freqs'):
-                freq = self.freqs
-                column_names.append('Freq')
-                column_values.append(freq)
-            elif hasattr(self, 'eigrs'):
-                try:
-                    abs_freqs = np.sqrt(np.abs(self.eigrs)) / (2 * np.pi)
-                except FloatingPointError:
-                    msg = 'Cant analyze freq = sqrt(eig)/(2*pi)\neigr=%s\n' % (self.eigrs)
-                    abs_freqs = np.sqrt(np.abs(self.eigrs)) / (2 * np.pi)
-                    msg += 'freq = sqrt(abs(self.eigrs)) / (2 * np.pi)=%s' % abs_freqs
-                    raise FloatingPointError(msg)
+        data_names = self.data_code['data_names']
+        for name in data_names:
+            #if name == primary_name:
+            #times = self.da
+            times = np.array(getattr(self, name + 's'))
+            if name == 'mode':
+                column_names.append('Mode')
+                column_values.append(times)
+
+                #if freq not in data_names:
+                #if name == 'freq':
+                ##if hasattr(self, 'freqs'):
+                    #column_names.append('Freq')
+                    #column_values.append(self.freqs)
+                #elif name == 'eigr':
+                    #column_names.append('eigenvalue_real')
+                    #column_values.append(self.eigrs)
+                #elif hasattr(self, 'eigrs') and 0:
+                    #try:
+                        #abs_freqs = np.sqrt(np.abs(self.eigrs)) / (2 * np.pi)
+                    #except FloatingPointError:
+                        #msg = 'Cant analyze freq = sqrt(eig)/(2*pi)\neigr=%s\n' % (self.eigrs)
+                        #abs_freqs = np.sqrt(np.abs(self.eigrs)) / (2 * np.pi)
+                        #msg += 'freq = sqrt(abs(self.eigrs)) / (2 * np.pi)=%s' % abs_freqs
+                        #raise FloatingPointError(msg)
+                    #column_names.append('Freq')
+                    #column_values.append(abs_freqs)
+                #else:
+                    #pass
+
+                # Convert eigenvalues to frequencies
+                # TODO: add damping header
+            elif name in ['eigr']:
+                column_names.append('EigenvalueReal')
+                column_values.append(times)
+                abs_freqs = np.sqrt(np.abs(self.eigrs)) / (2 * np.pi)
                 column_names.append('Freq')
                 column_values.append(abs_freqs)
+                column_names.append('Radians')
+                column_values.append(abs_freqs * 2 * np.pi)
+
+            elif name in ['eigi']:
+                column_names.append('EigenvalueImag')
+                column_values.append(times)
+                eigr = np.array(self.eigrs)
+                eigi = np.array(self.eigis)
+                damping = -eigr / np.sqrt(eigr ** 2 + eigi ** 2)
+                column_names.append('Damping (-eigr/sqrt(eigr^2+eigi^2); check)')
+                column_values.append(times)
+                #calculate_damping
+            elif name in ['mode_cycle']:
+                continue
+                #column_names.append('mode_cycle(Freq?)')
+                #column_values.append(times)
+            elif name in ['mode2']:
+                continue
+                #column_names.append('mode2(Freq?)')
+                #column_values.append(times)
+            elif name in ['cycle']:
+                continue
+                #column_names.append('Freq (Cycles/s)')
+                #column_values.append(times)
+
+            elif name in ['freq', 'freq2']:
+                column_names.append('Freq')
+                column_values.append(times)
+            elif name in ['dt','time']:
+                column_names.append('Time')
+                column_values.append(times)
+            elif name in ['lftsfq', 'lsdvmn', 'load_step', 'loadID', 'loadFactor', 'loadIDs']:
+                column_names.append('LoadStep')
+                column_values.append(times)
+            elif name == 'node_id':
+                column_names.append('NodeID')
+                column_values.append(times)
             else:
-                pass
-            # Convert eigenvalues to frequencies
-            # TODO: add damping header
-        elif name in ['freq', 'freq2']:
-            column_names.append('Freq')
-            column_values.append(times)
-        elif name in ['dt','time']:
-            column_names.append('Time')
-            column_values.append(times)
-        elif name in ['lftsfq', 'lsdvmn', 'load_step', 'loadID', 'loadFactor', 'loadIDs']:
-            column_names.append('LoadStep')
-            column_values.append(times)
-        elif name == 'node_id':
-            column_names.append('NodeID')
-            column_values.append(times)
-        else:
-            msg = 'build_dataframe; name=%r' % name
-            print(msg)
-            raise NotImplementedError(msg)
+                msg = 'build_dataframe; name=%r' % name
+                print(msg)
+                raise NotImplementedError(msg)
         assert len(column_names) > 0, column_names
         assert len(column_names) == len(column_values), 'names=%s values=%s' % (column_names, column_values)
         assert len(self.get_headers()) == self.data.shape[-1], 'headers=%s; n=%s\ndata.headers=%s' % (self.get_headers(), len(self.get_headers()), self.data.shape[-1])

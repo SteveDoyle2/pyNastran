@@ -19,7 +19,7 @@ If you want an F06 file:
 
   >>> test_op2 -cf fem.op2
 
-Additionally, you can skip results to minimize memory.  Skipping stress and rod_strain:
+You can skip results to minimize memory usage.  Skipping stress and rod_strain:
 
 .. code-block:: console
 
@@ -30,6 +30,18 @@ You may also skip specific subcases (read subcases 1, 5):
 .. code-block:: console
 
   >>> test_op2 -cf fem.op2 -s 1_5
+
+
+Finally, you can extract the geometry and write a BDF.
+
+.. code-block:: console
+
+  >>> test_op2 -c -gn fem.op2
+
+or
+
+  >>> test_op2 -c --geometry --write_bdf fem.op2
+
 
 
 Calling Signature
