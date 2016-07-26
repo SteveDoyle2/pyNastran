@@ -3,7 +3,7 @@ import unittest
 
 import os
 import pyNastran
-from pyNastran.bdf.bdf import BDF, BDFCard, DMIG
+from pyNastran.bdf.bdf import BDF, BDFCard, DMIG, read_bdf
 
 from numpy import array, array_equal, sqrt, sin, cos, radians
 
@@ -223,6 +223,21 @@ class TestDMIG(unittest.TestCase):
         assert len(a_matrix.GCj) == 4, 'len(GCj)=%s GCj=%s matrix=\n%s' % (len(a_matrix.GCj), a_matrix.GCj, a_matrix)
         assert a_matrix.shape == (4, 4), 'shape=%s' % str(a_matrix.shape)
         a_matrix.get_matrix()
+
+    def test_dmig_11(self):
+        pch_filename = os.path.join(test_path, 'dmig.pch')
+        model = read_bdf(pch_filename, debug=False, punch=True)
+        vax = model.dmigs['VAX']
+        vax_array, vax_dict_row, vax_dict_col = vax.get_matrix()
+        assert vax_array.shape == (15, 1), vax_array
+        vax_dict_row_expected = {
+            0: (101, 1), 1: (102, 1), 2: (105, 1), 3: (106, 1), 4: (107, 1), 5: (108, 1),
+            6: (109, 1), 7: (201, 1), 8: (301, 1), 9: (302, 1), 10: (305, 1), 11: (306, 1),
+            12: (307, 1), 13: (308, 1), 14: (309, 1)
+        }
+        vax_dict_col_expected = {0: (1, 0)}
+        assert list(sorted(vax_dict_col)) == list(sorted(vax_dict_col_expected)), 'vax_dict_col=%s vax_dict_col_expected=%s' % (vax_dict_col, vax_dict_col_expected)
+        assert list(sorted(vax_dict_row)) == list(sorted(vax_dict_row_expected)), 'vax_dict_row=%s vax_dict_row_expected=%s' % (vax_dict_row, vax_dict_row_expected)
 
     def test_dmi_01(self):
         data = """

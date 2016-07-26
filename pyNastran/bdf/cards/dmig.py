@@ -413,6 +413,7 @@ def get_row_col_map(GCi, GCj, ifo):
     cols = {}
     cols_reversed = {}
     ndim = len(GCi.shape)
+    #print('ndim=%s' % ndim)
     if ndim == 1:
         i = 0
         #nrows = np.unique(GCi)
@@ -449,7 +450,7 @@ def get_row_col_map(GCi, GCj, ifo):
         for (nid, comp) in GCi:
             GCi = (nid, comp)
             if GCi not in rows:
-                #print('GCi = %s' % str(GCi))
+                #print('row.GCi = %s' % str(GCi))
                 rows[GCi] = i
                 rows_reversed[i] = GCi
                 i += 1
@@ -458,20 +459,21 @@ def get_row_col_map(GCi, GCj, ifo):
             for (nid, comp) in GCj:
                 GCj = (nid, comp)
                 if GCj not in rows:
-                    #print('GCj = %s' % str(GCj))
+                    #print('row.GCj = %s' % str(GCj))
                     rows[GCj] = i
                     rows_reversed[i] = GCj
                     i += 1
+            cols = rows
+            cols_reversed = rows_reversed
         else:
             j = 0
             for (nid, comp) in GCj:
                 GCj = (nid, comp)
                 if GCj not in cols:
+                    #print('col.GCj = %s' % str(GCj))
                     cols[GCj] = j
                     cols_reversed[j] = GCj
                     j += 1
-        cols = rows
-        cols_reversed = rows_reversed
 
     nrows = len(rows)
     ncols = len(cols)
@@ -556,26 +558,26 @@ def _fill_dense_rectangular_matrix(self, nrows, ncols, ndim, rows, cols, apply_s
                     M[i, j] = reali
             except KeyError:
                 msg = ('name=%s ndim=%s gci=%s gcj=%s matrix_type=%s '
-                       'is_polar=%s is_sparse=%s ncols=%s M.shape=%s\n' % (
+                       'is_polar=%s is_sparse=%s ncols=%s M.shape=%s\n\n' % (
                            self.name, ndim, str(gci), str(gcj), self.matrix_type,
                            self.is_polar, is_sparse, self.ncols, M.shape))
 
                 gci2 = (gci[0], gci[1])
                 gcj2 = (gcj[0], gcj[1])
                 if gci2 in rows:
-                    msg += '\ngci/row_key=%s not found' % str(gci2)
+                    msg += 'gci/row_key=%s found\n' % str(gci2)
                 else:
-                    msg += '\ngci/row_key=%s not found' % str(gci2)
+                    msg += 'gci/row_key=%s not found\n' % str(gci2)
                     msg += 'Rows:\n'
                     for i, row in enumerate(rows):
                         msg += '  i=%s row=%s\n' % (i, row)
 
                 if gcj2 in cols:
-                    msg += '\ngcj/col_key=%s found' % str(gcj2)
+                    msg += '\ngcj/col_key=%s found\n' % str(gcj2)
                 else:
-                    msg += '\ngcj/col_key=%s not found' % str(gcj2)
+                    msg += '\ngcj/col_key=%s not found\n' % str(gcj2)
                     msg += 'Cols:\n'
-                    for j, row in enumerate(cols):
+                    for j, col in enumerate(cols):
                         msg += '  j=%s row=%s\n' % (j, col)
 
                 msg += '\n'
