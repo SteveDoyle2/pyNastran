@@ -16,7 +16,7 @@ from pyNastran.bdf.cards.test.test_elements import TestElements
 from pyNastran.bdf.cards.test.test_loads import TestLoads
 from pyNastran.bdf.cards.test.test_materials import TestMaterials
 from pyNastran.bdf.cards.test.test_other import TestOther
-#from pyNastran.bdf.cards.test.test_optimization import TestOpt
+from pyNastran.bdf.cards.test.test_optimization import TestOpt
 from pyNastran.bdf.cards.test.test_rigid import TestRigid
 from pyNastran.bdf.cards.test.test_springs import TestSprings
 from pyNastran.bdf.cards.test.test_solids import TestSolids

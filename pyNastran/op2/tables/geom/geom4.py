@@ -385,19 +385,18 @@ class GEOM4(GeomCommon):
 
     def _read_spcd(self, data, n):
         """common method for reading SPCDs"""
-        self._read_dual_card(data, n, self._read_spcd_nx, self._read_spcd_msc,
-                             'SPCD', self.add_load)
-        #if self.is_nx:
-            #n = self._read_spcd_nx(data, n)
-        #else:
-            #n = self._read_spcd_msc(data, n)
+        n = self._read_dual_card(data, n, self._read_spcd_nx, self._read_spcd_msc,
+                                 'SPCD', self.add_load)
         return n
 
     def _read_spcd_nx(self, data, n):
         """SPCD(5110,51,256) - NX specific"""
-        s = Struct(b(self._endian + '3ifi'))
+        s = Struct(b(self._endian + '3if'))
         ntotal = 16 # 4*4
         nentries = (len(data) - n) // ntotal
+        assert nentries > 0, nentries
+        assert (len(data) - n) % ntotal == 0
+        loads = []
         for i in range(nentries):
             edata = data[n:n + ntotal]
             #self.show_data(edata)
@@ -407,16 +406,18 @@ class GEOM4(GeomCommon):
             if self.is_debug_file:
                 self.binary_debug.write('  SPCD=%s\n' % str(out))
             constraint = SPCD.add_op2_data([sid, ID, c, dx])
-            self.add_load(constraint)
+            loads.append(constraint)
             n += ntotal
-        self.card_count['SPCD'] = nentries
-        return n
+        return n, loads
 
     def _read_spcd_msc(self, data, n):
         """SPCD(5110,51,256) - MSC specific - Record 47"""
         s = Struct(b(self._endian + '4ifi'))
         ntotal = 20 # 5*4
         nentries = (len(data) - n) // ntotal
+        assert nentries > 0, nentries
+        assert (len(data) - n) % ntotal == 0
+        loads = []
         for i in range(nentries):
             edata = data[n:n + ntotal]
             #self.show_data(edata)
@@ -426,10 +427,9 @@ class GEOM4(GeomCommon):
             if self.is_debug_file:
                 self.binary_debug.write('  SPCD=%s\n' % str(out))
             constraint = SPCD.add_op2_data([sid, ID, c, dx])
-            self.add_load(constraint)
+            loads.append(constraint)
             n += ntotal
-        self.card_count['SPCD'] = nentries
-        return n
+        return n, loads
 
     def _read_spcde(self, data, n):
         self.log.debug('skipping SPCDE in GEOM4\n')
