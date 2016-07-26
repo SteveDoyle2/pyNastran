@@ -256,8 +256,9 @@ class GEOM1(GeomCommon):
                 #self.nodes[nid] = node
                 #self.add_node(node)
             else:
-                self.log.debug("*nid=%s cp=%s x1=%-5.2f x2=%-5.2f x3=%-5.2f cd=%-2s ps=%s seid=%s" %
-                               (nid, cp, x1, x2, x3, cd, ps, seid))
+                self.log.debug('*nid=%s cp=%s x1=%-5.2f x2=%-5.2f x3=%-5.2f cd=%-2s ps=%s '
+                               'seid=%s' % (nid, cp, x1, x2, x3, cd, ps, seid))
+                node = GRID(nid, cp, np.array([x1, x2, x3]), cd, ps, seid)
                 self.reject_cards.append(str(node))
             n += ntotal
         return n

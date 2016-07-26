@@ -914,14 +914,16 @@ class GEOM2(GeomCommon):
         n0 = n
         if self.is_nx:
             try:
-                n, elements = self.nx_read(data, n)
+                n, elements = nx_read(data, n)
             except AssertionError:
-                n, elements = self.msc_read(data, n0)
+                #raise
+                n, elements = msc_read(data, n0)
         else:
             try:
-                n, elements = self.msc_read(data, n)
+                n, elements = msc_read(data, n)
             except AssertionError:
-                n, elements = self.nx_read(data, n0)
+                #raise
+                n, elements = nx_read(data, n0)
 
         nelements = len(elements)
         for elem in elements:

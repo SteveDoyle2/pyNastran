@@ -1,5 +1,6 @@
-from six import string_types, iteritems
+from __future__ import print_function
 import os
+from six import string_types, iteritems
 
 from numpy import array, ndarray
 
@@ -30,24 +31,24 @@ def get_files_of_type(dirname, extension='.txt', max_size=100., limit_file='no_d
     if not os.path.exists(dirname):
         return []
 
-    fs = []
-    files = os.listdir(dirname)
+    filenames2 = []
+    filenames = os.listdir(dirname)
     allow_digging = True
-    if limit_file in files:
+    if limit_file in filenames:
         allow_digging = False
-    for f in files:
+    for f in filenames:
         filename = os.path.join(dirname, f)
         if os.path.isdir(filename):
             if allow_digging:
-                fs += get_files_of_type(filename, extension, max_size)
-                #assert len(fs) > 0, dirnamei
+                filenames2 += get_files_of_type(filename, extension, max_size)
+                #assert len(filenames2) > 0, dirnamei
             else:
                 print('no digging in filename=%s; dirname=%s' % (filename, dirname))
         elif (os.path.isfile(filename) and
               os.path.splitext(f)[1].endswith(extension) and
               os.path.getsize(filename) / 1048576. <= max_size):
-            fs.append(filename)
-    return fs
+            filenames2.append(filename)
+    return filenames2
     #return [os.path.join(dirname, f) for f in os.listdir(dirname)
     #        if os.path.splitext(f)[1].endswith(extension)
     #         and os.path.getsize(os.path.join(dirname, f)) / (1048576.) <= max_size]
@@ -83,31 +84,31 @@ def list_print(lst, float_fmt='%-4.2f'):
             return '[]'
 
         if isinstance(lst, ndarray) and lst.ndim == 2:
-            r,c = lst.shape
+            row, col = lst.shape
             return ("["+",\n ".join(["["+",".join([float_fmt % lst[i, j]
-                                for j in range(c)])+"]" for i in range(r)])+"]")
+                    for j in range(col)])+"]" for i in range(row)])+"]")
         return "[" + ", ".join([_print(a) for a in lst]) + "]"
     except: # not a list
         return _print(lst)
 
 
 def write_class(name, obj, nspaces=0, nbase=0):
-    objectType = obj.__class__.__name__
+    object_type = obj.__class__.__name__
     obj_attrs = object_attributes(obj, 'both')
     if not obj_attrs:
-        return "%s()" % objectType
+        return "%s()" % object_type
 
     spaces = ' ' * nspaces
     nspaces2 = nspaces + 4
     #spaces2 = nspaces2 * ' '
-    msg = "%s(\n" % objectType
+    msg = "%s(\n" % object_type
     for attr in obj_attrs[:-1]:
         value = getattr(obj, attr)
         #msg += '?'
-        msg += write_object_attributes(attr, value, nspaces2, nbase, isClass=True)
+        msg += write_object_attributes(attr, value, nspaces2, nbase, is_class=True)
     attr = obj_attrs[-1]
     value = getattr(obj, attr)
-    msg += write_object_attributes(attr, value, nspaces2, nbase, isClass=True)
+    msg += write_object_attributes(attr, value, nspaces2, nbase, is_class=True)
     msg += '%s)' % spaces
 
     #print "dir(obj) =", dir(obj)
@@ -115,7 +116,7 @@ def write_class(name, obj, nspaces=0, nbase=0):
     return msg
 
 
-def write_object_attributes(attr, obj, nspaces, nbase=0, isClass=False):
+def write_object_attributes(attr, obj, nspaces, nbase=0, is_class=False):
     msg = ''
     if isinstance(obj, (int, float)) or obj is None:
         msg += '%s' % (str(obj))
@@ -124,18 +125,18 @@ def write_object_attributes(attr, obj, nspaces, nbase=0, isClass=False):
     elif isinstance(obj, unicode):
         msg += "u'%s'" % obj
     elif isinstance(obj, list):
-        msg += write_list(obj, nspaces, nbase, isClass)
+        msg += write_list(obj, nspaces, nbase, is_class)
     elif isinstance(obj, tuple):
-        msg += write_tuple(obj, nspaces, nbase, isClass)
+        msg += write_tuple(obj, nspaces, nbase, is_class)
     elif isinstance(obj, dict):
-        msg += write_dict(obj, nspaces, nbase, isClass)
+        msg += write_dict(obj, nspaces, nbase, is_class)
     else:
-        objectType = type(obj)
-        #raise RuntimeError('objectType=%s is not supported; value=%s' % (objectType, obj))
+        object_type = type(obj)
+        #raise RuntimeError('object_type=%s is not supported; value=%s' % (objec_type, obj))
     return msg
 
 
-def write_dict(obj, nspaces, nbase, isClass):
+def write_dict(obj, nspaces, nbase, is_class):
     spaces = (nbase+nspaces) * ' '
     nspaces2 = nspaces + 4
     if len(obj) == 0:
@@ -144,28 +145,28 @@ def write_dict(obj, nspaces, nbase, isClass):
     msg = '{\n'
     for key, value in sorted(iteritems(obj)):
         #msg += '#'
-        msg += write_object_attributes(key, value, nspaces2, nbase, isClass=False)
+        msg += write_object_attributes(key, value, nspaces2, nbase, is_class=False)
     msg += '%s}' % spaces
     return msg
 
 
-def write_list(obj, nspaces, nbase, isClass):
+def write_list(obj, nspaces, nbase, is_class):
     if len(obj) == 0:
         return '[]'
     return ' ' * (nspaces + nbase) + "???"  # don't choke on long numpy arrays
 
-    spaces = ' ' * (nspaces + nbase)
-    msg = '[\n%s    ' % spaces
-    for value in obj[:-1]:
-        msg += write_value(value, nspaces+4, nbase, isClass) + ', '
-    msg += write_value(obj[-1], nspaces+4, nbase, isClass) + '\n%s]' % spaces
-    return msg
+    #spaces = ' ' * (nspaces + nbase)
+    #msg = '[\n%s    ' % spaces
+    #for value in obj[:-1]:
+        #msg += write_value(value, nspaces+4, nbase, is_class) + ', '
+    #msg += write_value(obj[-1], nspaces+4, nbase, is_class) + '\n%s]' % spaces
+    #return msg
 
 
-def write_tuple(obj, nspaces, nbase, isClass):
+def write_tuple(obj, nspaces, nbase, is_class):
     msg = '('
     for value in obj:
-        msg += write_value(value, nspaces, nbase, isClass) + ', '
+        msg += write_value(value, nspaces, nbase, is_class) + ', '
     msg += ')'
     return msg
 
@@ -184,9 +185,10 @@ def write_array(a, nspaces=0):
             elif isinstance(ai, string_types):
                 msg += "'%s'," % ai
             else:
-                objectType = type(ai)
-                raise RuntimeError('objectType=%s is not supported; value=%s' % (objectType, ai))
-                return "'array(.not supported type.)'"
+                object_type = type(ai)
+                msg = 'object_type=%s is not supported; value=%s' % (object_type, ai)
+                raise RuntimeError(msg)
+                #return "'array(.not supported type.)'"
             msg += '%s, ' % ai
         if len(a) > 0:
             if isinstance(a[-1], (int, float)):
@@ -194,9 +196,10 @@ def write_array(a, nspaces=0):
             elif isinstance(a[-1], string_types):
                 msg += "'%s'], dtype='%s')" % (a[-1], dtype)
             else:
-                objectType = type(ai)
-                raise RuntimeError('objectType=%s is not supported; value=%s' % (objectType, ai))
-                return "'array(.not supported type.)'"
+                object_type = type(ai)
+                msg = 'object_type=%s is not supported; value=%s' % (object_type, ai)
+                raise RuntimeError(msg)
+                #return "'array(.not supported type.)'"
         else:
             msg += '], dtype=%s)' % dtype
     elif len(shape) == 2:
@@ -217,9 +220,8 @@ def write_array(a, nspaces=0):
         return "'array(.not supported shape.)'"
     return msg
 
-
-if __name__ == '__main__':  # pragma: no cover
-    from numpy import array, zeros
+def main():
+    from numpy import zeros
     class C(object):
         def __init__(self):
             pass
@@ -233,56 +235,53 @@ if __name__ == '__main__':  # pragma: no cover
             self.a = a
             self.b = b
             self.c = c
-            self.d = {'a' : 4,
-                      'b' : [1,2,3],
-                      'c' : {1:2},
-                      'd' : B(),
-                    (1,2) : 4,
+            self.d = {
+                'a' : 4,
+                'b' : [1, 2, 3],
+                'c' : {1 : 2},
+                'd' : B(),
+                (1, 2) : 4,
             }
 
     z = zeros(2, dtype='float64')
     #print z
     #print z.dtype
-    dictA = {
-            'strString' : 'a string',
-            'strFloat' : 1.0,
-            'strInt': 2,
-            'strTuple': (1,2),
-            'strNone' : None,
-            'strClass' : A('a', 'b', 'c'),
-            'strList' : [1,2,3],
-            'nullList' : [],
-            'nullArray' : array([]),
-            'stringArray' : array(['s']),
-            'stringArray2' : array(['a', 'b']),
-            'nullDict' : {},
-            u'unicodStr' : u'',
-            'ListOfLists' : [[[],[[],],2,{'a':3}]],
-            1 : 1,
-            None : 4,
-            1.0 : 5,
-            (1, 2) : 6,
-            'strArray' : array([4,5,6]),
-            'strArray2' : zeros((2,2)),
-            'strArray3' : zeros((2,2,2)),
+    dict_a = {
+        'strString' : 'a string',
+        'strFloat' : 1.0,
+        'strInt': 2,
+        'strTuple': (1, 2),
+        'strNone' : None,
+        'strClass' : A('a', 'b', 'c'),
+        'strList' : [1, 2, 3],
+        'nullList' : [],
+        'nullArray' : array([]),
+        'stringArray' : array(['s']),
+        'stringArray2' : array(['a', 'b']),
+        'nullDict' : {},
+        u'unicodStr' : u'',
+        'ListOfLists' : [[[], [[]], 2, {'a':3}]],
+        1 : 1,
+        None : 4,
+        1.0 : 5,
+        (1, 2) : 6,
+        'strArray' : array([4, 5, 6]),
+        'strArray2' : zeros((2, 2)),
+        'strArray3' : zeros((2, 2, 2)),
     }
-    dictB = {
-            'string2' : 'a string',
-            'float2' : 1.0,
-            'int2': 2,
-            'dictA' : dictA,
+    dict_b = {
+        'string2' : 'a string',
+        'float2' : 1.0,
+        'int2': 2,
+        'dictA' : dict_a,
     }
 
 
-    dictC = {
+    dict_c = {
         'dictA' : {
             None : 4,
             1 : 5,
-            'strClass' : A(
-                a = 'a',
-                b = 'b',
-                c = 'c',
-            ),
+            'strClass' : A(a='a', b='b', c='c'),
             'strFloat' : 1.0,
             'strInt' : 2,
             'strNone' : None,
@@ -295,12 +294,15 @@ if __name__ == '__main__':  # pragma: no cover
         'string2' : 'a string',
     }
     #assert sorted(dictB.items())==sorted(dictC.items())
-    #print write_object_attributes('dictA', dictA, isClass=False)
-    msg = write_object_attributes('dictB', dictB, nbase=0)
+    #print write_object_attributes('dictA', dictA, is_class=False)
+    nspaces = 0
+    msg = write_object_attributes('dictB', dict_b, nspaces, nbase=0)
     print(msg)
-    with open('junk.py', 'wb') as f:
-        f.write(msg)
+    with open('junk.py', 'wb') as file_obj:
+        file_obj.write(msg)
 
     import junk
-
     #dictB2 = eval(msg)
+
+if __name__ == '__main__':  # pragma: no cover
+    main()

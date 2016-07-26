@@ -5,7 +5,7 @@ from struct import unpack, Struct
 from six import b
 from six.moves import range
 
-from pyNastran.bdf.bdf import NSM, PMASS, PHBDY, PBUSH
+from pyNastran.bdf.bdf import NSM, PMASS
 
 from pyNastran.bdf.cards.properties.bars import PBAR, PBARL
 from pyNastran.bdf.cards.properties.beam import PBEAM
@@ -17,8 +17,8 @@ from pyNastran.bdf.cards.properties.shell import PSHEAR, PSHELL, PCOMP
 from pyNastran.bdf.cards.properties.solid import PSOLID
 from pyNastran.bdf.cards.properties.springs import PELAS
 
-from pyNastran.bdf.cards.thermal.thermal import PCONV
-# PCOMPG, PBUSH1D, PBEAML, PBEAM3, PBUSH,
+from pyNastran.bdf.cards.thermal.thermal import PCONV, PHBDY
+# PCOMPG, PBUSH1D, PBEAML, PBEAM3
 from pyNastran.op2.tables.geom.geom_common import GeomCommon
 
 
@@ -97,6 +97,11 @@ class EPT(GeomCommon):
             raise RuntimeError('bad parsing...%s' % str(prop))
         self.add_property(prop, allow_overwrites=True)
         #print(str(prop)[:-1])
+
+    def _add_pconv(self, prop):
+        if prop.pconid > 100000000:
+            raise RuntimeError('bad parsing...%s' % str(prop))
+        self.add_convection_property(prop)
 
 # HGSUPPR
 
@@ -435,24 +440,52 @@ class EPT(GeomCommon):
         return len(data)
 
     def _read_pconv(self, data, n):
+        """common method for reading PCONVs"""
+        n = self._read_dual_card(data, n, self._read_pconv_nx, self._read_pconv_msc,
+                                 'PCONV', self._add_pconv)
+        return n
+
+    def _read_pconv_nx(self, data, n):
         """
-        (11001,110,411)- Record 25
+        (11001,110,411)- NX version
+        """
+        ntotal = 16  # 4*4
+        s = Struct(b(self._endian + '3if'))
+        nentries = (len(data) - n) // ntotal
+        assert (len(data) - n) % ntotal == 0
+        props = []
+        for i in range(nentries):
+            out = s.unpack(data[n:n+ntotal])
+            (pconid, mid, form, expf) = out
+            ftype = tid = chlen = gidin = ce = e1 = e2 = e3 = None
+            data_in = (pconid, mid, form, expf, ftype, tid, chlen,
+                       gidin, ce, e1, e2, e3)
+
+            prop = PCONV.add_op2_data(data_in)
+            props.append(prop)
+            n += ntotal
+        return n, props
+
+    def _read_pconv_msc(self, data, n):
+        """
+        (11001,110,411)- MSC version - Record 25
         """
         ntotal = 56  # 14*4
         s = Struct(b(self._endian + '3if 4i fii 3f'))
         nentries = (len(data) - n) // ntotal
+        assert (len(data) - n) % ntotal == 0
+        props = []
         for i in range(nentries):
             out = s.unpack(data[n:n+ntotal])
             (pconid, mid, form, expf, ftype, tid, undef1, undef2, chlen,
              gidin, ce, e1, e2, e3) = out
             data_in = (pconid, mid, form, expf, ftype, tid, chlen,
-                    gidin, ce, e1, e2, e3)
+                       gidin, ce, e1, e2, e3)
 
             prop = PCONV.add_op2_data(data_in)
-            self._add_op2_property(prop)
+            props.append(prop)
             n += ntotal
-        self.card_count['PCONV'] = nentries
-        return n
+        return n, props
 
     def _read_pconvm(self, data, n):  # 26
         self.log.debug('skipping PCONVM in EPT\n')

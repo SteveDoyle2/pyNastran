@@ -23,7 +23,7 @@ class DummyWriter(object):
 #sys.stdout = DummyWriter()
 import pyNastran
 from pyNastran.bdf.bdf import BDF
-from pyNastran.f06.f06 import F06, FatalError
+from pyNastran.f06.errors import FatalError
 from pyNastran.op2.op2 import OP2
 from pyNastran.op4.op4 import OP4
 
