@@ -1067,20 +1067,20 @@ def main():
     model.extract_y_slice(y0, tol=0.014, slice_filename='slice.plt')
 
     return
-    for iprocessor, fname in enumerate(fnames):
-        nnodes, nelements = datai[iprocessor].split(',')
-        nnodes = int(nnodes.split('=')[1])
-        nelements = int(nelements.split('=')[1])
+    #for iprocessor, fname in enumerate(fnames):
+        #nnodes, nelements = datai[iprocessor].split(',')
+        #nnodes = int(nnodes.split('=')[1])
+        #nelements = int(nelements.split('=')[1])
 
-        ip = iprocessor + 1
-        tecplot_filename = 'model_final_meters_part%i_tec_volume_timestep20000.plt' % ip
-        print(tecplot_filename)
-        try:
-            plt.read_tecplot_binary(tecplot_filename, nnodes=nnodes, nelements=nelements)
-            plt.write_tecplot('processor%i.plt' % ip)
-        except:
-            raise
-        #break
+        #ip = iprocessor + 1
+        #tecplot_filename = 'model_final_meters_part%i_tec_volume_timestep20000.plt' % ip
+        #print(tecplot_filename)
+        #try:
+            #plt.read_tecplot_binary(tecplot_filename, nnodes=nnodes, nelements=nelements)
+            #plt.write_tecplot('processor%i.plt' % ip)
+        #except:
+            #raise
+        ##break
 
 def main2():
     """tests slicing"""

@@ -5,7 +5,7 @@ from struct import unpack, Struct
 from six import b
 from six.moves import range
 
-from pyNastran.bdf.bdf import NSM, PMASS, PHBDY, PBUSH
+from pyNastran.bdf.bdf import NSM, PMASS
 
 from pyNastran.bdf.cards.properties.bars import PBAR, PBARL
 from pyNastran.bdf.cards.properties.beam import PBEAM
@@ -17,8 +17,8 @@ from pyNastran.bdf.cards.properties.shell import PSHEAR, PSHELL, PCOMP
 from pyNastran.bdf.cards.properties.solid import PSOLID
 from pyNastran.bdf.cards.properties.springs import PELAS
 
-from pyNastran.bdf.cards.thermal.thermal import PCONV
-# PCOMPG, PBUSH1D, PBEAML, PBEAM3, PBUSH,
+from pyNastran.bdf.cards.thermal.thermal import PCONV, PHBDY
+# PCOMPG, PBUSH1D, PBEAML, PBEAM3
 from pyNastran.op2.tables.geom.geom_common import GeomCommon
 
 
