@@ -1228,11 +1228,11 @@ def main():
     """
     from pyNastran.utils.docopt_types import docopt_types
     msg = "Usage:\n"
-    msg += "  test_bdf [-q] [-D] [-i] [-e E] [-x] [-p] [-c] [-L] [-f] BDF_FILENAME\n"
-    msg += "  test_bdf [-q] [-D] [-i] [-e E] [-x] [-p] [-c] [-L] [-d] [-f] BDF_FILENAME\n"
-    msg += "  test_bdf [-q] [-D] [-i] [-e E] [-x] [-p] [-c] [-L] [-l] [-f] BDF_FILENAME\n"
-    msg += "  test_bdf [-q] [-D] [-i] [-e E] [-p] [-r] [-f] BDF_FILENAME\n"
-    msg += "  test_bdf [-q] [-D] [-i] [-e E] [-x] [-p] [-s] [-f] BDF_FILENAME\n"
+    msg += "  test_bdf [-q] [-D] [-i] [-e E] [-x] [-p] [-c] [-L] [-f] [--encoding ENCODE] BDF_FILENAME\n"
+    msg += "  test_bdf [-q] [-D] [-i] [-e E] [-x] [-p] [-c] [-L] [-d] [-f] [--encoding ENCODE] BDF_FILENAME\n"
+    msg += "  test_bdf [-q] [-D] [-i] [-e E] [-x] [-p] [-c] [-L] [-l] [-f] [--encoding ENCODE] BDF_FILENAME\n"
+    msg += "  test_bdf [-q] [-D] [-i] [-e E] [-p] [-r] [-f] [--encoding ENCODE] BDF_FILENAME\n"
+    msg += "  test_bdf [-q] [-D] [-i] [-e E] [-x] [-p] [-s] [-f] [--encoding ENCODE] BDF_FILENAME\n"
 
     #msg += "  test_bdf [-q] [-p] [-o [<VAR=VAL>]...] BDF_FILENAME\n" #
     msg += '  test_bdf -h | --help\n'
@@ -1261,6 +1261,7 @@ def main():
     msg += '  -f, --profile   Profiles the code (default=False)\n'
     msg += '  -s, --stop      Stop after first read/write (default=False)\n'
     msg += '  -e E, --nerrors E  Allow for cross-reference errors (default=100)\n'
+    msg += '  --encoding ENCODE  the encoding method\n'
     #msg += '  -o <VAR_VAL>, --openmdao <VAR_VAL>   rejects all cards with the appropriate values applied;\n'
     #msg += '                 Uses the OpenMDAO %var syntax to replace it with value.\n'
     #msg += '                 So test_bdf -r var1=val1 var2=val2\n'
@@ -1279,6 +1280,8 @@ def main():
 
     data['--xref'] = not data['--xref']
     data['--loads'] = not data['--loads']
+    if not data['--encoding']:
+        data['--encoding'] = None
     for key, value in sorted(iteritems(data)):
         print("%-12s = %r" % (key.strip('--'), value))
 
@@ -1319,6 +1322,7 @@ def main():
             dumplines=data['--dumplines'],
             dictsort=data['--dictsort'],
             nerrors=data['--nerrors'],
+            encoding=data['--encoding'],
         )
         prof.dump_stats('bdf.profile')
 
@@ -1357,6 +1361,7 @@ def main():
             dumplines=data['--dumplines'],
             dictsort=data['--dictsort'],
             nerrors=data['--nerrors'],
+            encoding=data['--encoding'],
         )
     print("total time:  %.2f sec" % (time.time() - t0))
 
