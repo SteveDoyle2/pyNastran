@@ -2172,7 +2172,7 @@ class PLOAD2(Load):
         list_fields = ['PLOAD2', self.sid, self.pressure]
         eids = self.element_ids
         if len(eids) == 1:
-            list_fields += self.eids
+            list_fields += eids
         else:
             eids.sort()
             delta_eid = eids[-1] - eids[0] + 1
