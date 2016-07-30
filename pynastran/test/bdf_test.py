@@ -1,0 +1,148 @@
+# coding: utf-8
+"""the interface for bdf_test"""
+from __future__ import (nested_scopes, generators, division, absolute_import,
+                        print_function, unicode_literals)
+from six import PY2
+import os
+import sys
+#import time
+
+import pyNastran
+from pyNastran.bdf.test.test_bdf import run_lots_of_files
+from pyNastran.op2.test.test_op2 import get_failed_files
+from pyNastran.op2.test.op2_test import get_all_files
+from pyNastran.utils.dev import get_files_of_type
+
+def remove_marc_files(filenames):
+    """Marc files are not supported"""
+    filenames2 = []
+    for filename in filenames:
+        if 'marc' not in filename:
+            filenames2.append(filename)
+    return filenames2
+
+# def get_open_fds():
+    # import resource
+    # fds = []
+    # soft, hard = resource.getrlimit(resource.RLIMIT_NOFILE)
+    # for fd in range(0, soft):
+        # try:
+            # flags = fcntl.fcntl(fd, fcntl.F_GETFD)
+        # except IOError:
+            # continue
+        # fds.append(fd)
+    # return fds
+
+# def get_file_names_from_file_number(fds):
+    # names = []
+    # for fd in fds:
+        # names.append(os.readlink('/proc/self/fd/%d' % fd))
+    # return names
+
+def run(regenerate=True, run_nastran=False, debug=False, sum_load=True, xref=True):
+    """Runs the full BDF test suite"""
+    # F:\work\pyNastran\pyNastran\master2\pyNastran\bdf\test
+    files = get_files_of_type('tests', '.bdf')
+    files += get_files_of_type('tests', '.dat')
+    folders_file = 'tests/foldersRead.txt'
+
+    # isubcases = []
+    # save_cases = True
+    # stop_on_failure = False
+    if run_nastran:
+        if os.path.exists(r'C:\MSC.Software\MSC.Nastran\bin\nastran.exe'):
+            nastran = r'C:\MSC.Software\MSC.Nastran\bin\nastran.exe scr=yes bat=no old=no '
+        else:
+            raise RuntimeError('cant find Nastran')
+        # elif os.path.exsits():
+    else:
+        nastran = ''
+
+    if regenerate:
+        files2 = get_all_files(folders_file, '.bdf')
+        files2 += get_all_files(folders_file, '.nas')
+        files2 += get_all_files(folders_file, '.dat')
+        files2 += files
+        files2.sort()
+    else:
+        files2 = get_failed_files('failed_cases.in')
+
+    files = remove_marc_files(files2)
+    files = [fname for fname in files
+             if not os.path.basename(fname).startswith('out_')
+             and '.test_op2.' not in fname]  # removing test output files
+
+    # skip_files = []  # giant
+
+    # nstart = 0
+    # nstop = 10000
+    if os.path.exists('skippedCards.out'):
+        os.remove('skippedCards.out')
+
+    print("nFiles = %s" % len(files))
+    cid = None
+    check = True
+    debug = False
+    size = [8]
+    is_double = [False]
+    post = -1
+    failed_files = run_lots_of_files(files, debug=debug, xref=xref,
+                                     check=check, cid=cid,
+                                     nastran=nastran,
+                                     size=size, is_double=is_double, post=post,
+                                     encoding='latin1')
+    ntotal = len(files)
+    nfailed = len(failed_files)
+    npassed = ntotal - nfailed
+    sys.stderr.write('%i/%i passed\n' % (npassed, ntotal))
+
+    if PY2:
+        write = 'wb'
+    else:
+        write = 'w'
+    with open('failed_cases.in', write) as failed_cases_file:
+        for fname in failed_files:
+            failed_cases_file.write('%s\n' % fname)
+    sys.exit('finished...')
+
+def main():
+    """the interface for bdf_test"""
+    from docopt import docopt
+    ver = str(pyNastran.__version__)
+
+    msg = "Usage:\n"
+    is_release = False
+    msg += "bdf_test [-r] [-n] [-s S...] [-e E] [-L] [-x]\n"
+    msg += "  bdf_test -h | --help\n"
+    msg += "  bdf_test -v | --version\n"
+    msg += "\n"
+    msg += "Tests to see if an OP2 will work with pyNastran %s.\n" % ver
+    msg += "\n"
+    #msg += "Positional Arguments:\n"
+    #msg += "  OP2_FILENAME         Path to OP2 file\n"
+    #msg += "\n"
+    msg += "Options:\n"
+    msg += "  -r, --regenerate   Dumps the OP2 as a readable text file\n"
+    msg += "  -n, --run_nastran  Runs Nastran\n"
+    msg += "  -L, --sum_loads    Disables static/dynamic loads sum\n"
+    msg += "  -s S, --size S     Sets the field size\n"
+    msg += '  -e E, --nerrors E  Allow for cross-reference errors (default=100)\n'
+    msg += '  -x, --xref         disables cross-referencing and checks of the BDF.\n'
+    msg += '                     (default=False -> on)\n'
+    #msg += "  -c, --disablecompare  Doesn't do a validation of the vectorized result\n"
+    #msg += "  -z, --is_mag_phase    F06 Writer writes Magnitude/Phase instead of\n"
+    #msg += "                        Real/Imaginary (still stores Real/Imag); [default: False]\n"
+    #msg += "  -s <sub>, --subcase   Specify one or more subcases to parse; (e.g. 2_5)\n"
+    if len(sys.argv) == 0:
+        sys.exit(msg)
+
+    data = docopt(msg, version=ver)
+    regenerate = data['--regenerate']
+    run_nastran = data['--run_nastran']
+    sum_load = not data['--sum_loads']
+    xref = not data['--xref']
+    run(regenerate=regenerate, run_nastran=run_nastran, sum_load=sum_load,
+        xref=xref)
+
+if __name__ == '__main__':  # pragma: no cover
+    main()
