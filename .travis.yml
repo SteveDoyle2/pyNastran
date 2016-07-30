@@ -48,6 +48,8 @@ before_install:
 # per http://conda.pydata.org/docs/travis.html
 install:
   - sudo apt-get update
+  - sudo apt-get install gfortran
+
   # We do this conditionally because it saves us some downloading if the
   # version is the same.
 
