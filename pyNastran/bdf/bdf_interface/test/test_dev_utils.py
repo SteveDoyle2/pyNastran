@@ -99,7 +99,12 @@ class DevUtils(unittest.TestCase):
 
         model = BDF(debug=False)
         model.read_bdf(bdf_filename_out)
-        assert len(model.nodes) == 4, len(model.nodes)
+
+        msg = 'nnodes=%s\n' % len(model.nodes)
+        for nid, node in sorted(iteritems(model.nodes)):
+            msg += 'nid=%s xyz=%s\n' % (nid, node.xyz)
+
+        assert len(model.nodes) == 4, msg
         # os.remove(bdf_filename)
         os.remove(bdf_filename_out)
 
