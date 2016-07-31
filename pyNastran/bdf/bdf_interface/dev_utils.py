@@ -36,9 +36,6 @@ from pyNastran.bdf.bdf_interface.dev.set_operations import intersect1d_multi
 from pyNastran.bdf.cards.elements.rigid import RBE3
 
 
-if scipy.__version__ == '0.18.0':
-    raise RuntimeError('scipy v0.18.0 has a bug; please change the version')
-
 def remove_unassociated_nodes(bdf_filename, bdf_filename_out, renumber=False,
                               size=8, is_double=False):
     """
@@ -244,6 +241,11 @@ def _eq_nodes_build_tree(nodes_xyz, nids, tol, inew=None, node_set=None, neq_max
 
     # check the closest 10 nodes for equality
     deq, ieq = kdt.query(nodes_xyz[inew, :], k=neq_max, distance_upper_bound=tol)
+    if deq[0, 0] == np.inf:
+        # fix for kdtree bug
+        kdt = scipy.spatial.KDTree(nodes_xyz)
+        deq, ieq = kdt.query(nodes_xyz[inew, :], k=neq_max, distance_upper_bound=tol)
+
     if node_set is not None:
         assert len(deq) == len(nids)
     nnodes = len(nids)
