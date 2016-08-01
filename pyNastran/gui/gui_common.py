@@ -26,7 +26,8 @@ from vtk.util.numpy_support import numpy_to_vtk
 import pyNastran
 from pyNastran.bdf.cards.base_card import deprecated
 from pyNastran.utils.log import SimpleLogger
-from pyNastran.utils import print_bad_path, loadtxt_nice, integer_types
+from pyNastran.utils import print_bad_path, integer_types
+from pyNastran.utils.numpy_utils import loadtxt_nice
 
 from pyNastran.gui.qt_files.gui_qt_common import GuiCommon
 from pyNastran.gui.qt_files.scalar_bar import ScalarBar
@@ -1110,6 +1111,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.edge_actor.Modified()
         prop.Modified()
         self.vtk_interactor.Render()
+        self.log_command('on_set_edge_visibility()')
 
     def get_edges(self):
         """Create the edge actor"""
@@ -2302,6 +2304,51 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         #view_projection_inverse = inverse(projection_matrix * view_vatrix)
         #point3d = Point3D(x, y, 0)
         #return view_projection_inverse.multiply(point3d)
+
+    def hide_actors(self, except_names=None):
+        """
+        Hide all the actors
+
+        except_names : str, List[str], None
+            list of names to exclude
+        """
+        if except_names is None:
+            except_names = []
+        elif isinstance(except_names, string_types):
+            except_names = [except_names]
+
+        # hide everything but the main grid
+        for key, actor in self.geometry_actors.iteritems():
+            if key not in except_names:
+                actor.VisibilityOff()
+            #else:
+                #prop = actor.GetProperty()
+                #prop.SetLineWidth(1.5)
+                #prop.SetColor((0., 0., 0.))
+        self.hide_axes()
+        self.hide_legend()
+        #self.set_background_color_to_white()
+
+    def hide_axes(self):
+        for axis in self.axes.itervalues():
+            axis.VisibilityOff()
+        self.corner_axis.EnabledOff()
+
+    def show_axes(self):
+        for axis in self.axes.itervalues():
+            axis.VisibilityOn()
+        self.corner_axis.EnabledOn()
+
+    def hide_legend(self):
+        self.scalarBar.VisibilityOff()
+
+    def show_legend(self):
+        self.scalarBar.VisibilityOn()
+
+    def set_background_color_to_white(self):
+        white = (1., 1., 1.)
+        self.set_background_color(white)
+
 
     def on_take_screenshot(self, fname=None, magnify=None):
         """ Take a screenshot of a current view and save as a file"""

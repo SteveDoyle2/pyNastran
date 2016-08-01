@@ -8,7 +8,8 @@ from six import StringIO
 import numpy as np
 
 import pyNastran
-from pyNastran.utils import is_binary_file, object_methods, object_attributes, loadtxt_nice
+from pyNastran.utils import is_binary_file, object_methods, object_attributes
+from pyNastran.utils.numpy_utils import loadtxt_nice
 from pyNastran.utils.dev import list_print
 
 pkg_path = pyNastran.__path__[0]
