@@ -414,22 +414,35 @@ def get_row_col_map(GCi, GCj, ifo):
     cols_reversed = {}
     ndim = len(GCi.shape)
     #print('ndim=%s' % ndim)
+    #print('GCj=%s' % GCj)
+    #print('GCi=%s' % GCi)
     if ndim == 1:
         i = 0
         #nrows = np.unique(GCi)
         #ncols = np.unique(GCj)
-        for GCi in GCi:
-            if GCi not in rows:
-                rows[GCi] = i
-                rows_reversed[i] = GCi
+        for gci in GCi:
+            if gci not in rows:
+                rows[gci] = i
+                rows_reversed[i] = gci
                 i += 1
 
-        j = 0
-        for GCj in GCj:
-            if GCj not in cols:
-                cols[GCj] = j
-                cols_reversed[j] = GCj
-                j += 1
+        if ifo == 6:
+            # symmetric
+            for gcj in GCj:
+                if gcj not in rows:
+                    #print('row.gcj = %s' % str(gcj))
+                    rows[gcj] = i
+                    rows_reversed[i] = gcj
+                    i += 1
+            cols = rows
+            cols_reversed = rows_reversed
+        else:
+            j = 0
+            for gcj in GCj:
+                if gcj not in cols:
+                    cols[gcj] = j
+                    cols_reversed[j] = gcj
+                    j += 1
     else:
         #print('i0=%s j0=%s' % (i, j))
         #nrows = len(GCi)
@@ -448,31 +461,31 @@ def get_row_col_map(GCi, GCj, ifo):
 
         i = 0
         for (nid, comp) in GCi:
-            GCi = (nid, comp)
-            if GCi not in rows:
-                #print('row.GCi = %s' % str(GCi))
-                rows[GCi] = i
-                rows_reversed[i] = GCi
+            gci = (nid, comp)
+            if gci not in rows:
+                #print('row.gci = %s' % str(gci))
+                rows[gci] = i
+                rows_reversed[i] = gci
                 i += 1
         if ifo == 6:
             # symmetric
             for (nid, comp) in GCj:
-                GCj = (nid, comp)
-                if GCj not in rows:
-                    #print('row.GCj = %s' % str(GCj))
-                    rows[GCj] = i
-                    rows_reversed[i] = GCj
+                gcj = (nid, comp)
+                if gcj not in rows:
+                    #print('row.gcj = %s' % str(gcj))
+                    rows[gcj] = i
+                    rows_reversed[i] = gcj
                     i += 1
             cols = rows
             cols_reversed = rows_reversed
         else:
             j = 0
             for (nid, comp) in GCj:
-                GCj = (nid, comp)
-                if GCj not in cols:
-                    #print('col.GCj = %s' % str(GCj))
-                    cols[GCj] = j
-                    cols_reversed[j] = GCj
+                gcj = (nid, comp)
+                if gcj not in cols:
+                    #print('col.gcj = %s' % str(gcj))
+                    cols[gcj] = j
+                    cols_reversed[j] = gcj
                     j += 1
 
     nrows = len(rows)
@@ -606,6 +619,7 @@ def _fill_dense_column_matrix(self, nrows, ncols, ndim, rows, cols, apply_symmet
     if self.is_complex:
         M = zeros((nrows, ncols), dtype='complex128')
         if self.ifo == 6 and apply_symmetry:  # symmetric
+            assert nrows == ncols, 'nrows=%s ncols=%s' % (nrows, ncols)
             for (gcj, gci, reali, complexi) in zip(self.GCj, self.GCi,
                                                    self.Real, self.Complex):
                 i = rows[gci]
@@ -618,8 +632,10 @@ def _fill_dense_column_matrix(self, nrows, ncols, ndim, rows, cols, apply_symmet
                 i = rows[gci]
                 j = cols[gcj]
     else:
+        #print('nrows=%s ncols=%s' % (nrows, ncols))
         M = zeros((nrows, ncols), dtype='float64')
         if self.ifo == 6 and apply_symmetry:  # symmetric
+            assert nrows == ncols, 'nrows=%s ncols=%s' % (nrows, ncols)
             for (gcj, gci, reali) in zip(self.GCj, self.GCi, self.Real):
                 i = rows[gci]
                 j = cols[gcj]

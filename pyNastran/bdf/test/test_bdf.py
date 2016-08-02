@@ -741,7 +741,7 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
             #assert 'DESSUB' in subcase or 'DESGLB' in subcase, subcase
         if 'DESSUB' in subcase:
             value, options = subcase.get_parameter('DESSUB')
-            assert value in fem2.dconstrs, 'value=%s not in dconstrs' % value
+            assert value in fem2.dconstrs, 'value=%s not in dconstrs; Allowed DCONSTRs=%s' % (value, np.unique(list(fem2.dconstrs.keys())))
 
         if analysis == 'STATICS':
             sol = 101
@@ -1143,12 +1143,59 @@ def get_matrix_stats(fem1, fem2):
                 dmig.get_matrix()
             else:
                 print("statistics not available - "
-                      "matrix.type=%s matrix.name=%s" % (dmig.type, dmig.name))
+                      "dmig.type=%s matrix.name=%s" % (dmig.type, dmig.name))
         except:
-            print("*stats - matrix.type=%s name=%s  matrix=\n%s"
+            print("*stats - dmig.type=%s name=%s  matrix=\n%s"
                   % (dmig.type, dmig.name, str(dmig)))
             raise
 
+    for (key, dmi) in sorted(iteritems(fem1.dmis)):
+        try:
+            if isinstance(dmi, NastranMatrix):
+                dmi.get_matrix()
+            else:
+                print("statistics not available - "
+                      "dmi.type=%s matrix.name=%s" % (dmi.type, dmi.name))
+        except:
+            print("*stats - dmi.type=%s name=%s  matrix=\n%s"
+                  % (dmi.type, dmi.name, str(dmi)))
+            raise
+
+    for (key, dmij) in sorted(iteritems(fem1.dmijs)):
+        try:
+            if isinstance(dmij, NastranMatrix):
+                dmij.get_matrix()
+            else:
+                print("statistics not available - "
+                      "dmij.type=%s matrix.name=%s" % (dmij.type, dmij.name))
+        except:
+            print("*stats - dmij.type=%s name=%s  matrix=\n%s"
+                  % (dmij.type, dmij.name, str(dmi)))
+            raise
+
+    for (key, dmiji) in sorted(iteritems(fem1.dmijis)):
+        try:
+            if isinstance(dmiji, NastranMatrix):
+                dmiji.get_matrix()
+            else:
+                print("statistics not available - "
+                      "dmiji.type=%s matrix.name=%s" % (dmiji.type, dmiji.name))
+        except:
+            print("*stats - dmiji.type=%s name=%s  matrix=\n%s"
+                  % (dmiji.type, dmiji.name, str(dmi)))
+            raise
+
+    for (key, dmik) in sorted(iteritems(fem1.dmiks)):
+        try:
+            if isinstance(dmik, NastranMatrix):
+                dmik.get_matrix()
+            else:
+                print("statistics not available - "
+                      "dmik.type=%s matrix.name=%s" % (dmik.type, dmik.name))
+        except:
+            print("*stats - dmik.type=%s name=%s  matrix=\n%s"
+                  % (dmik.type, dmik.name, str(dmi)))
+            raise
 
 def compare(fem1, fem2, xref=True, check=True, print_stats=True, quiet=False):
     diff_cards = compare_card_count(fem1, fem2, print_stats=print_stats, quiet=quiet)
@@ -1181,11 +1228,11 @@ def main():
     """
     from pyNastran.utils.docopt_types import docopt_types
     msg = "Usage:\n"
-    msg += "  test_bdf [-q] [-D] [-i] [-e E] [-x] [-p] [-c] [-L] [-f] BDF_FILENAME\n"
-    msg += "  test_bdf [-q] [-D] [-i] [-e E] [-x] [-p] [-c] [-L] [-d] [-f] BDF_FILENAME\n"
-    msg += "  test_bdf [-q] [-D] [-i] [-e E] [-x] [-p] [-c] [-L] [-l] [-f] BDF_FILENAME\n"
-    msg += "  test_bdf [-q] [-D] [-i] [-e E] [-p] [-r] [-f] BDF_FILENAME\n"
-    msg += "  test_bdf [-q] [-D] [-i] [-e E] [-x] [-p] [-s] [-f] BDF_FILENAME\n"
+    msg += "  test_bdf [-q] [-D] [-i] [-e E] [-x] [-p] [-c] [-L] [-f] [--encoding ENCODE] BDF_FILENAME\n"
+    msg += "  test_bdf [-q] [-D] [-i] [-e E] [-x] [-p] [-c] [-L] [-d] [-f] [--encoding ENCODE] BDF_FILENAME\n"
+    msg += "  test_bdf [-q] [-D] [-i] [-e E] [-x] [-p] [-c] [-L] [-l] [-f] [--encoding ENCODE] BDF_FILENAME\n"
+    msg += "  test_bdf [-q] [-D] [-i] [-e E] [-p] [-r] [-f] [--encoding ENCODE] BDF_FILENAME\n"
+    msg += "  test_bdf [-q] [-D] [-i] [-e E] [-x] [-p] [-s] [-f] [--encoding ENCODE] BDF_FILENAME\n"
 
     #msg += "  test_bdf [-q] [-p] [-o [<VAR=VAL>]...] BDF_FILENAME\n" #
     msg += '  test_bdf -h | --help\n'
@@ -1214,6 +1261,7 @@ def main():
     msg += '  -f, --profile   Profiles the code (default=False)\n'
     msg += '  -s, --stop      Stop after first read/write (default=False)\n'
     msg += '  -e E, --nerrors E  Allow for cross-reference errors (default=100)\n'
+    msg += '  --encoding ENCODE  the encoding method\n'
     #msg += '  -o <VAR_VAL>, --openmdao <VAR_VAL>   rejects all cards with the appropriate values applied;\n'
     #msg += '                 Uses the OpenMDAO %var syntax to replace it with value.\n'
     #msg += '                 So test_bdf -r var1=val1 var2=val2\n'
@@ -1232,6 +1280,8 @@ def main():
 
     data['--xref'] = not data['--xref']
     data['--loads'] = not data['--loads']
+    if not data['--encoding']:
+        data['--encoding'] = None
     for key, value in sorted(iteritems(data)):
         print("%-12s = %r" % (key.strip('--'), value))
 
@@ -1272,6 +1322,7 @@ def main():
             dumplines=data['--dumplines'],
             dictsort=data['--dictsort'],
             nerrors=data['--nerrors'],
+            encoding=data['--encoding'],
         )
         prof.dump_stats('bdf.profile')
 
@@ -1310,6 +1361,7 @@ def main():
             dumplines=data['--dumplines'],
             dictsort=data['--dictsort'],
             nerrors=data['--nerrors'],
+            encoding=data['--encoding'],
         )
     print("total time:  %.2f sec" % (time.time() - t0))
 

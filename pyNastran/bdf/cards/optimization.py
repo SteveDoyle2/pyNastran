@@ -1898,7 +1898,13 @@ class DVCREL1(OptConstraint):  # similar to DVMREL1
             the BDF object
         """
         msg = ', which is required by DVCREL1 name=%r' % self.type
-        self.eid = model.Element(self.eid, msg=msg)
+        if self.Type in ['CQUAD4', 'CTRIA3', 'CBAR', 'CBEAM', 'CELAS1', 'CELAS2', 'CELAS4']:
+            self.eid = model.Element(self.eid, msg=msg)
+        elif self.Type in ['CONM1', 'CONM2', 'CMASS2', 'CMASS4']:
+            self.eid = model.masses[self.eid]
+        #elif Type in ['CBUSH']:
+        else:
+            raise NotImplementedError(self.Type)
         self.eid_ref = self.eid
         self.dvids = [model.Desvar(dvid, msg) for dvid in self.dvids]
 

@@ -234,13 +234,18 @@ def _eq_nodes_build_tree(nodes_xyz, nids, tol, inew=None, node_set=None, neq_max
     """helper function for `bdf_equivalence_nodes`"""
     # build the kdtree
     try:
-        kdt = scipy.spatial.cKDTree(nodes_xyz)
+        kdt = scipy.spatial.cKDTree(nodes_xyz)  # breaks in v0.18.0
     except RuntimeError:
         print(nodes_xyz)
         raise RuntimeError(nodes_xyz)
 
     # check the closest 10 nodes for equality
     deq, ieq = kdt.query(nodes_xyz[inew, :], k=neq_max, distance_upper_bound=tol)
+    if deq[0, 0] == np.inf:
+        # fix for kdtree bug
+        kdt = scipy.spatial.KDTree(nodes_xyz)
+        deq, ieq = kdt.query(nodes_xyz[inew, :], k=neq_max, distance_upper_bound=tol)
+
     if node_set is not None:
         assert len(deq) == len(nids)
     nnodes = len(nids)
