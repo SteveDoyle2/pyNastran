@@ -27,6 +27,27 @@ class BDFAttributes(object):
         self.is_msc = False
 
     def object_attributes(self, mode='public', keys_to_skip=None):
+        """
+        List the names of attributes of a class as strings. Returns public
+        attributes as default.
+
+        Parameters
+        ----------
+        mode : str
+            defines what kind of attributes will be listed
+            * 'public' - names that do not begin with underscore
+            * 'private' - names that begin with single underscore
+            * 'both' - private and public
+            * 'all' - all attributes that are defined for the object
+        keys_to_skip : List[str]; default=None -> []
+            names to not consider to avoid deprecation warnings
+
+        Returns
+        -------
+        attribute_names : List[str]
+            sorted list of the names of attributes of a given type or None
+            if the mode is wrong
+        """
         if keys_to_skip is None:
             keys_to_skip = []
 
@@ -45,6 +66,29 @@ class BDFAttributes(object):
         return object_attributes(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
 
     def object_methods(self, mode='public', keys_to_skip=None):
+        """
+        List the names of methods of a class as strings. Returns public methods
+        as default.
+
+        Parameters
+        ----------
+        obj : instance
+            the object for checking
+        mode : str
+            defines what kind of methods will be listed
+            * "public" - names that do not begin with underscore
+            * "private" - names that begin with single underscore
+            * "both" - private and public
+            * "all" - all methods that are defined for the object
+        keys_to_skip : List[str]; default=None -> []
+            names to not consider to avoid deprecation warnings
+
+        Returns
+        -------
+        method : List[str]
+            sorted list of the names of methods of a given type
+            or None if the mode is wrong
+        """
         if keys_to_skip is None:
             keys_to_skip = []
         my_keys_to_skip = []
@@ -686,6 +730,7 @@ class BDFAttributes(object):
 
     @property
     def subcases(self):
+        """gets the subcases"""
         if self.case_control_deck is None:
             return {}
         return self.case_control_deck.subcases
@@ -701,14 +746,17 @@ class BDFAttributes(object):
 
     @property
     def nnodes(self):
+        """gets the number of GRIDs"""
         return len(self.nodes)
 
     @property
     def node_ids(self):
+        """gets the GRID ids"""
         return self.nodes.keys()
 
     @property
     def point_ids(self):
+        """gets the GRID, SPOINT, EPOINT ids"""
         if self.spoints is not None and self.epoints is not None:
             return set(self.node_ids) | self.spoints.points | self.epoints.points
         elif self.spoints is not None:
@@ -717,21 +765,17 @@ class BDFAttributes(object):
             return set(self.node_ids) | self.epoints.points
         return set(self.node_ids)
 
-    #def get_nodes(self):
-        #nodes = []
-        #for nid, node in sorted(iteritems(self.nodes)):
-            #nodes.append(node)
-        #return nodes
-
     #--------------------
     # Elements CARDS
 
     @property
     def nelements(self):
+        """gets the number of element"""
         return len(self.elements)
 
     @property
     def element_ids(self):
+        """gets the element ids"""
         return self.elements.keys()
 
     #--------------------
@@ -739,40 +783,48 @@ class BDFAttributes(object):
 
     @property
     def nproperties(self):
+        """gets the number of properties"""
         return len(self.properties)
 
     @property
     def property_ids(self):
+        """gets the property ids"""
         return self.properties.keys()
 
     #--------------------
     # Material CARDS
 
     @property
-    def material_ids(self):
-        return self.materials.keys()
+    def nmaterials(self):
+        """gets the number of materials"""
+        return len(self.materials)
 
     @property
-    def nmaterials(self):
-        return len(self.materials)
+    def material_ids(self):
+        """gets the material ids"""
+        return self.materials.keys()
 
     #--------------------
     # Coords CARDS
 
     @property
-    def coord_ids(self):
-        return self.coords.keys()
+    def ncoords(self):
+        """gets the number of coordinate systems"""
+        return len(self.coords)
 
     @property
-    def ncoords(self):
-        return len(self.coords)
+    def coord_ids(self):
+        """gets the number of coordinate system ids"""
+        return self.coords.keys()
 
     #--------------------
 
     @property
     def ncaeros(self):
+        """gets the number of CAEROx panels"""
         return len(self.caeros)
 
     @property
     def caero_ids(self):
+        """gets the CAEROx ids"""
         return self.caeros.keys()

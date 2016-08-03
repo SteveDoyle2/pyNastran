@@ -462,8 +462,11 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         """
         Sets the float precision.
 
-        :param precision:  string of 'single'/'float32' or
-          'double'/'float64' that is used by all the objects
+        Parameters
+        ----------
+        precision : str
+            string of 'single'/'float32' or 'double'/'float64'
+            that is used by all the objects
         """
         if precision in ('double', 'float64'):
             self.float = 'float64'
@@ -1354,9 +1357,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             dictionary of 7 character variable names to map.
 
         .. code-block:: python
-
           GRID, 1, %xVar, %yVar, %zVar
-
           >>> dict_of_vars = {'xVar': 1.0, 'yVar', 2.0, 'zVar':3.0}
           >>> bdf = BDF()
           >>> bdf.set_dynamic_syntax(dict_of_vars)
@@ -1365,7 +1366,8 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
 
         .. note:: Case sensitivity is supported.
         .. note:: Variables should be 7 characters or less to fit in an
-                     8-character field.
+           8-character field.
+
         .. warning:: Type matters!
         """
         self.dict_of_vars = {}

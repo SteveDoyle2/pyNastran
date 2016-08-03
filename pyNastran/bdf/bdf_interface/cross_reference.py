@@ -373,7 +373,7 @@ class XrefMesh(BDFAttributes):
                                            xref_aero=False, xref_masses=False,
                                            xref_sets=False)
 
-        .. warning:: be careful if you call this method
+        .. warning:: be careful if you call this method with False values
         """
         if xref:
             self.log.debug("Cross Referencing...")

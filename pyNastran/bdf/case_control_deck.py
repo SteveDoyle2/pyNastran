@@ -286,9 +286,13 @@ class CaseControlDeck(object):
 
     def add_parameter_to_global_subcase(self, param):
         """
-        Takes in a single-lined string and adds it to the global Subcase.
+        Takes in a single-lined string and adds it to the global subcase.
 
-        :param param: the variable to add
+        Parameters
+        ----------
+        param : str
+            the variable to add
+
         .. note:: dont worry about overbounding the line
 
         >>> bdf = BDF()
