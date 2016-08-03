@@ -65,7 +65,7 @@ def get_patch_edges(edge_to_eid_map, xyz_cid0, is_symmetric=True,
     if is_symmetric:
         #for eid, elem in iteritems(bdf_model.elements):
             #centroid = np.average(a)
-        key0 = list(xyz_cid0.keys())[0]
+        key0 = next(iter(xyz_cid0))
         ymin = xyz_cid0[key0][0]
         for nid, xyz in iteritems(xyz_cid0):
             ymin = min(ymin, xyz[1])

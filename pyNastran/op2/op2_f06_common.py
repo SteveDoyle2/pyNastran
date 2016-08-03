@@ -441,7 +441,7 @@ class OP2_F06_Common(object):
         for res_type in res_types:
             if not res_type:
                 continue
-            key0 = list(res_type.keys())[0]
+            key0 = next(iter(res_type))
             if not isinstance(key0, integer_types) and not isinstance(res_key, integer_types):
                 if not type(key0) == type(res_key):
                     msg = 'bad compression check...keys0=%s type(key0)=%s res_key=%s type(res_key)=%s' % (

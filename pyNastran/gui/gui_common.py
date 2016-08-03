@@ -26,7 +26,8 @@ from vtk.util.numpy_support import numpy_to_vtk
 import pyNastran
 from pyNastran.bdf.cards.base_card import deprecated
 from pyNastran.utils.log import SimpleLogger
-from pyNastran.utils import print_bad_path, loadtxt_nice, integer_types
+from pyNastran.utils import print_bad_path, integer_types
+from pyNastran.utils.numpy_utils import loadtxt_nice
 
 from pyNastran.gui.qt_files.gui_qt_common import GuiCommon
 from pyNastran.gui.qt_files.scalar_bar import ScalarBar
@@ -1110,6 +1111,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.edge_actor.Modified()
         prop.Modified()
         self.vtk_interactor.Render()
+        self.log_command('on_set_edge_visibility()')
 
     def get_edges(self):
         """Create the edge actor"""
@@ -2012,8 +2014,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         color : (float, float, float)
             RGB values as 0.0 <= rgb <= 1.0
 
-        .. note :: no header line is required
-        .. note :: nodes are in the global frame
+        .. note:: no header line is required
+        .. note:: nodes are in the global frame
 
         .. todo:: support changing the name
         .. todo:: support changing the color
@@ -2039,7 +2041,6 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             csv_filename, name, str(color)))
 
     def create_cell_picker(self):
-        # cell picker
         self.cell_picker = vtk.vtkCellPicker()
         self.node_picker = vtk.vtkPointPicker()
         self.cell_picker.SetTolerance(0.0005)
@@ -2304,7 +2305,52 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         #point3d = Point3D(x, y, 0)
         #return view_projection_inverse.multiply(point3d)
 
-    def on_take_screenshot(self, fname=None, magnification=None):
+    def hide_actors(self, except_names=None):
+        """
+        Hide all the actors
+
+        except_names : str, List[str], None
+            list of names to exclude
+        """
+        if except_names is None:
+            except_names = []
+        elif isinstance(except_names, string_types):
+            except_names = [except_names]
+
+        # hide everything but the main grid
+        for key, actor in self.geometry_actors.iteritems():
+            if key not in except_names:
+                actor.VisibilityOff()
+            #else:
+                #prop = actor.GetProperty()
+                #prop.SetLineWidth(1.5)
+                #prop.SetColor((0., 0., 0.))
+        self.hide_axes()
+        self.hide_legend()
+        #self.set_background_color_to_white()
+
+    def hide_axes(self):
+        for axis in self.axes.itervalues():
+            axis.VisibilityOff()
+        self.corner_axis.EnabledOff()
+
+    def show_axes(self):
+        for axis in self.axes.itervalues():
+            axis.VisibilityOn()
+        self.corner_axis.EnabledOn()
+
+    def hide_legend(self):
+        self.scalarBar.VisibilityOff()
+
+    def show_legend(self):
+        self.scalarBar.VisibilityOn()
+
+    def set_background_color_to_white(self):
+        white = (1., 1., 1.)
+        self.set_background_color(white)
+
+
+    def on_take_screenshot(self, fname=None, magnify=None):
         """ Take a screenshot of a current view and save as a file"""
         if fname is None or fname is False:
             filt = QtCore.QString()
@@ -2349,16 +2395,16 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             else:
                 render_large.SetInput(self.rend)
 
-            if magnification is None:
+            if magnify is None:
                 magnify_min = 1
                 magnify = self.magnify if self.magnify > magnify_min else magnify_min
             else:
-                magnify = magnification
+                magnify = magnify
             assert isinstance(magnify, integer_types), 'magnify=%r type=%s' % (magnify, type(magnify))
             self._update_text_size(magnify=magnify)
             render_large.SetMagnification(magnify)
 
-            # multiply linewidth by magnification
+            # multiply linewidth by magnify
             line_widths0 = {}
             point_sizes0 = {}
             for key, geom_actor in iteritems(self.geometry_actors):
@@ -2402,8 +2448,9 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                 writer.SetInputConnection(render_large.GetOutputPort())
             writer.SetFileName(fname)
             writer.Write()
+
             #self.log_info("Saved screenshot: " + fname)
-            self.log_command('on_take_screenshot(%r)' % fname)
+            self.log_command('on_take_screenshot(%r, magnify=%s)' % (fname, magnify))
             self._update_text_size(magnify=1.0)
 
             # show corner axes
@@ -2424,10 +2471,10 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
     def _update_text_size(self, magnify=1.0):
         """Internal method for updating the bottom-left text when we go to take a picture"""
         text_size = int(14 * magnify)
-        for itext, text_actor in iteritems(self.text_actors):
+        for text_actor in itervalues(self.text_actors):
             text_prop = text_actor.GetTextProperty()
             text_prop.SetFontSize(text_size)
-        self.itext += 1  # TODO: why is htis here?
+        self.itext += 1  # TODO: why is this here?
 
     def add_geometry(self):
         """
@@ -3934,7 +3981,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
         #representation = group.representation
         alt_prop = self.geometry_properties[name]
-        representation = alt_prop.representation
+        #representation = alt_prop.representation
         #is_visible1 = alt_prop.is_visible
         is_visible1 = bool(actor.GetVisibility())
         is_visible2 = group.is_visible

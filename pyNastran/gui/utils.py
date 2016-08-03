@@ -8,7 +8,9 @@ from codecs import open as codec_open
 import numpy as np
 from numpy import loadtxt
 import pyNastran
-from pyNastran.utils import _filename, loadtxt_nice
+from pyNastran.utils import _filename
+from pyNastran.utils.numpy_utils import loadtxt_nice
+
 
 def check_for_newer_version():
     """

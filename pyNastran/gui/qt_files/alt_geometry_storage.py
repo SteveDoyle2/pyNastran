@@ -2,6 +2,13 @@ from copy import deepcopy
 
 class AltGeometry(object):
 
+    def __repr__(self):
+        msg = ('AltGeometry(%s, color=%s, line_width=%s, opacity=%s,\n'
+              ' point_size=%s, bar_scale=%s, representation=%r, is_visible=%s)' % (
+                  self.name, str(self.color), self.line_width, self.opacity, self.point_size,
+                  self.bar_scale, self.representation, self.is_visible))
+        return msg
+
     def __init__(self, parent, name, color=None, line_width=1, opacity=0.0,
                  point_size=1, bar_scale=1.0, representation='main', is_visible=True):
         """
@@ -132,3 +139,4 @@ class AltGeometry(object):
     def representation(self, representation):
         assert representation in ['main', 'toggle', 'wire', 'point', 'surface', 'wire+point'], 'representation=%r is invalid' % representation
         self._representation = representation
+
