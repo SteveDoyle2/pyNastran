@@ -381,6 +381,8 @@ def object_attributes(obj, mode='public', keys_to_skip=None):
         * 'private' - names that begin with single underscore
         * 'both' - private and public
         * 'all' - all attributes that are defined for the object
+    keys_to_skip : List[str]; default=None -> []
+        names to not consider to avoid deprecation warnings
 
     Returns
     -------
