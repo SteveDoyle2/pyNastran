@@ -680,8 +680,10 @@ class BDFMethods(BDFAttributes):
         cid : int; default=0
             the cid to resolve the nodes to
 
-        .. note:: loses association with previous coordinate systems so to go
-                  back requires another FEM
+        .. note::
+
+           loses association with previous coordinate systems so to go
+           back requires another FEM
         """
         assert cid in self.coords, ('cannot resolve nodes to '
                                     'cid=%r b/c it doesnt exist' % cid)

@@ -3,6 +3,7 @@
 
 class GetMethodsDeprecated(object):
     """defines deprecated methods for GetMethods"""
+
     def getElementIDsWithPID(self, pid):
         """
         Gets all the element IDs with a specific property ID
@@ -17,23 +18,25 @@ class GetMethodsDeprecated(object):
         elementIDs : List[int]
             as a list
 
-        .. deprecated:: will be removed in version 0.8
-
-        The same functionality may be used by calling
-          >>> self.getElementIDsWithPIDs([pid], mode='list')
+        .. deprecated:: 0.7
+           Use :func:`get_element_ids_list_with_pids([pid], mode='list')`
         """
         self.deprecated('getElementIDsWithPID(pid)', 'get_element_ids_list_with_pids([pid])', '0.8')
-        return self.getElementIDsWithPIDs([pid], mode='list')
+        return self.get_element_ids_list_with_pids([pid], mode='list')
 
     def Flfact(self, sid, msg):
         """
-        .. deprecated:: will be removed in version 0.8
+        .. deprecated:: 0.7
+            Use :func:`FLFACT(sid, msg)`
         """
         self.deprecated('Flfact(sid)', 'FLFACT(sid)', '0.8')
         return self.FLFACT(sid, msg)
 
     def getNodes(self):
-        """deprecated"""
+        """
+        .. deprecated:: 0.7
+            Use :func:`get_nodes()`
+        """
         self.deprecated('getNodes()', 'get_nodes()', '0.8')
         return self.get_nodes()
 

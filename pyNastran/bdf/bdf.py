@@ -127,9 +127,8 @@ from pyNastran.bdf.field_writer_16 import print_field_16
 
 
 
-def read_bdf(bdf_filename=None,
-             validate=True, xref=True, punch=False, encoding=None,
-             log=None, debug=True, mode='msc'):
+def read_bdf(bdf_filename=None, validate=True, xref=True, punch=False,
+             encoding=None, log=None, debug=True, mode='msc'):
     """
     Creates the BDF object
 
@@ -161,19 +160,19 @@ def read_bdf(bdf_filename=None,
 
     .. code-block:: python
 
-        >>> bdf = BDF()
-        >>> bdf.read_bdf(bdf_filename, xref=True)
-        >>> g1 = bdf.Node(1)
-        >>> print(g1.get_position())
-        [10.0, 12.0, 42.0]
-        >>> bdf.write_card(bdf_filename2)
-        >>> print(bdf.card_stats())
+       >>> bdf = BDF()
+       >>> bdf.read_bdf(bdf_filename, xref=True)
+       >>> g1 = bdf.Node(1)
+       >>> print(g1.get_position())
+       [10.0, 12.0, 42.0]
+       >>> bdf.write_card(bdf_filename2)
+       >>> print(bdf.card_stats())
 
-        ---BDF Statistics---
-        SOL 101
-        bdf.nodes = 20
-        bdf.elements = 10
-        etc.
+       ---BDF Statistics---
+       SOL 101
+       bdf.nodes = 20
+       bdf.elements = 10
+       etc.
 
     .. note :: this method will change in order to return an object that
                does not have so many methods
@@ -987,19 +986,19 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
         .. code-block:: python
 
-            >>> bdf = BDF()
-            >>> bdf.read_bdf(bdf_filename, xref=True)
-            >>> g1 = bdf.Node(1)
-            >>> print(g1.get_position())
-            [10.0, 12.0, 42.0]
-            >>> bdf.write_card(bdf_filename2)
-            >>> print(bdf.card_stats())
+          >>> bdf = BDF()
+          >>> bdf.read_bdf(bdf_filename, xref=True)
+          >>> g1 = bdf.Node(1)
+          >>> print(g1.get_position())
+          [10.0, 12.0, 42.0]
+          >>> bdf.write_card(bdf_filename2)
+          >>> print(bdf.card_stats())
 
-            ---BDF Statistics---
-            SOL 101
-            bdf.nodes = 20
-            bdf.elements = 10
-            etc.
+          ---BDF Statistics---
+          SOL 101
+          bdf.nodes = 20
+          bdf.elements = 10
+          etc.
         """
         self._read_bdf_helper(bdf_filename, encoding, punch, read_includes)
 
@@ -1428,11 +1427,11 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
           >>> bdf = BDF()
           >>> bdf.set_dynamic_syntax(dict_of_vars)
           >>> bdf,read_bdf(bdf_filename, xref=True)
-          >>>
 
         .. note:: Case sensitivity is supported.
         .. note:: Variables should be 7 characters or less to fit in an
-                     8-character field.
+          8-character field.
+
         .. warning:: Type matters!
         """
         self.dict_of_vars = {}
@@ -1488,13 +1487,13 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
         .. code-block:: python
 
-        >>> card_lines = ['GRID,1,,1.0,2.0,3.0,,']
-        >>> model = BDF()
-        >>> fields, card_name = model.process_card(card_lines)
-        >>> fields
-        ['GRID', '1', '', '1.0', '2.0', '3.0']
-        >>> card_name
-        'GRID'
+            >>> card_lines = ['GRID,1,,1.0,2.0,3.0,,']
+            >>> model = BDF()
+            >>> fields, card_name = model.process_card(card_lines)
+            >>> fields
+            ['GRID', '1', '', '1.0', '2.0', '3.0']
+            >>> card_name
+            'GRID'
         """
         card_name = self._get_card_name(card_lines)
         fields = to_fields(card_lines, card_name)
@@ -1522,6 +1521,13 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             False : this is a list of lines
         has_none : bool; default=True
             can there be trailing Nones in the card data (e.g. ['GRID, 1, 2, 3.0, 4.0, 5.0, '])
+
+        Returns
+        -------
+        card_object : BDFCard()
+            the card object representation of card
+        card : list[str]
+            the card with empty fields removed
         """
         card_name = card_name.upper()
         self._increase_card_count(card_name)
@@ -1552,6 +1558,23 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         """
         Creates a BDFCard object, which is really just a list that
         allows indexing past the last field
+
+        Parameters
+        ----------
+        card_lines: list[str]
+            the list of the card lines
+            input is list of lines -> ['GRID, 1, 2, 3.0, 4.0, 5.0']
+        card_name : str
+            the card_name -> 'GRID'
+        has_none : bool; default=True
+            ???
+
+        Returns
+        -------
+        card_obj : BDFCard
+            the BDFCard object
+        card : list[str]
+            the card with empty fields removed
         """
         card_name = card_name.upper()
         self._increase_card_count(card_name)
@@ -1579,6 +1602,23 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         """
         Creates a BDFCard object, which is really just a list that
         allows indexing past the last field
+
+        Parameters
+        ----------
+        card_lines: list[str]
+            the list of the card fields
+            input is list of fields -> ['GRID', '1', '2', '3.0', '4.0', '5.0']
+        card_name : str
+            the card_name -> 'GRID'
+        has_none : bool; default=True
+            can there be trailing Nones in the card data (e.g. ['GRID', '1', '2', '3.0', '4.0', '5.0'])
+
+        Returns
+        -------
+        card_obj : BDFCard
+            the BDFCard object
+        card : list[str]
+            the card with empty fields removed
         """
         card_name = card_name.upper()
         self._increase_card_count(card_name)

@@ -2781,10 +2781,15 @@ class FLUTTER(BaseCard):
         """
         Gets complicated parameters on the FLUTTER card
 
-        :param n:     the field number to update
-        :type n:      int
-        :param value: the value for the appropriate field
-        :type field:  varies
+        Parameters
+        ----------
+        n : int
+            the field number to update
+
+        Returns
+        -------
+        value : int/float/str
+            the value for the appropriate field
         """
         if n == 7:
             if self.method in ['K', 'KE']:
@@ -2801,10 +2806,12 @@ class FLUTTER(BaseCard):
         """
         Updates complicated parameters on the FLUTTER card
 
-        :param n:     the field number to update
-        :type n:      int
-        :param value: the value for the appropriate field
-        :type field:  varies
+        Parameters
+        ----------
+        n : int
+            the field number to update
+        value : int/float/str
+            the value for the appropriate field
         """
         if n == 7:
             if self.method in ['K', 'KE']:
@@ -3287,6 +3294,7 @@ class MONPNT1(BaseCard):
     def __repr__(self):
         return self.write_card()
 
+
 class PAERO1(BaseCard):
     """
     Defines associated bodies for the panels in the Doublet-Lattice method.
@@ -3302,10 +3310,15 @@ class PAERO1(BaseCard):
         """
         Gets complicated parameters on the PAERO1 card
 
-        :param n:     the field number to update
-        :type n:      int
-        :param value: the value for the appropriate field
-        :type field:  varies
+        Parameters
+        ----------
+        n : int
+            the field number to update
+
+        Returns
+        -------
+        value : int
+            the value for the appropriate field
         """
         return self.Bi[n - 1]
 
@@ -3313,10 +3326,12 @@ class PAERO1(BaseCard):
         """
         Updates complicated parameters on the PAERO1 card
 
-        :param n:     the field number to update
-        :type n:      int
-        :param value: the value for the appropriate field
-        :type field:  varies
+        Parameters
+        ----------
+        n : int
+            the field number to update
+        value : varies
+            the value for the appropriate field
         """
         self.Bi[n - 1] = value
 
@@ -3534,10 +3549,15 @@ class PAERO3(BaseCard):
         """
         Gets complicated parameters on the PAERO3 card
 
-        :param n:     the field number to update
-        :type n:      int
-        :param value: the value for the appropriate field
-        :type field:  varies
+        Parameters
+        ----------
+        n : int
+            the field number to update
+
+        Returns
+        -------
+        value : varies
+            the value for the appropriate field
         """
         nnew = n - 6
         if nnew < 0:
@@ -3554,10 +3574,12 @@ class PAERO3(BaseCard):
         """
         Updates complicated parameters on the PAERO3 card
 
-        :param n:     the field number to update
-        :type n:      int
-        :param value: the value for the appropriate field
-        :type field:  varies
+        Parameters
+        ----------
+        n : int
+            the field number to update
+        value :varies
+            the value for the appropriate field
         """
         nnew = n - 6
         if nnew < 0:
@@ -4373,10 +4395,15 @@ class TRIM(BaseCard):
         """
         Gets complicated parameters on the TRIM card
 
-        :param n:     the field number to update
-        :type n:      int
-        :param value: the value for the appropriate field
-        :type field:  varies
+        Parameters
+        ----------
+        n : int
+            the field number to update
+
+        Returns
+        -------
+        value : varies
+            the value for the appropriate field
         """
         ni = 4
         for (i, label, ux) in zip(count(), self.labels, self.uxs):
@@ -4397,10 +4424,12 @@ class TRIM(BaseCard):
         """
         Updates complicated parameters on the TRIM card
 
-        :param n:     the field number to update
-        :type n:      int
-        :param value: the value for the appropriate field
-        :type field:  varies
+        Parameters
+        ----------
+        n : int
+            the field number to update
+        value : varies
+            the value for the appropriate field
         """
         ni = 4
         for (i, label, ux) in zip(count(), self.labels, self.uxs):
