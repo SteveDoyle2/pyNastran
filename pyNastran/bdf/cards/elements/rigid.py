@@ -1041,3 +1041,109 @@ class RBE3(RigidElement):
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         return self.comment + print_card_8(card)
+
+
+class RSPLINE(RigidElement):
+    type = 'RSPLINE'
+    """
+    Defines multipoint constraints for the interpolation of displacements at grid points.
+
+    +---------+-----+-----+----+----+--------+----+----+----+
+    |    1    |  2  |  3  |  4 |  5 |    6   |  7 |  8 |  9 |
+    +=========+=====+=====+====+====+========+====+====+====+
+    | RSPLINE | EID | D/L | G1 | G2 |   C2   | G3 | C3 | G4 |
+    +---------+-----+-----+----+----+--------+----+----+----+
+    |         |  C4 |  G5 | C5 | G6 | -etc.- |    |    |    |
+    +---------+-----+-----+----+----+--------+----+----+----+
+    """
+    def __init__(self, eid, nids, components, diameter_ratio=0.1, comment=''):
+        RigidElement.__init__(self)
+        if comment:
+            self._comment = comment
+        self.eid = eid
+        self.nids = nids
+        # Components to be constrained
+        self.components = components
+
+        # Ratio of the diameter of the elastic tube to the sum of the lengths of all segments
+        self.diameter_ratio = diameter_ratio
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        eid = integer(card, 1, 'eid')
+        diameter_ratio = double_or_blank(card, 2, 'diameter_ratio', 0.1)
+        nfields = len(card)
+        assert nfields % 2 == 1, 'nfields=%s card=%s'  % (nfields, card)
+
+        nids = []
+        components = []
+        j = 1
+        for i in range(3, nfields, 2):
+            nid = integer(card, i, 'nid_%s' % j)
+            comp = components_or_blank(card, i+1, 'components_%i' % j)
+            nids.append(nid)
+            components.append(comp)
+            j += 1
+        return RSPLINE(eid, nids, components, diameter_ratio=diameter_ratio, comment=comment)
+
+    def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        return
+        #msg = ' which is required by %s eid=%s' % (self.type, self.eid)
+        #self.Gni = model.Nodes(self.Gni, allow_empty_nodes=True, msg=msg)
+        #self.Gmi = model.Nodes(self.Gmi, allow_empty_nodes=True, msg=msg)
+        #self.Gni_ref = self.Gni
+        #self.Gmi_ref = self.Gmi
+
+    def uncross_reference(self):
+        pass
+        #self.Gni = self.Gni_node_ids
+        #self.Gmi = self.Gmi_node_ids
+        #del self.Gni_ref, self.Gmi_ref
+
+    #@property
+    #def Gni_node_ids(self):
+        #if len(self.Gni) == 0:
+            #return []
+        #return self._nodeIDs(nodes=self.Gni, allow_empty_nodes=True)
+
+    #@property
+    #def Gmi_node_ids(self):
+        #if len(self.Gmi) == 0:
+            #return []
+        #return self._nodeIDs(nodes=self.Gmi, allow_empty_nodes=True)
+
+    @property
+    def independent_nodes(self):
+        """gets the independent node ids"""
+        return []
+        #return self.Gni_node_ids
+
+    @property
+    def dependent_nodes(self):
+        """gets the dependent node ids"""
+        #nodes = self.Gmi_node_ids
+        #return nodes
+        return self.nids
+
+    def raw_fields(self):
+        list_fields = [self.type, self.eid, self.diameter_ratio]
+        for (i, gn, cn) in zip(count(), self.nids, self.components):
+            list_fields += [gn, cn]
+        return list_fields
+
+    def repr_fields(self):
+        return self.raw_fields()
+
+    def write_card(self, size=8, is_double=False):
+        card = self.repr_fields()
+        if size == 8:
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)

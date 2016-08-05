@@ -1922,7 +1922,7 @@ class BDFMethods(BDFAttributes):
             'PBUSH1D', 'PBUSH2D', 'PSOLID', 'PRAC2D', 'PRAC3D',
 
             'CONM2',
-            'RBE2', 'RBE3',
+            'RBE2', 'RBE3', 'RSPLINE',
 
             'CAERO1', 'CAERO2', 'CAERO3', 'CAERO4', 'CAERO5',
             'PAERO1', 'PAERO2', 'PAERO3', 'PAERO4', 'PAERO5',

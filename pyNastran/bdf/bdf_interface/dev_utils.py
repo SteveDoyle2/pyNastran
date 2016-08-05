@@ -750,7 +750,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
 
      - elements
         - CELASx/CONROD/CBAR/CBEAM/CQUAD4/CTRIA3/CTETRA/CPENTA/CHEXA
-        - RBAR/RBAR1/RBE1/RBE2/RBE3
+        - RBAR/RBAR1/RBE1/RBE2/RBE3/RSPLINE
 
      - properties
         - PSHELL/PCOMP/PCOMPG/PSOLID/PSHEAR/PBAR/PBARL
@@ -1041,7 +1041,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
             eid_map[eidi] = eid
             eid += 1
         for eidi, elem in sorted(iteritems(model.rigid_elements)):
-            # RBAR/RBAR1/RBE1/RBE2/RBE3
+            # RBAR/RBAR1/RBE1/RBE2/RBE3/RSPLINE
             elem.eid = eid
             eid_map[eidi] = eid
             eid += 1

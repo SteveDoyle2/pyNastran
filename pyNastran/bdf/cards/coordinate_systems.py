@@ -77,6 +77,96 @@ class Coord(BaseCard):
         """Gets the coordinate ID"""
         return self.cid
 
+    def setup_global_cord2x(self):
+        """
+        Sets up a global CORD2R, CORD2S, CORD2C
+        """
+        #if self.Cid() == 0:
+            #self.origin = np.array([0., 0., 0.], dtype='float64')
+            #return
+        #self.i = np.array([1., 0., 0.], dtype='float64')
+        #self.j = np.array([0., 1., 0.], dtype='float64')
+        #self.k = np.array([0., 0., 1.], dtype='float64')
+
+        self.origin = self.e1
+        e1 = self.e1
+        e2 = self.e2
+        e3 = self.e3
+
+        try:
+            # e_{13}
+            e13 = e3 - e1
+            # e_{12}
+            e12 = e2 - e1
+            #print("e13 = %s" % e13)
+            #print("e12 = %s" % e12)
+        except TypeError:
+            msg = ''
+            msg += "\ntype = %s\n" % (self.type)
+            msg += "\ncid  = %s\n" % (self.Cid())
+            msg += "e1 = %s\n" % str(e1)
+            msg += "e2 = %s\n" % str(e2)
+            msg += "e3 = %s\n" % str(e3)
+            raise TypeError(msg)
+
+        try:
+            #: k = (G3 cross G1) normalized
+            self.k = normalize(e12)
+        except RuntimeError:
+            print("---InvalidUnitVectorError---")
+            print("Cp  = %s" % (self.Cid()))
+            print("e1  = %s" % (self.e1))
+            print("e2  = %s" % (self.e2))
+            print("e3  = %s" % (self.e3))
+            print("e1* = %s" % (e1))
+            print("e2* = %s" % (e2))
+            print("e3* = %s" % (e3))
+            print("e13 = %s" % (e13))
+            print("e12 = %s" % (e12))
+            print("k   = normalize(e12)")
+            raise
+
+        try:
+            # j = (k cross e13) normalized
+            self.j = normalize(np.cross(self.k, e13))
+        except RuntimeError:
+            print("---InvalidUnitVectorError---")
+            print("Cp  = %s" % (self.Cid()))
+            print("e1  = %s" % (self.e1))
+            print("e2  = %s" % (self.e2))
+            print("e3  = %s" % (self.e3))
+            print("e1* = %s" % (e1))
+            print("e2* = %s" % (e2))
+            print("e3* = %s" % (e3))
+            print("e13 = %s" % (e13))
+            print("e12 = %s" % (e12))
+            print("k   = norm(e12)")
+            print("k   = %s\n" % (self.k))
+            print("j*  = cross(k, e13)")
+            print("j*  = %s" % (np.cross(self.k, e13)))
+            print("j   = norm(cross(k, e13))\n")
+            raise
+
+        try:
+            #: i = j cross k
+            self.i = np.cross(self.j, self.k)
+        except RuntimeError:
+            print("---InvalidUnitVectorError---")
+            print("Cp  = %s" % (self.Cid()))
+            print("Rid = %s" % (self.Rid()))
+            print("e1  = %s" % (self.e1))
+            print("e2  = %s" % (self.e2))
+            print("e3  = %s" % (self.e3))
+            print("e13 = %s" % (e13))
+            print("e12 = %s" % (e12))
+            print("k   = normalize(e12)")
+            print("k   = %s\n" % (self.k))
+            print("j   = norm(cross(k,e13))")
+            print("j   = %s" % (self.j))
+            raise
+
+        #print('done setting up cid=%s rid=%s' % (self.cid, self.Rid()))
+
     def setup(self):
         r"""
         .. math::
@@ -97,6 +187,8 @@ class Coord(BaseCard):
         .. math::
           i = j \times k
         """
+        #if self.isResolved:
+            #return
         try:
             assert len(self.e1) == 3, self.e1
             assert len(self.e2) == 3, self.e2
@@ -117,6 +209,7 @@ class Coord(BaseCard):
             self.k = np.array([0., 0., 1.], dtype='float64')
             return
 
+        #print('setting up cid=%s rid=%s' % (self.cid, self.Rid()))
         if not self.isResolved and self.type in ['CORD2R', 'CORD2C', 'CORD2S']:
             self.rid.setup()
 
@@ -220,6 +313,7 @@ class Coord(BaseCard):
             print("j   = %s len=%s"   % (str(self.j), norm(self.j)))
             print("k   = %s len=%s\n" % (str(self.k), norm(self.k)))
             print('-----')
+        #print('done setting up cid=%s rid=%s' % (self.cid, self.Rid()))
 
     #def transform_force_to_global(self, F, M):
         #raise NotImplementedError('transform_force_to_global')
@@ -1235,6 +1329,7 @@ class Cord2x(Coord):
         if self.rid == 0:
             self.isResolved = True
             self.setup()
+            #self.setup_global_cord2x()
 
     def _verify(self, xref):
         """
@@ -1431,6 +1526,10 @@ class Cord1x(Coord):
         if self.isResolved:
             return
 
+        self.g1_ref.cp_ref.setup()
+        self.g2_ref.cp_ref.setup()
+        self.g3_ref.cp_ref.setup()
+
         #: the origin in the local frame
         self.e1 = self.g1_ref.get_position()
 
@@ -1443,6 +1542,7 @@ class Cord1x(Coord):
         # rid is resolved b/c e1, e2, & e3 are in global coordinates
         self.isResolved = False
 
+        #print('setting up cid=%s' % self.cid)
         # call the Coord class' setup method
         super(Cord1x, self).setup()
 

@@ -180,7 +180,7 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
             raise
         rbes = []
         for eid, rigid_element in iteritems(self.rigid_elements):
-            if rigid_element.type in ['RBE3', 'RBE2', 'RBE1', 'RBAR']:
+            if rigid_element.type in ['RBE3', 'RBE2', 'RBE1', 'RBAR', 'RSPLINE']:
                 independent_nodes = set(rigid_element.independent_nodes)
                 dependent_nodes = set(rigid_element.dependent_nodes)
                 rbe_nids = independent_nodes | dependent_nodes
@@ -228,6 +228,7 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
                 #rbe_nids = independent_nodes | dependent_nodes
                 #if nids.intersection(rbe_nids):
                     #rbes.append(eid)
+            #elif rigid_element == 'RSPLINE':
             else:
                 raise RuntimeError(rigid_element.type)
         return dependent_nid_to_components
@@ -248,7 +249,7 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
         consider_0d : bool; default=True
             considers CELASx, CDAMPx, CFAST
         consider_0d_rigid : bool; default=True
-            considers MPC, RBAR, RBE2, RBE3 elements
+            considers MPC, RBAR, RBE2, RBE3, RSPLINE elements
         consider_1d : bool; default=True
             considers CONROD, CROD, CBAR, CBEAM elements
         consider_2d : bool; default=True
@@ -601,7 +602,7 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
         return mid_to_pids_map
 
     def Element(self, eid, msg=''):
-        """gets an element (not rigid (RBAR, RBE2, RBE3) or mass (CMASS1, CONM2))"""
+        """gets an element (not rigid (RBAR, RBE2, RBE3, RBAR, RBAR1, RSPLINE) or mass (CMASS1, CONM2))"""
         try:
             return self.elements[eid]
         except KeyError:
@@ -623,7 +624,7 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
                            % (eid, msg, np.unique(list(self.masses.keys()))))
 
     def RigidElement(self, eid, msg=''):
-        """gets a rigid element (RBAR, RBE2, RBE3)"""
+        """gets a rigid element (RBAR, RBE2, RBE3, RBAR, RBAR1, RSPLINE)"""
         try:
             return self.rigid_elements[eid]
         except KeyError:
