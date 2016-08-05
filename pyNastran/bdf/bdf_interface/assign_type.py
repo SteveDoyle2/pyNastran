@@ -145,7 +145,8 @@ def integer_double_string_or_blank(card, ifield, fieldname, default=None):
         field number
     fieldname : str
         name of field
-    :param default:   the default value for the field (default=None)
+    default : int, float, str, None (default=None)
+        the default value for the field
     """
     #assert isinstance(card, BDFCard), type(card)
     #assert isinstance(ifield, int), type(ifield)
