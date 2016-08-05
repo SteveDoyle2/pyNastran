@@ -129,8 +129,12 @@ class CaseControlDeck(object):
         Checks to see if a parameter (e.g. STRESS) is defined in a certain
         subcase ID.
 
-        :param isubcase:   the subcase ID to check
-        :param param_name: the parameter name to look for
+        Parameters
+        ----------
+        isubcase : int
+            the subcase ID to check
+        param_names : List[str]
+            the parameter name to look for
         """
         if self.has_subcase(isubcase):
             return any(self.subcases[isubcase].has_parameter(*param_names))
@@ -141,8 +145,13 @@ class CaseControlDeck(object):
         STRESS(PLOT,POST)=ALL, param_name=STRESS, value=ALL, options=['PLOT',
         'POST']
 
-        :param isubcase:   the subcase ID to check
-        :param param_name: the parameter name to get the [value, options] for
+
+        Parameters
+        ----------
+        isubcase : int
+            the subcase ID to check
+        param_name : str
+            the parameter name to look for
         """
         if self.has_subcase(isubcase):
             return self.subcases[isubcase].get_parameter(param_name.upper())
@@ -268,8 +277,12 @@ class CaseControlDeck(object):
         """
         sol = STATICS, FLUTTER, MODAL, etc.
 
-        :param isubcase: the subcase ID to update
-        :param sol: the solution type to change the solution to
+        Parameters
+        ----------
+        isubcase : int
+            the subcase ID to update
+        sol : str
+            the solution type to change the solution to
 
         >>> print(bdf.case_control)
         SUBCASE 1
@@ -312,8 +325,13 @@ class CaseControlDeck(object):
         """
         Takes in a single-lined string and adds it to a single Subcase.
 
-        :param isubcase: the subcase ID to add
-        :param param:    the variable to add
+        Parameters
+        ----------
+        isubcase : int
+            the subcase ID to add
+        param_name : List[str]
+            the parameter name to add
+
         .. note::  dont worry about overbounding the line
 
         >>> bdf = BDF()
@@ -333,7 +351,10 @@ class CaseControlDeck(object):
         """
         Parses a case control line
 
-        :param param: the variable to add
+        Parameters
+        ----------
+        param : str
+            the variable to add
         """
         if '\n' in param or '\r' in param or '\t' in param:
             msg = 'doesnt support embedded endline/tab characters\n'
