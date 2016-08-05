@@ -2129,7 +2129,7 @@ def read_nas2cam(op2file='nas2cam', op4file=None):
         j += 1
         while 1:
             name = op4names[j]
-            if name == "loop_end" or name == "se_start":
+            if name in ("loop_end", "se_start"):
                 # go on to next se or to residual
                 break
             if name not in nas:

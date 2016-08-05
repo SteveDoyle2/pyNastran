@@ -2755,7 +2755,7 @@ def formulvs(nas, seup, sedn=0, keepcset=True, shortcut=True,
     # work from up to down:
     r = _findse(nas, seup)
     sedown = nas['selist'][r, 1]
-    if sedown == seup or sedn == seup:
+    if seup in (sedown, sedn):
         return 1.
     if (shortcut and sedn == 0 and not gset and
             'ulvs' in nas and seup in nas['ulvs']):
