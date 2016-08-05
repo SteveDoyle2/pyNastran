@@ -1904,7 +1904,9 @@ class NastranIO(object):
         mids = np.zeros(nelements, 'int32')
         material_coord = np.zeros(nelements, 'int32')
         max_interior_angle = np.zeros(nelements, 'float32')
+        max_skew_angle = np.zeros(nelements, 'float32')
         max_warp_angle = np.zeros(nelements, 'float32')
+        max_aspect_ratio = np.zeros(nelements, 'float32')
 
         # pids_good = []
         # pids_to_keep = []
@@ -2002,7 +2004,9 @@ class NastranIO(object):
             self.eid_map[eid] = i
             pid = 0
             max_theta = 0.0
+            max_skew = 0.0
             max_warp = 0.0
+            aspect_ratio = 1.0
             if isinstance(element, (CTRIA3, CTRIAR)):
                 material_coord[i] = 0 if isinstance(element.thetaMcid, float) else element.thetaMcid
                 elem = vtkTriangle()
@@ -2013,10 +2017,44 @@ class NastranIO(object):
                     if nid is not None:
                         nid_to_pid_map[nid].append(pid)
 
-                p1, p2, p3 = [nid_map[nid] for nid in node_ids]
-                v21 = xyz_cid0[p2, :] - xyz_cid0[p1, :]
-                v32 = xyz_cid0[p3, :] - xyz_cid0[p2, :]
-                v13 = xyz_cid0[p1, :] - xyz_cid0[p3, :]
+                n1, n2, n3 = [nid_map[nid] for nid in node_ids]
+                p1 = xyz_cid0[n1, :]
+                p2 = xyz_cid0[n2, :]
+                p3 = xyz_cid0[n3, :]
+                e1 = (p1 + p2) / 2.
+                e2 = (p2 + p3) / 2.
+                e3 = (p3 + p1) / 2.
+
+                #    3
+                #    / \
+                # e3/   \ e2
+                #  /    /\
+                # /    /  \
+                # 1---/----2
+                #    e1
+                e21 = e2 - e1
+                e31 = e3 - e1
+                e32 = e3 - e2
+
+                e3_p2 = e3 - p2
+                e2_p1 = e2 - p1
+                e1_p3 = e1 - p3
+
+                v21 = p2 - p1
+                v32 = p3 - p2
+                v13 = p1 - p3
+                max_skew = 0.
+                cos_skew1 = np.dot(e2_p1, e31) / (np.linalg.norm(e2_p1) * np.linalg.norm(e31))
+                cos_skew2 = np.dot(e2_p1, -e31) / (np.linalg.norm(e2_p1) * np.linalg.norm(e31))
+                cos_skew3 = np.dot(e3_p2, e21) / (np.linalg.norm(e3_p2) * np.linalg.norm(e21))
+                cos_skew4 = np.dot(e3_p2, -e21) / (np.linalg.norm(e3_p2) * np.linalg.norm(e21))
+                cos_skew5 = np.dot(e1_p3, e32) / (np.linalg.norm(e1_p3) * np.linalg.norm(e32))
+                cos_skew6 = np.dot(e1_p3, -e32) / (np.linalg.norm(e1_p3) * np.linalg.norm(e32))
+                max_skew = np.pi / 2. - np.abs(np.arccos([cos_skew1, cos_skew2, cos_skew3, cos_skew4, cos_skew5, cos_skew6])).min()
+
+                lengths = np.linalg.norm([v21, v32, v13], axis=1)
+                #assert len(lengths) == 3, lengths
+                aspect_ratio = lengths.max() / lengths.min()
 
                 cos_theta1 = np.dot(v21, -v13) / (np.linalg.norm(v21) * np.linalg.norm(v13))
                 cos_theta2 = np.dot(v32, -v21) / (np.linalg.norm(v32) * np.linalg.norm(v21))
@@ -2063,9 +2101,9 @@ class NastranIO(object):
                     #print('max_theta=%s' % theta_deg)
                     #asdf
 
-                elem.GetPointIds().SetId(0, p1)
-                elem.GetPointIds().SetId(1, p2)
-                elem.GetPointIds().SetId(2, p3)
+                elem.GetPointIds().SetId(0, n1)
+                elem.GetPointIds().SetId(1, n2)
+                elem.GetPointIds().SetId(2, n3)
                 self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
             elif isinstance(element, CTRIA6):
                 material_coord[i] = element.thetaMcid
@@ -2129,11 +2167,35 @@ class NastranIO(object):
 
                 self.eid_to_nid_map[eid] = node_ids
 
-                p1, p2, p3, p4 = [nid_map[nid] for nid in node_ids]
-                v21 = xyz_cid0[p2, :] - xyz_cid0[p1, :]
-                v32 = xyz_cid0[p3, :] - xyz_cid0[p2, :]
-                v43 = xyz_cid0[p4, :] - xyz_cid0[p3, :]
-                v14 = xyz_cid0[p1, :] - xyz_cid0[p4, :]
+                n1, n2, n3, n4 = [nid_map[nid] for nid in node_ids]
+                p1 = xyz_cid0[n1, :]
+                p2 = xyz_cid0[n2, :]
+                p3 = xyz_cid0[n3, :]
+                p4 = xyz_cid0[n4, :]
+                v21 = p2 - p1
+                v32 = p3 - p2
+                v43 = p4 - p3
+                v14 = p1 - p4
+                p12 = (p1 + p2) / 2.
+                p23 = (p2 + p3) / 2.
+                p34 = (p3 + p4) / 2.
+                p14 = (p4 + p1) / 2.
+                #    e3
+                # 4-------3
+                # |       |
+                # |e4     |  e2
+                # 1-------2
+                #     e1
+                e13 = p34 - p12
+                e42 = p23 - p14
+                cos_skew1 = np.dot(e13, e42) / (np.linalg.norm(e13) * np.linalg.norm(e42))
+                cos_skew2 = np.dot(e13, -e42) / (np.linalg.norm(e13) * np.linalg.norm(e42))
+                max_skew = np.pi / 2. - np.abs(np.arccos([cos_skew1, cos_skew2])).min()
+                #aspect_ratio = max(p12, p23, p34, p14) / max(p12, p23, p34, p14)
+                lengths = np.linalg.norm([v21, v32, v43, v14], axis=1)
+                #assert len(lengths) == 3, lengths
+                aspect_ratio = lengths.max() / lengths.min()
+
                 cos_theta1 = np.dot(v21, -v14) / (np.linalg.norm(v21) * np.linalg.norm(v14))
                 cos_theta2 = np.dot(v32, -v21) / (np.linalg.norm(v32) * np.linalg.norm(v21))
                 cos_theta3 = np.dot(v43, -v32) / (np.linalg.norm(v43) * np.linalg.norm(v32))
@@ -2141,10 +2203,10 @@ class NastranIO(object):
                 max_theta = np.arccos([cos_theta1, cos_theta2, cos_theta3, cos_theta4]).max()
 
                 elem = vtkQuad()
-                elem.GetPointIds().SetId(0, nid_map[node_ids[0]])
-                elem.GetPointIds().SetId(1, nid_map[node_ids[1]])
-                elem.GetPointIds().SetId(2, nid_map[node_ids[2]])
-                elem.GetPointIds().SetId(3, nid_map[node_ids[3]])
+                elem.GetPointIds().SetId(0, n1)
+                elem.GetPointIds().SetId(1, n2)
+                elem.GetPointIds().SetId(2, n3)
+                elem.GetPointIds().SetId(3, n4)
                 self.grid.InsertNextCell(9, elem.GetPointIds())
 
                 if 0:
@@ -2435,7 +2497,9 @@ class NastranIO(object):
                 pids[i] = pid
                 pids_dict[eid] = pid
             max_interior_angle[i] = max_theta
+            max_skew_angle[i] = max_skew
             max_warp_angle[i] = max_warp
+            max_aspect_ratio[i] = aspect_ratio
             i += 1
         assert len(self.eid_map) > 0, self.eid_map
 
@@ -2747,6 +2811,12 @@ class NastranIO(object):
                 theta_res = GuiResult(0, header='Max Interior Angle', title='MaxInteriorAngle',
                                       location='centroid', scalar=np.degrees(max_interior_angle))
 
+                skew = np.degrees(max_skew_angle) #  should be 90-max_skew_angle, but meh...
+                skew_res = GuiResult(0, header='Max Skew Angle', title='MaxSkewAngle',
+                                     location='centroid', scalar=skew)
+                aspect_res = GuiResult(0, header='Aspect Ratio', title='AspectRatio',
+                                       location='centroid', scalar=max_aspect_ratio)
+
                 form_checks = []
                 form0.append(('Element Checks', None, form_checks))
 
@@ -2754,13 +2824,17 @@ class NastranIO(object):
                 cases[icase + 2] = (ny_res, (0, 'NormalY'))
                 cases[icase + 3] = (nz_res, (0, 'NormalZ'))
                 cases[icase + 4] = (theta_res, (0, 'Max Interior Angle'))
+                cases[icase + 5] = (skew_res, (0, 'Max Skew Angle'))
+                cases[icase + 6] = (aspect_res, (0, 'Aspect Ratio'))
 
                 form_checks.append(('ElementDim', icase, []))
                 form_checks.append(('NormalX', icase + 1, []))
                 form_checks.append(('NormalY', icase + 2, []))
                 form_checks.append(('NormalZ', icase + 3, []))
                 form_checks.append(('Max Interior Angle', icase + 4, []))
-                icase += 5
+                form_checks.append(('Max Skew Angle', icase + 5, []))
+                form_checks.append(('Aspect Ratio', icase + 6, []))
+                icase += 7
                 if max_warp_angle.max() > 0.0:
                     warp_res = GuiResult(0, header='Max Warp Angle', title='MaxWarpAngle',
                                          location='centroid', scalar=np.degrees(max_warp_angle))
@@ -2794,9 +2868,14 @@ class NastranIO(object):
                 form0.append(('Element Checks', None, form_checks))
                 theta_res = GuiResult(0, header='Max Interior Angle', title='MaxInteriorAngle',
                                       location='centroid', scalar=np.degrees(max_interior_angle))
+                #skew = 90. - np.degrees(max_skew_angle)
+                #skew_res = GuiResult(0, header='Max Skew Angle', title='MaxSkewAngle',
+                                     #location='centroid', scalar=skew)
                 form_checks.append(('ElementDim', icase, []))
                 form_checks.append(('Max Interior Angle', icase + 1, []))
+                #form_checks.append(('Max Skew Angle', icase + 2, []))
                 cases[icase + 1] = (theta_res, (0, 'Max Interior Angle'))
+                #cases[icase + 2] = (skew_res, (0, 'Max Interior Angle'))
                 icase += 2
 
             else:
