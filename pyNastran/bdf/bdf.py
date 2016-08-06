@@ -42,7 +42,7 @@ from pyNastran.bdf.cards.elements.springs import (CELAS1, CELAS2, CELAS3, CELAS4
 from pyNastran.bdf.cards.properties.springs import PELAS, PELAST
 
 from pyNastran.bdf.cards.elements.solid import (CTETRA, CPYRAM, CPENTA, CHEXA, CIHEX1)
-from pyNastran.bdf.cards.elements.rigid import RBAR, RBAR1, RBE1, RBE2, RBE3, RROD
+from pyNastran.bdf.cards.elements.rigid import RBAR, RBAR1, RBE1, RBE2, RBE3, RROD, RSPLINE
 
 from pyNastran.bdf.cards.elements.shell import (CQUAD, CQUAD4, CQUAD8, CQUADR, CQUADX,
                                                 CSHEAR, CTRIA3, CTRIA6, CTRIAX,
@@ -344,7 +344,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'CGAP',
 
             ## rigid_elements
-            'RBAR', 'RBAR1', 'RBE1', 'RBE2', 'RBE3', 'RROD',
+            'RBAR', 'RBAR1', 'RBE1', 'RBE2', 'RBE3', 'RROD', #'RSPLINE',
 
             ## plotels
             'PLOTEL',
@@ -1759,6 +1759,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'RBE2' : (RBE2, self.add_rigid_element),
             'RBE3' : (RBE3, self.add_rigid_element),
             'RROD' : (RROD, self.add_rigid_element),
+            'RSPLINE' : (RSPLINE, self.add_rigid_element),
 
 
             ## there is no MAT6 or MAT7

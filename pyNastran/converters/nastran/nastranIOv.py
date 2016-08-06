@@ -2496,6 +2496,12 @@ class NastranIO(object):
             else:
                 pids[i] = pid
                 pids_dict[eid] = pid
+            if np.isnan(max_theta):
+                print('eid=%s theta=%s...setting to 360. deg' % (eid, max_theta))
+                print(str(element).rstrip())
+                for node in element.nodes:
+                    print(str(node).rstrip())
+                max_theta = 2 * np.pi
             max_interior_angle[i] = max_theta
             max_skew_angle[i] = max_skew
             max_warp_angle[i] = max_warp

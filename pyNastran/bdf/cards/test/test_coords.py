@@ -1,6 +1,7 @@
 from __future__ import print_function
-from numpy import array, allclose, array_equal, cross
 import unittest
+from six import iteritems
+from numpy import array, allclose, array_equal, cross
 
 from pyNastran.bdf.bdf import BDF, BDFCard, CORD1R, CORD1C, CORD1S, CORD2R, CORD2C, CORD2S
 from pyNastran.bdf.utils import TransformLoadWRT
@@ -593,6 +594,58 @@ class TestCoords(unittest.TestCase):
         cid7 = CORD2R.add_ijk(cid=7, rid=0, origin=origin, i=xaxis, j=None, k=zaxis)
         cid8 = CORD2R.add_ijk(cid=8, rid=0, origin=origin, i=None, j=yaxis, k=zaxis)
         #cid6.add_ijk(rid=0, origin=origin, i=None, j=None, k=None)
+
+    def test_cord1_referencing_01(self):
+        bulk_data_lines = [
+            'CORD2C       300        253.345 171.174 197.495 242.9242270.3229205.2989+',
+            '+       254.1607163.4128297.19',
+            'CORD2R       301     3000.0     0.0     0.0     100.0   90.444676.406-13+',
+            '+       100.0   -179.5557.514-13',
+            'CORD2C       323        222.919 185.412 198.925 233.343986.26359191.1203+',
+            '+       309.1199190.5056249.3577',
+            'CORD2R        40        250.0   203.5575262.4969348.3264221.7756262.3345+',
+            '+       250.0005202.6639162.5009',
+            'CORD2R       111        253.345 171.174 197.495 263.764272.02488189.6917+',
+            '+       153.8893160.7869196.6775',
+            'CORD2C       112     1110.0     0.0     0.0     -7.88-14-2.58-14100.0   +',
+            '+       100.0   -7.33-148.148-14',
+            'CORD2C       114     1120.0     0.0     0.0     1.305-150.0     100.0   +',
+            '+       100.0   -90.445 7.994-15',
+            'CORD2R       116     1140.0     0.0     0.0     100.0   -90.0   -8.0-14 +',
+            '+       100.0   180.0   9.859-14',
+            'CORD2R       201        251.1275219.2556219.8197251.8979319.249 220.6651+',
+            '+       253.9912220.0786119.8641',
+            'CORD2R       202        251.4405218.3364184.3664256.3151317.7323174.5327+',
+            '+       251.9847228.1553283.8817',
+            'CORD2R       207        270.2522201.8565210.846 370.2484201.6459211.6994+',
+            '+       271.1036200.9139110.8541',
+            'CORD2R       208        230.5389215.4915162.7607234.0098310.4138131.4924+',
+            '+       228.789 184.266867.77676',
+            'CORD2R       511      400.0     0.0     0.0     -100.0  -1.7-13 -9.36-13+',
+            '+       -9.19-131.074-12100.0',
+            'CORD2R       321     3230.0     0.0     0.0     100.0   -3.26-141.363-13+',
+            '+       100.0   90.0    1.11-13',
+            'CORD2R        98        250.0   203.6961278.0626249.9841204.6729378.0579+',
+            '+       315.2573127.9272278.8131',
+            'CORD1R       932   23315   23310   22155',
+            'GRID       22155     321-2.79-145.396   1.388-16     321       0',
+            'GRID       23310        256.9914187.4238218.859      932       0',
+            'GRID       23315     3210.0     0.0     0.0          932       0',
+        ]
+        model = BDF(debug=False)
+        #model.echo = True
+        #cards, card_count = model.get_bdf_cards(bulk_data_lines)
+        cards, card_count = model.get_bdf_cards_dict(bulk_data_lines)
+        model._parse_cards(cards, card_count)
+
+        #print(model.card_count)
+        assert model.card_count['CORD1R'] == 1, model.card_count
+        assert model.card_count['CORD2C'] == 4, model.card_count
+        assert model.card_count['CORD2R'] == 11, model.card_count
+        assert model.card_count['GRID'] == 3, model.card_count
+        model.cross_reference()
+        for cid, coord in sorted(iteritems(model.coords)):
+            assert coord.i is not None, coord
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

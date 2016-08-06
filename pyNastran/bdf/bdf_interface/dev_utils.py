@@ -232,19 +232,10 @@ def _eq_nodes_setup(bdf_filename, tol,
 
 def _eq_nodes_build_tree(nodes_xyz, nids, tol, inew=None, node_set=None, neq_max=4):
     """helper function for `bdf_equivalence_nodes`"""
-    # build the kdtree
-    try:
-        kdt = scipy.spatial.cKDTree(nodes_xyz)  # breaks in v0.18.0
-    except RuntimeError:
-        print(nodes_xyz)
-        raise RuntimeError(nodes_xyz)
+    kdt = _get_tree(nodes_xyz)
 
     # check the closest 10 nodes for equality
     deq, ieq = kdt.query(nodes_xyz[inew, :], k=neq_max, distance_upper_bound=tol)
-    if deq[0, 0] == np.inf:
-        # fix for kdtree bug
-        kdt = scipy.spatial.KDTree(nodes_xyz)
-        deq, ieq = kdt.query(nodes_xyz[inew, :], k=neq_max, distance_upper_bound=tol)
 
     if node_set is not None:
         assert len(deq) == len(nids)
@@ -252,6 +243,48 @@ def _eq_nodes_build_tree(nodes_xyz, nids, tol, inew=None, node_set=None, neq_max
 
     # get the ids of the duplicate nodes
     slots = where(ieq[:, :] < nnodes)
+    return kdt, ieq, slots
+
+def _get_tree(nodes_xyz):
+    """gets the kdtree"""
+    assert isinstance(nodes_xyz, np.ndarray), type(nodes_xyz)
+
+    # build the kdtree
+    if scipy.__version__ < '0.18.1':
+        try:
+            kdt = scipy.spatial.KDTree(nodes_xyz)
+        except RuntimeError:
+            print(nodes_xyz)
+            raise RuntimeError(nodes_xyz)
+    else:
+        try:
+            kdt = scipy.spatial.cKDTree(nodes_xyz)
+        except RuntimeError:
+            print(nodes_xyz)
+            raise RuntimeError(nodes_xyz)
+    return kdt
+
+def _not_equal_nodes_build_tree(nodes_xyz, xyz_compare, tol, neq_max=4):
+    """helper function for `bdf_equivalence_nodes`"""
+    assert isinstance(xyz_compare, np.ndarray), type(xyz_compare)
+    assert nodes_xyz.shape[1] == xyz_compare.shape[1], 'nodes_xyz.shape=%s xyz_compare.shape=%s' % (str(nodes_xyz.shape), str(xyz_compare.shape))
+
+    kdt = _get_tree(nodes_xyz)
+    # check the closest 10 nodes for equality
+    deq, ieq = kdt.query(xyz_compare, k=neq_max, distance_upper_bound=tol)
+    #print(deq)
+    #print('ieq =', ieq)
+    #print('neq_max = %s' % neq_max)
+
+    # get the ids of the duplicate nodes
+    nnodes = nodes_xyz.shape[0]
+    if neq_max == 1:
+        assert len(deq.shape) == 1, deq.shape
+        slots = where(ieq < nnodes)
+    else:
+        assert len(deq.shape) == 2, deq.shape
+        slots = where(ieq[:, :] < nnodes)
+    #print('slots =', slots)
     return kdt, ieq, slots
 
 def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
@@ -331,6 +364,34 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
         model2 = BDF(debug=debug)
         model2.read_bdf(bdf_filename_out)
     return model
+
+def find_closest_nodes(nodes_xyz, xyz_compare, neq_max, tol):
+    """
+    Finds the closest nodes to an arbitrary set of xyz points
+
+    nodes_xyz : (N, 3) float ndarray
+         the source points
+    #nids : (N, ) float ndarray
+    #     the source node ids
+    xyz_compare : (N, 3) float ndarray
+         the xyz points to compare to
+    neq_max : int
+        the number of "close" points (default=4)
+    tol : float
+        the max spherical tolerance
+
+    Returns
+    -------
+    slots : (N, ) int ndarray
+        the indices of the close nodes corresponding to nodes_xyz
+    """
+    #nodes_xyz, model, nids, inew = _eq_nodes_setup(
+        #bdf_filename, tol, renumber_nodes=renumber_nodes,
+        #xref=xref, node_set=node_set, debug=debug)
+
+    ieq, slots = _not_equal_nodes_build_tree(nodes_xyz, xyz_compare, tol,
+                                             neq_max=neq_max)[1:]
+    return ieq
 
 def create_rbe3s_between_close_nodes(bdf_filename, bdf_filename_out, tol,
                                      renumber_nodes=False, neq_max=4, xref=True,
@@ -750,7 +811,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
 
      - elements
         - CELASx/CONROD/CBAR/CBEAM/CQUAD4/CTRIA3/CTETRA/CPENTA/CHEXA
-        - RBAR/RBAR1/RBE1/RBE2/RBE3
+        - RBAR/RBAR1/RBE1/RBE2/RBE3/RSPLINE
 
      - properties
         - PSHELL/PCOMP/PCOMPG/PSOLID/PSHEAR/PBAR/PBARL
@@ -1041,7 +1102,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
             eid_map[eidi] = eid
             eid += 1
         for eidi, elem in sorted(iteritems(model.rigid_elements)):
-            # RBAR/RBAR1/RBE1/RBE2/RBE3
+            # RBAR/RBAR1/RBE1/RBE2/RBE3/RSPLINE
             elem.eid = eid
             eid_map[eidi] = eid
             eid += 1

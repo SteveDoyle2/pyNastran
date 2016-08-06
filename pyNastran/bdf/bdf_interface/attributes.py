@@ -514,7 +514,7 @@ class BDFAttributes(object):
                 # thermal
                 'CHBDYE', 'CHBDYG', 'CHBDYP',
             ],
-            'rigid_elements' : ['RBAR', 'RBAR1', 'RBE1', 'RBE2', 'RBE3', 'RROD'],
+            'rigid_elements' : ['RBAR', 'RBAR1', 'RBE1', 'RBE2', 'RBE3', 'RROD', 'RSPLINE'],
             'plotels' : ['PLOTEL',],
 
             'properties_mass' : ['PMASS'],

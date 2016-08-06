@@ -302,6 +302,9 @@ class CTRIA3(TriShell):
         self.prepare_node_ids(nids)
         assert len(self.nodes) == 3
 
+    def validate(self):
+        assert len(set(self.nodes)) == 3, 'nodes=%s; n=%s\n%s' % (self.nodes, len(set(self.nodes)), str(self))
+
     @classmethod
     def add_op2_data(cls, data, comment=''):
         eid = data[0]
@@ -1367,6 +1370,9 @@ class CSHEAR(QuadShell):
         self.prepare_node_ids(nids)
         assert len(self.nodes) == 4
 
+    def validate(self):
+        assert len(set(self.nodes)) == 4, 'nodes=%s\n%s' % (self.nodes, str(self))
+
     @classmethod
     def add_card(cls, card, comment=''):
         eid = integer(card, 1, 'eid')
@@ -1575,6 +1581,9 @@ class CQUAD4(QuadShell):
         self.T2 = T2
         self.T3 = T3
         self.T4 = T4
+
+    def validate(self):
+        assert len(set(self.nodes)) == 4, 'nodes=%s\n%s' % (self.nodes, str(self))
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
