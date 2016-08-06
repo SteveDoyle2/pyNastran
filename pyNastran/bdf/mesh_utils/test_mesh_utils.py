@@ -2,9 +2,10 @@ from __future__ import print_function
 import os
 import unittest
 from six import iteritems
-from pyNastran.bdf.bdf import read_bdf
 
+from pyNastran.bdf.bdf import read_bdf
 from pyNastran.bdf.mesh_utils.collapse_bad_quads import convert_bad_quads_to_tris
+from pyNastran.bdf.mesh_utils.utils import *
 
 class TestMeshUtils(unittest.TestCase):
 

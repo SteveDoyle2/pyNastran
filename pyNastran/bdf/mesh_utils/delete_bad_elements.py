@@ -1,3 +1,4 @@
+from __future__ import print_function
 import numpy as np
 from six import iteritems
 
@@ -17,6 +18,7 @@ def delete_bad_shells(model, max_theta=175., max_skew=70., max_aspect_ratio=100.
         del model.elements[eid]
     model.validate()
     return model
+
 
 def get_bad_shells(model, xyz_cid0, nid_map, max_theta=175., max_skew=70., max_aspect_ratio=100.):
     """
@@ -124,7 +126,8 @@ def get_bad_shells(model, xyz_cid0, nid_map, max_theta=175., max_skew=70., max_a
             cos_skew4 = np.dot(e3_p2, -e21) / (np.linalg.norm(e3_p2) * np.linalg.norm(e21))
             cos_skew5 = np.dot(e1_p3, e32) / (np.linalg.norm(e1_p3) * np.linalg.norm(e32))
             cos_skew6 = np.dot(e1_p3, -e32) / (np.linalg.norm(e1_p3) * np.linalg.norm(e32))
-            skew = np.pi / 2. - np.abs(np.arccos([cos_skew1, cos_skew2, cos_skew3, cos_skew4, cos_skew5, cos_skew6])).min()
+            skew = np.pi / 2. - np.abs(np.arccos([cos_skew1, cos_skew2, cos_skew3,
+                                                  cos_skew4, cos_skew5, cos_skew6])).min()
             if skew > max_skew:
                 eids_failed.append(eid)
                 continue
