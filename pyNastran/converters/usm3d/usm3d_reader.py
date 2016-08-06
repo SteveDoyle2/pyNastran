@@ -402,12 +402,17 @@ class Usm3d(object):
          - ipltqn = 1  (unformatted)
          - ipltqn = 2  (formatted) - default
 
-        :param flo_filename: the name of the file to read
-        :param n:            the number of points to read (initializes the array)
-                             n is typically the number of points, but is not required to be
-                             this lets you read nodes 1...n, but not greater than n+1.
-                             node_ids must be set to None.
-        :param node_ids:     the specific points to read (n must be set to None).
+         Parameters
+         ----------
+        flo_filename : str
+            the name of the file to read
+        n : int; default=None
+            the number of points to read (initializes the array)
+            n is typically the number of points, but is not required to be
+            this lets you read nodes 1...n, but not greater than n+1.
+            node_ids must be set to None.
+        node_ids : List[int]; default=None
+            the specific points to read (n must be set to None).
 
         nvars = 5
           - (nodeID,rho,rhoU,rhoV,rhoW) = sline

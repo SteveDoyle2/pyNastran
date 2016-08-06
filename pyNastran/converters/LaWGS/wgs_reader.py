@@ -8,9 +8,14 @@ from numpy import array, radians, dot, zeros
 
 class LaWGS_Panel(object):
     """
-    :param rotate: rotates the patch
-    :param translate: translates the patch
-    :param scale: scales the patch
+    Parameters
+    ----------
+    rotate : float
+        rotates the patch
+    translate : float
+        translates the patch
+    scale : float
+        scales the patch
     """
     def __init__(self, key, header, group):
         #print("key=%s \nheader=|%s|" % (key, header))   # ,iSymG
