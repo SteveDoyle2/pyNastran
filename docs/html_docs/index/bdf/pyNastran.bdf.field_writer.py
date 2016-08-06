@@ -3,12 +3,12 @@ bdf/field_writer Package
 
 This is the pyNastran.bdf.rst file.
 
-:mod:`fieldWriter` Module
+:mod:`field_writer` Module
 -------------------------
 
-.. inheritance-diagram:: pyNastran.bdf.fieldWriter
+.. inheritance-diagram:: pyNastran.bdf.field_writer
 
-.. automodule:: pyNastran.bdf.fieldWriter
+.. automodule:: pyNastran.bdf.field_writer
     :members:
     :private-members:
     :undoc-members:

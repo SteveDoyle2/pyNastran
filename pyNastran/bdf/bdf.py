@@ -80,7 +80,8 @@ from pyNastran.bdf.cards.dmig import DMIG, DMI, DMIJ, DMIK, DMIJI, DMIG_UACCEL
 from pyNastran.bdf.cards.deqatn import DEQATN
 from pyNastran.bdf.cards.dynamic import (DELAY, DPHASE, FREQ, FREQ1, FREQ2, FREQ4, TSTEP,
                                          TSTEPNL, NLPARM, NLPCI, TF)
-from pyNastran.bdf.cards.loads.loads import LSEQ, SLOAD, DAREA, RANDPS, RFORCE, RFORCE1, SPCD, LOADCYN
+from pyNastran.bdf.cards.loads.loads import (
+    LSEQ, SLOAD, DAREA, RANDPS, RFORCE, RFORCE1, SPCD, LOADCYN)
 from pyNastran.bdf.cards.loads.dloads import ACSRCE, DLOAD, TLOAD1, TLOAD2, RLOAD1, RLOAD2
 from pyNastran.bdf.cards.loads.static_loads import (LOAD, GRAV, ACCEL, ACCEL1, FORCE,
                                                     FORCE1, FORCE2, MOMENT, MOMENT1, MOMENT2,
@@ -777,8 +778,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         for key, tstepnl in sorted(iteritems(self.tstepnls)):
             tstepnl.validate()
         for key, transfer_functions in sorted(iteritems(self.transfer_functions)):
-            for tf in transfer_functions:
-                tf.validate()
+            for transfer_function in transfer_functions:
+                transfer_function.validate()
         for key, delay in sorted(iteritems(self.delays)):
             delay.validate()
 
@@ -1169,7 +1170,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                 uduplicate_mids = np.unique(duplicate_mids)
                 msg += 'self.thermal_materials IDs are not unique=%s\n' % uduplicate_mids
                 for mid in uduplicate_mids:
-                    msg += 'old_thermal_material=\n%s\n' % self.thermal_materials[mid].print_repr_card()
+                    msg += 'old_thermal_material=\n%s\n' % (
+                        self.thermal_materials[mid].print_repr_card())
                     msg += 'new_thermal_materials=\n'
                     for mat, midi in zip(self._duplicate_thermal_materials, duplicate_mids):
                         if midi == mid:
@@ -1611,7 +1613,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         card_name : str
             the card_name -> 'GRID'
         has_none : bool; default=True
-            can there be trailing Nones in the card data (e.g. ['GRID', '1', '2', '3.0', '4.0', '5.0'])
+            can there be trailing Nones in the card data
+            (e.g. ['GRID', '1', '2', '3.0', '4.0', '5.0'])
 
         Returns
         -------
@@ -1928,7 +1931,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'DRESP2' : (DRESP2, self.add_DRESP), # deqatn
             'DRESP3' : (DRESP3, self.add_DRESP),
             'DVCREL1' : (DVCREL1, self.add_DVCREL),
-             'DVCREL2' : (DVCREL2, self.add_DVCREL),
+            'DVCREL2' : (DVCREL2, self.add_DVCREL),
             'DVPREL1' : (DVPREL1, self.add_DVPREL),
             'DVPREL2' : (DVPREL2, self.add_DVPREL), # deqatn
             'DVMREL1' : (DVMREL1, self.add_DVMREL),
@@ -2041,7 +2044,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
     def _prepare_grdset(self, card, card_obj, comment=''):
         """adds a GRDSET"""
-        self.gridSet = GRDSET(card_obj, comment=comment)
+        self.gridSet = GRDSET.add_card(card_obj, comment=comment)
 
     def _prepare_cdamp4(self, card, card_obj, comment=''):
         """adds a CDAMP4"""
@@ -2887,7 +2890,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                             msg += 'Check the end of %r\n' % crash_name
                             msg += 'bdf_filename2 = %r' % bdf_filename
                             raise IndexError(msg)
-                        # print('endswith_quote=%s; %r' % (line.split('$')[0].strip().endswith(""), line.strip()))
+                         #print('endswith_quote=%s; %r' % (
+                             #line.split('$')[0].strip().endswith(""), line.strip()))
                         include_lines.append(line.strip())
                         j += 1
                     # print('j=%s nlines=%s less?=%s'  % (j, nlines, j < nlines))
