@@ -19,7 +19,7 @@ from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.cards.nodes import GRID
 from pyNastran.bdf.cards.elements.shell import CQUAD4
 #from pyNastran.bdf.cards.base_card import expand_thru
-from pyNastran.bdf.bdf_interface.dev.set_operations import intersect1d_multi
+#from pyNastran.bdf.bdf_interface.dev.set_operations import intersect1d_multi
 from pyNastran.bdf.cards.elements.rigid import RBE3
 from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber
 
@@ -276,6 +276,7 @@ def _not_equal_nodes_build_tree(nodes_xyz, xyz_compare, tol, neq_max=4):
     #print('slots =', slots)
     return kdt, ieq, slots
 
+
 def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
                           renumber_nodes=False, neq_max=4, xref=True,
                           node_set=None,
@@ -354,6 +355,7 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
         model2.read_bdf(bdf_filename_out)
     return model
 
+
 def find_closest_nodes(nodes_xyz, xyz_compare, neq_max, tol):
     """
     Finds the closest nodes to an arbitrary set of xyz points
@@ -381,6 +383,7 @@ def find_closest_nodes(nodes_xyz, xyz_compare, neq_max, tol):
     ieq, slots = _not_equal_nodes_build_tree(nodes_xyz, xyz_compare, tol,
                                              neq_max=neq_max)[1:]
     return ieq
+
 
 def create_rbe3s_between_close_nodes(bdf_filename, bdf_filename_out, tol,
                                      renumber_nodes=False, neq_max=4, xref=True,
@@ -460,6 +463,7 @@ def create_rbe3s_between_close_nodes(bdf_filename, bdf_filename_out, tol,
         model.write_bdf(bdf_filename_out, size=size, is_double=is_double)
     return model
 
+
 def _eq_nodes_find_pairs(nids, slots, ieq, node_set=None):
     """helper function for `bdf_equivalence_nodes`"""
     irows, icols = slots
@@ -478,6 +482,7 @@ def _eq_nodes_find_pairs(nids, slots, ieq, node_set=None):
                 continue
         nid_pairs.append((nid1, nid2))
     return nid_pairs
+
 
 def _eq_nodes_final(nid_pairs, model, tol, node_set=None):
     """apply nodal equivalencing to model"""
@@ -517,10 +522,6 @@ def _eq_nodes_final(nid_pairs, model, tol, node_set=None):
         #skip_nodes.append(nid2)
     return
 
-#def slice_model(model):
-    #"""
-    #"""
-    #pass
 
 def cut_model(model, axis='-y'):
     """
@@ -634,6 +635,7 @@ def get_free_edges(bdf_filename, eids=None):
         free_edges.append(edge)
     return free_edges
 
+
 def get_joints(model, pid_sets):
     """
     Gets the nodes at the joints of multiple property id sets
@@ -666,7 +668,7 @@ def get_joints(model, pid_sets):
         nid_sets[pid].update(elem.node_ids)
 
     nid_array_sets = []
-    for i, pid_set in enumerate(pid_sets):
+    for pid_set in pid_sets:
         inside = np.hstack([list(nid_sets[pid]) for pid in pid_set])
         nid_array_set = np.unique(
             inside
@@ -676,6 +678,7 @@ def get_joints(model, pid_sets):
     joint_nids = reduce(np.intersect1d, nid_array_sets)
     #joint_nids = intersect1d_multi(nid_array_sets, assume_unique=True)
     return joint_nids
+
 
 def extract_surface_patches(bdf_filename, starting_eids, theta_tols=40.):
     """
@@ -1038,7 +1041,7 @@ def create_spar_cap(model, eids, nids, width, nelements=1, symmetric=True, xyz_c
             avg_normal_at_node += normals[j, :]
         avg_normal_at_node /= nelems
 
-        for imap, mapped_nid in enumerate(mapped_nids):
+        for mapped_nid in mapped_nids:
             xyzi = xyz[i, :] + avg_normal_at_node * width_array[i]
             node1 = GRID(mapped_nid, xyz=xyzi)
             nodes.append(node1)
