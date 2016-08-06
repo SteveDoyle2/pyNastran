@@ -303,7 +303,7 @@ class CTRIA3(TriShell):
         assert len(self.nodes) == 3
 
     def validate(self):
-        assert len(set(self.nodes)) == 3, 'nodes=%s\n%s' % (self.nodes, str(self))
+        assert len(set(self.nodes)) == 3, 'nodes=%s; n=%s\n%s' % (self.nodes, len(set(self.nodes)), str(self))
 
     @classmethod
     def add_op2_data(cls, data, comment=''):

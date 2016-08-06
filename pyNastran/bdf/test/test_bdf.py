@@ -683,8 +683,7 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
         assert any(subcase.has_parameter('TIME', 'TSTEP', 'TSTEPNL')), subcase
 
     elif sol == 144:
-        assert 'SUPORT1' in subcase or len(fem2.suport), subcase
-        assert 'TRIM' in subcase, subcase
+        assert any(subcase.has_parameter('TRIM', 'DIVERG')), subcase
         assert fem2.aeros is not None, 'An AEROS card is required for STATIC AERO - SOL %i' % sol
     elif sol == 145:
         assert fem2.aero is not None, 'An AERO card is required for FLUTTER - SOL %i; %s' % (sol, fem2.aero)
@@ -810,11 +809,12 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
             suport_id = subcase.get_parameter('SUPORT1')[0]
             suport1 = fem2.suport1[suport_id]
         trim._verify(fem2.suport, suport1, fem2.aestats, fem2.aeparams, fem2.aelinks, fem2.aesurfs, xref=True)
-
+        assert 'DIVERG' in subcase, subcase
 
     if 'DIVERG' in subcase:
         value, options = subcase.get_parameter('DIVERG')
         assert value in fem2.divergs, fem2.divergs
+        assert 'TRIM' in subcase, subcase
 
     if 'METHOD' in subcase:
         method_id = subcase.get_parameter('METHOD')[0]
@@ -828,6 +828,16 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
 
         assert sol in [5, 76, 101, 103, 105, 106, 107, 108, 110, 111,
                        112, 144, 145, 146, 187], 'sol=%s METHOD' % sol
+
+    if 'CMETHOD' in subcase:
+        cmethod_id = subcase.get_parameter('CMETHOD')[0]
+        if cmethod_id in fem2.cMethods:
+            method = fem2.cMethods[method_id]
+        #elif method_id in fem2.cMethods:
+            #method = fem2.cMethods[method_id]
+        else:
+            cmethod_ids = list(fem2.cMethods.keys())
+            raise RuntimeError('CMETHOD = %s not in cmethod_ids=%s' % (cmethod_id, cmethod_ids))
 
     if 'FMETHOD' in subcase:
         method_id = subcase.get_parameter('FMETHOD')[0]
