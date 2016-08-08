@@ -1,29 +1,30 @@
 from six import iteritems
 from copy import deepcopy
 from collections import defaultdict
-from numpy import zeros
+
+import numpy as np
 from pyNastran.bdf.field_writer_8 import print_card_8
-from pyNastran.converters.panair.panairGrid import PanairGrid, PanairPatch
+from pyNastran.converters.panair.panair_grid import PanairGrid, PanairPatch
 
 
 class Geom(object):
     def __init__(self, name, lifting_surface_xyz, lifting_surface_nx, lifting_surface_ny):
         self.name = name
-        self.lifting_surface_xyz = lifting_surface_xyz
-        self.lifting_surface_nx = lifting_surface_nx
-        self.lifting_surface_ny = lifting_surface_ny
+        self.xyz = lifting_surface_xyz
+        self.nx = lifting_surface_nx
+        self.ny = lifting_surface_ny
 
     def write_bdf_file_obj(self, bdf_file, nid0=1, eid=1, pid=1):
-        nx = self.lifting_surface_nx
-        ny = self.lifting_surface_ny
+        nx = self.nx
+        ny = self.ny
         nxy = nx * ny
         cp = None
 
         for ni in range(nxy):
-            x, y, z = self.lifting_surface_xyz[ni, :]
+            x, y, z = self.xyz[ni, :]
             card = ['GRID', nid0 + ni, cp, x, y, z]
             bdf_file.write(print_card_8(card))
-        #print('ni', ni, self.lifting_surface_xyz.shape)
+        #print('ni', ni, self.xyz.shape)
         eidi = 0
         for i in range(nx - 1):
             for j in range(ny - 1):
@@ -37,6 +38,32 @@ class Geom(object):
         nid0 += ni + 1
         eid += eidi + 1
         return nid0, eid, pid
+
+    @property
+    def elements(self):
+        nid0 = 1
+        eidi = 0
+        k = 0
+
+        nx = self.nx
+        ny = self.ny
+        nxy = nx * ny
+        elements = np.zeros((nxy, 4), dtype='int32')
+        for i in range(nx - 1):
+            for j in range(ny - 1):
+                g1 = nid0 + i*ny + j
+                g2 = nid0 + i*ny + j + 1
+                g3 = nid0 + (i+1) * ny + j + 1
+                g4 = nid0 + (i+1) * ny + j
+                card = [g1, g2, g3, g4]
+                elements[k, :] = card
+                k += 1
+        return elements
+
+    def __repr__(self):
+        msg = 'Geom(name=%s, lifting_surface_xyz, lifting_surface_nx, lifting_surface_ny)' % (self.name)
+        return msg
+
 
 class DegenGeom(object):
     def __init__(self, log=None, debug=False):
@@ -107,9 +134,9 @@ class DegenGeom(object):
                     yend = deepcopy(y[-1, :])
                     zend = deepcopy(z[-1, :])
                     imid = comp.lifting_surface_ny // 2
-                    x = zeros((imid+1, 2), dtype='float32')
-                    y = zeros((imid+1, 2), dtype='float32')
-                    z = zeros((imid+1, 2), dtype='float32')
+                    x = np.zeros((imid+1, 2), dtype='float32')
+                    y = np.zeros((imid+1, 2), dtype='float32')
+                    z = np.zeros((imid+1, 2), dtype='float32')
                     print(imid, xend[imid], xend.min())
                     xflip = list(xend[0:imid+1])
                     yflip = list(yend[0:imid+1])
@@ -162,9 +189,9 @@ class DegenGeom(object):
                 npoints = lifting_surface_nx * lifting_surface_ny
                 nelements = (lifting_surface_nx - 1) * (lifting_surface_ny - 1)
                 print('npoints = %r' % npoints)
-                lifting_surface_xyz = zeros((npoints, 3), dtype='float64')
-                normals = zeros((nelements, 3), dtype='float64')
-                area = zeros(nelements, dtype='float64')
+                lifting_surface_xyz = np.zeros((npoints, 3), dtype='float64')
+                normals = np.zeros((nelements, 3), dtype='float64')
+                area = np.zeros(nelements, dtype='float64')
 
                 # x, y, z, u, v
                 f.readline()
@@ -234,7 +261,6 @@ class DegenGeom(object):
                 f.readline()
                 cg_line = f.readline()
                 f.readline()
-
             else:
                 raise RuntimeError(line)
             component = Geom(name, lifting_surface_xyz, lifting_surface_nx, lifting_surface_ny)

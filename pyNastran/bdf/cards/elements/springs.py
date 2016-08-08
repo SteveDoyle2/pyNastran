@@ -11,15 +11,13 @@ All spring elements are SpringElement and Element objects.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-#import sys
-from numpy import array, zeros, dot, transpose
-from numpy.linalg import norm
 
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import Element
-from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
-                                       double, double_or_blank)
+from pyNastran.bdf.bdf_interface.assign_type import (
+    integer, integer_or_blank, double, double_or_blank)
 from pyNastran.bdf.field_writer_8 import print_card_8
+from pyNastran.bdf.field_writer_16 import print_card_16
 
 
 class SpringElement(Element):
@@ -40,6 +38,9 @@ class SpringElement(Element):
     def repr_fields(self):
         return self.raw_fields()
 
+    def write_card_16(self, is_double=False):
+        card = self.repr_fields()
+        return self.comment + print_card_16(card)
 
 class CELAS1(SpringElement):
     type = 'CELAS1'
@@ -75,7 +76,7 @@ class CELAS1(SpringElement):
         nids = [integer(card, 3, 'g1'), integer_or_blank(card, 5, 'g2', 0)]
         c1 = integer_or_blank(card, 4, 'c1', 0)
         c2 = integer_or_blank(card, 6, 'c2', 0)
-        assert len(card) <= 7, 'len(CELAS1 card) = %i' % len(card)
+        assert len(card) <= 7, 'len(CELAS1 card) = %i\ncard=%s' % (len(card), card)
         return CELAS1(eid, pid, nids, c1, c2, comment=comment)
 
     @classmethod
@@ -125,19 +126,25 @@ class CELAS1(SpringElement):
             #for nodeID, node in zip(nodeIDs, self.nodes):
                 #assert node.node.nid
 
-    def _is_same_card(self, elem, debug=False):
+    def _is_same_card(self, elem):
         if self.type != elem.type:
             return False
         fields1 = [self.eid] + self.nodes + [self.pid, self.c1, self.c2]
         fields2 = [elem.eid] + elem.nodes + [elem.pid, elem.c1, elem.c2]
-        if debug:
-            print("fields1=%s fields2=%s" % (fields1, fields2))
         return self._is_same_fields(fields1, fields2)
 
     def K(self):
         return self.pid_ref.k
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ', which is required by %s eid=%s' % (self.type, self.eid)
         self.nodes = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
         self.pid = model.Property(self.Pid(), msg=msg)
@@ -201,7 +208,7 @@ class CELAS2(SpringElement):
         c2 = integer_or_blank(card, 6, 'c2', 0)
         ge = double_or_blank(card, 7, 'ge', 0.)
         s = double_or_blank(card, 8, 's', 0.)
-        assert len(card) <= 9, 'len(CELAS2 card) = %i' % len(card)
+        assert len(card) <= 9, 'len(CELAS2 card) = %i\ncard=%s' % (len(card), card)
         return CELAS2(eid, k, nids, c1, c2, ge, s, comment=comment)
 
     @classmethod
@@ -234,6 +241,14 @@ class CELAS2(SpringElement):
         return [tuple(sorted(self.node_ids))]
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ', which is required by %s eid=%s' % (self.type, self.eid)
         self.nodes = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
         self.nodes_ref = self.nodes
@@ -262,13 +277,11 @@ class CELAS2(SpringElement):
             #for node_id, node in zip(node_id, self.nodes):
                 #assert node.node.nid
 
-    def _is_same_card(self, elem, debug=False):
+    def _is_same_card(self, elem):
         if self.type != elem.type:
             return False
         fields1 = [self.eid] + self.node_ids + [self.k, self.c1, self.c2]
         fields2 = [elem.eid] + elem.node_ids + [elem.k, elem.c1, elem.c2]
-        if debug:
-            print("fields1=%s fields2=%s" % (fields1, fields2))
         return self._is_same_fields(fields1, fields2)
 
     def K(self):
@@ -298,18 +311,6 @@ class CELAS2(SpringElement):
         else:
             raise ValueError('unsupported value of c1=%s' % self.c1)
         return msg
-
-    def nodeIDs(self):
-        self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
-        return self.node_ids
-
-    @property
-    def node_ids(self):
-        msg = ', which is required by %s eid=%s' % (self.type, self.eid)
-        return self._nodeIDs(allow_empty_nodes=True, msg=msg)
-
-    def get_edge_ids(self):
-        return [tuple(sorted(self.node_ids))]
 
     def raw_fields(self):
         nodes = self.node_ids
@@ -355,7 +356,7 @@ class CELAS3(SpringElement):
 
         s1 = integer_or_blank(card, 3, 's1', 0)
         s2 = integer_or_blank(card, 4, 's2', 0)
-        assert len(card) <= 5, 'len(CELAS3 card) = %i' % len(card)
+        assert len(card) <= 5, 'len(CELAS3 card) = %i\ncard=%s' % (len(card), card)
         return CELAS3(eid, pid, s1, s2, comment=comment)
 
     @classmethod
@@ -366,19 +367,25 @@ class CELAS3(SpringElement):
         s2 = data[3]
         return CELAS3(eid, pid, s1, s2, comment=comment)
 
-    def _is_same_card(self, elem, debug=False):
+    def _is_same_card(self, elem):
         if self.type != elem.type:
             return False
         fields1 = [self.eid, self.pid, self.s1, self.s2]
         fields2 = [elem.eid, elem.pid, elem.s1, elem.s2]
-        if debug:
-            print("fields1=%s fields2=%s" % (fields1, fields2))
         return self._is_same_fields(fields1, fields2)
 
     def K(self):
         return self.pid_ref.k
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ', which is required by %s eid=%s' % (self.type, self.eid)
         self.nodes = model.Nodes(self.node_ids, msg=msg)
         self.pid = model.Property(self.Pid(), msg=msg)
@@ -443,7 +450,7 @@ class CELAS4(SpringElement):
         k = double(card, 2, 'k')
         s1 = integer_or_blank(card, 3, 's1', 0)
         s2 = integer_or_blank(card, 4, 's2', 0)
-        assert len(card) <= 5, 'len(CELAS4 card) = %i' % len(card)
+        assert len(card) <= 5, 'len(CELAS4 card) = %i\ncard=%s' % (len(card), card)
         return CELAS4(eid, k, s1, s2, comment=comment)
 
     @classmethod
@@ -454,13 +461,11 @@ class CELAS4(SpringElement):
         s2 = data[3]
         return CELAS4(eid, k, s1, s2, comment=comment)
 
-    def _is_same_card(self, elem, debug=False):
+    def _is_same_card(self, elem):
         if self.type != elem.type:
             return False
         fields1 = [self.eid, self.k, self.s1, self.s2]
         fields2 = [elem.eid, elem.k, elem.s1, elem.s2]
-        if debug:
-            print("fields1=%s fields2=%s" % (fields1, fields2))
         return self._is_same_fields(fields1, fields2)
 
     def K(self):
@@ -479,6 +484,14 @@ class CELAS4(SpringElement):
         return []
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ', which is required by %s eid=%s' % (self.type, self.eid)
         self.nodes = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
         self.nodes_ref = self.nodes

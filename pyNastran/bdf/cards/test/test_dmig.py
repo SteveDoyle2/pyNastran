@@ -3,7 +3,7 @@ import unittest
 
 import os
 import pyNastran
-from pyNastran.bdf.bdf import BDF, BDFCard, DMIG
+from pyNastran.bdf.bdf import BDF, BDFCard, DMIG, read_bdf
 
 from numpy import array, array_equal, sqrt, sin, cos, radians
 
@@ -33,9 +33,8 @@ class TestDMIG(unittest.TestCase):
         a_matrix = model.dmigs['REALS']
         assert len(a_matrix.GCi) == 6, 'len(GCi)=%s GCi=%s matrix=\n%s' % (len(a_matrix.GCi), a_matrix.GCi, a_matrix)
         assert len(a_matrix.GCj) == 6, 'len(GCj)=%s GCj=%s matrix=\n%s' % (len(a_matrix.GCj), a_matrix.GCj, a_matrix)
-
-
         self.assertTrue(array_equal(reals_expected, reals_actual))
+        a_matrix.get_matrix()
 
     def test_dmig_2(self):
         model = BDF(debug=False)
@@ -55,6 +54,7 @@ class TestDMIG(unittest.TestCase):
         assert len(a_matrix.GCj) == 6, 'len(GCj)=%s GCj=%s matrix=\n%s' % (len(a_matrix.GCj), a_matrix.GCj, a_matrix)
 
         self.assertTrue(array_equal(REAL_expected, REAL_actual))
+        a_matrix.get_matrix()
 
         #model2 = BDF(debug=False)
         #bdf_name = os.path.join(test_path, 'include_dir', 'include.inc')
@@ -84,6 +84,7 @@ class TestDMIG(unittest.TestCase):
 
         IMAG_expected = array(IMAG_expected_real) + array(IMAG_expected_imag)*1j
         self.assertTrue(array_equal(IMAG_expected, IMAG_actual))
+        a_matrix.get_matrix()
 
     def test_dmig_4(self):
         model = BDF(debug=False)
@@ -112,6 +113,7 @@ class TestDMIG(unittest.TestCase):
         msg += '\n%s_expected\n%s\n----' % ('IMAGS', IMAGS_expected)
         msg += '\n%s_delta\n%s\n----' % ('IMAGS', IMAGS_actual-IMAGS_expected)
         self.assertTrue(array_equal(IMAGS_expected, IMAGS_actual), msg)
+        a_matrix.get_matrix()
 
     def test_dmig_5(self):
         model = BDF(debug=False)
@@ -139,6 +141,7 @@ class TestDMIG(unittest.TestCase):
         msg += '\n%s_expected\n%s\n----' % ('POLE', POLE_expected)
         msg += '\n%s_delta\n%s\n----' % ('POLE', POLE_actual-POLE_expected)
         self.assertTrue(array_equal(POLE_expected, POLE_actual), msg)
+        a_matrix.get_matrix()
 
     def test_dmig_06(self):
         lines = ['DMIG    ENFORCE 0       1       1       0']
@@ -166,6 +169,7 @@ class TestDMIG(unittest.TestCase):
         a_matrix = model.dmigs['A']
         assert len(a_matrix.GCi) == 3, 'len(GCi)=%s GCi=%s matrix=\n%s' % (len(a_matrix.GCi), a_matrix.GCi, a_matrix)
         assert len(a_matrix.GCj) == 3, 'len(GCj)=%s GCj=%s matrix=\n%s' % (len(a_matrix.GCj), a_matrix.GCj, a_matrix)
+        #a_matrix.get_matrix()
 
     def test_dmig_08(self):
         cards = [
@@ -182,6 +186,7 @@ class TestDMIG(unittest.TestCase):
         a_matrix = model.dmigs['A']
         assert len(a_matrix.GCi) == 3, 'len(GCi)=%s GCi=%s matrix=\n%s' % (len(a_matrix.GCi), a_matrix.GCi, a_matrix)
         assert len(a_matrix.GCj) == 3, 'len(GCj)=%s GCj=%s matrix=\n%s' % (len(a_matrix.GCj), a_matrix.GCj, a_matrix)
+        #a_matrix.get_matrix()
 
     def test_dmig_09(self):
         cards = [
@@ -198,6 +203,41 @@ class TestDMIG(unittest.TestCase):
         a_matrix = model.dmigs['A']
         assert len(a_matrix.GCi) == 3, 'len(GCi)=%s GCi=%s matrix=\n%s' % (len(a_matrix.GCi), a_matrix.GCi, a_matrix)
         assert len(a_matrix.GCj) == 3, 'len(GCj)=%s GCj=%s matrix=\n%s' % (len(a_matrix.GCj), a_matrix.GCj, a_matrix)
+        #a_matrix.get_matrix()
+
+    def test_dmig_10(self):
+        """symmetric"""
+        cards = [
+            ['DMIG,AMTRXX,0,6,1,0'],
+            ['DMIG,AMTRXX,2,1, ,2,1,201.0, ,+DM1',
+            '+DM1,2,3,203.0'],
+            ['DMIG,AMTRXX,3,1, ,3,1,301.0, ,+DM2',
+            '+DM2,3,3,303.0'],
+        ]
+        model = BDF(debug=False)
+        for card_lines in cards:
+            model.add_card(card_lines, 'DMIG', is_list=False)
+        model.fill_dmigs()
+        a_matrix = model.dmigs['AMTRXX']
+        assert len(a_matrix.GCi) == 4, 'len(GCi)=%s GCi=%s matrix=\n%s' % (len(a_matrix.GCi), a_matrix.GCi, a_matrix)
+        assert len(a_matrix.GCj) == 4, 'len(GCj)=%s GCj=%s matrix=\n%s' % (len(a_matrix.GCj), a_matrix.GCj, a_matrix)
+        assert a_matrix.shape == (4, 4), 'shape=%s' % str(a_matrix.shape)
+        a_matrix.get_matrix()
+
+    def test_dmig_11(self):
+        pch_filename = os.path.join(test_path, 'dmig.pch')
+        model = read_bdf(pch_filename, debug=False, punch=True)
+        vax = model.dmigs['VAX']
+        vax_array, vax_dict_row, vax_dict_col = vax.get_matrix()
+        assert vax_array.shape == (15, 1), vax_array
+        vax_dict_row_expected = {
+            0: (101, 1), 1: (102, 1), 2: (105, 1), 3: (106, 1), 4: (107, 1), 5: (108, 1),
+            6: (109, 1), 7: (201, 1), 8: (301, 1), 9: (302, 1), 10: (305, 1), 11: (306, 1),
+            12: (307, 1), 13: (308, 1), 14: (309, 1)
+        }
+        vax_dict_col_expected = {0: (1, 0)}
+        assert list(sorted(vax_dict_col)) == list(sorted(vax_dict_col_expected)), 'vax_dict_col=%s vax_dict_col_expected=%s' % (vax_dict_col, vax_dict_col_expected)
+        assert list(sorted(vax_dict_row)) == list(sorted(vax_dict_row_expected)), 'vax_dict_row=%s vax_dict_row_expected=%s' % (vax_dict_row, vax_dict_row_expected)
 
     def test_dmi_01(self):
         data = """
@@ -306,10 +346,11 @@ DMI         W2GJ       1       1 1.54685.1353939.1312423.0986108.0621382
         """
         with open('dmi.bdf', 'w') as bdf_file:
             bdf_file.write(data)
-        model = BDF()
+        model = BDF(debug=False)
         model.read_bdf('dmi.bdf', punch=True)
         w2gj = model.dmis['W2GJ']
         assert w2gj.shape == (1200, 1), w2gj.shape
+        w2gj.get_matrix()
 
         real2 = []
         for i, real in enumerate(w2gj.Real):
@@ -320,7 +361,7 @@ DMI         W2GJ       1       1 1.54685.1353939.1312423.0986108.0621382
 
         model.write_bdf('dmi_out.bdf')
 
-        model2 = BDF()
+        model2 = BDF(debug=False)
         model2.read_bdf('dmi_out.bdf')
         w2gj_new = model.dmis['W2GJ']
         assert w2gj_new.shape == (1200, 1), w2gj_new.shape
@@ -328,6 +369,8 @@ DMI         W2GJ       1       1 1.54685.1353939.1312423.0986108.0621382
         assert array_equal(w2gj.GCi, w2gj_new.GCi)
         assert array_equal(w2gj.GCj, w2gj_new.GCj)
         assert array_equal(w2gj.Real, w2gj_new.Real)
+        os.remove('dmi.bdf')
+        os.remove('dmi_out.bdf')
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

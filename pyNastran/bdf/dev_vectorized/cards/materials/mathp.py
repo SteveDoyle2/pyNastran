@@ -4,7 +4,7 @@ from numpy import zeros, where, arange, searchsorted, argsort
 
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
-from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
+from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_blank,
     double_or_blank)
 
 from pyNastran.bdf.dev_vectorized.cards.vectorized_card import VectorizedCard
@@ -125,7 +125,7 @@ class MATHP(Material):
         self.tab3[i] = integer_or_blank(card, 51, 'tab3', 0)
         self.tab4[i] = integer_or_blank(card, 52, 'tab4', 0)
         self.tabd[i] = integer_or_blank(card, 56, 'tabd', 0)
-        assert len(card) <= 57, 'len(MATHP card) = %i' % len(card)
+        assert len(card) <= 57, 'len(MATHP card) = %i\ncard=%s' % (len(card), card)
         self.i += 1
 
 

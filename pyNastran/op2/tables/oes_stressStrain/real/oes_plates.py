@@ -131,15 +131,6 @@ class RealPlateArray(OES_Object):
     def __eq__(self, table):
         assert self.is_sort1() == table.is_sort1()
         self._eq_header(table)
-        if not np.array_equal(self.element_node, table.element_node):
-            assert self.element_node.shape == table.element_node.shape, 'element_node shape=%s table.shape=%s' % (self.element_node.shape, table.element_node.shape)
-            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
-            msg += '%s\n' % str(self.code_information())
-            msg += '(Eid, Nid)\n'
-            for (eid1, nid1), (eid2, nid2) in zip(self.element_node, table.element_node):
-                msg += '(%s, %s)    (%s, %s)\n' % (eid1, nid1, eid2, nid2)
-            print(msg)
-            raise ValueError(msg)
         if not np.array_equal(self.data, table.data):
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
@@ -228,7 +219,8 @@ class RealPlateArray(OES_Object):
         msg.append('  data: [%s, ntotal, %i] where %i=[%s]\n' % (ntimes_word, n, n,
                                                                  str(', '.join(headers))))
         msg.append('  data.shape=%s\n' % str(self.data.shape))
-        msg.append('  element type: %s\n  ' % self.element_name)
+        msg.append('  element type: %s\n' % self.element_name)
+        msg.append('  s_code: %s\n  ' % self.s_code)
         msg += self.get_data_code()
         return msg
 
@@ -401,7 +393,7 @@ def _get_plate_msg(self):
         if self.is_fiber_distance():
             quad_msg_temp = ['    ELEMENT              STRAIN            STRAINS IN ELEMENT COORD SYSTEM         PRINCIPAL  STRAINS (ZERO SHEAR)               \n',
                              '      ID      GRID-ID   DISTANCE        NORMAL-X      NORMAL-Y      SHEAR-XY      ANGLE        MAJOR         MINOR       %s \n' % von_mises]
-            tri_msg_temp = ['  ELEMENT      STRAIN               STRAINS IN ELEMENT COORD SYSTEM             PRINCIPAL  STRAINS (ZERO SHEAR)                 \n',
+            tri_msg_temp = ['  ELEMENT      FIBER                STRAINS IN ELEMENT COORD SYSTEM             PRINCIPAL  STRAINS (ZERO SHEAR)                 \n',
                             '    ID.       DISTANCE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        %s\n' % von_mises]
         else:
             quad_msg_temp = ['    ELEMENT              STRAIN            STRAINS IN ELEMENT COORD SYSTEM         PRINCIPAL  STRAINS (ZERO SHEAR)               \n',
@@ -551,23 +543,8 @@ class RealCPLSTRNPlateArray(OES_Object):
         self.data = zeros((self.ntimes, self.ntotal, 5), dtype='float32')
 
     def __eq__(self, table):
+        self._eq_header(table)
         assert self.is_sort1() == table.is_sort1()
-        assert self.nonlinear_factor == table.nonlinear_factor
-        assert self.ntotal == table.ntotal
-        assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (self.table_name, table.table_name)
-        assert self.approach_code == table.approach_code
-        if self.nonlinear_factor is not None:
-            assert np.array_equal(self._times, table._times), 'ename=%s-%s times=%s table.times=%s' % (
-                self.element_name, self.element_type, self._times, table._times)
-        if not np.array_equal(self.element_node, table.element_node):
-            assert self.element_node.shape == table.element_node.shape, 'element_node shape=%s table.shape=%s' % (self.element_node.shape, table.element_node.shape)
-            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
-            msg += '%s\n' % str(self.code_information())
-            msg += '(Eid, Nid)\n'
-            for (eid1, nid1), (eid2, nid2) in zip(self.element_node, table.element_node):
-                msg += '(%s, %s)    (%s, %s)\n' % (eid1, nid1, eid2, nid2)
-            print(msg)
-            raise ValueError(msg)
         if not np.array_equal(self.data, table.data):
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())

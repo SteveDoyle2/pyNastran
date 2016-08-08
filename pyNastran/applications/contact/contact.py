@@ -149,57 +149,57 @@ def setup_contact(main_bdf, contact_bdf, contact_surfaces):
     # ------------------------------------------------------------------------
     # apply springs based on distance
 
-    f = open(contact_bdf, 'wb')
-    eid_groups = []
-    nodes_groups = []
-    neids = []
-    i = 0
-    for contact_surface in contact_surfaces:
-        nids_group1 = contact_surface['group1_nodes']
-        nids_group2 = contact_surface['group2_nodes']
-        stiffness   = contact_surface['stiffness']
-        dof = contact_surface['dof']
-        cid = contact_surface['cid']
+    with open(contact_bdf, 'wb') as f:
+        eid_groups = []
+        nodes_groups = []
+        neids = []
+        i = 0
+        for contact_surface in contact_surfaces:
+            nids_group1 = contact_surface['group1_nodes']
+            nids_group2 = contact_surface['group2_nodes']
+            stiffness   = contact_surface['stiffness']
+            dof = contact_surface['dof']
+            cid = contact_surface['cid']
 
-        print("nids_group1 = %s" % nids_group1)
-        #model_left = BDF()
-        #model_left.read_bdf(left_bdf)
+            print("nids_group1 = %s" % nids_group1)
+            #model_left = BDF(debug=False)
+            #model_left.read_bdf(left_bdf)
 
-        #model_right = BDF()
-        #model_right.read_bdf(right_bdf)
+            #model_right = BDF(debug=False)
+            #model_right.read_bdf(right_bdf)
 
-        # change nodes from cid=0 to cid=N
-        nodes_left  = update_nodes_cid(model_main, nids_group1, cid)
-        nodes_right = update_nodes_cid(model_main, nids_group2, cid)
+            # change nodes from cid=0 to cid=N
+            nodes_left  = update_nodes_cid(model_main, nids_group1, cid)
+            nodes_right = update_nodes_cid(model_main, nids_group2, cid)
 
-        # find 5 closest nodes; TODO: update this...
-        spring_sets = {
-        # left  # right
-            1 : [2, 4, 5],
-            2 : [10, 3],
-        }
+            # find 5 closest nodes; TODO: update this...
+            spring_sets = {
+            # left  # right
+                1 : [2, 4, 5],
+                2 : [10, 3],
+            }
 
-        c1 = c2 = dof
-        neids_start = eid
-        #i = 0
-        if i > 0:
-            f.write('$-------------------------------------------------------\n')
-        f.write('$ contact set %i\n' % i)
-        for g1, spring_nodes in sorted(iteritems(spring_sets)):
-            f.write('$ g1=%i, dof=%i\n' % (g1, dof))
-            for g2 in spring_nodes:
-                celas = ['CELAS2', eid, stiffness, g1, c1, g2, c2]
-                f.write(print_card(celas))
-                eid += 1
-            #i += 1
-        neid = eid - neids_start
+            c1 = c2 = dof
+            neids_start = eid
+            #i = 0
+            if i > 0:
+                f.write('$-------------------------------------------------------\n')
+            f.write('$ contact set %i\n' % i)
+            for g1, spring_nodes in sorted(iteritems(spring_sets)):
+                f.write('$ g1=%i, dof=%i\n' % (g1, dof))
+                for g2 in spring_nodes:
+                    celas = ['CELAS2', eid, stiffness, g1, c1, g2, c2]
+                    f.write(print_card(celas))
+                    eid += 1
+                #i += 1
+            neid = eid - neids_start
 
-        eid_group = (neids_start, neid)
-        eid_groups.append(eid_group)
-        nodes_group = (nodes_left, nodes_right)
-        nodes_groups.append(nodes_group)
-        neids.append(neid)
-        i += 1
+            eid_group = (neids_start, neid)
+            eid_groups.append(eid_group)
+            nodes_group = (nodes_left, nodes_right)
+            nodes_groups.append(nodes_group)
+            neids.append(neid)
+            i += 1
     f.close()
 
     # ------------------------------------------------------------------------
@@ -247,58 +247,57 @@ def parse_op2(contact_bdf, main_op2, subcase_id, contact_surfaces, eid_groups, n
     #force_name = 'forces.bdf'
 
     #contact_bdf = 'spring.bdf'
-    f = open(contact_bdf, 'wb')
+    with open(contact_bdf, 'wb') as f:
+        errorsi = 0
+        for contact_surface, eid_group, nodes_group in zip(contact_surfaces, eid_groups, nodes_groups):
+            (left_bdf, right_bdf, dof, stiffness, cid, glue, initial_gap, max_deflection_error) = contact_surface
+            spring_eids_min, spring_eids_max = eid_groups
+            nodes_left, nodes_right = nodes_groups
 
-    errorsi = 0
-    for contact_surface, eid_group, nodes_group in zip(contact_surfaces, eid_groups, nodes_groups):
-        (left_bdf, right_bdf, dof, stiffness, cid, glue, initial_gap, max_deflection_error) = contact_surface
-        spring_eids_min, spring_eids_max = eid_groups
-        nodes_left, nodes_right = nodes_groups
+            nelements = spring_eids_max - spring_eids_min
+            #forces = zeros((nelements), 'float64')
+            c1 = c2 = cid
 
-        nelements = spring_eids_max - spring_eids_min
-        #forces = zeros((nelements), 'float64')
-        c1 = c2 = cid
-
-        i = 0
-        for eid, force in iteritems(spring_forces.forces):
-            #forces[i] = force
-            g1 = spring_forces.g1[eid]
-            g2 = spring_forces.g2[eid]
+            i = 0
+            for eid, force in iteritems(spring_forces.forces):
+                #forces[i] = force
+                g1 = spring_forces.g1[eid]
+                g2 = spring_forces.g2[eid]
 
 
-            k = stiffnesses[i]
-            deflection = force/k
-            if force <= 0:
-                # assume a really small stiffness (no contact)
-                #force = 0.0
-                #if errors[i] == 1:  # if old error
-                new_stiffness = 0.01
-                stiffnesses[i] = new_stiffness
-                new_flag = 0
-            else:  # force > 0
-                # the contact is correct
-                #force_card = ['FORCE']
-                #if deflection >
+                k = stiffnesses[i]
+                deflection = force/k
+                if force <= 0:
+                    # assume a really small stiffness (no contact)
+                    #force = 0.0
+                    #if errors[i] == 1:  # if old error
+                    new_stiffness = 0.01
+                    stiffnesses[i] = new_stiffness
+                    new_flag = 0
+                else:  # force > 0
+                    # the contact is correct
+                    #force_card = ['FORCE']
+                    #if deflection >
 
-                new_stiffness = stiffness
-                #flag = int(force/abs(force)) # 0, 1
-                new_flag = 1
+                    new_stiffness = stiffness
+                    #flag = int(force/abs(force)) # 0, 1
+                    new_flag = 1
 
-            celas = ['CELAS2', eid, new_stiffness, g1, c1, g2, c2]
-            f.write(print_card(celas))
+                celas = ['CELAS2', eid, new_stiffness, g1, c1, g2, c2]
+                f.write(print_card(celas))
 
-            # check to see
-            if new_flag != errors[i]:
-                errorsi += 1
-                errors[i] = new_flag
-            i += 1
-    f.close()
+                # check to see
+                if new_flag != errors[i]:
+                    errorsi += 1
+                    errors[i] = new_flag
+                i += 1
+
     ierrrors = where(errors == 1)[0]
     nerrors = len(ierrors)
     return nerrors
 
 if __name__ == '__main__':  # pragma: no cover
-    model = BDF()
+    model = BDF(debug=False)
     model.read_bdf('plate.bdf')
     #model.write_bdf('plate2.bdf')
 
@@ -319,7 +318,7 @@ if __name__ == '__main__':  # pragma: no cover
         split_model(model, nids, func)
         model.write_bdf('plate_split.bdf')
 
-        model2 = BDF()
+        model2 = BDF(debug=False)
         model2.read_bdf('plate_split.bdf')
         assert nnodes + 12 == len(model2.nodes), 'nnodes+12=%s nnodes2=%s' % (nnodes + 12, len(model2.nodes))
         #assert nnodes + 6 == len(model2.nodes), 'nnodes+6=%s nnodes2=%s' % (nnodes + 6, len(model2.nodes))

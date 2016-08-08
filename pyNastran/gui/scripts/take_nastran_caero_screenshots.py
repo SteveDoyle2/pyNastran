@@ -1,7 +1,7 @@
 from pyNastran.bdf.bdf import BDF
 
 # find the list of CAERO cards
-model = BDF()
+model = BDF(debug=False)
 bdf_filename = self.infilename
 model.read_bdf(bdf_filename)
 caeros = model.caeros.keys()
@@ -10,7 +10,7 @@ del model
 
 # make a bdf for each CAERO card
 for caeroi in caeros:
-    model2 = BDF()
+    model2 = BDF(debug=False)
     model2.read_bdf(bdf_filename)
 
     for eid in caeros:

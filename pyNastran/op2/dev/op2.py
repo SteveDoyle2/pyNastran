@@ -8,14 +8,15 @@ Can read files in big or little endian format.
 @author: Tim Widrick
 """
 from __future__ import print_function
-from six import PY2
-import numpy as np
 import sys
 import struct
 import itertools as it
 import warnings
 
-import n2y
+from six import PY2
+import numpy as np
+
+import pyNastran.op2.dev.n2y as n2y
 
 #  Notes on the op2 format.
 #
@@ -1398,7 +1399,7 @@ class OP2(object):
                 self._fileh.read(4)  # reclen
                 # reclen = self._Str4.unpack(self._fileh.read(4))[0]
                 head = header_Str.unpack(self._fileh.read(hbytes))
-                if head == CORD2R or head == CORD2C or head == CORD2S:
+                if head in [CORD2R, CORD2C, CORD2S]:
                     n = (key-3) // 13
                     data = np.zeros((n, 13))
                     for i in range(n):
@@ -1572,7 +1573,7 @@ class OP2(object):
         if uset is None:
             warnings.warn('uset information not found.  Putting all '
                           'DOF in b-set.', RuntimeWarning)
-            import n2y
+            #import n2y
             b = n2y.mkusetmask('b')
             uset = np.zeros(len(doflist), int) + b
         uset = np.hstack((np.vstack((idlist, doflist, uset)).T,
@@ -2112,8 +2113,8 @@ def read_nas2cam(op2file='nas2cam', op4file=None):
         nas = o2.rdn2cop2()
 
     # read op4 file:
-    import op4
-    o4 = op4.OP4()
+    from pyNastran.op2.dev.op4 import OP4
+    o4 = OP4()
     #op4names, op4vars, *_ = o4.listload(op4file)
     op4names, op4vars = o4.listload(op4file)[:1]
 
@@ -2128,7 +2129,7 @@ def read_nas2cam(op2file='nas2cam', op4file=None):
         j += 1
         while 1:
             name = op4names[j]
-            if name == "loop_end" or name == "se_start":
+            if name in ("loop_end", "se_start"):
                 # go on to next se or to residual
                 break
             if name not in nas:
@@ -2800,9 +2801,10 @@ def proccess_drm1_drm2(op2file, op4file=None, dosort=True):
     if not op4file:
         op4file = op2file + '.op4'
         op2file = op2file + '.op2'
+
     # read op4 file:
-    import op4
-    o4 = op4.OP4()
+    from pyNastran.op2.dev.op4 import OP4
+    o4 = OP4()
     drms = o4.dctload(op4file)
 
     with OP2(op2file) as o2:
@@ -3032,12 +3034,11 @@ def read_post_op2(op2_filename, verbose=False, getougv1=False):
                 o2.skip_op2_table()
 
         if eqexin1 is not None:
-            (bgpdt, dof,
-             doftype, nid, upids) = o2._proc_bgpdt(eqexin1, eqexin,
-                                                   True, bgpdt_rec1)
+            (bgpdt, dof, doftype, nid, upids) = o2._proc_bgpdt(
+                eqexin1, eqexin, True, bgpdt_rec1)
         if dof is not None:
-            Uset, cstm, cstm2 = o2._build_Uset(se, dof, doftype, nid,
-                                               uset, bgpdt, None, cstm2)
+            Uset, cstm, cstm2 = o2._build_Uset(
+                se, dof, doftype, nid, uset, bgpdt, None, cstm2)
     return {'uset': Uset,
             'cstm': cstm,
             'cstm2': cstm2,

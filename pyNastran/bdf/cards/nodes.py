@@ -35,9 +35,10 @@ from pyNastran.bdf.field_writer_8 import set_string8_blank_if_default
 from pyNastran.bdf.field_writer_16 import set_string16_blank_if_default
 
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
-from pyNastran.bdf.cards.base_card import BaseCard, expand_thru, collapse_thru_packs
-from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
-    double, double_or_blank, blank, integer_or_string)
+from pyNastran.bdf.cards.base_card import BaseCard, expand_thru
+from pyNastran.bdf.cards.collpase_card import collapse_thru_packs
+from pyNastran.bdf.bdf_interface.assign_type import (
+    integer, integer_or_blank, double, double_or_blank, blank, integer_or_string)
 from pyNastran.bdf.field_writer_8 import print_card_8, print_float_8, print_int_card
 from pyNastran.bdf.field_writer_16 import print_float_16, print_card_16
 from pyNastran.bdf.field_writer_double import print_scientific_double, print_card_double
@@ -100,7 +101,7 @@ class RINGAX(Ring):
 
             #: local SPC constraint
             self.ps = integer_or_blank(card, 7, 'ps')
-            assert len(card) <= 8, 'len(RINGAX card) = %i' % len(card)
+            assert len(card) <= 8, 'len(RINGAX card) = %i\ncard=%s' % (len(card), card)
         else:  # hasn't been validated
             self.nid = data[0]
             self.R = data[1]
@@ -190,12 +191,12 @@ class XPoint(Node):
 
     def cross_reference(self, model):
         """
-        Cross links the card
+        Cross links the card so referenced cards can be extracted directly
 
-        :param model:
-          the BDF object
-        :type model:
-          BDF
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
         """
         pass
 
@@ -317,10 +318,10 @@ class XPoints(Node):
         """
         Returns the number of degrees of freedom for the EPOINTs/SPOINTs class
 
-        :returns ndofs:
-          the number of degrees of freedom
-        :type ndofs:
-          int
+        Returns
+        -------
+        ndofs : int
+            the number of degrees of freedom
         """
         return len(self.points)
 
@@ -335,12 +336,12 @@ class XPoints(Node):
 
     def cross_reference(self, model):
         """
-        Cross links the card
+        Cross links the card so referenced cards can be extracted directly
 
-        :param model:
-          the BDF object
-        :type model:
-          BDF
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
         """
         pass
 
@@ -462,53 +463,57 @@ class GRDSET(Node):
     #: allows the get_field method and update_field methods to be used
     _field_map = {1: 'nid', 2:'cp', 6:'cd', 7:'ps', 8:'seid'}
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self, cp, cd, ps, seid, comment=''):
         """
         Creates the GRDSET card
-
-        :param card:
-          a BDFCard object
-        :type card:
-          BDFCard
-        :param data:
-          a list with the GRDSET fields defined in OP2 format
-        :type data:
-          LIST
-        :param comment:
-          a comment for the card
-        :type comment:
-          string
         """
         if comment:
             self._comment = comment
 
+        #: Output Coordinate System
+        self.cp = cp
+
+        #: Analysis coordinate system
+        self.cd = cd
+
+        #: Default SPC constraint on undefined nodes
+        self.ps = ps
+
+        #: Superelement ID
+        self.seid = seid
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        """
+        Parameters
+        ----------
+        card : BDFCard()
+           a BDFCard object
+        comment : str
+           a comment for the card
+        """
         #: Grid point coordinate system
         blank(card, 1, 'blank')
 
-        #: Output Coordinate System
-        self.cp = integer_or_blank(card, 2, 'cp', 0)
+        cp = integer_or_blank(card, 2, 'cp', 0)
         blank(card, 3, 'blank')
         blank(card, 4, 'blank')
         blank(card, 5, 'blank')
+        cd = integer_or_blank(card, 6, 'cd', 0)
 
-        #: Analysis coordinate system
-        self.cd = integer_or_blank(card, 6, 'cd', 0)
-
-        #: Default SPC constraint on undefined nodes
-        self.ps = str(integer_or_blank(card, 7, 'ps', ''))
-
-        #: Superelement ID
-        self.seid = integer_or_blank(card, 8, 'seid', 0)
-        assert len(card) <= 9, 'len(GRDSET card) = %i' % len(card)
+        ps = str(integer_or_blank(card, 7, 'ps', ''))
+        seid = integer_or_blank(card, 8, 'seid', 0)
+        assert len(card) <= 9, 'len(GRDSET card) = %i\ncard=%s' % (len(card), card)
+        return GRDSET(cp, cd, ps, seid, comment=comment)
 
     def cross_reference(self, model):
         """
-        Cross links the card
+        Cross links the card so referenced cards can be extracted directly
 
-        :param model:
-          the BDF object
-        :type model:
-          BDF
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
         """
         msg = ' which is required by the GRDSET'
         self.cp = model.Coord(self.cp, msg=msg)
@@ -527,8 +532,10 @@ class GRDSET(Node):
         """
         Gets the output coordinate system
 
-        :returns cd: the output coordinate system
-        :type cd:    int
+        Returns
+        -------
+        cd : int
+            the output coordinate system
         """
         if isinstance(self.cd, integer_types):
             return self.cd
@@ -539,8 +546,10 @@ class GRDSET(Node):
         """
         Gets the analysis coordinate system
 
-        :returns cp: the analysis coordinate system
-        :type cp:    int
+        Returns
+        -------
+        cp : int
+            the analysis coordinate system
         """
         if isinstance(self.cp, integer_types):
             return self.cp
@@ -551,7 +560,10 @@ class GRDSET(Node):
         """
         Gets the GRID-based SPC
 
-        :returns ps: the GRID-based SPC
+        Returns
+        -------
+        ps : str
+            the GRID-based SPC
         """
         return self.ps
 
@@ -559,8 +571,10 @@ class GRDSET(Node):
         """
         Gets the Superelement ID
 
-        :returns seid: the Superelement ID
-        :type seid:    int
+        Returns
+        -------
+        seid : int
+            the Superelement ID
         """
         if isinstance(self.seid, integer_types):
             return self.seid
@@ -632,46 +646,22 @@ class GRIDB(Node):
     #: allows the get_field method and update_field methods to be used
     _field_map = {1: 'nid', 4:'phi', 6:'cd', 7:'ps', 8:'idf'}
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self, nid, phi, cd, ps, idf, comment=''):
         """
         Creates the GRIDB card
-
-        :param card:
-          a BDFCard object
-        :type card:
-          BDFCard
-        :param data:
-          a list with the GRIDB fields defined in OP2 format
-        :type data:
-          LIST
-        :param comment:
-          a comment for the card
-        :type comment:
-          string
         """
         if comment:
             self._comment = comment
         Node.__init__(self)
 
-        if card:
-            #: node ID
-            self.nid = integer(card, 1, 'nid')
-
-            self.phi = double(card, 4, 'phi')
-
-            # analysis coordinate system
-            self.cd = integer(card, 6, 'cd')
-
-            #: local SPC constraint
-            self.ps = integer(card, 7, 'ps')
-
-            self.idf = integer(card, 8, 'idf')
-        else:
-            self.nid = data[0]
-            self.phi = data[1]
-            self.cd = data[2]
-            self.ps = data[3]
-            self.idf = data[4]
+        #: node ID
+        self.nid = nid
+        self.phi = phi
+        # analysis coordinate system
+        self.cd = cd
+        #: local SPC constraint
+        self.ps = ps
+        self.idf = idf
 
         assert self.nid > 0, 'nid=%s' % self.nid
         assert self.phi >= 0, 'phi=%s' % self.phi
@@ -679,12 +669,46 @@ class GRIDB(Node):
         assert self.ps >= 0, 'ps=%s' % self.ps
         assert self.idf >= 0, 'idf=%s' % self.idf
 
+    @classmethod
+    def add_card(cls, card, comment=''):
+        """
+        Parameters
+        ----------
+        card : BDFCard()
+           the BDFCard object
+        comment : str
+          a comment for the card
+        """
+        nid = integer(card, 1, 'nid')
+        phi = double(card, 4, 'phi')
+        cd = integer(card, 6, 'cd')
+        ps = integer(card, 7, 'ps')
+        idf = integer(card, 8, 'idf')
+        return GRIDB(nid, phi, cd, ps, idf, comment=comment)
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        """
+        Parameters
+        ----------
+        data : List[varies]
+            a list with the GRIDB fields defined in OP2 format
+        """
+        nid = data[0]
+        phi = data[1]
+        cd = data[2]
+        ps = data[3]
+        idf = data[4]
+        return GRIDB(nid, phi, cd, ps, idf, comment=comment)
+
     def _verify(self, xref):
         """
         Verifies all methods for this object work
 
-        :param xref: has this model been cross referenced
-        :type xref:  bool
+        Returns
+        -------
+        xref : bool
+            has this model been cross referenced
         """
         pass
 
@@ -692,8 +716,10 @@ class GRIDB(Node):
         """
         Gets the output coordinate system
 
-        :returns cd: the output coordinate system
-        :type cd:    int
+        Returns
+        -------
+        cd : int
+            the output coordinate system
         """
         if isinstance(self.cd, integer_types):
             return self.cd
@@ -837,7 +863,7 @@ class GRID(Node):
         if xyz is None:
             xyz = [0., 0., 0.]
         self.xyz = np.asarray(xyz, dtype='float64')
-        assert xyz.size == 3, xyz.shape
+        assert self.xyz.size == 3, self.xyz.shape
         self.cd = cd
         self.ps = ps
         self.seid = seid
@@ -891,7 +917,7 @@ class GRID(Node):
 
             #: Superelement ID
             seid = integer_or_blank(card, 8, 'seid', 0)
-            assert len(card) <= 9, 'len(GRID card) = %i' % len(card)
+            assert len(card) <= 9, 'len(GRID card) = %i\ncard=%s' % (len(card), card)
         else:
             cd = 0
             ps = ''
@@ -1075,7 +1101,7 @@ class GRID(Node):
 
     def cross_reference(self, model, grdset=None):
         """
-        Cross links the card
+        Cross links the card so referenced cards can be extracted directly
 
         Parameters
         ----------
@@ -1256,10 +1282,15 @@ class POINT(Node):
         """
         Gets complicated parameters on the POINT card
 
-        :param n:     the field number to update
-        :type n:      int
-        :param value: the value for the appropriate field
-        :type field:  varies
+        Parameters
+        ----------
+        n : int
+            the field number to update
+
+        Returns
+        -------
+        value : varies
+            the value for the appropriate field
         """
         if n == 3:
             value = self.xyz[0]
@@ -1275,10 +1306,12 @@ class POINT(Node):
         """
         Updates complicated parameters on the POINT card
 
-        :param n:     the field number to update
-        :type n:      int
-        :param value: the value for the appropriate field
-        :type field:  varies
+        Parameters
+        ----------
+        n : int
+            the field number to update
+        value : varies
+            the value for the appropriate field
         """
         if n == 3:
             self.xyz[0] = value
@@ -1289,81 +1322,93 @@ class POINT(Node):
         else:
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self, nid, cp, xyz, cd, ps, seid, comment=''):
         """
         Creates the POINT card
-
-        :param card:
-          a BDFCard object
-        :type card:
-          BDFCard
-        :param data:
-          a list with the POINT fields defined in OP2 format
-        :type data:
-          LIST
-        :param comment:
-          a comment for the card
-        :type comment:
-          string
         """
         if comment:
             self._comment = comment
-        Node.__init__(self, card, data)
+        Node.__init__(self)
 
-        if card:
-            #: Node ID
-            self.nid = integer(card, 1, 'nid')
+        #: Node ID
+        self.nid = nid
 
-            #: Grid point coordinate system
-            self.cp = integer_or_blank(card, 2, 'cp', 0)
+        #: Grid point coordinate system
+        self.cp = cp
 
-            #: node location in local frame
-            self.xyz = np.array([
-                double_or_blank(card, 3, 'x1', 0.),
-                double_or_blank(card, 4, 'x2', 0.),
-                double_or_blank(card, 5, 'x3', 0.)], dtype='float64')
+        #: node location in local frame
+        self.xyz = xyz
 
-            #: Analysis coordinate system
-            self.cd = blank(card, 6, 'cd', 0)
+        #: Analysis coordinate system
+        self.cd = cd
 
-            #: SPC constraint
-            self.ps = blank(card, 7, 'ps', '')
+        #: SPC constraint
+        self.ps = ps
 
-            #: Superelement ID
-            self.seid = blank(card, 8, 'seid', 0)
-            assert len(card) <= 9, 'len(POINT card) = %i' % len(card)
-        else:
-            self.nid = data[0]
-            self.cp = data[1]
-            self.xyz = np.array(data[2:5])
-            assert len(self.xyz) == 3
-            self.ps = ''
-            self.seid = 0
-            self.cd = 0
-
+        #: Superelement ID
+        self.seid = seid
         assert self.nid > 0, 'nid=%s' % (self.nid)
         assert self.cp >= 0, 'cp=%s' % (self.cp)
+        assert len(xyz) == 3
 
-    def Position(self, debug=False):
+    @classmethod
+    def add_card(cls, card, comment=''):
+        """
+        Parameters
+        ----------
+        card : BDFCard()
+           the BDFCard object
+        comment : str
+          a comment for the card
+        """
+        nid = integer(card, 1, 'nid')
+        cp = integer_or_blank(card, 2, 'cp', 0)
+
+        xyz = np.array([
+            double_or_blank(card, 3, 'x1', 0.),
+            double_or_blank(card, 4, 'x2', 0.),
+            double_or_blank(card, 5, 'x3', 0.)], dtype='float64')
+
+        cd = blank(card, 6, 'cd', 0)
+        ps = blank(card, 7, 'ps', '')
+
+        seid = blank(card, 8, 'seid', 0)
+        assert len(card) <= 9, 'len(POINT card) = %i\ncard=%s' % (len(card), card)
+        return POINT(nid, cp, xyz, cd, ps, seid, comment=comment)
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        nid = data[0]
+        cp = data[1]
+        xyz = np.array(data[2:5])
+        ps = ''
+        seid = 0
+        cd = 0
+        return POINT(nid, cp, xyz, cd, ps, seid, comment=comment)
+
+    def Position(self):
         self.deprecated('Position()', 'get_position()', '0.8')
         return self.get_position()
 
-    def PositionWRT(self, model, cid, debug=False):
+    def PositionWRT(self, model, cid):
         self.deprecated('Position()', 'get_position_wrt()', '0.8')
         return self.get_position_wrt(model, cid)
 
     def UpdatePosition(self, model, xyz, cid=0):
-        self.deprecated('UpdatePosition(self, model, xyz, cid)', 'set_position(model, xyz, cid)', '0.8')
+        self.deprecated('UpdatePosition(self, model, xyz, cid)',
+                        'set_position(model, xyz, cid)', '0.8')
         return self.set_position(model, xyz, cid=cid)
 
     def set_position(self, model, xyz, cid=0):
         """
         Updates the POINT location
 
-        :param xyz:  the location of the node.
-        :type xyz:   TYPE = NDARRAY.  SIZE=(3,)
-        :param cp:   the analysis coordinate system.  (default=0; global)
-        :type cp:    int
+        Parameters
+        ----------
+        xyz : (3,) float ndarray
+            the location of the node
+        cp : int; default=0 (global)
+            the analysis coordinate system
         """
         self.xyz = xyz
         msg = ' which is required by POINT nid=%s' % self.nid
@@ -1373,8 +1418,10 @@ class POINT(Node):
         """
         Gets the point in the global XYZ coordinate system.
 
-        :returns position: the position of the POINT in the globaly
-                           coordinate system
+        Returns
+        -------
+        position : (3,) float ndarray
+            the position of the POINT in the globaly coordinate system
         """
         p = self.cp.transform_node_to_global(self.xyz)
         return p
@@ -1384,13 +1431,17 @@ class POINT(Node):
         Gets the location of the POINT which started in some arbitrary
         system and returns it in the desired coordinate system
 
-        :param model: the BDF model object
-        :type model:  BDF()
-        :param cid:   the desired coordinate ID
-        :type cid:    int
-        :returns xyz: the position of the POINT in an arbitrary
-                      coordinate system
-        :type xyz:    TYPE = NDARRAY.  SIZE=(3,)
+        Parameters
+        ----------
+        model : BDF()
+            the BDF model object
+        cid : int
+            the desired coordinate ID
+
+        Returns
+        -------
+        xyz : (3,) ndarray
+            the position of the POINT in an arbitrary coordinate system
         """
         if cid == self.Cp(): # same coordinate system
             return self.xyz
@@ -1408,8 +1459,10 @@ class POINT(Node):
         """
         Gets the analysis coordinate system
 
-        :returns cp: the analysis coordinate system
-        :type cp:    int
+        Returns
+        -------
+        cp : int
+            the analysis coordinate system
         """
         if isinstance(self.cp, integer_types):
             return self.cp
@@ -1418,10 +1471,12 @@ class POINT(Node):
 
     def cross_reference(self, model):
         """
-        Cross links the card
+        Cross links the card so referenced cards can be extracted directly
 
-        :param model:  the BDF object
-        :type model:   BDF()
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
         """
         self.cp = model.Coord(self.cp)
         self.cp_ref = self.cp
@@ -1434,10 +1489,10 @@ class POINT(Node):
         """
         Gets the fields in their unmodified form
 
-        :returns fields:
-          the fields that define the card
-        :type fields:
-          LIST
+        Returns
+        -------
+        fields : list[varies]
+            the fields that define the card
         """
         list_fields = ['POINT', self.nid, self.Cp()] + list(self.xyz)
         return list_fields
@@ -1459,10 +1514,10 @@ class POINT(Node):
         """
         The writer method used by BDF.write_card
 
-        :param size:
-          the size of the card (8/16)
-        :type size:
-          int
+        Parameters
+        ----------
+        size : int
+            the size of the card (8/16)
         """
         card = self.repr_fields()
         if size == 8:

@@ -1,0 +1,43 @@
+oqg_constraintForces Package
+============================
+
+:mod:`oqg` Module
+-----------------
+
+.. inheritance-diagram:: pyNastran.op2.tables.oqg_constraintForces.oqg
+
+.. automodule:: pyNastran.op2.tables.oqg_constraintForces.oqg
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`oqg_mpcForces` Module
+---------------------------
+
+.. inheritance-diagram:: pyNastran.op2.tables.oqg_constraintForces.oqg_mpcForces
+
+.. automodule:: pyNastran.op2.tables.oqg_constraintForces.oqg_mpcForces
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`oqg_spcForces` Module
+---------------------------
+
+.. inheritance-diagram:: pyNastran.op2.tables.oqg_constraintForces.oqg_spcForces
+
+.. automodule:: pyNastran.op2.tables.oqg_constraintForces.oqg_spcForces
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`oqg_thermalGradientAndFlux` Module
+----------------------------------------
+
+.. inheritance-diagram:: pyNastran.op2.tables.oqg_constraintForces.oqg_thermalGradientAndFlux
+
+.. automodule:: pyNastran.op2.tables.oqg_constraintForces.oqg_thermalGradientAndFlux
+    :members:
+    :undoc-members:
+    :show-inheritance:
+

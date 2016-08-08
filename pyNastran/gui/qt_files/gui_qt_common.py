@@ -11,15 +11,16 @@ import vtk
 from vtk.util.numpy_support import numpy_to_vtk
 
 from pyNastran.utils import integer_types
-from pyNastran.gui.names_storage import NamesStorage
+from pyNastran.gui.gui_objects.names_storage import NamesStorage
 from pyNastran.gui.testing_methods import GuiAttributes
 
 
 class GuiCommon(GuiAttributes):
     def __init__(self, inputs):
         GuiAttributes.__init__(self, inputs, res_widget=None)
+        self.is_groups = inputs['is_groups']
 
-        self.groups = set([])
+        #self.groups = set([])
         self._group_elements = {}
         self._group_coords = {}
         self._group_shown = {}
@@ -92,6 +93,17 @@ class GuiCommon(GuiAttributes):
             #self.log_command(""didn't find case...")
         return result_type
 
+    def get_name_result_data(self, icase):
+        key = self.case_keys[icase]
+        if isinstance(key, integer_types):
+            (obj, (i, name)) = self.result_cases[key]
+            #subcase_id = obj.subcase_id
+            case = obj.get_result(i, name)
+        else:
+            assert len(key) == 7, key
+            #(subcase_id, j, result_type, vector_size, location, data_format, label2) = key
+        return name, case
+
     def _set_case(self, result_name, icase, explicit=False, cycle=False, skip_click_check=False,
                   min_value=None, max_value=None, is_legend_shown=None):
         if not skip_click_check:
@@ -122,12 +134,6 @@ class GuiCommon(GuiAttributes):
             #default_max, default_min = obj.get_default_min_max(i, name)
             if min_value is None and max_value is None:
                 min_value, max_value = obj.get_min_max(i, name)
-        #elif len(key) == 5:
-            #(subcase_id, result_type, vector_size, location, data_format) = key
-            #scale = 0.0
-        #elif len(key) == 6:
-            #(subcase_id, j, result_type, vector_size, location, data_format) = key
-            #scale = 0.0
         else:
             assert len(key) == 7, key
             (subcase_id, j, result_type, vector_size, location, data_format, label2) = key
@@ -267,10 +273,80 @@ class GuiCommon(GuiAttributes):
             )
         return grid_result
 
+    def get_result_data_from_icase(self, icase):
+        """
+        Gets the data stored in the object in a more generic way.
+
+        Parameters
+        ----------
+        icase : int
+            the case ID
+
+        Returns
+        -------
+           see ``self.get_result_data_from_key(key)``
+        """
+        key = self.case_keys[icase]
+        return self.get_result_data_from_key(key)
+
+    def get_result_data_from_key(self, key):
+        """
+        You should probably use ``self.get_result_data_from_icase(icase)``
+        instead of this.
+
+        Parameters
+        ----------
+        key : tuple(varies)
+            the result key
+
+        Returns
+        -------
+        obj : varies
+            the object that stores the data, if it exists (or None)
+        i : int/None
+            the object array index
+            None : obj is None
+        j : int/None
+            does ???
+            None : obj is not None
+        res_name : str
+            the scalar bar default title (???)
+        result_type : str
+            the scalar bar title (???)
+        subcase_id : int
+            the subcase ID
+        vector_size : int
+            1 - scalar quantity
+            3 - vector quantity
+        data_format : str
+            Python string formatter (e.g. '%.3f')
+        label2 : str
+            something to append to the text at the bottom of the viewport
+        """
+        obj = None
+        i = None
+        j = None
+        if isinstance(key, int):
+            (obj, (i, res_name)) = self.result_cases[key]
+            subcase_id = obj.subcase_id
+            #case = obj.get_result(i, name)
+            result_type = obj.get_title(i, res_name)
+            vector_size = obj.get_vector_size(i, res_name)
+            location = obj.get_location(i, res_name)
+            data_format = obj.get_data_format(i, res_name)
+            label2 = ''
+        else:
+            assert len(key) == 7, key
+            # j is icase? and is used to...
+            # label2 defaults to ''
+            res_name = result_type # ???
+
+            (subcase_id, j, result_type, vector_size, location, data_format, label2) = key
+        return obj, i, j, res_name, subcase_id, result_type, vector_size, location, data_format, label2
+
     def final_grid_update(self, name, grid_result,
                           name_vector, grid_result_vector,
                           key, subtitle, label):
-
         obj = None
         if isinstance(key, int):
             (obj, (i, res_name)) = self.result_cases[key]
@@ -281,10 +357,6 @@ class GuiCommon(GuiAttributes):
             #print('res_name=%s vector_size=%s' % (res_name, vector_size))
             location = obj.get_location(i, res_name)
             #data_format = obj.get_data_format(i, res_name)
-        #elif len(key) == 5:
-            #(subcase_id, result_type, vector_size, location, data_format) = key
-        #elif len(key) == 6:
-            #(subcase_id, j, result_type, vector_size, location, data_format) = key
         else:
             assert len(key) == 7, key
             # j is icase? and is used to...
@@ -382,6 +454,10 @@ class GuiCommon(GuiAttributes):
 
         self.grid.Modified()
         self.grid_selected.Modified()
+        #self.update_all()
+        #self.update_all()
+        if len(self.groups):
+            self.post_group_by_name(self.group_active)
         self.vtk_interactor.Render()
 
         self.hide_labels(show_msg=False)
@@ -393,6 +469,7 @@ class GuiCommon(GuiAttributes):
         for j in range(nnodes):
             points.SetPoint(j, *vector_data[j, :])
         self.grid.Modified()
+        self.grid_selected.Modified()
 
     def _get_icase(self, result_name):
         found_case = False
@@ -460,10 +537,6 @@ class GuiCommon(GuiAttributes):
         if isinstance(key, int):
             (obj, (i, name)) = self.result_cases[key]
             return name
-        #elif len(key) == 5:
-            #(subcase_id, result_type, vector_size, location, data_format) = key
-        #elif len(key) == 6:
-            #(subcase_id, j, result_type, vector_size, location, data_format) = key
         else:
             assert len(key) == 7, '%s = (subcase_id, j, result_type, vector_size, location, data_format, label2)' % str(key)
             (subcase_id, j, result_type, vector_size, location, data_format, label2) = key
@@ -473,10 +546,6 @@ class GuiCommon(GuiAttributes):
         if isinstance(key, int):
             (obj, (i, name)) = self.result_cases[key]
             return obj.get_location(i, name)
-        #elif len(key) == 5:
-            #(subcase_id, result_type, vector_size, location, data_format) = key
-        #elif len(key) == 6:
-            #(subcase_id, j, result_type, vector_size, location, data_format) = key
         else:
             assert len(key) == 7, key
             try:

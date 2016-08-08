@@ -28,4 +28,15 @@ TRI,  2, 1, 2, 3
 QUAD, 3, 1, 5, 3, 4
 QUAD, 4, 1, 2, 3, 4  # this is after a blank line
 
+#RESULT,4,CENTROID,AREA(%f),PROPERTY_ID(%i)
+# in element id sorted order: value1, value2
+#1.0, 2.0 # bar
+#1.0, 2.0 # tri
+#1.0, 2.0 # quad
+#1.0, 2.0 # quad
 
+#RESULT,NODE,NODEX(%f),NODEY(%f),NODEZ(%f)
+# same difference
+
+#RESULT,VECTOR3,GEOM,DXYZ
+# 3xN

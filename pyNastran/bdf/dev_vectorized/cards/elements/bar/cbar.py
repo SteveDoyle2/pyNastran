@@ -7,7 +7,7 @@ from pyNastran.utils import integer_types
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
-from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
+from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_blank,
     double_or_blank, integer_double_or_blank, string_or_blank)
 from pyNastran.bdf.cards.elements.bars import CBAROR
 
@@ -140,7 +140,7 @@ class CBAR(Element):
         self.wb[i, :] = [double_or_blank(card, 14, 'w1b', 0.0),
                          double_or_blank(card, 15, 'w2b', 0.0),
                          double_or_blank(card, 16, 'w3b', 0.0),]
-        assert len(card) <= 17, 'len(CBAR card) = %i' % len(card)
+        assert len(card) <= 17, 'len(CBAR card) = %i\ncard=%s' % (len(card), card)
 
         self.i += 1
 

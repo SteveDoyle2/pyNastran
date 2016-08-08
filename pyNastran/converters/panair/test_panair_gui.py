@@ -1,7 +1,7 @@
 import os
 
 from pyNastran.gui.testing_methods import GUIMethods
-from pyNastran.converters.panair.panairIO import PanairIO
+from pyNastran.converters.panair.panair_io import PanairIO
 import pyNastran
 
 pkg_path = pyNastran.__path__[0]

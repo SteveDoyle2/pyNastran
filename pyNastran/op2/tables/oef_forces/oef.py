@@ -14,7 +14,7 @@ from numpy import hstack, zeros
 from pyNastran.op2.op2_helper import polar_to_real_imag
 from pyNastran.op2.op2_common import OP2Common
 
-from pyNastran.op2.tables.oef_forces.oef_thermalObjects import (
+from pyNastran.op2.tables.oef_forces.oef_thermal_objects import (
     Real1DHeatFluxArray,
     HeatFlux_2D_3DArray,
     RealChbdyHeatFluxArray,
@@ -28,7 +28,7 @@ from pyNastran.op2.tables.oef_forces.oef_thermalObjects import (
     #HeatFlux_VUBEAM,
     #HeatFlux_VU_3D,
 )
-from pyNastran.op2.tables.oef_forces.oef_forceObjects import (
+from pyNastran.op2.tables.oef_forces.oef_force_objects import (
     RealRodForceArray, RealViscForceArray,
     RealCBarForceArray, RealCBar100ForceArray,
     RealCBushForceArray,
@@ -45,7 +45,7 @@ from pyNastran.op2.tables.oef_forces.oef_forceObjects import (
     # TODO: vectorize 2
     #RealForce_VU_2D, RealForce_VU,
 )
-from pyNastran.op2.tables.oef_forces.oef_complexForceObjects import (
+from pyNastran.op2.tables.oef_forces.oef_complex_force_objects import (
     ComplexRodForceArray,
     ComplexCBarForceArray,
     ComplexCBeamForceArray,
@@ -228,7 +228,9 @@ class OEF(OP2Common):
             self.mode = self.add_data_parameter(data, 'mode', 'i', 5)
             #: eigenvalue
             self.eigr = self.add_data_parameter(data, 'eigr', 'f', 6, False)
-            self.data_names = self.apply_data_code_value('data_names', ['mode', 'eigr'])
+            self.cycle = 0.
+            self.update_mode_cycle('cycle')
+            self.data_names = self.apply_data_code_value('data_names', ['mode', 'eigr', 'cycle'])
             # TODO: mode_cycle is not defined?
             #self.data_names = self.apply_data_code_value('data_names', ['mode', 'eigr', 'mode_cycle'])
         elif self.analysis_code == 3:  # differential stiffness 0
@@ -311,6 +313,9 @@ class OEF(OP2Common):
     def _read_oef1_4(self, data, ndata):
         """Table 4 parser for OEF1 table"""
         if self.thermal == 0:
+            if self.isubcase not in self.case_control_deck.subcases:
+                self.subcase = self.case_control_deck.create_new_subcase(self.isubcase)
+            self.subcase.add_op2_data(self.data_code, 'FORCE', self.log)
             n = self._read_oef1_loads(data, ndata)
         elif self.thermal == 1:
             n = self._read_oef1_thermal(data, ndata)
@@ -542,17 +547,30 @@ class OEF(OP2Common):
             # 107-CHBDYE
             # 108-CHBDYG
             # 109-CHBDYP
-            if self.format_code == 1 and self.num_wide == 8:  # real
-                if self.element_type == 107:
-                    result_name = 'chbdye_thermal_load'
-                elif self.element_type == 108:
-                    result_name = 'chbdyg_thermal_load'
-                elif self.element_type == 109:
-                    result_name = 'chbdyp_thermal_load'
-                else:
-                    raise NotImplementedError('element_type=%s element_name=%s' % (
-                        self.element_type, self.element_name))
+            #if self.table_name in ['OEF1X']:
+            if self.element_type == 107:
+                result_name = 'chbdye_thermal_load'
+            elif self.element_type == 108:
+                result_name = 'chbdyg_thermal_load'
+            elif self.element_type == 109:
+                result_name = 'chbdyp_thermal_load'
+            else:
+                raise NotImplementedError('element_type=%s element_name=%s' % (
+                    self.element_type, self.element_name))
+            #elif self.table_name in ['HOEF1']:
+                #if self.element_type == 107:
+                    #result_name = 'chbdye_thermal_flux'
+                #elif self.element_type == 108:
+                    #result_name = 'chbdyg_thermal_flux'
+                #elif self.element_type == 109:
+                    #result_name = 'chbdyp_thermal_flux'
+                #else:
+                    #raise NotImplementedError('element_type=%s element_name=%s' % (
+                        #self.element_type, self.element_name))
+            #else:
+                #raise NotImplementedError(msg)
 
+            if self.format_code == 1 and self.num_wide == 8:  # real
                 #result_name = 'thermalLoad_CHBDY'
                 if self._results.is_not_saved(result_name):
                     return ndata
@@ -603,7 +621,7 @@ class OEF(OP2Common):
                             eid = eid_device // 10
 
                             if self.is_debug_file:
-                                self.binary_debug.write('  %s -> [%s, %s, %s, %s, %s, %s, %s]'
+                                self.binary_debug.write('  %s -> [%s, %s, %s, %s, %s, %s, %s]\n'
                                                         % (eid, eid_device, etype, fapplied, free_conv, force_conv, frad, ftotal))
                             obj.add(dt, eid, etype, fapplied, free_conv, force_conv, frad, ftotal)
             else:
@@ -1137,7 +1155,7 @@ class OEF(OP2Common):
             self._results._found_result(result_name)
             slot = getattr(self, result_name)
             if self.format_code == 1 and self.num_wide == 9:  # real centroid ???
-                aaa
+                raise RuntimeError('is this used?')
                 auto_return, is_vectorized = self._create_oes_object4(
                     nelements, result_name, slot, RealCBeamForceArray)
                 if auto_return:
@@ -1210,7 +1228,7 @@ class OEF(OP2Common):
                         ints2 = ints[:, 1:].reshape(nelements * 11, 9)
                         nids = ints2[:, 0]
 
-                        obj.element[ielement:ielement2] = eids
+                        obj.element[itotal:itotal2] = eids2
                         obj.element_node[itotal:itotal2, 0] = eids2
                         obj.element_node[itotal:itotal2, 1] = nids
 
@@ -1276,19 +1294,14 @@ class OEF(OP2Common):
                         eids = ints[:, 0] // 10
                         assert eids.min() > 0, eids.min()
                         assert 0 not in eids, eids
-                        #print('eids =', eids)
                         eids2 = np.repeat(eids, 11)
-                        #print('eids2 =', eids2)
 
                         ints2 = ints[:, 1:].reshape(nelements * 11, 16)
                         nids = ints2[:, 0]
 
-                        obj.element[ielement:ielement2] = eids
+                        obj.element[itotal:itotal2] = eids2
                         obj.element_node[itotal:itotal2, 0] = eids2
                         obj.element_node[itotal:itotal2, 1] = nids
-                        #print(itotal2, itotal, len(eids2))
-                        #print(obj.element_node)
-                        #print(obj.element)
 
                     #[nid, sd, bm1r, bm2r, ts1r, ts2r, afr, ttrqr, wtrqr,
                     #          bm1i, bm2i, ts1i, ts2i, afi, ttrqi, wtrqi]

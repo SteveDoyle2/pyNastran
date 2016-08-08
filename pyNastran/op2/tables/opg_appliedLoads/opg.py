@@ -4,16 +4,16 @@ Defines the Real/Complex Forces created by:
     OLOAD = ALL
 """
 
-#from pyNastran.op2.tables.opg_appliedLoads.opg_Objects import (#RealAppliedLoads,  #ComplexAppliedLoads,
+#from pyNastran.op2.tables.opg_appliedLoads.opg_objects import (#RealAppliedLoads,  #ComplexAppliedLoads,
                                                                #RealAppliedLoadsVectorArray, ComplexAppliedLoadsVectorArray)
-from pyNastran.op2.tables.opg_appliedLoads.opg_loadVector import (
+from pyNastran.op2.tables.opg_appliedLoads.opg_load_vector import (
     #RealLoadVector, ComplexLoadVector,
     RealLoadVectorArray, ComplexLoadVectorArray,
     #RealThermalLoadVector,
     RealTemperatureVectorArray,
     #RealThermalVelocityArray
 )
-from pyNastran.op2.tables.opg_appliedLoads.opnl_forceVector import RealForceVectorArray#, ComplexForceVectorArray
+from pyNastran.op2.tables.opg_appliedLoads.opnl_force_vector import RealForceVectorArray#, ComplexForceVectorArray
 
 from pyNastran.op2.op2_common import OP2Common
 
@@ -23,7 +23,6 @@ class OPG(OP2Common):
         pass
 
     def _read_opg1_3(self, data, ndata):
-        three = self.parse_approach_code(data)
         self.words = [
             'aCode', 'tCode', '???', 'isubcase',
             '???', '???', '???', 'dLoadID',
@@ -70,7 +69,8 @@ class OPG(OP2Common):
             self.eigr = self.add_data_parameter(data, 'eigr', 'f', 6, False)
             ## mode or cycle .. todo:: confused on the type - F1???
             self.mode2 = self.add_data_parameter(data, 'mode2', 'i', 7, False)
-            self.cycle2 = self.add_data_parameter(data, 'cycle', 'f', 7, False)
+            self.cycle = self.add_data_parameter(data, 'cycle', 'f', 7, False)
+            self.update_mode_cycle('cycle')
             self.data_names = self.apply_data_code_value('data_names', ['mode', 'eigr', 'mode2', 'cycle', ])
         #elif self.analysis_code == 3: # differential stiffness
         #    ## load set number
@@ -186,9 +186,9 @@ class OPG(OP2Common):
                                  #RealThermalLoadVector, ComplexThermalLoadVectorVector,
                                  #RealTemperatureVectorArray, ComplexThermalLoadVectorArray,
                                  #'node', random_code=self.random_code)
-            n = self._read_table_vectorized(data, ndata, result_name, storage_obj,
-                                            RealTemperatureVectorArray, ComplexThermalLoadVectorArray,
-                                            'node', random_code=self.random_code)
+            n = self._read_scalar_table_vectorized(data, ndata, result_name, storage_obj,
+                                                   RealTemperatureVectorArray, ComplexThermalLoadVectorArray,
+                                                   'node', random_code=self.random_code)
 
         else:
             raise NotImplementedError(self.thermal)

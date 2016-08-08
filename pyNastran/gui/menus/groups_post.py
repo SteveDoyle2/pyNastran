@@ -5,7 +5,7 @@ from six.moves import range
 
 from numpy import array, arange
 
-from pyNastran.gui.qt_files.groups_modify import _get_collapsed_text
+from pyNastran.gui.menus.groups_modify import _get_collapsed_text, Group
 
 
 class GroupsPostView(QtGui.QDialog):
@@ -343,19 +343,6 @@ class GroupsPostView(QtGui.QDialog):
     def on_cancel(self):
         self.close()
 
-
-class Group(object):
-    def __init__(self, name):
-        self.name = name
-        self.cids = [0]
-        self.eids = [1, 3, 8]
-
-    def __repr__(self):
-        msg = 'Group:\n'
-        msg += '  cids: [%s]\n' % _get_collapsed_text(self.cids).strip()
-        msg += '  eids: [%s]\n' % _get_collapsed_text(self.eids).strip()
-        return msg
-
 def on_post_group(data):
     print('hi')
 
@@ -371,10 +358,10 @@ def main():
     app = QtGui.QApplication(sys.argv)
     app.on_post_group = on_post_group
 
-    group1 = Group('this is a really long name')
-    group2 = Group('frog')
-    group3 = Group('dog')
-    all_group = Group('ALL')
+    group1 = Group('this is a really long name', [1,2,3], 4)
+    group2 = Group('frog', [1,3], 4)
+    group3 = Group('dog', [1,2,3, 5], 4)
+    all_group = Group('ALL', [1,2,3, 34], 4)
     print(group3)
     groups = [
         all_group, group1, group2, group3,

@@ -12,18 +12,24 @@ class ComplexEigenvectorArray(ComplexTableArray):
     def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
-        if 0:
-            msg += header
-            freq = self.eigrs[i]
-            #freq = 0.0
-            msg.append('%16s = %12E\n' % ('EIGENVALUE', freq))
-            if has_cycle:
-                msg.append('%16s = %12E          C O M P L E X   E I G E N V E C T O R   N O . %10i\n \n' % ('CYCLES', self.mode_cycle, imode))
-            else:
-                msg.append('                                         C O M P L E X   E I G E N V E C T O R   N O . %10i\n \n' % (imode))
-            msg.append('      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n')
 
-        words = ['                                         C O M P L E X   E I G E N V E C T O R   N O . ???\n \n']
+        words = []
+        #freq = self.eigrs[i]
+        #freq = 0.0
+        #words.append('%16s = %12E\n' % ('EIGENVALUE', freq))
+        #words.append('%%16s = %%12E\n')
+        has_cycle = False
+        if hasattr(self, 'cycles'):
+            has_cycle = True
+        #if has_cycle:
+        #words.append('%s = %s          C O M P L E X   E I G E N V E C T O R   N O. %s\n' % ('%16s', '%12E', '%10i'))
+            #msg.append('%16s = %12E          C O M P L E X   E I G E N V E C T O R   N O . %10i\n \n' % ('CYCLES', self.mode_cycle, imode))
+        #else:
+        words.append('      COMPLEX EIGENVALUE = %s, %s\n' % ('%12E', '%12E'))
+        words.append('                                       C O M P L E X   E I G E N V E C T O R   NO. %s\n' % '%10i')
+        #msg.append('                                         C O M P L E X   E I G E N V E C T O R   N O . %10i\n \n' % (imode))
+
+        #msg.append('      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n')
         #words += self.get_table_marker()
         return self._write_f06_transient_block(words, header, page_stamp, page_num, f, is_mag_phase, is_sort1)
 

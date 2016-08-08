@@ -3,16 +3,13 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six.moves import range
 
-from numpy import matrix, zeros, array, transpose, dot, ones
-from numpy import eye, allclose, cross
 from numpy.linalg import norm
 
 from pyNastran.utils import integer_types
-from pyNastran.utils.dev import list_print
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import Element #, Mid
-from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
-    double, double_or_blank)
+from pyNastran.bdf.bdf_interface.assign_type import (
+    integer, integer_or_blank, double, double_or_blank)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 
@@ -107,7 +104,7 @@ class CROD(RodElement):
         return CROD(eid, pid, nids, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data):
+    def add_op2_data(cls, data, comment=''):
         eid = data[0]
         pid = data[1]
         nids = data[2:4]
@@ -232,11 +229,11 @@ class CTUBE(RodElement):
         pid = integer_or_blank(card, 2, 'pid', eid)
         nids = [integer(card, 3, 'n1'),
                 integer(card, 4, 'n2')]
-        assert len(card) == 5, 'len(CTUBE card) = %i' % len(card)
+        assert len(card) == 5, 'len(CTUBE card) = %i\ncard=%s' % (len(card), card)
         return CTUBE(eid, pid, nids, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data):
+    def add_op2_data(cls, data, comment=''):
         eid = data[0]
         pid = data[1]
         nids = data[2:4]
@@ -353,7 +350,7 @@ class CONROD(RodElement):
         return CONROD(eid, mid, nids, A, j, c, nsm, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data):
+    def add_op2_data(cls, data, comment=''):
         eid = data[0]
         nids = data[1:3]
         mid = data[3]
@@ -364,10 +361,18 @@ class CONROD(RodElement):
         return CONROD(eid, mid, nids, A, j, c, nsm, comment=comment)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
         self.nodes = model.Nodes(self.nodes, msg=msg)
-        self.mid = model.Material(self.mid, msg=msg)
         self.nodes_ref = self.nodes
+        self.mid = model.Material(self.mid, msg=msg)
         self.mid_ref = self.mid
 
     def uncross_reference(self):
@@ -468,16 +473,17 @@ class CONROD(RodElement):
         #return msg
 
     def raw_fields(self):
-        list_fields = ['CONROD', self.eid] + self.node_ids + [
-                  self.Mid(), self.A, self.j, self.c, self.nsm]
+        list_fields = [
+            'CONROD', self.eid] + self.node_ids + [
+                self.Mid(), self.A, self.j, self.c, self.nsm]
         return list_fields
 
     def repr_fields(self):
         j = set_blank_if_default(self.j, 0.0)
         c = set_blank_if_default(self.c, 0.0)
         nsm = set_blank_if_default(self.nsm, 0.0)
-        list_fields = ['CONROD', self.eid] + self.node_ids + [self.Mid(),
-                  self.A, j, c, nsm]
+        list_fields = [
+            'CONROD', self.eid] + self.node_ids + [self.Mid(), self.A, j, c, nsm]
         return list_fields
 
     def write_card(self, size=8, is_double=False):

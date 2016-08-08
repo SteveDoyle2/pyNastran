@@ -1,7 +1,7 @@
 import unittest
 
 import os
-from numpy import array
+import numpy as np
 import pyNastran
 from pyNastran.bdf.bdf import BDF
 from pyNastran.utils import object_methods
@@ -74,8 +74,8 @@ class TestMass(unittest.TestCase):
         quad = model.elements[1]
         mass = 0.12
         area = 1.0
-        centroid = array([.5, .5, 0.])
-        normal = array([.0, .0, 1.])
+        centroid = np.array([.5, .5, 0.])
+        normal = np.array([.0, .0, 1.])
         self.verify_pcomp_element(quad, mass, area, centroid, normal)
 
         # quad - pshell, nsm=0
@@ -94,8 +94,8 @@ class TestMass(unittest.TestCase):
         tri = model.elements[2]
         mass = 0.06
         area = 0.5
-        centroid = array([2/3., 1/3., 0.])
-        normal = array([.0, .0, 1.])
+        centroid = np.array([2/3., 1/3., 0.])
+        normal = np.array([.0, .0, 1.])
         self.verify_pcomp_element(tri, mass, area, centroid, normal)
 
         # tri - pshell, nsm=0
@@ -123,7 +123,7 @@ class TestMass(unittest.TestCase):
         E = 1.0
         G = 2.0
         nu = 3.0
-        centroid = array([0.5, 0.5, 1.0])
+        centroid = np.array([0.5, 0.5, 1.0])
         self.verify_psolid_element(hexa, mass, volume, centroid, rho, E, G, nu)
 
         # tetra - psolid
@@ -134,7 +134,7 @@ class TestMass(unittest.TestCase):
         E = 1.0
         G = 2.0
         nu = 3.0
-        centroid = array([0.5, 0.25, 0.5])
+        centroid = np.array([0.5, 0.25, 0.5])
         self.verify_psolid_element(tetra, mass, volume, centroid, rho, E, G, nu)
 
         # penta - psolid
@@ -145,9 +145,24 @@ class TestMass(unittest.TestCase):
         E = 1.0
         G = 2.0
         nu = 3.0
-        centroid = array([2/3., 1/3., 1.])
+        centroid = np.array([2/3., 1/3., 1.])
         self.verify_psolid_element(penta, mass, volume, centroid, rho, E, G, nu)
 
+        #wtmass = 0.00259
+        mass, cg, I = model.mass_properties(element_ids=None, mass_ids=None,
+                                           reference_point=None,
+                                           sym_axis=None,
+                                           num_cpus=1,
+                                           scale=None)
+
+        model.params['WTMASS'].values[0] = 1.0
+        mass2, cg, I = model.mass_properties(element_ids=None, mass_ids=None,
+                                             reference_point=None,
+                                             sym_axis=None,
+                                             num_cpus=1,
+                                             scale=None)
+        assert np.allclose(mass, 0.005311658333), 'mass=%s' % mass
+        assert np.allclose(mass2, 2.050833333), 'mass2=%s' % mass2
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

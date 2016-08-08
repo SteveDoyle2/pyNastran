@@ -2,7 +2,7 @@ from six.moves import zip
 from numpy import array, zeros, unique, searchsorted, arange
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
-from pyNastran.bdf.bdfInterface.assign_type import (integer,
+from pyNastran.bdf.bdf_interface.assign_type import (integer,
     double, double_or_blank)
 
 from pyNastran.bdf.dev_vectorized.cards.elements.property import Property
@@ -35,7 +35,7 @@ class PSHEAR(Property):
         assert self.thickness[i] > 0.0
         #assert self.f1 >= 0.0
         #assert self.f2 >= 0.0
-        assert len(card) <= 7, 'len(PSHEAR card) = %i' % len(card)
+        assert len(card) <= 7, 'len(PSHEAR card) = %i\ncard=%s' % (len(card), card)
         self.i += 1
 
     def build(self):

@@ -24,8 +24,7 @@ class TestBeams(unittest.TestCase):
         card = bdf.process_card(lines)
         #print(print_card_8(card))
         cardi = BDFCard(card)
-        card2 = PBEAM()
-        card2.add_card(cardi)
+        card2 = PBEAM.add_card(cardi)
         fields = card2.raw_fields()
 
         lines_expected = [
@@ -67,8 +66,7 @@ class TestBeams(unittest.TestCase):
 
         card = bdf.process_card(lines)
         cardi = BDFCard(card)
-        card2 = PBEAM()
-        card2.add_card(cardi)
+        card2 = PBEAM.add_card(cardi)
         fields = card2.raw_fields()
 
         lines_expected = [
@@ -97,8 +95,7 @@ class TestBeams(unittest.TestCase):
 
         card = bdf.process_card(lines)
         cardi = BDFCard(card)
-        card2 = PBEAM()
-        card2.add_card(cardi)
+        card2 = PBEAM.add_card(cardi)
         fields = card2.raw_fields()
 
         lines_expected = [
@@ -121,8 +118,7 @@ class TestBeams(unittest.TestCase):
 
         card = bdf.process_card(lines)
         cardi = BDFCard(card)
-        card2 = PBEAM()
-        card2.add_card(cardi)
+        card2 = PBEAM.add_card(cardi)
         fields = card2.raw_fields()
         lines_expected = [
             'PBEAM         39       6     2.9     3.5    5.97      0.      0.      0.',
@@ -141,8 +137,7 @@ class TestBeams(unittest.TestCase):
         card = bdf.process_card(lines)
         #print(print_card_8(card))
         cardi = BDFCard(card)
-        card2 = PBEAM()
-        card2.add_card(cardi)
+        card2 = PBEAM.add_card(cardi)
         fields = card2.raw_fields()
         msg = print_card_8(fields)
 
@@ -206,8 +201,7 @@ class TestBeams(unittest.TestCase):
 
         card = bdf.process_card(lines)
         cardi = BDFCard(card)
-        card2 = PBEAM()
-        card2.add_card(cardi)
+        card2 = PBEAM.add_card(cardi)
         fields = card2.raw_fields()
 
         lines_expected = [
@@ -228,8 +222,7 @@ class TestBeams(unittest.TestCase):
         ]
         card = bdf.process_card(lines)
         cardi = BDFCard(card)
-        card2 = PBEAM()
-        card2.add_card(cardi)
+        card2 = PBEAM.add_card(cardi)
 
         #if 0:
             #fields = card2.raw_fields()
@@ -272,8 +265,7 @@ class TestBeams(unittest.TestCase):
 
         card = bdf.process_card(lines)
         cardi = BDFCard(card)
-        card2 = PBEAM()
-        card2.add_card(cardi)
+        card2 = PBEAM.add_card(cardi)
 
         if 1:
             fields = card2.raw_fields()
@@ -310,8 +302,7 @@ class TestBeams(unittest.TestCase):
         card = bdf.process_card(lines)
         cardi = BDFCard(card)
         #with self.assertRaises(AssertionError):  # A=0, I12=0, K1=0
-        pbeam = PBEAM()
-        pbeam.add_card(cardi)
+        pbeam = PBEAM.add_card(cardi)
         fields2 = pbeam.repr_fields()
         assert fields == fields
 
@@ -326,7 +317,7 @@ class TestBeams(unittest.TestCase):
         lines = [
             'PBEAM          1       1 5.094+7 289940.1.6043+7         271610. 3.73058',
             '            0.',
-            '              NO     1.4 .7489+7 238250.1.3182+7   1.-12 223170.3.458069',
+            '              NO     1.0 .7489+7 238250.1.3182+7   1.-12 223170.3.458069',
             '              0.      0.           .872    .718',
             '              0.  .33936      0. .31983',
         ]
@@ -337,18 +328,30 @@ class TestBeams(unittest.TestCase):
         lines = [
             'PBEAM          2       1 5.094+7 289940.1.6043+7         271610. 3.73058',
             '+',
-            '              NO     1.4 .7489+7 238250.1.3182+7   1.-12 223170.3.458069',
+            '              NO     1.0 .7489+7 238250.1.3182+7   1.-12 223170.3.458069',
             '              0.      0.           .872    .718',
             '              0.  .33936      0. .31983',
         ]
         lines_expected = lines
         model.add_card(lines, 'PBEAM', is_list=False)
 
+        # BAD x/xb value of 1.4 (should be 0 to 1.0)
+        lines = [
+            'PBEAM          2       1 5.094+7 289940.1.6043+7         271610. 3.73058',
+            '+',
+            '              NO     1.4 .7489+7 238250.1.3182+7   1.-12 223170.3.458069',
+            '              0.      0.           .872    .718',
+            '              0.  .33936      0. .31983',
+        ]
+        lines_expected = lines
+        with self.assertRaises(AssertionError):
+            model.add_card(lines, 'PBEAM', is_list=False)
+
         # error - 3 lines after NO
         lines = [
             'PBEAM          3       1 5.094+7 289940.1.6043+7         271610. 3.73058',
             '            0.',
-            '              NO     1.4 .7489+7 238250.1.3182+7   1.-12 223170.3.458069',
+            '              NO     1.0 .7489+7 238250.1.3182+7   1.-12 223170.3.458069',
             '            0.',
             '              0.      0.           .872    .718',
             '              0.  .33936      0. .31983',
@@ -359,7 +362,7 @@ class TestBeams(unittest.TestCase):
         # correct - skipped 2nd line
         lines = [
             'PBEAM          4       1 5.094+7 289940.1.6043+7         271610. 3.73058',
-            '              NO     1.4 .7489+7 238250.1.3182+7   1.-12 223170.3.458069',
+            '              NO     1.0 .7489+7 238250.1.3182+7   1.-12 223170.3.458069',
             '              0.      0.           .872    .718',
             '              0.  .33936      0. .31983',
         ]
@@ -369,7 +372,7 @@ class TestBeams(unittest.TestCase):
         # correct - skipped 2nd line and last line
         lines = [
             'PBEAM          5       1 5.094+7 289940.1.6043+7         271610. 3.73058',
-            '              NO     1.4 .7489+7 238250.1.3182+7   1.-12 223170.3.458069',
+            '              NO     1.0 .7489+7 238250.1.3182+7   1.-12 223170.3.458069',
             '              0.      0.           .872    .718',
         ]
         lines_expected = lines
@@ -378,7 +381,7 @@ class TestBeams(unittest.TestCase):
         # correct - skipped 2nd line and last 2 lines
         lines = [
             'PBEAM          6       1 5.094+7 289940.1.6043+7         271610. 3.73058',
-            '              NO     1.4 .7489+7 238250.1.3182+7   1.-12 223170.3.458069',
+            '              NO     1.0 .7489+7 238250.1.3182+7   1.-12 223170.3.458069',
         ]
         lines_expected = lines
         model.add_card(lines, 'PBEAM', is_list=False)
@@ -488,28 +491,28 @@ class TestBeams(unittest.TestCase):
         #assert allclose(cbeam.MassPerLength(), 10.25), cbeam.MassPerLength()
         #assert allclose(mass, 10.25), mass
 
-        f = open('pbeam12.bdf', 'w')
-        case_control_lines = (
-            'SOL 101\n'
-            'CEND\n'
-            'SUBCASE 1\n'
-            '    STRESS(PLOT,SORT1,REAL) = ALL\n'
-            '    SPC = 123456\n'
-            '    LOAD = 100\n'
-            'BEGIN BULK\n'
-            'PARAM,GRDPNT,0\n'
-            'PARAM,POST,-1\n'
-            'PARAM   POSTEXT YES\n'
-        )
-        f.write(case_control_lines)
-        model.write_bdf(f, enddata=True)
-        f.close()
-        model2 = BDF()
+        with open('pbeam12.bdf', 'w') as f:
+            case_control_lines = (
+                'SOL 101\n'
+                'CEND\n'
+                'SUBCASE 1\n'
+                '    STRESS(PLOT,SORT1,REAL) = ALL\n'
+                '    SPC = 123456\n'
+                '    LOAD = 100\n'
+                'BEGIN BULK\n'
+                'PARAM,GRDPNT,0\n'
+                'PARAM,POST,-1\n'
+                'PARAM   POSTEXT YES\n'
+            )
+            f.write(case_control_lines)
+            model.write_bdf(f, enddata=True)
+
+        model2 = BDF(debug=False)
         model2.read_bdf('pbeam12.bdf')
         import os
         if not os.path.exists('pbeam12.op2') and 0:
             os.system('nastran scr=yes bat=no old=no pbeam12.bdf')
-        #os.remove('pbeam12.bdf')
+        os.remove('pbeam12.bdf')
 
         if 0:
             from pyNastran.op2.op2 import OP2

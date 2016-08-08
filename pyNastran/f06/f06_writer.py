@@ -1,15 +1,17 @@
 #pylint: disable=W0201,C0301,C0111
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import string_types, iteritems, PY2
+import sys
 import copy
 from datetime import date
 from collections import defaultdict
+from traceback import print_exc
+
+from six import string_types, iteritems, PY2
 
 import pyNastran
 from pyNastran.op2.op2_f06_common import OP2_F06_Common
 from pyNastran.op2.result_set import ResultSet
-
 
 def make_stamp(Title, today=None):
     if 'Title' is None:
@@ -184,7 +186,7 @@ class F06Writer(OP2_F06_Common):
         all_results = ['stress', 'strain', 'element_forces', 'constraint_forces'] + self.get_table_types()
         return all_results
 
-    def _clear_results(self):
+    def clear_results(self):
         self._results.clear()
 
     def add_results(self, results):
@@ -213,7 +215,7 @@ class F06Writer(OP2_F06_Common):
                 self._results.add('stress')
             elif 'strain' in result.lower():
                 self._results.add('strain')
-            elif 'spc_forces' == result or 'mpc_forces' == result or 'constraint_forces' == result:
+            elif result in ('spc_forces', 'mpc_forces', 'constraint_forces'):
                 self._results.add('constraint_forces')
             elif 'force' in result.lower(): # could use more validation...
                 self._results.add('element_forces')
@@ -223,7 +225,7 @@ class F06Writer(OP2_F06_Common):
     def set_results(self, results):
         if isinstance(results, string_types):
             results = [results]
-        self._clear_results()
+        self.clear_results()
         self.add_results(results)
 
     def remove_results(self, results):
@@ -380,7 +382,7 @@ class F06Writer(OP2_F06_Common):
         page_stamp = self.make_stamp(self.title, self.date)
         if self.grid_point_weight.reference_point is not None:
             if not quiet:
-                print("grid_point_weight")
+                print(" grid_point_weight")
             self.page_num = self.grid_point_weight.write_f06(f06, page_stamp, self.page_num)
             assert isinstance(self.page_num, int), self.grid_point_weight.__class__.__name__
 
@@ -398,6 +400,7 @@ class F06Writer(OP2_F06_Common):
 
     def _write_f06_subcase_based(self, f06, page_stamp, delete_objects=True,
                                  is_mag_phase=False, is_sort1=True, quiet=False):
+        is_failed = False
         header = ['     DEFAULT                                                                                                                        \n',
                   '\n', '']
 
@@ -738,8 +741,13 @@ class F06Writer(OP2_F06_Common):
                         else:
                             print(res_format % (class_name, isubcase, element_name))
 
-                        self.page_num = result.write_f06(f06, header, page_stamp, page_num=self.page_num,
-                                                         is_mag_phase=is_mag_phase, is_sort1=is_sort1)
+                        try:
+                            self.page_num = result.write_f06(f06, header, page_stamp, page_num=self.page_num,
+                                                             is_mag_phase=is_mag_phase, is_sort1=is_sort1)
+                        except Exception as e:
+                            print_exc(file=sys.stdout)
+                            is_failed = True
+
                         assert isinstance(self.page_num, int), 'pageNum=%r' % str(self.page_num)
                     except:
                         #print("result name = %r" % result.name())
@@ -747,3 +755,7 @@ class F06Writer(OP2_F06_Common):
                     if delete_objects:
                         del result
                     self.page_num += 1
+        if is_failed:
+            if PY2:
+                raise
+            raise RuntimeError('Python 3 cannot reraise Exceptions like this...see previous traceback')

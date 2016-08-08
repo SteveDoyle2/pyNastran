@@ -4,7 +4,7 @@ from six.moves import zip, range
 from itertools import count
 
 from pyNastran.bdf.cards.utils import wipe_empty_fields_typed
-from pyNastran.bdf.bdfInterface.assign_type import interpret_value
+from pyNastran.bdf.bdf_interface.assign_type import interpret_value
 from pyNastran.bdf.field_writer_8 import print_field_8, print_card_8
 from pyNastran.bdf.field_writer_16 import print_field_16
 
@@ -64,7 +64,7 @@ def compare_card_content(fem1, fem2):
         'nlparms', 'tsteps', 'tstepnls', 'dmigs', 'dequations', 'frequencies',
         'sets', 'asets', 'bsets', 'csets', 'qsets', 'usets',
         'se_sets', 'se_bsets', 'se_csets', 'se_qsets', 'se_usets',
-        'tables', 'randomTables', 'methods', 'cMethods']
+        'tables', 'random_tables', 'methods', 'cMethods']
     for name in check_obj_names:
         check_length(fem1, fem2, name)
 
@@ -193,7 +193,7 @@ def compare_card_content(fem1, fem2):
     dict_groups = [
         #'se_sets',
         #'usets', 'se_usets',
-        'tables', 'randomTables',
+        'tables', 'random_tables',
         'methods', 'cMethods',
     ]
     #list_groups = [
@@ -222,9 +222,9 @@ def compare_card_content(fem1, fem2):
         #card2 = fem2.tables[key]
         #assert_fields(card1, card2)
 
-    #for key in fem1.randomTables:
-        #card1 = fem1.randomTables[key]
-        #card2 = fem2.randomTables[key]
+    #for key in fem1.random_tables:
+        #card1 = fem1.random_tables[key]
+        #card2 = fem2.random_tables[key]
         #assert_fields(card1, card2)
 
     #for key in fem1.methods:
@@ -310,7 +310,8 @@ def compare_optimization_content(fem1, fem2):
     for key in fem1.dconstrs:
         card1 = fem1.dconstrs[key]
         card2 = fem2.dconstrs[key]
-        assert_fields(card1, card2)
+        assert len(card1) == len(card2)
+        #assert_fields(card1, card2)
 
     for key in fem1.desvars:
         card1 = fem1.desvars[key]
@@ -346,8 +347,8 @@ def compare_optimization_content(fem1, fem2):
 def compare_aero_content(fem1, fem2):
     assert len(fem1.caeros) == len(fem2.caeros)
     assert len(fem1.paeros) == len(fem2.paeros)
-    assert len(fem1.aero) == len(fem2.aero)
-    assert len(fem1.aeros) == len(fem2.aeros)
+    assert (fem1.aero is None) == (fem2.aero is None), 'fem1.aero_is_None=%s fem2.aero_is_None=%s' % (fem1.aero is None, fem2.aero is None)
+    assert (fem1.aeros is None) == (fem2.aeros is None), 'fem1.aeros_is_None=%s fem2.aeros_is_None=%s' % (fem1.aeros is None, fem2.aeros is None)
     assert len(fem1.aeparams) == len(fem2.aeparams)
     assert len(fem1.aelinks) == len(fem2.aelinks)
     assert len(fem1.aelists) == len(fem2.aelists)
@@ -370,14 +371,14 @@ def compare_aero_content(fem1, fem2):
         card2 = fem2.paeros[key]
         assert_fields(card1, card2)
 
-    for key in fem1.aero:
-        card1 = fem1.aero[key]
-        card2 = fem2.aero[key]
+    if fem1.aero is not None:
+        card1 = fem1.aero
+        card2 = fem2.aero
         assert_fields(card1, card2)
 
-    for key in fem1.aeros:
-        card1 = fem1.aeros[key]
-        card2 = fem2.aeros[key]
+    if fem1.aeros is not None:
+        card1 = fem1.aeros
+        card2 = fem2.aeros
         assert_fields(card1, card2)
 
     for key in fem1.aeparams:

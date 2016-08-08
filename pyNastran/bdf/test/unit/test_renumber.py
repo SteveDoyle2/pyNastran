@@ -1,6 +1,6 @@
 from __future__ import print_function
 from pyNastran.bdf.bdf import BDF
-from pyNastran.bdf.bdfInterface.dev_utils import bdf_renumber
+from pyNastran.bdf.bdf_interface.dev_utils import bdf_renumber
 from pyNastran.utils.dev import get_files_of_type
 import unittest
 import os
@@ -51,9 +51,8 @@ class TestRenumber(unittest.TestCase):
         msg += '            20      10\n'
 
         msg += 'ENDDATA\n'
-        f = open('renumber_in.bdf', 'w')
-        f.write(msg)
-        f.close()
+        with open('renumber_in.bdf', 'w') as f:
+            f.write(msg)
 
         msg_expected = 'CEND\n'
         msg_expected += 'BEGIN BULK\n'

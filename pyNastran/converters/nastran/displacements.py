@@ -46,6 +46,7 @@ class NastranDisplacementResults(object):
 
         self.xyz = xyz
         self.dxyz = dxyz
+        self.uname = uname
         #self.dxyz_norm = norm(dxyz, axis=1)
 
         self.deflects = deflects

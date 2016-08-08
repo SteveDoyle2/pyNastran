@@ -110,8 +110,12 @@ def integrate_line(x, y):
     """
     Integrates a line of length 1.0
 
-    :param x: the independent variable
-    :param y: the dependent variable
+    Parameters
+    ----------
+    x : List[float]
+        the independent variable
+    y : List[float]
+        the dependent variable
 
     :returns integrated_value: the area under the curve
     """
@@ -130,8 +134,13 @@ def integrate_line(x, y):
 def build_spline(x, y):
     """
     Builds a cubic spline or 1st order spline if there are less than 3 terms
-    :param x: the independent variable
-    :param y: the dependent variable
+
+    Parameters
+    ----------
+    x : List[float]
+        the independent variable
+    y : List[float]
+        the dependent variable
 
     :returns splrep: a splrep object (linear or cubic spline depending
                      on the length of x)
@@ -146,8 +155,12 @@ def integrate_positive_line(x, y, minValue=0.):
     """
     Integrates a line of length 1.0
 
-    :param x: the independent variable
-    :param y: the dependent variable
+    Parameters
+    ----------
+    x : List[float]
+        the independent variable
+    y : List[float]
+        the dependent variable
 
     :returns integrated_value: the area under the curve
     """
@@ -305,17 +318,6 @@ def solve_tridag(A, D):
 
 
 Area = lambda a, b: 0.5 * norm(cross(a, b))
-
-def centroid_triangle(n1, n2, n3):
-    """
-    Calculates the centroid of a triangle
-
-    :param n1: NDARRAY of node 1
-    :param n2: NDARRAY of node 2
-    :param n3: NDARRAY of node 3
-    """
-    centroid = (n1 + n2 + n3) / 3.
-    return centroid
 
 def gauss(n):
     r"""

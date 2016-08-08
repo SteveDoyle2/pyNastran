@@ -4,7 +4,7 @@
 /*                                                                      */
 /*              A Python reader/editor/writer for the various           */
 /*                        NASTRAN file formats.                         */
-/*                       Copyright (C) 2011-2015                        */
+/*                       Copyright (C) 2011-2016                        */
 /*               Steven Doyle, Al Danial, Marcin Gąsiorek               */
 /*                                                                      */
 /*    This program is free software; you can redistribute it and/or     */

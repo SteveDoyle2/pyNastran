@@ -9,9 +9,8 @@ from pyNastran.utils.dev import get_files_of_type
 pkg_path = pyNastran.__path__[0]
 
 def parse_skipped_cards(fname):
-    f = open(fname, 'r')
-    lines = f.readlines()
-    f.close()
+    with open(fname, 'r') as f:
+        lines = f.readlines()
 
     results = {}
     for line in lines:
@@ -57,17 +56,14 @@ def get_all_files(folders_file, file_type):
     return files2
 
 
-def main(regenerate=True):
+def main(regenerate=True, make_geom=False, write_bdf=False, save_cases=True,
+         debug=False, write_f06=True):
     # works
     files = get_files_of_type('tests', '.op2')
 
     folders_file = os.path.join(pkg_path, 'bdf', 'test', 'tests', 'foldersRead.txt')
 
-    iSubcases = []
-    debug = False
-    make_geom = False
-    write_bdf = False
-    write_f06 = True
+    isubcases = []
     write_op2 = False
     is_vector = [True] # is this vectorized
     vector_stop = [True]  # corresponds to is_vector; stop if case fails=True
@@ -75,7 +71,6 @@ def main(regenerate=True):
     quiet = True
 
     delete_f06 = True
-    save_cases = True
     stop_on_failure = False
     get_skip_cards = False
 
@@ -121,7 +116,7 @@ if __name__ == '__main__':
 
     msg = "Usage:\n"
     is_release = False
-    msg += "op2_test [-r] [-c] [-u] [-t]\n"
+    msg += "op2_test [-r] [-s] [-c] [-u] [-t] [-g] [-n] [-d] [-f]\n"
     msg += "  op2_test -h | --help\n"
     msg += "  op2_test -v | --version\n"
     msg += "\n"
@@ -131,9 +126,14 @@ if __name__ == '__main__':
     #msg += "  OP2_FILENAME         Path to OP2 file\n"
     #msg += "\n"
     msg += "Options:\n"
+    msg += "  -d, --debug           debug logging\n"
     msg += "  -r, --regenerate      Dumps the OP2 as a readable text file\n"
     msg += "  -c, --disablecompare  Doesn't do a validation of the vectorized result\n"
     msg += "  -t, --short_stats     Short get_op2_stats printout\n"
+    msg += "  -g, --geometry        Reads the OP2 for geometry, which can be written out\n"
+    msg += "  -n, --write_bdf       Writes the bdf to fem.test_op2.bdf (default=False)\n" # n is for NAS
+    msg += "  -f, --write_f06       Writes the f06 to fem.test_op2.f06\n"
+    msg += "  -s, --save_cases      Disables saving of the cases (default=False)\n"
     #msg += "  -z, --is_mag_phase    F06 Writer writes Magnitude/Phase instead of\n"
     #msg += "                        Real/Imaginary (still stores Real/Imag); [default: False]\n"
     #msg += "  -s <sub>, --subcase   Specify one or more subcases to parse; (e.g. 2_5)\n"
@@ -141,5 +141,11 @@ if __name__ == '__main__':
         sys.exit(msg)
 
     data = docopt(msg, version=ver)
+    debug = data['--debug']
     regenerate = data['--regenerate']
-    main(regenerate=regenerate)
+    make_geom = data['--geometry']
+    write_bdf = data['--write_bdf']
+    write_f06 = data['--write_f06']
+    save_cases = not data['--save_cases']
+    main(regenerate=regenerate, make_geom=make_geom, write_bdf=write_bdf,
+         save_cases=save_cases, write_f06=write_f06, debug=debug)

@@ -8,7 +8,7 @@ from pyNastran.bdf.dev_vectorized.cards.elements.spring.spring_element import Sp
 
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
-from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
+from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_blank,
     double, double_or_blank)
 
 class CELAS3(SpringElement):
@@ -50,7 +50,7 @@ class CELAS3(SpringElement):
                                  integer_or_blank(card, 6, 'C2', 0)]
         self.ge[i] = double_or_blank(card, 7, 'ge', 0.)
         self.s[i] = double_or_blank(card, 8, 's', 0.)
-        assert len(card) <= 9, 'len(CELAS3 card) = %i' % len(card) + str(card)
+        assert len(card) <= 9, 'len(CELAS3 card) = %i\ncard=%s' % (len(card), card) + str(card)
         self.i += 1
 
     def build(self):

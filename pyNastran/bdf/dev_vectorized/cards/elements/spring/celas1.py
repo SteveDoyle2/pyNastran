@@ -8,7 +8,7 @@ from pyNastran.bdf.dev_vectorized.cards.elements.spring.spring_element import Sp
 
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
-from pyNastran.bdf.bdfInterface.assign_type import integer, integer_or_blank
+from pyNastran.bdf.bdf_interface.assign_type import integer, integer_or_blank
 
 
 class CELAS1(SpringElement):
@@ -40,7 +40,7 @@ class CELAS1(SpringElement):
                                integer(card, 5, 'n2')]
         self.components[i, :] = [integer_or_blank(card, 4, 'c1', 0),
                                  integer_or_blank(card, 6, 'c2', 0)]
-        assert len(card) <= 7, 'len(CELAS1 card) = %i' % len(card)
+        assert len(card) <= 7, 'len(CELAS1 card) = %i\ncard=%s' % (len(card), card)
         self.i += 1
 
     def build(self):

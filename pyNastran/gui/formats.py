@@ -1,5 +1,5 @@
 try:
-    from pyNastran.converters.cart3d.cart3dIO import Cart3dIO
+    from pyNastran.converters.cart3d.cart3d_io import Cart3dIO
     is_cart3d = True
 except ImportError:
     raise
@@ -22,10 +22,10 @@ except ImportError:
 
 
 try:
-    from pyNastran.converters.LaWGS.wgsIO import LaWGS_IO
+    from pyNastran.converters.LaWGS.wgs_io import LaWGS_IO
     is_lawgs = True
 except ImportError:
-    #raise
+    raise
     class LaWGS_IO(object):
         def __init__(self):
             pass
@@ -35,17 +35,17 @@ except ImportError:
 
 
 try:
-    from pyNastran.converters.panair.panairIO import PanairIO
+    from pyNastran.converters.panair.panair_io import PanairIO
     is_panair = True
 except ImportError:
-    #raise
+    raise
     class PanairIO(object):
         def __init__(self):
             pass
     is_panair = False
 
 try:
-    from pyNastran.converters.plot3d.plot3d_io import Plot3d_io
+    from pyNastran.converters.dev.plot3d.plot3d_io import Plot3d_io
     is_plot3d = True
 #except ImportError:
 except:
@@ -158,4 +158,14 @@ except ImportError:
         def __init__(self):
             pass
     is_openvsp = False
+
+try:
+    from pyNastran.converters.openvsp.degen_geom_io import DegenGeomIO
+    is_degen_geom = True
+except ImportError:
+    raise
+    class DegenGeomIO(object):
+        def __init__(self):
+            pass
+    is_degen_geom = False
 

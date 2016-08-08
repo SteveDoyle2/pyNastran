@@ -6,7 +6,7 @@ from numpy.linalg import norm
 from pyNastran.utils import integer_types
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
-from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
+from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_blank,
     double_or_blank, integer_double_or_blank,
     double_string_or_blank)
 
@@ -125,7 +125,7 @@ class CBEAM(Element):
                          double_or_blank(card, 16, 'w3b', 0.0),]
         self.sa[i] = integer_or_blank(card, 17, 'sa', 0)
         self.sb[i] = integer_or_blank(card, 18, 'sb', 0)
-        assert len(card) <= 19, 'len(CBEAM card) = %i' % len(card)
+        assert len(card) <= 19, 'len(CBEAM card) = %i\ncard=%s' % (len(card), card)
         self.i += 1
 
     def build(self):

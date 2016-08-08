@@ -6,7 +6,7 @@ from numpy import zeros, array
 from pyNastran.bdf.cards.base_card import expand_thru
 from pyNastran.bdf.field_writer_8 import print_float_8
 from pyNastran.bdf.field_writer_16 import print_float_16
-from pyNastran.bdf.bdfInterface.assign_type import (integer,
+from pyNastran.bdf.bdf_interface.assign_type import (integer,
     double, double_or_blank)
 
 from .loads import VectorizedCardDict

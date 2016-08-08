@@ -137,7 +137,6 @@ class RealStrainEnergyArray(ScalarObject):
     def _reset_indices(self):
         self.itotal = 0
         self.ielement = 0
-        pass
 
     def get_headers(self):
         headers = [

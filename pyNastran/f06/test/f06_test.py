@@ -1,3 +1,4 @@
+from __future__ import print_function
 from six import iteritems
 import os
 import sys
@@ -11,54 +12,53 @@ pkg_path = pyNastran.__path__[0]
 
 
 def parse_skipped_cards(fname):
-    f = open(fname, 'r')
-    lines = f.readlines()
-    f.close()
+    with open(fname, 'r') as f:
+        lines = f.readlines()
 
     results = {}
     for line in lines:
         if 'OES' in line[0:3]:
             (fore, aft) = line.strip().split('->')
-            (oes, form, elementTypeNum) = fore.strip().split(' ')
-            (element_type, eType) = elementTypeNum.strip().split('=')
+            (oes, form, element_type_num) = fore.strip().split(' ')
+            (element_type, etype) = element_type_num.strip().split('=')
             (msg, fpath) = aft.strip().split('-')
             #print("fpath=%r" % fpath)
             fpath = fpath.lstrip()[6:]
-            eName = msg.split(' ')[0]
-            #print("eName=%s eType=%s form=%s fpath=|%s|" % (eName, eType, form, fpath))
-            key = (eName, eType, form)
+            ename = msg.split(' ')[0]
+            #print("eName=%s etype=%s form=%s fpath=%r" % (ename, etype, form, fpath))
+            key = (ename, etype, form)
             if key not in results:
                 results[key] = fpath
 
-    filesToAnalyze = []
+    files_to_analyze = []
     for (key, value) in sorted(iteritems(results)):
-        filesToAnalyze.append(value)
+        files_to_analyze.append(value)
 
-    f = open('newElements.in', 'wb')
-    for fname in filesToAnalyze:
+    f = open('new_elements.in', 'wb')
+    for fname in files_to_analyze:
         f.write(fname + '\n')
     f.close()
-    return filesToAnalyze
+    return files_to_analyze
 
 
 def main():
     # works
     files = get_files_of_type('tests', '.f06')
 
-    foldersFile = os.path.join(pkg_path, 'bdf', 'test', 'tests', 'foldersRead.txt')
+    folders_file = os.path.join(pkg_path, 'bdf', 'test', 'tests', 'foldersRead.txt')
     #files2 = ['ann6611.f06']
 
-    iSubcases = []
+    isubcases = []
     debug = False
-    saveCases = True
+    save_cases = True
     regenerate = True
-    stopOnFailure = False
-    getSkipCards = False
+    stop_on_failure = False
+    get_skip_cards = False
 
-    if getSkipCards:
-        files2 = parse_skipped_cards('skippedCards.out')
+    if get_skip_cards:
+        files2 = parse_skipped_cards('skipped_cards.out')
     elif regenerate:
-        files2 = get_all_files(foldersFile, '.f06')
+        files2 = get_all_files(folders_file, '.f06')
         for fname in files2:
             if 'test_f06' in fname:
                 os.remove(fname)
@@ -74,7 +74,7 @@ def main():
         files2 += files
         files2.sort()
     else:
-        files2 = get_failed_files('failedCases.in')
+        files2 = get_failed_files('failed_cases.in')
 
     files2 = [fname for fname in files2
               if '.test_op2.f06' not in fname
@@ -88,22 +88,22 @@ def main():
 
     #            HIS, R1B        EQEXIN
     #skipFiles = ['accopt3.f06','acms111m.f06','adjoint.f06','aerobeam.f06',] # tpl
-    skipFiles = ['nltrot99.f06', 'rot12901.f06']  # giant
+    skip_files = ['nltrot99.f06', 'rot12901.f06']  # giant
     #print(files)
 
-    nStart = 0
-    nStop = 10000
+    nstart = 0
+    nstop = 10000
     try:
-        os.remove('skippedCards.out')
+        os.remove('skipped_cards.out')
     except:
         pass
 
-    print("nFiles = %s" % len(files))
+    print("nfiles = %s" % len(files))
     #print(files)
     import time
     t0 = time.time()
-    run_lots_of_files(files, debug, saveCases, skipFiles,
-                      stopOnFailure, nStart, nStop)
+    run_lots_of_files(files, debug, save_cases, skip_files,
+                      stop_on_failure, nstart, nstop)
     print("dt = %f" % (time.time() - t0))
     sys.exit('final stop...')
 

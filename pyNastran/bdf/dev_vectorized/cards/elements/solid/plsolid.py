@@ -3,7 +3,7 @@ from numpy import zeros, unique, searchsorted, array
 
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.field_writer_8 import print_card_8
-from pyNastran.bdf.bdfInterface.assign_type import (integer,
+from pyNastran.bdf.bdf_interface.assign_type import (integer,
     string_or_blank)
 
 from pyNastran.bdf.dev_vectorized.cards.elements.property import Property
@@ -40,7 +40,7 @@ class PLSOLID(Property):
                   % stress_strain
             #raise RuntimeError(msg)
         self.stress_strain[i] = stress_strain
-        assert len(card) <= 4, 'len(PLSOLID card) = %i' % len(card)
+        assert len(card) <= 4, 'len(PLSOLID card) = %i\ncard=%s' % (len(card), card)
         self.i += 1
 
     def build(self):

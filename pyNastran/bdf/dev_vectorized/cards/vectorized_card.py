@@ -146,6 +146,9 @@ class VectorizedCard(object):
             i = array([i], dtype='int32')
         return i
 
+    def __repr__(self):
+        return '<%s object; n=%s>' % (self.type, self.n)
+
 def by_converter(value, default):
     """
     For use in:

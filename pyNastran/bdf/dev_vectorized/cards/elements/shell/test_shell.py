@@ -3,6 +3,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from six.moves import range
 from collections import defaultdict
 import unittest
+import numpy as np
 from numpy import array, allclose
 
 from pyNastran.bdf.dev_vectorized.bdf import BDF
@@ -160,7 +161,7 @@ class TestShells(unittest.TestCase):
         self.assertEquals(pcomp.get_thickness_by_property_id(), 10 * t)
         self.assertEquals(pcomp.get_thickness_by_property_id_ply(pcomp_pid, 0), t)
         self.assertEquals(pcomp.get_thickness_by_property_id_ply(pcomp_pid, 1), 2 * t)
-        self.assertEquals(pcomp.get_thickness_by_property_id_ply(pcomp_pid, 2), 3 * t)
+        self.assertTrue(np.allclose(pcomp.get_thickness_by_property_id_ply(pcomp_pid, 2), 3 * t))
         self.assertEquals(pcomp.get_thickness_by_property_id_ply(pcomp_pid, 3), 4 * t)
         with self.assertRaises(IndexError):
             self.assertEquals(pcomp.get_thickness_by_property_id_ply(pcomp_pid, 4), 5*t)

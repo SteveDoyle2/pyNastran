@@ -11,7 +11,7 @@ from pyNastran.bdf.field_writer_16 import print_field_16, print_card_16, print_f
 from pyNastran.bdf.field_writer_double import print_card_double
 
 
-from pyNastran.bdf.bdfInterface.assign_type import interpret_value
+from pyNastran.bdf.bdf_interface.assign_type import interpret_value
 
 
 class Testfield_writer_8(unittest.TestCase):

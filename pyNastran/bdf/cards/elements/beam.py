@@ -1,12 +1,12 @@
 # pylint: disable=R0904,R0902,E1101,E1103,C0111,C0302,C0103,W0101
 from six import string_types
-from numpy import array, cross
+import numpy as np
 from numpy.linalg import norm
 
 from pyNastran.utils import integer_types
 from pyNastran.bdf.cards.elements.bars import CBAR, LineElement
-from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
-    double_or_blank, integer_double_string_or_blank)
+from pyNastran.bdf.bdf_interface.assign_type import (
+    integer, integer_or_blank, double_or_blank, integer_double_string_or_blank)
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
@@ -59,7 +59,9 @@ class CBEAM(CBAR):
                 if n == 5:
                     self.g0 = value
                 else:  # offt
-                    raise KeyError('Field %r=%r is an invalid %s entry or is unsupported.' % (n, value, self.type))
+                    msg = 'Field %r=%r is an invalid %s entry or is unsupported.' % (
+                        n, value, self.type)
+                    raise KeyError(msg)
             else:
                 if n == 5:
                     self.x[0] = value
@@ -68,7 +70,9 @@ class CBEAM(CBAR):
                 elif n == 7:
                     self.x[2] = value
                 else:
-                    raise KeyError('Field %r=%r is an invalid %s entry or is unsupported.' % (n, value, self.type))
+                    msg = 'Field %r=%r is an invalid %s entry or is unsupported.' % (
+                        n, value, self.type)
+                    raise KeyError(msg)
 
     def __init__(self, eid, pid, ga, gb, x, g0, is_offt, offt, bit,
                  pa, pb, wa, wb, sa, sb, comment=''):
@@ -93,50 +97,68 @@ class CBEAM(CBAR):
         self._validate_input()
 
     @classmethod
-    def add_card(self, card, comment=''):
+    def add_card(cls, card, comment=''):
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', eid)
         ga = integer(card, 3, 'ga')
         gb = integer(card, 4, 'gb')
 
-        x, g0 = self._init_x_g0(card, eid)
-        is_offt, offt, bit = self._init_offt_bit(card, eid)# offt doesn't exist in NX nastran
+        x, g0 = cls._init_x_g0(card, eid)
+        is_offt, offt, bit = cls._init_offt_bit(card, eid)# offt doesn't exist in NX nastran
         pa = integer_or_blank(card, 9, 'pa', 0)
         pb = integer_or_blank(card, 10, 'pb', 0)
 
-        wa = array([double_or_blank(card, 11, 'w1a', 0.0),
-                         double_or_blank(card, 12, 'w2a', 0.0),
-                         double_or_blank(card, 13, 'w3a', 0.0)], 'float64')
+        wa = np.array([double_or_blank(card, 11, 'w1a', 0.0),
+                       double_or_blank(card, 12, 'w2a', 0.0),
+                       double_or_blank(card, 13, 'w3a', 0.0)], 'float64')
 
-        wb = array([double_or_blank(card, 14, 'w1b', 0.0),
-                         double_or_blank(card, 15, 'w2b', 0.0),
-                         double_or_blank(card, 16, 'w3b', 0.0)], 'float64')
+        wb = np.array([double_or_blank(card, 14, 'w1b', 0.0),
+                       double_or_blank(card, 15, 'w2b', 0.0),
+                       double_or_blank(card, 16, 'w3b', 0.0)], 'float64')
 
         sa = integer_or_blank(card, 17, 'sa', 0)
         sb = integer_or_blank(card, 18, 'sb', 0)
-        assert len(card) <= 19, 'len(CBEAM card) = %i' % len(card)
+        assert len(card) <= 19, 'len(CBEAM card) = %i\ncard=%s' % (len(card), card)
         return CBEAM(eid, pid, ga, gb, x, g0, is_offt, offt, bit,
                      pa, pb, wa, wb, sa, sb, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
+    def add_op2_data(cls, data, f, comment=''):
         #: .. todo:: verify
+        assert len(data) == 2, 'data=%s len(data)=%s' % (data, len(data))
         #data = [[eid,pid,ga,gb,sa,sb, pa,pb,w1a,w2a,w3a,w1b,w2b,w3b],
         #        [f,g0]]
         #data = [[eid,pid,ga,gb,sa,sb, pa,pb,w1a,w2a,w3a,w1b,w2b,w3b],
         #        [f,x1,x2,x3]]
 
-        main = data[0]
-
-        flag = data[1][0]
-        if flag in [0, 1]:
+        main, aft = data
+        flag = aft[0]
+        assert f == flag, 'f=%s flag=%s' % (f, flag)
+        if flag == 0:
+            # basic cid
+            #data_in = [[eid, pid, ga, gb, sa, sb, pa, pb, w1a, w2a, w3a, w1b, w2b, w3b],
+                       #[f, x1, x2, x3]]
+            assert len(aft) == 4, 'f=%s aft=%s len(aft)=%s' % (f, aft, len(aft))
+            x1, x2, x3 = aft[1:]
             g0 = None
-            x = array([data[1][1],
-                            data[1][2],
-                            data[1][3]], dtype='float64')
-        else:
+            x = np.array([x1, x2, x3], dtype='float64')
+        elif flag == 1:
+            # global cid
+            #data_in = [[eid, pid, ga, gb, sa, sb, pa, pb, w1a, w2a, w3a, w1b, w2b, w3b],
+                       #[f, x1, x2, x3]]
+            assert len(aft) == 4, 'f=%s aft=%s len(aft)=%s' % (f, aft, len(aft))
+            g0 = None
+            x1, x2, x3 = aft[1:]
+            x = np.array([x1, x2, x3], dtype='float64')
+        elif flag == 2:
+            # grid option
+            #data_in = [[eid, pid, ga, gb, sa, sb, pa, pb, w1a, w2a, w3a, w1b, w2b, w3b],
+                       #[f, g0]]
+            assert len(aft) == 2, 'f=%s aft=%s len(aft)=%s' % (f, aft, len(aft))
             g0 = data[1][1]
             x = None
+        else:
+            raise NotImplementedError()
 
         eid = main[0]
         pid = main[1]
@@ -147,13 +169,14 @@ class CBEAM(CBAR):
 
         is_offt = True  #: .. todo:: is this correct???
         #offt = str(data[6]) # GGG
+        bit = None # ????
         offt = 'GGG'  #: .. todo:: is this correct???
 
         pa = main[6]
         pb = main[7]
 
-        wa = array([main[8], main[9], main[10]], 'float64')
-        wb = array([main[11], main[12], main[13]], 'float64')
+        wa = np.array([main[8], main[9], main[10]], 'float64')
+        wb = np.array([main[11], main[12], main[13]], 'float64')
         return CBEAM(eid, pid, ga, gb, x, g0, is_offt, offt, bit,
                      pa, pb, wa, wb, sa, sb, comment=comment)
 
@@ -166,7 +189,7 @@ class CBEAM(CBAR):
         return [self.ga, self.gb]
 
     @classmethod
-    def _init_offt_bit(self, card, eid):
+    def _init_offt_bit(cls, card, eid):
         """
         offt doesn't exist in NX nastran
         """
@@ -183,14 +206,13 @@ class CBEAM(CBAR):
             is_offt = True
             bit = None
             offt = field8
-            #print("self.offt = ", self.offt)
             msg = 'invalid offt parameter of CBEAM...offt=%s' % offt
             assert offt[0] in ['G', 'B', 'O', 'E'], msg
             assert offt[1] in ['G', 'B', 'O', 'E'], msg
             assert offt[2] in ['G', 'B', 'O', 'E'], msg
         else:
             msg = ('field8 on %s card is not a string(offt) or bit '
-                   '(float)...field8=%s\n' % (self.type, field8))
+                   '(float)...field8=%s\n' % (cls.type, field8))
             raise RuntimeError("Card Instantiation: %s" % msg)
         return is_offt, offt, bit
 
@@ -223,13 +245,22 @@ class CBEAM(CBAR):
         return field8
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
         self.ga = model.Node(self.ga, msg=msg)
-        self.gb = model.Node(self.gb, msg=msg)
-        self.pid = model.Property(self.pid, msg=msg)
-
         self.ga_ref = self.ga
+        self.gb = model.Node(self.gb, msg=msg)
         self.gb_ref = self.gb
+        self.nodes = model.Nodes([self.ga.nid, self.gb.nid], msg=msg)
+        self.nodes_ref = self.nodes
+        self.pid = model.Property(self.pid, msg=msg)
         self.pid_ref = self.pid
         if self.g0:
             g0 = model.nodes[self.g0]
@@ -297,4 +328,8 @@ class CBEAM(CBAR):
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
+
+    def write_card_16(self, is_double=False):
+        card = self.repr_fields()
         return self.comment + print_card_16(card)

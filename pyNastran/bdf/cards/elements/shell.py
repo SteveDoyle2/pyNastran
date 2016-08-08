@@ -20,20 +20,20 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six.moves import range
 
+import numpy as np
 from numpy import cross, allclose
 from numpy.linalg import norm
 
 from pyNastran.utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default, set_default_if_blank
 from pyNastran.bdf.cards.base_card import Element
-from pyNastran.utils.mathematics import Area, centroid_triangle
-from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
-    double_or_blank, integer_double_or_blank, blank)
-from pyNastran.bdf.field_writer_8 import print_card_8, print_field_8, print_float_or_int_8
+from pyNastran.bdf.bdf_interface.assign_type import (
+    integer, integer_or_blank, double_or_blank, integer_double_or_blank, blank)
+from pyNastran.bdf.field_writer_8 import print_card_8, print_field_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.cards.utils import wipe_empty_fields
 
-def _triangle_area_centroid_normal(nodes):
+def _triangle_area_centroid_normal(nodes, card):
     """
 
     Parameters
@@ -49,6 +49,8 @@ def _triangle_area_centroid_normal(nodes):
         Centroid of triangle.
     unit_normal : ndarray
         Unit normal of triangles.
+    card : CTRIA3(), CTRIA6()
+        the self parameter
 
     ::
 
@@ -72,8 +74,8 @@ def _triangle_area_centroid_normal(nodes):
 
     if not allclose(norm(normal), 1.):
         msg = ('function _triangle_area_centroid_normal, check...\n'
-               'a = {0}\nb = {1}\nnormal = {2}\nlength = {3}\n'.format(
-                   n0 - n1, n0 - n2, normal, length))
+               'a = {0}\nb = {1}\nnormal = {2}\nlength = {3}\n{4}'.format(
+                   n0 - n1, n0 - n2, normal, length, str(card)))
         raise RuntimeError(msg)
     return (0.5 * length, (n0 + n1 + n2) / 3., normal)
 
@@ -202,7 +204,7 @@ class TriShell(ShellElement):
                the normal vector
         """
         (n0, n1, n2) = self.get_node_positions()
-        return _triangle_area_centroid_normal([n0, n1, n2])
+        return _triangle_area_centroid_normal([n0, n1, n2], self)
 
     def get_area(self):
         return self.Area()
@@ -215,8 +217,7 @@ class TriShell(ShellElement):
         (n1, n2, n3) = self.get_node_positions()
         a = n1 - n2
         b = n1 - n3
-        area = Area(a, b)
-        0.5 * norm(cross(a, b))
+        area = 0.5 * norm(cross(a, b))
         return area
 
     def Normal(self):
@@ -247,7 +248,7 @@ class TriShell(ShellElement):
           CG = \frac{1}{3} (n_0+n_1+n_2)
         """
         n1, n2, n3 = self.get_node_positions()
-        centroid = centroid_triangle(n1, n2, n3)
+        centroid = (n1 + n2 + n3) / 3.
         return centroid
 
     def uncross_reference(self):
@@ -257,6 +258,15 @@ class TriShell(ShellElement):
 
 
 class CTRIA3(TriShell):
+    """
+    +--------+-------+-------+----+----+----+------------+---------+-----+
+    |   1    |   2   |   3   |  4 |  5 |  6 |     7      |    8    |  9  |
+    +========+=======+=======+=====+===+====+============+=========+=====+
+    | CTRIA3 |  EID  |  PID  | N1 | N2 | N3 | THETA/MCID | ZOFFSET |     |
+    +--------+-------+-------+----+----+----+------------+---------+-----+
+    |        |       | TFLAG | T1 | T2 | T3 |            |         |     |
+    +--------+-------+-------+----+----+----+------------+---------+-----+
+    """
     type = 'CTRIA3'
     aster_type = 'TRIA3'
     calculixType = 'S3'
@@ -292,6 +302,9 @@ class CTRIA3(TriShell):
         self.prepare_node_ids(nids)
         assert len(self.nodes) == 3
 
+    def validate(self):
+        assert len(set(self.nodes)) == 3, 'nodes=%s; n=%s\n%s' % (self.nodes, len(set(self.nodes)), str(self))
+
     @classmethod
     def add_op2_data(cls, data, comment=''):
         eid = data[0]
@@ -310,8 +323,8 @@ class CTRIA3(TriShell):
             T2 = 1.0
         if T3 == -1.0:
             T3 = 1.0
-            return CTRIA3(eid, pid, nids, zOffset, thetaMcid,
-                          TFlag, T1, T2, T3, comment=comment)
+        return CTRIA3(eid, pid, nids, zOffset, thetaMcid,
+                      TFlag, T1, T2, T3, comment=comment)
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -332,10 +345,10 @@ class CTRIA3(TriShell):
             blank(card, 9, 'blank')
 
             TFlag = integer_or_blank(card, 10, 'TFlag', 0)
-            T1 = double_or_blank(card, 11, 'T1', 1.0)
-            T2 = double_or_blank(card, 12, 'T2', 1.0)
-            T3 = double_or_blank(card, 13, 'T3', 1.0)
-            assert len(card) <= 14, 'len(CTRIA3 card) = %i' % len(card)
+            T1 = double_or_blank(card, 11, 'T1')
+            T2 = double_or_blank(card, 12, 'T2')
+            T3 = double_or_blank(card, 13, 'T3')
+            assert len(card) <= 14, 'len(CTRIA3 card) = %i\ncard=%s' % (len(card), card)
         else:
             thetaMcid = 0.0
             zOffset = 0.0
@@ -347,10 +360,18 @@ class CTRIA3(TriShell):
                       TFlag, T1, T2, T3, comment=comment)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by CTRIA3 eid=%s' % self.eid
         self.nodes = model.Nodes(self.node_ids, msg=msg)
-        self.pid = model.Property(self.Pid(), msg=msg)
         self.nodes_ref = self.nodes
+        self.pid = model.Property(self.Pid(), msg=msg)
         self.pid_ref = self.pid
 
     def uncross_reference(self):
@@ -500,39 +521,52 @@ class CTRIA6(TriShell):
         ]
         if len(card) > 9:
             thetaMcid = integer_double_or_blank(card, 9, 'thetaMcid', 0.0)
-            zOffset = double_or_blank(card, 10, 'zOffset', 0.0)
+            zoffset = double_or_blank(card, 10, 'zOffset', 0.0)
 
-            T1 = double_or_blank(card, 11, 'T1', 1.0)
-            T2 = double_or_blank(card, 12, 'T2', 1.0)
-            T3 = double_or_blank(card, 13, 'T3', 1.0)
+            T1 = double_or_blank(card, 11, 'T1')
+            T2 = double_or_blank(card, 12, 'T2')
+            T3 = double_or_blank(card, 13, 'T3')
             TFlag = integer_or_blank(card, 14, 'TFlag', 0)
-            assert len(card) <= 15, 'len(CTRIA6 card) = %i' % len(card)
+            assert len(card) <= 15, 'len(CTRIA6 card) = %i\ncard=%s' % (len(card), card)
         else:
             thetaMcid = 0.0
-            zOffset = 0.0
+            zoffset = 0.0
             T1 = 1.0
             T2 = 1.0
             T3 = 1.0
             TFlag = 0
-        return CTRIA6(eid, pid, nids, thetaMcid, zOffset,
+        return CTRIA6(eid, pid, nids, thetaMcid, zoffset,
                       TFlag, T1, T2, T3, comment=comment)
 
-    def add_op2_data(self, data, comment=''):
-        if comment:
-            self._comment = comment
-        self.eid = data[0]
-        self.pid = data[1]
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        eid = data[0]
+        pid = data[1]
         nids = data[2:8]
-        self.thetaMcid = data[8]
-        self.zOffset = data[8]
-        self.T1 = data[9]
-        self.T2 = data[10]
-        self.T3 = data[11]
-        self.TFlag = data[12]
-        self.prepare_node_ids(nids, allow_empty_nodes=True)
+        thetaMcid = data[8]
+        zoffset = data[9]
+        T1 = data[10]
+        T2 = data[11]
+        T3 = data[12]
+        TFlag = data[13]
+        assert isinstance(T1, float), data
+        assert isinstance(T2, float), data
+        assert isinstance(T3, float), data
+        assert isinstance(TFlag, int), data
+        #prepare_node_ids(nids, allow_empty_nodes=True)
         assert len(nids) == 6, 'error on CTRIA6'
+        return CTRIA6(eid, pid, nids, thetaMcid, zoffset,
+                      TFlag, T1, T2, T3, comment=comment)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by CTRIA6 eid=%s' % self.eid
         self.nodes = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
         self.pid = model.Property(self.Pid(), msg=msg)
@@ -580,7 +614,7 @@ class CTRIA6(TriShell):
         together
         """
         (n1, n2, n3, n4, n5, n6) = self.get_node_positions()
-        return _triangle_area_centroid_normal([n1, n2, n3])
+        return _triangle_area_centroid_normal([n1, n2, n3], self)
 
     def Area(self):
         r"""
@@ -590,7 +624,7 @@ class CTRIA6(TriShell):
         (n1, n2, n3, n4, n5, n6) = self.get_node_positions()
         a = n1 - n2
         b = n1 - n3
-        area = Area(a, b)
+        area = 0.5 * norm(cross(a, b))
         return area
 
     def Normal(self):
@@ -611,7 +645,7 @@ class CTRIA6(TriShell):
           CG = \frac{1}{3} (n_1+n_2+n_3)
         """
         (n1, n2, n3, n4, n5, n6) = self.get_node_positions()
-        centroid = centroid_triangle(n1, n2, n3)
+        centroid = (n1 + n2 + n3) / 3.
         return centroid
 
     def flipNormal(self):
@@ -632,6 +666,7 @@ class CTRIA6(TriShell):
 
     def _get_repr_defaults(self):
         zOffset = set_blank_if_default(self.zOffset, 0.0)
+        assert isinstance(self.TFlag, int), self.TFlag
         TFlag = set_blank_if_default(self.TFlag, 0)
         thetaMcid = set_blank_if_default(self.thetaMcid, 0.0)
 
@@ -650,14 +685,14 @@ class CTRIA6(TriShell):
 
     def raw_fields(self):
         list_fields = (['CTRIA6', self.eid, self.Pid()] + self.node_ids +
-                       [self.thetaMcid, self.zOffset, None] + [None, self.TFlag,
-                                                               self.T1, self.T2, self.T3])
+                       [self.thetaMcid, self.zOffset,
+                        self.T1, self.T2, self.T3, self.TFlag,])
         return list_fields
 
     def repr_fields(self):
         (thetaMcid, zOffset, TFlag, T1, T2, T3) = self._get_repr_defaults()
         list_fields = (['CTRIA6', self.eid, self.Pid()] + self.node_ids +
-                       [thetaMcid, zOffset, None] + [None, TFlag, T1, T2, T3])
+                       [thetaMcid, zOffset, T1, T2, T3, TFlag])
         return list_fields
 
     def write_card(self, size=8, is_double=False):
@@ -689,33 +724,45 @@ class CTRIAR(TriShell):
         self.T1 = T1
         self.T2 = T2
         self.T3 = T3
-        self.prepare_node_ids(nids)
+        self.nodes = nids
         assert len(self.nodes) == 3
+
+    def validate(self):
+        self.validate_node_ids(allow_empty_nodes=False)
 
     @classmethod
     def add_card(cls, card, comment=''):
         eid = integer(card, 1, 'eid')
         pid = integer(card, 2, 'pid')
 
-        nids = [integer(card, 3, 'n1'),
-                integer(card, 4, 'n2'),
-                integer(card, 5, 'n3')]
+        nids = [
+            integer(card, 3, 'n1'),
+            integer(card, 4, 'n2'),
+            integer(card, 5, 'n3')
+        ]
 
         thetaMcid = integer_double_or_blank(card, 6, 'thetaMcid', 0.0)
         zOffset = double_or_blank(card, 7, 'zOffset', 0.0)
         blank(card, 8, 'blank')
         blank(card, 9, 'blank')
-        blank(card, 10, 'blank')
 
         TFlag = integer_or_blank(card, 10, 'TFlag', 0)
-        T1 = double_or_blank(card, 11, 'T1', 1.0)
-        T2 = double_or_blank(card, 12, 'T2', 1.0)
-        T3 = double_or_blank(card, 13, 'T3', 1.0)
-        assert len(card) <= 14, 'len(CTRIAR card) = %i' % len(card)
+        T1 = double_or_blank(card, 11, 'T1')
+        T2 = double_or_blank(card, 12, 'T2')
+        T3 = double_or_blank(card, 13, 'T3')
+        assert len(card) <= 14, 'len(CTRIAR card) = %i\ncard=%s' % (len(card), card)
         return CTRIAR(eid, pid, nids, thetaMcid, zOffset,
                       TFlag, T1, T2, T3, comment=comment)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by CTRIAR eid=%s' % self.eid
         self.nodes = model.Nodes(self.nodes, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
@@ -827,6 +874,15 @@ class CTRIAR(TriShell):
 
 
 class CTRIAX(TriShell):
+    """
+    +--------+------------+-------+----+----+----+----+----+-----+
+    |   1    |     2      |   3   |  4 |  5 |  6 | 7  |  8 |  9  |
+    +========+============+=======+====+====+====+====+====+=====+
+    | CTRIA3 |    EID     |  PID  | N1 | N2 | N3 | N4 | N5 | N6  |
+    +--------+------------+-------+----+----+----+----+----+-----+
+    |        | THETA/MCID |       |    |    |    |    |    |     |
+    +--------+------------+-------+----+----+----+----+----+-----+
+    """
     type = 'CTRIAX'
     calculixType = 'CAX6'
     def __init__(self, eid, pid, nids, thetaMcid, comment=''):
@@ -838,8 +894,11 @@ class CTRIAX(TriShell):
         #: Property ID
         self.pid = pid
         self.thetaMcid = thetaMcid
+        self.nodes = nids
         assert len(nids) == 6, 'error on CTRIAX'
-        self.prepare_node_ids(nids, allow_empty_nodes=True)
+
+    def validate(self):
+        self.validate_node_ids(allow_empty_nodes=True)
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -855,7 +914,7 @@ class CTRIAX(TriShell):
             integer_or_blank(card, 8, 'n6'),
             ]
         thetaMcid = integer_double_or_blank(card, 9, 'theta_mcsid', 0.0)
-        assert len(card) <= 10, 'len(CTRIAX card) = %i' % len(card)
+        assert len(card) <= 10, 'len(CTRIAX card) = %i\ncard=%s' % (len(card), card)
         return CTRIAX(eid, pid, nids, thetaMcid, comment=comment)
 
     def _verify(self, xref=True):
@@ -885,13 +944,16 @@ class CTRIAX(TriShell):
                 assert isinstance(c[i], float)
                 assert isinstance(n[i], float)
 
+    def flipNormal(self):
+        pass
+
     def AreaCentroidNormal(self):
         """
         Returns area, centroid, normal as it's more efficient to do them
         together
         """
         (n1, n2, n3, n4, n5, n6) = self.get_node_positions()
-        return _triangle_area_centroid_normal([n1, n2, n3])
+        return _triangle_area_centroid_normal([n1, n2, n3], self)
 
     def Area(self):
         r"""
@@ -901,10 +963,18 @@ class CTRIAX(TriShell):
         (n1, n2, n3, n4, n5, n6) = self.get_node_positions()
         a = n1 - n2
         b = n1 - n3
-        area = Area(a, b)
+        area = 0.5 * norm(cross(a, b))
         return area
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by CTRIAX eid=%s' % self.eid
         self.nodes = model.Nodes(self.nodes, allow_empty_nodes=True, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
@@ -946,8 +1016,16 @@ class CTRIAX(TriShell):
 
 
 class CTRIAX6(TriShell):
-    r"""
-    Nodes defined in a non-standard way::
+    """
+    +--------+-------+-------+----+----+----+----+----+-----+
+    |   1    |   2   |   3   |  4 |  5 |  6 |  7 |  8 |  9  |
+    +========+=======+=======+=====+===+====+====+====+=====+
+    | CTRIAX6 |  EID |  MID  | N1 | N2 | N3 | G4 | G5 | G6  |
+    +--------+-------+-------+----+----+----+----+----+-----+
+    |        |       | THETA |    |    |    |    |    |     |
+    +--------+-------+-------+----+----+----+----+----+-----+
+
+    Nodes are defined in a non-standard way::
 
            5
           / \
@@ -985,10 +1063,18 @@ class CTRIAX6(TriShell):
         ]
 
         theta = double_or_blank(card, 9, 'theta', 0.0)
-        assert len(card) <= 10, 'len(CTRIAX6 card) = %i' % len(card)
+        assert len(card) <= 10, 'len(CTRIAX6 card) = %i\ncard=%s' % (len(card), card)
         return CTRIAX6(eid, mid, nids, theta, comment=comment)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by CTRIAX6 eid=%s' % self.eid
         self.nodes = model.Nodes(self.nodes, allow_empty_nodes=True, msg=msg)
         self.mid = model.Material(self.mid)
@@ -1027,7 +1113,7 @@ class CTRIAX6(TriShell):
         together
         """
         (n0, n1, n2, n3, n4, n5) = self.get_node_positions()
-        return _triangle_area_centroid_normal([n0, n2, n4])
+        return _triangle_area_centroid_normal([n0, n2, n4], self)
 
     def Area(self):
         r"""
@@ -1037,7 +1123,7 @@ class CTRIAX6(TriShell):
         (n1, n2, n3, n4, n5, n6) = self.get_node_positions()
         a = n1 - n3
         b = n1 - n5
-        area = Area(a, b)
+        area = 0.5 * norm(cross(a, b))
         return area
 
     def Thickness(self):
@@ -1079,7 +1165,25 @@ class CTRIAX6(TriShell):
 
     @property
     def node_ids(self):
+        """
+             5
+            / \
+           6   4
+         /       \
+        1----2----3
+        """
         return self._nodeIDs(allow_empty_nodes=True)
+
+    def get_edge_ids(self):
+        """
+        Return the edge IDs
+        """
+        node_ids = self.node_ids
+        return [
+            tuple(sorted([node_ids[0], node_ids[2]])),
+            tuple(sorted([node_ids[2], node_ids[4]])),
+            tuple(sorted([node_ids[4], node_ids[0]]))
+        ]
 
     def raw_fields(self):
         list_fields = (['CTRIAX6', self.eid, self.Mid(), self.Pid()] +
@@ -1266,6 +1370,9 @@ class CSHEAR(QuadShell):
         self.prepare_node_ids(nids)
         assert len(self.nodes) == 4
 
+    def validate(self):
+        assert len(set(self.nodes)) == 4, 'nodes=%s\n%s' % (self.nodes, str(self))
+
     @classmethod
     def add_card(cls, card, comment=''):
         eid = integer(card, 1, 'eid')
@@ -1274,7 +1381,7 @@ class CSHEAR(QuadShell):
                 integer_or_blank(card, 4, 'n2'),
                 integer_or_blank(card, 5, 'n3'),
                 integer_or_blank(card, 6, 'n4')]
-        assert len(card) <= 7, 'len(CSHEAR card) = %i' % len(card)
+        assert len(card) <= 7, 'len(CSHEAR card) = %i\ncard=%s' % (len(card), card)
         return CSHEAR(eid, pid, nids, comment=comment)
 
     @classmethod
@@ -1285,6 +1392,14 @@ class CSHEAR(QuadShell):
         return CSHEAR(eid, pid, nids, comment=comment)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by CSHEAR eid=%s' % self.eid
         self.nodes = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
         self.pid = model.Property(self.Pid(), msg=msg)
@@ -1326,24 +1441,19 @@ class CSHEAR(QuadShell):
         (n1, n2, n3, n4) = self.get_node_positions()
         a = n1 - n2
         b = n2 - n4
-        area1 = Area(a, b)
-        c1 = centroid_triangle(n1, n2, n4)
+        area1 = 0.5 * norm(cross(a, b))
 
         a = n2 - n4
         b = n2 - n3
-        area2 = Area(a, b)
-        c2 = centroid_triangle(n2, n3, n4)
+        area2 = 0.5 * norm(cross(a, b))
 
         area = area1 + area2
-        centroid = (c1 * area1 + c2 * area2) / area
+        centroid = (n1 + n2 + n3 + n4) / 4.
         return(area, centroid)
 
     def Centroid(self):
-        (area, centroid) = self.AreaCentroid()
-
         (n1, n2, n3, n4) = self.get_node_positions()
-        centroid2 = (n1 + n2 + n3 + n4) / 4.
-        assert centroid == centroid2, 'CSHEAR eid=%s centroid=%s centroid2=%s' % (self.eid, centroid, centroid2)
+        centroid = (n1 + n2 + n3 + n4) / 4.
         return centroid
 
     def _verify(self, xref=True):
@@ -1377,7 +1487,7 @@ class CSHEAR(QuadShell):
         (n1, n2, n3, n4) = self.get_node_positions()
         a = n1 - n3
         b = n2 - n4
-        area = Area(a, b)
+        area = 0.5 * norm(cross(a, b))
         return area
 
     def flipNormal(self):
@@ -1426,6 +1536,15 @@ class CSHEAR(QuadShell):
 
 
 class CQUAD4(QuadShell):
+    """
+    +--------+-------+-------+----+----+----+----+------------+---------+
+    |   1    |   2   |   3   |  4 |  5 |  6 | 7  |     8      |    9    |
+    +========+=======+=======+=====+===+====+====+============+=========+
+    | CQUAD4 |  EID  |  PID  | N1 | N2 | N3 | N4 | THETA/MCID | ZOFFSET |
+    +--------+-------+-------+----+----+----+----+------------+---------+
+    |        |       | TFLAG | T1 | T2 | T3 | T4 |            |         |
+    +--------+-------+-------+----+----+----+----+------------+---------+
+    """
     type = 'CQUAD4'
     aster_type = 'QUAD4 # CQUAD4'
     calculixType = 'S4'
@@ -1462,6 +1581,9 @@ class CQUAD4(QuadShell):
         self.T2 = T2
         self.T3 = T3
         self.T4 = T4
+
+    def validate(self):
+        assert len(set(self.nodes)) == 4, 'nodes=%s\n%s' % (self.nodes, str(self))
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -1500,11 +1622,11 @@ class CQUAD4(QuadShell):
             zOffset = double_or_blank(card, 8, 'zOffset', 0.0)
             blank(card, 9, 'blank')
             TFlag = integer_or_blank(card, 10, 'TFlag', 0)
-            T1 = double_or_blank(card, 11, 'T1', 1.0)
-            T2 = double_or_blank(card, 12, 'T2', 1.0)
-            T3 = double_or_blank(card, 13, 'T3', 1.0)
-            T4 = double_or_blank(card, 14, 'T4', 1.0)
-            assert len(card) <= 15, 'len(CQUAD4 card) = %i' % len(card)
+            T1 = double_or_blank(card, 11, 'T1')
+            T2 = double_or_blank(card, 12, 'T2')
+            T3 = double_or_blank(card, 13, 'T3')
+            T4 = double_or_blank(card, 14, 'T4')
+            assert len(card) <= 15, 'len(CQUAD4 card) = %i\ncard=%s' % (len(card), card)
         else:
             thetaMcid = 0.0
             zOffset = 0.0
@@ -1517,11 +1639,50 @@ class CQUAD4(QuadShell):
                       TFlag, T1, T2, T3, T4, comment=comment)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by CQUAD4 eid=%s' % self.eid
         self.nodes = model.Nodes(self.nodes, msg=msg)
-        self.pid = model.Property(self.pid, msg=msg)
         self.nodes_ref = self.nodes
+        self.pid = model.Property(self.pid, msg=msg)
         self.pid_ref = self.pid
+
+    def material_coordinate_system(self, normal=None, xyz1234=None):
+        if normal is None:
+            normal = self.Normal() # k = kmat
+
+        if xyz1234 is None:
+            xyz1 = self.nodes_ref[0].get_position()
+            xyz2 = self.nodes_ref[1].get_position()
+            xyz3 = self.nodes_ref[2].get_position()
+            xyz4 = self.nodes_ref[3].get_position()
+            #centroid = (xyz1 + xyz2 + xyz3 + xyz4) / 4.
+            #centroid = self.Centroid()
+        else:
+            #centroid = xyz1234.sum(axis=1)
+            #assert len(centroid) == 3, centroid
+            xyz1 = xyz1234[:, 0]
+            xyz2 = xyz1234[:, 1]
+            xyz3 = xyz1234[:, 2]
+            xyz4 = xyz1234[:, 3]
+        centroid = (xyz1 + xyz2 + xyz3 + xyz4) / 4.
+
+        if self.thetaMcid is None:
+            raise NotImplementedError('thetaMcid=%r' % self.thetaMcid)
+        if isinstance(self.thetaMcid, integer_types):
+            i = self.thetaMcid_ref.i
+            jmat = np.cross(normal, i) # k x i
+            jmat /= np.linalg.norm(jmat)
+            imat = np.cross(jmat, normal)
+        elif isinstance(self.thetaMcid, float):
+            raise NotImplementedError('thetaMcid=%r' % self.thetaMcid)
+        return centroid, imat, jmat, normal
 
     def uncross_reference(self):
         self.nodes = self.node_ids
@@ -1587,7 +1748,7 @@ class CQUAD4(QuadShell):
 
     def raw_fields(self):
         list_fields = (['CQUAD4', self.eid, self.Pid()] + self.node_ids +
-                       [self.thetaMcid, self.zOffset, self.TFlag, self.T1, self.T2,
+                       [self.thetaMcid, self.zOffset, None, self.TFlag, self.T1, self.T2,
                         self.T3, self.T4])
         return list_fields
 
@@ -1670,13 +1831,13 @@ class CQUADR(QuadShell):
         zOffset = double_or_blank(card, 8, 'zOffset', 0.0)
 
         TFlag = integer_or_blank(card, 10, 'TFlag', 0)
-        T1 = double_or_blank(card, 11, 'T1', 1.0)
-        T2 = double_or_blank(card, 12, 'T2', 1.0)
-        T3 = double_or_blank(card, 13, 'T3', 1.0)
-        T4 = double_or_blank(card, 14, 'T4', 1.0)
-        assert len(card) <= 15, 'len(CQUADR card) = %i' % len(card)
+        T1 = double_or_blank(card, 11, 'T1')
+        T2 = double_or_blank(card, 12, 'T2')
+        T3 = double_or_blank(card, 13, 'T3')
+        T4 = double_or_blank(card, 14, 'T4')
+        assert len(card) <= 15, 'len(CQUADR card) = %i\ncard=%s' % (len(card), card)
         return CQUADR(eid, pid, nids, thetaMcid, zOffset,
-                      TFlag, T1, T2, T3, T4)
+                      TFlag, T1, T2, T3, T4, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -1700,13 +1861,21 @@ class CQUADR(QuadShell):
         if T4 == -1.0:
             T4 = 1.0
         return CQUADR(eid, pid, nids, thetaMcid, zOffset,
-                      TFlag, T1, T2, T3, T4)
+                      TFlag, T1, T2, T3, T4, comment=comment)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by CQUADR eid=%s' % self.eid
         self.nodes = model.Nodes(self.nodes, allow_empty_nodes=True, msg=msg)
-        self.pid = model.Property(self.pid, msg=msg)
         self.nodes_ref = self.nodes
+        self.pid = model.Property(self.pid, msg=msg)
         self.pid_ref = self.pid
 
     def uncross_reference(self):
@@ -1816,14 +1985,22 @@ class CQUAD(QuadShell):
                 integer_or_blank(card, 9, 'n7'),
                 integer_or_blank(card, 10, 'n8'),
                 integer_or_blank(card, 11, 'n9')]
-        assert len(card) <= 12, 'len(CQUAD card) = %i' % len(card)
+        assert len(card) <= 12, 'len(CQUAD card) = %i\ncard=%s' % (len(card), card)
         return CQUAD(eid, pid, nids, comment=comment)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by CQUAD eid=%s' % self.eid
         self.nodes = model.Nodes(self.nodes, allow_empty_nodes=True, msg=msg)
-        self.pid = model.Property(self.pid, msg=msg)
         self.nodes_ref = self.nodes
+        self.pid = model.Property(self.pid, msg=msg)
         self.pid_ref = self.pid
 
     def uncross_reference(self):
@@ -1919,14 +2096,14 @@ class CQUAD8(QuadShell):
                 integer_or_blank(card, 9, 'n7', 0),
                 integer_or_blank(card, 10, 'n8', 0)]
         if len(card) > 11:
-            T1 = double_or_blank(card, 11, 'T1', 1.0)
-            T2 = double_or_blank(card, 12, 'T2', 1.0)
-            T3 = double_or_blank(card, 13, 'T3', 1.0)
-            T4 = double_or_blank(card, 14, 'T4', 1.0)
+            T1 = double_or_blank(card, 11, 'T1')
+            T2 = double_or_blank(card, 12, 'T2')
+            T3 = double_or_blank(card, 13, 'T3')
+            T4 = double_or_blank(card, 14, 'T4')
             thetaMcid = integer_double_or_blank(card, 15, 'thetaMcid', 0.0)
             zOffset = double_or_blank(card, 16, 'zOffset', 0.0)
             TFlag = integer_or_blank(card, 17, 'TFlag', 0)
-            assert len(card) <= 18, 'len(CQUAD4 card) = %i' % len(card)
+            assert len(card) <= 18, 'len(CQUAD4 card) = %i\ncard=%s' % (len(card), card)
         else:
             thetaMcid = 0.0
             zOffset = 0.0
@@ -1960,10 +2137,18 @@ class CQUAD8(QuadShell):
                       comment=comment)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by CQUAD8 eid=%s' % self.eid
         self.nodes = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
-        self.pid = model.Property(self.Pid(), msg=msg)
         self.nodes_ref = self.nodes
+        self.pid = model.Property(self.Pid(), msg=msg)
         self.pid_ref = self.pid
 
     def uncross_reference(self):
@@ -2037,13 +2222,13 @@ class CQUAD8(QuadShell):
         (n1, n2, n3, n4, n5, n6, n7, n8) = self.get_node_positions()
         a = n1 - n2
         b = n2 - n4
-        area1 = Area(a, b)
-        c1 = centroid_triangle(n1, n2, n4)
+        area1 = 0.5 * norm(cross(a, b))
+        c1 = (n1 + n2 + n4) / 3.
 
         a = n2 - n4
         b = n2 - n3
-        area2 = Area(a, b)
-        c2 = centroid_triangle(n2, n3, n4)
+        area2 = 0.5 * norm(cross(a, b))
+        c2 = (n2 + n3 + n4) / 3.
 
         area = area1 + area2
         centroid = (c1 * area1 + c2 * area2) / area
@@ -2056,7 +2241,7 @@ class CQUAD8(QuadShell):
         (n1, n2, n3, n4, n5, n6, n7, n8) = self.get_node_positions()
         a = n1 - n3
         b = n2 - n4
-        area = Area(a, b)
+        area = 0.5 * norm(cross(a, b))
         return area
 
     def nodeIDs(self):
@@ -2116,14 +2301,22 @@ class CQUADX(QuadShell):
             integer_or_blank(card, 10, 'n8'),
             integer_or_blank(card, 11, 'n9')
         ]
-        assert len(card) <= 12, 'len(CQUADX card) = %i' % len(card)
+        assert len(card) <= 12, 'len(CQUADX card) = %i\ncard=%s' % (len(card), card)
         return CQUADX(eid, pid, nids, comment=comment)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by CQUADX eid=%s' % self.eid
         self.nodes = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
-        self.pid = model.Property(self.Pid(), msg=msg)
         self.nodes_ref = self.nodes
+        self.pid = model.Property(self.Pid(), msg=msg)
         self.pid_ref = self.pid
 
     def uncross_reference(self):
@@ -2157,6 +2350,17 @@ class CQUADX(QuadShell):
     @property
     def node_ids(self):
         return self._nodeIDs(allow_empty_nodes=True)
+
+    def _verify(self, xref):
+        """
+        Verifies all methods for this object work
+
+        Parameters
+        ----------
+        xref : bool
+            has this model been cross referenced
+        """
+        pass
 
     def raw_fields(self):
         list_fields = ['CQUADX', self.eid, self.Pid()] + self.node_ids

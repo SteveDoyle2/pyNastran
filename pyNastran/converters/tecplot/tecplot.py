@@ -111,7 +111,7 @@ class Tecplot(FortranFormat):
          - CHEXA
 
         .. note :: assumes single typed results
-        .. warning :: BLOCK option doesn't work if line length isn't the same...
+        .. warning:: BLOCK option doesn't work if line length isn't the same...
         """
         self.tecplot_filename = tecplot_filename
         assert os.path.exists(tecplot_filename), tecplot_filename
@@ -396,141 +396,140 @@ class Tecplot(FortranFormat):
         """
         self.tecplot_filename = tecplot_filename
         assert os.path.exists(tecplot_filename), tecplot_filename
-        tecplot_file = open(tecplot_filename, 'rb')
-        self.f = tecplot_file
-        self.n = 0
-        self.variables = ['rho', 'u', 'v', 'w', 'p']
+        with open(tecplot_filename, 'rb') as tecplot_file:
+            self.f = tecplot_file
+            self.n = 0
+            self.variables = ['rho', 'u', 'v', 'w', 'p']
 
-        data = self.f.read(8)
-        self.n += 8
-        word, = unpack(b'8s', data)
-        print('word = ', word)
+            data = self.f.read(8)
+            self.n += 8
+            word, = unpack(b'8s', data)
+            print('word = ', word)
 
-        values = []
-        ii = 0
-        for ii in range(100):
-            datai = self.f.read(4)
-            val, = unpack(b'i', datai)
-            self.n += 4
-            values.append(val)
-            if val == 9999:
-                break
-        assert ii < 100, ii
-        #print(values)
+            values = []
+            ii = 0
+            for ii in range(100):
+                datai = self.f.read(4)
+                val, = unpack(b'i', datai)
+                self.n += 4
+                values.append(val)
+                if val == 9999:
+                    break
+            assert ii < 100, ii
+            #print(values)
 
-        nbytes = 3 * 4
-        data = self.f.read(nbytes)
-        self.n += nbytes
+            nbytes = 3 * 4
+            data = self.f.read(nbytes)
+            self.n += nbytes
 
-        nbytes = 1 * 4
-        data = self.f.read(nbytes)
-        self.n += nbytes
-        zone_type, = unpack(b'i', data)
-        #self.show(100, endian='<')
+            nbytes = 1 * 4
+            data = self.f.read(nbytes)
+            self.n += nbytes
+            zone_type, = unpack(b'i', data)
+            #self.show(100, endian='<')
 
-        nbytes = 11 * 4
-        data = self.f.read(nbytes)
-        self.n += nbytes
-        self.show_data(data, types='i', endian='<') # 'if'?
-        #assert self.n == 360, self.n
-        #print('----------')
+            nbytes = 11 * 4
+            data = self.f.read(nbytes)
+            self.n += nbytes
+            self.show_data(data, types='i', endian='<') # 'if'?
+            #assert self.n == 360, self.n
+            #print('----------')
 
-        nbytes = 2 * 4
-        data = self.f.read(nbytes)
-        self.n += nbytes
-        nnodes2, nelements2 = unpack('2i', data)
-        if nnodes and nelements:
-            print('nnodes=%s nelements=%s' % (nnodes, nelements))
-            print('nnodes2=%s nelements2=%s' % (nnodes2, nelements2))
-        else:
-            nnodes = nnodes2
-            nelements = nelements2
-        assert nnodes == nnodes2
-        assert nelements == nelements2
-        #assert nnodes2 < 10000, nnodes
-        #assert nelements2 < 10000, nelements
+            nbytes = 2 * 4
+            data = self.f.read(nbytes)
+            self.n += nbytes
+            nnodes2, nelements2 = unpack('2i', data)
+            if nnodes and nelements:
+                print('nnodes=%s nelements=%s' % (nnodes, nelements))
+                print('nnodes2=%s nelements2=%s' % (nnodes2, nelements2))
+            else:
+                nnodes = nnodes2
+                nelements = nelements2
+            assert nnodes == nnodes2
+            assert nelements == nelements2
+            #assert nnodes2 < 10000, nnodes
+            #assert nelements2 < 10000, nelements
 
-        nbytes = 35 * 4
-        data = self.f.read(nbytes)
-        self.n += nbytes
-        #self.show_data(data, types='ifs', endian='<')
-        #print('----------')
+            nbytes = 35 * 4
+            data = self.f.read(nbytes)
+            self.n += nbytes
+            #self.show_data(data, types='ifs', endian='<')
+            #print('----------')
 
-        nbytes = 30 * 4
-        data = self.f.read(nbytes)
-        self.n += nbytes
+            nbytes = 30 * 4
+            data = self.f.read(nbytes)
+            self.n += nbytes
 
-        #self.show_data(data, types='ifs', endian='<')
-        assert zone_type in [5], zone_type
+            #self.show_data(data, types='ifs', endian='<')
+            assert zone_type in [5], zone_type
 
-        # p.98
-        # zone_title
-        # zone_type
-        #   0=ORDERED, 1=FELINESEG, 2=FETRIANGLE,
-        #   3=FEQUADRILATERAL, 4=FETETRAHEDRON, 5=FEBRICK
-        # i_max_or_num_points
-        # j_max_or_num_elements
-        # k_max
-        # i_cell_max
-        # j_cell_max
-        # k_cell_max
-        # solution_time
-        # strand_id
-        # parent_zone
-        # is_block (0=POINT, 1=BLOCK)
-        # num_face_connections
-        # face_neighbor_mode
-        # passive_var_list
-        # value_location (0=cell-centered; 1=node-centered)
-        # share_var_from_zone
-        # share_connectivity_from_zone
+            # p.98
+            # zone_title
+            # zone_type
+            #   0=ORDERED, 1=FELINESEG, 2=FETRIANGLE,
+            #   3=FEQUADRILATERAL, 4=FETETRAHEDRON, 5=FEBRICK
+            # i_max_or_num_points
+            # j_max_or_num_elements
+            # k_max
+            # i_cell_max
+            # j_cell_max
+            # k_cell_max
+            # solution_time
+            # strand_id
+            # parent_zone
+            # is_block (0=POINT, 1=BLOCK)
+            # num_face_connections
+            # face_neighbor_mode
+            # passive_var_list
+            # value_location (0=cell-centered; 1=node-centered)
+            # share_var_from_zone
+            # share_connectivity_from_zone
 
-        # http://www.hgs.k12.va.us/tecplot/documentation/tp_data_format_guide.pdf
+            # http://www.hgs.k12.va.us/tecplot/documentation/tp_data_format_guide.pdf
 
 
-        #print('----------')
-        # the variables: [x, y, z]
-        nvars = 3
-        #nnodes = 3807
-        ni = nnodes * nvars
-        nbytes = ni * 4
-        data = self.f.read(nbytes)
-        self.n += nbytes
-        xyzvals = unpack(b'%sf' % ni, data)
-        xyz = array(xyzvals, dtype='float32').reshape(3, nnodes).T
+            #print('----------')
+            # the variables: [x, y, z]
+            nvars = 3
+            #nnodes = 3807
+            ni = nnodes * nvars
+            nbytes = ni * 4
+            data = self.f.read(nbytes)
+            self.n += nbytes
+            xyzvals = unpack(b'%sf' % ni, data)
+            xyz = array(xyzvals, dtype='float32').reshape(3, nnodes).T
 
-        # the variables: [rho, u, v, w, p]
-        nvars = 5
-        dunno = 0    # what's with this...
-        ni = nnodes * nvars + dunno
-        nbytes = ni * 4
-        data = self.f.read(nbytes)
-        self.n += nbytes
-        resvals = unpack(b'%sf' % ni, data)
-        results = array(resvals, dtype='float32').reshape(nvars, nnodes).T
+            # the variables: [rho, u, v, w, p]
+            nvars = 5
+            dunno = 0    # what's with this...
+            ni = nnodes * nvars + dunno
+            nbytes = ni * 4
+            data = self.f.read(nbytes)
+            self.n += nbytes
+            resvals = unpack(b'%sf' % ni, data)
+            results = array(resvals, dtype='float32').reshape(nvars, nnodes).T
 
-        #
-        # 7443 elements
-        nnodes_per_element = 8 # 8 nodes/elements
-        #nelements = 7443
-        nvals = nnodes_per_element * nelements
-        nbytes = nvals * 4
-        node_ids = unpack(b'%ii' % nvals, self.f.read(nbytes))
-        self.n += nbytes
+            #
+            # 7443 elements
+            nnodes_per_element = 8 # 8 nodes/elements
+            #nelements = 7443
+            nvals = nnodes_per_element * nelements
+            nbytes = nvals * 4
+            node_ids = unpack(b'%ii' % nvals, self.f.read(nbytes))
+            self.n += nbytes
 
-        elements = array(node_ids).reshape(nelements, nnodes_per_element)
-        #print(elements)
+            elements = array(node_ids).reshape(nelements, nnodes_per_element)
+            #print(elements)
 
-        #self.show_data(data, types='ifs', endian='<')
-        #print(vals)
+            #self.show_data(data, types='ifs', endian='<')
+            #print(vals)
 
-        #self.show(100, endian='<')
-        self.hexa_elements = elements
-        tecplot_file.close()
+            #self.show(100, endian='<')
+            self.hexa_elements = elements
+            del self.f
 
         self.xyz = xyz
         self.results = results
-        del self.f
 
     def slice_x(self, xslice):
         """TODO: doesn't remove unused nodes/renumber elements"""
@@ -636,169 +635,168 @@ class Tecplot(FortranFormat):
             element_ids are 0-based in binary and must be switched to 1-based in ASCII
         """
         self.log.info('writing tecplot %s' % tecplot_filename)
-        tecplot_file = open(tecplot_filename, 'w')
-        is_results = bool(len(self.results))
-        msg = 'TITLE     = "tecplot geometry and solution file"\n'
-        msg += 'VARIABLES = "x"\n'
-        msg += '"y"\n'
-        msg += '"z"\n'
-        if res_types is None:
-            res_types = self.variables
-        elif isinstance(res_types, string_types):
-            res_types = [res_types]
-        result_indices_to_write = []
-        if is_results:
-            #msg += '"rho"\n'
-            #msg += '"u"\n'
-            #msg += '"v"\n'
-            #msg += '"w"\n'
-            #msg += '"p"\n'
-            # msg += 'ZONE T="%s"\n' % r'\"processor 1\"'
-            # print('res_types =', res_types)
-            # print('vars =', self.variables)
-            for ivar, var in enumerate(res_types):
-                if var not in self.variables:
-                    raise RuntimeError('var=%r not in variables=%s' % (var, self.variables))
-                result_indices_to_write.append(self.variables.index(var))
-            ivars = unique(result_indices_to_write)
-            ivars.sort()
-            for ivar in ivars:
-                var = self.variables[ivar]
-                msg += '"%s"\n' % var
-            # print('ivars =', ivars)
-        else:
-            assert len(res_types) == 0, len(res_types)
-            ivars = []
-        msg += 'ZONE '
-
-        etype_elements = [
-            ('CHEXA', self.hexa_elements),
-            ('CTETRA', self.tet_elements),
-            ('CTRIA3', self.tri_elements),
-            ('CQUAD4', self.quad_elements),
-        ]
-        is_points = True
-        is_tets = False
-        is_hexas = False
-        is_tris = False
-        is_quads = False
-
-        nnodes = self.nnodes
-        nelements = self.nelements
-        for etype, elements in etype_elements:
-            if etype == 'CHEXA' and len(elements):
-                #print(etype)
-                # is_points = False
-                is_hexas = True
-                nnodes_per_element = 8
-                zone_type = 'FEBrick'
-            elif etype == 'CTETRA' and len(elements):
-                #print(etype)
-                # is_points = False
-                is_tets = True
-                nnodes_per_element = 4
-                zone_type = 'FETETRAHEDRON'
-            elif etype == 'CTRIA3' and len(elements):
-                #print(etype)
-                # is_points = True
-                is_tris = True
-                nnodes_per_element = 3
-                zone_type = 'FETRIANGLE'
-            elif etype == 'CQUAD4' and len(elements):
-                #print(etype)
-                # is_points = True
-                is_quads = True
-                nnodes_per_element = 4
-                zone_type = 'FEQUADRILATERAL'
-            else:
-                continue
-            break
-
-        self.log.info('is_points = %s' % is_points)
-        if is_points:
-            msg += ' n=%i, e=%i, ZONETYPE=%s, DATAPACKING=POINT\n' % (nnodes, nelements, zone_type)
-        else:
-            msg += ' n=%i, e=%i, ZONETYPE=%s, DATAPACKING=BLOCK\n' % (nnodes, nelements, zone_type)
-        tecplot_file.write(msg)
-
-        # xyz
-        assert self.nnodes > 0, 'nnodes=%s' % self.nnodes
-        nresults = len(ivars)
-        if is_points:
-            if nresults:
-                res = self.results[:, ivars]
-                try:
-                    data = hstack([self.xyz, res])
-                except ValueError:
-                    msg = 'Cant hstack...\n'
-                    msg += 'xyz.shape=%s\n' % str(self.xyz.shape)
-                    msg += 'results.shape=%s\n' % str(self.results.shape)
-                    raise ValueError(msg)
-                fmt = ' %15.9E' * (3 + nresults)
-            else:
-                data = self.xyz
-                fmt = ' %15.9E %15.9E %15.9E'
-            #vals = self.xyz[:, ivar].ravel()
-            # for vals in enumerate(data):
-                # tecplot_file.write(fmt % tuple(vals))
-            savetxt(tecplot_file, data, fmt=fmt)
-        else:
-            #nvalues_per_line = 5
-            for ivar in range(3):
-                #tecplot_file.write('# ivar=%i\n' % ivar)
-                vals = self.xyz[:, ivar].ravel()
-                msg = ''
-                for ival, val in enumerate(vals):
-                    msg += ' %15.9E' % val
-                    if (ival + 1) % 3 == 0:
-                        tecplot_file.write(msg)
-                        msg = '\n'
-                tecplot_file.write(msg.rstrip() + '\n')
-
-            if nresults:
-                # print('nnodes_per_element =', nnodes_per_element)
-                # for ivar in range(nnodes_per_element):
+        with open(tecplot_filename, 'w') as tecplot_file:
+            is_results = bool(len(self.results))
+            msg = 'TITLE     = "tecplot geometry and solution file"\n'
+            msg += 'VARIABLES = "x"\n'
+            msg += '"y"\n'
+            msg += '"z"\n'
+            if res_types is None:
+                res_types = self.variables
+            elif isinstance(res_types, string_types):
+                res_types = [res_types]
+            result_indices_to_write = []
+            if is_results:
+                #msg += '"rho"\n'
+                #msg += '"u"\n'
+                #msg += '"v"\n'
+                #msg += '"w"\n'
+                #msg += '"p"\n'
+                # msg += 'ZONE T="%s"\n' % r'\"processor 1\"'
+                # print('res_types =', res_types)
+                # print('vars =', self.variables)
+                for ivar, var in enumerate(res_types):
+                    if var not in self.variables:
+                        raise RuntimeError('var=%r not in variables=%s' % (var, self.variables))
+                    result_indices_to_write.append(self.variables.index(var))
+                ivars = unique(result_indices_to_write)
+                ivars.sort()
                 for ivar in ivars:
+                    var = self.variables[ivar]
+                    msg += '"%s"\n' % var
+                # print('ivars =', ivars)
+            else:
+                assert len(res_types) == 0, len(res_types)
+                ivars = []
+            msg += 'ZONE '
+
+            etype_elements = [
+                ('CHEXA', self.hexa_elements),
+                ('CTETRA', self.tet_elements),
+                ('CTRIA3', self.tri_elements),
+                ('CQUAD4', self.quad_elements),
+            ]
+            is_points = True
+            is_tets = False
+            is_hexas = False
+            is_tris = False
+            is_quads = False
+
+            nnodes = self.nnodes
+            nelements = self.nelements
+            for etype, elements in etype_elements:
+                if etype == 'CHEXA' and len(elements):
+                    #print(etype)
+                    # is_points = False
+                    is_hexas = True
+                    nnodes_per_element = 8
+                    zone_type = 'FEBrick'
+                elif etype == 'CTETRA' and len(elements):
+                    #print(etype)
+                    # is_points = False
+                    is_tets = True
+                    nnodes_per_element = 4
+                    zone_type = 'FETETRAHEDRON'
+                elif etype == 'CTRIA3' and len(elements):
+                    #print(etype)
+                    # is_points = True
+                    is_tris = True
+                    nnodes_per_element = 3
+                    zone_type = 'FETRIANGLE'
+                elif etype == 'CQUAD4' and len(elements):
+                    #print(etype)
+                    # is_points = True
+                    is_quads = True
+                    nnodes_per_element = 4
+                    zone_type = 'FEQUADRILATERAL'
+                else:
+                    continue
+                break
+
+            self.log.info('is_points = %s' % is_points)
+            if is_points:
+                msg += ' n=%i, e=%i, ZONETYPE=%s, DATAPACKING=POINT\n' % (nnodes, nelements, zone_type)
+            else:
+                msg += ' n=%i, e=%i, ZONETYPE=%s, DATAPACKING=BLOCK\n' % (nnodes, nelements, zone_type)
+            tecplot_file.write(msg)
+
+            # xyz
+            assert self.nnodes > 0, 'nnodes=%s' % self.nnodes
+            nresults = len(ivars)
+            if is_points:
+                if nresults:
+                    res = self.results[:, ivars]
+                    try:
+                        data = hstack([self.xyz, res])
+                    except ValueError:
+                        msg = 'Cant hstack...\n'
+                        msg += 'xyz.shape=%s\n' % str(self.xyz.shape)
+                        msg += 'results.shape=%s\n' % str(self.results.shape)
+                        raise ValueError(msg)
+                    fmt = ' %15.9E' * (3 + nresults)
+                else:
+                    data = self.xyz
+                    fmt = ' %15.9E %15.9E %15.9E'
+                #vals = self.xyz[:, ivar].ravel()
+                # for vals in enumerate(data):
+                    # tecplot_file.write(fmt % tuple(vals))
+                savetxt(tecplot_file, data, fmt=fmt)
+            else:
+                #nvalues_per_line = 5
+                for ivar in range(3):
                     #tecplot_file.write('# ivar=%i\n' % ivar)
-                    vals = self.results[:, ivar].ravel()
+                    vals = self.xyz[:, ivar].ravel()
                     msg = ''
                     for ival, val in enumerate(vals):
                         msg += ' %15.9E' % val
-                        if (ival + 1) % 5 == 0:
+                        if (ival + 1) % 3 == 0:
                             tecplot_file.write(msg)
                             msg = '\n'
                     tecplot_file.write(msg.rstrip() + '\n')
 
-        self.log.info('is_hexas=%s is_tets=%s is_quads=%s is_tris=%s' %
-                      (is_hexas, is_tets, is_quads, is_tris))
-        if is_hexas:
-            # elements
-            efmt = ' %i %i %i %i %i %i %i %i\n'
-            elements = self.hexa_elements
-        elif is_tets:
-            efmt = ' %i %i %i %i\n'
-            elements = self.tet_elements
-        elif is_quads:
-            efmt = ' %i %i %i %i\n'
-            elements = self.quad_elements
-        elif is_tris:
-            efmt = ' %i %i %i\n'
-            elements = self.tri_elements
-        else:
-            raise RuntimeError()
+                if nresults:
+                    # print('nnodes_per_element =', nnodes_per_element)
+                    # for ivar in range(nnodes_per_element):
+                    for ivar in ivars:
+                        #tecplot_file.write('# ivar=%i\n' % ivar)
+                        vals = self.results[:, ivar].ravel()
+                        msg = ''
+                        for ival, val in enumerate(vals):
+                            msg += ' %15.9E' % val
+                            if (ival + 1) % 5 == 0:
+                                tecplot_file.write(msg)
+                                msg = '\n'
+                        tecplot_file.write(msg.rstrip() + '\n')
 
-        if adjust_nids:
-            elements += 1
-        self.log.info('inode_min = %s' % elements.min())
-        self.log.info('inode_max = %s' % elements.max())
-        assert elements.min() >= 1, elements.min()
-        assert elements.max() <= nnodes, elements.max()
-        # assert elements.min() == 1, elements.min()
-        # assert elements.max() == nnodes, elements.max()
+            self.log.info('is_hexas=%s is_tets=%s is_quads=%s is_tris=%s' %
+                          (is_hexas, is_tets, is_quads, is_tris))
+            if is_hexas:
+                # elements
+                efmt = ' %i %i %i %i %i %i %i %i\n'
+                elements = self.hexa_elements
+            elif is_tets:
+                efmt = ' %i %i %i %i\n'
+                elements = self.tet_elements
+            elif is_quads:
+                efmt = ' %i %i %i %i\n'
+                elements = self.quad_elements
+            elif is_tris:
+                efmt = ' %i %i %i\n'
+                elements = self.tri_elements
+            else:
+                raise RuntimeError()
 
-        for element in elements:
-            tecplot_file.write(efmt % tuple(element))
-        tecplot_file.close()
+            if adjust_nids:
+                elements += 1
+            self.log.info('inode_min = %s' % elements.min())
+            self.log.info('inode_max = %s' % elements.max())
+            assert elements.min() >= 1, elements.min()
+            assert elements.max() <= nnodes, elements.max()
+            # assert elements.min() == 1, elements.min()
+            # assert elements.max() == nnodes, elements.max()
+
+            for element in elements:
+                tecplot_file.write(efmt % tuple(element))
 
     def skin_elements(self):
         tris = []
@@ -1069,20 +1067,20 @@ def main():
     model.extract_y_slice(y0, tol=0.014, slice_filename='slice.plt')
 
     return
-    for iprocessor, fname in enumerate(fnames):
-        nnodes, nelements = datai[iprocessor].split(',')
-        nnodes = int(nnodes.split('=')[1])
-        nelements = int(nelements.split('=')[1])
+    #for iprocessor, fname in enumerate(fnames):
+        #nnodes, nelements = datai[iprocessor].split(',')
+        #nnodes = int(nnodes.split('=')[1])
+        #nelements = int(nelements.split('=')[1])
 
-        ip = iprocessor + 1
-        tecplot_filename = 'model_final_meters_part%i_tec_volume_timestep20000.plt' % ip
-        print(tecplot_filename)
-        try:
-            plt.read_tecplot_binary(tecplot_filename, nnodes=nnodes, nelements=nelements)
-            plt.write_tecplot('processor%i.plt' % ip)
-        except:
-            raise
-        #break
+        #ip = iprocessor + 1
+        #tecplot_filename = 'model_final_meters_part%i_tec_volume_timestep20000.plt' % ip
+        #print(tecplot_filename)
+        #try:
+            #plt.read_tecplot_binary(tecplot_filename, nnodes=nnodes, nelements=nelements)
+            #plt.write_tecplot('processor%i.plt' % ip)
+        #except:
+            #raise
+        ##break
 
 def main2():
     """tests slicing"""

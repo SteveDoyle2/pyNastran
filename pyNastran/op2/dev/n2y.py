@@ -5,12 +5,13 @@ op2.rdnas2cam.  Adapted from the Yeti version.
 
 @author: Tim Widrick
 """
-
-import scipy.linalg as linalg
-import numpy as np
+from __future__ import print_function
 import math
 import sys
 import warnings
+
+import scipy.linalg as linalg
+import numpy as np
 
 import pyNastran.op2.dev.locate as locate
 
@@ -500,7 +501,7 @@ def expand_trim(dof):
 
 
 def mkusetmask(nasset=None):
-    """
+    r"""
     Get bit-masks for use with the Nastran USET table.
 
     Parameters
@@ -607,14 +608,14 @@ def mkusetmask(nasset=None):
     return usetmask
 
 
-def uset_print(file, uset, printsets="M,S,O,Q,R,C,B,E,L,T,A,F,N,G",
-            form=0, perpage=float('inf')):
+def uset_print(filename, uset, printsets="M,S,O,Q,R,C,B,E,L,T,A,F,N,G",
+               form=0, perpage=float('inf')):
     """
     Print Nastran DOF set membership information from USET table.
 
     Parameters
     ----------
-    file : string or file handle
+    filename : string or file handle
         Either a name of a file or a file handle as returned by
         open(). Use 1 to write to the screen, 0 to write nothing --
         just get output.
@@ -825,15 +826,15 @@ def uset_print(file, uset, printsets="M,S,O,Q,R,C,B,E,L,T,A,F,N,G",
     else:
         return_table = None
 
-    if file == 0:
+    if filename == 0:
         return return_table
 
-    if isinstance(file, str):
-        f = open(file, "w")
-    elif file == 1:
+    if isinstance(filename, str):
+        f = open(filename, "w")
+    elif filename == 1:
         f = sys.stdout
     else:
-        f = file
+        f = filename
 
     nsets = len(printsets)
     if form == 0:
@@ -970,7 +971,7 @@ def uset_print(file, uset, printsets="M,S,O,Q,R,C,B,E,L,T,A,F,N,G",
 
 
 def mksetpv(uset, major, minor):
-    """
+    r"""
     Make a set partition vector from a Nastran USET table.
 
     Parameters
@@ -1936,7 +1937,7 @@ def add_grid_to_uset(uset, gid, nasset, coordin, xyz, coordout, coordref=None):
     # get input "coordinfo" [ cid type 0; location(1x3); T(3x3) ]:
     if coordref is None:
         coordref = {0: np.vstack((np.array([[0, 1, 0], [0., 0., 0.]]),
-                                 np.eye(3)))}
+                                  np.eye(3)))}
     else:
         try:
             coordref[0]
@@ -2758,7 +2759,7 @@ def formulvs(nas, seup, sedn=0, keepcset=True, shortcut=True,
     # work from up to down:
     r = _findse(nas, seup)
     sedown = nas['selist'][r, 1]
-    if sedown == seup or sedn == seup:
+    if seup in [sedown, sedn]:
         return 1.
     if (shortcut and sedn == 0 and not gset and
             'ulvs' in nas and seup in nas['ulvs']):

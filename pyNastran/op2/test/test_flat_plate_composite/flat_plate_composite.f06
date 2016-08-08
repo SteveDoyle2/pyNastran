@@ -1,0 +1,1157 @@
+1
+ 
+ 
+ 
+ 
+                      Warning: This computer program is protected by copyright law and international treaties.       
+                  Unauthorized use, reproduction or distribution of this computer program, or any portion of it, may 
+                                          result in severe civil and criminal penalties.                             
+                         Copyright (C) 2013 MSC Software Corporation and its licensors. All rights reserved.         
+ 
+ 
+                                              * * * * * * * * * * * * * * * * * * * *
+                                              * * * * * * * * * * * * * * * * * * * *
+                                              * *                                 * *
+                                              * *           MSC Software          * *
+                                              * *               CORP              * *
+                                              * *                                 * *
+                                              * *      M S C   N a s t r a n      * *
+                                              * *                                 * *
+                                              * *                                 * *
+                                              * *                                 * *
+                                              * *     Version 2013.1.0-CL237422   * *
+                                              * *                                 * *
+                                              * *                                 * *
+                                              * *                                 * *
+                                              * *          NOV 27, 2013           * *
+                                              * *                                 * *
+                                              * *              Intel              * *
+                                              * *        MODEL 386/486/586        * *
+                                              * *    Windows 10 Home 6.2 9200     * *
+                                              * *        Compiled for 8664        * *
+                                              * *                                 * *
+                                              * * * * * * * * * * * * * * * * * * * *
+                                              * * * * * * * * * * * * * * * * * * * *
+1 News file -  (November 22,2013):
+  
+               Welcome to MSC Nastran 2013.1
+  
+  
+   Details of the new capabilities can be found in the MSC Nastran 2013.1
+     Release Guide available online in the installation documentation
+     sub-directory.
+   Additional information can be found at the MSC Nastran Product Support page:
+  
+      http://simcompanion.mscsoftware.com
+  
+  
+   The support page provides links to these valuable information:
+      * A searchable Knowledge Base containing examples and answers to thousands
+        of frequently asked questions written by MSC Software subject-matter
+        experts.
+      * Peer-to-peer Discussion Forums enabling you to post questions for your
+        MSC Software products and receive answers from other users worldwide.
+      * A list of known issues with the product and any workarounds.
+      * Instructions on how to contact technical support
+      * A mechanism for sending us product feedback or enhancement requests.
+      * Hardware and software requirements.
+      * Examples and Tutorials
+      * and much more.
+  
+   For information on training, please visit our Training web site
+  
+      http://www.mscsoftware.com/Contents/Services/Training/
+  
+   MSC Nastran brings powerful new features and enhancements for engineering
+   solutions.
+  
+   The highlights for the MSC Nastran 2013.1 release include:
+  
+  •   HPC
+     –   ACMS Performance Improvements which reduces wall time.
+  
+  •   Dynamics
+     –   New Axisymmetric Rotor Dynamics model
+     -   Rotors may be included in external Superelements
+  
+  •   Durability: Nastran Embedded Fatigue (NEF)
+     – Superelement support
+     – Restart support
+       – Out-of-core processing
+       – Histogram and time history output (HISTOGRAM case control)
+       – Static failure criteria (DAMAGE line on FTGPARM entry)
+       –	Duty cycle event name specification (FTGEVNT entry)
+       – Enhanced F06 output
+1 
+  
+  •   Advanced Nonlinear Implicit (SOL 400)
+     -	Stress recovery with advanced elements for perturbation load cases.
+     -   Improve Contact User Interface Improvements to make input file more
+ 	readable and reduce the amount of input for models with many contact
+ 	bodies.
+     -	Sequential thermal-mechanical analysis for 3-D thermal shell elements
+     -	Support of Digimat multi-scale composites material modeling
+  	
+  
+  •   Explicit Dynamics (SOL 700)
+     –	Support for User Subroutines
+     -	Support of Digimat multi-scale composites material modeling
+  
+  •  Ease of Use
+     -	User Defined Services (UDS) Enhancements to simplify usage.
+     -	Extension to Monitor Points to allow results in local coordinate system
+  
+  
+  
+  
+1                                                                              JUNE  28, 2016  MSC Nastran 11/27/13   PAGE     1
+                                                                                                                                    
+0        N A S T R A N    F I L E    A N D    S Y S T E M    P A R A M E T E R    E C H O                                           
+0
+0
+0
+ 
+ *** SYSTEM WARNING MESSAGE 1279 (SYSCHK)
+     THE BUFFSIZE IS LARGER THAN THE MAXIMUM ALLOWABLE BUFFSIZE FOR THIS MACHINE.
+     USER INFORMATION: THE SPECIFIED VALUE WILL BE RESET TO THE MAXIMUM ALLOWED WHICH IS      65537
+     NASTRAN BUFFSIZE=264065 $(C:/MSC.SOFTWARE/MSC_NASTRAN/20131/CONF/NAST20131.RCF[2
+     INIT MASTER(S)                                                                  
+     NASTRAN SYSTEM(442)=-1,SYSTEM(319)=1                                            
+1                                                                              JUNE  28, 2016  MSC Nastran 11/27/13   PAGE     2
+                                                                                                                                    
+0        N A S T R A N    E X E C U T I V E    C O N T R O L    E C H O                                                             
+0                                                                                                                                   
+                                                                                                                                    
+                                                                                                                                    
+     ID LB,FEMAP                                                                             
+     SOL SESTATIC                                                                            
+     TIME 10000                                                                              
+     CEND                                                                                    
+1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  28, 2016  MSC Nastran 11/27/13   PAGE     3
+                                                                                                                                    
+0                                                                                                                                   
+0                                        C A S E    C O N T R O L    E C H O                                                        
+                 COMMAND                                                                                                            
+                 COUNT                                                                                                              
+                  1        TITLE = NX NASTRAN STATIC ANALYSIS SET                                                
+                  2        ECHO = NONE                                                                           
+                  3        FORCE(PLOT,PRINT,CORNER) = ALL                                                        
+                  4        STRESS(PLOT,PRINT,CORNER) = ALL                                                       
+                  5        STRAIN(PLOT,PRINT,FIBER,CORNER) = ALL                                                 
+                  6        SPC = 1                                                                               
+                  7        LOAD = 1                                                                              
+                  8      SUBCASE 1                                                                               
+                  9        SUBTITLE = COMBINED LOADING                                                           
+                 10      BEGIN BULK                                                                              
+1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  28, 2016  MSC Nastran 11/27/13   PAGE     4
+                                                                                                                                    
+0                                                                                                                                   
+                                        M O D E L   S U M M A R Y          BULK = 0
+                                   ENTRY NAME        NUMBER OF ENTRIES
+                                   ----------        -----------------
+                                       CORD2C                        1
+                                       CORD2R                        1
+                                       CORD2S                        1
+                                       CQUAD4                       23
+                                       CQUAD8                        7
+                                        FORCE                       11
+                                         GRID                       66
+                                         MAT8                        1
+                                        PARAM                        7
+                                        PCOMP                        2
+                                       PLOAD4                       30
+                                         SPC1                        3
+
+ ^^^     
+ ^^^ >>> IFP OPERATIONS COMPLETE <<< 
+ ^^^     
+1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  28, 2016  MSC Nastran 11/27/13   PAGE     5
+                                                                                                                                    
+0                                                                                                                                   
+ *** USER INFORMATION MESSAGE 4109 (OUTPX2)
+     THE LABEL IS XXXXXXXX FOR FORTRAN UNIT 12
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =          7 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          8 RECORDS.)
+                (TOTAL DATA WRITTEN FOR LABEL =         17 WORDS.)
+ *** USER INFORMATION MESSAGE 7555 (GMTSTD)
+     FINITE ELEMENT GEOMETRY CHECK RESULTS EXCEED TOLERANCE LEVELS FOR THE FOLLOWING ELEMENTS.  METRIC VALUES THAT EXCEED
+     TEST TOLERANCE LIMITS ARE IDENTIFIED BY ONE OF THE FOLLOWING FLAGS PLACED TO THE RIGHT OF THE METRIC VALUE.
+        "++++" FOR TEST RESULTS EXCEEDING TOLERANCES.  INFORMATIONAL ONLY.  PROBLEM SOLUTION CONTINUES.  (DEFAULT FLAG)
+        "IGNR" FOR TEST RESULTS EXCEEDING TOLERANCES.  INFORMATIONAL ONLY.  PROBLEM SOLUTION CONTINUES.
+        "WARN" FOR TEST RESULTS EXCEEDING TOLERANCES.  INFORMATIONAL ONLY.  PROBLEM SOLUTION CONTINUES.
+        "FAIL" FOR TEST RESULTS EXCEEDING TOLERANCES.  SEVERE ERROR.        PROBLEM SOLUTION TERMINATES.
+     USER ACTION: USE THE GEOMCHECK (EXECUTIVE CONTROL STATEMENT) KEYWORD=VALUE TO CHANGE TOLERANCE VALUES IF DESIRED.
+     User information:
+       Element Geometry test tolerance levels and message limits can be changed by the GEOMCHECK Executive Control statement.
+       The following keywords are available:
+         Q4_SKEW  - modifies CQUAD4/CQUADR skew angle test tolerance.
+         Q4_TAPER - modifies CQUAD4/CQUADR taper ratio test tolerance.
+         Q4_WARP  - modifies CQUAD4/CQUADR warping coefficient test tolerance.
+         Q4_IAMAX - modifies CQUAD4/CQUADR maximum interior angle test tolerance.
+         Q4_IAMIN - modifies CQUAD4/CQUADR minimum interior angle test tolerance.
+         T3_SKEW  - modifies CTRIA3/CTRIAR skew angle test tolerance.
+         T3_IAMAX - modifies CTRIA3/CTRIAR maximum interior angle test tolerance.
+         TET_AR   - modifies CTETRA aspect ratio test tolerance.
+         TET_EPLR - modifies CTETRA edge node point length ratio test tolerance.
+         TET_EPIA - modifies CTETRA edge node point interior angle test tolerance.
+         TET_DETJ - modifies CTETRA determinant of the Jacobian matrix test tolerance.
+         TET_DETG - modifies CTETRA determinant of the vertex points Jacobian matrix test tolerance.
+         HEX_AR   - modifies CHEXA aspect ratio test tolerance.
+         HEX_EPLR - modifies CHEXA edge node point length ratio test tolerance.
+         HEX_EPIA - modifies CHEXA edge node point interior angle test tolerance.
+         HEX_DETJ - modifies CHEXA determinant of the Jacobian matrix test tolerance.
+         HEX_WARP - modifies CHEXA face warping coefficient test tolerance.
+         PEN_AR   - modifies CPENTA aspect ratio test tolerance.
+         PEN_EPLR - modifies CPENTA edge node point length ratio test tolerance.
+         PEN_EPIA - modifies CPENTA edge node point interior angle test tolerance.
+         PEN_DETJ - modifies CPENTA determinant of the Jacobian matrix test tolerance.
+         PEN_WARP - modifies CPENTA face warping coefficient test tolerance.
+         BEAM_OFF - modifies CBEAM  offset length ratio test tolerance.
+         BAR_OFF  - modifies CBAR   offset length ratio test tolerance.
+         MSGLIMIT - limit the number of messages that are generated.
+         MSGTYPE  - modify the severity level of the test.
+     A MAXIMUM OF        100 SKEW ANGLE (SA)       TOLERANCE LIMIT VIOLATIONS WILL BE IDENTIFIED BY THE FLAG "++++"
+                             PLACED AFTER THE VALUE METRIC FOR THE TEST.
+     A MAXIMUM OF        100 MIN INT. ANGLE (IA)   TOLERANCE LIMIT VIOLATIONS WILL BE IDENTIFIED BY THE FLAG "++++"
+                             PLACED AFTER THE VALUE METRIC FOR THE TEST.
+     A MAXIMUM OF        100 MAX INT. ANGLE (IA)   TOLERANCE LIMIT VIOLATIONS WILL BE IDENTIFIED BY THE FLAG "++++"
+                             PLACED AFTER THE VALUE METRIC FOR THE TEST.
+     A MAXIMUM OF        100 WARPING FACTOR (WF)   TOLERANCE LIMIT VIOLATIONS WILL BE IDENTIFIED BY THE FLAG "++++"
+                             PLACED AFTER THE VALUE METRIC FOR THE TEST.
+     A MAXIMUM OF        100 TAPER RATIO (TR)      TOLERANCE LIMIT VIOLATIONS WILL BE IDENTIFIED BY THE FLAG "++++"
+                             PLACED AFTER THE VALUE METRIC FOR THE TEST.
+     USER INFORMATION: THE MAXIMUM MESSAGE COUNT FOR ANY ONE ELEMENT ERROR TEST COULD BE EXCEEDED BY THE 
+     CUMULATIVE EFFECT OF ALL THE MESSAGES GENERATED FOR ALL OF THE DIFFERENT TESTS PERFORMED.
+1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  28, 2016  MSC Nastran 11/27/13   PAGE     6
+                                                                                                                                    
+0                                                                                                                                   
+     TOLERANCE LIMITS ARE:  SA =  30.00, IA(MIN) =  30.00, IA(MAX) = 150.00, WF =   0.05, TR =   0.50 (FLAG = LIMIT VIOLATED)
+ ELEMENT TYPE    ID          SKEW ANGLE      MIN INT. ANGLE    MAX INT. ANGLE    WARPING FACTOR      TAPER RATIO  
+    QUAD4          20        63.69             51.71            149.47              0.00              0.56 ++++
+1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  28, 2016  MSC Nastran 11/27/13   PAGE     7
+                                                                                                                                    
+0                                                                                                                                   
+
+
+                            E L E M E N T   G E O M E T R Y   T E S T   R E S U L T S   S U M M A R Y
+                                        TOTAL NUMBER OF TIMES TOLERANCES WERE EXCEEDED
+  ELEMENT        SKEW       ASPECT/     MINIMUM      MAXIMUM    SURFACE/FACE    OFFSET     EDGE POINT   EDGE POINT    JACOBIAN  
+    TYPE       ANGLE      TAPER RATIO INTER. ANGLE INTER. ANGLE  WARP FACTOR    RATIO     LENGTH RATIO ANGLE LIMIT  DETERMINANT 
+   QUAD4           0            1            0            0            0          N/A          N/A          N/A          N/A        
+
+         N/A IN THE ABOVE TABLE INDICATES TESTS THAT ARE NOT APPLICABLE TO THE ELEMENT TYPE AND WERE NOT PERFORMED.
+         FOR ALL ELEMENTS WHERE GEOMETRY TEST RESULTS HAVE EXCEEDED TOLERANCES,
+
+         QUAD4    ELEMENT ID       20 PRODUCED LARGEST  TAPER RATIO      OF       0.56 (TOLERANCE =        0.50).
+1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  28, 2016  MSC Nastran 11/27/13   PAGE     8
+                                                                                                                                    
+0                                                                                                                                   
+                           O U T P U T   F R O M   G R I D   P O I N T   W E I G H T   G E N E R A T O R
+0                                                     REFERENCE POINT =        0
+                                                                M O
+                      *  2.275000E+00  0.000000E+00  0.000000E+00  0.000000E+00  0.000000E+00 -1.137500E+00 *
+                      *  0.000000E+00  2.275000E+00  0.000000E+00  0.000000E+00  0.000000E+00  2.275000E+00 *
+                      *  0.000000E+00  0.000000E+00  2.275000E+00  1.137500E+00 -2.275000E+00  0.000000E+00 *
+                      *  0.000000E+00  0.000000E+00  1.137500E+00  7.979441E-01 -1.135298E+00  0.000000E+00 *
+                      *  0.000000E+00  0.000000E+00 -2.275000E+00 -1.135298E+00  3.081952E+00  0.000000E+00 *
+                      * -1.137500E+00  2.275000E+00  0.000000E+00  0.000000E+00  0.000000E+00  3.879896E+00 *
+                                                                 S
+                                           *  1.000000E+00  0.000000E+00  0.000000E+00 *
+                                           *  0.000000E+00  1.000000E+00  0.000000E+00 *
+                                           *  0.000000E+00  0.000000E+00  1.000000E+00 *
+                               DIRECTION
+                          MASS AXIS SYSTEM (S)     MASS              X-C.G.        Y-C.G.        Z-C.G.
+                                  X            2.275000E+00      0.000000E+00  5.000000E-01  0.000000E+00
+                                  Y            2.275000E+00      1.000000E+00  0.000000E+00  0.000000E+00
+                                  Z            2.275000E+00      1.000000E+00  5.000000E-01  0.000000E+00
+                                                                I(S)
+                                           *  2.291940E-01 -2.202286E-03  0.000000E+00 *
+                                           * -2.202286E-03  8.069522E-01  0.000000E+00 *
+                                           *  0.000000E+00  0.000000E+00  1.036146E+00 *
+                                                                I(Q)
+                                           *  2.291856E-01                             *
+                                           *                8.069606E-01               *
+                                           *                              1.036146E+00 *
+                                                                 Q
+                                           *  9.999927E-01  3.811694E-03  0.000000E+00 *
+                                           * -3.811694E-03  9.999927E-01  0.000000E+00 *
+                                           *  0.000000E+00  0.000000E+00  1.000000E+00 *
+
+1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  28, 2016  MSC Nastran 11/27/13   PAGE     9
+                                                                                                                                    
+0                                                                                                                                   
+1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  28, 2016  MSC Nastran 11/27/13   PAGE    10
+                                                                                                                                    
+0                                                                                                                                   
+0 RESULTANTS ABOUT ORIGIN OF SUPERELEMENT BASIC COORDINATE SYSTEM IN SUPERELEMENT BASIC SYSTEM COORDINATES.
+
+0                                                  OLOAD    RESULTANT       
+  SUBCASE/    LOAD
+  DAREA ID    TYPE       T1            T2            T3            R1            R2            R3
+0        1     FX   -1.000001E+03     ----          ----          ----       0.000000E+00  5.000007E+02                             
+               FY       ----       1.000000E+02     ----       0.000000E+00     ----       1.000000E+02                             
+               FZ       ----          ----       2.000000E+04  1.000000E+04 -2.000000E+04     ----                                  
+               MX       ----          ----          ----       0.000000E+00     ----          ----                                  
+               MY       ----          ----          ----          ----       0.000000E+00     ----                                  
+               MZ       ----          ----          ----          ----          ----       0.000000E+00                             
+             TOTALS -1.000001E+03  1.000000E+02  2.000000E+04  1.000000E+04 -2.000000E+04  6.000007E+02
+1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  28, 2016  MSC Nastran 11/27/13   PAGE    11
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+0                                         G R I D   P O I N T   S I N G U L A R I T Y   T A B L E
+0                             POINT    TYPE   FAILED      STIFFNESS       OLD USET           NEW USET
+                               ID            DIRECTION      RATIO     EXCLUSIVE  UNION   EXCLUSIVE  UNION
+                               19        G      6         0.00E+00          B        F         SB       S    *
+                               42        G      6         0.00E+00          B        F         SB       S    *
+                               43        G      6         0.00E+00          B        F         SB       S    *
+                               44        G      6         0.00E+00          B        F         SB       S    *
+                               45        G      6         0.00E+00          B        F         SB       S    *
+                               46        G      6         0.00E+00          B        F         SB       S    *
+                               47        G      6         0.00E+00          B        F         SB       S    *
+                               48        G      6         0.00E+00          B        F         SB       S    *
+                               49        G      6         0.00E+00          B        F         SB       S    *
+                               50        G      6         0.00E+00          B        F         SB       S    *
+                               51        G      6         0.00E+00          B        F         SB       S    *
+                               52        G      6         0.00E+00          B        F         SB       S    *
+                               53        G      6         0.00E+00          B        F         SB       S    *
+                               54        G      6         0.00E+00          B        F         SB       S    *
+                               55        G      6         0.00E+00          B        F         SB       S    *
+                               56        G      6         0.00E+00          B        F         SB       S    *
+                               57        G      6         0.00E+00          B        F         SB       S    *
+                               58        G      6         0.00E+00          B        F         SB       S    *
+                               59        G      6         0.00E+00          B        F         SB       S    *
+                               60        G      6         0.00E+00          B        F         SB       S    *
+                               61        G      6         0.00E+00          B        F         SB       S    *
+                               62        G      6         0.00E+00          B        F         SB       S    *
+                               63        G      6         0.00E+00          B        F         SB       S    *
+                               64        G      6         0.00E+00          B        F         SB       S    *
+                               65        G      6         0.00E+00          B        F         SB       S    *
+                               66        G      6         0.00E+00          B        F         SB       S    *
+1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  28, 2016  MSC Nastran 11/27/13   PAGE    12
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+  
+ *** SYSTEM INFORMATION MESSAGE 4159 (DFMSA)
+     THE DECOMPOSITION OF KLL      YIELDS A MAXIMUM MATRIX-TO-FACTOR-DIAGONAL RATIO OF    4.060220E+02
+ *** USER INFORMATION MESSAGE 5293 (SSG3A)
+    FOR DATA BLOCK KLL     
+    LOAD SEQ. NO.             EPSILON              EXTERNAL WORK      EPSILONS LARGER THAN 0.001 ARE FLAGGED WITH ASTERISKS
+    User information:
+    One line of output is printed for each static loading condition.
+    Small values of EPSILON are due to accumulated round-off error. Large
+    values of EPSILON indicate possible singularities in the stiffness
+    matrix.  See Section 9.5.1.
+                1          2.2881816E-13          2.1171898E+05
+1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  28, 2016  MSC Nastran 11/27/13   PAGE    13
+      COMBINED LOADING                                                                                                              
+0                                                                                                            SUBCASE 1              
+ 
+
+                          F O R C E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN  
+ 
+                                           RESULTS IN MATERIAL COORD SYSTEM
+    ELEMENT                    - MEMBRANE  FORCES -                      - BENDING   MOMENTS -            - TRANSVERSE SHEAR FORCES -
+      ID       GRID-ID     FX            FY            FXY           MX            MY            MXY           QX            QY
+0         2    CEN/4 -2.317596E+02 -2.228023E+02  3.284379E+02 -3.207511E+02 -4.095813E+02 -7.395118E+01 -3.548951E+03 -7.912036E+02
+                  27 -3.169591E+02 -2.581475E+02  3.451866E+02 -3.756801E+02 -3.512360E+02 -4.404181E+01 -3.548951E+03 -7.912036E+02
+                  28 -1.421202E+02 -2.539691E+02  2.990604E+02 -3.612986E+02 -3.363781E+02 -3.850487E+01 -3.548951E+03 -7.912036E+02
+                  26 -1.462689E+02 -1.809038E+02  3.127383E+02 -2.563800E+02 -4.807916E+02 -1.102598E+02 -3.548951E+03 -7.912036E+02
+                  25 -3.092223E+02 -1.989680E+02  3.532918E+02 -2.901697E+02 -4.667390E+02 -1.015489E+02 -3.548951E+03 -7.912036E+02
+0         3    CEN/4  1.289676E+02 -5.018386E+02 -3.585056E+02 -2.519834E+02  5.021858E+02  3.162971E+02  2.422590E+03  5.381267E+01
+                  28  5.294463E+01 -4.477302E+02 -3.975728E+02 -1.381293E+02  5.090395E+02  3.349854E+02  2.422590E+03  5.381267E+01
+                  15  2.098378E+02 -4.381155E+02 -3.489883E+02 -3.499536E+02  4.847414E+02  2.997675E+02  2.422590E+03  5.381267E+01
+                  16  2.178144E+02 -5.536088E+02 -3.158774E+02 -3.828549E+02  4.932162E+02  2.947731E+02  2.422590E+03  5.381267E+01
+                  29  3.041349E+01 -5.753524E+02 -3.711988E+02 -1.317994E+02  5.230978E+02  3.365555E+02  2.422590E+03  5.381267E+01
+0         4    CEN/4 -3.875064E+02 -3.501500E+02 -5.166975E+02  1.255891E+02  3.886880E+02  3.006090E+02  2.722548E+03 -9.586392E+02
+                  28  4.417055E+01 -1.325806E+02 -3.781096E+02 -1.120607E+02  3.829715E+02  2.857639E+02  2.722548E+03 -9.586392E+02
+                  29  4.907794E+01 -5.592371E+02 -5.337764E+02 -1.497216E+02  3.559612E+02  2.641998E+02  2.722548E+03 -9.586392E+02
+                  18 -7.936772E+02 -4.763575E+02 -6.183303E+02  3.555927E+02  3.989963E+02  3.184912E+02  2.722548E+03 -9.586392E+02
+                  27 -6.907808E+02 -2.481572E+02 -5.206814E+02  3.133110E+02  4.087061E+02  3.237445E+02  2.722548E+03 -9.586392E+02
+0         5    CEN/4  4.711232E+01 -5.248656E+02 -5.757426E+02 -5.152852E+02  3.974773E+02  4.326352E+02 -2.917395E+03  1.418236E+02
+                  16  2.634561E+02 -5.358621E+02 -3.536195E+02 -5.183494E+02  5.330417E+02  4.343956E+02 -2.917395E+03  1.418236E+02
+                  17  1.860458E+02 -3.420852E+02 -5.224873E+02 -3.718312E+02  3.316007E+02  4.861423E+02 -2.917395E+03  1.418236E+02
+                  18 -6.678677E+01 -4.743664E+02 -7.137366E+02 -4.794236E+02  2.900887E+02  4.440436E+02 -2.917395E+03  1.418236E+02
+                  29 -2.077932E+02 -8.032091E+02 -7.002954E+02 -7.348147E+02  4.724173E+02  3.501926E+02 -2.917395E+03  1.418236E+02
+0         6    CEN/4 -4.116949E+02 -5.224524E+01 -2.632391E+02  8.181995E+02  4.282603E+02 -4.455037E+00  2.435144E+03  1.003529E+03
+                  23 -5.069784E+02 -3.624267E+01 -2.915570E+02  1.036965E+03  3.562386E+02  5.531220E+01  2.435144E+03  1.003529E+03
+                  24 -5.077982E+02 -7.595199E+01 -2.744849E+02  8.731810E+02  5.229011E+02 -2.933935E+01  2.435144E+03  1.003529E+03
+                  25 -3.176326E+02 -7.100249E+01 -2.339981E+02  5.899325E+02  5.117844E+02 -6.978219E+01  2.435144E+03  1.003529E+03
+                  27 -3.047469E+02 -2.457155E+01 -2.512857E+02  7.623844E+02  3.175170E+02  2.599829E+01  2.435144E+03  1.003529E+03
+0         8    CEN/4 -1.801895E+02 -1.177811E+02  2.200768E+02 -6.071955E+02 -5.360915E+02 -2.049986E+02 -2.490259E+03 -1.652507E+03
+                  26 -1.250340E+02 -1.119950E+02  1.972096E+02 -4.801684E+02 -5.066603E+02 -2.024894E+02 -2.490259E+03 -1.652507E+03
+                  30 -1.172465E+02 -1.051501E+02  1.964918E+02 -4.513591E+02 -5.623793E+02 -2.439997E+02 -2.490259E+03 -1.652507E+03
+                  31 -2.411445E+02 -1.245331E+02  2.451994E+02 -7.482239E+02 -5.650665E+02 -2.052887E+02 -2.490259E+03 -1.652507E+03
+                  25 -2.347839E+02 -1.288314E+02  2.404941E+02 -7.425326E+02 -5.123511E+02 -1.705137E+02 -2.490259E+03 -1.652507E+03
+0         9    CEN/4 -1.457728E+02 -1.470864E+01 -1.133102E+02  9.842592E+02  5.499449E+02 -4.402053E+01  1.323699E+02 -1.424816E+03
+                  30 -3.408223E+01 -2.005580E+01 -1.130082E+02  5.152844E+02  4.505738E+02 -1.246688E+01  1.323699E+02 -1.424816E+03
+                  31 -2.579770E+02 -1.987103E+01 -1.089172E+02  1.562459E+03  4.982108E+02  1.919707E+01  1.323699E+02 -1.424816E+03
+                  21 -2.088408E+02 -1.046803E+01 -1.140252E+02  1.236661E+03  6.236273E+02 -7.284160E+01  1.323699E+02 -1.424816E+03
+                  22 -7.931715E+01 -1.015838E+01 -1.165776E+02  6.266345E+02  6.020623E+02 -9.491251E+01  1.323699E+02 -1.424816E+03
+0        10    CEN/4 -2.446903E+02  1.800038E+01 -1.310408E+02  1.288114E+03  6.459084E+02 -6.498384E+00  1.216624E+02 -2.029987E+02
+                  25 -2.907770E+02  2.842843E+00 -1.605348E+02  1.121894E+03  6.439758E+02  7.317318E+01  1.216624E+02 -2.029987E+02
+                  24 -2.069079E+02  3.091325E+01 -1.103593E+02  1.151617E+03  6.313924E+02  1.214531E+01  1.216624E+02 -2.029987E+02
+                  21 -1.982569E+02  3.345885E+01 -1.026687E+02  1.350798E+03  6.416704E+02 -5.451526E+01  1.216624E+02 -2.029987E+02
+                  31 -3.058032E+02 -3.005301E+00 -1.636368E+02  1.575678E+03  6.733298E+02 -5.720947E+01  1.216624E+02 -2.029987E+02
+0        11    CEN/4  9.017073E+00 -2.108283E+02  2.159166E+02 -1.781019E+02 -3.079821E+02 -6.959126E+01 -3.300726E+03 -3.005620E+03
+1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  28, 2016  MSC Nastran 11/27/13   PAGE    14
+      COMBINED LOADING                                                                                                              
+0                                                                                                            SUBCASE 1              
+ 
+
+                          F O R C E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN  
+ 
+                                           RESULTS IN MATERIAL COORD SYSTEM
+    ELEMENT                    - MEMBRANE  FORCES -                      - BENDING   MOMENTS -            - TRANSVERSE SHEAR FORCES -
+      ID       GRID-ID     FX            FY            FXY           MX            MY            MXY           QX            QY
+                  14  1.241472E+02 -2.142941E+02  1.676466E+02 -1.496365E+02 -3.292237E+02 -8.737155E+01 -3.300726E+03 -3.005620E+03
+                  13  1.244556E+02 -1.784858E+02  1.821912E+02 -1.596921E+02 -2.863270E+02 -5.709629E+01 -3.300726E+03 -3.005620E+03
+                  30 -9.906173E+01 -2.080124E+02  2.610511E+02 -2.047001E+02 -2.885662E+02 -5.327042E+01 -3.300726E+03 -3.005620E+03
+                  26 -1.077102E+02 -2.422317E+02  2.505513E+02 -1.970850E+02 -3.283196E+02 -8.112497E+01 -3.300726E+03 -3.005620E+03
+0        12    CEN/4  1.062871E+01 -1.389712E+02 -1.296228E+02 -4.258185E+00  1.809686E+02  5.571571E+00 -7.255922E+02 -2.195475E+03
+                  30 -5.502811E+01 -1.351777E+02 -1.550818E+02  2.334467E+02  2.240611E+02  3.892116E+01 -7.255922E+02 -2.195475E+03
+                  22 -5.126009E+01 -1.544445E+02 -1.436485E+02  2.252128E+02  1.940622E+02  5.090763E+01 -7.255922E+02 -2.195475E+03
+                  12  6.984499E+01 -1.436493E+02 -1.060031E+02 -2.182889E+02  1.402872E+02 -2.358956E+01 -7.255922E+02 -2.195475E+03
+                  13  8.203091E+01 -1.215002E+02 -1.132416E+02 -2.688948E+02  1.653119E+02 -4.645558E+01 -7.255922E+02 -2.195475E+03
+0        14    CEN/4 -5.286072E+02  1.617377E+02 -3.202005E+01  7.825756E+02  1.297254E+02 -1.187435E+02  1.003338E+03  3.708977E+03
+                  23 -5.274713E+02  1.847399E+02 -3.533984E+01  8.995333E+02  1.688169E+02 -1.190606E+02  1.003338E+03  3.708977E+03
+                  32 -5.288046E+02  1.872401E+02 -3.551707E+01  5.735970E+02  1.639780E+02 -1.149289E+02  1.003338E+03  3.708977E+03
+                   2 -5.293862E+02  1.408846E+02 -2.904206E+01  7.348821E+02  9.585173E+01 -1.191738E+02  1.003338E+03  3.708977E+03
+                  24 -5.286227E+02  1.434193E+02 -2.948833E+01  8.961354E+02  1.041409E+02 -1.210340E+02  1.003338E+03  3.708977E+03
+0        15    CEN/4 -7.815887E+02  1.340976E+01 -2.674275E+02 -7.391929E+02  7.724796E+01 -2.308289E+02  3.497149E+02  1.207660E+03
+                   1 -4.574702E+02 -4.068031E+01 -5.369028E+02 -5.051579E+02  1.066062E+02 -2.190005E+02  3.497149E+02  1.207660E+03
+                  20 -1.575562E+03 -2.680531E+02 -2.976605E+02 -8.462015E+02  1.268788E+02 -1.471208E+02  3.497149E+02  1.207660E+03
+                  32 -1.145671E+03  1.579102E+02  1.749255E+02 -1.096411E+03  1.968180E+01 -2.669106E+02  3.497149E+02  1.207660E+03
+                   2 -1.614236E+02  1.872710E+02 -3.205030E+02 -6.038096E+02  5.198436E+01 -2.836946E+02  3.497149E+02  1.207660E+03
+0        16    CEN/4 -2.412279E+02  1.272310E+02  6.996002E+01  8.340203E+02  2.464792E+02 -4.452561E+01 -1.204188E+03  7.172845E+02
+                   2 -6.829852E+01  2.640728E+02  1.364418E+02  6.443948E+02  1.167404E+02 -1.132993E+02 -1.204188E+03  7.172845E+02
+                   3 -1.124732E+02  7.361382E+01  1.525651E+02  5.313654E+02  2.748236E+02 -1.044095E+02 -1.204188E+03  7.172845E+02
+                  21 -3.855140E+02 -1.070053E+01  1.954740E+01  9.675701E+02  3.738156E+02  1.153092E+01 -1.204188E+03  7.172845E+02
+                  24 -4.150723E+02  1.935923E+02 -4.028893E+01  1.236401E+03  2.130556E+02  3.599292E+01 -1.204188E+03  7.172845E+02
+0        17    CEN/4 -2.115426E+01 -2.037506E+01  2.151866E+01 -8.996976E+02 -1.377476E+02 -2.762618E+02  1.960933E+03 -4.267076E+02
+                  36 -1.138494E+01 -8.397065E+00  1.323099E+01 -7.637767E+02 -2.109325E+02 -3.782804E+02  1.960933E+03 -4.267076E+02
+                   8 -1.539478E+01 -1.763945E+01  1.505709E+01 -8.764340E+02 -5.077630E+01 -2.582864E+02  1.960933E+03 -4.267076E+02
+                  37 -2.708678E+01 -2.818432E+01  2.635640E+01 -9.892765E+02 -7.719856E+01 -2.046397E+02  1.960933E+03 -4.267076E+02
+                  38 -3.026430E+01 -2.600031E+01  3.126640E+01 -9.535607E+02 -2.362664E+02 -2.812507E+02  1.960933E+03 -4.267076E+02
+0        18    CEN/4 -4.239151E+01 -2.931890E+00 -1.411809E+01  8.061464E+02  2.695533E+02 -1.492135E+01 -1.686240E+02 -6.915843E+01
+                  37 -5.153495E+01 -6.741497E+00 -1.870663E+01  4.390854E+02  1.736757E+02 -2.823326E+00 -1.686240E+02 -6.915843E+01
+                  38 -5.079949E+01 -5.529510E+00 -2.014966E+01  6.844642E+02  2.490152E+02 -1.807254E+02 -1.686240E+02 -6.915843E+01
+                  33 -3.491489E+01  3.735721E-02 -1.007411E+01  1.071520E+03  3.370582E+02  3.688545E+00 -1.686240E+02 -6.915843E+01
+                   6 -3.583408E+01 -7.680322E-01 -9.690111E+00  9.339317E+02  2.958739E+02  8.743567E+01 -1.686240E+02 -6.915843E+01
+0        19    CEN/4 -2.156614E+01 -1.316502E+01  9.742418E+00 -2.742179E+02  4.057497E+01 -2.976596E+02  4.948247E+02 -1.721946E+01
+                  37 -4.134715E+01 -1.560139E+01  6.339702E+00 -4.765377E+02 -3.249371E+00 -3.377829E+02  4.948247E+02 -1.721946E+01
+                   8 -1.775406E+00 -1.506487E+01  1.169832E+01 -5.182986E+01  2.451692E+01 -2.989522E+02  4.948247E+02 -1.721946E+01
+                   7 -9.814390E+00 -1.103637E+01  1.199144E+01 -1.571574E+02  7.601909E+01 -2.673148E+02  4.948247E+02 -1.721946E+01
+                   6 -3.233294E+01 -1.166814E+01  8.833065E+00 -3.973370E+02  5.570969E+01 -2.925304E+02  4.948247E+02 -1.721946E+01
+0        20    CEN/4 -1.760708E+01 -1.320325E+01 -2.398173E+01  8.123598E+02  1.756944E+02 -1.865308E+02 -4.176474E+03 -1.542141E+03
+                  36 -2.887641E+01 -2.496136E+01 -2.920142E+01  9.151038E+02 -4.527378E+01 -2.894299E+02 -4.176474E+03 -1.542141E+03
+                  35 -3.472627E+01 -4.212412E+00 -2.936796E+01  4.797827E+02  3.937977E+02 -1.140257E+02 -4.176474E+03 -1.542141E+03
+1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  28, 2016  MSC Nastran 11/27/13   PAGE    15
+      COMBINED LOADING                                                                                                              
+0                                                                                                            SUBCASE 1              
+ 
+
+                          F O R C E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN  
+ 
+                                           RESULTS IN MATERIAL COORD SYSTEM
+    ELEMENT                    - MEMBRANE  FORCES -                      - BENDING   MOMENTS -            - TRANSVERSE SHEAR FORCES -
+      ID       GRID-ID     FX            FY            FXY           MX            MY            MXY           QX            QY
+                  41 -3.055747E+00 -4.923629E+00 -1.789560E+01  8.053094E+02  3.186596E+02 -1.124852E+02 -4.176474E+03 -1.542141E+03
+                  38 -9.221496E+00 -1.692078E+01 -2.127835E+01  9.627751E+02  8.301712E+01 -2.161965E+02 -4.176474E+03 -1.542141E+03
+0        21    CEN/4  3.623070E+00 -3.468567E+01 -2.133512E+01  6.770278E+02 -1.812376E+02 -3.451877E+02 -1.405556E+03 -4.355013E+03
+                   9  1.247401E+01 -2.943720E+01 -1.723723E+01  7.295588E+02 -2.048654E+02 -3.487774E+02 -1.405556E+03 -4.355013E+03
+                  10  1.021596E+01 -3.646593E+01 -1.852248E+01  6.714786E+02 -1.533536E+02 -3.324588E+02 -1.405556E+03 -4.355013E+03
+                  34 -4.404146E+00 -4.160070E+01 -2.514247E+01  6.124635E+02 -1.425814E+02 -3.360981E+02 -1.405556E+03 -4.355013E+03
+                  39 -6.629718E+00 -3.102259E+01 -2.567145E+01  6.926818E+02 -2.317517E+02 -3.674043E+02 -1.405556E+03 -4.355013E+03
+0        23    CEN/4 -6.868923E+00 -2.141269E+01 -3.588162E+01  1.271913E+03  9.822418E+01 -4.329827E+02 -9.541711E+02 -1.302576E+04
+                  34  1.039134E+01 -1.213941E+01 -3.994671E+01  1.014944E+03  6.173905E+01 -4.012292E+02 -9.541711E+02 -1.302576E+04
+                  35 -4.637172E+00 -1.833108E+01 -4.680889E+01  1.214950E+03  1.064538E+02 -3.562040E+02 -9.541711E+02 -1.302576E+04
+                  36 -2.337949E+01 -3.006979E+01 -3.317212E+01  1.515029E+03  1.345921E+02 -4.551195E+02 -9.541711E+02 -1.302576E+04
+                  39 -9.881181E+00 -2.534496E+01 -2.238739E+01  1.345934E+03  8.867808E+01 -5.278474E+02 -9.541711E+02 -1.302576E+04
+0        25    CEN/4  7.963011E+00 -4.100971E+01 -3.881232E+01  4.791757E+02 -2.852735E+01 -1.387359E+02  8.924402E+03  1.780971E+03
+                  40 -3.157837E+00 -3.913991E+01 -4.825569E+01  8.044746E+02  1.282614E+01 -3.471710E+01  8.924402E+03  1.780971E+03
+                  34 -1.230377E+01 -5.247149E+01 -4.563913E+01  9.322438E+02  9.273529E+01 -3.096133E+01  8.924402E+03  1.780971E+03
+                  10  2.441698E+01 -4.118731E+01 -2.664804E+01  2.221001E+01 -9.770385E+01 -2.783975E+02  8.924402E+03  1.780971E+03
+                  11  2.079768E+01 -3.317248E+01 -3.489305E+01  1.976928E+02 -1.071075E+02 -2.038051E+02  8.924402E+03  1.780971E+03
+0        28    CEN/4 -3.211683E+01 -1.279719E+01  4.210074E+00 -1.279591E+02  3.378945E+02  2.576505E+02 -1.395224E+03  3.560128E+02
+                   4 -1.481034E+01 -1.627907E+01  1.549504E+01 -3.364875E+02  4.245187E+02  1.944621E+02 -1.395224E+03  3.560128E+02
+                   5 -1.617122E+01 -2.261904E+00  8.915799E+00 -1.066472E+02  2.252902E+02  2.740499E+02 -1.395224E+03  3.560128E+02
+                   6 -4.660251E+01 -8.747253E+00 -5.705841E+00  6.421718E+01  2.494905E+02  3.167052E+02 -1.395224E+03  3.560128E+02
+                  33 -5.158466E+01 -2.497070E+01 -1.820411E+00 -1.432792E+02  4.657266E+02  2.413690E+02 -1.395224E+03  3.560128E+02
+0        29    CEN/4 -1.031706E+02  2.166195E+01  3.762955E+01  4.540894E+02  3.845553E+02  6.889027E+01 -7.345848E+02  9.207826E+02
+                  33 -1.636586E+02 -1.831240E+01  3.115038E+01  8.784678E+02  4.434086E+02  1.367029E+02 -7.345848E+02  9.207826E+02
+                  21 -1.490396E+02  5.081932E+01  1.384259E+01  8.325792E+02  4.173467E+02  1.305051E+02 -7.345848E+02  9.207826E+02
+                   3 -5.236920E+01  5.783884E+01  4.224472E+01  1.001528E+02  3.346084E+02  1.238339E+01 -7.345848E+02  9.207826E+02
+                   4 -4.911076E+01 -7.552108E+00  6.402975E+01  1.292058E+01  3.448831E+02 -2.844536E+00 -7.345848E+02  9.207826E+02
+0        30    CEN/4 -8.710991E+01 -1.728734E+01 -4.312379E+01  8.666649E+02  4.903945E+02  9.322166E+01 -1.096676E+03 -6.543779E+02
+                  38 -2.435314E+01  1.041495E+01 -2.514811E+01  7.911190E+02  4.053477E+02  3.793527E+01 -1.096676E+03 -6.543779E+02
+                  41 -2.524077E+01 -3.953301E+01 -3.476769E+01  6.920892E+02  5.530831E+02  1.168448E+02 -1.096676E+03 -6.543779E+02
+                  21 -1.376128E+02 -3.179068E+01 -5.611740E+01  9.431944E+02  5.358013E+02  1.254318E+02 -1.096676E+03 -6.543779E+02
+                  33 -1.356170E+02 -7.327614E+00 -5.108909E+01  9.884252E+02  4.633669E+02  8.649535E+01 -1.096676E+03 -6.543779E+02
+1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  28, 2016  MSC Nastran 11/27/13   PAGE    16
+      COMBINED LOADING                                                                                                              
+0                                                                                                            SUBCASE 1              
+ 
+                          F O R C E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 8 )
+ 
+                                           RESULTS IN MATERIAL COORD SYSTEM
+    ELEMENT                    - MEMBRANE  FORCES -                      - BENDING   MOMENTS -            - TRANSVERSE SHEAR FORCES -
+      ID       GRID-ID     FX            FY            FXY           MX            MY            MXY           QX            QY
+0         1    CEN/8  8.240005E+01 -2.562892E+02  2.134387E+02  1.397697E+02 -2.341252E+02  6.987660E+01 -1.639998E+03 -1.048936E+03
+                  14  4.227374E+00 -7.542827E+02  6.561798E+01  7.477739E+02 -3.391454E+01  1.202123E+02 -1.359044E+03 -3.685927E+03
+                  26  4.310391E+02  6.144291E+02  1.179765E+02 -8.949406E+02 -4.020175E+02 -2.386050E+02 -6.027536E+03 -2.238875E+03
+                  28 -5.419545E+02 -1.168231E+03  3.515106E+02  5.373400E+02 -2.386780E+02  2.413931E+02 -4.168970E+03  3.294068E+03
+                  15  5.127899E+02  2.064261E+02  2.471023E+02  2.155918E+02 -3.085769E+02  5.442556E+01  4.912005E+03 -1.801729E+03
+0         7    CEN/8 -7.167263E+02 -1.993631E+02 -3.203718E+02  2.203414E+02  2.050975E+02  1.131097E+02  1.601501E+03 -4.208008E+02
+                  27 -8.085129E+02 -1.062936E+03 -1.261093E+03 -1.497200E+02  5.854272E+02  4.707031E+02  9.302203E+01 -1.155040E+03
+                  18  2.398827E+02  1.044182E+02 -3.034508E+00 -1.677102E+02 -1.649878E+02 -4.663367E+01  1.206983E+03  4.500857E+02
+                  19 -1.307857E+03 -7.435198E+02 -6.283407E+02  9.456767E+01  2.556519E+02  1.434648E+02  2.167887E+03  1.256673E+02
+                  23 -7.010677E+02  6.152347E+02  5.086636E+02  1.013592E+03  2.349349E+02 -1.506794E+02  3.028608E+03 -6.003716E+02
+0        13    CEN/8 -8.379897E+02 -1.562239E+02 -1.340737E+02  5.113752E+02 -2.004628E+01 -1.949714E+02  1.141719E+03  1.205384E+03
+                  23  1.213806E+02 -5.171010E+02 -1.126183E+03  9.588414E+02  7.158430E+02  2.754215E+02  3.530602E+03  5.413000E+03
+                  19 -1.435397E+03 -2.252953E+02  1.935579E+01  1.356222E+02 -4.420202E+02 -2.972358E+02  5.705743E+03  1.635622E+03
+                  20 -4.233893E+02 -3.099311E+02 -1.750973E+02  5.231303E+02  2.194303E+02 -3.291854E+01 -1.157982E+02 -5.024605E+03
+                  32 -1.526117E+03  3.389950E+02  7.193836E+02  4.253651E+02 -5.708962E+02 -7.050376E+02 -4.472113E+03  3.524811E+03
+0        22    CEN/8 -9.403346E+00 -1.774000E+01  1.391456E+01 -4.399305E+02 -1.741151E+02 -3.142364E+02  3.500645E+03 -2.121998E+03
+                  39 -3.816522E+01 -1.026146E+01  2.219626E+01 -2.082056E+03 -3.994219E+02 -7.520691E+02  1.416219E+04 -4.290103E+03
+                   9  6.135119E+00 -2.386641E+01  1.501243E+01  2.700611E+02 -4.823604E+00 -2.912727E+02 -1.204699E+04 -3.893906E+02
+                   8 -2.473052E+00 -9.498479E+00  3.935374E-01 -3.789603E+02  1.247519E+02  2.425093E+02  2.044399E+03 -4.317980E+03
+                  36  9.732734E+00 -4.017662E+01  4.736310E+00  4.200363E+02 -4.057697E+02 -4.864466E+02  7.681042E+03  4.024725E+03
+0        24    CEN/8  2.374459E+01 -7.027800E+01 -5.574542E+01  2.648664E+02  2.042010E+02 -6.059910E+00  1.178448E+03 -1.818541E+03
+                  11  4.586591E+01 -2.504592E+02  4.151258E+01 -6.227707E+01 -4.918120E+01 -2.664725E+01 -4.905742E+03 -6.468840E+03
+                  12  1.666019E+02  1.615340E+02 -3.139816E+01  2.403186E+02  2.434699E+01 -2.196555E+01  6.131627E+03  1.302403E+03
+                  22 -9.061642E+01 -3.594140E+02 -1.553428E+02  5.475594E+02  4.981456E+02  7.171948E+01 -2.779957E+03 -3.003590E+03
+                  40 -5.830623E+01  1.986603E+02 -6.365635E+01  3.522977E+02  3.250592E+02 -4.301841E+01  6.619718E+03  6.723075E+02
+0        26    CEN/8 -3.235703E+01 -3.459241E+01 -4.094009E+01  7.717350E+02  2.854697E+02  7.934655E+01  1.777404E+03 -1.439377E+03
+                  35 -3.972218E+01 -2.679328E+01 -9.013287E+01  2.592136E+03  1.632214E+02  6.640872E+02  2.930167E+03  8.782864E+02
+                  34 -1.825882E+01 -8.888255E+01 -3.556137E+01 -4.549144E+02  3.220551E+02  1.002403E+02 -7.595454E+01 -3.858121E+03
+                  40  4.403438E+01 -6.308890E+01 -7.974540E+01  1.925023E+03  8.871259E+01 -9.501418E+01  2.034311E+03 -1.941234E+03
+                  41 -1.065773E+02  3.149092E+01 -1.993823E+00 -1.081349E+03  6.739344E+02 -2.666423E+02  1.727045E+03 -3.515602E+02
+0        27    CEN/8 -7.244611E+01 -1.655615E+01 -4.914954E+01  8.970798E+02  6.500306E+02  1.379487E+02  2.055748E+02  1.304097E+03
+                  40 -7.695206E+00 -7.558190E+01 -3.259167E+01  1.948963E+02  5.686212E+02 -1.342494E+02 -2.187388E+03 -3.860723E+03
+                  22 -3.052320E+02  7.744626E+01 -9.934305E+01  1.837697E+03  2.839665E+02 -4.498932E+01  1.217958E+03  2.727777E+03
+                  21  1.553468E+02  1.352889E+01 -2.642711E+01 -1.115106E+03  8.828429E+02  6.953492E+02  1.897600E+03  3.936114E+03
+                  41 -1.534254E+02 -6.039655E+01 -3.427477E+01  2.988089E+03  5.474335E+02  3.355092E+02  1.986445E+03  1.470730E+03
+1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  28, 2016  MSC Nastran 11/27/13   PAGE    17
+      COMBINED LOADING                                                                                                              
+0                                                                                                            SUBCASE 1              
+ 
+                   S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )
+   ELEMENT  PLY  STRESSES IN FIBER AND MATRIX DIRECTIONS    INTER-LAMINAR  STRESSES  PRINCIPAL STRESSES (ZERO SHEAR)      MAX
+     ID      ID    NORMAL-1     NORMAL-2     SHEAR-12     SHEAR XZ-MAT  SHEAR YZ-MAT  ANGLE    MAJOR        MINOR        SHEAR
+0        2    1  -1.03340E+09 -1.15676E+09  1.42525E+08   -3.98587E+06 -2.64089E+05   33.30 -9.39783E+08 -1.25038E+09  1.55299E+08
+0        2    2  -5.28640E+09 -5.65584E+08 -4.28237E+08   -4.80810E+06 -1.15640E+06  -84.86 -5.27052E+08 -5.32494E+09  2.39894E+09
+0        2    3  -3.95542E+09 -2.24137E+08  2.14122E+08   -5.21921E+06 -1.60255E+06   86.73 -2.11889E+08 -3.96766E+09  1.87789E+09
+0        2    4  -5.99130E+05 -3.34253E+04 -8.25459E+04   -5.21921E+06 -1.60255E+06  -81.87 -2.16266E+04 -6.10928E+05  2.94651E+05
+0        2    5   3.95215E+09  2.24162E+08 -2.14107E+08   -4.80810E+06 -1.15640E+06   -3.28  3.96440E+09  2.11906E+08  1.87625E+09
+0        2    6   5.28769E+09  5.65406E+08  4.28222E+08   -3.98587E+06 -2.64089E+05    5.14  5.32621E+09  5.26888E+08  2.39966E+09
+0        2    7   1.03262E+09  1.15668E+09 -1.42360E+08   -8.64179E-09  5.31196E-09  -56.77  1.24993E+09  9.39361E+08  1.55286E+08
+0        3    1  -5.49924E+09  1.24139E+09  4.10227E+08    2.72084E+06  1.79617E+04   86.53  1.26626E+09 -5.52411E+09  3.39519E+09
+0        3    2   9.23235E+09  2.50716E+08  6.61346E+08    3.28211E+06  7.86510E+04    4.19  9.28078E+09  2.02280E+08  4.53925E+09
+0        3    3   8.43425E+08  2.94049E+08 -3.30618E+08    3.56275E+06  1.08996E+05  -25.14  9.98577E+08  1.38897E+08  4.29840E+08
+0        3    4  -2.09136E+06  2.22304E+04  9.01138E+04    3.56275E+06  1.08996E+05   87.56  2.60655E+04 -2.09520E+06  1.06063E+06
+0        3    5  -8.42112E+08 -2.94250E+08  3.30837E+08    3.28211E+06  7.86510E+04   64.81 -1.38657E+08 -9.97705E+08  4.29524E+08
+0        3    6  -9.23601E+09 -2.50695E+08 -6.61564E+08    2.72084E+06  1.79617E+04  -85.81 -2.02247E+08 -9.28445E+09  4.54110E+09
+0        3    7   5.50108E+09 -1.24161E+09 -4.10408E+08    5.89907E-09 -3.61286E-10   -3.47  5.52597E+09 -1.26650E+09  3.39623E+09
+0        4    1  -1.25492E+09  8.32548E+08  4.31514E+08    3.05773E+06 -3.19976E+05   78.77  9.18232E+08 -1.34061E+09  1.12942E+09
+0        4    2   8.22667E+09  1.49667E+08  3.69248E+08    3.68849E+06 -1.40112E+06    2.61  8.24352E+09  1.32822E+08  4.05535E+09
+0        4    3   1.45138E+08  2.52253E+08 -1.84620E+08    4.00388E+06 -1.94169E+06  -53.09  3.90927E+08  6.46395E+06  1.92231E+08
+0        4    4  -9.15934E+05 -5.60322E+04  1.29874E+05    4.00388E+06 -1.94169E+06   81.60 -3.68451E+04 -9.35121E+05  4.49138E+05
+0        4    5  -1.43150E+08 -2.52536E+08  1.84637E+08    3.68849E+06 -1.40112E+06   36.75 -5.27553E+06 -3.90410E+08  1.92567E+08
+0        4    6  -8.23185E+09 -1.49630E+08 -3.69266E+08    3.05773E+06 -3.19976E+05  -87.39 -1.32794E+08 -8.24869E+09  4.05795E+09
+0        4    7   1.25356E+09 -8.32681E+08 -4.31773E+08    6.62947E-09  6.43608E-09  -11.24  1.33939E+09 -9.18511E+08  1.12895E+09
+0        5    1  -7.81866E+09  8.03534E+08  7.84130E+08   -3.27656E+06  4.73381E+04   84.85  8.74266E+08 -7.88939E+09  4.38183E+09
+0        5    2   9.70115E+09 -1.31310E+08  5.58144E+08   -3.95247E+06  2.07285E+05    3.24  9.73273E+09 -1.62892E+08  4.94781E+09
+0        5    3  -2.36096E+09  2.56821E+08 -2.79021E+08   -4.29043E+06  2.87258E+05  -83.98  2.86230E+08 -2.39037E+09  1.33830E+09
+0        5    4  -2.08732E+06  1.01046E+04  1.44721E+05   -4.29043E+06  2.87258E+05   86.07  2.00432E+04 -2.09726E+06  1.05865E+06
+1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  28, 2016  MSC Nastran 11/27/13   PAGE    18
+      COMBINED LOADING                                                                                                              
+0                                                                                                            SUBCASE 1              
+ 
+                   S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )
+   ELEMENT  PLY  STRESSES IN FIBER AND MATRIX DIRECTIONS    INTER-LAMINAR  STRESSES  PRINCIPAL STRESSES (ZERO SHEAR)      MAX
+     ID      ID    NORMAL-1     NORMAL-2     SHEAR-12     SHEAR XZ-MAT  SHEAR YZ-MAT  ANGLE    MAJOR        MINOR        SHEAR
+0        5    5   2.36358E+09 -2.57104E+08  2.79224E+08   -3.95247E+06  2.07285E+05    6.01  2.39300E+09 -2.86524E+08  1.33976E+09
+0        5    6  -9.70651E+09  1.31383E+08 -5.58347E+08   -3.27656E+06  4.73381E+04  -86.76  1.62971E+08 -9.73810E+09  4.95053E+09
+0        5    7   7.82009E+09 -8.03765E+08 -7.84420E+08   -7.10393E-09 -9.52171E-10   -5.16  7.89086E+09 -8.74535E+08  4.38270E+09
+0        6    1   5.95596E+09  1.22968E+09 -3.76891E+08    2.73494E+06  3.34960E+05   -4.53  5.98583E+09  1.19981E+09  2.39301E+09
+0        6    2   4.73765E+09  7.85467E+08  3.06898E+08    3.29912E+06  1.46673E+06    4.41  4.76134E+09  7.61777E+08  1.99978E+09
+0        6    3   5.83623E+09  2.37638E+08 -1.53473E+08    3.58121E+06  2.03261E+06   -1.57  5.84043E+09  2.33434E+08  2.80350E+09
+0        6    4   2.65630E+05 -6.13925E+04  6.61545E+04    3.58121E+06  2.03261E+06   11.01  2.78505E+05 -7.42681E+04  1.76387E+05
+0        6    5  -5.83522E+09 -2.37782E+08  1.53376E+08    3.29912E+06  1.46673E+06   88.43 -2.33582E+08 -5.83942E+09  2.80292E+09
+0        6    6  -4.74029E+09 -7.85448E+08 -3.06801E+08    2.73494E+06  3.34960E+05  -85.59 -7.61789E+08 -4.76395E+09  2.00108E+09
+0        6    7  -5.95812E+09 -1.22968E+09  3.76759E+08    5.92964E-09 -6.73746E-09   85.47 -1.19985E+09 -5.98795E+09  2.39405E+09
+0        8    1  -2.94545E+09 -1.34174E+09 -6.23813E+07   -2.79684E+06 -5.51576E+05  -87.78 -1.33932E+09 -2.94788E+09  8.04279E+08
+0        8    2  -8.65480E+09 -5.95262E+08 -4.43366E+08   -3.37379E+06 -2.41525E+06  -86.86 -5.70945E+08 -8.67911E+09  4.05408E+09
+0        8    3  -3.75437E+09 -3.23277E+08  2.21681E+08   -3.66226E+06 -3.34709E+06   86.32 -3.09013E+08 -3.76864E+09  1.72981E+09
+0        8    4  -2.50883E+05 -2.63044E+04 -5.53147E+04   -3.66226E+06 -3.34709E+06  -76.89 -1.34194E+04 -2.63768E+05  1.25174E+05
+0        8    5   3.75223E+09  3.23298E+08 -2.21689E+08   -3.37379E+06 -2.41525E+06   -3.68  3.76650E+09  3.09024E+08  1.72874E+09
+0        8    6   8.65571E+09  5.95146E+08  4.43374E+08   -2.79684E+06 -5.51576E+05    3.14  8.68002E+09  5.70832E+08  4.05459E+09
+0        8    7   2.94472E+09  1.34170E+09  6.24919E+07   -6.06384E-09  1.10945E-08    2.23  2.94715E+09  1.33927E+09  8.03943E+08
+0        9    1   7.08445E+09  1.64007E+09 -5.72008E+08    1.48666E+05 -4.75577E+05   -5.93  7.14389E+09  1.58063E+09  2.78163E+09
+0        9    2   5.47070E+09  1.05994E+09  4.35550E+08    1.79334E+05 -2.08247E+06    5.59  5.51330E+09  1.01734E+09  2.24798E+09
+0        9    3   7.99724E+09  2.94635E+08 -2.17784E+08    1.94668E+05 -2.88591E+06   -1.62  8.00340E+09  2.88483E+08  3.85746E+09
+0        9    4   1.08379E+05 -2.17714E+04  2.84680E+04    1.94668E+05 -2.88591E+06   11.81  1.14334E+05 -2.77258E+04  7.10299E+04
+0        9    5  -7.99674E+09 -2.94692E+08  2.17748E+08    1.79334E+05 -2.08247E+06   88.38 -2.88541E+08 -8.00289E+09  3.85717E+09
+0        9    6  -5.47177E+09 -1.05992E+09 -4.35514E+08    1.48666E+05 -4.75577E+05  -84.42 -1.01734E+09 -5.51435E+09  2.24850E+09
+0        9    7  -7.08522E+09 -1.64007E+09  5.71951E+08    3.22324E-10  9.56588E-09   84.07 -1.58065E+09 -7.14465E+09  2.78200E+09
+0       10    1   9.51011E+09  1.84482E+09 -5.71282E+08    1.36641E+05 -6.77572E+04   -4.24  9.55245E+09  1.80247E+09  3.87499E+09
+1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  28, 2016  MSC Nastran 11/27/13   PAGE    19
+      COMBINED LOADING                                                                                                              
+0                                                                                                            SUBCASE 1              
+ 
+                   S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )
+   ELEMENT  PLY  STRESSES IN FIBER AND MATRIX DIRECTIONS    INTER-LAMINAR  STRESSES  PRINCIPAL STRESSES (ZERO SHEAR)      MAX
+     ID      ID    NORMAL-1     NORMAL-2     SHEAR-12     SHEAR XZ-MAT  SHEAR YZ-MAT  ANGLE    MAJOR        MINOR        SHEAR
+0       10    2   7.19521E+09  1.19163E+09  4.42858E+08    1.64828E+05 -2.96697E+05    4.20  7.22770E+09  1.15914E+09  3.03428E+09
+0       10    3   8.85285E+09  3.60776E+08 -2.21448E+08    1.78921E+05 -4.11166E+05   -1.49  8.85862E+09  3.55005E+08  4.25181E+09
+0       10    4   3.47588E+05 -3.67850E+04  3.29243E+04    1.78921E+05 -4.11166E+05    4.86  3.50388E+05 -3.95849E+04  1.94987E+05
+0       10    5  -8.85229E+09 -3.60843E+08  2.21372E+08    1.64828E+05 -2.96697E+05   88.51 -3.55076E+08 -8.85806E+09  4.25149E+09
+0       10    6  -7.19646E+09 -1.19161E+09 -4.42783E+08    1.36641E+05 -6.77572E+04  -85.81 -1.15914E+09 -7.22894E+09  3.03490E+09
+0       10    7  -9.51150E+09 -1.84480E+09  5.71216E+08    2.96251E-10  1.36289E-09   85.76 -1.80247E+09 -9.55382E+09  3.87568E+09
+0       11    1  -1.32227E+08 -8.62946E+08  6.94354E+07   -3.70709E+06 -1.00322E+06    5.38 -1.25687E+08 -8.69486E+08  3.71899E+08
+0       11    2  -4.12634E+09 -3.94711E+08 -3.38983E+08   -4.47181E+06 -4.39292E+06  -84.85 -3.64168E+08 -4.15688E+09  1.89636E+09
+0       11    3  -2.70264E+09 -1.68774E+08  1.69511E+08   -4.85417E+06 -6.08777E+06   86.19 -1.57485E+08 -2.71393E+09  1.27822E+09
+0       11    4  -8.26769E+05  2.57729E+03 -5.42665E+04   -4.85417E+06 -6.08777E+06  -86.27  6.11303E+03 -8.30305E+05  4.18209E+05
+0       11    5   2.70057E+09  1.68798E+08 -1.69432E+08   -4.47181E+06 -4.39292E+06   -3.81  2.71186E+09  1.57509E+08  1.27718E+09
+0       11    6   4.12727E+09  3.94601E+08  3.38904E+08   -3.70709E+06 -1.00322E+06    5.15  4.15779E+09  3.64080E+08  1.89685E+09
+0       11    7   1.32748E+08  8.62854E+08 -6.93268E+07   -8.03735E-09  2.01790E-08  -84.62  8.69379E+08  1.26224E+08  3.71577E+08
+0       12    1  -9.06938E+08  5.71651E+08 -1.18994E+08   -8.14922E+05 -7.32809E+05  -85.43  5.81166E+08 -9.16453E+08  7.48810E+08
+0       12    2   1.81794E+09  2.72750E+08  2.54912E+08   -9.83029E+05 -3.20884E+06    9.13  1.85891E+09  2.31783E+08  8.13563E+08
+0       12    3   2.00383E+09  8.73994E+07 -1.27443E+08   -1.06708E+06 -4.44685E+06   -3.79  2.01227E+09  7.89616E+07  9.66652E+08
+0       12    4  -5.50678E+05  2.39584E+03  3.25767E+04   -1.06708E+06 -4.44685E+06   86.64  4.30804E+03 -5.52590E+05  2.78449E+05
+0       12    5  -2.00330E+09 -8.74677E+07  1.27496E+08   -9.83029E+05 -3.20884E+06   86.21 -7.90202E+07 -2.01174E+09  9.66361E+08
+0       12    6  -1.81921E+09 -2.72738E+08 -2.54966E+08   -8.14922E+05 -7.32809E+05  -80.88 -2.31787E+08 -1.86016E+09  8.14186E+08
+0       12    7   9.07307E+08 -5.71712E+08  1.18929E+08   -1.76684E-09  1.47399E-08    4.57  9.16810E+08 -5.81214E+08  7.49012E+08
+0       14    1   7.26153E+09  4.29440E+08 -4.31195E+08    1.12686E+06  1.23799E+06   -3.60  7.28864E+09  4.02333E+08  3.44315E+09
+0       14    2   1.69845E+08  4.95191E+08 -5.10390E+07    1.35932E+06  5.42093E+06  -81.29  5.03010E+08  1.62027E+08  1.70492E+08
+0       14    3   4.05127E+09  7.01980E+07  2.54675E+07    1.47554E+06  7.51240E+06    0.37  4.05144E+09  7.00351E+07  1.99070E+09
+0       14    4   1.22791E+06 -8.01463E+04  8.03946E+03    1.47554E+06  7.51240E+06    0.35  1.22796E+06 -8.01957E+04  6.54080E+05
+0       14    5  -4.05147E+09 -7.02398E+07 -2.56755E+07    1.35932E+06  5.42093E+06  -89.63 -7.00743E+07 -4.05163E+09  1.99078E+09
+1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  28, 2016  MSC Nastran 11/27/13   PAGE    20
+      COMBINED LOADING                                                                                                              
+0                                                                                                            SUBCASE 1              
+ 
+                   S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )
+   ELEMENT  PLY  STRESSES IN FIBER AND MATRIX DIRECTIONS    INTER-LAMINAR  STRESSES  PRINCIPAL STRESSES (ZERO SHEAR)      MAX
+     ID      ID    NORMAL-1     NORMAL-2     SHEAR-12     SHEAR XZ-MAT  SHEAR YZ-MAT  ANGLE    MAJOR        MINOR        SHEAR
+0       14    6  -1.70482E+08 -4.95213E+08  5.12471E+07    1.12686E+06  1.23799E+06    8.76 -1.62587E+08 -5.03108E+08  1.70261E+08
+0       14    7  -7.26482E+09 -4.29343E+08  4.31179E+08    2.44315E-09 -2.49012E-08   86.40 -4.02252E+08 -7.29191E+09  3.44483E+09
+0       15    1  -7.07084E+09  6.74110E+08 -5.65974E+08    3.92769E+05  4.03095E+05  -85.84  7.15250E+08 -7.11198E+09  3.91361E+09
+0       15    2  -3.24386E+09  3.83638E+08  4.83932E+08    4.73792E+05  1.76508E+06   82.53  4.47088E+08 -3.30731E+09  1.87720E+09
+0       15    3   3.58467E+09 -4.10702E+07 -2.42022E+08    5.14303E+05  2.44607E+06   -3.80  3.60075E+09 -5.71542E+07  1.82895E+09
+0       15    4   9.40940E+05 -1.17175E+05  6.72035E+04    5.14303E+05  2.44607E+06    3.62  9.45191E+05 -1.21427E+05  5.33309E+05
+0       15    5  -3.58405E+09  4.08924E+07  2.41797E+08    4.73792E+05  1.76508E+06   86.20  5.69499E+07 -3.60011E+09  1.82853E+09
+0       15    6   3.24077E+09 -3.83650E+08 -4.83706E+08    3.92769E+05  4.03095E+05   -7.47  3.30421E+09 -4.47094E+08  1.87565E+09
+0       15    7   7.06648E+09 -6.74065E+08  5.65840E+08    8.51565E-10 -8.10794E-09    4.16  7.10763E+09 -7.15210E+08  3.91142E+09
+0       16    1   7.05365E+09  6.97804E+08 -3.41143E+08   -1.35244E+06  2.39416E+05   -3.06  7.07191E+09  6.79546E+08  3.19618E+09
+0       16    2   2.41921E+09  5.67313E+08  6.19649E+07   -1.63143E+06  1.04836E+06    1.91  2.42128E+09  5.65242E+08  9.28018E+08
+0       16    3   4.34741E+09  1.43325E+08 -3.10110E+07   -1.77092E+06  1.45283E+06   -0.42  4.34763E+09  1.43096E+08  2.10227E+09
+0       16    4   7.67181E+05 -3.68907E+04 -1.75902E+04   -1.77092E+06  1.45283E+06   -1.25  7.67565E+05 -3.72753E+04  4.02420E+05
+0       16    5  -4.34793E+09 -1.43307E+08  3.08967E+07   -1.63143E+06  1.04836E+06   89.58 -1.43080E+08 -4.34816E+09  2.10254E+09
+0       16    6  -2.41876E+09 -5.67338E+08 -6.18506E+07   -1.35244E+06  2.39416E+05  -88.09 -5.65274E+08 -2.42083E+09  9.27777E+08
+0       16    7  -7.05527E+09 -6.97737E+08  3.41178E+08   -2.93223E-09 -4.81568E-09   86.94 -6.79480E+08 -7.07352E+09  3.19702E+09
+0       17    1  -7.52021E+09  7.40337E+07 -5.07577E+08    2.20235E+06 -1.42427E+05  -86.19  1.07808E+08 -7.55398E+09  3.83090E+09
+0       17    2  -6.10745E+09  9.82794E+07  2.59097E+08    2.65666E+06 -6.23663E+05   87.61  1.09078E+08 -6.11825E+09  3.11366E+09
+0       17    3   1.61515E+09 -1.59667E+08 -1.29548E+08    2.88382E+06 -8.64280E+05   -4.15  1.62456E+09 -1.69073E+08  8.96815E+08
+0       17    4  -5.49307E+04 -3.04351E+03 -5.41829E+03    2.88382E+06 -8.64280E+05  -84.10 -2.48374E+03 -5.54905E+04  2.65034E+04
+0       17    5  -1.61539E+09  1.59666E+08  1.29549E+08    2.65666E+06 -6.23663E+05   85.85  1.69071E+08 -1.62480E+09  8.96934E+08
+0       17    6   6.10751E+09 -9.82931E+07 -2.59098E+08    2.20235E+06 -1.42427E+05   -2.39  6.11831E+09 -1.09092E+08  3.11370E+09
+0       17    7   7.52014E+09 -7.40415E+07  5.07588E+08    4.77492E-09  2.86482E-09    3.81  7.55391E+09 -1.07818E+08  3.83087E+09
+0       18    1   6.61067E+09  7.38286E+08 -2.84945E+08   -1.89384E+05 -2.30838E+04   -2.77  6.62446E+09  7.24492E+08  2.94998E+09
+0       18    2   3.04941E+09  5.52909E+08  9.15676E+07   -2.28451E+05 -1.01080E+05    2.10  3.05276E+09  5.49555E+08  1.25160E+09
+1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  28, 2016  MSC Nastran 11/27/13   PAGE    21
+      COMBINED LOADING                                                                                                              
+0                                                                                                            SUBCASE 1              
+ 
+                   S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )
+   ELEMENT  PLY  STRESSES IN FIBER AND MATRIX DIRECTIONS    INTER-LAMINAR  STRESSES  PRINCIPAL STRESSES (ZERO SHEAR)      MAX
+     ID      ID    NORMAL-1     NORMAL-2     SHEAR-12     SHEAR XZ-MAT  SHEAR YZ-MAT  ANGLE    MAJOR        MINOR        SHEAR
+0       18    3   4.14580E+09  1.59230E+08 -4.57865E+07   -2.47985E+05 -1.40078E+05   -0.66  4.14633E+09  1.58704E+08  1.99381E+09
+0       18    4   3.66698E+04 -6.34538E+03  3.54287E+03   -2.47985E+05 -1.40078E+05    4.68  3.69596E+04 -6.63523E+03  2.17974E+04
+0       18    5  -4.14578E+09 -1.59240E+08  4.57756E+07   -2.28451E+05 -1.01080E+05   89.34 -1.58715E+08 -4.14631E+09  1.99380E+09
+0       18    6  -3.04959E+09 -5.52910E+08 -9.15567E+07   -1.89384E+05 -2.30838E+04  -87.90 -5.49557E+08 -3.05294E+09  1.25169E+09
+0       18    7  -6.61090E+09 -7.38285E+08  2.84938E+08   -4.10604E-10  4.64314E-10   87.23 -7.24493E+08 -6.62469E+09  2.95010E+09
+0       19    1  -2.22457E+09  5.61046E+08 -7.29740E+08    5.55744E+05 -5.74754E+03  -76.17  7.40636E+08 -2.40416E+09  1.57240E+09
+0       19    2  -4.18116E+09  4.94696E+08  2.90947E+08    6.70386E+05 -2.51674E+04   86.45  5.12730E+08 -4.19919E+09  2.35596E+09
+0       19    3   4.62191E+09 -5.28534E+07 -1.45474E+08    7.27707E+05 -3.48774E+04   -1.78  4.62644E+09 -5.73760E+07  2.34191E+09
+0       19    4  -2.66575E+04 -3.15530E+03 -2.46279E+03    7.27707E+05 -3.48774E+04  -84.08 -2.90000E+03 -2.69128E+04  1.20064E+04
+0       19    5  -4.62205E+09  5.28509E+07  1.45472E+08    6.70386E+05 -2.51674E+04   88.22  5.73733E+07 -4.62658E+09  2.34197E+09
+0       19    6   4.18116E+09 -4.94704E+08 -2.90946E+08    5.55744E+05 -5.74754E+03   -3.55  4.19919E+09 -5.12738E+08  2.35596E+09
+0       19    7   2.22448E+09 -5.61051E+08  7.29745E+08    1.20491E-09  1.15607E-10   13.83  2.40408E+09 -7.40648E+08  1.57236E+09
+0       20    1   7.48146E+09  6.58241E+08 -6.30183E+08   -4.69065E+06 -5.14738E+05   -5.23  7.53917E+09  6.00527E+08  3.46932E+09
+0       20    2  -3.51695E+08  6.77614E+08  3.31549E+07   -5.65826E+06 -2.25395E+06   88.16  6.78681E+08 -3.52762E+08  5.15721E+08
+0       20    3   5.62096E+09  7.95576E+07 -1.65775E+07   -6.14207E+06 -3.12355E+06   -0.17  5.62101E+09  7.95080E+07  2.77075E+09
+0       20    4  -3.12913E+04 -2.57306E+03  6.01527E+03   -6.14207E+06 -3.12355E+06   78.64 -1.36401E+03 -3.25003E+04  1.55682E+04
+0       20    5  -5.62086E+09 -7.95700E+07  1.65773E+07   -5.65826E+06 -2.25395E+06   89.83 -7.95204E+07 -5.62091E+09  2.77070E+09
+0       20    6   3.51463E+08 -6.77611E+08 -3.31547E+07   -4.69065E+06 -5.14738E+05   -1.84  3.52530E+08 -6.78679E+08  5.15604E+08
+0       20    7  -7.48152E+09 -6.58246E+08  6.30170E+08   -1.01698E-08  1.03536E-08   84.77 -6.00534E+08 -7.53924E+09  3.46935E+09
+0       21    1   8.18717E+09 -2.53929E+08 -7.42325E+08   -1.57860E+06 -1.45362E+06   -4.99  8.25195E+09 -3.18713E+08  4.28533E+09
+0       21    2  -6.21287E+09  3.52667E+08 -3.50974E+08   -1.90424E+06 -6.36515E+06  -86.95  3.71376E+08 -6.23158E+09  3.30148E+09
+0       21    3   3.72191E+09 -1.29049E+08  1.75490E+08   -2.06706E+06 -8.82092E+06    2.60  3.72989E+09 -1.37030E+08  1.93346E+09
+0       21    4  -1.38377E+05  7.36149E+02  5.34791E+03   -2.06706E+06 -8.82092E+06   87.80  9.41435E+02 -1.38583E+05  6.97620E+04
+0       21    5  -3.72185E+09  1.29036E+08 -1.75477E+08   -1.90424E+06 -6.36515E+06  -87.40  1.37015E+08 -3.72983E+09  1.93342E+09
+0       21    6   6.21264E+09 -3.52667E+08  3.50961E+08   -1.57860E+06 -1.45362E+06    3.05  6.23134E+09 -3.71375E+08  3.30136E+09
+1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  28, 2016  MSC Nastran 11/27/13   PAGE    22
+      COMBINED LOADING                                                                                                              
+0                                                                                                            SUBCASE 1              
+ 
+                   S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )
+   ELEMENT  PLY  STRESSES IN FIBER AND MATRIX DIRECTIONS    INTER-LAMINAR  STRESSES  PRINCIPAL STRESSES (ZERO SHEAR)      MAX
+     ID      ID    NORMAL-1     NORMAL-2     SHEAR-12     SHEAR XZ-MAT  SHEAR YZ-MAT  ANGLE    MAJOR        MINOR        SHEAR
+0       21    7  -8.18707E+09  2.53914E+08  7.42314E+08   -3.42257E-09  2.92385E-08   85.01  3.18697E+08 -8.25185E+09  4.28528E+09
+0       23    1   1.28499E+10  6.47025E+08 -1.19672E+09   -1.07164E+06 -4.34776E+06   -5.55  1.29661E+10  5.30771E+08  6.21768E+09
+0       23    2  -4.30783E+09  1.00712E+09 -1.35257E+08   -1.29271E+06 -1.90381E+07  -88.54  1.01056E+09 -4.31127E+09  2.66092E+09
+0       23    3   8.85428E+09  1.12464E+07  6.76302E+07   -1.40324E+06 -2.63832E+07    0.44  8.85480E+09  1.07292E+07  4.42203E+09
+0       23    4  -7.52821E+04 -9.22468E+02  8.99517E+03   -1.40324E+06 -2.63832E+07   83.20  1.50190E+02 -7.63548E+04  3.82525E+04
+0       23    5  -8.85410E+09 -1.12629E+07 -6.76244E+07   -1.29271E+06 -1.90381E+07  -89.56 -1.07458E+07 -8.85462E+09  4.42194E+09
+0       23    6   4.30751E+09 -1.00712E+09  1.35252E+08   -1.07164E+06 -4.34776E+06    1.46  4.31095E+09 -1.01056E+09  2.66075E+09
+0       23    7  -1.28499E+10 -6.47034E+08  1.19671E+09   -2.32343E-09  8.74520E-08   84.45 -5.30783E+08 -1.29661E+10  6.21766E+09
+0       25    1   5.09802E+09  3.02315E+06 -3.44040E+08    1.00231E+07  5.94455E+05   -3.85  5.12115E+09 -2.01033E+07  2.57062E+09
+0       25    2  -1.89772E+09  2.38881E+08 -1.54496E+08    1.20907E+07  2.60301E+06  -85.89  2.49995E+08 -1.90884E+09  1.07942E+09
+0       25    3   2.21589E+09 -2.20979E+07  7.72525E+07    1.31245E+07  3.60729E+06    1.97  2.21856E+09 -2.47614E+07  1.12166E+09
+0       25    4  -1.67913E+05  1.42510E+03  9.74830E+03    1.31245E+07  3.60729E+06   86.72  1.98444E+03 -1.68473E+05  8.52285E+04
+0       25    5  -2.21572E+09  2.20782E+07 -7.72354E+07    1.20907E+07  2.60301E+06  -88.03  2.47407E+07 -2.21839E+09  1.12156E+09
+0       25    6   1.89736E+09 -2.38877E+08  1.54479E+08    1.00231E+07  5.94455E+05    4.11  1.90847E+09 -2.49990E+08  1.07923E+09
+0       25    7  -5.09788E+09 -3.04139E+06  3.44021E+08    2.17311E-08 -1.19570E-08   86.15  2.00831E+07 -5.12101E+09  2.57055E+09
+0       28    1  -3.39184E+09  7.70310E+08  3.81491E+08   -1.56699E+06  1.18831E+05   84.81  8.04987E+08 -3.42652E+09  2.11575E+09
+0       28    2   6.90192E+09  1.03740E+08  4.09775E+08   -1.89024E+06  5.20337E+05    3.44  6.92653E+09  7.91292E+07  3.42370E+09
+0       28    3  -5.82352E+07  2.08807E+08 -2.04889E+08   -2.05187E+06  7.21091E+05  -61.55  3.19841E+08 -1.69269E+08  2.44555E+08
+0       28    4  -1.33014E+04 -4.73799E+03 -1.05075E+03   -2.05187E+06  7.21091E+05  -83.11 -4.61095E+03 -1.34285E+04  4.40876E+03
+0       28    5   5.81184E+07 -2.08813E+08  2.04884E+08   -1.89024E+06  5.20337E+05   28.46  1.69174E+08 -3.19868E+08  2.44521E+08
+0       28    6  -6.90198E+09 -1.03748E+08 -4.09771E+08   -1.56699E+06  1.18831E+05  -86.56 -7.91379E+07 -6.92659E+09  3.42372E+09
+0       28    7   3.39169E+09 -7.70314E+08 -3.81489E+08   -3.39741E-09 -2.39019E-09   -5.19  3.42637E+09 -8.04992E+08  2.11568E+09
+0       29    1   2.46008E+09  1.05981E+09 -1.44783E+08   -8.25021E+05  3.07340E+05   -5.84  2.47489E+09  1.04499E+09  7.14950E+08
+0       29    2   5.08406E+09  5.52511E+08  3.46132E+08   -9.95212E+05  1.34579E+06    4.34  5.11035E+09  5.26225E+08  2.29206E+09
+0       29    3   3.87368E+09  2.16697E+08 -1.73075E+08   -1.08031E+06  1.86501E+06   -2.70  3.88186E+09  2.08524E+08  1.83667E+09
+1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  28, 2016  MSC Nastran 11/27/13   PAGE    23
+      COMBINED LOADING                                                                                                              
+0                                                                                                            SUBCASE 1              
+ 
+                   S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )
+   ELEMENT  PLY  STRESSES IN FIBER AND MATRIX DIRECTIONS    INTER-LAMINAR  STRESSES  PRINCIPAL STRESSES (ZERO SHEAR)      MAX
+     ID      ID    NORMAL-1     NORMAL-2     SHEAR-12     SHEAR XZ-MAT  SHEAR YZ-MAT  ANGLE    MAJOR        MINOR        SHEAR
+0       29    4   2.00977E+05 -1.55913E+04 -9.46052E+03   -1.08031E+06  1.86501E+06   -2.50  2.01390E+05 -1.60037E+04  1.08697E+05
+0       29    5  -3.87405E+09 -2.16694E+08  1.73038E+08   -9.95212E+05  1.34579E+06   87.30 -2.08525E+08 -3.88222E+09  1.83685E+09
+0       29    6  -5.08391E+09 -5.52531E+08 -3.46095E+08   -8.25021E+05  3.07340E+05  -85.66 -5.26249E+08 -5.11019E+09  2.29197E+09
+0       29    7  -2.46070E+09 -1.05979E+09  1.44802E+08   -1.78873E-09 -6.18192E-09   84.16 -1.04498E+09 -2.47551E+09  7.15265E+08
+0       30    1   5.92654E+09  1.29390E+09 -1.90035E+08   -1.23169E+06 -2.18419E+05   -2.35  5.93432E+09  1.28612E+09  2.32410E+09
+0       30    2   6.80184E+09  7.35104E+08  3.33313E+08   -1.48577E+06 -9.56418E+05    3.14  6.82009E+09  7.16846E+08  3.05162E+09
+0       30    3   5.14904E+09  2.89366E+08 -1.66661E+08   -1.61281E+06 -1.32542E+06   -1.96  5.15475E+09  2.83657E+08  2.43555E+09
+0       30    4   3.17510E+04 -1.29642E+04  1.08349E+04   -1.61281E+06 -1.32542E+06   12.93  3.42381E+04 -1.54513E+04  2.48447E+04
+0       30    5  -5.14893E+09 -2.89394E+08  1.66642E+08   -1.48577E+06 -9.56418E+05   88.04 -2.83686E+08 -5.15464E+09  2.43548E+09
+0       30    6  -6.80233E+09 -7.35105E+08 -3.33294E+08   -1.23169E+06 -2.18419E+05  -86.87 -7.16851E+08 -6.82058E+09  3.05186E+09
+0       30    7  -5.92698E+09 -1.29391E+09  1.90014E+08   -2.67043E-09  4.39334E-09   87.66 -1.28613E+09 -5.93476E+09  2.32432E+09
+1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  28, 2016  MSC Nastran 11/27/13   PAGE    24
+      COMBINED LOADING                                                                                                              
+0                                                                                                            SUBCASE 1              
+ 
+                   S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 8 )
+   ELEMENT  PLY  STRESSES IN FIBER AND MATRIX DIRECTIONS    INTER-LAMINAR  STRESSES  PRINCIPAL STRESSES (ZERO SHEAR)      MAX
+     ID      ID    NORMAL-1     NORMAL-2     SHEAR-12     SHEAR XZ-MAT  SHEAR YZ-MAT  ANGLE    MAJOR        MINOR        SHEAR
+0        1    1   2.39447E+09 -8.58286E+08  2.92012E+08   -1.89104E+06 -3.26162E+05    5.09  2.42047E+09 -8.84293E+08  1.65238E+09
+0        1    2  -1.43369E+09 -4.36694E+08 -4.14305E+08   -2.28113E+06 -1.42820E+06  -70.13 -2.87003E+08 -1.58338E+09  6.48189E+08
+0        1    3  -3.40365E+09 -9.82047E+07  2.07185E+08   -2.47618E+06 -1.97922E+06   86.43 -8.52691E+07 -3.41658E+09  1.66566E+09
+0        1    4  -1.17815E+06  1.65972E+04 -5.00314E+04   -2.47618E+06 -1.97922E+06  -87.61  1.86887E+04 -1.18024E+06  5.99465E+05
+0        1    5   3.40167E+09  9.82208E+07 -2.07057E+08   -2.28113E+06 -1.42820E+06   -3.57  3.41460E+09  8.52933E+07  1.66465E+09
+0        1    6   1.43448E+09  4.36587E+08  4.14178E+08   -1.89104E+06 -3.26162E+05   19.85  1.58398E+09  2.87080E+08  6.48452E+08
+0        1    7  -2.39330E+09  8.58162E+08 -2.91911E+08   -4.09996E-09  6.56049E-09  -84.91  8.84161E+08 -2.41930E+09  1.65173E+09
+0        7    1   1.06700E+09  4.63609E+08  9.84007E+07    1.79088E+06 -1.48988E+05    9.03  1.08264E+09  4.47967E+08  3.17336E+08
+0        7    2   3.70883E+09  1.74982E+08  1.51714E+08    2.16031E+06 -6.52391E+05    2.45  3.71534E+09  1.68481E+08  1.77343E+09
+0        7    3   9.49752E+08  1.27898E+08 -7.58911E+07    2.34502E+06 -9.04093E+05   -5.23  9.56701E+08  1.20949E+08  4.17876E+08
+0        7    4   8.57771E+04 -1.07800E+05  7.87198E+04    2.34502E+06 -9.04093E+05   19.56  1.13748E+05 -1.35771E+05  1.24759E+05
+0        7    5  -9.49290E+08 -1.28127E+08  7.57547E+07    2.16031E+06 -6.52391E+05   84.77 -1.21197E+08 -9.56220E+08  4.17512E+08
+0        7    6  -3.71272E+09 -1.75017E+08 -1.51578E+08    1.79088E+06 -1.48988E+05  -87.55 -1.68534E+08 -3.71920E+09  1.77533E+09
+0        7    7  -1.07059E+09 -4.63656E+08 -9.85582E+07    3.88281E-09  2.99678E-09  -81.00 -4.48053E+08 -1.08619E+09  3.19071E+08
+0       13    1   5.37451E+09  2.04921E+08 -5.67450E+08    1.34285E+06  3.84487E+05   -6.19  5.43607E+09  1.43367E+08  2.64635E+09
+0       13    2  -2.77801E+09  4.21058E+08 -8.26553E+07    1.61986E+06  1.68360E+06  -88.52  4.23192E+08 -2.78015E+09  1.60167E+09
+0       13    3   3.83056E+09 -2.29569E+07  4.12810E+07    1.75836E+06  2.33315E+06    0.61  3.83100E+09 -2.33991E+07  1.92720E+09
+0       13    4   3.93057E+05 -1.26323E+05  2.61076E+04    1.75836E+06  2.33315E+06    2.87  3.94366E+05 -1.27632E+05  2.60999E+05
+0       13    5  -3.83163E+09  2.27873E+07 -4.14676E+07    1.61986E+06  1.68360E+06  -89.38  2.32333E+07 -3.83207E+09  1.92765E+09
+0       13    6   2.77550E+09 -4.21163E+08  8.28419E+07    1.34285E+06  3.84487E+05    1.48  2.77765E+09 -4.23309E+08  1.60048E+09
+0       13    7  -5.37888E+09 -2.04943E+08  5.67398E+08    2.91143E-09 -7.73366E-09   83.81 -1.43451E+08 -5.44037E+09  2.64846E+09
+0       22    1  -6.24828E+09  2.50003E+08 -4.33498E+08    2.97920E+06 -1.04068E+06  -86.20  2.78794E+08 -6.27707E+09  3.27793E+09
+0       22    2  -4.14899E+09  1.65928E+08  2.90195E+08    3.59376E+06 -4.55695E+06   86.17  1.85357E+08 -4.16842E+09  2.17689E+09
+0       22    3   1.91301E+09 -9.53692E+07 -1.45096E+08    3.90104E+06 -6.31508E+06   -4.11  1.92344E+09 -1.05798E+08  1.01462E+09
+0       22    4  -9.21597E+04 -1.64354E+02 -2.05438E+03    3.90104E+06 -6.31508E+06  -88.72 -1.18500E+02 -9.22056E+04  4.60435E+04
+1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  28, 2016  MSC Nastran 11/27/13   PAGE    25
+      COMBINED LOADING                                                                                                              
+0                                                                                                            SUBCASE 1              
+ 
+                   S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 8 )
+   ELEMENT  PLY  STRESSES IN FIBER AND MATRIX DIRECTIONS    INTER-LAMINAR  STRESSES  PRINCIPAL STRESSES (ZERO SHEAR)      MAX
+     ID      ID    NORMAL-1     NORMAL-2     SHEAR-12     SHEAR XZ-MAT  SHEAR YZ-MAT  ANGLE    MAJOR        MINOR        SHEAR
+0       22    5  -1.91314E+09  9.53664E+07  1.45104E+08    3.59376E+06 -4.55695E+06   85.89  1.05795E+08 -1.92357E+09  1.01468E+09
+0       22    6   4.14897E+09 -1.65936E+08 -2.90204E+08    2.97920E+06 -1.04068E+06   -3.83  4.16840E+09 -1.85366E+08  2.17688E+09
+0       22    7   6.24832E+09 -2.50013E+08  4.33502E+08    6.45921E-09  2.09325E-08    3.80  6.27711E+09 -2.78804E+08  3.27796E+09
+0       24    1   1.72309E+09  6.24730E+08 -2.18163E+08    1.01944E+06 -6.56790E+05  -10.83  1.76483E+09  5.82984E+08  5.90925E+08
+0       24    2   1.84204E+09  3.85477E+08  1.95694E+08    1.22973E+06 -2.87596E+06    7.52  1.86788E+09  3.59644E+08  7.54116E+08
+0       24    3   2.92796E+09  1.02980E+08 -9.78419E+07    1.33488E+06 -3.98555E+06   -1.98  2.93134E+09  9.95948E+07  1.41587E+09
+0       24    4  -2.07035E+05  1.20094E+03  1.68283E+04    1.33488E+06 -3.98555E+06   85.41  2.55213E+03 -2.08386E+05  1.05469E+05
+0       24    5  -2.92763E+09 -1.03010E+08  9.78623E+07    1.22973E+06 -2.87596E+06   88.02 -9.96240E+07 -2.93101E+09  1.41570E+09
+0       24    6  -1.84264E+09 -3.85467E+08 -1.95714E+08    1.01944E+06 -6.56790E+05  -82.48 -3.59638E+08 -1.86847E+09  7.54415E+08
+0       24    7  -1.72294E+09 -6.24753E+08  2.18129E+08    2.21024E-09  1.32108E-08   79.17 -5.83013E+08 -1.76468E+09  5.90833E+08
+0       26    1   6.34630E+09  6.91881E+08 -1.49229E+08    1.84658E+06 -5.30670E+05   -1.51  6.35024E+09  6.87945E+08  2.83115E+09
+0       26    2   3.97841E+09  4.72542E+08  8.11944E+07    2.22751E+06 -2.32371E+06    1.33  3.98029E+09  4.70662E+08  1.75481E+09
+0       26    3   3.36197E+09  1.74873E+08 -4.05976E+07    2.41797E+06 -3.22023E+06   -0.73  3.36249E+09  1.74356E+08  1.59407E+09
+0       26    4  -6.03205E+04 -5.78002E+03  9.93276E+03    2.41797E+06 -3.22023E+06   79.99 -4.02741E+03 -6.20731E+04  2.90229E+04
+0       26    5  -3.36184E+09 -1.74896E+08  4.05962E+07    2.22751E+06 -2.32371E+06   89.27 -1.74379E+08 -3.36236E+09  1.59399E+09
+0       26    6  -3.97883E+09 -4.72540E+08 -8.11931E+07    1.84658E+06 -5.30670E+05  -88.67 -4.70661E+08 -3.98070E+09  1.75502E+09
+0       26    7  -6.34646E+09 -6.91891E+08  1.49209E+08    4.00358E-09  1.06740E-08   88.49 -6.87956E+08 -6.35040E+09  2.83122E+09
+0       27    1   5.78544E+09  1.57185E+09 -2.52749E+08    6.26192E+05  3.99433E+05   -3.42  5.80055E+09  1.55674E+09  2.12191E+09
+0       27    2   7.71474E+09  8.75367E+08  4.48101E+08    7.55366E+05  1.74904E+06    3.73  7.74397E+09  8.46133E+08  3.44892E+09
+0       27    3   6.18233E+09  3.33701E+08 -2.24058E+08    8.19953E+05  2.42385E+06   -2.19  6.19090E+09  3.25130E+08  2.93289E+09
+0       27    4   1.23066E+05 -1.41691E+04  6.76875E+03    8.19953E+05  2.42385E+06    2.82  1.23399E+05 -1.45022E+04  6.89505E+04
+0       27    5  -6.18229E+09 -3.33720E+08  2.24030E+08    7.55366E+05  1.74904E+06   87.81 -3.25151E+08 -6.19086E+09  2.93285E+09
+0       27    6  -7.71506E+09 -8.75369E+08 -4.48073E+08    6.26192E+05  3.99433E+05  -86.27 -8.46140E+08 -7.74429E+09  3.44908E+09
+0       27    7  -5.78598E+09 -1.57184E+09  2.52736E+08    1.35765E-09 -8.03430E-09   86.58 -1.55674E+09 -5.80108E+09  2.12217E+09
+1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  28, 2016  MSC Nastran 11/27/13   PAGE    26
+                                                                                                                                    
+0                                                                                                                                   
+0                                                                                                                                   
+                                                                                                                                    
+                                                                                                                                    
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK OES1C    WRITTEN ON FORTRAN UNIT  12 IN BINARY (LTLEND) FORMAT USING NDDL DESCRIPTION FOR OES1, TRL =
+                    101                 2                 1                 0                 0                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS OES1C   
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =      131074 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =        1771 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          30 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =        2643 WORDS.)
+1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  28, 2016  MSC Nastran 11/27/13   PAGE    27
+      COMBINED LOADING                                                                                                              
+0                                                                                                            SUBCASE 1              
+ 
+                     S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )
+   ELEMENT  PLY   STRAINS IN FIBER AND MATRIX DIRECTIONS    INTER-LAMINAR   STRAINS  PRINCIPAL  STRAINS (ZERO SHEAR)      MAX
+     ID      ID    NORMAL-1     NORMAL-2     SHEAR-12     SHEAR XZ-MAT  SHEAR YZ-MAT  ANGLE    MAJOR        MINOR        SHEAR
+0        2    1  -4.97901E-03 -1.30930E-01  2.79460E-02   -7.81543E-04 -5.17822E-05    6.26 -3.44747E-03 -1.32462E-01  1.29015E-01
+0        2    2  -3.59863E-02 -5.46223E-02 -8.39681E-02   -9.42765E-04 -2.26745E-04  -38.74 -2.29862E-03 -8.83100E-02  8.60113E-02
+0        2    3  -2.73169E-02 -1.79908E-02  4.19848E-02   -1.02338E-03 -3.14226E-04   51.26 -1.14978E-03 -4.41579E-02  4.30081E-02
+0        2    4  -4.13874E-06 -2.66475E-06 -1.61855E-05   -1.02338E-03 -3.14226E-04  -47.60  4.72448E-06 -1.15280E-05  1.62525E-05
+0        2    5   2.72939E-02  1.80002E-02 -4.19818E-02   -9.42765E-04 -2.26745E-04  -38.76  4.41462E-02  1.14792E-03  4.29983E-02
+0        2    6   3.59956E-02  5.45993E-02  8.39652E-02   -7.81543E-04 -5.17822E-05   51.25  8.82982E-02  2.29676E-03  8.60014E-02
+0        2    7   4.97368E-03  1.30922E-01 -2.79137E-02   -1.69447E-18  1.04156E-18  -83.75  1.32450E-01  3.44561E-03  1.29005E-01
+0        3    1  -4.10304E-02  1.53494E-01  8.04367E-02    5.33498E-04  3.52190E-06   78.77  1.61481E-01 -4.90177E-02  2.10499E-01
+0        3    2   6.42958E-02  1.06772E-02  1.29676E-01    6.43551E-04  1.54218E-05   33.77  1.07648E-01 -3.26754E-02  1.40324E-01
+0        3    3   5.34100E-03  3.21415E-02 -6.48272E-02    6.98578E-04  2.13717E-05  -56.23  5.38155E-02 -1.63331E-02  7.01486E-02
+0        3    4  -1.47199E-05  6.66457E-06  1.76694E-05    6.98578E-04  2.13717E-05   70.22  9.84228E-06 -1.78976E-05  2.77399E-05
+0        3    5  -5.33138E-03 -3.21672E-02  6.48699E-02    6.43551E-04  1.54218E-05   33.76  1.63515E-02 -5.38501E-02  7.02016E-02
+0        3    6  -6.43215E-02 -1.06676E-02 -1.29718E-01    5.33498E-04  3.52190E-06  -56.24  3.26938E-02 -1.07683E-01  1.40377E-01
+0        3    7   4.10437E-02 -1.53523E-01 -8.04721E-02    1.15668E-18 -7.08404E-20  -11.23  4.90361E-02 -1.61516E-01  2.10552E-01
+0        4    1  -1.04424E-02  9.81610E-02  8.46105E-02    5.99554E-04 -6.27404E-05   71.04  1.12695E-01 -2.49768E-02  1.37672E-01
+0        4    2   5.74370E-02  1.03846E-03  7.24017E-02    7.23234E-04 -2.74729E-04   26.04  7.51256E-02 -1.66502E-02  9.17758E-02
+0        4    3   5.22858E-04  2.87094E-02 -3.62000E-02    7.85074E-04 -3.80723E-04  -63.95  3.75558E-02 -8.32358E-03  4.58794E-02
+0        4    4  -6.31751E-06 -4.64075E-06  2.54654E-05    7.85074E-04 -3.80723E-04   46.88  7.28116E-06 -1.82394E-05  2.55206E-05
+0        4    5  -5.08351E-04 -2.87458E-02  3.62034E-02    7.23234E-04 -2.74729E-04   26.02  8.32960E-03 -3.75838E-02  4.59134E-02
+0        4    6  -5.74734E-02 -1.02396E-03 -7.24050E-02    5.99554E-04 -6.27404E-05  -63.97  1.66562E-02 -7.51535E-02  9.18097E-02
+0        4    7   1.04331E-02 -9.81736E-02 -8.46614E-02    1.29990E-18  1.26198E-18  -18.97  2.49828E-02 -1.12723E-01  1.37706E-01
+0        5    1  -5.64467E-02  1.07723E-01  1.53751E-01   -6.42463E-04  9.28198E-06   68.44  1.38101E-01 -8.68241E-02  2.24925E-01
+0        5    2   6.83362E-02 -3.41550E-02  1.09440E-01   -7.74994E-04  4.06441E-05   23.44  9.20599E-02 -5.78786E-02  1.49939E-01
+0        5    3  -1.70727E-02  3.41587E-02 -5.47100E-02   -8.41260E-04  5.63252E-05  -66.56  4.60191E-02 -2.89332E-02  7.49523E-02
+0        5    4  -1.46677E-05  5.26285E-06  2.83766E-05   -8.41260E-04  5.63252E-05   62.54  1.26358E-05 -2.20407E-05  3.46765E-05
+1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  28, 2016  MSC Nastran 11/27/13   PAGE    28
+      COMBINED LOADING                                                                                                              
+0                                                                                                            SUBCASE 1              
+ 
+                     S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )
+   ELEMENT  PLY   STRAINS IN FIBER AND MATRIX DIRECTIONS    INTER-LAMINAR   STRAINS  PRINCIPAL  STRAINS (ZERO SHEAR)      MAX
+     ID      ID    NORMAL-1     NORMAL-2     SHEAR-12     SHEAR XZ-MAT  SHEAR YZ-MAT  ANGLE    MAJOR        MINOR        SHEAR
+0        5    5   1.70917E-02 -3.41965E-02  5.47499E-02   -7.74994E-04  4.06441E-05   23.43  2.89577E-02 -4.60625E-02  7.50202E-02
+0        5    6  -6.83740E-02  3.41740E-02 -1.09480E-01   -6.42463E-04  9.28198E-06  -66.56  5.79032E-02 -9.21032E-02  1.50006E-01
+0        5    7   5.64572E-02 -1.07753E-01 -1.53808E-01   -1.39293E-18 -1.86700E-19  -21.56  8.68486E-02 -1.38144E-01  2.24993E-01
+0        6    1   3.93800E-02  1.29639E-01 -7.39003E-02    5.36263E-04  6.56784E-05  -70.35  1.42836E-01  2.61830E-02  1.16653E-01
+0        6    2   3.17033E-02  8.09745E-02  6.01761E-02    6.46886E-04  2.87594E-04   64.66  9.52259E-02  1.74518E-02  7.77741E-02
+0        6    3   4.04891E-02  1.58470E-02 -3.00928E-02    7.02198E-04  3.98551E-04  -25.34  4.76155E-02  8.72060E-03  3.88949E-02
+0        6    4   1.98470E-06 -7.57854E-06  1.29715E-05    7.02198E-04  3.98551E-04   26.80  5.26091E-06 -1.08548E-05  1.61157E-05
+0        6    5  -4.04817E-02 -1.58656E-02  3.00737E-02    6.46886E-04  2.87594E-04   64.65 -8.74181E-03 -4.76054E-02  3.88636E-02
+0        6    6  -3.17218E-02 -8.09671E-02 -6.01570E-02    5.36263E-04  6.56784E-05  -25.35 -1.74730E-02 -9.52159E-02  7.77429E-02
+0        6    7  -3.93952E-02 -1.29635E-01  7.38743E-02    1.16267E-18 -1.32107E-18   19.65 -2.62042E-02 -1.42826E-01  1.16622E-01
+0        8    1  -1.80334E-02 -1.48436E-01 -1.22316E-02   -5.48400E-04 -1.08152E-04   -2.68 -1.77472E-02 -1.48722E-01  1.30975E-01
+0        8    2  -5.95658E-02 -5.14150E-02 -8.69345E-02   -6.61527E-04 -4.73579E-04  -47.68 -1.18325E-02 -9.91483E-02  8.73158E-02
+0        8    3  -2.57113E-02 -2.97812E-02  4.34668E-02   -7.18091E-04 -6.56292E-04   42.33 -5.91777E-03 -4.95747E-02  4.36570E-02
+0        8    4  -1.70890E-06 -2.53052E-06 -1.08460E-05   -7.18091E-04 -6.56292E-04  -42.83  3.31884E-06 -7.55826E-06  1.08771E-05
+0        8    5   2.56962E-02  2.97878E-02 -4.34685E-02   -6.61527E-04 -4.73579E-04  -47.69  4.95723E-02  5.91170E-03  4.36606E-02
+0        8    6   5.95724E-02  5.13999E-02  8.69361E-02   -5.48400E-04 -1.08152E-04   42.31  9.91459E-02  1.18264E-02  8.73194E-02
+0        8    7   1.80284E-02  1.48432E-01  1.22533E-02   -1.18899E-18  2.17540E-18   87.32  1.48719E-01  1.77412E-02  1.30978E-01
+0        9    1   4.64928E-02  1.74594E-01 -1.12158E-01    2.91503E-05 -9.32505E-05  -69.40  1.95675E-01  2.54120E-02  1.70263E-01
+0        9    2   3.63082E-02  1.11082E-01  8.54020E-02    3.51635E-05 -4.08327E-04   65.60  1.30451E-01  1.69400E-02  1.13511E-01
+0        9    3   5.55421E-02  1.81522E-02 -4.27027E-02    3.81702E-05 -5.65865E-04  -24.40  6.52264E-02  8.46792E-03  5.67585E-02
+0        9    4   8.03337E-07 -2.71542E-06  5.58196E-06    3.81702E-05 -5.65865E-04   28.89  2.34320E-06 -4.25528E-06  6.59848E-06
+0        9    5  -5.55384E-02 -1.81597E-02  4.26957E-02    3.51635E-05 -4.08327E-04   65.60 -8.47616E-03 -6.52220E-02  5.67458E-02
+0        9    6  -3.63157E-02 -1.11079E-01 -8.53949E-02    2.91503E-05 -9.32505E-05  -24.40 -1.69482E-02 -1.30446E-01  1.13498E-01
+0        9    7  -4.64982E-02 -1.74592E-01  1.12147E-01    6.32008E-20  1.87566E-18   20.60 -2.54202E-02 -1.95670E-01  1.70250E-01
+0       10    1   6.31127E-02  1.93361E-01 -1.12016E-01    2.67923E-05 -1.32857E-05  -69.65  2.14133E-01  4.23413E-02  1.71792E-01
+1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  28, 2016  MSC Nastran 11/27/13   PAGE    29
+      COMBINED LOADING                                                                                                              
+0                                                                                                            SUBCASE 1              
+ 
+                     S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )
+   ELEMENT  PLY   STRAINS IN FIBER AND MATRIX DIRECTIONS    INTER-LAMINAR   STRAINS  PRINCIPAL  STRAINS (ZERO SHEAR)      MAX
+     ID      ID    NORMAL-1     NORMAL-2     SHEAR-12     SHEAR XZ-MAT  SHEAR YZ-MAT  ANGLE    MAJOR        MINOR        SHEAR
+0       10    2   4.81512E-02  1.22831E-01  8.68350E-02    3.23191E-05 -5.81758E-05   65.35  1.42756E-01  2.82255E-02  1.14531E-01
+0       10    3   6.14164E-02  2.40734E-02 -4.34212E-02    3.50826E-05 -8.06208E-05  -24.65  7.13801E-02  1.41097E-02  5.72704E-02
+0       10    4   2.51150E-06 -4.91115E-06  6.45575E-06    3.50826E-05 -8.06208E-05   20.51  3.71882E-06 -6.11847E-06  9.83729E-06
+0       10    5  -6.14123E-02 -2.40823E-02  4.34064E-02    3.23191E-05 -5.81758E-05   65.35 -1.41219E-02 -7.13727E-02  5.72507E-02
+0       10    6  -4.81601E-02 -1.22827E-01 -8.68201E-02    2.67923E-05 -1.32857E-05  -24.65 -2.82377E-02 -1.42749E-01  1.14511E-01
+0       10    7  -6.31225E-02 -1.93356E-01  1.12003E-01    5.80884E-20  2.67233E-19   20.35 -4.23535E-02 -2.14125E-01  1.71772E-01
+0       11    1   7.67707E-04 -9.89294E-02  1.36148E-02   -7.26880E-04 -1.96710E-04    3.89  1.23037E-03 -9.93921E-02  1.00622E-01
+0       11    2  -2.81812E-02 -3.72612E-02 -6.64673E-02   -8.76825E-04 -8.61357E-04  -41.11  8.21117E-04 -6.62635E-02  6.70847E-02
+0       11    3  -1.86343E-02 -1.40889E-02  3.32375E-02   -9.51797E-04 -1.19368E-03   48.89  4.11861E-04 -3.31350E-02  3.35469E-02
+0       11    4  -5.80695E-06  1.92077E-06 -1.06405E-05   -9.51797E-04 -1.19368E-03  -62.99  4.63220E-06 -8.51838E-06  1.31506E-05
+0       11    5   1.86197E-02  1.40957E-02 -3.32221E-02   -8.76825E-04 -8.61357E-04  -41.12  3.31220E-02 -4.06652E-04  3.35287E-02
+0       11    6   2.81879E-02  3.72467E-02  6.64519E-02   -7.26880E-04 -1.96710E-04   48.88  6.62506E-02 -8.15908E-04  6.70665E-02
+0       11    7  -7.63865E-04  9.89178E-02 -1.35935E-02   -1.57595E-18  3.95667E-18  -86.12  9.93791E-02 -1.22516E-03  1.00604E-01
+0       12    1  -7.48772E-03  6.74891E-02 -2.33322E-02   -1.59789E-04 -1.43688E-04  -81.36  6.92623E-02 -9.26099E-03  7.85233E-02
+0       12    2   1.22216E-02  2.77785E-02  4.99828E-02   -1.92751E-04 -6.29184E-04   53.64  4.61740E-02 -6.17389E-03  5.23479E-02
+0       12    3   1.38902E-02  6.10856E-03 -2.49888E-02   -2.09232E-04 -8.71932E-04  -36.35  2.30856E-02 -3.08680E-03  2.61724E-02
+0       12    4  -3.86911E-06  1.35742E-06  6.38759E-06   -2.09232E-04 -8.71932E-04   64.65  2.87083E-06 -5.38253E-06  8.25336E-06
+0       12    5  -1.38863E-02 -6.11746E-03  2.49992E-02   -1.92751E-04 -6.29184E-04   53.63  3.08738E-03 -2.30912E-02  2.61786E-02
+0       12    6  -1.22305E-02 -2.77746E-02 -4.99932E-02   -1.59789E-04 -1.43688E-04  -36.36  6.17447E-03 -4.61796E-02  5.23540E-02
+0       12    7   7.49043E-03 -6.74968E-02  2.33195E-02   -3.46438E-19  2.89018E-18    8.64  9.26157E-03 -6.92680E-02  7.85295E-02
+0       14    1   5.01143E-02  3.50926E-02 -8.45480E-02    2.20953E-04  2.42743E-04  -39.96  8.55395E-02 -3.32598E-04  8.58721E-02
+0       14    2   2.18891E-04  5.65848E-02 -1.00076E-02    2.66533E-04  1.06293E-03  -84.97  5.70255E-02 -2.21871E-04  5.72474E-02
+0       14    3   2.82921E-02  1.08339E-04  4.99362E-03    2.89322E-04  1.47302E-03    5.02  2.85115E-02 -1.11146E-04  2.86227E-02
+0       14    4   8.77442E-06 -1.16250E-05  1.57637E-06    2.89322E-04  1.47302E-03    2.21  8.80483E-06 -1.16554E-05  2.04602E-05
+0       14    5  -2.82933E-02 -1.12766E-04 -5.03442E-03    2.66533E-04  1.06293E-03  -84.94  1.10316E-04 -2.85164E-02  2.86267E-02
+1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  28, 2016  MSC Nastran 11/27/13   PAGE    30
+      COMBINED LOADING                                                                                                              
+0                                                                                                            SUBCASE 1              
+ 
+                     S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )
+   ELEMENT  PLY   STRAINS IN FIBER AND MATRIX DIRECTIONS    INTER-LAMINAR   STRAINS  PRINCIPAL  STRAINS (ZERO SHEAR)      MAX
+     ID      ID    NORMAL-1     NORMAL-2     SHEAR-12     SHEAR XZ-MAT  SHEAR YZ-MAT  ANGLE    MAJOR        MINOR        SHEAR
+0       14    6  -2.23318E-04 -5.65860E-02  1.00484E-02    2.20953E-04  2.42743E-04    5.05  2.21042E-04 -5.70304E-02  5.72514E-02
+0       14    7  -5.01375E-02 -3.50751E-02  8.45449E-02    4.79050E-19 -4.88259E-18   50.05  3.31769E-04 -8.55444E-02  8.58761E-02
+0       15    1  -5.09445E-02  9.13774E-02 -1.10975E-01    7.70136E-05  7.90382E-05  -71.03  1.10454E-01 -7.00208E-02  1.80474E-01
+0       15    2  -2.35177E-02  5.04702E-02  9.48886E-02    9.29004E-05  3.46094E-04   63.97  7.36387E-02 -4.66862E-02  1.20325E-01
+0       15    3   2.52363E-02 -1.17643E-02 -4.74554E-02    1.00844E-04  4.79621E-04  -26.03  3.68236E-02 -2.33516E-02  6.01752E-02
+0       15    4   6.83332E-06 -1.53173E-05  1.31772E-05    1.00844E-04  4.79621E-04   15.37  8.64490E-06 -1.71289E-05  2.57738E-05
+0       15    5  -2.52316E-02  1.17426E-02  4.74111E-02    9.29004E-05  3.46094E-04   63.97  2.33176E-02 -3.68065E-02  6.01241E-02
+0       15    6   2.34961E-02 -5.04655E-02 -9.48443E-02    7.70136E-05  7.90382E-05  -26.03  4.66521E-02 -7.36216E-02  1.20274E-01
+0       15    7   5.09138E-02 -9.13638E-02  1.10949E-01    1.66973E-19 -1.58979E-18   18.97  6.99867E-02 -1.10437E-01  1.80423E-01
+0       16    1   4.81282E-02  6.63475E-02 -6.68908E-02   -2.65184E-04  4.69444E-05  -52.62  9.19017E-02  2.25740E-02  6.93276E-02
+0       16    2   1.58622E-02  6.04549E-02  1.21500E-02   -3.19888E-04  2.05561E-04   82.38  6.12677E-02  1.50494E-02  4.62183E-02
+0       16    3   3.02265E-02  7.93187E-03 -6.08059E-03   -3.47240E-04  2.84869E-04   -7.63  3.06337E-02  7.52471E-03  2.31090E-02
+0       16    4   5.45621E-06 -5.74775E-06 -3.44905E-06   -3.47240E-04  2.84869E-04   -8.56  5.71565E-06 -6.00719E-06  1.17228E-05
+0       16    5  -3.02302E-02 -7.92872E-03  6.05818E-03   -3.19888E-04  2.05561E-04   82.40 -7.52461E-03 -3.06343E-02  2.31097E-02
+0       16    6  -1.58590E-02 -6.04586E-02 -1.21276E-02   -2.65184E-04  4.69444E-05   -7.61 -1.50493E-02 -6.12683E-02  4.62191E-02
+0       16    7  -4.81397E-02 -6.63366E-02  6.68977E-02   -5.74947E-19 -9.44251E-19   37.39 -2.25739E-02 -9.19023E-02  6.93284E-02
+0       17    1  -5.29189E-02  2.32862E-02 -9.95248E-02    4.31833E-04 -2.79269E-05  -63.72  4.78582E-02 -7.74909E-02  1.25349E-01
+0       17    2  -4.30524E-02  2.32971E-02  5.08033E-02    5.20914E-04 -1.22287E-04   71.28  3.19052E-02 -5.16606E-02  8.35658E-02
+0       17    3   1.16481E-02 -2.15261E-02 -2.54016E-02    5.65454E-04 -1.69467E-04  -18.72  1.59522E-02 -2.58302E-02  4.17824E-02
+0       17    4  -3.79499E-07 -2.41894E-07 -1.06241E-06    5.65454E-04 -1.69467E-04  -48.69  2.24945E-07 -8.46338E-07  1.07128E-06
+0       17    5  -1.16498E-02  2.15265E-02  2.54019E-02    5.20914E-04 -1.22287E-04   71.28  2.58305E-02 -1.59538E-02  4.17843E-02
+0       17    6   4.30529E-02 -2.32988E-02 -5.08036E-02    4.31833E-04 -2.79269E-05  -18.72  5.16609E-02 -3.19068E-02  8.35676E-02
+0       17    7   5.29184E-02 -2.32869E-02  9.95270E-02    9.36259E-19  5.61729E-19   26.28  7.74912E-02 -4.78598E-02  1.25351E-01
+0       18    1   4.49400E-02  7.18711E-02 -5.58716E-02   -3.71341E-05 -4.52624E-06  -57.87  8.94173E-02  2.73938E-02  6.20235E-02
+0       18    2   2.03130E-02  5.75609E-02  1.79544E-02   -4.47943E-05 -1.98196E-05   77.13  5.96116E-02  1.82622E-02  4.13494E-02
+1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  28, 2016  MSC Nastran 11/27/13   PAGE    31
+      COMBINED LOADING                                                                                                              
+0                                                                                                            SUBCASE 1              
+ 
+                     S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )
+   ELEMENT  PLY   STRAINS IN FIBER AND MATRIX DIRECTIONS    INTER-LAMINAR   STRAINS  PRINCIPAL  STRAINS (ZERO SHEAR)      MAX
+     ID      ID    NORMAL-1     NORMAL-2     SHEAR-12     SHEAR XZ-MAT  SHEAR YZ-MAT  ANGLE    MAJOR        MINOR        SHEAR
+0       18    3   2.87805E-02  1.01562E-02 -8.97775E-03   -4.86244E-05 -2.74662E-05  -12.87  2.98060E-02  9.13071E-03  2.06752E-02
+0       18    4   2.69800E-07 -8.01406E-07  6.94681E-07   -4.86244E-05 -2.74662E-05   16.48  3.72567E-07 -9.04173E-07  1.27674E-06
+0       18    5  -2.87803E-02 -1.01574E-02  8.97561E-03   -4.47943E-05 -1.98196E-05   77.13 -9.13234E-03 -2.98054E-02  2.06731E-02
+0       18    6  -2.03142E-02 -5.75607E-02 -1.79523E-02   -3.71341E-05 -4.52624E-06  -12.87 -1.82639E-02 -5.96111E-02  4.13472E-02
+0       18    7  -4.49416E-02 -7.18706E-02  5.58702E-02   -8.05105E-20  9.10419E-20   32.13 -2.73954E-02 -8.94167E-02  6.20214E-02
+0       19    1  -1.67134E-02  6.88591E-02 -1.43086E-01    1.08969E-04 -1.12697E-06  -60.44  1.09434E-01 -5.72883E-02  1.66722E-01
+0       19    2  -3.03135E-02  6.50772E-02  5.70484E-02    1.31448E-04 -4.93479E-06   74.56  7.29559E-02 -3.81922E-02  1.11148E-01
+0       19    3   3.25383E-02 -1.51568E-02 -2.85243E-02    1.42688E-04 -6.83870E-06  -15.44  3.64777E-02 -1.90962E-02  5.55739E-02
+0       19    4  -1.80871E-07 -3.10299E-07 -4.82900E-07    1.42688E-04 -6.83870E-06  -37.50  4.38744E-09 -4.95557E-07  4.99944E-07
+0       19    5  -3.25393E-02  1.51568E-02  2.85240E-02    1.31448E-04 -4.93479E-06   74.56  1.90960E-02 -3.64786E-02  5.55746E-02
+0       19    6   3.03135E-02 -6.50782E-02 -5.70482E-02    1.08969E-04 -1.12697E-06  -15.44  3.81921E-02 -7.29567E-02  1.11149E-01
+0       19    7   1.67128E-02 -6.88595E-02  1.43087E-01    2.36257E-19  2.26681E-20   29.56  5.72882E-02 -1.09435E-01  1.66723E-01
+0       20    1   5.12081E-02  6.09595E-02 -1.23565E-01   -9.19735E-04 -1.00929E-04  -47.26  1.18058E-01 -5.89091E-03  1.23949E-01
+0       20    2  -3.79949E-03  7.85777E-02  6.50096E-03   -1.10946E-03 -4.41950E-04   87.74  7.87058E-02 -3.92755E-03  8.26333E-02
+0       20    3   3.92890E-02 -1.90015E-03 -3.25049E-03   -1.20433E-03 -6.12461E-04   -2.26  3.93531E-02 -1.96418E-03  4.13172E-02
+0       20    4  -2.14532E-07 -2.34269E-07  1.17947E-06   -1.20433E-03 -6.12461E-04   44.52  3.65415E-07 -8.14216E-07  1.17963E-06
+0       20    5  -3.92883E-02  1.89852E-03  3.25045E-03   -1.10946E-03 -4.41950E-04   87.74  1.96255E-03 -3.93523E-02  4.13149E-02
+0       20    6   3.79786E-03 -7.85770E-02 -6.50092E-03   -9.19735E-04 -1.00929E-04   -2.26  3.92592E-03 -7.87050E-02  8.26310E-02
+0       20    7  -5.12085E-02 -6.09599E-02  1.23563E-01   -1.99408E-18  2.03011E-18   42.74  5.88929E-03 -1.18058E-01  1.23947E-01
+0       21    1   5.79528E-02 -4.52743E-02 -1.45554E-01   -3.09529E-04 -2.85024E-04  -27.33  9.55605E-02 -8.28821E-02  1.78443E-01
+0       21    2  -4.42921E-02  5.27442E-02 -6.88185E-02   -3.73380E-04 -1.24807E-03  -72.33  6.37072E-02 -5.52551E-02  1.18962E-01
+0       21    3   2.63722E-02 -2.21465E-02  3.44099E-02   -4.05306E-04 -1.72959E-03   17.67  3.18539E-02 -2.76281E-02  5.94819E-02
+0       21    4  -9.72515E-07  3.56514E-07  1.04861E-06   -4.05306E-04 -1.72959E-03   70.86  5.38448E-07 -1.15445E-06  1.69290E-06
+0       21    5  -2.63718E-02  2.21448E-02 -3.44072E-02   -3.73380E-04 -1.24807E-03  -72.33  2.76259E-02 -3.18528E-02  5.94787E-02
+0       21    6   4.42904E-02 -5.27438E-02  6.88158E-02   -3.09529E-04 -2.85024E-04   17.67  5.52528E-02 -6.37062E-02  1.18959E-01
+1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  28, 2016  MSC Nastran 11/27/13   PAGE    32
+      COMBINED LOADING                                                                                                              
+0                                                                                                            SUBCASE 1              
+ 
+                     S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )
+   ELEMENT  PLY   STRAINS IN FIBER AND MATRIX DIRECTIONS    INTER-LAMINAR   STRAINS  PRINCIPAL  STRAINS (ZERO SHEAR)      MAX
+     ID      ID    NORMAL-1     NORMAL-2     SHEAR-12     SHEAR XZ-MAT  SHEAR YZ-MAT  ANGLE    MAJOR        MINOR        SHEAR
+0       21    7  -5.79521E-02  4.52723E-02  1.45552E-01   -6.71091E-19  5.73305E-18   62.67  8.28798E-02 -9.55595E-02  1.78439E-01
+0       23    1   8.89032E-02  4.91219E-02 -2.34652E-01   -2.10126E-04 -8.52502E-04  -40.19  1.88013E-01 -4.99875E-02  2.38000E-01
+0       23    2  -3.22093E-02  1.24226E-01 -2.65211E-02   -2.53472E-04 -3.73295E-03  -85.19  1.25342E-01 -3.33254E-02  1.58667E-01
+0       23    3   6.21132E-02 -1.61052E-02  1.32608E-02   -2.75145E-04 -5.17318E-03    4.81  6.26713E-02 -1.66633E-02  7.93346E-02
+0       23    4  -5.26483E-07  4.18919E-08  1.76376E-06   -2.75145E-04 -5.17318E-03   53.93  6.84243E-07 -1.16883E-06  1.85308E-06
+0       23    5  -6.21119E-02  1.61030E-02 -1.32597E-02   -2.53472E-04 -3.73295E-03  -85.19  1.66609E-02 -6.26699E-02  7.93309E-02
+0       23    6   3.22070E-02 -1.24225E-01  2.65199E-02   -2.10126E-04 -8.52502E-04    4.81  3.33231E-02 -1.25341E-01  1.58664E-01
+0       23    7  -8.89031E-02 -4.91229E-02  2.34648E-01   -4.55574E-19  1.71474E-17   49.81  4.99852E-02 -1.88011E-01  2.37996E-01
+0       25    1   3.57696E-02 -9.66967E-03 -6.74589E-02    1.96532E-03  1.16560E-04  -28.02  5.37176E-02 -2.76177E-02  8.13353E-02
+0       25    2  -1.37867E-02  3.11865E-02 -3.02934E-02    2.37073E-03  5.10394E-04  -73.02  3.58121E-02 -1.84123E-02  5.42244E-02
+0       25    3   1.55936E-02 -6.89402E-03  1.51476E-02    2.57344E-03  7.07312E-04   16.98  1.79065E-02 -9.20696E-03  2.71135E-02
+0       25    4  -1.18114E-06  4.93740E-07  1.91143E-06    2.57344E-03  7.07312E-04   65.61  9.27008E-07 -1.61441E-06  2.54141E-06
+0       25    5  -1.55923E-02  6.89143E-03 -1.51442E-02    2.37073E-03  5.10394E-04  -73.02  9.20375E-03 -1.79047E-02  2.71084E-02
+0       25    6   1.37841E-02 -3.11853E-02  3.02901E-02    1.96532E-03  1.16560E-04   16.98  1.84091E-02 -3.58102E-02  5.42193E-02
+0       25    7  -3.57686E-02  9.66731E-03  6.74551E-02    4.26101E-18 -2.34451E-18   61.98  2.76145E-02 -5.37158E-02  8.13303E-02
+0       28    1  -2.53160E-02  9.52060E-02  7.48022E-02   -3.07254E-04  2.33001E-05   74.09  1.05869E-01 -3.59791E-02  1.41848E-01
+0       28    2   4.82307E-02 -1.63751E-03  8.03481E-02   -3.70636E-04  1.02027E-04   29.09  7.05794E-02 -2.39862E-02  9.45656E-02
+0       28    3  -8.18956E-04  2.41152E-02 -4.01743E-02   -4.02327E-04  1.41390E-04  -60.91  3.52897E-02 -1.19934E-02  4.72831E-02
+0       28    4  -8.40336E-08 -5.18460E-07 -2.06029E-07   -4.02327E-04  1.41390E-04  -12.69 -6.08440E-08 -5.41650E-07  4.80806E-07
+0       28    5   8.18147E-04 -2.41156E-02  4.01734E-02   -3.70636E-04  1.02027E-04   29.09  1.19923E-02 -3.52898E-02  4.72821E-02
+0       28    6  -4.82311E-02  1.63670E-03 -8.03473E-02   -3.07254E-04  2.33001E-05  -60.91  2.39852E-02 -7.05795E-02  9.45647E-02
+0       28    7   2.53149E-02 -9.52062E-02 -7.48018E-02   -6.66158E-19 -4.68664E-19  -15.91  3.59780E-02 -1.05869E-01  1.41847E-01
+0       29    1   1.51813E-02  1.16983E-01 -2.83888E-02   -1.61769E-04  6.02628E-05  -82.21  1.18925E-01  1.32392E-02  1.05686E-01
+0       29    2   3.45920E-02  5.35172E-02  6.78689E-02   -1.95140E-04  2.63880E-04   52.79  7.92837E-02  8.82550E-03  7.04582E-02
+0       29    3   2.67580E-02  1.72963E-02 -3.39363E-02   -2.11825E-04  3.65688E-04  -37.21  3.96424E-02  4.41182E-03  3.52306E-02
+1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  28, 2016  MSC Nastran 11/27/13   PAGE    33
+      COMBINED LOADING                                                                                                              
+0                                                                                                            SUBCASE 1              
+ 
+                     S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )
+   ELEMENT  PLY   STRAINS IN FIBER AND MATRIX DIRECTIONS    INTER-LAMINAR   STRAINS  PRINCIPAL  STRAINS (ZERO SHEAR)      MAX
+     ID      ID    NORMAL-1     NORMAL-2     SHEAR-12     SHEAR XZ-MAT  SHEAR YZ-MAT  ANGLE    MAJOR        MINOR        SHEAR
+0       29    4   1.44100E-06 -2.18700E-06 -1.85500E-06   -2.11825E-04  3.65688E-04  -13.54  1.66437E-06 -2.41036E-06  4.07473E-06
+0       29    5  -2.67606E-02 -1.72952E-02  3.39290E-02   -1.95140E-04  2.63880E-04   52.79 -4.41556E-03 -3.96402E-02  3.52246E-02
+0       29    6  -3.45909E-02 -5.35198E-02 -6.78617E-02   -1.61769E-04  6.02628E-05  -37.21 -8.82925E-03 -7.92815E-02  7.04522E-02
+0       29    7  -1.51857E-02 -1.16980E-01  2.83925E-02   -3.50732E-19 -1.21214E-18    7.79 -1.32429E-02 -1.18923E-01  1.05680E-01
+0       30    1   3.90473E-02  1.37080E-01 -3.72618E-02   -2.41508E-04 -4.28273E-05  -79.59  1.40501E-01  3.56260E-02  1.04875E-01
+0       30    2   4.62878E-02  7.11297E-02  6.53554E-02   -2.91328E-04 -1.87533E-04   55.41  9.36675E-02  2.37500E-02  6.99174E-02
+0       30    3   3.55651E-02  2.31430E-02 -3.26786E-02   -3.16238E-04 -2.59886E-04  -34.59  4.68340E-02  1.18741E-02  3.49599E-02
+0       30    4   2.48288E-07 -1.55253E-06  2.12450E-06   -3.16238E-04 -2.59886E-04   24.86  7.40397E-07 -2.04464E-06  2.78504E-06
+0       30    5  -3.55642E-02 -2.31465E-02  3.26750E-02   -2.91328E-04 -1.87533E-04   55.40 -1.18778E-02 -4.68329E-02  3.49551E-02
+0       30    6  -4.62912E-02 -7.11289E-02 -6.53518E-02   -2.41508E-04 -4.28273E-05  -34.60 -2.37538E-02 -9.36663E-02  6.99126E-02
+0       30    7  -3.90504E-02 -1.37079E-01  3.72576E-02   -5.23615E-19  8.61439E-19   10.41 -3.56297E-02 -1.40500E-01  1.04870E-01
+1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  28, 2016  MSC Nastran 11/27/13   PAGE    34
+      COMBINED LOADING                                                                                                              
+0                                                                                                            SUBCASE 1              
+ 
+                     S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 8 )
+   ELEMENT  PLY   STRAINS IN FIBER AND MATRIX DIRECTIONS    INTER-LAMINAR   STRAINS  PRINCIPAL  STRAINS (ZERO SHEAR)      MAX
+     ID      ID    NORMAL-1     NORMAL-2     SHEAR-12     SHEAR XZ-MAT  SHEAR YZ-MAT  ANGLE    MAJOR        MINOR        SHEAR
+0        1    1   1.84897E-02 -1.03359E-01  5.72572E-02   -3.70791E-04 -6.39532E-05   12.58  2.48809E-02 -1.09750E-01  1.34631E-01
+0        1    2  -9.20292E-03 -4.73776E-02 -8.12363E-02   -4.47280E-04 -2.80040E-04  -32.42  1.65891E-02 -7.31697E-02  8.97589E-02
+0        1    3  -2.36923E-02 -4.60003E-03  4.06244E-02   -4.85525E-04 -3.88083E-04   57.59  8.29743E-03 -3.65897E-02  4.48872E-02
+0        1    4  -8.30033E-06  4.22269E-06 -9.81008E-06   -4.85525E-04 -3.88083E-04  -70.96  5.91516E-06 -9.99281E-06  1.59080E-05
+0        1    5   2.36784E-02  4.60576E-03 -4.05994E-02   -4.47280E-04 -2.80040E-04  -32.42  3.65702E-02 -8.28600E-03  4.48562E-02
+0        1    6   9.20865E-03  4.73637E-02  8.12113E-02   -3.70791E-04 -6.39532E-05   57.58  7.31501E-02 -1.65777E-02  8.97278E-02
+0        1    7  -1.84813E-02  1.03342E-01 -5.72375E-02   -8.03914E-19  1.28637E-18  -77.42  1.09730E-01 -2.48694E-02  1.34600E-01
+0        7    1   6.57676E-03  5.11918E-02  1.92943E-02    3.51152E-04 -2.92133E-05   78.31  5.31885E-02  4.58011E-03  4.86084E-02
+0        7    2   2.56831E-02  1.28254E-02  2.97478E-02    4.23590E-04 -1.27920E-04   33.31  3.54581E-02  3.05042E-03  3.24076E-02
+0        7    3   6.41362E-03  1.28347E-02 -1.48806E-02    4.59809E-04 -1.77273E-04  -56.67  1.77276E-02  1.52074E-03  1.62069E-02
+0        7    4   8.13762E-07 -1.25594E-05  1.54353E-05    4.59809E-04 -1.77273E-04   24.55  4.33856E-06 -1.60842E-05  2.04227E-05
+0        7    5  -6.40993E-03 -1.28619E-02  1.48539E-02    4.23590E-04 -1.27920E-04   33.26 -1.53862E-03 -1.77332E-02  1.61946E-02
+0        7    6  -2.57103E-02 -1.28217E-02 -2.97211E-02    3.51152E-04 -2.92133E-05  -56.72 -3.06831E-03 -3.54637E-02  3.23953E-02
+0        7    7  -6.60188E-03 -5.11902E-02 -1.93251E-02    7.61335E-19  5.87604E-19  -11.72 -4.59800E-03 -5.31941E-02  4.85961E-02
+0       13    1   3.73132E-02  1.29937E-02 -1.11265E-01    2.63303E-04  7.53896E-05  -38.84  8.20992E-02 -3.17923E-02  1.13892E-01
+0       13    2  -2.03222E-02  5.38560E-02 -1.62069E-02    3.17619E-04  3.30117E-04  -83.84  5.47310E-02 -2.11971E-02  7.59281E-02
+0       13    3   2.69262E-02 -1.01654E-02  8.09431E-03    3.44777E-04  4.57481E-04    6.16  2.73627E-02 -1.06019E-02  3.79646E-02
+0       13    4   3.00651E-06 -1.52922E-05  5.11913E-06    3.44777E-04  4.57481E-04    7.81  3.35779E-06 -1.56434E-05  1.90012E-05
+0       13    5  -2.69334E-02  1.01480E-02 -8.13091E-03    3.17619E-04  3.30117E-04  -83.82  1.05885E-02 -2.73739E-02  3.79624E-02
+0       13    6   2.03048E-02 -5.38632E-02  1.62435E-02    2.63303E-04  7.53896E-05    6.18  2.11837E-02 -5.47422E-02  7.59259E-02
+0       13    7  -3.73438E-02 -1.29877E-02  1.11255E-01    5.70869E-19 -1.51640E-18   51.17  3.17789E-02 -8.21104E-02  1.13889E-01
+0       22    1  -4.43388E-02  4.10133E-02 -8.49996E-02    5.84156E-04 -2.04055E-04  -67.56  5.85658E-02 -6.18913E-02  1.20457E-01
+0       22    2  -2.94417E-02  2.72246E-02  5.69011E-02    7.04659E-04 -8.93520E-04   67.44  3.90436E-02 -4.12608E-02  8.03044E-02
+0       22    3   1.36121E-02 -1.47209E-02 -2.84501E-02    7.64911E-04 -1.23825E-03  -22.56  1.95215E-02 -2.06303E-02  4.01518E-02
+0       22    4  -6.46412E-07  1.62195E-07 -4.02819E-07    7.64911E-04 -1.23825E-03  -76.76  2.09585E-07 -6.93802E-07  9.03387E-07
+1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  28, 2016  MSC Nastran 11/27/13   PAGE    35
+      COMBINED LOADING                                                                                                              
+0                                                                                                            SUBCASE 1              
+ 
+                     S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 8 )
+   ELEMENT  PLY   STRAINS IN FIBER AND MATRIX DIRECTIONS    INTER-LAMINAR   STRAINS  PRINCIPAL  STRAINS (ZERO SHEAR)      MAX
+     ID      ID    NORMAL-1     NORMAL-2     SHEAR-12     SHEAR XZ-MAT  SHEAR YZ-MAT  ANGLE    MAJOR        MINOR        SHEAR
+0       22    5  -1.36129E-02  1.47208E-02  2.84518E-02    7.04659E-04 -8.93520E-04   67.44  2.06307E-02 -1.95228E-02  4.01535E-02
+0       22    6   2.94417E-02 -2.72254E-02 -5.69027E-02    5.84156E-04 -2.04055E-04  -22.56  4.12612E-02 -3.90450E-02  8.03062E-02
+0       22    7   4.43391E-02 -4.10145E-02  8.50004E-02    1.26651E-18  4.10441E-18   22.44  6.18917E-02 -5.85671E-02  1.20459E-01
+0       24    1   1.08643E-02  6.84224E-02 -4.27770E-02    1.99889E-04 -1.28782E-04  -71.69  7.55000E-02  3.78666E-03  7.17134E-02
+0       24    2   1.21692E-02  4.06883E-02  3.83714E-02    2.41124E-04 -5.63914E-04   63.31  5.03333E-02  2.52423E-03  4.78090E-02
+0       24    3   2.03447E-02  6.08354E-03 -1.91847E-02    2.61741E-04 -7.81480E-04  -26.69  2.51665E-02  1.26180E-03  2.39047E-02
+0       24    4  -1.45523E-06  5.44844E-07  3.29966E-06    2.61741E-04 -7.81480E-04   60.61  1.47406E-06 -2.38445E-06  3.85851E-06
+0       24    5  -2.03424E-02 -6.08775E-03  1.91887E-02    2.41124E-04 -5.63914E-04   63.30 -1.26307E-03 -2.51670E-02  2.39040E-02
+0       24    6  -1.21734E-02 -4.06859E-02 -3.83754E-02    1.99889E-04 -1.28782E-04  -26.69 -2.52550E-03 -5.03338E-02  4.78083E-02
+0       24    7  -1.08632E-02 -6.84253E-02  4.27704E-02    4.33381E-19  2.59036E-18   18.31 -3.78793E-03 -7.55006E-02  7.17126E-02
+0       26    1   4.31760E-02  6.70566E-02 -2.92606E-02    3.62075E-04 -1.04053E-04  -64.61  7.40006E-02  3.62320E-02  3.77686E-02
+0       26    2   2.69902E-02  4.64979E-02  1.59205E-02    4.36766E-04 -4.55629E-04   70.39  4.93338E-02  2.41542E-02  2.51796E-02
+0       26    3   2.32492E-02  1.34944E-02 -7.96031E-03    4.74111E-04 -6.31417E-04  -19.61  2.46671E-02  1.20765E-02  1.25906E-02
+0       26    4  -4.11945E-07 -5.45846E-07  1.94760E-06    4.74111E-04 -6.31417E-04   43.03  4.97204E-07 -1.45499E-06  1.95220E-06
+0       26    5  -2.32482E-02 -1.34973E-02  7.96004E-03    4.36766E-04 -4.55629E-04   70.39 -1.20790E-02 -2.46664E-02  1.25874E-02
+0       26    6  -2.69931E-02 -4.64969E-02 -1.59202E-02    3.62075E-04 -1.04053E-04  -19.61 -2.41568E-02 -4.93332E-02  2.51764E-02
+0       26    7  -4.31771E-02 -6.70574E-02  2.92567E-02    7.85016E-19  2.09295E-18   25.39 -3.62345E-02 -7.40000E-02  3.77654E-02
+0       27    1   3.75111E-02  1.69304E-01 -4.95587E-02    1.22783E-04  7.83202E-05  -79.70  1.73809E-01  3.30061E-02  1.40803E-01
+0       27    2   5.24185E-02  8.54581E-02  8.78630E-02    1.48111E-04  3.42950E-04   55.30  1.15873E-01  2.20034E-02  9.38697E-02
+0       27    3   4.27291E-02  2.62087E-02 -4.39329E-02    1.60775E-04  4.75265E-04  -34.70  5.79371E-02  1.10007E-02  4.69364E-02
+0       27    4   8.91461E-07 -1.87045E-06  1.32721E-06    1.60775E-04  4.75265E-04   12.83  1.04263E-06 -2.02162E-06  3.06425E-06
+0       27    5  -4.27288E-02 -2.62110E-02  4.39274E-02    1.48111E-04  3.42950E-04   55.30 -1.10047E-02 -5.79350E-02  4.69303E-02
+0       27    6  -5.24208E-02 -8.54577E-02 -8.78575E-02    1.22783E-04  7.83202E-05  -34.70 -2.20074E-02 -1.15871E-01  9.38636E-02
+0       27    7  -3.75148E-02 -1.69302E-01  4.95560E-02    2.66206E-19 -1.57535E-18   10.30 -3.30102E-02 -1.73807E-01  1.40797E-01
+1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  28, 2016  MSC Nastran 11/27/13   PAGE    36
+                                                                                                                                    
+0                                                                                                                                   
+0                                                                                                                                   
+                                                                                                                                    
+                                                                                                                                    
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK OSTR1C   WRITTEN ON FORTRAN UNIT  12 IN BINARY (LTLEND) FORMAT USING NDDL DESCRIPTION FOR OE, TRL =
+                    101                63                 6                28                16                 0                 3
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS OSTR1C  
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =      131074 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =        1771 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          30 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =        2643 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK OEF1X    WRITTEN ON FORTRAN UNIT  12 IN BINARY (LTLEND) FORMAT USING NDDL DESCRIPTION FOR OEF1, TRL =
+                    101                63                 6                28                16                 0                 3
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS OEF1X   
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =      131074 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =        1081 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          30 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =        1743 WORDS.)
+ *** USER INFORMATION MESSAGE 4110 (OUTPX2)
+                                 END-OF-DATA SIMULATION ON FORTRAN UNIT 12
+                                 (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =      1 WORDS.)
+                                       (NUMBER OF FORTRAN RECORDS WRITTEN =      1 RECORDS.)
+                                       (TOTAL DATA WRITTEN FOR EOF MARKER =      1 WORDS.)
+1    NX NASTRAN STATIC ANALYSIS SET                                            JUNE  28, 2016  MSC Nastran 11/27/13   PAGE    37
+                                                                                                                                    
+0                                                                                                                                   
+ * * * *  D B D I C T   P R I N T  * * * *      SUBDMAP = PRTSUM  ,  DMAP STATEMENT NO.     41
+
+
+
+0                                   * * * *  A N A L Y S I S  S U M M A R Y  T A B L E  * * * *
+0 SEID  PEID PROJ VERS APRCH      SEMG SEMR SEKR SELG SELR MODES DYNRED SOLLIN PVALID SOLNL LOOPID DESIGN CYCLE SENSITIVITY
+ --------------------------------------------------------------------------------------------------------------------------
+     0     0    1    1 '        '    T    T    T    T    T     F      F      T      0     F     -1            0           F
+0SEID = SUPERELEMENT ID.
+ PEID = PRIMARY SUPERELEMENT ID OF IMAGE SUPERELEMENT.
+ PROJ = PROJECT ID NUMBER.
+ VERS = VERSION ID.
+ APRCH = BLANK FOR STRUCTURAL ANALYSIS.  HEAT FOR HEAT TRANSFER ANALYSIS.
+ SEMG = STIFFNESS AND MASS MATRIX GENERATION STEP.
+ SEMR = MASS MATRIX REDUCTION STEP (INCLUDES EIGENVALUE SOLUTION FOR MODES).
+ SEKR = STIFFNESS MATRIX REDUCTION STEP.
+ SELG = LOAD MATRIX GENERATION STEP.
+ SELR = LOAD MATRIX REDUCTION STEP. 
+ MODES = T (TRUE) IF NORMAL MODES OR BUCKLING MODES CALCULATED.
+ DYNRED = T (TRUE) MEANS GENERALIZED DYNAMIC AND/OR COMPONENT MODE REDUCTION PERFORMED.
+ SOLLIN = T (TRUE) IF LINEAR SOLUTION EXISTS IN DATABASE.
+ PVALID = P-DISTRIBUTION ID OF P-VALUE FOR P-ELEMENTS
+ LOOPID = THE LAST LOOPID VALUE USED IN THE NONLINEAR ANALYSIS.  USEFUL FOR RESTARTS.
+ SOLNL = T (TRUE) IF NONLINEAR SOLUTION EXISTS IN DATABASE.
+ DESIGN CYCLE = THE LAST DESIGN CYCLE (ONLY VALID IN OPTIMIZATION).
+ SENSITIVITY = SENSITIVITY MATRIX GENERATION FLAG.
+ 
+ No PARAM values were set in the Control File.
+ 
+1                                        * * * END OF JOB * * *
+ 
+ 
+ No Symbolic Replacement variables or values were specified.
+

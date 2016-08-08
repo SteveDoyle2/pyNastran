@@ -3,7 +3,7 @@ from numpy import arange, cross, abs, searchsorted, array
 from numpy.linalg import norm
 
 from pyNastran.bdf.field_writer_8 import print_card_8
-from pyNastran.bdf.bdfInterface.assign_type import integer
+from pyNastran.bdf.bdf_interface.assign_type import integer
 
 from pyNastran.bdf.dev_vectorized.cards.elements.solid.solid_element import SolidElement
 
@@ -57,7 +57,7 @@ class CPENTA6(SolidElement):
         ], dtype='int32')
         assert 0 not in nids, '%s\n%s' % (nids, card)
         self.node_ids[i, :] = nids
-        assert len(card) == 9, 'len(CPENTA6 card) = %i' % len(card)
+        assert len(card) == 9, 'len(CPENTA6 card) = %i\ncard=%s' % (len(card), card)
         self.i += 1
 
     def get_mass_matrix(self, i, model, positions, index0s):

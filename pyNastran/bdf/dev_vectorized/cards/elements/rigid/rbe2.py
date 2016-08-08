@@ -3,7 +3,7 @@ from six import iteritems
 from six.moves import zip, range
 from itertools import count
 
-from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_double, components_or_blank)
+from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_double, components_or_blank)
 
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
@@ -23,11 +23,11 @@ class RBE2(object):
         """
         +-------+-----+-----+-----+------+-------+-----+-----+-----+
         |   1   |  2  |  3  |  4  |  5   |   6   |  7  |  8  |  9  |
-        +-------+-----+-----+-----+------+-------+-----+-----+-----+
+        +=======+=====+=====+=====+======+=======+=====+=====+=====+
         |  RBE2 | EID | GN  | CM  | GM1  | GM2   | GM3 | GM4 | GM5 |
         +-------+-----+-----+-----+------+-------+-----+-----+-----+
-        |       | GM6 | GM7 | GM8 | etc. | ALPHA |
-        +-------+-----+-----+-----+------+-------+
+        |       | GM6 | GM7 | GM8 | etc. | ALPHA |     |     |     |
+        +-------+-----+-----+-----+------+-------+-----+-----+-----+
         """
         self.model = model
         self.n = 0
@@ -216,3 +216,6 @@ class RBE2(object):
 
         #card = self.repr_fields()
         #return self.comment + print_card_8(card)
+
+    def __repr__(self):
+        return '<%s object; n=%s>' % (self.type, self.n)

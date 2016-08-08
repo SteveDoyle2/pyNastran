@@ -54,7 +54,7 @@ class AERO(VectorizedCard):
         self.rhoRef[i] = double(card, 4, 'rhoRef')
         self.symXZ[i] = integer_or_blank(card, 5, 'symXZ', 0)
         self.symXY[i] = integer_or_blank(card, 6, 'symXY', 0)
-        assert len(card) <= 7, 'len(AERO card) = %i' % len(card)
+        assert len(card) <= 7, 'len(AERO card) = %i\ncard=%s' % (len(card), card)
         self.i += 1
 
     def add_op2(self, data):

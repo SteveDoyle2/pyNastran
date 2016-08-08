@@ -11,24 +11,38 @@ class NastranMesh(BDF):
     def __init__(self):
         BDF.__init__(self)
 
-    def tank_fill(self, mFuel, percent_start=.50, rho_fuel=51.19,
-                 tank_elements=None, gravity=None,
-                 mass_tol=0.05, nIterMax=10, add_elements=True):
+    def tank_fill(self, mfuel, percent_start=0.50, rho_fuel=51.19,
+                  tank_elements=None, gravity=None,
+                  mass_tol=0.05, nIterMax=10, add_elements=True):
         """
         Fills a single fuel tank in consistent units
-        :percent_start: the percentage to start at.
-                        percent_start = z/(zMax-zMin); default=0.50
-        :mFuel:         mass (or weight) of fuel to add to the tank
-        :rhoFuel:       density of fuel (default = 51.19 lb/ft^3 = 6.6 lb/gal)
-        :tank_elements: list of elements defining the boundary of the tank
-        :gravity:       vector defining the direction of gravity in cid=0; <0,0,-32.2>=default
-        :mass_tol:      tolerance on the mass (massError = massTol*mFuel; default=0.05)
-        :nIterMax:     the maximum number of iterations (default=10)
-        :addElements:  create CONM2 elements if True
 
-        :returns: nodalMasses the masses on each node
-        :returns: percentStarts the percentages used in the interpolation
-        :returns: massToli = (mFuel-totalMass)/mFuel
+        Parameters
+        percent_start : float
+            the percentage to start at
+            percent_start = z/(zMax-zMin); default=0.50
+        mfuel : float
+            mass (or weight) of fuel to add to the tank
+        rho_fuel : float
+            density of fuel (default = 51.19 lb/ft^3 = 6.6 lb/gal)
+        tank_elements : List[int]
+            list of elements defining the boundary of the tank
+        gravity : float
+            vector defining the direction of gravity in cid=0; <0,0,-32.2>=default
+        mass_tol : float
+            tolerance on the mass (massError = massTol*mfuel; default=0.05)
+        nIterMax : int; default=10
+            the maximum number of iterations
+        addElements : bool; default=True
+            create CONM2 elements if True
+
+        Returns
+        nodal_masses : ???
+            the masses on each node
+        percentStarts : float
+            the percentages used in the interpolation
+        massToli : float
+            massToli = (mfuel - total_mass)/mfuel
 
         .. note:: massTol should be valid for any tank size
                   (adjust the percent error from 5% if necessary)
@@ -49,7 +63,7 @@ class NastranMesh(BDF):
            1.  No cid=-2 is already being used
            2.  Tank doesnt have to be closed (but it's probably a good thing)
            3.  No requirement on normals
-           4.  percentStart < 1.
+           4.  percent_start < 1.
            5.  massTol < 0.20
         """
         if tank_elements is None:
@@ -59,7 +73,7 @@ class NastranMesh(BDF):
         percent_starts = []
         mass_errors = []
         percent_starts.append(0.)   # x; empty tank
-        mass_errors.append(-mFuel)  # y; the mass is too low by mFuel
+        mass_errors.append(-mfuel)  # y; the mass is too low by mFuel
 
         # find the vector with the maximum difference with the gravity vector
         if gravity is None:
@@ -69,30 +83,29 @@ class NastranMesh(BDF):
         B = array([0., 1., 0.])  # global y
         C = array([0., 0., 1.])  # global z
 
-        Adot_gravity = dot(A, gravity)
-        Bdot_gravity = dot(B, gravity)
-        Cdot_gravity = dot(C, gravity)
-        ABC = [A, B, C]
-        ABCdot = [Adot_gravity, Bdot_gravity, Cdot_gravity]
-        ABCmax = max(ABCdot)
-        i = ABCdot.index(ABCmax)
+        a_dot_gravity = dot(A, gravity)
+        b_dot_gravity = dot(B, gravity)
+        c_dot_gravity = dot(C, gravity)
+        abc = [A, B, C]
+        abc_dot = [a_dot_gravity, b_dot_gravity, c_dot_gravity]
+        abc_max = max(abc_dot)
+        i = abc_dot.index(abc_max)
 
-        (bx, by, bz) = ABC[i]
+        (bx, by, bz) = abc[i]
         gx, gy, gz = gravity
 
         # Create a new CORD2R coordinate system (cid=-2)
         # origin is at [0.,0.,0.] and doesnt matter
         # z axis is the gravity direction (gravity)
         # point on x-z plane is the max unit vector (ABC)
-        coordCard = ['CORD2R', -2, 0, 0., 0., 0., gx, gy, gz, bx, by, bz]
-        cardName = 'CORD2R'
-        self.add_card(self, coordCard, cardName)
-        #cardObj = BDF_Card(coordCard)
-        #coord = CORD2R(cardObj)
+        coord_card = ['CORD2R', -2, 0, 0., 0., 0., gx, gy, gz, bx, by, bz]
+        self.add_card(self, coord_card, coord_card[0])
+        #card_obj = BDF_Card(coord_card)
+        #coord = CORD2R(card_obj)
 
         # convert all points into the gravity frame
         cid = -2
-        elementNodeIDs = {}  # CQUAD4, CTRIA3
+        element_node_ids = {}  # CQUAD4, CTRIA3
         node_locations = {}
 
         for eid in tank_elements:
@@ -100,10 +113,10 @@ class NastranMesh(BDF):
             if (elem.type == 'CQUAD4') or (elem.type == 'CTRIA3'):
                 nodes = elem.nodes
 
-                elementNodeIDs[eid] = []
+                element_node_ids[eid] = []
                 for node in nodes:
                     nid = node.nid
-                    elementNodeIDs[eid].append(nid)
+                    element_node_ids[eid].append(nid)
                     if nid not in node_locations:
                         p = node.PositionWRT(self, cid)
                         node_locations[nid] = p
@@ -115,48 +128,48 @@ class NastranMesh(BDF):
             zMin = min(zMin, node[2])
 
         # max sure to go into the while looop
-        massToli = 2.  # 2*mFuel
-        percentFill = percent_start
+        mass_toli = 2.  # 2*mFuel
+        percent_fill = percent_start
 
         nIter = 0
-        while massToli > mass_tol and nIter < nIterMax:
+        while mass_toli > mass_tol and nIter < nIterMax:
             # find the z0 (zero fill line) by taking z0=percentStart*(zMax-zMin)
-            z0 = percentFill * (zMax - zMin)
+            z0 = percent_fill * (zMax - zMin)
 
-            aboveNodes = set()
-            belowNodes = set()
+            above_nodes = set()
+            below_nodes = set()
             for nid, node in sorted(iteritems(node_locations)):
                 if node[2] >= z0:
-                    aboveNodes.add(nid)
+                    above_nodes.add(nid)
                 else:
-                    belowNodes.add(nid)
+                    below_nodes.add(nid)
 
             if 0:
-                belowElements = set()
-                partialElements = set()
-                for eid, nodeIDs in sorted(iteritems(elementNodeIDs)):
+                below_elements = set()
+                partial_elements = set()
+                for eid, node_ids in sorted(iteritems(element_node_ids)):
                     elem = self.elements[eid]
 
-                    isAboveBelow = set()  # True=Above False=Below
+                    is_above_below = set()  # True=Above False=Below
                     for nid in nodeIDs:
-                        if nid in aboveNodes:
-                            isAboveBelow.add(True)
+                        if nid in above_nodes:
+                            is_above_below.add(True)
                         else:
-                            isAboveBelow.add(False)
+                            is_above_below.add(False)
 
-                    if   True in isAboveBelow and False not in isAboveBelow:  # all nodes are above
+                    if   True in is_above_below and False not in is_above_below:  # all nodes are above
                         pass
-                    elif True not in isAboveBelow and False in isAboveBelow:  # all nodes are below
-                        belowElements.add(eid)
-                    elif True in isAboveBelow and False in isAboveBelow:  # some nodes are above, some below
-                        partialElements.add(eid)
+                    elif True not in is_above_below and False in is_above_below:  # all nodes are below
+                        below_elements.add(eid)
+                    elif True in is_above_below and False in is_above_below:  # some nodes are above, some below
+                        partial_elements.add(eid)
                     else:
                         raise RuntimeError('not above, not below, not partial...')
 
             if 0:
-                for eid in belowElements:
+                for eid in below_elements:
                     elem = self.elements[eid]
-                    nodeIDs = elementNodeIDs[eid]
+                    node_ids = element_node_ids[eid]
                     if elem.type == 'CQUAD4':
                         pass
                     elif elem.type == 'CTRIA3':
@@ -165,19 +178,19 @@ class NastranMesh(BDF):
                         raise NotImplementedError()
 
             # compute the total and elemental masses
-            nodalMasses = {}
-            totalMass = 0.
-            for nid in belowNodes:
+            nodal_masses = {}
+            total_mass = 0.
+            for nid in below_nodes:
                 # mass = g*rho*(z0-z)
                 # it's (z0-z) b/c magGravity is always positive and z0 is higher than z
                 mass = mag_gravity * (z0 - node_locations[nid][2])
-                nodalMasses[nid] = mass
-                totalMass += mass
-            massError = mFuel - totalMass
+                nodal_masses[nid] = mass
+                total_mass += mass
+            mass_error = mfuel - total_mass
 
             percent_starts.append(percent_start)  # x
-            mass_errors.append(massError)         # y
-            mass_toli = massError / mFuel
+            mass_errors.append(mass_error)         # y
+            mass_toli = mass_error / mfuel
 
             #x=[]; y=[]
             for xi, yi in mass_found:
@@ -189,17 +202,17 @@ class NastranMesh(BDF):
 
             spline = buildSpline(Y, X)  # reverse interpolation
             yi = 0.  # find 0. mass
-            xi = splev(yi, spline)  # the percentFill for 0. mass
-            percentFill = xi
+            xi = splev(yi, spline)  # the percent_fill for 0. mass
+            percent_fill = xi
 
             nIter += 1
 
         if add_elements:
-            maxEid = max(self.elements) + 1  # get the next available eid
-            for (nid, mass) in sorted(iteritems(nodalMasses)):
-                card = ['CONM2', maxEid, nid, 0, mass]
+            eid = max(self.elements) + 1  # get the next available eid
+            for (nid, mass) in sorted(iteritems(nodal_masses)):
+                card = ['CONM2', eid, nid, 0, mass]
                 self.add_card(self, card, 'CONM2')
-                maxEid += 1
+                eid += 1
 
         del self.coords[cid]
         return masses, X, Y
@@ -227,8 +240,8 @@ class NastranMesh(BDF):
         dx = width / nx
         dy = height / ny
 
-        nidStart = 200
-        n = nidStart
+        nid_start = 200
+        n = nid_start
         #x=[]; y=[]
         ij_NMap = {}
         points = {}
@@ -254,88 +267,87 @@ class NastranMesh(BDF):
 
         #origin = [width/2,height/2,0.]
         origin = [0., 0., -1.]
-        zAxis = array([0., 1., 0.])
-        xAxis = array([1., 0., 0.])
+        zaxis = array([0., 1., 0.])
+        xaxis = array([1., 0., 0.])
 
-        f = open('plane.bdf', 'wb')
-        #f.write('SOL 101\n')
-        #f.write('CEND\n')
-        #f.write('BEGIN BULK\n')
+        with open('plane.bdf', 'wb') as bdf_file:
+            #f.write('SOL 101\n')
+            #f.write('CEND\n')
+            #f.write('BEGIN BULK\n')
 
-        cid = 200
-        rid = 0
-        coord = ['CORD2R', cid, rid, origin[0], origin[1], origin[2],
-                 zAxis[0], zAxis[1], zAxis[2],
-                 xAxis[0], xAxis[1], xAxis[2]]
-        f.write(print_card(coord))
-        for nid, point in sorted(iteritems(points)):
-            (x, y, z) = point
-            node = ['GRID', nid, cid, x, y, z]
-            f.write(print_card(node))
+            cid = 200
+            rid = 0
+            coord = ['CORD2R', cid, rid, origin[0], origin[1], origin[2],
+                     zaxis[0], zaxis[1], zaxis[2],
+                     xaxis[0], xaxis[1], xaxis[2]]
+            f.write(print_card(coord))
+            for nid, point in sorted(iteritems(points)):
+                (x, y, z) = point
+                node = ['GRID', nid, cid, x, y, z]
+                bdf_file.write(print_card(node))
 
-        pid = 123
-        mid = pid
-        eidStart = 200
-        for eid, element in enumerate(elements):
-            (n1, n2, n3) = element
-            tri = ['CTRIA3', eid + eidStart, pid, n1, n2, n3]
-            f.write(print_card(tri))
+            pid = 123
+            mid = pid
+            eidStart = 200
+            for eid, element in enumerate(elements):
+                (n1, n2, n3) = element
+                tri = ['CTRIA3', eid + eid_start, pid, n1, n2, n3]
+                bdf_file.write(print_card(tri))
 
-        shell = ['PSHELL', pid, mid, 1.0]
-        f.write(print_card(shell))
-        mat = ['MAT1', mid, 1e7, None, 0.3]
-        f.write(print_card(mat))
-        #f.write('ENDDATA\n')
-        f.close()
+            shell = ['PSHELL', pid, mid, 1.0]
+            bdf_file.write(print_card(shell))
+            mat = ['MAT1', mid, 1e7, None, 0.3]
+            bdf_file.write(print_card(mat))
+            #bdf_file.write('ENDDATA\n')
         return points, elements
 
     def intersect(self, eids, maxDist=2.):
         nodeIs = {}
-        nodeLocations = {}
+        node_locations = {}
         i = 0
         nodes = []
         for nid, node in sorted(iteritems(self.nodes)):
             position = node.get_position()
-            nodeLocations[nid] = position
+            node_locations[nid] = position
             nodes.append(position)
             nodeIs[i] = nid
             i += 1
 
-        originalElements = {}
-        newElements = {}
-        newNodes = set()
-        oldNodes = set()
+        original_elements = {}
+        new_elements = {}
+        new_nodes = set()
+        old_nodes = set()
         for eid, element in sorted(iteritems(self.elements)):
             if eid in eids:
-                newElements[eid] = element
-                newNodes = newNodes.union(set(element.node_ids))
+                new_elements[eid] = element
+                new_nodes = new_nodes.union(set(element.node_ids))
             else:
-                originalElements[eid] = element
-                oldNodes = oldNodes.union(set(element.node_ids))
+                original_elements[eid] = element
+                old_nodes = old_nodes.union(set(element.node_ids))
 
-        #for eid in newElements:
-        newNodes = list(newNodes)
-        print("newNodes = ", sorted(newNodes))
-        #print("newElements.keys = ", newElements.keys())
-        #print("originalElements.keys = ", originalElements.keys())
+        #for eid in new_elements:
+        new_nodes = list(new_nodes)
+        print("new_nodes = ", sorted(new_nodes))
+        #print("new_elements.keys = ", new_elements.keys())
+        #print("original_elements.keys = ", original_elements.keys())
 
         tree = spatial.KDTree(nodes)
         k = 10
 
-        for nid in newNodes:
-            positionLookup = nodeLocations[nid]
+        for nid in new_nodes:
+            position_lookup = node_locations[nid]
 
-            (dists, iLocs) = tree.query(array(positionLookup), k=k)
-            #print "iLocs=%s dists=%s" %(iLocs,dists)
-            #print "out = ",out
+            (dists, iLocs) = tree.query(array(position_lookup), k=k)
+            #print("iLocs=%s dists=%s" % (iLocs, dists))
+            #print("out = ", out)
 
-            closeNodes = set()
+            close_nodes = set()
             for dist, iLoc in zip(dists, iLocs):
-                closeNodes.add(nodeIs[iLoc])
-                #print "nodeClose[%s] = %s" %(nodeIs[iLoc],nodeLocations[nodeIs[iLoc]])
-            intersectionNodes = closeNodes.intersection(oldNodes)
-            if intersectionNodes:
-                print("intersectionNodes[%s] = %s" % (nid, intersectionNodes))
+                close_nodes.add(nodeIs[iLoc])
+                #print "nodeClose[%s] = %s" %(nodeIs[iLoc],node_locations[nodeIs[iLoc]])
+            intersection_nodes = close_nodes.intersection(old_nodes)
+            if intersection_nodes:
+                print("intersection_nodes[%s] = %s" % (nid, intersection_nodes))
 
 
     # def flip_normals(self, starterEid, eids=None, flipStarter=False):
@@ -416,8 +428,8 @@ if __name__ == '__main__':  ## pragma: no cover
         height = 20.
         nx = 10
         ny = 10
-        eidStart = 10
-        mesh.createPlane(width, height, nx, ny, eidStart)
+        eid_start = 10
+        mesh.create_plane(width, height, nx, ny, eid_start)
     mesh.read_bdf('combo.bdf')
 
     # plane eids

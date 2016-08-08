@@ -240,7 +240,7 @@ def print_field_8(value):
     else:
         field = "%8s" % value
     if len(field) != 8:
-        msg = 'field=%r is not 8 characters long...rawValue=%r' % (field, value)
+        msg = 'field=%r is not 8 characters long...raw_value=%r' % (field, value)
         raise RuntimeError(msg)
     return field
 
@@ -255,6 +255,7 @@ def print_card_8(fields):
         all the fields in the BDF card (no trailing Nones)
 
     Returns
+    -------
     card : str
         string representation of the card in small field format
 
@@ -286,7 +287,7 @@ def print_card_8(fields):
         try:
             out += print_field_8(field)
         except:
-            #print("bad fields = %s" % fields)
+            print("bad fields = %s" % fields)
             raise
         if i % 8 == 0:  # allow 1+8 fields per line
             out = out.rstrip(' ')

@@ -12,6 +12,7 @@ This file defines the OUG Table, which contains:
  * Real Temperature
    - DISPLACEMENT = ALL
 """
+import numpy as np
 from pyNastran import is_release
 from pyNastran.op2.op2_common import OP2Common
 
@@ -31,13 +32,21 @@ from pyNastran.op2.tables.oug.oug_eigenvectors import (
     RealEigenvectorArray, ComplexEigenvectorArray,
 )
 
-from pyNastran.op2.tables.opg_appliedLoads.opg_loadVector import RealThermalVelocityVectorArray
+from pyNastran.op2.tables.opg_appliedLoads.opg_load_vector import RealThermalVelocityVectorArray
 
 
 class OUG(OP2Common):
 
     def __init__(self):
         OP2Common.__init__(self)
+
+    def update_mode_cycle(self, name):
+        value = getattr(self, name)
+        if value == 0.0:
+            #print('table_name=%r mode=%s eigr=%s' % (self.table_name, self.mode, self.eigr))
+            value = np.sqrt(np.abs(self.eigr)) / (2. * np.pi)
+            setattr(self, name, value)
+            self.data_code[name] = value
 
     def _read_oug1_3(self, data, ndata):
         #self._set_times_dtype()
@@ -81,6 +90,7 @@ class OUG(OP2Common):
             self.eigr = self.add_data_parameter(data, 'eigr', 'f', 6, False)
             # mode or cycle .. todo:: confused on the type - F1???
             self.mode_cycle = self.add_data_parameter(data, 'mode_cycle', 'i', 7, False)
+            self.update_mode_cycle('mode_cycle')
             self.data_names = self.apply_data_code_value('data_names', ['mode', 'eigr', 'mode_cycle'])
         #elif self.analysis_code == 3: # differential stiffness
             #self.lsdvmn = self.get_values(data, 'i', 5) ## load set number
@@ -347,6 +357,11 @@ class OUG(OP2Common):
         raise NotImplementedError()
 
     def _read_displacement(self, data, ndata, is_cid):
+        if self.read_mode == 1:
+            if self.isubcase not in self.case_control_deck.subcases:
+                self.subcase = self.case_control_deck.create_new_subcase(self.isubcase)
+            self.subcase.add_op2_data(self.data_code, 'displacement', self.log)
+
         if self.table_name in [b'OUG1', b'OUGV1', b'OUGV2', b'OUGV1PAT', b'BOUGV1', b'ROUGV1']:
             assert self.thermal in [0, 1], self.code_information()
             if self.thermal == 0:
@@ -393,10 +408,10 @@ class OUG(OP2Common):
             if self._results.is_not_saved(result_name):
                 return ndata
             self._results._found_result(result_name)
-            n = self._read_table_vectorized(data, ndata, result_name, storage_obj,
-                                            RealTemperatureArray, None,
-                                            'node', random_code=self.random_code,
-                                            is_cid=is_cid)
+            n = self._read_scalar_table_vectorized(data, ndata, result_name, storage_obj,
+                                                   RealTemperatureArray, None,
+                                                   'node', random_code=self.random_code,
+                                                   is_cid=is_cid)
         elif self.thermal == 2:
             result_name = 'displacement_scaled_response_spectra_ABS'
             storage_obj = self.displacement_scaled_response_spectra_ABS
@@ -436,6 +451,10 @@ class OUG(OP2Common):
         """
         table_code = 10
         """
+        if self.read_mode == 1:
+            if self.isubcase not in self.case_control_deck.subcases:
+                self.subcase = self.case_control_deck.create_new_subcase(self.isubcase)
+            self.subcase.add_op2_data(self.data_code, 'velocity', self.log)
         if self.table_name in [b'OUGV1', b'OUGV2', b'ROUGV1']:
             result_name = 'velocities'
         elif self.table_name == b'OUPV1':
@@ -471,7 +490,7 @@ class OUG(OP2Common):
                                  #RealThermalVelocityVector, None,
                                  #None, None,
                                  #'node', random_code=self.random_code)
-            n = self._read_table_vectorized(data, ndata, result_name, storage_obj,
+            n = self._read_scalar_table_vectorized(data, ndata, result_name, storage_obj,
                                             RealThermalVelocityVectorArray, None,
                                             'node', random_code=self.random_code)
 
@@ -493,6 +512,11 @@ class OUG(OP2Common):
         """
         table_code = 11
         """
+        if self.read_mode == 1:
+            if self.isubcase not in self.case_control_deck.subcases:
+                self.subcase = self.case_control_deck.create_new_subcase(self.isubcase)
+            self.subcase.add_op2_data(self.data_code, 'acceleration', self.log)
+
         if self.table_name in [b'OUGV1', b'OUGV2']:
             result_name = 'accelerations'
             assert self.thermal == 0, self.code_information()
@@ -524,6 +548,7 @@ class OUG(OP2Common):
             if self._results.is_not_saved(result_name):
                 return ndata
             self._results._found_result(result_name)
+            raise NotImplementedError(self.code_information())
             n = self._read_table(data, ndata, result_name, storage_obj,
                                  None, None,
                                  None, None, 'node', random_code=self.random_code)
@@ -555,7 +580,11 @@ class OUG(OP2Common):
         """
         table_code = 7
         """
-        if self.table_name in [b'OUGV1', b'OUGV2', 'BOUGV1']:
+        if self.isubcase not in self.case_control_deck.subcases:
+            self.subcase = self.case_control_deck.create_new_subcase(self.isubcase)
+        self.subcase.add_op2_data(self.data_code, 'VECTOR', self.log)
+
+        if self.table_name in [b'OUGV1', b'OUGV2', b'BOUGV1', b'BOPHIG']:
             result_name = 'eigenvectors'
         elif self.table_name == b'RADCONS':
             result_name = 'eigenvectors_RADCONS'

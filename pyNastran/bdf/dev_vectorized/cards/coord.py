@@ -7,7 +7,7 @@ from numpy import (array, searchsorted, zeros, array, full,
                    transpose, asarray, isnan, array_equal)
 from numpy.linalg import norm
 
-from pyNastran.bdf.cards.coordinateSystems import (
+from pyNastran.bdf.cards.coordinate_systems import (
     CORD1R, CORD1C, CORD1S,
     CORD2R, CORD2C, CORD2S)
 
@@ -187,7 +187,7 @@ class Coord(VectorizedCard):
 
         self.n = 1
         ncards = 1
-        self.coords = {0: CORD2R(),}
+        self.coords = {0: CORD2R(0),}
         self.coord_id = zeros(ncards, dtype='int32')
         self.Type = full(ncards, 'R', dtype='|S1')  # R-CORD2R, S-CORD2S, C-CORD2C
 
@@ -213,6 +213,8 @@ class Coord(VectorizedCard):
         #print('coord_ids = %s' % self.coords.keys())
         #print('T = \n%s' % self.T)
         for i, (cid, coord) in enumerate(sorted(iteritems(self.coords))):
+            print('i = %s' % i)
+            print('cid = %s' % cid)
             self.coord_id[i] = cid
             self.Type[i] = coord.Type
             if coord.isResolved:
@@ -527,38 +529,38 @@ class Coord(VectorizedCard):
 
     def add_cord1r(self, card, comment=''):
         """adds a CORD1R card"""
-        coord = CORD1R(card, comment=comment)
+        coord = CORD1R.add_card(card, comment=comment)
         self.coords[coord.cid] = coord
         self.n += 1
 
     def add_cord1c(self, card, comment=''):
         """adds a CORD1C card"""
-        coord = CORD1C(card, comment=comment)
+        coord = CORD1C.add_card(card, comment=comment)
         self.coords[coord.cid] = coord
         self.n += 1
 
     def add_cord1s(self, card, comment=''):
         """adds a CORD1S card"""
-        coord = CORD1S(card, comment=comment)
+        coord = CORD1S.add_card(card, comment=comment)
         self.coords[coord.cid] = coord
         self.n += 1
 
     def add_cord2r(self, card, comment=''):
         """adds a CORD2R card"""
-        coord = CORD2R(card, comment=comment)
+        coord = CORD2R.add_card(card, comment=comment)
         self.coords[coord.cid] = coord
         self.n += 1
         #print('adding cord2r; cids=%s' % self.coords.keys())
 
     def add_cord2c(self, card, comment=''):
         """adds a CORD2C card"""
-        coord = CORD2C(card, comment=comment)
+        coord = CORD2C.add_card(card, comment=comment)
         self.coords[coord.cid] = coord
         self.n += 1
 
     def add_cord2s(self, card, comment=''):
         """adds a CORD2S card"""
-        coord = CORD2S(card, comment=comment)
+        coord = CORD2S.add_card(card, comment=comment)
         self.coords[coord.cid] = coord
         self.n += 1
 

@@ -53,9 +53,8 @@ class IGES(object):
         pass
 
     def read_iges(self, igs_name):
-        f = open(igs_name)
-        lines = f.readlines()
-        f.close()
+        with open(igs_name) as f:
+            lines = f.readlines()
 
         'SolidWorks IGES file using analytic representation for surfaces         S      1'
         Start1 = []

@@ -1,6 +1,6 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-
+from six import string_types
 
 class Op2Codes(object):
     def __init__(self):
@@ -734,49 +734,18 @@ class Op2Codes(object):
         if hasattr(self, 'thermal'):
             thermal = self.thermal
 
+        s_word = ''
         stress_word = ''
         if hasattr(self, 'stress_bits'):
             if self.is_stress():
                 stress_word = 'Stress'
             else:
                 stress_word = 'Strain'
+            s_word = get_scode_word(s_code, self.stress_bits)
 
         element_type = None
         if hasattr(self, 'element_type'):
             element_type = self.element_type
-
-        if s_code == 0:
-            s_word = 'Coordinate Element - Stress Max Shear (Octahedral)'
-        elif s_code == 14:
-            s_word = 'Coordinate Element - Strain Fiber Max Shear (Octahedral)'
-
-        elif s_code == 1:
-            s_word = 'Coordinate Element - Stress von Mises'
-        elif s_code == 10:
-            s_word = 'Coordinate Element - Strain Curvature Max Shear (Octahedral)'
-
-        elif s_code == 11:
-            s_word = 'Coordinate Element - Strain Curvature von Mises'
-        elif s_code == 15:
-            s_word = 'Coordinate Element - Strain Fiber von Mises'
-
-        elif s_code == 16:
-            s_word = 'Coordinate Material - Stress Max Shear (Octahedral)'
-        elif s_code == 17:
-            s_word = 'Coordinate Material - Stress von Mises'
-
-        elif s_code == 26:
-            s_word = 'Coordinate Material - Strain Curvature Max Shear'
-        elif s_code == 30:
-            s_word = 'Coordinate Material - Strain Fiber Max Shear (Octahedral)'
-
-        elif s_code == 27:
-            s_word = 'Coordinate Material - Strain Curvature von Mises'
-        elif s_code == 31:
-            s_word = 'Coordinate Material - Strain Fiber von Mises'
-        else:
-            #sWord = 'Stress or Strain - UNDEFINED'
-            s_word = ''
 
         format_word = '???'
         if format_code == 1:
@@ -988,8 +957,12 @@ class Op2Codes(object):
         msg += "  random_code   = %-3s\n" % (random_code)
 
         if element_type is not None:
-            msg += "  element_type  = %-3s %s\n" % (
-                element_type, self.get_element_type(element_type))
+            if isinstance(element_type, string_types):
+                etype = element_type
+            else:
+                etype = self.get_element_type(element_type)
+            msg += "  element_type  = %-3s %s\n" % (element_type, etype)
+
         if s_word:  # stress code
             msg += "  s_code        = %-3s %s\n" % (s_code, s_word)
         if thermal is not None:
@@ -1120,3 +1093,50 @@ class Op2Codes(object):
     def _set_op2_date(self, month, day, year):
         self.date = (month, day, 2000 + year)
         return self.date
+
+def get_scode_word(s_code, stress_bits):
+    if s_code == 0:
+        s_word = 'Coordinate Element - Stress Max Shear (Octahedral)'
+        assert stress_bits == [0, 0, 0, 0, 0], stress_bits
+    elif s_code == 14:
+        s_word = 'Coordinate Element - Strain Fiber Max Shear (Octahedral)'
+        assert stress_bits == [0, 1, 1, 1, 0], stress_bits
+
+    elif s_code == 1:
+        s_word = 'Coordinate Element - Stress von Mises'
+        assert stress_bits == [0, 0, 0, 0, 1], stress_bits
+    elif s_code == 10:
+        s_word = 'Coordinate Element - Strain Curvature Max Shear (Octahedral)'
+        assert stress_bits == [0, 1, 0, 1, 0], stress_bits
+
+    elif s_code == 11:
+        s_word = 'Coordinate Element - Strain Curvature von Mises'
+        assert stress_bits == [0, 1, 0, 1, 1], stress_bits
+    elif s_code == 15:
+        s_word = 'Coordinate Element - Strain Fiber von Mises'
+        assert stress_bits == [0, 1, 1, 1, 1], stress_bits
+
+    elif s_code == 16:
+        s_word = 'Coordinate Material - Stress Max Shear (Octahedral)'
+        assert stress_bits == [1, 0, 0, 0, 0], stress_bits
+    elif s_code == 17:
+        s_word = 'Coordinate Material - Stress von Mises'
+        assert stress_bits == [1, 0, 0, 0, 1], stress_bits
+
+    elif s_code == 26:
+        s_word = 'Coordinate Material - Strain Curvature Max Shear'
+        assert stress_bits == [1, 1, 0, 1, 0], stress_bits
+    elif s_code == 30:
+        s_word = 'Coordinate Material - Strain Fiber Max Shear (Octahedral)'
+        assert stress_bits == [1, 1, 1, 1, 0], stress_bits
+
+    elif s_code == 27:
+        s_word = 'Coordinate Material - Strain Curvature von Mises'
+        assert stress_bits == (1, 1, 0, 1, 1), stress_bits
+    elif s_code == 31:
+        s_word = 'Coordinate Material - Strain Fiber von Mises'
+        assert stress_bits == (1, 1, 1, 1, 1), stress_bits
+    else:
+        #s_word = 'Stress or Strain - UNDEFINED'
+        s_word = '???'
+    return s_word

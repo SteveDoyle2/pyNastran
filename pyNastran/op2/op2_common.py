@@ -11,7 +11,7 @@ import numpy as np
 
 from pyNastran import is_release
 from pyNastran.f06.f06_writer import F06Writer
-from pyNastran.op2.op2_codes import Op2Codes
+from pyNastran.op2.op2_codes import Op2Codes, get_scode_word
 from pyNastran.op2.op2_helper import polar_to_real_imag
 
 from pyNastran.op2.errors import SortCodeError, MultipleSolutionNotImplementedError # DeviceCodeError,
@@ -151,7 +151,7 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
         if self.format_code == -1:
             if self.is_debug_file:
                 self.write_ndata(self.binary_debug, 100)
-            if self.table_name in ['OESNLXR', 'OESNLBR', 'OESNLXD', 'OESNL1X']:
+            if self.table_name in [b'OESNLXR', b'OESNLBR', b'OESNLXD', b'OESNL1X']:
                 assert self.format_code == -1, self.format_code
                 self.format_code = 1
             else:
@@ -305,14 +305,39 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
                 self.labels[code] = self.label
 
     def _write_debug_bits(self):
+        """
+        s_code =  0 -> stress_bits = [0,0,0,0,0]
+        s_code =  1 -> stress_bits = [0,0,0,0,1]
+        s_code =  2 -> stress_bits = [0,0,0,1,0]
+        s_code =  3 -> stress_bits = [0,0,0,1,1]
+        etc.
+        s_code = 32 -> stress_bits = [1,1,1,1,1]
+
+        stress_bits[0] = 0 -> isMaxShear=True       isVonMises=False
+        stress_bits[0] = 1 -> isMaxShear=False      isVonMises=True
+
+        stress_bits[1] = 0 -> is_stress=True        is_strain=False
+        stress_bits[2] = 0 -> isFiberCurvature=True isFiberDistance=False
+        stress_bits[3] = 0 -> duplicate of Bit[1] (stress/strain)
+        stress_bits[4] = 0 -> material coordinate system flag
+        """
         if self.is_debug_file:
             msg = ''
             for i, param in enumerate(self.words):
-                if param == '???':
+                if param == 's_code':
+                    s_word = get_scode_word(self.s_code, self.stress_bits)
+                    self.binary_debug.write('  s_code         = %s -> %s\n' % (self.s_code, s_word))
+                    self.binary_debug.write('    stress_bits[0] = %i -> is_von_mises    =%-5s vs is_max_shear\n' % (self.stress_bits[0], self.is_von_mises()))
+                    self.binary_debug.write('    stress_bits[1] = %i -> is_strain       =%-5s vs is_stress\n' % (self.stress_bits[1], self.is_strain()))
+                    self.binary_debug.write('    stress_bits[2] = %i -> strain_curvature=%-5s vs fiber_dist\n' % (self.stress_bits[2], self.is_curvature()))
+                    self.binary_debug.write('    stress_bits[3] = %i -> is_strain       =%-5s vs is_stress\n' % (self.stress_bits[3], self.is_strain()))
+                    self.binary_debug.write('    stress_bits[4] = %i -> material coordinate system flag=%s vs ???\n' % (self.stress_bits[4], self.stress_bits[4]))
+                elif param == '???':
                     param = 0
                 msg += '%s, ' % param
                 if i % 5 == 4:
                     msg += '\n             '
+
             if hasattr(self, 'format_code'):
                 if self.is_complex():
                     self.binary_debug.write('\n  %-14s = %i -> is_mag_phase vs is_real_imag vs. is_random\n' % ('format_code', self.format_code))
@@ -323,20 +348,26 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
                 self.binary_debug.write('    sort_bits[2] = %i -> is_real  =%s vs real/imag\n' % (self.sort_bits[2], self.is_real()))
                 sort_method, is_real, is_random = self._table_specs()
                 self.binary_debug.write('    sort_method = %s\n' % sort_method)
+
+                if self.is_complex():
+                    self.binary_debug.write('\n  %-14s = %i -> is_mag_phase vs is_real_imag vs. is_random\n' % ('format_code', self.format_code))
+                else:
+                    self.binary_debug.write('  %-14s = %i\n' % ('format_code', self.format_code))
+
             self.binary_debug.write('  recordi = [%s]\n\n' % msg)
 
-    def _read_geom_4(self, mapper, data):
+    def _read_geom_4(self, mapper, data, ndata):
         if self.read_mode == 1:
-            return len(data)
+            return ndata
         if not self.make_geom:
-            return len(data)
+            return ndata
         n = 0
         keys = unpack(b'3i', data[n:n+12])
         n += 12
         if len(data) == 12:
             #print('*self.istream = %s' % self.istream)
             #print('self.isubtable = %s' % self.isubtable)
-            self.istream -= 1
+            #self.istream -= 1 ## TODO: removed because it doesn't exist???
             self.isubtable_old = self.isubtable
             return n
 
@@ -370,11 +401,13 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
             name, func = mapper[keys]
         except KeyError:
             return n
-        self.binary_debug.write('  found keys=%s -> name=%-6s - %s\n' % (str(keys), name, self.table_name))
-        print("  found keys=(%5s,%4s,%4s) name=%-6s - %s" % (keys[0], keys[1], keys[2], name, self.table_name))
+        if self.is_debug_file:
+            self.binary_debug.write('  found keys=%s -> name=%-6s - %s\n' % (str(keys), name, self.table_name))
+        if self.debug:
+            self.log.debug("  found keys=(%5s,%4s,%4s) name=%-6s - %s" % (keys[0], keys[1], keys[2], name, self.table_name))
 
         n = func(data, n)  # gets all the grid/mat cards
-        assert n != None, name
+        assert n is not None, name
 
         self.geom_keys = keys
         self.is_start_of_subtable = False
@@ -405,7 +438,7 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
                     real_obj, complex_obj,
                     real_vector, complex_vector,
                     node_elem, random_code=None, is_cid=False):
-
+        raise RuntimeError('is this still used?')
         assert isinstance(result_name, string_types), 'result_name=%r' % result_name
         assert isinstance(storage_obj, dict), 'storage_obj=%r' % storage_obj
         #assert real_obj is None
@@ -527,6 +560,68 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
         #n = self._not_implemented_or_skip(data, ndata, msg)
         return n
 
+    def _read_scalar_table_vectorized(self, data, ndata, result_name, storage_obj,
+                               real_vector, complex_vector,
+                               node_elem, random_code=None, is_cid=False):
+
+        assert isinstance(result_name, string_types), 'result_name=%r' % result_name
+        assert isinstance(storage_obj, dict), 'storage_obj=%r' % storage_obj
+        #print('self.num_wide =', self.num_wide)
+        #print('random...%s' % self.isRandomResponse())
+        #if not self.isRandomResponse():
+        is_vectorized = True
+        if self.format_code == 1 and self.num_wide == 8:  # real/random
+            # real
+            nnodes = ndata // 32  # 8*4
+            auto_return = self._create_table_vector(
+                result_name, nnodes, storage_obj, real_vector, is_cid=is_cid)
+            if auto_return:
+                return ndata
+
+            self._fix_format_code(format_code=1)
+            if self.is_sort1():
+                if self.nonlinear_factor is None:
+                    n = self._read_real_scalar_table_static(data, is_vectorized, nnodes, result_name, node_elem, is_cid=is_cid)
+                else:
+                    n = self._read_real_scalar_table_sort1(data, is_vectorized, nnodes, result_name, node_elem, is_cid=is_cid)
+            else:
+                n = self._read_real_scalar_table_sort2(data, is_vectorized, nnodes, result_name, node_elem, is_cid=is_cid)
+                #n = ndata
+                #msg = self.code_information()
+                #n = self._not_implemented_or_skip(data, ndata, msg)
+        elif self.format_code in [2, 3] and self.num_wide == 14:  # real or real/imaginary or mag/phase
+            raise NotImplementedError('real/imaginary or mag/phase')
+            # complex
+            nnodes = ndata // 56  # 14*4
+            if self.is_debug_file:
+                self.binary_debug.write('nnodes=%s' % nnodes)
+            auto_return = self._create_table_vector(
+                result_name, nnodes, storage_obj, complex_vector)
+            if auto_return:
+                return ndata
+            if self.is_sort1():
+                if self.is_magnitude_phase():
+                    n = self._read_complex_table_sort1_mag(data, is_vectorized, nnodes, result_name, node_elem)
+                else:
+                    n = self._read_complex_table_sort1_imag(data, is_vectorized, nnodes, result_name, node_elem)
+            else:
+                if self.is_magnitude_phase():
+                    n = self._read_complex_table_sort2_mag(data, is_vectorized, nnodes, result_name, node_elem)
+                else:
+                    n = self._read_complex_table_sort2_imag(data, is_vectorized, nnodes, result_name, node_elem)
+                #msg = self.code_information()
+                #n = self._not_implemented_or_skip(data, ndata, msg)
+        else:
+            #msg = 'COMPLEX/PHASE is included in:\n'
+            #msg += '  DISP(PLOT)=ALL\n'
+            #msg += '  but the result type is REAL\n'
+            msg = self.code_information()
+            n = self._not_implemented_or_skip(data, ndata, msg)
+        #else:
+        #msg = 'invalid random_code=%s num_wide=%s' % (random_code, self.num_wide)
+        #n = self._not_implemented_or_skip(data, ndata, msg)
+        return n
+
     def function_code(self, value):
         """
         This is a new specification from NX that's really important and
@@ -552,6 +647,159 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
         #elif self._function_code == 7:
             #raise NotImplementedError(self.function_code)
         raise NotImplementedError(self.function_code)
+
+    def _read_real_scalar_table_static(self, data, is_vectorized, nnodes, result_name, flag, is_cid=False):
+        """
+        With a static (e.g. SOL 101) result, reads a complex OUG-style
+        table created by:
+              DISP(PLOT,SORT1,REAL) = ALL
+        """
+        if self.is_debug_file:
+            self.binary_debug.write('  _read_real_scalar_table_static\n')
+        assert flag in ['node', 'elem'], flag
+        dt = self.nonlinear_factor
+        assert self.obj is not None
+        obj = self.obj
+
+        if self.use_vector and is_vectorized:
+            n = nnodes * 4 * 8
+            itotal2 = obj.itotal + nnodes
+            #print('ndata=%s n=%s nnodes=%s' % (ndata, n, nnodes))
+            ints = fromstring(data, dtype=self.idtype).reshape(nnodes, 8)
+            floats = fromstring(data, dtype=self.fdtype).reshape(nnodes, 8)
+            obj._times[obj.itime] = dt
+            #self.node_gridtype[self.itotal, :] = [node_id, grid_type]
+            #self.data[self.itime, self.itotal, :] = [v1, v2, v3, v4, v5, v6]
+            #obj.node_gridtype[obj.itotal:itotal2, :] = ints[:, 0:1]
+            nids = ints[:, 0] // 10
+            assert nids.min() > 0, nids.min()
+            obj.node_gridtype[obj.itotal:itotal2, 0] = nids
+            obj.node_gridtype[obj.itotal:itotal2, 1] = ints[:, 1]
+            obj.data[obj.itime, obj.itotal:itotal2, 0] = floats[:, 2]
+            assert np.abs(floats[:, 3:]).max() == 0, '%s is not a scalar result...' % obj.__class__.__name__
+            obj.itotal = itotal2
+        else:
+            n = 0
+            s = Struct(b(self._endian + '2i6f'))
+            for inode in range(nnodes):
+                out = s.unpack(data[n:n+32])
+                eid_device, grid_type, tx = out[:3]
+                eid = eid_device // 10
+                if self.is_debug_file:
+                    self.binary_debug.write('  %s=%i; %s\n' % (flag, eid, str(out)))
+                #print(out)
+                obj.add(eid, grid_type, tx)
+                n += 32
+        return n
+
+    def _read_real_scalar_table_sort1(self, data, is_vectorized, nnodes, result_name, flag, is_cid=False):
+        """
+        With a real transient result (e.g. SOL 109/159), reads a
+        real OUG-style table created by:
+              DISP(PLOT,SORT1,REAL) = ALL
+        """
+        # print('result_name=%s use_vector=%s is_vectorized=%s' % (result_name, self.use_vector, is_vectorized))
+        if self.is_debug_file:
+            self.binary_debug.write('  _read_real_scalar_table_sort1\n')
+        #assert flag in ['node', 'elem'], flag
+        #assert self.obj is not None
+        dt = self.nonlinear_factor
+        obj = self.obj
+        if self.use_vector and is_vectorized:
+            itime = obj.itime
+            n = nnodes * 4 * 8
+            itotal = obj.itotal
+            itotal2 = itotal + nnodes
+
+            is_mask = False
+            if obj.itime == 0:
+                ints = fromstring(data, dtype=self.idtype).reshape(nnodes, 8)
+                #ints = floats[:, :2].view('int32')
+                #from numpy import array_equal
+                #assert array_equal(ints, intsB)
+
+                nids = ints[:, 0] // 10
+                assert nids.min() > 0, nids.min()
+                obj.node_gridtype[itotal:itotal2, 0] = nids
+                obj.node_gridtype[itotal:itotal2, 1] = ints[:, 1]
+                #obj.Vn = ones(floats.shape, dtype=bool)
+                #obj.Vn[itotal:itotal2, :2] = False
+                #print(obj.Vn)
+                if obj.nonlinear_factor is not None and is_mask:
+                    raise NotImplementedError('masking1')
+                    float_mask = np.arange(nnodes * 8, dtype=np.int32).reshape(nnodes, 8)[:, 2:]
+                    obj.float_mask = float_mask
+
+            if obj.nonlinear_factor is not None and is_mask:
+                raise NotImplementedError('masking2')
+                results = fromstring(data, dtype=self.fdtype)[obj.float_mask]
+            else:
+                floats = fromstring(data, dtype=self.fdtype).reshape(nnodes, 8)
+                obj.data[obj.itime, obj.itotal:itotal2, 0] = floats[:, 2]
+                assert np.abs(floats[:, 3:]).max() == 0, '%s is not a scalar result...' % obj.__class__.__name__
+            obj._times[itime] = dt
+            obj.itotal = itotal2
+        else:
+            n = 0
+            assert nnodes > 0, nnodes
+            s = Struct(b(self._endian + '2i6f'))
+            for inode in range(nnodes):
+                out = s.unpack(data[n:n+32])
+                eid_device, grid_type, tx = out[:3]
+                eid = eid_device // 10
+                if self.is_debug_file:
+                    self.binary_debug.write('  %s=%i; %s\n' % (flag, eid, str(out)))
+                obj.add_sort1(dt, eid, grid_type, tx)
+                n += 32
+        return n
+
+    def _read_real_scalar_table_sort2(self, data, is_vectorized, nnodes, result_name, flag, is_cid=False):
+        """
+        With a real transient result (e.g. SOL 109/159), reads a
+        real OUG-style table created by:
+              DISP(PLOT,SORT2,REAL) = ALL
+        """
+        if self.is_debug_file:
+            self.binary_debug.write('  _read_real_scalar_table_sort2\n')
+        assert flag in ['node', 'elem'], flag
+        eid = self.nonlinear_factor
+        #assert self.obj is not None
+
+        obj = self.obj
+        if self.use_vector and is_vectorized and 0:  # TODO: not done....
+            itime = obj.itime
+            n = nnodes * 4 * 8
+            itotal = obj.itotal
+            itotal2 = itotal + nnodes
+            if obj.itime == 0:
+                ints = fromstring(data, dtype=self.idtype).reshape(nnodes, 8)
+                #nids = ints[:, 0] // 10
+                nids = ones(nnodes, dtype='int32') * eid
+                assert nids.min() > 0, nids.min()
+                obj.node_gridtype[itotal:itotal2, 0] = nids
+                obj.node_gridtype[itotal:itotal2, 1] = ints[:, 1]
+
+            floats = fromstring(data, dtype=self.fdtype).reshape(nnodes, 8)
+            obj._times[itime] = floats[:, 0]
+            obj.data[obj.itime, itotal:itotal2, :] = floats[:, 2]
+            assert np.abs(floats[:, 3:]).max() == 0, '%s is not a scalar result...' % obj.__class__.__name__
+            obj.itotal = itotal2
+        else:
+            n = 0
+            assert nnodes > 0
+
+            flag = 'freq/dt/mode'
+            s = Struct(b(self._endian + self._analysis_code_fmt + 'i6f'))
+            assert eid > 0, self.code_information()
+            for inode in range(nnodes):
+                edata = data[n:n+32]
+                out = s.unpack(edata)
+                (dt, grid_type, tx) = out[:3]
+                if self.is_debug_file:
+                    self.binary_debug.write('  %s=%i; %s\n' % (flag, dt, str(out)))
+                obj.add_sort2(dt, eid, grid_type, tx)
+                n += 32
+        return n
 
     def _read_real_table_static(self, data, is_vectorized, nnodes, result_name, flag, is_cid=False):
         """
@@ -696,7 +944,7 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
             assert nnodes > 0
 
             flag = 'freq/dt/mode'
-            s = Struct(self._endian + self._analysis_code_fmt + b'i6f')
+            s = Struct(b(self._endian + self._analysis_code_fmt + 'i6f'))
             assert eid > 0, self.code_information()
             for inode in range(nnodes):
                 edata = data[n:n+32]
@@ -1023,6 +1271,8 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
 
         if not hasattr(self, 'subtable_name'):
             self.data_code['subtable_name'] = self.subtable_name
+
+        self.data_code['table_name'] = self.table_name
         self.data_code['approach_code'] = approach_code
 
         #: the local subcase ID
@@ -1267,6 +1517,27 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
             #return True
         #return False
 
+    def is_curvature(self):
+        if self.is_stress():
+            curvature_flag = False
+        else:
+            # strain only
+            curvature_flag = True if self.stress_bits[2] == 0 else False
+        if self.s_code in [10, 11, 20, 27]:
+            assert curvature_flag, curvature_flag
+            return True
+        assert not curvature_flag, curvature_flag
+        return False
+
+    def is_fiber_distance(self):
+        return not self.is_curvature()
+
+    def is_max_shear(self):
+        return True if self.stress_bits[4] == 0 else False
+
+    def is_von_mises(self):
+        return not self.is_max_shear()
+
     def is_stress(self):
         return not self.is_strain()
 
@@ -1441,6 +1712,8 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
                     msg += "There's probably an extra check for read_mode=1...%s" % result_name
                     self.log.error(msg)
                     raise
+                assert self.obj.table_name == self.table_name.decode('utf-8'), 'obj.table_name=%s table_name=%s' % (self.obj.table_name, self.table_name)
+
                 #obj.update_data_code(self.data_code)
                 self.obj.build()
 

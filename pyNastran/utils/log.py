@@ -122,8 +122,12 @@ class SimpleLogger(object):
 
     def properties(self):
         """Return tuple: line number and filename"""
-        _fr = sys._getframe(3)  # jump to get out of the logger code
-        return (_fr.f_lineno, os.path.basename(_fr.f_globals['__file__']))
+        # jump to get out of the logger code
+        frame = sys._getframe(3)
+        active_file = os.path.basename(frame.f_globals['__file__'])
+        if active_file.endswith('.pyc'):
+            return frame.f_lineno, active_file[:-1]
+        return frame.f_lineno, active_file
 
     def debug(self, msg):
         """
@@ -165,6 +169,7 @@ class SimpleLogger(object):
         typ : str
             type of a message (e.g. INFO)
         """
+        assert msg is not None, msg
         self.log_func(typ, msg)
 
     def info(self, msg):
@@ -178,6 +183,7 @@ class SimpleLogger(object):
         """
         if self.level not in ('debug', 'info'):
             return
+        assert msg is not None, msg
         self.msg_typ('INFO', msg)
 
     def warning(self, msg):
@@ -189,6 +195,7 @@ class SimpleLogger(object):
         msg : str
             message to be logged
         """
+        assert msg is not None, msg
         self.msg_typ('WARNING', msg)
 
     def error(self, msg):
@@ -200,6 +207,7 @@ class SimpleLogger(object):
         msg : str
             message to be logged
         """
+        assert msg is not None, msg
         self.msg_typ('ERROR', msg)
 
     def exception(self, msg):
@@ -211,6 +219,7 @@ class SimpleLogger(object):
         msg : str
             message to be logged
         """
+        assert msg is not None, msg
         self.msg_typ('ERROR', msg)
 
     def critical(self, msg):
@@ -222,6 +231,7 @@ class SimpleLogger(object):
         msg : str
             message to be logged
         """
+        assert msg is not None, msg
         self.msg_typ('CRITICAL', msg)
 
 

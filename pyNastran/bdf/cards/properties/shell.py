@@ -18,8 +18,8 @@ from pyNastran.utils import integer_types
 from pyNastran.bdf.deprecated import DeprecatedCompositeShellProperty
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import Property, Material
-from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank, double,
-    double_or_blank, string_or_blank)
+from pyNastran.bdf.bdf_interface.assign_type import (
+    integer, integer_or_blank, double, double_or_blank, string_or_blank)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_8 import is_same
@@ -46,15 +46,30 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
 
     def cross_reference(self, model):
         """
-        Links the Material IDs to the materials.
+        Cross links the card so referenced cards can be extracted directly
 
-        :param model: a BDF object
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
         """
         for iply in range(len(self.thicknesses)):
             mid = self.mids[iply]
             msg = ' which is required by %s pid=%s iply=%s' % (self.type, self.pid, iply)
             self.mids[iply] = model.Material(mid, msg)
         self.mids_ref = self.mids
+
+        z1 = self.z0
+        t = self.Thickness()
+        try:
+            z2 = z1 + t
+        except TypeError:
+            msg = 'Type=%s z1=%s t=%s; z2=z1+t is undefined' % (self.type, z1, t)
+            raise TypeError(msg)
+        if not ((-1.5*t <= z1 <= 1.5*t) or (-1.5*t <= z2 <= 1.5*t)):
+            msg = '%s pid=%s midsurface: z1=%s z2=%s t=%s not in range of -1.5t < zi < 1.5t' % (
+                self.type, self.pid, z1, z2, t)
+            model.log.warning(msg)
 
     def uncross_reference(self):
         for iply in range(len(self.thicknesses)):
@@ -203,10 +218,13 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
     @property
     def material_ids(self):
         """
-            Gets the material IDs of all the plies
+        Gets the material IDs of all the plies
 
-            :returns mids: the material IDs
-            """
+        Returns
+        -------
+        mids : MATx
+            the material IDs
+        """
         mids = []
         for iply in range(self.nplies):
             mids.append(self.Mid(iply))
@@ -216,7 +234,10 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
         """
         Gets the density of the :math:`i^{th}` ply
 
-        :param iply: the ply ID (starts from 0)
+        Parameters
+        ----------
+        iply : int
+            the ply ID (starts from 0)
         """
         iply = self._adjust_ply_id(iply)
         mid_ref = self.mids_ref[iply]
@@ -529,9 +550,9 @@ class PCOMP(CompositeShellProperty):
         self.thicknesses = thicknesses
         self.thetas = thetas
         self.souts = souts
-        self.z0 = z0
         if z0 is None:
-            self.z0 = -0.5 * self.Thickness()
+            z0 = -0.5 * self.Thickness()
+        self.z0 = z0
 
         assert self.ft in ['HILL', 'HOFF', 'TSAI', 'STRN', 0.0, None], 'ft=%r' % self.ft
         assert self.lam in [None, 'SYM', 'MEM', 'BEND', 'SMEAR', 'SMCORE', 'NO'], 'lam=%r is invalid' % self.lam
@@ -578,7 +599,7 @@ class PCOMP(CompositeShellProperty):
             theta = double_or_blank(card, i + 2, 'theta', 0.0)
             sout = string_or_blank(card, i + 3, 'sout', 'NO')
 
-            if not t > 0.:
+            if t <= 0.:
                 msg = ('thickness of PCOMP layer is invalid pid=%s'
                        ' iLayer=%s t=%s ply=[mid,t,theta,'
                        'sout]=%s' % (pid, iply, t, ply))
@@ -611,6 +632,9 @@ class PCOMP(CompositeShellProperty):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        #data_in = [
+            #pid, z0, nsm, sb, ft, Tref, ge,
+            #is_symmetrical, Mid, T, Theta, Sout]
         pid = data[0]
         z0 = data[1]
         nsm = data[2]
@@ -632,8 +656,12 @@ class PCOMP(CompositeShellProperty):
         for (mid, t, theta, sout) in zip(Mid, T, Theta, Sout):
             if sout == 0:
                 sout = 'NO'
-            elif sout == 1:  #: .. todo:: not sure  0=NO,1=YES (most likely)
+            elif sout == 1:
                 sout = 'YES'
+            #elif sout == 2:  #: .. todo:: what?!!
+                #sout = 'YES'
+            #elif sout == 3:  #: .. todo:: what?!!
+                #sout = 'YES'
             else:
                 raise RuntimeError('unsupported sout.  sout=%r and must be 0 or 1.'
                                    '\nPCOMP = %s' % (sout, data))
@@ -641,6 +669,19 @@ class PCOMP(CompositeShellProperty):
             thicknesses.append(t)
             thetas.append(theta)
             souts.append(sout)
+        if ft == 0:
+            ft = None
+        elif ft == 1:
+            ft = 'HILL'
+        elif ft == 2:
+            ft = 'HOFF'
+        elif ft == 3:
+            ft = 'TSAI'
+        elif ft == 4:
+            ft = 'STRN'
+        else:
+            raise RuntimeError('unsupported ft.  pid=%s ft=%r.'
+                               '\nPCOMP = %s' % (pid, ft, data))
         return PCOMP(pid, mids, thicknesses, thetas, souts,
                      nsm, sb, ft, TRef, ge, lam, z0, comment=comment)
 
@@ -777,9 +818,9 @@ class PCOMPG(CompositeShellProperty):
         self.thetas = thetas
         self.global_ply_ids = global_ply_ids
         self.souts = souts
-        self.z0 = z0
         if z0 is None:
             z0 = -0.5 * self.Thickness()
+        self.z0 = z0
 
         assert self.ft in ['HILL', 'HOFF', 'TSAI', 'STRN', None], 'ft=%r' % self.ft
         assert self.lam in [None, 'SYM', 'MEM', 'BEND', 'SMEAR', 'SMCORE'], 'lam=%r is invalid' % self.lam
@@ -931,6 +972,14 @@ class PLPLANE(ShellProperty):
                        comment=comment)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by PLPLANE pid=%s' % self.pid
         self.mid = model.HyperelasticMaterial(self.mid, msg=msg)
         self.cid = model.Coord(self.cid, msg=msg)
@@ -1009,8 +1058,8 @@ class PSHEAR(ShellProperty):
         nsm = double_or_blank(card, 4, 'nsm', 0.0)
         f1 = double_or_blank(card, 5, 'f1', 0.0)
         f2 = double_or_blank(card, 6, 'f2', 0.0)
-        assert len(card) <= 7, 'len(PSHEAR card) = %i' % len(card)
-        return PSHEAR(pid, mid, t, nsm, f1, f2, comment=comment)
+        assert len(card) <= 7, 'len(PSHEAR card) = %i\ncard=%s' % (len(card), card)
+        return PSHEAR(pid, t, mid, nsm, f1, f2, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -1020,7 +1069,8 @@ class PSHEAR(ShellProperty):
         nsm = data[3]
         f1 = data[4]
         f2 = data[5]
-        return PSHEAR(pid, mid, t, nsm, f1, f2, comment=comment)
+        assert isinstance(mid, integer_types), data
+        return PSHEAR(pid, t, mid, nsm, f1, f2, comment=comment)
 
     def _is_same_card(self, prop, debug=False):
         if self.type != prop.type:
@@ -1032,6 +1082,14 @@ class PSHEAR(ShellProperty):
         return self._is_same_fields(fields1, fields2)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by PSHEAR pid=%s' % self.pid
         self.mid = model.Material(self.mid, msg)
         self.mid_ref = self.mid
@@ -1054,6 +1112,7 @@ class PSHEAR(ShellProperty):
         return mass_per_area
 
     def _verify(self, xref=False):
+        print('xref =', xref)
         pid = self.Pid()
         midi = self.Mid()
 
@@ -1089,7 +1148,10 @@ class PSHEAR(ShellProperty):
 
 class PSHELL(ShellProperty):
     """
+
     +--------+-------+------+--------+------+----------+------+------+---------+
+    |   1    |   2   |   3  |    4   |  5   |    6     |   7  |  8   |    9    |
+    +========+=======+======+========+======+==========+======+======+=========+
     | PSHELL |  PID  | MID1 |   T    | MID2 | 12I/T**3 | MID3 | TS/T |   NSM   |
     +--------+-------+------+--------+------+----------+------+------+---------+
     |        |  Z1   |  Z2  |  MID4  |      |          |      |      |         |
@@ -1127,6 +1189,10 @@ class PSHELL(ShellProperty):
         #:
         #: ..math:: I = \frac{12I}{t^3} I_{plate}
         self.twelveIt3 = twelveIt3
+
+        #: Transverse shear thickness ratio, . Ratio of the shear thickness,
+        #: ts/t, to the membrane thickness of the shell, t.
+        #: The default value is for a homogeneous shell.
         self.tst = tst
 
         #: Non-structural Mass
@@ -1173,7 +1239,7 @@ class PSHELL(ShellProperty):
 
         #if self.mid1 is not None and self.mid2 is not None:
         #    assert self.mid4 == None
-        assert len(card) <= 12, 'len(PSHELL card) = %i' % len(card)
+        assert len(card) <= 12, 'len(PSHELL card) = %i\ncard=%s' % (len(card), card)
         return PSHELL(pid, mid1, t, mid2, twelveIt3,
                       mid3, tst, nsm,
                       z1, z2, mid4, comment=comment)
@@ -1215,16 +1281,18 @@ class PSHELL(ShellProperty):
 
         mids = [mid for mid in [self.mid1, self.mid2, self.mid3, self.mid4]
                 if mid is not None]
+        material_ids = self.material_ids
         assert len(mids) > 0
         if xref:
             assert isinstance(self.mid, Material), 'mid=%r' % self.mid
 
             for i, mid in enumerate(mids):
+                if mid == 0:
+                    continue
                 if i == 1: # mid2
                     if isinstance(mid, integer_types):
                         assert mid == -1, mid
                         continue
-
                 assert isinstance(mid, Material), 'mid=%r' % mid
                 assert mid.type in ['MAT1', 'MAT2', 'MAT4', 'MAT5', 'MAT8'], 'pid.type=%s mid.type=%s' % (self.type, mid.type)
                 if mid.type == 'MAT1':
@@ -1259,7 +1327,19 @@ class PSHELL(ShellProperty):
         return z
 
     def materials(self):
-        return [self.mid1, self.mid2, self.mid3, self.mid4]
+        materials = []
+        for i in range(1, 5):
+            name = 'mid%i_ref' % i
+            if hasattr(self, name):
+                mat = getattr(self, name)
+                materials.append(mat)
+            else:
+                materials.append(None)
+        return materials
+
+    @property
+    def material_ids(self):
+        return [self.Mid1(), self.Mid2(), self.Mid3(), self.Mid4()]
 
     #@property
     #def mid(self):
@@ -1323,6 +1403,14 @@ class PSHELL(ShellProperty):
         return mass_per_area
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by PSHELL pid=%s' % self.pid
         if self.mid1:
             self.mid1 = model.Material(self.mid1, msg)
@@ -1336,6 +1424,14 @@ class PSHELL(ShellProperty):
         if self.mid4:
             self.mid4 = model.Material(self.mid4, msg)
             self.mid4_ref = self.mid4
+        if self.t is not None:
+            z1 = abs(self.z1)
+            z2 = abs(self.z2)
+            t = self.t
+            if not ((-1.5*t <= z1 <= 1.5*t) or (-1.5*t <= z2 <= 1.5*t)):
+                msg = 'PSHELL pid=%s midsurface: z1=%s z2=%s t=%s not in range of -1.5t < zi < 1.5t' % (
+                    self.pid, self.z1, self.z2, t)
+                model.log.warning(msg)
 
     def uncross_reference(self):
         self.mid1 = self.Mid1()
@@ -1381,18 +1477,28 @@ class PSHELL(ShellProperty):
     def repr_fields(self):
         twelveIt3 = set_blank_if_default(self.twelveIt3, 1.0)
         tst = set_blank_if_default(self.tst, 0.833333)
+        tst2 = set_blank_if_default(self.tst, 0.83333)
+        if tst or tst2 is None:
+            tst = None
         nsm = set_blank_if_default(self.nsm, 0.0)
-
         if self.t is not None:
-            tOver2 = self.t / 2.
-            z1 = set_blank_if_default(self.z1, -tOver2)
-            z2 = set_blank_if_default(self.z2, tOver2)
+            t_over_2 = self.t / 2.
+            z1 = set_blank_if_default(self.z1, -t_over_2)
+            z2 = set_blank_if_default(self.z2, t_over_2)
         else:
             z1 = self.z1
             z2 = self.z2
 
-        list_fields = ['PSHELL', self.pid, self.Mid1(), self.t, self.Mid2(),
-                       twelveIt3, self.Mid3(), tst, nsm, z1, z2, self.Mid4()]
+        mid1 = self.Mid1()
+        mid2 = self.Mid2()
+        mid3 = self.Mid3()
+        mid4 = self.Mid4()
+        mid1 = None if mid1 == 0 else mid1
+        mid2 = None if mid2 == 0 else mid2
+        mid3 = None if mid3 == 0 else mid3
+        mid4 = None if mid4 == 0 else mid4
+        list_fields = ['PSHELL', self.pid, mid1, self.t, mid2,
+                       twelveIt3, mid3, tst, nsm, z1, z2, mid4]
         return list_fields
 
     def write_card(self, size=8, is_double=False):

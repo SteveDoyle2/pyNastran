@@ -3,14 +3,15 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import string_types
 
-from numpy import array
+import numpy as np
 from numpy.linalg import norm
 
 from pyNastran.utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import Element
-from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
-    integer_double_or_blank, double_or_blank, string_or_blank)
+from pyNastran.bdf.bdf_interface.assign_type import (
+    integer, integer_or_blank, integer_double_or_blank, double_or_blank,
+    integer_string_or_blank, string_or_blank)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 
@@ -121,11 +122,19 @@ class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
         return mass
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
         self.nodes = model.Nodes(self.nodes, msg=msg)
+        self.nodes_ref = self.nodes
         self.pid = model.Property(self.pid, msg=msg)
         #self.g0 = model.nodes[self.g0]
-        self.nodes_ref = self.nodes
         self.pid_ref = self.pid
 
     def uncross_reference(self):
@@ -173,11 +182,12 @@ class CBAROR(object):
         elif isinstance(field5, float):
             self.is_g0 = False
             self.g0 = None
-            self.x = array([field5,
-                            double_or_blank(card, 6, 'x2', 0.0),
-                            double_or_blank(card, 7, 'x3', 0.0)], dtype='float64')
+            self.x = np.array([field5,
+                               double_or_blank(card, 6, 'x2', 0.0),
+                               double_or_blank(card, 7, 'x3', 0.0)],
+                              dtype='float64')
         self.offt = string_or_blank(card, 8, 'offt', 'GGG')
-        assert len(card) <= 9, 'len(CBAROR card) = %i' % len(card)
+        assert len(card) <= 9, 'len(CBAROR card) = %i\ncard=%s' % (len(card), card)
 
 
 class CBAR(LineElement):
@@ -258,7 +268,10 @@ class CBAR(LineElement):
         self._validate_input()
 
     def _validate_input(self):
-        if not isinstance(self.offt, string_types):
+        if isinstance(self.offt, integer_types):
+            assert self.offt in [1, 2], 'invalid offt; offt=%i' % self.offt
+            raise NotImplementedError('invalid offt; offt=%i' % self.offt)
+        elif not isinstance(self.offt, string_types):
             raise SyntaxError('invalid offt expected a string of length 3 '
                               'offt=%r; Type=%s' % (self.offt, type(self.offt)))
 
@@ -273,28 +286,28 @@ class CBAR(LineElement):
         assert self.offt[2] in ['G', 'O', 'E'], msg
 
     @classmethod
-    def add_card(self, card, comment=''):
+    def add_card(cls, card, comment=''):
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', eid)
         ga = integer(card, 3, 'ga')
         gb = integer(card, 4, 'gb')
-        x, g0 = self._init_x_g0(card, eid)
+        x, g0 = cls._init_x_g0(card, eid)
 
         # doesn't exist in NX nastran
-        offt = string_or_blank(card, 8, 'offt', 'GGG')
-        #print('self.offt = %r' % (self.offt))
+        offt = integer_string_or_blank(card, 8, 'offt', 'GGG')
+        #print('cls.offt = %r' % (cls.offt))
 
         pa = integer_or_blank(card, 9, 'pa', 0)
         pb = integer_or_blank(card, 10, 'pb', 0)
 
-        wa = array([double_or_blank(card, 11, 'w1a', 0.0),
-                    double_or_blank(card, 12, 'w2a', 0.0),
-                    double_or_blank(card, 13, 'w3a', 0.0)], dtype='float64')
+        wa = np.array([double_or_blank(card, 11, 'w1a', 0.0),
+                       double_or_blank(card, 12, 'w2a', 0.0),
+                       double_or_blank(card, 13, 'w3a', 0.0)], dtype='float64')
 
-        wb = array([double_or_blank(card, 14, 'w1b', 0.0),
-                    double_or_blank(card, 15, 'w2b', 0.0),
-                    double_or_blank(card, 16, 'w3b', 0.0)], dtype='float64')
-        assert len(card) <= 17, 'len(CBAR card) = %i' % len(card)
+        wb = np.array([double_or_blank(card, 14, 'w1b', 0.0),
+                       double_or_blank(card, 15, 'w2b', 0.0),
+                       double_or_blank(card, 16, 'w3b', 0.0)], dtype='float64')
+        assert len(card) <= 17, 'len(CBAR card) = %i\ncard=%s' % (len(card), card)
         return CBAR(eid, pid, ga, gb, x, g0,
                     offt, pa, pb, wa, wb, comment=comment)
 
@@ -307,10 +320,10 @@ class CBAR(LineElement):
         main = data[0]
         flag = data[1][0]
         if flag in [0, 1]:
-            self.g0 = None
-            x = array([data[1][1],
-                       data[1][2],
-                       data[1][3]], dtype='float64')
+            g0 = None
+            x = np.array([data[1][1],
+                          data[1][2],
+                          data[1][3]], dtype='float64')
         else:
             g0 = data[1][1]
             x = None
@@ -324,8 +337,8 @@ class CBAR(LineElement):
         pa = main[4]
         pb = main[5]
 
-        wa = array([main[6], main[7], main[8]], dtype='float64')
-        wb = array([main[9], main[10], main[11]], dtype='float64')
+        wa = np.array([main[6], main[7], main[8]], dtype='float64')
+        wb = np.array([main[9], main[10], main[11]], dtype='float64')
         return CBAR(eid, pid, ga, gb, x, g0,
                     offt, pa, pb, wa, wb, comment=comment)
 
@@ -350,19 +363,22 @@ class CBAR(LineElement):
 
     def Mid(self):
         if isinstance(self.pid, integer_types):
-            raise RuntimeError('Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self)))
+            msg = 'Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self))
+            raise RuntimeError(msg)
         return self.pid_ref.Mid()
 
     def Area(self):
         if isinstance(self.pid, integer_types):
-            raise RuntimeError('Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self)))
+            msg = 'Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self))
+            raise RuntimeError(msg)
         A = self.pid_ref.Area()
         assert isinstance(A, float)
         return A
 
     def J(self):
         if isinstance(self.pid, integer_types):
-            raise RuntimeError('Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self)))
+            msg = 'Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self))
+            raise RuntimeError(msg)
         j = self.pid_ref.J()
         assert isinstance(j, float), 'J=%r for CBAR eid=%s pid=%s pidType=%s' % (j, self.eid, self.pid_ref.pid, self.pid_ref.type)
         return j
@@ -375,14 +391,16 @@ class CBAR(LineElement):
 
     def Nsm(self):
         if isinstance(self.pid, integer_types):
-            raise RuntimeError('Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self)))
+            msg = 'Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self))
+            raise RuntimeError(msg)
         nsm = self.pid_ref.Nsm()
         assert isinstance(nsm, float)
         return nsm
 
     def I1(self):
         if isinstance(self.pid, integer_types):
-            raise RuntimeError('Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self)))
+            msg = 'Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self))
+            raise RuntimeError(msg)
         return self.pid_ref.I1()
 
     def I2(self):
@@ -392,16 +410,16 @@ class CBAR(LineElement):
         return (self.ga_ref.get_position() + self.gb_ref.get_position()) / 2.
 
     @classmethod
-    def _init_x_g0(self, card, eid):
+    def _init_x_g0(cls, card, eid):
         field5 = integer_double_or_blank(card, 5, 'g0_x1', 0.0)
         if isinstance(field5, integer_types):
             g0 = field5
             x = None
         elif isinstance(field5, float):
             g0 = None
-            x = array([field5,
-                            double_or_blank(card, 6, 'x2', 0.0),
-                            double_or_blank(card, 7, 'x3', 0.0)], dtype='float64')
+            x = np.array([field5,
+                          double_or_blank(card, 6, 'x2', 0.0),
+                          double_or_blank(card, 7, 'x3', 0.0)], dtype='float64')
             if norm(x) == 0.0:
                 msg = 'G0 vector defining plane 1 is not defined.\n'
                 msg += 'G0 = %s\n' % g0
@@ -409,19 +427,29 @@ class CBAR(LineElement):
                 raise RuntimeError(msg)
         else:
             msg = ('field5 on %s (G0/X1) is the wrong type...id=%s field5=%s '
-                   'type=%s' % (self.type, eid, field5, type(field5)))
+                   'type=%s' % (cls.type, eid, field5, type(field5)))
             raise RuntimeError(msg)
         return x, g0
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         #if self.g0:
         #    self.x = nodes[self.g0].get_position() - nodes[self.ga].get_position()
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
         self.ga = model.Node(self.ga, msg=msg)
-        self.gb = model.Node(self.gb, msg=msg)
-        self.pid = model.Property(self.pid, msg=msg)
         self.ga_ref = self.ga
+        self.gb = model.Node(self.gb, msg=msg)
         self.gb_ref = self.gb
+        self.nodes = model.Nodes([self.ga.nid, self.gb.nid], msg=msg)
+        self.nodes_ref = self.nodes
+        self.pid = model.Property(self.pid, msg=msg)
         self.pid_ref = self.pid
         if model.is_nx:
             assert self.offt == 'GGG', 'NX only support offt=GGG; offt=%r' % self.offt
@@ -445,9 +473,11 @@ class CBAR(LineElement):
             return self.gb_ref.nid
 
     def getX_G0_defaults(self):
-        if self.g0:
+        if self.g0 is not None:
             return (self.g0, None, None)
         else:
+            #print('x =', self.x)
+            #print('g0 =', self.g0)
             #x1 = set_blank_if_default(self.x[0], 0.0)
             #x2 = set_blank_if_default(self.x[1], 0.0)
             #x3 = set_blank_if_default(self.x[2], 0.0)
@@ -517,8 +547,12 @@ class CBAR(LineElement):
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)
 
+    def write_card_16(self, is_double=False):
+        card = self.repr_fields()
+        return self.comment + print_card_16(card)
 
-class CBEAM3(CBAR):
+
+class CBEAM3(LineElement):  # was CBAR
     """
     Defines a three-node beam element
     """
@@ -543,52 +577,55 @@ class CBEAM3(CBAR):
         self.s = s
 
     @classmethod
-    def add_card(self, card, comment=''):
+    def add_card(cls, card, comment=''):
         eid = integer(card, 1, 'eid')
-        pid = integer_or_blank(card, 2, 'pid', self.eid)
+        pid = integer_or_blank(card, 2, 'pid', eid)
         ga = integer(card, 3, 'ga')
         gb = integer(card, 4, 'gb')
         gc = integer(card, 5, 'gc')
 
-        self._init_x_g0(card, eid)
+        x, g0 = cls._init_x_g0(card, eid)
 
-        wa = array([double_or_blank(card, 9, 'w1a', 0.0),
-                    double_or_blank(card, 10, 'w2a', 0.0),
-                    double_or_blank(card, 11, 'w3a', 0.0)], dtype='float64')
+        wa = np.array([double_or_blank(card, 9, 'w1a', 0.0),
+                       double_or_blank(card, 10, 'w2a', 0.0),
+                       double_or_blank(card, 11, 'w3a', 0.0)], dtype='float64')
 
-        wb = array([double_or_blank(card, 12, 'w1b', 0.0),
-                    double_or_blank(card, 13, 'w2b', 0.0),
-                    double_or_blank(card, 14, 'w3b', 0.0)], dtype='float64')
+        wb = np.array([double_or_blank(card, 12, 'w1b', 0.0),
+                       double_or_blank(card, 13, 'w2b', 0.0),
+                       double_or_blank(card, 14, 'w3b', 0.0)], dtype='float64')
 
-        wc = array([double_or_blank(card, 15, 'w1c', 0.0),
-                    double_or_blank(card, 16, 'w2c', 0.0),
-                    double_or_blank(card, 17, 'w3c', 0.0)], dtype='float64')
+        wc = np.array([double_or_blank(card, 15, 'w1c', 0.0),
+                       double_or_blank(card, 16, 'w2c', 0.0),
+                       double_or_blank(card, 17, 'w3c', 0.0)], dtype='float64')
 
-        tw = array([double_or_blank(card, 18, 0., 'twa'),
-                    double_or_blank(card, 19, 0., 'twb'),
-                    double_or_blank(card, 20, 0., 'twc')], dtype='float64')
+        tw = np.array([double_or_blank(card, 18, 0., 'twa'),
+                       double_or_blank(card, 19, 0., 'twb'),
+                       double_or_blank(card, 20, 0., 'twc')], dtype='float64')
 
-        s = array([integer_or_blank(card, 21, 'sa'),
-                   integer_or_blank(card, 22, 'sb'),
-                   integer_or_blank(card, 23, 'sc')], dtype='float64')
-        assert len(card) <= 24, 'len(CBEAM3 card) = %i' % len(card)
+        s = np.array([integer_or_blank(card, 21, 'sa'),
+                      integer_or_blank(card, 22, 'sb'),
+                      integer_or_blank(card, 23, 'sc')], dtype='float64')
+        assert len(card) <= 24, 'len(CBEAM3 card) = %i\ncard=%s' % (len(card), card)
         return CBEAM3(eid, pid, ga, gb, gc, x, g0,
                       wa, wb, wc, tw, s, comment='')
 
-    @classmethod
-    def add_card(cls, data, comment=''):
-        raise NotImplementedError(data)
-
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
         self.ga = model.Node(self.ga, msg=msg)
-        self.gb = model.Node(self.gb, msg=msg)
-        self.gc = model.Node(self.gc, msg=msg)
-        self.pid = model.Property(self.pid, msg=msg)
-
         self.ga_ref = self.ga
+        self.gb = model.Node(self.gb, msg=msg)
         self.gb_ref = self.gb
+        self.gc = model.Node(self.gc, msg=msg)
         self.gc_ref = self.gc
+        self.pid = model.Property(self.pid, msg=msg)
         self.pid_ref = self.pid
 
     def uncross_reference(self):
@@ -600,10 +637,50 @@ class CBEAM3(CBAR):
 
     def Length(self):
         """
-        .. math:: L = g_b - g_a
+        # TODO: consider w1a and w1b in the length formulation
+        # TODO: add gc to length formula
         """
         L = norm(self.gb_ref.get_position() - self.ga_ref.get_position())
+        assert isinstance(L, float)
         return L
+
+    def Area(self):
+        if isinstance(self.pid, integer_types):
+            msg = 'Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self))
+            raise RuntimeError(msg)
+        A = self.pid_ref.Area()
+        assert isinstance(A, float)
+        return A
+
+    def Nsm(self):
+        if isinstance(self.pid, integer_types):
+            msg = 'Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self))
+            raise RuntimeError(msg)
+        nsm = self.pid_ref.Nsm()
+        assert isinstance(nsm, float)
+        return nsm
+
+    def Ga(self):
+        if isinstance(self.ga, integer_types):
+            return self.ga
+        else:
+            return self.ga_ref.nid
+
+    def Gb(self):
+        if isinstance(self.gb, integer_types):
+            return self.gb
+        else:
+            return self.gb_ref.nid
+
+    def Gc(self):
+        if isinstance(self.gc, integer_types):
+            return self.gc
+        else:
+            return self.gc_ref.nid
+
+    @property
+    def node_ids(self):
+        return [self.Ga(), self.Gb(), self.Gc()]
 
     def raw_fields(self):
         (x1, x2, x3) = self.getX_G0_defaults()
@@ -677,6 +754,7 @@ class CBEND(LineElement):
         self.x = x
         self.geom = geom
         assert self.geom in [1, 2, 3, 4], 'geom is invalid geom=%r' % self.geom
+        self._validate_input()
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -690,9 +768,9 @@ class CBEND(LineElement):
             x = None
         elif isinstance(x1_g0, float):
             g0 = None
-            x = array([double_or_blank(card, 5, 'x1', 0.0),
-                       double_or_blank(card, 6, 'x2', 0.0),
-                       double_or_blank(card, 7, 'x3', 0.0)], dtype='float64')
+            x = np.array([double_or_blank(card, 5, 'x1', 0.0),
+                          double_or_blank(card, 6, 'x2', 0.0),
+                          double_or_blank(card, 7, 'x3', 0.0)], dtype='float64')
             if norm(x) == 0.0:
                 msg = 'G0 vector defining plane 1 is not defined.\n'
                 msg += 'G0 = %s\n' % g0
@@ -702,14 +780,54 @@ class CBEND(LineElement):
             raise ValueError('invalid x1Go=%r on CBEND' % x1_g0)
         geom = integer(card, 8, 'geom')
 
-        assert len(card) == 9, 'len(CBEND card) = %i' % len(card)
+        assert len(card) == 9, 'len(CBEND card) = %i\ncard=%s' % (len(card), card)
         return CBEND(eid, pid, ga, gb, g0, x, geom, comment=comment)
-        self._validate_input()
 
     #def add_op2_data(self, data, comment=''):
         #if comment:
             #self._comment = comment
         #raise NotImplementedError(data)
+
+    def Length(self):
+        # TODO: consider w1a and w1b in the length formulation
+        L = norm(self.gb_ref.get_position() - self.ga_ref.get_position())
+        assert isinstance(L, float)
+        return L
+
+        #prop = self.pid_ref
+        #bend_radius = prop.rb
+        #theta_bend = prop.thetab
+        #length_oa = None
+        if self.geom == 1:
+            #The center of curvature lies on the line AO
+            #(or its extension) or vector .
+            pass
+        elif self.geom == 2:
+            # The tangent of centroid arc at end A is
+            # parallel to line AO or vector . Point O (or
+            # vector) and the arc must be on the
+            # same side of the chord .
+            pass
+        elif self.geom == 3:
+            # The bend radius (RB) is specified on the
+            # PBEND entry: Points A, B, and O (or
+            # vector ) define a plane parallel or
+            # coincident with the plane of the element
+            # arc. Point O (or vector ) lies on the
+            # opposite side of line AB from the center of
+            # the curvature.
+            pass
+        elif self.geom == 4:
+            # THETAB is specified on the PBEND entry.
+            # Points A, B, and O (or vector ) define a
+            # plane parallel or coincident with the plane
+            # of the element arc. Point O (or vector )
+            # lies on the opposite side of line AB from the
+            # center of curvature.
+            pass
+        else:
+            raise RuntimeError('geom=%r is not supported on the CBEND' % geom)
+        return L
 
     def _validate_input(self):
         if self.g0 in [self.ga, self.gb]:
@@ -738,7 +856,8 @@ class CBEND(LineElement):
 
     def Area(self):
         if isinstance(self.pid, integer_types):
-            raise RuntimeError('Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self)))
+            msg = 'Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self))
+            raise RuntimeError(msg)
         return self.pid_ref.Area()
 
     def _verify(self, xref):
@@ -754,19 +873,31 @@ class CBEND(LineElement):
         return self.raw_fields()
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
-        self.nodes = model.Nodes(self.nodes, msg=msg)
+        self.ga = model.Node(self.ga, msg=msg)
+        self.gb = model.Node(self.gb, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
         #self.g0 = model.nodes[self.g0]
-        self.nodes_ref = self.nodes
+        self.ga_ref = self.ga
+        self.gb_ref = self.gb
         self.pid_ref = self.pid
 
     def uncross_reference(self):
-        self.nodes = self.node_ids
+        node_ids = self.node_ids
+        self.ga = node_ids[0]
+        self.gb = node_ids[1]
         self.pid = self.Pid()
-        del self.nodes_ref, self.pid_ref
+        del self.ga_ref, self.gb_ref, self.pid_ref
 
-    def write_card(self, size, is_double):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)

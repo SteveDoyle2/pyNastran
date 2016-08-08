@@ -16,11 +16,16 @@ Given a version number MAJOR.MINOR.PATCH, increment the:
   - MINOR version when you add functionality in a backwards-compatible manner, and
   - PATCH version when you make backwards-compatible bug fixes.
 
-Additional labels for pre-release and build metadata are available as extensions to the MAJOR.MINOR.PATCH format.
+Additional labels for pre-release and build metadata are available as
+extensions to the MAJOR.MINOR.PATCH format.
 #===================================================================
 Maintenance
 ===========
-Code maintenance is a pain.  pyNastran is not well funded and as such will not maintain versions prior to the previous PATCH release.  If in 20 years, you want to run pyNastran, go install the old version.  It's a big project and as such, there are warts (kinda like Nastran), so rather than maintaining bugs, we'll fix them slowly.
+Code maintenance is a pain.  pyNastran is not well funded and as such
+will not maintain versions prior to the previous PATCH release.  If in
+20 years, you want to run pyNastran, go install the old version.  It's
+a big project and as such, there are warts (kinda like Nastran), so
+rather than maintaining bugs, we'll fix them slowly.
 
 In the case of a MAJOR release, hopefully, it won't be that different.
 
@@ -54,9 +59,11 @@ Some approaches for Area() include:
    1. change self.area to self._area; change Area() to area()
      * I dislike this as we're changing two things
    2. change Area() to get_area()
-     * this makes it obvious the function doesn't take an argument  (it's a getter, not a setter)
+     * this makes it obvious the function doesn't take an argument
+       (it's a getter, not a setter)
+
 I like Option #2.  It follows PEP-8 and is clear.
-	 
+
 Some approaches for Ixx() include:
    - change self.ixx to self._ixx (if _ixx exists); change Ixx() to get_ixx()
      * I dislike this as we're potentially changing two things
@@ -64,7 +71,9 @@ Some approaches for Ixx() include:
    - change Ixx() to get_Ixx()
      * it doesn't follow PEP-8
 	 * it's obvious the function doesn't take an argument (it's a getter, not a setter)
-I like Option #2.  It doesn't follow PEP-8 exactly, but is more clear.  PEP-8 has a "rules are made to be broken" clause, so why not use it?
+
+I like Option #2.  It doesn't follow PEP-8 exactly, but is more clear.
+PEP-8 has a "rules are made to be broken" clause, so why not use it?
 
 #===================================================================
 Frequent Code Errors
@@ -75,17 +84,20 @@ Options:
  2. Develop new code in the trunk and allow the branch to fail
       - We've flipped the direction, but accomplished nothing vs Option 1
  3. Allow for errors to enter into the trunk and just fix them quickly
-	  - A machine that runs automated testing would help to identify errors and keep it in the working state.
+	  - A machine that runs automated testing would help to identify
+	    errors and keep it in the working state.
       - Preferred as it:
 	      * Minimizes branching
           * Encourages new tests
 
-NOTE:  Code in a dev folder (e.g. dev_vectorized) is allowed to fail as it's obviously dev code
+NOTE:  Code in a dev folder (e.g. dev_vectorized) is allowed to fail as it's dev code
 
 #===================================================================
 Automated Testing
 =================
-One of the biggest issues with pyNastran is that there is no automated testing.  The code is developed on machines where tests are run intermittently.  Thus, it regularly goes from a working state to a non-working state.
+One of the biggest issues with pyNastran is that there is no automated testing.  
+The code is developed on machines where tests are run intermittently.  
+Thus, it regularly goes from a working state to a non-working state.
 
 There are two basic classes of tests:
   - unit tests (they should all pass unless they're known failures)
@@ -93,11 +105,17 @@ There are two basic classes of tests:
 
 Unit Tests
 ==========
-Unit tests are run semi-regularly, but often uncover bugs when they are run.  A system like Buildbot would help this.  Improved coverage would obviously reduce bugs, but better test problems would need to be created.
+Unit tests are run semi-regularly, but often uncover bugs when they are run.  
+A system like Buildbot would help this.  
+Improved coverage would obviously reduce bugs, but better test problems 
+would need to be created.
 
 Buildbot Package Requirements
 =============================
-Buildbot doesn't exist for pyNastran, but if it did, it should test against some specified versions of Python/numpy/scipy/etc.  pyNastran tries to be liberal with versioning, which is in conflict with the specified version requirement.  Thus, two setup.py scripts could be created.
+Buildbot doesn't exist for pyNastran, but if it did, it should test
+against some specified versions of Python/numpy/scipy/etc.  pyNastran
+tries to be liberal with versioning, which is in conflict with the
+specified version requirement.  Thus, two setup.py scripts could be created.
 
 For example:
   - setup.py                    (liberal versioning)
@@ -106,16 +124,23 @@ For example:
 
 Mass Testing
 ============
-Mass testing is also useful in that it tests many cards in a wide variety of input styles.  Here, a simple check of what tests passed and which tests failed could be stored.
+Mass testing is also useful in that it tests many cards in a wide
+variety of input styles.  Here, a simple check of what tests passed
+and which tests failed could be stored.
 
-If any tests go from passing to failing the code should fail and print those test files.  The resolution should either be to say the test was wrong and fix it or say the test was correct and the model is bad (and is thus removed from the passing test list).
+If any tests go from passing to failing the code should fail and print
+those test files.  The resolution should either be to say the test was
+wrong and fix it or say the test was correct and the model is bad (and
+is thus removed from the passing test list).
 
-If a test goes from failing to passing, the model should be added to the passing list.
+If a test goes from failing to passing, the model should be added to
+the passing list.
 
 #===================================================================
 Documentation
 =============
-Classes/functions should be documented with proper inputs/outputs/types/errors/gotchas.  Some issues include:
+Classes/functions should be documented with proper 
+inputs/outputs/types/errors/gotchas.  Some issues include:
   1.  There are many duplicate functions
   2.  API changes
   3.  Fast & Loose
@@ -124,21 +149,41 @@ Classes/functions should be documented with proper inputs/outputs/types/errors/g
 
 Documentation Style
 ===================
-Sphinx documentation will be used (as opposed to Doxygen).  It is much more standard across Python.
+Sphinx documentation will be used (as opposed to Doxygen).  
+It is much more standard across Python.
 
-All new functions/methods must be appropriately documented (per the Duplicate Functions section).  All Sphinx warnings relating to incorrect parameter names/missing variables (due to half implemented documentation) are errors.  In other words, it's not documented at all (only applying to existing functions) or it's documented correctly.
+All new functions/methods must be appropriately documented 
+(per the Duplicate Functions section).  All Sphinx warnings relating
+to incorrect parameter names/missing variables (due to half implemented
+documentation) are errors.  In other words, it's not documented at all
+(only applying to existing functions) or it's documented correctly.
 
-BDF cards (e.g. GRID, CQUAD4, PSHELL) should have a QRG-style table at the class level, while the __init__ can effectively be empty (per Duplicate Functions) because it has the following signature:
+BDF cards (e.g. GRID, CQUAD4, PSHELL) should have a QRG-style table at
+the class level, while the __init__ can effectively be empty
+(per Duplicate Functions) because it has the following signature:
    __init__(self, card=None, data=None)
 
 Duplicate Functions
 ===================
 Every BDF card object has a write_bdf, __str__, rawFields, etc. method
-that is overwritten from the parent BaseCard.  Similarly, a CONROD, CROD, CBAR, and CBEAM card each have a Mass method.  It seems like a lot of extra work to document how each Mass method works when there is very similar code in each location (e.g. a CONROD gets the area from itself, while a CROD gets area from a PROD, but the formula for mass is the same).
+that is overwritten from the parent BaseCard.  Similarly, a CONROD, 
+CROD, CBAR, and CBEAM card each have a Mass method.  It seems like a lot
+of extra work to document how each Mass method works when there is very
+similar code in each location (e.g. a CONROD gets the area from itself,
+while a CROD gets area from a PROD, but the formula for mass is the same).
 
-Thus is proposed that "obvious" functions (e.g. Length/Mass) are documented at the earliest common ancestor of an object (e.g. RodElement), which is then overwritten by a CONROD/CROD object.  While the implementation is different, the Mass is still mass=length*(area*rho+nsm).  For an element like CTRIA3/CQUAD4 also has a Mass, but because it is computed differently (area*mass_per_area+nsm), where mass_per_area is different for a PSHELL or PCOMP, it must have a different explanation.
+Thus is proposed that "obvious" functions (e.g. Length/Mass) are 
+documented at the earliest common ancestor of an object 
+(e.g. RodElement), which is then overwritten by a CONROD/CROD object.
+While the implementation is different, the Mass is still 
+mass=length*(area*rho+nsm).  For an element like CTRIA3/CQUAD4 also has
+a Mass, but because it is computed differently (area*mass_per_area+nsm),
+where mass_per_area is different for a PSHELL or PCOMP, it must have a
+different explanation.
 
-For an "obvious" function like write_bdf, __str__, or rawFields that exist for every card are defined at the BaseCard level and not defined on the 200+ card objects.
+For an "obvious" function like write_bdf, __str__, or rawFields that
+exist for every card are defined at the BaseCard level and not defined
+on the 200+ card objects.
 
 API Changes
 ===========
@@ -148,13 +193,24 @@ For a class function to be deprecated from the BDF class:
         - when it will be deprecated as part of the deprecation warning/documentation
 		- how to update the call signature
 		- does not contain any "extra" code
-		- call the new method or in the case of code removal has the entire function
-  2. Wait until the specified version number and delete the deprecated code class as part of bumping versions.
-NOTE:  If a function in v1.1 is to be deprecated=v1.2 and removed=v1.3 and we double bump (due to a bug), the version numbers for may be changed to deprecated=v1.3 and removed=1.4.  A double bump is a defined as:
+		- call the new method or in the case of code removal
+		  has the entire function
+  2. Wait until the specified version number and delete the deprecated
+     code class as part of bumping versions.
+NOTE:  If a function in v1.1 is to be deprecated=v1.2 and removed=v1.3
+       and we double bump (due to a bug), the version numbers for may
+       be changed to deprecated=v1.3 and removed=1.4.  A double bump
+       is a defined as:
 
-Q: What do I do if I accidentally release a backwards incompatible change as a minor version?
+Q: What do I do if I accidentally release a backwards incompatible
+   change as a minor version?
 
-A: As soon as you realize that you've broken the Semantic Versioning spec, fix the problem and release a new minor version that corrects the problem and restores backwards compatibility. Even under this circumstance, it is unacceptable to modify versioned releases. If it's appropriate, document the offending version and inform your users of the problem so that they are aware of the offending version.
+A: As soon as you realize that you've broken the Semantic Versioning
+   spec, fix the problem and release a new minor version that corrects
+   the problem and restores backwards compatibility. Even under this
+   circumstance, it is unacceptable to modify versioned releases.  If
+   it's appropriate, document the offending version and inform your
+   users of the problem so that they are aware of the offending version.
 
 
 For a new required parameter/change in functionality:
@@ -163,14 +219,24 @@ For a new required parameter/change in functionality:
 For a new optional parameter that doesn't change the function's result if ignored:
   1. document the parameter
 
-For improved support of an optional parameter (e.g. moment center as a int (GRID ID) or (NEW) triple list representing a coordinate (e.g. [1., 2., 3])), the base functionality didn't change, so:
+For improved support of an optional parameter (e.g. moment center as
+a int (GRID ID) or (NEW) triple list representing a coordinate
+(e.g. [1., 2., 3])), the base functionality didn't change, so:
   1. document the parameter
 
-NOTE:  For previously fully broken functionality, no deprecation is required.  An example of this is a function that didn't have all the arguments passed in.
+NOTE:  For previously fully broken functionality, no deprecation is
+       required.  An example of this is a function that didn't have all
+       the arguments passed in.
 
 Fast & Loose
 ============
-It's a lot of work to document every function.  An current example of bdf/dev_vectorized.  It is a (near) total reimplementation of the BDF class.  Getting into the weeds a bit, the GRID card has a "get_position_by_node_id" and "get_position_by_node_index" method, which function the same as the CQUAD4 method "get_node_ids_by_element_id" or "get_node_ids_by_element_index".  Methods like these methods are fundamental to the vectorized code and are repeated frequently repeated.  
+It's a lot of work to document every function.  An current example of 
+bdf/dev_vectorized.  It is a (near) total reimplementation of the BDF 
+class.  Getting into the weeds a bit, the GRID card has a 
+"get_position_by_node_id" and "get_position_by_node_index" method,
+which function the same as the CQUAD4 method "get_node_ids_by_element_id"
+or "get_node_ids_by_element_index".  Methods like these methods are
+fundamental to the vectorized code and are repeated frequently repeated.
 
 Thus, for a class method with a call signature like:
   - get_position_by_node_index(self, node_id=None)
@@ -184,19 +250,30 @@ For a class method with a call signature like:
   - get_mass_by_element_index(self, xyz_cid0=None, i=None)
 Only, the get_mass_by_element_id method will be documented.
 
-NOTE:  The difference is there are additional attributes (and probably falls into the #Duplicate Functions category previously discussed.
+NOTE:  The difference is there are additional attributes (and probably
+falls into the #Duplicate Functions category previously discussed.
 
-Still, in the case of something like bdf/dev_vectorized, the documentation requirements are so excessive, it nay just be "grandfathered" in.  For something like bdf/dev_io or bdf/dev_unicode or op2/dev_v2, the API changes were/are small enough that documentation isn't a big deal.
+Still, in the case of something like bdf/dev_vectorized, the 
+documentation requirements are so excessive, it nay just be 
+"grandfathered" in.  For something like bdf/dev_io or bdf/dev_unicode
+or op2/dev_v2, the API changes were/are small enough that documentation
+isn't a big deal.
 
-In the case of bdf/dev_vectorized, if it becomes bdf/vectorized, we're bump the major version.  In the case of bdf/dev_io or bdf/dev_unicode, the changes are theoretically small enough that we can just bump the minor versions.
+In the case of bdf/dev_vectorized, if it becomes bdf/vectorized, we're
+bump the major version.  In the case of bdf/dev_io or bdf/dev_unicode,
+the changes are theoretically small enough that we can just bump the 
+minor versions.
 
 Releasable vs. Non-Releasable
 =============================
-Code that exists in converters and GUI aren't really part of the main code.  These may just be dropped during release and as such shouldn't be subject to the same constraints.
+Code that exists in converters and GUI aren't really part of the main 
+code.  These may just be dropped during release and as such shouldn't 
+be subject to the same constraints.
 
 The Code is Big
 ===============
-To encourage the release process, it may just be a good idea to grandfather everything in.
+To encourage the release process, it may just be a good idea to 
+grandfather everything in.
 
 #===================================================================
 Release Process
@@ -216,7 +293,8 @@ Less obvious pieces:
 
 Tickets
 =======
-Can we parse the subversion log to get the list of closed tickets to put in the release notes?
+Can we parse the subversion log to get the list of closed tickets to 
+put in the release notes?
 
 Release Notes
 =============
@@ -227,20 +305,17 @@ The following script would be useful:
 
 User Manual
 ===========
-This should probably just be the Sphinx documentation.  Numpy doesn't have an official User's Manual, so why should pyNastran?
+This should probably just be the Sphinx documentation.  Numpy doesn't 
+have an official User's Manual, so why should pyNastran?
 
 Theory
 ======
-All relevant theory should be discussed in the area that implemnts it.  Things like the mass/stiffness matrix should be documented.  That the finite element method is a discritized model should not be.
+All relevant theory should be discussed in the area that implemnts it.
+Things like the mass/stiffness matrix should be documented.  That the 
+finite element method is a discritized model should not be.
 
 iPython Examples
 ================
-iPython is a neat way to demo the code.  Care should be taken to make sure these work for any user and are reasonably self-documenting.
-
-
-
-
-
-
-
+iPython is a neat way to demo the code.  Care should be taken to make 
+sure these work for any user and are reasonably self-documenting.
 

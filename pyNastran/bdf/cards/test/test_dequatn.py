@@ -121,10 +121,9 @@ class TestDEQATN(unittest.TestCase):
         model.add_card(card, 'DEQATN', is_list=False)
         model.cross_reference()
 
-        f = open('junk.bdf', 'wb')
-        model.write_bdf(f, close=False)
-        #s.getvalue()
-        f.close()
+        with open('junk.bdf', 'wb') as f:
+            model.write_bdf(f, close=False)
+            #s.getvalue()
         os.remove('junk.bdf')
 
     def test_deqatn_6(self):
@@ -191,7 +190,7 @@ class TestDEQATN(unittest.TestCase):
         s.getvalue()
         s.close()
 
-    def test_deqatn_8(self):
+    def test_deqatn_9(self):
         """
         per nast/tpl/ptdmi1.dat
         """
@@ -217,7 +216,7 @@ class TestDEQATN(unittest.TestCase):
         s.getvalue()
         s.close()
 
-    def test_deqatn_8(self):
+    def test_deqatn_10(self):
         """
         per nast/tpl/ptdmi1.dat
         """
@@ -243,7 +242,7 @@ class TestDEQATN(unittest.TestCase):
         out = eq.func(1.0, 2.0)
         print(out)
 
-    def test_deqatn_9(self):
+    def test_deqatn_11(self):
         """
         per nast/tpl/ptdmi1.dat
         """

@@ -14,8 +14,9 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from pyNastran.utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import Element
-from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
-    integer_double_or_blank, double_or_blank, string_or_blank)
+from pyNastran.bdf.bdf_interface.assign_type import (
+    integer, integer_or_blank, integer_double_or_blank, double_or_blank,
+    string_or_blank)
 from pyNastran.bdf.field_writer_8 import print_card_8
 
 
@@ -122,12 +123,13 @@ class CBUSH(BushElement):
         si = [double_or_blank(card, 11, 's1'),
               double_or_blank(card, 12, 's2'),
               double_or_blank(card, 13, 's3')]
-        assert len(card) <= 14, 'len(CBUSH card) = %i' % len(card)
+        assert len(card) <= 14, 'len(CBUSH card) = %i\ncard=%s' % (len(card), card)
         return CBUSH(eid, pid, ga, gb, x, g0, cid, s, ocid, si, comment=comment)
 
-    def add_op2_data(cls, data, comment=''):
-        eid = data[0]
-        raise NotImplementedError('CBUSH data...')
+    @classmethod
+    def add_op2_data(cls, data, f, comment=''):
+        ((eid, pid, ga, gb, cid, s, ocid, si), x, g0) = data
+        return CBUSH(eid, pid, ga, gb, x, g0, cid, s, ocid, si, comment=comment)
 
     def Eid(self):
         return self.eid
@@ -182,6 +184,14 @@ class CBUSH(BushElement):
         return self.cid_ref.cid
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by CBUSH eid=%s' % self.eid
         self.ga = model.Node(self.ga, msg=msg)
         self.ga_ref = self.ga
@@ -246,24 +256,33 @@ class CBUSH1D(BushElement):
         self.cid = cid
 
     @classmethod
-    def add_card(cls, comment=''):
+    def add_card(cls, card, comment=''):
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', eid)
         ga = integer(card, 3, 'ga')
         gb = integer_or_blank(card, 4, 'gb')
         cid = integer_or_blank(card, 5, 'cid')
-        assert len(card) <= 6, 'len(CBUSH1D card) = %i' % len(card)
+        assert len(card) <= 6, 'len(CBUSH1D card) = %i\ncard=%s' % (len(card), card)
         return CBUSH1D(eid, pid, ga, gb, cid, comment=comment)
 
-    def add_op2_data(cls, data, comment=''):
-        eid = data[0]
-        pid = data[1]
-        ga = data[2]
-        gb = data[3]
-        raise NotImplementedError(data)
-        return CBUSH1D(eid, pid, ga, gb, cid, comment=comment)
+    #@classmethod
+    #def add_op2_data(cls, data, comment=''):
+        #eid = data[0]
+        #pid = data[1]
+        #ga = data[2]
+        #gb = data[3]
+        #raise NotImplementedError(data)
+        #return CBUSH1D(eid, pid, ga, gb, cid, comment=comment)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by CBUSH1D eid=%s' % self.eid
         self.ga = model.Node(self.ga, msg=msg)
         self.ga_ref = self.ga
@@ -356,7 +375,7 @@ class CBUSH2D(BushElement):
             raise RuntimeError(msg)
 
     @classmethod
-    def add_card(cls, comment=''):
+    def add_card(cls, card, comment=''):
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid')
         ga = integer(card, 3, 'ga')
@@ -364,17 +383,17 @@ class CBUSH2D(BushElement):
         cid = integer_or_blank(card, 5, 'cid', 0)
         plane = string_or_blank(card, 6, 'plane', 'XY')
         sptid = integer_or_blank(card, 7, 'sptid')
-        assert len(card) <= 8, 'len(CBUSH2D card) = %i' % len(card)
+        assert len(card) <= 8, 'len(CBUSH2D card) = %i\ncard=%s' % (len(card), card)
         return CBUSH2D(eid, pid, ga, gb, cid, plane, sptid, comment=comment)
 
-    @classmethod
-    def add_card(cls, data, comment=''):
-        eid = data[0]
-        pid = data[1]
-        ga = data[2]
-        gb = data[3]
-        raise NotImplementedError(data)
-        return CBUSH2D(eid, pid, ga, gb, cid, plane, sptid, comment=comment)
+    #@classmethod
+    #def add_op2_data(cls, data, comment=''):
+        #eid = data[0]
+        #pid = data[1]
+        #ga = data[2]
+        #gb = data[3]
+        #raise NotImplementedError(data)
+        #return CBUSH2D(eid, pid, ga, gb, cid, plane, sptid, comment=comment)
 
     def _verify(self, xref=False):
         ga = self.Ga()
@@ -411,13 +430,20 @@ class CBUSH2D(BushElement):
         return [self.Ga(), self.Gb()]
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by CBUSH2D eid=%s' % self.eid
         self.ga = model.Node(self.ga, msg=msg)
-        self.gb = model.Node(self.gb, msg=msg)
-        self.pid = model.Property(self.pid)
-
         self.ga_ref = self.ga
+        self.gb = model.Node(self.gb, msg=msg)
         self.gb_ref = self.gb
+        self.pid = model.Property(self.pid)
         self.pid_ref = self.pid
         if self.cid is not None:
             self.cid = model.Coord(self.cid, msg=msg)

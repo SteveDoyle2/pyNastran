@@ -3,7 +3,10 @@ defines the GridPointWeight class
 """
 from __future__ import print_function
 from six.moves import range
+from six import StringIO
+
 from numpy import zeros
+
 from pyNastran.utils import object_attributes, object_methods
 
 
@@ -96,6 +99,61 @@ class GridPointWeight(object):
         self.IS = IS
         self.IQ = IQ
         self.Q = Q
+
+    def get_stats(self, short=True):
+        if self.reference_point is None:
+            return ''
+        if short:
+            msg = ('GridPointWeight: ref_point=%s mass=%g; '
+                   '[reference_point, M0, S, mass, cg, IS, IQ, Q]\n' % (
+                       self.reference_point, self.mass.max()))
+        else:
+            msg = (
+                'GridPointWeight:'
+                '  reference_point=%s\n'
+                '  mass=[%10g %10g %10g]\n'
+                '  cg  =[%10g %10g %10g]\n'
+                '       [%10g %10g %10g]\n'
+                '       [%10g %10g %10g]\n\n'
+
+                '  IS  =[%10g %10g %10g]\n'
+                '       [%10g %10g %10g]\n'
+                '       [%10g %10g %10g]\n\n'
+
+                '  IQ  =[%10g %10s %10s]\n'
+                '       [%10s %10g %10s]\n'
+                '       [%10s %10s %10g]\n\n'
+
+                '  Q  = [%10g %10g %10g]\n'
+                '       [%10g %10g %10g]\n'
+                '       [%10g %10g %10g]\n' % (
+                    self.reference_point, self.mass[0], self.mass[1], self.mass[2],
+                    self.cg[0, 0], self.cg[0, 1], self.cg[0, 2],
+                    self.cg[1, 0], self.cg[1, 1], self.cg[1, 2],
+                    self.cg[2, 0], self.cg[2, 1], self.cg[2, 2],
+
+                    self.IS[0, 0], self.IS[0, 1], self.IS[0, 2],
+                    self.IS[1, 0], self.IS[1, 1], self.IS[1, 2],
+                    self.IS[2, 0], self.IS[2, 1], self.IS[2, 2],
+
+                    self.IQ[0], '', '',
+                    '', self.IQ[1], '',
+                    '', '', self.IQ[2],
+
+                    self.Q[0, 0], self.Q[0, 1], self.Q[0, 2],
+                    self.Q[1, 0], self.Q[1, 1], self.Q[1, 2],
+                    self.Q[2, 0], self.Q[2, 1], self.Q[2, 2],
+                    )
+            )
+        return msg
+
+    def __repr__(self):
+        f = StringIO()
+        page_stamp = 'PAGE %i'
+        page_num = 1
+        self.write_f06(f, page_stamp, page_num)
+        msg = f.getvalue()
+        return msg
 
     def read_grid_point_weight(self, lines):
         """
@@ -267,3 +325,4 @@ class GridPointWeight(object):
         f.write('\n'.join(msg))
         #print('\n'.join(msg))
         return page_num + 1
+

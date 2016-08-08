@@ -14,6 +14,7 @@ ECHOOFF (done
 GRID    (done)
 GRDSET  (done)
 SPOINT  (done)
+MONPNT1 (done)
 
 ----Coordinates----:
 CORD1R  (done)
@@ -49,6 +50,7 @@ PBMSECT  # arbitrary beam section
 
 # beam3
 CBEAM3  (done)
+PBEAM3
 PBCOMP  (done)
 PBEAM   (done)
 PBEAML  (done)
@@ -56,9 +58,6 @@ PBEAML  (done)
 # bend
 CBEND   (done)
 PBEND   (done)
-
-# beam3
-PBEAM3
 
 
 ----Plates/Shells (Elements/Properties)----:
@@ -132,6 +131,8 @@ CPYRAM  (done)
 
 PSOLID  (done)
 PLSOLID (done)
+PIHEX   (done)
+PCOMPS  (done)
 
 ----Cracks (Elements/Properties)----:
 CRAC2D (done)
@@ -145,6 +146,10 @@ PFAST   (done)
 
 CGAP    (done)
 PGAP    (done)
+
+PBCOMP  (not added)
+
+PLPLANE (???)
 
 ----Rigid Elements----:
 RROD  (done)
@@ -222,10 +227,14 @@ MOMENT2 (done)
 DLOAD   (done)
 SLOAD   (done)
 
+LOADCYN (???)
 TLOAD1  (done)
 TLOAD2  (done)
 RLOAD1  (done)
 RLOAD2  (done)
+
+----Acoustic----:
+ACSRCE  (done)
 
 ----Thermal Loads----:
 TEMP   (done)
@@ -295,11 +304,12 @@ SPLINE7
 
 CSSCHD  (done)
 TRIM    (done)
+DIVERG  (done)
 
 ----Dynamic----:
 EPOINT  (done)
 DAREA   (done)
-PHASE   (done)
+DPHASE  (done)
 DELAY   (done)
 NLPARM  (done)
 NLPCI   (done)
@@ -325,20 +335,20 @@ DRESP1   (done)
 DRESP2   (done)
 DRESP3   (done)
 
-
-DVGRID
-DVCREL1         # element  DV
-DVCREL2
-DVPREL1  (done) # property DV
+DVGRID   (no)
+DVCREL1  (done)  # element  DV
+DVCREL2  (done)
+DVPREL1  (done)  # property DV
 DVPREL2  (done)
-DVMREL1  (done) # material DV
-DVMREL2
+DVMREL1  (done)  # material DV
+DVMREL2  (done)
 
 DOPTPRM  (done)
 DLINK    (done)
 DCONADD  (done)
 
 ---Tables---
+DTABLE
 TABLED1  (done)
 TABLED2  (done)
 TABLED3  (done)
@@ -371,7 +381,6 @@ CSET1  (done)
 QSET1  (done)
 USET1  (done)
 
-SESET  (done)
 SET1   (done)
 SET2
 SET3   (done)
@@ -379,6 +388,7 @@ SET3   (done)
 SEQSEP (done)
 RADSET (done)
 
+SESET  (done)
 SEBSET  (done)
 SECSET  (done)
 SEQSET  (done)
@@ -497,7 +507,6 @@ VIEW3D
 ----Nodes----:
 EGRID
 GRIDG
-MONPNT1 (done)
 MONPNT2
 MONPNT3
 
@@ -511,8 +520,58 @@ RADLST
 RADMTX
 RADSET
 
-----Special----:
+----Parametric Grids/Elements----:
 GENEL
+
+EQUIV
+DELETE
+ACTIVE
+RSPLNG
+
+CGEN
+SPCG
+SETG
+TEMPG
+ETEMP
+LIST
+EDGER
+INSECT
+GRIDMOD
+DISTORT
+
+TRICON
+CBARG
+PGEN
+
+EIDL
+EIDH
+
+GRIDMOD
+GRIDD
+GRIDG
+GRIDU
+EGRID
+
+CURVE
+EDGER
+
+MPOINT
+MDIM
+MLINE
+MAREA
+MTAB
+MFUN
+
+MESHOFF
+MESHON
+
+PLOTG
+PLOTG
+PLOTOPT
+
+PLOADG
+
+
 
 ----Dynamics/Nonlinear---:
 

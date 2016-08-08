@@ -209,10 +209,9 @@ class TestOP4(unittest.TestCase):
         matrices = {
             'A1': (form1, A1),
         }
-        f = open(os.path.join(op4Path, 'file_binary.op4'), 'wb')
-        op4.write_op4(f, matrices, name_order='A1', precision='default',
-                     is_binary=True)
-        f.close()
+        with open(os.path.join(op4Path, 'file_binary.op4'), 'wb') as f:
+            op4.write_op4(f, matrices, name_order='A1', precision='default',
+                          is_binary=True)
 
     def test_square_matrices_1(self):
         op4 = OP4()

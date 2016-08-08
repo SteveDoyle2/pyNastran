@@ -11,16 +11,12 @@ Multi-segment beams are IntegratedLineProperty objects.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-#import sys
-from six.moves import zip
-from itertools import count
-from numpy import pi, array
+from numpy import pi
 
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import Property
-from pyNastran.bdf.bdfInterface.assign_type import (integer,
-    double, double_or_blank)
-from pyNastran.utils.mathematics import integrate_line, integrate_positive_line
+from pyNastran.bdf.bdf_interface.assign_type import (
+    integer, double, double_or_blank)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 
@@ -46,11 +42,11 @@ class PROD(Property):
         j = double_or_blank(card, 4, 'J', 0.0)
         c = double_or_blank(card, 5, 'c', 0.0)
         nsm = double_or_blank(card, 6, 'nsm', 0.0)
-        assert len(card) <= 7, 'len(PROD card) = %i' % len(card)
+        assert len(card) <= 7, 'len(PROD card) = %i\ncard=%s' % (len(card), card)
         return PROD(pid, mid, A, j, c, nsm, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data):
+    def add_op2_data(cls, data, comment=''):
         pid = data[0]
         mid = data[1]
         A = data[2]
@@ -95,6 +91,14 @@ class PROD(Property):
         return self.mid_ref.Rho()
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by PROD mid=%s' % self.mid
         self.mid = model.Material(self.mid, msg=msg)
         self.mid_ref = self.mid
@@ -104,7 +108,7 @@ class PROD(Property):
         msg += "    POUTRE=_F(GROUP_MA='P%s', # PROD\n" % (self.pid)
         msg += "              SECTION='CERCLE',  # circular section\n"
         msg += "              CARA=('R')   # radius\n"
-        msg += "              VALE=(%g),),\n" % (self.Radius())
+        #msg += "              VALE=(%g),),\n" % (self.Radius())
 
         msg += "              SECTION='GENERALE',\n"
         msg += "              CARA=('A', 'JX')\n"
@@ -156,11 +160,11 @@ class PTUBE(Property):
             t = OD1 / 2.
         nsm = double_or_blank(card, 5, 'nsm', 0.0)
         OD2 = double_or_blank(card, 6, 'OD2', OD1)
-        assert len(card) <= 7, 'len(PTUBE card) = %i' % len(card)
+        assert len(card) <= 7, 'len(PTUBE card) = %i\ncard=%s' % (len(card), card)
         return PTUBE(pid, mid, OD1, t, nsm, OD2, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data):
+    def add_op2_data(cls, data, comment=''):
         pid = data[0]
         mid = data[1]
         OD1 = data[2]
@@ -187,6 +191,14 @@ class PTUBE(Property):
         return self.nsm
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by PTUBE mid=%s' % self.mid
         self.mid = model.Material(self.mid, msg=msg)
         self.mid_ref = self.mid

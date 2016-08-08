@@ -1,1 +1,1 @@
-from pyNastran.bdf.bdfInterface.assign_type import *
+from pyNastran.bdf.bdf_interface.assign_type import *

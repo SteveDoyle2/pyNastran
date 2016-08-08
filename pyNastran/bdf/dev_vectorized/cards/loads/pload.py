@@ -4,7 +4,7 @@ from numpy import arange, array, zeros, searchsorted, unique
 #from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
-from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
+from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_blank,
     double)
 
 
@@ -57,7 +57,7 @@ class PLOAD(object):
             integer(card, 5, 'n3'),
             integer_or_blank(card, 6, 'n4', 0)])
         self.node_ids.append(node_ids)
-        assert len(card) <= 7, 'len(PLOAD card) = %i' % len(card)
+        assert len(card) <= 7, 'len(PLOAD card) = %i\ncard=%s' % (len(card), card)
         self._comments.append(comment)
 
     def build(self):

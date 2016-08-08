@@ -6,7 +6,7 @@ from pyNastran.bdf.dev_vectorized.cards.elements.shell.shell_element import Shel
 from pyNastran.bdf.dev_vectorized.cards.elements.shell.ctria3 import _ctria3_normal_A
 
 from pyNastran.bdf.field_writer_8 import print_card_8
-from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
+from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_blank,
     double_or_blank)
 
 class CTRIA6(ShellElement):
@@ -49,7 +49,7 @@ class CTRIA6(ShellElement):
             double_or_blank(card, 12, 'T2', 1.0),
             double_or_blank(card, 13, 'T3', 1.0), ]
         self.t_flag[i] = integer_or_blank(card, 14, 'TFlag', 0)
-        assert len(card) <= 15, 'len(CTRIA6 card) = %i' % len(card)
+        assert len(card) <= 15, 'len(CTRIA6 card) = %i\ncard=%s' % (len(card), card)
         self.i += 1
 
     def build(self):
@@ -75,9 +75,9 @@ class CTRIA6(ShellElement):
             for (eid, pid, n, zoffset, t_flag, thickness) in zip(
                 self.element_id[i], self.property_id[i], self.node_ids[i],
                 self.zoffset[i], self.t_flag[i], self.thickness[i]):
-                thetaMcid = None
+                theta_mcid = None
                 #TFlag = None
-                card = ['CTRIA6', eid, pid, ] + list(n) + [thetaMcid, zOffset,
+                card = ['CTRIA6', eid, pid, ] + list(n) + [theta_mcid, zoffset,
                         None] + [None, TFlag] + list(t)
                 f.write(print_card_8(card))
 

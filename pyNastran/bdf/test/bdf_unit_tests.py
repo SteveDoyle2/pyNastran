@@ -7,8 +7,8 @@ from numpy.linalg import norm
 
 import pyNastran
 from pyNastran.utils import object_attributes, object_methods
-from pyNastran.bdf.cards.base_card import collapse_thru_by
-from pyNastran.bdf.bdf import BDF
+from pyNastran.bdf.cards.collpase_card import collapse_thru_by
+from pyNastran.bdf.bdf import BDF, read_bdf
 
 pkg_path = pyNastran.__path__[0]
 test_path = os.path.join(pkg_path, 'bdf', 'test')
@@ -32,34 +32,32 @@ class Tester(unittest.TestCase):
 
 class TestBDF(Tester):
     def test_object_attributes_01(self):
-        model = BDF()
+        model = BDF(debug=False)
         model.object_attributes(mode='public', keys_to_skip=None)
 
     def test_object_attributes_02(self):
-        model = BDF()
-        keys = ['thermalMaterials', 'hyperelasticMaterials', 'rigidElements',
-                'creepMaterials', 'convectionProperties']
+        model = BDF(debug=False)
+        keys = []
         object_attributes(model, mode='public', keys_to_skip=keys)
 
     def test_object_attributes_03(self):
-        model = BDF()
+        model = BDF(debug=False)
         model.add_card(['GRID',1], 'GRID')
         grid = model.nodes[1]
         grid.object_attributes(mode='public', keys_to_skip=None)
 
     def test_object_methods_01(self):
-        model = BDF()
+        model = BDF(debug=False)
         keys = []
         model.object_methods(mode="public", keys_to_skip=keys)
 
     def test_object_methods_02(self):
-        model = BDF()
-        keys = ['thermalMaterials', 'hyperelasticMaterials', 'rigidElements',
-                'creepMaterials', 'convectionProperties']
+        model = BDF(debug=False)
+        keys = []
         object_methods(model, mode="public", keys_to_skip=keys)
 
     def test_object_methods_03(self):
-        model = BDF()
+        model = BDF(debug=False)
         model.add_card(['GRID',1], 'GRID')
         grid = model.nodes[1]
         print(grid.object_methods(mode='public', keys_to_skip=None))
@@ -120,7 +118,6 @@ class TestBDF(Tester):
             assert len(fem.properties) == 1, 'len(properties) = %i' % len(fem.properties)
         self._compare_mass_cg_I(fem1)
         self._compare_mass_cg_I(fem1, reference_point=u'cg')
-
 
     def test_bdf_03(self):
         bdf_filename = os.path.join('cbush', 'cbush.dat')
@@ -208,6 +205,25 @@ class TestBDF(Tester):
         self._compare_mass_cg_I(fem1, reference_point=u'cg')
         self._compare_mass_cg_I(fem1, reference_point='cg')
 
+    def test_bdf_transfer_function_01(self):
+        bdf_filename = os.path.join('transfer_function', 'actuator_tf_modeling.bdf')
+        folder = os.path.abspath(os.path.join(pkg_path, '..', 'models'))
+        fem1, fem2, diff_cards = self.run_bdf(folder, bdf_filename)
+        diff_cards2 = list(set(diff_cards))
+        diff_cards2.sort()
+        assert len(diff_cards2) == 0, diff_cards2
+
+        for fem in [fem1, fem2]:
+            assert fem.card_count['CONM2'] == 3, fem.card_count
+            assert fem.card_count['SPOINT'] == 1, fem.card_count
+            assert fem.card_count['EPOINT'] == 1, fem.card_count
+            assert fem.card_count['PARAM'] == 1, fem.card_count
+            assert fem.card_count['CELAS2'] == 2, fem.card_count
+            assert fem.card_count['GRID'] == 3, fem.card_count
+            assert fem.card_count['EIGR'] == 1, fem.card_count
+            assert fem.card_count['EIGC'] == 1, fem.card_count
+            assert fem.card_count['MPC'] == 1, fem.card_count
+            assert fem.card_count['TF'] == 2, fem.card_count
 
 class TestBaseCard(Tester):
     def test_base_card_01_collapse_thru(self):

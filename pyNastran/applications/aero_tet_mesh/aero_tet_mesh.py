@@ -78,7 +78,7 @@ def main():
 
     get_bcs(bdf_filename, pid_map, boundary_conditions, log=None)
     #if flip_normals:
-       #bdf = BDF()
+       #bdf = BDF(debug=False)
        #bdf.read_bdf(bdf_filename, xref=False)
        #bdf.flip_normals()
        #bdf.write_bdf(bdf_filename2)
@@ -92,7 +92,7 @@ def main():
     else:
         nastran_to_stl_filename(bdf_filename, stl_filename, log=log)
         stl_to_nastran_filename(stl_filename, bdf_filename2, log=log)
-    print("----------")
+    print('----------')
     #nastran_to_cart3d(bdf_filename2, cart3d_filename)
     #cart3d = Cart3d()
     #cart3d.read_cart3d(cart3d_filename)

@@ -58,6 +58,7 @@ class SolidElement(Element):
         return self._get_node_locations_by_index(i, xyz_cid0)
 
     def allocate(self, ncards):
+        print('%s.allocate(%s)' % (self.type, ncards))
         self.n = ncards
         #float_fmt = self.model.float
         self.element_id = zeros(ncards, 'int32')
@@ -66,6 +67,7 @@ class SolidElement(Element):
         #self._comments.append(comment)
 
     def build(self):
+        print('self.n =', self.n)
         if self.n:
             i = self.element_id.argsort()
             self.element_id = self.element_id[i]

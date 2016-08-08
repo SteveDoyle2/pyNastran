@@ -1,6 +1,6 @@
 from pyNastran.bdf.field_writer_8 import print_card_8, set_blank_if_default
 from pyNastran.bdf.field_writer_16 import print_card_16
-from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
+from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_blank,
     double_or_blank, string_or_blank)
 
 
@@ -56,7 +56,7 @@ class NLPARM(object):
         self.maxBisect = integer_or_blank(card, 17, '', 5)
         self.maxR = double_or_blank(card, 21, 'maxR', 20.)
         self.rTolB = double_or_blank(card, 23, 'rTolB', 20.)
-        assert len(card) <= 24, 'len(NLPARM card) = %i' % len(card)
+        assert len(card) <= 24, 'len(NLPARM card) = %i\ncard=%s' % (len(card), card)
 
     def raw_fields(self):
         list_fields = ['NLPARM', self.nlparm_id, self.ninc, self.dt, self.kMethod,

@@ -13,10 +13,11 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from six import integer_types
 from numpy import pi, array
 
-from pyNastran.bdf.field_writer_8 import set_blank_if_default, set_default_if_blank
+from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import Property
-from pyNastran.bdf.bdfInterface.assign_type import (integer, double,
-    double_or_blank, string, string_or_blank, blank, integer_or_double)
+from pyNastran.bdf.bdf_interface.assign_type import (
+    integer, double, double_or_blank, string, string_or_blank,
+    blank, integer_or_double)
 from pyNastran.utils.mathematics import integrate_line, integrate_positive_line
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
@@ -202,7 +203,7 @@ class LineProperty(Property):
 
             h3 = dim[4]
             w3 = dim[1]
-            y3 = -dim[0] / 2. + h3
+            #y3 = -dim[0] / 2. + h3
             sections.append([w3, h3, 0., y1])
 
             h2 = dim[0] - h1 - h3
@@ -291,9 +292,15 @@ def _bar_areaL(class_name, Type, dim):
     """
     Area(x) method for the PBARL and PBEAML classes (pronounced **Area-L**)
 
-    :param dim:    a list of the dimensions associated with **Type**
-    :returns Area: Area of the given cross section defined
-                   by **self.Type**
+    Parameters
+    ----------
+    dim : List[float]
+        a list of the dimensions associated with **Type**
+
+    Returns
+    -------
+    Area : float
+        Area of the given cross section defined by **self.Type**
 
     .. note:: internal method
     """
@@ -667,7 +674,7 @@ class PBAR(LineProperty):
             #: default=infinite; assume 1e8
             k2 = double_or_blank(card, 18, 'K2', 1e8)
 
-        assert len(card) <= 20, 'len(PBAR card) = %i' % len(card)
+        assert len(card) <= 20, 'len(PBAR card) = %i\ncard=%s' % (len(card), card)
         return PBAR(pid, mid, A, i1, i2, i12, j, nsm,
                     c1, c2, d1, d2, e1, e2,
                     f1, f2, k1, k2, comment=comment)
@@ -726,6 +733,14 @@ class PBAR(LineProperty):
         return rho * A + nsm
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by PBAR mid=%s' % self.mid
         self.mid = model.Material(self.mid, msg=msg)
         self.mid_ref = self.mid
@@ -921,6 +936,14 @@ class PBARL(LineProperty):
         assert None not in self.dim
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by PBARL mid=%s' % self.mid
         self.mid = model.Material(self.mid, msg=msg)
         self.mid_ref = self.mid
@@ -1196,7 +1219,7 @@ class PBARL(LineProperty):
             b = b1
             Ixx = (b*d**3-h**3*(b-t)) / 12.
             Iyy = (2.*s*b**3 + h*t**3) / 12.
-        elif self.Type == 'T': # test
+        #elif self.Type == 'T': # test
             # http://www.amesweb.info/SectionalPropertiesTabs/SectionalPropertiesTbeam.aspx
             # http://www.amesweb.info/SectionalPropertiesTabs/SectionalPropertiesTbeam.aspx
             # d - outside height
@@ -1206,7 +1229,7 @@ class PBARL(LineProperty):
             # s - web thickness
             #(b, d, t, s) = self.dim
             #h = d - 2 * s
-            (b, d, s, t) = self.dim
+            #(b, d, s, t) = self.dim
             #if b1 != b2:
                 #msg = 'J for Type=%r dim=%r on PBARL b1 != b2 is not supported' % (
                     #self.Type, self.dim)
@@ -1220,9 +1243,9 @@ class PBARL(LineProperty):
             #b = b1
 
             # http://www.engineersedge.com/material_science/moment-inertia-gyration-6.htm
-            y = d**2*t+s**2*(b-t)/(2*(b*s+h*t))
-            Ixx = (t*y**3 + b*(d-y)**3 - (b-t)*(d-y-s)**3)/3.
-            Iyy = t**3*(h-s)/12. + b**3*s/12.
+            #y = d**2*t+s**2*(b-t)/(2*(b*s+h*t))
+            #Ixx = (t*y**3 + b*(d-y)**3 - (b-t)*(d-y-s)**3)/3.
+            #Iyy = t**3*(h-s)/12. + b**3*s/12.
             #A = b*s + h*t
 
         elif self.Type == 'C':
@@ -1237,7 +1260,7 @@ class PBARL(LineProperty):
             #cx = (2.*b**2*s + h*t**2)/(2*b*d - 2*h*(b-t))
             #cy = d / 2.
             Ixx = (b * d**3 - h **3 * (b-t)) / 12.
-            Iyx = (2.*s*b**3 + h*t**3)/3 - A*cx**2
+            #Iyx = (2.*s*b**3 + h*t**3)/3 - A*cx**2
         else:
             msg = 'J for Type=%r dim=%r on PBARL is not supported' % (self.Type, self.dim)
             raise NotImplementedError(msg)
@@ -1278,7 +1301,7 @@ class PBARL(LineProperty):
                        None, None, None] + self.dim + [self.nsm]
         return list_fields
 
-    def write_card(self, size, is_double):
+    def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -1327,6 +1350,14 @@ class PBEAM3(LineProperty):  # not done, cleanup
         return self.nsm
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by PBEAM3 mid=%s' % self.mid
         self.mid = model.Material(self.mid, msg=msg)
         self.mid_ref = self.mid
@@ -1426,7 +1457,7 @@ class PBEND(LineProperty):
 
             #: Arc angle :math:`\theta_B` of element  (optional)
             self.thetab = double_or_blank(card, 8, 'thetab')
-            assert len(card) <= 23, 'len(PBEND card) = %i' % len(card)
+            assert len(card) <= 23, 'len(PBEND card) = %i\ncard=%s' % (len(card), card)
 
         else:
             raise NotImplementedError(data)
@@ -1437,6 +1468,14 @@ class PBEND(LineProperty):
         #return self.nsm
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by PBEND mid=%s' % self.mid
         self.mid = model.Material(self.mid, msg=msg)
         self.mid_ref = self.mid

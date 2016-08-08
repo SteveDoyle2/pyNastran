@@ -21,17 +21,16 @@ def cart3d_to_usm3d_bc(cart3d, usm3d_bc_filename):
     #elements = cart3d.elements
     #regions = cart3d.regions
 
-    usm3d_bc = open(usm3d_bc_filename, 'wb')
-    patches = unique(regions)
-    npatches = len(patches)
-    nelements = elements.shape[0]
+    with open(usm3d_bc_filename, 'wb') as usm3d_bc:
+        patches = unique(regions)
+        npatches = len(patches)
+        nelements = elements.shape[0]
 
-    usm3d_bc.write('%-8s %-8s %-8s %s\n'  % (nelements, 'intA', npatches, 'intB'))
-    usm3d_bc.write('Triangle   Patch            Nodes\n')
-    for i, element, iregion in zip(count(), elements, regions):
-        (n1, n2, n3) = element
-        usm3d_bc.write('%-8s %-8s %-8s %-8s %s\n' % (i+1, iregion, n1, n2, n3))
-    usm3d_bc.close()
+        usm3d_bc.write('%-8s %-8s %-8s %s\n'  % (nelements, 'intA', npatches, 'intB'))
+        usm3d_bc.write('Triangle   Patch            Nodes\n')
+        for i, element, iregion in zip(count(), elements, regions):
+            (n1, n2, n3) = element
+            usm3d_bc.write('%-8s %-8s %-8s %-8s %s\n' % (i+1, iregion, n1, n2, n3))
 
 def cart3d_to_usm3d_bc_filename(cart3d_filename, usm3d_bc_filename, log=None, debug=False):
     """

@@ -4,7 +4,7 @@ from six.moves import zip
 from numpy import array, zeros, arange, concatenate, searchsorted, where, unique
 
 from pyNastran.bdf.field_writer_8 import print_card_8
-from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
+from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_blank,
     double_or_blank, string_or_blank)
 from pyNastran.bdf.dev_vectorized.cards.vectorized_card import VectorizedCard
 
@@ -76,7 +76,7 @@ class SPLINE1(VectorizedCard):
         self.melements[i] = integer_or_blank(card, 10, 'melements', 10)
         assert self.nelements[i] > 0, 'nelements = %s' % self.nelements[i]
         assert self.melements[i] > 0, 'melements = %s' % self.melements[i]
-        assert len(card) <= 11, 'len(SPLINE1 card) = %i' % len(card)
+        assert len(card) <= 11, 'len(SPLINE1 card) = %i\ncard=%s' % (len(card), card)
         self.i += 1
 
     def add_op2(self, data, comment=''):

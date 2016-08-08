@@ -3,17 +3,18 @@ from __future__ import print_function
 from numpy import array
 
 from pyNastran.utils import integer_types
-#from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
+#from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_blank,
                                                     #double_or_blank, integer_double_or_blank, blank, string_or_blank)
-from pyNastran.bdf.bdfInterface.assign_type import integer, double_or_blank, string_or_blank, integer_or_blank
+from pyNastran.bdf.bdf_interface.assign_type import integer, double_or_blank, string_or_blank, integer_or_blank
 from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8
-from pyNastran.bdf.fieldWriter import print_card
+from pyNastran.bdf.field_writer import print_card
 
 
 class BaseCard(object):
     def __init__(self):
         pass
 
+    @property
     def comment(self):
         if hasattr(self, '_comment'):
             return '%s' % self._comment
@@ -46,8 +47,10 @@ class Property_i(BaseCard):
         """
         returns the property ID of an property
 
-        :returns pid: the Property ID
-        :type pid:    int
+        Returns
+        -------
+        pid : int
+            the Property ID
         """
         return self.pid
 
@@ -55,8 +58,10 @@ class Property_i(BaseCard):
         """
         returns the material ID of an element
 
-        :returns mid: the Material ID
-        :type mid:    int
+        Returns
+        -------
+        mid : int
+            the Material ID
         """
         if isinstance(self.mid, integer_types):
             return self.mid
@@ -64,6 +69,14 @@ class Property_i(BaseCard):
             return self.mid_ref.mid
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by %s pid=%s' % (self.type, self.pid)
         self.mid = model.Material(self.mid, msg)
         self.mid_ref = self.mid

@@ -2,11 +2,8 @@
 Multi-input/output format converter
 """
 from __future__ import print_function
-from six import iteritems
 import glob
 from docopt import docopt
-
-from numpy import zeros, array
 
 import pyNastran
 from pyNastran.bdf.bdf import BDF
@@ -23,6 +20,7 @@ from pyNastran.converters.nastran.nastran_to_tecplot import nastran_to_tecplot
 from pyNastran.converters.nastran.nastran_to_ugrid import nastran_to_ugrid
 
 from pyNastran.converters.stl.stl_to_nastran import stl_to_nastran_filename
+#from pyNastran.converters.stl.stl_to_cart3d import stl_to_cart3d, stl_to_cart3d_filename
 from pyNastran.converters.cart3d.cart3d_to_nastran import cart3d_to_nastran_filename
 from pyNastran.converters.cart3d.cart3d_to_stl import cart3d_to_stl_filename
 from pyNastran.converters.ugrid.ugrid_reader import UGRID
@@ -97,21 +95,32 @@ def process_stl(stl_filename, fmt2, fname2, data=None):
         stl_filenames = [stl_filename]
     assert len(stl_filenames) > 0, stl_filenames
     model = merge_stl_files(stl_filenames, stl_out_filename=None)
+    scale = data['--scale']
+    if scale is not None:
+        assert isinstance(scale, float), 'scale=%r type=%r' % (scale, type(scale))
+        model.nodes *= scale
 
     # model = STL()
     # model.read_stl(stl_filename)
     if fmt2 == 'nastran':
-        stl_to_nastran_filename(stl_filename, fname2)
+        stl_temp_filename = '__temp__.stl'
+        model.write_stl(stl_out_filename, is_binary=True, #float_fmt='%6.12f',
+                        stop_on_failure=False)
+        stl_to_nastran_filename(stl_temp_filename, fname2)
+        os.remove(stl_temp_filename)
         # stl_to_cart3d(model, fname2 + '.cart')
         # process_cart3d(fname2 + '.cart', 'nastran', fname2)
         # stl_to_nastran(model, fname2)
-    elif fmt2 == 'cart3d':
+    #elif fmt2 == 'cart3d':
+        # we don't have an STL -> Cart3d, so we:
+        #    - STL -> BDF
+        #    - BDF -> Cart3D
         # stl_to_cart3d(model, fname2)
-        stl_to_nastran_filename(stl_filename, fname2 + '.bdf')
-        stl_to_nastran_filename(fname2 + '.bdf', fname2)
+        #stl_to_nastran_filename(stl_filename, fname2 + '.bdf')
+        #stl_to_cart3d_filename(fname2 + '.bdf', fname2)
     elif fmt2 == 'stl':
         is_binary = data['--binary']
-        model.write_stl(fname2, is_binary=is_binary, float_fmt='%6.12f')
+        model.write_stl(fname2, is_binary=is_binary, float_fmt='%6.12f', stop_on_failure=False)
     # elif fmt2 == 'tecplot':
         # stl_to_tecplot(model, fname2)
     # elif fmt2 == 'ugrid':
@@ -231,9 +240,9 @@ def main():
     """Interface for format_converter"""
     msg = "Usage:\n"
     msg += "  format_converter nastran <INPUT> <format2> <OUTPUT> [-o <OP2>]\n"
-    msg += "  format_converter <format1> <INPUT> tecplot <OUTPUT> [-r RESTYPE...] [-b] [--block] [-x <X>] [-y <Y>] [-z <Z>]\n"
-    msg += "  format_converter <format1> <INPUT> stl     <OUTPUT> [-b]\n"
-    msg += "  format_converter <format1> <INPUT> <format2> <OUTPUT>\n"
+    msg += "  format_converter <format1> <INPUT> tecplot <OUTPUT> [-r RESTYPE...] [-b] [--block] [-x <X>] [-y <Y>] [-z <Z>] [--scale SCALE]\n"
+    msg += "  format_converter <format1> <INPUT> stl     <OUTPUT> [-b]  [--scale SCALE]\n"
+    msg += "  format_converter <format1> <INPUT> <format2> <OUTPUT> [--scale SCALE]\n"
     #msg += "  format_converter nastran  <INPUT> <format2> <OUTPUT>\n"
     #msg += "  format_converter cart3d   <INPUT> <format2> <OUTPUT>\n"
     msg += '  format_converter -h | --help\n'
@@ -249,6 +258,7 @@ def main():
     msg += "  -x X, --xx X   Creates a constant x slice; keeps points < X\n"
     msg += "  -y Y, --yy Y   Creates a constant y slice; keeps points < Y\n"
     msg += "  -z Z, --zz Z   Creates a constant z slice; keeps points < Z\n"
+    msg += "  --scale SCALE  Apply a scale factor to the XYZ locations (default=1.0)\n"
     msg += "  --block        Writes the data in BLOCK (vs. POINT) format\n"
     msg += "  -r, --results  Specifies the results to write to limit output\n"
     msg += "  -b, --binary   writes the STL in binary (not supported for Tecplot)\n"
@@ -260,6 +270,7 @@ def main():
     msg += "  STL/Tecplot supports globbing as the input filename\n"
     msg += "  Tecplot slicing doesn't support multiple slice values and will give bad results (not crash)\n"
     msg += "  UGRID outfiles must be of the form model.b8.ugrid, where b8, b4, lb8, lb4 are valid choices and periods are important\n"
+    msg += "  Scale has only been tested on STL -> STL\n"
 
 
     ver = str(pyNastran.__version__)
@@ -284,9 +295,11 @@ def main():
         data['<format2>'] = format2
     print(data)
 
+    if data['--scale']:
+        data['--scale'] = float(data['--scale'])
+
     input_filename = data['<INPUT>']
     output_filename = data['<OUTPUT>']
-    op2_filename = data['--op2']
     run(format1, input_filename, format2, output_filename, data)
 
 if __name__ == '__main__':

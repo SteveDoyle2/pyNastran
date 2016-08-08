@@ -3,7 +3,7 @@ from numpy import array, zeros, arange, searchsorted, unique, cross
 
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
-from pyNastran.bdf.bdfInterface.assign_type import integer
+from pyNastran.bdf.bdf_interface.assign_type import integer
 
 from pyNastran.bdf.dev_vectorized.cards.elements.element import Element
 
@@ -33,7 +33,7 @@ class CSHEAR(Element):
                             integer(card, 4, 'n2'),
                             integer(card, 5, 'n3'),
                             integer(card, 6, 'n4')]
-        assert len(card) <= 7, 'len(CSHEAR card) = %i' % len(card)
+        assert len(card) <= 7, 'len(CSHEAR card) = %i\ncard=%s' % (len(card), card)
         self.i += 1
 
     def build(self):

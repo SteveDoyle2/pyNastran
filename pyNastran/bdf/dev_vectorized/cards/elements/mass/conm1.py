@@ -4,7 +4,7 @@ from numpy import zeros, array, arange, searchsorted
 
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
-from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank, double_or_blank)
+from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_blank, double_or_blank)
 
 from pyNastran.bdf.dev_vectorized.cards.vectorized_card import VectorizedCard
 
@@ -50,7 +50,7 @@ class CONM1(VectorizedCard):
         m[i, 5, 3] = double_or_blank(card, 22, 'M64', 0.)
         m[i, 5, 4] = double_or_blank(card, 23, 'M65', 0.)
         m[i, 5, 5] = double_or_blank(card, 24, 'M66', 0.)
-        assert len(card) <= 25, 'len(CONM1 card) = %i' % len(card)
+        assert len(card) <= 25, 'len(CONM1 card) = %i\ncard=%s' % (len(card), card)
         self.i += 1
 
     def build(self):

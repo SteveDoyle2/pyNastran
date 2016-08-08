@@ -15,8 +15,9 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 
 from pyNastran.utils import integer_types
 from pyNastran.bdf.cards.base_card import Element, BaseCard
-from pyNastran.bdf.bdfInterface.assign_type import (fields, integer, integer_or_blank,
-    integer_double_or_blank, double_or_blank, string)  # double
+from pyNastran.bdf.bdf_interface.assign_type import (
+    fields, integer, integer_or_blank, integer_double_or_blank,
+    double_or_blank, string)
 from pyNastran.bdf.field_writer_8 import print_card_8
 
 
@@ -56,12 +57,20 @@ class CFAST(Element):
         xs = double_or_blank(card, 9, 'xs')
         ys = double_or_blank(card, 10, 'ys')
         zs = double_or_blank(card, 11, 'zs')
-        assert len(card) <= 12, 'len(CFAST card) = %i' % len(card)
+        assert len(card) <= 12, 'len(CFAST card) = %i\ncard=%s' % (len(card), card)
         #if self.Type=='PROP': # PSHELL/PCOMP  ida & idb
         return CFAST(eid, pid, Type, ida, idb, gs, ga, gb, xs, ys, zs,
                      comment=comment)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by CFAST eid=%s' % self.eid
         self.pid = model.Property(self.Pid(), msg=msg)
         self.pid_ref = self.pid
@@ -79,7 +88,12 @@ class CFAST(Element):
         self.gs = self.Gs()
         self.ga = self.Ga()
         self.gb = self.Gb()
-        del self.gs_ref, self.ga_ref, self.gb_ref
+        if self.gs:
+            del self.gs_ref
+        if self.ga:
+            del self.ga_ref
+        if self.gb:
+            del self.gb_ref
 
     def raw_fields(self):
         list_fields = ['CFAST', self.eid, self.Pid(), self.Type, self.ida, self.idb,
@@ -96,7 +110,8 @@ class CFAST(Element):
     def Gs(self):
         if isinstance(self.gs, integer_types):
             return self.gs
-        return self.gs_ref.nid
+        elif self.gs is not None:
+            return self.gs_ref.nid
 
     def Ga(self):
         if isinstance(self.ga, integer_types) or self.ga is None:
@@ -107,6 +122,17 @@ class CFAST(Element):
         if isinstance(self.gb, integer_types) or self.gb is None:
             return self.gb
         return self.gb_ref.nid
+
+    def _verify(self, xref):
+        """
+        Verifies all methods for this object work
+
+        Parameters
+        ----------
+        xref : bool
+            has this model been cross referenced
+        """
+        pass
 
     @property
     def node_ids(self):
@@ -164,7 +190,7 @@ class CGAP(Element):
             g0 = None
             x = [None, None, None]
             cid = None
-        assert len(card) <= 9, 'len(CGAP card) = %i' % len(card)
+        assert len(card) <= 9, 'len(CGAP card) = %i\ncard=%s' % (len(card), card)
         return CGAP(eid, pid, ga, gb, x, g0, cid, comment=comment)
 
     @classmethod
@@ -179,6 +205,8 @@ class CGAP(Element):
         x3 = data[7]
         x = [x1, x2, x3]
         cid = data[8]
+        if cid == -1:
+            cid = None
         return CGAP(eid, pid, ga, gb, x, g0, cid, comment=comment)
 
     def _verify(self, xref=True):
@@ -201,6 +229,14 @@ class CGAP(Element):
                                                  cid, self.cid_ref.type)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by CGAP eid=%s' % self.Eid()
         self.ga = model.Node(self.Ga(), msg=msg)
         self.gb = model.Node(self.Gb(), msg=msg)
@@ -258,9 +294,14 @@ class CGAP(Element):
             return self.gb
         return self.gb_ref.nid
 
+    def G0(self):
+        if isinstance(self.g0, integer_types):
+            return self.g0
+        return self.g0_ref.nid
+
     def raw_fields(self):
         if self.g0 is not None:
-            x = [self.g0, None, None]
+            x = [self.G0(), None, None]
         else:
             x = self.x
         list_fields = (['CGAP', self.eid, self.Pid(), self.Ga(), self.Gb()] + x +
@@ -276,9 +317,17 @@ class CrackElement(Element):
     type = 'Crack'
 
     def __init__(self):
-        pass
+        self.eid = 0
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by %s eid=%s' % (self. type, self.eid)
         self.nodes = model.Nodes(self.nodes, allow_empty_nodes=True, msg=msg)
         self.pid = model.Property(self.pid, msg=msg)
@@ -326,7 +375,7 @@ class CRAC2D(CrackElement):
             integer_or_blank(card, 19, 'n17'),
             integer_or_blank(card, 20, 'n18')
         ]
-        assert len(card) <= 21, 'len(CRAC2D card) = %i' % len(card)
+        assert len(card) <= 21, 'len(CRAC2D card) = %i\ncard=%s' % (len(card), card)
         return CRAC2D(eid, pid, nids, comment=comment)
 
     @classmethod
@@ -391,7 +440,7 @@ class CRAC3D(CrackElement):
         # optional 11-18, 29-36, 37-64
         # all/none 37-46
         nids = fields(integer_or_blank, card, 'nid', 3, 67)  # cap at +3 = 67
-        assert len(card) <= 67, 'len(CRAC3D card) = %i' % len(card)
+        assert len(card) <= 67, 'len(CRAC3D card) = %i\ncard=%s' % (len(card), card)
         return CRAC3D(eid, pid, nids, comment=comment)
 
     @classmethod
@@ -442,7 +491,7 @@ class PLOTEL(BaseCard):
         Defines a 1D dummy element used for plotting.
         +--------+-----+-----+-----+
         |   1    |  2  |  3  |  4  |
-        +--------+-----+-----+-----+
+        +========+=====+=====+=====+
         | PLOTEL | EID | G1  | G2  |
         +--------+-----+-----+-----+
         """
@@ -459,7 +508,7 @@ class PLOTEL(BaseCard):
             integer(card, 2, 'g1'),
             integer(card, 3, 'g2'),
         ]
-        assert len(card) <= 4, 'len(CGAP card) = %i' % len(card)
+        assert len(card) <= 4, 'len(PLOTEL card) = %i\ncard=%s' % (len(card), card)
         return PLOTEL(eid, nodes, comment=comment)
 
     @classmethod
@@ -472,6 +521,14 @@ class PLOTEL(BaseCard):
         pass
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by PLOTEL eid=%s' % self.Eid()
         node_ids = self.node_ids
         self.nodes = [

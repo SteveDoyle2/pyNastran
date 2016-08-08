@@ -1,10 +1,10 @@
 from __future__ import print_function
-from six import iteritems
 import os
+import multiprocessing as mp
+from six import iteritems
 from numpy import savetxt, arange, zeros
 
-from pyNastran.converters.usm3d.usm3d_reader import Usm3dReader
-import multiprocessing as mp
+from pyNastran.converters.usm3d.usm3d_reader import Usm3d
 
 def get_n_list(dirname, model_name):
     flo_filenames = os.listdir(dirname)

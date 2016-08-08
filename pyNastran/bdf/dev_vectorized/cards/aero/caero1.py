@@ -4,7 +4,7 @@ from numpy import zeros, arange, searchsorted, cross
 
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
-from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
+from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_blank,
     double_or_blank)
 from pyNastran.bdf.dev_vectorized.cards.vectorized_card import VectorizedCard
 
@@ -65,7 +65,7 @@ class CAERO1(VectorizedCard):
                          double_or_blank(card, 14, 'y4', 0.0),
                          double_or_blank(card, 15, 'z4', 0.0)]
         self.x43[i] = double_or_blank(card, 16, 'x43', 0.)
-        assert len(card) <= 17, 'len(CAERO1 card) = %i' % len(card)
+        assert len(card) <= 17, 'len(CAERO1 card) = %i\ncard=%s' % (len(card), card)
         self.i += 1
 
     def allocate(self, ncards):
@@ -194,9 +194,14 @@ class CAERO1(VectorizedCard):
         """
         Gets the normals of the CAERO1s on per element basis.
 
-        :param element_id: the elements to consider (default=None -> all)
-        :param node_ids:   the GRIDs as an (N, )  NDARRAY (or None)
-        :param grids_cid0: the GRIDs as an (N, 3) NDARRAY in CORD2R=0 (or None)
+        Parameters
+        -----------
+        element_id : (N, ) int ndarray  (default=None -> all)
+            the elements to consider
+        node_ids : (N, ) int ndarray (None -> auto)
+            the GRID IDs
+        grids_cid0 : (N, 3) float ndarray (None -> auto)
+            the GRIDs in CORD2R=0
 
         .. note:: If node_ids is None, the positions of all the GRID cards
                   must be calculated
@@ -242,24 +247,30 @@ class CAERO1(VectorizedCard):
         v12 = p2 - p1
         v13 = p3 - p1
         v123 = cross(v12, v13)
+        normi = np.norm(v123, axis=0)
 
         A = None
-        normal = v123 / n
+        normal = v123 / normi
         if calculate_area:
-            A = 0.5 * n
+            A = 0.5 * normi
         return A, normal
 
     def _positions(self, nids_to_get, node_ids, grids_cid0):
         """
         Gets the positions of a list of nodes
 
-        :param nids_to_get:  the node IDs to get as an NDARRAY
-        :param node_ids:     the node IDs that contains all the nids_to_get
-                             as an NDARRAY
-        :param grids_cid_0:  the GRIDs as an (N, )  NDARRAY
+        Parameters
+        ----------
+        nids_to_get : (n,) ndarray
+            the node IDs to get
+        node_ids : (n,) ndarray
+            the node IDs that contains all the nids_to_get
+        grids_cid0 : (n,3) ndarray
+            the GRIDs in CID=0
 
-        :returns grids2_cid_0 : the corresponding positins of the requested
-                                GRIDs
+        Returns
+        -------
+        grids2_cid0 : the corresponding positins of the requested GRIDs
         """
         grids2_cid_0 = grids_cid0[searchsorted(nids_to_get, node_ids), :]
         return grids2_cid_0

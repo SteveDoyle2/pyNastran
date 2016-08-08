@@ -196,9 +196,8 @@ class TagReader(object):
         self.debug = debug
 
     def read_tag_filename(self, tag_filename):
-        f = open(tag_filename, 'r')
-        lines = f.readlines()
-        f.close()
+        with open(tag_filename, 'r') as tag_file:
+            lines = tag_file.readlines()
 
         lines = [line.strip().split('#')[0].strip() for line in lines
                  if line.strip().split('#')[0].strip()

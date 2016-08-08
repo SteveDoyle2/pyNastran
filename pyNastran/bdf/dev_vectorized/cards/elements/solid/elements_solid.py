@@ -1,11 +1,14 @@
+from numpy import hstack, zeros, where, searchsorted, argsort, full, nan, unique
+
 from pyNastran.bdf.dev_vectorized.cards.elements.solid.ctetra4 import CTETRA4
+from pyNastran.bdf.dev_vectorized.cards.elements.solid.cpyram5 import CPYRAM5
 from pyNastran.bdf.dev_vectorized.cards.elements.solid.cpenta6 import CPENTA6
 from pyNastran.bdf.dev_vectorized.cards.elements.solid.chexa8 import CHEXA8
 
 from pyNastran.bdf.dev_vectorized.cards.elements.solid.ctetra10 import CTETRA10
+from pyNastran.bdf.dev_vectorized.cards.elements.solid.cpyram13 import CPYRAM13
 from pyNastran.bdf.dev_vectorized.cards.elements.solid.cpenta15 import CPENTA15
 from pyNastran.bdf.dev_vectorized.cards.elements.solid.chexa20 import CHEXA20
-from numpy import hstack, zeros, where, searchsorted, argsort, full, nan, unique
 
 class ElementsSolid(object):
     def __init__(self, model):
@@ -18,10 +21,12 @@ class ElementsSolid(object):
         self.n = 0
 
         self.ctetra4 = CTETRA4(self.model)
+        self.cpyram5 = CPYRAM5(self.model)
         self.cpenta6 = CPENTA6(self.model)
         self.chexa8 = CHEXA8(self.model)
 
         self.ctetra10 = CTETRA10(self.model)
+        self.cpyram13 = CPYRAM13(self.model)
         self.cpenta15 = CPENTA15(self.model)
         self.chexa20 = CHEXA20(self.model)
 
@@ -45,9 +50,11 @@ class ElementsSolid(object):
 
         self.element_id = hstack([
             self.ctetra4.element_id,
+            self.cpyram5.element_id,
             self.cpenta6.element_id,
             self.chexa8.element_id,
             self.ctetra10.element_id,
+            self.cpyram13.element_id,
             self.cpenta15.element_id,
             self.chexa20.element_id,
         ])
@@ -164,8 +171,8 @@ class ElementsSolid(object):
             elems.write_card(f, size=size, element_id=element_id)
 
     def _get_types(self, nlimit=True):
-        types = [self.ctetra4, self.cpenta6, self.chexa8,
-                 self.ctetra10, self.cpenta15, self.chexa20,
+        types = [self.ctetra4, self.cpyram5, self.cpenta6, self.chexa8,
+                 self.ctetra10, self.cpyram13, self.cpenta15, self.chexa20,
                  ]
         if nlimit:
             types2 = []
@@ -190,3 +197,6 @@ class ElementsSolid(object):
         types = self._get_types()
         for elems in types:
             elems._verify(xref=xref)
+
+    def __repr__(self):
+        return '<%s object; n=%s>' % (self.__class__.__name__, self.n)

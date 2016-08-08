@@ -4,7 +4,8 @@ from numpy import zeros, where, arange, searchsorted
 
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
-from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
+from pyNastran.bdf.field_writer_16 import print_card_16
+from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_blank,
     double_or_blank)
 
 #from pyNastran.bdf.dev_vectorized.cards.vectorized_card import VectorizedCard
@@ -60,7 +61,7 @@ class MAT1(Material):
         self.Sc[i] = double_or_blank(card, 10, 'Sc', 0.0)
         self.Ss[i] = double_or_blank(card, 11, 'Ss', 0.0)
         self.mcsid[i] = integer_or_blank(card, 12, 'Mcsid', 0)
-        assert len(card) <= 13, 'len(MAT1 card) = %i' % len(card)
+        assert len(card) <= 13, 'len(MAT1 card) = %i\ncard=%s' % (len(card), card)
         assert self.material_id[i] > 0, self.material_id
         self.i += 1
 

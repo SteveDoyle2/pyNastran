@@ -4,7 +4,7 @@ from pyNastran.bdf.bdf import BDF
 
 startnum = 9000
 
-mesh = BDF()
+mesh = BDF(debug=False)
 mesh.read_bdf('before.bdf', punch=True)
 mesh.write_bdf('before_i.bdf', interspersed=False)
 
@@ -40,6 +40,6 @@ for k, n in enumerate(mesh.nodes.keys()):
 
 mesh.write_bdf('after_i.bdf', interspersed=False)
 
-meshC = BDF()
+meshC = BDF(debug=False)
 meshC.read_bdf('after_i.bdf', punch=True)
 meshC.write_bdf('after.bdf')

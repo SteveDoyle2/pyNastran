@@ -3,7 +3,7 @@ from numpy import arange, array, zeros, searchsorted, unique, full, nan, where
 
 from pyNastran.bdf.cards.base_card import expand_thru
 from pyNastran.bdf.field_writer_8 import print_card_8
-from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
+from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_blank,
     double_or_blank, integer_string_or_blank, string_or_blank)
 
 
@@ -137,7 +137,7 @@ class PLOAD4(object):
                     double_or_blank(card, 12, 'N3', 0.0), ]
                 self.sorl[i] = string_or_blank(card, 13, 'sorl', 'SURF')
                 self.ldir[i] = string_or_blank(card, 14, 'ldir', 'NORM')
-                assert len(card) <= 15, 'len(PLOAD4 card) = %i' % len(card)
+                assert len(card) <= 15, 'len(PLOAD4 card) = %i\ncard=%s' % (len(card), card)
 
             i = self.load_id.argsort()
             #self.element_id = self.element_id[i]

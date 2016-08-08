@@ -58,14 +58,13 @@ def main():
         iz = key_map['X Location']
         iozz = key_map['Z Component']
         csv_filename = 'rpt_%i.csv' % key
-        f = open(csv_filename, 'wb')
-        f.write('#x,ozz\n')
-        for row in rows:
-            z = float(row[iz])
-            ozz = float(row[iozz])
-            print("z=%s ozz=%s" % (z, ozz))
-            f.write('%g,%g\n' % (z, ozz))
-        f.close()
+        with open(csv_filename, 'wb') as f:
+            f.write('#x,ozz\n')
+            for row in rows:
+                z = float(row[iz])
+                ozz = float(row[iozz])
+                print("z=%s ozz=%s" % (z, ozz))
+                f.write('%g,%g\n' % (z, ozz))
 
         ix = 0
         dx = 0.1
@@ -81,7 +80,7 @@ def csv_simplify(csv_filename, x0, ix, iname, tol=0.05):
 
     isort = argsort(A[:, ix])
     X = A[isort, ix]
-    aResponse = A[isort, iname]
+    a_response = A[isort, iname]
 
     f.write('#z,response\n')
     update_flag = 1
@@ -98,9 +97,9 @@ def csv_simplify(csv_filename, x0, ix, iname, tol=0.05):
         print("x=%s x_orig=%s" % (x, x_orig))
         if allclose(x, x_orig, atol=tol):
             if response is None:
-                response = aResponse[i]
+                response = a_response[i]
             else:
-                response = vstack((response, aResponse[i]))
+                response = vstack((response, a_response[i]))
             update_flag = False
         else:
             print("response = %s" % response)
@@ -136,7 +135,7 @@ def csv_simplify(csv_filename, x0, ix, iname, tol=0.05):
             f.write("%g,%g,%g\n" % (x, response, response / 1e6))
             #f.write("-------------------\n")
             x_orig = X[i]
-            response = aResponse[i]
+            response = a_response[i]
 
 if __name__ == "__main__":
     main()

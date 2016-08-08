@@ -59,7 +59,7 @@ def wipe_empty_fields_off(fields):
     Removes any trailing Nones from the card.
     Also converts empty strings to None.
 
-    .. warning :: doesn't allows floats & ints.
+    .. warning:: doesn't allows floats & ints.
     """
     nfields = len(fields)
     for i, field in enumerate(reversed(fields)):
@@ -69,7 +69,7 @@ def wipe_empty_fields_off(fields):
     # print('fields =', fields[:nfields-i])
 
     # has the potential issue of not returning embedded Nones
-    return [field.strip() if isinstance(field, string_types) else field for field in fields[:nfields-i] ]
+    return [field.strip() if isinstance(field, string_types) else field for field in fields[:nfields-i]]
     # return [field.strip() if field.strip() else None for field in fields[:nfields-i] ] # fails on ints/Nones
 
 def wipe_empty_fields(fields):
@@ -103,24 +103,24 @@ def wipe_empty_fields(fields):
     # print('fields2', fields)
     return fields
 
-def _wipe_empty_fields(card):
-    """
-    For testing:
-        this method is:   wipe_empty_fields
-        the one above is: wipe_empty_fields_new
+#def _wipe_empty_fields(card):
+    #"""
+    #For testing:
+        #this method is:   wipe_empty_fields
+        #the one above is: wipe_empty_fields_new
 
-    In general:
-        this method is     _wipe_empty_fields
-        the  one above is: wipe_empty_fields
-    """
-    typed = wipe_empty_fields_typed(card)
-    untyped = wipe_empty_fields_new(card)  # the above method is wipe_empty_fields_new
-    untyped = wipe_empty_fields_new(card)  # the above method is wipe_empty_fields_new
-    if typed != untyped:
-        msg = 'typed   = %s\n' % typed
-        msg += 'untyped = %s\n' % untyped
-        print(msg)
-    return untyped
+    #In general:
+        #this method is     _wipe_empty_fields
+        #the  one above is: wipe_empty_fields
+    #"""
+    #typed = wipe_empty_fields_typed(card)
+    #untyped = wipe_empty_fields_new(card)  # the above method is wipe_empty_fields_new
+    #untyped = wipe_empty_fields_new(card)  # the above method is wipe_empty_fields_new
+    #if typed != untyped:
+        #msg = 'typed   = %s\n' % typed
+        #msg += 'untyped = %s\n' % untyped
+        #print(msg)
+    #return untyped
 
 def wipe_empty_fields_typed(card):
     """

@@ -3,7 +3,7 @@ from numpy import zeros, where, arange, searchsorted
 
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
-from pyNastran.bdf.bdfInterface.assign_type import (integer,
+from pyNastran.bdf.bdf_interface.assign_type import (integer,
     double, double_or_blank, string_or_blank)
 
 from pyNastran.bdf.dev_vectorized.cards.materials.material import Material
@@ -76,7 +76,7 @@ class MAT8(Material):
         self.ge[i] = double_or_blank(card, 17, 'ge', 0.0)
         self.F12[i] = double_or_blank(card, 18, 'F12', 0.0)
         self.strn[i] = double_or_blank(card, 19, 'strn', 0.0)
-        assert len(card) <= 20, 'len(MAT8 card) = %i' % len(card)
+        assert len(card) <= 20, 'len(MAT8 card) = %i\ncard=%s' % (len(card), card)
         self.i += 1
 
 

@@ -23,7 +23,7 @@ from pyNastran.op2.tables.grid_point_weight import GridPointWeight
 
 from pyNastran.op2.tables.lama_eigenvalues.lama import LAMA
 from pyNastran.op2.tables.oee_energy.onr import ONR
-from pyNastran.op2.tables.opg_appliedLoads.ogpf import OGPF
+from pyNastran.op2.tables.ogf_gridPointForces.ogpf import OGPF
 
 from pyNastran.op2.tables.oef_forces.oef import OEF
 from pyNastran.op2.tables.oes_stressStrain.oes import OES
@@ -37,7 +37,7 @@ from pyNastran.op2.fortran_format import FortranFormat
 
 from pyNastran.utils import is_binary_file
 from pyNastran.utils.log import get_logger
-
+from pyNastran.op2.tables.design_response import WeightResponse, FlutterResponse, Convergence
 
 GEOM_TABLES = [
     # GEOM2 - Table of Bulk Data entry images related to element connectivity andscalar points
@@ -61,7 +61,7 @@ GEOM_TABLES = [
     # EQEXIN - quivalence table between external and internal grid/scalaridentification numbers.
     b'EQEXIN', b'EQEXINS',
     b'ERRORN',
-    b'DESTAB', b'R1TABRG', b'HISADD',
+    b'DESTAB', b'R1TABRG',# b'HISADD',
 
     # eigenvalues
     b'BLAMA', b'LAMA', b'CLAMA',  #CLAMA is new
@@ -350,6 +350,7 @@ AUTODESK_MATRIX_TABLES = [
 RESULT_TABLES = NX_RESULT_TABLES + MSC_RESULT_TABLES
 MATRIX_TABLES = NX_MATRIX_TABLES + MSC_MATRIX_TABLES + AUTODESK_MATRIX_TABLES
 
+
 class OP2_Scalar(LAMA, ONR, OGPF,
                  OEF, OES, OGS, OPG, OQG, OUG, OGPWG, FortranFormat):
     """
@@ -358,10 +359,20 @@ class OP2_Scalar(LAMA, ONR, OGPF,
     def set_as_nx(self):
         self.is_nx = True
         self.is_msc = False
+        self.is_optistruct = False
+        self._nastran_format = 'msc'
 
     def set_as_msc(self):
         self.is_nx = False
         self.is_msc = True
+        self.is_optistruct = False
+        self._nastran_format = 'nx'
+
+    def set_as_optistruct(self):
+        self.is_nx = False
+        self.is_msc = False
+        self.is_optistruct = True
+        self._nastran_format = 'optistruct'
 
     def __init__(self, debug=False, log=None, debug_file=None):
         """
@@ -514,16 +525,12 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             #b'RANCONS': [self._table_passer, self._table_passer], # Constraint mode element strain energy table (ORGY1)
 
 
-            #b'HISADD': [self._hisadd_3, self._hisadd_4],  # optimization history (SOL200)
-            b'HISADD': [self._table_passer, self._table_passer],
-            b'R1TABRG': [self._table_passer, self._table_passer_r1tabrg],
+            b'R1TABRG': [self._table_passer, self._read_r1tabrg],
             #b'TOL': [self._table_passer, self._table_passer],
 
             b'MATPOOL': [self._table_passer, self._table_passer], # DMIG bulk data entries
             b'CSTM':    [self._table_passer, self._table_passer],
             b'AXIC':    [self._table_passer, self._table_passer],
-            b'OPHIG' :  [self._table_passer, self._table_passer],  # eigenvectors in basic coordinate system
-            b'BOPHIG':  [self._table_passer, self._table_passer],  # eigenvectors in basic coordinate system
             b'ONRGY2':  [self._table_passer, self._table_passer],
 
             b'RSOUGV1': [self._table_passer, self._table_passer],
@@ -666,6 +673,9 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OUPV1'   : [self._read_oug1_3, self._read_oug_4],  # scaled response spectra - displacement
             b'TOUGV1'  : [self._read_oug1_3, self._read_oug_4],  # grid point temperature
             b'ROUGV1'  : [self._read_oug1_3, self._read_oug_4], # relative OUG
+
+            b'OPHIG' :  [self._read_oug1_3, self._read_oug_4],  # eigenvectors in basic coordinate system
+            b'BOPHIG':  [self._read_oug1_3, self._read_oug_4],  # eigenvectors in basic coordinate system
 
             b'OUGV2'   : [self._read_oug2_3, self._read_oug_4],  # displacements in nodal frame
 
@@ -860,18 +870,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         }
         return table_mapper
 
-    #def _hisadd_3(self, data):
-        #"""
-        #table of design iteration history for current design cycle
-        #HIS table
-        #"""
-        #self.show_data(data, types='ifs')
-        #asf
-
-    #def _hisadd_4(self, data):
-        #self.show_data(data, types='ifs')
-        #asf
-
     def _read_aemonpt_3(self, data, ndata):
         sys.exit(self.code_information())
 
@@ -935,11 +933,172 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             self.binary_debug.write('  skipping table = %s\n' % self.table_name)
         return ndata
 
-    def _table_passer_r1tabrg(self, data, ndata):
-        """auto-table skipper"""
+    def _read_r1tabrg(self, data, ndata):
+        """
+        Design Responses:
+          - Weight
+          - Flutter Speed
+          - Stress
+          - Strain
+          - Displacement
+        """
         if self._table4_count == 0:
             self._count += 1
         self._table4_count += 1
+
+        if self.read_mode == 0:
+            return ndata
+        #if self._table4_count == 0:
+            #self._count += 1
+        #self._table4_count += 1
+
+        if self.read_mode == 1:
+            assert data is not None, data
+            assert len(data) > 12, len(data)
+            Type, = unpack(self._endian + 'i', data[8:12])
+            #assert Type in [1, 6, 10, 84], Type
+            if Type == 1:
+                if self.weight_response is None:
+                    self.weight_response = WeightResponse()
+                else:
+                    self.weight_response.n += 1
+            elif Type == 4:
+                #TYPE =4 EIGN or FREQ
+                #8 MODE I Mode number
+                #9 APRX I Approximation code
+                pass
+            elif Type == 5:
+                #TYPE =5 DISP
+                #8 COMP I Displacement component
+                #9 UNDEF None
+                #10 GRID I Grid identification number
+                pass
+            elif Type == 15:
+                # CEIG
+                #8 MODE I Mode number
+                #9 ICODE I 1: Real component or 2: Imaginary component
+                pass
+            elif Type == 84:
+                if self.flutter_response is None:
+                    self.flutter_response = FlutterResponse()
+                else:
+                    self.flutter_response.n += 1
+            return ndata
+            #else: # response not added...
+                #pass
+        if 1:
+            #self.show_data(data, types='ifs', endian=None)
+            out = unpack(self._endian + 'iii 8s iiii i iiiii', data)
+            # per the R1TAB DMAP page:
+            #   all indicies are downshift by 1
+            #   indices above out[3] are off by +2 because of the 2 field response_label
+            internal_id = out[0]
+            dresp_id = out[1]
+            Type = out[2]
+            response_label = out[3].strip()
+            # -1 for 2 field wide response_label
+            region = out[4]
+            subcase = out[5]
+            type_flag = out[12]  # no meaning per MSC DMAP 2005
+            seid = out[13]
+
+            if Type == 1:
+                #                                                  -----    WEIGHT RESPONSE    -----
+                #     ---------------------------------------------------------------------------------------------------------------------------
+                #          INTERNAL    DRESP1    RESPONSE     ROW       COLUMN         LOWER          INPUT         OUTPUT          UPPER
+                #             ID         ID       LABEL        ID         ID           BOUND          VALUE          VALUE          BOUND
+                #     ---------------------------------------------------------------------------------------------------------------------------
+                #               1         1      WEIGHT        3          3              N/A        2.9861E+05    2.9852E+05       N/A
+                #(1, 1,    1, 'WEIGHT  ', 0, 1011, 3, 3, 0, 0, 0, 0, 0, 0)
+                #(1, 1000, 1, 'W       ', 0, 1,    3, 3, 0, 0, 0, 0, 0, 0)
+                #print(out)
+                #row_id = out[4]
+
+                # these should be blank?
+                row_id = out[6]
+                column_id = out[7]
+
+                seid_weight = out[8]
+
+                assert np.abs(out[8:-1]).sum() == 0.0, 'out=%s 8=%s' % (out, out[8:-1])
+                assert out[-1] in [0, 1, 2, 3, 4, 5], out
+                #dunno_8 = out[8]
+                #dunno_9 = out[9]
+                #dunno_10 = out[10]
+                #dunno_11 = out[11]
+                #dunno_12 = out[12]
+                #dunno_13 = out[13]
+                #msg = 'WEIGHT - Type=%r response_label=%r row_id=%r column_id=%r 6=%r 7=%r 8=%r 9=%r 10=%r 11=%r 12=%r 13=%r' % (
+                    #Type, response_label, row_id, column_id, dunno_6, dunno_7, dunno_8, dunno_9, dunno_10, dunno_11, dunno_12, dunno_13)
+                #out = unpack(self._endian + 'iii 8s iiff f fffff', data)
+                #print(out)
+                msg = 'WEIGHT - label=%r region=%s subcase=%s row_id=%r column_id=%r' % (
+                    response_label, region, subcase, row_id, column_id)
+                self.weight_response.append(internal_id, dresp_id, response_label, region,
+                                            subcase, type_flag, seid,
+                                            row_id, column_id)
+                #print(msg)
+                #self.log.debug(msg)
+            elif Type == 6:  # STRESS
+                #                                                 -----    STRESS RESPONSES    -----
+                #     ---------------------------------------------------------------------------------------------------------------------------
+                #        INTERNAL   DRESP1   RESPONSE   ELEMENT    VIEW    COMPONENT      LOWER         INPUT        OUTPUT         UPPER
+                #           ID        ID      LABEL        ID     ELM ID      NO.         BOUND         VALUE         VALUE         BOUND
+                #     ---------------------------------------------------------------------------------------------------------------------------
+                #              21       209  S09L       1447476                  17       N/A        4.8561E+04    5.0000E+04    5.0000E+04
+                # (21, 209, 6, 'S09L    ', 30, 1011, 17, 0, 1447476, 0, 0, 0, 0, 0)
+                stress_code = out[6]
+                pid = out[8]
+                msg = 'STRESS - Type=%r label=%r region=%s subcase=%s stress_code=%s pid=%s' % (
+                    Type, response_label, region, subcase, stress_code, pid)
+
+            #elif Type == 5:  # DISP
+                #pass
+            #elif Type == 7:  # STRAIN
+                #pass
+            elif Type == 10:  # CSTRESS
+                stress_code = out[6]
+                ply = out[7]
+                pid = out[8]  # is this element id?
+                msg = 'CSTRESS - label=%r region=%s subcase=%s stress_code=%s ply=%s pid=%s' % (
+                    response_label, region, subcase, stress_code, ply, pid)
+                #print(msg)
+            #elif Type == 10:  # CSTRAIN
+                #pass
+            elif Type == 24:  # FRSTRE
+                #8 ICODE I Stress item code
+                #9 UNDEF None
+                #10 ELID I Element identification number
+                #11 FREQ RS Frequency
+                #12 IFLAG I Integrated response flag. See Remark 20 of
+                #DRESP1.
+                #Value is -1 to -6, for SUM, AVG, SSQ,
+                pass
+            elif Type == 28:  # RMSACCL
+                #8 COMP I RMS Acceleration component
+                #9 RANDPS I RANDPS entry identification number
+                #10 GRID I Grid identification number
+                #11 DMFREQ RS Dummy frequency for internal use
+                pass
+            elif Type == 84:  # FLUTTER  (iii, label, mode, (Ma, V, rho), flutter_id, fff)
+                out = unpack(self._endian + 'iii 8s iii fff i fff', data)
+                mode = out[6]
+                mach = out[7]
+                velocity = out[8]
+                density = out[9]
+                flutter_id = out[10]
+                msg = 'FLUTTER - _count=%s label=%r region=%s subcase=%s mode=%s mach=%s velocity=%s density=%s flutter_id=%s' % (
+                    self._count, response_label, region, subcase, mode, mach, velocity, density, flutter_id)
+                self.flutter_response.append(internal_id, dresp_id, response_label, region,
+                                             subcase, type_flag, seid,
+                                             mode, mach, velocity, density, flutter_id)
+                #print(msg)
+                #self.log.debug(msg)
+            else:
+                self.log.debug('R1TABRG response Type=%s not supported' % Type)
+                #raise NotImplementedError(Type)
+            assert len(out) == 14, len(out)
+        #self.response1_table[self._count] = out
         return ndata
 
     def _validate_op2_filename(self, op2_filename):
@@ -1116,6 +1275,9 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             elif version == b'XXXXXXXX':
                 self.set_as_msc()
                 self.set_table_type()
+            elif version == b'OS12.210':
+                self.set_as_optistruct()
+                self.set_table_type()
             else:
                 raise RuntimeError('unknown version=%r' % version)
 
@@ -1179,9 +1341,9 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
     def _make_tables(self):
         return
-        global RESULT_TABLES, NX_RESULT_TABLES, MSC_RESULT_TABLES
-        table_mapper = self._get_table_mapper()
-        RESULT_TABLES = table_mapper.keys()
+        #global RESULT_TABLES, NX_RESULT_TABLES, MSC_RESULT_TABLES
+        #table_mapper = self._get_table_mapper()
+        #RESULT_TABLES = table_mapper.keys()
 
     def _read_tables(self, table_name):
         """
@@ -1213,8 +1375,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                     #self._read_meff()
                 elif table_name == b'INTMOD':
                     self._read_intmod()
-                #elif table_name == b'HISADD':
-                    #self._read_hisadd()
+                elif table_name == b'HISADD':
+                    self._read_hisadd()
                 elif table_name == b'FRL':  # frequency response list
                     self._skip_table(self.table_name)
                 elif table_name == b'EXTDB':
@@ -1225,8 +1387,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                     self._read_dit()
                 elif table_name == b'TOL':
                     self._read_tol()
-                #elif table_name == b'KELM':
-                    #self._read_kelm()
                 elif table_name == b'PCOMPTS': # blade
                     self._read_pcompts()
                 elif table_name == b'FOL':
@@ -1397,7 +1557,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             return self._skip_matrix()
 
         allowed_forms = [1, 2, 3, 4, 5, 6, 8, 9, 10, 11, 13, 15]
-        print('----------------------------------------------------------------')
+        #self.log.debug('----------------------------------------------------------------')
         table_name = self._read_table_name(rewind=False, stop_on_failure=True)
         self.read_markers([-1])
         data = self._read_record()
@@ -1443,18 +1603,18 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         else:
             #raise RuntimeError('tout = %s' % tout)
             dtype = '????'
-            print('unexpected tout: matrix_num=%s form=%s mrows=%s ncols=%s tout=%s nvalues=%s g=%s'  % (
+            self.log.warning('unexpected tout: matrix_num=%s form=%s mrows=%s ncols=%s tout=%s nvalues=%s g=%s'  % (
                 matrix_num, form, mrows, ncols, tout, nvalues, g))
 
         if form == 1:
             if ncols != mrows:
-                print('unexpected size; form=%s mrows=%s ncols=%s' % (form, mrows, ncols))
+                self.log.warning('unexpected size; form=%s mrows=%s ncols=%s' % (form, mrows, ncols))
         elif form not in allowed_forms:
             self.log.error('name=%r matrix_num=%s form=%s mrows=%s ncols=%s tout=%s nvalues=%s g=%s' % (
                 table_name, matrix_num, form, mrows, ncols, tout, nvalues, g))
             raise RuntimeError('form=%s; allowed=%s' % (form, allowed_forms))
-        self.log.info('name=%r matrix_num=%s form=%s mrows=%s ncols=%s tout=%s nvalues=%s g=%s' % (
-            table_name, matrix_num, form, mrows, ncols, tout, nvalues, g))
+        #self.log.info('name=%r matrix_num=%s form=%s mrows=%s ncols=%s tout=%s nvalues=%s g=%s' % (
+            #table_name, matrix_num, form, mrows, ncols, tout, nvalues, g))
 
         self.read_markers([-2, 1, 0])
         data = self._read_record()
@@ -1531,7 +1691,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                         matrix = coo_matrix((real_array, (GCi, GCj)),
                                             shape=(mrows, ncols), dtype=dtype)
                         matrix = matrix.todense()
-                        self.log.info('created %s' % self.table_name)
+                        #self.log.info('created %s' % self.table_name)
                     elif tout in [3, 4]:
                         real_array = np.array(reals, dtype=dtype)
                         nvalues_matrix = real_array.shape[0] // 2
@@ -1552,7 +1712,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                         matrix = None
                         self.log.warning('what is the dtype?')
                     else:
-                        print('dtype =', dtype)
+                        #print('dtype =', dtype)
                         real_array = np.array(reals, dtype=dtype)
                         self.log.debug('shape=%s mrows=%s ncols=%s' % (str(real_array.shape), mrows, ncols))
                         if len(reals) == mrows * ncols:
@@ -1628,110 +1788,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
         #self.show(100)
         self.read_markers([0])
-
-    def _read_kelm(self):
-        """
-        .. todo:: this table follows a totally different pattern...
-        The KELM table stores information about the K matrix???
-        """
-        self.log.debug("table_name = %r" % self.table_name)
-        table_name = self._read_table_name(rewind=False)
-        self.read_markers([-1])
-        data = self._read_record()
-
-        self.read_markers([-2, 1, 0])
-        data = self._read_record()
-        if len(data) == 16:  # KELM
-            table_name, dummy_a, dummy_b = unpack(b(self._endian + '8sii'), data)
-            assert dummy_a == 170, dummy_a
-            assert dummy_b == 170, dummy_b
-        else:
-            raise NotImplementedError(self.show_data(data))
-
-        self.read_markers([-3, 1, 1])
-
-        # data = read_record()
-        for i in range(170//10):
-            self.read_markers([2])
-            data = self.read_block()
-            #print "i=%s n=%s" % (i, self.n)
-
-        self.read_markers([4])
-        data = self.read_block()
-
-        for i in range(7):
-            self.read_markers([2])
-            data = self.read_block()
-            #print "i=%s n=%s" % (i, self.n)
-
-
-        self.read_markers([-4, 1, 1])
-        for i in range(170//10):
-            self.read_markers([2])
-            data = self.read_block()
-            #print "i=%s n=%s" % (i, self.n)
-
-        self.read_markers([4])
-        data = self.read_block()
-
-        for i in range(7):
-            self.read_markers([2])
-            data = self.read_block()
-            #print "i=%s n=%s" % (i, self.n)
-
-        self.read_markers([-5, 1, 1])
-        self.read_markers([600])
-        data = self.read_block()  # 604
-
-        self.read_markers([-6, 1, 1])
-        self.read_markers([188])
-        data = self.read_block()
-
-        self.read_markers([14])
-        data = self.read_block()
-        self.read_markers([16])
-        data = self.read_block()
-        self.read_markers([18])
-        data = self.read_block()
-        self.read_markers([84])
-        data = self.read_block()
-        self.read_markers([6])
-        data = self.read_block()
-
-        self.read_markers([-7, 1, 1])
-        self.read_markers([342])
-        data = self.read_block()
-
-        self.read_markers([-8, 1, 1])
-        data = self.read_block()
-        data = self.read_block()
-        while 1:
-            n = self.get_nmarkers(1, rewind=True)[0]
-            if n not in [2, 4, 6, 8]:
-                #print "n =", n
-                break
-            n = self.get_nmarkers(1, rewind=False)[0]
-            #print n
-            data = self.read_block()
-
-
-        i = -9
-        while i != -13:
-            n = self.get_nmarkers(1, rewind=True)[0]
-
-            self.read_markers([i, 1, 1])
-            while 1:
-                n = self.get_nmarkers(1, rewind=True)[0]
-                if n not in [2, 4, 6, 8]:
-                    #print "n =", n
-                    break
-                n = self.get_nmarkers(1, rewind=False)[0]
-                #print n
-                data = self.read_block()
-            i -= 1
-
-        #print "n=%s" % (self.n)
-        #strings, ints, floats = self.show(100)
 
     def _skip_pcompts(self):
         """
@@ -2081,43 +2137,63 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
 
     def _read_hisadd(self):
-        """preliminary reader for the HISADD table"""
+        """optimization history (SOL200) table"""
         self.table_name = self._read_table_name(rewind=False)
-        #self.log.debug('table_name = %r' % self.table_name)
+
+        if self.read_mode == 1:
+            self.read_markers([-1])
+            self._skip_record()
+            self.read_markers([-2, 1, 0])
+            self._skip_record()
+            self.read_markers([-3, 1, 0])
+
+            if self.convergence_data is None:
+                data = self._read_record()
+                ndvs = len(data) // 4 - 7
+                self.convergence_data = Convergence(ndvs)
+            else:
+                self._skip_record()
+                self.convergence_data.n += 1
+
+            self.read_markers([-4, 1, 0, 0])
+            return
+
         if self.is_debug_file:
             self.binary_debug.write('_read_geom_table - %s\n' % self.table_name)
+        #self.log.info('----marker1----')
         self.read_markers([-1])
         if self.is_debug_file:
             self.binary_debug.write('---markers = [-1]---\n')
-        data = self._read_record()
+        data = self._read_record()  # ()102, 303, 0, 0, 0, 0, 0) date???
         #print('hisadd data1')
-        self.show_data(data)
+        #self.show_data(data)
 
+        #self.log.info('----marker2----')
         markers = self.get_nmarkers(1, rewind=True)
         if self.is_debug_file:
             self.binary_debug.write('---marker0 = %s---\n' % markers)
         self.read_markers([-2, 1, 0])
-        data = self._read_record()
-        print('hisadd data2')
-        self.show_data(data)
+        data = self._read_record()  # ('HISADD', )
+        #print('hisadd data2')
+        #self.show_data(data)
 
+        #self.log.info('----marker3----')
         self.read_markers([-3, 1, 0])
-        markers = self.get_nmarkers(1, rewind=False)
-        print('markers =', markers)
-        nbytes = markers[0]*4 + 12
-        data = self.f.read(nbytes)
-        self.n += nbytes
-        self.show_data(data[4:-4])
-        #self.show(100)
-        datai = data[:-4]
+        data = self._read_record()
 
-        irec = data[:32]
         (design_iter, iconvergence, conv_result, obj_intial, obj_final,
-         constraint_max, row_constraint_max, desvar_value) = unpack(b(self._endian + '3i3fif'), irec)
+         constraint_max, row_constraint_max) = unpack(b(self._endian + '3i3fi'), data[:28])
         if iconvergence == 1:
             iconvergence = 'soft'
         elif iconvergence == 2:
             iconvergence = 'hard'
+        elif iconvergence == 6:
+            self.log.warning('HISADD iconverge=6')
+            iconvergence = '???'
+        else:
+            msg = 'iconvergence=%s\n' % iconvergence
+            self.show_data(data, types='ifs', endian=None)
+            raise NotImplementedError(msg)
 
         if conv_result == 0:
             conv_result = 'no'
@@ -2125,23 +2201,25 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             conv_result = 'soft'
         elif conv_result == 2:
             conv_result = 'hard'
+        elif conv_result in [3, 4]:
+            self.log.warning('HISADD conv_result=%s' % conv_result)
+            # not sure why this happens, but the field is wrong
+            # it seems to apply to one step before this one
+            conv_result = 'best_design'
+        else:
+            self.log.debug('design_iter=%s iconvergence=%s conv_result=%s obj_intial=%s obj_final=%s constraint_max=%s row_constraint_max=%s' % (
+                design_iter, iconvergence, conv_result, obj_intial, obj_final, constraint_max, row_constraint_max))
+            raise NotImplementedError('conv_result=%s' % conv_result)
+        #self.log.debug('design_iter=%s iconvergence=%s conv_result=%s obj_intial=%s obj_final=%s constraint_max=%s row_constraint_max=%s' % (
+            #design_iter, iconvergence, conv_result, obj_intial, obj_final, constraint_max, row_constraint_max))
 
-        print('design_iter=%s iconvergence=%s conv_result=%s obj_intial=%s obj_final=%s constraint_max=%s row_constraint_max=%s desvar_value=%s' % (
-            design_iter, iconvergence, conv_result, obj_intial, obj_final, constraint_max, row_constraint_max, desvar_value))
-        self.show_data(datai[32:])
-        raise NotImplementedError()
-        #for n in [-3, -4, -5, -6, -7, -8,]:
-            #self.read_markers([n, 1, 1])
-            #markers = self.get_nmarkers(1, rewind=False)
-            ##print('markers =', markers)
-            #nbytes = markers[0]*4 + 12
-            #data = self.f.read(nbytes)
-            ##print('intmod data%i' % n)
-            ##self.show_data(data)
-            #self.n += nbytes
+        ndvs = len(data) // 4 - 7
+        desvar_values = unpack('%sf' % ndvs, data[28:])
 
-        #n = -9
-        #self.read_markers([n, 1, 0, 0])
+        self.convergence_data.append(design_iter, iconvergence, conv_result, obj_intial,
+                                    obj_final, constraint_max, row_constraint_max, desvar_values)
+        self.read_markers([-4, 1, 0, 0])
+
 
     def _get_marker_n(self, nmarkers):
         """

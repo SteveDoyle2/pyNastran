@@ -14,7 +14,7 @@ def determine_format(input):
     .. note :: this function will not support generic extensions (e.g. .inp, .dat)
     """
     format_to_extension = {
-        'nastran' : ['.bdf', '.ecd', '.nas'],
+        'nastran' : ['.bdf', '.ecd', '.nas', '.op2'],
         'stl' : ['.stl'],
         'cart3d' : ['.tri', '.triq'],
         'tecplot' : ['.plt'],
@@ -22,6 +22,8 @@ def determine_format(input):
         'plot3d' : ['.p3d', '.p3da'],
         'surf' : ['.surf'],
         'lawgs' : ['.wgs'],
+        'shabp' : ['.mk5'],
+        'panair' : ['.inp'],
     }
     ext = os.path.splitext(input)[1].lower()
     extension_to_format = {val : key for key, value in iteritems(format_to_extension)
@@ -39,17 +41,17 @@ def run_docopt():
     msg += '               [-s SHOT] [-m MAGNIFY]\n'  #  [-r XYZ]
     msg += '               [-g GSCRIPT] [-p PSCRIPT]\n'
     msg += '               [-u POINTS_FNAME...] [--user_geom GEOM_FNAME...]\n'
-    msg += '               [-q]\n'
+    msg += '               [-q] [--groups]\n'
     msg += "  pyNastranGUI [-f FORMAT] INPUT OUTPUT [-o OUTPUT]\n"
     msg += '               [-s SHOT] [-m MAGNIFY]\n'  #  [-r XYZ]
     msg += '               [-g GSCRIPT] [-p PSCRIPT]\n'
     msg += '               [-u POINTS_FNAME...] [--user_geom GEOM_FNAME...]\n'
-    msg += '               [-q]\n'
+    msg += '               [-q] [--groups]\n'
     msg += "  pyNastranGUI [-f FORMAT] [-i INPUT] [-o OUTPUT...]\n"
-    msg += '                [-s SHOT] [-m MAGNIFY]\n'  #  [-r XYZ]
-    msg += '                [-g GSCRIPT] [-p PSCRIPT]\n'
-    msg += '                [-u POINTS_FNAME...] [--user_geom GEOM_FNAME...]\n'
-    msg += '                [-q]\n'
+    msg += '               [-s SHOT] [-m MAGNIFY]\n'  #  [-r XYZ]
+    msg += '               [-g GSCRIPT] [-p PSCRIPT]\n'
+    msg += '               [-u POINTS_FNAME...] [--user_geom GEOM_FNAME...]\n'
+    msg += '               [-q] [--groups]\n'
     msg += '  pyNastranGUI -h | --help\n'
     msg += '  pyNastranGUI -v | --version\n'
     msg += "\n"
@@ -66,6 +68,7 @@ def run_docopt():
     msg += "  -p PSCRIPT, --postscript PSCRIPT     path to post script file (runs after load geometry)\n"
     msg += "  -s SHOT, --shots SHOT                path to screenshot (only 1 for now)\n"
     msg += "  -m MAGNIFY, --magnify                how much should the resolution on a picture be magnified [default: 5]\n"
+    msg += "  --groups                             enables groups\n"
     msg += "  --user_geom GEOM_FNAME POINTS_FNAME  add user specified points to an alternate grid (repeatable)\n"
     msg += "  -u POINTS_FNAME, --user_points POINTS_FNAME  add user specified points to an alternate grid (repeatable)\n"
 
@@ -95,6 +98,12 @@ def run_docopt():
 
     if input_filenames and not input_format:
         input_format = determine_format(input_filenames[0])
+
+    # None is for custom geometry
+    allowed_formats = [
+        'nastran', 'stl', 'cart3d', 'tecplot', 'ugrid', 'panair', 'plot3d',
+        'surf', 'lawgs', 'degen_geom', 'shabp', None]
+    assert input_format in allowed_formats, 'format=%r is not supported' % input_format
 
     shots = []
     if '--shots' in data:
@@ -127,9 +136,10 @@ def run_docopt():
         #print("shots2 = %r" % shots, type(shots))
         shots = shots.split(';')[0]
 
+    is_groups = data['--groups']
     #assert data['--console'] == False, data['--console']
     return (input_format, input_filenames, output_filenames, shots,
-            magnify, rotation, geom_script, post_script, debug, user_points, user_geom)
+            magnify, rotation, geom_script, post_script, debug, user_points, user_geom, is_groups)
 
 
 def get_inputs():
@@ -145,13 +155,14 @@ def get_inputs():
     post_script = None
     user_points = None
     user_geom = None
+    is_groups = False
 
     if sys.version_info < (2, 6):
         print("requires Python 2.6+ to use command line arguments...")
     else:
         if len(sys.argv) > 1:
             (input_format, input_filename, output_filename, shots, magnify,
-             rotation, geom_script, post_script, debug, user_points, user_geom) = run_docopt()
+             rotation, geom_script, post_script, debug, user_points, user_geom, is_groups) = run_docopt()
 
     inputs = {
         'format' : input_format,
@@ -165,5 +176,6 @@ def get_inputs():
         'postscript' : post_script,
         'user_points' : user_points,
         'user_geom' : user_geom,
+        'is_groups' : is_groups,
     }
     return inputs

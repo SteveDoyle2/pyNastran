@@ -7,13 +7,14 @@ Can read files in big or little endian format.
 
 @author: Tim Widrick
 """
-
-import numpy as np
-import sys
-import n2y
+from __future__ import print_function
 import struct
 import itertools as it
 import warnings
+import sys
+
+import numpy as np
+import n2y
 
 #  Notes on the op2 format.
 #

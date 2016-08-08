@@ -4,7 +4,7 @@ from numpy import arange, searchsorted, array
 from numpy.linalg import norm
 
 from pyNastran.bdf.field_writer_8 import print_card_8
-from pyNastran.bdf.bdfInterface.assign_type import integer, integer_or_blank
+from pyNastran.bdf.bdf_interface.assign_type import integer, integer_or_blank
 from pyNastran.bdf.dev_vectorized.cards.elements.solid.cpenta6 import tri_area_centroid
 
 from pyNastran.bdf.dev_vectorized.cards.elements.solid.solid_element import SolidElement
@@ -52,7 +52,7 @@ class CPENTA15(SolidElement):
             integer_or_blank(card, 17, 'node_id_15', 0),
         ], dtype='int32')
         self.node_ids[i, :] = nids
-        assert len(card) <= 17, 'len(CPENTA15 card) = %i' % len(card)
+        assert len(card) <= 17, 'len(CPENTA15 card) = %i\ncard=%s' % (len(card), card)
         self.i += 1
 
     def _verify(self, xref=True):

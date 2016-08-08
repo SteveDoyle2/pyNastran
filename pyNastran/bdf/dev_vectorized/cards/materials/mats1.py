@@ -2,7 +2,7 @@ from numpy import zeros
 
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
-from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
+from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_blank,
     double, double_or_blank, blank, string)
 from pyNastran.bdf.dev_vectorized.cards.vectorized_card import VectorizedCard
 from pyNastran.bdf.dev_vectorized.cards.materials.mat1 import Material
@@ -133,7 +133,7 @@ class MATS1(Material):
                 #self.limit2[i] = blank(card, 8, 'limit2')
                 #self.limit2[i] = None
                 pass
-        assert len(card) <= 9, 'len(MATS1 card) = %i' % len(card)
+        assert len(card) <= 9, 'len(MATS1 card) = %i\ncard=%s' % (len(card), card)
         self.i += 1
 
     def build(self):

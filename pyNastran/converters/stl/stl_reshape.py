@@ -3,7 +3,7 @@ from docopt import docopt
 from copy import deepcopy
 
 import pyNastran
-from pyNastran.converters.stl.stl_reader import STL
+from pyNastran.converters.stl.stl import STL
 
 def main():
     # --ascii <fmt> doesn't work for binary properly, so we set:

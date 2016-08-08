@@ -3,7 +3,7 @@ from numpy import arange, zeros, searchsorted, unique
 
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
-from pyNastran.bdf.bdfInterface.assign_type import (integer,
+from pyNastran.bdf.bdf_interface.assign_type import (integer,
     double, integer_string_or_blank)
 
 
@@ -60,7 +60,7 @@ class PLOAD2(object):
             eids = [i for i in range(e1, e2 + 1)]
         else:
             eids = fields(integer, card, 'eid', i=3, j=len(card))
-        assert len(card) == 6, 'len(PLOAD2 card) = %i' % len(card)
+        assert len(card) == 6, 'len(PLOAD2 card) = %i\ncard=%s' % (len(card), card)
         self.n += len(eids)
         self._element_ids.append(eids)
 

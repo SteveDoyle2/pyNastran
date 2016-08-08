@@ -172,7 +172,7 @@ class NastranIO(NastranIO_xref):
             self.nid_map[node_id] = i
 
         dim_max = max(xmax-xmin, ymax-ymin, zmax-zmin)
-        self.update_axes_length(dim_max)
+        self.create_global_axes(dim_max)
 
 
         # add the CAERO/CONM2 elements
@@ -181,13 +181,13 @@ class NastranIO(NastranIO_xref):
 
         nsprings = 0
         if 0:
+            elements_no_mass = [
+                'CBUSH', 'CBUSH1D', 'CFAST', 'CROD', 'CONROD',
+                'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
+                'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5', 'CVISC', ]
             for (eid, element) in sorted(iteritems(model.elements)):
-                if (isinstance(element, LineElement) or
-                    isinstance(element, SpringElement) or
-                    element.type in ['CBUSH', 'CBUSH1D', 'CFAST', 'CROD', 'CONROD',
-                                     'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
-                                     'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5', 'CVISC', ]):
-
+                if (isinstance(element, (LineElement, SpringElement)) or
+                    element.type in elements_no_mass):
                         nodeIDs = element.node_ids
                         if None in nodeIDs:
                             nsprings += 1
@@ -672,8 +672,7 @@ class NastranIO(NastranIO_xref):
                     elem.GetPointIds().SetId(7, nidMap[nodeIDs[7]])
                     self.grid.InsertNextCell(elem.GetCellType(),
                                              elem.GetPointIds())
-                elif (isinstance(element, LineElement) or
-                      isinstance(element, SpringElement) or
+                elif (isinstance(element, (LineElement, SpringElement)) or
                       element.type in ['CBUSH', 'CBUSH1D', 'CFAST', 'CROD', 'CONROD',
                                        'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
                                        'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5', 'CVISC', ]):

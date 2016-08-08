@@ -7,7 +7,7 @@ import vtk
 from vtk import vtkTriangle
 
 from pyNastran.converters.stl.stl import STL
-from pyNastran.gui.gui_result import GuiResult
+from pyNastran.gui.gui_objects.gui_result import GuiResult
 
 
 class STL_IO(object):
@@ -22,7 +22,7 @@ class STL_IO(object):
 
     def load_stl_geometry(self, stl_filename, dirname, name='main', plot=True):
         print("load_stl_geometry...")
-        skip_reading = self.removeOldGeometry(stl_filename)
+        skip_reading = self._remove_old_geometry(stl_filename)
         if skip_reading:
             return
 
@@ -32,8 +32,8 @@ class STL_IO(object):
         nodes = model.nodes
         elements = model.elements
 
-        normals = model.get_normals(elements)
-        areas = model.get_area(elements)
+        normals = model.get_normals(elements, stop_on_failure=False)
+        areas = model.get_area(elements, stop_on_failure=False)
         #nnormals = model.get_normals_at_nodes(elements)
         self.nNodes = nodes.shape[0]
         self.nElements = elements.shape[0]
@@ -70,7 +70,7 @@ class STL_IO(object):
         self.log.info('ymax=%s ymin=%s' % (ymax, ymin))
         self.log.info('zmax=%s zmin=%s' % (zmax, zmin))
         dim_max = max(xmax-xmin, ymax-ymin, zmax-zmin)
-        self.update_axes_length(dim_max)
+        self.create_global_axes(dim_max)
 
 
         nid = 0
@@ -116,7 +116,7 @@ class STL_IO(object):
         #cases[(ID, icase, 'Region', 1, 'centroid', '%i')] = regions
         itime = 0
         eids = arange(1, nelements + 1, dtype='int32')
-        nids = arange(1, nnodes+1, dtype='int32')
+        nids = arange(1, nnodes + 1, dtype='int32')
         if 0:
             cases[(ID, icase, 'ElementID', 1, 'centroid', '%i', '')] = eids
             cases[(ID, icase + 1, 'NodeID', 1, 'node', '%i', '')] = nids

@@ -23,7 +23,7 @@ class DummyWriter(object):
 #sys.stdout = DummyWriter()
 import pyNastran
 from pyNastran.bdf.bdf import BDF
-from pyNastran.f06.f06 import F06, FatalError
+from pyNastran.f06.errors import FatalError
 from pyNastran.op2.op2 import OP2
 from pyNastran.op4.op4 import OP4
 
@@ -582,7 +582,6 @@ class TestF06(unittest.TestCase):
                     for nid, ovmi in sorted(iteritems(ovm)):
                         for ilayer, ovmii in enumerate(ovmi):
                             print("%8s %8s %6s %8s" % (eid, nid, ilayer, ovmii))
-                            pass
             else:
                 #print("%3s %3s %6s %8s" % ('eID', 'NID', 'iLayer', 'MaxShear'))
                 #vonMises = 'MAX SHEAR'

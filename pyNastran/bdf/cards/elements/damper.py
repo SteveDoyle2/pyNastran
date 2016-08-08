@@ -15,8 +15,8 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 
 from pyNastran.utils import integer_types
 from pyNastran.bdf.cards.base_card import Element
-from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
-                                                    double)
+from pyNastran.bdf.bdf_interface.assign_type import (
+    integer, integer_or_blank, double)
 from pyNastran.bdf.field_writer_8 import print_card_8
 
 
@@ -30,10 +30,18 @@ class LineDamper(DamperElement):
         DamperElement.__init__(self)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by %s eid=%s' % (self.type, self.eid)
         self.nodes = model.Nodes(self.nodes, msg=msg)
-        self.pid = model.Property(self.pid, msg=msg)
         self.nodes_ref = self.nodes
+        self.pid = model.Property(self.pid, msg=msg)
         self.pid_ref = self.pid
 
     def uncross_reference(self):
@@ -75,23 +83,20 @@ class CDAMP1(LineDamper):
         #: component number
         c1 = integer_or_blank(card, 4, 'c1', 0)
         c2 = integer_or_blank(card, 6, 'c2', 0)
-        assert len(card) <= 7, 'len(CDAMP1 card) = %i' % len(card)
+        assert len(card) <= 7, 'len(CDAMP1 card) = %i\ncard=%s' % (len(card), card)
         return CDAMP1(eid, pid, nids, c1, c2, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
-        eid = data[0]
-        pid = data[1]
-        nids = [data[2], data[4]]
-        c1 = data[3]
-        c2 = data[5]
+        eid, pid, g1, g2, c1, c2 = data
+        nids = [g1, g2]
         return CDAMP1(eid, pid, nids, c1, c2, comment=comment)
 
     def _validate_input(self):
         assert len(self.nodes) == 2
         msg = 'on\n%s\n is invalid validComponents=[0,1,2,3,4,5,6]' % str(self)
-        assert self.c1 in [0, 1, 2, 3, 4, 5, 6], 'c1=|%s| %s' % (self.c1, msg)
-        assert self.c2 in [0, 1, 2, 3, 4, 5, 6], 'c2=|%s| %s' % (self.c2, msg)
+        assert self.c1 in [0, 1, 2, 3, 4, 5, 6], 'c1=%r %s' % (self.c1, msg)
+        assert self.c2 in [0, 1, 2, 3, 4, 5, 6], 'c2=%r %s' % (self.c2, msg)
 
     def _verify(self, xref=True):
         eid = self.Eid()
@@ -134,6 +139,14 @@ class CDAMP1(LineDamper):
         return self.pid_ref.b
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by CDAMP1 eid=%s' % self.eid
         self.nodes = model.Nodes(self.nodes, allow_empty_nodes=True, msg=msg)
         self.nodes_ref = self.nodes
@@ -206,15 +219,15 @@ class CDAMP2(LineDamper):
 
         c1 = integer_or_blank(card, 4, 'c1', 0)
         c2 = integer_or_blank(card, 6, 'c2', 0)
-        assert len(card) <= 7, 'len(CDAMP2 card) = %i' % len(card)
+        assert len(card) <= 7, 'len(CDAMP2 card) = %i\ncard=%s' % (len(card), card)
         return CDAMP2(eid, b, nids, c1, c2, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
         eid = data[0]
         b = data[1]
-        nids = [data[2], data[4]]
-        c1 = data[3]
+        nids = [data[2], data[3]]
+        c1 = data[4]
         c2 = data[5]
         return CDAMP2(eid, b, nids, c1, c2, comment=comment)
 
@@ -241,6 +254,14 @@ class CDAMP2(LineDamper):
         return self.b
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by CDAMP2 eid=%s' % self.eid
         self.nodes = model.Nodes(self.nodes, allow_empty_nodes=True, msg=msg)
         self.nodes_ref = self.nodes
@@ -302,7 +323,7 @@ class CDAMP3(LineDamper):
         pid = integer(card, 2, 'pid')
         nids = [integer_or_blank(card, 3, 's1', 0),
                 integer_or_blank(card, 4, 's2', 0)]
-        assert len(card) <= 5, 'len(CDAMP3 card) = %i' % len(card)
+        assert len(card) <= 5, 'len(CDAMP3 card) = %i\ncard=%s' % (len(card), card)
         return CDAMP3(eid, pid, nids, comment=comment)
 
     @classmethod
@@ -333,10 +354,18 @@ class CDAMP3(LineDamper):
         return self.pid_ref.b
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ', which is required by %s eid=%s' % (self.type, self.eid)
         self.nodes = model.Nodes(self.nodes, allow_empty_nodes=True, msg=msg)
-        self.pid = model.Property(self.pid, msg=msg)
         self.nodes_ref = self.nodes
+        self.pid = model.Property(self.pid, msg=msg)
         self.pid_ref = self.pid
 
     def uncross_reference(self):
@@ -374,26 +403,35 @@ class CDAMP4(LineDamper):
         else:
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
-    def __init__(self, card=None, icard=0, data=None, comment=''):
+    def __init__(self, eid, b, nids, comment=''):
         LineDamper.__init__(self)
         if comment:
             self._comment = comment
-        if card:
-            ioffset = icard * 4
-            self.eid = integer(card, 1 + ioffset, 'eid')
-            #: Value of the scalar damper (Real)
-            self.b = double(card, 2 + ioffset, 'b')
-            nids = [
-                integer_or_blank(card, 3 + ioffset, 'n1', 0),
-                integer_or_blank(card, 4 + ioffset, 'n2', 0)
-            ]
-            assert len(card) <= 9, 'len(CDAMP4 card) = %i' % len(card)
-        else:
-            self.eid = data[0]
-            self.b = data[1]
-            nids = [data[2], data[3]]
+        self.eid = eid
+        self.b = b
+        self.nids = nids
         self.prepare_node_ids(nids, allow_empty_nodes=True)
         assert len(self.nodes) == 2
+
+    @classmethod
+    def add_card(cls, card, icard=0, comment=''):
+        ioffset = icard * 4
+        eid = integer(card, 1 + ioffset, 'eid')
+        #: Value of the scalar damper (Real)
+        b = double(card, 2 + ioffset, 'b')
+        nids = [
+            integer_or_blank(card, 3 + ioffset, 'n1', 0),
+            integer_or_blank(card, 4 + ioffset, 'n2', 0)
+        ]
+        assert len(card) <= 9, 'len(CDAMP4 card) = %i\ncard=%s' % (len(card), card)
+        return CDAMP4(eid, b, nids, comment=comment)
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        eid = data[0]
+        b = data[1]
+        nids = [data[2], data[3]]
+        return CDAMP4(eid, b, nids, comment=comment)
 
     def _verify(self, xref=True):
         eid = self.Eid()
@@ -412,6 +450,14 @@ class CDAMP4(LineDamper):
         return self.b
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ', which is required by %s eid=%s' % (self.type, self.eid)
         self.nodes = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
         self.nodes_ref = self.nodes
@@ -463,9 +509,10 @@ class CDAMP5(LineDamper):
         pid = integer(card, 2, 'pid')
         nids = [integer_or_blank(card, 3, 'n1', 0),
                 integer_or_blank(card, 4, 'n2', 0)]
-        assert len(card) <= 5, 'len(CDAMP5 card) = %i' % len(card)
+        assert len(card) <= 5, 'len(CDAMP5 card) = %i\ncard=%s' % (len(card), card)
         return CDAMP5(eid, pid, nids, comment=comment)
 
+    @classmethod
     def add_op2_data(cls, data, comment=''):
         eid = data[0]
         pid = data[1]
@@ -487,10 +534,18 @@ class CDAMP5(LineDamper):
             assert self.pid_ref.type in ['PDAMP5'], 'pid=%i self.pid_ref.type=%s' % (pid, self.pid_ref.type)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ', which is required by %s eid=%s' % (self.type, self.eid)
         self.nodes = model.Nodes(self.node_ids, allow_empty_nodes=True, msg=msg)
-        self.pid = model.Property(self.pid, msg=msg)
         self.nodes_ref = self.nodes
+        self.pid = model.Property(self.pid, msg=msg)
         self.pid_ref = self.pid
 
     def uncross_reference(self):
@@ -511,10 +566,6 @@ class CDAMP5(LineDamper):
     @property
     def node_ids(self):
         return self._nodeIDs(allow_empty_nodes=True)
-
-    @node_ids.setter
-    def node_ids(self, value):
-        raise ValueError("You cannot set node IDs like this...modify the node objects")
 
     def raw_fields(self):
         nodes = self.node_ids
@@ -554,11 +605,11 @@ class CVISC(LineDamper):
         pid = integer_or_blank(card, 2, 'pid', eid)
         nids = [integer_or_blank(card, 3, 'n1', 0),
                 integer_or_blank(card, 4, 'n2', 0)]
-        assert len(card) <= 5, 'len(CVISC card) = %i' % len(card)
+        assert len(card) <= 5, 'len(CVISC card) = %i\ncard=%s' % (len(card), card)
         return CVISC(eid, pid, nids, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment):
+    def add_op2_data(cls, data, comment=''):
         eid = data[0]
         pid = data[1]
         nids = data[2:4]

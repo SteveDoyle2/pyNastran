@@ -4,7 +4,7 @@ from numpy import arange, zeros, unique
 
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
-from pyNastran.bdf.bdfInterface.assign_type import (integer,
+from pyNastran.bdf.bdf_interface.assign_type import (integer,
     double, double_or_blank)
 
 
@@ -85,7 +85,7 @@ class PLOADX1(object):
                 self.node_ids[i, :] = [integer(card, 5, 'ga'),
                                        integer(card, 6, 'gb')]
                 self.theta[i] = double_or_blank(card, 7, 'theta', 0.)
-                assert len(card) <= 8, 'len(PLOADX1 card) = %i' % len(card)
+                assert len(card) <= 8, 'len(PLOADX1 card) = %i\ncard=%s' % (len(card), card)
 
             i = self.load_id.argsort()
             self.load_id = self.load_id[i]

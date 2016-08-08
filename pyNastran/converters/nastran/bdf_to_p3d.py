@@ -1,55 +1,61 @@
-
-from math import radians,degrees,cos,sin
-from pyNastran.bdf.bdf import BDF
+from __future__ import print_function
+from math import radians, degrees, cos, sin
 import copy
+from pyNastran.bdf.bdf import BDF
 
-def makeCircle(r,theta0,theta1):
+def make_circle(radius, theta0, theta1):
     """
     Makes a circle from theta0 to theta1 at a radius R.
     """
     theta0 = radians(theta0)
     theta1 = radians(theta1)
     npoints = 10
-    dtheta = (theta1-theta0)/npoints
+    dtheta = (theta1 - theta0) / npoints
 
     theta = theta0
-    X=[]; Y=[]
+    X = []
+    Y = []
     for i in range(npoints+1):
-        x = r*cos(theta)
-        y = r*sin(theta)
-        print("x=%g \ty=%g     \ttheta=%s" %(x,y,degrees(theta)))
+        x = radius * cos(theta)
+        y = radius * sin(theta)
+        print("x=%g \ty=%g     \ttheta=%s" %(x, y, degrees(theta)))
         theta += dtheta
-        X.append(x); Y.append(y)
-    return (X,Y)
+        X.append(x)
+        Y.append(y)
+    return (X, Y)
 
-def readAirfoil(filename):
-    infile = open(filename,'rU')
-    lines = infile.readlines()
-    (nUpper,nLower) = lines[1].split()
-    nUpper=int(float(nUpper)); nLower=int(float(nLower))
-    print("nUpper=%s nLower=%s" % (nUpper,nLower))
+def read_airfoil(filename):
+    with open(filename, 'rU') as infile:
+        lines = infile.readlines()
 
-    upperSurface=[]; lowerSurface=[]
-    upperLines = lines[3:3+nUpper]
-    for line in upperLines:
-        x,y = line.split()
-        x=float(x); y=float(y)
-        upperSurface.append([x,y])
+    (nupper, nlower) = lines[1].split()
+    nupper = int(float(nupper))
+    nlower = int(float(nlower))
+    print("nupper=%s nlower=%s" % (nupper, nlower))
 
-    lowerLines = lines[4+nUpper:4+nUpper+nLower+1]
-    for line in lowerLines:
+    upper_surface = []
+    lower_surface = []
+    upper_lines = lines[3:3+nupper]
+    for line in upper_lines:
         x, y = line.split()
-        x=float(x)
-        y=float(y)
-        lowerSurface.append([x,y])
+        x = float(x)
+        y = float(y)
+        upper_surface.append([x, y])
 
-    for u in upperSurface:
-        print("%g \t%g" %(u[0],u[1]))
+    lower_lines = lines[4+nupper:4+nupper+nlower+1]
+    for line in lower_lines:
+        x, y = line.split()
+        x = float(x)
+        y = float(y)
+        lower_surface.append([x, y])
 
-    #for u in lowerSurface:
-        #print("%g \t%g" %(u[0],u[1]))
+    for u in upper_surface:
+        print("%g \t%g" %(u[0], u[1]))
 
-    return(upperSurface, lowerSurface)
+    #for u in lower_surface:
+        #print("%g \t%g" %(u[0], u[1]))
+
+    return(upper_surface, lower_surface)
 
 
 class BdfToP3d(object):
@@ -57,289 +63,298 @@ class BdfToP3d(object):
         #self.mesh = None
         pass
 
-    def makeMesh(self,femName,p3d_name, eStart):
-        self.mesh = BDF()
-        #cardsToInclude = set(['GRID','CQUAD4'])
-        #mesh.setCardsToInclude(cardsToInclude)
-        self.mesh.read_bdf(femName, xref=False)
+    def make_mesh(self, fem_name, p3d_name, estart):
+        self.mesh = BDF(debug=False)
+        #cards_to_include = set(['GRID','CQUAD4'])
+        #mesh.setCardsToInclude(cards_to_include)
+        self.mesh.read_bdf(fem_name, xref=False)
 
-        (sides,rSides) = self.makeConnections()
+        (sides, rsides) = self.make_connections()
 
-        edgeB = self.getCommonEdgeNumber(1,2)
-        edgeC = self.getCommonEdgeNumber(1,51)
-        edgeA = self.scaleEdge(edgeC+2)
-        edgeD = self.scaleEdge(edgeB+2)
-        print("edgeA = ", edgeA)
+        edge_b = self.get_common_edge_number(1, 2)
+        edge_c = self.get_common_edge_number(1, 51)
+        edge_a = self.scale_edge(edge_c + 2)
+        edge_d = self.scale_edge(edge_b + 2)
+        print("edge_a = ", edge_a)
 
-        edge = self.findBoundEdge(eStart)
+        edge = self.find_bound_edge(estart)
         #print("edge = ", edge)
 
-        edgeNum = self.getEdgeNumber(eStart,edge)
-        eidCorner = copy.deepcopy(eStart)
+        edge_num = self.get_edge_number(estart, edge)
+        eid_corner = copy.deepcopy(estart)
 
-        isBounded2 = True
-        eidCorners = []
-        savedIDs2  = []
-        while isBounded2:
-            eid = copy.deepcopy(eidCorner)
-            if(eid in eidCorners):
-                print("already found eidCorner=%s" % eid)
+        is_bounded2 = True
+        eid_corners = []
+        saved_ids2 = []
+        while is_bounded2:
+            eid = copy.deepcopy(eid_corner)
+            if eid in eid_corners:
+                print("already found eid_corner=%s" % eid)
                 break
-            eidCorners.append(eid)
+            eid_corners.append(eid)
             print("eid = %s" % eid)
 
-            savedIDs = []
-            isBounded = True
-            while isBounded:
-                savedIDs.append(eid)
-                (isBounded,leftoverEID,sharedEdge) = self.getBoundEdge(eid, edgeNum)
-                #print("leftoverEID = %s" % leftoverEID)
-                eid = leftoverEID
+            saved_ids = []
+            is_bounded = True
+            while is_bounded:
+                saved_ids.append(eid)
+                (is_bounded, leftover_eid, shared_edge) = self.get_bound_edge(eid, edge_num)
+                #print("leftover_eid = %s" % leftover_eid)
+                eid = leftover_eid
 
             print("")
-            print("eLast = %s" % savedIDs[-1])
-            (eidCorner,sharedEdge) = self.turnCorner(eidCorner, edgeNum)
-            savedIDs2.append(savedIDs)
+            print("eLast = %s" % saved_ids[-1])
+            (eid_corner, shared_edge) = self.turn_corner(eid_corner, edge_num)
+            saved_ids2.append(saved_ids)
 
-            #eid = eidCorner
+            #eid = eid_corner
             #break
-        #print("eidCorners = %s" %(eidCorners))
+        #print("eid_corners = %s" %(eid_corners))
 
-        self.makePlot3D(savedIDs2,eStart,p3d_name,edgeD)
+        self.make_plot3d(saved_ids2, estart, p3d_name, edge_d)
         #print("e")
 
-    def getNode(self,nid):
+    def get_node(self, nid):
         node = self.mesh.nodes[nid]
         #spot = self.mesh.nodesmap[nid]
         #node = self.mesh.nodes[spot]
         return node
 
 
-    def getElement(self,eid):
+    def get_element(self, eid):
         element = self.mesh.elements[eid]
         return element
 
-    def getCommonNode(self,edgeA,edgeB):
-        setA = set(edgeA)
-        setB = set(edgeB)
-        intersect = list(setA.intersection(setB))
+    def get_common_node(self, edge_a, edge_b):
+        set_a = set(edge_a)
+        set_b = set(edge_b)
+        intersect = list(set_a.intersection(set_b))
         nid = intersect[0]
         return nid
 
-    def getEdgeNumberBasedOnNodes(self,eid,node1,node2):
-        edge = [node1,node2]
+    def get_edge_number_by_nodes(self, eid, node1, node2):
+        edge = [node1, node2]
         edge.sort()
         sides = sides[eid]
-        edgeNum = sides.index(edge)
-        return edgeNum
+        edge_num = sides.index(edge)
+        return edge_num
 
-    def getEdgeOrder(self,eid,edgeA):
-        edge1 = edgeA
-        edge2 = self.scaleEdge(edgeA+1)
-        edge3 = self.scaleEdge(edgeA+2)
-        edge4 = self.scaleEdge(edgeA+3)
-        return (edge1,edge2,edge3,edge4)
+    def get_edge_order(self, eid, edge_a):
+        edge1 = edge_a
+        edge2 = self.scale_edge(edge_a+1)
+        edge3 = self.scale_edge(edge_a+2)
+        edge4 = self.scale_edge(edge_a+3)
+        return (edge1, edge2, edge3, edge4)
 
-    def makePlot3D(self,elements,eStart,p3dname,edgeA):
-        (n0,n1,n2,n3) = self.getEdgeOrder(eStart,edgeA)
-        element = self.mesh.elements[eStart]
+    def make_plot3d(self, elements, estart, p3dname, edge_a):
+        (n0, n1, n2, n3) = self.get_edge_order(estart, edge_a)
+        element = self.mesh.elements[estart]
 
-        print("n0=%s n1=%s" % (n0, n1))
+        print('n0=%s n1=%s' % (n0, n1))
         #node0 = element.get_node_id(n0)
 
-        jmax = len(elements)+1
-        imax = len(elements[0])+1
+        jmax = len(elements) + 1
+        imax = len(elements[0]) + 1
         kmax = 1
-        out  = "1\n"
-        out += "%s %s %s\n" % (imax, jmax, kmax)
+        out = '1\n'
+        out += '%s %s %s\n' % (imax, jmax, kmax)
 
-        x=''; y=''; z=''; w=''
-        for j,elementsLine in enumerate(elements):
-            (x2,y2,z2,w2) = self.writeP3dLine(elementsLine,n0,n1) # 0,1
-            x+=x2; y+=y2; z+=z2; w+=w2
+        x = ''
+        y = ''
+        z = ''
+        w = ''
+        for j, elements_line in enumerate(elements):
+            (x2, y2, z2, w2) = self.write_p3d_line(elements_line, n0, n1) # 0,1
+            x += x2
+            y += y2
+            z += z2
+            w += w2
 
-        elementsLine = elements[-1]
-        (x2,y2,z2,w2) = self.writeP3dLine(elementsLine,n3,n2)
-        x+=x2; y+=y2; z+=z2; w+=w2
+        elements_line = elements[-1]
+        (x2, y2, z2, w2) = self.write_p3d_line(elements_line, n3, n2)
+        x += x2
+        y += y2
+        z += z2
+        w += w2
 
         #out += "%s\n%s\n%s\n%s\n" % (x, y, z, w)
-        out += "%s\n%s\n%s\n" % (x, y, z)
+        out += '%s\n%s\n%s\n' % (x, y, z)
 
-        outfile = open(p3dname,'wb')
-        outfile.write(out)
-        outfile.close()
+        with open(p3dname, 'wb') as outfile:
+            outfile.write(out)
 
-    def writeP3dLine(self,elementsLine,n0,n1):
+    def write_p3d_line(self, elements_line, n0, n1):
         #mesh = self.mesh
-        x=''; y=''; z=''; w=''
-        print("eLine = ", elementsLine)
-        eSpot   = elementsLine[0]
-        element = self.getElement(eSpot)
+        x = ''
+        y = ''
+        z = ''
+        w = ''
+        print("eLine = ", elements_line)
+        espot = elements_line[0]
+        element = self.get_element(espot)
         #print("element = ", element)
         print("n0 = ", n0)
         node_ids = element.node_ids
-        nid0  = node_ids[n0]
-        node0 = self.getNode(nid0)
+        nid0 = node_ids[n0]
+        node0 = self.get_node(nid0)
         #print("node0 = ", node0)
         print("nid = ", nid0)
         x += '%f ' % node0.xyz[0]
         y += '%f ' % node0.xyz[1]
         z += '%f ' % node0.xyz[2]
-        w+="%4s " % nid0
+        w += "%4s " % nid0
 
-        for i,eid in enumerate(elementsLine):
-            element = self.getElement(eid)
+        for i, eid in enumerate(elements_line):
+            element = self.get_element(eid)
             node_ids = element.node_ids
             print("n1 = ", n1)
-            nid1  = node_ids[n1]
+            nid1 = node_ids[n1]
             print("nid = ", nid1)
-            node1 = self.getNode(nid1)
+            node1 = self.get_node(nid1)
             x += '%f ' % node1.xyz[0]
             y += '%f ' % node1.xyz[1]
             z += '%f ' % node1.xyz[2]
-            w+="%4s " % nid1
+            w += "%4s " % nid1
 
             msg = 'nid0=%s i=%s nid0+i=%s nid1=%s' % (nid0, i, nid0+i, nid1)
-            assert nid0+i+1==nid1, msg
+            assert nid0 + i + 1 == nid1, msg
 
-        x+='\n'
-        y+='\n'
-        z+='\n'
-        w+='\n'
+        x += '\n'
+        y += '\n'
+        z += '\n'
+        w += '\n'
         return (x, y, z, w)
 
-    def getCommonEdgeNumber(self, eidA, eidB):
-        elementA = self.sides[eidA]
+    def get_common_edge_number(self, eid_a, eid_b):
+        element_a = self.sides[eid_a]
 
-        setA = set(elementA)
-        setB = set(self.sides[eidB])
-        edgeList = list(setA.intersection(setB))
-        edge = edgeList[0]
+        set_a = set(element_a)
+        set_b = set(self.sides[eid_b])
+        edge_list = list(set_a.intersection(set_b))
+        edge = edge_list[0]
 
-        edgeNum = elementA.index(edge)
-        print("commonEdge = ", edge)
-        print("commonEdgeNum = ", edgeNum)
-        return edgeNum
+        edge_num = element_a.index(edge)
+        print("common_edge = ", edge)
+        print("common_edge_num = ", edge_num)
+        return edge_num
 
 
 
-    def turnCorner(self, eid, edgeNum):
-        print("turnCorner eid=%s" % eid)
-        dEdgeNums = [1,2,3]
-        for dEdgeNum in dEdgeNums:
-            isBounded,leftoverEID,sharedEdge = self.getBoundEdge(eid, edgeNum+dEdgeNum)
-            print("bound=%s eid=%s" % (isBounded, leftoverEID))
-            if(isBounded):
+    def turn_corner(self, eid, edge_num):
+        print("turn_corner eid=%s" % eid)
+        dedge_nums = [1, 2, 3]
+        for dedge_num in dedge_nums:
+            is_bounded, leftover_eid, shared_edge = self.get_bound_edge(eid, edge_num+dedge_num)
+            print("bound=%s eid=%s" % (is_bounded, leftover_eid))
+            if is_bounded:
                 break
-        assert isBounded
-        print("leftoverEID = ", leftoverEID)
-        print("sharedEdge = ", sharedEdge)
-        return (leftoverEID,sharedEdge)
+        assert is_bounded
+        print("leftover_eid = ", leftover_eid)
+        print("shared_edge = ", shared_edge)
+        return (leftover_eid, shared_edge)
 
 
-    def getBoundEdge(self, eid, edgeNum):
-        edgeN = self.getEdgeN(eid,edgeNum)
-        eShared = self.rSides[edgeN]
-        #print("eShared[%s] = %s" % (eid, eShared))
-        nShared = len(eShared)-1
+    def get_bound_edge(self, eid, edge_num):
+        edge_n = self.get_edge_n(eid, edge_num)
+        eshared = self.reversed_sides[edge_n]
+        #print("eshared[%s] = %s" % (eid, eshared))
+        nshared = len(eshared) - 1
 
-        isBounded = False
-        leftoverEID = None
-        if nShared > 0:
-            isBounded = True
-            foundIndex = eShared.index(eid)
-            leftoverEID = eShared[1-foundIndex]
+        is_bounded = False
+        leftover_eid = None
+        if nshared > 0:
+            is_bounded = True
+            found_index = eshared.index(eid)
+            leftover_eid = eshared[1 - found_index]
 
-        return isBounded, leftoverEID, edgeN
+        return is_bounded, leftover_eid, edge_n
 
-    def scaleEdge(self,edgeNum):
-        if edgeNum >= 4:
-            edgeNum -= 4
-        return edgeNum
+    def scale_edge(self, edge_num):
+        if edge_num >= 4:
+            edge_num -= 4
+        return edge_num
 
-    def getEdgeN(self,eid,edgeNum):
-        edgeNum = self.scaleEdge(edgeNum)
-        #msg = '%s=edgeNum<4' % edgeNum
-        #print("edgeNum = ",edgeNum)
+    def get_edge_n(self, eid, edge_num):
+        edge_num = self.scale_edge(edge_num)
+        #msg = '%s=edge_num<4' % edge_num
+        #print("edge_num = ", edge_num)
 
-        #assert edgeNum<4,msg
+        #assert edge_num<4,msg
         edges = self.sides[eid]
-        return edges[edgeNum]
+        return edges[edge_num]
 
-    def findBoundEdge(self,eidStart):
-        eSides = self.sides[eidStart]
-        for side in eSides:
-            neighboringElements = self.rSides[side]
-            nEdges = len(neighboringElements)-1
-            if(nEdges>0):
+    def find_bound_edge(self, eid_start):
+        esides = self.sides[eid_start]
+        for side in esides:
+            neighboring_elements = self.reversed_sides[side]
+            nedges = len(neighboring_elements)-1
+            if nedges > 0:
                 break
-        print("neighboringElements[%s]=%s" % (side, neighboringElements))
-        print("  nEdges = %s" % nEdges)
+        print("neighboring_elements[%s]=%s" % (side, neighboring_elements))
+        print("  nedges = %s" % nedges)
         print("")
-        assert nEdges > 0
+        assert nedges > 0
         return side
 
-    def getEdgeNumber(self,eid,edge):
+    def get_edge_number(self, eid, edge):
         #element = getElement(eid)
         side = self.sides[eid]
-        edgeNum = side.index(edge)
+        edge_num = side.index(edge)
         print("side = ", side)
         print("edge = ", edge)
-        print("edgeNum = ", edgeNum)
-        return edgeNum
+        print("edge_num = ", edge_num)
+        return edge_num
 
-    def makeList(self,nodes,i0,i1):
+    def make_list(self, nodes, i0, i1):
         node0 = nodes[i0]
         node1 = nodes[i1]
-        nList = [node0,node1]
-        return nList
+        nlist = [node0, node1]
+        return nlist
 
-    def makeTuple(self,nodes,i0,i1):
-        nList = self.makeList(nodes,i0,i1)
-        nList.sort()
-        nList = tuple(nList)
-        return nList
+    def make_tuple(self, nodes, i0, i1):
+        nlist = self.make_list(nodes, i0, i1)
+        nlist.sort()
+        nlist = tuple(nlist)
+        return nlist
 
-    def makeConnections(self):
+    def make_connections(self):
         sides = {}
-        reversedSides = {}
-        for eid,element in self.mesh.elements.items():
+        reversed_sides = {}
+        for eid, element in self.mesh.elements.items():
             #print(dir(element))
             nodes = element.node_ids
             #print("element[%s]=%s" %(eid,nodes))
-            nList = self.makeTuple(nodes,0,-1)
-            sides[eid] = [nList]
-            #print("adding nList = ",nList)
-            reversedSides.setdefault(nList,[]).append(eid)
-            #reversedSides[nList].append(eid)
+            nlist = self.make_tuple(nodes, 0, -1)
+            sides[eid] = [nlist]
+            #print("adding nlist = ",nlist)
+            reversed_sides.setdefault(nlist, []).append(eid)
+            #reversed_sides[nlist].append(eid)
             for i in range(len(nodes)-1):
-                nList = self.makeTuple(nodes,i,i+1)
-                #print(reversedSides)
-                #print("adding nList = ",nList)
-                sides[eid].append(nList)
-                reversedSides.setdefault(nList,[]).append(eid)
+                nlist = self.make_tuple(nodes, i, i+1)
+                #print(reversed_sides)
+                #print("adding nlist = ",nlist)
+                sides[eid].append(nlist)
+                reversed_sides.setdefault(nlist, []).append(eid)
 
             #print("sides[%s]=%s" %(eid,sides[eid]))
             #if eid>3:
                 #break
         print()
-        #for side,eid in reversedSides.items():
+        #for side,eid in reversed_sides.items():
             #print("rS[%s]=%s" % (side, eid))
         self.sides = sides
-        self.rSides = reversedSides
-        return sides, reversedSides
+        self.reversed_sides = reversed_sides
+        return sides, reversed_sides
 
 def run():
-#    (X, Y) = makeCircle(1., 90., 45.)
-#    (upper, lower) = readAirfoil('clarky.dat')
+   #(X, Y) = makeCircle(1., 90., 45.)
+   #(upper, lower) = readAirfoil('clarky.dat')
 
-    eStart = 1
+    estart = 1
     mesh = BdfToP3d()
     p3d_name = 'mesh2.p3d'
-    mesh.makeMesh('airfoil.bdf', p3d_name, eStart)
+    mesh.make_mesh('airfoil.bdf', p3d_name, estart)
 
 
-
-
-if __name__=='__main__':
+if __name__ == '__main__':
     run()

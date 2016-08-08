@@ -9,7 +9,7 @@ from pyNastran.utils.dev import list_print
 
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
-from pyNastran.bdf.bdfInterface.assign_type import integer, integer_or_blank
+from pyNastran.bdf.bdf_interface.assign_type import integer, integer_or_blank
 
 from pyNastran.bdf.dev_vectorized.cards.elements.rod.rod_element import RodElement
 
@@ -44,7 +44,7 @@ class CTUBE(RodElement):
         self.property_id[i] = integer_or_blank(card, 2, 'property_id', self.element_id[i])
         self.node_ids[i] = [integer(card, 3, 'n1'),
                             integer(card, 4, 'n2')]
-        assert len(card) == 5, 'len(CTUBE card) = %i' % len(card)
+        assert len(card) == 5, 'len(CTUBE card) = %i\ncard=%s' % (len(card), card)
         self.i += 1
 
     def build(self):

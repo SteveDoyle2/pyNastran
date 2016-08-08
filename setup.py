@@ -7,6 +7,7 @@ PY2 = False
 if sys.version_info < (3, 0):
     PY2 = True
 if sys.version_info < (2, 7, 7):
+    imajor, minor1, minor2 = sys.version_info[:3]
     # makes sure we don't get the following bug:
     #   Issue #19099: The struct module now supports Unicode format strings.
     sys.exit('Upgrade your Python to >= 2.7.7; version=(%s.%s.%s)' % (imajor, minor1, minor2))
@@ -33,11 +34,11 @@ if sys.version_info <= (3,):
     try:
         import vtk
         vtk_version = '.'.join(vtk.VTK_VERSION.split('.'))
-        if vtk_version < '5.10.0':
-            print("vtk.VTK_VERSION = %r < '5.10.0'" % vtk.VTK_VERSION)
-            py2_packages.append('vtk >= 5.10.0')
+        if vtk_version < '5.10.1':
+            print("vtk.VTK_VERSION = %r < '5.10.1'" % vtk.VTK_VERSION)
+            py2_packages.append('vtk >= 5.10.1')
     except ImportError:
-        py2_packages.append('vtk >= 5.10.0')
+        py2_packages.append('vtk >= 5.10.1')
 
     #try:  # is this still required?
         #import PIL
@@ -48,7 +49,7 @@ if sys.version_info <= (3,):
         #py2_packages.append('pillow >= 2.7.0')
 
     py2_packages += [
-        #'vtk >= 5.10.0',
+        #'vtk >= 5.10.1',
         #'pillow >= 2.7.0',
         ##'dill'
         ##'wx >= 2.8.12.0',
@@ -85,29 +86,36 @@ py_packages = []
 try:
     import numpy as np
     ver = np.lib.NumpyVersion(np.__version__)
-    if ver < '1.9.0':
-        print("np.__version__ = %r < '1.9.0'" % np.__version__)
-        py_packages.append('numpy >= 1.9.0')
+    if ver < '1.9.2':
+        print("np.__version__ = %r < '1.9.2'" % np.__version__)
+        py_packages.append('numpy >= 1.9.2')
 except ImportError:
-    py_packages.append('numpy >= 1.9.0')
+    py_packages.append('numpy >= 1.9.2')
 
 try:
     import scipy
     ver = scipy.version.short_version
-    if ver < '0.15.0':
-        print("scipy.version.short_version = %r < '0.15.0'" % scipy.version.short_version)
-        py_packages.append('scipy >= 0.15.0')
+    if ver < '0.16.0':
+        print("scipy.version.short_version = %r < '0.16.0'" % scipy.version.short_version)
+        py_packages.append('scipy >= 0.16.0')
+        #py_packages.append('scipy >= 0.16.0, < 0.18.0')
+    #elif ver == '0.18.0':  # v0.18.1 is not released
+        #py_packages.append('scipy >= 0.16.0, < 0.18.0')
+    #elif ver == '0.18.0':  # v0.18.1 is released
+        #py_packages.append('scipy > 0.18.0')
+        #raise NotImplementedError('scipy has a bug in v0.18.0')
 except ImportError:
-    py_packages.append('scipy >= 0.15.0')
+    py_packages.append('scipy >= 0.16.0')
+    #py_packages.append('scipy >= 0.16.0, < 0.18.0')
 
 try:
     import six
     sver = [int(val) for val in six.__version__.split('-')[0].split('.')]
-    if sver < [1, 8, 0]:
-        print("six.__version__ = %r < '1.8.0'" % six.__version__)
-        py_packages.append('six >= 1.8.0')
+    if sver < [1, 9, 0]:
+        print("six.__version__ = %r < '1.9.0'" % six.__version__)
+        py_packages.append('six >= 1.9.0')
 except ImportError:
-    py_packages.append('six >= 1.8.0')
+    py_packages.append('six >= 1.9.0')
 
 try:
     import docopt
@@ -121,15 +129,15 @@ except ImportError:
 
 
 #py_packages = [
-#    'numpy >= 1.9.0',
-#    'scipy >= 0.15.0',
+#    'numpy >= 1.9.2',
+#    'scipy >= 0.16.0, scipy < 0.18.0',
 #]
 
 install_requires = py_packages + [
     # -*- Extra requirements: -*-
     #'docopt == 0.6.2',
     ##'matplotlib >= 1.3.0',
-    #'six >= 1.8.0',
+    #'six >= 1.9.0',
     ##'cython',
 ] + py2_packages + py3_packages,
 

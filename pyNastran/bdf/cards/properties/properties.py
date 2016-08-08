@@ -3,8 +3,6 @@
 All ungrouped properties are defined in this file.  This includes:
  * PFAST
  * PGAP
- * PLSOLID (SolidProperty)
- * PSOLID (SolidProperty)
  * PRAC2D (CrackProperty)
  * PRAC3D (CrackProperty)
  * PCONEAX (not done)
@@ -16,8 +14,9 @@ from six.moves import range
 from pyNastran.utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import Property, Material
-from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
-    double, double_or_blank, string_or_blank, integer_string_or_blank, blank)
+from pyNastran.bdf.bdf_interface.assign_type import (
+    integer, integer_or_blank, double, double_or_blank,
+    blank)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 
@@ -78,11 +77,26 @@ class PFAST(Property):
         kr3 = double_or_blank(card, 10, 'kr3', 0.0)
         mass = double_or_blank(card, 11, 'mass', 0.0)
         ge = double_or_blank(card, 12, 'ge', 0.0)
-        assert len(card) <= 13, 'len(PFAST card) = %i' % len(card)
+        assert len(card) <= 13, 'len(PFAST card) = %i\ncard=%s' % (len(card), card)
+        return PFAST(pid, d, mcid, mflag, kt1, kt2, kt3,
+                     kr1, kr2, kr3, mass, ge, comment=comment)
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        (pid, d, mcid, mflag, kt1, kt2, kt3,
+         kr1, kr2, kr3, mass, ge) = data
         return PFAST(pid, d, mcid, mflag, kt1, kt2, kt3,
                      kr1, kr2, kr3, mass, ge, comment=comment)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by PFAST pid=%s' % self.pid
         if self.mcid != -1:
             self.mcid = model.Coord(self.Mcid(), msg)
@@ -176,7 +190,7 @@ class PGAP(Property):
         tmax = double_or_blank(card, 9, 'tmax', 0.)
         mar = double_or_blank(card, 10, 'mar', 100.)
         trmin = double_or_blank(card, 11, 'trmin', 0.001)
-        assert len(card) <= 12, 'len(PGAP card) = %i' % len(card)
+        assert len(card) <= 12, 'len(PGAP card) = %i\ncard=%s' % (len(card), card)
         return PGAP(pid, u0, f0, ka, kb, mu1, kt, mu2, tmax, mar, trmin,
                     comment=comment)
 
@@ -233,217 +247,6 @@ class PGAP(Property):
         if size == 8:
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)
-
-
-class SolidProperty(Property):
-    def __init__(self):
-        Property.__init__(self)
-
-    def Rho(self):
-        return self.mid_ref.rho
-
-
-class PLSOLID(SolidProperty):
-    """
-    Defines a fully nonlinear (i.e., large strain and large rotation)
-    hyperelastic solid element.
-
-    +---------+-----+-----+-----+
-    | PLSOLID | PID | MID | STR |
-    +---------+-----+-----+-----+
-    | PLSOLID |  20 |  21 |     |
-    +---------+-----+-----+-----+
-    """
-    type = 'PLSOLID'
-    _field_map = {
-        1: 'pid', 2:'mid', 3:'str',
-    }
-
-    def __init__(self, pid, mid, stress_strain='GRID', ge=0., comment=''):
-        SolidProperty.__init__(self)
-        if comment:
-            self._comment = comment
-        #: Property ID
-        self.pid = pid
-        #: Material ID
-        self.mid = mid
-        #: Location of stress and strain output
-        self.stress_strain = stress_strain
-
-        self.ge = ge
-        assert isinstance(pid, int), type(pid)
-        assert isinstance(mid, int), type(mid)
-        self._validate_input()
-
-    @classmethod
-    def add_card(cls, card, comment=''):
-        pid = integer(card, 1, 'pid')
-        mid = integer(card, 2, 'mid')
-        stress_strain = string_or_blank(card, 3, 'stress_strain', 'GRID')
-        assert len(card) <= 4, 'len(PLSOLID card) = %i' % len(card)
-        return PLSOLID(pid, mid, stress_strain, comment=comment)
-
-    @classmethod
-    def add_op2_data(cls, data, comment=''):
-        pid = data[0]
-        mid = data[1]
-        ge = data[2]
-        stress_strain = data[3]
-        return PLSOLID(pid, mid, stress_strain, ge, comment=comment)
-
-    def _validate_input(self):
-        if self.stress_strain == 'GAUS':
-            self.stress_strain = 'GAUSS'
-        if self.stress_strain not in ['GRID', 'GAUSS']:
-            raise RuntimeError('STR="%s" doesnt have a valid stress/strain '
-                               'output value set; valid=["GRID", "GAUSS"]\n'
-                               % self.stress_strain)
-
-    def cross_reference(self, model):
-        msg = ' which is required by PLSOLID pid=%s' % self.pid
-        self.mid = model.HyperelasticMaterial(self.mid, msg)
-        self.mid_ref = self.mid
-
-    def uncross_reference(self):
-        self.mid = self.Mid()
-        del self.mid_ref
-
-    def raw_fields(self):
-        stress_strain = set_blank_if_default(self.stress_strain, 'GRID')
-        fields = ['PLSOLID', self.pid, self.Mid(), stress_strain]
-        return fields
-
-    def write_card(self, size=8, is_double=False):
-        card = self.repr_fields()
-        if size == 8:
-            return self.comment + print_card_8(card)
-        return self.comment + print_card_16(card)
-
-class PSOLID(SolidProperty):
-    """
-    +--------+-----+-----+-------+-----+--------+---------+------+
-    | PSOLID | PID | MID | CORDM | IN  | STRESS |   ISOP  | FCTN |
-    +--------+-----+-----+-------+-----+--------+---------+------+
-
-    +--------+-----+-----+-------+-----+--------+---------+------+
-    | PSOLID |  1  |     |   1   | 0   |        |         |      |
-    +--------+-----+-----+-------+-----+--------+---------+------+
-    | PSOLID |  2  | 100 |   6   | TWO |  GRID  | REDUCED |      |
-    +--------+-----+-----+-------+-----+--------+---------+------+
-    """
-    type = 'PSOLID'
-    _field_map = {
-        1: 'pid', 2:'mid', 3:'cordm', 4:'integ', 5:'stress',
-        6:'isop', 7:'fctn',
-    }
-
-    def __init__(self, pid, mid, cordm=0, integ=None, stress=None, isop=None,
-                 fctn='SMECH', comment=''):
-        SolidProperty.__init__(self)
-        if comment:
-            self._comment = comment
-        #: Property ID
-        self.pid = pid
-        #: Material ID
-        self.mid = mid
-        self.cordm = cordm
-        #valid_integration = ['THREE', 'TWO', 'FULL', 'BUBBLE',
-        #                     2, 3, None, 'REDUCED']
-        self.integ = integ
-        self.stress = stress
-        self.isop = isop
-        self.fctn = fctn
-
-    @classmethod
-    def add_card(cls, card, comment=''):
-        pid = integer(card, 1, 'pid')
-        mid = integer(card, 2, 'mid')
-        cordm = integer_or_blank(card, 3, 'cordm', 0)
-        integ = integer_string_or_blank(card, 4, 'integ')
-        stress = integer_string_or_blank(card, 5, 'stress')
-        isop = integer_string_or_blank(card, 6, 'isop')
-        fctn = string_or_blank(card, 7, 'fctn', 'SMECH')
-        assert len(card) <= 8, 'len(PSOLID card) = %i' % len(card)
-        return PSOLID(pid, mid, cordm, integ, stress, isop,
-                      fctn, comment=comment)
-
-    @classmethod
-    def add_op2_data(cls, data, comment=''):
-        pid = data[0]
-        mid = data[1]
-        cordm = data[2]
-        integ = data[3]
-        stress = data[4]
-        isop = data[5]
-        fctn = data[6]
-
-        if fctn == 'SMEC':
-            fctn = 'SMECH'
-        return PSOLID(pid, mid, cordm, integ, stress, isop,
-                      fctn, comment=comment)
-
-    def E(self):
-        return self.mid_ref.E()
-
-    def G(self):
-        return self.mid_ref.G()
-
-    def Nu(self):
-        return self.mid_ref.Nu()
-
-    def materials(self):
-        return [self.mid]
-
-    def _verify(self, xref=False):
-        pid = self.Pid()
-        mid = self.Mid()
-        assert isinstance(pid, int), 'pid=%r' % pid
-        assert isinstance(mid, int), 'mid=%r' % mid
-
-        if xref:
-            if self.mid_ref.type not in ['MAT1', 'MAT4', 'MAT5', 'MAT9', 'MAT10', 'MAT11']:
-                msg = 'mid=%i self.mid_ref.type=%s' % (mid, self.mid_ref.type)
-                raise TypeError(msg)
-
-    def _write_calculix(self, element_set=999):
-        msg = '*SOLID SECTION,MATERIAL=M%s,ELSET=E_Mat%s\n' % (
-            self.mid, element_set)
-        return msg
-
-    def raw_fields(self):
-        fields = ['PSOLID', self.pid, self.Mid(), self.cordm, self.integ,
-                  self.stress, self.isop, self.fctn]
-        return fields
-
-    def repr_fields(self):
-        cordm = set_blank_if_default(self.cordm, 0)
-        fctn = set_blank_if_default(self.fctn, 'SMECH')
-        fields = ['PSOLID', self.pid, self.Mid(), cordm, self.integ,
-                  self.stress, self.isop, fctn]
-        return fields
-
-    def write_card(self, size=8, is_double=False):
-        card = self.repr_fields()
-        # this card has integers & strings, so it uses...
-        return self.comment + print_card_8(card)
-
-
-class PIHEX(PSOLID):
-    type = 'PIHEX'
-    def __init__(self, card=None, data=None, comment=''):
-        PSOLID.__init__(self, card, data, comment)
-
-    def raw_fields(self):
-        fields = ['PIHEX', self.pid, self.Mid(), self.cordm, self.integ,
-                  self.stress, self.isop, self.fctn]
-        return fields
-
-    def repr_fields(self):
-        cordm = set_blank_if_default(self.cordm, 0)
-        fctn = set_blank_if_default(self.fctn, 'SMECH')
-        fields = ['PIHEX', self.pid, self.Mid(), cordm, self.integ,
-                  self.stress, self.isop, fctn]
-        return fields
 
 
 class CrackProperty(Property):
@@ -509,7 +312,7 @@ class PRAC2D(CrackProperty):
         nsm = double_or_blank(card, 5, 'nsm', 0.)
         gamma = double_or_blank(card, 6, 'gamma', 0.5)
         phi = double_or_blank(card, 7, 'phi', 180.)
-        assert len(card) <= 8, 'len(PRAC2D card) = %i' % len(card)
+        assert len(card) <= 8, 'len(PRAC2D card) = %i\ncard=%s' % (len(card), card)
         return PRAC2D(pid, mid, thick, iplane, nsm, gamma, phi,
                       comment=comment)
 
@@ -518,6 +321,14 @@ class PRAC2D(CrackProperty):
         assert isinstance(pid, int)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by PRAC2D pid=%s' % self.pid
         self.mid = model.Material(self.mid, msg)  # MAT1, MAT2, MAT8
         self.mid_ref = self.mid
@@ -572,7 +383,7 @@ class PRAC3D(CrackProperty):
         mid = integer(card, 2, 'mid')
         gamma = double_or_blank(card, 3, 'gamma', 0.5)
         phi = double_or_blank(card, 4, 'gamma', 180.)
-        assert len(card) <= 5, 'len(PRAC3D card) = %i' % len(card)
+        assert len(card) <= 5, 'len(PRAC3D card) = %i\ncard=%s' % (len(card), card)
         return PRAC3D(pid, mid, gamma, phi, comment=comment)
 
     def _verify(self, xref=True):
@@ -580,6 +391,14 @@ class PRAC3D(CrackProperty):
         assert isinstance(pid, int)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by PRAC3D pid=%s' % self.pid
         self.mid = model.Material(self.mid, msg)  # MAT1, MAT9
         self.mid_ref = self.mid
@@ -663,6 +482,14 @@ class PCONEAX(Property):
                        comment=comment)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by %s=%s' %(self.type, self.pid)
         if self.mid1 > 0:
             self.mid1 = model.Material(self.mid1, msg=msg)

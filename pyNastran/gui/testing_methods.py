@@ -1,8 +1,10 @@
 from __future__ import print_function
+from collections import OrderedDict
+
 from six import iteritems
+
 from pyNastran.utils.log import get_logger
 from pyNastran.gui.qt_files.alt_geometry_storage import AltGeometry
-from collections import OrderedDict
 
 
 class GuiAttributes(object):
@@ -14,8 +16,10 @@ class GuiAttributes(object):
         """
         self.case_keys = {}
         self.res_widget = res_widget
+        self._show_flag = True
 
         self.is_testing = False
+        self.is_groups = False
         self._logo = None
         self._script_path = None
         self._icon_path = ''
@@ -30,9 +34,13 @@ class GuiAttributes(object):
         #-------------
 
         # window variables
+        self._picker_window_shown = False
         self._legend_window_shown = False
         self._clipping_window_shown = False
         self._edit_geometry_properties_window_shown = False
+        self._modify_groups_window_shown = False
+        self._label_window_shown = False
+        #self._label_window = None
         #-------------
         # inputs dict
         self.is_edges = False
@@ -54,6 +62,7 @@ class GuiAttributes(object):
         self.out_filename = None
         self.dirname = ''
         self.last_dir = '' # last visited directory while opening file
+        self._default_python_file = None
 
         #-------------
         # internal params
@@ -79,6 +88,10 @@ class GuiAttributes(object):
         self.text_actors = {}
         self.geometry_actors = OrderedDict()
         self.alt_grids = {} #additional grids
+
+        # coords
+        self.transform = {}
+        self.axes = {}
 
         #geom = Geom(color, line_thickness, etc.)
         #self.geometry_properties = {
@@ -107,6 +120,51 @@ class GuiAttributes(object):
         self.nid_maps = {}
         self.eid_maps = {}
         self.name = 'main'
+
+        self.groups = {}
+        self.group_active = 'main'
+
+    def set_quad_grid(self, name, nodes, elements, color, line_width=5, opacity=1.):
+        """
+        Makes a CQUAD4 grid
+        """
+        self.create_alternate_vtk_grid(name, color=color, line_width=line_width,
+                                       opacity=opacity, representation='wire')
+
+        nnodes = nodes.shape[0]
+        nquads = elements.shape[0]
+        #print(nodes)
+        if nnodes == 0:
+            return
+        if nquads == 0:
+            return
+
+        #print('adding quad_grid %s; nnodes=%s nquads=%s' % (name, nnodes, nquads))
+        points = vtk.vtkPoints()
+        points.SetNumberOfPoints(nnodes)
+        for nid, node in enumerate(nodes):
+            #print(nid, node)
+            points.InsertPoint(nid, *list(node))
+
+        #assert vtkQuad().GetCellType() == 9, elem.GetCellType()
+        self.alt_grids[name].Allocate(nquads, 1000)
+        for element in elements:
+            elem = vtkQuad()
+            point_ids = elem.GetPointIds()
+            point_ids.SetId(0, element[0])
+            point_ids.SetId(1, element[1])
+            point_ids.SetId(2, element[2])
+            point_ids.SetId(3, element[3])
+            self.alt_grids[name].InsertNextCell(9, elem.GetPointIds())
+        self.alt_grids[name].SetPoints(points)
+
+        self._add_alt_actors({name : self.alt_grids[name]})
+
+        #if name in self.geometry_actors:
+        self.geometry_actors[name].Modified()
+
+    def create_coordinate_system(self, dim_max, label='', origin=None, matrix_3x3=None, Type='xyz'):
+        pass
 
     @property
     def nid_map(self):
@@ -174,7 +232,14 @@ class GuiAttributes(object):
         self.res_widget.update_methods(data2)
 
 
-
+class CoordProperties(object):
+    def __init__(self, label, Type, is_visible, scale):
+        self.label = label
+        #self.axes = axes
+        self.Type = Type
+        self.is_visible = is_visible
+        self.representation = 'coord'
+        self.scale = scale
 
 
 class GeometryProperty(object):
@@ -242,7 +307,6 @@ class GUIMethods(GuiAttributes):
         self._form = []
         self.result_cases = {}
         self._finish_results_io = self.passer1
-        self._finish_results_io2 = self.passer2
         #self.geometry_actors = {
             #'main' : GeometryActor(),
         #}
@@ -262,7 +326,36 @@ class GUIMethods(GuiAttributes):
         level = 'debug' if self.debug else 'info'
         self.log = get_logger(log=None, level=level)
 
-    def removeOldGeometry(self, filename):
+    def _finish_results_io2(self, form, cases):
+        """
+        This is not quite the same as the main one.
+        It's more or less just _set_results
+        """
+        assert len(cases) > 0, cases
+        if isinstance(cases, OrderedDict):
+            self.case_keys = list(cases.keys())
+        else:
+            self.case_keys = sorted(cases.keys())
+            assert isinstance(cases, dict), type(cases)
+
+        for key in self.case_keys:
+            value = cases[key]
+            #print('value[0] = %s' % value[0])
+            assert not isinstance(value[0], int), 'key=%s\n type=%s value=%s' % (key, type(value[0]), value)
+
+        self.result_cases = cases
+
+        if len(self.case_keys) > 1:
+            self.icase = -1
+            self.ncases = len(self.result_cases)  # number of keys in dictionary
+        elif len(self.case_keys) == 1:
+            self.icase = -1
+            self.ncases = 1
+        else:
+            self.icase = -1
+            self.ncases = 0
+
+    def _remove_old_geometry(self, filename):
         skip_reading = False
         return skip_reading
     def cycle_results(self):
@@ -270,6 +363,8 @@ class GUIMethods(GuiAttributes):
     def  turn_text_on(self):
         pass
     def turn_text_off(self):
+        pass
+    def create_global_axes(self, dim_max):
         pass
     def update_axes_length(self, value):
         self.dim_max = value
@@ -314,6 +409,5 @@ class GUIMethods(GuiAttributes):
     #test.cycle_results = cycle_results
     #test.turn_text_on =  turn_text_on
     #test.turn_text_off = turn_text_off
-    #test.update_axes_length = update_axes_length
     #test.cycle_results_explicit = passer
 

@@ -7,7 +7,7 @@ from pyNastran.bdf.dev_vectorized.cards.elements.property import Property
 
 #from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.field_writer_8 import print_card_8
-from pyNastran.bdf.bdfInterface.assign_type import (integer,
+from pyNastran.bdf.bdf_interface.assign_type import (integer,
     double, double_or_blank)
 
 
@@ -47,7 +47,7 @@ class PTUBE(Property):
         self.nsm[i] = double_or_blank(card, 5, 'nsm', 0.0)
         OD2 = double_or_blank(card, 6, 'OD2', OD1)
         self.OD[i, :] = [OD1, OD2]
-        assert len(card) <= 7, 'len(PTUBE card) = %i' % len(card)
+        assert len(card) <= 7, 'len(PTUBE card) = %i\ncard=%s' % (len(card), card)
         self.i += 1
 
     def build(self):
@@ -116,16 +116,26 @@ class PTUBE(Property):
         nsm = self.nsm[i]
         return nsm
 
+    #def get_E_by_property_id(self, property_id=None):
+        #i = self.get_property_index_by_property_id(property_id)
+        #material_id = self.material_id[i]
+        #E = self.model.materials.get_E_by_material_id(material_id)
+        #return E
+
     def get_E_by_property_id(self, property_id=None):
-        i = self.get_property_index_by_property_id(property_id)
-        material_id = self.material_id[i]
-        E = self.model.materials.get_E_by_material_id(material_id)
+        mid = self.get_material_id_by_property_id(property_id)
+        E = self.model.materials.get_E_by_material_id(mid)
         return E
 
+    #def get_G_by_property_id(self, property_id=None):
+        #i = self.get_property_index_by_property_id(property_id)
+        #material_id = self.material_id[i]
+        #G = self.model.materials.get_G_by_material_id(material_id)
+        #return G
+
     def get_G_by_property_id(self, property_id=None):
-        i = self.get_property_index_by_property_id(property_id)
-        material_id = self.material_id[i]
-        G = self.model.materials.get_G_by_material_id(material_id)
+        mid = self.get_material_id_by_property_id(property_id)
+        G = self.model.materials.get_G_by_material_id(mid)
         return G
 
     def get_J_by_property_id(self, property_id=None):
@@ -157,15 +167,6 @@ class PTUBE(Property):
         return mid
 
     #=========================================================================
-    def get_E_by_property_id(self, property_id=None):
-        mid = self.get_material_id_by_property_id(property_id)
-        E = self.model.materials.get_E_by_material_id(mid)
-        return E
-
-    def get_G_by_property_id(self, property_id=None):
-        mid = self.get_material_id_by_property_id(property_id)
-        G = self.model.materials.get_G_by_material_id(mid)
-        return G
 
     def get_density_by_property_id(self, property_id=None):
         mid = self.get_material_id_by_property_id(property_id)

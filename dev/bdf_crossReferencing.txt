@@ -36,27 +36,34 @@ CORD2S  (done)
 CORD3G
 
 ----Rods/Bars/Beams (Elements/Properties)----:
-CBAR    (done)
+# rods
 CROD    (done)
-CTUBE   (done)
-CBEAM   (done)
-CBEAM3  (???)
-CBEND   (partial)
+CBAR    (done)
+PROD    (done)
 CONROD  (done)
 
-PROD    (done)
+# tube
+CTUBE   (done)
+PTUBE   (done)
+
+# bars
 PBAR    (done)
 PBARL   (done)
+CBEAM   (done)
+PBMSECT
+PBRSECT
+
+# beam3
+CBEAM3  (???)
+PBEAM3
+PBCOMP  (partial)
 PBEAM   (done)
 PBEAML  (done)
-PBEAM3
 
-PBCOMP  (partial)
-PBRSECT
-PBMSECT
-
+# bend
+CBEND   (partial)
 PBEND   (done)
-PTUBE   (done)
+
 
 ----Plates/Shells (Elements/Properties)----:
 CTRIA3  (done)
@@ -109,7 +116,7 @@ PVISC   (NA)
 
 ----Masses (Elements/Properties)----:
 CONM1   (does this card need cross-referencing???)
-CONM2   (cid!=0, cid=0 requires CG location...is this true???)
+CONM2   (cid!=0, cid=0 requires CG location...is this true???; problem for cid=S/C)
 
 CMASS1  (no)
 CMASS2  (no)
@@ -123,9 +130,12 @@ NSM1
 CTETRA  (done)
 CPENTA  (done)
 CHEXA   (done)
+CPYRAM  (done)
 
 PSOLID  (done)
 PLSOLID (done)
+PIHEX   (done)
+PCOMPS  (done)
 
 ----Cracks (Elements/Properties)----:
 CRAC2D (done)
@@ -161,7 +171,11 @@ MAT3  (???)
 MAT8  (???)
 MAT9  (???)
 MAT10 (???)
+MAT11 (???)
+
+----Hyperelastic Materials----:
 MATHP (???)
+MATHE (???)
 
 ----Thermal Materials----:
 MAT4  (???)
@@ -177,10 +191,10 @@ MATT5
 MATT8
 MATT9
 
+MATS1 (???)
 ----Constraints----:
 SPC     (done)
 SPC1    (done)
-SPCD    (done)
 SPCADD  (done)
 
 MPC     (done)
@@ -192,6 +206,7 @@ SUPORT1 (???)
 ----Loads----:
 LOAD    (done)
 LSEQ    (done)
+SPCD    (done)
 
 FORCE   (done)
 FORCE1  (done)
@@ -215,6 +230,8 @@ MOMENT2 (done)
 DLOAD   (done; TLOAD/RLOAD)
 SLOAD   (done)
 
+LOADCYN (???)
+ACSRCE  (done)
 TLOAD1  (done; delay)
 TLOAD2  (done; delay)
 RLOAD1  (done; delay)
@@ -229,6 +246,8 @@ QHBDY  (???)
 QBDY1  (???)
 QBDY2  (???)
 QBDY3  (???)
+
+QVOL  (???)
 
 ----Thermal Elements----:
 CHBDYE (???)
@@ -286,9 +305,13 @@ SPLINE7
 
 CSSCHD  (???)
 TRIM    (???)
+DIVERG  (???)
 
 ----Dynamic----:
+EPOINT  (???)
 DAREA   (???)
+DPHASE  (???)
+DELAY   (???)
 NLPARM  (???)
 NLPCI   (???)
 TSTEP   (???)
@@ -303,22 +326,25 @@ FREQ4
 FREQ5
 
 ----Optimization----:
-DCONSTR  (???)
-DESVAR   (???)
+DCONSTR  (done)
+DESVAR   (NA)
 DDVAL    (???)
 DOPTPRM  (NA)
-DRESP1   (???)
-DRESP2   (???)
+DRESP1   (done)
+DRESP2   (done)
 DRESP3   (partial)
+
 DVGRID
-DVCREL1         # element  DV
-DVCREL2
-DVPREL1  (???)  # property DV
-DVPREL2  (???)
-DVMREL1  (???)  # material DV
-DVMREL2
-DLINK   (???)
+DVCREL1  (done)  # element  DV
+DVCREL2  (done)
+DVPREL1  (done)  # property DV
+DVPREL2  (done)
+DVMREL1  (done)  # material DV
+DVMREL2  (done)
+
 DEQATN  (no)
+DLINK   (???)
+DCONADD (no)
 
 ---Tables---
 DTABLE
@@ -333,8 +359,9 @@ TABLEM1  (NA)
 TABLEM2  (NA)
 TABLEM3  (NA)
 TABLEM4  (NA)
-TABLES1  (???)
+
 TABLEST  (???)
+TABLES1  (???)
 TIC
 
 ---Random Tables---
@@ -346,21 +373,32 @@ ASET   (no)
 BSET   (no)
 CSET   (no)
 QSET   (no)
+USET   (???)
 ASET1  (no)
 BSET1  (no)
 CSET1  (no)
 QSET1  (no)
+USET1  (???)
 
 SET1   (???)
 SET2
 SET3   (???)
-SESET  (???)
+
 SEQSEP
-SEQSET1
 RADSET
 
+SESET  (???)
+SEBSET
+SECSET
+SEQSET
+SEUSET
+SEBSET1
+SECSET1
+SEQSET1
+SEUSET1
+
 ----Methods----:
-EIGB    (???)
+EIGB    (NA)
 EIGC    (???)
 EIGP    (???)
 EIGR    (???)
@@ -368,12 +406,22 @@ EIGRL   (???)
 MKAERO1 (NA)
 MKAERO2 (NA)
 
+AECOMP
+
 ----MATRICES----:
 DMIG        (NA)
 DMIG,UACCEL
 DMIJ        (NA)
 DMIJI       (NA)
 DMIK        (NA)
+DMI
+----Contact----:
+BCTPARA (???)
+BCRPARA (???)
+BCTADD  (???)
+BCTSET  (???)
+BSURF   (???)
+BSURFS  (???)
 
 ----Other----:
 INCLUDE (NA)
@@ -412,12 +460,6 @@ AXIC
 OMITAX
 SECTAX
 
-----Contact----:
-BCRPARA (???)
-BCTADD  (???)
-BCTSET  (???)
-BSURF   (???)
-BSURFS  (???)
 
 -----------------------------------------------
 

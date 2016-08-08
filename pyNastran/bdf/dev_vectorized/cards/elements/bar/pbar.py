@@ -5,7 +5,7 @@ from pyNastran.utils import integer_types
 from pyNastran.bdf.dev_vectorized.cards.elements.property import Property
 
 from pyNastran.bdf.field_writer_8 import print_card_8
-from pyNastran.bdf.bdfInterface.assign_type import (integer,
+from pyNastran.bdf.bdf_interface.assign_type import (integer,
     integer_double_or_blank, double_or_blank)
 
 class PBAR(Property):
@@ -74,7 +74,7 @@ class PBAR(Property):
             if self.A == 0.0 and self.i12 == 0.0:
                 assert self.K1 is None, 'K1 must be blank if A=0.0 and I12=0.0; A=%r I12=%r K1=%r' % (self.A, self.i12, self.K1)
                 assert self.K2 is None, 'K2 must be blank if A=0.0 and I12=0.0; A=%r I12=%r K2=%r' % (self.A, self.i12, self.K2)
-            assert len(card) <= 20, 'len(PBAR card) = %i' % len(card)
+            assert len(card) <= 20, 'len(PBAR card) = %i\ncard=%s' % (len(card), card)
 
         self.i += 1
 

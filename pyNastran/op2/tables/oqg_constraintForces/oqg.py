@@ -9,15 +9,15 @@ This file defines the OUG Table, which contains:
 """
 from pyNastran.op2.op2_common import OP2Common
 
-from pyNastran.op2.tables.oqg_constraintForces.oqg_spcForces import (
+from pyNastran.op2.tables.oqg_constraintForces.oqg_spc_forces import (
     RealSPCForcesArray, ComplexSPCForcesArray,
     #RealSPCForces, ComplexSPCForces
 )
-from pyNastran.op2.tables.oqg_constraintForces.oqg_mpcForces import (
+from pyNastran.op2.tables.oqg_constraintForces.oqg_mpc_forces import (
     RealMPCForcesArray, ComplexMPCForcesArray,
     #RealMPCForces, ComplexMPCForces
 )
-from pyNastran.op2.tables.oqg_constraintForces.oqg_thermalGradientAndFlux import (
+from pyNastran.op2.tables.oqg_constraintForces.oqg_thermal_gradient_and_flux import (
     #RealTemperatureGradientAndFlux,
     RealTemperatureGradientAndFluxArray)
 
@@ -72,6 +72,7 @@ class OQG(OP2Common):
             self.eigr = self.add_data_parameter(data, 'eigr', 'f', 6, False)
             ## mode or cycle .. todo:: confused on the type - F1???
             self.mode_cycle = self.add_data_parameter(data, 'mode_cycle', 'f', 7, False)
+            self.update_mode_cycle('mode_cycle')
             self.data_names = self.apply_data_code_value('data_names', ['mode', 'eigr', 'mode_cycle'])
         #elif self.analysis_code == 3: # differential stiffness
             #self.lsdvmn = self.get_values(data,'i',5) ## load set number
@@ -318,6 +319,10 @@ class OQG(OP2Common):
             raise NotImplementedError(msg)
 
         if self.thermal == 0:
+            if self.isubcase not in self.case_control_deck.subcases:
+                self.subcase = self.case_control_deck.create_new_subcase(self.isubcase)
+            self.subcase.add_op2_data(self.data_code, 'SPCFORCES, self.log')
+
             result_name = 'spc_forces'
             storage_obj = self.spc_forces
             if self._results.is_not_saved(result_name):
@@ -328,6 +333,10 @@ class OQG(OP2Common):
                                             'node', random_code=self.random_code)
         elif self.thermal == 1:
             #'finite element temperature gradients and fluxes'
+            if self.isubcase not in self.case_control_deck.subcases:
+                self.subcase = self.case_control_deck.create_new_subcase(self.isubcase)
+            self.subcase.add_op2_data(self.data_code, 'FLUX', self.log)
+
             result_name = 'thermal_gradient_and_flux'
             storage_obj = self.thermal_gradient_and_flux
             if self._results.is_not_saved(result_name):
@@ -355,6 +364,10 @@ class OQG(OP2Common):
         """
         table_code = 39
         """
+        if self.isubcase not in self.case_control_deck.subcases:
+            self.subcase = self.case_control_deck.create_new_subcase(self.isubcase)
+        self.subcase.add_op2_data(self.data_code, 'MPCFORCES', self.log)
+
         if self.table_name == b'OQMG1':
             result_name = 'mpc_forces'
         elif self.table_name == b'RAQEATC':

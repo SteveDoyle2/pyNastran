@@ -1,10 +1,11 @@
 from six.moves import zip
 
+import numpy as np
 from numpy import array, zeros, arange, searchsorted, cross
 
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
-from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
+from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_blank,
     double_or_blank)
 
 
@@ -49,7 +50,7 @@ class CTRIAX6(object):
                 #: theta
                 self.theta[i] = double_or_blank(card, 9, 'theta', 0.0)
 
-                assert len(card) <= 10, 'len(CTRIAX6 card) = %i' % len(card)
+                assert len(card) <= 10, 'len(CTRIAX6 card) = %i\ncard=%s' % (len(card), card)
             i = self.element_id.argsort()
             self.element_id = self.element_id[i]
             self.material_id = self.material_id[i]
@@ -189,10 +190,11 @@ class CTRIAX6(object):
         v12 = p2 - p1
         v13 = p3 - p1
         v123 = cross(v12, v13)
+        normi = np.linalg.norm(v123)
         if calculate_normal or calculate_area:
-            normal = v123 / n
+            normal = v123 / normi
         if calculate_area:
-            A = 0.5 * n
+            A = 0.5 * normi
         if calculate_mass:
             t = self.model.pid.get_thickness_by_property_id(self.pid)
             massi = A * t
@@ -212,3 +214,6 @@ class CTRIAX6(object):
         """
         grids2_cid_0 = grids_cid0[searchsorted(nids_to_get, node_ids), :]
         return grids2_cid_0
+
+    def __repr__(self):
+        return '<%s object; n=%s>' % (self.type, self.n)

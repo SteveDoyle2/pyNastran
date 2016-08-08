@@ -8,6 +8,8 @@ from pyNastran.op2.tables.grid_point_weight import GridPointWeight
 from pyNastran.f06.f06_formatting import get_key0
 from pyNastran.utils import object_attributes, integer_types
 from pyNastran.bdf.cards.base_card import deprecated
+from pyNastran.bdf.case_control_deck import CaseControlDeck
+
 try:
     import pandas as pd
 except ImportError:
@@ -20,6 +22,7 @@ class OP2_F06_Common(object):
         #: subcaseID
         self.iSubcaseNameMap = {}
         self.subtitles = defaultdict(list)
+        self.case_control_deck = CaseControlDeck([], log=self.log)
         self.labels = {}
 
         self.make_geom = False
@@ -174,6 +177,15 @@ class OP2_F06_Common(object):
         #: the date the job was run on
         self.date = None
 
+        # SOL 200
+        self.convergence_data = None
+        self.weight_response = None
+        self.stress_response = None
+        self.strain_response = None
+        self.composite_stress_response = None
+        self.composite_strain_response = None
+        self.flutter_response = None
+
         #: Grid Point Weight Table
         #: create with:
         #:   PARAM   GRDPNT    0  (required for F06/OP2)
@@ -183,6 +195,9 @@ class OP2_F06_Common(object):
 
         #: ESE
         self.eigenvalues = {}
+
+        #self.convergence_history = {}
+        #self.response1_table = {}
 
     def __objects_init__(self):
         """More variable declarations"""
@@ -426,7 +441,7 @@ class OP2_F06_Common(object):
         for res_type in res_types:
             if not res_type:
                 continue
-            key0 = list(res_type.keys())[0]
+            key0 = next(iter(res_type))
             if not isinstance(key0, integer_types) and not isinstance(res_key, integer_types):
                 if not type(key0) == type(res_key):
                     msg = 'bad compression check...keys0=%s type(key0)=%s res_key=%s type(res_key)=%s' % (
@@ -617,6 +632,12 @@ class OP2_F06_Common(object):
         table_types += [
             # LAMA
             'eigenvalues',
+
+            # HISADD
+            #'convergence_history',
+
+            # R1TABRG
+            #'response1_table',
 
             # OEF - Forces - tCode=4 thermal=0
             'crod_force',
@@ -875,8 +896,11 @@ class OP2_F06_Common(object):
                 #self.log.debug(type(key))
                 return key[0]
 
-        table_types = self._get_table_types_testing()
         msg = []
+        if self.grid_point_weight:
+            msg += self.grid_point_weight.get_stats(short=short)
+
+        table_types = self._get_table_types_testing()
         if short:
             no_data_classes = ['RealEigenvalues', 'ComplexEigenvalues', 'BucklingEigenvalues']
             for table_type in table_types:

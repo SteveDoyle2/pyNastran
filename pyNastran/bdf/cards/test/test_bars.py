@@ -186,7 +186,7 @@ class TestBars(unittest.TestCase):
         model2._verify_bdf(xref=True)
         if not os.path.exists('cbar.op2') and 0:
             os.system('nastran scr=yes bat=no old=no cbar.bdf')
-        #os.remove('pbeam12.bdf')
+        os.remove('cbar.bdf')
 
         if 0:
             from pyNastran.op2.op2 import OP2

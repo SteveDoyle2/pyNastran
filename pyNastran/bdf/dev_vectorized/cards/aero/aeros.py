@@ -60,7 +60,7 @@ class AEROS(VectorizedCard):
         self.Sref[i] = double(card, 5, 'Sref')
         self.symXZ[i] = integer_or_blank(card, 6, 'symXZ', 0)
         self.symXY[i] = integer_or_blank(card, 7, 'symXY', 0)
-        assert len(card) <= 8, 'len(AEROS card) = %i' % len(card)
+        assert len(card) <= 8, 'len(AEROS card) = %i\ncard=%s' % (len(card), card)
         self.i += 1
 
     def add_op2(self, data):

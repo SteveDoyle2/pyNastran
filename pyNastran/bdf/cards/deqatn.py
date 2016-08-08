@@ -57,12 +57,17 @@ def invdba(dba, pref, f):
 class DEQATN(BaseCard):  # needs work...
     type = 'DEQATN'
 
-    def __init__(self, card=None, data=None, comment=''):
+    def __init__(self, name, equation_id, eqs, comment=''):
         if comment:
             self._comment = comment
         self.dtable = None
         self.func = None
+        self.name = name
+        self.equation_id = equation_id
+        self.eqs = eqs
 
+    @classmethod
+    def add_card(cls, card, comment=''):
         new_card = ''
         found_none = False
         #print(card)
@@ -82,18 +87,18 @@ class DEQATN(BaseCard):  # needs work...
             msg += 'card=%s' % card
             raise ValueError(msg)
 
-        self.equation_id = int(eq_id)
+        equation_id = int(eq_id)
 
         line0_eq = line0[16:]
-        eqs = [line0_eq] + card[1:]
-        self.eqs = []
-        neqs = len(eqs)
+        eqs_temp = [line0_eq] + card[1:]
+        eqs = []
+        neqs = len(eqs_temp)
         is_join = False
-        for i, eq in enumerate(eqs):
+        for i, eq in enumerate(eqs_temp):
             #print('i=%s join=%s eq=%r' % (i, is_join, eq))
             if is_join:
                 eq = eqi.rstrip() + eq.lstrip()
-            eqi = eq.strip()
+            eqi = eq.strip().replace(' ', '')
             if i == 0 and eqi == '':
                 #self.eqs.append(eqi)
                 continue
@@ -122,15 +127,16 @@ class DEQATN(BaseCard):  # needs work...
             if not is_join:
                 if '=' not in eqi:
                     raise SyntaxError('line=%r expected an equal sign' % eqi)
-                self.eqs.append(eqi)
+                eqs.append(eqi)
             #print(i, eqi)
         #assert not is_join
         if is_join:
-            self.eqs.append(eqi)
-        self._raw_eqs = deepcopy(self.eqs)  # TODO: temporary
-        assert len(self.eqs) > 0, self.eqs
-        #assert len(eqs) <= 8, 'len(eqID)==%s' % (len(self.eqID))
-        #self._setup_equation()
+            eqs.append(eqi)
+        _raw_eqs = deepcopy(eqs)  # TODO: temporary
+        assert len(eqs) > 0, eqs
+        #assert len(eqs) <= 8, 'len(eqID)==%s' % (len(eqID))
+        #_setup_equation()
+        return DEQATN(name, equation_id, eqs, comment=comment)
 
     def _setup_equation(self):
         default_values = {}
@@ -148,6 +154,14 @@ class DEQATN(BaseCard):  # needs work...
         self.nargs = nargs
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         # TODO: get deafults from DTABLE
         # TODO: get limits from DCONSTR
         self.dtable = model.dtable

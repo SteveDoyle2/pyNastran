@@ -10,14 +10,15 @@ All static loads are defined in this file.  This includes:
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import integer_types
+from six import integer_types, PY3
 from six.moves import zip, range
 
 #from pyNastran.bdf.errors import CrossReferenceError
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import BaseCard, _node_ids
-from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
-    double, double_or_blank, components_or_blank)
+from pyNastran.bdf.bdf_interface.assign_type import (
+    integer, integer_or_blank, double, double_or_blank, components_or_blank,
+    string_or_blank)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
@@ -31,19 +32,13 @@ class Load(BaseCard):
         self.cid = None
         self.nodes = None
 
-    def Cid(self):
-        if isinstance(self.cid, integer_types):
-            return self.cid
-        else:
-            return self.cid_ref.cid
-
     @property
     def node_ids(self):
-        return self._nodeIDs()
-
-    @node_ids.setter
-    def node_ids(self, value):
-        raise ValueError("You cannot set node IDs like this...modify the node objects")
+        try:
+            return self._nodeIDs()
+        except:
+            #raise
+            raise RuntimeError('error processing nodes for \n%s' % str(self))
 
     def _nodeIDs(self, nodes=None):
         """returns nodeIDs for repr functions"""
@@ -100,9 +95,18 @@ class LoadCombination(Load):  # LOAD, DLOAD
         return cls(sid, scale, scale_factors, load_ids, comment=comment)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         load_ids2 = []
         msg = ' which is required by %s=%s' % (self.type, self.sid)
         for load_id in self.load_ids:
+            assert load_id != self.sid, 'Type=%s sid=%s load_id=%s creates a recursion error' % (self.type, self.sid, load_id)
             load_id2 = model.Load(load_id, msg=msg)
             assert isinstance(load_id2, list), load_id2
             load_ids2.append(load_id2)
@@ -148,7 +152,14 @@ class LoadCombination(Load):  # LOAD, DLOAD
                 try:
                     loads += load.get_loads()
                 except RuntimeError:
-                    raise RuntimeError('recursion error on load=\n%s' % str(load))
+                    if PY3:
+                        print('recursion error on load=\n%s' % str(load))
+                        raise
+                    try:
+                        msg = 'recursion error on load=\n%s' % str(load)
+                    except RuntimeError:
+                        msg = 'Recursion Error on load=%s Type=%s' % (load.sid, load.type)
+                    raise RuntimeError(msg)
             #loads += self.ID  #: :: todo:  what does this mean, was uncommented
         return loads
 
@@ -161,26 +172,40 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
     """
     type = 'LSEQ'
 
-    def __init__(self):
-        pass
-
-    def add_card(self, card, comment=''):
+    def __init__(self, sid, excite_id, lid, tid, comment=''):
         if comment:
             self._comment = comment
-        self.sid = integer(card, 1, 'sid')
-        self.excite_id = integer(card, 2, 'excite_id')
-        self.lid = integer(card, 3, 'lid')
-        self.tid = integer_or_blank(card, 4, 'tid')
-        assert len(card) <= 5, 'len(LSEQ card) = %i' % len(card)
+        self.sid = sid
+        self.excite_id = excite_id
+        self.lid = lid
+        self.tid = tid
 
-    def add_op2_data(self, data, comment=''):
-        self.sid = data[0]
-        self.excite_id = data[1]
-        self.lid = data[2]
-        self.tid = data[3]
-        raise NotImplementedError()
+    @classmethod
+    def add_card(cls, card, comment=''):
+        sid = integer(card, 1, 'sid')
+        excite_id = integer(card, 2, 'excite_id')
+        lid = integer(card, 3, 'lid')
+        tid = integer_or_blank(card, 4, 'tid')
+        assert len(card) <= 5, 'len(LSEQ card) = %i\ncard=%s' % (len(card), card)
+        return LSEQ(sid, excite_id, lid, tid, comment=comment)
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        sid = data[0]
+        excite_id = data[1]
+        lid = data[2]
+        tid = data[3]
+        return LSEQ(sid, excite_id, lid, tid, comment=comment)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by %s=%s' % (self.type, self.sid)
         self.lid = model.Load(self.lid, msg=msg)
         self.lid_ref = self.lid
@@ -244,6 +269,61 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
         return self.comment + print_card_8(card)
 
 
+class LOADCYN(Load):
+    type = 'LOADCYN'
+
+    def __init__(self, sid, scale, segment_id, scales, load_ids, segment_type=None, comment=''):
+        if comment:
+            self._comment = comment
+        self.sid = sid
+        self.scale = scale
+        self.segment_id = segment_id
+        self.scales = scales
+        self.load_ids = load_ids
+        self.segment_type = segment_type
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        sid = integer(card, 1, 'sid')
+        scale = double(card, 2, 'scale')
+        segment_id = integer(card, 3, 'segment_id')
+        segment_type = string_or_blank(card, 4, 'segment_type')
+
+        scalei = double(card, 5, 'sid1')
+        loadi = integer(card, 6, 'load1')
+        scales = [scalei]
+        load_ids = [loadi]
+
+        scalei = double_or_blank(card, 7, 'sid2')
+        if scalei is not None:
+            loadi = double_or_blank(card, 8, 'load2')
+            scales.append(scaali)
+            load_ids.append(loadi)
+        return LOADCYN(sid, scale, segment_id, scales, load_ids,
+                       segment_type=segment_type, comment=comment)
+
+    def get_loads(self):
+        return [self]
+
+    def cross_reference(self, model):
+        pass
+
+    def raw_fields(self):
+        end = []
+        for scale, load in zip(self.scales, self.load_ids):
+            end += [scale, load]
+        list_fields = ['LOADCYN', self.sid, self.scale, self.segment_id, self.segment_type
+                       ] + end
+        return list_fields
+
+    def repr_fields(self):
+        return self.raw_fields()
+
+    def write_card(self, size=8, is_double=False):
+        card = self.raw_fields()
+        return self.comment + print_card_8(card)
+
+
 class DAREA(BaseCard):
     """
     Defines scale (area) factors for static and dynamic loads. In dynamic
@@ -285,6 +365,14 @@ class DAREA(BaseCard):
         return DAREA(sid, p, c, scale, comment=comment)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ', which is required by %s=%s' % (self.type, self.sid)
         self.p = model.Node(self.node_id, allow_empty_nodes=False, msg=msg)
         self.p_ref = self.p
@@ -300,7 +388,7 @@ class DAREA(BaseCard):
 
     @property
     def node_id(self):
-        if isinstance(self.p, int):
+        if isinstance(self.p, integer_types):
             return self.p
         return self.p_ref.nid
 
@@ -374,6 +462,14 @@ class SPCD(Load):
         return _node_ids(self, nodes=self.gids, allow_empty_nodes=True, msg=msg)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ', which is required by %s=%s' % (self.type, self.sid)
         self.gids = model.Nodes(self.gids, allow_empty_nodes=True, msg=msg)
         self.gids_ref = self.gids
@@ -429,7 +525,6 @@ class SLOAD(Load):
 
     @classmethod
     def add_card(cls, card, comment=''):
-
         sid = integer(card, 1, 'sid')
 
         nfields = len(card) - 2
@@ -447,7 +542,20 @@ class SLOAD(Load):
             mags.append(double(card, j + 1, 'mag' + str(i)))
         return SLOAD(sid, nids, mags, comment=comment)
 
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        (sid, nid, scale_factor) = data
+        return SLOAD(sid, [nid], [scale_factor], comment=comment)
+
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by %s=%s' % (self.type, self.sid)
         for (i, nid) in enumerate(self.nids):
             self.nids[i] = model.Node(nid, msg=msg)
@@ -510,7 +618,7 @@ class RFORCE(Load):
         self.idrf = idrf
 
     @classmethod
-    def add_card(self, card, comment=''):
+    def add_card(cls, card, comment=''):
         sid = integer(card, 1, 'sid')
         nid = integer_or_blank(card, 2, 'nid', 0)
         cid = integer_or_blank(card, 3, 'cid', 0)
@@ -522,7 +630,7 @@ class RFORCE(Load):
         racc = double_or_blank(card, 9, 'racc', 0.)
         mb = integer_or_blank(card, 10, 'mb', 0)
         idrf = integer_or_blank(card, 11, 'idrf', 0)
-        assert len(card) <= 12, 'len(RFORCE card) = %i' % len(card)
+        assert len(card) <= 12, 'len(RFORCE card) = %i\ncard=%s' % (len(card), card)
         return RFORCE(sid, nid, cid, scale, r1, r2, r3, method, racc, mb,
                       idrf, comment=comment)
 
@@ -535,6 +643,14 @@ class RFORCE(Load):
                       #idrf, comment=comment)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         msg = ' which is required by RFORCE sid=%s' % self.sid
         if self.nid > 0:
             self.nid = model.Node(self.nid, msg=msg)
@@ -580,6 +696,93 @@ class RFORCE(Load):
         list_fields = ['RFORCE', self.sid, self.Nid(), self.Cid(), self.scale,
                        self.r1, self.r2, self.r3, self.method, racc,
                        mb, idrf]
+        return list_fields
+
+    def write_card(self, size=8, is_double=False):
+        card = self.repr_fields()
+        if size == 8:
+            return self.comment + print_card_8(card)
+        if is_double:
+            return self.comment + print_card_double(card)
+        return self.comment + print_card_16(card)
+
+
+class RFORCE1(Load):
+    type = 'RFORCE1'
+
+    def __init__(self, sid, nid, scale, r1, r2, r3, racc,
+                 mb, group_id, cid=0, method=2, comment=''):
+        if comment:
+            self._comment = comment
+        self.sid = sid
+        self.nid = nid
+        self.cid = cid
+        self.scale = scale
+        self.r1 = r1
+        self.r2 = r2
+        self.r3 = r3
+        self.method = method
+        self.racc = racc
+        self.mb = mb
+        self.group_id = group_id
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        sid = integer(card, 1, 'sid')
+        nid = integer_or_blank(card, 2, 'nid', 0)
+        cid = integer_or_blank(card, 3, 'cid', 0)
+        scale = double_or_blank(card, 4, 'scale', 1.)
+        r1 = double_or_blank(card, 5, 'r1', 0.)
+        r2 = double_or_blank(card, 6, 'r2', 0.)
+        r3 = double_or_blank(card, 7, 'r3', 0.)
+        method = integer_or_blank(card, 8, 'method', 1)
+        racc = double_or_blank(card, 9, 'racc', 0.)
+        mb = integer_or_blank(card, 10, 'mb', 0)
+        group_id = integer_or_blank(card, 11, 'group_id', 0)
+        assert len(card) <= 12, 'len(RFORCE card) = %i\ncard=%s' % (len(card), card)
+        return RFORCE1(sid, nid, scale, r1, r2, r3, racc, mb,
+                       group_id, cid=cid, method=method, comment=comment)
+
+    def get_loads(self):
+        return [self]
+
+    def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ' which is required by RFORCE1 sid=%s' % self.sid
+        if self.nid > 0:
+            self.nid = model.Node(self.nid, msg=msg)
+            self.nid_ref = self.nid
+        self.cid = model.Coord(self.cid, msg=msg)
+        self.cid_ref = self.cid
+
+    def uncross_reference(self):
+        self.nid = self.Nid()
+        self.cid = self.Cid()
+        if self.nid != 0:
+            del self.nid_ref
+        del self.cid_ref
+
+    def Nid(self):
+        if isinstance(self.nid, integer_types):
+            return self.nid
+        return self.nid_ref.nid
+
+    def Cid(self):
+        if isinstance(self.cid, integer_types):
+            return self.cid
+        return self.cid_ref.cid
+
+    def raw_fields(self):
+        list_fields = ['RFORCE1', self.sid, self.Nid(), self.Cid(), self.scale,
+                       self.r1, self.r2, self.r3, self.method, self.racc,
+                       self.mb, self.group_id]
         return list_fields
 
     def write_card(self, size=8, is_double=False):
@@ -637,10 +840,18 @@ class RANDPS(RandomLoad):
         x = double_or_blank(card, 4, 'x', 0.0)
         y = double_or_blank(card, 5, 'y', 0.0)
         tid = integer_or_blank(card, 6, 'tid', 0)
-        assert len(card) <= 7, 'len(RANDPS card) = %i' % len(card)
+        assert len(card) <= 7, 'len(RANDPS card) = %i\ncard=%s' % (len(card), card)
         return RANDPS(sid, j, k, x, y, tid, comment=comment)
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         if self.tid:
             msg = ' which is required by RANDPS sid=%s' % (self.sid)
             #self.tid = model.Table(self.tid, msg=msg)

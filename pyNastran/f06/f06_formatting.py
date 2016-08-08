@@ -7,7 +7,7 @@ def writeFloats10E(vals):
     is_all_zeros = True
     for v in vals:
         v2 = '%10.3E' % v
-        if v2 == ' 0.000E+00' or v2 == '-0.000E+00':
+        if v2 in (' 0.000E+00', '-0.000E+00'):
             v2 = ' 0.0'
         else:
             is_all_zeros = False
@@ -20,7 +20,7 @@ def writeFloats12E(vals):
     is_all_zeros = True
     for v in vals:
         v2 = '%12.5E' % v
-        if v2 == ' 0.00000E+00' or v2 == '-0.00000E+00':
+        if v2 in (' 0.00000E+00', '-0.00000E+00'):
             v2 = ' 0.0'
         else:
             is_all_zeros = False
@@ -31,14 +31,14 @@ def writeFloats12E(vals):
 def write_float_12E(val):
     vals2 = []
     v2 = '%12.5E' % val
-    if v2 == ' 0.00000E+00' or v2 == '-0.00000E+00':
+    if v2 in (' 0.00000E+00', '-0.00000E+00'):
         v2 = ' 0.0'
     return v2
 
 
 def write_float_13e(val):
     val2 = '%13.6E' % val
-    if val2 == ' 0.000000E+00' or val2 == '-0.000000E+00':
+    if val2 in (' 0.000000E+00', '-0.000000E+00'):
         val2 = ' 0.0'
     return val2
 
@@ -48,7 +48,7 @@ def write_float_13e(val):
     #is_all_zeros = True
     #for v in vals:
         #v2 = '%13.6E' % v
-        #if v2 == ' 0.000000E+00' or v2 == '-0.000000E+00':
+        #if v2 in (' 0.000000E+00', '-0.000000E+00'):
             #v2 = ' 0.0'
         #else:
             #is_all_zeros = False
@@ -59,7 +59,7 @@ def write_floats_13e(vals):
     vals2 = []
     for v in vals:
         v2 = '%13.6E' % v
-        if v2 == ' 0.000000E+00' or v2 == '-0.000000E+00':
+        if v2 in (' 0.000000E+00', '-0.000000E+00'):
             v2 = ' 0.0'
         vals2.append(v2)
     return vals2
@@ -71,7 +71,7 @@ def write_imag_floats_13e(vals, is_mag_phase):
     if is_mag_phase:
         for v in vals:
             v2 = '%13.6E' % abs(v)
-            if v2 == ' 0.000000E+00' or v2 == '-0.000000E+00':
+            if v2 in (' 0.000000E+00', '-0.000000E+00'):
                 v2 = ' 0.0'
             vals2.append(v2)
 
@@ -86,13 +86,13 @@ def write_imag_floats_13e(vals, is_mag_phase):
     else:
         for v in vals:
             v2 = '%13.6E' % v.real
-            if v2 == ' 0.000000E+00' or v2 == '-0.000000E+00':
+            if v2 in (' 0.000000E+00', '-0.000000E+00'):
                 v2 = ' 0.0'
             vals2.append(v2)
 
         for v in vals:
             v3 = '%13.6E' % v.imag
-            if v3 == ' 0.000000E+00' or v3 == '-0.000000E+00':
+            if v3 in (' 0.000000E+00', '-0.000000E+00'):
                 v3 = ' 0.0'
             vals2.append(v3)
     return vals2
@@ -105,7 +105,7 @@ def writeFloats8p4F(vals):
         if v >= 1000.0 or v <= -100.0:
             raise RuntimeError(v)
         v2 = '%8.4f' % v
-        if v2 == '  0.0000' or v2 == ' -0.0000':
+        if v2 in ('  0.0000', ' -0.0000'):
             v2 = '  0.0   '
         else:
             is_all_zeros = False

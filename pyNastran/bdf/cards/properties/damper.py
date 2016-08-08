@@ -16,8 +16,8 @@ from pyNastran.utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.cards.base_card import Property
-from pyNastran.bdf.bdfInterface.assign_type import (integer, integer_or_blank,
-    double, double_or_blank)
+from pyNastran.bdf.bdf_interface.assign_type import (
+    integer, integer_or_blank, double, double_or_blank)
 
 
 class DamperProperty(Property):
@@ -113,7 +113,7 @@ class PDAMP5(DamperProperty):
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')
         b = double(card, 3, 'b')
-        assert len(card) == 4, 'len(PDAMP5 card) = %i' % len(card)
+        assert len(card) == 4, 'len(PDAMP5 card) = %i\ncard=%s' % (len(card), card)
         return PDAMP5(pid, mid, b, comment=comment)
 
     @classmethod
@@ -130,6 +130,14 @@ class PDAMP5(DamperProperty):
         #assert isinstance(b, float), 'b=%r\n%s' % (b, str(self))
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         self.mid = model.Material(self.mid)
         self.mid_ref = self.mid
 
@@ -176,7 +184,7 @@ class PDAMPT(DamperProperty):
     def add_card(cls, card, comment=''):
         pid = integer(card, 1, 'pid')
         tbid = integer_or_blank(card, 2, 'tbid', 0)
-        assert len(card) <= 3, 'len(PDAMPT card) = %i' % len(card)
+        assert len(card) <= 3, 'len(PDAMPT card) = %i\ncard=%s' % (len(card), card)
         return PDAMPT(pid, tbid, comment=comment)
 
     @classmethod
@@ -190,6 +198,14 @@ class PDAMPT(DamperProperty):
         assert isinstance(pid, int), 'pid=%r' % pid
 
     def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
         self.tbid = model.Table(self.tbid)
         self.tbid_ref = self.tbid
 

@@ -11,7 +11,7 @@ from numpy import arange, cross, abs, searchsorted, array, ones, eye
 from numpy.linalg import norm
 
 from pyNastran.bdf.field_writer_8 import print_card_8
-from pyNastran.bdf.bdfInterface.assign_type import integer
+from pyNastran.bdf.bdf_interface.assign_type import integer
 
 from pyNastran.bdf.dev_vectorized.cards.elements.solid.solid_element import SolidElement
 
@@ -71,9 +71,11 @@ class CHEXA8(SolidElement):
         SolidElement.__init__(self, model)
 
     def add(self, card, comment=''):
+        print('chexa8-add')
         i = self.i
         #comment = self._comments[i]
         eid = integer(card, 1, 'element_id')
+
         if comment:
             self._comments[eid] = comment
 
@@ -94,10 +96,10 @@ class CHEXA8(SolidElement):
         ], dtype='int32')
         assert 0 not in nids, '%s\n%s' % (nids, card)
         self.node_ids[i, :] = nids
-        assert len(card) == 11, 'len(CHEXA8 card) = %i' % len(card)
+        assert len(card) == 11, 'len(CHEXA8 card) = %i\ncard=%s' % (len(card), card)
         self.i += 1
 
-    def get_mass_matrix(self, i, model, positions, index0s):
+    def get_mass_matrix(self, i, model, positions, index0s, is_lumped=True):
         nnodes = 8
         ndof = 3 * nnodes
         pid = self.property_id[i]
