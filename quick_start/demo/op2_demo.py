@@ -34,41 +34,41 @@ op2.read_op2()
 
 # <codecell>
 
-print op2.get_op2_stats()
+print (op2.get_op2_stats())
 
 # <codecell>
 
 # what modes did we analyze:  1 to 167
-print "loadcases =", op2.eigenvectors.keys()
+print ("loadcases =", op2.eigenvectors.keys())
 
 # get subcase 1
 eig1 = op2.eigenvectors[1]
 
 modes = eig1.translations.keys()
 
-print "modes =", modes, '\n'
+print ("modes =", modes, '\n')
 
 mode2 = eig1.translations[2]
 mode2_node10 = mode2[10]
-print "translation mode2_node10 =", mode2_node10
-print "rotations mode2_node10 =", eig1.rotations[2][10]
+print ("translation mode2_node10 =", mode2_node10)
+print ("rotations mode2_node10 =", eig1.rotations[2][10])
 
 # <codecell>
 
 plate_stress = op2.plateStress[1]
-print "plate_stress_obj =", type(plate_stress), '\n'
+print ("plate_stress_obj =", type(plate_stress), '\n')
 
 # the set of variables in the PlateStressObject
-print "plate_stress = ", plate_stress.__dict__.keys(), '\n'
+print ("plate_stress = ", plate_stress.__dict__.keys(), '\n')
 
 # list of parameters that define the object (e.g. what is the nonlinear variable name
-print "data_code_keys = ", plate_stress.data_code.keys(), '\n'
+print ("data_code_keys = ", plate_stress.data_code.keys(), '\n')
 
 # nonlinear variable name
 name = plate_stress.data_code['name']
-print "name = %r" % plate_stress.data_code['name']
+print ("name = %r" % plate_stress.data_code['name'])
 
-print "list-type variables =", plate_stress.data_code['dataNames']
+print ("list-type variables =", plate_stress.data_code['dataNames'])
 
 # the special loop parameter
 # for modal analysis, it's "modes"
@@ -87,7 +87,7 @@ def abs_max_min(vals):
     i = absvals.index(maxval)
     return vals[i]
 
-print "methods =", object_methods(plate_stress)
+print ("methods =", object_methods(plate_stress))
 if plate_stress.isVonMises():  # True
     ovm = plate_stress.ovmShear
 else:

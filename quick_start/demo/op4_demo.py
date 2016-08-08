@@ -61,20 +61,20 @@ print "object_methods", object_methods(op4)
 
 # <codecell>
 
-print matrices.keys()
+print (matrices.keys())
 form_flama, flama = matrices['FLAMA']
-print "shape = ", flama.shape
-print "flamat nvals =", product(flama.shape)
+print ("shape = ", flama.shape)
+print ("flamat nvals =", product(flama.shape))
 
 form_ugext, ugext = matrices['UGEXT']
-print "form_ugext=%s type=%s" % (form_ugext, type(ugext[0,0]))
+print ("form_ugext=%s type=%s" % (form_ugext, type(ugext[0,0])))
 #print "ugext", ugext
-print "ugext.shape =", ugext.shape
-print "ugext nvals =", product(ugext.shape)
+print ("ugext.shape =", ugext.shape)
+print ("ugext nvals =", product(ugext.shape))
 
 # <codecell>
 
-print ugext[:,:]
+#print ugext[:,:]
 #print flama
 
 # <codecell>
