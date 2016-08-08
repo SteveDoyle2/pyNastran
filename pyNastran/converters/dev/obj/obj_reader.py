@@ -60,7 +60,6 @@ class OBJ(object):
         #lines2[:, 1] = i2
         #self.lines = lines2
         #print self.lines.shape
-        return 0
         #self.nodes = unodes
 
     def write_obj(self, obj_filename):

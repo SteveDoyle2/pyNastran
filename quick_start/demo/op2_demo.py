@@ -73,7 +73,7 @@ print ("list-type variables =", plate_stress.data_code['dataNames'])
 # the special loop parameter
 # for modal analysis, it's "modes"
 # for transient, it's "dts"
-print ("modes = ", plate_stress.modes) # name + 's'
+print "modes = ", plate_stress.modes # name + 's'
 
 
 # extra list-type parameter for modal analysis; see dataNames
@@ -95,10 +95,10 @@ else:
 
 #ovm.keys()  # modes 1-6
 #ovm[6].keys()  # elements 1-3277
-print ("")
-print ("[layer1, layer2, ...] =", ovm[6][1000]['C'])
+print ""
+print "[layer1, layer2, ...] =", ovm[6][1000]['C']
 ovm_mode6_eid1000 = abs_max_min(ovm[6][1000]['C'])
-print ("ovm_mode6_eid1000 =", ovm_mode6_eid1000)
+print "ovm_mode6_eid1000 =", ovm_mode6_eid1000
 
 # <codecell>
 
