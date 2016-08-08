@@ -345,7 +345,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'CGAP',
 
             ## rigid_elements
-            'RBAR', 'RBAR1', 'RBE1', 'RBE2', 'RBE3', 'RROD', #'RSPLINE',
+            'RBAR', 'RBAR1', 'RBE1', 'RBE2', 'RBE3', 'RROD', 'RSPLINE',
 
             ## plotels
             'PLOTEL',

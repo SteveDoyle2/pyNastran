@@ -140,7 +140,6 @@ class DELAY(BaseCard):
         else:
             for nid, comp, delay in zip(node_ids, self.components, self.delays):
                 msg += print_card_16(['DELAY', self.sid, nid, comp, delay])
-        print(msg)
         return msg
 
 

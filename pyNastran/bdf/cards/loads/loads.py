@@ -302,6 +302,9 @@ class LOADCYN(Load):
         return LOADCYN(sid, scale, segment_id, scales, load_ids,
                        segment_type=segment_type, comment=comment)
 
+    def get_loads(self):
+        return [self]
+
     def cross_reference(self, model):
         pass
 

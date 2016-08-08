@@ -213,8 +213,6 @@ class AELINK(BaseCard):
     def __init__(self, id, label, independent_labels, Cis, comment=''):
         if comment:
             self._comment = comment
-        #: an ID=0 is applicable to the global subcase, ID=1 only subcase 1
-        self.id = id
         #: defines the dependent variable name (string)
         self.label = label
         #: defines the independent variable name (string)
@@ -222,9 +220,16 @@ class AELINK(BaseCard):
         #: linking coefficient (real)
         self.Cis = Cis
 
+        if isinstance(id, string_types):
+            if id != 'ALWAYS':
+                raise RuntimeError("The only valid ID that is a string is 'ALWAYS'")
+            id = 0
+        #: an ID=0 is applicable to the global subcase, ID=1 only subcase 1
+        self.id = id
+
     @classmethod
     def add_card(cls, card, comment=''):
-        id = integer(card, 1, 'ID')
+        id = integer_or_string(card, 1, 'ID')
         label = string(card, 2, 'label')
         independent_labels = []
         Cis = []
@@ -4510,6 +4515,12 @@ class TRIM(BaseCard):
             ntrim = len(self.labels)
             naesurfs = len(aesurf_names)
             naeparms = len(aeparm_labels)
+            naelinks = 0
+            if self.sid in aelinks:
+                naelinks = len(aelinks[self.sid])
+            if 0 in aelinks:
+                naelinks += len(aelinks[0])
+
             ntrim_aesurfs = 0
             labels = aestat_labels + aesurf_names + aeparm_labels
             for label in self.labels:
@@ -4531,11 +4542,11 @@ class TRIM(BaseCard):
                     #ntrim, nsuport_dofs, nsuport1_dofs, naesurfs)
                 #raise RuntimeError(msg)
 
-            ndelta = (naestats + naesurfs + naeparms) - (ntrim + nsuport_dofs + nsuport1_dofs) #+ ntrim_aesurfs  - naelinks
+            ndelta = (naestats + naesurfs + naeparms) - (ntrim + naelinks + nsuport_dofs + nsuport1_dofs) #+ ntrim_aesurfs
             if ndelta != 0:
-                msg = '(naestats + naesurfs) - (ntrim + ntrim_aesurf + nsuport_dofs + nsuport1_dofs) = ndelta = %s; ndelta != 0\n' % ndelta
-                msg += 'naestats=%s naesurfs=%s naeparms=%s ntrim=%s nsuport_dofs=%s nsuport1_dofs=%s ntrim_aesurfs=%s' % (
-                    naestats, naesurfs, naeparms, ntrim, nsuport_dofs, nsuport1_dofs, ntrim_aesurfs)
+                msg = '(naestats + naesurfs) - (ntrim + ntrim_aesurf + naelink + nsuport_dofs + nsuport1_dofs) = ndelta = %s; ndelta != 0\n' % ndelta
+                msg += 'naestats=%s naesurfs=%s naeparms=%s ntrim=%s naelinks=%s nsuport_dofs=%s nsuport1_dofs=%s ntrim_aesurfs=%s' % (
+                    naestats, naesurfs, naeparms, ntrim, naelinks, nsuport_dofs, nsuport1_dofs, ntrim_aesurfs)
                 raise RuntimeError(msg)
 
     def cross_reference(self, model):

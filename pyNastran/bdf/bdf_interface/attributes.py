@@ -572,7 +572,7 @@ class BDFAttributes(object):
                 'GRAV', 'ACCEL', 'ACCEL1',
                 'PLOAD', 'PLOAD1', 'PLOAD2', 'PLOAD4',
                 'PLOADX1', 'RFORCE', 'RFORCE1', 'SLOAD',
-                'GMLOAD', 'SPCD',
+                'GMLOAD', 'SPCD', 'LOADCYN',
 
                 # thermal
                 'TEMP', 'QBDY1', 'QBDY2', 'QBDY3', 'QHBDY',

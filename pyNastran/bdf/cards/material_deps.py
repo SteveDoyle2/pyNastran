@@ -380,7 +380,6 @@ class MATT2(MaterialDependence):
     @classmethod
     def add_card(cls, card, comment=''):
         mid = integer(card, 1, 'mid')
-        print('***mid = ', mid)
         G11_table = integer_or_blank(card, 2, 'T(G11)')
         G12_table = integer_or_blank(card, 3, 'T(G12)')
         G13_table = integer_or_blank(card, 4, 'T(G13)')
@@ -492,7 +491,6 @@ class MATT2(MaterialDependence):
             self.A2_table(), self.A3_table(), None, self.ge_table(),
             self.st_table(), self.sc_table(), self.ss_table()
         ]
-        print('list_fields =', list_fields)
         return list_fields
 
     def repr_fields(self):

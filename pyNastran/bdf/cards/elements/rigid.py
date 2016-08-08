@@ -62,7 +62,7 @@ class RROD(RigidElement):
         cma = components_or_blank(card, 4, 'cma')
         cmb = components_or_blank(card, 5, 'cmb')
         alpha = double_or_blank(card, 6, 'alpha', 0.0)
-        assert len(card) <= 6, 'len(RROD card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 7, 'len(RROD card) = %i\ncard=%s' % (len(card), card)
         return RROD(eid, ga, gb, cma, cmb, alpha, comment=comment)
 
     @classmethod

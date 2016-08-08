@@ -375,7 +375,7 @@ class DDVAL(OptConstraint):
         ddvals = []
         for i in range(2, len(card)):
             ddval = double_string_or_blank(card, i, 'DDVAL%s' % n)
-            if ddval:
+            if ddval is not None:
                 ddvals.append(ddval)
         ddvals = expand_thru_by(ddvals)
         ddvals.sort()
@@ -2809,6 +2809,7 @@ class DVPREL2(OptConstraint):
         self.dvids = dvids
         self.labels = labels
         validate_dvprel(Type, pname_fid, validate)
+        #print(self)
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -2849,7 +2850,7 @@ class DVPREL2(OptConstraint):
                     assert dvid is not 'DESVAR'
                     dvids.append(dvid)
                     n += 1
-
+        #print('dvids =', dvids)
         labels = []
         if idtable:
             n = 1

@@ -133,7 +133,11 @@ class EIGC(Method):
     """
     type = 'EIGC'
 
-    def __init__(self, sid, method, norm, G, C, E, ndo, comment=''):
+    def __init__(self, sid, method, norm, G, C, E, ndo,
+                 mblkszs=None, iblkszs=None, ksteps=None, NJIs=None,
+                 alphaAjs=None, omegaAjs=None, LJs=None, NEJs=None, NDJs=None, # HESS/INV
+                 shift_r1=None, shift_i1=None, isrr_flag=None, nd1=None, # ISRR
+                 comment=''):
         Method.__init__(self)
         if comment:
             self._comment = comment
@@ -168,25 +172,32 @@ class EIGC(Method):
         self.ndo = ndo
 
         # CLAN
-        self.mblkszs = []
-        self.iblkszs = []
-        self.ksteps = []
-        self.NJIs = []
+        self.mblkszs = mblkszs
+        self.iblkszs = iblkszs
+        self.ksteps = ksteps
+        self.NJIs = NJIs
 
         # HESS
         self.alphaBjs = []
         self.omegaBjs = []
-        self.LJs = []
-        self.NEJs = []
-        self.NDJs = []
+        self.LJs = LJs
+        self.NEJs = NEJs
+        self.NDJs = NDJs
 
-        self.alphaAjs = []
-        self.omegaAjs = []
+        self.alphaAjs = alphaAjs
+        self.omegaAjs = omegaAjs
         #self.alphaBjs = []
         self.omegaBjs = []
         #self.LJs = []
         #self.NEJs = []
         #self.NDJs = []
+
+        #----------
+        # ISRR
+        self.shift_r1 = shift_r1
+        self.shift_i1 = shift_i1
+        self.isrr_flag = isrr_flag
+        self.nd1 = nd1
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -209,8 +220,32 @@ class EIGC(Method):
         # ALPHAAJ OMEGAAJ ALPHABJ OMEGABJ LJ NEJ NDJ
         fields = [interpret_value(field) for field in card[9:]]
 
+        #-------CLAN--------------
+        mblkszs = []
+        iblkszs = []
+        ksteps = []
+        NJIs = []
+        #-------CLAN--------------
+
+        #-------HESS--------------
         alphaAjs = []
+        #alphaBjs = []
         omegaAjs = []
+        #omegaBjs = []
+        mblkszs = []
+        #iblkszs = []
+        #ksteps = []
+        LJs = []
+        NEJs = []
+        NDJs = []
+        #-------HESS--------------
+
+        #-------ISRR--------------
+        shift_r1 = 0.0
+        shift_i1 = 0.0
+        isrr_flag = 0
+        nd1 = None
+        #-------ISRR--------------
         nfields = len(fields)
         nrows = nfields // 8
         if nfields % 8 > 0:
@@ -223,27 +258,39 @@ class EIGC(Method):
         if method == 'CLAN':
             alphaAjs, omegaAjs, mblkszs, iblkszs, ksteps, NJIs = cls._load_clan(nrows, card)
         elif method in ['HESS', 'INV']:  # HESS, INV
-            cls._load_hess_inv(nrows, method, card)
+            alphaAjs, omegaAjs, LJs, NEJs, NDJs = cls._load_hess_inv(nrows, method, card)
         elif method == 'ISRR':
-            cls._load_isrr(nrows, card)
+            shift_r1, shift_i1, isrr_flag, nd1 = cls._load_isrr(nrows, card)
         else:
             msg = 'invalid EIGC method...method=%r' % method
             raise RuntimeError(msg)
         #assert card.nFields() < 8, 'card = %s' % card
-        return EIGC(sid, method, norm, G, C, E, ndo, comment=comment)
+        return EIGC(sid, method, norm, G, C, E, ndo,
+                    mblkszs, iblkszs, ksteps, NJIs, # CLAN
+                    alphaAjs, omegaAjs, LJs, NEJs, NDJs, # HESS/INV
+                    shift_r1, shift_i1, isrr_flag, nd1, # ISRR
+                    comment=comment)
 
     @staticmethod
     def _load_isrr(nrows, card):
-        assert nrows == 1, card
+        shift_r1 = []
+        shift_i1 = []
+        isrr_flag = []
+        nd1 = []
         for irow in range(nrows):
             i = 9 + 8 * irow
-            shift_r1 = double_or_blank(card, i, 'SHIFT_R1', 0.0)
-            shift_i1 = double_or_blank(card, i + 1, 'SHIFT_I1', 0.0)
+            shift_r1i = double_or_blank(card, i, 'SHIFT_R1', 0.0)
+            shift_i1i = double_or_blank(card, i + 1, 'SHIFT_I1', 0.0)
             #2
             #3
             #4
-            isrr_flag = integer_or_blank(card, i + 5, 'ISRR_FLAG', 0)
-            nd1 = integer(card, i + 6, 'ND1')
+            isrr_flagi = integer_or_blank(card, i + 5, 'ISRR_FLAG', 0)
+            nd1i = integer(card, i + 6, 'ND1')
+            shift_r1.append(shift_r1i)
+            shift_i1.append(shift_i1i)
+            isrr_flag.append(isrr_flagi)
+            nd1.append(nd1i)
+        return shift_r1, shift_i1, isrr_flag, nd1
 
     @staticmethod
     def _load_clan(nrows, card):
@@ -283,7 +330,7 @@ class EIGC(Method):
         alphaBjs = []
         omegaAjs = []
         omegaBjs = []
-        mblkszs = []
+        #mblkszs = []
         #iblkszs = []
         #ksteps = []
         LJs = []
@@ -310,6 +357,7 @@ class EIGC(Method):
                 integer(card, i + 5, 'NEJ' + str(irow)))
             NDJs.append(
                 integer_or_blank(card, i + 6, 'NDJ' + str(irow), NDJ_default))
+        return alphaAjs, omegaAjs, LJs, NEJs, NDJs
 
     def cross_reference(self, model):
         pass
@@ -343,6 +391,11 @@ class EIGC(Method):
 
                 list_fields += [alphaA, omegaA, mblksz, iblksz,
                                 kstep, None, Nj, None]
+        elif self.method == 'ISRR':
+            for shift_r1i, shift_i1i, isrr_flagi, nd1i in zip(
+                self.shift_r1, self.shift_i1, self.isrr_flag, self.nd1):
+                list_fields += [shift_r1i, shift_i1i, None, None, None, isrr_flagi, nd1i, None]
+
         else:
             msg = 'invalid EIGC method...method=%r' % self.method
             raise RuntimeError(msg)

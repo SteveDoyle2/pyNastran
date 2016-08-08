@@ -580,7 +580,7 @@ def _assert_has_spc(subcase, fem):
         if node.ps:
             has_ps = True
             break
-    assert 'SPC' in subcase or has_ps, subcase
+    assert subcase.has_parameter('SPC', 'STATSUB') or has_ps, subcase
 
 def validate_case_control(fem2, p0, sol_base, subcase_keys, subcases, sol_200_map):
     for isubcase in subcase_keys[1:]:  # drop isubcase = 0
@@ -653,16 +653,16 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
     elif sol == 108: # freq
         assert 'FREQUENCY' in subcase, subcase
     elif sol == 109:  # time
-        assert any(subcase.has_parameter('TIME', 'TSTEP', 'TSTEPNL')), subcase
+        assert any(subcase.has_parameter('TIME', 'TSTEP', 'TSTEPNL')), 'sol=%s\n%s' % (sol, subcase)
     elif sol == 110:  # ???
         if 'SPC' not in subcase:
             _assert_has_spc(subcase, fem2)
-        assert 'LOAD' in subcase, subcase
+        assert subcase.has_parameter('LOAD', 'STATSUB'), 'sol=%s\n%s' % (sol, subcase)
     elif sol == 111:  # modal frequency
-        assert subcase.has_parameter('FREQUENCY'), subcase
-        assert any(subcase.has_parameter('METHOD')), subcase
+        assert subcase.has_parameter('FREQUENCY'), 'sol=%s\n%s' % (sol, subcase)
+        assert any(subcase.has_parameter('METHOD')), 'sol=%s\n%s' % (sol, subcase)
     elif sol == 112:  # modal transient
-        assert any(subcase.has_parameter('TIME', 'TSTEP', 'TSTEPNL')), subcase
+        assert any(subcase.has_parameter('TIME', 'TSTEP', 'TSTEPNL')), 'sol=%s\n%s' % (sol, subcase)
     elif sol == 114:
         assert 'LOAD' in subcase, subcase
         assert 'HARMONICS' in subcase, subcase
@@ -678,9 +678,9 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
             _assert_has_spc(subcase, fem2)
 
     elif sol == 129:  # nonlinear transient
-        assert any(subcase.has_parameter('TIME', 'TSTEP', 'TSTEPNL')), subcase
+        assert any(subcase.has_parameter('TIME', 'TSTEP', 'TSTEPNL')), 'sol=%s\n%s' % (sol, subcase)
     elif sol == 159:  # thermal transient
-        assert any(subcase.has_parameter('TIME', 'TSTEP', 'TSTEPNL')), subcase
+        assert any(subcase.has_parameter('TIME', 'TSTEP', 'TSTEPNL')), 'sol=%s\n%s' % (sol, subcase)
 
     elif sol == 144:
         assert any(subcase.has_parameter('TRIM', 'DIVERG')), subcase
@@ -809,12 +809,12 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
             suport_id = subcase.get_parameter('SUPORT1')[0]
             suport1 = fem2.suport1[suport_id]
         trim._verify(fem2.suport, suport1, fem2.aestats, fem2.aeparams, fem2.aelinks, fem2.aesurfs, xref=True)
-        assert 'DIVERG' in subcase, subcase
+        assert 'DIVERG' not in subcase, subcase
 
     if 'DIVERG' in subcase:
         value, options = subcase.get_parameter('DIVERG')
         assert value in fem2.divergs, fem2.divergs
-        assert 'TRIM' in subcase, subcase
+        assert 'TRIM' not in subcase, subcase
 
     if 'METHOD' in subcase:
         method_id = subcase.get_parameter('METHOD')[0]
@@ -832,12 +832,13 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
     if 'CMETHOD' in subcase:
         cmethod_id = subcase.get_parameter('CMETHOD')[0]
         if cmethod_id in fem2.cMethods:
-            method = fem2.cMethods[method_id]
+            method = fem2.cMethods[cmethod_id]
         #elif method_id in fem2.cMethods:
             #method = fem2.cMethods[method_id]
         else:
             cmethod_ids = list(fem2.cMethods.keys())
             raise RuntimeError('CMETHOD = %s not in cmethod_ids=%s' % (cmethod_id, cmethod_ids))
+        assert sol in [110], 'sol=%s CMETHOD' % sol
 
     if 'FMETHOD' in subcase:
         method_id = subcase.get_parameter('FMETHOD')[0]

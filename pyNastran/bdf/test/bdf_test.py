@@ -70,12 +70,23 @@ def run(regenerate=True, run_nastran=False, debug=False, sum_load=True, xref=Tru
         print('failed_cases_filename = %r' % failed_cases_filename)
         files2 = get_failed_files(failed_cases_filename)
 
+    skip_files = [
+        'mp10a.dat',
+        'mp20e.dat',
+        'mp30.dat',
+        'mp30b.dat',
+        'mp60bd.dat',
+        'mp60br.dat',
+        'mp60cd.dat',
+        'mp60cr.dat',
+        'mp70a.dat',
+    ]
+
     files = remove_marc_files(files2)
     files = [fname for fname in files
              if not os.path.basename(fname).startswith('out_')
-             and '.test_op2.' not in fname]  # removing test output files
-
-    # skip_files = []  # giant
+             and '.test_op2.' not in fname # removing test output files
+             and os.path.basename(fname) not in skip_files]
 
     # nstart = 0
     # nstop = 10000
