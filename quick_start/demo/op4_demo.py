@@ -48,15 +48,15 @@ matrices = op4.read_op4(op4_filename, matrix_names=['FLAMA','UGEXT'])
 
 # extract a matrix
 form, flama = matrices['FLAMA']
-print "form =", form
-print "type =", type(flama)
+print ("form =", form)
+print ("type =", type(flama))
 
 # <codecell>
 
 from pyNastran.utils import object_methods
-print "keys =", matrices.keys()
+print ("keys =", matrices.keys())
 
-print "object_methods", object_methods(op4)
+print ("object_methods", object_methods(op4))
 #op4.getTypeNWV?
 
 # <codecell>
