@@ -194,9 +194,14 @@ class CAERO1(VectorizedCard):
         """
         Gets the normals of the CAERO1s on per element basis.
 
-        :param element_id: the elements to consider (default=None -> all)
-        :param node_ids:   the GRIDs as an (N, )  NDARRAY (or None)
-        :param grids_cid0: the GRIDs as an (N, 3) NDARRAY in CORD2R=0 (or None)
+        Parameters
+        -----------
+        element_id : (N, ) int ndarray  (default=None -> all)
+            the elements to consider
+        node_ids : (N, ) int ndarray (None -> auto)
+            the GRID IDs
+        grids_cid0 : (N, 3) float ndarray (None -> auto)
+            the GRIDs in CORD2R=0
 
         .. note:: If node_ids is None, the positions of all the GRID cards
                   must be calculated

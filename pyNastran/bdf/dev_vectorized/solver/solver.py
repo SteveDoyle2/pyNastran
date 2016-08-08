@@ -1350,8 +1350,12 @@ class Solver(F06, OP2):
 
     def make_gpwg(self, grid_point, Mgg):
         """
-        :param grid_point: 0->origin, x>0, that grid point
-        :param Mgg: the mass matrix
+        Parameters
+        ----------
+        grid_point : int
+            0->origin, x>0, that grid point
+        Mgg : (N, N) matrix
+            the mass matrix
         """
         #return
         example = False

@@ -143,7 +143,7 @@ class TestCoords(unittest.TestCase):
         }
 
         model = BDF(debug=False)
-        model.allocate(card_count)
+        #model.allocate(card_count)
         model.add_card(lines, 'CORD1R', is_list=False)
         for grid in grids:
             model.add_card(grid, 'GRID', is_list=True)
@@ -173,7 +173,12 @@ class TestCoords(unittest.TestCase):
         }
 
         model = BDF(debug=False)
-        model.allocate(card_count)
+        cards = {
+            'CORD2C' : ['', lines_a],
+            'CORD2R' : ['', lines_b],
+        }
+        model.add_cards(cards, card_count)
+        #model.allocate(cards, card_count)
         card = model.add_card(lines_a, 'CORD2C', is_list=False)
         card = model.add_card(lines_b, 'CORD2R', is_list=False)
         model.build()
@@ -202,16 +207,17 @@ class TestCoords(unittest.TestCase):
 
     def test_grid_01(self):
         model = BDF(debug=False)
-        cards = [
+        card_lines = [
             #['CORD1R', 1, 1, 2, 3],  # fails on self.k
             ['GRID', 1, 0, 0., 0., 0.],
             ['GRID', 2, 0, 1., 0., 0.],
             ['GRID', 4, 0, 1., 2., 3.],
         ]
-        card_count = {
-            'GRID': 3,
-        }
-        model.allocate(card_count)
+        #card_count = {
+            #'GRID': 3,
+        #}
+        cards, card_count = model.add_cards_lines(card_lines)
+        model.allocate(card_count, cards)
         for card in cards:
             model.add_card(card, card[0], comment='comment', is_list=True)
         model.build()
@@ -249,7 +255,7 @@ class TestCoords(unittest.TestCase):
             'CORD1R' : 1,
             'GRID' : 3,
         }
-        model.allocate(card_count)
+        #model.allocate(card_count)
         cards = [
             ['CORD1R', 1, 1, 2, 3],  # fails on self.k
             ['GRID', 1, 0, 0., 0., 0.],
@@ -268,7 +274,7 @@ class TestCoords(unittest.TestCase):
             'GRID' : 4,
             'CORD2R' : 3,
         }
-        model.allocate(card_count)
+        cards = {'GRID' : [], 'CORD2R' : []}
         grids = [
             ['GRID', 1, 0],
             ['GRID', 20, 0],
@@ -276,9 +282,9 @@ class TestCoords(unittest.TestCase):
             ['GRID', 11, 5],
         ]
         for grid in grids:
-            model.add_card(grid, 'GRID', is_list=True)
+            cards['GRID'].append(('', grid))
 
-        cards = [
+        coord_cards = [
             ['CORD2R', 1, 0, 0., 0., 0.,
                              0., 0., 0.,
                              0., 0., 0.],  # fails on self.k
@@ -295,13 +301,15 @@ class TestCoords(unittest.TestCase):
                              1., 0., 0.,
                              1., 1., 0.],  # passes
         ]
-        for card in cards:
+        for card in coord_cards:
+            card_name = card[0]
             cid = card[1]
             if cid in [1, 2]:
                 with self.assertRaises(RuntimeError):
-                    model.add_card(card, card[0], is_list=True)
+                    cards[card_name].append(('', card))
             else:
-                model.add_card(card, card[0], is_list=True)
+                cards[card_name].append(('', card))
+        model.add_cards(cards, card_count)
         model.build()
 
         # this runs because it's got rid=0
@@ -338,8 +346,8 @@ class TestCoords(unittest.TestCase):
             'CORD2C' : 1,
             'CORD2S' : 1,
         }
-        model.allocate(card_count)
-        cards = [
+        cards = []
+        card_lines = [
             [
                 #'$ Femap with NX Nastran Coordinate System 10 : rectangular defined in a rectangular',
                 'CORD2R*               10               0             10.              5.',
@@ -366,10 +374,10 @@ class TestCoords(unittest.TestCase):
                 'GRID*                 12              12   58.0775343829   44.7276544324',
                 '*          75.7955331161               0',],
         ]
-        for lines in cards:
-            card = model.process_card(lines)
-            model.add_card(card, card[0])
+        cards, card_count = model.add_cards_lines(card_lines)
+        model.allocate(card_count, cards)
         model.build()
+
         for nid in model.nodes:
             a = array([30., 40., 50.])
             b = model.Node(nid).get_position()
@@ -380,14 +388,14 @@ class TestCoords(unittest.TestCase):
         all points are located at <30,40,50>
         """
         model = BDF(debug=False)
-        card_count = {
-            'GRID' : 3,
-            'CORD2R' : 1,
-            'CORD2C' : 2,
-            'CORD2S' : 1,
-        }
-        model.allocate(card_count)
-        cards = [
+        #card_count = {
+            #'GRID' : 3,
+            #'CORD2R' : 1,
+            #'CORD2C' : 2,
+            #'CORD2S' : 1,
+        #}
+        #model.allocate(card_count)
+        card_lines = [
             [
                 'CORD2C*                1               0              0.              0.',
                 '*                     0.              0.              0.              1.*       ',
@@ -417,9 +425,11 @@ class TestCoords(unittest.TestCase):
                 'GRID*                 22              22   61.1042111232   158.773483595',
                 '*           -167.4951724               0',],
         ]
-        for lines in cards:
-            card = model.process_card(lines)
-            model.add_card(card, card[0])
+        cards, card_count = model.add_cards_lines(card_lines)
+        model.allocate(card_count, cards)
+        #for lines in cards:
+            #card = model.add(lines)
+            #model.add_card(card, card[0])
         model.build()
         for nid in model.nodes:
             a = array([30., 40., 50.])
@@ -431,15 +441,14 @@ class TestCoords(unittest.TestCase):
         all points are located at <30,40,50>
         """
         model = BDF(debug=False)
-        card_count = {
-            'GRID' : 3,
-            'CORD2R' : 1,
-            'CORD2C' : 1,
-            'CORD2S' : 2,
-        }
-        model.allocate(card_count)
+        #card_count = {
+            #'GRID' : 3,
+            #'CORD2R' : 1,
+            #'CORD2C' : 1,
+            #'CORD2S' : 2,
+        #}
 
-        cards = [
+        card_lines = [
             [
                 'CORD2S*                2               0              0.              0.',
                 '*                     0.              0.              0.              1.*       ',
@@ -469,10 +478,10 @@ class TestCoords(unittest.TestCase):
                 'GRID*                 32              32   53.8270847449   95.8215692632',
                 '*          159.097767463               0',],
         ]
-        for lines in cards:
-            card = model.process_card(lines)
-            model.add_card(card, card[0])
+        cards, card_count = model.add_cards_lines(card_lines)
+        model.allocate(card_count, cards)
         model.build()
+
         for nid in model.nodes:
             a = array([30., 40., 50.])
             b = model.Node(nid).get_position()
@@ -506,7 +515,7 @@ class TestCoords(unittest.TestCase):
         card.write_card(bdf_file, size=8, is_double=False)
 
     def test_cord1s_01(self):
-        lines = ['cord1s,2, 1,4,3']
+        cord1s = ['cord1s,2, 1,4,3']
         grids = [
             ['GRID', 4, 0, 0.0, 0., 0.],
             ['GRID', 3, 0, 0.0, 0., 1.],
@@ -517,10 +526,15 @@ class TestCoords(unittest.TestCase):
             'GRID' : 3,
         }
         model = BDF(debug=False)
-        model.allocate(card_count)
-        model.add_card(lines, 'CORD1S', is_list=False)
-        for grid in grids:
-            model.add_card(grid, grid[0], is_list=True)
+        cards = {
+            'GRID' : [
+                ('', grids[0]),
+                ('', grids[1]),
+                ('', grids[2]),
+            ],
+            'CORD1S' : [('', cord1s)]
+        }
+        model.add_cards(cards, card_count)
         model.build()
 
         size = 8
@@ -542,12 +556,11 @@ class TestCoords(unittest.TestCase):
             'GRID' : 1,
             'CORD2R' : 1,
         }
-        model.allocate(card_count)
-        card = model.process_card(grid)
-        model.add_card(card, card[0])
-
-        card = model.process_card(coord)
-        model.add_card(card, card[0])
+        cards = {
+            'CORD2R' : [('', coord)],
+            'GRID' : [('', grid)],
+        }
+        model.add_cards(cards, card_count)
         model.build()
 
         g = model.grid.slice_by_node_id(20143)
@@ -572,16 +585,18 @@ class TestCoords(unittest.TestCase):
             'GRID' : len(grids),
             'CORD2R' : len(coords),
         }
-        model.allocate(card_count)
+        cards = {'GRID' : [], 'CORD2R' : []}
         for grid in grids:
             nid, cid, x, y, z = grid
-            model.add_card(['GRID', nid, cid, x, y, z], 'GRID')
+            card = ['GRID', nid, cid, x, y, z]
+            cards['GRID'].append(('', card))
 
         for coord in coords:
             cid, rid, x, y, z = coord
-            model.add_card(['CORD2R', cid, rid] + x + y + z, 'CORD2R')
+            card = ['CORD2R', cid, rid] + x + y + z
+            cards['CORD2R'].append(('', card))
             #coordObj = model.coords.slice_by_coord_id(cid)
-
+        model.add_cards(cards, card_count)
         model.build()
 
         for (i, grid) in enumerate(grids_expected):

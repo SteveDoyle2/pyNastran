@@ -602,7 +602,7 @@ class Elements(object):
 
     def allocate(self, card_count):
         print('elements.allocate()')
-        etypes = self._get_element_types(nlimit=False)
+        etypes = self._get_element_types(nlimit=True)
         for etype in etypes:
             self.model.log.info('etype=%r' % etype)
             netype = card_count[etype]
@@ -635,7 +635,10 @@ class Elements(object):
 
     def _get_element_types(self, nlimit=True):
         """
-        :param nlimit: limit the outputs to objects with data
+        Parameters
+        ----------
+        nlimit : bool; default=True
+            limit the outputs to objects with data
         """
         types = [
             self.crod, self.conrod, self.ctube,

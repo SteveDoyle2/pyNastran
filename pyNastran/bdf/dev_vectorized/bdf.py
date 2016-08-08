@@ -270,6 +270,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             60 : 'CTETRA4', 61 : 'CTETRA10',
             62 : 'CPENTA6', 63 : 'CPENTA15',
             64 : 'CHEXA8', 65 : 'CHEXA20',
+            66 : 'CPYRAM5', 67 : 'CPYRAM13',
 
             # ???
             100 : 'CAERO1'
@@ -1055,6 +1056,12 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             dictionary of {card_name : ncards}
             card_name : string
             ncards : int
+        cards : dict
+            dictionary of {card_name : card_lines}
+            card_name : str
+            card : comment, card_lines
+                comment : str
+                card_lines : List[str]
 
         .. note::  Sometimes there are cards that have 2 cards per line.
                    Depending on the card (e.g. CELASx)
@@ -1234,15 +1241,30 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             card_count[old_card_name] += 1
         return cards, card_count
 
+    def add_cards_lines(self, line_pairs):
+        cards = defaultdict(list)
+        card_count = defaultdict(int)
+        for lines in line_pairs:
+            cardsi, card_counti = self._get_bdf_cards_dict(cards, card_count, lines)
+            for card_name, card in iteritems(cards):
+                cards[card_name] = card
+            for card_name, count in iteritems(card_count):
+                cards[card_name] += count
+        return cards, card_count
+
     def get_bdf_cards_dict(self, bulk_data_lines):
         """Parses the BDF lines into a list of card_lines"""
         cards = defaultdict(list)
         card_count = defaultdict(int)
+        cards, card_count = self._get_bdf_cards_dict(cards, card_count, bulk_data_lines)
+
+    def _get_bdf_cards_dict(self, cards, card_count, bulk_data_lines):
         full_comment = ''
         card_lines = []
         old_card_name = None
         backup_comment = ''
         nlines = len(bulk_data_lines)
+
         for i, line in enumerate(bulk_data_lines):
             #print('    backup=%r' % backup_comment)
             comment = ''
@@ -2742,6 +2764,9 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
                     bdf_filename_inc, current_filename))
             elif not os.path.isfile(_filename(bdf_filename)):
                 raise IOError('Not a file: bdf_filename=%r' % bdf_filename)
+
+    def add_cards(self, cards, card_count):
+        self._parse_cards(cards, card_count)
 
     def _parse_cards(self, cards, card_count):
         """creates card objects and adds the parsed cards to the deck"""
