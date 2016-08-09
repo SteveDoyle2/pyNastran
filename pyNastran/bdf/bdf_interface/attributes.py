@@ -222,7 +222,7 @@ class BDFAttributes(object):
 
         # ------------------------ structural defaults -----------------------
         #: the analysis type
-        self.sol = None
+        self._sol = None
         #: used in solution 600, method
         self.solMethod = None
         #: the line with SOL on it, marks ???
@@ -727,6 +727,20 @@ class BDFAttributes(object):
     #def caseControlDeck(self, value):
         #self.deprecated('self.caseControlDeck', 'self.case_control_deck', '0.8')
         #self.case_control_deck = value
+
+    @property
+    def sol(self):
+        """gets the solution (e.g. 101, 103)"""
+        return self._sol
+
+    @sol.setter
+    def sol(self, sol):
+        """sets the solution (e.g. 101, 103)"""
+        self._sol = sol
+        if len(self.executive_control_lines) == 0:
+            self.executive_control_lines = ['SOL %s' % sol]
+            self.iSolLine = 0
+        return self._sol
 
     @property
     def subcases(self):
