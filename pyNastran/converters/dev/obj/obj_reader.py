@@ -40,13 +40,13 @@ class OBJ(object):
         self.make_elements()
 
     def make_elements(self):
-        print self.nodes.shape
+        print (self.nodes.shape)
         unodes, indicies = unique_rows(self.nodes, return_inverse=True)
 
-        print unodes
+        print (unodes)
         #print list(indicies)
-        print unodes.shape
-        print indicies.shape
+        print (unodes.shape)
+        print (indicies.shape)
 
         n1 = self.lines[:, 0]
         n2 = self.lines[:, 1]
