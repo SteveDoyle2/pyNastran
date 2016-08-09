@@ -2043,7 +2043,6 @@ class NastranIO(object):
                 v21 = p2 - p1
                 v32 = p3 - p2
                 v13 = p1 - p3
-                max_skew = 0.
                 cos_skew1 = np.dot(e2_p1, e31) / (np.linalg.norm(e2_p1) * np.linalg.norm(e31))
                 cos_skew2 = np.dot(e2_p1, -e31) / (np.linalg.norm(e2_p1) * np.linalg.norm(e31))
                 cos_skew3 = np.dot(e3_p2, e21) / (np.linalg.norm(e3_p2) * np.linalg.norm(e21))

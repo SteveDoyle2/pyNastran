@@ -38,6 +38,9 @@ class LegendPropertiesWindow(QtGui.QDialog):
         self._default_max = data['max']
         self._format = data['format']
         self._scale = data['scale']
+
+        self._number_of_labels = 10
+        self._label_size = 10
         self._default_is_blue_to_red = data['is_blue_to_red']
         self._default_is_discrete = data['is_discrete']
         self._default_is_horizontal = data['is_horizontal']
@@ -46,6 +49,8 @@ class LegendPropertiesWindow(QtGui.QDialog):
         self._default_format = data['default_format']
         self._default_scale = data['default_scale']
         self._default_icase = self._icase
+        self._default_number_of_labels = 10
+        self._default_label_size = 10
 
         self.out_data = data
 
@@ -105,6 +110,8 @@ class LegendPropertiesWindow(QtGui.QDialog):
             self.scale_edit.setText(str(scale))
             self.scale_edit.setStyleSheet("QLineEdit{background: white;}")
 
+            #self.number_of_labels_edit.setValue(10)
+
 
     def create_widgets(self):
         # Name
@@ -137,6 +144,21 @@ class LegendPropertiesWindow(QtGui.QDialog):
         #tip = QtGui.QToolTip()
         #tip.setTe
         #self.format_edit.toolTip(tip)
+
+
+        self.number_of_labels = QtGui.QLabel("Number of Labels:")
+        self.number_of_labels_edit = QtGui.QSpinBox()
+        #self.number_of_labels_edit.setRange(1, 10)
+        #self.number_of_labels_edit.setSingleStep(1)
+        self.number_of_labels_edit.setValue(self._number_of_labels)
+        self.number_of_labels_button = QtGui.QPushButton("Default")
+
+        self.label_size = QtGui.QLabel("Number of Labels:")
+        self.label_size_edit = QtGui.QSpinBox()
+        #self.label_size_edit.setRange(1, 10)
+        #self.label_size_edit.setSingleStep(1)
+        self.label_size_edit.setValue(self._label_size)
+        self.label_size_button = QtGui.QPushButton("Default")
 
         # red/blue or blue/red
         self.checkbox_blue_to_red = QtGui.QCheckBox("Min -> Blue; Max -> Red")
@@ -209,6 +231,15 @@ class LegendPropertiesWindow(QtGui.QDialog):
         grid.addWidget(self.scale_edit, 4, 1)
         grid.addWidget(self.scale_button, 4, 2)
 
+        if 0:
+            grid.addWidget(self.number_of_labels, 5, 0)
+            grid.addWidget(self.number_of_labels_edit, 5, 1)
+            grid.addWidget(self.number_of_labels_button, 5, 2)
+
+            grid.addWidget(self.label_size, 6, 0)
+            grid.addWidget(self.label_size_edit, 6, 1)
+            grid.addWidget(self.label_size_button, 6, 2)
+
         ok_cancel_box = QtGui.QHBoxLayout()
         ok_cancel_box.addWidget(self.apply_button)
         ok_cancel_box.addWidget(self.ok_button)
@@ -268,6 +299,8 @@ class LegendPropertiesWindow(QtGui.QDialog):
         self.connect(self.max_button, QtCore.SIGNAL('clicked()'), self.on_default_max)
         self.connect(self.format_button, QtCore.SIGNAL('clicked()'), self.on_default_format)
         self.connect(self.scale_button, QtCore.SIGNAL('clicked()'), self.on_default_scale)
+        self.connect(self.number_of_labels_button, QtCore.SIGNAL('clicked()'), self.on_default_number_of_labels)
+        self.connect(self.label_size_button, QtCore.SIGNAL('clicked()'), self.on_default_label_size)
 
         self.connect(self.apply_button, QtCore.SIGNAL('clicked()'), self.on_apply)
         self.connect(self.ok_button, QtCore.SIGNAL('clicked()'), self.on_ok)
@@ -301,6 +334,12 @@ class LegendPropertiesWindow(QtGui.QDialog):
     def on_default_scale(self):
         self.scale_edit.setText(str(self._default_scale))
         self.scale_edit.setStyleSheet("QLineEdit{background: white;}")
+
+    def on_default_number_of_labels(self):
+        self.number_of_labels_edit.setValue(self._default_number_of_labels)
+
+    def on_default_label_size(self):
+        self.label_size_edit.setValue(self._default_label_size)
 
     def check_float(self, cell):
         text = cell.text()
@@ -372,6 +411,8 @@ class LegendPropertiesWindow(QtGui.QDialog):
             self.out_data['max'] = max_value
             self.out_data['format'] = format_value
             self.out_data['scale'] = scale_value
+            self.out_data['label_size'] = self.label_size_edit.value()
+            self.out_data['number_of_labels'] = self.number_of_labels_edit.value()
             self.out_data['is_blue_to_red'] = self.checkbox_blue_to_red.isChecked()
             self.out_data['is_discrete'] = self.checkbox_discrete.isChecked()
             self.out_data['is_horizontal'] = self.checkbox_horizontal.isChecked()

@@ -2,13 +2,15 @@ Release 0.8
 ===========
  Tasks
  -----
- - various BDF/OP2/F06 tests
- - make sure OP2/BDF classes are shown in ReadTheDocs
- - vectorize op2 fully
+ - fix EIGC
+ - fix NX bars in GUI
 
 Done
 ----
  - fix SetInput/SetInputData
+ - various BDF/OP2/F06 tests
+ - make sure OP2/BDF classes are shown in ReadTheDocs
+ - vectorize op2 fully
 
 Release 0.7
 ===========
