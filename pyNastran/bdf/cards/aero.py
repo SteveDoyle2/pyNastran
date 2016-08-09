@@ -4486,7 +4486,7 @@ class TRIM(BaseCard):
             suport_dofs = set()
             assert isinstance(suport, list), type(suport)
             for suporti in suport:
-                print(str(suporti).rstrip())
+                #print(str(suporti).rstrip())
                 for nid in suporti.node_ids:
                     for cs in suporti.Cs:
                         for ci in cs:
