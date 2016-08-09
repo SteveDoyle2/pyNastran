@@ -1,48 +1,48 @@
-#bdf/field_writer Package
-#=================
+bdf/field_writer Package
+=================
 
-#This is the pyNastran.bdf.rst file.
+This is the pyNastran.bdf.rst file.
 
-#:mod:`field_writer` Module
-#-------------------------
+:mod:`field_writer` Module
+-------------------------
 
-#.. inheritance-diagram:: pyNastran.bdf.field_writer
+.. inheritance-diagram:: pyNastran.bdf.field_writer
 
-#.. automodule:: pyNastran.bdf.field_writer
-#    :members:
-#    :private-members:
-#    :undoc-members:
-#    :show-inheritance:
+.. automodule:: pyNastran.bdf.field_writer
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
 
-#:mod:`field_writer_8` Module
-#----------------------------
+:mod:`field_writer_8` Module
+----------------------------
 
-#.. inheritance-diagram:: pyNastran.bdf.field_writer_8
+.. inheritance-diagram:: pyNastran.bdf.field_writer_8
 
-#.. automodule:: pyNastran.bdf.field_writer_8
-#    :members:
-#    :private-members:
-#    :undoc-members:
-#    :show-inheritance:
+.. automodule:: pyNastran.bdf.field_writer_8
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
 
-#:mod:`field_writer_16` Module
-#-----------------------------
+:mod:`field_writer_16` Module
+-----------------------------
 
-#.. inheritance-diagram:: pyNastran.bdf.field_writer_16
+.. inheritance-diagram:: pyNastran.bdf.field_writer_16
 
-#.. automodule:: pyNastran.bdf.field_writer_16
-#    :members:
-#    :private-members:
-#    :undoc-members:
-#    :show-inheritance:
+.. automodule:: pyNastran.bdf.field_writer_16
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
 
-#:mod:`field_writer_double` Module
-#---------------------------------
+:mod:`field_writer_double` Module
+---------------------------------
 
-#.. inheritance-diagram:: pyNastran.bdf.field_writer_double
+.. inheritance-diagram:: pyNastran.bdf.field_writer_double
 
-#.. automodule:: pyNastran.bdf.field_writer_double
-#    :members:
-#    :private-members:
-#    :undoc-members:
-#    :show-inheritance:
+.. automodule:: pyNastran.bdf.field_writer_double
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
