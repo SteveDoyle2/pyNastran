@@ -24,8 +24,8 @@ else:
     import pyNastran
     pkg_path = pyNastran.__path__[0]
 
-print "cwd", cwd
-print "pkg_path", pkg_path
+print ("cwd", cwd)
+print ("pkg_path", pkg_path)
 sys.stdout.flush()
 
 sys.path.append(os.path.dirname(cwd))
