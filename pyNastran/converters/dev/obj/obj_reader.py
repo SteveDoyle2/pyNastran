@@ -59,7 +59,7 @@ class OBJ(object):
         lines2[:, 0] = i1
         lines2[:, 1] = i2
         self.lines = lines2
-        print self.lines.shape
+        print (self.lines.shape)
         self.nodes = unodes
 
     def write_obj(self, obj_filename):
