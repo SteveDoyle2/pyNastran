@@ -21,6 +21,10 @@ Notations
  - any other note means a card isn't done
  - no label means the card isnt done and probably isnt even added in readWrite
 
+----Control---:
+ECHOON  (done)
+ECHOOFF (done
+
 ----Nodes----:
 GRID    (done)
 GRDSET  (NA)
@@ -38,7 +42,6 @@ CORD3G
 ----Rods/Bars/Beams (Elements/Properties)----:
 # rods
 CROD    (done)
-CBAR    (done)
 PROD    (done)
 CONROD  (done)
 
@@ -47,11 +50,14 @@ CTUBE   (done)
 PTUBE   (done)
 
 # bars
+CBAR    (done)
 PBAR    (done)
 PBARL   (done)
+PBRSECT
+
+# beam
 CBEAM   (done)
 PBMSECT
-PBRSECT
 
 # beam3
 CBEAM3  (???)
@@ -78,7 +84,9 @@ CQUADR  (done)
 PSHELL  (done)
 PCOMP   (done)
 PCOMPG  (done)
+PLPLANE (???)
 
+----Shear (Elements/Properties)----:
 CSHEAR  (done)
 PSHEAR  (done)
 
@@ -152,16 +160,14 @@ PGAP    (NA)
 
 PBCOMP  (not added)
 
-PLPLANE (???)
-
 ----Rigid Elements----:
-RROD
+RROD   (???)
 RTRPLT
-RBAR  (???)
-RBAR1 (???)
-RBE1  (???)
-RBE2  (???)
-RBE3  (???)
+RBAR   (???)
+RBAR1  (???)
+RBE1   (???)
+RBE2   (???)
+RBE3   (???)
 
 ----Materials----:
 CREEP (???)
@@ -192,6 +198,7 @@ MATT8
 MATT9
 
 MATS1 (???)
+
 ----Constraints----:
 SPC     (done)
 SPC1    (done)
@@ -201,7 +208,7 @@ MPC     (done)
 MPCADD  (done)
 
 SUPORT  (done)
-SUPORT1 (???)
+SUPORT1 (done)
 
 ----Loads----:
 LOAD    (done)
@@ -231,11 +238,13 @@ DLOAD   (done; TLOAD/RLOAD)
 SLOAD   (done)
 
 LOADCYN (???)
+TLOAD1  (done)
+TLOAD2  (done)
+RLOAD1  (done)
+RLOAD2  (done)
+
+----Acoustic----:
 ACSRCE  (done)
-TLOAD1  (done; delay)
-TLOAD2  (done; delay)
-RLOAD1  (done; delay)
-RLOAD2  (done; delay)
 
 ----Thermal Loads----:
 TEMP   (???)
@@ -253,7 +262,7 @@ QVOL  (???)
 CHBDYE (???)
 CHBDYG (???)
 CHBDYP (???)
-CONVM
+CONVM  (???)
 
 ----Thermal BCs----:
 CONV   (???)
@@ -269,9 +278,9 @@ PCONVM (???)
 PHBDY  (???)
 
 ----Aero----:
-AERO    (no acsid)
-AEROS   (no acsid, rcsid)
-GUST    (no dload)
+AERO    (done)
+AEROS   (done)
+GUST    (todo dload)
 FLUTTER (done)
 FLFACT  (NA)
 
@@ -285,18 +294,18 @@ AESURFS
 
 CAERO1  (done)
 CAERO2  (done)
-CAERO3  (no AEFACT)
-CAERO4  (no PAERO4)
+CAERO3  (todo AEFACT)
+CAERO4  (todo PAERO4)
 CAERO5
 
 PAERO1  (NA)
 PAERO2  (NA)
 PAERO3  (NA)
-PAERO4
-PAERO5
+PAERO4  (???)
+PAERO5  (???)
 
 SPLINE1 (done)
-SPLINE2 (done; aefact)
+SPLINE2 (todo aefact)
 SPLINE3 (done)
 SPLINE4 (done)
 SPLINE5 (done)
@@ -304,7 +313,7 @@ SPLINE6
 SPLINE7
 
 CSSCHD  (???)
-TRIM    (???)
+TRIM    (done)
 DIVERG  (???)
 
 ----Dynamic----:
@@ -314,8 +323,9 @@ DPHASE  (???)
 DELAY   (???)
 NLPARM  (???)
 NLPCI   (???)
-TSTEP   (???)
-TSTEPNL (???)
+TSTEP   (NA)
+TSTEPNL (NA)
+TF      (done)
 
 ----Modal Cards----:
 FREQ    (NA)
@@ -387,30 +397,30 @@ SET3   (???)
 SEQSEP
 RADSET
 
-SESET  (???)
-SEBSET
-SECSET
-SEQSET
-SEUSET
-SEBSET1
-SECSET1
-SEQSET1
-SEUSET1
+SESET   (???)
+SEBSET  (???)
+SECSET  (???)
+SEQSET  (???)
+SEUSET  (???)
+SEBSET1 (???)
+SECSET1 (???)
+SEQSET1 (???)
+SEUSET1 (???)
 
 ----Methods----:
 EIGB    (NA)
-EIGC    (???)
+EIGC    (NA)
 EIGP    (???)
-EIGR    (???)
-EIGRL   (???)
+EIGR    (NA)
+EIGRL   (NA)
 MKAERO1 (NA)
 MKAERO2 (NA)
 
-AECOMP
+AECOMP  (???)
 
 ----MATRICES----:
 DMIG        (NA)
-DMIG,UACCEL
+DMIG,UACCEL (NA)
 DMIJ        (NA)
 DMIJI       (NA)
 DMIK        (NA)
@@ -439,7 +449,7 @@ CTRIAX6 (done)
 CQUADX  (done)
 RINGAX
 
-----Axial Cone Element/Properties----:
+----Axial Cone Elements/Properties----:
 CCONEAX
 PCONEAX
 

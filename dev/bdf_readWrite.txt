@@ -149,8 +149,6 @@ PGAP    (done)
 
 PBCOMP  (not added)
 
-PLPLANE (???)
-
 ----Rigid Elements----:
 RROD  (done)
 RTRPLT
@@ -189,6 +187,7 @@ MATT8
 MATT9
 
 MATS1 (done)
+
 ----Constraints----:
 SPC     (done)
 SPC1    (done)
@@ -291,8 +290,8 @@ CAERO5
 PAERO1  (done)
 PAERO2  (done)
 PAERO3  (done)
-PAERO4
-PAERO5
+PAERO4  (done)
+PAERO5  (done)
 
 SPLINE1 (done)
 SPLINE2 (done)
@@ -388,15 +387,15 @@ SET3   (done)
 SEQSEP (done)
 RADSET (done)
 
-SESET  (done)
+SESET   (done)
 SEBSET  (done)
 SECSET  (done)
 SEQSET  (done)
-SEUSET
+SEUSET  (done)
 SEBSET1 (done)
 SECSET1 (done)
 SEQSET1 (done)
-SEUSET1
+SEUSET1 (done)
 
 ----Methods----:
 EIGB    (done)
@@ -411,7 +410,7 @@ AECOMP (done)
 
 ----MATRICES----:
 DMIG        (done)
-DMIG,UACCEL
+DMIG,UACCEL (done)
 DMIJ        (done)
 DMIJI       (done)
 DMIK        (done)
@@ -505,7 +504,7 @@ VIEW
 VIEW3D
 
 ----Nodes----:
-EGRID
+EGRID   (done)
 GRIDG
 MONPNT2
 MONPNT3
@@ -550,7 +549,6 @@ GRIDMOD
 GRIDD
 GRIDG
 GRIDU
-EGRID
 
 CURVE
 EDGER
@@ -565,7 +563,6 @@ MFUN
 MESHOFF
 MESHON
 
-PLOTG
 PLOTG
 PLOTOPT
 
