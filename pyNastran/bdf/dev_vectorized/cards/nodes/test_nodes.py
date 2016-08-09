@@ -21,7 +21,7 @@ class TestNodes(unittest.TestCase):
         nodes = model.grid
         nodes.add(data1)
 
-        #print n1
+        #print(n1)
         f = StringIO()
         nodes.write_card(f, size=8, write_header=False)
         nodes.write_card(f, size=16, write_header=False)

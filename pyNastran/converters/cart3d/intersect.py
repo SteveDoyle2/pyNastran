@@ -1,3 +1,4 @@
+from __future__ import print_function
 from numpy import zeros, cross, dot, allclose, sign
 from numpy.linalg import norm
 
@@ -27,7 +28,7 @@ class Intersect(object):
         n = cross(a, b)
         assert len(n) == ne, 'len(n)=%s ne=%s' % (len(n), ne)
 
-        print (n)
+        print(n)
         ni = norm(n, axis=1)
         print('n.shape=%s ni.shape=%s' % (n.shape, ni.shape))
         assert len(ni) == ne, 'len(ni)=%s ne=%s' % (len(ni), ne)
@@ -78,7 +79,7 @@ class Intersect(object):
 
             print('c[%i] = %s' % (i, c))
             pts = centroid_tree.query_ball_point(c, gel2i)
-            #print pts
+            #print(pts)
             for pt in pts:
                 diff = norm(c - centroid[pt])
                 nodes2 = elements[pt]
@@ -89,7 +90,7 @@ class Intersect(object):
                                                                                diff,
                                                                                gel2[pt], diff < geli))
                     is_intersection = self.intersect(i, pt, nodes1, nodes2, nodes, n)
-            #print centroid_tree.query(c, k=10)
+            #print(centroid_tree.query(c, k=10))
             #break
 
     def intersect(self, e1, e2, element1, element2, nodes, n):
@@ -97,7 +98,7 @@ class Intersect(object):
         http://fileadmin.cs.lth.se/cs/Personal/Tomas_Akenine-Moller/pubs/tritri.pdf
         """
         n2 = n[e2]
-        #print "nodes.shape =", nodes.shape
+        #print("nodes.shape =", nodes.shape)
         pt = nodes[element2[0], :]
         d2 = -dot(n2, pt)  # vo2 - node 0 on element 2
         #dvi = []
@@ -105,7 +106,7 @@ class Intersect(object):
             #ei = element1[i]
             #dvii = dot(n2, nodes[ei, :]) + d2
             #dvi.append(dvii)
-        #print "    dvi = %s" % dvi
+        #print("    dvi = %s" % dvi)
         #e1 = elements1
         dvi2 = dot(n2, nodes[element1, :].T) + d2
 
@@ -123,7 +124,7 @@ class Intersect(object):
             is_intersection = False
 
 
-        #print "    n2=%s" % (n2)
+        #print("    n2=%s" % (n2))
         return is_intersection
 
     def remove_inner_elements(self):

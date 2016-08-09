@@ -56,7 +56,7 @@ class Model(QtCore.QAbstractTableModel):
     #def adding_row(index):
         ## http://stackoverflow.com/questions/13109128/pyqt-qabstracttablemodel-never-updates-when-rows-are-added
         #self.beginInsertRows(self.createIndex(0, 0), index, index)
-        #print 'adding ', index
+        #print('adding ', index)
 
 
     def rowCount(self, parent=QtCore.QModelIndex()):

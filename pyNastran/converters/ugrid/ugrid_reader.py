@@ -922,7 +922,7 @@ class UGRID(object):
                     faces1_sort = tri_faces_sort[it1:it2, :]
                     faces1_unsorted = tri_faces[it1:it2, :]
 
-                    #print "faces1 = \n", faces1_sort, '\n'
+                    #print("faces1 = \n", faces1_sort, '\n')
 
                     # figure out irow; 3 for the test case
                     face = array(face, dtype='int32')
@@ -975,7 +975,7 @@ class UGRID(object):
                         it2 = it1 + 4
                         faces2 = tri_faces_sort[it1:it2, :]
                         #print('face=%s eids=%s' % (face, eids))
-                        #print "faces2 = \n", faces2
+                        #print("faces2 = \n", faces2)
                         # spits out 3
                     else:
                         asdf

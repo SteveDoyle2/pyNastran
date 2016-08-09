@@ -139,7 +139,7 @@ class CQUAD4(ShellElement):
             #print("nsm=%s" % nsm)
             #massi = rho * A * t + nsm
             massi = mpa * A
-        #print "massi =", massi
+        #print("massi =", massi)
         return massi, A, normal
 
     def get_centroid_by_element_id(self, element_id=None, node_ids=None, xyz_cid0=None):

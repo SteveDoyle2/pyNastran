@@ -1,3 +1,4 @@
+from __future__ import print_function
 if 0:
     from sympy import Symbol, Matrix, integrate
 
@@ -81,7 +82,7 @@ if 0:
     def makeM(pdV, NT, factorI=1, levels=1):
         N = NT.transpose()
 
-        #print "N = \n",N
+        #print("N = \n",N)
 
         print("size(NT) = ", NT.shape)
         print("size(N) = ", N.shape)

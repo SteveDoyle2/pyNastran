@@ -72,13 +72,13 @@ def run_f06(f06_filename, isubcases=None, write_f06=True, is_vector=False,
             #print(f06.get_f06_stats())
             f06.write_f06(model + '.test_f06.f06')
 
-        #print "subcases = ",f06.subcases
+        #print("subcases = ",f06.subcases)
 
         #assert tableNamesF06==tableNamesF06,'tableNamesF06=%s tableNamesF06=%s' %(tableNamesF06,tableNamesF06)
         #f06.case_control_deck.sol = f06.sol
-        #print f06.case_control_deck.getF06Data()
-        #print f06.print_results()
-        #print f06.case_control_deck.getF06Data()
+        #print(f06.case_control_deck.getF06Data())
+        #print(f06.print_results())
+        #print(f06.case_control_deck.getF06Data())
         is_passed = True
     except KeyboardInterrupt:
         sys.stdout.flush()
@@ -131,7 +131,7 @@ def run_f06(f06_filename, isubcases=None, write_f06=True, is_vector=False,
     #except InvalidFieldError: # bad bdf field
     #    is_passed = True
     except:
-        #print e
+        #print(e)
         print_exc(file=sys.stdout)
         if stop_on_failure:
             raise

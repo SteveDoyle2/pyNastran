@@ -1,3 +1,4 @@
+from __future__ import print_function
 from six import iteritems
 import os
 import sys
@@ -139,8 +140,8 @@ class Cart3dToPanair(PanairGridHelper):
             if len(sValue) > 10:
                 sValue = sValue[0:9]
             pointOut.append(sValue.rstrip('0'))
-            #print "sValue=%s len=%s" %(sValue,len(sValue))
-        #print "pointOut = ",pointOut
+            #print("sValue=%s len=%s" %(sValue,len(sValue)))
+        #print("pointOut = ",pointOut)
         return pointOut
 
     def run(self, cart3d_geom_filename, oname, varmap):
@@ -225,8 +226,8 @@ class Cart3dToPanair(PanairGridHelper):
                 points_out += self.write_points(n3, n3)
                 f.write(header + points_out)
                 #break
-            #print points
-            #print outfilename
+            #print(points)
+            #print(outfilename)
 
             f.write('$end of panair inputs\n')
             #sys.exit()

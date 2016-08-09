@@ -1,3 +1,4 @@
+from __future__ import print_function
 from six import iteritems
 from six.moves import zip, StringIO
 from numpy import unique, where
@@ -53,7 +54,7 @@ class LoadCase(object):
             #print("--------------------------")
             #print("i = %s" % i)
             all_loads_loop = []
-            #print "all_loads", all_loads
+            #print("all_loads", all_loads)
             for loads in all_loads:
                 #print("a-loads =", loads)
                 if isinstance(loads, tuple):

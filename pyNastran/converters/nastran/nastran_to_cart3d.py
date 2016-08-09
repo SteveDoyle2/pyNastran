@@ -1,3 +1,4 @@
+from __future__ import print_function
 from six import iteritems
 from codecs import open as codec_open
 from numpy import zeros, ones, arange, array, searchsorted, array_equal
@@ -120,7 +121,7 @@ def nastran_to_cart3d_filename(bdf_filename, cart3d_filename, log=None, debug=Fa
         except:
             print("type =", element.type)
             raise
-        #print out
+        #print(out)
         n1 = node_id_shift[n1]
         n2 = node_id_shift[n2]
         n3 = node_id_shift[n3]

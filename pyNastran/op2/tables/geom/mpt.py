@@ -111,7 +111,7 @@ class MPT(GeomCommon):
             out = s.unpack(edata)
             (mid, g1, g2, g3, g4, g5, g6, rho, aj1, aj2, aj3,
              TRef, ge, St, Sc, Ss, mcsid) = out
-            #print "MAT2 = ",out
+            #print("MAT2 = ",out)
             mat = MAT2.add_op2_data(out)
 
             if mid > 1e8 or mid < 0:  # just a checker for out of range materials
@@ -403,7 +403,7 @@ class MPT(GeomCommon):
         """
         NLPARM(3003,30,286) - record 27
         """
-        #print "reading NLPARM"
+        #print("reading NLPARM")
         ntotal = 76  # 19*4
         s = Struct(b(self._endian + 'iif5i3f3iffiff'))
         nentries = (len(data) - n) // ntotal

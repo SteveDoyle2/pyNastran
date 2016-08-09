@@ -159,7 +159,7 @@ class MarginChecker(object):
         print("case_names = ", self.case_names)
         (stressP, eid_list) = self.process_solid_stress()
         (stressP, eid_list) = self.process_plate_stress()
-        #print stressP
+        #print(stressP)
         self.stressP = stressP
 
         Fty = self.Fty  # ksi

@@ -1,3 +1,4 @@
+from __future__ import print_function
 from numpy import union1d, concatenate, argsort
 from pyNastran.bdf.dev_vectorized.cards.elements.mass.conm1 import CONM1
 from pyNastran.bdf.dev_vectorized.cards.elements.mass.conm2 import CONM2
@@ -118,7 +119,7 @@ class Mass(object):
         if types:
             f.write('$ELEMENTS_MASS\n')
         for elems in types:
-            #print "MASS", elems.type
+            #print("MASS", elems.type)
             elems.write_card(f, size=size, element_id=element_id)
 
     def _get_types(self, nlimit=True):

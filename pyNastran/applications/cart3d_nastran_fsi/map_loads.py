@@ -115,8 +115,8 @@ class LoadMapping(object):
             area = self.aero_model.Area(aero_eid)
             normal = self.aero_model.Normal(aero_eid)
             Cp = self.aero_model.Cp(aero_eid)
-            #print "Cp = ", Cp
-            #print "area[%s]=%s" % (aero_eid, area)
+            #print("Cp = ", Cp)
+            #print("area[%s]=%s" % (aero_eid, area))
 
             p = self.get_pressure(Cp)
             centroid = self.aero_model.Centroid(aero_eid)
@@ -193,7 +193,7 @@ class LoadMapping(object):
         log.info("---start build_nodal_tree---")
         raise Exception('DEPRECATED...build_nodal_tree in mapLoads.py')
         sys.stdout.flush()
-        #print "type(aCentroids)=%s type(sCentroids)=%s" %(type(aCentroids), type(sCentroids))
+        #print("type(aCentroids)=%s type(sCentroids)=%s" %(type(aCentroids), type(sCentroids)))
         self.nodal_tree = KdTree('node', sNodes, nclose=self.nCloseNodes)
         log.info("---finish build_nodal_tree---")
         sys.stdout.flush()
@@ -206,7 +206,7 @@ class LoadMapping(object):
         """
         log.info("---start build_centroid_tree---")
         sys.stdout.flush()
-        #print "type(aCentroids)=%s type(structural_centroids)=%s" %(type(aCentroids), type(structural_centroids))
+        #print("type(aCentroids)=%s type(structural_centroids)=%s" %(type(aCentroids), type(structural_centroids)))
 
         msg = 'Element '
         for eid, structural_centroid in sorted(iteritems(structural_centroids)):
@@ -233,7 +233,7 @@ class LoadMapping(object):
         # dont read the first line, thats a header line
         for (i, line) in enumerate(lines[1:]):
             line = line.strip()
-            #print "line = %r" % line
+            #print("line = %r" % line)
             (aEID, dict_line) = line.split('{') # splits the dictionary from the aEID
             aEID = int(aEID)
             #assert i == int(aEID)
@@ -295,7 +295,7 @@ class LoadMapping(object):
             return self.mapping_matrix
 
         log.info("---starting build_mapping_matrix---")
-        #print "self.mapping_matrix = ",self.mapping_matrix
+        #print("self.mapping_matrix = ",self.mapping_matrix)
         if os.path.exists('mappingMatrix.new.out'):
             self.mapping_matrix = self.parseMapFile('mappingMatrix.new.out')
             log.info("---finished build_mapping_matrix based on mappingMatrix.new.out---")
@@ -381,7 +381,7 @@ class LoadMapping(object):
 
         log.info("---finish piercing---")
         self.run_map_test(self.mapping_matrix)
-        #print "mapping_matrix = ", self.mapping_matrix
+        #print("mapping_matrix = ", self.mapping_matrix)
         log.info("---finished build_mapping_matrix---")
         sys.stdout.flush()
         return self.mapping_matrix
@@ -431,7 +431,7 @@ class LoadMapping(object):
         pierced_elements = []
 
         for sEID, sDist in zip(sElements, sDists):
-            #print "aEID=%s sEID=%s" % (aEID, sEID)
+            #print("aEID=%s sEID=%s" % (aEID, sEID))
             sArea, sNormal, sCentroid = self.structural_model.get_element_properties(sEID)
             sNodes = self.structural_model.get_element_nodes(sEID)
             nNodes = len(sNodes)
@@ -463,21 +463,21 @@ class LoadMapping(object):
                 pIntersect = pEnd * t1 +pSource * (1 - t1)
                 #P = A + (B - A) * t
                 tuv = pierce_plane_vector(sA, sB, sC, pSource, pIntersect, pierced_elements)
-                #print "t,u,v=", tuv
+                #print("t,u,v=", tuv)
 
                 pierced_elements.append([sEID, pIntersect, u1, v1, sDist])
 
             #t = min(t1, t2)
-            #print "t1=%6.3g t2=%6.3g" % (t1, t2)
+            #print("t1=%6.3g t2=%6.3g" % (t1, t2))
             #if is_inside:
-                #print "*t[%s]=%6.3g u1=%6.3g v1=%6.3g u2=%6.3g v2=%6.3g" %(sEID,t,u1,v1,u2,v2)
+                #print("*t[%s]=%6.3g u1=%6.3g v1=%6.3g u2=%6.3g v2=%6.3g" %(sEID,t,u1,v1,u2,v2))
             #else:
-                #print " t[%s]=%6.3g u1=%6.3g v1=%6.3g u2=%6.3g v2=%6.3g" %(sEID,t,u1,v1,u2,v2)
+                #print(" t[%s]=%6.3g u1=%6.3g v1=%6.3g u2=%6.3g v2=%6.3g" %(sEID,t,u1,v1,u2,v2))
 
             #if is_inside:
-                #print "*t[%s]=%6.3g u1=%6.3g v1=%6.3g d=%g" %(sEID,t1,u1,v1,sDist)
+                #print("*t[%s]=%6.3g u1=%6.3g v1=%6.3g d=%g" %(sEID,t1,u1,v1,sDist))
             #else:
-                #print " t[%s]=%6.3g u1=%6.3g v1=%6.3g d=%g" %(sEID,t1,u1,v1,sDist)
+                #print(" t[%s]=%6.3g u1=%6.3g v1=%6.3g d=%g" %(sEID,t1,u1,v1,sDist))
 
         log.info("avgDist = %g" % mean(sDists))
         (pierced_elements, nPiercings) = self.fix_piercings(sElements, pierced_elements)
@@ -499,7 +499,7 @@ class LoadMapping(object):
                 log.info("dist = %s\n" % dist)
                 dists.append(dist)
             iSort = argsort(dists)
-            #print "iSort = ", iSort
+            #print("iSort = ", iSort)
 
             piercedElements2 = []
             for iElement in iSort:
@@ -507,8 +507,8 @@ class LoadMapping(object):
             #piercedElements = piercedElements[iSort]
 
             #for element in pierced_elements:
-                #print "element = ",element
-                #print "dist = ",dist, '\n'
+                #print("element = ",element)
+                #print("dist = ",dist, '\n')
 
             npiercings = len(pierced_elements)
         return (pierced_elements, npiercings)
@@ -566,7 +566,7 @@ class LoadMapping(object):
             aCentroid = aero_model.Centroid(aero_eid)
             nodes = structural_model.getNodeIDLocations(nIDs)
 
-            #print "nodes = ", nodes
+            #print("nodes = ", nodes)
             weights = self.get_weights(aCentroid, nodes)
             distribution = self.create_distribution(nIDs, weights)
 

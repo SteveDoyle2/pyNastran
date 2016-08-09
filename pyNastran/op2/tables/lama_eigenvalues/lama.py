@@ -1,3 +1,4 @@
+from __future__ import print_function
 from six import b
 from six.moves import range
 from struct import Struct
@@ -30,7 +31,7 @@ class LAMA(OP2Common):
 
     def _read_buckling_eigenvalue_3(self, data, ndata):
         """parses the Buckling Eigenvalues Table 3 Data"""
-        #print self.show_data(data)
+        #print(self.show_data(data))
         #self._read_title_helper(data)
 
         self.words = [

@@ -133,7 +133,7 @@ def run_op4(op4_filename, write_op4=True, debug=True,
             raise
         is_passed = True
     except:
-        #print e
+        #print(e)
         if stop_on_failure:
             raise
         else:

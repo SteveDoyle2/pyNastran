@@ -642,7 +642,7 @@ def atm_unit_reynolds_number2(alt, mach, SI=False, debug=False):
         calls to atm_press and atm_temp are not made
     """
     z = _update_alt(alt, SI)
-    #print "z = ",z
+    #print("z = ",z)
     gamma = 1.4
     R = 1716.
     p = atm_pressure(z)

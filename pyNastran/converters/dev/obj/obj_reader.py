@@ -1,3 +1,4 @@
+from __future__ import print_function
 from numpy import array, unique, hstack, zeros
 
 class OBJ(object):
@@ -18,7 +19,7 @@ class OBJ(object):
         #faces = []
         for line in f:
             sline = line.strip().split()
-            #print sline
+            #print(sline)
             Type = sline[0]
             if Type == 'v':  # vertex
                 nodes.append(sline[1:])
@@ -40,13 +41,13 @@ class OBJ(object):
         self.make_elements()
 
     def make_elements(self):
-        print (self.nodes.shape)
+        print(self.nodes.shape)
         unodes, indicies = unique_rows(self.nodes, return_inverse=True)
 
-        print (unodes)
-        #print list(indicies)
-        print (unodes.shape)
-        print (indicies.shape)
+        print(unodes)
+        #print(list(indicies))
+        print(unodes.shape)
+        print(indicies.shape)
 
         n1 = self.lines[:, 0]
         n2 = self.lines[:, 1]
@@ -59,7 +60,7 @@ class OBJ(object):
         lines2[:, 0] = i1
         lines2[:, 1] = i2
         self.lines = lines2
-        print (self.lines.shape)
+        print(self.lines.shape)
         self.nodes = unodes
 
     def write_obj(self, obj_filename):
