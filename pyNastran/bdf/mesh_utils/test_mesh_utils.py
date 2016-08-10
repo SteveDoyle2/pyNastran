@@ -5,7 +5,11 @@ from six import iteritems
 
 from pyNastran.bdf.bdf import read_bdf
 from pyNastran.bdf.mesh_utils.collapse_bad_quads import convert_bad_quads_to_tris
+
+
+# testing these imports are up to date
 from pyNastran.bdf.mesh_utils.utils import *
+
 
 class TestMeshUtils(unittest.TestCase):
 
@@ -38,7 +42,9 @@ class TestMeshUtils(unittest.TestCase):
                               xref_aero=False,
                               xref_sets=False,
                               xref_optimization=False)
-        convert_bad_quads_to_tris(model, tol=0.01)
-        for eid, elem in sorted(iteritems(model.elements)):
-            print(elem)
+        convert_bad_quads_to_tris(model, min_edge_length=0.01)
+        #for eid, elem in sorted(iteritems(model.elements)):
+            #print(elem)
+        assert model.card_count['CQUAD4'] == 2, model.card_count
+        assert model.card_count['CTRIA3'] == 1, model.card_count
         os.remove(bdf_filename)
