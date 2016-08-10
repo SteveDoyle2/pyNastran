@@ -174,6 +174,9 @@ class QBDY1(ThermalLoad):
         self.eids = model.Elements(self.eids, msg=msg)
         self.eids_ref = self.eids
 
+    def safe_cross_reference(self, model):
+        return self.cross_reference(model)
+
     def uncross_reference(self):
         self.eids = self.element_ids
         del self.eids_ref

@@ -199,6 +199,9 @@ class DPHASE(BaseCard):
         self.nodes = model.Nodes(self.node_ids, msg=msg)
         self.nodes_ref = self.nodes
 
+    def safe_cross_reference(self, model):
+        return self.cross_reference(model)
+
     def uncross_reference(self):
         self.nodes = self.node_ids
         del self.nodes_ref

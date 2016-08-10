@@ -133,9 +133,10 @@ class EIGC(Method):
     """
     type = 'EIGC'
 
-    def __init__(self, sid, method, norm, G, C, E, ndo,
-                 mblkszs=None, iblkszs=None, ksteps=None, NJIs=None,
-                 alphaAjs=None, omegaAjs=None, LJs=None, NEJs=None, NDJs=None, # HESS/INV
+    def __init__(self, sid, method, norm, G, C, E, ndo, # common
+                 mblkszs=None, iblkszs=None, ksteps=None, NJIs=None, # CLAN
+                 alphaAjs=None, omegaAjs=None, alphaBjs=None, omegaBjs=None, # HESS/INV
+                 LJs=None, NEJs=None, NDJs=None, # HESS/INV
                  shift_r1=None, shift_i1=None, isrr_flag=None, nd1=None, # ISRR
                  comment=''):
         Method.__init__(self)
@@ -178,8 +179,8 @@ class EIGC(Method):
         self.NJIs = NJIs
 
         # HESS
-        self.alphaBjs = []
-        self.omegaBjs = []
+        self.alphaBjs = alphaBjs
+        self.omegaBjs = omegaBjs
         self.LJs = LJs
         self.NEJs = NEJs
         self.NDJs = NDJs
@@ -233,8 +234,8 @@ class EIGC(Method):
         omegaAjs = []
         omegaBjs = []
         mblkszs = []
-        #iblkszs = []
-        #ksteps = []
+        iblkszs = []
+        ksteps = []
         LJs = []
         NEJs = []
         NDJs = []
@@ -258,7 +259,7 @@ class EIGC(Method):
         if method == 'CLAN':
             alphaAjs, omegaAjs, mblkszs, iblkszs, ksteps, NJIs = cls._load_clan(nrows, card)
         elif method in ['HESS', 'INV']:  # HESS, INV
-            alphaAjs, omegaAjs, alphaBjs, omegaBJs, LJs, NEJs, NDJs = cls._load_hess_inv(
+            alphaAjs, omegaAjs, alphaBjs, omegaBjs, LJs, NEJs, NDJs = cls._load_hess_inv(
                 nrows, method, card)
         elif method == 'ISRR':
             shift_r1, shift_i1, isrr_flag, nd1 = cls._load_isrr(nrows, card)
@@ -268,7 +269,7 @@ class EIGC(Method):
         #assert card.nFields() < 8, 'card = %s' % card
         return EIGC(sid, method, norm, G, C, E, ndo,
                     mblkszs, iblkszs, ksteps, NJIs, # CLAN
-                    alphaAjs, omegaAjs, LJs, NEJs, NDJs, # HESS/INV
+                    alphaAjs, omegaAjs, alphaBjs, omegaBjs, LJs, NEJs, NDJs, # HESS/INV
                     shift_r1, shift_i1, isrr_flag, nd1, # ISRR
                     comment=comment)
 
@@ -357,7 +358,7 @@ class EIGC(Method):
             NEJs.append(NEj)
             NDJs.append(
                 integer_or_blank(card, i + 6, 'NDJ' + str(irow), NDJ_default))
-        return alphaAjs, omegaAjs, alphaBjs, omegaBJs, LJs, NEJs, NDJs
+        return alphaAjs, omegaAjs, alphaBjs, omegaBjs, LJs, NEJs, NDJs
 
     def cross_reference(self, model):
         pass

@@ -214,6 +214,9 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
             self.tid = model.Table(self.tid, msg=msg)
             self.tid_ref = self.tid
 
+    def safe_cross_reference(self, model):
+        return self.cross_reference(model)
+
     def uncross_reference(self):
         self.lid = self.Lid()
         self.tid = self.Tid()
@@ -307,6 +310,9 @@ class LOADCYN(Load):
 
     def cross_reference(self, model):
         pass
+
+    def safe_cross_reference(self, model):
+        return self.cross_reference(model)
 
     def raw_fields(self):
         end = []
@@ -561,6 +567,9 @@ class SLOAD(Load):
             self.nids[i] = model.Node(nid, msg=msg)
         self.nids_ref = self.nids
 
+    def safe_cross_reference(self, model):
+        return self.cross_reference(model)
+
     def uncross_reference(self):
         self.nids = self.node_ids
         del self.nids_ref
@@ -657,6 +666,9 @@ class RFORCE(Load):
             self.nid_ref = self.nid
         self.cid = model.Coord(self.cid, msg=msg)
         self.cid_ref = self.cid
+
+    def safe_cross_reference(self, model):
+        return self.cross_reference(model)
 
     def uncross_reference(self):
         self.nid = self.Nid()
@@ -857,6 +869,9 @@ class RANDPS(RandomLoad):
             #self.tid = model.Table(self.tid, msg=msg)
             self.tid = model.RandomTable(self.tid, msg=msg)
             self.tid_ref = self.tid
+
+    def safe_cross_reference(self, model):
+        return self.cross_reference(model)
 
     def uncross_reference(self):
         self.tid = self.Tid()

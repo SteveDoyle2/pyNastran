@@ -630,6 +630,9 @@ class ACCEL1(BaseCard):
         self.cid_ref = self.cid
         self.nodes_ref = self.nodes
 
+    def safe_cross_reference(self, model):
+        return self.cross_reference(model)
+
     def Cid(self):
         if isinstance(self.cid, integer_types):
             return self.cid
@@ -1726,6 +1729,9 @@ class GMLOAD(Load):
         #self.xyz = self.g2.get_position() - self.g1.get_position()
         #self.normalize()
 
+    def safe_cross_reference(self, model):
+        return self.cross_reference(model)
+
     def uncross_reference(self):
         self.cid = self.Cid()
         del self.cid_ref
@@ -1815,6 +1821,9 @@ class PLOAD(Load):
             the BDF object
         """
         pass
+
+    def safe_cross_reference(self, model):
+        return self.cross_reference(model)
 
     def uncross_reference(self):
         pass
@@ -1916,6 +1925,9 @@ class PLOAD1(Load):
         msg = ' which is required by PLOAD1 sid=%s' % self.sid
         self.eid = model.Element(self.eid, msg=msg)
         self.eid_ref = self.eid
+
+    def safe_cross_reference(self, model):
+        return self.cross_reference(model)
 
     def uncross_reference(self):
         self.eid = self.Eid()
@@ -2148,6 +2160,9 @@ class PLOAD2(Load):
         msg = ' which is required by PLOAD2 sid=%s' % self.sid
         self.eids = model.Elements(self.eids, msg=msg)
         self.eids_ref = self.eids
+
+    def safe_cross_reference(self, model):
+        return self.cross_reference(model)
 
     def uncross_reference(self):
         self.eids = self.element_ids
@@ -2538,6 +2553,9 @@ class PLOADX1(Load):
         self.eid_ref = self.eid
         self.ga_ref = self.ga
         self.gb_ref = self.gb
+
+    def safe_cross_reference(self, model):
+        return self.cross_reference(model)
 
     def uncross_reference(self):
         self.eid = self.Eid()

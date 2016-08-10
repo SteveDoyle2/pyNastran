@@ -293,7 +293,6 @@ class RLOAD1(TabularLoad):
             self.dphase = model.DPHASE(self.dphase, msg=msg)
             self.dphase_ref = self.dphase
 
-
     def safe_cross_reference(self, model):
         msg = ' which is required by RLOAD1 sid=%s' % (self.sid)
         if self.tc > 0:
