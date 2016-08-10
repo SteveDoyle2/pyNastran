@@ -79,6 +79,12 @@ class QVOL(ThermalLoad):
         self.elements = model.Elements(self.elements, msg=msg)
         self.elements_ref = self.elements
 
+    def safe_cross_reference(self, model):
+        try:
+            return self.cross_reference(model)
+        except KeyError:
+            model.log.warning('failed cross-referencing\n%s' % str(self))
+
     def uncross_reference(self):
         self.elements = self.element_ids
         del self.elements_ref
@@ -175,7 +181,10 @@ class QBDY1(ThermalLoad):
         self.eids_ref = self.eids
 
     def safe_cross_reference(self, model):
-        return self.cross_reference(model)
+        try:
+            return self.cross_reference(model)
+        except KeyError:
+            model.log.warning('failed cross-referencing\n%s' % str(self))
 
     def uncross_reference(self):
         self.eids = self.element_ids
@@ -279,6 +288,12 @@ class QBDY2(ThermalLoad):  # not tested
         self.eid = model.Element(self.eid, msg=msg)
         self.eid_ref = self.eid
 
+    def safe_cross_reference(self, model):
+        try:
+            return self.cross_reference(model)
+        except KeyError:
+            model.log.warning('failed cross-referencing\n%s' % str(self))
+
     def uncross_reference(self):
         self.eid = self.Eid()
         del self.eid_ref
@@ -361,6 +376,12 @@ class QBDY3(ThermalLoad):
         for i, eid in enumerate(self.eids):
             self.eids[i] = model.Element(eid, msg=msg)
         self.eids_ref = self.eids
+
+    def safe_cross_reference(self, model):
+        try:
+            return self.cross_reference(model)
+        except KeyError:
+            model.log.warning('failed cross-referencing\n%s' % str(self))
 
     def uncross_reference(self):
         self.eids = self.element_ids
@@ -483,6 +504,12 @@ class QHBDY(ThermalLoad):
 
     def cross_reference(self, model):
         pass
+
+    def safe_cross_reference(self, model):
+        try:
+            return self.cross_reference(model)
+        except KeyError:
+            model.log.warning('failed cross-referencing\n%s' % str(self))
 
     def uncross_reference(self):
         pass

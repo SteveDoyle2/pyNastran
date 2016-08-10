@@ -1,3 +1,4 @@
+from six import iteritems
 from numpy import hstack, zeros, where, searchsorted, argsort, full, nan, unique
 
 from pyNastran.bdf.dev_vectorized.cards.elements.solid.ctetra4 import CTETRA4
@@ -104,7 +105,7 @@ class ElementsSolid(object):
         }
         #element_property = zeros((self.n, 2), dtype='int32')
         #n0 = n
-        #for etype, elements in etypes.iteritems():
+        #for etype, elements in iteritems(etypes):
         #    n = element_property.n
         #    element_property[n0:n0+n, 0] = element_property.element_id
         #    element_property[n0:n0+n, 1] = element_property.property_id

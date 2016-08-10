@@ -774,6 +774,9 @@ class RFORCE1(Load):
         self.cid = model.Coord(self.cid, msg=msg)
         self.cid_ref = self.cid
 
+    def safe_cross_reference(self, model):
+        return self.cross_reference(model)
+
     def uncross_reference(self):
         self.nid = self.Nid()
         self.cid = self.Cid()

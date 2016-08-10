@@ -1005,12 +1005,14 @@ class FORCE1(Force):
         """
         msg = ' which is required by FORCE1 sid=%s' % self.sid
         self.node = model.Node(self.node, msg=msg)
-        self.g1 = model.Node(self.g1, msg=msg)
-        self.g2 = model.Node(self.g2, msg=msg)
-
         self.node_ref = self.node
+
+        self.g1 = model.Node(self.g1, msg=msg)
         self.g1_ref = self.g1
+
+        self.g2 = model.Node(self.g2, msg=msg)
         self.g2_ref = self.g2
+
         self.xyz = self.g2_ref.get_position() - self.g1_ref.get_position()
         self.normalize()
 
@@ -1024,12 +1026,16 @@ class FORCE1(Force):
         """
         .. todo:: cross reference and fix repr function
         """
-        msg = ' which is required by FORCE1 sid=%s' % self.sid
-        self.node = model.Node(self.node, msg=msg)
-        self.g1 = model.Node(self.g1, msg=msg)
-        self.g2 = model.Node(self.g2, msg=msg)
-        self.xyz = self.g2.get_position() - self.g1.get_position()
-        self.normalize()
+        return self.cross_reference(model)
+        #msg = ' which is required by FORCE1 sid=%s' % self.sid
+        #self.node = model.Node(self.node, msg=msg)
+        #self.node_ref = self.node
+        #self.g1 = model.Node(self.g1, msg=msg)
+        #self.g1_ref = self.g1
+        #self.g2 = model.Node(self.g2, msg=msg)
+        #self.g2_ref = self.g2
+        #self.xyz = self.g2.get_position() - self.g1.get_position()
+        #self.normalize()
 
     def G1(self):
         if isinstance(self.g1, (integer_types, float)):
