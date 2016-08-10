@@ -3652,6 +3652,127 @@ class PAERO3(BaseCard):
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
+class PAERO4(BaseCard):
+    """
+    Defines properties of each strip element for Strip theory.
+    """
+    type = 'PAERO4'
+    _field_map = {
+        1: 'pid', #2:'orient', 3:'width', 4:'AR',
+    }
+
+    #def _get_field_helper(self, n):
+        #"""
+        #Gets complicated parameters on the PAERO3 card
+
+        #Parameters
+        #----------
+        #n : int
+            #the field number to update
+
+        #Returns
+        #-------
+        #value : varies
+            #the value for the appropriate field
+        #"""
+        #nnew = n - 6
+        #if nnew < 0:
+            #raise RuntimeError('field n=%i on PAERO3 is invalid' % n)
+        #spot = nnew // 2
+        #i = nnew % 2
+        #if i == 0:
+            #value = self.x[spot]
+        #else:
+            #value = self.y[spot]
+        #return value
+
+    #def _update_field_helper(self, n, value):
+        #"""
+        #Updates complicated parameters on the PAERO3 card
+
+        #Parameters
+        #----------
+        #n : int
+            #the field number to update
+        #value :varies
+            #the value for the appropriate field
+        #"""
+        #nnew = n - 6
+        #if nnew < 0:
+            #raise RuntimeError('field n=%i on PAERO3 is invalid' % n)
+        #spot = nnew // 2
+        #i = nnew % 2
+        #if i == 0:
+            #self.x[spot] = value
+        #else:
+            #self.y[spot] = value
+
+    def __init__(self, pid, cla, lcla, circ, lcirc,
+                 docs, caocs, gapocs, comment=''):
+        if comment:
+            self._comment = comment
+        #: Property identification number. (Integer > 0)
+        self.pid = pid
+        self.cla = cla
+        self.lcla = lcla
+        self.circ = circ
+        self.lcirc = lcirc
+        self.docs = docs
+        self.caocs = caocs
+        self.gapocs = gapocs
+        assert isinstance(docs, list), docs
+        assert isinstance(caocs, list), caocs
+        assert isinstance(gapocs, list), gapocs
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        pid = integer(card, 1, 'pid')
+        cla = integer_or_blank(card, 2, 'cla', 0)
+        lcla = integer_or_blank(card, 3, 'lcla', 0) # ???
+
+        circ = integer_or_blank(card, 4, 'circ', 0)
+        lcirc = integer_or_blank(card, 5, 'lcirc', 0) # ???
+        nfields = card.nfields
+
+        j = 0
+        docs = []
+        caocs = []
+        gapocs = []
+        for i in range(6, nfields, 3):
+            doc = double(card, i, 'doc_%i' % j)
+            caoc = double(card, i + 1, 'caoc_%i' % j)
+            gapoc = double(card, i + 2, 'gapoc_%i' % j)
+            docs.append(doc)
+            caocs.append(caoc)
+            gapocs.append(gapoc)
+            j += 1
+        return PAERO4(pid, cla, lcla, circ, lcirc,
+                      docs, caocs, gapocs, comment=comment)
+
+    def cross_reference(self, model):
+        pass
+
+    def uncross_reference(self):
+        pass
+
+    def raw_fields(self):
+        """
+        Gets the fields in their unmodified form
+
+        Returns
+        -------
+        fields : list[varies]
+            the fields that define the card
+        """
+        list_fields = ['PAERO4', self.pid, self.cla, self.lcla, self.circ, self.lcirc]
+        for doc, caoc, gapoc in zip(self.docs, self.caocs, self.gapocs):
+            list_fields += [doc, caoc, gapoc]
+        return list_fields
+
+    def write_card(self, size=8, is_double=False):
+        card = self.repr_fields()
+        return self.comment + print_card_8(card)
+
 
 class Spline(BaseCard):
     def __init__(self):
@@ -4490,7 +4611,7 @@ class TRIM(BaseCard):
             suport_dofs = set()
             assert isinstance(suport, list), type(suport)
             for suporti in suport:
-                print(str(suporti).rstrip())
+                #print(str(suporti).rstrip())
                 for nid in suporti.node_ids:
                     for cs in suporti.Cs:
                         for ci in cs:
@@ -4545,6 +4666,14 @@ class TRIM(BaseCard):
                 #msg += 'ntrim=%s nsuport_dofs=%s nsuport1_dofs=%s naesurfs=%s' % (
                     #ntrim, nsuport_dofs, nsuport1_dofs, naesurfs)
                 #raise RuntimeError(msg)
+
+#            ndelta = (naestats + naesurfs + naeparms + ntrim_aesurfs) - (ntrim + naelinks + nsuport_dofs + nsuport1_dofs)
+#            if ndelta != 0:
+#                msg = '(naestats + naesurfs + naeparms + ntrim_aesurf) - (ntrim + naelink + nsuport_dofs + nsuport1_dofs) = ndelta = %s; ndelta != 0\n' % ndelta
+#                msg += ('naestats=%s naesurfs=%s naeparms=%s ntrim_aesurfs=%s\n'
+#                        'ntrim=%s naelinks=%s nsuport_dofs=%s nsuport1_dofs=%s' % (
+#                            naestats, naesurfs, naeparms, ntrim_aesurfs,
+#                            ntrim, naelinks, nsuport_dofs, nsuport1_dofs))
 
             ndelta = (naestats + naesurfs + naeparms) - (ntrim + naelinks + nsuport_dofs + nsuport1_dofs) #+ ntrim_aesurfs
             if ndelta != 0:

@@ -30,6 +30,8 @@ from pyNastran.bdf.test.compare_card_content import compare_card_content
 import pyNastran.bdf.test
 test_path = pyNastran.bdf.test.__path__[0]
 
+class DisabledCardError(RuntimeError):
+    pass
 
 def run_all_files_in_folder(folder, debug=False, xref=True, check=True,
                             punch=False, cid=None, nastran=''):
@@ -150,6 +152,10 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
             is_passed = True
         except KeyboardInterrupt:
             sys.exit('KeyboardInterrupt...sys.exit()')
+        except DisabledCardError:
+            #if dev:
+                #pass
+            raise
         #except IOError:
             #pass
         #except RuntimeError:  # only temporarily uncomment this when running lots of tests
@@ -457,12 +463,13 @@ def run_fem1(fem1, bdf_model, mesh_form, xref, punch, sum_load, size, is_double,
             fem1.read_bdf(bdf_model, xref=False, punch=punch, encoding=encoding)
             for card in crash_cards:
                 if card in fem1.card_count:
-                    raise RuntimeError('card=%r has been disabled')
+                    raise DisabledCardError('card=%r has been disabled' % card)
             #fem1.geom_check(geom_check=True, xref=False)
             fem1.write_skin_solid_faces('skin_file.bdf', size=16, is_double=False)
             if xref:
                 #fem1.uncross_reference()
-                fem1.cross_reference()
+                #fem1.cross_reference()
+                fem1.safe_cross_reference()
                 fem1._xref = True
                 spike_fem = read_bdf(fem1.bdf_filename, encoding=encoding)
 
@@ -839,6 +846,18 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
             cmethod_ids = list(fem2.cMethods.keys())
             raise RuntimeError('CMETHOD = %s not in cmethod_ids=%s' % (cmethod_id, cmethod_ids))
         assert sol in [110], 'sol=%s CMETHOD' % sol
+
+    if 'RMETHOD' in subcase:
+        rmethod_id = subcase.get_parameter('RMETHOD')[0]
+        #if method_id in fem2.methods:
+            #method = fem2.methods[method_id]
+        #elif method_id in fem2.cMethods:
+            #method = fem2.cMethods[method_id]
+        #else:
+            #method_ids = list(fem2.methods.keys())
+            #raise RuntimeError('METHOD = %s not in method_ids=%s' % (method_id, method_ids))
+
+        assert sol in [111], 'sol=%s RMETHOD' % sol
 
     if 'FMETHOD' in subcase:
         method_id = subcase.get_parameter('FMETHOD')[0]
@@ -1239,11 +1258,11 @@ def main():
     """
     from pyNastran.utils.docopt_types import docopt_types
     msg = "Usage:\n"
-    msg += "  test_bdf [-q] [-D] [-i] [-e E] [-x] [-p] [-c] [-L] [-f] [--encoding ENCODE] BDF_FILENAME\n"
-    msg += "  test_bdf [-q] [-D] [-i] [-e E] [-x] [-p] [-c] [-L] [-d] [-f] [--encoding ENCODE] BDF_FILENAME\n"
-    msg += "  test_bdf [-q] [-D] [-i] [-e E] [-x] [-p] [-c] [-L] [-l] [-f] [--encoding ENCODE] BDF_FILENAME\n"
-    msg += "  test_bdf [-q] [-D] [-i] [-e E] [-p] [-r] [-f] [--encoding ENCODE] BDF_FILENAME\n"
-    msg += "  test_bdf [-q] [-D] [-i] [-e E] [-x] [-p] [-s] [-f] [--encoding ENCODE] BDF_FILENAME\n"
+    msg += "  test_bdf [-q] [-D] [-i] [-e E] [--crash C] [-x] [-p] [-c] [-L] [-f] [--encoding ENCODE] BDF_FILENAME\n"
+    msg += "  test_bdf [-q] [-D] [-i] [-e E] [--crash C] [-x] [-p] [-c] [-L] [-d] [-f] [--encoding ENCODE] BDF_FILENAME\n"
+    msg += "  test_bdf [-q] [-D] [-i] [-e E] [--crash C] [-x] [-p] [-c] [-L] [-l] [-f] [--encoding ENCODE] BDF_FILENAME\n"
+    msg += "  test_bdf [-q] [-D] [-i] [-e E] [--crash C]      [-p] [-r] [-f] [--encoding ENCODE] BDF_FILENAME\n"
+    msg += "  test_bdf [-q] [-D] [-i] [-e E] [--crash C] [-x] [-p] [-s] [-f] [--encoding ENCODE] BDF_FILENAME\n"
 
     #msg += "  test_bdf [-q] [-p] [-o [<VAR=VAL>]...] BDF_FILENAME\n" #
     msg += '  test_bdf -h | --help\n'
@@ -1255,6 +1274,7 @@ def main():
     msg += '\n'
 
     msg += 'Options:\n'
+    msg += '  --crash C,     Crash on specific cards (e.g. CGEN,EGRID)\n'
     msg += '  -q, --quiet    prints debug messages (default=False)\n'
     msg += '  -x, --xref     disables cross-referencing and checks of the BDF.\n'
     msg += '                 (default=True -> on)\n'
@@ -1293,6 +1313,7 @@ def main():
     data['--loads'] = not data['--loads']
     if not data['--encoding']:
         data['--encoding'] = None
+
     for key, value in sorted(iteritems(data)):
         print("%-12s = %r" % (key.strip('--'), value))
 
@@ -1307,6 +1328,11 @@ def main():
         size = 16
     else:
         size = 8
+
+    crash_cards = []
+    if data['--crash']:
+        crash_cards = data['--crash'].split(',')
+
 
     #print(data)
     if data['--profile']:
@@ -1334,6 +1360,7 @@ def main():
             dictsort=data['--dictsort'],
             nerrors=data['--nerrors'],
             encoding=data['--encoding'],
+            crash_cards=crash_cards,
         )
         prof.dump_stats('bdf.profile')
 
@@ -1373,6 +1400,7 @@ def main():
             dictsort=data['--dictsort'],
             nerrors=data['--nerrors'],
             encoding=data['--encoding'],
+            crash_cards=crash_cards,
         )
     print("total time:  %.2f sec" % (time.time() - t0))
 

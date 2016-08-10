@@ -90,10 +90,10 @@ def run(regenerate=True, run_nastran=False, debug=False, sum_load=True, xref=Tru
 
     # nstart = 0
     # nstop = 10000
-    if os.path.exists('skippedCards.out'):
-        os.remove('skippedCards.out')
+    if os.path.exists('skipped_cards.out'):
+        os.remove('skipped_cards.out')
 
-    print("nFiles = %s" % len(files))
+    print("nfiles = %s" % len(files))
     cid = None
     check = True
     debug = False
@@ -104,7 +104,8 @@ def run(regenerate=True, run_nastran=False, debug=False, sum_load=True, xref=Tru
                                      check=check, cid=cid,
                                      nastran=nastran,
                                      size=size, is_double=is_double, post=post,
-                                     encoding='latin1', crash_cards=crash_cards)
+                                     encoding='latin1', crash_cards=crash_cards,
+                                     dev=True)
     ntotal = len(files)
     nfailed = len(failed_files)
     npassed = ntotal - nfailed
@@ -118,6 +119,7 @@ def run(regenerate=True, run_nastran=False, debug=False, sum_load=True, xref=Tru
         for fname in failed_files:
             failed_cases_file.write('%s\n' % fname)
     sys.exit('finished...')
+
 
 def main():
     """the interface for bdf_test"""
@@ -137,7 +139,7 @@ def main():
     #msg += "\n"
     msg += "Options:\n"
     msg += "  -r, --regenerate     Dumps the OP2 as a readable text file\n"
-    msg += '  -c C, --crash_cards  Crash on specific cards (e.g. CGEN)\n'
+    msg += '  -c C, --crash_cards  Crash on specific cards (e.g. CGEN,EGRID)\n'
     msg += "  -n, --run_nastran    Runs Nastran\n"
     msg += "  -L, --sum_loads      Disables static/dynamic loads sum\n"
     msg += "  -s S, --size S       Sets the field size\n"
@@ -160,7 +162,7 @@ def main():
 
     crash_cards = []
     if data['--crash_cards']:
-        crash_cards = data['--crash_cards'].split()
+        crash_cards = data['--crash_cards'].split(',')
     run(regenerate=regenerate, run_nastran=run_nastran, sum_load=sum_load,
         xref=xref, crash_cards=crash_cards)
 

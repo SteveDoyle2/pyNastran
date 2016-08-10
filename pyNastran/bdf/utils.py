@@ -8,12 +8,12 @@ Defines various utilities for BDF parsing including:
  - TransformLoadWRT
 """
 from __future__ import print_function, unicode_literals
-from six import iteritems, StringIO, string_types
 import os
 import sys
 import inspect
 import warnings
 from copy import deepcopy
+from six import iteritems, StringIO, string_types
 
 import numpy as np
 from numpy import unique, cross, dot, array
@@ -833,7 +833,17 @@ def PositionWRT(xyz, cid, cid_new, model, is_cid_int=True):
 
 def deprecated(old_name, new_name, deprecated_version, levels=None):
     """
-    :param deprecated_version: the version the method was first deprecated in
+    Parameters
+    ----------
+    old_name : str
+        the old function name
+    new_name : str
+        the new function name
+    deprecated_version : float
+        the version the method was first deprecated in
+    levels : List[int]
+        the deprecation levels to show
+        [1, 2, 3] shows 3 levels up from this function
 
     TODO: turn this into a decorator?
     """

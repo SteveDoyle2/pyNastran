@@ -287,6 +287,7 @@ def integer_or_blank(card, ifield, fieldname, default=None):
     raise SyntaxError('%s = %r (field #%s) on card must be an integer (not %s).\n'
                       'card=%s' % (fieldname, svalue, ifield, dtype, card))
 
+
 def double(card, ifield, fieldname):
     """
     Converts a field into a double
@@ -299,6 +300,11 @@ def double(card, ifield, fieldname):
         field number
     fieldname : str
         name of field
+
+    Returns
+    -------
+    value : float
+        the value from the desired field
     """
     #assert isinstance(card, BDFCard), type(card)
     #assert isinstance(ifield, int), type(ifield)

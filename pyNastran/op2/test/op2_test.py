@@ -1,7 +1,7 @@
 from __future__ import print_function
-from six import iteritems
 import os
 import sys
+from six import iteritems
 
 import pyNastran
 from pyNastran.op2.test.test_op2 import get_failed_files, run_lots_of_files
@@ -9,8 +9,8 @@ from pyNastran.utils.dev import get_files_of_type
 pkg_path = pyNastran.__path__[0]
 
 def parse_skipped_cards(fname):
-    with open(fname, 'r') as f:
-        lines = f.readlines()
+    with open(fname, 'r') as skip_file:
+        lines = skip_file.readlines()
 
     results = {}
     for line in lines:
@@ -31,10 +31,9 @@ def parse_skipped_cards(fname):
     for key, value in sorted(iteritems(results)):
         files_to_analyze.append(value)
 
-    f = open('new_elements.in', 'wb')
-    for fname in files_to_analyze:
-        f.write(fname + '\n')
-    f.close()
+    with open('new_elements.in', 'wb') as new_elements_file:
+        for fname in files_to_analyze:
+            new_elements_file.write(fname + '\n')
     return files_to_analyze
 
 
@@ -56,8 +55,8 @@ def get_all_files(folders_file, file_type):
     return files2
 
 
-def main(regenerate=True, make_geom=False, write_bdf=False, save_cases=True,
-         debug=False, write_f06=True):
+def run(regenerate=True, make_geom=False, write_bdf=False, save_cases=True,
+        debug=False, write_f06=True, compare=True, short_stats=False):
     # works
     files = get_files_of_type('tests', '.op2')
 
@@ -74,6 +73,8 @@ def main(regenerate=True, make_geom=False, write_bdf=False, save_cases=True,
     stop_on_failure = False
     get_skip_cards = False
 
+
+    failed_cases_filename = 'failed_cases%s%s.in' % (sys.version_info[:2])
     if get_skip_cards:
         files2 = parse_skipped_cards('skipped_cards.out')
     elif regenerate:
@@ -81,14 +82,15 @@ def main(regenerate=True, make_geom=False, write_bdf=False, save_cases=True,
         files2 += files
         files2.sort()
     else:
-        files2 = get_failed_files('failed_cases.in')
+        print('failed_cases_filename = %r' % failed_cases_filename)
+        files2 = get_failed_files(failed_cases_filename)
     files = files2
 
     skip_files = []
     #skip_files = ['nltrot99.op2', 'rot12901.op2', 'plan20s.op2'] # giant
 
     nstart = 0
-    nstop = 10000
+    nstop = 20000
     try:
         os.remove('skipped_cards.out')
     except:
@@ -97,25 +99,24 @@ def main(regenerate=True, make_geom=False, write_bdf=False, save_cases=True,
     print("nfiles = %s" % len(files))
     import time
     t0 = time.time()
-    short_stats = data['--short_stats']
     run_lots_of_files(files, make_geom=make_geom, write_bdf=write_bdf,
                       write_f06=write_f06, delete_f06=delete_f06,
-                      write_op2=write_op2, debug=debug, save_cases=save_cases, skip_files=skip_files,
-                      stop_on_failure=stop_on_failure,
+                      write_op2=write_op2, debug=debug, save_cases=save_cases,
+                      skip_files=skip_files, stop_on_failure=stop_on_failure,
                       is_vector=is_vector, vector_stop=vector_stop,
                       nstart=nstart, nstop=nstop, binary_debug=binary_debug,
-                      compare=not data['--disablecompare'], short_stats=short_stats,
-                      quiet=quiet)
-    print("dt = %f" %(time.time() - t0))
+                      compare=compare, short_stats=short_stats,
+                      quiet=quiet, dev=True)
+    print("dt = %f" % (time.time() - t0))
     sys.exit('final stop...')
 
-if __name__ == '__main__':
+def main():
     """the interface for op2_test"""
     from docopt import docopt
     ver = str(pyNastran.__version__)
 
     msg = "Usage:\n"
-    is_release = False
+    #is_release = False
     msg += "op2_test [-r] [-s] [-c] [-u] [-t] [-g] [-n] [-d] [-f]\n"
     msg += "  op2_test -h | --help\n"
     msg += "  op2_test -v | --version\n"
@@ -131,7 +132,8 @@ if __name__ == '__main__':
     msg += "  -c, --disablecompare  Doesn't do a validation of the vectorized result\n"
     msg += "  -t, --short_stats     Short get_op2_stats printout\n"
     msg += "  -g, --geometry        Reads the OP2 for geometry, which can be written out\n"
-    msg += "  -n, --write_bdf       Writes the bdf to fem.test_op2.bdf (default=False)\n" # n is for NAS
+    # n is for NAS
+    msg += "  -n, --write_bdf       Writes the bdf to fem.test_op2.bdf (default=False)\n"
     msg += "  -f, --write_f06       Writes the f06 to fem.test_op2.f06\n"
     msg += "  -s, --save_cases      Disables saving of the cases (default=False)\n"
     #msg += "  -z, --is_mag_phase    F06 Writer writes Magnitude/Phase instead of\n"
@@ -147,5 +149,11 @@ if __name__ == '__main__':
     write_bdf = data['--write_bdf']
     write_f06 = data['--write_f06']
     save_cases = not data['--save_cases']
-    main(regenerate=regenerate, make_geom=make_geom, write_bdf=write_bdf,
-         save_cases=save_cases, write_f06=write_f06, debug=debug)
+    short_stats = data['--short_stats']
+    compare = not data['--disablecompare']
+    run(regenerate=regenerate, make_geom=make_geom, write_bdf=write_bdf,
+        save_cases=save_cases, write_f06=write_f06, short_stats=short_stats,
+        compare=compare, debug=debug)
+
+if __name__ == '__main__':
+    main()

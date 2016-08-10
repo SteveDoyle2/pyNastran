@@ -94,6 +94,9 @@ class ACSRCE(BaseCard):
         #self.load_ids = load_ids2
         #self.load_ids_ref = self.load_ids
 
+    def safe_cross_reference(self, model):
+        return self.cross_reference(model)
+
     #def uncross_reference(self):
         #self.load_ids = [self.LoadID(load) for load in self.load_ids]
         #del self.load_ids_ref
@@ -292,7 +295,6 @@ class RLOAD1(TabularLoad):
         if isinstance(self.dphase, integer_types) and self.dphase > 0:
             self.dphase = model.DPHASE(self.dphase, msg=msg)
             self.dphase_ref = self.dphase
-
 
     def safe_cross_reference(self, model):
         msg = ' which is required by RLOAD1 sid=%s' % (self.sid)
@@ -715,6 +717,17 @@ class TLOAD1(TabularLoad):
             self.delay = model.DELAY(self.delay, msg=msg)
             self.delay_ref = self.delay
 
+    def safe_cross_reference(self, model, debug=True):
+        msg = ' which is required by %s=%s' % (self.type, self.sid)
+        if self.tid:
+            #try:
+            self.tid = model.Table(self.tid, msg=msg)
+            self.tid_ref = self.tid
+            #except
+        if isinstance(self.delay, integer_types) and self.delay > 0:
+            self.delay = model.DELAY(self.delay_id, msg=msg)
+            self.delay_ref = self.delay
+
     def uncross_reference(self):
         self.tid = self.Tid()
         self.delay = self.delay_id
@@ -722,15 +735,6 @@ class TLOAD1(TabularLoad):
             del self.tid_ref
         if self.delay > 0:
             del self.delay_ref
-
-    def safe_cross_reference(self, model, debug=True):
-        msg = ' which is required by %s=%s' % (self.type, self.sid)
-        if self.tid:
-            #try:
-            self.tid = model.Table(self.tid, msg=msg)
-            #except
-        if isinstance(self.delay, integer_types) and self.delay > 0:
-            self.delay = model.DELAY(self.delay_id, msg=msg)
 
     def Tid(self):
         if self.tid == 0:

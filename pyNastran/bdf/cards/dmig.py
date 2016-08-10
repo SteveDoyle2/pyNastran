@@ -2,6 +2,7 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from math import sin, cos, radians, atan2, sqrt, degrees
+from six import iteritems
 from six.moves import zip, range
 
 import numpy as np
@@ -151,15 +152,15 @@ class NastranMatrix(BaseCard):
         assert 0 <= Cj <= 6, 'C%i must be between [0, 6]; Cj=%s' % (0, Cj)
 
         nfields = len(card)
-        # print("nfields = %i" % nfields)
-        # print("card[5:] =", card[5:])
-        # print("(nfields - 5) %% 4 = %i" % ((nfields - 5) % 4))
+        #print("nfields = %i" % nfields)
+        #print("card[5:] =", card[5:])
+        #print("(nfields - 5) %% 4 = %i" % ((nfields - 5) % 4))
 
         nloops = (nfields - 5) // 4
         if (nfields - 5) % 4 in [2, 3]:  # real/complex
             nloops += 1
         #assert nfields <= 8,'nfields=%s' % nfields
-        # print("nloops = %i" % nloops)
+        #print("nloops = %i" % nloops)
         assert nloops > 0, 'nloops=%s' % nloops
 
         for i in range(nloops):
@@ -725,7 +726,7 @@ class DMIG_UACCEL(BaseCard):
         self.tin = tin
         self.ncol = ncol
         self.load_sequences = {}
-        print(str(self))
+        #print(str(self))
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -752,12 +753,12 @@ class DMIG_UACCEL(BaseCard):
         list_fields = [
             'DMI', 'UACCEL', 0, 9, self.tin, None, None, None, self.ncol
         ]
-        for lseq, ncx in sorted(self.load_sequences.iteritems()):
+        for lseq, ncx in sorted(iteritems(self.load_sequences)):
             list_fields += [lseq, None, None]
             for ncxi in ncx:
                 list_fields += ncxi
            #for (nid, comp, xi) in ncx:
-        print('list_fields= %s' % list_fields)
+        #print('list_fields= %s' % list_fields)
         self.write_card()
         return list_fields
 
@@ -776,13 +777,13 @@ class DMIG_UACCEL(BaseCard):
         msg += print_card_8(list_fields)
 
         list_fields = ['DMIG', 'UACCEL']
-        for lseq, ncx in sorted(self.load_sequences.iteritems()):
+        for lseq, ncx in sorted(iteritems(self.load_sequences)):
             list_fields += [lseq, None, None]
             for ncxi in ncx:
                 list_fields += ncxi
         #print('list_fields= %s' % list_fields)
         msg += print_card_8(list_fields)
-        print(msg)
+        #print(msg)
         #if self.is_complex:
             #msg += self._get_complex_fields(func)
         #else:

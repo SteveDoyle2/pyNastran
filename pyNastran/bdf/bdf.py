@@ -65,7 +65,7 @@ from pyNastran.bdf.cards.properties.mass import PMASS, NSM
 from pyNastran.bdf.cards.aero import (AECOMP, AEFACT, AELINK, AELIST, AEPARM, AESTAT,
                                       AESURF, AESURFS, AERO, AEROS, CSSCHD,
                                       CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
-                                      PAERO1, PAERO2, PAERO3, PAERO5, # PAERO4
+                                      PAERO1, PAERO2, PAERO3, PAERO4, PAERO5,
                                       MONPNT1,
                                       FLFACT, FLUTTER, GUST, MKAERO1,
                                       MKAERO2, SPLINE1, SPLINE2, SPLINE3, SPLINE4,
@@ -427,7 +427,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'CAERO1', 'CAERO2', 'CAERO3', 'CAERO4',  ## caeros
             # 'CAERO5',
             'PAERO1', 'PAERO2', 'PAERO3',  ## paeros
-            # 'PAERO4', 'PAERO5',
+            'PAERO4', # 'PAERO5',
             'MONPNT1',                                   ## monitor_points
             'SPLINE1', 'SPLINE2', 'SPLINE4', 'SPLINE5',  ## splines
             #'SPLINE3', 'SPLINE6', 'SPLINE7',
@@ -1888,7 +1888,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'PAERO1' : (PAERO1, self.add_PAERO),
             'PAERO2' : (PAERO2, self.add_PAERO),
             'PAERO3' : (PAERO3, self.add_PAERO),
-            ##'PAERO4' : (PAERO4, self.add_PAERO),
+            'PAERO4' : (PAERO4, self.add_PAERO),
             'PAERO5' : (PAERO5, self.add_PAERO),
 
             'SPLINE1' : (SPLINE1, self.add_SPLINE),

@@ -40,7 +40,6 @@ SOL 103 Solver
 BDF
  - HDF5
  - improved Case Control object / individual entries
- - convert MKAERO1 and MKAERO2 into type MKAero and write out as MKAERO1s
 
 Overall
  - better API definition
