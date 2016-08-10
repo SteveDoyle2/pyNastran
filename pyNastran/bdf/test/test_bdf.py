@@ -471,20 +471,20 @@ def run_fem1(fem1, bdf_model, mesh_form, xref, punch, sum_load, size, is_double,
                 #fem1.cross_reference()
                 fem1.safe_cross_reference()
                 fem1._xref = True
-                spike_fem = read_bdf(fem1.bdf_filename, encoding=encoding)
+                spike_fem = read_bdf(fem1.bdf_filename, encoding=encoding, debug=fem1.debug, log=fem1.log)
 
                 remake = False
                 if remake:
-                    log = fem1.log
+                    #log = fem1.log
                     fem1.save('model.obj')
                     fem1.save('model.obj', unxref=False)
                     fem1.write_bdf('spike_out.bdf')
                     fem1.get_bdf_stats()
 
-                    fem1 = BDF(debug=False)
+                    fem1 = BDF(debug=fem1.debug, log=fem1.log)
                     fem1.load('model.obj')
                     fem1.write_bdf('spike_in.bdf')
-                    fem1.log = log
+                    #fem1.log = log
                     fem1.get_bdf_stats()
 
                     fem1.cross_reference()
