@@ -16,6 +16,8 @@ def delete_bad_shells(model, max_theta=175., max_skew=70., max_aspect_ratio=100.
 
     for eid in eids_to_delete:
         del model.elements[eid]
+    model.log.info('deleted %s bad CTRIA3/CQUAD4s' % len(eids_to_delete))
+
     model.validate()
     return model
 
@@ -67,6 +69,7 @@ def get_bad_shells(model, xyz_cid0, nid_map, max_theta=175., max_skew=70., max_a
             skew = np.pi / 2. - np.abs(np.arccos([cos_skew1, cos_skew2])).min()
             if skew > max_skew:
                 eids_failed.append(eid)
+                model.log.debug('eid=%s failed max_skew check; skew=%s' % (eid, np.degrees(skew)))
                 continue
 
             #aspect_ratio = max(p12, p23, p34, p14) / max(p12, p23, p34, p14)
@@ -75,6 +78,7 @@ def get_bad_shells(model, xyz_cid0, nid_map, max_theta=175., max_skew=70., max_a
             aspect_ratio = lengths.max() / lengths.min()
             if aspect_ratio > max_aspect_ratio:
                 eids_failed.append(eid)
+                model.log.debug('eid=%s failed aspect_ratio check; AR=%s' % (eid, aspect_ratio))
                 continue
 
             cos_theta1 = np.dot(v21, -v14) / (np.linalg.norm(v21) * np.linalg.norm(v14))
@@ -84,6 +88,8 @@ def get_bad_shells(model, xyz_cid0, nid_map, max_theta=175., max_skew=70., max_a
             theta = np.arccos([cos_theta1, cos_theta2, cos_theta3, cos_theta4]).max()
             if theta > max_theta:
                 eids_failed.append(eid)
+                model.log.debug('eid=%s failed max_theta check; theta=%s' % (
+                    eid, np.degrees(theta)))
                 continue
 
         elif element.type == 'CTRIA3':
@@ -130,6 +136,7 @@ def get_bad_shells(model, xyz_cid0, nid_map, max_theta=175., max_skew=70., max_a
                                                   cos_skew4, cos_skew5, cos_skew6])).min()
             if skew > max_skew:
                 eids_failed.append(eid)
+                model.log.debug('eid=%s failed max_skew check; skew=%s' % (eid, np.degrees(skew)))
                 continue
 
             lengths = np.linalg.norm([v21, v32, v13], axis=1)
@@ -137,6 +144,7 @@ def get_bad_shells(model, xyz_cid0, nid_map, max_theta=175., max_skew=70., max_a
             aspect_ratio = lengths.max() / lengths.min()
             if aspect_ratio > max_aspect_ratio:
                 eids_failed.append(eid)
+                model.log.debug('eid=%s failed aspect_ratio check; AR=%s' % (eid, aspect_ratio))
                 continue
 
             cos_theta1 = np.dot(v21, -v13) / (np.linalg.norm(v21) * np.linalg.norm(v13))
@@ -145,6 +153,8 @@ def get_bad_shells(model, xyz_cid0, nid_map, max_theta=175., max_skew=70., max_a
             theta = np.arccos([cos_theta1, cos_theta2, cos_theta3]).max()
             if theta > max_theta:
                 eids_failed.append(eid)
+                model.log.debug('eid=%s failed max_theta check; theta=%s' % (
+                    eid, np.degrees(theta)))
                 continue
     return eids_failed
 

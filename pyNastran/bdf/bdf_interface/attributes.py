@@ -738,7 +738,7 @@ class BDFAttributes(object):
         """sets the solution (e.g. 101, 103)"""
         self._sol = sol
         if len(self.executive_control_lines) == 0:
-            self.executive_control_lines = ['SOL %s' % sol]
+            self.executive_control_lines = ['SOL %s' % sol, 'CEND']
             self.iSolLine = 0
         return self._sol
 
