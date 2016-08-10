@@ -430,6 +430,8 @@ class BDFAttributes(object):
         #: stores AEPARAM
         self.aeparams = {}
         #: stores AESURF
+        self.aesurf = {}
+        #: stores AESURFS
         self.aesurfs = {}
         #: stores AESTAT
         self.aestats = {}
@@ -594,7 +596,8 @@ class BDFAttributes(object):
             'aelinks' : ['AELINK'],
             'aelists' : ['AELIST'],
             'aeparams' : ['AEPARM'],
-            'aesurfs' : ['AESURF', 'AESURFS'],
+            'aesurf' : ['AESURF'],
+            'aesurfs' : ['AESURFS'],
             'aestats' : ['AESTAT'],
             'caeros' : ['CAERO1', 'CAERO2', 'CAERO3', 'CAERO4', 'CAERO5'],
             'paeros' : ['PAERO1', 'PAERO2', 'PAERO3', 'PAERO4', 'PAERO5'],

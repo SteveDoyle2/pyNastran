@@ -233,8 +233,8 @@ class XrefMesh(BDFAttributes):
             aeparam.uncross_reference()
         for aestat in itervalues(self.aestats):
             aestat.uncross_reference()
-        #for aesurf in itervalues(self.aesurf):
-            #aesurf.uncross_reference()
+        for aesurf in itervalues(self.aesurf):
+            aesurf.uncross_reference()
         for aesurfs in itervalues(self.aesurfs):
             aesurfs.uncross_reference()
         for flutter in itervalues(self.flutters):
@@ -469,8 +469,8 @@ class XrefMesh(BDFAttributes):
             aeparam.cross_reference(self)
         for aestat in itervalues(self.aestats):
             aestat.cross_reference(self)
-        #for aesurf in itervalues(self.aesurf):
-            #aesurf.cross_reference(self)
+        for aesurf in itervalues(self.aesurf):
+            aesurf.cross_reference(self)
         for aesurfs in itervalues(self.aesurfs):
             aesurfs.cross_reference(self)
         for flutter in itervalues(self.flutters):
@@ -529,8 +529,8 @@ class XrefMesh(BDFAttributes):
             aeparam.safe_cross_reference(self)
         for aestat in itervalues(self.aestats):
             aestat.safe_cross_reference(self)
-        #for aesurf in itervalues(self.aesurf):
-            #aesurf.safe_cross_reference(self)
+        for aesurf in itervalues(self.aesurf):
+            aesurf.safe_cross_reference(self)
         for aesurfs in itervalues(self.aesurfs):
             aesurfs.safe_cross_reference(self)
         for flutter in itervalues(self.flutters):

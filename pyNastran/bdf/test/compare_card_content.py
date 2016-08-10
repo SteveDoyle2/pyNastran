@@ -352,6 +352,7 @@ def compare_aero_content(fem1, fem2):
     assert len(fem1.aeparams) == len(fem2.aeparams)
     assert len(fem1.aelinks) == len(fem2.aelinks)
     assert len(fem1.aelists) == len(fem2.aelists)
+    assert len(fem1.aesurf) == len(fem2.aesurf)
     assert len(fem1.aesurfs) == len(fem2.aesurfs)
     assert len(fem1.aestats) == len(fem2.aestats)
     assert len(fem1.gusts) == len(fem2.gusts)
@@ -395,6 +396,11 @@ def compare_aero_content(fem1, fem2):
     for key in fem1.aelists:
         card1 = fem1.aelists[key]
         card2 = fem2.aelists[key]
+        assert_fields(card1, card2)
+
+    for key in fem1.aesurf:
+        card1 = fem1.aesurf[key]
+        card2 = fem2.aesurf[key]
         assert_fields(card1, card2)
 
     for key in fem1.aesurfs:

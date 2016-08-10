@@ -105,7 +105,7 @@ class WriteMesh(BDFAttributes):
 
         mid = 1
         bdf_file.write('MAT1,%s,3.0E7,,0.3\n' % mid)
-        for aesurf_id, aesurf in iteritems(self.aesurfs):
+        for aesurf_id, aesurf in iteritems(self.aesurf):
             cid = aesurf.cid1
             bdf_file.write('PSHELL,%s,%s,0.1\n' % (aesurf_id, aesurf_id))
             #print(cid)
@@ -142,7 +142,7 @@ class WriteMesh(BDFAttributes):
                 p1, p2, p3, p4 = elem
                 eid2 = j + eid
                 pidi = None
-                for aesurf_id, aesurf in iteritems(self.aesurfs):
+                for aesurf_id, aesurf in iteritems(self.aesurf):
                     aelist_id = aesurf.AELIST_id1()
                     aelist = self.aelists[aelist_id]
                     if eid2 in aelist.elements:
@@ -468,7 +468,7 @@ class WriteMesh(BDFAttributes):
     def _write_aero_control(self, outfile, size=8, is_double=False):
         """Writes the aero control surface cards"""
         if(self.aecomps or self.aefacts or self.aeparams or self.aelinks or
-           self.aelists or self.aestats or self.aesurfs):
+           self.aelists or self.aestats or self.aesurf or self.aesurfs):
             msg = ['$AERO CONTROL SURFACES\n']
             for (unused_id, aelinks) in sorted(iteritems(self.aelinks)):
                 for aelink in aelinks:
@@ -483,8 +483,10 @@ class WriteMesh(BDFAttributes):
 
             for (unused_id, aelist) in sorted(iteritems(self.aelists)):
                 msg.append(aelist.write_card(size, is_double))
-            for (unused_id, aesurf) in sorted(iteritems(self.aesurfs)):
+            for (unused_id, aesurf) in sorted(iteritems(self.aesurf)):
                 msg.append(aesurf.write_card(size, is_double))
+            for (unused_id, aesurfs) in sorted(iteritems(self.aesurfs)):
+                msg.append(aesurfs.write_card(size, is_double))
             for (unused_id, aefact) in sorted(iteritems(self.aefacts)):
                 msg.append(aefact.write_card(size, is_double))
             outfile.write(''.join(msg))
