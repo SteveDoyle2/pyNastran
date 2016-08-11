@@ -373,10 +373,14 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
 
         #print('is_start_of_subtable=%s' % self.is_start_of_subtable)
         #print('self.istream = %s' % self.istream)
+        #if hasattr(self, 'isubtable_old'):
+            #print("self.isubtable_old=%r self.isubtable=%s" % (self.isubtable_old, self.isubtable))
+        #else:
+            #print("self.isubtable=%s" % (self.isubtable))
         if not hasattr(self, 'isubtable_old'):
-            self.isubtable_old = None
+            self.isubtable_old = 1
         elif self.isubtable_old > self.isubtable:
-            self.isubtable_old = None
+            self.isubtable_old = 1
 
         #self.binary_debug.write('isubtable=%s isubtable_old=%s\n' % (self.isubtable, self.isubtable_old))
         #ni = self.f.tell() - len(data) + 12

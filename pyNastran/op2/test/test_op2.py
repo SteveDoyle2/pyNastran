@@ -2,11 +2,11 @@
 Defines the command line tool `test_op2`
 """
 from __future__ import print_function
-from six import string_types, iteritems, PY2
 import os
 import sys
 import time
 from traceback import print_exc
+from six import string_types, iteritems
 
 import numpy as np
 np.set_printoptions(precision=3, threshold=20)
@@ -113,7 +113,7 @@ except:
     is_memory = False
 
 
-def parse_table_names_from_F06(f06_filename):
+def parse_table_names_from_f06(f06_filename):
     """gets the op2 names from the f06"""
 
     marker = 'NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS'
@@ -140,7 +140,7 @@ def get_failed_files(filename):
 def run_lots_of_files(files, make_geom=True, write_bdf=False, write_f06=True,
                       delete_f06=True, write_op2=False,
                       is_vector=False, vector_stop=True,
-                      debug=True, save_cases=True, skip_files=None,
+                      debug=True, skip_files=None,
                       stop_on_failure=False, nstart=0, nstop=1000000000,
                       short_stats=False, binary_debug=False,
                       compare=True, quiet=False, dev=True):
@@ -163,7 +163,7 @@ def run_lots_of_files(files, make_geom=True, write_bdf=False, write_f06=True,
     t0 = time.time()
     for i, op2file in enumerate(files[nstart:nstop], nstart):  # 149
         basename = os.path.basename(op2file)
-        #if baseName not in skip_files and not baseName.startswith('acms') and i not in nSkip:
+        #if basename not in skip_files and not basename.startswith('acms') and i not in nskip:
         if basename not in skip_files and '#' not in op2file:
             print("%" * 80)
             print('file=%s\n' % op2file)
@@ -194,27 +194,7 @@ def run_lots_of_files(files, make_geom=True, write_bdf=False, write_f06=True,
                 nfailed += 1
             else:
                 npassed += 1
-            #sys.exit('end of test...test_op2.py')
-
-    if save_cases:
-        if PY2:
-            failed_cases_file = open('failed_cases.in', 'wb')
-        else:
-            failed_cases_file = open('failed_cases.in', 'w')
-        for op2file in failed_cases:
-            failed_cases_file.write('%s\n' % op2file)
-        failed_cases_file.close()
-
-    seconds = time.time() - t0
-    minutes = seconds / 60.
-    print("dt = %.2f seconds = %.2f minutes" % (seconds, minutes))
-
-    msg = '-----done with all models %s/%s=%.2f%%  nfailed=%s-----' % (
-        npassed, ntotal,
-        100. * npassed / float(ntotal),
-        ntotal - npassed)
-    print(msg)
-    sys.exit("%s\ndt = %.2f seconds = %.2f minutes" % (msg, seconds, minutes))
+    return failed_cases
 
 
 def run_op2(op2_filename, make_geom=False, write_bdf=False,
@@ -490,9 +470,9 @@ def main():
     ver = str(pyNastran.__version__)
 
     msg = "Usage:\n"
-    is_release = False
+    is_release = True
     if is_release:
-        line1 = "test_op2 [-q] [-b] [-c]                [-f]           [-z] [-w] [-t] [-s <sub>] [-x <arg>]... OP2_FILENAME\n"
+        line1 = "test_op2 [-q] [-b] [-c] [-g] [-n]      [-f]           [-z] [-w] [-t] [-s <sub>] [-x <arg>]... OP2_FILENAME\n"
     else:
         line1 = "test_op2 [-q] [-b] [-c] [-g] [-n] [-m] [-f] [-o] [-p] [-z] [-w] [-t] [-s <sub>] [-x <arg>]... OP2_FILENAME\n"
 
@@ -514,7 +494,7 @@ def main():
     msg += "  -t, --short_stats     Short get_op2_stats printout\n"
     #if not is_release:
     msg += "  -g, --geometry        Reads the OP2 for geometry, which can be written out\n"
-    msg += "  -n, --write_bdf      Writes the bdf to fem.test_op2.bdf (default=False)\n" # n is for NAS
+    msg += "  -n, --write_bdf       Writes the bdf to fem.test_op2.bdf (default=False)\n" # n is for NAS
     msg += "  -f, --write_f06       Writes the f06 to fem.test_op2.f06\n"
     if not is_release:
         msg += "  -m, --write_xlsx      Writes an XLSX to fem.test_op2.xlsx\n"  # m is for Microsoft
@@ -532,10 +512,14 @@ def main():
         sys.exit(msg)
 
     data = docopt(msg, version=ver)
+
+    if is_release:
+        data['--profile'] = False
+        data['--write_xlsx'] = False
+        data['--write_op2'] = False
+
     if '--geometry' not in data:
         data['--geometry'] = False
-    if '--write_op2' not in data:
-        data['--write_op2'] = False
     if '--write_bdf' not in data:
         data['--write_bdf'] = False
     data['--is_sort2'] = bool(data['--is_sort2'])
@@ -548,6 +532,7 @@ def main():
         os.remove('skippedCards.out')
 
     t0 = time.time()
+
     if data['--profile']:
         import pstats
 

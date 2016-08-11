@@ -1,7 +1,7 @@
 from __future__ import print_function
 import os
 import sys
-from six import iteritems
+from six import iteritems, PY2
 
 import pyNastran
 from pyNastran.op2.test.test_op2 import get_failed_files, run_lots_of_files
@@ -99,16 +99,38 @@ def run(regenerate=True, make_geom=False, write_bdf=False, save_cases=True,
     print("nfiles = %s" % len(files))
     import time
     t0 = time.time()
-    run_lots_of_files(files, make_geom=make_geom, write_bdf=write_bdf,
-                      write_f06=write_f06, delete_f06=delete_f06,
-                      write_op2=write_op2, debug=debug, save_cases=save_cases,
-                      skip_files=skip_files, stop_on_failure=stop_on_failure,
-                      is_vector=is_vector, vector_stop=vector_stop,
-                      nstart=nstart, nstop=nstop, binary_debug=binary_debug,
-                      compare=compare, short_stats=short_stats,
-                      quiet=quiet, dev=True)
-    print("dt = %f" % (time.time() - t0))
-    sys.exit('final stop...')
+    failed_files = run_lots_of_files(files, make_geom=make_geom, write_bdf=write_bdf,
+                                     write_f06=write_f06, delete_f06=delete_f06,
+                                     write_op2=write_op2, debug=debug,
+                                     skip_files=skip_files, stop_on_failure=stop_on_failure,
+                                     is_vector=is_vector, vector_stop=vector_stop,
+                                     nstart=nstart, nstop=nstop, binary_debug=binary_debug,
+                                     compare=compare, short_stats=short_stats,
+                                     quiet=quiet, dev=True)
+    if save_cases:
+        if PY2:
+            write = 'wb'
+        else:
+            write = 'w'
+
+        with open(failed_cases_filename, write) as failed_cases_file:
+            for op2file in failed_files:
+                failed_cases_file.write('%s\n' % op2file)
+
+    seconds = time.time() - t0
+    minutes = seconds / 60.
+    print("dt = %.2f seconds = %.2f minutes" % (seconds, minutes))
+    ntotal = len(files)
+    nfailed = len(failed_files)
+    npassed = ntotal - nfailed
+
+    msg = '-----done with all models %s/%s=%.2f%%  nfailed=%s-----' % (
+        npassed, ntotal,
+        100. * npassed / float(ntotal),
+        ntotal - npassed)
+    print(msg)
+    sys.exit("%s\ndt = %.2f seconds = %.2f minutes" % (msg, seconds, minutes))
+
 
 def main():
     """the interface for op2_test"""
