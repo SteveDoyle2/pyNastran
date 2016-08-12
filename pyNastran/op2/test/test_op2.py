@@ -454,7 +454,7 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
             #raise
         #is_passed = True
     except:
-        #print e
+        #print(e)
         if stop_on_failure:
             raise
         else:
