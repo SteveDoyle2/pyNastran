@@ -111,8 +111,8 @@ def write_class(name, obj, nspaces=0, nbase=0):
     msg += write_object_attributes(attr, value, nspaces2, nbase, is_class=True)
     msg += '%s)' % spaces
 
-    #print "dir(obj) =", dir(obj)
-    #print "obj_attrs =", obj_attrs
+    #print("dir(obj) =", dir(obj))
+    #print("obj_attrs =", obj_attrs)
     return msg
 
 
@@ -177,9 +177,9 @@ def write_array(a, nspaces=0):
     dtype = a.dtype
     if len(shape) == 1:
         msg = 'array(['
-        #print "a = ",a
+        #print("a = ",a)
         for ai in a[:-1]:
-            #print "ai = ",ai
+            #print("ai = ",ai)
             if isinstance(ai, (int, float)):
                 msg += '%s, ' % ai
             elif isinstance(ai, string_types):
@@ -244,8 +244,8 @@ def main():
             }
 
     z = zeros(2, dtype='float64')
-    #print z
-    #print z.dtype
+    #print(z)
+    #print(z.dtype)
     dict_a = {
         'strString' : 'a string',
         'strFloat' : 1.0,
@@ -294,7 +294,7 @@ def main():
         'string2' : 'a string',
     }
     #assert sorted(dictB.items())==sorted(dictC.items())
-    #print write_object_attributes('dictA', dictA, is_class=False)
+    #print(write_object_attributes('dictA', dictA, is_class=False))
     nspaces = 0
     msg = write_object_attributes('dictB', dict_b, nspaces, nbase=0)
     print(msg)
