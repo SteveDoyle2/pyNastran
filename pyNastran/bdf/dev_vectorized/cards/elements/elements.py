@@ -149,7 +149,7 @@ class Elements(object):
             elems.build()
             self.nelements += elems.n
             self.validate_nodes(elems)
-            #print nids - grids[i]
+            #print(nids - grids[i])
 
         for props in ptypes:
             if hasattr(props, 'type'):

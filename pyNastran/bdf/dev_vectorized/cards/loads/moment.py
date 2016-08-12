@@ -1,3 +1,4 @@
+from __future__ import print_function
 from six.moves import zip, StringIO
 
 from numpy import zeros, unique
@@ -24,7 +25,7 @@ class MOMENT(object):
 
     def __getitem__(self, i):
         unique_lid = unique(self.load_id)
-        #print "force", unique_lid, i
+        #print("force", unique_lid, i)
         if len(i):
             f = MOMENT(self.model)
             f.load_id = self.load_id[i]

@@ -254,7 +254,37 @@ def _get_tree(nodes_xyz):
     return kdt
 
 def _not_equal_nodes_build_tree(nodes_xyz, xyz_compare, tol, neq_max=4):
-    """helper function for `bdf_equivalence_nodes`"""
+    """
+    helper function for `bdf_equivalence_nodes`
+
+    Parameters
+    ----------
+    nodes_xyz : (N, 3) float ndarray
+         the source points
+    xyz_compare : (N, 3) float ndarray
+         the xyz points to compare to
+    tol : float
+        the max spherical tolerance
+    neq_max : int; default=4
+        the number of close nodes
+
+    Returns
+    -------
+    kdt : cKDTree() or KDTree()
+        the kdtree object
+    ieq : int ndarray
+        The indices of nodes_xyz where the nodes in xyz_compare are close???
+        neq_max = 1:
+            (N, ) int ndarray
+        neq_max > 1:
+            (N, N) int ndarray
+    slots : int ndarray
+        The indices of nodes_xyz where the nodes in xyz_compare are close???
+        neq_max = 1:
+            (N, ) int ndarray
+        neq_max > 1:
+            (N, N) int ndarray
+    """
     assert isinstance(xyz_compare, np.ndarray), type(xyz_compare)
     assert nodes_xyz.shape[1] == xyz_compare.shape[1], 'nodes_xyz.shape=%s xyz_compare.shape=%s' % (str(nodes_xyz.shape), str(xyz_compare.shape))
 
@@ -356,14 +386,41 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
     return model
 
 
-def find_closest_nodes(nodes_xyz, xyz_compare, neq_max, tol):
+def find_closest_nodes(nodes_xyz, nids, xyz_compare, neq_max, tol):
     """
     Finds the closest nodes to an arbitrary set of xyz points
 
+    Parameters
+    ----------
     nodes_xyz : (N, 3) float ndarray
          the source points
-    #nids : (N, ) float ndarray
-    #     the source node ids
+    nids : (N, ) int ndarray
+         the source node ids
+    xyz_compare : (N, 3) float ndarray
+         the xyz points to compare to
+    neq_max : int
+        the number of "close" points (default=4)
+    tol : float
+        the max spherical tolerance
+
+    Returns
+    -------
+    nids_close: (N, ) int ndarray
+        the close node ids
+    """
+    #ieq = find_closest_nodes_index(nodes_xyz, xyz_compare, neq_max, tol)
+    ieq, slots = _not_equal_nodes_build_tree(nodes_xyz, xyz_compare, tol,
+                                             neq_max=neq_max)[1:]
+    return nids[ieq]
+
+def find_closest_nodes_index(nodes_xyz, xyz_compare, neq_max, tol):
+    """
+    Finds the closest nodes to an arbitrary set of xyz points
+
+    Parameters
+    ----------
+    nodes_xyz : (N, 3) float ndarray
+         the source points
     xyz_compare : (N, 3) float ndarray
          the xyz points to compare to
     neq_max : int
@@ -379,7 +436,6 @@ def find_closest_nodes(nodes_xyz, xyz_compare, neq_max, tol):
     #nodes_xyz, model, nids, inew = _eq_nodes_setup(
         #bdf_filename, tol, renumber_nodes=renumber_nodes,
         #xref=xref, node_set=node_set, debug=debug)
-
     ieq, slots = _not_equal_nodes_build_tree(nodes_xyz, xyz_compare, tol,
                                              neq_max=neq_max)[1:]
     return ieq

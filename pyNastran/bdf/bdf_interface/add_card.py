@@ -545,11 +545,19 @@ class AddMethods(BDFAttributes):
 
     def add_AESURF(self, aesurf):
         key = aesurf.aesid
-        assert key not in self.aesurfs, '\naesurf=\n%s old=\n%s' % (
-            aesurf, self.aesurfs[key])
+        assert key not in self.aesurf, '\naesurf=\n%s old=\n%s' % (
+            aesurf, self.aesurf[key])
         assert key >= 0
-        self.aesurfs[key] = aesurf
+        self.aesurf[key] = aesurf
         self._type_to_id_map[aesurf.type].append(key)
+
+    def add_AESURFS(self, aesurfs):
+        key = aesurfs.aesid
+        assert key not in self.aesurf, '\naesurfs=\n%s old=\n%s' % (
+            aesurfs, self.aesurfs[key])
+        assert key >= 0
+        self.aesurfs[key] = aesurfs
+        self._type_to_id_map[aesurfs.type].append(key)
 
     def add_CSSCHD(self, csschd):
         key = csschd.sid

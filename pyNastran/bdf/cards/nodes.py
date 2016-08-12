@@ -1067,7 +1067,12 @@ class GRID(Node):
         xyz : (3, ) float ndarray
             the position of the GRID in the global coordinate system
         """
-        xyz = self.cp_ref.transform_node_to_global(self.xyz)
+        try:
+            xyz = self.cp_ref.transform_node_to_global(self.xyz)
+        except AttributeError:
+            if self.cp == 0:
+                return self.xyz
+            raise
         return xyz
 
     def get_position_wrt(self, model, cid):

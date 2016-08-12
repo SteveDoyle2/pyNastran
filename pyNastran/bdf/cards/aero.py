@@ -33,6 +33,7 @@ import numpy as np
 
 from pyNastran.utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8, print_float_8
+from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.cards.base_card import BaseCard, expand_thru
 from pyNastran.bdf.bdf_interface.assign_type import (
     fields, integer, integer_or_blank, double, double_or_blank, string,
@@ -2762,7 +2763,10 @@ class FLFACT(BaseCard):
 
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
-        return self.comment + print_card_8(card)
+        if size == 8:
+            return self.comment + print_card_8(card)
+        else:
+            return self.comment + print_card_16(card)
 
 
 class FLUTTER(BaseCard):
@@ -4673,8 +4677,8 @@ class TRIM(BaseCard):
 
             ndelta = (naestats + naesurfs + naeparms) - (ntrim + naelinks + nsuport_dofs + nsuport1_dofs) #+ ntrim_aesurfs
             if ndelta != 0:
-                msg = '(naestats + naesurfs) - (ntrim + ntrim_aesurf + naelink + nsuport_dofs + nsuport1_dofs) = ndelta = %s; ndelta != 0\n' % ndelta
-                msg += 'naestats=%s naesurfs=%s naeparms=%s ntrim=%s naelinks=%s nsuport_dofs=%s nsuport1_dofs=%s ntrim_aesurfs=%s' % (
+                msg = '(naestats + naesurfs - (ntrim + ntrim_aesurf + naelink + nsuport_dofs + nsuport1_dofs) = ndelta = %s; ndelta != 0\n' % ndelta
+                msg += 'naestats=%s naesurf=%s naeparms=%s ntrim=%s naelinks=%s nsuport_dofs=%s nsuport1_dofs=%s ntrim_aesurfs=%s' % (
                     naestats, naesurfs, naeparms, ntrim, naelinks, nsuport_dofs, nsuport1_dofs, ntrim_aesurfs)
                 raise RuntimeError(msg)
 
@@ -4684,7 +4688,7 @@ class TRIM(BaseCard):
         #self.suport1 = model.suport1
         #self.aestats = model.aestats
         #self.aelinks = model.aelinks
-        #self.aesurfs = model.aesurfs
+        #self.aesurf = model.aesurf
 
     def safe_cross_reference(self, model):
         self.cross_reference(model)

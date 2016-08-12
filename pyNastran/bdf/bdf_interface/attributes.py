@@ -222,7 +222,7 @@ class BDFAttributes(object):
 
         # ------------------------ structural defaults -----------------------
         #: the analysis type
-        self.sol = None
+        self._sol = None
         #: used in solution 600, method
         self.solMethod = None
         #: the line with SOL on it, marks ???
@@ -430,6 +430,8 @@ class BDFAttributes(object):
         #: stores AEPARAM
         self.aeparams = {}
         #: stores AESURF
+        self.aesurf = {}
+        #: stores AESURFS
         self.aesurfs = {}
         #: stores AESTAT
         self.aestats = {}
@@ -594,7 +596,8 @@ class BDFAttributes(object):
             'aelinks' : ['AELINK'],
             'aelists' : ['AELIST'],
             'aeparams' : ['AEPARM'],
-            'aesurfs' : ['AESURF', 'AESURFS'],
+            'aesurf' : ['AESURF'],
+            'aesurfs' : ['AESURFS'],
             'aestats' : ['AESTAT'],
             'caeros' : ['CAERO1', 'CAERO2', 'CAERO3', 'CAERO4', 'CAERO5'],
             'paeros' : ['PAERO1', 'PAERO2', 'PAERO3', 'PAERO4', 'PAERO5'],
@@ -727,6 +730,20 @@ class BDFAttributes(object):
     #def caseControlDeck(self, value):
         #self.deprecated('self.caseControlDeck', 'self.case_control_deck', '0.8')
         #self.case_control_deck = value
+
+    @property
+    def sol(self):
+        """gets the solution (e.g. 101, 103)"""
+        return self._sol
+
+    @sol.setter
+    def sol(self, sol):
+        """sets the solution (e.g. 101, 103)"""
+        self._sol = sol
+        if len(self.executive_control_lines) == 0:
+            self.executive_control_lines = ['SOL %s' % sol, 'CEND']
+            self.iSolLine = 0
+        return self._sol
 
     @property
     def subcases(self):

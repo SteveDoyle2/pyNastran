@@ -12,7 +12,7 @@ class TestNodes(unittest.TestCase):
         seid = 0
         datai = [nid, cp, 0., 0., 0., cd, ps, seid]
         n1 = GRID.add_op2_data(datai)
-        #print n1
+        #print(n1)
 
         msg = n1.write_card(size=8)
         #print(msg)

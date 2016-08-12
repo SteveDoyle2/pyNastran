@@ -869,7 +869,9 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         self.aelists = {}
         #: stores AEPARAM
         self.aeparams = {}
-        #: stores AESURF, AESURFS
+        #: stores AESURF
+        self.aesurf = {}
+        #: stores AESURFS
         self.aesurfs = {}
         #: stores AESTAT
         self.aestats = {}
@@ -2319,8 +2321,16 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
     def add_AESURF(self, card_obj, comment=''):
         aesurf = AESURF.add_card(card_obj, comment=comment)
         key = aesurf.aesid
-        assert key not in self.aesurfs, '\naesurf=\n%s oldAESURF=\n%s' % (
-            aesurf, self.aesurfs[key])
+        assert key not in self.aesurf, '\naesurf=\n%s oldAESURF=\n%s' % (
+            aesurf, self.aesurf[key])
+        assert key >= 0
+        self.aesurf[key] = aesurf
+
+    def add_AESURFS(self, card_obj, comment=''):
+        aesurfs = AESURFS.add_card(card_obj, comment=comment)
+        key = aesurf.aesid
+        assert key not in self.aesurfs, '\naesurfs=\n%s oldAESURFS=\n%s' % (
+            aesurfs, self.aesurfs[key])
         assert key >= 0
         self.aesurfs[key] = aesurf
 

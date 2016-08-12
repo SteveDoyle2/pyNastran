@@ -423,7 +423,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'AELIST',   ## aelists
             'AEPARM',   ## aeparams
             'AESTAT',   ## aestats
-            'AESURF', #'AESURFS',  ## aesurfs
+            'AESURF',  ## aesurf
+            #'AESURFS', ## aesurfs
             'CAERO1', 'CAERO2', 'CAERO3', 'CAERO4',  ## caeros
             # 'CAERO5',
             'PAERO1', 'PAERO2', 'PAERO3',  ## paeros
@@ -802,8 +803,10 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                 aelink.validate()
         for key, aeparam in sorted(iteritems(self.aeparams)):
             aeparam.validate()
-        for key, aesurf in sorted(iteritems(self.aesurfs)):
+        for key, aesurf in sorted(iteritems(self.aesurf)):
             aesurf.validate()
+        for key, aesurfs in sorted(iteritems(self.aesurfs)):
+            aesurfs.validate()
         for key, aestat in sorted(iteritems(self.aestats)):
             aestat.validate()
         for key, trim in sorted(iteritems(self.trims)):
@@ -1877,7 +1880,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'AEPARM' : (AEPARM, self.add_AEPARM),
             'AESTAT' : (AESTAT, self.add_AESTAT),
             'AESURF' : (AESURF, self.add_AESURF),
-            'AESURFS' : (AESURFS, self.add_AESURF),
+            'AESURFS' : (AESURFS, self.add_AESURFS),
 
             'CAERO1' : (CAERO1, self.add_CAERO),
             'CAERO2' : (CAERO2, self.add_CAERO),
@@ -2065,7 +2068,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
     def _prepare_radm(self, card, card_obj, comment=''):
         """adds a RADM"""
-        boundary_condition = RADM.add_card(comment=comment)
+        boundary_condition = RADM.add_card(card, comment=comment)
         self.add_thermal_BC(boundary_condition, boundary_condition.radmid)
 
     def _prepare_radbc(self, card, card_obj, comment=''):
