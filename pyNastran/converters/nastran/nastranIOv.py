@@ -179,7 +179,14 @@ class NastranIO(object):
             self.geometry_properties['caero'].is_visble = False
             self.geometry_actors['caero_subpanels'].VisibilityOff()
             self.geometry_properties['caero_subpanels'].is_visble = False
+            self.on_update_geometry_properties_window(self.geometry_properties)
+
         self.vtk_interactor.Render()
+
+    def on_update_geometry_properties_window(self, geometry_properties):
+        if self._edit_geometry_properties_window_shown:
+            self._edit_geometry_properties.on_update_geometry_properties_window(
+                geometry_properties)
 
     def toggle_caero_sub_panels(self):
         """
