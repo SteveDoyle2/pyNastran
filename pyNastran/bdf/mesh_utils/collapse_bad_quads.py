@@ -3,7 +3,7 @@ from six import iteritems
 import numpy as np
 from pyNastran.bdf.cards.elements.shell import CTRIA3
 
-def convert_bad_quads_to_tris(model, eids_to_check=None, xyz_cid0=None, tol=0.0):
+def convert_bad_quads_to_tris(model, eids_to_check=None, xyz_cid0=None, min_edge_length=0.0):
     """
     A standard quad is a nice rectangle.  If an edge is collapsed, it's a triangle.
     Change the element type.
@@ -17,7 +17,7 @@ def convert_bad_quads_to_tris(model, eids_to_check=None, xyz_cid0=None, tol=0.0)
         the subset of element ids to check
     xyz_cid0 : (n, 3) ndarray
         nodes in cid=0
-    tol : float; default=0.0
+    min_edge_length : float; default=0.0
         what is classified as "short"
 
     Warning
@@ -57,7 +57,7 @@ def convert_bad_quads_to_tris(model, eids_to_check=None, xyz_cid0=None, tol=0.0)
             i = np.searchsorted(all_nids, edge)
             xyz = xyz_cid0[i, :]
             edge_length = np.linalg.norm(xyz[0, :] - xyz[1, :])
-            if edge_length <= tol:
+            if edge_length <= min_edge_length:
                 nids_to_remove.append(nid1)
 
         if len(nids_to_remove) == 0:
@@ -67,7 +67,9 @@ def convert_bad_quads_to_tris(model, eids_to_check=None, xyz_cid0=None, tol=0.0)
             nids.remove(nid)
 
         if len(nids) < 3:
-            print('found eid=%s is a line/point...removing' % eid)
+            model.log.debug('found eid=%s is a line/point...removing' % eid)
+            etype = elem.type
+            model.card_count[etype] -= 1
             del model.elements[eid]
             continue
 
@@ -80,18 +82,20 @@ def convert_bad_quads_to_tris(model, eids_to_check=None, xyz_cid0=None, tol=0.0)
             i = np.searchsorted(all_nids, edge)
             xyz = xyz_cid0[i, :]
             edge_length = np.linalg.norm(xyz[0, :] - xyz[1, :])
-            if edge_length <= tol:
+            if edge_length <= min_edge_length:
                 nids_to_remove.append(nid1)
 
         for nid in nids_to_remove:
             nids.remove(nid)
 
         if len(nids) < 3:
-            print('found eid=%s is a line/point...removing' % eid)
+            model.log.debug('found eid=%s is a line/point...removing' % eid)
+            etype = elem.type
+            model.card_count[etype] -= 1
             del model.elements[eid]
             continue
 
-        print('found eid=%s is a triangle...replacing CQUAD4 with CTRIA3' % eid)
+        model.log.debug('found eid=%s is a triangle...replacing CQUAD4 with CTRIA3' % eid)
         #print('  nids2=%s' % (nids))
         assert elem.TFlag == 0, elem
         assert elem.T1 is None, elem.T1
@@ -101,5 +105,6 @@ def convert_bad_quads_to_tris(model, eids_to_check=None, xyz_cid0=None, tol=0.0)
         elem2 = CTRIA3(eid, elem.Pid(), nids, elem.zOffset,
                        thetaMcid=elem.thetaMcid, TFlag=0, T1=None, T2=None, T3=None,
                        comment='$ was a CQUAD4\n')
+        model._increase_card_count('CTRIA3')
         del model.elements[eid]
         model.elements[eid] = elem2

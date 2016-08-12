@@ -122,7 +122,7 @@ class TestBDF(Tester):
     def test_bdf_03(self):
         bdf_filename = os.path.join('cbush', 'cbush.dat')
         folder = os.path.abspath(os.path.join(pkg_path, '..', 'models'))
-        fem1, fem2, diff_cards = self.run_bdf(folder, bdf_filename)
+        fem1, fem2, diff_cards = self.run_bdf(folder, bdf_filename, debug=False)
         diff_cards2 = list(set(diff_cards))
         diff_cards2.sort()
         assert len(diff_cards2) == 0, diff_cards2
@@ -139,7 +139,7 @@ class TestBDF(Tester):
         self._compare_mass_cg_I(fem1)
         self._compare_mass_cg_I(fem1, reference_point=u'cg')
 
-        self.run_bdf(folder, bdf_filename, xref=True)
+        self.run_bdf(folder, bdf_filename, xref=True, debug=False)
 
     def test_bdf_04(self):
         bdf_filename = os.path.join('beam_modes', 'beam_modes.dat')
@@ -162,7 +162,7 @@ class TestBDF(Tester):
         self._compare_mass_cg_I(fem1)
         #self._compare_mass_cg_I(fem1, reference_point=u'cg')
 
-        #self.run_bdf(folder, bdf_filename, xref=True) # PBEAML is not supported
+        #self.run_bdf(folder, bdf_filename, xref=True, debug=False) # PBEAML is not supported
 
     def test_bdf_05(self):
         bdf_filename = 'testA.bdf'
