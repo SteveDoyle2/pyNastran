@@ -47,28 +47,28 @@ class LaWGS_Panel(object):
         points = []
 
         irow = 0
-        #print "*****",group[-1]
+        #print("*****",group[-1])
         for iline in range(self.nRows):
             for row in range(nGroupLines):
                 line = group[irow]
-                #print " line = ",line
+                #print(" line = ",line)
                 (x1, y1, z1, x2, y2, z2) = line.strip().split()
                 points.append(array([x1, y1, z1], 'd'))
                 points.append(array([x2, y2, z2], 'd'))
-                #print "points[%s]=%s" %(i,points[i])
-                #print "points[%s]=%s" %(i+1,points[i+1])
-                #print "---"
+                #print("points[%s]=%s" %(i,points[i]))
+                #print("points[%s]=%s" %(i+1,points[i+1]))
+                #print("---")
                 irow += 1
 
             if isSingleLine:
                 line = group[irow]
-                #print "*line = ",line
+                #print("*line = ",line)
                 (x1, y1, z1) = line.strip().split()
                 points.append(array([x1, y1, z1], 'd'))
                 irow += 1
 
         #for i,point in enumerate(points):
-            #print "point[%s] = %s" %(i,point)
+            #print("point[%s] = %s" %(i,point))
 
         n = 0
         #for n,point in enumerate(points):
@@ -79,14 +79,14 @@ class LaWGS_Panel(object):
                 points2.append(points[n])
                 #jj = n%self.nCols
                 #ii = n/self.nCols
-                #print "n=%-2s i=%-2s j=%-2s ii=%-2s jj=%-2s" %(n,i,j,ii,jj)
+                #print("n=%-2s i=%-2s j=%-2s ii=%-2s jj=%-2s" %(n,i,j,ii,jj))
                 n += 1
 
             Points.append(points2)
-            #print "len(points[%s]) = %s" %(j,len(points2))
+            #print("len(points[%s]) = %s" %(j,len(points2)))
 
         self.points = Points
-        #print "len(self.points) = %s" %(len(self.points))
+        #print("len(self.points) = %s" %(len(self.points)))
 
     def buildRotationMatrix(self, r):
         """
@@ -95,7 +95,7 @@ class LaWGS_Panel(object):
         """
         # rotation angles, degrees
         #r = radians([self.phi,self.theta,self.psi])
-        #print "self.rotate = ",self.rotate
+        #print("self.rotate = ",self.rotate)
         r = [radians(ri) for ri in self.rotate]
         cPhi = cos(r[0])
         sPhi = sin(r[0])
@@ -105,7 +105,7 @@ class LaWGS_Panel(object):
         sPsi = sin(r[2])
 
         rot = zeros((3, 3), 'd')
-        #print rot
+        #print(rot)
         rot[0, 0] = cTheta * cPsi
         rot[1, 0] = cTheta * sPsi
         rot[2, 0] = -sTheta
@@ -144,7 +144,7 @@ class LaWGS_Panel(object):
 
     def get_elements(self, pointI):
         n = (self.nRows - 1) * (self.nCols - 1)
-        #print "name=%s n=%s nout=%s" %(self.name,n)
+        #print("name=%s n=%s nout=%s" %(self.name,n))
         elements = []
 
         for i in range(self.nRows - 1):
@@ -208,11 +208,11 @@ class LaWGS(object):
         while i < nlines:
             line = lines[i].rstrip()
             if line.strip() == '':
-                #print "found blank line, breaking..."
+                #print("found blank line, breaking...")
                 break
-            #print line
+            #print(line)
             if "'" in line:
-                #print "if"
+                #print("if")
                 groups[name] = [header, group]
                 name = line.strip("' \t\r\n")
                 header = lines[i + 1].rstrip()
@@ -252,10 +252,10 @@ class LaWGS(object):
             pointI += pointi
             regions += [iregion] * n
             iregion += 1
-            #print "name=%s len(AllElements)=%s len(allPoints)=%s" %(name,len(elements),len(points))
+            #print("name=%s len(AllElements)=%s len(allPoints)=%s" %(name,len(elements),len(points)))
 
         #for point in points:
-            #print point
+            #print(point)
         return points, elements, regions
 
     def write_as_plot3d(self, p3dname):

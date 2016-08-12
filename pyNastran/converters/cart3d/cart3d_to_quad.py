@@ -1,3 +1,4 @@
+from __future__ import print_function
 from collections import defaultdict
 from numpy import cross, allclose
 from numpy.linalg import norm
@@ -34,19 +35,19 @@ def normal_groups_to_quads(elements, normals, normal_groups):
             # null case, one element
             for groupi in group:
                 tri = elements[groupi, :] + 1
-                #print "t1", tri
+                #print("t1", tri)
                 tris.append(tri)
         else:
             # this is more complicated, so we'll skip it for now
             for groupi in group:
                 tri = elements[groupi, :] + 1
-                #print "t2", tri
+                #print("t2", tri)
                 tris.append(tri)
 
     #for quad in quads:
-        #print quad
+        #print(quad)
     #for tri in tris:
-        #print "t", tri
+        #print("t", tri)
     return tris, quads
 
 def write_nastran_quads_tris(nodes, tris, quads, bdf_filename='tris_quads.bdf'):
@@ -64,12 +65,12 @@ def write_nastran_quads_tris(nodes, tris, quads, bdf_filename='tris_quads.bdf'):
         for tri in tris:
             #print(tri)
             card = ['CTRIA3', eid, pid, ] + list(tri)
-            #print card
+            #print(card)
             bdf_file.write(print_card_8(card))
             eid += 1
 
         for quad in quads:
-            #print "quad[%s] = %s" % (eid, str(quad))
+            #print("quad[%s] = %s" % (eid, str(quad)))
             card = ['CQUAD4', eid, pid, ] + list(quad)
             bdf_file.write(print_card_8(card))
             eid += 1
@@ -109,13 +110,13 @@ def get_normal_groups(points, elements, rtol=1e-3, atol=1e-5):
     #npoints = points.shape[0]
     nelements = elements.shape[0]
 
-    #print points
-    #print elements
+    #print(points)
+    #print(elements)
 
     n1 = elements[:, 0]
 
-    #print len(unique(n1))
-    #print list(n1), max(n1), min(n1)
+    #print(len(unique(n1)))
+    #print(list(n1), max(n1), min(n1))
     p1 = points[n1, :]
     p2 = points[elements[:, 1]]
     p3 = points[elements[:, 2]]
@@ -124,8 +125,8 @@ def get_normal_groups(points, elements, rtol=1e-3, atol=1e-5):
     b = p3 - p1
     n = cross(a, b)
     ni = norm(n, axis=1)
-    #print n.shape
-    #print ni.shape
+    #print(n.shape)
+    #print(ni.shape)
 
     normals = (n.T / ni).T
     #normals = n / norm(n, axis=1)  # this should work...but it doesn't
@@ -140,7 +141,7 @@ def get_normal_groups(points, elements, rtol=1e-3, atol=1e-5):
         c2 = tuple(sorted([element[1], element[2]]))
         c3 = tuple(sorted([element[0], element[2]]))
         #if eid == 0:
-            #print c1, c2, c3
+            #print(c1, c2, c3)
         cdict[c1].append(eid)
         cdict[c2].append(eid)
         cdict[c3].append(eid)
@@ -171,14 +172,14 @@ def get_normal_groups(points, elements, rtol=1e-3, atol=1e-5):
             same_normals = [eid]
             check_normals(eid, elements, normals, cdict, same_normals,
                           rtol=1e-4, atol=1e-3)  # same_normals is modified
-            #print same_normals, '\n'
+            #print(same_normals, '\n')
             groups.append(same_normals)
             set_elements.update(same_normals)
         #break
 
     #for group in groups:
         #if len(group) > 1:
-            #print group
+            #print(group)
     return normals, groups
 
 
@@ -191,7 +192,7 @@ def check_normals(eid, elements, normals, cdict, same_normals, rtol=1e-4, atol=1
 
     # remove the current element as it's been checked
     eids_alt = cdict[c1]
-    #print "eids_alt", eids_alt
+    #print("eids_alt", eids_alt)
     if eid in eids_alt:
         eids_alt.pop(eids_alt.index(eid))
         if eids_alt:
