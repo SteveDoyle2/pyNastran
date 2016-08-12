@@ -142,6 +142,8 @@ class LegendPropertiesWindow(QtGui.QDialog):
             self.scale_edit.setText(str(scale))
             self.scale_edit.setStyleSheet("QLineEdit{background: white;}")
 
+            #self.number_of_labels_edit.setValue(10)
+
 
     def create_widgets(self):
         # Name
@@ -188,18 +190,6 @@ class LegendPropertiesWindow(QtGui.QDialog):
         self.ncolors = QtGui.QLabel("Number of Colors:")
         self.ncolors_edit = QtGui.QLineEdit(str(self._ncolors))
         self.ncolors_button = QtGui.QPushButton("Default")
-
-
-        #grid.addWidget(self.nlabels, 5, 0)
-        #grid.addWidget(self.nlabels_edit, 5, 1)
-        #grid.addWidget(self.nlabels_button, 5, 2)
-        #grid.addWidget(self.labelsize, 4, 0)
-        #grid.addWidget(self.labelsize_edit, 4, 1)
-        #grid.addWidget(self.labelsize_button, 4, 2)
-        #grid.addWidget(self.ncolors, 6, 0)
-        #grid.addWidget(self.ncolors_edit, 6, 1)
-        #grid.addWidget(self.ncolors_button, 6, 2)
-
 
         # red/blue or blue/red
         self.checkbox_blue_to_red = QtGui.QCheckBox("Min -> Blue; Max -> Red")
