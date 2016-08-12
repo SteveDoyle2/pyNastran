@@ -7,7 +7,7 @@ from pyNastran.bdf.bdf import BDF
 
 
 def bdf_merge(bdf_filenames, bdf_filename_out=None, renumber=True, encoding=None,
-              size=8, is_double=False):
+              size=8, is_double=False, cards_to_skip=None):
     """
     Merges multiple BDF into one file
 
@@ -60,6 +60,7 @@ def bdf_merge(bdf_filenames, bdf_filename_out=None, renumber=True, encoding=None
         #'mid' : max(model.material_ids),
     #}
     model = BDF(debug=False)
+    model.disable_cards(cards_to_skip)
     bdf_filename0 = bdf_filenames[0]
     model.read_bdf(bdf_filename0, encoding=encoding)
     model.log.info('primary=%s' % bdf_filename0)
@@ -88,12 +89,14 @@ def bdf_merge(bdf_filenames, bdf_filename_out=None, renumber=True, encoding=None
 
         model.log.info('secondary=%s' % bdf_filename)
         model2 = BDF(debug=False)
+        model2.disable_cards(cards_to_skip)
         bdf_dump = 'bdf_merge_temp.bdf'
         #model2.read_bdf(bdf_filename, xref=False)
 
         bdf_renumber(bdf_filename, bdf_dump, starting_id_dict=starting_id_dict,
-                     size=size, is_double=is_double)
+                     size=size, is_double=is_double, cards_to_skip=cards_to_skip)
         model2 = BDF(debug=False)
+        model2.disable_cards(cards_to_skip)
         model2.read_bdf(bdf_dump)
         os.remove(bdf_dump)
 
@@ -126,8 +129,8 @@ def bdf_merge(bdf_filenames, bdf_filename_out=None, renumber=True, encoding=None
             'pid' : 1,
             'mid' : 1,
         }
-        renumber(model, bdf_filename_out, starting_id_dict=starting_id_dict,
-                 size=size, is_double=is_double)
+        bdf_renumber(model, bdf_filename_out, starting_id_dict=starting_id_dict,
+                     size=size, is_double=is_double, cards_to_skip=cards_to_skip)
     elif bdf_filename_out:
         model.write_bdf(out_filename=bdf_filename_out, encoding=None,
                         size=size, is_double=is_double,

@@ -66,6 +66,7 @@ setup(
 
             'format_converter = pyNastran.converters.type_converter:main',
             'pyNastranGUI = pyNastran.gui.gui:main',
+            'bdf = pyNastran.bdf.mesh_utils.utils:cmd_line',
         ]
     },
     test_suite='pyNastran.all_tests',

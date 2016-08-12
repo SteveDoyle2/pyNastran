@@ -973,12 +973,13 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
             if self.aeros is not None:
                 assert acsid_aero == acsid_aeros, 'AERO acsid=%s, AEROS acsid=%s' % (acsid_aero,
                                                                                      acsid_aeros)
-            return self.coords[acsid_aero]
+            cid = self.Coord(acsid_aero, msg=msg)
         elif self.aeros is not None:
-            return self.coords[acsid_aeros]
+            cid = self.Coord(acsid_aeros, msg=msg)
         else:
             msg = 'neither AERO nor AEROS cards exist.'
             raise RuntimeError(msg)
+        return cid
 
     def Aero(self, msg=''):
         """gets the AERO"""

@@ -1117,6 +1117,7 @@ class NastranIO(object):
         card_types = ['CBAR', 'CBEAM']
         out = model.get_card_ids_by_card_types(card_types=card_types)
         bar_beam_eids = out['CBAR'] + out['CBEAM']
+        self.bar_eids = {}
         self.bar_lines = {}
         if len(bar_beam_eids) == 0:
             return icase
@@ -1197,6 +1198,7 @@ class NastranIO(object):
         bar_nids = set([])
         for eid in bar_beam_eids:
             if eid not in self.eid_map:
+                self.log.error('eid=%s is not a valid element...' % eid)
                 continue
             ieid = self.eid_map[eid]
             elem = model.elements[eid]
@@ -1282,7 +1284,7 @@ class NastranIO(object):
             # while the slots are:
             #  - A -> orientation; values=[G, B]
             #  - B -> End A; values=[G, O]
-            #  - C -> End B; values=[G, 0]
+            #  - C -> End B; values=[G, O]
             #
             # and the values for A,B,C mean:
             #  - B -> basic
@@ -1300,10 +1302,12 @@ class NastranIO(object):
             # - orientation -> ???
             #
             if elem.g0:
-                n0 = model.nodes[elem.g0].get_position()
+                n0 = node.get_position()
                 v = n0 - n1
             else:
-                v = elem.x
+                ga = model.nodes[elem.Ga()]
+                v = ga.cp_ref.transform_node_to_global(elem.x)
+                #v = elem.x
 
             offt_vector, offt_end_a, offt_end_b = elem.offt
             if debug:
@@ -1316,13 +1320,15 @@ class NastranIO(object):
                 if node1.Cp() != 0:
                     v = node1.cp_ref.transform_node_to_global(v)
                     if node1.cp_ref.type not in ['CORD2R', 'CORD1R']:
+                        msg = 'invalid Cp type (%r) on Node %i; expected CORDxR' % (node1.cp_ref.type, node1.nid)
+                        self.log.error(msg)
                         raise NotImplementedError(node1.cp)
             elif offt_vector == 'B':
                 # basic - cid = 0
                 pass
             else:
                 msg = 'offt_vector=%r is not supported; offt=%s' % (offt_vector, elem.offt)
-                self.log.debug(msg)
+                self.log.error(msg)
                 raise NotImplementedError(msg)
             #print('v =', v)
 
@@ -1339,7 +1345,7 @@ class NastranIO(object):
                 wa = node1.cp.transform_node_to_global(n1 - wa)
             else:
                 msg = 'offt_end_a=%r is not supported; offt=%s' % (offt_end_a, elem.offt)
-                self.log.debug(msg)
+                self.log.error(msg)
                 raise NotImplementedError(msg)
 
             #print('wa =', wa)
@@ -1356,14 +1362,14 @@ class NastranIO(object):
                 wb = node1.cp.transform_node_to_global(n2 - wb)
             else:
                 msg = 'offt_end_b=%r is not supported; offt=%s' % (offt_end_b, elem.offt)
-                model.log.debug(msg)
+                model.log.error(msg)
                 raise NotImplementedError(msg)
 
             #print('wb =', wb)
             ## concept has a GOO
             if not elem.offt in ['GGG', 'BGG']:
                 msg = 'offt=%r for CBAR/CBEAM eid=%s is not supported...skipping' % (elem.offt, eid)
-                self.log.debug(msg)
+                self.log.error(msg)
                 continue
 
             vhat = v / norm(v) # i
@@ -1448,6 +1454,7 @@ class NastranIO(object):
             eids, lines_bar_y, lines_bar_z = data
             #print(data)
             if len(eids):
+                #print('bar_type = %r' % bar_type)
                 # if bar_type not in ['ROD', 'TUBE']:
                 bar_y = bar_type + '_y'
                 bar_z = bar_type + '_z'
@@ -1459,8 +1466,8 @@ class NastranIO(object):
                     bar_z, color=blue, line_width=5, opacity=1.,
                     point_size=5, representation='wire', bar_scale=scale, is_visible=False)
 
-                self._add_nastran_lines_xyz_to_grid(bar_y, lines_bar_y, model)
-                self._add_nastran_lines_xyz_to_grid(bar_z, lines_bar_z, model)
+                self._add_nastran_lines_xyz_to_grid(bar_y, lines_bar_y, eids, model)
+                self._add_nastran_lines_xyz_to_grid(bar_z, lines_bar_z, eids, model)
 
                 # form = ['Geometry', None, []]
                 i = np.searchsorted(self.element_ids, eids)
@@ -1565,18 +1572,21 @@ class NastranIO(object):
             geo_form.append(bar_form)
         return icase
 
-    def _add_nastran_lines_xyz_to_grid(self, name, lines, model):
+    def _add_nastran_lines_xyz_to_grid(self, name, lines, eids, model):
         """creates the bar orientation vector lines"""
         nlines = len(lines)
         nnodes = nlines * 2
-        if nnodes == 0:
+        if nlines == 0:
             return
         points = vtk.vtkPoints()
         points.SetNumberOfPoints(nnodes)
 
-        bar_lines = np.zeros((nnodes, 6))
         assert name != u'Bar Nodes', name
+
+        bar_eids = np.array(eids, dtype='int32')
+        bar_lines = np.zeros((nlines, 6))
         self.bar_lines[name] = bar_lines
+        self.bar_eids[name] = np.asarray(eids, dtype='int32')
 
         j = 0
         for i, (node1, node2) in enumerate(lines):

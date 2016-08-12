@@ -23,7 +23,7 @@ else:
 
 
 def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
-                 starting_id_dict=None, round_ids=False):
+                 starting_id_dict=None, round_ids=False, cards_to_skip=None):
     """
     Renumbers a BDF
 
@@ -225,6 +225,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
 
     if isinstance(bdf_filename, string_types):
         model = BDF(debug=False)
+        model.disable_cards(cards_to_skip)
         model.read_bdf(bdf_filename)
     else:
         model = bdf_filename

@@ -476,6 +476,11 @@ class XrefMesh(BDFAttributes):
         for flutter in itervalues(self.flutters):
             flutter.cross_reference(self)
 
+        if self.aero:
+            self.aero.cross_reference(self)
+        if self.aeros:
+            self.aeros.cross_reference(self)
+
         if 0:  # only support CAERO1
             ncaeros = len(self.caeros)
             if ncaeros > 1:

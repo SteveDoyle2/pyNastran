@@ -670,7 +670,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
             bdfModel.disable_cards(['DMIG', 'PCOMP'])
         """
-        if isinstance(cards, string_types):
+        if cards is None:
+            return
+        elif isinstance(cards, string_types):
             disable_set = set([cards])
         else:
             disable_set = set(cards)

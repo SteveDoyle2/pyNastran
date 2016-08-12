@@ -45,15 +45,8 @@ try:
     if ver < '0.16.0':
         print("scipy.version.short_version = %r < '0.16.0'" % scipy.version.short_version)
         py_packages.append('scipy >= 0.16.0')
-        #py_packages.append('scipy >= 0.16.0, < 0.18.0')
-    #elif ver == '0.18.0':  # v0.18.1 is not released
-        #py_packages.append('scipy >= 0.16.0, < 0.18.0')
-    #elif ver == '0.18.0':  # v0.18.1 is released
-        #py_packages.append('scipy > 0.18.0')
-        #raise NotImplementedError('scipy has a bug in v0.18.0')
 except ImportError:
     py_packages.append('scipy >= 0.16.0')
-    #py_packages.append('scipy >= 0.16.0, < 0.18.0')
 
 try:
     import six
@@ -144,6 +137,7 @@ setup(
             #'pyNastran2 = pyNastran.bdf.dev_vectorized.solver.solver:main',
             #'nastranToCodeAster = pyNastran.converters.toCodeAster:main',
             'format_converter = pyNastran.converters.type_converter:main',
+            'bdf = pyNastran.bdf.mesh_utils.utils:cmd_line',
         ] + py2_gui_scripts
     },
     test_suite='pyNastran.all_tests',

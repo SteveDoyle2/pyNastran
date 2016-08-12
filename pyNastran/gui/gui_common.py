@@ -2791,7 +2791,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             # self.case_keys = sorted(cases.keys())
             # assert isinstance(cases, dict), type(cases)
 
-        self.on_update_geometry_properties(self.geometry_properties)
+        self.on_update_geometry_properties(self.geometry_properties, write_log=False)
         # self.result_cases = cases
 
         #print("cases =", cases)
@@ -3973,7 +3973,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             data[group.name] = group
         self.groups = data
 
-    def on_update_geometry_properties(self, out_data):
+    def on_update_geometry_properties(self, out_data, write_log=True):
         """
         Applies the changed properties to the different actors if
         something changed.
@@ -4007,7 +4007,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                 raise NotImplementedError(actor)
 
         self.vtk_interactor.Render()
-        if lines:
+        if write_log and lines:
             msg = 'out_data = {\n'
             msg += ''.join(lines)
             msg += '}\n'
@@ -4067,6 +4067,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             changed = True
         if bar_scale1 != bar_scale2 and bar_scale1 > 0.0:
             print('name=%s bar_scale1=%s bar_scale2=%s' % (name, bar_scale1, bar_scale2))
+            ## TOODO: this is totally messed up for bar_z on aerobeam.bdf
             self.set_bar_scale(name, bar_scale2)
         if is_visible1 != is_visible2:
             actor.SetVisibility(is_visible2)
@@ -4085,23 +4086,44 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         return lines
 
     def set_bar_scale(self, name, bar_scale):
+        """
+        Parameters
+        ----------
+        name : str
+           the parameter to scale (e.g. TUBE_y, TUBE_z)
+        bar_scale : float
+           the scaling factor
+        """
         #print('set_bar_scale - GuiCommon2; name=%s scale=%s' % (name, bar_scale))
+
+        # bar_y : (nbars, 6) float ndarray
+        #     the xyz coordinates for (node1, node2) of the y/z axis of the bar
+        #     xyz1 is the centroid
+        #     xyz2 is the end point of the axis with a length_xyz with a bar_scale of 1.0
         bar_y = self.bar_lines[name]
+
         #dy = c - yaxis
         #dz = c - zaxis
-        node1 = bar_y[:, :3]
-        node2 = bar_y[:, 3:]
-        dy = node2 - node1
+        #print('bary:\n%s' % bar_y)
+        xyz1 = bar_y[:, :3]
+        xyz2 = bar_y[:, 3:]
+        dxyz = xyz2 - xyz1
 
-        length_y = np.linalg.norm(dy, axis=1)
-        # v = dy / length_y *  bar_scale
-        # node2 = node1 + v
+        # vectorized version of L = sqrt(dx^2 + dy^2 + dz^2)
+        length_xyz = np.linalg.norm(dxyz, axis=1)
+        izero = np.where(length_xyz == 0.0)[0]
+        if len(izero):
+            bad_eids = self.bar_eids[name][izero]
+            self.log.error('The following elements have zero length...%s' % bad_eids)
 
-        nnodes = len(length_y)
+        # v = dxyz / length_xyz *  bar_scale
+        # xyz2 = xyz1 + v
+
+        nnodes = len(length_xyz)
         grid = self.alt_grids[name]
         points = grid.GetPoints()
         for i in range(nnodes):
-            node = node1[i, :] + length_y[i] * bar_scale * dy[i, :]
+            node = xyz1[i, :] + length_xyz[i] * bar_scale * dxyz[i, :]
             points.SetPoint(2 * i + 1, *node)
 
         if hasattr(grid, 'Update'):

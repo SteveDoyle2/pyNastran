@@ -803,15 +803,32 @@ class AERO(Aero):
         6:'symXY',
     }
 
-    def __init__(self, acsid, velocity, cref, rho_ref, sym_xz, sym_xy, comment=''):
+    def __init__(self, acsid, velocity, cref, rho_ref, sym_xz=0., sym_xy=0, comment=''):
         Aero.__init__(self)
         if comment:
             self._comment = comment
+
+        #: Aerodynamic coordinate system identification
         self.acsid = acsid
+
+        #: Velocity for aerodynamic force data recovery and to calculate the BOV
+        #: parameter
         self.velocity = velocity
+
+        #: Reference length for reduced frequency
         self.cref = cref
+
+        #: Reference density
         self.rho_ref = rho_ref
+
+        #: Symmetry key for the aero coordinate x-z plane. See Remark 6.
+        #: (Integer = +1 for symmetry, 0 for no symmetry, and -1 for antisymmetry;
+        #: Default = 0)
         self.sym_xz = sym_xz
+
+        #: The symmetry key for the aero coordinate x-y plane can be used to
+        #: simulate ground effect. (Integer = -1 for symmetry, 0 for no symmetry,
+        #: and +1 for antisymmetry; Default = 0)
         self.sym_xy = sym_xy
 
     def cross_reference(self, model):
@@ -865,7 +882,7 @@ class AERO(Aero):
         fields : List[int/float/str]
            the fields that define the card
         """
-        list_fields = ['AERO', self.acsid, self.velocity, self.cref,
+        list_fields = ['AERO', self.Acsid(), self.velocity, self.cref,
                        self.rho_ref, self.sym_xz, self.sym_xy]
         return list_fields
 
@@ -880,7 +897,7 @@ class AERO(Aero):
         """
         sym_xz = set_blank_if_default(self.sym_xz, 0)
         sym_xy = set_blank_if_default(self.sym_xy, 0)
-        list_fields = ['AERO', self.acsid, self.velocity, self.cref,
+        list_fields = ['AERO', self.Acsid(), self.velocity, self.cref,
                        self.rho_ref, sym_xz, sym_xy]
         return list_fields
 
@@ -928,12 +945,30 @@ class AEROS(Aero):
         Aero.__init__(self)
         if comment:
             self._comment = comment
+
+        #: Aerodynamic coordinate system identification.
         self.acsid = acsid
+
+        #: Reference coordinate system identification for rigid body motions.
         self.rcsid = rcsid
+
+        #: Reference chord length
         self.cref = cref
+
+        #: Reference span
         self.bref = bref
+
+        #: Reference wing area
         self.sref = sref
+
+        #: Symmetry key for the aero coordinate x-z plane. See Remark 6.
+        #: (Integer = +1 for symmetry, 0 for no symmetry, and -1 for antisymmetry;
+        #: Default = 0)
         self.sym_xz = sym_xz
+
+        #: The symmetry key for the aero coordinate x-y plane can be used to
+        #: simulate ground effects. (Integer = +1 for antisymmetry, 0 for no
+        #: symmetry, and -1 for symmetry; Default = 0)
         self.sym_xy = sym_xy
         if self.acsid is None:
             self.acsid = 0
@@ -943,6 +978,18 @@ class AEROS(Aero):
             self.sym_xz = 0
         if self.sym_xy is None:
             self.sym_xy = 0
+
+    def Acsid(self):
+        try:
+            return self.acsid_ref.cid
+        except AttributeError:
+            return self.acsid
+
+    def Rcsid(self):
+        try:
+            return self.rcsid_ref.cid
+        except AttributeError:
+            return self.rcsid
 
     def validate(self):
         assert isinstance(self.acsid, int), 'acsid=%s type=%s' % (self.acsid, type(self.acsid))
@@ -964,6 +1011,7 @@ class AEROS(Aero):
         """
         msg = ' which is required by AEROS'
         self.acsid_ref = model.Coord(self.acsid, msg=msg)
+        self.rcsid_ref = model.Coord(self.rcsid, msg=msg)
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -993,6 +1041,7 @@ class AEROS(Aero):
 
     def uncross_reference(self):
         self.acsid_ref = None
+        self.rcsid_ref = None
 
     def raw_fields(self):
         """
@@ -1003,7 +1052,7 @@ class AEROS(Aero):
         fields : list[varies]
             the fields that define the card
         """
-        list_fields = ['AEROS', self.acsid, self.rcsid, self.cref,
+        list_fields = ['AEROS', self.Acsid(), self.Rcsid(), self.cref,
                        self.bref, self.sref, self.sym_xz, self.sym_xy]
         return list_fields
 
@@ -1018,7 +1067,7 @@ class AEROS(Aero):
         """
         sym_xz = set_blank_if_default(self.sym_xz, 0)
         sym_xy = set_blank_if_default(self.sym_xy, 0)
-        list_fields = ['AEROS', self.acsid, self.rcsid, self.cref,
+        list_fields = ['AEROS', self.Acsid(), self.Rcsid(), self.cref,
                        self.bref, self.sref, sym_xz, sym_xy]
         return list_fields
 
@@ -3524,6 +3573,16 @@ class PAERO2(BaseCard):
         del self.lrsb_ref
         del self.lrib_ref
 
+    def Lrsb(self):
+        if self.lrsb is None or isinstance(self.lrsb, integer_types):
+            return self.lrsb
+        return self.lrsb_ref.sid
+
+    def Lrib(self):
+        if self.lrib is None or isinstance(self.lrib, integer_types):
+            return self.lrib
+        return self.lrib_ref.sid
+
     def raw_fields(self):
         """
         Gets the fields in their unmodified form
@@ -3534,7 +3593,7 @@ class PAERO2(BaseCard):
             the fields that define the card
         """
         list_fields = ['PAERO2', self.pid, self.orient, self.width,
-                       self.AR, self.lrsb, self.lrib, self.lth1, self.lth2]
+                       self.AR, self.Lrsb(), self.Lrib(), self.lth1, self.lth2]
         for (thi, thn) in zip(self.thi, self.thn):
             list_fields += [thi, thn]
         return list_fields
