@@ -372,16 +372,16 @@ class LegendPropertiesWindow(QtGui.QDialog):
         self.scale_edit.setStyleSheet("QLineEdit{background: white;}")
 
     def on_default_ncolors(self):
-        self.scale_edit.setText(str(self._default_ncolors))
-        self.scale_edit.setStyleSheet("QLineEdit{background: white;}")
+        self.ncolors_edit.setText(str(self._default_ncolors))
+        self.ncolors_edit.setStyleSheet("QLineEdit{background: white;}")
 
     def on_default_nlabels(self):
-        self.scale_edit.setText(str(self._default_nlabels))
-        self.scale_edit.setStyleSheet("QLineEdit{background: white;}")
+        self.nlabels_edit.setStyleSheet("QLineEdit{background: white;}")
+        self.nlabels_edit.setText(str(self._default_nlabels))
 
     def on_default_labelsize(self):
-        self.scale_edit.setText(str(self._default_labelsize))
-        self.scale_edit.setStyleSheet("QLineEdit{background: white;}")
+        self.labelsize_edit.setText(str(self._default_labelsize))
+        self.labelsize_edit.setStyleSheet("QLineEdit{background: white;}")
 
     def check_float(self, cell):
         text = cell.text()
@@ -421,7 +421,13 @@ class LegendPropertiesWindow(QtGui.QDialog):
         return value, True
 
     def check_name(self, cell):
-        text = str(cell.text()).strip()
+        cell_value = cell.text()
+        try:
+            text = str(cell_value).strip()
+        except UnicodeEncodeError:
+            cell.setStyleSheet("QLineEdit{background: red;}")
+            return None, False
+
         if len(text):
             cell.setStyleSheet("QLineEdit{background: white;}")
             return text, True

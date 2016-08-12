@@ -43,8 +43,8 @@ class ScalarBar(object):
         self.color_function.SetColorSpaceToHSV()
         self.color_function.HSVWrapOff()
         self.color_function.SetRange(*drange)
-            self.color_function.AddRGBPoint(drange[0], 0.0, 0.0, 1.0)
-            self.color_function.AddRGBPoint(drange[1], 1.0, 0.0, 0.0)
+        self.color_function.AddRGBPoint(drange[0], 0.0, 0.0, 1.0)
+        self.color_function.AddRGBPoint(drange[1], 1.0, 0.0, 0.0)
 
         self.scalar_bar.SetTitle("Title1")
 
