@@ -694,7 +694,7 @@ def write_cogsg_volume(model, cogsg_file):
         outfile.write(pack(Format, *n2))
         outfile.write(pack(Format, *n3))
         #n += 4 * 8 * ntets
-        #print "outfile.tell 2 = ", outfile.tell(), n
+        #print("outfile.tell 2 = ", outfile.tell(), n)
 
         # tet footer
         outfile.write(block_size)
