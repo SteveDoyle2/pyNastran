@@ -149,10 +149,14 @@ class SHABP(ShabpOut):
                 #nadj4 = header[24:26]  # not used
 
                 vis_type = int(header[26])
-                #if vis_type==0:  print "inviscid_A"
-                #if vis_type==1:  print "neither"
-                #if vis_type==2:  print "viscous_A"
-                #if vis_type==3:  print "inviscid_B"
+                #if vis_type == 0:
+                    #print("inviscid_A")
+                #if vis_type == 1:
+                    #print("neither")
+                #if vis_type == 2:
+                    #print("viscous_A")
+                #if vis_type == 3:
+                    #print("inviscid_B")
 
                 name_old = header[:7].strip()
                 self.log.info('name=%r stream_cross=%r symmetry=%r scale_factor=%r vis_type=%r' % (
