@@ -167,7 +167,7 @@ class ModifyLabelPropertiesMenu(QtGui.QDialog):
     def on_apply(self, force=False):
         passed = self.on_validate()
         if (passed or Force) and self.win_parent is not None:
-            self.win_parent.set_label_size_color(self._size, self.float_color)
+            self.win_parent.set_labelsize_color(self._size, self.float_color)
         return passed
 
     def on_ok(self):

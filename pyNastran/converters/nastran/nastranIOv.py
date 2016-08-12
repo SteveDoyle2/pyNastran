@@ -1415,7 +1415,7 @@ class NastranIO(object):
         debug = False
         if debug:
             #np.set_printoptions(formatter={'float': '{: 0.3f}'.format})
-            for bar_type, data in sorted(bar_types.iteritems()):
+            for bar_type, data in sorted(iteritems(bar_types)):
                 eids, lines_bar_y, lines_bar_z = data
                 if len(eids):
                     #print('barsi =', barsi)

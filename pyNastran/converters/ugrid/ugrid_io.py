@@ -10,6 +10,7 @@ from pyNastran.converters.ugrid.surf_reader import TagReader
 from pyNastran.converters.ugrid.ugrid_reader import UGRID
 from pyNastran.converters.ugrid.ugrid2d_reader import UGRID2D_Reader
 from pyNastran.utils import print_bad_path, is_binary_file
+from pyNastran.gui.gui_objects.gui_result import GuiResult  ## TODO: update this for GuiResult
 
 #VTK_TRIANGLE = 5
 
@@ -194,8 +195,17 @@ class UGRID_IO(object):
         eids = arange(1, nelements + 1)
         nids = arange(1, nnodes + 1)
 
-        cases[(ID, 0, 'ElementID', 1, 'centroid', '%i', '')] = eids
-        cases[(ID, 1, 'NodeID', 1, 'node', '%i', '')] = nids
+        #cases[(ID, 0, 'ElementID', 1, 'centroid', '%i', '')] = eids
+        #cases[(ID, 1, 'NodeID', 1, 'node', '%i', '')] = nids
+
+        eid_res = GuiResult(0, header='ElementID', title='ElementID',
+                            location='centroid', scalar=eids)
+        nid_res = GuiResult(0, header='NodeID', title='NodeID',
+                            location='node', scalar=nids)
+
+        icase = 0
+        cases[icase] = (eid_res, (0, 'ElementID'))
+        cases[icase + 1] = (nid_res, (0, 'NodeID'))
 
         form = [
             ('Geometry', None, geometry_form),

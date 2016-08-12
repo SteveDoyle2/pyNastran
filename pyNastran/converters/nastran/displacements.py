@@ -38,9 +38,11 @@ class NastranComplexDisplacementResults(object):
         defl = scale * (np.real(eigvs[:, :3]) * np.cos(theta) +
                         np.imag(eigvs[:, :3]) * np.sin(theta))
 
+
 class NastranDisplacementResults(object):
     def __init__(self, subcase_id, titles, headers, xyz, dxyz, scalar,
-                 scales, deflects=True, uname='NastranGeometry'):
+                 scales, nlabels=None, labelsize=None, ncolors=None, colormap='jet',
+                 deflects=True, uname='NastranGeometry'):
         self.subcase_id = subcase_id
         assert self.subcase_id > 0, self.subcase_id
 
@@ -57,6 +59,10 @@ class NastranDisplacementResults(object):
         self.data_type = self.dxyz.dtype.str # '<c8', '<f4'
         self.is_real = True if self.data_type == '<f4' else False
         self.is_complex = not self.is_real
+        self.nlabels = nlabels
+        self.labelsize = labelsize
+        self.ncolors = ncolors
+        self.colormap = colormap
 
         self.data_formats = None
         self.titles_default = None
@@ -135,11 +141,24 @@ class NastranDisplacementResults(object):
     def get_default_min_max(self, i, name):
         return self.default_mins[i], self.default_maxs[i]
 
+    def get_nlabels_labelsize_ncolors_colormap(self, i, name):
+        return self.nlabels, self.labelsize, self.ncolors, self.colormap
+
+    def set_nlabels_labelsize_ncolors_colormap(self, i, name, nlabels, labelsize, ncolors, colormap):
+        self.nlabels = nlabels
+        self.labelsize = labelsize
+        self.ncolors = ncolors
+        self.colormap = colormap
+
     #def get_default_min_max(self, i, name):
         #return self.min_default[i], self.max_default[i]
 
     def get_default_scale(self, i, name):
         return self.scales_default[i]
+
+    def get_default_nlabels_labelsize_ncolors_colormap(self, i, name):
+        # TODO: do this right
+        return self.get_nlabels_labelsize_ncolors_colormap(i, name)
 
     def get_default_title(self, i, name):
         return self.titles_default[i]

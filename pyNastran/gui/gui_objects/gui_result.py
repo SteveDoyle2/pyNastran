@@ -1,7 +1,10 @@
 from copy import deepcopy
 
+
 class GuiResult(object):
-    def __init__(self, subcase_id, header, title, location, scalar, data_format=None, uname='GuiResult'):
+    def __init__(self, subcase_id, header, title, location, scalar,
+                 nlabels=None, labelsize=None, ncolors=None, colormap='jet',
+                 data_format=None, uname='GuiResult'):
         """
         subcase_id : int
             the flag that points to self.subcases for a message
@@ -36,6 +39,10 @@ class GuiResult(object):
         self.data_type = self.scalar.dtype.str # '<c8', '<f4'
         self.is_real = True if self.data_type in ['<i4', '<i8', '<f4', '<f8'] else False
         self.is_complex = not self.is_real
+        self.nlabels = nlabels
+        self.labelsize = labelsize
+        self.ncolors = ncolors
+        self.colormap = colormap
 
 
         if self.data_type in ['<i4', '<i8']:
@@ -74,6 +81,10 @@ class GuiResult(object):
     def get_title(self, i, name):
         return self.title
 
+    def get_nlabels_labelsize_ncolors_colormap(self, i, name):
+        #self.ncolors = 1000
+        return self.nlabels, self.labelsize, self.ncolors, self.colormap
+
     def get_min_max(self, i, name):
         return self.min_value, self.max_value
 
@@ -96,6 +107,13 @@ class GuiResult(object):
     def set_title(self, i, name):
         return self.title
 
+    def set_nlabels_labelsize_ncolors_colormap(self, i, name, nlabels, labelsize,
+                                               ncolors, colormap):
+        self.nlabels = nlabels
+        self.labelsize = labelsize
+        self.ncolors = ncolors
+        self.colormap = colormap
+
     #------------
     # default getters
     def get_default_data_format(self, i, name):
@@ -109,6 +127,10 @@ class GuiResult(object):
 
     def get_default_title(self, i, name):
         return self.title_default
+
+    def get_default_nlabels_labelsize_ncolors_colormap(self, i, name):
+        # TODO: do this right
+        return self.get_nlabels_labelsize_ncolors_colormap(i, name)
 
     #------------
     # unmodifyable getters

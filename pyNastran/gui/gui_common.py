@@ -319,7 +319,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                 ('text_color', 'Change text color', 'tcolorpick.png', None, 'Choose a text color', self.change_text_color),
 
                 ('label_clear', 'Clear current labels', '', None, 'Clear current labels', self.clear_labels),
-                ('label_modify', 'Modify label color/size', '', None, 'Edit Label Properties', self.on_set_label_size_color),
+                ('label_modify', 'Modify label color/size', '', None, 'Edit Label Properties', self.on_set_labelsize_color),
                 ('label_reset', 'Clear all labels', '', None, 'Clear all labels', self.reset_labels),
 
                 ('picker_modify', 'Modify picker size', '', None, 'Edit Label Properties', self.on_set_picker_size),
@@ -544,6 +544,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
         actor = vtk.vtkLODActor()
         mapper = vtk.vtkPolyDataMapper()
+        #mapper.UseLookupTableScalarRangeOn()
 
         if self.vtk_version <= 5:
             mapper.SetInputData(plane)
@@ -2318,7 +2319,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             except_names = [except_names]
 
         # hide everything but the main grid
-        for key, actor in self.geometry_actors.iteritems():
+        for key, actor in iteritems(self.geometry_actors):
             if key not in except_names:
                 actor.VisibilityOff()
             #else:
@@ -3135,7 +3136,10 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             self.log_command('show_labels(%s' % names)
 
     def update_scalar_bar(self, title, min_value, max_value, norm_value,
-                          data_format, is_blue_to_red=True, is_horizontal=True,
+                          data_format,
+                          nlabels=None, labelsize=None,
+                          ncolors=None, colormap='jet',
+                          is_blue_to_red=True, is_horizontal=True,
                           is_shown=True):
         """
         Updates the Scalar Bar
@@ -3150,6 +3154,19 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             the red value
         data_format : str
             '%g','%f','%i', etc.
+
+        nlabels : int (default=None -> auto)
+            the number of labels
+        labelsize : int (default=None -> auto)
+            the label size
+        ncolors : int (default=None -> auto)
+            the number of colors
+        colormap : varies
+            str :
+                the name
+            ndarray : (N, 3) float ndarry
+                red-green-blue array
+
         is_blue_to_red : bool; default=True
             flips the order of the RGB points
         is_horizontal : bool; default=True
@@ -3157,9 +3174,11 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         is_shown : bool
             show the scalar bar
         """
-        print("update_scalar_bar min=%s max=%s norm=%s" % (min_value, max_value, norm_value))
-        self.scalar_bar.update(title, min_value, max_value, norm_value,
-                               data_format, is_blue_to_red, is_horizontal,
+        #print("update_scalar_bar min=%s max=%s norm=%s" % (min_value, max_value, norm_value))
+        self.scalar_bar.update(title, min_value, max_value, norm_value, data_format,
+                               nlabels=nlabels, labelsize=labelsize,
+                               ncolors=ncolors, colormap=colormap,
+                               is_blue_to_red=is_blue_to_red, is_horizontal=is_horizontal,
                                is_shown=is_shown)
 
     #---------------------------------------------------------------------------------------
@@ -3262,7 +3281,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
     #---------------------------------------------------------------------------------------
     # LABEL SIZE/COLOR
-    def on_set_label_size_color(self):
+    def on_set_labelsize_color(self):
         """
         Opens a dialog box to set:
 
@@ -3307,7 +3326,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         else:
             self._label_window.activateWindow()
 
-    def set_label_size_color(self, size=None, color=None):
+    def set_labelsize_color(self, size=None, color=None):
         """
         Parameters
         ----------
@@ -3318,7 +3337,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         """
         if size is not None:
             assert isinstance(size, (int, float)), 'size=%r' % size
-            self.set_label_size(size)
+            self.set_labelsize(size)
         if color is not None:
             assert len(color) == 3, color
             assert isinstance(color[0], float), 'color=%r' % color
@@ -3335,7 +3354,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         #d = a / bc
         self.label_scale = label_text_size / (self.dim_max * 0.02)
 
-    def set_label_size(self, size, render=True):
+    def set_labelsize(self, size, render=True):
         """Updates the size of all the labels"""
         assert size >= 0., size
         self.label_text_size = size
@@ -3345,7 +3364,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                 follower_actor.Modified()
         if render:
             self.vtk_interactor.GetRenderWindow().Render()
-            self.log_command('set_label_size(%s)' % size)
+            self.log_command('set_labelsize(%s)' % size)
 
 
     def set_label_color(self, color, render=True):
@@ -3521,6 +3540,11 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             #subcase_id = obj.subcase_id
             case = obj.get_result(i, res_name)
             result_type = obj.get_title(i, res_name)
+            nlabels, labelsize, ncolors, colormap = obj.get_nlabels_labelsize_ncolors_colormap(i, res_name)
+
+            defaults_scalar_bar = obj.get_default_nlabels_labelsize_ncolors_colormap(i, res_name)
+            default_nlabels, default_labelsize, default_ncolors, default_colormap = defaults_scalar_bar
+
             #vector_size = obj.get_vector_size(i, res_name)
             #location = obj.get_location(i, res_name)
             data_format = obj.get_data_format(i, res_name)
@@ -3528,6 +3552,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
             default_title = obj.get_default_title(i, res_name)
             default_scale = obj.get_default_scale(i, res_name)
+
             min_value, max_value = obj.get_min_max(i, res_name)
             default_min, default_max = obj.get_default_min_max(i, res_name)
         #elif len(key) == 5:
@@ -3576,6 +3601,17 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             'default_title' : default_title,
             'default_scale' : default_scale,
             'default_format' : default_format,
+
+            'default_nlabels' : default_nlabels,
+            'default_labelsize' : default_labelsize,
+            'default_ncolors' : default_ncolors,
+            'default_colormap' : default_colormap,
+
+            'nlabels' : nlabels,
+            'labelsize' :  labelsize,
+            'ncolors' : ncolors,
+            'colormap' : colormap,
+
 
             'is_blue_to_red' : True,
             'is_discrete': True,
@@ -3650,16 +3686,25 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         is_discrete = data['is_discrete']
         is_horizontal = data['is_horizontal']
         is_shown = data['is_shown']
+
+        nlabels = data['nlabels']
+        labelsize = data['labelsize']
+        ncolors = data['ncolors']
+        colormap = data['colormap']
+
         #print('is_shown1 =', is_shown)
         self.on_update_legend(title=title, min_value=min_value, max_value=max_value,
                               scale=scale_value, data_format=data_format,
                               is_blue_to_red=is_blue_to_red,
                               is_discrete=is_discrete, is_horizontal=is_horizontal,
+                              nlabels=nlabels, labelsize=labelsize,
+                              ncolors=ncolors, colormap=colormap,
                               is_shown=is_shown)
 
     def on_update_legend(self, title='Title', min_value=0., max_value=1., scale=0.0,
                          data_format='%.0f',
                          is_blue_to_red=True, is_discrete=True, is_horizontal=True,
+                         nlabels=None, labelsize=None, ncolors=None, colormap='jet',
                          is_shown=True):
         #print('is_shown2 =', is_shown)
         #assert is_shown == False, is_shown
@@ -3688,6 +3733,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             location = obj.get_location(i, res_name)
             obj.set_min_max(i, res_name, min_value, max_value)
             obj.set_data_format(i, res_name, data_format)
+            obj.set_nlabels_labelsize_ncolors_colormap(
+                i, res_name, nlabels, labelsize, ncolors, colormap)
 
             #data_format = obj.get_data_format(i, res_name)
             #obj.set_format(i, res_name, data_format)
@@ -3745,7 +3792,10 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                                                       #is_blue_to_red=is_blue_to_red)
 
         self.update_scalar_bar(title, min_value, max_value, norm_value,
-                               data_format, is_blue_to_red=is_blue_to_red,
+                               data_format,
+                               nlabels=nlabels, labelsize=labelsize,
+                               ncolors=ncolors, colormap=colormap,
+                               is_blue_to_red=is_blue_to_red,
                                is_horizontal=is_horizontal, is_shown=is_shown)
 
         revert_displaced = True
@@ -3770,8 +3820,11 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         #self.is_horizontal_scalar_bar = is_horizontal
         icase = i
         self.log_command('self.on_update_legend(title=%r, min_value=%s, max_value=%s,\n'
-                         '                      data_format=%r, is_blue_to_red=%s, is_discrete=%s)'
-                         % (title, min_value, max_value, data_format, is_blue_to_red, is_discrete))
+                         '                      data_format=%r, is_blue_to_red=%s, is_discrete=%s,\n'
+                         '                      nlabels=%r, labelsize=%r, ncolors=%r, colormap=%r,\n'
+                         '                      is_horizontal=%r, is_shown=%r)'
+                         % (title, min_value, max_value, data_format, is_blue_to_red, is_discrete,
+                            nlabels, labelsize, ncolors, colormap, is_horizontal, is_shown))
         #if is_shown:
             #pass
     #---------------------------------------------------------------------------------------

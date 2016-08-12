@@ -9,7 +9,7 @@ from copy import deepcopy
 from struct import Struct
 import sys
 from codecs import open
-from six import PY2
+from six import PY2, iteritems
 
 
 from numpy import zeros, unique, where, argsort, searchsorted, allclose, array
@@ -901,7 +901,7 @@ class UGRID(object):
                 4 : 'penta6s',
             }
             print("eid_keys =", eid_keys)
-            for face, eids in tri_face_to_eids.iteritems():
+            for face, eids in iteritems(tri_face_to_eids):
                 if len(eids) == 1:
                     #if it's a boundary face, wer're fine, otherwise, error...
                     #print('*face=%s eids=%s' % (face, eids))

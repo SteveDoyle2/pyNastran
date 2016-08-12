@@ -17,4 +17,9 @@ def eval_float_from_string(value_str):
     for letter in value_str:
         if letter not in allowed_letters:
             raise ValueError('%r is an invalid character' % allowed_letters)
-    return float(eval(value_str))
+
+    try:
+        value = float(eval(value_str))
+    except:
+        print('value_str=%r is invalid' % value_str)
+    return value

@@ -131,6 +131,7 @@ class GuiCommon(GuiAttributes):
             data_format = obj.get_data_format(i, name)
             scale = obj.get_scale(i, name)
             label2 = obj.get_header(i, name)
+            nlabels, labelsize, ncolors, colormap = obj.get_nlabels_labelsize_ncolors_colormap(i, name)
             #default_max, default_min = obj.get_default_min_max(i, name)
             if min_value is None and max_value is None:
                 min_value, max_value = obj.get_min_max(i, name)
@@ -196,7 +197,9 @@ class GuiCommon(GuiAttributes):
         if is_legend_shown is None:
             is_legend_shown = self.scalar_bar.is_shown
         self.update_scalar_bar(result_type, min_value, max_value, norm_value,
-                               data_format, is_blue_to_red=is_blue_to_red,
+                               data_format,
+                               nlabels=None, labelsize=None, ncolors=None, colormap='jet',
+                               is_blue_to_red=is_blue_to_red,
                                is_horizontal=self.is_horizontal_scalar_bar,
                                is_shown=is_legend_shown)
         self.update_legend(icase,
@@ -340,8 +343,8 @@ class GuiCommon(GuiAttributes):
             # j is icase? and is used to...
             # label2 defaults to ''
             res_name = result_type # ???
-
             (subcase_id, j, result_type, vector_size, location, data_format, label2) = key
+
         return obj, i, j, res_name, subcase_id, result_type, vector_size, location, data_format, label2
 
     def final_grid_update(self, name, grid_result,

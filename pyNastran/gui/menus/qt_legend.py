@@ -1,7 +1,7 @@
 from __future__ import print_function
-from six import string_types
 from PyQt4 import QtCore, QtGui
 from pyNastran.gui.qt_files.menu_utils import eval_float_from_string
+from pyNastran.gui.colormaps import colormap_keys
 
 
 class LegendPropertiesWindow(QtGui.QDialog):
@@ -14,9 +14,10 @@ class LegendPropertiesWindow(QtGui.QDialog):
     | Max    ______ Default |
     | Format ______ Default |
     | Scale  ______ Default |
-    | Number of Colors ____ | (TODO)
-    | Number of Labels ____ | (TODO)
+    | Number of Colors ____ |
+    | Number of Labels ____ |
     | Label Size       ____ | (TODO)
+    | ColorMap         ____ | (TODO)
     |                       |
     | x Min/Max (Blue->Red) |
     | o Max/Min (Red->Blue) |
@@ -33,19 +34,54 @@ class LegendPropertiesWindow(QtGui.QDialog):
         #Init the base class
         self._updated_legend = False
         self._icase = data['icase']
+        self._default_icase = self._icase
+
         self._default_name = data['name']
         self._default_min = data['min']
         self._default_max = data['max']
-        self._format = data['format']
+
+        self._default_scale = data['default_scale']
         self._scale = data['scale']
+
+        self._default_format = data['default_format']
+        self._format = data['format']
+
+        self._default_labelsize = data['default_labelsize']
+        self._labelsize = data['labelsize']
+
+        self._default_nlabels = data['default_nlabels']
+        self._nlabels = data['nlabels']
+
+        self._default_ncolors = data['default_ncolors']
+        self._ncolors = data['ncolors']
+
+        #self._default_colormap = data['default_colormap']
+        #self._colormap = data['colormap']
+        self._default_colormap = 'jet'
+        self._colormap = 'jet'
+
         self._default_is_blue_to_red = data['is_blue_to_red']
         self._default_is_discrete = data['is_discrete']
         self._default_is_horizontal = data['is_horizontal']
         self._default_is_shown = data['is_shown']
 
-        self._default_format = data['default_format']
-        self._default_scale = data['default_scale']
-        self._default_icase = self._icase
+        if self._default_colormap is None:
+            self._default_colormap = 'jet'
+        if self._default_labelsize is None:
+            self._default_labelsize = ''
+        if self._default_ncolors is None:
+            self._default_ncolors = ''
+        if self._default_nlabels is None:
+            self._default_nlabels = ''
+
+        if self._colormap is None:
+            self._colormap = 'jet'
+        if self._labelsize is None:
+            self._labelsize = ''
+        if self._ncolors is None:
+            self._ncolors = ''
+        if self._nlabels is None:
+            self._nlabels = ''
 
         self.out_data = data
 
@@ -59,7 +95,8 @@ class LegendPropertiesWindow(QtGui.QDialog):
 
     def update_legend(self, icase, name,
                       min_value, max_value, data_format, scale,
-                      default_title, default_min_value, default_max_value, default_data_format, default_scale,
+                      default_title, default_min_value, default_max_value,
+                      default_data_format, default_scale,
                       is_blue_to_red, is_horizontal_scalar_bar):
         """
         We need to update the legend if there's been a result change request
@@ -138,6 +175,32 @@ class LegendPropertiesWindow(QtGui.QDialog):
         #tip.setTe
         #self.format_edit.toolTip(tip)
 
+        #---------------------------------------
+        # nlabels
+        self.nlabels = QtGui.QLabel("Number of Labels:")
+        self.nlabels_edit = QtGui.QLineEdit(str(self._nlabels))
+        self.nlabels_button = QtGui.QPushButton("Default")
+
+        self.labelsize = QtGui.QLabel("Label Size:")
+        self.labelsize_edit = QtGui.QLineEdit(str(self._labelsize))
+        self.labelsize_button = QtGui.QPushButton("Default")
+
+        self.ncolors = QtGui.QLabel("Number of Colors:")
+        self.ncolors_edit = QtGui.QLineEdit(str(self._ncolors))
+        self.ncolors_button = QtGui.QPushButton("Default")
+
+
+        #grid.addWidget(self.nlabels, 5, 0)
+        #grid.addWidget(self.nlabels_edit, 5, 1)
+        #grid.addWidget(self.nlabels_button, 5, 2)
+        #grid.addWidget(self.labelsize, 4, 0)
+        #grid.addWidget(self.labelsize_edit, 4, 1)
+        #grid.addWidget(self.labelsize_button, 4, 2)
+        #grid.addWidget(self.ncolors, 6, 0)
+        #grid.addWidget(self.ncolors_edit, 6, 1)
+        #grid.addWidget(self.ncolors_button, 6, 2)
+
+
         # red/blue or blue/red
         self.checkbox_blue_to_red = QtGui.QCheckBox("Min -> Blue; Max -> Red")
         self.checkbox_red_to_blue = QtGui.QCheckBox("Min -> Red; Max -> Blue")
@@ -159,7 +222,7 @@ class LegendPropertiesWindow(QtGui.QDialog):
         # on / off
         self.checkbox_show = QtGui.QCheckBox("Show")
         self.checkbox_hide = QtGui.QCheckBox("Hide")
-        print('_default_is_shown =', self._default_is_shown)
+        #print('_default_is_shown =', self._default_is_shown)
         self.checkbox_show.setChecked(self._default_is_shown)
         self.checkbox_hide.setChecked(not self._default_is_shown)
 
@@ -208,6 +271,18 @@ class LegendPropertiesWindow(QtGui.QDialog):
         grid.addWidget(self.scale, 4, 0)
         grid.addWidget(self.scale_edit, 4, 1)
         grid.addWidget(self.scale_button, 4, 2)
+
+        grid.addWidget(self.nlabels, 5, 0)
+        grid.addWidget(self.nlabels_edit, 5, 1)
+        grid.addWidget(self.nlabels_button, 5, 2)
+
+        #grid.addWidget(self.labelsize, 6, 0)
+        #grid.addWidget(self.labelsize_edit, 6, 1)
+        #grid.addWidget(self.labelsize_button, 6, 2)
+
+        grid.addWidget(self.ncolors, 6, 0)
+        grid.addWidget(self.ncolors_edit, 6, 1)
+        grid.addWidget(self.ncolors_button, 6, 2)
 
         ok_cancel_box = QtGui.QHBoxLayout()
         ok_cancel_box.addWidget(self.apply_button)
@@ -269,6 +344,10 @@ class LegendPropertiesWindow(QtGui.QDialog):
         self.connect(self.format_button, QtCore.SIGNAL('clicked()'), self.on_default_format)
         self.connect(self.scale_button, QtCore.SIGNAL('clicked()'), self.on_default_scale)
 
+        self.connect(self.nlabels_button, QtCore.SIGNAL('clicked()'), self.on_default_nlabels)
+        self.connect(self.ncolors_button, QtCore.SIGNAL('clicked()'), self.on_default_ncolors)
+        self.connect(self.labelsize_button, QtCore.SIGNAL('clicked()'), self.on_default_labelsize)
+
         self.connect(self.apply_button, QtCore.SIGNAL('clicked()'), self.on_apply)
         self.connect(self.ok_button, QtCore.SIGNAL('clicked()'), self.on_ok)
         self.connect(self.cancel_button, QtCore.SIGNAL('clicked()'), self.on_cancel)
@@ -302,6 +381,18 @@ class LegendPropertiesWindow(QtGui.QDialog):
         self.scale_edit.setText(str(self._default_scale))
         self.scale_edit.setStyleSheet("QLineEdit{background: white;}")
 
+    def on_default_ncolors(self):
+        self.scale_edit.setText(str(self._default_ncolors))
+        self.scale_edit.setStyleSheet("QLineEdit{background: white;}")
+
+    def on_default_nlabels(self):
+        self.scale_edit.setText(str(self._default_nlabels))
+        self.scale_edit.setStyleSheet("QLineEdit{background: white;}")
+
+    def on_default_labelsize(self):
+        self.scale_edit.setText(str(self._default_labelsize))
+        self.scale_edit.setStyleSheet("QLineEdit{background: white;}")
+
     def check_float(self, cell):
         text = cell.text()
         try:
@@ -312,6 +403,33 @@ class LegendPropertiesWindow(QtGui.QDialog):
             cell.setStyleSheet("QLineEdit{background: red;}")
             return None, False
 
+    def check_int(self, cell):
+        text = cell.text()
+        try:
+            value = int(text)
+            cell.setStyleSheet("QLineEdit{background: white;}")
+            return value, True
+        except ValueError:
+            cell.setStyleSheet("QLineEdit{background: red;}")
+            return None, False
+
+    def check_positive_int_or_blank(self, cell):
+        text = str(cell.text()).strip()
+        if len(text) == 0:
+            return None, True
+        try:
+            value = int(text)
+        except ValueError:
+            cell.setStyleSheet("QLineEdit{background: red;}")
+            return None, False
+
+        if value < 1:
+            cell.setStyleSheet("QLineEdit{background: red;}")
+            return None, False
+
+        cell.setStyleSheet("QLineEdit{background: white;}")
+        return value, True
+
     def check_name(self, cell):
         text = str(cell.text()).strip()
         if len(text):
@@ -320,6 +438,16 @@ class LegendPropertiesWindow(QtGui.QDialog):
         else:
             cell.setStyleSheet("QLineEdit{background: red;}")
             return None, False
+
+    def check_colormap(self, cell):
+        text = str(cell.text()).strip()
+        if text in colormap_keys:
+            cell.setStyleSheet("QLineEdit{background: white;}")
+            return text, True
+        else:
+            cell.setStyleSheet("QLineEdit{background: red;}")
+            return None, False
+
 
     def check_format(self, cell):
         text = str(cell.text())
@@ -362,16 +490,27 @@ class LegendPropertiesWindow(QtGui.QDialog):
         max_value, flag2 = self.check_float(self.max_edit)
         format_value, flag3 = self.check_format(self.format_edit)
         scale_value, flag4 = self.check_float(self.scale_edit)
+
+        nlabels, flag5 = self.check_positive_int_or_blank(self.nlabels_edit)
+        ncolors, flag6 = self.check_positive_int_or_blank(self.ncolors_edit)
+        labelsize, flag7 = self.check_positive_int_or_blank(self.labelsize_edit)
+        colormap = 'jet'
         if 'i' in format_value:
             format_value = '%i'
 
-        if flag0 and flag1 and flag2 and flag3 and flag4:
+        if all([flag0, flag1, flag2, flag3, flag4, flag5, flag6, flag7]):
             assert isinstance(scale_value, float), scale_value
             self.out_data['name'] = name_value
             self.out_data['min'] = min_value
             self.out_data['max'] = max_value
             self.out_data['format'] = format_value
             self.out_data['scale'] = scale_value
+
+            self.out_data['nlabels'] = nlabels
+            self.out_data['ncolors'] = ncolors
+            self.out_data['labelsize'] = labelsize
+            self.out_data['colormap'] = colormap
+
             self.out_data['is_blue_to_red'] = self.checkbox_blue_to_red.isChecked()
             self.out_data['is_discrete'] = self.checkbox_discrete.isChecked()
             self.out_data['is_horizontal'] = self.checkbox_horizontal.isChecked()
@@ -422,6 +561,18 @@ def main():
         'max' : 10,
         'scale' : 1e-12,
         'default_scale' : 1.0,
+
+        'nlabels' : 11,
+        'default_nlabels' : 11,
+
+        'labelsize' : 12,
+        'default_labelsize' : 12,
+
+        'ncolors' : 13,
+        'default_ncolors' : 13,
+
+        'colormap' : 'jet',
+        'default_colormap' : 'jet',
 
         'default_format' : '%s',
         'format' : '%g',

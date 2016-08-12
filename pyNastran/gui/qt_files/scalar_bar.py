@@ -1,5 +1,8 @@
+import numpy as np
+from six import string_types
 import vtk
 
+from pyNastran.gui.colormaps import colormap_dict
 
 class ScalarBar(object):
 
@@ -28,21 +31,20 @@ class ScalarBar(object):
         self.is_shown = True
         self.is_horizontal = False
 
-        self.color_function.SetColorSpaceToHSV()
-        self.color_function.HSVWrapOff()
         #self.color_function.SetNanColor(1., 1., 1., 0.)
         #self.color_function.SetColorSpaceToLab()
         #self.color_function.SetColorSpaceToRGB()
         #self.scalar_bar.SetDragable(True)
         #self.scalar_bar.SetPickable(True)
 
-        drange = [10., 20.]
-        self.color_function.SetRange(*drange)
-
         # blue - low
         # red - high
-        self.color_function.AddRGBPoint(drange[0], 0.0, 0.0, 1.0)
-        self.color_function.AddRGBPoint(drange[1], 1.0, 0.0, 0.0)
+        drange = [10., 20.]
+        self.color_function.SetColorSpaceToHSV()
+        self.color_function.HSVWrapOff()
+        self.color_function.SetRange(*drange)
+            self.color_function.AddRGBPoint(drange[0], 0.0, 0.0, 1.0)
+            self.color_function.AddRGBPoint(drange[1], 1.0, 0.0, 0.0)
 
         self.scalar_bar.SetTitle("Title1")
 
@@ -102,16 +104,28 @@ class ScalarBar(object):
 
 
     def update(self, title, min_value, max_value, norm_value,
-               data_format, is_blue_to_red=True, is_horizontal=True,
+               data_format,
+               nlabels=None, labelsize=None, ncolors=None, colormap='jet',
+               is_blue_to_red=True, is_horizontal=True,
                is_shown=True):
         self.color_function.RemoveAllPoints()
 
-        if is_blue_to_red:
-            self.color_function.AddRGBPoint(min_value, 0.0, 0.0, 1.0)  # blue
-            self.color_function.AddRGBPoint(max_value, 1.0, 0.0, 0.0)  # red
+        if colormap in [None, 'jet']:
+            if is_blue_to_red:
+                self.color_function.AddRGBPoint(min_value, 0.0, 0.0, 1.0)  # blue
+                self.color_function.AddRGBPoint(max_value, 1.0, 0.0, 0.0)  # red
+            else:
+                self.color_function.AddRGBPoint(min_value, 1.0, 0.0, 0.0)  # red
+                self.color_function.AddRGBPoint(max_value, 0.0, 0.0, 1.0)  # blue
         else:
-            self.color_function.AddRGBPoint(min_value, 1.0, 0.0, 0.0)  # red
-            self.color_function.AddRGBPoint(max_value, 0.0, 0.0, 1.0)  # blue
+            if isinstance(colormap, string_types):
+                colormap = colormap_dict[colormap]
+
+            vals = np.linspace(min_value, max_value, num=len(colormap))
+            if is_blue_to_red:
+                vals = vals[::-1]
+            for val, (red, green, blue) in zip(vals, colormap):
+                self.color_function.AddRGBPoint(val, red, green, blue)
 
         if is_horizontal:
             # put the scalar bar at the top
@@ -154,49 +168,53 @@ class ScalarBar(object):
 
         self.scalar_bar.SetTitle('%s%s%s' % (padding, title, padding))
 
-        nvalues = 11
         data_format_display = data_format
-        if data_format == '%i':
-            data_format_display = '%.0f'
-            nvalues = int(max_value - min_value) + 1
+        if nlabels is None: # and labelsize is None:
+            nvalues = 11
+            if data_format == '%i':
+                data_format_display = '%.0f'
+                nvalues = int(max_value - min_value) + 1
 
-            # old
-            if nvalues < 7:
-                nvalues = 7
-            elif nvalues > 30:
-                nvalues = 11
+                # old
+                if nvalues < 7:
+                    nvalues = 7
+                elif nvalues > 30:
+                    nvalues = 11
 
-            # new
-            if 0:
-                text_prop = self.scalar_bar.GetLabelTextProperty()
-                #font_size = text_prop.GetFontSize()
-                nvalues_max = 11
-                nvalues_min = 7
-                if nvalues > nvalues_max:
-                    font_size = 4
-                    nvalues = nvalues_max
-                    font_size = text_prop.SetFontSize(font_size)
-                    text_prop.Modified()
-                elif nvalues < nvalues_min:
-                    nvalues = nvalues_min
-                    font_size = 12
-                    font_size = text_prop.SetFontSize(font_size)
-                    text_prop.Modified()
+                # new
+                if 0:
+                    text_prop = self.scalar_bar.GetLabelTextProperty()
+                    #font_size = text_prop.GetFontSize()
+                    nvalues_max = 11
+                    nvalues_min = 7
+                    if nvalues > nvalues_max:
+                        font_size = 4
+                        nvalues = nvalues_max
+                        font_size = text_prop.SetFontSize(font_size)
+                        text_prop.Modified()
+                    elif nvalues < nvalues_min:
+                        nvalues = nvalues_min
+                        font_size = 12
+                        font_size = text_prop.SetFontSize(font_size)
+                        text_prop.Modified()
+        else:
+            if data_format == '%i':
+                data_format_display = '%.0f'
+            nvalues = nlabels
+
+        if ncolors is None:
+            ncolors = nvalues
 
         assert data_format_display is not None, 'data_format is invalid = %r' % data_format_display
         self.scalar_bar.SetLabelFormat(data_format_display)
 
-        #if title in ['ElementID', 'Eids', 'Region'] and norm_value < 11:
-            #nvalues = int(max_value - min_value) + 1
-            #print("need to adjust axes...max_value=%s" % max_value)
-
-        #if self.nvalues is not None:
-            #if not _is_int_result(data_format):
-                ## don't change nvalues for int results
-                #nvalues = self.nvalues
-
+        # the code explodes if these are too big
+        if nvalues > 100:
+            nvalues = 100
+        if ncolors > 100:
+            ncolors = 100
         self.scalar_bar.SetNumberOfLabels(nvalues)
-        self.scalar_bar.SetMaximumNumberOfColors(nvalues)
+        self.scalar_bar.SetMaximumNumberOfColors(ncolors)
         #is_shown = False
         #if is_shown:
             #self.scalar_bar.VisibilityOn()
