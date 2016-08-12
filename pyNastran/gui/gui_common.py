@@ -2046,6 +2046,12 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.node_picker = vtk.vtkPointPicker()
         self.cell_picker.SetTolerance(0.0005)
 
+    def mark_node(self, nid, result_name, text):
+        raise NotImplementedError()
+        i = self.node_ids.index(nid)
+        x, y, z = self.xyz_cid0[i, :]
+        self._create_annotation(text, result_name, x, y, z)
+
     def _cell_centroid_pick(self, cell_id, world_position):
         duplicate_key = None
         if self.pick_state == 'node/centroid':

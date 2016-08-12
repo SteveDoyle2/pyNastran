@@ -19,6 +19,24 @@ class CustomQTableView(QtGui.QTableView):
         #super(CustomQTableView, self).__init__()
         QtGui.QTableView.__init__(self, *args, **kwargs) #Use QTableView constructor
 
+    def update_data(self, data):
+        #items = self.getModel()
+        self.model().change_data(data)
+
+    def getModel(self):
+        model = self.model() #tableView.model()
+        return model.items
+        #data = []
+        #for row in range(model.rowCount()):
+            #data.append([])
+            #for column in range(model.columnCount()):
+                #index = model.index(row, column)
+                ## We suppose data are strings
+
+                #role = QtCore.Qt.DisplayRole
+                #data[row].append(str(model.data(index, role).toString()))
+        #return data
+
     def mouseDoubleClickEvent(self, event):
         #self.last = "Double Click"
         index = self.currentIndex()
@@ -56,8 +74,7 @@ class Model(QtCore.QAbstractTableModel):
     #def adding_row(index):
         ## http://stackoverflow.com/questions/13109128/pyqt-qabstracttablemodel-never-updates-when-rows-are-added
         #self.beginInsertRows(self.createIndex(0, 0), index, index)
-        #print 'adding ', index
-
+        #print('adding ', index)
 
     def rowCount(self, parent=QtCore.QModelIndex()):
         return len(self.items)
@@ -65,12 +82,22 @@ class Model(QtCore.QAbstractTableModel):
     def columnCount(self, parent=QtCore.QModelIndex()):
         return 1
 
-
     def change_data(self, items):
         #self.emit(SIGNAL("LayoutAboutToBeChanged()"))
         self.items = items
         #self.emit(SIGNAL("LayoutChanged()"))
-        self.select()
+        #self.select()  # old
+
+        if 1:
+            self.reset()
+            #self.beginInsertRows()
+            for i, item in enumerate(items):
+                self.insertRow(i, parent=QtCore.QModelIndex())
+            #self.endInsertRows()
+        else:
+            self.removeRows(int)
+            for i, item in enumerate(items):
+                self.setItem(i,j,QtGui.QStandardItem(item))
 
         #self.dataChanged.emit(self.createIndex(0, 0),
                               #self.createIndex(self.rowCount(0),
@@ -293,6 +320,18 @@ class EditGeometryProperties(QtGui.QDialog):
 
         self.create_layout()
         self.set_connections()
+
+    def on_update_geometry_properties_window(self, data):
+        """Not Implemented"""
+        return
+        new_keys = sorted(data.keys())
+        if self.active_key in new_keys:
+            i = new_keys.index(self.active_key)
+        else:
+            i = 0
+        self.table.update_data(new_keys)
+        self.out_data = data
+        self.update_active_key(i)
 
     def update_active_key(self, index):
         old_obj = self.out_data[self.active_key]
