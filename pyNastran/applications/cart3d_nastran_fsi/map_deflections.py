@@ -38,7 +38,7 @@ class DeflectionReader(object):
             self.get_deflection(n2),
             self.get_deflection(n3),
         ]
-        #print "defs[%s]-[%s,%s,%s,%s] = %s" %(ID, n0, n1, n2, n3, defs)
+        #print("defs[%s]-[%s,%s,%s,%s] = %s" %(ID, n0, n1, n2, n3, defs))
         return defs
 
     def get_deflection(self, grid_id):
@@ -84,7 +84,7 @@ class DeflectionMapper(object):
 
         #startingTet = tets[1]
         #closest_tet = self.findClosestTet_recursion(m, startingTet, tets)
-        #print "found tet = ", closest_tet.ID
+        #print("found tet = ", closest_tet.ID)
         #v1 = array([1.,0.,0.])
 
         #tet, tet_id = self.bruteForce(m, tets)
@@ -155,7 +155,7 @@ class DeflectionMapper(object):
 
         local_vols = []
         counter = []
-        #print "m = [%g %g %g]" % (m[0], m[1], m[2])
+        #print("m = [%g %g %g]" % (m[0], m[1], m[2]))
         found_internal_node = False
         for i, tet in tets.items():
             #if tet.ID in excluded:
@@ -164,12 +164,12 @@ class DeflectionMapper(object):
             found_internal_node, local_vol = tet.is_internal_node(m)
             local_vols.append(local_vol)
             counter.append(i)
-            #print "tet[%4s].internal=%s" % (i, foundInternalNode)
+            #print("tet[%4s].internal=%s" % (i, foundInternalNode))
             if found_internal_node:
                 found_id = tet.ID
                 log.info("*found_id = %s" % (found_id))
-                #print self.findCloserTet(m, tets[excluded[-1]], tets)
-                #print self.findCloserTet(m, tets[found_id], tets)
+                #print(self.findCloserTet(m, tets[excluded[-1]], tets))
+                #print(self.findCloserTet(m, tets[found_id], tets))
 
                 return tet, found_id
                 #raise Exception('unhandled success!')
@@ -199,28 +199,28 @@ class DeflectionMapper(object):
         """
         if excluded is None:
             excluded = []
-        #print "findCloserTet"
-        #print "working on tet = ", tet0.ID
+        #print("findCloserTet")
+        #print("working on tet = ", tet0.ID)
 
         cent = tet0.centroid()
         dist = m-cent
         #faces = [tet0.face0, tet0.face1, tet0.face2, tet0.face3]
         dists = [9.e9] * 4
         for i, neighbor in enumerate(tet0.neighbors):
-            #print "i=%s neighbor=%s centroid=%s" %(i,neighbor,tets[neighbor].centroid())
+            #print("i=%s neighbor=%s centroid=%s" %(i,neighbor,tets[neighbor].centroid()))
             if neighbor > 0:
                 dists[i] = self.distance(m, tets[neighbor].centroid())
         #dists[0] = 9.e9
-        #print "dists = ",dists
+        #print("dists = ", dists)
 
-        #print dists
+        #print(dists)
         min_value = min(dists)
         i = dists.index(min_value)
         neighbors = tet0.neighbors
-        #print "neighbors = ",neighbors
-        #print "tet0.neightbors[%s] = %s" %(i,tet0.neighbors[i])
+        #print("neighbors = ",neighbors)
+        #print("tet0.neightbors[%s] = %s" %(i,tet0.neighbors[i]))
         tet_new = tets[tet0.neighbors[i]]
-        #print "tet_new = ", tet_new
+        #print("tet_new = ", tet_new)
 
         #closestTet = self.findClosestTet_recursion(m, tet_new, tets, excluded)
         return tet_new, min_value
@@ -370,7 +370,7 @@ def mapDeflectionsStructures_Aero(bdf_model='test_tet10.bdf', op2_filename='test
     tets, nodes, elements, volume = dr.build_tets()
     sys.stdout.flush()
 
-    #print "type(tets) = ",type(tets)
+    #print("type(tets) = ",type(tets))
     #for i,tet in sorted(tets.items()):
         #print("tet[%4s]=%s" % (i, tet))
 

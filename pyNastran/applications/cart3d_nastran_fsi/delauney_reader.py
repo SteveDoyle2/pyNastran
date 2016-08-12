@@ -200,7 +200,7 @@ class Tet4(object):
         #allv = [aVol, bVol, cVol, dVol]
         #minThis = sum(allv) - max(allv)
 
-        #print "vol[%s] = [%g %g %g %g]   %g" %(self.ID, aVol, bVol, cVol, dVol, minThis)
+        #print("vol[%s] = [%g %g %g %g]   %g" %(self.ID, aVol, bVol, cVol, dVol, minThis))
         #minVol = min(aVol, bVol, cVol, dVol)
         #if minVol < 0.:
             #return False, minThis
@@ -306,7 +306,7 @@ class DelauneyReader(object):
         i = dists.index(min_value)
         tet_new = tets[tet0.neighbors[i]]
         excluded.append(tet0.ID)
-        #print "excluding ID=%s\n" % tet0.ID
+        #print("excluding ID=%s\n" % tet0.ID)
 
         closest_tet = self.find_closest_tet_recursion(m, tet_new, tets, excluded)
         return closest_tet
@@ -367,7 +367,7 @@ class DelauneyReader(object):
             elements[nelements] = [element, neighbors]
             nelements += 1
 
-            #print "e[%s]=%s" %(e[0], e[1:])
+            #print("e[%s]=%s" %(e[0], e[1:]))
 
         log.info("max_x=%s min_x=%s" % (max_x, min_x))
         log.info("max_y=%s min_y=%s" % (max_y, min_y))
