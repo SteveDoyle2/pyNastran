@@ -287,9 +287,11 @@ class ScalarBar(object):
     def Modified(self):
         pass
 
+
 class MockResWidget(object):
     def __init__(self):
         pass
+
 
 class GUIMethods(GuiAttributes):
     def __init__(self, inputs=None):
@@ -358,25 +360,35 @@ class GUIMethods(GuiAttributes):
     def _remove_old_geometry(self, filename):
         skip_reading = False
         return skip_reading
+
     def cycle_results(self):
         pass
+
     def  turn_text_on(self):
         pass
+
     def turn_text_off(self):
         pass
+
     def create_global_axes(self, dim_max):
         pass
+
     def update_axes_length(self, value):
         self.dim_max = value
+
     def passer(self):
         pass
+
     def passer1(self, a):
         pass
+
     def passer2(self, a, b):
         pass
+
     @property
     def displacement_scale_factor(self):
         return 1 * self.dim_max
+
     def create_alternate_vtk_grid(self, name, color=None, line_width=None, opacity=None,
                                   point_size=None, bar_scale=None,
                                   representation=None, is_visible=True):

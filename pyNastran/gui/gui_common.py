@@ -544,6 +544,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
         actor = vtk.vtkLODActor()
         mapper = vtk.vtkPolyDataMapper()
+        #mapper.InterpolateScalarsBeforeMappingOn()
         #mapper.UseLookupTableScalarRangeOn()
 
         if self.vtk_version <= 5:
@@ -1681,11 +1682,11 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             #return
             raise
 
-        if 0:
-            self.out_filename = out_filename
-            msg = '%s - %s - %s' % (self.format, self.infile_name, out_filename)
-            self.set_window_title(msg)
-            self.out_filename = out_filename
+        #if 0:
+            #self.out_filename = out_filename
+            #msg = '%s - %s - %s' % (self.format, self.infile_name, out_filename)
+            #self.set_window_title(msg)
+            #self.out_filename = out_filename
 
         if result_type == 'Nodal':
             self.log_command("_on_load_nodal_elemental_results(%r)" % out_filename)
@@ -2048,9 +2049,9 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
     def mark_node(self, nid, result_name, text):
         raise NotImplementedError()
-        i = self.node_ids.index(nid)
-        x, y, z = self.xyz_cid0[i, :]
-        self._create_annotation(text, result_name, x, y, z)
+        #i = self.node_ids.index(nid)
+        #x, y, z = self.xyz_cid0[i, :]
+        #self._create_annotation(text, result_name, x, y, z)
 
     def _cell_centroid_pick(self, cell_id, world_position):
         duplicate_key = None
@@ -2161,7 +2162,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                 assert result_name in self.label_actors, result_name
                 self._create_annotation(text, result_name, x, y, z)
 
-        def annotate_point_picker(object, event):
+        def annotate_point_picker(obj, event):
             self.log_command("annotate_point_picker()")
             picker = self.cell_picker
             if picker.GetPointId() < 0:
@@ -2520,39 +2521,38 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             self.grid_mapper.SetInputData(self.grid_selected)
 
 
-        if 0:
-            self.warp_filter = vtk.vtkWarpVector()
-            self.warp_filter.SetScaleFactor(50.0)
-            self.warp_filter.SetInput(self.grid_mapper.GetUnstructuredGridOutput())
+        #if 0:
+            #self.warp_filter = vtk.vtkWarpVector()
+            #self.warp_filter.SetScaleFactor(50.0)
+            #self.warp_filter.SetInput(self.grid_mapper.GetUnstructuredGridOutput())
 
-            self.geom_filter = vtk.vtkGeometryFilter()
-            self.geom_filter.SetInput(self.warp_filter.GetUnstructuredGridOutput())
+            #self.geom_filter = vtk.vtkGeometryFilter()
+            #self.geom_filter.SetInput(self.warp_filter.GetUnstructuredGridOutput())
 
-            self.geom_mapper = vtk.vtkPolyDataMapper()
-            self.geom_actor.setMapper(self.geom_mapper)
+            #self.geom_mapper = vtk.vtkPolyDataMapper()
+            #self.geom_actor.setMapper(self.geom_mapper)
 
-        if 0:
-            #from vtk.numpy_interface import algorithms
+        #if 0:
+            ##from vtk.numpy_interface import algorithms
+            #arrow = vtk.vtkArrowSource()
+            #arrow.PickableOff()
 
-            arrow = vtk.vtkArrowSource()
-            arrow.PickableOff()
+            #self.glyph_transform = vtk.vtkTransform()
+            #self.glyph_transform_filter = vtk.vtkTransformPolyDataFilter()
+            #self.glyph_transform_filter.SetInputConnection(arrow.GetOutputPort())
+            #self.glyph_transform_filter.SetTransform(self.glyph_transform)
 
-            self.glyph_transform = vtk.vtkTransform()
-            self.glyph_transform_filter = vtk.vtkTransformPolyDataFilter()
-            self.glyph_transform_filter.SetInputConnection(arrow.GetOutputPort())
-            self.glyph_transform_filter.SetTransform(self.glyph_transform)
+            #self.glyph = vtk.vtkGlyph3D()
+            ##self.glyph.setInput(xxx)
+            #self.glyph.SetSource(self.glyph_transform_filter.GetOutput())
 
-            self.glyph = vtk.vtkGlyph3D()
-            #self.glyph.setInput(xxx)
-            self.glyph.SetSource(self.glyph_transform_filter.GetOutput())
+            #self.glyph.SetVectorModeToUseVector()
+            #self.glyph.SetColorModeToColorByVector()
+            #self.glyph.SetScaleModeToScaleByVector()
+            #self.glyph.SetScaleFactor(1.0)
 
-            self.glyph.SetVectorModeToUseVector()
-            self.glyph.SetColorModeToColorByVector()
-            self.glyph.SetScaleModeToScaleByVector()
-            self.glyph.SetScaleFactor(1.0)
-
-            self.append_filter = vtk.vtkAppendFilter()
-            self.append_filter.AddInputConnection(self.grid.GetOutput())
+            #self.append_filter = vtk.vtkAppendFilter()
+            #self.append_filter.AddInputConnection(self.grid.GetOutput())
 
 
         #self.warpVector = vtk.vtkWarpVector()
@@ -2566,19 +2566,19 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         #geometryActor.GetProperty().SetDiffuseColor(0, 0, 1) # blue
         #self.geom_actor.GetProperty().SetDiffuseColor(1, 0, 0)  # red
 
-        if 0:
-            id_filter = vtk.vtkIdFilter()
+        #if 0:
+            #id_filter = vtk.vtkIdFilter()
 
-            ids = np.array([1, 2, 3], dtype='int32')
-            id_array = numpy_to_vtk(
-                num_array=ids,
-                deep=True,
-                array_type=vtk.VTK_INT,
-            )
+            #ids = np.array([1, 2, 3], dtype='int32')
+            #id_array = numpy_to_vtk(
+                #num_array=ids,
+                #deep=True,
+                #array_type=vtk.VTK_INT,
+            #)
 
-            id_filter.SetCellIds(id_array.GetOutputPort())
-            id_filter.CellIdsOff()
-            self.grid_mapper.SetInputConnection(id_filter.GetOutputPort())
+            #id_filter.SetCellIds(id_array.GetOutputPort())
+            #id_filter.CellIdsOff()
+            #self.grid_mapper.SetInputConnection(id_filter.GetOutputPort())
         self.rend.AddActor(self.geom_actor)
 
     def _add_alt_actors(self, grids_dict, names_to_ignore=None):
@@ -3578,6 +3578,14 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             max_value = case.max()
             default_min = min_value
             default_max = max_value
+            nlabels = None
+            labelsize = None
+            ncolors = None
+            colormap = 'jet'
+            default_nlabels = None
+            default_labelsize = None
+            default_ncolors = None
+            default_colormap = 'jet'
 
         if default_format is None:
             default_format = data_format
@@ -3644,41 +3652,53 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             self._legend_window.activateWindow()
 
     def update_legend(self, icase, name, min_value, max_value, data_format, scale,
+                      nlabels, labelsize, ncolors, colormap,
                       is_blue_to_red, is_horizontal_scalar_bar):
-        if self._legend_window_shown:
-            self._legend_window._updated_legend = True
+        if not self._legend_window_shown:
+            return
+        self._legend_window._updated_legend = True
 
-            key = self.case_keys[icase]
-            if isinstance(key, integer_types):
-                (obj, (i, name)) = self.result_cases[key]
-                #subcase_id = obj.subcase_id
-                #case = obj.get_result(i, name)
-                #result_type = obj.get_title(i, name)
-                #vector_size = obj.get_vector_size(i, name)
-                #location = obj.get_location(i, name)
-                #data_format = obj.get_data_format(i, name)
-                #scale = obj.get_scale(i, name)
-                #label2 = obj.get_header(i, name)
-                default_data_format = obj.get_default_data_format(i, name)
-                default_min, default_max = obj.get_default_min_max(i, name)
-                default_scale = obj.get_default_scale(i, name)
-                default_title = obj.get_default_title(i, name)
-            else:
-                assert len(key) == 7, key
-                (subcase_id, j, result_type, vector_size, location, data_format, label2) = key
-                case = self.result_cases[key]
-                default_data_format = data_format
-                default_min = case.min()
-                default_max = case.max()
-                default_scale = 0.
-                default_title = result_type
+        key = self.case_keys[icase]
+        if isinstance(key, integer_types):
+            (obj, (i, name)) = self.result_cases[key]
+            #subcase_id = obj.subcase_id
+            #case = obj.get_result(i, name)
+            #result_type = obj.get_title(i, name)
+            #vector_size = obj.get_vector_size(i, name)
+            #location = obj.get_location(i, name)
+            #data_format = obj.get_data_format(i, name)
+            #scale = obj.get_scale(i, name)
+            #label2 = obj.get_header(i, name)
+            default_data_format = obj.get_default_data_format(i, name)
+            default_min, default_max = obj.get_default_min_max(i, name)
+            default_scale = obj.get_default_scale(i, name)
+            default_title = obj.get_default_title(i, name)
+            out_labels = obj.get_default_nlabels_labelsize_ncolors_colormap(i, name)
+            default_nlabels, default_labelsize, default_ncolors, default_colormap = out_labels
+        else:
+            assert len(key) == 7, key
+            (subcase_id, j, result_type, vector_size, location, data_format, label2) = key
+            case = self.result_cases[key]
+            default_data_format = data_format
+            default_min = case.min()
+            default_max = case.max()
+            default_scale = 0.
+            default_title = result_type
+            default_nlabels = None
+            default_labelsize = None
+            default_ncolors = None
+            default_colormap = 'jet'
 
-            assert isinstance(scale, float), 'scale=%s' % scale
-            self._legend_window.update_legend(
-                icase,
-                name, min_value, max_value, data_format, scale,
-                default_title, default_min, default_max, default_data_format, default_scale,
-                is_blue_to_red, is_horizontal_scalar_bar)
+        assert isinstance(scale, float), 'scale=%s' % scale
+        self._legend_window.update_legend(
+            icase,
+            name, min_value, max_value, data_format, scale,
+            nlabels, labelsize,
+            ncolors, colormap,
+            default_title, default_min, default_max, default_data_format, default_scale,
+            default_nlabels, default_labelsize,
+            default_ncolors, default_colormap,
+            is_blue_to_red, is_horizontal_scalar_bar)
         #self.scalar_bar.set_visibility(self._legend_shown)
         #self.vtk_interactor.Render()
 

@@ -4,8 +4,8 @@ from __future__ import print_function
 from six import iteritems
 from copy import deepcopy
 
-import numpy
-from numpy import ndarray, full, float32, issubdtype
+import numpy as np
+from numpy import ndarray, full, issubdtype
 from numpy.linalg import norm
 import vtk
 from vtk.util.numpy_support import numpy_to_vtk
@@ -45,13 +45,24 @@ class GuiCommon(GuiAttributes):
 
     def update_axes_length(self, dim_max):
         """
-        scale coordinate system based on model length
+        sets the driving dimension for:
+          - picking?
+          - coordinate systems
+          - label size
         """
         self.dim_max = dim_max
-        dim_max *= 0.10
+        dim = self.dim * 0.10
+        self.on_set_axes_length(dim)
+
+    def on_set_axes_length(self, dim=None):
+        """
+        scale coordinate system based on model length
+        """
+        if dim is None:
+            dim = self.dim_max * 0.10
         if hasattr(self, 'axes'):
             for cid, axes in iteritems(self.axes):
-                axes.SetTotalLength(dim_max, dim_max, dim_max)
+                axes.SetTotalLength(dim, dim, dim)
 
     def update_text_actors(self, subcase_id, subtitle, min_value, max_value, label):
         self.text_actors[0].SetInput('Max:  %g' % max_value)  # max
@@ -138,11 +149,20 @@ class GuiCommon(GuiAttributes):
         else:
             assert len(key) == 7, key
             (subcase_id, j, result_type, vector_size, location, data_format, label2) = key
+            nlabels = None
+            labelsize = None
+            ncolors = None
+            colormap = 'jet'
             #normi = case
             scale = 0.0
             if min_value is None and max_value is None:
                 max_value = case.max()
                 min_value = case.min()
+            if np.isnan(max_value):
+                inotnan = not np.isnan(case)
+                max_value = case[inotnan].max()
+                min_value = case[inotnan].min()
+                print('max_value = ', max_value)
 
         subtitle, label = self.get_subtitle_label(subcase_id)
         if label2:
@@ -198,12 +218,14 @@ class GuiCommon(GuiAttributes):
             is_legend_shown = self.scalar_bar.is_shown
         self.update_scalar_bar(result_type, min_value, max_value, norm_value,
                                data_format,
-                               nlabels=None, labelsize=None, ncolors=None, colormap='jet',
+                               nlabels=nlabels, labelsize=labelsize,
+                               ncolors=ncolors, colormap=colormap,
                                is_blue_to_red=is_blue_to_red,
                                is_horizontal=self.is_horizontal_scalar_bar,
                                is_shown=is_legend_shown)
         self.update_legend(icase,
                            result_type, min_value, max_value, data_format, scale,
+                           nlabels, labelsize, ncolors, colormap,
                            is_blue_to_red, self.is_horizontal_scalar_bar)
         location = self.get_case_location(key)
         self.res_widget.update_method(location)
@@ -223,10 +245,10 @@ class GuiCommon(GuiAttributes):
         if not hasattr(case, 'dtype'):
             raise RuntimeError('name=%s case=%s' % (name, case))
 
-        if issubdtype(case.dtype, numpy.integer):
+        if issubdtype(case.dtype, np.integer):
             data_type = vtk.VTK_INT
             self.grid_mapper.InterpolateScalarsBeforeMappingOn()
-        elif issubdtype(case.dtype, numpy.float):
+        elif issubdtype(case.dtype, np.float):
             data_type = vtk.VTK_FLOAT
             self.grid_mapper.InterpolateScalarsBeforeMappingOff()
         else:
@@ -235,9 +257,9 @@ class GuiCommon(GuiAttributes):
 
         if 0: # nan testing
             if case.dtype.name == 'float32':
-                case[50] = float32(1) / float32(0)
+                case[50] = np.float32(1) / np.float32(0)
             else:
-                case[50] = int32(1) / int32(0)
+                case[50] = np.int32(1) / np.int32(0)
 
         if vector_size == 1:
             if is_blue_to_red:

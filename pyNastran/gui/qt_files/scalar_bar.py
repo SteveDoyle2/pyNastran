@@ -28,6 +28,7 @@ class ScalarBar(object):
     def __init__(self, is_horizontal):
         self.scalar_bar = vtk.vtkScalarBarActor()
         self.color_function = vtk.vtkColorTransferFunction()
+        self.color_function.SetNanColor(0., 0., 0.)
         self.is_shown = True
         self.is_horizontal = False
 
@@ -213,6 +214,10 @@ class ScalarBar(object):
             nvalues = 100
         if ncolors > 100:
             ncolors = 100
+
+        if ncolors < 2 and (max_value - min_value) > 0: # data_format == '%i' and
+            ncolors = 2
+        #print('ncolors=%s nvalues=%s' % (ncolors, nvalues))
         self.scalar_bar.SetNumberOfLabels(nvalues)
         self.scalar_bar.SetMaximumNumberOfColors(ncolors)
         #is_shown = False

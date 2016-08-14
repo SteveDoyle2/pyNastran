@@ -55,16 +55,27 @@ class LegendPropertiesWindow(QtGui.QDialog):
         self._default_ncolors = data['default_ncolors']
         self._ncolors = data['ncolors']
 
-        #self._default_colormap = data['default_colormap']
-        #self._colormap = data['colormap']
-        self._default_colormap = 'jet'
-        self._colormap = 'jet'
+        self._default_colormap = data['default_colormap']
+        self._colormap = data['colormap']
 
         self._default_is_blue_to_red = data['is_blue_to_red']
         self._default_is_discrete = data['is_discrete']
         self._default_is_horizontal = data['is_horizontal']
         self._default_is_shown = data['is_shown']
 
+        self._update_defaults_to_blank()
+        self.out_data = data
+
+        QtGui.QDialog.__init__(self, win_parent)
+        #self.setupUi(self)
+        self.setWindowTitle('Legend Properties')
+        self.create_widgets()
+        self.create_layout()
+        self.set_connections()
+        #self.show()
+
+    def _update_defaults_to_blank(self):
+        """Changes the default (None) to a blank string"""
         if self._default_colormap is None:
             self._default_colormap = 'jet'
         if self._default_labelsize is None:
@@ -83,20 +94,15 @@ class LegendPropertiesWindow(QtGui.QDialog):
         if self._nlabels is None:
             self._nlabels = ''
 
-        self.out_data = data
-
-        QtGui.QDialog.__init__(self, win_parent)
-        #self.setupUi(self)
-        self.setWindowTitle('Legend Properties')
-        self.create_widgets()
-        self.create_layout()
-        self.set_connections()
-        #self.show()
-
     def update_legend(self, icase, name,
                       min_value, max_value, data_format, scale,
+                      nlabels, labelsize,
+                      ncolors, colormap,
+
                       default_title, default_min_value, default_max_value,
                       default_data_format, default_scale,
+                      default_nlabels, default_labelsize,
+                      default_ncolors, default_colormap,
                       is_blue_to_red, is_horizontal_scalar_bar):
         """
         We need to update the legend if there's been a result change request
@@ -111,6 +117,22 @@ class LegendPropertiesWindow(QtGui.QDialog):
             self._default_is_discrete = True
             self._default_is_horizontal = is_horizontal_scalar_bar
             self._default_scale = default_scale
+            self._default_nlabels = default_nlabels
+            self._default_labelsize = default_labelsize
+            self._default_ncolors = default_ncolors
+            self._default_colormap = default_colormap
+
+
+            if colormap is None:
+                colormap = 'jet'
+            if labelsize is None:
+                labelsize = ''
+            if ncolors is None:
+                ncolors = ''
+            if nlabels is None:
+                nlabels = ''
+
+            self._update_defaults_to_blank()
 
             assert isinstance(scale, float), 'scale=%r' % scale
             assert isinstance(default_scale, float), 'default_scale=%r' % default_scale
@@ -142,8 +164,17 @@ class LegendPropertiesWindow(QtGui.QDialog):
             self.scale_edit.setText(str(scale))
             self.scale_edit.setStyleSheet("QLineEdit{background: white;}")
 
-            #self.number_of_labels_edit.setValue(10)
+            self.nlabels_edit.setText(str(nlabels))
+            self.nlabels_edit.setStyleSheet("QLineEdit{background: white;}")
 
+            self.labelsize_edit.setText(str(labelsize))
+            self.labelsize_edit.setStyleSheet("QLineEdit{background: white;}")
+
+            self.ncolors_edit.setText(str(ncolors))
+            self.ncolors_edit.setStyleSheet("QLineEdit{background: white;}")
+
+            self.colormap_edit.setCurrentIndex(colormap_keys.index(str(colormap)))
+            self.on_apply()
 
     def create_widgets(self):
         # Name
@@ -191,17 +222,17 @@ class LegendPropertiesWindow(QtGui.QDialog):
         self.ncolors_edit = QtGui.QLineEdit(str(self._ncolors))
         self.ncolors_button = QtGui.QPushButton("Default")
 
+        self.colormap = QtGui.QLabel("Color Map:")
+        self.colormap_edit = QtGui.QComboBox(self)
+        self.colormap_button = QtGui.QPushButton("Default")
+        for key in colormap_keys:
+            self.colormap_edit.addItem(key)
+        self.colormap_edit.setCurrentIndex(colormap_keys.index(self._colormap))
+
         # red/blue or blue/red
         self.checkbox_blue_to_red = QtGui.QCheckBox("Min -> Blue; Max -> Red")
         self.checkbox_red_to_blue = QtGui.QCheckBox("Min -> Red; Max -> Blue")
         self.checkbox_blue_to_red.setChecked(self._default_is_blue_to_red)
-
-        # continuous / discrete
-        self.checkbox_continuous = QtGui.QCheckBox("Continuous")
-        self.checkbox_discrete = QtGui.QCheckBox("Discrete")
-        self.checkbox_discrete.setChecked(self._default_is_discrete)
-        self.checkbox_continuous.setDisabled(True)
-        self.checkbox_discrete.setDisabled(True)
 
         # horizontal / vertical
         self.checkbox_horizontal = QtGui.QCheckBox("Horizontal")
@@ -224,16 +255,12 @@ class LegendPropertiesWindow(QtGui.QDialog):
         checkboxs.addButton(self.checkbox_red_to_blue)
 
         checkboxs2 = QtGui.QButtonGroup(self)
-        checkboxs2.addButton(self.checkbox_continuous)
-        checkboxs2.addButton(self.checkbox_discrete)
+        checkboxs2.addButton(self.checkbox_vertical)
+        checkboxs2.addButton(self.checkbox_horizontal)
 
         checkboxs3 = QtGui.QButtonGroup(self)
-        checkboxs3.addButton(self.checkbox_vertical)
-        checkboxs3.addButton(self.checkbox_horizontal)
-
-        checkboxs4 = QtGui.QButtonGroup(self)
-        checkboxs4.addButton(self.checkbox_show)
-        checkboxs4.addButton(self.checkbox_hide)
+        checkboxs3.addButton(self.checkbox_show)
+        checkboxs3.addButton(self.checkbox_hide)
 
         # closing
         self.apply_button = QtGui.QPushButton("Apply")
@@ -274,6 +301,10 @@ class LegendPropertiesWindow(QtGui.QDialog):
         grid.addWidget(self.ncolors_edit, 6, 1)
         grid.addWidget(self.ncolors_button, 6, 2)
 
+        grid.addWidget(self.colormap, 7, 0)
+        grid.addWidget(self.colormap_edit, 7, 1)
+        grid.addWidget(self.colormap_button, 7, 2)
+
         ok_cancel_box = QtGui.QHBoxLayout()
         ok_cancel_box.addWidget(self.apply_button)
         ok_cancel_box.addWidget(self.ok_button)
@@ -285,17 +316,12 @@ class LegendPropertiesWindow(QtGui.QDialog):
             vbox1.addWidget(self.checkbox_red_to_blue)
 
             vbox2 = QtGui.QVBoxLayout()
-            vbox2.addWidget(self.checkbox_continuous)
-            vbox2.addWidget(self.checkbox_discrete)
-
-            vbox3 = QtGui.QVBoxLayout()
-            vbox3.addWidget(self.checkbox_vertical)
-            vbox3.addWidget(self.checkbox_horizontal)
+            vbox2.addWidget(self.checkbox_vertical)
+            vbox2.addWidget(self.checkbox_horizontal)
 
             checkboxes = QtGui.QHBoxLayout()
             checkboxes.addLayout(vbox1)
             checkboxes.addLayout(vbox2)
-            checkboxes.addLayout(vbox3)
         else:
             grid2 = QtGui.QGridLayout()
 
@@ -304,14 +330,11 @@ class LegendPropertiesWindow(QtGui.QDialog):
             grid2.addWidget(self.checkbox_blue_to_red, 1, 0)
             grid2.addWidget(self.checkbox_red_to_blue, 2, 0)
 
-            grid2.addWidget(self.checkbox_continuous, 1, 1)
-            grid2.addWidget(self.checkbox_discrete, 2, 1)
+            grid2.addWidget(self.checkbox_vertical, 1, 1)
+            grid2.addWidget(self.checkbox_horizontal, 2, 1)
 
-            grid2.addWidget(self.checkbox_vertical, 1, 2)
-            grid2.addWidget(self.checkbox_horizontal, 2, 2)
-
-            grid2.addWidget(self.checkbox_show, 1, 3)
-            grid2.addWidget(self.checkbox_hide, 2, 3)
+            grid2.addWidget(self.checkbox_show, 1, 2)
+            grid2.addWidget(self.checkbox_hide, 2, 2)
             #grid2.setSpacing(0)
 
         vbox = QtGui.QVBoxLayout()
@@ -335,13 +358,15 @@ class LegendPropertiesWindow(QtGui.QDialog):
         self.connect(self.scale_button, QtCore.SIGNAL('clicked()'), self.on_default_scale)
 
         self.connect(self.nlabels_button, QtCore.SIGNAL('clicked()'), self.on_default_nlabels)
-        self.connect(self.ncolors_button, QtCore.SIGNAL('clicked()'), self.on_default_ncolors)
         self.connect(self.labelsize_button, QtCore.SIGNAL('clicked()'), self.on_default_labelsize)
+        self.connect(self.ncolors_button, QtCore.SIGNAL('clicked()'), self.on_default_ncolors)
+        self.connect(self.colormap_button, QtCore.SIGNAL('clicked()'), self.on_default_colormap)
 
         self.connect(self.apply_button, QtCore.SIGNAL('clicked()'), self.on_apply)
         self.connect(self.ok_button, QtCore.SIGNAL('clicked()'), self.on_ok)
         self.connect(self.cancel_button, QtCore.SIGNAL('clicked()'), self.on_cancel)
         self.connect(self, QtCore.SIGNAL('triggered()'), self.closeEvent)
+        #self.colormap_edit.activated[str].connect(self.onActivated)
 
     def keyPressEvent(self, event):
         if event.key() == QtCore.Qt.Key_Escape:
@@ -374,6 +399,9 @@ class LegendPropertiesWindow(QtGui.QDialog):
     def on_default_ncolors(self):
         self.ncolors_edit.setText(str(self._default_ncolors))
         self.ncolors_edit.setStyleSheet("QLineEdit{background: white;}")
+
+    def on_default_colormap(self):
+        self.colormap_edit.setCurrentIndex(colormap_keys.index(self._default_colormap))
 
     def on_default_nlabels(self):
         self.nlabels_edit.setStyleSheet("QLineEdit{background: white;}")
@@ -490,7 +518,7 @@ class LegendPropertiesWindow(QtGui.QDialog):
         nlabels, flag5 = self.check_positive_int_or_blank(self.nlabels_edit)
         ncolors, flag6 = self.check_positive_int_or_blank(self.ncolors_edit)
         labelsize, flag7 = self.check_positive_int_or_blank(self.labelsize_edit)
-        colormap = 'jet'
+        colormap = str(self.colormap_edit.currentText())
         if 'i' in format_value:
             format_value = '%i'
 
@@ -508,7 +536,6 @@ class LegendPropertiesWindow(QtGui.QDialog):
             self.out_data['colormap'] = colormap
 
             self.out_data['is_blue_to_red'] = self.checkbox_blue_to_red.isChecked()
-            self.out_data['is_discrete'] = self.checkbox_discrete.isChecked()
             self.out_data['is_horizontal'] = self.checkbox_horizontal.isChecked()
             self.out_data['is_shown'] = self.checkbox_show.isChecked()
             self.out_data['clicked_ok'] = True
