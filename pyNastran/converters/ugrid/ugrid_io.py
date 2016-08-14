@@ -1,21 +1,20 @@
 from __future__ import print_function
+import os
 
 from six import iteritems
 from six.moves import range
-import os
 
-from numpy import vstack, amax, amin, arange, ones, zeros, where, unique
+from numpy import amax, amin, arange, ones, zeros, where, unique
+
+#VTK_TRIANGLE = 5
+import vtk
+from vtk import vtkTriangle, vtkQuad
 
 from pyNastran.converters.ugrid.surf_reader import TagReader
 from pyNastran.converters.ugrid.ugrid_reader import UGRID
 from pyNastran.converters.ugrid.ugrid2d_reader import UGRID2D_Reader
-from pyNastran.utils import print_bad_path, is_binary_file
-from pyNastran.gui.gui_objects.gui_result import GuiResult  ## TODO: update this for GuiResult
-
-#VTK_TRIANGLE = 5
-
-import vtk
-from vtk import vtkTriangle, vtkQuad
+from pyNastran.utils import is_binary_file
+from pyNastran.gui.gui_objects.gui_result import GuiResult
 
 
 class UGRID_IO(object):
@@ -75,8 +74,8 @@ class UGRID_IO(object):
         self.nElements = nelements
         self.nNodes = nnodes
 
-        print("nNodes = %s" % self.nNodes)
-        print("nElements = %s" % self.nElements)
+        print("nnodes = %s" % self.nNodes)
+        print("nelements = %s" % self.nElements)
         assert nelements > 0, nelements
 
         self.grid.Allocate(self.nElements, 1000)
@@ -94,7 +93,8 @@ class UGRID_IO(object):
         diff_node_ids = model.check_hanging_nodes(stop_on_diff=False)
         if len(diff_node_ids):
             red = (1., 0., 0.)
-            self.create_alternate_vtk_grid('hanging_nodes', color=red, line_width=5, opacity=1., point_size=10, representation='point')
+            self.create_alternate_vtk_grid('hanging_nodes', color=red, line_width=5, opacity=1.,
+                                           point_size=10, representation='point')
             self._add_ugrid_nodes_to_grid('hanging_nodes', diff_node_ids, nodes)
             self._add_alt_actors(self.alt_grids)
 
@@ -138,9 +138,11 @@ class UGRID_IO(object):
         ID = 1
 
         if hasattr(model, 'pids'):
-            form, cases = self._fill_ugrid3d_case(ugrid_filename, cases, ID, nnodes, nelements, model)
+            form, cases = self._fill_ugrid3d_case(
+                ugrid_filename, cases, ID, nnodes, nelements, model)
         else:
-            form, cases = self._fill_ugrid2d_case(ugrid_filename, cases, ID, nnodes, nelements, model)
+            form, cases = self._fill_ugrid2d_case(
+                ugrid_filename, cases, ID, nnodes, nelements, model)
 
         if plot:
             self._finish_results_io2(form, cases)
@@ -163,14 +165,14 @@ class UGRID_IO(object):
             print('nid=%s node=%s' % (nid, node))
             points.InsertPoint(nid, *node)
 
-            if 1:
-                elem = vtk.vtkVertex()
-                elem.GetPointIds().SetId(0, nid)
-            else:
-                elem = vtk.vtkSphere()
-                sphere_size = self._get_sphere_size(dim_max)
-                elem.SetRadius(sphere_size)
-                elem.SetCenter(points.GetPoint(nid))
+            #if 1:
+            elem = vtk.vtkVertex()
+            elem.GetPointIds().SetId(0, nid)
+            #else:
+                #elem = vtk.vtkSphere()
+                #sphere_size = self._get_sphere_size(dim_max)
+                #elem.SetRadius(sphere_size)
+                #elem.SetCenter(points.GetPoint(nid))
 
             self.alt_grids[name].InsertNextCell(elem.GetCellType(), elem.GetPointIds())
         self.alt_grids[name].SetPoints(points)
@@ -250,11 +252,19 @@ class UGRID_IO(object):
 
         #npids = len(model.pids)
         pids = model.pids
-        cases[(ID, 0, 'ElementID', 1, 'centroid', '%i', '')] = eids
-        cases[(ID, 1, 'NodeID', 1, 'node', '%i', '')] = nids
-        cases[(ID, 2, 'SurfaceID', 1, 'centroid', '%i', '')] = pids
+        eid_res = GuiResult(0, header='ElementID', title='ElementID',
+                            location='centroid', scalar=eids)
+        nid_res = GuiResult(0, header='NodeID', title='NodeID',
+                            location='node', scalar=nids)
+        surface_res = GuiResult(0, header='SurfaceID', title='SurfaceID',
+                                location='centroid', scalar=pids)
 
-        n = 3
+        icase = 0
+        cases[icase] = (eid_res, (0, 'ElementID'))
+        cases[icase + 1] = (nid_res, (0, 'NodeID'))
+        cases[icase + 2] = (surface_res, (0, 'SurfaceID'))
+
+        icase = 3
         if os.path.exists(tag_filename):
             #surf_ids = element_props[:, 0]
             #recon_flags = element_props[:, 1]
@@ -268,37 +278,62 @@ class UGRID_IO(object):
             float_data = zeros((nelements, 2), dtype='float64')
             for key, datai in sorted(iteritems(data)):
                 #self.log.info(datai)
-                [name, is_visc, is_recon, is_rebuild, is_fixed, is_source, is_trans, is_delete, bl_spacing, bl_thickness, nlayers] = datai
+                [name, is_visc, is_recon, is_rebuild, is_fixed, is_source,
+                 is_trans, is_delete, bl_spacing, bl_thickness, nlayers] = datai
                 i = where(pids == key)[0]
-                int_data[i, :] = [is_visc, is_recon, is_rebuild, is_fixed, is_source, is_trans, is_delete, nlayers]
+                int_data[i, :] = [is_visc, is_recon, is_rebuild, is_fixed,
+                                  is_source, is_trans, is_delete, nlayers]
                 float_data[i, :] = [bl_spacing, bl_thickness]
                 self.log.info('data[%i] = %s' % (key, name))
 
             has_tag_data = True
             tag_form = []
-            tag_form.append( ('is_visc',      n, []) )
-            tag_form.append( ('is_recon',     n+1, []) )
-            tag_form.append( ('is_rebuild',   n+2, []) )
-            tag_form.append( ('is_fixed',     n+3, []) )
-            tag_form.append( ('is_source',    n+4, []) )
-            tag_form.append( ('is_trans',     n+5, []) )
-            tag_form.append( ('is_delete',    n+6, []) )
-            tag_form.append( ('nlayers',      n+7, []) )
-            tag_form.append( ('bl_spacing',   n+8, []) )
-            tag_form.append( ('bl_thickness', n+9, []) )
+            tag_form.append(('is_visc', icase, []))
+            tag_form.append(('is_recon', icase+1, []))
+            tag_form.append(('is_rebuild', icase+2, []))
+            tag_form.append(('is_fixed', icase+3, []))
+            tag_form.append(('is_source', icase+4, []))
+            tag_form.append(('is_trans', icase+5, []))
+            tag_form.append(('is_delete', icase+6, []))
+            tag_form.append(('nlayers', icase+7, []))
+            tag_form.append(('bl_spacing', icase+8, []))
+            tag_form.append(('bl_thickness', icase+9, []))
 
-            cases[(ID, n, 'is_visc',      1, 'centroid', '%i', '')] = int_data[:, 0]
-            cases[(ID, n + 1, 'is_recon',   1, 'centroid', '%i', '')] = int_data[:, 1]
-            cases[(ID, n + 2, 'is_rebuild', 1, 'centroid', '%i', '')] = int_data[:, 2]
-            cases[(ID, n + 3, 'is_fixed',   1, 'centroid', '%i', '')] = int_data[:, 3]
-            cases[(ID, n + 4, 'is_source',  1, 'centroid', '%i', '')] = int_data[:, 4]
-            cases[(ID, n + 5, 'is_trans',   1, 'centroid', '%i', '')] = int_data[:, 5]
-            cases[(ID, n + 6, 'is_delete',  1, 'centroid', '%i', '')] = int_data[:, 6]
-            cases[(ID, n + 7, 'nlayers',    1, 'centroid', '%i', '')] = int_data[:, 7]
+            visc_res = GuiResult(0, header='is_visc', title='is_visc',
+                                 location='node', scalar=int_data[:, 0])
+            recon_res = GuiResult(0, header='is_recon', title='is_recon',
+                                  location='node', scalar=int_data[:, 1])
+            rebuild_res = GuiResult(0, header='is_rebuild', title='is_rebuild',
+                                    location='node', scalar=int_data[:, 2])
+            fixed_res = GuiResult(0, header='is_fixed', title='is_fixed',
+                                  location='node', scalar=int_data[:, 3])
+            source_res = GuiResult(0, header='is_source', title='is_source',
+                                   location='node', scalar=int_data[:, 4])
+            trans_res = GuiResult(0, header='is_trans', title='is_trans',
+                                  location='node', scalar=int_data[:, 5])
+            delete_res = GuiResult(0, header='is_delete', title='is_delete',
+                                   location='node', scalar=int_data[:, 6])
+            nlayers_res = GuiResult(0, header='nlayers', title='nlayers',
+                                    location='node', scalar=int_data[:, 7])
 
-            cases[(ID, n + 8, 'bl_spacing',   1, 'centroid', '%.3e', '')] = float_data[:, 0]
-            cases[(ID, n + 9, 'bl_thickness', 1, 'centroid', '%.3e', '')] = float_data[:, 1]
-            n += 10
+            spacing_res = GuiResult(0, header='bl_spacing', title='bl_spacing',
+                                    location='centroid', scalar=float_data[:, 0])
+            blthickness_res = GuiResult(0, header='bl_thickness', title='bl_thickness',
+                                        location='centroid', scalar=float_data[:, 1])
+
+            cases[icase] = (visc_res, (0, 'is_visc'))
+            cases[icase + 1] = (recon_res, (0, 'is_recon'))
+            cases[icase + 2] = (rebuild_res, (0, 'is_rebuild'))
+            cases[icase + 3] = (fixed_res, (0, 'is_fixed'))
+            cases[icase + 4] = (source_res, (0, 'is_source'))
+            cases[icase + 5] = (trans_res, (0, 'is_trans'))
+            cases[icase + 6] = (delete_res, (0, 'is_delete'))
+            cases[icase + 7] = (nlayers_res, (0, 'nlayers'))
+
+            cases[icase + 8] = (spacing_res, (0, 'bl_spacing'))
+            cases[icase + 9] = (blthickness_res, (0, 'bl_thickness'))
+
+            icase += 10
         else:
             self.log_info('tag_filename=%r could not be found' % tag_filename)
 
@@ -323,8 +358,11 @@ class UGRID_IO(object):
                     raise RuntimeError(msg)
                 mapbcs[islot] = bc_num
                 print(line)
-            mapbc_form.append(('Map BC', n, []))
-            cases[(ID, n, 'Map BC', 1, 'centroid', '%i', '')] = mapbcs
+            mapbc_form.append(('Map BC', icase, []))
+
+            mapbc_res = GuiResult(0, header='Map BC', title='Map BC',
+                                  location='centroid', scalar=mapbcs)
+            cases[icase + 9] = (mapbc_res, (0, 'Map BC'))
         else:
             self.log_info('mapbc_filename=%r could not be found' % mapbc_filename)
 

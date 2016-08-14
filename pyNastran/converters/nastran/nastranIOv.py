@@ -2830,6 +2830,7 @@ class NastranIO(object):
                 nz_res = GuiResult(0, header='NormalZ', title='NormalZ',
                                    location='centroid', scalar=normals[:, 2], data_format='%.2f')
 
+                #max_interior_angle[:1000] = np.nan
                 theta_res = GuiResult(0, header='Max Interior Angle', title='MaxInteriorAngle',
                                       location='centroid', scalar=np.degrees(max_interior_angle))
 

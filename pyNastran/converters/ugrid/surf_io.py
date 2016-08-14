@@ -1,16 +1,18 @@
-from numpy import vstack, amax, amin, arange, ones, zeros, where
-from pyNastran.converters.ugrid.surf_reader import SurfReader, TagReader
+from __future__ import print_function
+import os
 
-#VTK_TRIANGLE = 5
 from six import iteritems
 from six.moves import range
-import os
-from numpy import unique
+#from numpy import unique
+from numpy import vstack, amax, amin, arange, ones, zeros, where
 #from numpy import zeros, arange, mean, amax, amin, array
 
+#VTK_TRIANGLE = 5
 import vtk
 from vtk import vtkTriangle, vtkQuad
-from pyNastran.utils import print_bad_path
+
+from pyNastran.gui.gui_objects.gui_result import GuiResult
+from pyNastran.converters.ugrid.surf_reader import SurfReader, TagReader
 
 
 class SurfIO(object):
@@ -21,7 +23,7 @@ class SurfIO(object):
         data = (
             'AFLR3 Surf',
             'AFLR3 Surf (*.surf)', self.load_surf_geometry,
-             None, None)
+            None, None)
         return data
 
     def load_surf_geometry(self, surf_filename, dirname, plot=True):
@@ -89,7 +91,8 @@ class SurfIO(object):
         if len(model.nodes_failed):
             if 'failed_nodes' not in self.alt_grids:
                 yellow = (1., 1., 0.)
-                self.create_alternate_vtk_grid('failed_nodes', color=yellow, line_width=3, opacity=1.0)
+                self.create_alternate_vtk_grid('failed_nodes', color=yellow,
+                                               line_width=3, opacity=1.0)
 
             ifailed = where(model.nodes_failed == 1)[0]
             nfailed = len(ifailed)
@@ -104,7 +107,8 @@ class SurfIO(object):
                 print(nid, c)
                 points2.InsertPoint(j, *c)
                 elem.GetPointIds().SetId(0, j)
-                self.alt_grids['failed_nodes'].InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                self.alt_grids['failed_nodes'].InsertNextCell(elem.GetCellType(),
+                                                              elem.GetPointIds())
             self.alt_grids['failed_nodes'].SetPoints(points2)
             self._add_alt_actors(self.alt_grids)
 
@@ -113,9 +117,6 @@ class SurfIO(object):
             prop = actor.GetProperty()
             prop.SetRepresentationToPoints()
             prop.SetPointSize(10)
-
-
-            # self.
 
         self.nElements = nelements
         self.grid.SetPoints(points)
@@ -186,19 +187,28 @@ class SurfIO(object):
         surf_ids = element_props[:, 0]
         recon_flags = element_props[:, 1]
         grid_bcs = element_props[:, 2]
-        print(unique(grid_bcs))
+        #print(unique(grid_bcs))
 
         normals = model.get_normals()
-        cases[(ID, 0, 'ElementID', 1, 'centroid', '%i', '')] = eids
-        cases[(ID, 1, 'NodeID',    1, 'node', '%i', '')] = nids
-        cases[(ID, 2, 'SurfaceID', 1, 'centroid', '%i', '')] = surf_ids
+        eid_res = GuiResult(0, header='ElementID', title='ElementID',
+                            location='centroid', scalar=eids)
+        nid_res = GuiResult(0, header='NodeID', title='NodeID',
+                            location='node', scalar=nids)
+        surface_res = GuiResult(0, header='SurfaceID', title='SurfaceID',
+                                location='centroid', scalar=surf_ids)
+
+        icase = 0
+        cases[icase] = (eid_res, (0, 'ElementID'))
+        cases[icase + 1] = (nid_res, (0, 'NodeID'))
+        cases[icase + 2] = (surface_res, (0, 'SurfaceID'))
+
         cases[(ID, 3, 'ReconFlag', 1, 'centroid', '%i', '')] = recon_flags
-        cases[(ID, 4, 'GridBC',    1, 'centroid', '%i', '')] = grid_bcs
-        cases[(ID, 5, 'NormalX',   1, 'centroid', '%.3f', '')] = normals[:, 0]
-        cases[(ID, 6, 'NormalY',   1, 'centroid', '%.3f', '')] = normals[:, 1]
-        cases[(ID, 7, 'NormalZ',   1, 'centroid', '%.3f', '')] = normals[:, 2]
+        cases[(ID, 4, 'GridBC', 1, 'centroid', '%i', '')] = grid_bcs
+        cases[(ID, 5, 'NormalX', 1, 'centroid', '%.3f', '')] = normals[:, 0]
+        cases[(ID, 6, 'NormalY', 1, 'centroid', '%.3f', '')] = normals[:, 1]
+        cases[(ID, 7, 'NormalZ', 1, 'centroid', '%.3f', '')] = normals[:, 2]
         cases[(ID, 8, 'normSpacing', 1, 'node', '%.3e', '')] = norm_spacing
-        cases[(ID, 9, 'BL_thick',    1, 'node', '%.3e', '')] = bl_thickness
+        cases[(ID, 9, 'BL_thick', 1, 'node', '%.3e', '')] = bl_thickness
 
         if os.path.exists(tag_filename):
             tagger = TagReader()
@@ -208,37 +218,60 @@ class SurfIO(object):
             float_data = zeros((nelements, 2), dtype='float64')
             for key, datai in sorted(iteritems(data)):
                 #self.log.info(datai)
-                [name, is_visc, is_recon, is_rebuild, is_fixed, is_source, is_trans, is_delete, bl_spacing, bl_thickness, nlayers] = datai
+                [name, is_visc, is_recon, is_rebuild, is_fixed, is_source,
+                 is_trans, is_delete, bl_spacing, bl_thickness, nlayers] = datai
                 i = where(surf_ids == key)[0]
-                int_data[i, :] = [is_visc, is_recon, is_rebuild, is_fixed, is_source, is_trans, is_delete, nlayers]
+                int_data[i, :] = [is_visc, is_recon, is_rebuild, is_fixed,
+                                  is_source, is_trans, is_delete, nlayers]
                 float_data[i, :] = [bl_spacing, bl_thickness]
                 self.log.info('data[%i] = %s' % (key, name))
 
             has_tag_data = True
             tag_form = []
-            i = 10
-            tag_form.append( ('is_visc',    i, []) )
-            tag_form.append( ('is_recon',   i + 1, []) )
-            tag_form.append( ('is_rebuild', i + 2, []) )
-            tag_form.append( ('is_fixed',   i + 3, []) )
-            tag_form.append( ('is_source',  i + 4, []) )
-            tag_form.append( ('is_trans',   i + 5, []) )
-            tag_form.append( ('is_delete',  i + 6, []) )
-            tag_form.append( ('nlayers',    i + 7, []) )
-            tag_form.append( ('bl_spacing',  i + 8, []) )
-            tag_form.append( ('bl_thickness', i + 9, []) )
+            icase = 10
+            tag_form.append(('is_visc', icase, []))
+            tag_form.append(('is_recon', icase + 1, []))
+            tag_form.append(('is_rebuild', icase + 2, []))
+            tag_form.append(('is_fixed', icase + 3, []))
+            tag_form.append(('is_source', icase + 4, []))
+            tag_form.append(('is_trans', icase + 5, []))
+            tag_form.append(('is_delete', icase + 6, []))
+            tag_form.append(('nlayers', icase + 7, []))
+            tag_form.append(('bl_spacing', icase + 8, []))
+            tag_form.append(('bl_thickness', icase + 9, []))
 
-            cases[(ID, i, 'is_visc',    1, 'centroid', '%i', '')] = int_data[:, 0]
-            cases[(ID, i + 1, 'is_recon',   1, 'centroid', '%i', '')] = int_data[:, 1]
-            cases[(ID, i + 2, 'is_rebuild', 1, 'centroid', '%i', '')] = int_data[:, 2]
-            cases[(ID, i + 3, 'is_fixed',   1, 'centroid', '%i', '')] = int_data[:, 3]
-            cases[(ID, i + 4, 'is_source',  1, 'centroid', '%i', '')] = int_data[:, 4]
-            cases[(ID, i + 5, 'is_trans',   1, 'centroid', '%i', '')] = int_data[:, 5]
-            cases[(ID, i + 6, 'is_delete', 1, 'centroid', '%i', '')] = int_data[:, 6]
-            cases[(ID, i + 7, 'nlayers',   1, 'centroid', '%i', '')] = int_data[:, 7]
+            visc_res = GuiResult(0, header='is_visc', title='is_visc',
+                                 location='node', scalar=int_data[:, 0])
+            recon_res = GuiResult(0, header='is_recon', title='is_recon',
+                                  location='node', scalar=int_data[:, 1])
+            rebuild_res = GuiResult(0, header='is_rebuild', title='is_rebuild',
+                                    location='node', scalar=int_data[:, 2])
+            fixed_res = GuiResult(0, header='is_fixed', title='is_fixed',
+                                  location='node', scalar=int_data[:, 3])
+            source_res = GuiResult(0, header='is_source', title='is_source',
+                                   location='node', scalar=int_data[:, 4])
+            trans_res = GuiResult(0, header='is_trans', title='is_trans',
+                                  location='node', scalar=int_data[:, 5])
+            delete_res = GuiResult(0, header='is_delete', title='is_delete',
+                                   location='node', scalar=int_data[:, 6])
+            nlayers_res = GuiResult(0, header='nlayers', title='nlayers',
+                                    location='node', scalar=int_data[:, 7])
 
-            cases[(ID, i + 8, 'bl_spacing', 1, 'centroid', '%.3e', '')] = float_data[:, 0]
-            cases[(ID, i + 9, 'bl_thickness', 1, 'centroid', '%.3e', '')] = float_data[:, 1]
+            spacing_res = GuiResult(0, header='bl_spacing', title='bl_spacing',
+                                    location='centroid', scalar=float_data[:, 0])
+            blthickness_res = GuiResult(0, header='bl_thickness', title='bl_thickness',
+                                        location='centroid', scalar=float_data[:, 1])
+
+            cases[icase] = (visc_res, (0, 'is_visc'))
+            cases[icase + 1] = (recon_res, (0, 'is_recon'))
+            cases[icase + 2] = (rebuild_res, (0, 'is_rebuild'))
+            cases[icase + 3] = (fixed_res, (0, 'is_fixed'))
+            cases[icase + 4] = (source_res, (0, 'is_source'))
+            cases[icase + 5] = (trans_res, (0, 'is_trans'))
+            cases[icase + 6] = (delete_res, (0, 'is_delete'))
+            cases[icase + 7] = (nlayers_res, (0, 'nlayers'))
+            cases[icase + 8] = (spacing_res, (0, 'bl_spacing'))
+            cases[icase + 9] = (blthickness_res, (0, 'bl_thickness'))
 
         form = [
             ('Geometry', None, geometry_form),
