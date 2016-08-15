@@ -150,7 +150,7 @@ except ImportError:
     is_ugrid = False
 
 try:
-    from pyNastran.converters.openvsp.adb_io import ADB_IO
+    from pyNastran.converters.dev.openvsp.adb_io import ADB_IO
     is_openvsp = True
 except ImportError:
     #raise
@@ -160,7 +160,7 @@ except ImportError:
     is_openvsp = False
 
 try:
-    from pyNastran.converters.openvsp.degen_geom_io import DegenGeomIO
+    from pyNastran.converters.dev.openvsp.degen_geom_io import DegenGeomIO
     is_degen_geom = True
 except ImportError:
     raise

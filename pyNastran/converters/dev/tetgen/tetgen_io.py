@@ -7,6 +7,7 @@ import vtk
 from vtk import vtkTriangle, vtkTetra
 
 from pyNastran.converters.dev.tetgen.tetgen import Tetgen
+from pyNastran.gui.gui_objects.gui_result import GuiResult
 
 
 class TetgenIO(object):

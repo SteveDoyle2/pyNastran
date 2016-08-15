@@ -242,65 +242,66 @@ class UGRID(object):
         #assert encoding.lower() in ['ascii', 'latin1', 'utf8'], encoding
 
         if PY2:
-            bdf_file = open(bdf_filename, 'wb', encoding=encoding)
+            write = 'wb'
         else:
-            bdf_file = open(bdf_filename, 'w', encoding=encoding)
-        #bdf_file.write('CEND\n')
-        #bdf_file.write('BEGIN BULK\n')
-        bdf_file.write('$ pyNastran: punch=True\n')
-        bdf_file.write('$ pyNastran: encoding=utf-8\n')
-        mid = 1
-        bdf_file.write('MAT1, %i, 1.0e7,, 0.3\n' % mid)
+            write = 'w'
 
-        if size == 8:
-            print_card = print_card_8
-        elif size == 16:
-            if is_double:
-                print_card = print_card_double
+        with open(bdf_filename, 'w', encoding=encoding) as bdf_file:
+            #bdf_file.write('CEND\n')
+            #bdf_file.write('BEGIN BULK\n')
+            bdf_file.write('$ pyNastran: punch=True\n')
+            bdf_file.write('$ pyNastran: encoding=utf-8\n')
+            mid = 1
+            bdf_file.write('MAT1, %i, 1.0e7,, 0.3\n' % mid)
+
+            if size == 8:
+                print_card = print_card_8
+            elif size == 16:
+                if is_double:
+                    print_card = print_card_double
+                else:
+                    print_card = print_card_16
             else:
-                print_card = print_card_16
-        else:
-            raise RuntimeError(size)
+                raise RuntimeError(size)
 
-        if 1:
-            print('writing GRID')
-            for nid, node in enumerate(self.nodes):
-                card = ['GRID', nid + 1, None] + list(node)
-                bdf_file.write(print_card(card))
-        else:
-            print('skipping GRID')
+            if 1:
+                print('writing GRID')
+                for nid, node in enumerate(self.nodes):
+                    card = ['GRID', nid + 1, None] + list(node)
+                    bdf_file.write(print_card(card))
+            else:
+                print('skipping GRID')
 
-        eid = 1
-        pids = self.pids
-        if include_shells:
-            upids = unique(pids)  # auto-sorts
-            for pid in upids:
-                bdf_file.write('PSHELL,%i,%i, 0.1\n' % (pid, mid))
-            print('writing CTRIA3')
-            for element in self.tris:
-                bdf_file.write('CTRIA3  %-8i%-8i%-8i%-8i%-8i\n' % (
-                    eid, pids[eid-1], element[0], element[1], element[2]))
-                eid += 1
+            eid = 1
+            pids = self.pids
+            if include_shells:
+                upids = unique(pids)  # auto-sorts
+                for pid in upids:
+                    bdf_file.write('PSHELL,%i,%i, 0.1\n' % (pid, mid))
+                print('writing CTRIA3')
+                for element in self.tris:
+                    bdf_file.write('CTRIA3  %-8i%-8i%-8i%-8i%-8i\n' % (
+                        eid, pids[eid-1], element[0], element[1], element[2]))
+                    eid += 1
 
-            print('writing CQUAD4')
-            for element in self.quads:
-                bdf_file.write('CQUAD4  %-8i%-8i%-8i%-8i%-8i%-8i\n' % (
-                    eid, pids[eid-1], element[0], element[1], element[2], element[3]))
-                eid += 1
-        else:
-            ntris = self.tris.shape[0]
-            nquads = self.quads.shape[0]
-            eid += ntris + nquads
+                print('writing CQUAD4')
+                for element in self.quads:
+                    bdf_file.write('CQUAD4  %-8i%-8i%-8i%-8i%-8i%-8i\n' % (
+                        eid, pids[eid-1], element[0], element[1], element[2], element[3]))
+                    eid += 1
+            else:
+                ntris = self.tris.shape[0]
+                nquads = self.quads.shape[0]
+                eid += ntris + nquads
 
 
-        max_pid = pids.max()
-        #==========================================
-        # solids
-        if include_solids:
-            pid = max_pid + 1
-            eid, pid = self._write_bdf_solids(bdf_file, eid, pid, convert_pyram_to_penta=convert_pyram_to_penta)
-        bdf_file.write('ENDDATA\n')
-        bdf_file.close()
+            max_pid = pids.max()
+            #==========================================
+            # solids
+            if include_solids:
+                pid = max_pid + 1
+                eid, pid = self._write_bdf_solids(bdf_file, eid, pid, convert_pyram_to_penta=convert_pyram_to_penta)
+            bdf_file.write('ENDDATA\n')
 
     def check_hanging_nodes(self, stop_on_diff=True):
         """verifies that all nodes are used"""
@@ -351,6 +352,8 @@ class UGRID(object):
             diff2 = setdiff1d(nids, expected)
             diff = union1d(diff, diff2)
             msg = 'nnodes=%i len(nids)=%s diff=%s diff2=%s' % (nnodes, len(nids), diff, diff2)
+            print(msg)
+            print('nids = %s' % nids)
             if stop_on_diff:
                 raise RuntimeError(msg)
 
@@ -371,7 +374,7 @@ class UGRID(object):
             assert len(unique(hexa)) == 8, hexa
         return diff
 
-    def write_ugrid(self, ugrid_filename_out):
+    def write_ugrid(self, ugrid_filename_out, check_shells=True):
         """writes a UGrid model"""
         outi = determine_dytpe_nfloat_endian_from_ugrid_filename(ugrid_filename_out)
         ndarray_float, float_fmt, nfloat, endian = outi
@@ -396,7 +399,8 @@ class UGRID(object):
 
         nshells = ntris + nquads
         nsolids = ntets + npyramids + npentas + nhexas
-        assert nshells > 0, 'nquads=%s ntris=%s' % (nquads, ntris)
+        if check_shells:
+            assert nshells > 0, 'nquads=%s ntris=%s' % (nquads, ntris)
         assert nsolids > 0, 'ntets=%s npyramids=%s npentas=%s nhexas=%s' % (ntets, npyramids, npentas, nhexas)
 
         with open(ugrid_filename_out, 'wb') as f_ugrid:
@@ -988,7 +992,12 @@ class UGRID(object):
 
 def determine_dytpe_nfloat_endian_from_ugrid_filename(ugrid_filename):
     """figures out what the format of the binary data is based on the filename"""
-    base, file_format, ext = os.path.basename(ugrid_filename).split('.')
+    try:
+        base, file_format, ext = os.path.basename(ugrid_filename).split('.')
+    except ValueError:
+        msg = ('expected file of the form "model.b8.ugrid" '
+               'or "model.lb4.ugrid"; actual=%r' % ugrid_filename)
+        raise ValueError(msg)
     assert ext == 'ugrid', 'extension=%r' % ext
 
     if '8' in file_format:

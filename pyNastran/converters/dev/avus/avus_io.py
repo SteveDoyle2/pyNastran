@@ -9,6 +9,7 @@ import vtk
 from vtk import vtkHexahedron, vtkQuad, vtkTriangle, vtkTetra
 
 from pyNastran.converters.dev.avus.avus_grid import AvusGrid
+from pyNastran.gui.gui_objects.gui_result import GuiResult
 
 
 class AvusIO(object):
@@ -244,15 +245,15 @@ class AvusIO(object):
         eids = arange(1, nelements + 1)
         nids = arange(1, nnodes + 1)
 
+        eid_res = GuiResult(ID, header=element_id, title=element_id,
+                            location='centroid', scalar=eids)
+        nid_res = GuiResult(ID, header='NodeID', title='NodeID',
+                            location='node', scalar=nids)
+        icase = 0
+        cases[icase] = (eid_res, (itime, element_id))
+        cases[icase + 1] = (nid_res, (itime, 'NodeID'))
 
-        if new:
-            cases_new[0] = (ID, nids, 'NodeID', 'node', '%i', '')
-            cases_new[1] = (ID, eids, element_id, 'centroid', '%i', '')
-            #cases_new[2] = (ID, regions, 'Region', 'centroid', '%i')
-        else:
-            cases[(ID, 0, 'NodeID', 1, 'node', '%i', '')] = nids
-            cases[(ID, 1, element_id, 1, 'centroid', '%i', '')] = eids
-            #cases[(ID, 2, 'Region', 1, 'centroid', '%i')] = regions
+        #cases[(ID, 2, 'Region', 1, 'centroid', '%i')] = regions
 
         return geometry_form, cases
 

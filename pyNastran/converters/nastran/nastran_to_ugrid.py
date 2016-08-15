@@ -59,12 +59,14 @@ def nastran_to_ugrid(bdf_model, ugrid_filename_out=None, properties=None,
         model.quads = array([elements[eid].node_ids for eid in cquad4], dtype='int32')
         pquads = array([elements[eid].Pid() for eid in cquad4], dtype='int32')
         pids.append(pquads)
-    if len(pids) == 1:
-        model.pids = pids[0]
-    elif len(pids) == 2:
-        model.pids = hstack(pids)
-    else:
-        raise RuntimeError(pids)
+
+    if check_shells:
+        if len(pids) == 1:
+            model.pids = pids[0]
+        elif len(pids) == 2:
+            model.pids = hstack(pids)
+        else:
+            raise RuntimeError(pids)
 
     if ntetra:
         model.tets = array([elements[eid].node_ids for eid in ctetra], dtype='int32')
@@ -76,7 +78,7 @@ def nastran_to_ugrid(bdf_model, ugrid_filename_out=None, properties=None,
         model.hexas = array([elements[eid].node_ids for eid in chexa], dtype='int32')
 
     if ugrid_filename_out is not None:
-        model.write_ugrid(ugrid_filename_out)
+        model.write_ugrid(ugrid_filename_out, check_shells=check_shells)
     return model
 
 def merge_ugrids(a_model, b_model):

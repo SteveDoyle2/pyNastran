@@ -7,7 +7,7 @@ from numpy import arange, mean, amax, amin, zeros, hstack
 import vtk
 from vtk import vtkQuad, vtkParametricSpline
 
-from pyNastran.converters.openvsp.degen_geom import DegenGeom
+from pyNastran.converters.dev.openvsp.degen_geom import DegenGeom
 from pyNastran.gui.gui_objects.gui_result import GuiResult
 
 
