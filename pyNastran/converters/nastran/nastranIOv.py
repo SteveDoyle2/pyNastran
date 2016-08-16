@@ -2224,7 +2224,7 @@ class NastranIO(object):
                 aspect_ratio = lengths.max() / lengths.min()
 
                 normal = np.cross(v31, v42)
-                area = 0.5 * np.linalg.norm(normal)
+                areai = 0.5 * np.linalg.norm(normal)
 
                 cos_theta1 = np.dot(v21, -v14) / (np.linalg.norm(v21) * np.linalg.norm(v14))
                 cos_theta2 = np.dot(v32, -v21) / (np.linalg.norm(v32) * np.linalg.norm(v21))
