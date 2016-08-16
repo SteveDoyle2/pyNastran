@@ -33,10 +33,30 @@ def get_bad_shells(model, xyz_cid0, nid_map, max_theta=175., max_skew=70., max_a
     """
     Get the bad shell elements
 
+    Parameters
+    ----------
+    model : BDF()
+        the model object
+    xyz_cid0 : (N, 3) float ndarray
+        the xyz coordinates in cid=0
+    nid_map : dict[nid] : index
+        nid : int
+            the node id
+        index : int
+            the index of the node id in xyz_cid0
+    max_theta : float; default=175.
+        the maximum interior angle
+    max_skew : float; default=70.
+        the maximum skew angle
+    max_aspect_ratio : float; default=100.
+        the max aspect ratio
+
     Returns
     -------
     eids_failed : List[int]
         element ids that fail the criteria
+
+    shells with a edge length=0.0 are automatically added
     """
     max_theta = np.radians(max_theta)
     max_skew = np.radians(max_skew)
@@ -101,8 +121,6 @@ def get_bad_shells(model, xyz_cid0, nid_map, max_theta=175., max_skew=70., max_a
                 continue
 
             # ixj = k
-            # i
-
             # dot the local normal with the normal vector
             # then take the norm of that to determine the angle relative to the normal
             # then take the sign of that to see if we're pointing roughly towares the normal
@@ -111,13 +129,13 @@ def get_bad_shells(model, xyz_cid0, nid_map, max_theta=175., max_skew=70., max_a
             # a x b = ab sin(theta)
             # a x b / ab = sin(theta)
             # sin(theta) < 0. -> normal is flipped
-            n2 = np.sign(np.dot(np.cross(v21, v32), normal))# * np.pi
-            n3 = np.sign(np.dot(np.cross(v32, v43), normal))# * np.pi
-            n4 = np.sign(np.dot(np.cross(v43, v14), normal))# * np.pi
-            n1 = np.sign(np.dot(np.cross(v14, v21), normal))# * np.pi
+            n2 = np.sign(np.dot(np.cross(v21, v32), normal))
+            n3 = np.sign(np.dot(np.cross(v32, v43), normal))
+            n4 = np.sign(np.dot(np.cross(v43, v14), normal))
+            n1 = np.sign(np.dot(np.cross(v14, v21), normal))
             n = np.array([n1, n2, n3, n4])
-            theta_additional = np.where(n < 0, np.pi, 0.)
-            #theta_additional = 0.
+
+            theta_additional = np.where(n < 0, 2*np.pi, 0.)
             #print('theta_additional = ', theta_additional)
             #print('n1=%s n2=%s n3=%s n4=%s' % (n1, n2, n3, n4))
 
@@ -126,12 +144,12 @@ def get_bad_shells(model, xyz_cid0, nid_map, max_theta=175., max_skew=70., max_a
             cos_theta3 = np.dot(v43, -v32) / (np.linalg.norm(v43) * np.linalg.norm(v32))
             cos_theta4 = np.dot(v14, -v43) / (np.linalg.norm(v14) * np.linalg.norm(v43))
             #print([cos_theta1, cos_theta2, cos_theta3, cos_theta4])
-            theta = np.arccos([cos_theta1, cos_theta2, cos_theta3, cos_theta4]) + theta_additional
+            theta = n * np.arccos([cos_theta1, cos_theta2, cos_theta3, cos_theta4]) + theta_additional
 
             #theta = np.arcsin(np.sin(theta))
             thetai = theta.max()
-            #print(np.degrees(theta))
-            #print(np.degrees(theta).sum())
+            #print('theta = ', np.degrees(theta))
+            #print('theta.sum = ', np.degrees(theta.sum()))
             if thetai > max_theta:
                 eids_failed.append(eid)
                 model.log.debug('eid=%s failed max_theta check; theta=%s' % (

@@ -2240,23 +2240,14 @@ class NastranIO(object):
                 # a x b = ab sin(theta)
                 # a x b / ab = sin(theta)
                 # sin(theta) < 0. -> normal is flipped
-                normal2 = np.sign(np.dot(np.cross(v21, v32), normal))# * np.pi
-                normal3 = np.sign(np.dot(np.cross(v32, v43), normal))# * np.pi
-                normal4 = np.sign(np.dot(np.cross(v43, v14), normal))# * np.pi
-                normal1 = np.sign(np.dot(np.cross(v14, v21), normal))# * np.pi
+                normal2 = np.sign(np.dot(np.cross(v21, v32), normal))
+                normal3 = np.sign(np.dot(np.cross(v32, v43), normal))
+                normal4 = np.sign(np.dot(np.cross(v43, v14), normal))
+                normal1 = np.sign(np.dot(np.cross(v14, v21), normal))
                 n = np.array([normal1, normal2, normal3, normal4])
-                theta_additional = np.where(n < 0, np.pi, 0.)
-                #theta_additional = 0.
+                theta_additional = np.where(n < 0, 2*np.pi, 0.)
 
-                #print('theta_additional = ', theta_additional)
-                #print('n1=%s n2=%s n3=%s n4=%s' % (n1, n2, n3, n4))
-
-                #cos_theta1 = np.dot(v21, -v14) / (np.linalg.norm(v21) * np.linalg.norm(v14))
-                #cos_theta2 = np.dot(v32, -v21) / (np.linalg.norm(v32) * np.linalg.norm(v21))
-                #cos_theta3 = np.dot(v43, -v32) / (np.linalg.norm(v43) * np.linalg.norm(v32))
-                #cos_theta4 = np.dot(v14, -v43) / (np.linalg.norm(v14) * np.linalg.norm(v43))
-                #print([cos_theta1, cos_theta2, cos_theta3, cos_theta4])
-                theta = np.arccos([cos_theta1, cos_theta2, cos_theta3, cos_theta4]) + theta_additional
+                theta = n * np.arccos([cos_theta1, cos_theta2, cos_theta3, cos_theta4]) + theta_additional
                 max_theta = theta.max()
                 #print('theta_max = ', theta_max)
 
