@@ -1924,6 +1924,7 @@ class NastranIO(object):
         max_skew_angle = np.zeros(nelements, 'float32')
         max_warp_angle = np.zeros(nelements, 'float32')
         max_aspect_ratio = np.zeros(nelements, 'float32')
+        area = np.zeros(nelements, 'float32')
 
         # pids_good = []
         # pids_to_keep = []
@@ -2024,6 +2025,7 @@ class NastranIO(object):
             max_skew = 0.0
             max_warp = 0.0
             aspect_ratio = 1.0
+            areai = 0.
             if isinstance(element, (CTRIA3, CTRIAR)):
                 material_coord[i] = 0 if isinstance(element.thetaMcid, float) else element.thetaMcid
                 elem = vtkTriangle()
@@ -2060,6 +2062,8 @@ class NastranIO(object):
                 v21 = p2 - p1
                 v32 = p3 - p2
                 v13 = p1 - p3
+                areai = np.linalg.norm(np.cross(v21, v13))
+
                 cos_skew1 = np.dot(e2_p1, e31) / (np.linalg.norm(e2_p1) * np.linalg.norm(e31))
                 cos_skew2 = np.dot(e2_p1, -e31) / (np.linalg.norm(e2_p1) * np.linalg.norm(e31))
                 cos_skew3 = np.dot(e3_p2, e21) / (np.linalg.norm(e3_p2) * np.linalg.norm(e21))
@@ -2196,6 +2200,9 @@ class NastranIO(object):
                 p23 = (p2 + p3) / 2.
                 p34 = (p3 + p4) / 2.
                 p14 = (p4 + p1) / 2.
+                v31 = p3 - p1
+                v42 = p4 - p2
+                areai = np.linalg.norm(np.cross(v31, v42))
                 #    e3
                 # 4-------3
                 # |       |
@@ -2209,6 +2216,7 @@ class NastranIO(object):
                 max_skew = np.pi / 2. - np.abs(np.arccos([cos_skew1, cos_skew2])).min()
                 #aspect_ratio = max(p12, p23, p34, p14) / max(p12, p23, p34, p14)
                 lengths = np.linalg.norm([v21, v32, v43, v14], axis=1)
+
                 #assert len(lengths) == 3, lengths
                 aspect_ratio = lengths.max() / lengths.min()
 
@@ -2522,6 +2530,7 @@ class NastranIO(object):
             max_skew_angle[i] = max_skew
             max_warp_angle[i] = max_warp
             max_aspect_ratio[i] = aspect_ratio
+            area[i] = areai
             i += 1
         assert len(self.eid_map) > 0, self.eid_map
 
@@ -2839,7 +2848,8 @@ class NastranIO(object):
                                      location='centroid', scalar=skew)
                 aspect_res = GuiResult(0, header='Aspect Ratio', title='AspectRatio',
                                        location='centroid', scalar=max_aspect_ratio)
-
+                area_res = GuiResult(0, header='Area', title='Area',
+                                     location='centroid', scalar=area)
                 form_checks = []
                 form0.append(('Element Checks', None, form_checks))
 
@@ -2849,6 +2859,7 @@ class NastranIO(object):
                 cases[icase + 4] = (theta_res, (0, 'Max Interior Angle'))
                 cases[icase + 5] = (skew_res, (0, 'Max Skew Angle'))
                 cases[icase + 6] = (aspect_res, (0, 'Aspect Ratio'))
+                cases[icase + 7] = (area_res, (0, 'Area'))
 
                 form_checks.append(('ElementDim', icase, []))
                 form_checks.append(('NormalX', icase + 1, []))
@@ -2857,7 +2868,8 @@ class NastranIO(object):
                 form_checks.append(('Max Interior Angle', icase + 4, []))
                 form_checks.append(('Max Skew Angle', icase + 5, []))
                 form_checks.append(('Aspect Ratio', icase + 6, []))
-                icase += 7
+                form_checks.append(('Area', icase + 7, []))
+                icase += 8
                 if max_warp_angle.max() > 0.0:
                     warp_res = GuiResult(0, header='Max Warp Angle', title='MaxWarpAngle',
                                          location='centroid', scalar=np.degrees(max_warp_angle))

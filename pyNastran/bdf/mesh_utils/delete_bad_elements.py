@@ -75,7 +75,13 @@ def get_bad_shells(model, xyz_cid0, nid_map, max_theta=175., max_skew=70., max_a
             #aspect_ratio = max(p12, p23, p34, p14) / max(p12, p23, p34, p14)
             lengths = np.linalg.norm([v21, v32, v43, v14], axis=1)
             #assert len(lengths) == 3, lengths
-            aspect_ratio = lengths.max() / lengths.min()
+            length_min = lengths.min()
+            if length_min == 0.0:
+                eids_failed.append(eid)
+                model.log.debug('eid=%s failed length_min check; length_min=%s' % (eid, length_min))
+                continue
+
+            aspect_ratio = lengths.max() / length_min
             if aspect_ratio > max_aspect_ratio:
                 eids_failed.append(eid)
                 model.log.debug('eid=%s failed aspect_ratio check; AR=%s' % (eid, aspect_ratio))
@@ -140,8 +146,14 @@ def get_bad_shells(model, xyz_cid0, nid_map, max_theta=175., max_skew=70., max_a
                 continue
 
             lengths = np.linalg.norm([v21, v32, v13], axis=1)
+            length_min = lengths.min()
+            if length_min == 0.0:
+                eids_failed.append(eid)
+                model.log.debug('eid=%s failed length_min check; length_min=%s' % (eid, length_min))
+                continue
+
             #assert len(lengths) == 3, lengths
-            aspect_ratio = lengths.max() / lengths.min()
+            aspect_ratio = lengths.max() / length_min
             if aspect_ratio > max_aspect_ratio:
                 eids_failed.append(eid)
                 model.log.debug('eid=%s failed aspect_ratio check; AR=%s' % (eid, aspect_ratio))
