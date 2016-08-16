@@ -17,6 +17,7 @@ import pyNastran
 from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.bdf.mesh_utils.bdf_equivalence import bdf_equivalence_nodes
 from pyNastran.bdf.mesh_utils.collapse_bad_quads import convert_bad_quads_to_tris
+from pyNastran.bdf.mesh_utils.delete_bad_elements import get_bad_shells
 
 # testing these imports are up to date
 from pyNastran.bdf.mesh_utils.utils import *
@@ -25,6 +26,51 @@ pkg_path = pyNastran.__path__[0]
 
 
 class TestMeshUtils(unittest.TestCase):
+
+    def test_quad_180_01(self):
+        """
+        Identify a 180+ degree quad
+
+        y
+        ^         4
+        |       / |
+        |     /   |
+        |   /     |
+        | /       |
+        /         |
+        1------2  |----> x
+                \ |
+                 \|
+                  3
+        """
+        msg = (
+            'CEND\n'
+            'BEGIN BULK\n'
+            'GRID,1,,0.,0.,0.\n'
+            'GRID,2,,1.,0.,0.\n'
+            'GRID,3,,2.,-1.,0.\n'
+            'GRID,4,,2., 1.,0.\n'
+
+            'CQUAD4,100,1, 1,2,3,4\n'
+            'PSHELL,1,1,0.1\n'
+            'MAT1,1,3.0,, 0.3\n'
+            'ENDDATA'
+        )
+        bdf_filename = 'cquad4.bdf'
+
+        with codec_open(bdf_filename, 'w') as bdf_file:
+            bdf_file.write(msg)
+
+        model = read_bdf(bdf_filename, xref=True)
+        xyz_cid0 = model.get_xyz_in_coord(cid=0, dtype='float32')
+        nid_map = {}
+        for i, (nid, node) in enumerate(sorted(iteritems(model.nodes))):
+            #xyz = node.get_position()
+            #xyz_cid0[i, :] = xyz
+            nid_map[nid] = i
+        eids_to_delete = get_bad_shells(model, xyz_cid0, nid_map, max_theta=180.,
+                                        max_skew=1000., max_aspect_ratio=1000.)
+        assert eids_to_delete == [100], eids_to_delete
 
     def test_eq1(self):
         """
@@ -45,13 +91,11 @@ class TestMeshUtils(unittest.TestCase):
             'MAT1,1,3.0,, 0.3\n'
             'ENDDATA'
         )
-
         bdf_filename = 'nonunique.bdf'
         bdf_filename_out = 'unique.bdf'
 
-        bdf_file = codec_open(bdf_filename, 'w')
-        bdf_file.write(msg)
-        bdf_file.close()
+        with codec_open(bdf_filename, 'w') as bdf_file:
+            bdf_file.write(msg)
 
         tol = 0.2
         bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
@@ -93,9 +137,8 @@ class TestMeshUtils(unittest.TestCase):
         bdf_filename = 'nonunique.bdf'
         bdf_filename_out = 'unique.bdf'
 
-        bdf_file = codec_open(bdf_filename, 'w')
-        bdf_file.write(msg)
-        bdf_file.close()
+        with codec_open(bdf_filename, 'w') as bdf_file:
+            bdf_file.write(msg)
 
         tol = 0.2
         # Collapse 5/6 and 20/3; Put a 40 and 20 to test non-sequential IDs
@@ -218,9 +261,9 @@ class TestMeshUtils(unittest.TestCase):
         bdf_filename = 'nonunique2.bdf'
         bdf_filename_out = 'unique2.bdf'
 
-        bdf_file = codec_open(bdf_filename, 'w')
-        bdf_file.write('\n'.join(lines))
-        bdf_file.close()
+        with codec_open(bdf_filename, 'w') as bdf_file:
+            bdf_file.write('\n'.join(lines))
+
         tol = 0.01
         bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
                               renumber_nodes=False, neq_max=4, xref=True,
@@ -264,9 +307,8 @@ class TestMeshUtils(unittest.TestCase):
         bdf_filename = 'nonunique.bdf'
         bdf_filename_out = 'unique.bdf'
 
-        bdf_file = codec_open(bdf_filename, 'w')
-        bdf_file.write(msg)
-        bdf_file.close()
+        with codec_open(bdf_filename, 'w') as bdf_file:
+            bdf_file.write(msg)
 
         tol = 0.2
         node_set = [4, 40, 41]
@@ -360,3 +402,7 @@ class TestMeshUtils(unittest.TestCase):
         assert model.card_count['CQUAD4'] == 2, model.card_count
         assert model.card_count['CTRIA3'] == 1, model.card_count
         os.remove(bdf_filename)
+
+
+if __name__ == '__main__':  # pragma: no cover
+    unittest.main()

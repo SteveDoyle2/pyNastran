@@ -4,7 +4,14 @@ from six import iteritems
 
 
 def delete_bad_shells(model, max_theta=175., max_skew=70., max_aspect_ratio=100.):
-    """removes bad CQUAD4/CTRIA3 elements"""
+    """
+    Removes bad CQUAD4/CTRIA3 elements
+
+    Parameters
+    ----------
+    model : BDF ()
+        this should be equivalenced
+    """
     xyz_cid0 = model.get_xyz_in_coord(cid=0, dtype='float32')
     nid_map = {}
     for i, (nid, node) in enumerate(sorted(iteritems(model.nodes))):
@@ -52,10 +59,15 @@ def get_bad_shells(model, xyz_cid0, nid_map, max_theta=175., max_skew=70., max_a
             v32 = p3 - p2
             v43 = p4 - p3
             v14 = p1 - p4
+
+            v42 = p4 - p2
+            v31 = p3 - p1
             p12 = (p1 + p2) / 2.
             p23 = (p2 + p3) / 2.
             p34 = (p3 + p4) / 2.
             p14 = (p4 + p1) / 2.
+            normal = np.cross(v31, v42)
+            #area = 0.5 * np.linalg.norm(normal)
             #    e3
             # 4-------3
             # |       |
@@ -64,6 +76,7 @@ def get_bad_shells(model, xyz_cid0, nid_map, max_theta=175., max_skew=70., max_a
             #     e1
             e13 = p34 - p12
             e42 = p23 - p14
+
             cos_skew1 = np.dot(e13, e42) / (np.linalg.norm(e13) * np.linalg.norm(e42))
             cos_skew2 = np.dot(e13, -e42) / (np.linalg.norm(e13) * np.linalg.norm(e42))
             skew = np.pi / 2. - np.abs(np.arccos([cos_skew1, cos_skew2])).min()
@@ -81,15 +94,42 @@ def get_bad_shells(model, xyz_cid0, nid_map, max_theta=175., max_skew=70., max_a
                 model.log.debug('eid=%s failed aspect_ratio check; AR=%s' % (eid, aspect_ratio))
                 continue
 
+            # ixj = k
+            # i
+
+            # dot the local normal with the normal vector
+            # then take the norm of that to determine the angle relative to the normal
+            # then take the sign of that to see if we're pointing roughly towares the normal
+
+            # np.sign(np.linalg.norm(np.dot(
+            # a x b = ab sin(theta)
+            # a x b / ab = sin(theta)
+            # sin(theta) < 0. -> normal is flipped
+            n2 = np.sign(np.dot(np.cross(v21, v32), normal))# * np.pi
+            n3 = np.sign(np.dot(np.cross(v32, v43), normal))# * np.pi
+            n4 = np.sign(np.dot(np.cross(v43, v14), normal))# * np.pi
+            n1 = np.sign(np.dot(np.cross(v14, v21), normal))# * np.pi
+            n = np.array([n1, n2, n3, n4])
+            theta_additional = np.where(n < 0, np.pi, 0.)
+            #theta_additional = 0.
+            #print('theta_additional = ', theta_additional)
+            #print('n1=%s n2=%s n3=%s n4=%s' % (n1, n2, n3, n4))
+
             cos_theta1 = np.dot(v21, -v14) / (np.linalg.norm(v21) * np.linalg.norm(v14))
             cos_theta2 = np.dot(v32, -v21) / (np.linalg.norm(v32) * np.linalg.norm(v21))
             cos_theta3 = np.dot(v43, -v32) / (np.linalg.norm(v43) * np.linalg.norm(v32))
             cos_theta4 = np.dot(v14, -v43) / (np.linalg.norm(v14) * np.linalg.norm(v43))
-            theta = np.arccos([cos_theta1, cos_theta2, cos_theta3, cos_theta4]).max()
-            if theta > max_theta:
+            #print([cos_theta1, cos_theta2, cos_theta3, cos_theta4])
+            theta = np.arccos([cos_theta1, cos_theta2, cos_theta3, cos_theta4]) + theta_additional
+
+            #theta = np.arcsin(np.sin(theta))
+            thetai = theta.max()
+            #print(np.degrees(theta))
+            #print(np.degrees(theta).sum())
+            if thetai > max_theta:
                 eids_failed.append(eid)
                 model.log.debug('eid=%s failed max_theta check; theta=%s' % (
-                    eid, np.degrees(theta)))
+                    eid, np.degrees(thetai)))
                 continue
 
         elif element.type == 'CTRIA3':

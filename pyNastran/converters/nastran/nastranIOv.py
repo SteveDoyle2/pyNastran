@@ -1302,7 +1302,7 @@ class NastranIO(object):
             # - orientation -> ???
             #
             if elem.g0:
-                n0 = node.get_position()
+                n0 = elem.g0.get_position()
                 v = n0 - n1
             else:
                 ga = model.nodes[elem.Ga()]
@@ -1486,7 +1486,7 @@ class NastranIO(object):
         if no_axial.max() == 1:
             bar_form[2].append(['No Axial', icase, []])
             axial_res = GuiResult(0, header='No Axial', title='No Axial',
-                                 location='centroid', scalar=no_axial)
+                                  location='centroid', scalar=no_axial)
             cases[icase] = (axial_res, (0, 'No Axial'))
             #cases[(0, icase, 'No Axial', 1, 'centroid', '%i', '')] = no_axial
             icase += 1
@@ -1532,7 +1532,7 @@ class NastranIO(object):
             if no_bending.max() == 1:
                 bar_form[2].append(['No Bending', icase, []])
                 bending_res = GuiResult(0, header='No Bending', title='No Bending',
-                                          location='centroid', scalar=no_bending)
+                                        location='centroid', scalar=no_bending)
                 cases[icase] = (bending_res, (0, 'No Bending'))
                 #cases[(0, icase, 'No Bending', 1, 'centroid', '%i', '')] = no_bending
                 icase += 1
@@ -2192,6 +2192,9 @@ class NastranIO(object):
                 v32 = p3 - p2
                 v43 = p4 - p3
                 v14 = p1 - p4
+
+                v42 = p4 - p2
+                v31 = p3 - p1
                 p12 = (p1 + p2) / 2.
                 p23 = (p2 + p3) / 2.
                 p34 = (p3 + p4) / 2.
@@ -2212,11 +2215,42 @@ class NastranIO(object):
                 #assert len(lengths) == 3, lengths
                 aspect_ratio = lengths.max() / lengths.min()
 
+                normal = np.cross(v31, v42)
+                area = 0.5 * np.linalg.norm(normal)
+
                 cos_theta1 = np.dot(v21, -v14) / (np.linalg.norm(v21) * np.linalg.norm(v14))
                 cos_theta2 = np.dot(v32, -v21) / (np.linalg.norm(v32) * np.linalg.norm(v21))
                 cos_theta3 = np.dot(v43, -v32) / (np.linalg.norm(v43) * np.linalg.norm(v32))
                 cos_theta4 = np.dot(v14, -v43) / (np.linalg.norm(v14) * np.linalg.norm(v43))
-                max_theta = np.arccos([cos_theta1, cos_theta2, cos_theta3, cos_theta4]).max()
+                #max_theta = np.arccos([cos_theta1, cos_theta2, cos_theta3, cos_theta4]).max()
+
+                # dot the local normal with the normal vector
+                # then take the norm of that to determine the angle relative to the normal
+                # then take the sign of that to see if we're pointing roughly towares the normal
+
+                # np.sign(np.linalg.norm(np.dot(
+                # a x b = ab sin(theta)
+                # a x b / ab = sin(theta)
+                # sin(theta) < 0. -> normal is flipped
+                normal2 = np.sign(np.dot(np.cross(v21, v32), normal))# * np.pi
+                normal3 = np.sign(np.dot(np.cross(v32, v43), normal))# * np.pi
+                normal4 = np.sign(np.dot(np.cross(v43, v14), normal))# * np.pi
+                normal1 = np.sign(np.dot(np.cross(v14, v21), normal))# * np.pi
+                n = np.array([normal1, normal2, normal3, normal4])
+                theta_additional = np.where(n < 0, np.pi, 0.)
+                #theta_additional = 0.
+
+                #print('theta_additional = ', theta_additional)
+                #print('n1=%s n2=%s n3=%s n4=%s' % (n1, n2, n3, n4))
+
+                #cos_theta1 = np.dot(v21, -v14) / (np.linalg.norm(v21) * np.linalg.norm(v14))
+                #cos_theta2 = np.dot(v32, -v21) / (np.linalg.norm(v32) * np.linalg.norm(v21))
+                #cos_theta3 = np.dot(v43, -v32) / (np.linalg.norm(v43) * np.linalg.norm(v32))
+                #cos_theta4 = np.dot(v14, -v43) / (np.linalg.norm(v14) * np.linalg.norm(v43))
+                #print([cos_theta1, cos_theta2, cos_theta3, cos_theta4])
+                theta = np.arccos([cos_theta1, cos_theta2, cos_theta3, cos_theta4]) + theta_additional
+                max_theta = theta.max()
+                #print('theta_max = ', theta_max)
 
                 elem = vtkQuad()
                 elem.GetPointIds().SetId(0, n1)

@@ -3,6 +3,7 @@ from six import iteritems
 import numpy as np
 from pyNastran.bdf.cards.elements.shell import CTRIA3
 
+
 def convert_bad_quads_to_tris(model, eids_to_check=None, xyz_cid0=None, min_edge_length=0.0):
     """
     A standard quad is a nice rectangle.  If an edge is collapsed, it's a triangle.

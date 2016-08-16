@@ -576,10 +576,10 @@ class XrefMesh(BDFAttributes):
         """
         Links the nodes to coordinate systems
         """
-        gridSet = self.gridSet
+        grid_set = self.gridSet
         for n in itervalues(self.nodes):
             try:
-                n.cross_reference(self, gridSet)
+                n.cross_reference(self, grid_set)
             except:
                 self.log.error("Couldn't cross reference GRID.\n%s" % (str(n)))
                 raise
@@ -637,15 +637,14 @@ class XrefMesh(BDFAttributes):
             #    pass
             #else:
                 if element.nodes is not None:
-                    for node in element.nodes:
-                        if node is None:
+                    for nid in element.node_ids:
+                        if nid is None:
                             continue
-                        try:
-                            nodes[node.nid].add(element)
-                        except AttributeError:
-                            print(element)
-                            print('node = %s' % str(node))
-                            raise
+                        nodes[nid].add(element)
+                        #except AttributeError:
+                            #print(element)
+                            #print('node = %s' % str(node))
+                            #raise
         for node in itervalues(self.nodes):
             node.elements = nodes[node.nid]
 
