@@ -46,7 +46,7 @@ Solver
         solve, calculate responses
    - added D matricies for PSHELL, PCOMP, PSOLID
 
------------------------v0.8.0 released 2016/2/20-----------------------
+-----------------------v0.8.0 released 2016/8/20-----------------------
 Major changes:
  - BDF supports unicode
  - 24 new cards
@@ -91,6 +91,7 @@ BDF:
    - supports reading executive/case control decks
    - renumbering
    - parsing of "SET 1 THRU 10 EXCEPT, 8, 11, 12" in case control deck
+
  - fixes:
    - PBEAM has been reworked
    - SUPORT1 dropping extra cards with same sid
@@ -106,21 +107,30 @@ BDF:
    - model.material_ids
    - MPC writing bug
    - add_card and print_card_16 now handles float32
+   - CORD1x referencing bug
+   - many DMIx fixes
 
  - API changes:
+   - cards are now much easier to call directly
+     e.g. instead of passing in a BDFCard(), you can do:
+         grid = GRID(nid, cp, x, y, z, cd, ps, seid)
+     Not all cards have defaults fully defined.  The order of cards may change
+     such that all optional fields are at the end in field number order. This
+     is card dependent. Old approach can be done using 
+     `model.add_card(...)` or `GRID.add_card(card, comment)`.
    - case control now returns PRESSURE as DISPLACEMENT and not VECTOR
    - SPCD is now in self.loads, not self.spcs
    - TABDMP1 is now in self.tables_sdamping
    - SUPORT1 is now in self.suport1, not self.spcs
    - renamed spoints.spoints to spoints.points
    - deprecated echo_bdf
+   - renamed bdf.aesurfs to bdf.aesurf
 
 OP2:
  - automatically identifying NX vs MSC Nastran if header table found
- - RealRodForceArray headers bug
  - write_f06 for all classes
  - using _eigenvalue header across all transient results
- - CBushStrain/CBush1dStrain f06 writing
+ - many more f06 table writing
  - element_names removed from objects (element_name is used instead)
  - SPOINTs in tables (e.g. displacement/spc forces) now write properly
  - added subtable_name to objects
@@ -129,6 +139,17 @@ OP2:
  - better SOL200 support
  - read_op2 is ~500x faster
  - removed non-vectorized OP2
+ - pandas is supported
+
+OP2_Geom:
+ - Geometry can be accessed directly from the OP2 without needing to
+   read the BDF
+ - the same BDF objects are still created
+ - not all cards are supported
+ - not all cards are even written by Nastran
+ - using the BDF/OP2 separately is recommended, but when it works,
+   it's much faster
+ - doesn't support card limiting
 
 OP2 Issues:
  - not all NX tables supported; some still cause crashes
