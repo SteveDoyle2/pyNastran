@@ -14,7 +14,7 @@ from pyNastran.bdf.cards.elements.mass import CONM2
 from pyNastran.bdf.bdf_interface.dev.convert import convert
 
 from pyNastran.bdf.bdf import BDF, read_bdf
-from pyNastran.bdf.bdf_interface.dev_utils import bdf_equivalence_nodes
+from pyNastran.bdf.mesh_utils.bdf_equivalence import bdf_equivalence_nodes
 import pyNastran
 pkg_path = pyNastran.__path__[0]
 
