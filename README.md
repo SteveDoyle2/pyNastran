@@ -17,6 +17,22 @@
 
 [Doumentation](http://pynastran-git.readthedocs.org/en/latest/index.html)
 
+Also, check out the:
+  * [Wiki](https://github.com/SteveDoyle2/pynastran/wiki)
+  * [Discussion forum](http://groups.google.com/group/pynastran-discuss)
+  * [Developer forum](http://groups.google.com/group/pynastran-dev)
+
+for more detailed information.
+
+<!--- this isn't setup... -->
+<!--- http://stevedoyle2.github.io/pyNastran/ --->
+
+# News
+
+### pyNastran v0.8 GUI demo (8/16/2016)
+
+  [Download](https://sourceforge.net/projects/pynastran/files/?source=navbar)
+
 # Overview
 
 pyNastran is an interface library to the various Nastran file formats (BDF, OP2, OP4).  Using the BDF interface, you can read/edit/write Nastran geometry without worrying about field formatting.  Many checks are also performed to verify that your model is correct.  Using the OP2 interface, you can read very large result files very quckly and very efficiently.  Additionally, you can also extract a subset of the result data and write F06 result files.
@@ -30,26 +46,31 @@ Using the pyNastran GUI, you can read in Nastran models and quickly view results
 <!--- [![codecov.io](https://codecov.io/github/SteveDoyle2/pyNastran/coverage.svg?branch=master)](https://codecov.io/github/SteveDoyle2/pyNastran?branch=master)  --->
 
 
-Also, check out the:
-  * [Wiki](https://github.com/SteveDoyle2/pynastran/wiki)
-  * [Discussion forum](http://groups.google.com/group/pynastran-discuss)
-  * [Developer forum](http://groups.google.com/group/pynastran-dev)
-
-for more detailed information.
-
-<!--- this isn't setup... -->
-<!--- http://stevedoyle2.github.io/pyNastran/ --->
-
-# News
-
-### pyNastran v0.8 GUI demo (2/4/2016)
-
-  [Download](https://sourceforge.net/projects/pynastran/files/?source=navbar)
+## pyNastran v0.8 progress (8/16/2016)
+ - BDF
+   - 278 cards supported
+   - simplifed method to add cards
+     - grid = GRID(nid, cp, xyz, cd, ps, eid, comment)
+   - lots of optimization work
+   - bdf equivalence, renumber, deck merging
+   - element quality
+ - OP2
+   - improved SOL 200 support
+   - transform displacement/eigenvectors/spc/mpc/applied loads to global coordinate system
+   - transform stresses/forces to material coordinate system
+   - geometry can be read directly from op2 (not perfect, but when it works, it's much faster)
+ - GUI
+   - area, max interior angle, skew angle, aspect ratio results
+   - improved SOL 200 support
+   - aero models now support sideslip coordinate systems
+   - more legend control
+ - OP4
+  - fixed sparse ASCII BIGMAT bug
 
 ## pyNastran v0.8 progress (~2/2016)
  - BDF
    - supports unicode
-   - ~270 cards supported
+   - 270 cards supported
  - OP2
    - ~500x faster than v0.7.2
      - non-vectorized OP2 option has being removed
