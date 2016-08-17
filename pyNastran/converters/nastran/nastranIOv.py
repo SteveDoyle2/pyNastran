@@ -2064,7 +2064,7 @@ class NastranIO(object):
                 v21 = p2 - p1
                 v32 = p3 - p2
                 v13 = p1 - p3
-                areai = np.linalg.norm(np.cross(v21, v13))
+                areai = 0.5 * np.linalg.norm(np.cross(v21, v13))
 
                 cos_skew1 = np.dot(e2_p1, e31) / (np.linalg.norm(e2_p1) * np.linalg.norm(e31))
                 cos_skew2 = np.dot(e2_p1, -e31) / (np.linalg.norm(e2_p1) * np.linalg.norm(e31))
@@ -2207,15 +2207,19 @@ class NastranIO(object):
                 p14 = (p4 + p1) / 2.
                 v31 = p3 - p1
                 v42 = p4 - p2
-                areai = np.linalg.norm(np.cross(v31, v42))
+                normal = np.cross(v31, v42)
+                areai = 0.5 * np.linalg.norm(normal)
 
                 # the ratio of the ideal area to the actual area
                 # this is an hourglass check
-                area_ratioi = (areai/2.) / min(
+                #
+                # why does the ratio look totally wrong when I divide by 2 correctly
+                #   e.g.  area_ratioi = (2. * areai) / min(...)
+                area_ratioi = areai / min(
                     np.linalg.norm(np.cross(-v14, v21)), # v41 x v21
                     np.linalg.norm(np.cross(v32, -v21)), # v32 x v12
                     np.linalg.norm(np.cross(v43, -v32)), # v43 x v23
-                    np.linalg.norm(np.cross(v14, v43)), # v14 x v43
+                    np.linalg.norm(np.cross(v14, v43)),  # v14 x v43
                 )
                 #    e3
                 # 4-------3
@@ -2232,9 +2236,6 @@ class NastranIO(object):
                 lengths = np.linalg.norm([v21, v32, v43, v14], axis=1)
                 #assert len(lengths) == 3, lengths
                 aspect_ratio = lengths.max() / lengths.min()
-
-                normal = np.cross(v31, v42)
-                areai = 0.5 * np.linalg.norm(normal)
 
                 cos_theta1 = np.dot(v21, -v14) / (np.linalg.norm(v21) * np.linalg.norm(v14))
                 cos_theta2 = np.dot(v32, -v21) / (np.linalg.norm(v32) * np.linalg.norm(v21))
