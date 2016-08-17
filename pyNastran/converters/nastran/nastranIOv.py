@@ -2211,7 +2211,7 @@ class NastranIO(object):
 
                 # the ratio of the ideal area to the actual area
                 # this is an hourglass check
-                area_ratioi = (2 * areai) / min(
+                area_ratioi = (areai/2.) / min(
                     np.linalg.norm(np.cross(-v14, v21)), # v41 x v21
                     np.linalg.norm(np.cross(v32, -v21)), # v32 x v12
                     np.linalg.norm(np.cross(v43, -v32)), # v43 x v23
