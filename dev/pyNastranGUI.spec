@@ -98,19 +98,21 @@ assert os.path.exists(icon_main), '%s doesnt exist' % icon_main
 #from PyInstaller import compat
 #from os import listdir
 
-##mkldir = compat.base_prefix + "/Lib/site-packages/numpy/core" 
+##mkldir = compat.base_prefix + "/Lib/site-packages/numpy/core"
 #logger = logging.getLogger(__name__)
 #logger.info("MKL installed as part of numpy, importing that!")
-#binaries = [(mkldir + "/" + mkl, '') for mkl in listdir(mkldir) if mkl.startswith('mkl_')] 
+#binaries = [(mkldir + "/" + mkl, '') for mkl in listdir(mkldir) if mkl.startswith('mkl_')]
 
-
-python_path = 'F:\Anaconda'
-if PY2:
-    mkl_dll = os.path.join(python_path, 'Library', 'bin', 'mkl_def.dll')
-else:
-    mkl_dll = os.path.join(python_path, 'evns', 'py35', 'Library', 'bin', 'mkl_def3.dll')
-mkl_dll_base = os.path.basename(mkl_dll)
-assert os.path.exists(mkl_dll), '%s doesnt exist' % mlk_dll
+#python_path = 'F:\Anaconda'
+python_path = os.path.dirname(sys.executable)
+has_mkl = True
+if has_mkl:
+    if PY2:
+        mkl_dll = os.path.join(python_path, 'Library', 'bin', 'mkl_def.dll')
+    else:
+        mkl_dll = os.path.join(python_path, 'evns', 'py35', 'Library', 'bin', 'mkl_def3.dll')
+    mkl_dll_base = os.path.basename(mkl_dll)
+    assert os.path.exists(mkl_dll), '%s doesnt exist' % mkl_dll
 
 binaries = []
 if sys.platform == 'win32':
@@ -152,7 +154,7 @@ excludes = [
     'python-dateutil', 'rope', 'scikit-image', 'simplegeneric',
     'singledispatch', 'sockjs-tornado', 'ssl_match_hostname',
     'statsmodels', 'sympy', 'tk', 'toolz', 'ujson', 'unicodecsv',
-    'xlrd', 'xlwt', 'zeromq', 'zlib', 'alabaster', 
+    'xlrd', 'xlwt', 'zeromq', 'zlib', 'alabaster',
     'anaconda-client', 'appdirs', 'astroid', 'astroid', 'astropy'
     'babel', 'backports_abc', 'blackwidow', 'blaze-core', 'bokeh',
     'boto', 'clyent', 'coverage',
@@ -161,7 +163,7 @@ excludes = [
     'futures', 'gevent', 'gevent-websocket', 'hdf5', 'ipykernel',
     'ipython', 'ipywidgets', 'jdcal', 'jupyter', 'jupyter_console',
     'lazy-object-proxy', 'libtiff', 'llvmlite', 'logilab-common',
-    'lxml', 'matplotlib', 'menuinst', 'MeshPy', 
+    'lxml', 'matplotlib', 'menuinst', 'MeshPy',
     'msvc_runtime', 'nbconvert', 'networkx', 'notebook', 'numba',
     'numexpr', 'numpydoc', 'odo', 'openmdao', 'openpyxl',
     'openssl', 'pandas', 'path.py', 'pep8', 'pi', 'pip',
@@ -174,16 +176,16 @@ excludes = [
     'traitlets', 'werkzeug', 'wheel',
     'wrapt', 'wxpython', 'xlsxwriter', 'xlwings',
 
-    
+
     # not required...strange...
     'conda', 'conda-env', 'pywin32', 'python', 'vs2008_runtime',
     'pyqt', 'anaconda',
 
     # things we're using
-    'libpng', 
+    'libpng',
     #'sip', 'colorama', 'numpy', 'pillow', 'qt','scipy',
     #'vtk', 'six', 'mkl', 'mkl-service',
-] 
+]
 
 a = Analysis(analyze_files,
              pathex=pathex,
