@@ -10,46 +10,23 @@ Issues List:     https://github.com/SteveDoyle2/pyNastran/issues
 
 *** Not done....
 
---------------------------------Future--------------------------------
-Overall Notes
-
-Added BDF
-   - *** SET2,PEALST,TIC,DMI,CONM1
-
-Overall OP2
-   - ***added support for SORT2
-
-BDF Bug Fixes
-BDF API Additions
-
-Removed BDF
-
-Overall OP2
-   - added plotting support for "standard" results (***complex)
-      - ***complex results may plot in real/imag or mag/phase or PSD
-        (power spectral density)
-      - ***no temperature, stress, element forces, energy
-
-
-Overall F06
-F06 Reader
-F06 Writer
-
-Solver
-   - not released
-   - rewriting pyNastran solver (SOL 101)
-      - improved support for 3D
-      - uses case control deck to identify loads/BCs
-      - still uses dense matricies, but layout will be easier to add sparse
-        matricies later
-      - still need to build Kgg/Fg/SPC/MPC matrices, partition matrices,
-        solve, calculate responses
-   - added D matricies for PSHELL, PCOMP, PSOLID
-
------------------------v0.8.0 released 2016/8/20-----------------------
+-----------------------v0.8.0 released 2016/8/21-----------------------
 Major changes:
- - BDF supports unicode
- - 24 new cards
+ - BDF:
+   - supports unicode
+   - 24 new BDF cards (278 total cards)
+   - lots of bug fixes
+   - much better SOL 200/optimization support
+ - OP2:
+   - 500x faster
+     - removed v0.6 style dictionary result objects 
+     - it's just too slow to maintain
+   - much better NX Nastran support
+   - much better SOL 200/optimization support
+   - pandas objects can be made for iPython/Jupyter notebook
+ - much improved testing
+ - much improved GUI
+
 
 BDF:
  - unicode is now supported
@@ -162,7 +139,7 @@ GUI:
  - improved legend control
  - added sub-grids (e.g. SPCs) & sub-grid control menu
  - added label support with 'p'
- - csv result loading
+ - csv nodal/centroidal result loading for every format
  - multiple OP2 files
  - added scripting dock
  - preliminary groups
