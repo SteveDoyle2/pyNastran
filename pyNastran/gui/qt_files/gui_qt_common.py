@@ -466,10 +466,8 @@ class GuiCommon(GuiAttributes):
             cell_data.SetActiveScalars(None)
 
             point_data = self.grid.GetPointData()
-            if vector_size == 1:
-                point_data.SetActiveScalars(name_str)
-            elif vector_size == 3:
-                point_data.SetActiveVectors(name_str)
+            if vector_size == 1:                point_data.SetActiveScalars(name_str)
+            elif vector_size == 3:                point_data.SetActiveVectors(name_str)
             else:
                 raise RuntimeError(vector_size)
             #print('name_str=%r' % name_str)

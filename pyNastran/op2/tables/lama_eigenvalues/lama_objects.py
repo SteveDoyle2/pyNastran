@@ -13,7 +13,10 @@ except ImportError:
 
 
 class RealEigenvalues(BaseScalarObject):
-
+    """
+    cycle = sqrt(abs(eigenvalue)) / (2. * pi)
+    radians = sqrt(abs(eigenvalue))
+    """
     def __init__(self, title):
         #self.modeNumber = []
         BaseScalarObject.__init__(self)
@@ -127,6 +130,11 @@ class RealEigenvalues(BaseScalarObject):
 
 
 class ComplexEigenvalues(BaseScalarObject):
+    """
+    cycle = freq = eigi / (2*pi)
+    radians = eigi
+    damping = atan2(eigi, eigr) * 2
+    """
     def __init__(self, title):
         BaseScalarObject.__init__(self)
         #self.rootNumber = []

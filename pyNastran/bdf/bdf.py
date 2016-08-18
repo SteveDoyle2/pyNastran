@@ -2914,8 +2914,11 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                         self._dump_file(crash_name, lines, j)
                         msg = 'There was an invalid filename found while parsing.\n'
                         msg += 'Check the end of %r\n' % crash_name
-                        msg += 'bdf_filename2 = %r' % bdf_filename2
+                        msg += 'bdf_filename2 = %r\n' % bdf_filename2
+                        msg += 'abs_filename2 = %r\n' % os.path.abspath(bdf_filename2)
                         #msg += 'len(bdf_filename2) = %s' % len(bdf_filename2)
+                        print(msg)
+                        raise
                         raise IOError(msg)
 
                     with self._open_file(bdf_filename2, basename=False) as bdf_file:
@@ -3319,7 +3322,7 @@ IGNORE_COMMENTS = (
     'UNASSOCIATED_PROPERTIES',
     'MATERIALS', 'THERMAL MATERIALS',
     'CONSTRAINTS', 'SPCs', 'MPCs', 'RIGID ELEMENTS',
-    'LOADS', 'AERO', 'AERO CONTROL SURFACES',
+    'LOADS', 'AERO', 'STATIC AERO', 'AERO CONTROL SURFACES',
     'FLUTTER', 'GUST', 'DYNAMIC', 'OPTIMIZATION',
     'COORDS', 'THERMAL', 'TABLES', 'RANDOM TABLES',
     'SETS', 'CONTACT', 'REJECTS', 'REJECT_LINES',

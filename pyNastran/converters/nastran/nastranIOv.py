@@ -1946,6 +1946,9 @@ class NastranIO(object):
         max_skew_angle = np.zeros(nelements, 'float32')
         max_warp_angle = np.zeros(nelements, 'float32')
         max_aspect_ratio = np.zeros(nelements, 'float32')
+        area = np.zeros(nelements, 'float32')
+        area_ratio = np.zeros(nelements, 'float32')
+        taper_ratio = np.zeros(nelements, 'float32')
 
         # pids_good = []
         # pids_to_keep = []
@@ -2046,6 +2049,9 @@ class NastranIO(object):
             max_skew = 0.0
             max_warp = 0.0
             aspect_ratio = 1.0
+            areai = 0.
+            area_ratioi = 1.
+            taper_ratioi = 0.
             if isinstance(element, (CTRIA3, CTRIAR)):
                 material_coord[i] = 0 if isinstance(element.thetaMcid, float) else element.thetaMcid
                 elem = vtkTriangle()
@@ -2082,6 +2088,8 @@ class NastranIO(object):
                 v21 = p2 - p1
                 v32 = p3 - p2
                 v13 = p1 - p3
+                areai = 0.5 * np.linalg.norm(np.cross(v21, v13))
+
                 cos_skew1 = np.dot(e2_p1, e31) / (np.linalg.norm(e2_p1) * np.linalg.norm(e31))
                 cos_skew2 = np.dot(e2_p1, -e31) / (np.linalg.norm(e2_p1) * np.linalg.norm(e31))
                 cos_skew3 = np.dot(e3_p2, e21) / (np.linalg.norm(e3_p2) * np.linalg.norm(e21))
@@ -2221,6 +2229,30 @@ class NastranIO(object):
                 p23 = (p2 + p3) / 2.
                 p34 = (p3 + p4) / 2.
                 p14 = (p4 + p1) / 2.
+                v31 = p3 - p1
+                v42 = p4 - p2
+                normal = np.cross(v31, v42)
+                areai = 0.5 * np.linalg.norm(normal)
+
+                # the ratio of the ideal area to the actual area
+                # this is an hourglass check
+                #
+                # why does the ratio look totally wrong when I divide by 2 correctly
+                #   e.g.  area_ratioi = (2. * areai) / min(...)
+                area_ratioi = areai / min(
+                    np.linalg.norm(np.cross(-v14, v21)), # v41 x v21
+                    np.linalg.norm(np.cross(v32, -v21)), # v32 x v12
+                    np.linalg.norm(np.cross(v43, -v32)), # v43 x v23
+                    np.linalg.norm(np.cross(v14, v43)),  # v14 x v43
+                )
+
+                area1 = 0.5 * np.linalg.norm(np.cross(-v14, v21)) # v41 x v21
+                area2 = 0.5 * np.linalg.norm(np.cross(-v21, v32)) # v12 x v32
+                area3 = 0.5 * np.linalg.norm(np.cross(v43, v32)) # v43 x v32
+                area4 = 0.5 * np.linalg.norm(np.cross(v14, -v43)) # v14 x v34
+                aavg = (area1 + area2 + area3 + area4) / 4.
+                taper_ratioi = (abs(area1 - aavg) + abs(area2 - aavg) + abs(area3 - aavg) + abs(area4 - aavg)) / aavg
+
                 #    e3
                 # 4-------3
                 # |       |
@@ -2237,9 +2269,6 @@ class NastranIO(object):
                 #assert len(lengths) == 3, lengths
                 aspect_ratio = lengths.max() / lengths.min()
 
-                normal = np.cross(v31, v42)
-                area = 0.5 * np.linalg.norm(normal)
-
                 cos_theta1 = np.dot(v21, -v14) / (np.linalg.norm(v21) * np.linalg.norm(v14))
                 cos_theta2 = np.dot(v32, -v21) / (np.linalg.norm(v32) * np.linalg.norm(v21))
                 cos_theta3 = np.dot(v43, -v32) / (np.linalg.norm(v43) * np.linalg.norm(v32))
@@ -2254,23 +2283,14 @@ class NastranIO(object):
                 # a x b = ab sin(theta)
                 # a x b / ab = sin(theta)
                 # sin(theta) < 0. -> normal is flipped
-                normal2 = np.sign(np.dot(np.cross(v21, v32), normal))# * np.pi
-                normal3 = np.sign(np.dot(np.cross(v32, v43), normal))# * np.pi
-                normal4 = np.sign(np.dot(np.cross(v43, v14), normal))# * np.pi
-                normal1 = np.sign(np.dot(np.cross(v14, v21), normal))# * np.pi
+                normal2 = np.sign(np.dot(np.cross(v21, v32), normal))
+                normal3 = np.sign(np.dot(np.cross(v32, v43), normal))
+                normal4 = np.sign(np.dot(np.cross(v43, v14), normal))
+                normal1 = np.sign(np.dot(np.cross(v14, v21), normal))
                 n = np.array([normal1, normal2, normal3, normal4])
-                theta_additional = np.where(n < 0, np.pi, 0.)
-                #theta_additional = 0.
+                theta_additional = np.where(n < 0, 2*np.pi, 0.)
 
-                #print('theta_additional = ', theta_additional)
-                #print('n1=%s n2=%s n3=%s n4=%s' % (n1, n2, n3, n4))
-
-                #cos_theta1 = np.dot(v21, -v14) / (np.linalg.norm(v21) * np.linalg.norm(v14))
-                #cos_theta2 = np.dot(v32, -v21) / (np.linalg.norm(v32) * np.linalg.norm(v21))
-                #cos_theta3 = np.dot(v43, -v32) / (np.linalg.norm(v43) * np.linalg.norm(v32))
-                #cos_theta4 = np.dot(v14, -v43) / (np.linalg.norm(v14) * np.linalg.norm(v43))
-                #print([cos_theta1, cos_theta2, cos_theta3, cos_theta4])
-                theta = np.arccos([cos_theta1, cos_theta2, cos_theta3, cos_theta4]) + theta_additional
+                theta = n * np.arccos([cos_theta1, cos_theta2, cos_theta3, cos_theta4]) + theta_additional
                 max_theta = theta.max()
                 #print('theta_max = ', theta_max)
 
@@ -2578,6 +2598,9 @@ class NastranIO(object):
             max_skew_angle[i] = max_skew
             max_warp_angle[i] = max_warp
             max_aspect_ratio[i] = aspect_ratio
+            area[i] = areai
+            area_ratio[i] = area_ratioi
+            taper_ratio[i] = taper_ratioi
             i += 1
         assert len(self.eid_map) > 0, self.eid_map
 
@@ -2741,7 +2764,8 @@ class NastranIO(object):
                 except KeyError:
                     print('mids = %s' % mids)
                     print('mids = %s' % model.materials.keys())
-                    raise
+                    continue
+                    #raise
                 if mat.type == 'MAT1':
                     e11i = e22i = mat.e
                 elif mat.type == 'MAT8':
@@ -2887,6 +2911,8 @@ class NastranIO(object):
                                    location='centroid', scalar=normals[:, 2], data_format='%.2f')
 
                 #max_interior_angle[:1000] = np.nan
+                area_res = GuiResult(0, header='Area', title='Area',
+                                     location='centroid', scalar=area)
                 theta_res = GuiResult(0, header='Max Interior Angle', title='MaxInteriorAngle',
                                       location='centroid', scalar=np.degrees(max_interior_angle))
 
@@ -2895,6 +2921,10 @@ class NastranIO(object):
                                      location='centroid', scalar=skew)
                 aspect_res = GuiResult(0, header='Aspect Ratio', title='AspectRatio',
                                        location='centroid', scalar=max_aspect_ratio)
+                arearatio_res = GuiResult(0, header='Area Ratio', title='Area Ratio',
+                                          location='centroid', scalar=area_ratio)
+                taperratio_res = GuiResult(0, header='Taper Ratio', title='Taper Ratio',
+                                           location='centroid', scalar=taper_ratio)
 
                 form_checks = []
                 form0.append(('Element Checks', None, form_checks))
@@ -2902,18 +2932,24 @@ class NastranIO(object):
                 cases[icase + 1] = (nx_res, (0, 'NormalX'))
                 cases[icase + 2] = (ny_res, (0, 'NormalY'))
                 cases[icase + 3] = (nz_res, (0, 'NormalZ'))
-                cases[icase + 4] = (theta_res, (0, 'Max Interior Angle'))
-                cases[icase + 5] = (skew_res, (0, 'Max Skew Angle'))
-                cases[icase + 6] = (aspect_res, (0, 'Aspect Ratio'))
+                cases[icase + 4] = (area_res, (0, 'Area'))
+                cases[icase + 5] = (theta_res, (0, 'Max Interior Angle'))
+                cases[icase + 6] = (skew_res, (0, 'Max Skew Angle'))
+                cases[icase + 7] = (aspect_res, (0, 'Aspect Ratio'))
+                cases[icase + 8] = (arearatio_res, (0, 'Area Ratio'))
+                cases[icase + 9] = (taperratio_res, (0, 'Taper Ratio'))
 
                 form_checks.append(('ElementDim', icase, []))
                 form_checks.append(('NormalX', icase + 1, []))
                 form_checks.append(('NormalY', icase + 2, []))
                 form_checks.append(('NormalZ', icase + 3, []))
-                form_checks.append(('Max Interior Angle', icase + 4, []))
-                form_checks.append(('Max Skew Angle', icase + 5, []))
-                form_checks.append(('Aspect Ratio', icase + 6, []))
-                icase += 7
+                form_checks.append(('Area', icase + 4, []))
+                form_checks.append(('Max Interior Angle', icase + 5, []))
+                form_checks.append(('Max Skew Angle', icase + 6, []))
+                form_checks.append(('Aspect Ratio', icase + 7, []))
+                form_checks.append(('Area Ratio', icase + 8, []))
+                form_checks.append(('Taper Ratio', icase + 9, []))
+                icase += 10
                 if max_warp_angle.max() > 0.0:
                     warp_res = GuiResult(0, header='Max Warp Angle', title='MaxWarpAngle',
                                          location='centroid', scalar=np.degrees(max_warp_angle))
@@ -3550,11 +3586,15 @@ class NastranIO(object):
             icase = self._fill_op2_oug_oqg(cases, model, key, icase,
                                            disp_dict, header_dict)
             ncases = icase - ncases_old
+            #print('ncases=%s icase=%s' % (ncases, icase))
             #assert ncases > 0, ncases
 
-            # makes a double listing; why was it here?
-            #for itime, dt in enumerate(times):
-                #key_itime.append((key, itime))
+            if ncases:
+                # can potentially make a double listing, but we need it
+                # eigenvector only cases
+                for itime, dt in enumerate(times):
+                    new_key = (key, itime)
+                    key_itime.append(new_key)
 
             for itime, dt in enumerate(times):
                 ncases_old = icase
@@ -3571,11 +3611,12 @@ class NastranIO(object):
                     cases, model, key, icase, itime,
                     strain_energy_dict, header_dict, is_static)
                 ncases = icase - ncases_old
-                if ncases:
-                    key_itime.append((key, itime))
+                new_key = (key, itime)
+                if ncases and new_key not in key_itime:
+                    key_itime.append(new_key)
             #icase = self._fill_op2_oug_oqg(cases, model, key, icase,
                                            #disp_dict, header_dict)
-            #print('******', form_time)
+            #print('******form_time =', form_time)
             #print(header)
 
         form_out = []
@@ -3604,8 +3645,9 @@ class NastranIO(object):
             subtitle = key[4]
             if subcase_id != subcase_id_old or subtitle != subtitle_old:
                 count_str = '' if count == 0 else ' ; opt_count=%s' % count_old
+                subcase_str = 'Subcase %s; %s%s' % (subcase_id_old, subtitle_old, count_str)
                 res = (
-                    'Subcase %s; %s%s' % (subcase_id_old, subtitle_old, count_str),
+                    subcase_str.rstrip('; '),
                     None,
                     form_resultsi_subcase
                 )
@@ -3663,8 +3705,9 @@ class NastranIO(object):
 
         if subcase_id:
             count_str = '' if count == 0 else ' ; opt_count=%s' % count_old
+            subcase_str = 'Subcase %s; %s%s' % (subcase_id, subtitle, count_str)
             res = (
-                'Subcase %s; %s%s' % (subcase_id, subtitle, count_str),
+                subcase_str.strip('; '),
                 None,
                 form_resultsi_subcase
             )
@@ -3962,6 +4005,7 @@ class NastranIO(object):
             if not hasattr(case, 'data'):
                 continue
 
+            ntimes = case.ntimes
             for itime in range(ntimes):
                 dt = case._times[itime]
                 header = self._get_nastran_header(case, dt, itime)
@@ -4503,6 +4547,7 @@ class NastranIO(object):
                                       location='centroid', scalar=is_bending_y, data_format=fmt)
                 is_mz_res = GuiResult(subcase_id, header='IsBendingZ', title='IsBendingZ',
                                       location='centroid', scalar=is_bending_z, data_format=fmt)
+
                 cases[icase] = (is_fx_res, (subcase_id, 'IsAxial'))
                 cases[icase + 1] = (is_fy_res, (subcase_id, 'IsShearY'))
                 cases[icase + 2] = (is_fz_res, (subcase_id, 'IsShearZ'))

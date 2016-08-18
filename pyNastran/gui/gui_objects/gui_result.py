@@ -37,15 +37,15 @@ class GuiResult(object):
         self.scalar = scalar
         #self.data_type = self.dxyz.dtype.str # '<c8', '<f4'
         self.data_type = self.scalar.dtype.str # '<c8', '<f4'
-        self.is_real = True if self.data_type in ['<i4', '<i8', '<f4', '<f8'] else False
+        self.is_real = True if self.data_type in ['<i4', '<i8', '<f4', '<f8', '|i1'] else False
         self.is_complex = not self.is_real
         self.nlabels = nlabels
         self.labelsize = labelsize
         self.ncolors = ncolors
         self.colormap = colormap
 
-
-        if self.data_type in ['<i4', '<i8']:
+        #print('title=%r data_type=%r' % (self.title, self.data_type))
+        if self.data_type in ['<i4', '<i8', '|i1']:
             self.data_format = '%i'
         elif data_format is None:
             self.data_format = '%.2f'

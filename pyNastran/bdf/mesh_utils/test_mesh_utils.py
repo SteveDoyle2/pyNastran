@@ -4,7 +4,7 @@ import unittest
 from codecs import open as codec_open
 
 from six import iteritems
-from numpy import array, intersect1d
+import numpy as np
 #import pyNastran
 #from pyNastran.bdf.bdf import BDF
 
@@ -24,11 +24,15 @@ from pyNastran.bdf.mesh_utils.utils import *
 
 pkg_path = pyNastran.__path__[0]
 
+np.set_printoptions(edgeitems=3, infstr='inf',
+                    linewidth=75, nanstr='nan', precision=3,
+                    suppress=True, threshold=1000, formatter=None)
+
 
 class TestMeshUtils(unittest.TestCase):
 
     def test_quad_180_01(self):
-        """
+        r"""
         Identify a 180+ degree quad
 
         y
@@ -199,10 +203,10 @@ class TestMeshUtils(unittest.TestCase):
         os.remove(bdf_filename_out)
 
         tol = 0.2
-        aset = array([20, 3, 4], dtype='int32')
-        bset = array([20, 3], dtype='int32')
+        aset = np.array([20, 3, 4], dtype='int32')
+        bset = np.array([20, 3], dtype='int32')
 
-        node_set = intersect1d(aset, bset)
+        node_set = np.intersect1d(aset, bset)
         assert len(node_set) > 0, node_set
         # Only collpase 2 nodes
         bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
@@ -334,6 +338,7 @@ class TestMeshUtils(unittest.TestCase):
         os.remove(bdf_filename_out)
 
     def test_convert_01(self):
+        """converts the CONM2s units"""
         model = BDF()
         eid = 1000
         nid = 100
@@ -354,6 +359,7 @@ class TestMeshUtils(unittest.TestCase):
         #print(model.masses[eid].write_card_16())
 
     def test_convert_02(self):
+        """converts a full model units"""
         bdf_filename = os.path.abspath(
             os.path.join(pkg_path, '..', 'models', 'bwb', 'BWB_saero.bdf'))
         bdf_filename_out = os.path.abspath(

@@ -3765,7 +3765,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             if vector_size == 3:
                 plot_value = obj.get_plot_value(i, res_name) # vector
                 update_3d = True
-                print('seeting scale=%s' % scale)
+                #print('setting scale=%s' % scale)
                 assert isinstance(scale, float), scale
                 obj.set_scale(i, res_name, scale)
             else:

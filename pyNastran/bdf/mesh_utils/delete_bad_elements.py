@@ -3,7 +3,7 @@ import numpy as np
 from six import iteritems
 
 
-def delete_bad_shells(model, max_theta=175., max_skew=70., max_aspect_ratio=100.):
+def delete_bad_shells(model, max_theta=175., max_skew=70., max_aspect_ratio=100., max_taper_ratio=4.0):
     """
     Removes bad CQUAD4/CTRIA3 elements
 
@@ -19,7 +19,8 @@ def delete_bad_shells(model, max_theta=175., max_skew=70., max_aspect_ratio=100.
         #xyz_cid0[i, :] = xyz
         nid_map[nid] = i
     eids_to_delete = get_bad_shells(model, xyz_cid0, nid_map, max_theta=max_theta,
-                                    max_skew=max_skew, max_aspect_ratio=max_aspect_ratio)
+                                    max_skew=max_skew, max_aspect_ratio=max_aspect_ratio,
+                                    max_taper_ratio=max_taper_ratio)
 
     for eid in eids_to_delete:
         del model.elements[eid]
@@ -29,14 +30,36 @@ def delete_bad_shells(model, max_theta=175., max_skew=70., max_aspect_ratio=100.
     return model
 
 
-def get_bad_shells(model, xyz_cid0, nid_map, max_theta=175., max_skew=70., max_aspect_ratio=100.):
+def get_bad_shells(model, xyz_cid0, nid_map, max_theta=175., max_skew=70., max_aspect_ratio=100., max_taper_ratio=4.0):
     """
     Get the bad shell elements
+
+    Parameters
+    ----------
+    model : BDF()
+        the model object
+    xyz_cid0 : (N, 3) float ndarray
+        the xyz coordinates in cid=0
+    nid_map : dict[nid] : index
+        nid : int
+            the node id
+        index : int
+            the index of the node id in xyz_cid0
+    max_theta : float; default=175.
+        the maximum interior angle
+    max_skew : float; default=70.
+        the maximum skew angle
+    max_aspect_ratio : float; default=100.
+        the max aspect ratio
+    taper_ratio : float; default=2.0
+        the taper ratio; applies to CQUAD4s only
 
     Returns
     -------
     eids_failed : List[int]
         element ids that fail the criteria
+
+    shells with a edge length=0.0 are automatically added
     """
     max_theta = np.radians(max_theta)
     max_skew = np.radians(max_skew)
@@ -67,7 +90,7 @@ def get_bad_shells(model, xyz_cid0, nid_map, max_theta=175., max_skew=70., max_a
             p34 = (p3 + p4) / 2.
             p14 = (p4 + p1) / 2.
             normal = np.cross(v31, v42)
-            #area = 0.5 * np.linalg.norm(normal)
+            #areai = 0.5 * np.linalg.norm(normal)
             #    e3
             # 4-------3
             # |       |
@@ -88,15 +111,30 @@ def get_bad_shells(model, xyz_cid0, nid_map, max_theta=175., max_skew=70., max_a
             #aspect_ratio = max(p12, p23, p34, p14) / max(p12, p23, p34, p14)
             lengths = np.linalg.norm([v21, v32, v43, v14], axis=1)
             #assert len(lengths) == 3, lengths
-            aspect_ratio = lengths.max() / lengths.min()
+            length_min = lengths.min()
+            if length_min == 0.0:
+                eids_failed.append(eid)
+                model.log.debug('eid=%s failed length_min check; length_min=%s' % (eid, length_min))
+                continue
+
+            aspect_ratio = lengths.max() / length_min
             if aspect_ratio > max_aspect_ratio:
                 eids_failed.append(eid)
                 model.log.debug('eid=%s failed aspect_ratio check; AR=%s' % (eid, aspect_ratio))
                 continue
 
-            # ixj = k
-            # i
+            area1 = 0.5 * np.linalg.norm(np.cross(-v14, v21)) # v41 x v21
+            area2 = 0.5 * np.linalg.norm(np.cross(-v21, v32)) # v12 x v32
+            area3 = 0.5 * np.linalg.norm(np.cross(v43, v32)) # v43 x v32
+            area4 = 0.5 * np.linalg.norm(np.cross(v14, -v43)) # v14 x v34
+            aavg = (area1 + area2 + area3 + area4) / 4.
+            taper_ratioi = (abs(area1 - aavg) + abs(area2 - aavg) + abs(area3 - aavg) + abs(area4 - aavg)) / aavg
+            if taper_ratioi > max_taper_ratio:
+                eids_failed.append(eid)
+                model.log.debug('eid=%s failed taper_ratio check; AR=%s' % (eid, taper_ratioi))
+                continue
 
+            # ixj = k
             # dot the local normal with the normal vector
             # then take the norm of that to determine the angle relative to the normal
             # then take the sign of that to see if we're pointing roughly towares the normal
@@ -105,13 +143,13 @@ def get_bad_shells(model, xyz_cid0, nid_map, max_theta=175., max_skew=70., max_a
             # a x b = ab sin(theta)
             # a x b / ab = sin(theta)
             # sin(theta) < 0. -> normal is flipped
-            n2 = np.sign(np.dot(np.cross(v21, v32), normal))# * np.pi
-            n3 = np.sign(np.dot(np.cross(v32, v43), normal))# * np.pi
-            n4 = np.sign(np.dot(np.cross(v43, v14), normal))# * np.pi
-            n1 = np.sign(np.dot(np.cross(v14, v21), normal))# * np.pi
+            n2 = np.sign(np.dot(np.cross(v21, v32), normal))
+            n3 = np.sign(np.dot(np.cross(v32, v43), normal))
+            n4 = np.sign(np.dot(np.cross(v43, v14), normal))
+            n1 = np.sign(np.dot(np.cross(v14, v21), normal))
             n = np.array([n1, n2, n3, n4])
-            theta_additional = np.where(n < 0, np.pi, 0.)
-            #theta_additional = 0.
+
+            theta_additional = np.where(n < 0, 2*np.pi, 0.)
             #print('theta_additional = ', theta_additional)
             #print('n1=%s n2=%s n3=%s n4=%s' % (n1, n2, n3, n4))
 
@@ -120,12 +158,12 @@ def get_bad_shells(model, xyz_cid0, nid_map, max_theta=175., max_skew=70., max_a
             cos_theta3 = np.dot(v43, -v32) / (np.linalg.norm(v43) * np.linalg.norm(v32))
             cos_theta4 = np.dot(v14, -v43) / (np.linalg.norm(v14) * np.linalg.norm(v43))
             #print([cos_theta1, cos_theta2, cos_theta3, cos_theta4])
-            theta = np.arccos([cos_theta1, cos_theta2, cos_theta3, cos_theta4]) + theta_additional
+            theta = n * np.arccos([cos_theta1, cos_theta2, cos_theta3, cos_theta4]) + theta_additional
 
             #theta = np.arcsin(np.sin(theta))
             thetai = theta.max()
-            #print(np.degrees(theta))
-            #print(np.degrees(theta).sum())
+            #print('theta = ', np.degrees(theta))
+            #print('theta.sum = ', np.degrees(theta.sum()))
             if thetai > max_theta:
                 eids_failed.append(eid)
                 model.log.debug('eid=%s failed max_theta check; theta=%s' % (
@@ -180,8 +218,14 @@ def get_bad_shells(model, xyz_cid0, nid_map, max_theta=175., max_skew=70., max_a
                 continue
 
             lengths = np.linalg.norm([v21, v32, v13], axis=1)
+            length_min = lengths.min()
+            if length_min == 0.0:
+                eids_failed.append(eid)
+                model.log.debug('eid=%s failed length_min check; length_min=%s' % (eid, length_min))
+                continue
+
             #assert len(lengths) == 3, lengths
-            aspect_ratio = lengths.max() / lengths.min()
+            aspect_ratio = lengths.max() / length_min
             if aspect_ratio > max_aspect_ratio:
                 eids_failed.append(eid)
                 model.log.debug('eid=%s failed aspect_ratio check; AR=%s' % (eid, aspect_ratio))
