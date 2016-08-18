@@ -133,6 +133,8 @@ class Model(QtCore.QAbstractTableModel):
 
 
 class EditGeometryProperties(QtGui.QDialog):
+    force = True
+    allow_update = True
     def __init__(self, data, win_parent=None):
         """
         +------------------+
@@ -262,12 +264,15 @@ class EditGeometryProperties(QtGui.QDialog):
         self.point_size_edit.setRange(1, 15)
         self.point_size_edit.setSingleStep(1)
         self.point_size_edit.setValue(point_size)
+        self.point_size.setVisible(False)
+        self.point_size_edit.setVisible(False)
         if self.use_slider:
             self.point_size_slider_edit = QtGui.QSlider(QtCore.Qt.Horizontal)
             self.point_size_slider_edit.setRange(1, 15)
             self.point_size_slider_edit.setValue(point_size)
             self.point_size_slider_edit.setTickInterval(1)
             self.point_size_slider_edit.setTickPosition(QtGui.QSlider.TicksBelow)
+            self.point_size_slider_edit.setVisible(False)
 
         if self.representation in ['wire', 'surface']:
             self.point_size.setEnabled(False)
@@ -279,10 +284,11 @@ class EditGeometryProperties(QtGui.QDialog):
         self.bar_scale_edit = QtGui.QDoubleSpinBox(self)
         #self.bar_scale_edit.setRange(0.01, 1.0)  # was 0.1
         #self.bar_scale_edit.setRange(0.05, 5.0)
-        self.bar_scale_edit.setDecimals(2)
+        self.bar_scale_edit.setDecimals(1)
         #self.bar_scale_edit.setSingleStep(bar_scale / 10.)
-        self.bar_scale_edit.setSingleStep(0.05)
+        self.bar_scale_edit.setSingleStep(0.1)
         self.bar_scale_edit.setValue(bar_scale)
+
         #if self.use_slider:
             #self.bar_scale_slider_edit = QtGui.QSlider(QtCore.Qt.Horizontal)
             #self.bar_scale_slider_edit.setRange(1, 100)  # 1/0.05 = 100/5.0
@@ -290,9 +296,12 @@ class EditGeometryProperties(QtGui.QDialog):
             #self.bar_scale_slider_edit.setTickInterval(10)
             #self.bar_scale_slider_edit.setTickPosition(QtGui.QSlider.TicksBelow)
 
-        if bar_scale == 0.0:
+        if self.representation != 'bar':
             self.bar_scale.setEnabled(False)
             self.bar_scale_edit.setEnabled(False)
+            self.bar_scale.setVisible(False)
+            self.bar_scale_edit.setVisible(False)
+            #self.bar_scale_slider_edit.setVisible(False)
             #self.bar_scale_slider_edit.setEnabled(False)
 
         # show/hide
@@ -334,6 +343,19 @@ class EditGeometryProperties(QtGui.QDialog):
         self.update_active_key(i)
 
     def update_active_key(self, index):
+        """
+        Parameters
+        ----------
+        index : PyQt4.QtCore.QModelIndex
+            the index of the list
+
+        Internal Parameters
+        -------------------
+        name : str
+            the name of obj
+        obj : CoordProperties, AltGeometry
+            the storage object for things like line_width, point_size, etc.
+        """
         old_obj = self.out_data[self.active_key]
         old_obj.line_width = self.line_width_edit.value()
         old_obj.point_size = self.point_size_edit.value()
@@ -348,9 +370,6 @@ class EditGeometryProperties(QtGui.QDialog):
         self.name_edit.setText(name)
         obj = self.out_data[name]
         if isinstance(obj, CoordProperties):
-            #line_width = 0
-            #point_size = 0
-            #bar_scale = 0.0
             opacity = 1.0
             representation = 'coord'
             is_visible = obj.is_visible
@@ -366,17 +385,24 @@ class EditGeometryProperties(QtGui.QDialog):
                                           "background-color: rgb(%s, %s, %s);" % tuple(obj.color) +
                                           #"border:1px solid rgb(255, 170, 255); "
                                           "}")
+            self.allow_update = False
+            self.force = False
             self.line_width_edit.setValue(line_width)
             self.point_size_edit.setValue(point_size)
             self.bar_scale_edit.setValue(bar_scale)
+            self.force = True
+            self.allow_update = True
         else:
             raise NotImplementedError(obj)
 
         allowed_representations = [
-            'main', 'surface', 'coord', 'toggle', 'wire', 'point', 'wire']
+            'main', 'surface', 'coord', 'toggle', 'wire', 'point', 'bar']
+
         if self.representation != representation:
             self.representation = representation
-            assert representation in allowed_representations, 'name=%r representation=%r' % (name, representation)
+            if representation not in allowed_representations:
+                msg = 'name=%r; representation=%r is invalid\nrepresentations=%r' % (
+                    name, representation, allowed_representations)
 
             if self.representation == 'coord':
                 self.color.setVisible(False)
@@ -402,7 +428,7 @@ class EditGeometryProperties(QtGui.QDialog):
                 self.point_size.setVisible(True)
                 self.point_size_edit.setVisible(True)
                 self.bar_scale.setVisible(True)
-                self.bar_scale_edit.setVisible(True)
+                #self.bar_scale_edit.setVisible(True)
                 self.opacity.setVisible(True)
                 self.opacity_edit.setVisible(True)
                 if self.use_slider:
@@ -420,11 +446,12 @@ class EditGeometryProperties(QtGui.QDialog):
                     self.line_width_edit.setEnabled(True)
                     self.bar_scale.setEnabled(False)
                     self.bar_scale_edit.setEnabled(False)
+                    show_points = False
+                    show_line_width = True
+                    show_bar_scale = False
                     if self.use_slider:
-                        self.point_size_slider_edit.setEnabled(False)
                         self.line_width_slider_edit.setEnabled(True)
                         #self.bar_scale_slider_edit.setVisible(False)
-
                 else:
                     self.color.setEnabled(True)
                     self.color_edit.setEnabled(True)
@@ -432,28 +459,37 @@ class EditGeometryProperties(QtGui.QDialog):
                     show_points = False
                     if self.representation in ['point', 'wire+point']:
                         show_points = True
-                    self.point_size.setEnabled(show_points)
-                    self.point_size_edit.setEnabled(show_points)
-                    if self.use_slider:
-                        self.point_size_slider_edit.setEnabled(show_points)
 
                     show_line_width = False
-                    if self.representation in ['wire', 'wire+point']:
+                    if self.representation in ['wire', 'wire+point', 'bar']:
                         show_line_width = True
-                    self.line_width.setEnabled(show_line_width)
-                    self.line_width_edit.setEnabled(show_line_width)
-                    if self.use_slider:
-                        self.line_width_slider_edit.setEnabled(show_line_width)
 
-                    if bar_scale == 0.0:
-                        enable_bar_scale = False
+                    if representation == 'bar':
+                        show_bar_scale = True
                     else:
-                        enable_bar_scale = True
-                    self.bar_scale.setEnabled(enable_bar_scale)
-                    self.bar_scale_edit.setEnabled(enable_bar_scale)
+                        show_bar_scale = False
+                    #self.bar_scale_button.setVisible(show_bar_scale)
                     #self.bar_scale_edit.setSingleStep(bar_scale / 10.)
                     #if self.use_slider:
                         #self.bar_scale_slider_edit.setEnabled(False)
+
+                self.point_size.setEnabled(show_points)
+                self.point_size_edit.setEnabled(show_points)
+                self.point_size.setVisible(show_points)
+                self.point_size_edit.setVisible(show_points)
+
+                self.line_width.setEnabled(show_line_width)
+                self.line_width_edit.setEnabled(show_line_width)
+
+                self.bar_scale.setEnabled(show_bar_scale)
+                self.bar_scale_edit.setEnabled(show_bar_scale)
+                self.bar_scale.setVisible(show_bar_scale)
+                self.bar_scale_edit.setVisible(show_bar_scale)
+                if self.use_slider:
+                    self.point_size_slider_edit.setEnabled(show_points)
+                    self.point_size_slider_edit.setVisible(show_points)
+                    self.line_width_slider_edit.setEnabled(show_line_width)
+
 
             #if self.representation in ['wire', 'surface']:
 
@@ -462,7 +498,10 @@ class EditGeometryProperties(QtGui.QDialog):
             #self.opacity_slider_edit.setValue(opacity*10)
         self.checkbox_show.setChecked(is_visible)
         self.checkbox_hide.setChecked(not is_visible)
-        self.on_apply(force=True)
+
+        passed = self.on_validate()
+        #self.on_apply(force=True)  # TODO: was turned on...do I want this???
+        #self.allow_update = True
 
     #def on_name_select(self):
         #print('on_name_select')
@@ -597,19 +636,19 @@ class EditGeometryProperties(QtGui.QDialog):
                                           "background-color: rgb(%s, %s, %s);" % tuple(obj.color) +
                                           #"border:1px solid rgb(255, 170, 255); "
                                           "}")
-        self.on_apply(force=True)
+        self.on_apply(force=self.force)
 
     def on_show(self):
         name = self.active_key
         is_checked = self.checkbox_show.isChecked()
         self.out_data[name].is_visible = is_checked
-        self.on_apply(force=True)
+        self.on_apply(force=self.force)
 
     def on_hide(self):
         name = self.active_key
         is_checked = self.checkbox_hide.isChecked()
         self.out_data[name].is_visible = not is_checked
-        self.on_apply(force=True)
+        self.on_apply(force=self.force)
 
     def on_line_width(self):
         self.is_line_width_edit_active = True
@@ -620,7 +659,7 @@ class EditGeometryProperties(QtGui.QDialog):
             if self.use_slider:
                 self.line_width_slider_edit.setValue(line_width)
             self.is_line_width_edit_active = False
-        self.on_apply(force=True)
+        self.on_apply(force=self.force)
         self.is_line_width_edit_active = False
 
     def on_line_width_slider(self):
@@ -640,7 +679,7 @@ class EditGeometryProperties(QtGui.QDialog):
             if self.use_slider:
                 self.point_size_slider_edit.setValue(point_size)
             self.is_point_size_edit_active = False
-        self.on_apply(force=True)
+        self.on_apply(force=self.force)
         self.is_point_size_edit_active = False
 
     def on_point_size_slider(self):
@@ -661,7 +700,7 @@ class EditGeometryProperties(QtGui.QDialog):
             #if self.use_slider:
                 #self.bar_scale_slider_edit.setValue(int_bar_scale)
             self.is_bar_scale_edit_active = False
-        self.on_apply(force=True)
+        self.on_apply(force=self.force)
         self.is_bar_scale_edit_active = False
 
     def on_bar_scale_slider(self):
@@ -683,7 +722,7 @@ class EditGeometryProperties(QtGui.QDialog):
             if self.use_slider:
                 self.opacity_slider_edit.setValue(int_opacity)
             self.is_opacity_edit_active = False
-        self.on_apply(force=True)
+        self.on_apply(force=self.force)
         self.is_opacity_edit_active = False
 
     def on_opacity_slider(self):
@@ -760,7 +799,7 @@ class EditGeometryProperties(QtGui.QDialog):
 
     def on_apply(self, force=False):
         passed = self.on_validate()
-        if passed or force:
+        if (passed or force) and self.allow_update:
             self.win_parent.on_update_geometry_properties(self.out_data)
         return passed
 

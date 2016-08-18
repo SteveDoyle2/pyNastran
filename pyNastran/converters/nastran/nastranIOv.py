@@ -1483,10 +1483,10 @@ class NastranIO(object):
 
                 self.create_alternate_vtk_grid(
                     bar_y, color=green, line_width=5, opacity=1.,
-                    point_size=5, representation='wire', bar_scale=scale, is_visible=False)
+                    point_size=5, representation='bar', bar_scale=scale, is_visible=False)
                 self.create_alternate_vtk_grid(
                     bar_z, color=blue, line_width=5, opacity=1.,
-                    point_size=5, representation='wire', bar_scale=scale, is_visible=False)
+                    point_size=5, representation='bar', bar_scale=scale, is_visible=False)
 
                 self._add_nastran_lines_xyz_to_grid(bar_y, lines_bar_y, eids, model)
                 self._add_nastran_lines_xyz_to_grid(bar_z, lines_bar_z, eids, model)

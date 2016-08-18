@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=W0201,C0111
 from __future__ import division, unicode_literals, print_function
-from six import string_types, iteritems, itervalues, PY2
-from six.moves import range
 
 # standard library
 import sys
@@ -13,15 +11,19 @@ import traceback
 from copy import deepcopy
 from collections import OrderedDict
 
-from PyQt4 import QtCore, QtGui
-import vtk
-from vtk.qt4.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
+from six import string_types, iteritems, itervalues, PY2
+from six.moves import range
 
 import numpy as np
 #from numpy import arange
-from vtk.util.numpy_support import numpy_to_vtk
 #from numpy import eye, array, zeros, loadtxt
 #from numpy.linalg import norm
+
+from PyQt4 import QtCore, QtGui
+import vtk
+from vtk.qt4.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
+from vtk.util.numpy_support import numpy_to_vtk
+
 
 import pyNastran
 from pyNastran.bdf.cards.base_card import deprecated
@@ -517,54 +519,54 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             menu.clear()
         self._populate_menu(menu_items)
 
-    def _create_plane_from_points(self, points):
-        origin, vx, vy, vz, x_limits, y_limits = self._fit_plane(points)
+    #def _create_plane_from_points(self, points):
+        #origin, vx, vy, vz, x_limits, y_limits = self._fit_plane(points)
 
-        # We create a 100 by 100 point plane to sample
-        splane = vtk.vtkPlaneSource()
-        plane = splane.GetOutput()
+        ## We create a 100 by 100 point plane to sample
+        #splane = vtk.vtkPlaneSource()
+        #plane = splane.GetOutput()
 
-        dx = max(x_limits) - min(x_limits)
-        dy = max(y_limits) - min(y_limits)
-        #dx = 1.
-        #dy = 3.
+        #dx = max(x_limits) - min(x_limits)
+        #dy = max(y_limits) - min(y_limits)
+        ##dx = 1.
+        ##dy = 3.
 
-        # we need to offset the origin of the plane because the "origin"
-        # is at the lower left corner of the plane and not the centroid
-        offset = (dx * vx + dy * vy) / 2.
-        origin -= offset
-        splane.SetCenter(origin)
+        ## we need to offset the origin of the plane because the "origin"
+        ## is at the lower left corner of the plane and not the centroid
+        #offset = (dx * vx + dy * vy) / 2.
+        #origin -= offset
+        #splane.SetCenter(origin)
 
-        splane.SetNormal(vz)
+        #splane.SetNormal(vz)
 
-        # Point 1 defines the x-axis and the x-size
-        # Point 2 defines the y-axis and the y-size
-        splane.SetPoint1(origin + dx * vx)
-        splane.SetPoint2(origin + dy * vy)
+        ## Point 1 defines the x-axis and the x-size
+        ## Point 2 defines the y-axis and the y-size
+        #splane.SetPoint1(origin + dx * vx)
+        #splane.SetPoint2(origin + dy * vy)
 
-        actor = vtk.vtkLODActor()
-        mapper = vtk.vtkPolyDataMapper()
-        #mapper.InterpolateScalarsBeforeMappingOn()
-        #mapper.UseLookupTableScalarRangeOn()
+        #actor = vtk.vtkLODActor()
+        #mapper = vtk.vtkPolyDataMapper()
+        ##mapper.InterpolateScalarsBeforeMappingOn()
+        ##mapper.UseLookupTableScalarRangeOn()
 
-        if self.vtk_version <= 5:
-            mapper.SetInputData(plane)
-        else:
-            mapper.SetInput(plane)
+        #if self.vtk_version <= 5:
+            #mapper.SetInputData(plane)
+        #else:
+            #mapper.SetInput(plane)
 
-        actor.GetProperty().SetColor(1., 0., 0.)
-        actor.SetMapper(mapper)
-        self.rend.AddActor(actor)
-        splane.Update()
+        #actor.GetProperty().SetColor(1., 0., 0.)
+        #actor.SetMapper(mapper)
+        #self.rend.AddActor(actor)
+        #splane.Update()
 
-    def _fit_plane(self, points):
-        origin = np.array([34.60272856552356, 16.92028913186242, 37.805958003209184])
-        vx = np.array([1., 0., 0.])
-        vy = np.array([0., 1., 0.])
-        vz = np.array([0., 0., 1.])
-        x_limits = [-1., 2.]
-        y_limits = [0., 1.]
-        return origin, vx, vy, vz, x_limits, y_limits
+    #def _fit_plane(self, points):
+        #origin = np.array([34.60272856552356, 16.92028913186242, 37.805958003209184])
+        #vx = np.array([1., 0., 0.])
+        #vy = np.array([0., 1., 0.])
+        #vz = np.array([0., 0., 1.])
+        #x_limits = [-1., 2.]
+        #y_limits = [0., 1.]
+        #return origin, vx, vy, vz, x_limits, y_limits
 
     def _prepare_actions(self, icon_path, tools, checkables=None):
         """
@@ -995,7 +997,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         if python_file in [None, False]:
             title = 'Choose a Python Script to Run'
             wildcard = "Python (*.py)"
-            infile_name = self._create_load_file_dialog(wildcard, title, self._default_python_file)[1]
+            infile_name = self._create_load_file_dialog(
+                wildcard, title, self._default_python_file)[1]
             if not infile_name:
                 is_failed = True
                 return is_failed # user clicked cancel
@@ -1028,7 +1031,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             self.log_command('on_surface()')
             for name, actor in iteritems(self.geometry_actors):
                 #if name != 'main':
-                    #print('name: %s\nrep: %s' % (name, self.geometry_properties[name].representation ))
+                    #print('name: %s\nrep: %s' % (
+                        #name, self.geometry_properties[name].representation))
                 representation = self.geometry_properties[name].representation
                 if name == 'main' or self.geometry_properties[name].representation in ['main', 'toggle']:
                     prop = actor.GetProperty()
@@ -1042,7 +1046,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             self.log_command('on_wireframe()')
             for name, actor in iteritems(self.geometry_actors):
                 #if name != 'main':
-                    #print('name: %s\nrep: %s' % (name, self.geometry_properties[name].representation ))
+                    #print('name: %s\nrep: %s' % (
+                        #name, self.geometry_properties[name].representation))
                 representation = self.geometry_properties[name].representation
                 if name == 'main' or representation in ['main', 'toggle']:
                     prop = actor.GetProperty()
@@ -2082,7 +2087,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         duplicate_key = None
         if self.pick_state == 'node/centroid':
             return_flag = False
-            result_name, result_value, node_id, xyz = self.get_result_by_xyz_cell_id(world_position, cell_id)
+            (result_name, result_value, node_id, xyz) = self.get_result_by_xyz_cell_id(
+                world_position, cell_id)
             assert result_name in self.label_actors, result_name
             assert not isinstance(xyz, int), xyz
             duplicate_key = node_id
@@ -2408,7 +2414,9 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                 magnify = self.magnify if self.magnify > magnify_min else magnify_min
             else:
                 magnify = magnify
-            assert isinstance(magnify, integer_types), 'magnify=%r type=%s' % (magnify, type(magnify))
+            if not isinstance(magnify, integer_types):
+                msg = 'magnify=%r type=%s' % (magnify, type(magnify))
+                raise TypeError(msg)
             self._update_text_size(magnify=magnify)
             render_large.SetMagnification(magnify)
 
@@ -2858,9 +2866,13 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             (obj, (i, res_name)) = case
             subcase_id = obj.subcase_id
             case = obj.get_result(i, res_name)
+        try:
             result_values = case[cell_id]
-        else:
-            result_values = case[cell_id]
+        except IndexError:
+            msg = ('case[cell_id] is out of bounds; length=%s\n'
+                   'result_name=%r cell_id=%r case_key=%r\n' % (
+                       len(case), result_name, cell_id, case_key))
+            raise IndexError(msg)
 
         cell = self.grid_selected.GetCell(cell_id)
         nnodes = cell.GetNumberOfPoints()
@@ -3265,7 +3277,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
            or it's like k'
         """
         #position, clip_range, focal_point, view_up, distance = camera_data
-        position, focal_point, view_angle, view_up, clip_range, parallel_scale, parallel_proj, distance = camera_data
+        (position, focal_point, view_angle, view_up, clip_range,
+         parallel_scale, parallel_proj, distance) = camera_data
 
         camera = self.rend.GetActiveCamera()
         camera.SetPosition(position)
@@ -3282,8 +3295,10 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         camera.Modified()
         self.vtk_interactor.Render()
         if show_log:
-            self.log_command('on_set_camera_data([%s, %s, %s, %s, %s, %s, %s, %s])'
-                             % (position, focal_point, view_angle, view_up, clip_range, parallel_scale, parallel_proj, distance))
+            self.log_command(
+                'on_set_camera_data([%s, %s, %s, %s, %s, %s, %s, %s])'
+                % (position, focal_point, view_angle, view_up,
+                   clip_range, parallel_scale, parallel_proj, distance))
 
     #---------------------------------------------------------------------------------------
     # LABEL SIZE/COLOR
@@ -3845,12 +3860,13 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
         #self.is_horizontal_scalar_bar = is_horizontal
         icase = i
-        self.log_command('self.on_update_legend(title=%r, min_value=%s, max_value=%s,\n'
-                         '                      data_format=%r, is_blue_to_red=%s, is_discrete=%s,\n'
-                         '                      nlabels=%r, labelsize=%r, ncolors=%r, colormap=%r,\n'
-                         '                      is_horizontal=%r, is_shown=%r)'
-                         % (title, min_value, max_value, data_format, is_blue_to_red, is_discrete,
-                            nlabels, labelsize, ncolors, colormap, is_horizontal, is_shown))
+        msg = ('self.on_update_legend(title=%r, min_value=%s, max_value=%s,\n'
+               '                      data_format=%r, is_blue_to_red=%s, is_discrete=%s,\n'
+               '                      nlabels=%r, labelsize=%r, ncolors=%r, colormap=%r,\n'
+               '                      is_horizontal=%r, is_shown=%r)'
+               % (title, min_value, max_value, data_format, is_blue_to_red, is_discrete,
+                  nlabels, labelsize, ncolors, colormap, is_horizontal, is_shown))
+        self.log_command(msg)
         #if is_shown:
             #pass
     #---------------------------------------------------------------------------------------
@@ -3955,7 +3971,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         #data = deepcopy(self.groups)
 
         if not self._modify_groups_window_shown:
-            self._modify_groups = GroupsModify(data, win_parent=self, group_active=self.group_active)
+            self._modify_groups = GroupsModify(
+                data, win_parent=self, group_active=self.group_active)
             self._modify_groups.show()
             self._modify_groups_window_shown = True
             self._modify_groups.exec_()
@@ -4022,7 +4039,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
                 if changed:
                     lines.append('    %r : CoordProperties(is_visible=%s),\n' % (
-                                     name, is_visible2))
+                        name, is_visible2))
             else:
                 raise NotImplementedError(actor)
 
@@ -4102,10 +4119,9 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         if point_size1 != point_size2:
             prop.SetPointSize(point_size2)
             changed = True
-        if bar_scale1 != bar_scale2 and bar_scale1 > 0.0:
-            bar_scale2 = max(bar_scale2, 0.05)
-            print('name=%s bar_scale1=%s bar_scale2=%s' % (name, bar_scale1, bar_scale2))
-            ## TODO: this is totally messed up for bar_z on aerobeam.bdf
+        if representation == 'bar' and bar_scale1 != bar_scale2:
+            #print('name=%s rep=%r bar_scale1=%s bar_scale2=%s' % (
+                #name, representation, bar_scale1, bar_scale2))
             self.set_bar_scale(name, bar_scale2)
         if is_visible1 != is_visible2:
             actor.SetVisibility(is_visible2)
@@ -4132,7 +4148,10 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         bar_scale : float
            the scaling factor
         """
-        print('set_bar_scale - GuiCommon2; name=%s scale=%s' % (name, bar_scale))
+        #print('set_bar_scale - GuiCommon2; name=%s bar_scale=%s' % (name, bar_scale))
+        if bar_scale <= 0.0:
+            return
+        assert bar_scale > 0.0, 'bar_scale=%r' % bar_scale
 
         # bar_y : (nbars, 6) float ndarray
         #     the xyz coordinates for (node1, node2) of the y/z axis of the bar
@@ -4164,18 +4183,14 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             p = points.GetPoint(2*i+1)
             #print(p)
             node = xyz1[i, :] + length_xyz[i] * bar_scale * dxyz[i, :]
-            print(p, node)
+            #print(p, node)
             points.SetPoint(2 * i + 1, *node)
 
         if hasattr(grid, 'Update'):
-            print('update....')
+            #print('update....')
             grid.Update()
-        print('update2...')
-        # bar_z = self.bar_lines[(name)]
-        # dz = bar_z[:, :3] - bar_z[:, 3:]
-        # Lz = norm(dz, axis=1)
-        # bar_z[:, 3:] = bar_z[:, :3] + Lz * bar_scale
-
+        grid.Modified()
+        #print('update2...')
 
     def _add_user_points(self, points_filename, name, color):
         if name in self.geometry_actors:

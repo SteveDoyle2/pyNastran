@@ -3,7 +3,7 @@ from copy import deepcopy
 from six import string_types
 
 class AltGeometry(object):
-
+    representations = ['main', 'toggle', 'wire', 'point', 'surface', 'wire+point', 'bar']
     def __repr__(self):
         msg = ('AltGeometry(self, %s, color=%s, line_width=%s, opacity=%s,\n'
               ' point_size=%s, bar_scale=%s, representation=%r, is_visible=%s)' % (
@@ -32,7 +32,7 @@ class AltGeometry(object):
             wire - always wireframe
             point - always points
             surface - always surface
-
+            bar - can use bar scale
         """
         if line_width is None:
             line_width = 1
@@ -54,7 +54,9 @@ class AltGeometry(object):
         assert isinstance(is_visible, bool), is_visible
         self.is_visible = is_visible
 
-        assert representation in ['main', 'toggle', 'wire', 'point', 'surface', 'wire+point'], 'representation=%r' % representation
+        if representation not in self.representations:
+            msg = 'representation=%r is invalid\nrepresentations=%r' % (
+                representation, self.representations)
         self.representation = representation
 
     def __deepcopy__(self, memo):
@@ -135,11 +137,14 @@ class AltGeometry(object):
         * point - always points
         * wire+point - point (vertex) and wireframe allowed
         * surface - always surface
+        * bar - this can use bar scale
         """
         return self._representation
 
     @representation.setter
     def representation(self, representation):
-        assert representation in ['main', 'toggle', 'wire', 'point', 'surface', 'wire+point'], 'representation=%r is invalid' % representation
+        if representation not in self.representations:
+            msg = 'representation=%r is invalid\nrepresentations=%r' % (
+                representation, self.representations)
         self._representation = representation
 
