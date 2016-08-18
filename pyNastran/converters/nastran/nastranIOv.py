@@ -1926,6 +1926,7 @@ class NastranIO(object):
         max_aspect_ratio = np.zeros(nelements, 'float32')
         area = np.zeros(nelements, 'float32')
         area_ratio = np.zeros(nelements, 'float32')
+        taper_ratio = np.zeros(nelements, 'float32')
 
         # pids_good = []
         # pids_to_keep = []
@@ -2028,6 +2029,7 @@ class NastranIO(object):
             aspect_ratio = 1.0
             areai = 0.
             area_ratioi = 1.
+            taper_ratioi = 0.
             if isinstance(element, (CTRIA3, CTRIAR)):
                 material_coord[i] = 0 if isinstance(element.thetaMcid, float) else element.thetaMcid
                 elem = vtkTriangle()
@@ -2221,6 +2223,14 @@ class NastranIO(object):
                     np.linalg.norm(np.cross(v43, -v32)), # v43 x v23
                     np.linalg.norm(np.cross(v14, v43)),  # v14 x v43
                 )
+
+                area1 = 0.5 * np.linalg.norm(np.cross(-v14, v21)) # v41 x v21
+                area2 = 0.5 * np.linalg.norm(np.cross(-v21, v32)) # v12 x v32
+                area3 = 0.5 * np.linalg.norm(np.cross(v43, v32)) # v43 x v32
+                area4 = 0.5 * np.linalg.norm(np.cross(v14, -v43)) # v14 x v34
+                aavg = (area1 + area2 + area3 + area4) / 4.
+                taper_ratioi = (abs(area1 - aavg) + abs(area2 - aavg) + abs(area3 - aavg) + abs(area4 - aavg)) / aavg
+
                 #    e3
                 # 4-------3
                 # |       |
@@ -2568,6 +2578,7 @@ class NastranIO(object):
             max_aspect_ratio[i] = aspect_ratio
             area[i] = areai
             area_ratio[i] = area_ratioi
+            taper_ratio[i] = taper_ratioi
             i += 1
         assert len(self.eid_map) > 0, self.eid_map
 
@@ -2889,7 +2900,9 @@ class NastranIO(object):
                 aspect_res = GuiResult(0, header='Aspect Ratio', title='AspectRatio',
                                        location='centroid', scalar=max_aspect_ratio)
                 arearatio_res = GuiResult(0, header='Area Ratio', title='Area Ratio',
-                                     location='centroid', scalar=area_ratio)
+                                          location='centroid', scalar=area_ratio)
+                taperratio_res = GuiResult(0, header='Taper Ratio', title='Taper Ratio',
+                                           location='centroid', scalar=taper_ratio)
 
                 form_checks = []
                 form0.append(('Element Checks', None, form_checks))
@@ -2902,6 +2915,7 @@ class NastranIO(object):
                 cases[icase + 6] = (skew_res, (0, 'Max Skew Angle'))
                 cases[icase + 7] = (aspect_res, (0, 'Aspect Ratio'))
                 cases[icase + 8] = (arearatio_res, (0, 'Area Ratio'))
+                cases[icase + 9] = (taperratio_res, (0, 'Taper Ratio'))
 
                 form_checks.append(('ElementDim', icase, []))
                 form_checks.append(('NormalX', icase + 1, []))
@@ -2912,7 +2926,8 @@ class NastranIO(object):
                 form_checks.append(('Max Skew Angle', icase + 6, []))
                 form_checks.append(('Aspect Ratio', icase + 7, []))
                 form_checks.append(('Area Ratio', icase + 8, []))
-                icase += 9
+                form_checks.append(('Taper Ratio', icase + 9, []))
+                icase += 10
                 if max_warp_angle.max() > 0.0:
                     warp_res = GuiResult(0, header='Max Warp Angle', title='MaxWarpAngle',
                                          location='centroid', scalar=np.degrees(max_warp_angle))
