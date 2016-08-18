@@ -58,7 +58,8 @@ class LegendPropertiesWindow(QtGui.QDialog):
         self._default_colormap = data['default_colormap']
         self._colormap = data['colormap']
 
-        self._default_is_blue_to_red = data['is_blue_to_red']
+        self._default_is_low_to_high = data['is_low_to_high']
+
         self._default_is_discrete = data['is_discrete']
         self._default_is_horizontal = data['is_horizontal']
         self._default_is_shown = data['is_shown']
@@ -103,7 +104,7 @@ class LegendPropertiesWindow(QtGui.QDialog):
                       default_data_format, default_scale,
                       default_nlabels, default_labelsize,
                       default_ncolors, default_colormap,
-                      is_blue_to_red, is_horizontal_scalar_bar):
+                      is_low_to_high, is_horizontal_scalar_bar):
         """
         We need to update the legend if there's been a result change request
         """
@@ -113,7 +114,7 @@ class LegendPropertiesWindow(QtGui.QDialog):
             self._default_min = default_min_value
             self._default_max = default_max_value
             self._default_format = default_data_format
-            self._default_is_blue_to_red = is_blue_to_red
+            self._default_is_low_to_high = is_low_to_high
             self._default_is_discrete = True
             self._default_is_horizontal = is_horizontal_scalar_bar
             self._default_scale = default_scale
@@ -229,38 +230,36 @@ class LegendPropertiesWindow(QtGui.QDialog):
             self.colormap_edit.addItem(key)
         self.colormap_edit.setCurrentIndex(colormap_keys.index(self._colormap))
 
+
         # red/blue or blue/red
-        self.checkbox_blue_to_red = QtGui.QCheckBox("Min -> Blue; Max -> Red")
-        self.checkbox_red_to_blue = QtGui.QCheckBox("Min -> Red; Max -> Blue")
-        self.checkbox_blue_to_red.setChecked(self._default_is_blue_to_red)
+        self.low_to_high_radio = QtGui.QRadioButton('Low -> High')
+        self.high_to_low_radio = QtGui.QRadioButton('High -> Low')
+        widget = QtGui.QWidget(self)
+        low_to_high_group = QtGui.QButtonGroup(widget)
+        low_to_high_group.addButton(self.low_to_high_radio)
+        low_to_high_group.addButton(self.high_to_low_radio)
+        self.low_to_high_radio.setChecked(self._default_is_low_to_high)
+        self.high_to_low_radio.setChecked(not self._default_is_low_to_high)
 
         # horizontal / vertical
-        self.checkbox_horizontal = QtGui.QCheckBox("Horizontal")
-        self.checkbox_vertical = QtGui.QCheckBox("Vertical")
-        self.checkbox_horizontal.setChecked(self._default_is_horizontal)
-        self.checkbox_vertical.setChecked(not self._default_is_horizontal)
+        self.horizontal_radio = QtGui.QRadioButton("Horizontal")
+        self.vertical_radio = QtGui.QRadioButton("Vertical")
+        widget = QtGui.QWidget(self)
+        horizontal_vertical_group = QtGui.QButtonGroup(widget)
+        horizontal_vertical_group.addButton(self.horizontal_radio)
+        horizontal_vertical_group.addButton(self.vertical_radio)
+        self.horizontal_radio.setChecked(self._default_is_horizontal)
+        self.vertical_radio.setChecked(not self._default_is_horizontal)
 
         # on / off
-        self.checkbox_show = QtGui.QCheckBox("Show")
-        self.checkbox_hide = QtGui.QCheckBox("Hide")
-        #print('_default_is_shown =', self._default_is_shown)
-        self.checkbox_show.setChecked(self._default_is_shown)
-        self.checkbox_hide.setChecked(not self._default_is_shown)
-
-        #checkbox3.setChecked(False)
-
-        # put these in a group
-        checkboxs = QtGui.QButtonGroup(self)
-        checkboxs.addButton(self.checkbox_blue_to_red)
-        checkboxs.addButton(self.checkbox_red_to_blue)
-
-        checkboxs2 = QtGui.QButtonGroup(self)
-        checkboxs2.addButton(self.checkbox_vertical)
-        checkboxs2.addButton(self.checkbox_horizontal)
-
-        checkboxs3 = QtGui.QButtonGroup(self)
-        checkboxs3.addButton(self.checkbox_show)
-        checkboxs3.addButton(self.checkbox_hide)
+        self.show_radio = QtGui.QRadioButton("Show")
+        self.hide_radio = QtGui.QRadioButton("Hide")
+        widget = QtGui.QWidget(self)
+        show_hide_group = QtGui.QButtonGroup(widget)
+        show_hide_group.addButton(self.show_radio)
+        show_hide_group.addButton(self.hide_radio)
+        self.show_radio.setChecked(self._default_is_shown)
+        self.hide_radio.setChecked(not self._default_is_shown)
 
         # closing
         self.apply_button = QtGui.QPushButton("Apply")
@@ -310,32 +309,20 @@ class LegendPropertiesWindow(QtGui.QDialog):
         ok_cancel_box.addWidget(self.ok_button)
         ok_cancel_box.addWidget(self.cancel_button)
 
-        if 0:
-            vbox1 = QtGui.QVBoxLayout()
-            vbox1.addWidget(self.checkbox_blue_to_red)
-            vbox1.addWidget(self.checkbox_red_to_blue)
 
-            vbox2 = QtGui.QVBoxLayout()
-            vbox2.addWidget(self.checkbox_vertical)
-            vbox2.addWidget(self.checkbox_horizontal)
+        grid2 = QtGui.QGridLayout()
+        title = QtGui.QLabel("Color Scale:")
+        grid2.addWidget(title, 0, 0)
+        grid2.addWidget(self.low_to_high_radio, 1, 0)
+        grid2.addWidget(self.high_to_low_radio, 2, 0)
 
-            checkboxes = QtGui.QHBoxLayout()
-            checkboxes.addLayout(vbox1)
-            checkboxes.addLayout(vbox2)
-        else:
-            grid2 = QtGui.QGridLayout()
+        grid2.addWidget(self.vertical_radio, 1, 1)
+        grid2.addWidget(self.horizontal_radio, 2, 1)
 
-            title = QtGui.QLabel("Color Scale:")
-            grid2.addWidget(title, 0, 0)
-            grid2.addWidget(self.checkbox_blue_to_red, 1, 0)
-            grid2.addWidget(self.checkbox_red_to_blue, 2, 0)
+        grid2.addWidget(self.show_radio, 1, 2)
+        grid2.addWidget(self.hide_radio, 2, 2)
 
-            grid2.addWidget(self.checkbox_vertical, 1, 1)
-            grid2.addWidget(self.checkbox_horizontal, 2, 1)
-
-            grid2.addWidget(self.checkbox_show, 1, 2)
-            grid2.addWidget(self.checkbox_hide, 2, 2)
-            #grid2.setSpacing(0)
+        #grid2.setSpacing(0)
 
         vbox = QtGui.QVBoxLayout()
         vbox.addLayout(grid)
@@ -535,12 +522,13 @@ class LegendPropertiesWindow(QtGui.QDialog):
             self.out_data['labelsize'] = labelsize
             self.out_data['colormap'] = colormap
 
-            self.out_data['is_blue_to_red'] = self.checkbox_blue_to_red.isChecked()
-            self.out_data['is_horizontal'] = self.checkbox_horizontal.isChecked()
-            self.out_data['is_shown'] = self.checkbox_show.isChecked()
+            self.out_data['is_low_to_high'] = self.low_to_high_radio.isChecked()
+            self.out_data['is_horizontal'] = self.horizontal_radio.isChecked()
+            self.out_data['is_shown'] = self.show_radio.isChecked()
+
             self.out_data['clicked_ok'] = True
             self.out_data['close'] = True
-
+            #print('self.out_data = ', self.out_data)
             #print("name = %r" % self.name_edit.text())
             #print("min = %r" % self.min_edit.text())
             #print("max = %r" % self.max_edit.text())
@@ -599,7 +587,8 @@ def main():
 
         'default_format' : '%s',
         'format' : '%g',
-        'is_blue_to_red': True,
+
+        'is_low_to_high': True,
         'is_discrete' : False,
         'is_horizontal' : False,
         'is_shown' : True,

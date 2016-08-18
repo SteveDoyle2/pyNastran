@@ -107,12 +107,12 @@ class ScalarBar(object):
     def update(self, title, min_value, max_value, norm_value,
                data_format,
                nlabels=None, labelsize=None, ncolors=None, colormap='jet',
-               is_blue_to_red=True, is_horizontal=True,
+               is_low_to_high=True, is_horizontal=True,
                is_shown=True):
         self.color_function.RemoveAllPoints()
 
         if colormap in [None, 'jet']:
-            if is_blue_to_red:
+            if is_low_to_high:
                 self.color_function.AddRGBPoint(min_value, 0.0, 0.0, 1.0)  # blue
                 self.color_function.AddRGBPoint(max_value, 1.0, 0.0, 0.0)  # red
             else:
@@ -123,7 +123,7 @@ class ScalarBar(object):
                 colormap = colormap_dict[colormap]
 
             vals = np.linspace(min_value, max_value, num=len(colormap))
-            if is_blue_to_red:
+            if is_low_to_high:
                 vals = vals[::-1]
             for val, (red, green, blue) in zip(vals, colormap):
                 self.color_function.AddRGBPoint(val, red, green, blue)

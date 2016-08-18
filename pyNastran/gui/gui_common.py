@@ -3157,7 +3157,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                           data_format,
                           nlabels=None, labelsize=None,
                           ncolors=None, colormap='jet',
-                          is_blue_to_red=True, is_horizontal=True,
+                          is_low_to_high=True, is_horizontal=True,
                           is_shown=True):
         """
         Updates the Scalar Bar
@@ -3185,7 +3185,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             ndarray : (N, 3) float ndarry
                 red-green-blue array
 
-        is_blue_to_red : bool; default=True
+        is_low_to_high : bool; default=True
             flips the order of the RGB points
         is_horizontal : bool; default=True
             makes the scalar bar horizontal
@@ -3196,7 +3196,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.scalar_bar.update(title, min_value, max_value, norm_value, data_format,
                                nlabels=nlabels, labelsize=labelsize,
                                ncolors=ncolors, colormap=colormap,
-                               is_blue_to_red=is_blue_to_red, is_horizontal=is_horizontal,
+                               is_low_to_high=is_low_to_high, is_horizontal=is_horizontal,
                                is_shown=is_shown)
 
     #---------------------------------------------------------------------------------------
@@ -3641,8 +3641,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             'ncolors' : ncolors,
             'colormap' : colormap,
 
-
-            'is_blue_to_red' : True,
+            'is_low_to_high' : True,
             'is_discrete': True,
             'is_horizontal': self.scalar_bar.is_horizontal,
             'is_shown' : self.scalar_bar.is_shown,
@@ -3668,7 +3667,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
     def update_legend(self, icase, name, min_value, max_value, data_format, scale,
                       nlabels, labelsize, ncolors, colormap,
-                      is_blue_to_red, is_horizontal_scalar_bar):
+                      is_low_to_high, is_horizontal_scalar_bar):
         if not self._legend_window_shown:
             return
         self._legend_window._updated_legend = True
@@ -3713,7 +3712,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             default_title, default_min, default_max, default_data_format, default_scale,
             default_nlabels, default_labelsize,
             default_ncolors, default_colormap,
-            is_blue_to_red, is_horizontal_scalar_bar)
+            is_low_to_high, is_horizontal_scalar_bar)
         #self.scalar_bar.set_visibility(self._legend_shown)
         #self.vtk_interactor.Render()
 
@@ -3723,7 +3722,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         max_value = data['max']
         scale_value = data['scale']
         data_format = data['format']
-        is_blue_to_red = data['is_blue_to_red']
+        is_low_to_high = data['is_low_to_high']
         is_discrete = data['is_discrete']
         is_horizontal = data['is_horizontal']
         is_shown = data['is_shown']
@@ -3736,7 +3735,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         #print('is_shown1 =', is_shown)
         self.on_update_legend(title=title, min_value=min_value, max_value=max_value,
                               scale=scale_value, data_format=data_format,
-                              is_blue_to_red=is_blue_to_red,
+                              is_low_to_high=is_low_to_high,
                               is_discrete=is_discrete, is_horizontal=is_horizontal,
                               nlabels=nlabels, labelsize=labelsize,
                               ncolors=ncolors, colormap=colormap,
@@ -3744,7 +3743,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
     def on_update_legend(self, title='Title', min_value=0., max_value=1., scale=0.0,
                          data_format='%.0f',
-                         is_blue_to_red=True, is_discrete=True, is_horizontal=True,
+                         is_low_to_high=True, is_discrete=True, is_horizontal=True,
                          nlabels=None, labelsize=None, ncolors=None, colormap='jet',
                          is_shown=True):
         #print('is_shown2 =', is_shown)
@@ -3819,24 +3818,24 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             #norm_plot_value = norm(plot_value, axis=1)
             #grid_result = self.set_grid_values(name, norm_plot_value, vector_size1,
                                                #min_value, max_value, norm_value,
-                                               #is_blue_to_red=is_blue_to_red)
+                                               #is_low_to_high=is_low_to_high)
         #else:
         grid_result = self.set_grid_values(name, scalar_result, vector_size1,
                                            min_value, max_value, norm_value,
-                                           is_blue_to_red=is_blue_to_red)
+                                           is_low_to_high=is_low_to_high)
 
         grid_result_vector = None
         #if name_vector and 0:
             #vector_size = 3
             #grid_result_vector = self.set_grid_values(name_vector, plot_value, vector_size,
                                                       #min_value, max_value, norm_value,
-                                                      #is_blue_to_red=is_blue_to_red)
+                                                      #is_low_to_high=is_low_to_high)
 
         self.update_scalar_bar(title, min_value, max_value, norm_value,
                                data_format,
                                nlabels=nlabels, labelsize=labelsize,
                                ncolors=ncolors, colormap=colormap,
-                               is_blue_to_red=is_blue_to_red,
+                               is_low_to_high=is_low_to_high,
                                is_horizontal=is_horizontal, is_shown=is_shown)
 
         revert_displaced = True
@@ -3861,10 +3860,10 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         #self.is_horizontal_scalar_bar = is_horizontal
         icase = i
         msg = ('self.on_update_legend(title=%r, min_value=%s, max_value=%s,\n'
-               '                      data_format=%r, is_blue_to_red=%s, is_discrete=%s,\n'
+               '                      data_format=%r, is_low_to_high=%s, is_discrete=%s,\n'
                '                      nlabels=%r, labelsize=%r, ncolors=%r, colormap=%r,\n'
                '                      is_horizontal=%r, is_shown=%r)'
-               % (title, min_value, max_value, data_format, is_blue_to_red, is_discrete,
+               % (title, min_value, max_value, data_format, is_low_to_high, is_discrete,
                   nlabels, labelsize, ncolors, colormap, is_horizontal, is_shown))
         self.log_command(msg)
         #if is_shown:

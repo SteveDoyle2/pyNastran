@@ -213,20 +213,20 @@ class GuiCommon(GuiAttributes):
                                name_vector, grid_result_vector,
                                key, subtitle, label)
 
-        is_blue_to_red = True
+        is_low_to_high = True
         if is_legend_shown is None:
             is_legend_shown = self.scalar_bar.is_shown
         self.update_scalar_bar(result_type, min_value, max_value, norm_value,
                                data_format,
                                nlabels=nlabels, labelsize=labelsize,
                                ncolors=ncolors, colormap=colormap,
-                               is_blue_to_red=is_blue_to_red,
+                               is_low_to_high=is_low_to_high,
                                is_horizontal=self.is_horizontal_scalar_bar,
                                is_shown=is_legend_shown)
         self.update_legend(icase,
                            result_type, min_value, max_value, data_format, scale,
                            nlabels, labelsize, ncolors, colormap,
-                           is_blue_to_red, self.is_horizontal_scalar_bar)
+                           is_low_to_high, self.is_horizontal_scalar_bar)
         location = self.get_case_location(key)
         self.res_widget.update_method(location)
         if explicit:
@@ -234,7 +234,7 @@ class GuiCommon(GuiAttributes):
         return result_type
 
     def set_grid_values(self, name, case, vector_size, min_value, max_value, norm_value,
-                        is_blue_to_red=True):
+                        is_low_to_high=True):
         """
         https://pyscience.wordpress.com/2014/09/06/numpy-to-vtk-converting-your-numpy-arrays-to-vtk-arrays-and-files/
         """
@@ -262,7 +262,7 @@ class GuiCommon(GuiAttributes):
                 case[50] = np.int32(1) / np.int32(0)
 
         if vector_size == 1:
-            if is_blue_to_red:
+            if is_low_to_high:
                 if norm_value == 0:
                     nvalues = len(case)
                     case2 = full((nvalues), 1.0 - min_value, dtype='float32')
