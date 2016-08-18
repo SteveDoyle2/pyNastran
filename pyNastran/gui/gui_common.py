@@ -4035,6 +4035,23 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             self.log_command(msg)
 
     def _update_geomtry_properties_actor(self, name, group, actor):
+        """
+        Updates an actor
+
+        Parameters
+        ----------
+        name : str
+            the geometry proprety to update
+        group : AltGeometry()
+            a storage container for all the actor's properties
+        actor : vtkActor()
+            the actor where the properties will be applied
+
+        linewidth1 : int
+            the active linewidth
+        linewidth2 : int
+            the new linewidth
+        """
         lines = []
         changed = False
         #mapper = actor.GetMapper()
@@ -4058,7 +4075,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         point_size2 = group.point_size
         point_size2 = max(1, point_size2)
 
-        #representation = group.representation
+        representation = group.representation
         alt_prop = self.geometry_properties[name]
         #representation = alt_prop.representation
         #is_visible1 = alt_prop.is_visible
@@ -4086,8 +4103,9 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             prop.SetPointSize(point_size2)
             changed = True
         if bar_scale1 != bar_scale2 and bar_scale1 > 0.0:
+            bar_scale2 = max(bar_scale2, 0.05)
             print('name=%s bar_scale1=%s bar_scale2=%s' % (name, bar_scale1, bar_scale2))
-            ## TOODO: this is totally messed up for bar_z on aerobeam.bdf
+            ## TODO: this is totally messed up for bar_z on aerobeam.bdf
             self.set_bar_scale(name, bar_scale2)
         if is_visible1 != is_visible2:
             actor.SetVisibility(is_visible2)
@@ -4097,11 +4115,11 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             changed = True
 
         if changed:
-            lines.append('    %r : AltGeometry(color=(%s, %s, %s), '
-                         'line_width=%s, opacity=%s, point_size=%s, '
-                         'is_visible=%s),\n' % (
-                             name, color2[0], color2[1], color2[2], line_width2,
-                             opacity2, point_size2, is_visible2))
+            lines.append('    %r : AltGeometry(self, %r, color=(%s, %s, %s), '
+                         'line_width=%s, opacity=%s, point_size=%s, bar_scale=%s, '
+                         'representation=%r, is_visible=%s),\n' % (
+                             name, name, color2[0], color2[1], color2[2], line_width2,
+                             opacity2, point_size2, bar_scale2, representation, is_visible2))
             prop.Modified()
         return lines
 
@@ -4114,7 +4132,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         bar_scale : float
            the scaling factor
         """
-        #print('set_bar_scale - GuiCommon2; name=%s scale=%s' % (name, bar_scale))
+        print('set_bar_scale - GuiCommon2; name=%s scale=%s' % (name, bar_scale))
 
         # bar_y : (nbars, 6) float ndarray
         #     the xyz coordinates for (node1, node2) of the y/z axis of the bar
@@ -4143,11 +4161,16 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         grid = self.alt_grids[name]
         points = grid.GetPoints()
         for i in range(nnodes):
+            p = points.GetPoint(2*i+1)
+            #print(p)
             node = xyz1[i, :] + length_xyz[i] * bar_scale * dxyz[i, :]
+            print(p, node)
             points.SetPoint(2 * i + 1, *node)
 
         if hasattr(grid, 'Update'):
+            print('update....')
             grid.Update()
+        print('update2...')
         # bar_z = self.bar_lines[(name)]
         # dz = bar_z[:, :3] - bar_z[:, 3:]
         # Lz = norm(dz, axis=1)

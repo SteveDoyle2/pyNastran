@@ -1,9 +1,11 @@
+from __future__ import print_function
 from copy import deepcopy
+from six import string_types
 
 class AltGeometry(object):
 
     def __repr__(self):
-        msg = ('AltGeometry(%s, color=%s, line_width=%s, opacity=%s,\n'
+        msg = ('AltGeometry(self, %s, color=%s, line_width=%s, opacity=%s,\n'
               ' point_size=%s, bar_scale=%s, representation=%r, is_visible=%s)' % (
                   self.name, str(self.color), self.line_width, self.opacity, self.point_size,
                   self.bar_scale, self.representation, self.is_visible))
@@ -39,6 +41,7 @@ class AltGeometry(object):
 
         self.parent = parent
         self.name = name
+        assert isinstance(name, string_types), 'name=%r' % name
         self._color = None
         if color is not None:
             assert color is not None, color

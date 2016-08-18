@@ -422,7 +422,6 @@ class NastranIO(object):
         if model.caeros:
             caero_points = []
             for eid, caero in sorted(iteritems(model.caeros)):
-                print('caero\n%s' % caero)
                 if caero.type == 'CAERO1':
                     ncaeros_sub += 1
                     pointsi, elementsi = caero.panel_points_elements()
@@ -430,6 +429,8 @@ class NastranIO(object):
                     for i, box_id in enumerate(caero.box_ids.flat):
                         box_id_to_caero_element_map[box_id] = elementsi[i, :] + num_prev
                     num_prev += pointsi.shape[0]
+                else:
+                    print('caero\n%s' % caero)
             if ncaeros_sub:
                 caero_points = np.vstack(caero_points)
             self.has_caero = True
@@ -556,7 +557,6 @@ class NastranIO(object):
                 self.set_caero_control_surface_grid(
                     'caero_control_surfaces', cs_box_ids,
                     box_id_to_caero_element_map, caero_points)
-
         if nconm2 > 0:
             self.set_conm_grid(nconm2, dim_max, model)
 
@@ -1195,6 +1195,8 @@ class NastranIO(object):
             no_56_456 = np.zeros(self.element_ids.shape, dtype='int32')
             no_0_6 = np.zeros(self.element_ids.shape, dtype='int32')
             no_0_16 = np.zeros(self.element_ids.shape, dtype='int32')
+
+        debug = True
         bar_nids = set([])
         for eid in bar_beam_eids:
             if eid not in self.eid_map:
@@ -1213,6 +1215,10 @@ class NastranIO(object):
             else:
                 raise NotImplementedError(pid)
             #print('bar_type =', bar_type)
+
+            if debug:
+                print('%s' % elem)
+                print('  bar_type =', bar_type)
             found_bar_types.add(bar_type)
 
             (nid1, nid2) = elem.node_ids
@@ -1227,6 +1233,8 @@ class NastranIO(object):
             ihat = i / Li
 
             if 1:
+                pass
+            elif 0:
                 #if elem.pa == 0 and elem.pb == 0:
                     #continue
 
@@ -1257,7 +1265,7 @@ class NastranIO(object):
                     no_bending[ieid] = 1
                     no_torsion[ieid] = 1
                     no_0_456[ieid] = 1
-                    # print(elem)
+                    #print(elem)
                 elif (elem.pa == 456 and elem.pb == 56) or (elem.pa == 56 and elem.pb == 456):
                     no_torsion[ieid] = 1
                     no_56_456[ieid] = 1
@@ -1302,16 +1310,27 @@ class NastranIO(object):
             # - orientation -> ???
             #
             if elem.g0:
+                if debug:
+                    print('  g0 =', elem.g0)
                 n0 = elem.g0.get_position()
                 v = n0 - n1
             else:
                 ga = model.nodes[elem.Ga()]
                 v = ga.cp_ref.transform_node_to_global(elem.x)
+                if debug:
+                    print('  ga =', elem.ga)
+                    if ga.Cp() != 0:
+                        print('  cp =', ga.cp_ref)
+                    else:
+                        print('  cp = 0')
+
+                    print('  x =', elem.x)
+                    print('  v =', v)
                 #v = elem.x
 
             offt_vector, offt_end_a, offt_end_b = elem.offt
             if debug:
-                print('offt vector,A,B=%r' % (elem.offt))
+                print('  offt vector,A,B=%r' % (elem.offt))
             # if offt_end_a == 'G' or (offt_end_a == 'O' and offt_vector == 'G'):
 
             if offt_vector == 'G':
@@ -1393,14 +1412,16 @@ class NastranIO(object):
             zhat = z / norm(z)
             yhat = np.cross(zhat, ihat) # j
             if debug:
+                print('  centroid =', centroid)
                 print('  ihat =', ihat)
                 print('  yhat =', yhat)
                 print('  zhat =', zhat)
+                print('  scale =', scale)
             #if eid == 5570:
                 #print('  check - eid=%s yhat=%s zhat=%s v=%s i=%s n%s=%s n%s=%s' % (
                       #eid, yhat, zhat, v, i, nid1, n1, nid2, n2))
 
-            if norm(yhat) == 0.0 or norm(z) == 0.0:
+            if norm(ihat) == 0.0 or norm(yhat) == 0.0 or norm(z) == 0.0:
                 print('  invalid_orientation - eid=%s yhat=%s zhat=%s v=%s i=%s n%s=%s n%s=%s' % (
                     eid, yhat, zhat, v, i, nid1, n1, nid2, n2))
             elif not np.allclose(norm(yhat), 1.0) or not np.allclose(norm(zhat), 1.0) or Li == 0.0:
@@ -1454,7 +1475,8 @@ class NastranIO(object):
             eids, lines_bar_y, lines_bar_z = data
             #print(data)
             if len(eids):
-                #print('bar_type = %r' % bar_type)
+                if debug:
+                    print('bar_type = %r' % bar_type)
                 # if bar_type not in ['ROD', 'TUBE']:
                 bar_y = bar_type + '_y'
                 bar_z = bar_type + '_z'
