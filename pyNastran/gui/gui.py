@@ -33,9 +33,8 @@ import vtk
 
 # pyNastran
 #from pyNastran.utils import print_bad_path
-from pyNastran.gui.formats import (NastranIO, Cart3dIO,  DegenGeomIO, PanairIO, LaWGS_IO,
-    STL_IO, TecplotIO, TetgenIO, Usm3dIO, Plot3d_io, ShabpIO, ADB_IO, FastIO,
-    AvusIO, SurfIO, UGRID_IO,
+from pyNastran.gui.formats import (NastranIO, Cart3dIO, PanairIO, LaWGS_IO,
+    STL_IO, TecplotIO, ShabpIO, SurfIO, UGRID_IO,
     )
 from pyNastran.gui.arg_handling import get_inputs
 from pyNastran.gui.gui_common import GuiCommon2
@@ -64,9 +63,8 @@ import signal
 signal.signal(signal.SIGINT, signal.SIG_DFL)
 
 
-class MainWindow(GuiCommon2, NastranIO, Cart3dIO, DegenGeomIO, ShabpIO, PanairIO,
-                 LaWGS_IO, STL_IO, TetgenIO, Usm3dIO, TecplotIO, Plot3d_io, ADB_IO,
-                 FastIO, AvusIO, SurfIO, UGRID_IO):
+class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO,
+                 LaWGS_IO, STL_IO, TecplotIO, SurfIO, UGRID_IO):
     """
     MainWindow -> GuiCommon2 -> GuiCommon
     gui.py     -> gui_common -> gui_qt_common
@@ -102,29 +100,21 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, DegenGeomIO, ShabpIO, PanairIO
         html_logging = True
         fmt_order = [
             # results
-            'nastran', 'cart3d', 'panair', 'shabp', 'usm3d', 'openvsp', 'degen_geom', 'tecplot',
-            'surf', 'ugrid',
+            'nastran', 'cart3d', 'panair', 'shabp', 'tecplot', 'surf', 'ugrid',
 
             # no results
-            'lawgs', 'stl', 'fast', 'avus', #'plot3d', 'tetgen',
+            'lawgs', 'stl',
         ]
         GuiCommon2.__init__(self, fmt_order, html_logging, inputs)
 
-        ADB_IO.__init__(self)
-        AvusIO.__init__(self)
         NastranIO.__init__(self)
         Cart3dIO.__init__(self)
-        DegenGeomIO.__init__(self)
-        FastIO.__init__(self)
         LaWGS_IO.__init__(self)
         PanairIO.__init__(self)
-        Plot3d_io.__init__(self)
         STL_IO.__init__(self)
         ShabpIO.__init__(self)
         SurfIO.__init__(self)
-        TetgenIO.__init__(self)
         TecplotIO.__init__(self)
-        Usm3dIO.__init__(self)
         UGRID_IO.__init__(self)
 
         self.build_fmts(fmt_order, stop_on_failure=False)

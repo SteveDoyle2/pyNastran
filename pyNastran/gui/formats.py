@@ -45,17 +45,6 @@ except ImportError:
     is_panair = False
 
 try:
-    from pyNastran.converters.dev.plot3d.plot3d_io import Plot3d_io
-    is_plot3d = True
-#except ImportError:
-except:
-    class Plot3d_io(object):
-        def __init__(self):
-            pass
-    is_plot3d = False
-    #raise
-
-try:
     from pyNastran.converters.shabp.shabp_io import ShabpIO
     is_shabp = True
 except ImportError:
@@ -87,49 +76,6 @@ except ImportError:
     is_tecplot = False
 
 try:
-    from pyNastran.converters.dev.avus.avus_io import AvusIO
-    is_avus = True
-except ImportError:
-    raise
-    class AvusIO(object):
-        def __init__(self):
-            pass
-    is_avus = False
-
-
-try:
-    from pyNastran.converters.tetgen.tetgen_io import TetgenIO
-    is_tetgen = True
-except ImportError:
-    #raise
-    class TetgenIO(object):
-        def __init__(self):
-            pass
-    is_tetgen = False
-
-try:
-    from pyNastran.converters.usm3d.usm3d_io import Usm3dIO
-    is_usm3d = True
-except ImportError:
-    #raise
-    class Usm3dIO(object):
-        def __init__(self):
-            pass
-    is_usm3d = False
-
-
-try:
-    from pyNastran.converters.dev.fast.fast_io import FastIO
-    is_fast = True
-except ImportError:
-    #raise
-    class FastIO(object):
-        def __init__(self):
-            pass
-    is_fast = False
-
-
-try:
     from pyNastran.converters.ugrid.surf_io import SurfIO
     is_surf = True
 except ImportError:
@@ -148,24 +94,3 @@ except ImportError:
         def __init__(self):
             pass
     is_ugrid = False
-
-try:
-    from pyNastran.converters.dev.openvsp.adb_io import ADB_IO
-    is_openvsp = True
-except ImportError:
-    #raise
-    class ADB_IO(object):
-        def __init__(self):
-            pass
-    is_openvsp = False
-
-try:
-    from pyNastran.converters.dev.openvsp.degen_geom_io import DegenGeomIO
-    is_degen_geom = True
-except ImportError:
-    raise
-    class DegenGeomIO(object):
-        def __init__(self):
-            pass
-    is_degen_geom = False
-
