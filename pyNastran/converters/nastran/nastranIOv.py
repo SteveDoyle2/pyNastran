@@ -1196,7 +1196,7 @@ class NastranIO(object):
             no_0_6 = np.zeros(self.element_ids.shape, dtype='int32')
             no_0_16 = np.zeros(self.element_ids.shape, dtype='int32')
 
-        debug = True
+        debug = False
         bar_nids = set([])
         for eid in bar_beam_eids:
             if eid not in self.eid_map:
@@ -3598,7 +3598,7 @@ class NastranIO(object):
         subtitle_old = key0[4]
 
         for key, itime in key_itime:
-            print('key =', key)
+            #print('key =', key)
             subcase_id = key[0]
             count = key[3]
             subtitle = key[4]
@@ -5048,7 +5048,7 @@ class NastranIO(object):
         if is_stress and itime == 0:
             if is_element_on.min() == 0:  # if all elements aren't on
                 ioff = np.where(is_element_on == 0)[0]
-                print('stress_eids_off = %s' % self.element_ids[ioff])
+                print('stress_eids_off = %s' % np.array(self.element_ids[ioff]))
                 self.log_error('stress_eids_off = %s' % self.element_ids[ioff])
                 cases[(1, icase, 'Stress\nisElementOn', 1, 'centroid', '%i', header)] = is_element_on
                 form_dict[(key, itime)].append(('Stress - IsElementOn', icase, []))

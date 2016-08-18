@@ -828,8 +828,8 @@ class NastranIO(NastranIO_xref):
     def finish_nastran_io(self, cases):  # same as Cart3d version
         self.result_cases = cases
         self.case_keys = sorted(cases.keys())
-        print("ncases = %s" % len(cases))
-        print("case_keys = %s" % self.case_keys)
+        #print("ncases = %s" % len(cases))
+        #print("case_keys = %s" % self.case_keys)
 
         if len(self.case_keys) > 1:
             self.icase = -1

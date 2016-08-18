@@ -467,13 +467,12 @@ class GuiCommon(GuiAttributes):
 
             point_data = self.grid.GetPointData()
             if vector_size == 1:
-                print('name_str=%r' % name_str)
                 point_data.SetActiveScalars(name_str)
             elif vector_size == 3:
-                print('name_str=%r' % name_str)
                 point_data.SetActiveVectors(name_str)
             else:
                 raise RuntimeError(vector_size)
+            #print('name_str=%r' % name_str)
         else:
             raise RuntimeError(location)
 
@@ -535,13 +534,14 @@ class GuiCommon(GuiAttributes):
                 msg = 'type(case_keys)=%s\n' % type(self.case_keys)
                 msg += 'icase=%r\n' % str(self.icase)
                 msg += 'case_keys=%r' % str(self.case_keys)
+                print(msg)
                 raise TypeError(msg)
             msg = 'icase=%r\n' % str(self.icase)
             msg += 'case_keys=%r' % str(self.case_keys)
-            print(msg)
+            #print(msg)
 
             location = self.get_case_location(key)
-            print("key = %s" % str(key))
+            #print("key_increment_cycle = %s" % str(key))
             #if key[2] == 3:  # vector size=3 -> vector, skipping ???
                 #self.increment_cycle()
             found_cases = True

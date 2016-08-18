@@ -2758,7 +2758,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         key : str
             a key that VTK should be informed about, e.g. 't'
         """
-        print("key = ", key)
+        print("key_key_press = ", key)
         if key == 'f':  # change focal point
             #print('focal_point!')
             return
@@ -2822,7 +2822,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         #]
         data = []
         for key in self.case_keys:
-            print(key)
+            #print(key)
             if isinstance(key, int):
                 obj, (i, name) = self.result_cases[key]
                 t = (i, [])
