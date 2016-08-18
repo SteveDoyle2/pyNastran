@@ -3,7 +3,7 @@ import numpy as np
 from six import iteritems
 
 
-def delete_bad_shells(model, max_theta=175., max_skew=70., max_aspect_ratio=100.):
+def delete_bad_shells(model, max_theta=175., max_skew=70., max_aspect_ratio=100., max_taper_ratio=4.0):
     """
     Removes bad CQUAD4/CTRIA3 elements
 
@@ -19,7 +19,8 @@ def delete_bad_shells(model, max_theta=175., max_skew=70., max_aspect_ratio=100.
         #xyz_cid0[i, :] = xyz
         nid_map[nid] = i
     eids_to_delete = get_bad_shells(model, xyz_cid0, nid_map, max_theta=max_theta,
-                                    max_skew=max_skew, max_aspect_ratio=max_aspect_ratio)
+                                    max_skew=max_skew, max_aspect_ratio=max_aspect_ratio,
+                                    max_taper_ratio=max_taper_ratio)
 
     for eid in eids_to_delete:
         del model.elements[eid]
@@ -29,7 +30,7 @@ def delete_bad_shells(model, max_theta=175., max_skew=70., max_aspect_ratio=100.
     return model
 
 
-def get_bad_shells(model, xyz_cid0, nid_map, max_theta=175., max_skew=70., max_aspect_ratio=100.):
+def get_bad_shells(model, xyz_cid0, nid_map, max_theta=175., max_skew=70., max_aspect_ratio=100., max_taper_ratio=4.0):
     """
     Get the bad shell elements
 
@@ -50,6 +51,8 @@ def get_bad_shells(model, xyz_cid0, nid_map, max_theta=175., max_skew=70., max_a
         the maximum skew angle
     max_aspect_ratio : float; default=100.
         the max aspect ratio
+    taper_ratio : float; default=2.0
+        the taper ratio; applies to CQUAD4s only
 
     Returns
     -------
@@ -87,7 +90,7 @@ def get_bad_shells(model, xyz_cid0, nid_map, max_theta=175., max_skew=70., max_a
             p34 = (p3 + p4) / 2.
             p14 = (p4 + p1) / 2.
             normal = np.cross(v31, v42)
-            #area = 0.5 * np.linalg.norm(normal)
+            #areai = 0.5 * np.linalg.norm(normal)
             #    e3
             # 4-------3
             # |       |
@@ -118,6 +121,17 @@ def get_bad_shells(model, xyz_cid0, nid_map, max_theta=175., max_skew=70., max_a
             if aspect_ratio > max_aspect_ratio:
                 eids_failed.append(eid)
                 model.log.debug('eid=%s failed aspect_ratio check; AR=%s' % (eid, aspect_ratio))
+                continue
+
+            area1 = 0.5 * np.linalg.norm(np.cross(-v14, v21)) # v41 x v21
+            area2 = 0.5 * np.linalg.norm(np.cross(-v21, v32)) # v12 x v32
+            area3 = 0.5 * np.linalg.norm(np.cross(v43, v32)) # v43 x v32
+            area4 = 0.5 * np.linalg.norm(np.cross(v14, -v43)) # v14 x v34
+            aavg = (area1 + area2 + area3 + area4) / 4.
+            taper_ratioi = (abs(area1 - aavg) + abs(area2 - aavg) + abs(area3 - aavg) + abs(area4 - aavg)) / aavg
+            if taper_ratioi > max_taper_ratio:
+                eids_failed.append(eid)
+                model.log.debug('eid=%s failed taper_ratio check; AR=%s' % (eid, taper_ratioi))
                 continue
 
             # ixj = k
