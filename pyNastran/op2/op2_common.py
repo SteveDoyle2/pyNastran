@@ -7,7 +7,6 @@ from struct import Struct, unpack
 from numpy import radians, sin, cos, fromstring, ones, float32, dtype as npdtype
 
 import numpy as np
-#from numba import autojit
 
 from pyNastran import is_release
 from pyNastran.f06.f06_writer import F06Writer
@@ -15,13 +14,11 @@ from pyNastran.op2.op2_codes import Op2Codes, get_scode_word
 from pyNastran.op2.op2_helper import polar_to_real_imag
 
 from pyNastran.op2.errors import SortCodeError, MultipleSolutionNotImplementedError # DeviceCodeError,
-from pyNastran.op2.dev.xlsx_writer import XlsxWriter
 
-class OP2Common(Op2Codes, F06Writer, XlsxWriter):
+class OP2Common(Op2Codes, F06Writer):
     def __init__(self):
         Op2Codes.__init__(self)
         F06Writer.__init__(self)
-        XlsxWriter.__init__(self)
 
         #: flag for vectorization
         #: 0 - no vectorization
