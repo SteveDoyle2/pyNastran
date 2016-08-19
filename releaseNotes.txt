@@ -46,10 +46,22 @@ Solver
         solve, calculate responses
    - added D matricies for PSHELL, PCOMP, PSOLID
 
------------------------v0.8.0 released 2016/8/20-----------------------
+-----------------------v0.8.0 released 2016/8/21-----------------------
 Major changes:
- - BDF supports unicode
- - 24 new cards
+ - BDF:
+   - supports unicode
+   - 24 new BDF cards (278 total cards)
+   - lots of bug fixes
+   - much better SOL 200/optimization support
+ - OP2:
+   - 500x faster
+     - removed v0.6 style dictionary result objects 
+     - it's just too slow to maintain
+   - much better NX Nastran support
+   - much better SOL 200/optimization support
+   - pandas objects can be made for iPython/Jupyter notebook
+ - much improved testing
+ - much improved GUI
 
 BDF:
  - unicode is now supported
@@ -162,7 +174,7 @@ GUI:
  - improved legend control
  - added sub-grids (e.g. SPCs) & sub-grid control menu
  - added label support with 'p'
- - csv result loading
+ - csv nodal/centroidal result loading for every format
  - multiple OP2 files
  - added scripting dock
  - preliminary groups
