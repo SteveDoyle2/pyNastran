@@ -14,7 +14,7 @@ Issues List:     https://github.com/SteveDoyle2/pyNastran/issues
 Major changes:
  - BDF:
    - supports unicode
-   - 24 new BDF cards (278 total cards)
+   - 278 total cards
    - lots of bug fixes
    - much better SOL 200/optimization support
  - OP2:
@@ -26,7 +26,6 @@ Major changes:
    - pandas objects can be made for iPython/Jupyter notebook
  - much improved testing
  - much improved GUI
-
 
 BDF:
  - unicode is now supported
