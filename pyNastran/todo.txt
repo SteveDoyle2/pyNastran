@@ -1,34 +1,27 @@
-Release 0.8
-===========
- Tasks
- -----
- - fix EIGC
- - fix NX bars in GUI
+Release 0.8.0
+=============
+Tasks
+-----
+ - build docs
+   - attach on sourceforge/egg?
+ - pass travis
+ - run bdf tests in py27/35
+ - run op2 tests in py27/35
+ - upload wheel
+ - upload py27 gui
+
+ Remove
+ ------
+
 
 Done
 ----
+ - fix EIGC
+ - fix NX bars in GUI
  - fix SetInput/SetInputData
  - various BDF/OP2/F06 tests
  - make sure OP2/BDF classes are shown in ReadTheDocs
  - vectorize op2 fully
-
-Release 0.7
-===========
- - large/small field format & single/double precision writing
- - tests for op2 results request
- - cleanup outdated op2 table skipping
- - RealBeamStressArray / RealBeamStrainArray
- - superelement op2 results
- - RealPlateArrayStress/Strain in gui considers all nodes/layers in gui
- - RealSolidArrayStress/Strain in gui considers all nodes in gui
- - RealBeamArrayStress/Strain in gui considers all nodes in gui
- - RealCompositePlateArrayStress/Strain considers all layers in gui
- - get the iSat model working again
- - test_op2 should be simplified b/c geometry doesn't work and op2 writing doesn't work
- - improved xref
-
- Remove
- ------
 
 
 Future

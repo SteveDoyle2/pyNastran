@@ -3,10 +3,10 @@ import os
 import unittest
 import numpy as np
 from six import iteritems
+from numpy import dot, array_equal
 
 import pyNastran
 test_path = pyNastran.__path__[0]
-from numpy import dot, array_equal
 
 from pyNastran.bdf.bdf import BDF
 from pyNastran.op2.op2 import OP2, FatalError, read_op2
@@ -14,7 +14,7 @@ from pyNastran.op2.op2_geom import read_op2_geom
 from pyNastran.op2.test.test_op2 import run_op2
 
 from pyNastran.bdf.test.bdf_unit_tests import Tester
-from pyNastran.op2.tables.oef_forces.oef_forceObjects import RealPlateBilinearForceArray, RealPlateForceArray
+from pyNastran.op2.tables.oef_forces.oef_force_objects import RealPlateBilinearForceArray, RealPlateForceArray
 from pyNastran.op2.export_to_vtk import export_to_vtk_filename
 from pyNastran.op2.vector_utils import filter1d
 
@@ -72,9 +72,8 @@ class TestOP2(Tester):
         self.assertEqual(len(op2.displacements), 1, len(op2.displacements))
 
     def test_op2_solid_bending_01(self):
-        op2_filename = os.path.join('solid_bending.op2')
         folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'solid_bending'))
-        op2_filename = os.path.join(folder, op2_filename)
+        op2_filename = os.path.join(folder, 'solid_bending.op2')
         make_geom = False
         write_bdf = False
         write_f06 = True
@@ -103,29 +102,26 @@ class TestOP2(Tester):
         os.remove(debug_file)
 
     def test_op2_solid_bending_02(self):
-        op2_filename = os.path.join('solid_bending.op2')
         folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'solid_bending'))
-        op2_filename = os.path.join(folder, op2_filename)
-        op2 = read_op2(op2_filename)
+        op2_filename = os.path.join(folder, 'solid_bending.op2')
+        op2 = read_op2(op2_filename, debug=False)
 
     def test_op2_solid_bending_02_geom(self):
-        op2_filename = os.path.join('solid_bending.op2')
         folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'solid_bending'))
-        op2_filename = os.path.join(folder, op2_filename)
-        op2 = read_op2_geom(op2_filename)
+        op2_filename = os.path.join(folder, 'solid_bending.op2')
+        op2 = read_op2_geom(op2_filename, debug=False)
 
     def test_op2_solid_shell_bar_01_geom(self):
-        op2_filename = os.path.join('static_solid_shell_bar.op2')
         folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'sol_101_elements'))
-        op2_filename = os.path.join(folder, op2_filename)
-        op2 = read_op2_geom(op2_filename)
+        op2_filename = os.path.join(folder, 'static_solid_shell_bar.op2')
+        op2 = read_op2_geom(op2_filename, debug=False)
 
 
     def test_op2_solid_shell_bar_01_gpforce(self):
         folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'sol_101_elements'))
         #bdf_filename = os.path.join(folder, 'static_solid_shell_bar.bdf')
         op2_filename = os.path.join(folder, 'static_solid_shell_bar.op2')
-        op2 = read_op2_geom(op2_filename)
+        op2 = read_op2_geom(op2_filename, debug=False)
 
         i_transform, beta_transforms = op2.get_displacement_index_transforms()
         op2.transform_displacements_to_global(i_transform, beta_transforms)
@@ -134,8 +130,7 @@ class TestOP2(Tester):
 
         #bdf_filename = os.path.join(folder, 'solid_shell_bar_xyz.bdf')
         #model = BDF(debug=False)
-        #model.read_bdf(bdf_filename)
-        #model.cross_reference()
+        #model.read_bdf(bdf_filename, xref=True)
 
         op2.cross_reference(xref_elements=False,
                             xref_nodes_with_elements=False,
@@ -490,7 +485,7 @@ class TestOP2(Tester):
     @unittest.expectedFailure
     def test_op2_solid_shell_bar_01_gpforce_radial(self):
         folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'sol_101_elements'))
-        bdf_filename = os.path.join(folder, 'static_solid_shell_bar_radial.bdf')
+        #bdf_filename = os.path.join(folder, 'static_solid_shell_bar_radial.bdf')
         op2_filename = os.path.join(folder, 'static_solid_shell_bar_radial.op2')
         op2 = read_op2_geom(op2_filename)
 
@@ -515,12 +510,12 @@ class TestOP2(Tester):
 
         data = _get_gpforce_data()
         coords = op2.coords
-        for datai in data:
+        for i, datai in enumerate(data):
             eids, nids, cid, summation_point, total_force_local_expected, total_moment_local_expected = datai
             if cid not in coords:
                 continue
             coord_out = coords[cid]
-            op2.log.debug('*' * 30 + 'Next Test' + '*' * 30)
+            op2.log.debug('*' * 30 + 'Next Test #%s' % i + '*' * 30)
             out = gpforce.extract_interface_loads(
                 nids, eids,
                 coord_out, coords,
@@ -584,11 +579,10 @@ class TestOP2(Tester):
         assert cbar_stress.nelements == 1, cbar_stress.nelements
         assert cbar_stress.data.shape == (1, 1, 15), cbar_stress.data.shape
 
-        # TODO: not vectorized
-        #cbeam_force = op2.cbeam_force[isubcase]
-        #cbeam_force.build_dataframe()
-        #assert cbeam_force.nelements == 11, cbeam_force.nelements
-        #assert cbeam_force.data.shape == (1, 11, 8), cbeam_force.data.shape
+        cbeam_force = op2.cbeam_force[isubcase]
+        cbeam_force.build_dataframe()
+        assert cbeam_force.nelements == 1, cbeam_force.nelements
+        assert cbeam_force.data.shape == (1, 2, 8), cbeam_force.data.shape
 
         cbeam_stress = op2.cbeam_stress[isubcase]
         cbeam_stress.build_dataframe()
@@ -604,6 +598,8 @@ class TestOP2(Tester):
         cquad4_stress.build_dataframe()
         assert cquad4_stress.nelements == 20, cquad4_stress.nelements # TODO: should this be 4; yes by actual count...
         assert cquad4_stress.data.shape == (1, 20, 8), cquad4_stress.data.shape
+        assert cquad4_stress.is_fiber_distance(), cquad4_stress
+        assert cquad4_stress.is_von_mises(), cquad4_stress
 
         ctria3_force = op2.ctria3_force[isubcase]
         ctria3_force.build_dataframe()
@@ -614,21 +610,26 @@ class TestOP2(Tester):
         ctria3_stress.build_dataframe()
         assert ctria3_stress.nelements == 8, ctria3_stress.nelements
         assert ctria3_stress.data.shape == (1, 8, 8), ctria3_stress.data.shape
+        assert ctria3_stress.is_fiber_distance(), ctria3_stress
+        assert ctria3_stress.is_von_mises(), ctria3_stress
 
         ctetra_stress = op2.ctetra_stress[isubcase]
         ctetra_stress.build_dataframe()
         assert ctetra_stress.nelements == 2, ctetra_stress.nelements
         assert ctetra_stress.data.shape == (1, 10, 10), ctetra_stress.data.shape
+        assert ctetra_stress.is_von_mises(), ctetra_stress
 
         cpenta_stress = op2.cpenta_stress[isubcase]
         cpenta_stress.build_dataframe()
         assert cpenta_stress.nelements == 2, cpenta_stress.nelements
         assert cpenta_stress.data.shape == (1, 14, 10), cpenta_stress.data.shape
+        assert cpenta_stress.is_von_mises(), cpenta_stress
 
         chexa_stress = op2.chexa_stress[isubcase]
         chexa_stress.build_dataframe()
         assert chexa_stress.nelements == 1, chexa_stress.nelements
         assert chexa_stress.data.shape == (1, 9, 10), chexa_stress.data.shape
+        assert chexa_stress.is_von_mises(), chexa_stress
 
         assert os.path.exists(debug_file), os.listdir(folder)
         os.remove(debug_file)
@@ -654,7 +655,7 @@ class TestOP2(Tester):
 
         if os.path.exists(debug_file):
             os.remove(debug_file)
-        read_op2(op2_filename)
+        read_op2(op2_filename, debug=False)
         op2, is_passed = run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, isubcases=[],
                                  write_f06=write_f06,
                                  debug=debug, stop_on_failure=True, binary_debug=True, quiet=True)
@@ -726,7 +727,7 @@ class TestOP2(Tester):
 
         if os.path.exists(debug_file):
             os.remove(debug_file)
-        read_op2(op2_filename)
+        read_op2(op2_filename, debug=False)
         op2, is_passed = run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, isubcases=[],
                                  write_f06=write_f06,
                                  debug=debug, stop_on_failure=True, binary_debug=True, quiet=True)
@@ -798,7 +799,7 @@ class TestOP2(Tester):
 
         if os.path.exists(debug_file):
             os.remove(debug_file)
-        read_op2(op2_filename)
+        read_op2(op2_filename, debug=False)
         op2, is_passed = run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, isubcases=[],
                                  write_f06=write_f06,
                                  debug=debug, stop_on_failure=True, binary_debug=True, quiet=True)
@@ -832,9 +833,9 @@ class TestOP2(Tester):
         assert cbar_stress.data.shape == (7, 1, 9), cbar_stress.data.shape
 
         #print(op2.cbeam_stress.keys())
-        # cbeam_stress = op2.cbeam_stress[isubcase]
-        # assert cbeam_stress.nelements == 11, cbeam_stress.nelements  # TODO: wrong
-        # assert cbeam_stress.data.shape == (7, 11, 8), cbeam_stress.data.shape
+        #cbeam_stress = op2.cbeam_stress[isubcase]
+        #assert cbeam_stress.nelements == 2, cbeam_stress.nelements
+        #assert cbeam_stress.data.shape == (7, 2, 8), cbeam_stress.data.shape
 
         cquad4_stress = op2.cquad4_stress[isubcase]
         #cquad4_stress.build_dataframe()
@@ -899,7 +900,7 @@ class TestOP2(Tester):
 
         if os.path.exists(debug_file):
             os.remove(debug_file)
-        read_op2(op2_filename)
+        read_op2(op2_filename, debug=debug)
         op2, is_passed = run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, isubcases=[],
                                  write_f06=write_f06,
                                  debug=debug, stop_on_failure=True, binary_debug=True, quiet=True)
@@ -1220,9 +1221,11 @@ class TestOP2(Tester):
         model.read_bdf(bdf_filename)
 
         dmi_a = model.dmis['A']
+        assert dmi_a.shape == (4, 2), 'shape=%s' % (dmi_a.shape)
+        #print('dmi_a\n', dmi_a)
         a, rows_reversed, cols_reversed = dmi_a.get_matrix(is_sparse=False, apply_symmetry=False)
-        print('model.dmi.A =\n%s' % dmi_a)
-        print('model.dmi.A =\n%s' % str(a))
+        #print('model.dmi.A =\n%s' % dmi_a)
+        #print('model.dmi.A =\n%s' % str(a))
         #return
         op2 = OP2(debug=False)
         op2.set_additional_matrices_to_read(matrices)

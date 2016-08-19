@@ -3548,7 +3548,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         | Format | pyString |
         +--------+----------+
         """
-        if not hasattr(self, 'case_keys'):
+        if not hasattr(self, 'case_keys') or len(self.case_keys) == 0:
             self.log_error('No model has been loaded.')
             return
         key = self.case_keys[self.icase]
