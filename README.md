@@ -45,40 +45,40 @@ Using the pyNastran GUI, you can read in Nastran models and quickly view results
 <!--- [![Build Status](https://travis-ci.org/SteveDoyle2/pyNastran.svg?branch=master)](https://travis-ci.org/SteveDoyle2/pyNastran)  --->
 <!--- [![codecov.io](https://codecov.io/github/SteveDoyle2/pyNastran/coverage.svg?branch=master)](https://codecov.io/github/SteveDoyle2/pyNastran?branch=master)  --->
 
+<!--- ## pyNastran v0.8.0 has NOT been released (8/21/2016)   --->
 
 ## pyNastran v0.8 progress (8/16/2016)
+The following are some new features from the v0.8 release.
+
  - BDF
+   - supports unicode
    - 278 cards supported
    - simplifed method to add cards
-     - grid = GRID(nid, cp, xyz, cd, ps, eid, comment)
+     - `grid = GRID(nid, cp, xyz, cd, ps, eid, comment)`
    - lots of optimization work
    - bdf equivalence, renumber, deck merging
    - element quality
  - OP2
+   - ~500x faster than v0.7.2
+     - non-vectorized OP2 option has been removed
+   - matrix support
    - improved SOL 200 support
    - transform displacement/eigenvectors/spc/mpc/applied loads to global coordinate system
    - transform stresses/forces to material coordinate system
    - geometry can be read directly from op2 (not perfect, but when it works, it's much faster)
+   - [Pandas](http://pandas.pydata.org/) DataFrame support for use in the [Jupyter/iPython](http://jupyter.org/index.html) Notebook
  - GUI
-   - area, max interior angle, skew angle, aspect ratio results
-   - improved SOL 200 support
+   - additional results
+      - multiple OP2s
+      - deflection plots
+      - area, max interior angle, skew angle, aspect ratio, taper ratio results
+   - SOL 200 support
+   - imporoved legend
+   - custom user (nodal/centroidal results)
    - aero models now support sideslip coordinate systems
-   - more legend control
  - OP4
   - fixed sparse ASCII BIGMAT bug
 
-## pyNastran v0.8 progress (~2/2016)
- - BDF
-   - supports unicode
-   - 270 cards supported
- - OP2
-   - ~500x faster than v0.7.2
-     - non-vectorized OP2 option has being removed
-   - Matrix support
-   - [Pandas](http://pandas.pydata.org/) DataFrame support for use in the [Jupyter/iPython](http://jupyter.org/index.html) Notebook
- - GUI
-   - nodal and centroidal results supported at the same time
-   - deflection plot support
 
 ## pyNastran v0.7.2 has been Released (4/25/2015)
 
@@ -88,6 +88,7 @@ Highlights:
  * OP2
    * superelement support
    * vectorized support (uses much less memory; Element Forces not vectorized yet)
+     - this is the standard in v0.8
    * additional results (e.g. grid point weight, eigenvalues)
    * `PARAM,POST,-2` support
    * catching of most FATAL errors without needing to read the F06
@@ -109,7 +110,3 @@ Most op2 object were changed in order to eliminate errors, and be more consisten
 
 Marcin Gąsiorek participated in the latest pyNastran under the European Space Agency's (ESA) "Summer of Code In Space" [SOCIS](http://sophia.estec.esa.int/socis2012/?q=node/13) program.  The program provides a stipend to students to work on open-source projects.
 He did a great job of simplifying code and creating nicer documentation.
-
-## Additional Info
-
-If anyone makes any specific requests I'll try to incorporate them.  They need to be specific, such as read these cards from the BDF, read these results from this OP2, or write these results to an OP2.  <b>Any sample problems that you have (to test the software with) would be appreciated.  I need small examples that are comprehensive that I can add as demo problems.</b>

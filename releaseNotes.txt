@@ -50,7 +50,7 @@ Solver
 Major changes:
  - BDF:
    - supports unicode
-   - 24 new BDF cards (278 total cards)
+   - 278 total cards
    - lots of bug fixes
    - much better SOL 200/optimization support
  - OP2:
