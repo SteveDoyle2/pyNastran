@@ -38,7 +38,8 @@ for more detailed information.
 pyNastran is an interface library to the various Nastran file formats (BDF, OP2, OP4).  Using the BDF interface, you can read/edit/write Nastran geometry without worrying about field formatting.  Many checks are also performed to verify that your model is correct.  Using the OP2 interface, you can read very large result files very quckly and very efficiently.  Additionally, you can also extract a subset of the result data and write F06 result files.
 
 Using the pyNastran GUI, you can read in Nastran models and quickly view results for a model.  While it's no FEMAP/Patran, it can replace many tasks that would otherwise require a commercial program.
-![GUI](https://github.com/SteveDoyle2/pynastran/blob/v0.7/pyNastran/gui/caero.png)
+
+![GUI](https://github.com/SteveDoyle2/pynastran/blob/v0.8/pyNastran/gui/images/caero.png)
 
 
 <!--- Ripped off meshio  --->
@@ -46,6 +47,7 @@ Using the pyNastran GUI, you can read in Nastran models and quickly view results
 <!--- [![codecov.io](https://codecov.io/github/SteveDoyle2/pyNastran/coverage.svg?branch=master)](https://codecov.io/github/SteveDoyle2/pyNastran?branch=master)  --->
 
 <!--- ## pyNastran v0.8.0 has NOT been released (8/21/2016)   --->
+<!--- [Download pyNastran v0.8] (https://github.com/SteveDoyle2/pyNastran/releases)  --->
 
 ## pyNastran v0.8 progress (8/16/2016)
 The following are some new features from the v0.8 release.
