@@ -18,29 +18,46 @@ The GUI can be seen at:
   https://github.com/SteveDoyle2/pyNastran/wiki/GUI
 
 >>> pyNastranGUI --help
+
 Usage:
+  pyNastranGUI [-f FORMAT] INPUT [-o OUTPUT]
+               [-s SHOT] [-m MAGNIFY]
+               [-g GSCRIPT] [-p PSCRIPT]
+               [-u POINTS_FNAME...] [--user_geom GEOM_FNAME...]
+               [-q] [--groups]
+  pyNastranGUI [-f FORMAT] INPUT OUTPUT [-o OUTPUT]
+               [-s SHOT] [-m MAGNIFY]
+               [-g GSCRIPT] [-p PSCRIPT]
+               [-u POINTS_FNAME...] [--user_geom GEOM_FNAME...]
+               [-q] [--groups]
   pyNastranGUI [-f FORMAT] [-i INPUT] [-o OUTPUT...]
-                  [-s SHOT] [-m MAGNIFY]
-                  [-g GSCRIPT] [-p PSCRIPT]
-                  [-u POINTS_FNAME...]
-                  [-c][-q]
+               [-s SHOT] [-m MAGNIFY]
+               [-g GSCRIPT] [-p PSCRIPT]
+               [-u POINTS_FNAME...] [--user_geom GEOM_FNAME...]
+               [-q] [--groups]
   pyNastranGUI -h | --help
   pyNastranGUI -v | --version
 
-Options:
-  -h, --help                  show this help message and exit
-  -f FORMAT, --format FORMAT  format type (cart3d, lawgs, nastran, panair,
-                                           plot3d, stl, tetgen, usm3d)
+Primary Options:
+  -f FORMAT, --format FORMAT  format type (avus, cart3d, lawgs, nastran, panair, 
+                                           plot3d, stl, surf, tetgen, ugrid, usm3d)
   -i INPUT, --input INPUT     path to input file
   -o OUTPUT, --output OUTPUT  path to output file
-  -c, --console               disable HTML console output
-  -g GSCRIPT, --geomscript GSCRIPT  path to geometry script file (runs before load geometry)
-  -p PSCRIPT, --postscript PSCRIPT  path to post script file (runs after load geometry)
-  -s SHOT, --shots SHOT       path to screenshot (only 1 for now)
-  -m MAGNIFY, --magnify       how much should the resolution on a picture be magnified [default: 5]
-  -u POINTS_FNAME, --user_points POINTS_FNAME               add user specified points to an alternate grid (repeatable)
-  -q, --quiet                 prints debug messages (default=True)
-  -v, --version               show program's version number and exit
+
+Secondary Options:
+  -g GSCRIPT, --geomscript        path to geometry script file (runs before load geometry)
+  -p PSCRIPT, --postscript        path to post script file (runs after load geometry)
+  -s SHOT, --shots SHOT           path to screenshot (only 1 for now)
+  -m MAGNIFY, --magnify           how much should the resolution on a picture be magnified [default: 5]
+  --groups                        enables groups
+  --user_geom GEOM_FNAME          add user specified points to an alternate grid (repeatable)
+  -u POINTS_FNAME, --user_points  add user specified points to an alternate grid (repeatable)
+
+Info:
+  -q, --quiet    prints debug messages (default=True)
+  -h, --help     show this help message and exit
+  -v, --version  show program's version number and exit
+
 
 test_bdf
 --------

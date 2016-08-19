@@ -293,7 +293,7 @@ Less obvious pieces:
 
 Tickets
 =======
-Can we parse the subversion log to get the list of closed tickets to 
+Can we parse the git log to get the list of closed tickets to 
 put in the release notes?
 
 Release Notes
@@ -318,4 +318,3 @@ iPython Examples
 ================
 iPython is a neat way to demo the code.  Care should be taken to make 
 sure these work for any user and are reasonably self-documenting.
-

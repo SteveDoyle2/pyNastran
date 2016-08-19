@@ -55,26 +55,28 @@ def run_docopt():
     msg += '  pyNastranGUI -h | --help\n'
     msg += '  pyNastranGUI -v | --version\n'
     msg += "\n"
-    msg += "Options:\n"
-    msg += "  -h, --help                  show this help message and exit\n"
-    msg += "  -f FORMAT, --format FORMAT  format type (cart3d, lawgs, nastran, panair, \n"
-    msg += "                                           plot3d, stl, tetgen, usm3d)\n"
+    msg += "Primary Options:\n"
+    msg += "  -f FORMAT, --format FORMAT  format type (avus, cart3d, lawgs, nastran, panair, plot3d,\n"
+    msg += "                                           stl, surf, tetgen, usm3d, ugrid)\n"
     msg += "  -i INPUT, --input INPUT     path to input file\n"
     msg += "  -o OUTPUT, --output OUTPUT  path to output file\n"
     #msg += "  -r XYZ, --rotation XYZ      [x, y, z, -x, -y, -z] default is ???\n"
+    msg += '\n'
 
-    #if mode != 'qt':
-    msg += "  -g GSCRIPT, --geomscript GSCRIPT     path to geometry script file (runs before load geometry)\n"
-    msg += "  -p PSCRIPT, --postscript PSCRIPT     path to post script file (runs after load geometry)\n"
-    msg += "  -s SHOT, --shots SHOT                path to screenshot (only 1 for now)\n"
-    msg += "  -m MAGNIFY, --magnify                how much should the resolution on a picture be magnified [default: 5]\n"
-    msg += "  --groups                             enables groups\n"
-    msg += "  --user_geom GEOM_FNAME POINTS_FNAME  add user specified points to an alternate grid (repeatable)\n"
-    msg += "  -u POINTS_FNAME, --user_points POINTS_FNAME  add user specified points to an alternate grid (repeatable)\n"
+    msg += "Secondary Options:\n"
+    msg += "  -g GSCRIPT, --geomscript        path to geometry script file (runs before load geometry)\n"
+    msg += "  -p PSCRIPT, --postscript        path to post script file (runs after load geometry)\n"
+    msg += "  -s SHOT, --shots SHOT           path to screenshot (only 1 for now)\n"
+    msg += "  -m MAGNIFY, --magnify           how much should the resolution on a picture be magnified [default: 5]\n"
+    msg += "  --groups                        enables groups\n"
+    msg += "  --user_geom GEOM_FNAME          add user specified points to an alternate grid (repeatable)\n"
+    msg += "  -u POINTS_FNAME, --user_points  add user specified points to an alternate grid (repeatable)\n"
+    msg += '\n'
 
-    msg += "  -q, --quiet                 prints debug messages (default=True)\n"
-    #if mode != 'qt':
-    msg += "  -v, --version               show program's version number and exit\n"
+    msg += "Info:\n"
+    msg += "  -q, --quiet    prints debug messages (default=True)\n"
+    msg += "  -h, --help     show this help message and exit\n"
+    msg += "  -v, --version  show program's version number and exit\n"
 
 
     ver = str(pyNastran.__version__)
