@@ -46,37 +46,44 @@ To view the options:
 
   >>> pyNastranGUI --help
 
-    pyNastranGUI [-f FORMAT] INPUT
-                 [-s SHOT] [-m MAGNIFY]
-                 [-g GSCRIPT] [-p PSCRIPT]
-                 [-u POINTS_FNAME...]
-                 [-q]
-    pyNastranGUI [-f FORMAT] INPUT OUTPUT
-                 [-s SHOT] [-m MAGNIFY]
-                 [-g GSCRIPT] [-p PSCRIPT]
-                 [-u POINTS_FNAME...]
-                 [-q]
-    pyNastranGUI [-f FORMAT] [-i INPUT] [-o OUTPUT...]
-                 [-s SHOT] [-m MAGNIFY]
-                 [-g GSCRIPT] [-p PSCRIPT]
-                 [-u POINTS_FNAME...]
-                 [-q]
-    pyNastranGUI -h | --help
-    pyNastranGUI -v | --version
+    Usage:
+      pyNastranGUI [-f FORMAT] INPUT [-o OUTPUT]
+                   [-s SHOT] [-m MAGNIFY]
+                   [-g GSCRIPT] [-p PSCRIPT]
+                   [-u POINTS_FNAME...] [--user_geom GEOM_FNAME...]
+                   [-q] [--groups]
+      pyNastranGUI [-f FORMAT] INPUT OUTPUT [-o OUTPUT]
+                   [-s SHOT] [-m MAGNIFY]
+                   [-g GSCRIPT] [-p PSCRIPT]
+                   [-u POINTS_FNAME...] [--user_geom GEOM_FNAME...]
+                   [-q] [--groups]
+      pyNastranGUI [-f FORMAT] [-i INPUT] [-o OUTPUT...]
+                   [-s SHOT] [-m MAGNIFY]
+                   [-g GSCRIPT] [-p PSCRIPT]
+                   [-u POINTS_FNAME...] [--user_geom GEOM_FNAME...]
+                   [-q] [--groups]
+      pyNastranGUI -h | --help
+      pyNastranGUI -v | --version
 
-  Options:
-    -h, --help                  show this help message and exit
-    -f FORMAT, --format FORMAT  format type (cart3d, lawgs, nastran, panair,
-                                             plot3d, stl, tetgen, usm3d)
-    -i INPUT, --input INPUT     path to input file
-    -o OUTPUT, --output OUTPUT  path to output file
-    -g GSCRIPT, --geomscript GSCRIPT  path to geometry script file (runs before load geometry)
-    -p PSCRIPT, --postscript PSCRIPT  path to post script file (runs after load geometry)
-    -s SHOT, --shots SHOT       path to screenshot (only 1 for now)
-    -m MAGNIFY, --magnify       how much should the resolution on a picture be magnified [default: 5]
-    -u POINTS_FNAME, --user_points POINTS_FNAME               add user specified points to an alternate grid (repeatable)
-    -q, --quiet                 prints debug messages (default=True)
-    -v, --version               show program's version number and exit
+    Primary Options:
+      -f FORMAT, --format FORMAT  format type (cart3d, lawgs, nastran, panair, stl, surf, ugrid)
+      -i INPUT, --input INPUT     path to input file
+      -o OUTPUT, --output OUTPUT  path to output file
+
+    Secondary Options:
+      -g GSCRIPT, --geomscript        path to geometry script file (runs before load geometry)
+      -p PSCRIPT, --postscript        path to post script file (runs after load geometry)
+      -s SHOT, --shots SHOT           path to screenshot (only 1 for now)
+      -m MAGNIFY, --magnify           how much should the resolution on a picture be magnified [default: 5]
+      --groups                        enables groups
+      --user_geom GEOM_FNAME          add user specified points to an alternate grid (repeatable)
+      -u POINTS_FNAME, --user_points  add user specified points to an alternate grid (repeatable)
+    
+    Info:
+      -q, --quiet    prints debug messages (default=True)
+      -h, --help     show this help message and exit
+      -v, --version  show program's version number and exit
+
 
 
 The standard way to run the code:
@@ -199,29 +206,6 @@ Some of the results include:
    * **STL** ASCII/binary input (\*.stl)
 
      * Normal X/Y/Z
-
-   * **Tetgen** input (\*.smesh)
-
-   * **Usm3d** surface input (\*.front, \*.cogsg); volume input (\*.cogsg); volume output (\*.flo)
-
-     * Boundary Condition Region
-     * Node ID
-     * Cp, Mach, T, U, V, W, p, rhoU
-
-Graphical Issues
-----------------
-You'll have the best performance if you run the GUI on Windows with an new
-NVIDIA graphics card and on a desktop.
-
-If you're having issues, you should update the driver for your graphics card,
-especially if you have a laptop or Radeon card. For a desktop machine, go to
-the web site of the manufacturer of the graphics card. For a laptop, you should
-normally go to the web site of the laptop manufacturer, though for NVIDIA you
-may now find a newer driver available from NVIDIA.
-
-Issues include:
-  1. the backfaces of elements not being colored
-  2. the GUI not working
 
 
 *****************
@@ -573,8 +557,8 @@ unless you write a script.
 ..     grid_result_vector = self.set_grid_values(name_vector, case, vector_size, min_value, max_value, norm_value)
 
 
-Animation of Complex Mode Shapes
-================================
+.. Animation of Complex Mode Shapes
+.. ================================
 
 
 .. Complex Mode Shapes (not done)

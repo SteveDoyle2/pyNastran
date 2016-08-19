@@ -254,5 +254,5 @@ def load_user_geom(fname, encoding='latin1'):
     return grid_ids, xyz, bars, tris, quads
 
 if __name__ == '__main__':
-    check_for_newer_version(window=None)
+    check_for_newer_version()
 

@@ -18,29 +18,45 @@ The GUI can be seen at:
   https://github.com/SteveDoyle2/pyNastran/wiki/GUI
 
 >>> pyNastranGUI --help
+
 Usage:
+  pyNastranGUI [-f FORMAT] INPUT [-o OUTPUT]
+               [-s SHOT] [-m MAGNIFY]
+               [-g GSCRIPT] [-p PSCRIPT]
+               [-u POINTS_FNAME...] [--user_geom GEOM_FNAME...]
+               [-q] [--groups]
+  pyNastranGUI [-f FORMAT] INPUT OUTPUT [-o OUTPUT]
+               [-s SHOT] [-m MAGNIFY]
+               [-g GSCRIPT] [-p PSCRIPT]
+               [-u POINTS_FNAME...] [--user_geom GEOM_FNAME...]
+               [-q] [--groups]
   pyNastranGUI [-f FORMAT] [-i INPUT] [-o OUTPUT...]
-                  [-s SHOT] [-m MAGNIFY]
-                  [-g GSCRIPT] [-p PSCRIPT]
-                  [-u POINTS_FNAME...]
-                  [-c][-q]
+               [-s SHOT] [-m MAGNIFY]
+               [-g GSCRIPT] [-p PSCRIPT]
+               [-u POINTS_FNAME...] [--user_geom GEOM_FNAME...]
+               [-q] [--groups]
   pyNastranGUI -h | --help
   pyNastranGUI -v | --version
 
-Options:
-  -h, --help                  show this help message and exit
-  -f FORMAT, --format FORMAT  format type (cart3d, lawgs, nastran, panair,
-                                           plot3d, stl, tetgen, usm3d)
+Primary Options:
+  -f FORMAT, --format FORMAT  format type (cart3d, lawgs, nastran, panair, stl, surf, ugrid)
   -i INPUT, --input INPUT     path to input file
   -o OUTPUT, --output OUTPUT  path to output file
-  -c, --console               disable HTML console output
-  -g GSCRIPT, --geomscript GSCRIPT  path to geometry script file (runs before load geometry)
-  -p PSCRIPT, --postscript PSCRIPT  path to post script file (runs after load geometry)
-  -s SHOT, --shots SHOT       path to screenshot (only 1 for now)
-  -m MAGNIFY, --magnify       how much should the resolution on a picture be magnified [default: 5]
-  -u POINTS_FNAME, --user_points POINTS_FNAME               add user specified points to an alternate grid (repeatable)
-  -q, --quiet                 prints debug messages (default=True)
-  -v, --version               show program's version number and exit
+
+Secondary Options:
+  -g GSCRIPT, --geomscript        path to geometry script file (runs before load geometry)
+  -p PSCRIPT, --postscript        path to post script file (runs after load geometry)
+  -s SHOT, --shots SHOT           path to screenshot (only 1 for now)
+  -m MAGNIFY, --magnify           how much should the resolution on a picture be magnified [default: 5]
+  --groups                        enables groups
+  --user_geom GEOM_FNAME          add user specified points to an alternate grid (repeatable)
+  -u POINTS_FNAME, --user_points  add user specified points to an alternate grid (repeatable)
+
+Info:
+  -q, --quiet    prints debug messages (default=True)
+  -h, --help     show this help message and exit
+  -v, --version  show program's version number and exit
+
 
 test_bdf
 --------
@@ -86,7 +102,7 @@ Runs through various checks on an OP2 file.  Creates a summary table.
 
 >>> test_op2 --help
 Usage:
-test_op2 [-q] [-b] [-c] [-g] [-n] [-m] [-f] [-o] [-p] [-z] [-w] [-s <sub>] [-x <arg>]... OP2_FILENAME
+test_op2 [-q] [-b] [-c] [-g] [-n] [-f] [-z] [-w] [-s <sub>] [-x <arg>]... OP2_FILENAME
   test_op2 -h | --help
   test_op2 -v | --version
 
@@ -100,11 +116,8 @@ Options:
   -c, --disablecompare  Doesn't do a validation of the vectorized result
   -q, --quiet           Suppresses debug messages [default: False]
   -g, --geometry        Reads the OP2 for geometry, which can be written out
-  -n, --write_bdf      Writes the bdf to fem.test_op2.bdf (default=False)
+  -n, --write_bdf       Writes the bdf to fem.test_op2.bdf (default=False)
   -f, --write_f06       Writes the f06 to fem.test_op2.f06
-  -m, --write_xlsx      Writes an XLSX to fem.test_op2.xlsx
-  -o, --write_op2       Writes the op2 to fem.test_op2.op2
-  -p, --profile     Profiles the code (default=False)
   -z, --is_mag_phase    F06 Writer writes Magnitude/Phase instead of
                         Real/Imaginary (still stores Real/Imag); [default: False]
   -s <sub>, --subcase   Specify one or more subcases to parse; (e.g. 2_5)
