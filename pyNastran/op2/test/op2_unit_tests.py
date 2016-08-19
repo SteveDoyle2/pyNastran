@@ -1169,40 +1169,6 @@ class TestOP2(Tester):
 
         self._verify_ids(bdf, op2, isubcase=1)
 
-    def test_op2_bcell_01(self):
-        folder = os.path.abspath(os.path.join(test_path, '..', 'models'))
-        bdf_filename = os.path.join(folder, 'other', 'bcell9p0.bdf')
-        op2_filename = os.path.join(folder, 'other', 'bcell9p0.op2')
-        make_geom = False
-        write_bdf = False
-        write_f06 = True
-        debug = False
-        op2file = os.path.join(folder, op2_filename)
-        bdf = BDF(debug=False)
-        bdf.read_bdf(bdf_filename, xref=False)
-
-        debug = False
-        debug_file = 'debug.out'
-        read_op2(op2_filename)
-        op2 = OP2(debug=debug, debug_file=debug_file)
-        op2.read_op2(op2_filename)
-        assert os.path.exists(debug_file), os.listdir('.')
-
-        self._verify_ids(bdf, op2, isubcase=1)
-
-        msg = ''
-        for isubcase, keys in sorted(iteritems(op2.subcase_key)):
-            if len(keys) != 1:
-                msg += 'isubcase=%s keys=%s len(keys) != 1\n' % (isubcase, keys)
-                if len(keys) == 0:
-                    continue
-            if isubcase != keys[0]:
-                msg += 'isubcase=%s != key0=%s keys=%s\n' % (isubcase, keys[0], keys)
-        if msg:
-            assert msg == '', msg
-        op2.write_f06('junk.f06', quiet=True)
-        os.remove('junk.f06')
-
     def test_op2_cbush_01(self):
         op2_filename = os.path.join('cbush.op2')
         folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'cbush'))
