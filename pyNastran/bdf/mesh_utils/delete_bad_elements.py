@@ -51,7 +51,7 @@ def get_bad_shells(model, xyz_cid0, nid_map, max_theta=175., max_skew=70., max_a
         the maximum skew angle
     max_aspect_ratio : float; default=100.
         the max aspect ratio
-    taper_ratio : float; default=2.0
+    taper_ratio : float; default=4.0
         the taper ratio; applies to CQUAD4s only
 
     Returns

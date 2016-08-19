@@ -44,7 +44,10 @@ def convert_bad_quads_to_tris(model, eids_to_check=None, xyz_cid0=None, min_edge
     nid_cd = np.array([[nid, node.Cd()] for nid, node in sorted(iteritems(model.nodes))])
     all_nids = nid_cd[:, 0]
 
-    assert len(cquad4s_to_check) > 0, cquad4s_to_check
+    if len(cquad4s_to_check) == 0:
+        model.log.warning('no quads in the model...')
+        return
+
     for eid in sorted(cquad4s_to_check):
         elem = elements[eid]
         nids = elem.node_ids
