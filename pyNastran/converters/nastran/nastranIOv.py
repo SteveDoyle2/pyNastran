@@ -2096,8 +2096,8 @@ class NastranIO(object):
                 cos_skew4 = np.dot(e3_p2, -e21) / (np.linalg.norm(e3_p2) * np.linalg.norm(e21))
                 cos_skew5 = np.dot(e1_p3, e32) / (np.linalg.norm(e1_p3) * np.linalg.norm(e32))
                 cos_skew6 = np.dot(e1_p3, -e32) / (np.linalg.norm(e1_p3) * np.linalg.norm(e32))
-                max_skew = np.pi / 2. - np.abs(np.arccos([cos_skew1, cos_skew2, cos_skew3, cos_skew4, cos_skew5, cos_skew6])).min()
-
+                max_skew = np.pi / 2. - np.abs(np.arccos(np.clip([
+                    cos_skew1, cos_skew2, cos_skew3, cos_skew4, cos_skew5, cos_skew6], -1., 1.))).min()
                 lengths = np.linalg.norm([v21, v32, v13], axis=1)
                 #assert len(lengths) == 3, lengths
                 aspect_ratio = lengths.max() / lengths.min()
@@ -2105,7 +2105,7 @@ class NastranIO(object):
                 cos_theta1 = np.dot(v21, -v13) / (np.linalg.norm(v21) * np.linalg.norm(v13))
                 cos_theta2 = np.dot(v32, -v21) / (np.linalg.norm(v32) * np.linalg.norm(v21))
                 cos_theta3 = np.dot(v13, -v32) / (np.linalg.norm(v13) * np.linalg.norm(v32))
-                max_theta = np.arccos([cos_theta1, cos_theta2, cos_theta3]).max()
+                max_theta = np.arccos(np.clip([cos_theta1, cos_theta2, cos_theta3], -1., 1.)).max()
 
                 if 0:
                     # p_avg =
@@ -2133,7 +2133,7 @@ class NastranIO(object):
                     v2_skew = p_avg[[3], :] - xyz_cid0[[p3], :]
                     skew3 = np.dot(v1_skew, v2_skew) / (
                         np.linalg.norm(v1_skew) * np.linalg.norm(v2_skew))
-                    max_skew = np.arccos([skew1, skew2, skew3]).max()
+                    max_skew = np.arccos(np.clip([skew1, skew2, skew3], -1., 1.)).max()
 
 
                 #theta_deg = np.degrees(np.arccos(max_cos_theta))
@@ -2263,7 +2263,7 @@ class NastranIO(object):
                 e42 = p23 - p14
                 cos_skew1 = np.dot(e13, e42) / (np.linalg.norm(e13) * np.linalg.norm(e42))
                 cos_skew2 = np.dot(e13, -e42) / (np.linalg.norm(e13) * np.linalg.norm(e42))
-                max_skew = np.pi / 2. - np.abs(np.arccos([cos_skew1, cos_skew2])).min()
+                max_skew = np.pi / 2. - np.abs(np.arccos(np.clip([cos_skew1, cos_skew2]), -1., 1.)).min()
                 #aspect_ratio = max(p12, p23, p34, p14) / max(p12, p23, p34, p14)
                 lengths = np.linalg.norm([v21, v32, v43, v14], axis=1)
                 #assert len(lengths) == 3, lengths
@@ -2290,7 +2290,8 @@ class NastranIO(object):
                 n = np.array([normal1, normal2, normal3, normal4])
                 theta_additional = np.where(n < 0, 2*np.pi, 0.)
 
-                theta = n * np.arccos([cos_theta1, cos_theta2, cos_theta3, cos_theta4]) + theta_additional
+                theta = n * np.arccos(np.clip(
+                    [cos_theta1, cos_theta2, cos_theta3, cos_theta4], -1., 1.)) + theta_additional
                 max_theta = theta.max()
                 #print('theta_max = ', theta_max)
 
@@ -2921,10 +2922,6 @@ class NastranIO(object):
                                      location='centroid', scalar=skew)
                 aspect_res = GuiResult(0, header='Aspect Ratio', title='AspectRatio',
                                        location='centroid', scalar=max_aspect_ratio)
-                arearatio_res = GuiResult(0, header='Area Ratio', title='Area Ratio',
-                                          location='centroid', scalar=area_ratio)
-                taperratio_res = GuiResult(0, header='Taper Ratio', title='Taper Ratio',
-                                           location='centroid', scalar=taper_ratio)
 
                 form_checks = []
                 form0.append(('Element Checks', None, form_checks))
@@ -2936,8 +2933,6 @@ class NastranIO(object):
                 cases[icase + 5] = (theta_res, (0, 'Max Interior Angle'))
                 cases[icase + 6] = (skew_res, (0, 'Max Skew Angle'))
                 cases[icase + 7] = (aspect_res, (0, 'Aspect Ratio'))
-                cases[icase + 8] = (arearatio_res, (0, 'Area Ratio'))
-                cases[icase + 9] = (taperratio_res, (0, 'Taper Ratio'))
 
                 form_checks.append(('ElementDim', icase, []))
                 form_checks.append(('NormalX', icase + 1, []))
@@ -2947,9 +2942,22 @@ class NastranIO(object):
                 form_checks.append(('Max Interior Angle', icase + 5, []))
                 form_checks.append(('Max Skew Angle', icase + 6, []))
                 form_checks.append(('Aspect Ratio', icase + 7, []))
-                form_checks.append(('Area Ratio', icase + 8, []))
-                form_checks.append(('Taper Ratio', icase + 9, []))
-                icase += 10
+                icase += 8
+
+                if area_ratio.max() > 1.:
+                    arearatio_res = GuiResult(0, header='Area Ratio', title='Area Ratio',
+                                              location='centroid', scalar=area_ratio)
+                    cases[icase] = (arearatio_res, (0, 'Area Ratio'))
+                    form_checks.append(('Area Ratio', icase, []))
+                    icase += 1
+
+                if taper_ratio.max() > 1.:
+                    taperratio_res = GuiResult(0, header='Taper Ratio', title='Taper Ratio',
+                                               location='centroid', scalar=taper_ratio)
+                    cases[icase] = (taperratio_res, (0, 'Taper Ratio'))
+                    form_checks.append(('Taper Ratio', icase, []))
+                    icase += 1
+
                 if max_warp_angle.max() > 0.0:
                     warp_res = GuiResult(0, header='Max Warp Angle', title='MaxWarpAngle',
                                          location='centroid', scalar=np.degrees(max_warp_angle))
