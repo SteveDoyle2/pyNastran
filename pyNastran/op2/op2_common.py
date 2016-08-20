@@ -7,7 +7,6 @@ from struct import Struct, unpack
 from numpy import radians, sin, cos, fromstring, ones, float32, dtype as npdtype
 
 import numpy as np
-#from numba import autojit
 
 from pyNastran import is_release
 from pyNastran.f06.f06_writer import F06Writer

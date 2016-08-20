@@ -4,7 +4,7 @@ Installing
 
 List of Installed Scripts
 -------------------------
-pyNastranGUI (python 2 only)
+pyNastranGUI
 test_bdf
 test_op2
 test_op4
