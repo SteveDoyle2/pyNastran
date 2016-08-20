@@ -1,6 +1,6 @@
 
 ### v0.8.0
-[Doumentation](http://pynastran-git.readthedocs.io/en/v0.8.0/)
+[Doumentation](http://pynastran-git.readthedocs.io/en/v0.8/)
 
 ### v0.7.2
 
