@@ -2,13 +2,19 @@ Release 0.8.0
 =============
 Tasks
 -----
+ - merge 
  - build docs
    - attach on sourceforge/egg?
- - pass travis
  - run bdf tests in py27/35
  - run op2 tests in py27/35
+ - tag
  - upload wheel
  - upload py27 gui
+   - test eigenvector with edges
+
+Passing
+-------
+ - pass travis
 
  Remove
  ------

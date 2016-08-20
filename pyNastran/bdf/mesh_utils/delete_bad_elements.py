@@ -3,7 +3,8 @@ import numpy as np
 from six import iteritems
 
 
-def delete_bad_shells(model, max_theta=175., max_skew=70., max_aspect_ratio=100., max_taper_ratio=4.0):
+def delete_bad_shells(model, max_theta=175., max_skew=70., max_aspect_ratio=100.,
+                      max_taper_ratio=4.0):
     """
     Removes bad CQUAD4/CTRIA3 elements
 
@@ -30,7 +31,8 @@ def delete_bad_shells(model, max_theta=175., max_skew=70., max_aspect_ratio=100.
     return model
 
 
-def get_bad_shells(model, xyz_cid0, nid_map, max_theta=175., max_skew=70., max_aspect_ratio=100., max_taper_ratio=4.0):
+def get_bad_shells(model, xyz_cid0, nid_map, max_theta=175., max_skew=70.,
+                   max_aspect_ratio=100., max_taper_ratio=4.0):
     """
     Get the bad shell elements
 
@@ -102,7 +104,7 @@ def get_bad_shells(model, xyz_cid0, nid_map, max_theta=175., max_skew=70., max_a
 
             cos_skew1 = np.dot(e13, e42) / (np.linalg.norm(e13) * np.linalg.norm(e42))
             cos_skew2 = np.dot(e13, -e42) / (np.linalg.norm(e13) * np.linalg.norm(e42))
-            skew = np.pi / 2. - np.abs(np.arccos([cos_skew1, cos_skew2])).min()
+            skew = np.pi / 2. - np.abs(np.arccos(np.clip([cos_skew1, cos_skew2], -1., 1.))).min()
             if skew > max_skew:
                 eids_failed.append(eid)
                 model.log.debug('eid=%s failed max_skew check; skew=%s' % (eid, np.degrees(skew)))
@@ -128,7 +130,8 @@ def get_bad_shells(model, xyz_cid0, nid_map, max_theta=175., max_skew=70., max_a
             area3 = 0.5 * np.linalg.norm(np.cross(v43, v32)) # v43 x v32
             area4 = 0.5 * np.linalg.norm(np.cross(v14, -v43)) # v14 x v34
             aavg = (area1 + area2 + area3 + area4) / 4.
-            taper_ratioi = (abs(area1 - aavg) + abs(area2 - aavg) + abs(area3 - aavg) + abs(area4 - aavg)) / aavg
+            taper_ratioi = (abs(area1 - aavg) + abs(area2 - aavg) +
+                            abs(area3 - aavg) + abs(area4 - aavg)) / aavg
             if taper_ratioi > max_taper_ratio:
                 eids_failed.append(eid)
                 model.log.debug('eid=%s failed taper_ratio check; AR=%s' % (eid, taper_ratioi))
@@ -137,7 +140,7 @@ def get_bad_shells(model, xyz_cid0, nid_map, max_theta=175., max_skew=70., max_a
             # ixj = k
             # dot the local normal with the normal vector
             # then take the norm of that to determine the angle relative to the normal
-            # then take the sign of that to see if we're pointing roughly towares the normal
+            # then take the sign of that to see if we're pointing roughly towards the normal
 
             # np.sign(np.linalg.norm(np.dot(
             # a x b = ab sin(theta)
@@ -150,24 +153,20 @@ def get_bad_shells(model, xyz_cid0, nid_map, max_theta=175., max_skew=70., max_a
             n = np.array([n1, n2, n3, n4])
 
             theta_additional = np.where(n < 0, 2*np.pi, 0.)
-            #print('theta_additional = ', theta_additional)
-            #print('n1=%s n2=%s n3=%s n4=%s' % (n1, n2, n3, n4))
 
             cos_theta1 = np.dot(v21, -v14) / (np.linalg.norm(v21) * np.linalg.norm(v14))
             cos_theta2 = np.dot(v32, -v21) / (np.linalg.norm(v32) * np.linalg.norm(v21))
             cos_theta3 = np.dot(v43, -v32) / (np.linalg.norm(v43) * np.linalg.norm(v32))
             cos_theta4 = np.dot(v14, -v43) / (np.linalg.norm(v14) * np.linalg.norm(v43))
-            #print([cos_theta1, cos_theta2, cos_theta3, cos_theta4])
-            theta = n * np.arccos([cos_theta1, cos_theta2, cos_theta3, cos_theta4]) + theta_additional
+            interior_angle = np.arccos(np.clip(
+                [cos_theta1, cos_theta2, cos_theta3, cos_theta4], -1., 1.))
+            theta = n * interior_angle + theta_additional
 
-            #theta = np.arcsin(np.sin(theta))
-            thetai = theta.max()
-            #print('theta = ', np.degrees(theta))
-            #print('theta.sum = ', np.degrees(theta.sum()))
-            if thetai > max_theta:
+            theta_maxi = theta.max()
+            if theta_maxi > max_theta:
                 eids_failed.append(eid)
                 model.log.debug('eid=%s failed max_theta check; theta=%s' % (
-                    eid, np.degrees(thetai)))
+                    eid, np.degrees(theta_maxi)))
                 continue
 
         elif element.type == 'CTRIA3':
@@ -186,7 +185,7 @@ def get_bad_shells(model, xyz_cid0, nid_map, max_theta=175., max_skew=70., max_a
             e2 = (p2 + p3) / 2.
             e3 = (p3 + p1) / 2.
 
-            #    3
+            #     3
             #    / \
             # e3/   \ e2
             #  /    /\
@@ -210,8 +209,10 @@ def get_bad_shells(model, xyz_cid0, nid_map, max_theta=175., max_skew=70., max_a
             cos_skew4 = np.dot(e3_p2, -e21) / (np.linalg.norm(e3_p2) * np.linalg.norm(e21))
             cos_skew5 = np.dot(e1_p3, e32) / (np.linalg.norm(e1_p3) * np.linalg.norm(e32))
             cos_skew6 = np.dot(e1_p3, -e32) / (np.linalg.norm(e1_p3) * np.linalg.norm(e32))
-            skew = np.pi / 2. - np.abs(np.arccos([cos_skew1, cos_skew2, cos_skew3,
-                                                  cos_skew4, cos_skew5, cos_skew6])).min()
+            skew = np.pi / 2. - np.abs(np.arccos(
+                np.clip([cos_skew1, cos_skew2, cos_skew3,
+                         cos_skew4, cos_skew5, cos_skew6], -1., 1.)
+            )).min()
             if skew > max_skew:
                 eids_failed.append(eid)
                 model.log.debug('eid=%s failed max_skew check; skew=%s' % (eid, np.degrees(skew)))
@@ -234,11 +235,17 @@ def get_bad_shells(model, xyz_cid0, nid_map, max_theta=175., max_skew=70., max_a
             cos_theta1 = np.dot(v21, -v13) / (np.linalg.norm(v21) * np.linalg.norm(v13))
             cos_theta2 = np.dot(v32, -v21) / (np.linalg.norm(v32) * np.linalg.norm(v21))
             cos_theta3 = np.dot(v13, -v32) / (np.linalg.norm(v13) * np.linalg.norm(v32))
-            theta = np.arccos([cos_theta1, cos_theta2, cos_theta3]).max()
-            if theta > max_theta:
+
+            interior_angle = np.arccos(np.clip(
+                [cos_theta1, cos_theta2, cos_theta3], -1., 1.))
+            theta = n * interior_angle + theta_additional
+            theta_mini = theta.min()
+            theta_maxi = theta.max()
+
+            if theta_maxi > max_theta:
                 eids_failed.append(eid)
                 model.log.debug('eid=%s failed max_theta check; theta=%s' % (
-                    eid, np.degrees(theta)))
+                    eid, np.degrees(theta_maxi)))
                 continue
     return eids_failed
 
