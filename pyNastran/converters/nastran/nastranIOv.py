@@ -252,7 +252,8 @@ class NastranIO(object):
                     # .. todo:: has issues in VTK 6 I think due to lack of self.grid.Update()
                     self._create_coord(dim_max, cid, coord, cid_type)
             else:
-                print('skipping cid=%s; use a script and set self.show_cids=[%s] to view' % (cid, cid))
+                print('skipping cid=%s; use a script and set self.show_cids=[%s] to view' % (
+                    cid, cid))
 
     def _remove_old_nastran_geometry(self, bdf_filename):
         #return self._remove_old_geometry(bdf_filename)
@@ -1339,7 +1340,8 @@ class NastranIO(object):
                 if node1.Cp() != 0:
                     v = node1.cp_ref.transform_node_to_global(v)
                     if node1.cp_ref.type not in ['CORD2R', 'CORD1R']:
-                        msg = 'invalid Cp type (%r) on Node %i; expected CORDxR' % (node1.cp_ref.type, node1.nid)
+                        msg = 'invalid Cp type (%r) on Node %i; expected CORDxR' % (
+                            node1.cp_ref.type, node1.nid)
                         self.log.error(msg)
                         raise NotImplementedError(node1.cp)
             elif offt_vector == 'B':
@@ -1425,7 +1427,8 @@ class NastranIO(object):
                 print('  invalid_orientation - eid=%s yhat=%s zhat=%s v=%s i=%s n%s=%s n%s=%s' % (
                     eid, yhat, zhat, v, i, nid1, n1, nid2, n2))
             elif not np.allclose(norm(yhat), 1.0) or not np.allclose(norm(zhat), 1.0) or Li == 0.0:
-                print('  length_error        - eid=%s Li=%s Lyhat=%s Lzhat=%s v=%s i=%s n%s=%s n%s=%s' % (
+                print('  length_error        - eid=%s Li=%s Lyhat=%s Lzhat=%s'
+                      ' v=%s i=%s n%s=%s n%s=%s' % (
                     eid, Li, norm(yhat), norm(zhat), v, i, nid1, n1, nid2, n2))
 
             #print('adding bar %s' % bar_type)
@@ -2263,7 +2266,7 @@ class NastranIO(object):
                 e42 = p23 - p14
                 cos_skew1 = np.dot(e13, e42) / (np.linalg.norm(e13) * np.linalg.norm(e42))
                 cos_skew2 = np.dot(e13, -e42) / (np.linalg.norm(e13) * np.linalg.norm(e42))
-                max_skew = np.pi / 2. - np.abs(np.arccos(np.clip([cos_skew1, cos_skew2]), -1., 1.)).min()
+                max_skew = np.pi / 2. - np.abs(np.arccos(np.clip([cos_skew1, cos_skew2], -1., 1.))).min()
                 #aspect_ratio = max(p12, p23, p34, p14) / max(p12, p23, p34, p14)
                 lengths = np.linalg.norm([v21, v32, v43, v14], axis=1)
                 #assert len(lengths) == 3, lengths
@@ -2968,7 +2971,7 @@ class NastranIO(object):
                 #if np.abs(xoffset).max() > 0.0 or np.abs(yoffset).max() > 0.0 or np.abs(zoffset).max() > 0.0:
                 # offsets
                 offset_res = GuiResult(0, header='Offset', title='Offset',
-                                         location='centroid', scalar=offset, data_format='%g')
+                                       location='centroid', scalar=offset, data_format='%g')
                 offset_x_res = GuiResult(0, header='OffsetX', title='OffsetX',
                                          location='centroid', scalar=xoffset, data_format='%g')
                 offset_y_res = GuiResult(0, header='OffsetY', title='OffsetY',
