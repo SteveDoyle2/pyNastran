@@ -53,10 +53,10 @@ Using the pyNastran GUI, you can read in Nastran models and quickly view results
 The following are some new features from the v0.8 release.
 
  - BDF
-   - supports unicode
+   - unicode support
    - 278 cards supported
-   - simplifed method to add cards
-     - `grid = GRID(nid, cp, xyz, cd, ps, eid, comment)`
+   - simplifed method to add cards : `grid = GRID(nid, cp, xyz, cd, ps, eid, comment)`
+   - `verify=False` in `read_bdf(...)` will disable checks to allow reading in bad decks
    - lots of optimization work
    - bdf equivalence, renumber, deck merging
    - element quality
@@ -76,7 +76,7 @@ The following are some new features from the v0.8 release.
       - area, max interior angle, skew angle, aspect ratio, taper ratio results
    - SOL 200 support
    - imporoved legend
-   - custom user (nodal/centroidal results)
+   - custom user (nodal/centroidal) results
    - aero models now support sideslip coordinate systems
  - OP4
   - fixed sparse ASCII BIGMAT bug
