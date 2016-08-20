@@ -70,6 +70,8 @@ try:
 except ImportError:
     is_geom = False
 
+piover2 = np.pi / 2.
+piover3 = np.pi / 3.
 
 class NastranIO(object):
     """
@@ -545,7 +547,8 @@ class NastranIO(object):
                        #isinstance(element, SpringElement) or
                        #element.type in ['CBUSH', 'CBUSH1D', 'CFAST', 'CROD', 'CONROD',
                                         #'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
-                                        #'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5', 'CVISC', ]):
+                                        #'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4',
+                                        #'CDAMP5', 'CVISC', ]):
                         #node_ids = element.node_ids
                         #if None in node_ids:
                             #nsprings += 1
@@ -1233,58 +1236,58 @@ class NastranIO(object):
             Li = norm(i)
             ihat = i / Li
 
-            if 1:
-                pass
-            elif 0:
+            #if 1:
+                #pass
+            #elif 0:
+                ##if elem.pa == 0 and elem.pb == 0:
+                    ##continue
+
+                #if elem.pa == 1 or elem.pb == 1:
+                    #no_axial[ieid] = 1
+                #if elem.pa == 2 or elem.pb == 2:
+                    #no_axial[ieid] = 1
+                #if elem.pa == 3 or elem.pb == 3:
+                    #no_axial[ieid] = 1
+                #if elem.pa == 4 or elem.pb == 4:
+                    #no_torsion[ieid] = 1
+                #if elem.pa == 5 or elem.pb == 5:
+                    #no_axial[ieid] = 1
+                #if elem.pa == 6 or elem.pb == 6:
+                    #no_axial[ieid] = 1
+
+            #else:
                 #if elem.pa == 0 and elem.pb == 0:
                     #continue
-
-                if elem.pa == 1 or elem.pb == 1:
-                    no_axial[ieid] = 1
-                if elem.pa == 2 or elem.pb == 2:
-                    no_axial[ieid] = 1
-                if elem.pa == 3 or elem.pb == 3:
-                    no_axial[ieid] = 1
-                if elem.pa == 4 or elem.pb == 4:
-                    no_torsion[ieid] = 1
-                if elem.pa == 5 or elem.pb == 5:
-                    no_axial[ieid] = 1
-                if elem.pa == 6 or elem.pb == 6:
-                    no_axial[ieid] = 1
-
-            else:
-                if elem.pa == 0 and elem.pb == 0:
-                    continue
-                elif (elem.pa == 6 and elem.pb == 16) or (elem.pa == 16 and elem.pb == 6):
-                    no_axial[ieid] = 1
-                    no_6_16[ieid] = 1
-                elif (elem.pa == 56 and elem.pb == 0) or (elem.pa == 0 and elem.pb == 56):
-                    no_bending[ieid] = 1
-                    no_0_56[ieid] = 1
-                    #print(elem)
-                elif (elem.pa == 0 and elem.pb == 456) or (elem.pa == 456 and elem.pb == 0):
-                    no_bending[ieid] = 1
-                    no_torsion[ieid] = 1
-                    no_0_456[ieid] = 1
-                    #print(elem)
-                elif (elem.pa == 456 and elem.pb == 56) or (elem.pa == 56 and elem.pb == 456):
-                    no_torsion[ieid] = 1
-                    no_56_456[ieid] = 1
-                elif elem.pa == 6 and elem.pb == 0:
-                    no_bending_bad[ieid] = 1
-                    no_0_6[ieid] = 1
-                    #print(elem)
-                elif elem.pa == 0 and elem.pb == 16 or elem.pb == 0 and elem.pa == 16:
-                    no_axial[ieid] = 1
-                    no_bending_bad[ieid] = 1
-                    # print(elem)
-                    no_0_16[ieid] = 1
-                elif elem.pa == 56 and elem.pb == 45 or elem.pb == 56 and elem.pa == 45:
-                    no_torsion[ieid] = 1
-                    no_bending[ieid] = 1
-                else:
-                    msg = 'pa=%r pb=%r; elem=\n%s' % (elem.pa, elem.pb, elem)
-                    raise NotImplementedError(msg)
+                #elif (elem.pa == 6 and elem.pb == 16) or (elem.pa == 16 and elem.pb == 6):
+                    #no_axial[ieid] = 1
+                    #no_6_16[ieid] = 1
+                #elif (elem.pa == 56 and elem.pb == 0) or (elem.pa == 0 and elem.pb == 56):
+                    #no_bending[ieid] = 1
+                    #no_0_56[ieid] = 1
+                    ##print(elem)
+                #elif (elem.pa == 0 and elem.pb == 456) or (elem.pa == 456 and elem.pb == 0):
+                    #no_bending[ieid] = 1
+                    #no_torsion[ieid] = 1
+                    #no_0_456[ieid] = 1
+                    ##print(elem)
+                #elif (elem.pa == 456 and elem.pb == 56) or (elem.pa == 56 and elem.pb == 456):
+                    #no_torsion[ieid] = 1
+                    #no_56_456[ieid] = 1
+                #elif elem.pa == 6 and elem.pb == 0:
+                    #no_bending_bad[ieid] = 1
+                    #no_0_6[ieid] = 1
+                    ##print(elem)
+                #elif elem.pa == 0 and elem.pb == 16 or elem.pb == 0 and elem.pa == 16:
+                    #no_axial[ieid] = 1
+                    #no_bending_bad[ieid] = 1
+                    ## print(elem)
+                    #no_0_16[ieid] = 1
+                #elif elem.pa == 56 and elem.pb == 45 or elem.pb == 56 and elem.pa == 45:
+                    #no_torsion[ieid] = 1
+                    #no_bending[ieid] = 1
+                #else:
+                    #msg = 'pa=%r pb=%r; elem=\n%s' % (elem.pa, elem.pb, elem)
+                    #raise NotImplementedError(msg)
 
 
             # OFFT flag
@@ -1429,14 +1432,16 @@ class NastranIO(object):
             elif not np.allclose(norm(yhat), 1.0) or not np.allclose(norm(zhat), 1.0) or Li == 0.0:
                 print('  length_error        - eid=%s Li=%s Lyhat=%s Lzhat=%s'
                       ' v=%s i=%s n%s=%s n%s=%s' % (
-                    eid, Li, norm(yhat), norm(zhat), v, i, nid1, n1, nid2, n2))
+                          eid, Li, norm(yhat), norm(zhat), v, i, nid1, n1, nid2, n2))
 
             #print('adding bar %s' % bar_type)
             #print('   centroid=%s' % centroid)
             #print('   yhat=%s len=%s' % (yhat, np.linalg.norm(yhat)))
             #print('   zhat=%s len=%s' % (zhat, np.linalg.norm(zhat)))
             #print('   Li=%s scale=%s' % (Li, scale))
-            assert bar_type in allowed_types, 'bar_type=%r allowed=[%s]' % (bar_type, ', '.join(allowed_types))
+            if bar_type not in allowed_types:
+                msg = 'bar_type=%r allowed=[%s]' % (bar_type, ', '.join(allowed_types))
+                raise RuntimeError(msg)
 
             bar_types[bar_type][0].append(eid)
             bar_types[bar_type][1].append((centroid, centroid + yhat * Li * scale))
@@ -1458,7 +1463,8 @@ class NastranIO(object):
                     #print('barsi =', barsi)
                     #print('bar_type = %r' % bar_type)
                     for eid, line_y, line_z  in zip(eids, lines_bar_y, lines_bar_z):
-                        print('eid=%s centroid=%s cy=%s cz=%s' % (eid, line_y[0], line_y[1], line_z[1]))
+                        print('eid=%s centroid=%s cy=%s cz=%s' % (
+                            eid, line_y[0], line_y[1], line_z[1]))
 
         #print('found_bar_types =', found_bar_types)
 
@@ -1659,7 +1665,8 @@ class NastranIO(object):
                         assert isinstance(n2, int), 'RBE3 eid=%s Giji=%s' % (elem.eid, Giji)
                         lines_rigid.append([n1, n2])
             elif elem.type == 'RBE2':
-                #list_fields = ['RBE2', elem.eid, elem.Gn(), elem.cm] + elem.Gmi_node_ids + [elem.alpha]
+                #list_fields = ['RBE2', elem.eid, elem.Gn(), elem.cm
+                               #] + elem.Gmi_node_ids + [elem.alpha]
                 n2 = elem.Gn() # independent
                 nids1 = elem.Gmi_node_ids # dependent
                 for n1 in nids1:
@@ -1740,15 +1747,15 @@ class NastranIO(object):
             #self.log_info('adding SUPORT1; p=%s' % str(point))
             points.InsertPoint(j, *point)
 
-            if 1:
-                elem = vtk.vtkVertex()
-                elem.GetPointIds().SetId(0, j)
-            else:
-                elem = vtk.vtkSphere()
-                dim_max = 1.0
-                sphere_size = self._get_sphere_size(dim_max)
-                elem.SetRadius(sphere_size)
-                elem.SetCenter(points.GetPoint(j))
+            #if 1:
+            elem = vtk.vtkVertex()
+            elem.GetPointIds().SetId(0, j)
+            #else:
+                #elem = vtk.vtkSphere()
+                #dim_max = 1.0
+                #sphere_size = self._get_sphere_size(dim_max)
+                #elem.SetRadius(sphere_size)
+                #elem.SetCenter(points.GetPoint(j))
 
             self.alt_grids[name].InsertNextCell(elem.GetCellType(), elem.GetPointIds())
             j += 1
@@ -1945,7 +1952,9 @@ class NastranIO(object):
         pids = np.zeros(nelements, 'int32')
         mids = np.zeros(nelements, 'int32')
         material_coord = np.zeros(nelements, 'int32')
+        min_interior_angle = np.zeros(nelements, 'float32')
         max_interior_angle = np.zeros(nelements, 'float32')
+        dideal_theta = np.zeros(nelements, 'float32')
         max_skew_angle = np.zeros(nelements, 'float32')
         max_warp_angle = np.zeros(nelements, 'float32')
         max_aspect_ratio = np.zeros(nelements, 'float32')
@@ -2048,7 +2057,9 @@ class NastranIO(object):
                 # continue
             self.eid_map[eid] = i
             pid = 0
-            max_theta = 0.0
+            dideal_thetai = 0.0
+            min_thetai = 0.0
+            max_thetai = 0.0
             max_skew = 0.0
             max_warp = 0.0
             aspect_ratio = 1.0
@@ -2100,7 +2111,8 @@ class NastranIO(object):
                 cos_skew5 = np.dot(e1_p3, e32) / (np.linalg.norm(e1_p3) * np.linalg.norm(e32))
                 cos_skew6 = np.dot(e1_p3, -e32) / (np.linalg.norm(e1_p3) * np.linalg.norm(e32))
                 max_skew = np.pi / 2. - np.abs(np.arccos(np.clip([
-                    cos_skew1, cos_skew2, cos_skew3, cos_skew4, cos_skew5, cos_skew6], -1., 1.))).min()
+                    cos_skew1, cos_skew2, cos_skew3,
+                    cos_skew4, cos_skew5, cos_skew6], -1., 1.))).min()
                 lengths = np.linalg.norm([v21, v32, v13], axis=1)
                 #assert len(lengths) == 3, lengths
                 aspect_ratio = lengths.max() / lengths.min()
@@ -2108,36 +2120,10 @@ class NastranIO(object):
                 cos_theta1 = np.dot(v21, -v13) / (np.linalg.norm(v21) * np.linalg.norm(v13))
                 cos_theta2 = np.dot(v32, -v21) / (np.linalg.norm(v32) * np.linalg.norm(v21))
                 cos_theta3 = np.dot(v13, -v32) / (np.linalg.norm(v13) * np.linalg.norm(v32))
-                max_theta = np.arccos(np.clip([cos_theta1, cos_theta2, cos_theta3], -1., 1.)).max()
-
-                if 0:
-                    # p_avg =
-                    #  (p1 + p2)/2 = p12
-                    #  (p2 + p3)/2 = p23
-                    #  (p3 + p1)/2 = p31
-                    p_avg = (xyz_cid0[[p1, p2, p3], :] + xyz_cid0[[p2, p3, p1], :]) / 2.
-                    #p_add = (xyz_cid0[[p1, p2, p3], :] + xyz_cid0[[p2, p3, p1], :])
-                    #p_sub = (xyz_cid0[[p1, p2, p3], :] - xyz_cid0[[p2, p3, p1], :])
-
-                    # skew1
-                    v1_skew = v21
-                    v2_skew = p_avg[[2], :] - xyz_cid0[[p1], :]
-                    skew1 = np.dot(v1_skew, v2_skew) / (
-                        np.linalg.norm(v1_skew) * np.linalg.norm(v2_skew))
-
-                    # skew2
-                    v1_skew = v32
-                    v2_skew = p_avg[[2], :] - xyz_cid0[[p2], :]
-                    skew2 = np.dot(v1_skew, v2_skew) / (
-                        np.linalg.norm(v1_skew) * np.linalg.norm(v2_skew))
-
-                    # skew3
-                    v1_skew = v13
-                    v2_skew = p_avg[[3], :] - xyz_cid0[[p3], :]
-                    skew3 = np.dot(v1_skew, v2_skew) / (
-                        np.linalg.norm(v1_skew) * np.linalg.norm(v2_skew))
-                    max_skew = np.arccos(np.clip([skew1, skew2, skew3], -1., 1.)).max()
-
+                thetas = np.arccos(np.clip([cos_theta1, cos_theta2, cos_theta3], -1., 1.))
+                min_thetai = thetas.min()
+                max_thetai = thetas.max()
+                dideal_thetai = max(max_thetai - piover3, piover3 - min_thetai)
 
                 #theta_deg = np.degrees(np.arccos(max_cos_theta))
                 #if theta_deg < 60.:
@@ -2221,6 +2207,7 @@ class NastranIO(object):
                 p2 = xyz_cid0[n2, :]
                 p3 = xyz_cid0[n3, :]
                 p4 = xyz_cid0[n4, :]
+
                 v21 = p2 - p1
                 v32 = p3 - p2
                 v43 = p4 - p3
@@ -2237,24 +2224,31 @@ class NastranIO(object):
                 normal = np.cross(v31, v42)
                 areai = 0.5 * np.linalg.norm(normal)
 
+                # still kind of in development
+                #
                 # the ratio of the ideal area to the actual area
                 # this is an hourglass check
-                #
-                # why does the ratio look totally wrong when I divide by 2 correctly
-                #   e.g.  area_ratioi = (2. * areai) / min(...)
-                area_ratioi = areai / min(
+                areas = [
                     np.linalg.norm(np.cross(-v14, v21)), # v41 x v21
                     np.linalg.norm(np.cross(v32, -v21)), # v32 x v12
                     np.linalg.norm(np.cross(v43, -v32)), # v43 x v23
                     np.linalg.norm(np.cross(v14, v43)),  # v14 x v43
-                )
+                ]
+                #
+                # for:
+                #   area=1; area1=0.5 -> area_ratioi1=2.0; area_ratio=2.0
+                #   area=1; area1=2.0 -> area_ratioi2=2.0; area_ratio=2.0
+                area_ratioi1 = areai / min(areas)
+                area_ratioi2 = max(areas) / areai
+                area_ratioi = max(area_ratioi1, area_ratioi2)
 
                 area1 = 0.5 * np.linalg.norm(np.cross(-v14, v21)) # v41 x v21
                 area2 = 0.5 * np.linalg.norm(np.cross(-v21, v32)) # v12 x v32
                 area3 = 0.5 * np.linalg.norm(np.cross(v43, v32)) # v43 x v32
                 area4 = 0.5 * np.linalg.norm(np.cross(v14, -v43)) # v14 x v34
                 aavg = (area1 + area2 + area3 + area4) / 4.
-                taper_ratioi = (abs(area1 - aavg) + abs(area2 - aavg) + abs(area3 - aavg) + abs(area4 - aavg)) / aavg
+                taper_ratioi = (abs(area1 - aavg) + abs(area2 - aavg) +
+                                abs(area3 - aavg) + abs(area4 - aavg)) / aavg
 
                 #    e3
                 # 4-------3
@@ -2266,7 +2260,8 @@ class NastranIO(object):
                 e42 = p23 - p14
                 cos_skew1 = np.dot(e13, e42) / (np.linalg.norm(e13) * np.linalg.norm(e42))
                 cos_skew2 = np.dot(e13, -e42) / (np.linalg.norm(e13) * np.linalg.norm(e42))
-                max_skew = np.pi / 2. - np.abs(np.arccos(np.clip([cos_skew1, cos_skew2], -1., 1.))).min()
+                max_skew = np.pi / 2. - np.abs(np.arccos(
+                    np.clip([cos_skew1, cos_skew2], -1., 1.))).min()
                 #aspect_ratio = max(p12, p23, p34, p14) / max(p12, p23, p34, p14)
                 lengths = np.linalg.norm([v21, v32, v43, v14], axis=1)
                 #assert len(lengths) == 3, lengths
@@ -2276,11 +2271,11 @@ class NastranIO(object):
                 cos_theta2 = np.dot(v32, -v21) / (np.linalg.norm(v32) * np.linalg.norm(v21))
                 cos_theta3 = np.dot(v43, -v32) / (np.linalg.norm(v43) * np.linalg.norm(v32))
                 cos_theta4 = np.dot(v14, -v43) / (np.linalg.norm(v14) * np.linalg.norm(v43))
-                #max_theta = np.arccos([cos_theta1, cos_theta2, cos_theta3, cos_theta4]).max()
+                #max_thetai = np.arccos([cos_theta1, cos_theta2, cos_theta3, cos_theta4]).max()
 
                 # dot the local normal with the normal vector
                 # then take the norm of that to determine the angle relative to the normal
-                # then take the sign of that to see if we're pointing roughly towares the normal
+                # then take the sign of that to see if we're pointing roughly towards the normal
 
                 # np.sign(np.linalg.norm(np.dot(
                 # a x b = ab sin(theta)
@@ -2295,7 +2290,9 @@ class NastranIO(object):
 
                 theta = n * np.arccos(np.clip(
                     [cos_theta1, cos_theta2, cos_theta3, cos_theta4], -1., 1.)) + theta_additional
-                max_theta = theta.max()
+                min_thetai = theta.min()
+                max_thetai = theta.max()
+                dideal_thetai = max(max_thetai - piover2, piover2 - min_thetai)
                 #print('theta_max = ', theta_max)
 
                 elem = vtkQuad()
@@ -2352,7 +2349,8 @@ class NastranIO(object):
                 elem.GetPointIds().SetId(3, nid_map[node_ids[3]])
                 self.grid.InsertNextCell(10, elem.GetPointIds())
                 #elem_nid_map = {nid:nid_map[nid] for nid in node_ids[:4]}
-                max_theta = get_max_theta(_ctetra_faces, node_ids[:4], nid_map, xyz_cid0)
+                min_thetai, max_thetai, dideal_thetai = get_min_max_theta(
+                    _ctetra_faces, node_ids[:4], nid_map, xyz_cid0)
             elif isinstance(element, CTETRA10):
                 node_ids = element.node_ids
                 pid = element.Pid()
@@ -2375,7 +2373,8 @@ class NastranIO(object):
                 elem.GetPointIds().SetId(2, nid_map[node_ids[2]])
                 elem.GetPointIds().SetId(3, nid_map[node_ids[3]])
                 self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
-                max_theta = get_max_theta(_ctetra_faces, node_ids[:4], nid_map, xyz_cid0)
+                min_thetai, max_thetai, dideal_thetai = get_min_max_theta(
+                    _ctetra_faces, node_ids[:4], nid_map, xyz_cid0)
             elif isinstance(element, CPENTA6):
                 elem = vtkWedge()
                 node_ids = element.node_ids
@@ -2390,7 +2389,8 @@ class NastranIO(object):
                 elem.GetPointIds().SetId(4, nid_map[node_ids[4]])
                 elem.GetPointIds().SetId(5, nid_map[node_ids[5]])
                 self.grid.InsertNextCell(13, elem.GetPointIds())
-                max_theta = get_max_theta(_cpenta_faces, node_ids[:6], nid_map, xyz_cid0)
+                min_thetai, max_thetai, dideal_thetai = get_min_max_theta(
+                    _cpenta_faces, node_ids[:6], nid_map, xyz_cid0)
 
             elif isinstance(element, CPENTA15):
                 node_ids = element.node_ids
@@ -2419,7 +2419,8 @@ class NastranIO(object):
                 elem.GetPointIds().SetId(4, nid_map[node_ids[4]])
                 elem.GetPointIds().SetId(5, nid_map[node_ids[5]])
                 self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
-                max_theta = get_max_theta(_cpenta_faces, node_ids[:6], nid_map, xyz_cid0)
+                min_thetai, max_thetai, dideal_thetai = get_min_max_theta(
+                    _cpenta_faces, node_ids[:6], nid_map, xyz_cid0)
             elif isinstance(element, (CHEXA8, CIHEX1)):
                 node_ids = element.node_ids
                 pid = element.Pid()
@@ -2436,7 +2437,8 @@ class NastranIO(object):
                 elem.GetPointIds().SetId(6, nid_map[node_ids[6]])
                 elem.GetPointIds().SetId(7, nid_map[node_ids[7]])
                 self.grid.InsertNextCell(12, elem.GetPointIds())
-                max_theta = get_max_theta(_chexa_faces, node_ids[:8], nid_map, xyz_cid0)
+                min_thetai, max_thetai, dideal_thetai = get_min_max_theta(
+                    _chexa_faces, node_ids[:8], nid_map, xyz_cid0)
             elif isinstance(element, CHEXA20):
                 node_ids = element.node_ids
                 pid = element.Pid()
@@ -2470,7 +2472,8 @@ class NastranIO(object):
                 elem.GetPointIds().SetId(6, nid_map[node_ids[6]])
                 elem.GetPointIds().SetId(7, nid_map[node_ids[7]])
                 self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
-                max_theta = get_max_theta(_chexa_faces, node_ids[:8], nid_map, xyz_cid0)
+                min_thetai, max_thetai, dideal_thetai = get_min_max_theta(
+                    _chexa_faces, node_ids[:8], nid_map, xyz_cid0)
 
             elif isinstance(element, CPYRAM5):
                 node_ids = element.node_ids
@@ -2485,7 +2488,8 @@ class NastranIO(object):
                 elem.GetPointIds().SetId(3, nid_map[node_ids[3]])
                 elem.GetPointIds().SetId(4, nid_map[node_ids[4]])
                 self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
-                max_theta = get_max_theta(_cpyram_faces, node_ids[:5], nid_map, xyz_cid0)
+                min_thetai, max_thetai, dideal_thetai = get_min_max_theta(
+                    _cpyram_faces, node_ids[:5], nid_map, xyz_cid0)
             elif isinstance(element, CPYRAM13):
                 node_ids = element.node_ids
                 pid = element.Pid()
@@ -2512,7 +2516,8 @@ class NastranIO(object):
                 elem.GetPointIds().SetId(3, nid_map[node_ids[3]])
                 elem.GetPointIds().SetId(4, nid_map[node_ids[4]])
                 self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
-                max_theta = get_max_theta(_cpyram_faces, node_ids[:5], nid_map, xyz_cid0)
+                min_thetai, max_thetai, dideal_thetai = get_min_max_theta(
+                    _cpyram_faces, node_ids[:5], nid_map, xyz_cid0)
 
             elif (isinstance(element, (LineElement, SpringElement)) or
                   element.type in ['CBUSH', 'CBUSH1D', 'CFAST', 'CROD', 'CONROD',
@@ -2592,13 +2597,15 @@ class NastranIO(object):
             else:
                 pids[i] = pid
                 pids_dict[eid] = pid
-            if np.isnan(max_theta):
-                print('eid=%s theta=%s...setting to 360. deg' % (eid, max_theta))
+            if np.isnan(max_thetai):
+                print('eid=%s theta=%s...setting to 360. deg' % (eid, max_thetai))
                 print(str(element).rstrip())
                 for node in element.nodes:
                     print(str(node).rstrip())
-                max_theta = 2 * np.pi
-            max_interior_angle[i] = max_theta
+                max_thetai = 2 * np.pi
+            min_interior_angle[i] = min_thetai
+            max_interior_angle[i] = max_thetai
+            dideal_theta[i] = dideal_thetai
             max_skew_angle[i] = max_skew
             max_warp_angle[i] = max_warp
             max_aspect_ratio[i] = aspect_ratio
@@ -2625,15 +2632,15 @@ class NastranIO(object):
         #for key, value in sorted(iteritems(self.eid_map)):
             #print('  %s %s' % (key, value))
 
-        if 0:
-            if not len(pids) == len(self.eid_map):
-                msg = 'ERROR:  len(pids)=%s len(eid_map)=%s\n' % (len(pids), len(self.eid_map))
-                for eid, pid in sorted(iteritems(pids_dict)):
-                    #self.eid_map[eid] = i
-                    #pids_dict[eid] = pid
-                    if eid not in self.eid_map:
-                        msg += 'eid=%s %s' % (eid, str(model.elements[eid]))
-                raise RuntimeError(msg)
+        #if 0:
+            #if not len(pids) == len(self.eid_map):
+                #msg = 'ERROR:  len(pids)=%s len(eid_map)=%s\n' % (len(pids), len(self.eid_map))
+                #for eid, pid in sorted(iteritems(pids_dict)):
+                    ##self.eid_map[eid] = i
+                    ##pids_dict[eid] = pid
+                    #if eid not in self.eid_map:
+                        #msg += 'eid=%s %s' % (eid, str(model.elements[eid]))
+                #raise RuntimeError(msg)
         del pids_dict
 
 
@@ -2643,7 +2650,7 @@ class NastranIO(object):
         form = ['Geometry', None, []]
         form0 = form[2]
 
-        new_cases = True
+        #new_cases = True
         # set to True to enable node_ids as an result
         nids_set = True
         if nids_set:
@@ -2819,7 +2826,7 @@ class NastranIO(object):
 
         try:
             icase = self._build_optimization(model, pids, upids, nelements, cases, form0, icase)
-        except Exception as e:
+        except Exception:
             import sys
             import cStringIO
             s = cStringIO.StringIO()
@@ -2846,6 +2853,7 @@ class NastranIO(object):
             yoffset = np.zeros(nelements, dtype='float32')
             zoffset = np.zeros(nelements, dtype='float32')
             element_dim = np.zeros(nelements, dtype='int32')
+            nnodes_array = np.zeros(nelements, dtype='int32')
             for eid, element in sorted(iteritems(model.elements)):
                 if isinstance(element, ShellElement):
                     element_dimi = 2
@@ -2864,10 +2872,36 @@ class NastranIO(object):
                         raise NotImplementedError(pid_type) # PSHEAR, PCOMPG
 
                     if z0 is None:
-                        if element.type in ['CTRIA3', 'CTRIA6', 'CTRIAR', 'CTRIAX', 'CTRIAX6']:
+                        if element.type in ['CTRIA3', 'CTRIAR', 'CTRIAX']:
                             z0 = (element.T1 + element.T2 + element.T3) / 3.
-                        if element.type in ['CQUAD4', 'CQUAD8', 'CQUAD', 'CQUADR']:
+                            nnodesi = 3
+                        elif element.type in ['CTRIA6', 'CTRIAX6']:
+                            z0 = (element.T1 + element.T2 + element.T3) / 3.
+                            nnodesi = 6
+
+                        elif element.type in ['CQUAD4', 'CQUADR']:
                             z0 = (element.T1 + element.T2 + element.T3 + element.T4) / 4.
+                            nnodesi = 4
+                        elif element.type in ['CQUAD8']:
+                            z0 = (element.T1 + element.T2 + element.T3 + element.T4) / 4.
+                            nnodesi = 8
+                        elif element.type in ['CQUAD']:
+                            z0 = (element.T1 + element.T2 + element.T3 + element.T4) / 4.
+                            nnodesi = 9
+                        else:
+                            raise NotImplementedError(element.type)
+                    else:
+                        if element.type in ['CTRIA3', 'CTRIAR', 'CTRIAX']:
+                            nnodesi = 3
+                        elif element.type in ['CTRIA6', 'CTRIAX6']:
+                            nnodesi = 6
+
+                        elif element.type in ['CQUAD4', 'CQUADR']:
+                            nnodesi = 4
+                        elif element.type in ['CQUAD8']:
+                            nnodesi = 8
+                        elif element.type in ['CQUAD']:
+                            nnodesi = 9
                         else:
                             raise NotImplementedError(element.type)
                     zi = element.zOffset + z0
@@ -2878,23 +2912,42 @@ class NastranIO(object):
                     xoffset[ie] = zi * normali[0]
                     yoffset[ie] = zi * normali[1]
                     zoffset[ie] = zi * normali[2]
-                elif element.type in ['CTETRA', 'CHEXA', 'CPENTA', 'CPYRAM', 'CIHEX1']:
+
+                elif element.type in ['CTETRA']:
                     ie = self.eid_map[eid]
                     element_dimi = 3
+                    nnodesi = 4
+                elif element.type in ['CPENTA']:
+                    ie = self.eid_map[eid]
+                    element_dimi = 3
+                    nnodesi = 6
+                elif element.type in ['CPYRAM']:
+                    ie = self.eid_map[eid]
+                    element_dimi = 3
+                    nnodesi = 5
+                elif element.type in ['CHEXA', 'CIHEX1']:
+                    ie = self.eid_map[eid]
+                    element_dimi = 3
+                    nnodesi = 8
+
                 elif element.type in ['CROD', 'CONROD', 'CBEND', 'CBAR', 'CBEAM', 'CGAP']:
                     ie = self.eid_map[eid]
                     element_dimi = 1
+                    nnodesi = 2
                 elif element.type in ['CBUSH', 'CBUSH1D', 'CFAST', 'CVISC',
                                       'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
                                       'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5']:
                     ie = self.eid_map[eid]
                     element_dimi = 0
+                    nnodesi = 2
                 else:
                     ie = self.eid_map[eid]
                     element_dimi = -1
+                    nnodesi = -1
                     print('element.type=%s doesnt have a dimension' % element.type)
 
                 element_dim[ie] = element_dimi
+                nnodes_array[ie] = nnodesi
                 #ielement += 1
 
             # if not a flat plate
@@ -2906,7 +2959,10 @@ class NastranIO(object):
 
             is_shell = np.abs(normals).max() > 0.
             is_solid = np.abs(max_interior_angle).max() > 0.
+            #print('is_shell=%s is_solid=%s' % (is_shell, is_solid))
             if is_shell:
+                nnodes_res = GuiResult(0, header='NNodes/Elem', title='NNodes/Elem',
+                                       location='centroid', scalar=nnodes_array)
                 nx_res = GuiResult(0, header='NormalX', title='NormalX',
                                    location='centroid', scalar=normals[:, 0], data_format='%.2f')
                 ny_res = GuiResult(0, header='NormalY', title='NormalY',
@@ -2917,8 +2973,14 @@ class NastranIO(object):
                 #max_interior_angle[:1000] = np.nan
                 area_res = GuiResult(0, header='Area', title='Area',
                                      location='centroid', scalar=area)
-                theta_res = GuiResult(0, header='Max Interior Angle', title='MaxInteriorAngle',
-                                      location='centroid', scalar=np.degrees(max_interior_angle))
+                min_theta_res = GuiResult(0, header='Min Interior Angle', title='MinInteriorAngle',
+                                          location='centroid', scalar=np.degrees(min_interior_angle))
+                max_theta_res = GuiResult(0, header='Max Interior Angle', title='MaxInteriorAngle',
+                                          location='centroid', scalar=np.degrees(max_interior_angle))
+                dideal_theta_res = GuiResult(0, header='Delta Ideal Angle', title='DeltaIdealAngle',
+                                             location='centroid', scalar=np.degrees(dideal_theta))
+                eid_dim_res = GuiResult(0, header='ElementDim', title='ElementDim',
+                                        location='centroid', scalar=element_dim)
 
                 skew = np.degrees(max_skew_angle) #  should be 90-max_skew_angle, but meh...
                 skew_res = GuiResult(0, header='Max Skew Angle', title='MaxSkewAngle',
@@ -2929,23 +2991,29 @@ class NastranIO(object):
                 form_checks = []
                 form0.append(('Element Checks', None, form_checks))
 
-                cases[icase + 1] = (nx_res, (0, 'NormalX'))
-                cases[icase + 2] = (ny_res, (0, 'NormalY'))
-                cases[icase + 3] = (nz_res, (0, 'NormalZ'))
-                cases[icase + 4] = (area_res, (0, 'Area'))
-                cases[icase + 5] = (theta_res, (0, 'Max Interior Angle'))
-                cases[icase + 6] = (skew_res, (0, 'Max Skew Angle'))
-                cases[icase + 7] = (aspect_res, (0, 'Aspect Ratio'))
+                cases[icase + 1] = (nnodes_res, (0, 'NNodes'))
+                cases[icase + 2] = (nx_res, (0, 'NormalX'))
+                cases[icase + 3] = (ny_res, (0, 'NormalY'))
+                cases[icase + 4] = (nz_res, (0, 'NormalZ'))
+                cases[icase + 5] = (area_res, (0, 'Area'))
+                cases[icase + 6] = (min_theta_res, (0, 'Min Interior Angle'))
+                cases[icase + 7] = (max_theta_res, (0, 'Max Interior Angle'))
+                cases[icase + 8] = (dideal_theta_res, (0, 'Delta Ideal Angle'))
+                cases[icase + 9] = (skew_res, (0, 'Max Skew Angle'))
+                cases[icase + 10] = (aspect_res, (0, 'Aspect Ratio'))
 
                 form_checks.append(('ElementDim', icase, []))
-                form_checks.append(('NormalX', icase + 1, []))
-                form_checks.append(('NormalY', icase + 2, []))
-                form_checks.append(('NormalZ', icase + 3, []))
-                form_checks.append(('Area', icase + 4, []))
-                form_checks.append(('Max Interior Angle', icase + 5, []))
-                form_checks.append(('Max Skew Angle', icase + 6, []))
-                form_checks.append(('Aspect Ratio', icase + 7, []))
-                icase += 8
+                form_checks.append(('NNodes', icase + 1, []))
+                form_checks.append(('NormalX', icase + 2, []))
+                form_checks.append(('NormalY', icase + 3, []))
+                form_checks.append(('NormalZ', icase + 4, []))
+                form_checks.append(('Area', icase + 5, []))
+                form_checks.append(('Min Interior Angle', icase + 6, []))
+                form_checks.append(('Max Interior Angle', icase + 7, []))
+                form_checks.append(('Delta Ideal Angle', icase + 8, []))
+                form_checks.append(('Max Skew Angle', icase + 9, []))
+                form_checks.append(('Aspect Ratio', icase + 10, []))
+                icase += 11
 
                 if area_ratio.max() > 1.:
                     arearatio_res = GuiResult(0, header='Area Ratio', title='Area Ratio',
@@ -2968,7 +3036,8 @@ class NastranIO(object):
                     form_checks.append(('Max Warp Angle', icase, []))
                     icase += 1
 
-                #if np.abs(xoffset).max() > 0.0 or np.abs(yoffset).max() > 0.0 or np.abs(zoffset).max() > 0.0:
+                #if (np.abs(xoffset).max() > 0.0 or np.abs(yoffset).max() > 0.0 or
+                    #np.abs(zoffset).max() > 0.0):
                 # offsets
                 offset_res = GuiResult(0, header='Offset', title='Offset',
                                        location='centroid', scalar=offset, data_format='%g')
@@ -2992,17 +3061,21 @@ class NastranIO(object):
             elif is_solid:
                 form_checks = []
                 form0.append(('Element Checks', None, form_checks))
-                theta_res = GuiResult(0, header='Max Interior Angle', title='MaxInteriorAngle',
-                                      location='centroid', scalar=np.degrees(max_interior_angle))
+                min_theta_res = GuiResult(0, header='Min Interior Angle', title='MinInteriorAngle',
+                                          location='centroid', scalar=np.degrees(min_interior_angle))
+                max_theta_res = GuiResult(0, header='Max Interior Angle', title='MaxInteriorAngle',
+                                          location='centroid', scalar=np.degrees(max_interior_angle))
                 #skew = 90. - np.degrees(max_skew_angle)
                 #skew_res = GuiResult(0, header='Max Skew Angle', title='MaxSkewAngle',
                                      #location='centroid', scalar=skew)
                 form_checks.append(('ElementDim', icase, []))
-                form_checks.append(('Max Interior Angle', icase + 1, []))
+                form_checks.append(('Min Interior Angle', icase + 1, []))
+                form_checks.append(('Max Interior Angle', icase + 2, []))
                 #form_checks.append(('Max Skew Angle', icase + 2, []))
-                cases[icase + 1] = (theta_res, (0, 'Max Interior Angle'))
-                #cases[icase + 2] = (skew_res, (0, 'Max Interior Angle'))
-                icase += 2
+                cases[icase + 1] = (min_theta_res, (0, 'Min Interior Angle'))
+                cases[icase + 2] = (max_theta_res, (0, 'Max Interior Angle'))
+                #cases[icase + 3] = (skew_res, (0, 'Max Interior Angle'))
+                icase += 3
 
             else:
                 form0.append(('ElementDim', icase, []))
@@ -3320,7 +3393,8 @@ class NastranIO(object):
                         # m = cross(r, f)
                         for nid in node_ids:
                             if nid in self.dependents_nodes:
-                                print('    nid=%s is a dependent node and has an PLOAD2 applied\n%s' % (nid, str(load)))
+                                print('    nid=%s is a dependent node and has an PLOAD2 applied\n'
+                                      '%s' % (nid, str(load)))
                             forces[nid_map[nid]] += forcei
                         forces += forcei
                         # F += f
@@ -3348,7 +3422,8 @@ class NastranIO(object):
                         # TODO: doesn't consider load.eids for distributed pressures???
                         for nid in node_ids[4:]:
                             if nid in self.dependents_nodes:
-                                print('    nid=%s is a dependent node and has an PLOAD4 applied\n%s' % (nid, str(load)))
+                                print('    nid=%s is a dependent node and has an PLOAD4 applied\n'
+                                      '%s' % (nid, str(load)))
                             centroidal_pressures[nid_map[nid]] += k
                     else:
                         print('    PLOAD4 is unhandled\n%s' % str(load))
@@ -3369,7 +3444,8 @@ class NastranIO(object):
                         forcei = pressure * area / elem_nnodes
                         for nid in elem_node_ids:
                             if nid in self.dependents_nodes:
-                                print('    nid=%s is a dependent node and has an PLOAD4 applied\n%s' % (nid, str(load)))
+                                print('    nid=%s is a dependent node and has an PLOAD4 applied\n'
+                                      '%s' % (nid, str(load)))
                             #forces[nids.index(nid)] += F
                             i = nid_map[nid]
                             forces[i, :] += forcei * self.normals[i, :]
@@ -3380,7 +3456,8 @@ class NastranIO(object):
                 #self.enforced = [double_or_blank(card, 4, 'D1', 0.0)]
                 for nid, c1, d1 in zip(load.node_ids, load.constraints, load.enforced):
                     if nid in self.dependents_nodes:
-                        print('    nid=%s is a dependent node and has an SPCD applied\n%s' % (nid, str(load)))
+                        print('    nid=%s is a dependent node and has an SPCD applied\n%s' % (
+                            nid, str(load)))
                     c1 = int(c1)
                     assert c1 in [1, 2, 3, 4, 5, 6], c1
                     if c1 < 4:
@@ -3388,7 +3465,8 @@ class NastranIO(object):
             else:
                 if load.type not in cards_ignored:
                     cards_ignored[load.type] = True
-                    print('  NastranIOv _get_forces_moments_array - unsupported load.type = %s' % load.type)
+                    print('  NastranIOv _get_forces_moments_array - unsupported load.type = %s'
+                          % load.type)
 
         return centroidal_pressures, forces, spcd
 
@@ -3488,16 +3566,16 @@ class NastranIO(object):
         else:
             model.transform_displacements_to_global(i_transform, transforms)
 
-        if 0:
-            cases = OrderedDict()
-            self.iSubcaseNameMap = {}
-            form = []
-            icase = 0
-        else:
-            cases = self.result_cases
-            form = self.get_form()
-            icase = len(cases)
-            # form = self.res_widget.get_form()
+        #if 0:
+            #cases = OrderedDict()
+            #self.iSubcaseNameMap = {}
+            #form = []
+            #icase = 0
+        #else:
+        cases = self.result_cases
+        form = self.get_form()
+        icase = len(cases)
+        # form = self.res_widget.get_form()
 
         subcase_ids = model.iSubcaseNameMap.keys()
         #self.iSubcaseNameMap = model.iSubcaseNameMap
@@ -4372,7 +4450,10 @@ class NastranIO(object):
                     assert np.array_equal(self.element_ids[i], eids)
                     fxi = data[itime, :, 0]
                     rxi = data[itime, :, 1]
-                    assert fxi.size == i.size, 'fx.size=%s i.size=%s fx=%s eids_to_find=%s' % (fxi.size, i.size, fxi, eids)
+                    if fxi.size != i.size:
+                        msg = 'fx.size=%s i.size=%s fx=%s eids_to_find=%s' % (
+                            fxi.size, i.size, fxi, eids)
+                        raise RuntimeError(msg)
                     fx[i] = fxi
                     rx[i] = rxi
                     is_element_on[i] = 1.
@@ -4466,7 +4547,9 @@ class NastranIO(object):
             else:
                 # [station, bending_moment1, bending_moment2, shear1, shear2, axial, torque]
                 neids = len(np.unique(eids)) * 2
-                assert len(eids) == len(np.unique(eids)) * 2, 'CBAR-100 Error: len(eids)=%s neids=%s' % (len(eids), neids)
+                if len(eids) != len(np.unique(eids)) * 2:
+                    msg = 'CBAR-100 Error: len(eids)=%s neids=%s' % (len(eids), neids)
+                    raise RuntimeError(msg)
                 fx[i] = np.array(
                     [case.data[itime, ::-1, 5],
                      case.data[itime, 1::-1, 5]]).max(axis=0)
@@ -5180,8 +5263,9 @@ class NastranIO(object):
         #, case, header, form0
         return icase
 
-def get_max_theta(faces, all_node_ids, nid_map, xyz_cid0):
-    max_thetas = []
+def get_min_max_theta(faces, all_node_ids, nid_map, xyz_cid0):
+    cos_thetas = []
+    ideal_theta = []
     #print('faces =', faces)
     #assert len(faces) > 0, 'faces=%s nids=%s' % (faces, all_node_ids)
     for face in faces:
@@ -5195,8 +5279,8 @@ def get_max_theta(faces, all_node_ids, nid_map, xyz_cid0):
             cos_theta1 = np.dot(v21, -v13) / (np.linalg.norm(v21) * np.linalg.norm(v13))
             cos_theta2 = np.dot(v32, -v21) / (np.linalg.norm(v32) * np.linalg.norm(v21))
             cos_theta3 = np.dot(v13, -v32) / (np.linalg.norm(v13) * np.linalg.norm(v32))
-            max_thetas.extend([cos_theta1, cos_theta2, cos_theta3])
-            #max_theta = np.arccos([cos_theta1, cos_theta2, cos_theta3]).max()
+            cos_thetas.extend([cos_theta1, cos_theta2, cos_theta3])
+            ideal_theta.extend([piover3, piover3, piover3])
         elif len(face) == 4:
             try:
                 node_ids = all_node_ids[face[0]], all_node_ids[face[1]], all_node_ids[face[2]], all_node_ids[face[3]]
@@ -5213,9 +5297,14 @@ def get_max_theta(faces, all_node_ids, nid_map, xyz_cid0):
             cos_theta2 = np.dot(v32, -v21) / (np.linalg.norm(v32) * np.linalg.norm(v21))
             cos_theta3 = np.dot(v43, -v32) / (np.linalg.norm(v43) * np.linalg.norm(v32))
             cos_theta4 = np.dot(v14, -v43) / (np.linalg.norm(v14) * np.linalg.norm(v43))
-            max_thetas.extend([cos_theta1, cos_theta2, cos_theta3, cos_theta4])
-            #max_theta = np.arccos([cos_theta1, cos_theta2, cos_theta3, cos_theta4]).max()
+            cos_thetas.extend([cos_theta1, cos_theta2, cos_theta3, cos_theta4])
+            ideal_theta.extend([piover2, piover2, piover2, piover2])
         else:
             raise NotImplementedError(face)
-    max_theta = np.arccos(max_thetas).max()
-    return max_theta
+    thetas = np.arccos(cos_thetas)
+    ideal_theta = np.array(ideal_theta)
+    ideal_thetai = max((thetas - ideal_theta).max(), (ideal_theta - thetas).min())
+
+    min_thetai = thetas.min()
+    max_thetai = thetas.max()
+    return min_thetai, max_thetai, ideal_thetai

@@ -63,6 +63,10 @@ def get_bad_shells(model, xyz_cid0, nid_map, max_theta=175., max_skew=70.,
 
     shells with a edge length=0.0 are automatically added
     """
+    min_theta_quad = 0.1
+    min_theta_tri = 0.1
+    min_theta_quad = np.radians(min_theta_quad)
+    min_theta_tri = np.radians(min_theta_tri)
     max_theta = np.radians(max_theta)
     max_skew = np.radians(max_skew)
     eids_failed = []
@@ -137,10 +141,25 @@ def get_bad_shells(model, xyz_cid0, nid_map, max_theta=175., max_skew=70.,
                 model.log.debug('eid=%s failed taper_ratio check; AR=%s' % (eid, taper_ratioi))
                 continue
 
+            if 0:
+                # still kind of in development
+                #
+                # the ratio of the ideal area to the actual area
+                # this is an hourglass check
+                areas = [
+                    np.linalg.norm(np.cross(-v14, v21)), # v41 x v21
+                    np.linalg.norm(np.cross(v32, -v21)), # v32 x v12
+                    np.linalg.norm(np.cross(v43, -v32)), # v43 x v23
+                    np.linalg.norm(np.cross(v14, v43)),  # v14 x v43
+                ]
+                area_ratioi1 = areai / min(areas)
+                area_ratioi2 = max(areas) / areai
+                area_ratioi = max(area_ratioi1, area_ratioi2)
+
             # ixj = k
             # dot the local normal with the normal vector
             # then take the norm of that to determine the angle relative to the normal
-            # then take the sign of that to see if we're pointing roughly towares the normal
+            # then take the sign of that to see if we're pointing roughly towards the normal
 
             # np.sign(np.linalg.norm(np.dot(
             # a x b = ab sin(theta)
@@ -161,17 +180,25 @@ def get_bad_shells(model, xyz_cid0, nid_map, max_theta=175., max_skew=70.,
             cos_theta3 = np.dot(v43, -v32) / (np.linalg.norm(v43) * np.linalg.norm(v32))
             cos_theta4 = np.dot(v14, -v43) / (np.linalg.norm(v14) * np.linalg.norm(v43))
             #print([cos_theta1, cos_theta2, cos_theta3, cos_theta4])
-            theta = n * np.arccos(np.clip(
-                [cos_theta1, cos_theta2, cos_theta3, cos_theta4], -1., 1.)) + theta_additional
+            interior_angle = np.arccos(np.clip(
+                [cos_theta1, cos_theta2, cos_theta3, cos_theta4], -1., 1.))
+            theta = n * interior_angle + theta_additional
 
             #theta = np.arcsin(np.sin(theta))
-            thetai = theta.max()
+            theta_mini = theta.min()
+            theta_maxi = theta.max()
             #print('theta = ', np.degrees(theta))
             #print('theta.sum = ', np.degrees(theta.sum()))
-            if thetai > max_theta:
+
+            if theta_mini > min_theta:
+                eids_failed.append(eid)
+                model.log.debug('eid=%s failed min_theta check; theta=%s' % (
+                    eid, np.degrees(theta_mini)))
+                continue
+            if theta_maxi > max_theta:
                 eids_failed.append(eid)
                 model.log.debug('eid=%s failed max_theta check; theta=%s' % (
-                    eid, np.degrees(thetai)))
+                    eid, np.degrees(theta_maxi)))
                 continue
 
         elif element.type == 'CTRIA3':
@@ -190,7 +217,7 @@ def get_bad_shells(model, xyz_cid0, nid_map, max_theta=175., max_skew=70.,
             e2 = (p2 + p3) / 2.
             e3 = (p3 + p1) / 2.
 
-            #    3
+            #     3
             #    / \
             # e3/   \ e2
             #  /    /\
@@ -240,11 +267,19 @@ def get_bad_shells(model, xyz_cid0, nid_map, max_theta=175., max_skew=70.,
             cos_theta1 = np.dot(v21, -v13) / (np.linalg.norm(v21) * np.linalg.norm(v13))
             cos_theta2 = np.dot(v32, -v21) / (np.linalg.norm(v32) * np.linalg.norm(v21))
             cos_theta3 = np.dot(v13, -v32) / (np.linalg.norm(v13) * np.linalg.norm(v32))
-            theta = np.arccos(np.clip([cos_theta1, cos_theta2, cos_theta3], -1., 1.)).max()
-            if theta > max_theta:
+
+            interior_angle = np.arccos(np.clip(
+                [cos_theta1, cos_theta2, cos_theta3], -1., 1.))
+            theta = n * interior_angle + theta_additional
+            if theta_mini > min_theta:
+                eids_failed.append(eid)
+                model.log.debug('eid=%s failed min_theta check; theta=%s' % (
+                    eid, np.degrees(theta_mini)))
+                continue
+            if theta_maxi > max_theta:
                 eids_failed.append(eid)
                 model.log.debug('eid=%s failed max_theta check; theta=%s' % (
-                    eid, np.degrees(theta)))
+                    eid, np.degrees(theta_maxi)))
                 continue
     return eids_failed
 
