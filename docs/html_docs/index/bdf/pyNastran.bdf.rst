@@ -77,8 +77,8 @@ This is the pyNastran.bdf.rst file.
     pyNastran.bdf.utils
     pyNastran.bdf.field_writer
 
-    pyNastran.bdf.bdfInterface
+    pyNastran.bdf.bdf_interface
     pyNastran.bdf.cards
-    pyNastran.bdf.dev_vectorized
+    pyNastran.bdf.mesh_utils
     pyNastran.bdf.test
 

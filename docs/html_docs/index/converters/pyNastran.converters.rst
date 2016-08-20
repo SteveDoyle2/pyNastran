@@ -63,27 +63,15 @@ pyNastran/converters
     :undoc-members:
     :show-inheritance:
 
-:mod:`tetgen` Module
+:mod:`tecplot` Module
 -----------------------
 
-.. inheritance-diagram:: pyNastran.converters.tetgen
+.. inheritance-diagram:: pyNastran.converters.tecplot
 
-.. automodule:: pyNastran.converters.tetgen
+.. automodule:: pyNastran.converters.tecplot
     :members:
     :undoc-members:
     :show-inheritance:
-
-:mod:`usm3d` Module
------------------------
-
-.. inheritance-diagram:: pyNastran.converters.usm3d
-
-.. automodule:: pyNastran.converters.usm3d
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-
 
 .. toctree::
 
@@ -93,6 +81,4 @@ pyNastran/converters
     pyNastran.converters.panair
     pyNastran.converters.shabp
     pyNastran.converters.stl
-    pyNastran.converters.tetgen
     pyNastran.converters.tecplot
-    pyNastran.converters.usm3d
