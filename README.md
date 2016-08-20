@@ -1,4 +1,7 @@
 
+### v0.8.0
+[Doumentation](http://pynastran-git.readthedocs.io/en/v0.8.0/)
+
 ### v0.7.2
 
 [![PyPi Version](https://img.shields.io/pypi/v/pynastran.svg)](https://pypi.python.org/pypi/pyNastran)
