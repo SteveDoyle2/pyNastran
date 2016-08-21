@@ -307,15 +307,21 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         if checkables is None:
             checkables = ['show_info', 'show_debug', 'show_gui', 'show_command']
         if tools is None:
-            tools = [
+            file_tools = [
 
                 ('exit', '&Exit', 'texit.png', 'Ctrl+Q', 'Exit application', self.closeEvent), # QtGui.qApp.quit
                 ('load_geometry', 'Load &Geometry', 'load_geometry.png', 'Ctrl+O', 'Loads a geometry input file', self.on_load_geometry),
                 ('load_results', 'Load &Results', 'load_results.png', 'Ctrl+R', 'Loads a results file', self.on_load_results),
-                ('load_csv_nodal', 'Load CSV Nodal Results', '', None, 'Loads a custom nodal results file', self.on_load_nodal_results),
-                ('load_csv_elemental', 'Load CSV Elemental Results', '', None, 'Loads a custom elemental results file', self.on_load_elemental_results),
+
+                ('load_csv_user_geom', 'Load CSV User Geometry', '', None, 'Loads custom geometry file', self.on_load_user_geom),
                 ('load_csv_user_points', 'Load CSV User Points', 'user_points.png', None, 'Loads user defined points ', self.on_load_user_points),
 
+                ('load_csv_nodal', 'Load CSV Nodal Results', '', None, 'Loads a custom nodal results file', self.on_load_nodal_results),
+                ('load_csv_elemental', 'Load CSV Elemental Results', '', None, 'Loads a custom elemental results file', self.on_load_elemental_results),
+                ('script', 'Run Python script', 'python48.png', None, 'Runs pyNastranGUI in batch mode', self.on_run_script),
+            ]
+
+            tools = file_tools + [
                 ('back_color', 'Change background color', 'tcolorpick.png', None, 'Choose a background color', self.change_background_color),
                 #('label_color', 'Change label color', 'tcolorpick.png', None, 'Choose a label color', self.change_label_color),
                 ('text_color', 'Change text color', 'tcolorpick.png', None, 'Choose a text color', self.change_text_color),
@@ -368,7 +374,6 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                 ('X', 'Flips to -X Axis', 'minus_x.png', 'X', 'Flips to -X Axis', lambda: self.update_camera('-x')),
                 ('Y', 'Flips to -Y Axis', 'minus_y.png', 'Y', 'Flips to -Y Axis', lambda: self.update_camera('-y')),
                 ('Z', 'Flips to -Z Axis', 'minus_z.png', 'Z', 'Flips to -Z Axis', lambda: self.update_camera('-z')),
-                ('script', 'Run Python script', 'python48.png', None, 'Runs pyCart3dGUI in batch mode', self.on_run_script),
                 ('edges', 'Show/Hide Edges', 'tedges.png', 'e', 'Show/Hide Model Edges', self.on_flip_edges),
                 ('edges_black', 'Color Edges', '', 'b', 'Set Edge Color to Color/Black', self.on_set_edge_visibility),
             ]
@@ -457,7 +462,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
         menu_file = [
             'load_geometry', 'load_results', 'load_csv_nodal', 'load_csv_elemental',
-            'load_csv_user_points', 'script', '', 'exit']
+            'load_csv_user_points', 'load_csv_user_geom', 'script', '', 'exit']
         toolbar_tools = ['reload', 'load_geometry', 'load_results',
                          'x', 'y', 'z', 'X', 'Y', 'Z',
                          'magnify', 'shrink', 'rotate_clockwise', 'rotate_cclockwise',
@@ -993,7 +998,6 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             #self.on_run_script(python_file)
 
     def on_run_script(self, python_file=False):
-        print('python_file =', python_file)
         if python_file in [None, False]:
             title = 'Choose a Python Script to Run'
             wildcard = "Python (*.py)"
@@ -1005,6 +1009,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
             #python_file = os.path.join(script_path, infile_name)
             python_file = os.path.join(infile_name)
+
+        print('python_file =', python_file)
         execfile(python_file)
         self._default_python_file = python_file
         self.log_command('self.on_run_script(%r)' % python_file)
@@ -1897,16 +1903,71 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                 self.on_load_user_geom(fname)
 
     def on_load_user_geom(self, csv_filename=None, name=None, color=None):
+        """
+        Loads a User Geometry CSV File of the form:
+
+        #    id  x    y    z
+        GRID, 1, 0.2, 0.3, 0.3
+        GRID, 2, 1.2, 0.3, 0.3
+        GRID, 3, 2.2, 0.3, 0.3
+        GRID, 4, 5.2, 0.3, 0.3
+        grid, 5, 5.2, 1.3, 2.3  # case insensitive
+
+        #    ID, nodes
+        BAR,  1, 1, 2
+        TRI,  2, 1, 2, 3
+        # this is a comment
+
+        QUAD, 3, 1, 5, 3, 4
+        QUAD, 4, 1, 2, 3, 4  # this is after a blank line
+
+        #RESULT,4,CENTROID,AREA(%f),PROPERTY_ID(%i)
+        # in element id sorted order: value1, value2
+        #1.0, 2.0 # bar
+        #1.0, 2.0 # tri
+        #1.0, 2.0 # quad
+        #1.0, 2.0 # quad
+
+        #RESULT,NODE,NODEX(%f),NODEY(%f),NODEZ(%f)
+        # same difference
+
+        #RESULT,VECTOR3,GEOM,DXYZ
+        # 3xN
+
+        Parameters
+        ----------
+        csv_filename : str (default=None -> load a dialog)
+            the path to the user geometry CSV file
+        name : str (default=None -> extract from fname)
+            the name for the user points
+        color : (float, float, float)
+            RGB values as 0.0 <= rgb <= 1.0
+        """
         if csv_filename in [None, False]:
             qt_wildcard = '*.csv'
-            title = 'Load User Points'
+            title = 'Load User Geometry'
             csv_filename = self._create_load_file_dialog(qt_wildcard, title)[1]
+            if not csv_filename:
+                return
+
         if color is None:
             # we mod the num_user_points so we don't go outside the range
             icolor = self.num_user_points % len(self.color_order)
             color = self.color_order[icolor]
         if name is None:
             name = os.path.basename(csv_filename).rsplit('.', 1)[0]
+
+        self._add_user_geometry(csv_filename, name, color)
+        self.log_command('on_load_user_geom(%r, %r, %s)' % (
+            csv_filename, name, str(color)))
+
+    def _add_user_geometry(self, csv_filename, name, color):
+        if name in self.geometry_actors:
+            msg = 'Name: %s is already in geometry_actors\nChoose a different name.' % name
+            raise ValueError(msg)
+        if len(name) == 0:
+            msg = 'Invalid Name: name=%r' % name
+            raise ValueError(msg)
 
         point_name = name + '_point'
         geom_name = name + '_geom'
