@@ -22,7 +22,7 @@ class GuiUtils(unittest.TestCase):
         load_csv(csv_filename)
 
     def test_gui_utils_03(self):
-        csv_filename = os.path.join(pkg_path, '..', 'models', 'custom_geom.txt')
+        csv_filename = os.path.join(pkg_path, '..', 'models', 'custom_geom.csv')
         load_user_geom(csv_filename)
 
 if __name__ == '__main__':

@@ -96,7 +96,6 @@ def get_bad_shells(model, xyz_cid0, nid_map, max_theta=175., max_skew=70.,
             p34 = (p3 + p4) / 2.
             p14 = (p4 + p1) / 2.
             normal = np.cross(v31, v42)
-            #areai = 0.5 * np.linalg.norm(normal)
             #    e3
             # 4-------3
             # |       |
@@ -141,20 +140,21 @@ def get_bad_shells(model, xyz_cid0, nid_map, max_theta=175., max_skew=70.,
                 model.log.debug('eid=%s failed taper_ratio check; AR=%s' % (eid, taper_ratioi))
                 continue
 
-            if 0:
-                # still kind of in development
-                #
-                # the ratio of the ideal area to the actual area
-                # this is an hourglass check
-                areas = [
-                    np.linalg.norm(np.cross(-v14, v21)), # v41 x v21
-                    np.linalg.norm(np.cross(v32, -v21)), # v32 x v12
-                    np.linalg.norm(np.cross(v43, -v32)), # v43 x v23
-                    np.linalg.norm(np.cross(v14, v43)),  # v14 x v43
-                ]
-                area_ratioi1 = areai / min(areas)
-                area_ratioi2 = max(areas) / areai
-                area_ratioi = max(area_ratioi1, area_ratioi2)
+            #if 0:
+                #areai = 0.5 * np.linalg.norm(normal)
+                ## still kind of in development
+                ##
+                ## the ratio of the ideal area to the actual area
+                ## this is an hourglass check
+                #areas = [
+                    #np.linalg.norm(np.cross(-v14, v21)), # v41 x v21
+                    #np.linalg.norm(np.cross(v32, -v21)), # v32 x v12
+                    #np.linalg.norm(np.cross(v43, -v32)), # v43 x v23
+                    #np.linalg.norm(np.cross(v14, v43)),  # v14 x v43
+                #]
+                #area_ratioi1 = areai / min(areas)
+                #area_ratioi2 = max(areas) / areai
+                #area_ratioi = max(area_ratioi1, area_ratioi2)
 
             # ixj = k
             # dot the local normal with the normal vector
@@ -184,7 +184,7 @@ def get_bad_shells(model, xyz_cid0, nid_map, max_theta=175., max_skew=70.,
             theta_mini = theta.min()
             theta_maxi = theta.max()
 
-            if theta_mini > min_theta:
+            if theta_mini > min_theta_quad:
                 eids_failed.append(eid)
                 model.log.debug('eid=%s failed min_theta check; theta=%s' % (
                     eid, np.degrees(theta_mini)))
@@ -268,7 +268,7 @@ def get_bad_shells(model, xyz_cid0, nid_map, max_theta=175., max_skew=70.,
             theta_mini = theta.min()
             theta_maxi = theta.max()
 
-            if theta_mini > min_theta:
+            if theta_mini > min_theta_tri:
                 eids_failed.append(eid)
                 model.log.debug('eid=%s failed min_theta check; theta=%s' % (
                     eid, np.degrees(theta_mini)))
