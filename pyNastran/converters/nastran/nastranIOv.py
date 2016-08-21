@@ -2882,10 +2882,10 @@ class NastranIO(object):
                         elif element.type in ['CQUAD4', 'CQUADR']:
                             z0 = (element.T1 + element.T2 + element.T3 + element.T4) / 4.
                             nnodesi = 4
-                        elif element.type in ['CQUAD8']:
+                        elif element.type == 'CQUAD8':
                             z0 = (element.T1 + element.T2 + element.T3 + element.T4) / 4.
                             nnodesi = 8
-                        elif element.type in ['CQUAD']:
+                        elif element.type == 'CQUAD':
                             z0 = (element.T1 + element.T2 + element.T3 + element.T4) / 4.
                             nnodesi = 9
                         else:
@@ -2898,9 +2898,9 @@ class NastranIO(object):
 
                         elif element.type in ['CQUAD4', 'CQUADR']:
                             nnodesi = 4
-                        elif element.type in ['CQUAD8']:
+                        elif element.type == 'CQUAD8':
                             nnodesi = 8
-                        elif element.type in ['CQUAD']:
+                        elif element.type == 'CQUAD':
                             nnodesi = 9
                         else:
                             raise NotImplementedError(element.type)
@@ -2913,15 +2913,15 @@ class NastranIO(object):
                     yoffset[ie] = zi * normali[1]
                     zoffset[ie] = zi * normali[2]
 
-                elif element.type in ['CTETRA']:
+                elif element.type == 'CTETRA':
                     ie = self.eid_map[eid]
                     element_dimi = 3
                     nnodesi = 4
-                elif element.type in ['CPENTA']:
+                elif element.type == 'CPENTA':
                     ie = self.eid_map[eid]
                     element_dimi = 3
                     nnodesi = 6
-                elif element.type in ['CPYRAM']:
+                elif element.type == 'CPYRAM':
                     ie = self.eid_map[eid]
                     element_dimi = 3
                     nnodesi = 5
@@ -2952,7 +2952,6 @@ class NastranIO(object):
 
             # if not a flat plate
             #if min(nxs) == max(nxs) and min(nxs) != 0.0:
-            # subcase_id, resultType, vector_size, location, dataFormat
             eid_dim_res = GuiResult(0, header='ElementDim', title='ElementDim',
                                     location='centroid', scalar=element_dim)
             cases[icase] = (eid_dim_res, (0, 'ElementDim'))
@@ -2961,8 +2960,6 @@ class NastranIO(object):
             is_solid = np.abs(max_interior_angle).max() > 0.
             #print('is_shell=%s is_solid=%s' % (is_shell, is_solid))
             if is_shell:
-                nnodes_res = GuiResult(0, header='NNodes/Elem', title='NNodes/Elem',
-                                       location='centroid', scalar=nnodes_array)
                 nx_res = GuiResult(0, header='NormalX', title='NormalX',
                                    location='centroid', scalar=normals[:, 0], data_format='%.2f')
                 ny_res = GuiResult(0, header='NormalY', title='NormalY',
@@ -2970,19 +2967,20 @@ class NastranIO(object):
                 nz_res = GuiResult(0, header='NormalZ', title='NormalZ',
                                    location='centroid', scalar=normals[:, 2], data_format='%.2f')
 
+                # this is just for testing nan colors that doesn't work
                 #max_interior_angle[:1000] = np.nan
                 area_res = GuiResult(0, header='Area', title='Area',
                                      location='centroid', scalar=area)
-                min_theta_res = GuiResult(0, header='Min Interior Angle', title='MinInteriorAngle',
+                min_theta_res = GuiResult(0, header='Min Interior Angle', title='Min Interior Angle',
                                           location='centroid', scalar=np.degrees(min_interior_angle))
-                max_theta_res = GuiResult(0, header='Max Interior Angle', title='MaxInteriorAngle',
+                max_theta_res = GuiResult(0, header='Max Interior Angle', title='Max Interior Angle',
                                           location='centroid', scalar=np.degrees(max_interior_angle))
-                dideal_theta_res = GuiResult(0, header='Delta Ideal Angle', title='DeltaIdealAngle',
+                dideal_theta_res = GuiResult(0, header='Delta Ideal Angle', title='Delta Ideal Angle',
                                              location='centroid', scalar=np.degrees(dideal_theta))
                 eid_dim_res = GuiResult(0, header='ElementDim', title='ElementDim',
                                         location='centroid', scalar=element_dim)
 
-                skew = np.degrees(max_skew_angle) #  should be 90-max_skew_angle, but meh...
+                skew = np.degrees(max_skew_angle)
                 skew_res = GuiResult(0, header='Max Skew Angle', title='MaxSkewAngle',
                                      location='centroid', scalar=skew)
                 aspect_res = GuiResult(0, header='Aspect Ratio', title='AspectRatio',
@@ -2990,30 +2988,36 @@ class NastranIO(object):
 
                 form_checks = []
                 form0.append(('Element Checks', None, form_checks))
-
-                cases[icase + 1] = (nnodes_res, (0, 'NNodes'))
-                cases[icase + 2] = (nx_res, (0, 'NormalX'))
-                cases[icase + 3] = (ny_res, (0, 'NormalY'))
-                cases[icase + 4] = (nz_res, (0, 'NormalZ'))
-                cases[icase + 5] = (area_res, (0, 'Area'))
-                cases[icase + 6] = (min_theta_res, (0, 'Min Interior Angle'))
-                cases[icase + 7] = (max_theta_res, (0, 'Max Interior Angle'))
-                cases[icase + 8] = (dideal_theta_res, (0, 'Delta Ideal Angle'))
-                cases[icase + 9] = (skew_res, (0, 'Max Skew Angle'))
-                cases[icase + 10] = (aspect_res, (0, 'Aspect Ratio'))
-
                 form_checks.append(('ElementDim', icase, []))
-                form_checks.append(('NNodes', icase + 1, []))
-                form_checks.append(('NormalX', icase + 2, []))
-                form_checks.append(('NormalY', icase + 3, []))
-                form_checks.append(('NormalZ', icase + 4, []))
-                form_checks.append(('Area', icase + 5, []))
-                form_checks.append(('Min Interior Angle', icase + 6, []))
-                form_checks.append(('Max Interior Angle', icase + 7, []))
-                form_checks.append(('Delta Ideal Angle', icase + 8, []))
-                form_checks.append(('Max Skew Angle', icase + 9, []))
-                form_checks.append(('Aspect Ratio', icase + 10, []))
-                icase += 11
+
+                make_nnodes_result = False
+                if make_nnodes_result:
+                    nnodes_res = GuiResult(0, header='NNodes/Elem', title='NNodes/Elem',
+                                           location='centroid', scalar=nnodes_array)
+                    form_checks.append(('NNodes', icase + 1, []))
+                    cases[icase + 1] = (nnodes_res, (0, 'NNodes'))
+                    icase += 1
+
+                cases[icase + 1] = (nx_res, (0, 'NormalX'))
+                cases[icase + 2] = (ny_res, (0, 'NormalY'))
+                cases[icase + 3] = (nz_res, (0, 'NormalZ'))
+                cases[icase + 4] = (area_res, (0, 'Area'))
+                cases[icase + 5] = (min_theta_res, (0, 'Min Interior Angle'))
+                cases[icase + 6] = (max_theta_res, (0, 'Max Interior Angle'))
+                cases[icase + 7] = (dideal_theta_res, (0, 'Delta Ideal Angle'))
+                cases[icase + 8] = (skew_res, (0, 'Max Skew Angle'))
+                cases[icase + 9] = (aspect_res, (0, 'Aspect Ratio'))
+
+                form_checks.append(('NormalX', icase + 1, []))
+                form_checks.append(('NormalY', icase + 2, []))
+                form_checks.append(('NormalZ', icase + 3, []))
+                form_checks.append(('Area', icase + 4, []))
+                form_checks.append(('Min Interior Angle', icase + 5, []))
+                form_checks.append(('Max Interior Angle', icase + 6, []))
+                form_checks.append(('Delta Ideal Angle', icase + 7, []))
+                form_checks.append(('Max Skew Angle', icase + 8, []))
+                form_checks.append(('Aspect Ratio', icase + 9, []))
+                icase += 10
 
                 if area_ratio.max() > 1.:
                     arearatio_res = GuiResult(0, header='Area Ratio', title='Area Ratio',
@@ -3058,12 +3062,28 @@ class NastranIO(object):
                 form_checks.append(('OffsetY', icase + 2, []))
                 form_checks.append(('OffsetZ', icase + 3, []))
                 icase += 4
+
+                x_res = GuiResult(0, header='X', title='X',
+                                  location='node', scalar=xyz_cid0[:, 0], data_format='%g')
+                y_res = GuiResult(0, header='Y', title='Y',
+                                  location='node', scalar=xyz_cid0[:, 1], data_format='%g')
+                z_res = GuiResult(0, header='Z', title='Z',
+                                  location='node', scalar=xyz_cid0[:, 2], data_format='%g')
+                cases[icase] = (x_res, (0, 'X'))
+                cases[icase + 1] = (y_res, (0, 'Y'))
+                cases[icase + 2] = (z_res, (0, 'Z'))
+                form_checks.append(('X', icase + 0, []))
+                form_checks.append(('Y', icase + 1, []))
+                form_checks.append(('Z', icase + 2, []))
+                icase += 3
+
             elif is_solid:
+                # only solid elements
                 form_checks = []
                 form0.append(('Element Checks', None, form_checks))
-                min_theta_res = GuiResult(0, header='Min Interior Angle', title='MinInteriorAngle',
+                min_theta_res = GuiResult(0, header='Min Interior Angle', title='Min Interior Angle',
                                           location='centroid', scalar=np.degrees(min_interior_angle))
-                max_theta_res = GuiResult(0, header='Max Interior Angle', title='MaxInteriorAngle',
+                max_theta_res = GuiResult(0, header='Max Interior Angle', title='Max Interior Angle',
                                           location='centroid', scalar=np.degrees(max_interior_angle))
                 #skew = 90. - np.degrees(max_skew_angle)
                 #skew_res = GuiResult(0, header='Max Skew Angle', title='MaxSkewAngle',
