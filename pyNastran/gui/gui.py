@@ -248,6 +248,10 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, ShabpIO, PanairIO,
         width = main_window.frameGeometry().width()
         height = main_window.frameGeometry().height()
         settings.setValue('screen_shape', (width, height))
+
+        qpos = self.pos()
+        pos = qpos.x(), qpos.y()
+        settings.setValue('pos', pos)
         QtGui.qApp.quit()
 
 

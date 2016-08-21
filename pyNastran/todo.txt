@@ -1,8 +1,20 @@
+Release 0.8.1
+=============
+Tasks
+-----
+ - bar vectors:
+    - fix bar scale precision for Master_model_TAXI
+    - fix Cd vector transform for Master_model_TAXI
+ 
+ - window should:
+   - remember the screen number
+   - remember the corners
+ 
 Release 0.8.0
 =============
 Tasks
 -----
- - merge 
+ - merge
  - build docs
    - attach on sourceforge/egg?
  - run bdf tests in py27/35
@@ -11,6 +23,7 @@ Tasks
  - upload wheel
  - upload py27 gui
    - test eigenvector with edges
+ - test autoupdate
 
 Passing
 -------
@@ -22,6 +35,8 @@ Passing
 
 Done
 ----
+ - window should:
+   - automatically bring up the sidebar on first load
  - fix EIGC
  - fix NX bars in GUI
  - fix SetInput/SetInputData

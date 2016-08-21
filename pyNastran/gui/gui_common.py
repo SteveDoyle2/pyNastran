@@ -22,7 +22,7 @@ import numpy as np
 from PyQt4 import QtCore, QtGui
 import vtk
 from vtk.qt4.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
-from vtk.util.numpy_support import numpy_to_vtk
+#from vtk.util.numpy_support import numpy_to_vtk
 
 
 import pyNastran
@@ -1845,8 +1845,12 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         #red = (1.0, 0.0, 0.0)
         grey = (119/255., 136/255., 153/255.)
         screen_shape_default = (1100, 700)
+        qpos_default = self.pos()
+        pos_default = qpos_default.x(), qpos_default.y()
         if PY2:
             self.restoreGeometry(settings.value("mainWindowGeometry").toByteArray())
+
+        #self.reset_settings = False
         if self.reset_settings:
             self.background_color = grey
             self.label_color = black
@@ -1861,11 +1865,19 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             #h = screen_shape.height()
             #try:
             self.resize(screen_shape[0], screen_shape[1])
+            width, height = screen_shape
+            pos = settings.value("pos", pos_default).toPyObject()
+            #x_pos, y_pos = pos
+            #print(pos)
+            #self.mapToGlobal(QtCore.QPoint(pos[0], pos[1]))
+            #self.setGeometry(x_pos, y_pos, width, height)
             #except TypeError:
                 #self.resize(1100, 700)
 
 
         self.init_ui()
+        if self.reset_settings:
+            self.res_dock.toggleViewAction()
         self.init_cell_picker()
 
         if PY2:
@@ -3907,12 +3919,12 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             self._final_grid_update(name_vector, grid_result_vector, obj, i, res_name,
                                     vector_size, subcase_id, result_type, location, subtitle, label,
                                     revert_displaced=False)
-            if 0:
-                xyz_nominal, vector_data = obj.get_vector_result(i, res_name)
-                self._update_grid(vector_data)
-                self.grid.Modified()
-                self.geom_actor.Modified()
-                self.vtk_interactor.Render()
+            #if 0:
+                #xyz_nominal, vector_data = obj.get_vector_result(i, res_name)
+                #self._update_grid(vector_data)
+                #self.grid.Modified()
+                #self.geom_actor.Modified()
+                #self.vtk_interactor.Render()
             #revert_displaced = False
         #self._final_grid_update(name, grid_result, None, None, None,
                                 #1, subcase_id, result_type, location, subtitle, label,
