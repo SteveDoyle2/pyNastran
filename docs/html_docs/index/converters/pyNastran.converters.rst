@@ -63,6 +63,16 @@ pyNastran/converters
     :undoc-members:
     :show-inheritance:
 
+:mod:`tecplot` Module
+-----------------------
+
+.. inheritance-diagram:: pyNastran.converters.tecplot
+
+.. automodule:: pyNastran.converters.tecplot
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 :mod:`tetgen` Module
 -----------------------
 
@@ -82,8 +92,6 @@ pyNastran/converters
     :members:
     :undoc-members:
     :show-inheritance:
-
-
 
 .. toctree::
 
