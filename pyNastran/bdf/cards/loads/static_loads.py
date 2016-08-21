@@ -2428,18 +2428,19 @@ class PLOAD4(Load):
             return eid
         return eid.eid
 
-    def nodeIDs(self, nodes=None):
-        nodeIDs = [None, None]
+    @property
+    def node_ids(self):
+        node_ids = [None, None]
         if isinstance(self.g1, integer_types):
-            nodeIDs[0] = self.g1
+            node_ids[0] = self.g1
         elif self.g1 is not None:
-            nodeIDs[0] = self.g1_ref.nid
+            node_ids[0] = self.g1_ref.nid
 
         if isinstance(self.g34, integer_types):
-            nodeIDs[1] = self.g34
+            node_ids[1] = self.g34
         elif self.g34 is not None:
-            nodeIDs[1] = self.g34_ref.nid
-        return nodeIDs
+            node_ids[1] = self.g34_ref.nid
+        return node_ids
 
     def get_element_ids(self, eid=None):
         if eid:
@@ -2472,7 +2473,8 @@ class PLOAD4(Load):
         list_fields = ['PLOAD4', self.sid, eid, self.pressures[0], p2, p3, p4]
 
         if self.g1 is not None:  # is it a SOLID element
-            node_ids = self.nodeIDs([self.g1, self.g34])
+            node_ids = self.node_ids
+            #node_ids = self.node_ids([self.g1, self.g34])
             list_fields += node_ids
         else:
             if len(eids) > 1:

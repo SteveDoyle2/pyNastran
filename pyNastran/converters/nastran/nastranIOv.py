@@ -5,10 +5,11 @@ Defines the GUI IO file for Nastran.
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import os
+import sys
 from copy import deepcopy
 from collections import defaultdict, OrderedDict
 import traceback
-from six import iteritems, itervalues
+from six import iteritems, itervalues, StringIO
 from six.moves import zip, range
 
 
@@ -78,6 +79,26 @@ class NastranIO(object):
     Defines the GUI class for Nastran.
     """
     def __init__(self):
+        # new options, no way to access them through the gui
+        # they control results generation
+        self.make_xyz = False
+        self.make_offset_normals_dim = True
+        self.make_nnodes_result = False  # make_offset_normals_dim must be True for this to work
+        self.make_released_dofs1 = False
+        self.make_released_dofs2 = False
+        self.plot_applied_loads = True
+        self.plot_pressures = True  # make_offset_normals_dim must be True for this to work
+
+        # these are local variables
+        self.model = None
+        self.model_results = None
+        self.bar_lines = None
+        self.bar_eids = None
+        self.xyz_cid0 = None
+        self.normals = None
+        self.save_data = True # was False
+        #--------------------------------------
+
         #: flips the nastran CAERO subpaneling
         #:   False -> borders of CAEROs can be seen
         #:   True  -> individual subpanels can be seen
@@ -86,7 +107,7 @@ class NastranIO(object):
         #: coordinate systems can be messy, so this is the
         #: list of coords to show
         self.show_cids = []
-        self.save_data = True # was False
+
         self.show_caero_actor = True  # show the caero mesh
         self.show_control_surfaces = True
         self.show_conm = True
@@ -182,7 +203,6 @@ class NastranIO(object):
             self.geometry_actors['caero_subpanels'].VisibilityOff()
             self.geometry_properties['caero_subpanels'].is_visble = False
             self.on_update_geometry_properties_window(self.geometry_properties)
-
         self.vtk_interactor.Render()
 
     def on_update_geometry_properties_window(self, geometry_properties):
@@ -581,7 +601,7 @@ class NastranIO(object):
         for subcase_id in subcase_ids:
             if subcase_id == 0:
                 continue
-            print('NastranIOv subcase_id = %s' % subcase_id)
+            self.log_debug('NastranIOv subcase_id = %s' % subcase_id)
             subcase = model.case_control_deck.subcases[subcase_id]
 
             subtitle = ''
@@ -592,9 +612,27 @@ class NastranIO(object):
             load_str = 'Load Case=%i' % subcase_id if subtitle == '' else 'Load Case=%i; %s' % (subcase_id, subtitle)
             formi = (load_str, None, [])
             formii = formi[2]
-            icase = self._plot_pressures(model, cases, formii, icase, subcase_id, subcase)
+            if self.plot_pressures:
+                try:
+                    icase = self._plot_pressures(model, cases, formii, icase, subcase_id, subcase)
+                except:
+                    s = StringIO()
+                    traceback.print_exc(file=s)
+                    sout = s.getvalue()
+                    self.log_error(sout)
+                    print(sout)
+
             assert icase is not None
-            # icase = self._plot_applied_loads(model, cases, formii, icase, subcase_id, subcase)
+            if self.plot_applied_loads:
+                try:
+                    icase = self._plot_applied_loads(model, cases, formii, icase, subcase_id, subcase)
+                except:
+                    s = StringIO()
+                    traceback.print_exc(file=s)
+                    sout = s.getvalue()
+                    self.log_error(sout)
+                    print(sout)
+
             if len(formii):
                 form0.append(formi)
 
@@ -610,7 +648,7 @@ class NastranIO(object):
                 self.geometry_actors[grid_name].Modified()
 
         if plot:
-            self.log.info(cases.keys())
+            #self.log.info(cases.keys())
             self._finish_results_io2([form], cases)
         else:
             self._set_results([form], cases)
@@ -869,7 +907,7 @@ class NastranIO(object):
         points.SetNumberOfPoints(ncaero_sub_points)
 
         vtk_type = vtkQuad().GetCellType()
-        for ibox, box_id in enumerate(aero_box_ids):
+        for box_id in aero_box_ids:
             try:
                 elementi = box_id_to_caero_element_map[box_id]
             except KeyError:
@@ -914,13 +952,13 @@ class NastranIO(object):
                 #d = norm(xyz - c)
                 points.InsertPoint(j, *centroid)
 
-                if 1:
-                    elem = vtk.vtkVertex()
-                    elem.GetPointIds().SetId(0, j)
-                else:
-                    elem = vtk.vtkSphere()
-                    elem.SetRadius(sphere_size)
-                    elem.SetCenter(points.GetPoint(j))
+                #if 1:
+                elem = vtk.vtkVertex()
+                elem.GetPointIds().SetId(0, j)
+                #else:
+                    #elem = vtk.vtkSphere()
+                    #elem.SetRadius(sphere_size)
+                    #elem.SetCenter(points.GetPoint(j))
 
                 self.alt_grids['conm2'].InsertNextCell(elem.GetCellType(), elem.GetPointIds())
                 j += 1
@@ -974,7 +1012,7 @@ class NastranIO(object):
         """
         try:
             spcs = model.spcs[spc_id]
-        except:
+        except KeyError:
             model.log.warning('spc_id=%s not found' % spc_id)
             return []
 
@@ -1009,7 +1047,7 @@ class NastranIO(object):
         """
         try:
             spcs = model.spcs[spc_id]
-        except:
+        except KeyError:
             model.log.warning('spc_id=%s not found' % spc_id)
             return {}
 
@@ -1183,16 +1221,15 @@ class NastranIO(object):
         no_axial = np.zeros(self.element_ids.shape, dtype='int32')
         no_torsion = np.zeros(self.element_ids.shape, dtype='int32')
 
-        if 1:
+        if self.make_released_dofs1:
             no_shear_y = np.zeros(self.element_ids.shape, dtype='int32')
             no_shear_z = np.zeros(self.element_ids.shape, dtype='int32')
             no_bending_y = np.zeros(self.element_ids.shape, dtype='int32')
             no_bending_z = np.zeros(self.element_ids.shape, dtype='int32')
 
-        if 0:
+        if self.make_released_dofs2:
             no_bending = np.zeros(self.element_ids.shape, dtype='int32')
             no_bending_bad = np.zeros(self.element_ids.shape, dtype='int32')
-
             no_6_16 = np.zeros(self.element_ids.shape, dtype='int32')
             no_0_56 = np.zeros(self.element_ids.shape, dtype='int32')
             no_0_456 = np.zeros(self.element_ids.shape, dtype='int32')
@@ -1236,58 +1273,56 @@ class NastranIO(object):
             Li = norm(i)
             ihat = i / Li
 
-            #if 1:
-                #pass
-            #elif 0:
-                ##if elem.pa == 0 and elem.pb == 0:
-                    ##continue
+            if not self.make_released_dofs2:
+                if elem.pa == 0 and elem.pb == 0:
+                    continue
 
-                #if elem.pa == 1 or elem.pb == 1:
-                    #no_axial[ieid] = 1
-                #if elem.pa == 2 or elem.pb == 2:
-                    #no_axial[ieid] = 1
-                #if elem.pa == 3 or elem.pb == 3:
-                    #no_axial[ieid] = 1
-                #if elem.pa == 4 or elem.pb == 4:
-                    #no_torsion[ieid] = 1
-                #if elem.pa == 5 or elem.pb == 5:
-                    #no_axial[ieid] = 1
-                #if elem.pa == 6 or elem.pb == 6:
-                    #no_axial[ieid] = 1
+                if elem.pa == 1 or elem.pb == 1:
+                    no_axial[ieid] = 1
+                if elem.pa == 2 or elem.pb == 2:
+                    no_axial[ieid] = 1
+                if elem.pa == 3 or elem.pb == 3:
+                    no_axial[ieid] = 1
+                if elem.pa == 4 or elem.pb == 4:
+                    no_torsion[ieid] = 1
+                if elem.pa == 5 or elem.pb == 5:
+                    no_axial[ieid] = 1
+                if elem.pa == 6 or elem.pb == 6:
+                    no_axial[ieid] = 1
 
-            #else:
-                #if elem.pa == 0 and elem.pb == 0:
-                    #continue
-                #elif (elem.pa == 6 and elem.pb == 16) or (elem.pa == 16 and elem.pb == 6):
-                    #no_axial[ieid] = 1
-                    #no_6_16[ieid] = 1
-                #elif (elem.pa == 56 and elem.pb == 0) or (elem.pa == 0 and elem.pb == 56):
-                    #no_bending[ieid] = 1
-                    #no_0_56[ieid] = 1
-                    ##print(elem)
-                #elif (elem.pa == 0 and elem.pb == 456) or (elem.pa == 456 and elem.pb == 0):
-                    #no_bending[ieid] = 1
-                    #no_torsion[ieid] = 1
-                    #no_0_456[ieid] = 1
-                    ##print(elem)
-                #elif (elem.pa == 456 and elem.pb == 56) or (elem.pa == 56 and elem.pb == 456):
-                    #no_torsion[ieid] = 1
-                    #no_56_456[ieid] = 1
-                #elif elem.pa == 6 and elem.pb == 0:
-                    #no_bending_bad[ieid] = 1
-                    #no_0_6[ieid] = 1
-                    ##print(elem)
-                #elif elem.pa == 0 and elem.pb == 16 or elem.pb == 0 and elem.pa == 16:
-                    #no_axial[ieid] = 1
-                    #no_bending_bad[ieid] = 1
-                    ## print(elem)
-                    #no_0_16[ieid] = 1
-                #elif elem.pa == 56 and elem.pb == 45 or elem.pb == 56 and elem.pa == 45:
-                    #no_torsion[ieid] = 1
-                    #no_bending[ieid] = 1
-                #else:
-                    #msg = 'pa=%r pb=%r; elem=\n%s' % (elem.pa, elem.pb, elem)
-                    #raise NotImplementedError(msg)
+            else:
+                if elem.pa == 0 and elem.pb == 0:
+                    continue
+                elif (elem.pa == 6 and elem.pb == 16) or (elem.pa == 16 and elem.pb == 6):
+                    no_axial[ieid] = 1
+                    no_6_16[ieid] = 1
+                elif (elem.pa == 56 and elem.pb == 0) or (elem.pa == 0 and elem.pb == 56):
+                    no_bending[ieid] = 1
+                    no_0_56[ieid] = 1
+                    #print(elem)
+                elif (elem.pa == 0 and elem.pb == 456) or (elem.pa == 456 and elem.pb == 0):
+                    no_bending[ieid] = 1
+                    no_torsion[ieid] = 1
+                    no_0_456[ieid] = 1
+                    #print(elem)
+                elif (elem.pa == 456 and elem.pb == 56) or (elem.pa == 56 and elem.pb == 456):
+                    no_torsion[ieid] = 1
+                    no_56_456[ieid] = 1
+                elif elem.pa == 6 and elem.pb == 0:
+                    no_bending_bad[ieid] = 1
+                    no_0_6[ieid] = 1
+                    #print(elem)
+                elif elem.pa == 0 and elem.pb == 16 or elem.pb == 0 and elem.pa == 16:
+                    no_axial[ieid] = 1
+                    no_bending_bad[ieid] = 1
+                    # print(elem)
+                    no_0_16[ieid] = 1
+                elif elem.pa == 56 and elem.pb == 45 or elem.pb == 56 and elem.pa == 45:
+                    no_torsion[ieid] = 1
+                    no_bending[ieid] = 1
+                else:
+                    msg = 'pa=%r pb=%r; elem=\n%s' % (elem.pa, elem.pb, elem)
+                    raise NotImplementedError(msg)
 
 
             # OFFT flag
@@ -1315,21 +1350,21 @@ class NastranIO(object):
             #
             if elem.g0:
                 if debug:
-                    print('  g0 =', elem.g0)
+                    print('  g0 = %s' % elem.g0)
                 n0 = elem.g0.get_position()
                 v = n0 - n1
             else:
                 ga = model.nodes[elem.Ga()]
                 v = ga.cp_ref.transform_node_to_global(elem.x)
                 if debug:
-                    print('  ga =', elem.ga)
+                    print('  ga = %s' % elem.ga)
                     if ga.Cp() != 0:
-                        print('  cp =', ga.cp_ref)
+                        print('  cp = %s' % ga.cp_ref)
                     else:
                         print('  cp = 0')
 
-                    print('  x =', elem.x)
-                    print('  v =', v)
+                    print('  x = %s' % elem.x)
+                    print('  v = %s' % v)
                 #v = elem.x
 
             offt_vector, offt_end_a, offt_end_b = elem.offt
@@ -1417,11 +1452,11 @@ class NastranIO(object):
             zhat = z / norm(z)
             yhat = np.cross(zhat, ihat) # j
             if debug:
-                print('  centroid =', centroid)
-                print('  ihat =', ihat)
-                print('  yhat =', yhat)
-                print('  zhat =', zhat)
-                print('  scale =', scale)
+                print('  centroid = %s' % centroid)
+                print('  ihat = %s' % ihat)
+                print('  yhat = %s' % yhat)
+                print('  zhat = %s' % zhat)
+                print('  scale = %s' % scale)
             #if eid == 5570:
                 #print('  check - eid=%s yhat=%s zhat=%s v=%s i=%s n%s=%s n%s=%s' % (
                       #eid, yhat, zhat, v, i, nid1, n1, nid2, n2))
@@ -1514,22 +1549,22 @@ class NastranIO(object):
                 #cases[(0, icase, msg, 1, 'centroid', '%i', '')] = is_type
                 icase += 1
 
-        if no_axial.max() == 1:
-            bar_form[2].append(['No Axial', icase, []])
-            axial_res = GuiResult(0, header='No Axial', title='No Axial',
-                                  location='centroid', scalar=no_axial)
-            cases[icase] = (axial_res, (0, 'No Axial'))
-            #cases[(0, icase, 'No Axial', 1, 'centroid', '%i', '')] = no_axial
-            icase += 1
-        if no_torsion.max() == 1:
-            bar_form[2].append(['No Torsion', icase, []])
-            torsion_res = GuiResult(0, header='No Torsion', title='No Torsion',
-                                    location='centroid', scalar=no_torsion)
-            cases[icase] = (torsion_res, (0, 'No Torsion'))
-            #cases[(0, icase, 'No Torsion', 1, 'centroid', '%i', '')] = no_torsion
-            icase += 1
+        if self.make_released_dofs2:
+            if no_axial.max() == 1:
+                bar_form[2].append(['No Axial', icase, []])
+                axial_res = GuiResult(0, header='No Axial', title='No Axial',
+                                      location='centroid', scalar=no_axial)
+                cases[icase] = (axial_res, (0, 'No Axial'))
+                icase += 1
 
-        if 1:
+            if no_torsion.max() == 1:
+                bar_form[2].append(['No Torsion', icase, []])
+                torsion_res = GuiResult(0, header='No Torsion', title='No Torsion',
+                                        location='centroid', scalar=no_torsion)
+                cases[icase] = (torsion_res, (0, 'No Torsion'))
+                icase += 1
+
+        if self.make_released_dofs1:
             if no_shear_y.max() == 1:
                 bar_form[2].append(['No Shear Y', icase, []])
                 shear_y_res = GuiResult(0, header='No Shear Y', title='No Shear Y',
@@ -1559,7 +1594,7 @@ class NastranIO(object):
                 #cases[(0, icase, 'No Bending Z', 1, 'centroid', '%i', '')] = no_bending_z
                 icase += 1
 
-        if 0:
+        if make_released_dofs2:
             if no_bending.max() == 1:
                 bar_form[2].append(['No Bending', icase, []])
                 bending_res = GuiResult(0, header='No Bending', title='No Bending',
@@ -2826,10 +2861,8 @@ class NastranIO(object):
 
         try:
             icase = self._build_optimization(model, pids, upids, nelements, cases, form0, icase)
-        except Exception:
-            import sys
-            import cStringIO
-            s = cStringIO.StringIO()
+        except:
+            s = StringIO()
             traceback.print_exc(file=s)
             sout = s.getvalue()
             self.log_error(sout)
@@ -2844,7 +2877,7 @@ class NastranIO(object):
             #mid_eids_skip = []
             #for pid in upids:
 
-        if 1:
+        if self.make_offset_normals_dim:
             #ielement = 0
             nelements = self.element_ids.shape[0]
             normals = np.zeros((nelements, 3), dtype='float32')
@@ -2990,8 +3023,7 @@ class NastranIO(object):
                 form0.append(('Element Checks', None, form_checks))
                 form_checks.append(('ElementDim', icase, []))
 
-                make_nnodes_result = False
-                if make_nnodes_result:
+                if self.make_nnodes_result:
                     nnodes_res = GuiResult(0, header='NNodes/Elem', title='NNodes/Elem',
                                            location='centroid', scalar=nnodes_array)
                     form_checks.append(('NNodes', icase + 1, []))
@@ -3063,19 +3095,20 @@ class NastranIO(object):
                 form_checks.append(('OffsetZ', icase + 3, []))
                 icase += 4
 
-                x_res = GuiResult(0, header='X', title='X',
-                                  location='node', scalar=xyz_cid0[:, 0], data_format='%g')
-                y_res = GuiResult(0, header='Y', title='Y',
-                                  location='node', scalar=xyz_cid0[:, 1], data_format='%g')
-                z_res = GuiResult(0, header='Z', title='Z',
-                                  location='node', scalar=xyz_cid0[:, 2], data_format='%g')
-                cases[icase] = (x_res, (0, 'X'))
-                cases[icase + 1] = (y_res, (0, 'Y'))
-                cases[icase + 2] = (z_res, (0, 'Z'))
-                form_checks.append(('X', icase + 0, []))
-                form_checks.append(('Y', icase + 1, []))
-                form_checks.append(('Z', icase + 2, []))
-                icase += 3
+                if self.make_xyz:
+                    x_res = GuiResult(0, header='X', title='X',
+                                      location='node', scalar=xyz_cid0[:, 0], data_format='%g')
+                    y_res = GuiResult(0, header='Y', title='Y',
+                                      location='node', scalar=xyz_cid0[:, 1], data_format='%g')
+                    z_res = GuiResult(0, header='Z', title='Z',
+                                      location='node', scalar=xyz_cid0[:, 2], data_format='%g')
+                    cases[icase] = (x_res, (0, 'X'))
+                    cases[icase + 1] = (y_res, (0, 'Y'))
+                    cases[icase + 2] = (z_res, (0, 'Z'))
+                    form_checks.append(('X', icase + 0, []))
+                    form_checks.append(('Y', icase + 1, []))
+                    form_checks.append(('Z', icase + 2, []))
+                    icase += 3
 
             elif is_solid:
                 # only solid elements
@@ -3110,6 +3143,7 @@ class NastranIO(object):
                 icase += 1
 
             self.normals = normals
+        assert self.normals is not None, normals
         return nid_to_pid_map, icase, cases, form
 
     def _build_optimization(self, model, pids, upids, nelements, cases, form0, icase):
@@ -3225,26 +3259,29 @@ class NastranIO(object):
         # loop thru scaled loads and plot the pressure
         for load, scale in zip(loads2, scale_factors2):
             if show_nloads and iload % 5000 == 0:
-                print('  NastranIOv iload=%s/%s' % (iload, nloads))
+                self.log_debug('  NastranIOv iload=%s/%s' % (iload, nloads))
             if load.type == 'PLOAD4':
-                elem = load.eid
-                if elem.type in ['CTRIA3', 'CTRIA6', 'CTRIA', 'CTRIAR',
-                                 'CQUAD4', 'CQUAD8', 'CQUAD', 'CQUADR', 'CSHEAR']:
-                    pressure = load.pressures[0] * scale
+                #print(load.object_attributes())
+                for elem in load.eids:
+                    #elem = self.model.elements[eid]
+                    if elem.type in ['CTRIA3', 'CTRIA6', 'CTRIA', 'CTRIAR',
+                                     'CQUAD4', 'CQUAD8', 'CQUAD', 'CQUADR', 'CSHEAR']:
+                        pressure = load.pressures[0] * scale
 
-                    # single element per PLOAD
-                    #eid = elem.eid
-                    #pressures[eids.index(eid)] = pressure
+                        # single element per PLOAD
+                        #eid = elem.eid
+                        #pressures[eids.index(eid)] = pressure
 
-                    # multiple elements
-                    for elem in load.eids:
+                        # multiple elements
+                        #for elem in load.eids:
                         ie = np.searchsorted(eids, elem.eid)
                         #pressures[ie] += p  # correct; we can't assume model orientation
-                        pressures[ie] += pressure * self.normals[ie, 2]  # considers normal of shell
+                        nz = self.normals[ie, 2]  # considers normal of shell
+                        pressures[ie] += pressure * nz
 
-                #elif elem.type in ['CTETRA', 'CHEXA', 'CPENTA']:
-                    #A, centroid, normal = elem.getFaceAreaCentroidNormal(load.g34.nid, load.g1.nid)
-                    #r = centroid - p
+                    #elif elem.type in ['CTETRA', 'CHEXA', 'CPENTA']:
+                        #A, centroid, normal = elem.getFaceAreaCentroidNormal(load.g34.nid, load.g1.nid)
+                        #r = centroid - p
             iload += 1
         # if there is no applied pressure, don't make a plot
         if np.abs(pressures).max():
@@ -3377,6 +3414,7 @@ class NastranIO(object):
         nids = sorted(model.nodes.keys())
         nnodes = len(nids)
         nid_map = self.nid_map
+        eid_map = self.eid_map
 
         load_case = model.loads[load_case_id]
         loads2, scale_factors2 = self._get_loads_and_scale_factors(load_case)
@@ -3389,6 +3427,8 @@ class NastranIO(object):
         spcd = np.zeros((nnodes, 3), dtype='float32')
         # loop thru scaled loads and plot the pressure
         cards_ignored = {}
+
+        assert self.normals is not None
         for load, scale in zip(loads2, scale_factors2):
             if load.type == 'FORCE':
                 scale2 = load.mag * scale  # does this need a magnitude?
@@ -3457,18 +3497,82 @@ class NastranIO(object):
 
                     # multiple elements
                     for elem in load.eids:
+                        ie = eid_map[elem.eid]
+                        nz = self.normals[ie, :]
                         # pressures[eids.index(elem.eid)] += p
-                        area = elem.get_area()
-                        elem_node_ids = elem.node_ids
-                        elem_nnodes = len(elem_node_ids)
-                        forcei = pressure * area / elem_nnodes
-                        for nid in elem_node_ids:
-                            if nid in self.dependents_nodes:
-                                print('    nid=%s is a dependent node and has an PLOAD4 applied\n'
-                                      '%s' % (nid, str(load)))
-                            #forces[nids.index(nid)] += F
-                            i = nid_map[nid]
-                            forces[i, :] += forcei * self.normals[i, :]
+                        if elem.type in ['CTRIA3', 'CTRIA6', 'CTRIA', 'CTRIAR',
+                                         # TODO: this was split in bdf_methods...
+                                         'CQUAD4', 'CQUAD8', 'CQUAD', 'CQUADR', 'CSHEAR']:
+                            area = elem.get_area()
+                            elem_node_ids = elem.node_ids
+                            elem_nnodes = len(elem_node_ids)
+                            forcei = pressure * area / elem_nnodes
+                            for nid in elem_node_ids:
+                                if nid in self.dependents_nodes:
+                                    print('    nid=%s is a dependent node and has an PLOAD4 applied\n'
+                                          '%s' % (nid, str(load)))
+                                #forces[nids.index(nid)] += F
+                                i = nid_map[nid]
+                                try:
+                                    forces[i, :] += forcei * nz
+                                except IndexError:
+                                    print('i = %s' % i)
+                                    print('normals.shape = %s' %  str(self.normals.shape))
+                                    print('forces.shape = %s' % str(forces.shape))
+                                    print('nz = ', self.normals[i, :])
+                                    print('forces[i, :] = ', forces[i, :])
+                                    raise
+                        else:
+                            elem_node_ids = elem.node_ids
+                            if elem.type == 'CTETRA':
+                                #face1 = elem.get_face(load.g1.nid, load.g34.nid)
+                                face, area, centroid, normal = elem.getFaceAreaCentroidNormal(load.g1.nid, load.g34.nid)
+                                #assert face == face1
+                                nface = 3
+                            elif elem.type == 'CHEXA':
+                                #face1 = elem.get_face(load.g34.nid, load.g1.nid)
+                                face, area, centroid, normal = elem.getFaceAreaCentroidNormal(load.g34.nid, load.g1.nid)
+                                #assert face == face1
+                                nface = 4
+                            elif elem.type == 'CPENTA':
+                                g1 = load.g1.nid
+                                if load.g34 is None:
+                                    #face1 = elem.get_face(g1)
+                                    face, area, centroid, normal = elem.getFaceAreaCentroidNormal(g1)
+                                    nface = 3
+                                else:
+                                    #face1 = elem.get_face(g1, load.g34.nid)
+                                    face, area, centroid, normal = elem.getFaceAreaCentroidNormal(g1, load.g34.nid)
+                                    nface = 4
+                                #assert face == face1
+                            else:
+                                msg = ('case=%s eid=%s etype=%r loadtype=%r not supported'
+                                       % (loadcase_id, eid, elem.type, load.type))
+                                self.log.debug(msg)
+                                continue
+                            pressures = load.pressures[:nface]
+                            assert len(pressures) == nface
+                            if min(pressures) != max(pressures):
+                                pressure = mean(pressures)
+                                #msg = '%s%s\npressure.min=%s != pressure.max=%s using average of %%s; load=%s eid=%%s'  % (
+                                    #str(load), str(elem), min(pressures), max(pressures), load.sid)
+                                #print(msg % (pressure, eid))
+                            else:
+                                pressure = pressures[0]
+                            #centroidal_pressures
+                            f = pressure * area * normal * scale
+                            for inid in face:
+                                inidi = nid_map[elem_node_ids[inid]]
+                                nodal_pressures[inid] += pressure * scale / nface
+                                forces[inidi, :] += f / nface
+                            centroidal_pressures[ie] += pressure
+
+                            #r = centroid - p
+                            #load.cid.transformToGlobal()
+                            #m = cross(r, f)
+                            #M += m
+
+
                 #elif elem.type in ['CTETRA', 'CHEXA', 'CPENTA']:
             elif load.type == 'SPCD':
                 #self.gids = [integer(card, 2, 'G1'),]
@@ -3476,8 +3580,8 @@ class NastranIO(object):
                 #self.enforced = [double_or_blank(card, 4, 'D1', 0.0)]
                 for nid, c1, d1 in zip(load.node_ids, load.constraints, load.enforced):
                     if nid in self.dependents_nodes:
-                        print('    nid=%s is a dependent node and has an SPCD applied\n%s' % (
-                            nid, str(load)))
+                        self.log_warning('    nid=%s is a dependent node and has an'
+                                         ' SPCD applied\n%s' % (nid, str(load)))
                     c1 = int(c1)
                     assert c1 in [1, 2, 3, 4, 5, 6], c1
                     if c1 < 4:
@@ -3485,8 +3589,8 @@ class NastranIO(object):
             else:
                 if load.type not in cards_ignored:
                     cards_ignored[load.type] = True
-                    print('  NastranIOv _get_forces_moments_array - unsupported load.type = %s'
-                          % load.type)
+                    self.log_info('  NastranIOv _get_forces_moments_array - unsupported '
+                                  'load.type = %s' % load.type)
 
         return centroidal_pressures, forces, spcd
 
@@ -4002,7 +4106,7 @@ class NastranIO(object):
                 continue
             # transient
             if case.nonlinear_factor is not None:
-                code_name = case.data_code['name']
+                #code_name = case.data_code['name']
                 has_cycle = hasattr(case, 'mode_cycle')
             else:
                 has_cycle = False
@@ -4435,7 +4539,7 @@ class NastranIO(object):
         """
         Creates the time accurate strain energy objects for the pyNastranGUI
         """
-        new_cases = True
+        #new_cases = True
         nelements = self.nElements
         fx = np.zeros(nelements, dtype='float32') # axial
         fy = np.zeros(nelements, dtype='float32') # shear_y
@@ -4511,7 +4615,6 @@ class NastranIO(object):
 
                     # rza = array([case.data[itime, :, 1], case.data[itime, :, 3]])#.max(axis=0)
                     # rzh = hstack([case.data[itime, :, 1], case.data[itime, :, 3]])#.max(axis=0)
-
                     # print(rzv.shape, rzv.shape, rzv.shape)
                 assert rxi.size == i.size, 'rx.size=%s i.size=%s rx=%s' % (rxi.size, i.size, rxi)
                 assert ryi.size == i.size, 'ry.size=%s i.size=%s ry=%s' % (ryi.size, i.size, ryi)
@@ -4683,7 +4786,7 @@ class NastranIO(object):
         """
         Creates the time accurate stress objects for the pyNastranGUI
         """
-        new_cases = True
+        #new_cases = True
         case = None
         #assert isinstance(subcase_id, int), type(subcase_id)
         assert isinstance(icase, int), icase
