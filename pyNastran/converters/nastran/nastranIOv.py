@@ -1237,11 +1237,13 @@ class NastranIO(object):
             no_0_6 = np.zeros(self.element_ids.shape, dtype='int32')
             no_0_16 = np.zeros(self.element_ids.shape, dtype='int32')
 
-        debug = False
+        #debug = True
         bar_nids = set([])
         for eid in bar_beam_eids:
             if eid not in self.eid_map:
                 self.log.error('eid=%s is not a valid element...' % eid)
+                if debug:
+                    print('eid=%s is not a valid element...' % eid)
                 continue
             ieid = self.eid_map[eid]
             elem = model.elements[eid]
@@ -1254,6 +1256,8 @@ class NastranIO(object):
             elif pid.type in ['PBARL', 'PBEAML']:
                 bar_type = pid.Type
             else:
+                if debug:
+                    print('NotImplementedError(pid)')
                 raise NotImplementedError(pid)
             #print('bar_type =', bar_type)
 
@@ -1275,7 +1279,7 @@ class NastranIO(object):
 
             if not self.make_released_dofs2:
                 if elem.pa == 0 and elem.pb == 0:
-                    continue
+                    pass
 
                 if elem.pa == 1 or elem.pb == 1:
                     no_axial[ieid] = 1
@@ -1292,7 +1296,7 @@ class NastranIO(object):
 
             else:
                 if elem.pa == 0 and elem.pb == 0:
-                    continue
+                    pass
                 elif (elem.pa == 6 and elem.pb == 16) or (elem.pa == 16 and elem.pb == 6):
                     no_axial[ieid] = 1
                     no_6_16[ieid] = 1
@@ -1349,19 +1353,24 @@ class NastranIO(object):
             # - orientation -> ???
             #
             if elem.g0:
+                #debug = False
+                msg = 'which is required by %s eid=%s\n%s' % (elem.type, elem.g0, str(elem))
+                g0_ref = model.Node(elem.g0, msg=msg)
                 if debug:
                     print('  g0 = %s' % elem.g0)
-                n0 = elem.g0.get_position()
+                    print('  g0_ref = %s' % g0_ref)
+                n0 = g0_ref.get_position()
                 v = n0 - n1
             else:
+                #debug = False
                 ga = model.nodes[elem.Ga()]
-                v = ga.cp_ref.transform_node_to_global(elem.x)
+                v = ga.cd_ref.transform_node_to_global(elem.x)
                 if debug:
                     print('  ga = %s' % elem.ga)
-                    if ga.Cp() != 0:
-                        print('  cp = %s' % ga.cp_ref)
+                    if ga.Cd() != 0:
+                        print('  cd = %s' % ga.cd_ref)
                     else:
-                        print('  cp = 0')
+                        print('  cd = 0')
 
                     print('  x = %s' % elem.x)
                     print('  v = %s' % v)
@@ -1375,13 +1384,13 @@ class NastranIO(object):
             if offt_vector == 'G':
                 # end A
                 # global - cid != 0
-                if node1.Cp() != 0:
-                    v = node1.cp_ref.transform_node_to_global(v)
-                    if node1.cp_ref.type not in ['CORD2R', 'CORD1R']:
-                        msg = 'invalid Cp type (%r) on Node %i; expected CORDxR' % (
-                            node1.cp_ref.type, node1.nid)
+                if node1.Cd() != 0:
+                    v = node1.cd_ref.transform_node_to_global(v)
+                    if node1.cd_ref.type not in ['CORD2R', 'CORD1R']:
+                        msg = 'invalid Cd type (%r) on Node %i; expected CORDxR' % (
+                            node1.cd_ref.type, node1.nid)
                         self.log.error(msg)
-                        raise NotImplementedError(node1.cp)
+                        raise NotImplementedError(node1.cd)
             elif offt_vector == 'B':
                 # basic - cid = 0
                 pass
@@ -1394,10 +1403,10 @@ class NastranIO(object):
             # rotate wa
             wa = elem.wa
             if offt_end_a == 'G':
-                if node1.Cp() != 0:
-                    wa = node1.cp.transform_node_to_global(wa)
-                    if node1.cp.type not in ['CORD2R', 'CORD1R']:
-                        raise NotImplementedError(node1.cp)
+                if node1.Cd() != 0:
+                    wa = node1.cd.transform_node_to_global(wa)
+                    if node1.cd.type not in ['CORD2R', 'CORD1R']:
+                        raise NotImplementedError(node1.cd)
             elif offt_end_a == 'B':
                 pass
             elif offt_end_a == 'O':
@@ -1411,10 +1420,10 @@ class NastranIO(object):
             # rotate wb
             wb = elem.wb
             if offt_end_b == 'G':
-                if node2.Cp() != 0:
-                    wb = node2.cp.transform_node_to_global(wb)
-                    if node2.cp.type not in ['CORD2R', 'CORD1R']:
-                        raise NotImplementedError(node2.cp)
+                if node2.Cd() != 0:
+                    wb = node2.cd.transform_node_to_global(wb)
+                    if node2.cd.type not in ['CORD2R', 'CORD1R']:
+                        raise NotImplementedError(node2.cd)
             elif offt_end_b == 'B':
                 pass
             elif offt_end_b == 'O':
@@ -1431,7 +1440,7 @@ class NastranIO(object):
                 self.log.error(msg)
                 continue
 
-            vhat = v / norm(v) # i
+            vhat = v / norm(v) # j
             try:
                 z = np.cross(ihat, vhat) # k
             except ValueError:
@@ -1594,7 +1603,7 @@ class NastranIO(object):
                 #cases[(0, icase, 'No Bending Z', 1, 'centroid', '%i', '')] = no_bending_z
                 icase += 1
 
-        if make_released_dofs2:
+        if self.make_released_dofs2:
             if no_bending.max() == 1:
                 bar_form[2].append(['No Bending', icase, []])
                 bending_res = GuiResult(0, header='No Bending', title='No Bending',
@@ -3143,7 +3152,6 @@ class NastranIO(object):
                 icase += 1
 
             self.normals = normals
-        assert self.normals is not None, normals
         return nid_to_pid_map, icase, cases, form
 
     def _build_optimization(self, model, pids, upids, nelements, cases, form0, icase):
@@ -5312,6 +5320,10 @@ class NastranIO(object):
                 ioff = np.where(is_element_on == 0)[0]
                 print('stress_eids_off = %s' % np.array(self.element_ids[ioff]))
                 self.log_error('stress_eids_off = %s' % self.element_ids[ioff])
+                #stress_res = GuiResult(subcase_id, header='Stress - isElementOn', title='Stress\nisElementOn',
+                                    #location='centroid', scalar=oxx, data_format=fmt)
+                #cases[icase] = (stress_res, (subcase_id, 'Stress - isElementOn'))
+
                 cases[(1, icase, 'Stress\nisElementOn', 1, 'centroid', '%i', header)] = is_element_on
                 form_dict[(key, itime)].append(('Stress - IsElementOn', icase, []))
                 icase += 1
