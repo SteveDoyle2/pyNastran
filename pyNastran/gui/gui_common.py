@@ -1845,8 +1845,12 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         #red = (1.0, 0.0, 0.0)
         grey = (119/255., 136/255., 153/255.)
         screen_shape_default = (1100, 700)
+        qpos_default = self.pos()
+        pos_default = qpos_default.x(), qpos_default.y()
         if PY2:
             self.restoreGeometry(settings.value("mainWindowGeometry").toByteArray())
+
+        #self.reset_settings = False
         if self.reset_settings:
             self.background_color = grey
             self.label_color = black
@@ -1861,11 +1865,19 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             #h = screen_shape.height()
             #try:
             self.resize(screen_shape[0], screen_shape[1])
+            width, height = screen_shape
+            pos = settings.value("pos", pos_default).toPyObject()
+            #x_pos, y_pos = pos
+            #print(pos)
+            #self.mapToGlobal(QtCore.QPoint(pos[0], pos[1]))
+            #self.setGeometry(x_pos, y_pos, width, height)
             #except TypeError:
                 #self.resize(1100, 700)
 
 
         self.init_ui()
+        if self.reset_settings:
+            self.res_dock.toggleViewAction()
         self.init_cell_picker()
 
         if PY2:

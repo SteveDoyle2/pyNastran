@@ -609,12 +609,14 @@ class NastranIO(object):
                 subtitle, options = subcase.get_parameter('SUBTITLE')
                 del options
 
-            load_str = 'Load Case=%i' % subcase_id if subtitle == '' else 'Load Case=%i; %s' % (subcase_id, subtitle)
+            load_str = 'Load Case=%i' % subcase_id if subtitle == '' else 'Load Case=%i; %s' % (
+                subcase_id, subtitle)
             formi = (load_str, None, [])
             formii = formi[2]
             if self.plot_pressures:
                 try:
-                    icase = self._plot_pressures(model, cases, formii, icase, subcase_id, subcase)
+                    icase = self._plot_pressures(
+                        model, cases, formii, icase, subcase_id, subcase)
                 except:
                     s = StringIO()
                     traceback.print_exc(file=s)
@@ -625,7 +627,8 @@ class NastranIO(object):
             assert icase is not None
             if self.plot_applied_loads:
                 try:
-                    icase = self._plot_applied_loads(model, cases, formii, icase, subcase_id, subcase)
+                    icase = self._plot_applied_loads(
+                        model, cases, formii, icase, subcase_id, subcase)
                 except:
                     s = StringIO()
                     traceback.print_exc(file=s)
@@ -1326,7 +1329,9 @@ class NastranIO(object):
                     no_bending[ieid] = 1
                 else:
                     msg = 'pa=%r pb=%r; elem=\n%s' % (elem.pa, elem.pb, elem)
-                    raise NotImplementedError(msg)
+                    print(msg)
+                    continue
+                    #raise NotImplementedError(msg)
 
 
             # OFFT flag
@@ -1390,55 +1395,63 @@ class NastranIO(object):
                         msg = 'invalid Cd type (%r) on Node %i; expected CORDxR' % (
                             node1.cd_ref.type, node1.nid)
                         self.log.error(msg)
-                        raise NotImplementedError(node1.cd)
+                        continue
+                        #raise NotImplementedError(node1.cd)
             elif offt_vector == 'B':
                 # basic - cid = 0
                 pass
             else:
                 msg = 'offt_vector=%r is not supported; offt=%s' % (offt_vector, elem.offt)
                 self.log.error(msg)
-                raise NotImplementedError(msg)
+                continue
+                #raise NotImplementedError(msg)
             #print('v =', v)
 
             # rotate wa
             wa = elem.wa
             if offt_end_a == 'G':
                 if node1.Cd() != 0:
-                    wa = node1.cd.transform_node_to_global(wa)
                     if node1.cd.type not in ['CORD2R', 'CORD1R']:
-                        raise NotImplementedError(node1.cd)
+                        continue # TODO: support CD transform
+                        #raise NotImplementedError(node1.cd)
+                    wa = node1.cd.transform_node_to_global(wa)  # TODO: fixme
             elif offt_end_a == 'B':
                 pass
             elif offt_end_a == 'O':
-                wa = node1.cp.transform_node_to_global(n1 - wa)
+                wa = node1.cd.transform_node_to_global(n1 - wa)  # TODO: fixme
             else:
                 msg = 'offt_end_a=%r is not supported; offt=%s' % (offt_end_a, elem.offt)
                 self.log.error(msg)
-                raise NotImplementedError(msg)
+                continue
+                #raise NotImplementedError(msg)
 
             #print('wa =', wa)
             # rotate wb
             wb = elem.wb
             if offt_end_b == 'G':
                 if node2.Cd() != 0:
-                    wb = node2.cd.transform_node_to_global(wb)
                     if node2.cd.type not in ['CORD2R', 'CORD1R']:
-                        raise NotImplementedError(node2.cd)
+                        continue # TODO: MasterModelTaxi
+                        #raise NotImplementedError(node2.cd)
+                    #wb = node2.cd.transform_node_to_local_xyz(wb)
+                    wb = node2.cd.transform_node_to_global(wb)  # TODO: fixme
+
             elif offt_end_b == 'B':
                 pass
             elif offt_end_b == 'O':
-                wb = node1.cp.transform_node_to_global(n2 - wb)
+                wb = node1.cd.transform_node_to_global(n2 - wb)  # TODO: fixme
             else:
                 msg = 'offt_end_b=%r is not supported; offt=%s' % (offt_end_b, elem.offt)
                 model.log.error(msg)
-                raise NotImplementedError(msg)
+                continue
+                #raise NotImplementedError(msg)
 
             #print('wb =', wb)
             ## concept has a GOO
-            if not elem.offt in ['GGG', 'BGG']:
-                msg = 'offt=%r for CBAR/CBEAM eid=%s is not supported...skipping' % (elem.offt, eid)
-                self.log.error(msg)
-                continue
+            #if not elem.offt in ['GGG', 'BGG']:
+                #msg = 'offt=%r for CBAR/CBEAM eid=%s is not supported...skipping' % (elem.offt, eid)
+                #self.log.error(msg)
+                #continue
 
             vhat = v / norm(v) # j
             try:
@@ -3288,7 +3301,8 @@ class NastranIO(object):
                         pressures[ie] += pressure * nz
 
                     #elif elem.type in ['CTETRA', 'CHEXA', 'CPENTA']:
-                        #A, centroid, normal = elem.getFaceAreaCentroidNormal(load.g34.nid, load.g1.nid)
+                        #A, centroid, normal = elem.getFaceAreaCentroidNormal(
+                            #load.g34.nid, load.g1.nid)
                         #r = centroid - p
             iload += 1
         # if there is no applied pressure, don't make a plot
@@ -3517,8 +3531,8 @@ class NastranIO(object):
                             forcei = pressure * area / elem_nnodes
                             for nid in elem_node_ids:
                                 if nid in self.dependents_nodes:
-                                    print('    nid=%s is a dependent node and has an PLOAD4 applied\n'
-                                          '%s' % (nid, str(load)))
+                                    print('    nid=%s is a dependent node and has a'
+                                          ' PLOAD4 applied\n%s' % (nid, str(load)))
                                 #forces[nids.index(nid)] += F
                                 i = nid_map[nid]
                                 try:
@@ -3534,12 +3548,14 @@ class NastranIO(object):
                             elem_node_ids = elem.node_ids
                             if elem.type == 'CTETRA':
                                 #face1 = elem.get_face(load.g1.nid, load.g34.nid)
-                                face, area, centroid, normal = elem.getFaceAreaCentroidNormal(load.g1.nid, load.g34.nid)
+                                face, area, centroid, normal = elem.getFaceAreaCentroidNormal(
+                                    load.g1.nid, load.g34.nid)
                                 #assert face == face1
                                 nface = 3
                             elif elem.type == 'CHEXA':
                                 #face1 = elem.get_face(load.g34.nid, load.g1.nid)
-                                face, area, centroid, normal = elem.getFaceAreaCentroidNormal(load.g34.nid, load.g1.nid)
+                                face, area, centroid, normal = elem.getFaceAreaCentroidNormal(
+                                    load.g34.nid, load.g1.nid)
                                 #assert face == face1
                                 nface = 4
                             elif elem.type == 'CPENTA':
@@ -3550,18 +3566,19 @@ class NastranIO(object):
                                     nface = 3
                                 else:
                                     #face1 = elem.get_face(g1, load.g34.nid)
-                                    face, area, centroid, normal = elem.getFaceAreaCentroidNormal(g1, load.g34.nid)
+                                    face, area, centroid, normal = elem.getFaceAreaCentroidNormal(
+                                        g1, load.g34.nid)
                                     nface = 4
                                 #assert face == face1
                             else:
                                 msg = ('case=%s eid=%s etype=%r loadtype=%r not supported'
-                                       % (loadcase_id, eid, elem.type, load.type))
+                                       % (load_case_id, eid, elem.type, load.type))
                                 self.log.debug(msg)
                                 continue
                             pressures = load.pressures[:nface]
                             assert len(pressures) == nface
                             if min(pressures) != max(pressures):
-                                pressure = mean(pressures)
+                                pressure = np.mean(pressures)
                                 #msg = '%s%s\npressure.min=%s != pressure.max=%s using average of %%s; load=%s eid=%%s'  % (
                                     #str(load), str(elem), min(pressures), max(pressures), load.sid)
                                 #print(msg % (pressure, eid))

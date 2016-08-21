@@ -26,9 +26,9 @@ else:
         return 'dev.%s' % ghash
 
     revision = get_git_revision_short_hash()
-    __version__ = '0.8.0+%s' % revision
-    __releaseDate__ = '2016/4/xx'
-    __releaseDate2__ = 'APRIL xx, 2016'
+    __version__ = '0.9.0+%s' % revision
+    __releaseDate__ = '2016/8/xx'
+    __releaseDate2__ = 'AUGUST xx, 2016'
 
 __author__  = 'Steven Doyle, Al Danials, Marcin Gasiorek, hurlei, saullocastro, Paul Blelloch, Nikita Kalutsky'
 __email__   = 'mesheb82@gmail.com'
