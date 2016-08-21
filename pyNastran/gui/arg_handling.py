@@ -104,7 +104,7 @@ def run_docopt():
     # None is for custom geometry
     allowed_formats = [
         'nastran', 'stl', 'cart3d', 'tecplot', 'ugrid', 'panair', 'plot3d',
-        'surf', 'lawgs', 'degen_geom', 'shabp', None]
+        'surf', 'lawgs', 'degen_geom', 'shabp', 'avus', 'fast', None]
     assert input_format in allowed_formats, 'format=%r is not supported' % input_format
 
     shots = []
