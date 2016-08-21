@@ -92,7 +92,6 @@ def get_bad_shells(model, xyz_cid0, nid_map, max_theta=175., max_skew=70.,
             p34 = (p3 + p4) / 2.
             p14 = (p4 + p1) / 2.
             normal = np.cross(v31, v42)
-            #areai = 0.5 * np.linalg.norm(normal)
             #    e3
             # 4-------3
             # |       |
