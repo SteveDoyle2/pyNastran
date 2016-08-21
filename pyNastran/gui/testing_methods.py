@@ -403,6 +403,10 @@ class GUIMethods(GuiAttributes):
         for name, grid in iteritems(alt_grids):
             self.geometry_actors[name] = GeometryActor()
 
+    def log_debug(self, msg):
+        if self.debug:
+            print('DEBUG:  ', msg)
+
     def log_info(self, msg):
         if self.debug:
             print('INFO:  ', msg)
