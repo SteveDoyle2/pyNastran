@@ -1328,14 +1328,16 @@ class MOMENT(Moment):
         """
         msg = ' which is required by MOMENT sid=%s' % self.sid
         self.node = model.Node(self.node, msg=msg)
-        self.cid = model.Coord(self.cid, msg=msg)
         self.node_ref = self.node
+        self.cid = model.Coord(self.cid, msg=msg)
         self.cid_ref = self.cid
 
     def safe_cross_reference(self, model, debug=True):
         msg = ' which is required by MOMENT sid=%s' % self.sid
         self.node = model.Node(self.node, msg=msg)
+        self.node_ref = self.node
         self.cid = model.Coord(self.cid, msg=msg)
+        self.cid_ref = self.cid
 
     def uncross_reference(self):
         self.node = self.node_id
