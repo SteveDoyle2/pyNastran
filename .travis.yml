@@ -70,7 +70,7 @@ install:
   # Useful for debugging any issues with conda
   - conda info -a
 
-  - conda install psutil
+  - conda install psutil pip
   - pip install coveralls
 
   # install dependencies
