@@ -1,13 +1,16 @@
 
-[![Build Status](https://travis-ci.org/SteveDoyle2/pyNastran.png)](https://travis-ci.org/SteveDoyle2/pyNastran)
-
 ### v0.8.0
-[Doumentation](http://pynastran-git.readthedocs.io/en/v0.8/)
-
-### v0.7.2
-
 [![PyPi Version](https://img.shields.io/pypi/v/pynastran.svg)](https://pypi.python.org/pypi/pyNastran)
 [![PyPi Downloads](https://img.shields.io/pypi/dm/pynastran.svg)](https://pypi.python.org/pypi/pyNastran)
+
+[Doumentation](http://pynastran-git.readthedocs.io/en/v0.8/)
+
+[Download pyNastran] (https://github.com/SteveDoyle2/pyNastran/releases)
+
+[Download GUI](https://sourceforge.net/projects/pynastran/files/?source=navbar)
+
+
+### v0.7.2
 
 <!--- [![Github Downloads](	https://img.shields.io/github/downloads/SteveDoyle2/pyNastran/latest/total.svg)  --->
 <!--- [![All Downloads](https://img.shields.io/github/downloads/SteveDoyle2/pyNastran/total.svg)  --->
@@ -18,6 +21,7 @@
 
 ### Master
 
+[![Build Status](https://travis-ci.org/SteveDoyle2/pyNastran.png)](https://travis-ci.org/SteveDoyle2/pyNastran)
 
 [Doumentation](http://pynastran-git.readthedocs.org/en/latest/index.html)
 
@@ -30,14 +34,6 @@ for more detailed information.
 
 <!--- this isn't setup... -->
 <!--- http://stevedoyle2.github.io/pyNastran/ --->
-
-# News
-
-### pyNastran v0.8 has been released (8/21/2016)
-
-  [Download pyNastran v0.8] (https://github.com/SteveDoyle2/pyNastran/releases)
-  
-  [Download GUI](https://sourceforge.net/projects/pynastran/files/?source=navbar)
 
 # Overview
 
@@ -55,11 +51,13 @@ Using the pyNastran GUI, you can read in Nastran models and quickly view results
 <!--- ## pyNastran v0.8.0 has NOT been released (8/21/2016)   --->
 <!--- [Download pyNastran v0.8] (https://github.com/SteveDoyle2/pyNastran/releases)  --->
 
-## pyNastran v0.8 has been released (8/21/2016)
+# News
 
-[Download pyNastran v0.8] (https://github.com/SteveDoyle2/pyNastran/releases)
+### pyNastran v0.8 has been released (8/21/2016)
 
-[Download GUI](https://sourceforge.net/projects/pynastran/files/?source=navbar)
+  [Download pyNastran v0.8] (https://github.com/SteveDoyle2/pyNastran/releases)
+  
+  [Download GUI](https://sourceforge.net/projects/pynastran/files/?source=navbar)
 
 The following are some new features from the v0.8 release.
 
@@ -93,7 +91,7 @@ The following are some new features from the v0.8 release.
   - fixed sparse ASCII BIGMAT bug
 
 
-## pyNastran v0.7.2 has been Released (4/25/2015)
+### pyNastran v0.7.2 has been Released (4/25/2015)
 
 [Download pyNastran v0.7] (https://github.com/SteveDoyle2/pyNastran/releases)
 
