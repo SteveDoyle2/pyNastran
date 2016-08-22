@@ -4,13 +4,13 @@ import unittest
 import pyNastran
 from pyNastran.gui.testing_methods import GUIMethods
 from pyNastran.bdf.bdf import BDF
-from pyNastran.converters.dev.fast.fast_io import FastIO
+from pyNastran.converters.fast.fast_io import FastIO
 #from pyNastran.converters..cart3d import Cart3D
-from pyNastran.converters.nastran.nastran_to_cart3d import nastran_to_cart3d, nastran_to_cart3d_filename
+#from pyNastran.converters.nastran.nastran_to_cart3d import nastran_to_cart3d, nastran_to_cart3d_filename
 
 
 pkg_path = pyNastran.__path__[0]
-test_path = os.path.join(pkg_path, 'converters', 'dev', 'fast')
+test_path = os.path.join(pkg_path, 'converters', 'fast')
 
 
 class FastGUI(FastIO, GUIMethods):

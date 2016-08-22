@@ -4,11 +4,11 @@ from numpy import array_equal, allclose
 import unittest
 
 import pyNastran
-from pyNastran.converters.dev.fast.fgrid_reader import FGridReader
+from pyNastran.converters.fast.fgrid_reader import FGridReader
 #from pyNastran.converters.cart3d.cart3d_to_nastran import cart3d_to_nastran_filename, cart3d_to_nastran_model
 
 pkg_path = pyNastran.__path__[0]
-test_path = os.path.join(pkg_path, 'converters', 'dev', 'fast')
+test_path = os.path.join(pkg_path, 'converters', 'fast')
 
 class TestFast(unittest.TestCase):
 

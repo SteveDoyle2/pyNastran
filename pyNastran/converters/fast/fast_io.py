@@ -7,7 +7,7 @@ from collections import defaultdict
 import vtk
 from vtk import vtkTriangle, vtkTetra
 
-from pyNastran.converters.dev.fast.fgrid_reader import FGridReader
+from pyNastran.converters.fast.fgrid_reader import FGridReader
 
 
 class FastIO(object):

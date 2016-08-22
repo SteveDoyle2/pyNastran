@@ -3,6 +3,8 @@ import unittest
 from pyNastran.converters.nastran.test_nastran_gui import TestNastranGUI
 from pyNastran.converters.cart3d.test_cart3d import TestCart3d
 from pyNastran.converters.cart3d.test_cart3d_gui import TestCart3dGUI
+from pyNastran.converters.fast.test_fast import TestFast
+from pyNastran.converters.fast.test_fast_gui import TestFastGUI
 from pyNastran.converters.panair.test_panair import TestPanair
 from pyNastran.converters.panair.test_panair_gui import TestPanairGUI
 from pyNastran.converters.shabp.test_shabp_gui import TestShabpGUI
