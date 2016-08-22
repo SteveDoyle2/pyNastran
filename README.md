@@ -35,6 +35,8 @@ for more detailed information.
 
 ### pyNastran v0.8 has been released (8/21/2016)
 
+  [Download pyNastran v0.8] (https://github.com/SteveDoyle2/pyNastran/releases)
+  
   [Download GUI](https://sourceforge.net/projects/pynastran/files/?source=navbar)
 
 # Overview
@@ -53,7 +55,12 @@ Using the pyNastran GUI, you can read in Nastran models and quickly view results
 <!--- ## pyNastran v0.8.0 has NOT been released (8/21/2016)   --->
 <!--- [Download pyNastran v0.8] (https://github.com/SteveDoyle2/pyNastran/releases)  --->
 
-## pyNastran v0.8 progress (8/16/2016)
+## pyNastran v0.8 has been released (8/21/2016)
+
+[Download pyNastran v0.8] (https://github.com/SteveDoyle2/pyNastran/releases)
+
+[Download GUI](https://sourceforge.net/projects/pynastran/files/?source=navbar)
+
 The following are some new features from the v0.8 release.
 
  - BDF
