@@ -22,10 +22,10 @@
 ### Master
 
 [![Build Status](https://travis-ci.org/SteveDoyle2/pyNastran.png)](https://travis-ci.org/SteveDoyle2/pyNastran)
+[![Coverage Status](https://coveralls.io/repos/github/SteveDoyle2/pyNastran/badge.svg?branch=master)](https://coveralls.io/github/SteveDoyle2/pyNastran?branch=master)
 
 [Doumentation](http://pynastran-git.readthedocs.org/en/latest/index.html)
 
-[![Coverage Status](https://coveralls.io/repos/github/SteveDoyle2/pyNastran/badge.svg?branch=master)](https://coveralls.io/github/SteveDoyle2/pyNastran?branch=master)
 
 Also, check out the:
   * [Wiki](https://github.com/SteveDoyle2/pynastran/wiki)
