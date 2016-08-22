@@ -71,7 +71,7 @@ install:
   - conda info -a
 
   - conda install psutil pip
-  - pip install coveralls
+#  - pip install coveralls
 
   # install dependencies
   # if line per https://docs.travis-ci.com/user/multi-os/
