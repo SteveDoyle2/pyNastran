@@ -53,7 +53,7 @@ Using the pyNastran GUI, you can read in Nastran models and quickly view results
 
 # News
 
-### pyNastran v0.8 has been released (8/21/2016)
+### pyNastran v0.8.0 has been released (8/21/2016)
 
   [Download pyNastran v0.8] (https://github.com/SteveDoyle2/pyNastran/releases)
   
