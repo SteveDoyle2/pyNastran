@@ -1,4 +1,6 @@
 
+[![Build Status](https://travis-ci.org/SteveDoyle2/pyNastran.png)](https://travis-ci.org/SteveDoyle2/pyNastran)
+
 ### v0.8.0
 [Doumentation](http://pynastran-git.readthedocs.io/en/v0.8/)
 
@@ -16,7 +18,6 @@
 
 ### Master
 
-[![Build Status](https://travis-ci.org/SteveDoyle2/pyNastran.png)](https://travis-ci.org/SteveDoyle2/pyNastran)
 
 [Doumentation](http://pynastran-git.readthedocs.org/en/latest/index.html)
 
