@@ -33,9 +33,9 @@ for more detailed information.
 
 # News
 
-### pyNastran v0.8 GUI demo (8/16/2016)
+### pyNastran v0.8 has been released (8/21/2016)
 
-  [Download](https://sourceforge.net/projects/pynastran/files/?source=navbar)
+  [Download GUI](https://sourceforge.net/projects/pynastran/files/?source=navbar)
 
 # Overview
 
