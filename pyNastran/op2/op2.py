@@ -676,7 +676,7 @@ class OP2(OP2_Scalar):
                         data[:, inode, 3:] = rotation.dot(transform)
 
 
-def main():
+def main():  # pragma: no cover
     """testing new ideas"""
     import pyNastran
     pkg_path = pyNastran.__path__[0]

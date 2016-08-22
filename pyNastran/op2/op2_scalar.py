@@ -2412,7 +2412,7 @@ class Matrix(object):
         self.data = None
 
 
-def main():
+def main():  # pragma: no cover
     """testing pickling"""
     from pickle import dumps, dump, load, loads
     txt_filename = 'solid_shell_bar.txt'

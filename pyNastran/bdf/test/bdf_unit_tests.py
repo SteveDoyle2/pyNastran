@@ -225,6 +225,54 @@ class TestBDF(Tester):
             assert fem.card_count['MPC'] == 1, fem.card_count
             assert fem.card_count['TF'] == 2, fem.card_count
 
+    def test_bdf_aero_01(self):
+        bdf_filename = os.path.join('aero', 'aerobeam.bdf')
+        folder = os.path.abspath(os.path.join(pkg_path, '..', 'models'))
+        fem1, fem2, diff_cards = self.run_bdf(folder, bdf_filename)
+        diff_cards2 = list(set(diff_cards))
+        diff_cards2.sort()
+        assert len(diff_cards2) == 0, diff_cards2
+
+        for fem in [fem1, fem2]:
+            assert fem.card_count['MAT1'] == 3, fem.card_count
+            assert fem.card_count['DCONADD'] == 2, fem.card_count
+            assert fem.card_count['MAT1'] == 3, fem.card_count
+            assert fem.card_count['DMI'] == 6, fem.card_count
+            assert fem.card_count['PAERO1'] == 1, fem.card_count
+            assert fem.card_count['EIGRL'] == 2, fem.card_count
+            assert fem.card_count['PBAR'] == 1, fem.card_count
+            assert fem.card_count['DESVAR'] == 3, fem.card_count
+            assert fem.card_count['DRESP1'] == 11, fem.card_count
+            assert fem.card_count['DRESP2'] == 6, fem.card_count
+
+            assert fem.card_count['SPC1'] == 4, fem.card_count
+            assert fem.card_count['AESTAT'] == 10, fem.card_count
+            assert fem.card_count['TRIM'] == 4, fem.card_count
+            assert fem.card_count['SPLINE2'] == 3, fem.card_count
+            assert fem.card_count['DVPREL1'] == 6, fem.card_count
+            assert fem.card_count['SUPORT1'] == 2, fem.card_count
+            assert fem.card_count['DCONSTR'] == 10, fem.card_count
+            assert fem.card_count['AELIST'] == 3, fem.card_count
+            assert fem.card_count['CORD2R'] == 6, fem.card_count
+            assert fem.card_count['CONM2'] == 10, fem.card_count
+
+            assert fem.card_count['ENDDATA'] == 1, fem.card_count
+            assert fem.card_count['AERO'] == 1, fem.card_count
+            assert fem.card_count['PARAM'] == 4, fem.card_count
+            assert fem.card_count['CBEAM'] == 3, fem.card_count
+            assert fem.card_count['GRID'] == 14, fem.card_count
+            assert fem.card_count['SET1'] == 5, fem.card_count
+            assert fem.card_count['MKAERO1'] == 1, fem.card_count
+            assert fem.card_count['PBEAML'] == 3, fem.card_count
+            assert fem.card_count['FLFACT'] ==5, fem.card_count
+            assert fem.card_count['AESURF'] == 3, fem.card_count
+            assert fem.card_count['DEQATN'] == 3, fem.card_count
+            assert fem.card_count['CBAR'] == 4, fem.card_count
+            assert fem.card_count['CAERO1'] == 3, fem.card_count
+            assert fem.card_count['AEROS'] == 1, fem.card_count
+            assert fem.card_count['FLUTTER'] == 4, fem.card_count
+            assert fem.card_count['DOPTPRM'] == 1, fem.card_count
+
 class TestBaseCard(Tester):
     def test_base_card_01_collapse_thru(self):
         """
