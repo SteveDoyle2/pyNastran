@@ -3,6 +3,8 @@
 [![PyPi Version](https://img.shields.io/pypi/v/pynastran.svg)](https://pypi.python.org/pypi/pyNastran)
 [![PyPi Downloads](https://img.shields.io/pypi/dm/pynastran.svg)](https://pypi.python.org/pypi/pyNastran)
 
+<!--- [![Coverage Status](https://img.shields.io/coveralls/SteveDoyle2/pyNastrane/master.svg)](https://coveralls.io/github/SteveDoyle2/pyNastran?branch=master)   --->
+
 [Doumentation](http://pynastran-git.readthedocs.io/en/v0.8/)
 
 [Download pyNastran] (https://github.com/SteveDoyle2/pyNastran/releases)
