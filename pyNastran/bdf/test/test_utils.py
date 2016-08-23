@@ -2,7 +2,8 @@ from __future__ import print_function
 import unittest
 import numpy as np
 
-from pyNastran.bdf.utils import parse_patran_syntax, parse_patran_syntax_dict
+from pyNastran.bdf.utils import (
+    parse_patran_syntax, parse_patran_syntax_dict, write_patran_syntax_dict)
 
 class TestBdfUtils(unittest.TestCase):
     def test_bdf_utils_01(self):
@@ -69,6 +70,22 @@ class TestBdfUtils(unittest.TestCase):
             np.setdiff1d(output_dict['junk'], expected_junk))
         assert np.array_equal(output_dict['junk'], expected_junk), error_msg
 
+        msg = write_patran_syntax_dict({'e' : [2, 6, 10, 14]})
+        assert msg == 'e 2:14:4', 'msg=%r' % msg
+
+        msg = write_patran_syntax_dict({'e' : [1, 2, 6, 10, 14]})
+        assert msg == 'e 1 2 6:14:4', 'msg=%r' % msg
+
+        msg = write_patran_syntax_dict(
+            {
+                'n' : [1, 2, 6, 10, 14],
+                'e' : [1, 2, 6, 10, 14],
+             },
+        )
+        assert msg == 'e 1 2 6:14:4 n 1 2 6:14:4', 'msg=%r' % msg
+
+        out = parse_patran_syntax_dict('')
+        assert len(out) == 0, 'out=%s' % out
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

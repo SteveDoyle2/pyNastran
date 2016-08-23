@@ -4,7 +4,7 @@ from pyNastran.bdf.mesh_utils.bdf_merge import bdf_merge
 from pyNastran.bdf.mesh_utils.delete_bad_elements import delete_bad_shells, get_bad_shells
 
 
-def cmd_line_equivalence():
+def cmd_line_equivalence():  # pragma: no cover
     import sys
     from docopt import docopt
     import pyNastran
@@ -48,7 +48,7 @@ def cmd_line_equivalence():
     bdf_merge(bdf_filenames, bdf_filename_out, renumber=True,
               encoding=None, size=size, is_double=False, cards_to_skip=cards_to_skip)
 
-def cmd_line_bin():
+def cmd_line_bin():  # pragma: no cover
     import sys
     from docopt import docopt
     import pyNastran
@@ -152,7 +152,7 @@ def cmd_line_bin():
 
 
 
-def cmd_line_renumber():
+def cmd_line_renumber():  # pragma: no cover
     import sys
     from docopt import docopt
     import pyNastran
@@ -196,7 +196,7 @@ def cmd_line_renumber():
                 starting_id_dict=None, round_ids=False,
                 cards_to_skip=cards_to_skip)
 
-def cmd_line_merge():
+def cmd_line_merge():  # pragma: no cover
     import sys
     from docopt import docopt
     import pyNastran
@@ -268,7 +268,7 @@ def cmd_line_merge():
     bdf_merge(bdf_filenames, bdf_filename_out, renumber=True,
               encoding=None, size=size, is_double=False, cards_to_skip=cards_to_skip)
 
-def cmd_line():
+def cmd_line():  # pragma: no cover
     import sys
     dev = True
     msg = 'Usage:\n'
@@ -304,6 +304,6 @@ def cmd_line():
         sys.exit(msg)
         #raise NotImplementedError('arg1=%r' % sys.argv[1])
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     main()
 
