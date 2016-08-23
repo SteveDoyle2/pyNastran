@@ -381,7 +381,7 @@ class OP4(object):
 
     def _read_real_dense_ascii(self, op4, iline, nrows, ncols, line_size, line, dtype, is_big_mat):
         """reads a real dense ASCII matrix"""
-        self.log.info('_read_real_dense_ascii')
+        self.log.debug('_read_real_dense_ascii')
         A = zeros((nrows, ncols), dtype=dtype)  # Initialize a real matrix
         nloops = 0
         was_broken = False

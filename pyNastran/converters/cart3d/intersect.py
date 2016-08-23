@@ -141,5 +141,5 @@ def main():
     cart3d_filename = 'threePlugs_bin.tri'
     intersect_model(cart3d_filename)
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     main()

@@ -94,9 +94,9 @@ class CELAS1(SpringElement):
         assert self.c2 in [0, 1, 2, 3, 4, 5, 6], 'c2=|%s| %s' % (self.c2, msg)
         assert len(self.nodes) == 2
 
-    def nodeIDs(self):
-        self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
-        return self.node_ids
+    #def nodeIDs(self):
+        #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
+        #return self.node_ids
 
     @property
     def node_ids(self):
@@ -228,9 +228,9 @@ class CELAS2(SpringElement):
         assert self.c2 in [0, 1, 2, 3, 4, 5, 6], 'c2=%r %s' % (self.c2, msg)
         assert len(set(self.nodes)) == 2, 'There are duplicate nodes=%s on CELAS2 eid=%s' % (self.nodes, self.eid)
 
-    def nodeIDs(self):
-        self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
-        return self.node_ids
+    #def nodeIDs(self):
+        #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
+        #return self.node_ids
 
     @property
     def node_ids(self):
@@ -397,9 +397,9 @@ class CELAS3(SpringElement):
         self.pid = self.Pid()
         del self.nodes_ref, self.pid_ref
 
-    def nodeIDs(self):
-        self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
-        return self.node_ids
+    #def nodeIDs(self):
+        #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
+        #return self.node_ids
 
     @property
     def node_ids(self):
@@ -471,9 +471,9 @@ class CELAS4(SpringElement):
     def K(self):
         return self.k
 
-    def nodeIDs(self):
-        self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
-        return self.node_ids
+    #def nodeIDs(self):
+        #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
+        #return self.node_ids
 
     @property
     def node_ids(self):

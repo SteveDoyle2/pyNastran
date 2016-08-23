@@ -1039,5 +1039,5 @@ def main():
     ugrid_model.write_foam(foam_filename, tag_filename)
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     main()

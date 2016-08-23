@@ -259,23 +259,11 @@ class NastranIO(object):
             'S' : 'Rtp',
         }
         self.create_global_axes(dim_max)
-        self.show_cids = True
         for cid, coord in sorted(iteritems(model.coords)):
             if cid == 0:
                 continue
             cid_type = cid_types[coord.Type]
-            if self.show_cids is True:
-                self._create_coord(dim_max, cid, coord, cid_type)
-            elif isinstance(self.show_cids, integer_types):
-                if cid == self.show_cids:
-                    self._create_coord(dim_max, cid, coord, cid_type)
-            elif isinstance(self.show_cids, (list, tuple, np.ndarray)):
-                if cid in self.show_cids:
-                    # .. todo:: has issues in VTK 6 I think due to lack of self.grid.Update()
-                    self._create_coord(dim_max, cid, coord, cid_type)
-            else:
-                print('skipping cid=%s; use a script and set self.show_cids=[%s] to view' % (
-                    cid, cid))
+            self._create_coord(dim_max, cid, coord, cid_type)
 
     def _remove_old_nastran_geometry(self, bdf_filename):
         #return self._remove_old_geometry(bdf_filename)
@@ -452,6 +440,7 @@ class NastranIO(object):
                     for i, box_id in enumerate(caero.box_ids.flat):
                         box_id_to_caero_element_map[box_id] = elementsi[i, :] + num_prev
                     num_prev += pointsi.shape[0]
+                elif caero.type == 'CAERO2':
                 else:
                     print('caero\n%s' % caero)
             if ncaeros_sub:

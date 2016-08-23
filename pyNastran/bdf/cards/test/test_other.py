@@ -8,11 +8,13 @@ root_path = pyNastran.__path__[0]
 
 class TestOther(unittest.TestCase):
     card = PARAM('NOCOMP', [-1])
-    print(card)
+    #print('%r' % card)
+    assert str(card) == 'PARAM     NOCOMP      -1\n', '%r' % str(card)
 
     cardi = BDFCard(['PARAM', 'NOCOMP', -1])
     card = PARAM.add_card(cardi)
-    print(card)
+    assert str(card) == 'PARAM     NOCOMP      -1\n', '%r' % str(card)
+    #print('%r' % card)
 
-    if __name__ == '__main__':  # pragma: no cover
-        unittest.main()
+if __name__ == '__main__':  # pragma: no cover
+    unittest.main()

@@ -31,32 +31,32 @@ class WriteMesh(BDFAttributes):
         self._auto_reject = True
         self.cards_to_read = set([])
 
-    def echo_bdf(self, infile_name):
-        """
-        This method removes all comment lines from the bdf
-        A write method is stil required.
+    #def echo_bdf(self, infile_name):
+        #"""
+        #This method removes all comment lines from the bdf
+        #A write method is stil required.
 
-        .. todo:: maybe add the write method
+        #.. todo:: maybe add the write method
 
-        .. code-block:: python
+        #.. code-block:: python
 
-          model = BDF()
-          model.echo_bdf(bdf_filename)
-        """
-        self.deprecated('self.echo_bdf()', 'removed...', '0.8')
-        self.cards_to_read = set([])
-        return self.read_bdf(infile_name)
+          #model = BDF()
+          #model.echo_bdf(bdf_filename)
+        #"""
+        #self.deprecated('self.echo_bdf()', 'removed...', '0.8')
+        #self.cards_to_read = set([])
+        #return self.read_bdf(infile_name)
 
-    def auto_reject_bdf(self, infile_name):
-        """
-        This method parses supported cards, but does not group them into
-        nodes, elements, properties, etc.
+    #def auto_reject_bdf(self, infile_name):
+        #"""
+        #This method parses supported cards, but does not group them into
+        #nodes, elements, properties, etc.
 
-        .. todo:: maybe add the write method
-        """
-        self.deprecated('self.auto_reject_bdf()', 'removed...', '0.8')
-        self._auto_reject = True
-        return self.read_bdf(infile_name)
+        #.. todo:: maybe add the write method
+        #"""
+        #self.deprecated('self.auto_reject_bdf()', 'removed...', '0.8')
+        #self._auto_reject = True
+        #return self.read_bdf(infile_name)
 
     def _output_helper(self, out_filename, interspersed, size, is_double):
         """
@@ -210,9 +210,10 @@ class WriteMesh(BDFAttributes):
             outfile = out_filename
         else:
             if PY2:
-                outfile = open(out_filename, 'wb', encoding=encoding)
+                wb = 'wb'
             else:
-                outfile = open(out_filename, 'w', encoding=encoding)
+                wb = 'w'
+            outfile = open(out_filename, 'w', encoding=encoding)
         self._write_header(outfile, encoding)
         self._write_params(outfile, size, is_double)
         self._write_nodes(outfile, size, is_double)
@@ -276,9 +277,10 @@ class WriteMesh(BDFAttributes):
             outfile = out_filename
         else:
             if PY2:
-                outfile = open(out_filename, 'wb', encoding=encoding)
+                wb = 'wb'
             else:
-                outfile = open(out_filename, 'w', encoding=encoding)
+                wb = 'w'
+            outfile = open(out_filename, wb, encoding=encoding)
         self._write_header(outfile, encoding)
         self._write_params(outfile, size, is_double)
         self._write_nodes_symmetric(outfile, size, is_double, plane=plane)

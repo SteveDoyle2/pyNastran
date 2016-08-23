@@ -350,9 +350,9 @@ class CHEXA8(SolidElement):
         volume = (area1 + area2) / 2. * norm(c1 - c2)
         return abs(volume)
 
-    def nodeIDs(self):
-        self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
-        return self.node_ids
+    #def nodeIDs(self):
+        #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
+        #return self.node_ids
 
     @property
     def node_ids(self):
@@ -601,9 +601,9 @@ class CHEXA20(SolidElement):
         volume = (area1 + area2) / 2. * norm(c1 - c2)
         return abs(volume)
 
-    def nodeIDs(self):
-        self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
-        return self.node_ids
+    #def nodeIDs(self):
+        #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
+        #return self.node_ids
 
     @property
     def node_ids(self):
@@ -813,9 +813,9 @@ class CPENTA6(SolidElement):
         list_fields = ['CPENTA', self.eid, self.Pid()] + self._nodeIDs(allow_empty_nodes=False)
         return list_fields
 
-    def nodeIDs(self):
-        self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
-        return self.node_ids
+    #def nodeIDs(self):
+        #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
+        #return self.node_ids
 
     @property
     def node_ids(self):
@@ -1104,9 +1104,9 @@ class CPENTA15(SolidElement):
         volume = (area1 + area2) / 2. * norm(c1 - c2)
         return abs(volume)
 
-    def nodeIDs(self):
-        self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
-        return self.node_ids
+    #def nodeIDs(self):
+        #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
+        #return self.node_ids
 
     @property
     def node_ids(self):
@@ -1235,9 +1235,9 @@ class CPYRAM5(SolidElement):
         volume = area1 / 3. * norm(c1 - n5)
         return abs(volume)
 
-    def nodeIDs(self):
-        self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
-        return self.node_ids
+    #def nodeIDs(self):
+        #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
+        #return self.node_ids
 
     @property
     def node_ids(self):
@@ -1387,9 +1387,9 @@ class CPYRAM13(SolidElement):
         volume = area1 / 2. * norm(c1 - n5)
         return abs(volume)
 
-    def nodeIDs(self):
-        self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
-        return self.node_ids
+    #def nodeIDs(self):
+        #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
+        #return self.node_ids
 
     @property
     def node_ids(self):
@@ -1521,9 +1521,9 @@ class CTETRA4(SolidElement):
         return ctetra_face_area_centroid_normal(nid, nid_opposite,
                                                 self.node_ids, self.nodes)
 
-    def nodeIDs(self):
-        self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
-        return self.node_ids
+    #def nodeIDs(self):
+        #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
+        #return self.node_ids
 
     @property
     def node_ids(self):
@@ -1731,9 +1731,9 @@ class CTETRA10(SolidElement):
         nids.pop(indx)
         return nids
 
-    def nodeIDs(self):
-        self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
-        return self.node_ids
+    #def nodeIDs(self):
+        #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
+        #return self.node_ids
 
     @property
     def node_ids(self):

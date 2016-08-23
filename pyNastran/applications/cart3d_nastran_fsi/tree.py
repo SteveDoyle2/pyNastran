@@ -117,5 +117,5 @@ def main():
         print(nkey, dist[0], dist[1])
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     main()

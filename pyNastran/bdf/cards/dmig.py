@@ -243,21 +243,21 @@ class NastranMatrix(BaseCard):
     def rename(self, new_name):
         self.name = new_name
 
-    def isComplex(self):
-        self.deprecated('isComplex()', 'is_complex', '0.8')
-        return self.is_complex
+    #def isComplex(self):
+        #self.deprecated('isComplex()', 'is_complex', '0.8')
+        #return self.is_complex
 
-    def isReal(self):
-        self.deprecated('isReal()', 'is_real', '0.8')
-        return self.is_real
+    #def isReal(self):
+        #self.deprecated('isReal()', 'is_real', '0.8')
+        #return self.is_real
 
-    def isPolar(self):
-        self.deprecated('isPolar()', 'is_polar', '0.8')
-        return self.is_polar
+    #def isPolar(self):
+        #self.deprecated('isPolar()', 'is_polar', '0.8')
+        #return self.is_polar
 
-    def getMatrix(self, isSparse=False, applySymmetry=True):
-        self.deprecated('getMatrix()', 'get_matrix()', '0.8')
-        return self.get_matrix(is_sparse=isSparse, apply_symmetry=applySymmetry)
+    #def getMatrix(self, isSparse=False, applySymmetry=True):
+        #self.deprecated('getMatrix()', 'get_matrix()', '0.8')
+        #return self.get_matrix(is_sparse=isSparse, apply_symmetry=applySymmetry)
 
     @property
     def is_real(self):

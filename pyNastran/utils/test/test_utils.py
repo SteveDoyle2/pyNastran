@@ -158,5 +158,5 @@ class TestUtils(unittest.TestCase):
         assert np.array_equal(y1, y2), 'y1=%s y2=%s' % (y1, y2)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':  # pragma: no cover
     unittest.main()

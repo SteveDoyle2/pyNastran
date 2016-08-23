@@ -328,9 +328,9 @@ class Element(BaseCard):
         #: the list of node IDs for an element (default=None)
         #self.nodes = None
 
-    def nodePositions(self, nodes=None):
-        self.deprecated('nodePositions(nodes)', 'get_node_positions(nodes)', '0.8')
-        return self.get_node_positions(nodes=nodes)
+    #def nodePositions(self, nodes=None):
+        #self.deprecated('nodePositions(nodes)', 'get_node_positions(nodes)', '0.8')
+        #return self.get_node_positions(nodes=nodes)
 
     def verify_unique_node_ids(self):
         node_ids = self.node_ids

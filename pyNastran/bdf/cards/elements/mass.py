@@ -172,9 +172,9 @@ class CMASS1(PointMassElement):
         c = (p1 + p2) / f
         return c
 
-    def nodeIDs(self):
-        self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
-        return self.node_ids
+    #def nodeIDs(self):
+        #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
+        #return self.node_ids
 
     @property
     def node_ids(self):
@@ -276,9 +276,9 @@ class CMASS2(PointMassElement):
     def Eid(self):
         return self.eid
 
-    def nodeIDs(self):
-        self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
-        return self.node_ids
+    #def nodeIDs(self):
+        #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
+        #return self.node_ids
 
     @property
     def node_ids(self):
@@ -704,9 +704,9 @@ class CONM1(PointMassElement):
     def Mass(self):
         return 0.0
 
-    def nodeIDs(self):
-        self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
-        return self.node_ids
+    #def nodeIDs(self):
+        #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
+        #return self.node_ids
 
     @property
     def node_ids(self):
@@ -1017,9 +1017,9 @@ class CONM2(PointMassElement):
     def node_ids(self):
         return [self.Nid()]
 
-    def nodeIDs(self):
-        self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
-        return self.node_ids
+    #def nodeIDs(self):
+        #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
+        #return self.node_ids
 
     def Nid(self):
         if isinstance(self.nid, integer_types):

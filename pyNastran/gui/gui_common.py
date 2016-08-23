@@ -744,7 +744,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             text_actor.GetTextProperty().SetColor(color)
         self.log_command('set_text_color(%s, %s, %s)' % color)
 
-    def create_coordinate_system(self, dim_max, label='', origin=None, matrix_3x3=None, Type='xyz'):
+    def create_coordinate_system(self, dim_max, label='', origin=None, matrix_3x3=None,
+                                 Type='xyz'):
         """
         Creates a coordinate system
 

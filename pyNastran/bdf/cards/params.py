@@ -118,8 +118,12 @@ class PARAM(BaseCard):
         Updates value1 and value2.  Performs type checking based on the PARAM
         type after setting any default value(s).
 
-        :param value1: the main value (default=None)
-        :param value2: optional value (default=None)
+        Parameters
+        ----------
+        value1 : varies; default=None
+            the main value
+        value2 : varies; default=None
+            optional value
 
         If you want to access the data directly, use:
         >>>  param = bdf.params['POST']

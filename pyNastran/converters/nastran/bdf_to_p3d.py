@@ -346,7 +346,7 @@ class BdfToP3d(object):
         self.reversed_sides = reversed_sides
         return sides, reversed_sides
 
-def run():
+def run():  # pragma: no cover
    #(X, Y) = makeCircle(1., 90., 45.)
    #(upper, lower) = readAirfoil('clarky.dat')
 
@@ -356,5 +356,5 @@ def run():
     mesh.make_mesh('airfoil.bdf', p3d_name, estart)
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     run()

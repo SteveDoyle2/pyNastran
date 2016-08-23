@@ -20,9 +20,9 @@ from pyNastran.op2.test.all_tests import *
 
 #f06
 #try:
-#    from pyNastran.f06.test.all_tests import *
-#except ImportError:
-#    pass
+   #from pyNastran.f06.test.all_tests import *
+##except ImportError:
+   #pass
 
 #op4
 from pyNastran.op4.test.op4_test import TestOP4
@@ -33,17 +33,17 @@ from pyNastran.utils.test.all_tests import *
 # converters
 try:
     from pyNastran.converters.test_formats import *
-except ImportError:
+except ImportError:  # pragma: no cover
     pass
 
 #gui - just tests the imports
 from pyNastran.gui.test.all_tests import *
 #on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 #if not on_rtd:
-#    import pyNastran.gui.gui
+    #import pyNastran.gui.gui
 #import pyNastran.gui.gui
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     import unittest
     unittest.main()

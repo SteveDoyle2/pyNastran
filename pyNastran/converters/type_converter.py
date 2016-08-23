@@ -302,5 +302,5 @@ def main():
     output_filename = data['<OUTPUT>']
     run(format1, input_filename, format2, output_filename, data)
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     main()

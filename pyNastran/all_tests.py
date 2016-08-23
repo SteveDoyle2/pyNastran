@@ -5,6 +5,6 @@ from pyNastran.all_tests_no_gui import *
 from pyNastran.converters.test_formats import *
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     import unittest
     unittest.main()

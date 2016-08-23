@@ -37,10 +37,10 @@ class C3D_Reader(FortranFormat):
 
         self.f.close()
 
-def main():
+def main():  # pragma: no cover
     c3d_filename = 'Mesh.R.c3d'
     c3d = C3D_Reader()
     c3d.read_c3d(c3d_filename)
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     main()

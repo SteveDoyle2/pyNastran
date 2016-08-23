@@ -163,7 +163,25 @@ class GuiAttributes(object):
         #if name in self.geometry_actors:
         self.geometry_actors[name].Modified()
 
-    def create_coordinate_system(self, dim_max, label='', origin=None, matrix_3x3=None, Type='xyz'):
+    def create_coordinate_system(self, dim_max, label='', origin=None, matrix_3x3=None,
+                                 Type='xyz'):
+        """
+        Creates a coordinate system
+
+        Parameters
+        ----------
+        dim_max : float
+            the max model dimension; 10% of the max will be used for the coord length
+        label : str
+            the coord id or other unique label (default is empty to indicate the global frame)
+        origin : (3, ) ndarray/list/tuple
+            the origin
+        matrix_3x3 : (3, 3) ndarray
+            a standard Nastran-style coordinate system
+        Type : str
+            a string of 'xyz', 'Rtz', 'Rtp' (xyz, cylindrical, spherical)
+            that changes the axis names
+        """
         pass
 
     @property

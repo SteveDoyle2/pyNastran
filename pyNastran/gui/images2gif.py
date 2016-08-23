@@ -1094,5 +1094,5 @@ def main():
     images = [im*1.0, im*0.8, im*0.6, im*0.4, im*0]
     writeGif('lala3.gif',images, duration=0.5, dither=0)
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     main()

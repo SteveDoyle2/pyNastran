@@ -94,12 +94,12 @@ class ShellElement(Element):
     def __init__(self):
         Element.__init__(self)
 
-    def Rho(self):
-        """
-        Returns the density
-        """
-        self.deprecated('Rho()', 'pid.mid().rho', '0.8')
-        return self.pid_ref.mid().rho
+    #def Rho(self):
+        #"""
+        #Returns the density
+        #"""
+        #self.deprecated('Rho()', 'pid.mid().rho', '0.8')
+        #return self.pid_ref.mid().rho
 
     def Eid(self):
         return self.eid
@@ -443,9 +443,9 @@ class CTRIA3(TriShell):
         T3 = set_blank_if_default(self.T3, 1.0)
         return (thetaMcid, zOffset, TFlag, T1, T2, T3)
 
-    def nodeIDs(self):
-        self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
-        return self.node_ids
+    #def nodeIDs(self):
+        #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
+        #return self.node_ids
 
     @property
     def node_ids(self):
@@ -675,9 +675,9 @@ class CTRIA6(TriShell):
         T3 = set_blank_if_default(self.T3, 1.0)
         return (thetaMcid, zOffset, TFlag, T1, T2, T3)
 
-    def nodeIDs(self):
-        self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
-        return self.node_ids
+    #def nodeIDs(self):
+        #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
+        #return self.node_ids
 
     @property
     def node_ids(self):
@@ -844,9 +844,9 @@ class CTRIAR(TriShell):
             mass = self.Mass()
             assert isinstance(mass, float), 'mass=%r' % mass
 
-    def nodeIDs(self):
-        self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
-        return self.node_ids
+    #def nodeIDs(self):
+        #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
+        #return self.node_ids
 
     @property
     def node_ids(self):
@@ -986,9 +986,9 @@ class CTRIAX(TriShell):
         self.pid = self.Pid()
         del self.nodes_ref, self.pid_ref
 
-    def nodeIDs(self):
-        self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
-        return self.node_ids
+    #def nodeIDs(self):
+        #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
+        #return self.node_ids
 
     @property
     def node_ids(self):
@@ -1159,9 +1159,9 @@ class CTRIAX6(TriShell):
         (n1, n2, n3, n4, n5, n6) = self.nodes
         self.nodes = [n1, n6, n5, n4, n3, n2]
 
-    def nodeIDs(self):
-        self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
-        return self.node_ids
+    #def nodeIDs(self):
+        #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
+        #return self.node_ids
 
     @property
     def node_ids(self):
@@ -1502,9 +1502,9 @@ class CSHEAR(QuadShell):
         (n1, n2, n3, n4) = self.nodes
         self.nodes = [n1, n4, n3, n2]
 
-    def nodeIDs(self):
-        self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
-        return self.node_ids
+    #def nodeIDs(self):
+        #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
+        #return self.node_ids
 
     @property
     def node_ids(self):
@@ -1724,9 +1724,9 @@ class CQUAD4(QuadShell):
         (n1, n2, n3, n4) = self.nodes
         self.nodes = [n1, n4, n3, n2]
 
-    def nodeIDs(self):
-        self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
-        return self.node_ids
+    #def nodeIDs(self):
+        #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
+        #return self.node_ids
 
     @property
     def node_ids(self):
@@ -1923,9 +1923,9 @@ class CQUADR(QuadShell):
         (n1, n2, n3, n4) = self.nodes
         self.nodes = [n1, n4, n3, n2]
 
-    def nodeIDs(self):
-        self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
-        return self.node_ids
+    #def nodeIDs(self):
+        #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
+        #return self.node_ids
 
     @property
     def node_ids(self):
@@ -2028,9 +2028,9 @@ class CQUAD(QuadShell):
         self.nodes = [n1, n4, n3, n2, n8, n7, n6, n5, n9]
         assert len(self.nodes) == 9
 
-    def nodeIDs(self):
-        self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
-        return self.node_ids
+    #def nodeIDs(self):
+        #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
+        #return self.node_ids
 
     @property
     def node_ids(self):
@@ -2244,9 +2244,9 @@ class CQUAD8(QuadShell):
         area = 0.5 * norm(cross(a, b))
         return area
 
-    def nodeIDs(self):
-        self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
-        return self.node_ids
+    #def nodeIDs(self):
+        #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
+        #return self.node_ids
 
     @property
     def node_ids(self):
@@ -2343,9 +2343,9 @@ class CQUADX(QuadShell):
         (n1, n2, n3, n4, n5, n6, n7, n8, n9) = self.nodes
         self.nodes = [n1, n4, n3, n2, n8, n7, n6, n5, n9]
 
-    def nodeIDs(self):
-        self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
-        return self.node_ids
+    #def nodeIDs(self):
+        #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
+        #return self.node_ids
 
     @property
     def node_ids(self):

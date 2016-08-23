@@ -692,7 +692,7 @@ class Cart3D(Cart3dIO):
     def read_cart3d(self, infilename, result_names=None):
         """extracts the points, elements, and Cp"""
         self.infilename = infilename
-        self.log.info("---starting reading cart3d file...%r---" % self.infilename)
+        self.log.info("---reading cart3d...%r---" % self.infilename)
 
         self.infilename = infilename
         if is_binary_file(infilename):
@@ -711,7 +711,7 @@ class Cart3D(Cart3dIO):
                 self._read_results_ascii(0, self.infile, nresults, result_names=result_names)
 
         self.log.debug("npoints=%s nelements=%s" % (self.npoints, self.nelements))
-        self.log.info("---finished reading cart3d file...%r---" % self.infilename)
+        self.log.info("---finished reading cart3d...%r---" % self.infilename)
         assert self.npoints > 0, 'npoints=%s' % self.npoints
         assert self.nelements > 0, 'nelements=%s' % self.nelements
 
@@ -725,7 +725,7 @@ class Cart3D(Cart3dIO):
         else:
             is_loads = True
 
-        self.log.info("---writing cart3d file...%r---" % outfilename)
+        self.log.info("---writing cart3d...%r---" % outfilename)
         if is_binary:
             form = 'wb'
         else:
@@ -782,7 +782,7 @@ class Cart3D(Cart3dIO):
         if result_names is None:
             result_names = ['Cp', 'rho', 'rhoU', 'rhoV', 'rhoW', 'rhoE',
                             'Mach', 'U', 'V', 'W', 'E', 'a', 'T', 'Pressure', 'q']
-        self.log.info('---starting read_results---')
+        self.log.debug('---starting read_results---')
 
         results = zeros((self.npoints, 6), dtype='float32')
 
@@ -944,7 +944,7 @@ class Cart3D(Cart3dIO):
         #i = where(Mach == max(Mach))[0][0]
         #self.log.info("i=%s Cp=%s rho=%s rhoU=%s rhoV=%s rhoW=%s Mach=%s" % (i, Cp[i], rho[i], rhoU[i],
         #              rhoV[i], rhoW[i], Mach[i]))
-        self.log.info('---finished read_results---')
+        self.log.debug('---finished read_results---')
         return loads
 
     def get_normals(self, shift_nodes=True):

@@ -497,9 +497,9 @@ class CBAR(LineElement):
         assert self.offt == 'GGG', self.offt
         return v
 
-    def nodeIDs(self):
-        self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
-        return self.node_ids
+    #def nodeIDs(self):
+        #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
+        #return self.node_ids
 
     @property
     def node_ids(self):

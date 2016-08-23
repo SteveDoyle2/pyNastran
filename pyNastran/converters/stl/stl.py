@@ -58,7 +58,7 @@ class STL(object):
         normalize_normal_vectors : bool; default=False
             should the vectors be normalized
         """
-        self.log.info("---writing STL file...%r---" % stl_out_filename)
+        self.log.info("---writing STL...%r---" % stl_out_filename)
         assert len(self.nodes) > 0
         solid_name = 'dummy_name'
         if is_binary:
@@ -80,7 +80,7 @@ class STL(object):
             the filename to read
         """
         self.infilename = stl_filename
-        self.log.info("---starting reading STL file...%r---" % self.infilename)
+        self.log.info("---reading STL...%r---" % self.infilename)
 
         if is_binary_file(stl_filename):
             self.read_binary_stl(stl_filename)
@@ -88,7 +88,6 @@ class STL(object):
             self.read_ascii_stl(stl_filename)
 
         #self.log.info("nodes=%s  nelements=%s" % (self.nodes, self.nelements))
-        self.log.info("---finished reading STL file...%r---" % self.infilename)
         #assert self.nodes > 0, 'nodes=%s' % self.nodes
         #assert self.nelements > 0, 'nelements=%s' % self.nelements
 
