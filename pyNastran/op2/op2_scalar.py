@@ -115,7 +115,7 @@ NX_RESULT_TABLES = [
     b'OPHIG', # Eigenvectors in the basic coordinate system.
 ]
 
-MSC_RESULT_TABLES = [
+MSC_RESULT_TABLES = [b'ASSIG', b'ASEPS'] + [
     # new
     b'TOLD',
     b'RAPCONS', b'RAQCONS', b'RADCONS', b'RASCONS', b'RAFCONS', b'RAECONS',
@@ -1272,7 +1272,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 # C:\Users\Steve\Dropbox\pyNastran_examples\move_tpl\loadf.op2
                 self.set_as_msc()
                 self.set_table_type()
-            elif version == b'XXXXXXXX':
+            elif version in [b'XXXXXXXX', b'V2005R3B']:
                 self.set_as_msc()
                 self.set_table_type()
             elif version == b'OS12.210':

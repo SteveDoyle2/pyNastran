@@ -167,6 +167,11 @@ class TestOP2(Tester):
             #assert fem.card_count['MPC'] == 1, fem.card_count
             #assert fem.card_count['TF'] == 2, fem.card_count
 
+    def test_op2_nastran_2005r3b(self):
+        folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'modele_petite_zone'))
+        op2_filename = os.path.join(folder, 'modele_petite_zone.op2')
+        op2 = read_op2(op2_filename, debug=False)
+
     def test_gpforce_01(self):
         nids = np.array([1, 2, 3])
         xyz_cid0 = np.array([

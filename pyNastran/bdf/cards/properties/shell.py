@@ -545,6 +545,8 @@ class PCOMP(CompositeShellProperty):
         self.ge = ge
 
         #: symmetric flag - default = No Symmetry (NO)
+        if lam is None:
+            lam = 'NO'
         self.lam = lam
         self.mids = mids
         self.thicknesses = thicknesses
