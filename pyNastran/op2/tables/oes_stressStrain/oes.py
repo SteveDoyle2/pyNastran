@@ -1185,15 +1185,7 @@ class OES(OP2Common):
                         obj.element[itotal:itotal2] = eids
 
                     #(eid_device, etmaxr, etmaxi, etavgr, etavgi)
-                    if is_magnitude_phase:
-                        real = floats[:, [1, 3]]
-                        imag = floats[:, [2, 4]]
-                        real_imag = real + 1.j * imag
-                    else:
-                        mag = floats[:, [1, 3]]
-                        phase = floats[:, [2, 4]]
-                        rtheta = radians(phase)
-                        real_imag = mag * (cos(rtheta) + 1.j * sin(rtheta))
+                    real_imag = apply_mag_phase(floats, is_magnitude_phase, [1, 3], [2, 4])
                     obj.data[obj.itime, itotal:itotal2, :] = real_imag
                     obj.itotal = itotal2
                     obj.ielement = ielement2
@@ -1469,15 +1461,7 @@ class OES(OP2Common):
 
                     isave1 = [1, 2, 3, 4, 5, 11, 12, 13, 14]
                     isave2 = [6, 7, 8, 9, 10, 15, 16, 17, 18]
-                    if is_magnitude_phase:
-                        mag = floats[:, isave1]
-                        phase = floats[:, isave2]
-                        rtheta = radians(phase)
-                        real_imag = mag * (cos(rtheta) + 1.j * sin(rtheta))
-                    else:
-                        real = floats[:, isave1]
-                        imag = floats[:, isave2]
-                        real_imag = real + 1.j * imag
+                    real_imag = apply_mag_phase(floats, is_magnitude_phase, isave1, isave2)
                     obj.data[obj.itime, itotal:itotal2, :] = real_imag
 
                     obj.itotal = itotal2
@@ -1961,15 +1945,7 @@ class OES(OP2Common):
                     #[fd, sxr, sxi, syr, syi, txyr, txyi]
                     isave1 = [1, 3, 5]
                     isave2 = [2, 4, 6]
-                    if is_magnitude_phase:
-                        mag = floats1[:, isave1]
-                        phase = floats1[:, isave2]
-                        rtheta = radians(phase)
-                        real_imag = mag * (cos(rtheta) + 1.j * sin(rtheta))
-                    else:
-                        real = floats1[:, isave1]
-                        imag = floats1[:, isave2]
-                        real_imag = real + 1.j * imag
+                    real_imag = apply_mag_phase(floats1, is_magnitude_phase, isave1, isave2)
 
                     obj.fiber_curvature[itotal:itotal2] = floats1[:, 0]
                     obj.data[obj.itime, itotal:itotal2, :] = real_imag
@@ -2155,15 +2131,7 @@ class OES(OP2Common):
                     #[fd, sxr, sxi, syr, syi, txyr, txyi]
                     isave1 = [1, 3, 5]
                     isave2 = [2, 4, 6]
-                    if is_magnitude_phase:
-                        mag = floats1[:, isave1]
-                        phase = floats1[:, isave2]
-                        rtheta = radians(phase)
-                        real_imag = mag * (cos(rtheta) + 1.j * sin(rtheta))
-                    else:
-                        real = floats1[:, isave1]
-                        imag = floats1[:, isave2]
-                        real_imag = real + 1.j * imag
+                    real_imag = apply_mag_phase(floats1, is_magnitude_phase, isave1, isave2)
 
                     obj.fiber_curvature[itotal:itotal2] = floats1[:, 0]
                     obj.data[obj.itime, itotal:itotal2, :] = real_imag
@@ -2428,15 +2396,7 @@ class OES(OP2Common):
                     #[fd, sxr, sxi, syr, syi, txyr, txyi]
                     isave1 = [1, 3, 5]
                     isave2 = [2, 4, 6]
-                    if is_magnitude_phase:
-                        mag = floats2[:, isave1]
-                        phase = floats2[:, isave2]
-                        rtheta = radians(phase)
-                        real_imag = mag * (cos(rtheta) + 1.j * sin(rtheta))
-                    else:
-                        real = floats2[:, isave1]
-                        imag = floats2[:, isave2]
-                        real_imag = real + 1.j * imag
+                    real_imag = apply_mag_phase(floats2, is_magnitude_phase, isave1, isave2)
 
                     obj.fiber_curvature[itotal:itotal2] = floats2[:, 0]
                     obj.data[obj.itime, itotal:itotal2, :] = real_imag
@@ -3042,15 +3002,9 @@ class OES(OP2Common):
                         assert eids.min() > 0, eids.min()
                         obj.element[itotal:itotal2] = eids
 
-                    if is_magnitude_phase:
-                        mag = floats[:, [1, 2, 3, 4, 5, 6]]
-                        phase = floats[:, [7, 8, 9, 10, 11, 12]]
-                        rtheta = radians(phase)
-                        real_imag = mag * (cos(rtheta) + 1.j * sin(rtheta))
-                    else:
-                        real = floats[:, [1, 2, 3, 4, 5, 6]]
-                        imag = floats[:, [7, 8, 9, 10, 11, 12]]
-                        real_imag = real + 1.j * imag
+                    isave1 = [1, 2, 3, 4, 5, 6]
+                    isave2 = [7, 8, 9, 10, 11, 12]
+                    real_imag = apply_mag_phase(floats, is_magnitude_phase, isave1, isave2)
                     obj.data[obj.itime, itotal:itotal2, :] = real_imag
 
                     obj.itotal = itotal2
