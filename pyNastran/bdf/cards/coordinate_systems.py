@@ -52,15 +52,15 @@ def normalize(v):
 class Coord(BaseCard):
     type = 'COORD'
 
-    @property
-    def isResolved(self):
-        self.deprecated('isResolved', 'is_resolved', '0.8.1')
-        return self.is_resolved
+    #@property
+    #def isResolved(self):
+        #self.deprecated('isResolved', 'is_resolved', '0.8.1')
+        #return self.is_resolved
 
-    @isResolved.setter
-    def isResolved(self, is_resolved):
-        self.deprecated('isResolved', 'is_resolved', '0.8.1')
-        self.is_resolved = is_resolved
+    #@isResolved.setter
+    #def isResolved(self, is_resolved):
+        #self.deprecated('isResolved', 'is_resolved', '0.8.1')
+        #self.is_resolved = is_resolved
 
     def __init__(self):
         """
@@ -472,7 +472,7 @@ class Coord(BaseCard):
 
         .. warning:: make sure you cross-reference before calling this
         .. warning:: you probably shouldnt call this, call the Node methods
-                     Position and PositionWRT
+                     get_position and get_position_wrt
         """
         if self.cid == 0:
             return xyz

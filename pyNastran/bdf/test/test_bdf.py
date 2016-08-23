@@ -260,7 +260,8 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
         True : crashes if an Exception occurs
         False : doesn't crash; useful for running many tests
     """
-    print('debug = %s' % debug)
+    if not quiet:
+        print('debug = %s' % debug)
     if dynamic_vars is None:
         dynamic_vars = {}
     if crash_cards is None:
@@ -268,7 +269,8 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
 
     # TODO: why do we need this?
     bdf_model = str(bdf_filename)
-    print("bdf_model = %s" % bdf_model)
+    if not quiet:
+        print("bdf_model = %s" % bdf_model)
     if is_folder:
         bdf_model = os.path.join(test_path, folder, bdf_filename)
 
@@ -298,10 +300,11 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
         out_model, fem1 = run_fem1(fem1, bdf_model, mesh_form, xref, punch, sum_load, size,
                                    is_double, cid, encoding=encoding, crash_cards=crash_cards)
         if stop:
-            print('card_count:')
-            print('-----------')
-            for card_name, card_count in sorted(iteritems(fem1.card_count)):
-                print('key=%-8s value=%s' % (card_name, card_count))
+            if not quiet:
+                print('card_count:')
+                print('-----------')
+                for card_name, card_count in sorted(iteritems(fem1.card_count)):
+                    print('key=%-8s value=%s' % (card_name, card_count))
             return fem1, None, None
         fem2 = run_fem2(bdf_model, out_model, xref, punch, sum_load, size, is_double, reject,
                         encoding=encoding, debug=debug, log=None)
@@ -366,7 +369,8 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
         print("-" * 80)
         raise
 
-    print("-" * 80)
+    if not quiet:
+        print("-" * 80)
     return (fem1, fem2, diff_cards)
 
 

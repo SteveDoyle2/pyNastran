@@ -1380,12 +1380,12 @@ class NastranIO(object):
                 # end A
                 # global - cid != 0
                 if node1.Cd() != 0:
-                    v = node1.cd_ref.transform_node_to_global(v)
-                    if node1.cd_ref.type not in ['CORD2R', 'CORD1R']:
-                        msg = 'invalid Cd type (%r) on Node %i; expected CORDxR' % (
-                            node1.cd_ref.type, node1.nid)
-                        self.log.error(msg)
-                        continue
+                    v = node1.cd_ref.transform_node_to_global_assuming_rectangular(v)
+                    #if node1.cd_ref.type not in ['CORD2R', 'CORD1R']:
+                        #msg = 'invalid Cd type (%r) on Node %i; expected CORDxR' % (
+                            #node1.cd_ref.type, node1.nid)
+                        #self.log.error(msg)
+                        #continue
                         #raise NotImplementedError(node1.cd)
             elif offt_vector == 'B':
                 # basic - cid = 0
@@ -1401,14 +1401,13 @@ class NastranIO(object):
             wa = elem.wa
             if offt_end_a == 'G':
                 if node1.Cd() != 0:
-                    if node1.cd.type not in ['CORD2R', 'CORD1R']:
-                        continue # TODO: support CD transform
-                        #raise NotImplementedError(node1.cd)
-                    wa = node1.cd.transform_node_to_global(wa)  # TODO: fixme
+                    #if node1.cd.type not in ['CORD2R', 'CORD1R']:
+                        #continue # TODO: support CD transform
+                    wa = node1.cd_ref.transform_node_to_global_assuming_rectangular(wa)  # TODO: fixme
             elif offt_end_a == 'B':
                 pass
             elif offt_end_a == 'O':
-                wa = node1.cd.transform_node_to_global(n1 - wa)  # TODO: fixme
+                wa = node1.cd_ref.transform_node_to_global_assuming_rectangular(n1 - wa)  # TODO: fixme
             else:
                 msg = 'offt_end_a=%r is not supported; offt=%s' % (offt_end_a, elem.offt)
                 self.log.error(msg)
@@ -1420,11 +1419,9 @@ class NastranIO(object):
             wb = elem.wb
             if offt_end_b == 'G':
                 if node2.Cd() != 0:
-                    if node2.cd.type not in ['CORD2R', 'CORD1R']:
-                        continue # TODO: MasterModelTaxi
-                        #raise NotImplementedError(node2.cd)
-                    #wb = node2.cd.transform_node_to_local_xyz(wb)
-                    wb = node2.cd.transform_node_to_global(wb)  # TODO: fixme
+                    #if node2.cd_ref.type not in ['CORD2R', 'CORD1R']:
+                        #continue # TODO: MasterModelTaxi
+                    wb = node2.cd.transform_node_to_global_assuming_rectangular(wb)  # TODO: fixme
 
             elif offt_end_b == 'B':
                 pass
@@ -1497,7 +1494,7 @@ class NastranIO(object):
                 #break
 
         #print('bar_types =', bar_types)
-        for bar_type in bar_types.keys():
+        for bar_type in list(bar_types):
             if len(bar_types[bar_type][0]) == 0:
                 del bar_types[bar_type]
 
