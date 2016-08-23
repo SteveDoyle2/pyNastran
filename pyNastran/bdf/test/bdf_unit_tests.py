@@ -9,6 +9,7 @@ import pyNastran
 from pyNastran.utils import object_attributes, object_methods
 from pyNastran.bdf.cards.collpase_card import collapse_thru_by
 from pyNastran.bdf.bdf import BDF, read_bdf
+from pyNastran.bdf.write_path import write_include
 
 pkg_path = pyNastran.__path__[0]
 test_path = os.path.join(pkg_path, 'bdf', 'test')
@@ -31,6 +32,33 @@ class Tester(unittest.TestCase):
 
 
 class TestBDF(Tester):
+
+    def test_write_path(self):
+        include_name = r'C:\NASA\formats\pynastran_v0.6\pyNastran\bdf\writePath.py'
+        msg1 = write_include(include_name, is_windows=True)
+        #print(msg1)
+
+        include_name = r'/opt/NASA/formats/pynastran_v0.6/pyNastran/bdf/writePath.py'
+        msg2 = write_include(include_name, is_windows=False)
+
+        #include_name = r'/opt/NASA/test1/test2/test3/test4/formats/pynastran_v0.6/pyNastran/bdf/writePath.py'
+        #msg3 = write_include(include_name, is_windows=False)
+
+        #include_name = r'/opt/NASA/test1/test2/test3/test4/formats/pynastran_v0.6/pyNastran/bdf/writePath.py'
+        #msg4 = write_include(include_name, is_windows=True)
+
+        msg1_expected = 'INCLUDE C:\\\\NASA\\formats\\pynastran_v0.6\\pyNastran\\bdf\\writePath.py\n'
+        msg2_expected =  'INCLUDE /opt/NASA/formats/pynastran_v0.6/pyNastran/bdf/writePath.py\n'
+        #msg3_expected = ('INCLUDE /opt/NASA/test1/test2/test3/test4/formats/pynastran_v0.6/\n'
+                         #'        pyNastran/bdf/writePath.py\n')
+        #msg4_expected = (r'INCLUDE opt\NASA\test1\test2\test3\test4\formats\pynastran_v0.6' '\n'
+                         #'        pyNastran\bdf\writePath.py\n')
+
+        assert msg1 == msg1_expected, 'actual:\n%r\nexpected:\n%r' % (msg1, msg1_expected)
+        assert msg2 == msg2_expected, 'actual:\n%r\nexpected:\n%r' % (msg2, msg2_expected)
+        #assert msg3 == msg3_expected, 'actual:\n%r\nexpected:\n%r' % (msg3, msg3_expected)
+        #assert msg4 == msg4_expected, 'actual:\n%r\nexpected:\n%r' % (msg4, msg4_expected)
+
     def test_object_attributes_01(self):
         model = BDF(debug=False)
         model.object_attributes(mode='public', keys_to_skip=None)
