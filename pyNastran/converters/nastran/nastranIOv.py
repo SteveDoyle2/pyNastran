@@ -441,6 +441,7 @@ class NastranIO(object):
                         box_id_to_caero_element_map[box_id] = elementsi[i, :] + num_prev
                     num_prev += pointsi.shape[0]
                 elif caero.type == 'CAERO2':
+                    pass
                 else:
                     print('caero\n%s' % caero)
             if ncaeros_sub:

@@ -711,7 +711,6 @@ class Cart3D(Cart3dIO):
                 self._read_results_ascii(0, self.infile, nresults, result_names=result_names)
 
         self.log.debug("npoints=%s nelements=%s" % (self.npoints, self.nelements))
-        self.log.info("---finished reading cart3d...%r---" % self.infilename)
         assert self.npoints > 0, 'npoints=%s' % self.npoints
         assert self.nelements > 0, 'nelements=%s' % self.nelements
 
