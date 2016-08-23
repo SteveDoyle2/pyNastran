@@ -3,8 +3,6 @@
 [![PyPi Version](https://img.shields.io/pypi/v/pynastran.svg)](https://pypi.python.org/pypi/pyNastran)
 [![PyPi Downloads](https://img.shields.io/pypi/dm/pynastran.svg)](https://pypi.python.org/pypi/pyNastran)
 
-<!--- [![Coverage Status](https://img.shields.io/coveralls/SteveDoyle2/pyNastrane/master.svg)](https://coveralls.io/github/SteveDoyle2/pyNastran?branch=master)   --->
-
 [Doumentation](http://pynastran-git.readthedocs.io/en/v0.8/)
 
 [Download pyNastran] (https://github.com/SteveDoyle2/pyNastran/releases)
@@ -24,8 +22,10 @@
 ### Master
 
 [![Build Status](https://travis-ci.org/SteveDoyle2/pyNastran.png)](https://travis-ci.org/SteveDoyle2/pyNastran)
+[![Coverage Status](https://coveralls.io/repos/github/SteveDoyle2/pyNastran/badge.svg?branch=master)](https://coveralls.io/github/SteveDoyle2/pyNastran?branch=master)
 
 [Doumentation](http://pynastran-git.readthedocs.org/en/latest/index.html)
+
 
 Also, check out the:
   * [Wiki](https://github.com/SteveDoyle2/pynastran/wiki)
