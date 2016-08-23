@@ -214,7 +214,7 @@ class OP4(object):
 
     def _read_real_sparse_ascii(self, op4, iline, nrows, ncols, line_size, line, dtype, is_big_mat):
         """reads a sparse real ASCII matrix"""
-        self.log.info('_read_real_sparse_ascii')
+        self.log.debug('_read_real_sparse_ascii')
         rows = []
         cols = []
         entries = []
@@ -295,7 +295,7 @@ class OP4(object):
 
     def _read_real_sparse_ascii_new(self, op4, iline, nrows, ncols, line_size, line, dtype, is_big_mat):
         """reads a sparse real ASCII matrix"""
-        self.log.info('_read_real_sparse_ascii')
+        self.log.debug('_read_real_sparse_ascii')
         rows = []
         cols = []
         entries = []
