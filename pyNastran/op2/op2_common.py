@@ -36,7 +36,7 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
         #   >>> modelB.read_op2(op2_filename)
         #   >>> assert model A == modelB
         # vectorized:
-        #    False : uses range loops
+        #    False : uses range loops (testing)
         #    True : uses vectorization
         # non-vectorized:
         #    does nothing
@@ -1734,3 +1734,15 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
         self.struct_i = Struct(b(self._endian + 'i'))
         self.struct_8s = Struct(b(self._endian + '8s'))
         self.struct_2i = Struct(b(self._endian + 'ii'))
+
+def apply_mag_phase(floats, is_magnitude_phase, isave1, isave2):
+    if is_magnitude_phase:
+        mag = floats[:, isave1]
+        phase = floats[:, isave2]
+        rtheta = radians(phase)
+        real_imag = mag * (cos(rtheta) + 1.j * sin(rtheta))
+    else:
+        real = floats[:, isave1]
+        imag = floats[:, isave2]
+        real_imag = real + 1.j * imag
+    return real_imag

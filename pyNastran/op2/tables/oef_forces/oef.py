@@ -12,7 +12,7 @@ from numpy import fromstring, vstack, sin, cos, radians, array
 from numpy import hstack, zeros
 
 from pyNastran.op2.op2_helper import polar_to_real_imag
-from pyNastran.op2.op2_common import OP2Common
+from pyNastran.op2.op2_common import OP2Common, apply_mag_phase
 
 from pyNastran.op2.tables.oef_forces.oef_thermal_objects import (
     Real1DHeatFluxArray,
@@ -1112,15 +1112,7 @@ class OEF(OP2Common):
 
                     #[axial_force, torque]
                     #(eid_device, axial_real, torque_real, axial_imag, torque_imag) = out
-                    if is_magnitude_phase:
-                        mag = floats[:, [1, 2]]
-                        phase = floats[:, [3, 4]]
-                        rtheta = radians(phase)
-                        real_imag = mag * (cos(rtheta) + 1.j * sin(rtheta))
-                    else:
-                        real = floats[:, [1, 2]]
-                        imag = floats[:, [3, 4]]
-                        real_imag = real + 1.j * imag
+                    real_imag = apply_mag_phase(floats, is_magnitude_phase, [1, 2], [3, 4])
                     obj.data[obj.itime, itotal:itotal2, :] = real_imag
                     obj.itotal = itotal2
                     obj.ielement = ielement2
@@ -1306,15 +1298,9 @@ class OEF(OP2Common):
                     #[nid, sd, bm1r, bm2r, ts1r, ts2r, afr, ttrqr, wtrqr,
                     #          bm1i, bm2i, ts1i, ts2i, afi, ttrqi, wtrqi]
                     floats2 = floats.reshape(nelements * 11, 16)[:, 1:]
-                    if is_magnitude_phase:
-                        mag = floats2[:, 1:8] # 7
-                        phase = floats2[:, 8:]
-                        rtheta = radians(phase)
-                        real_imag = mag * (cos(rtheta) + 1.j * sin(rtheta))
-                    else:
-                        real = floats2[:, 1:8]
-                        imag = floats2[:, 8:]
-                        real_imag = real + 1.j * imag
+                    isave1 = slice(1, 8)
+                    isave2 = slice(8, None)
+                    real_imag = apply_mag_phase(floats2, is_magnitude_phase, isave1, isave2)
 
                     sd = floats2[:, 0]
                     obj.data[obj.itime, itotal:itotal2, 0] = sd
@@ -1617,15 +1603,7 @@ class OEF(OP2Common):
 
                     #[axial_force, torque]
                     #(eid_device, axial_real, torque_real, axial_imag, torque_imag) = out
-                    if is_magnitude_phase:
-                        mag = floats[:, [1, 2]]
-                        phase = floats[:, [3, 4]]
-                        rtheta = radians(phase)
-                        real_imag = mag * (cos(rtheta) + 1.j * sin(rtheta))
-                    else:
-                        real = floats[:, [1, 2]]
-                        imag = floats[:, [3, 4]]
-                        real_imag = real + 1.j * imag
+                    real_imag = apply_mag_phase(floats, is_magnitude_phase, [1, 2], [3, 4])
                     obj.data[obj.itime, itotal:itotal2, :] = real_imag
                     obj.itotal = itotal2
                     obj.ielement = ielement2
@@ -1876,15 +1854,9 @@ class OEF(OP2Common):
                         obj.element[itotal:itotal2] = eids
 
                     #[mx, my, mxy, bmx, bmy, bmxy, tx, ty]
-                    if is_magnitude_phase:
-                        mag = floats[:, [1, 2, 3, 4, 5, 6, 7, 8]]
-                        phase = floats[:, [9, 10, 11, 12, 13, 14, 15, 16]]
-                        rtheta = radians(phase)
-                        real_imag = mag * (cos(rtheta) + 1.j * sin(rtheta))
-                    else:
-                        real = floats[:, [1, 2, 3, 4, 5, 6, 7, 8]]
-                        imag = floats[:, [9, 10, 11, 12, 13, 14, 15, 16]]
-                        real_imag = real + 1.j * imag
+                    isave1 = [1, 2, 3, 4, 5, 6, 7, 8]
+                    isave2 = [9, 10, 11, 12, 13, 14, 15, 16]
+                    real_imag = apply_mag_phase(floats, is_magnitude_phase, isave1, isave2)
                     obj.data[obj.itime, itotal:itotal2, :] = real_imag
                     obj.itotal = itotal2
                     obj.ielement = ielement2

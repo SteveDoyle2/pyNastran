@@ -272,7 +272,6 @@ class ONR(OP2Common):
 
             obj = self.obj
             itime = obj.itime
-            is_vectorized = True
 
             if self.is_debug_file:
                 self.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
@@ -280,7 +279,7 @@ class ONR(OP2Common):
                 self.binary_debug.write('  #elementi = [eid_device, energy, percent, density]\n')
                 self.binary_debug.write('  nelements=%i\n' % nelements)
 
-            if self.use_vector and is_vectorized:
+            if self.use_vector:
                 n = nelements * 4 * self.num_wide
                 ielement = obj.ielement
                 ielement2 = obj.ielement + nelements
@@ -325,8 +324,7 @@ class ONR(OP2Common):
                     nelements, result_name, slot, RealStrainEnergyArray)
 
             obj = self.obj
-            is_vectorized = True
-            if self.use_vector and is_vectorized:
+            if self.use_vector:
                 n = nelements * 4 * self.num_wide
                 itotal = obj.ielement
                 ielement2 = obj.itotal + nelements
@@ -374,8 +372,7 @@ class ONR(OP2Common):
                     nelements, result_name, slot, RealStrainEnergyArray)
 
             obj = self.obj
-            is_vectorized = True
-            if self.use_vector and is_vectorized:
+            if self.use_vector:
                 n = nelements * 4 * self.num_wide
                 itotal = obj.ielement
                 ielement2 = obj.itotal + nelements

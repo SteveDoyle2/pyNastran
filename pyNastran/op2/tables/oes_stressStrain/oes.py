@@ -12,7 +12,7 @@ from six.moves import range
 from numpy import fromstring, radians, sin, cos, vstack, repeat, array
 import numpy as np
 
-from pyNastran.op2.op2_common import OP2Common
+from pyNastran.op2.op2_common import OP2Common, apply_mag_phase
 from pyNastran.op2.op2_helper import polar_to_real_imag
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_bars import RealBarStressArray, RealBarStrainArray
@@ -957,15 +957,7 @@ class OES(OP2Common):
                         assert eids.min() > 0, eids.min()
                         obj.element[itotal:itotal2] = eids
 
-                    if is_magnitude_phase:
-                        mag = floats[:, [1, 3]]
-                        phase = floats[:, [2, 4]]
-                        rtheta = radians(phase)
-                        real_imag = mag * (cos(rtheta) + 1.j * sin(rtheta))
-                    else:
-                        real = floats[:, [1, 3]]
-                        imag = floats[:, [2, 4]]
-                        real_imag = real + 1.j * imag
+                    real_imag = apply_mag_phase(floats, is_magnitude_phase, [1, 3], [2, 4])
                     obj.data[obj.itime, itotal:itotal2, :] = real_imag
 
                     obj.itotal = itotal2
@@ -1762,15 +1754,7 @@ class OES(OP2Common):
                     # 0 is nid
                     isave1 = [1, 2, 3, 4, 5, 6]
                     isave2 = [7, 8, 9, 10, 11, 12]
-                    if is_magnitude_phase:
-                        mag = floats1[:, isave1]
-                        phase = floats1[:, isave2]
-                        rtheta = radians(phase)
-                        real_imag = mag * (cos(rtheta) + 1.j * sin(rtheta))
-                    else:
-                        real = floats1[:, isave1]
-                        imag = floats1[:, isave2]
-                        real_imag = real + 1.j * imag
+                    real_imag = apply_mag_phase(floats1, is_magnitude_phase, isave1, isave2)
                     obj.data[obj.itime, itotal:itotal2, :] = real_imag
 
                     obj.itotal = itotal2
@@ -2920,15 +2904,7 @@ class OES(OP2Common):
                     # [loc, rsr, rsi, azsr, azsi, Asr, Asi, ssr, ssi]
                     isave1 = [1, 3, 5, 7]
                     isave2 = [2, 4, 6, 9]
-                    if is_magnitude_phase:
-                        mag = floats1[:, isave1]
-                        phase = floats1[:, isave2]
-                        rtheta = radians(phase)
-                        real_imag = mag * (cos(rtheta) + 1.j * sin(rtheta))
-                    else:
-                        real = floats1[:, isave1]
-                        imag = floats1[:, isave2]
-                        real_imag = real + 1.j * imag
+                    real_imag = apply_mag_phase(floats1, is_magnitude_phase, isave1, isave2)
 
                     obj.data[obj.itime, itotal:itotal2, :] = real_imag
                     obj.itotal = itotal2
@@ -3204,15 +3180,7 @@ class OES(OP2Common):
                     # fei, uei, aoi, aei]
                     isave1 = [1, 3, 5, 7]
                     isave2 = [2, 4, 6, 8]
-                    if is_magnitude_phase:
-                        mag = floats[:, isave1]
-                        phase = floats[:, isave2]
-                        rtheta = radians(phase)
-                        real_imag = mag * (cos(rtheta) + 1.j * sin(rtheta))
-                    else:
-                        real = floats[:, isave1]
-                        imag = floats[:, isave2]
-                        real_imag = real + 1.j * imag
+                    real_imag = apply_mag_phase(floats, is_magnitude_phase, isave1, isave2)
                     obj.data[obj.itime, itotal:itotal2, :] = real_imag
 
                     obj.ielement = itotal2
