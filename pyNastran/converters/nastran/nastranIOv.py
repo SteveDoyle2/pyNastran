@@ -1768,6 +1768,7 @@ class NastranIO(object):
         if nnodes == 0:
             model.log.warning('0 nodes added for %r' % name)
             return
+        self.follower_nodes[name] = node_ids
         points = vtk.vtkPoints()
         points.SetNumberOfPoints(nnodes)
 
@@ -1813,6 +1814,7 @@ class NastranIO(object):
         nnodes = nlines * 2
         if nnodes == 0:
             return
+        self.follower_nodes[name] = lines.ravel()
         points = vtk.vtkPoints()
         points.SetNumberOfPoints(nnodes)
 
@@ -4716,7 +4718,10 @@ class NastranIO(object):
                 num_off = len(ioff)
                 print('force_eids_off = %s; n=%s' % (self.element_ids[ioff], num_off))
                 self.log_error('force_eids_off = %s; n=%s' % (self.element_ids[ioff], num_off))
-                cases[(subcase_id, icase, 'Force\nIsElementOn', 1, 'centroid', '%i', header)] = is_element_on
+                force_on_res = GuiResult(subcase_id, header='Force - IsElementOn',
+                                         title='Force\nIsElementOn',
+                                         location='centroid', scalar=is_element_on)
+                cases[icase] = (force_on_res, (subcase_id, 'Force\nIsElementOn'))
                 form_dict[(key, itime)].append(('Force - IsElementOn', icase, []))
                 #num_on -= num_off
                 icase += 1
@@ -5319,20 +5324,18 @@ class NastranIO(object):
         form0 = (word, None, [])
         formis = form0[2]
         # subcase_id, icase, resultType, vector_size, location, dataFormat
+        subcase_id = key[2]
         if is_stress and itime == 0:
             if is_element_on.min() == 0:  # if all elements aren't on
                 ioff = np.where(is_element_on == 0)[0]
                 print('stress_eids_off = %s' % np.array(self.element_ids[ioff]))
                 self.log_error('stress_eids_off = %s' % self.element_ids[ioff])
-                #stress_res = GuiResult(subcase_id, header='Stress - isElementOn', title='Stress\nisElementOn',
-                                    #location='centroid', scalar=oxx, data_format=fmt)
-                #cases[icase] = (stress_res, (subcase_id, 'Stress - isElementOn'))
-
-                cases[(1, icase, 'Stress\nisElementOn', 1, 'centroid', '%i', header)] = is_element_on
+                stress_res = GuiResult(subcase_id, header='Stress - isElementOn', title='Stress\nisElementOn',
+                                       location='centroid', scalar=oxx, data_format=fmt)
+                cases[icase] = (stress_res, (subcase_id, 'Stress - isElementOn'))
                 form_dict[(key, itime)].append(('Stress - IsElementOn', icase, []))
                 icase += 1
 
-        subcase_id = key[2]
         if oxx.min() != oxx.max():
             oxx_res = GuiResult(subcase_id, header=word + 'XX', title=word + 'XX',
                                 location='centroid', scalar=oxx, data_format=fmt)
