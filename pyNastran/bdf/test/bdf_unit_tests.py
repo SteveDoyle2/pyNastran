@@ -36,28 +36,28 @@ class TestBDF(Tester):
     def test_write_path(self):
         include_name = r'C:\NASA\formats\pynastran_v0.6\pyNastran\bdf\writePath.py'
         msg1 = write_include(include_name, is_windows=True)
-        #print(msg1)
 
         include_name = r'/opt/NASA/formats/pynastran_v0.6/pyNastran/bdf/writePath.py'
         msg2 = write_include(include_name, is_windows=False)
 
-        #include_name = r'/opt/NASA/test1/test2/test3/test4/formats/pynastran_v0.6/pyNastran/bdf/writePath.py'
-        #msg3 = write_include(include_name, is_windows=False)
+        include_name = r'/opt/NASA/test1/test2/test3/test4/formats/pynastran_v0.6/pyNastran/bdf/writePath.py'
+        msg3 = write_include(include_name, is_windows=False)
 
-        #include_name = r'/opt/NASA/test1/test2/test3/test4/formats/pynastran_v0.6/pyNastran/bdf/writePath.py'
-        #msg4 = write_include(include_name, is_windows=True)
+        include_name = r'opt/NASA/test1/test2/test3/test4/formats/pynastran_v0.6/pyNastran/bdf/writePath.py'
+        msg4 = write_include(include_name, is_windows=True)
+        #include_name = os.path.join(pkg_path, 'this', 'is', 'a', 'long_path', 'model.pch')
 
-        msg1_expected = 'INCLUDE C:\\\\NASA\\formats\\pynastran_v0.6\\pyNastran\\bdf\\writePath.py\n'
+        msg1_expected = r'INCLUDE C:\\NASA\formats\pynastran_v0.6\pyNastran\bdf\writePath.py' '\n'
         msg2_expected =  'INCLUDE /opt/NASA/formats/pynastran_v0.6/pyNastran/bdf/writePath.py\n'
-        #msg3_expected = ('INCLUDE /opt/NASA/test1/test2/test3/test4/formats/pynastran_v0.6/\n'
-                         #'        pyNastran/bdf/writePath.py\n')
-        #msg4_expected = (r'INCLUDE opt\NASA\test1\test2\test3\test4\formats\pynastran_v0.6' '\n'
-                         #'        pyNastran\bdf\writePath.py\n')
+        msg3_expected = ('INCLUDE /opt/NASA/test1/test2/test3/test4/formats/pynastran_v0.6/\n'
+                         '        pyNastran/bdf/writePath.py\n')
+        msg4_expected = (r'INCLUDE opt\NASA\test1\test2\test3\test4\formats\pynastran_v0.6' '\\\n'
+                         r'        pyNastran\bdf\writePath.py' '\n')
 
-        assert msg1 == msg1_expected, 'actual:\n%r\nexpected:\n%r' % (msg1, msg1_expected)
-        assert msg2 == msg2_expected, 'actual:\n%r\nexpected:\n%r' % (msg2, msg2_expected)
-        #assert msg3 == msg3_expected, 'actual:\n%r\nexpected:\n%r' % (msg3, msg3_expected)
-        #assert msg4 == msg4_expected, 'actual:\n%r\nexpected:\n%r' % (msg4, msg4_expected)
+        assert msg1 == msg1_expected, 'test1 actual:\n%r\nexpected:\n%r' % (msg1, msg1_expected)
+        assert msg2 == msg2_expected, 'test2 actual:\n%r\nexpected:\n%r' % (msg2, msg2_expected)
+        assert msg3 == msg3_expected, 'test3 actual:\n%r\nexpected:\n%r' % (msg3, msg3_expected)
+        assert msg4 == msg4_expected, 'test4 actual:\n%r\nexpected:\n%r' % (msg4, msg4_expected)
 
     def test_object_attributes_01(self):
         model = BDF(debug=False)

@@ -41,9 +41,10 @@ def write_include(filename, is_windows=True):
     if is_windows:
         marker = '\\'
     else:
-        marker = r'/'
+        marker = '/'
 
     sline = _split_path(filename)
+    #print('sline =', sline)
     nsline = len(sline)
     if len(filename) > 52: # 62
         pth = ''
@@ -54,16 +55,18 @@ def write_include(filename, is_windows=True):
                 pth += '%s%s' % (pathi, marker)
             if len(pth) > 52:
                 if isline == nsline - 1: # if this is the last one...
-                    pth = pth.rstrip(marker)
-                    msg += pth
-                    pth = '\n'
+                    break
+                    #pth = pth.rstrip(marker)
+                    #msg += pth
+                    #pth = '\n'
                 else:
                     pth += '\n        '
                     msg += pth
                     pth = ''
     else:
         pth = marker.join(sline)
-    return msg + pth
+    out = msg + pth.rstrip('\n ' + marker) + '\n'
+    return out
 
 
 def _split_path(abspath):
