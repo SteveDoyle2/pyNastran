@@ -88,8 +88,8 @@ install:
 # Run test
 script:
   #- nosetests --with-cov --cov YOUR_PACKAGE_NAME_HERE --cov-config .coveragerc --logging-level=INFO
-  #- "python pyNastran/all_tests_no_gui.py"
-  - "python -m coverage run pyNastran/all_tests_no_gui.py"
+  - "python pyNastran/all_tests_no_gui.py"
+  #- "python -m coverage run pyNastran/all_tests_no_gui.py"
   #- "coverage run pyNastran/all_tests_no_gui.py"
 
 # https://github.com/z4r/python-coveralls
