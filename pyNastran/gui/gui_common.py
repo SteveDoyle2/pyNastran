@@ -1866,11 +1866,13 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             #try:
             self.resize(screen_shape[0], screen_shape[1])
             width, height = screen_shape
-            pos = settings.value("pos", pos_default).toPyObject()
-            #x_pos, y_pos = pos
-            #print(pos)
-            #self.mapToGlobal(QtCore.QPoint(pos[0], pos[1]))
-            #self.setGeometry(x_pos, y_pos, width, height)
+            if 0 and PY3:
+                pos = settings.value("pos", pos_default).toPyObject()
+                x_pos, y_pos = pos
+                #print(pos)
+                #self.mapToGlobal(QtCore.QPoint(pos[0], pos[1]))
+                y_pos = pos_default[0]
+                self.setGeometry(x_pos, y_pos, width, height)
             #except TypeError:
                 #self.resize(1100, 700)
 

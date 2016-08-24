@@ -46,6 +46,27 @@ Solver
         solve, calculate responses
    - added D matricies for PSHELL, PCOMP, PSOLID
 
+-----------------------v0.8.1 released 2016/?/??-----------------------
+This is a bug fix release.
+
+Done
+----
+BDF:
+ - write_path function works
+
+OP2:
+ - MSC Nastran 2005R3B supported
+ - ASSIG, ASEPS tables now skipped properly
+
+TODO:
+-----
+BDF:
+ - fix speed of CORD1R, CORD1C, CORD1S
+
+GUI:
+ - fix bar Cd frame for CORD2C
+ - fix command index (gives a duplicated string, not the Sidebar index)
+
 -----------------------v0.8.0 released 2016/8/21-----------------------
 Major changes:
  - BDF:
