@@ -88,14 +88,14 @@ install:
 # Run test
 script:
   #- nosetests --with-cov --cov YOUR_PACKAGE_NAME_HERE --cov-config .coveragerc --logging-level=INFO
-  - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then coverage run pyNastran/all_tests.py; fi
-  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.3" ]]; then python pyNastran/all_tests_no_gui.py; fi
-  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.4" ]]; then python pyNastran/all_tests_no_gui.py; fi
-  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.5" ]]; then python pyNastran/all_tests_no_gui.py; fi
-  - if [[ "$TRAVIS_PYTHON_VERSION" == "nightly" ]]; then python pyNastran/all_tests_no_gui.py; fi
+  #- if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then coverage run pyNastran/all_tests.py; fi
+  #- if [[ "$TRAVIS_PYTHON_VERSION" == "3.3" ]]; then python pyNastran/all_tests_no_gui.py; fi
+  #- if [[ "$TRAVIS_PYTHON_VERSION" == "3.4" ]]; then python pyNastran/all_tests_no_gui.py; fi
+  #- if [[ "$TRAVIS_PYTHON_VERSION" == "3.5" ]]; then python pyNastran/all_tests_no_gui.py; fi
+  #- if [[ "$TRAVIS_PYTHON_VERSION" == "nightly" ]]; then python pyNastran/all_tests_no_gui.py; fi
   #- "python pyNastran/all_tests.py"
   #- "python -m coverage run pyNastran/all_tests_no_gui.py"
-  #- "coverage run pyNastran/all_tests_no_gui.py"
+  - "coverage run pyNastran/all_tests_no_gui.py"
 
 # https://github.com/z4r/python-coveralls
 # Calculate coverage
