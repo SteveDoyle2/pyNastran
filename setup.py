@@ -126,6 +126,9 @@ except ImportError:
 #    'scipy >= 0.16.0, scipy < 0.18.0',
 #]
 
+if 'dev' in pyNastran.__version__:
+    py_packages.append('coveralls')
+
 install_requires = py_packages + [
     # -*- Extra requirements: -*-
     #'docopt == 0.6.2',

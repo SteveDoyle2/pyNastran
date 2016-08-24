@@ -9,6 +9,7 @@ import pyNastran
 from pyNastran.utils import object_attributes, object_methods
 from pyNastran.bdf.cards.collpase_card import collapse_thru_by
 from pyNastran.bdf.bdf import BDF, read_bdf
+from pyNastran.bdf.write_path import write_include
 
 pkg_path = pyNastran.__path__[0]
 test_path = os.path.join(pkg_path, 'bdf', 'test')
@@ -32,6 +33,33 @@ class Tester(unittest.TestCase):
 
 
 class TestBDF(Tester):
+
+    def test_write_path(self):
+        include_name = r'C:\NASA\formats\pynastran_v0.6\pyNastran\bdf\writePath.py'
+        msg1 = write_include(include_name, is_windows=True)
+
+        include_name = r'/opt/NASA/formats/pynastran_v0.6/pyNastran/bdf/writePath.py'
+        msg2 = write_include(include_name, is_windows=False)
+
+        include_name = r'/opt/NASA/test1/test2/test3/test4/formats/pynastran_v0.6/pyNastran/bdf/writePath.py'
+        msg3 = write_include(include_name, is_windows=False)
+
+        include_name = r'opt/NASA/test1/test2/test3/test4/formats/pynastran_v0.6/pyNastran/bdf/writePath.py'
+        msg4 = write_include(include_name, is_windows=True)
+        #include_name = os.path.join(pkg_path, 'this', 'is', 'a', 'long_path', 'model.pch')
+
+        msg1_expected = r'INCLUDE C:\\NASA\formats\pynastran_v0.6\pyNastran\bdf\writePath.py' '\n'
+        msg2_expected =  'INCLUDE /opt/NASA/formats/pynastran_v0.6/pyNastran/bdf/writePath.py\n'
+        msg3_expected = ('INCLUDE /opt/NASA/test1/test2/test3/test4/formats/pynastran_v0.6/\n'
+                         '        pyNastran/bdf/writePath.py\n')
+        msg4_expected = (r'INCLUDE opt\NASA\test1\test2\test3\test4\formats\pynastran_v0.6' '\\\n'
+                         r'        pyNastran\bdf\writePath.py' '\n')
+
+        assert msg1 == msg1_expected, 'test1 actual:\n%r\nexpected:\n%r' % (msg1, msg1_expected)
+        assert msg2 == msg2_expected, 'test2 actual:\n%r\nexpected:\n%r' % (msg2, msg2_expected)
+        assert msg3 == msg3_expected, 'test3 actual:\n%r\nexpected:\n%r' % (msg3, msg3_expected)
+        assert msg4 == msg4_expected, 'test4 actual:\n%r\nexpected:\n%r' % (msg4, msg4_expected)
+
     def test_object_attributes_01(self):
         model = BDF(debug=False)
         model.object_attributes(mode='public', keys_to_skip=None)
@@ -225,6 +253,54 @@ class TestBDF(Tester):
             assert fem.card_count['EIGC'] == 1, fem.card_count
             assert fem.card_count['MPC'] == 1, fem.card_count
             assert fem.card_count['TF'] == 2, fem.card_count
+
+    def test_bdf_aero_01(self):
+        bdf_filename = os.path.join('aero', 'aerobeam.bdf')
+        folder = os.path.abspath(os.path.join(pkg_path, '..', 'models'))
+        fem1, fem2, diff_cards = self.run_bdf(folder, bdf_filename)
+        diff_cards2 = list(set(diff_cards))
+        diff_cards2.sort()
+        assert len(diff_cards2) == 0, diff_cards2
+
+        for fem in [fem1, fem2]:
+            assert fem.card_count['MAT1'] == 3, fem.card_count
+            assert fem.card_count['DCONADD'] == 2, fem.card_count
+            assert fem.card_count['MAT1'] == 3, fem.card_count
+            assert fem.card_count['DMI'] == 6, fem.card_count
+            assert fem.card_count['PAERO1'] == 1, fem.card_count
+            assert fem.card_count['EIGRL'] == 2, fem.card_count
+            assert fem.card_count['PBAR'] == 1, fem.card_count
+            assert fem.card_count['DESVAR'] == 3, fem.card_count
+            assert fem.card_count['DRESP1'] == 11, fem.card_count
+            assert fem.card_count['DRESP2'] == 6, fem.card_count
+
+            assert fem.card_count['SPC1'] == 4, fem.card_count
+            assert fem.card_count['AESTAT'] == 10, fem.card_count
+            assert fem.card_count['TRIM'] == 4, fem.card_count
+            assert fem.card_count['SPLINE2'] == 3, fem.card_count
+            assert fem.card_count['DVPREL1'] == 6, fem.card_count
+            assert fem.card_count['SUPORT1'] == 2, fem.card_count
+            assert fem.card_count['DCONSTR'] == 10, fem.card_count
+            assert fem.card_count['AELIST'] == 3, fem.card_count
+            assert fem.card_count['CORD2R'] == 6, fem.card_count
+            assert fem.card_count['CONM2'] == 10, fem.card_count
+
+            assert fem.card_count['ENDDATA'] == 1, fem.card_count
+            assert fem.card_count['AERO'] == 1, fem.card_count
+            assert fem.card_count['PARAM'] == 4, fem.card_count
+            assert fem.card_count['CBEAM'] == 3, fem.card_count
+            assert fem.card_count['GRID'] == 14, fem.card_count
+            assert fem.card_count['SET1'] == 5, fem.card_count
+            assert fem.card_count['MKAERO1'] == 1, fem.card_count
+            assert fem.card_count['PBEAML'] == 3, fem.card_count
+            assert fem.card_count['FLFACT'] ==5, fem.card_count
+            assert fem.card_count['AESURF'] == 3, fem.card_count
+            assert fem.card_count['DEQATN'] == 3, fem.card_count
+            assert fem.card_count['CBAR'] == 4, fem.card_count
+            assert fem.card_count['CAERO1'] == 3, fem.card_count
+            assert fem.card_count['AEROS'] == 1, fem.card_count
+            assert fem.card_count['FLUTTER'] == 4, fem.card_count
+            assert fem.card_count['DOPTPRM'] == 1, fem.card_count
 
 class TestBaseCard(Tester):
     def test_base_card_01_collapse_thru(self):

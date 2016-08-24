@@ -24,7 +24,8 @@ def write_include(filename, is_windows=True):
 
     ..code-block:: python
 
-      fname = r'/opt/NASA/test1/test2/test3/test4/formats/pynastran_v0.6/pyNastran/bdf/model.inc'
+      fname = r'/opt/NASA/test1/test2/test3/
+      test4/formats/pynastran_v0.6/pyNastran/bdf/model.inc'
       write_include(fname, is_windows=False)
 
     We want:
@@ -43,22 +44,29 @@ def write_include(filename, is_windows=True):
         marker = '/'
 
     sline = _split_path(filename)
-    #print("sline = %s" % sline)
+    #print('sline =', sline)
+    nsline = len(sline)
     if len(filename) > 52: # 62
         pth = ''
-        for p in sline:
-            if p == '/':
+        for isline, pathi in enumerate(sline):
+            if pathi == '/':  # /home/etc -> [/, home, etc]
                 pth += '%s' % marker
             else:
-                pth += '%s%s' % (p, marker)
+                pth += '%s%s' % (pathi, marker)
             if len(pth) > 52:
-                pth += '\n        '
-                msg += pth
-                pth = ''
-        pth = pth.rstrip(' /\\\n')
+                if isline == nsline - 1: # if this is the last one...
+                    break
+                    #pth = pth.rstrip(marker)
+                    #msg += pth
+                    #pth = '\n'
+                else:
+                    pth += '\n        '
+                    msg += pth
+                    pth = ''
     else:
         pth = marker.join(sline)
-    return msg + pth
+    out = msg + pth.rstrip('\n ' + marker) + '\n'
+    return out
 
 
 def _split_path(abspath):
@@ -86,20 +94,3 @@ def _split_path(abspath):
 
     basepaths.reverse()
     return basepaths
-
-
-def main():
-    include_name = r'C:\NASA\formats\pynastran_v0.6\pyNastran\bdf\writePath.py'
-    print('%s' % write_include(include_name, is_windows=True))
-
-    include_name = r'/opt/NASA/formats/pynastran_v0.6/pyNastran/bdf/writePath.py'
-    print('%s' % write_include(include_name, is_windows=False))
-
-    include_name = r'/opt/NASA/test1/test2/test3/test4/formats/pynastran_v0.6/pyNastran/bdf/writePath.py'
-    print('%s' % write_include(include_name, is_windows=False))
-
-    include_name = r'/opt/NASA/test1/test2/test3/test4/formats/pynastran_v0.6/pyNastran/bdf/writePath.py'
-    print('%s' % write_include(include_name, is_windows=True))
-
-if __name__ == '__main__':  ## pragma: no cover
-    main()

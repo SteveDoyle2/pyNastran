@@ -1,0 +1,276 @@
+SOL 101                                                                         
+TIME 100                                                                        
+INCLUDE 'dmap_charge'                                                           
+CEND                                                                            
+TITLE = modele_petite_zone
+ECHO = NONE 
+$                                                                               
+   SPC = 2
+   LOAD = 2
+   STRESS(PLOT)=ALL                                                          
+   STRAIN(PLOT)=ALL                                                          
+$                                                                               
+$---------------------------------                                              
+$ Definition des cas de chargement                                              
+$---------------------------------                                              
+$                                                                               
+SUBCASE=1                                                                       
+SUBTITLE=chargement                                              
+        LABEL=chargement                                        
+        LOAD=1                                                                  
+        SPC=2                                                                   
+        MPC=101106                                                              
+$                                                                               
+BEGIN BULK                                                                      
+$                                                                               
+PARAM   BAILOUT 0                                                               
+PARAM   POST    -1                                                              
+PARAM   PATVER  3.000000                                                        
+PARAM   MAXRATI 3.000000                                                        
+PARAM   AUTOSPC NO                                                              
+$                                                                               
+PARAM   INREL   0                                                               
+PARAM   ALTRED  NO                                                              
+PARAM   COUPMASS-1                                                              
+PARAM   WTMASS  .0010000                                                        
+PARAM   GRDPNT  0                                                               
+$                                                                               
+PARAM   K6ROT   1.000000                                                        
+PARAM   SNORM   20.00000                                                        
+$                                                                               
+PARAM   PRTMAXIMYES                                                             
+$                                                                               $
+$----------------------------------------------                                 
+$ Parametres pour contraintes repere materiaux                                  
+$----------------------------------------------                                 
+PARAM   CURV    1                                                               
+PARAM   OG      -1                                                              
+PARAM   S1M     1                                                               
+PARAM   S1AM    1                                                               
+$
+$ Elements and Element Properties for region : pbeam.20883432
+PBEAM   2088343220076500135.000010125.00100.0000      0.100.0000        +       
++       15.00000      0.-15.0000      0.-15.0000      0.      0.      0.+       
++       YES     1.000000180.000013500.00100.0000      0.100.0000        +       
++       15.00000      0.-15.0000      0.-15.0000      0.      0.      0.+       
++       YES     .5000000                                                +       
++       15.00000      0.-15.0000      0.-15.0000      0.      0.      0.+       
++       1.000000      0.                                                +       
++                                             0.      0.      0.      0.        
+CBEAM   20883432208834322088341 2088351 1.000000      0.      0.                
+$ Elements and Element Properties for region : pbeam.20883512
+PBEAM   2088351220076500180.000013500.00100.0000      0.100.0000        +       
++       15.00000      0.-15.0000      0.-15.0000      0.      0.      0.+       
++       YES     1.000000180.000013500.00100.0000      0.100.0000        +       
++       15.00000      0.-15.0000      0.-15.0000      0.      0.      0.+       
++       YES     .5000000                                                +       
++       15.00000      0.-15.0000      0.-15.0000      0.      0.      0.+       
++       1.000000      0.                                                +       
++                                             0.      0.      0.      0.        
+CBEAM   20883512208835122088351 2088361 1.000000      0.      0.                
+$ Elements and Element Properties for region : pbeam.20883612
+PBEAM   2088361220076500180.000013500.00100.0000      0.100.0000        +       
++       15.00000      0.-15.0000      0.-15.0000      0.      0.      0.+       
++       YES     1.000000135.000010125.00100.0000      0.100.0000        +       
++       15.00000      0.-15.0000      0.-15.0000      0.      0.      0.+       
++       YES     .5000000                                                +       
++       15.00000      0.-15.0000      0.-15.0000      0.      0.      0.+       
++       1.000000      0.                                                +       
++                                             0.      0.      0.      0.        
+CBEAM   20883612208836122088361 2088373 1.000000      0.      0.                
+$ Elements and Element Properties for region : pbeam.20883732
+PBEAM   2088373220076500135.000010125.00100.0000      0.100.0000        +       
++       15.00000      0.-15.0000      0.-15.0000      0.      0.      0.+       
++       YES     1.000000135.000010125.00100.0000      0.100.0000        +       
++       15.00000      0.-15.0000      0.-15.0000      0.      0.      0.+       
++       YES     .5000000                                                +       
++       15.00000      0.-15.0000      0.-15.0000      0.      0.      0.+       
++       1.000000      0.                                                +       
++                                             0.      0.      0.      0.        
+CBEAM   20883732208837322088373 2088381 1.000000      0.      0.                
+$ Elements and Element Properties for region : prod.20853415                    
+$ Pset: "prod.20853415" will be imported as: "prod.20853415"                    
+PROD    2085341520057593.1000000                                                
+CROD    20853415208534152085940 2085350                                         
+$ Elements and Element Properties for region : prod.20853418                    
+$ Pset: "prod.20853418" will be imported as: "prod.20853418"                    
+PROD    2085341820069000529.3000                                                
+CROD    20853418208534182085940 2085350                                         
+$ Elements and Element Properties for region : prod.20853465                    
+$ Pset: "prod.20853465" will be imported as: "prod.20853465"                    
+PROD    2085346520000010.1000000                                                
+CROD    20853465208534652085940 2085350                                         
+$ Elements and Element Properties for region : prod.20853505                    
+$ Pset: "prod.20853505" will be imported as: "prod.20853505"                    
+PROD    2085350520057593.1000000                                                
+CROD    20853505208535052085350 2085360                                         
+$ Elements and Element Properties for region : prod.20853508                    
+$ Pset: "prod.20853508" will be imported as: "prod.20853508"                    
+PROD    2085350820069000571.9900                                                
+CROD    20853508208535082085350 2085360                                         
+$ Elements and Element Properties for region : prod.20853555                    
+$ Pset: "prod.20853555" will be imported as: "prod.20853555"                    
+PROD    208535552006900048.00000                                                
+CROD    20853555208535552085350 2085360                                         
+$ Elements and Element Properties for region : prod.20853605                    
+$ Pset: "prod.20853605" will be imported as: "prod.20853605"                    
+PROD    2085360520057593.1000000                                                
+CROD    20853605208536052085360 2085370                                         
+$ Elements and Element Properties for region : prod.20853608                    
+$ Pset: "prod.20853608" will be imported as: "prod.20853608"                    
+PROD    2085360820069000404.9000                                                
+CROD    20853608208536082085360 2085370                                         
+$ Elements and Element Properties for region : prod.20853655                    
+$ Pset: "prod.20853655" will be imported as: "prod.20853655"                    
+PROD    208536552006900048.00000                                                
+CROD    20853655208536552085360 2085370                                         
+$ Elements and Element Properties for region : prod.20853705                    
+$ Pset: "prod.20853705" will be imported as: "prod.20853705"                    
+PROD    2085370520057593.1000000                                                
+CROD    20853705208537052085370 2085380                                         
+$ Elements and Element Properties for region : prod.20853708                    
+$ Pset: "prod.20853708" will be imported as: "prod.20853708"                    
+PROD    2085370820069000404.9000                                                
+CROD    20853708208537082085370 2085380                                         
+$ Elements and Element Properties for region : prod.20853755                    
+$ Pset: "prod.20853755" will be imported as: "prod.20853755"                    
+PROD    208537552006900024.00000                                                
+CROD    20853755208537552085370 2085380                                         
+$ Elements and Element Properties for region : prod.20883403                    
+$ Pset: "prod.20883403" will be imported as: "prod.20883403"                    
+PROD    208834032007650080.00000                                                
+CROD    20883403208834032088340 2085940                                         
+$ Elements and Element Properties for region : prod.20883412                    
+$ Pset: "prod.20883412" will be imported as: "prod.20883412"                    
+PROD    2088341220076500120.0000                                                
+CROD    20883412208834122085940 2085350                                         
+$ Elements and Element Properties for region : prod.20883413                    
+$ Pset: "prod.20883413" will be imported as: "prod.20883413"                    
+PROD    208834132007650080.00000                                                
+CROD    20883413208834132088341 2088340                                         
+$ Elements and Element Properties for region : prod.20883502                    
+$ Pset: "prod.20883502" will be imported as: "prod.20883502"                    
+PROD    2088350220076500120.0000                                                
+CROD    20883502208835022085350 2085360                                         
+$ Elements and Element Properties for region : prod.20883503                    
+$ Pset: "prod.20883503" will be imported as: "prod.20883503"                    
+PROD    208835032007650080.00000                                                
+CROD    20883503208835032088350 2085350                                         
+$ Elements and Element Properties for region : prod.20883513                    
+$ Pset: "prod.20883513" will be imported as: "prod.20883513"                    
+PROD    208835132007650080.00000                                                
+CROD    20883513208835132088351 2088350                                         
+$ Elements and Element Properties for region : prod.20883602                    
+$ Pset: "prod.20883602" will be imported as: "prod.20883602"                    
+PROD    2088360220076500120.0000                                                
+CROD    20883602208836022085360 2085370                                         
+$ Elements and Element Properties for region : prod.20883603                    
+$ Pset: "prod.20883603" will be imported as: "prod.20883603"                    
+PROD    208836032007650080.00000                                                
+CROD    20883603208836032088360 2085360                                         
+$ Elements and Element Properties for region : prod.20883613                    
+$ Pset: "prod.20883613" will be imported as: "prod.20883613"                    
+PROD    208836132007650080.00000                                                
+CROD    20883613208836132088361 2088360                                         
+$ Elements and Element Properties for region : prod.20883702                    
+$ Pset: "prod.20883702" will be imported as: "prod.20883702"                    
+PROD    2088370220076500120.0000                                                
+CROD    20883702208837022085370 2085380                                         
+$ Elements and Element Properties for region : prod.20883703                    
+$ Pset: "prod.20883703" will be imported as: "prod.20883703"                    
+PROD    208837032007650080.00000                                                
+CROD    20883703208837032088370 2085370                                         
+$ Elements and Element Properties for region : prod.20883713                    
+$ Pset: "prod.20883713" will be imported as: "prod.20883713"                    
+PROD    208837132007650080.00000                                                
+CROD    20883713208837132088373 2088370                                         
+$ Elements and Element Properties for region : prod.20883803                    
+$ Pset: "prod.20883803" will be imported as: "prod.20883803"                    
+PROD    208838032007650080.00000                                                
+CROD    20883803208838032088380 2085380                                         
+$ Elements and Element Properties for region : prod.20883813                    
+$ Pset: "prod.20883813" will be imported as: "prod.20883813"                    
+PROD    208838132007650080.00000                                                
+CROD    20883813208838132088381 2088380                                         
+$ Elements and Element Properties for region : pshell.20883410
+PSHELL  20883410200765003.      20076500        20076500
+         0.     1.5
+$ Pset: "pshell.20883410" will be imported as: "pshell.20883410"
+CQUAD4  2088341020883410 2085350 2088350 2088340 208594086.54    0.
+$ Elements and Element Properties for region : pshell.20883430
+PSHELL  20883430200765003.      20076500        20076500
+         0.     1.5
+$ Pset: "pshell.20883430" will be imported as: "pshell.20883430"
+CQUAD4  2088343020883430 2088350 2088351 2088341 208834086.54    0.
+$ Elements and Element Properties for region : pshell.20883500
+PSHELL  20883500200765003.      20076500        20076500
+         0.     1.5
+$ Pset: "pshell.20883500" will be imported as: "pshell.20883500"
+CQUAD4  2088350020883500 2085360 2088360 2088350 208535086.6     0.
+$ Elements and Element Properties for region : pshell.20883510
+PSHELL  20883510200765003.      20076500        20076500
+         0.     1.5
+$ Pset: "pshell.20883510" will be imported as: "pshell.20883510"
+CQUAD4  2088351020883510 2088360 2088361 2088351 208835086.61    0.
+$ Elements and Element Properties for region : pshell.20883600
+PSHELL  20883600200765003.      20076500        20076500
+         0.     1.5
+$ Pset: "pshell.20883600" will be imported as: "pshell.20883600"
+CQUAD4  2088360020883600 2085370 2088370 2088360 208536086.75    0.
+$ Elements and Element Properties for region : pshell.20883610
+PSHELL  20883610200765003.      20076500        20076500
+         0.     1.5
+$ Pset: "pshell.20883610" will be imported as: "pshell.20883610"
+CQUAD4  2088361020883610 2088370 2088373 2088361 208836086.76    0.
+$ Elements and Element Properties for region : pshell.20883700
+PSHELL  20883700200765003.      20076500        20076500
+         0.     1.5
+$ Pset: "pshell.20883700" will be imported as: "pshell.20883700"
+CQUAD4  2088370020883700 2085380 2088380 2088370 208537087.2     0.
+$ Elements and Element Properties for region : pshell.20883710
+PSHELL  20883710200765003.      20076500        20076500
+         0.     1.5
+$ Pset: "pshell.20883710" will be imported as: "pshell.20883710"
+CQUAD4  2088371020883710 2088380 2088381 2088373 208837087.21    0.
+$ Referenced Material Records
+$ Material Record : mat1.20000010                                               
+MAT1    2000001010.000004200.000.3500000.10000-5.16000-6                +       
++                               2100                                            
+$ Material Record : mat1.20057593                                               
+MAT1    2005759357593.0021802.00.3208000.16000-5.20950-5                +       
++                               2100                                            
+$ Material Record : mat1.20069000                                               
+MAT1    2006900068950.0025921.00.3300000.28000-5.22500-4                +       
++                               2100                                            
+$ Material Record : mat1.20076500
+MAT1    2007650076500.0029000.00.3000000.27000-5.23700-4                +       
++                               2100                                            
+$ Nodes of Group : test
+GRID     2085350 2100   4854.   1696.86 -1592.58 2100
+GRID     2085360 2100   4854.   1621.93 -1762.59 2100
+GRID     2085370 2100   4854.   1529.3  -1923.48 2100
+GRID     2085380 2100   4854.   1418.5  -2072.35 2100
+GRID     2085940 2100   4854.   1759.88 -1399.73 2100
+GRID     2088340 2100   4854.   1702.29 -1380.53 2100
+GRID     2088341 2100   4854.   1613.47 -1350.92 2100
+GRID     2088350 2100   4854.   1635.54 -1566.89 2100
+GRID     2088351 2100   4854.   1546.6  -1529.64 2100
+GRID     2088360 2100   4854.   1558.09 -1727.43 2100
+GRID     2088361 2100   4854.   1469.7  -1678.77 2100
+GRID     2088370 2100   4854.   1464.51 -1878.26 2100
+GRID     2088373 2100   4854.   1377.52 -1817.56 2100
+GRID     2088380 2100   4854.   1355.9  -2018.   2100
+GRID     2088381 2100   4854.   1271.41 -1944.66 2100
+$ Loads for Load Case : Default
+SPCADD   2       1
+LOAD     2      1.      1.       1
+$ Displacement Constraints of Load Set : encastrement
+SPC1     1       123456  2085380 2085940 2088341 2088381
+$ Nodal Forces of Load Set : effort
+FORCE    1       2088350 0      1000.    0.      0.     -1.
+FORCE    1       2088360 0      1000.    0.      0.     -1.
+FORCE    1       2088370 0      1000.    0.      0.     -1.
+$ Referenced Coordinate Frames
+CORD2R   2100            0.      0.      0.      0.      0.     1.
+        1.       0.      0.
+ENDDATA 

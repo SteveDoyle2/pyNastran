@@ -70,7 +70,8 @@ install:
   # Useful for debugging any issues with conda
   - conda info -a
 
-  - conda install psutil
+  - conda install psutil pip
+#  - pip install coveralls
 
   # install dependencies
   # if line per https://docs.travis-ci.com/user/multi-os/
@@ -87,11 +88,12 @@ install:
 # Run test
 script:
   #- nosetests --with-cov --cov YOUR_PACKAGE_NAME_HERE --cov-config .coveragerc --logging-level=INFO
-  - "python pyNastran/all_tests_no_gui.py"
+  #- "python pyNastran/all_tests_no_gui.py"
+  - "coverage run pyNastran/all_tests_no_gui.py"
 
 # https://github.com/z4r/python-coveralls
 # Calculate coverage
-#after_success:
-#  - coveralls
+after_success:
+  - coveralls
 #after_success:
 #  - coveralls --config_file .coveragerc
