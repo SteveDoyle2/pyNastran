@@ -98,6 +98,7 @@ class GuiAttributes(object):
         #    'name' : Geom(),
         #}
         self.geometry_properties = OrderedDict()
+        self.follower_nodes = {}
 
         self.itext = 0
 
@@ -163,7 +164,25 @@ class GuiAttributes(object):
         #if name in self.geometry_actors:
         self.geometry_actors[name].Modified()
 
-    def create_coordinate_system(self, dim_max, label='', origin=None, matrix_3x3=None, Type='xyz'):
+    def create_coordinate_system(self, dim_max, label='', origin=None, matrix_3x3=None,
+                                 Type='xyz'):
+        """
+        Creates a coordinate system
+
+        Parameters
+        ----------
+        dim_max : float
+            the max model dimension; 10% of the max will be used for the coord length
+        label : str
+            the coord id or other unique label (default is empty to indicate the global frame)
+        origin : (3, ) ndarray/list/tuple
+            the origin
+        matrix_3x3 : (3, 3) ndarray
+            a standard Nastran-style coordinate system
+        Type : str
+            a string of 'xyz', 'Rtz', 'Rtp' (xyz, cylindrical, spherical)
+            that changes the axis names
+        """
         pass
 
     @property
@@ -215,11 +234,9 @@ class GuiAttributes(object):
         data = []
         for key in self.case_keys:
             #print(key)
-            if isinstance(key, int):
-                obj, (i, name) = self.result_cases[key]
-                t = (i, [])
-            else:
-                t = (key[1], [])
+            assert isinstance(key, int), key
+            obj, (i, name) = self.result_cases[key]
+            t = (i, [])
             data.append(t)
 
         self.res_widget.update_results(formi)
@@ -391,13 +408,15 @@ class GUIMethods(GuiAttributes):
 
     def create_alternate_vtk_grid(self, name, color=None, line_width=None, opacity=None,
                                   point_size=None, bar_scale=None,
-                                  representation=None, is_visible=True):
+                                  representation=None, is_visible=True,
+                                  follower_nodes=None):
         self.alt_grids[name] = Grid()
         geom = AltGeometry(self, name, color=color, line_width=line_width,
                            point_size=point_size, bar_scale=bar_scale,
                            opacity=opacity, representation=representation,
                            is_visible=is_visible)
         self.geometry_properties[name] = geom
+        self.follower_nodes[name] = follower_nodes
 
     def _add_alt_actors(self, alt_grids):
         for name, grid in iteritems(alt_grids):

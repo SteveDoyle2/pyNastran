@@ -25,5 +25,5 @@ class GuiUtils(unittest.TestCase):
         csv_filename = os.path.join(pkg_path, '..', 'models', 'custom_geom.csv')
         load_user_geom(csv_filename)
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     unittest.main()

@@ -136,15 +136,19 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, DegenGeomIO, ShabpIO, PanairIO
 
         self.setup_gui()
         self.setup_post(inputs)
-        self._check_for_latest_version()
+        self._check_for_latest_version(inputs['no_update'])
 
-    def _check_for_latest_version(self):
+    def _check_for_latest_version(self, check=True):
+        import time
+        t0 = time.time()
         version_latest, version_current, is_newer = check_for_newer_version()
         if is_newer:
             url = pyNastran.__website__
             from pyNastran.gui.menus.download import DownloadWindow
             win = DownloadWindow(url, version_latest, win_parent=self)
             win.show()
+        dt = time.time() - t0
+        print('dt = ', dt)
 
     def mousePressEvent(self, ev):
         if not self.run_vtk:
@@ -277,5 +281,5 @@ def main():
     window = MainWindow(inputs)
     sys.exit(app.exec_())
 
-if __name__ == "__main__":
+if __name__ == '__main__':  # pragma: no cover
     main()

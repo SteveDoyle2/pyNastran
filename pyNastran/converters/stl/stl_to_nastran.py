@@ -1,4 +1,5 @@
 from __future__ import print_function
+from six import string_types
 from pyNastran.converters.stl.stl import STL
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
@@ -10,8 +11,13 @@ def stl_to_nastran_filename(stl_filename, bdf_filename,
                             pid=100, mid=200,
                             size=8, is_double=False,
                             log=None):
-    model = STL(log=log)
-    model.read_stl(stl_filename)
+    if isinstance(stl_filename, string_types):
+        model = STL(log=log)
+        model.read_stl(stl_filename)
+    elif isinstance(stl_filename, STL):
+        model = stl_filename
+    else:
+        raise TypeError('stl_filename must be a string or STL; type=%s' % type(stl_filename))
 
     nid = nnodes_offset + 1
     cid = None
@@ -19,20 +25,22 @@ def stl_to_nastran_filename(stl_filename, bdf_filename,
 
     nodal_normals = model.get_normals_at_nodes(model.elements)
 
+    if size == 8:
+        print_card = print_card_8
+    elif size == 16:
+        if is_double:
+            print_card = print_card_16
+        else:
+            print_card = print_card_double
+    else:
+        raise RuntimeError('size=%r' % size)
+
     with open(bdf_filename, 'w') as bdf:
         bdf.write('CEND\n')
         #bdf.write('LOAD = %s\n' % load_id)
         bdf.write('BEGIN BULK\n')
         nid2 = 1
         magnitude = 100.
-
-        if size == 8:
-            print_card = print_card_8
-        elif size == 16:
-            if is_double:
-                print_card = print_card_16
-            else:
-                print_card = print_card_double
 
         for x, y, z in model.nodes:
             card = ['GRID', nid, cid, x, y, z]
@@ -59,8 +67,8 @@ def stl_to_nastran_filename(stl_filename, bdf_filename,
         nu = 0.3
         card = ['MAT1', mid, E, G, nu]
         bdf.write(print_card_8(card))
-
         bdf.write('ENDDATA\n')
+
 
 def main():
     import os

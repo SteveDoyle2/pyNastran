@@ -744,7 +744,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             text_actor.GetTextProperty().SetColor(color)
         self.log_command('set_text_color(%s, %s, %s)' % color)
 
-    def create_coordinate_system(self, dim_max, label='', origin=None, matrix_3x3=None, Type='xyz'):
+    def create_coordinate_system(self, dim_max, label='', origin=None, matrix_3x3=None,
+                                 Type='xyz'):
         """
         Creates a coordinate system
 
@@ -896,13 +897,16 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.create_cell_picker()
 
     def create_alternate_vtk_grid(self, name, color=None, line_width=5, opacity=1.0, point_size=1,
-                                  bar_scale=0.0, representation=None, is_visible=True):
+                                  bar_scale=0.0, representation=None, is_visible=True,
+                                  follower_nodes=None):
         self.alt_grids[name] = vtk.vtkUnstructuredGrid()
         self.geometry_properties[name] = AltGeometry(
             self, name, color=color,
             line_width=line_width, opacity=opacity,
             point_size=point_size, bar_scale=bar_scale,
             representation=representation, is_visible=is_visible)
+        if follower_nodes is not None:
+            self.follower_nodes[name] = follower_nodes
 
     def _create_vtk_objects(self):
         """creates some of the vtk objects"""
@@ -2898,11 +2902,9 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         data = []
         for key in self.case_keys:
             #print(key)
-            if isinstance(key, int):
-                obj, (i, name) = self.result_cases[key]
-                t = (i, [])
-            else:
-                t = (key[1], [])
+            assert isinstance(key, integer_types), key
+            obj, (i, name) = self.result_cases[key]
+            t = (i, [])
             data.append(t)
 
         self.res_widget.update_results(form)
@@ -2937,10 +2939,10 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         result_name = self.result_name
         case = self.result_cases[case_key]
 
-        if isinstance(case_key, integer_types):
-            (obj, (i, res_name)) = case
-            subcase_id = obj.subcase_id
-            case = obj.get_result(i, res_name)
+        (obj, (i, res_name)) = case
+        subcase_id = obj.subcase_id
+        case = obj.get_result(i, res_name)
+
         try:
             result_values = case[cell_id]
         except IndexError:
@@ -3012,13 +3014,11 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         node_id = cell.GetPointId(imin)
         xyz = np.array(point_min, dtype='float32')
         case = self.result_cases[case_key]
-        if isinstance(case_key, integer_types):
-            (obj, (i, res_name)) = case
-            subcase_id = obj.subcase_id
-            case = obj.get_result(i, res_name)
-            result_values = case[node_id]
-        else:
-            result_values = case[node_id]
+        assert isinstance(case_key, integer_types), case_key
+        (obj, (i, res_name)) = case
+        subcase_id = obj.subcase_id
+        case = obj.get_result(i, res_name)
+        result_values = case[node_id]
         assert not isinstance(xyz, int), xyz
         return result_name, result_values, node_id, xyz
 
@@ -3038,16 +3038,9 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         """
         # case_key = (1, 'ElementID', 1, 'centroid', '%.0f')
         case_key = self.case_keys[self.icase]
-        if isinstance(case_key, int):
-            obj, (i, name) = self.result_cases[case_key]
-            value = name
-        else:
-            assert len(case_key) == 7, case_key
-            #if len(case_key) == 5:
-                #value = case_key[1]
-            #else:
-            value = case_key[2]
-        return value
+        assert isinstance(case_key, integer_types), case_key
+        obj, (i, name) = self.result_cases[case_key]
+        return name
 
     def finish_io(self, cases):
         self.result_cases = cases
@@ -3630,52 +3623,26 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         case = self.result_cases[key]
         default_format = None
         default_scale = None
-        if isinstance(key, integer_types):
-            #(subcase_id, result_type, vector_size, location, data_format) = key
-            (obj, (i, res_name)) = self.result_cases[key]
-            #subcase_id = obj.subcase_id
-            case = obj.get_result(i, res_name)
-            result_type = obj.get_title(i, res_name)
-            nlabels, labelsize, ncolors, colormap = obj.get_nlabels_labelsize_ncolors_colormap(i, res_name)
+        assert isinstance(key, integer_types), key
+        (obj, (i, res_name)) = self.result_cases[key]
+        #subcase_id = obj.subcase_id
+        case = obj.get_result(i, res_name)
+        result_type = obj.get_title(i, res_name)
+        nlabels, labelsize, ncolors, colormap = obj.get_nlabels_labelsize_ncolors_colormap(i, res_name)
 
-            defaults_scalar_bar = obj.get_default_nlabels_labelsize_ncolors_colormap(i, res_name)
-            default_nlabels, default_labelsize, default_ncolors, default_colormap = defaults_scalar_bar
+        defaults_scalar_bar = obj.get_default_nlabels_labelsize_ncolors_colormap(i, res_name)
+        default_nlabels, default_labelsize, default_ncolors, default_colormap = defaults_scalar_bar
 
-            #vector_size = obj.get_vector_size(i, res_name)
-            #location = obj.get_location(i, res_name)
-            data_format = obj.get_data_format(i, res_name)
-            scale = obj.get_scale(i, res_name)
+        #vector_size = obj.get_vector_size(i, res_name)
+        #location = obj.get_location(i, res_name)
+        data_format = obj.get_data_format(i, res_name)
+        scale = obj.get_scale(i, res_name)
 
-            default_title = obj.get_default_title(i, res_name)
-            default_scale = obj.get_default_scale(i, res_name)
+        default_title = obj.get_default_title(i, res_name)
+        default_scale = obj.get_default_scale(i, res_name)
 
-            min_value, max_value = obj.get_min_max(i, res_name)
-            default_min, default_max = obj.get_default_min_max(i, res_name)
-        #elif len(key) == 5:
-            #(subcase_id, result_type, vector_size, location, data_format) = key
-            #default_title = result_type
-            #scale = 0.0
-        #elif len(key) == 6:
-            #(subcase_id, i, result_type, vector_size, location, data_format) = key
-            #default_title = result_type
-            #scale = 0.0
-        else:
-            (subcase_id, i, result_type, vector_size, location, data_format, label2) = key
-            default_title = result_type
-            scale = 0.0
-            default_scale = 0.0
-            min_value = case.min()
-            max_value = case.max()
-            default_min = min_value
-            default_max = max_value
-            nlabels = None
-            labelsize = None
-            ncolors = None
-            colormap = 'jet'
-            default_nlabels = None
-            default_labelsize = None
-            default_ncolors = None
-            default_colormap = 'jet'
+        min_value, max_value = obj.get_min_max(i, res_name)
+        default_min, default_max = obj.get_default_min_max(i, res_name)
 
         if default_format is None:
             default_format = data_format
@@ -3748,35 +3715,22 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self._legend_window._updated_legend = True
 
         key = self.case_keys[icase]
-        if isinstance(key, integer_types):
-            (obj, (i, name)) = self.result_cases[key]
-            #subcase_id = obj.subcase_id
-            #case = obj.get_result(i, name)
-            #result_type = obj.get_title(i, name)
-            #vector_size = obj.get_vector_size(i, name)
-            #location = obj.get_location(i, name)
-            #data_format = obj.get_data_format(i, name)
-            #scale = obj.get_scale(i, name)
-            #label2 = obj.get_header(i, name)
-            default_data_format = obj.get_default_data_format(i, name)
-            default_min, default_max = obj.get_default_min_max(i, name)
-            default_scale = obj.get_default_scale(i, name)
-            default_title = obj.get_default_title(i, name)
-            out_labels = obj.get_default_nlabels_labelsize_ncolors_colormap(i, name)
-            default_nlabels, default_labelsize, default_ncolors, default_colormap = out_labels
-        else:
-            assert len(key) == 7, key
-            (subcase_id, j, result_type, vector_size, location, data_format, label2) = key
-            case = self.result_cases[key]
-            default_data_format = data_format
-            default_min = case.min()
-            default_max = case.max()
-            default_scale = 0.
-            default_title = result_type
-            default_nlabels = None
-            default_labelsize = None
-            default_ncolors = None
-            default_colormap = 'jet'
+        assert isinstance(key, integer_types), key
+        (obj, (i, name)) = self.result_cases[key]
+        #subcase_id = obj.subcase_id
+        #case = obj.get_result(i, name)
+        #result_type = obj.get_title(i, name)
+        #vector_size = obj.get_vector_size(i, name)
+        #location = obj.get_location(i, name)
+        #data_format = obj.get_data_format(i, name)
+        #scale = obj.get_scale(i, name)
+        #label2 = obj.get_header(i, name)
+        default_data_format = obj.get_default_data_format(i, name)
+        default_min, default_max = obj.get_default_min_max(i, name)
+        default_scale = obj.get_default_scale(i, name)
+        default_title = obj.get_default_title(i, name)
+        out_labels = obj.get_default_nlabels_labelsize_ncolors_colormap(i, name)
+        default_nlabels, default_labelsize, default_ncolors, default_colormap = out_labels
 
         assert isinstance(scale, float), 'scale=%s' % scale
         self._legend_window.update_legend(
@@ -3828,43 +3782,34 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         plot_value = self.result_cases[key] # scalar
         vector_size1 = 1
         update_3d = False
-        if isinstance(key, integer_types):
-            #(subcase_id, result_type, vector_size, location, data_format) = key
-            (obj, (i, res_name)) = self.result_cases[key]
-            subcase_id = obj.subcase_id
-            #print('plot_value =', plot_value)
+        assert isinstance(key, integer_types), key
+        (obj, (i, res_name)) = self.result_cases[key]
+        subcase_id = obj.subcase_id
+        #print('plot_value =', plot_value)
 
-            result_type = obj.get_title(i, res_name)
-            vector_size = obj.get_vector_size(i, res_name)
-            if vector_size == 3:
-                plot_value = obj.get_plot_value(i, res_name) # vector
-                update_3d = True
-                #print('setting scale=%s' % scale)
-                assert isinstance(scale, float), scale
-                obj.set_scale(i, res_name, scale)
-            else:
-                scalar_result = obj.get_scalar(i, res_name)
-
-            location = obj.get_location(i, res_name)
-            obj.set_min_max(i, res_name, min_value, max_value)
-            obj.set_data_format(i, res_name, data_format)
-            obj.set_nlabels_labelsize_ncolors_colormap(
-                i, res_name, nlabels, labelsize, ncolors, colormap)
-
-            #data_format = obj.get_data_format(i, res_name)
-            #obj.set_format(i, res_name, data_format)
-            #obj.set_data_format(i, res_name, data_format)
-            subtitle, label = self.get_subtitle_label(subcase_id)
-            name_vector = (vector_size1, subcase_id, result_type, label,
-                           min_value, max_value, scale)
-
-        #elif len(key) == 5:
-            #(subcase_id, result_type, vector_size1, location, _data_format) = key
-        #elif len(key) == 6:
-            #(subcase_id, i, result_type, vector_size1, location, _data_format) = key
+        result_type = obj.get_title(i, res_name)
+        vector_size = obj.get_vector_size(i, res_name)
+        if vector_size == 3:
+            plot_value = obj.get_plot_value(i, res_name) # vector
+            update_3d = True
+            #print('setting scale=%s' % scale)
+            assert isinstance(scale, float), scale
+            obj.set_scale(i, res_name, scale)
         else:
-            (subcase_id, i, result_type, vector_size1, location, _data_format, label2) = key
-            scalar_result = plot_value
+            scalar_result = obj.get_scalar(i, res_name)
+
+        location = obj.get_location(i, res_name)
+        obj.set_min_max(i, res_name, min_value, max_value)
+        obj.set_data_format(i, res_name, data_format)
+        obj.set_nlabels_labelsize_ncolors_colormap(
+            i, res_name, nlabels, labelsize, ncolors, colormap)
+
+        #data_format = obj.get_data_format(i, res_name)
+        #obj.set_format(i, res_name, data_format)
+        #obj.set_data_format(i, res_name, data_format)
+        subtitle, label = self.get_subtitle_label(subcase_id)
+        name_vector = (vector_size1, subcase_id, result_type, label,
+                       min_value, max_value, scale)
         assert vector_size1 == 1, vector_size1
 
         #if isinstance(key, integer_types):  # vector 3

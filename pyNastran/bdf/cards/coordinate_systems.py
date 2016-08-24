@@ -11,8 +11,8 @@ All coordinate cards are defined in this file.  This includes:
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six.moves import zip, range
 from math import sqrt, degrees, radians, atan2, acos, sin, cos
+from six.moves import zip, range
 
 import numpy as np
 from numpy.linalg import norm
@@ -20,8 +20,8 @@ from numpy.linalg import norm
 from pyNastran.utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import BaseCard
-from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_blank,
-    double_or_blank, string_or_blank, string)
+from pyNastran.bdf.bdf_interface.assign_type import (
+    integer, integer_or_blank, double_or_blank, string_or_blank, string)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
@@ -31,9 +31,15 @@ def normalize(v):
     r"""
     Normalizes v into a unit vector.
 
-    :param v:    the vector to normalize
+    Parameters
+    ----------
+    v : (3, ) float ndarray
+        the vector to normalize
 
-    :returns:  normalized v
+    Returns
+    -------
+    vn : (3, ) float ndarray
+        normalized v
 
     .. math:: v_{norm} = \frac{v}{\lvert v \lvert}
     """
@@ -46,15 +52,22 @@ def normalize(v):
 class Coord(BaseCard):
     type = 'COORD'
 
+    #@property
+    #def isResolved(self):
+        #self.deprecated('isResolved', 'is_resolved', '0.8.1')
+        #return self.is_resolved
+
+    #@isResolved.setter
+    #def isResolved(self, is_resolved):
+        #self.deprecated('isResolved', 'is_resolved', '0.8.1')
+        #self.is_resolved = is_resolved
+
     def __init__(self):
         """
         Defines a general CORDxx object
-
-        :param card: a BDFCard object
-        :param data: a list analogous to the card
         """
         #: have all the transformation matricies been determined
-        self.isResolved = False
+        self.is_resolved = False
         self.cid = None
         self.e1 = None
         self.e2 = None
@@ -65,13 +78,13 @@ class Coord(BaseCard):
         self.origin = None
 
 
-    def XYZtoCoord(self, p):
-        self.deprecated('XYZtoCoord', 'xyz_to_coord', '0.8')
-        return self.xyz_to_coord(p)
+    #def XYZtoCoord(self, p):
+        #self.deprecated('XYZtoCoord', 'xyz_to_coord', '0.8')
+        #return self.xyz_to_coord(p)
 
-    def coordToXYZ(self, p):
-        self.deprecated('coordToXYZ', 'coord_to_xyz', '0.8')
-        return self.coord_to_xyz(p)
+    #def coordToXYZ(self, p):
+        #self.deprecated('coordToXYZ', 'coord_to_xyz', '0.8')
+        #return self.coord_to_xyz(p)
 
     def Cid(self):
         """Gets the coordinate ID"""
@@ -187,7 +200,7 @@ class Coord(BaseCard):
         .. math::
           i = j \times k
         """
-        #if self.isResolved:
+        #if self.is_resolved:
             #return
         try:
             assert len(self.e1) == 3, self.e1
@@ -210,7 +223,7 @@ class Coord(BaseCard):
             return
 
         #print('setting up cid=%s rid=%s' % (self.cid, self.Rid()))
-        if not self.isResolved and self.type in ['CORD2R', 'CORD2C', 'CORD2S']:
+        if not self.is_resolved and self.type in ['CORD2R', 'CORD2C', 'CORD2S']:
             self.rid.setup()
 
         if self.Rid() == 0:
@@ -296,23 +309,23 @@ class Coord(BaseCard):
             print("j   = %s" % (self.j))
             raise
 
-        if 0:
-            print("\nCid = %s" % (self.Cid()))
-            print("Rid = %s" % (self.Rid()))
-            print("e1  = %s" % (self.e1))
-            print("e2  = %s" % (self.e2))
-            print("e3  = %s" % (self.e3))
-            print("e1* = [%g, %g, %g]" % tuple(e1))
-            print("e2* = [%g, %g, %g]" % tuple(e2))
-            print("e3* = [%g, %g, %g]" % tuple(e3))
-            print('-----')
-            print("e13 = %s" % (e13))
-            print("e12 = %s" % (e12))
-            print('-----')
-            print("i   = %s len=%s"   % (str(self.i), norm(self.i)))
-            print("j   = %s len=%s"   % (str(self.j), norm(self.j)))
-            print("k   = %s len=%s\n" % (str(self.k), norm(self.k)))
-            print('-----')
+        #if 0:
+            #print("\nCid = %s" % (self.Cid()))
+            #print("Rid = %s" % (self.Rid()))
+            #print("e1  = %s" % (self.e1))
+            #print("e2  = %s" % (self.e2))
+            #print("e3  = %s" % (self.e3))
+            #print("e1* = [%g, %g, %g]" % tuple(e1))
+            #print("e2* = [%g, %g, %g]" % tuple(e2))
+            #print("e3* = [%g, %g, %g]" % tuple(e3))
+            #print('-----')
+            #print("e13 = %s" % (e13))
+            #print("e12 = %s" % (e12))
+            #print('-----')
+            #print("i   = %s len=%s"   % (str(self.i), norm(self.i)))
+            #print("j   = %s len=%s"   % (str(self.j), norm(self.j)))
+            #print("k   = %s len=%s\n" % (str(self.k), norm(self.k)))
+            #print('-----')
         #print('done setting up cid=%s rid=%s' % (self.cid, self.Rid()))
 
     #def transform_force_to_global(self, F, M):
@@ -323,6 +336,31 @@ class Coord(BaseCard):
         #r = self.origin #  maybe a minus sign?
         #Mdelta = cross(r, Fg)
         #return Fg, Mg + Mdelta
+
+    def transform_vector_to_global_assuming_rectangular(self, p):
+        if self.cid == 0:
+            return p
+
+        if not self.is_resolved:
+            if isinstance(self.rid, int) and self.rid != 0:
+                raise RuntimeError("BDF has not been cross referenced.")
+            if self.type in ['CORD2R', 'CORD2C', 'CORD2S']:
+                self.rid_ref.setup()
+            else:
+                self.setup()
+
+        # the ijk axes arent resolved as R-theta-z, only points
+        #p2 = self.coord_to_xyz(p)
+
+        if self.i is None:
+            msg = "Local unit vectors haven't been set.\nType=%r cid=%s rid=%s" % (
+                self.type, self.cid, self.rid)
+            raise RuntimeError(msg)
+        matrix = np.vstack([self.i, self.j, self.k])
+
+        # rotate point p2 from the local frame to the global frame
+        p3 = np.dot(p, matrix)
+        return p3
 
     def transform_vector_to_global(self, p):
         """
@@ -348,7 +386,7 @@ class Coord(BaseCard):
         if self.cid == 0:
             return p
 
-        if not self.isResolved:
+        if not self.is_resolved:
             if isinstance(self.rid, int) and self.rid != 0:
                 raise RuntimeError("BDF has not been cross referenced.")
             if self.type in ['CORD2R', 'CORD2C', 'CORD2S']:
@@ -370,7 +408,7 @@ class Coord(BaseCard):
         return p3
 
     def resolve(self):
-        if not self.isResolved:
+        if not self.is_resolved:
             if isinstance(self.rid, int) and self.rid != 0:
                 raise RuntimeError("BDF has not been cross referenced.")
             if self.type in ['CORD2R', 'CORD2C', 'CORD2S']:
@@ -424,21 +462,42 @@ class Coord(BaseCard):
 
         Parameters
         ----------
-        xyz : (1,3) ndarray
+        xyz : (1,3) float ndarray
             the point in the local frame to be transformed
 
         Returns
         -------
-        xyz_global : (1,3) ndarray
+        xyz_global : (1,3) float ndarray
             the point in the global frame
 
         .. warning:: make sure you cross-reference before calling this
         .. warning:: you probably shouldnt call this, call the Node methods
-                     Position and PositionWRT
+                     get_position and get_position_wrt
         """
         if self.cid == 0:
             return xyz
         return self.transform_vector_to_global(xyz) + self.origin
+
+    def transform_node_to_global_assuming_rectangular(self, xyz):
+        """
+        Gets the point in a coordinate system that has unit vectors
+        in the referenced coordinate system, but is not transformed
+        from a cylindrical/spherical system.  This is used by cards
+        like CBAR/CBEAM for element offset vectors.
+
+        Parameters
+        ----------
+        xyz : (1,3) float ndarray
+            the point in the local frame to be transformed
+
+        Returns
+        -------
+        xyz : (1, 3) float ndarray
+            the position of the GRID in the alternate coordinate system
+        """
+        if self.cid == 0:
+            return xyz
+        return self.transform_vector_to_global_assuming_rectangular(xyz) + self.origin
 
     def _transform_node_to_global_array(self, xyz):
         if self.cid == 0:
@@ -575,10 +634,12 @@ class Coord(BaseCard):
         Move the coordinate system to a new origin while maintaining
         the orientation
 
-        :param xyz: the new origin point to move the coordinate to in
-                    the global coordinate system
+        Parameters
+        ----------
+        xyz : the new origin point to move the coordinate to in
+              the global coordinate system
         """
-        if self.i == None:
+        if self.i is None:
             self.setup()
 
         xyz = _fix_xyz_shape(xyz)
@@ -599,6 +660,13 @@ class Coord(BaseCard):
 def _fix_xyz_shape(xyz, name='xyz'):
     """
     Checks the shape of a grid point location and fixes it if possible
+
+    Parameters
+    ----------
+    xyz : (N, 3) float ndarray
+        the xyz locations
+    name : str; default='xyz'
+        the name in case of an error
     """
     xyz = np.asarray(xyz)
     if not isinstance(xyz, np.ndarray):
@@ -622,13 +690,20 @@ def define_spherical_cutting_plane(model, origin, rid, cids, thetas, phis):
         .. math::  \theta = \mu = \frac{1}{\sqrt(Mach^2 - 1)}
         .. math::  \phi = [-\pi, \pi]
 
-    :param model: a BDF object
-    :param origin: a (3,) ndarray defining the location of the origin in
-                   the global coordinate frame
-    :param rid:  the new spherical reference coordinate system id
-    :param cids:  list of new coordinate system ids
-    :param thetas:  list of thetas (in radians)
-    :param phis:  list of phis (in radians)
+    Parameters
+    ----------
+    model : BDF()
+        a BDF object
+    origin : (3, ) float ndarray
+        defines the location of the origin in the global coordinate frame
+    rid : int
+        the new spherical reference coordinate system id
+    cids : List[int, ...]
+        list of new coordinate system ids
+    thetas : List[float, ...]
+        list of thetas (in radians)
+    phis:  List[float, ...]
+        list of phis (in radians)
 
     .. note:: creates 1 CORD2S and ncid CORD2R coordinate systems
 
@@ -1028,7 +1103,7 @@ class SphericalCoord(object):
 
     @classmethod
     def coord_to_xyz(cls, p):
-        """
+        r"""
         Returns
         -------
         xyz : (3,) float ndarray
@@ -1044,7 +1119,7 @@ class SphericalCoord(object):
 
     @classmethod
     def coord_to_xyz_array(cls, p):
-        """
+        r"""
         Returns
         -------
         xyz : (3,) float ndarray
@@ -1327,7 +1402,7 @@ class Cord2x(Coord):
         self.k = None
 
         if self.rid == 0:
-            self.isResolved = True
+            self.is_resolved = True
             self.setup()
             #self.setup_global_cord2x()
 
@@ -1412,7 +1487,7 @@ class Cord1x(Coord):
 
     @classmethod
     def add_card(cls, card, icard=0, comment=''):
-        #self.isResolved = False
+        #self.is_resolved = False
         assert icard in (0, 1), 'icard=%r' % (icard)
         ncoord = 4 * icard  # 0 if the 1st coord, 4 if the 2nd
 
@@ -1471,11 +1546,11 @@ class Cord1x(Coord):
         data = [type1, self.cid, rid1, list(p1) + list(p2) + list(p3)]
 
         if self.type == 'CORD1R':
-            coord = CORD2R.add_op2_data(data=data, comment=self.comment)
+            coord = CORD2R.add_op2_data(data, comment=self.comment)
         elif self.type == 'CORD1C':
-            coord = CORD2C.add_op2_data(data=data, comment=self.comment)
+            coord = CORD2C.add_op2_data(data, comment=self.comment)
         elif self.type == 'CORD1S':
-            coord = CORD2S.add_op2_data(data=data, comment=self.comment)
+            coord = CORD2S.add_op2_data(data, comment=self.comment)
         else:
             raise RuntimeError('coordinate type of \n%s is %s' % (str(self), type1))
         model.coords[self.cid] = coord
@@ -1523,7 +1598,7 @@ class Cord1x(Coord):
         Finds the position of the nodes used define the coordinate system
         and sets the ijk vectors
         """
-        if self.isResolved:
+        if self.is_resolved:
             return
 
         self.g1_ref.cp_ref.setup()
@@ -1540,7 +1615,7 @@ class Cord1x(Coord):
         self.e3 = self.g3_ref.get_position()
 
         # rid is resolved b/c e1, e2, & e3 are in global coordinates
-        self.isResolved = False
+        self.is_resolved = False
 
         #print('setting up cid=%s' % self.cid)
         # call the Coord class' setup method
@@ -1561,15 +1636,14 @@ class Cord1x(Coord):
             return self.g3
         return self.g3_ref.nid
 
-    def nodeIDs(self):
-        """
-        Gets the integers for the node [g1,g2,g3]
-        """
-        self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
-        return self.node_ids
+    #def nodeIDs(self):
+        #"""Gets the integers for the node [g1,g2,g3]"""
+        #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
+        #return self.node_ids
 
     @property
     def node_ids(self):
+        """Gets the integers for the node [g1,g2,g3]"""
         grids = [self.G1(), self.G2(), self.G3()]
         return grids
 
@@ -1630,10 +1704,10 @@ class CORD3G(Coord):  # not done
     def __init__(self, cid, method_es, method_int, form, thetas, rid, comment=''):
         """
         Intilizes the CORD3G
-
-        :param card: a list version of the fields
         """
-        Coord.__init__(self, card, comment)
+        Coord.__init__(self)
+        if comment:
+            self._comment = comment
         self.cid = cid
         self.method_es = method_es
         self.method_int = method_int
@@ -1646,6 +1720,7 @@ class CORD3G(Coord):  # not done
 
         # EQN for DEQATN, TABLE for TABLE3D
         assert self.form in ['EQN', 'TABLE']
+        assert self.method_es in ['E', 'S'] # Euler / Space-Fixed
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
@@ -1653,11 +1728,16 @@ class CORD3G(Coord):  # not done
 
     @classmethod
     def add_card(cls, card, comment=''):
-        self.cid = integer(card, 1, 'cid')
+        """
+        Parameters
+        ----------
+        card : BDFCard()
+            a list version of the fields
+        """
+        cid = integer(card, 1, 'cid')
         method = string_or_blank(card, 2, 'E313')
         method_es = method[0]
         method_int = int(method[1:])
-        assert self.methodES in ['E', 'S'] # Euler / Space-Fixed
 
         form = string_or_blank(card, 3, 'form', 'EQN')
         thetas = [integer(card, 4, 'theta1'),
@@ -1693,10 +1773,14 @@ class CORD3G(Coord):  # not done
 
     def coord3g_transform_to_global(self, p):
         """
-        :param p:     the point to transform.  TYPE=NUMPY.NDARRAY.
+        Parameters
+        ----------
+        p : (3,) float ndarray
+            the point to transform
 
         .. warning:: not done, just setting up how you'd do this
         .. note::    per http://en.wikipedia.org/wiki/Euler_angles
+
          "This means for example that a convention named (YXZ) is the result
          of performing first an intrinsic Z rotation, followed by X and
          Y rotations, in the moving axes (Note: the order of multiplication
@@ -1828,10 +1912,15 @@ class CORD1S(Cord1x, SphericalCoord):
         |CORD1S | CIDA | G1A | G2A | CIDB | G1B  | G2B | G3B  |     |
         +-------+------+-----+-----+------+------+-----+------+-----+
 
-        :param card:   a BDFCard object
-        :param icard: the coordinate location on the line
-                       (there are possibly 2 coordinates on 1 card)
-        :param data:   a list version of the fields (1 CORD1S only)
+        Parameters
+        ----------
+        card : BDF()
+            a BDFCard object
+        icard : int
+            the coordinate location on the line
+            (there are possibly 2 coordinates on 1 card)
+        data : List[varies]
+            a list version of the fields (1 CORD1S only)
         """
         Cord1x.__init__(self, cid, g1, g2, g3, comment=comment)
 

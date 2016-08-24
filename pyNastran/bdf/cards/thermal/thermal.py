@@ -37,9 +37,9 @@ class ThermalElement(ThermalCard):
     def __init__(self):
         ThermalCard.__init__(self)
 
-    def nodeIDs(self):
-        self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
-        return []
+    #def nodeIDs(self):
+        #self.deprecated('self.nodeIDs()', 'self.node_ids', '0.8')
+        #return []
 
     def Pid(self):
         if isinstance(self.pid, integer_types):

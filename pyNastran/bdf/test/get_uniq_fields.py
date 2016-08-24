@@ -66,7 +66,7 @@ class BDFuniqCard(BDF):
         elif not cardName in self.cards_to_read:
             if cardName:
                 if cardName not in self.reject_count:
-                    self.log.info("RejectCardName = |%s|" % cardName)
+                    self.log.info("RejectCardName = %r" % cardName)
                     self.reject_count[cardName] = 0
                 self.reject_count[cardName] += 1
         return False

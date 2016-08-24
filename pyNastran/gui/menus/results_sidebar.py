@@ -1,6 +1,8 @@
 from __future__ import print_function
 import sys
 from copy import deepcopy
+from six import string_types
+
 from PyQt4 import QtGui
 #from PyQt4.QtCore import *
 #from PyQt4.QtGui import *
@@ -11,9 +13,10 @@ signal.signal(signal.SIGINT, signal.SIG_DFL)
 
 
 class QTreeView2(QtGui.QTreeView):
-    def __init__(self, data):
+    def __init__(self, data, choices):
         self.old_rows = []
         self.data = data
+        self.choices = choices
         self.single = False
         QtGui.QTreeView.__init__(self)
 
@@ -38,9 +41,29 @@ class QTreeView2(QtGui.QTreeView):
         if rows != self.old_rows:
             self.old_rows = rows
         valid, keys = self.get_row()
+        if not valid:
+            print('invalid=%s keys=%s' % (valid, keys))
+        else:
+            print('valid=%s keys=%s' % (valid, keys))
+            #print('choice =', self.choices[keys])
 
     def get_row(self):
-        # if there's only 1 data member, we don't need to extrac the data id
+        """
+        gets the row
+
+        Returns
+        -------
+        is_valid : bool
+            is this case valid
+        row : None or tuple
+            None : invalid case
+            tuple : valid case
+                ('centroid', None, [])
+                0 - the location (e.g. node, centroid)
+                1 - ???
+                2 - ???
+        """
+        # if there's only 1 data member, we don't need to extract the data id
         if self.single:
             return True, self.data[0]
 
@@ -177,20 +200,22 @@ class Sidebar(QtGui.QWidget):
                 ]),
             ]
 
-        self.result_case_window = ResultsWindow('Case/Results', data)
+        choices = ['keys2', 'purse2', 'cellphone2', 'credit_card2', 'money2']
+        self.result_case_window = ResultsWindow('Case/Results', data, choices)
 
         data = [
             ('A', 1, []),
             #('B', 2, []),
             #('C', 3, []),
         ]
-        self.result_data_window = ResultsWindow('Method', data)
+        self.result_data_window = ResultsWindow('Method', data, choices)
         self.result_data_window.setVisible(False)
 
-        if 0:
+        self.show_pulldown = False
+        if self.show_pulldown:
             combo_options = ['a1', 'a2', 'a3']
             self.pulldown = QtGui.QComboBox()
-            self.pulldown.addItems(combo_options)
+            self.pulldown.addItems(choices)
             self.pulldown.activated[str].connect(self.on_pulldown)
 
         self.apply_button = QtGui.QPushButton('Apply', self)
@@ -201,16 +226,23 @@ class Sidebar(QtGui.QWidget):
         layout = QtGui.QVBoxLayout()
         layout.addWidget(self.result_case_window)
         layout.addWidget(self.result_data_window)
-        #layout.addWidget(self.pulldown)
+        if self.show_pulldown:
+            layout.addWidget(self.pulldown)
         layout.addWidget(self.apply_button)
         self.setLayout(layout)
 
         self.clear_data()
 
     def update_method(self, method):
-        datai = self.result_data_window.data[0]
-        self.result_data_window.data[0] = (method, datai[1], datai[2])
-        self.result_data_window.update_data(self.result_data_window.data)
+        if isinstance(method, str):
+            datai = self.result_data_window.data[0]
+            self.result_data_window.data[0] = (method, datai[1], datai[2])
+            print('method=%s datai=%s' % (method, datai))
+            self.result_data_window.update_data(self.result_data_window.data)
+        else:
+            return
+            datai = self.result_data_window.data[0]
+            asdf
 
     def get_form(self):
         return self.result_case_window.data
@@ -248,11 +280,11 @@ class Sidebar(QtGui.QWidget):
 
     def update_vtk_window(self, keys_a, keys_b):
         if 0:
-            #print('keys_a = %s' % str(keys_a))
+            print('keys_a = %s' % str(keys_a))
             for i, key in enumerate(self.parent.case_keys):
                 if key[1] == keys_a[0]:
                     break
-            #print('*i=%s key=%s' % (i, str(key)))
+            print('*i=%s key=%s' % (i, str(key)))
             #self.parent.update_vtk_window_by_key(i)
             result_name = key[1]
             #self.parent.cycle_results_explicit(result_name=result_name, explicit=True)
@@ -264,12 +296,13 @@ class Sidebar(QtGui.QWidget):
 
 
 class ResultsWindow(QtGui.QWidget):
-    def __init__(self, name, data):
+    def __init__(self, name, data, choices):
         QtGui.QWidget.__init__(self)
         self.name = name
         self.data = data
+        self.choices = choices
 
-        self.treeView = QTreeView2(self.data)
+        self.treeView = QTreeView2(self.data, choices)
         self.treeView.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
 
         self.model = QtGui.QStandardItemModel()
@@ -286,7 +319,14 @@ class ResultsWindow(QtGui.QWidget):
     def update_data(self, data):
         self.clear_data()
         self.data = data
-        self.addItems(self.model, data)
+        try:
+            self.addItems(self.model, data)
+        except:
+            adf
+            if isinstance(data, string_types):
+                self.addItems(self.model, data)
+            else:
+                self.addItems(self.model, *tuple(data))
         self.treeView.data = data
         #layout = QVBoxLayout()
         #layout.addWidget(self.treeView)

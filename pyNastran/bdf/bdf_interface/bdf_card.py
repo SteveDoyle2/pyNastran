@@ -62,17 +62,17 @@ class BDFCard(object):
         #return str(self.card)
         return '%r' % self.card
 
-    def nFields(self):
-        """
-        Gets how many fields are on the card
+    #def nFields(self):
+        #"""
+        #Gets how many fields are on the card
 
-        Returns
-        -------
-        nfields : int
-            the number of fields on the card
-        """
-        self.deprecated('self.nFields()', 'self.nfields', '0.8')
-        return self.nfields
+        #Returns
+        #-------
+        #nfields : int
+            #the number of fields on the card
+        #"""
+        #self.deprecated('self.nFields()', 'self.nfields', '0.8')
+        #return self.nfields
 
     def __len__(self):
         """len(card)"""

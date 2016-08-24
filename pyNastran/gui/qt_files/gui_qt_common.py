@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=C0111
 from __future__ import print_function
-from six import iteritems
 from copy import deepcopy
+from six import iteritems, itervalues
 
 import numpy as np
-from numpy import ndarray, full, issubdtype
+from numpy import full, issubdtype
 from numpy.linalg import norm
 import vtk
 from vtk.util.numpy_support import numpy_to_vtk
@@ -29,20 +29,6 @@ class GuiCommon(GuiAttributes):
         self.vtk_version = [int(i) for i in vtk.VTK_VERSION.split('.')[:1]]
         print('vtk_version = %s' % (self.vtk_version))
 
-    #def nCells(self):
-        #try:
-            #cell_data = self.grid.GetCellData()
-            #return cell_data.GetNumberOfCells()
-        #except AttributeError:
-            #return 0
-
-    #def nPoints(self):
-        #try:
-            #point_data = self.grid.GetPointData()
-            #return point_data.GetNumberOfPoints()
-        #except AttributeError:
-            #return 0
-
     def update_axes_length(self, dim_max):
         """
         sets the driving dimension for:
@@ -61,7 +47,7 @@ class GuiCommon(GuiAttributes):
         if dim is None:
             dim = self.dim_max * 0.10
         if hasattr(self, 'axes'):
-            for cid, axes in iteritems(self.axes):
+            for axes in itervalues(self.axes):
                 axes.SetTotalLength(dim, dim, dim)
 
     def update_text_actors(self, subcase_id, subtitle, min_value, max_value, label):
@@ -77,7 +63,8 @@ class GuiCommon(GuiAttributes):
 
     def cycle_results(self, result_name=None):
         if self.ncases <= 1:
-            self.log.warning('cycle_results(result_name=%r); ncases=%i' % (result_name, self.ncases))
+            self.log.warning('cycle_results(result_name=%r); ncases=%i' % (
+                result_name, self.ncases))
             if self.ncases == 0:
                 self.scalarBar.SetVisibility(False)
             return
@@ -106,13 +93,10 @@ class GuiCommon(GuiAttributes):
 
     def get_name_result_data(self, icase):
         key = self.case_keys[icase]
-        if isinstance(key, integer_types):
-            (obj, (i, name)) = self.result_cases[key]
-            #subcase_id = obj.subcase_id
-            case = obj.get_result(i, name)
-        else:
-            assert len(key) == 7, key
-            #(subcase_id, j, result_type, vector_size, location, data_format, label2) = key
+        assert isinstance(key, integer_types), key
+        (obj, (i, name)) = self.result_cases[key]
+        #subcase_id = obj.subcase_id
+        case = obj.get_result(i, name)
         return name, case
 
     def _set_case(self, result_name, icase, explicit=False, cycle=False, skip_click_check=False,
@@ -132,29 +116,23 @@ class GuiCommon(GuiAttributes):
         self.icase = icase
         case = self.result_cases[key]
         label2 = ''
-        if isinstance(key, integer_types):
-            (obj, (i, name)) = self.result_cases[key]
-            subcase_id = obj.subcase_id
-            case = obj.get_result(i, name)
-            result_type = obj.get_title(i, name)
-            vector_size = obj.get_vector_size(i, name)
-            location = obj.get_location(i, name)
-            data_format = obj.get_data_format(i, name)
-            scale = obj.get_scale(i, name)
-            label2 = obj.get_header(i, name)
-            nlabels, labelsize, ncolors, colormap = obj.get_nlabels_labelsize_ncolors_colormap(i, name)
-            #default_max, default_min = obj.get_default_min_max(i, name)
-            if min_value is None and max_value is None:
-                min_value, max_value = obj.get_min_max(i, name)
-        else:
-            assert len(key) == 7, key
-            (subcase_id, j, result_type, vector_size, location, data_format, label2) = key
-            nlabels = None
-            labelsize = None
-            ncolors = None
-            colormap = 'jet'
-            #normi = case
-            scale = 0.0
+        assert isinstance(key, integer_types), key
+        (obj, (i, name)) = self.result_cases[key]
+        subcase_id = obj.subcase_id
+        case = obj.get_result(i, name)
+        result_type = obj.get_title(i, name)
+        vector_size = obj.get_vector_size(i, name)
+        #location = obj.get_location(i, name)
+        methods = obj.get_methods(i)
+        data_format = obj.get_data_format(i, name)
+        scale = obj.get_scale(i, name)
+        label2 = obj.get_header(i, name)
+        nlabels, labelsize, ncolors, colormap = obj.get_nlabels_labelsize_ncolors_colormap(i, name)
+        #default_max, default_min = obj.get_default_min_max(i, name)
+        if min_value is None and max_value is None:
+            min_value, max_value = obj.get_min_max(i, name)
+
+        if 0:
             if min_value is None and max_value is None:
                 max_value = case.max()
                 min_value = case.min()
@@ -172,15 +150,10 @@ class GuiCommon(GuiAttributes):
 
         #================================================
 
-        if isinstance(case, ndarray):
-            if len(case.shape) == 1:
-                normi = case
-            else:
-                normi = norm(case, axis=1)
+        if len(case.shape) == 1:
+            normi = case
         else:
-            msg = 'list-based results have been removed; use numpy.array; name=%s case=%s' % (
-                result_name, case)
-            raise RuntimeError(msg)
+            normi = norm(case, axis=1)
 
         #if min_value is None and max_value is None:
             #max_value = normi.max()
@@ -227,8 +200,19 @@ class GuiCommon(GuiAttributes):
                            result_type, min_value, max_value, data_format, scale,
                            nlabels, labelsize, ncolors, colormap,
                            is_low_to_high, self.is_horizontal_scalar_bar)
-        location = self.get_case_location(key)
-        self.res_widget.update_method(location)
+
+        # updates the type of the result that is displayed
+        # method:
+        #     for a nodeID, the method is [node]
+        #     for an elementID, the method is [centroid]
+        #     for a displacement, the methods are [magnitude, tx, ty, tz, rx, ry, rz]
+        # location:
+        #     for a nodeID, the location is [node]
+        #     for an elementID, the location is [centroid]
+        #     for a displacement, the location is [node]
+
+        #location = self.get_case_location(key)
+        self.res_widget.update_method(methods)
         if explicit:
             self.log_command('cycle_results(result_name=%r)' % result_type)
         return result_type
@@ -298,103 +282,21 @@ class GuiCommon(GuiAttributes):
             )
         return grid_result
 
-    def get_result_data_from_icase(self, icase):
-        """
-        Gets the data stored in the object in a more generic way.
-
-        Parameters
-        ----------
-        icase : int
-            the case ID
-
-        Returns
-        -------
-           see ``self.get_result_data_from_key(key)``
-        """
-        key = self.case_keys[icase]
-        return self.get_result_data_from_key(key)
-
-    def get_result_data_from_key(self, key):
-        """
-        You should probably use ``self.get_result_data_from_icase(icase)``
-        instead of this.
-
-        Parameters
-        ----------
-        key : tuple(varies)
-            the result key
-
-        Returns
-        -------
-        obj : varies
-            the object that stores the data, if it exists (or None)
-        i : int/None
-            the object array index
-            None : obj is None
-        j : int/None
-            does ???
-            None : obj is not None
-        res_name : str
-            the scalar bar default title (???)
-        result_type : str
-            the scalar bar title (???)
-        subcase_id : int
-            the subcase ID
-        vector_size : int
-            1 - scalar quantity
-            3 - vector quantity
-        data_format : str
-            Python string formatter (e.g. '%.3f')
-        label2 : str
-            something to append to the text at the bottom of the viewport
-        """
-        obj = None
-        i = None
-        j = None
-        if isinstance(key, int):
-            (obj, (i, res_name)) = self.result_cases[key]
-            subcase_id = obj.subcase_id
-            #case = obj.get_result(i, name)
-            result_type = obj.get_title(i, res_name)
-            vector_size = obj.get_vector_size(i, res_name)
-            location = obj.get_location(i, res_name)
-            data_format = obj.get_data_format(i, res_name)
-            label2 = ''
-        else:
-            assert len(key) == 7, key
-            # j is icase? and is used to...
-            # label2 defaults to ''
-            res_name = result_type # ???
-            (subcase_id, j, result_type, vector_size, location, data_format, label2) = key
-
-        return obj, i, j, res_name, subcase_id, result_type, vector_size, location, data_format, label2
-
     def final_grid_update(self, name, grid_result,
                           name_vector, grid_result_vector,
                           key, subtitle, label):
-        obj = None
-        if isinstance(key, int):
-            (obj, (i, res_name)) = self.result_cases[key]
-            subcase_id = obj.subcase_id
-            #case = obj.get_result(i, name)
-            result_type = obj.get_title(i, res_name)
-            vector_size = obj.get_vector_size(i, res_name)
-            #print('res_name=%s vector_size=%s' % (res_name, vector_size))
-            location = obj.get_location(i, res_name)
-            #data_format = obj.get_data_format(i, res_name)
-        else:
-            assert len(key) == 7, key
-            # j is icase? and is used to...
-            # label2 defaults to ''
-            (subcase_id, j, result_type, vector_size, location, data_format, label2) = key
+        assert isinstance(key, integer_types), key
+        (obj, (i, res_name)) = self.result_cases[key]
+        subcase_id = obj.subcase_id
+        result_type = obj.get_title(i, res_name)
+        vector_size = obj.get_vector_size(i, res_name)
+        location = obj.get_location(i, res_name)
 
         #if vector_size == 3:
             #print('name, grid_result, vector_size=3', name, grid_result)
         self._final_grid_update(name, grid_result, None, None, None,
                                 1, subcase_id, result_type, location, subtitle, label,
                                 revert_displaced=True)
-        if obj is None:
-            return
         if vector_size == 3:
             self._final_grid_update(name_vector, grid_result_vector, obj, i, res_name,
                                     vector_size, subcase_id, result_type, location, subtitle, label,
@@ -423,7 +325,8 @@ class GuiCommon(GuiAttributes):
                     self._names_storage.remove(name)
 
                 cell_data.AddArray(grid_result)
-                self.log_info("centroidal plotting vector=%s - subcase_id=%s result_type=%s subtitle=%s label=%s"
+                self.log_info('centroidal plotting vector=%s - subcase_id=%s '
+                              'result_type=%s subtitle=%s label=%s'
                               % (vector_size, subcase_id, result_type, subtitle, label))
             elif location == 'node':
                 point_data = self.grid.GetPointData()
@@ -432,7 +335,8 @@ class GuiCommon(GuiAttributes):
                     self._names_storage.remove(name)
 
                 if vector_size == 1:
-                    self.log_info("node plotting vector=%s - subcase_id=%s result_type=%s subtitle=%s label=%s"
+                    self.log_info('node plotting vector=%s - subcase_id=%s '
+                                  'result_type=%s subtitle=%s label=%s"'
                                   % (vector_size, subcase_id, result_type, subtitle, label))
                     point_data.AddArray(grid_result)
                 elif vector_size == 3:
@@ -446,7 +350,8 @@ class GuiCommon(GuiAttributes):
                     self._is_displaced = True
                     self._xyz_nominal = xyz_nominal
                     self._update_grid(vector_data)
-                    self.log_info("node plotting vector=%s - subcase_id=%s result_type=%s subtitle=%s label=%s"
+                    self.log_info('node plotting vector=%s - subcase_id=%s '
+                                  'result_type=%s subtitle=%s label=%s'
                                   % (vector_size, subcase_id, result_type, subtitle, label))
                     #point_data.AddVector(grid_result) # old
                     #point_data.AddArray(grid_result)
@@ -466,8 +371,10 @@ class GuiCommon(GuiAttributes):
             cell_data.SetActiveScalars(None)
 
             point_data = self.grid.GetPointData()
-            if vector_size == 1:                point_data.SetActiveScalars(name_str)
-            elif vector_size == 3:                point_data.SetActiveVectors(name_str)
+            if vector_size == 1:
+                point_data.SetActiveScalars(name_str)
+            elif vector_size == 3:
+                point_data.SetActiveVectors(name_str)
             else:
                 raise RuntimeError(vector_size)
             #print('name_str=%r' % name_str)
@@ -486,12 +393,24 @@ class GuiCommon(GuiAttributes):
         self.show_labels(result_names=[result_type], show_msg=False)
 
     def _update_grid(self, vector_data):
+        """deflects the geometry"""
         nnodes = vector_data.shape[0]
         points = self.grid.GetPoints()
         for j in range(nnodes):
             points.SetPoint(j, *vector_data[j, :])
         self.grid.Modified()
         self.grid_selected.Modified()
+        self._update_follower_grids(vector_data)
+
+    def _update_follower_grids(self, vector_data):
+        """updates grids that use the same ids as the parent model"""
+        for name, nids in iteritems(self.follower_nodes):
+            grid = self.alt_grids[name]
+            points = grid.GetPoints()
+            for j, nid in enumerate(nids):
+                i = self.nid_map[nid]
+                points.SetPoint(j, *vector_data[i, :])
+            grid.Modified()
 
     def _get_icase(self, result_name):
         found_case = False
@@ -503,7 +422,7 @@ class GuiCommon(GuiAttributes):
                 icase = i
                 break
             i += 1
-        assert found_case == True, 'result_name=%r' % result_name
+        assert found_case is True, 'result_name=%r' % result_name
         return icase
 
     def increment_cycle(self, result_name=False):
@@ -538,7 +457,7 @@ class GuiCommon(GuiAttributes):
             msg += 'case_keys=%r' % str(self.case_keys)
             #print(msg)
 
-            location = self.get_case_location(key)
+            #location = self.get_case_location(key)
             #print("key_increment_cycle = %s" % str(key))
             #if key[2] == 3:  # vector size=3 -> vector, skipping ???
                 #self.increment_cycle()
@@ -549,32 +468,20 @@ class GuiCommon(GuiAttributes):
             location = 'N/A'
             #result_type = 'centroidal' if location == 'centroid' else 'nodal'
             result_type = '???'
-            self.log_error("No Results found.  Many results are not supported in the GUI.\nTry using %s results."
-                           % result_type)
+            self.log_error('No Results found.  Many results are not supported in the GUI.\n'
+                           'Try using %s results.' % result_type)
             self.scalarBar.SetVisibility(False)
             found_cases = False
         #print("next icase=%s key=%s" % (self.icase, key))
         return found_cases
 
     def get_result_name(self, key):
-        if isinstance(key, int):
-            (obj, (i, name)) = self.result_cases[key]
-            return name
-        else:
-            assert len(key) == 7, '%s = (subcase_id, j, result_type, vector_size, location, data_format, label2)' % str(key)
-            (subcase_id, j, result_type, vector_size, location, data_format, label2) = key
-        return result_type
+        assert isinstance(key, integer_types), key
+        (obj, (i, name)) = self.result_cases[key]
+        return name
 
     def get_case_location(self, key):
-        if isinstance(key, int):
-            (obj, (i, name)) = self.result_cases[key]
-            return obj.get_location(i, name)
-        else:
-            assert len(key) == 7, key
-            try:
-                (subcase_id, j, result_type, vector_size, location, data_format, label2) = key
-            except:
-                self.log.error(key)
-                return
-        return location
+        assert isinstance(key, integer_types), key
+        (obj, (i, name)) = self.result_cases[key]
+        return obj.get_location(i, name)
 

@@ -30,9 +30,7 @@ class TestOpt(unittest.TestCase):
                              f06_has_weight=False, vectorized=True,
                              encoding='utf-8')
 
-        #op2 = OP2()
         subcase_ids = op2.subcase_key.keys()
-        #print('subcase_ids = ', subcase_ids)
         for subcase_id in subcase_ids:
             assert isinstance(subcase_id, int), subcase_id
             for key, dresp in sorted(iteritems(bdf.dresps)):

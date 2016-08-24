@@ -43,24 +43,15 @@ from pyNastran.bdf.field_writer_8 import print_card_8, print_float_8, print_int_
 from pyNastran.bdf.field_writer_16 import print_float_16, print_card_16
 from pyNastran.bdf.field_writer_double import print_scientific_double, print_card_double
 
-class Ring(BaseCard):
-    """Generic Ring base class"""
-    def __init__(self):
-        pass
 
-class Node(BaseCard):
-    """Generic Node base class"""
-    def __init__(self):
-        pass
-
-class RINGAX(Ring):
+class RINGAX(BaseCard):
     """
     Defines a ring for conical shell problems.
 
     +-------+-----+-----+-----+----+-----+-----+------+-----+
     |   1   |  2  |  3  |  4  |  5 |  6  |  7  |  8   |  9  |
     +=======+=====+=====+=====+====+=====+=====+======+=====+
-    |RINGAX | MID |     |  R  |  Z |     |     | PS   |     |
+    |RINGAX | MID |     |  R  |  Z |     |     |  PS  |     |
     +-------+-----+-----+-----+----+-----+-----+------+-----+
     """
     type = 'RINGAX'
@@ -71,52 +62,70 @@ class RINGAX(Ring):
     def __init__(self, card=None, data=None, comment=''):  # this card has missing fields
         """
         Creates the RINGAX card
-
-        :param card:
-          a BDFCard object
-        :type card:
-          BDFCard
-        :param data:
-          a list with the RINGAX fields defined in OP2 format
-        :type data:
-          LIST
-        :param comment:
-          a comment for the card
-        :type comment:
-          string
         """
-        Ring.__init__(self)
+        #Ring.__init__(self)
         if comment:
             self._comment = comment
-        if card:
-            #: Node ID
-            self.nid = integer(card, 1, 'nid')
-            blank(card, 2, 'blank')
 
-            #: Radius
-            self.R = double(card, 3, 'R')
-            self.z = double(card, 4, 'z')
-            blank(card, 5, 'blank')
-            blank(card, 6, 'blank')
+        #: Node ID
+        self.nid = nid
 
-            #: local SPC constraint
-            self.ps = integer_or_blank(card, 7, 'ps')
-            assert len(card) <= 8, 'len(RINGAX card) = %i\ncard=%s' % (len(card), card)
-        else:  # hasn't been validated
-            self.nid = data[0]
-            self.R = data[1]
-            self.z = data[2]
-            self.ps = data[3]
-            assert len(data) == 4, data
+        #: Radius
+        self.R = R
+        self.z = z
+
+        #: local SPC constraint
+        self.ps = ps
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        """
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
+        nid = integer(card, 1, 'nid')
+        blank(card, 2, 'blank')
+
+        R = double(card, 3, 'R')
+        z = double(card, 4, 'z')
+        blank(card, 5, 'blank')
+        blank(card, 6, 'blank')
+
+        ps = integer_or_blank(card, 7, 'ps')
+        assert len(card) <= 8, 'len(RINGAX card) = %i\ncard=%s' % (len(card), card)
+        return RINGAX(nid, R, z, ps, comment=comment)
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        """
+        TODO: hasnt been verified
+
+        Parameters
+        ----------
+        data : List[int/float]; default=None
+            a list with the GRID fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+        """
+        self.nid = data[0]
+        self.R = data[1]
+        self.z = data[2]
+        self.ps = data[3]
+        assert len(data) == 4, data
+        return RINGAX(nid, R, z, ps)
 
     def raw_fields(self):
         """
         Gets the fields in their unmodified form
 
-        :returns fields:
-          the fields that define the card
-        :type fields:
-          LIST
+        Returns
+        -------
+        fields : List[varies]
+            the fields that define the card
         """
         list_fields = ['RINGAX', self.nid, None, self.R, self.z, None,
                        None, self.ps]
@@ -126,20 +135,20 @@ class RINGAX(Ring):
         """
         The writer method used by BDF.write_card
 
-        :param size:
-          the size of the card (8/16)
-        :type size:
-          int
+        Parameters
+        -----------
+        size : int; default=8
+            the size of the card (8/16)
         """
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)
 
-class XPoint(Node):
+class XPoint(BaseCard):
     """common class for EPOINT/SPOINT"""
     def __init__(self, nid, comment):
-        Node.__init__(self)
+        #Node.__init__(self)
         if comment:
             self._comment = comment
         self.nid = nid
@@ -154,10 +163,10 @@ class XPoint(Node):
         """
         Gets the fields in their unmodified form
 
-        :returns fields:
-          the fields that define the card
-        :type fields:
-          LIST
+        Returns
+        -------
+        fields : List[varies]
+            the fields that define the card
         """
         lists_fields = []
         if isinstance(self.nid, integer_types):
@@ -177,8 +186,12 @@ class XPoint(Node):
         """
         The writer method used by BDF.write_card
 
-        :param size:   unused
-        :param is_double: unused
+        Parameters
+        ----------
+        size : int; default=8
+            unused
+        size : bool; default=False
+            unused
         """
         msg = self.comment
         lists_fields = self.repr_fields()
@@ -283,7 +296,7 @@ def _get_compressed_xpoints(Type, xpoints):
             lists_fields.append(list_fields)
     return lists_fields
 
-class XPoints(Node):
+class XPoints(BaseCard):
     """common class for EPOINTs and SPOINTs"""
 
     @property
@@ -292,7 +305,7 @@ class XPoints(Node):
         raise NotImplementedError('This method should be overwritten by the parent class')
 
     def __init__(self, ids, comment=''):
-        Node.__init__(self)
+        #Node.__init__(self)
         if comment:
             self._comment = comment
         self.points = ids
@@ -349,10 +362,10 @@ class XPoints(Node):
         """
         Gets the fields in their unmodified form
 
-        :returns fields:
-          the fields that define the card
-        :type fields:
-          LIST
+        Returns
+        -------
+        fields : List[varies]
+            the fields that define the card
         """
         points = list(self.points)
         points.sort()
@@ -448,7 +461,7 @@ class EPOINTs(XPoints):
         return points
 
 
-class GRDSET(Node):
+class GRDSET(BaseCard):
     """
     Defines default options for fields 3, 7, 8, and 9 of all GRID entries.
 
@@ -601,10 +614,10 @@ class GRDSET(Node):
         """
         Gets the fields in their unmodified form
 
-        :returns fields:
-          the fields that define the card
-        :type fields:
-          LIST
+        Returns
+        -------
+        fields : List[varies]
+            the fields that define the card
         """
         list_fields = ['GRDSET', None, self.Cp(), None, None, None,
                        self.Cd(), self.ps, self.SEid()]
@@ -639,7 +652,7 @@ class GRDSET(Node):
         f.write(print_card_8(card))
 
 
-class GRIDB(Node):
+class GRIDB(BaseCard):
     """defines the GRIDB class"""
     type = 'GRIDB'
 
@@ -652,7 +665,7 @@ class GRIDB(Node):
         """
         if comment:
             self._comment = comment
-        Node.__init__(self)
+        #Node.__init__(self)
 
         #: node ID
         self.nid = nid
@@ -730,10 +743,10 @@ class GRIDB(Node):
         """
         Gets the fields in their unmodified form
 
-        :returns fields:
-          the fields that define the card
-        :type fields:
-          LIST
+        Returns
+        -------
+        fields : List[varies]
+            the fields that define the card
         """
         list_fields = ['GRIDB', self.nid, None, None, self.phi, None,
                        self.Cd(), self.ps, self.idf]
@@ -778,7 +791,7 @@ class GRIDB(Node):
         return self.comment + print_card_16(card)
 
 
-class GRID(Node):
+class GRID(BaseCard):
     """
     +------+-----+----+----+----+----+----+----+------+
     |   1  |  2  | 3  | 4  | 5  | 6  |  7 | 8  |  9   |
@@ -853,9 +866,10 @@ class GRID(Node):
             Additional SPCs in the analysis coordinate frame (e.g. '123').
             This corresponds to DOF set ``SG``.
         seid : int; default=0
-            ???
+            superelement id
+            TODO: how is this used by Nastran???
         """
-        Node.__init__(self)
+        #Node.__init__(self)
         if comment:
             self._comment = comment
         self.nid = nid
@@ -931,19 +945,19 @@ class GRID(Node):
         assert self.seid >= 0, 'seid=%s' % (self.seid)
         assert len(self.xyz) == 3
 
-    def Position(self, debug=False):
-        self.deprecated('Position()', 'get_position()', '0.8')
-        return self.get_position()
+    #def Position(self, debug=False):
+        #self.deprecated('Position()', 'get_position()', '0.8')
+        #return self.get_position()
 
-    def PositionWRT(self, model, cid):
-        self.deprecated('PositionWRT(self, model, cid)',
-                        'get_position_wrt(model, cid)', '0.8')
-        return self.get_position_wrt(model, cid)
+    #def PositionWRT(self, model, cid):
+        #self.deprecated('PositionWRT(self, model, cid)',
+                        #'get_position_wrt(model, cid)', '0.8')
+        #return self.get_position_wrt(model, cid)
 
-    def UpdatePosition(self, model, xyz, cid=0):
-        self.deprecated('UpdatePosition(self, model, xyz, cid',
-                        'set_position(self, model, xyz, cid=cid)', '0.8')
-        return self.set_position(model, xyz, cid=cid)
+    #def UpdatePosition(self, model, xyz, cid=0):
+        #self.deprecated('UpdatePosition(self, model, xyz, cid',
+                        #'set_position(self, model, xyz, cid=cid)', '0.8')
+        #return self.set_position(model, xyz, cid=cid)
 
     def Nid(self):
         """
@@ -1061,6 +1075,26 @@ class GRID(Node):
     def get_position(self):
         """
         Gets the point in the global XYZ coordinate system.
+
+        Returns
+        -------
+        xyz : (3, ) float ndarray
+            the position of the GRID in the global coordinate system
+        """
+        try:
+            xyz = self.cp_ref.transform_node_to_global(self.xyz)
+        except AttributeError:
+            if self.cp == 0:
+                return self.xyz
+            raise
+        return xyz
+
+    def get_position_assuming_rectangular(self):
+        """
+        Gets the point in a coordinate system that has unit vectors
+        in the referenced coordinate system, but is not transformed
+        from a cylindrical/spherical system.  This is used by cards
+        like CBAR/CBEAM for element offset vectors.
 
         Returns
         -------
@@ -1272,7 +1306,7 @@ class GRID(Node):
         return self.comment + msg
 
 
-class POINT(Node):
+class POINT(BaseCard):
     """
     +-------+-----+----+----+----+----+----+----+-----+
     |   1   |  2  | 3  | 4  | 5  | 6  |  7 | 8  |  9  |
@@ -1333,7 +1367,7 @@ class POINT(Node):
         """
         if comment:
             self._comment = comment
-        Node.__init__(self)
+        #Node.__init__(self)
 
         #: Node ID
         self.nid = nid
@@ -1391,18 +1425,18 @@ class POINT(Node):
         cd = 0
         return POINT(nid, cp, xyz, cd, ps, seid, comment=comment)
 
-    def Position(self):
-        self.deprecated('Position()', 'get_position()', '0.8')
-        return self.get_position()
+    #def Position(self):
+        #self.deprecated('Position()', 'get_position()', '0.8')
+        #return self.get_position()
 
-    def PositionWRT(self, model, cid):
-        self.deprecated('Position()', 'get_position_wrt()', '0.8')
-        return self.get_position_wrt(model, cid)
+    #def PositionWRT(self, model, cid):
+        #self.deprecated('Position()', 'get_position_wrt()', '0.8')
+        #return self.get_position_wrt(model, cid)
 
-    def UpdatePosition(self, model, xyz, cid=0):
-        self.deprecated('UpdatePosition(self, model, xyz, cid)',
-                        'set_position(model, xyz, cid)', '0.8')
-        return self.set_position(model, xyz, cid=cid)
+    #def UpdatePosition(self, model, xyz, cid=0):
+        #self.deprecated('UpdatePosition(self, model, xyz, cid)',
+                        #'set_position(model, xyz, cid)', '0.8')
+        #return self.set_position(model, xyz, cid=cid)
 
     def set_position(self, model, xyz, cid=0):
         """

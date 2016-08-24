@@ -51,13 +51,24 @@ def check_for_newer_version():
     if 'dev' in version_current:
         is_dev = True
 
-    major, minor, rev = version_current.split('+')[0].split('.')
+    try:
+        major, minor, rev = version_current.split('+')[0].split('.')
+    except ValueError:
+        print('sline = %s' % sline)
+        print('version_current = %s' % version_current)
+        raise
     major = int(major)
     minor = int(minor)
     rev = int(rev)
     tuple_current_version = (major, minor, rev)
 
-    major, minor, rev = version_latest.split('_')[0].split('.')
+    try:
+        major, minor, rev = version_latest.split('_')[0].split('.')
+    except ValueError:
+        print('sline = %s' % sline)
+        print('version_latest = %s' % version_latest)
+        raise
+
     major = int(major)
     minor = int(minor)
     rev = int(rev)
@@ -253,6 +264,6 @@ def load_user_geom(fname, encoding='latin1'):
     bars = np.array(bars, dtype='int32')
     return grid_ids, xyz, bars, tris, quads
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     check_for_newer_version()
 

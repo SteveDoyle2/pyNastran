@@ -75,7 +75,7 @@ class AGPS(object):
         #for ipatch, Cp in sorted(iteritems(self.pressures)):
             #print(Cp)
 
-def main():
+def main():  # pragma: no cover
     agps = AGPS()
     agps.read_agps('agps')
 

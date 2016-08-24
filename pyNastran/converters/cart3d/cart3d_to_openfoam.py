@@ -213,7 +213,7 @@ def create_openfoam_inputs(inpt_filename):
     inpt = read_cart3d_inpt(inpt_filename)
 
 
-def main():
+def main():  # pragma: no cover
     #bdf_filename = 'g278.bdf'
     cart3d_geo_filename = 'g278.tri'
     cart3d_inpt_filename = 'g278.inpt'

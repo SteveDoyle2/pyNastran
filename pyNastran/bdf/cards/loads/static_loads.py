@@ -43,21 +43,21 @@ class LOAD(LoadCombination):
         LoadCombination.__init__(self, sid, scale, scale_factors, load_ids,
                                  comment=comment)
 
-    def getLoadIDs(self):
-        self.deprecated('getLoadIDs()', 'get_load_ids()', '0.8')
-        return self.get_load_ids()
+    #def getLoadIDs(self):
+        #self.deprecated('getLoadIDs()', 'get_load_ids()', '0.8')
+        #return self.get_load_ids()
 
-    def getReducedLoads(self):
-        self.deprecated('self.getReducedLoads()', 'self.get_reduced_loads()', '0.8')
-        return self.get_reduced_loads()
+    #def getReducedLoads(self):
+        #self.deprecated('self.getReducedLoads()', 'self.get_reduced_loads()', '0.8')
+        #return self.get_reduced_loads()
 
-    def organizeLoads(self, model):
-        self.deprecated('organizeLoads(model)', 'organize_loads(model)', '0.8')
-        return self.organize_loads(model)
+    #def organizeLoads(self, model):
+        #self.deprecated('organizeLoads(model)', 'organize_loads(model)', '0.8')
+        #return self.organize_loads(model)
 
-    def getLoadTypes(self):
-        self.deprecated('getLoadTypes()', 'get_load_types()', '0.8')
-        return self.get_load_types()
+    #def getLoadTypes(self):
+        #self.deprecated('getLoadTypes()', 'get_load_types()', '0.8')
+        #return self.get_load_types()
 
     def get_load_ids(self):
         """
@@ -365,16 +365,16 @@ class GRAV(BaseCard):
         assert len(data) == 7
         return GRAV(sid, cid, scale, N, mb, comment=comment)
 
-    def getLoads(self):
-        self.deprecated('getLoads()', 'get_loads()', '0.8')
-        return self.get_loads()
+    #def getLoads(self):
+        #self.deprecated('getLoads()', 'get_loads()', '0.8')
+        #return self.get_loads()
 
     def get_loads(self):
         return [self]
 
-    def organizeLoads(self, model):
-        self.deprecated('organizeLoads(model)', 'organize_loads(model)', '0.8')
-        return self.organize_loads(model)
+    #def organizeLoads(self, model):
+        #self.deprecated('organizeLoads(model)', 'organize_loads(model)', '0.8')
+        #return self.organize_loads(model)
 
     def organize_loads(self, model):
         types_found = [self.type]
@@ -387,9 +387,9 @@ class GRAV(BaseCard):
                 force_constraints, moment_constraints,
                 gravity_load)
 
-    def transformLoad(self):
-        self.deprecated('transformLoad()', 'transform_load()', '0.8')
-        return self.transform_load()
+    #def transformLoad(self):
+        #self.deprecated('transformLoad()', 'transform_load()', '0.8')
+        #return self.transform_load()
 
     def transform_load(self):
         g = self.GravityVector()
@@ -550,9 +550,9 @@ class ACCEL(BaseCard):
             return self.cid
         return self.cid_ref.cid
 
-    def getLoads(self):
-        self.deprecated('getLoads()', 'get_loads()', '0.8')
-        return self.get_loads()
+    #def getLoads(self):
+        #self.deprecated('getLoads()', 'get_loads()', '0.8')
+        #return self.get_loads()
 
     def get_loads(self):
         return [self]
@@ -655,9 +655,9 @@ class ACCEL1(BaseCard):
         assert 0 not in node_ids, 'node_ids = %s' % (node_ids)
         return node_ids
 
-    def getLoads(self):
-        self.deprecated('getLoads()', 'get_loads()', '0.8')
-        return self.get_loads()
+    #def getLoads(self):
+        #self.deprecated('getLoads()', 'get_loads()', '0.8')
+        #return self.get_loads()
 
     def get_loads(self):
         return [self]
@@ -703,9 +703,9 @@ class Force(Load):
                 raise FloatingPointError(msg)
 
 
-    def transformLoad(self):
-        self.deprecated('transformLoad()', 'transform_load()', '0.8')
-        return self.transform_load()
+    #def transformLoad(self):
+        #self.deprecated('transformLoad()', 'transform_load()', '0.8')
+        #return self.transform_load()
 
     def transform_load(self):
         xyz = self.cid_ref.transform_node_to_global(self.xyz)
@@ -713,9 +713,9 @@ class Force(Load):
             return (True, self.node, self.mag * xyz)  # load
         return (False, self.node, xyz)  # enforced displacement
 
-    def getLoads(self):
-        self.deprecated('getLoads()', 'get_loads()', '0.8')
-        return self.get_loads()
+    #def getLoads(self):
+        #self.deprecated('getLoads()', 'get_loads()', '0.8')
+        #return self.get_loads()
 
     def get_loads(self):
         return [self]
@@ -723,18 +723,18 @@ class Force(Load):
     def F(self):
         return self.xyz * self.mag
 
-    def getReducedLoads(self):
-        self.deprecated('getReducedLoads()', 'get_reduced_loads', '0.8')
-        return self.get_reduced_loads()
+    #def getReducedLoads(self):
+        #self.deprecated('getReducedLoads()', 'get_reduced_loads', '0.8')
+        #return self.get_reduced_loads()
 
     def get_reduced_loads(self):
         scale_factors = [1.]
         loads = self.F()
         return(scale_factors, loads)
 
-    def organizeLoads(self, model):
-        self.deprecated('organizeLoads(model)', 'organize_loads(model)', '0.8')
-        return self.organize_loads(model)
+    #def organizeLoads(self, model):
+        #self.deprecated('organizeLoads(model)', 'organize_loads(model)', '0.8')
+        #return self.organize_loads(model)
 
     def organize_loads(self, model):
         (scale_factors, force_loads) = self.get_reduced_loads()
@@ -775,9 +775,9 @@ class Moment(Load):
             self.mag *= normXYZ
             self.xyz /= normXYZ
 
-    def transformLoad(self):
-        self.deprecated('transformLoad()', 'transform_load()', '0.8')
-        return self.transform_load()
+    #def transformLoad(self):
+        #self.deprecated('transformLoad()', 'transform_load()', '0.8')
+        #return self.transform_load()
 
     def transform_load(self):
         #print("self.xyz = ",self.xyz)
@@ -787,16 +787,16 @@ class Moment(Load):
             return (True, self.node, self.mag * xyz)  # load
         return (False, self.node, xyz)  # enforced displacement
 
-    def getLoads(self):
-        self.deprecated('getLoads()', 'get_loads()', '0.8')
-        return self.get_loads()
+    #def getLoads(self):
+        #self.deprecated('getLoads()', 'get_loads()', '0.8')
+        #return self.get_loads()
 
     def get_loads(self):
         return [self]
 
-    def getReducedLoads(self):
-        self.deprecated('getReducedLoads()', 'get_reduced_loads()', '0.8')
-        self.get_reduced_loads()
+    #def getReducedLoads(self):
+        #self.deprecated('getReducedLoads()', 'get_reduced_loads()', '0.8')
+        #self.get_reduced_loads()
 
     def get_reduced_loads(self):
         scale_factors = [1.]
@@ -805,9 +805,9 @@ class Moment(Load):
         }
         return(scale_factors, loads)
 
-    def organizeLoads(self, model):
-        self.deprecated('organizeLoads(model)', 'organize_loads(model)', '0.8')
-        return self.organize_loads(model)
+    #def organizeLoads(self, model):
+        #self.deprecated('organizeLoads(model)', 'organize_loads(model)', '0.8')
+        #return self.organize_loads(model)
 
     def organize_loads(self, model):
         (scale_factors, moment_loads) = self.get_reduced_loads()
@@ -1220,9 +1220,9 @@ class FORCE2(Force):
             return self.node
         return self.node.nid
 
-    def NodeID(self):
-        self.deprecated('node_id', 'NodeID()', '0.8')
-        return self.node_id
+    #def NodeID(self):
+        #self.deprecated('node_id', 'NodeID()', '0.8')
+        #return self.node_id
 
     def G1(self):
         if isinstance(self.g1, integer_types):
@@ -1764,9 +1764,9 @@ class GMLOAD(Load):
             #return self.node
         #return self.node_ref.nid
 
-    def getLoads(self):
-        self.deprecated('getLoads()', 'get_loads()', '0.8')
-        return self.get_loads()
+    #def getLoads(self):
+        #self.deprecated('getLoads()', 'get_loads()', '0.8')
+        #return self.get_loads()
 
     def get_loads(self):
         return [self]
@@ -1836,9 +1836,9 @@ class PLOAD(Load):
     def uncross_reference(self):
         pass
 
-    def getLoads(self):
-        self.deprecated('getLoads()', 'get_loads()', '0.8')
-        return self.get_loads()
+    #def getLoads(self):
+        #self.deprecated('getLoads()', 'get_loads()', '0.8')
+        #return self.get_loads()
 
     def get_loads(self):
         return [self]
@@ -1941,8 +1941,8 @@ class PLOAD1(Load):
         self.eid = self.Eid()
         del self.eid_ref
 
-    def transformLoad(self):
-        self.deprecated('transformLoad()', 'transform_load()', '0.8')
+    #def transformLoad(self):
+        #self.deprecated('transformLoad()', 'transform_load()', '0.8')
 
     def transform_load(self):
         p1 = self.eid_ref.ga_ref.get_position()
@@ -1964,9 +1964,9 @@ class PLOAD1(Load):
         #(g2, matrix) = self.cid.transformToGlobal(A)
         #return (g2)
 
-    def getReducedLoads(self):
-        self.deprecated('getReducedLoads()', 'get_reduced_loads()', '0.8')
-        return self.get_reduced_loads()
+    #def getReducedLoads(self):
+        #self.deprecated('getReducedLoads()', 'get_reduced_loads()', '0.8')
+        #return self.get_reduced_loads()
 
     def get_reduced_loads(self):
         """
@@ -1980,9 +1980,9 @@ class PLOAD1(Load):
         loads = [self]
         return scale_factors, loads
 
-    def organizeLoads(self, model):
-        self.deprecated('organizeLoads(model)', 'organize_loads(model)', '0.8')
-        return self.organize_loads(model)
+    #def organizeLoads(self, model):
+        #self.deprecated('organizeLoads(model)', 'organize_loads(model)', '0.8')
+        #return self.organize_loads(model)
 
     def organize_loads(self, model):
         """
@@ -2096,9 +2096,9 @@ class PLOAD1(Load):
         return (types_found, force_loads, moment_loads, force_constraints,
                 moment_constraints, gravity_loads)
 
-    def getLoads(self):
-        self.deprecated('getLoads()', 'get_loads()', '0.8')
-        return self.get_loads()
+    #def getLoads(self):
+        #self.deprecated('getLoads()', 'get_loads()', '0.8')
+        #return self.get_loads()
 
     def get_loads(self):
         return [self]
@@ -2176,9 +2176,9 @@ class PLOAD2(Load):
         self.eids = self.element_ids
         del self.eids_ref
 
-    def getLoads(self):
-        self.deprecated('getLoads()', 'get_loads()', '0.8')
-        return self.get_loads()
+    #def getLoads(self):
+        #self.deprecated('getLoads()', 'get_loads()', '0.8')
+        #return self.get_loads()
 
     @property
     def element_ids(self):
@@ -2222,13 +2222,13 @@ class PLOAD2(Load):
 class PLOAD4(Load):
     type = 'PLOAD4'
 
-    def getLoads(self):
-        self.deprecated('getLoads()', 'get_loads()', '0.8')
-        return self.get_loads()
+    #def getLoads(self):
+        #self.deprecated('getLoads()', 'get_loads()', '0.8')
+        #return self.get_loads()
 
-    def transformLoad(self):
-        self.deprecated('transformLoad()', 'transform_load()', '0.8')
-        return self.transform_load()
+    #def transformLoad(self):
+        #self.deprecated('transformLoad()', 'transform_load()', '0.8')
+        #return self.transform_load()
 
     def __init__(self, sid, eids, pressures, g1, g34, cid, NVector, sorl, ldir, comment=''):
         if comment:
@@ -2588,9 +2588,9 @@ class PLOADX1(Load):
             return self.gb
         return self.gb_ref.nid
 
-    def getLoads(self):
-        self.deprecated('getLoads()', 'get_loads()', '0.8')
-        return self.get_loads()
+    #def getLoads(self):
+        #self.deprecated('getLoads()', 'get_loads()', '0.8')
+        #return self.get_loads()
 
     def get_loads(self):
         return [self]

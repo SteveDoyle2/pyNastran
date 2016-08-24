@@ -100,7 +100,7 @@ def main():
     ansys_filename = 'ds.dat'
     model.read_ansys(ansys_filename)
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     main()
 
 """

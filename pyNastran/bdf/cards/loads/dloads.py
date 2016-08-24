@@ -322,9 +322,9 @@ class RLOAD1(TabularLoad):
         if isinstance(self.delay, integer_types) and self.delay > 0:
             del self.delay_ref
 
-    def getLoads(self):
-        self.deprecated('getLoads()', 'get_loads()', '0.8')
-        return self.get_loads()
+    #def getLoads(self):
+        #self.deprecated('getLoads()', 'get_loads()', '0.8')
+        #return self.get_loads()
 
     def get_loads(self):
         return [self]
@@ -563,9 +563,9 @@ class RLOAD2(TabularLoad):
         if self.delay > 0:
             del self.delay_ref
 
-    def getLoads(self):
-        self.deprecated('getLoads()', 'get_loads()', '0.8')
-        return self.get_loads()
+    #def getLoads(self):
+        #self.deprecated('getLoads()', 'get_loads()', '0.8')
+        #return self.get_loads()
 
     def get_loads(self):
         return [self]
@@ -693,9 +693,9 @@ class TLOAD1(TabularLoad):
         assert len(card) <= 8, 'len(TLOAD1 card) = %i\ncard=%s' % (len(card), card)
         return TLOAD1(sid, excite_id, delay, Type, tid, us0, vs0, comment=comment)
 
-    def getLoads(self):
-        self.deprecated('getLoads()', 'get_loads()', '0.8')
-        return self.get_loads()
+    #def getLoads(self):
+        #self.deprecated('getLoads()', 'get_loads()', '0.8')
+        #return self.get_loads()
 
     def get_loads(self):
         return [self]
@@ -916,9 +916,9 @@ class TLOAD2(TabularLoad):
             f[0] = self.vs0
         return f
 
-    def getLoads(self):
-        self.deprecated('getLoads()', 'get_loads()', '0.8')
-        return self.get_loads()
+    #def getLoads(self):
+        #self.deprecated('getLoads()', 'get_loads()', '0.8')
+        #return self.get_loads()
 
     def get_loads(self):
         return [self]

@@ -11,6 +11,6 @@ from pyNastran.bdf.dev_vectorized.cards.elements.rod.test_rods import *
 #from pyNastran.bdf.dev_vectorized.cards.elements.shear.test_shear import *
 #from pyNastran.bdf.dev_vectorized.cards.elements.damper.test_dampers import *
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     import unittest
     unittest.main()

@@ -540,18 +540,18 @@ def parse_patran_syntax(node_sets, pound=None):
 
 def write_patran_syntax_dict(dict_sets):
     msg = ''
-    for key, dict_set in iteritems(dict_sets):
+    for key, dict_set in sorted(iteritems(dict_sets)):
         singles, doubles = collapse_colon_packs(dict_set)
-        double_list = ['%s:%s ' % (double[0], double[2])
-                       if len(double) == 3 else '%s:%s:%s ' % (double[0], double[2], double[4])
+        double_list = ['%s:%s' % (double[0], double[2])
+                       if len(double) == 3 else '%s:%s:%s' % (double[0], double[2], double[4])
                        for double in doubles]
-        double_str = ''.join(double_list)
-        msg += '%s %s %s' % (key,
+        double_str = ' '.join(double_list)
+        msg += '%s %s %s ' % (key,
                              ' '.join(str(single) for single in singles),
                              double_str,
                             )
     assert '%' not in msg, msg
-    return msg
+    return msg.strip().replace('  ', ' ')
 
 
 def parse_patran_syntax_dict(node_sets, pound_dict=None):

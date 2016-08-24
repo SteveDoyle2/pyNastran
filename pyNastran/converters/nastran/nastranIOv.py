@@ -259,23 +259,11 @@ class NastranIO(object):
             'S' : 'Rtp',
         }
         self.create_global_axes(dim_max)
-        self.show_cids = True
         for cid, coord in sorted(iteritems(model.coords)):
             if cid == 0:
                 continue
             cid_type = cid_types[coord.Type]
-            if self.show_cids is True:
-                self._create_coord(dim_max, cid, coord, cid_type)
-            elif isinstance(self.show_cids, integer_types):
-                if cid == self.show_cids:
-                    self._create_coord(dim_max, cid, coord, cid_type)
-            elif isinstance(self.show_cids, (list, tuple, np.ndarray)):
-                if cid in self.show_cids:
-                    # .. todo:: has issues in VTK 6 I think due to lack of self.grid.Update()
-                    self._create_coord(dim_max, cid, coord, cid_type)
-            else:
-                print('skipping cid=%s; use a script and set self.show_cids=[%s] to view' % (
-                    cid, cid))
+            self._create_coord(dim_max, cid, coord, cid_type)
 
     def _remove_old_nastran_geometry(self, bdf_filename):
         #return self._remove_old_geometry(bdf_filename)
@@ -452,6 +440,8 @@ class NastranIO(object):
                     for i, box_id in enumerate(caero.box_ids.flat):
                         box_id_to_caero_element_map[box_id] = elementsi[i, :] + num_prev
                     num_prev += pointsi.shape[0]
+                elif caero.type == 'CAERO2':
+                    pass
                 else:
                     print('caero\n%s' % caero)
             if ncaeros_sub:
@@ -1390,12 +1380,12 @@ class NastranIO(object):
                 # end A
                 # global - cid != 0
                 if node1.Cd() != 0:
-                    v = node1.cd_ref.transform_node_to_global(v)
-                    if node1.cd_ref.type not in ['CORD2R', 'CORD1R']:
-                        msg = 'invalid Cd type (%r) on Node %i; expected CORDxR' % (
-                            node1.cd_ref.type, node1.nid)
-                        self.log.error(msg)
-                        continue
+                    v = node1.cd_ref.transform_node_to_global_assuming_rectangular(v)
+                    #if node1.cd_ref.type not in ['CORD2R', 'CORD1R']:
+                        #msg = 'invalid Cd type (%r) on Node %i; expected CORDxR' % (
+                            #node1.cd_ref.type, node1.nid)
+                        #self.log.error(msg)
+                        #continue
                         #raise NotImplementedError(node1.cd)
             elif offt_vector == 'B':
                 # basic - cid = 0
@@ -1411,14 +1401,13 @@ class NastranIO(object):
             wa = elem.wa
             if offt_end_a == 'G':
                 if node1.Cd() != 0:
-                    if node1.cd.type not in ['CORD2R', 'CORD1R']:
-                        continue # TODO: support CD transform
-                        #raise NotImplementedError(node1.cd)
-                    wa = node1.cd.transform_node_to_global(wa)  # TODO: fixme
+                    #if node1.cd.type not in ['CORD2R', 'CORD1R']:
+                        #continue # TODO: support CD transform
+                    wa = node1.cd_ref.transform_node_to_global_assuming_rectangular(wa)  # TODO: fixme
             elif offt_end_a == 'B':
                 pass
             elif offt_end_a == 'O':
-                wa = node1.cd.transform_node_to_global(n1 - wa)  # TODO: fixme
+                wa = node1.cd_ref.transform_node_to_global_assuming_rectangular(n1 - wa)  # TODO: fixme
             else:
                 msg = 'offt_end_a=%r is not supported; offt=%s' % (offt_end_a, elem.offt)
                 self.log.error(msg)
@@ -1430,11 +1419,9 @@ class NastranIO(object):
             wb = elem.wb
             if offt_end_b == 'G':
                 if node2.Cd() != 0:
-                    if node2.cd.type not in ['CORD2R', 'CORD1R']:
-                        continue # TODO: MasterModelTaxi
-                        #raise NotImplementedError(node2.cd)
-                    #wb = node2.cd.transform_node_to_local_xyz(wb)
-                    wb = node2.cd.transform_node_to_global(wb)  # TODO: fixme
+                    #if node2.cd_ref.type not in ['CORD2R', 'CORD1R']:
+                        #continue # TODO: MasterModelTaxi
+                    wb = node2.cd.transform_node_to_global_assuming_rectangular(wb)  # TODO: fixme
 
             elif offt_end_b == 'B':
                 pass
@@ -1507,7 +1494,7 @@ class NastranIO(object):
                 #break
 
         #print('bar_types =', bar_types)
-        for bar_type in bar_types.keys():
+        for bar_type in list(bar_types):
             if len(bar_types[bar_type][0]) == 0:
                 del bar_types[bar_type]
 
@@ -1781,6 +1768,7 @@ class NastranIO(object):
         if nnodes == 0:
             model.log.warning('0 nodes added for %r' % name)
             return
+        self.follower_nodes[name] = node_ids
         points = vtk.vtkPoints()
         points.SetNumberOfPoints(nnodes)
 
@@ -1826,6 +1814,7 @@ class NastranIO(object):
         nnodes = nlines * 2
         if nnodes == 0:
             return
+        self.follower_nodes[name] = lines.ravel()
         points = vtk.vtkPoints()
         points.SetNumberOfPoints(nnodes)
 
@@ -4729,7 +4718,10 @@ class NastranIO(object):
                 num_off = len(ioff)
                 print('force_eids_off = %s; n=%s' % (self.element_ids[ioff], num_off))
                 self.log_error('force_eids_off = %s; n=%s' % (self.element_ids[ioff], num_off))
-                cases[(subcase_id, icase, 'Force\nIsElementOn', 1, 'centroid', '%i', header)] = is_element_on
+                force_on_res = GuiResult(subcase_id, header='Force - IsElementOn',
+                                         title='Force\nIsElementOn',
+                                         location='centroid', scalar=is_element_on)
+                cases[icase] = (force_on_res, (subcase_id, 'Force\nIsElementOn'))
                 form_dict[(key, itime)].append(('Force - IsElementOn', icase, []))
                 #num_on -= num_off
                 icase += 1
@@ -5332,20 +5324,18 @@ class NastranIO(object):
         form0 = (word, None, [])
         formis = form0[2]
         # subcase_id, icase, resultType, vector_size, location, dataFormat
+        subcase_id = key[2]
         if is_stress and itime == 0:
             if is_element_on.min() == 0:  # if all elements aren't on
                 ioff = np.where(is_element_on == 0)[0]
                 print('stress_eids_off = %s' % np.array(self.element_ids[ioff]))
                 self.log_error('stress_eids_off = %s' % self.element_ids[ioff])
-                #stress_res = GuiResult(subcase_id, header='Stress - isElementOn', title='Stress\nisElementOn',
-                                    #location='centroid', scalar=oxx, data_format=fmt)
-                #cases[icase] = (stress_res, (subcase_id, 'Stress - isElementOn'))
-
-                cases[(1, icase, 'Stress\nisElementOn', 1, 'centroid', '%i', header)] = is_element_on
+                stress_res = GuiResult(subcase_id, header='Stress - isElementOn', title='Stress\nisElementOn',
+                                       location='centroid', scalar=oxx, data_format=fmt)
+                cases[icase] = (stress_res, (subcase_id, 'Stress - isElementOn'))
                 form_dict[(key, itime)].append(('Stress - IsElementOn', icase, []))
                 icase += 1
 
-        subcase_id = key[2]
         if oxx.min() != oxx.max():
             oxx_res = GuiResult(subcase_id, header=word + 'XX', title=word + 'XX',
                                 location='centroid', scalar=oxx, data_format=fmt)

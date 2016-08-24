@@ -50,7 +50,7 @@ from pyNastran.converters.stl.stl import STL
 
 
 
-def main():
+def main():  # pragma: no cover
     bdf_filename = 'bay.bdf'
     bc_file = 'bc'
 

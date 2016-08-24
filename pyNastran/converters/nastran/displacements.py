@@ -181,7 +181,7 @@ class NastranDisplacementResults(object):
 
     def get_methods(self, i):
         if self.is_real:
-            return ['node']
+            return ['magnitude', 'tx', 'ty', 'tz', 'rx', 'ry', 'rz']
         else:
             return ['node real', 'node imag', 'node magnitude', 'node phase']
 

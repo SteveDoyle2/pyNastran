@@ -1,7 +1,21 @@
 
+|  Branch	| Status  |
+| :-------:	| :--- 	  |
+|  v0.8: 	| [![Build Status](https://img.shields.io/travis/SteveDoyle2/pyNastran/v0.8.svg)](https://travis-ci.org/SteveDoyle2/pyNastran) [![Coverage Status](https://img.shields.io/coveralls/SteveDoyle2/pyNastran/v0.8.svg)](https://coveralls.io/github/SteveDoyle2/pyNastran?branch=v0.8) 
+|   Master:	| [![Build Status](https://img.shields.io/travis/SteveDoyle2/pyNastran/master.svg)](https://travis-ci.org/SteveDoyle2/pyNastran) [![Coverage Status](https://img.shields.io/coveralls/SteveDoyle2/pyNastran/master.svg)](https://coveralls.io/github/SteveDoyle2/pyNastran?branch=master) 
+
+<!---
+[![Build Status](https://travis-ci.org/SteveDoyle2/pyNastran.png)](https://travis-ci.org/SteveDoyle2/pyNastran)
+[![Coverage Status](https://coveralls.io/repos/github/SteveDoyle2/pyNastran/badge.svg?branch=master)](https://coveralls.io/github/SteveDoyle2/pyNastran?branch=master)
+[![Requirements Status](https://img.shields.io/requires/github/SteveDoyle2/pyNastran/master.svg)](https://requires.io/github/SteveDoyle2/pyNastran/requirements/?branch=master)	|
+--->
+
 ### v0.8.0
 [![PyPi Version](https://img.shields.io/pypi/v/pynastran.svg)](https://pypi.python.org/pypi/pyNastran)
+
+<!---
 [![PyPi Downloads](https://img.shields.io/pypi/dm/pynastran.svg)](https://pypi.python.org/pypi/pyNastran)
+--->
 
 [Doumentation](http://pynastran-git.readthedocs.io/en/v0.8/)
 
@@ -12,17 +26,16 @@
 
 ### v0.7.2
 
-<!--- [![Github Downloads](	https://img.shields.io/github/downloads/SteveDoyle2/pyNastran/latest/total.svg)  --->
-<!--- [![All Downloads](https://img.shields.io/github/downloads/SteveDoyle2/pyNastran/total.svg)  --->
-<!--- [![Total PyPi Downloads](https://img.shields.io/github/downloads/atom/atom/latest/pynastran.svg)]  --->
-<!--- [![v0.7.2 Downloads](https://img.shields.io/github/downloads/atom/atom/v0.7.2/total.svg)]  --->
+<!--- 
+[![Github Downloads](	https://img.shields.io/github/downloads/SteveDoyle2/pyNastran/latest/total.svg)
+[![All Downloads](https://img.shields.io/github/downloads/SteveDoyle2/pyNastran/total.svg)
+[![Total PyPi Downloads](https://img.shields.io/github/downloads/atom/atom/latest/pynastran.svg)]
+[![v0.7.2 Downloads](https://img.shields.io/github/downloads/atom/atom/v0.7.2/total.svg)]  
+--->
 
 [Documentation] (http://pynastran-git.readthedocs.org/en/v0.7.2/index.html)
 
 ### Master
-
-[![Build Status](https://travis-ci.org/SteveDoyle2/pyNastran.png)](https://travis-ci.org/SteveDoyle2/pyNastran)
-[![Coverage Status](https://coveralls.io/repos/github/SteveDoyle2/pyNastran/badge.svg?branch=master)](https://coveralls.io/github/SteveDoyle2/pyNastran?branch=master)
 
 [Doumentation](http://pynastran-git.readthedocs.org/en/latest/index.html)
 

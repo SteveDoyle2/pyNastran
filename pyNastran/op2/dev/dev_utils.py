@@ -173,5 +173,5 @@ def cat(fname):
         print(file_obj.readline().strip())
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     main()

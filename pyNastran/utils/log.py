@@ -284,7 +284,7 @@ def get_logger2(log=None, debug=True, encoding='utf-8'):
 if __name__ == '__main__':  # pragma: no cover
     # how to use a simple logger
     for nam in ['debug', 'info']:
-        print('--- %s logger ---' % nam)
+        #print('--- %s logger ---' % nam)
         test_log = SimpleLogger(nam, encoding=encoding)
         test_log.debug('debug message')
         test_log.warning('warning')

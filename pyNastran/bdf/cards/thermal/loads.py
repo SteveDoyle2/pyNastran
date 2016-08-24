@@ -59,9 +59,9 @@ class QVOL(ThermalLoad):
         elements = expand_thru_by(eids)
         return QVOL(sid, qvol, control_point, elements, comment=comment)
 
-    def getLoads(self):
-        self.deprecated('getLoads()', 'get_loads()', '0.8')
-        return self.get_loads()
+    #def getLoads(self):
+        #self.deprecated('getLoads()', 'get_loads()', '0.8')
+        #return self.get_loads()
 
     def get_loads(self):
         return [self]
@@ -160,9 +160,9 @@ class QBDY1(ThermalLoad):
         eids = data[2:]
         return QBDY1(sid, qFlux, eids, comment=comment)
 
-    def getLoads(self):
-        self.deprecated('getLoads()', 'get_loads()', '0.8')
-        return self.get_loads()
+    #def getLoads(self):
+        #self.deprecated('getLoads()', 'get_loads()', '0.8')
+        #return self.get_loads()
 
     def get_loads(self):
         return [self]
@@ -268,9 +268,9 @@ class QBDY2(ThermalLoad):  # not tested
         qfluxs = [data[2]]
         return QBDY2(sid, eid, qfluxs, comment=comment)
 
-    def getLoads(self):
-        self.deprecated('getLoads()', 'get_loads()', '0.8')
-        return self.get_loads()
+    #def getLoads(self):
+        #self.deprecated('getLoads()', 'get_loads()', '0.8')
+        #return self.get_loads()
 
     def get_loads(self):
         return [self]
@@ -412,9 +412,9 @@ class QBDY3(ThermalLoad):
         list_fields = ['QBDY3', self.sid, self.Q0, cntrlnd] + collapse_thru_by(eids)
         return list_fields
 
-    def getLoads(self):
-        self.deprecated('getLoads()', 'get_loads()', '0.8')
-        return self.get_loads()
+    #def getLoads(self):
+        #self.deprecated('getLoads()', 'get_loads()', '0.8')
+        #return self.get_loads()
 
     def get_loads(self):
         """
@@ -495,9 +495,9 @@ class QHBDY(ThermalLoad):
         grids = data[4:]
         return QHBDY(sid, flag, Q0, af, grids, comment=comment)
 
-    def getLoads(self):
-        self.deprecated('getLoads()', 'get_loads()', '0.8')
-        return self.get_loads()
+    #def getLoads(self):
+        #self.deprecated('getLoads()', 'get_loads()', '0.8')
+        #return self.get_loads()
 
     def get_loads(self):
         return [self]
@@ -606,9 +606,9 @@ class TEMP(ThermalLoad):
         """Writes the TEMP card"""
         return self.raw_fields()
 
-    def getLoads(self):
-        self.deprecated('getLoads()', 'get_loads()', '0.8')
-        return self.get_loads()
+    #def getLoads(self):
+        #self.deprecated('getLoads()', 'get_loads()', '0.8')
+        #return self.get_loads()
 
     def get_loads(self):
         """

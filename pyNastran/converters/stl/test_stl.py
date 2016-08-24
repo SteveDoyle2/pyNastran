@@ -1,10 +1,9 @@
-from six.moves import range
+from __future__ import print_function
 import os
-from numpy import array_equal, allclose
 import unittest
 
 import pyNastran
-from pyNastran.converters.stl.stl import STL, read_stl
+from pyNastran.converters.stl.stl import read_stl
 from pyNastran.converters.stl.stl_to_nastran import stl_to_nastran_filename
 
 pkg_path = pyNastran.__path__[0]
@@ -32,11 +31,12 @@ class TestSTL(unittest.TestCase):
             'endsolid\n'
         )
         stl_filename = os.path.join(test_path, 'tris.stl')
-        with open(stl_filename, 'w') as f:
-            f.write(lines)
+        with open(stl_filename, 'w') as stl_file:
+            stl_file.write(lines)
 
-        stl = STL(log=None, debug=False)
-        stl.read_stl(stl_filename)
+        stl = read_stl(stl_filename, log=None, debug=False)
+        #stl = STL(log=None, debug=False)
+        #stl.read_stl(stl_filename)
         assert len(stl.nodes) == 6, 'nodes=%s' % len(stl.nodes)
         assert len(stl.elements) == 2, 'nelements=%s' % len(stl.elements)
         os.remove(stl_filename)
@@ -63,8 +63,8 @@ class TestSTL(unittest.TestCase):
         stl_filename = os.path.join(test_path, 'tris.stl')
         stl_out_filename = os.path.join(test_path, 'tris_out.stl')
         stl_bin_filename = os.path.join(test_path, 'tris_bin.stl')
-        with open(stl_filename, 'w') as f:
-            f.write(lines)
+        with open(stl_filename, 'w') as stl_file:
+            stl_file.write(lines)
 
         stl = read_stl(stl_filename, log=None, debug=False)
         stl.write_stl(stl_out_filename, is_binary=False)
@@ -86,16 +86,22 @@ class TestSTL(unittest.TestCase):
 
     def test_stl_to_nastran_01(self):
         stl_filename = os.path.join(test_path, 'sphere.stl')
-        bdf_filename = os.path.join(test_path, 'sphere.bdf')
-        stl_to_nastran_filename(stl_filename, bdf_filename)
-        os.remove(bdf_filename)
+        bdf_filename_8 = os.path.join(test_path, 'sphere_8.bdf')
+        bdf_filename_16 = os.path.join(test_path, 'sphere_16.bdf')
+        bdf_filename_double = os.path.join(test_path, 'sphere_double.bdf')
+        stl_to_nastran_filename(stl_filename, bdf_filename_8)
+        stl_to_nastran_filename(stl_filename, bdf_filename_16, size=16)
+        stl_to_nastran_filename(stl_filename, bdf_filename_double, size=16, is_double=True)
+        os.remove(bdf_filename_8)
+        os.remove(bdf_filename_16)
+        os.remove(bdf_filename_double)
 
 
-if __name__ == '__main__':  # pragma: no cover
+def main():  # pragma: no cover
     import time
     t0 = time.time()
     unittest.main()
-    #test_1()
-    #test_2()
-    #test_3()
     print("dt = %s" % (time.time() - t0))
+
+if __name__ == '__main__':  # pragma: no cover
+    main()

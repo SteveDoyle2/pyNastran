@@ -117,5 +117,5 @@ def check_renumber(bdf_filename, bdf_filename_renumber, bdf_filename_check):
     model = BDF(debug=False)
     model.read_bdf(bdf_filename_renumber)
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     unittest.main()

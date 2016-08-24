@@ -280,8 +280,8 @@ def get_bad_shells(model, xyz_cid0, nid_map, max_theta=175., max_skew=70.,
                 continue
     return eids_failed
 
-#def main():
+#def main():  # pragma: no cover
     #delete_bad_shells()
 
-#if __name__ == '__main__':
+#if __name__ == '__main__':  # pragma: no cover
     #main()

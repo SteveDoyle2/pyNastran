@@ -41,17 +41,17 @@ def run_docopt():
     msg += '               [-s SHOT] [-m MAGNIFY]\n'  #  [-r XYZ]
     msg += '               [-g GSCRIPT] [-p PSCRIPT]\n'
     msg += '               [-u POINTS_FNAME...] [--user_geom GEOM_FNAME...]\n'
-    msg += '               [-q] [--groups]\n'
+    msg += '               [-q] [--groups] [--noupdate]\n'
     msg += "  pyNastranGUI [-f FORMAT] INPUT OUTPUT [-o OUTPUT]\n"
     msg += '               [-s SHOT] [-m MAGNIFY]\n'  #  [-r XYZ]
     msg += '               [-g GSCRIPT] [-p PSCRIPT]\n'
     msg += '               [-u POINTS_FNAME...] [--user_geom GEOM_FNAME...]\n'
-    msg += '               [-q] [--groups]\n'
+    msg += '               [-q] [--groups] [--noupdate]\n'
     msg += "  pyNastranGUI [-f FORMAT] [-i INPUT] [-o OUTPUT...]\n"
     msg += '               [-s SHOT] [-m MAGNIFY]\n'  #  [-r XYZ]
     msg += '               [-g GSCRIPT] [-p PSCRIPT]\n'
     msg += '               [-u POINTS_FNAME...] [--user_geom GEOM_FNAME...]\n'
-    msg += '               [-q] [--groups]\n'
+    msg += '               [-q] [--groups] [--noupdate]\n'
     msg += '  pyNastranGUI -h | --help\n'
     msg += '  pyNastranGUI -v | --version\n'
     msg += "\n"
@@ -69,6 +69,7 @@ def run_docopt():
     msg += "  -s SHOT, --shots SHOT           path to screenshot (only 1 for now)\n"
     msg += "  -m MAGNIFY, --magnify           how much should the resolution on a picture be magnified [default: 5]\n"
     msg += "  --groups                        enables groups\n"
+    msg += "  --noupdate                      disables the update check\n"
     msg += "  --user_geom GEOM_FNAME          add user specified points to an alternate grid (repeatable)\n"
     msg += "  -u POINTS_FNAME, --user_points  add user specified points to an alternate grid (repeatable)\n"
     msg += '\n'
@@ -139,9 +140,11 @@ def run_docopt():
         shots = shots.split(';')[0]
 
     is_groups = data['--groups']
+    no_update = data['--noupdate']
     #assert data['--console'] == False, data['--console']
     return (input_format, input_filenames, output_filenames, shots,
-            magnify, rotation, geom_script, post_script, debug, user_points, user_geom, is_groups)
+            magnify, rotation, geom_script, post_script, debug, user_points, user_geom,
+            is_groups, no_update)
 
 
 def get_inputs():
@@ -158,13 +161,15 @@ def get_inputs():
     user_points = None
     user_geom = None
     is_groups = False
+    no_update = True
 
     if sys.version_info < (2, 6):
         print("requires Python 2.6+ to use command line arguments...")
     else:
         if len(sys.argv) > 1:
             (input_format, input_filename, output_filename, shots, magnify,
-             rotation, geom_script, post_script, debug, user_points, user_geom, is_groups) = run_docopt()
+             rotation, geom_script, post_script, debug, user_points, user_geom,
+             is_groups, no_update) = run_docopt()
 
     inputs = {
         'format' : input_format,
@@ -179,5 +184,6 @@ def get_inputs():
         'user_points' : user_points,
         'user_geom' : user_geom,
         'is_groups' : is_groups,
+        'no_update' : no_update,
     }
     return inputs

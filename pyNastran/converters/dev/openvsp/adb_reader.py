@@ -268,11 +268,11 @@ class ADB_Reader(FortranFormat):
             self.show_ndata(300, types='ifs')
         return self.nodes, self.tris
 
-def main():
+def main():  # pragma: no cover
     adb_filename = 'model_DegenGeom.adb'
     a = ADB_Reader(batch=True)
     a.read_adb(adb_filename)
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     main()
 #WingGeom\x00tran/pyNastran/OpenVSP-3.1.0-win32/model_DegenGeom.history

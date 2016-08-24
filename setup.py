@@ -127,7 +127,8 @@ except ImportError:
 #]
 
 if 'dev' in pyNastran.__version__:
-    py_packages.append('coveralls')
+    py_packages.append('python-coveralls')
+    #py_packages.append('coverage')
 
 install_requires = py_packages + [
     # -*- Extra requirements: -*-

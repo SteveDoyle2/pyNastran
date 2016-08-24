@@ -137,9 +137,9 @@ class LoadCombination(Load):  # LOAD, DLOAD
         else:
             raise NotImplementedError(lid)
 
-    def getLoads(self):
-        self.deprecated('getLoads()', 'get_loads()', '0.8')
-        return self.get_loads()
+    #def getLoads(self):
+        #self.deprecated('getLoads()', 'get_loads()', '0.8')
+        #return self.get_loads()
 
     def get_loads(self):
         """
@@ -233,9 +233,9 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
         else:
             return lid.sid
 
-    def getLoads(self):
-        self.deprecated('getLoads()', 'get_loads()', '0.8')
-        return self.get_loads()
+    #def getLoads(self):
+        #self.deprecated('getLoads()', 'get_loads()', '0.8')
+        #return self.get_loads()
 
     def get_loads(self):
         return self.lid
@@ -489,9 +489,9 @@ class SPCD(Load):
         self.gids = self.node_ids
         del self.gids_ref
 
-    def getLoads(self):
-        self.deprecated('getLoads()', 'get_loads()', '0.8')
-        return self.get_loads()
+    #def getLoads(self):
+        #self.deprecated('getLoads()', 'get_loads()', '0.8')
+        #return self.get_loads()
 
     def get_loads(self):
         return [self]
@@ -579,9 +579,9 @@ class SLOAD(Load):
             return node
         return node.nid
 
-    def getLoads(self):
-        self.deprecated('getLoads()', 'get_loads()', '0.8')
-        return self.get_loads()
+    #def getLoads(self):
+        #self.deprecated('getLoads()', 'get_loads()', '0.8')
+        #return self.get_loads()
 
     def get_loads(self):
         """
@@ -687,9 +687,9 @@ class RFORCE(Load):
             return self.cid
         return self.cid_ref.cid
 
-    def getLoads(self):
-        self.deprecated('getLoads()', 'get_loads()', '0.8')
-        return self.get_loads()
+    #def getLoads(self):
+        #self.deprecated('getLoads()', 'get_loads()', '0.8')
+        #return self.get_loads()
 
     def get_loads(self):
         return [self]
@@ -881,9 +881,9 @@ class RANDPS(RandomLoad):
         if self.tid is not None:
             del self.tid_ref
 
-    def getLoads(self):
-        self.deprecated('getLoads()', 'get_loads()', '0.8')
-        return self.get_loads()
+    #def getLoads(self):
+        #self.deprecated('getLoads()', 'get_loads()', '0.8')
+        #return self.get_loads()
 
     def get_loads(self):
         return [self]

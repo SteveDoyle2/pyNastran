@@ -10,9 +10,6 @@ from pyNastran.gui.gui_objects.gui_result import GuiResult
 class LaWGS_IO(object):
     def __init__(self):
         pass
-#if __name__=='__main__':
-#    lawgs = LaWGS('tmx1242.wgs')
-#    lawgs.run()
 
     def get_lawgs_wildcard_geometry_results_functions(self):
         data = ('LaWGS',

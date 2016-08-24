@@ -780,13 +780,13 @@ class Subcase(object):
         #print('param_name=%r value=%s options=%s param_type=%r' % (param_name, value, options, param_type))
         return value, options  #, param_type
 
-    def update_parameter_in_subcase(self, key, value, options, param_type):
-        self.deprecated('update_parameter_in_subcase', 'update', '0.8')
-        self.update(key, value, options, param_type)
+    #def update_parameter_in_subcase(self, key, value, options, param_type):
+        #self.deprecated('update_parameter_in_subcase', 'update', '0.8')
+        #self.update(key, value, options, param_type)
 
-    def add_parameter_to_subcase(self, key, value, options, param_type):
-        self.deprecated('add_parameter_to_subcase', 'add', '0.8')
-        self.add(key, value, options, param_type)
+    #def add_parameter_to_subcase(self, key, value, options, param_type):
+        #self.deprecated('add_parameter_to_subcase', 'add', '0.8')
+        #self.add(key, value, options, param_type)
 
     def add(self, key, value, options, param_type):
         assert param_type in ['SET-type', 'CSV-type', 'SUBCASE-type', 'KEY-type', 'STRESS-type', 'STRING-type'], param_type
