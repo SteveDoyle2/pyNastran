@@ -12,7 +12,10 @@
 
 ### v0.8.0
 [![PyPi Version](https://img.shields.io/pypi/v/pynastran.svg)](https://pypi.python.org/pypi/pyNastran)
+
+<!---
 [![PyPi Downloads](https://img.shields.io/pypi/dm/pynastran.svg)](https://pypi.python.org/pypi/pyNastran)
+--->
 
 [Doumentation](http://pynastran-git.readthedocs.io/en/v0.8/)
 
