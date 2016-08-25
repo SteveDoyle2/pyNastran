@@ -396,7 +396,8 @@ class NastranIO(object):
 
         assert nnodes + nspoints > 0, model.card_count
         nelements = model.nelements
-        assert nelements > 0
+        ncaero_cards = len(model.caeros)
+        assert nelements + ncaero_cards > 0
 
         self.nNodes = nnodes + nspoints
         self.nElements = nelements  # approximate...
@@ -2659,7 +2660,7 @@ class NastranIO(object):
             area_ratio[i] = area_ratioi
             taper_ratio[i] = taper_ratioi
             i += 1
-        assert len(self.eid_map) > 0, self.eid_map
+        #assert len(self.eid_map) > 0, self.eid_map
 
         nelements = i
         self.nElements = nelements
@@ -2729,7 +2730,7 @@ class NastranIO(object):
 
         # set to True to enable elementIDs as a result
         eids_set = True
-        if eids_set:
+        if eids_set and nelements:
             eids = np.zeros(nelements, dtype='int32')
             for (eid, eid2) in iteritems(self.eid_map):
                 eids[eid2] = eid
@@ -2888,7 +2889,7 @@ class NastranIO(object):
             #mid_eids_skip = []
             #for pid in upids:
 
-        if self.make_offset_normals_dim:
+        if self.make_offset_normals_dim and nelements:
             #ielement = 0
             nelements = self.element_ids.shape[0]
             normals = np.zeros((nelements, 3), dtype='float32')

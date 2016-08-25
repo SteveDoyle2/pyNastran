@@ -1,7 +1,9 @@
 import unittest
 
 import pyNastran
-from pyNastran.bdf.bdf import BDF
+from pyNastran.bdf.bdf import BDF, CORD2R
+from pyNastran.bdf.cards.aero import (
+    FLFACT, AEFACT, AEPARM, AERO, AEROS, CAERO1, CAERO2, PAERO1, PAERO2)
 
 root_path = pyNastran.__path__[0]
 #test_path = os.path.join(root_path, 'bdf', 'cards', 'test')
@@ -51,17 +53,20 @@ class TestAero(unittest.TestCase):
         out = aefact98.write_card(8, None)
         self.assertEqual(msg, out)
 
-        data = ['AEFACT', 99, .3, 0.7, 1.0, None, 'cat']
-        with self.assertRaises(SyntaxError):
-            model.add_card(data, data[0], comment_good, is_list=True)
+        #data = ['AEFACT', 99, .3, 0.7, 1.0, None, 'cat']
+        #with self.assertRaises(SyntaxError):
+            #model.add_card(data, data[0], comment_good, is_list=True)
 
-        data = ['AEFACT', 99, .3, 0.7, 1.0, 'cat']
-        with self.assertRaises(SyntaxError):
-            model.add_card(data, data[0], comment_good, is_list=True)
+        #data = ['AEFACT', 100, .3, 0.7, 1.0, 'cat']
+        #with self.assertRaises(SyntaxError):
+            #model.add_card(data, data[0], comment_good, is_list=True)
 
-        data = ['AEFACT', 99, .3, 0.7, 1.0, 2]
-        with self.assertRaises(SyntaxError):
-            model.add_card(data, data[0], comment_good, is_list=True)
+        #data = ['AEFACT', 101, .3, 0.7, 1.0, 2]
+        #with self.assertRaises(SyntaxError):
+            #model.add_card(data, data[0], comment_good, is_list=True)
+
+        Di = [1., 2., 3.]
+        aefact = AEFACT(200, Di, comment='')
 
    # def test_aelink_1(self):
     def test_aelist_1(self):
@@ -85,16 +90,107 @@ class TestAero(unittest.TestCase):
         elements.sort()
         self.assertTrue(elements == aelist76.elements)
 
-   # def test_aeparm_1(self):
+    def test_aeparm_1(self):
+        aeparm = AEPARM(100, 'THRUST', 'lb')
+        aeparm.write_card()
+
    # def test_aestat_1(self):
    # def test_aesurf_1(self):
    # def test_aesurfs_1(self):
 
-   # def test_aero_1(self):
-   # def test_aeros_1(self):
+    def test_aero_1(self):
+        acsid = 0.
+        velocity = None
+        cref = 1.0
+        rho_ref = 1.0
+        aero = AERO(acsid, velocity, cref, rho_ref, sym_xz=0., sym_xy=0,
+                    comment='')
+        aero.write_card()
 
-   # def test_caero1_1(self):
-   # def test_caero2_1(self):
+    def test_aeros_1(self):
+        acsid = 0.
+        velocity = None
+        cref = 1.0
+        bref = 2.0
+        sref = 100.
+        aeros = AEROS(cref, bref, sref, acsid=0, rcsid=0, sym_xz=0, sym_xy=0,
+                      comment='')
+        aeros.write_card()
+
+
+    def test_caero1_1(self):
+        eid = 1
+        pid = 10
+        cp = 4
+        nspan = None
+        lspan = 3
+        nchord = None
+        lchord = 4
+        igid = None
+        p1 = [0., 0., 0.]
+        x12 = 5.
+        p4 = [2., 3., 4.]
+        x43 = 1.
+        caero = CAERO1(eid, pid, cp, nspan, lspan, nchord, lchord, igid, p1,
+                       x12, p4, x43)
+        caero.validate()
+        caero.write_card()
+
+    def test_caero2_1(self):
+        model = BDF()
+        eid = 1
+        pid = 10
+        cp = 4
+        nsb = 0
+        nint = 0
+        lsb = 3
+        lint = 6
+        igid = None
+        p1 = [0., 1., 2.]
+        x12 = 10.
+        caero = CAERO2(eid, pid, cp, nsb, nint, lsb, lint, igid, p1, x12,
+                       comment='')
+        caero.validate()
+        aefact = AEFACT(lint, [0., 1., 2., 3., 4., 5.])
+        aefact.validate()
+        model.aefacts[lint] = aefact
+
+        orient = 'Z'
+        width = 10.
+        AR = 2.
+        lrsb = 0
+        lrib = 3
+        lth1 = 0
+        lth2 = 0
+        thi = 0
+        thn = 0
+        paero = PAERO2(pid, orient, width, AR, lrsb, lrib, lth1, lth2, thi, thn)
+        paero.validate()
+        model.paeros[pid] = paero
+
+        coord = CORD2R(cp, rid=0, origin=None, zaxis=None, xzplane=None,
+                       comment='')
+        coord.validate()
+        model.coords[cp] = coord
+
+        aefact = AEFACT(lrib, [0., 1., 2., 3., 4., 5.])
+        aefact.validate()
+        model.aefacts[lrib] = aefact
+
+        acsid = 0
+        velocity = None
+        cref = 1.0
+        rho_ref = 1.0
+
+        aero = AERO(acsid, velocity, cref, rho_ref,
+                          comment='')
+        aero.validate()
+        model.aero = aero
+
+        paero.cross_reference(model)
+        caero.cross_reference(model)
+        xyz, elems = caero.get_points_elements_3d()
+
    # def test_caero3_1(self):
    # def test_caero4_1(self):
    # def test_caero5_1(self):

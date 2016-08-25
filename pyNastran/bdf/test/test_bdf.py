@@ -469,7 +469,10 @@ def run_fem1(fem1, bdf_model, mesh_form, xref, punch, sum_load, size, is_double,
                 if card in fem1.card_count:
                     raise DisabledCardError('card=%r has been disabled' % card)
             #fem1.geom_check(geom_check=True, xref=False)
-            fem1.write_skin_solid_faces('skin_file.bdf', size=16, is_double=False)
+            skin_filename = 'skin_file.bdf'
+            fem1.write_skin_solid_faces(skin_filename, size=16, is_double=False)
+            if os.path.exists(skin_filename):
+                os.remove(skin_filename)
             if xref:
                 #fem1.uncross_reference()
                 #fem1.cross_reference()
@@ -703,7 +706,7 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
         assert 'FMETHOD' in subcase, subcase  # FLUTTER
     elif sol == 146:
         assert 'METHOD'in subcase, subcase
-        assert any(subcase.has_parameter('FREQUENCY', 'TIME', 'TSTEP', 'TSTEPNL')), subcase
+        assert any(subcase.has_parameter('FREQUENCY', 'TIME', 'TSTEP', 'TSTEPNL')), 'sol=%s\n%s' % (sol, subcase)
         assert any(subcase.has_parameter('GUST', 'LOAD')), subcase
         assert fem2.aero is not None, 'An AERO card is required for GUST - SOL %i' % sol
     elif sol == 153: # heat?
@@ -713,14 +716,14 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
         if 'ANALYSIS' in subcase and subcase.get_parameter('ANALYSIS')[0] == 'HEAT':
             assert 'TEMPERATURE' in subcase, subcase
         else:
-            assert any(subcase.has_parameter('LOAD')), subcase
+            assert any(subcase.has_parameter('LOAD')), 'sol=%s\n%s' % (sol, subcase)
 
     elif sol == 159: #  nonlinear transient; heat?
-        assert 'NLPARM' in subcase, subcase
+        assert 'NLPARM' in subcase, 'sol=%s\n%s' % (sol, subcase)
         #assert any(subcase.has_parameter('TIME', 'TSTEP', 'TSTEPNL')), subcase
         #assert any(subcase.has_parameter('GUST', 'LOAD')), subcase
         if 'ANALYSIS' in subcase and subcase.get_parameter('ANALYSIS')[0] == 'HEAT':
-            assert 'TEMPERATURE' in subcase, subcase
+            assert 'TEMPERATURE' in subcase, 'sol=%s\n%s' % (sol, subcase)
 
     elif sol == 200:
         # local level
@@ -732,7 +735,7 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
         #          required globally
         # 1 or more DESSUB/DESGLB are required globally
         # 1 DESOBJ is required
-        assert 'ANALYSIS' in subcase, subcase
+        assert 'ANALYSIS' in subcase, 'sol=%s\n%s' % (sol, subcase)
 
         analysis, options = subcase.get_parameter('ANALYSIS')
         if analysis != 'STATICS':
