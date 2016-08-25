@@ -3046,7 +3046,7 @@ class FLUTTER(BaseCard):
         msg = ' which is required by FLUTTER sid=%s' % self.sid
         #print('density =', self.density)
         self.density = model.FLFACT(self.density, msg=msg)
-        assert self.density.type == 'FLFACT', self.density
+        #assert self.density.type == 'FLFACT', self.density
         self.density_ref = self.density
         self.mach = model.FLFACT(self.mach, msg=msg)
         self.mach_ref = self.mach

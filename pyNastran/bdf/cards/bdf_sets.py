@@ -115,6 +115,11 @@ class ABCQSet(Set):
         self.ids = ids
         self.components = components
 
+    def validate(self):
+        assert isinstance(self.ids, list), type(self.ids)
+        assert isinstance(self.components, list), type(self.components)
+        assert len(self.ids) == len(self.components), 'len(ids)=%s len(components)=%s' % (len(self.ids), len(self.components))
+
     @classmethod
     def add_card(cls, card, comment=''):
         ids = []
