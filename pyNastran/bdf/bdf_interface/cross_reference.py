@@ -238,7 +238,7 @@ class XrefMesh(BDFAttributes):
         for aesurfs in itervalues(self.aesurfs):
             aesurfs.uncross_reference()
         for flutter in itervalues(self.flutters):
-            flutter.uncross_reference(self)
+            flutter.uncross_reference()
 
     def _uncross_reference_constraints(self):
         """

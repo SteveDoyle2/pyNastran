@@ -125,7 +125,9 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
     filenames2 = []
     diff_cards = []
     for filename in filenames:
-        if filename.endswith(('.bdf', '.dat', '.nas')) and 'pyNastran_crash' not in filename and 'skin_file' not in filename:
+        if (filename.endswith(('.bdf', '.dat', '.nas')) and
+            'pyNastran_crash' not in filename and
+            'skin_file' not in filename):
             filenames2.append(filename)
 
     failed_files = []
@@ -288,7 +290,8 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
     if dynamic_vars:
         fem1.set_dynamic_syntax(dynamic_vars)
 
-    fem1.log.info('starting fem1')
+    if not quiet:
+        fem1.log.info('starting fem1')
     sys.stdout.flush()
     fem2 = None
     diff_cards = []
@@ -307,7 +310,7 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
                     print('key=%-8s value=%s' % (card_name, card_count))
             return fem1, None, None
         fem2 = run_fem2(bdf_model, out_model, xref, punch, sum_load, size, is_double, reject,
-                        encoding=encoding, debug=debug, log=None)
+                        encoding=encoding, debug=debug, log=None, quiet=quiet)
 
         diff_cards = compare(fem1, fem2, xref=xref, check=check,
                              print_stats=print_stats, quiet=quiet)
@@ -478,7 +481,8 @@ def run_fem1(fem1, bdf_model, mesh_form, xref, punch, sum_load, size, is_double,
                 #fem1.cross_reference()
                 fem1.safe_cross_reference()
                 fem1._xref = True
-                spike_fem = read_bdf(fem1.bdf_filename, encoding=encoding, debug=fem1.debug, log=fem1.log)
+                spike_fem = read_bdf(fem1.bdf_filename, encoding=encoding,
+                                     debug=fem1.debug, log=fem1.log)
 
                 remake = False
                 if remake:
@@ -527,7 +531,7 @@ def run_fem1(fem1, bdf_model, mesh_form, xref, punch, sum_load, size, is_double,
 
 def run_fem2(bdf_model, out_model, xref, punch,
              sum_load, size, is_double,
-             reject, encoding=None, debug=False, log=None):
+             reject, encoding=None, debug=False, log=None, quiet=False):
     """
     Reads/writes the BDF to verify nothing has been lost
 
@@ -548,6 +552,8 @@ def run_fem2(bdf_model, out_model, xref, punch,
         True : rejects the cards
     debug : bool
         debugs
+    quiet : bool
+        supress prints
     log : logger / None
         ignored
     """
@@ -558,7 +564,8 @@ def run_fem2(bdf_model, out_model, xref, punch,
         fem2 = BDFReplacer(bdf_model + '.rej', debug=debug, log=None)
     else:
         fem2 = BDF(debug=debug, log=None)
-    fem2.log.info('starting fem2')
+    if not quiet:
+        fem2.log.info('starting fem2')
     sys.stdout.flush()
     try:
         fem2.read_bdf(out_model, xref=xref, punch=punch, encoding=encoding)
@@ -727,9 +734,11 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
 
     elif sol == 200:
         # local level
-        # DESSUB - Set constraints (DCONSTR, DCONADD) applied for subcase (e.g. STRESS, STRAIN, DAMP)
+        # DESSUB - Set constraints (DCONSTR, DCONADD) applied for subcase
+        #          (e.g. STRESS, STRAIN, DAMP)
         #          optional locally
-        # DESGLB - Set constraints (DCONSTR, DCONADD) applied globally (e.g. WEIGHT, VOLUME, WMPID, FRMASS)
+        # DESGLB - Set constraints (DCONSTR, DCONADD) applied globally
+        #          (e.g. WEIGHT, VOLUME, WMPID, FRMASS)
         #          optional locally
         # DESOBJ - The objective function (DRESP1, DRESP2, DRESP3)
         #          required globally
@@ -748,13 +757,17 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases):
                 fem2.log.warning('\n%s' % subcase)
 
             if 'DESSUB' not in subcase and 'DESGLB' not in subcase:
-                fem2.log.warning('no DESSUB/DESGLB in this subcase; is this a buckling preload case?')
+                fem2.log.warning('no DESSUB/DESGLB in this subcase;'
+                                 ' is this a buckling preload case?')
                 fem2.log.warning('\n%s' % subcase)
 
             #assert 'DESSUB' in subcase or 'DESGLB' in subcase, subcase
         if 'DESSUB' in subcase:
             value, options = subcase.get_parameter('DESSUB')
-            assert value in fem2.dconstrs, 'value=%s not in dconstrs; Allowed DCONSTRs=%s' % (value, np.unique(list(fem2.dconstrs.keys())))
+            if value not in fem2.dconstrs:
+                msg = 'value=%s not in dconstrs; Allowed DCONSTRs=%s' % (
+                    value, np.unique(list(fem2.dconstrs.keys())))
+                raise RuntimeError(msg)
 
         if analysis == 'STATICS':
             sol = 101

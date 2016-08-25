@@ -145,6 +145,9 @@ class AEFACT(BaseCard):
     +--------+-----+----+--------+-----+
     | AEFACT | 97  |.3  | 0.7    | 1.0 |
     +--------+-----+----+--------+-----+
+
+    TODO: Are these defined in percentages and thus,
+          should they be normalized if they are not?
     """
     type = 'AEFACT'
 
@@ -1746,6 +1749,14 @@ class CAERO2(BaseCard):
     Aerodynamic Body Connection
     Defines aerodynamic slender body and interference elements for
     Doublet-Lattice aerodynamics.
+
+    +--------+-----+-----+----+-----+------+-----+------+------+
+    |    1   |  2  |  3  |  4 |  5  |   6  |   7 |   8  |  9   |
+    +========+=====+=====+====+=====+======+=====+======+======+
+    | CAERO2 | EID | PID | CP | NSB | NINT | LSB | LINT | IGID |
+    +--------+-----+-----+----+-----+------+-----+------+------+
+    |        | X1  |  Y1 | Z1 | X12 |      |     |      |      |
+    +--------+-----+-----+----+-----+------+-----+------+------+
     """
     type = 'CAERO2'
     _field_map = {
@@ -1946,7 +1957,7 @@ class CAERO2(BaseCard):
         """
         paero2 = self.pid_ref
 
-        if self.nsb == 0:
+        if self.nsb in [0, None]:
             xstation = self.lsb_ref.data
             nx = len(xstation) - 1
             #print('xstation = ', xstation)
@@ -1957,13 +1968,13 @@ class CAERO2(BaseCard):
 
 
         #print('paero2 - pid=%s lrsb=%s lrib=%s' % (paero2.pid, paero2.lrsb, paero2.lrib))
-        if paero2.lrsb == 0:
+        if paero2.lrsb in [0, None]:
             radii_slender = np.ones(nx + 1) * paero2.width
         else:
             radii_slender = paero2.lrsb_ref.data
 
         # TODO: not suppported
-        if paero2.lrib == 0:
+        if paero2.lrib in [0, None]:
             radii_interference = np.ones(nx + 1) * paero2.width
         else:
             #print('lrib = ', paero2.lrib)
@@ -2620,6 +2631,8 @@ class PAERO5(BaseCard):
                  caoci, comment=''):
         """
         +--------+-------+--------+--------+---------+-------+-------+-------+
+        |   1    |   2   |    3   |   4    |    5    |   6   |   7   |   8   |
+        +========+=======+========+========+=========+=======+=======+=======+
         | PAERO5 | PID   | NALPHA | LALPHA | NXIS    | LXIS  | NTAUS | LTAUS |
         +--------+-------+--------+--------+---------+-------+-------+-------+
         |        | CAOC1 | CAOC2  | CAOC3  | CAOC4   | CAOC5 |       |       |
@@ -3031,7 +3044,9 @@ class FLUTTER(BaseCard):
             the BDF object
         """
         msg = ' which is required by FLUTTER sid=%s' % self.sid
+        #print('density =', self.density)
         self.density = model.FLFACT(self.density, msg=msg)
+        assert self.density.type == 'FLFACT', self.density
         self.density_ref = self.density
         self.mach = model.FLFACT(self.mach, msg=msg)
         self.mach_ref = self.mach
@@ -3047,6 +3062,7 @@ class FLUTTER(BaseCard):
     def get_density(self):
         if isinstance(self.density, integer_types):
             return self.density
+        print('density =', self.density)
         return self.density_ref.sid
 
     def get_mach(self):
@@ -3611,16 +3627,18 @@ class PAERO2(BaseCard):
         self.lth2 = lth2
         self.thi = thi
         self.thn = thn
-        if self.lrsb is None:
-            self.lrsb = 0
-        if self.lrib is None:
-            self.lrib = 0
+        if self.lrsb == 0:
+            self.lrsb = None
+        if self.lrib is 0:
+            self.lrib = None
 
 
     def validate(self):
         assert self.orient in ['Z', 'Y', 'ZY'], 'orient=%r' % self.orient
         assert isinstance(self.AR, float), 'AR=%r type=%s' % (self.AR, type(self.AR))
         assert isinstance(self.width, float), 'width=%r type=%s' % (self.width, type(self.width))
+        assert isinstance(self.thi, list), 'thi=%s type=%s' % (self.thi, type(self.thi))
+        assert isinstance(self.thn, list), 'thn=%s type=%s' % (self.thn, type(self.thn))
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -3628,8 +3646,8 @@ class PAERO2(BaseCard):
         orient = string(card, 2, 'orient')
         width = double(card, 3, 'width')
         AR = double(card, 4, 'AR')
-        lrsb = integer_or_blank(card, 5, 'lrsb', 0)
-        lrib = integer_or_blank(card, 6, 'lrib', 0)
+        lrsb = integer_or_blank(card, 5, 'lrsb')
+        lrib = integer_or_blank(card, 6, 'lrib')
         lth1 = integer_or_blank(card, 7, 'lth1')
         lth2 = integer_or_blank(card, 8, 'lth2')
         thi = []
@@ -3644,26 +3662,28 @@ class PAERO2(BaseCard):
 
     def cross_reference(self, model):
         msg = ' which is required by PAERO2 eid=%s' % self.pid
-        if self.lrsb > 0:
+        if self.lrsb is not None and self.lrsb > 0:
             self.lrsb_ref = model.AEFact(self.lrsb, msg=msg)
-        if self.lrib > 0:
+            self.lrsb = self.lrsb_ref
+        if self.lrib is not None and self.lrib > 0:
             self.lrib_ref = model.AEFact(self.lrib, msg=msg)
+            self.lrib = self.lrib_ref
 
     def uncross_reference(self):
-        if self.lrsb > 0:
-            self.lrsb = self.lrsb.aefact_id
+        if self.lrsb is not None and self.lrsb > 0:
+            self.lrsb = self.lrsb_ref.sid # AEFACT id
             del self.lrsb_ref
-        if self.lrib > 0:
-            self.lrib = self.lrib.aefact_id
+        if self.lrib is not None and self.lrib > 0:
+            self.lrib = self.lrib_ref.sid # AEFACT id
             del self.lrib_ref
 
     def Lrsb(self):
-        if self.lrsb > 0:
+        if self.lrsb is None or isinstance(self.lrsb, int):
             return self.lrsb
         return self.lrsb_ref.sid
 
     def Lrib(self):
-        if self.lrib > 0:
+        if self.lrib is None or isinstance(self.lrib, int):
             return self.lrib
         return self.lrib_ref.sid
 
