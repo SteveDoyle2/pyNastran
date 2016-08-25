@@ -46,6 +46,10 @@ Solver
         solve, calculate responses
    - added D matricies for PSHELL, PCOMP, PSOLID
 
+v0.8.1
+ - added handling of non-uniform lsrb/lrib on CAERO2
+
+
 -----------------------v0.8.0 released 2016/8/21-----------------------
 Major changes:
  - BDF:
