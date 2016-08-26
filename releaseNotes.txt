@@ -49,7 +49,7 @@ Solver
 v0.8.1
 BDF:
  - added handling of non-uniform lsrb/lrib on CAERO2
- - fixed flutter unxref bug
+ - fixed FLUTTER unxref bug
  - more validate methods & tests
 
 -----------------------v0.8.0 released 2016/8/21-----------------------

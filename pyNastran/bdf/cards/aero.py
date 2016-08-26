@@ -1349,17 +1349,17 @@ class CAERO1(BaseCard):
         msg = ''
         is_failed = False
         if self.nspan == 0 and self.lspan == 0:
-            msg += 'NSPAN or LSPAN must be greater than 0\n'
+            msg += 'NSPAN or LSPAN must be greater than 0; nspan=%r nlspan=%s\n' % (self.nspan, self.lspan)
             is_failed = True
         if self.nspan != 0 and self.lspan != 0:
-            msg += 'Either NSPAN or LSPAN must 0\n'
+            msg += 'Either NSPAN or LSPAN must 0; nspan=%r nlspan=%s\n' % (self.nspan, self.lspan)
             is_failed = True
 
         if self.nchord == 0 and self.lchord == 0:
-            msg += 'NCHORD or LCHORD must be greater than 0\n'
+            msg += 'NCHORD or LCHORD must be greater than 0; nchord=%r lchord=%s\n' % (self.nchord, self.lchord)
             is_failed = True
         if self.nchord != 0 and self.lchord != 0:
-            msg += 'Either NCHORD or LCHORD must 0\n'
+            msg += 'Either NCHORD or LCHORD must 0; nchord=%r lchord=%s\n' % (self.nchord, self.lchord)
             is_failed = True
         if is_failed:
             msg += str(self)
@@ -1419,15 +1419,13 @@ class CAERO1(BaseCard):
         lchord = 0
 
         if spanwise.lower() == 'y':
-            dspan = max(
-                p4[1] - p1[1],
-                p3[1] - p2[1]
-            )
+            y41 = p4[1] - p1[1]
+            y32 = p3[1] - p2[1]
+            dspan = max(y41, y32)
         elif spanwise.lower() == 'z':
-            dspan = max(
-                p4[2] - p1[2],
-                p3[2] - p2[2]
-            )
+            y41 = p4[2] - p1[2]
+            y32 = p3[2] - p2[2]
+            dspan = max(y41, y32)
         else:
             raise NotImplementedError('spanwise=%r; expected=[y, z]' % spanwise.lower())
 
@@ -1438,6 +1436,8 @@ class CAERO1(BaseCard):
             lspan = span.sid
         elif isinstance(span, float):
             nspan = int(math.ceil(dspan / span))
+            assert nspan > 0, 'y41=%s y32=%s; dspan=%s span=%s nspan=%s' % (y41, y32, dspan, span, nspan)
+        else:
             raise TypeError(span)
 
         if isinstance(chord, int):
@@ -1446,6 +1446,7 @@ class CAERO1(BaseCard):
             lchord = chord.sid
         elif isinstance(chord, float):
             nchord = int(math.ceil(dx / chord))
+            assert nchord > 0, 'x12=%s x43=%s; dx=%s chord=%s nchord=%s' % (x12, x43, dx, chord, nchord)
         else:
             raise TypeError(chord)
 
@@ -2155,10 +2156,13 @@ class CAERO3(BaseCard):
                  p1, x12, p4, x43, comment=''):
         if comment:
             self._comment = comment
+
         #: Element identification number
         self.eid = eid
+
         #: Property identification number of a PAERO3 entry.
         self.pid = pid
+
         #: Coordinate system for locating point 1.
         self.cp = cp
         self.list_w = list_w
@@ -3062,7 +3066,6 @@ class FLUTTER(BaseCard):
     def get_density(self):
         if isinstance(self.density, integer_types):
             return self.density
-        print('density =', self.density)
         return self.density_ref.sid
 
     def get_mach(self):

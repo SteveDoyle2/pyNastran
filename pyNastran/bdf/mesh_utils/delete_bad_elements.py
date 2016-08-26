@@ -184,7 +184,7 @@ def get_bad_shells(model, xyz_cid0, nid_map, max_theta=175., max_skew=70.,
             theta_mini = theta.min()
             theta_maxi = theta.max()
 
-            if theta_mini > min_theta_quad:
+            if theta_mini < min_theta_quad:
                 eids_failed.append(eid)
                 model.log.debug('eid=%s failed min_theta check; theta=%s' % (
                     eid, np.degrees(theta_mini)))
@@ -262,13 +262,12 @@ def get_bad_shells(model, xyz_cid0, nid_map, max_theta=175., max_skew=70.,
             cos_theta2 = np.dot(v32, -v21) / (np.linalg.norm(v32) * np.linalg.norm(v21))
             cos_theta3 = np.dot(v13, -v32) / (np.linalg.norm(v13) * np.linalg.norm(v32))
 
-            interior_angle = np.arccos(np.clip(
+            theta = np.arccos(np.clip(
                 [cos_theta1, cos_theta2, cos_theta3], -1., 1.))
-            theta = n * interior_angle + theta_additional
             theta_mini = theta.min()
             theta_maxi = theta.max()
 
-            if theta_mini > min_theta_tri:
+            if theta_mini < min_theta_tri:
                 eids_failed.append(eid)
                 model.log.debug('eid=%s failed min_theta check; theta=%s' % (
                     eid, np.degrees(theta_mini)))
