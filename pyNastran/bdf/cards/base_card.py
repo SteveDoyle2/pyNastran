@@ -46,6 +46,14 @@ class BaseCard(object):
         card = BDFCard(raw_fields)
         return self.add_card(card)
 
+    def get_stats(self):
+        """Prints out an easy to read summary of the card"""
+        msg = '---%s---\n' % self.type
+        for name in sorted(self.object_attributes()):
+            value = getattr(self, name)
+            msg += '  %-6s : %r\n' % (name, value)
+        return msg
+
     def deprecated(self, old_name, new_name, deprecated_version):
         """deprecates methods"""
         return deprecated(old_name, new_name, deprecated_version, levels=[0, 1, 2])

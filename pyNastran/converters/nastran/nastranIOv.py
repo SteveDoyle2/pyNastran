@@ -130,15 +130,22 @@ class NastranIO(object):
         gets the Nastran wildcard loader used in the file load menu
         """
         if is_geom:
-            geom_methods = 'Nastran BDF (*.bdf; *.dat; *.nas; *.op2; *.pch)'
+            geom_methods1 = 'Nastran BDF ''(*.bdf; *.dat; *.nas; *.ecd; *.op2; *.pch)'
+            geom_methods2 = 'Nastran Punch (*.bdf; *.dat; *.nas; *.ecd; *.op2; *.pch)'
         else:
-            geom_methods = 'Nastran BDF (*.bdf; *.dat; *.nas; *.pch)'
+            geom_methods1 = 'Nastran BDF ''(*.bdf; *.dat; *.nas; *.ecd; *.pch)'
+            geom_methods2 = 'Nastran Punch (*.bdf; *.dat; *.nas; *.ecd; *.pch)'
 
-        data = (
-            'Nastran',
-            geom_methods, self.load_nastran_geometry,
+        data_bdf = (
+            'Nastran BDF',
+            geom_methods1, self.load_nastran_geometry,
             'Nastran OP2 (*.op2)', self.load_nastran_results)
-        return data
+        data_pch = (
+            'Nastran BDF2',
+            geom_methods2, self.load_nastran_geometry,
+            'Nastran OP2 (*.op2)', self.load_nastran_results)
+
+        return [data_bdf, data_pch]
 
     def _cleanup_nastran_tools_and_menu_items(self):
         """

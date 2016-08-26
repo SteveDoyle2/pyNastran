@@ -38,12 +38,29 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
         the bdf write precision
     is_double : bool; default=False
         the field precision to write
+    starting_id_dict : dict, None (default=None)
+        None : renumber everything starting from 1
+        dict : {key : starting_id}
+            key : str
+                the key (e.g. eid, nid, cid, ...)
+            starting_id : int, None
+                int : the value to start from
+                None : don't renumber this key
+    round_ids : bool; default=False
+        Should a rounding up be applied for each variable?
+        This makes it easier to read a deck and verify that it's been renumbered properly.
+        This only really applies when starting_id_dict is None
+    cards_to_skip : None (don't skip any cards)
+        There are edge cases (e.g. FLUTTER analysis) where things can break due to
+        uncross-referenced cards.  You need to disable entire classes of cards in
+        that case (e.g. all aero cards).
 
     .. todo:: bdf_model option for bdf_filename hasn't been tested
     .. todo:: add support for subsets (e.g. renumber only a subset of nodes/elements)
+    .. todo:: doesn't support partial renumbering
     ..warning :: spoints might be problematic...check
     ..warning :: still in development, but it usually brutally crashes if it's not supported
-    ..warning :: be careful of unsupported cards
+    ..warning :: be careful of card unsupported cards (e.g. ones not read in)
 
     Supports
     ========
@@ -180,6 +197,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
         'suport1_id' : 1,
         'tf_id' : 1,
     }
+    # fill up starting_id_dict
     if starting_id_dict is None:
         starting_id_dict = starting_id_dict_default
     else:
@@ -187,22 +205,88 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
             if key not in starting_id_dict:
                 starting_id_dict[key] = value
 
+    nid = None
+    cid = None
+    eid = None
+    pid = None
+    mid = None
+    spc_id = None
+    mpc_id = None
+    load_id = None
+    dload_id = None
+    method_id = None
+    cmethod_id = None
+    spline_id = None
+    table_id = None
+    flfact_id = None
+    flutter_id = None
+    freq_id = None
+    tstep_id = None
+    tstepnl_id = None
+    suport_id = None
+    suport1_id = None
+    tf_id = None
+
+    # turn them into variables
     for key, value in sorted(iteritems(starting_id_dict)):
-        assert isinstance(key, string_types), key
-        assert key in starting_id_dict_default, 'key=%s is invalid' % (key)
-        assert isidentifier(key), 'key=%s is invalid' % key
+        #assert isinstance(key, string_types), key
+        assert key in starting_id_dict_default, 'key=%r is invalid' % (key)
+        #assert isidentifier(key), 'key=%s is invalid' % key
         if value is None:
             pass
         else:
             if not isinstance(value, integer_types):
-                msg = 'value=%s must be an integer; type(value)=%s' % (value, type(value))
+                msg = 'key=%r value=%r must be an integer; type(value)=%s' % (
+                    key, value, type(value))
                 raise TypeError(msg)
-            call = '%s = %s' % (key, value)
 
-            # this exec is safe because we checked the identifier
-            exec(call)
+        if key == 'nid':
+            nid = int(value)
+        elif key == 'cid':
+            cid = int(value)
+        elif key == 'eid':
+            eid = int(value)
+        elif key == 'pid':
+            pid = int(value)
+        elif key == 'mid':
+            mid = int(value)
+        elif key == 'spc_id':
+            spc_id = int(value)
+        elif key == 'mpc_id':
+            mpc_id = int(value)
 
+        elif key == 'load_id':
+            load_id = int(value)
+        elif key == 'dload_id':
+            dload_id = int(value)
+        elif key == 'method_id':
+            method_id = int(value)
+        elif key == 'cmethod_id':
+            cmethod_id = int(value)
+        elif key == 'spline_id':
+            spline_id = int(value)
+        elif key == 'table_id':
+            table_id = int(value)
+        elif key == 'flfact_id':
+            flfact_id = int(value)
+        elif key == 'flutter_id':
+            flutter_id = int(value)
+        elif key == 'freq_id':
+            freq_id = int(value)
+        elif key == 'tstep_id':
+            tstep_id = int(value)
+        elif key == 'tstepnl_id':
+            tstepnl_id = int(value)
+        elif key == 'suport_id':
+            suport_id = int(value)
+        elif key == 'suport1_id':
+            suport1_id = int(value)
+        elif key == 'tf_id':
+            tf_id = int(value)
+        else:
+            raise NotImplementedError('key=%r' % key)
 
+    # build the maps
     eid_map = {}
     nid_map = {}
     reverse_nid_map = {}
@@ -461,6 +545,8 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
         #(model.se_qsets, 'sid', None),
         #(model.se_usets, 'sid', None),
     )
+
+    # apply the simple to update parameters
     param_id = 9999
     for (dict_obj, param_name, mmap) in sorted(data):
         if round_ids:
@@ -479,6 +565,8 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
                 mmap[idi] = param_id
             param_id += 1
 
+    # start the complicated set
+    # dconstr
     dessub_map = dconadd_map
     for key, value in iteritems(dconstr_map):
         if key in dessub_map:

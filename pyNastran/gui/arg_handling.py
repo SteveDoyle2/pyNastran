@@ -14,7 +14,7 @@ def determine_format(input):
     .. note :: this function will not support generic extensions (e.g. .inp, .dat)
     """
     format_to_extension = {
-        'nastran' : ['.bdf', '.ecd', '.nas', '.op2'],
+        'nastran' : ['.bdf', '.ecd', '.nas', '.op2', '.pch'],
         'stl' : ['.stl'],
         'cart3d' : ['.tri', '.triq'],
         'tecplot' : ['.plt'],

@@ -902,6 +902,19 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         for key, dmik in sorted(iteritems(self.dmiks)):
             dmik.validate()
         #------------------------------------------------
+        #self.asets = []
+        #self.bsets = []
+        #self.csets = []
+        #self.qsets = []
+        #self.usets = {}
+
+        ##: SExSETy
+        #self.se_bsets = []
+        #self.se_csets = []
+        #self.se_qsets = []
+        #self.se_usets = {}
+        #self.se_sets = {}
+
         for key, sets in sorted(iteritems(self.sets)):
             sets.validate()
         for key, uset in sorted(iteritems(self.usets)):

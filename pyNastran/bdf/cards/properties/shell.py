@@ -545,8 +545,8 @@ class PCOMP(CompositeShellProperty):
         self.ge = ge
 
         #: symmetric flag - default = No Symmetry (NO)
-        if lam is None:
-            lam = 'NO'
+        #if lam is None:  # TODO: is NO an option?
+            #lam = 'NO'
         self.lam = lam
         self.mids = mids
         self.thicknesses = thicknesses
@@ -557,6 +557,7 @@ class PCOMP(CompositeShellProperty):
         self.z0 = z0
 
         assert self.ft in ['HILL', 'HOFF', 'TSAI', 'STRN', 0.0, None], 'ft=%r' % self.ft
+        # TODO: is NO an option?
         assert self.lam in [None, 'SYM', 'MEM', 'BEND', 'SMEAR', 'SMCORE', 'NO'], 'lam=%r is invalid' % self.lam
 
     @classmethod
@@ -572,7 +573,7 @@ class PCOMP(CompositeShellProperty):
         ft = string_or_blank(card, 5, 'ft')
         TRef = double_or_blank(card, 6, 'TRef', 0.0)
         ge = double_or_blank(card, 7, 'ge', 0.0)
-        lam = string_or_blank(card, 8, 'lam')
+        lam = string_or_blank(card, 8, 'lam') # NO?
 
         # -8 for the first 8 fields (1st line)
         nply_fields = card.nfields - 9
