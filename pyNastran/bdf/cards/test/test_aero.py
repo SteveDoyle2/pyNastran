@@ -359,6 +359,16 @@ class TestAero(unittest.TestCase):
         model.write_bdf('aero.temp')
         os.remove('aero.temp')
 
+        nsb = 4
+        nint = 2
+        lsb = None
+        lint = None
+        caero2 = CAERO2(eid, pid, cp, nsb, nint, lsb, lint, igid, p1, x12,
+                       comment='this is a caero')
+        caero2.validate()
+        caero2.cross_reference(model)
+        caero2.write_card()
+
     def test_caero3_1(self):
         """checks the CAERO3/PAERO3"""
         eid = 100

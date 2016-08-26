@@ -1864,10 +1864,10 @@ class CAERO2(BaseCard):
         #: Length of body in the x-direction of the aerodynamic coordinate
         #: system.  (Real > 0)
         self.x12 = x12
-        if self.lsb is None:
-            self.lsb = 0
-        if self.lint is None:
-            self.lint = 0
+        if self.lsb is 0:
+            self.lsb = None
+        if self.lint is 0:
+            self.lint = None
 
     def validate(self):
         assert len(self.p1) == 3, 'p1=%s' % self.p1
@@ -1910,9 +1910,14 @@ class CAERO2(BaseCard):
         return self.pid_ref.pid
 
     def Lsb(self):  # AEFACT
-        if isinstance(self.lsb, integer_types):
+        if self.lsb is None or isinstance(self.lsb, integer_types):
             return self.lsb
         return self.lsb_ref.sid
+
+    def Lint(self):  # AEFACT
+        if self.lint is None or isinstance(self.lint, integer_types):
+            return self.lint
+        return self.lint_ref.sid
 
     def cross_reference(self, model):
         """
@@ -1928,10 +1933,10 @@ class CAERO2(BaseCard):
         self.pid_ref = self.pid
         self.cp = model.Coord(self.cp, msg=msg)
         self.cp_ref = self.cp
-        if self.lsb is None or isinstance(self.lsb, integer_types): #  > 0
+        if self.lsb is not None and isinstance(self.lsb, integer_types): #  > 0
             self.lsb = model.AEFact(self.lsb, msg=msg)
             self.lsb_ref = self.lsb
-        if self.lint is None or isinstance(self.lint, integer_types): #  > 0
+        if self.lint is not None and isinstance(self.lint, integer_types): #  > 0
             self.lint = model.AEFact(self.lint, msg=msg)
             self.lint_ref = self.lint
         self.ascid_ref = model.Acsid(msg=msg)
@@ -2127,7 +2132,7 @@ class CAERO2(BaseCard):
             The fields that define the card
         """
         list_fields = (['CAERO2', self.eid, self.Pid(), self.Cp(), self.nsb,
-                        self.nint, self.lsb, self.lint, self.igid, ] + list(self.p1)
+                        self.nint, self.Lsb(), self.Lint(), self.igid, ] + list(self.p1)
                        + [self.x12])
         return list_fields
 
