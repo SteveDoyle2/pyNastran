@@ -1449,9 +1449,17 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                 data = getattr(self, func)()
                 msg = 'macro_name, geo_fmt, geo_func, res_fmt, res_func = data\n'
                 msg += 'data = %s'
-                assert len(data) == 5, msg % str(data)
-                macro_name, geo_fmt, geo_func, res_fmt, res_func = data
-                fmts.append((fmt, macro_name, geo_fmt, geo_func, res_fmt, res_func))
+                if isinstance(data, tuple):
+                    assert len(data) == 5, msg % str(data)
+                    macro_name, geo_fmt, geo_func, res_fmt, res_func = data
+                    fmts.append((fmt, macro_name, geo_fmt, geo_func, res_fmt, res_func))
+                elif isinstance(data, list):
+                    for datai in data:
+                        assert len(datai) == 5, msg % str(datai)
+                        macro_name, geo_fmt, geo_func, res_fmt, res_func = datai
+                        fmts.append((fmt, macro_name, geo_fmt, geo_func, res_fmt, res_func))
+                else:
+                    raise TypeError(data)
             else:
                 if stop_on_failure:
                     func = 'get_%s_wildcard_geometry_results_functions does not exist' % fmt
