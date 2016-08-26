@@ -424,6 +424,41 @@ class TestAero(unittest.TestCase):
    # def test_spline4_1(self):
    # def test_spline5_1(self):
 
+    def test_aesurf(self):
+        """checks the AESURF/AELIST cards"""
+        aesid = 10
+        label = 'FLAP'
+        cid1 = 0
+        aelist_id1 = 10
+        cid2 = None
+        alid2 = None
+        aesurf1 = AESURF(aesid, label, cid1, aelist_id1, cid2, alid2,
+                         #eff, ldw,
+                         #crefc, crefs, pllim, pulim,
+                         #hmllim, hmulim, tqllim, tqulim,
+                         comment='aesurf comment')
+        aesurf2 = AESURF.add_card(BDFCard(
+            ['AESURF', aesid, label, cid1, aelist_id1, cid2, alid2,
+             #eff, ldw,
+             #crefc, crefs, pllim, pulim,
+             #hmllim, hmulim, tqllim, tqulim,
+             ]), comment='aesurf comment')
+        #assert aesurf1 == aesurf2
+
+        aesurf1.validate()
+        aesurf2.validate()
+        model = BDF()
+        model.aesurf[aesid] = aesurf1
+
+        elements = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
+        aelist = AELIST(aesid, elements)
+        model.aelists[aelist_id1] = aelist
+        aesurf1.cross_reference(model)
+        aesurf1.write_card()
+        aesurf1.uncross_reference()
+        aesurf1.write_card()
+        aesurf1.cross_reference(model)
+
     def test_flutter(self):
         """checks the FLUTTER/FLFACT cards"""
         model = BDF()

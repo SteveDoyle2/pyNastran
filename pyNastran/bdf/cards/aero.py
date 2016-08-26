@@ -492,13 +492,15 @@ class AESURF(BaseCard):
         13:'hmllim', 14:'hmulim', 15:'tqllim', '16':'tqulim',
     }
 
-    def __init__(self, aesid, label, cid1, alid1, cid2, alid2, eff, ldw,
-                 crefc, crefs, pllim, pulim, hmllim, hmulim, tqllim, tqulim,
+    def __init__(self, aesid, label, cid1, alid1, cid2=None, alid2=None, eff=1.0, ldw='LDW',
+                 crefc=1.0, crefs=1.0, pllim=-np.pi/2., pulim=np.pi/2.,
+                 hmllim=None, hmulim=None, tqllim=None, tqulim=None,
                  comment=''):
         if comment:
             self._comment = comment
         #: Controller identification number
         self.aesid = aesid
+
         #: Controller name.
         self.label = label
 
@@ -614,13 +616,15 @@ class AESURF(BaseCard):
     def uncross_reference(self):
         self.cid1 = self.Cid1()
         self.cid2 = self.Cid2()
-        self.aelid1 = self.AELIST_id1()
-        self.aelid2 = self.AELIST_id2()
         del self.cid1_ref
         if self.cid2:
             del self.cid2_ref
+
+        self.alid1 = self.AELIST_id1()
         del self.alid1_ref
-        if self.aelid2:
+
+        self.alid2 = self.AELIST_id2()
+        if self.alid2:
             del self.alid2_ref
 
     def raw_fields(self):
