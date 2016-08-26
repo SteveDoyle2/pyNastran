@@ -9,6 +9,7 @@ from pyNastran.bdf.cards.bdf_sets import (
 
 class TestSets(unittest.TestCase):
     def test_set3_01(self):
+        """checks the SET1 card"""
         fields_blocks = [
             'SET1',
             [['a', 1.0, 3], False], # these are not all integers
@@ -37,6 +38,7 @@ class TestSets(unittest.TestCase):
                          '               6\n', msg3)
 
     def test_set1_02(self):
+        """checks the SET1 card"""
         sid = 10
         ids = [1, 2, 3, 4, 5]
         set1a = SET1(sid, ids, is_skin=False, comment='')
@@ -44,6 +46,7 @@ class TestSets(unittest.TestCase):
         set1a.write_card()
 
     def test_set3_02(self):
+        """checks the SET3 card"""
         sid = 10
         ids = [1, 2, 3, 4, 5]
         desc = 'ELEM'
@@ -52,6 +55,7 @@ class TestSets(unittest.TestCase):
         set3a.write_card()
 
     def test_aset(self):
+        """checks the ASET/ASET1 cards"""
         aset1a = ASET1(4, [1, 'THRU', 10])
         aset1b = ASET1.add_card(BDFCard(['ASET1', 5, 1, 2, 3, 4, 5, 6, 7, 8, 10, 9]))
         aset1a.write_card()
@@ -69,6 +73,7 @@ class TestSets(unittest.TestCase):
 
 
     def test_bset(self):
+        """checks the BSET/BSET1 cards"""
         bset1a = BSET1(4, [1, 'THRU', 10])
         bset1b = BSET1.add_card(BDFCard(['BSET1', 5, 1, 2, 3, 4, 5, 6, 7, 8, 10, 9]))
         bset1a.write_card()
@@ -85,6 +90,7 @@ class TestSets(unittest.TestCase):
         bsetb.write_card()
 
     def _test_cset(self):
+        """checks the CSET/CSET1 cards"""
         cset1a = CSET1(4, [1, 'THRU', 10])
         cset1b = CSET1.add_card(BDFCard(['CSET1', 5, 1, 2, 3, 4, 5, 6, 7, 8, 10, 9]))
         cset1a.write_card()
@@ -102,6 +108,7 @@ class TestSets(unittest.TestCase):
 
 
     def test_qset(self):
+        """checks the QSET/QSET1 cards"""
         qset1a = QSET1(4, [1, 'THRU', 10])
         qset1b = QSET1.add_card(BDFCard(['QSET1', 5, 1, 2, 3, 4, 5, 6, 7, 8, 10, 9]))
         qset1a.write_card()

@@ -1092,37 +1092,40 @@ class CSSCHD(Aero):
     """
     type = 'CSSCHD'
     _field_map = {
-        1: 'sid', 2:'aesid', 3:'lAlpha', 4:'lMach', 5:'lSchd',
+        1: 'sid', 2:'aesid', 3:'lalpha', 4:'lmach', 5:'lschd',
     }
 
-    def __init__(self, sid, aesid, lAlpha, lMach, lSchd, comment=''):
+    def __init__(self, sid, aesid, lalpha, lmach, lschd, comment=''):
         Aero.__init__(self)
         if comment:
             self._comment = comment
         self.sid = sid
         self.aesid = aesid
-        self.lAlpha = lAlpha
-        self.lMach = lMach
-        self.lSchd = lSchd
+        self.lalpha = lalpha
+        self.lmach = lmach
+        self.lschd = lschd
+
+    def validate(self):
+        assert self.lalpha is None or isinstance(self.lalpha, integer_types), 'lalpha=%r' % self.lalpha
 
     @classmethod
     def add_card(cls, card, comment=''):
         sid = integer(card, 1, 'sid')
         aesid = integer(card, 2, 'aesid')             # AESURF
-        lAlpha = integer_or_blank(card, 3, 'lAlpha')  # AEFACT
-        lMach = integer_or_blank(card, 4, 'lMach')    # AEFACT
-        lSchd = integer(card, 5, 'lSchd')             # AEFACT
+        lalpha = integer_or_blank(card, 3, 'lAlpha')  # AEFACT
+        lmach = integer_or_blank(card, 4, 'lMach')    # AEFACT
+        lschd = integer(card, 5, 'lSchd')             # AEFACT
         assert len(card) <= 6, 'len(CSSCHD card) = %i\ncard=%s' % (len(card), card)
-        return CSSCHD(sid, aesid, lAlpha, lMach, lSchd, comment=comment)
+        return CSSCHD(sid, aesid, lalpha, lmach, lschd, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
         sid = data[0]
         aesid = data[1]  # AESURF
-        lAlpha = data[2]  # AEFACT
-        lMach = data[3]  # AEFACT
-        lSchd = data[4]  # AEFACT
-        return CSSCHD(sid, aesid, lAlpha, lMach, lSchd, comment=comment)
+        lalpha = data[2]  # AEFACT
+        lmach = data[3]  # AEFACT
+        lschd = data[4]  # AEFACT
+        return CSSCHD(sid, aesid, lalpha, lmach, lschd, comment=comment)
 
     def cross_reference(self, model):
         """
@@ -1136,22 +1139,22 @@ class CSSCHD(Aero):
         msg = ' which is required by ASSCHD sid=%s' % self.sid
         self.aesid = model.AESurf(self.aesid, msg=msg)
         self.aesid_ref = self.aesid
-        self.lAlpha = model.AEFact(self.lAlpha, msg=msg)
-        self.lAlpha_ref = self.lAlpha
-        self.lMach = model.AEFact(self.lMach, msg=msg)
-        self.lMach_ref = self.lMach
-        self.lSchd = model.AEFact(self.lSchd, msg=msg)
-        self.lSchd_ref = self.lSchd
+        self.lalpha = model.AEFact(self.lalpha, msg=msg)
+        self.lalpha_ref = self.lalpha
+        self.lmach = model.AEFact(self.lmach, msg=msg)
+        self.lmach_ref = self.lmach
+        self.lschd = model.AEFact(self.lschd, msg=msg)
+        self.lschd_ref = self.lschd
 
     def uncross_reference(self):
         self.aesid = self.AESid()
-        self.lAlpha = self.LAlpha()
-        self.lMach = self.LMach()
-        self.lSchd = self.LSchd()
+        self.lalpha = self.LAlpha()
+        self.lmach = self.LMach()
+        self.lschd = self.LSchd()
         del self.aesid_ref
-        del self.lAlpha_ref
-        del self.lMach_ref
-        del self.lSchd_ref
+        del self.lalpha_ref
+        del self.lmach_ref
+        del self.lschd_ref
 
     def AESid(self):
         if isinstance(self.aesid, integer_types):
@@ -1159,19 +1162,19 @@ class CSSCHD(Aero):
         return self.aesid_ref.aesid
 
     def LAlpha(self):
-        if isinstance(self.lAlpha, integer_types):
-            return self.lAlpha
-        return self.lAlpha_ref.sid
+        if self.lalpha is None or isinstance(self.lalpha, integer_types):
+            return self.lalpha
+        return self.lalpha_ref.sid
 
     def LMach(self):
-        if isinstance(self.lMach, integer_types):
-            return self.lMach
-        return self.lMach_ref.sid
+        if self.lmach is None or isinstance(self.lmach, integer_types):
+            return self.lmach
+        return self.lmach_ref.sid
 
     def LSchd(self):
-        if isinstance(self.lSchd, integer_types):
-            return self.lSchd
-        return self.lSchd_ref.sid
+        if self.lschd is None or isinstance(self.lschd, integer_types):
+            return self.lschd
+        return self.lschd_ref.sid
 
     def raw_fields(self):
         """
@@ -1925,10 +1928,10 @@ class CAERO2(BaseCard):
         self.pid_ref = self.pid
         self.cp = model.Coord(self.cp, msg=msg)
         self.cp_ref = self.cp
-        if self.lsb > 0:
+        if self.lsb is None or isinstance(self.lsb, integer_types): #  > 0
             self.lsb = model.AEFact(self.lsb, msg=msg)
             self.lsb_ref = self.lsb
-        if self.lint > 0:
+        if self.lint is None or isinstance(self.lint, integer_types): #  > 0
             self.lint = model.AEFact(self.lint, msg=msg)
             self.lint_ref = self.lint
         self.ascid_ref = model.Acsid(msg=msg)
@@ -3333,6 +3336,9 @@ class MKAERO2(BaseCard):
             self._comment = comment
         self.machs = machs
         self.reduced_freqs = reduced_freqs
+
+    def validate(self):
+        assert len(self.machs) == len(self.reduced_freqs), 'len(machs)=%s len(rfreqs)=%s' % (len(self.machs), len(self.reduced_freqs))
 
     @classmethod
     def add_card(cls, card, comment=''):

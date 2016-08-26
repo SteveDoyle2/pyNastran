@@ -49,6 +49,7 @@ Solver
 v0.8.1
 BDF:
  - added handling of non-uniform lsrb/lrib on CAERO2
+ - fixed xref bug in CSSCHD
  - fixed FLUTTER unxref bug
  - more validate methods & tests
 
