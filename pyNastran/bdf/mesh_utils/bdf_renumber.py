@@ -197,10 +197,10 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
             if not isinstance(value, integer_types):
                 msg = 'value=%s must be an integer; type(value)=%s' % (value, type(value))
                 raise TypeError(msg)
-        call = '%s = %s' % (key, value)
+            call = '%s = %s' % (key, value)
 
-        # this exec is safe because we checked the identifier
-        exec(call)
+            # this exec is safe because we checked the identifier
+            exec(call)
 
 
     eid_map = {}
@@ -240,9 +240,10 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
         epoints = list(model.epoints.points)
 
     nids = model.nodes.keys()
+    from itertools import chain
 
-    spoints_nids = spoints + nids
-    spoints_nids.sort()
+    spoints_nids = sorted(chain(spoints, nids))
+    #spoints_nids.sort()
     i = 1
     #nnodes = len(spoints_nids)
 
@@ -250,7 +251,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
     #j = 1
     #print(spoints_nids)
     #k = 0
-
+    print(starting_id_dict)
     if 'nid' in starting_id_dict and nid is not None:
         i = nid
         #banned_nodes = spoints
