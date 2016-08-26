@@ -3,6 +3,7 @@ from __future__ import print_function
 from pyNastran.bdf.cards.test.test_coords import TestCoords
 from pyNastran.bdf.cards.test.test_nodes import TestNodes
 
+from pyNastran.bdf.cards.test.test_aero import TestAero
 from pyNastran.bdf.cards.test.test_constraints import TestConstraints
 from pyNastran.bdf.cards.test.test_sets import TestSets
 

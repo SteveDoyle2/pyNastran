@@ -409,6 +409,28 @@ class TestMeshUtils(unittest.TestCase):
         assert model.card_count['CTRIA3'] == 1, model.card_count
         os.remove(bdf_filename)
 
+    def test_renumber_01(self):
+        bdf_filename = os.path.abspath(
+            os.path.join(pkg_path, '..', 'models', 'bwb', 'BWB_saero.bdf'))
+        bdf_filename_out1 = os.path.abspath(
+            os.path.join(pkg_path, '..', 'models', 'bwb', 'BWB_saero1.out'))
+        bdf_filename_out2 = os.path.abspath(
+            os.path.join(pkg_path, '..', 'models', 'bwb', 'BWB_saero2.out'))
+        bdf_filename_out3 = os.path.abspath(
+            os.path.join(pkg_path, '..', 'models', 'bwb', 'BWB_saero3.out'))
+        bdf_renumber(bdf_filename, bdf_filename_out1, size=8, is_double=False,
+                    starting_id_dict=None,
+                    round_ids=False, cards_to_skip=None)
+
+        model = read_bdf(bdf_filename)
+        bdf_renumber(model, bdf_filename_out2, size=16, is_double=False,
+                     starting_id_dict={
+                             'eid' : 1000, 'pid':2000, 'mid':3000,
+                             'spc_id' : 4000,},
+                     round_ids=False, cards_to_skip=None)
+        bdf_renumber(bdf_filename, bdf_filename_out3, size=8, is_double=False,
+                     starting_id_dict=None,
+                     round_ids=True, cards_to_skip=None)
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

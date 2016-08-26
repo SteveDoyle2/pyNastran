@@ -660,7 +660,7 @@ def _update_case_control(model, mapper):
                             msg = 'Could not find id=%s in %s dictionary\n' % (value, key)
                             msg += str(kmap)
                             raise KeyError(msg)
-                        subcase.update_parameter_in_subcase(
+                        subcase.update(
                             key, value2, options, param_type)
 
                     elif key in elemental_quantities + nodal_quantities:
@@ -720,18 +720,18 @@ def _update_case_control(model, mapper):
                             if gset != lset:
                                 msg = 'gset=%s lset=%s' % (str(gset), str(lset))
                                 raise NotImplementedError(msg)
-                                #subcase.update_parameter_in_subcase(
+                                #subcase.update(
                                     #seti, values2, seti_key, param_type)
                             else:
-                                global_subcase.update_parameter_in_subcase(
+                                global_subcase.update(
                                     seti, values2, seti_key, param_type)
-                            #subcase.update_parameter_in_subcase(
+                            #subcase.update(
                                 #seti, values2, seti_key, param_type)
                         elif not key not in global_subcase:
-                            subcase.update_parameter_in_subcase(
+                            subcase.update(
                                 seti, values2, seti_key, param_type)
                         else:
-                            global_subcase.update_parameter_in_subcase(
+                            global_subcase.update(
                                 seti, values2, seti_key, param_type)
                     else:
                         #pass

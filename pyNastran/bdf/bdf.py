@@ -3393,7 +3393,7 @@ def _lines_to_decks(lines, i, punch):
     return executive_control_lines, case_control_lines, bulk_data_lines
 
 
-def main():
+def main():  # pragma: no cover
     """
     shows off how unicode works becausee it's overly complicated
     """

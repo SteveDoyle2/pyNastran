@@ -145,6 +145,9 @@ class AEFACT(BaseCard):
     +--------+-----+----+--------+-----+
     | AEFACT | 97  |.3  | 0.7    | 1.0 |
     +--------+-----+----+--------+-----+
+
+    TODO: Are these defined in percentages and thus,
+          should they be normalized if they are not?
     """
     type = 'AEFACT'
 
@@ -489,13 +492,15 @@ class AESURF(BaseCard):
         13:'hmllim', 14:'hmulim', 15:'tqllim', '16':'tqulim',
     }
 
-    def __init__(self, aesid, label, cid1, alid1, cid2, alid2, eff, ldw,
-                 crefc, crefs, pllim, pulim, hmllim, hmulim, tqllim, tqulim,
+    def __init__(self, aesid, label, cid1, alid1, cid2=None, alid2=None, eff=1.0, ldw='LDW',
+                 crefc=1.0, crefs=1.0, pllim=-np.pi/2., pulim=np.pi/2.,
+                 hmllim=None, hmulim=None, tqllim=None, tqulim=None,
                  comment=''):
         if comment:
             self._comment = comment
         #: Controller identification number
         self.aesid = aesid
+
         #: Controller name.
         self.label = label
 
@@ -611,13 +616,15 @@ class AESURF(BaseCard):
     def uncross_reference(self):
         self.cid1 = self.Cid1()
         self.cid2 = self.Cid2()
-        self.aelid1 = self.AELIST_id1()
-        self.aelid2 = self.AELIST_id2()
         del self.cid1_ref
         if self.cid2:
             del self.cid2_ref
+
+        self.alid1 = self.AELIST_id1()
         del self.alid1_ref
-        if self.aelid2:
+
+        self.alid2 = self.AELIST_id2()
+        if self.alid2:
             del self.alid2_ref
 
     def raw_fields(self):
@@ -848,7 +855,7 @@ class AERO(Aero):
         acsid = integer_or_blank(card, 1, 'acsid', 0)
         velocity = double_or_blank(card, 2, 'velocity')
         cref = double(card, 3, 'cRef')
-        rho_ref = double(card, 4, 'rhoRef')
+        rho_ref = double(card, 4, 'rho_ref')
         sym_xz = integer_or_blank(card, 5, 'symXZ', 0)
         sym_xy = integer_or_blank(card, 6, 'symXY', 0)
         assert len(card) <= 7, 'len(AERO card) = %i\ncard=%s' % (len(card), card)
@@ -1089,37 +1096,40 @@ class CSSCHD(Aero):
     """
     type = 'CSSCHD'
     _field_map = {
-        1: 'sid', 2:'aesid', 3:'lAlpha', 4:'lMach', 5:'lSchd',
+        1: 'sid', 2:'aesid', 3:'lalpha', 4:'lmach', 5:'lschd',
     }
 
-    def __init__(self, sid, aesid, lAlpha, lMach, lSchd, comment=''):
+    def __init__(self, sid, aesid, lalpha, lmach, lschd, comment=''):
         Aero.__init__(self)
         if comment:
             self._comment = comment
         self.sid = sid
         self.aesid = aesid
-        self.lAlpha = lAlpha
-        self.lMach = lMach
-        self.lSchd = lSchd
+        self.lalpha = lalpha
+        self.lmach = lmach
+        self.lschd = lschd
+
+    def validate(self):
+        assert self.lalpha is None or isinstance(self.lalpha, integer_types), 'lalpha=%r' % self.lalpha
 
     @classmethod
     def add_card(cls, card, comment=''):
         sid = integer(card, 1, 'sid')
         aesid = integer(card, 2, 'aesid')             # AESURF
-        lAlpha = integer_or_blank(card, 3, 'lAlpha')  # AEFACT
-        lMach = integer_or_blank(card, 4, 'lMach')    # AEFACT
-        lSchd = integer(card, 5, 'lSchd')             # AEFACT
+        lalpha = integer_or_blank(card, 3, 'lAlpha')  # AEFACT
+        lmach = integer_or_blank(card, 4, 'lMach')    # AEFACT
+        lschd = integer(card, 5, 'lSchd')             # AEFACT
         assert len(card) <= 6, 'len(CSSCHD card) = %i\ncard=%s' % (len(card), card)
-        return CSSCHD(sid, aesid, lAlpha, lMach, lSchd, comment=comment)
+        return CSSCHD(sid, aesid, lalpha, lmach, lschd, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
         sid = data[0]
         aesid = data[1]  # AESURF
-        lAlpha = data[2]  # AEFACT
-        lMach = data[3]  # AEFACT
-        lSchd = data[4]  # AEFACT
-        return CSSCHD(sid, aesid, lAlpha, lMach, lSchd, comment=comment)
+        lalpha = data[2]  # AEFACT
+        lmach = data[3]  # AEFACT
+        lschd = data[4]  # AEFACT
+        return CSSCHD(sid, aesid, lalpha, lmach, lschd, comment=comment)
 
     def cross_reference(self, model):
         """
@@ -1133,22 +1143,22 @@ class CSSCHD(Aero):
         msg = ' which is required by ASSCHD sid=%s' % self.sid
         self.aesid = model.AESurf(self.aesid, msg=msg)
         self.aesid_ref = self.aesid
-        self.lAlpha = model.AEFact(self.lAlpha, msg=msg)
-        self.lAlpha_ref = self.lAlpha
-        self.lMach = model.AEFact(self.lMach, msg=msg)
-        self.lMach_ref = self.lMach
-        self.lSchd = model.AEFact(self.lSchd, msg=msg)
-        self.lSchd_ref = self.lSchd
+        self.lalpha = model.AEFact(self.lalpha, msg=msg)
+        self.lalpha_ref = self.lalpha
+        self.lmach = model.AEFact(self.lmach, msg=msg)
+        self.lmach_ref = self.lmach
+        self.lschd = model.AEFact(self.lschd, msg=msg)
+        self.lschd_ref = self.lschd
 
     def uncross_reference(self):
         self.aesid = self.AESid()
-        self.lAlpha = self.LAlpha()
-        self.lMach = self.LMach()
-        self.lSchd = self.LSchd()
+        self.lalpha = self.LAlpha()
+        self.lmach = self.LMach()
+        self.lschd = self.LSchd()
         del self.aesid_ref
-        del self.lAlpha_ref
-        del self.lMach_ref
-        del self.lSchd_ref
+        del self.lalpha_ref
+        del self.lmach_ref
+        del self.lschd_ref
 
     def AESid(self):
         if isinstance(self.aesid, integer_types):
@@ -1156,19 +1166,19 @@ class CSSCHD(Aero):
         return self.aesid_ref.aesid
 
     def LAlpha(self):
-        if isinstance(self.lAlpha, integer_types):
-            return self.lAlpha
-        return self.lAlpha_ref.sid
+        if self.lalpha is None or isinstance(self.lalpha, integer_types):
+            return self.lalpha
+        return self.lalpha_ref.sid
 
     def LMach(self):
-        if isinstance(self.lMach, integer_types):
-            return self.lMach
-        return self.lMach_ref.sid
+        if self.lmach is None or isinstance(self.lmach, integer_types):
+            return self.lmach
+        return self.lmach_ref.sid
 
     def LSchd(self):
-        if isinstance(self.lSchd, integer_types):
-            return self.lSchd
-        return self.lSchd_ref.sid
+        if self.lschd is None or isinstance(self.lschd, integer_types):
+            return self.lschd
+        return self.lschd_ref.sid
 
     def raw_fields(self):
         """
@@ -1346,21 +1356,23 @@ class CAERO1(BaseCard):
         msg = ''
         is_failed = False
         if self.nspan == 0 and self.lspan == 0:
-            msg += 'NSPAN or LSPAN must be greater than 0\n'
+            msg += 'NSPAN or LSPAN must be greater than 0; nspan=%r nlspan=%s\n' % (self.nspan, self.lspan)
             is_failed = True
         if self.nspan != 0 and self.lspan != 0:
-            msg += 'Either NSPAN or LSPAN must 0\n'
+            msg += 'Either NSPAN or LSPAN must 0; nspan=%r nlspan=%s\n' % (self.nspan, self.lspan)
             is_failed = True
 
         if self.nchord == 0 and self.lchord == 0:
-            msg += 'NCHORD or LCHORD must be greater than 0\n'
+            msg += 'NCHORD or LCHORD must be greater than 0; nchord=%r lchord=%s\n' % (self.nchord, self.lchord)
             is_failed = True
         if self.nchord != 0 and self.lchord != 0:
-            msg += 'Either NCHORD or LCHORD must 0\n'
+            msg += 'Either NCHORD or LCHORD must 0; nchord=%r lchord=%s\n' % (self.nchord, self.lchord)
             is_failed = True
         if is_failed:
             msg += str(self)
             raise ValueError(msg)
+        assert len(self.p1) == 3, 'p1=%s' % self.p1
+        assert len(self.p4) == 3, 'p4=%s' % self.p4
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -1414,15 +1426,13 @@ class CAERO1(BaseCard):
         lchord = 0
 
         if spanwise.lower() == 'y':
-            dspan = max(
-                p4[1] - p1[1],
-                p3[1] - p2[1]
-            )
+            y41 = p4[1] - p1[1]
+            y32 = p3[1] - p2[1]
+            dspan = max(y41, y32)
         elif spanwise.lower() == 'z':
-            dspan = max(
-                p4[2] - p1[2],
-                p3[2] - p2[2]
-            )
+            y41 = p4[2] - p1[2]
+            y32 = p3[2] - p2[2]
+            dspan = max(y41, y32)
         else:
             raise NotImplementedError('spanwise=%r; expected=[y, z]' % spanwise.lower())
 
@@ -1433,6 +1443,8 @@ class CAERO1(BaseCard):
             lspan = span.sid
         elif isinstance(span, float):
             nspan = int(math.ceil(dspan / span))
+            assert nspan > 0, 'y41=%s y32=%s; dspan=%s span=%s nspan=%s' % (y41, y32, dspan, span, nspan)
+        else:
             raise TypeError(span)
 
         if isinstance(chord, int):
@@ -1441,6 +1453,7 @@ class CAERO1(BaseCard):
             lchord = chord.sid
         elif isinstance(chord, float):
             nchord = int(math.ceil(dx / chord))
+            assert nchord > 0, 'x12=%s x43=%s; dx=%s chord=%s nchord=%s' % (x12, x43, dx, chord, nchord)
         else:
             raise TypeError(chord)
 
@@ -1744,6 +1757,14 @@ class CAERO2(BaseCard):
     Aerodynamic Body Connection
     Defines aerodynamic slender body and interference elements for
     Doublet-Lattice aerodynamics.
+
+    +--------+-----+-----+----+-----+------+-----+------+------+
+    |    1   |  2  |  3  |  4 |  5  |   6  |   7 |   8  |  9   |
+    +========+=====+=====+====+=====+======+=====+======+======+
+    | CAERO2 | EID | PID | CP | NSB | NINT | LSB | LINT | IGID |
+    +--------+-----+-----+----+-----+------+-----+------+------+
+    |        | X1  |  Y1 | Z1 | X12 |      |     |      |      |
+    +--------+-----+-----+----+-----+------+-----+------+------+
     """
     type = 'CAERO2'
     _field_map = {
@@ -1847,6 +1868,19 @@ class CAERO2(BaseCard):
         #: Length of body in the x-direction of the aerodynamic coordinate
         #: system.  (Real > 0)
         self.x12 = x12
+        if self.lsb is 0:
+            self.lsb = None
+        if self.lint is 0:
+            self.lint = None
+
+    def validate(self):
+        assert len(self.p1) == 3, 'p1=%s' % self.p1
+        if self.nsb == 0 and self.lsb == 0:
+            msg = 'nsb=%s lsb=%s; nsb or lsb must be > 0' % (self.nsb, self.lsb)
+            raise RuntimeError(msg)
+        if self.nint == 0 and self.lint == 0:
+            msg = 'nint=%s lint=%s; nint or lint must be > 0' % (self.nint, self.lint)
+            raise RuntimeError(msg)
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -1856,15 +1890,8 @@ class CAERO2(BaseCard):
         nsb = integer_or_blank(card, 4, 'nsb', 0)
         nint = integer_or_blank(card, 5, 'nint', 0)
 
-        if nsb == 0:
-            lsb = integer(card, 6, 'nsb=%s lsb' % nsb)
-        else:
-            lsb = blank(card, 6, 'nsb=%s lsb' % nsb)
-
-        if nint == 0:
-            lint = integer(card, 7, 'nint=%s lint' % nint)
-        else:
-            lint = blank(card, 7, 'nint=%s lint' % nint)
+        lsb = integer_or_blank(card, 6, 'nsb=%s lsb' % nsb, 0)
+        lint = integer_or_blank(card, 7, 'nint=%s lint' % nint, 0)
         igid = integer(card, 8, 'igid')
 
         p1 = np.array([
@@ -1887,9 +1914,14 @@ class CAERO2(BaseCard):
         return self.pid_ref.pid
 
     def Lsb(self):  # AEFACT
-        if isinstance(self.lsb, integer_types):
+        if self.lsb is None or isinstance(self.lsb, integer_types):
             return self.lsb
         return self.lsb_ref.sid
+
+    def Lint(self):  # AEFACT
+        if self.lint is None or isinstance(self.lint, integer_types):
+            return self.lint
+        return self.lint_ref.sid
 
     def cross_reference(self, model):
         """
@@ -1905,8 +1937,12 @@ class CAERO2(BaseCard):
         self.pid_ref = self.pid
         self.cp = model.Coord(self.cp, msg=msg)
         self.cp_ref = self.cp
-        #self.lsb = model.AeFact(self.lsb, msg=msg) # not added
-
+        if self.lsb is not None and isinstance(self.lsb, integer_types): #  > 0
+            self.lsb = model.AEFact(self.lsb, msg=msg)
+            self.lsb_ref = self.lsb
+        if self.lint is not None and isinstance(self.lint, integer_types): #  > 0
+            self.lint = model.AEFact(self.lint, msg=msg)
+            self.lint_ref = self.lint
         self.ascid_ref = model.Acsid(msg=msg)
 
     def uncross_reference(self):
@@ -1927,60 +1963,114 @@ class CAERO2(BaseCard):
 
     def get_points_elements_3d(self):
         """
-        gets the points/elements in 3d space as CQUAD4s
+        Gets the points/elements in 3d space as CQUAD4s
+        The idea is that this is used by the GUI to display CAERO panels.
 
         TODO: doesn't support the aero coordinate system
         """
         paero2 = self.pid_ref
 
+        if self.nsb in [0, None]:
+            xstation = self.lsb_ref.data
+            nx = len(xstation) - 1
+            #print('xstation = ', xstation)
+        else:
+            nx = self.nsb
+            station = np.linspace(0., nx, num=nx+1) # *dx?
+        assert nx > 0, 'nx=%s' % nx
+
+
         #print('paero2 - pid=%s lrsb=%s lrib=%s' % (paero2.pid, paero2.lrsb, paero2.lrib))
-        radii = paero2.lrsb_ref.data
-        if paero2.lrib is not None:
-            lrib = paero2.lrib_ref.data
+        if paero2.lrsb in [0, None]:
+            radii_slender = np.ones(nx + 1) * paero2.width
+        else:
+            radii_slender = paero2.lrsb_ref.data
+
+        # TODO: not suppported
+        if paero2.lrib in [0, None]:
+            radii_interference = np.ones(nx + 1) * paero2.width
+        else:
+            #print('lrib = ', paero2.lrib)
+            radii_interference = paero2.lrib_ref.data
+        radii = radii_slender
+
+        # TODO: not suppported
         #theta_interference1 = paero2.theta1
         #theta_interference2 = paero2.theta2
-        yzs = []
-        p1, p2 = self.get_points()
-        L = p2 - p1
-        nx = self.nsb
-        #nx = 10
-        dxyz = L / nx
-        dx, dy, dz = dxyz
+
+        if self.nsb != 0:
+            p1, p2 = self.get_points()
+            L = p2 - p1
+            #print('L=%s nx=%s' % (L, nx))
+            dxyz = L / nx
+            #print('dxyz\n%s' % (dxyz))
+            dx, dy, dz = dxyz
+            xstation = station * dx
+            ystation = station * dy
+            zstation = station * dz
+        else:
+            p1, p2 = self.get_points()
+            L = p2 - p1
+            dxi = xstation.max() - xstation.min()
+
+            #print('L=%s nx=%s dxi=%s' % (L, nx, dxi))
+            xratio = xstation / dxi
+            #print('xstation/dxi=%s' % xratio)
+            dxyz = np.zeros((nx+1, 3))
+            for i, xr in enumerate(xratio):
+                dxyz[i, :] = xr * L
+            ystation = dxyz[:, 1]
+            zstation = dxyz[:, 2]
 
         # I think this just lets you know what directions it can pivot in
         # and therefore doesn't affect visualization
         #assert paero2.orient == 'ZY', paero2.orient
         aspect_ratio = paero2.AR
 
-        xi = 0.
+        #Rs = []
+        assert len(radii) == (nx + 1), 'len(radii)=%s nx=%s' % (len(radii), nx)
+        assert len(xstation) == (nx + 1), 'len(xstation)=%s nx=%s\nxstation=%s\n%s' % (len(xstation), nx, xstation, str(self))
+
         xs = []
         ys = []
         zs = []
-        #Rs = []
-        assert len(radii) == (nx + 1), 'len(radii)=%s nx=%s' % (len(radii), nx)
-        for i, radius in enumerate(radii):
+        yzs = []
+        for i, xi, yi, zi, radius in zip(count(), xstation, ystation, zstation, radii):
             #print('  station=%s xi=%.4f radius=%s' % (i, xi, radius))
             yz = self.create_ellipse(aspect_ratio, radius)
             yzs.append(yz)
-            y = yz[:, 0] + dy
-            z = yz[:, 1] + dz
+            try:
+                y = yz[:, 0] + yi
+                z = yz[:, 1] + zi
+            except ValueError:
+                print('yz = %s' % yz)
+                print('yz.shape = %s' % str(yz.shape))
+                print('dy = %s' % dy)
+                print('dz = %s' % dz)
+                raise
             ntheta = yz.shape[0]
-            #print('')
             x = np.ones(ntheta) * xi
             xs.append(x)
             ys.append(y)
             zs.append(z)
             #Rs.append(np.sqrt(y**2 + z**2))
-            xi += dx
         #print('yz.shape=%s xs.shape=%s' % (str(np.array(yzs).shape), str(np.array(xs).shape)))
         #xyz = np.hstack([yzs, xs])
-        #print('xs =', xs)
-        #print('ys =', ys)
-        xyz = np.vstack([
-            np.hstack(xs),
-            np.hstack(ys),
-            np.hstack(zs),
-        ]).T + p1
+        xs = np.array(xs)
+        ys = np.array(ys)
+        zs = np.array(zs)
+        try:
+            xyz = np.vstack([
+                np.hstack(xs),
+                np.hstack(ys),
+                np.hstack(zs),
+            ]).T + p1
+        except:
+            print('xs =', xs.shape)
+            print('ys =', ys.shape)
+            print('zs =', zs.shape)
+            raise
+
         #R = np.hstack(Rs)
         #print('xyz.shape =', xyz.shape)
         #print('xyz =', xyz)
@@ -2022,7 +2112,7 @@ class CAERO2(BaseCard):
             xy = np.zeros((ntheta, 2)) # this is just R
             return xy
 
-        R = a*b / np.sqrt((b*np.cos(thetas))**2 + (a*np.sin(thetas))**2)
+        R = a * b / np.sqrt((b*np.cos(thetas))**2 + (a*np.sin(thetas))**2)
         x = R * np.cos(thetas)
         y = R * np.sin(thetas)
 
@@ -2046,7 +2136,7 @@ class CAERO2(BaseCard):
             The fields that define the card
         """
         list_fields = (['CAERO2', self.eid, self.Pid(), self.Cp(), self.nsb,
-                        self.nint, self.lsb, self.lint, self.igid, ] + list(self.p1)
+                        self.nint, self.Lsb(), self.Lint(), self.igid, ] + list(self.p1)
                        + [self.x12])
         return list_fields
 
@@ -2060,6 +2150,8 @@ class CAERO2(BaseCard):
             The fields that define the card
         """
         cp = set_blank_if_default(self.Cp(), 0)
+        nint = set_blank_if_default(self.nint, 0)
+        lsb = set_blank_if_default(self.lsb, 0)
         list_fields = (['CAERO2', self.eid, self.Pid(), cp, self.nsb, self.nint,
                         self.lsb, self.lint, self.igid, ] + list(self.p1) +
                        [self.x12])
@@ -2076,10 +2168,13 @@ class CAERO3(BaseCard):
                  p1, x12, p4, x43, comment=''):
         if comment:
             self._comment = comment
+
         #: Element identification number
         self.eid = eid
+
         #: Property identification number of a PAERO3 entry.
         self.pid = pid
+
         #: Coordinate system for locating point 1.
         self.cp = cp
         self.list_w = list_w
@@ -2552,6 +2647,8 @@ class PAERO5(BaseCard):
                  caoci, comment=''):
         """
         +--------+-------+--------+--------+---------+-------+-------+-------+
+        |   1    |   2   |    3   |   4    |    5    |   6   |   7   |   8   |
+        +========+=======+========+========+=========+=======+=======+=======+
         | PAERO5 | PID   | NALPHA | LALPHA | NXIS    | LXIS  | NTAUS | LTAUS |
         +--------+-------+--------+--------+---------+-------+-------+-------+
         |        | CAOC1 | CAOC2  | CAOC3  | CAOC4   | CAOC5 |       |       |
@@ -2963,7 +3060,9 @@ class FLUTTER(BaseCard):
             the BDF object
         """
         msg = ' which is required by FLUTTER sid=%s' % self.sid
+        #print('density =', self.density)
         self.density = model.FLFACT(self.density, msg=msg)
+        #assert self.density.type == 'FLFACT', self.density
         self.density_ref = self.density
         self.mach = model.FLFACT(self.mach, msg=msg)
         self.mach_ref = self.mach
@@ -3247,6 +3346,9 @@ class MKAERO2(BaseCard):
         self.machs = machs
         self.reduced_freqs = reduced_freqs
 
+    def validate(self):
+        assert len(self.machs) == len(self.reduced_freqs), 'len(machs)=%s len(rfreqs)=%s' % (len(self.machs), len(self.reduced_freqs))
+
     @classmethod
     def add_card(cls, card, comment=''):
         list_fields = card.fields(1)
@@ -3450,6 +3552,8 @@ class PAERO2(BaseCard):
     Defines the cross-sectional properties of aerodynamic bodies.
 
     +--------+------+--------+-------+------+------+------+------+------+
+    |    1   |  2   |   3    |    4  |   5  |   6  |   7  |   8  |   9  |
+    +========+======+========+=======+======+======+======+======+======+
     | PAERO2 | PID  | ORIENT | WIDTH |  AR  | LRSB | LRIB | LTH1 | LTH2 |
     +--------+------+--------+-------+------+------+------+------+------+
     | THI1   | THN1 |  THI2  |  THN2 | THI3 | THN3 |      |      |      |
@@ -3507,38 +3611,52 @@ class PAERO2(BaseCard):
                  thi, thn, comment=''):
         if comment:
             self._comment = comment
+
         #: Property identification number. (Integer > 0)
         self.pid = pid
+
         #: Orientation flag. Type of motion allowed for bodies. Refers to
         #: the aerodynamic coordinate system of ACSID. See AERO entry.
         #: (Character = 'Z', 'Y', or 'ZY')
         self.orient = orient
+
         #: Reference half-width of body and the width of the constant width
         #: interference tube. (Real > 0.0)
         self.width = width
+
         #: Aspect ratio of the interference tube (height/width). float>0.
         self.AR = AR
+
         #: Identification number of an AEFACT entry containing a list of
-        #: slender body half-widths at the end points of the slender body
-        #: elements. If blank, the value of WIDTH will be used.
+        #: slender body half-widths at the end points of the
+        #: slender body elements. If blank, the value of WIDTH will be used.
         #: (Integer > 0 or blank)
         self.lrsb = lrsb
+
         #: Identification number of an AEFACT entry containing a list of
-        #: slender body half-widths at the end points of the interference
-        #: elements. If blank, the value of WIDTH will be used.
+        #: slender body half-widths at the end points of the
+        #: interference elements. If blank, the value of WIDTH will be used.
         #: (Integer > 0 or blank)
         self.lrib = lrib
-        #: dentification number of AEFACT entries for defining ? arrays for
+
+        #: Identification number of AEFACT entries for defining ? arrays for
         #: interference calculations. (Integer >= 0)
         self.lth1 = lth1
         self.lth2 = lth2
-
         self.thi = thi
         self.thn = thn
+        if self.lrsb == 0:
+            self.lrsb = None
+        if self.lrib is 0:
+            self.lrib = None
+
 
     def validate(self):
         assert self.orient in ['Z', 'Y', 'ZY'], 'orient=%r' % self.orient
         assert isinstance(self.AR, float), 'AR=%r type=%s' % (self.AR, type(self.AR))
+        assert isinstance(self.width, float), 'width=%r type=%s' % (self.width, type(self.width))
+        assert isinstance(self.thi, list), 'thi=%s type=%s' % (self.thi, type(self.thi))
+        assert isinstance(self.thn, list), 'thn=%s type=%s' % (self.thn, type(self.thn))
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -3562,16 +3680,20 @@ class PAERO2(BaseCard):
 
     def cross_reference(self, model):
         msg = ' which is required by PAERO2 eid=%s' % self.pid
-        if self.lrsb is not None:
+        if self.lrsb is not None and isinstance(self.lrsb, integer_types):
             self.lrsb_ref = model.AEFact(self.lrsb, msg=msg)
-        if self.lrib is not None:
+            self.lrsb = self.lrsb_ref
+        if self.lrib is not None and isinstance(self.lrib, integer_types):
             self.lrib_ref = model.AEFact(self.lrib, msg=msg)
+            self.lrib = self.lrib_ref
 
     def uncross_reference(self):
-        self.lrsb = self.lrsb.aefact_id
-        self.lrib = self.lrib.aefact_id
-        del self.lrsb_ref
-        del self.lrib_ref
+        if self.lrsb is not None and isinstance(self.lrsb, integer_types):
+            self.lrsb = self.lrsb_ref.sid # AEFACT id
+            del self.lrsb_ref
+        if self.lrib is not None and isinstance(self.lrib, integer_types):
+            self.lrib = self.lrib_ref.sid # AEFACT id
+            del self.lrib_ref
 
     def Lrsb(self):
         if self.lrsb is None or isinstance(self.lrsb, integer_types):

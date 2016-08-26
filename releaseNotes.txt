@@ -51,8 +51,16 @@ This is a bug fix release.
 
 Done
 ----
+
 BDF:
- - write_path function works
+ - fixed bdf_renumber case control update bug
+ - Aero:
+   - added handling of non-uniform lsrb/lrib on CAERO2
+   - fixed unxref bug in AESURF
+   - fixed xref bug in CSSCHD
+   - fixed FLUTTER unxref bug
+ - write_path function works (Windows)
+ - more validate methods & tests
 
 OP2:
  - MSC Nastran 2005R3B supported
@@ -61,10 +69,13 @@ OP2:
 TODO:
 -----
 BDF:
+ - write_path function works (Linux)
+ - Python 3 bdf_renumber bug fix
  - fix speed of CORD1R, CORD1C, CORD1S
 
 GUI:
  - fix bar Cd frame for CORD2C
+ - 
  - fix command index (gives a duplicated string, not the Sidebar index)
 
 -----------------------v0.8.0 released 2016/8/21-----------------------
