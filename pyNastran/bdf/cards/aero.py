@@ -3665,28 +3665,28 @@ class PAERO2(BaseCard):
 
     def cross_reference(self, model):
         msg = ' which is required by PAERO2 eid=%s' % self.pid
-        if self.lrsb is not None and self.lrsb > 0:
+        if self.lrsb is not None and isinstance(self.lrsb, integer_types):
             self.lrsb_ref = model.AEFact(self.lrsb, msg=msg)
             self.lrsb = self.lrsb_ref
-        if self.lrib is not None and self.lrib > 0:
+        if self.lrib is not None and isinstance(self.lrib, integer_types):
             self.lrib_ref = model.AEFact(self.lrib, msg=msg)
             self.lrib = self.lrib_ref
 
     def uncross_reference(self):
-        if self.lrsb is not None and self.lrsb > 0:
+        if self.lrsb is not None and isinstance(self.lrsb, integer_types):
             self.lrsb = self.lrsb_ref.sid # AEFACT id
             del self.lrsb_ref
-        if self.lrib is not None and self.lrib > 0:
+        if self.lrib is not None and isinstance(self.lrib, integer_types):
             self.lrib = self.lrib_ref.sid # AEFACT id
             del self.lrib_ref
 
     def Lrsb(self):
-        if self.lrsb is None or isinstance(self.lrsb, int):
+        if self.lrsb is None or isinstance(self.lrsb, integer_types):
             return self.lrsb
         return self.lrsb_ref.sid
 
     def Lrib(self):
-        if self.lrib is None or isinstance(self.lrib, int):
+        if self.lrib is None or isinstance(self.lrib, integer_types):
             return self.lrib
         return self.lrib_ref.sid
 
