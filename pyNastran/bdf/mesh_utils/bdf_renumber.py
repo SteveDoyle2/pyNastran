@@ -335,7 +335,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
     #j = 1
     #print(spoints_nids)
     #k = 0
-    print(starting_id_dict)
+    #model.log.debug(starting_id_dict)
     if 'nid' in starting_id_dict and nid is not None:
         i = nid
         #banned_nodes = spoints
@@ -548,7 +548,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
 
     # apply the simple to update parameters
     param_id = 9999
-    for (dict_obj, param_name, mmap) in sorted(data):
+    for (dict_obj, param_name, mmap) in data:
         if round_ids:
             param_id = _roundup(param_id, 1000) + 1
         else:
@@ -557,7 +557,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
             try:
                 msg = '%s has no %r; use %s' % (param.type, param_name, object_attributes(param))
             except AttributeError:
-                print('param = %r' % param)
+                model.log.error('param = %r' % param)
                 raise
             assert hasattr(param, param_name), msg
             setattr(param, param_name, param_id)
@@ -772,7 +772,7 @@ def _update_case_control(model, mapper):
                             #print(seti2)
                         else:
                             seti2 = [value]
-                            print('key=%s options=%s param_type=%s value=%s' % (
+                            model.log.error('key=%s options=%s param_type=%s value=%s' % (
                                 key, options, param_type, value))
                             raise NotImplementedError(key)
 
@@ -781,7 +781,7 @@ def _update_case_control(model, mapper):
                             # renumber eids
                             for eid in seti2:
                                 if eid not in eid_map:
-                                    print("  couldn't find eid=%s...dropping" % eid)
+                                    model.log.warning("  couldn't find eid=%s...dropping" % eid)
                                     continue
                                 eid_new = eid_map[eid]
                                 values2.append(eid_new)
@@ -790,7 +790,7 @@ def _update_case_control(model, mapper):
                             # renumber nids
                             for nid in seti2:
                                 if nid not in nid_map:
-                                    print("  couldn't find nid=%s...dropping" % nid)
+                                    model.log.warning("  couldn't find nid=%s...dropping" % nid)
                                     continue
                                 nid_new = nid_map[nid]
                                 values2.append(nid_new)
@@ -825,7 +825,7 @@ def _update_case_control(model, mapper):
                     else:
                         #pass
                         #print('key=%s seti2=%s' % (key, seti2))
-                        print('key=%r options=%r param_type=%r value=%r' % (
+                        model.log.error('key=%r options=%r param_type=%r value=%r' % (
                             key, options, param_type, value))
                         raise RuntimeError(key)
                 elif value in ['NONE', 'ALL']:

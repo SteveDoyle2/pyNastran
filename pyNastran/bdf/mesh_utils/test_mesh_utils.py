@@ -18,6 +18,7 @@ from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.bdf.mesh_utils.bdf_equivalence import bdf_equivalence_nodes
 from pyNastran.bdf.mesh_utils.collapse_bad_quads import convert_bad_quads_to_tris
 from pyNastran.bdf.mesh_utils.delete_bad_elements import get_bad_shells
+from pyNastran.utils.log import SimpleLogger
 
 # testing these imports are up to date
 from pyNastran.bdf.mesh_utils.utils import *
@@ -360,12 +361,13 @@ class TestMeshUtils(unittest.TestCase):
 
     def test_convert_02(self):
         """converts a full model units"""
+        log = SimpleLogger(level='warning')
         bdf_filename = os.path.abspath(
             os.path.join(pkg_path, '..', 'models', 'bwb', 'BWB_saero.bdf'))
         bdf_filename_out = os.path.abspath(
             os.path.join(pkg_path, '..', 'models', 'bwb', 'BWB_saero.out'))
 
-        model = read_bdf(bdf_filename)
+        model = read_bdf(bdf_filename, log=log)
         units_to = ['m', 'kg', 's']
         units_from = ['in', 'lbm', 's']
         #units_to = units_from
@@ -410,6 +412,7 @@ class TestMeshUtils(unittest.TestCase):
         os.remove(bdf_filename)
 
     def test_renumber_01(self):
+        log = SimpleLogger(level='warning')
         bdf_filename = os.path.abspath(
             os.path.join(pkg_path, '..', 'models', 'bwb', 'BWB_saero.bdf'))
         bdf_filename_out1 = os.path.abspath(
@@ -418,19 +421,22 @@ class TestMeshUtils(unittest.TestCase):
             os.path.join(pkg_path, '..', 'models', 'bwb', 'BWB_saero2.out'))
         bdf_filename_out3 = os.path.abspath(
             os.path.join(pkg_path, '..', 'models', 'bwb', 'BWB_saero3.out'))
-        bdf_renumber(bdf_filename, bdf_filename_out1, size=8, is_double=False,
-                    starting_id_dict=None,
-                    round_ids=False, cards_to_skip=None)
+        model = bdf_renumber(bdf_filename, bdf_filename_out1, size=8,
+                             is_double=False, starting_id_dict=None,
+                             round_ids=False, cards_to_skip=None)
 
-        model = read_bdf(bdf_filename)
+        model = read_bdf(bdf_filename, log=log)
         bdf_renumber(model, bdf_filename_out2, size=16, is_double=False,
                      starting_id_dict={
                              'eid' : 1000, 'pid':2000, 'mid':3000,
                              'spc_id' : 4000,},
                      round_ids=False, cards_to_skip=None)
-        bdf_renumber(bdf_filename, bdf_filename_out3, size=8, is_double=False,
-                     starting_id_dict=None,
+        bdf_renumber(bdf_filename, bdf_filename_out3, size=8,
+                     is_double=False, starting_id_dict=None,
                      round_ids=True, cards_to_skip=None)
+        read_bdf(bdf_filename_out1, log=log)
+        read_bdf(bdf_filename_out2, log=log)
+        read_bdf(bdf_filename_out3, log=log)
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()
