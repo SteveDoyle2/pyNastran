@@ -806,7 +806,7 @@ class NastranIO(NastranIO_xref):
             cases[(0, 'Element_ID', 1, 'centroid', '%i')] = eids
             eidsSet = True
 
-        # subcaseID, resultType, vectorSize, location, dataFormat
+        # subcase_id, resultType, vectorSize, location, dataFormat
         if len(model.properties) and self.is_centroidal:
             #pids = model.elements.property_id
             cases[(0, 'Property_ID', 1, 'centroid', '%i')] = pids
@@ -817,7 +817,7 @@ class NastranIO(NastranIO_xref):
         if 0:
             # if not a flat plate???
             #if min(nxs) == max(nxs) and min(nxs) != 0.0:
-                # subcaseID, resultType, vectorSize, location, dataFormat
+                # subcase_id, resultType, vectorSize, location, dataFormat
                 cases[(0, 'Normal_x', 1, 'centroid', '%.1f')] = nxs
                 cases[(0, 'Normal_y', 1, 'centroid', '%.1f')] = nys
                 cases[(0, 'Normal_z', 1, 'centroid', '%.1f')] = nzs
@@ -853,10 +853,10 @@ class NastranIO(NastranIO_xref):
         if not self.is_centroidal:
             return
         sucaseIDs = model.case_control_deck.get_subcase_list()
-        for subcaseID in sucaseIDs:
-            if subcaseID == 0:
+        for subcase_id in sucaseIDs:
+            if subcase_id == 0:
                 continue
-            load_case_id, options = model.case_control_deck.get_subcase_parameter(subcaseID, 'LOAD')
+            load_case_id, options = model.case_control_deck.get_subcase_parameter(subcase_id, 'LOAD')
             loadCase = model.loads[load_case_id]
 
             # account for scale factors
@@ -895,17 +895,17 @@ class NastranIO(NastranIO_xref):
 
             # if there is no applied pressure, don't make a plot
             if abs(pressures).max():
-                # subcaseID, resultType, vectorSize, location, dataFormat
-                cases[(0, 'Pressure Case=%i' % subcaseID, 1, 'centroid', '%.1f')] = pressures
+                # subcase_id, resultType, vectorSize, location, dataFormat
+                cases[(0, 'Pressure Case=%i' % subcase_id, 1, 'centroid', '%.1f')] = pressures
 
     def _plot_applied_loads(self, model, cases):
         if not self.is_nodal:
             return
         sucaseIDs = model.case_control_deck.get_subcase_list()
-        for subcaseID in sucaseIDs:
-            if subcaseID == 0:
+        for subcase_id in sucaseIDs:
+            if subcase_id == 0:
                 continue
-            load_case_id, options = model.case_control_deck.get_subcase_parameter(subcaseID, 'LOAD')
+            load_case_id, options = model.case_control_deck.get_subcase_parameter(subcase_id, 'LOAD')
             loadCase = model.loads[load_case_id]
 
             # account for scale factors
@@ -946,11 +946,11 @@ class NastranIO(NastranIO_xref):
                         for nid in node_ids[4:]:
                             pressures[eids.index(nid)] += k
             if loads[:, 0].min() != loads[:, 0].max():
-                cases[(subcaseID, 'LoadX Case=%i' % subcaseID, 1, 'node', '%.1f')] = loads[:, 0]
+                cases[(subcase_id, 'LoadX Case=%i' % subcase_id, 1, 'node', '%.1f')] = loads[:, 0]
             if loads[:, 1].min() != loads[:, 1].max():
-                cases[(subcaseID, 'LoadY Case=%i' % subcaseID, 1, 'node', '%.1f')] = loads[:, 1]
+                cases[(subcase_id, 'LoadY Case=%i' % subcase_id, 1, 'node', '%.1f')] = loads[:, 1]
             if loads[:, 2].min() != loads[:, 2].max():
-                cases[(subcaseID, 'LoadZ Case=%i' % subcaseID, 1, 'node', '%.1f')] = loads[:, 2]
+                cases[(subcase_id, 'LoadZ Case=%i' % subcase_id, 1, 'node', '%.1f')] = loads[:, 2]
 
     def load_nastran_results(self, op2_filename, dirname):
         #gridResult.SetNumberOfComponents(self.nElements)
@@ -1003,16 +1003,16 @@ class NastranIO(NastranIO_xref):
         #self.iSubcaseNameMap[self.isubcase] = [Subtitle, Label]
 
         cases = {}
-        subcaseIDs = model.iSubcaseNameMap.keys()
+        subcase_ids = model.iSubcaseNameMap.keys()
         self.iSubcaseNameMap = model.iSubcaseNameMap
 
-        for subcaseID in subcaseIDs:
-            cases = self.fill_oug_oqg_case(cases, model, subcaseID)
-            cases = self.fill_stress_case(cases, model, subcaseID)
+        for subcase_id in subcase_ids:
+            cases = self.fill_oug_oqg_case(cases, model, subcase_id)
+            cases = self.fill_stress_case(cases, model, subcase_id)
 
         self.finish_nastran_io(cases)
 
-    def fill_oug_oqg_case(self, cases, model, subcaseID):
+    def fill_oug_oqg_case(self, cases, model, subcase_id):
         if self.is_nodal: # nodal results don't work with centroidal ones
             displacement_like = [
                 [model.displacements, 'Displacement'],
@@ -1034,8 +1034,8 @@ class NastranIO(NastranIO_xref):
 
             # size = 3
             for (result, name) in displacement_like:
-                if subcaseID in result:
-                    case = result[subcaseID]
+                if subcase_id in result:
+                    case = result[subcase_id]
 
                     if case.nonlinear_factor is not None: # transient
                         return
@@ -1064,17 +1064,17 @@ class NastranIO(NastranIO_xref):
                         y_displacements[nid2] = txyz[1]
                         z_displacements[nid2] = txyz[2]
 
-                    #cases[(subcaseID, name + 'Vector', 3, 'node', '%g')] = displacements
-                    cases[(subcaseID, name + 'X', 1, 'node', '%g')] = x_displacements
-                    cases[(subcaseID, name + 'Y', 1, 'node', '%g')] = y_displacements
-                    cases[(subcaseID, name + 'Z', 1, 'node', '%g')] = z_displacements
-                    cases[(subcaseID, name + 'XYZ', 1, 'node', '%g')] = xyz_displacements
+                    #cases[(subcase_id, name + 'Vector', 3, 'node', '%g')] = displacements
+                    cases[(subcase_id, name + 'X', 1, 'node', '%g')] = x_displacements
+                    cases[(subcase_id, name + 'Y', 1, 'node', '%g')] = y_displacements
+                    cases[(subcase_id, name + 'Z', 1, 'node', '%g')] = z_displacements
+                    cases[(subcase_id, name + 'XYZ', 1, 'node', '%g')] = xyz_displacements
                     del res, word
 
             # size = 1
             for (result, name) in temperature_like:
-                if subcaseID in result:
-                    case = result[subcaseID]
+                if subcase_id in result:
+                    case = result[subcase_id]
                     if case.nonlinear_factor is not None: # transient
                         return
                     temperatures = zeros(nnodes, dtype='float32')
@@ -1083,8 +1083,8 @@ class NastranIO(NastranIO_xref):
                         displacements[nid2] = txyz
                         temperatures[nid2] = norm(txyz)
 
-                        #cases[(subcaseID, name + 'Vector', 3, 'node', '%g')] = displacements
-                        cases[(subcaseID, name, 1, 'node', '%g')] = temperatures
+                        #cases[(subcase_id, name + 'Vector', 3, 'node', '%g')] = displacements
+                        cases[(subcase_id, name, 1, 'node', '%g')] = temperatures
         return cases
 
     def clear_nastran(self):
@@ -1092,17 +1092,17 @@ class NastranIO(NastranIO_xref):
         self.nid_map = {}
         self.eid_to_nid_map = {}
 
-    def fill_stress_case(self, cases, model, subcaseID):
+    def fill_stress_case(self, cases, model, subcase_id):
         #return cases
         if self.is_centroidal:
-            self._fill_stress_centroidal(cases, model, subcaseID)
+            self._fill_stress_centroidal(cases, model, subcase_id)
         elif self.is_nodal:
-            self._fill_stress_case_nodal(cases, model, subcaseID)
+            self._fill_stress_case_nodal(cases, model, subcase_id)
         else:
             raise RuntimeError('this shouldnt happen...')
         return cases
 
-    def _fill_stress_case_nodal(self, cases, model, subcaseID):
+    def _fill_stress_case_nodal(self, cases, model, subcase_id):
         oxx_dict = {}
         oyy_dict = {}
         ozz_dict = {}
@@ -1121,8 +1121,8 @@ class NastranIO(NastranIO_xref):
             ovm_dict[nid] = []
 
         vmWord = None
-        if subcaseID in model.rodStress:
-            case = model.rodStress[subcaseID]
+        if subcase_id in model.rodStress:
+            case = model.rodStress[subcase_id]
             if case.nonlinear_factor is not None: # transient
                 return
             for eid in case.axial:
@@ -1139,8 +1139,8 @@ class NastranIO(NastranIO_xref):
                     o3_dict[nid].append(o3i)
                     ovm_dict[nid].append(ovmi)
 
-        if subcaseID in model.barStress:
-            case = model.barStress[subcaseID]
+        if subcase_id in model.barStress:
+            case = model.barStress[subcase_id]
             if case.nonlinear_factor is not None: # transient
                 return
             for eid in case.axial:
@@ -1156,8 +1156,8 @@ class NastranIO(NastranIO_xref):
                     o3_dict[nid].append(o3i)
                     ovm_dict[nid].append(ovmi)
 
-        if subcaseID in model.beamStress:
-            case = model.beamStress[subcaseID]
+        if subcase_id in model.beamStress:
+            case = model.beamStress[subcase_id]
             if case.nonlinear_factor is not None: # transient
                 return
             for eid in case.smax:
@@ -1176,8 +1176,8 @@ class NastranIO(NastranIO_xref):
                     o3_dict[nid].append(o3i)
                     ovm_dict[nid].append(ovmi)
 
-        if subcaseID in model.plateStress:
-            case = model.plateStress[subcaseID]
+        if subcase_id in model.plateStress:
+            case = model.plateStress[subcase_id]
             if case.nonlinear_factor is not None: # transient
                 return
             if case.isVonMises():
@@ -1225,8 +1225,8 @@ class NastranIO(NastranIO_xref):
                         o3_dict[nid].append(o3i)
                         ovm_dict[nid].append(ovmi)
 
-        if subcaseID in model.compositePlateStress:
-            case = model.compositePlateStress[subcaseID]
+        if subcase_id in model.compositePlateStress:
+            case = model.compositePlateStress[subcase_id]
             if case.nonlinear_factor is not None: # transient
                 return
             if case.isVonMises():
@@ -1250,8 +1250,8 @@ class NastranIO(NastranIO_xref):
                     o3_dict[nid].append(o3i)
                     ovm_dict[nid].append(ovmi)
 
-        if subcaseID in model.solidStress:
-            case = model.solidStress[subcaseID]
+        if subcase_id in model.solidStress:
+            case = model.solidStress[subcase_id]
             if case.nonlinear_factor is not None: # transient
                 return
             if case.isVonMises():
@@ -1303,22 +1303,22 @@ class NastranIO(NastranIO_xref):
         o3 = nan_to_num(o3)
         ovm = nan_to_num(ovm)
         if oxx.min() != oxx.max():
-            cases[(subcaseID, 'StressXX', 1, 'node', '%.3f')] = oxx
+            cases[(subcase_id, 'StressXX', 1, 'node', '%.3f')] = oxx
         if oyy.min() != oyy.max():
-            cases[(subcaseID, 'StressYY', 1, 'node', '%.3f')] = oyy
+            cases[(subcase_id, 'StressYY', 1, 'node', '%.3f')] = oyy
         if ozz.min() != ozz.max():
-            cases[(subcaseID, 'StressZZ', 1, 'node', '%.3f')] = ozz
+            cases[(subcase_id, 'StressZZ', 1, 'node', '%.3f')] = ozz
 
         if o1.min() != o1.max():
-            cases[(subcaseID, 'Stress1', 1, 'node', '%.3f')] = o1
+            cases[(subcase_id, 'Stress1', 1, 'node', '%.3f')] = o1
         if o2.min() != o2.max():
-            cases[(subcaseID, 'Stress2', 1, 'node', '%.3f')] = o2
+            cases[(subcase_id, 'Stress2', 1, 'node', '%.3f')] = o2
         if o3.min() != o3.max():
-            cases[(subcaseID, 'Stress3', 1, 'node', '%.3f')] = o3
+            cases[(subcase_id, 'Stress3', 1, 'node', '%.3f')] = o3
         if vmWord is not None:
-            cases[(subcaseID, vmWord, 1, 'node', '%.3f')] = ovm
+            cases[(subcase_id, vmWord, 1, 'node', '%.3f')] = ovm
 
-    def _fill_stress_centroidal(self, cases, model, subcaseID):
+    def _fill_stress_centroidal(self, cases, model, subcase_id):
         nElements = self.nElements
         isElementOn = zeros(nElements)  # is the element supported
 
@@ -1332,8 +1332,8 @@ class NastranIO(NastranIO_xref):
         ovm = zeros(nElements, dtype='float32')
 
         vmWord = None
-        if subcaseID in model.rodStress:
-            case = model.rodStress[subcaseID]
+        if subcase_id in model.rodStress:
+            case = model.rodStress[subcase_id]
             for eid in case.axial:
                 eid2 = self.eid_map[eid]
                 isElementOn[eid2] = 1.
@@ -1348,8 +1348,8 @@ class NastranIO(NastranIO_xref):
                 o3[eid2] = min(axial, torsion)
                 ovm[eid2] = max(abs(axial), abs(torsion))
 
-        if subcaseID in model.barStress:
-            case = model.barStress[subcaseID]
+        if subcase_id in model.barStress:
+            case = model.barStress[subcase_id]
             if case.nonlinear_factor is not None:
                 return
             for eid in case.axial:
@@ -1365,8 +1365,8 @@ class NastranIO(NastranIO_xref):
                     abs(min(case.smin[eid]))
                 )
 
-        if subcaseID in model.beamStress:
-            case = model.beamStress[subcaseID]
+        if subcase_id in model.beamStress:
+            case = model.beamStress[subcase_id]
             if case.nonlinear_factor is not None: # transient
                 return
             for eid in case.smax:
@@ -1387,8 +1387,8 @@ class NastranIO(NastranIO_xref):
                     abs(min(case.smin[eid]))
                 )
 
-        if subcaseID in model.plateStress:
-            case = model.plateStress[subcaseID]
+        if subcase_id in model.plateStress:
+            case = model.plateStress[subcase_id]
             if case.nonlinear_factor is not None: # transient
                 return
             if case.isVonMises():
@@ -1420,8 +1420,8 @@ class NastranIO(NastranIO_xref):
                 o3[eid2] = o3i
                 ovm[eid2] = ovmi
 
-        if subcaseID in model.compositePlateStress:
-            case = model.compositePlateStress[subcaseID]
+        if subcase_id in model.compositePlateStress:
+            case = model.compositePlateStress[subcase_id]
             if case.nonlinear_factor is not None: # transient
                 return
             if case.isVonMises():
@@ -1447,8 +1447,8 @@ class NastranIO(NastranIO_xref):
                 o3[eid2] = o3i
                 ovm[eid2] = ovmi
 
-        if subcaseID in model.solidStress:
-            case = model.solidStress[subcaseID]
+        if subcase_id in model.solidStress:
+            case = model.solidStress[subcase_id]
             if case.nonlinear_factor is not None: # transient
             #if case.isTransient():
                 return
@@ -1470,24 +1470,24 @@ class NastranIO(NastranIO_xref):
                 o3[eid2] = case.o3[eid]['CENTER']
                 ovm[eid2] = case.ovmShear[eid]['CENTER']
 
-        # subcaseID,resultType,vectorSize,location,dataFormat
+        # subcase_id,resultType,vectorSize,location,dataFormat
         if isElementOn.min() != isElementOn.max():
             cases[(1, 'isElementOn', 1, 'centroid', '%i')] = isElementOn
         if oxx.min() != oxx.max():
-            cases[(subcaseID, 'StressXX', 1, 'centroid', '%.3f')] = oxx
+            cases[(subcase_id, 'StressXX', 1, 'centroid', '%.3f')] = oxx
         if oyy.min() != oyy.max():
-            cases[(subcaseID, 'StressYY', 1, 'centroid', '%.3f')] = oyy
+            cases[(subcase_id, 'StressYY', 1, 'centroid', '%.3f')] = oyy
         if ozz.min() != ozz.max():
-            cases[(subcaseID, 'StressZZ', 1, 'centroid', '%.3f')] = ozz
+            cases[(subcase_id, 'StressZZ', 1, 'centroid', '%.3f')] = ozz
 
         if o1.min() != o1.max():
-            cases[(subcaseID, 'Stress1', 1, 'centroid', '%.3f')] = o1
+            cases[(subcase_id, 'Stress1', 1, 'centroid', '%.3f')] = o1
         if o2.min() != o2.max():
-            cases[(subcaseID, 'Stress2', 1, 'centroid', '%.3f')] = o2
+            cases[(subcase_id, 'Stress2', 1, 'centroid', '%.3f')] = o2
         if o3.min() != o3.max():
-            cases[(subcaseID, 'Stress3', 1, 'centroid', '%.3f')] = o3
+            cases[(subcase_id, 'Stress3', 1, 'centroid', '%.3f')] = o3
         if vmWord is not None:
-            cases[(subcaseID, vmWord, 1, 'centroid', '%.3f')] = ovm
+            cases[(subcase_id, vmWord, 1, 'centroid', '%.3f')] = ovm
         return cases
 
 def main():

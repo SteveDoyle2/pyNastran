@@ -1563,7 +1563,6 @@ class NastranIO(object):
                 type_res = GuiResult(0, header=msg, title=msg,
                                      location='centroid', scalar=is_type)
                 cases[icase] = (type_res, (0, msg))
-                #cases[(0, icase, msg, 1, 'centroid', '%i', '')] = is_type
                 icase += 1
 
         if self.make_released_dofs2:
@@ -1587,67 +1586,76 @@ class NastranIO(object):
                 shear_y_res = GuiResult(0, header='No Shear Y', title='No Shear Y',
                                         location='centroid', scalar=no_shear_y)
                 cases[icase] = (shear_y_res, (0, 'No Shear Y'))
-                #cases[(0, icase, 'No Shear Y', 1, 'centroid', '%i', '')] = no_shear_y
                 icase += 1
             if no_shear_z.max() == 1:
                 bar_form[2].append(['No Shear Z', icase, []])
                 shear_z_res = GuiResult(0, header='No Shear Z', title='No Shear Z',
-                                        location='centroid', scalar=no_shear_y)
+                                        location='centroid', scalar=no_shear_z)
                 cases[icase] = (shear_z_res, (0, 'No Shear Z'))
-                #cases[(0, icase, 'No Shear Z', 1, 'centroid', '%i', '')] = no_shear_z
                 icase += 1
             if no_bending_y.max() == 1:
                 bar_form[2].append(['No Bending Y', icase, []])
                 bending_y_res = GuiResult(0, header='No Bending Z', title='No Bending Z',
                                           location='centroid', scalar=no_bending_y)
                 cases[icase] = (bending_y_res, (0, 'No Bending Z'))
-                #cases[(0, icase, 'No Bending Y', 1, 'centroid', '%i', '')] = no_bending_y
                 icase += 1
             if no_bending_z.max() == 1:
                 bar_form[2].append(['No Bending Z', icase, []])
                 bending_z_res = GuiResult(0, header='No Bending Z', title='No Bending Z',
                                           location='centroid', scalar=no_bending_z)
                 cases[icase] = (bending_z_res, (0, 'No Bending Z'))
-                #cases[(0, icase, 'No Bending Z', 1, 'centroid', '%i', '')] = no_bending_z
                 icase += 1
 
-        if self.make_released_dofs2:
+        if self.make_released_dofs2 and 0:
             if no_bending.max() == 1:
                 bar_form[2].append(['No Bending', icase, []])
                 bending_res = GuiResult(0, header='No Bending', title='No Bending',
                                         location='centroid', scalar=no_bending)
                 cases[icase] = (bending_res, (0, 'No Bending'))
-                #cases[(0, icase, 'No Bending', 1, 'centroid', '%i', '')] = no_bending
                 icase += 1
 
             if no_bending_bad.max() == 1:
                 bar_form[2].append(['No Bending (Bad)', icase, []])
-                cases[(0, icase, 'No Bending (Bad)', 1, 'centroid', '%i', '')] = no_bending_bad
+                type_res = GuiResult(0, header='No Bending (Bad)', title='No Bending (Bad)',
+                                     location='centroid', scalar=no_bending_bad)
+                cases[icase] = (type_res, (0, 'No Bending (Bad)'))
                 icase += 1
 
             if no_6_16.max() == 1:
                 bar_form[2].append(['no_6_16', icase, []])
-                cases[(0, icase, 'no_6_16', 1, 'centroid', '%i', '')] = no_6_16
+                type_res = GuiResult(0, header='no_6_16', title='no_6_16',
+                                     location='centroid', scalar=no_6_16)
+                cases[icase] = (type_res, (0, 'no_6_16'))
                 icase += 1
             if no_0_56.max() == 1:
                 bar_form[2].append(['no_0_56', icase, []])
-                cases[(0, icase, 'no_0_56', 1, 'centroid', '%i', '')] = no_0_56
+                type_res = GuiResult(0, header='no_0_56', title='no_0_56',
+                                     location='centroid', scalar=no_0_56)
+                cases[icase] = (type_res, (0, 'no_0_56'))
                 icase += 1
             if no_0_456.max() == 1:
                 bar_form[2].append(['no_0_456', icase, []])
-                cases[(0, icase, 'no_0_456', 1, 'centroid', '%i', '')] = no_0_456
+                type_res = GuiResult(0, header='no_0_456', title='no_0_456',
+                                     location='centroid', scalar=no_0_456)
+                cases[icase] = (type_res, (0, 'no_0_456'))
                 icase += 1
             if no_56_456.max() == 1:
                 bar_form[2].append(['no_56_456', icase, []])
-                cases[(0, icase, 'no_56_456', 1, 'centroid', '%i', '')] = no_56_456
+                type_res = GuiResult(0, header='no_56_456', title='no_56_456',
+                                     location='centroid', scalar=no_56_456)
+                cases[icase] = (type_res, (0, 'no_56_456'))
                 icase += 1
             if no_0_6.max() == 1:
                 bar_form[2].append(['no_0_6', icase, []])
-                cases[(0, icase, 'no_0_6', 1, 'centroid', '%i', '')] = no_0_6
+                type_res = GuiResult(0, header='no_0_6', title='no_0_6',
+                                     location='centroid', scalar=no_0_6)
+                cases[icase] = (type_res, (0, 'no_0_6'))
                 icase += 1
             if no_0_16.max() == 1:
                 bar_form[2].append(['no_0_16)', icase, []])
-                cases[(0, icase, 'no_0_16', 1, 'centroid', '%i', '')] = no_0_16
+                type_res = GuiResult(0, header='no_0_16', title='no_0_16',
+                                     location='centroid', scalar=no_0_16)
+                cases[icase] = (type_res, (0, 'no_0_16'))
                 icase += 1
 
         # print(geo_form)
@@ -2742,12 +2750,9 @@ class NastranIO(object):
             for (eid, eid2) in iteritems(self.eid_map):
                 eids[eid2] = eid
 
-            #if new_cases:
             eid_res = GuiResult(0, header='ElementID', title='ElementID',
                                 location='centroid', scalar=eids)
             cases[icase] = (eid_res, (0, 'ElementID'))
-            #else:
-                #cases[(0, icase, 'ElementID', 1, 'centroid', '%i', '')] = eids
             form0.append(('ElementID', icase, []))
             icase += 1
             self.element_ids = eids
@@ -3307,8 +3312,9 @@ class NastranIO(object):
             case_name = 'Pressure'
             # print('iload=%s' % iload)
             # print(case_name)
-            # subcase_id, resultType, vector_size, location, dataFormat
-            cases[(0, icase, case_name, 1, 'centroid', '%.1f', '')] = pressures
+            pressure_res = GuiResult(subcase_id, header='Pressure', title='Pressure',
+                                     location='centroid', scalar=pressures)
+            cases[icase] = (pressure_res, (0, 'Pressure'))
             form0.append((case_name, icase, []))
             icase += 1
         return icase
@@ -3353,18 +3359,26 @@ class NastranIO(object):
             if np.abs(centroidal_pressures).max():
                 # print('iload=%s' % iload)
                 # print(case_name)
-                # subcase_id, resultType, vector_size, location, dataFormat
-                cases[(0, icase, 'Pressure', 1, 'centroid', '%.1f', '')] = centroidal_pressures
+                pressure_res = GuiResult(subcase_id, header='Pressure', title='Pressure',
+                                         location='centroid', scalar=centroidal_pressures)
+                cases[icase] = (pressure_res, (0, 'Pressure'))
                 form0.append(('Pressure', icase, []))
                 icase += 1
 
             if np.abs(forces.max() - forces.min()) > 0.0:
+                load_x_res = GuiResult(subcase_id, header='LoadX', title='LoadX',
+                                       location='node', scalar=forces[:, 0])
+                load_y_res = GuiResult(subcase_id, header='LoadY', title='LoadY',
+                                       location='node', scalar=forces[:, 1])
+                load_z_res = GuiResult(subcase_id, header='LoadZ', title='LoadZ',
+                                       location='node', scalar=forces[:, 2])
+                cases[icase] = (load_x_res, (0, 'LoadX'))
+                cases[icase + 1] = (load_y_res, (0, 'LoadY'))
+                cases[icase + 2] = (load_z_res, (0, 'LoadZ'))
+
                 # if forces[:, 0].min() != forces[:, 0].max():
-                cases[(subcase_id, icase, 'LoadX', 1, 'node', '%.1f', '')] = forces[:, 0]
                 # if forces[:, 1].min() != forces[:, 1].max():
-                cases[(subcase_id, icase + 1, 'LoadY', 1, 'node', '%.1f', '')] = forces[:, 1]
                 # if forces[:, 2].min() != forces[:, 2].max():
-                cases[(subcase_id, icase + 2, 'LoadZ', 1, 'node', '%.1f', '')] = forces[:, 2]
 
                 form0.append(('Total Load FX', icase, []))
                 form0.append(('Total Load FY', icase + 1, []))
@@ -3372,27 +3386,38 @@ class NastranIO(object):
                 icase += 3
 
             if np.abs(spcd.max() - spcd.min()) > 0.0:
-                cases[(subcase_id, icase, 'SPCDx', 1, 'node', '%.3g')] = spcd[:, 0]
-                form0.append(('SPCDx', icase, []))
-                icase += 1
-
-                cases[(subcase_id, icase, 'SPCDy', 1, 'node', '%.3g')] = spcd[:, 1]
-                form0.append(('SPCDy', icase, []))
-                icase += 1
-
-                #cases[(subcase_id, icase, name + 'Z', 1, 'node', '%g', header)] = t3
-                cases[(subcase_id, icase, 'SPCDz', 1, 'node', '%.3g')] = spcd[:, 2]
-                form0.append(('SPCDz', icase, []))
-                icase += 1
-
                 t123 = spcd[:, :3]
                 tnorm = norm(t123, axis=1)
                 assert len(tnorm) == len(spcd[:, 2]), len(spcd[:, 2])
-                cases[(subcase_id, icase, 'SPCD XYZ', 1, 'node', '%.3g')] = tnorm
+
+                spcd_x_res = GuiResult(subcase_id, header='SPCDx', title='SPCDx',
+                                       location='node', scalar=forces[:, 0])
+                spcd_y_res = GuiResult(subcase_id, header='SPCDy', title='SPCDy',
+                                       location='node', scalar=forces[:, 1])
+                spcd_z_res = GuiResult(subcase_id, header='SPCDz', title='SPCDz',
+                                       location='node', scalar=forces[:, 2])
+                spcd_xyz_res = GuiResult(subcase_id, header='SPCD XYZ', title='SPCD XYZ',
+                                         location='node', scalar=tnorm)
+
+                cases[icase] = (spcd_x_res, (0, 'SPCDx'))
+                form0.append(('SPCDx', icase, []))
+                icase += 1
+
+                cases[icase] = (spcd_y_res, (0, 'SPCDy'))
+                form0.append(('SPCDy', icase, []))
+                icase += 1
+
+                cases[icase] = (spcd_z_res, (0, 'SPCDz'))
+                form0.append(('SPCDz', icase, []))
+                icase += 1
+
+                cases[icase] = (spcd_xyz_res, (0, 'SPCD XYZ'))
                 form0.append(('SPCD XYZ', icase, []))
                 icase += 1
         if found_temperature:
-            cases[(subcase_id, icase, temperature_key, 1, 'node', '%.3g')] = temperatures
+            temperature_res = GuiResult(subcase_id, header=temperature_key, title=temperature_key,
+                                        location='node', scalar=temperatures)
+            cases[icase] = (temperature_res, (0, temperature_key))
             form.append((temperature_key, icase, []))
             icase += 1
         return icase
@@ -4199,7 +4224,6 @@ class NastranIO(object):
                     assert len(nxyz) == nnodes, 'len(nxyz)=%s nnodes=%s' % (
                         len(nxyz), nnodes)
 
-                    #cases[(subcase_id, icase, word + 'XX', 1, 'node', '%.3f')] = oxx
                     tx_res = GuiResult(subcase_idi, header=name + 'Tx', title=name + 'Tx',
                                        location='node', scalar=loads[:, 0])
                     ty_res = GuiResult(subcase_idi, header=name + 'Ty', title=name + 'Ty',
@@ -4538,6 +4562,7 @@ class NastranIO(object):
 
             case = ese
             fmt = '%.4f'
+            # TODO: update this to use GUIResult...
             cases[(subcase_id, icase, 'StrainEnergy', 1, 'centroid', fmt, header)] = oxx
             form_dict[(key, itime)].append(('StrainEnergy', icase, []))
             icase += 1

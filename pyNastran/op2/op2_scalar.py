@@ -471,8 +471,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         gets the output closest to those times.
 
         .. code-block:: python
-          times = {subcaseID_1: [time1, time2],
-                   subcaseID_2: [time3, time4]}
+          times = {subcase_id_1: [time1, time2],
+                   subcase_id_2: [time3, time4]}
         """
         expected_times = {}
         for (isubcase, etimes) in iteritems(times):

@@ -19,7 +19,7 @@ except ImportError:
 class OP2_F06_Common(object):
     def __init__(self):
         #: a dictionary that maps an integer of the subcaseName to the
-        #: subcaseID
+        #: subcase_id
         self.iSubcaseNameMap = {}
         self.subtitles = defaultdict(list)
         self.case_control_deck = CaseControlDeck([], log=self.log)

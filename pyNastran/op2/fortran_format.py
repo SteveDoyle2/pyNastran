@@ -303,7 +303,7 @@ class FortranFormat(object):
         # get the parsing functions (table3_parser, table4_parser)
         # or find out we're going to be skipping the tables
         #
-        # table3 - the table with the meta data (e.g. subcaseID, time, is_stress/strain)
+        # table3 - the table with the meta data (e.g. subcase_id, time, is_stress/strain)
         # table4 - the actual results data
         #
         # we indicate table3/4 by isubtable, which starts from -3 (so table3) and counts

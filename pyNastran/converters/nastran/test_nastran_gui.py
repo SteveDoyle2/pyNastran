@@ -65,7 +65,7 @@ class TestNastranGUI(unittest.TestCase):
         test.load_nastran_results(op2_filename, None)
 
     def test_beam_modes_01(self):
-        dirname = bdf_filename = os.path.join(model_path, 'beam_modes')
+        dirname = os.path.join(model_path, 'beam_modes')
         bdf_filename = os.path.join(dirname, 'beam_modes.dat')
         op2_filename = os.path.join(dirname, 'beam_modes_m1.op2')
 
@@ -80,7 +80,7 @@ class TestNastranGUI(unittest.TestCase):
         test.load_nastran_results(op2_filename, dirname)
 
     def test_beam_modes_02(self):
-        dirname = bdf_filename = os.path.join(model_path, 'beam_modes')
+        dirname = os.path.join(model_path, 'beam_modes')
         bdf_filename = os.path.join(dirname, 'beam_modes.dat')
         op2_filename = os.path.join(dirname, 'beam_modes_m2.op2')
 
@@ -93,15 +93,19 @@ class TestNastranGUI(unittest.TestCase):
 
         test.load_nastran_geometry(bdf_filename, '')
 
+    def test_blade_01(self):
+        dirname = os.path.join(model_path, 'blade_2dv')
+        bdf_filename = os.path.join(dirname, 'blade_2dv.bdf')
+        #op2_filename = os.path.join(dirname, 'beam_modes_m1.op2')
+
+        test = NastranGUI()
+        test.load_nastran_geometry(bdf_filename, None)
 
 def test_bottle():
     """
     Tests Nastran GUI loading
     """
-    test = NastranIO()
-    add_dummy_gui_functions(test)
-
-    #test.load_panair_geometry('SWB.INP','')
+    test = NastranGUI()
     test.load_nastran_geometry('bottle_shell_w_holes_pmc.bdf', '')
     test.load_nastran_results('bottle_shell_w_holes_pmc.op2', '')
 
