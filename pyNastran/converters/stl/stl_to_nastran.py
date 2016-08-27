@@ -70,7 +70,7 @@ def stl_to_nastran_filename(stl_filename, bdf_filename,
         bdf.write('ENDDATA\n')
 
 
-def main():
+def main():  # pragma: no cover
     import os
 
     import pyNastran

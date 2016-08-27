@@ -57,6 +57,7 @@ def main():
     print(data)
     stl_reshape(data)
 
+
 def stl_reshape(data):
     if '--xy' not in data:
         data['--xy'] = False

@@ -97,42 +97,39 @@ def nastran_to_cart3d_filename(bdf_filename, cart3d_filename, log=None, debug=Fa
     nnodes = len(model.nodes)
     nelements = len(model.elements)
 
-    f = codec_open(cart3d_filename, 'w', encoding='utf8')
-    f.write('%s %s\n' % (nnodes, nelements))
-    node_id_shift = {}
-    i = 1
-    for node_id, node in sorted(iteritems(model.nodes)):
-        node_id_shift[node_id] = i
-        x, y, z = node.get_position()
-        f.write('%s %s %s\n' % (x, y, z))
-        i += 1
-    mids = ''
-    j = 0
-    for element_id, element in sorted(iteritems(model.elements)):
-        if element.type in ['CQUADR', 'CQUAD4', 'CONM2']:
-            print('element type=%s is not supported' % element.type)
-            continue
-        assert element.type in ['CTRIA3', 'CTRIAR'], element.type
+    with codec_open(cart3d_filename, 'w', encoding='utf8') as cart3d:
+        cart3d.write('%s %s\n' % (nnodes, nelements))
+        node_id_shift = {}
+        i = 1
+        for node_id, node in sorted(iteritems(model.nodes)):
+            node_id_shift[node_id] = i
+            x, y, z = node.get_position()
+            cart3d.write('%s %s %s\n' % (x, y, z))
+            i += 1
+        mids = ''
+        j = 0
+        for element_id, element in sorted(iteritems(model.elements)):
+            if element.type in ['CQUADR', 'CQUAD4', 'CONM2']:
+                print('element type=%s is not supported' % element.type)
+                continue
+            assert element.type in ['CTRIA3', 'CTRIAR'], element.type
 
-
-        out = element.node_ids
-        try:
-            n1, n2, n3 = out
-        except:
-            print("type =", element.type)
-            raise
-        #print(out)
-        n1 = node_id_shift[n1]
-        n2 = node_id_shift[n2]
-        n3 = node_id_shift[n3]
-        mid = element.Mid()
-        f.write('%i %i %i\n' % (n1, n2, n3))
-        mids += '%i ' % mid
-        if j != 0 and j % 20 == 0:
-            mids += '\n'
-        j += 1
-    f.write(mids + '\n')
-    f.close()
+            out = element.node_ids
+            try:
+                n1, n2, n3 = out
+            except:
+                print("type =", element.type)
+                raise
+            n1 = node_id_shift[n1]
+            n2 = node_id_shift[n2]
+            n3 = node_id_shift[n3]
+            mid = element.Mid()
+            cart3d.write('%i %i %i\n' % (n1, n2, n3))
+            mids += '%i ' % mid
+            if j != 0 and j % 20 == 0:
+                mids += '\n'
+            j += 1
+        cart3d.write(mids + '\n')
 
 if __name__ == '__main__':  # pragma: no cover
     bdf_filename = 'g278.bdf'

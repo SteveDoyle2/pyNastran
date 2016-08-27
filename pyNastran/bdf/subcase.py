@@ -103,11 +103,11 @@ class Subcase(object):
         #subtable_name = data_code['subtable_name']
         table_name = data_code['table_name']
         if PY2 and isinstance(table_name, str):
-            # tablename is a byte string
-            table_name = table_name = table_name.decode('latin1')
+            # table_name is a byte string
+            table_name = table_name.decode('latin1')
         elif PY3 and not isinstance(table_name, str):
             # table_name is a byte string
-            table_name = table_name = table_name.decode('latin1')
+            table_name = table_name.decode('latin1')
         else:
             raise NotImplementedError('table_name=%r PY2=%s PY3=%s' % (table_name, PY2, PY3))
 
@@ -136,10 +136,7 @@ class Subcase(object):
                 elif thermal == 1:
                     self.add('ANALYSIS', 'HEAT', options, 'KEY-type')
                 else:
-                    print('Error calling subcase.add_op2_data...')
-                    print(msg)
-                    print(data_code)
-                    #raise NotImplementedError(data_code)
+                    _write_op2_error_msg(log, self.log, msg, data_code)
             elif table_code == 7:
                 self.add('VECTOR', 'ALL', options, 'STRESS-type')
             elif table_code == 10:
@@ -147,52 +144,24 @@ class Subcase(object):
             elif table_code == 11:
                 self.add('ACCELERATION', 'ALL', options, 'STRESS-type')
             else:
-                if log is None:
-                    print('Error calling subcase.add_op2_data...')
-                    print(msg)
-                    print(data_code)
-                else:
-                    self.log.error(msg)
-                    self.log.error(data_code)
-                #raise NotImplementedError(data_code)
+                _write_op2_error_msg(log, self.log, msg, data_code)
         elif table_name == 'TOUGV1':
             thermal = data_code['thermal']
             if thermal == 1:
                 self.add('ANALYSIS', 'HEAT', options, 'KEY-type')
             else:
-                if log is None:
-                    print('Error calling subcase.add_op2_data...')
-                    print(msg)
-                    print(data_code)
-                else:
-                    self.log.error(msg)
-                    self.log.error(data_code)
-                #raise NotImplementedError(data_code)
+                _write_op2_error_msg(log, self.log, msg, data_code)
         elif table_name == 'ROUGV1':
             thermal = data_code['thermal']
             if thermal == 0:
                 self.add('DISPLACEMENT', 'ALL', options, 'STRESS-type')
             else:
-                if log is None:
-                    print('Error calling subcase.add_op2_data...')
-                    print(msg)
-                    print(data_code)
-                else:
-                    self.log.error(msg)
-                    self.log.error(data_code)
-                #raise NotImplementedError(data_code)
+                _write_op2_error_msg(log, self.log, msg, data_code)
         elif table_name == 'BOPHIG':
             if table_code == 7:
                 self.add('ANALYSIS', 'HEAT', options, 'KEY-type')
             else:
-                if log is None:
-                    print('Error calling subcase.add_op2_data...')
-                    print(msg)
-                    print(data_code)
-                else:
-                    self.log.error(msg)
-                    self.log.error(data_code)
-                #raise NotImplementedError(data_code)
+                _write_op2_error_msg(log, self.log, msg, data_code)
         elif table_name == 'OUPV1':
             if table_code == 1:
                 self.add('SDISPLACEMENT', 'ALL', options, 'STRESS-type')
@@ -201,14 +170,7 @@ class Subcase(object):
             elif table_code == 11:
                 self.add('SACCELERATION', 'ALL', options, 'STRESS-type')
             else:
-                if log is None:
-                    print('Error calling subcase.add_op2_data...')
-                    print(msg)
-                    print(data_code)
-                else:
-                    self.log.error(msg)
-                    self.log.error(data_code)
-                #raise NotImplementedError(data_code)
+                _write_op2_error_msg(log, self.log, msg, data_code)
 
         elif table_name in ['OQG1', 'OQG2']:
             if table_code == 3:
