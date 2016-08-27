@@ -592,6 +592,8 @@ class OUG(OP2Common):
             result_name = 'eigenvectors_RADEFFM'
         elif self.table_name == b'RADEATC':
             result_name = 'eigenvectors_RADEATC'
+        elif self.table_name == b'ROUGV1':
+            result_name = 'eigenvectors_ROUGV1'
         else:
             msg = 'eigenvectors; table_name=%s' % self.table_name
             raise NotImplementedError(msg)

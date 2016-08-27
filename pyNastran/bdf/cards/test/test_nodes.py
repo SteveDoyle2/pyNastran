@@ -127,7 +127,30 @@ class TestNodes(unittest.TestCase):
         assert s5.write_card() == msg, '\n%s---\n%s' % (s5.write_card(), msg)
 
 
+    def test_time_type_check(self):
+        """this tests what the best way to do type checking is"""
+        g = GRID(4)
+        s = SPOINT(4)
+        import time
+        import six
 
+        t0 = time.time()
+        for i in six.moves.range(5000000):
+            if g.type == 'GRID':
+                pass
+            if s.type == 'GRID':
+                pass
+        dt1 = time.time() - t0
+
+        t1 = time.time()
+        for i in six.moves.range(5000000):
+            if isinstance(g, GRID):
+                pass
+            if isinstance(s, GRID):
+                pass
+        dt2 = time.time() - t1
+        print('dt1=%.4f dt2=%.4f' % (dt1, dt2))
+        assert dt2 > dt1, 'flip the way you do type checking'
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()
