@@ -76,6 +76,7 @@ class TestMeshUtils(unittest.TestCase):
         eids_to_delete = get_bad_shells(model, xyz_cid0, nid_map, max_theta=180.,
                                         max_skew=1000., max_aspect_ratio=1000.)
         assert eids_to_delete == [100], eids_to_delete
+        os.remove(bdf_filename)
 
     def test_eq1(self):
         """
@@ -434,6 +435,40 @@ class TestMeshUtils(unittest.TestCase):
         bdf_renumber(bdf_filename, bdf_filename_out3, size=8,
                      is_double=False, starting_id_dict=None,
                      round_ids=True, cards_to_skip=None)
+        read_bdf(bdf_filename_out1, log=log)
+        read_bdf(bdf_filename_out2, log=log)
+        read_bdf(bdf_filename_out3, log=log)
+
+    def test_merge_01(self):
+        log = SimpleLogger(level='info')
+        bdf_filename1 = os.path.abspath(os.path.join(
+            pkg_path, '..', 'models', 'bwb', 'BWB_saero.bdf'))
+        bdf_filename2 = os.path.abspath(os.path.join(
+            pkg_path, '..', 'models', 'sol_101_elements', 'static_solid_shell_bar.bdf'))
+        bdf_filename3 = os.path.abspath(os.path.join(
+            pkg_path, '..', 'models', 'solid_bending', 'solid_bending.bdf'))
+        bdf_filename4 = os.path.abspath(os.path.join(
+            pkg_path, '..', 'models', 'iSat', 'ISat_Dploy_Sm.dat'))
+
+        bdf_filename_out1 = os.path.abspath(
+            os.path.join(pkg_path, '..', 'models', 'bwb', 'BWBsaero_staticbar_8.out'))
+        bdf_filename_out2 = os.path.abspath(
+            os.path.join(pkg_path, '..', 'models', 'bwb', 'BWBsaero_static_bar_16.out'))
+        bdf_filename_out3 = os.path.abspath(
+            os.path.join(pkg_path, '..', 'models', 'bwb', 'BWBsaero_staticbar_isat.out'))
+
+        bdf_filenames1 = [bdf_filename1, bdf_filename2]
+        bdf_filenames2 = [bdf_filename1, bdf_filename2, bdf_filename3, bdf_filename4]
+        bdf_merge(bdf_filenames1, bdf_filename_out=bdf_filename_out1,
+                  renumber=True, encoding=None, size=8, is_double=False,
+                  cards_to_skip=None, log=log)
+        bdf_merge(bdf_filenames1, bdf_filename_out=bdf_filename_out2,
+                  renumber=False, encoding=None, size=16, is_double=False,
+                  cards_to_skip=None, log=log)
+
+        bdf_merge(bdf_filenames2, bdf_filename_out=bdf_filename_out3,
+                  renumber=False, encoding=None, size=16, is_double=False,
+                  cards_to_skip=None, log=log)
         read_bdf(bdf_filename_out1, log=log)
         read_bdf(bdf_filename_out2, log=log)
         read_bdf(bdf_filename_out3, log=log)

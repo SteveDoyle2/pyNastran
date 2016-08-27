@@ -205,6 +205,7 @@ class TestBDF(Tester):
         diff_cards2 = list(set(diff_cards))
         diff_cards2.sort()
         assert len(diff_cards2) == 0, diff_cards2
+        #os.remove(bdf_filename + '_out')
         #self.run_bdf(folder, bdf_filename, xref=True) # PBEAML is not supported
 
     def test_bdf_06(self):

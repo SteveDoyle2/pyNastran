@@ -110,7 +110,7 @@ class Plot3d_io(object):
         #self.grid.GetCellData().SetScalars(self.gridResult)
         self.grid.Modified()
         self.grid.Update()
-        print("updated grid")
+        self.log_info("updated grid")
 
         #return
 

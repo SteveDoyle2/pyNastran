@@ -95,6 +95,19 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
         rslot_map
         return rslot_map
 
+    def get_rslot_map(self, reset_type_to_slot_map=False):
+        if (reset_type_to_slot_map or self._type_to_slot_map is None or
+            len(self._type_to_slot_map) == 0):
+            rslot_map = {}
+            for key, values in iteritems(self._slot_to_type_map):
+                for value in values:
+                    rslot_map[value] = key
+            self._type_to_slot_map = rslot_map
+        else:
+            rslot_map = self._type_to_slot_map
+        assert 'GRID' in rslot_map
+        return rslot_map
+
     def get_cards_by_card_types(self, card_types, reset_type_to_slot_map=False,
                                 stop_on_missing_card=False):
         """
@@ -120,14 +133,7 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
         #    'CQUAD4' : [1, 2, 3]
         #}
         #self._slot_to_type_map = {'elements' : [CQUAD4, CTRIA3]}
-        if reset_type_to_slot_map or self._type_to_slot_map is None:
-            rslot_map = {}
-            for key, values in iteritems(self._slot_to_type_map):
-                for value in values:
-                    rslot_map[value] = key
-            self._type_to_slot_map = rslot_map
-        else:
-            rslot_map = self._type_to_slot_map
+        rslot_map = self.get_rslot_map(reset_type_to_slot_map=False)
 
         out = {}
         for card_type in card_types:

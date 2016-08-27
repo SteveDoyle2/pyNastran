@@ -123,7 +123,7 @@ class SurfIO(object):
         self.grid.Modified()
         if hasattr(self.grid, 'Update'):
             self.grid.Update()
-        #print("updated grid")
+        #self.log_info("updated grid")
 
         # loadCart3dResults - regions/loads
         self. turn_text_on()

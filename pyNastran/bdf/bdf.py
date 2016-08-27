@@ -1429,6 +1429,67 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         else:  # very common
             self.solMethod = None
 
+    def update_card(self, card_name, icard, ifield, value):
+        """
+        Updates a Nastran card based on standard Nastran optimization names
+
+        Parameters
+        ----------
+        card_name : str
+            the name of the card
+            (e.g. GRID)
+        icard : int
+            the unique 1-based index identifier for the card
+
+            (e.g. the GRID id)
+        ifield : int
+            the index on the card
+            (e.g. X on GRID card as an integer representing the field number)
+        value : varies
+            the value to assign
+
+        Returns
+        -------
+        obj : varies
+            the corresponding object
+            (e.g. the GRID object)
+
+        # On GRID 100, set Cp (2) to 42
+        >>> model.update_card('GRID', 100, 2, 42)
+
+        # On GRID 100, set X (3) to 43.
+        >>> model.update_card('GRID', 100, 3, 43.)
+        """
+        #rslot_map = self.get_rslot_map(reset_type_to_slot_map=False)
+
+        for key in self.card_count:
+            assert isinstance(key, string_types), 'key=%r' % key
+            if key not in self._type_to_slot_map:
+                msg = 'add %r to self._type_to_slot_map\n%s' % (key, str(self._type_to_slot_map))
+                raise RuntimeError(msg)
+        #_slot_to_type_map['nodes'] : ['GRID']
+        #_type_to_slot_map['GRID'] : ['nodes']
+
+        # get the storage object
+        try:
+            field_str = self._type_to_slot_map[card_name] # 'nodes'
+        except KeyError:
+            msg = 'Updating card card_name=%r is not supported\nkeys=%s' % (
+                card_name, list(self._type_to_slot_map.keys()))
+            raise KeyError(msg)
+
+        objs = getattr(self, field_str) # self.nodes
+        # get the specific card
+        try:
+            obj = objs[icard]
+        except KeyError:
+            msg = 'Could not find %s ID=%r' % (card_name, icard)
+            raise KeyError(msg)
+
+        # update the card
+        obj.update_field(ifield, value)
+        return obj
+
     def set_dynamic_syntax(self, dict_of_vars):
         """
         Uses the OpenMDAO syntax of %varName in an embedded BDF to

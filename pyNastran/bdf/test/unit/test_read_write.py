@@ -281,6 +281,7 @@ class TestReadWrite(unittest.TestCase):
 
         os.remove('include4.out.bdf')
         os.remove('include4b.inc')
+        os.remove('include4.bdf')
         #os.remove('include4.inc')
         # os.remove('c.bdf')
         # os.remove('executive_control.inc')

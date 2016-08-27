@@ -123,10 +123,10 @@ class UGRID_IO(object):
         self.nElements = nelements
         self.grid.SetPoints(points)
         self.grid.Modified()
-        print('update...')
+        self.log_info('update...')
         if hasattr(self.grid, 'Update'):
             self.grid.Update()
-        #print("updated grid")
+        #self.log_info("updated grid")
 
         # loadCart3dResults - regions/loads
         self. turn_text_on()

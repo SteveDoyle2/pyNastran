@@ -1,4 +1,4 @@
-from __future__ import print_function
+from __future__ import print_function, unicode_literals
 from collections import defaultdict
 from numpy import array
 
@@ -488,7 +488,6 @@ class BDFAttributes(object):
 
         # ---------------------------------------------------------------------
         self._type_to_id_map = defaultdict(list)
-        self._type_to_slot_map = None
         self._slot_to_type_map = {
             'params' : ['PARAM'],
             'nodes' : ['GRID', 'SPOINT', 'EPOINT'], # 'RINGAX',
@@ -703,6 +702,7 @@ class BDFAttributes(object):
             #'INCLUDE',  # '='
             #'ENDDATA',
         }
+        self._type_to_slot_map = self.get_rslot_map()
 
     @property
     def nastran_format(self):

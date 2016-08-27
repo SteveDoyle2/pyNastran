@@ -214,115 +214,62 @@ class Subcase(object):
             if table_code == 3:
                 self.add('SPCFORCES', 'ALL', options, 'STRESS-type')
             else:
-                if log is None:
-                    print('Error calling subcase.add_op2_data...')
-                    print(msg)
-                    print(data_code)
-                else:
-                    self.log.error(msg)
-                    self.log.error(data_code)
-                #raise NotImplementedError(data_code)
+                _write_op2_error_msg(log, self.log, msg, data_code)
         elif table_name in ['OEF1X', 'OEF1']:
             if table_code in [4]:
                 self.add('FORCE', 'ALL', options, 'STRESS-type')
             else:
-                if log is None:
-                    print('Error calling subcase.add_op2_data...')
-                    print(msg)
-                    print(data_code)
-                else:
-                    self.log.error(msg)
-                    self.log.error(data_code)
-                #raise NotImplementedError(data_code)
+                _write_op2_error_msg(log, self.log, msg, data_code)
         elif table_name in ['OEFIT']:
             if table_code in [25]:
                 self.add('FORCE', 'ALL', options, 'STRESS-type')
             else:
-                if log is None:
-                    print('Error calling subcase.add_op2_data...')
-                    print(msg)
-                    print(data_code)
-                else:
-                    self.log.error(msg)
-                    self.log.error(data_code)
-                #raise NotImplementedError(data_code)
+                _write_op2_error_msg(log, self.log, msg, data_code)
         elif table_name == 'OQMG1':
             if table_code in [3, 39]:
                 self.add('MPCFORCES', 'ALL', options, 'STRESS-type')
             else:
-                if log is None:
-                    print('Error calling subcase.add_op2_data...')
-                    print(msg)
-                    print(data_code)
-                else:
-                    self.log.error(msg)
-                    self.log.error(data_code)
-                #raise NotImplementedError(data_code)
+                _write_op2_error_msg(log, self.log, msg, data_code)
         elif table_name in ['OGPFB1']:
             if table_code == 19:
                 self.add('GPFORCE', 'ALL', options, 'STRESS-type')
             else:
-                if log is None:
-                    print('Error calling subcase.add_op2_data...')
-                    print(msg)
-                    print(data_code)
-                else:
-                    self.log.error(msg)
-                    self.log.error(data_code)
-                #raise NotImplementedError(data_code)
+                _write_op2_error_msg(log, self.log, msg, data_code)
         elif table_name in ['OES1', 'OES1X', 'OES1X1', 'OES1C', 'OESCP',
                             'OESNLXD', 'OESNLXR', 'OESNLBR', 'OESTRCP']:
             #assert data_code['is_stress_flag'] == True, data_code
             if table_code == 5:
                 self.add('STRESS', 'ALL', options, 'STRESS-type')
             else:
-                if log is None:
-                    print('Error calling subcase.add_op2_data...')
-                    print(msg)
-                    print(data_code)
-                else:
-                    self.log.error(msg)
-                    self.log.error(data_code)
-                #raise NotImplementedError(data_code)
+                _write_op2_error_msg(log, self.log, msg, data_code)
         elif table_name in ['OESRT']:
             #assert data_code['is_stress_flag'] == True, data_code
             if table_code == 25:
                 self.add('STRESS', 'ALL', options, 'STRESS-type')
             else:
-                if log is None:
-                    print('Error calling subcase.add_op2_data...')
-                    print(msg)
-                    print(data_code)
-                else:
-                    self.log.error(msg)
-                    self.log.error(data_code)
-                #raise NotImplementedError(data_code)
+                _write_op2_error_msg(log, self.log, msg, data_code)
         elif table_name in ['OSTR1X', 'OSTR1C']:
             assert data_code['is_strain_flag'] == True, data_code
             if table_code == 5:
                 self.add('STRAIN', 'ALL', options, 'STRESS-type')
             else:
-                if log is None:
-                    print('Error calling subcase.add_op2_data...')
-                    print(msg)
-                    print(data_code)
-                else:
-                    self.log.error(msg)
-                    self.log.error(data_code)
-                #raise NotImplementedError(data_code)
+                _write_op2_error_msg(log, self.log, msg, data_code)
         elif table_name in ['RADCONS', 'RADEFFM', 'RADEATC', 'RAPEATC', 'RAQEATC', 'RADCONS',
                             'RASEATC', 'RAFEATC', 'RAEEATC', 'RANEATC', 'RAGEATC',]:
             pass
         else:
-            if log is None:
-                print('Error calling subcase.add_op2_data...')
-                print(msg)
-                print(data_code)
-            else:
-                self.log.error(msg)
-                self.log.error(data_code)
-            #raise NotImplementedError(data_code)
+            _write_op2_error_msg(log, self.log, msg, data_code)
         #print(self)
+
+    def _write_op2_error_msg(log, log_error, msg, data_code):
+        if log is None:
+            print('Error calling subcase.add_op2_data...')
+            print(msg)
+            print(data_code)
+        else:
+            log_error.error(msg)
+            log_error.error(data_code)
+        #raise NotImplementedError(data_code)
 
     def get_format_code(self, options, value):
         """

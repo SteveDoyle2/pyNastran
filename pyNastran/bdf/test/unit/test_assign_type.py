@@ -15,7 +15,7 @@ class ExtendedTestCase(unittest.TestCase):
         except Exception as inst:
             self.assertEqual(inst.message, msg)
 
-class Test(ExtendedTestCase):
+class TestAssignType(ExtendedTestCase):
 
     def run_function_default(self, f, card, exact, default):
         fieldname = 'f'

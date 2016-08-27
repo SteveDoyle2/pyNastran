@@ -93,7 +93,7 @@ class STL_IO(object):
         self.grid.Modified()
         if hasattr(self.grid, 'Update'):
             self.grid.Update()
-            print("updated grid")
+            self.log_info("updated grid")
 
         # loadSTLResults - regions/loads
         self. turn_text_on()

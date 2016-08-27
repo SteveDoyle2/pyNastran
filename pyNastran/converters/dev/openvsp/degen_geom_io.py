@@ -89,7 +89,7 @@ class DegenGeomIO(object):
         self.grid.Modified()
         if hasattr(self.grid, 'Update'):
             self.grid.Update()
-        print("updated grid")
+        self.log_info("updated grid")
 
         # load results - regions/loads
         self. turn_text_on()

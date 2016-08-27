@@ -7,7 +7,7 @@ from pyNastran.bdf.bdf import BDF
 
 
 def bdf_merge(bdf_filenames, bdf_filename_out=None, renumber=True, encoding=None,
-              size=8, is_double=False, cards_to_skip=None):
+              size=8, is_double=False, cards_to_skip=None, log=None):
     """
     Merges multiple BDF into one file
 
@@ -19,10 +19,16 @@ def bdf_merge(bdf_filenames, bdf_filename_out=None, renumber=True, encoding=None
         the output bdf filename (default=None; None -> no writing)
     renumber : bool
         should the bdf be renumbered (default=True)
+    encoding : str
+        the unicode encoding (default=None; system default)
     size : int; {8, 16}; default=8
         the bdf write precision
     is_double : bool; default=False
         the field precision to write
+    cards_to_skip : List[str]; (default=None -> don't skip any cards)
+        There are edge cases (e.g. FLUTTER analysis) where things can break due to
+        uncross-referenced cards.  You need to disable entire classes of cards in
+        that case (e.g. all aero cards).
 
     Supports
     --------
@@ -59,7 +65,7 @@ def bdf_merge(bdf_filenames, bdf_filename_out=None, renumber=True, encoding=None
         #]),
         #'mid' : max(model.material_ids),
     #}
-    model = BDF(debug=False)
+    model = BDF(debug=False, log=log)
     model.disable_cards(cards_to_skip)
     bdf_filename0 = bdf_filenames[0]
     model.read_bdf(bdf_filename0, encoding=encoding)

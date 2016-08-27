@@ -46,13 +46,17 @@ Solver
         solve, calculate responses
    - added D matricies for PSHELL, PCOMP, PSOLID
 
------------------------v0.8.1 released 2016/?/??-----------------------
+-----------------------v0.8.1 released 2016/9/??-----------------------
 This is a bug fix release.
 
 Done
 ----
 
 BDF:
+ - fixed update_card method:
+    # update cards similar to Nastran's optimization
+    # on grid 1234, update cp (field 2) to a value of 7)
+    - model.update_card('GRID', 1234, 2, 7)
  - fixed bdf_renumber case control update bug
  - Aero:
    - added handling of non-uniform lsrb/lrib on CAERO2
@@ -69,14 +73,15 @@ OP2:
 TODO:
 -----
 BDF:
- - write_path function works (Linux)
- - Python 3 bdf_renumber bug fix
- - fix speed of CORD1R, CORD1C, CORD1S
+ - write_path function works (Linux; low priority; 1/10)
+ - fix speed of CORD1R, CORD1C, CORD1S (low priority; 6/10)
 
 GUI:
- - fix bar Cd frame for CORD2C
- - 
  - fix command index (gives a duplicated string, not the Sidebar index)
+   high priority; 1/10)
+ - fix issue with picking/focusing on a CAERO/CONM2 grid, which doesn't have a result
+   it causes a segfault (high priority; 4/10)
+ - fix bar Cd frame for cylindrical/spherical coords (low priority; 4/10)
 
 -----------------------v0.8.0 released 2016/8/21-----------------------
 Major changes:

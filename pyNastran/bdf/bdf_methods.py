@@ -35,7 +35,7 @@ from pyNastran.bdf.bdf_interface.attributes import BDFAttributes
 from pyNastran.bdf.field_writer_8 import print_card_8
 
 
-def _mass_properties_mass_mp_func(element):
+def _mass_properties_mass_mp_func(element):  # pragma: no cover
     """helper method for mass properties multiprocessing"""
     try:
         cg = element.Centroid()
@@ -211,7 +211,7 @@ class BDFMethods(BDFAttributes):
         mass, cg, I = self._apply_mass_symmetry(sym_axis, scale, mass, cg, I)
         return (mass, cg, I)
 
-    def _mass_properties_sp(self, elements, masses, reference_point):
+    def _mass_properties_sp(self, elements, masses, reference_point):  # pragma: no cover
         """
         Caclulates mass properties in the global system about the
         reference point.
@@ -299,7 +299,7 @@ class BDFMethods(BDFAttributes):
         return (mass, cg, I)
 
     def _mass_properties_new(self, elements, masses, reference_point=None,
-                             sym_axis=None, scale=None, xyz_cid0=None):
+                             sym_axis=None, scale=None, xyz_cid0=None):  # pragma: no cover
         """
         half implemented, not tested, should be faster someday...
         don't use this
@@ -488,18 +488,27 @@ class BDFMethods(BDFAttributes):
         if isinstance(sym_axis, string_types):
             sym_axis = [sym_axis]
         elif isinstance(sym_axis, (list, tuple)):
+            # basically overwrite the existing values on the AERO/AEROS card
             pass
         else:
             sym_axis = []
+
+            # The symmetry flags on the AERO/AEROS must be the same, so
+            # it doesn't matter which we one pick.  However, they might
+            # not both be defined.
             if self.aero is not None:
                 if self.aero.is_symmetric_xy():
                     sym_axis.append('xy')
                 if self.aero.is_symmetric_xz():
                     sym_axis.append('xz')
                 if self.aero.is_anti_symmetric_xy():
-                    raise NotImplementedError('%s is anti-symmetric about the XY plane' % str(aero))
+                    sym_axis.append('xy')
+                    #raise NotImplementedError('%s load is anti-symmetric about the XY plane'
+                                              #% str(aero))
                 if self.aero.is_anti_symmetric_xz():
-                    raise NotImplementedError('%s is anti-symmetric about the XZ plane' % str(aero))
+                    #raise NotImplementedError('%s load is anti-symmetric about the XZ plane'
+                                              #% str(aero))
+                    sym_axis.append('xz')
 
             if self.aeros is not None:
                 if self.aeros.is_symmetric_xy():
@@ -507,9 +516,13 @@ class BDFMethods(BDFAttributes):
                 if self.aeros.is_symmetric_xz():
                     sym_axis.append('xz')
                 if self.aeros.is_anti_symmetric_xy():
-                    raise NotImplementedError('%s is anti-symmetric about the XY plane' % str(aeros))
+                    sym_axis.append('xy')
+                    #raise NotImplementedError('%s load is anti-symmetric about the XY plane'
+                                              #% str(aeros))
                 if self.aeros.is_anti_symmetric_xz():
-                    raise NotImplementedError('%s is anti-symmetric about the XZ plane' % str(aeros))
+                    sym_axis.append('xz')
+                    #raise NotImplementedError('%s load is anti-symmetric about the XZ plane' %
+                                              #str(aeros))
 
         sym_axis = list(set(sym_axis))
         short_sym_axis = [sym_axisi.lower() for sym_axisi in sym_axis]
@@ -571,9 +584,9 @@ class BDFMethods(BDFAttributes):
 
 
     def _mass_properties_mp(self, num_cpus, elements, masses, nelements,
-                            reference_point=None):
+                            reference_point=None):  # pragma: no cover
         """
-        Caclulates mass properties in the global system about the
+        Calculates mass properties in the global system about the
         reference point.
 
         Parameters
@@ -691,24 +704,24 @@ class BDFMethods(BDFAttributes):
             p = node.get_position_wrt(self, cid)
             node.set_position(self, p, cid)
 
-    def unresolve_grids(self, model_old):
-        """
-        Puts all nodes back to original coordinate system.
+    #def unresolve_grids(self, model_old):
+        #"""
+        #Puts all nodes back to original coordinate system.
 
-        Parameters
-        ----------
-        model_old : BDF()
-            the old model that hasnt lost it's connection to the node cids
+        #Parameters
+        #----------
+        #model_old : BDF()
+            #the old model that hasnt lost it's connection to the node cids
 
-        .. warning:: hasnt been tested well...
-        """
-        for (nid, node_old) in iteritems(model_old.nodes):
-            coord = node_old.cp_ref
-            raise RuntimeError('what is self.xyz?')
-            p = coord.transform_node_to_global(self.xyz)
-            beta = coord.beta()
-            p2 = coord.transform_node_to_local(p, beta)
-            self.nodes[nid].set_position(self, p2, coord.cid)
+        #.. warning:: hasnt been tested well...
+        #"""
+        #for (nid, node_old) in iteritems(model_old.nodes):
+            #coord = node_old.cp_ref
+            #raise RuntimeError('what is self.xyz?')
+            #p = coord.transform_node_to_global(self.xyz)
+            #beta = coord.beta()
+            #p2 = coord.transform_node_to_local(p, beta)
+            #self.nodes[nid].set_position(self, p2, coord.cid)
 
     #def __gravity_load(self, loadcase_id):
         #"""
@@ -1909,6 +1922,7 @@ class BDFMethods(BDFAttributes):
             bdf_file.write('ENDDATA\n')
 
     def remove_unassociated_properties(model, reset_type_to_slot_map=True):
+        """remove_unassociated_properties"""
         pids_used = set()
         #elem_types = ['']
         card_types = list(model.card_count.keys())
