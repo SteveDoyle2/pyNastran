@@ -97,6 +97,8 @@ def load_deflection_csv(out_filename, encoding='latin1'):
 
     with codec_open(_filename(out_filename), 'r', encoding=encoding) as file_obj:
         names, fmt_dict, dtype, delimiter = _load_format_header(file_obj, ext, force_float=False)
+        nnames = len(names)
+
         try:
             #A = np.loadtxt(file_obj, dtype=dtype, delimiter=delimiter)
             A = loadtxt_nice(file_obj, delimiter=delimiter)
@@ -106,8 +108,13 @@ def load_deflection_csv(out_filename, encoding='latin1'):
                 ext, len(names), delimiter, dtype)
             raise RuntimeError(msg)
 
-        nrows, ncols = A.shape
-        nnames = len(names)
+        try:
+            nrows, ncols = A.shape
+        except ValueError:
+            msg = 'A should be (nnodes, 3); A.shape=%s nnames*3=%s names=%s' % (
+                str(A.shape), nnames*3, names)
+            raise ValueError(msg)
+
         if ncols != (nnames * 3):
             msg = 'A.shape=%s ncols=%s nnames*3=%s names=%s' % (
                 str(A.shape), ncols, nnames*3, names)
