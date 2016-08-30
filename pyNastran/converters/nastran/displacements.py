@@ -39,15 +39,33 @@ class NastranComplexDisplacementResults(object):
                         np.imag(eigvs[:, :3]) * np.sin(theta))
 
 
-class NastranDisplacementResults(object):
+class DisplacementResults(object):
     def __init__(self, subcase_id, titles, headers, xyz, dxyz, scalar,
-                 scales, nlabels=None, labelsize=None, ncolors=None, colormap='jet',
-                 deflects=True, uname='NastranGeometry'):
+                 scales, data_formats=None,
+                 nlabels=None, labelsize=None, ncolors=None, colormap='jet',
+                 deflects=True, set_max_min=False, uname='NastranGeometry'):
+        """
+        subcase_id : int
+            the flag that points to self.subcases for a message
+        headers : List[str]
+            the sidebar word
+        titles : List[str]
+            the legend title
+        scalars : (nnodes,n) float ndarray
+            #the data to make a contour plot with
+            does nothing
+        data_formats : List[str]
+            the type of data result (e.g. '%i', '%.2f', '%.3f')
+        uname : str
+            some unique name for ...
+        """
         self.subcase_id = subcase_id
-        assert self.subcase_id > 0, self.subcase_id
+        #assert self.subcase_id > 0, self.subcase_id
 
         self.xyz = xyz
         self.dxyz = dxyz
+        self.dim = len(self.dxyz.shape)
+
         self.uname = uname
         #self.dxyz_norm = norm(dxyz, axis=1)
 
@@ -57,36 +75,50 @@ class NastranDisplacementResults(object):
         self.scales = scales
         self.subcase_id = subcase_id
         self.data_type = self.dxyz.dtype.str # '<c8', '<f4'
-        self.is_real = True if self.data_type == '<f4' else False
+        self.is_real = True if self.data_type in ['<f4', '<f8'] else False
+        #print('self.data_type = %r' % self.data_type)
         self.is_complex = not self.is_real
         self.nlabels = nlabels
         self.labelsize = labelsize
         self.ncolors = ncolors
         self.colormap = colormap
 
-        self.data_formats = None
-        self.titles_default = None
-        self.headers_default = None
-        self.scales_default = None
-        self.data_formats_default = None
+        self.data_formats = data_formats
+        self.titles_default = deepcopy(self.titles)
+        self.headers_default = deepcopy(self.headers)
+        self.scales_default = deepcopy(self.scales)
+        self.data_formats_default = deepcopy(self.data_formats)
+        if self.dim == 2:
+            ntimes = 1
+            self.default_mins = zeros(1, dtype=self.dxyz.dtype)
+            self.default_maxs = zeros(1, dtype=self.dxyz.dtype)
+            normi = norm(self.dxyz, axis=1)
+            self.default_mins[0] = normi.min()
+            self.default_maxs[0] = normi.max()
+        elif self.dim == 3:
+            ntimes = self.dxyz.shape[0]
+            self.default_mins = zeros(ntimes, dtype=self.dxyz.dtype)
+            self.default_maxs = zeros(ntimes, dtype=self.dxyz.dtype)
+            for itime in range(ntimes):
+                normi = norm(self.dxyz[itime, :, :], axis=1)
+                self.default_mins[itime] = normi.min()
+                self.default_maxs[itime] = normi.max()
+        else:
+            raise NotImplementedError('dim=%s' % self.dim)
 
-        ntimes = self.dxyz.shape[0]
-        self.default_mins = zeros(ntimes, dtype=self.dxyz.dtype)
-        self.default_maxs = zeros(ntimes, dtype=self.dxyz.dtype)
-        for itime in range(ntimes):
-            normi = norm(self.dxyz[itime, :, :], axis=1)
-            self.default_mins[itime] = normi.min()
-            self.default_maxs[itime] = normi.max()
-
-        self.max_values = None
-        self.min_values = None
+        if set_max_min:
+            self.min_values = deepcopy(self.default_mins)
+            self.max_values = deepcopy(self.default_maxs)
+        else:
+            self.max_values = None
+            self.min_values = None
 
     def save_defaults(self):
         self.data_formats = ['%g'] * len(self.titles)
         self.titles_default = deepcopy(self.titles)
         self.headers_default = deepcopy(self.headers)
-        self.data_formats_default = deepcopy(self.data_formats)
         self.scales_default = deepcopy(self.scales)
+        self.data_formats_default = deepcopy(self.data_formats)
 
         size = self.default_maxs.size
         assert size == len(self.titles), 'len(maxs)=%s len(titles)=%s' % (
@@ -187,7 +219,12 @@ class NastranDisplacementResults(object):
 
     def get_plot_value(self, i, name):
         if self.is_real:
-            return self.dxyz[i, :]
+            if self.dim == 2:
+                dxyz = self.dxyz
+            elif self.dim == 3:
+                dxyz = self.dxyz[i, :]
+            else:
+                raise NotImplementedError('dim=%s' % self.dim)
         #if method == 'real':
             #return self.dxyz[i, :].real
         #elif method == 'imag':
@@ -198,13 +235,22 @@ class NastranDisplacementResults(object):
             #return angle(self.dxyz[i, :], deg=True)
         #else:
             #raise RuntimeError(method)
+        assert len(dxyz.shape) == 2, dxyz.shape
+        return dxyz
 
     def get_result(self, i, name):
         if self.is_real:
-            # .0006 -> 0.0
-            # .057 -> 0.0123
-            # min
-            return self.dxyz[i, :]
+            if self.dim == 2:
+                # single result
+                dxyz = self.dxyz
+            elif self.dim == 3:
+                # multiple results
+                # .0006 -> 0.0
+                # .057 -> 0.0123
+                # min
+                dxyz = self.dxyz[i, :]
+            else:
+                raise NotImplementedError('dim=%s' % self.dim)
         else:
             raise NotImplementedError(self.is_real)
             #if method == 'real':
@@ -217,6 +263,8 @@ class NastranDisplacementResults(object):
                 #return angle(self.dxyz[i, :], deg=True)
             #else:
                 #raise RuntimeError(method)
+        assert len(dxyz.shape) == 2, dxyz.shape
+        return dxyz
 
     #@property
     #def scalar(self):
@@ -227,12 +275,20 @@ class NastranDisplacementResults(object):
         #return self.dxyz_norm
 
     def get_vector_result(self, i, name):
+        assert len(self.xyz.shape) == 2, self.xyz.shape
         if self.is_real:
-            xyz = self.xyz + self.scales[i] * self.dxyz[i, :]
+            if self.dim == 2:
+                # single result
+                xyz = self.xyz + self.scales[i] * self.dxyz
+            elif self.dim == 3:
+                xyz = self.xyz + self.scales[i] * self.dxyz[i, :]
+            else:
+                raise NotImplementedError('dim=%s' % self.dim)
         else:
             # z = x + i*y
             #
             phase = self.phase
+        assert len(xyz.shape) == 2, xyz.shape
         return self.xyz, xyz
 
     def set_phase(self, i, name, phase):
@@ -240,6 +296,6 @@ class NastranDisplacementResults(object):
         self.phase[i] = phase
 
     def __repr__(self):
-        msg = 'NastranDisplacementResults\n'
+        msg = 'DisplacementResults\n'
         msg += '    uname=%r\n' % self.uname
         return msg

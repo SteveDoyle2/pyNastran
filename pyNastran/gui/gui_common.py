@@ -47,7 +47,10 @@ from pyNastran.gui.menus.modify_picker_properties import ModifyPickerPropertiesM
 
 from pyNastran.gui.testing_methods import CoordProperties
 #from pyNastran.gui.menus.multidialog import MultiFileDialog
-from pyNastran.gui.utils import load_csv, load_user_geom
+from pyNastran.gui.utils import load_csv, load_deflection_csv, load_user_geom
+
+from pyNastran.converters.nastran.displacements import DisplacementResults
+from pyNastran.gui.gui_objects.gui_result import GuiResult
 
 
 class Interactor(vtk.vtkGenericRenderWindowInteractor):
@@ -318,6 +321,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
                 ('load_csv_nodal', 'Load CSV Nodal Results', '', None, 'Loads a custom nodal results file', self.on_load_nodal_results),
                 ('load_csv_elemental', 'Load CSV Elemental Results', '', None, 'Loads a custom elemental results file', self.on_load_elemental_results),
+                ('load_csv_nodal_deflection', 'Load CSV (Nodal) Deflection Results', '', None, 'Loads a custom deflection results file', self.on_load_deflection_results),
                 ('script', 'Run Python script', 'python48.png', None, 'Runs pyNastranGUI in batch mode', self.on_run_script),
             ]
 
@@ -461,7 +465,8 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             menu_window += ['python_dock_widget']
 
         menu_file = [
-            'load_geometry', 'load_results', 'load_csv_nodal', 'load_csv_elemental',
+            'load_geometry', 'load_results', '',
+            'load_csv_nodal', 'load_csv_elemental', 'load_csv_nodal_deflection', '',
             'load_csv_user_points', 'load_csv_user_geom', 'script', '', 'exit']
         toolbar_tools = ['reload', 'load_geometry', 'load_results',
                          'x', 'y', 'z', 'X', 'Y', 'Z',
@@ -1665,6 +1670,35 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                     #menu_items = self._create_menu_items()
                     #self._populate_menu(menu_items)
 
+    def on_load_deflection_results(self, out_filename=None):
+        geometry_format = self.format
+        if self.format is None:
+            msg = 'on_load_results failed:  You need to load a file first...'
+            self.log_error(msg)
+            raise RuntimeError(msg)
+
+        if out_filename in [None, False]:
+            title = 'Select a (Nodal) Deflection Results File for %s' % (self.format)
+            wildcard = 'Delimited Text (*.txt; *.dat; *.csv)'
+            out_filename = self._create_load_file_dialog(wildcard, title)[1]
+
+        if out_filename == '':
+            return
+        if not os.path.exists(out_filename):
+            msg = 'result file=%r does not exist' % out_filename
+            self.log_error(msg)
+            return
+
+        try:
+            self._load_deflection(out_filename)
+        except Exception as e:
+            msg = traceback.format_exc()
+            self.log_error(msg)
+            #return
+            raise
+
+        self.log_command("on_load_deflection_results(%r)" % out_filename)
+
     def _on_load_nodal_elemental_results(self, result_type, out_filename=None):
         """
         Loads a CSV/TXT results file.  Must have called on_load_geometry first.
@@ -1712,13 +1746,33 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             #self.out_filename = out_filename
 
         if result_type == 'Nodal':
-            self.log_command("_on_load_nodal_elemental_results(%r)" % out_filename)
+            self.log_command("on_load_nodal_results(%r)" % out_filename)
         elif result_type == 'Elemental':
             self.log_command("on_load_elemental_results(%r)" % out_filename)
         else:
             raise NotImplementedError(result_type)
 
+    def _load_deflection(self, out_filename):
+        out_filename_short = os.path.basename(out_filename)
+        A, fmt_dict, headers = load_deflection_csv(out_filename)
+        #nrows, ncols, fmts
+        header0 = headers[0]
+        print('headers=%s' % headers)
+        print('A.keys()=%s' % A.keys())
+        result0 = A[header0]
+        nrows = result0.shape[0]
+
+        assert nrows == self.nNodes, 'nrows=%s nnodes=%s' % (nrows, self.nNodes)
+        result_type2 = 'node'
+        self._add_cases_to_form(A, fmt_dict, headers, result_type2,
+                                out_filename_short, update=True)
+
     def _load_csv(self, result_type, out_filename):
+        """
+        common method between:
+          - on_add_nodal_results(filename)
+          - on_add_elemental_results(filename)
+        """
         out_filename_short = os.path.basename(out_filename)
         A, fmt_dict, headers = load_csv(out_filename)
         #nrows, ncols, fmts
@@ -1734,7 +1788,16 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             result_type2 = 'centroid'
         else:
             raise NotImplementedError('result_type=%r' % result_type)
+        self._add_cases_to_form(A, fmt_dict, headers, result_type2,
+                                out_filename_short, update=True)
 
+    def _add_cases_to_form(self, A, fmt_dict, headers, result_type,
+                           out_filename_short, update=True):
+        """
+        common method between:
+          - _load_csv
+          - _load_deflection_csv
+        """
         #print('A =', A)
         formi = []
         form = self.get_form()
@@ -1748,9 +1811,50 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         for header in headers:
             datai = A[header]
             fmti = fmt_dict[header]
-            key = (islot, icase, header, 1, result_type2, fmti, '')
-            self.case_keys.append(key)
-            self.result_cases[key] = datai
+            title = header
+            location = result_type
+
+            dimension = len(datai.shape)
+            if dimension == 1:
+                vector_size = 1
+            elif dimension == 2:
+                vector_size = datai.shape[1]
+            else:
+                raise RuntimeError('dimension=%s' % (dimension))
+
+            if vector_size == 1:
+                res_obj = GuiResult(
+                    islot, header, title, location, datai,
+                    nlabels=None, labelsize=None, ncolors=None,
+                    colormap='jet', data_format=fmti,
+                )
+            elif vector_size == 3:
+                # title is 3 values
+                # header is 3 values
+                # scale is 3 values
+                titles = [header]
+                headers = header
+
+                norm_max = np.linalg.norm(datai, axis=1).max()
+                scales = [self.dim_max / norm_max * 0.25]
+                data_formats = [fmti] * 3
+                scalar = None
+                dxyz = datai
+                xyz = self.xyz_cid0
+                res_obj = DisplacementResults(
+                    islot, titles, headers,
+                    xyz, dxyz, scalar, scales, data_formats=data_formats,
+                    nlabels=None, labelsize=None, ncolors=None,
+                    colormap='jet',
+                    set_max_min=True, deflects=True)
+            else:
+                raise RuntimeError('vector_size=%s' % (vector_size))
+
+            #cases[icase] = (stress_res, (subcase_id, 'Stress - isElementOn'))
+            #form_dict[(key, itime)].append(('Stress - IsElementOn', icase, []))
+            #key = (res_obj, (0, title))
+            self.case_keys.append(icase)
+            self.result_cases[icase] = (res_obj, (islot, title))
             formi.append((header, icase, []))
 
             self.label_actors[header] = []
@@ -2970,7 +3074,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                 point = points.GetPoint(ipoint)
                 node_xyz[ipoint, :] = point
             xyz = node_xyz.mean(axis=0)
-        elif cell_type in [10, 12, 13]: # CTETRA4, CHEXA8, CPENTA6
+        elif cell_type in [10, 12, 13, 14]: # CTETRA4, CHEXA8, CPENTA6, CPYRAM5
             # TODO: No idea how to get the center of the face
             #       vs. a point on a face that's not exposed
             #faces = cell.GetFaces()
@@ -2980,15 +3084,38 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                 #points = face.GetPoints()
             #faces
             xyz = world_position
-        elif cell_type in [24]: # CTETRA10
+        elif cell_type in [24, 25, 26, 27]: # CTETRA10, CHEXA20, CPENTA15, CPYRAM13
             xyz = world_position
-        elif cell_type in [3]: # CBAR
-            xyz = world_position
+        elif cell_type in [3]: # CBAR, CBEAM, CELASx, CDAMPx, CBUSHx
+            node_xyz = np.zeros((nnodes, 3), dtype='float32')
+            for ipoint in range(nnodes):
+                point = points.GetPoint(ipoint)
+                node_xyz[ipoint, :] = point
+            xyz = node_xyz.mean(axis=0)
         else:
             #self.log.error(msg)
             msg = 'cell_type=%s nnodes=%s; result_name=%s result_values=%s' % (
                 cell_type, nnodes, result_name, result_values)
             self.log.error(msg)
+            #VTK_LINE = 3
+
+            #VTK_TRIANGLE = 5
+            #VTK_QUADRATIC_TRIANGLE = 22
+
+            #VTK_QUAD = 9
+            #VTK_QUADRATIC_QUAD = 23
+
+            #VTK_TETRA = 10
+            #VTK_QUADRATIC_TETRA = 24
+
+            #VTK_WEDGE = 13
+            #VTK_QUADRATIC_WEDGE = 26
+
+            #VTK_HEXAHEDRON = 12
+            #VTK_QUADRATIC_HEXAHEDRON = 25
+
+            #VTK_PYRAMID = 14
+            #VTK_QUADRATIC_PYRAMID = 27
             raise NotImplementedError(msg)
         return result_name, result_values, xyz
 

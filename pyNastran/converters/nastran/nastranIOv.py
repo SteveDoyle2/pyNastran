@@ -60,7 +60,7 @@ from pyNastran.bdf.cards.elements.solid import (
     CPYRAM5, CPYRAM13,
 )
 
-from pyNastran.converters.nastran.displacements import NastranDisplacementResults
+from pyNastran.converters.nastran.displacements import DisplacementResults
 from pyNastran.gui.gui_objects.gui_result import GuiResult
 
 from pyNastran.op2.op2 import OP2
@@ -2109,6 +2109,7 @@ class NastranIO(object):
         )
         nid_to_pid_map = defaultdict(list)
         for (eid, element) in sorted(iteritems(model.elements)):
+            etype = element.type
             # if element.Pid() >= 82:
                 # continue
             # if element.Pid() in pids_to_drop:
@@ -2513,14 +2514,17 @@ class NastranIO(object):
                     elem.GetPointIds().SetId(9, nid_map[node_ids[9]])
                     elem.GetPointIds().SetId(10, nid_map[node_ids[10]])
                     elem.GetPointIds().SetId(11, nid_map[node_ids[11]])
-                    elem.GetPointIds().SetId(12, nid_map[node_ids[12]])
-                    elem.GetPointIds().SetId(13, nid_map[node_ids[13]])
-                    elem.GetPointIds().SetId(14, nid_map[node_ids[14]])
-                    elem.GetPointIds().SetId(15, nid_map[node_ids[15]])
-                    elem.GetPointIds().SetId(16, nid_map[node_ids[16]])
-                    elem.GetPointIds().SetId(17, nid_map[node_ids[17]])
-                    elem.GetPointIds().SetId(18, nid_map[node_ids[18]])
-                    elem.GetPointIds().SetId(19, nid_map[node_ids[19]])
+
+                    # these two blocks are flipped
+                    elem.GetPointIds().SetId(12, nid_map[node_ids[16]])
+                    elem.GetPointIds().SetId(13, nid_map[node_ids[17]])
+                    elem.GetPointIds().SetId(14, nid_map[node_ids[18]])
+                    elem.GetPointIds().SetId(15, nid_map[node_ids[19]])
+
+                    elem.GetPointIds().SetId(16, nid_map[node_ids[12]])
+                    elem.GetPointIds().SetId(17, nid_map[node_ids[13]])
+                    elem.GetPointIds().SetId(18, nid_map[node_ids[14]])
+                    elem.GetPointIds().SetId(19, nid_map[node_ids[15]])
                 else:
                     elem = vtkHexahedron()
 
@@ -2549,6 +2553,7 @@ class NastranIO(object):
                 elem.GetPointIds().SetId(2, nid_map[node_ids[2]])
                 elem.GetPointIds().SetId(3, nid_map[node_ids[3]])
                 elem.GetPointIds().SetId(4, nid_map[node_ids[4]])
+                # etype = 14
                 self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
                 min_thetai, max_thetai, dideal_thetai = get_min_max_theta(
                     _cpyram_faces, node_ids[:5], nid_map, xyz_cid0)
@@ -2558,6 +2563,7 @@ class NastranIO(object):
                 #if None not in node_ids:
                     #print(' node_ids =', node_ids)
                     #elem = vtkQuadraticPyramid()
+                    # etype = 27
                     #elem.GetPointIds().SetId(5, nid_map[node_ids[5]])
                     #elem.GetPointIds().SetId(6, nid_map[node_ids[6]])
                     #elem.GetPointIds().SetId(7, nid_map[node_ids[7]])
@@ -2581,21 +2587,25 @@ class NastranIO(object):
                 min_thetai, max_thetai, dideal_thetai = get_min_max_theta(
                     _cpyram_faces, node_ids[:5], nid_map, xyz_cid0)
 
-            elif (isinstance(element, (LineElement, SpringElement)) or
-                  element.type in ['CBUSH', 'CBUSH1D', 'CFAST', 'CROD', 'CONROD',
-                                   'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
-                                   'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5',
-                                   'CVISC', 'CGAP']):
+            #elif (isinstance(element, (LineElement, SpringElement)) or
+                  #etype in ['CBUSH', 'CBUSH1D', 'CFAST', 'CROD', 'CONROD',
+                                   #'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
+                                   #'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5',
+                                   #'CVISC', 'CGAP']):
+            elif etype in ['CBUSH', 'CBUSH1D', 'CFAST',
+                           'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
+                           'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5',
+                           'CVISC', 'CGAP']:
 
                 # TODO: verify
-                # CBUSH, CBUSH1D, CFAST, CROD, CELAS1, CELAS3
+                # CBUSH, CBUSH1D, CFAST, CELAS1, CELAS3
                 # CDAMP1, CDAMP2, CDAMP3, CDAMP4, CDAMP5, CVISC
                 if hasattr(element, 'pid'):
                     pid = element.Pid()
                 else:
-                    # CONROD
                     # CELAS2, CELAS4?
                     pid = 0
+
                 node_ids = element.node_ids
                 for nid in node_ids:
                     if nid is not None:
@@ -2639,6 +2649,31 @@ class NastranIO(object):
                         print(str(element))
                         continue
 
+                self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+            elif etype in ('CBAR', 'CBEAM', 'CROD', 'CONROD'):
+                if etype == 'CROD':
+                    pid = 0
+                    areai = element.Area()
+                else:
+                    pid = element.Pid()
+                    areai = element.pid_ref.Area()
+
+                node_ids = element.node_ids
+                for nid in node_ids:
+                    nid_to_pid_map[nid].append(pid)
+
+                # 2 points
+                lengthi = norm(element.nodes[0].get_position() -
+                               element.nodes[1].get_position())
+                self.eid_to_nid_map[eid] = node_ids
+                elem = vtk.vtkLine()
+                try:
+                    elem.GetPointIds().SetId(0, nid_map[node_ids[0]])
+                    elem.GetPointIds().SetId(1, nid_map[node_ids[1]])
+                except KeyError:
+                    print("node_ids =", node_ids)
+                    print(str(element))
+                    continue
                 self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
             else:
                 print('removing\n%s' % (elem))
@@ -4177,6 +4212,7 @@ class NastranIO(object):
                     msg += 'nidsi in disp = %s\n' % list(nidsi)
                     raise IndexError(msg)
 
+            # (itime, nnodes, xyz)
             t123 = case.data[:, :, :3]
             if nnodes != ndata:
                 t123i = np.zeros((nnodes, 3), dtype='float32')
@@ -4189,10 +4225,10 @@ class NastranIO(object):
             scales = []
             headers = []
             if deflects:
-                nastran_res = NastranDisplacementResults(subcase_idi, titles, headers,
-                                                         self.xyz_cid0, t123, tnorm,
-                                                         scales, deflects=deflects,
-                                                         uname='NastranResult')
+                nastran_res = DisplacementResults(subcase_idi, titles, headers,
+                                                  self.xyz_cid0, t123, tnorm,
+                                                  scales, deflects=deflects,
+                                                  uname='NastranResult')
 
                 for itime in range(ntimes):
                     dt = case._times[itime]
@@ -4200,10 +4236,10 @@ class NastranIO(object):
                     header_dict[(key, itime)] = header
 
                     tnorm_abs_max = tnorm.max()
-                    if tnorm_abs_max == 0.0:
-                        scale = self.displacement_scale_factor
-                    else:
-                        scale = self.displacement_scale_factor / tnorm_abs_max
+                    #if tnorm_abs_max == 0.0:
+                        #scale = self.displacement_scale_factor
+                    #else:
+                        #scale = self.displacement_scale_factor / tnorm_abs_max
                     scale = self.dim_max / tnorm_abs_max * 0.25
                     scales.append(scale)
                     titles.append(title)

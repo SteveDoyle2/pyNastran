@@ -479,6 +479,7 @@ class F06Writer(OP2_F06_Common):
             self.eigenvectors_RADCONS,
             self.eigenvectors_RADEFFM,
             self.eigenvectors_RADEATC,
+            self.eigenvectors_ROUGV1,
 
             self.mpc_forces, self.mpc_forcesPSD, self.mpc_forcesATO, self.mpc_forcesRMS,
             self.mpc_forces_RAQCONS,

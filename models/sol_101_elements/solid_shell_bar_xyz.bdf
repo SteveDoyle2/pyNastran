@@ -16,43 +16,6 @@ PARAM   PRTMAXIM YES
 $ Direct Text Input for Bulk Data
 $ Pset: "shell" will be imported as: "pshell.1"
 INCLUDE 'geom.inc'
-$ Elements and Element Properties for region : solid
-$PBEAM*                 5               1             .25        .0052083
-$*               .0052083                        .0087949
-$*                   -.25            -.25             .25            -.25
-$*                    .25             .25            -.25             .25
-$*                    YES              1.             .25        .0052083
-$*               .0052083        .0052083                        .0087949
-$*                                   -.25            -.25             .25
-$*                   -.25             .25             .25            -.25
-$*                .850116         .850116
-$*
-$            YES      1.     .25.0052083.0052083.0052083      0..0087949
-$             YES      1.     .25.0052083.0052083.0      .0087949
-$	YES	1.	.25	.005208	.005208	.0	.0087949
-PBEAM          5       1     .25.0052083.0052083        .0087949
-            -.25    -.25     .25    -.25     .25     .25    -.25     .25
-             YES      1.     .25 .005208 .005208      0..0087949      0.
-        .0087949      0.    -.25    -.25     .25    -.25     .25     .25
-         .850116.8501160      0.      0.      0.      0.      0.      0.
-              0.      0.      0.      0.      0.      0.      0.      0.
-PBAR     1       1      0.25    .0052083.0052083.0088021
-PSOLID   2       1       0
-PROD     3       1      .1      .0088021 1.
-PSHELL   4       1      .25      1               1
-PCOMP,6,,,,,,,
-,1,0.1
-,1,0.2
-,1,0.3
-,1,0.4
-PCOMP,7,,,,,,,
-,1,0.1,,,1,0.2
-,1,0.3,,,1,0.4
-,1,0.5
-$ Pset: "solid" will be imported as: "psolid.2"
-$ Referenced Material Records
-$ Material Record : 300M
-$ Description of Material : Date: 12-Dec-05           Time: 15:45:24
 MAT1     1      2.9+7   1.1+7   .32     .283
 $ Nodes of the Entire Model
 

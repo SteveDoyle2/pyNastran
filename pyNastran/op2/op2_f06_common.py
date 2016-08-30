@@ -265,6 +265,7 @@ class OP2_F06_Common(object):
         self.eigenvectors_RADCONS = {}
         self.eigenvectors_RADEFFM = {}
         self.eigenvectors_RADEATC = {}
+        self.eigenvectors_ROUGV1 = {}
 
         # OEF - Forces - tCode=4 thermal=0
 
@@ -503,6 +504,7 @@ class OP2_F06_Common(object):
             'eigenvectors_RADCONS',
             'eigenvectors_RADEFFM',
             'eigenvectors_RADEATC',
+            'eigenvectors_ROUGV1',
 
 
             # OUG - velocity

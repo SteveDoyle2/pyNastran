@@ -48,7 +48,7 @@ class TestNastranGUI(unittest.TestCase):
         test.load_nastran_geometry(bdf_filename, None)
         test.load_nastran_results(op2_filename, None)
 
-    def _test_contact(self):
+    def test_contact(self):
         bdf_filename = os.path.join(model_path, 'contact', 'contact.bdf')
         op2_filename = os.path.join(model_path, 'contact', 'contact.op2')
 
@@ -93,6 +93,15 @@ class TestNastranGUI(unittest.TestCase):
 
         test.load_nastran_geometry(bdf_filename, '')
 
+    def test_thermal_01(self):
+        dirname = os.path.join(model_path, 'thermal')
+        bdf_filename = os.path.join(dirname, 'thermal_test_153.bdf')
+        op2_filename = os.path.join(dirname, 'thermal_test_153.op2')
+
+        test = NastranGUI()
+        test.load_nastran_geometry(bdf_filename, None)
+        test.load_nastran_results(op2_filename, None)
+
     def test_blade_01(self):
         dirname = os.path.join(model_path, 'blade_2dv')
         bdf_filename = os.path.join(dirname, 'blade_2dv.bdf')
@@ -100,6 +109,15 @@ class TestNastranGUI(unittest.TestCase):
 
         test = NastranGUI()
         test.load_nastran_geometry(bdf_filename, None)
+
+    def test_femap_rougv1_01(self):
+        dirname = os.path.join(model_path, 'femap')
+        bdf_filename = os.path.join(dirname, 'modal_example.bdf')
+        op2_filename = os.path.join(dirname, 'modal_example.op2')
+
+        test = NastranGUI()
+        test.load_nastran_geometry(op2_filename, None)
+        test.load_nastran_results(op2_filename, None)
 
 def test_bottle():
     """
