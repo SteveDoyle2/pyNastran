@@ -8,13 +8,12 @@ $ Subcase name : Default
    SUBTITLE=Default
    SPC = 2
    LOAD = 123458
-   GPFORCE(PLOT,PRINT)=ALL
+   DISP(PLOT,PRINT) = ALL
+   GPFORCE(PLOT,PRINT) = ALL
 BEGIN BULK
 PARAM    POST    -1
 PARAM    AUTOSPC NO
 PARAM   PRTMAXIM YES
-$ Direct Text Input for Bulk Data
-$ Pset: "shell" will be imported as: "pshell.1"
 INCLUDE 'geom.inc'
 MAT1     1      2.9+7   1.1+7   .32     .283
 $ Nodes of the Entire Model
