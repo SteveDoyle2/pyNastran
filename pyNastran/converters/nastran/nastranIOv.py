@@ -2514,14 +2514,17 @@ class NastranIO(object):
                     elem.GetPointIds().SetId(9, nid_map[node_ids[9]])
                     elem.GetPointIds().SetId(10, nid_map[node_ids[10]])
                     elem.GetPointIds().SetId(11, nid_map[node_ids[11]])
-                    elem.GetPointIds().SetId(12, nid_map[node_ids[12]])
-                    elem.GetPointIds().SetId(13, nid_map[node_ids[13]])
-                    elem.GetPointIds().SetId(14, nid_map[node_ids[14]])
-                    elem.GetPointIds().SetId(15, nid_map[node_ids[15]])
-                    elem.GetPointIds().SetId(16, nid_map[node_ids[16]])
-                    elem.GetPointIds().SetId(17, nid_map[node_ids[17]])
-                    elem.GetPointIds().SetId(18, nid_map[node_ids[18]])
-                    elem.GetPointIds().SetId(19, nid_map[node_ids[19]])
+
+                    # these two blocks are flipped
+                    elem.GetPointIds().SetId(12, nid_map[node_ids[16]])
+                    elem.GetPointIds().SetId(13, nid_map[node_ids[17]])
+                    elem.GetPointIds().SetId(14, nid_map[node_ids[18]])
+                    elem.GetPointIds().SetId(15, nid_map[node_ids[19]])
+
+                    elem.GetPointIds().SetId(16, nid_map[node_ids[12]])
+                    elem.GetPointIds().SetId(17, nid_map[node_ids[13]])
+                    elem.GetPointIds().SetId(18, nid_map[node_ids[14]])
+                    elem.GetPointIds().SetId(19, nid_map[node_ids[15]])
                 else:
                     elem = vtkHexahedron()
 
@@ -2550,6 +2553,7 @@ class NastranIO(object):
                 elem.GetPointIds().SetId(2, nid_map[node_ids[2]])
                 elem.GetPointIds().SetId(3, nid_map[node_ids[3]])
                 elem.GetPointIds().SetId(4, nid_map[node_ids[4]])
+                # etype = 14
                 self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
                 min_thetai, max_thetai, dideal_thetai = get_min_max_theta(
                     _cpyram_faces, node_ids[:5], nid_map, xyz_cid0)
@@ -2559,6 +2563,7 @@ class NastranIO(object):
                 #if None not in node_ids:
                     #print(' node_ids =', node_ids)
                     #elem = vtkQuadraticPyramid()
+                    # etype = 27
                     #elem.GetPointIds().SetId(5, nid_map[node_ids[5]])
                     #elem.GetPointIds().SetId(6, nid_map[node_ids[6]])
                     #elem.GetPointIds().SetId(7, nid_map[node_ids[7]])
@@ -2669,7 +2674,6 @@ class NastranIO(object):
                     print("node_ids =", node_ids)
                     print(str(element))
                     continue
-
                 self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
             else:
                 print('removing\n%s' % (elem))

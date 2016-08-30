@@ -3074,7 +3074,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                 point = points.GetPoint(ipoint)
                 node_xyz[ipoint, :] = point
             xyz = node_xyz.mean(axis=0)
-        elif cell_type in [10, 12, 13]: # CTETRA4, CHEXA8, CPENTA6
+        elif cell_type in [10, 12, 13, 14]: # CTETRA4, CHEXA8, CPENTA6, CPYRAM5
             # TODO: No idea how to get the center of the face
             #       vs. a point on a face that's not exposed
             #faces = cell.GetFaces()
@@ -3084,15 +3084,38 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                 #points = face.GetPoints()
             #faces
             xyz = world_position
-        elif cell_type in [24]: # CTETRA10
+        elif cell_type in [24, 25, 26, 27]: # CTETRA10, CHEXA20, CPENTA15, CPYRAM13
             xyz = world_position
-        elif cell_type in [3]: # CBAR
-            xyz = world_position
+        elif cell_type in [3]: # CBAR, CBEAM, CELASx, CDAMPx, CBUSHx
+            node_xyz = np.zeros((nnodes, 3), dtype='float32')
+            for ipoint in range(nnodes):
+                point = points.GetPoint(ipoint)
+                node_xyz[ipoint, :] = point
+            xyz = node_xyz.mean(axis=0)
         else:
             #self.log.error(msg)
             msg = 'cell_type=%s nnodes=%s; result_name=%s result_values=%s' % (
                 cell_type, nnodes, result_name, result_values)
             self.log.error(msg)
+            #VTK_LINE = 3
+
+            #VTK_TRIANGLE = 5
+            #VTK_QUADRATIC_TRIANGLE = 22
+
+            #VTK_QUAD = 9
+            #VTK_QUADRATIC_QUAD = 23
+
+            #VTK_TETRA = 10
+            #VTK_QUADRATIC_TETRA = 24
+
+            #VTK_WEDGE = 13
+            #VTK_QUADRATIC_WEDGE = 26
+
+            #VTK_HEXAHEDRON = 12
+            #VTK_QUADRATIC_HEXAHEDRON = 25
+
+            #VTK_PYRAMID = 14
+            #VTK_QUADRATIC_PYRAMID = 27
             raise NotImplementedError(msg)
         return result_name, result_values, xyz
 

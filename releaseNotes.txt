@@ -67,7 +67,9 @@ BDF:
  - more validate methods & tests
 
 GUI:
- - adding custom displacement results
+ - added custom displacement results
+ - fixed display issue with CHEXA20
+ - fixed element selection for quadratic solids
 
 OP2:
  - MSC Nastran 2005R3B supported
@@ -81,6 +83,7 @@ BDF:
  - fix speed of CORD1R, CORD1C, CORD1S (low priority; 6/10)
 
 GUI:
+ - fix node Cd deflection issue
  - fix command index (gives a duplicated string, not the Sidebar index)
    high priority; 1/10)
  - is this a solid element issue?
