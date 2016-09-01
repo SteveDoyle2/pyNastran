@@ -211,7 +211,6 @@ class TestOP2(Tester):
         ])
         op2 = OP2()
         summation_point = [0., 0., 0.]
-        beta_transforms = None
         i_transform = None
         nid_cd = np.array([
             [1, 0],
@@ -227,7 +226,6 @@ class TestOP2(Tester):
         #gpforce.extract_interface_loads(
             #nids, eids, coord_out, coords, nid_cd,
             #i_transform,
-            #beta_transforms,
             #xyz_cid0,
             #summation_point,
             #itime=0,
@@ -240,7 +238,6 @@ class TestOP2(Tester):
         #gpforce.extract_interface_loads(
             #nids, eids, coord_out, coords, nid_cd,
             #i_transform,
-            #beta_transforms,
             #xyz_cid0,
             #summation_point,
             #itime=0,
@@ -253,7 +250,6 @@ class TestOP2(Tester):
         gpforce.extract_interface_loads(
             nids, eids, coord_out, coords, nid_cd,
             i_transform,
-            beta_transforms,
             xyz_cid0,
             summation_point,
             itime=0,
@@ -269,7 +265,7 @@ class TestOP2(Tester):
         op2 = read_op2_geom(op2_filename, debug=False)
 
         i_transform, beta_transforms = op2.get_displacement_index_transforms()
-        op2.transform_displacements_to_global(i_transform, beta_transforms)
+        op2.transform_displacements_to_global(i_transform, op2.coords)
 
         gpforce = op2.grid_point_forces[1]
 
@@ -301,7 +297,7 @@ class TestOP2(Tester):
             out = gpforce.extract_interface_loads(
                 nids, eids,
                 coord_out, coords,
-                nid_cd, i_transform, beta_transforms,
+                nid_cd, i_transform,
                 xyz_cid0, summation_point, itime=0, debug=False, logger=op2.log)
             total_force_global, total_moment_global, total_force_local, total_moment_local = out
 
@@ -326,7 +322,7 @@ class TestOP2(Tester):
         op2_1 = read_op2_geom(op2_filename1, debug=False)
 
         i_transform, beta_transforms = op2_1.get_displacement_index_transforms()
-        op2_1.transform_displacements_to_global(i_transform, coords=op2_1.coords)
+        op2_1.transform_displacements_to_global(i_transform, op2_1.coords)
 
         gpforce = op2_1.grid_point_forces[1]
         op2_1.cross_reference(xref_elements=False,
@@ -363,7 +359,7 @@ class TestOP2(Tester):
             out = gpforce.extract_interface_loads(
                 nids, eids,
                 coord_out, coords,
-                nid_cd, i_transform, beta_transforms,
+                nid_cd, i_transform,
                 xyz_cid0, summation_point, itime=0, debug=False, logger=op2_1.log)
             total_force_global, total_moment_global, total_force_local, total_moment_local = out
 
@@ -438,7 +434,7 @@ class TestOP2(Tester):
             out = gpforce.extract_interface_loads(
                 nids, eids,
                 coord_out, coords,
-                nid_cd, i_transform, beta_transforms,
+                nid_cd, i_transform,
                 xyz_cid0, summation_point, itime=0, debug=False, logger=op2_1.log)
             total_force_global, total_moment_global, total_force_local, total_moment_local = out
 

@@ -243,7 +243,7 @@ class RealGridPointForcesArray(ScalarObject):
 
     def extract_freebody_loads(
         self, eids,
-        coord_out, coords, nid_cd, i_transform, beta_transforms,
+        coord_out, coords, nid_cd, i_transform,
         itime=0, debug=True, logger=None):
         """
         Extracts Patran-style freebody loads
@@ -261,8 +261,6 @@ class RealGridPointForcesArray(ScalarObject):
         nid_cd : (M, 2) int ndarray
             the (BDF.point_ids, cd) array
         i_transform : dict[cd] = (Mi, ) int ndarray
-            the mapping for nid_cd
-        beta_transforms : dict[cd] = (3, 3) float ndarray
             the mapping for nid_cd
         summation_point : (3, ) float ndarray
             the summation point in output??? coordinate system
@@ -325,7 +323,7 @@ class RealGridPointForcesArray(ScalarObject):
         force, moment = transform_force_moment(
             force_global, moment_global,
             coord_out, coords, nid_cd[is_in3, :],
-            i_transform, beta_transforms,
+            i_transform,
             xyz_cid0=None, summation_point_cid0=None,
             consider_rxf=False,
             debug=debug, logger=logger)
@@ -333,7 +331,7 @@ class RealGridPointForcesArray(ScalarObject):
 
     def extract_interface_loads(
         self, nids, eids,
-        coord_out, coords, nid_cd, i_transform, beta_transforms,
+        coord_out, coords, nid_cd, i_transform,
         xyz_cid0, summation_point, itime=0, debug=True, logger=None):
         """
         Extracts Patran-style interface loads
@@ -353,8 +351,6 @@ class RealGridPointForcesArray(ScalarObject):
         nid_cd : (M, 2) int ndarray
             the (BDF.point_ids, cd) array
         i_transform : dict[cd] = (Mi, ) int ndarray
-            the mapping for nid_cd
-        beta_transforms : dict[cd] = (3, 3) float ndarray
             the mapping for nid_cd
         xyz_cid0 : (nnodes + nspoints, 3) ndarray
             the grid locations in coordinate system 0
@@ -429,7 +425,7 @@ class RealGridPointForcesArray(ScalarObject):
         moment_global = self.data[itime, irange, 3:]
         out = transform_force_moment_sum(force_global, moment_global,
                                      coord_out, coords, nid_cd[is_in3, :],
-                                     i_transform, beta_transforms,
+                                     i_transform,
                                      xyz_cid0[is_in3, :], summation_point_cid0=summation_point,
                                      debug=debug, logger=logger)
         return out
@@ -497,8 +493,6 @@ class RealGridPointForcesArray(ScalarObject):
             the (BDF.point_ids, cd) array
         i_transform : dict[cd] = (Mi, ) int ndarray
             the mapping for nid_cd
-        beta_transforms : dict[cd] = (3, 3) float ndarray
-            the mapping for nid_cd
         stations : (nstations, ) float ndarray
             the station to sum forces/moments about
             be careful of picking exactly on symmetry planes/boundaries
@@ -561,7 +555,7 @@ class RealGridPointForcesArray(ScalarObject):
                 # I don't think this will work...
                 forcei, momenti = extract_freebody_loads(
                     eids[i],
-                    coord_out, coords, nid_cd, i_transform, beta_transforms,
+                    coord_out, coords, nid_cd, i_transform,
                     xyz_cid0, summation_point, itime=itime, debug=debug, logger=logger)
 
                 force_sum[istation, :] = forcei.sum(axis=0)
@@ -571,7 +565,7 @@ class RealGridPointForcesArray(ScalarObject):
             else:
                 forcei, momenti, force_sumi, moment_sumi = self.extract_interface_loads(
                     eids[i], nids[j],
-                    coord_out, coords, nid_cd, i_transform, beta_transforms,
+                    coord_out, coords, nid_cd, i_transform,
                     xyz_cid0, summation_point, itime=itime, debug=debug, logger=logger)
 
                 force_sum[istation, :] = forcei_sum

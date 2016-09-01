@@ -83,7 +83,7 @@ BDF:
  - fix speed of CORD1R, CORD1C, CORD1S (low priority; 6/10)
 
 GUI:
- - fix node Cd deflection issue
+ - fix node Cd deflection issue (high priority, 4/10)
  - fix command index (gives a duplicated string, not the Sidebar index)
    high priority; 1/10)
  - is this a solid element issue?
@@ -92,6 +92,10 @@ GUI:
  - fix issue with picking/focusing on a CAERO/CONM2 grid, which doesn't have a result
    it causes a segfault (high priority; 4/10)
  - fix bar Cd frame for cylindrical/spherical coords (low priority; 4/10)
+   - see femap_exhaust
+   - old : transform_displacements_to_global(i_transforms, beta_transforms)
+   - new : transform_displacements_to_global(i_transforms, coords, xyz_cid0=None)
+ - removed beta_transforms from gpforce
 
 -----------------------v0.8.0 released 2016/8/21-----------------------
 Major changes:

@@ -2820,7 +2820,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         nids_transform = {}
         i_transform = {}
         if len(self.coords) == 1:  # was ncoords > 2; changed b/c seems dangerous
-            return i_transform #, beta_transforms
+            return i_transform
 
         for nid, node in sorted(iteritems(self.nodes)):
             cid_d = node.Cd()

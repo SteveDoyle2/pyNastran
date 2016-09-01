@@ -435,7 +435,7 @@ def test_abs_max_min_vector():
 
 def transform_force(force_in_local,
                     coord_out, coords,
-                    nid_cd, i_transform, beta_transforms):
+                    nid_cd, i_transform):
     """
     Transforms force/moment from global to local and returns all the forces.
 
@@ -486,7 +486,7 @@ def transform_force(force_in_local,
 
 def transform_force_moment(force_in_local, moment_in_local,
                            coord_out, coords,
-                           nid_cd, i_transform, beta_transforms,
+                           nid_cd, i_transform,
                            xyz_cid0, summation_point_cid0=None,
                            consider_rxf=True,
                            debug=False, logger=None):
@@ -639,7 +639,7 @@ def transform_force_moment(force_in_local, moment_in_local,
 
 def transform_force_moment_sum(force_in_local, moment_in_local,
                                coord_out, coords,
-                               nid_cd, i_transform, beta_transforms,
+                               nid_cd, i_transform,
                                xyz_cid0, summation_point_cid0=None,
                                consider_rxf=True,
                                debug=False, logger=None):
@@ -682,7 +682,7 @@ def transform_force_moment_sum(force_in_local, moment_in_local,
     out = transform_force_moment(
         force_in_local, moment_in_local,
         coord_out, coords, nid_cd,
-        i_transform, beta_transforms, xyz_cid0,
+        i_transform, xyz_cid0,
         summation_point_cid0=summation_point_cid0, consider_rxf=consider_rxf,
         debug=debug, logger=logger)
     force_out, moment_out = out
