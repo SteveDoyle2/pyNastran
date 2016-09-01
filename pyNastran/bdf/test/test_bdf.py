@@ -1277,6 +1277,7 @@ def main():
     """
     The main function for the command line ``test_bdf`` script.
     """
+    encoding = sys.getdefaultencoding()
     from pyNastran.utils.docopt_types import docopt_types
     msg = "Usage:\n"
     msg += "  test_bdf [-q] [-D] [-i] [-e E] [--crash C] [-x] [-p] [-c] [-L] [-f] [--encoding ENCODE] BDF_FILENAME\n"
@@ -1295,9 +1296,7 @@ def main():
     msg += '\n'
 
     msg += 'Options:\n'
-    msg += '  --crash C,     Crash on specific cards (e.g. CGEN,EGRID)\n'
-    msg += '  -q, --quiet    prints debug messages (default=False)\n'
-    msg += '  -x, --xref     disables cross-referencing and checks of the BDF.\n'
+    msg += '  -x, --xref     disables cross-referencing and checks of the BDF\n'
     msg += '                 (default=True -> on)\n'
     msg += '  -p, --punch    disables reading the executive and case control decks in the BDF\n'
     msg += '                 (default=False -> reads entire deck)\n'
@@ -1308,16 +1307,22 @@ def main():
     msg += '  -d, --double   writes the BDF in large field, double precision format (default=False)\n'
     msg += '  -L, --loads    Disables forces/moments summation for the different subcases (default=True)\n'
     msg += '  -r, --reject   rejects all cards with the appropriate values applied (default=False)\n'
-    msg += '  -D, --dumplines  Writes the BDF exactly as read with the INCLUDES processed (pyNastran_dump.bdf)\n'
-    msg += '  -i, --dictsort  Writes the BDF with exactly as read with the INCLUDES processed (pyNastran_dict.bdf)\n'
-    msg += '  -f, --profile   Profiles the code (default=False)\n'
-    msg += '  -s, --stop      Stop after first read/write (default=False)\n'
     msg += '  -e E, --nerrors E  Allow for cross-reference errors (default=100)\n'
-    msg += '  --encoding ENCODE  the encoding method\n'
+    msg += '  --encoding ENCODE  the encoding method (default=None -> %r)\n' % encoding
+    msg += '  -q, --quiet        prints debug messages (default=False)\n'
+
+    msg += "\n"
+    msg += "Developer:\n"
+    msg += '  --crash C,       Crash on specific cards (e.g. CGEN,EGRID)\n'
+    msg += '  -D, --dumplines  Writes the BDF exactly as read with the INCLUDES processed (pyNastran_dump.bdf)\n'
+    msg += '  -i, --dictsort   Writes the BDF with exactly as read with the INCLUDES processed (pyNastran_dict.bdf)\n'
+    msg += '  -f, --profile    Profiles the code (default=False)\n'
+    msg += '  -s, --stop       Stop after first read/write (default=False)\n'
     #msg += '  -o <VAR_VAL>, --openmdao <VAR_VAL>   rejects all cards with the appropriate values applied;\n'
     #msg += '                 Uses the OpenMDAO %var syntax to replace it with value.\n'
     #msg += '                 So test_bdf -r var1=val1 var2=val2\n'
-
+    msg += "\n"
+    msg += "Info:\n"
     msg += '  -h, --help     show this help message and exit\n'
     msg += "  -v, --version  show program's version number and exit\n"
 
