@@ -11,6 +11,7 @@ All coordinate cards are defined in this file.  This includes:
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+import copy
 from math import sqrt, degrees, radians, atan2, acos, sin, cos
 from six.moves import zip, range
 
@@ -76,6 +77,7 @@ class Coord(BaseCard):
         self.j = None
         self.k = None
         self.origin = None
+        self.rid_trace = []
 
 
     #def XYZtoCoord(self, p):
@@ -223,19 +225,26 @@ class Coord(BaseCard):
             return
 
         #print('setting up cid=%s rid=%s' % (self.cid, self.Rid()))
+        rid = self.Rid()
         if not self.is_resolved and self.type in ['CORD2R', 'CORD2C', 'CORD2S']:
-            self.rid.setup()
+            rid_ref = self.rid_ref
+            rid_ref.setup()
+            self.rid_trace = copy.deepcopy(rid_ref.rid_trace)
+            if rid not in self.rid_trace:
+                self.rid_trace.append(rid)
+            assert self.cid not in self.rid_trace, 'cid=%s rid_trace=%s' % (self.cid, self.rid_trace)
 
-        if self.Rid() == 0:
+        if rid == 0:
             self.origin = self.e1
             e1 = self.e1
             e2 = self.e2
             e3 = self.e3
         else:
-            self.origin = self.rid_ref.transform_node_to_global(self.e1)
+            rid_ref = self.rid_ref
+            self.origin = rid_ref.transform_node_to_global(self.e1)
             e1 = self.origin
-            e2 = self.rid_ref.transform_node_to_global(self.e2)
-            e3 = self.rid_ref.transform_node_to_global(self.e3)
+            e2 = rid_ref.transform_node_to_global(self.e2)
+            e3 = rid_ref.transform_node_to_global(self.e3)
 
         try:
             # e_{13}
@@ -327,6 +336,8 @@ class Coord(BaseCard):
             #print("k   = %s len=%s\n" % (str(self.k), norm(self.k)))
             #print('-----')
         #print('done setting up cid=%s rid=%s' % (self.cid, self.Rid()))
+        #print('cid=%s rid_trace=%s' % (self.cid, self.rid_trace))
+        assert self.cid not in self.rid_trace, 'cid=%s rid_trace=%s' % (self.cid, self.rid_trace)
 
     #def transform_force_to_global(self, F, M):
         #raise NotImplementedError('transform_force_to_global')
@@ -903,8 +914,8 @@ def define_coord_ijk(model, Type, cid, origin, rid=0, i=None, j=None, k=None):
 
 class RectangularCoord(object):
 
-    @classmethod
-    def coord_to_xyz(cls, p):
+    @staticmethod
+    def coord_to_xyz(p):
         """
         Returns
         -------
@@ -913,8 +924,8 @@ class RectangularCoord(object):
         """
         return p
 
-    @classmethod
-    def xyz_to_coord(cls, p):
+    @staticmethod
+    def xyz_to_coord(p):
         """
         Returns
         -------
@@ -923,8 +934,8 @@ class RectangularCoord(object):
         """
         return p
 
-    @classmethod
-    def coord_to_xyz_array(cls, p):
+    @staticmethod
+    def coord_to_xyz_array(p):
         """
         Returns
         -------
@@ -933,8 +944,8 @@ class RectangularCoord(object):
         """
         return p
 
-    @classmethod
-    def xyz_to_coord_array(cls, p):
+    @staticmethod
+    def xyz_to_coord_array(p):
         """
         Returns
         -------
@@ -961,8 +972,8 @@ class CylindricalCoord(object):
     .. seealso:: `MSC Reference Manual (pdf) <`http://simcompanion.mscsoftware.com/resources/sites/MSC/content/meta/DOCUMENTATION/9000/DOC9188/~secure/refman.pdf?token=WDkwz5Q6v7LTw9Vb5p+nwkbZMJAxZ4rU6BoR7AHZFxi2Tl1QdrbVvWj00qmcC4+S3fnbL4WUa5ovbpBwGDBt+zFPzsGyYC13zvGPg0j/5SrMF6bnWrQoTGyJb8ho1ROYsm2OqdSA9jVceaFHQVc+tJq4b49VogM4dZBxyi/QrHgdUgPFos8BAL9mgju5WGk8yYcFtRzQIxU=>`_.
     """
 
-    @classmethod
-    def coord_to_xyz(cls, p):
+    @staticmethod
+    def coord_to_xyz(p):
         r"""
         ::
 
@@ -986,8 +997,8 @@ class CylindricalCoord(object):
         y = R * sin(theta)
         return np.array([x, y, p[2]], dtype='float64')
 
-    @classmethod
-    def coord_to_xyz_array(cls, p):
+    @staticmethod
+    def coord_to_xyz_array(p):
         r"""
         ::
 
@@ -1005,14 +1016,29 @@ class CylindricalCoord(object):
         xyz : (3,) float ndarray
             the point in the local coordinate system
         """
+        assert len(p.shape) == 2, p.shape
         R = p[:, 0]
         theta = np.radians(p[:, 1])
         x = R * np.cos(theta)
         y = R * np.sin(theta)
-        return np.array([x, y, p[:, 2]], dtype='float64').T
+        out = np.array([x, y, p[:, 2]], dtype='float64').T
+        return out
 
-    @classmethod
-    def xyz_to_coord(cls, p):
+    @staticmethod
+    def coord_to_spherical(p):
+        """hasn't been tested"""
+        r, t, z = p
+        rho = (r**2 + z**2)**0.5
+        theta = degrees(acos(z / rho))
+        phi = t
+        return np.array([rho, theta, phi], dtype='float64')
+
+    @staticmethod
+    def coord_to_cylindrical(p):
+        return p
+
+    @staticmethod
+    def xyz_to_coord(p):
         """
         Returns
         -------
@@ -1024,8 +1050,8 @@ class CylindricalCoord(object):
         R = sqrt(x * x + y * y)
         return np.array([R, theta, z], dtype='float64')
 
-    @classmethod
-    def xyz_to_coord_array(cls, p):
+    @staticmethod
+    def xyz_to_coord_array(p):
         r"""
         ::
 
@@ -1043,6 +1069,7 @@ class CylindricalCoord(object):
         xyz : (3,) float ndarray
             the point in the local coordinate system
         """
+        assert len(p.shape) == 2, p.shape
         x = p[:, 0]
         y = p[:, 1]
         theta = np.degrees(np.arctan(y, x))
@@ -1070,10 +1097,13 @@ class SphericalCoord(object):
 
     .. seealso:: `MSC Reference Manual (pdf) <`http://simcompanion.mscsoftware.com/resources/sites/MSC/content/meta/DOCUMENTATION/9000/DOC9188/~secure/refman.pdf?token=WDkwz5Q6v7LTw9Vb5p+nwkbZMJAxZ4rU6BoR7AHZFxi2Tl1QdrbVvWj00qmcC4+S3fnbL4WUa5ovbpBwGDBt+zFPzsGyYC13zvGPg0j/5SrMF6bnWrQoTGyJb8ho1ROYsm2OqdSA9jVceaFHQVc+tJq4b49VogM4dZBxyi/QrHgdUgPFos8BAL9mgju5WGk8yYcFtRzQIxU=>`_.
     """
-    @classmethod
-    def xyz_to_coord(cls, p):
+    @staticmethod
+    def xyz_to_coord(p):
         r"""
-        :returns xyz: the loca XYZ point in the R, \theta, \phi coordinate system
+        Returns
+        -------
+        xyz : (3, ) float ndarray
+            the local XYZ point in the R, \theta, \phi coordinate system
         """
         (x, y, z) = p
         R = sqrt(x * x + y * y + z * z)
@@ -1084,11 +1114,15 @@ class SphericalCoord(object):
             theta = 0.
         return np.array([R, theta, phi], dtype='float64')
 
-    @classmethod
-    def xyz_to_coord_array(cls, p):
+    @staticmethod
+    def xyz_to_coord_array(p):
         r"""
-        :returns xyz: the loca XYZ point in the R, \theta, \phi coordinate system
+        Returns
+        -------
+        xyz : (3, ) float ndarray
+            the local XYZ point in the R, \theta, \phi coordinate system
         """
+        assert len(p.shape) == 2, p.shape
         x = p[:, 0]
         y = p[:, 1]
         z = p[:, 2]
@@ -1101,8 +1135,8 @@ class SphericalCoord(object):
             theta[i] = 0.0
         return np.array([R, theta, phi], dtype='float64').T
 
-    @classmethod
-    def coord_to_xyz(cls, p):
+    @staticmethod
+    def coord_to_xyz(p):
         r"""
         Returns
         -------
@@ -1117,14 +1151,15 @@ class SphericalCoord(object):
         z = R * cos(theta)
         return np.array([x, y, z], dtype='float64')
 
-    @classmethod
-    def coord_to_xyz_array(cls, p):
+    @staticmethod
+    def coord_to_xyz_array(p):
         r"""
         Returns
         -------
         xyz : (3,) float ndarray
             the R, \theta, \phi in the local coordinate system
         """
+        assert len(p.shape) == 2, p.shape
         R = p[:, 0]
         theta = np.radians(p[:, 1])
         phi = np.radians(p[:, 2])
@@ -1132,6 +1167,23 @@ class SphericalCoord(object):
         y = R * np.sin(theta) * np.sin(phi)
         z = R * np.cos(theta)
         return np.array([x, y, z], dtype='float64').T
+
+    @staticmethod
+    def coord_to_spherical(p):
+        return p
+
+    @staticmethod
+    def coord_to_cylindrical(p):
+        """hasn't been tested"""
+        rho, theta, phi = p
+
+        r, t, z = p
+        rho = (r**2 + z**2)**0.5
+        thetar = radians(theta)
+        r = rho * sin(thetar)
+        z = rho * cos(thetar)
+        t = phi
+        return np.array([r, t, z], dtype='float64')
 
 class Cord2x(Coord):
 
@@ -1467,6 +1519,22 @@ class Cord1x(Coord):
         return self.rid
 
     def __init__(self, cid, g1, g2, g3, comment=''):
+        """
+        Initializes the CORD1R, CORD1C, CORD1S card
+
+        Parameters
+        ----------
+        cid : int
+            the coordinate id
+        g1 : int
+            grid point 1
+        g2 : int
+            grid point 2
+        g3 : int
+            grid point 3
+        comment : str; default=''
+            the card comment
+        """
         Coord.__init__(self)
         if comment:
             self._comment = comment
@@ -1487,6 +1555,17 @@ class Cord1x(Coord):
 
     @classmethod
     def add_card(cls, card, icard=0, comment=''):
+        """
+        Parameters
+        ----------
+        card : BDF()
+            a BDFCard object
+        icard : int
+            the coordinate location on the line
+            (there are possibly 2 coordinates on 1 card)
+        comment : str
+            the card comment
+        """
         #self.is_resolved = False
         assert icard in (0, 1), 'icard=%r' % (icard)
         ncoord = 4 * icard  # 0 if the 1st coord, 4 if the 2nd
@@ -1604,6 +1683,12 @@ class Cord1x(Coord):
         self.g1_ref.cp_ref.setup()
         self.g2_ref.cp_ref.setup()
         self.g3_ref.cp_ref.setup()
+        if self.g1_ref.Cp() not in self.rid_trace:
+            self.rid_trace.append(self.g1_ref.Cp())
+        if self.g2_ref.Cp() not in self.rid_trace:
+            self.rid_trace.append(self.g2_ref.Cp())
+        if self.g3_ref.Cp() not in self.rid_trace:
+            self.rid_trace.append(self.g3_ref.Cp())
 
         #: the origin in the local frame
         self.e1 = self.g1_ref.get_position()
@@ -1620,6 +1705,7 @@ class Cord1x(Coord):
         #print('setting up cid=%s' % self.cid)
         # call the Coord class' setup method
         super(Cord1x, self).setup()
+        print('cid=%s rid_trace=%s' % (self.cid, self.rid_trace))
 
     def G1(self):
         if isinstance(self.g1, integer_types):
@@ -1849,13 +1935,16 @@ class CORD1R(Cord1x, RectangularCoord):
 
         Parameters
         ----------
-        self :CORD1R()
-            the CORD1R coordinate system object
-        icard : int
-            the coordinate location on the line
-            (there are possibly 2 coordinates on 1 card)
-        card : List
-            a list version of the fields (1 CORD1R only)
+        cid : int
+            the coordinate id
+        g1 : int
+            grid point 1
+        g2 : int
+            grid point 2
+        g3 : int
+            grid point 3
+        comment : str; default=''
+            the card comment
         """
         Cord1x.__init__(self, cid, g1, g2, g3, comment=comment)
 
@@ -1878,9 +1967,18 @@ class CORD1C(Cord1x, CylindricalCoord):
         |CORD1C | CIDA | G1A | G2A | CIDB | G1B  | G2B | G3B  |     |
         +-------+------+-----+-----+------+------+-----+------+-----+
 
-        :param icard:  the coordinate location on the line
-                       (there are possibly 2 coordinates on 1 card)
-        :param data:   a list version of the fields (1 CORD1R only)
+        Parameters
+        ----------
+        cid : int
+            the coordinate id
+        g1 : int
+            grid point 1
+        g2 : int
+            grid point 2
+        g3 : int
+            grid point 3
+        comment : str; default=''
+            the card comment
         """
         Cord1x.__init__(self, cid, g1, g2, g3, comment=comment)
 
@@ -1914,13 +2012,16 @@ class CORD1S(Cord1x, SphericalCoord):
 
         Parameters
         ----------
-        card : BDF()
-            a BDFCard object
-        icard : int
-            the coordinate location on the line
-            (there are possibly 2 coordinates on 1 card)
-        data : List[varies]
-            a list version of the fields (1 CORD1S only)
+        cid : int
+            the coordinate id
+        g1 : int
+            grid point 1
+        g2 : int
+            grid point 2
+        g3 : int
+            grid point 3
+        comment : str; default=''
+            the card comment
         """
         Cord1x.__init__(self, cid, g1, g2, g3, comment=comment)
 
@@ -1944,10 +2045,6 @@ class CORD2R(Cord2x, RectangularCoord):
         +--------+-----+-----+-----+----+-----+----+----+-----+
         |        | B3  | C1  | C2  | C3 |     |    |    |     |
         +--------+-----+-----+-----+----+-----+----+----+-----+
-
-        :param card: a BDFCard object
-        :param data: a list version of the fields (1 CORD2R only)
-                     default=None -> [0, 0, 0., 0., 0., 0., 0., 1., 1., 0., 0.]
 
         .. note :: no type checking
         """
@@ -1987,9 +2084,6 @@ class CORD2C(Cord2x, CylindricalCoord):
         +--------+-----+-----+-----+----+-----+----+----+-----+
         |        | B3  | C1  | C2  | C3 |     |    |    |     |
         +--------+-----+-----+-----+----+-----+----+----+-----+
-
-        :param card: a BDFCard object
-        :param data: a list version of the fields (1 CORD2C only)
         """
         Cord2x.__init__(self, cid, rid, origin, zaxis, xzplane, comment=comment)
 
@@ -2015,9 +2109,6 @@ class CORD2S(Cord2x, SphericalCoord):
         +--------+-----+-----+-----+----+-----+----+----+-----+
         |        | B3  | C1  | C2  | C3 |     |    |    |     |
         +--------+-----+-----+-----+----+-----+----+----+-----+
-
-        :param card: a BDFCard object
-        :param data: a list version of the fields (1 CORD2S only)
         """
         Cord2x.__init__(self, cid, rid, origin, zaxis, xzplane, comment=comment)
 

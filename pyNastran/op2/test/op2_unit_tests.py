@@ -19,7 +19,7 @@ from pyNastran.op2.tables.oef_forces.oef_force_objects import RealPlateBilinearF
 from pyNastran.op2.tables.ogf_gridPointForces.ogf_objects import RealGridPointForcesArray
 from pyNastran.op2.export_to_vtk import export_to_vtk_filename
 from pyNastran.op2.vector_utils import filter1d
-
+from pyNastran.utils.log import SimpleLogger
 
 class TestOP2(Tester):
     #def _spike(self):
@@ -321,47 +321,55 @@ class TestOP2(Tester):
 
     def test_op2_solid_shell_bar_01_gpforce_xyz(self):
         folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'sol_101_elements'))
-        bdf_filename = os.path.join(folder, 'solid_shell_bar_xyz.bdf')
-        op2_filename = os.path.join(folder, 'solid_shell_bar_xyz.op2')
-        op2 = read_op2_geom(op2_filename, debug=False)
+        bdf_filename1 = os.path.join(folder, 'static_solid_shell_bar_xyz.bdf')
+        op2_filename1 = os.path.join(folder, 'static_solid_shell_bar_xyz.op2')
+        op2_1 = read_op2_geom(op2_filename1, debug=False)
 
-        i_transform, beta_transforms = op2.get_displacement_index_transforms()
-        op2.transform_displacements_to_global(i_transform, beta_transforms)
+        i_transform, beta_transforms = op2_1.get_displacement_index_transforms()
+        op2_1.transform_displacements_to_global(i_transform, coords=op2_1.coords)
 
-        gpforce = op2.grid_point_forces[1]
-        op2.cross_reference(xref_elements=False,
-                            xref_nodes_with_elements=False,
-                            xref_properties=False,
-                            xref_masses=False,
-                            xref_materials=False,
-                            xref_loads=False,
-                            xref_constraints=False,
-                            xref_aero=False,
-                            xref_sets=False,
-                            xref_optimization=False)
-        xyz_cid0 = op2.get_xyz_in_coord(cid=0)
-        nid_cd = np.array([[nid, node.Cd()] for nid, node in sorted(iteritems(op2.nodes))])
+        gpforce = op2_1.grid_point_forces[1]
+        op2_1.cross_reference(xref_elements=False,
+                              xref_nodes_with_elements=False,
+                              xref_properties=False,
+                              xref_masses=False,
+                              xref_materials=False,
+                              xref_loads=False,
+                              xref_constraints=False,
+                              xref_aero=False,
+                              xref_sets=False,
+                              xref_optimization=False)
+        xyz_cid0 = op2_1.get_xyz_in_coord(cid=0)
+        nid_cd = np.array([[nid, node.Cd()] for nid, node in sorted(iteritems(op2_1.nodes))])
 
         #model = BDF(debug=False)
         #model.read_bdf(bdf_filename)
 
+        #-------------------------------------------------
         data = _get_gpforce_data()
-        coords = op2.coords
-        print(op2.coords)
+        coords = op2_1.coords
+        used_cds = np.unique(nid_cd[:, 1])
+        for cd in used_cds:
+            coord = op2_1.coords[cd]
+            print(coord)
+            print('origin = %s' % coord.origin)
+            print('beta =\n%s' % coord.beta())
+            print('-----------------------------')
+
         for datai in data:
             eids, nids, cid, summation_point, total_force_local_expected, total_moment_local_expected = datai
             coord_out = coords[cid]
-            op2.log.debug('*' * 30 + 'Next Test' + '*' * 30)
+            op2_1.log.debug('*' * 30 + 'Next Test' + '*' * 30)
             out = gpforce.extract_interface_loads(
                 nids, eids,
                 coord_out, coords,
                 nid_cd, i_transform, beta_transforms,
-                xyz_cid0, summation_point, itime=0, debug=False, logger=op2.log)
+                xyz_cid0, summation_point, itime=0, debug=False, logger=op2_1.log)
             total_force_global, total_moment_global, total_force_local, total_moment_local = out
 
-            op2.log.debug('***********')
-            op2.log.debug('force = %s; %s' % (total_force_global, np.linalg.norm(total_force_global)))
-            op2.log.debug('moment = %s; %s' % (total_moment_global, np.linalg.norm(total_moment_global)))
+            op2_1.log.debug('***********')
+            op2_1.log.debug('force = %s; %s' % (total_force_global, np.linalg.norm(total_force_global)))
+            op2_1.log.debug('moment = %s; %s' % (total_moment_global, np.linalg.norm(total_moment_global)))
 
             case = 'eids=%s nids=%s cid=%s summation_point=%s' % (
                 eids, nids, cid, summation_point)
@@ -377,46 +385,66 @@ class TestOP2(Tester):
 
     @unittest.expectedFailure
     def test_op2_solid_shell_bar_01_gpforce_radial(self):
+        warning_log = SimpleLogger(level='warning')
+        debug_log = SimpleLogger(level='debug')
         folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'sol_101_elements'))
         #bdf_filename = os.path.join(folder, 'static_solid_shell_bar_radial.bdf')
         op2_filename = os.path.join(folder, 'static_solid_shell_bar_radial.op2')
-        op2 = read_op2_geom(op2_filename)
+        op2_1 = read_op2_geom(op2_filename, log=warning_log)
+        op2_1.log = debug_log
 
-        i_transform, beta_transforms = op2.get_displacement_index_transforms()
-        op2.transform_displacements_to_global(i_transform, beta_transforms)
+        op2_1.cross_reference(xref_elements=False,
+                              xref_nodes_with_elements=False,
+                              xref_properties=False,
+                              xref_masses=False,
+                              xref_materials=False,
+                              xref_loads=False,
+                              xref_constraints=False,
+                              xref_aero=False,
+                              xref_sets=False,
+                              xref_optimization=False)
+        xyz_cid0 = op2_1.get_xyz_in_coord(cid=0)
 
-        gpforce = op2.grid_point_forces[1]
+        nid_cd = np.array([[nid, node.Cd()] for nid, node in sorted(iteritems(op2_1.nodes))])
+        #-------------------------------------------------
+        coords = op2_1.coords
+        used_cds = np.unique(nid_cd[:, 1])
+        for cd in used_cds:
+            coord = op2_1.coords[cd]
+            print(coord)
+            print('origin = %s' % coord.origin)
+            print('beta =\n%s' % coord.beta())
+            print('-----------------------------')
 
-        op2.cross_reference(xref_elements=False,
-                            xref_nodes_with_elements=False,
-                            xref_properties=False,
-                            xref_masses=False,
-                            xref_materials=False,
-                            xref_loads=False,
-                            xref_constraints=False,
-                            xref_aero=False,
-                            xref_sets=False,
-                            xref_optimization=False)
-        xyz_cid0 = op2.get_xyz_in_coord(cid=0)
+        disp = op2_1.displacements[1]
+        #for line in list(disp.data[0, :, :3]):
+            #print('%10.4e %10.4e %10.4e' % tuple(line))
 
-        nid_cd = np.array([[nid, node.Cd()] for nid, node in sorted(iteritems(op2.nodes))])
+        i_transform, beta_transforms = op2_1.get_displacement_index_transforms()
+        i_transform = op2_1.get_displacement_index()
+        op2_1.transform_displacements_to_global(i_transform, coords, xyz_cid0=xyz_cid0)
+        #print('stuff...')
+        #disp = op2_1.displacements[1]
+        #for line in list(disp.data[0, :, :3]):
+            #print('%10.4e %10.4e %10.4e' % tuple(line))
+        #print(disp.data[0, :, :3])
 
+        gpforce = op2_1.grid_point_forces[1]
         data = _get_gpforce_data()
-        coords = op2.coords
         for i, datai in enumerate(data):
             eids, nids, cid, summation_point, total_force_local_expected, total_moment_local_expected = datai
             coord_out = coords[cid]
-            op2.log.debug('*' * 30 + 'Next Test #%s' % i + '*' * 30)
+            op2_1.log.debug('*' * 30 + 'Next Test #%s' % i + '*' * 30)
             out = gpforce.extract_interface_loads(
                 nids, eids,
                 coord_out, coords,
                 nid_cd, i_transform, beta_transforms,
-                xyz_cid0, summation_point, itime=0, debug=False, logger=op2.log)
+                xyz_cid0, summation_point, itime=0, debug=False, logger=op2_1.log)
             total_force_global, total_moment_global, total_force_local, total_moment_local = out
 
-            op2.log.debug('***********')
-            op2.log.debug('force = %s; %s' % (total_force_global, np.linalg.norm(total_force_global)))
-            op2.log.debug('moment = %s; %s' % (total_moment_global, np.linalg.norm(total_moment_global)))
+            op2_1.log.debug('***********')
+            op2_1.log.debug('force = %s; %s' % (total_force_global, np.linalg.norm(total_force_global)))
+            op2_1.log.debug('moment = %s; %s' % (total_moment_global, np.linalg.norm(total_moment_global)))
 
             case = 'eids=%s nids=%s cid=%s summation_point=%s' % (
                 eids, nids, cid, summation_point)

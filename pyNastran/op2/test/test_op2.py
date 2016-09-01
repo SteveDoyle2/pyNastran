@@ -496,17 +496,23 @@ def main():
     msg += "  -g, --geometry        Reads the OP2 for geometry, which can be written out\n"
     msg += "  -n, --write_bdf       Writes the bdf to fem.test_op2.bdf (default=False)\n" # n is for NAS
     msg += "  -f, --write_f06       Writes the f06 to fem.test_op2.f06\n"
-    if not is_release:
-        msg += "  -m, --write_xlsx      Writes an XLSX to fem.test_op2.xlsx\n"  # m is for Microsoft
-        msg += "  -o, --write_op2       Writes the op2 to fem.test_op2.op2\n"
-        msg += '  -p, --profile     Profiles the code (default=False)\n'
     msg += "  -z, --is_mag_phase    F06 Writer writes Magnitude/Phase instead of\n"
     msg += "                        Real/Imaginary (still stores Real/Imag); [default: False]\n"
     msg += "  -s <sub>, --subcase   Specify one or more subcases to parse; (e.g. 2_5)\n"
     msg += "  -w, --is_sort2        Sets the F06 transient to SORT2\n"
     msg += "  -x <arg>, --exclude   Exclude specific results\n"
-    msg += "  -h, --help            Show this help message and exit\n"
-    msg += "  -v, --version         Show program's version number and exit\n"
+
+    if not is_release:
+        msg += "\n"
+        msg += "Developer:\n"
+        msg += "  -m, --write_xlsx  Writes an XLSX to fem.test_op2.xlsx\n"  # m is for Microsoft
+        msg += "  -o, --write_op2   Writes the op2 to fem.test_op2.op2\n"
+        msg += '  -p, --profile     Profiles the code (default=False)\n'
+
+    msg += "\n"
+    msg += "Info:\n"
+    msg += "  -h, --help     Show this help message and exit\n"
+    msg += "  -v, --version  Show program's version number and exit\n"
 
     if len(sys.argv) == 1:
         sys.exit(msg)

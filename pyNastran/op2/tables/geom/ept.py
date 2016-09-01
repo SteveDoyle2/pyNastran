@@ -281,8 +281,8 @@ class EPT(GeomCommon):
             assert len(endpack) == 16, endpack
             (k1, k2, s1, s2, nsia, nsib, cwa, cwb, # 8
              m1a, m2a, m1b, m2b, n1a, n2a, n1b, n2b ) = endpack # 8 -> 16
-            self.log.info('    k=[%s,%s] s=[%s,%s] nsi=[%s,%s] cw=[%s,%s] '
-                          'ma=[%s,%s] mb=[%s,%s] na=[%s,%s] nb=[%s,%s]' % (tuple(endpack)))
+            self.log.debug('    k=[%s,%s] s=[%s,%s] nsi=[%s,%s] cw=[%s,%s] '
+                           'ma=[%s,%s] mb=[%s,%s] na=[%s,%s] nb=[%s,%s]' % (tuple(endpack)))
             data_in.append(endpack)
 
             prop = PBEAM.add_op2_data(data_in)

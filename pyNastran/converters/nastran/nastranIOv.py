@@ -123,7 +123,7 @@ class NastranIO(object):
         self.has_caero = False
         self.dependents_nodes = set([])
         self.i_transform = {}
-        self.transforms = {}
+        #self.transforms = {}
 
     def get_nastran_wildcard_geometry_results_functions(self):
         """
@@ -337,7 +337,7 @@ class NastranIO(object):
         self.eid_maps[name] = {}
         self.nid_maps[name] = {}
         self.i_transform = {}
-        self.transforms = {}
+        #self.transforms = {}
         #print('bdf_filename=%r' % bdf_filename)
         #key = self.case_keys[self.icase]
         #case = self.result_cases[key]
@@ -392,7 +392,8 @@ class NastranIO(object):
                                        xref_nodes_with_elements=False)
 
         # get indicies and transformations for displacements
-        self.i_transform, self.transforms = model.get_displacement_index_transforms()
+        #self.i_transform, self.transforms = model.get_displacement_index_transforms()
+        self.i_transform = model.get_displacement_index()
 
         nnodes = len(model.nodes)
         nspoints = 0
@@ -3766,11 +3767,12 @@ class NastranIO(object):
         # tansform displacements into global coordinates
         try:
             i_transform = self.i_transform
-            transforms = self.transforms
+            #transforms = self.transforms
         except AttributeError:
             self.log.error('Skipping displacment transformation')
         else:
-            model.transform_displacements_to_global(i_transform, transforms)
+            model.transform_displacements_to_global(
+                i_transform, self.model.coords, xyz_cid0=self.xyz_cid0)
 
         #if 0:
             #cases = OrderedDict()

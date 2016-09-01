@@ -2790,6 +2790,51 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         else:
             return msg
 
+    def get_displacement_index(self):
+        """
+        Get index and transformation matricies for nodes with
+        their output in coordinate systems other than the global.
+        Used in combination with ``OP2.transform_displacements_to_global``
+
+        Returns
+        ----------
+        i_transform : dict{int:(n,) int ndarray}
+            Dictionary from coordinate id to index of the nodes in
+            ``self.point_ids`` that their output (`CD`) in that
+            coordinate system.
+
+        Example
+        -------
+        # assume GRID 1 has a CD=10
+        # assume GRID 2 has a CD=10
+        # assume GRID 5 has a CD=50
+        >>> model.point_ids
+        [1, 2, 5]
+        >>> i_transform = model.get_displacement_index()
+        >>> i_transform[10]
+        [0, 1]
+
+        >>> i_transform[50]
+        [2]
+        """
+        nids_transform = {}
+        i_transform = {}
+        if len(self.coords) == 1:  # was ncoords > 2; changed b/c seems dangerous
+            return i_transform #, beta_transforms
+
+        for nid, node in sorted(iteritems(self.nodes)):
+            cid_d = node.Cd()
+            if cid_d:
+                if cid_d not in nids_transform:
+                    nids_transform[cid_d] = []
+                nids_transform[cid_d].append(nid)
+
+        nids_all = np.array(sorted(self.point_ids))
+        for cid in sorted(iterkeys(nids_transform)):
+            nids = np.array(nids_transform[cid])
+            i_transform[cid] = np.where(np.in1d(nids_all, nids))[0]
+        return i_transform
+
     def get_displacement_index_transforms(self):
         """
         Get index and transformation matricies for nodes with
@@ -2828,10 +2873,12 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         [0., 1., 0.]
         [0., 0., 1.]
         """
+        self.deprecated('i_transforms, model.get_displacement_index_transforms()',
+                        'itransforms, beta_transforms = model.get_displacement_index()', '0.9.0')
         nids_transform = {}
         i_transform = {}
         beta_transforms = {}
-        if len(self.coords) == 1:  # was ncords > 2; changed b/c seems dangerous
+        if len(self.coords) == 1:  # was ncoords > 2; changed b/c seems dangerous
             return i_transform, beta_transforms
 
         for nid, node in sorted(iteritems(self.nodes)):

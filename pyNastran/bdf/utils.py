@@ -858,7 +858,8 @@ def deprecated(old_name, new_name, deprecated_version, levels=None):
     new_line = ''
     if new_name:
         new_line = "; replace it with '%s'\n" % new_name
-    msg = "'%s' was deprecated in v%s%s" % (old_name, deprecated_version, new_line)
+    msg = "'%s' was deprecated in v%s%s (current=%s)" % (
+        old_name, version, deprecated_version, new_line)
 
     for level in levels:
         # jump to get out of the inspection code
