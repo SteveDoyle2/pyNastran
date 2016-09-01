@@ -111,7 +111,7 @@ class TestNastranGUI(unittest.TestCase):
         test.load_nastran_geometry(bdf_filename, None)
 
     def test_femap_rougv1_01(self):
-        dirname = os.path.join(model_path, 'femap')
+        dirname = os.path.join(model_path, 'femap_exhaust')
         bdf_filename = os.path.join(dirname, 'modal_example.bdf')
         op2_filename = os.path.join(dirname, 'modal_example.op2')
 

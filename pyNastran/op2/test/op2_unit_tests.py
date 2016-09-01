@@ -15,7 +15,8 @@ from pyNastran.op2.op2_geom import read_op2_geom
 from pyNastran.op2.test.test_op2 import run_op2
 
 from pyNastran.bdf.test.bdf_unit_tests import Tester
-from pyNastran.op2.tables.oef_forces.oef_force_objects import RealPlateBilinearForceArray, RealPlateForceArray
+from pyNastran.op2.tables.oef_forces.oef_force_objects import (
+    RealPlateBilinearForceArray, RealPlateForceArray)
 from pyNastran.op2.tables.ogf_gridPointForces.ogf_objects import RealGridPointForcesArray
 from pyNastran.op2.export_to_vtk import export_to_vtk_filename
 from pyNastran.op2.vector_utils import filter1d
@@ -47,10 +48,10 @@ class TestOP2(Tester):
 
     def test_ibulk(self):
         """this test will fail if IBULK talble doesn't work"""
-        bdf_filename = os.path.abspath(os.path.join(test_path, 'op2', 'test',
-            'examples', 'ibulk', 'model1_sim1-solution_1.op2'))
-        op2_filename = os.path.abspath(os.path.join(test_path, 'op2', 'test',
-            'examples', 'ibulk', 'model1_sim1-solution_1.op2'))
+        bdf_filename = os.path.abspath(os.path.join(
+            test_path, 'op2', 'test', 'examples', 'ibulk', 'model1_sim1-solution_1.op2'))
+        op2_filename = os.path.abspath(os.path.join(
+            test_path, 'op2', 'test', 'examples', 'ibulk', 'model1_sim1-solution_1.op2'))
         op2 = read_op2(op2_filename, debug=False)
 
     def test_set_results(self):

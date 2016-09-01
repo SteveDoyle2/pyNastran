@@ -16,16 +16,15 @@ class Displacement(object):
 
 def load():
     fname = 'test.hdf5'
-    f = h5py.File(fname, 'w')
-    d = Displacement()
+    with h5py.File(fname, 'w') as f:
+        d = Displacement()
 
-    f1 = f.create_group('disp1')
-    print(f1.name)
-    d.build(f1)
+        f1 = f.create_group('disp1')
+        print(f1.name)
+        d.build(f1)
 
-    f2 = f.create_group('disp2')
-    d.build(f2)
-    f.close()
+        f2 = f.create_group('disp2')
+        d.build(f2)
     return fname
 
 def op2():
