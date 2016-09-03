@@ -23,6 +23,52 @@ from pyNastran.utils.log import get_logger
 
 from pyNastran.converters.ugrid.surf_reader import TagReader
 
+def read_ugrid(ugrid_filename=None,
+             encoding=None, log=None, debug=True):
+    """
+    Creates the BDF object
+
+    Parameters
+    ----------
+    bdf_filename : str (default=None -> popup)
+        the ugrid filename
+    debug : bool/None
+        used to set the logger if no logger is passed in
+            True:  logs debug/info/error messages
+            False: logs info/error messages
+            None:  logs error messages
+    log : logging module object / None
+        if log is set, debug is ignored and uses the
+        settings the logging object has
+
+    Returns
+    -------
+    model : UGRID()
+        an UGRID object
+
+    .. code-block:: python
+
+       >>> model = read_ugrid()
+       >>> modelf.read_bdf(bdf_filename, xref=True)
+       #>>> g1 = bdf.Node(1)
+       #>>> print(g1.get_position())
+       #[10.0, 12.0, 42.0]
+       #>>> bdf.write_card(bdf_filename2)
+       #>>> print(bdf.card_stats())
+
+       #---BDF Statistics---
+       #SOL 101
+       #bdf.nodes = 20
+       #bdf.elements = 10
+       #etc.
+
+    .. note :: this method will change in order to return an object that
+               does not have so many methods
+    .. todo:: finish this
+    """
+    ugrid_model = UGRID(log=None, debug=False)
+    ugrid_model.read_ugrid(ugrid_filename)
+    return ugrid_model
 
 class UGRID(object):
     """
@@ -72,7 +118,7 @@ class UGRID(object):
         $Number_of_Vol_Tets 1036480
         """
         out = determine_dytpe_nfloat_endian_from_ugrid_filename(ugrid_filename)
-        ndarray_float, float_fmt, nfloat, endian = out
+        ndarray_float, float_fmt, nfloat, endian, ugrid_filename = out
 
         # more for documentation than anything else
         assert ndarray_float in ['float32', 'float64'], ndarray_float
@@ -265,12 +311,12 @@ class UGRID(object):
                 raise RuntimeError(size)
 
             if 1:
-                print('writing GRID')
+                self.log.debug('writing GRID')
                 for nid, node in enumerate(self.nodes):
                     card = ['GRID', nid + 1, None] + list(node)
                     bdf_file.write(print_card(card))
             else:
-                print('skipping GRID')
+                self.log.debug('skipping GRID')
 
             eid = 1
             pids = self.pids
@@ -278,13 +324,13 @@ class UGRID(object):
                 upids = unique(pids)  # auto-sorts
                 for pid in upids:
                     bdf_file.write('PSHELL,%i,%i, 0.1\n' % (pid, mid))
-                print('writing CTRIA3')
+                self.log.debug('writing CTRIA3')
                 for element in self.tris:
                     bdf_file.write('CTRIA3  %-8i%-8i%-8i%-8i%-8i\n' % (
                         eid, pids[eid-1], element[0], element[1], element[2]))
                     eid += 1
 
-                print('writing CQUAD4')
+                self.log.debug('writing CQUAD4')
                 for element in self.quads:
                     bdf_file.write('CQUAD4  %-8i%-8i%-8i%-8i%-8i%-8i\n' % (
                         eid, pids[eid-1], element[0], element[1], element[2], element[3]))
@@ -305,7 +351,7 @@ class UGRID(object):
 
     def check_hanging_nodes(self, stop_on_diff=True):
         """verifies that all nodes are used"""
-        self.log.info('checking hanging nodes')
+        self.log.debug('checking hanging nodes')
         tris = self.tris
         quads = self.quads
         pids = self.pids
@@ -377,7 +423,7 @@ class UGRID(object):
     def write_ugrid(self, ugrid_filename_out, check_shells=True):
         """writes a UGrid model"""
         outi = determine_dytpe_nfloat_endian_from_ugrid_filename(ugrid_filename_out)
-        ndarray_float, float_fmt, nfloat, endian = outi
+        ndarray_float, float_fmt, nfloat, endian, ugrid_filename = outi
 
         nodes = self.nodes
         nnodes = nodes.shape[0]
@@ -458,7 +504,7 @@ class UGRID(object):
         """writes the Nastran BDF solid elements"""
         #pid = 0
         bdf_file.write('PSOLID,%i,1\n' % pid)
-        print('writing CTETRA')
+        self.log.debug('writing CTETRA')
         bdf_file.write('$ CTETRA\n')
         for element in self.tets:
             #card = ['CTETRA', eid, pid] + list(element)
@@ -469,21 +515,21 @@ class UGRID(object):
 
         if convert_pyram_to_penta:
             # skipping the penta5s
-            print('writing CPYRAM as CPENTA with node6=node5')
+            self.log.debug('writing CPYRAM as CPENTA with node6=node5')
             bdf_file.write('$ CPYRAM - CPENTA5\n')
             for element in self.penta5s:
                 bdf_file.write('CPENTA  %-8i%-8i%-8i%-8i%-8i%-8i%-8i%-8i\n' % (
                     eid, pid, element[0], element[1], element[2], element[3], element[4], element[4]))
                 eid += 1
         else:
-            print('writing CPYRAM')
+            self.log.debug('writing CPYRAM')
             bdf_file.write('$ CPYRAM - CPENTA5\n')
             for element in self.penta5s:
                 bdf_file.write('CPYRAM  %-8i%-8i%-8i%-8i%-8i%-8i%-8i\n' % (
                     eid, pid, element[0], element[1], element[2], element[3], element[4]))
                 eid += 1
 
-        print('writing CPENTA')
+        self.log.debug('writing CPENTA')
         bdf_file.write('$ CPENTA6\n')
         for element in self.penta6s:
             #card = ['CPENTA', eid, pid] + list(element)
@@ -492,7 +538,7 @@ class UGRID(object):
                 eid, pid, element[0], element[1], element[2], element[3], element[4], element[5]))
             eid += 1
 
-        print('writing CHEXA')
+        self.log.debug('writing CHEXA')
         bdf_file.write('$ CHEXA\n')
         for element in self.hexas:
             #card = ['CHEXA', eid, pid] + list(element)
@@ -990,8 +1036,22 @@ class UGRID(object):
         return
 
 
-def determine_dytpe_nfloat_endian_from_ugrid_filename(ugrid_filename):
+def determine_dytpe_nfloat_endian_from_ugrid_filename(ugrid_filename=None):
     """figures out what the format of the binary data is based on the filename"""
+    if ugrid_filename is None:
+        from pyNastran.utils.gui_io import load_file_dialog
+        wildcard_wx = "AFLR3 UGRID (*.ugrid)|" \
+            "*.ugrid|" \
+            "All files (*.*)|*.*"
+        wildcard_qt = "AFLR3 UGRID (*.ugrid);;All files (*)"
+        title = 'Please select an AFLR3 UGRID to load'
+        ugrid_filename = load_file_dialog(title, wildcard_wx, wildcard_qt)[0]
+        assert ugrid_filename is not None, ugrid_filename
+
+    if not os.path.exists(ugrid_filename):
+        msg = 'cannot find ugrid_filename=%r\n%s' % (ugrid_filename, print_bad_path(ugrid_filename))
+        raise IOError(msg)
+
     try:
         base, file_format, ext = os.path.basename(ugrid_filename).split('.')
     except ValueError:
@@ -1023,7 +1083,7 @@ def determine_dytpe_nfloat_endian_from_ugrid_filename(ugrid_filename):
     else:  # fortran unformatted
         msg = 'file_format=%r ugrid_filename=%s' % (file_format, ugrid_filename)
         raise NotImplementedError(msg)
-    return ndarray_float, float_fmt, nfloat, endian
+    return ndarray_float, float_fmt, nfloat, endian, ugrid_filename
 
 
 def main():

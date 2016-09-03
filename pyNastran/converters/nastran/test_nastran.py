@@ -1,0 +1,55 @@
+from six.moves import range
+import os
+from numpy import array_equal, allclose
+import unittest
+
+import pyNastran
+from pyNastran.bdf.bdf import read_bdf
+
+from pyNastran.converters.nastran.nastran_to_tecplot import nastran_to_tecplot
+from pyNastran.converters.nastran.nastran_to_cart3d import nastran_to_cart3d
+from pyNastran.converters.nastran.nastran_to_stl import nastran_to_stl
+from pyNastran.converters.nastran.nastran_to_ugrid import nastran_to_ugrid
+
+from pyNastran.converters.ugrid.ugrid_reader import read_ugrid
+
+pkg_path = pyNastran.__path__[0]
+model_path = os.path.join(pkg_path, '../', 'models')
+
+class TestNastran(unittest.TestCase):
+
+    def test_nastran_to_ugrid_01(self):
+        bdf_filename = os.path.join(model_path, 'solid_bending', 'solid_bending.bdf')
+
+        size = 8
+        debug = False
+        model = read_bdf(bdf_filename, log=None, debug=debug)
+        log = model.log
+        #model.skin_solid_elements()
+        skin_filename = os.path.join(model_path, 'solid_bending', 'solid_skin.bdf')
+        model.write_skin_solid_faces(skin_filename, write_solids=True,
+                                    write_shells=True,
+                                    size=size, is_double=False, encoding=None)
+
+        bdf_model = read_bdf(skin_filename, log=log, debug=debug)
+        ugrid_filename_out = os.path.join(model_path, 'solid_bending', 'solid_skin.b8.ugrid')
+        nastran_to_ugrid(bdf_model, ugrid_filename_out, properties=None,
+                         check_shells=True, check_solids=True)
+        ugrid = read_ugrid(ugrid_filename_out, encoding=None, log=log,
+                           debug=debug)
+
+        skin_bdf_filename2 = os.path.join(model_path, 'solid_bending', 'solid_skin2.bdf')
+        ugrid.write_bdf(skin_bdf_filename2, include_shells=True, include_solids=True,
+                  convert_pyram_to_penta=True, encoding=None,
+                  size=size, is_double=False)
+        model2 = read_bdf(skin_bdf_filename2, log=log, debug=debug)
+
+
+if __name__ == '__main__':  # pragma: no cover
+    import time
+    t0 = time.time()
+    unittest.main()
+    #test_1()
+    #test_2()
+    #test_3()
+    print("dt = %s" % (time.time() - t0))

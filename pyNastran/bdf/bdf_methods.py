@@ -16,7 +16,7 @@ reading/writing/accessing of BDF data.  Such methods include:
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import iteritems, string_types, PY2
+from six import iterkeys, itervalues, iteritems, string_types, PY2
 from six.moves import zip
 from codecs import open
 
@@ -437,7 +437,8 @@ class BDFMethods(BDFAttributes):
                 m = elem.Mass()
                 centroid = elem.Centroid()
                 if mass > 0.0:
-                    self.log.info('elem.type=%s is not supported in new mass properties method' % elem.type)
+                    self.log.info('elem.type=%s is not supported in new mass properties method' %
+                                  elem.type)
                 else:
                     self.log.info('elem.type=%s doesnt have mass' % elem.type)
             (x, y, z) = centroid - reference_point
@@ -956,7 +957,8 @@ class BDFMethods(BDFAttributes):
                     if nodes[3] in nids:
                         nodesi += 1
                 else:
-                    raise RuntimeError('invalid number of nodes on PLOAD card; nodes=%s' % str(nodes))
+                    raise RuntimeError('invalid number of nodes on PLOAD card; '
+                                       'nodes=%s' % str(nodes))
                 if nodes[0] in nids:
                     nodesi += 1
                 if nodes[1] in nids:
@@ -1115,7 +1117,8 @@ class BDFMethods(BDFAttributes):
                         raise FloatingPointError(msg)
                     del Mdir
                 else:
-                    raise NotImplementedError('Type=%r is not supported.  Use "FX", "FXE".' % load.Type)
+                    raise NotImplementedError('Type=%r is not supported.  '
+                                              'Use "FX", "FXE".' % load.Type)
 
             elif load.type == 'PLOAD2':
                 pressure = load.pressure * scale
@@ -1132,7 +1135,8 @@ class BDFMethods(BDFAttributes):
                         F += f
                         M += m
                     else:
-                        self.log.debug('case=%s etype=%r loadtype=%r not supported' % (loadcase_id, elem.type, load.type))
+                        self.log.debug('case=%s etype=%r loadtype=%r not supported' % (
+                            loadcase_id, elem.type, load.type))
             elif load.type == 'PLOAD4':
                 assert load.Cid() == 0, 'Cid() = %s' % (load.Cid())
                 assert load.sorl == 'SURF', 'sorl = %s' % (load.sorl)
@@ -1180,26 +1184,30 @@ class BDFMethods(BDFAttributes):
 
                     elif elem.type == 'CTETRA':
                         #face = elem.get_face(load.g1.nid, load.g34.nid)
-                        face, area, centroid, normal = elem.getFaceAreaCentroidNormal(load.g1.nid, load.g34.nid)
+                        face_acn = elem.getFaceAreaCentroidNormal(load.g1.nid, load.g34.nid)
+                        face, area, centroid, normal = face_acn
                         nface = 3
 
                     elif elem.type == 'CHEXA':
                         #face = elem.get_face(load.g1.nid, load.g34.nid)
-                        face, area, centroid, normal = elem.getFaceAreaCentroidNormal(load.g1.nid, load.g34.nid)
+                        face_acn = elem.getFaceAreaCentroidNormal(load.g1.nid, load.g34.nid)
+                        face, area, centroid, normal = face_acn
                         nface = 4
 
                     elif elem.type == 'CPENTA':
                         g1 = load.g1.nid
                         if load.g34 is None:
                             #face = elem.get_face(g1)
-                            face, area, centroid, normal = elem.getFaceAreaCentroidNormal(g1)
+                            face_acn = elem.getFaceAreaCentroidNormal(g1)
                             nface = 3
                         else:
                             #face = elem.get_face(load.g1.nid, load.g34.nid)
-                            face, area, centroid, normal = elem.getFaceAreaCentroidNormal(g1, load.g34.nid)
+                            face_acn = elem.getFaceAreaCentroidNormal(g1, load.g34.nid)
                             nface = 4
+                        face, area, centroid, normal = face_acn
                     else:
-                        self.log.debug('case=%s eid=%s etype=%r loadtype=%r not supported' % (loadcase_id, eid, elem.type, load.type))
+                        self.log.debug('case=%s eid=%s etype=%r loadtype=%r not supported' % (
+                            loadcase_id, eid, elem.type, load.type))
                         continue
                     r = centroid - p
 
@@ -1207,8 +1215,9 @@ class BDFMethods(BDFAttributes):
                     assert len(pressures) == nface
                     if min(pressures) != max(pressures):
                         pressure = mean(pressures)
-                        #msg = '%s%s\npressure.min=%s != pressure.max=%s using average of %%s; load=%s eid=%%s'  % (
-                            #str(load), str(elem), min(pressures), max(pressures), load.sid)
+                        msg = ('%s%s\npressure.min=%s != pressure.max=%s using average of %%s; '
+                               'load=%s eid=%%s'  % (str(load), str(elem), min(pressures),
+                                                     max(pressures), load.sid))
                         #print(msg % (pressure, eid))
                     else:
                         pressure = pressures[0]
@@ -1459,9 +1468,11 @@ class BDFMethods(BDFAttributes):
                 if x1 != x2:
                     # continue
                     if not load.type in ['FX', 'FY', 'FZ']:
-                        print('PLOAD1 x1 != x2 continue; x1=%s x2=%s; scale=%r\n%s%s'% (x1, x2, load.scale, str(elem), str(load)))
+                        print('PLOAD1 x1 != x2 continue; x1=%s x2=%s; scale=%r\n%s%s'% (
+                            x1, x2, load.scale, str(elem), str(load)))
                         continue
-                    print('check this...PLOAD1 x1 != x2; x1=%s x2=%s; scale=%r\n%s%s'% (x1, x2, load.scale, str(elem), str(load)))
+                    print('check this...PLOAD1 x1 != x2; x1=%s x2=%s; scale=%r\n%s%s'% (
+                        x1, x2, load.scale, str(elem), str(load)))
 
                     # y = (y2-y1)/(x2-x1)*(x-x1) + y1
                     # y = (y2-y1) * (x-x1)/(x2-x1) + y1
@@ -1490,7 +1501,8 @@ class BDFMethods(BDFAttributes):
                         Ftotal = L * (x2-x1) * (p1 + p2)/2.
                         Mx = L * p1 * (x2-x1)/2. + L * (p2-p1) * (2./3. * x2 + 1./3. * x1)
                         x = Mx / Ftotal
-                    print('L=%s x1=%s x2=%s p1/L=%s p2/L=%s Ftotal=%s Mtotal=%s x=%s' % (L, x1, x2, p1, p2, Ftotal, Mx, x))
+                    print('L=%s x1=%s x2=%s p1/L=%s p2/L=%s Ftotal=%s Mtotal=%s x=%s' % (
+                        L, x1, x2, p1, p2, Ftotal, Mx, x))
 
                     i = Ldir
                     if load.Type in ['FX', 'FY', 'FZ']:
@@ -1503,7 +1515,8 @@ class BDFMethods(BDFAttributes):
                         elif load.Type == 'FZ':
                             Fdir = array([0., 0., 1.])
                         else:
-                            raise NotImplementedError('Type=%r is not supported.  Use "FX", "FY", "FZ".' % load.Type)
+                            raise NotImplementedError('Type=%r is not supported.  '
+                                                      'Use "FX", "FY", "FZ".' % load.Type)
 
                     Fi = Ftotal * Fdir
                     Mi = cross(r - p, Fdir * Ftotal)
@@ -1583,7 +1596,8 @@ class BDFMethods(BDFAttributes):
                             raise FloatingPointError(msg)
                         del Mdir
                     else:
-                        raise NotImplementedError('Type=%r is not supported.  Use "FX", "FXE".' % load.Type)
+                        raise NotImplementedError('Type=%r is not supported.  '
+                                                  'Use "FX", "FXE".' % load.Type)
 
             elif load.type == 'PLOAD2':
                 pressure = load.pressure * scale
@@ -1598,7 +1612,8 @@ class BDFMethods(BDFAttributes):
                         F += f
                         M += m
                     else:
-                        self.log.debug('case=%s etype=%r loadtype=%r not supported' % (loadcase_id, elem.type, load.type))
+                        self.log.debug('case=%s etype=%r loadtype=%r not supported' % (
+                            loadcase_id, elem.type, load.type))
             elif load.type == 'PLOAD4':
                 assert load.Cid() == 0, 'Cid() = %s' % (load.Cid())
                 assert load.sorl == 'SURF', 'sorl = %s' % (load.sorl)
@@ -1644,24 +1659,27 @@ class BDFMethods(BDFAttributes):
                         nface = 4
                     elif elem.type == 'CTETRA':
                         #face1 = elem.get_face(load.g1.nid, load.g34.nid)
-                        face, area, centroid, normal = elem.getFaceAreaCentroidNormal(load.g1.nid, load.g34.nid)
+                        face_acn = elem.getFaceAreaCentroidNormal(load.g1.nid, load.g34.nid)
+                        face, area, centroid, normal = face_acn
                         #assert face == face1
                         nface = 3
                     elif elem.type == 'CHEXA':
                         #face1 = elem.get_face(load.g34.nid, load.g1.nid)
-                        face, area, centroid, normal = elem.getFaceAreaCentroidNormal(load.g34.nid, load.g1.nid)
+                        face_acn = elem.getFaceAreaCentroidNormal(load.g34.nid, load.g1.nid)
+                        face, area, centroid, normal = face_acn
                         #assert face == face1
                         nface = 4
                     elif elem.type == 'CPENTA':
                         g1 = load.g1.nid
                         if load.g34 is None:
                             #face1 = elem.get_face(g1)
-                            face, area, centroid, normal = elem.getFaceAreaCentroidNormal(g1)
+                            face_acn = elem.getFaceAreaCentroidNormal(g1)
                             nface = 3
                         else:
                             #face1 = elem.get_face(g1, load.g34.nid)
-                            face, area, centroid, normal = elem.getFaceAreaCentroidNormal(g1, load.g34.nid)
+                            face_acn = elem.getFaceAreaCentroidNormal(g1, load.g34.nid)
                             nface = 4
+                        face, area, centroid, normal = face_acn
                         #assert face == face1
                     else:
                         msg = ('case=%s eid=%s etype=%r loadtype=%r not supported'
@@ -1673,8 +1691,10 @@ class BDFMethods(BDFAttributes):
                     assert len(pressures) == nface
                     if min(pressures) != max(pressures):
                         pressure = mean(pressures)
-                        #msg = '%s%s\npressure.min=%s != pressure.max=%s using average of %%s; load=%s eid=%%s'  % (
-                            #str(load), str(elem), min(pressures), max(pressures), load.sid)
+                        msg = ('%s%s\npressure.min=%s != pressure.max=%s using average of %%s; '
+                               'load=%s eid=%%s'  % (str(load), str(elem), min(pressures),
+                                                     max(pressures), load.sid))
+
                         #print(msg % (pressure, eid))
                     else:
                         pressure = load.pressures[0]
@@ -1780,8 +1800,7 @@ class BDFMethods(BDFAttributes):
 
     def write_skin_solid_faces(self, skin_filename,
                                write_solids=False, write_shells=True,
-                               encoding=None,
-                               size=8, is_double=False):
+                               size=8, is_double=False, encoding=None):
         """
         Writes the skinned elements
 
@@ -1797,8 +1816,9 @@ class BDFMethods(BDFAttributes):
             the field width
         is_double : bool; default=False
             double precision flag
+        encoding : str; default=None -> system default
+            the string encoding
         """
-        encoding = self.get_encoding(encoding)
         if(len(self.element_ids) == 0 or len(self.material_ids) == 0 or
            len(self.property_ids) == 0):
             return
@@ -1844,7 +1864,50 @@ class BDFMethods(BDFAttributes):
         eid_shell = max(self.elements) + 1
         pid_shell = max(self.properties) + 1
         mid_shell = max(self.materials) + 1
+        self._write_skin_solid_faces(skin_filename, face_map,
+                                     nids_to_write, eids_to_write, mids_to_write, eid_set,
+                                     eid_shell, pid_shell, mid_shell,
+                                     write_solids=write_solids, write_shells=write_shells,
+                                     size=size, is_double=is_double, encoding=encoding)
 
+    def _write_skin_solid_faces(self, skin_filename, face_map,
+                                nids_to_write, eids_to_write, mids_to_write, eid_set,
+                                eid_shell, pid_shell, mid_shell,
+                                write_solids=False, write_shells=True,
+                                size=8, is_double=False, encoding=None):
+        """
+        helper method for ``write_skin_solid_faces``
+
+        Parameters
+        ----------
+        skin_filename : str
+            the file to write
+        face_map : ???
+            ???
+        nids_to_write : ???
+            ???
+        eids_to_write : ???
+            ???
+        mids_to_write : ???
+            ???
+        eid_set : ???
+            ???
+        eid_shell : ???
+            ???
+        pid_shell : ???
+            ???
+        mid_shell : ???
+            ???
+        write_solids : bool; default=False
+            write solid elements that have skinned faces
+        write_shells : bool; default=False
+            write shell elements
+        size : int; default=8
+            the field width
+        is_double : bool; default=False
+            double precision flag
+        """
+        encoding = self.get_encoding(encoding)
         if PY2:
             wb = 'wb'
         else:
@@ -1892,6 +1955,8 @@ class BDFMethods(BDFAttributes):
                         #print(elem)
                         #break
 
+                    elem = next(itervalues(self.elements))
+                    #pid = next(iterkeys(self.properties))
                     pid = elem.Pid()
                     prop = self.properties[pid]
                     try:
@@ -1921,7 +1986,7 @@ class BDFMethods(BDFAttributes):
                     #bdf_file.write(prop.write_card(size=size, is_double=is_double))
             bdf_file.write('ENDDATA\n')
 
-    def remove_unassociated_properties(model, reset_type_to_slot_map=True):
+    def remove_unassociated_properties(self, model, reset_type_to_slot_map=True):
         """remove_unassociated_properties"""
         pids_used = set()
         #elem_types = ['']

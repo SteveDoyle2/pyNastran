@@ -1,5 +1,6 @@
 import unittest
 
+from pyNastran.converters.nastran.test_nastran import TestNastran
 from pyNastran.converters.nastran.test_nastran_gui import TestNastranGUI
 from pyNastran.converters.cart3d.test_cart3d import TestCart3d
 from pyNastran.converters.cart3d.test_cart3d_gui import TestCart3dGUI

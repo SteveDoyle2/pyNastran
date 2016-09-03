@@ -8,6 +8,19 @@ def nastran_to_ugrid(bdf_model, ugrid_filename_out=None, properties=None,
                      check_shells=True, check_solids=True):
     """
     set xref=False
+
+    Parameters
+    ----------
+    bdf_model : BDF()
+        a BDF object
+    ugrid_filename_out : str (default=None -> ???)
+        the path to the ugrid_filename
+    properties : dict???
+        ???
+    check_shells : bool (default=True)
+        ???
+    check_solids : bool (default=True)
+        ???
     """
     # pids_to_inlcude = []
     # for pid, prop in iteritems(model.properties):
