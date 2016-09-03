@@ -545,7 +545,7 @@ def transform_force_moment(force_in_local, moment_in_local,
     moment_out = zeros(force_in_local.shape, dtype=dtype)
 
     nids = nid_cd[:, 0]
-    cds = nid_cd[:, 1]
+    cds = nid_cd[:, 1] * 0
     ucds = unique(cds)
 
     #coord_out_cid = coord_out.cid
@@ -568,6 +568,7 @@ def transform_force_moment(force_in_local, moment_in_local,
         nidsi = nids[i]
         analysis_coord = coords[cd]
         beta_cd = analysis_coord.beta()
+        #print('analysis_coord =\n%s' % analysis_coord)
         print('beta_cd =\n%s' % beta_cd)
 
         print('i =', i)
@@ -576,7 +577,7 @@ def transform_force_moment(force_in_local, moment_in_local,
         #moment_in_locali.astype('float64')
 
         # rotate loads from an arbitrary coordinate system to local xyz
-        if 0:
+        if 1:
             force_in_locali = -force_in_local[i, :]
             moment_in_locali = -moment_in_local[i, :]
         else:

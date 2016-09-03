@@ -424,10 +424,10 @@ class RealGridPointForcesArray(ScalarObject):
         force_global = self.data[itime, irange, :3]
         moment_global = self.data[itime, irange, 3:]
         out = transform_force_moment_sum(force_global, moment_global,
-                                     coord_out, coords, nid_cd[is_in3, :],
-                                     i_transform,
-                                     xyz_cid0[is_in3, :], summation_point_cid0=summation_point,
-                                     debug=debug, logger=logger)
+                                         coord_out, coords, nid_cd[is_in3, :],
+                                         i_transform,
+                                         xyz_cid0[is_in3, :], summation_point_cid0=summation_point,
+                                         debug=debug, logger=logger)
         return out
 
     def find_centroid_of_load(self, f, m):

@@ -2790,6 +2790,128 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         else:
             return msg
 
+    def get_displacement_index_xyz_cp_cd(self, dtype='float64'):
+        """
+        Get index and transformation matricies for nodes with
+        their output in coordinate systems other than the global.
+        Used in combination with ``OP2.transform_displacements_to_global``
+
+        Returns
+        ----------
+        icd_transform : dict{int cd : (n,) int ndarray}
+            Dictionary from coordinate id to index of the nodes in
+            ``self.point_ids`` that their output (`CD`) in that
+            coordinate system.
+        icp_transform : dict{int cp : (n,) int ndarray}
+            Dictionary from coordinate id to index of the nodes in
+            ``self.point_ids`` that their input (`CP`) in that
+            coordinate system.
+        xyz_cp : (n, 3) float ndarray
+            points in the CP coordinate system
+        nid_cp_cd : (n, 3) int ndarray
+            node id, CP, CD for each node
+        dtype : str
+            the type of xyz_cp
+
+        Example
+        -------
+        # assume GRID 1 has a CD=10
+        # assume GRID 2 has a CD=10
+        # assume GRID 5 has a CD=50
+        >>> model.point_ids
+        [1, 2, 5]
+        >>> i_transform = model.get_displacement_index_xyz_cp_cd()
+        >>> i_transform[10]
+        [0, 1]
+
+        >>> i_transform[50]
+        [2]
+        """
+        nids_cd_transform = defaultdict(list)
+        nids_cp_transform = defaultdict(list)
+        i_transform = {}
+
+        nnodes = len(self.nodes)
+        nspoints = 0
+        spoints = None
+        if self.spoints:
+            spoints = self.spoints.points
+            nspoints = len(spoints)
+        if self.epoints is not None:
+            raise NotImplementedError('EPOINTs')
+
+        assert nnodes + nspoints > 0, 'nnodes=%s nspoints=%s' % (nnodes, nspoints)
+        #xyz_cid0 = np.zeros((nnodes + nspoints, 3), dtype=dtype)
+        xyz_cp = np.zeros((nnodes + nspoints, 3), dtype=dtype)
+        nid_cp_cd = np.zeros((nnodes + nspoints, 3), dtype='int32')
+        i = 0
+        for nid, node in sorted(iteritems(self.nodes)):
+            cd = node.Cd()
+            cp = node.Cp()
+            nids_cd_transform[cp].append(nid)
+            nids_cd_transform[cd].append(nid)
+            nid_cp_cd[i, :] = [nid, cp, cd]
+            xyz_cp[i, :] = node.xyz
+            i += 1
+
+        icp_transform = {}
+        icd_transform = {}
+        nids_all = np.array(sorted(self.point_ids))
+        for cd, nids in sorted(iteritems(nids_cd_transform)):
+            if cd in [0, -1]:
+                continue
+            nids = np.array(nids)
+            icd_transform[cd] = np.where(np.in1d(nids_all, nids))[0]
+            if cd in nids_cp_transform:
+                icp_transform[cd] = icd_transform[cd]
+        for cp, nids in sorted(iteritems(nids_cd_transform)):
+            if cp in [0, -1]:
+                continue
+            if cp in icd_transform:
+                continue
+            nids = np.array(nids)
+            icd_transform[cd] = np.where(np.in1d(nids_all, nids))[0]
+
+        return icd_transform, icp_transform, xyz_cp, nid_cp_cd
+
+    def transform_xyzcp_to_xyz_cid(self, xyz_cp, icp_transform, cid=0):
+        """
+        Working on faster method for calculating node locations
+        Not validated...
+        """
+        coord2 = self.coords[cid]
+        beta2 = coord2.beta()
+
+        xyz_cid0 = np.copy(xyz_cp)
+        for cp, inode in iteritems(icp_transform):
+            if cp == 0:
+                continue
+            coord = model.coords[cp]
+            beta = coord.beta()
+            is_beta = np.abs(np.diagonal(beta)).min() == 1.
+            is_origin = np.abs(coord.origin).max() == 0.
+            xyzi = coord.coord_to_xyz_array(xyz_cp[inode, :])
+            if is_beta and is_origin:
+                xyz_cid0[inode, :] = np.dot(xyzi, beta) + coord.origin
+            elif is_beta:
+                xyz_cid0[inode, :] = np.dot(xyzi, beta)
+            else:
+                xyz_cid0[inode, :] = xyzi + coord.origin
+
+        if cid == 0:
+            return xyz_cid0
+
+        is_beta = np.abs(np.diagonal(beta2)).min() == 1.
+        is_origin = np.abs(coord2.origin).max() == 0.
+        if is_beta and is_origin:
+            xyz_cid = coord2.xyz_to_coord_array(np.dot(xyz_cid0 - coord2.origin, beta2.T))
+        elif is_beta:
+            xyz_cid = coord2.xyz_to_coord_array(np.dot(xyz_cid0, beta2.T))
+        else:
+            xyz_cid = coord2.xyz_to_coord_array(xyz_cid0 - coord2.origin)
+
+        return xyz_cid
+
     def get_displacement_index(self):
         """
         Get index and transformation matricies for nodes with
@@ -2798,7 +2920,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
         Returns
         ----------
-        i_transform : dict{int:(n,) int ndarray}
+        i_transform : dict{int cid : (n,) int ndarray}
             Dictionary from coordinate id to index of the nodes in
             ``self.point_ids`` that their output (`CD`) in that
             coordinate system.
@@ -2817,7 +2939,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         >>> i_transform[50]
         [2]
         """
-        nids_transform = {}
+        nids_transform = defaultdict(list)
         i_transform = {}
         if len(self.coords) == 1:  # was ncoords > 2; changed b/c seems dangerous
             return i_transform
@@ -2825,8 +2947,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         for nid, node in sorted(iteritems(self.nodes)):
             cid_d = node.Cd()
             if cid_d:
-                if cid_d not in nids_transform:
-                    nids_transform[cid_d] = []
                 nids_transform[cid_d].append(nid)
 
         nids_all = np.array(sorted(self.point_ids))
@@ -2843,7 +2963,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
         Returns
         ----------
-        i_transform : dict{int:(n,) int ndarray}
+        i_transform : dict{int cid : (n,) int ndarray}
             Dictionary from coordinate id to index of the nodes in
             ``self.point_ids`` that their output (`CD`) in that
             coordinate system.
@@ -2875,7 +2995,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         """
         self.deprecated('i_transforms, model.get_displacement_index_transforms()',
                         'itransforms, beta_transforms = model.get_displacement_index()', '0.9.0')
-        nids_transform = {}
+        nids_transform = defaultdict(list)
         i_transform = {}
         beta_transforms = {}
         if len(self.coords) == 1:  # was ncoords > 2; changed b/c seems dangerous
@@ -2884,8 +3004,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         for nid, node in sorted(iteritems(self.nodes)):
             cid_d = node.Cd()
             if cid_d:
-                if cid_d not in nids_transform:
-                    nids_transform[cid_d] = []
                 nids_transform[cid_d].append(nid)
 
         nids_all = np.array(sorted(self.point_ids))

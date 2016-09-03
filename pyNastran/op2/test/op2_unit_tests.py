@@ -417,7 +417,6 @@ class TestOP2(Tester):
         #for line in list(disp.data[0, :, :3]):
             #print('%10.4e %10.4e %10.4e' % tuple(line))
 
-        i_transform, beta_transforms = op2_1.get_displacement_index_transforms()
         i_transform = op2_1.get_displacement_index()
         op2_1.transform_displacements_to_global(i_transform, coords, xyz_cid0=xyz_cid0)
         #print('stuff...')

@@ -41,6 +41,7 @@ from vtk import (vtkTriangle, vtkQuad, vtkTetra, vtkWedge, vtkHexahedron,
                  vtkQuadraticTriangle, vtkQuadraticQuad, vtkQuadraticTetra,
                  vtkQuadraticWedge, vtkQuadraticHexahedron,
                  vtkPyramid) #vtkQuadraticPyramid
+from vtk.util.numpy_support import numpy_to_vtk
 
 #from pyNastran import is_release
 from pyNastran.utils import integer_types
@@ -303,34 +304,81 @@ class NastranIO(object):
         return skip_reading
 
     def get_xyz_in_coord(self, model, points, cid=0, dtype='float32'):
-        nid_map = self.nid_map
-        assert cid == 0, cid
-        nnodes = len(model.nodes)
-        nspoints = 0
-        spoints = None
-        if model.spoints:
-            spoints = model.spoints.points
-            nspoints = len(spoints)
+        #import time
+        #t0 = time.time()
 
-        xyz_cid0 = np.zeros((nnodes + nspoints, 3), dtype=dtype)
-        if nspoints:
-            nids = model.nodes.keys()
-            newpoints = nids + list(spoints)
-            newpoints.sort()
-            for i, nid in enumerate(newpoints):
-                if nid in spoints:
-                    nid_map[nid] = i
-                else:
-                    node = model.nodes[nid]
-                    xyz_cid0[i, :] = node.get_position()
-                    nid_map[nid] = i
-                points.InsertPoint(i, *xyz_cid0[i, :])
-        else:
-            for i, (nid, node) in enumerate(sorted(iteritems(model.nodes))):
-                xyz = node.get_position()
-                xyz_cid0[i, :] = xyz
-                points.InsertPoint(i, *xyz)
+        if 1:
+            # t=.578
+            out = model.get_displacement_index_xyz_cp_cd(
+                dtype='float32')
+            icd_transform, icp_transform, xyz_cp, nid_cp_cd = out
+            self.i_transform = icd_transform
+            xyz_cid0 = model.transform_xyzcp_to_xyz_cid(xyz_cp, icp_transform, cid=0)
+
+            data_type = vtk.VTK_FLOAT
+            points_array = numpy_to_vtk(
+                num_array=xyz_cid0,
+                deep=True,
+                array_type=data_type
+            )
+            points.SetData(points_array)
+            nid_map = self.nid_map
+            for i, nid in enumerate(nid_cp_cd[:, 0]):
                 nid_map[nid] = i
+        elif 0:
+            # t=.573
+            out = model.get_displacement_index_xyz_cp_cd(
+                dtype='float32')
+            icd_transform, icp_transform, xyz_cp, nid_cp_cd = out
+            self.i_transform = icd_transform
+            xyz_cid0 = model.transform_xyzcp_to_xyz_cid(xyz_cp, icp_transform, cid=0)
+
+            data_type = vtk.VTK_FLOAT
+            points_array = numpy_to_vtk(
+                num_array=xyz_cid0,
+                deep=False,
+                array_type=data_type
+            )
+            points.SetData(points_array)
+            nid_map = self.nid_map
+            for i, nid in enumerate(nid_cp_cd[:, 0]):
+                nid_map[nid] = i
+        else:
+            # t=.75
+            nid_map = self.nid_map
+            assert cid == 0, cid
+            nnodes = len(model.nodes)
+            nspoints = 0
+            spoints = None
+            if model.spoints:
+                spoints = model.spoints.points
+                nspoints = len(spoints)
+
+            xyz_cid0 = np.zeros((nnodes + nspoints, 3), dtype=dtype)
+            if nspoints:
+                nids = model.nodes.keys()
+                newpoints = nids + list(spoints)
+                newpoints.sort()
+                for i, nid in enumerate(newpoints):
+                    if nid in spoints:
+                        nid_map[nid] = i
+                    else:
+                        node = model.nodes[nid]
+                        xyz_cid0[i, :] = node.get_position()
+                        nid_map[nid] = i
+                    points.InsertPoint(i, *xyz_cid0[i, :])
+            else:
+                for i, (nid, node) in enumerate(sorted(iteritems(model.nodes))):
+                    xyz = node.get_position()
+                    xyz_cid0[i, :] = xyz
+                    points.InsertPoint(i, *xyz)
+                    nid_map[nid] = i
+
+            # get indicies and transformations for displacements
+            #self.i_transform, self.transforms = model.get_displacement_index_transforms()
+            self.i_transform = model.get_displacement_index()
+
+        #print('dt_nastran_xyz =', time.time() - t0)
         return xyz_cid0
 
     def load_nastran_geometry(self, bdf_filename, dirname, name='main', plot=True):
@@ -390,10 +438,6 @@ class NastranIO(object):
             model.safe_cross_reference(xref=True, xref_loads=xref_loads,
                                        xref_constraints=False,
                                        xref_nodes_with_elements=False)
-
-        # get indicies and transformations for displacements
-        #self.i_transform, self.transforms = model.get_displacement_index_transforms()
-        self.i_transform = model.get_displacement_index()
 
         nnodes = len(model.nodes)
         nspoints = 0
@@ -1705,7 +1749,7 @@ class NastranIO(object):
         self.alt_grids[name].SetPoints(points)
 
 
-    def _get_rigid(self, dim_max, model):
+    def _get_rigid(self, model):
         """
         dependent = (lines[:, 0])
         independent = np.unique(lines[:, 1])
@@ -1743,12 +1787,12 @@ class NastranIO(object):
     def _fill_mpc(self, mpc_id, dim_max, model, nid_to_pid_map):
         """helper for making MPCs"""
         lines = self.get_MPCx_node_ids_c1(model, mpc_id, exclude_mpcadd=False)
-        lines += self._get_rigid(dim_max, model)
+        lines += self._get_rigid(model)
         self._fill_dependent_independent(dim_max, model, lines, nid_to_pid_map)
 
     def _fill_rigid(self, dim_max, model, nid_to_pid_map):
         """helper for making rigid elements"""
-        lines = self._get_rigid(dim_max, model)
+        lines = self._get_rigid(model)
         self._fill_dependent_independent(dim_max, model, lines, nid_to_pid_map)
 
     def _fill_dependent_independent(self, dim_max, model, lines, nid_to_pid_map):
@@ -1946,7 +1990,7 @@ class NastranIO(object):
           The maximum angle of the two possible angles is reported as
           the warp angle.
 
-        Aspect:
+        Aspect Ratio:
           Aspect = maximum element edge length / minimum element edge length
           Ideal value = 1 (Acceptable < 5).
 
@@ -3637,8 +3681,10 @@ class NastranIO(object):
                             assert len(pressures) == nface
                             if min(pressures) != max(pressures):
                                 pressure = np.mean(pressures)
-                                #msg = '%s%s\npressure.min=%s != pressure.max=%s using average of %%s; load=%s eid=%%s'  % (
-                                    #str(load), str(elem), min(pressures), max(pressures), load.sid)
+                                #msg = ('%s%s\npressure.min=%s != pressure.max=%s using average'
+                                       #' of %%s; load=%s eid=%%s'  % (
+                                           #str(load), str(elem), min(pressures), max(pressures),
+                                           #load.sid)
                                 #print(msg % (pressure, eid))
                             else:
                                 pressure = pressures[0]

@@ -626,12 +626,12 @@ class OP2(OP2_Scalar):
 
         Parameters
         ----------
-        i_transform : dict{float:ndarray}
+        i_transform : dict{int cid : int ndarray}
             Dictionary from coordinate id to index of the nodes in
             ``BDF.point_ids`` that their output (`CD`) in that
             coordinate system.
 
-        coords : dict{int:Coord()}
+        coords : dict{int cid :Coord()}
             Dictionary of coordinate id to the coordinate object
             Use this if CD is only rectangular
             Use this if CD is not rectangular
@@ -642,43 +642,49 @@ class OP2(OP2_Scalar):
             Use this if CD is not rectangular
         """
         #output = {}
-        disp_like_dicts = [
-            self.displacements,
-            self.displacementsATO,
-            self.displacementsCRM,
-            self.displacementsPSD,
-            self.displacementsRMS,
-            self.displacements_scaled,
-            self.displacement_scaled_response_spectra_ABS,
-            self.displacement_scaled_response_spectra_NRL,
+        res_tuples = [
+            ('disp', (
+                self.displacements,
+                self.displacementsATO,
+                self.displacementsCRM,
+                self.displacementsPSD,
+                self.displacementsRMS,
+                self.displacements_scaled,
+                self.displacement_scaled_response_spectra_ABS,
+                self.displacement_scaled_response_spectra_NRL,
 
-            self.velocities,
-            self.velocity_scaled_response_spectra_ABS,
+                self.velocities,
+                self.velocity_scaled_response_spectra_ABS,
+                self.accelerations,
+                self.acceleration_scaled_response_spectra_ABS,
+                self.acceleration_scaled_response_spectra_NRL,
+                self.eigenvectors)),
 
-            self.accelerations,
-            self.acceleration_scaled_response_spectra_ABS,
-            self.acceleration_scaled_response_spectra_NRL,
+            ('force', (
+                self.spc_forces, self.spc_forcesATO, self.spc_forcesPSD,
+                self.spc_forcesRMS,
+                self.mpc_forces, self.mpc_forcesATO, self.mpc_forcesPSD,
+                self.mpc_forcesRMS,
+                self.applied_loads, self.load_vectors,
 
-            self.eigenvectors,
-            self.spc_forces, self.spc_forcesATO, self.spc_forcesPSD,
-            self.spc_forcesRMS,
-            self.mpc_forces, self.mpc_forcesATO, self.mpc_forcesPSD,
-            self.mpc_forcesRMS,
-            self.applied_loads, self.load_vectors,
-
-            # TODO: causes test_op2_solid_shell_bar_01_gpforce_xyz to fail
-            #       even though it should be uncommented
-            #self.grid_point_forces,
+                # TODO: causes test_op2_solid_shell_bar_01_gpforce_xyz to fail
+                #       even though it should be uncommented
+                self.grid_point_forces,
+            )),
         ]
-        for disp_like_dict in disp_like_dicts:
-            if disp_like_dict:
+        for res_type, disp_like_dicts in res_tuples:
+            for disp_like_dict in disp_like_dicts:
+                if not disp_like_dict:
+                    continue
                 for subcase, result in iteritems(disp_like_dict):
                     data = result.data
                     for cid, inode in iteritems(i_transform):
+                        if cid in [-1, 0]:
+                            continue
                         coord = coords[cid]
                         coord_type = coord.type
                         cid_transform = coord.beta()
-                        if coord_type in ['CORD2R', 'CORD1R']:
+                        if res_type == 'force' or coord_type in ['CORD2R', 'CORD1R']:
                             translation = data[:, inode, :3]
                             rotation = data[:, inode, 3:]
                             data[:, inode, :3] = translation.dot(cid_transform)
@@ -720,7 +726,6 @@ class OP2(OP2_Scalar):
                                 rotation = coord.coord_to_xyz_array(data[itime, inode, 3:])
                                 data[itime, inode, :3] = translation.dot(cid_transform)
                                 data[itime, inode, 3:] = rotation.dot(cid_transform)
-
                         else:
                             raise RuntimeError(coord)
         return
