@@ -3,13 +3,19 @@ from six import iteritems
 from collections import defaultdict
 from numpy import array, linspace, hstack, vstack
 from pyNastran.bdf.cards.aero import points_elements_from_quad_points
+from pyNastran.utils.log import get_logger
 
+
+def read_input_c3d(input_c3d_filename, log=None, debug=False, stack=True):
+    model = InputC3dReader(log=log, debug=debug)
+    return model.read_input_c3d(input_c3d_filename, stack=True)
 
 class InputC3dReader(object):
-    def __init__(self):
-        pass
+    def __init__(self, log=None, debug=False):
+        self.log = get_logger(log, 'debug' if debug else 'info')
 
     def read_input_c3d(self, input_c3d_filename, stack=True):
+        self.log.info('reading input_c3d=%r' % input_c3d_filename)
         with open(input_c3d_filename, 'r') as c3d_filename:
             lines = c3d_filename.readlines()
 
@@ -31,7 +37,7 @@ class InputC3dReader(object):
                 #print('# %s' % line)
                 #continue
 
-            print('%r' % line)
+            self.log.debug('%r' % line)
             if len(line) > 2 and line[0].isdigit() and line[1] == '.':
                 pack_key = int(line.split('.')[0])
             else:
@@ -39,10 +45,10 @@ class InputC3dReader(object):
                 packs[pack_key].append(pack_values)
 
         for key, values in sorted(iteritems(packs)):
-            print(key)
+            self.log.debug(key)
             for value in values:
-                print('    %s' % value)
-        print(packs[1])
+                self.log.debug('    %s' % value)
+        self.log.debug(packs[1])
         geometry_filename = packs[1][0]
         xyz_size = [float(val) for val in packs[2][1]]
         xyz_dim = [int(val) for val in packs[3][0]]
@@ -54,7 +60,7 @@ class InputC3dReader(object):
         x = linspace(0., 1., num=xdim)
         y = linspace(0., 1., num=ydim)
         z = linspace(0., 1., num=zdim)
-        print(x)
+        self.log.debug(x)
 
         # organized in x, y, z planes order
         planes = (
@@ -82,7 +88,7 @@ class InputC3dReader(object):
             p2 = array(p2, dtype='float32')
             p3 = array(p3, dtype='float32')
             p4 = array(p4, dtype='float32')
-            print(plane[:1])
+            self.log.debug(plane[:1])
 
             pointsi, elementsi = points_elements_from_quad_points(p1, p2, p3, p4, xi, yi)
             points.append(pointsi)

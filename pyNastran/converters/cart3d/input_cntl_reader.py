@@ -1,12 +1,20 @@
 from six import iteritems
 from collections import OrderedDict
+from pyNastran.utils.log import get_logger
+
+
+def read_input_cntl(input_cntl_filename, log=None, debug=False):
+    cntl = InputCntlReader(log=log, debug=debug)
+    cntl.read_input_cntl(input_cntl_filename)
+    return cntl
 
 
 class InputCntlReader(object):
-    def __init__(self, log=None):
-        self.log = log
+    def __init__(self, log=None, debug=False):
+        self.log = get_logger(log, 'debug' if debug else 'info')
 
     def read_input_cntl(self, input_cntl_filename):
+        self.log.info('reading input_cntl=%r' % input_cntl_filename)
         with open(input_cntl_filename, 'r') as input_cntl:
             lines = input_cntl.readlines()
         self.sections = self._read_sections(lines)
@@ -82,16 +90,16 @@ class InputCntlReader(object):
     def get_boundary_conditions(self):
         section = self.sections['Boundary_Conditions']
         name, comment, table = section
-        print(table)
-        print('-------')
-        print(table[0])
-        print('-------*********')
+        self.log.debug(table)
+        self.log.debug('-------')
+        self.log.debug(table[0])
+        self.log.debug('-------*********')
         xline = table[0][0]
-        print(xline)
+        self.log.debug(xline)
         yline = table[1][0]
-        print(yline)
+        self.log.debug(yline)
         zline = table[2][0]
-        print(zline)
+        self.log.debug(zline)
 
         xsline = None
         ysline = None
@@ -174,14 +182,14 @@ class InputCntlReader(object):
 
         for name, section in iteritems(sections):
             name, comment, data = section
-            print('name = %r' % name)
+            self.log.debug('name = %r' % name)
             if comment.strip() and 1:
-                print('comment = ')
-                print(comment)
-                print('*****')
+                self.log.debug('comment = ')
+                self.log.debug(comment)
+                self.log.debug('*****')
             for (datai, commenti) in data:
-                print(datai)
-            print('#' * 80)
+                self.log.debug(datai)
+            self.log.debug('#' * 80)
         return sections
 
 def main():
