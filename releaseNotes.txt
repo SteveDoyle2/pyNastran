@@ -76,6 +76,9 @@ OP2:
  - MEFF, ASSIG, ASEPS tables now skipped properly
  - eigenvector_ROUGV1 now supported
 
+Other
+ - cart3d legend values are now saved
+
 TODO:
 -----
 BDF:

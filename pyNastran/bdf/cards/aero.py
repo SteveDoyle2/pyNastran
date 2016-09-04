@@ -4790,7 +4790,13 @@ class TRIM(BaseCard):
     def validate(self):
         assert self.mach >= 0.0 and self.mach != 1.0, 'mach = %s' % self.mach
         assert self.q > 0.0, 'q=%s' % self.q
-        assert len(set(self.labels)) == len(self.labels), 'not all labels are unique; labels=%s' % str(self.labels)
+        if len(set(self.labels)) != len(self.labels):
+            msg = 'not all labels are unique; labels=%s' % str(self.labels)
+            raise RuntimeError(msg)
+        if len(self.labels) != len(self.uxs):
+            msg = 'nlabels=%s != nux=%s; labels=%s uxs=%s' % (
+                len(self.labels), len(self.uxs), str(self.labels), str(self.uxs))
+            raise RuntimeError(msg)
 
     def _verify(self, suport, suport1, aestats, aeparms, aelinks, aesurf, xref=True):
         if xref:

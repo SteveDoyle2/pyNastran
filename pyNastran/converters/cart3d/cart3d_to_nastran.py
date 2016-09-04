@@ -8,6 +8,7 @@ from pyNastran.converters.cart3d.cart3d import Cart3D
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 
+
 def cart3d_to_nastran_model(cart3d_filename, log=None, debug=False):
     """
     Converts a Cart3D file to Nastran format and returns a BDF() object.
@@ -77,6 +78,12 @@ def cart3d_to_nastran_filename(cart3d_filename, bdf_filename, log=None, debug=Fa
         None : a log will be defined
     debug : bool
         True/False (used if log is not defined)
+
+    Example
+    -------
+    cart3d_filename = 'threePlugs.tri'
+    bdf_filename = 'threePlugs.bdf'
+    cart3d_to_nastran_filename(cart3d_filename, bdf_filename)
     """
     cart3d = Cart3D(log=log, debug=debug)
     cart3d.read_cart3d(cart3d_filename)
@@ -89,44 +96,34 @@ def cart3d_to_nastran_filename(cart3d_filename, bdf_filename, log=None, debug=Fa
     #bdf.elements = cart3d.elements
     #bdf.write_bdf(bdf_filename)
     #return
-    f = codec_open(bdf_filename, 'w')
-    f.write('CEND\n')
-    f.write('BEGIN BULK\n')
-    f.write('$Nodes\n')
+    with codec_open(bdf_filename, 'w') as f:
+        f.write('CEND\n')
+        f.write('BEGIN BULK\n')
+        f.write('$Nodes\n')
 
-    i = 0
-    nid = 1
-    cid = 0
-    for node in nodes:
-        card = print_card_16(['GRID', nid, cid] + list(node))
-        f.write(card)
-        nid += 1
+        i = 0
+        nid = 1
+        cid = 0
+        for node in nodes:
+            card = print_card_16(['GRID', nid, cid] + list(node))
+            f.write(card)
+            nid += 1
 
-    eid = 1
-    f.write('$Elements\n')
-    for (n1, n2, n3), pid in zip(elements, regions):
-        card = print_card_8(['CTRIA3', eid, pid, n1, n2, n3])
-        f.write(card)
-        eid += 1
+        eid = 1
+        f.write('$Elements\n')
+        for (n1, n2, n3), pid in zip(elements, regions):
+            card = print_card_8(['CTRIA3', eid, pid, n1, n2, n3])
+            f.write(card)
+            eid += 1
 
-    t = 0.1
-    E = 1e7
-    nu = 0.3
-    f.write('$Properties\n')
-    for pid in unique(regions):
-        mid = pid
-        card = print_card_8(['PSHELL', pid, mid, t])
-        f.write(card)
-        card = print_card_8(['MAT1', mid, E, None, nu])
-        f.write(card)
-    f.write('ENDDATA\n')
-    f.close()
-
-
-def main():
-    cart3d_filename = 'threePlugs.tri'
-    bdf_filename = 'threePlugs.bdf'
-    cart3d_to_nastran_filename(cart3d_filename, bdf_filename)
-
-    if __name__ == '__main__':  # pragma: no cover
-        main()
+        t = 0.1
+        E = 1e7
+        nu = 0.3
+        f.write('$Properties\n')
+        for pid in unique(regions):
+            mid = pid
+            card = print_card_8(['PSHELL', pid, mid, t])
+            f.write(card)
+            card = print_card_8(['MAT1', mid, E, None, nu])
+            f.write(card)
+        f.write('ENDDATA\n')

@@ -3,6 +3,7 @@ from collections import OrderedDict
 
 from six import iteritems
 
+import vtk
 from pyNastran.utils.log import get_logger
 from pyNastran.gui.qt_files.alt_geometry_storage import AltGeometry
 
@@ -150,7 +151,7 @@ class GuiAttributes(object):
         #assert vtkQuad().GetCellType() == 9, elem.GetCellType()
         self.alt_grids[name].Allocate(nquads, 1000)
         for element in elements:
-            elem = vtkQuad()
+            elem = vtk.vtkQuad()
             point_ids = elem.GetPointIds()
             point_ids.SetId(0, element[0])
             point_ids.SetId(1, element[1])

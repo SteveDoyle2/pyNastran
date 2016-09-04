@@ -7,6 +7,10 @@ from pyNastran.utils.log import get_logger
 
 
 def read_input_c3d(input_c3d_filename, log=None, debug=False, stack=True):
+    """
+    input_c3d_filename = 'bJet/input.c3d'
+    nodes, elements = read_input_c3d(input_c3d_filename)
+    """
     model = InputC3dReader(log=log, debug=debug)
     return model.read_input_c3d(input_c3d_filename, stack=True)
 
@@ -104,12 +108,3 @@ class InputC3dReader(object):
             points = vstack(points)
             elements = vstack(elements)
         return points, elements
-
-
-def main():
-    input_c3d_filename = r'F:\work\pyNastran\pyNastran\master2\pyNastran\converters\cart3d\models\bJet\input.c3d'
-    c3d = InputC3dReader()
-    nodes, elements = c3d.read_input_c3d(input_c3d_filename)
-
-if __name__ == '__main__':
-    main()

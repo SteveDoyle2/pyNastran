@@ -14,7 +14,7 @@ from pyNastran.gui.gui_objects.gui_result import GuiResult
 from pyNastran.converters.cart3d.cart3d import Cart3D
 from pyNastran.converters.cart3d.cart3d_result import Cart3dGeometry, Cart3dResult
 
-from pyNastran.converters.cart3d.input_c3d_reader import InputC3dReader, read_input_c3d
+from pyNastran.converters.cart3d.input_c3d_reader import read_input_c3d
 from pyNastran.converters.cart3d.input_cntl_reader import read_input_cntl
 
 
@@ -243,8 +243,7 @@ class Cart3dIO(object):
 
 
         if os.path.exists(input_c3d_filename):
-            c3d = InputC3dReader()
-            nodes, elements = c3d.read_input_c3d(input_c3d_filename, stack=stack)
+            c3d = read_input_cntl(input_c3d_filename, stack=stack, log=log, debug=debug)
 
             # Planes
             # ----------
@@ -287,7 +286,7 @@ class Cart3dIO(object):
                     # 1 = SYMMETRY
                     # 2 = INFLOW  (specify all)
                     # 3 = OUTFLOW (simple extrap)
-                    print('bc =', bc)
+                    self.log.info('bc = %s' % bc)
                     nnodes = nodesi.shape[0]
                     if bc == 0:
                         farfield_nodes.append(nodesi)

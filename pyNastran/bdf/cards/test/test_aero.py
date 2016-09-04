@@ -9,6 +9,7 @@ from pyNastran.bdf.bdf import BDF, CORD2R, BDFCard
 from pyNastran.bdf.cards.aero import (
     FLFACT, AEFACT, AEPARM, AERO, AEROS, CAERO1, CAERO2, CAERO3, PAERO1, PAERO2, PAERO3,
     AELIST, FLUTTER, TRIM, CSSCHD, MKAERO1, MKAERO2, GUST, AESURF, AELINK, DIVERG,
+    SPLINE1,
 )
 
 root_path = pyNastran.__path__[0]
@@ -291,6 +292,19 @@ class TestAero(unittest.TestCase):
         caero.panel_points_elements()
         caero.raw_fields()
 
+    def test_spline1(self):
+        """checks the SPLINE1 card"""
+        eid = 1
+        caero_id = 1
+        box1 = 1
+        box2 = 10
+        setg = 1
+        spline = SPLINE1(eid, caero_id, box1, box2, setg, dz=0., method='IPS',
+                         usage='BOTH', nelements=10,
+                         melements=10, comment='$ spline1')
+        spline.validate()
+        spline.write_card(size=8, is_double=False)
+
     def test_caero2_1(self):
         """checks the CAERO2/PAERO2/AERO/AEFACT card"""
         log = SimpleLogger(level='warning')
@@ -472,7 +486,8 @@ class TestAero(unittest.TestCase):
 
         aesurf1.validate()
         aesurf2.validate()
-        model = BDF()
+        log = SimpleLogger(level='warning')
+        model = BDF(log=log)
         model.aesurf[aesid] = aesurf1
 
         elements = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
@@ -486,7 +501,8 @@ class TestAero(unittest.TestCase):
 
     def test_flutter(self):
         """checks the FLUTTER/FLFACT cards"""
-        model = BDF()
+        log = SimpleLogger(level='warning')
+        model = BDF(log=log)
         sid = 75
         method = 'PKNL'
         idensity = 76
@@ -577,6 +593,46 @@ class TestAero(unittest.TestCase):
         diverg = model.add_card(['DIVERG', sid, nroots] + machs, 'DIVERG', comment='divergence')
         #diverg.validate()
         #diverg.write_card()
+
+    def test_trim(self):
+        """checks the TRIM card"""
+        log = SimpleLogger(level='warning')
+        model = BDF(log=log)
+
+        sid = 100
+        mach = 0.75
+        q = 100.
+        labels = ['ALPHA', 'ALPHA']
+        uxs = [10., 20.]
+        trim = TRIM(sid, mach, q, labels, uxs)
+        with self.assertRaises(RuntimeError):
+            trim.validate()
+
+        labels = ['ALPHA']
+        uxs = [10., 20.]
+        trim = TRIM(sid, mach, q, labels, uxs)
+        with self.assertRaises(RuntimeError):
+            trim.validate()
+
+        labels = ['ALPHA', 'BETA']
+        uxs = [10., 20.]
+        trim = TRIM(sid, mach, q, labels, uxs)
+        trim.validate()
+        trim.write_card()
+
+        labels = ['ALPHA']
+        uxs = [10.]
+        trim = TRIM(sid, mach, q, labels, uxs, aeqr=3.0, comment='')
+        trim.validate()
+        trim.write_card()
+
+        labels = ['ALPHA', 'BETA']
+        uxs = [10., 20.]
+        trim = TRIM(sid, mach, q, labels, uxs, aeqr=3.0, comment='')
+        trim.validate()
+        trim.write_card()
+
+        model.add_card(['TRIM', sid, mach, q, labels[0], uxs[0]], 'TRIM', comment='$ trim')
 
     def test_gust(self):
         """checks the GUST card"""
