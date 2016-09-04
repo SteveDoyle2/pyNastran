@@ -231,6 +231,13 @@ class AELINK(BaseCard):
         #: an ID=0 is applicable to the global subcase, ID=1 only subcase 1
         self.id = id
 
+    def validate(self):
+        if len(self.independent_labels) != len(self.Cis):
+            msg = 'nlabels=%s nci=%s\nindependent_labels=%s Cis=%s\n%s' % (
+                len(self.independent_labels), len(self.Cis),
+                self.independent_labels, self.Cis, str(self))
+            raise RuntimeError(msg)
+
     @classmethod
     def add_card(cls, card, comment=''):
         id = integer_or_string(card, 1, 'ID')

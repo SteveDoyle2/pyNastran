@@ -2,9 +2,9 @@ from __future__ import print_function
 from six import iteritems, PY2
 import os
 
-from numpy import ndarray, eye, array_equal, complex64, complex128, zeros
+from numpy import ndarray, eye, array_equal, complex64, complex128, zeros, ones
 import unittest
-from pyNastran.op4.op4 import OP4
+from pyNastran.op4.op4 import OP4, read_op4
 
 import pyNastran.op4.test
 op4Path = pyNastran.op4.test.__path__[0]
@@ -61,9 +61,8 @@ class TestOP4(unittest.TestCase):
                       'mat_b_s1.op4',
                       'mat_b_s2.op4',
                       ]:
-            op4 = OP4()
 
-            matrices = op4.read_op4(os.path.join(op4Path, fname))
+            matrices = read_op4(os.path.join(op4Path, fname))
             for name, (form, matrix) in sorted(iteritems(matrices)):
                 #print("name = %s" % (name))
                 if isinstance(matrix, ndarray):
@@ -194,17 +193,16 @@ class TestOP4(unittest.TestCase):
             'A1': (form1, A1),
         }
         if PY2:
-            f = open(os.path.join(op4Path, 'file_ascii.op4'), 'wb')
+            wb = 'wb'
         else:
-            f = open(os.path.join(op4Path, 'file_ascii.op4'), 'w')
-        op4.write_op4(f, matrices, name_order='A1', precision='default',
-                     is_binary=False)
-        f.close()
+            wb = 'w'
+        with open(os.path.join(op4Path, 'file_ascii.op4'), wb) as f:
+            op4.write_op4(f, matrices, name_order='A1', precision='default',
+                          is_binary=False)
 
     def test_file_obj_binary(self):
         op4 = OP4()
         form1 = 1
-        from numpy import ones
         A1 = ones((3,3), dtype='float64')
         matrices = {
             'A1': (form1, A1),

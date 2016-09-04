@@ -1,4 +1,5 @@
 import subprocess
+from six import iteritems
 
 def run_nastran(fname, keywords=None):
     """
@@ -18,7 +19,7 @@ def run_nastran(fname, keywords=None):
             keywords_list = keywords
         else:
             keywords_list = []
-            for keyword, value in keywords.items():
+            for keyword, value in iteritems(keywords):
                 if value is None:
                     continue
                 keywords_list.append('%s=%s' % (keyword, value))

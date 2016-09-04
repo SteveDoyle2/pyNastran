@@ -48,6 +48,22 @@ class TestNastranGUI(unittest.TestCase):
         test.load_nastran_geometry(bdf_filename, None)
         test.load_nastran_results(op2_filename, None)
 
+    def test_beam_modes_01(self):
+        bdf_filename = os.path.join(model_path, 'beam_modes', 'beam_modes.dat')
+        op2_filename = os.path.join(model_path, 'beam_modes', 'beam_modes_m1.op2')
+
+        test = NastranGUI()
+        test.load_nastran_geometry(bdf_filename, None)
+        test.load_nastran_results(op2_filename, None)
+
+    def test_beam_modes_02(self):
+        bdf_filename = os.path.join(model_path, 'beam_modes', 'beam_modes.dat')
+        op2_filename = os.path.join(model_path, 'beam_modes', 'beam_modes_m2.op2')
+
+        test = NastranGUI()
+        test.load_nastran_geometry(bdf_filename, None)
+        test.load_nastran_results(op2_filename, None)
+
     def test_contact(self):
         bdf_filename = os.path.join(model_path, 'contact', 'contact.bdf')
         op2_filename = os.path.join(model_path, 'contact', 'contact.op2')
@@ -106,6 +122,12 @@ class TestNastranGUI(unittest.TestCase):
         dirname = os.path.join(model_path, 'blade_2dv')
         bdf_filename = os.path.join(dirname, 'blade_2dv.bdf')
         #op2_filename = os.path.join(dirname, 'beam_modes_m1.op2')
+
+        test = NastranGUI()
+        test.load_nastran_geometry(bdf_filename, None)
+
+    def test_solid_shell_bar_01(self):
+        bdf_filename = os.path.join(model_path, 'bwb', 'BWB_saero.bdf')
 
         test = NastranGUI()
         test.load_nastran_geometry(bdf_filename, None)

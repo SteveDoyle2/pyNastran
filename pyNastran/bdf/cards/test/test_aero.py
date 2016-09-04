@@ -8,7 +8,7 @@ from pyNastran.utils.log import SimpleLogger
 from pyNastran.bdf.bdf import BDF, CORD2R, BDFCard
 from pyNastran.bdf.cards.aero import (
     FLFACT, AEFACT, AEPARM, AERO, AEROS, CAERO1, CAERO2, CAERO3, PAERO1, PAERO2, PAERO3,
-    AELIST, FLUTTER, TRIM, CSSCHD, MKAERO1, MKAERO2, GUST, AESURF,
+    AELIST, FLUTTER, TRIM, CSSCHD, MKAERO1, MKAERO2, GUST, AESURF, AELINK, DIVERG,
 )
 
 root_path = pyNastran.__path__[0]
@@ -38,7 +38,8 @@ class TestAero(unittest.TestCase):
     def test_aefact_1(self):
         """checks the AEFACT card"""
         data = ['AEFACT', 97, .3, 0.7, 1.0]
-        model = BDF(debug=None)
+        log = SimpleLogger(level='warning')
+        model = BDF(log=log)
         model.add_card(data, data[0], comment_bad, is_list=True)
 
         data = ['AEFACT', 97, .3, 0.7, 1.0]
@@ -77,10 +78,32 @@ class TestAero(unittest.TestCase):
         aefact.validate()
         aefact.write_card()
 
-   # def test_aelink_1(self):
+    def test_aelink_1(self):
+        log = SimpleLogger(level='warning')
+        model = BDF(log=log)
+        id = 10
+        label = 'CS'
+        independent_labels = ['A', 'B', 'C']
+        Cis = [1.0, 2.0]
+        aelink = AELINK(id, label, independent_labels, Cis, comment='')
+        with self.assertRaises(RuntimeError):
+            aelink.validate()
+        str(aelink)
+
+        card = ['AELINK', id, label, independent_labels[0], Cis[0],
+                independent_labels[1], Cis[1], independent_labels[2]]
+        with self.assertRaises(AssertionError):
+            model.add_card(card, 'AELINK')
+
+        card = ['AELINK', id, label, independent_labels[0], Cis[0],
+                independent_labels[1], Cis[1]]
+        model.add_card(card, 'AELINK', comment='cat')
+
+
     def test_aelist_1(self):
         """checks the AELIST card"""
-        model = BDF(debug=None)
+        log = SimpleLogger(level='warning')
+        model = BDF(log=log)
         data = ['AELIST', 75, 1001, 'THRU', 1075, 1101, 'THRU', 1109, 1201, 1202]
         model.add_card(data, data[0], comment_bad, is_list=True)
         elements = list(range(1001, 1076)) + list(range(1101, 1110)) + [1201, 1202]
@@ -177,7 +200,8 @@ class TestAero(unittest.TestCase):
         p4 = [2., 3., 4.]
         x43 = 1.
 
-        model = BDF()
+        log = SimpleLogger(level='warning')
+        model = BDF(log=log)
         caero = CAERO1.add_card(BDFCard(['CAERO1', eid, pid, cp, nspan, nchord, lspan, lchord,
                                          igid, ] + p1 + [x12] + p4 + [x43]))
         caero.validate()
@@ -387,7 +411,8 @@ class TestAero(unittest.TestCase):
         x = None
         y = None
 
-        model = BDF()
+        log = SimpleLogger(level='warning')
+        model = BDF(log=log)
         coord = CORD2R.add_card(BDFCard(['CORD2R', cp, 0,
                                          0., 0., 0.,
                                          0., 0., 1.,
@@ -535,7 +560,26 @@ class TestAero(unittest.TestCase):
         mkaero.validate()
         mkaero.write_card()
 
+    def test_diverg(self):
+        """checks the DIVERG card"""
+        log = SimpleLogger(level='warning')
+        model = BDF(log=log)
+
+        sid = 100
+        nroots = 21
+        machs = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]
+        x0 = 3.
+        V = 42.
+        diverg = DIVERG(sid, nroots, machs, comment='divergence')
+        diverg.validate()
+        diverg.write_card()
+
+        diverg = model.add_card(['DIVERG', sid, nroots] + machs, 'DIVERG', comment='divergence')
+        #diverg.validate()
+        #diverg.write_card()
+
     def test_gust(self):
+        """checks the GUST card"""
         sid = 100
         dload = 200
         wg = 50.
@@ -550,6 +594,7 @@ class TestAero(unittest.TestCase):
         gust2.write_card()
 
     def test_cssch(self):
+        """checks the CSSCHD card"""
         sid = 10
         aesid = 0
         lalpha = None

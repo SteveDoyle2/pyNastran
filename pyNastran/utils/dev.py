@@ -173,52 +173,52 @@ def write_tuple(obj, nspaces, nbase, is_class):
 
 def write_array(a, nspaces=0):
     return ' '*nspaces + '[???]'
-    shape = a.shape
-    dtype = a.dtype
-    if len(shape) == 1:
-        msg = 'array(['
-        #print("a = ",a)
-        for ai in a[:-1]:
-            #print("ai = ",ai)
-            if isinstance(ai, (int, float)):
-                msg += '%s, ' % ai
-            elif isinstance(ai, string_types):
-                msg += "'%s'," % ai
-            else:
-                object_type = type(ai)
-                msg = 'object_type=%s is not supported; value=%s' % (object_type, ai)
-                raise RuntimeError(msg)
-                #return "'array(.not supported type.)'"
-            msg += '%s, ' % ai
-        if len(a) > 0:
-            if isinstance(a[-1], (int, float)):
-                msg += "%s], dtype='%s')" % (a[-1], dtype)
-            elif isinstance(a[-1], string_types):
-                msg += "'%s'], dtype='%s')" % (a[-1], dtype)
-            else:
-                object_type = type(ai)
-                msg = 'object_type=%s is not supported; value=%s' % (object_type, ai)
-                raise RuntimeError(msg)
-                #return "'array(.not supported type.)'"
-        else:
-            msg += '], dtype=%s)' % dtype
-    elif len(shape) == 2:
-        spaces = ' '*nspaces
-        msg = 'array(['
-        for i, ai in enumerate(a):
-            if i > 0:
-                msg += '%s[' % spaces
-            for bi in ai[:-1]:
-                msg += '%s, ' % bi
-            msg += '%s' % ai[-1]
+    #shape = a.shape
+    #dtype = a.dtype
+    #if len(shape) == 1:
+        #msg = 'array(['
+        ##print("a = ",a)
+        #for ai in a[:-1]:
+            ##print("ai = ",ai)
+            #if isinstance(ai, (int, float)):
+                #msg += '%s, ' % ai
+            #elif isinstance(ai, string_types):
+                #msg += "'%s'," % ai
+            #else:
+                #object_type = type(ai)
+                #msg = 'object_type=%s is not supported; value=%s' % (object_type, ai)
+                #raise RuntimeError(msg)
+                ##return "'array(.not supported type.)'"
+            #msg += '%s, ' % ai
+        #if len(a) > 0:
+            #if isinstance(a[-1], (int, float)):
+                #msg += "%s], dtype='%s')" % (a[-1], dtype)
+            #elif isinstance(a[-1], string_types):
+                #msg += "'%s'], dtype='%s')" % (a[-1], dtype)
+            #else:
+                #object_type = type(ai)
+                #msg = 'object_type=%s is not supported; value=%s' % (object_type, ai)
+                #raise RuntimeError(msg)
+                ##return "'array(.not supported type.)'"
+        #else:
+            #msg += '], dtype=%s)' % dtype
+    #elif len(shape) == 2:
+        #spaces = ' '*nspaces
+        #msg = 'array(['
+        #for i, ai in enumerate(a):
+            #if i > 0:
+                #msg += '%s[' % spaces
+            #for bi in ai[:-1]:
+                #msg += '%s, ' % bi
+            #msg += '%s' % ai[-1]
 
-            if i+1 == len(a):
-                msg += '], dtype=%s)' % dtype
-            else:
-                msg += '],\n'
-    elif len(shape) == 3:
-        return "'array(.not supported shape.)'"
-    return msg
+            #if i+1 == len(a):
+                #msg += '], dtype=%s)' % dtype
+            #else:
+                #msg += '],\n'
+    #elif len(shape) == 3:
+        #return "'array(.not supported shape.)'"
+    #return msg
 
 def main():
     from numpy import zeros

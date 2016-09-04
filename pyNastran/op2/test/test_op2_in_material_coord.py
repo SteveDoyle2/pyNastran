@@ -97,8 +97,8 @@ class TestMaterialCoord(unittest.TestCase):
                     assert np.allclose(data[:, check][:, 1::10, :], ref_result[1::10], rtol=RTOL, atol=ATOL)
                 else:
                     assert np.allclose(data[:, check], ref_result, rtol=RTOL, atol=ATOL)
-            print('OK')
+            #print('OK')
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     unittest.main()

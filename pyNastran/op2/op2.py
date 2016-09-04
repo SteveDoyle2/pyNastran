@@ -655,10 +655,15 @@ class OP2(OP2_Scalar):
 
                 self.velocities,
                 self.velocity_scaled_response_spectra_ABS,
+
                 self.accelerations,
                 self.acceleration_scaled_response_spectra_ABS,
                 self.acceleration_scaled_response_spectra_NRL,
-                self.eigenvectors)),
+
+                self.eigenvectors,
+                self.eigenvectors_RADCONS, self.eigenvectors_RADEFFM,
+                self.eigenvectors_RADEATC, self.eigenvectors_ROUGV1,
+            )),
 
             ('force', (
                 self.spc_forces, self.spc_forcesATO, self.spc_forcesPSD,

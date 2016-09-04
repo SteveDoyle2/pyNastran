@@ -1684,6 +1684,276 @@ class CQUAD4(QuadShell):
             raise NotImplementedError('thetaMcid=%r' % self.thetaMcid)
         return centroid, imat, jmat, normal
 
+    #def x(self, eta, xi, xs):
+        #"""Calculate the x-coordinate within the element.
+
+        #Calculates the local xsect x-coordinate provided the desired master
+        #coordinates eta and xi.
+
+        #:Args:
+
+        #- `eta (float)`: The eta coordinate in the master coordinate domain.*
+        #- `xi (float)`: The xi coordinate in the master coordinate domain.*
+
+        #:Returns:
+
+        #- `x (float)`: The x-coordinate within the element.
+
+        #.. Note:: Xi and eta can both vary between -1 and 1 respectively.
+
+        #per AeroComBAT
+        #"""
+        #return .25*(
+            #xs[0]*(1.-xi)*(1.-eta) + xs[1]*(1.+xi)*(1.-eta)+
+            #xs[2]*(1.+xi)*(1.+eta) + xs[3]*(1.-xi)*(1.+eta)
+        #)
+
+    #def y(self, eta, xi, ys):
+        #"""Calculate the y-coordinate within the element.
+
+        #Calculates the local xsect y-coordinate provided the desired master
+        #coordinates eta and xi.
+
+        #:Args:
+
+        #- `eta (float)`: The eta coordinate in the master coordinate domain.*
+        #- `xi (float)`: The xi coordinate in the master coordinate domain.*
+
+        #:Returns:
+
+        #- `y (float)': The y-coordinate within the element.
+
+        #.. Note:: Xi and eta can both vary between -1 and 1 respectively.
+
+        #per AeroComBAT
+        #"""
+        #return .25*(
+            #ys[0]*(1.-xi)*(1.-eta) + ys[1]*(1.+xi)*(1.-eta)+\
+            #ys[2]*(1.+xi)*(1.+eta) + ys[3]*(1.-xi)*(1.+eta)
+        #)
+
+    #def Z(self, eta, xi, xs, ys):
+        #"""Calculates transformation matrix relating stress to force-moments.
+
+        #Intended primarily as a private method but left public, this method
+        #calculates the transformation matrix that converts stresses to force
+        #and moment resultants.
+
+        #:Args:
+
+        #- `eta (float)`: The eta coordinate in the master coordinate domain.*
+        #- `xi (float)`: The xi coordinate in the master coordinate domain.*
+
+        #:Returns:
+
+        #- `Z (3x6 np.array[float])`: The stress-resutlant transformation array.
+
+        #.. Note:: Xi and eta can both vary between -1 and 1 respectively.
+
+        #per AeroComBAT
+        #"""
+        #return np.array([
+            #[1., 0, 0, 0, 0, -self.y(eta, xi, ys)],
+            #[0, 1., 0, 0, 0, self.x(eta, xi, xs)],
+            #[0, 0, 1., self.y(eta, xi, ys), -self.x(eta, xi, xs), 0]
+        #])
+
+    #def J(self, eta, xi):
+        #"""Calculates the jacobian at a point in the element.
+
+        #This method calculates the jacobian at a local point within the element
+        #provided the master coordinates eta and xi.
+
+        #:Args:
+
+        #- `eta (float)`: The eta coordinate in the master coordinate domain.
+        #- `xi (float)`: The xi coordinate in the master coordinate domain.
+
+        #:Returns:
+
+        #- `Jmat (3x3 np.array[float])`: The stress-resutlant transformation
+            #array.
+
+        #.. Note:: Xi and eta can both vary between -1 and 1 respectively.
+
+        #per AeroComBAT
+        #"""
+        #xs = self.xs
+        #ys = self.ys
+        #J11 = 0.25*(-xs[0]*(1-eta) + xs[1]*(1-eta) + xs[2]*(1+eta) - xs[3]*(1+eta))
+        #J12 = 0.25*(-ys[0]*(1-eta) + ys[1]*(1-eta) + ys[2]*(1+eta) - ys[3]*(1+eta))
+        #J21 = 0.25*(-xs[0]*(1-xi) - xs[1]*(1+xi) + xs[2]*(1+xi) + xs[3]*(1-xi))
+        #J22 = 0.25*(-ys[0]*(1-xi) - ys[1]*(1+xi) + ys[2]*(1+xi) + ys[3]*(1-xi))
+        #Jmat = np.array([
+            #[J11, J12, 0.],
+            #[J21, J22, 0.],
+            #[0., 0., 1.]])
+        #return Jmat
+
+    #def _gauss(self):
+        #"""
+        #per AeroComBAT
+        #"""
+        #xyz = self.get_node_positions()
+        #xs = xyz[:, 0]
+        #ys = xyz[:, 0]
+
+        ## Initialize coordinates for Guass Quadrature Integration
+        #etas = np.array([-1,1]) * np.sqrt(3)/3
+        #xis = np.array([-1,1]) * np.sqrt(3)/3
+
+        ## Evaluate/sum the cross-section matricies at the Guass points
+        #for k in range(0, np.size(xis)):
+            #for l in range(0, np.size(etas)):
+                ##Get Z Matrix
+                #Zmat = self.Z(etas[l], xis[k], xs, ys)
+
+                ##Get BN Matricies
+                #Jmat = self.J(etas[l], xis[k], xs, ys)
+
+                ##Get determinant of the Jacobian Matrix
+                #Jdet = abs(np.linalg.det(Jmat))
+                #Jmatinv = np.linalg.inv(Jmat)
+                #Bxi = np.zeros((6,3))
+                #Beta = np.zeros((6,3))
+                #Bxi[0,0] = Bxi[2,1] = Bxi[3,2] = Jmatinv[0,0]
+                #Bxi[1,1] = Bxi[2,0] = Bxi[4,2] = Jmatinv[1,0]
+                #Beta[0,0] = Beta[2,1] = Beta[3,2] = Jmatinv[0,1]
+                #Beta[1,1] = Beta[2,0] = Beta[4,2] = Jmatinv[1,1]
+                #BN = np.dot(Bxi,self.dNdxi(etas[l])) + np.dot(Beta,self.dNdeta(xis[k]))
+
+                ##Get a few last minute matricies
+                #S = np.zeros((6,3))
+                #S[3,0] = 1.
+                #S[4,1] = 1.
+                #S[5,2] = 1.
+                #SZ = np.dot(S, Zmat)
+                #Nmat = self.N(etas[l], xis[k])
+                #SN = np.dot(S, Nmat)
+
+                ## Calculate the mass per unit length of the element
+                #self.mass += self.rho * Jdet
+
+                ##Add to Ae Matrix
+                #self.Ae += np.dot(SZ.T, np.dot(self.Q, SZ)) * Jdet
+
+                ##Add to Re Matrix
+                #self.Re += np.dot(BN.T, np.dot(self.Q, SZ)) * Jdet
+
+                ##Add to Ee Matrix
+                #self.Ee += np.dot(BN.T, np.dot(self.Q, BN)) * Jdet
+
+                ##Add to Ce Matrix
+                #self.Ce += np.dot(BN.T, np.dot(self.Q, SN)) * Jdet
+
+                ##Add to Le Matrix
+                #self.Le += np.dot(SN.T, np.dot(self.Q, SZ)) * Jdet
+
+                ##Add to Me Matrix
+                #self.Me += np.dot(SN.T, np.dot(self.Q, SN)) * Jdet
+
+    #@staticmethod
+    #def N(eta, xi):
+        #"""Generates the shape-function value weighting matrix.
+
+        #Intended primarily as a private method but left public, this method
+        #generates the weighting matrix used to interpolate values within the
+        #element. This method however is mainly reserved for the cross-sectional
+        #analysis process.
+
+        #:Args:
+
+        #- `eta (float)`: The eta coordinate in the master coordinate domain.*
+        #- `xi (float)`: The xi coordinate in the master coordinate domain.*
+
+        #:Returns:
+
+        #- `Nmat (3x12 np.array[float])`: The shape-function value weighting
+            #matrix.
+
+        #.. Note:: Xi and eta can both vary between -1 and 1 respectively.
+
+        #per AeroComBAT
+        #"""
+        #Nmat = np.zeros([3,12])
+        #N1 = .25*(1.-xi)*(1.-eta)
+        #N2 = .25*(1.+xi)*(1.-eta)
+        #N3 = .25*(1.+xi)*(1.+eta)
+        #N4 = .25*(1.-xi)*(1.+eta)
+        #Nmat[0,0] = Nmat[1,1] = Nmat[2,2] = N1
+        #Nmat[0,3] = Nmat[1,4] = Nmat[2,5] = N2
+        #Nmat[0,6] = Nmat[1,7] = Nmat[2,8] = N3
+        #Nmat[0,9] = Nmat[1,10] = Nmat[2,11] = N4
+        #return Nmat
+
+    #@staticmethod
+    #def dNdxi(eta):
+        #"""Generates a gradient of the shape-function value weighting matrix.
+
+        #Intended primarily as a private method but left public, this method
+        #generates the gradient of the weighting matrix with respect to xi and
+        #is used to interpolate values within the element. This method however
+        #is mainly reserved for the cross-sectional analysis process.
+
+        #:Args:
+
+        #- `eta (float)`: The eta coordinate in the master coordinate domain.*
+        #- `xi (float)`: The xi coordinate in the master coordinate domain.*
+
+        #:Returns:
+
+        #- `dNdxi_mat (3x12 np.array[float])`: The gradient of the shape-
+            #function value weighting matrix with respect to xi.
+
+        #.. Note:: Xi and eta can both vary between -1 and 1 respectively.
+
+        #per AeroComBAT
+        #"""
+        #dNdxi_mat = np.zeros([3,12])
+        #dN1dxi = -.25*(1-eta)
+        #dN2dxi = .25*(1-eta)
+        #dN3dxi = .25*(1+eta)
+        #dN4dxi = -.25*(1+eta)
+        #dNdxi_mat[0,0] = dNdxi_mat[1,1] = dNdxi_mat[2,2] = dN1dxi
+        #dNdxi_mat[0,3] = dNdxi_mat[1,4] = dNdxi_mat[2,5] = dN2dxi
+        #dNdxi_mat[0,6] = dNdxi_mat[1,7] = dNdxi_mat[2,8] = dN3dxi
+        #dNdxi_mat[0,9] = dNdxi_mat[1,10] = dNdxi_mat[2,11] = dN4dxi
+        #return dNdxi_mat
+
+    #@staticmethod
+    #def dNdeta(xi):
+        #"""Generates a gradient of the shape-function value weighting matrix.
+
+        #Intended primarily as a private method but left public, this method
+        #generates the gradient of the weighting matrix with respect to eta and
+        #is used to interpolate values within the element. This method however
+        #is mainly reserved for the cross-sectional analysis process.
+
+        #:Args:
+
+        #- `eta (float)`: The eta coordinate in the master coordinate domain.*
+        #- `xi (float)`: The xi coordinate in the master coordinate domain.*
+
+        #:Returns:
+
+        #- `dNdeta_mat (3x12 np.array[float])`: The gradient of the shape-
+            #function value weighting matrix with respect to eta.
+
+        #.. Note:: Xi and eta can both vary between -1 and 1 respectively.
+
+        #per AeroComBAT
+        #"""
+        #dNdeta_mat = np.zeros([3,12])
+        #dN1deta = -.25*(1-xi)
+        #dN2deta = -.25*(1+xi)
+        #dN3deta = .25*(1+xi)
+        #dN4deta = .25*(1-xi)
+        #dNdeta_mat[0,0] = dNdeta_mat[1,1] = dNdeta_mat[2,2] = dN1deta
+        #dNdeta_mat[0,3] = dNdeta_mat[1,4] = dNdeta_mat[2,5] = dN2deta
+        #dNdeta_mat[0,6] = dNdeta_mat[1,7] = dNdeta_mat[2,8] = dN3deta
+        #dNdeta_mat[0,9] = dNdeta_mat[1,10] = dNdeta_mat[2,11] = dN4deta
+        #return dNdeta_mat
+
     def uncross_reference(self):
         self.nodes = self.node_ids
         self.pid = self.Pid()

@@ -137,6 +137,31 @@ class TestOP2(Tester):
         op2_filename = os.path.join(folder, 'static_solid_shell_bar.op2')
         op2 = read_op2_geom(op2_filename, debug=False)
 
+    def test_op2_mode_solid_shell_bar_01_geom(self):
+        folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'sol_101_elements'))
+        op2_filename = os.path.join(folder, 'mode_solid_shell_bar.op2')
+        op2 = read_op2_geom(op2_filename, debug=False)
+
+    def test_op2_buckling_solid_shell_bar_01_geom(self):
+        folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'sol_101_elements'))
+        op2_filename = os.path.join(folder, 'buckling_solid_shell_bar.op2')
+        op2 = read_op2_geom(op2_filename, debug=False)
+
+    def test_op2_buckling_solid_shell_bar_02_geom(self):
+        folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'sol_101_elements'))
+        op2_filename = os.path.join(folder, 'buckling2_solid_shell_bar.op2')
+        op2 = read_op2_geom(op2_filename, debug=False)
+
+    def test_op2_transient_solid_shell_bar_01_geom(self):
+        folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'sol_101_elements'))
+        op2_filename = os.path.join(folder, 'transient_solid_shell_bar.op2')
+        op2 = read_op2_geom(op2_filename, debug=False)
+
+    def test_op2_frequency_solid_shell_bar_01_geom(self):
+        folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'sol_101_elements'))
+        op2_filename = os.path.join(folder, 'freq_solid_shell_bar.op2')
+        op2 = read_op2_geom(op2_filename, debug=False)
+
     def test_op2_transfer_function_01(self):
         folder = os.path.abspath(os.path.join(test_path, '..', 'models'))
         #bdf_filename = os.path.join(folder, 'transfer_function', 'actuator_tf_modeling.bdf')

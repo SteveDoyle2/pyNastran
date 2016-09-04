@@ -271,22 +271,6 @@ class MAT1(IsotropicMaterial):
                 assert isinstance(G, float), 'G=%r' % G
                 assert isinstance(nu, float), 'nu=%r' % nu
 
-    def D(self):
-        E11 = self.E()
-        E22 = E11
-        nu12 = self.Nu()
-        G12 = self.G()
-
-        D = zeros((3, 3))
-        #D = zeros((6,6))
-        mu = 1. - nu12 * nu12  # *E11/E22    # not necessary b/c they're equal
-        D[0, 0] = E11 / mu
-        D[1, 1] = E22 / mu
-        D[0, 1] = nu12 * D[0, 0]
-        D[1, 0] = D[0, 1]
-        D[2, 2] = G12
-        return D
-
     def G(self):
         return self.g
 
@@ -436,17 +420,17 @@ class MAT1(IsotropicMaterial):
 
         rho = set_blank_if_default(self.rho, 0.)
         a = set_blank_if_default(self.a, 0.)
-        TRef = set_blank_if_default(self.TRef, 0.)
+        tref = set_blank_if_default(self.TRef, 0.)
         ge = set_blank_if_default(self.ge, 0.)
 
         if [self.St, self.Sc, self.Ss, self.Mcsid] == [0., 0., 0., 0]:
-            list_fields = ['MAT1', self.mid, self.e, G, self.nu, rho, a, TRef, ge]
+            list_fields = ['MAT1', self.mid, self.e, G, self.nu, rho, a, tref, ge]
         else:
             St = set_blank_if_default(self.St, 0.)
             Sc = set_blank_if_default(self.Sc, 0.)
             Ss = set_blank_if_default(self.Ss, 0.)
             Mcsid = set_blank_if_default(self.Mcsid, 0)
-            list_fields = ['MAT1', self.mid, self.e, G, self.nu, rho, a, TRef, ge,
+            list_fields = ['MAT1', self.mid, self.e, G, self.nu, rho, a, tref, ge,
                            St, Sc, Ss, Mcsid]
         return list_fields
 
@@ -456,6 +440,77 @@ class MAT1(IsotropicMaterial):
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)
 
+
+    def D(self):
+        E11 = self.E()
+        E22 = E11
+        nu12 = self.Nu()
+        G12 = self.G()
+
+        D = zeros((3, 3))
+        #D = zeros((6,6))
+        mu = 1. - nu12 * nu12  # *E11/E22    # not necessary b/c they're equal
+        D[0, 0] = E11 / mu
+        D[1, 1] = E22 / mu
+        D[0, 1] = nu12 * D[0, 0]
+        D[1, 0] = D[0, 1]
+        D[2, 2] = G12
+        return D
+
+    def compliance(self):
+        """
+        per AeroComBAT
+        """
+        # Initialize the compliance matrix in the local fiber 123 CSYS:
+        #self.Smat = np.array([
+            #[1./self.E1, -nu_12/E1, -nu_13/E1, 0., 0., 0.],
+            #[-nu_12/E1, 1./E2, -nu_23/E2, 0., 0., 0.],
+            #[-nu_13/E1, -nu_23/E2, 1./E3, 0., 0., 0.],
+            #[0., 0., 0., 1./G_23, 0., 0.],
+            #[0., 0., 0., 0., 1./G_13, 0.],
+            #[0., 0., 0., 0., 0., 1./G_12]
+        #])
+        E = self.e
+        nu = self.nu
+        G = self.g
+        Smat = np.array([
+            [1./E, -nu/E, -nu/E, 0., 0., 0.],
+            [-nu/E, 1./E, -nu/E, 0., 0., 0.],
+            [-nu/E, -nu/E, 1./E, 0., 0., 0.],
+            [0., 0., 0., 1./G, 0., 0.],
+            [0., 0., 0., 0., 1./G, 0.],
+            [0., 0., 0., 0., 0., 1./G]
+        ])
+        # Rotate the compliance matrix to the local x-sect csys if the material
+        # is to be used for cross-sectional analysis:
+        #Smat = self.returnComplMat(theta)
+
+        # Solve for the material stiffness matrix
+        Cmat = np.linalg.inv(Smat)
+        return Cmat
+
+    #def returnComplMat(self, th, **kwargs):
+        #"""Returns the material 6x6 compliance matrix.
+
+        #Mainly inteded as a private method although kept public, and
+        #fascilitated the transformation of the compliance matrix to another
+        #coordinate system.
+
+        #:Args:
+
+        #- `th (1x3 Array[float])`: The angles about which the material can be
+        #rotated when it is initialized. In degrees.
+
+        #:Returns:
+
+        #- `Sp`: The transformed compliance matrix.
+
+        #per AeroComBAT
+        #"""
+        ## Method to return the compliance matrix
+        #rh = RotationHelper()
+        #Sp = rh.transformCompl(self.Smat,th)
+        #return Sp
 
 class MAT2(AnisotropicMaterial):
     """

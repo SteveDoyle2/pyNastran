@@ -117,7 +117,10 @@ def integrate_line(x, y):
     y : List[float]
         the dependent variable
 
-    :returns integrated_value: the area under the curve
+    Returns
+    -------
+    integrated_value : float
+        the area under the curve
     """
     if len(set(y)) == 1:
         return y[0]  # (x1-x0 = 1., so yBar*1 = yBar)
@@ -142,8 +145,10 @@ def build_spline(x, y):
     y : List[float]
         the dependent variable
 
-    :returns splrep: a splrep object (linear or cubic spline depending
-                     on the length of x)
+    Returns
+    -------
+    splrep : splrep object
+        linear or cubic spline depending on the length of x
 
     .. note:: a 1st order spline is the same as linear interpolation
     """
@@ -192,11 +197,19 @@ def is_list_ranged(a, List, b):
     """
     Returns true if a<= x <= b or a-x < 0 < b-x
 
-    :param a: the lower bound value (inclusive)
-    :param x: the search values
-    :param b: the upper bound value (inclusive)
+    Parameters
+    ----------
+    a : float
+        the lower bound value (inclusive)
+    x : List[float, ...]
+        the search values
+    b: float
+        the upper bound value (inclusive)
 
-    :returns is_ranged: True/False
+    Returns
+    -------
+    is_ranged : bool
+        True/False
     """
     for x in List:
         if not is_float_ranged(a, x, b):
@@ -208,18 +221,25 @@ def is_float_ranged(a, x, b):
     """
     Returns true if a<= x <= b or a-x < 0 < b-x.
 
-    :param a: the lower bound value (inclusive)
-    :param x: the search value
-    :param b: the upper bound value (inclusive)
+    Parameters
+    ----------
+    a : float
+        the lower bound value (inclusive)
+    x : List[float, ...]
+        the search values
+    b: float
+        the upper bound value (inclusive)
 
-    :returns is_ranged: True/False
+    Returns
+    -------
+    is_ranged : bool
+        True/False
     """
     if (not a < x) and (not allclose(x, a)):
         return False
 
     if (not x < b) and (not allclose(x, b)):
         return False
-
     return True
 
 
@@ -304,9 +324,17 @@ def solve_tridag(A, D):
     """
     Solves a tridagonal matrix [A]{x}={b} for {x}
 
-    :param A: main diagonal (length=N)
-    :param D: off diagonal (length=N-1)
-    :returns: x
+    Parameters
+    ----------
+    A : (N,) float ndarray
+        main diagonal
+    D : (N-1,) float ndarray)
+        off diagonal
+
+    Returns
+    -------
+    x : (N, )
+        the result
     """
     # Find the diagonals
     ud = insert(diag(A, 1), 0, 0)  # upper diagonal

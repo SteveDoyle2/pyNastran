@@ -357,10 +357,13 @@ class GUIMethods(GuiAttributes):
             self.case_keys = sorted(cases.keys())
             assert isinstance(cases, dict), type(cases)
 
+        #print('self.case_keys = ', self.case_keys)
         for key in self.case_keys:
             value = cases[key]
+            #print('key = %s' % str(key))
             #print('value[0] = %s' % value[0])
             assert not isinstance(value[0], int), 'key=%s\n type=%s value=%s' % (key, type(value[0]), value)
+            #assert len(value) == 2, 'value=%s; len=%s' % (str(value), len(value))
 
         self.result_cases = cases
 
