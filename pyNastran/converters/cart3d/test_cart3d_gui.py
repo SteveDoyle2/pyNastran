@@ -37,6 +37,44 @@ class TestCart3dGUI(unittest.TestCase):
         test = Cart3dGUI()
         test.load_cart3d_geometry(geometry_filename, dirname)
 
+    def test_cart3d_results(self):
+        lines = (
+            "5 3 6\n"
+            "0. 0. 0.\n"
+            "1. 0. 0.\n"
+            "2. 0. 0.\n"
+            "1. 1. 0.\n"
+            "2. 1. 0.\n"
+            "1 4 2\n"
+            "2 4 5\n"
+            "2 5 3\n"
+            "1\n"
+            "2\n"
+            "3\n"
+            "1.\n"
+            "1. 1. 1. 1. 1.\n"
+            "2.\n"
+            "2. 2. 2. 2. 2.\n"
+            "3.\n"
+            "3. 3. 3. 3. 3.\n"
+            "4.\n"
+            "4. 4. 4. 4. 4.\n"
+            "5.\n"
+            "5. 5. 5. 5. 5.\n"
+        )
+        test_path = os.path.join(pkg_path, 'converters', 'cart3d', 'models')
+        geometry_filename = os.path.join(test_path, 'flat.tri')
+        with open(geometry_filename, 'w') as f:
+            f.write(lines)
+
+        #geometry_filename = os.path.join(model_path, 'threePlugs.a.tri')
+        #out_filename = os.path.join(model_path, 'panair.out')
+        dirname = None
+
+        test = Cart3dGUI()
+        #test.load_nastran_geometry(geometry_filename, None)
+        test.load_cart3d_geometry(geometry_filename, dirname)
+
     def test_nastran_to_cart3d_01(self):
         lines = (
             'SOL 101\n'

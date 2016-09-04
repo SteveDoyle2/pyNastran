@@ -9,6 +9,7 @@ from numpy import amax, amin, arange, ones, zeros, where, unique
 #VTK_TRIANGLE = 5
 import vtk
 from vtk import vtkTriangle, vtkQuad
+from vtk.util.numpy_support import numpy_to_vtk
 
 from pyNastran.converters.ugrid.surf_reader import TagReader
 from pyNastran.converters.ugrid.ugrid_reader import UGRID
@@ -99,8 +100,13 @@ class UGRID_IO(object):
             self._add_alt_actors(self.alt_grids)
 
 
-        for inode, node in enumerate(nodes):
-            points.InsertPoint(inode, node)
+        data_type = vtk.VTK_FLOAT
+        points_array = numpy_to_vtk(
+            num_array=nodes,
+            deep=True,
+            array_type=data_type
+        )
+        points.SetData(points_array)
 
         if ntris:
             for eid, element in enumerate(tris):
