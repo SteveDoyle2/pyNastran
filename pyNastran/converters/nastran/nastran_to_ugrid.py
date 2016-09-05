@@ -90,6 +90,7 @@ def nastran_to_ugrid(bdf_model, ugrid_filename_out=None, properties=None,
     if nhexa:
         model.hexas = array([elements[eid].node_ids for eid in chexa], dtype='int32')
 
+    print('ugrid_filename_out = %r' % ugrid_filename_out)
     if ugrid_filename_out is not None:
         model.write_ugrid(ugrid_filename_out, check_shells=check_shells)
     return model

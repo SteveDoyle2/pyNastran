@@ -20,6 +20,7 @@ from pyNastran.bdf.field_writer_double import print_card_double
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.utils.log import get_logger
+from pyNastran.utils import print_bad_path
 
 from pyNastran.converters.ugrid.surf_reader import TagReader
 
@@ -449,7 +450,8 @@ class UGRID(object):
             assert nshells > 0, 'nquads=%s ntris=%s' % (nquads, ntris)
         assert nsolids > 0, 'ntets=%s npyramids=%s npentas=%s nhexas=%s' % (ntets, npyramids, npentas, nhexas)
 
-        with open(ugrid_filename_out, 'wb') as f_ugrid:
+        self.log.debug('writing ugrid=%r' % ugrid_filename)
+        with open(ugrid_filename, 'wb') as f_ugrid:
             sfmt = Struct(endian + '7i')
             f_ugrid.write(sfmt.pack(nnodes, ntris, nquads, ntets, npyramids, npentas, nhexas))
 
@@ -1047,10 +1049,6 @@ def determine_dytpe_nfloat_endian_from_ugrid_filename(ugrid_filename=None):
         title = 'Please select an AFLR3 UGRID to load'
         ugrid_filename = load_file_dialog(title, wildcard_wx, wildcard_qt)[0]
         assert ugrid_filename is not None, ugrid_filename
-
-    if not os.path.exists(ugrid_filename):
-        msg = 'cannot find ugrid_filename=%r\n%s' % (ugrid_filename, print_bad_path(ugrid_filename))
-        raise IOError(msg)
 
     try:
         base, file_format, ext = os.path.basename(ugrid_filename).split('.')

@@ -22,16 +22,16 @@ class TestNastran(unittest.TestCase):
         bdf_filename = os.path.join(model_path, 'solid_bending', 'solid_bending.bdf')
 
         size = 8
-        debug = False
+        debug = True
         model = read_bdf(bdf_filename, log=None, debug=debug)
         log = model.log
         #model.skin_solid_elements()
-        skin_filename = os.path.join(model_path, 'solid_bending', 'solid_skin.bdf')
-        model.write_skin_solid_faces(skin_filename, write_solids=True,
+        skin_bdf_filename = os.path.join(model_path, 'solid_bending', 'solid_skin.bdf')
+        model.write_skin_solid_faces(skin_bdf_filename, write_solids=True,
                                     write_shells=True,
                                     size=size, is_double=False, encoding=None)
 
-        bdf_model = read_bdf(skin_filename, log=log, debug=debug)
+        bdf_model = read_bdf(skin_bdf_filename, log=log, debug=debug)
         ugrid_filename_out = os.path.join(model_path, 'solid_bending', 'solid_skin.b8.ugrid')
         nastran_to_ugrid(bdf_model, ugrid_filename_out, properties=None,
                          check_shells=True, check_solids=True)
@@ -43,6 +43,10 @@ class TestNastran(unittest.TestCase):
                   convert_pyram_to_penta=True, encoding=None,
                   size=size, is_double=False)
         model2 = read_bdf(skin_bdf_filename2, log=log, debug=debug)
+
+        os.remove(ugrid_filename_out)
+        os.remove(skin_bdf_filename)
+        os.remove(skin_bdf_filename2)
 
 
 if __name__ == '__main__':  # pragma: no cover
