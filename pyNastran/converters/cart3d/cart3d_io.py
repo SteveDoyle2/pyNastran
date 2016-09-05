@@ -179,11 +179,11 @@ class Cart3dIO(object):
         alpha = None
         beta = None
         if os.path.exists(input_cntl_filename):
-            cntl = read_input_cntl(input_cntl_filename, log=log, debug=debug)
+            cntl = read_input_cntl(input_cntl_filename, log=self.log, debug=self.debug)
             mach, alpha, beta = cntl.get_flow_conditions()
             bcs = cntl.get_boundary_conditions()
             bc_xmin, bc_xmax, bc_ymin, bc_ymax, bc_xmin, bc_xmax, surfbcs = bcs
-            stack = False
+            #stack = False
 
             if surfbcs:
                 bc_form = [
@@ -243,7 +243,7 @@ class Cart3dIO(object):
 
 
         if os.path.exists(input_c3d_filename):
-            c3d = read_input_cntl(input_c3d_filename, stack=stack, log=log, debug=debug)
+            nodes, elements = read_input_c3d(input_c3d_filename, stack=stack, log=self.log, debug=self.debug)
 
             # Planes
             # ----------
@@ -281,35 +281,43 @@ class Cart3dIO(object):
                 nsymmetry_nodes = 0
                 ninflow_nodes = 0
                 noutflow_nodes = 0
-                for bc, nodesi, elementsi in zip(bcs, nodes, elements):
+                for bcsi, nodesi, elementsi in zip(bcs, nodes, elements):
                     # 0 = FAR FIELD
                     # 1 = SYMMETRY
                     # 2 = INFLOW  (specify all)
                     # 3 = OUTFLOW (simple extrap)
-                    self.log.info('bc = %s' % bc)
+                    self.log.info('bcsi = %s' % bcsi)
                     nnodes = nodesi.shape[0]
-                    if bc == 0:
-                        farfield_nodes.append(nodesi)
-                        farfield_elements.append(elementsi + nfarfield_nodes)
-                        nfarfield_nodes += nnodes
-                        ifarfield += 1
-                    elif bc == 1:
-                        symmetry_nodes.append(nodesi)
-                        symmetry_elements.append(elementsi + nsymmetry_nodes)
-                        nsymmetry_nodes += nnodes
-                        isymmetry += 1
-                    elif bc == 2:
-                        inflow_nodes.append(nodesi)
-                        inflow_elements.append(elementsi + ninflow_nodes)
-                        ninflow_nodes += nnodes
-                        iinflow += 1
-                    elif bc == 3:
-                        outflow_nodes.append(nodesi)
-                        outflow_elements.append(elementsi + noutflow_nodes)
-                        noutflow_nodes += nnodes
-                        ioutflow += 1
+                    bc = bcsi
+                    if isinstance(bc, int):
+                        if bc == 0:
+                            farfield_nodes.append(nodesi)
+                            farfield_elements.append(elementsi + nfarfield_nodes)
+                            nfarfield_nodes += nnodes
+                            ifarfield += 1
+                        elif bc == 1:
+                            symmetry_nodes.append(nodesi)
+                            symmetry_elements.append(elementsi + nsymmetry_nodes)
+                            nsymmetry_nodes += nnodes
+                            isymmetry += 1
+                        elif bc == 2:
+                            inflow_nodes.append(nodesi)
+                            inflow_elements.append(elementsi + ninflow_nodes)
+                            ninflow_nodes += nnodes
+                            iinflow += 1
+                        elif bc == 3:
+                            outflow_nodes.append(nodesi)
+                            outflow_elements.append(elementsi + noutflow_nodes)
+                            noutflow_nodes += nnodes
+                            ioutflow += 1
+                        else:
+                            msg = 'bc=%s' % str(bc)
+                            raise NotImplementedError(msg)
+                    elif isinstance(bc, dict):
+                        continue
                     else:
-                        raise NotImplementedError(bc)
+                        msg = 'bc=%s' % str(bc)
+                        raise NotImplementedError(msg)
 
                 if ifarfield:
                     color = blue

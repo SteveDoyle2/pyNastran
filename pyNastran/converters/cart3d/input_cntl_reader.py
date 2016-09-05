@@ -32,12 +32,14 @@ class InputCntlReader(object):
             #beta     0.0   #  (double) - sideslip Angle
             if flow_type == 'Mach':
                 mach = float(sline[1])
-            if flow_type == 'alpha':
+            elif flow_type == 'alpha':
                 alpha = float(sline[1])
-            if flow_type == 'beta':
+            elif flow_type == 'beta':
                 beta = float(sline[1])
             else:
-                raise NotImplementedError(sline)
+                msg = 'flow_type=%r allowed=[Mach, alpha, beta]\nsline=%s' % (
+                    flow_type, str(sline))
+                raise NotImplementedError(msg)
 
         return mach, alpha, beta
 
