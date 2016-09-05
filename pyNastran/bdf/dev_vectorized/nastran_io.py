@@ -841,7 +841,7 @@ class NastranIO(NastranIO_xref):
             self.icase = -1
             self.ncases = 0
 
-        self.cycle_results_explicit()  # start at nCase=0
+        self.cycle_results_explicit()  # start at ncase=0
         if self.ncases:
             self.scalarBar.VisibilityOn()
             self.scalarBar.Modified()

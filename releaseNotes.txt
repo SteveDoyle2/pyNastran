@@ -70,11 +70,14 @@ GUI:
  - added custom displacement results
  - fixed display issue with CHEXA20
  - fixed element selection for quadratic solids
+ - cycle_results now takes an integer instead of a string
+   - now supports switching to results with common names
 
 OP2:
  - MSC Nastran 2005R3B supported
  - MEFF, ASSIG, ASEPS tables now skipped properly
  - eigenvector_ROUGV1 now supported
+ - removed beta_transforms from gpforce
 
 Other
  - cart3d legend values are now saved
@@ -87,8 +90,6 @@ BDF:
 
 GUI:
  - fix node Cd deflection issue (high priority, 4/10)
- - fix command index (gives a duplicated string, not the Sidebar index)
-   high priority; 1/10)
  - is this a solid element issue?
    - fix Min Interior angle (moderate priority; 1/10; see optistruct model - quad?)
    - fix Aspect Ratio (moderate priority; 1/10; see optistruct model - quad?)
@@ -98,7 +99,6 @@ GUI:
    - see femap_exhaust
    - old : transform_displacements_to_global(i_transforms, beta_transforms)
    - new : transform_displacements_to_global(i_transforms, coords, xyz_cid0=None)
- - removed beta_transforms from gpforce
 
 -----------------------v0.8.0 released 2016/8/21-----------------------
 Major changes:

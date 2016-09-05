@@ -369,7 +369,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                 ('camera_reset', 'Reset camera view', 'trefresh.png', 'r', 'Reset the camera view to default', self.on_reset_camera),
                 ('reload', 'Reload model', 'treload.png', 'r', 'Remove the model and reload the same geometry file', self.on_reload),
 
-                ('cycle_results', 'Cycle Results', 'cycle_results.png', 'CTRL+L', 'Changes the result case', self.cycle_results),
+                ('cycle_results', 'Cycle Results', 'cycle_results.png', 'CTRL+L', 'Changes the result case', self.on_cycle_results),
 
                 ('x', 'Flips to +X Axis', 'plus_x.png', 'x', 'Flips to +X Axis', lambda: self.update_camera('+x')),
                 ('y', 'Flips to +Y Axis', 'plus_y.png', 'y', 'Flips to +Y Axis', lambda: self.update_camera('+y')),

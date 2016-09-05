@@ -131,7 +131,7 @@ class Plot3d_io(object):
         #print "type(case_keys) = ",type(self.case_keys)
         self.ncases = min(0, len(self.result_cases) - 1)  # number of keys in dictionary
         self.icase = 0 if self.ncases == 0 else -1
-        self.cycle_results()  # start at nCase=0
+        self.cycle_results()  # start at ncase=0
 
     def fill_plot3d_geometry_case(self, cases, ID, nodes, elements, regions, loads):
         #print "regions**** = ",regions

@@ -61,15 +61,27 @@ class GuiCommon(GuiAttributes):
         else:
             self.text_actors[3].VisibilityOff()
 
-    def cycle_results(self, result_name=None):
+    def on_cycle_results(self, case=None):
+        """the gui method for calling cycle_results"""
+        self.cycle_results(self.icase + 1)
+
+    def cycle_results(self, case=None):
+        #print('-----------------')
+        #print('real-cycle_results(case=%r)' % case)
+        if case is None:
+            #print('adding 1 to case (%s)' % (self.icase))
+            case = self.icase + 1
+
+        assert case is not False, case
         if self.ncases <= 1:
             self.log.warning('cycle_results(result_name=%r); ncases=%i' % (
-                result_name, self.ncases))
+                case, self.ncases))
             if self.ncases == 0:
                 self.scalarBar.SetVisibility(False)
             return
-        result_type = self.cycle_results_explicit(result_name, explicit=False)
-        self.log_command('cycle_results(result_name=%r)' % result_type)
+        case = self.cycle_results_explicit(case, explicit=False)
+        assert case is not False, case
+        self.log_command('cycle_results(case=%r)' % self.icase)
 
     def get_subtitle_label(self, subcase_id):
         try:
@@ -79,17 +91,17 @@ class GuiCommon(GuiAttributes):
             label = 'label=NA'
         return subtitle, label
 
-    def cycle_results_explicit(self, result_name=None, explicit=True):
+    def cycle_results_explicit(self, case=None, explicit=True):
+        assert case is not False, case
         #if explicit:
-            #self.log_command('cycle_results(result_name=%r)' % result_name)
-        found_cases = self.increment_cycle(result_name)
+            #self.log_command('cycle_results(case=%r)' % case)
+        found_cases = self.increment_cycle(case)
         if found_cases:
-            result_type = self._set_case(result_name, self.icase, explicit=explicit, cycle=True)
+            icase = self._set_case(case, self.icase, explicit=explicit, cycle=True)
+            assert icase is not False, case
         else:
-            result_type = None
-        #else:
-            #self.log_command(""didn't find case...")
-        return result_type
+            icase = None
+        return icase
 
     def get_name_result_data(self, icase):
         key = self.case_keys[icase]
@@ -214,8 +226,9 @@ class GuiCommon(GuiAttributes):
         #location = self.get_case_location(key)
         self.res_widget.update_method(methods)
         if explicit:
-            self.log_command('cycle_results(result_name=%r)' % result_type)
-        return result_type
+            self.log_command('cycle_results(case=%r)' % self.icase)
+        assert self.icase is not False, self.icase
+        return self.icase
 
     def set_grid_values(self, name, case, vector_size, min_value, max_value, norm_value,
                         is_low_to_high=True):
@@ -425,42 +438,35 @@ class GuiCommon(GuiAttributes):
         assert found_case is True, 'result_name=%r' % result_name
         return icase
 
-    def increment_cycle(self, result_name=False):
-        found_case = False
-        if result_name is not False and result_name is not None:
-            for icase, cases in sorted(iteritems(self.result_cases)):
-                if result_name == cases[1]:
-                    found_case = True
-                    self.icase = icase  # no idea why this works...if it does...
-
-        if not found_case:
-            if self.icase is not self.ncases:
-                self.icase += 1
-            else:
+    def increment_cycle(self, icase=None):
+        #print('1-icase=%r self.icase=%s ncases=%r' % (icase, self.icase, self.ncases))
+        #print(type(icase))
+        if isinstance(icase, int):
+            self.icase = icase
+            if self.icase >= self.ncases:
                 self.icase = 0
-        if self.icase == len(self.case_keys):
-            self.icase = 0
+        else:
+            self.icase += 1
+            if self.icase == self.ncases:
+                self.icase = 0
+        #print('2-icase=%r self.icase=%s ncases=%r' % (icase, self.icase, self.ncases))
 
-        if len(self.case_keys) > 0:
-            try:
-                key = self.case_keys[self.icase]
-            except IndexError:
-                found_cases = False
-                return found_cases
-            except TypeError:
-                msg = 'type(case_keys)=%s\n' % type(self.case_keys)
-                msg += 'icase=%r\n' % str(self.icase)
-                msg += 'case_keys=%r' % str(self.case_keys)
-                print(msg)
-                raise TypeError(msg)
+        if self.ncases > 0:
+            key = self.case_keys[self.icase]
+            #try:
+                #key = self.case_keys[self.icase]
+            #except IndexError:
+                #found_cases = False
+                #return found_cases
+            #except TypeError:
+                #msg = 'type(case_keys)=%s\n' % type(self.case_keys)
+                #msg += 'icase=%r\n' % str(self.icase)
+                #msg += 'case_keys=%r' % str(self.case_keys)
+                #print(msg)
+                #raise TypeError(msg)
             msg = 'icase=%r\n' % str(self.icase)
             msg += 'case_keys=%r' % str(self.case_keys)
             #print(msg)
-
-            #location = self.get_case_location(key)
-            #print("key_increment_cycle = %s" % str(key))
-            #if key[2] == 3:  # vector size=3 -> vector, skipping ???
-                #self.increment_cycle()
             found_cases = True
         else:
             # key = self.case_keys[self.icase]
