@@ -105,24 +105,25 @@ assert os.path.exists(icon_main), '%s doesnt exist' % icon_main
 
 #python_path = 'F:\Anaconda'
 python_path = os.path.dirname(sys.executable)
-has_mkl = True
-if has_mkl:
-    if PY2:
-        mkl_dll = os.path.join(python_path, 'Library', 'bin', 'mkl_def.dll')
-    else:
-        mkl_dll = os.path.join(python_path, 'evns', 'py35', 'Library', 'bin', 'mkl_def3.dll')
-    mkl_dll_base = os.path.basename(mkl_dll)
-    assert os.path.exists(mkl_dll), '%s doesnt exist' % mkl_dll
+
+if PY2:
+    mkl_dll = os.path.join(python_path, 'Library', 'bin', 'mkl_def.dll')
+else:
+    mkl_dll = os.path.join(python_path, 'evns', 'py35', 'Library', 'bin', 'mkl_def3.dll')
+mkl_dll_base = os.path.basename(mkl_dll)
+#assert os.path.exists(mkl_dll), '%s doesnt exist' % mkl_dll
+has_mkl_dll = os.path.exists(mkl_dll_base)
 
 binaries = []
 if sys.platform == 'win32':
-    binaries = [('msvcp100.dll', 'C:\\Windows\\System32\\msvcp100.dll', 'BINARY'),
-                ('msvcr100.dll', 'C:\\Windows\\System32\\msvcr100.dll', 'BINARY'),
-                (mkl_dll_base, mkl_dll, 'BINARY'),
-                ]
-
-#python_path = 'C:\\Python27_x86'
-#python_path = 'C:\\Anaconda'
+    binaries = [
+        ('msvcp100.dll', 'C:\\Windows\\System32\\msvcp100.dll', 'BINARY'),
+        ('msvcr100.dll', 'C:\\Windows\\System32\\msvcr100.dll', 'BINARY'),
+    ]
+    if has_mkl_dll:
+        binaries.append(
+            (mkl_dll_base, mkl_dll, 'BINARY')
+        )
 
 
 pathex = pyInstaller_path + [
