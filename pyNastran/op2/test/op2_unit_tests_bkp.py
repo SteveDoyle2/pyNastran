@@ -716,6 +716,7 @@ class TestOP2(Tester):
         op2_filename = os.path.join(folder, 'mode_solid_shell_bar.op2')
         vtk_filename = os.path.join(folder, 'mode_solid_shell_bar.vtk')
         export_to_vtk_filename(bdf_filename, op2_filename, vtk_filename)
+        os.remove(vtk_filename)
 
     def test_op2_solid_shell_bar_03(self):
         op2_filename = os.path.join('buckling_solid_shell_bar.op2')
@@ -882,6 +883,7 @@ class TestOP2(Tester):
         op2_filename = os.path.join(folder, 'freq_solid_shell_bar.op2')
         vtk_filename = os.path.join(folder, 'freq_solid_shell_bar.vtk')
         export_to_vtk_filename(bdf_filename, op2_filename, vtk_filename)
+        os.remove(vtk_filename)
 
     def test_op2_solid_shell_bar_05(self):
         """

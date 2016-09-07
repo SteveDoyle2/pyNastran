@@ -238,20 +238,19 @@ def export_to_vtk_filename(bdf_filename, op2_filename, vtk_filename, debug=False
         vtk_file.write('\n')
 
         vtk_file.write('POINT_DATA %i\n' % nnodes)
-        if 1:
-            vtk_file.write('NodeID %i float\n' % nnodes)
-            vtk_file.write(pack_int_array(nid_fmt, nids))
+        vtk_file.write('NodeID %i float\n' % nnodes)
+        vtk_file.write(pack_int_array(nid_fmt, nids))
 
-            fmt = '%si' % nelements
-            if nelements:
-                vtk_file.write('ElementID %i float\n' % nelements)
-                vtk_file.write(pack_int_array(eid_fmt, eids))
-            if nproperties:
-                vtk_file.write('PropertyID %i float\n' % nproperties)
-                vtk_file.write(pack_int_array(eid_fmt, pids))
-            if nmaterials:
-                vtk_file.write('MaterialID %i float\n' % nmaterials)
-                vtk_file.write(pack_int_array(eid_fmt, mids))
+        fmt = '%si' % nelements
+        if nelements:
+            vtk_file.write('ElementID %i float\n' % nelements)
+            vtk_file.write(pack_int_array(eid_fmt, eids))
+        if nproperties:
+            vtk_file.write('PropertyID %i float\n' % nproperties)
+            vtk_file.write(pack_int_array(eid_fmt, pids))
+        if nmaterials:
+            vtk_file.write('MaterialID %i float\n' % nmaterials)
+            vtk_file.write(pack_int_array(eid_fmt, mids))
 
         nodal_cases = [op2.eigenvectors, op2.displacements, op2.velocities, op2.accelerations]
         fmt = '%sf' % (nnodes * 6)
