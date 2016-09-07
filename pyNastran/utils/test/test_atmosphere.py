@@ -136,7 +136,6 @@ class Atm(unittest.TestCase):
 
     def test_re(self):
         re = atm_unit_reynolds_number(55000., 2.4)
-
         self.assertEqual(atm_unit_reynolds_number(55000., 2.4), 2244166.3810534105)
 
 if __name__ == "__main__":  # pragma: no cover
