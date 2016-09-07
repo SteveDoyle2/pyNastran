@@ -84,19 +84,23 @@ class TableArray(ScalarObject):  # displacement style table
             rtols = []
             if self.is_sort1():
                 for itime in range(ntimes):
+                    msg += '(nid, gridtype); itime=%s\n' % itime
+                    msg += '(tx, ty, tz, rx, ry, rz)\n'
                     for inid, nid_gridtype, in enumerate(self.node_gridtype):
                         (nid, grid_type) = nid_gridtype
                         t1 = self.data[itime, inid, :]
                         t2 = table.data[itime, inid, :]
-                        (tx, ty, tz, rx, ry, rz) = t1
-                        (tx2, ty2, tz2, rx2, ry2, rz2) = t2
                         if not allclose(t1, t2, rtol=rtol, atol=atol):
                         #if not np.array_equal(t1, t2):
+                            inonzero = np.where(t1 != 0.)[0]
                             atoli = np.abs(t2 - t1).max()
-                            rtoli = np.abs(t2/t1).max()
+                            rtoli = np.abs(t2[inonzero] / t1[inonzero]).max()
+
+                            (tx1, ty1, tz1, rx1, ry1, rz1) = t1
+                            (tx2, ty2, tz2, rx2, ry2, rz2) = t2
                             msg += '(%s, %s)\n  (%s, %s, %s, %s, %s, %s)\n  (%s, %s, %s, %s, %s, %s)\n' % (
                                 nid, grid_type,
-                                tx, ty, tz, rx, ry, rz,
+                                tx1, ty1, tz1, rx1, ry1, rz1,
                                 tx2, ty2, tz2, rx2, ry2, rz2)
                             i += 1
                             atols.append(atoli)

@@ -688,19 +688,20 @@ class OP2(OP2_Scalar):
                     if np.diagonal(cid_transform).sum() == 3.:
                         is_global_cid = True
 
+                    print('coord\n', coord)
+                    print(cid_transform)
+                    print('inode = %s' % inode)
                     if coord_type in ['CORD2R', 'CORD1R']:
                         if is_global_cid:
+                            print('is_global_cid')
                             continue
-                        #print('coord\n', coord)
-                        #print(cid_transform)
-                        #print('inode = %s' % inode)
-                        #print('rectangular')
+                        print('rectangular')
                         translation = data[:, inode, :3]
                         rotation = data[:, inode, 3:]
                         data[:, inode, :3] = translation.dot(cid_transform)
                         data[:, inode, 3:] = rotation.dot(cid_transform)
                     elif coord_type in ['CORD2C', 'CORD1C']:
-                        #print('cylindrical')
+                        print('cylindrical')
                         if xyz_cid0 is None:
                             msg = ('xyz_cid is required for cylindrical '
                                    'coordinate transforms')
@@ -708,9 +709,13 @@ class OP2(OP2_Scalar):
                         xyzi = xyz_cid0[inode, :]
                         rtz_cid = coord.xyz_to_coord_array(xyzi)
                         theta = rtz_cid[:, 1]
+                        print('theta = %s' % list(theta))
                         for itime in range(data.shape[0]):
                             translation = data[itime, inode, :3]
                             rotation = data[itime, inode, 3:]
+                            theta_max1 = translation[:, 1].max()
+                            theta_max2 = translation[:, 1].max()
+                            print('theta_max = ', max(theta_max1, theta_max2))
                             translation[:, 1] += theta
                             rotation[:, 1] += theta
                             translation = coord.coord_to_xyz_array(data[itime, inode, :3])
@@ -718,6 +723,7 @@ class OP2(OP2_Scalar):
                             if is_global_cid:
                                 data[itime, inode, :3] = translation
                                 data[itime, inode, 3:] = rotation
+                                print('is_global_cid')
                                 continue
                             data[itime, inode, :3] = translation.dot(cid_transform)
                             data[itime, inode, 3:] = rotation.dot(cid_transform)
@@ -750,7 +756,7 @@ class OP2(OP2_Scalar):
                         raise RuntimeError(coord)
         return
 
-    def transform_gpforce_to_global(self, i_transform, coords, nids_transform):
+    def transform_gpforce_to_global(self, nids_transform, i_transform, coords):
         """
         Transforms the ``data`` of GPFORCE results into the
         global coordinate system for those nodes with different output
@@ -766,6 +772,15 @@ class OP2(OP2_Scalar):
         nids_transform : dict{int cid : int ndarray nds}
             Dictionary from coordinate id to corresponding node ids.
 
+        i_transform : dict{int cid : int ndarray}
+            Dictionary from coordinate id to index of the nodes in
+            ``BDF.point_ids`` that their output (`CD`) in that
+            coordinate system.
+
+        coords : dict{int cid :Coord()}
+            Dictionary of coordinate id to the coordinate object
+            Use this if CD is only rectangular
+            Use this if CD is not rectangular
         """
         disp_like_dicts = [
             # TODO: causes test_op2_solid_shell_bar_01_gpforce_xyz to fail

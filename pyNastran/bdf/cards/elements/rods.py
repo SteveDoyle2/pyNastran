@@ -83,6 +83,8 @@ class CROD(RodElement):
     def __init__(self, eid, pid, nids, comment=''):
         """
         +------+-----+-----+----+----+
+        |   1  |  2  |  3  |  4 |  5 |
+        +======+=====+=====+====+====+
         | CROD | EID | PID | N1 | N2 |
         +------+-----+-----+----+----+
         """
@@ -215,6 +217,13 @@ class CTUBE(RodElement):
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
     def __init__(self, eid, pid, nids, comment=''):
+        """
+        +-------+-----+-----+----+----+
+        |   1   |  2  |  3  |  4 |  5 |
+        +=======+=====+=====+====+====+
+        | CTUBE | EID | PID | N1 | N2 |
+        +-------+-----+-----+----+----+
+        """
         RodElement.__init__(self)
         if comment:
             self._comment = comment
@@ -325,6 +334,13 @@ class CONROD(RodElement):
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
     def __init__(self, eid, mid, nids, A, j=0.0, c=0.0, nsm=0.0, comment=''):
+        """
+        +--------+-----+-----+----+-----+---+---+---+-----+
+        |   1    |  2  |  3  |  4 |  5  | 6 | 7 | 8 |  9  |
+        +========+=====+=====+====+=====+===+===+===+=====+
+        | CONROD | EID | N1  | N2 | MID | A | J | C | NSM |
+        +--------+-----+-----+----+-----+---+---+---+-----+
+        """
         RodElement.__init__(self)
         if comment:
             self._comment = comment
