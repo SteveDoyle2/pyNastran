@@ -2,7 +2,7 @@ import unittest
 
 from pyNastran.utils.atmosphere import (
     atm_density, atm_dynamic_pressure, atm_temperature, atm_pressure,
-    atm_velocity, atm_mach, atm_dynamic_viscosity_mu, get_alt_for_mach_q,
+    atm_velocity, atm_mach, atm_dynamic_viscosity_mu, get_alt_for_q_with_constant_mach,
     atm_unit_reynolds_number)
 from pyNastran.utils.atmosphere2 import (
     atm_density as atm_density2,
@@ -127,9 +127,9 @@ class Atm(unittest.TestCase):
         self.assertAlmostEqual(mach_c, 1.0, delta=0.002)
 
     def test_get_q(self):
-        get_alt_for_mach_q(0.8, 534.2)
-        alt_a = get_alt_for_mach_q(0.8, 600., tol=0.01)
-        alt_b = get_alt_for_mach_q(0.8, 400., tol=0.01)
+        get_alt_for_q_with_constant_mach(534.2, 0.8)
+        alt_a = get_alt_for_q_with_constant_mach(600., 0.8, tol=0.01)
+        alt_b = get_alt_for_q_with_constant_mach(400., 0.8, tol=0.01)
 
         self.assertAlmostEqual(alt_a, 12144.30, delta=1.5)  # TODO: should be 0.01
         self.assertAlmostEqual(alt_b, 22058.47, delta=2.5)  # TODO: should be 0.01
