@@ -528,12 +528,19 @@ def transform_force_moment(force_in_local, moment_in_local,
 
     xyz2 = T_2_to_0.T @ xyz0
     xyz2 = T_2_to_0.T @ T_1_to_0 @ xyz1
+
+    Method
+    ------
+    xyz_g = T_a2g @ xyz_a
+    xyz_g = T_b2g @ xyz_b
+    T_b2g @ xyz_b = T_a2g @ xyz_a
+    xyz_b = T_b2g.T @ T_a2g @ xyz_a = T_g2b @ T_a2g @ xyz_a
     """
     debug = True
     assert logger is not None
     #print('nid_cd*\n', nid_cd)
     dtype = force_in_local.dtype
-    dtype = 'float64'
+    #dtype = 'float64'
     force_out = np.zeros(force_in_local.shape, dtype=dtype)
     moment_out = np.zeros(force_in_local.shape, dtype=dtype)
 
