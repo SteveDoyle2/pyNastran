@@ -613,7 +613,7 @@ class OP2(OP2_Scalar):
                     self.log.info('  %s' % str(key))
         #self.log.info('subcase_key = %s' % self.subcase_key)
 
-    def transform_displacements_to_global(self, i_transform, coords, xyz_cid0=None):
+    def transform_displacements_to_global(self, i_transform, coords, xyz_cid0=None, debug=False):
         """
         Transforms the ``data`` of displacement-like results into the
         global coordinate system for those nodes with different output
@@ -688,9 +688,10 @@ class OP2(OP2_Scalar):
                     if np.diagonal(cid_transform).sum() == 3.:
                         is_global_cid = True
 
-                    print('coord\n', coord)
-                    print(cid_transform)
-                    print('inode = %s' % inode)
+                    if debug:
+                        print('coord\n', coord)
+                        print(cid_transform)
+                        print('inode = %s' % inode)
                     if coord_type in ['CORD2R', 'CORD1R']:
                         if is_global_cid:
                             print('is_global_cid')
@@ -714,17 +715,36 @@ class OP2(OP2_Scalar):
                             translation = data[itime, inode, :3]
                             rotation = data[itime, inode, 3:]
                             theta_max1 = translation[:, 1].max()
-                            theta_max2 = translation[:, 1].max()
+                            theta_max2 = rotation[:, 1].max()
                             print('theta_max = ', max(theta_max1, theta_max2))
-                            translation[:, 1] += theta
-                            rotation[:, 1] += theta
-                            translation = coord.coord_to_xyz_array(data[itime, inode, :3])
-                            rotation = coord.coord_to_xyz_array(data[itime, inode, 3:])
-                            if is_global_cid:
-                                data[itime, inode, :3] = translation
-                                data[itime, inode, 3:] = rotation
-                                print('is_global_cid')
-                                continue
+
+                            if 0:
+                                # actually somewhat close
+                                translation[:, 1] += theta
+                                rotation[:, 1] += theta
+                                translation = coord.coord_to_xyz_array(data[itime, inode, :3])
+                                rotation = coord.coord_to_xyz_array(data[itime, inode, 3:])
+                            elif 0:
+                                # bad for spc (global_radial_cd)
+                                translation[:, 1] += theta
+                                rotation[:, 1] += theta
+                                translation = coord.coord_to_xyz_array(translation)
+                                rotation = coord.coord_to_xyz_array(rotation)
+                            elif 0:
+                                # very wrong...
+                                print(translation.shape)
+                                translation[:, 1] += theta
+                                rotation[:, 1] += theta
+                            elif 1:
+                                pass
+                            else:
+                                raise RuntimeError('no option selected...')
+
+                            #if is_global_cid:
+                                #data[itime, inode, :3] = translation
+                                #data[itime, inode, 3:] = rotation
+                                #print('is_global_cid')
+                                #continue
                             data[itime, inode, :3] = translation.dot(cid_transform)
                             data[itime, inode, 3:] = rotation.dot(cid_transform)
                     elif coord_type in ['CORD2S', 'CORD1S']:
@@ -740,12 +760,13 @@ class OP2(OP2_Scalar):
                         for itime in range(data.shape[0]):
                             translation = data[itime, inode, :3]
                             rotation = data[itime, inode, 3:]
-                            translation[:, 1] += theta
-                            translation[:, 2] += phi
-                            rotation[:, 1] += theta
-                            rotation[:, 2] += phi
-                            translation = coord.coord_to_xyz_array(data[itime, inode, :3])
-                            rotation = coord.coord_to_xyz_array(data[itime, inode, 3:])
+                            if 0:
+                                translation[:, 1] += theta
+                                translation[:, 2] += phi
+                                rotation[:, 1] += theta
+                                rotation[:, 2] += phi
+                            translation = coord.coord_to_xyz_array(translation)
+                            rotation = coord.coord_to_xyz_array(rotation)
                             if is_global_cid:
                                 data[itime, inode, :3] = translation
                                 data[itime, inode, 3:] = rotation
@@ -841,14 +862,15 @@ class OP2(OP2_Scalar):
                         for itime in range(data.shape[0]):
                             translation = data[itime, inode, :3]
                             rotation = data[itime, inode, 3:]
-                            translation[:, 1] += theta
-                            rotation[:, 1] += theta
+                            if 0:
+                                translation[:, 1] += theta
+                                rotation[:, 1] += theta
                             translation = coord.coord_to_xyz_array(data[itime, inode, :3])
                             rotation = coord.coord_to_xyz_array(data[itime, inode, 3:])
-                            if is_global_cid:
-                                data[itime, inode, :3] = translation
-                                data[itime, inode, 3:] = rotation
-                                continue
+                            #if is_global_cid:
+                                #data[itime, inode, :3] = translation
+                                #data[itime, inode, 3:] = rotation
+                                #continue
                             data[itime, inode, :3] = translation.dot(cid_transform)
                             data[itime, inode, 3:] = rotation.dot(cid_transform)
                     elif coord_type in ['CORD2S', 'CORD1S']:
@@ -864,16 +886,17 @@ class OP2(OP2_Scalar):
                         for itime in range(data.shape[0]):
                             translation = data[itime, inode, :3]
                             rotation = data[itime, inode, 3:]
-                            translation[:, 1] += theta
-                            translation[:, 2] += phi
-                            rotation[:, 1] += theta
-                            rotation[:, 2] += phi
+                            #if 0:
+                                #translation[:, 1] += theta
+                                #translation[:, 2] += phi
+                                #rotation[:, 1] += theta
+                                #rotation[:, 2] += phi
                             translation = coord.coord_to_xyz_array(data[itime, inode, :3])
                             rotation = coord.coord_to_xyz_array(data[itime, inode, 3:])
-                            if is_global_cid:
-                                data[itime, inode, :3] = translation
-                                data[itime, inode, 3:] = rotation
-                                continue
+                            #if is_global_cid:
+                                #data[itime, inode, :3] = translation
+                                #data[itime, inode, 3:] = rotation
+                                #continue
                             data[itime, inode, :3] = translation.dot(cid_transform)
                             data[itime, inode, 3:] = rotation.dot(cid_transform)
                     else:

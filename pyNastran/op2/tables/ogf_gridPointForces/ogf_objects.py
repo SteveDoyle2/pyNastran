@@ -206,10 +206,10 @@ class RealGridPointForcesArray(ScalarObject):
                         ename2 = self.element_names[itime, ie]
                         t1 = self.data[itime, ie, :]
                         t2 = table.data[itime, ie, :]
-                        (t11, t21, t31, r11, r21, r31) = t1
-                        (t12, t22, t32, r12, r22, r32) = t2
 
                         if not np.allclose(t1, t2, rtol=rtol, atol=atol):
+                            (t11, t21, t31, r11, r21, r31) = t1
+                            (t12, t22, t32, r12, r22, r32) = t2
                             inonzero = np.where(t1 != 0.)[0]
                             atoli = np.abs(t2 - t1).max()
                             rtoli = np.abs(t2[inonzero] / t1[inonzero]).max()
@@ -217,7 +217,7 @@ class RealGridPointForcesArray(ScalarObject):
                             pre_msg = '(%s, %s, %s)    ' % (nid, eid, ename1)
                             msg += '%s(%s, %s, %s, %s, %s, %s)\n%s(%s, %s, %s, %s, %s, %s)\n' % (
                                 pre_msg,
-                                t12, t22, t32, r12, r22, r32,
+                                t11, t21, t31, r11, r21, r31,
                                 ' ' * len(pre_msg),
                                 t12, t22, t32, r12, r22, r32)
                             i += 1
@@ -255,9 +255,10 @@ class RealGridPointForcesArray(ScalarObject):
                             pre_msg = '(%s, %s, %s)    ' % (nid, eid, ename1)
                             msg += '%s(%s, %s, %s, %s, %s, %s)\n%s(%s, %s, %s, %s, %s, %s)\n' % (
                                 pre_msg,
-                                t12, t22, t32, r12, r22, r32,
+                                t11, t21, t31, r11, r21, r31,
                                 ' ' * len(pre_msg),
-                                t12, t22, t32, r12, r22, r32)
+                                t12, t22, t32, r12, r22, r32
+                            )
                             i += 1
                             if i > 10:
                                 msg += 'atol.max() = %s\n' % max(atols)

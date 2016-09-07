@@ -444,9 +444,9 @@ class TestOP2(Tester):
         op2_1 = read_op2_geom(op2_filename1, log=warning_log)
         op2_1.log = debug_log
 
-        print("disp_orig =\n", op2_1.displacements[1].data[0, :2, :])
+        print("disp_orig =\n", op2_1.displacements[1].data[0, :4, :])
         print("spc_orig =\n", op2_1.spc_forces[1].data[0, -3:, :])
-        print("gpf_orig =\n", op2_1.grid_point_forces[1].data[0, :2, :])
+        #print("gpf_orig =\n", op2_1.grid_point_forces[1].data[0, :2, :])
 
         op2_1.cross_reference(xref_elements=False,
                               xref_nodes_with_elements=False,
@@ -484,9 +484,9 @@ class TestOP2(Tester):
             #print('%10.4e %10.4e %10.4e' % tuple(line))
         #print(disp.data[0, :, :3])
 
-        print("disp_new =\n", op2_1.displacements[1].data[0, :2, :])
+        #print("disp_new =\n", op2_1.displacements[1].data[0, :4, :])
         print("spc_new =\n", op2_1.spc_forces[1].data[0, -3:, :])
-        print("gpf_new =\n", op2_1.grid_point_forces[1].data[0, :2, :])
+        #print("gpf_new =\n", op2_1.grid_point_forces[1].data[0, :2, :])
 
         #-----------------------------------------------------------------------
         op2_filename2 = os.path.join(folder, 'static_solid_shell_bar.op2')
@@ -495,24 +495,25 @@ class TestOP2(Tester):
         op2_2.transform_displacements_to_global(i_transform_2, op2_2.coords)
         op2_2.transform_gpforce_to_global(nids_transform_2, i_transform_2, op2_2.coords)
 
-        print("disp_goal =\n", op2_2.displacements[1].data[0, :2, :])
+        #print("disp_goal =\n", op2_2.displacements[1].data[0, :4, :])
         print("spc_goal =\n", op2_2.spc_forces[1].data[0, -3:, :])
-        print("gpf_goal =\n", op2_2.grid_point_forces[1].data[0, :2, :])
+        #print("gpf_goal =\n", op2_2.grid_point_forces[1].data[0, :2, :])
 
-        return
-        msg = 'displacements baseline=\n%s\ndisplacements xyz=\n%s' % (
-            op2_1.displacements[1].data[0, :, :], op2_2.displacements[1].data[0, :, :])
+        #return
+        #msg = 'displacements baseline=\n%s\ndisplacements xyz=\n%s' % (
+            #op2_1.displacements[1].data[0, :, :], op2_2.displacements[1].data[0, :, :])
         #print(msg)
-        assert op2_1.displacements[1].assert_equal(op2_2.displacements[1])
+        #assert op2_1.displacements[1].assert_equal(op2_2.displacements[1])
 
-        msg = 'grid_point_forces baseline=\n%s\ngrid_point_forces xyz=\n%s' % (
-            op2_1.grid_point_forces[1].data[0, :, :], op2_2.grid_point_forces[1].data[0, :, :])
+        #msg = 'grid_point_forces baseline=\n%s\ngrid_point_forces xyz=\n%s' % (
+            #op2_1.grid_point_forces[1].data[0, :, :], op2_2.grid_point_forces[1].data[0, :, :])
         #print(msg)
 
         assert op2_1.spc_forces[1].assert_equal(op2_2.spc_forces[1], atol=4.4341e-04), msg
         assert op2_1.mpc_forces[1].assert_equal(op2_2.mpc_forces[1]), msg
         assert op2_1.load_vectors[1].assert_equal(op2_2.load_vectors[1]), msg
-        assert op2_1.grid_point_forces[1].assert_equal(op2_2.grid_point_forces[1], atol=0.000123), msg
+        #assert op2_1.grid_point_forces[1].assert_equal(op2_2.grid_point_forces[1], atol=0.000123), msg
+        return
         #-----------------------------------------------------------------------
         gpforce = op2_1.grid_point_forces[1]
         data = _get_gpforce_data()
