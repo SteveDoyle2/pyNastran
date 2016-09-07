@@ -349,6 +349,20 @@ class Coord(BaseCard):
         #return Fg, Mg + Mdelta
 
     def transform_vector_to_global_assuming_rectangular(self, p):
+        """
+        Transforms a vector to the global frame
+        The CBAR/CBEAM y/z vectors use this.
+
+        Parameters
+        ----------
+        p : (1,3) float ndarray
+            the point in the local frame to be transformed
+
+        Returns
+        -------
+        p : (1, 3) float ndarray
+            the vector in the global frame
+        """
         if self.cid == 0:
             return p
 
@@ -359,9 +373,6 @@ class Coord(BaseCard):
                 self.rid_ref.setup()
             else:
                 self.setup()
-
-        # the ijk axes arent resolved as R-theta-z, only points
-        #p2 = self.coord_to_xyz(p)
 
         if self.i is None:
             msg = "Local unit vectors haven't been set.\nType=%r cid=%s rid=%s" % (

@@ -61,6 +61,9 @@ class TableArray(ScalarObject):  # displacement style table
         self._nnodes = 0  # result specific
 
     def __eq__(self, table):
+        return self.assert_equal(table)
+
+    def assert_equal(self, table, rtol=1.e-5, atol=1.e-8):
         self._eq_header(table)
         assert self.is_sort1() == table.is_sort1()
         if not np.array_equal(self.node_gridtype, table.node_gridtype):
@@ -77,6 +80,8 @@ class TableArray(ScalarObject):  # displacement style table
             ntimes = self.data.shape[0]
 
             i = 0
+            atols = []
+            rtols = []
             if self.is_sort1():
                 for itime in range(ntimes):
                     for inid, nid_gridtype, in enumerate(self.node_gridtype):
@@ -85,19 +90,27 @@ class TableArray(ScalarObject):  # displacement style table
                         t2 = table.data[itime, inid, :]
                         (tx, ty, tz, rx, ry, rz) = t1
                         (tx2, ty2, tz2, rx2, ry2, rz2) = t2
-                        if not allclose(t1, t2):
+                        if not allclose(t1, t2, rtol=rtol, atol=atol):
                         #if not np.array_equal(t1, t2):
+                            atoli = np.abs(t2 - t1).max()
+                            rtoli = np.abs(t2/t1).max()
                             msg += '(%s, %s)\n  (%s, %s, %s, %s, %s, %s)\n  (%s, %s, %s, %s, %s, %s)\n' % (
                                 nid, grid_type,
                                 tx, ty, tz, rx, ry, rz,
                                 tx2, ty2, tz2, rx2, ry2, rz2)
                             i += 1
+                            atols.append(atoli)
+                            rtols.append(rtoli)
                         if i > 10:
+                            msg += 'atol.max() = %s\n' % max(atols)
+                            msg += 'rtol.max() = %s\n' % max(rtols)
                             print(msg)
                             raise ValueError(msg)
             else:
                 raise NotImplementedError(self.is_sort2())
             if i > 0:
+                msg += 'atol.max() = %s\n' % max(atols)
+                msg += 'rtol.max() = %s\n' % max(rtols)
                 print(msg)
                 raise ValueError(msg)
         return True

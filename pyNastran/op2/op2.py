@@ -109,7 +109,7 @@ K4HH    - Modal Structural Damping Matrix
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import iteritems, string_types, itervalues
+from six import iterkeys, iteritems, string_types, itervalues
 import os
 import sys
 
@@ -642,97 +642,227 @@ class OP2(OP2_Scalar):
             Use this if CD is not rectangular
         """
         #output = {}
-        res_tuples = [
-            ('disp', (
-                self.displacements,
-                self.displacementsATO,
-                self.displacementsCRM,
-                self.displacementsPSD,
-                self.displacementsRMS,
-                self.displacements_scaled,
-                self.displacement_scaled_response_spectra_ABS,
-                self.displacement_scaled_response_spectra_NRL,
+        disp_like_dicts = [
+            self.displacements,
+            self.displacementsATO,
+            self.displacementsCRM,
+            self.displacementsPSD,
+            self.displacementsRMS,
+            self.displacements_scaled,
+            self.displacement_scaled_response_spectra_ABS,
+            self.displacement_scaled_response_spectra_NRL,
 
-                self.velocities,
-                self.velocity_scaled_response_spectra_ABS,
+            self.velocities,
+            self.velocity_scaled_response_spectra_ABS,
 
-                self.accelerations,
-                self.acceleration_scaled_response_spectra_ABS,
-                self.acceleration_scaled_response_spectra_NRL,
+            self.accelerations,
+            self.acceleration_scaled_response_spectra_ABS,
+            self.acceleration_scaled_response_spectra_NRL,
 
-                self.eigenvectors,
-                self.eigenvectors_RADCONS, self.eigenvectors_RADEFFM,
-                self.eigenvectors_RADEATC, self.eigenvectors_ROUGV1,
-            )),
+            self.eigenvectors,
+            self.eigenvectors_RADCONS, self.eigenvectors_RADEFFM,
+            self.eigenvectors_RADEATC, self.eigenvectors_ROUGV1,
 
-            ('force', (
-                self.spc_forces, self.spc_forcesATO, self.spc_forcesPSD,
-                self.spc_forcesRMS,
-                self.mpc_forces, self.mpc_forcesATO, self.mpc_forcesPSD,
-                self.mpc_forcesRMS,
-                self.applied_loads, self.load_vectors,
+            self.spc_forces, self.spc_forcesATO, self.spc_forcesPSD,
+            self.spc_forcesRMS,
+            self.mpc_forces, self.mpc_forcesATO, self.mpc_forcesPSD,
 
-                # TODO: causes test_op2_solid_shell_bar_01_gpforce_xyz to fail
-                #       even though it should be uncommented
-                self.grid_point_forces,
-            )),
+            self.mpc_forcesRMS,
+            self.applied_loads, self.load_vectors,
         ]
-        for res_type, disp_like_dicts in res_tuples:
-            for disp_like_dict in disp_like_dicts:
-                if not disp_like_dict:
-                    continue
-                for subcase, result in iteritems(disp_like_dict):
-                    data = result.data
-                    for cid, inode in iteritems(i_transform):
-                        if cid in [-1, 0]:
+        for disp_like_dict in disp_like_dicts:
+            if not disp_like_dict:
+                continue
+            #print('-----------')
+            for subcase, result in iteritems(disp_like_dict):
+                #print('result.name = ', result.class_name)
+                data = result.data
+                for cid, inode in iteritems(i_transform):
+                    if cid in [-1, 0]:
+                        continue
+                    coord = coords[cid]
+                    coord_type = coord.type
+                    cid_transform = coord.beta()
+
+                    is_global_cid = False
+                    if np.diagonal(cid_transform).sum() == 3.:
+                        is_global_cid = True
+
+                    if coord_type in ['CORD2R', 'CORD1R']:
+                        if is_global_cid:
                             continue
-                        coord = coords[cid]
-                        coord_type = coord.type
-                        cid_transform = coord.beta()
-                        if res_type == 'force' or coord_type in ['CORD2R', 'CORD1R']:
-                            translation = data[:, inode, :3]
-                            rotation = data[:, inode, 3:]
-                            data[:, inode, :3] = translation.dot(cid_transform)
-                            data[:, inode, 3:] = rotation.dot(cid_transform)
-                        elif coord_type in ['CORD2C', 'CORD1C']:
-                            if xyz_cid0 is None:
-                                msg = ('xyz_cid is required for cylindrical '
-                                       'coordinate transforms')
-                                raise RuntimeError(msg)
-                            xyzi = xyz_cid0[inode, :]
-                            rtz_cid = coord.xyz_to_coord_array(xyzi)
-                            theta = rtz_cid[:, 1]
-                            for itime in range(data.shape[0]):
-                                translation = data[itime, inode, :3]
-                                rotation = data[itime, inode, 3:]
-                                translation[:, 1] += theta
-                                rotation[:, 1] += theta
-                                translation = coord.coord_to_xyz_array(data[itime, inode, :3])
-                                rotation = coord.coord_to_xyz_array(data[itime, inode, 3:])
-                                data[itime, inode, :3] = translation.dot(cid_transform)
-                                data[itime, inode, 3:] = rotation.dot(cid_transform)
-                        elif coord_type in ['CORD2S', 'CORD1S']:
-                            if xyz_cid0 is None:
-                                msg = ('xyz_cid is required for spherical '
-                                       'coordinate transforms')
-                                raise RuntimeError(msg)
-                            xyzi = xyz_cid0[inode, :]
-                            rtp_cid = coord.xyz_to_coord_array(xyzi)
-                            theta = rtp_cid[:, 1]
-                            phi = rtp_cid[:, 2]
-                            for itime in range(data.shape[0]):
-                                translation = data[itime, inode, :3]
-                                rotation = data[itime, inode, 3:]
-                                translation[:, 1] += theta
-                                translation[:, 2] += phi
-                                rotation[:, 1] += theta
-                                rotation[:, 2] += phi
-                                translation = coord.coord_to_xyz_array(data[itime, inode, :3])
-                                rotation = coord.coord_to_xyz_array(data[itime, inode, 3:])
-                                data[itime, inode, :3] = translation.dot(cid_transform)
-                                data[itime, inode, 3:] = rotation.dot(cid_transform)
-                        else:
-                            raise RuntimeError(coord)
+                        #print('coord\n', coord)
+                        #print(cid_transform)
+                        #print('inode = %s' % inode)
+                        #print('rectangular')
+                        translation = data[:, inode, :3]
+                        rotation = data[:, inode, 3:]
+                        data[:, inode, :3] = translation.dot(cid_transform)
+                        data[:, inode, 3:] = rotation.dot(cid_transform)
+                    elif coord_type in ['CORD2C', 'CORD1C']:
+                        #print('cylindrical')
+                        if xyz_cid0 is None:
+                            msg = ('xyz_cid is required for cylindrical '
+                                   'coordinate transforms')
+                            raise RuntimeError(msg)
+                        xyzi = xyz_cid0[inode, :]
+                        rtz_cid = coord.xyz_to_coord_array(xyzi)
+                        theta = rtz_cid[:, 1]
+                        for itime in range(data.shape[0]):
+                            translation = data[itime, inode, :3]
+                            rotation = data[itime, inode, 3:]
+                            translation[:, 1] += theta
+                            rotation[:, 1] += theta
+                            translation = coord.coord_to_xyz_array(data[itime, inode, :3])
+                            rotation = coord.coord_to_xyz_array(data[itime, inode, 3:])
+                            if is_global_cid:
+                                data[itime, inode, :3] = translation
+                                data[itime, inode, 3:] = rotation
+                                continue
+                            data[itime, inode, :3] = translation.dot(cid_transform)
+                            data[itime, inode, 3:] = rotation.dot(cid_transform)
+                    elif coord_type in ['CORD2S', 'CORD1S']:
+                        #print('spherical')
+                        if xyz_cid0 is None:
+                            msg = ('xyz_cid is required for spherical '
+                                   'coordinate transforms')
+                            raise RuntimeError(msg)
+                        xyzi = xyz_cid0[inode, :]
+                        rtp_cid = coord.xyz_to_coord_array(xyzi)
+                        theta = rtp_cid[:, 1]
+                        phi = rtp_cid[:, 2]
+                        for itime in range(data.shape[0]):
+                            translation = data[itime, inode, :3]
+                            rotation = data[itime, inode, 3:]
+                            translation[:, 1] += theta
+                            translation[:, 2] += phi
+                            rotation[:, 1] += theta
+                            rotation[:, 2] += phi
+                            translation = coord.coord_to_xyz_array(data[itime, inode, :3])
+                            rotation = coord.coord_to_xyz_array(data[itime, inode, 3:])
+                            if is_global_cid:
+                                data[itime, inode, :3] = translation
+                                data[itime, inode, 3:] = rotation
+                                continue
+                            data[itime, inode, :3] = translation.dot(cid_transform)
+                            data[itime, inode, 3:] = rotation.dot(cid_transform)
+                    else:
+                        raise RuntimeError(coord)
+        return
+
+    def transform_gpforce_to_global(self, i_transform, coords, nids_transform):
+        """
+        Transforms the ``data`` of GPFORCE results into the
+        global coordinate system for those nodes with different output
+        coordinate systems. Takes indicies and transformation matricies
+        for nodes with their output in coordinate systems other than the
+        global.
+
+        Used in combination with ``BDF.get_displacement_index_transforms``
+                          and/or ``BDF.get_displacement_index``
+
+        Parameters
+        ----------
+        nids_transform : dict{int cid : int ndarray nds}
+            Dictionary from coordinate id to corresponding node ids.
+
+        """
+        disp_like_dicts = [
+            # TODO: causes test_op2_solid_shell_bar_01_gpforce_xyz to fail
+            #       even though it should be uncommented
+            self.grid_point_forces,
+        ]
+        for disp_like_dict in disp_like_dicts:
+            if not disp_like_dict:
+                continue
+            print('-----------')
+            for subcase, result in iteritems(disp_like_dict):
+                print('result.name = ', result.class_name)
+                data = result.data
+                for cid, inode in iteritems(i_transform):
+                    if cid in [-1, 0]:
+                        continue
+                    coord = coords[cid]
+                    coord_type = coord.type
+                    cid_transform = coord.beta()
+
+                    is_global_cid = False
+                    if np.diagonal(cid_transform).sum() == 3.:
+                        is_global_cid = True
+                    nids = np.array(nids_transform[cid])
+
+                    #from pyNastran.op2.tables.ogf_gridPointForces.ogf_objects import RealGridPointForcesArray
+                    #result = RealGridPointForcesArray()
+                    if result.is_unique: # TODO: doesn't support preload
+                        #self.node_element = zeros((self.ntimes, self.ntotal, 2), dtype='int32')
+                        nids_all = result.node_element[0, :, 0]
+                        inode = np.where(np.in1d(nids_all, nids))[0]
+                        #print('nids_all = %s' % list(nids_all))
+                        #print('nids = %s' % list(nids))
+                        #print('inode = %s' % list(inode))
+                    else:
+                        raise NotImplementedError(result)
+
+                    if coord_type in ['CORD2R', 'CORD1R'] or 1:
+                        if is_global_cid:
+                            continue
+                        #print('coord\n', coord)
+                        #print(cid_transform)
+                        #print('inode = %s' % inode)
+                        print('rectangular')
+                        translation = data[:, inode, :3]
+                        rotation = data[:, inode, 3:]
+                        data[:, inode, :3] = translation.dot(cid_transform)
+                        data[:, inode, 3:] = rotation.dot(cid_transform)
+                    elif coord_type in ['CORD2C', 'CORD1C']:
+                        print('cylindrical')
+                        if xyz_cid0 is None:
+                            msg = ('xyz_cid is required for cylindrical '
+                                   'coordinate transforms')
+                            raise RuntimeError(msg)
+                        xyzi = xyz_cid0[inode, :]
+                        rtz_cid = coord.xyz_to_coord_array(xyzi)
+                        theta = rtz_cid[:, 1]
+                        for itime in range(data.shape[0]):
+                            translation = data[itime, inode, :3]
+                            rotation = data[itime, inode, 3:]
+                            translation[:, 1] += theta
+                            rotation[:, 1] += theta
+                            translation = coord.coord_to_xyz_array(data[itime, inode, :3])
+                            rotation = coord.coord_to_xyz_array(data[itime, inode, 3:])
+                            if is_global_cid:
+                                data[itime, inode, :3] = translation
+                                data[itime, inode, 3:] = rotation
+                                continue
+                            data[itime, inode, :3] = translation.dot(cid_transform)
+                            data[itime, inode, 3:] = rotation.dot(cid_transform)
+                    elif coord_type in ['CORD2S', 'CORD1S']:
+                        print('spherical')
+                        if xyz_cid0 is None:
+                            msg = ('xyz_cid is required for spherical '
+                                   'coordinate transforms')
+                            raise RuntimeError(msg)
+                        xyzi = xyz_cid0[inode, :]
+                        rtp_cid = coord.xyz_to_coord_array(xyzi)
+                        theta = rtp_cid[:, 1]
+                        phi = rtp_cid[:, 2]
+                        for itime in range(data.shape[0]):
+                            translation = data[itime, inode, :3]
+                            rotation = data[itime, inode, 3:]
+                            translation[:, 1] += theta
+                            translation[:, 2] += phi
+                            rotation[:, 1] += theta
+                            rotation[:, 2] += phi
+                            translation = coord.coord_to_xyz_array(data[itime, inode, :3])
+                            rotation = coord.coord_to_xyz_array(data[itime, inode, 3:])
+                            if is_global_cid:
+                                data[itime, inode, :3] = translation
+                                data[itime, inode, 3:] = rotation
+                                continue
+                            data[itime, inode, :3] = translation.dot(cid_transform)
+                            data[itime, inode, 3:] = rotation.dot(cid_transform)
+                    else:
+                        raise RuntimeError(coord)
         return
 
 def main():  # pragma: no cover

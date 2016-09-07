@@ -2953,7 +2953,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         for cid in sorted(iterkeys(nids_transform)):
             nids = np.array(nids_transform[cid])
             i_transform[cid] = np.where(np.in1d(nids_all, nids))[0]
-        return i_transform
+        return nids_transform, i_transform
 
     def get_displacement_index_transforms(self):
         """

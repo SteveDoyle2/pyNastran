@@ -170,6 +170,9 @@ class RealGridPointForcesArray(ScalarObject):
             #print(self.data_frame)
 
     def __eq__(self, table):
+        return self.assert_equal(table)
+
+    def assert_equal(self, table, rtol=1.e-5, atol=1.e-8):
         self._eq_header(table)
         assert self.is_sort1() == table.is_sort1()
         if not np.array_equal(self.node_element, table.node_element) and array_equal(self.element_names, table.element_names):
@@ -185,13 +188,19 @@ class RealGridPointForcesArray(ScalarObject):
             print(msg)
             raise ValueError(msg)
 
+        atols = []
+        rtols = []
         if self.is_unique:
+            # node_element varies with time
             if not np.array_equal(self.data, table.data):
                 msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
                 msg += '%s\n' % str(self.code_information())
                 i = 0
                 for itime in range(self.ntimes):
-                    for ie, e in enumerate(self.node_element):
+                    #print('node_element = ', self.node_element)
+                    #print('shape = ', self.node_element.shape)
+                    for ie, e in enumerate(self.node_element[itime, :, :]):
+                        #print('e = ', e)
                         (nid, eid) = e
                         ename1 = self.element_names[itime, ie]
                         ename2 = self.element_names[itime, ie]
@@ -200,19 +209,34 @@ class RealGridPointForcesArray(ScalarObject):
                         (t11, t21, t31, r11, r21, r31) = t1
                         (t12, t22, t32, r12, r22, r32) = t2
 
-                        if not np.array_equal(t1, t2):
-                            msg += '(%s, %s, %s)    (%s, %s, %s, %s, %s, %s)  (%s, %s, %s, %s, %s, %s)\n' % (
-                                nid, eid, ename1,
+                        if not np.allclose(t1, t2, rtol=rtol, atol=atol):
+                            inonzero = np.where(t1 != 0.)[0]
+                            atoli = np.abs(t2 - t1).max()
+                            rtoli = np.abs(t2[inonzero] / t1[inonzero]).max()
+
+                            pre_msg = '(%s, %s, %s)    ' % (nid, eid, ename1)
+                            msg += '%s(%s, %s, %s, %s, %s, %s)\n%s(%s, %s, %s, %s, %s, %s)\n' % (
+                                pre_msg,
                                 t12, t22, t32, r12, r22, r32,
+                                ' ' * len(pre_msg),
                                 t12, t22, t32, r12, r22, r32)
                             i += 1
+                            atols.append(atoli)
+                            rtols.append(rtoli)
                             if i > 10:
+                                print(atols)
+                                msg += 'atol.max() = %s\n' % max(atols)
+                                msg += 'rtol.max() = %s\n' % max(rtols)
                                 print(msg)
                                 raise ValueError(msg)
                     #print(msg)
                     if i > 0:
+                        msg += 'atol.max() = %s\n' % max(atols)
+                        msg += 'rtol.max() = %s\n' % max(rtols)
+                        #print(msg)
                         raise ValueError(msg)
         else:
+            # node_element does not vary with time
             if not np.array_equal(self.data, table.data):
                 msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
                 msg += '%s\n' % str(self.code_information())
@@ -227,17 +251,23 @@ class RealGridPointForcesArray(ScalarObject):
                         (t11, t21, t31, r11, r21, r31) = t1
                         (t12, t22, t32, r12, r22, r32) = t2
 
-                        if not np.array_equal(t1, t2):
-                            msg += '(%s, %s, %s)    (%s, %s, %s, %s, %s, %s)  (%s, %s, %s, %s, %s, %s)\n' % (
-                                nid, eid, ename1,
+                        if not np.allclose(t1, t2, rtol=rtol, atol=atol):
+                            pre_msg = '(%s, %s, %s)    ' % (nid, eid, ename1)
+                            msg += '%s(%s, %s, %s, %s, %s, %s)\n%s(%s, %s, %s, %s, %s, %s)\n' % (
+                                pre_msg,
                                 t12, t22, t32, r12, r22, r32,
+                                ' ' * len(pre_msg),
                                 t12, t22, t32, r12, r22, r32)
                             i += 1
                             if i > 10:
+                                msg += 'atol.max() = %s\n' % max(atols)
+                                msg += 'rtol.max() = %s\n' % max(rtols)
                                 print(msg)
                                 raise ValueError(msg)
-                    #print(msg)
                     if i > 0:
+                        msg += 'atol.max() = %s\n' % max(atols)
+                        msg += 'rtol.max() = %s\n' % max(rtols)
+                        #print(msg)
                         raise ValueError(msg)
         return True
 
