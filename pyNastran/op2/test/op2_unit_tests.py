@@ -479,9 +479,9 @@ class TestOP2(Tester):
         op2_1 = read_op2_geom(op2_filename1, log=warning_log)
         op2_1.log = debug_log
 
-        print("disp_orig =\n", op2_1.displacements[1].data[0, :4, :])
-        print("spc_orig =\n", op2_1.spc_forces[1].data[0, -3:, :])
-        #print("gpf_orig =\n", op2_1.grid_point_forces[1].data[0, :2, :])
+        #print("disp_orig =\n", op2_1.displacements[1].data[0, :4, :])
+        #print("spc_orig =\n", op2_1.spc_forces[1].data[0, -3:, :])
+        print("gpf_orig =\n", op2_1.grid_point_forces[1].data[0, 2:8, :])
 
         op2_1.cross_reference(xref_elements=False,
                               xref_nodes_with_elements=False,
@@ -510,9 +510,9 @@ class TestOP2(Tester):
         #for line in list(disp.data[0, :, :3]):
             #print('%10.4e %10.4e %10.4e' % tuple(line))
 
-        nids_transform_1, i_transform_1 = op2_1.get_displacement_index()
+        nids_all, nids_transform_1, i_transform_1 = op2_1.get_displacement_index()
         op2_1.transform_displacements_to_global(i_transform_1, op2_1.coords, xyz_cid0=xyz_cid0)
-        op2_1.transform_gpforce_to_global(nids_transform_1, i_transform_1, op2_1.coords)
+        op2_1.transform_gpforce_to_global(nids_all, nids_transform_1, i_transform_1, op2_1.coords, xyz_cid0=xyz_cid0)
         #print('stuff...')
         #disp = op2_1.displacements[1]
         #for line in list(disp.data[0, :, :3]):
@@ -520,19 +520,19 @@ class TestOP2(Tester):
         #print(disp.data[0, :, :3])
 
         #print("disp_new =\n", op2_1.displacements[1].data[0, :4, :])
-        print("spc_new =\n", op2_1.spc_forces[1].data[0, -3:, :])
-        #print("gpf_new =\n", op2_1.grid_point_forces[1].data[0, :2, :])
+        #print("spc_new =\n", op2_1.spc_forces[1].data[0, -3:, :])
+        print("gpf_new =\n", op2_1.grid_point_forces[1].data[0, 2:8, :])
 
         #-----------------------------------------------------------------------
         op2_filename2 = os.path.join(folder, 'static_solid_shell_bar.op2')
         op2_2 = read_op2_geom(op2_filename2, debug=False)
-        nids_transform_2, i_transform_2 = op2_2.get_displacement_index()
+        nids_all, nids_transform_2, i_transform_2 = op2_2.get_displacement_index()
         op2_2.transform_displacements_to_global(i_transform_2, op2_2.coords)
-        op2_2.transform_gpforce_to_global(nids_transform_2, i_transform_2, op2_2.coords)
+        op2_2.transform_gpforce_to_global(nids_all, nids_transform_2, i_transform_2, op2_2.coords, xyz_cid0=xyz_cid0)
 
         #print("disp_goal =\n", op2_2.displacements[1].data[0, :4, :])
-        print("spc_goal =\n", op2_2.spc_forces[1].data[0, -3:, :])
-        #print("gpf_goal =\n", op2_2.grid_point_forces[1].data[0, :2, :])
+        #print("spc_goal =\n", op2_2.spc_forces[1].data[0, -3:, :])
+        print("gpf_goal =\n", op2_2.grid_point_forces[1].data[0, 2:8, :])
 
         #return
         #msg = 'displacements baseline=\n%s\ndisplacements xyz=\n%s' % (
@@ -544,10 +544,17 @@ class TestOP2(Tester):
             #op2_1.grid_point_forces[1].data[0, :, :], op2_2.grid_point_forces[1].data[0, :, :])
         #print(msg)
 
+        from six import StringIO
+        csv_file = StringIO()
+        op2_1.spc_forces[1].write_csv(csv_file)
+        op2_1.grid_point_forces[1].write_csv(csv_file)
+        #print(csv_file.getvalue())
+
         assert op2_1.spc_forces[1].assert_equal(op2_2.spc_forces[1], atol=4.4341e-04), msg
         assert op2_1.mpc_forces[1].assert_equal(op2_2.mpc_forces[1]), msg
         assert op2_1.load_vectors[1].assert_equal(op2_2.load_vectors[1]), msg
-        #assert op2_1.grid_point_forces[1].assert_equal(op2_2.grid_point_forces[1], atol=0.000123), msg
+        #print('op2_2.grid_point_forces[1]\n', op2_2.grid_point_forces[1].data)
+        assert op2_1.grid_point_forces[1].assert_equal(op2_2.grid_point_forces[1], atol=0.000123), msg
         return
         #-----------------------------------------------------------------------
         gpforce = op2_1.grid_point_forces[1]

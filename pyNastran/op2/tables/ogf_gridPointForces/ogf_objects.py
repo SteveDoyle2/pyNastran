@@ -199,6 +199,7 @@ class RealGridPointForcesArray(ScalarObject):
                 for itime in range(self.ntimes):
                     #print('node_element = ', self.node_element)
                     #print('shape = ', self.node_element.shape)
+                    msg += '#i, Nid, Eid, Name\n'
                     for ie, e in enumerate(self.node_element[itime, :, :]):
                         #print('e = ', e)
                         (nid, eid) = e
@@ -214,7 +215,7 @@ class RealGridPointForcesArray(ScalarObject):
                             atoli = np.abs(t2 - t1).max()
                             rtoli = np.abs(t2[inonzero] / t1[inonzero]).max()
 
-                            pre_msg = '(%s, %s, %s)    ' % (nid, eid, ename1)
+                            pre_msg = '(%s, %s, %s, %s)    ' % (ie, nid, eid, ename1)
                             msg += '%s(%s, %s, %s, %s, %s, %s)\n%s(%s, %s, %s, %s, %s, %s)\n' % (
                                 pre_msg,
                                 t11, t21, t31, r11, r21, r31,
@@ -223,7 +224,7 @@ class RealGridPointForcesArray(ScalarObject):
                             i += 1
                             atols.append(atoli)
                             rtols.append(rtoli)
-                            if i > 10:
+                            if i > 30:
                                 print(atols)
                                 msg += 'atol.max() = %s\n' % max(atols)
                                 msg += 'rtol.max() = %s\n' % max(rtols)
@@ -671,6 +672,40 @@ class RealGridPointForcesArray(ScalarObject):
     #def eid_to_element_node_index(self, eids):
         #ind = ravel([searchsorted(self.node_element[:, 0] == eid) for eid in eids])
         #return ind
+
+    def write_csv(self, csv_file, is_mag_phase=False):
+        name = str(self.__class__.__name__)
+        csv_file.write('%s\n' % name)
+        headers = ['Nid', 'Eid', 'EName', 'T1', 'T2', 'T3', 'R1', 'R2', 'R3']
+        csv_file.write('%s,' * len(headers) % tuple(headers) + '\n')
+        #node = self.node_gridtype[:, 0]
+        #gridtype = self.node_gridtype[:, 1]
+        itime = 0
+        times = self._times
+
+        assert self.is_unique, self.is_unique
+        # sort1 as sort1
+        for itime in range(self.ntimes):
+            dt = self._times[itime]
+            t1 = self.data[itime, :, 0]
+            t2 = self.data[itime, :, 1]
+            t3 = self.data[itime, :, 2]
+            r1 = self.data[itime, :, 3]
+            r2 = self.data[itime, :, 4]
+            r3 = self.data[itime, :, 5]
+
+            nids = self.node_element[itime, :, 0]
+            eids = self.node_element[itime, :, 1]
+            enames = self.element_names[itime, :]
+            zero = ' '
+            ntotal = self._ntotals[itime]
+
+            for (i, nid, eid, ename, t1i, t2i, t3i, r1i, r2i, r3i) in zip(
+                range(ntotal), nids, eids, enames, t1, t2, t3, r1, r2, r3):
+
+                csv_file.write('%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n' % (
+                    itime, nid, eid, ename.strip(), t1i, t2i, t3i, r1i, r2i, r3i))
+        return
 
     def write_f06(self, f, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
