@@ -42,7 +42,7 @@ def _update_alt(alt, SI=False, debug=False):
             print("z = %s [m] = %s [ft]" % (alt * _feet_to_meters(True), alt2))
     return alt2
 
-def get_alt_for_density(density):
+def get_alt_for_density(density, nmax=20):
     """
     Gets the altitude associated with a given air density.
 
@@ -63,7 +63,7 @@ def get_alt_for_density(density):
     tol = 5. # ft
 
     # Newton's method
-    while abs(alt_final - alt_old) > tol and n < 20:
+    while abs(alt_final - alt_old) > tol and n < nmax:
         alt_old = alt_final
         alt1 = alt_old
         alt2 = alt_old + dalt
@@ -72,12 +72,13 @@ def get_alt_for_density(density):
         m = dalt / (rho2 - rho1)
         alt_final = m * (density - rho1) + alt1
         n += 1
-    if n > 18:
-        print('n = %s' % n)
+    if abs(alt_final - alt_old) > tol:
+        raise RuntimeError('Did not converge; Check your units; n=nmax=%s\n'
+                           'target alt=%s alt_current=%s' % (nmax, alt_final, alt1))
     return alt_final
 
 
-def get_alt_for_eas_mach(equivalent_airspeed, mach, SI=False):
+def get_alt_for_eas_with_constant_mach(equivalent_airspeed, mach, SI=False, nmax=20):
     """
     Gets the altitude associated with a equivalent airspeed.
 
@@ -111,7 +112,7 @@ def get_alt_for_eas_mach(equivalent_airspeed, mach, SI=False):
     #eas = a * mach * sqrt((p * T0) / (T * p0)) = a * mach * sqrt(p / T) * k
 
     # Newton's method
-    while abs(alt_final - alt_old) > tol and n < 20:
+    while abs(alt_final - alt_old) > tol and n < nmax:
         alt_old = alt_final
         alt1 = alt_old
         alt2 = alt_old + dalt
@@ -127,15 +128,16 @@ def get_alt_for_eas_mach(equivalent_airspeed, mach, SI=False):
         alt_final = m * (equivalent_airspeed - eas1) + alt1
         n += 1
 
-    if n > 18:
-        print('n = %s' % n)
+    if abs(alt_final - alt_old) > tol:
+        raise RuntimeError('Did not converge; Check your units; n=nmax=%s\n'
+                           'target alt=%s alt_current=%s' % (nmax, alt_final, alt1))
     if SI:
         alt_final *= 0.3048  # feet to meters
     return alt_final
 
-def get_alt_for_mach_q(mach, q, tol=5., SI=False):
+def get_alt_for_q_with_constant_mach(q, mach, tol=5., SI=False, nmax=20):
     """
-    Gets the altitude associated with a equivalent airspeed.
+    Gets the altitude associated with a dynamic pressure.
 
     Parameters
     ----------
@@ -154,12 +156,12 @@ def get_alt_for_mach_q(mach, q, tol=5., SI=False):
         the altitude in ft (SI=m)
     """
     pressure = 2 * q / (1.4 * mach ** 2) # gamma = 1.4
-    alt = get_alt_for_pressure(pressure, tol=tol, SI=SI)
+    alt = get_alt_for_pressure(pressure, tol=tol, SI=SI, nmax=nmax)
     return alt
 
-def get_alt_for_pressure(pressure, tol=5., SI=False):
+def get_alt_for_pressure(pressure, tol=5., SI=False, nmax=20):
     """
-    Gets the altitude associated with a equivalent airspeed.
+    Gets the altitude associated with a given pressure.
 
     Parameters
     ----------
@@ -184,7 +186,7 @@ def get_alt_for_pressure(pressure, tol=5., SI=False):
     n = 0
 
     # Newton's method
-    while abs(alt_final - alt_old) > tol and n < 20:
+    while abs(alt_final - alt_old) > tol and n < nmax:
         alt_old = alt_final
         alt1 = alt_old
         alt2 = alt_old + dalt
@@ -194,13 +196,15 @@ def get_alt_for_pressure(pressure, tol=5., SI=False):
         alt_final = m * (pressure - press1) + alt1
         n += 1
 
-    if n > 18:
-        print('n = %s' % n)
+    if abs(alt_final - alt_old) > tol:
+        raise RuntimeError('Did not converge; Check your units; n=nmax=%s\n'
+                           'target alt=%s alt_current=%s' % (nmax, alt_final, alt1))
     if SI:
         alt_final *= 0.3048  # feet to meters
     return alt_final
 
 def _feet_to_meters(SI):
+    """converts m -> ft"""
     if SI:
         factor = 0.3048
     else:
@@ -208,6 +212,7 @@ def _feet_to_meters(SI):
     return factor
 
 def _rankine_to_kelvin(SI):
+    """converts K -> R"""
     if SI:
         factor = 5 / 9.
     else:
@@ -215,6 +220,7 @@ def _rankine_to_kelvin(SI):
     return factor
 
 def _psf_to_pascals(SI):
+    """converts Pa -> psf"""
     if SI:
         factor = 47.880259
     else:
@@ -322,7 +328,7 @@ def atm_pressure(alt, SI=False, debug=False):
         else:
             print("z    = %s [m]  = %s [ft]" % (alt * ft_to_m, z))
             print("Patm = %g [Pa] = %g [psf]" % (p * _psf_to_pascals(True), p))
-    return p*factor
+    return p * factor
 
 def atm_dynamic_pressure(alt, mach, SI=False, debug=False):
     r"""
@@ -410,6 +416,9 @@ def atm_speed_of_sound(alt, SI=False, gamma=1.4, debug=False):
 def atm_velocity(alt, mach, SI=False, debug=False):
     r"""
     Freestream Velocity  \f$ V_{\infty} \f$
+
+    Parameters
+    ----------
     alt : float
         altitude in feet or meters
     SI : bool; default=False
@@ -418,6 +427,7 @@ def atm_velocity(alt, mach, SI=False, debug=False):
         Mach Number \f$ M \f$
 
     Returns
+    -------
     velocity : float
         Returns velocity in ft/s or m/s (SI).
 
@@ -519,6 +529,7 @@ def atm_density(alt, R=1716., SI=False, debug=False):
     r"""
     Freestream Density   \f$ \rho_{\infty} \f$
 
+    Parameters
     ----------
     alt : float
         altitude in feet or meters

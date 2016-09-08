@@ -115,6 +115,7 @@ class TestOP2(Tester):
         op2 = read_op2_geom(op2_filename, debug=False)
 
     def _test_op2_solid_bending_03(self):
+        """tests basic op2 writing"""
         folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'solid_bending'))
         op2_filename = os.path.join(folder, 'solid_bending.op2')
         op2_filename_debug = os.path.join(folder, 'solid_bending.debug.out')
@@ -133,36 +134,69 @@ class TestOP2(Tester):
 
 
     def test_op2_solid_shell_bar_01_geom(self):
+        """tests reading op2 geometry"""
         folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'sol_101_elements'))
         op2_filename = os.path.join(folder, 'static_solid_shell_bar.op2')
         op2 = read_op2_geom(op2_filename, debug=False)
 
     def test_op2_mode_solid_shell_bar_01_geom(self):
+        """tests reading op2 geometry"""
         folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'sol_101_elements'))
         op2_filename = os.path.join(folder, 'mode_solid_shell_bar.op2')
-        op2 = read_op2_geom(op2_filename, debug=False)
+        subcases = [1]
+        op2 = read_op2_geom(op2_filename, debug=False, subcases=subcases)
+        op2.get_op2_stats(short=False)
+        op2.get_op2_stats(short=True)
+        assert len(op2.eigenvectors) == 1, len(op2.eigenvectors)
 
     def test_op2_buckling_solid_shell_bar_01_geom(self):
+        """single subcase buckling"""
         folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'sol_101_elements'))
         op2_filename = os.path.join(folder, 'buckling_solid_shell_bar.op2')
-        op2 = read_op2_geom(op2_filename, debug=False)
+        subcases = 1
+        op2 = read_op2_geom(op2_filename, debug=False, subcases=subcases)
+        assert len(op2.displacements) == 1, len(op2.displacements)
+        assert len(op2.eigenvectors) == 1, len(op2.eigenvectors)
 
     def test_op2_buckling_solid_shell_bar_02_geom(self):
+        """multi subcase buckling"""
         folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'sol_101_elements'))
         op2_filename = os.path.join(folder, 'buckling2_solid_shell_bar.op2')
         op2 = read_op2_geom(op2_filename, debug=False)
+        subcases = 1
+        op2 = read_op2_geom(op2_filename, debug=False, subcases=subcases)
+        assert len(op2.displacements) == 1, len(op2.displacements)
+        assert len(op2.eigenvectors) == 0, len(op2.eigenvectors)
+
+        subcases = 2
+        op2 = read_op2(op2_filename, debug=False, subcases=subcases)
+        assert len(op2.displacements) == 0, len(op2.displacements)
+        assert len(op2.eigenvectors) == 1, len(op2.eigenvectors)
+
+        subcases = 2
+        op2 = read_op2(op2_filename, debug=False, subcases=subcases)
+        assert len(op2.displacements) == 0, len(op2.displacements)
+        assert len(op2.eigenvectors) == 1, len(op2.eigenvectors)
+
+        subcases = [1, 2]
+        op2 = read_op2(op2_filename, debug=False, subcases=subcases)
+        assert len(op2.displacements) == 1, len(op2.displacements)
+        assert len(op2.eigenvectors) == 1, len(op2.eigenvectors)
 
     def test_op2_transient_solid_shell_bar_01_geom(self):
+        """transient test"""
         folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'sol_101_elements'))
         op2_filename = os.path.join(folder, 'transient_solid_shell_bar.op2')
         op2 = read_op2_geom(op2_filename, debug=False)
 
     def test_op2_frequency_solid_shell_bar_01_geom(self):
+        """frequency test"""
         folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'sol_101_elements'))
         op2_filename = os.path.join(folder, 'freq_solid_shell_bar.op2')
         op2 = read_op2_geom(op2_filename, debug=False)
 
     def test_op2_transfer_function_01(self):
+        """tests the transfer function cards work"""
         folder = os.path.abspath(os.path.join(test_path, '..', 'models'))
         #bdf_filename = os.path.join(folder, 'transfer_function', 'actuator_tf_modeling.bdf')
         op2_filename = os.path.join(folder, 'transfer_function', 'actuator_tf_modeling.op2')
@@ -194,6 +228,7 @@ class TestOP2(Tester):
             #assert fem.card_count['TF'] == 2, fem.card_count
 
     def test_op2_nastran_2005r3b(self):
+        """Nastran2005r3 bug"""
         folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'modele_petite_zone'))
         op2_filename = os.path.join(folder, 'modele_petite_zone.op2')
         op2 = read_op2(op2_filename, debug=False)
