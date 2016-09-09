@@ -2833,14 +2833,18 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
         nnodes = len(self.nodes)
         nspoints = 0
+        nepoints = 0
         spoints = None
+        epoints = None
         if self.spoints:
             spoints = self.spoints.points
             nspoints = len(spoints)
         if self.epoints is not None:
-            raise NotImplementedError('EPOINTs')
+            epoints = self.epoints.points
+            nepoints = len(epoints)
+            #raise NotImplementedError('EPOINTs')
 
-        assert nnodes + nspoints > 0, 'nnodes=%s nspoints=%s' % (nnodes, nspoints)
+        assert nnodes + nspoints + nepoints > 0, 'nnodes=%s nspoints=%s nepoints=%s' % (nnodes, nspoints, nepoints)
         #xyz_cid0 = np.zeros((nnodes + nspoints, 3), dtype=dtype)
         xyz_cp = np.zeros((nnodes + nspoints, 3), dtype=dtype)
         nid_cp_cd = np.zeros((nnodes + nspoints, 3), dtype='int32')
