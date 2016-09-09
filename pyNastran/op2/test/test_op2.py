@@ -343,7 +343,7 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
 
         if write_f06:
             op2.write_f06(model + '.test_op2.f06', is_mag_phase=is_mag_phase,
-                          is_sort1=not is_sort2, quiet=quiet)
+                          is_sort1=not is_sort2, quiet=quiet, repr_check=True)
             if delete_f06:
                 try:
                     os.remove(model + '.test_op2.f06')
