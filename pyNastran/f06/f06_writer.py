@@ -343,7 +343,7 @@ class F06Writer(OP2_F06_Common):
             self.page_num += 1
 
     def write_f06(self, f06_outname, is_mag_phase=False, is_sort1=True,
-                  delete_objects=True, end_flag=False, quiet=False):
+                  delete_objects=True, end_flag=False, quiet=False, repr_check=False):
         """
         Writes an F06 file based on the data we have stored in the object
 
@@ -363,7 +363,9 @@ class F06Writer(OP2_F06_Common):
         end_flag : bool; default=False
             should a dummy Nastran "END" table be made
         quiet : bool; default=False
-             suppress print messages
+            suppress print messages
+        repr_check: bool; defualt=False
+            calls the object repr as a validation test (prints nothing)
         """
         if not quiet:
             print("F06:")
@@ -384,22 +386,50 @@ class F06Writer(OP2_F06_Common):
             if not quiet:
                 print(" grid_point_weight")
             self.page_num = self.grid_point_weight.write_f06(f06, page_stamp, self.page_num)
+            if repr_check:
+                str(self.grid_point_weight)
             assert isinstance(self.page_num, int), self.grid_point_weight.__class__.__name__
 
         if self.oload_resultant is not None:
             self.page_num = self.oload_resultant.write_f06(f06, page_stamp, self.page_num)
+            if repr_check:
+                str(self.oload_resultant)
             assert isinstance(self.page_num, int), self.oload_resultant.__class__.__name__
 
         # writes all results for
         self._write_f06_subcase_based(f06, page_stamp, delete_objects=delete_objects,
                                       is_mag_phase=is_mag_phase, is_sort1=is_sort1,
-                                      quiet=quiet)
+                                      quiet=quiet, repr_check=repr_check)
         #self._write_f06_time_based(f06, page_stamp)
         f06.write(make_end(end_flag))
         f06.close()
 
     def _write_f06_subcase_based(self, f06, page_stamp, delete_objects=True,
-                                 is_mag_phase=False, is_sort1=True, quiet=False):
+                                 is_mag_phase=False, is_sort1=True, quiet=False,
+                                 repr_check=False):
+        """
+        Helper function for ``write_f06`` that does the real work
+
+        Parameters
+        ----------
+        f06 : file
+            the opened file object
+        page_stamp : ???
+            ???
+        is_mag_phase : bool; default=False
+            should complex data be written using Magnitude/Phase
+            instead of Real/Imaginary
+            Real objects don't use this parameter
+        is_sort1 : bool; default=True
+            writes output in SORT1 format if the output is transient;
+            ignored for static analyses
+        delete_objects : bool; default=True
+            should objects be deleted after they're written to reduce memory
+        quiet : bool; default=False
+            suppress print messages
+        repr_check: bool; defualt=False
+            calls the object repr as a validation test (prints nothing)
+        """
         is_failed = False
         header = ['     DEFAULT                                                                                                                        \n',
                   '\n', '']
@@ -412,6 +442,8 @@ class F06Writer(OP2_F06_Common):
                 print('%-18s case=%r' % (result.__class__.__name__, ikey))
             self.page_num = result.write_f06(f06, header, page_stamp,
                                              page_num=self.page_num)
+            if repr_check:
+                str(result)
             assert isinstance(self.page_num, int), 'pageNum=%r' % str(self.page_num)
             if delete_objects:
                 del result
@@ -436,6 +468,8 @@ class F06Writer(OP2_F06_Common):
                 if res_key not in self.eigenvectors:
                     continue
                 result = self.eigenvectors[res_key]
+                if repr_check:
+                    str(result)
                 subtitle = result.subtitle
                 header[0] = '     %s\n' % subtitle
                 header[1] = '0                                                                                                            SUBCASE %i\n' % isubcase
@@ -721,6 +755,8 @@ class F06Writer(OP2_F06_Common):
                         continue
 
                     result = res_type[res_key]
+                    if repr_check:
+                        str(result)
                     subtitle = result.subtitle
                     label = result.label
 

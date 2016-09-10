@@ -234,7 +234,7 @@ class ComplexEigenvalues(BaseScalarObject):
             damping = self.damping[imode]
             msg += '%-7s %15s %15s %10s %10s %10s\n' % (
                 imode, extract_order,
-                eigenvalue[0], eigenvalue[1], cycle, damping)
+                eigenvalue.real, eigenvalue.imag, cycle, damping)
         return msg
 
 

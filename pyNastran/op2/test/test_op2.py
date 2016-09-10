@@ -155,7 +155,7 @@ def run_lots_of_files(files, make_geom=True, write_bdf=False, write_f06=True,
         is_vector = [is_vector]
         vector_stop = [vector_stop]
 
-    isubcases = []
+    subcases = []
     failed_cases = []
     nfailed = 0
     ntotal = 0
@@ -180,7 +180,7 @@ def run_lots_of_files(files, make_geom=True, write_bdf=False, write_f06=True,
                                       is_mag_phase=False,
                                       delete_f06=delete_f06,
                                       short_stats=short_stats,
-                                      isubcases=isubcases, debug=debug,
+                                      subcases=subcases, debug=debug,
                                       stop_on_failure=stop_on_failure,
                                       binary_debug=binary_debug,
                                       compare=True, dev=dev)[1]
@@ -201,7 +201,7 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
             write_f06=True, write_op2=False, write_xlsx=False,
             is_mag_phase=False, is_sort2=False,
             delete_f06=False,
-            isubcases=None, exclude=None, short_stats=False,
+            subcases=None, exclude=None, short_stats=False,
             compare=True, debug=False, binary_debug=False,
             quiet=False, check_memory=False, stop_on_failure=True, dev=False):
     """
@@ -230,7 +230,7 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
         True : writes "transient" data is SORT2
     delete_f06 : bool; default=False
         deletes the F06 (assumes write_f06 is True)
-    isubcases : List[int, ...]; default=None
+    subcases : List[int, ...]; default=None
         limits subcases to specified values; default=None -> no limiting
     exclude : List[str, ...]; default=None
         limits result types; (remove what's listed)
@@ -250,8 +250,8 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
     """
     op2 = None
     op2_nv = None
-    if isubcases is None:
-        isubcases = []
+    if subcases is None:
+        subcases = []
     if exclude is None:
         exclude = []
     assert '.op2' in op2_filename.lower(), 'op2_filename=%s is not an OP2' % op2_filename
@@ -260,13 +260,13 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
     fname_base = os.path.splitext(op2_filename)[0]
     bdf_filename = fname_base + '.test_op2.bdf'
 
-    if isinstance(isubcases, string_types):
-        if '_' in isubcases:
-            isubcases = [int(i) for i in isubcases.split('_')]
+    if isinstance(subcases, string_types):
+        if '_' in subcases:
+            subcases = [int(i) for i in subcases.split('_')]
         else:
-            isubcases = [int(isubcases)]
+            subcases = [int(subcases)]
     if not quiet:
-        print('isubcases = %s' % isubcases)
+        print('subcases = %s' % subcases)
 
     debug_file = None
     model = os.path.splitext(op2_filename)[0]
@@ -287,8 +287,8 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
         op2_nv = OP2(debug=debug, debug_file=debug_file) # have to double write this until
     op2_nv.use_vector = False
 
-    op2.set_subcases(isubcases)
-    op2_nv.set_subcases(isubcases)
+    op2.set_subcases(subcases)
+    op2_nv.set_subcases(subcases)
     op2.remove_results(exclude)
     op2_nv.remove_results(exclude)
 
@@ -343,7 +343,7 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False,
 
         if write_f06:
             op2.write_f06(model + '.test_op2.f06', is_mag_phase=is_mag_phase,
-                          is_sort1=not is_sort2, quiet=quiet)
+                          is_sort1=not is_sort2, quiet=quiet, repr_check=True)
             if delete_f06:
                 try:
                     os.remove(model + '.test_op2.f06')
@@ -494,7 +494,8 @@ def main():
     msg += "  -t, --short_stats     Short get_op2_stats printout\n"
     #if not is_release:
     msg += "  -g, --geometry        Reads the OP2 for geometry, which can be written out\n"
-    msg += "  -n, --write_bdf       Writes the bdf to fem.test_op2.bdf (default=False)\n" # n is for NAS
+    # n is for NAS
+    msg += "  -n, --write_bdf       Writes the bdf to fem.test_op2.bdf (default=False)\n"
     msg += "  -f, --write_f06       Writes the f06 to fem.test_op2.f06\n"
     msg += "  -z, --is_mag_phase    F06 Writer writes Magnitude/Phase instead of\n"
     msg += "                        Real/Imaginary (still stores Real/Imag); [default: False]\n"
@@ -552,7 +553,7 @@ def main():
             write_f06=data['--write_f06'],
             write_op2=data['--write_op2'],
             is_mag_phase=data['--is_mag_phase'],
-            isubcases=data['--subcase'],
+            subcases=data['--subcase'],
             exclude=data['--exclude'],
             debug=not data['--quiet'],
             binary_debug=data['--binarydebug'],
@@ -575,7 +576,7 @@ def main():
                 write_op2=data['--write_op2'],
                 write_xlsx=data['--write_xlsx'],
                 is_mag_phase=data['--is_mag_phase'],
-                isubcases=data['--subcase'],
+                subcases=data['--subcase'],
                 exclude=data['--exclude'],
                 short_stats=data['--short_stats'],
                 debug=not data['--quiet'],

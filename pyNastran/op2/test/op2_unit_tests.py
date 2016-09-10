@@ -90,7 +90,7 @@ class TestOP2(Tester):
             os.remove(debug_file)
 
         read_op2(op2_filename)
-        run_op2(op2_filename, write_bdf=write_bdf, isubcases=[],
+        run_op2(op2_filename, write_bdf=write_bdf, subcases=[],
                 write_f06=write_f06,
                 debug=debug, stop_on_failure=True, binary_debug=True, quiet=True)
         assert os.path.exists(debug_file), os.listdir(folder)
@@ -98,7 +98,7 @@ class TestOP2(Tester):
         make_geom = False
         write_bdf = False
         write_f06 = True
-        run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, isubcases=[],
+        run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, subcases=[],
                 write_f06=write_f06,
                 debug=debug, stop_on_failure=True, binary_debug=True, quiet=True)
         assert os.path.exists(debug_file), os.listdir(folder)
@@ -112,7 +112,14 @@ class TestOP2(Tester):
     def test_op2_solid_bending_02_geom(self):
         folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'solid_bending'))
         op2_filename = os.path.join(folder, 'solid_bending.op2')
-        op2 = read_op2_geom(op2_filename, debug=False)
+        op2, is_passed = run_op2(
+            op2_filename, make_geom=True, write_bdf=False,
+            write_f06=True, write_op2=False, write_xlsx=False,
+            is_mag_phase=False, is_sort2=False, delete_f06=False,
+            subcases=None, exclude=None, short_stats=False,
+            compare=True, debug=False, binary_debug=False,
+            quiet=False, check_memory=False, stop_on_failure=True,
+            dev=False)
 
     def _test_op2_solid_bending_03(self):
         """tests basic op2 writing"""
@@ -137,14 +144,28 @@ class TestOP2(Tester):
         """tests reading op2 geometry"""
         folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'sol_101_elements'))
         op2_filename = os.path.join(folder, 'static_solid_shell_bar.op2')
-        op2 = read_op2_geom(op2_filename, debug=False)
+        op2, is_passed = run_op2(
+            op2_filename, make_geom=True, write_bdf=True,
+            write_f06=True, write_op2=False, write_xlsx=False,
+            is_mag_phase=False, is_sort2=False, delete_f06=False,
+            subcases=None, exclude=None, short_stats=False,
+            compare=True, debug=False, binary_debug=False,
+            quiet=False, check_memory=False, stop_on_failure=True,
+            dev=False)
 
     def test_op2_mode_solid_shell_bar_01_geom(self):
         """tests reading op2 geometry"""
         folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'sol_101_elements'))
         op2_filename = os.path.join(folder, 'mode_solid_shell_bar.op2')
         subcases = [1]
-        op2 = read_op2_geom(op2_filename, debug=False, subcases=subcases)
+        op2, is_passed = run_op2(
+            op2_filename, make_geom=True, write_bdf=False,
+            write_f06=True, write_op2=False, write_xlsx=False,
+            is_mag_phase=False, is_sort2=False, delete_f06=False,
+            subcases=subcases, exclude=None, short_stats=False,
+            compare=True, debug=False, binary_debug=False,
+            quiet=False, check_memory=False, stop_on_failure=True,
+            dev=False)
         op2.get_op2_stats(short=False)
         op2.get_op2_stats(short=True)
         assert len(op2.eigenvectors) == 1, len(op2.eigenvectors)
@@ -155,6 +176,15 @@ class TestOP2(Tester):
         op2_filename = os.path.join(folder, 'buckling_solid_shell_bar.op2')
         subcases = 1
         op2 = read_op2_geom(op2_filename, debug=False, subcases=subcases)
+        op2, is_passed = run_op2(
+            op2_filename, make_geom=True, write_bdf=False,
+            write_f06=True, write_op2=False, write_xlsx=False,
+            is_mag_phase=False, is_sort2=False, delete_f06=False,
+            subcases=subcases, exclude=None, short_stats=False,
+            compare=True, debug=False, binary_debug=False,
+            quiet=False, check_memory=False, stop_on_failure=True,
+            dev=False)
+
         assert len(op2.displacements) == 1, len(op2.displacements)
         assert len(op2.eigenvectors) == 1, len(op2.eigenvectors)
 
@@ -172,17 +202,38 @@ class TestOP2(Tester):
         str(op2.displacements[1].label)
 
         subcases = 2
-        op2 = read_op2(op2_filename, debug=False, subcases=subcases)
+        op2, is_passed = run_op2(
+            op2_filename, make_geom=False, write_bdf=False,
+            write_f06=True, write_op2=False, write_xlsx=False,
+            is_mag_phase=False, is_sort2=False, delete_f06=False,
+            subcases=subcases, exclude=None, short_stats=False,
+            compare=True, debug=False, binary_debug=False,
+            quiet=False, check_memory=False, stop_on_failure=True,
+            dev=False)
         assert len(op2.displacements) == 0, len(op2.displacements)
         assert len(op2.eigenvectors) == 1, len(op2.eigenvectors)
 
         subcases = 2
-        op2 = read_op2(op2_filename, debug=False, subcases=subcases)
+        op2, is_passed = run_op2(
+            op2_filename, make_geom=False, write_bdf=False,
+            write_f06=True, write_op2=False, write_xlsx=False,
+            is_mag_phase=False, is_sort2=False, delete_f06=False,
+            subcases=subcases, exclude=None, short_stats=False,
+            compare=True, debug=False, binary_debug=False,
+            quiet=False, check_memory=False, stop_on_failure=True,
+            dev=False)
         assert len(op2.displacements) == 0, len(op2.displacements)
         assert len(op2.eigenvectors) == 1, len(op2.eigenvectors)
 
         subcases = [1, 2]
-        op2 = read_op2(op2_filename, debug=False, subcases=subcases)
+        op2, is_passed = run_op2(
+            op2_filename, make_geom=False, write_bdf=False,
+            write_f06=True, write_op2=False, write_xlsx=False,
+            is_mag_phase=False, is_sort2=False, delete_f06=False,
+            subcases=subcases, exclude=None, short_stats=False,
+            compare=True, debug=False, binary_debug=False,
+            quiet=False, check_memory=False, stop_on_failure=True,
+            dev=False)
         assert len(op2.displacements) == 1, len(op2.displacements)
         assert len(op2.eigenvectors) == 1, len(op2.eigenvectors)
 
@@ -190,13 +241,28 @@ class TestOP2(Tester):
         """transient test"""
         folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'sol_101_elements'))
         op2_filename = os.path.join(folder, 'transient_solid_shell_bar.op2')
-        op2 = read_op2_geom(op2_filename, debug=False)
+        op2, is_passed = run_op2(
+            op2_filename, make_geom=False, write_bdf=False,
+            write_f06=True, write_op2=False, write_xlsx=False,
+            is_mag_phase=False, is_sort2=False, delete_f06=False,
+            subcases=None, exclude=None, short_stats=False,
+            compare=True, debug=False, binary_debug=False,
+            quiet=False, check_memory=False, stop_on_failure=True,
+            dev=False)
 
     def test_op2_frequency_solid_shell_bar_01_geom(self):
         """frequency test"""
         folder = os.path.abspath(os.path.join(test_path, '..', 'models', 'sol_101_elements'))
         op2_filename = os.path.join(folder, 'freq_solid_shell_bar.op2')
         op2 = read_op2_geom(op2_filename, debug=False)
+        op2, is_passed = run_op2(
+            op2_filename, make_geom=False, write_bdf=False,
+            write_f06=True, write_op2=False, write_xlsx=False,
+            is_mag_phase=False, is_sort2=False, delete_f06=False,
+            subcases=None, exclude=None, short_stats=False,
+            compare=True, debug=False, binary_debug=False,
+            quiet=False, check_memory=False, stop_on_failure=True,
+            dev=False)
 
     def test_op2_transfer_function_01(self):
         """tests the transfer function cards work"""
@@ -209,7 +275,7 @@ class TestOP2(Tester):
         write_bdf = True
         write_f06 = True
         make_geom = True
-        run_op2(op2_filename, write_bdf=write_bdf, make_geom=make_geom, isubcases=[],
+        run_op2(op2_filename, write_bdf=write_bdf, make_geom=make_geom, subcases=[],
                 write_f06=write_f06,
                 debug=debug, stop_on_failure=True, binary_debug=True, quiet=True)
 
@@ -712,7 +778,7 @@ class TestOP2(Tester):
         if os.path.exists(debug_file):
             os.remove(debug_file)
         read_op2(op2_filename)
-        op2, is_passed = run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, isubcases=[],
+        op2, is_passed = run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, subcases=[],
                                  write_f06=write_f06,
                                  debug=debug, stop_on_failure=True, binary_debug=True, quiet=True)
 
@@ -815,7 +881,7 @@ class TestOP2(Tester):
         if os.path.exists(debug_file):
             os.remove(debug_file)
         read_op2(op2_filename, debug=False)
-        op2, is_passed = run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, isubcases=[],
+        op2, is_passed = run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, subcases=[],
                                  write_f06=write_f06,
                                  debug=debug, stop_on_failure=True, binary_debug=True, quiet=True)
 
@@ -861,7 +927,7 @@ class TestOP2(Tester):
         if os.path.exists(debug_file):
             os.remove(debug_file)
         read_op2(op2_filename, debug=False)
-        op2, is_passed = run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, isubcases=[],
+        op2, is_passed = run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, subcases=[],
                                  write_f06=write_f06,
                                  debug=debug, stop_on_failure=True, binary_debug=True, quiet=True)
 
@@ -906,7 +972,7 @@ class TestOP2(Tester):
         if os.path.exists(debug_file):
             os.remove(debug_file)
         read_op2(op2_filename, debug=False)
-        op2, is_passed = run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, isubcases=[],
+        op2, is_passed = run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, subcases=[],
                                  write_f06=write_f06,
                                  debug=debug, stop_on_failure=True, binary_debug=True, quiet=True)
 
@@ -950,7 +1016,7 @@ class TestOP2(Tester):
         if os.path.exists(debug_file):
             os.remove(debug_file)
         read_op2(op2_filename, debug=False)
-        op2, is_passed = run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, isubcases=[],
+        op2, is_passed = run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, subcases=[],
                                  write_f06=write_f06,
                                  debug=debug, stop_on_failure=True, binary_debug=True, quiet=True)
 
@@ -994,7 +1060,7 @@ class TestOP2(Tester):
         if os.path.exists(debug_file):
             os.remove(debug_file)
         read_op2(op2_filename, debug=False)
-        op2, is_passed = run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, isubcases=[],
+        op2, is_passed = run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, subcases=[],
                                  write_f06=write_f06,
                                  debug=debug, stop_on_failure=True, binary_debug=True, quiet=True)
 
@@ -1067,7 +1133,7 @@ class TestOP2(Tester):
         if os.path.exists(debug_file):
             os.remove(debug_file)
         read_op2(op2_filename, debug=False)
-        op2, is_passed = run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, isubcases=[],
+        op2, is_passed = run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, subcases=[],
                                  write_f06=write_f06,
                                  debug=debug, stop_on_failure=True, binary_debug=True, quiet=True)
 
@@ -1139,7 +1205,7 @@ class TestOP2(Tester):
         if os.path.exists(debug_file):
             os.remove(debug_file)
         read_op2(op2_filename, debug=False)
-        op2, is_passed = run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, isubcases=[],
+        op2, is_passed = run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, subcases=[],
                                  write_f06=write_f06,
                                  debug=debug, stop_on_failure=True, binary_debug=True, quiet=True)
         isubcase = 1
@@ -1241,7 +1307,7 @@ class TestOP2(Tester):
         if os.path.exists(debug_file):
             os.remove(debug_file)
         read_op2(op2_filename, debug=debug)
-        op2, is_passed = run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, isubcases=[],
+        op2, is_passed = run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, subcases=[],
                                  write_f06=write_f06,
                                  debug=debug, stop_on_failure=True, binary_debug=True, quiet=True)
         isubcase = 1
@@ -1331,7 +1397,7 @@ class TestOP2(Tester):
         if os.path.exists(debug_file):
             os.remove(debug_file)
         read_op2(op2_filename, debug=debug)
-        op2, is_passed = run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, isubcases=[],
+        op2, is_passed = run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, subcases=[],
                                  write_f06=write_f06,
                                  debug=debug, stop_on_failure=True, binary_debug=True, quiet=True)
         isubcase = 1
@@ -1373,14 +1439,14 @@ class TestOP2(Tester):
         debug = False
         op2file = os.path.join(folder, op2_filename)
         read_op2(op2file)
-        run_op2(op2file, make_geom=make_geom, write_bdf=write_bdf, isubcases=[],
+        run_op2(op2file, make_geom=make_geom, write_bdf=write_bdf, subcases=[],
                 write_f06=write_f06,
                 debug=debug, stop_on_failure=True, quiet=True)
 
         make_geom = False
         write_bdf = False
         write_f06 = True
-        run_op2(op2file, make_geom=make_geom, write_bdf=write_bdf, isubcases=[],
+        run_op2(op2file, make_geom=make_geom, write_bdf=write_bdf, subcases=[],
                 write_f06=write_f06,
                 debug=debug, stop_on_failure=True, quiet=True)
 
@@ -1393,7 +1459,7 @@ class TestOP2(Tester):
         debug = False
         op2file = os.path.join(folder, op2_filename)
         read_op2(op2file)
-        op2i, is_passed = run_op2(op2file, make_geom=make_geom, write_bdf=write_bdf, isubcases=[],
+        op2i, is_passed = run_op2(op2file, make_geom=make_geom, write_bdf=write_bdf, subcases=[],
                                   write_f06=write_f06,
                                   debug=debug, stop_on_failure=True,
                                   quiet=True)
@@ -1418,7 +1484,7 @@ class TestOP2(Tester):
         #make_geom = False
         #write_bdf = False
         #write_f06 = True
-        #run_op2(op2file, make_geom=make_geom, write_bdf=write_bdf, iSubcases=[],
+        #run_op2(op2file, make_geom=make_geom, write_bdf=write_bdf, subcases=[],
                 #write_f06=write_f06,
                 #debug=debug, stopOnFailure=True)
 
@@ -1495,7 +1561,7 @@ class TestOP2(Tester):
         if os.path.exists(debug_file):
             os.remove(debug_file)
         read_op2(op2_filename)
-        op2, is_passed = run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, isubcases=[],
+        op2, is_passed = run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf, subcases=[],
                                  write_f06=write_f06,
                                  debug=debug, stop_on_failure=True, binary_debug=True, quiet=True)
         isubcase = 1
