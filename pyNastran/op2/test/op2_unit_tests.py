@@ -167,6 +167,9 @@ class TestOP2(Tester):
         op2 = read_op2_geom(op2_filename, debug=False, subcases=subcases)
         assert len(op2.displacements) == 1, len(op2.displacements)
         assert len(op2.eigenvectors) == 0, len(op2.eigenvectors)
+        str(op2.iSubcaseNameMap)
+        str(op2.displacements[1].subtitle)
+        str(op2.displacements[1].label)
 
         subcases = 2
         op2 = read_op2(op2_filename, debug=False, subcases=subcases)
