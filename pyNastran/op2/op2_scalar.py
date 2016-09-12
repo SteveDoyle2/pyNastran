@@ -765,6 +765,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'DYNAMIC' : [self._table_passer, self._table_passer],
             b'DYNAMICS' : [self._table_passer, self._table_passer],
             b'DIT' : [self._table_passer, self._table_passer],
+            b'DITS' : [self._table_passer, self._table_passer],
 
             # geometry
             #b'GEOM1': [self._read_geom1_4, self._read_geom1_4],
@@ -1383,7 +1384,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                     self._read_extdb()
                 elif table_name == b'OMM2':
                     self._read_omm2()
-                elif table_name == b'DIT':  # tables
+                elif table_name in [b'DIT', b'DITS']:  # tables
                     self._read_dit()
                 elif table_name == b'TOL':
                     self._read_tol()
@@ -1737,7 +1738,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
     def _skip_table(self, table_name):
         """bypasses the next table as quickly as possible"""
-        if table_name in ['DIT']:  # tables
+        if table_name in ['DIT', 'DITS']:  # tables
             self._read_dit()
         elif table_name in ['PCOMPTS']:
             self._read_pcompts()
