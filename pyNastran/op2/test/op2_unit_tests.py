@@ -695,9 +695,10 @@ class TestOP2(Tester):
         #for line in list(disp.data[0, :, :3]):
             #print('%10.4e %10.4e %10.4e' % tuple(line))
 
-        nids_transform_1, i_transform_1 = op2_1.get_displacement_index()
+        nids_all, nids_transform_1, i_transform_1 = op2_1.get_displacement_index()
         op2_1.transform_displacements_to_global(i_transform_1, op2_1.coords, xyz_cid0=xyz_cid0)
-        op2_1.transform_gpforce_to_global(nids_transform_1, i_transform_1, op2_1.coords)
+        op2_1.transform_gpforce_to_global(
+            nids_all, nids_transform_1, i_transform_1, op2_1.coords, xyz_cid0=xyz_cid0)
         #print('stuff...')
         #disp = op2_1.displacements[1]
         #for line in list(disp.data[0, :, :3]):
@@ -711,9 +712,10 @@ class TestOP2(Tester):
         #-----------------------------------------------------------------------
         op2_filename2 = os.path.join(folder, 'static_solid_shell_bar.op2')
         op2_2 = read_op2_geom(op2_filename2, debug=False)
-        nids_transform_2, i_transform_2 = op2_2.get_displacement_index()
+        nids_all, nids_transform_2, i_transform_2 = op2_2.get_displacement_index()
         op2_2.transform_displacements_to_global(i_transform_2, op2_2.coords)
-        op2_2.transform_gpforce_to_global(nids_transform_2, i_transform_2, op2_2.coords)
+        op2_2.transform_gpforce_to_global(
+            nids_all, nids_transform_2, i_transform_2, op2_2.coords)
 
         print("disp_goal =\n", op2_2.displacements[1].data[0, :2, :])
         #print("spc_goal =\n", op2_2.spc_forces[1].data[0, -3:, :])
