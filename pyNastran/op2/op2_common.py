@@ -1210,7 +1210,7 @@ class OP2Common(Op2Codes, F06Writer, XlsxWriter):
         assert self.log is not None
 
         code = self._get_code()
-        print('code =', code)
+        #print('code =', code)
         if hasattr(self, 'isubcase'):
             if self.code in storage_obj:
                 self.obj = storage_obj[code]
