@@ -66,7 +66,7 @@ def run(regenerate=True, make_geom=False, write_bdf=False, save_cases=True,
     write_op2 = False
     is_vector = [True] # is this vectorized
     vector_stop = [True]  # corresponds to is_vector; stop if case fails=True
-    binary_debug = False  # catch any errors
+    binary_debug = [True, False]  # catch any errors
     quiet = True
 
     delete_f06 = True

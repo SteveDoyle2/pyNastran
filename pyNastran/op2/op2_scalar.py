@@ -1512,7 +1512,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         Matrix Trailer:
         +------+---------------------------------------------------+
         | Word | Contents                                          |
-        +------+---------------------------------------------------+
+        +======+===================================================+
         |  1   | Number of columns in matrix                       |
         |  2   | Number of rows in matrix                          |
         |  3   | Form of the matrix                                |
@@ -1529,7 +1529,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
         +------+--------------------------------+
         | Form | Meaning                        |
-        +------+--------------------------------+
+        +======+================================+
         |  1   | Square                         |
         |  2   | Rectangular                    |
         |  3   | Diagonal                       |
@@ -1546,7 +1546,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
         +------+---------------------------+
         | Type | Meaning                   |
-        +------+---------------------------+
+        +======+===========================+
         |  1   | Real, single precision    |
         |  2   | Real, double precision    |
         |  3   | Complex, single precision |

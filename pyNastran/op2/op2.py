@@ -122,10 +122,11 @@ from pyNastran.f06.errors import FatalError
 from pyNastran.op2.errors import SortCodeError, DeviceCodeError, FortranMarkerError
 #from pyNastran.op2.op2_writer import OP2Writer
 from pyNastran.op2.op2_f06_common import Op2F06Attributes
+from pyNastran.utils import ipython_info
 
 
 def read_op2(op2_filename=None, combine=True, subcases=None,
-             log=None, debug=True, debug_file=None, build_dataframe=False,
+             log=None, debug=True, debug_file=None, build_dataframe=None,
              skip_undefined_matrices=True, mode='msc', encoding=None):
     """
     Creates the OP2 object without calling the OP2 class.
@@ -141,7 +142,7 @@ def read_op2(op2_filename=None, combine=True, subcases=None,
     subcases : List[int, ...] / int; default=None->all subcases
         list of [subcase1_ID,subcase2_ID]
 
-    build_dataframe : bool; default=False
+    build_dataframe : bool (default=None -> True if in iPython, False otherwise)
         builds a pandas DataFrame for op2 objects
     skip_undefined_matrices : bool; default=False
          True : prevents matrix reading crashes
@@ -339,7 +340,7 @@ class OP2(OP2_Scalar):
         """
         self.ask = ask
 
-    def read_op2(self, op2_filename=None, combine=True, build_dataframe=False,
+    def read_op2(self, op2_filename=None, combine=True, build_dataframe=None,
                  skip_undefined_matrices=False, encoding=None):
         """
         Starts the OP2 file reading
@@ -352,13 +353,18 @@ class OP2(OP2_Scalar):
             True : objects are isubcase based
             False : objects are (isubcase, subtitle) based;
                     will be used for superelements regardless of the option
-        build_dataframe : bool; default=False
+        build_dataframe : bool (default=None -> True if in iPython, False otherwise)
             builds a pandas DataFrame for op2 objects
         skip_undefined_matrices : bool; default=False
              True : prevents matrix reading crashes
         encoding : str
             the unicode encoding (default=None; system default)
         """
+        if build_dataframe is None:
+            build_dataframe = False
+            if ipython_info():
+                build_dataframe = True
+
         if encoding is None:
             encoding = sys.getdefaultencoding()
         self.encoding = encoding

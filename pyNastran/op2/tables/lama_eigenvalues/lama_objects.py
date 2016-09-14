@@ -27,6 +27,7 @@ class RealEigenvalues(BaseScalarObject):
         self.cycles = {}
         self.generalized_mass = {}
         self.generalized_stiffness = {}
+        self.data_frame = None
 
     def __eq__(self, table):
         return True
@@ -114,6 +115,9 @@ class RealEigenvalues(BaseScalarObject):
         return page_num
 
     def __repr__(self):
+        if self.data_frame is not None:
+            return str(self.data_frame)
+
         msg = '%-7s %15s %15s %10s %10s %10s %15s\n' % (
             'ModeNum', 'ExtractionOrder', 'Eigenvalue', 'Radians', 'Cycles', 'GenMass', 'GenStiffness')
         for mode_num, extract_order in sorted(iteritems(self.extraction_order)):

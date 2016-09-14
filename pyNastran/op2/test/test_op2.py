@@ -154,6 +154,8 @@ def run_lots_of_files(files, make_geom=True, write_bdf=False, write_f06=True,
     if is_vector in [True, False]:
         is_vector = [is_vector]
         vector_stop = [vector_stop]
+    if binary_debug in [True, False]:
+        binary_debug = [binary_debug]
 
     subcases = []
     failed_cases = []
@@ -174,20 +176,21 @@ def run_lots_of_files(files, make_geom=True, write_bdf=False, write_f06=True,
             is_passed = True
             is_vector_failed = []
             for vectori, vector_stopi in zip(is_vector, vector_stop):
-                print('------running is_vector=%s------' % vectori)
-                is_passed_i = run_op2(op2file, make_geom=make_geom, write_bdf=write_bdf,
-                                      write_f06=write_f06, write_op2=write_op2,
-                                      is_mag_phase=False,
-                                      delete_f06=delete_f06,
-                                      short_stats=short_stats,
-                                      subcases=subcases, debug=debug,
-                                      stop_on_failure=stop_on_failure,
-                                      binary_debug=binary_debug,
-                                      compare=True, dev=dev)[1]
-                if not is_passed_i and vector_stopi:
-                    is_passed = False
-                if not is_passed_i:
-                    is_vector_failed.append(vectori)
+                for binary_debugi in binary_debug:
+                    print('------running is_vector=%s binary_debug=%s------' % (vectori, binary_debugi))
+                    is_passed_i = run_op2(op2file, make_geom=make_geom, write_bdf=write_bdf,
+                                          write_f06=write_f06, write_op2=write_op2,
+                                          is_mag_phase=False,
+                                          delete_f06=delete_f06,
+                                          short_stats=short_stats,
+                                          subcases=subcases, debug=debug,
+                                          stop_on_failure=stop_on_failure,
+                                          binary_debug=binary_debug,
+                                          compare=True, dev=dev)[1]
+                    if not is_passed_i and vector_stopi:
+                        is_passed = False
+                    if not is_passed_i:
+                        is_vector_failed.append(vectori)
             if not is_passed:
                 sys.stderr.write('**file=%s vector_failed=%s\n' % (op2file, is_vector_failed))
                 failed_cases.append(op2file)

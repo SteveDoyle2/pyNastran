@@ -454,9 +454,9 @@ class TestOP2(Tester):
         #print("spc_orig =\n", op2_1.spc_forces[1].data[0, -3:, :])
         print("gpf_orig =\n", op2_1.grid_point_forces[1].data[0, :2, :])
 
-        nids_transform_1, i_transform_1 = op2_1.get_displacement_index()
+        nids_all, nids_transform_1, i_transform_1 = op2_1.get_displacement_index()
         op2_1.transform_displacements_to_global(i_transform_1, op2_1.coords)
-        op2_1.transform_gpforce_to_global(nids_transform_1, i_transform_1, op2_1.coords)
+        op2_1.transform_gpforce_to_global(nids_all, nids_transform_1, i_transform_1, op2_1.coords)
         #print("disp_new =\n", op2_1.displacements[1].data[0, :2, :])
         #print("spc_new =\n", op2_1.spc_forces[1].data[0, -3:, :])
         print("gpf_new =\n", op2_1.grid_point_forces[1].data[0, :2, :])
