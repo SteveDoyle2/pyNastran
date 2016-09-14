@@ -3,6 +3,7 @@ from __future__ import print_function
 from types import MethodType
 import os
 import io
+import sys
 from codecs import open as codec_open
 from itertools import count
 
@@ -17,6 +18,15 @@ else:
     integer_types = (int, np.int32, np.int64)
     integer_float_types = (int, np.int32, np.int64, float)
 
+
+def ipython_info():
+    """determines if iPython/Jupyter notebook is running"""
+    ip = False
+    if 'ipykernel' in sys.modules:
+        ip = 'notebook'
+    elif 'Ipython' in sys.modules:
+        ip = 'terminal'
+    return ip
 
 def is_file_obj(filename):
     """does this object behave like a file object?"""

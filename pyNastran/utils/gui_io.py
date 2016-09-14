@@ -30,7 +30,7 @@ elif _gui_mode in [1, 2]:
 #----------------------------------------------------------------------
 #print("f_mode =", f_mode)
 
-def radio_pullown_dialog(Title, button_dict, nwide=3):  # pragma: no conver
+def radio_pullown_dialog(Title, button_dict, nwide=3):  # pragma: no cover
     """
     buttons = [
         [header, 'checkbox', A', 'B', 'C'],
@@ -128,7 +128,7 @@ def load_file_dialog(Title, wx_wildcard, qt_wildcard, dirname=''):
     return fname, wildcard_level
 
 
-def _main():  # pragma: no conver
+def _main():  # pragma: no cover
     """helps to test the functions"""
     wildcard_wx = "Nastran BDF (*.bdf; *.dat; *.nas)|*.bdf;*.dat;*.nas|" \
         "All files (*.*)|*.*"
@@ -138,5 +138,5 @@ def _main():  # pragma: no conver
     print("fname2 = %s" % fname)
 
 
-if __name__ == '__main__':  # pragma: no conver
+if __name__ == '__main__':  # pragma: no cover
     _main()
