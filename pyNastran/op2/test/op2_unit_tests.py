@@ -501,7 +501,7 @@ class TestOP2(Tester):
         assert op2_1.grid_point_forces[1].assert_equal(op2_2.grid_point_forces[1], atol=0.000123), msg
 
         #-------------------------------------------------
-        #return
+        return
         data = _get_gpforce_data()
         coords = op2_1.coords
         used_cds = np.unique(nid_cd[:, 1])
@@ -512,7 +512,6 @@ class TestOP2(Tester):
             #print('beta =\n%s' % coord.beta())
             #print('-----------------------------')
 
-        debug = False
         for datai in data:
             eids, nids, cid, summation_point, total_force_local_expected, total_moment_local_expected = datai
             coord_out = coords[cid]
