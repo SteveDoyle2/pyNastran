@@ -550,7 +550,7 @@ def transform_force_moment(force_in_local, moment_in_local,
 
     #coord_out_cid = coord_out.cid
     beta_out = coord_out.beta().T
-    print('beta_out =\n%s' % beta_out)
+    logger.debug('beta_out =\n%s' % beta_out)
 
     if debug:
         logger.debug(coord_out)
@@ -568,11 +568,11 @@ def transform_force_moment(force_in_local, moment_in_local,
         nidsi = nids[i]
         analysis_coord = coords[cd]
         beta_cd = analysis_coord.beta()
-        #print('analysis_coord =\n%s' % analysis_coord)
-        print('beta_cd =\n%s' % beta_cd)
+        #logger.debug('analysis_coord =\n%s' % analysis_coord)
+        logger.debug('beta_cd =\n%s' % beta_cd)
 
-        print('i =', i)
-        print('force_in_local =', force_in_local)
+        logger.debug('i = %s' % i)
+        logger.debug('force_in_local = %s' % force_in_local)
         #force_in_locali.astype('float64')
         #moment_in_locali.astype('float64')
 
@@ -583,8 +583,8 @@ def transform_force_moment(force_in_local, moment_in_local,
         else:
             force_in_locali = -force_in_local[i, :]
             moment_in_locali = -moment_in_local[i, :]
-            print(analysis_coord)
-            print(force_in_locali)
+            logger.debug(analysis_coord)
+            logger.debug(force_in_locali)
             force_in_locali = analysis_coord.coord_to_xyz_array(force_in_locali)
             moment_in_locali = analysis_coord.coord_to_xyz_array(moment_in_locali)
 
@@ -598,7 +598,7 @@ def transform_force_moment(force_in_local, moment_in_local,
         # with the local frame and with the same primary directions
         # as the global frame
         force_in_globali = dot(force_in_locali, beta_cd)
-        print('force_in_globali = %s' % force_in_globali)
+        logger.debug('force_in_globali = %s' % force_in_globali)
         moment_in_globali = dot(moment_in_locali, beta_cd)
 
         # rotate the forces and moments into a coordinate system coincident

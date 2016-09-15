@@ -478,9 +478,9 @@ class TestOP2(Tester):
         #bdf_filename2 = os.path.join(folder, 'static_solid_shell_bar.bdf')
         op2_filename2 = os.path.join(folder, 'static_solid_shell_bar.op2')
         op2_2 = read_op2_geom(op2_filename2, debug=False)
-        nids_transform_2, i_transform_2 = op2_2.get_displacement_index()
+        nids_all, nids_transform_2, i_transform_2 = op2_2.get_displacement_index()
         op2_2.transform_displacements_to_global(i_transform_2, op2_2.coords)
-        op2_2.transform_gpforce_to_global(nids_transform_2, i_transform_2, op2_2.coords)
+        op2_2.transform_gpforce_to_global(nids_all, nids_transform_2, i_transform_2, op2_2.coords)
 
         #print("disp_goal =\n", op2_2.displacements[1].data[0, :2, :])
         #print("spc_goal =\n", op2_2.spc_forces[1].data[0, -3:, :])
@@ -498,10 +498,10 @@ class TestOP2(Tester):
         assert op2_1.spc_forces[1].assert_equal(op2_2.spc_forces[1], atol=4.4341e-04), msg
         assert op2_1.mpc_forces[1].assert_equal(op2_2.mpc_forces[1]), msg
         assert op2_1.load_vectors[1].assert_equal(op2_2.load_vectors[1]), msg
-        #assert op2_1.grid_point_forces[1].assert_equal(op2_2.grid_point_forces[1], atol=0.000123), msg
+        assert op2_1.grid_point_forces[1].assert_equal(op2_2.grid_point_forces[1], atol=0.000123), msg
 
         #-------------------------------------------------
-        return
+        #return
         data = _get_gpforce_data()
         coords = op2_1.coords
         used_cds = np.unique(nid_cd[:, 1])
@@ -512,6 +512,7 @@ class TestOP2(Tester):
             #print('beta =\n%s' % coord.beta())
             #print('-----------------------------')
 
+        debug = False
         for datai in data:
             eids, nids, cid, summation_point, total_force_local_expected, total_moment_local_expected = datai
             coord_out = coords[cid]

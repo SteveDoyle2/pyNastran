@@ -699,20 +699,20 @@ class OP2(OP2_Scalar):
                         is_global_cid = True
 
                     if debug:
-                        print('coord\n', coord)
-                        print(cid_transform)
-                        print('inode = %s' % inode)
+                        self.log.debug('coord\n%s' % coord)
+                        self.log.debug(cid_transform)
+                        self.log.debug('inode = %s' % inode)
                     if coord_type in ['CORD2R', 'CORD1R']:
                         if is_global_cid:
-                            print('is_global_cid')
+                            self.log.debug('is_global_cid')
                             continue
-                        print('rectangular')
+                        self.log.debug('rectangular')
                         translation = data[:, inode, :3]
                         rotation = data[:, inode, 3:]
                         data[:, inode, :3] = translation.dot(cid_transform)
                         data[:, inode, 3:] = rotation.dot(cid_transform)
                     elif coord_type in ['CORD2C', 'CORD1C']:
-                        #print('cylindrical')
+                        #self.log.debug('cylindrical')
                         if xyz_cid0 is None:
                             msg = ('xyz_cid is required for cylindrical '
                                    'coordinate transforms')
@@ -720,7 +720,7 @@ class OP2(OP2_Scalar):
                         xyzi = xyz_cid0[inode, :]
                         rtz_cid = coord.xyz_to_coord_array(xyzi)
                         theta = rtz_cid[:, 1]
-                        #print('theta = %s' % list(theta))
+                        #self.log.debug('theta = %s' % list(theta))
                         for itime in range(data.shape[0]):
                             translation = data[itime, inode, :3]
                             rotation = data[itime, inode, 3:]
@@ -821,15 +821,15 @@ class OP2(OP2_Scalar):
         for disp_like_dict in disp_like_dicts:
             if not disp_like_dict:
                 continue
-            print('-----------')
+            self.log.debug('-----------')
             for subcase, result in iteritems(disp_like_dict):
-                print('result.name = ', result.class_name)
+                self.log.debug('result.name = %s' % result.class_name)
                 data = result.data
 
                 # inode_xyz :
                 #    the indices of the nodes in the model grid point list
                 for cid, inode_xyz in iteritems(i_transform):
-                    print('cid = ', cid)
+                    self.log.debug('cid = %s' % cid)
                     if cid in [-1, 0]:
                         continue
                     coord = coords[cid]
@@ -840,7 +840,6 @@ class OP2(OP2_Scalar):
                     if np.diagonal(cid_transform).sum() == 3.:
                         is_global_cid = True
                     nids = np.array(nids_transform[cid])
-                    #nids = [2]
 
                     #from pyNastran.op2.tables.ogf_gridPointForces.ogf_objects import RealGridPointForcesArray
                     #result = RealGridPointForcesArray()
@@ -848,20 +847,25 @@ class OP2(OP2_Scalar):
                         #self.node_element = zeros((self.ntimes, self.ntotal, 2), dtype='int32')
                         nids_all_gp = result.node_element[0, :, 0]
 
-                        # the indices of the grid point forces that we're transforming
-                        inode_gp = np.where(np.in1d(nids_all_gp, nids))[0]
-                        assert len(inode_gp) == len(nids_all_gp), 'len(inode_gp)=%s len(nids_all_gp)=%s' % (len(inode_gp), len(nids_all_gp))
+                        self.log.debug('nids_all_gp = %s' % list(nids_all_gp))
+                        self.log.debug('nids = %s' % list(nids))
 
+                        # the indices of the grid points that we're transforming
+                        inode_gp = np.where(np.in1d(nids_all_gp, nids))[0]
+                        self.log.debug('inode_gp = %s' % list(inode_gp))
+                        nids_gp = nids_all_gp[inode_gp]
+                        self.log.debug('nids_gp = %s' % list(nids_gp))
+                        assert np.array_equal(np.unique(nids_gp), np.unique(nids)), 'nids_gp=%s nids=%s' % (nids_gp, nids)
+                        self.log.debug('---------')
                         # the transformation index to go from xyz to the grid point forces
                         inode_gp_xyz = np.searchsorted(nids_all, nids_all_gp)
+                        self.log.debug('nids_all = %s' % list(nids_all))
+                        self.log.debug('nids_all_gp = %s' % list(nids_all_gp))
+                        self.log.debug('inode_xyz = %s' % list(inode_xyz))
+                        self.log.debug('inode_gp_xyz = %s' % list(inode_gp_xyz))
+                        sys.stdout.flush()
                         assert len(inode_gp_xyz) == len(nids_all_gp), len(nids_all_gp)
 
-                        print('nids_all = %s' % list(nids_all))
-                        print('nids_all_gp = %s' % list(nids_all_gp))
-                        print('nids = %s' % list(nids))
-                        print('inode_gp = %s' % list(inode_gp))
-                        print('inode_xyz = %s' % list(inode_xyz))
-                        print('inode_gp_xyz = %s' % list(inode_gp_xyz))
                     else:
                         raise NotImplementedError(result)
 
@@ -886,8 +890,8 @@ class OP2(OP2_Scalar):
                         rtz_cid = coord.xyz_to_coord_array(xyzi)
                         theta_xyz = rtz_cid[inode_xyz, 1]
                         theta = rtz_cid[inode_gp_xyz, 1]
-                        print('coord\n', coord)
-                        print(cid_transform)
+                        self.log.debug('coord\n%s' % coord)
+                        self.log.debug(cid_transform)
                         #print('theta_xyz = %s' % list(theta_xyz))
                         #print('theta     = %s' % list(theta))
 
@@ -954,7 +958,7 @@ class OP2(OP2_Scalar):
                             #print('end', data[itime, inode_gp, :3])
 
                     elif coord_type in ['CORD2S', 'CORD1S']:
-                        print('spherical')
+                        self.log.debug('spherical')
                         if xyz_cid0 is None:
                             msg = ('xyz_cid is required for spherical '
                                    'coordinate transforms')
@@ -981,7 +985,7 @@ class OP2(OP2_Scalar):
                             data[itime, inode, 3:] = rotation.dot(cid_transform)
                     else:
                         raise RuntimeError(coord)
-        print('-----------')
+        self.log.debug('-----------')
         return
 
 def main():  # pragma: no cover
