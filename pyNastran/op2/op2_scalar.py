@@ -1351,7 +1351,10 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         Reads all the geometry/result tables.
         The OP2 header is not read by this function.
 
-        :param table_name: the first table's name
+        Parameters
+        ----------
+        table_name : bytes str
+            the first table's name
         """
         table_names = []
         while table_name is not None:
@@ -1767,25 +1770,14 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
         self.read_markers([-5, 1, 0])
 
-        markers = self.get_nmarkers(1, rewind=True)
-        if markers != [0]:
+        itable = -6
+        while 1:
+            markers = self.get_nmarkers(1, rewind=True)
+            if markers == [0]:
+                break
             data = self._read_record()
-            self.read_markers([-6, 1, 0])
-
-        markers = self.get_nmarkers(1, rewind=True)
-        if markers != [0]:
-            data = self._read_record()
-            self.read_markers([-7, 1, 0])
-
-        markers = self.get_nmarkers(1, rewind=True)
-        if markers != [0]:
-            data = self._read_record()
-            self.read_markers([-8, 1, 0])
-
-        markers = self.get_nmarkers(1, rewind=True)
-        if markers != [0]:
-            data = self._read_record()
-            self.read_markers([-9, 1, 0])
+            self.read_markers([itable, 1, 0])
+            itable -= 1
 
         #self.show(100)
         self.read_markers([0])

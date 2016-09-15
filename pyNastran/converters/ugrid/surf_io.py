@@ -26,7 +26,7 @@ class SurfIO(object):
             None, None)
         return data
 
-    def load_surf_geometry(self, surf_filename, dirname, plot=True):
+    def load_surf_geometry(self, surf_filename, dirname, name=None, plot=True):
         #skip_reading = self.remove_old_openfoam_geometry(openfoam_filename)
         #if skip_reading:
         #    return
@@ -197,18 +197,36 @@ class SurfIO(object):
         surface_res = GuiResult(0, header='SurfaceID', title='SurfaceID',
                                 location='centroid', scalar=surf_ids)
 
+        recon_res = GuiResult(0, header='ReconFlag', title='ReconFlag',
+                              location='centroid', scalar=recon_flags)
+        gridbc_res = GuiResult(0, header='GridBC', title='GridBC',
+                               location='centroid', scalar=grid_bcs)
+        normalx_res = GuiResult(0, header='NormalX', title='NormalX',
+                                location='centroid', scalar=normals[:, 0])
+        normaly_res = GuiResult(0, header='NormalY', title='NormalY',
+                                location='centroid', scalar=normals[:, 1])
+        normalz_res = GuiResult(0, header='NormalZ', title='NormalZ',
+                                location='centroid', scalar=normals[:, 2])
+
+        normspacing_res = GuiResult(0, header='NormSpacing', title='NormSpacing',
+                                    location='node', scalar=norm_spacing)
+        blthick_res = GuiResult(0, header='BL_thick', title='BL_thick',
+                                location='node', scalar=bl_thickness)
+
         icase = 0
         cases[icase] = (eid_res, (0, 'ElementID'))
         cases[icase + 1] = (nid_res, (0, 'NodeID'))
         cases[icase + 2] = (surface_res, (0, 'SurfaceID'))
 
-        cases[(ID, 3, 'ReconFlag', 1, 'centroid', '%i', '')] = recon_flags
-        cases[(ID, 4, 'GridBC', 1, 'centroid', '%i', '')] = grid_bcs
-        cases[(ID, 5, 'NormalX', 1, 'centroid', '%.3f', '')] = normals[:, 0]
-        cases[(ID, 6, 'NormalY', 1, 'centroid', '%.3f', '')] = normals[:, 1]
-        cases[(ID, 7, 'NormalZ', 1, 'centroid', '%.3f', '')] = normals[:, 2]
-        cases[(ID, 8, 'normSpacing', 1, 'node', '%.3e', '')] = norm_spacing
-        cases[(ID, 9, 'BL_thick', 1, 'node', '%.3e', '')] = bl_thickness
+        cases[icase + 3] = (recon_res, (0, 'ReconFlag'))
+        cases[icase + 4] = (gridbc_res, (0, 'GridBC'))
+        cases[icase + 5] = (normalx_res, (0, 'NormalX'))
+        cases[icase + 6] = (normaly_res, (0, 'NormalY'))
+        cases[icase + 7] = (normalz_res, (0, 'NormalZ'))
+
+        cases[icase + 8] = (normspacing_res, (0, 'NormSpacing'))
+        cases[icase + 9] = (blthick_res, (0, 'BL_thick'))
+        icase += 10
 
         if os.path.exists(tag_filename):
             tagger = TagReader()
@@ -228,7 +246,6 @@ class SurfIO(object):
 
             has_tag_data = True
             tag_form = []
-            icase = 10
             tag_form.append(('is_visc', icase, []))
             tag_form.append(('is_recon', icase + 1, []))
             tag_form.append(('is_rebuild', icase + 2, []))
