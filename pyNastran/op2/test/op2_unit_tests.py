@@ -539,7 +539,7 @@ class TestOP2(Tester):
                 np.abs(total_moment_local_expected - total_moment_local))
             self.assertTrue(np.allclose(total_moment_local_expected, total_moment_local, atol=0.005), msg), msg
 
-    #@unittest.expectedFailure
+    @unittest.expectedFailure
     def test_op2_solid_shell_bar_01_gpforce_radial_global_cd(self):
         warning_log = SimpleLogger(level='warning')
         debug_log = SimpleLogger(level='debug')
