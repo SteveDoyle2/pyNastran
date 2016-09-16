@@ -195,6 +195,7 @@ setup(
             #'nastranToCodeAster = pyNastran.converters.toCodeAster:main',
             'format_converter = pyNastran.converters.type_converter:main',
             'bdf = pyNastran.bdf.mesh_utils.utils:cmd_line',
+            'f06 = pyNastran.f06.utils:cmd_line',
         ] + py2_gui_scripts + py3_gui_scripts
     },
     test_suite='pyNastran.all_tests',
