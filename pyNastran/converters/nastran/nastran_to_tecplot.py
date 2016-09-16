@@ -8,8 +8,8 @@ def nastran_to_tecplot(model):
     """assumes sequential nodes"""
     tecplot = Tecplot()
 
-    nnodes = model.nnodes
-    inode_max = max(model.nodes.keys())
+    nnodes = len(model.nodes)
+    inode_max = max(model.nodes)
     if nnodes == inode_max:
         xyz = zeros((nnodes, 3), dtype='float64')
         i = 0
@@ -150,7 +150,7 @@ def nastran_to_tecplot_filename(bdf_filename, tecplot_filename, log=None):
                 nodeid_to_i_map[n5], nodeid_to_i_map[n6])
             elements.append([i1, i2, i3, i4,
                              i5, i6, i6, i6])
-        elif element.type in ['CYPRAM']:
+        elif element.type in ['CPYRAM']:
             n1, n2, n3, n4, n5 = element.node_ids
             i1, i2, i3, i4, i5 = (
                 nodeid_to_i_map[n1], nodeid_to_i_map[n2], nodeid_to_i_map[n3], nodeid_to_i_map[n4],
@@ -165,16 +165,18 @@ def nastran_to_tecplot_filename(bdf_filename, tecplot_filename, log=None):
             elements.append([i1, i2, i3, i4,
                              i5, i6, i7, i8])
         else:
-            print(element.type)
+            self.log.info('skip etype=%r' % element.type)
+            self.log.info(element)
     elements = array(elements, dtype='int32')
+
     tecplot = Tecplot()
     tecplot.xyz = nodes
-    tecplot.elements = elements
+    tecplot.hexa_elements = elements
     tecplot.write_tecplot(tecplot_filename)
     tecplot.results = array([], dtype='float32')
 
 
-def main():
+def main():  # pragma: no cover
     bdf_filename = 'threePlugs.bdf'
     tecplot_filename = 'threePlugs.plt'
     nastran_to_tecplot_filename(bdf_filename, tecplot_filename)

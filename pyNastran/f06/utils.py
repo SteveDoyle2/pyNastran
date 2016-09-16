@@ -16,8 +16,8 @@ def cmd_line_plot_flutter():  # pragma: no cover
     msg += "  F06_FILENAME    path to input F06 files\n"
 
     msg += 'Options:\n'
-    msg += "  --modes MODES   the modes to plot (e.g. 1:10,20:22)\n"
-    msg += "  --subcases SUB  the subcases to plot (e.g. 1,3)\n"
+    msg += "  --modes MODES   the modes to plot (e.g. 1:10,20:22); unused\n"
+    msg += "  --subcases SUB  the subcases to plot (e.g. 1,3); unused\n"
     msg += "  --xlim FREQ     the frequency limits (unused)"
     msg += "  --ylim DAMP     the damping limits (unused)"
     msg += '\n'
@@ -36,6 +36,23 @@ def cmd_line_plot_flutter():  # pragma: no cover
     data = docopt(msg, version=ver)
     print(data)
     f06_filename = data['F06_FILENAME']
+    modes = data['--modes']
+    modes2 = []
+    if modes is not None:
+        smodes = modes.strip().split(',')
+        for mode in smodes:
+            mode = mode.strip()
+            if ':' in mode:
+                smode = mode.split(':')
+                if len(smode) == 2:
+                    istart = int(smode[0])
+                    iend = int(smode[1])
+                    modes2 += list(range(istart, iend + 1))
+                elif len(smode) == 1:
+                    raise NotImplementedError('smode=%r' % smode)
+            else:
+                imode = int(mode)
+                modes2.append(imode)
 
     plot_flutter_f06(f06_filename, plot=True)
 

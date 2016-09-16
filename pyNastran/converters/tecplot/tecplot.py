@@ -715,6 +715,8 @@ class Tecplot(FortranFormat):
                     nnodes_per_element = 4
                     zone_type = 'FEQUADRILATERAL'
                 else:
+                    self.log.info('etype=%r' % etype)
+                    self.log.info(elements)
                     continue
                 break
 

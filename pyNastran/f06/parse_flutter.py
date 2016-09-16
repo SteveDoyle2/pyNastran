@@ -24,7 +24,7 @@ class FlutterResponse(object):
             the subcase id
         method : str
             PK, PKNL, ???
-        modes : List[int]
+        modes : List[int]; (default=None -> all)
             the modes; typically 1 to N
         results : varies
             method = PK
@@ -342,11 +342,13 @@ class FlutterResponse(object):
 
         Parameters
         ----------
-        modes : int ndarray
-            the modes to plot
+        modes : List[int] / int ndarray; (default=None -> all)
+            the modes; typically 1 to N
         """
         if modes is None:
             modes = self.modes
+        else:
+            modes = np.asarray(modes)
         if fig is None:
             plt.figure(self.subcase)
 
@@ -376,9 +378,19 @@ class FlutterResponse(object):
                         xlim=None, ylim=None,
                         show=True, clear=False, legend=True,
                         png_filename=None):
-        """plots a root locus"""
+        """
+        Plots a root locus
+
+        Parameters
+        ----------
+        modes : List[int] / int ndarray; (default=None -> all)
+            the modes; typically 1 to N
+        """
         if modes is None:
             modes = self.modes
+        else:
+            modes = np.asarray(modes)
+
         if fig is None:
             plt.figure()
 
@@ -393,7 +405,6 @@ class FlutterResponse(object):
 
         plt.grid(True)
         plt.xlabel('Eigenvalue (Real)')
-
         plt.ylabel('Eigenvalue (Imaginary)')
 
         title = 'Subcase %i' % self.subcase
@@ -409,11 +420,13 @@ class FlutterResponse(object):
 
         Parameters
         ----------
-        modes : int ndarray
-            the modes to plot
+        modes : List[int] / int ndarray; (default=None -> all)
+            the modes; typically 1 to N
         """
         if modes is None:
             modes = self.modes
+        else:
+            modes = np.asarray(modes)
         if fig is None:
             fig = plt.figure(self.subcase) # figsize=(12,9)
             gridspeci = gridspec.GridSpec(2, 4)
@@ -486,7 +499,9 @@ class FlutterResponse(object):
         #return fig
 
 
-def plot_flutter_f06(f06_filename, plot=True, show=True):
+def plot_flutter_f06(f06_filename, modes=None,
+                     plot_vg=False, plot_vg_vf=True, plot_root_locus=True,
+                     show=True):
     """
     TODO: support multiple subcases
     TODO: support long tables
@@ -578,14 +593,16 @@ def plot_flutter_f06(f06_filename, plot=True, show=True):
                                   modes, results,
                                   f06_units=f06_units, out_units=out_units, plot_units=plot_units)
         flutters.append(flutter)
-        flutter.plot_vg(show=show)
-        flutter.plot_vg_vf(show=show)
-        flutter.plot_root_locus(show=show)
-        if show:
-            plt.show()
-        #if plot:
-            ##flutter.plot_vg()
-            #flutter.plot_vg_vf()
+
+        if plot:
+            if plot_vg:
+                flutter.plot_vg(show=False)
+            if plot_vg_vf:
+                flutter.plot_vg_vf(show=False)
+            if plot_root_locus:
+                flutter.plot_root_locus(show=False)
+            if show:
+                plt.show()
     return flutters
 
 if __name__ == '__main__':
