@@ -594,16 +594,15 @@ def plot_flutter_f06(f06_filename, modes=None,
                                   f06_units=f06_units, out_units=out_units, plot_units=plot_units)
         flutters.append(flutter)
 
-        if plot:
-            if plot_vg:
-                flutter.plot_vg(show=False)
-            if plot_vg_vf:
-                flutter.plot_vg_vf(show=False)
-            if plot_root_locus:
-                flutter.plot_root_locus(show=False)
-            if show:
-                plt.show()
+        if plot_vg:
+            flutter.plot_vg(show=False)
+        if plot_vg_vf:
+            flutter.plot_vg_vf(show=False)
+        if plot_root_locus:
+            flutter.plot_root_locus(show=False)
+        if show:
+            plt.show()
     return flutters
 
 if __name__ == '__main__':
-    read_flutter_f06('bah_plane.f06')
+    plot_flutter_f06('bah_plane.f06')
