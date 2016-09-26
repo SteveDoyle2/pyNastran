@@ -17,10 +17,10 @@ class ShabpGUI(ShabpIO, GUIMethods):
 
 class TestShabpGUI(unittest.TestCase):
 
-    def _test_shabp_geometry_01(self):
+    def test_shabp_geometry_01(self):
         dirname = None
         test = ShabpGUI()
-        shabp_infilename = os.path.join(model_path, 'models', 'flap_inviscid.mk5')
+        shabp_infilename = os.path.join(model_path, 'models', 'flap', 'flap_inviscid.mk5')
         test.load_shabp_geometry(shabp_infilename, '')
         #test.load_nastran_geometry(geometry_filename, None)
         #test.load_shabp_geometry(geometry_filename, dirname)
@@ -36,6 +36,15 @@ class TestShabpGUI(unittest.TestCase):
         test = ShabpGUI()
         shabp_infilename = os.path.join(model_path, 'models', 'shuttle.mk5')
         test.load_shabp_geometry(shabp_infilename, '')
+
+    def test_shabp_geometry_04(self):
+        dirname = None
+        test = ShabpGUI()
+        shabp_infilename = os.path.join(model_path, 'models', 'nose', 'noseX_working.mk5')
+        test.load_shabp_geometry(shabp_infilename, '')
+        #test.load_nastran_geometry(geometry_filename, None)
+        #test.load_shabp_geometry(geometry_filename, dirname)
+
 
     def test_shabp_results(self):
         pass

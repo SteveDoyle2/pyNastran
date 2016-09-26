@@ -16,6 +16,11 @@ from pyNastran.utils import is_binary_file
 from pyNastran.utils.log import get_logger
 from pyNastran.op2.fortran_format import FortranFormat
 
+def read_tecplot(tecplot_filename, log=None, debug=False):
+    """loads a tecplot file"""
+    tecplot = Tecplot(log=log, debug=debug)
+    tecplot.read_tecplot(tecplot_filename)
+    return tecplot
 
 def unique_rows(A, return_index=False, return_inverse=False):
     """
@@ -710,6 +715,8 @@ class Tecplot(FortranFormat):
                     nnodes_per_element = 4
                     zone_type = 'FEQUADRILATERAL'
                 else:
+                    self.log.info('etype=%r' % etype)
+                    self.log.info(elements)
                     continue
                 break
 
@@ -921,7 +928,7 @@ class Tecplot(FortranFormat):
 
 
 
-def main():
+def main():  # pragma: no cover
     plt = Tecplot()
     fnames = os.listdir(r'Z:\Temporary_Transfers\steve\output\time20000')
 
@@ -1082,7 +1089,7 @@ def main():
             #raise
         ##break
 
-def main2():
+def main2():  # pragma: no cover
     """tests slicing"""
     plt = Tecplot()
     #fnames = os.listdir(r'Z:\Temporary_Transfers\steve\output\time20000')
