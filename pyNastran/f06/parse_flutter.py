@@ -15,7 +15,7 @@ class FlutterResponse(object):
     """storage object for single subcase SOL 145 results"""
     def __init__(self, subcase, configuration, xysym, xzsym, mach, density_ratio, method,
                  modes, results,
-                 f06_units=None, out_units=None, plot_units=None,
+                 f06_units=None, out_units=None,
                 ):
         """
         Parameters
@@ -61,15 +61,6 @@ class FlutterResponse(object):
                     'altitude' : 'ft'
                 }
 
-        plot_units dict[str] = str (default=None -> no units conversion)
-            The units to use when plotting.
-            TODO: Remove this???
-
-            PK method:
-                plot_units = {'velocity' : 'ft/s'}
-            PKNL method:
-                plot_units = {'velocity' : 'ft/s', 'eas' : 'knots', 'density': 'kg/m^3'}
-
         Unused Parameters
         -----------------
         configuration : str
@@ -83,10 +74,11 @@ class FlutterResponse(object):
         """
         self.f06_units = f06_units
         self.out_units = out_units
-        self.plot_units = plot_units
 
         self.subcase = subcase
         self.configuration = configuration
+        self.mach = mach
+        print('mach=%s' % mach)
         self.xysym = xysym
         self.xzsym = xzsym
         self.method = method
@@ -106,6 +98,9 @@ class FlutterResponse(object):
             self.ieigr = 5
             self.ieigi = 6
             self.results = results
+
+            kvel = self._get_unit_factor('velocity')[0]
+            results[:, :, self.ivelocity] *= kvel
 
         elif self.method == 'PKNL':
             raise NotImplementedError(method)
@@ -128,10 +123,12 @@ class FlutterResponse(object):
             #eas  = (2 * q / rho_ref)**0.5
             eas = vel * np.sqrt(rho / rho_ref)
 
-            density_units = self.out_units['density']
+            density_units1 = self.f06_units['density']
             altitude_units = self.out_units['altitude']
+            #density_units1 = self.out_units['density']
 
-            kdensity = self._get_altitude_unit_factor(density_units, 'slug/ft^3')
+            kdensity = self._get_altitude_unit_factor(density_units1, 'slug/ft^3')
+            #kdensity = self._get_altitude_unit_factor(density_units2, 'slug/ft^3')
             kalt = self._get_altitude_unit_factor('ft', altitude_units)
             kpressure = self._get_unit_factor('dynamic_pressure')[0]
 
@@ -159,37 +156,35 @@ class FlutterResponse(object):
     def _get_unit_factor(self, name):
         if not self.f06_units or not self.out_units:
             return 1.
+        unit_f06 = self.f06_units[name]
         unit_out = self.out_units[name]
-        unit_plot = self.plot_units[name]
 
-        #print('unit_out=%r unit_out=%r' % (unit_out, unit_plot))
+        #print('unit_f06=%r unit_out=%r' % (unit_f06, unit_out))
         if name == 'velocity':
-            factor = self._get_velocity_unit_factor(unit_out, unit_plot)
+            factor = self._get_velocity_unit_factor(unit_f06, unit_out)
         elif name == 'altitude':
-            factor = self._get_altitude_unit_factor(unit_out, unit_plot)
+            factor = self._get_altitude_unit_factor(unit_f06, unit_out)
         elif name == 'density':
-            factor = self._get_altitude_unit_factor(unit_out, unit_plot)
-
+            factor = self._get_altitude_unit_factor(unit_f06, unit_out)
         elif name in ['pressure', 'dynamic_pressure']:
-            factor = self._get_pressure_unit_factor(unit_out, unit_plot)
+            factor = self._get_pressure_unit_factor(unit_f06, unit_out)
         else:
             raise NotImplementedError(name)
 
-        if self.plot_units is not None:
-            units = self.plot_units[name]
+        if self.out_units is not None:
+            units = self.out_units[name]
         else:
             units = 'units'
-
         return factor, units
 
     @staticmethod
     def _get_velocity_unit_factor(unit_in, unit_out):
         """TODO: simplify this..."""
         if unit_in not in ['in/s', 'ft/s', 'knots', 'm/s']:
-            msg = 'unit_out=%r not in [in/s, ft/s, knots, m/s]' % unit_in
+            msg = 'unit_in=%r not in [in/s, ft/s, knots, m/s]' % unit_in
             raise NotImplementedError(msg)
         if unit_out not in ['in/s', 'ft/s', 'knots', 'm/s']:
-            msg = 'unit_plot=%r not in [in/s, ft/s, knots, m/s]' % unit_out
+            msg = 'unit_out=%r not in [in/s, ft/s, knots, m/s]' % unit_out
             raise NotImplementedError(msg)
 
         if unit_in == unit_out:
@@ -237,7 +232,7 @@ class FlutterResponse(object):
     @staticmethod
     def _get_altitude_unit_factor(unit_in, unit_out):
         """TODO: simplify this..."""
-        if unit_out not in ['ft', 'm']:
+        if unit_in not in ['ft', 'm']:
             msg = 'unit_in=%r not in [ft, m]' % unit_in
             raise NotImplementedError(msg)
         if unit_out not in ['ft', 'm']:
@@ -263,7 +258,7 @@ class FlutterResponse(object):
     @staticmethod
     def _get_pressure_unit_factor(unit_in, unit_out):
         """TODO: simplify this..."""
-        if unit_out not in ['psi', 'psf']:
+        if unit_in not in ['psi', 'psf']:
             msg = 'unit_in=%r not in [psi, psf]' % unit_in
             raise NotImplementedError(msg)
         if unit_out not in ['psi', 'psf']:
@@ -289,7 +284,7 @@ class FlutterResponse(object):
     @staticmethod
     def _get_density_unit_factor(unit_in, unit_out):
         """TODO: simplify this..."""
-        if unit_out not in ['slinch/in^3', 'slug/ft^3']:
+        if unit_in not in ['slinch/in^3', 'slug/ft^3']:
             msg = 'unit_in=%r not in [slinch/in^3, slug/ft^3]' % unit_in
             raise NotImplementedError(msg)
         if unit_out not in ['ft', 'm']:
@@ -356,9 +351,9 @@ class FlutterResponse(object):
         imodes = np.searchsorted(self.modes, modes)
         symbols = self.symbols
 
-        kvelocity, velocity_units = self._get_unit_factor('velocity')
+        _kvelocity, velocity_units = self._get_unit_factor('velocity')
         for i, imode, mode in zip(count(), imodes, modes):
-            vel = self.results[imode, :, self.ivelocity].ravel() * kvelocity
+            vel = self.results[imode, :, self.ivelocity].ravel()
             damping = self.results[imode, :, self.idamping].ravel()
             plt.plot(vel, damping, symbols[i], label='Mode %i' % mode)
 
@@ -414,7 +409,8 @@ class FlutterResponse(object):
         self._finalize_plot(legend, show, png_filename, clear)
 
     def plot_vg_vf(self, fig=None, modes=None, show=None, png_filename=None,
-                   clear=False, legend=None):
+                   clear=False, legend=None,
+                   xlim=None, ylim_damping=None, ylim_freq=None):
         """
         Make a V-g and V-f plot
 
@@ -437,9 +433,9 @@ class FlutterResponse(object):
         imodes = np.searchsorted(self.modes, modes)
         symbols = self.symbols
 
-        kvelocity, velocity_units = self._get_unit_factor('velocity')
+        _kvelocity, velocity_units = self._get_unit_factor('velocity')
         for i, imode, mode in zip(count(), imodes, modes):
-            vel = self.results[imode, :, self.ivelocity].ravel() * kvelocity
+            vel = self.results[imode, :, self.ivelocity].ravel()
             damping = self.results[imode, :, self.idamping].ravel()
             freq = self.results[imode, :, self.ifreq].ravel()
             damp_axes.plot(vel, damping, symbols[i], label='Mode %i' % mode)
@@ -448,10 +444,18 @@ class FlutterResponse(object):
         damp_axes.set_xlabel('Velocity [%s]' % velocity_units)
         damp_axes.set_ylabel('Damping')
         damp_axes.grid(True)
+        if xlim is not None:
+            damp_axes.set_xlim(xlim)
+        if ylim_damping is not None:
+            damp_axes.set_ylim(ylim_damping)
 
         freq_axes.set_xlabel('Velocity [%s]' % velocity_units)
         freq_axes.set_ylabel('Frequency [Hz]')
         freq_axes.grid(True)
+        if xlim is not None:
+            freq_axes.set_xlim(xlim)
+        if ylim_freq is not None:
+            freq_axes.set_ylim(ylim_freq)
 
         title = 'Subcase %i' % self.subcase
         if png_filename:
@@ -460,17 +464,7 @@ class FlutterResponse(object):
         damp_axes.set_title(title)
         #plt.suptitle(title)
 
-        xlim_damp = None
-        ylim_damp = None
-        ylim_freq = None
-        if xlim_damp:
-            damp_axes.set_xlim(xlim_damp)
-        if ylim_damp:
-            damp_axes.set_ylim(ylim_damp)
-        if ylim_freq:
-            freq_axes.set_ylim(ylim_freq)
-
-        #self._finalize_plot(legend, show, png_filename, clear)
+#self._finalize_plot(legend, show, png_filename, clear)
         if legend:
             #damp_axes.legend(legend_items, fontsize=10, bbox_to_anchor=(1.125, 1.), loc=2)
             #fig.subplots_adjust(hspace=0.25)
@@ -501,25 +495,27 @@ class FlutterResponse(object):
 
 def plot_flutter_f06(f06_filename, modes=None,
                      plot_vg=False, plot_vg_vf=True, plot_root_locus=True,
-                     show=True):
+                     show=True,
+                     xlim=None, ylim_damping=None, ylim_freq=None):
     """
     TODO: support multiple subcases
     TODO: support long tables
     """
     f06_units = {'velocity' : 'in/s'}
     out_units = {'velocity' : 'in/s'}
-    plot_units = {'velocity' : 'ft/s'}
 
     flutters = []
     with open(f06_filename, 'r') as f06_file:
         subcase = 1
         results = []
         modes = []
+        #is_new_subcase = True
         while 1:
             nblank = 0
+            #if is_new_subcase:
             line = f06_file.readline()
             #print('line = %s' % line.strip())
-            while 'SUBCASE' not in line:
+            while 'SUBCASE' not in line and 'FLUTTER  SUMMARY' not in line:
                 line = f06_file.readline()
                 if not line:
                     nblank += 1
@@ -527,23 +523,36 @@ def plot_flutter_f06(f06_filename, modes=None,
                     print(line.strip())
                     break
             if nblank == 100:
-                break
-            sline = line.strip().split()
-            isubcase = sline.index('SUBCASE')
-            new_subcase = int(sline[isubcase + 1])
-            if new_subcase > subcase:
-                print('new_subcase = ', subcase)
                 break
 
-            while 'FLUTTER  SUMMARY' not in line:
-                line = f06_file.readline()
-                if not line:
-                    nblank += 1
+            #print('line =', line)
+            if 'SUBCASE' in line:
+                sline = line.strip().split()
+                isubcase = sline.index('SUBCASE')
+                new_subcase = int(sline[isubcase + 1])
+                if new_subcase > subcase:
+                    print('\nsubcase=%s -> new_subcase=%s' % (subcase, new_subcase))
+                    print('modes1 =', modes)
+                    flutter = FlutterResponse(subcase, configuration, xysym, xzsym,
+                                              mach, density_ratio, method,
+                                              modes, results,
+                                              f06_units=f06_units, out_units=out_units)
+                    flutters.append(flutter)
+                    modes = []
+                    results = []
+
+                    subcase = new_subcase
+                    #break
+
+                while 'FLUTTER  SUMMARY' not in line:
+                    line = f06_file.readline()
+                    if not line:
+                        nblank += 1
+                    if nblank == 100:
+                        print(line.strip())
+                        break
                 if nblank == 100:
-                    print(line.strip())
                     break
-            if nblank == 100:
-                break
 
             configuration_sline = f06_file.readline().split()
             configuration = configuration_sline[2]
@@ -552,14 +561,15 @@ def plot_flutter_f06(f06_filename, modes=None,
             #print(configuration, xysym, xzsym)
 
             point_sline = f06_file.readline().split()
-            mode = point_sline[2]
-            mach = point_sline[6]
-            density_ratio = point_sline[10]
+            mode = int(point_sline[2])
+            mach = float(point_sline[6])
+            density_ratio = float(point_sline[10])
             method = point_sline[13]
             print(mode, mach, density_ratio, method)
-            if mode in modes:
-                print('found existing mode...')
-                continue
+            if 1:
+                if mode in modes:
+                    print('found existing mode...')
+                    continue
             modes.append(mode)
 
             # blanks
@@ -588,18 +598,23 @@ def plot_flutter_f06(f06_filename, modes=None,
             #print('')
 
         #print(len(results))
+        print('modes =', modes)
         flutter = FlutterResponse(subcase, configuration, xysym, xzsym,
                                   mach, density_ratio, method,
                                   modes, results,
-                                  f06_units=f06_units, out_units=out_units, plot_units=plot_units)
+                                  f06_units=f06_units, out_units=out_units)
         flutters.append(flutter)
 
-        if plot_vg:
-            flutter.plot_vg(show=False)
-        if plot_vg_vf:
-            flutter.plot_vg_vf(show=False)
-        if plot_root_locus:
-            flutter.plot_root_locus(show=False)
+        for flutter in flutters:
+            if plot_vg:
+                flutter.plot_vg(show=False,
+                                xlim=xlim, ylim=ylim_damping)
+            if plot_vg_vf:
+                flutter.plot_vg_vf(show=False,
+                                   xlim=xlim,
+                                   ylim_damping=ylim_damping, ylim_freq=ylim_freq)
+            if plot_root_locus:
+                flutter.plot_root_locus(show=False)
         if show:
             plt.show()
     return flutters

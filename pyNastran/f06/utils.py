@@ -54,7 +54,8 @@ def cmd_line_plot_flutter():  # pragma: no cover
                 imode = int(mode)
                 modes2.append(imode)
 
-    plot_flutter_f06(f06_filename, plot=True)
+    plot_flutter_f06(f06_filename, plot_root_locus=True, plot_vg_vf=True, plot_vg=False)
+    #plot_flutter_f06(f06_filename, plot_root_locus=False, plot_vg_vf=True)
 
 def cmd_line():  # pragma: no cover
     import sys
