@@ -308,7 +308,11 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
     def set_tools(self, tools=None, checkables=None):
         """Creates the GUI tools"""
         if checkables is None:
-            checkables = ['show_info', 'show_debug', 'show_gui', 'show_command']
+            checkables = [
+                'show_info', 'show_debug', 'show_gui', 'show_command',
+                'anti_alias_0', 'anti_alias_1', 'anti_alias_2', 'anti_alias_4', 'anti_alias_8',
+            ]
+
         if tools is None:
             file_tools = [
 
@@ -380,6 +384,12 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                 ('Z', 'Flips to -Z Axis', 'minus_z.png', 'Z', 'Flips to -Z Axis', lambda: self.update_camera('-z')),
                 ('edges', 'Show/Hide Edges', 'tedges.png', 'e', 'Show/Hide Model Edges', self.on_flip_edges),
                 ('edges_black', 'Color Edges', '', 'b', 'Set Edge Color to Color/Black', self.on_set_edge_visibility),
+                ('anti_alias_0', 'Off', '', None, 'Disable Anti-Aliasing', lambda: self.on_set_anti_aliasing(0)),
+                ('anti_alias_1', '1x', '', None, 'Set Anti-Aliasing to 1x', lambda: self.on_set_anti_aliasing(1)),
+                ('anti_alias_2', '2x', '', None, 'Set Anti-Aliasing to 2x', lambda: self.on_set_anti_aliasing(2)),
+                ('anti_alias_4', '4x', '', None, 'Set Anti-Aliasing to 4x', lambda: self.on_set_anti_aliasing(4)),
+                ('anti_alias_8', '8x', '', None, 'Set Anti-Aliasing to 8x', lambda: self.on_set_anti_aliasing(8)),
+
             ]
         # print('version =', vtk.VTK_VERSION, self.vtk_version)
         #if self.vtk_version[0] < 6
@@ -448,7 +458,9 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             'screenshot', '', 'wireframe', 'surface', 'camera_reset', '',
             'back_color', 'text_color', '',
             'label_modify', 'label_clear', 'label_reset', 'picker_modify', '',
-            'legend', 'geo_properties']
+            'legend', 'geo_properties',
+            ['Anti-Aliasing', 'anti_alias_0', 'anti_alias_1', 'anti_alias_2', 'anti_alias_4', 'anti_alias_8',],
+        ]
         if self.is_groups:
             menu_view += ['modify_groups', 'create_groups_by_property_id']
         menu_view += [
@@ -517,7 +529,18 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                 if not i:
                     menu.addSeparator()
                 else:
-                    if not isinstance(i, string_types):
+                    if isinstance(i, list):
+                        sub_menu_name = i[0]
+                        sub_menu = menu.addMenu(sub_menu_name)
+                        for ii_count, ii in enumerate(i[1:]):
+                            if not isinstance(ii, string_types):
+                                raise RuntimeError('what is this...action ii() = %r' % ii())
+                            action = self.actions[ii]
+                            if ii_count > 0:
+                                action.setChecked(False)
+                            sub_menu.addAction(action)
+                        continue
+                    elif not isinstance(i, string_types):
                         raise RuntimeError('what is this...action i() = %r' % i())
 
                     action = self.actions[i] #if isinstance(i, string_types) else i()
@@ -922,6 +945,11 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.vtk_interactor = QVTKRenderWindowInteractor(parent=self.vtk_frame)
         #self.vtk_interactor = PyNastranRenderWindowInteractor(parent=self.vtk_frame)
         self.iren = self.vtk_interactor
+        #self.set_anti_aliasing(2)
+
+    @property
+    def render_window(self):
+        return self.vtk_interactor.GetRenderWindow()
 
     def build_vtk_frame(self):
         vtk_hbox = QtGui.QHBoxLayout()
@@ -2031,6 +2059,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         if inputs['user_geom'] is not None:
             for fname in inputs['user_geom']:
                 self.on_load_user_geom(fname)
+        #self.set_anti_aliasing(16)
 
     def on_load_user_geom(self, csv_filename=None, name=None, color=None):
         """
@@ -3734,6 +3763,18 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         camera.SetClippingRange(min_clip, max_clip)
         self.log_command('self.on_update_clipping(min_value=%s, max_clip=%s)'
                          % (min_clip, max_clip))
+
+    #---------------------------------------------------------------------------------------
+
+    def on_set_anti_aliasing(self, scale=0):
+        assert isinstance(scale, int), 'scale=%r; type=%r' % (scale, type(scale))
+        renwin = self.render_window
+        renwin.LineSmoothingOn()
+        renwin.PolygonSmoothingOn()
+        renwin.PointSmoothingOn()
+        renwin.SetMultiSamples(scale)
+        self.log_command('on_set_anti_aliasing(%r)' % (scale))
+
 
     #---------------------------------------------------------------------------------------
     # LEGEND MENU
