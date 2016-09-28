@@ -25,6 +25,7 @@ packages = find_packages()+['gui/icons/*.*']
 
 py2_gui_scripts = []
 py2_packages = []
+
 if sys.version_info <= (3,):
     py2_gui_scripts = ['pyNastranGUI = pyNastran.gui.gui:main',]
 

@@ -126,7 +126,8 @@ except ImportError:
 #    'scipy >= 0.16.0, scipy < 0.18.0',
 #]
 
-if 'dev' in pyNastran.__version__:
+is_windows = 'nt' in os.name
+if 'dev' in pyNastran.__version__ and not is_windows:
     py_packages.append('python-coveralls')
     #py_packages.append('coverage')
 
@@ -137,7 +138,6 @@ install_requires = py_packages + [
     #'six >= 1.9.0',
     ##'cython',
 ] + py2_packages + py3_packages,
-
 
 # set up all icons
 icon_path = os.path.join('pyNastran', 'gui', 'icons')
