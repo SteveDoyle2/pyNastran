@@ -82,6 +82,7 @@ install:
   - if [[ "$TRAVIS_PYTHON_VERSION" == "3.5" ]];     then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas numpy scipy pandas; fi
   - if [[ "$TRAVIS_PYTHON_VERSION" == "nightly" ]]; then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas numpy scipy pandas; fi
   - source activate test-environment
+  - conda list
   - python setup.py develop
 
 
