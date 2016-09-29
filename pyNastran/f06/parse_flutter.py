@@ -520,30 +520,53 @@ class FlutterResponse(object):
         #return fig
 
 
-def plot_flutter_f06(f06_filename, modes=None,
+def plot_flutter_f06(f06_filename, f06_units=None, out_units=None,
+                     modes=None,
                      plot_vg=False, plot_vg_vf=True, plot_root_locus=True,
                      show=True,
                      xlim=None, ylim_damping=None, ylim_freq=None):
     """
-    TODO: support multiple subcases
-    TODO: support long tables
+    Plots a flutter (SOL 145) deck
+    Supports:
+    ---------
+     o single subcase
+     o single subcase, no subcase marker
+     o multiple subcases
+     o PK
+     o PKNL
+       o calculation of:
+         - equivalent airspeed
+         - dynamic pressure
+         - altitude
+
+    Doesn't support:
+    ----------------
+     o long tables (use LINE=500000)
+     o SOL 200
+     o fixing mode switching problem
+     o fixing unconverged points
     """
-    f06_units = {'velocity' : 'in/s', 'density' : 'slinch/in^3'}
-    out_units = {'velocity' : 'in/s', 'density' : 'slug/ft^3', 'altitude' : 'ft', 'dynamic_pressure' : 'psf'}
+    if f06_units is None:
+        f06_units = {'velocity' : 'in/s', 'density' : 'slinch/in^3'}
+    if out_units is None:
+        out_units = {'velocity' : 'in/s', 'density' : 'slug/ft^3',
+                     'altitude' : 'ft', 'dynamic_pressure' : 'psf'}
 
     flutters = []
+    iline = 0
     with open(f06_filename, 'r') as f06_file:
         subcase = 1
         results = []
         modes = []
-        #is_new_subcase = True
+
         while 1:
             nblank = 0
-            #if is_new_subcase:
             line = f06_file.readline()
-            #print('line = %s' % line.strip())
-            while 'SUBCASE' not in line and 'FLUTTER  SUMMARY' not in line:
+            iline += 1
+            #print('line%ia = %r' % (iline, line))
+            while 'SUBCASE ' not in line and 'FLUTTER  SUMMARY' not in line:
                 line = f06_file.readline()
+                iline += 1
                 if not line:
                     nblank += 1
                 if nblank == 100:
@@ -552,11 +575,12 @@ def plot_flutter_f06(f06_filename, modes=None,
             if nblank == 100:
                 break
 
-            #print('line =', line)
-            if 'SUBCASE' in line:
+            #print('line%ib = %r' % (iline, line))
+            if 'SUBCASE' in line[109:]:
                 sline = line.strip().split()
                 isubcase = sline.index('SUBCASE')
                 new_subcase = int(sline[isubcase + 1])
+                #print('subcasei = %r' % new_subcase)
                 if new_subcase > subcase:
                     print('\nsubcase=%s -> new_subcase=%s' % (subcase, new_subcase))
                     print('modes1 =', modes)
@@ -570,24 +594,29 @@ def plot_flutter_f06(f06_filename, modes=None,
 
                     subcase = new_subcase
                     #break
+                continue
 
-                while 'FLUTTER  SUMMARY' not in line:
-                    line = f06_file.readline()
-                    if not line:
-                        nblank += 1
-                    if nblank == 100:
-                        print(line.strip())
-                        break
+            #print('line%i_FS = %r' % (iline, line))
+            while 'FLUTTER  SUMMARY' not in line:
+                line = f06_file.readline()
+                iline += 1
+                if not line:
+                    nblank += 1
                 if nblank == 100:
+                    print(line.strip())
                     break
+            if nblank == 100:
+                break
 
             configuration_sline = f06_file.readline().split()
+            iline += 1
             configuration = configuration_sline[2]
             xysym = configuration_sline[5]
             xzsym = configuration_sline[8]
             #print(configuration, xysym, xzsym)
 
             point_sline = f06_file.readline().split()
+            iline += 1
             mode = int(point_sline[2])
             method = point_sline[-1]  # 13 for PN, 5 for PK
             #print(point_sline)
@@ -595,12 +624,13 @@ def plot_flutter_f06(f06_filename, modes=None,
                 mach = float(point_sline[6])
                 density_ratio = float(point_sline[10])
                 #method = point_sline[13]
-                print(mode, mach, density_ratio, method)
+                print(iline, mode, mach, density_ratio, method)
             elif method == 'PKNL':
                 mach = None
                 density_ratio = None
-                print(mode, method)
+                print(iline, mode, method)
                 f06_file.readline()
+                iline += 1
             else:
                 raise NotImplementedError(point_sline)
             if 1:
@@ -612,6 +642,7 @@ def plot_flutter_f06(f06_filename, modes=None,
             # blanks
             f06_file.readline()
             f06_file.readline()
+            iline += 2
 
             lines = []
 
@@ -627,6 +658,7 @@ def plot_flutter_f06(f06_filename, modes=None,
             sline = [None] * nvalues
             while len(sline) == nvalues:
                 sline = f06_file.readline().split()
+                iline += 1
                 if (sline
                     and 'PAGE' not in sline
                     and 'INFORMATION' not in sline
