@@ -1,3 +1,4 @@
+import os
 from parse_flutter import plot_flutter_f06
 
 
@@ -36,6 +37,10 @@ def cmd_line_plot_flutter():  # pragma: no cover
     data = docopt(msg, version=ver)
     print(data)
     f06_filename = data['F06_FILENAME']
+    if not f06_filename.lower().endswith('.f06'):
+        base = os.path.splitext(f06_filename)[0]
+        f06_filename = base + '.f06'
+
     modes = data['--modes']
     modes2 = []
     if modes is not None:
