@@ -34,7 +34,15 @@ from numpy.linalg import norm
 #: makes vtk work on certain builds of vtk
 #: we have to call this before vtk; you can't just try-except it
 #: unused_import
-import PyQt4
+try:
+    import PyQt4
+except ImportError:
+    try:
+        import PyQt5
+        print('found PyQt5...wrong version')
+    except ImportError:
+        pass
+    raise
 
 import vtk
 from vtk import (vtkTriangle, vtkQuad, vtkTetra, vtkWedge, vtkHexahedron,
