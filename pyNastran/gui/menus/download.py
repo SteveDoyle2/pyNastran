@@ -1,17 +1,31 @@
 import webbrowser
-from PyQt4 import QtCore, QtGui
 
+from pyNastran.gui.qt_version import qt_version
+if qt_version == 4:
+    from PyQt4 import QtCore, QtGui
+    from PyQt4.QtGui import (
+        QLabel, QApplication, QDialog, QGridLayout, QHBoxLayout, QVBoxLayout, QPushButton,
+    )
+elif qt_version == 5:
+    from PyQt5 import QtCore, QtGui
+    from PyQt5.QtWidgets import (
+        QLabel, QApplication, QDialog, QGridLayout, QHBoxLayout, QVBoxLayout, QPushButton,
+    )
 
-class ClickableQLabel(QtGui.QLabel):
+class ClickableQLabel(QLabel):
 
     def __init(self, parent):
-        QtGui.QLabel.__init__(self, parent)
+        QLabel.__init__(self, parent)
 
     def mouseReleaseEvent(self, ev):
-        self.emit(QtCore.SIGNAL('clicked()'))
+        if qt_version == 4:
+            self.emit(QtCore.SIGNAL('clicked()'))
+        else:
+            # ????
+            pass
 
 
-class DownloadWindow(QtGui.QDialog):
+class DownloadWindow(QDialog):
     """
     +-------------------+
     | Legend Properties |
@@ -40,7 +54,7 @@ class DownloadWindow(QtGui.QDialog):
         self.url = url
         self.version = version
 
-        QtGui.QDialog.__init__(self, win_parent)
+        QDialog.__init__(self, win_parent)
         self.setWindowTitle('pyNastran update ')
         self.create_widgets()
         self.create_layout()
@@ -48,7 +62,7 @@ class DownloadWindow(QtGui.QDialog):
         #self.show()
 
     def create_widgets(self):
-        self.name = QtGui.QLabel("Version %s is now available." % self.version)
+        self.name = QLabel("Version %s is now available." % self.version)
         self.link = ClickableQLabel(self.url)
         font = QtGui.QFont()
         #"Times",20,QtGui.QFont.Bold,True
@@ -57,26 +71,31 @@ class DownloadWindow(QtGui.QDialog):
         self.link.setStyleSheet("QLabel {color : blue}")
 
         # closing
-        self.close_button = QtGui.QPushButton("Close")
+        self.close_button = QPushButton("Close")
 
     def create_layout(self):
-        grid = QtGui.QGridLayout()
+        grid = QGridLayout()
         grid.addWidget(self.name, 0, 0)
         grid.addWidget(self.link, 1, 0)
 
-        close_box = QtGui.QHBoxLayout()
+        close_box = QHBoxLayout()
         close_box.addWidget(self.close_button)
 
-        vbox = QtGui.QVBoxLayout()
+        vbox = QVBoxLayout()
         vbox.addLayout(grid)
         vbox.addStretch()
         vbox.addLayout(close_box)
         self.setLayout(vbox)
 
     def set_connections(self):
-        self.connect(self.link, QtCore.SIGNAL('clicked()'), self.on_download)
-        self.connect(self.close_button, QtCore.SIGNAL('clicked()'), self.on_cancel)
-        self.connect(self, QtCore.SIGNAL('triggered()'), self.closeEvent)
+        if qt_version == 4:
+            self.connect(self.link, QtCore.SIGNAL('clicked()'), self.on_download)
+            self.connect(self.close_button, QtCore.SIGNAL('clicked()'), self.on_cancel)
+            self.connect(self, QtCore.SIGNAL('triggered()'), self.closeEvent)
+        else:
+            # ????
+            self.close_button.clicked.connect(self.on_cancel)
+            # ????
 
     def keyPressEvent(self, event):
         if event.key() == QtCore.Qt.Key_Escape:
@@ -106,7 +125,7 @@ def main():
 
     import sys
     import pyNastran
-    app = QtGui.QApplication(sys.argv)
+    app = QApplication(sys.argv)
     url = pyNastran.__website__
     version = '0.8.0'
     main_window = DownloadWindow(url, version)

@@ -1,10 +1,20 @@
 from __future__ import print_function
-from PyQt4 import QtCore, QtGui
+
+from pyNastran.gui.qt_version import qt_version
+if qt_version == 4:
+    from PyQt4 import QtCore, QtGui
+    from PyQt4.QtGui import (
+        QApplication, QDialog, QLabel, QPushButton)
+elif qt_version == 5:
+    from PyQt5 import QtCore, QtGui
+    from PyQt5.QtWidgets import (
+        QApplication, QDialog, QLabel, QPushButton, QLineEdit, QComboBox, QWidget, QRadioButton,
+        QButtonGroup, QGridLayout, QHBoxLayout, QVBoxLayout)
+
 from pyNastran.gui.qt_files.menu_utils import eval_float_from_string
 from pyNastran.gui.colormaps import colormap_keys
 
-
-class LegendPropertiesWindow(QtGui.QDialog):
+class LegendPropertiesWindow(QDialog):
     """
     +-------------------+
     | Legend Properties |
@@ -67,7 +77,7 @@ class LegendPropertiesWindow(QtGui.QDialog):
         self._update_defaults_to_blank()
         self.out_data = data
 
-        QtGui.QDialog.__init__(self, win_parent)
+        QDialog.__init__(self, win_parent)
         #self.setupUi(self)
         self.setWindowTitle('Legend Properties')
         self.create_widgets()
@@ -179,29 +189,29 @@ class LegendPropertiesWindow(QtGui.QDialog):
 
     def create_widgets(self):
         # Name
-        self.name = QtGui.QLabel("Title:")
-        self.name_edit = QtGui.QLineEdit(str(self._default_name))
-        self.name_button = QtGui.QPushButton("Default")
+        self.name = QLabel("Title:")
+        self.name_edit = QLineEdit(str(self._default_name))
+        self.name_button = QPushButton("Default")
 
         # Min
-        self.min = QtGui.QLabel("Min:")
-        self.min_edit = QtGui.QLineEdit(str(self._default_min))
-        self.min_button = QtGui.QPushButton("Default")
+        self.min = QLabel("Min:")
+        self.min_edit = QLineEdit(str(self._default_min))
+        self.min_button = QPushButton("Default")
 
         # Max
-        self.max = QtGui.QLabel("Max:")
-        self.max_edit = QtGui.QLineEdit(str(self._default_max))
-        self.max_button = QtGui.QPushButton("Default")
+        self.max = QLabel("Max:")
+        self.max_edit = QLineEdit(str(self._default_max))
+        self.max_button = QPushButton("Default")
 
         # Format
-        self.format = QtGui.QLabel("Format (e.g. %.3f, %g, %.6e):")
-        self.format_edit = QtGui.QLineEdit(str(self._format))
-        self.format_button = QtGui.QPushButton("Default")
+        self.format = QLabel("Format (e.g. %.3f, %g, %.6e):")
+        self.format_edit = QLineEdit(str(self._format))
+        self.format_button = QPushButton("Default")
 
         # Scale
-        self.scale = QtGui.QLabel("Scale:")
-        self.scale_edit = QtGui.QLineEdit(str(self._scale))
-        self.scale_button = QtGui.QPushButton("Default")
+        self.scale = QLabel("Scale:")
+        self.scale_edit = QLineEdit(str(self._scale))
+        self.scale_button = QPushButton("Default")
         if self._default_scale == 0.0:
             self.scale_edit.setEnabled(False)
             self.scale_button.setEnabled(False)
@@ -211,63 +221,63 @@ class LegendPropertiesWindow(QtGui.QDialog):
 
         #---------------------------------------
         # nlabels
-        self.nlabels = QtGui.QLabel("Number of Labels:")
-        self.nlabels_edit = QtGui.QLineEdit(str(self._nlabels))
-        self.nlabels_button = QtGui.QPushButton("Default")
+        self.nlabels = QLabel("Number of Labels:")
+        self.nlabels_edit = QLineEdit(str(self._nlabels))
+        self.nlabels_button = QPushButton("Default")
 
-        self.labelsize = QtGui.QLabel("Label Size:")
-        self.labelsize_edit = QtGui.QLineEdit(str(self._labelsize))
-        self.labelsize_button = QtGui.QPushButton("Default")
+        self.labelsize = QLabel("Label Size:")
+        self.labelsize_edit = QLineEdit(str(self._labelsize))
+        self.labelsize_button = QPushButton("Default")
 
-        self.ncolors = QtGui.QLabel("Number of Colors:")
-        self.ncolors_edit = QtGui.QLineEdit(str(self._ncolors))
-        self.ncolors_button = QtGui.QPushButton("Default")
+        self.ncolors = QLabel("Number of Colors:")
+        self.ncolors_edit = QLineEdit(str(self._ncolors))
+        self.ncolors_button = QPushButton("Default")
 
-        self.colormap = QtGui.QLabel("Color Map:")
-        self.colormap_edit = QtGui.QComboBox(self)
-        self.colormap_button = QtGui.QPushButton("Default")
+        self.colormap = QLabel("Color Map:")
+        self.colormap_edit = QComboBox(self)
+        self.colormap_button = QPushButton("Default")
         for key in colormap_keys:
             self.colormap_edit.addItem(key)
         self.colormap_edit.setCurrentIndex(colormap_keys.index(self._colormap))
 
 
         # red/blue or blue/red
-        self.low_to_high_radio = QtGui.QRadioButton('Low -> High')
-        self.high_to_low_radio = QtGui.QRadioButton('High -> Low')
-        widget = QtGui.QWidget(self)
-        low_to_high_group = QtGui.QButtonGroup(widget)
+        self.low_to_high_radio = QRadioButton('Low -> High')
+        self.high_to_low_radio = QRadioButton('High -> Low')
+        widget = QWidget(self)
+        low_to_high_group = QButtonGroup(widget)
         low_to_high_group.addButton(self.low_to_high_radio)
         low_to_high_group.addButton(self.high_to_low_radio)
         self.low_to_high_radio.setChecked(self._default_is_low_to_high)
         self.high_to_low_radio.setChecked(not self._default_is_low_to_high)
 
         # horizontal / vertical
-        self.horizontal_radio = QtGui.QRadioButton("Horizontal")
-        self.vertical_radio = QtGui.QRadioButton("Vertical")
-        widget = QtGui.QWidget(self)
-        horizontal_vertical_group = QtGui.QButtonGroup(widget)
+        self.horizontal_radio = QRadioButton("Horizontal")
+        self.vertical_radio = QRadioButton("Vertical")
+        widget = QWidget(self)
+        horizontal_vertical_group = QButtonGroup(widget)
         horizontal_vertical_group.addButton(self.horizontal_radio)
         horizontal_vertical_group.addButton(self.vertical_radio)
         self.horizontal_radio.setChecked(self._default_is_horizontal)
         self.vertical_radio.setChecked(not self._default_is_horizontal)
 
         # on / off
-        self.show_radio = QtGui.QRadioButton("Show")
-        self.hide_radio = QtGui.QRadioButton("Hide")
-        widget = QtGui.QWidget(self)
-        show_hide_group = QtGui.QButtonGroup(widget)
+        self.show_radio = QRadioButton("Show")
+        self.hide_radio = QRadioButton("Hide")
+        widget = QWidget(self)
+        show_hide_group = QButtonGroup(widget)
         show_hide_group.addButton(self.show_radio)
         show_hide_group.addButton(self.hide_radio)
         self.show_radio.setChecked(self._default_is_shown)
         self.hide_radio.setChecked(not self._default_is_shown)
 
         # closing
-        self.apply_button = QtGui.QPushButton("Apply")
-        self.ok_button = QtGui.QPushButton("OK")
-        self.cancel_button = QtGui.QPushButton("Cancel")
+        self.apply_button = QPushButton("Apply")
+        self.ok_button = QPushButton("OK")
+        self.cancel_button = QPushButton("Cancel")
 
     def create_layout(self):
-        grid = QtGui.QGridLayout()
+        grid = QGridLayout()
         grid.addWidget(self.name, 0, 0)
         grid.addWidget(self.name_edit, 0, 1)
         grid.addWidget(self.name_button, 0, 2)
@@ -304,14 +314,14 @@ class LegendPropertiesWindow(QtGui.QDialog):
         grid.addWidget(self.colormap_edit, 7, 1)
         grid.addWidget(self.colormap_button, 7, 2)
 
-        ok_cancel_box = QtGui.QHBoxLayout()
+        ok_cancel_box = QHBoxLayout()
         ok_cancel_box.addWidget(self.apply_button)
         ok_cancel_box.addWidget(self.ok_button)
         ok_cancel_box.addWidget(self.cancel_button)
 
 
-        grid2 = QtGui.QGridLayout()
-        title = QtGui.QLabel("Color Scale:")
+        grid2 = QGridLayout()
+        title = QLabel("Color Scale:")
         grid2.addWidget(title, 0, 0)
         grid2.addWidget(self.low_to_high_radio, 1, 0)
         grid2.addWidget(self.high_to_low_radio, 2, 0)
@@ -324,7 +334,7 @@ class LegendPropertiesWindow(QtGui.QDialog):
 
         #grid2.setSpacing(0)
 
-        vbox = QtGui.QVBoxLayout()
+        vbox = QVBoxLayout()
         vbox.addLayout(grid)
         #vbox.addLayout(checkboxes)
         vbox.addLayout(grid2)
@@ -338,22 +348,39 @@ class LegendPropertiesWindow(QtGui.QDialog):
         self.setLayout(vbox)
 
     def set_connections(self):
-        self.connect(self.name_button, QtCore.SIGNAL('clicked()'), self.on_default_name)
-        self.connect(self.min_button, QtCore.SIGNAL('clicked()'), self.on_default_min)
-        self.connect(self.max_button, QtCore.SIGNAL('clicked()'), self.on_default_max)
-        self.connect(self.format_button, QtCore.SIGNAL('clicked()'), self.on_default_format)
-        self.connect(self.scale_button, QtCore.SIGNAL('clicked()'), self.on_default_scale)
+        if qt_version == 4:
+            self.connect(self.name_button, QtCore.SIGNAL('clicked()'), self.on_default_name)
+            self.connect(self.min_button, QtCore.SIGNAL('clicked()'), self.on_default_min)
+            self.connect(self.max_button, QtCore.SIGNAL('clicked()'), self.on_default_max)
+            self.connect(self.format_button, QtCore.SIGNAL('clicked()'), self.on_default_format)
+            self.connect(self.scale_button, QtCore.SIGNAL('clicked()'), self.on_default_scale)
 
-        self.connect(self.nlabels_button, QtCore.SIGNAL('clicked()'), self.on_default_nlabels)
-        self.connect(self.labelsize_button, QtCore.SIGNAL('clicked()'), self.on_default_labelsize)
-        self.connect(self.ncolors_button, QtCore.SIGNAL('clicked()'), self.on_default_ncolors)
-        self.connect(self.colormap_button, QtCore.SIGNAL('clicked()'), self.on_default_colormap)
+            self.connect(self.nlabels_button, QtCore.SIGNAL('clicked()'), self.on_default_nlabels)
+            self.connect(self.labelsize_button, QtCore.SIGNAL('clicked()'), self.on_default_labelsize)
+            self.connect(self.ncolors_button, QtCore.SIGNAL('clicked()'), self.on_default_ncolors)
+            self.connect(self.colormap_button, QtCore.SIGNAL('clicked()'), self.on_default_colormap)
 
-        self.connect(self.apply_button, QtCore.SIGNAL('clicked()'), self.on_apply)
-        self.connect(self.ok_button, QtCore.SIGNAL('clicked()'), self.on_ok)
-        self.connect(self.cancel_button, QtCore.SIGNAL('clicked()'), self.on_cancel)
-        self.connect(self, QtCore.SIGNAL('triggered()'), self.closeEvent)
-        #self.colormap_edit.activated[str].connect(self.onActivated)
+            self.connect(self.apply_button, QtCore.SIGNAL('clicked()'), self.on_apply)
+            self.connect(self.ok_button, QtCore.SIGNAL('clicked()'), self.on_ok)
+            self.connect(self.cancel_button, QtCore.SIGNAL('clicked()'), self.on_cancel)
+            self.connect(self, QtCore.SIGNAL('triggered()'), self.closeEvent)
+            #self.colormap_edit.activated[str].connect(self.onActivated)
+        else:
+            self.name_button.clicked.connect(self.on_default_name)
+            self.min_button.clicked.connect(self.on_default_min)
+            self.max_button.clicked.connect(self.on_default_max)
+            self.format_button.clicked.connect(self.on_default_format)
+            self.scale_button.clicked.connect(self.on_default_scale)
+
+            self.nlabels_button.clicked.connect(self.on_default_nlabels)
+            self.labelsize_button.clicked.connect(self.on_default_labelsize)
+            self.ncolors_button.clicked.connect(self.on_default_ncolors)
+            self.colormap_button.clicked.connect(self.on_default_colormap)
+
+            self.apply_button.clicked.connect(self.on_apply)
+            self.ok_button.clicked.connect(self.on_ok)
+            self.cancel_button.clicked.connect(self.on_cancel)
+            # closeEvent???
 
     def keyPressEvent(self, event):
         if event.key() == QtCore.Qt.Key_Escape:
@@ -506,10 +533,11 @@ class LegendPropertiesWindow(QtGui.QDialog):
         ncolors, flag6 = self.check_positive_int_or_blank(self.ncolors_edit)
         labelsize, flag7 = self.check_positive_int_or_blank(self.labelsize_edit)
         colormap = str(self.colormap_edit.currentText())
-        if 'i' in format_value:
-            format_value = '%i'
 
         if all([flag0, flag1, flag2, flag3, flag4, flag5, flag6, flag7]):
+            if 'i' in format_value:
+                format_value = '%i'
+
             assert isinstance(scale_value, float), scale_value
             self.out_data['name'] = name_value
             self.out_data['min'] = min_value
@@ -563,7 +591,7 @@ def main():
     import sys
     # Someone is launching this directly
     # Create the QApplication
-    app = QtGui.QApplication(sys.argv)
+    app = QApplication(sys.argv)
     #The Main window
     d = {
         'icase' : 1,

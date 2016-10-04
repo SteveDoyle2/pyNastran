@@ -4,10 +4,23 @@ based on manage_actors.py
 from __future__ import print_function
 from math import log10, ceil, floor
 from six import iteritems
-from PyQt4 import QtCore, QtGui
+
+from pyNastran.gui.qt_version import qt_version
+if qt_version == 4:
+    from PyQt4 import QtCore, QtGui
+    from PyQt4.QtGui import (
+        QDialog, QLabel, QLineEdit, QPushButton, QTextEdit, QDockWidget, QTableView, QWidget, QDoubleSpinBox,
+        QApplication, QGridLayout, QHBoxLayout, QVBoxLayout,
+    )
+elif qt_version == 5:
+    from PyQt5 import QtCore, QtGui
+    from PyQt5.QtWidgets import (
+        QDialog, QLabel, QLineEdit, QPushButton, QTextEdit, QDockWidget, QTableView, QWidget, QDoubleSpinBox,
+        QApplication, QGridLayout, QHBoxLayout, QVBoxLayout,
+    )
 
 
-class ModifyPickerPropertiesMenu(QtGui.QDialog):
+class ModifyPickerPropertiesMenu(QDialog):
 
     def __init__(self, data, win_parent=None):
         self.win_parent = win_parent
@@ -16,7 +29,7 @@ class ModifyPickerPropertiesMenu(QtGui.QDialog):
         self.out_data = data
         self.dim_max = data['dim_max']
 
-        QtGui.QDialog.__init__(self, win_parent)
+        QDialog.__init__(self, win_parent)
         self.setWindowTitle('Modify Picker Properties')
         self.create_widgets()
         self.create_layout()
@@ -28,8 +41,8 @@ class ModifyPickerPropertiesMenu(QtGui.QDialog):
 
     def create_widgets(self):
         # Size
-        self.size = QtGui.QLabel("Size:")
-        self.size_edit = QtGui.QDoubleSpinBox(self)
+        self.size = QLabel("Size:")
+        self.size_edit = QDoubleSpinBox(self)
         self.size_edit.setRange(0.0, self.dim_max)
 
         log_dim = log10(self.dim_max)
@@ -40,22 +53,22 @@ class ModifyPickerPropertiesMenu(QtGui.QDialog):
         self.size_edit.setValue(self._size)
 
         # closing
-        #self.apply_button = QtGui.QPushButton("Apply")
-        #self.ok_button = QtGui.QPushButton("OK")
-        self.cancel_button = QtGui.QPushButton("Close")
+        #self.apply_button = QPushButton("Apply")
+        #self.ok_button = QPushButton("OK")
+        self.cancel_button = QPushButton("Close")
 
     def create_layout(self):
-        grid = QtGui.QGridLayout()
+        grid = QGridLayout()
 
         grid.addWidget(self.size, 1, 0)
         grid.addWidget(self.size_edit, 1, 1)
 
-        ok_cancel_box = QtGui.QHBoxLayout()
+        ok_cancel_box = QHBoxLayout()
         #ok_cancel_box.addWidget(self.apply_button)
         #ok_cancel_box.addWidget(self.ok_button)
         ok_cancel_box.addWidget(self.cancel_button)
 
-        vbox = QtGui.QVBoxLayout()
+        vbox = QVBoxLayout()
         vbox.addLayout(grid)
 
         vbox.addStretch()
@@ -68,14 +81,23 @@ class ModifyPickerPropertiesMenu(QtGui.QDialog):
 
     def set_connections(self):
         self.size_edit.valueChanged.connect(self.on_size)
-        self.connect(self.size_edit, QtCore.SIGNAL('editingFinished()'), self.on_size)
-        self.connect(self.size_edit, QtCore.SIGNAL('valueChanged()'), self.on_size)
-        self.connect(self.size_edit, QtCore.SIGNAL('clicked()'), self.on_size)
+        if qt_version == 4:
+            self.connect(self.size_edit, QtCore.SIGNAL('editingFinished()'), self.on_size)
+            self.connect(self.size_edit, QtCore.SIGNAL('valueChanged()'), self.on_size)
+            self.connect(self.size_edit, QtCore.SIGNAL('clicked()'), self.on_size)
 
-        #self.connect(self.apply_button, QtCore.SIGNAL('clicked()'), self.on_apply)
-        #self.connect(self.ok_button, QtCore.SIGNAL('clicked()'), self.on_ok)
-        self.connect(self.cancel_button, QtCore.SIGNAL('clicked()'), self.on_cancel)
-        self.connect(self, QtCore.SIGNAL('triggered()'), self.closeEvent)
+            #self.connect(self.apply_button, QtCore.SIGNAL('clicked()'), self.on_apply)
+            #self.connect(self.ok_button, QtCore.SIGNAL('clicked()'), self.on_ok)
+            self.connect(self.cancel_button, QtCore.SIGNAL('clicked()'), self.on_cancel)
+            self.connect(self, QtCore.SIGNAL('triggered()'), self.closeEvent)
+        else:
+            self.size_edit.editingFinished.connect(self.on_size)
+            self.size_edit.valueChanged.connect(self.on_size)
+            ## ??? clicked
+
+            self.cancel_button.clicked.connect(self.on_cancel)
+            #self.connect(self, QtCore.SIGNAL('triggered()'), self.closeEvent)
+
 
     def keyPressEvent(self, event):
         if event.key() == QtCore.Qt.Key_Escape:
@@ -136,7 +158,7 @@ def main():
     import sys
     # Someone is launching this directly
     # Create the QApplication
-    app = QtGui.QApplication(sys.argv)
+    app = QApplication(sys.argv)
     #The Main window
     d = {
         'size' : 10.,

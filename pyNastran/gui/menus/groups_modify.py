@@ -2,15 +2,28 @@
 from __future__ import print_function, unicode_literals
 from six import iteritems
 
-from PyQt4 import QtCore, QtGui
 from numpy import setdiff1d, unique, array, hstack, ndarray
+
+from pyNastran.gui.qt_version import qt_version
+if qt_version == 4:
+    from PyQt4 import QtCore, QtGui
+    from PyQt4.QtGui import (
+        QDialog, QLabel, QLineEdit, QPushButton, QTextEdit, QDockWidget, QTableView, QWidget, QApplication,
+        QListWidget, QGridLayout, QHBoxLayout, QVBoxLayout,
+    )
+elif qt_version == 5:
+    from PyQt5 import QtCore, QtGui
+    from PyQt5.QtWidgets import (
+        QDialog, QLabel, QLineEdit, QPushButton, QTextEdit, QDockWidget, QTableView, QWidget, QApplication,
+        QListWidget, QGridLayout, QHBoxLayout, QVBoxLayout,
+    )
 
 from pyNastran.bdf.utils import parse_patran_syntax, parse_patran_syntax_dict
 from pyNastran.bdf.cards.collpase_card import collapse_colon_packs
 from pyNastran.gui.menus.manage_actors import CustomQTableView, Model
 
 
-class ColorDisplay(QtGui.QWidget):
+class ColorDisplay(QWidget):
     """
     http://stackoverflow.com/questions/4624985/how-simply-display-a-qcolor-using-pyqt
     """
@@ -35,7 +48,7 @@ class ColorDisplay(QtGui.QWidget):
         return unicode(self.color.name())
 
 
-class GroupsModify(QtGui.QDialog):
+class GroupsModify(QDialog):
     """
     +--------------------------+
     |     Groups : Modify      |
@@ -53,7 +66,7 @@ class GroupsModify(QtGui.QDialog):
     """
     def __init__(self, data, win_parent=None, group_active='main'):
         self.win_parent = win_parent
-        QtGui.QDialog.__init__(self, win_parent)
+        QDialog.__init__(self, win_parent)
 
         self.win_parent = win_parent
         self.out_data = data
@@ -72,7 +85,7 @@ class GroupsModify(QtGui.QDialog):
         self._default_elements = group_obj.element_str
         self.elements_pound = group_obj.elements_pound
 
-        self.table = QtGui.QListWidget(parent=None)
+        self.table = QListWidget(parent=None)
         self.table.clear()
         self.table.addItems(self.keys)
 
@@ -87,37 +100,37 @@ class GroupsModify(QtGui.QDialog):
 
     def create_widgets(self):
         # Name
-        self.name = QtGui.QLabel("Name:")
-        self.name_set = QtGui.QPushButton("Set")
-        self.name_edit = QtGui.QLineEdit(str(self._default_name).strip())
-        self.name_button = QtGui.QPushButton("Default")
+        self.name = QLabel("Name:")
+        self.name_set = QPushButton("Set")
+        self.name_edit = QLineEdit(str(self._default_name).strip())
+        self.name_button = QPushButton("Default")
 
         # elements
-        self.elements = QtGui.QLabel("Element IDs:")
-        self.elements_edit = QtGui.QLineEdit(str(self._default_elements).strip())
-        self.elements_button = QtGui.QPushButton("Default")
+        self.elements = QLabel("Element IDs:")
+        self.elements_edit = QLineEdit(str(self._default_elements).strip())
+        self.elements_button = QPushButton("Default")
 
         # add
-        self.add = QtGui.QLabel("Add:")
-        self.add_edit = QtGui.QLineEdit(str(''))
-        self.add_button = QtGui.QPushButton("Add")
+        self.add = QLabel("Add:")
+        self.add_edit = QLineEdit(str(''))
+        self.add_button = QPushButton("Add")
 
         # remove
-        self.remove = QtGui.QLabel("Remove:")
-        self.remove_edit = QtGui.QLineEdit(str(''))
-        self.remove_button = QtGui.QPushButton("Remove")
+        self.remove = QLabel("Remove:")
+        self.remove_edit = QLineEdit(str(''))
+        self.remove_button = QPushButton("Remove")
 
         # applies a unique implicitly
         self.eids = parse_patran_syntax(str(self._default_elements), pound=self.elements_pound)
 
         # closing
-        #self.apply_button = QtGui.QPushButton("Apply")
-        self.ok_button = QtGui.QPushButton("Close")
-        #self.cancel_button = QtGui.QPushButton("Cancel")
+        #self.apply_button = QPushButton("Apply")
+        self.ok_button = QPushButton("Close")
+        #self.cancel_button = QPushButton("Cancel")
 
-        self.set_as_main_button = QtGui.QPushButton("Set As Main")
-        self.create_group_button = QtGui.QPushButton('Create New Group')
-        self.delete_group_button = QtGui.QPushButton('Delete Group')
+        self.set_as_main_button = QPushButton("Set As Main")
+        self.create_group_button = QPushButton('Create New Group')
+        self.delete_group_button = QPushButton('Delete Group')
 
         self.name.setEnabled(False)
         self.name_set.setEnabled(False)
@@ -138,7 +151,7 @@ class GroupsModify(QtGui.QDialog):
 
 
     def create_layout(self):
-        grid = QtGui.QGridLayout()
+        grid = QGridLayout()
         grid.addWidget(self.name, 0, 0)
         grid.addWidget(self.name_edit, 0, 1)
         grid.addWidget(self.name_set, 0, 2)
@@ -157,18 +170,18 @@ class GroupsModify(QtGui.QDialog):
         grid.addWidget(self.remove_button, 5, 2)
 
 
-        ok_cancel_box = QtGui.QHBoxLayout()
+        ok_cancel_box = QHBoxLayout()
         #ok_cancel_box.addWidget(self.apply_button)
         ok_cancel_box.addWidget(self.ok_button)
         #ok_cancel_box.addWidget(self.cancel_button)
 
 
-        main_create_delete = QtGui.QHBoxLayout()
+        main_create_delete = QHBoxLayout()
         main_create_delete.addWidget(self.set_as_main_button)
         main_create_delete.addWidget(self.create_group_button)
         main_create_delete.addWidget(self.delete_group_button)
 
-        vbox = QtGui.QVBoxLayout()
+        vbox = QVBoxLayout()
         vbox.addWidget(self.table)
         vbox.addLayout(grid)
         vbox.addLayout(main_create_delete)
@@ -190,21 +203,35 @@ class GroupsModify(QtGui.QDialog):
             self.name_edit.setStyleSheet("QLineEdit{background: white;}")
 
     def set_connections(self):
-        self.connect(self.name_set, QtCore.SIGNAL('clicked()'), self.on_set_name)
-        self.connect(self.name_button, QtCore.SIGNAL('clicked()'), self.on_default_name)
-        self.connect(self.elements_button, QtCore.SIGNAL('clicked()'), self.on_default_elements)
+        if qt_version == 4:
+            self.connect(self.name_set, QtCore.SIGNAL('clicked()'), self.on_set_name)
+            self.connect(self.name_button, QtCore.SIGNAL('clicked()'), self.on_default_name)
+            self.connect(self.elements_button, QtCore.SIGNAL('clicked()'), self.on_default_elements)
 
-        self.connect(self.add_button, QtCore.SIGNAL('clicked()'), self.on_add)
-        self.connect(self.remove_button, QtCore.SIGNAL('clicked()'), self.on_remove)
-        self.connect(self.table, QtCore.SIGNAL('itemClicked(QListWidgetItem *)'), self.on_update_active_key)
+            self.connect(self.add_button, QtCore.SIGNAL('clicked()'), self.on_add)
+            self.connect(self.remove_button, QtCore.SIGNAL('clicked()'), self.on_remove)
+            self.connect(self.table, QtCore.SIGNAL('itemClicked(QListWidgetItem *)'), self.on_update_active_key)
 
-        #self.connect(self.apply_button, QtCore.SIGNAL('clicked()'), self.on_apply)
-        self.connect(self.ok_button, QtCore.SIGNAL('clicked()'), self.on_ok)
-        #self.connect(self.cancel_button, QtCore.SIGNAL('clicked()'), self.on_cancel)
+            #self.connect(self.apply_button, QtCore.SIGNAL('clicked()'), self.on_apply)
+            self.connect(self.ok_button, QtCore.SIGNAL('clicked()'), self.on_ok)
+            #self.connect(self.cancel_button, QtCore.SIGNAL('clicked()'), self.on_cancel)
 
-        self.connect(self.set_as_main_button, QtCore.SIGNAL('clicked()'), self.on_set_as_main)
-        self.connect(self.create_group_button, QtCore.SIGNAL('clicked()'), self.on_create_group)
-        self.connect(self.delete_group_button, QtCore.SIGNAL('clicked()'), self.on_delete_group)
+            self.connect(self.set_as_main_button, QtCore.SIGNAL('clicked()'), self.on_set_as_main)
+            self.connect(self.create_group_button, QtCore.SIGNAL('clicked()'), self.on_create_group)
+            self.connect(self.delete_group_button, QtCore.SIGNAL('clicked()'), self.on_delete_group)
+        else:
+            self.name_set.clicked.connect(self.on_set_name)
+            self.name_button.clicked.connect(self.on_default_name)
+            self.elements_button.clicked.connect(self.on_default_elements)
+
+            self.add_button.clicked.connect(self.on_add)
+            self.remove_button.clicked.connect(self.on_remove)
+            self.table.itemClicked.connect(self.on_update_active_key)
+            self.ok_button.clicked.connect(self.on_ok)
+
+            self.set_as_main_button.clicked.connect(self.on_set_as_main)
+            self.create_group_button.clicked.connect(self.on_create_group)
+            self.delete_group_button.clicked.connect(self.on_delete_group)
 
     def on_create_group(self):
         irow = self.nrows
@@ -590,7 +617,10 @@ class Group(object):
             assert '\t' not in name, name
         self.name = name
         #self.cids = [0]
-        assert isinstance(element_str, (str, unicode)), element_str
+        if isinstance(element_str, list):
+            element_str = ' '.join(str(s) for s in element_str)
+        else:
+            assert isinstance(element_str, (str, unicode)), 'element_str=%r type=%s' % (element_str, type(element_str))
         self.element_str = element_str
         self.elements_pound = elements_pound
         self.editable = editable
@@ -623,7 +653,7 @@ def main():
     import sys
     # Someone is launching this directly
     # Create the QApplication
-    app = QtGui.QApplication(sys.argv)
+    app = QApplication(sys.argv)
 
     d = {
         0 : Group(name='main', element_str='1:#', elements_pound='103', editable=False),

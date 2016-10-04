@@ -1,8 +1,21 @@
 from copy import deepcopy
-from PyQt4 import QtCore, QtGui
+
+from pyNastran.gui.qt_version import qt_version
+if qt_version == 4:
+    from PyQt4 import QtCore
+    from PyQt4.QtGui import (
+        QApplication, QDialog, QLabel, QLineEdit, QPushButton, QTableWidget, QTableWidgetItem,
+        QHBoxLayout, QVBoxLayout, QGridLayout)
+    QString = PyQt4.QtCore.QString
+elif qt_version == 5:
+    #from PyQt5 import QtCore, QtGui
+    from PyQt5.QtWidgets import (
+        QApplication, QDialog, QLabel, QLineEdit, QPushButton, QTableWidget, QTableWidgetItem,
+        QHBoxLayout, QVBoxLayout, QGridLayout)
+    QString = str
 
 
-class CameraWindow(QtGui.QDialog):
+class CameraWindow(QDialog):
     def __init__(self, data, win_parent=None):
         """
         +--------+
@@ -23,7 +36,7 @@ class CameraWindow(QtGui.QDialog):
         |    Apply   OK  Cancel  |
         +--------+---------------+
         """
-        QtGui.QDialog.__init__(self, win_parent)
+        QDialog.__init__(self, win_parent)
         self.win_parent = win_parent
         self.setWindowTitle('Camera Views')
         #self.setWindowIcon(view_icon)
@@ -35,23 +48,23 @@ class CameraWindow(QtGui.QDialog):
         self.cameras = deepcopy(data['cameras'])
         self.names = sorted(self.cameras.keys())
 
-        self.name = QtGui.QLabel("Name:")
-        self.name_edit = QtGui.QLineEdit(str(self._default_name))
+        self.name = QLabel("Name:")
+        self.name_edit = QLineEdit(str(self._default_name))
 
-        self.delete_button = QtGui.QPushButton("Delete")
-        self.set_button = QtGui.QPushButton("Set")
-        self.save_button = QtGui.QPushButton("Save")
+        self.delete_button = QPushButton("Delete")
+        self.set_button = QPushButton("Set")
+        self.save_button = QPushButton("Save")
 
         # closing
-        self.apply_button = QtGui.QPushButton("Apply")
-        #self.ok_button = QtGui.QPushButton("OK")
-        self.close_button = QtGui.QPushButton("Close")
-        self.cancel_button = QtGui.QPushButton("Cancel")
+        self.apply_button = QPushButton("Apply")
+        #self.ok_button = QPushButton("OK")
+        self.close_button = QPushButton("Close")
+        self.cancel_button = QPushButton("Cancel")
 
-        self.table = QtGui.QTableWidget()
+        self.table = QTableWidget()
         names_text = []
         for iname, name in enumerate(self.names):
-            name_text = QtGui.QTableWidgetItem(str(name))
+            name_text = QTableWidgetItem(str(name))
             names_text.append(name_text)
         self.create_layout(names_text)
         self.set_connections()
@@ -61,7 +74,7 @@ class CameraWindow(QtGui.QDialog):
         table = self.table
         table.setRowCount(nrows)
         table.setColumnCount(1)
-        headers = [QtCore.QString('Camera Name')]
+        headers = [QString('Camera Name')]
         table.setHorizontalHeaderLabels(headers)
 
         header = table.horizontalHeader()
@@ -72,13 +85,13 @@ class CameraWindow(QtGui.QDialog):
             table.setItem(iname, 0, name_text)
         table.resizeRowsToContents()
 
-        ok_cancel_box = QtGui.QHBoxLayout()
+        ok_cancel_box = QHBoxLayout()
         ok_cancel_box.addWidget(self.apply_button)
         #ok_cancel_box.addWidget(self.ok_button)
         ok_cancel_box.addWidget(self.close_button)
         ok_cancel_box.addWidget(self.cancel_button)
 
-        grid = QtGui.QGridLayout()
+        grid = QGridLayout()
 
         irow = 0
         grid.addWidget(self.name, irow, 0)
@@ -91,7 +104,7 @@ class CameraWindow(QtGui.QDialog):
         irow += 1
 
 
-        vbox = QtGui.QVBoxLayout()
+        vbox = QVBoxLayout()
         vbox.addWidget(self.table)
 
         vbox.addLayout(grid)
@@ -100,14 +113,22 @@ class CameraWindow(QtGui.QDialog):
         self.setLayout(vbox)
 
     def set_connections(self):
-        self.connect(self.set_button, QtCore.SIGNAL('clicked()'), self.on_set)
-        self.connect(self.save_button, QtCore.SIGNAL('clicked()'), self.on_save)
-        self.connect(self.delete_button, QtCore.SIGNAL('clicked()'), self.on_delete)
+        if qt_version == 4:
+            self.connect(self.set_button, QtCore.SIGNAL('clicked()'), self.on_set)
+            self.connect(self.save_button, QtCore.SIGNAL('clicked()'), self.on_save)
+            self.connect(self.delete_button, QtCore.SIGNAL('clicked()'), self.on_delete)
 
-        self.connect(self.apply_button, QtCore.SIGNAL('clicked()'), self.on_apply)
-        #self.connect(self.ok_button, QtCore.SIGNAL('clicked()'), self.on_ok)
-        self.connect(self.close_button, QtCore.SIGNAL('clicked()'), self.on_close)
-        self.connect(self.cancel_button, QtCore.SIGNAL('clicked()'), self.on_cancel)
+            self.connect(self.apply_button, QtCore.SIGNAL('clicked()'), self.on_apply)
+            #self.connect(self.ok_button, QtCore.SIGNAL('clicked()'), self.on_ok)
+            self.connect(self.close_button, QtCore.SIGNAL('clicked()'), self.on_close)
+            self.connect(self.cancel_button, QtCore.SIGNAL('clicked()'), self.on_cancel)
+        else:
+            self.set_button.clicked.connect(self.on_set)
+            self.save_button.clicked.connect(self.on_save)
+            self.delete_button.clicked.connect(self.on_delete)
+            self.apply_button.clicked.connect(self.on_apply)
+            self.close_button.clicked.connect(self.on_close)
+            self.cancel_button.clicked.connect(self.on_cancel)
 
     def on_set(self):
         objs = self.table.selectedIndexes()
@@ -127,7 +148,7 @@ class CameraWindow(QtGui.QDialog):
         irow = self.nrows
         if len(name):
             self.table.insertRow(irow)
-            name_text = QtGui.QTableWidgetItem(str(name))
+            name_text = QTableWidgetItem(str(name))
             self.table.setItem(irow, 0, name_text)
             self.name_edit.setText('')
             self.save_camera(name)
@@ -223,7 +244,7 @@ def main():
     import sys
     # Someone is launching this directly
     # Create the QApplication
-    app = QtGui.QApplication(sys.argv)
+    app = QApplication(sys.argv)
     #The Main window
     a = [
         [1., 1., 1.],

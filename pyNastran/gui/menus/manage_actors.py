@@ -7,17 +7,33 @@ http://stackoverflow.com/questions/12152060/how-does-the-keypressevent-method-wo
 """
 from __future__ import print_function
 from six import iteritems
-from PyQt4 import QtCore, QtGui
+
+from pyNastran.gui.qt_version import qt_version
+if qt_version == 4:
+    from PyQt4 import QtCore, QtGui
+    from PyQt4.QtGui import (
+        QDialog, QLabel, QLineEdit, QPushButton, QTextEdit, QDockWidget, QTableView, QApplication,
+        QLabel, QDoubleSpinBox, QSlider, QSpinBox, QCheckBox, QHBoxLayout, QGridLayout, QVBoxLayout,
+        QButtonGroup,
+    )
+elif qt_version == 5:
+    from PyQt5 import QtCore, QtGui
+    from PyQt5.QtWidgets import (
+        QDialog, QLabel, QLineEdit, QPushButton, QTextEdit, QDockWidget, QTableView, QApplication,
+        QLabel, QDoubleSpinBox, QSlider, QSpinBox, QCheckBox, QHBoxLayout, QGridLayout, QVBoxLayout,
+        QButtonGroup,
+    )
+
 #from pyNastran.gui.qt_files.menu_utils import eval_float_from_string
 from pyNastran.gui.qt_files.alt_geometry_storage import AltGeometry
 from pyNastran.gui.testing_methods import CoordProperties
 
 
-class CustomQTableView(QtGui.QTableView):
+class CustomQTableView(QTableView):
     def __init__(self, *args, **kwargs):
         self.parent2 = args[0]
         #super(CustomQTableView, self).__init__()
-        QtGui.QTableView.__init__(self, *args, **kwargs) #Use QTableView constructor
+        QTableView.__init__(self, *args, **kwargs) #Use QTableView constructor
 
     def update_data(self, data):
         #items = self.getModel()
@@ -132,7 +148,7 @@ class Model(QtCore.QAbstractTableModel):
             self.close()
 
 
-class EditGeometryProperties(QtGui.QDialog):
+class EditGeometryProperties(QDialog):
     force = True
     allow_update = True
     def __init__(self, data, win_parent=None):
@@ -156,7 +172,7 @@ class EditGeometryProperties(QtGui.QDialog):
         |    Apply   OK   Cancel  |
         +-------------------------+
         """
-        QtGui.QDialog.__init__(self, win_parent)
+        QDialog.__init__(self, win_parent)
         self.setWindowTitle('Edit Geometry Properties')
 
         #default
@@ -175,7 +191,9 @@ class EditGeometryProperties(QtGui.QDialog):
         table_model = Model(items, header_labels, self)
         view = CustomQTableView(self) #Call your custom QTableView here
         view.setModel(table_model)
-        view.horizontalHeader().setResizeMode(QtGui.QHeaderView.Stretch)
+        if qt_version == 4:
+            view.horizontalHeader().setResizeMode(QtGui.QHeaderView.Stretch)
+
         self.table = view
 
         actor_obj = data[self.active_key]
@@ -193,12 +211,12 @@ class EditGeometryProperties(QtGui.QDialog):
         header.setStretchLastSection(True)
 
         self._default_is_apply = False
-        self.name = QtGui.QLabel("Name:")
-        self.name_edit = QtGui.QLineEdit(str(name))
+        self.name = QLabel("Name:")
+        self.name_edit = QLineEdit(str(name))
         self.name_edit.setDisabled(True)
 
-        self.color = QtGui.QLabel("Color:")
-        self.color_edit = QtGui.QPushButton()
+        self.color = QLabel("Color:")
+        self.color_edit = QPushButton()
         #self.color_edit.setFlat(True)
 
         color = self.out_data[self.active_key].color
@@ -229,49 +247,49 @@ class EditGeometryProperties(QtGui.QDialog):
         self.is_bar_scale_edit_active = False
         self.is_bar_scale_edit_slider_active = False
 
-        self.opacity = QtGui.QLabel("Opacity:")
-        self.opacity_edit = QtGui.QDoubleSpinBox(self)
+        self.opacity = QLabel("Opacity:")
+        self.opacity_edit = QDoubleSpinBox(self)
         self.opacity_edit.setRange(0.1, 1.0)
         self.opacity_edit.setDecimals(1)
         self.opacity_edit.setSingleStep(0.1)
         self.opacity_edit.setValue(opacity)
         if self.use_slider:
-            self.opacity_slider_edit = QtGui.QSlider(QtCore.Qt.Horizontal)
+            self.opacity_slider_edit = QSlider(QtCore.Qt.Horizontal)
             self.opacity_slider_edit.setRange(1, 10)
             self.opacity_slider_edit.setValue(opacity * 10)
             self.opacity_slider_edit.setTickInterval(1)
-            self.opacity_slider_edit.setTickPosition(QtGui.QSlider.TicksBelow)
+            self.opacity_slider_edit.setTickPosition(QSlider.TicksBelow)
 
-        self.line_width = QtGui.QLabel("Line Width:")
-        self.line_width_edit = QtGui.QSpinBox(self)
+        self.line_width = QLabel("Line Width:")
+        self.line_width_edit = QSpinBox(self)
         self.line_width_edit.setRange(1, 15)
         self.line_width_edit.setSingleStep(1)
         self.line_width_edit.setValue(line_width)
         if self.use_slider:
-            self.line_width_slider_edit = QtGui.QSlider(QtCore.Qt.Horizontal)
+            self.line_width_slider_edit = QSlider(QtCore.Qt.Horizontal)
             self.line_width_slider_edit.setRange(1, 15)
             self.line_width_slider_edit.setValue(line_width)
             self.line_width_slider_edit.setTickInterval(1)
-            self.line_width_slider_edit.setTickPosition(QtGui.QSlider.TicksBelow)
+            self.line_width_slider_edit.setTickPosition(QSlider.TicksBelow)
 
         if self.representation in ['point', 'surface']:
             self.line_width.setEnabled(False)
             self.line_width_edit.setEnabled(False)
             self.line_width_slider_edit.setEnabled(False)
 
-        self.point_size = QtGui.QLabel("Point Size:")
-        self.point_size_edit = QtGui.QSpinBox(self)
+        self.point_size = QLabel("Point Size:")
+        self.point_size_edit = QSpinBox(self)
         self.point_size_edit.setRange(1, 15)
         self.point_size_edit.setSingleStep(1)
         self.point_size_edit.setValue(point_size)
         self.point_size.setVisible(False)
         self.point_size_edit.setVisible(False)
         if self.use_slider:
-            self.point_size_slider_edit = QtGui.QSlider(QtCore.Qt.Horizontal)
+            self.point_size_slider_edit = QSlider(QtCore.Qt.Horizontal)
             self.point_size_slider_edit.setRange(1, 15)
             self.point_size_slider_edit.setValue(point_size)
             self.point_size_slider_edit.setTickInterval(1)
-            self.point_size_slider_edit.setTickPosition(QtGui.QSlider.TicksBelow)
+            self.point_size_slider_edit.setTickPosition(QSlider.TicksBelow)
             self.point_size_slider_edit.setVisible(False)
 
         if self.representation in ['wire', 'surface']:
@@ -280,8 +298,8 @@ class EditGeometryProperties(QtGui.QDialog):
             if self.use_slider:
                 self.point_size_slider_edit.setEnabled(False)
 
-        self.bar_scale = QtGui.QLabel("Bar Scale:")
-        self.bar_scale_edit = QtGui.QDoubleSpinBox(self)
+        self.bar_scale = QLabel("Bar Scale:")
+        self.bar_scale_edit = QDoubleSpinBox(self)
         #self.bar_scale_edit.setRange(0.01, 1.0)  # was 0.1
         #self.bar_scale_edit.setRange(0.05, 5.0)
         self.bar_scale_edit.setDecimals(1)
@@ -290,11 +308,11 @@ class EditGeometryProperties(QtGui.QDialog):
         self.bar_scale_edit.setValue(bar_scale)
 
         #if self.use_slider:
-            #self.bar_scale_slider_edit = QtGui.QSlider(QtCore.Qt.Horizontal)
+            #self.bar_scale_slider_edit = QSlider(QtCore.Qt.Horizontal)
             #self.bar_scale_slider_edit.setRange(1, 100)  # 1/0.05 = 100/5.0
             #self.bar_scale_slider_edit.setValue(opacity * 0.05)
             #self.bar_scale_slider_edit.setTickInterval(10)
-            #self.bar_scale_slider_edit.setTickPosition(QtGui.QSlider.TicksBelow)
+            #self.bar_scale_slider_edit.setTickPosition(QSlider.TicksBelow)
 
         if self.representation != 'bar':
             self.bar_scale.setEnabled(False)
@@ -305,8 +323,8 @@ class EditGeometryProperties(QtGui.QDialog):
             #self.bar_scale_slider_edit.setEnabled(False)
 
         # show/hide
-        self.checkbox_show = QtGui.QCheckBox("Show")
-        self.checkbox_hide = QtGui.QCheckBox("Hide")
+        self.checkbox_show = QCheckBox("Show")
+        self.checkbox_hide = QCheckBox("Hide")
         self.checkbox_show.setChecked(show)
         self.checkbox_hide.setChecked(not show)
 
@@ -320,12 +338,12 @@ class EditGeometryProperties(QtGui.QDialog):
 
 
         # closing
-        # self.apply_button = QtGui.QPushButton("Apply")
+        # self.apply_button = QPushButton("Apply")
         #if self._default_is_apply:
             #self.apply_button.setDisabled(True)
 
-        # self.ok_button = QtGui.QPushButton("OK")
-        self.cancel_button = QtGui.QPushButton("Close")
+        # self.ok_button = QPushButton("OK")
+        self.cancel_button = QPushButton("Close")
 
         self.create_layout()
         self.set_connections()
@@ -363,7 +381,11 @@ class EditGeometryProperties(QtGui.QDialog):
         old_obj.opacity = self.opacity_edit.value()
         old_obj.is_visible = self.checkbox_show.isChecked()
 
-        name = str(index.data().toString())
+        if qt_version == 4:
+            name = str(index.data().toString())
+        else:
+            name = str(index.data())
+            print('name = %r' % name)
         #i = self.keys.index(self.active_key)
 
         self.active_key = name
@@ -508,12 +530,12 @@ class EditGeometryProperties(QtGui.QDialog):
         #return
 
     def create_layout(self):
-        ok_cancel_box = QtGui.QHBoxLayout()
+        ok_cancel_box = QHBoxLayout()
         # ok_cancel_box.addWidget(self.apply_button)
         # ok_cancel_box.addWidget(self.ok_button)
         ok_cancel_box.addWidget(self.cancel_button)
 
-        grid = QtGui.QGridLayout()
+        grid = QGridLayout()
 
         irow = 0
         grid.addWidget(self.name, irow, 0)
@@ -556,11 +578,11 @@ class EditGeometryProperties(QtGui.QDialog):
             grid.addWidget(self.bar_scale_edit, irow, 1)
         irow += 1
 
-        checkboxs = QtGui.QButtonGroup(self)
+        checkboxs = QButtonGroup(self)
         checkboxs.addButton(self.checkbox_show)
         checkboxs.addButton(self.checkbox_hide)
 
-        vbox = QtGui.QVBoxLayout()
+        vbox = QVBoxLayout()
         vbox.addWidget(self.table)
         vbox.addLayout(grid)
 
@@ -568,7 +590,7 @@ class EditGeometryProperties(QtGui.QDialog):
             vbox.addWidget(self.checkbox_show)
             vbox.addWidget(self.checkbox_hide)
         else:
-            vbox1 = QtGui.QVBoxLayout()
+            vbox1 = QVBoxLayout()
             vbox1.addWidget(self.checkbox_show)
             vbox1.addWidget(self.checkbox_hide)
             vbox.addLayout(vbox1)
@@ -580,18 +602,25 @@ class EditGeometryProperties(QtGui.QDialog):
 
     def set_connections(self):
         # self.opacity_edit.connect(arg0, QObject, arg1)
-        self.connect(self.opacity_edit, QtCore.SIGNAL('valueChanged(double)'), self.on_opacity)
-            #self.connect(self.opacity_slider_edit, QtCore.SIGNAL('valueChanged(double)'), self.on_opacity)
-            #grid.addWidget(self.opacity_slider_edit, irow, 1)
+        if qt_version == 4:
+            self.connect(self.opacity_edit, QtCore.SIGNAL('valueChanged(double)'), self.on_opacity)
+                #self.connect(self.opacity_slider_edit, QtCore.SIGNAL('valueChanged(double)'), self.on_opacity)
+                #grid.addWidget(self.opacity_slider_edit, irow, 1)
 
-        # self.connect(self.line_width, QtCore.SIGNAL('valueChanged(int)'), self.on_line_width)
-        # self.connect(self.point_size, QtCore.SIGNAL('valueChanged(int)'), self.on_point_size)
+            # self.connect(self.line_width, QtCore.SIGNAL('valueChanged(int)'), self.on_line_width)
+            # self.connect(self.point_size, QtCore.SIGNAL('valueChanged(int)'), self.on_point_size)
 
-        # self.connect(self.line_width, QtCore.SIGNAL('valueChanged(const QString&)'), self.on_line_width)
-        # self.connect(self.point_size, QtCore.SIGNAL('valueChanged(const QString&)'), self.on_point_size)
-        self.connect(self.line_width_edit, QtCore.SIGNAL('valueChanged(int)'), self.on_line_width)
-        self.connect(self.point_size_edit, QtCore.SIGNAL('valueChanged(int)'), self.on_point_size)
-        self.connect(self.bar_scale_edit, QtCore.SIGNAL('valueChanged(double)'), self.on_bar_scale)
+            # self.connect(self.line_width, QtCore.SIGNAL('valueChanged(const QString&)'), self.on_line_width)
+            # self.connect(self.point_size, QtCore.SIGNAL('valueChanged(const QString&)'), self.on_point_size)
+            self.connect(self.line_width_edit, QtCore.SIGNAL('valueChanged(int)'), self.on_line_width)
+            self.connect(self.point_size_edit, QtCore.SIGNAL('valueChanged(int)'), self.on_point_size)
+            self.connect(self.bar_scale_edit, QtCore.SIGNAL('valueChanged(double)'), self.on_bar_scale)
+        else:
+            self.opacity_edit.valueChanged.connect(self.on_opacity)
+            self.line_width_edit.valueChanged.connect(self.on_line_width)
+            self.point_size_edit.valueChanged.connect(self.on_point_size)
+            self.bar_scale_edit.valueChanged.connect(self.on_bar_scale)
+
         if self.use_slider:
             self.opacity_slider_edit.valueChanged.connect(self.on_opacity_slider)
             self.line_width_slider_edit.valueChanged.connect(self.on_line_width_slider)
@@ -604,15 +633,22 @@ class EditGeometryProperties(QtGui.QDialog):
         # self.connect(self.line_width, QtCore.SIGNAL('clicked()'), self.on_line_width)
         # self.connect(self.point_size, QtCore.SIGNAL('clicked()'), self.on_point_size)
 
-        self.connect(self.color_edit, QtCore.SIGNAL('clicked()'), self.on_color)
-        self.connect(self.checkbox_show, QtCore.SIGNAL('clicked()'), self.on_show)
-        self.connect(self.checkbox_hide, QtCore.SIGNAL('clicked()'), self.on_hide)
-        #self.connect(self.check_apply, QtCore.SIGNAL('clicked()'), self.on_check_apply)
+        if qt_version == 4:
+            self.connect(self.color_edit, QtCore.SIGNAL('clicked()'), self.on_color)
+            self.connect(self.checkbox_show, QtCore.SIGNAL('clicked()'), self.on_show)
+            self.connect(self.checkbox_hide, QtCore.SIGNAL('clicked()'), self.on_hide)
+            #self.connect(self.check_apply, QtCore.SIGNAL('clicked()'), self.on_check_apply)
 
-        # self.connect(self.apply_button, QtCore.SIGNAL('clicked()'), self.on_apply)
-        # self.connect(self.ok_button, QtCore.SIGNAL('clicked()'), self.on_ok)
-        self.connect(self.cancel_button, QtCore.SIGNAL('clicked()'), self.on_cancel)
-        self.connect(self, QtCore.SIGNAL('triggered()'), self.closeEvent)
+            # self.connect(self.apply_button, QtCore.SIGNAL('clicked()'), self.on_apply)
+            # self.connect(self.ok_button, QtCore.SIGNAL('clicked()'), self.on_ok)
+            self.connect(self.cancel_button, QtCore.SIGNAL('clicked()'), self.on_cancel)
+            self.connect(self, QtCore.SIGNAL('triggered()'), self.closeEvent)
+        else:
+            self.color_edit.clicked.connect(self.on_color)
+            self.checkbox_show.clicked.connect(self.on_show)
+            self.checkbox_hide.clicked.connect(self.on_hide)
+            self.cancel_button.clicked.connect(self.on_cancel)
+            # closeEvent
 
     def keyPressEvent(self, event):
         if event.key() == QtCore.Qt.Key_Escape:
@@ -825,7 +861,7 @@ def main():
     import sys
     # Someone is launching this directly
     # Create the QApplication
-    app = QtGui.QApplication(sys.argv)
+    app = QApplication(sys.argv)
     #The Main window
     #g = GeometryHandle()
     #g.add('main', color=(0, 0, 0), line_thickness=0.0)

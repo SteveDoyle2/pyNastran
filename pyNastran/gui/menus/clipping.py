@@ -1,8 +1,20 @@
 from six import string_types
-from PyQt4 import QtCore, QtGui
+
+from pyNastran.gui.qt_version import qt_version
+if qt_version == 4:
+    #from PyQt4 import QtCore, QtGui
+    from PyQt4 import QtCore
+    from PyQt4.QtGui import (
+        QDialog, QLabel, QLineEdit, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout)
+elif qt_version == 5:
+    #from PyQt5 import QtCore, QtGui
+    from PyQt5 import QtCore
+    from PyQt5.QtWidgets import (
+        QDialog, QLabel, QLineEdit, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout)
+
 from pyNastran.gui.qt_files.menu_utils import eval_float_from_string
 
-class ClippingPropertiesWindow(QtGui.QDialog):
+class ClippingPropertiesWindow(QDialog):
 
     def __init__(self, data, win_parent=None):
         self.win_parent = win_parent
@@ -11,7 +23,7 @@ class ClippingPropertiesWindow(QtGui.QDialog):
         self._default_max = data['max']
         self.out_data = {}
 
-        QtGui.QDialog.__init__(self, win_parent)
+        QDialog.__init__(self, win_parent)
         #self.setupUi(self)
         self.setWindowTitle('Clipping Properties')
         self.create_widgets()
@@ -21,22 +33,22 @@ class ClippingPropertiesWindow(QtGui.QDialog):
 
     def create_widgets(self):
         # Min
-        self.min = QtGui.QLabel("Min:")
-        self.min_edit = QtGui.QLineEdit(str(self._default_min))
-        self.min_button = QtGui.QPushButton("Default")
+        self.min = QLabel("Min:")
+        self.min_edit = QLineEdit(str(self._default_min))
+        self.min_button = QPushButton("Default")
 
         # Max
-        self.max = QtGui.QLabel("Max:")
-        self.max_edit = QtGui.QLineEdit(str(self._default_max))
-        self.max_button = QtGui.QPushButton("Default")
+        self.max = QLabel("Max:")
+        self.max_edit = QLineEdit(str(self._default_max))
+        self.max_button = QPushButton("Default")
 
         # closing
-        self.apply_button = QtGui.QPushButton("Apply")
-        self.ok_button = QtGui.QPushButton("OK")
-        self.cancel_button = QtGui.QPushButton("Cancel")
+        self.apply_button = QPushButton("Apply")
+        self.ok_button = QPushButton("OK")
+        self.cancel_button = QPushButton("Cancel")
 
     def create_layout(self):
-        grid = QtGui.QGridLayout()
+        grid = QGridLayout()
 
         grid.addWidget(self.min, 0, 0)
         grid.addWidget(self.min_edit, 0, 1)
@@ -46,12 +58,12 @@ class ClippingPropertiesWindow(QtGui.QDialog):
         grid.addWidget(self.max_edit, 1, 1)
         grid.addWidget(self.max_button, 1, 2)
 
-        ok_cancel_box = QtGui.QHBoxLayout()
+        ok_cancel_box = QHBoxLayout()
         ok_cancel_box.addWidget(self.apply_button)
         ok_cancel_box.addWidget(self.ok_button)
         ok_cancel_box.addWidget(self.cancel_button)
 
-        vbox = QtGui.QVBoxLayout()
+        vbox = QVBoxLayout()
         vbox.addLayout(grid)
 
         vbox.addStretch()
@@ -59,13 +71,22 @@ class ClippingPropertiesWindow(QtGui.QDialog):
         self.setLayout(vbox)
 
     def set_connections(self):
-        self.connect(self.min_button, QtCore.SIGNAL('clicked()'), self.on_default_min)
-        self.connect(self.max_button, QtCore.SIGNAL('clicked()'), self.on_default_max)
+        if qt_version == 4:
+            self.connect(self.min_button, QtCore.SIGNAL('clicked()'), self.on_default_min)
+            self.connect(self.max_button, QtCore.SIGNAL('clicked()'), self.on_default_max)
 
-        self.connect(self.apply_button, QtCore.SIGNAL('clicked()'), self.on_apply)
-        self.connect(self.ok_button, QtCore.SIGNAL('clicked()'), self.on_ok)
-        self.connect(self.cancel_button, QtCore.SIGNAL('clicked()'), self.on_cancel)
-        self.connect(self, QtCore.SIGNAL('triggered()'), self.closeEvent)
+            self.connect(self.apply_button, QtCore.SIGNAL('clicked()'), self.on_apply)
+            self.connect(self.ok_button, QtCore.SIGNAL('clicked()'), self.on_ok)
+            self.connect(self.cancel_button, QtCore.SIGNAL('clicked()'), self.on_cancel)
+            self.connect(self, QtCore.SIGNAL('triggered()'), self.closeEvent)
+        else:
+            self.min_button.clicked.connect(self.on_default_min)
+            self.max_button.clicked.connect(self.on_default_max)
+
+            self.apply_button.clicked.connect(self.on_apply)
+            self.ok_button.clicked.connect(self.on_ok)
+            self.cancel_button.clicked.connect(self.on_cancel)
+            # closeEvent
 
     def keyPressEvent(self, event):
         if event.key() == QtCore.Qt.Key_Escape:
@@ -130,7 +151,7 @@ def main():
     import sys
     # Someone is launching this directly
     # Create the QApplication
-    app = QtGui.QApplication(sys.argv)
+    app = QApplication(sys.argv)
     #The Main window
     d = {
         'min' : 0.,

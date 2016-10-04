@@ -1,27 +1,36 @@
 from __future__ import print_function
 import sys
 from copy import deepcopy
-from six import string_types
-
-from PyQt4 import QtGui
-#from PyQt4.QtCore import *
-#from PyQt4.QtGui import *
 
 # kills the program when you hit Cntl+C from the command line
 import signal
 signal.signal(signal.SIGINT, signal.SIG_DFL)
 
+from six import string_types
 
-class QTreeView2(QtGui.QTreeView):
+from pyNastran.gui.qt_version import qt_version
+if qt_version == 4:
+    from PyQt5 import QtGui
+    from PyQt4.QtGui import (
+        QTreeView, QWidget, QAbstractItemView, QVBoxLayout, QPushButton, QApplication,
+        QComboBox)
+elif qt_version == 5:
+    from PyQt5 import QtGui
+    from PyQt5.QtWidgets import (
+        QTreeView, QWidget, QAbstractItemView, QVBoxLayout, QPushButton, QApplication,
+        QComboBox)
+
+
+class QTreeView2(QTreeView):
     def __init__(self, data, choices):
         self.old_rows = []
         self.data = data
         self.choices = choices
         self.single = False
-        QtGui.QTreeView.__init__(self)
+        QTreeView.__init__(self)
 
     def mousePressEvent(self, position):
-        QtGui.QTreeView.mousePressEvent(self, position)
+        QTreeView.mousePressEvent(self, position)
         indexes = self.selectedIndexes()
 
         # trace the tree to find the selected item
@@ -93,7 +102,7 @@ class QTreeView2(QtGui.QTreeView):
 #        stress
 #        load
 
-class Sidebar(QtGui.QWidget):
+class Sidebar(QWidget):
     """
     +--------------+
     | Case/Results |
@@ -177,10 +186,9 @@ class Sidebar(QtGui.QWidget):
     | - derive/avg |  (default?)
     | - avg/derive |
     +--------------+
-
     """
     def __init__(self, parent, debug=False):
-        QtGui.QWidget.__init__(self)
+        QWidget.__init__(self)
         self.parent = parent
         self.debug = debug
 
@@ -214,16 +222,16 @@ class Sidebar(QtGui.QWidget):
         self.show_pulldown = False
         if self.show_pulldown:
             combo_options = ['a1', 'a2', 'a3']
-            self.pulldown = QtGui.QComboBox()
+            self.pulldown = QComboBox()
             self.pulldown.addItems(choices)
             self.pulldown.activated[str].connect(self.on_pulldown)
 
-        self.apply_button = QtGui.QPushButton('Apply', self)
+        self.apply_button = QPushButton('Apply', self)
         self.apply_button.clicked.connect(self.on_apply)
         self.setup_layout()
 
     def setup_layout(self):
-        layout = QtGui.QVBoxLayout()
+        layout = QVBoxLayout()
         layout.addWidget(self.result_case_window)
         layout.addWidget(self.result_data_window)
         if self.show_pulldown:
@@ -295,15 +303,15 @@ class Sidebar(QtGui.QWidget):
         self.parent._set_case(result_name, i, explicit=True)
 
 
-class ResultsWindow(QtGui.QWidget):
+class ResultsWindow(QWidget):
     def __init__(self, name, data, choices):
-        QtGui.QWidget.__init__(self)
+        QWidget.__init__(self)
         self.name = name
         self.data = data
         self.choices = choices
 
         self.treeView = QTreeView2(self.data, choices)
-        self.treeView.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
+        self.treeView.setEditTriggers(QAbstractItemView.NoEditTriggers)
 
         self.model = QtGui.QStandardItemModel()
         is_single = self.addItems(self.model, data)
@@ -312,7 +320,7 @@ class ResultsWindow(QtGui.QWidget):
 
         self.model.setHorizontalHeaderLabels([self.tr(self.name)])
 
-        layout = QtGui.QVBoxLayout()
+        layout = QVBoxLayout()
         layout.addWidget(self.treeView)
         self.setLayout(layout)
 
@@ -391,7 +399,7 @@ class ResultsWindow(QtGui.QWidget):
         #    self.update_data(data)
 
 def main():
-    app = QtGui.QApplication(sys.argv)
+    app = QApplication(sys.argv)
     window = Sidebar(app, debug=True)
     window.show()
     sys.exit(app.exec_())

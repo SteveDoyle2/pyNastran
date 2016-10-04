@@ -1,14 +1,30 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function, unicode_literals
-from PyQt4 import QtCore, QtGui
 from six.moves import range
 
 from numpy import array, arange
 
-from pyNastran.gui.menus.groups_modify import _get_collapsed_text, Group
+
+from pyNastran.gui.qt_version import qt_version
+if qt_version == 4:
+    from PyQt4 import QtCore, QtGui
+    from PyQt4.QtGui import (
+        QDialog, QPushButton, QApplication,
+        QHBoxLayout, QVBoxLayout, QTableWidget, QTableWidgetItem,
+    )
+    QString = QtCore.QString
+elif qt_version == 5:
+    from PyQt5 import QtCore, QtGui
+    from PyQt5.QtWidgets import (
+        QDialog, QPushButton, QApplication,
+        QHBoxLayout, QVBoxLayout, QTableWidget, QTableWidgetItem,
+    )
+    QString = str
+
+from pyNastran.gui.menus.groups_modify import Group
 
 
-class GroupsPostView(QtGui.QDialog):
+class GroupsPostView(QDialog):
     """
     +------------------------+
     |  Groups : Post/Delete  |
@@ -55,7 +71,7 @@ class GroupsPostView(QtGui.QDialog):
 
         self.out_data = data
 
-        QtGui.QDialog.__init__(self, win_parent)
+        QDialog.__init__(self, win_parent)
         #self.setupUi(self)
         self.setWindowTitle('Groups: Post/View')
         self.create_widgets()
@@ -65,21 +81,21 @@ class GroupsPostView(QtGui.QDialog):
 
     def create_widgets(self):
         # main/delete/supergroup
-        self.set_as_main_button = QtGui.QPushButton("Set As Main")
-        self.create_super_group_button = QtGui.QPushButton("Create Super Group")
-        self.delete_groups_button = QtGui.QPushButton("Delete Groups")
-        self.revert_groups_button = QtGui.QPushButton("Revert Groups")
+        self.set_as_main_button = QPushButton("Set As Main")
+        self.create_super_group_button = QPushButton("Create Super Group")
+        self.delete_groups_button = QPushButton("Delete Groups")
+        self.revert_groups_button = QPushButton("Revert Groups")
 
-        self.show_groups_button = QtGui.QPushButton("Show Groups")
-        self.hide_groups_button = QtGui.QPushButton("Hide Groups")
+        self.show_groups_button = QPushButton("Show Groups")
+        self.hide_groups_button = QPushButton("Hide Groups")
 
         # closing
-        self.apply_button = QtGui.QPushButton("Apply")
-        self.ok_button = QtGui.QPushButton("OK")
-        self.cancel_button = QtGui.QPushButton("Cancel")
+        self.apply_button = QPushButton("Apply")
+        self.ok_button = QPushButton("OK")
+        self.cancel_button = QPushButton("Cancel")
 
         #table
-        self.table = QtGui.QTableWidget()
+        self.table = QTableWidget()
         self.checks = []
         self.names_text = []
 
@@ -89,11 +105,11 @@ class GroupsPostView(QtGui.QDialog):
         bold.setWeight(75)
         anames = array(self.names)
         for iname, name in enumerate(anames[self.inames]):
-            check = QtGui.QTableWidgetItem()
+            check = QTableWidgetItem()
             check.setCheckState(False)
 
             # TODO: create right click menu ???
-            name_text = QtGui.QTableWidgetItem(str(name))
+            name_text = QTableWidgetItem(str(name))
             if iname == self.imain:
                 name_text.setFont(bold)
                 self.shown_set.add(iname)
@@ -110,7 +126,7 @@ class GroupsPostView(QtGui.QDialog):
         table = self.table
         table.setRowCount(nrows)
         table.setColumnCount(2)
-        headers = [QtCore.QString('Operate On'), QtCore.QString('Name')]
+        headers = [QString('Operate On'), QString('Name')]
         table.setHorizontalHeaderLabels(headers)
 
         header = table.horizontalHeader()
@@ -139,12 +155,12 @@ class GroupsPostView(QtGui.QDialog):
         #table.horizontalHeaderItem(1).setTextAlignment(QtCore.AlignHCenter)
 
         #= QtGui.QVBoxLayout()
-        ok_cancel_box = QtGui.QHBoxLayout()
+        ok_cancel_box = QHBoxLayout()
         ok_cancel_box.addWidget(self.apply_button)
         ok_cancel_box.addWidget(self.ok_button)
         ok_cancel_box.addWidget(self.cancel_button)
 
-        vbox = QtGui.QVBoxLayout()
+        vbox = QVBoxLayout()
         vbox.addWidget(table)
         vbox.addWidget(self.set_as_main_button)
         #vbox.addWidget(self.create_super_group_button)
@@ -163,18 +179,32 @@ class GroupsPostView(QtGui.QDialog):
         self.setLayout(vbox)
 
     def set_connections(self):
-        self.connect(self.set_as_main_button, QtCore.SIGNAL('clicked()'), self.on_set_as_main)
-        self.connect(self.delete_groups_button, QtCore.SIGNAL('clicked()'), self.on_delete_groups)
-        self.connect(self.revert_groups_button, QtCore.SIGNAL('clicked()'), self.on_revert_groups)
+        if qt_version == 4:
+            self.connect(self.set_as_main_button, QtCore.SIGNAL('clicked()'), self.on_set_as_main)
+            self.connect(self.delete_groups_button, QtCore.SIGNAL('clicked()'), self.on_delete_groups)
+            self.connect(self.revert_groups_button, QtCore.SIGNAL('clicked()'), self.on_revert_groups)
 
-        self.connect(self.show_groups_button, QtCore.SIGNAL('clicked()'), self.on_show_groups)
-        self.connect(self.hide_groups_button, QtCore.SIGNAL('clicked()'), self.on_hide_groups)
+            self.connect(self.show_groups_button, QtCore.SIGNAL('clicked()'), self.on_show_groups)
+            self.connect(self.hide_groups_button, QtCore.SIGNAL('clicked()'), self.on_hide_groups)
 
-        self.connect(self.create_super_group_button, QtCore.SIGNAL('clicked()'), self.on_create_super_group)
+            self.connect(self.create_super_group_button, QtCore.SIGNAL('clicked()'), self.on_create_super_group)
 
-        self.connect(self.apply_button, QtCore.SIGNAL('clicked()'), self.on_apply)
-        self.connect(self.ok_button, QtCore.SIGNAL('clicked()'), self.on_ok)
-        self.connect(self.cancel_button, QtCore.SIGNAL('clicked()'), self.on_cancel)
+            self.connect(self.apply_button, QtCore.SIGNAL('clicked()'), self.on_apply)
+            self.connect(self.ok_button, QtCore.SIGNAL('clicked()'), self.on_ok)
+            self.connect(self.cancel_button, QtCore.SIGNAL('clicked()'), self.on_cancel)
+        else:
+            self.set_as_main_button.clicked.connect(self.on_set_as_main)
+            self.delete_groups_button.clicked.connect(self.on_delete_groups)
+            self.revert_groups_button.clicked.connect(self.on_revert_groups)
+
+            self.show_groups_button.clicked.connect(self.on_show_groups)
+            self.hide_groups_button.clicked.connect(self.on_hide_groups)
+
+            self.create_super_group_button.clicked.connect(self.on_create_super_group)
+
+            self.apply_button.clicked.connect(self.on_apply)
+            self.ok_button.clicked.connect(self.on_ok)
+            self.cancel_button.clicked.connect(self.on_cancel)
 
     def closeEvent(self, event):
         event.accept()
@@ -238,7 +268,7 @@ class GroupsPostView(QtGui.QDialog):
 
     def on_create_super_group(self):
         inames = [iname for iname, check in enumerate(self.checks)
-                        if bool(check.checkState())]
+                  if bool(check.checkState())]
 
         if not len(inames):
             # TODO: add logging
@@ -256,9 +286,9 @@ class GroupsPostView(QtGui.QDialog):
         self.table.insertRow(irow)
 
 
-        check = QtGui.QTableWidgetItem()
+        check = QTableWidgetItem()
         check.setCheckState(False)
-        name_text = QtGui.QTableWidgetItem(str(name))
+        name_text = QTableWidgetItem(str(name))
 
         self.names.extend(name)
         self.names_text.append(name_text)
@@ -355,13 +385,13 @@ def main():
     import sys
     # Someone is launching this directly
     # Create the QApplication
-    app = QtGui.QApplication(sys.argv)
+    app = QApplication(sys.argv)
     app.on_post_group = on_post_group
 
-    group1 = Group('this is a really long name', [1,2,3], 4)
-    group2 = Group('frog', [1,3], 4)
-    group3 = Group('dog', [1,2,3, 5], 4)
-    all_group = Group('ALL', [1,2,3, 34], 4)
+    group1 = Group('this is a really long name', [1, 2, 3], 4)
+    group2 = Group('frog', [1, 3], 4)
+    group3 = Group('dog', [1, 2, 3, 5], 4)
+    all_group = Group('ALL', [1, 2, 3, 34], 4)
     print(group3)
     groups = [
         all_group, group1, group2, group3,

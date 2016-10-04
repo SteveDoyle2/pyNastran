@@ -11,12 +11,19 @@ import os.path
 #import webbrowser
 #webbrowser.open("http://xkcd.com/353/")
 
-from PyQt4 import QtCore, QtGui
+from pyNastran.gui.qt_version import qt_version
+if qt_version == 4:
+    from PyQt4 import QtCore, QtGui
+    from PyQt4.QtGui import QApplication, QMessageBox
+    print("Using PyQt4")
+elif qt_version == 5:
+    from PyQt5 import QtCore, QtGui
+    from PyQt5.QtWidgets import QApplication, QMessageBox
+    print("Using PyQt5")
 
 import pyNastran
 from pyNastran.gui.utils import check_for_newer_version
 
-print("Using PyQt4")
 fmode = 1
 #except ImportError:
     #try:
@@ -213,7 +220,7 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, DegenGeomIO, ShabpIO, PanairIO
             '',
             'Reload Model:  using the same filename, reload the model',
         ]
-        QtGui.QMessageBox.about(self, "About pyNastran GUI", "\n".join(about))
+        QMessageBox.about(self, "About pyNastran GUI", "\n".join(about))
 
     def on_reload(self):
         """
@@ -266,12 +273,12 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, DegenGeomIO, ShabpIO, PanairIO
 
 
 def main():
-    app = QtGui.QApplication(sys.argv)
+    app = QApplication(sys.argv)
 
-    QtGui.QApplication.setOrganizationName("pyNastran")
-    QtGui.QApplication.setOrganizationDomain(pyNastran.__website__)
-    QtGui.QApplication.setApplicationName("pyNastran")
-    QtGui.QApplication.setApplicationVersion(pyNastran.__version__)
+    QApplication.setOrganizationName("pyNastran")
+    QApplication.setOrganizationDomain(pyNastran.__website__)
+    QApplication.setApplicationName("pyNastran")
+    QApplication.setApplicationVersion(pyNastran.__version__)
 
     inputs = get_inputs()
     window = MainWindow(inputs)
