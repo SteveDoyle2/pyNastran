@@ -6,7 +6,7 @@ if qt_version == 4:
     from PyQt4.QtGui import (
         QApplication, QDialog, QLabel, QLineEdit, QPushButton, QTableWidget, QTableWidgetItem,
         QHBoxLayout, QVBoxLayout, QGridLayout)
-    QString = PyQt4.QtCore.QString
+    QString = QtCore.QString
 elif qt_version == 5:
     #from PyQt5 import QtCore, QtGui
     from PyQt5.QtWidgets import (

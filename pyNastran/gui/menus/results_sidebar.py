@@ -10,7 +10,7 @@ from six import string_types
 
 from pyNastran.gui.qt_version import qt_version
 if qt_version == 4:
-    from PyQt5 import QtGui
+    from PyQt4 import QtGui
     from PyQt4.QtGui import (
         QTreeView, QWidget, QAbstractItemView, QVBoxLayout, QPushButton, QApplication,
         QComboBox)
