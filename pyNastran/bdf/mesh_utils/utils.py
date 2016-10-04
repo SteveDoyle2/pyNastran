@@ -183,15 +183,13 @@ def cmd_line_renumber():  # pragma: no cover
     #}
     data = docopt(msg, version=ver)
     print(data)
-    raise NotImplementedError(data)
     size = 16
-    bdf_filenames = data['IN_BDF_FILENAMES']
+    bdf_filename = data['IN_BDF_FILENAME']
     bdf_filename_out = data['--output']
     if bdf_filename_out is None:
         bdf_filename_out = 'renumber.bdf'
 
     cards_to_skip = ['AEFACT', 'CAERO1', 'CAERO2', 'SPLINE1', 'SPLINE2', 'AERO', 'AEROS', 'PAERO1', 'PAERO2', 'MKAERO1']
-    aaa
     bdf_renumber(bdf_filename, bdf_filename_out, size=size, is_double=False,
                 starting_id_dict=None, round_ids=False,
                 cards_to_skip=cards_to_skip)
@@ -296,7 +294,7 @@ def cmd_line():  # pragma: no cover
         cmd_line_merge()
     elif sys.argv[1] == 'equivalence':
         cmd_line_equivalence()
-    elif sys.argv[1] == 'equivalence':
+    elif sys.argv[1] == 'renumber':
         cmd_line_renumber()
     elif sys.argv[1] == 'bin' and dev:
         cmd_line_bin()

@@ -203,6 +203,7 @@ class WriteMesh(BDFAttributes):
         #self.write_caero_model()
         out_filename = self._output_helper(out_filename,
                                            interspersed, size, is_double)
+        self.log.debug('---starting BDF.write_bdf of %s---' % out_filename)
         encoding = self.get_encoding(encoding)
         #assert encoding.lower() in ['ascii', 'latin1', 'utf8'], encoding
 

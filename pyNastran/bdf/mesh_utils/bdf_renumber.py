@@ -58,6 +58,8 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
     .. todo:: bdf_model option for bdf_filename hasn't been tested
     .. todo:: add support for subsets (e.g. renumber only a subset of nodes/elements)
     .. todo:: doesn't support partial renumbering
+    .. todo:: doesn't support element material coordinate systems
+
     ..warning :: spoints might be problematic...check
     ..warning :: still in development, but it usually brutally crashes if it's not supported
     ..warning :: be careful of card unsupported cards (e.g. ones not read in)
@@ -243,13 +245,22 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
         if key == 'nid':
             nid = int(value)
         elif key == 'cid':
-            cid = int(value)
+            if value is None:
+                cid = None
+            else:
+                cid = int(value)
         elif key == 'eid':
             eid = int(value)
         elif key == 'pid':
-            pid = int(value)
+            if value is None:
+                pid = None
+            else:
+                pid = int(value)
         elif key == 'mid':
-            mid = int(value)
+            if value is None:
+                mid = None
+            else:
+                mid = int(value)
         elif key == 'spc_id':
             spc_id = int(value)
         elif key == 'mpc_id':
@@ -398,6 +409,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
         #spoints2 = arange(1, len(spoints) + 1)
         for nid, node in sorted(iteritems(model.nodes)):
             nid_new = nid_map[nid]
+            #print('nid=%s -> %s' % (nid,nid_new))
             node.nid = nid_new
 
     if 'pid' in starting_id_dict and pid is not None:

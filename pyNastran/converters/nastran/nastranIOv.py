@@ -2705,7 +2705,11 @@ class NastranIO(object):
                     areai = element.Area()
                 else:
                     pid = element.Pid()
-                    areai = element.pid_ref.Area()
+                    try:
+                        areai = element.pid_ref.Area()
+                    except:
+                        print(element)
+                        raise
 
                 node_ids = element.node_ids
                 for nid in node_ids:

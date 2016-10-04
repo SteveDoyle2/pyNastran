@@ -4193,8 +4193,8 @@ class SPLINE2(Spline):
         self.caero = model.CAero(self.CAero(), msg=msg)
         self.caero_ref = self.caero
         self.setg = model.Set(self.Set(), msg=msg)
-        self.setg.cross_reference(model, 'Node', msg=msg)
         self.setg_ref = self.setg
+        self.setg.cross_reference(model, 'Node', msg=msg)
 
         nnodes = len(self.setg_ref.ids)
         if nnodes < 2:
