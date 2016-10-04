@@ -88,12 +88,11 @@ class PyNastranRenderWindowInteractor(QVTKRenderWindowInteractor):
         #self.Highlight
 
 
-class GuiCommon2(QMainWindow, GuiCommon):
+class GuiCommon2(GuiCommon):
     def __init__(self, fmt_order, html_logging, inputs):
         # this will reset the background color/label color if things break
         self.reset_settings = False
 
-        QtGui.QMainWindow.__init__(self)
         GuiCommon.__init__(self, inputs)
 
         self.fmts = fmt_order

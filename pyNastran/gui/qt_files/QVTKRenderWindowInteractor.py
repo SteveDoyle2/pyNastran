@@ -40,6 +40,7 @@ Changes by Fabian Wenzel, Jan. 2016
  Support for Python3
 """
 import vtk
+from pyNastran.gui.qt_version import qt_version
 
 # Check whether a specific PyQt implementation was chosen
 #try:
@@ -94,6 +95,7 @@ elif PyQtImpl == "PySide":
     from PySide.QtCore import QEvent
 else:
     raise ImportError("Unknown PyQt implementation " + repr(PyQtImpl))
+
 
 class QVTKRenderWindowInteractor(QWidget):
 
@@ -428,7 +430,12 @@ class QVTKRenderWindowInteractor(QWidget):
         self._Iren.KeyReleaseEvent()
 
     def wheelEvent(self, ev):
-        if ev.delta() >= 0:
+        if qt_version == 4:
+            delta = ev.delta()
+        else:
+            delta = ev.angleDelta().y()
+
+        if delta >= 0:
             self._Iren.MouseWheelForwardEvent()
         else:
             self._Iren.MouseWheelBackwardEvent()

@@ -14,11 +14,11 @@ import os.path
 from pyNastran.gui.qt_version import qt_version
 if qt_version == 4:
     from PyQt4 import QtCore, QtGui
-    from PyQt4.QtGui import QApplication, QMessageBox
+    from PyQt4.QtGui import QApplication, QMessageBox, qApp
     print("Using PyQt4")
 elif qt_version == 5:
     from PyQt5 import QtCore, QtGui
-    from PyQt5.QtWidgets import QApplication, QMessageBox
+    from PyQt5.QtWidgets import QApplication, QMessageBox, qApp
     print("Using PyQt5")
 
 import pyNastran
@@ -269,7 +269,7 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, DegenGeomIO, ShabpIO, PanairIO
         qpos = self.pos()
         pos = qpos.x(), qpos.y()
         settings.setValue('pos', pos)
-        QtGui.qApp.quit()
+        qApp.quit()
 
 
 def main():

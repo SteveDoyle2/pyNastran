@@ -12,17 +12,22 @@ elif qt_version == 5:
         QLabel, QApplication, QDialog, QGridLayout, QHBoxLayout, QVBoxLayout, QPushButton,
     )
 
-class ClickableQLabel(QLabel):
+if qt_version == 4:
+    class ClickableQLabel(QLabel):
+        def __init(self, parent):
+            QLabel.__init__(self, parent)
 
-    def __init(self, parent):
-        QLabel.__init__(self, parent)
-
-    def mouseReleaseEvent(self, ev):
-        if qt_version == 4:
-            self.emit(QtCore.SIGNAL('clicked()'))
-        else:
-            # ????
-            pass
+        def mouseReleaseEvent(self, ev):
+            if qt_version == 4:
+                self.emit(QtCore.SIGNAL('clicked()'))
+            else:
+                # ????
+                pass
+else:
+    class ClickableQLabel(QPushButton):
+            def __init(self, text):
+                QPushButton.__init__(self, text)
+                self.setFlat(True)
 
 
 class DownloadWindow(QDialog):
@@ -63,7 +68,12 @@ class DownloadWindow(QDialog):
 
     def create_widgets(self):
         self.name = QLabel("Version %s is now available." % self.version)
-        self.link = ClickableQLabel(self.url)
+        if qt_version == 4:
+            self.link = ClickableQLabel(self.url)
+        else:
+            self.link = QPushButton(self.url)
+            self.link.setFlat(True)
+
         font = QtGui.QFont()
         #"Times",20,QtGui.QFont.Bold,True
         font.setUnderline(True)
@@ -93,7 +103,7 @@ class DownloadWindow(QDialog):
             self.connect(self.close_button, QtCore.SIGNAL('clicked()'), self.on_cancel)
             self.connect(self, QtCore.SIGNAL('triggered()'), self.closeEvent)
         else:
-            # ????
+            self.link.clicked.connect(self.on_download)
             self.close_button.clicked.connect(self.on_cancel)
             # ????
 
