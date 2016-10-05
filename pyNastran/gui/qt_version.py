@@ -7,3 +7,9 @@ except ImportError:
         qt_version = 4
     except:
         raise ImportError('PyQt4 or PyQt5 is required')
+
+try:
+    import pygments
+    is_pygments = True
+except ImportError:
+    pass
