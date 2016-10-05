@@ -19,7 +19,18 @@ import numpy as np
 #from numpy import eye, array, zeros, loadtxt
 #from numpy.linalg import norm
 
-from PyQt4 import QtCore, QtGui
+from pyNastran.gui.qt_version import qt_version
+if qt_version == 4:
+    from PyQt4 import QtCore, QtGui
+    from PyQt4.QtGui import (
+        QMainWindow, QDockWidget, QFrame, QHBoxLayout, QAction, QColorDialog, QFileDialog)
+    from PyQt4.QtCore import QString
+elif qt_version == 5:
+    from PyQt5 import QtCore, QtGui
+    from PyQt5.QtWidgets import (
+        QMainWindow, QDockWidget, QFrame, QHBoxLayout, QAction, QColorDialog, QFileDialog)
+    QString = str
+
 import vtk
 from vtk.qt4.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 #from vtk.util.numpy_support import numpy_to_vtk
@@ -167,7 +178,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         self.set_window_title(self.base_window_title)
 
         #=========== Results widget ===================
-        self.res_dock = QtGui.QDockWidget("Results", self)
+        self.res_dock = QDockWidget("Results", self)
         self.res_dock.setObjectName("results_obj")
         #self.res_widget = QtGui.QTextEdit()
         #self.res_widget.setReadOnly(True)
@@ -632,10 +643,10 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                 ico.addPixmap(QtGui.QPixmap(pth), QtGui.QIcon.Normal, QtGui.QIcon.Off)
 
             if nam in checkables:
-                self.actions[nam] = QtGui.QAction(ico, txt, self, checkable=True)
+                self.actions[nam] = QAction(ico, txt, self, checkable=True)
                 self.actions[nam].setChecked(True)
             else:
-                self.actions[nam] = QtGui.QAction(ico, txt, self)
+                self.actions[nam] = QAction(ico, txt, self)
 
             if shortcut:
                 self.actions[nam].setShortcut(shortcut)
@@ -747,7 +758,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
 
     def _change_color(self, msg, rgb_color_floats, call_func):
         c = [int(255 * i) for i in rgb_color_floats]
-        col = QtGui.QColorDialog.getColor(QtGui.QColor(*c), self, "Choose a %s color" % msg)
+        col = QColorDialog.getColor(QtGui.QColor(*c), self, "Choose a %s color" % msg)
         if col.isValid():
             color = col.getRgbF()[:3]
             call_func(color)
@@ -939,7 +950,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
     def _create_vtk_objects(self):
         """creates some of the vtk objects"""
         #Frame that VTK will render on
-        self.vtk_frame = QtGui.QFrame()
+        self.vtk_frame = QFrame()
 
         #Qt VTK QVTKRenderWindowInteractor
         self.vtk_interactor = QVTKRenderWindowInteractor(parent=self.vtk_frame)
@@ -952,12 +963,12 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         return self.vtk_interactor.GetRenderWindow()
 
     def build_vtk_frame(self):
-        vtk_hbox = QtGui.QHBoxLayout()
+        vtk_hbox = QHBoxLayout()
         vtk_hbox.setContentsMargins(2, 2, 2, 2)
 
         vtk_hbox.addWidget(self.vtk_interactor)
         self.vtk_frame.setLayout(vtk_hbox)
-        self.vtk_frame.setFrameStyle(QtGui.QFrame.NoFrame | QtGui.QFrame.Plain)
+        self.vtk_frame.setFrameStyle(QFrame.NoFrame | QFrame.Plain)
         # this is our main, 'central' widget
         self.setCentralWidget(self.vtk_frame)
 
@@ -1991,11 +2002,11 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
         screen_shape_default = (1100, 700)
         qpos_default = self.pos()
         pos_default = qpos_default.x(), qpos_default.y()
-        if PY2:
+        if PY2 and qt_version == 4:
             self.restoreGeometry(settings.value("mainWindowGeometry").toByteArray())
 
         #self.reset_settings = False
-        if self.reset_settings:
+        if self.reset_settings or qt_version == 5:
             self.background_color = grey
             self.label_color = black
             self.text_color = white
@@ -2026,7 +2037,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
             self.res_dock.toggleViewAction()
         self.init_cell_picker()
 
-        if PY2:
+        if PY2 and qt_version == 4:
             self.restoreState(settings.value("mainWindowState").toByteArray())
         self.create_corner_axis()
         #-------------
@@ -2587,7 +2598,7 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
     def on_take_screenshot(self, fname=None, magnify=None):
         """ Take a screenshot of a current view and save as a file"""
         if fname is None or fname is False:
-            filt = QtCore.QString()
+            filt = QString()
             default_filename = ''
 
             title = ''
@@ -2604,17 +2615,26 @@ class GuiCommon2(QtGui.QMainWindow, GuiCommon):
                 base, ext = os.path.splitext(os.path.basename(self.out_filename))
                 default_filename = title + '_' + base + '.png'
 
-            fname = str(QtGui.QFileDialog.getSaveFileName(self, (
-                'Choose a filename and type'), default_filename, (
-                    'PNG Image *.png (*.png);; '
-                    'JPEG Image *.jpg *.jpeg (*.jpg, *.jpeg);; '
-                    'TIFF Image *.tif *.tiff (*.tif, *.tiff);; '
-                    'BMP Image *.bmp (*.bmp);; '
-                    'PostScript Document *.ps (*.ps)'), filt))
+            file_types = (
+                'PNG Image *.png (*.png);; '
+                'JPEG Image *.jpg *.jpeg (*.jpg, *.jpeg);; '
+                'TIFF Image *.tif *.tiff (*.tif, *.tiff);; '
+                'BMP Image *.bmp (*.bmp);; '
+                'PostScript Document *.ps (*.ps)')
+            if qt_version == 4:
+                fname = str(QFileDialog.getSaveFileName(self,
+                    'Choose a filename and type', default_filename, file_types, filt))
+                if fname is None or fname == '':  # 2nd option
+                    return
+                flt = str(filt).split()[0]
+            else:
+                fname, flt = QFileDialog.getSaveFileName(self,
+                    'Choose a filename and type', default_filename, file_types, filt)
+                #flt = str(filt).strip()
+                if fname is None or fname == '':  # 2nd option
+                    return
             #print("fname=%r" % fname)
-            if fname is None or fname == '':  # 2nd option
-                return
-            flt = str(filt).split()[0]
+            #print("flt=%r" % flt)
         else:
             base, ext = os.path.splitext(os.path.basename(fname))
             if ext.lower() in ['png', 'jpg', 'jpeg', 'tif', 'tiff', 'bmp', 'ps']:
