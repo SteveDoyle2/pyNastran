@@ -1,6 +1,8 @@
 from __future__ import print_function
+from collections import Counter
 import unittest
 
+from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 from pyNastran.bdf.field_writer_8 import print_int_card_blocks
 from pyNastran.bdf.cards.bdf_sets import (
@@ -8,7 +10,7 @@ from pyNastran.bdf.cards.bdf_sets import (
 )
 
 class TestSets(unittest.TestCase):
-    def test_set3_01(self):
+    def test_set1_01(self):
         """checks the SET1 card"""
         fields_blocks = [
             'SET1',
@@ -45,7 +47,7 @@ class TestSets(unittest.TestCase):
         set1b = SET1.add_card(BDFCard(['SET1', sid] + ids))
         set1a.write_card()
 
-    def test_set3_02(self):
+    def test_set3_01(self):
         """checks the SET3 card"""
         sid = 10
         ids = [1, 2, 3, 4, 5]
@@ -53,6 +55,31 @@ class TestSets(unittest.TestCase):
         set3a = SET3(sid, desc, ids, comment='')
         set3b = SET3.add_card(BDFCard(['SET3', sid, desc] + ids))
         set3a.write_card()
+
+    def test_set3_02(self):
+        """checks the SET3 card"""
+        model = BDF()
+
+        # List of grid IDs
+        grid_list = [1, 2, 3, 4, 5, 6, 7, 13, 15,
+                     20, 21, 22, 23, 30, 31, 32, 33]
+
+        # Define the card lines
+        card_lines = ['SET3', 1, 'GRID'] + grid_list
+
+        # Add nastran card to BDF object
+        model.add_card(card_lines, 'SET3', comment='', is_list=True)
+        fields = model.sets[1].raw_fields()
+        thru_count = Counter(fields)['THRU']
+        assert thru_count in [0, 1], fields
+        str(model.sets[1])
+
+        set3a = SET3(2, 'GRID', grid_list, comment='')
+        fields = model.sets[1].raw_fields()
+        thru_count = Counter(fields)['THRU']
+        assert thru_count in [0, 1], fields
+        str(set3a)
+
 
     def test_aset(self):
         """checks the ASET/ASET1 cards"""
