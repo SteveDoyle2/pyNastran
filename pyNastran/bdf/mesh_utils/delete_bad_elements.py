@@ -207,9 +207,16 @@ def get_bad_shells(model, xyz_cid0, nid_map, max_theta=175., max_skew=70.,
             p1 = xyz_cid0[n1, :]
             p2 = xyz_cid0[n2, :]
             p3 = xyz_cid0[n3, :]
-            e1 = (p1 + p2) / 2.
-            e2 = (p2 + p3) / 2.
-            e3 = (p3 + p1) / 2.
+
+            v21 = p2 - p1
+            v32 = p3 - p2
+            v13 = p1 - p3
+            lengths = np.linalg.norm([v21, v32, v13], axis=1)
+            length_min = lengths.min()
+            if length_min == 0.0:
+                eids_failed.append(eid)
+                model.log.debug('eid=%s failed length_min check; length_min=%s' % (eid, length_min))
+                continue
 
             #     3
             #    / \
@@ -218,6 +225,10 @@ def get_bad_shells(model, xyz_cid0, nid_map, max_theta=175., max_skew=70.,
             # /    /  \
             # 1---/----2
             #    e1
+            e1 = (p1 + p2) / 2.
+            e2 = (p2 + p3) / 2.
+            e3 = (p3 + p1) / 2.
+
             e21 = e2 - e1
             e31 = e3 - e1
             e32 = e3 - e2
@@ -225,10 +236,6 @@ def get_bad_shells(model, xyz_cid0, nid_map, max_theta=175., max_skew=70.,
             e3_p2 = e3 - p2
             e2_p1 = e2 - p1
             e1_p3 = e1 - p3
-
-            v21 = p2 - p1
-            v32 = p3 - p2
-            v13 = p1 - p3
             cos_skew1 = np.dot(e2_p1, e31) / (np.linalg.norm(e2_p1) * np.linalg.norm(e31))
             cos_skew2 = np.dot(e2_p1, -e31) / (np.linalg.norm(e2_p1) * np.linalg.norm(e31))
             cos_skew3 = np.dot(e3_p2, e21) / (np.linalg.norm(e3_p2) * np.linalg.norm(e21))
@@ -242,13 +249,6 @@ def get_bad_shells(model, xyz_cid0, nid_map, max_theta=175., max_skew=70.,
             if skew > max_skew:
                 eids_failed.append(eid)
                 model.log.debug('eid=%s failed max_skew check; skew=%s' % (eid, np.degrees(skew)))
-                continue
-
-            lengths = np.linalg.norm([v21, v32, v13], axis=1)
-            length_min = lengths.min()
-            if length_min == 0.0:
-                eids_failed.append(eid)
-                model.log.debug('eid=%s failed length_min check; length_min=%s' % (eid, length_min))
                 continue
 
             #assert len(lengths) == 3, lengths
