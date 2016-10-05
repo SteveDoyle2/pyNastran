@@ -42,8 +42,8 @@ from pyNastran.utils import integer_types
 from pyNastran.bdf.cards.base_card import (
     BaseCard, _node_ids, expand_thru
 )
-from pyNastran.bdf.cards.collpase_card import collapse_thru #collapse_thru_packs
-from pyNastran.bdf.field_writer_8 import print_card_8 #, print_int_card_blocks
+from pyNastran.bdf.cards.collpase_card import collapse_thru, condense, build_thru_packs
+from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, integer_or_string,
     components as fcomponents, components_or_blank as fcomponents_or_blank,
@@ -762,6 +762,8 @@ class SET3(Set):
     Defines a list of grids, elements or points.
 
     +------+-----+-------+-----+-----+-----+-----+-----+-----+
+    |   1  |  2  |   3   |  4  |  5  |  6  |  7  |  8  |  9  |
+    +======+=====+=======+=====+=====+=====+=====+=====+=====+
     | SET3 | SID |  DES  | ID1 | ID2 | ID3 | ID4 | ID5 | ID6 |
     +------+-----+-------+-----+-----+-----+-----+-----+-----+
     |      | ID7 |  ID8  | etc |     |     |     |     |     |
@@ -832,9 +834,12 @@ class SET3(Set):
             return True
         return False
 
-    def SetIDs(self):
+    def SetIDs(self, collapse=True):
         """gets the IDs of the SETx"""
-        return collapse_thru(self.ids)
+        if collapse:
+            return collapse_thru(self.ids, nthru=1)
+        else:
+            return self.IDs
 
     def raw_fields(self):
         """Gets the "raw" card without any processing as a list for printing"""
@@ -849,7 +854,18 @@ class SET3(Set):
         #]
         #print(fields_blocks)
         #return self.comment + print_int_card_blocks(fields_blocks)
-        return self.comment + print_card_8([self.sid, self.desc] + self.SetIDs())
+        msg = self.comment
+
+        self.ids.sort()
+        packs = condense(self.ids)
+        singles, doubles = build_thru_packs(packs, max_dv=1)
+
+        packs = collapse_thru(self.ids)
+        for pack in doubles:
+            msg += print_card_8(['SET3', self.sid, self.desc] + pack)
+        if singles:
+            msg += print_card_8(['SET3', self.sid, self.desc] + singles)
+        return msg
 
 
 class SESET(SetSuper):

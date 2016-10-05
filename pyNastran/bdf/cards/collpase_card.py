@@ -1,4 +1,5 @@
 from __future__ import print_function
+from collections import Counter
 
 
 def collapse_thru_by(fields, get_packs=False):
@@ -29,11 +30,26 @@ def collapse_thru_by_float(fields):
     return fields2
 
 
-def collapse_thru(fields):
+def collapse_thru(fields, nthru=None):
+    """
+    Collapses fields into a set of packs
+
+    Parameters
+    ----------
+    fields : list[int, int, ...]
+        the list of integers to compress
+
+    Returns
+    -------
+    packs = list[pack]
+       pack = list[int first_val, int last_val, int_by]
+    """
     assert 'THRU' not in fields, fields
     fields.sort()
     packs = condense(fields)
-    fields2 = build_thru(packs, max_dv=1)
+    fields2 = build_thru(packs, max_dv=1) # , nthru=nthru
+    if nthru is not None and Counter(fields2)['THRU'] > 2:
+        return fields
     #assert fields == expand_thru_by(fields2), fields2  # why doesn't this work?
     return fields2
 
@@ -164,7 +180,7 @@ def build_thru_packs(packs, max_dv=1):
     return singles, doubles
 
 
-def build_thru(packs, max_dv=None):
+def build_thru(packs, max_dv=None, nthru=None):
     """
     Takes a pack [1,7,2] and converts it into fields used by a SET card.
     The values correspond to the first value, last value, and delta in the
@@ -175,7 +191,23 @@ def build_thru(packs, max_dv=None):
     :param maxDV: integer defining the max allowable delta between two values
             (default=None; no limit)
     """
+    singles = []
     fields = []
+    if nthru is not None:
+        raise NotImplementedError('nthru=%s' % nthru)
+        #assert nthru == 1, nthru # others
+        #assert nthru == 1, nthru
+        #packs2 = []
+        #nvalues = []
+        #for (first_val, last_val, dv) in packs:
+            #nvalue = (last_val - first_val + 1) // dv
+            ##print('first=%s last=%s delta=%s dv=%s n=%s' % (
+                ##first_val, last_val, last_val-first_val, dv, nvalue))
+            #nvalues.append(nvalue)
+        #i = nvalues.index(max(nvalues))
+        ##print('nvalues =', nvalues, i)
+        #packs = []
+
     for (first_val, last_val, dv) in packs:
         if first_val == last_val:
             fields.append(first_val)

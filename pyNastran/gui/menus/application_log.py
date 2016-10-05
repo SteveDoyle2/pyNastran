@@ -9,10 +9,14 @@ if qt_version == 4:
 
 elif qt_version == 5:
     #from PyQt5 import QtCore, QtGui
-    from PyQt5 import QtCore, QSci
+    from PyQt5.QtGui import QFont, QFontMetrics, QColor
+    from PyQt5 import QtCore
+    #from PyQt5.QtCore import QSci
+    #import QScintilla
     from PyQt5.QtWidgets import (
         QDialog, QLabel, QLineEdit, QPushButton, QTextEdit, QDockWidget,
-        QVBoxLayout, QHBoxLayout, QWidget, QFont, qApp, QMenu, QFontMetrics, QColor)
+        QVBoxLayout, QHBoxLayout, QWidget, qApp, QMenu)
+    is_scintilla = False
 
 class HtmlLog(QTextEdit):
 
@@ -41,78 +45,79 @@ class ApplicationLogWidget(QDockWidget):
         #self.setFont(font)
 
 
-class SimplePythonEditorWidget(Qsci.QsciScintilla):
-    ARROW_MARKER_NUM = 8
+if is_scintilla:
+    class SimplePythonEditorWidget(Qsci.QsciScintilla):
+        ARROW_MARKER_NUM = 8
 
-    def __init__(self, parent=None):
-        super(SimplePythonEditorWidget, self).__init__(parent)
+        def __init__(self, parent=None):
+            super(SimplePythonEditorWidget, self).__init__(parent)
 
-        # Set the default font
-        font = QFont()
-        font.setFamily('Courier')
-        font.setFixedPitch(True)
-        font.setPointSize(10)
-        self.setFont(font)
-        self.setMarginsFont(font)
+            # Set the default font
+            font = QFont()
+            font.setFamily('Courier')
+            font.setFixedPitch(True)
+            font.setPointSize(10)
+            self.setFont(font)
+            self.setMarginsFont(font)
 
-        # Margin 0 is used for line numbers
-        fontmetrics = QFontMetrics(font)
-        self.setMarginsFont(font)
-        self.setMarginWidth(0, fontmetrics.width("00000") + 6)
-        self.setMarginLineNumbers(0, True)
-        self.setMarginsBackgroundColor(QColor("#cccccc"))
+            # Margin 0 is used for line numbers
+            fontmetrics = QFontMetrics(font)
+            self.setMarginsFont(font)
+            self.setMarginWidth(0, fontmetrics.width("00000") + 6)
+            self.setMarginLineNumbers(0, True)
+            self.setMarginsBackgroundColor(QColor("#cccccc"))
 
-        # Clickable margin 1 for showing markers
-        self.setMarginSensitivity(1, True)
-        self.connect(self,
-                     QtCore.SIGNAL('marginClicked(int, int, Qt::KeyboardModifiers)'),
-                     self.on_margin_clicked)
-        self.markerDefine(Qsci.QsciScintilla.RightArrow,
-                          self.ARROW_MARKER_NUM)
-        self.setMarkerBackgroundColor(QColor("#ee1111"),
-                                      self.ARROW_MARKER_NUM)
+            # Clickable margin 1 for showing markers
+            self.setMarginSensitivity(1, True)
+            self.connect(self,
+                         QtCore.SIGNAL('marginClicked(int, int, Qt::KeyboardModifiers)'),
+                         self.on_margin_clicked)
+            self.markerDefine(Qsci.QsciScintilla.RightArrow,
+                              self.ARROW_MARKER_NUM)
+            self.setMarkerBackgroundColor(QColor("#ee1111"),
+                                          self.ARROW_MARKER_NUM)
 
-        # Brace matching: enable for a brace immediately before or after
-        # the current position
-        self.setBraceMatching(Qsci.QsciScintilla.SloppyBraceMatch)
+            # Brace matching: enable for a brace immediately before or after
+            # the current position
+            self.setBraceMatching(Qsci.QsciScintilla.SloppyBraceMatch)
 
-        # Current line visible with special background color
-        self.setCaretLineVisible(True)
-        self.setCaretLineBackgroundColor(QColor("#ffe4e4"))
+            # Current line visible with special background color
+            self.setCaretLineVisible(True)
+            self.setCaretLineBackgroundColor(QColor("#ffe4e4"))
 
-        # Set Python lexer
-        # Set style for Python comments (style number 1) to a fixed-width
-        # courier.
-        lexer = Qsci.QsciLexerPython()
-        lexer.setDefaultFont(font)
-        self.setLexer(lexer)
-        self.SendScintilla(Qsci.QsciScintilla.SCI_STYLESETFONT, 1, 'Courier')
+            # Set Python lexer
+            # Set style for Python comments (style number 1) to a fixed-width
+            # courier.
+            lexer = Qsci.QsciLexerPython()
+            lexer.setDefaultFont(font)
+            self.setLexer(lexer)
+            self.SendScintilla(Qsci.QsciScintilla.SCI_STYLESETFONT, 1, 'Courier')
 
-        # Don't want to see the horizontal scrollbar at all
-        # Use raw message to Scintilla here (all messages are documented
-        # here: http://www.scintilla.org/ScintillaDoc.html)
-        self.SendScintilla(Qsci.QsciScintilla.SCI_SETHSCROLLBAR, 0)
+            # Don't want to see the horizontal scrollbar at all
+            # Use raw message to Scintilla here (all messages are documented
+            # here: http://www.scintilla.org/ScintillaDoc.html)
+            self.SendScintilla(Qsci.QsciScintilla.SCI_SETHSCROLLBAR, 0)
 
-        # not too small
-        #self.setMinimumSize(600, 450)
+            # not too small
+            #self.setMinimumSize(600, 450)
 
-    def on_margin_clicked(self, nmargin, nline, modifiers):
-        # Toggle marker for the line the margin was clicked on
-        if self.markersAtLine(nline) != 0:
-            self.markerDelete(nline, self.ARROW_MARKER_NUM)
-        else:
-            self.markerAdd(nline, self.ARROW_MARKER_NUM)
+        def on_margin_clicked(self, nmargin, nline, modifiers):
+            # Toggle marker for the line the margin was clicked on
+            if self.markersAtLine(nline) != 0:
+                self.markerDelete(nline, self.ARROW_MARKER_NUM)
+            else:
+                self.markerAdd(nline, self.ARROW_MARKER_NUM)
 
-    def toPlainText(self):
-        data = str(self.text())
-        return data
+        def toPlainText(self):
+            data = str(self.text())
+            return data
 
 class PythonConsoleWidget(QDockWidget):
     """
     original code pulled from:
     http://stackoverflow.com/questions/31380457/add-right-click-functionality-to-listwidget-in-pyqt4
     http://stackoverflow.com/questions/20951660/creating-a-syntax-highlighter-in-pythonpyqt4
-
+    http://eli.thegreenplace.net/2011/04/01/sample-using-qscintilla-with-pyqt
     """
     def __init__(self, parent):
         self.parent = parent
@@ -122,7 +127,7 @@ class PythonConsoleWidget(QDockWidget):
         self.execute_python_button = QPushButton('Execute')
         self.execute_and_clear_python_button = QPushButton('Execute and Clear')
 
-        if is_pygments:
+        if is_pygments and is_scintilla:
             #self.enter_data = QSyntaxHighlighting()
             self.enter_data = SimplePythonEditorWidget()
         else:

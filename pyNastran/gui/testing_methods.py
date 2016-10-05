@@ -7,14 +7,14 @@ import vtk
 from pyNastran.utils.log import get_logger
 from pyNastran.gui.qt_files.alt_geometry_storage import AltGeometry
 
-from pyNastran.gui.qt_version import qt_version
-if qt_version == 4:
-    from PyQt4.QtGui import QMainWindow
-elif qt_version == 5:
-    from PyQt5.QtWidgets import  QMainWindow
+#from pyNastran.gui.qt_version import qt_version
+#if qt_version == 4:
+#    from PyQt4.QtGui import QMainWindow
+#elif qt_version == 5:
+#    from PyQt5.QtWidgets import  QMainWindow
 
-
-class GuiAttributes(QMainWindow):
+#class GuiAttributes(QMainWindow):
+class GuiAttributes(object):
     """All methods in this class must not require VTK"""
     def __init__(self, inputs, res_widget):
         """
@@ -132,10 +132,11 @@ class GuiAttributes(QMainWindow):
         self.groups = {}
         self.group_active = 'main'
 
-        if qt_version == 4:
-            QMainWindow.__init__(self)
-        elif qt_version == 5:
-            super(QMainWindow, self).__init__()
+        #if not isinstance(res_widget, MockResWidget):
+            #if qt_version == 4:
+                #QMainWindow.__init__(self)
+            #elif qt_version == 5:
+                #super(QMainWindow, self).__init__()
 
     def set_quad_grid(self, name, nodes, elements, color, line_width=5, opacity=1.):
         """
