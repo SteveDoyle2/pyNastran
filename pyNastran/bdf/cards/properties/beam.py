@@ -1187,6 +1187,27 @@ class PBMSECT(LineProperty):
         self.mid = model.Material(self.mid, msg=msg)
         self.mid_ref = self.mid
 
+        self.outp = model.Set(self.outp)
+        self.outp_ref = self.outp
+
+        self.brp1 = model.Set(self.brp1)
+        self.brp1_ref = self.brp1
+
+        self.outp_ref.cross_reference(model, 'Point', msg=msg)
+        self.brp1_ref.cross_reference(model, 'Point', msg=msg)
+
+    @property
+    def outp_id(self):
+        if isinstance(self.outp, int):
+            return self.outp
+        return self.outp.sid
+
+    @property
+    def brp1_id(self):
+        if isinstance(self.brp1, int):
+            return self.brp1
+        return self.brp1.sid
+
     def uncross_reference(self):
         self.mid = self.Mid()
         del self.mid_ref
@@ -1256,7 +1277,7 @@ class PBMSECT(LineProperty):
         card = ['PBMSECT', self.pid, self.Mid(), self.form]
         end = ''
         for key, value in [('NSM', self.nsm), ('t', self.t),
-                           ('outp', self.outp), ('brp(1)', self.brp1), ]:
+                           ('outp', self.outp_id), ('brp(1)', self.brp1_id), ]:
             if value:
                 end += '        %s=%s,\n' % (key, value)
         if end:

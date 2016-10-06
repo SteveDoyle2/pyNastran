@@ -824,12 +824,23 @@ class SET3(Set):
     def get_ids(self):
         if self.xref_type is None:
             ids = self.ids
-        elif self.xref_type == 'Node':
-            ids = [node if isinstance(node, integer_types) else node.nid
-                   for node in self.ids]
+        elif self.xref_type == 'Point':
+            # TODO: improve this...
+            ids = [point if isinstance(point, integer_types) else point.nid
+                   for point in self.ids]
         else:
             raise NotImplementedError("xref_type=%r and must be ['Node']" % self.xref_type)
         return ids
+
+    def cross_reference(self, model, xref_type, msg=''):
+        msg = ' which is required by SET3 sid=%s%s' % (self.sid, msg)
+        #if xref_type == 'Node':
+            #self.ids = model.Nodes(self.get_ids(), msg=msg)
+        if xref_type == 'Point':
+            self.ids = [model.points[nid] for nid in self.ids]
+        else:
+            raise NotImplementedError("xref_type=%r and must be ['Point']" % xref_type)
+        self.xref_type = xref_type
 
     def add_set(self, set3):
         self.ids += set3.get_ids()
@@ -900,7 +911,7 @@ class SET3(Set):
         msg = self.comment
 
         self.ids.sort()
-        ids = self.ids
+        ids = self.get_ids()
         packs = condense(ids)
         if len(packs) == 1:
             singles, doubles = build_thru_packs(packs, max_dv=1)
