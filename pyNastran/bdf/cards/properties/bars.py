@@ -1308,6 +1308,171 @@ class PBARL(LineProperty):
         return self.comment + print_card_16(card)
 
 
+class PBRSECT(LineProperty):
+    """
+    not done
+    """
+    type = 'PBRSECT'
+
+    def __init__(self, pid, mid, form, options, comment=''):
+        LineProperty.__init__(self)
+        if comment:
+            self._comment = comment
+
+        #: Property ID
+        self.pid = pid
+        #: Material ID
+        self.mid = mid
+        self.form = form
+
+        self.nsm = 0.
+        self.t = None
+        self.outp = None
+        self.brp1 = None
+        for key, value in options.items():
+            key = key.upper()
+            #if key == 'NSM':
+                #self.nsm = float(value)
+            #elif key == 'OUTP':
+                #self.outp = int(value)
+            #elif key == 'BRP(1)':
+                #self.brp1 = int(value)
+            #elif key == 'T':
+                #self.t = float(value)
+            #else:
+            raise NotImplementedError('PBRSECT.pid=%s key=%r value=%r' % (pid, key, value))
+
+        self._validate_input()
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        line0 = card[0]
+        if '\t' in line0:
+            line0 = line0.expandtabs()
+
+        bdf_card = BDFCard(to_fields([line0], 'PBMSECT'))
+        line0_eq = line0[16:]
+        lines_joined = ''.join(card[1:]).replace(' ', '')
+
+        if lines_joined:
+            fields = lines_joined.split(',')
+            slines = [field.split('=') for field in fields]
+            options = {key : value for (key, value) in slines}
+        else:
+            options = {}
+
+        pid = integer(bdf_card, 1, 'pid')
+        mid = integer(bdf_card, 2, 'mid')
+        form = string_or_blank(bdf_card, 3, 'form')
+        assert form in ['GS', 'OP', 'CP'], 'pid=%s form=%r' % (pid, form)
+
+        return PBRSECT(pid, mid, form, options, comment=comment)
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        pid = data[0]
+        mid = data[1]
+        group = data[2].strip()
+        Type = data[3].strip()
+        dim = list(data[4:-1])
+        nsm = data[-1]
+        #print("group = %r" % self.group)
+        #print("Type  = %r" % self.Type)
+        #print("dim = ",self.dim)
+        #print(str(self))
+        #print("*PBARL = ",data)
+        raise NotImplementedError('not finished...')
+        #return PBRSECT(pid, mid, group, Type, dim, nsm, comment=comment)
+
+    def _validate_input(self):
+        pass
+
+    def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ' which is required by PBRSECT mid=%s' % self.mid
+        self.mid = model.Material(self.mid, msg=msg)
+        self.mid_ref = self.mid
+
+    def uncross_reference(self):
+        self.mid = self.Mid()
+        del self.mid_ref
+
+    def _verify(self, xref=False):
+        pid = self.Pid()
+        mid = self.Mid()
+        #A = self.Area()
+        #J = self.J()
+        #nsm = self.Nsm()
+        #mpl = self.MassPerLength()
+        assert isinstance(pid, int), 'pid=%r' % pid
+        assert isinstance(mid, int), 'mid=%r' % mid
+        #assert isinstance(A, float), 'pid=%r' % A
+        #assert isinstance(J, float), 'cid=%r' % J
+        #assert isinstance(nsm, float), 'nsm=%r' % nsm
+        #assert isinstance(mpl, float), 'mass_per_length=%r' % mpl
+
+    def Area(self):
+        """
+        Gets the area :math:`A` of the CBAR.
+        """
+        return 0.
+        #raise NotImplementedError('Area is not implemented for PBRSECT')
+
+    def Nsm(self):
+        """
+        Gets the non-structural mass :math:`nsm` of the CBAR.
+        """
+        return 0.
+        #raise NotImplementedError('Nsm is not implemented for PBRSECT')
+
+    def MassPerLength(self):
+        r"""
+        Gets the mass per length :math:`\frac{m}{L}` of the CBAR.
+
+        .. math:: \frac{m}{L} = A \rho + nsm
+        """
+        rho = self.Rho()
+        area = self.Area()
+        nsm = self.Nsm()
+        return area * rho + nsm
+
+    def I11(self):
+        raise NotImplementedError('I11 is not implemented for PBRSECT')
+
+    #def I12(self):
+        #return self.I12()
+
+    def J(self):
+        raise NotImplementedError('J is not implemented for PBRSECT')
+
+    def I22(self):
+        raise NotImplementedError('I22 is not implemented for PBRSECT')
+
+    def raw_fields(self):
+        """not done..."""
+        list_fields = ['PBRSECT', self.pid, self.Mid(), self.form]
+                       #None, None, None, None] + self.dim + [self.nsm]
+        return list_fields
+
+    def repr_fields(self):
+        """not done..."""
+        list_fields = ['PBRSECT', self.pid, self.Mid(), self.form]
+        return list_fields
+
+    def write_card(self, size=8, is_double=False):
+        card = self.repr_fields()
+        if size == 8:
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
+
+
 class PBEAM3(LineProperty):  # not done, cleanup
     type = 'PBEAM3'
 

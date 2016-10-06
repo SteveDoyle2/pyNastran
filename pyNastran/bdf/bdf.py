@@ -57,8 +57,8 @@ from pyNastran.bdf.cards.elements.rods import CROD, CONROD, CTUBE
 from pyNastran.bdf.cards.elements.bars import CBAR, CBEAM3, CBEND
 from pyNastran.bdf.cards.elements.beam import CBEAM
 from pyNastran.bdf.cards.properties.rods import PROD, PTUBE
-from pyNastran.bdf.cards.properties.bars import PBAR, PBARL  # PBEND
-from pyNastran.bdf.cards.properties.beam import PBEAM, PBEAML, PBCOMP
+from pyNastran.bdf.cards.properties.bars import PBAR, PBARL, PBRSECT  # PBEND
+from pyNastran.bdf.cards.properties.beam import PBEAM, PBEAML, PBCOMP, PBMSECT
 # CMASS5
 from pyNastran.bdf.cards.elements.mass import CONM1, CONM2, CMASS1, CMASS2, CMASS3, CMASS4
 from pyNastran.bdf.cards.properties.mass import PMASS, NSM
@@ -95,7 +95,7 @@ from pyNastran.bdf.cards.materials import (MAT1, MAT2, MAT3, MAT4, MAT5,
 from pyNastran.bdf.cards.material_deps import MATT1, MATT2, MATT4, MATT5, MATS1
 
 from pyNastran.bdf.cards.methods import EIGB, EIGC, EIGR, EIGP, EIGRL
-from pyNastran.bdf.cards.nodes import GRID, GRDSET, SPOINTs, EPOINTs
+from pyNastran.bdf.cards.nodes import GRID, GRDSET, SPOINTs, EPOINTs, POINT
 from pyNastran.bdf.cards.optimization import (DCONADD, DCONSTR, DESVAR, DDVAL, DOPTPRM, DLINK,
                                               DRESP1, DRESP2, DRESP3,
                                               DVCREL1, DVCREL2,
@@ -322,6 +322,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
             ## nodes
             'GRID', 'GRDSET', 'SPOINT', 'EPOINT',
+
+            # points
+            'POINT',
             #'POINT', 'POINTAX', 'RINGAX', 'GRIDG'
 
             # mass
@@ -355,8 +358,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'PELAS', 'PGAP', 'PFAST', 'PLPLANE',
             'PBUSH', 'PBUSH1D',
             'PDAMP', 'PDAMP5',
-            'PROD', 'PBAR', 'PBARL', 'PBEAM', 'PTUBE', 'PBCOMP', # 'PBEND',
-            'PBEAML',  # not fully supported
+            'PROD', 'PBAR', 'PBARL', 'PBEAM', 'PTUBE', 'PBCOMP', 'PBRSECT', # 'PBEND',
+            'PBEAML', 'PBMSECT', # not fully supported
             # 'PBEAM3',
 
             'PSHELL', 'PCOMP', 'PCOMPG', 'PSHEAR',
@@ -1612,7 +1615,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         """
         card_name = card_name.upper()
         self._increase_card_count(card_name)
-        if card_name in ['DEQATN']:
+        if card_name in ['DEQATN', 'PBRSECT', 'PBMSECT']:
             card_obj = card_lines
             card = card_lines
         else:
@@ -1659,7 +1662,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         """
         card_name = card_name.upper()
         self._increase_card_count(card_name)
-        if card_name in ['DEQATN']:
+        if card_name in ['DEQATN', 'PBRSECT', 'PBMSECT']:
             card_obj = card_lines
             card = card_lines
         else:
@@ -1704,7 +1707,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         """
         card_name = card_name.upper()
         self._increase_card_count(card_name)
-        if card_name in ['DEQATN']:
+        if card_name in ['DEQATN', 'PBRSECT', 'PBMSECT']:
             card_obj = card_lines
             card = card_lines
         else:
@@ -1736,9 +1739,11 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         self._card_parser = {
             #'=' : (Crash, None),
             '/' : (Crash, None),
+            # nodes
             'GRID' : (GRID, self.add_node),
             'SPOINT' : (SPOINTs, self.add_spoint),
             'EPOINT' : (EPOINTs, self.add_epoint),
+            'POINT' : (POINT, self.add_point),
 
             'PARAM' : (PARAM, self.add_PARAM),
 
@@ -1758,11 +1763,13 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'CBAR' : (CBAR, self.add_element),
             'PBAR' : (PBAR, self.add_property),
             'PBARL' : (PBARL, self.add_property),
+            'PBRSECT' : (PBRSECT, self.add_property),
 
             'CBEAM' : (CBEAM, self.add_element),
             'PBEAM' : (PBEAM, self.add_property),
             'PBEAML' : (PBEAML, self.add_property),
             'PBCOMP' : (PBCOMP, self.add_property),
+            'PBMSECT' : (PBMSECT, self.add_property),
 
             'CBEAM3' : (CBEAM3, self.add_element),
             #'PBEAM3' : (PBEAM3, self.add_property),

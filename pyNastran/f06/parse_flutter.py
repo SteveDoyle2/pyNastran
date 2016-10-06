@@ -148,6 +148,34 @@ class FlutterResponse(object):
             raise NotImplementedError(method)
         #print(self.results.shape)
 
+
+        # c - cyan
+        # b - black
+        # r - red
+        # g - green
+        # m - magenta
+        # y - yellow
+        colors = ['b', 'c', 'g', 'k', 'm', 'r'] #, 'y']
+        # D - wide diamond
+        # h - hexagon
+        # * - star
+        # + - plus
+        # 3 - 3 pointed star
+        # o - circle
+        # d - thin diamond
+        # 1 - Y shape
+        # s - square
+        shapes = ['D', 'h', '*', 's', 'd', '3', 'o', '1', '2', '4', 'x', '^', '<', '>'] # '+',
+
+        # this symbol list is taken from a series of "good" colors (e.g. not yellow)
+        # and easily distinguishable shapes.  Far more combinations that is necessary
+        # is defined
+        #symbol_list = []
+        #for shape in shapes:
+            #for color in colors:
+                #symbol_list.append('%s-%s' % (shape, color))
+
+
         colors = ['r', 'g', 'b', 'k']
         symbols = ['o', '*', 'x', 'v', '>', '<', '^']
         self._symbols = []

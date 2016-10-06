@@ -23,7 +23,7 @@ The superelement sets start with SE:
 
 +------------+-----------------+
 | Entry Type | Equivalent Type |
-+------------+-----------------+
++============+=================+
 |  SEQSETi   | QSETi           |
 +------------+-----------------+
 |  SESUP     | SUPORT          |
@@ -101,6 +101,8 @@ class ABCQSet(Set):
     Defines degrees-of-freedom in the analysis set (A-set)
 
     +------+-----+----+-----+------+-----+----+-----+----+
+    |   1  |   2 |  3 |  4  |   5  |  6  |  7 |   8 |  9 |
+    +======+=====+====+=====+======+=====+====+=====+====+
     | ASET | ID1 | C1 | ID2 |  C2  | ID3 | C3 | ID4 | C4 |
     +------+-----+----+-----+------+-----+----+-----+----+
     | ASET | 16  |  2 |  23 | 3516 |  1  | 4  |     |    |
@@ -831,6 +833,7 @@ class SET3(Set):
 
     def add_set(self, set3):
         self.ids += set3.get_ids()
+        assert self.sid == set3.sid, 'SET3.sid=%r; existing sid=%r new=%r' % (self.sid, self.sid, set3.sid)
         assert self.desc == set3.desc, 'SET3.sid=%r; existing desc=%r new=%r' % (self.sid, self.desc, set3.desc)
         self.clean_ids()
 
@@ -972,6 +975,8 @@ class SEBSET(SuperABCQSet):
     dynamic reduction or component mode calculations.
 
     +--------+------+-----+------+-----+----+-----+----+
+    |    1   |   2  |  3  |   4  |  5  |  6 |  7  |  8 |
+    +========+======+=====+======+=====+====+=====+====+
     | SEBSET | SEID | ID1 |  C1  | ID2 | C2 | ID3 | C3 |
     +--------+------+-----+------+-----+----+-----+----+
     | SEBSET |  C   | ID1 | THRU | ID2 |    |     |    |
@@ -1057,6 +1062,8 @@ class RADSET(Set):  # not integrated
     radiation enclosure analysis.
 
     +--------+----------+----------+----------+----------+----------+----------+----------+
+    |   1    |     2    |     3    |     4    |     5    |     6    |     7    |     8    |
+    +========+==========+==========+==========+==========+==========+==========+==========+
     | RADSET | ICAVITY1 | ICAVITY2 | ICAVITY3 | ICAVITY4 | ICAVITY5 | ICAVITY6 | ICAVITY7 |
     +--------+----------+----------+----------+----------+----------+----------+----------+
     |        | ICAVITY8 | ICAVITY9 | -etc.-   |          |          |          |          |
