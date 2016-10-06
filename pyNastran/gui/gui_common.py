@@ -87,7 +87,7 @@ class PyNastranRenderWindowInteractor(QVTKRenderWindowInteractor):
                                             iren=iren, rw=render_window)
         #self.Highlight
 
-
+# http://pyqt.sourceforge.net/Docs/PyQt5/multiinheritance.html
 class GuiCommon2(GuiCommon):
     def __init__(self, fmt_order, html_logging, inputs):
         # this will reset the background color/label color if things break
