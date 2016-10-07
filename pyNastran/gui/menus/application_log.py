@@ -17,6 +17,7 @@ elif qt_version == 5:
         QDialog, QLabel, QLineEdit, QPushButton, QTextEdit, QDockWidget,
         QVBoxLayout, QHBoxLayout, QWidget, qApp, QMenu)
     is_scintilla = False
+    #import PyQt5.qsci
 
 class HtmlLog(QTextEdit):
 

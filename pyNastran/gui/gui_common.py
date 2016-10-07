@@ -88,12 +88,37 @@ class PyNastranRenderWindowInteractor(QVTKRenderWindowInteractor):
         #self.Highlight
 
 
-class GuiCommon2(GuiCommon):
-    def __init__(self, fmt_order, html_logging, inputs):
+class GuiCommon2(QMainWindow, GuiCommon):
+    def __init__(self, *kwargs, **kwds):
+        """
+        fmt_order, html_logging, inputs, parent=None,
+        """
         # this will reset the background color/label color if things break
+        #super(QMainWindow, self).__init__(self)
+        super(GuiCommon2, self).__init__(*kwargs, **kwds)
+
+        fmt_order = kwds['fmt_order']
+        inputs = kwds['inputs']
+        html_logging = kwds['html_logging']
+        del kwds['fmt_order']
+        #del kwds['inputs']
+        del kwds['html_logging']
+
+        #print('inputs =', inputs)
+        print('kwargs =', kwargs)
+        print('kwds =', kwds)
         self.reset_settings = False
 
-        GuiCommon.__init__(self, inputs)
+        if qt_version == 4:
+            QMainWindow.__init__(self)
+        #else:
+            #super(QMainWindow, self).__init__(*kwargs, **kwds)
+
+            #QMainWindow.__init__(self, parent)
+            #super(QMainWindow, self).__init__(self, parent)
+            # (go to the next class, can't hand it off)
+        #GuiCommon.__init__(self, inputs)
+        #super(GuiCommon2, self).__init__(self, inputs)
 
         self.fmts = fmt_order
         self.base_window_title = "pyNastran v%s"  % pyNastran.__version__

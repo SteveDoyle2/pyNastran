@@ -374,6 +374,16 @@ class FlutterResponse(object):
         plt.suptitle(title)
         self._finalize_plot(legend, show, png_filename, clear)
 
+    @property
+    def flutter_speed(self, modes=None):
+        """gets the flutter speed"""
+        if modes is None:
+            modes = self.modes
+        else:
+            modes = np.asarray(modes)
+
+        #for mode in modes:
+
     def plot_root_locus(self, modes=None,
                         fig=None,
                         xlim=None, ylim=None,

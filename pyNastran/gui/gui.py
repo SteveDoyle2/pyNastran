@@ -105,7 +105,11 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, DegenGeomIO, ShabpIO, PanairIO
     speeding up vtk cell loading in unstructured grids
     http://vtk.1045678.n5.nabble.com/Speed-up-cell-allocation-td5733208.html#a5733214
     """
-    def __init__(self, inputs):
+    def __init__(self, inputs, *kwargs, **kwds):
+        """
+        inputs=None
+        """
+        print('kwds =', kwds)
         html_logging = True
         fmt_order = [
             # results
@@ -115,24 +119,29 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, DegenGeomIO, ShabpIO, PanairIO
             # no results
             'lawgs', 'stl', 'fast', 'avus', #'plot3d', 'tetgen',
         ]
-        GuiCommon2.__init__(self, fmt_order, html_logging, inputs)
+        #GuiCommon2.__init__(self, fmt_order, html_logging, inputs, parent)
+        super(MainWindow, self).__init__(self,
+                                         #fmt_order=fmt_order, inputs=inputs,
+                                         #html_logging=html_logging,
+                                         *kwargs, **kwds)
 
-        ADB_IO.__init__(self)
-        AvusIO.__init__(self)
-        NastranIO.__init__(self)
-        Cart3dIO.__init__(self)
-        DegenGeomIO.__init__(self)
-        FastIO.__init__(self)
-        LaWGS_IO.__init__(self)
-        PanairIO.__init__(self)
-        Plot3d_io.__init__(self)
-        STL_IO.__init__(self)
-        ShabpIO.__init__(self)
-        SurfIO.__init__(self)
-        TetgenIO.__init__(self)
-        TecplotIO.__init__(self)
-        Usm3dIO.__init__(self)
-        UGRID_IO.__init__(self)
+        if qt_version == 4:
+            ADB_IO.__init__(self)
+            AvusIO.__init__(self)
+            NastranIO.__init__(self)
+            Cart3dIO.__init__(self)
+            DegenGeomIO.__init__(self)
+            FastIO.__init__(self)
+            LaWGS_IO.__init__(self)
+            PanairIO.__init__(self)
+            Plot3d_io.__init__(self)
+            STL_IO.__init__(self)
+            ShabpIO.__init__(self)
+            SurfIO.__init__(self)
+            TetgenIO.__init__(self)
+            TecplotIO.__init__(self)
+            Usm3dIO.__init__(self)
+            UGRID_IO.__init__(self)
 
         self.build_fmts(fmt_order, stop_on_failure=False)
 

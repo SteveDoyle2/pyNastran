@@ -16,8 +16,10 @@ from pyNastran.gui.testing_methods import GuiAttributes
 
 
 class GuiCommon(GuiAttributes):
-    def __init__(self, inputs):
-        GuiAttributes.__init__(self, inputs, res_widget=None)
+    def __init__(self, *kwargs, **kwds):
+        inputs = kwds['inputs']
+        super(GuiCommon, self).__init__(*kwargs, **kwds)
+        #GuiAttributes.__init__(self, inputs, res_widget=None)
         self.is_groups = inputs['is_groups']
 
         #self.groups = set([])
