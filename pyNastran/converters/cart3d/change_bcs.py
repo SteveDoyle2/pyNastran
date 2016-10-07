@@ -1,6 +1,24 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function, unicode_literals
-from PyQt4 import QtCore, QtGui
+
+from pyNastran.gui.qt_version import qt_version
+if qt_version == 4:
+    #from PyQt4 import QtCore, QtGui
+    from PyQt4.QtGui import (
+        QDialog, QLineEdit, QPushButton, QGridLayout, QVBoxLayout, QHBoxLayout, QApplication,
+        QColorDialog,
+    )
+    #QButtonGroup, QCheckBox
+    #from PyQt4.QtCore import QString
+elif qt_version == 5:
+    #from PyQt5 import QtCore, QtGui
+    from PyQt5.QtWidgets import (
+        QDialog, QLineEdit, QPushButton, QGridLayout, QVBoxLayout, QHBoxLayout, QApplication,
+        QColorDialog,
+    )
+    #QButtonGroup, QCheckBox
+
+
 
 from numpy import setdiff1d, unique, array, hstack
 
@@ -31,8 +49,7 @@ class ChangeBCs(QtGui.QDialog):
         self.elements_pound = data['elements_pound']
 
         self.out_data = data
-
-        QtGui.QDialog.__init__(self, win_parent)
+        QDialog.__init__(self, win_parent)
         #self.setupUi(self)
         self.setWindowTitle('Groups: Modify')
         self.create_widgets()
@@ -42,42 +59,42 @@ class ChangeBCs(QtGui.QDialog):
 
     def create_widgets(self):
         # Name
-        self.pid = QtGui.QLabel("New Property ID:")
-        self.pid_edit = QtGui.QLineEdit(str(self._default_pid).strip())
-        self.pid_button = QtGui.QPushButton("Default")
+        self.pid = QLabel("New Property ID:")
+        self.pid_edit = QLineEdit(str(self._default_pid).strip())
+        self.pid_button = QPushButton("Default")
 
         # Name
-        self.elements = QtGui.QLabel("Element ID:")
-        self.elements_edit = QtGui.QLineEdit(str(self._default_elements).strip())
-        self.elements_button = QtGui.QPushButton("Default")
+        self.elements = QLabel("Element ID:")
+        self.elements_edit = QLineEdit(str(self._default_elements).strip())
+        self.elements_button = QPushButton("Default")
 
 
         # elements
-        self.theta = QtGui.QLabel("Theta Neighbor Max:")
-        self.theta_edit = QtGui.QLineEdit(str(self._default_theta).strip())
-        self.theta_button = QtGui.QPushButton("Default")
+        self.theta = QLabel("Theta Neighbor Max:")
+        self.theta_edit = QLineEdit(str(self._default_theta).strip())
+        self.theta_button = QPushButton("Default")
 
         # applies a unique implicitly
         self.eids = parse_patran_syntax(str(self._default_elements), pound=self.elements_pound)
         self.cids = parse_patran_syntax(str(self._default_coords), pound=self.coords_pound)
 
         # continuous / discrete
-        #self.checkbox_continuous = QtGui.QCheckBox("Continuous")
-        #self.checkbox_discrete = QtGui.QCheckBox("Discrete")
+        #self.checkbox_continuous = QCheckBox("Continuous")
+        #self.checkbox_discrete = QCheckBox("Discrete")
         #self.checkbox_discrete.setChecked(self._default_is_discrete)
 
         # put these in a group
-        #checkboxs2 = QtGui.QButtonGroup(self)
+        #checkboxs2 = QButtonGroup(self)
         #checkboxs2.addButton(self.checkbox_continuous)
         #checkboxs2.addButton(self.checkbox_discrete)
 
         # closing
-        self.apply_button = QtGui.QPushButton("Apply")
-        self.ok_button = QtGui.QPushButton("OK")
-        self.cancel_button = QtGui.QPushButton("Cancel")
+        self.apply_button = QPushButton("Apply")
+        self.ok_button = QPushButton("OK")
+        self.cancel_button = QPushButton("Cancel")
 
     def create_layout(self):
-        grid = QtGui.QGridLayout()
+        grid = QGridLayout()
         grid.addWidget(self.pid, 0, 0)
         grid.addWidget(self.pid_edit, 0, 1)
         grid.addWidget(self.pid_button, 0, 2)
@@ -86,13 +103,13 @@ class ChangeBCs(QtGui.QDialog):
         grid.addWidget(self.elements_edit, 2, 1)
         grid.addWidget(self.elements_button, 2, 2)
 
-        ok_cancel_box = QtGui.QHBoxLayout()
+        ok_cancel_box = QHBoxLayout()
         ok_cancel_box.addWidget(self.apply_button)
         ok_cancel_box.addWidget(self.ok_button)
         ok_cancel_box.addWidget(self.cancel_button)
 
 
-        vbox = QtGui.QVBoxLayout()
+        vbox = QVBoxLayout()
         vbox.addLayout(grid)
         vbox.addStretch()
         vbox.addLayout(ok_cancel_box)
@@ -154,7 +171,7 @@ class ChangeBCs(QtGui.QDialog):
     def on_edit_color(self):
         c = [int(255 * i) for i in self.text_col]
         #print('c =', c)
-        col = QtGui.QColorDialog.getColor(QtGui.QColor(*c), self, "Choose a text color")
+        col = QColorDialog.getColor(QtGui.QColor(*c), self, "Choose a text color")
         self.color.SetColor(col)
 
     def on_default_color(self):
@@ -313,7 +330,7 @@ def main():
     import sys
     # Someone is launching this directly
     # Create the QApplication
-    app = QtGui.QApplication(sys.argv)
+    app = QApplication(sys.argv)
 
     nice_blue = (0.1, 0.2, 0.4)
     #The Main window

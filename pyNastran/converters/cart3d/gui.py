@@ -16,6 +16,20 @@ from numpy import ndarray, eye
 import vtk
 from PyQt4 import QtCore, QtGui
 
+from pyNastran.gui.qt_version import qt_version
+if qt_version == 4:
+    from PyQt4 import QtCore, QtGui
+    from PyQt4.QtGui import (
+        QApplication, qApp)
+    from PyQt4.QtCore import QString
+elif qt_version == 5:
+    from PyQt5 import QtCore, QtGui
+    from PyQt5.QtWidgets import (
+        QApplication, qApp)
+    from six import text_type as QString
+
+
+
 # pyNastran
 import pyNastran
 from pyNastran.utils import print_bad_path
@@ -151,15 +165,15 @@ class MainWindow(GuiCommon2, Cart3dIO):
         settings.setValue("main_WindowGeometry", self.saveGeometry())
         settings.setValue("mainWindowState", self.saveState())
         settings.setValue("backgroundColor", self.background_col)
-        QtGui.qApp.quit()
+        qApp.quit()
 
 
 def main():
-    app = QtGui.QApplication(sys.argv)
-    QtGui.QApplication.setOrganizationName("pyCart3d")
-    QtGui.QApplication.setOrganizationDomain(pyNastran.__website__)
-    QtGui.QApplication.setApplicationName("pyCart3d")
-    QtGui.QApplication.setApplicationVersion(pyNastran.__version__)
+    app = QApplication(sys.argv)
+    QApplication.setOrganizationName("pyCart3d")
+    QApplication.setOrganizationDomain(pyNastran.__website__)
+    QApplication.setApplicationName("pyCart3d")
+    QApplication.setApplicationVersion(pyNastran.__version__)
 
     inputs = get_inputs()
     window = MainWindow(inputs)

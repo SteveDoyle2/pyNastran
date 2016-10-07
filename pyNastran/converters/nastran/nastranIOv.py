@@ -142,11 +142,11 @@ class NastranIO(object):
             geom_methods2 = 'Nastran Punch (*.bdf; *.dat; *.nas; *.ecd; *.pch)'
 
         data_bdf = (
-            'Nastran BDF',
+            'nastran',
             geom_methods1, self.load_nastran_geometry,
             'Nastran OP2 (*.op2)', self.load_nastran_results)
         data_pch = (
-            'Nastran BDF2',
+            'nastran',
             geom_methods2, self.load_nastran_geometry,
             'Nastran OP2 (*.op2)', self.load_nastran_results)
 

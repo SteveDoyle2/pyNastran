@@ -127,7 +127,7 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, DegenGeomIO, ShabpIO, PanairIO
         #fmt_order=fmt_order, inputs=inputs,
         #html_logging=html_logging,
 
-        if qt_version == 4:
+        if qt_version in [4, 5]:
             ADB_IO.__init__(self)
             AvusIO.__init__(self)
             NastranIO.__init__(self)

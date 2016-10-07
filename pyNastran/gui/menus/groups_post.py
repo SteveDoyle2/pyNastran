@@ -154,7 +154,7 @@ class GroupsPostView(QDialog):
         table.resizeRowsToContents()
         #table.horizontalHeaderItem(1).setTextAlignment(QtCore.AlignHCenter)
 
-        #= QtGui.QVBoxLayout()
+        #= QVBoxLayout()
         ok_cancel_box = QHBoxLayout()
         ok_cancel_box.addWidget(self.apply_button)
         ok_cancel_box.addWidget(self.ok_button)

@@ -37,10 +37,13 @@ from pyNastran.gui.qt_files.QVTKRenderWindowInteractor import QVTKRenderWindowIn
 
 
 import pyNastran
+
 from pyNastran.bdf.cards.base_card import deprecated
 from pyNastran.utils.log import SimpleLogger
 from pyNastran.utils import print_bad_path, integer_types
 from pyNastran.utils.numpy_utils import loadtxt_nice
+
+from pyNastran.gui.gui_utils import save_file_dialog, open_file_dialog
 
 from pyNastran.gui.qt_files.gui_qt_common import GuiCommon
 from pyNastran.gui.qt_files.scalar_bar import ScalarBar
@@ -1487,9 +1490,9 @@ class GuiCommon2(QMainWindow, GuiCommon):
         if default_filename is None:
             default_filename = self.last_dir
         # getOpenFileName return QString and we want Python string
-        fname, wildcard_level = QtGui.QFileDialog.getOpenFileNameAndFilter(
-            self, title, default_filename, qt_wildcard)
-        return str(wildcard_level), str(fname)
+        fname, wildcard_level = open_file_dialog(self, title, default_filename,
+                                                 qt_wildcard)
+        return wildcard_level, fname
 
     #def _create_load_file_dialog2(self, qt_wildcard, title):
         ## getOpenFileName return QString and we want Python string
@@ -1648,7 +1651,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
             #gridResult.Reset()
             #gridResult.Modified()
-
             if not os.path.exists(infile_name) and geometry_format:
                 msg = 'input file=%r does not exist' % infile_name
                 self.log_error(msg)
@@ -1775,6 +1777,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         Parameters
         ----------
+        result_type : str
+            'Nodal', 'Elemental'
         out_filename : str / None
             the path to the results file
         """
@@ -2652,18 +2656,13 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 'TIFF Image *.tif *.tiff (*.tif, *.tiff);; '
                 'BMP Image *.bmp (*.bmp);; '
                 'PostScript Document *.ps (*.ps)')
-            if qt_version == 4:
-                fname = str(QFileDialog.getSaveFileName(self,
-                    'Choose a filename and type', default_filename, file_types, filt))
-                if fname is None or fname == '':  # 2nd option
-                    return
-                flt = str(filt).split()[0]
-            else:
-                fname, flt = QFileDialog.getSaveFileName(self,
-                    'Choose a filename and type', default_filename, file_types, filt)
-                #flt = str(filt).strip()
-                if fname is None or fname == '':  # 2nd option
-                    return
+
+            title = 'Choose a filename and type'
+            fname, flt = save_file_dialog(self, title, default_filename,
+                                          file_types, filt)
+
+            if fname in [None, '']:
+                return
             #print("fname=%r" % fname)
             #print("flt=%r" % flt)
         else:

@@ -1,0 +1,33 @@
+from pyNastran.gui.qt_version import qt_version
+
+if qt_version == 4:
+    from PyQt4.QtGui import QFileDialog
+elif qt_version == 5:
+    from PyQt5.QtWidgets import QFileDialog
+
+
+def save_file_dialog(self, title, default_filename,
+                     file_types, filt):
+    """common method for saving files"""
+    if qt_version == 4:
+        fname = str(QFileDialog.getSaveFileName(
+            self, title, default_filename, file_types, filt))
+        flt = str(filt).split()[0]
+    else:
+        fname, flt = QFileDialog.getSaveFileName(
+            self, title, default_filename, file_types, filt)
+        #flt = str(filt).strip()
+    return fname, flt
+
+def open_file_dialog(self, title, default_filename,
+                     file_types):
+    """common method for opening files"""
+    if qt_version == 4:
+        fname, wildcard_level = QtGui.QFileDialog.getOpenFileNameAndFilter(
+            self, title, default_filename, file_types)
+        return str(wildcard_level), str(fname)
+    else:
+        fname, flt = QFileDialog.getOpenFileName(
+            self, title, default_filename, file_types)
+        #flt = str(filt).strip()
+    return fname, flt
