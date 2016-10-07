@@ -19,7 +19,7 @@ elif qt_version == 5:
         QDialog, QPushButton, QApplication,
         QHBoxLayout, QVBoxLayout, QTableWidget, QTableWidgetItem,
     )
-    QString = str
+    from six import text_type as QString
 
 from pyNastran.gui.menus.groups_modify import Group
 

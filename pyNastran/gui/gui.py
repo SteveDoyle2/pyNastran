@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+# coding: utf-8
 # pylint: disable=C0111
 from __future__ import division, unicode_literals, print_function
 #from six import string_types, iteritems
@@ -105,11 +105,12 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, DegenGeomIO, ShabpIO, PanairIO
     speeding up vtk cell loading in unstructured grids
     http://vtk.1045678.n5.nabble.com/Speed-up-cell-allocation-td5733208.html#a5733214
     """
-    def __init__(self, inputs, *kwargs, **kwds):
+    def __init__(self, inputs, **kwds):
         """
         inputs=None
         """
         print('kwds =', kwds)
+        kwds['inputs'] = inputs
         html_logging = True
         fmt_order = [
             # results
@@ -120,10 +121,11 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, DegenGeomIO, ShabpIO, PanairIO
             'lawgs', 'stl', 'fast', 'avus', #'plot3d', 'tetgen',
         ]
         #GuiCommon2.__init__(self, fmt_order, html_logging, inputs, parent)
-        super(MainWindow, self).__init__(self,
-                                         #fmt_order=fmt_order, inputs=inputs,
-                                         #html_logging=html_logging,
-                                         *kwargs, **kwds)
+        kwds['fmt_order'] = fmt_order
+        kwds['html_logging'] = html_logging
+        super(MainWindow, self).__init__(**kwds)
+        #fmt_order=fmt_order, inputs=inputs,
+        #html_logging=html_logging,
 
         if qt_version == 4:
             ADB_IO.__init__(self)

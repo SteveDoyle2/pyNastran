@@ -16,11 +16,14 @@ from pyNastran.gui.qt_files.alt_geometry_storage import AltGeometry
 #class GuiAttributes(QMainWindow):
 class GuiAttributes(object):
     """All methods in this class must not require VTK"""
-    def __init__(self, inputs, res_widget):
+    def __init__(self, **kwds):
         """
         These variables are common between the GUI and
         the batch mode testing that fakes the GUI
         """
+        inputs = kwds['inputs']
+        res_widget = kwds['res_widget']
+
         self.case_keys = {}
         self.res_widget = res_widget
         self._show_flag = True
@@ -333,7 +336,11 @@ class GUIMethods(GuiAttributes):
             }
 
         res_widget = MockResWidget()
-        GuiAttributes.__init__(self, inputs, res_widget)
+        kwds = {
+            'inputs' : inputs,
+            'res_widget' : res_widget
+        }
+        GuiAttributes.__init__(self, **kwds)
         self.is_testing = True
         self.debug = False
         self._form = []

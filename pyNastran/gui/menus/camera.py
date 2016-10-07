@@ -12,7 +12,7 @@ elif qt_version == 5:
     from PyQt5.QtWidgets import (
         QApplication, QDialog, QLabel, QLineEdit, QPushButton, QTableWidget, QTableWidgetItem,
         QHBoxLayout, QVBoxLayout, QGridLayout)
-    QString = str
+    from six import text_type as QString
 
 
 class CameraWindow(QDialog):

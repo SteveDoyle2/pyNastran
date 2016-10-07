@@ -169,15 +169,18 @@ class PythonConsoleWidget(QDockWidget):
         # TODO: enables the right click menu
         #       messes up the previous right click menu
         #self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-        self.connect(self, QtCore.SIGNAL("customContextMenuRequested(QPoint)"),
-                     self.listItemRightClicked)
+        #self.connect(self, QtCore.SIGNAL("customContextMenuRequested(QPoint)"),
+        #             self.listItemRightClicked)
 
         menu_item1 = self.listMenu.addAction("Properties...")
         menu_item2 = self.listMenu.addAction("Select All...")
         menu_item3 = self.listMenu.addAction("Copy...")
-        self.connect(menu_item1, QtCore.SIGNAL("triggered()"), self.menuItemClicked_1)
-        self.connect(menu_item2, QtCore.SIGNAL("triggered()"), self.menuItemClicked_2)
-        self.connect(menu_item3, QtCore.SIGNAL("triggered()"), self.menuItemClicked_3)
+        menu_item1.triggered.connect(self.menuItemClicked_1)
+        menu_item2.triggered.connect(self.menuItemClicked_2)
+        menu_item3.triggered.connect(self.menuItemClicked_3)
+        #self.connect(menu_item1, QtCore.SIGNAL("triggered()"), self.menuItemClicked_1)
+        #self.connect(menu_item2, QtCore.SIGNAL("triggered()"), self.menuItemClicked_2)
+        #self.connect(menu_item3, QtCore.SIGNAL("triggered()"), self.menuItemClicked_3)
 
         # we have to create a QWidget to put the console vbox into vbox_widget because
         #    self.setLayout(vbox)

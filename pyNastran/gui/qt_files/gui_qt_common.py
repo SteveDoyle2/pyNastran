@@ -1,6 +1,6 @@
-# -*- coding: utf-8 -*-
+# coding: utf-8
 # pylint: disable=C0111
-from __future__ import print_function
+from __future__ import print_function, unicode_literals
 from copy import deepcopy
 from six import iteritems, itervalues
 
@@ -16,10 +16,10 @@ from pyNastran.gui.testing_methods import GuiAttributes
 
 
 class GuiCommon(GuiAttributes):
-    def __init__(self, *kwargs, **kwds):
+    def __init__(self, **kwds):
         inputs = kwds['inputs']
-        super(GuiCommon, self).__init__(*kwargs, **kwds)
-        #GuiAttributes.__init__(self, inputs, res_widget=None)
+        kwds['res_widget'] = None
+        super(GuiCommon, self).__init__(**kwds)
         self.is_groups = inputs['is_groups']
 
         #self.groups = set([])

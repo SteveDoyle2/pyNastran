@@ -29,7 +29,7 @@ elif qt_version == 5:
     from PyQt5 import QtCore, QtGui
     from PyQt5.QtWidgets import (
         QMainWindow, QDockWidget, QFrame, QHBoxLayout, QAction, QColorDialog, QFileDialog)
-    QString = str
+    from six import text_type as QString
 
 import vtk
 from vtk.qt4.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor

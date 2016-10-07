@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+# coding: utf-8
 # pylint: disable=W0201,C0111
 from __future__ import division, unicode_literals, print_function
 
@@ -29,7 +29,7 @@ elif qt_version == 5:
     from PyQt5 import QtCore, QtGui
     from PyQt5.QtWidgets import (
         QMainWindow, QDockWidget, QFrame, QHBoxLayout, QAction, QColorDialog, QFileDialog)
-    QString = str
+    from six import text_type as QString
 
 import vtk
 from pyNastran.gui.qt_files.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
@@ -94,23 +94,23 @@ class PyNastranRenderWindowInteractor(QVTKRenderWindowInteractor):
 
 # new
 class GuiCommon2(QMainWindow, GuiCommon):
-    def __init__(self, *kwargs, **kwds):
+    def __init__(self, **kwds):
         """
         fmt_order, html_logging, inputs, parent=None,
         """
         # this will reset the background color/label color if things break
         #super(QMainWindow, self).__init__(self)
-        super(GuiCommon2, self).__init__(*kwargs, **kwds)
-
+        super(GuiCommon2, self).__init__(**kwds)
+        print('kwds =', kwds.keys())
         fmt_order = kwds['fmt_order']
         inputs = kwds['inputs']
         html_logging = kwds['html_logging']
-        del kwds['fmt_order']
+        #del kwds['fmt_order']
         #del kwds['inputs']
         del kwds['html_logging']
 
         #print('inputs =', inputs)
-        print('kwargs =', kwargs)
+        #print('kwargs =', kwargs)
         print('kwds =', kwds)
         self.reset_settings = False
 
