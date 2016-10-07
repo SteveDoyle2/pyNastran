@@ -2,11 +2,15 @@ from __future__ import print_function
 from pyNastran.gui.qt_version import qt_version, is_pygments
 
 if qt_version == 4:
-    from PyQt4 import QtCore, Qsci
+    from PyQt4 import QtCore
     from PyQt4.QtGui import (
         QDialog, QLabel, QLineEdit, QPushButton, QTextEdit, QDockWidget,
         QVBoxLayout, QHBoxLayout, QWidget, QFont, qApp, QMenu, QFontMetrics, QColor)
-    is_scintilla = True
+    try:
+        import PyQt4.Qsci as Qsci
+        is_scintilla = True
+    except ImportError:
+        is_scintilla = False
 
 elif qt_version == 5:
     #from PyQt5 import QtCore, QtGui
@@ -17,7 +21,12 @@ elif qt_version == 5:
     from PyQt5.QtWidgets import (
         QDialog, QLabel, QLineEdit, QPushButton, QTextEdit, QDockWidget,
         QVBoxLayout, QHBoxLayout, QWidget, qApp, QMenu)
-    is_scintilla = False
+
+    try:
+        import PyQt5.Qsci as Qsci
+        is_scintilla = True
+    except ImportError:
+        is_scintilla = False
     #import PyQt5.qsci
 
 class HtmlLog(QTextEdit):

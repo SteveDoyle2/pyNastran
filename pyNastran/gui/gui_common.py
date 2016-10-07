@@ -103,7 +103,11 @@ class GuiCommon2(QMainWindow, GuiCommon):
         """
         # this will reset the background color/label color if things break
         #super(QMainWindow, self).__init__(self)
-        super(GuiCommon2, self).__init__(**kwds)
+        if qt_version == 4:
+            QMainWindow.__init__(self)
+            GuiCommon.__init__(self, **kwds)
+        elif qt_version == 5:
+            super(GuiCommon2, self).__init__(**kwds)
         print('kwds =', kwds.keys())
         fmt_order = kwds['fmt_order']
         inputs = kwds['inputs']

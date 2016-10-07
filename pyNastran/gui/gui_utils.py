@@ -23,9 +23,9 @@ def open_file_dialog(self, title, default_filename,
                      file_types):
     """common method for opening files"""
     if qt_version == 4:
-        fname, wildcard_level = QtGui.QFileDialog.getOpenFileNameAndFilter(
+        fname, wildcard_level = QFileDialog.getOpenFileNameAndFilter(
             self, title, default_filename, file_types)
-        return str(wildcard_level), str(fname)
+        return str(fname), str(wildcard_level)
     else:
         fname, flt = QFileDialog.getOpenFileName(
             self, title, default_filename, file_types)
