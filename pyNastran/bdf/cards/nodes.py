@@ -1361,7 +1361,7 @@ class POINT(BaseCard):
         else:
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
-    def __init__(self, nid, cp, xyz, cd, ps, seid, comment=''):
+    def __init__(self, nid, cp, xyz, comment=''):
         """
         Creates the POINT card
         """
@@ -1378,14 +1378,7 @@ class POINT(BaseCard):
         #: node location in local frame
         self.xyz = xyz
 
-        #: Analysis coordinate system
-        self.cd = cd
-
-        #: SPC constraint
-        self.ps = ps
-
-        #: Superelement ID
-        self.seid = seid
+    def validate(self):
         assert self.nid > 0, 'nid=%s' % (self.nid)
         assert self.cp >= 0, 'cp=%s' % (self.cp)
         assert len(xyz) == 3
@@ -1408,12 +1401,8 @@ class POINT(BaseCard):
             double_or_blank(card, 4, 'x2', 0.),
             double_or_blank(card, 5, 'x3', 0.)], dtype='float64')
 
-        cd = blank(card, 6, 'cd', 0)
-        ps = blank(card, 7, 'ps', '')
-
-        seid = blank(card, 8, 'seid', 0)
         assert len(card) <= 9, 'len(POINT card) = %i\ncard=%s' % (len(card), card)
-        return POINT(nid, cp, xyz, cd, ps, seid, comment=comment)
+        return POINT(nid, cp, xyz, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment=''):

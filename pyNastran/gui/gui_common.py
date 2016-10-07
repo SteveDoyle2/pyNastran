@@ -87,7 +87,12 @@ class PyNastranRenderWindowInteractor(QVTKRenderWindowInteractor):
                                             iren=iren, rw=render_window)
         #self.Highlight
 
+# http://pyqt.sourceforge.net/Docs/PyQt5/multiinheritance.html
+# old
+#class GuiCommon2(GuiCommon):
+#    def __init__(self, fmt_order, html_logging, inputs):
 
+# new
 class GuiCommon2(QMainWindow, GuiCommon):
     def __init__(self, *kwargs, **kwds):
         """
@@ -117,6 +122,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
             #QMainWindow.__init__(self, parent)
             #super(QMainWindow, self).__init__(self, parent)
             # (go to the next class, can't hand it off)
+
+        # old
         #GuiCommon.__init__(self, inputs)
         #super(GuiCommon2, self).__init__(self, inputs)
 

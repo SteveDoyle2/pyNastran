@@ -6,6 +6,7 @@ if qt_version == 4:
     from PyQt4.QtGui import (
         QDialog, QLabel, QLineEdit, QPushButton, QTextEdit, QDockWidget,
         QVBoxLayout, QHBoxLayout, QWidget, QFont, qApp, QMenu, QFontMetrics, QColor)
+    is_scintilla = True
 
 elif qt_version == 5:
     #from PyQt5 import QtCore, QtGui

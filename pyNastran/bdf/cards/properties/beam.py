@@ -15,6 +15,8 @@ from itertools import count
 from six.moves import zip, range
 from numpy import array, unique, argsort, mean, allclose
 
+from pyNastran.bdf.utils import to_fields
+from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 from pyNastran.bdf.cards.properties.bars import IntegratedLineProperty, LineProperty, _bar_areaL
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.bdf_interface.assign_type import (
@@ -1091,6 +1093,197 @@ class PBEAML(IntegratedLineProperty):
         if size == 8:
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)  #is this allowed???
+
+
+class PBMSECT(LineProperty):
+    """
+    not done
+    """
+    type = 'PBMSECT'
+
+    def __init__(self, pid, mid, form, options, comment=''):
+        LineProperty.__init__(self)
+        if comment:
+            self._comment = comment
+
+        #: Property ID
+        self.pid = pid
+        #: Material ID
+        self.mid = mid
+        self.form = form
+
+        self.nsm = 0.
+        self.t = None
+        self.outp = None
+        self.brp1 = None
+        for key, value in options.items():
+            key = key.upper()
+            if key == 'NSM':
+                self.nsm = float(value)
+            elif key == 'OUTP':
+                self.outp = int(value)
+            elif key == 'BRP(1)':
+                self.brp1 = int(value)
+            elif key == 'T':
+                self.t = float(value)
+            else:
+                raise NotImplementedError('PBMSECT.pid=%s key=%r value=%r' % (pid, key, value))
+        #self.options = options
+        self._validate_input()
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        line0 = card[0]
+        if '\t' in line0:
+            line0 = line0.expandtabs()
+
+        bdf_card = BDFCard(to_fields([line0], 'PBMSECT'))
+        line0_eq = line0[16:]
+        lines_joined = ''.join(card[1:]).replace(' ', '')
+
+        if lines_joined:
+            fields = lines_joined.split(',')
+            slines = [field.split('=') for field in fields]
+            options = {key : value for (key, value) in slines}
+        else:
+            options = {}
+
+        pid = integer(bdf_card, 1, 'pid')
+        mid = integer(bdf_card, 2, 'mid')
+        form = string_or_blank(bdf_card, 3, 'form')
+        assert form in ['GS', 'OP', 'CP'], 'pid=%s form=%r' % (pid, form)
+
+        return PBMSECT(pid, mid, form, options, comment=comment)
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        pid = data[0]
+        mid = data[1]
+        group = data[2].strip()
+        Type = data[3].strip()
+        dim = list(data[4:-1])
+        nsm = data[-1]
+        #print("group = %r" % self.group)
+        #print("Type  = %r" % self.Type)
+        #print("dim = ",self.dim)
+        #print(str(self))
+        #print("*PBARL = ",data)
+        raise NotImplementedError('not finished...')
+        #return PBMSECT(pid, mid, group, Type, dim, nsm, comment=comment)
+
+    def _validate_input(self):
+        pass
+
+    def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ' which is required by PBMSECT mid=%s' % self.mid
+        self.mid = model.Material(self.mid, msg=msg)
+        self.mid_ref = self.mid
+
+        self.outp = model.Set(self.outp)
+        self.outp_ref = self.outp
+
+        self.brp1 = model.Set(self.brp1)
+        self.brp1_ref = self.brp1
+
+        self.outp_ref.cross_reference(model, 'Point', msg=msg)
+        self.brp1_ref.cross_reference(model, 'Point', msg=msg)
+
+    @property
+    def outp_id(self):
+        if isinstance(self.outp, int):
+            return self.outp
+        return self.outp.sid
+
+    @property
+    def brp1_id(self):
+        if isinstance(self.brp1, int):
+            return self.brp1
+        return self.brp1.sid
+
+    def uncross_reference(self):
+        self.mid = self.Mid()
+        del self.mid_ref
+
+    def _verify(self, xref=False):
+        pid = self.Pid()
+        mid = self.Mid()
+        #A = self.Area()
+        #J = self.J()
+        #nsm = self.Nsm()
+        #mpl = self.MassPerLength()
+        assert isinstance(pid, int), 'pid=%r' % pid
+        assert isinstance(mid, int), 'mid=%r' % mid
+        #assert isinstance(A, float), 'pid=%r' % A
+        #assert isinstance(J, float), 'cid=%r' % J
+        #assert isinstance(nsm, float), 'nsm=%r' % nsm
+        #assert isinstance(mpl, float), 'mass_per_length=%r' % mpl
+
+    def Area(self):
+        """
+        Gets the area :math:`A` of the CBEAM.
+        """
+        return 0.
+        #raise NotImplementedError('Area is not implemented for PBMSECT')
+
+    def Nsm(self):
+        """
+        Gets the non-structural mass :math:`nsm` of the CBEAM.
+        """
+        return 0.
+        #raise NotImplementedError('Nsm is not implemented for PBMSECT')
+
+    def MassPerLength(self):
+        r"""
+        Gets the mass per length :math:`\frac{m}{L}` of the CBEAM.
+
+        .. math:: \frac{m}{L} = A \rho + nsm
+        """
+        rho = self.Rho()
+        area = self.Area()
+        nsm = self.Nsm()
+        return area * rho + nsm
+
+    def I11(self):
+        raise NotImplementedError('I11 is not implemented for PBMSECT')
+
+    #def I12(self):
+        #return self.I12()
+
+    def J(self):
+        raise NotImplementedError('J is not implemented for PBMSECT')
+
+    def I22(self):
+        raise NotImplementedError('I22 is not implemented for PBMSECT')
+
+    def raw_fields(self):
+        """not done..."""
+        list_fields = ['PBMSECT', self.pid, self.Mid(), self.form]
+        return list_fields
+
+    def repr_fields(self):
+        """not done..."""
+        list_fields = ['PBMSECT', self.pid, self.Mid(), self.form]
+        return list_fields
+
+    def write_card(self, size=8, is_double=False):
+        card = ['PBMSECT', self.pid, self.Mid(), self.form]
+        end = ''
+        for key, value in [('NSM', self.nsm), ('t', self.t),
+                           ('outp', self.outp_id), ('brp(1)', self.brp1_id), ]:
+            if value:
+                end += '        %s=%s,\n' % (key, value)
+        if end:
+            end = end[:-2] + '\n'
+        out = self.comment + print_card_8(card) + end
+        return out
 
 
 class PBCOMP(LineProperty):

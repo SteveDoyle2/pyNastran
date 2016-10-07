@@ -491,6 +491,7 @@ class BDFAttributes(object):
         self._slot_to_type_map = {
             'params' : ['PARAM'],
             'nodes' : ['GRID', 'SPOINT', 'EPOINT'], # 'RINGAX',
+            'points' : ['POINT'],
             'gridSet' : ['GRDSET'],
             #'POINT', 'POINTAX', 'RINGAX',
 
@@ -523,7 +524,7 @@ class BDFAttributes(object):
                 'PELAS', 'PGAP', 'PFAST', 'PLPLANE',
                 'PBUSH', 'PBUSH1D',
                 'PDAMP', 'PDAMP5',
-                'PROD', 'PBAR', 'PBARL', 'PBEAM', 'PTUBE', 'PBEND', 'PBCOMP',
+                'PROD', 'PBAR', 'PBARL', 'PBEAM', 'PTUBE', 'PBEND', 'PBCOMP', 'PBRSECT', 'PBMSECT',
                 'PBEAML',  # not fully supported
                 # 'PBEAM3',
 

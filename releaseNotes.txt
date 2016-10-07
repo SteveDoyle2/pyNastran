@@ -47,7 +47,7 @@ Solver
    - added D matricies for PSHELL, PCOMP, PSOLID
 
 -----------------------v0.8.1 released 2016/9/??-----------------------
-This is a bug fix release.
+This is a bug fix release and minor new features.
 
 Done
 ----
@@ -57,21 +57,30 @@ BDF:
     # update cards similar to Nastran's optimization
     # on grid 1234, update cp (field 2) to a value of 7)
     - model.update_card('GRID', 1234, 2, 7)
- - fixed bdf_renumber case control update bug
+ 
+ - bdf_renumber
+   - removed execs from bdf_renumber, so Python 3 will work
+   - fixed bug with handling Nones (caused by exec change)
+   - fixed case control update bug
+
  - Aero:
    - added handling of non-uniform lsrb/lrib on CAERO2
    - fixed unxref bug in AESURF
    - fixed xref bug in CSSCHD
    - fixed FLUTTER unxref bug
+   - FLFACT can now write in wide field format
  - write_path function works (Windows)
  - more validate methods & tests
+ - fixed bug in SET3 card (multiple THRUs on single card)
+ - added: POINT, PBRSECT, PBMSECT
 
 GUI:
  - added custom displacement results
  - fixed display issue with CHEXA20
  - fixed element selection for quadratic solids
- - cycle_results now takes an integer instead of a string
-   - now supports switching to results with common names
+ - cycle_results now takes an integer instead of a string, so it works
+   when you call it with more than 10 results  or have transient solutions
+ - Python 2 only: nicer Python console
 
 OP2:
  - MSC Nastran 2005R3B supported
@@ -89,6 +98,7 @@ BDF:
  - fix speed of CORD1R, CORD1C, CORD1S (low priority; 6/10)
 
 GUI:
+ - added support for PyQt5
  - fix node Cd deflection issue (high priority, 4/10)
  - is this a solid element issue?
    - fix Min Interior angle (moderate priority; 1/10; see optistruct model - quad?)

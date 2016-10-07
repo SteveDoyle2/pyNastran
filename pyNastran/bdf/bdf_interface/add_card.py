@@ -49,14 +49,27 @@ class AddMethods(BDFAttributes):
         key = node.nid
         if key in self.nodes and not allow_overwrites:
             if not node._is_same_card(self.nodes[key]):
-                assert node.nid not in self.nodes, 'nid=%s\noldNode=\n%snewNode=\n%s' % (node.nid, self.nodes[key], node)
+                assert node.nid not in self.nodes, 'nid=%s\nold_node=\n%snew_node=\n%s' % (node.nid, self.nodes[key], node)
             else:
-                #print('Node was duplicated...nid=%s; node=\n%s' % (key, node))
+                #print('GRID was duplicated...nid=%s; node=\n%s' % (key, node))
                 pass
         else:
             assert key > 0, 'nid=%s node=%s' % (key, node)
             self.nodes[key] = node
             self._type_to_id_map[node.type].append(key)
+
+    def add_point(self, point, allow_overwrites=False):
+        key = point.nid
+        if key in self.points and not allow_overwrites:
+            if not point._is_same_card(self.points[key]):
+                assert point.nid not in self.points, 'nid=%s\nold_point=\n%snew_point=\n%s' % (point.nid, self.points[key], point)
+            else:
+                #print('POINT was duplicated...nid=%s; point=\n%s' % (key, point))
+                pass
+        else:
+            assert key > 0, 'nid=%s point=%s' % (key, point)
+            self.points[key] = point
+            self._type_to_id_map[point.type].append(key)
 
     def add_spoint(self, spoints):
         if self.spoints is None:

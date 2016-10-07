@@ -23,7 +23,7 @@ The superelement sets start with SE:
 
 +------------+-----------------+
 | Entry Type | Equivalent Type |
-+------------+-----------------+
++============+=================+
 |  SEQSETi   | QSETi           |
 +------------+-----------------+
 |  SESUP     | SUPORT          |
@@ -101,6 +101,8 @@ class ABCQSet(Set):
     Defines degrees-of-freedom in the analysis set (A-set)
 
     +------+-----+----+-----+------+-----+----+-----+----+
+    |   1  |   2 |  3 |  4  |   5  |  6  |  7 |   8 |  9 |
+    +======+=====+====+=====+======+=====+====+=====+====+
     | ASET | ID1 | C1 | ID2 |  C2  | ID3 | C3 | ID4 | C4 |
     +------+-----+----+-----+------+-----+----+-----+----+
     | ASET | 16  |  2 |  23 | 3516 |  1  | 4  |     |    |
@@ -761,6 +763,25 @@ class SET3(Set):
     """
     Defines a list of grids, elements or points.
 
+    SET3 entries are referenced by:
+    - NX
+      - ACMODL
+      - PANEL
+    - MSC
+      - PBMSECT
+      - PBRSECT
+      - RFORCE
+        - ELEM only (SOL 600)
+      - DEACTEL
+        - ELEM only (SOL 400)
+      - RBAR, RBAR1, RBE1, RBE2, RBE2GS, RBE3, RROD,
+        RSPLINE, RSSCON, RTRPLT and RTRPLT1
+         - RBEin / RBEex only
+      - ELSIDi / XELSIDi
+         - ELEM only
+      - NDSIDi
+         - GRID only
+
     +------+-----+-------+-----+-----+-----+-----+-----+-----+
     |   1  |  2  |   3   |  4  |  5  |  6  |  7  |  8  |  9  |
     +======+=====+=======+=====+=====+=====+=====+=====+=====+
@@ -775,6 +796,7 @@ class SET3(Set):
     +------+-----+-------+-----+----+
     """
     type = 'SET3'
+    valid_descs = ['GRID', 'POINT', 'ELEMENT', 'PROP', 'RBEIN', 'RBEEX']
 
     def __init__(self, sid, desc, ids, comment=''):
         Set.__init__(self)
@@ -788,11 +810,43 @@ class SET3(Set):
         if desc == 'ELEM':
             desc = 'ELEMENT'
         self.desc = desc
-        assert self.desc in ['GRID', 'POINT', 'ELEMENT', 'PROP'], 'desc = %r' % self.desc
 
         #:  Identifiers of grids points, elements, points or properties.
         #:  (Integer > 0)
         self.ids = expand_thru(ids)
+        self.xref_type = None
+
+    def validate(self):
+        if self.desc not in self.valid_descs:
+            msg = 'desc=%r; valid_descs=[%s]' % (self.desc, ', '.join(self.valid_descs))
+            raise ValueError(msg)
+
+    def get_ids(self):
+        if self.xref_type is None:
+            ids = self.ids
+        elif self.xref_type == 'Point':
+            # TODO: improve this...
+            ids = [point if isinstance(point, integer_types) else point.nid
+                   for point in self.ids]
+        else:
+            raise NotImplementedError("xref_type=%r and must be ['Node']" % self.xref_type)
+        return ids
+
+    def cross_reference(self, model, xref_type, msg=''):
+        msg = ' which is required by SET3 sid=%s%s' % (self.sid, msg)
+        #if xref_type == 'Node':
+            #self.ids = model.Nodes(self.get_ids(), msg=msg)
+        if xref_type == 'Point':
+            self.ids = [model.points[nid] for nid in self.ids]
+        else:
+            raise NotImplementedError("xref_type=%r and must be ['Point']" % xref_type)
+        self.xref_type = xref_type
+
+    def add_set(self, set3):
+        self.ids += set3.get_ids()
+        assert self.sid == set3.sid, 'SET3.sid=%r; existing sid=%r new=%r' % (self.sid, self.sid, set3.sid)
+        assert self.desc == set3.desc, 'SET3.sid=%r; existing desc=%r new=%r' % (self.sid, self.desc, set3.desc)
+        self.clean_ids()
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -857,16 +911,22 @@ class SET3(Set):
         msg = self.comment
 
         self.ids.sort()
-        packs = condense(self.ids)
-        singles, doubles = build_thru_packs(packs, max_dv=1)
+        ids = self.get_ids()
+        packs = condense(ids)
+        if len(packs) == 1:
+            singles, doubles = build_thru_packs(packs, max_dv=1)
 
-        packs = collapse_thru(self.ids)
-        for pack in doubles:
-            msg += print_card_8(['SET3', self.sid, self.desc] + pack)
-        if singles:
-            msg += print_card_8(['SET3', self.sid, self.desc] + singles)
+            packs = collapse_thru(ids)
+            for pack in doubles:
+                msg += print_card_8(['SET3', self.sid, self.desc] + pack)
+            if singles:
+                msg += print_card_8(['SET3', self.sid, self.desc] + singles)
+        else:
+            msg += print_card_8(['SET3', self.sid, self.desc] + ids)
         return msg
 
+    def write_card(self, size=8, is_double=False):
+        return str(self)
 
 class SESET(SetSuper):
     """
@@ -926,6 +986,8 @@ class SEBSET(SuperABCQSet):
     dynamic reduction or component mode calculations.
 
     +--------+------+-----+------+-----+----+-----+----+
+    |    1   |   2  |  3  |   4  |  5  |  6 |  7  |  8 |
+    +========+======+=====+======+=====+====+=====+====+
     | SEBSET | SEID | ID1 |  C1  | ID2 | C2 | ID3 | C3 |
     +--------+------+-----+------+-----+----+-----+----+
     | SEBSET |  C   | ID1 | THRU | ID2 |    |     |    |
@@ -1011,6 +1073,8 @@ class RADSET(Set):  # not integrated
     radiation enclosure analysis.
 
     +--------+----------+----------+----------+----------+----------+----------+----------+
+    |   1    |     2    |     3    |     4    |     5    |     6    |     7    |     8    |
+    +========+==========+==========+==========+==========+==========+==========+==========+
     | RADSET | ICAVITY1 | ICAVITY2 | ICAVITY3 | ICAVITY4 | ICAVITY5 | ICAVITY6 | ICAVITY7 |
     +--------+----------+----------+----------+----------+----------+----------+----------+
     |        | ICAVITY8 | ICAVITY9 | -etc.-   |          |          |          |          |

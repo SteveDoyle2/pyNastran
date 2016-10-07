@@ -823,6 +823,13 @@ class WriteMesh(BDFAttributes):
             msg.append('$EPOINTS\n')
             msg.append(self.epoints.write_card(size, is_double))
             outfile.write(''.join(msg))
+        if self.points:
+            msg = []
+            msg.append('$POINTS\n')
+            for point_id, point in sorted(iteritems(self.points)):
+                msg.append(point.write_card(size, is_double))
+            outfile.write(''.join(msg))
+
 
         if self.nodes:
             msg = []
