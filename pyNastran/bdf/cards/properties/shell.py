@@ -464,7 +464,9 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
 class PCOMP(CompositeShellProperty):
     """
     +-------+--------+--------+---------+------+--------+--------+-------+------+
-    | PCOMP |   PID  |   Z0   |   NSM   | SB   |   FT   | TREF   | GE    | LAM  |
+    |   1   |    2   |    3   |    4    |  5   |    6   |    7   |   8   |   9  |
+    +=======+========+========+=========+======+========+========+=======+======+
+    | PCOMP |   PID  |   Z0   |   NSM   |  SB  |   FT   |  TREF  |  GE   | LAM  |
     +-------+--------+--------+---------+------+--------+--------+-------+------+
     | MID1  |   T1   | THETA1 |  SOUT1  | MID2 |   T2   | THETA2 | SOUT2 |      |
     +-------+--------+--------+---------+------+--------+--------+-------+------+
@@ -558,7 +560,7 @@ class PCOMP(CompositeShellProperty):
 
         assert self.ft in ['HILL', 'HOFF', 'TSAI', 'STRN', 0.0, None], 'ft=%r' % self.ft
         # TODO: is NO an option?
-        assert self.lam in [None, 'SYM', 'MEM', 'BEND', 'SMEAR', 'SMCORE', 'NO'], 'lam=%r is invalid' % self.lam
+        assert self.lam in [None, 'SYM', 'MEM', 'BEND', 'SMEAR', 'SMCORE'], 'lam=%r is invalid' % self.lam
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -573,7 +575,7 @@ class PCOMP(CompositeShellProperty):
         ft = string_or_blank(card, 5, 'ft')
         TRef = double_or_blank(card, 6, 'TRef', 0.0)
         ge = double_or_blank(card, 7, 'ge', 0.0)
-        lam = string_or_blank(card, 8, 'lam') # NO?
+        lam = string_or_blank(card, 8, 'lam') # default=blank -> nothing
 
         # -8 for the first 8 fields (1st line)
         nply_fields = card.nfields - 9

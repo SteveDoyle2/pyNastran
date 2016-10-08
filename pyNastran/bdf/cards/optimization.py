@@ -2551,6 +2551,7 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
         'PBUSH', 'PBUSH1D',
         'PGAP', 'PVISC',
         'PDAMP', 'PWELD',
+        'PBMSECT',
     ]
     allowed_elements = [
         'CELAS2', 'CBAR', 'CBEAM',

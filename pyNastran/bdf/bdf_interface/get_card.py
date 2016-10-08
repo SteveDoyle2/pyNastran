@@ -384,12 +384,29 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
 
     def Nodes(self, nids, allow_empty_nodes=False, msg=''):
         """
-        Returns a series of node objects given a list of node IDs
+        Returns a series of node objects given a list of IDs
         """
         nodes = []
         for nid in nids:
             nodes.append(self.Node(nid, allow_empty_nodes=allow_empty_nodes, msg=msg))
         return nodes
+
+    def Point(self, nid, msg=''):
+        if nid in self.points:
+            return self.points[nid]
+        else:
+            assert isinstance(nid, integer_types), 'nid should be an integer; not %s' % type(nid)
+            nid_list = np.unique(list(self.points.keys()))
+            raise RuntimeError('nid=%s is not a POINT%s\n%s' % (nid, msg, nid_list))
+
+    def Points(self, nids, msg=''):
+        """
+        Returns a series of POINT objects given a list of IDs
+        """
+        points = []
+        for nid in nids:
+            points.append(self.Point(nid, msg=msg))
+        return points
 
     #--------------------
     # ELEMENT CARDS

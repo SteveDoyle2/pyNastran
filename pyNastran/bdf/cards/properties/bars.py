@@ -3,6 +3,9 @@
 All bar properties are defined in this file.  This includes:
  *   PBAR
  *   PBARL
+ *   PBEAM3
+ *   PBEND
+ *   PBRSECT
 
 All bars are LineProperty objects.
 Multi-segment beams are IntegratedLineProperty objects.
@@ -585,7 +588,9 @@ class PBAR(LineProperty):
             do a check for mid -> MAT4/MAT5 for thermal
 
         +------+-----+-----+-----+----+----+----+-----+-----+
-        | PBAR | PID | MID | A   | I1 | I2 | J  | NSM |     |
+        |   1  |  2  |  3  |  4  |  5 |  6 |  7 |  8  |  9  |
+        +======+=====+=====+=====+====+====+====+=====+=====+
+        | PBAR | PID | MID |  A  | I1 | I2 | J  | NSM |     |
         +------+-----+-----+-----+----+----+----+-----+-----+
         |      | C1  | C2  | D1  | D2 | E1 | E2 | F1  | F2  |
         +------+-----+-----+-----+----+----+----+-----+-----+
@@ -830,7 +835,7 @@ class PBARL(LineProperty):
     """
     .. todo:: doesnt support user-defined types
 
-    +=======+======+======+=======+======+======+======+======+======+
+    +-------+------+------+-------+------+------+------+------+------+
     |   1   |   2  |   3  |   4   |   5  |   6  |   7  |   8  |   9  |
     +=======+======+======+=======+======+======+======+======+======+
     | PBARL | PID  | MID  | GROUP | TYPE |      |      |      |      |
@@ -996,25 +1001,25 @@ class PBARL(LineProperty):
 
     def I11(self):
         return self.I1()
-        if self.Type in ['ROD']:
-            assert len(self.dim) == 1, 'dim=%r' % self.dim
-            r = self.dim[0]
-            #Ix = pi*r**4/4.
-            #J = pi*r**4/2.
-            (Ix, Iy, Ixy) = self.I1_I2_I12()
+        #if self.Type in ['ROD']:
+            #assert len(self.dim) == 1, 'dim=%r' % self.dim
+            #r = self.dim[0]
+            ##Ix = pi*r**4/4.
+            ##J = pi*r**4/2.
+            #(Ix, Iy, Ixy) = self.I1_I2_I12()
 
-        elif self.Type in ['BAR']:
-            assert len(self.dim) == 2, 'dim=%r' % self.dim
-            b, h = self.dim
-            #Ix = self.I11()
-            #Iy = self.I22()
-            (Ix, Iy, Ixy) = self.I1_I2_I12()
-            #print
-            #J = Ix + Iy
-        else:
-            msg = 'I11 for Type=%r dim=%r on PBARL is not supported' % (self.Type, self.dim)
-            raise NotImplementedError(msg)
-        return Ix
+        #elif self.Type in ['BAR']:
+            #assert len(self.dim) == 2, 'dim=%r' % self.dim
+            #b, h = self.dim
+            ##Ix = self.I11()
+            ##Iy = self.I22()
+            #(Ix, Iy, Ixy) = self.I1_I2_I12()
+            ##print
+            ##J = Ix + Iy
+        #else:
+            #msg = 'I11 for Type=%r dim=%r on PBARL is not supported' % (self.Type, self.dim)
+            #raise NotImplementedError(msg)
+        #return Ix
 
     #def I12(self):
         #return self.I12()

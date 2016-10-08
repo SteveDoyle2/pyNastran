@@ -338,6 +338,9 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
             raise
         else:
             print('failed test because DuplicateIDsError...ignoring')
+    except DisabledCardError as e:
+        if not dev:
+            raise
     except RuntimeError as e:
         # only temporarily uncomment this when running lots of tests
         if not dev:

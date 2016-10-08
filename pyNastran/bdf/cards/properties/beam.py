@@ -5,6 +5,7 @@ All beam properties are defined in this file.  This includes:
  *   PBEAM
  *   PBEAML
  *   PBCOMP
+ *   PBRSECT
 
 All beams are LineProperty objects.
 Multi-segment beams are IntegratedLineProperty objects.
@@ -828,7 +829,9 @@ class PBEAM(IntegratedLineProperty):
 class PBEAML(IntegratedLineProperty):
     """
     +--------+---------+---------+---------+---------+---------+---------+---------+---------+
-    | PBEAML | PID     | MID     | GROUP   | TYPE    |         |         |         |         |
+    |   1    |    2    |    3    |    4    |    5    |    6    |    7    |    8    |    9    |
+    +========+=========+=========+=========+=========+=========+=========+=========+=========+
+    | PBEAML |   PID   |   MID   |  GROUP  |  TYPE   |         |         |         |         |
     +--------+---------+---------+---------+---------+---------+---------+---------+---------+
     |        | DIM1(A) | DIM2(A) | -etc.-  | DIMn(A) | NSM(A)  | SO(1)   | X(1)/XB | DIM1(1) |
     +--------+---------+---------+---------+---------+---------+---------+---------+---------+
@@ -836,7 +839,7 @@ class PBEAML(IntegratedLineProperty):
     +--------+---------+---------+---------+---------+---------+---------+---------+---------+
     |        | -etc.-  | DIMn(2) | NSM(m)  | -etc.-  | SO(m)   | X(m)/XB | DIM1(m) | -etc.-  |
     +--------+---------+---------+---------+---------+---------+---------+---------+---------+
-    |        | DIMn(m) |  NSM(m) | SO(B)   | 1.0     | DIM1(B) | DIM2(B) | -etc.-  | DIMn(B) |
+    |        | DIMn(m) |  NSM(m) | SO(B)   |   1.0   | DIM1(B) | DIM2(B) | -etc.-  | DIMn(B) |
     +--------+---------+---------+---------+---------+---------+---------+---------+---------+
     |        | NSM(B)  |
     +--------+---------+
@@ -1112,23 +1115,52 @@ class PBMSECT(LineProperty):
         self.mid = mid
         self.form = form
 
-        self.nsm = 0.
-        self.t = None
+
+        # integer
         self.outp = None
-        self.brp1 = None
+
+        # float
+        self.nsm = 0.
+
+        # int : int
+        self.brps = {}
+        self.inps = {}
+
+        # int : floats
+        self.ts = {}
         for key, value in options.items():
             key = key.upper()
             if key == 'NSM':
                 self.nsm = float(value)
+
+            elif 'INP' in key:
+                if key.startswith('INP('):
+                    assert key.endswith(')'), 'key=%r' % key
+                    key_id = int(key[4:-1])
+                    self.inps[key_id] = int(value)
+                else:
+                    self.inps[0] = int(value)
+
             elif key == 'OUTP':
                 self.outp = int(value)
-            elif key == 'BRP(1)':
-                self.brp1 = int(value)
+
+            elif key.startswith('BRP'):
+                if key.startswith('BRP('):
+                    assert key.endswith(')'), 'key=%r' % key
+                    key_id = int(key[4:-1])
+                    self.brps[key_id] = int(value)
+                else:
+                    self.brps[0] = int(value)
+
             elif key == 'T':
-                self.t = float(value)
+                if key.startswith('T('):
+                    assert key.endswith(')'), 'key=%r' % key
+                    key_id = int(key[2:-1])
+                    self.ts[key_id] = float(value)
+                else:
+                    self.ts[0] = int(value)
             else:
                 raise NotImplementedError('PBMSECT.pid=%s key=%r value=%r' % (pid, key, value))
-        #self.options = options
         self._validate_input()
 
     @classmethod
@@ -1189,12 +1221,13 @@ class PBMSECT(LineProperty):
 
         self.outp = model.Set(self.outp)
         self.outp_ref = self.outp
-
-        self.brp1 = model.Set(self.brp1)
-        self.brp1_ref = self.brp1
-
         self.outp_ref.cross_reference(model, 'Point', msg=msg)
-        self.brp1_ref.cross_reference(model, 'Point', msg=msg)
+
+        if len(self.brps):
+            ## TODO: not done
+            self.brp1 = model.Set(self.brp1)
+            self.brp1_ref = self.brp1
+            self.brp1_ref.cross_reference(model, 'Point', msg=msg)
 
     @property
     def outp_id(self):
@@ -1204,7 +1237,8 @@ class PBMSECT(LineProperty):
 
     @property
     def brp1_id(self):
-        if isinstance(self.brp1, int):
+        ## TODO: not done
+        if self.brp1 is None or isinstance(self.brp1, int):
             return self.brp1
         return self.brp1.sid
 
@@ -1276,8 +1310,15 @@ class PBMSECT(LineProperty):
     def write_card(self, size=8, is_double=False):
         card = ['PBMSECT', self.pid, self.Mid(), self.form]
         end = ''
-        for key, value in [('NSM', self.nsm), ('t', self.t),
-                           ('outp', self.outp_id), ('brp(1)', self.brp1_id), ]:
+        for key, dicts in [('INP', self.inps), ('T', self.ts), ('BRP', self.brps)]:
+            # dicts = {int index : int/float value}
+            for k, v in sorted(dicts.items()):
+                if k == 0:
+                    end += '        %s=%s,\n' % (key, v)
+                else:
+                    end += '        %s(%s)=%s,\n' % (key, k, v)
+
+        for key, value in [('NSM', self.nsm), ('outp', self.outp_id),]:
             if value:
                 end += '        %s=%s,\n' % (key, value)
         if end:

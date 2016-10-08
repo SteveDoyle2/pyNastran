@@ -100,7 +100,7 @@ class PFAST(Property):
         msg = ' which is required by PFAST pid=%s' % self.pid
         if self.mcid != -1:
             self.mcid = model.Coord(self.Mcid(), msg)
-            self.mcid_ref = self.mcid_ref
+            self.mcid_ref = self.mcid
 
     def uncross_reference(self):
         self.mcid = self.Mcid()

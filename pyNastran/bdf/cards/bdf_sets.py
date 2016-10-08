@@ -712,12 +712,14 @@ class SET1(Set):
         msg = ' which is required by SET1 sid=%s%s' % (self.sid, msg)
         if xref_type == 'Node':
             self.ids = model.Nodes(self.get_ids(), msg=msg)
+        elif xref_type == 'Point':
+            self.ids = model.Points(self.get_ids(), msg=msg)
         else:
             raise NotImplementedError("xref_type=%r and must be ['Node']" % xref_type)
         self.xref_type = xref_type
 
     def uncross_reference(self):
-        if self.xref_type == 'Node':
+        if self.xref_type in ['Node', 'Point']:
             self.ids = self.get_ids()
             del self.ids_ref
             self.xref_type = None
@@ -727,7 +729,7 @@ class SET1(Set):
     def get_ids(self):
         if self.xref_type is None:
             ids = self.ids
-        elif self.xref_type == 'Node':
+        elif self.xref_type in ['Node', 'Point']:
             ids = [node if isinstance(node, integer_types) else node.nid
                    for node in self.ids]
         else:
@@ -837,7 +839,7 @@ class SET3(Set):
         #if xref_type == 'Node':
             #self.ids = model.Nodes(self.get_ids(), msg=msg)
         if xref_type == 'Point':
-            self.ids = [model.points[nid] for nid in self.ids]
+            self.ids = model.Points(self.get_ids(), msg=msg)
         else:
             raise NotImplementedError("xref_type=%r and must be ['Point']" % xref_type)
         self.xref_type = xref_type
