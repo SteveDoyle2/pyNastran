@@ -56,7 +56,7 @@ from pyNastran.gui.menus.results_sidebar import Sidebar
 from pyNastran.gui.gui_interface.legend.interface import set_legend_menu
 from pyNastran.gui.gui_interface.clipping.interface import set_clipping_menu
 from pyNastran.gui.gui_interface.camera.interface import set_camera_menu
-from pyNastran.gui.gui_interface.modify_picker_properties.interface import asdf
+from pyNastran.gui.gui_interface.modify_picker_properties.interface import on_set_picker_size_menu
 
 from pyNastran.gui.menus.application_log import PythonConsoleWidget, ApplicationLogWidget
 from pyNastran.gui.menus.manage_actors import EditGeometryProperties
@@ -3469,10 +3469,10 @@ class GuiCommon2(QMainWindow, GuiCommon):
         """
         #print("update_scalar_bar min=%s max=%s norm=%s" % (min_value, max_value, norm_value))
         self.scalar_bar.update(title, min_value, max_value, norm_value, data_format,
-                               nlabels=nlabels, labelsize=labelsize,
-                               ncolors=ncolors, colormap=colormap,
-                               is_low_to_high=is_low_to_high, is_horizontal=is_horizontal,
-                               is_shown=is_shown)
+                                nlabels=nlabels, labelsize=labelsize,
+                                ncolors=ncolors, colormap=colormap,
+                                is_low_to_high=is_low_to_high, is_horizontal=is_horizontal,
+                                is_shown=is_shown)
 
     #---------------------------------------------------------------------------------------
     # CAMERA MENU

@@ -2,7 +2,7 @@
 # pylint: disable=C0111
 from __future__ import print_function, unicode_literals
 from copy import deepcopy
-from six import iteritems, itervalues
+from six import iteritems, itervalues, iterkeys
 
 import numpy as np
 from numpy import full, issubdtype
@@ -76,7 +76,7 @@ class GuiCommon(GuiAttributes):
 
         assert case is not False, case
         if self.ncases <= 1:
-            self.log.warning('cycle_results(result_name=%r); ncases=%i' % (
+            self.log_warning('cycle_results(result_name=%r); ncases=%i' % (
                 case, self.ncases))
             if self.ncases == 0:
                 self.scalarBar.SetVisibility(False)
@@ -146,15 +146,15 @@ class GuiCommon(GuiAttributes):
         if min_value is None and max_value is None:
             min_value, max_value = obj.get_min_max(i, name)
 
-        if 0:
-            if min_value is None and max_value is None:
-                max_value = case.max()
-                min_value = case.min()
-            if np.isnan(max_value):
-                inotnan = not np.isnan(case)
-                max_value = case[inotnan].max()
-                min_value = case[inotnan].min()
-                print('max_value = ', max_value)
+        #if 0:
+            #if min_value is None and max_value is None:
+                #max_value = case.max()
+                #min_value = case.min()
+            #if np.isnan(max_value):
+                #inotnan = not np.isnan(case)
+                #max_value = case[inotnan].max()
+                #min_value = case[inotnan].min()
+                #print('max_value = ', max_value)
 
         subtitle, label = self.get_subtitle_label(subcase_id)
         if label2:
@@ -254,11 +254,11 @@ class GuiCommon(GuiAttributes):
             raise NotImplementedError(case.dtype.type)
 
 
-        if 0: # nan testing
-            if case.dtype.name == 'float32':
-                case[50] = np.float32(1) / np.float32(0)
-            else:
-                case[50] = np.int32(1) / np.int32(0)
+        #if 0: # nan testing
+            #if case.dtype.name == 'float32':
+                #case[50] = np.float32(1) / np.float32(0)
+            #else:
+                #case[50] = np.int32(1) / np.int32(0)
 
         if vector_size == 1:
             if is_low_to_high:
@@ -428,16 +428,18 @@ class GuiCommon(GuiAttributes):
             grid.Modified()
 
     def _get_icase(self, result_name):
-        found_case = False
-        print('result_cases.keys() =', self.result_cases.keys())
+        if not self.result_cases:
+            raise IndexError('result_name=%r not in self.result_cases' % result_name)
+
+        #print('result_cases.keys() =', self.result_cases.keys())
         i = 0
-        for icase, cases in sorted(iteritems(self.result_cases)):
+        for icase in sorted(iterkeys(self.result_cases)):
+            #cases = self.result_cases[icase]
             if result_name == icase[1]:
                 found_case = True
                 icase = i
                 break
             i += 1
-        assert found_case is True, 'result_name=%r' % result_name
         return icase
 
     def increment_cycle(self, icase=None):
@@ -454,7 +456,7 @@ class GuiCommon(GuiAttributes):
         #print('2-icase=%r self.icase=%s ncases=%r' % (icase, self.icase, self.ncases))
 
         if self.ncases > 0:
-            key = self.case_keys[self.icase]
+            #key = self.case_keys[self.icase]
             #try:
                 #key = self.case_keys[self.icase]
             #except IndexError:
