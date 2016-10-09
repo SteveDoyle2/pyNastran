@@ -6,8 +6,8 @@ def on_set_picker_size_menu(self):
         #return
 
     #print('size =', self.element_picker_size)
-    size = 10.
-    size = self.get_element_picker_size()
+    #size = 10.
+    size = self.element_picker_size
     data = {
         'size' : size,
         'dim_max' : self.dim_max,
@@ -15,7 +15,6 @@ def on_set_picker_size_menu(self):
         #'clicked_cancel' : False,
         #'close' : False,
     }
-    #print(data)
     if not self._picker_window_shown:
         self._picker_window = ModifyPickerPropertiesMenu(data, win_parent=self)
         self._picker_window.show()

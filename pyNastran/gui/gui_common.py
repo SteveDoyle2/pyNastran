@@ -3687,12 +3687,13 @@ class GuiCommon2(QMainWindow, GuiCommon):
         """
         on_set_picker_size_menu(self)
 
-    def get_element_picker_size(self):
-        return self.cell_picker.GetTolerance()
+    @property
+    def node_picker_size(self):
+        return self.node_picker.GetTolerance()
 
     @property
     def element_picker_size(self):
-        return self.get_element_picker_size()
+        return self.cell_picker.GetTolerance()
 
     @element_picker_size.setter
     def element_picker_size(self, size):
