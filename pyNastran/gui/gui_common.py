@@ -57,11 +57,11 @@ from pyNastran.gui.gui_interface.legend.interface import set_legend_menu
 from pyNastran.gui.gui_interface.clipping.interface import set_clipping_menu
 from pyNastran.gui.gui_interface.camera.interface import set_camera_menu
 from pyNastran.gui.gui_interface.modify_picker_properties.interface import on_set_picker_size_menu
+from pyNastran.gui.gui_interface.modify_label_properties.interface import on_set_labelsize_color_menu
 
 from pyNastran.gui.menus.application_log import PythonConsoleWidget, ApplicationLogWidget
 from pyNastran.gui.menus.manage_actors import EditGeometryProperties
 from pyNastran.gui.menus.groups_modify import GroupsModify, Group
-from pyNastran.gui.menus.modify_label_properties import ModifyLabelPropertiesMenu
 
 from pyNastran.gui.testing_methods import CoordProperties
 #from pyNastran.gui.menus.multidialog import MultiFileDialog
@@ -2311,11 +2311,28 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.node_picker = vtk.vtkPointPicker()
         self.cell_picker.SetTolerance(0.0005)
 
-    def mark_node(self, nid, result_name, text):
-        raise NotImplementedError()
-        #i = self.node_ids.index(nid)
-        #x, y, z = self.xyz_cid0[i, :]
-        #self._create_annotation(text, result_name, x, y, z)
+    def mark_nodes(self, nids, result_name, text):
+        """
+        Marks a series of nodes with custom text labels
+
+        self.mark_nodes(1, 'NodeID', 'max')
+        self.mark_nodes(6, 'NodeID', 'min')
+        self.mark_nodes([1, 6], 'NodeID', 'max')
+        self.mark_nodes([1, 6], 'NodeID', ['max', 'min'])
+        """
+        if result_name not in self.label_actors:
+            msg = 'result_name=%r not in label_actors=[%s]' % (result_name, ', '.join(self.label_actors))
+            self.log_error(msg)
+        i = np.searchsorted(self.node_ids, nids)
+        if isinstance(text, string_types):
+            text = [text] * len(i)
+        else:
+            assert len(text) == len(i)
+
+        xyz = self.xyz_cid0[i, :]
+        for (xi, yi, zi), texti in zip(xyz, text):
+            self._create_annotation(texti, result_name, xi, yi, zi)
+        self.vtk_interactor.Render()
 
     def _cell_centroid_pick(self, cell_id, world_position):
         duplicate_key = None
@@ -2377,7 +2394,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         self.vtk_interactor.SetPicker(self.cell_picker)
         def annotate_cell_picker(object, event):
-            #self.log_command("annotate_cell_picker()")
             picker = self.cell_picker
             if picker.GetCellId() < 0:
                 #self.picker_textActor.VisibilityOff()
@@ -3576,36 +3592,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         | Format | pyString |
         +--------+----------+
         """
-        if not hasattr(self, 'case_keys'):
-            self.log_error('No model has been loaded.')
-            return
-
-        data = {
-            'size' : self.label_text_size,
-            'color' : self.label_color,
-            'dim_max' : self.dim_max,
-            #'clicked_ok' : False,
-            #'clicked_cancel' : False,
-            #'close' : False,
-        }
-        #print(data)
-        if not self._label_window_shown:
-            self._label_window = ModifyLabelPropertiesMenu(data, win_parent=self)
-            self._label_window.show()
-            self._label_window_shown = True
-            self._label_window.exec_()
-        else:
-            self._label_window.activateWindow()
-
-        if 'close' not in data:
-            self._label_window.activateWindow()
-            return
-
-        if data['close']:
-            self._label_window_shown = False
-            del self._label_window
-        else:
-            self._label_window.activateWindow()
+        on_set_labelsize_color_menu(self)
 
     def set_labelsize_color(self, size=None, color=None):
         """
@@ -3692,8 +3679,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
         """Gets the node picker size"""
         return self.node_picker.GetTolerance()
 
-    @element_picker_size.setter
-    def element_picker_size(self, size):
+    @node_picker_size.setter
+    def node_picker_size(self, size):
         """Sets the node picker size"""
         assert size >= 0., size
         self.node_picker.SetTolerance(size)
