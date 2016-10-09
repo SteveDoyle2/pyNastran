@@ -20,12 +20,10 @@ def set_legend_menu(self):
         self.log_error('No model has been loaded.')
         return
     key = self.case_keys[self.icase]
-    #case = self.result_cases[key]
     default_format = None
     default_scale = None
     assert isinstance(key, integer_types), key
     (obj, (i, res_name)) = self.result_cases[key]
-    #subcase_id = obj.subcase_id
     case = obj.get_result(i, res_name)
     result_type = obj.get_title(i, res_name)
     nlabels, labelsize, ncolors, colormap = obj.get_nlabels_labelsize_ncolors_colormap(i, res_name)
@@ -46,7 +44,6 @@ def set_legend_menu(self):
 
     if default_format is None:
         default_format = data_format
-    print(key)
 
     #if isinstance(case, ndarray):
         #if len(case.shape) == 1:
@@ -90,7 +87,6 @@ def set_legend_menu(self):
         'clicked_ok' : False,
         'close' : False,
     }
-    print(data)
     if not self._legend_window_shown:
         self._legend_window = LegendPropertiesWindow(data, win_parent=self)
         self._legend_window.show()

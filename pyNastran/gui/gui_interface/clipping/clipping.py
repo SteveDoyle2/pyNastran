@@ -15,13 +15,25 @@ elif qt_version == 5:
 from pyNastran.gui.qt_files.menu_utils import eval_float_from_string
 
 class ClippingPropertiesWindow(QDialog):
+    """
+    +---------------------+
+    | Clipping Properties |
+    +------------------------------+
+    | Clipping Min  ______ Default |
+    | Clipping Max  ______ Default |
+    |                              |
+    |       Apply OK Cancel        |
+    +------------------------------+
+    """
 
     def __init__(self, data, win_parent=None):
         self.win_parent = win_parent
         #Init the base class
+        self._updated_clipping = False
+
         self._default_min = data['min']
         self._default_max = data['max']
-        self.out_data = {}
+        self.out_data = data
 
         QDialog.__init__(self, win_parent)
         #self.setupUi(self)
@@ -138,6 +150,7 @@ class ClippingPropertiesWindow(QDialog):
             #self.destroy()
 
     def on_cancel(self):
+        self.out_data['close'] = True
         self.close()
 
 

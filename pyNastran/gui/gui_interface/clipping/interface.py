@@ -32,7 +32,8 @@ def set_clipping_menu(self):
         self._clipping_window.activateWindow()
 
     if data['close']:
-        self._apply_clipping(data)
+        if not self._clipping_window._updated_clipping:
+            self._apply_clipping(data)
         del self._clipping_window
         self._clipping_window_shown = False
     else:
