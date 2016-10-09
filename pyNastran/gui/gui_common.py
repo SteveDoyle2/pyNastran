@@ -3736,6 +3736,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         renwin.PolygonSmoothingOn()
         renwin.PointSmoothingOn()
         renwin.SetMultiSamples(scale)
+        self.vtk_interactor.Render()
         self.log_command('on_set_anti_aliasing(%r)' % (scale))
 
 
