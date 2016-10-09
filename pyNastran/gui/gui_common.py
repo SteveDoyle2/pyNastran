@@ -3689,22 +3689,25 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
     @property
     def node_picker_size(self):
+        """Gets the node picker size"""
         return self.node_picker.GetTolerance()
+
+    @element_picker_size.setter
+    def element_picker_size(self, size):
+        """Sets the node picker size"""
+        assert size >= 0., size
+        self.node_picker.SetTolerance(size)
 
     @property
     def element_picker_size(self):
+        """Gets the element picker size"""
         return self.cell_picker.GetTolerance()
 
     @element_picker_size.setter
     def element_picker_size(self, size):
-        """sets the element picker size"""
-        self.cell_picker.SetTolerance(size)
-
-    def set_element_picker_size(self, size):
-        """Updates the element picker size"""
-
+        """Sets the element picker size"""
         assert size >= 0., size
-        self.element_picker_size = size
+        self.cell_picker.SetTolerance(size)
 
 
     #---------------------------------------------------------------------------------------

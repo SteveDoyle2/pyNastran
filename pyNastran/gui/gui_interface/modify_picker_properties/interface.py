@@ -5,11 +5,9 @@ def on_set_picker_size_menu(self):
         #self.log_error('No model has been loaded.')
         #return
 
-    #print('size =', self.element_picker_size)
-    #size = 10.
-    size = self.element_picker_size
+    element_picker_size = self.element_picker_size
     data = {
-        'size' : size,
+        'size' : element_picker_size,
         'dim_max' : self.dim_max,
         #'clicked_ok' : False,
         #'clicked_cancel' : False,

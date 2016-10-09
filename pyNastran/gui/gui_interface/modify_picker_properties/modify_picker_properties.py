@@ -131,7 +131,7 @@ class ModifyPickerPropertiesMenu(QDialog):
     def on_apply(self, force=False):
         passed = self.on_validate()
         if (passed or Force) and self.win_parent is not None:
-            self.win_parent.set_element_picker_size(self._size)
+            self.win_parent.element_picker_size = self._size
         return passed
 
     def on_ok(self):
