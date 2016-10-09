@@ -1,4 +1,4 @@
-from pyNastran.gui.menus.modify_picker_properties import ModifyPickerPropertiesMenu
+from pyNastran.gui.gui_interface.modify_picker_properties.modify_picker_properties import ModifyPickerPropertiesMenu
 
 def on_set_picker_size_menu(self):
     #if not hasattr(self, 'case_keys'):
