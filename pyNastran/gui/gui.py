@@ -109,7 +109,6 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, DegenGeomIO, ShabpIO, PanairIO
         """
         inputs=None
         """
-        print('kwds =', kwds)
         kwds['inputs'] = inputs
         html_logging = True
         fmt_order = [
@@ -196,7 +195,7 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, DegenGeomIO, ShabpIO, PanairIO
             copyright = pyNastran.__copyright__
 
         about = [
-            'pyNastran QT GUI',
+            'pyNastran Qt GUI',
             '',
             'pyNastran v%s' % pyNastran.__version__,
             copyright,

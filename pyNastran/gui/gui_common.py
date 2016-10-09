@@ -30,6 +30,8 @@ elif qt_version == 5:
     from PyQt5.QtWidgets import (
         QMainWindow, QDockWidget, QFrame, QHBoxLayout, QAction, QColorDialog, QFileDialog)
     from six import text_type as QString
+else:
+    raise NotImplementedError('qt_version = %r' % qt_version)
 
 import vtk
 from pyNastran.gui.qt_files.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
@@ -50,9 +52,11 @@ from pyNastran.gui.qt_files.scalar_bar import ScalarBar
 from pyNastran.gui.qt_files.alt_geometry_storage import AltGeometry
 
 from pyNastran.gui.menus.results_sidebar import Sidebar
-from pyNastran.gui.menus.qt_legend import LegendPropertiesWindow
-from pyNastran.gui.menus.clipping import ClippingPropertiesWindow
-from pyNastran.gui.menus.camera import CameraWindow
+
+from pyNastran.gui.gui_interface.legend.interface import set_legend_menu
+from pyNastran.gui.gui_interface.clipping.interface import set_clipping_menu
+from pyNastran.gui.gui_interface.camera.interface import set_camera_menu
+
 from pyNastran.gui.menus.application_log import PythonConsoleWidget, ApplicationLogWidget
 from pyNastran.gui.menus.manage_actors import EditGeometryProperties
 from pyNastran.gui.menus.groups_modify import GroupsModify, Group
@@ -108,32 +112,17 @@ class GuiCommon2(QMainWindow, GuiCommon):
             GuiCommon.__init__(self, **kwds)
         elif qt_version == 5:
             super(GuiCommon2, self).__init__(**kwds)
-        print('kwds =', kwds.keys())
+
         fmt_order = kwds['fmt_order']
         inputs = kwds['inputs']
         html_logging = kwds['html_logging']
-        #del kwds['fmt_order']
-        #del kwds['inputs']
         del kwds['html_logging']
 
-        #print('inputs =', inputs)
-        #print('kwargs =', kwargs)
-        print('kwds =', kwds)
-        self.reset_settings = False
-
-        if qt_version == 4:
+        if qt_version == 4:  # TODO: remove this???
             QMainWindow.__init__(self)
-        #else:
-            #super(QMainWindow, self).__init__(*kwargs, **kwds)
 
-            #QMainWindow.__init__(self, parent)
-            #super(QMainWindow, self).__init__(self, parent)
-            # (go to the next class, can't hand it off)
-
-        # old
-        #GuiCommon.__init__(self, inputs)
-        #super(GuiCommon2, self).__init__(self, inputs)
-
+        #-----------------------------------------------------------------------
+        self.reset_settings = False
         self.fmts = fmt_order
         self.base_window_title = "pyNastran v%s"  % pyNastran.__version__
 
@@ -261,11 +250,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
         if self.html_logging:
             self.log_dock_widget = ApplicationLogWidget(self)
             self.log_widget = self.log_dock_widget.log_widget
-            #self.log_dock_widget = QtGui.QDockWidget("Application log", self)
-            #self.log_dock_widget.setObjectName("application_log")
-            #self.log_widget = QtGui.QTextEdit()
-            #self.log_widget.setReadOnly(True)
-            #self.log_dock_widget.setWidget(self.log_widget)
             self.addDockWidget(QtCore.Qt.BottomDockWidgetArea, self.log_dock_widget)
 
         if self.execute_python:
@@ -3493,22 +3477,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
     #---------------------------------------------------------------------------------------
     # CAMERA MENU
     def view_camera(self):
-        camera = self.rend.GetActiveCamera()
-        #position = camera.GetPosition()
-        #clip_range = camera.GetClippingRange()
-        #focal_point = camera.GetFocalPoint()
-
-        data = {'cameras' : self.cameras}
-        window = CameraWindow(data, win_parent=self)
-        window.show()
-        window.exec_()
-
-        if data['clicked_ok']:
-            self.cameras = deepcopy(data['cameras'])
-            #self._apply_camera(data)
-        #self.log_info('position = %s' % str(position))
-        #self.log_info('clip_range = %s' % str(clip_range))
-        #self.log_info('focal_point = %s' % str(focal_point))
+        set_camera_menu(self)
 
     #def _apply_camera(self, data):
         #name = data['name']
@@ -3780,32 +3749,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         |  Max   |  Float   |
         +--------+----------+
         """
-        #if not hasattr(self, 'case_keys'):  # TODO: maybe include...
-            #self.log_error('No model has been loaded.')
-            #return
-        camera = self.GetCamera()
-        min_clip, max_clip = camera.GetClippingRange()
-
-        data = {
-            'min' : min_clip,
-            'max' : max_clip,
-            'clicked_ok' : False,
-            'close' : False,
-        }
-        if not self._clipping_window_shown:
-            self._clipping_window = ClippingPropertiesWindow(data, win_parent=self)
-            self._clipping_window.show()
-            self._clipping_window_shown = True
-            self._clipping_window.exec_()
-        else:
-            self._clipping_window.activateWindow()
-
-        if data['close']:
-            self._apply_clipping(data)
-            del self._clipping_window
-            self._clipping_window_shown = False
-        else:
-            self._clipping_window.activateWindow()
+        set_clipping_menu(self)
 
     def _apply_clipping(self, data):
         min_clip = data['min']
@@ -3851,96 +3795,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         | Format | pyString |
         +--------+----------+
         """
-        if not hasattr(self, 'case_keys') or len(self.case_keys) == 0:
-            self.log_error('No model has been loaded.')
-            return
-        key = self.case_keys[self.icase]
-        case = self.result_cases[key]
-        default_format = None
-        default_scale = None
-        assert isinstance(key, integer_types), key
-        (obj, (i, res_name)) = self.result_cases[key]
-        #subcase_id = obj.subcase_id
-        case = obj.get_result(i, res_name)
-        result_type = obj.get_title(i, res_name)
-        nlabels, labelsize, ncolors, colormap = obj.get_nlabels_labelsize_ncolors_colormap(i, res_name)
-
-        defaults_scalar_bar = obj.get_default_nlabels_labelsize_ncolors_colormap(i, res_name)
-        default_nlabels, default_labelsize, default_ncolors, default_colormap = defaults_scalar_bar
-
-        #vector_size = obj.get_vector_size(i, res_name)
-        #location = obj.get_location(i, res_name)
-        data_format = obj.get_data_format(i, res_name)
-        scale = obj.get_scale(i, res_name)
-
-        default_title = obj.get_default_title(i, res_name)
-        default_scale = obj.get_default_scale(i, res_name)
-
-        min_value, max_value = obj.get_min_max(i, res_name)
-        default_min, default_max = obj.get_default_min_max(i, res_name)
-
-        if default_format is None:
-            default_format = data_format
-        print(key)
-
-        #if isinstance(case, ndarray):
-            #if len(case.shape) == 1:
-                #normi = case
-            #else:
-                #normi = norm(case, axis=1)
-        #else:
-            #raise RuntimeError('list-based results have been removed; use numpy.array')
-
-        data = {
-            'icase' : i,
-            'name' : result_type,
-            #'min' : normi.min(),
-            #'max' : normi.max(),
-            'min' : min_value,
-            'max' : max_value,
-
-            'scale' : scale,
-            'format' : data_format,
-
-            'default_min' : default_min,
-            'default_max' : default_max,
-            'default_title' : default_title,
-            'default_scale' : default_scale,
-            'default_format' : default_format,
-
-            'default_nlabels' : default_nlabels,
-            'default_labelsize' : default_labelsize,
-            'default_ncolors' : default_ncolors,
-            'default_colormap' : default_colormap,
-
-            'nlabels' : nlabels,
-            'labelsize' :  labelsize,
-            'ncolors' : ncolors,
-            'colormap' : colormap,
-
-            'is_low_to_high' : True,
-            'is_discrete': True,
-            'is_horizontal': self.scalar_bar.is_horizontal,
-            'is_shown' : self.scalar_bar.is_shown,
-            'clicked_ok' : False,
-            'close' : False,
-        }
-        print(data)
-        if not self._legend_window_shown:
-            self._legend_window = LegendPropertiesWindow(data, win_parent=self)
-            self._legend_window.show()
-            self._legend_window_shown = True
-            self._legend_window.exec_()
-        else:
-            self._legend_window.activateWindow()
-
-        if data['close']:
-            if not self._legend_window._updated_legend:
-                self._apply_legend(data)
-            self._legend_window_shown = False
-            del self._legend_window
-        else:
-            self._legend_window.activateWindow()
+        set_legend_menu(self)
 
     def update_legend(self, icase, name, min_value, max_value, data_format, scale,
                       nlabels, labelsize, ncolors, colormap,

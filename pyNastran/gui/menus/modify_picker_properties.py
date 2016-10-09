@@ -47,7 +47,8 @@ class ModifyPickerPropertiesMenu(QDialog):
 
         log_dim = log10(self.dim_max)
         decimals = int(ceil(abs(log_dim)))
-        decimals = max(3, decimals)
+
+        decimals = max(6, decimals)
         self.size_edit.setDecimals(decimals)
         self.size_edit.setSingleStep(self.dim_max / 100.)
         self.size_edit.setValue(self._size)
