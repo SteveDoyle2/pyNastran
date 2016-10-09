@@ -2,6 +2,15 @@ from __future__ import print_function
 from pyNastran.gui.gui_interface.clipping.clipping import ClippingPropertiesWindow
 
 def set_clipping_menu(self):
+    """
+    Opens a dialog box to set:
+
+    +--------+----------+
+    |  Min   |  Float   |
+    +--------+----------+
+    |  Max   |  Float   |
+    +--------+----------+
+    """
     #if not hasattr(self, 'case_keys'):  # TODO: maybe include...
         #self.log_error('No model has been loaded.')
         #return
