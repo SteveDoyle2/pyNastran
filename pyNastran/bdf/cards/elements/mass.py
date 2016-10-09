@@ -308,6 +308,7 @@ class CMASS2(PointMassElement):
         if self.g2 is not None:
             p2 = self.g2_ref.get_position()
             f += 1.
+        assert f > 0., str(self)
         c = (p1 + p2) / f
         return c
 

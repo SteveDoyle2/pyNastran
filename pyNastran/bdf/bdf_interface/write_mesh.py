@@ -947,7 +947,8 @@ class WriteMesh(BDFAttributes):
         if(self.dconadds or self.dconstrs or self.desvars or self.ddvals or
            self.dresps or self.ddvals or
            self.dvprels or self.dvmrels or self.dvcrels or self.doptprm or
-           self.dlinks or self.dequations or self.dtable is not None):
+           self.dlinks or self.dequations or self.dtable is not None or
+           self.dvgrids):
             msg = ['$OPTIMIZATION\n']
             for (unused_id, dconadd) in sorted(iteritems(self.dconadds)):
                 msg.append(dconadd.write_card(size, is_double))
@@ -969,6 +970,8 @@ class WriteMesh(BDFAttributes):
                 msg.append(dvmrel.write_card(size, is_double))
             for (unused_id, dvprel) in sorted(iteritems(self.dvprels)):
                 msg.append(dvprel.write_card(size, is_double))
+            for (unused_id, dvgrid) in sorted(iteritems(self.dvgrids)):
+                msg.append(dvgrid.write_card(size, is_double))
             for (unused_id, equation) in sorted(iteritems(self.dequations)):
                 msg.append(str(equation))
 

@@ -1788,6 +1788,18 @@ class BDFMethods(BDFAttributes):
             eid_set[tface].append(eid)
             face_map[tface] = raw_face
 
+        #print('eid_set:')
+        #for tface, eidset in iteritems(eid_set):
+            #print(tface, eidset)
+
+        #print('face_set:')
+        #for tface, faceset in iteritems(face_set):
+            #print(tface, faceset)
+
+        #print('face_map:')
+        #for tface, facemap in iteritems(face_map):
+            #print(tface, facemap)
+
         del_faces = []
         for face, face_count in iteritems(face_set):
             if face_count == 2:
@@ -1812,6 +1824,7 @@ class BDFMethods(BDFAttributes):
             write solid elements that have skinned faces
         write_shells : bool; default=False
             write shell elements
+
         size : int; default=8
             the field width
         is_double : bool; default=False
@@ -1837,8 +1850,10 @@ class BDFMethods(BDFAttributes):
                     pid = elem.Pid()
                     prop = self.properties[pid] # PSOLID
                     mid = prop.Mid()
+                    #print(prop)
                     nid_set_to_write.update(elem.node_ids)
                     mid_set_to_write.add(mid)
+                    #print('added_mid (a) =', mid)
         elif write_shells:
             for face, eids in iteritems(eid_set):
                 eid_set_to_write.update(eids)
@@ -1847,9 +1862,12 @@ class BDFMethods(BDFAttributes):
                     elem = self.elements[eid]
                     pid = elem.Pid()
                     prop = self.properties[pid] # PSOLID
+                    #print(prop)
                     try:
+                        #print(prop.mid)
                         mid = prop.Mid()
                         mid_set_to_write.add(mid)
+                        #print('added eid=%s pid=%s mid=%s (b)' % (eid, pid, mid))
                     except AttributeError:
                         continue
         else:
@@ -1882,30 +1900,36 @@ class BDFMethods(BDFAttributes):
         ----------
         skin_filename : str
             the file to write
-        face_map : ???
-            ???
-        nids_to_write : ???
-            ???
-        eids_to_write : ???
-            ???
-        mids_to_write : ???
-            ???
+        face_map : dict[sorted_face] : face
+            sorted_face : List[int, int, int] / List[int, int, int, int]
+            face : List[int, int, int] / List[int, int, int, int]
+
+        nids_to_write : List[int, int, ...]
+            list of node ids to write
+        eids_to_write : List[int, int, ...]
+            list of element ids to write
+        mids_to_write : List[int, int, ...]
+            list of material ids to write
         eid_set : ???
             ???
-        eid_shell : ???
-            ???
-        pid_shell : ???
-            ???
-        mid_shell : ???
-            ???
+
+        eid_shell : int
+            the next id to use for the shell id
+        pid_shell : int
+            the next id to use for the shell property
+        mid_shell : int
+            the next id to use for the shell material
+
         write_solids : bool; default=False
             write solid elements that have skinned faces
-        write_shells : bool; default=False
+        write_shells : bool; default=True
             write shell elements
         size : int; default=8
             the field width
         is_double : bool; default=False
             double precision flag
+        encoding : str; default=None -> system default
+            the string encoding
         """
         encoding = self.get_encoding(encoding)
         if PY2:
@@ -1955,7 +1979,8 @@ class BDFMethods(BDFAttributes):
                         #print(elem)
                         #break
 
-                    elem = next(itervalues(self.elements))
+                    #elem = next(itervalues(self.elements)) # old
+                    elem = self.elements[eids[0]]
                     #pid = next(iterkeys(self.properties))
                     pid = elem.Pid()
                     prop = self.properties[pid]
@@ -1963,6 +1988,8 @@ class BDFMethods(BDFAttributes):
                         mid = prop.Mid()
                     except AttributeError:
                         continue
+                    #print('mids_to_write = %s' % mids_to_write)
+                    #print('mids = ', self.materials.keys())
                     imid = mids_to_write.index(mid)
 
                     if nface == 3:
@@ -1985,6 +2012,9 @@ class BDFMethods(BDFAttributes):
                 #for pid, prop in iteritems(self.properties):
                     #bdf_file.write(prop.write_card(size=size, is_double=is_double))
             bdf_file.write('ENDDATA\n')
+        #if 0:
+            #model = self.__class__.__init__()
+            #model.read_bdf(skin_filename)
 
     def remove_unassociated_properties(self, model, reset_type_to_slot_map=True):
         """remove_unassociated_properties"""

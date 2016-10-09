@@ -2987,3 +2987,70 @@ class DVPREL2(OptConstraint):
         if size == 8:
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)
+
+class DVGRID(OptConstraint):
+    type = 'DVGRID'
+
+    """
+    +--------+------+-----+-----+-------+----+----+----+
+    |    1   |   2  |  3  |  4  |   5   |  6 |  7 |  8 |
+    +========+======+=====+=====+=======+====+====+====+
+    | DVGRID | DVID | GID | CID | COEFF | N1 | N2 | N3 |
+    +--------+------+-----+-----+-------+----+----+----+
+    """
+    def __init__(self, dvid, nid, dxyz, cid=0, coeff=1.0, comment=''):
+        if comment:
+            self._comment = comment
+        self.dvid = dvid
+        self.nid = nid
+        self.cid = cid
+        self.coeff = coeff
+        self.dxyz = np.asarray(dxyz)
+
+    def validate(self):
+        if np.linalg.norm(self.dxyz) == 0.:
+            msg = 'DVGRID Error; dvid=%s nid=%s norm(dxyz)=0.' % (self.dvid, self.nid)
+            raise ValueError(msg)
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        dvid = integer(card, 1, 'dvid')
+        nid = integer(card, 2, 'nid')
+        cid = integer_or_blank(card, 3, 'cid', 0)
+        coeff = double_or_blank(card, 4, 'coeff', 1.0)
+        dxyz = [
+            double_or_blank(card, 5, 'n1', 0.),
+            double_or_blank(card, 6, 'n2', 0.),
+            double_or_blank(card, 7, 'n3', 0.),
+        ]
+        return DVGRID(dvid, nid, dxyz, cid=cid, coeff=coeff, comment=comment)
+
+    def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        #self.dconstrs = [model.dconstrs[oid] for oid in self.dconstr_ids]
+        #self.dconstrs_ref = [model.dconstrs[oid] for oid in self.dconstr_ids]
+        pass
+
+    def uncross_reference(self):
+        return
+        #self.dconstrs = self.dconstr_ids
+        #del self.dconstrs_ref
+
+    def raw_fields(self):
+        list_fields = ['DVGRID', self.dvid, self.nid, self.cid, self.coeff] + list(self.dxyz)
+        return list_fields
+
+    def write_card(self, size=8, is_double=False):
+        card = self.repr_fields()
+        if size == 8:
+            return self.comment + print_card_8(card)
+        if is_double:
+            return self.comment + print_card_double(card)
+        return self.comment + print_card_16(card)

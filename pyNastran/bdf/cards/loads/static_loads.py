@@ -543,7 +543,11 @@ class ACCEL(BaseCard):
 
     def safe_cross_reference(self, model, debug=True):
         msg = ' which is required by ACCEL sid=%s' % self.sid
-        self.cid = model.Coord(self.cid, msg=msg)
+        try:
+            self.cid = model.Coord(self.cid, msg=msg)
+            self.cid_ref = self.cid
+        except KeyError:
+            pass
 
     def Cid(self):
         if isinstance(self.cid, integer_types):

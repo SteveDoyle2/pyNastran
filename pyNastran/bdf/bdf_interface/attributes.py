@@ -393,6 +393,7 @@ class BDFAttributes(object):
         self.dvprels = {}
         self.dvmrels = {}
         self.dvcrels = {}
+        self.dvgrids = {}
         self.doptprm = None
         self.dscreen = {}
 

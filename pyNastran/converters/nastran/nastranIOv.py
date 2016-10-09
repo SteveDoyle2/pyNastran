@@ -534,10 +534,14 @@ class NastranIO(object):
         for msgi in msg:
             model.log.debug(msgi)
 
+        nconm2 = 0
         if 'CONM2' in model.card_count:
-            nconm2 = model.card_count['CONM2']
-        else:
-            nconm2 = 0
+            nconm2 += model.card_count['CONM2']
+        if 'CMASS1' in model.card_count:
+            nconm2 += model.card_count['CMASS1']
+        if 'CMASS2' in model.card_count:
+            nconm2 += model.card_count['CMASS2']
+
         #self.gridResult.SetNumberOfComponents(self.nElements)
         if nconm2 > 0:
             self.create_alternate_vtk_grid(
@@ -1012,6 +1016,18 @@ class NastranIO(object):
 
                 self.alt_grids['conm2'].InsertNextCell(elem.GetCellType(), elem.GetPointIds())
                 j += 1
+            elif element.type in ['CMASS1', 'CMASS2']:
+                n1 = element.G1()
+                n2 = element.G1()
+                centroid = element.Centroid()
+                #print('n1=%s n2=%s centroid=%s' % (n1, n2, centroid))
+                points.InsertPoint(j, *centroid)
+
+                elem = vtk.vtkVertex()
+                elem.GetPointIds().SetId(0, j)
+                self.alt_grids['conm2'].InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                j += 1
+
             else:
                 self.log_info("skipping %s" % element.type)
         self.alt_grids['conm2'].SetPoints(points)
@@ -2678,13 +2694,16 @@ class NastranIO(object):
                         continue
 
                     #c = nid_map[nid]
-                    elem = vtk.vtkVertex()
-                    elem.GetPointIds().SetId(0, j)
 
-                    elem = vtk.vtkSphere()
-                    #if d == 0.:
+                    if 1:
+                        elem = vtk.vtkVertex()
+                        elem.GetPointIds().SetId(0, j)
+                    else:
+                        elem = vtk.vtkSphere()
+                        #elem = vtk.vtkSphereSource()
+                        #if d == 0.:
                         #d = sphere_size
-                    elem.SetRadius(sphere_size)
+                        elem.SetRadius(sphere_size)
                 else:
                     # 2 points
                     #d = norm(element.nodes[0].get_position() - element.nodes[1].get_position())
@@ -2849,6 +2868,7 @@ class NastranIO(object):
             'PSOLID', 'PSHEAR',
             'PROD', 'CROD', 'PTUBE', 'PBAR', 'PBARL', 'PBEAM', 'PBEAML',
         ]
+        upids = None
         # subcase_id, resultType, vector_size, location, dataFormat
         if len(model.properties):
 
@@ -3258,6 +3278,8 @@ class NastranIO(object):
         return nid_to_pid_map, icase, cases, form
 
     def _build_optimization(self, model, pids, upids, nelements, cases, form0, icase):
+        if upids is None:
+            return icase
         if len(model.properties) and len(model.dvprels):
             # len(model.dvprels) + len(model.dvcrels) + len(model.dvmrels) + len(model.desvars)
             #dvmrel_init = np.zeros(nelements, dtype='int32')

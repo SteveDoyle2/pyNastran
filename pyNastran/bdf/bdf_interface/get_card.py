@@ -157,6 +157,7 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
                 try:
                     card = slot[idi]
                 except KeyError:
+                    print(slot)
                     msg = 'key=%r id=%r cannot be found\n' % (key, idi)
                     msg += 'id=%s not found.  Allowed=%s' % (
                         key, np.unique(ids))

@@ -100,7 +100,8 @@ from pyNastran.bdf.cards.optimization import (DCONADD, DCONSTR, DESVAR, DDVAL, D
                                               DRESP1, DRESP2, DRESP3,
                                               DVCREL1, DVCREL2,
                                               DVMREL1, DVMREL2,
-                                              DVPREL1, DVPREL2)
+                                              DVPREL1, DVPREL2,
+                                              DVGRID)
 from pyNastran.bdf.cards.params import PARAM
 from pyNastran.bdf.cards.bdf_sets import (ASET, BSET, CSET, QSET, USET,
                                           ASET1, BSET1, CSET1, QSET1, USET1,
@@ -474,7 +475,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'DVCREL1', 'DVCREL2',
             'DVPREL1', 'DVPREL2',
             'DVMREL1', 'DVMREL2',
-            'DOPTPRM', 'DLINK', 'DCONADD',
+            'DOPTPRM', 'DLINK', 'DCONADD', 'DVGRID',
             #'DSCREEN',
 
             'SET1', 'SET3',  ## sets
@@ -657,8 +658,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             self.dvprels[dvid] = dvprel
         for dvid, dvmrel in iteritems(replace_model.dvmrels):
             self.dvmrels[dvid] = dvmrel
-        for dvid, dvcrel in iteritems(replace_model.dvcrels):
-            self.dvcrels[dvid] = dvcrel
+        for dvid, dvgrid in iteritems(replace_model.dvgrids):
+            self.dvgrids[dvid] = dvgrid
 
     def disable_cards(self, cards):
         """
@@ -984,6 +985,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             dvcrel.validate()
         for key, dscreen in sorted(iteritems(self.dscreen)):
             dscreen.validate()
+        for dvid, dvgrid in iteritems(self.dvgrids):
+            dvgrid.validate()
         #------------------------------------------------
 
     def read_bdf(self, bdf_filename=None,
@@ -2016,12 +2019,13 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'DRESP1' : (DRESP1, self.add_DRESP),
             'DRESP2' : (DRESP2, self.add_DRESP), # deqatn
             'DRESP3' : (DRESP3, self.add_DRESP),
-            'DVCREL1' : (DVCREL1, self.add_DVCREL),
+            'DVCREL1' : (DVCREL1, self.add_DVCREL), # dvcrels
             'DVCREL2' : (DVCREL2, self.add_DVCREL),
-            'DVPREL1' : (DVPREL1, self.add_DVPREL),
-            'DVPREL2' : (DVPREL2, self.add_DVPREL), # deqatn
-            'DVMREL1' : (DVMREL1, self.add_DVMREL),
-            'DVMREL2' : (DVMREL2, self.add_DVMREL), # deqatn
+            'DVPREL1' : (DVPREL1, self.add_DVPREL), # dvprels
+            'DVPREL2' : (DVPREL2, self.add_DVPREL),
+            'DVMREL1' : (DVMREL1, self.add_DVMREL), # ddvmrels
+            'DVMREL2' : (DVMREL2, self.add_DVMREL),
+            'DVGRID' : (DVGRID, self.add_DVGRID), # dvgrids
 
             'TABLED1' : (TABLED1, self.add_table),
             'TABLED2' : (TABLED2, self.add_table),
@@ -2650,7 +2654,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
             # optimization - dict
             'dconadds', 'dconstrs', 'desvars', 'ddvals', 'dlinks', 'dresps',
-            'dvcrels', 'dvmrels', 'dvprels',
+            'dvcrels', 'dvmrels', 'dvprels', 'dvgrids',
 
             # SESETx - dict
             'suport1',
@@ -3556,6 +3560,12 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                 print(str(card))
                 raise
         for key, card in sorted(iteritems(self.dvprels)):
+            try:
+                card._verify(xref)
+            except:
+                print(str(card))
+                raise
+        for key, card in sorted(iteritems(self.dvgrids)):
             try:
                 card._verify(xref)
             except:

@@ -653,6 +653,9 @@ class PCOMP(CompositeShellProperty):
         Theta = data[10]
         Sout = data[11]
 
+        if lam == 'NO':
+            lam = None
+
         #ply = [mid,t,theta,sout]
         mids = []
         thicknesses = []

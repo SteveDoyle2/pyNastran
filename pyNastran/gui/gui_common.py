@@ -146,6 +146,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         # in,lb,s
         self.input_units = ['', '', ''] # '' means not set
         self.display_units = ['', '', '']
+        self.recent_files = []
 
     #def dragEnterEvent(self, e):
         #print(e)
@@ -2051,10 +2052,14 @@ class GuiCommon2(QMainWindow, GuiCommon):
             self.text_color = white
             self.resize(1100, 700)
         else:
+            setting_keys = [str(key) for key in settings.childKeys()]
             self.background_color = settings.value("backgroundColor", grey).toPyObject()
             self.label_color = settings.value("labelColor", black).toPyObject()
             self.text_color = settings.value("textColor", white).toPyObject()
             screen_shape = settings.value("screen_shape", screen_shape_default).toPyObject()
+            #if 'recent_files' in setting_keys:
+            self.recent_files = settings.value("recent_files", self.recent_files).toPyObject()
+
             #w = screen_shape.width()
             #h = screen_shape.height()
             #try:

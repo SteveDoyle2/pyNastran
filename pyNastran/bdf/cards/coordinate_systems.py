@@ -1716,7 +1716,7 @@ class Cord1x(Coord):
         #print('setting up cid=%s' % self.cid)
         # call the Coord class' setup method
         super(Cord1x, self).setup()
-        print('cid=%s rid_trace=%s' % (self.cid, self.rid_trace))
+        #print('cid=%s rid_trace=%s' % (self.cid, self.rid_trace))
 
     def G1(self):
         if isinstance(self.g1, integer_types):

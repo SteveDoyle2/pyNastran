@@ -629,7 +629,7 @@ class AddMethods(BDFAttributes):
         if not allow_overwrites:
             assert key not in self.divergs, 'DIVERG=%s  old=\n%snew=\n%s' % (key, self.divergs[key], diverg)
         assert key > 0, 'key=%r diverg=\n%s' % (key, diverg)
-        self.divergs[diverg] = diverg
+        self.divergs[key] = diverg
         self._type_to_id_map[diverg.type].append(key)
 
     def add_FLUTTER(self, flutter):
@@ -725,6 +725,15 @@ class AddMethods(BDFAttributes):
         assert key > 0
         self.dvprels[key] = dvprel
         self._type_to_id_map[dvprel.type].append(key)
+
+    def add_DVGRID(self, dvgrid):
+        key = dvgrid.dvid
+        assert key not in self.dvgrids, 'DVGRID=%s old=\n%snew=\n%s' % (
+                    key, self.dvgrids[key], dvgrid)
+        assert key not in self.dvgrids
+        assert key > 0
+        self.dvgrids[key] = dvgrid
+        self._type_to_id_map[dvgrid.type].append(key)
 
     def add_NLPARM(self, nlparm):
         key = nlparm.nlparm_id
