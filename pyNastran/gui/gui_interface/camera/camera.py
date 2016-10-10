@@ -13,6 +13,14 @@ elif qt_version == 5:
         QApplication, QDialog, QLabel, QLineEdit, QPushButton, QTableWidget, QTableWidgetItem,
         QHBoxLayout, QVBoxLayout, QGridLayout)
     from six import text_type as QString
+elif qt_version == 'pyside':
+    from PySide import QtCore
+    from PySide.QtGui import (
+        QApplication, QDialog, QLabel, QLineEdit, QPushButton, QTableWidget, QTableWidgetItem,
+        QHBoxLayout, QVBoxLayout, QGridLayout)
+    from six import text_type as QString
+else:
+    raise NotImplementedError('qt_version = %r' % qt_version)
 
 
 class CameraWindow(QDialog):

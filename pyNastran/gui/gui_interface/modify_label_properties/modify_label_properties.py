@@ -16,6 +16,13 @@ elif qt_version == 5:
     from PyQt5.QtWidgets import (
         QDialog, QLabel, QLineEdit, QPushButton, QTextEdit, QDockWidget, QTableView, QWidget,
         QApplication, QDoubleSpinBox, QGridLayout, QHBoxLayout, QVBoxLayout, QColorDialog)
+elif qt_version == 'pyside':
+    from PySide import QtCore, QtGui
+    from PySide.QtGui import (
+        QDialog, QLabel, QLineEdit, QPushButton, QTextEdit, QDockWidget, QTableView, QWidget,
+        QApplication, QDoubleSpinBox, QGridLayout, QHBoxLayout, QVBoxLayout, QColorDialog)
+else:
+    raise NotImplementedError('qt_version = %r' % qt_version)
 
 
 class ModifyLabelPropertiesMenu(QDialog):
@@ -72,7 +79,8 @@ class ModifyLabelPropertiesMenu(QDialog):
         decimals = int(ceil(abs(log_dim)))
         decimals = max(6, decimals)
         self.size_edit.setDecimals(decimals)
-        self.size_edit.setSingleStep(self.dim_max / 100.)
+        #self.size_edit.setSingleStep(self.dim_max / 100.)
+        self.size_edit.setSingleStep(self.dim_max / 1000.)
         self.size_edit.setValue(self._size)
 
         # closing

@@ -6,13 +6,15 @@ class AltGeometry(object):
     representations = ['main', 'toggle', 'wire', 'point', 'surface', 'wire+point', 'bar']
     def __repr__(self):
         msg = ('AltGeometry(self, %s, color=%s, line_width=%s, opacity=%s,\n'
-              ' point_size=%s, bar_scale=%s, representation=%r, is_visible=%s)' % (
+              ' point_size=%s, bar_scale=%s, representation=%r, is_visible=%s,\n'
+              'is_pickable=%s)' % (
                   self.name, str(self.color), self.line_width, self.opacity, self.point_size,
-                  self.bar_scale, self.representation, self.is_visible))
+                  self.bar_scale, self.representation, self.is_visible, self.is_pickable))
         return msg
 
     def __init__(self, parent, name, color=None, line_width=1, opacity=0.0,
-                 point_size=1, bar_scale=1.0, representation='main', is_visible=True):
+                 point_size=1, bar_scale=1.0, representation='main', is_visible=True,
+                 is_pickable=False):
         """
         Parameters
         ----------
@@ -33,6 +35,10 @@ class AltGeometry(object):
             point - always points
             surface - always surface
             bar - can use bar scale
+        is_visible : bool; default=True
+            is this actor currently visable
+        is_pickable : bool; default=False
+            can you pick a node/cell on this actor
         """
         if line_width is None:
             line_width = 1
@@ -53,6 +59,7 @@ class AltGeometry(object):
 
         assert isinstance(is_visible, bool), is_visible
         self.is_visible = is_visible
+        self.is_pickable = is_pickable
 
         if representation not in self.representations:
             msg = 'representation=%r is invalid\nrepresentations=%r' % (

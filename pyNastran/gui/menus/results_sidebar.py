@@ -19,6 +19,13 @@ elif qt_version == 5:
     from PyQt5.QtWidgets import (
         QTreeView, QWidget, QAbstractItemView, QVBoxLayout, QPushButton, QApplication,
         QComboBox)
+elif qt_version == 'pyside':
+    from PySide import QtGui
+    from PySide.QtGui import (
+        QTreeView, QWidget, QAbstractItemView, QVBoxLayout, QPushButton, QApplication,
+        QComboBox)
+else:
+    raise NotImplementedError('qt_version = %r' % qt_version)
 
 
 class QTreeView2(QTreeView):

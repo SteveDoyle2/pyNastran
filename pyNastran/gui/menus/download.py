@@ -23,11 +23,13 @@ if qt_version == 4:
             else:
                 # ????
                 pass
-else:
+elif qt_version == 5:
     class ClickableQLabel(QPushButton):
             def __init(self, text):
                 QPushButton.__init__(self, text)
                 self.setFlat(True)
+else:
+    raise NotImplementedError('qt_version = %r' % qt_version)
 
 
 class DownloadWindow(QDialog):

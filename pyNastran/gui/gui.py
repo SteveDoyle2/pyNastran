@@ -20,20 +20,16 @@ elif qt_version == 5:
     from PyQt5 import QtCore, QtGui
     from PyQt5.QtWidgets import QApplication, QMessageBox, qApp
     print("Using PyQt5")
+elif qt_version == 'pyside':
+    from PySide import QtCore, QtGui
+    from PySide.QtGui import QApplication, QMessageBox, qApp
+else:
+    raise NotImplementedError(qt_version)
+
 
 import pyNastran
 from pyNastran.gui.utils import check_for_newer_version
 
-fmode = 1
-#except ImportError:
-    #try:
-        #from PySide import QtCore, QtGui
-        #print("Using PySide")
-        #fmode = 2
-    #except ImportError:
-        #msg = 'Failed to import PySide or PyQt4'
-        #raise ImportError(msg)
-assert fmode in [1, 2]
 
 # 3rd party
 import vtk
@@ -189,10 +185,10 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, DegenGeomIO, ShabpIO, PanairIO
 
     def about_dialog(self):
         """ Display about dialog """
-        if fmode == 1:  # PyQt
-            copyright = pyNastran.__pyqt_copyright__
-        else:
+        if qt_version == 'pyside':
             copyright = pyNastran.__copyright__
+        else:
+            copyright = pyNastran.__pyqt_copyright__
 
         about = [
             'pyNastran Qt GUI',

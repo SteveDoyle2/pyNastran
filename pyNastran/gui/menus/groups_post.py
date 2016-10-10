@@ -20,6 +20,8 @@ elif qt_version == 5:
         QHBoxLayout, QVBoxLayout, QTableWidget, QTableWidgetItem,
     )
     from six import text_type as QString
+else:
+    raise NotImplementedError('qt_version = %r' % qt_version)
 
 from pyNastran.gui.menus.groups_modify import Group
 

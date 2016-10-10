@@ -555,11 +555,11 @@ class NastranIO(object):
             if 'caero' not in self.alt_grids:
                 self.create_alternate_vtk_grid(
                     'caero', color=yellow, line_width=3, opacity=1.0,
-                    representation='toggle', is_visible=True)
+                    representation='toggle', is_visible=True, is_pickable=False)
             if 'caero_subpanels' not in self.alt_grids:
                 self.create_alternate_vtk_grid(
                     'caero_subpanels', color=yellow, line_width=3, opacity=1.0,
-                    representation='toggle', is_visible=False)
+                    representation='toggle', is_visible=False, is_pickable=False)
 
             self.alt_grids['caero'].Allocate(ncaeros, 1000)
             self.alt_grids['caero_subpanels'].Allocate(ncaeros_sub, 1000)

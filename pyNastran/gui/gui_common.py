@@ -30,6 +30,11 @@ elif qt_version == 5:
     from PyQt5.QtWidgets import (
         QMainWindow, QDockWidget, QFrame, QHBoxLayout, QAction, QColorDialog, QFileDialog)
     from six import text_type as QString
+elif qt_version == 'pyside':
+    from PySide import QtCore, QtGui
+    from PySide.QtGui import (
+        QMainWindow, QDockWidget, QFrame, QHBoxLayout, QAction, QColorDialog, QFileDialog)
+    from six import text_type as QString
 else:
     raise NotImplementedError('qt_version = %r' % qt_version)
 
@@ -112,14 +117,31 @@ class GuiCommon2(QMainWindow, GuiCommon):
             GuiCommon.__init__(self, **kwds)
         elif qt_version == 5:
             super(GuiCommon2, self).__init__(**kwds)
+        elif qt_version == 'pyside':
+            #super(GuiCommon2, self).__init__(**kwds) # fails
+
+            # fails
+            #QMainWindow.__init__(self)
+            #GuiCommon.__init__(self, **kwds)
+
+            #super(GuiCommon2, self).__init__(**kwds)
+            #super(GuiCommon2, self).__init__(**kwds)
+
+            #super(GuiCommon2, self).__init__(**kwds)
+
+            QMainWindow.__init__(self)
+            GuiCommon.__init__(self, **kwds)
+            pass
+        else:
+            raise NotImplementedError(qt_version)
 
         fmt_order = kwds['fmt_order']
         inputs = kwds['inputs']
         html_logging = kwds['html_logging']
         del kwds['html_logging']
 
-        if qt_version == 4:  # TODO: remove this???
-            QMainWindow.__init__(self)
+        #if qt_version == 4:  # TODO: remove this???
+            #QMainWindow.__init__(self)
 
         #-----------------------------------------------------------------------
         self.reset_settings = False
@@ -976,13 +998,13 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
     def create_alternate_vtk_grid(self, name, color=None, line_width=5, opacity=1.0, point_size=1,
                                   bar_scale=0.0, representation=None, is_visible=True,
-                                  follower_nodes=None):
+                                  follower_nodes=None, is_pickable=False):
         self.alt_grids[name] = vtk.vtkUnstructuredGrid()
         self.geometry_properties[name] = AltGeometry(
             self, name, color=color,
             line_width=line_width, opacity=opacity,
             point_size=point_size, bar_scale=bar_scale,
-            representation=representation, is_visible=is_visible)
+            representation=representation, is_visible=is_visible, is_pickable=is_pickable)
         if follower_nodes is not None:
             self.follower_nodes[name] = follower_nodes
 
@@ -1001,27 +1023,42 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self._camera_mode = 'default'
         self.setup_mouse_buttons(mode='default')
 
-    def setup_mouse_buttons(self, mode=None):
+    def setup_mouse_buttons(self, mode=None, func=None):
+        #print('setup_mouse_buttons mode=%r _camera_mode=%r' % (mode, self._camera_mode))
         if mode == self._camera_mode:
             return
-        elif mode is None:
+        self._camera_mode = mode
+
+        if mode is None:
             # same as default
             return
         elif mode == 'default':
             # standard rotation
+
             # Disable default left mouse click function (Rotate)
             self.vtk_interactor.RemoveObservers('LeftButtonPressEvent')
+
+            self.set_style_as_trackball()
             # Re-assign left mouse click event to custom function (Point Picker)
-            self.vtk_interactor.AddObserver('LeftButtonPressEvent', self.LeftButtonPressEvent)
-        elif mode == 'one_node_pick':
-            # used for rotation_center
-            raise NotImplementedError(mode)
-        elif mode == 'node_pick':
+            #self.vtk_interactor.AddObserver('LeftButtonPressEvent', self.LeftButtonPressEvent)
+        elif mode == 'rotation_center':
+            # used for rotation_center - hackish at this point
             self.vtk_interactor.RemoveObservers('LeftButtonPressEvent')
-            self.vtk_interactor.AddObserver('LeftButtonPressEvent', self.on_node_pick_event)
+            self.vtk_interactor.AddObserver('LeftButtonPressEvent', func)
+            #self.vtk_interactor.AddObserver('LeftButtonPressEvent', func, 1) # on press down
+            #self.vtk_interactor.AddObserver('LeftButtonPressEvent', func, -1) # on button up
+
+        #elif mode == 'node_pick':
+            #self.vtk_interactor.RemoveObservers('LeftButtonPressEvent')
+            #self.vtk_interactor.AddObserver('LeftButtonPressEvent', self.on_node_pick_event)
         #elif mode == 'cell_pick':
             #self.vtk_interactor.RemoveObservers('LeftButtonPressEvent')
             #self.vtk_interactor.AddObserver('LeftButtonPressEvent', self.on_cell_pick_event)
+        elif mode == 'cell_pick':
+            self.vtk_interactor.SetPicker(self.cell_picker)
+        elif mode == 'node_pick':
+            self.vtk_interactor.SetPicker(self.node_picker)
+
         #elif mode == 'area_cell_pick':
             #self.vtk_interactor.RemoveObservers('LeftButtonPressEvent')
             #self.vtk_interactor.AddObserver('LeftButtonPressEvent', self.on_area_cell_pick_event)
@@ -1040,23 +1077,98 @@ class GuiCommon2(QMainWindow, GuiCommon):
         else:
             raise NotImplementedError('camera_mode = %r' % self._camera_mode)
 
-    def on_measure_distance(self, ):
+    def on_measure_distance(self):
         pass
 
     def on_rotation_center(self):
         """
         http://osdir.com/ml/lib.vtk.user/2002-09/msg00079.html
         """
-        camera = self.rend.GetActiveCamera()
 
         # get view dimensions
         #GetClientRect(&viewdims);
-        self.setup_mouse_buttons('one_node_pick')
-        focal_point = self.do_point_pick(point)
+        #self.vtk_interactor.SetPi
+        #self.vtk_interactor.SetPicker(self.node_picker)
+        method = 'cell'
+        if method == 'node':
+            asdf
+            self.set_node_picker()
+            self.setup_mouse_buttons('rotation_center', self._rotation_center_node_picker)
+        elif method == 'cell':
+            self.setup_mouse_buttons('rotation_center', self._rotation_center_cell_picker)
+        else:
+            raise NotImplementedError(method)
+        #focal_point = self.do_point_pick(point)
+        #self.node_picker.RemoveObservers('EndPickEvent')
+        #self.node_picker.AddObserver('EndPickEvent', annotate_cell_picker)
 
-        # now we can actually modify the camera
-        camera.SetFocalPoint(focalpoint[0], focalpoint[1], focalpoint[2]);
-        camera.OrthogonalizeViewUp()
+    def _rotation_center_cell_picker(self, obj, event):
+        picker = self.cell_picker
+        cell_id = picker.GetCellId()
+        print('_rotation_center_cell_picker', cell_id)
+
+        if cell_id < 0:
+            #self.picker_textActor.VisibilityOff()
+            pass
+        else:
+            camera = self.rend.GetActiveCamera()
+            world_position = picker.GetPickPosition()
+            focal_point = world_position
+
+            #ds = picker.GetDataSet()
+            #select_point = picker.GetSelectionPoint()
+            self.log_command("_rotation_center_cell_picker()")
+            self.log_info('focal_point = %s' % str(focal_point))
+
+            self.setup_mouse_buttons(mode='default')
+
+            # now we can actually modify the camera
+            camera.SetFocalPoint(focal_point[0], focal_point[1], focal_point[2])
+            camera.OrthogonalizeViewUp()
+
+
+    def _rotation_center_node_picker(self, obj, event):
+        self.log_command('_rotation_center_node_picker()')
+        picker = self.node_picker
+        from pyNastran.utils import object_methods
+
+        print('picker.object_methods =', object_methods(picker))
+        point_id = picker.GetPointId()
+        if point_id < 0:
+            #self.picker_textActor.VisibilityOff()
+            print('picker.point_id =', point_id)
+        else:
+            self.log_command('_rotation_center_node_picker()')
+            camera = self.rend.GetActiveCamera()
+
+            world_position = picker.GetPickPosition()
+            focal_point = world_position
+            point_id = picker.GetPointId()
+            #ds = picker.GetDataSet()
+            select_point = picker.GetSelectionPoint()
+            self.log_info('focal_point = %s' % str(focal_point))
+            self.log_info('point_id = %s' % point_id)
+            #self.log_info('data_set = %s' % ds)
+            self.log_info('select_point = %s' % str(select_point))
+
+            #self.picker_textMapper.SetInput('(%.6f, %.6f, %.6f)' % pick_pos)
+            #self.picker_textActor.SetPosition(select_point[:2])
+            #self.picker_textActor.VisibilityOn()
+            self.setup_mouse_buttons(mode='default')
+
+            # now we can actually modify the camera
+            camera.SetFocalPoint(focal_point[0], focal_point[1], focal_point[2])
+            camera.OrthogonalizeViewUp()
+
+            self.set_cell_picker()
+
+    #def remove_picker(self):
+        #self.vtk_interactor.
+    def set_node_picker(self):
+        self.vtk_interactor.SetPicker(self.node_picker)
+
+    def set_cell_picker(self):
+        self.vtk_interactor.SetPicker(self.cell_picker)
 
     @property
     def render_window(self):
@@ -1124,7 +1236,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.rend.SetBackground(*self.background_color)
 
         self.rend.ResetCamera()
-        self._simulate_key_press('t') # change mouse style to trackball
+        self.set_style_as_trackball()
         self.build_lookup_table()
 
         text_size = 14
@@ -1144,6 +1256,11 @@ class GuiCommon2(QMainWindow, GuiCommon):
     #def _script_helper(self, python_file=False):
         #if python_file in [None, False]:
             #self.on_run_script(python_file)
+
+    def set_style_as_trackball(self):
+        #self._simulate_key_press('t') # change mouse style to trackball
+        self.style = vtk.vtkInteractorStyleTrackballCamera()
+        self.vtk_interactor.SetInteractorStyle(self.style)
 
     def on_run_script(self, python_file=False):
         if python_file in [None, False]:
@@ -2107,7 +2224,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             self.restoreGeometry(settings.value("mainWindowGeometry").toByteArray())
 
         #self.reset_settings = False
-        if self.reset_settings or qt_version == 5:
+        if self.reset_settings or qt_version in [5, 'pyside']:
             self.background_color = grey
             self.label_color = black
             self.text_color = white
@@ -2387,6 +2504,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.cell_picker = vtk.vtkCellPicker()
         self.node_picker = vtk.vtkPointPicker()
         self.cell_picker.SetTolerance(0.0005)
+        self.node_picker.SetTolerance(0.5)
 
     def mark_nodes(self, nids, result_name, text):
         """
@@ -2469,7 +2587,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
         if not self.run_vtk:
             return
 
-        self.vtk_interactor.SetPicker(self.cell_picker)
         def annotate_cell_picker(object, event):
             picker = self.cell_picker
             if picker.GetCellId() < 0:
@@ -2509,10 +2626,10 @@ class GuiCommon2(QMainWindow, GuiCommon):
                     return
                 self.label_ids[result_name].add(duplicate_key)
 
-                if 0:
-                    result_value2, xyz2 = self.convert_units(result_name, result_value, xyz)
-                    result_value = result_value2
-                    xyz2 = xyz
+                #if 0:
+                    #result_value2, xyz2 = self.convert_units(result_name, result_value, xyz)
+                    #result_value = result_value2
+                    #xyz2 = xyz
                 #x, y, z = world_position
                 x, y, z = xyz
                 text = '(%.3g, %.3g, %.3g); %s' % (x, y, z, result_value)
@@ -2531,18 +2648,19 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 point_id = picker.GetPointId()
                 #ds = picker.GetDataSet()
                 select_point = picker.GetSelectionPoint()
-                self.log_command("annotate_picker()")
+                self.log_command("annotate_point_picker()")
                 self.log_info("world_position = %s" % str(world_position))
                 self.log_info("point_id = %s" % point_id)
                 #self.log_info("data_set = %s" % ds)
                 self.log_info("select_point = %s" % str(select_point))
 
-                #self.picker_textMapper.SetInput("(%.6f, %.6f, %.6f)"% pickPos)
+                #self.picker_textMapper.SetInput("(%.6f, %.6f, %.6f)"% pick_pos)
                 #self.picker_textActor.SetPosition(select_point[:2])
                 #self.picker_textActor.VisibilityOn()
 
         self.cell_picker.AddObserver("EndPickEvent", annotate_cell_picker)
         self.node_picker.AddObserver("EndPickEvent", annotate_point_picker)
+        self.vtk_interactor.SetPicker(self.cell_picker)
 
         #self.cell_picker.AddObserver("EndPickEvent", on_cell_picker)
         #self.node_picker.AddObserver("EndPickEvent", on_node_picker)p
@@ -2597,6 +2715,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
             tprop.SetColor(self.label_color)
 
             text_actor = vtk.vtkActor2D()
+            text_actor.PickableOff()
+            text_actor.DragableOff()
             text_actor.GetPositionCoordinate().SetCoordinateSystemToWorld()
             #text_actor.SetPosition(world_position[:2])
             text_actor.SetMapper(text_mapper)
@@ -2604,6 +2724,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
         # finish adding the actor
         self.rend.AddActor(follower)
+        follower.SetPickable(False)
         self.label_actors[result_name].append(follower)
 
         #self.picker_textMapper.SetInput("(%.6f, %.6f, %.6f)"% pickPos)
@@ -2977,6 +3098,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         """
         NOTE: color, line_width, opacity are ignored if name already exists
         """
+        is_pickable = self.geometry_properties[name].is_pickable
         quad_mapper = vtk.vtkDataSetMapper()
         if name in self.geometry_actors:
             alt_geometry_actor = self.geometry_actors[name]
@@ -2990,6 +3112,10 @@ class GuiCommon2(QMainWindow, GuiCommon):
             else:
                 quad_mapper.SetInput(grid)
             alt_geometry_actor = vtk.vtkActor()
+            if not is_pickable:
+                alt_geometry_actor.PickableOff()
+                alt_geometry_actor.DragableOff()
+
             alt_geometry_actor.SetMapper(quad_mapper)
             self.geometry_actors[name] = alt_geometry_actor
 

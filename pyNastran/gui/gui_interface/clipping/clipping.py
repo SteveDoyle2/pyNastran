@@ -11,6 +11,13 @@ elif qt_version == 5:
     from PyQt5 import QtCore
     from PyQt5.QtWidgets import (
         QDialog, QLabel, QLineEdit, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout)
+elif qt_version == 'pyside':
+    from PySide import QtCore
+    from PySide.QtGui import (
+        QDialog, QLabel, QLineEdit, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout)
+else:
+    raise NotImplementedError('qt_version = %r' % qt_version)
+
 
 from pyNastran.gui.qt_files.menu_utils import eval_float_from_string
 

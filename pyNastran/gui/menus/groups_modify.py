@@ -17,6 +17,14 @@ elif qt_version == 5:
         QDialog, QLabel, QLineEdit, QPushButton, QTextEdit, QDockWidget, QTableView, QWidget, QApplication,
         QListWidget, QGridLayout, QHBoxLayout, QVBoxLayout,
     )
+elif qt_version == 'pyside':
+    from PySide import QtCore, QtGui
+    from PySide.QtGui import (
+        QDialog, QLabel, QLineEdit, QPushButton, QTextEdit, QDockWidget, QTableView, QWidget, QApplication,
+        QListWidget, QGridLayout, QHBoxLayout, QVBoxLayout,
+    )
+else:
+    raise NotImplementedError('qt_version = %r' % qt_version)
 
 from pyNastran.bdf.utils import parse_patran_syntax, parse_patran_syntax_dict
 from pyNastran.bdf.cards.collpase_card import collapse_colon_packs

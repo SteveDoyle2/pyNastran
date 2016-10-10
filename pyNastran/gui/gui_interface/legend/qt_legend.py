@@ -11,9 +11,18 @@ elif qt_version == 5:
     from PyQt5.QtWidgets import (
         QApplication, QDialog, QLabel, QPushButton, QLineEdit, QComboBox, QWidget, QRadioButton,
         QButtonGroup, QGridLayout, QHBoxLayout, QVBoxLayout)
+elif qt_version == 'pyside':
+    from PySide import QtCore#, QtGui
+    from PySide.QtGui import (
+        QApplication, QDialog, QLabel, QPushButton, QLineEdit, QComboBox, QWidget, QRadioButton,
+        QButtonGroup, QGridLayout, QHBoxLayout, QVBoxLayout)
+else:
+    raise NotImplementedError('qt_version = %r' % qt_version)
+
 
 from pyNastran.gui.qt_files.menu_utils import eval_float_from_string
 from pyNastran.gui.colormaps import colormap_keys
+
 
 class LegendPropertiesWindow(QDialog):
     """

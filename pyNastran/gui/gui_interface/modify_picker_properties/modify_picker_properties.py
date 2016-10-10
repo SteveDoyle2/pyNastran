@@ -18,6 +18,14 @@ elif qt_version == 5:
         QDialog, QLabel, QLineEdit, QPushButton, QTextEdit, QDockWidget, QTableView, QWidget, QDoubleSpinBox,
         QApplication, QGridLayout, QHBoxLayout, QVBoxLayout,
     )
+elif qt_version == 'pyside':
+    from PySide import QtCore, QtGui
+    from PySide.QtGui import (
+        QDialog, QLabel, QLineEdit, QPushButton, QTextEdit, QDockWidget, QTableView, QWidget, QDoubleSpinBox,
+        QApplication, QGridLayout, QHBoxLayout, QVBoxLayout,
+    )
+else:
+    raise NotImplementedError('qt_version = %r' % qt_version)
 
 
 class ModifyPickerPropertiesMenu(QDialog):
@@ -25,7 +33,7 @@ class ModifyPickerPropertiesMenu(QDialog):
     def __init__(self, data, win_parent=None):
         self.win_parent = win_parent
 
-        self._size = data['size']
+        self._size = data['size'] * 100.
         self.out_data = data
         self.dim_max = data['dim_max']
 
@@ -41,16 +49,16 @@ class ModifyPickerPropertiesMenu(QDialog):
 
     def create_widgets(self):
         # Size
-        self.size = QLabel("Size:")
+        self.size = QLabel("Percent of Screen Size:")
         self.size_edit = QDoubleSpinBox(self)
-        self.size_edit.setRange(0.0, self.dim_max)
+        self.size_edit.setRange(0., 10.)
 
         log_dim = log10(self.dim_max)
         decimals = int(ceil(abs(log_dim)))
 
-        decimals = max(6, decimals)
+        decimals = max(3, decimals)
         self.size_edit.setDecimals(decimals)
-        self.size_edit.setSingleStep(self.dim_max / 100.)
+        self.size_edit.setSingleStep(10. / 5000.)
         self.size_edit.setValue(self._size)
 
         # closing
@@ -132,7 +140,7 @@ class ModifyPickerPropertiesMenu(QDialog):
     def on_apply(self, force=False):
         passed = self.on_validate()
         if (passed or Force) and self.win_parent is not None:
-            self.win_parent.element_picker_size = self._size
+            self.win_parent.element_picker_size = self._size / 100.
         return passed
 
     def on_ok(self):

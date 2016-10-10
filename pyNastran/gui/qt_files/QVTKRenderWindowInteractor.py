@@ -466,13 +466,13 @@ def QVTKRenderWidgetConeExample():
     cone = vtk.vtkConeSource()
     cone.SetResolution(8)
 
-    coneMapper = vtk.vtkPolyDataMapper()
-    coneMapper.SetInputConnection(cone.GetOutputPort())
+    cone_mapper = vtk.vtkPolyDataMapper()
+    cone_mapper.SetInputConnection(cone.GetOutputPort())
 
-    coneActor = vtk.vtkActor()
-    coneActor.SetMapper(coneMapper)
+    cone_actor = vtk.vtkActor()
+    cone_actor.SetMapper(cone_mapper)
 
-    ren.AddActor(coneActor)
+    ren.AddActor(cone_actor)
 
     # show the widget
     widget.show()

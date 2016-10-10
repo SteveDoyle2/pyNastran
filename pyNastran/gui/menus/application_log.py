@@ -28,6 +28,15 @@ elif qt_version == 5:
     except ImportError:
         is_scintilla = False
     #import PyQt5.qsci
+elif qt_version == 'pyside':
+    from PySide import QtCore
+    from PySide.QtGui import (
+        QDialog, QLabel, QLineEdit, QPushButton, QTextEdit, QDockWidget,
+        QVBoxLayout, QHBoxLayout, QWidget, QFont, qApp, QMenu, QFontMetrics, QColor)
+    is_scintilla = False
+else:
+    raise NotImplementedError('qt_version = %r' % qt_version)
+
 
 class HtmlLog(QTextEdit):
 
@@ -132,7 +141,8 @@ class PythonConsoleWidget(QDockWidget):
     """
     def __init__(self, parent):
         self.parent = parent
-        super(QDockWidget, self).__init__('Python Console', parent=parent)
+        super(PythonConsoleWidget, self).__init__('Python Console', parent=parent)
+        #super(QDockWidget, self).__init__('Python Console', parent=parent) # I think this works by accident in qt4/5
 
         self.listMenu = QMenu()
         self.execute_python_button = QPushButton('Execute')
