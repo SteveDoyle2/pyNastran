@@ -12,5 +12,6 @@ This is the pyNastran.rst file for Master.
     utils/pyNastran.utils
     converters/pyNastran.converters
     pyNastran.applications
+    reference.rst
     pyNastran.__init__.py
 
