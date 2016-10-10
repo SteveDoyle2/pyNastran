@@ -19,7 +19,8 @@ class TRIM(object):
 
         #: Mach number. (Real > 0.0 and != 1.0)
         self.mach = double(card, 2, 'mach')
-        assert self.mach >= 0.0 and self.mach != 1.0, 'mach = %s' % self.mach
+        assert self.mach >= 0.0, 'mach = %r' % self.mach
+        assert self.mach != 1.0, 'mach = %r' % self.mach
 
         #: Dynamic pressure. (Real > 0.0)
         self.q = double(card, 3, 'q')

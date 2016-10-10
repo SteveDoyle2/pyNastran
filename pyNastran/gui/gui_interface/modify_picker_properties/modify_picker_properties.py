@@ -112,7 +112,8 @@ class ModifyPickerPropertiesMenu(QDialog):
         self._size = float(self.size_edit.text())
         self.on_apply(force=True)
 
-    def check_float(self, cell):
+    @staticmethod
+    def check_float(cell):
         text = cell.text()
         value = float(text)
         return value, True

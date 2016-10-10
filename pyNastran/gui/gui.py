@@ -147,7 +147,7 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, DegenGeomIO, ShabpIO, PanairIO
         self.build_fmts(fmt_order, stop_on_failure=False)
 
         logo = os.path.join(icon_path, 'logo.png')
-        self.set_logo(logo)
+        self.logo = logo
         self.set_script_path(script_path)
         self.set_icon_path(icon_path)
 
@@ -253,7 +253,7 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, DegenGeomIO, ShabpIO, PanairIO
             msg = '%s - %s' % (self.format, self.infile_name)
         else:
             msg = '%s - %s - %s' % (self.format, self.infile_name, self.out_filename)
-        self.set_window_title(msg)
+        self.window_title = msg
         self.log_command('on_reload()')
         self.cycle_results(case)
         self.on_set_camera_data(camera, show_log=False)

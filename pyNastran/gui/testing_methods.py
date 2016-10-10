@@ -27,6 +27,7 @@ class GuiAttributes(object):
         self.case_keys = {}
         self.res_widget = res_widget
         self._show_flag = True
+        self._camera_mode = None
 
         self.is_testing = False
         self.is_groups = False

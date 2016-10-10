@@ -4788,7 +4788,8 @@ class TRIM(BaseCard):
         self.aeqr = aeqr
 
     def validate(self):
-        assert self.mach >= 0.0 and self.mach != 1.0, 'mach = %s' % self.mach
+        assert self.mach >= 0.0, 'mach = %r' % self.mach
+        assert self.mach != 1.0, 'mach = %r' % self.mach
         assert self.q > 0.0, 'q=%s' % self.q
         if len(set(self.labels)) != len(self.labels):
             msg = 'not all labels are unique; labels=%s' % str(self.labels)

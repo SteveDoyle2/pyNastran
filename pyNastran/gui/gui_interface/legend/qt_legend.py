@@ -426,7 +426,8 @@ class LegendPropertiesWindow(QDialog):
         self.labelsize_edit.setText(str(self._default_labelsize))
         self.labelsize_edit.setStyleSheet("QLineEdit{background: white;}")
 
-    def check_float(self, cell):
+    @staticmethod
+    def check_float(cell):
         text = cell.text()
         try:
             value = eval_float_from_string(text)
@@ -436,7 +437,8 @@ class LegendPropertiesWindow(QDialog):
             cell.setStyleSheet("QLineEdit{background: red;}")
             return None, False
 
-    def check_int(self, cell):
+    @staticmethod
+    def check_int(cell):
         text = cell.text()
         try:
             value = int(text)
@@ -446,7 +448,8 @@ class LegendPropertiesWindow(QDialog):
             cell.setStyleSheet("QLineEdit{background: red;}")
             return None, False
 
-    def check_positive_int_or_blank(self, cell):
+    @staticmethod
+    def check_positive_int_or_blank(cell):
         text = str(cell.text()).strip()
         if len(text) == 0:
             return None, True
@@ -463,7 +466,8 @@ class LegendPropertiesWindow(QDialog):
         cell.setStyleSheet("QLineEdit{background: white;}")
         return value, True
 
-    def check_name(self, cell):
+    @staticmethod
+    def check_name(cell):
         cell_value = cell.text()
         try:
             text = str(cell_value).strip()
@@ -478,7 +482,8 @@ class LegendPropertiesWindow(QDialog):
             cell.setStyleSheet("QLineEdit{background: red;}")
             return None, False
 
-    def check_colormap(self, cell):
+    @staticmethod
+    def check_colormap(cell):
         text = str(cell.text()).strip()
         if text in colormap_keys:
             cell.setStyleSheet("QLineEdit{background: white;}")
@@ -487,8 +492,8 @@ class LegendPropertiesWindow(QDialog):
             cell.setStyleSheet("QLineEdit{background: red;}")
             return None, False
 
-
-    def check_format(self, cell):
+    @staticmethod
+    def check_format(cell):
         text = str(cell.text())
 
         is_valid = True

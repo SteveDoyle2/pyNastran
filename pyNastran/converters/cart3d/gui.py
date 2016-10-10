@@ -69,7 +69,7 @@ class MainWindow(GuiCommon2, Cart3dIO):
 
         self.build_fmts(fmt_order, stop_on_failure=True)
         logo = os.path.join(icon_path, 'logo.png')
-        self.set_logo(logo)
+        self.logo = logo
         self.set_script_path(script_path)
         self.set_icon_path(icon_path)
 
@@ -152,7 +152,7 @@ class MainWindow(GuiCommon2, Cart3dIO):
             self.on_load_geometry(self.infile_name, self.format)
 
         msg = '%s - %s - %s' % (self.format, self.infile_name, self.out_filename)
-        self.set_window_title(msg)
+        self.window_title = msg
         self.log_command('on_reload()')
         self.cycle_results(case)
 

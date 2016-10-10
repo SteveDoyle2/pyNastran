@@ -57,6 +57,8 @@ BDF:
     # update cards similar to Nastran's optimization
     # on grid 1234, update cp (field 2) to a value of 7)
     - model.update_card('GRID', 1234, 2, 7)
+    - fixed DIVERG bug
+    - fixed PFAST bug
  
  - bdf_renumber
    - removed execs from bdf_renumber, so Python 3 will work
@@ -72,9 +74,10 @@ BDF:
  - write_path function works (Windows)
  - more validate methods & tests
  - fixed bug in SET3 card (multiple THRUs on single card)
- - added: POINT, PBRSECT, PBMSECT
+ - added: POINT, PBRSECT, PBMSECT, DVGRID
 
 GUI:
+ - added support for PyQt5
  - added custom displacement results
  - fixed display issue with CHEXA20
  - fixed element selection for quadratic solids
@@ -98,7 +101,6 @@ BDF:
  - fix speed of CORD1R, CORD1C, CORD1S (low priority; 6/10)
 
 GUI:
- - added support for PyQt5
  - fix node Cd deflection issue (high priority, 4/10)
  - is this a solid element issue?
    - fix Min Interior angle (moderate priority; 1/10; see optistruct model - quad?)

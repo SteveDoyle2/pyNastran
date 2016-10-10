@@ -164,12 +164,24 @@ class GuiCommon2(QMainWindow, GuiCommon):
     #def get_color_function(self):
         #return self.scalar_bar.color_function
 
-    def set_window_title(self, msg):
+
+    @property
+    def window_title(self):
+        return self.getWindowTitle()
+
+    @window_title.setter
+    def window_title(self, msg):
         #msg2 = "%s - "  % self.base_window_title
         #msg2 += msg
         self.setWindowTitle(msg)
 
-    def set_logo(self, logo):
+    @property
+    def logo(self):
+        """Gets the pyNastran icon path, which can be overwritten"""
+        return self._logo
+
+    @logo.setter
+    def logo(self, logo):
         """Sets the pyNastran icon path, which can be overwritten"""
         self._logo = logo
 
@@ -203,7 +215,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.setWindowTitle('Statusbar')
         if self._logo is not None:
             self.setWindowIcon(QtGui.QIcon(self._logo))
-        self.set_window_title(self.base_window_title)
+        self.window_title = self.base_window_title
 
         #=========== Results widget ===================
         self.res_dock = QDockWidget("Results", self)
@@ -424,6 +436,9 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 ('anti_alias_4', '4x', '', None, 'Set Anti-Aliasing to 4x', lambda: self.on_set_anti_aliasing(4)),
                 ('anti_alias_8', '8x', '', None, 'Set Anti-Aliasing to 8x', lambda: self.on_set_anti_aliasing(8)),
 
+                # TODO: not done...
+                ('measure_distance', 'Measure Distance', 'tmeasure_distance.png', None, 'Measure the distance between two nodes', self.on_measure_distance),
+                ('rotation_center', 'Set the rotation center', 'trotation_center.png', 'f', 'Pick a node for the rotation center', self.on_rotation_center),
             ]
         # print('version =', vtk.VTK_VERSION, self.vtk_version)
         #if self.vtk_version[0] < 6
@@ -517,6 +532,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         toolbar_tools = ['reload', 'load_geometry', 'load_results',
                          'x', 'y', 'z', 'X', 'Y', 'Z',
                          'magnify', 'shrink', 'rotate_clockwise', 'rotate_cclockwise',
+                         #'rotation_center',
                          'wireframe', 'surface', 'edges']
         toolbar_tools += ['camera_reset', 'view', 'screenshot', '', 'exit']
 
@@ -980,6 +996,67 @@ class GuiCommon2(QMainWindow, GuiCommon):
         #self.vtk_interactor = PyNastranRenderWindowInteractor(parent=self.vtk_frame)
         self.iren = self.vtk_interactor
         #self.set_anti_aliasing(2)
+
+        #self._camera_event_name = 'LeftButtonPressEvent'
+        self._camera_mode = 'default'
+        self.setup_mouse_buttons(mode='default')
+
+    def setup_mouse_buttons(self, mode=None):
+        if mode == self._camera_mode:
+            return
+        elif mode is None:
+            # same as default
+            return
+        elif mode == 'default':
+            # standard rotation
+            # Disable default left mouse click function (Rotate)
+            self.vtk_interactor.RemoveObservers('LeftButtonPressEvent')
+            # Re-assign left mouse click event to custom function (Point Picker)
+            self.vtk_interactor.AddObserver('LeftButtonPressEvent', self.LeftButtonPressEvent)
+        elif mode == 'one_node_pick':
+            # used for rotation_center
+            raise NotImplementedError(mode)
+        elif mode == 'node_pick':
+            self.vtk_interactor.RemoveObservers('LeftButtonPressEvent')
+            self.vtk_interactor.AddObserver('LeftButtonPressEvent', self.on_node_pick_event)
+        #elif mode == 'cell_pick':
+            #self.vtk_interactor.RemoveObservers('LeftButtonPressEvent')
+            #self.vtk_interactor.AddObserver('LeftButtonPressEvent', self.on_cell_pick_event)
+        #elif mode == 'area_cell_pick':
+            #self.vtk_interactor.RemoveObservers('LeftButtonPressEvent')
+            #self.vtk_interactor.AddObserver('LeftButtonPressEvent', self.on_area_cell_pick_event)
+        #elif mode == 'area_node_pick':
+            #self.vtk_interactor.RemoveObservers('LeftButtonPressEvent')
+            #self.vtk_interactor.AddObserver('LeftButtonPressEvent', self.on_area_cell_pick_event)
+        #elif mode == 'polygon_cell_pick':
+            #self.vtk_interactor.RemoveObservers('LeftButtonPressEvent')
+            #self.vtk_interactor.AddObserver('LeftButtonPressEvent', self.on_polygon_cell_pick_event)
+        #elif mode == 'polygon_node_pick':
+            #self.vtk_interactor.RemoveObservers('LeftButtonPressEvent')
+            #self.vtk_interactor.AddObserver('LeftButtonPressEvent', self.on_polygon_cell_pick_event)
+
+        #elif mode == 'pan':
+            #pass
+        else:
+            raise NotImplementedError('camera_mode = %r' % self._camera_mode)
+
+    def on_measure_distance(self, ):
+        pass
+
+    def on_rotation_center(self):
+        """
+        http://osdir.com/ml/lib.vtk.user/2002-09/msg00079.html
+        """
+        camera = self.rend.GetActiveCamera()
+
+        # get view dimensions
+        #GetClientRect(&viewdims);
+        self.setup_mouse_buttons('one_node_pick')
+        focal_point = self.do_point_pick(point)
+
+        # now we can actually modify the camera
+        camera.SetFocalPoint(focalpoint[0], focalpoint[1], focalpoint[2]);
+        camera.OrthogonalizeViewUp()
 
     @property
     def render_window(self):
@@ -1694,7 +1771,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             #msg = '%s - %s - %s' % (self.format, self.infile_name, self.out_filename)
         #else:
         msg = '%s - %s' % (self.format, self.infile_name)
-        self.set_window_title(msg)
+        self.window_title = msg
         self.update_menu_bar()
         self.log_command("on_load_geometry(infile_name=%r, geometry_format=%r)" % (
             infile_name, self.format))
@@ -1805,7 +1882,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         #if 0:
             #self.out_filename = out_filename
             #msg = '%s - %s - %s' % (self.format, self.infile_name, out_filename)
-            #self.set_window_title(msg)
+            #self.window_title = msg
             #self.out_filename = out_filename
 
         if result_type == 'Nodal':
@@ -2006,7 +2083,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
             self.out_filename = out_filenamei
             msg = '%s - %s - %s' % (self.format, self.infile_name, out_filenamei)
-            self.set_window_title(msg)
+            self.window_title = msg
             print("on_load_results(%r)" % out_filenamei)
             self.out_filename = out_filenamei
             self.log_command("on_load_results(%r)" % out_filenamei)

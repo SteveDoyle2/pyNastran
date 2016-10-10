@@ -116,7 +116,8 @@ class ClippingPropertiesWindow(QDialog):
         self.max_edit.setText(str(self._default_max))
         self.max_edit.setStyleSheet("QLineEdit{background: white;}")
 
-    def check_float(self, cell):
+    @staticmethod
+    def check_float(cell):
         text = cell.text()
         try:
             value = eval_float_from_string(text)

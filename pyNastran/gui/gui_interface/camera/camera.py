@@ -191,7 +191,8 @@ class CameraWindow(QDialog):
     def closeEvent(self, event):
         event.accept()
 
-    def check_name(self, cell):
+    @staticmethod
+    def check_name(cell):
         text = str(cell.text()).strip()
         if len(text):
             cell.setStyleSheet("QLineEdit{background: white;}")

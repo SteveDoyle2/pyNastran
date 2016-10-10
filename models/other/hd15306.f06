@@ -3,113 +3,106 @@
  
  
  
-                     THIS PROGRAM IS CONFIDENTIAL AND A TRADE SECRET OF MSC.SOFTWARE CORPORATION.  THE RECEIPT OR    
-                  POSSESSION OF THIS PROGRAM DOES NOT CONVEY ANY RIGHTS TO REPRODUCE OR DISCLOSE ITS CONTENTS, OR TO 
-                 MANUFACTURE, USE, OR SELL ANYTHING HEREIN, IN WHOLE OR IN PART, WITHOUT THE SPECIFIC WRITTEN CONSENT
-                                                    OF MSC.SOFTWARE CORPORATION.                                     
- 
- 
-                                              * * * * * * * * * * * * * * * * * * * *
-                                              * * * * * * * * * * * * * * * * * * * *
-                                              * *                                 * *
-                                              * *           MSC.SOFTWARE          * *
-                                              * *               CORP              * *
-                                              * *                                 * *
-                                              * *      M S C . N a s t r a n      * *
-                                              * *                                 * *
-                                              * *                                 * *
-                                              * *                                 * *
-                                              * *        Version 2005.1.0         * *
-                                              * *             2005R2              * *
-                                              * *                                 * *
-                                              * *                                 * *
-                                              * *          JUN 17, 2005           * *
-                                              * *                                 * *
-                                              * *              Intel              * *
-                                              * *MODEL PentiumIII/5114 (sdoyle-de * *
-                                              * *   Windows XP 6.1 (Build 7601)   * *
-                                              * *                                 * *
-                                              * *                                 * *
-                                              * * * * * * * * * * * * * * * * * * * *
-                                              * * * * * * * * * * * * * * * * * * * *
-1News file - (6/03/05):
+                                                             
+                 Copyright 2011 Siemens Product Lifecycle    
+                        Management Software Inc.             
+                         All Rights Reserved.                
+                                                             
+               This software and related documentation are   
+                 proprietary to Siemens Product Lifecycle    
+                        Management Software Inc.             
+                                                             
+              Siemens and the Siemens logo are registered    
+             trademarks of Siemens AG. NX is a trademark or  
+                registered trademark of Siemens Product      
+               Lifecycle Management Software Inc. or its     
+             subsidiaries in the United States and in other  
+             countries.  NASTRAN is a registered trademark   
+                 of the National Aeronautics and Space       
+                 Administration.  All other trademarks,      
+              registered trademarks or service marks belong  
+                      to their respective holders.           
+                                                             
+           LIMITATIONS TO U.S. GOVERNMENT RIGHTS. UNPUBLISHED
+           - RIGHTS RESERVED UNDER THE COPYRIGHT LAWS OF THE 
+            UNITED STATES. This computer software and related
+               computer software documentation have been     
+            developed exclusively at private expense and are 
+           provided subject to the following rights:  If this
+               computer software and computer  software      
+            documentation qualify as "commercial items" (as  
+             that term is defined in FAR 2.101), their use,  
+            duplication or disclosure by the U.S. Government 
+           is subject to the protections and restrictions as 
+            set forth in the Siemens commercial license for  
+            software and/or documentation, as prescribed in  
+           FAR 12.212 and FAR 27.405(b)(2)(i) (for civilian  
+             agencies) and in DFARS 227.7202-1(a) and DFARS  
+           227.7202-3(a) (for the Department of Defense), or 
+           any successor or similar regulation, as applicable
+           or as amended from time to time.  If this computer
+           software and computer documentation do not qualify
+            as "commercial items", then they are "restricted 
+           computer software" and are provided with "restric-
+            tive rights", and their use, duplication or dis- 
+            closure by the U.S. Government is subject to the 
+            protections and restrictions as set forth in FAR 
+           27.404(b) and FAR 52-227-14 (for civilian agencies
+           ), and DFARS 227.7203-5(c) and DFARS 252.227-7014 
+           (for the Department of Defense), or any successor 
+           or similar regulation, as applicable or as amended
+              from time to time.  Siemens PLM Software Inc.  
+              5400 Legacy Drive, Plano, Texas 75024-3199.    
+
+                * * * * * * * * * * * * * * * * * * * *
+                * * * * * * * * * * * * * * * * * * * *
+                * *                                 * *
+                * *                                 * *
+                * *                                 * *
+                * *                                 * *
+                * *       N X   N a s t r a n       * *
+                * *                                 * *
+                * *       VERSION -  8.5 MP1        * *
+                * *                                 * *
+                * *          JAN 24, 2013           * *
+                * *                                 * *
+                * *                                 * *
+                * *Intel64 Family 6 Model 45 Steppi * *
+                * *                                 * *
+                * * Intel(R) Core(TM) i7-3820 CPU @ * *
+                * *                                 * *
+                * *            Windows 7            * *
+                * *                                 * *
+                * *       Compiled for X86-64       * *
+                * *                                 * *
+                * * * * * * * * * * * * * * * * * * * *
+                * * * * * * * * * * * * * * * * * * * *
+1 
   
- Thank you for choosing MSC.Nastran, the industry standard in FEA, and Welcome
- to MSC.Nastran 2005 r2.
+                        Welcome to NX Nastran
+                        -------------------------
   
- You can find version-specific online documentation, and online technical support
- at:
   
-    http://www.mscsoftware.com/support/prod_support/nastran/
-  
- Also at the technical support location is a searchable list of technical
- application notes and the current error/avoidance list. Please don't hesitate
- to contact your nearest technical support representative if you require
- assistance.
-  
-    http://www.mscsoftware.com/about/locate/
-  
- The arbitrary beam cross section, explicit nonlinear (SOL 700), and the new
- nonlinear (SOL 400) solution sequences, are regarded as pre-release capabilities
- and are still undergoing testing and verification.  These capabilities should
- not be employed in any analysis except for the purpose of testing and verifying
- the functionality and working of the capabilities themselves.
-  
- MSC.Nastran 2005 r2 is mainly focused on improving quality, accuracy and
- ease-of-use, but also introduces new capabilities, some of which were made
- available as pre-release functionality in MSC.Nastran 2005 r1. In addition,
- significant advancements have been made regarding performance and scalability of
- the program.  Some of the new features and enhancements are listed below.
-  
- Nonlinear
- - MSC.Nastran Implicit Nonlinear (SOL 600) - We have addressed many known
-   issues, improved memory usage, improved output options, added beam, bar, and
-   shell offsets, and thermal contact
- - MSC.Nastran Explicit Nonlinear (SOL 700) pre-release - you can now
-   execute LS-Dyna from inside MSC.Nastran to perform crash and impact
-   analyses
-  
- Numeric Enhancements
- - Multi-level DMP - an enhanced Lanczos modal extraction methodology that
-   improves scalability and efficiently handles large normal modes analyses with
-   very frequency ranges
- - MDACMS enhanced robustness, improved handling of large masses, and improved
-   performance
- - Distributed memory parallel MPYAD
-  
- Elements
- - CFAST - a new fastener element based on user defined stiffness values.
- - Arbitrary beam cross section pre-release capability - you can specify cross
-   section shapes using POINT entries, and optimize them in SOL 200
- - Enhanced nonstructural mass element summary printout - ELSUM
-1- spatially dependent heat transfer coefficient
- - Heat transfer coefficient as a function of two variables
- - Thermal analysis flux output
-  
- Optimization
- - MSC.Nastran Topology Optimization - this addition to the existing SOL 200
-   optimization solution sequence allows optimization analyses to be performed
-   that require many design variables
-  
- Further Enhancements
- - Larger XDB database support
- - MATMOD option 16 - we have removed many previous limitations with this
-   matrix output capability
-1                                                                          DECEMBER   2, 2011  MSC.NASTRAN  6/17/05   PAGE     1
+ This "news" information can be turned off by setting "news=no" in the runtime
+ configuration (RC) file.  The "news" keyword can be set in the system RC file
+ for global, or multi-user control, and in a local file for local control.
+ Individual jobs can be controlled by setting news to yes or no on the command
+ line.
+1                                                                             APRIL  28, 2016  NX NASTRAN  1/24/13   PAGE     1
                                                                                                                                     
 0        N A S T R A N    F I L E    A N D    S Y S T E M    P A R A M E T E R    E C H O                                           
 0                                                                                                                                   
                                                                                                                                     
                                                                                                                                     
-     NASTRAN OP2NEW=0 $ MSC.NASTRAN .LCL FILE                                        
-     NASTRAN BUFFSIZE=8193 $(C:/MSC.SOFTWARE/MSC.NASTRAN/CONF/NAST20051.RCF[2])      
-     NASTRAN REAL=1605107712 $(PROGRAM DEFAULT)                                      
+     NASTRAN BUFFSIZE=8193 $(F:/PROGRAM FILES (X86)/FEMAPV1101/NASTRAN/CONF/NAST8.RCF
+     NASTRAN DIAGA=128 DIAGB=0 $(F:/PROGRAM FILES (X86)/FEMAPV1101/NASTRAN/CONF/NAST8
+     NASTRAN REAL=2147483647 $(PROGRAM DEFAULT)                                      
      $ DEC/CMS REPLACEMENT HISTORY, ELEMENT HD15306.DAT                              
      $ *3    23-FEB-1994 16:02:35 S_PATEL "68 PLUS/G/ CHANGED FOR V68 USER INTERFACE"
      $ *2    23-FEB-1994 14:29:18 S_PATEL "68 PLUS/G/ MODIFIED FOR V68 USER INTERFACE
      $ *1    15-JUN-1990 16:38:18 CMSMGR "66B PLUS/G 66B/ INITIAL INSTALLATION OF DEM
      $ DEC/CMS REPLACEMENT HISTORY, ELEMENT HD15306.DAT                              
-1                                                                          DECEMBER   2, 2011  MSC.NASTRAN  6/17/05   PAGE     2
+1                                                                             APRIL  28, 2016  NX NASTRAN  1/24/13   PAGE     2
                                                                                                                                     
 0        N A S T R A N    E X E C U T I V E    C O N T R O L    E C H O                                                             
 0                                                                                                                                   
@@ -132,7 +125,7 @@
      $SOL 74                                                                                 
      SOL 153                                                                                 
      CEND $ END OF EXECUTIVE CONTROL DECK                                                    
-1             NON-LINEAR STEADY-STATE PROBLEM                HD15306       DECEMBER   2, 2011  MSC.NASTRAN  6/17/05   PAGE     3
+1             NON-LINEAR STEADY-STATE PROBLEM                HD15306          APRIL  28, 2016  NX NASTRAN  1/24/13   PAGE     3
             CONVECTIVE MULTILAYER INSULATION                                                                                        
 0                                                                                                                                   
 0                                        C A S E    C O N T R O L    E C H O                                                        
@@ -175,10 +168,10 @@
                  35      $               POWERS)                                                                 
                  36      $                                                                                       
                  37      OUTPUT                                                                                  
-                 38      THERMAL = ALL                                                                           
-                 39      OLOAD = ALL                                                                             
-                 40      SPCF = ALL                                                                              
-                 41      FLUX = ALL                                                                              
+                 38      THERMAL(PLOT,PRINT) = ALL                                                               
+                 39      OLOAD(PLOT,PRINT) = ALL                                                                 
+                 40      SPCF(PLOT,PRINT) = ALL                                                                  
+                 41      FLUX(PLOT,PRINT) = ALL                                                                  
                  42      $*******                                                                                
                  43      $       PLOT PACKAGE TO DISPLAY MODEL AND SOLUTION                                      
                  44      $*******                                                                                
@@ -188,7 +181,7 @@
                  48      SET 1 INCLUDE ALL EXCEPT HBDY                                                           
                  49      SET 2 INCLUDE HBDY EXCEPT 500,600,700                                                   
                  50      AXES Z,X,Y                                                                              
-1             NON-LINEAR STEADY-STATE PROBLEM                HD15306       DECEMBER   2, 2011  MSC.NASTRAN  6/17/05   PAGE     4
+1             NON-LINEAR STEADY-STATE PROBLEM                HD15306          APRIL  28, 2016  NX NASTRAN  1/24/13   PAGE     4
             CONVECTIVE MULTILAYER INSULATION                                                                                        
 0                                                                                                                                   
 0                                        C A S E    C O N T R O L    E C H O                                                        
@@ -220,7 +213,7 @@
                  74      $       END CASE CONTROL ... START BULK DATA                                            
                  75      $                                                                                       
                  76      BEGIN BULK $ ENDS CASECONTROL DECK                                                      
-1             NON-LINEAR STEADY-STATE PROBLEM                HD15306       DECEMBER   2, 2011  MSC.NASTRAN  6/17/05   PAGE     5
+1             NON-LINEAR STEADY-STATE PROBLEM                HD15306          APRIL  28, 2016  NX NASTRAN  1/24/13   PAGE     5
             CONVECTIVE MULTILAYER INSULATION                                                                                        
 0                                                                                                                                   
 0                                             I N P U T   B U L K   D A T A   E C H O                                               
@@ -276,7 +269,7 @@
                               $                                                                               
                               $       DEFINE CROSS-SECTIONAL AREAS AND/OR THICKNESS                           
                               $                                                                               
-1             NON-LINEAR STEADY-STATE PROBLEM                HD15306       DECEMBER   2, 2011  MSC.NASTRAN  6/17/05   PAGE     6
+1             NON-LINEAR STEADY-STATE PROBLEM                HD15306          APRIL  28, 2016  NX NASTRAN  1/24/13   PAGE     6
             CONVECTIVE MULTILAYER INSULATION                                                                                        
 0                                                                                                                                   
 0                                             I N P U T   B U L K   D A T A   E C H O                                               
@@ -332,7 +325,7 @@
                               CHBDYG  600             AREA4                   2000                    +       
                               +       6       7       3       2                                               
                               CHBDYG  700             AREA4                   2000                    +       
-1             NON-LINEAR STEADY-STATE PROBLEM                HD15306       DECEMBER   2, 2011  MSC.NASTRAN  6/17/05   PAGE     7
+1             NON-LINEAR STEADY-STATE PROBLEM                HD15306          APRIL  28, 2016  NX NASTRAN  1/24/13   PAGE     7
             CONVECTIVE MULTILAYER INSULATION                                                                                        
 0                                                                                                                                   
 0                                             I N P U T   B U L K   D A T A   E C H O                                               
@@ -388,7 +381,7 @@
                               GRID    12              .1                                                      
                               GRID    13              .2                                                      
                               GRID    14              .3                                                      
-1             NON-LINEAR STEADY-STATE PROBLEM                HD15306       DECEMBER   2, 2011  MSC.NASTRAN  6/17/05   PAGE     8
+1             NON-LINEAR STEADY-STATE PROBLEM                HD15306          APRIL  28, 2016  NX NASTRAN  1/24/13   PAGE     8
             CONVECTIVE MULTILAYER INSULATION                                                                                        
 0                                                                                                                                   
 0                                             I N P U T   B U L K   D A T A   E C H O                                               
@@ -444,7 +437,7 @@
                               RADMTX  1       3       0.0     0.0     0.0     0.0                             
                               RADMTX  1       4       0.0     0.0     0.0                                     
                               RADMTX  1       5       0.0     0.0                                             
-1             NON-LINEAR STEADY-STATE PROBLEM                HD15306       DECEMBER   2, 2011  MSC.NASTRAN  6/17/05   PAGE     9
+1             NON-LINEAR STEADY-STATE PROBLEM                HD15306          APRIL  28, 2016  NX NASTRAN  1/24/13   PAGE     9
             CONVECTIVE MULTILAYER INSULATION                                                                                        
 0                                                                                                                                   
 0                                             I N P U T   B U L K   D A T A   E C H O                                               
@@ -491,39 +484,39 @@
                               $                                                                               
                               PARAM,POST,-1                                                                   
                               ENDDATA
-0                             INPUT BULK DATA ENTRY COUNT =     241
-1             NON-LINEAR STEADY-STATE PROBLEM                HD15306       DECEMBER   2, 2011  MSC.NASTRAN  6/17/05   PAGE    10
+0                             INPUT BULK DATA ENTRY COUNT =         241
+1             NON-LINEAR STEADY-STATE PROBLEM                HD15306          APRIL  28, 2016  NX NASTRAN  1/24/13   PAGE    10
             CONVECTIVE MULTILAYER INSULATION                                                                                        
 0                                                                                                                                   
 0                                                 S O R T E D   B U L K   D A T A   E C H O                                         
                  ENTRY                                                                                                              
                  COUNT        .   1  ..   2  ..   3  ..   4  ..   5  ..   6  ..   7  ..   8  ..   9  ..  10  .                      
-                    1-        CHBDYG  200             AREA4                   2000                    ++000003
-                    2-        ++0000031       2       6       5                                        +000004
-                    3-        CHBDYG  300             AREA4                   2000                    ++000005
-                    4-        ++0000052       3       7       6                                        +000006
-                    5-        CHBDYG  400             AREA4                   2000                    ++000007
-                    6-        ++0000073       4       8       7                                        +000008
-                    7-        CHBDYG  500             AREA4                   2000                    ++000009
-                    8-        ++0000095       6       2       1                                        +00000A
-                    9-        CHBDYG  600             AREA4                   2000                    ++00000B
-                   10-        ++00000B6       7       3       2                                        +00000C
-                   11-        CHBDYG  700             AREA4                   2000                    ++00000D
-                   12-        ++00000D7       8       4       3                                        +00000E
-                   13-        CHBDYG  1200            AREA4   10              2001                    ++00000F
-                   14-        ++00000F11      12      16      15                                       +00000G
-                   15-        CHBDYG  1300            AREA4   10              2001                    ++00000H
-                   16-        ++00000H12      13      17      16                                       +00000I
-                   17-        CHBDYG  1400            AREA4   10              2001                    ++00000J
-                   18-        ++00000J13      14      18      17                                       +00000K
-                   19-        CHBDYG  2500            AREA4   10              2001                    ++00000L
-                   20-        ++00000L25      26      22      21                                       +00000M
-                   21-        CHBDYG  2600            AREA4   10              2001                    ++00000N
-                   22-        ++00000N26      27      23      22                                       +00000O
-                   23-        CHBDYG  2700            AREA4   10              2001                    ++00000P
-                   24-        ++00000P27      28      24      23                                       +00000Q
-                   25-        CHBDYP  60      300     LINE                    1       5               ++000001
-                   26-        ++000001                                                1.               +000002
+                    1-        CHBDYG  200             AREA4                   2000                    +0000003
+                    2-        +00000031       2       6       5                                        0000004
+                    3-        CHBDYG  300             AREA4                   2000                    +0000005
+                    4-        +00000052       3       7       6                                        0000006
+                    5-        CHBDYG  400             AREA4                   2000                    +0000007
+                    6-        +00000073       4       8       7                                        0000008
+                    7-        CHBDYG  500             AREA4                   2000                    +0000009
+                    8-        +00000095       6       2       1                                        000000A
+                    9-        CHBDYG  600             AREA4                   2000                    +000000B
+                   10-        +000000B6       7       3       2                                        000000C
+                   11-        CHBDYG  700             AREA4                   2000                    +000000D
+                   12-        +000000D7       8       4       3                                        000000E
+                   13-        CHBDYG  1200            AREA4   10              2001                    +000000F
+                   14-        +000000F11      12      16      15                                       000000G
+                   15-        CHBDYG  1300            AREA4   10              2001                    +000000H
+                   16-        +000000H12      13      17      16                                       000000I
+                   17-        CHBDYG  1400            AREA4   10              2001                    +000000J
+                   18-        +000000J13      14      18      17                                       000000K
+                   19-        CHBDYG  2500            AREA4   10              2001                    +000000L
+                   20-        +000000L25      26      22      21                                       000000M
+                   21-        CHBDYG  2600            AREA4   10              2001                    +000000N
+                   22-        +000000N26      27      23      22                                       000000O
+                   23-        CHBDYG  2700            AREA4   10              2001                    +000000P
+                   24-        +000000P27      28      24      23                                       000000Q
+                   25-        CHBDYP  60      300     LINE                    1       5               +0000001
+                   26-        +0000001                                                1.               0000002
                    27-        CONV    60      300                     100     100                             
                    28-        CONV    1200    2001                    1       2       6       5               
                    29-        CONV    1300    2001                    2       3       7       6               
@@ -548,7 +541,7 @@
                    48-        GRID    10                      -.1                                             
                    49-        GRID    11                                                                      
                    50-        GRID    12              .1                                                      
-1             NON-LINEAR STEADY-STATE PROBLEM                HD15306       DECEMBER   2, 2011  MSC.NASTRAN  6/17/05   PAGE    11
+1             NON-LINEAR STEADY-STATE PROBLEM                HD15306          APRIL  28, 2016  NX NASTRAN  1/24/13   PAGE    11
             CONVECTIVE MULTILAYER INSULATION                                                                                        
 0                                                                                                                                   
 0                                                 S O R T E D   B U L K   D A T A   E C H O                                         
@@ -604,7 +597,7 @@
                    98-        SLOAD   300     5       4.      6       8.                                      
                    99-        SLOAD   300     7       8.      8       4.                                      
                   100-        SPC     100     100     1       300.                                            
-1             NON-LINEAR STEADY-STATE PROBLEM                HD15306       DECEMBER   2, 2011  MSC.NASTRAN  6/17/05   PAGE    12
+1             NON-LINEAR STEADY-STATE PROBLEM                HD15306          APRIL  28, 2016  NX NASTRAN  1/24/13   PAGE    12
             CONVECTIVE MULTILAYER INSULATION                                                                                        
 0                                                                                                                                   
 0                                                 S O R T E D   B U L K   D A T A   E C H O                                         
@@ -643,7 +636,7 @@
                   131-        VIEW    10      1       NONE    3       3                                       
                               ENDDATA 
 0                       TOTAL COUNT=       132
-1             NON-LINEAR STEADY-STATE PROBLEM                HD15306       DECEMBER   2, 2011  MSC.NASTRAN  6/17/05   PAGE    13
+1             NON-LINEAR STEADY-STATE PROBLEM                HD15306          APRIL  28, 2016  NX NASTRAN  1/24/13   PAGE    13
             CONVECTIVE MULTILAYER INSULATION                                                                                        
 0                                                                                                                                   
 0
@@ -656,6 +649,7 @@
 
                                    NUMBER OF GRID     POINTS   =       27
  
+ 
                                    NUMBER OF CHBDYG   ELEMENTS =       12
                                    NUMBER OF CHBDYP   ELEMENTS =        1
                                    NUMBER OF CONV     ELEMENTS =        7
@@ -664,80 +658,100 @@
                                    NUMBER OF PLOTEL   ELEMENTS =        2
  
  *** USER INFORMATION MESSAGE 4109 (OUTPX2)
-     THE LABEL IS XXXXXXXX FOR FORTRAN UNIT 12
+     THE LABEL IS NX8.5    FOR FORTRAN UNIT 12
      (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =        7 WORDS.)
-     (NUMBER OF FORTRAN RECORDS WRITTEN =          8 RECORDS.)
-     (TOTAL DATA WRITTEN FOR TAPE LABEL = WORDS.)
- *** USER WARNING MESSAGE 6617 (MAKoG2CV)
-     THERE ARE FIELD(S), WITH NON-DEFAULT VALUES, ON THE FOLLOWING CONV BULK DATA ENTRY WITH IDS:
-             60      1200      1300      1400      2500      2600      2700
-     ( ONLY THE FIRST TEN ARE PRINTED ).
-     USER INFORMATION: THESE FIELDS WILL NOT BE CONVERTED BY THE MAKEOLD MODULE.
+     (NUMBER OF FORTRAN RECORDS WRITTEN =        8 RECORDS.)
+     (TOTAL DATA WRITTEN FOR TAPE LABEL =       17 WORDS.)
  *** USER INFORMATION MESSAGE 4114 (OUTPX2)
-     DATA BLOCK GEOM1X   WRITTEN ON FORTRAN UNIT 12, TRL =
-                    101                 0                 0                 8                 0                 0                 0
-     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS GEOM1.
-        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
-     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =         219 WORDS.)
-           (NUMBER OF FORTRAN RECORDS WRITTEN =          20 RECORDS.)
-           (TOTAL DATA WRITTEN FOR DATA BLOCK =         250 WORDS.)
-1             NON-LINEAR STEADY-STATE PROBLEM                HD15306       DECEMBER   2, 2011  MSC.NASTRAN  6/17/05   PAGE    14
+     DATA BLOCK PVT0     WRITTEN ON FORTRAN UNIT 12, TRL =
+                    101                34                 0                 0                 0                 0                 0
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =       34 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       19 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =       58 WORDS.)
+1             NON-LINEAR STEADY-STATE PROBLEM                HD15306          APRIL  28, 2016  NX NASTRAN  1/24/13   PAGE    14
             CONVECTIVE MULTILAYER INSULATION                                                                                        
 0                                                                                                                                   
 0                                                                                                                                   
                                                                                                                                     
                                                                                                                                     
  *** USER INFORMATION MESSAGE 4114 (OUTPX2)
-     DATA BLOCK GEOM2X   WRITTEN ON FORTRAN UNIT 12, TRL =
+     DATA BLOCK CASECC   WRITTEN ON FORTRAN UNIT 12, TRL =
+                    101                 1                 0               600                 1                 0                 0
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =      600 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       19 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =      624 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK GEOM1S   WRITTEN ON FORTRAN UNIT 12, TRL =
+                    101                 0                 0                 8                 0                 0                 0
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =      219 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       24 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =      250 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK GEOM2S   WRITTEN ON FORTRAN UNIT 12, TRL =
                     102           1572864            131076                 0             12288                 0                 0
-     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS GEOM2.
-        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
-     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =         195 WORDS.)
-           (NUMBER OF FORTRAN RECORDS WRITTEN =          45 RECORDS.)
-           (TOTAL DATA WRITTEN FOR DATA BLOCK =         416 WORDS.)
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =      195 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       49 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =      416 WORDS.)
  *** USER INFORMATION MESSAGE 4114 (OUTPX2)
-     DATA BLOCK GEOM3X   WRITTEN ON FORTRAN UNIT 12, TRL =
+     DATA BLOCK GEOM3S   WRITTEN ON FORTRAN UNIT 12, TRL =
                     103                 0                 0                 0              1152             32768                 0
-     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS GEOM3.
-        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
-     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =          87 WORDS.)
-           (NUMBER OF FORTRAN RECORDS WRITTEN =          30 RECORDS.)
-           (TOTAL DATA WRITTEN FOR DATA BLOCK =         158 WORDS.)
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =       87 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       34 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =      158 WORDS.)
  *** USER INFORMATION MESSAGE 4114 (OUTPX2)
-     DATA BLOCK GEOM4X   WRITTEN ON FORTRAN UNIT 12, TRL =
+     DATA BLOCK GEOM4S   WRITTEN ON FORTRAN UNIT 12, TRL =
                     104                 0                 0                 0             33280                 0                 0
-     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS GEOM4.
-        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
-     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =          23 WORDS.)
-           (NUMBER OF FORTRAN RECORDS WRITTEN =          25 RECORDS.)
-           (TOTAL DATA WRITTEN FOR DATA BLOCK =          69 WORDS.)
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =       23 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       29 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =       69 WORDS.)
  *** USER INFORMATION MESSAGE 4114 (OUTPX2)
-     DATA BLOCK EPTX     WRITTEN ON FORTRAN UNIT 12, TRL =
-                    105            262272               592                 0                 0                 0                 0
-     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS EPT.
-        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
-     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =          14 WORDS.)
-           (NUMBER OF FORTRAN RECORDS WRITTEN =          40 RECORDS.)
-           (TOTAL DATA WRITTEN FOR DATA BLOCK =          97 WORDS.)
+     DATA BLOCK EPTS     WRITTEN ON FORTRAN UNIT 12, TRL =
+                    101            262272               592                 0                 0                 0                 0
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =       14 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       44 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =       97 WORDS.)
  *** USER INFORMATION MESSAGE 4114 (OUTPX2)
      DATA BLOCK MPTS     WRITTEN ON FORTRAN UNIT 12, TRL =
                     101                 0              2052                 0                 0                 0               256
-     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS MPTS.
-        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
-     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =          36 WORDS.)
-           (NUMBER OF FORTRAN RECORDS WRITTEN =          30 RECORDS.)
-           (TOTAL DATA WRITTEN FOR DATA BLOCK =         107 WORDS.)
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =       36 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       34 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =      107 WORDS.)
+1             NON-LINEAR STEADY-STATE PROBLEM                HD15306          APRIL  28, 2016  NX NASTRAN  1/24/13   PAGE    15
+            CONVECTIVE MULTILAYER INSULATION                                                                                        
+0                                                                                                                                   
+0                                                                                                                                   
+                                                                                                                                    
+                                                                                                                                    
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK BGPDTS   WRITTEN ON FORTRAN UNIT 12, TRL =
+                    101                27                 0                 0                 0                 0                 0
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =      108 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       19 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =      132 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK EQEXINS  WRITTEN ON FORTRAN UNIT 12, TRL =
+                    101                27                 0                 0                 0                 0                 0
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =       54 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       24 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =      136 WORDS.)
  *** USER WARNING MESSAGE 6427 (VIEWD)
      VIEW FACTORS WILL NOT BE COMPUTED FOR RADIATION CAVITY ID=       1 BECAUSE A RADIATION MATRIX IS ALREADY DEFINED.
      USER INFORMATION:  THE RADIATION MATRIX IS DEFINED ON RADLST OR RADMTX BULK DATA ENTRIES.
- *** USER INFORMATION MESSAGE 4534 (RMG2)
-        6 ELEMENTS HAVE A TOTAL VIEW FACTOR (FA/A) LESS THAN 0.99, ENERGY MAY BE LOST TO SPACE.
- ^^^ USER INFORMATION MESSAGE (NLKR) 
- ^^^ THE NL-CONDUCTION AND RADIATION HAVE BEEN MODIFIED  TO AVOID THE TEMPERATURE OVERSHOOT WITH A COARSE MESH   
- ^^^ USER ACTION:  TO SKIP THIS OPERATION INSERT PARAM,RADMOD,NO 
  ^^^ USER INFORMATION MESSAGE 9048 (NLSTATIC)    
  ^^^ LINEAR ELEMENTS ARE CONNECTED TO THE    ANALYSIS SET (A-SET).   
-1             NON-LINEAR STEADY-STATE PROBLEM                HD15306       DECEMBER   2, 2011  MSC.NASTRAN  6/17/05   PAGE    15
+ *** USER INFORMATION MESSAGE 4534 (RMG2)
+        6 ELEMENTS HAVE A TOTAL VIEW FACTOR (FA/A) LESS THAN 0.99, ENERGY MAY BE LOST TO SPACE.
+1             NON-LINEAR STEADY-STATE PROBLEM                HD15306          APRIL  28, 2016  NX NASTRAN  1/24/13   PAGE    16
             CONVECTIVE MULTILAYER INSULATION                                                                                        
 0                                                                                                                                   
  *** USER INFORMATION MESSAGE 7310 (VECPRN)
@@ -747,7 +761,7 @@
   SUBCASE/
   DAREA ID        T1             T2             T3             R1             R2             R3
 0        1   4.8000000E+01
-1             NON-LINEAR STEADY-STATE PROBLEM                HD15306       DECEMBER   2, 2011  MSC.NASTRAN  6/17/05   PAGE    16
+1             NON-LINEAR STEADY-STATE PROBLEM                HD15306          APRIL  28, 2016  NX NASTRAN  1/24/13   PAGE    17
             CONVECTIVE MULTILAYER INSULATION                                                                                        
 0                                                                                                                                   
 0                             N O N - L I N E A R   I T E R A T I O N   M O D U L E   O U T P U T
@@ -758,19 +772,19 @@
                         - - - CONVERGENCE  FACTORS - - -                      - - - LINE SEARCH DATA - - -
 0ITERATION      EUI         EPI         EWI      LAMBDA       DLMAG       FACTOR     E-FIRST     E-FINAL   NQNV  NLS  ENIC  NDV  MDV
 
-         1  1.3680E-01  4.1442E-06  2.0625E-06  1.0000E-01  4.2954E-04  1.0000E+00  1.1664E-02  1.1664E-02    0    0          0    1
-         2  8.1618E-06  4.9042E-08  2.8964E-10  5.5917E-02  5.0938E-06  1.0000E+00  1.1889E-02  1.1889E-02    1    0          0    1
+         1  1.0339E-01  4.0383E-06  2.1043E-06  1.0000E-01  4.3325E-04  1.0000E+00  1.1825E-02  1.1825E-02    0    0          0    1
+         2  6.2009E-06  4.8876E-08  3.1475E-10  5.6052E-02  5.2848E-06  1.0000E+00  1.2435E-02  1.2435E-02    1    0          0    1
  *** USER INFORMATION MESSAGE 6186 (NCONVG)
      *** SOLUTION HAS CONVERGED ***
          SUBID    1     LOOPID    1     LOAD STEP    1.000     LOAD FACTOR 1.00000000
 
  ^^^ USER INFORMATION MESSAGE 9005 (NLSTATIC)    
- ^^^ THE SOLUTION FOR LOOPID=   1          IS SAVED FOR RESTART    
+ ^^^ THE SOLUTION FOR LOOPID=            1 IS SAVED FOR RESTART    
  ^^^     
- ^^^ USER INFORMATION MESSAGE 9052 (NLSTATIC)    
+ ^^^ USER INFORMATION MESSAGE 9210 (NLSTATIC)    
  ^^^ NONLINEAR STATIC ANALYSIS COMPLETED.    
  ^^^     
-1             NON-LINEAR STEADY-STATE PROBLEM                HD15306       DECEMBER   2, 2011  MSC.NASTRAN  6/17/05   PAGE    17
+1             NON-LINEAR STEADY-STATE PROBLEM                HD15306          APRIL  28, 2016  NX NASTRAN  1/24/13   PAGE    18
             CONVECTIVE MULTILAYER INSULATION                                                                                        
 0                                                                                                                                   
  *** USER INFORMATION MESSAGE 7310 (VECPRN)
@@ -779,37 +793,38 @@
 0                                                  SPCFORCE RESULTANT       
   SUBCASE/
   DAREA ID        T1             T2             T3             R1             R2             R3
-0        1  -2.9538662E+01
+0        1  -2.9538366E+01
  *** USER INFORMATION MESSAGE 4114 (OUTPX2)
      DATA BLOCK OQG1     WRITTEN ON FORTRAN UNIT 12, TRL =
-                    101                 0               216                 0                 0                 0                 1
-     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS OQG1.
-        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
-     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =         216 WORDS.)
-           (NUMBER OF FORTRAN RECORDS WRITTEN =          20 RECORDS.)
-           (TOTAL DATA WRITTEN FOR DATA BLOCK =         395 WORDS.)
+                    101                 0               216                28                16                 0                 1
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =      216 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       24 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =      395 WORDS.)
  *** USER INFORMATION MESSAGE 4114 (OUTPX2)
      DATA BLOCK OUGV1    WRITTEN ON FORTRAN UNIT 12, TRL =
-                    101                 0               216                 0                 0                 0                 1
-     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS OUGV1.
-        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
-     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =         216 WORDS.)
-           (NUMBER OF FORTRAN RECORDS WRITTEN =          20 RECORDS.)
-           (TOTAL DATA WRITTEN FOR DATA BLOCK =         395 WORDS.)
-1             NON-LINEAR STEADY-STATE PROBLEM                HD15306       DECEMBER   2, 2011  MSC.NASTRAN  6/17/05   PAGE    18
+                    101                 0               216                28                16                 0                 1
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =      216 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       24 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =      395 WORDS.)
+1             NON-LINEAR STEADY-STATE PROBLEM                HD15306          APRIL  28, 2016  NX NASTRAN  1/24/13   PAGE    19
             CONVECTIVE MULTILAYER INSULATION                                                                                        
 0                                                                                                                                   
      LOAD STEP =  1.00000E+00
                                               T E M P E R A T U R E   V E C T O R
  
       POINT ID.   TYPE      ID   VALUE     ID+1 VALUE     ID+2 VALUE     ID+3 VALUE     ID+4 VALUE     ID+5 VALUE
-             1      S      3.047036E+02   3.097876E+02   3.171122E+02   3.195471E+02   3.047036E+02   3.097876E+02
-             7      S      3.171122E+02   3.195471E+02   3.047036E+02   3.047036E+02   3.780735E+00   4.727783E+00
-            13      S      6.078302E+00   6.523689E+00   3.780735E+00   4.727783E+00   6.078302E+00   6.523689E+00
-            21      S      3.780735E+00   4.727783E+00   6.078302E+00   6.523689E+00   3.780735E+00   4.727783E+00
-            27      S      6.078302E+00   6.523689E+00                
+             1      S      3.047036E+02   3.097888E+02   3.171167E+02   3.195521E+02   3.047036E+02   3.097888E+02
+             7      S      3.171167E+02   3.195521E+02   3.047036E+02   3.047036E+02   3.144542E+00   4.703429E+00
+            13      S      6.355365E+00   6.641318E+00   3.144542E+00   4.703429E+00   6.355365E+00   6.641318E+00
+            21      S      3.144542E+00   4.703429E+00   6.355365E+00   6.641318E+00   3.144542E+00   4.703429E+00
+            27      S      6.355365E+00   6.641318E+00                
            100      S      3.000000E+02                    
-1             NON-LINEAR STEADY-STATE PROBLEM                HD15306       DECEMBER   2, 2011  MSC.NASTRAN  6/17/05   PAGE    19
+1             NON-LINEAR STEADY-STATE PROBLEM                HD15306          APRIL  28, 2016  NX NASTRAN  1/24/13   PAGE    20
+            CONVECTIVE MULTILAYER INSULATION                                                                                        
+0                                                                                                                                   
+1             NON-LINEAR STEADY-STATE PROBLEM                HD15306          APRIL  28, 2016  NX NASTRAN  1/24/13   PAGE    21
             CONVECTIVE MULTILAYER INSULATION                                                                                        
 0                                                                                                                                   
      LOAD STEP =  1.00000E+00
@@ -820,7 +835,7 @@
              7      S      8.000000E+00   4.000000E+00   0.0            0.0            0.0            0.0
             27      S      0.0            0.0                         
            100      S      0.0                             
-1             NON-LINEAR STEADY-STATE PROBLEM                HD15306       DECEMBER   2, 2011  MSC.NASTRAN  6/17/05   PAGE    20
+1             NON-LINEAR STEADY-STATE PROBLEM                HD15306          APRIL  28, 2016  NX NASTRAN  1/24/13   PAGE    22
             CONVECTIVE MULTILAYER INSULATION                                                                                        
 0                                                                                                                                   
      LOAD STEP =  1.00000E+00
@@ -828,84 +843,79 @@
  
       POINT ID.   TYPE      ID   VALUE     ID+1 VALUE     ID+2 VALUE     ID+3 VALUE     ID+4 VALUE     ID+5 VALUE
             27      S      0.0            0.0                         
-           100      S     -2.953866E+01                    
-1             NON-LINEAR STEADY-STATE PROBLEM                HD15306       DECEMBER   2, 2011  MSC.NASTRAN  6/17/05   PAGE    21
-            CONVECTIVE MULTILAYER INSULATION                                                                                        
-0                                                                                                                                   
-1             NON-LINEAR STEADY-STATE PROBLEM                HD15306       DECEMBER   2, 2011  MSC.NASTRAN  6/17/05   PAGE    22
+           100      S     -2.953837E+01                    
+1             NON-LINEAR STEADY-STATE PROBLEM                HD15306          APRIL  28, 2016  NX NASTRAN  1/24/13   PAGE    23
             CONVECTIVE MULTILAYER INSULATION                                                                                        
 0                                                                                                                                   
      LOAD STEP =  1.00000E+00
                                 H E A T   F L O W   I N T O   H B D Y   E L E M E N T S   (CHBDY)
  
                ELEMENT-ID      APPLIED-LOAD   FREE-CONVECTION   FORCED-CONVECTION     RADIATION           TOTAL
-                       60      0.000000E+00     -2.953869E+01      0.000000E+00      0.000000E+00     -2.953869E+01
+                       60      0.000000E+00     -2.953831E+01      0.000000E+00      0.000000E+00     -2.953831E+01
                       200      0.000000E+00      0.000000E+00      0.000000E+00      0.000000E+00      0.000000E+00
                       300      0.000000E+00      0.000000E+00      0.000000E+00      0.000000E+00      0.000000E+00
                       400      0.000000E+00      0.000000E+00      0.000000E+00      0.000000E+00      0.000000E+00
                       500      0.000000E+00      0.000000E+00      0.000000E+00      0.000000E+00      0.000000E+00
                       600      0.000000E+00      0.000000E+00      0.000000E+00      0.000000E+00      0.000000E+00
                       700      0.000000E+00      0.000000E+00      0.000000E+00      0.000000E+00      0.000000E+00
-                     1200      0.000000E+00      3.029913E+00      0.000000E+00     -3.029933E+00     -1.978874E-05
-                     1300      0.000000E+00      3.080468E+00      0.000000E+00     -3.080491E+00     -2.217293E-05
-                     1400      0.000000E+00      3.120286E+00      0.000000E+00     -3.120306E+00     -2.026558E-05
-                     2500      0.000000E+00      3.029913E+00      0.000000E+00     -3.029933E+00     -1.978874E-05
-                     2600      0.000000E+00      3.080468E+00      0.000000E+00     -3.080491E+00     -2.217293E-05
-                     2700      0.000000E+00      3.120286E+00      0.000000E+00     -3.120306E+00     -2.026558E-05
-1             NON-LINEAR STEADY-STATE PROBLEM                HD15306       DECEMBER   2, 2011  MSC.NASTRAN  6/17/05   PAGE    23
+                     1200      0.000000E+00      3.033222E+00      0.000000E+00     -3.015620E+00      1.760268E-02
+                     1300      0.000000E+00      3.079234E+00      0.000000E+00     -3.086138E+00     -6.904364E-03
+                     1400      0.000000E+00      3.118361E+00      0.000000E+00     -3.129123E+00     -1.076293E-02
+                     2500      0.000000E+00      3.033222E+00      0.000000E+00     -3.015620E+00      1.760268E-02
+                     2600      0.000000E+00      3.079234E+00      0.000000E+00     -3.086138E+00     -6.904364E-03
+                     2700      0.000000E+00      3.118361E+00      0.000000E+00     -3.129123E+00     -1.076293E-02
+1             NON-LINEAR STEADY-STATE PROBLEM                HD15306          APRIL  28, 2016  NX NASTRAN  1/24/13   PAGE    24
             CONVECTIVE MULTILAYER INSULATION                                                                                        
 0                                                                                                                                   
      LOAD STEP =  1.00000E+00
                    F I N I T E   E L E M E N T   T E M P E R A T U R E   G R A D I E N T S   A N D   F L U X E S  
  
     ELEMENT-ID   EL-TYPE        X-GRADIENT       Y-GRADIENT       Z-GRADIENT        X-FLUX           Y-FLUX           Z-FLUX
-            30    QUAD4        5.084035E+01     5.434231E-11                     -1.016807E+04    -1.086846E-08
-            40    QUAD4        7.324545E+01    -2.933120E-10                     -1.464909E+04     5.866241E-08
-            50    QUAD4        2.434883E+01    -4.818048E-10                     -4.869766E+03     9.636096E-08
-1             NON-LINEAR STEADY-STATE PROBLEM                HD15306       DECEMBER   2, 2011  MSC.NASTRAN  6/17/05   PAGE    24
+            30    QUAD4        5.085291E+01     2.273737E-13                     -1.017058E+04    -4.547474E-11
+            40    QUAD4        7.327833E+01     2.273737E-13                     -1.465567E+04    -4.547474E-11
+            50    QUAD4        2.435446E+01     2.273737E-13                     -4.870892E+03    -4.547474E-11
+1             NON-LINEAR STEADY-STATE PROBLEM                HD15306          APRIL  28, 2016  NX NASTRAN  1/24/13   PAGE    25
             CONVECTIVE MULTILAYER INSULATION                                                                                        
 0                                                                                                                                   
      LOAD STEP =  1.00000E+00
                    F I N I T E   E L E M E N T   T E M P E R A T U R E   G R A D I E N T S   A N D   F L U X E S  
  
     ELEMENT-ID   EL-TYPE        X-GRADIENT       Y-GRADIENT       Z-GRADIENT        X-FLUX           Y-FLUX           Z-FLUX
-            10    ROD          3.594955E+01                                      -7.189911E+03
-            20    ROD          3.594955E+01                                      -7.189911E+03
-1             NON-LINEAR STEADY-STATE PROBLEM                HD15306       DECEMBER   2, 2011  MSC.NASTRAN  6/17/05   PAGE    25
+            10    ROD          3.595837E+01                                      -7.191673E+03
+            20    ROD          3.595837E+01                                      -7.191673E+03
+1             NON-LINEAR STEADY-STATE PROBLEM                HD15306          APRIL  28, 2016  NX NASTRAN  1/24/13   PAGE    26
             CONVECTIVE MULTILAYER INSULATION                                                                                        
 0                                                                                                                                   
  *** USER INFORMATION MESSAGE 4114 (OUTPX2)
      DATA BLOCK OEF1X    WRITTEN ON FORTRAN UNIT 12, TRL =
                     101               101               102                 0                 0                 0                 0
-     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS OEF1X.
-        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
-     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =         146 WORDS.)
-           (NUMBER OF FORTRAN RECORDS WRITTEN =          40 RECORDS.)
-           (TOTAL DATA WRITTEN FOR DATA BLOCK =         636 WORDS.)
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =      146 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       44 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =      631 WORDS.)
  *** USER INFORMATION MESSAGE 4114 (OUTPX2)
      DATA BLOCK OPG1     WRITTEN ON FORTRAN UNIT 12, TRL =
-                    101                 0               216                 0                 0                 0                 1
-     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS OPG1.
-        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
-     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =         216 WORDS.)
-           (NUMBER OF FORTRAN RECORDS WRITTEN =          20 RECORDS.)
-           (TOTAL DATA WRITTEN FOR DATA BLOCK =         395 WORDS.)
-1             NON-LINEAR STEADY-STATE PROBLEM                HD15306       DECEMBER   2, 2011  MSC.NASTRAN  6/17/05   PAGE    26
+                    101                 0               216                28                16                 0                 1
+     (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =    16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =      216 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =       24 RECORDS.)
+     (TOTAL DATA WRITTEN FOR DATA BLOCK =      395 WORDS.)
+1             NON-LINEAR STEADY-STATE PROBLEM                HD15306          APRIL  28, 2016  NX NASTRAN  1/24/13   PAGE    27
             CONVECTIVE MULTILAYER INSULATION                                                                                        
 0                                                                                                                                   
                                   ERROR MESSAGES FROM THE PLOT SET DEFINITION MODULE (PLTSET)                                     
 
                                  NO PLOTABLE STRUCTURAL ELEMENTS EXIST IN SET       2
-1             NON-LINEAR STEADY-STATE PROBLEM                HD15306       DECEMBER   2, 2011  MSC.NASTRAN  6/17/05   PAGE    27
+1             NON-LINEAR STEADY-STATE PROBLEM                HD15306          APRIL  28, 2016  NX NASTRAN  1/24/13   PAGE    28
             CONVECTIVE MULTILAYER INSULATION                                                                                        
 0                                                                                                                                   
-1             NON-LINEAR STEADY-STATE PROBLEM                HD15306       DECEMBER   2, 2011  MSC.NASTRAN  6/17/05   PAGE    28
+1             NON-LINEAR STEADY-STATE PROBLEM                HD15306          APRIL  28, 2016  NX NASTRAN  1/24/13   PAGE    29
             CONVECTIVE MULTILAYER INSULATION                                                                                        
 0                                                                                                                                   
                                                   MESSAGES FROM THE PLOT MODULE                                                   
 
                                 ALL REFERENCES TO SET       2 WILL BE IGNORED
-1             NON-LINEAR STEADY-STATE PROBLEM                HD15306       DECEMBER   2, 2011  MSC.NASTRAN  6/17/05   PAGE    29
+1             NON-LINEAR STEADY-STATE PROBLEM                HD15306          APRIL  28, 2016  NX NASTRAN  1/24/13   PAGE    30
             CONVECTIVE MULTILAYER INSULATION                                                                                        
 0                                                                                                                                   
                                                   MESSAGES FROM THE PLOT MODULE                                                   
@@ -944,7 +954,7 @@
 
 
           PLOT    6   STATIC DEFORM.       1 - SUBCASE     300 - LOAD   1.000000E+00 - LOAD STEP 
-1             NON-LINEAR STEADY-STATE PROBLEM                HD15306       DECEMBER   2, 2011  MSC.NASTRAN  6/17/05   PAGE    30
+1             NON-LINEAR STEADY-STATE PROBLEM                HD15306          APRIL  28, 2016  NX NASTRAN  1/24/13   PAGE    31
             CONVECTIVE MULTILAYER INSULATION                                                                                        
 0                                                                                                                                   
                                                   MESSAGES FROM THE PLOT MODULE                                                   
@@ -988,24 +998,24 @@
  C O N T O U R   P L O T T I N G   D A T A
 
 
-         ABOVE PLOT IS A CONTOUR PLOT OF DEFORMATION MAG.     MIN =  3.047036E+02     MAX =  3.195471E+02
+         ABOVE PLOT IS A CONTOUR PLOT OF DEFORMATION MAG.     MIN =  3.047036E+02     MAX =  3.195522E+02
  
                                                    TABLE OF   PLOTTING  SYMBOLS
  
      SYMBOL  VALUE           SYMBOL  VALUE           SYMBOL  VALUE           SYMBOL  VALUE           SYMBOL  VALUE
  
         1   3.047036E+02
-        2   3.063529E+02
-        3   3.080022E+02
-        4   3.096514E+02
-        5   3.113007E+02
-        6   3.129500E+02
-        7   3.145992E+02
-        8   3.162485E+02
-        9   3.178978E+02
-       10   3.195471E+02
-1                                                                          DECEMBER   2, 2011  MSC.NASTRAN  6/17/05   PAGE    31
-                                                                                                                                    
+        2   3.063534E+02
+        3   3.080033E+02
+        4   3.096531E+02
+        5   3.113029E+02
+        6   3.129528E+02
+        7   3.146026E+02
+        8   3.162525E+02
+        9   3.179023E+02
+       10   3.195522E+02
+1             NON-LINEAR STEADY-STATE PROBLEM                HD15306          APRIL  28, 2016  NX NASTRAN  1/24/13   PAGE    32
+            CONVECTIVE MULTILAYER INSULATION                                                                                        
 0                                                                                                                                   
 0                                                    MESSAGES FROM THE PLOT MODULE                                                  
                                                                                                                                     
@@ -1015,10 +1025,10 @@
                                  (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =      1 WORDS.)
                                        (NUMBER OF FORTRAN RECORDS WRITTEN =      1 RECORDS.)
                                        (TOTAL DATA WRITTEN FOR EOF MARKER =      1 WORDS.)
-1                                                                          DECEMBER   2, 2011  MSC.NASTRAN  6/17/05   PAGE    32
-                                                                                                                                    
+1             NON-LINEAR STEADY-STATE PROBLEM                HD15306          APRIL  28, 2016  NX NASTRAN  1/24/13   PAGE    33
+            CONVECTIVE MULTILAYER INSULATION                                                                                        
 0                                                                                                                                   
- * * * *  D B D I C T   P R I N T  * * * *      SUBDMAP = PRTSUM  ,  DMAP STATEMENT NO.     30
+ * * * *  D B D I C T   P R I N T  * * * *      SUBDMAP = PRTSUM  ,  DMAP STATEMENT NO.     29
 
 
 
@@ -1045,9 +1055,6 @@
  SOLNL = T (TRUE) IF NONLINEAR SOLUTION EXISTS IN DATABASE.
  DESIGN CYCLE = THE LAST DESIGN CYCLE (ONLY VALID IN OPTIMIZATION).
  SENSITIVITY = SENSITIVITY MATRIX GENERATION FLAG.
- 
- No PARAM values were set in the Control File.
- 
 1                                        * * * END OF JOB * * *
  
  

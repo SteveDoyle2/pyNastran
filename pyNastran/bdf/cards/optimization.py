@@ -3012,8 +3012,8 @@ class DVGRID(OptConstraint):
             msg = 'DVGRID Error; dvid=%s nid=%s norm(dxyz)=0.' % (self.dvid, self.nid)
             raise ValueError(msg)
 
-    @classmethod
-    def add_card(cls, card, comment=''):
+    @staticmethod
+    def add_card(card, comment=''):
         dvid = integer(card, 1, 'dvid')
         nid = integer(card, 2, 'nid')
         cid = integer_or_blank(card, 3, 'cid', 0)

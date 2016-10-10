@@ -160,7 +160,8 @@ class ModifyLabelPropertiesMenu(QDialog):
         #self.min_edit.setText(str(self._default_min))
         #self.min_edit.setStyleSheet("QLineEdit{background: white;}")
 
-    def check_float(self, cell):
+    @staticmethod
+    def check_float(cell):
         text = cell.text()
         value = float(text)
         return value, True

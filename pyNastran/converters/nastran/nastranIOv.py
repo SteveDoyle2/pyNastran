@@ -3347,10 +3347,13 @@ class NastranIO(object):
             cases[icase + 1] = (t_init_res, (0, 'DVPREL Init - t'))
             cases[icase + 2] = (t_min_res, (0, 'DVPREL Min - t'))
             cases[icase + 3] = (t_max_res, (0, 'DVPREL Max - t'))
-            form0.append(('DV Region', icase, []))
-            form0.append(('DVPREL Init - t', icase + 1, []))
-            form0.append(('DVPREL Min - t', icase + 2, []))
-            form0.append(('DVPREL Max - t', icase + 3, []))
+            opt = []
+            opt.append(('DV Region', icase, []))
+            opt.append(('DVPREL Init - t', icase + 1, []))
+            opt.append(('DVPREL Min - t', icase + 2, []))
+            opt.append(('DVPREL Max - t', icase + 3, []))
+            form0.append(('Optimization', '', opt))
+
             icase += 4
         return icase
 
