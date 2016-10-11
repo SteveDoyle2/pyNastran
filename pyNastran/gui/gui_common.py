@@ -376,10 +376,21 @@ class GuiCommon2(QMainWindow, GuiCommon):
     def set_tools(self, tools=None, checkables=None):
         """Creates the GUI tools"""
         if checkables is None:
-            checkables = [
-                'show_info', 'show_debug', 'show_gui', 'show_command',
-                'anti_alias_0', 'anti_alias_1', 'anti_alias_2', 'anti_alias_4', 'anti_alias_8',
-            ]
+            checkables = {
+                # name, is_checked
+                'show_info' : True,
+                'show_debug' : True,
+                'show_gui' : True,
+                'show_command' : True,
+                'anti_alias_0' : True,
+                'anti_alias_1' : False,
+                'anti_alias_2' : False,
+                'anti_alias_4' : False,
+                'anti_alias_8' : False,
+                'rotation_center' : False,
+                'measure_distance' : False,
+                'probe_result' : False,
+            }
 
         if tools is None:
             file_tools = [
@@ -458,9 +469,12 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 ('anti_alias_4', '4x', '', None, 'Set Anti-Aliasing to 4x', lambda: self.on_set_anti_aliasing(4)),
                 ('anti_alias_8', '8x', '', None, 'Set Anti-Aliasing to 8x', lambda: self.on_set_anti_aliasing(8)),
 
+                # new
+                ('rotation_center', 'Set the rotation center', 'trotation_center.png', 'f', 'Pick a node for the rotation center', self.on_rotation_center),
+
                 # TODO: not done...
                 ('measure_distance', 'Measure Distance', 'tmeasure_distance.png', None, 'Measure the distance between two nodes', self.on_measure_distance),
-                ('rotation_center', 'Set the rotation center', 'trotation_center.png', 'f', 'Pick a node for the rotation center', self.on_rotation_center),
+                ('probe_result', 'Probe', 'tprobe.png', None, 'Probe the displayed result', self.on_probe_result),
             ]
         # print('version =', vtk.VTK_VERSION, self.vtk_version)
         #if self.vtk_version[0] < 6
@@ -554,7 +568,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
         toolbar_tools = ['reload', 'load_geometry', 'load_results',
                          'x', 'y', 'z', 'X', 'Y', 'Z',
                          'magnify', 'shrink', 'rotate_clockwise', 'rotate_cclockwise',
-                         #'rotation_center',
+                         'rotation_center', 'measure_distance', 'probe_result',
                          'wireframe', 'surface', 'edges']
         toolbar_tools += ['camera_reset', 'view', 'screenshot', '', 'exit']
 
@@ -682,8 +696,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
             checkables = []
         #print('---------------------------')
         for tool in tools:
-            (nam, txt, icon, shortcut, tip, func) = tool
-            if nam in self.actions:
+            (name, txt, icon, shortcut, tip, func) = tool
+            if name in self.actions:
                 self.log_error('trying to create a duplicate action %r' % nam)
                 continue
             #print("name=%s txt=%s icon=%s shortcut=%s tip=%s func=%s"
@@ -703,19 +717,20 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 pth = os.path.join(icon_path, icon)
                 ico.addPixmap(QtGui.QPixmap(pth), QtGui.QIcon.Normal, QtGui.QIcon.Off)
 
-            if nam in checkables:
-                self.actions[nam] = QAction(ico, txt, self, checkable=True)
-                self.actions[nam].setChecked(True)
+            if name in checkables:
+                is_checked = checkables[name]
+                self.actions[name] = QAction(ico, txt, self, checkable=True)
+                self.actions[name].setChecked(is_checked)
             else:
-                self.actions[nam] = QAction(ico, txt, self)
+                self.actions[name] = QAction(ico, txt, self)
 
             if shortcut:
-                self.actions[nam].setShortcut(shortcut)
-                #actions[nam].setShortcutContext(QtCore.Qt.WidgetShortcut)
+                self.actions[name].setShortcut(shortcut)
+                #actions[name].setShortcutContext(QtCore.Qt.WidgetShortcut)
             if tip:
-                self.actions[nam].setStatusTip(tip)
+                self.actions[name].setStatusTip(tip)
             if func:
-                self.actions[nam].triggered.connect(func)
+                self.actions[name].triggered.connect(func)
 
         self.actions['toolbar'] = self.toolbar.toggleViewAction()
         self.actions['toolbar'].setStatusTip("Show/Hide application toolbar")
@@ -1026,27 +1041,43 @@ class GuiCommon2(QMainWindow, GuiCommon):
     def setup_mouse_buttons(self, mode=None, func=None):
         #print('setup_mouse_buttons mode=%r _camera_mode=%r' % (mode, self._camera_mode))
         if mode == self._camera_mode:
+            #print('auto return from set mouse mode')
             return
         self._camera_mode = mode
 
         if mode is None:
             # same as default
+            #print('auto return 2 from set mouse mode')
             return
         elif mode == 'default':
-            # standard rotation
+            #print('set mouse mode as default')
 
+            # standard rotation
             # Disable default left mouse click function (Rotate)
             self.vtk_interactor.RemoveObservers('LeftButtonPressEvent')
 
+            # there should be a cleaner way to revert the trackball Rotate command
+            # it apparently requires an (obj, event) argument instead of a void...
             self.set_style_as_trackball()
+
+            # the more correct-ish way to reset the 'LeftButtonPressEvent' to Rotate
+            # that doesn't work...
+            #
             # Re-assign left mouse click event to custom function (Point Picker)
-            #self.vtk_interactor.AddObserver('LeftButtonPressEvent', self.LeftButtonPressEvent)
+            #self.vtk_interactor.AddObserver('LeftButtonPressEvent', self.style.Rotate)
+
         elif mode == 'rotation_center':
+            #print('set mouse mode as rotation_center')
             # used for rotation_center - hackish at this point
             self.vtk_interactor.RemoveObservers('LeftButtonPressEvent')
             self.vtk_interactor.AddObserver('LeftButtonPressEvent', func)
             #self.vtk_interactor.AddObserver('LeftButtonPressEvent', func, 1) # on press down
             #self.vtk_interactor.AddObserver('LeftButtonPressEvent', func, -1) # on button up
+
+        elif mode in ['measure_distance', 'probe_result']:
+            # used for rotation_center - hackish at this point
+            self.vtk_interactor.RemoveObservers('LeftButtonPressEvent')
+            self.vtk_interactor.AddObserver('LeftButtonPressEvent', func)
 
         #elif mode == 'node_pick':
             #self.vtk_interactor.RemoveObservers('LeftButtonPressEvent')
@@ -1055,8 +1086,10 @@ class GuiCommon2(QMainWindow, GuiCommon):
             #self.vtk_interactor.RemoveObservers('LeftButtonPressEvent')
             #self.vtk_interactor.AddObserver('LeftButtonPressEvent', self.on_cell_pick_event)
         elif mode == 'cell_pick':
+            #print('set mouse mode as cell_pick')
             self.vtk_interactor.SetPicker(self.cell_picker)
         elif mode == 'node_pick':
+            #print('set mouse mode as node_pick')
             self.vtk_interactor.SetPicker(self.node_picker)
 
         #elif mode == 'area_cell_pick':
@@ -1078,23 +1111,86 @@ class GuiCommon2(QMainWindow, GuiCommon):
             raise NotImplementedError('camera_mode = %r' % self._camera_mode)
 
     def on_measure_distance(self):
+        self.revert_pressed('measure_distance')
+        measure_distance_button = self.actions['measure_distance']
+        is_checked = measure_distance_button.isChecked()
+        if not is_checked:
+            # revert on_measure_distance
+            self._measure_distance_pick_points = []
+            self.setup_mouse_buttons(mode='default')
+            return
+        self._measure_distance_pick_points = []
+        self.setup_mouse_buttons('measure_distance', self._measure_distance_picker)
+
+    def _measure_distance_picker(self, obj, event):
+        picker = self.cell_picker
+        pixel_x, pixel_y = self.vtk_interactor.GetEventPosition()
+        picker.Pick(pixel_x, pixel_y, 0, self.rend)
+
+        cell_id = picker.GetCellId()
+        #print('_measure_distance_picker', cell_id)
+
+        if cell_id < 0:
+            #self.picker_textActor.VisibilityOff()
+            pass
+        else:
+            world_position = picker.GetPickPosition()
+            closest_point = self._get_closest_node_xyz(cell_id, world_position)
+
+            if len(self._measure_distance_pick_points) == 0:
+                self._measure_distance_pick_points.append(closest_point)
+                self.log_info('point1 = %s' % str(closest_point))
+            else:
+                self.log_info('point2 = %s' % str(closest_point))
+                p1 = self._measure_distance_pick_points[0]
+                dxyz = closest_point - p1
+                mag = np.linalg.norm(dxyz)
+
+                self._measure_distance_pick_points = []
+                self.log_info('dxyz=%s mag=%s' % (str(dxyz), str(mag)))
+
+                measure_distance_button = self.actions['measure_distance']
+                measure_distance_button.setChecked(False)
+                self.setup_mouse_buttons(mode='default')
+
+    def on_escape_null(self):
+        """
+        The default state for Escape key is nothing.
+        """
+        pass
+
+    def on_escape(self):
+        """
+        Escape key should cancel:
+         - on_rotation_center
+
+        TODO: not done...
+        """
         pass
 
     def on_rotation_center(self):
         """
         http://osdir.com/ml/lib.vtk.user/2002-09/msg00079.html
         """
+        self.revert_pressed('rotation_center')
+        is_checked = self.actions['rotation_center'].isChecked()
+        if not is_checked:
+            # revert on_rotation_center
+            self.setup_mouse_buttons(mode='default')
+            return
 
-        # get view dimensions
-        #GetClientRect(&viewdims);
-        #self.vtk_interactor.SetPi
         #self.vtk_interactor.SetPicker(self.node_picker)
         method = 'cell'
-        if method == 'node':
-            asdf
-            self.set_node_picker()
-            self.setup_mouse_buttons('rotation_center', self._rotation_center_node_picker)
-        elif method == 'cell':
+        #if method == 'node':
+            #asdf
+            #self.set_node_picker()
+            #self.setup_mouse_buttons('rotation_center', self._rotation_center_node_picker)
+        if method == 'cell':
+            #tol = self.cell_picker.GetTolerance()
+            #print('tol = ', tol)
+            #self.cell_picker.SetTolerance(0.5)
+            #tol = self.cell_picker.GetTolerance()
+            #print('tol = ', tol)
             self.setup_mouse_buttons('rotation_center', self._rotation_center_cell_picker)
         else:
             raise NotImplementedError(method)
@@ -1104,8 +1200,11 @@ class GuiCommon2(QMainWindow, GuiCommon):
 
     def _rotation_center_cell_picker(self, obj, event):
         picker = self.cell_picker
+        pixel_x, pixel_y = self.vtk_interactor.GetEventPosition()
+        picker.Pick(pixel_x, pixel_y, 0, self.rend)
+
         cell_id = picker.GetCellId()
-        print('_rotation_center_cell_picker', cell_id)
+        #print('_rotation_center_cell_picker', cell_id)
 
         if cell_id < 0:
             #self.picker_textActor.VisibilityOff()
@@ -1113,19 +1212,127 @@ class GuiCommon2(QMainWindow, GuiCommon):
         else:
             camera = self.rend.GetActiveCamera()
             world_position = picker.GetPickPosition()
-            focal_point = world_position
+            focal_point = self._get_closest_node_xyz(cell_id, world_position)
 
             #ds = picker.GetDataSet()
             #select_point = picker.GetSelectionPoint()
             self.log_command("_rotation_center_cell_picker()")
             self.log_info('focal_point = %s' % str(focal_point))
-
             self.setup_mouse_buttons(mode='default')
 
             # now we can actually modify the camera
             camera.SetFocalPoint(focal_point[0], focal_point[1], focal_point[2])
             camera.OrthogonalizeViewUp()
+            rotation_center_button = self.actions['rotation_center']
+            rotation_center_button.setChecked(False)
 
+    def revert_pressed(self, active_name):
+        if active_name != 'probe_result':
+            probe_button = self.actions['probe_result']
+            is_checked = probe_button.isChecked()
+            if is_checked:  # revert probe_result
+                probe_button.setChecked(False)
+                self.setup_mouse_buttons(mode='default')
+                return
+
+        if active_name != 'rotation_center':
+            rotation_button = self.actions['rotation_center']
+            is_checked = rotation_button.isChecked()
+            if is_checked:  # revert rotation_center
+                rotation_button.setChecked(False)
+                self.setup_mouse_buttons(mode='default')
+                return
+
+        if active_name != 'measure_distance':
+            measure_distance_button = self.actions['measure_distance']
+            is_checked = measure_distance_button.isChecked()
+            if is_checked:
+                # revert on_measure_distance
+                measure_distance_button.setChecked(False)
+                self._measure_distance_pick_points = []
+                self.setup_mouse_buttons(mode='default')
+                return
+
+    def on_probe_result(self):
+        self.revert_pressed('probe_result')
+        is_checked = self.actions['probe_result'].isChecked()
+        if not is_checked:
+            # revert probe_result
+            self.setup_mouse_buttons(mode='default')
+            return
+        self.setup_mouse_buttons('probe_result', self._probe_picker)
+
+    def _probe_picker(self, obj, event):
+        picker = self.cell_picker
+        pixel_x, pixel_y = self.vtk_interactor.GetEventPosition()
+        picker.Pick(pixel_x, pixel_y, 0, self.rend)
+
+        cell_id = picker.GetCellId()
+        #print('_rotation_center_cell_picker', cell_id)
+
+        if cell_id < 0:
+            pass
+        else:
+            world_position = picker.GetPickPosition()
+            if 0:
+                camera = self.rend.GetActiveCamera()
+                #focal_point = world_position
+                (result_name, result_value, node_id, node_xyz) = self.get_result_by_xyz_cell_id(
+                    world_position, cell_id)
+                self.log_info('focal_point = %s' % str(focal_point))
+                self.setup_mouse_buttons(mode='default')
+
+                # now we can actually modify the camera
+                camera.SetFocalPoint(focal_point[0], focal_point[1], focal_point[2])
+                camera.OrthogonalizeViewUp()
+                rotation_center_button = self.actions['rotation_center']
+                rotation_center_button.setChecked(False)
+
+
+                world_position = picker.GetPickPosition()
+                cell_id = picker.GetCellId()
+                #ds = picker.GetDataSet()
+                #select_point = picker.GetSelectionPoint()
+                self.log_command("annotate_cell_picker()")
+                self.log_info("XYZ Global = %s" % str(world_position))
+                #self.log_info("cell_id = %s" % cell_id)
+                #self.log_info("data_set = %s" % ds)
+                #self.log_info("selPt = %s" % str(select_point))
+
+                #method = 'get_result_by_cell_id()' # self.model_type
+                #print('pick_state =', self.pick_state)
+
+            icase = self.icase
+            key = self.case_keys[icase]
+            location = self.get_case_location(key)
+
+            if location == 'centroid':
+                out = self._cell_centroid_pick(cell_id, world_position)
+            elif location == 'node':
+                out = self._cell_node_pick(cell_id, world_position)
+            else:
+                raise RuntimeError('invalid pick location=%r' % location)
+
+            return_flag, duplicate_key, result_value, result_name, xyz = out
+            if return_flag is True:
+                return
+
+            # prevent duplicate labels with the same value on the same cell
+            if duplicate_key is not None and duplicate_key in self.label_ids[result_name]:
+                return
+            self.label_ids[result_name].add(duplicate_key)
+
+            #if 0:
+                #result_value2, xyz2 = self.convert_units(result_name, result_value, xyz)
+                #result_value = result_value2
+                #xyz2 = xyz
+            #x, y, z = world_position
+            x, y, z = xyz
+            text = '(%.3g, %.3g, %.3g); %s' % (x, y, z, result_value)
+            text = str(result_value)
+            assert result_name in self.label_actors, result_name
+            self._create_annotation(text, result_name, x, y, z)
+            self.vtk_interactor.Render()
 
     def _rotation_center_node_picker(self, obj, event):
         self.log_command('_rotation_center_node_picker()')
@@ -2554,6 +2761,15 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self.log_info("%s = %s" % (result_name, result_value))
         return return_flag, duplicate_key, result_value, result_name, xyz
 
+    def _get_closest_node_xyz(self, cell_id, world_position):
+        duplicate_key = None
+        return_flag = False
+        (result_name, result_value, node_id, xyz) = self.get_result_by_xyz_cell_id(
+            world_position, cell_id)
+        assert result_name in self.label_actors, result_name
+        assert not isinstance(xyz, int), xyz
+        return xyz
+
     def _cell_node_pick(self, cell_id, world_position):
         duplicate_key = None
         if self.pick_state == 'node/centroid':
@@ -2588,6 +2804,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
             return
 
         def annotate_cell_picker(object, event):
+            if self._camera_mode != 'default':
+                return
             picker = self.cell_picker
             if picker.GetCellId() < 0:
                 #self.picker_textActor.VisibilityOff()
