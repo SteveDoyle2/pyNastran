@@ -53,42 +53,57 @@ Done
 ----
 
 BDF:
- - fixed update_card method:
-    # update cards similar to Nastran's optimization
-    # on grid 1234, update cp (field 2) to a value of 7)
+ - fixed:
+    - update_card method:
+      # update cards similar to Nastran's optimization
+      # on grid 1234, update cp (field 2) to a value of 7)
     - model.update_card('GRID', 1234, 2, 7)
-    - fixed DIVERG bug
-    - fixed PFAST bug
- 
+
+  - other bugs:
+    - fixed DIVERG bug (bad key)
+    - fixed PFAST bug (bad xref)
+    - fixed bug in SET3 card (multiple THRUs on single card)
+    - write_path function works (Windows)
+
  - bdf_renumber
    - removed execs from bdf_renumber, so Python 3 will work
    - fixed bug with handling Nones (caused by exec change)
    - fixed case control update bug
 
  - Aero:
-   - added handling of non-uniform lsrb/lrib on CAERO2
+   - handling of non-uniform lsrb/lrib on CAERO2
    - fixed unxref bug in AESURF
    - fixed xref bug in CSSCHD
    - fixed FLUTTER unxref bug
    - FLFACT can now write in wide field format
- - write_path function works (Windows)
- - more validate methods & tests
- - fixed bug in SET3 card (multiple THRUs on single card)
- - added: POINT, PBRSECT, PBMSECT, DVGRID
+
+ - added cards:
+   - POINT
+   - PBRSECT
+   - PBMSECT
+   - DVGRID
 
 GUI:
- - added support for PyQt5
- - added custom displacement results
- - fixed display issue with CHEXA20
- - fixed element selection for quadratic solids
- - cycle_results now takes an integer instead of a string, so it works
-   when you call it with more than 10 results  or have transient solutions
- - Python 2 only: nicer Python console
+ - added:
+   - added support for PyQt5 (not quite perfect)
+   - added custom displacement results
+   - probe support by mouse picking
+   - distance support by mouse picking
+   - rotation center by mouse picking
+   - Python 2 only: nicer Python console
+ - fixed:
+   - display issue with CHEXA20 (element was ordered wrong)
+   - element selection for quadratic solids no longer crashes
+ - changes:
+   - cycle_results now takes an integer instead of a string, so it works
+      when you call it with more than 10 results  or have transient solutions
+
 
 OP2:
- - MSC Nastran 2005R3B supported
- - MEFF, ASSIG, ASEPS tables now skipped properly
- - eigenvector_ROUGV1 now supported
+ - added:
+   - MSC Nastran 2005R3B supported
+   - MEFF, ASSIG, ASEPS tables now skipped properly
+   - eigenvector_ROUGV1 now supported
  - removed beta_transforms from gpforce
 
 Other
