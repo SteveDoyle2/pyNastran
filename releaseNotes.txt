@@ -60,7 +60,7 @@ BDF:
     - model.update_card('GRID', 1234, 2, 7)
 
   - other bugs:
-    - fixed DIVERG bug (bad key)
+    - fixed DIVERG bug (bad key when adding card)
     - fixed PFAST bug (bad xref)
     - fixed bug in SET3 card (multiple THRUs on single card)
     - write_path function works (Windows)
