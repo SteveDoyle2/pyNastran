@@ -8,18 +8,16 @@ import py.numpy.asarray % import as array function (convert list into a ndarray)
 bdf = BDF();
 
 %% Read the BDF
-
 bdf.read_bdf(filenamebdf);
 
 % NMODES (is valid only if RESVEC = NO, that is no residual augmentation)
-
 EIGRL_CARDS_ID = ndarray2mat(asarray(py.list(bdf.methods.keys())));
 RESVEC_tuple = bdf.case_control_deck.get_subcase_parameter(0,'RESVEC');
 RESVEC_cell = RESVEC_tuple.cell;
 RESVEC_RH = char(RESVEC_tuple{1}); % RH side of the RESVEC case command
 
+
 if numel(EIGRL_CARDS_ID) ~= 1
-    
     errordlg('If bdf contains more than 1 EIGRL cards, the software does not work. (Things are much more complicated)');
     return
 elseif strcmp(RESVEC_RH,'NO')~=1
@@ -35,10 +33,10 @@ Nmodes = double(bdf.Method(EIGRL_CARDS_ID).nd);
 FLUTTER_CARDS_ID = ndarray2mat(asarray(py.list(bdf.flutters.keys())));
 
 if numel(FLUTTER_CARDS_ID) ~= 1
-    
+
     errordlg('If bdf contains more than 1 FLUTTER cards, the software does not work. (Things are much more complicated)');
     return
-    
+
 end
 
 
@@ -60,14 +58,14 @@ Velocity_fact = -1*Velocity_fact; % In the op2 NASTRAN gives only the eigenvalue
 
 
 if strcmp(char(bdf.flutters{FLUTTER_CARDS_ID}.method),'PK')
-    
+
     tmpdensity = repmat(Density_fact(:),numel(Velocity_fact)*numel(Mach_fact),1);
     Density = reshape(tmpdensity,numel(Density_fact)*numel(Velocity_fact)*numel(Mach_fact),1);
     tmpvelocity = repmat(Velocity_fact(:),numel(Density_fact),numel(Mach_fact));
     Velocity = reshape(tmpvelocity',numel(Density_fact)*numel(Velocity_fact)*numel(Mach_fact),1);
     tmpmach = repmat(Mach_fact(:),1,numel(Density_fact)*numel(Velocity_fact));
     Mach = reshape(tmpmach',numel(Density_fact)*numel(Velocity_fact)*numel(Mach_fact),1);
-    
+
 else
     strcmp(char(bdf.flutters{FLUTTER_CARDS_ID}.method),'PKNL');
     Density = Density_fact;

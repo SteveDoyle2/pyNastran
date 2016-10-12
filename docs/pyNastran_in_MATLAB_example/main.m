@@ -19,11 +19,11 @@ Ngrids = size(eigvs,1); % number of GRIDs can be read from the eigenvectors
 tmpEigvs = NaN*zeros(Nsweep_par,Ngrids*Ndofs,Nmodes);
 
 for k = 1:Nsweep_par
-    
+
     % Eigenvalues
     modeidx_nth_par = 1+Nmodes*(k-1):k*Nmodes;
     Eigs(:,k) = eigs(modeidx_nth_par); %(2D matrix MODES x NPAR array)
-    
+
     % Eigenvectors
     tmp = squeeze(eigvs(:,:,modeidx_nth_par));
     for m = 1:Nmodes
@@ -31,7 +31,7 @@ for k = 1:Nsweep_par
             tmpEigvs(k,(Ndofs*(g-1)+1:Ndofs*g),m) = tmp(g,:,m); % (3D matrix NPAR x [NGRIDSxNDOFS(6)] x NMODES)
         end
     end
-    
+
 end
 
 
