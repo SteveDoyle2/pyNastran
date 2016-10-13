@@ -3084,10 +3084,10 @@ class NastranIO(object):
                         nnodes_array[ie] = nnodesi
                         continue
 
-                    offset[ie] = zi
-                    xoffset[ie] = zi * normali[0]
-                    yoffset[ie] = zi * normali[1]
-                    zoffset[ie] = zi * normali[2]
+                    offset[ie] = z0
+                    xoffset[ie] = z0 * normali[0]
+                    yoffset[ie] = z0 * normali[1]
+                    zoffset[ie] = z0 * normali[2]
 
                 elif element.type == 'CTETRA':
                     ie = self.eid_map[eid]
