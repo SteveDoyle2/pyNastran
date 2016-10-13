@@ -469,6 +469,10 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
 
           # consider all properties
           eids_dict = model.get_element_ids_dict_with_pids()
+
+        Note
+        ----
+        What happens with CONRODs?
         """
         if pids is None:
             pids = self.properties.keys()
@@ -481,6 +485,8 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
         for eid, element in iteritems(self.elements):
             try:
                 pid = element.Pid()
+                #if element.type == 'CONROD':
+                    #raise RuntimeError('CONROD pid=%r' % pid)
                 if pid in pids:
                     eids2[pid].append(eid)
             except AttributeError:

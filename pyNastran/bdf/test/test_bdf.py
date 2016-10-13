@@ -529,6 +529,10 @@ def run_fem1(fem1, bdf_model, mesh_form, xref, punch, sum_load, size, is_double,
         #fem1.writeAsCTRIA3(out_model)
 
     fem1._get_maps()
+    if xref:
+        fem1.get_area_breakdown()
+        fem1.get_volume_breakdown()
+        fem1.get_mass_breakdown()
     return out_model, fem1
 
 

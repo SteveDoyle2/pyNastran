@@ -111,7 +111,7 @@ def bdf_merge(bdf_filenames, bdf_filename_out=None, renumber=True, encoding=None
             data1 = getattr(model, data_member)
             data2 = getattr(model2, data_member)
             if isinstance(data1, dict):
-                model.log.info('  working on %s' % (data_member))
+                #model.log.info('  working on %s' % (data_member))
                 for key, value in iteritems(data2):
                     if data_member in 'coords' and key == 0:
                         continue
