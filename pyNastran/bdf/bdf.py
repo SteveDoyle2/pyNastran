@@ -46,8 +46,9 @@ from pyNastran.bdf.cards.elements.rigid import RBAR, RBAR1, RBE1, RBE2, RBE3, RR
 
 from pyNastran.bdf.cards.elements.shell import (CQUAD, CQUAD4, CQUAD8, CQUADR, CQUADX,
                                                 CSHEAR, CTRIA3, CTRIA6, CTRIAX,
-                                                CTRIAX6, CTRIAR)
-from pyNastran.bdf.cards.properties.shell import PSHELL, PCOMP, PCOMPG, PSHEAR, PLPLANE
+                                                CTRIAX6, CTRIAR,
+                                                CPLSTN3, CPLSTN4, CPLSTN6, CPLSTN8)
+from pyNastran.bdf.cards.properties.shell import PSHELL, PCOMP, PCOMPG, PSHEAR, PLPLANE, PPLANE
 from pyNastran.bdf.cards.elements.bush import CBUSH, CBUSH1D, CBUSH2D
 from pyNastran.bdf.cards.properties.bush import PBUSH, PBUSH1D, PBUSHT
 from pyNastran.bdf.cards.elements.damper import (CVISC, CDAMP1, CDAMP2, CDAMP3, CDAMP4,
@@ -90,7 +91,7 @@ from pyNastran.bdf.cards.loads.static_loads import (LOAD, GRAV, ACCEL, ACCEL1, F
 
 from pyNastran.bdf.cards.materials import (MAT1, MAT2, MAT3, MAT4, MAT5,
                                            MAT8, MAT9, MAT10, MAT11,
-                                           MATHP, CREEP, EQUIV)
+                                           MATHE, MATHP, CREEP, EQUIV)
 # TODO: add MATT3, MATT8, MATT9
 from pyNastran.bdf.cards.material_deps import MATT1, MATT2, MATT4, MATT5, MATS1
 
@@ -343,6 +344,9 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'CBAR', 'CROD', 'CTUBE', 'CBEAM', 'CBEAM3', 'CONROD', 'CBEND',
             'CTRIA3', 'CTRIA6', 'CTRIAR', 'CTRIAX', 'CTRIAX6',
             'CQUAD4', 'CQUAD8', 'CQUADR', 'CQUADX', 'CQUAD',
+            'CPLSTN3', 'CPLSTN6', 'CPLSTN4', 'CPLSTN8',
+            #'CPLSTS3', 'CPLSTS6', 'CPLSTS4', 'CPLSTS8',
+
             'CTETRA', 'CPYRAM', 'CPENTA', 'CHEXA',
             'CIHEX1',
             'CSHEAR', 'CVISC', 'CRAC2D', 'CRAC3D',
@@ -356,7 +360,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
             ## properties
             'PMASS',
-            'PELAS', 'PGAP', 'PFAST', 'PLPLANE',
+            'PELAS', 'PGAP', 'PFAST', 'PLPLANE', 'PPLANE',
             'PBUSH', 'PBUSH1D',
             'PDAMP', 'PDAMP5',
             'PROD', 'PBAR', 'PBARL', 'PBEAM', 'PTUBE', 'PBCOMP', 'PBRSECT', # 'PBEND',
@@ -381,7 +385,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'CREEP',
 
             ## materials
-            'MAT1', 'MAT2', 'MAT3', 'MAT8', 'MAT9', 'MAT10', 'MAT11', 'MATHP',
+            'MAT1', 'MAT2', 'MAT3', 'MAT8', 'MAT9', 'MAT10', 'MAT11',
+            'MATHE', 'MATHP',
 
             ## Material dependence - MATT1/MATT2/etc.
             'MATT1', 'MATT2', 'MATT4', 'MATT5',  #'MATT3', 'MATT8', 'MATT9',
@@ -1795,6 +1800,12 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'PSHELL' : (PSHELL, self.add_property),
             'PLPLANE' : (PLPLANE, self.add_property),
 
+            'CPLSTN3' : (CPLSTN3, self.add_element),
+            'CPLSTN4' : (CPLSTN4, self.add_element),
+            'CPLSTN6' : (CPLSTN6, self.add_element),
+            'CPLSTN8' : (CPLSTN8, self.add_element),
+            'PPLANE' : (PPLANE, self.add_property),
+
             'CSHEAR' : (CSHEAR, self.add_element),
             'PSHEAR' : (PSHEAR, self.add_property),
 
@@ -1864,7 +1875,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'MAT11' : (MAT11, self.add_structural_material),
             'EQUIV' : (EQUIV, self.add_structural_material),
 
-            ##'MATHE' : (MATHE, self.add_hyperelastic_material),
+            'MATHE' : (MATHE, self.add_hyperelastic_material),
             'MATHP' : (MATHP, self.add_hyperelastic_material),
             'MAT4' : (MAT4, self.add_thermal_material),
             'MAT5' : (MAT5, self.add_thermal_material),

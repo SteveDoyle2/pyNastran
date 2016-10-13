@@ -12,6 +12,7 @@ All material cards are defined in this file.  This includes:
  * MAT9 (anisotropic solid)
  * MAT10 (fluid element)
  * MATHP (hyperelastic)
+ * MATHE (hyperelastic)
 
 All cards are Material objects.
 """
@@ -1837,6 +1838,148 @@ class MAT11(Material):
         list_fields = ['MAT11', self.mid, self.e1, self.e2, self.e3, self.nu12,
                        self.nu13, self.nu23, self.g12, self.g13, self.g23, rho, a1,
                        a2, a3, TRef, ge]
+        return list_fields
+
+    def write_card(self, size=8, is_double=False):
+        card = self.repr_fields()
+        if size == 8:
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
+
+
+class MATHE(HyperelasticMaterial):
+    type = 'MATHE'
+
+    def __init__(self, mid, model, bulk, rho, texp,
+                 mus, alphas, betas, comment=''):
+        HyperelasticMaterial.__init__(self)
+        if comment:
+            self._comment = comment
+        self.mid = mid
+        self.model = model
+        self.bulk = bulk
+        self.rho = rho
+        self.texp = texp
+
+        # OGDEN/FOAM
+        self.mus = mus
+        self.alphas = alphas
+        self.betas = betas # not used for ogden
+
+    def validate(self):
+        assert self.model in ['MOONEY', 'OGDEN', 'FOAM', 'ABOYCE', 'SUSSBAT'], 'model=%r' % self.model
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        mid = integer(card, 1, 'mid')
+        model = string_or_blank(card, 2, 'a10', 'MOONEY')
+        bulk = double_or_blank(card, 4, 'bulk', None)
+        rho = double_or_blank(card, 5, 'rho', 0.)
+        texp = double_or_blank(card, 6, 'texp', 0.)
+
+        nfields_leftover = card.nfields - 8
+        nlines = nfields_leftover // 8
+        if nfields_leftover % 8:
+            nlines += 1
+
+        mus = []
+        alphas = []
+        betas = [] # unused for ogden
+        for iline in range(nlines):
+            ilinei = iline + 1
+            ifield = 8 + iline * 8
+
+            if model in ['OGDEN', 'FOAM']:
+                mu = double_or_blank(card, ifield, 'mu%i' % ilinei, 0.)
+                alpha = double_or_blank(card, ifield + 1, 'alpha%i' % ilinei, 0.)
+                beta = double_or_blank(card, ifield + 2, 'beta%i' % ilinei, 0.)
+                mus.append(mu)
+                alphas.append(alpha)
+                betas.append(beta)
+            else:
+                raise NotImplementedError(model)
+        #print('nfields =', nfields)
+
+        #assert len(card) <= 10, 'len(MATHE card) = %i\ncard=%s' % (len(card), card)
+        return MATHE(mid, model, bulk, rho, texp,
+                     mus, alphas, betas,
+                     comment=comment)
+
+    def raw_fields(self):
+        #list_fields = ['MATHP', self.mid, self.a10, self.a01, self.d1, self.rho,
+                       #self.av, self.TRef, self.ge,
+                       #None, self.na, self.nd, None, None, None, None, None,
+                       #self.a20, self.a11, self.a02, self.d2, None, None, None,
+                       #None,
+                       #self.a30, self.a21, self.a12, self.a03, self.d3, None,
+                       #None, None,
+                       #self.a40, self.a31, self.a22, self.a13, self.a04, self.d4,
+                       #None, None,
+                       #self.a50, self.a41, self.a32, self.a23, self.a14, self.a05,
+                       #self.d5, None,
+                       #self.tab1, self.tab2, self.tab4, None, None, None, self.tabd]
+        return list_fields
+
+    def repr_fields(self):
+        """
+        Gets the fields in their simplified form
+
+        Returns
+        -------
+        fields : [varies, ...]
+            the fields that define the card
+        """
+        #av = set_blank_if_default(self.av, 0.0)
+        #na = set_blank_if_default(self.na, 0.0)
+        #nd = set_blank_if_default(self.nd, 0.0)
+
+        #a01 = set_blank_if_default(self.a01, 0.0)
+        #a10 = set_blank_if_default(self.a10, 0.0)
+        #d1 = set_blank_if_default(self.d1, 1000 * (self.a01 + self.a10))
+
+        #a20 = set_blank_if_default(self.a20, 0.0)
+        #a11 = set_blank_if_default(self.a11, 0.0)
+        #a02 = set_blank_if_default(self.a02, 0.0)
+        #d2 = set_blank_if_default(self.d2, 0.0)
+
+        #a30 = set_blank_if_default(self.a30, 0.0)
+        #a12 = set_blank_if_default(self.a12, 0.0)
+        #a21 = set_blank_if_default(self.a21, 0.0)
+        #a03 = set_blank_if_default(self.a03, 0.0)
+        #d3 = set_blank_if_default(self.d3, 0.0)
+
+        #a40 = set_blank_if_default(self.a40, 0.0)
+        #a31 = set_blank_if_default(self.a31, 0.0)
+        #a22 = set_blank_if_default(self.a22, 0.0)
+        #a13 = set_blank_if_default(self.a13, 0.0)
+        #a04 = set_blank_if_default(self.a04, 0.0)
+        #d4 = set_blank_if_default(self.d4, 0.0)
+
+        #a50 = set_blank_if_default(self.a50, 0.0)
+        #a41 = set_blank_if_default(self.a41, 0.0)
+        #a32 = set_blank_if_default(self.a32, 0.0)
+        #a23 = set_blank_if_default(self.a23, 0.0)
+        #a14 = set_blank_if_default(self.a14, 0.0)
+        #a05 = set_blank_if_default(self.a05, 0.0)
+        #d5 = set_blank_if_default(self.d5, 0.0)
+
+        #TRef = set_blank_if_default(self.TRef, 0.0)
+        #ge = set_blank_if_default(self.ge, 0.0)
+        list_fields = ['MATHE', self.mid, self.model, None, self.bulk, self.rho, self.texp,
+                       None, None]
+        if self.model in ['OGDEN', 'FOAM']:
+            i = 0
+            for mu, alpha, beta in zip(self.mus, self.alphas, self.betas):
+                if i == 0 or i % 2 == 1:
+                    # 0, 1, 3, 5, 7
+                    # mu1, mu2, mu4, mu6, mu8
+                    list_fields += [mu, alpha, beta, None, None, None, None, None]
+                else:
+                    list_fields[-5] = mu
+                    list_fields[-4] = alpha
+                    list_fields[-3] = beta
+        else:
+            raise NotImplementedError(self.model)
         return list_fields
 
     def write_card(self, size=8, is_double=False):
