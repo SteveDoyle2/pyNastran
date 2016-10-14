@@ -119,10 +119,10 @@ except ImportError:
 
 
 try:
-    from pyNastran.converters.dev.fast.fast_io import FastIO
+    from pyNastran.converters.fast.fast_io import FastIO
     is_fast = True
 except ImportError:
-    #raise
+    raise
     class FastIO(object):
         def __init__(self):
             pass
@@ -169,3 +169,12 @@ except ImportError:
             pass
     is_degen_geom = False
 
+try:
+    from pyNastran.converters.dev.abaqus.abaqus_io import AbaqusIO
+    is_abaqus = True
+except ImportError:
+    raise
+    class AbaqusIO(object):
+        def __init__(self):
+            pass
+    is_abaqus = False

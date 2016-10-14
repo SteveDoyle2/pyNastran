@@ -76,7 +76,7 @@ def bdf_merge(bdf_filenames, bdf_filename_out=None, renumber=True, encoding=None
         'materials',
     ]
     for bdf_filename in bdf_filenames[1:]:
-        model.log.info('model.masses = %s' % model.masses)
+        #model.log.info('model.masses = %s' % model.masses)
         starting_id_dict = {
             'cid' : max(model.coords.keys()) + 1,
             'nid' : max(model.nodes.keys()) + 1,
@@ -106,7 +106,7 @@ def bdf_merge(bdf_filenames, bdf_filename_out=None, renumber=True, encoding=None
         model2.read_bdf(bdf_dump)
         os.remove(bdf_dump)
 
-        model.log.info('model2.node_ids = %s' % np.array(model2.node_ids))
+        #model.log.info('model2.node_ids = %s' % np.array(model2.node_ids))
         for data_member in data_members:
             data1 = getattr(model, data_member)
             data2 = getattr(model2, data_member)

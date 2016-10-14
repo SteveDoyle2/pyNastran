@@ -24,6 +24,7 @@ def determine_format(input):
         'lawgs' : ['.wgs'],
         'shabp' : ['.mk5'],
         'panair' : ['.inp'],
+        'abaqus' : ['.inp'],
     }
     ext = os.path.splitext(input)[1].lower()
     extension_to_format = {val : key for key, value in iteritems(format_to_extension)
@@ -105,7 +106,7 @@ def run_docopt():
     # None is for custom geometry
     allowed_formats = [
         'nastran', 'stl', 'cart3d', 'tecplot', 'ugrid', 'panair', 'plot3d',
-        'surf', 'lawgs', 'degen_geom', 'shabp', 'avus', 'fast', None]
+        'surf', 'lawgs', 'degen_geom', 'shabp', 'avus', 'fast', 'abaqus', None]
     assert input_format in allowed_formats, 'format=%r is not supported' % input_format
 
     shots = []

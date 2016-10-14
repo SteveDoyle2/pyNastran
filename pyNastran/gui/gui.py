@@ -38,7 +38,7 @@ import vtk
 #from pyNastran.utils import print_bad_path
 from pyNastran.gui.formats import (NastranIO, Cart3dIO,  DegenGeomIO, PanairIO, LaWGS_IO,
     STL_IO, TecplotIO, TetgenIO, Usm3dIO, Plot3d_io, ShabpIO, ADB_IO, FastIO,
-    AvusIO, SurfIO, UGRID_IO,
+    AvusIO, SurfIO, UGRID_IO, AbaqusIO,
     )
 from pyNastran.gui.arg_handling import get_inputs
 from pyNastran.gui.gui_common import GuiCommon2
@@ -69,7 +69,7 @@ signal.signal(signal.SIGINT, signal.SIG_DFL)
 
 class MainWindow(GuiCommon2, NastranIO, Cart3dIO, DegenGeomIO, ShabpIO, PanairIO,
                  LaWGS_IO, STL_IO, TetgenIO, Usm3dIO, TecplotIO, Plot3d_io, ADB_IO,
-                 FastIO, AvusIO, SurfIO, UGRID_IO):
+                 FastIO, AvusIO, SurfIO, UGRID_IO, AbaqusIO):
     """
     MainWindow -> GuiCommon2 -> GuiCommon
     gui.py     -> gui_common -> gui_qt_common
@@ -109,11 +109,12 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, DegenGeomIO, ShabpIO, PanairIO
         html_logging = True
         fmt_order = [
             # results
-            'nastran', 'cart3d', 'panair', 'shabp', 'usm3d', 'openvsp', 'degen_geom', 'tecplot',
+            'nastran', 'cart3d', 'panair', 'shabp', 'usm3d', #'openvsp',
+            'degen_geom', 'tecplot',
             'surf', 'ugrid',
 
             # no results
-            'lawgs', 'stl', 'fast', 'avus', #'plot3d', 'tetgen',
+            'lawgs', 'stl', 'fast', 'avus', 'abaqus', #'plot3d', 'tetgen',
         ]
         #GuiCommon2.__init__(self, fmt_order, html_logging, inputs, parent)
         kwds['fmt_order'] = fmt_order
@@ -139,6 +140,7 @@ class MainWindow(GuiCommon2, NastranIO, Cart3dIO, DegenGeomIO, ShabpIO, PanairIO
             TecplotIO.__init__(self)
             Usm3dIO.__init__(self)
             UGRID_IO.__init__(self)
+            AbaqusIO.__init__(self)
 
         self.build_fmts(fmt_order, stop_on_failure=False)
 

@@ -1,3 +1,6 @@
+"""
+Defines how the GUI reads Abaqus files
+"""
 from __future__ import print_function
 from six import iteritems
 from six.moves import range
@@ -23,6 +26,7 @@ class AbaqusIO(object):
         pass
 
     def get_abaqus_wildcard_geometry_results_functions(self):
+        """dynamic named method for loading abaqus input files"""
         data = ('Abaqus',
                 'Abaqus (*.inp)', self.load_abaqus_geometry,
                 None, None
@@ -89,6 +93,7 @@ class AbaqusIO(object):
         #return skip_reading
 
     def load_abaqus_geometry(self, abaqus_filename, dirname, name='main', plot=True):
+        """loads abaqus input files into the gui"""
         skip_reading = self._remove_old_cart3d_geometry(abaqus_filename)
         if skip_reading:
             return
@@ -267,12 +272,15 @@ class AbaqusIO(object):
         self._finish_results_io2(form, cases)
 
     def clear_abaqus(self):
+        """does nothing"""
         pass
 
     def load_abaqus_results(self, cart3d_filename, dirname):
+        """does nothing"""
         raise NotImplementedError()
 
     def _fill_abaqus_case(self, cases, ID, nodes, nelements, model):
+        """creates the result objects for abaqus"""
         #return [], {}, 0
         #nelements = elements.shape[0]
         nnodes = nodes.shape[0]

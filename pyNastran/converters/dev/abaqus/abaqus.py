@@ -1,13 +1,18 @@
+"""
+Defines the Abaqus class
+"""
 from __future__ import print_function
 import copy
 import numpy as np
 
 def read_abaqus(abaqus_inp_filename, log=None, debug=False):
+    """reads an abaqus model"""
     model = Abaqus()
     model.read_abaqus_inp(abaqus_inp_filename)
     return model
 
 def _clean_lines(lines):
+    """removes comment lines and concatenates include files"""
     lines2 = []
     for line in lines:
         line2 = line.strip().split('**', 1)[0]
@@ -35,16 +40,17 @@ def _clean_lines(lines):
 
 
 class Abaqus(object):
+    """defines the abaqus reader"""
     def __init__(self, log=None, debug=False):
         self.debug = debug
+        self.parts = {}
 
     def read_abaqus_inp(self, abaqus_inp_filename):
+        """reads an abaqus model"""
         with open(abaqus_inp_filename, 'r') as abaqus_inp:
             lines = abaqus_inp.readlines()
 
         lines = _clean_lines(lines)
-        self.parts = {}
-
 
         ilines = []
         iline = 0
@@ -368,7 +374,9 @@ class Abaqus(object):
 
 
 class Part(object):
+    """a Part object is a series of nodes & elements (of various types)"""
     def __init__(self, name, nids, nodes, element_types, node_sets, element_sets):
+        """creates a Part object"""
         self.name = name
 
         self.nids = np.array(nids, dtype='int32')
@@ -443,6 +451,7 @@ class Part(object):
             self.c3d10h_eids = self.c3d10h[:, 0]
 
     def element(self, eid):
+        """gets a specific element of the part"""
         elem = None
         # bars
         if self.r2d2_eids is not None:
@@ -512,6 +521,7 @@ class Part(object):
         return None, None, None
 
     def __repr__(self):
+        """prints a summary for the part"""
         nnodes = self.nodes.shape[0]
         n_r2d2 = 0
         n_cpe3 = 0
@@ -538,7 +548,8 @@ class Part(object):
                     self.name, nnodes, neids,
                     n_r2d2, n_cpe3, n_cpe4, n_cpe4r, n_coh2d4, n_c3d10h))
 
-def main():
+def main(): # pragma: no cover
+    """tests a simple abaqus model"""
     abaqus_inp_filename = 'mesh.inp'
     part_name = 'part-spec'
     eid = 3707
@@ -594,6 +605,6 @@ def main():
     plt.xlabel('x location (mm)')
     plt.show()
 
-if __name__ == '__main__':
+if __name__ == '__main__': # pragma: no cover
     main()
 
