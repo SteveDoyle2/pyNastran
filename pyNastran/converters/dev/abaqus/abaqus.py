@@ -13,6 +13,23 @@ def _clean_lines(lines):
         line2 = line.strip().split('**', 1)[0]
         #print(line2)
         if line2:
+            if 'include' in line2.lower():
+                sline = line2.split(',')
+                assert len(sline) == 2, sline
+                assert '=' in sline[1], sline
+                sline2 = sline[1].split('=')
+                assert len(sline2) == 2, sline2
+                base, inc_filename = sline2
+                base = base.strip()
+                inc_filename = inc_filename.strip()
+                assert base.lower() == 'input', 'base=%r' % base.lower()
+
+                with open(inc_filename, 'r') as inc_file:
+                    inc_lines = inc_file.readlines()
+                inc_lines = _clean_lines(inc_lines)
+                lines2 += inc_lines
+                continue
+
             lines2.append(line)
     return lines2
 

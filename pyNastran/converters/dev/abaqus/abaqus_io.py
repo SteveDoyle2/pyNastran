@@ -3,7 +3,7 @@ from six import iteritems
 from six.moves import range
 
 import os
-from numpy import arange, mean, amax, amin, vstack, zeros, unique, where, sqrt
+import numpy as np
 
 import vtk
 from vtk import vtkLine, vtkTriangle, vtkQuad, vtkTetra
@@ -108,6 +108,7 @@ class AbaqusIO(object):
         n_c3d10h = 0
         nnodes = 0
         nelements = 0
+        all_nodes = []
         for part_name, part in iteritems(model.parts):
             nids = part.nids - 1
             nodes = part.nodes
@@ -123,7 +124,7 @@ class AbaqusIO(object):
                 n_cpe4r += part.cpe4r.shape[0]
             if part.c3d10h is not None:
                 n_c3d10h += part.c3d10h.shape[0]
-            break
+            all_nodes.append(nodes)
         nelements += n_r2d2 + n_cpe3 + n_cpe4 + n_cpe4r + n_coh2d4 + n_c3d10h
         #nodes = model.nodes
         #elements = model.elements
@@ -141,8 +142,13 @@ class AbaqusIO(object):
         assert nodes is not None
         nnodes = nodes.shape[0]
 
-        mmax = amax(nodes, axis=0)
-        mmin = amin(nodes, axis=0)
+        if len(all_nodes) == 1:
+            nodes = all_nodes[0]
+        else:
+            nodes = np.vstack(all_nodes)
+
+        mmax = np.amax(nodes, axis=0)
+        mmin = np.amin(nodes, axis=0)
         dim_max = (mmax - mmin).max()
         self.create_global_axes(dim_max)
 
@@ -176,7 +182,8 @@ class AbaqusIO(object):
                 n_c3d10h += part.c3d10h.shape[0]
 
             if n_r2d2:
-                part.r2d2[:, 1:] -= 1
+                eids = part.r2d2[:, 0]
+                node_ids = part.r2d2[:, 1:] + nid_offset
                 for eid, node_ids in part.r2d2:
                     elem = vtkLine()
                     elem.GetPointIds().SetId(0, node_ids[0])
@@ -184,7 +191,8 @@ class AbaqusIO(object):
                     self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
 
             if n_cpe3:
-                part.cpe3[:, 1:] -= 1
+                eids = part.cpe3[:, 0]
+                node_ids = part.cpe3[:, 1:] + nid_offset
                 for eid, node_ids in part.cpe3:
                     elem = vtkTriangle()
                     elem.GetPointIds().SetId(0, node_ids[0])
@@ -193,7 +201,8 @@ class AbaqusIO(object):
                     self.grid.InsertNextCell(5, elem.GetPointIds())
 
             if n_cpe4:
-                part.cpe4[:, 1:] -= 1
+                eids = part.cpe4[:, 0]
+                node_ids = part.cpe4[:, 1:] + nid_offset
                 for eid, node_ids in part.cpe4:
                     elem = vtkQuad()
                     elem.GetPointIds().SetId(0, node_ids[0])
@@ -203,7 +212,8 @@ class AbaqusIO(object):
                     self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
 
             if n_cpe4r:
-                part.cpe4r[:, 1:] -= 1
+                eids = part.cpe4r[:, 0]
+                node_ids = part.cpe4r[:, 1:] + nid_offset
                 for eid, node_ids in part.cpe4r:
                     elem = vtkLine()
                     elem.GetPointIds().SetId(0, node_ids[0])
@@ -213,7 +223,8 @@ class AbaqusIO(object):
                     self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
 
             if n_coh2d4:
-                part.coh2d4[:, 1:] -= 1
+                eids = part.coh2d4[:, 0]
+                node_ids = part.coh2d4[:, 1:] + nid_offset
                 for eid, node_ids in part.coh2d4:
                     elem = vtkLine()
                     elem.GetPointIds().SetId(0, node_ids[0])
@@ -266,8 +277,8 @@ class AbaqusIO(object):
         #nelements = elements.shape[0]
         nnodes = nodes.shape[0]
 
-        element_ids = arange(1, nelements + 1)
-        node_ids = arange(1, nnodes + 1)
+        element_ids = np.arange(1, nelements + 1)
+        node_ids = np.arange(1, nnodes + 1)
         #cnormals = model.get_normals(shift_nodes=False)
         #cnnodes = cnormals.shape[0]
         #assert cnnodes == nelements, len(cnnodes)
