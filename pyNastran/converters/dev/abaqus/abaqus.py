@@ -78,7 +78,7 @@ class Abaqus(object):
                             iline += 1
                             line0 = lines[iline].strip().lower()
                         elif (word.startswith('surface') or word.startswith('rigid body') or
-                              word.startswith('mpc')):
+                              word.startswith('mpc') or word.startswith('tie')):
                             # TODO: skips header parsing
                             iline += 1
                             line0 = lines[iline].strip().lower()
@@ -252,8 +252,93 @@ class Abaqus(object):
                             line0 = lines[iline].strip().lower()
                         except IndexError:
                             return
+                elif 'include' in word:
+                    pass
+                elif word.startswith('material'):
+                    # TODO: skips header parsing
+
+                    iline += 1
+                    line0 = lines[iline].strip().lower()
+                    word = line0.strip('*').lower()
+                    allowed_words = ['elastic']
+                    print('  line0 =', line0)
+                    iline += 1
+                    line0 = lines[iline].strip().lower()
+                    while word in allowed_words:
+                        data_lines = []
+                        if word == 'elastic':
+                            sline = line0.split(',')
+                            assert len(sline) == 2, sline
+                            iline += 1
+                        else:
+                            raise NotImplementedError('word = %r' % word)
+                        line0 = lines[iline].strip().lower()
+                        word = line0.strip('*').lower()
+                        print('  lineB =', line0)
+                    iline -= 1
+
+                elif word.startswith('step'):
+                    # TODO: skips header parsing
+
+                    iline += 1
+                    line0 = lines[iline].strip().lower()
+                    word = line0.strip('*').lower()
+                    #allowed_words = ['static', 'boundary', 'dsload', 'restart', 'output', 'node',
+                                     #'element output']
+                    print('  word =', word)
+                    print('  lineA =', line0)
+                    while word != 'end step':
+                        iline += 1
+                        line0 = lines[iline].strip().lower()
+                        print('word =', word)
+                        data_lines = []
+                        if word == 'static':
+                            sline = line0.split(',')
+                            assert len(sline) == 4, sline
+                            iline += 1
+                        elif word == 'boundary':
+                            #print('  line_sline =', line0)
+                            sline = line0.split(',')
+                            assert len(sline) == 2, sline
+                            iline += 1
+                        elif word == 'dsload':
+                            #print('  line_sline =', line0)
+                            sline = line0.split(',')
+                            assert len(sline) == 3, sline
+                            iline += 1
+                        elif word.startswith('restart'):
+                            line0 = lines[iline].strip().lower()
+                            word = line0.strip('*').lower()
+                            continue
+                            #print('  line_sline =', line0)
+                            #iline -= 1
+                            #line0 = lines[iline].strip().lower()
+                            #sline = line0.split(',')
+                            #assert len(sline) == 3, sline
+                            #iline += 1
+                        elif word.startswith('output'):
+                            line0 = lines[iline].strip().lower()
+                            word = line0.strip('*').lower()
+                            continue
+                        elif word == 'node output':
+                            #print('  line_sline =', line0)
+                            sline = line0.split(',')
+                            iline += 1
+                        elif word.startswith('element output'):
+                            #print('  line_sline =', line0)
+                            sline = line0.split(',')
+                            iline += 2
+                        else:
+                            raise NotImplementedError('word = %r' % word)
+                        line0 = lines[iline].strip().lower()
+                        word = line0.strip('*').lower()
+                        print('  lineB =', line0)
+                        print('  word2 =', word)
+                    #iline += 1
+                    #iline -= 1
                 else:
                     raise NotImplementedError(word)
+
             else:
                 raise NotImplementedError('this shouldnt happen; line=%r' % line0)
             iline += 1
