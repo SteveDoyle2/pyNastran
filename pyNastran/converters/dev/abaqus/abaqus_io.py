@@ -111,6 +111,11 @@ class AbaqusIO(object):
         n_cpe4r = 0
         n_coh2d4 = 0
         n_c3d10h = 0
+
+        n_cohax4 = 0
+        n_cax3 = 0
+        n_cax4r = 0
+
         nnodes = 0
         nelements = 0
         all_nodes = []
@@ -127,10 +132,22 @@ class AbaqusIO(object):
                 n_cpe4 += part.cpe4.shape[0]
             if part.cpe4r is not None:
                 n_cpe4r += part.cpe4r.shape[0]
+            if part.coh2d4 is not None:
+                n_coh2d4 += part.coh2d4.shape[0]
+
+            if part.cohax4 is not None:
+                n_cohax4 += part.cohax4.shape[0]
+            if part.cax3 is not None:
+                n_cax3 += part.cax3.shape[0]
+            if part.cax4r is not None:
+                n_cax4r += part.cax4r.shape[0]
+
             if part.c3d10h is not None:
                 n_c3d10h += part.c3d10h.shape[0]
+
             all_nodes.append(nodes)
-        nelements += n_r2d2 + n_cpe3 + n_cpe4 + n_cpe4r + n_coh2d4 + n_c3d10h
+        nelements += n_r2d2 + n_cpe3 + n_cpe4 + n_cpe4r + n_coh2d4 + n_c3d10h + n_cohax4 + n_cax3 + n_cax4r
+        assert nelements > 0, nelements
         #nodes = model.nodes
         #elements = model.elements
 
@@ -175,6 +192,10 @@ class AbaqusIO(object):
             n_cpe4r = 0
             n_coh2d4 = 0
             n_c3d10h = 0
+
+            n_cohax4 = 0
+            n_cax3 = 0
+            n_cax4r = 0
             if part.r2d2 is not None:
                 n_r2d2 += part.r2d2.shape[0]
             if part.cpe3 is not None:
@@ -183,13 +204,24 @@ class AbaqusIO(object):
                 n_cpe4 += part.cpe4.shape[0]
             if part.cpe4r is not None:
                 n_cpe4r += part.cpe4r.shape[0]
+
+            if part.coh2d4 is not None:
+                n_coh2d4 += part.coh2d4.shape[0]
+            if part.cohax4 is not None:
+                n_cohax4 += part.cohax4.shape[0]
+            if part.cax3 is not None:
+                n_cax3 += part.cax3.shape[0]
+            if part.cax4r is not None:
+                n_cax4r += part.cax4r.shape[0]
+
+            # solids
             if part.c3d10h is not None:
                 n_c3d10h += part.c3d10h.shape[0]
 
             if n_r2d2:
                 eids = part.r2d2[:, 0]
                 node_ids = part.r2d2[:, 1:] + nid_offset
-                for eid, node_ids in part.r2d2:
+                for eid, node_ids in zip(eids, node_ids):
                     elem = vtkLine()
                     elem.GetPointIds().SetId(0, node_ids[0])
                     elem.GetPointIds().SetId(1, node_ids[1])
@@ -198,7 +230,7 @@ class AbaqusIO(object):
             if n_cpe3:
                 eids = part.cpe3[:, 0]
                 node_ids = part.cpe3[:, 1:] + nid_offset
-                for eid, node_ids in part.cpe3:
+                for eid, node_ids in zip(eids, node_ids):
                     elem = vtkTriangle()
                     elem.GetPointIds().SetId(0, node_ids[0])
                     elem.GetPointIds().SetId(1, node_ids[1])
@@ -208,7 +240,7 @@ class AbaqusIO(object):
             if n_cpe4:
                 eids = part.cpe4[:, 0]
                 node_ids = part.cpe4[:, 1:] + nid_offset
-                for eid, node_ids in part.cpe4:
+                for eid, node_ids in zip(eids, node_ids):
                     elem = vtkQuad()
                     elem.GetPointIds().SetId(0, node_ids[0])
                     elem.GetPointIds().SetId(1, node_ids[1])
@@ -219,8 +251,8 @@ class AbaqusIO(object):
             if n_cpe4r:
                 eids = part.cpe4r[:, 0]
                 node_ids = part.cpe4r[:, 1:] + nid_offset
-                for eid, node_ids in part.cpe4r:
-                    elem = vtkLine()
+                for eid, node_ids in zip(eids, node_ids):
+                    elem = vtkQuad()
                     elem.GetPointIds().SetId(0, node_ids[0])
                     elem.GetPointIds().SetId(1, node_ids[1])
                     elem.GetPointIds().SetId(2, node_ids[2])
@@ -230,8 +262,40 @@ class AbaqusIO(object):
             if n_coh2d4:
                 eids = part.coh2d4[:, 0]
                 node_ids = part.coh2d4[:, 1:] + nid_offset
-                for eid, node_ids in part.coh2d4:
-                    elem = vtkLine()
+                for eid, node_ids in zip(eids, node_ids):
+                    elem = vtkQuad()
+                    elem.GetPointIds().SetId(0, node_ids[0])
+                    elem.GetPointIds().SetId(1, node_ids[1])
+                    elem.GetPointIds().SetId(2, node_ids[2])
+                    elem.GetPointIds().SetId(3, node_ids[3])
+                    self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+
+            if n_cohax4:
+                eids = part.cohax4[:, 0]
+                node_ids = part.cohax4[:, 1:] + nid_offset
+                for eid, node_ids in zip(eids, node_ids):
+                    elem = vtkQuad()
+                    elem.GetPointIds().SetId(0, node_ids[0])
+                    elem.GetPointIds().SetId(1, node_ids[1])
+                    elem.GetPointIds().SetId(2, node_ids[2])
+                    elem.GetPointIds().SetId(3, node_ids[3])
+                    self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+
+            if n_cax3:
+                eids = part.cax3[:, 0]
+                node_ids = part.cax3[:, 1:] + nid_offset
+                for eid, node_ids in zip(eids, node_ids):
+                    elem = vtkTriangle()
+                    elem.GetPointIds().SetId(0, node_ids[0])
+                    elem.GetPointIds().SetId(1, node_ids[1])
+                    elem.GetPointIds().SetId(2, node_ids[2])
+                    self.grid.InsertNextCell(5, elem.GetPointIds())
+
+            if n_cax4r:
+                eids = part.cax4r[:, 0]
+                node_ids = part.cax4r[:, 1:] + nid_offset
+                for eid, node_ids in zip(eids, node_ids):
+                    elem = vtkQuad()
                     elem.GetPointIds().SetId(0, node_ids[0])
                     elem.GetPointIds().SetId(1, node_ids[1])
                     elem.GetPointIds().SetId(2, node_ids[2])

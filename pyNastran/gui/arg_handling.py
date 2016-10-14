@@ -7,7 +7,7 @@ from docopt import docopt
 import pyNastran
 #from gui.formats import format_string
 
-def determine_format(input):
+def determine_format(input_filename, allowed_formats):
     """
     Tries to map the input filename to an extension.
 
@@ -23,16 +23,20 @@ def determine_format(input):
         'surf' : ['.surf'],
         'lawgs' : ['.wgs'],
         'shabp' : ['.mk5'],
-        'panair' : ['.inp'],
-        'abaqus' : ['.inp'],
+
+        # no duplicates are allowed
+        #'panair' : ['.inp'],
+        #'abaqus' : ['.inp'],
     }
-    ext = os.path.splitext(input)[1].lower()
+    ext = os.path.splitext(input_filename)[1].lower()
     extension_to_format = {val : key for key, value in iteritems(format_to_extension)
                            for val in value}
     try:
         format = extension_to_format[ext]
     except:
-        msg = 'format=%r was not found; Specify the format' % ext
+        print('allowed_formats =', allowed_formats)
+        msg = 'format=%r was not found\nSpecify the format as [%s]' % (
+            ext, ', '.join(allowed_formats))
         raise TypeError(msg)
     return format
 
@@ -100,13 +104,18 @@ def run_docopt():
         output_filenames += data['--output']
     debug = not(data['--quiet'])
 
+    # used to include None...
+    allowed_formats = [
+        'nastran', 'stl', 'cart3d', 'tecplot', 'ugrid', 'panair',
+        #'plot3d',
+        'surf', 'lawgs', 'degen_geom', 'shabp', 'avus', 'fast', 'abaqus'
+    ]
+
     if input_filenames and not input_format:
-        input_format = determine_format(input_filenames[0])
+        input_format = determine_format(input_filenames[0], allowed_formats)
 
     # None is for custom geometry
-    allowed_formats = [
-        'nastran', 'stl', 'cart3d', 'tecplot', 'ugrid', 'panair', 'plot3d',
-        'surf', 'lawgs', 'degen_geom', 'shabp', 'avus', 'fast', 'abaqus', None]
+    allowed_formats.append(None)
     assert input_format in allowed_formats, 'format=%r is not supported' % input_format
 
     shots = []
