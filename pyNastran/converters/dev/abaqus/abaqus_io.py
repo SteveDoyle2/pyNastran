@@ -6,7 +6,7 @@ import os
 from numpy import arange, mean, amax, amin, vstack, zeros, unique, where, sqrt
 
 import vtk
-from vtk import vtkLine, vtkTriangle, vtkQuad
+from vtk import vtkLine, vtkTriangle, vtkQuad, vtkTetra
 from vtk.util.numpy_support import numpy_to_vtk
 
 from pyNastran.gui.gui_objects.gui_result import GuiResult
@@ -25,7 +25,7 @@ class AbaqusIO(object):
     def get_abaqus_wildcard_geometry_results_functions(self):
         data = ('Abaqus',
                 'Abaqus (*.inp)', self.load_abaqus_geometry,
-                #'Abaqus (*.triq)', self.load_cart3d_results
+                None, None
                 )
         return data
 
@@ -99,32 +99,35 @@ class AbaqusIO(object):
         self.model_type = 'abaqus'
         #self.model_type = model.model_type
         model.read_abaqus_inp(abaqus_filename)
-        for part_name, part in model.parts:
-            nids = part.nids - 1
-            nodes = part.nodes
-            break
-        nodes = model.nodes
-        #elements = model.elements
-        #regions = model.regions
-        #loads = model.loads
 
-        nnodes = nodes.shape[0]
         n_r2d2 = 0
         n_cpe3 = 0
         n_cpe4 = 0
         n_cpe4r = 0
         n_coh2d4 = 0
-        if part.r2d2 is not None:
-            n_r2d2 = part.r2d2.shape[0]
-        if part.cpe3 is not None:
-            n_cpe3 = part.cpe3.shape[0]
-        if part.cpe4 is not None:
-            n_cpe4 = part.cpe4.shape[0]
-        if part.cpe4r is not None:
-            n_cpe4r = part.cpe4r.shape[0]
-        if part.coh2d4 is not None:
-            n_coh2d4 = part.coh2d4.shape[0]
-        nelements = n_r2d2 + n_cpe3 + n_cpe4 + n_cpe4r + n_coh2d4
+        n_c3d10h = 0
+        nnodes = 0
+        nelements = 0
+        for part_name, part in iteritems(model.parts):
+            nids = part.nids - 1
+            nodes = part.nodes
+
+            nnodes += nodes.shape[0]
+            if part.r2d2 is not None:
+                n_r2d2 += part.r2d2.shape[0]
+            if part.cpe3 is not None:
+                n_cpe3 += part.cpe3.shape[0]
+            if part.cpe4 is not None:
+                n_cpe4 += part.cpe4.shape[0]
+            if part.cpe4r is not None:
+                n_cpe4r += part.cpe4r.shape[0]
+            if part.c3d10h is not None:
+                n_c3d10h += part.c3d10h.shape[0]
+            break
+        nelements += n_r2d2 + n_cpe3 + n_cpe4 + n_cpe4r + n_coh2d4 + n_c3d10h
+        #nodes = model.nodes
+        #elements = model.elements
+
 
         self.nNodes = nnodes
         self.nElements = nelements
@@ -151,73 +154,87 @@ class AbaqusIO(object):
         )
         points.SetData(points_array)
 
-        if part.r2d2 is not None:
-            n_r2d2 = part.r2d2.shape[0]
-        if part.cpe3 is not None:
-            n_cpe3 = part.cpe3.shape[0]
-        if part.cpe4 is not None:
-            n_cpe4 = part.cpe4.shape[0]
-        if part.cpe4r is not None:
-            n_cpe4r = part.cpe4r.shape[0]
-        if part.coh2d4 is not None:
-            n_coh2d4 = part.coh2d4.shape[0]
+        nid_offset = -1
+        for part_name, part in iteritems(model.parts):
+            nnodesi = part.nodes.shape[0]
 
-        if part.r2d2:
-            part.r2d2[:, 1:] -= 1
-            for eid, node_ids in part.r2d2:
-                elem = vtkLine()
-                elem.GetPointIds().SetId(0, node_ids[0])
-                elem.GetPointIds().SetId(1, node_ids[1])
-                self.grid.InsertNextCell(5, elem.GetPointIds())
+            n_r2d2 = 0
+            n_cpe3 = 0
+            n_cpe4 = 0
+            n_cpe4r = 0
+            n_coh2d4 = 0
+            n_c3d10h = 0
+            if part.r2d2 is not None:
+                n_r2d2 += part.r2d2.shape[0]
+            if part.cpe3 is not None:
+                n_cpe3 += part.cpe3.shape[0]
+            if part.cpe4 is not None:
+                n_cpe4 += part.cpe4.shape[0]
+            if part.cpe4r is not None:
+                n_cpe4r += part.cpe4r.shape[0]
+            if part.c3d10h is not None:
+                n_c3d10h += part.c3d10h.shape[0]
 
-        if part.cpe3:
-            part.cpe3[:, 1:] -= 1
-            for eid, node_ids in part.cpe3:
-                elem = vtkTriangle()
-                elem.GetPointIds().SetId(0, node_ids[0])
-                elem.GetPointIds().SetId(1, node_ids[1])
-                elem.GetPointIds().SetId(2, node_ids[3])
-                self.grid.InsertNextCell(5, elem.GetPointIds())
+            if n_r2d2:
+                part.r2d2[:, 1:] -= 1
+                for eid, node_ids in part.r2d2:
+                    elem = vtkLine()
+                    elem.GetPointIds().SetId(0, node_ids[0])
+                    elem.GetPointIds().SetId(1, node_ids[1])
+                    self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
 
-        if part.cpe4:
-            part.cpe4[:, 1:] -= 1
-            for eid, node_ids in part.cpe4:
-                elem = vtkQuad()
-                elem.GetPointIds().SetId(0, node_ids[0])
-                elem.GetPointIds().SetId(1, node_ids[1])
-                elem.GetPointIds().SetId(2, node_ids[2])
-                elem.GetPointIds().SetId(3, node_ids[3])
-                self.grid.InsertNextCell(5, elem.GetPointIds())
+            if n_cpe3:
+                part.cpe3[:, 1:] -= 1
+                for eid, node_ids in part.cpe3:
+                    elem = vtkTriangle()
+                    elem.GetPointIds().SetId(0, node_ids[0])
+                    elem.GetPointIds().SetId(1, node_ids[1])
+                    elem.GetPointIds().SetId(2, node_ids[3])
+                    self.grid.InsertNextCell(5, elem.GetPointIds())
 
-        if part.cpe4r:
-            part.cpe4r[:, 1:] -= 1
-            for eid, node_ids in part.cpe4r:
-                elem = vtkLine()
-                elem.GetPointIds().SetId(0, node_ids[0])
-                elem.GetPointIds().SetId(1, node_ids[1])
-                elem.GetPointIds().SetId(2, node_ids[2])
-                elem.GetPointIds().SetId(3, node_ids[3])
-                self.grid.InsertNextCell(5, elem.GetPointIds())
+            if n_cpe4:
+                part.cpe4[:, 1:] -= 1
+                for eid, node_ids in part.cpe4:
+                    elem = vtkQuad()
+                    elem.GetPointIds().SetId(0, node_ids[0])
+                    elem.GetPointIds().SetId(1, node_ids[1])
+                    elem.GetPointIds().SetId(2, node_ids[2])
+                    elem.GetPointIds().SetId(3, node_ids[3])
+                    self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
 
-        if part.coh2d4:
-            part.coh2d4[:, 1:] -= 1
-            for eid, node_ids in part.coh2d4:
-                elem = vtkLine()
-                elem.GetPointIds().SetId(0, node_ids[0])
-                elem.GetPointIds().SetId(1, node_ids[1])
-                elem.GetPointIds().SetId(2, node_ids[2])
-                elem.GetPointIds().SetId(3, node_ids[3])
-                self.grid.InsertNextCell(5, elem.GetPointIds())
+            if n_cpe4r:
+                part.cpe4r[:, 1:] -= 1
+                for eid, node_ids in part.cpe4r:
+                    elem = vtkLine()
+                    elem.GetPointIds().SetId(0, node_ids[0])
+                    elem.GetPointIds().SetId(1, node_ids[1])
+                    elem.GetPointIds().SetId(2, node_ids[2])
+                    elem.GetPointIds().SetId(3, node_ids[3])
+                    self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
 
-        nelements = elements.shape[0]
-        elements -= 1
-        for eid in range(nelements):
-            elem = vtkTriangle()
-            node_ids = elements[eid, :]
-            elem.GetPointIds().SetId(0, node_ids[0])
-            elem.GetPointIds().SetId(1, node_ids[1])
-            elem.GetPointIds().SetId(2, node_ids[2])
-            self.grid.InsertNextCell(5, elem.GetPointIds())
+            if n_coh2d4:
+                part.coh2d4[:, 1:] -= 1
+                for eid, node_ids in part.coh2d4:
+                    elem = vtkLine()
+                    elem.GetPointIds().SetId(0, node_ids[0])
+                    elem.GetPointIds().SetId(1, node_ids[1])
+                    elem.GetPointIds().SetId(2, node_ids[2])
+                    elem.GetPointIds().SetId(3, node_ids[3])
+                    self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+
+            # solids
+            if n_c3d10h:
+                eids = part.c3d10h[:, 0]
+                node_ids = part.c3d10h[:, 1:] + nid_offset
+                for eid, node_ids in zip(eids, node_ids):
+                #for eid, node_ids in part.c3d10h:
+                    elem = vtkTetra()
+                    elem.GetPointIds().SetId(0, node_ids[0])
+                    elem.GetPointIds().SetId(1, node_ids[1])
+                    elem.GetPointIds().SetId(2, node_ids[2])
+                    elem.GetPointIds().SetId(3, node_ids[3])
+                    self.grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+            nid_offset += nnodesi
 
         self.grid.SetPoints(points)
         self.grid.Modified()
@@ -225,16 +242,17 @@ class AbaqusIO(object):
             self.grid.Update()
 
         # loadCart3dResults - regions/loads
-        self. turn_text_on()
+        #self.turn_text_on()
         self.scalarBar.VisibilityOn()
         self.scalarBar.Modified()
 
         note = ''
-        self.iSubcaseNameMap = {1: ['Cart3d%s' % note, '']}
+        self.iSubcaseNameMap = {1: ['Abaqus%s' % note, '']}
+        #form = []
         cases = {}
         ID = 1
-        form, cases, icase = self._fill_abaqus_case(cases, ID, nodes, elements, regions, model)
-        self._fill_cart3d_results(cases, form, icase, ID, loads, model, mach)
+        form, cases, icase = self._fill_abaqus_case(cases, ID, nodes, nelements, model)
+        #self._fill_cart3d_results(cases, form, icase, ID, model)
         self._finish_results_io2(form, cases)
 
     def clear_abaqus(self):
@@ -243,16 +261,16 @@ class AbaqusIO(object):
     def load_abaqus_results(self, cart3d_filename, dirname):
         raise NotImplementedError()
 
-    def _fill_abaqus_case(self, cases, ID, nodes, elements, regions, model):
-        return [], {}, 0
-        nelements = elements.shape[0]
+    def _fill_abaqus_case(self, cases, ID, nodes, nelements, model):
+        #return [], {}, 0
+        #nelements = elements.shape[0]
         nnodes = nodes.shape[0]
 
-        eids = arange(1, nelements + 1)
-        nids = arange(1, nnodes + 1)
-        cnormals = model.get_normals(shift_nodes=False)
-        cnnodes = cnormals.shape[0]
-        assert cnnodes == nelements, len(cnnodes)
+        element_ids = arange(1, nelements + 1)
+        node_ids = arange(1, nnodes + 1)
+        #cnormals = model.get_normals(shift_nodes=False)
+        #cnnodes = cnormals.shape[0]
+        #assert cnnodes == nelements, len(cnnodes)
 
         #print('nnodes =', nnodes)
         #print('nelements =', nelements)
@@ -263,29 +281,21 @@ class AbaqusIO(object):
                                     #nids, eids, regions, cnormals,
                                     #uname='Cart3dGeometry')
 
-        rho_res = GuiResult(ID, header='NodeID', title='NodeID',
+        nid_res = GuiResult(ID, header='NodeID', title='NodeID',
                             location='node', scalar=node_ids)
-        rho_res = GuiResult(ID, header='ElementID', title='ElementID',
+        eid_res = GuiResult(ID, header='ElementID', title='ElementID',
                             location='centroid', scalar=element_ids)
 
         cases = {
-            0 : (cart3d_geo, (0, 'NodeID')),
-            1 : (cart3d_geo, (0, 'ElementID')),
-            #2 : (cart3d_geo, (0, 'Region')),
-            #3 : (cart3d_geo, (0, 'NormalX')),
-            #4 : (cart3d_geo, (0, 'NormalY')),
-            #5 : (cart3d_geo, (0, 'NormalZ')),
+            0 : (nid_res, (0, 'NodeID')),
+            1 : (eid_res, (0, 'ElementID')),
         }
         geometry_form = [
             ('NodeID', 0, []),
             ('ElementID', 1, []),
-            #('Region', 2, []),
-            #('Normal X', 3, []),
-            #('Normal Y', 4, []),
-            #('Normal Z', 5, []),
         ]
         form = [
             ('Geometry', None, geometry_form),
         ]
-        icase = 6
+        icase = 2
         return form, cases, icase

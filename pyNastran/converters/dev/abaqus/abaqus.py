@@ -159,7 +159,7 @@ class Abaqus(object):
                             etype_sline = sline[0]
                             assert 'type' in etype_sline, etype_sline
                             etype = etype_sline.split('=')[1]
-                            assert etype in ['r2d2', 'cpe3', 'cpe4', 'cpe4r', 'coh2d4'], etype
+                            assert etype in ['r2d2', 'cpe3', 'cpe4', 'cpe4r', 'coh2d4', 'c3d10h'], etype
                             if self.debug:
                                 print('etype = %r' % etype)
 
@@ -371,23 +371,31 @@ class Part(object):
         else:
             raise NotImplementedError(node0)
 
+        # bars
         self.r2d2 = None
+
+        # shells
         self.cpe3 = None
         self.cpe4 = None
         self.cpe4r = None
         self.coh2d4 = None
+
+        # solids
+        self.c3d10h = None
 
         self.r2d2_eids = None
         self.cpe3_eids = None
         self.cpe4_eids = None
         self.cpe4r_eids = None
         self.coh2d4_eids = None
+        self.c3d10h_eids = None
 
         if 'r2d2' in element_types: # similar to CBAR
             elements = element_types['r2d2']
             self.r2d2 = np.array(elements, dtype='int32')
             self.r2d2_eids = self.r2d2[:, 0]
 
+        # shells
         if 'cpe3' in element_types: # similar to CTRIA3
             elements = element_types['cpe3']
             self.cpe3 = np.array(elements, dtype='int32')
@@ -411,8 +419,26 @@ class Part(object):
             self.coh2d4_eids = self.coh2d4[:, 0]
             #print('  n_coh2d4=%r' % str(self.coh2d4.shape))
 
+        # solids
+        if 'c3d10h' in element_types: # similar to CTRIA3
+            elements = element_types['c3d10h']
+            self.c3d10h = np.array(elements, dtype='int32')
+            self.c3d10h_eids = self.c3d10h[:, 0]
+
     def element(self, eid):
         elem = None
+        # bars
+        if self.r2d2_eids is not None:
+            ieid = np.where(eid == self.r2d2_eids)[0]
+            #print('self.cpe3_eids =', self.cpe3_eids)
+            print('ieid_r2d2 = %s' % ieid, len(ieid))
+            if len(ieid):
+                ieid = ieid[0]
+                etype = 'r2d2'
+                elem = self.r2d2[ieid, :]
+                return etype, ieid, elem
+
+         # shells
         if self.cpe3_eids is not None:
             ieid = np.where(eid == self.cpe3_eids)[0]
             #print('self.cpe3_eids =', self.cpe3_eids)
@@ -454,6 +480,18 @@ class Part(object):
                 return etype, ieid, elem
             else:
                 print('ieid = %s' % ieid)
+
+        if self.c3d10h_eids is not None:
+            ieid = np.where(eid == self.c3d10h_eids)[0]
+            #print('self.c3d10h_eids =', self.c3d10h_eids)
+            print('ieid_c3d10h = %s' % ieid, len(ieid))
+            if len(ieid):
+                ieid = ieid[0]
+                etype = 'c3d10h'
+                elem = self.c3d10h[ieid, :]
+                return etype, ieid, elem
+            else:
+                print('ieid = %s' % ieid)
         return None, None, None
 
     def __repr__(self):
@@ -463,6 +501,7 @@ class Part(object):
         n_cpe4 = 0
         n_cpe4r = 0
         n_coh2d4 = 0
+        n_c3d10h = 0
         if self.r2d2 is not None:
             n_r2d2 = self.r2d2.shape[0]
         if self.cpe3 is not None:
@@ -473,11 +512,14 @@ class Part(object):
             n_cpe4r = self.cpe4r.shape[0]
         if self.coh2d4 is not None:
             n_coh2d4 = self.coh2d4.shape[0]
-        neids = n_r2d2 + n_cpe3 + n_cpe4 + n_cpe4r + n_coh2d4
+        if self.c3d10h is not None:
+            n_c3d10h = self.c3d10h.shape[0]
+        neids = n_r2d2 + n_cpe3 + n_cpe4 + n_cpe4r + n_coh2d4 + n_c3d10h
         return ('Part(name=%r, nnodes=%i, neids=%i,\n'
-                '     n_r2d2=%i, n_cpe3=%i, n_cpe4=%i, n_cpe4r=%i n_coh2d4=%i)' % (
+                '     n_r2d2=%i, n_cpe3=%i, n_cpe4=%i, n_cpe4r=%i n_coh2d4=%in\n'
+                '     n_c3d10h=%i)' % (
                     self.name, nnodes, neids,
-                    n_r2d2, n_cpe3, n_cpe4, n_cpe4r, n_coh2d4))
+                    n_r2d2, n_cpe3, n_cpe4, n_cpe4r, n_coh2d4, n_c3d10h))
 
 def main():
     abaqus_inp_filename = 'mesh.inp'
