@@ -186,7 +186,7 @@ setup(
         'console_scripts': [
             'run_nastran_double_precision = pyNastran.bdf.test.run_nastran_double_precision:cmd_line',
             'test_bdf  = pyNastran.bdf.test.test_bdf:main',
-            'test_abaqus = pyNastran.converters.abaqus.test_abaqus:main',
+            'test_abaqus = pyNastran.converters.dev.abaqus.test_abaqus:main',
             'test_op2  = pyNastran.op2.test.test_op2:main',
             'test_op4  = pyNastran.op4.test.test_op4:main',
             'test_f06  = pyNastran.f06.test.test_f06:main',
