@@ -16,21 +16,20 @@ reading/writing/accessing of BDF data.  Such methods include:
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import iterkeys, itervalues, iteritems, string_types, PY2
-from six.moves import zip
-from codecs import open
-
 from collections import defaultdict
 from copy import deepcopy
 import multiprocessing as mp
+from codecs import open
+
+from six import iteritems, string_types, PY2
+from six.moves import zip
 
 import numpy as np
 from numpy import array, cross, zeros, dot, allclose, mean
 from numpy.linalg import norm
 
 from pyNastran.utils import integer_types
-from pyNastran.bdf.cards.params import PARAM
-from pyNastran.bdf.cards.loads.static_loads import Moment, Force, LOAD
+from pyNastran.bdf.cards.loads.static_loads import LOAD
 from pyNastran.bdf.bdf_interface.attributes import BDFAttributes
 from pyNastran.bdf.field_writer_8 import print_card_8
 
@@ -111,6 +110,154 @@ class BDFMethods(BDFAttributes):
 
     def __init__(self):
         BDFAttributes.__init__(self)
+
+    def get_area_breakdown(self, property_ids=None):
+        """
+        gets a breakdown of the volume by property region
+
+        TODO: What about CONRODs?
+        #'PBRSECT',
+        #'PBCOMP',
+        #'PBMSECT',
+        #'PBEAM3',
+        #'PBEND',
+        #'PIHEX',
+        #'PLSOLID',
+        #'PCOMPS',
+        """
+        pid_eids = self.get_element_ids_dict_with_pids(property_ids)
+
+        pids_to_area = {}
+        for pid, eids in iteritems(pid_eids):
+            prop = self.properties[pid]
+            areas = []
+            if prop.type in ['PSHELL', 'PCOMP', 'PSHEAR', 'PCOMPG',]:
+                for eid in eids:
+                    elem = self.elements[eid]
+                    areas.append(elem.Area())
+            elif prop.type in ['PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PROD', 'PTUBE']:
+                for eid in eids:
+                    elem = self.elements[eid]
+                    areas.append(elem.Area())
+            elif prop.type in ['PSOLID', 'PLPLANE', 'PPLANE', 'PELAS',
+                               'PDAMP', 'PBUSH', 'PBUSH1D', 'PBUSH2D',
+                               'PELAST', 'PDAMPT', 'PBUSHT', 'PDAMP5',
+                               'PFAST', 'PGAP', 'PRAC2D', 'PRAC3D', 'PCONEAX',]:
+                pass
+            else:
+                raise NotImplementedError(prop)
+            if areas:
+                pids_to_area[pid] = sum(areas)
+        return pids_to_area
+
+    def get_volume_breakdown(self, property_ids=None):
+        """
+        gets a breakdown of the volume by property region
+
+        TODO: What about CONRODs?
+        #'PBRSECT',
+        #'PBCOMP',
+        #'PBMSECT',
+        #'PBEAM3',
+        #'PBEND',
+        #'PIHEX',
+        #'PLSOLID',
+        #'PCOMPS',
+        """
+        pid_eids = self.get_element_ids_dict_with_pids(property_ids)
+
+        pids_to_volume = {}
+        for pid, eids in iteritems(pid_eids):
+            prop = self.properties[pid]
+            volumes = []
+            if prop.type in ['PSHELL', 'PSHEAR']:
+                t = prop.t
+                for eid in eids:
+                    elem = self.elements[eid]
+                    volumes.append(elem.Area() * t)
+            elif prop.type in ['PCOMP', 'PCOMPG',]:
+                for eid in eids:
+                    elem = self.elements[eid]
+                    t = prop.Thickness()
+                    volumes.append(elem.Area() * t)
+            elif prop.type in ['PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PROD', 'PTUBE']:
+                # what should I do here?
+                for eid in eids:
+                    elem = self.elements[eid]
+                    area = prop.Area()
+                    length = elem.Length()
+                    volumes.append(area * length)
+            elif prop.type in ['PSOLID']:
+                for eid in eids:
+                    elem = self.elements[eid]
+                    volumes.append(elem.Volume())
+            elif prop.type in ['PLPLANE', 'PPLANE', 'PELAS',
+                               'PDAMP', 'PBUSH', 'PBUSH1D', 'PBUSH2D',
+                               'PELAST', 'PDAMPT', 'PBUSHT', 'PDAMP5',
+                               'PFAST', 'PGAP', 'PRAC2D', 'PRAC3D', 'PCONEAX',]:
+                pass
+            else:
+                raise NotImplementedError(prop)
+            if volumes:
+                pids_to_volume[pid] = sum(volumes)
+        return pids_to_volume
+
+    def get_mass_breakdown(self, property_ids=None):
+        """
+        gets a breakdown of the mass by property region
+
+        TODO: What about CONRODs, CONM2s?
+        #'PBRSECT',
+        #'PBCOMP',
+        #'PBMSECT',
+        #'PBEAM3',
+        #'PBEND',
+        #'PIHEX',
+        #'PLSOLID',
+        #'PCOMPS',
+        """
+        pid_eids = self.get_element_ids_dict_with_pids(property_ids)
+
+        pids_to_mass = {}
+        for pid, eids in iteritems(pid_eids):
+            prop = self.properties[pid]
+            masses = []
+            if prop.type in ['PSHELL', 'PSHEAR']:
+                t = prop.t
+                nsm = prop.nsm
+                rho = prop.Rho()
+                for eid in eids:
+                    elem = self.elements[eid]
+                    area = elem.Area()
+                    masses.append(area * (rho * t + nsm))
+            elif prop.type in ['PCOMP', 'PCOMPG',]:
+                for eid in eids:
+                    elem = self.elements[eid]
+                    masses.append(elem.Mass())
+            elif prop.type in ['PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PROD', 'PTUBE']:
+                # what should I do here?
+                nsm = prop.nsm
+                rho = prop.Rho()
+                for eid in eids:
+                    elem = self.elements[eid]
+                    area = prop.Area()
+                    length = elem.Length()
+                    masses.append(area * (rho * length + nsm))
+            elif prop.type in ['PSOLID']:
+                rho = prop.Rho()
+                for eid in eids:
+                    elem = self.elements[eid]
+                    masses.append(rho * elem.Volume())
+            elif prop.type in ['PLPLANE', 'PPLANE', 'PELAS',
+                               'PDAMP', 'PBUSH', 'PBUSH1D', 'PBUSH2D',
+                               'PELAST', 'PDAMPT', 'PBUSHT', 'PDAMP5',
+                               'PFAST', 'PGAP', 'PRAC2D', 'PRAC3D', 'PCONEAX',]:
+                pass
+            else:
+                raise NotImplementedError(prop)
+            if masses:
+                pids_to_mass[pid] = sum(masses)
+        return pids_to_mass
 
     def mass_properties(self, element_ids=None, mass_ids=None, reference_point=None,
                         sym_axis=None, num_cpus=1, scale=None):
