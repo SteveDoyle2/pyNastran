@@ -412,13 +412,13 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
     #--------------------
     # ELEMENT CARDS
 
-    def get_element_ids_list_with_pids(self, pids):
+    def get_element_ids_list_with_pids(self, pids=None):
         """
         Gets all the element IDs with a specific property ID.
 
         Parameters
         ----------
-        pids : List[int]
+        pids : List[int]; default=None -> all
             list of property ID
 
         Returns
@@ -435,7 +435,11 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
           pids = [1, 2, 3]
           eids_list = model.get_element_ids_list_with_pids(pids)
         """
-        assert isinstance(pids, (list, tuple)), pids
+        if pids is None:
+            pids = iterkeys(self.properties)
+        elif isinstance(pids, int):
+            pids = [int]
+        assert isinstance(pids, (list, tuple)), 'pids=%s type=%s' % (pids, type(pids))
         eids2 = []
         for eid, element in sorted(iteritems(self.elements)):
             pid = element.Pid()
@@ -471,10 +475,10 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
           eids_dict = model.get_element_ids_dict_with_pids()
         """
         if pids is None:
-            pids = self.properties.keys()
+            pids = iterkeys(self.properties)
         elif isinstance(pids, int):
             pids = [int]
-        assert isinstance(pids, (list, tuple)), pids
+            assert isinstance(pids, (list, tuple)), 'pids=%s type=%s' % (pids, type(pids))
         eids2 = {}
         for pid in pids:
             eids2[pid] = []

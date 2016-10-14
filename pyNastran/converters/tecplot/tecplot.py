@@ -3,7 +3,7 @@ models from:
     http://people.sc.fsu.edu/~jburkardt/data/tec/tec.html
 """
 from __future__ import print_function
-from six import iteritems, string_types
+from six import iteritems, string_types, PY3
 
 import os
 from struct import unpack
@@ -744,10 +744,13 @@ class Tecplot(FortranFormat):
                 else:
                     data = self.xyz
                     fmt = ' %15.9E %15.9E %15.9E'
-                #vals = self.xyz[:, ivar].ravel()
-                # for vals in enumerate(data):
-                    # tecplot_file.write(fmt % tuple(vals))
-                savetxt(tecplot_file, data, fmt=fmt)
+
+                if PY3:
+                    #vals = self.xyz[:, ivar].ravel()
+                    for vals in data:
+                        tecplot_file.write(fmt % tuple(vals))
+                else:
+                    savetxt(tecplot_file, data, fmt=fmt)
             else:
                 #nvalues_per_line = 5
                 for ivar in range(3):

@@ -1197,7 +1197,7 @@ class NastranIO(object):
             return []
 
         # dependent, independent
-        for card in sorted(mpcs):
+        for card in mpcs:
             if card.type == 'MPC':
                 nids = card.node_ids
                 nid0 = nids[0]
