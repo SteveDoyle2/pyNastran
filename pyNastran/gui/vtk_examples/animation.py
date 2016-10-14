@@ -7,7 +7,7 @@ class vtkTimerCallback():
 
     def execute(self,obj,event):
         print(self.timer_count)
-        self.actor.SetPosition(self.timer_count, self.timer_count,0);
+        self.actor.SetPosition(self.timer_count, self.timer_count,0)
         iren = obj
         iren.GetRenderWindow().Render()
         self.timer_count += 1
@@ -15,44 +15,44 @@ class vtkTimerCallback():
 
 def main():
     #Create a sphere
-    sphereSource = vtk.vtkSphereSource()
-    sphereSource.SetCenter(0.0, 0.0, 0.0)
-    sphereSource.SetRadius(5)
+    sphere_source = vtk.vtkSphereSource()
+    sphere_source.SetCenter(0.0, 0.0, 0.0)
+    sphere_source.SetRadius(5)
 
     #Create a mapper and actor
     mapper = vtk.vtkPolyDataMapper()
-    mapper.SetInputConnection(sphereSource.GetOutputPort())
+    mapper.SetInputConnection(sphere_source.GetOutputPort())
     actor = vtk.vtkActor()
     actor.SetMapper(mapper)
     prop = actor.GetProperty()
 
     # Setup a renderer, render window, and interactor
     renderer = vtk.vtkRenderer()
-    renderWindow = vtk.vtkRenderWindow()
-    #renderWindow.SetWindowName('Test')
+    render_window = vtk.vtkRenderWindow()
+    #render_window.SetWindowName('Test')
 
-    renderWindow.AddRenderer(renderer);
-    renderWindowInteractor = vtk.vtkRenderWindowInteractor()
-    renderWindowInteractor.SetRenderWindow(renderWindow)
+    render_window.AddRenderer(renderer)
+    render_window_interactor = vtk.vtkRenderWindowInteractor()
+    render_window_interactor.SetRenderWindow(render_window)
 
     #Add the actor to the scene
     renderer.AddActor(actor)
     renderer.SetBackground(1,1,1) # Background color white
 
     #Render and interact
-    renderWindow.Render()
+    render_window.Render()
 
     # Initialize must be called prior to creating timer events.
-    renderWindowInteractor.Initialize()
+    render_window_interactor.Initialize()
 
     # Sign up to receive TimerEvent
     cb = vtkTimerCallback()
     cb.actor = actor
-    renderWindowInteractor.AddObserver('TimerEvent', cb.execute)
-    timerId = renderWindowInteractor.CreateRepeatingTimer(100);
+    render_window_interactor.AddObserver('TimerEvent', cb.execute)
+    timerId = render_window_interactor.CreateRepeatingTimer(100)
 
     #start the interaction and timer
-    renderWindowInteractor.Start()
+    render_window_interactor.Start()
 
 
 if __name__ == '__main__':  # pragma: no cover

@@ -6,6 +6,7 @@ All shell properties are defined in this file.  This includes:
  * PLPLANE
  * PSHEAR
  * PSHELL
+ * PPLANE
 
 All shell properties are ShellProperty and Property objects.
 """
@@ -1021,6 +1022,72 @@ class PLPLANE(ShellProperty):
 
     def repr_fields(self):
         list_fields = ['PLPLANE', self.pid, self.Mid(), self.Cid(), self.stress_strain_output_location]
+        return list_fields
+
+    def write_card(self, size=8, is_double=False):
+        card = self.repr_fields()
+        return self.comment + print_card_8(card)
+
+class PPLANE(ShellProperty):
+    type = 'PLPLANE'
+    _field_map = {1: 'pid', 2:'mid', 3:'t', 4:'nsm', 5:'formulation_option'}
+
+    def __init__(self, pid, mid, t=0., nsm=0., formulation_option=0, comment=''):
+        """NX specific card"""
+        ShellProperty.__init__(self)
+        if comment:
+            self._comment = comment
+        #: Property ID
+        self.pid = pid
+        self.mid = mid
+        self.t = t
+        self.nsm = nsm
+        self.formulation_option = formulation_option
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        pid = integer(card, 1, 'pid')
+        mid = integer(card, 2, 'mid')  # MATHE, MATHP
+        t = double_or_blank(card, 3, 'cid', 0.)
+        nsm = double_or_blank(card, 4, 'nsm', 0.)
+        formulation_option = integer_or_blank(card, 5, 'formulation_option', 0)
+        return PPLANE(pid, mid, t, nsm, formulation_option,
+                      comment=comment)
+
+    def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+        """
+        msg = ' which is required by PPLANE pid=%s' % self.pid
+        self.mid = model.Material(self.mid, msg=msg)
+        self.mid_ref = self.mid
+
+    def _verify(self, xref=False):
+        pid = self.Pid()
+        mid = self.Mid()
+        #stress_strain_output_location = self.stress_strain_output_location
+        if xref:
+            assert self.mid.type in ['MAT1', 'MAT3', 'MAT4', 'MAT5'], 'mid.type=%s' % self.mid.type
+
+    #def Pid(self):
+        #return self.pid
+
+    def Mid(self):
+        if isinstance(self.mid, integer_types):
+            return self.mid
+        return self.mid_ref.mid
+
+    def raw_fields(self):
+        list_fields = ['PPLANE', self.pid, self.Mid(), self.t, self.nsm, self.formulation_option]
+        return list_fields
+
+    def repr_fields(self):
+        list_fields = ['PPLANE', self.pid, self.Mid(), self.t, self.nsm, self.formulation_option]
         return list_fields
 
     def write_card(self, size=8, is_double=False):

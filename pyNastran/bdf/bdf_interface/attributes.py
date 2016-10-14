@@ -510,6 +510,9 @@ class BDFAttributes(object):
                 'CBAR', 'CROD', 'CTUBE', 'CBEAM', 'CBEAM3', 'CONROD', 'CBEND',
                 'CTRIA3', 'CTRIA6', 'CTRIAR', 'CTRIAX', 'CTRIAX6',
                 'CQUAD4', 'CQUAD8', 'CQUADR', 'CQUADX', 'CQUAD',
+                'CPLSTN3', 'CPLSTN6', 'CPLSTN4', 'CPLSTN8',
+                'CPLSTS3', 'CPLSTS6', 'CPLSTS4', 'CPLSTS8',
+
                 'CTETRA', 'CPYRAM', 'CPENTA', 'CHEXA', 'CIHEX1',
                 'CSHEAR', 'CVISC', 'CRAC2D', 'CRAC3D',
                 'CGAP',
@@ -522,7 +525,7 @@ class BDFAttributes(object):
 
             'properties_mass' : ['PMASS'],
             'properties' : [
-                'PELAS', 'PGAP', 'PFAST', 'PLPLANE',
+                'PELAS', 'PGAP', 'PFAST', 'PLPLANE', 'PPLANE',
                 'PBUSH', 'PBUSH1D',
                 'PDAMP', 'PDAMP5',
                 'PROD', 'PBAR', 'PBARL', 'PBEAM', 'PTUBE', 'PBEND', 'PBCOMP', 'PBRSECT', 'PBMSECT',
@@ -539,7 +542,7 @@ class BDFAttributes(object):
 
             # materials
             'materials' : ['MAT1', 'MAT2', 'MAT3', 'MAT8', 'MAT9', 'MAT10', 'MAT11'],
-            'hyperelastic_materials' : ['MATHP',],
+            'hyperelastic_materials' : ['MATHE', 'MATHP',],
             'creep_materials' : ['CREEP'],
             'MATT1' : ['MATT1'],
             'MATT2' : ['MATT2'],
