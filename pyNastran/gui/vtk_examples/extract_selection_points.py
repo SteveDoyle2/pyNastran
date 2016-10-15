@@ -1,16 +1,16 @@
 """
 converted from:
- - http://www.vtk.org/Wiki/VTK/Examples/Cxx/PolyData/ExtractSelectionCells
+ - http://www.vtk.org/Wiki/VTK/Examples/Cxx/PolyData/extract_selectionCells
 """
 
 import vtk
 
 def main():
-    pointSource = vtk.vtkPointSource()
-    pointSource.SetNumberOfPoints(50)
-    pointSource.Update()
+    point_source = vtk.vtkPointSource()
+    point_source.SetNumberOfPoints(50)
+    point_source.Update()
 
-    print("There are %s input points\n" % pointSource.GetOutput().GetNumberOfPoints())
+    print("There are %s input points\n" % point_source.GetOutput().GetNumberOfPoints())
 
     ids = vtk.vtkIdTypeArray()
     ids.SetNumberOfComponents(1)
@@ -21,15 +21,15 @@ def main():
         ids.InsertNextValue(i)
         i += 1
 
-    selectionNode = vtk.vtkSelectionNode()
-    selectionNode.SetFieldType(1) # POINT
+    selection_node = vtk.vtkSelectionNode()
+    selection_node.SetFieldType(1) # POINT
     #  CELL_DATA = 0
     #  POINT_DATA = 1
     #  FIELD_DATA = 2
     #  VERTEX_DATA = 3
     #  EDGE_DATA = 4
 
-    selectionNode.SetContentType(4) # INDICES
+    selection_node.SetContentType(4) # INDICES
     #SELECTIONS = 0
     #GLOBALIDS = 1
     #PEDIGREEIDS = 2
@@ -39,99 +39,99 @@ def main():
     #LOCATIONS = 6
     #THRESHOLDS = 7
     #BLOCKS = 8
-    selectionNode.SetSelectionList(ids)
+    selection_node.SetSelectionList(ids)
 
     selection = vtk.vtkSelection()
-    selection.AddNode(selectionNode)
+    selection.AddNode(selection_node)
 
-    extractSelection = vtk.vtkExtractSelection()
+    extract_selection = vtk.vtkExtractSelection()
 
-    extractSelection.SetInputConnection(0, pointSource.GetOutputPort())
+    extract_selection.SetInputConnection(0, point_source.GetOutputPort())
     if vtk.VTK_MAJOR_VERSION <= 5:
-        extractSelection.SetInput(1, selection)
+        extract_selection.SetInput(1, selection)
     else:
-        extractSelection.SetInputData(1, selection)
-    extractSelection.Update()
+        extract_selection.SetInputData(1, selection)
+    extract_selection.Update()
 
     # In selection
     selected = vtk.vtkUnstructuredGrid()
-    selected.ShallowCopy(extractSelection.GetOutput())
+    selected.ShallowCopy(extract_selection.GetOutput())
 
     print("There are %s points in the selection" % selected.GetNumberOfPoints())
-    print("There are %s cells in the selection" %selected.GetNumberOfCells())
+    print("There are %s cells in the selection" % selected.GetNumberOfCells())
 
     # Get points that are NOT in the selection
     # invert the selection
-    selectionNode.GetProperties().Set(vtk.vtkSelectionNode.INVERSE(), 1)
-    extractSelection.Update()
+    selection_node.GetProperties().Set(vtk.vtkSelectionNode.INVERSE(), 1)
+    extract_selection.Update()
 
-    notSelected = vtk.vtkUnstructuredGrid()
-    notSelected.ShallowCopy(extractSelection.GetOutput())
+    not_selected = vtk.vtkUnstructuredGrid()
+    not_selected.ShallowCopy(extract_selection.GetOutput())
 
-    print("There are %s points NOT in the selection" % notSelected.GetNumberOfPoints())
-    print("There are %s cells NOT in the selection" % notSelected.GetNumberOfCells())
+    print("There are %s points NOT in the selection" % not_selected.GetNumberOfPoints())
+    print("There are %s cells NOT in the selection" % not_selected.GetNumberOfCells())
 
-    inputMapper = vtk.vtkDataSetMapper()
-    inputMapper.SetInputConnection(pointSource.GetOutputPort())
-    inputActor = vtk.vtkActor()
-    inputActor.SetMapper(inputMapper)
+    input_mapper = vtk.vtkDataSetMapper()
+    input_mapper.SetInputConnection(point_source.GetOutputPort())
+    input_actor = vtk.vtkActor()
+    input_actor.SetMapper(input_mapper)
 
-    selectedMapper = vtk.vtkDataSetMapper()
+    selected_mapper = vtk.vtkDataSetMapper()
     if vtk.VTK_MAJOR_VERSION <= 5:
-        selectedMapper.SetInputConnection(selected.GetProducerPort())
+        selected_mapper.SetInputConnection(selected.GetProducerPort())
     else:
-        selectedMapper.SetInputData(selected)
-    selectedActor = vtk.vtkActor()
-    selectedActor.SetMapper(selectedMapper)
+        selected_mapper.SetInputData(selected)
+    selected_actor = vtk.vtkActor()
+    selected_actor.SetMapper(selected_mapper)
 
-    notSelectedMapper = vtk.vtkDataSetMapper()
+    not_selected_mapper = vtk.vtkDataSetMapper()
     if vtk.VTK_MAJOR_VERSION <= 5:
-        notSelectedMapper.SetInputConnection(notSelected.GetProducerPort())
+        not_selected_mapper.SetInputConnection(not_selected.GetProducerPort())
     else:
-        notSelectedMapper.SetInputData(notSelected)
-    notSelectedActor = vtk.vtkActor()
-    notSelectedActor.SetMapper(notSelectedMapper)
+        not_selected_mapper.SetInputData(not_selected)
+    not_selected_actor = vtk.vtkActor()
+    not_selected_actor.SetMapper(not_selected_mapper)
 
 
     # There will be one render window
-    renderWindow = vtk.vtkRenderWindow()
-    renderWindow.SetSize(900, 300)
+    render_window = vtk.vtkRenderWindow()
+    render_window.SetSize(900, 300)
 
     # And one interactor
     interactor = vtk.vtkRenderWindowInteractor()
-    interactor.SetRenderWindow(renderWindow)
+    interactor.SetRenderWindow(render_window)
 
     # Define viewport ranges
     # (xmin, ymin, xmax, ymax)
-    leftViewport = [0.0, 0.0, 0.33, 1.0]
-    centerViewport = [0.33, 0.0, .66, 1.0]
-    rightViewport = [0.66, 0.0, 1.0, 1.0]
+    left_viewport = [0.0, 0.0, 0.33, 1.0]
+    center_viewport = [0.33, 0.0, .66, 1.0]
+    right_viewport = [0.66, 0.0, 1.0, 1.0]
 
     # Setup the renderers
-    leftRenderer = vtk.vtkRenderer()
-    renderWindow.AddRenderer(leftRenderer)
-    leftRenderer.SetViewport(leftViewport)
-    leftRenderer.SetBackground(.6, .5, .4)
+    left_renderer = vtk.vtkRenderer()
+    render_window.AddRenderer(left_renderer)
+    left_renderer.SetViewport(left_viewport)
+    left_renderer.SetBackground(.6, .5, .4)
 
-    centerRenderer = vtk.vtkRenderer()
-    renderWindow.AddRenderer(centerRenderer)
-    centerRenderer.SetViewport(centerViewport)
-    centerRenderer.SetBackground(.3, .1, .4)
+    center_renderer = vtk.vtkRenderer()
+    render_window.AddRenderer(center_renderer)
+    center_renderer.SetViewport(center_viewport)
+    center_renderer.SetBackground(.3, .1, .4)
 
-    rightRenderer = vtk.vtkRenderer()
-    renderWindow.AddRenderer(rightRenderer)
-    rightRenderer.SetViewport(rightViewport)
-    rightRenderer.SetBackground(.4, .5, .6)
+    right_renderer = vtk.vtkRenderer()
+    render_window.AddRenderer(right_renderer)
+    right_renderer.SetViewport(right_viewport)
+    right_renderer.SetBackground(.4, .5, .6)
 
-    leftRenderer.AddActor(inputActor)
-    centerRenderer.AddActor(selectedActor)
-    rightRenderer.AddActor(notSelectedActor)
+    left_renderer.AddActor(input_actor)
+    center_renderer.AddActor(selected_actor)
+    right_renderer.AddActor(not_selected_actor)
 
-    leftRenderer.ResetCamera()
-    centerRenderer.ResetCamera()
-    rightRenderer.ResetCamera()
+    left_renderer.ResetCamera()
+    center_renderer.ResetCamera()
+    right_renderer.ResetCamera()
 
-    renderWindow.Render()
+    render_window.Render()
     interactor.Start()
 
 if __name__ == '__main__':  # pragma: no cover

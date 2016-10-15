@@ -1,27 +1,27 @@
 import vtk
 
-input='labels.mhd'
+meta_image_filename = 'labels.mhd'
 
 # Prepare to read the file
 
-readerVolume = vtk.vtkMetaImageReader()
-readerVolume.SetFileName(input)
-readerVolume.Update()
+reader_volume = vtk.vtkMetaImageReader()
+reader_volume.SetFileName(meta_image_filename)
+reader_volume.Update()
 
 
 # Extract the region of interest
 voi = vtk.vtkExtractVOI()
 if vtk.VTK_MAJOR_VERSION <= 5:
-    voi.SetInput(readerVolume.GetOutput())
+    voi.SetInput(reader_volume.GetOutput())
 else:
-    voi.SetInputConnection(readerVolume.GetOutputPort())
+    voi.SetInputConnection(reader_volume.GetOutputPort())
 
 #voi.SetVOI(0,517, 0,228, 0,392)
-voi.SetSampleRate(1,1,1)
-#voi.SetSampleRate(3,3,3)
-voi.Update()#necessary for GetScalarRange()
-srange= voi.GetOutput().GetScalarRange()#needs Update() before!
-print "Range", srange
+voi.SetSampleRate(1, 1, 1)
+#voi.SetSampleRate(3, 3, 3)
+voi.Update() # necessary for GetScalarRange()
+srange = voi.GetOutput().GetScalarRange() # needs Update() before!
+print("Range", srange)
 
 
 ##Prepare surface generation
@@ -29,74 +29,71 @@ print "Range", srange
 #contour = vtk.vtkMarchingCubes()
 contour = vtk.vtkDiscreteMarchingCubes() #for label images
 if vtk.VTK_MAJOR_VERSION <= 5:
-    contour.SetInput( voi.GetOutput() )
+    contour.SetInput(voi.GetOutput())
 else:
-    contour.SetInputConnection( voi.GetOutputPort() )
+    contour.SetInputConnection(voi.GetOutputPort())
 contour.ComputeNormalsOn()
 
 
 ##run through all labels
-
 for index in range(1, int(srange[1]) + 1):
-
-    print "Doing label", index
+    print("Doing label", index)
 
     contour.SetValue(0, index)
     contour.Update() #needed for GetNumberOfPolys() !!!
 
-
-    smoother= vtk.vtkWindowedSincPolyDataFilter()
+    smoother = vtk.vtkWindowedSincPolyDataFilter()
     if vtk.VTK_MAJOR_VERSION <= 5:
-        smoother.SetInput(contour.GetOutput());
+        smoother.SetInput(contour.GetOutput())
     else:
-        smoother.SetInputConnection(contour.GetOutputPort());
-    smoother.SetNumberOfIterations(5);
-    #smoother.BoundarySmoothingOff();
-    #smoother.FeatureEdgeSmoothingOff();
-    #smoother.SetFeatureAngle(120.0);
-    #smoother.SetPassBand(.001);
-    smoother.NonManifoldSmoothingOn();
-    smoother.NormalizeCoordinatesOn();
-    smoother.Update();
+        smoother.SetInputConnection(contour.GetOutputPort())
+    smoother.SetNumberOfIterations(5)
+    #smoother.BoundarySmoothingOff()
+    #smoother.FeatureEdgeSmoothingOff()
+    #smoother.SetFeatureAngle(120.0)
+    #smoother.SetPassBand(.001)
+    smoother.NonManifoldSmoothingOn()
+    smoother.NormalizeCoordinatesOn()
+    smoother.Update()
 
 
     ##calc cell normal
-    triangleCellNormals= vtk.vtkPolyDataNormals()
+    triangle_cell_normals = vtk.vtkPolyDataNormals()
     if vtk.VTK_MAJOR_VERSION <= 5:
-        triangleCellNormals.SetInput(smoother.GetOutput())
+        triangle_cell_normals.SetInput(smoother.GetOutput())
     else:
-        triangleCellNormals.SetInputConnection(smoother.GetOutputPort())
-    triangleCellNormals.ComputeCellNormalsOn()
-    triangleCellNormals.ComputePointNormalsOff()
-    triangleCellNormals.ConsistencyOn()
-    triangleCellNormals.AutoOrientNormalsOn()
-    triangleCellNormals.Update() #creates vtkPolyData
+        triangle_cell_normals.SetInputConnection(smoother.GetOutputPort())
+    triangle_cell_normals.ComputeCellNormalsOn()
+    triangle_cell_normals.ComputePointNormalsOff()
+    triangle_cell_normals.ConsistencyOn()
+    triangle_cell_normals.AutoOrientNormalsOn()
+    triangle_cell_normals.Update() #creates vtkPolyData
 
 
     ##calc cell area
-    triangleCellAN= vtk.vtkMeshQuality()
+    triangle_cell_mesh_quality = vtk.vtkMeshQuality()
     if vtk.VTK_MAJOR_VERSION <= 5:
-        triangleCellAN.SetInput(triangleCellNormals.GetOutput())
+        triangle_cell_mesh_quality.SetInput(triangle_cell_normals.GetOutput())
     else:
-        triangleCellAN.SetInputConnection(triangleCellNormals.GetOutputPort())
-    triangleCellAN.SetTriangleQualityMeasureToArea()
-    triangleCellAN.SaveCellQualityOn() #default
-    triangleCellAN.Update() #creates vtkDataSet
+        triangle_cell_mesh_quality.SetInputConnection(triangle_cell_normals.GetOutputPort())
+    triangle_cell_mesh_quality.SetTriangleQualityMeasureToArea()
+    triangle_cell_mesh_quality.SaveCellQualityOn() #default
+    triangle_cell_mesh_quality.Update() #creates vtkDataSet
 
-    PointNormalArray = triangleCellNormals.GetOutput().GetCellData().GetNormals()
-    qualityArray = triangleCellAN.GetOutput().GetCellData().GetArray("Quality")
+    point_normal_array = triangle_cell_normals.GetOutput().GetCellData().GetNormals()
+    quality_array = triangle_cell_mesh_quality.GetOutput().GetCellData().GetArray("Quality")
 
-    if PointNormalArray.GetNumberOfTuples() != qualityArray.GetNumberOfTuples():
+    if point_normal_array.GetNumberOfTuples() != qualityArray.GetNumberOfTuples():
         print "Error! Sizes of normal array and area array dont equal!"
         exit(1)
 
-    f= open('label_stat' + "_%.4d" % index + ".dat", 'w')
-    print >> f, "#cell_index\tarea\tn_x\tn_y\tn_z"
+    f = open('label_stat' + "_%.4d" % index + ".dat", 'w')
+    f.write("#cell_index\tarea\tn_x\tn_y\tn_z")
 
-    for i in range(0, PointNormalArray.GetNumberOfTuples()):
+    for i in range(0, point_normal_array.GetNumberOfTuples()):
 
-        pointNormal= PointNormalArray.GetTuple3(i) #this is for 3D data in python
-        area= qualityArray.GetValue(i)
-        print >> f, i, area, pointNormal[0], pointNormal[1], pointNormal[2]
+        point_normal = point_normal_array.GetTuple3(i) #this is for 3D data in python
+        area = quality_array.GetValue(i)
+        f.write('%s %s %s %s %s\n' % (i, area, point_normal[0], point_normal[1], point_normal[2]))
 
     f.close()

@@ -1,3 +1,4 @@
+from __future__ import print_function
 #include <vtkVersion.h
 #include <vtkSmartPointer.h
 #include <vtkPointData.h
@@ -23,7 +24,6 @@
 #include <vtkIdFilter.h
 
 import vtk
-
 from vtk.qt4.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 
 class myInteractorStyle(vtk.vtkInteractorStyleRubberBandPick):
@@ -44,9 +44,9 @@ class InteractorStyle(vtk.vtkInteractorStyleRubberBandPick):
     #vtkTypeMacro(InteractorStyle,vtkInteractorStyleRubberBandPick)
 
     def InteractorStyle(self):
-        self.SelectedMapper = vtk.vtkDataSetMapper()
-        self.SelectedActor = vtk.vtkActor()
-        self.SelectedActor.SetMapper(SelectedMapper)
+        self.selected_mapper = vtk.vtkDataSetMapper()
+        self.selected_actor = vtk.vtkActor()
+        self.selected_actor.SetMapper(selected_mapper)
 
     def OnLeftButtonUp(self):
         # Forward events
@@ -54,20 +54,20 @@ class InteractorStyle(vtk.vtkInteractorStyleRubberBandPick):
 
         frustum = vtk.vtkAreaPicker(self.GetInteractor().GetPicker()).GetFrustum()
 
-        extractGeometry = vtk.vtkExtractGeometry.New()
-        extractGeometry.SetImplicitFunction(frustum)
+        extract_geometry = vtk.vtkExtractGeometry()
+        extract_geometry.SetImplicitFunction(frustum)
 
-        if VTK_MAJOR_VERSION <= 5:
-            extractGeometry.SetInput(this.Points)
+        if vtk.VTK_MAJOR_VERSION <= 5:
+            extract_geometry.SetInput(self.Points)
         else:
-            extractGeometry.SetInputData(this.Points)
-        extractGeometry.Update()
+            extract_geometry.SetInputData(self.Points)
+        extract_geometry.Update()
 
-        glyphFilter = vtk.vtkVertexGlyphFilter()
-        glyphFilter.SetInputConnection(extractGeometry.GetOutputPort())
-        glyphFilter.Update()
+        glyph_filter = vtk.vtkVertexGlyphFilter()
+        glyph_filter.SetInputConnection(extract_geometry.GetOutputPort())
+        glyph_filter.Update()
 
-        selected = glyphFilter.GetOutput()
+        selected = glyph_filter.GetOutput()
         print("Selected %s points" % selected.GetNumberOfPoints())
         print("Selected %s cells" % selected.GetNumberOfCells())
         if vtk.VTK_MAJOR_VERSION <= 5:
@@ -84,7 +84,7 @@ class InteractorStyle(vtk.vtkInteractorStyleRubberBandPick):
         self.SelectedActor.GetProperty().SetColor(1.0, 0.0, 0.0) #(R,G,B)
         self.SelectedActor.GetProperty().SetPointSize(3)
 
-        self.CurrentRenderer.AddActor(SelectedActor)
+        self.CurrentRenderer.AddActor(selected_actor)
         self.GetInteractor().GetRenderWindow().Render()
         #self.HighlightProp(NULL)
 
@@ -94,26 +94,27 @@ class InteractorStyle(vtk.vtkInteractorStyleRubberBandPick):
     #private:
     #vtkPolyData Points
     #vtkActor SelectedActor
-    #vtkDataSetMapper SelectedMapper
+    #vtkDataSetMapper Selected_mapper
 
 
 #vtkStandardNewMacro(InteractorStyle)
 
-def main():
-    pointSource = vtk.vtkPointSource()
-    pointSource.SetNumberOfPoints(20)
-    pointSource.Update()
+#def main():
+if 1:
+    point_source = vtk.vtkPointSource()
+    point_source.SetNumberOfPoints(20)
+    point_source.Update()
 
-    idFilter = vtk.vtkIdFilter()
-    idFilter.SetInputConnection(pointSource.GetOutputPort())
-    idFilter.SetIdsArrayName("OriginalIds")
-    idFilter.Update()
+    id_filter = vtk.vtkIdFilter()
+    id_filter.SetInputConnection(point_source.GetOutputPort())
+    id_filter.SetIdsArrayName("OriginalIds")
+    id_filter.Update()
 
-    surfaceFilter = vtk.vtkDataSetSurfaceFilter()
-    surfaceFilter.SetInputConnection(idFilter.GetOutputPort())
-    surfaceFilter.Update()
+    surface_filter = vtk.vtkDataSetSurfaceFilter()
+    surface_filter.SetInputConnection(id_filter.GetOutputPort())
+    surface_filter.Update()
 
-    poly_input = surfaceFilter.GetOutput()
+    poly_input = surface_filter.GetOutput()
 
     # Create a mapper and actor
     mapper = vtk.vtkPolyDataMapper()
@@ -129,27 +130,27 @@ def main():
 
     # Visualize
     renderer = vtk.vtkRenderer()
-    renderWindow = vtk.vtkRenderWindow()
-    renderWindow.AddRenderer(renderer)
+    render_window = vtk.vtkRenderWindow()
+    render_window.AddRenderer(renderer)
 
-    areaPicker = vtk.vtkAreaPicker()
-    renderWindowInteractor = vtk.vtkRenderWindowInteractor()
-    renderWindowInteractor.SetPicker(areaPicker)
-    renderWindowInteractor.SetRenderWindow(renderWindow)
+    area_picker = vtk.vtkAreaPicker()
+    render_window_interactor = vtk.vtkRenderWindowInteractor()
+    render_window_interactor.SetPicker(area_picker)
+    render_window_interactor.SetRenderWindow(render_window)
 
     renderer.AddActor(actor)
     #renderer.SetBackground(1,1,1) # Background color white
 
-    renderWindow.Render()
+    render_window.Render()
 
     style = vtk.vtkRenderWindowInteractor()
     #style = myInteractorStyle()
     #style = InteractorStyle()
     #style = QVTKRenderWindowInteractor()
     #style.SetPoints(poly_input)
-    renderWindowInteractor.SetInteractorStyle(style)
+    render_window_interactor.SetInteractorStyle(style)
 
-    renderWindowInteractor.Start()
+    render_window_interactor.Start()
 
-if __name__ == '__main__':  # pragma: no cover
-    main()
+#if __name__ == '__main__':  # pragma: no cover
+#    main()
