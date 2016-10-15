@@ -1,5 +1,10 @@
 #!/usr/bin/env python
 
+# kills the program when you hit Cntl+C from the command line
+# doesn't save the current state as presumably there's been an error
+import signal
+signal.signal(signal.SIGINT, signal.SIG_DFL)
+
 # A simple script to demonstrate the vtkCutter function
 import vtk
 
@@ -13,8 +18,8 @@ cube_mapper.SetInputConnection(cube.GetOutputPort())
 
 #create a plane to cut,here it cuts in the XZ direction (xz normal=(1,0,0);XY =(0,0,1),YZ =(0,1,0)
 plane = vtk.vtkPlane()
-plane.SetOrigin(10,0,0)
-plane.SetNormal(1,0,0)
+plane.SetOrigin(10, 0, 0)
+plane.SetNormal(1, 0, 0)
 
 #create cutter
 cutter = vtk.vtkCutter()
@@ -26,13 +31,13 @@ cutter_mapper.SetInputConnection(cutter.GetOutputPort())
 
 #create plane actor
 plane_actor = vtk.vtkActor()
-plane_actor.GetProperty().SetColor(1.0,1,0)
+plane_actor.GetProperty().SetColor(1.0, 1, 0)
 plane_actor.GetProperty().SetLineWidth(2)
 plane_actor.SetMapper(cutter_mapper)
 
 #create cube actor
 cube_actor = vtk.vtkActor()
-cube_actor.GetProperty().SetColor(0.5,1,0.5)
+cube_actor.GetProperty().SetColor(0.5, 1, 0.5)
 cube_actor.GetProperty().SetOpacity(0.5)
 cube_actor.SetMapper(cube_mapper)
 

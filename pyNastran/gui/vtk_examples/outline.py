@@ -1,3 +1,9 @@
+# kills the program when you hit Cntl+C from the command line
+# doesn't save the current state as presumably there's been an error
+import signal
+signal.signal(signal.SIGINT, signal.SIG_DFL)
+
+
 import vtk
 
 # create a rendering window and renderer

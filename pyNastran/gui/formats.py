@@ -3,22 +3,26 @@ try:
     is_cart3d = True
 except ImportError:
     raise
-    class Cart3dIO(object):
-        def __init__(self):
-            pass
-    is_cart3d = False
+    #class Cart3dIO(object):
+    #    """dummy cart3d gui class"""
+    #    def __init__(self):
+    #        """dummy gui init"""
+    #        pass
+    #is_cart3d = False
 
 try:
     from pyNastran.converters.nastran.nastranIOv import NastranIO
     is_nastran = True
 except ImportError:
     raise
-    class NastranIO(object):
-        def __init__(self):
-            pass
-        def load_nastran_geometry(self, infile_name, dirname):
-            pass
-    is_nastran = False
+    #class NastranIO(object):
+    #    """dummy nastran gui class"""
+    #    def __init__(self):
+    #        """dummy gui init"""
+    #        pass
+    #    def load_nastran_geometry(self, infile_name, dirname):
+    #        pass
+    #is_nastran = False
 
 
 try:
@@ -26,12 +30,14 @@ try:
     is_lawgs = True
 except ImportError:
     raise
-    class LaWGS_IO(object):
-        def __init__(self):
-            pass
-        def load_lawgs_geometry(self, infile_name, dirname):
-            pass
-    is_lawgs = False
+    #class LaWGS_IO(object):
+    #    """dummy lawgs gui class"""
+    #    def __init__(self):
+    #        """dummy gui init"""
+    #        pass
+    #    def load_lawgs_geometry(self, infile_name, dirname):
+    #        pass
+    #is_lawgs = False
 
 
 try:
@@ -39,10 +45,12 @@ try:
     is_panair = True
 except ImportError:
     raise
-    class PanairIO(object):
-        def __init__(self):
-            pass
-    is_panair = False
+    #class PanairIO(object):
+    #    """dummy panair gui class"""
+    #    def __init__(self):
+    #        """dummy gui init"""
+    #        pass
+    #is_panair = False
 
 try:
     from pyNastran.converters.dev.plot3d.plot3d_io import Plot3d_io
@@ -50,7 +58,9 @@ try:
 #except ImportError:
 except:
     class Plot3d_io(object):
+        """dummy plot3d gui class"""
         def __init__(self):
+            """dummy gui init"""
             pass
     is_plot3d = False
     #raise
@@ -61,7 +71,9 @@ try:
 except ImportError:
     #raise
     class ShabpIO(object):
+        """dummy shabp gui class"""
         def __init__(self):
+            """dummy gui init"""
             pass
     is_shabp = False
 
@@ -71,7 +83,9 @@ try:
 except ImportError:
     #raise
     class STL_IO(object):
+        """dummy stl gui class"""
         def __init__(self):
+            """dummy gui init"""
             pass
     is_stl = False
 
@@ -81,20 +95,24 @@ try:
     is_tecplot = True
 except ImportError:
     raise
-    class TecplotIO(object):
-        def __init__(self):
-            pass
-    is_tecplot = False
+    #class TecplotIO(object):
+    #    """dummy tecplot gui class"""
+    #    def __init__(self):
+    #        """dummy gui init"""
+    #        pass
+    #is_tecplot = False
 
 try:
     from pyNastran.converters.dev.avus.avus_io import AvusIO
     is_avus = True
 except ImportError:
     raise
-    class AvusIO(object):
-        def __init__(self):
-            pass
-    is_avus = False
+    #class AvusIO(object):
+    #    """dummy avus gui class"""
+    #    def __init__(self):
+    #        """dummy gui init"""
+    #        pass
+    #is_avus = False
 
 
 try:
@@ -103,7 +121,9 @@ try:
 except ImportError:
     #raise
     class TetgenIO(object):
+        """dummy tetgen gui class"""
         def __init__(self):
+            """dummy gui init"""
             pass
     is_tetgen = False
 
@@ -113,7 +133,9 @@ try:
 except ImportError:
     #raise
     class Usm3dIO(object):
+        """dummy usm3d gui class"""
         def __init__(self):
+            """dummy gui init"""
             pass
     is_usm3d = False
 
@@ -123,10 +145,12 @@ try:
     is_fast = True
 except ImportError:
     raise
-    class FastIO(object):
-        def __init__(self):
-            pass
-    is_fast = False
+    #class FastIO(object):
+    #    """dummy fast gui class"""
+    #    def __init__(self):
+    #        """dummy gui init"""
+    #        pass
+    #is_fast = False
 
 
 try:
@@ -135,7 +159,9 @@ try:
 except ImportError:
     #raise
     class SurfIO(object):
+        """dummy surf gui class"""
         def __init__(self):
+            """dummy gui init"""
             pass
     is_surf = False
 
@@ -145,7 +171,9 @@ try:
 except ImportError:
     #raise
     class UGRID_IO(object):
+        """dummy ugrid gui class"""
         def __init__(self):
+            """dummy gui init"""
             pass
     is_ugrid = False
 
@@ -155,7 +183,9 @@ try:
 except ImportError:
     #raise
     class ADB_IO(object):
+        """dummy adb gui class"""
         def __init__(self):
+            """dummy gui init"""
             pass
     is_openvsp = False
 
@@ -164,17 +194,21 @@ try:
     is_degen_geom = True
 except ImportError:
     raise
-    class DegenGeomIO(object):
-        def __init__(self):
-            pass
-    is_degen_geom = False
+    #class DegenGeomIO(object):
+    #    """dummy degen_geom gui class"""
+    #    def __init__(self):
+    #        """dummy gui init"""
+    #        pass
+    #is_degen_geom = False
 
 try:
     from pyNastran.converters.dev.abaqus.abaqus_io import AbaqusIO
     is_abaqus = True
 except ImportError:
     raise
-    class AbaqusIO(object):
-        def __init__(self):
-            pass
-    is_abaqus = False
+    #class AbaqusIO(object):
+    #    """dummy abaqus gui class"""
+    #    def __init__(self):
+    #        """dummy gui init"""
+    #        pass
+    #is_abaqus = False

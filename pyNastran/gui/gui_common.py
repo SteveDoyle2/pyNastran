@@ -387,9 +387,12 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 'anti_alias_2' : False,
                 'anti_alias_4' : False,
                 'anti_alias_8' : False,
+
                 'rotation_center' : False,
                 'measure_distance' : False,
                 'probe_result' : False,
+                'area_pick' : False,
+                'zoom' : False,
             }
 
         if tools is None:
@@ -472,9 +475,12 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 # new
                 ('rotation_center', 'Set the rotation center', 'trotation_center.png', 'f', 'Pick a node for the rotation center', self.on_rotation_center),
 
-                # TODO: not done...
                 ('measure_distance', 'Measure Distance', 'tmeasure_distance.png', None, 'Measure the distance between two nodes', self.on_measure_distance),
                 ('probe_result', 'Probe', 'tprobe.png', None, 'Probe the displayed result', self.on_probe_result),
+                ('zoom', 'Zoom', 'zoom.png', None, 'Zoom In', self.on_zoom),
+
+                # TODO: not done...
+                ('area_pick', 'Area Pick', 'tarea_pick.png', None, 'Get a list of nodes/elements', self.on_area_pick),
             ]
         # print('version =', vtk.VTK_VERSION, self.vtk_version)
         #if self.vtk_version[0] < 6
@@ -567,8 +573,10 @@ class GuiCommon2(QMainWindow, GuiCommon):
             'load_csv_user_points', 'load_csv_user_geom', 'script', '', 'exit']
         toolbar_tools = ['reload', 'load_geometry', 'load_results',
                          'x', 'y', 'z', 'X', 'Y', 'Z',
-                         'magnify', 'shrink', 'rotate_clockwise', 'rotate_cclockwise',
-                         'rotation_center', 'measure_distance', 'probe_result',
+                         'magnify', 'shrink', 'zoom',
+                         'rotate_clockwise', 'rotate_cclockwise',
+                         'rotation_center', 'measure_distance', 'probe_result', #'area_pick',
+
                          'wireframe', 'surface', 'edges']
         toolbar_tools += ['camera_reset', 'view', 'screenshot', '', 'exit']
 
@@ -1038,7 +1046,28 @@ class GuiCommon2(QMainWindow, GuiCommon):
         self._camera_mode = 'default'
         self.setup_mouse_buttons(mode='default')
 
-    def setup_mouse_buttons(self, mode=None, func=None):
+    def setup_mouse_buttons(self, mode=None,
+                            left_button_down=None, left_button_up=None,
+                            right_button_down=None,
+                            end_pick=None,
+                            style=None):
+        """
+        Remaps the mouse buttons temporarily
+
+        Parameters
+        ----------
+        mode : str
+            lets you know what kind of mapping this is
+        left_button_down : function (default=None)
+            the callback function (None -> depends on the mode)
+        left_button_up : function (default=None)
+            the callback function (None -> depends on the mode)
+        right_button_down : function (default=None)
+            the callback function (None -> depends on the mode)
+        style : vtkInteractorStyle (default=None)
+            a custom vtkInteractorStyle
+            None -> keep the same style, but overwrite the left mouse button
+        """
         #print('setup_mouse_buttons mode=%r _camera_mode=%r' % (mode, self._camera_mode))
         if mode == self._camera_mode:
             #print('auto return from set mouse mode')
@@ -1066,18 +1095,36 @@ class GuiCommon2(QMainWindow, GuiCommon):
             # Re-assign left mouse click event to custom function (Point Picker)
             #self.vtk_interactor.AddObserver('LeftButtonPressEvent', self.style.Rotate)
 
-        elif mode == 'rotation_center':
-            #print('set mouse mode as rotation_center')
-            # used for rotation_center - hackish at this point
+        elif mode in ['rotation_center', 'measure_distance', 'probe_result']:
+            # hackish b/c the default setting is so bad
             self.vtk_interactor.RemoveObservers('LeftButtonPressEvent')
-            self.vtk_interactor.AddObserver('LeftButtonPressEvent', func)
+            self.vtk_interactor.AddObserver('LeftButtonPressEvent', left_button_down)
             #self.vtk_interactor.AddObserver('LeftButtonPressEvent', func, 1) # on press down
             #self.vtk_interactor.AddObserver('LeftButtonPressEvent', func, -1) # on button up
+        elif mode == 'zoom':
+            assert style is not None, style
+            self.vtk_interactor.SetInteractorStyle(style)
+            self.vtk_interactor.AddObserver('LeftButtonPressEvent', left_button_down) # on press down
+            self.vtk_interactor.AddObserver('LeftButtonReleaseEvent', left_button_up, -1) # on button up
+            if right_button_down:
+                self.vtk_interactor.AddObserver('RightButtonPressEvent', right_button_down)
 
-        elif mode in ['measure_distance', 'probe_result']:
-            # used for rotation_center - hackish at this point
-            self.vtk_interactor.RemoveObservers('LeftButtonPressEvent')
-            self.vtk_interactor.AddObserver('LeftButtonPressEvent', func)
+        elif mode == 'area_pick':
+            assert style is not None, style
+            self.vtk_interactor.SetInteractorStyle(style)
+            # on button down
+            if left_button_down:
+                self.vtk_interactor.AddObserver('LeftButtonPressEvent', left_button_down)
+            if right_button_down:
+                self.vtk_interactor.AddObserver('RightButtonPressEvent', right_button_down)
+
+            # button up
+            if left_button_up:
+                self.vtk_interactor.AddObserver('LeftButtonReleaseEvent', left_button_up) # on button up
+
+            if end_pick:
+                self.vtk_interactor.AddObserver('EndPickEvent', end_pick) # on button up
+            #style = vtk.vtkInteractorStyleTrackballCamera()
 
         #elif mode == 'node_pick':
             #self.vtk_interactor.RemoveObservers('LeftButtonPressEvent')
@@ -1253,6 +1300,16 @@ class GuiCommon2(QMainWindow, GuiCommon):
                 self.setup_mouse_buttons(mode='default')
                 return
 
+        if active_name != 'zoom':
+            zoom_button = self.actions['zoom']
+            is_checked = zoom_button.isChecked()
+            if is_checked:
+                # revert on_measure_distance
+                zoom_button.setChecked(False)
+                self._zoom = []
+                self.setup_mouse_buttons(mode='default')
+                return
+
     def on_probe_result(self):
         self.revert_pressed('probe_result')
         is_checked = self.actions['probe_result'].isChecked()
@@ -1262,7 +1319,301 @@ class GuiCommon2(QMainWindow, GuiCommon):
             return
         self.setup_mouse_buttons('probe_result', self._probe_picker)
 
+    def on_area_pick(self):
+        self.revert_pressed('area_pick')
+        is_checked = self.actions['area_pick'].isChecked()
+        if not is_checked:
+            # revert area_pick
+            self.setup_mouse_buttons(mode='default')
+            return
+
+        self.log_info('on_area_pick')
+        self._picker_points = []
+
+        self.vtk_interactor.SetPicker(self.area_picker)
+        style = vtk.vtkInteractorStyleRubberBand2D()
+        self.setup_mouse_buttons('area_pick',
+                                 left_button_down=self._area_picker_box_up,
+                                 left_button_up=self._area_picker_box_up,
+                                 #end_pick=self._area_picker_up,
+                                 style=style)
+
+    def on_area_pick_not_square(self):
+        self.revert_pressed('area_pick')
+        is_checked = self.actions['area_pick'].isChecked()
+        if not is_checked:
+            # revert area_pick
+            self.setup_mouse_buttons(mode='default')
+            return
+
+        self.log_info('on_area_pick')
+        self.vtk_interactor.SetPicker(self.area_picker)
+
+        style = vtk.vtkInteractorStyleDrawPolygon()
+        self.setup_mouse_buttons('area_pick',
+                                 #left_button_down=self._area_picker,
+                                 left_button_up=self._area_picker_up,
+                                 #end_pick=self._area_picker_up,
+                                 style=style)
+        #self.area_picker = vtk.vtkAreaPicker()  # vtkRenderedAreaPicker?
+        #self.rubber_band_style = vtk.vtkInteractorStyleRubberBandPick()
+        #vtk.vtkInteractorStyleRubberBand2D
+        #vtk.vtkInteractorStyleRubberBand3D
+        #vtk.vtkInteractorStyleRubberBandZoom
+        #vtk.vtkInteractorStyleAreaSelectHover
+        #vtk.vtkInteractorStyleDrawPolygon
+
+    def _area_picker_up(self, obj, event):
+        self.log_info('_area_picker_up')
+        #pts = self.style.GetPolygonPoints()
+        #pts = self.vtk_interactor.GetPolygonPoints()
+        #print('pts =', pts)
+        props = self.area_picker.GetProp3Ds()
+        print(props)
+        for i in range(props.GetNumberOfItems()):
+            prop = props.GetNextProp3D()
+            print("Picked prop: ", prop)
+        self.vtk_interactor.SetPicker(self.cell_picker)
+
+
+        area_pick = self.actions['area_pick']
+        area_pick.setChecked(False)
+        self.setup_mouse_buttons(mode='default')
+        self.vtk_interactor.Render()
+
+    def on_zoom(self):
+        """creates a Rubber Band Zoom"""
+        #self.revert_pressed('zoom')
+        is_checked = self.actions['zoom'].isChecked()
+        if not is_checked:
+            # revert zoom
+            self.setup_mouse_buttons(mode='default')
+            return
+        style = vtk.vtkInteractorStyleRubberBandZoom()
+        self._picker_points = []
+        self.setup_mouse_buttons('zoom',
+                                 left_button_down=self._zoom_picker,
+                                 left_button_up=self._zoom_picker,
+                                 right_button_down=self._zoom_reset,
+                                 style=style)
+
+    def _area_picker(self, obj, event):
+        """
+        picks all the nodes/elements in the box
+        TODO: not done
+        """
+        picker = self.area_picker
+        pixel_x, pixel_y = self.vtk_interactor.GetEventPosition()
+        picker.Pick(pixel_x, pixel_y, 0, self.rend)
+
+        cell_id = picker.GetCellId()
+        #print('_rotation_center_cell_picker', cell_id)
+
+        if cell_id < 0:
+            pass
+        else:
+            world_position = picker.GetPickPosition()
+            if 0:
+                camera = self.rend.GetActiveCamera()
+                #focal_point = world_position
+                (result_name, result_value, node_id, node_xyz) = self.get_result_by_xyz_cell_id(
+                    world_position, cell_id)
+                self.log_info('focal_point = %s' % str(focal_point))
+                self.setup_mouse_buttons(mode='default')
+
+                # now we can actually modify the camera
+                camera.SetFocalPoint(focal_point[0], focal_point[1], focal_point[2])
+                camera.OrthogonalizeViewUp()
+                rotation_center_button = self.actions['rotation_center']
+                rotation_center_button.setChecked(False)
+
+
+                world_position = picker.GetPickPosition()
+                cell_id = picker.GetCellId()
+                #ds = picker.GetDataSet()
+                #select_point = picker.GetSelectionPoint()
+                self.log_command("annotate_cell_picker()")
+                self.log_info("XYZ Global = %s" % str(world_position))
+                #self.log_info("cell_id = %s" % cell_id)
+                #self.log_info("data_set = %s" % ds)
+                #self.log_info("selPt = %s" % str(select_point))
+
+                #method = 'get_result_by_cell_id()' # self.model_type
+                #print('pick_state =', self.pick_state)
+
+            icase = self.icase
+            key = self.case_keys[icase]
+            location = self.get_case_location(key)
+
+            if location == 'centroid':
+                out = self._cell_centroid_pick(cell_id, world_position)
+            elif location == 'node':
+                out = self._cell_node_pick(cell_id, world_position)
+            else:
+                raise RuntimeError('invalid pick location=%r' % location)
+
+            return_flag, duplicate_key, result_value, result_name, xyz = out
+            if return_flag is True:
+                return
+
+            # prevent duplicate labels with the same value on the same cell
+            if duplicate_key is not None and duplicate_key in self.label_ids[result_name]:
+                return
+            self.label_ids[result_name].add(duplicate_key)
+
+            #if 0:
+                #result_value2, xyz2 = self.convert_units(result_name, result_value, xyz)
+                #result_value = result_value2
+                #xyz2 = xyz
+            #x, y, z = world_position
+            x, y, z = xyz
+            text = '(%.3g, %.3g, %.3g); %s' % (x, y, z, result_value)
+            text = str(result_value)
+            assert result_name in self.label_actors, result_name
+            self._create_annotation(text, result_name, x, y, z)
+            self.vtk_interactor.Render()
+
+    def _zoom_reset(self, obj, event):
+        """right button event to cancel the zoom button"""
+        zoom_button = self.actions['zoom']
+        zoom_button.setChecked(False)
+        self.setup_mouse_buttons(mode='default')
+        self.vtk_interactor.Render()
+
+    def _zoom_picker(self, obj, event):
+        """
+        actually picks the points for zooming
+
+        TODO: doesn't handle panning of the camera to center the image
+              with respect to the selected limits
+        """
+        #picker = self.area_picker
+        pixel_x, pixel_y = self.vtk_interactor.GetEventPosition()
+        #if len(self._picker_points) == 0:
+        self._picker_points.append((pixel_x, pixel_y))
+
+        if len(self._picker_points) == 2:
+            #self.zoom(5)
+            camera = self.rend.GetActiveCamera()
+            x, y, z = camera.GetPosition()
+            p1x, p1y = self._picker_points[0]
+            p2x, p2y = self._picker_points[1]
+
+            dx = abs(p1x - p2x)
+            dy = abs(p1y - p2y)
+            x_avg = (p1x + p2x) / 2.
+            y_avg = (p1y + p2y) / 2.
+
+            main_window = self.window()
+            width = main_window.frameGeometry().width()
+            height = main_window.frameGeometry().height()
+            #print('dx=%s dy=%s' % (dx, dy))
+
+            # otherwise it's a failed zoom (they didn't hold the button down)
+            self._picker_points = []
+            if dx > 0 and dy > 0:
+                #xmin = min(p1x, p2x)
+                #ymin = min(p1y, p2y)
+                #xmax = max(p1x, p2x)
+                #ymax = max(p1y, p2y)
+
+                aspect_ratio_x = width / dx
+                aspect_ratio_y = height / dy
+                zoom_factor = min([aspect_ratio_x, aspect_ratio_y])
+
+                #distance = camera.GetDistance()
+                #a = vtk.vtkCamera()
+
+
+                  # +---------+ --- ymax
+                  # |         |
+                  # |         |
+                  # |         |
+                  # +---------+ --- ymin
+                  #
+                #camera.SetScreenBottomLeft(xmin, ymin)
+                #camera.SetScreenBottomRight(float, float)
+                #camera.SetScreenTopRight(float, float)
+
+                #print('  p1 =', p1x, p1y)
+                #print('  p2 =', p2x, p2y)
+                #print('  z=%s distance=%s' % (z, distance))
+                #print('  zoom_factor = %s\n' % zoom_factor)
+                #camera.SetPosition(x, y, z)
+                self.zoom(zoom_factor)
+
+                zoom_button = self.actions['zoom']
+                zoom_button.setChecked(False)
+                self.setup_mouse_buttons(mode='default')
+
+    def _area_picker_box_up(self, obj, event):
+        """
+        actually picks the points for zooming
+
+        TODO: doesn't handle panning of the camera to center the image
+              with respect to the selected limits
+        """
+        #picker = self.area_picker
+        pixel_x, pixel_y = self.vtk_interactor.GetEventPosition()
+        #if len(self._picker_points) == 0:
+        self._picker_points.append((pixel_x, pixel_y))
+        self.area_picker.Pick()
+
+        print(self._picker_points)
+        if len(self._picker_points) == 2:
+            p1x, p1y = self._picker_points[0]
+            p2x, p2y = self._picker_points[1]
+            self._picker_points = []
+            dx = abs(p1x - p2x)
+            dy = abs(p1y - p2y)
+            xmin = min(p1x, p2x)
+            ymin = min(p1y, p2y)
+            xmax = max(p1x, p2x)
+            ymax = max(p1y, p2y)
+            self.area_picker.SetRenderer(self.rend)
+            #self.area_picker.SetPickCoords(xmin, ymin, xmax, ymax)
+            self.area_picker.AreaPick(xmin, ymin, xmax, ymax, self.rend)
+            print(self._picker_points)
+            #print('_rotation_center_cell_picker', cell_id)
+
+            self._picker_points = []
+            if dx > 0 and dy > 0:
+                if 1:
+                    cell_ids = set([])
+                    picker = self.cell_picker
+                    nx = max((xmax - xmin) // 100, 1)
+                    ny = max((ymax - ymin) // 100, 1)
+                    print('nx=%s ny=%s' % (nx, ny))
+                    for xi in range(xmin, xmax, nx):
+                        for yi in range(ymin, ymax, ny):
+                            picker.Pick(xi, yi, 0, self.rend)
+                            cell_id = picker.GetCellId()
+                            if cell_id >= 0:
+                                cell_ids.add(int(cell_id))
+                else:
+                    data = self.area_picker.GetDataSet()
+                    pick_list = self.area_picker.GetPickList()
+
+                    props = self.area_picker.GetProp3Ds()
+                    print('props=', props)
+                    print('data=', data)
+                    for i in range(data.GetNumberOfCells()):
+                        c = data.GetCell(i)
+
+                    print('pick_list=', pick_list)
+                    for i in range(props.GetNumberOfItems()):
+                        prop = props.GetNextProp3D()
+                        print("Picked prop: ", prop)
+
+                self.log_info('cell_ids = %s' % cell_ids)
+
+                area_picker_button = self.actions['area_pick']
+                area_picker_button.setChecked(False)
+                self.setup_mouse_buttons(mode='default')
+            self.vtk_interactor.Render()
+
     def _probe_picker(self, obj, event):
+        """pick a point and apply the label based on the current displayed result"""
         picker = self.cell_picker
         pixel_x, pixel_y = self.vtk_interactor.GetEventPosition()
         picker.Pick(pixel_x, pixel_y, 0, self.rend)
@@ -1335,6 +1686,7 @@ class GuiCommon2(QMainWindow, GuiCommon):
             self.vtk_interactor.Render()
 
     def _rotation_center_node_picker(self, obj, event):
+        """reset the rotation center"""
         self.log_command('_rotation_center_node_picker()')
         picker = self.node_picker
         from pyNastran.utils import object_methods
@@ -2710,6 +3062,27 @@ class GuiCommon2(QMainWindow, GuiCommon):
     def create_cell_picker(self):
         self.cell_picker = vtk.vtkCellPicker()
         self.node_picker = vtk.vtkPointPicker()
+
+        self.area_picker = vtk.vtkAreaPicker()  # vtkRenderedAreaPicker?
+        self.rubber_band_style = vtk.vtkInteractorStyleRubberBandPick()
+        #vtk.vtkInteractorStyleRubberBand2D
+        #vtk.vtkInteractorStyleRubberBand3D
+        #vtk.vtkInteractorStyleRubberBandZoom
+        #vtk.vtkInteractorStyleAreaSelectHover
+        #vtk.vtkInteractorStyleDrawPolygon
+
+        #vtk.vtkAngleWidget
+        #vtk.vtkAngleRepresentation2D
+        #vtk.vtkAngleRepresentation3D
+        #vtk.vtkAnnotation
+        #vtk.vtkArrowSource
+        #vtk.vtkGlyph2D
+        #vtk.vtkGlyph3D
+        #vtk.vtkHedgeHog
+        #vtk.vtkLegendBoxActor
+        #vtk.vtkLegendScaleActor
+        #vtk.vtkLabelPlacer
+
         self.cell_picker.SetTolerance(0.0005)
         self.node_picker.SetTolerance(0.5)
 
