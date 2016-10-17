@@ -56,7 +56,6 @@ from pyNastran.gui.qt_files.gui_qt_common import GuiCommon
 from pyNastran.gui.qt_files.scalar_bar import ScalarBar
 from pyNastran.gui.qt_files.alt_geometry_storage import AltGeometry
 
-from pyNastran.gui.menus.results_sidebar import Sidebar
 
 from pyNastran.gui.gui_interface.legend.interface import set_legend_menu
 from pyNastran.gui.gui_interface.clipping.interface import set_clipping_menu
@@ -64,6 +63,10 @@ from pyNastran.gui.gui_interface.camera.interface import set_camera_menu
 from pyNastran.gui.gui_interface.modify_picker_properties.interface import on_set_picker_size_menu
 from pyNastran.gui.gui_interface.modify_label_properties.interface import on_set_labelsize_color_menu
 
+from pyNastran.gui.styles.zoom_style import ZoomStyle
+from pyNastran.gui.styles.probe_style import ProbeResultStyle
+
+from pyNastran.gui.menus.results_sidebar import Sidebar
 from pyNastran.gui.menus.application_log import PythonConsoleWidget, ApplicationLogWidget
 from pyNastran.gui.menus.manage_actors import EditGeometryProperties
 from pyNastran.gui.menus.groups_modify import GroupsModify, Group
@@ -1318,6 +1321,8 @@ class GuiCommon2(QMainWindow, GuiCommon):
             self.setup_mouse_buttons(mode='default')
             return
         self.setup_mouse_buttons('probe_result', self._probe_picker)
+        #style = ProbeResultStyle(parent=self)
+        #self.vtk_interactor.SetInteractorStyle(style)
 
     def on_area_pick(self):
         self.revert_pressed('area_pick')
@@ -1389,13 +1394,9 @@ class GuiCommon2(QMainWindow, GuiCommon):
             # revert zoom
             self.setup_mouse_buttons(mode='default')
             return
-        style = vtk.vtkInteractorStyleRubberBandZoom()
-        self._picker_points = []
-        self.setup_mouse_buttons('zoom',
-                                 left_button_down=self._zoom_picker,
-                                 left_button_up=self._zoom_picker,
-                                 right_button_down=self._zoom_reset,
-                                 style=style)
+
+        style = ZoomStyle(parent=self)
+        self.vtk_interactor.SetInteractorStyle(style)
 
     def _area_picker(self, obj, event):
         """
@@ -1472,79 +1473,6 @@ class GuiCommon2(QMainWindow, GuiCommon):
             assert result_name in self.label_actors, result_name
             self._create_annotation(text, result_name, x, y, z)
             self.vtk_interactor.Render()
-
-    def _zoom_reset(self, obj, event):
-        """right button event to cancel the zoom button"""
-        zoom_button = self.actions['zoom']
-        zoom_button.setChecked(False)
-        self.setup_mouse_buttons(mode='default')
-        self.vtk_interactor.Render()
-
-    def _zoom_picker(self, obj, event):
-        """
-        actually picks the points for zooming
-
-        TODO: doesn't handle panning of the camera to center the image
-              with respect to the selected limits
-        """
-        #picker = self.area_picker
-        pixel_x, pixel_y = self.vtk_interactor.GetEventPosition()
-        #if len(self._picker_points) == 0:
-        self._picker_points.append((pixel_x, pixel_y))
-
-        if len(self._picker_points) == 2:
-            #self.zoom(5)
-            camera = self.rend.GetActiveCamera()
-            x, y, z = camera.GetPosition()
-            p1x, p1y = self._picker_points[0]
-            p2x, p2y = self._picker_points[1]
-
-            dx = abs(p1x - p2x)
-            dy = abs(p1y - p2y)
-            x_avg = (p1x + p2x) / 2.
-            y_avg = (p1y + p2y) / 2.
-
-            main_window = self.window()
-            width = main_window.frameGeometry().width()
-            height = main_window.frameGeometry().height()
-            #print('dx=%s dy=%s' % (dx, dy))
-
-            # otherwise it's a failed zoom (they didn't hold the button down)
-            self._picker_points = []
-            if dx > 0 and dy > 0:
-                #xmin = min(p1x, p2x)
-                #ymin = min(p1y, p2y)
-                #xmax = max(p1x, p2x)
-                #ymax = max(p1y, p2y)
-
-                aspect_ratio_x = width / dx
-                aspect_ratio_y = height / dy
-                zoom_factor = min([aspect_ratio_x, aspect_ratio_y])
-
-                #distance = camera.GetDistance()
-                #a = vtk.vtkCamera()
-
-
-                  # +---------+ --- ymax
-                  # |         |
-                  # |         |
-                  # |         |
-                  # +---------+ --- ymin
-                  #
-                #camera.SetScreenBottomLeft(xmin, ymin)
-                #camera.SetScreenBottomRight(float, float)
-                #camera.SetScreenTopRight(float, float)
-
-                #print('  p1 =', p1x, p1y)
-                #print('  p2 =', p2x, p2y)
-                #print('  z=%s distance=%s' % (z, distance))
-                #print('  zoom_factor = %s\n' % zoom_factor)
-                #camera.SetPosition(x, y, z)
-                self.zoom(zoom_factor)
-
-                zoom_button = self.actions['zoom']
-                zoom_button.setChecked(False)
-                self.setup_mouse_buttons(mode='default')
 
     def _area_picker_box_up(self, obj, event):
         """
@@ -1628,16 +1556,17 @@ class GuiCommon2(QMainWindow, GuiCommon):
             if 0:
                 camera = self.rend.GetActiveCamera()
                 #focal_point = world_position
-                (result_name, result_value, node_id, node_xyz) = self.get_result_by_xyz_cell_id(
-                    world_position, cell_id)
+                out = self.get_result_by_xyz_cell_id(world_position, cell_id)
+                result_name, result_value, node_id, node_xyz = out
+                focal_point = node_xyz
                 self.log_info('focal_point = %s' % str(focal_point))
                 self.setup_mouse_buttons(mode='default')
 
                 # now we can actually modify the camera
                 camera.SetFocalPoint(focal_point[0], focal_point[1], focal_point[2])
                 camera.OrthogonalizeViewUp()
-                rotation_center_button = self.actions['rotation_center']
-                rotation_center_button.setChecked(False)
+                probe_result_button = self.actions['probe_result']
+                probe_result_button.setChecked(False)
 
 
                 world_position = picker.GetPickPosition()
