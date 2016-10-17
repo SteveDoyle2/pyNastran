@@ -72,7 +72,7 @@ class Abaqus(object):
 
             if '*' in line0[0]:
                 word = line0.strip('*').lower()
-                print('word1 = %r' % word)
+                #print('word1 = %r' % word)
                 if word == 'heading':
                     pass
                 elif word.startswith('preprint'):
@@ -129,18 +129,18 @@ class Abaqus(object):
                     line0 = lines[iline].strip().lower()
                     word = line0.strip('*').lower()
                     allowed_words = ['elastic']
-                    unallowed_words = ['material', 'step', 'boundary']
-                    print('  line0 =', line0)
+                    unallowed_words = ['material', 'step', 'boundary', 'amplitude']
+                    #print('  line0 =', line0)
                     iline += 1
                     line0 = lines[iline].strip('\n\r\t, ').lower()
-                    print('  wordA =', word)
+                    #print('  wordA =', word)
                     #while word in allowed_words:
                     while word not in unallowed_words:
                         data_lines = []
                         if word.startswith('elastic'):
                             sword = word.split(',')
 
-                            print('  matword =', sword)
+                            #print('  matword =', sword)
                             if len(sword) == 1:
                                 # elastic
                                 assert len(sword) in [1, 2], sword
@@ -184,15 +184,51 @@ class Abaqus(object):
                             sline = line0.split(',')
                             assert len(sline) == 1, sline
                             iline += 1
+                        elif word == 'depvar':
+                            sline = line0.split(',')
+                            assert len(sline) == 1, sline
+                            ndepvars = int(sline[0])
+                            iline += 1
+                        elif word.startswith('user material'):
+                            words = word.split(',')[1:]
+                            for wordi in words:
+                                assert '=' in wordi, wordi
+                                mat_word, value = wordi.split('=')
+                                mat_word = mat_word.strip()
+                                if mat_word == 'constants':
+                                    nconstants = int(value)
+                                elif mat_word == 'type':
+                                    mat_type = value.strip()
+                                    allowed_types = ['mechanical']
+                                    if not mat_type in allowed_types:
+                                        msg = 'mat_type=%r; allowed_types=[%s]'  % (mat_type, ', '.join(allowed_types))
+                                        raise NotImplementedError(msg)
+                                else:
+                                    raise NotImplementedError('mat_word=%r' % mat_word)
+
+                            #nconstants = 111
+                            nlines_full = nconstants // 8
+                            nleftover = nconstants % 8
+                            mat_data = []
+                            for iiline in range(nlines_full):
+                                sline = line0.split(',')
+                                assert len(sline) == 8, 'len(sline)=%s; sline=%s' % (len(sline), sline)
+                                mat_data += sline
+                                iline += 1
+                                line0 = lines[iline].strip('\n\r\t, ').lower()
+                            if nleftover:
+                                sline = line0.split(',')
+                                iline += 1
+                                line0 = lines[iline].strip('\n\r\t, ').lower()
                         else:
-                            raise NotImplementedError('  word = %r' % word)
+                            raise NotImplementedError(print_data(lines, iline, word, 'is this an unallowed word for *Material?\n'))
                         line0 = lines[iline].strip('\n\r\t, ').lower()
                         word = line0.strip('*').lower()
 
                         iline += 1
                         line0 = lines[iline].strip('\n\r\t, ').lower()
-                        print('  lineB =', line0)
-                        print('  wordB =', word)
+                        #print('  lineB =', line0)
+                        #print('  wordB =', word)
 
                         is_broken = False
                         for unallowed_word in unallowed_words:
@@ -209,6 +245,15 @@ class Abaqus(object):
                 elif word.startswith('step'):
                     print('---------step-----------')
                     iline, line0 = self.read_step(lines, iline, line0)
+                elif word.startswith('initial conditions'):
+                    # TODO: skips header parsing
+                    iline += 1
+                    line0 = lines[iline].strip().lower()
+                    data_lines = []
+                    while not line0.startswith('*'):
+                        data_lines.append(line0.split(','))
+                        iline += 1
+                        line0 = lines[iline].strip().lower()
 
                 else:
                     raise NotImplementedError(word)
@@ -256,8 +301,18 @@ class Abaqus(object):
                     data_lines.append(line0.split(','))
                     iline += 1
                     line0 = lines[iline].strip().lower()
+            elif word.startswith('nset'):
+                # TODO: skips header parsing
+                iline += 1
+                line0 = lines[iline].strip().lower()
+                set_ids = []
+                while not line0.startswith('*'):
+                    set_ids.append(line0.split(','))
+                    iline += 1
+                    line0 = lines[iline].strip().lower()
+                print('set_ids =', set_ids)
             else:
-                raise NotImplementedError(line0)
+                raise NotImplementedError('\nword=%r\nline=%r' % (word, line0))
         return iline, line0
 
     def read_part(self, lines, iline, line0, word):
@@ -413,17 +468,18 @@ class Abaqus(object):
         """reads a step object"""
         # TODO: skips header parsing
 
-        iline += 1
+        iline += 2
         line0 = lines[iline].strip().lower()
         word = line0.strip('*').lower()
         #allowed_words = ['static', 'boundary', 'dsload', 'restart', 'output', 'node',
                          #'element output']
-        print('  word =', word)
-        print('  lineA =', line0)
+        #print('  word =', word)
+        #print('  lineA =', line0)
         while word != 'end step':
             iline += 1
             line0 = lines[iline].strip().lower()
-            print('word =', word)
+            #print('word =', word)
+            #print('active_line =', line0)
             data_lines = []
             if word == 'static':
                 sline = line0.split(',')
@@ -454,6 +510,10 @@ class Abaqus(object):
                 sline = line0.split(',')
                 assert len(sline) >= 2, sline
                 iline += 1
+            elif word.startswith('visco'):
+                iline += 1
+            elif word.startswith('temperature'):
+                iline += 1
             elif word.startswith('controls'):
                 iline += 1
                 line0 = lines[iline].strip().lower()
@@ -466,19 +526,25 @@ class Abaqus(object):
                 word = line0.strip('*').lower()
                 continue
             elif word == 'node output':
-                #print('  line_sline =', line0)
-                sline = line0.split(',')
-                iline += 1
+                node_output = []
+                while '*' not in line0:
+                    sline = line0.split(',')
+                    node_output += sline
+                    iline += 1
+                    line0 = lines[iline].strip().lower()
             elif word.startswith('element output'):
-                #print('  line_sline =', line0)
-                sline = line0.split(',')
-                iline += 2
+                element_output = []
+                while '*' not in line0:
+                    sline = line0.split(',')
+                    element_output += sline
+                    iline += 1
+                    line0 = lines[iline].strip().lower()
             else:
                 raise NotImplementedError('word = %r' % word)
             line0 = lines[iline].strip().lower()
             word = line0.strip('*').lower()
-            print('  lineB =', line0)
-            print('  word2 =', word)
+            #print('  lineB =', line0)
+            #print('  word2 =', word)
         #iline += 1
         #iline -= 1
         return iline, line0
@@ -715,8 +781,15 @@ class Part(object):
                     self.name, nnodes, neids,
                     n_r2d2, n_cpe3, n_cpe4, n_cpe4r, n_coh2d4,
                     n_cohax4, n_cax3, n_cax4r,
-
                     n_c3d10h))
+
+def print_data(lines, iline, word, msg, nlines=20):
+    msg = 'word=%r\n%s\n' % (word, msg)
+    iline_start = iline - nlines
+    iline_start = max(iline_start, 0)
+    for iiline in range(iline_start, iline):
+        msg += lines[iiline]
+    raise NotImplementedError(msg)
 
 def main(): # pragma: no cover
     """tests a simple abaqus model"""
