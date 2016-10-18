@@ -348,19 +348,19 @@ def compute_ints(cards1, cards2, fem1):
     diff_keys1 = list(all_keys.difference(card_keys1))
     diff_keys2 = list(all_keys.difference(card_keys2))
 
-    listKeys1 = list(card_keys1)
-    listKeys2 = list(card_keys2)
+    list_keys1 = list(card_keys1)
+    list_keys2 = list(card_keys2)
     if diff_keys1 or diff_keys2:
         print(' diff_keys1=%s diff_keys2=%s' % (diff_keys1, diff_keys2))
 
     for key in sorted(all_keys):
         msg = ''
-        if key in listKeys1:
+        if key in list_keys1:
             value1 = cards1[key]
         else:
             value1 = 0
 
-        if key in listKeys2:
+        if key in list_keys2:
             value2 = cards2[key]
         else:
             value2 = 0
