@@ -7,6 +7,7 @@ from math import ceil
 from collections import defaultdict
 from codecs import open as codec_open
 
+import numpy as np
 from numpy import zeros, where, savetxt, sqrt, amax, amin
 from numpy import arange, ravel, cross
 from numpy.linalg import norm
@@ -106,11 +107,11 @@ class Cart3dIO(object):
 
     def _write_points(self, outfile, points, is_binary, float_fmt='%6.6f'):
         if is_binary:
-            four = pack(b'>i', 4)
+            four = pack(self._endian + b'i', 4)
             outfile.write(four)
 
             npoints = points.shape[0]
-            fmt = b'>%if' % (npoints * 3)
+            fmt = self._endian + b('%if' % (npoints * 3))
             floats = pack(fmt, *ravel(points))
 
             outfile.write(floats)
@@ -126,10 +127,11 @@ class Cart3dIO(object):
         min_e = elements.min()
         assert min_e == 1, 'min(elements)=%s' % min_e
         if is_binary:
-            four = pack(b'>i', 4)
+            fmt = self._endian + b('i')
+            four = pack(fmt, 4)
             outfile.write(four)
             nelements = elements.shape[0]
-            fmt = b'>%ii' % (nelements * 3)
+            fmt = self._endian + b('%ii' % (nelements * 3))
             ints = pack(fmt, *ravel(elements))
 
             outfile.write(ints)
@@ -143,11 +145,11 @@ class Cart3dIO(object):
 
     def _write_regions(self, outfile, regions, is_binary):
         if is_binary:
-            four = pack('>i', 4)
+            four = pack(self._endian + 'i', 4)
             outfile.write(four)
 
             nregions = len(regions)
-            fmt = b'>%ii' % nregions
+            fmt = self._endian = b('%ii' % nregions)
             ints = pack(fmt, *regions)
             outfile.write(ints)
 
@@ -307,94 +309,31 @@ class Cart3dIO(object):
 
     def _read_points_binary(self, npoints):
         size = npoints * 12  # 12=3*4 all the points
+        data = self.infile.read(size)
 
-        n = 0
-        points = zeros(npoints * 3, dtype='float32')
-        s = Struct(self._endian + b'3000f') # 3000 floats; 1000 points
-        while size > 12000:  # 12k = 4 bytes/float*3 floats/point*1000 points
-            data = self.infile.read(4 * 3000)
-
-            node_xyzs = s.unpack(data)
-            points[n:n+3000] = node_xyzs
-            n += 3000
-            size -= 4 * 3000
-
-        assert size >= 0, 'size=%s' % size
-
-        if size > 0:
-            data = self.infile.read(size)
-            bin_format = self._endian + b'%if' % (size // 4)
-
-            node_xyzs = unpack(bin_format, data)
-            points[n:] = node_xyzs
-
-        points = points.reshape((npoints, 3))
+        dtype = self._endian + b'f'
+        points = np.fromstring(data, dtype=dtype).reshape((npoints, 3))
 
         self.infile.read(8)  # end of second block, start of third block
         return points
 
     def _read_elements_binary(self, nelements):
         size = nelements * 12  # 12=3*4 all the elements
+        data = self.infile.read(size)
 
-        elements = zeros(nelements * 3, dtype='int32')
+        dtype = self._endian + b'i'
+        elements = np.fromstring(data, dtype=dtype).reshape((nelements, 3))
 
-        n = 0
-        s = Struct(self._endian + b'3000i')
-        while size > 12000:  # 4k is 1000 elements
-            data = self.infile.read(4 * 3000)
-            nodes = s.unpack(data)
-            elements[n : n + 3000] = nodes
-            size -= 4 * 3000
-            n += 3000
-
-        assert size >= 0, 'size=%s' % size
-        if size > 0:
-            data = self.infile.read(size)
-            bin_format = self._endian + b'%ii' % (size // 4)
-
-            nodes = unpack(bin_format, data)
-            elements[n:] = nodes
-
-        elements2 = elements.reshape((nelements, 3))
         self.infile.read(8)  # end of third (element) block, start of regions (fourth) block
-        return elements2
+        return elements
 
     def _read_regions_binary(self, nelements):
         size = nelements * 4  # 12=3*4 all the elements
-        s = Struct(self._endian + b'3000i')
+        data = self.infile.read(size)
 
         regions = zeros(nelements, dtype='int32')
-
-        nr = 0
-        while size > 12000:  # 12k is 3000 elements
-            data = self.infile.read(4 * 3000)
-            try:
-                region_data = s.unpack(data)
-            except:
-                print("len =", len(data))
-                raise
-
-            delta = len(region_data)
-            regions[nr:nr+delta] = region_data
-            nr += delta
-            size -= 4 * 3000
-
-        assert size >= 0, 'size=%s' % size
-        if size > 0:
-            data = self.infile.read(size)
-            bin_format = self._endian + b'%ii' % (size // 4)
-            try:
-                region_data = unpack(bin_format, data)
-            except:
-                print("len =", len(data))
-                raise
-
-            r = nelements
-            if len(regions[nr:]) != len(region_data):
-                msg = 'len(regions[nr:]=%s len(region_data)=%s' % (len(regions[nr:]), len(region_data))
-                raise RuntimeError(msg)
-            regions[nr:] = region_data
-            size = 0
+        dtype = self._endian + b'i'
+        regions = np.fromstring(data, dtype=dtype)
 
         self.infile.read(4)  # end of regions (fourth) block
         return regions
