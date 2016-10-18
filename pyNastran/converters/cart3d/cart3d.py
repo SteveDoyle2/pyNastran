@@ -96,6 +96,7 @@ class Cart3dIO(object):
 
             int_fmt = None
         else:
+            # this is ASCII data
             if is_loads:
                 msg = b("%i %i 6\n" % (npoints, nelements))
             else:
@@ -103,7 +104,7 @@ class Cart3dIO(object):
 
             # take the max value, string it, and length it
             # so 123,456 is length 6
-            int_fmt = self._endian + b('%%%si' % len(str(nelements)))
+            int_fmt = b('%%%si' % len(str(nelements)))
         outfile.write(msg)
         return int_fmt
 
@@ -630,7 +631,6 @@ class Cart3D(Cart3dIO):
         for edge, eids in sorted(iteritems(edge_to_eid_map)):
             if len(eids) != 2:
                 free_edges.append(edge)
-                # print(edge)
         return free_edges
 
     def read_cart3d(self, infilename, result_names=None):
@@ -648,11 +648,16 @@ class Cart3D(Cart3dIO):
                 # TODO: loads
         else:
             with codec_open(_filename(infilename), 'r', encoding=self._encoding) as self.infile:
-                npoints, nelements, nresults = self._read_header_ascii()
-                self.points = self._read_points_ascii(npoints)
-                self.elements = self._read_elements_ascii(nelements)
-                self.regions = self._read_regions_ascii(nelements)
-                self._read_results_ascii(0, self.infile, nresults, result_names=result_names)
+                try:
+                    npoints, nelements, nresults = self._read_header_ascii()
+                    self.points = self._read_points_ascii(npoints)
+                    self.elements = self._read_elements_ascii(nelements)
+                    self.regions = self._read_regions_ascii(nelements)
+                    self._read_results_ascii(0, self.infile, nresults, result_names=result_names)
+                except:
+                    msg = 'failed reading %r' % infilename
+                    self.log.error(msg)
+                    raise
 
         self.log.debug("npoints=%s nelements=%s" % (self.npoints, self.nelements))
         assert self.npoints > 0, 'npoints=%s' % self.npoints
@@ -664,7 +669,6 @@ class Cart3D(Cart3dIO):
         if self.loads is None or self.loads == {}:
             loads = {}
             is_loads = False
-            # print("no loads")
         else:
             is_loads = True
 
@@ -676,6 +680,7 @@ class Cart3D(Cart3dIO):
                 form = 'w'
             else:
                 form = 'wb'
+
         with codec_open(outfilename, form) as outfile:
             int_fmt = self._write_header(outfile, self.points, self.elements, is_loads, is_binary)
             self._write_points(outfile, self.points, is_binary, float_fmt)
