@@ -21,7 +21,6 @@ import traceback
 
 from pyNastran.utils import print_bad_path
 from pyNastran.bdf.dev_vectorized.bdf import BDF #, NastranMatrix
-from pyNastran.bdf.dev_vectorized.test.compare_card_content import compare_card_content
 
 import pyNastran.bdf.dev_vectorized.test
 test_path = pyNastran.bdf.dev_vectorized.test.__path__[0]
@@ -88,6 +87,20 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
     filenames = list(set(filenames))
     filenames.sort()
 
+    if size is None:
+        sizes = [8]
+    elif isinstance(size, integer_types):
+        sizes = [size]
+    else:
+        sizes = size
+
+    if is_double is None:
+        is_doubles = [8]
+    elif isinstance(is_double, bool):
+        is_doubles = [is_double]
+    else:
+        is_doubles = is_double
+
     #debug = True
     filenames2 = []
     diff_cards = []
@@ -103,29 +116,29 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
         if folder != '':
             print("filename = %s" % abs_filename)
         is_passed = False
-        try:
-            (fem1, fem2, diff_cards) = run_bdf(folder, filename, debug=debug,
-                                               xref=xref, check=check, punch=punch,
-                                               cid=cid, isFolder=True, dynamic_vars={})
-            del fem1
-            del fem2
-            diff_cards += diff_cards
-            is_passed = True
-        except KeyboardInterrupt:
-            sys.exit('KeyboardInterrupt...sys.exit()')
-        except IOError:
-            pass
+        #try:
+        (fem1, fem2, diff_cards) = run_bdf(folder, filename, debug=debug,
+                                           xref=xref, check=check, punch=punch,
+                                           cid=cid, isFolder=True, dynamic_vars={})
+        del fem1
+        del fem2
+        diff_cards += diff_cards
+        is_passed = True
+        #except KeyboardInterrupt:
+            #sys.exit('KeyboardInterrupt...sys.exit()')
+        #except IOError:
+            #pass
         #except RuntimeError:  # only temporarily uncomment this when running lots of tests
             #pass
         #except AttributeError:  # only temporarily uncomment this when running lots of tests
             #pass
         #except SyntaxError:  # only temporarily uncomment this when running lots of tests
             #pass
-        except SystemExit:
-            sys.exit('sys.exit...')
-        except:
-            traceback.print_exc(file=sys.stdout)
-            #raise
+        #except SystemExit:
+            #sys.exit('sys.exit...')
+        #except:
+            #traceback.print_exc(file=sys.stdout)
+            ##raise
         print('-' * 80)
 
         if is_passed:
@@ -140,29 +153,76 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
     try:
         print("diff_cards1 = %s" % list(set(diff_cards)))
     except TypeError:
-        #print "type(diff_cards) =", type(diff_cards)
         print("diff_cards2 = %s" % diff_cards)
     return failed_files
 
-
-def memory_usage_psutil():
-    # return the memory usage in MB
-    try:
-
-        import psutil
-    except ImportError:
-        return '???'
-    process = psutil.Process(os.getpid())
-    mem = process.get_memory_info()[0] / float(2 ** 20)
-    return mem
 
 def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=False,
             cid=None, mesh_form='combined', is_folder=False, print_stats=False,
             sum_load=False, size=8, precision='single',
             quiet=False,
             reject=False, dynamic_vars=None):
+    """
+    Runs a single BDF
+
+    Parameters
+    ----------
+    folder : str
+        the folder where the bdf_filename is
+    bdf_filename : str
+        the bdf file to analyze
+    debug : bool, optional
+        run with debug logging (default=False)
+    xref : bool / str, optional
+        True : cross reference the model
+        False  : don't cross reference the model
+        'safe' : do safe cross referencing
+    check : bool, optional
+        validate cards for things like mass, area, etc.
+    punch : bool, optional
+        this is a PUNCH file (no executive/case control decks)
+    cid : int / None, optional
+        convert the model grids to an alternate coordinate system (default=None; no conversion)
+    mesh_form : str, optional, {'combined', 'separate'}
+        'combined' : interspersed=True
+        'separate' : interspersed=False
+    is_folder : bool, optional
+        attach the test path and the folder to the bdf_filename
+    print_stats : bool, optional
+        get a nicely formatted message of all the cards in the model
+    sum_load : bool, optional
+        Sum the static loads (doesn't work for frequency-based loads)
+    size : int, optional, {8, 16}
+        The field width of the model
+    is_double : bool, optional
+        Is this a double precision model?
+            True : size = 16
+            False : six = {8, 16}
+    reject : bool, optional
+        True : all the cards are rejected
+        False : the model is read
+    nastran : str, optional
+        the path to nastran (default=''; no analysis)
+    post : int, optional
+        the PARAM,POST,value to run
+    dynamic vars : dict[str]=int / float / str / None
+        support OpenMDAO syntax  %myvar; max variable length=7
+    quiet : bool; default=False
+        suppresses print messages
+    dumplines: bool; default=False
+        writes pyNastran_dump.bdf
+    dictsort : bool; default=False
+        writes pyNastran_dict.bdf
+    dev : bool; default=False
+        True : crashes if an Exception occurs
+        False : doesn't crash; useful for running many tests
+    """
+    if not quiet:
+        print('debug = %s' % debug)
     if dynamic_vars is None:
         dynamic_vars = {}
+
+    # TODO: why do we need this?
     bdf_model = str(bdf_filename)
     if not quiet:
         print("bdf_model = %s" % bdf_model)
@@ -171,7 +231,7 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
 
     assert os.path.exists(bdf_model), '%r doesnt exist' % bdf_model
 
-    print("before read bdf, Memory usage: %s (Mb) " % memory_usage_psutil())
+    #print("before read bdf, Memory usage: %s (Mb) " % memory_usage_psutil())
     #print('before read bdf, Memory usage: %s (kb)' % resource.getrusage(resource.RUSAGE_SELF).ru_maxrss)
     fem1 = BDF(debug=debug, log=None)
     if dynamic_vars:
@@ -187,8 +247,8 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
                         debug=debug, log=None)
         diff_cards = compare(fem1, fem2, xref=xref, check=check, print_stats=print_stats)
 
-    except KeyboardInterrupt:
-        sys.exit('KeyboardInterrupt...sys.exit()')
+    #except KeyboardInterrupt:
+        #sys.exit('KeyboardInterrupt...sys.exit()')
     #except IOError:
         #pass
     #except AttributeError:  # only temporarily uncomment this when running lots of tests
@@ -197,8 +257,8 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
         #pass
     #except AssertionError:  # only temporarily uncomment this when running lots of tests
         #pass
-    except SystemExit:
-        sys.exit('sys.exit...')
+    #except SystemExit:
+        #sys.exit('sys.exit...')
     except:
         #exc_type, exc_value, exc_traceback = sys.exc_info()
         #print "\n"
@@ -253,10 +313,10 @@ def run_fem2(bdf_model, out_model, xref, punch,
 
     #fem2.sumForces()
     #fem2.sumMoments()
-    out_model_2 = bdf_model + '_out2'
-    fem2.write_bdf(out_model_2, interspersed=True)
+    out_model2 = bdf_model + '_out2'
+    fem2.write_bdf(out_model2, interspersed=True)
     #fem2.writeAsCTRIA3(out_model_2)
-    os.remove(out_model_2)
+    os.remove(out_model2)
     return fem2
 
 
@@ -419,15 +479,15 @@ def get_matrix_stats(fem1, fem2):
 
 def compare(fem1, fem2, xref=True, check=True, print_stats=True):
     diff_cards = compare_card_count(fem1, fem2, print_stats=print_stats)
-
+    return
     #if xref and check:
     if check:
         fem1.mass_properties()
         get_element_stats(fem1, fem2)
         get_matrix_stats(fem1, fem2)
     compare_card_content(fem1, fem2)
-    #compare_params(fem1,fem2)
-    #print_points(fem1,fem2)
+    #compare_params(fem1, fem2)
+    #print_points(fem1, fem2)
     return diffCards
 
 
