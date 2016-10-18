@@ -553,7 +553,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             'SAERO': 146,
         }
 
-        self.rsolmap_toStr = {
+        self.rsolmap_to_str = {
             66: 'NONLIN',
             101: 'SESTSTATIC',  # linear static
             103: 'SEMODES',  # modal
@@ -583,7 +583,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         #: the analysis type
         self.sol = None
         #: used in solution 600, method
-        self.solMethod = None
+        self.sol_method = None
         #: the line with SOL on it, marks ???
         self.iSolLine = None
         self.case_control_deck = None
@@ -951,8 +951,8 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         self.update_solution(sol, method, isol_line)
 
         self.case_control_deck = CaseControlDeck(self.case_control_lines, self.log)
-        self.case_control_deck.solmap_toValue = self._solmap_to_value
-        self.case_control_deck.rsolmap_toStr = self.rsolmap_toStr
+        self.case_control_deck.solmap_to_value = self._solmap_to_value
+        self.case_control_deck.rsolmap_to_str = self.rsolmap_to_str
 
         if self._is_cards_dict:
             cards, card_count = self.get_bdf_cards_dict(bulk_data_lines)
@@ -1352,7 +1352,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         # the integer of the solution type (e.g. SOL 101)
         if sol is None:
             self.sol = None
-            self.solMethod = None
+            self.sol_method = None
             return
 
         try:
@@ -1365,10 +1365,10 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
 
         if self.sol == 600:
             #: solution 600 method modifier
-            self.solMethod = method.strip()
-            self.log.debug("sol=%s method=%s" % (self.sol, self.solMethod))
+            self.sol_method = method.strip()
+            self.log.debug("sol=%s method=%s" % (self.sol, self.sol_method))
         else:  # very common
-            self.solMethod = None
+            self.sol_method = None
 
     def set_dynamic_syntax(self, dict_of_vars):
         """

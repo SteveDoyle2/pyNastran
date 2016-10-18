@@ -20,7 +20,7 @@ import traceback
 #import resource
 
 from pyNastran.utils import print_bad_path
-from pyNastran.bdf.dev_vectorized.bdf import BDF #, NastranMatrix
+from pyNastran.bdf.dev_vectorized.bdf import BDF, read_bdf #, NastranMatrix
 
 import pyNastran.bdf.dev_vectorized.test
 test_path = pyNastran.bdf.dev_vectorized.test.__path__[0]
@@ -563,17 +563,18 @@ def main():
         size = 8
         precision = 'single'
 
-    run_bdf('.',
-            data['BDF_FILENAME'],
-            debug=not(data['--quiet']),
-            xref=not(data['--xref']),
-            check=not(data['--check']),
-            punch=data['--punch'],
-            reject=data['--reject'],
-            size=size,
-            precision=precision,
-            sum_load=data['--loads']
-    )
+    model = read_bdf(data['BDF_FILENAME'])
+    #run_bdf('.',
+            #data['BDF_FILENAME'],
+            #debug=not(data['--quiet']),
+            #xref=not(data['--xref']),
+            #check=not(data['--check']),
+            #punch=data['--punch'],
+            #reject=data['--reject'],
+            #size=size,
+            #precision=precision,
+            #sum_load=data['--loads']
+    #)
     print("total time:  %.2f sec" % (time.time() - t0))
 
 

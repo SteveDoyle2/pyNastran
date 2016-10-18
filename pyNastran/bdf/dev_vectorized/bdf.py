@@ -20,12 +20,12 @@ from six.moves.cPickle import load, dump
 import numpy as np
 
 from pyNastran.bdf.utils import _parse_pynastran_header
-#from pyNastran.utils import object_attributes, print_bad_path
+from pyNastran.utils import object_attributes, print_bad_path
 from pyNastran.bdf.utils import (to_fields, get_include_filename,
                                  parse_executive_control_deck, parse_patran_syntax)
 #from pyNastran.bdf.field_writer_8 import print_card_8
 #from pyNastran.bdf.field_writer_16 import print_card_16
-#from pyNastran.bdf.cards.utils import wipe_empty_fields
+from pyNastran.bdf.cards.utils import wipe_empty_fields
 
 from pyNastran.utils import _filename
 from pyNastran.utils.log import get_logger2
@@ -38,7 +38,10 @@ from pyNastran.utils.log import get_logger2
 #from pyNastran.bdf.field_writer_16 import print_field_16
 
 from pyNastran.bdf.case_control_deck import CaseControlDeck
+
+from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 from pyNastran.bdf.dev_vectorized.bdf_interface2.write_mesh import WriteMesh
+from pyNastran.bdf.dev_vectorized.bdf_interface2.cross_reference import CrossReference
 
 
 def read_bdf(bdf_filename=None, validate=True, xref=True, punch=False,
@@ -151,7 +154,7 @@ def read_bdf(bdf_filename=None, validate=True, xref=True, punch=False,
     return model
 
 
-class BDF(WriteMesh):
+class BDF(WriteMesh, CrossReference):
     """
     NASTRAN BDF Reader/Writer/Editor class.
     """
@@ -174,6 +177,7 @@ class BDF(WriteMesh):
             settings the logging object has
         """
         WriteMesh.__init___(self)
+        CrossReference.__init__(self)
         assert debug in [True, False, None], 'debug=%r' % debug
         self.echo = False
         self.read_includes = True
@@ -225,229 +229,7 @@ class BDF(WriteMesh):
 
         #: the list of possible cards that will be parsed
         self.cards_to_read = set([
-            '/',
-            'ECHOON', 'ECHOOFF',
-            'PARAM',
-
-            ## nodes
-            'GRID', 'GRDSET', 'SPOINT', 'EPOINT',
-
-            # points
-            'POINT',
-            #'POINT', 'POINTAX', 'RINGAX', 'GRIDG'
-
-            # mass
-            'CONM1', 'CONM2', 'CMASS1', 'CMASS2', 'CMASS3', 'CMASS4',
-
-            ## elements
-            # springs
-            'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4', # 'CELAS5',
-            # bushings
-            'CBUSH', 'CBUSH1D', 'CBUSH2D',
-            # dampers
-            'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5',
-            'CFAST',
-
-            'CBAR', 'CROD', 'CTUBE', 'CBEAM', 'CBEAM3', 'CONROD', 'CBEND',
-            'CTRIA3', 'CTRIA6', 'CTRIAR', 'CTRIAX', 'CTRIAX6',
-            'CQUAD4', 'CQUAD8', 'CQUADR', 'CQUADX', 'CQUAD',
-            'CPLSTN3', 'CPLSTN6', 'CPLSTN4', 'CPLSTN8',
-            #'CPLSTS3', 'CPLSTS6', 'CPLSTS4', 'CPLSTS8',
-
-            'CTETRA', 'CPYRAM', 'CPENTA', 'CHEXA',
-            'CIHEX1',
-            'CSHEAR', 'CVISC', 'CRAC2D', 'CRAC3D',
-            'CGAP',
-
-            ## rigid_elements
-            'RBAR', 'RBAR1', 'RBE1', 'RBE2', 'RBE3', 'RROD', 'RSPLINE',
-
-            ## plotels
-            'PLOTEL',
-
-            ## properties
-            'PMASS',
-            'PELAS', 'PGAP', 'PFAST', 'PLPLANE', 'PPLANE',
-            'PBUSH', 'PBUSH1D',
-            'PDAMP', 'PDAMP5',
-            'PROD', 'PBAR', 'PBARL', 'PBEAM', 'PTUBE', 'PBCOMP', 'PBRSECT', # 'PBEND',
-            'PBEAML', 'PBMSECT', # not fully supported
-            # 'PBEAM3',
-
-            'PSHELL', 'PCOMP', 'PCOMPG', 'PSHEAR',
-            'PSOLID', 'PLSOLID', 'PVISC', 'PRAC2D', 'PRAC3D',
-            'PIHEX', 'PCOMPS',
-            # PQUAD4
-
-            ## pdampt
-            'PDAMPT',
-
-            ## pelast
-            'PELAST',
-
-            ## pbusht
-            'PBUSHT',
-
-            ## creep_materials
-            'CREEP',
-
-            ## materials
-            'MAT1', 'MAT2', 'MAT3', 'MAT8', 'MAT9', 'MAT10', 'MAT11',
-            'MATHE', 'MATHP',
-
-            ## Material dependence - MATT1/MATT2/etc.
-            'MATT1', 'MATT2', 'MATT4', 'MATT5',  #'MATT3', 'MATT8', 'MATT9',
-            'MATS1', #'MATS3', 'MATS8',
-            # 'MATHE'
-            #'EQUIV', # testing only, should never be activated...
-
-            ## thermal_materials
-            'MAT4', 'MAT5',
-
-            ## spcs/spcadds
-            'SPC', 'SPCADD', 'SPC1', 'SPCAX',
-            'GMSPC',
-
-            ## mpcs/mpcadds
-            'MPC', 'MPCADD',
-
-            ## suport/suport1/se_suport
-            'SUPORT', 'SUPORT1', 'SESUP',
-
-            ## loads
-            'LOAD', 'LSEQ', 'LOADCYN', 'RANDPS',
-            'DLOAD', 'SLOAD', 'ACSRCE', 'TLOAD1', 'TLOAD2', 'RLOAD1', 'RLOAD2',
-            'FORCE', 'FORCE1', 'FORCE2',
-            'MOMENT', 'MOMENT1', 'MOMENT2',
-            'GRAV', 'ACCEL', 'ACCEL1',
-            'PLOAD', 'PLOAD1', 'PLOAD2', 'PLOAD4',
-            'PLOADX1', 'RFORCE', 'RFORCE1',
-            'GMLOAD', 'SPCD',
-            #thermal
-            'QVOL',
-
-            # aero cards
-            'AERO',  ## aero
-            'AEROS',  ## aeros
-            'GUST',  ## gusts
-            'FLUTTER',   ## flutters
-            'FLFACT',   ## flfacts
-            'MKAERO1', 'MKAERO2',  ## mkaeros
-            'AECOMP',   ## aecomps
-            'AEFACT',   ## aefacts
-            'AELINK',   ## aelinks
-            'AELIST',   ## aelists
-            'AEPARM',   ## aeparams
-            'AESTAT',   ## aestats
-            'AESURF',  ## aesurf
-            #'AESURFS', ## aesurfs
-            'CAERO1', 'CAERO2', 'CAERO3', 'CAERO4',  ## caeros
-            # 'CAERO5',
-            'PAERO1', 'PAERO2', 'PAERO3',  ## paeros
-            'PAERO4', # 'PAERO5',
-            'MONPNT1',                                   ## monitor_points
-            'SPLINE1', 'SPLINE2', 'SPLINE4', 'SPLINE5',  ## splines
-            #'SPLINE3', 'SPLINE6', 'SPLINE7',
-            'TRIM',  ## trims
-            'CSSCHD', ## csschds
-            'DIVERG', ## divergs
-
-            ## coords
-            'CORD1R', 'CORD1C', 'CORD1S',
-            'CORD2R', 'CORD2C', 'CORD2S',
-            'GMCORD',
-
-            # temperature cards
-            'TEMP', 'TEMPD',
-            'QBDY1', 'QBDY2', 'QBDY3', 'QHBDY',
-            'CHBDYE', 'CHBDYG', 'CHBDYP',
-            'PCONV', 'PCONVM', 'PHBDY',
-            'RADBC', 'CONV',  # 'RADM',
-
-            # ---- dynamic cards ---- #
-            'DAREA',  ## dareas
-            'DPHASE',  ## dphases
-            'DELAY',  ## delays
-            'NLPARM',  ## nlparms
-            'NLPCI',  ## nlpcis
-            'TSTEP',  ## tsteps
-            'TSTEPNL',  ## tstepnls
-            'TF',  ## transfer_functions
-
-            ## frequencies
-            'FREQ', 'FREQ1', 'FREQ2', #'FREQ4',
-
-            # direct matrix input cards
-            'DMIG', 'DMIJ', 'DMIJI', 'DMIK', 'DMI',
-
-
-            # optimization cards
-            'DEQATN', 'DTABLE',
-            'DCONSTR', 'DESVAR', 'DDVAL', 'DRESP1', 'DRESP2', 'DRESP3',
-            'DVCREL1', 'DVCREL2',
-            'DVPREL1', 'DVPREL2',
-            'DVMREL1', 'DVMREL2',
-            'DOPTPRM', 'DLINK', 'DCONADD', 'DVGRID',
-            #'DSCREEN',
-
-            'SET1', 'SET3',  ## sets
-            'ASET', 'ASET1',  ## asets
-            'BSET', 'BSET1',  ## bsets
-            'CSET', 'CSET1',  ## csets
-            'QSET', 'QSET1',  ## qsets
-            'USET', 'USET1',  ## usets
-
-
-            # super-element sets
-            'SESET',  ## se_sets
-
-            'SEBSET', 'SEBSET1',  ## se_bsets
-            'SECSET', 'SECSET1',  ## se_csets
-            'SEQSET', 'SEQSET1',  ## se_qsets
-            #'SEUSET', 'SEUSET1',  ## se_usets
-            'SEQSEP',
-            #'RADSET',
-
-            #------------------------------------------------------------------
-            ## tables
-            #'TABLEHT', 'TABRNDG',
-            'TABLED1', 'TABLED2', 'TABLED3', 'TABLED4',  # dynamic tables - freq/time loads
-            'TABLEM1', 'TABLEM2', 'TABLEM3', 'TABLEM4',  # material tables - temperature
-
-            # nonlinear elastic temperature dependent materials (e.g. creep)
-            # sees TABLES1
-            'TABLEST',
-            # material tables - stress (MATS1, CREEP, MATHP)
-            'TABLES1',
-
-
-            ## modal damping table - tables_sdamping
-            'TABDMP1',
-
-            ## random_tables
-            # PSD=func(freq); used by RANDPS card
-            'TABRND1',
-            # gust for aeroelastic response; used by RANDPS card
-            'TABRNDG',
-
-            #------------------------------------------------------------------
-
-            # initial conditions - sid (set ID)
-            #'TIC',  (in bdf_tables.py)
-
-            #: methods
-            'EIGB', 'EIGR', 'EIGRL',
-
-            #: cMethods
-            'EIGC', 'EIGP',
-
-            #: contact
-            'BCTPARA',  ## bctpara
-            'BCRPARA',  ## bcrpara
-            'BCTADD',  ## bctadds
-            'BCTSET',  ## bctsets
-            'BSURF',  ## bsurf
-            'BSURFS',  ## bsurfs
+            'GRID',
 
             # other
             'INCLUDE',  # '='
@@ -625,6 +407,7 @@ class BDF(WriteMesh):
 
     def validate(self):
         """runs some checks on the input data beyond just type checking"""
+        return
         #for eid, elem in sorted(iteritems(model.elements)):
             #elem.validate()
         for nid, node in sorted(iteritems(self.nodes)):
@@ -954,9 +737,9 @@ class BDF(WriteMesh):
         self.update_solution(sol, method, isol_line)
 
         self.case_control_deck = CaseControlDeck(self.case_control_lines, self.log)
-        print(self.object_attributes())
-        #self.case_control_deck.solmap_toValue = self._solmap_to_value
-        #self.case_control_deck.rsolmap_toStr = self.rsolmap_toStr
+        #print(self.object_attributes())
+        self.case_control_deck.solmap_to_value = self._solmap_to_value
+        self.case_control_deck.rsolmap_to_str = self.rsolmap_to_str
 
         if self._is_cards_dict:
             cards, card_count = self.get_bdf_cards_dict(bulk_data_lines)
@@ -964,7 +747,7 @@ class BDF(WriteMesh):
             cards, card_count = self.get_bdf_cards(bulk_data_lines)
         self._parse_cards(cards, card_count)
 
-        if self.values_to_skip:
+        if 0 and self.values_to_skip:
             for key, values in iteritems(self.values_to_skip):
                 dict_values = getattr(self, key)
                 if not isinstance(dict_values, dict):
@@ -1019,6 +802,7 @@ class BDF(WriteMesh):
 
     def fill_dmigs(self):
         """fills the DMIx cards with the column data that's been stored"""
+        return
         for name, card_comments in iteritems(self._dmig_temp):
             card0, comment0 = card_comments[0]
             card_name = card0[0]
@@ -1046,119 +830,121 @@ class BDF(WriteMesh):
 
     def pop_parse_errors(self):
         """raises an error if there are parsing errors"""
-        if self._stop_on_parsing_error:
-            if self._iparse_errors == 1 and self._nparse_errors == 0:
-                raise
-            is_error = False
-            msg = ''
-            if self._duplicate_elements:
-                duplicate_eids = [elem.eid for elem in self._duplicate_elements]
-                uduplicate_eids = np.unique(duplicate_eids)
-                msg += 'self.elements IDs are not unique=%s\n' % uduplicate_eids
-                for eid in uduplicate_eids:
-                    msg += 'old_element=\n%s\n' % self.elements[eid].print_repr_card()
-                    msg += 'new_elements=\n'
-                    for elem, eidi in zip(self._duplicate_elements, duplicate_eids):
-                        if eidi == eid:
-                            msg += elem.print_repr_card()
-                    msg += '\n'
-                    is_error = True
-                    raise DuplicateIDsError(msg)
+        return
+        #if self._stop_on_parsing_error:
+            #if self._iparse_errors == 1 and self._nparse_errors == 0:
+                #raise
+            #is_error = False
+            #msg = ''
+            #if self._duplicate_elements:
+                #duplicate_eids = [elem.eid for elem in self._duplicate_elements]
+                #uduplicate_eids = np.unique(duplicate_eids)
+                #msg += 'self.elements IDs are not unique=%s\n' % uduplicate_eids
+                #for eid in uduplicate_eids:
+                    #msg += 'old_element=\n%s\n' % self.elements[eid].print_repr_card()
+                    #msg += 'new_elements=\n'
+                    #for elem, eidi in zip(self._duplicate_elements, duplicate_eids):
+                        #if eidi == eid:
+                            #msg += elem.print_repr_card()
+                    #msg += '\n'
+                    #is_error = True
+                    #raise DuplicateIDsError(msg)
 
-            if self._duplicate_properties:
-                duplicate_pids = [prop.pid for prop in self._duplicate_properties]
-                uduplicate_pids = np.unique(duplicate_pids)
-                msg += 'self.properties IDs are not unique=%s\n' % uduplicate_pids
-                for pid in duplicate_pids:
-                    msg += 'old_property=\n%s\n' % self.properties[pid].print_repr_card()
-                    msg += 'new_properties=\n'
-                    for prop, pidi in zip(self._duplicate_properties, duplicate_pids):
-                        if pidi == pid:
-                            msg += prop.print_repr_card()
-                    msg += '\n'
-                    is_error = True
+            #if self._duplicate_properties:
+                #duplicate_pids = [prop.pid for prop in self._duplicate_properties]
+                #uduplicate_pids = np.unique(duplicate_pids)
+                #msg += 'self.properties IDs are not unique=%s\n' % uduplicate_pids
+                #for pid in duplicate_pids:
+                    #msg += 'old_property=\n%s\n' % self.properties[pid].print_repr_card()
+                    #msg += 'new_properties=\n'
+                    #for prop, pidi in zip(self._duplicate_properties, duplicate_pids):
+                        #if pidi == pid:
+                            #msg += prop.print_repr_card()
+                    #msg += '\n'
+                    #is_error = True
 
-            if self._duplicate_masses:
-                duplicate_eids = [elem.eid for elem in self._duplicate_masses]
-                uduplicate_eids = np.unique(duplicate_eids)
-                msg += 'self.massses IDs are not unique=%s\n' % uduplicate_eids
-                for eid in uduplicate_eids:
-                    msg += 'old_mass=\n%s\n' % self.masses[eid].print_repr_card()
-                    msg += 'new_masses=\n'
-                    for elem, eidi in zip(self._duplicate_masses, duplicate_eids):
-                        if eidi == eid:
-                            msg += elem.print_repr_card()
-                    msg += '\n'
-                    is_error = True
+            #if self._duplicate_masses:
+                #duplicate_eids = [elem.eid for elem in self._duplicate_masses]
+                #uduplicate_eids = np.unique(duplicate_eids)
+                #msg += 'self.massses IDs are not unique=%s\n' % uduplicate_eids
+                #for eid in uduplicate_eids:
+                    #msg += 'old_mass=\n%s\n' % self.masses[eid].print_repr_card()
+                    #msg += 'new_masses=\n'
+                    #for elem, eidi in zip(self._duplicate_masses, duplicate_eids):
+                        #if eidi == eid:
+                            #msg += elem.print_repr_card()
+                    #msg += '\n'
+                    #is_error = True
 
-            if self._duplicate_materials:
-                duplicate_mids = [mat.mid for mat in self._duplicate_materials]
-                uduplicate_mids = np.unique(duplicate_mids)
-                msg += 'self.materials IDs are not unique=%s\n' % uduplicate_mids
-                for mid in uduplicate_mids:
-                    msg += 'old_material=\n%s\n' % self.materials[mid].print_repr_card()
-                    msg += 'new_materials=\n'
-                    for mat, midi in zip(self._duplicate_materials, duplicate_mids):
-                        if midi == mid:
-                            msg += mat.print_repr_card()
-                    msg += '\n'
-                    is_error = True
+            #if self._duplicate_materials:
+                #duplicate_mids = [mat.mid for mat in self._duplicate_materials]
+                #uduplicate_mids = np.unique(duplicate_mids)
+                #msg += 'self.materials IDs are not unique=%s\n' % uduplicate_mids
+                #for mid in uduplicate_mids:
+                    #msg += 'old_material=\n%s\n' % self.materials[mid].print_repr_card()
+                    #msg += 'new_materials=\n'
+                    #for mat, midi in zip(self._duplicate_materials, duplicate_mids):
+                        #if midi == mid:
+                            #msg += mat.print_repr_card()
+                    #msg += '\n'
+                    #is_error = True
 
-            if self._duplicate_thermal_materials:
-                duplicate_mids = [mat.mid for mat in self._duplicate_thermal_materials]
-                uduplicate_mids = np.unique(duplicate_mids)
-                msg += 'self.thermal_materials IDs are not unique=%s\n' % uduplicate_mids
-                for mid in uduplicate_mids:
-                    msg += 'old_thermal_material=\n%s\n' % (
-                        self.thermal_materials[mid].print_repr_card())
-                    msg += 'new_thermal_materials=\n'
-                    for mat, midi in zip(self._duplicate_thermal_materials, duplicate_mids):
-                        if midi == mid:
-                            msg += mat.print_repr_card()
-                    msg += '\n'
-                    is_error = True
+            #if self._duplicate_thermal_materials:
+                #duplicate_mids = [mat.mid for mat in self._duplicate_thermal_materials]
+                #uduplicate_mids = np.unique(duplicate_mids)
+                #msg += 'self.thermal_materials IDs are not unique=%s\n' % uduplicate_mids
+                #for mid in uduplicate_mids:
+                    #msg += 'old_thermal_material=\n%s\n' % (
+                        #self.thermal_materials[mid].print_repr_card())
+                    #msg += 'new_thermal_materials=\n'
+                    #for mat, midi in zip(self._duplicate_thermal_materials, duplicate_mids):
+                        #if midi == mid:
+                            #msg += mat.print_repr_card()
+                    #msg += '\n'
+                    #is_error = True
 
-            if self._duplicate_coords:
-                duplicate_cids = [coord.cid for coord in self._duplicate_coords]
-                uduplicate_cids = np.unique(duplicate_cids)
-                msg += 'self.coords IDs are not unique=%s\n' % uduplicate_cids
-                for cid in uduplicate_cids:
-                    msg += 'old_coord=\n%s\n' % self.coords[cid].print_repr_card()
-                    msg += 'new_coords=\n'
-                    for coord, cidi in zip(self._duplicate_coords, duplicate_cids):
-                        if cidi == cid:
-                            msg += coord.print_repr_card()
-                    msg += '\n'
-                    is_error = True
+            #if self._duplicate_coords:
+                #duplicate_cids = [coord.cid for coord in self._duplicate_coords]
+                #uduplicate_cids = np.unique(duplicate_cids)
+                #msg += 'self.coords IDs are not unique=%s\n' % uduplicate_cids
+                #for cid in uduplicate_cids:
+                    #msg += 'old_coord=\n%s\n' % self.coords[cid].print_repr_card()
+                    #msg += 'new_coords=\n'
+                    #for coord, cidi in zip(self._duplicate_coords, duplicate_cids):
+                        #if cidi == cid:
+                            #msg += coord.print_repr_card()
+                    #msg += '\n'
+                    #is_error = True
 
-            if is_error:
-                msg = 'There are dupliate cards.\n\n' + msg
+            #if is_error:
+                #msg = 'There are dupliate cards.\n\n' + msg
 
-            if self._stop_on_xref_error:
-                msg += 'There are parsing errors.\n\n'
-                for (card, an_error) in self._stored_parse_errors:
-                    msg += '%scard=%s\n' % (an_error[0], card)
-                    msg += 'xref errror: %s\n\n'% an_error[0]
-                    is_error = True
+            #if self._stop_on_xref_error:
+                #msg += 'There are parsing errors.\n\n'
+                #for (card, an_error) in self._stored_parse_errors:
+                    #msg += '%scard=%s\n' % (an_error[0], card)
+                    #msg += 'xref errror: %s\n\n'% an_error[0]
+                    #is_error = True
 
-            if is_error:
-                print('%s' % msg)
-                raise DuplicateIDsError(msg.rstrip())
+            #if is_error:
+                #print('%s' % msg)
+                #raise DuplicateIDsError(msg.rstrip())
 
     def pop_xref_errors(self):
         """raises an error if there are cross-reference errors"""
-        is_error = False
-        if self._stop_on_xref_error:
-            if self._ixref_errors == 1 and self._nxref_errors == 0:
-                raise
-            if self._stored_xref_errors:
-                msg = 'There are cross-reference errors.\n\n'
-                for (card, an_error) in self._stored_xref_errors:
-                    msg += '%scard=%s\n' % (an_error[0], card)
-                    is_error = True
+        return
+        #is_error = False
+        #if self._stop_on_xref_error:
+            #if self._ixref_errors == 1 and self._nxref_errors == 0:
+                #raise
+            #if self._stored_xref_errors:
+                #msg = 'There are cross-reference errors.\n\n'
+                #for (card, an_error) in self._stored_xref_errors:
+                    #msg += '%scard=%s\n' % (an_error[0], card)
+                    #is_error = True
 
-                if is_error and self._stop_on_xref_error:
-                    raise CrossReferenceError(msg.rstrip())
+                #if is_error and self._stop_on_xref_error:
+                    #raise CrossReferenceError(msg.rstrip())
 
     def get_bdf_cards(self, bulk_data_lines):
         """Parses the BDF lines into a list of card_lines"""
@@ -1332,7 +1118,7 @@ class BDF(WriteMesh):
         # the integer of the solution type (e.g. SOL 101)
         if sol is None:
             self.sol = None
-            self.solMethod = None
+            self.sol_method = None
             return
 
         try:
@@ -1345,71 +1131,10 @@ class BDF(WriteMesh):
 
         if self.sol == 600:
             #: solution 600 method modifier
-            self.solMethod = method.strip()
-            self.log.debug("sol=%s method=%s" % (self.sol, self.solMethod))
+            self.sol_method = method.strip()
+            self.log.debug("sol=%s method=%s" % (self.sol, self.sol_method))
         else:  # very common
-            self.solMethod = None
-
-    def update_card(self, card_name, icard, ifield, value):
-        """
-        Updates a Nastran card based on standard Nastran optimization names
-
-        Parameters
-        ----------
-        card_name : str
-            the name of the card
-            (e.g. GRID)
-        icard : int
-            the unique 1-based index identifier for the card
-
-            (e.g. the GRID id)
-        ifield : int
-            the index on the card
-            (e.g. X on GRID card as an integer representing the field number)
-        value : varies
-            the value to assign
-
-        Returns
-        -------
-        obj : varies
-            the corresponding object
-            (e.g. the GRID object)
-
-        # On GRID 100, set Cp (2) to 42
-        >>> model.update_card('GRID', 100, 2, 42)
-
-        # On GRID 100, set X (3) to 43.
-        >>> model.update_card('GRID', 100, 3, 43.)
-        """
-        #rslot_map = self.get_rslot_map(reset_type_to_slot_map=False)
-
-        for key in self.card_count:
-            assert isinstance(key, string_types), 'key=%r' % key
-            if key not in self._type_to_slot_map:
-                msg = 'add %r to self._type_to_slot_map\n%s' % (key, str(self._type_to_slot_map))
-                raise RuntimeError(msg)
-        #_slot_to_type_map['nodes'] : ['GRID']
-        #_type_to_slot_map['GRID'] : ['nodes']
-
-        # get the storage object
-        try:
-            field_str = self._type_to_slot_map[card_name] # 'nodes'
-        except KeyError:
-            msg = 'Updating card card_name=%r is not supported\nkeys=%s' % (
-                card_name, list(self._type_to_slot_map.keys()))
-            raise KeyError(msg)
-
-        objs = getattr(self, field_str) # self.nodes
-        # get the specific card
-        try:
-            obj = objs[icard]
-        except KeyError:
-            msg = 'Could not find %s ID=%r' % (card_name, icard)
-            raise KeyError(msg)
-
-        # update the card
-        obj.update_field(ifield, value)
-        return obj
+            self.sol_method = None
 
     def set_dynamic_syntax(self, dict_of_vars):
         """
@@ -2434,10 +2159,6 @@ class BDF(WriteMesh):
         comment : str
             an optional the comment for the card
         """
-        if self._auto_reject:
-            self.reject_cards.append(card)
-            print('rejecting processed auto=rejected %s' % card)
-
         if card_name == 'ECHOON':
             self.echo = True
             return
@@ -2627,7 +2348,7 @@ class BDF(WriteMesh):
             'case_control_lines', 'cards_to_read', 'card_count',
             'isStructured', 'uniqueBulkDataCards',
             'nCardLinesMax', 'model_type', 'includeDir',
-            'solMethod', 'log',
+            'sol_method', 'log',
             'linesPack', 'lineNumbers', 'iSolLine',
             'reject_count', '_relpath', 'isOpened',
             #'foundEndData',
@@ -2777,7 +2498,10 @@ class BDF(WriteMesh):
             nepoints = len(epoints)
             #raise NotImplementedError('EPOINTs')
 
-        assert nnodes + nspoints + nepoints > 0, 'nnodes=%s nspoints=%s nepoints=%s' % (nnodes, nspoints, nepoints)
+        if nnodes + nspoints + nepoints == 0:
+            msg = 'nnodes=%s nspoints=%s nepoints=%s' % (nnodes, nspoints, nepoints)
+            raise ValueError(msg)
+
         #xyz_cid0 = np.zeros((nnodes + nspoints, 3), dtype=dtype)
         xyz_cp = np.zeros((nnodes + nspoints, 3), dtype=dtype)
         nid_cp_cd = np.zeros((nnodes + nspoints, 3), dtype='int32')
@@ -3273,38 +2997,105 @@ class BDF(WriteMesh):
             elif not os.path.isfile(_filename(bdf_filename)):
                 raise IOError('Not a file: bdf_filename=%r' % bdf_filename)
 
+    #def _allocate(self):
+        #"""allocates the BDF objects"""
+        #self.grid.allocate(card_count)
+        ##self.grdset.allocate(card_count)
+        #self.spoint.allocate(card_count)
+
+        ## elements
+        #self.cquad4.allocate(card_count)
+        #self.ctria3.allocate(card_count)
+        #self.cquad8.allocate(card_count)
+        #self.ctria6.allocate(card_count)
+        ##self.cquad.allocate(card_count)
+
+        #self.pshell.allocate(card_count)
+        #self.pcomp.allocate(card_count)
+
+        #self.psolid.allocate(card_count)
+        #self.psolid.allocate(card_count)
+        #self.ctetra4.allocate(card_count)
+        #self.ctetra10.allocate(card_count)
+        #self.cpenta6.allocate(card_count)
+        #self.cpenta15.allocate(card_count)
+        #self.chexa8.allocate(card_count)
+        #self.chexa20.allocate(card_count)
+
+        #self.mat1.allocate(card_count)
+        #self.mat8.allocate(card_count)
+
+    def _build(self):
+        """builds the BDF objects"""
+        self.grid.build()
+        #self.grdset.build()
+        self.spoint.build()
+
+        # elements
+        self.cquad4.build()
+        self.ctria3.build()
+        self.cquad8.build()
+        self.ctria6.build()
+        #self.cquad.build()
+
+        self.pshell.build()
+        self.pcomp.build()
+
+        self.psolid.build()
+        self.psolid.build()
+        self.ctetra4.build()
+        self.ctetra10.build()
+        self.cpenta6.build()
+        self.cpenta15.build()
+        self.chexa8.build()
+        self.chexa20.build()
+
+        self.mat1.build()
+        self.mat8.build()
+
+
     def _parse_cards(self, cards, card_count):
         """creates card objects and adds the parsed cards to the deck"""
         #print('card_count = %s' % card_count)
 
         if isinstance(cards, dict):
             # self._is_cards_dict = True
-            if self._is_vectorized:
-                for card_name, card in sorted(iteritems(cards)):
-                    if self.is_reject(card_name):
-                        self.log.info('    rejecting card_name = %s' % card_name)
-                        for cardi in card:
-                            self._increase_card_count(card_name)
-                            self.rejects.append([cardi[0]] + cardi[1])
-                    else:
-                        for comment, card_lines in card:
-                            print('card_lines', card_lines)
-                            self.add_card(card_lines, card_name, comment=comment,
-                                          is_list=False, has_none=False)
-            else:
-                asdf
+            # this is the loop that hits...
+            #for card_name, card in sorted(iteritems(cards)):
+                #print('%r = %r' % (card_name, ncards))
+
+            self._build()
+            card_name_to_obj_mapper = self.card_name_to_obj
+            for card_name, card in sorted(iteritems(cards)):
                 if self.is_reject(card_name):
                     self.log.info('    rejecting card_name = %s' % card_name)
                     for cardi in card:
-                        self._increase_card_count(card_name)
                         self.rejects.append([cardi[0]] + cardi[1])
                 else:
+                    ncards = len(card)
+                    print('%r = %r' % (card_name, ncards))
+                    obj = card_name_to_obj_mapper[card_name]
+                    self._increase_card_count(card_name, ncards)
+                    obj.allocate(self.card_count)
                     for comment, card_lines in card:
-                        print('card_lines', card_lines)
-                        self.add_card(card_lines, card_name, comment=comment,
-                                      is_list=False, has_none=False)
-
+                        #print('card_lines', card_lines)
+                        fields = to_fields(card_lines, card_name)
+                        card = wipe_empty_fields(fields)
+                        card_obj = BDFCard(card, has_none=False)
+                        obj.add(card_obj, comment=comment)
+                    obj.build()
+                #if self.is_reject(card_name):
+                    #self.log.info('    rejecting card_name = %s' % card_name)
+                    #for cardi in card:
+                        #self._increase_card_count(card_name)
+                        #self.rejects.append([cardi[0]] + cardi[1])
+                #else:
+                    #for comment, card_lines in card:
+                        #print('card_lines', card_lines)
+                        #self.add_card(card_lines, card_name, comment=comment,
+                                      #is_list=False, has_none=False)
         else:
+            raise NotImplementedError('dict...')
             # list - this is the one that's used
             for card in cards:
                 card_name, comment, card_lines = card
