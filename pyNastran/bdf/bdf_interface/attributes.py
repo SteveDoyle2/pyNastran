@@ -12,7 +12,9 @@ class BDFAttributes(object):
 
     def __init__(self):
         self.__init_attributes()
-        self._is_cards_dict = False
+        self._is_vectorized = False
+        self._is_cards_dict = True
+
         self.set_as_msc()
         self.units = []
 
