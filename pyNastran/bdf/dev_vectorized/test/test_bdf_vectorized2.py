@@ -241,11 +241,11 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
     sys.stdout.flush()
     fem2 = None
     diff_cards = []
-    try:
-        out_model = run_fem1(fem1, bdf_model, mesh_form, xref, punch, sum_load, size, precision, cid)
-        fem2 = run_fem2(bdf_model, out_model, xref, punch, sum_load, size, precision, reject,
-                        debug=debug, log=None)
-        diff_cards = compare(fem1, fem2, xref=xref, check=check, print_stats=print_stats)
+    #try:
+    out_model = run_fem1(fem1, bdf_model, mesh_form, xref, punch, sum_load, size, precision, cid)
+    fem2 = run_fem2(bdf_model, out_model, xref, punch, sum_load, size, precision, reject,
+                    debug=debug, log=None)
+    diff_cards = compare(fem1, fem2, xref=xref, check=check, print_stats=print_stats)
 
     #except KeyboardInterrupt:
         #sys.exit('KeyboardInterrupt...sys.exit()')
@@ -259,13 +259,13 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
         #pass
     #except SystemExit:
         #sys.exit('sys.exit...')
-    except:
+    #except:
         #exc_type, exc_value, exc_traceback = sys.exc_info()
         #print "\n"
-        traceback.print_exc(file=sys.stdout)
+        #traceback.print_exc(file=sys.stdout)
         #print msg
-        print("-" * 80)
-        raise
+        #print("-" * 80)
+        #raise
 
     print("-" * 80)
     return (fem1, fem2, diff_cards)
@@ -342,16 +342,16 @@ def compare_card_count(fem1, fem2, print_stats=False):
 
 
 def compute_ints(cards1, cards2, fem1):
-    cardKeys1 = set(cards1.keys())
-    cardKeys2 = set(cards2.keys())
-    all_keys = cardKeys1.union(cardKeys2)
-    diffKeys1 = list(all_keys.difference(cardKeys1))
-    diffKeys2 = list(all_keys.difference(cardKeys2))
+    card_keys1 = set(cards1.keys())
+    card_keys2 = set(cards2.keys())
+    all_keys = card_keys1.union(card_keys2)
+    diff_keys1 = list(all_keys.difference(card_keys1))
+    diff_keys2 = list(all_keys.difference(card_keys2))
 
-    listKeys1 = list(cardKeys1)
-    listKeys2 = list(cardKeys2)
-    if diffKeys1 or diffKeys2:
-        print(' diffKeys1=%s diffKeys2=%s' % (diffKeys1, diffKeys2))
+    listKeys1 = list(card_keys1)
+    listKeys2 = list(card_keys2)
+    if diff_keys1 or diff_keys2:
+        print(' diff_keys1=%s diff_keys2=%s' % (diff_keys1, diff_keys2))
 
     for key in sorted(all_keys):
         msg = ''
@@ -374,38 +374,38 @@ def compute_ints(cards1, cards2, fem1):
 
         factor1 = divide(value1, value2)
         factor2 = divide(value2, value1)
-        factorMsg = ''
+        factor_msg = ''
         if factor1 != factor2:
-            factorMsg = 'diff=%s factor1=%g factor2=%g' % (diff, factor1,
-                                                           factor2)
+            factor_msg = 'diff=%s factor1=%g factor2=%g' % (diff, factor1,
+                                                            factor2)
         msg += '  %skey=%-7s value1=%-7s value2=%-7s' % (star, key, value1,
-                                                         value2) + factorMsg
+                                                         value2) + factor_msg
         msg = msg.rstrip()
         print(msg)
-    return listKeys1 + listKeys2
+    return list_keys1 + list_keys2
 
 
 def compute(cards1, cards2):
-    cardKeys1 = set(cards1.keys())
-    cardKeys2 = set(cards2.keys())
-    all_keys = cardKeys1.union(cardKeys2)
-    diffKeys1 = list(all_keys.difference(cardKeys1))
-    diffKeys2 = list(all_keys.difference(cardKeys2))
+    card_keys1 = set(cards1.keys())
+    card_keys2 = set(cards2.keys())
+    all_keys = card_keys1.union(card_keys2)
+    diff_keys1 = list(all_keys.difference(card_keys1))
+    diff_keys2 = list(all_keys.difference(card_keys2))
 
-    listKeys1 = list(cardKeys1)
-    listKeys2 = list(cardKeys2)
+    list_keys1 = list(card_keys1)
+    list_keys2 = list(card_keys2)
     msg = ''
-    if diffKeys1 or diffKeys2:
-        msg = 'diffKeys1=%s diffKeys2=%s' % (diffKeys1, diffKeys2)
+    if diff_keys1 or diff_keys2:
+        msg = 'diff_keys1=%s diff_keys2=%s' % (diff_keys1, diff_keys2)
 
-    for key in sorted(allKeys):
+    for key in sorted(all_keys):
         msg = ''
-        if key in listKeys1:
+        if key in list_keys1:
             value1 = cards1[key]
         else:
             value2 = 0
 
-        if key in listKeys2:
+        if key in list_keys2:
             value2 = cards2[key]
         else:
             value2 = 0

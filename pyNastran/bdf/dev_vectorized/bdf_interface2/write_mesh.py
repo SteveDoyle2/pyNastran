@@ -1,4 +1,4 @@
-from pyNastran.bdf.dev_vectorized.bdf_interface.attributes2 import BDFAttributes
+from pyNastran.bdf.dev_vectorized.bdf_interface2.attributes import BDFAttributes
 
 
 class WriteMesh(BDFAttributes):

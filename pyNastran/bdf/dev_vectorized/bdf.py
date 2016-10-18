@@ -20,26 +20,25 @@ from six.moves.cPickle import load, dump
 import numpy as np
 
 from pyNastran.bdf.utils import _parse_pynastran_header
-from pyNastran.utils import object_attributes, print_bad_path
+#from pyNastran.utils import object_attributes, print_bad_path
 from pyNastran.bdf.utils import (to_fields, get_include_filename,
                                  parse_executive_control_deck, parse_patran_syntax)
-from pyNastran.bdf.field_writer_8 import print_card_8
-from pyNastran.bdf.field_writer_16 import print_card_16
-from pyNastran.bdf.cards.utils import wipe_empty_fields
+#from pyNastran.bdf.field_writer_8 import print_card_8
+#from pyNastran.bdf.field_writer_16 import print_card_16
+#from pyNastran.bdf.cards.utils import wipe_empty_fields
 
 from pyNastran.utils import _filename
 from pyNastran.utils.log import get_logger2
 
-from pyNastran.bdf.write_path import write_include
-from pyNastran.bdf.bdf_interface.assign_type import (integer,
-                                                     integer_or_string, string)
+#from pyNastran.bdf.write_path import write_include
+#from pyNastran.bdf.bdf_interface.assign_type import (integer,
+                                                     #integer_or_string, string)
 
-from pyNastran.bdf.errors import CrossReferenceError, DuplicateIDsError, CardParseSyntaxError
-from pyNastran.bdf.field_writer_16 import print_field_16
+#from pyNastran.bdf.errors import CrossReferenceError, DuplicateIDsError, CardParseSyntaxError
+#from pyNastran.bdf.field_writer_16 import print_field_16
 
-from pyNastran.bdf.bdf import _lines_to_decks, CaseControlDeck
-
-from pyNastran.bdf.dev_vectorized.bdf_interface.write_mesh2 import WriteMesh
+from pyNastran.bdf.case_control_deck import CaseControlDeck
+from pyNastran.bdf.dev_vectorized.bdf_interface2.write_mesh import WriteMesh
 
 
 def read_bdf(bdf_filename=None, validate=True, xref=True, punch=False,
@@ -3512,6 +3511,88 @@ class BDF(WriteMesh):
             except:
                 print(str(card))
                 raise
+
+
+IGNORE_COMMENTS = (
+    '$EXECUTIVE CONTROL DECK',
+    '$CASE CONTROL DECK',
+    'NODES', 'SPOINTS', 'EPOINTS', 'ELEMENTS',
+    'PARAMS', 'PROPERTIES', 'ELEMENTS_WITH_PROPERTIES',
+    'ELEMENTS_WITH_NO_PROPERTIES (PID=0 and unanalyzed properties)',
+    'UNASSOCIATED_PROPERTIES',
+    'MATERIALS', 'THERMAL MATERIALS',
+    'CONSTRAINTS', 'SPCs', 'MPCs', 'RIGID ELEMENTS',
+    'LOADS', 'AERO', 'STATIC AERO', 'AERO CONTROL SURFACES',
+    'FLUTTER', 'GUST', 'DYNAMIC', 'OPTIMIZATION',
+    'COORDS', 'THERMAL', 'TABLES', 'RANDOM TABLES',
+    'SETS', 'CONTACT', 'REJECTS', 'REJECT_LINES',
+    'PROPERTIES_MASS', 'MASSES')
+
+def _clean_comment(comment):
+    """
+    Removes specific pyNastran comment lines so duplicate lines aren't
+    created.
+
+    Parameters
+    ----------
+    comment : str
+        the comment to possibly remove
+
+    Returns
+    -------
+    updated_comment : str
+        the comment
+    """
+    if comment == '':
+        pass
+    elif comment in IGNORE_COMMENTS:
+        comment = ''
+    elif 'pynastran' in comment.lower():
+        comment = ''
+
+    #if comment:
+        #print(comment)
+    return comment
+
+
+def _lines_to_decks(lines, i, punch):
+    """
+    Splits the lines into their deck.
+    """
+    executive_control_lines = []
+    case_control_lines = []
+    bulk_data_lines = []
+
+    if punch:
+        bulk_data_lines = lines
+    else:
+        flag = 1
+        for i, line in enumerate(lines):
+            if flag == 1:
+                #line = line.upper()
+                if line.upper().startswith('CEND'):
+                    assert flag == 1
+                    flag = 2
+                executive_control_lines.append(line.rstrip())
+            elif flag == 2:
+                uline = line.upper()
+                if 'BEGIN' in uline and ('BULK' in uline or 'SUPER' in uline):
+                    assert flag == 2
+                    flag = 3
+                case_control_lines.append(line.rstrip())
+            else:
+                break
+        for line in lines[i:]:
+            bulk_data_lines.append(line.rstrip())
+    del lines
+    #for line in bulk_data_lines:
+        #print(line)
+
+    # clean comments
+    executive_control_lines = [_clean_comment(line) for line in executive_control_lines]
+    case_control_lines = [_clean_comment(line) for line in case_control_lines]
+    return executive_control_lines, case_control_lines, bulk_data_lines
+
 
 if __name__ == '__main__':  # pragma: no cover
     from pyNastran.bdf.test.test_bdf import main
