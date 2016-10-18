@@ -159,7 +159,8 @@ class Cart3dIO(object):
 
             outfile.write(four)
         else:
-            np.savetxt(outfile, regions, b'%i')
+            fmt = b'%i'
+            np.savetxt(outfile, regions, fmt)
 
     def _write_loads(self, outfile, loads, is_binary, float_fmt='%6.6f'):
         if is_binary:
@@ -664,6 +665,9 @@ class Cart3D(Cart3dIO):
         assert self.nelements > 0, 'nelements=%s' % self.nelements
 
     def write_cart3d(self, outfilename, is_binary=False, float_fmt='%6.7f'):
+        """
+        writes a cart3d file
+        """
         assert len(self.points) > 0, 'len(self.points)=%s' % len(self.points)
 
         if self.loads is None or self.loads == {}:
