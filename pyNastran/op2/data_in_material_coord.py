@@ -238,7 +238,7 @@ def data_in_material_coord(bdf, op2, in_place=False):
         for subcase, vector in op2_vectors.items():
             new_vector = new_vectors[subcase]
             veceids = get_eids_from_op2_vector(vector)
-            vecthetarad = np.array([thetarad[eid] for eid in veceids])
+            vecthetarad = np.array([thetarad.get(eid, 0) for eid in veceids])
 
             # membrane terms
             Sxx = vector.data[:, :, 0]
@@ -281,7 +281,7 @@ def data_in_material_coord(bdf, op2, in_place=False):
             veceids = get_eids_from_op2_vector(vector)
             check = veceids != 0
             veceids = veceids[check]
-            vecthetarad = np.array([thetarad[eid] for eid in veceids])
+            vecthetarad = np.array([thetarad.get(eid, 0) for eid in veceids])
 
             # bottom and top in-plane stresses
             Sxx = vector.data[:, :, 1][:, check]
@@ -308,7 +308,7 @@ def data_in_material_coord(bdf, op2, in_place=False):
             veceids = get_eids_from_op2_vector(vector)
             check = veceids != 0
             veceids = veceids[check]
-            vecthetarad = np.array([thetarad[eid] for eid in veceids])
+            vecthetarad = np.array([thetarad.get(eid, 0) for eid in veceids])
 
             # bottom and top in-plane strains
             exx = vector.data[:, :, 1][:, check]
