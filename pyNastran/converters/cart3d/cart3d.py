@@ -88,26 +88,28 @@ class Cart3dIO(object):
 
         if is_binary:
             if is_loads:
-                msg = pack('>iiiii', 3*4, npoints, nelements, 6, 4)
+                fmt = self._endian + b('iiiii')
+                msg = pack(fmt, 3*4, npoints, nelements, 6, 4)
             else:
-                msg = pack('>iiii', 2*4, npoints, nelements, 4)
+                fmt = self._endian + b('iiii')
+                msg = pack(fmt, 2*4, npoints, nelements, 4)
 
             int_fmt = None
         else:
             if is_loads:
-                msg = b"%i %i 6\n" % (npoints, nelements)
+                msg = b("%i %i 6\n" % (npoints, nelements))
             else:
-                msg = b"%i %i\n" % (npoints, nelements)
+                msg = b("%i %i\n" % (npoints, nelements))
 
             # take the max value, string it, and length it
             # so 123,456 is length 6
-            int_fmt = '%%%si' % len(str(nelements))
+            int_fmt = self._endian + b('%%%si' % len(str(nelements)))
         outfile.write(msg)
         return int_fmt
 
     def _write_points(self, outfile, points, is_binary, float_fmt='%6.6f'):
         if is_binary:
-            four = pack(self._endian + b'i', 4)
+            four = pack(self._endian + b('i'), 4)
             outfile.write(four)
 
             npoints = points.shape[0]
@@ -296,10 +298,10 @@ class Cart3dIO(object):
 
         so4 = size // 4  # size over 4
         if so4 == 3:
-            (npoints, nelements, nresults) = unpack(self._endian + b'iii', data)
+            (npoints, nelements, nresults) = unpack(self._endian + b('iii'), data)
             self.log.info("npoints=%s nelements=%s nresults=%s" % (npoints, nelements, nresults))
         elif so4 == 2:
-            (npoints, nelements) = unpack(self._endian + b'ii', data)
+            (npoints, nelements) = unpack(self._endian + b('ii'), data)
             nresults = 0
             self.log.info("npoints=%s nelements=%s" % (npoints, nelements))
         else:
@@ -683,7 +685,6 @@ class Cart3D(Cart3dIO):
             if is_loads:
                 assert is_binary is False, 'is_binary=%r is not supported for loads' % is_binary
                 self._write_loads(outfile, self.loads, is_binary, float_fmt)
-        outfile.close()
 
 
     def get_min(self, points, i):
