@@ -2,7 +2,7 @@
 #warnings.filterwarnings('ignore', 'missing __init__.py*')
 
 from pyNastran.all_tests_no_gui import *
-from pyNastran.converters.test_formats import *
+from pyNastran.converters.test_gui_formats import *
 
 
 if __name__ == "__main__":  # pragma: no cover

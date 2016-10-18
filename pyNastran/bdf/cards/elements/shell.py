@@ -25,6 +25,9 @@ All quads are QuadShell, ShellElement, and Element objects.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+__all__ = ['CTRIA3', 'CTRIA6', 'CTRIAX', 'CTRIAX6', 'CSHEAR',
+           'CQUAD', 'CQUAD4', 'CQUAD8', 'CQUADR', 'CQUADX',
+           'CPLTSN3', 'CPLSTN4', 'CPLSTN6', 'CPLSTN8',]
 from six.moves import range
 
 import numpy as np
