@@ -522,7 +522,8 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
                 print(element.type)
             else:
                 for nid in nids:  # (e.g. CQUAD8 with missing node)
-                    nid_to_eids_map[nid].append(eid)
+                    if nid:
+                        nid_to_eids_map[nid].append(eid)
 
         return nid_to_eids_map
 
@@ -550,7 +551,8 @@ class GetMethods(GetMethodsDeprecated, BDFAttributes):
                 print(element.type)
             else:
                 for nid in nids:  # (e.g. CQUAD8 with missing node)
-                    nid_to_elements_map[nid].append(element)
+                    if nid:
+                        nid_to_elements_map[nid].append(element)
 
         return nid_to_elements_map
 
