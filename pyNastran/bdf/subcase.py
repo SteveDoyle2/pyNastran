@@ -753,7 +753,7 @@ class Subcase(object):
             #else: pass
         return key, value, options
 
-    def get_op2_data(self, sol, solmap_toValue):
+    def get_op2_data(self, sol, solmap_to_value):
         self.sol = sol
         label = 'SUBCASE %s' % (self.id)
         op2Params = {'isubcase': None, 'tables': [], 'analysisCodes': [],
@@ -773,9 +773,9 @@ class Subcase(object):
         # converts from solution 200 to solution 144
         if self.sol == 200 or 'ANALYSIS' in self.params:
             param = self.params['ANALYSIS']
-            (value, options, paramType) = param
+            (value, options, param_type) = param
 
-            sol = solmap_toValue[value.upper()]
+            sol = solmap_to_value[value.upper()]
             #print("***value=%s sol=%s" % (value, sol))
         else:  # leaves SOL the same
             sol = self.sol
@@ -785,19 +785,19 @@ class Subcase(object):
 
         for (key, param) in iteritems(self.params):
             key = key.upper()
-            (value, options, paramType) = param
-            #msg = ("  -key=|%s| value=|%s| options=%s paramType=|%s|"
-            #    % (key, value, options, paramType))
+            (value, options, param_type) = param
+            #msg = ("  -key=|%s| value=|%s| options=%s param_type=|%s|"
+            #    % (key, value, options, param_type))
 
         thermal = 0
         for (key, param) in iteritems(self.params):
             key = key.upper()
-            (value, options, paramType) = param
-            #msg = ("  *key=|%s| value=|%s| options=%s paramType=|%s|"
-            #    % (key, value, options, paramType)
+            (value, options, param_type) = param
+            #msg = ("  *key=|%s| value=|%s| options=%s param_type=|%s|"
+            #    % (key, value, options, param_type)
             #print(msg)
             #msg += self.printParam(key, param)
-            if paramType == 'SUBCASE-type':
+            if param_type == 'SUBCASE-type':
                 op2Params['isubcase'].append(value)
             elif key in ['BEGIN', 'ECHO', 'ANALYSIS'] or 'SET' in key:
                 pass
