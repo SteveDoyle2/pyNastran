@@ -30,21 +30,23 @@ class PSHELL(Property):
         """
         Property.__init__(self, model)
 
-    def allocate(self, ncards):
-        self.model.log.debug('allocate PSHELL')
-        self.n = ncards
-        float_fmt = self.model.float
-        self.property_id = zeros(ncards, 'int32')
-        self.material_id = zeros(ncards, 'int32')
-        self.thickness = zeros(ncards, float_fmt)
-        self.material_id2 = zeros(ncards, 'int32')
-        self.twelveIt3 = zeros(ncards, float_fmt)
-        self.material_id3 = zeros(ncards, 'int32')
-        self.tst = zeros(ncards, float_fmt)
-        self.nsm = zeros(ncards, float_fmt)
-        self.z1 = zeros(ncards, float_fmt)
-        self.z2 = zeros(ncards, float_fmt)
-        self.material_id4 = zeros(ncards, 'int32')
+    def allocate(self, card_count):
+        ncards = card_count[self.type]
+        if ncards:
+            self.model.log.debug('allocate PSHELL')
+            self.n = ncards
+            float_fmt = self.model.float
+            self.property_id = zeros(ncards, 'int32')
+            self.material_id = zeros(ncards, 'int32')
+            self.thickness = zeros(ncards, float_fmt)
+            self.material_id2 = zeros(ncards, 'int32')
+            self.twelveIt3 = zeros(ncards, float_fmt)
+            self.material_id3 = zeros(ncards, 'int32')
+            self.tst = zeros(ncards, float_fmt)
+            self.nsm = zeros(ncards, float_fmt)
+            self.z1 = zeros(ncards, float_fmt)
+            self.z2 = zeros(ncards, float_fmt)
+            self.material_id4 = zeros(ncards, 'int32')
 
     def add(self, card, comment=''):
         i = self.i

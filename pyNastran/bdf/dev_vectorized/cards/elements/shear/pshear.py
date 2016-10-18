@@ -13,16 +13,18 @@ class PSHEAR(Property):
     def __init__(self, model):
         Property.__init__(self, model)
 
-    def allocate(self, ncards):
-        self.n = ncards
-        float_fmt = self.model.float
-        self.property_id = zeros(ncards, 'int32')
-        #: Material ID
-        self.material_id = zeros(ncards, 'int32')
-        self.thickness = zeros(ncards, float_fmt)
-        self.nsm = zeros(ncards, float_fmt)
-        self.f1 = zeros(ncards, float_fmt)
-        self.f2 = zeros(ncards, float_fmt)
+    def allocate(self, card_count):
+        ncards = card_count[self.type]
+        if ncards:
+            self.n = ncards
+            float_fmt = self.model.float
+            self.property_id = zeros(ncards, 'int32')
+            #: Material ID
+            self.material_id = zeros(ncards, 'int32')
+            self.thickness = zeros(ncards, float_fmt)
+            self.nsm = zeros(ncards, float_fmt)
+            self.f1 = zeros(ncards, float_fmt)
+            self.f2 = zeros(ncards, float_fmt)
 
     def add(self, card, comment=''):
         i = self.i

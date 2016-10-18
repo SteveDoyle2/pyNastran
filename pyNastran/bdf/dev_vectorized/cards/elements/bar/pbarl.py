@@ -53,27 +53,29 @@ class PBARL(Property):
         Property.__init__(self, model)
         self._cards = []
 
-    def allocate(self, ncards):
-        self.n = ncards
-        print('ncards PBARL = %s' % ncards)
-        float_fmt = self.model.float
+    def allocate(self, card_count):
+        ncards = card_count[self.type]
+        if ncards:
+            self.n = ncards
+            print('ncards PBARL = %s' % ncards)
+            float_fmt = self.model.float
 
-        #: Property ID
-        self.property_id = zeros(ncards, dtype='int32')
+            #: Property ID
+            self.property_id = zeros(ncards, dtype='int32')
 
-        #: Material ID
-        self.material_id = zeros(ncards, dtype='int32')
+            #: Material ID
+            self.material_id = zeros(ncards, dtype='int32')
 
-        self.group = zeros(ncards, dtype='|S8')
+            self.group = zeros(ncards, dtype='|S8')
 
-        #: Section Type (e.g. 'ROD', 'TUBE', 'I', 'H')
-        self.Type = zeros(ncards, dtype='|S8')
+            #: Section Type (e.g. 'ROD', 'TUBE', 'I', 'H')
+            self.Type = zeros(ncards, dtype='|S8')
 
-        #: non-structural mass
-        self.nsm = zeros(ncards, dtype=float_fmt)
+            #: non-structural mass
+            self.nsm = zeros(ncards, dtype=float_fmt)
 
-        #: dimension list
-        self.dim = {}
+            #: dimension list
+            self.dim = {}
 
     def add(self, card, comment):
         i = self.i

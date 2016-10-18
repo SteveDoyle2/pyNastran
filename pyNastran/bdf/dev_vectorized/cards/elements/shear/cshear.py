@@ -12,16 +12,19 @@ class CSHEAR(Element):
     def __init__(self, model):
         Element.__init__(self, model)
 
-    def allocate(self, ncards):
-        #: Element ID
-        self.element_id = zeros(ncards, 'int32')
-        #: Property ID
-        self.property_id = zeros(ncards, 'int32')
-        #: Node IDs
-        self.node_ids = zeros((ncards, 4), 'int32')
-        self.zoffset = zeros(ncards, 'int32')
-        self.t_flag = zeros(ncards, 'int32')
-        self.thickness = zeros((ncards, 4), self.model.float)
+    def allocate(self, card_count):
+        ncards = card_count[self.type]
+        if ncards:
+            self.n = ncards
+            #: Element ID
+            self.element_id = zeros(ncards, 'int32')
+            #: Property ID
+            self.property_id = zeros(ncards, 'int32')
+            #: Node IDs
+            self.node_ids = zeros((ncards, 4), 'int32')
+            self.zoffset = zeros(ncards, 'int32')
+            self.t_flag = zeros(ncards, 'int32')
+            self.thickness = zeros((ncards, 4), self.model.float)
 
     def add(self, card, comment=''):
         i = self.i

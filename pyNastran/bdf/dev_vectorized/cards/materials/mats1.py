@@ -48,38 +48,40 @@ class MATS1(Material):
         obj.limit2 = self.limit2[i]
         return obj
 
-    def allocate(self, ncards):
-        self.n = ncards
-        float_fmt = self.model.float
-        #: Identification number of a MAT1, MAT2, or MAT9 entry.
-        self.material_id = zeros(ncards, dtype='int32')
-        #: Identification number of a TABLES1 or TABLEST entry. If H is
-        #: given, then this field must be blank.
-        self.table_id = zeros(ncards, dtype='int32')
-        #: Type of material nonlinearity. ('NLELAST' for nonlinear elastic
-        #: or 'PLASTIC' for elastoplastic.)
-        self.Type = zeros(ncards, dtype='|S8')
+    def allocate(self, card_count):
+        ncards = card_count[self.type]
+        if ncards:
+            self.n = ncards
+            float_fmt = self.model.float
+            #: Identification number of a MAT1, MAT2, or MAT9 entry.
+            self.material_id = zeros(ncards, dtype='int32')
+            #: Identification number of a TABLES1 or TABLEST entry. If H is
+            #: given, then this field must be blank.
+            self.table_id = zeros(ncards, dtype='int32')
+            #: Type of material nonlinearity. ('NLELAST' for nonlinear elastic
+            #: or 'PLASTIC' for elastoplastic.)
+            self.Type = zeros(ncards, dtype='|S8')
 
-        #: Work hardening slope (slope of stress versus plastic strain) in
-        #: units of stress. For elastic-perfectly plastic cases, H=0.0.
-        #: For more than a single slope in the plastic range, the
-        #: stress-strain data must be supplied on a TABLES1 entry
-        #: referenced by TID, and this field must be blank
-        self.h = zeros(ncards, dtype=float_fmt)
-        self.hflag = zeros(ncards, dtype='bool')
+            #: Work hardening slope (slope of stress versus plastic strain) in
+            #: units of stress. For elastic-perfectly plastic cases, H=0.0.
+            #: For more than a single slope in the plastic range, the
+            #: stress-strain data must be supplied on a TABLES1 entry
+            #: referenced by TID, and this field must be blank
+            self.h = zeros(ncards, dtype=float_fmt)
+            self.hflag = zeros(ncards, dtype='bool')
 
-        #: Yield function criterion, selected by one of the following
-        #: values (1) Von Mises (2) Tresca (3) Mohr-Coulomb
-        #: (4) Drucker-Prager
-        self.yf = zeros(ncards, dtype='int32')
+            #: Yield function criterion, selected by one of the following
+            #: values (1) Von Mises (2) Tresca (3) Mohr-Coulomb
+            #: (4) Drucker-Prager
+            self.yf = zeros(ncards, dtype='int32')
 
-        #: Hardening Rule, selected by one of the following values
-        #: (Integer): (1) Isotropic (Default) (2) Kinematic
-        #: (3) Combined isotropic and kinematic hardening
-        self.hr = zeros(ncards, dtype='int32')
-        #: Initial yield point
-        self.limit1 = zeros(ncards, dtype=float_fmt)
-        self.limit2 = zeros(ncards, dtype=float_fmt)
+            #: Hardening Rule, selected by one of the following values
+            #: (Integer): (1) Isotropic (Default) (2) Kinematic
+            #: (3) Combined isotropic and kinematic hardening
+            self.hr = zeros(ncards, dtype='int32')
+            #: Initial yield point
+            self.limit1 = zeros(ncards, dtype=float_fmt)
+            self.limit2 = zeros(ncards, dtype=float_fmt)
 
     def add(self, card=None, comment=''):
         if comment:

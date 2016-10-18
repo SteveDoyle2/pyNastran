@@ -14,18 +14,20 @@ class CQUAD4(ShellElement):
     def __init__(self, model):
         ShellElement.__init__(self, model)
 
-    def allocate(self, ncards):
+    def allocate(self, card_count):
+        ncards = card_count[self.type]
         self.n = ncards
-        float_fmt = self.model.float
-        #: Element ID
-        self.element_id = zeros(ncards, 'int32')
-        #: Property ID
-        self.property_id = zeros(ncards, 'int32')
-        #: Node IDs
-        self.node_ids = zeros((ncards, 4), 'int32')
-        self.zoffset = zeros(ncards, 'int32')
-        self.t_flag = zeros(ncards, 'int32')
-        self.thickness = zeros((ncards, 4), float_fmt)
+        if self.n:
+            float_fmt = self.model.float
+            #: Element ID
+            self.element_id = zeros(ncards, 'int32')
+            #: Property ID
+            self.property_id = zeros(ncards, 'int32')
+            #: Node IDs
+            self.node_ids = zeros((ncards, 4), 'int32')
+            self.zoffset = zeros(ncards, 'int32')
+            self.t_flag = zeros(ncards, 'int32')
+            self.thickness = zeros((ncards, 4), float_fmt)
 
     def add(self, card, comment=''):
         i = self.i

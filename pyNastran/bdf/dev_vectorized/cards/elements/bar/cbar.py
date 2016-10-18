@@ -46,26 +46,29 @@ class CBAR(Element):
         """
         Element.__init__(self, model)
 
-    def allocate(self, ncards):
+    def allocate(self, card_count):
+        ncards = card_count[self.type]
         self.n = ncards
-        float_fmt = self.model.float
-        #: Element ID
-        self.element_id = zeros(ncards, 'int32')
-        #: Property ID
-        self.property_id = zeros(ncards, 'int32')
-        self.node_ids = zeros((ncards, 2), 'int32')
-        self.is_g0 = zeros(ncards, 'bool')
-        self.g0 = full(ncards, nan, 'int32')
-        self.x = full((ncards, 3), nan, float_fmt)
-        self.offt = full(ncards, nan, '|S3')
-        self.pin_flags = zeros((ncards, 2), 'int32')
-        self.wa = zeros((ncards, 3), float_fmt)
-        self.wb = zeros((ncards, 3), float_fmt)
+        if self.n:
+            assert isinstance(ncards, int), ncards
+            float_fmt = self.model.float
+            #: Element ID
+            self.element_id = zeros(ncards, 'int32')
+            #: Property ID
+            self.property_id = zeros(ncards, 'int32')
+            self.node_ids = zeros((ncards, 2), 'int32')
+            self.is_g0 = zeros(ncards, 'bool')
+            self.g0 = full(ncards, nan, 'int32')
+            self.x = full((ncards, 3), nan, float_fmt)
+            self.offt = full(ncards, nan, '|S3')
+            self.pin_flags = zeros((ncards, 2), 'int32')
+            self.wa = zeros((ncards, 3), float_fmt)
+            self.wb = zeros((ncards, 3), float_fmt)
 
     def add(self, card, comment=''):
         i = self.i
 
-        if self.model.cbaror.n > 0:
+        if 0 and self.model.cbaror.n > 0:
             cbaror = self.model.cbaror
             pid_default = cbaror.property_id
             is_g0_default = cbaror.is_g0

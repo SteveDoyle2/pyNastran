@@ -1,9 +1,12 @@
 """defines the BDF attributes"""
 from __future__ import print_function
+from collections import defaultdict
+
 from pyNastran.utils import object_attributes, object_methods
 
 from pyNastran.bdf.dev_vectorized.cards.nodes.grid import GRID, GRDSET
 from pyNastran.bdf.dev_vectorized.cards.nodes.spoint import SPOINT
+
 from pyNastran.bdf.dev_vectorized.cards.elements.shell.cquad4 import CQUAD4
 from pyNastran.bdf.dev_vectorized.cards.elements.shell.ctria3 import CTRIA3
 from pyNastran.bdf.dev_vectorized.cards.elements.shell.ctria6 import CTRIA6
@@ -36,6 +39,7 @@ from pyNastran.bdf.dev_vectorized.cards.elements.rod.ptube import PTUBE
 from pyNastran.bdf.dev_vectorized.cards.elements.rod.ctube import CTUBE
 
 from pyNastran.bdf.dev_vectorized.cards.elements.bar.cbar import CBAR
+#from pyNastran.bdf.dev_vectorized.cards.elements.bar.cbaror import CBAROR
 from pyNastran.bdf.dev_vectorized.cards.elements.bar.pbar import PBAR
 from pyNastran.bdf.dev_vectorized.cards.elements.bar.pbarl import PBARL
 
@@ -78,6 +82,7 @@ class BDFAttributes(object):
 
         # bars
         self.cbar = CBAR(self)
+        #self.cbaror = CBAROR(self)
         self.pbar = PBAR(self)
         self.pbarl = PBARL(self)
 
@@ -260,6 +265,7 @@ class BDFAttributes(object):
 
         self.set_precision()
 
+        self._type_to_id_map = defaultdict(list)
         self._solmap_to_value = {
             'NONLIN': 101,  # 66 -> 101 per Reference 1
             'SESTATIC': 101,
@@ -458,6 +464,7 @@ class BDFAttributes(object):
             'CTUBE' : self.ctube,
 
             'CBAR' : self.cbar,
+            #'CBAROR' : self.cbaror,
             'PBAR' : self.pbar,
             'PBARL' : self.pbarl,
 
