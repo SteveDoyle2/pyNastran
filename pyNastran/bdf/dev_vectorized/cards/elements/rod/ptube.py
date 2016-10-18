@@ -18,7 +18,10 @@ class PTUBE(Property):
         """
         Defines the PTUBE object.
 
-        :param model: the BDF object
+        Parameters
+        ----------
+        model : BDF
+           the BDF object
         """
         Property.__init__(self, model)
 

@@ -12,7 +12,10 @@ class POINT(object):
         """
         Defines the POINT object.
 
-        :param model: the BDF object
+        Parameters
+        ----------
+        model : BDF
+           the BDF object
 
         +-------+-----+----+----+----+----+
         |   1   |  2  | 3  | 4  | 5  | 6  |

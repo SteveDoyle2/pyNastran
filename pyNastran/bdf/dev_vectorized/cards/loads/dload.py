@@ -12,7 +12,10 @@ class DLOAD(object):
         """
         Defines the DLOAD object.
 
-        :param model: the BDF object
+        Parameters
+        ----------
+        model : BDF
+           the BDF object
         """
         self.model = model
         self.load_id = None

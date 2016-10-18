@@ -14,7 +14,10 @@ class PLOADX1(object):
         """
         Defines the PLOADX1 object.
 
-        :param model: the BDF object
+        Parameters
+        ----------
+        model : BDF
+           the BDF object
         """
         self.model = model
         self.n = 0

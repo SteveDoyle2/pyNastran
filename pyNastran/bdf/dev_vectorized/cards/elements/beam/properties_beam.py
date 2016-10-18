@@ -4,9 +4,12 @@ from pyNastran.bdf.dev_vectorized.cards.elements.beam.pbeaml import PBEAML
 class PropertiesBeam(object):
     def __init__(self, model):
         """
-        Defines the PropertiesBar object.
+        Defines the PropertiesBeam object.
 
-        :param model: the BDF object
+        Parameters
+        ----------
+        model : BDF
+           the BDF object
         """
         self.model = model
 

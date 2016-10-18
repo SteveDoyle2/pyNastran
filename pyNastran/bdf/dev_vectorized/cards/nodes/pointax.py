@@ -14,7 +14,10 @@ class POINTAX(object):
         """
         Defines the POINTAX object.
 
-        :param model: the BDF object
+        Parameters
+        ----------
+        model : BDF
+           the BDF object
 
         +---------+-----+-----+-----+
         |    1    |  2  |  3  |  4  |

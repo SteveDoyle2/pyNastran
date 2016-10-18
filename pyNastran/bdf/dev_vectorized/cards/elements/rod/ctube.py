@@ -19,7 +19,10 @@ class CTUBE(RodElement):
         """
         Defines the CTUBE object.
 
-        :param model: the BDF object
+        Parameters
+        ----------
+        model : BDF
+           the BDF object
         """
         RodElement.__init__(self, model)
 

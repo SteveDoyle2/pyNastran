@@ -31,7 +31,10 @@ class CPENTA6(SolidElement):
         """
         Defines the CPENTA object.
 
-        :param model: the BDF object
+        Parameters
+        ----------
+        model : BDF
+           the BDF object
         """
         SolidElement.__init__(self, model)
 

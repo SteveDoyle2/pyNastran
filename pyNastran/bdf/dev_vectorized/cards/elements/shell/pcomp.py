@@ -25,8 +25,10 @@ class PCOMP(Property):
         """
         Defines the PCOMP object.
 
-        :param model: the BDF object
-        :param cards: the list of PCOMP cards
+        Parameters
+        ----------
+        model : BDF
+           the BDF object
         """
         Property.__init__(self, model)
         #self.model = model

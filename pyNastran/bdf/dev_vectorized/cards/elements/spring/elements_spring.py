@@ -7,9 +7,12 @@ from pyNastran.bdf.dev_vectorized.cards.elements.spring.celas4 import CELAS4
 class ElementsSpring(object):
     def __init__(self, model):
         """
-        Defines the ElementsShell object.
+        Defines the ElementsSpring object.
 
-        :param model: the BDF object
+        Parameters
+        ----------
+        model : BDF
+           the BDF object
         """
         self.model = model
 

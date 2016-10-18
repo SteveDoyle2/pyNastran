@@ -171,11 +171,16 @@ class CAERO1(VectorizedCard):
         """
         Gets the area of the CAERO1s on a total or per element basis.
 
-        :param element_id: the elements to consider (default=None -> all)
-        :param total: should the area be summed (default=False)
-
-        :param node_ids:   the GRIDs as an (N, )  NDARRAY (or None)
-        :param grids_cid0: the GRIDs as an (N, 3) NDARRAY in CORD2R=0 (or None)
+        Parameters
+        ----------
+        element_id : (N, ) int ndarray; (default=None -> all)
+            the elements to consider
+        total : bool; default=False
+           should the area be summed
+        node_ids : (nnodes, ) int ndarray; (default=None -> computes)
+            the GRID ids for grids_cid0
+        grids_cid0 : (nnodes, 3) float ndarray; (default=None -> computes)
+            the GRIDs in CORD2R=0
 
         .. note:: If node_ids is None, the positions of all the GRID cards
                   must be calculated
@@ -195,12 +200,12 @@ class CAERO1(VectorizedCard):
         Gets the normals of the CAERO1s on per element basis.
 
         Parameters
-        -----------
-        element_id : (N, ) int ndarray  (default=None -> all)
+        ----------
+        element_id : (N, ) int ndarray; (default=None -> all)
             the elements to consider
-        node_ids : (N, ) int ndarray (None -> auto)
-            the GRID IDs
-        grids_cid0 : (N, 3) float ndarray (None -> auto)
+        node_ids : (nnodes, ) int ndarray; (None -> computes)
+            the GRID ids for grids_cid0
+        grids_cid0 : (nnodes, 3) float ndarray; (None -> computes)
             the GRIDs in CORD2R=0
 
         .. note:: If node_ids is None, the positions of all the GRID cards
@@ -224,13 +229,19 @@ class CAERO1(VectorizedCard):
         Gets the area, and normals of the CAERO1s on a per
         element basis.
 
-        :param element_id: the elements to consider (default=None -> all)
+        Parameters
+        -----------
+        element_id : (N, ) int ndarray; (default=None -> all)
+            the elements to consider
+        node_ids : (nnodes, ) int ndarray; (None -> computes)
+            the GRID ids for grids_cid0
+        grids_cid0 : (nnodes, 3) float ndarray; (None -> computes)
+            the GRIDs in CORD2R=0
 
-        :param node_ids:   the GRIDs as an (N, )  NDARRAY (or None)
-        :param grids_cid0: the GRIDs as an (N, 3) NDARRAY in CORD2R=0 (or None)
-
-        :param calculate_area: should the area be calculated (default=True)
-        :param calculate_normal: should the normals be calculated (default=True)
+        calculate_area : bool; default=True
+            should the area be calculated
+        calculate_normal : bool; default=True
+            should the normals be calculated
 
         .. note:: If node_ids is None, the positions of all the GRID cards
                   must be calculated
@@ -270,7 +281,8 @@ class CAERO1(VectorizedCard):
 
         Returns
         -------
-        grids2_cid0 : the corresponding positins of the requested GRIDs
+        grids2_cid0 : ???
+            the corresponding positions of the requested GRIDs
         """
         grids2_cid_0 = grids_cid0[searchsorted(nids_to_get, node_ids), :]
         return grids2_cid_0

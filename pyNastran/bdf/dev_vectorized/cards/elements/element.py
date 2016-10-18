@@ -4,18 +4,34 @@ from pyNastran.utils import integer_types
 from pyNastran.bdf.dev_vectorized.cards.vectorized_card import VectorizedCard
 
 class Element(VectorizedCard):
+    """
+    an Element is a subclass for the Elements that defines:
+      - for
+    """
     def __init__(self, model):
         VectorizedCard.__init__(self, model)
 
     def __iter__(self):
+        """
+        for ielem in range(model.elements):
+           ...
+        """
         for i in self.n:
             yield i
 
     def values(self):
+        """
+        for elem in model.elements.values():
+           ...
+        """
         for i in self.n:
             yield self.__getitem__([i])
 
     def items(self):
+        """
+        for ielem, elem in model.elements.items():
+           ...
+        """
         for i in self.n:
             yield i, self.__getitem__([i])
 

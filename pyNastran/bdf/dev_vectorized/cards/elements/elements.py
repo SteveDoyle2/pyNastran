@@ -30,9 +30,12 @@ def asarray(ids, dtype='float32'):
 class Elements(object):
     def __init__(self, model):
         """
-        Defines the ElementsShell object.
+        Defines the Elements object.
 
-        :param model: the BDF object
+        Parameters
+        ----------
+        model : BDF
+           the BDF object
         """
         self.model = model
         self.n = 0
@@ -686,7 +689,10 @@ class Elements(object):
 
     def _get_property_types(self, nlimit=True):
         """
-        :param nlimit: limit the outputs to objects with data
+        Parameters
+        ----------
+        nlimit : bool; default=True
+            limit the outputs to objects with data
         """
         types = [
             # 0D

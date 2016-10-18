@@ -17,7 +17,10 @@ class PROD(Property):
         """
         Defines the PROD object.
 
-        :param model: the BDF object
+        Parameters
+        ----------
+        model : BDF
+           the BDF object
         """
         Property.__init__(self, model)
 

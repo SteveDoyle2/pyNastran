@@ -15,8 +15,10 @@ class PBAR(Property):
         """
         Defines the PBAR object.
 
-        :param model: the BDF object
-        :param cards: the list of PBAR cards
+        Parameters
+        ----------
+        model : BDF
+           the BDF object
         """
         Property.__init__(self, model)
 

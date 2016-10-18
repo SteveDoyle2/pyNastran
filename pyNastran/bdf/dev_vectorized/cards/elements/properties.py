@@ -15,7 +15,10 @@ class Properties(object):
         """
         Defines the Properties object.
 
-        :param model: the BDF object
+        Parameters
+        ----------
+        model : BDF
+           the BDF object
         """
         self.model = model
         self.np = 0

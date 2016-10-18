@@ -383,10 +383,12 @@ class Cord1x(Coord):
         """
         Converts a coordinate system from a CORD1x to a CORD2x
 
-        :param model: a BDF model
-        :param rid:
-          The relative coordinate system (default=0 -> Global);
-          TYPE = INT.
+        Parameters
+        ----------
+        model : BDF
+           the BDF object
+        rid : int; (default=0 -> global)
+           The relative coordinate system
         """
         rid1 = self.g1.cid
         rid2 = self.g2.cid

@@ -51,8 +51,10 @@ class PBEAM(Property):
         """
         Defines the PBEAM object.
 
-        :param model: the BDF object
-        :param cards: the list of PBEAM cards
+        Parameters
+        ----------
+        model : BDF
+           the BDF object
         """
         self.properties = {}
         self.model = model

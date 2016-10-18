@@ -16,7 +16,10 @@ class FORCE2(VectorizedCard):
         """
         Defines the FORCE2 object.
 
-        :param model: the BDF object
+        Parameters
+        ----------
+        model : BDF
+           the BDF object
 
         .. todo:: collapse loads
         """

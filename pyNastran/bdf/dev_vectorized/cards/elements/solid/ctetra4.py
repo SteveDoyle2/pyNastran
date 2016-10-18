@@ -25,7 +25,10 @@ class CTETRA4(SolidElement):
         """
         Defines the CTETRA object.
 
-        :param model: the BDF object
+        Parameters
+        ----------
+        model : BDF
+           the BDF object
         """
         SolidElement.__init__(self, model)
 

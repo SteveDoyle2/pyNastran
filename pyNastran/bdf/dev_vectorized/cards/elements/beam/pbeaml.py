@@ -54,8 +54,10 @@ class PBEAML(object):
         """
         Defines the PBEAML object.
 
-        :param model: the BDF object
-        :param cards: the list of PBEAML cards
+        Parameters
+        ----------
+        model : BDF
+           the BDF object
         """
         self.properties = {}
         self.model = model

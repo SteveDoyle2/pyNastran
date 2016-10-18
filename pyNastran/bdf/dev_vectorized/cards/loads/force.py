@@ -14,7 +14,10 @@ class FORCE(object):
         """
         Defines the FORCE object.
 
-        :param model: the BDF object
+        Parameters
+        ----------
+        model : BDF
+           the BDF object
 
         .. todo:: collapse loads
         """

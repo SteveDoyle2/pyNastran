@@ -16,7 +16,10 @@ class CONM2(VectorizedCard):
         """
         Defines the CONM2 object.
 
-        :param model: the BDF object
+        Parameters
+        ----------
+        model : BDF
+           the BDF object
         """
         VectorizedCard.__init__(self, model)
 

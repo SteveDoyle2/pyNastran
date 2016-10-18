@@ -16,8 +16,10 @@ class PBUSH(object):
         """
         Defines the PCOMP object.
 
-        :param model: the BDF object
-        :param cards: the list of PBUSH cards
+        Parameters
+        ----------
+        model : BDF
+           the BDF object
         """
         self.model = model
         self.properties = {}

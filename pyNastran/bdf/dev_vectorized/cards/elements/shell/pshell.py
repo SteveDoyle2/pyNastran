@@ -25,8 +25,10 @@ class PSHELL(Property):
         """
         Defines the PSHELL object.
 
-        :param model: the BDF object
-        :param cards: the list of PSHELL cards
+        Parameters
+        ----------
+        model : BDF
+           the BDF object
         """
         Property.__init__(self, model)
 

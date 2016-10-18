@@ -17,7 +17,10 @@ class CELAS1(SpringElement):
         """
         Defines the CELAS1 object.
 
-        :param model: the BDF object
+        Parameters
+        ----------
+        model : BDF
+           the BDF object
         """
         SpringElement.__init__(self, model)
 

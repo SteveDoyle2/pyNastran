@@ -13,7 +13,10 @@ class TEMPD(object):
         """
         Defines the TEMPD object.
 
-        :param model: the BDF object
+        Parameters
+        ----------
+        model : BDF
+           the BDF object
 
         +-------+------+----+------+----+------+----+------+----+
         |    1  |  2   | 3  |  4   | 5  |  6   | 7  |  8   | 9  |
@@ -63,7 +66,10 @@ class TEMP(object):
         """
         Defines the TEMP object.
 
-        :param model: the BDF object
+        Parameters
+        ----------
+        model : BDF
+           the BDF object
 
         +------+-----+----+----+----+----+----+----+------+
         |   1  |  2  | 3  | 4  | 5  | 6  |  7 | 8  |  9   |

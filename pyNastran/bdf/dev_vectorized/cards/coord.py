@@ -177,10 +177,10 @@ class Coord(VectorizedCard):
         """
         Defines the ShellProperties object.
 
-        :param model: the BDF object
-        :param pshells: the list of PSHELL cards
-        :param pcomps: the list of PCOMP cards
-        :param pshears: the list of PSHEAR cards
+        Parameters
+        ----------
+        model : BDF
+           the BDF object
         """
         VectorizedCard.__init__(self, model)
         float_fmt = self.model.float

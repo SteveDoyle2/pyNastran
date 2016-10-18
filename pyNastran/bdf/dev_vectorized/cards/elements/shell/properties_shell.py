@@ -11,7 +11,10 @@ class PropertiesShell(object):
         """
         Defines the ShellProperties object.
 
-        :param model: the BDF object
+        Parameters
+        ----------
+        model : BDF
+           the BDF object
         """
         self.model = model
         self.pshell = PSHELL(self.model)

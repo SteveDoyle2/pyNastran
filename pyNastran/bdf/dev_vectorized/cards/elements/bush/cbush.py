@@ -40,7 +40,10 @@ class CBUSH(Element):
         """
         Defines the CBUSH object.
 
-        :param model: the BDF object
+        Parameters
+        ----------
+        model : BDF
+           the BDF object
         """
         Element.__init__(self, model)
 

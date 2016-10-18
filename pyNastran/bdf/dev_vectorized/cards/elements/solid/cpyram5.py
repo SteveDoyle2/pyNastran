@@ -31,7 +31,10 @@ class CPYRAM5(SolidElement):
         """
         Defines the CPYRAM5 object.
 
-        :param model: the BDF object
+        Parameters
+        ----------
+        model : BDF
+           the BDF object
         """
         SolidElement.__init__(self, model)
 
