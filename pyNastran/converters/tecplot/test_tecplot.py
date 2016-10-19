@@ -1,6 +1,5 @@
 import os
 
-from pyNastran.gui.testing_methods import GUIMethods
 from pyNastran.converters.tecplot.tecplot import read_tecplot
 from pyNastran.converters.tecplot.tecplot_to_nastran import tecplot_to_nastran_filename
 from pyNastran.converters.nastran.nastran_to_tecplot import nastran_to_tecplot, nastran_to_tecplot_filename

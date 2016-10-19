@@ -44,6 +44,14 @@ class Abaqus(object):
     def __init__(self, log=None, debug=False):
         self.debug = debug
         self.parts = {}
+        self.boundaries = {}
+        self.materials = {}
+        self.amplitudes = {}
+        self.assembly = {}
+        self.initial_conditions = {}
+        self.steps = {}
+        self.heading = None
+        self.preprint = None
 
     def read_abaqus_inp(self, abaqus_inp_filename):
         """reads an abaqus model"""
@@ -72,7 +80,7 @@ class Abaqus(object):
 
             if '*' in line0[0]:
                 word = line0.strip('*').lower()
-                print('word1 = %r' % word)
+                #print('word1 = %r' % word)
                 if word == 'heading':
                     pass
                 elif word.startswith('preprint'):
@@ -107,6 +115,10 @@ class Abaqus(object):
                             return
 
                 elif word.startswith('amplitude'):
+                    param_map = get_param_map(word)
+                    name = param_map['name']
+                    if name in self.amplitudes:
+                        raise RuntimeError('name=%r is already defined...' % name)
                     # TODO: skips header parsing
                     iline += 1
                     line0 = lines[iline].strip().lower()
@@ -115,7 +127,13 @@ class Abaqus(object):
                         data_lines.append(line0.split(','))
                         iline += 1
                         line0 = lines[iline].strip().lower()
-                    print(line0)
+                    amplitude = []
+                    for sline in data_lines[:-1]:
+                        assert len(sline) == 8, sline
+                        amplitude += sline
+                    assert len(data_lines[-1]) <= 8, sline
+                    amplitude += data_lines[-1]
+                    self.amplitudes[name] = np.array(amplitude)
                     continue
                     #iline -= 1
                     #line0 = lines[iline].strip().lower()
@@ -123,92 +141,22 @@ class Abaqus(object):
                 #elif 'include' in word:
                     #pass
                 elif word.startswith('material'):
-                    # TODO: skips header parsing
-
-                    iline += 1
-                    line0 = lines[iline].strip().lower()
-                    word = line0.strip('*').lower()
-                    allowed_words = ['elastic']
-                    unallowed_words = ['material', 'step', 'boundary']
-                    print('  line0 =', line0)
-                    iline += 1
-                    line0 = lines[iline].strip('\n\r\t, ').lower()
-                    print('  wordA =', word)
-                    #while word in allowed_words:
-                    while word not in unallowed_words:
-                        data_lines = []
-                        if word.startswith('elastic'):
-                            sword = word.split(',')
-
-                            print('  matword =', sword)
-                            if len(sword) == 1:
-                                # elastic
-                                assert len(sword) in [1, 2], sword
-                            else:
-                                mat_type = sword[1]
-                                assert 'type' in mat_type, sword
-                                mat_type = mat_type.split('=')[1]
-
-                                sline = line0.split(',')
-                                if mat_type == 'traction':
-                                    assert len(sline) == 3, sline
-                                    print('  traction material')
-                            iline += 1
-                        elif word.startswith('plastic'):
-                            sword = word.split(',')
-                            print('  matword =', sword)
-                            if len(sword) == 1:
-                                # elastic
-                                assert len(sline) in [1, 2], sline
-                            else:
-                                raise NotImplementedError(sline)
-                            iline += 1
-                        elif word == 'density':
-                            sline = line0.split(',')
-                            assert len(sline) == 1, 'sline=%s line0=%r' % (sline, line0)
-                            iline += 1
-                        elif word.startswith('damage initiation'):
-                            print('  damage0 ', line0)
-                            sline = line0.split(',')
-                            print(sline)
-                            assert len(sline) == 3, sline
-                            iline += 1
-                        elif word.startswith('damage evolution'):
-                            print('  damage_e ', line0)
-                            sline = line0.split(',')
-                            assert len(sline) == 3, sline
-                            iline += 41
-                            line0 = lines[iline].strip().lower()
-                            print(line0)
-                        elif word == 'damage stabilization':
-                            sline = line0.split(',')
-                            assert len(sline) == 1, sline
-                            iline += 1
-                        else:
-                            raise NotImplementedError('  word = %r' % word)
-                        line0 = lines[iline].strip('\n\r\t, ').lower()
-                        word = line0.strip('*').lower()
-
-                        iline += 1
-                        line0 = lines[iline].strip('\n\r\t, ').lower()
-                        print('  lineB =', line0)
-                        print('  wordB =', word)
-
-                        is_broken = False
-                        for unallowed_word in unallowed_words:
-                            if word.startswith(unallowed_word):
-                                print('  breaking on %r' % unallowed_word)
-                                is_broken = True
-                                break
-                        if is_broken:
-                            iline -= 1
-                            break
-                    iline -= 1
+                    iline, line0, material = self.read_material(lines, iline, word)
+                    self.materials[material.name] = material
                     print('end of material')
 
                 elif word.startswith('step'):
                     print('---------step-----------')
                     iline, line0 = self.read_step(lines, iline, line0)
+                elif word.startswith('initial conditions'):
+                    # TODO: skips header parsing
+                    iline += 1
+                    line0 = lines[iline].strip().lower()
+                    data_lines = []
+                    while not line0.startswith('*'):
+                        data_lines.append(line0.split(','))
+                        iline += 1
+                        line0 = lines[iline].strip().lower()
 
                 else:
                     raise NotImplementedError(word)
@@ -222,6 +170,144 @@ class Abaqus(object):
 
         for part_name, part in sorted(self.parts.items()):
             print(part)
+
+    def read_material(self, lines, iline, word):
+        """reads a Material card"""
+        param_map = get_param_map(word)
+        #print(param_map)
+        name = param_map['name']
+
+        iline += 1
+        line0 = lines[iline].strip().lower()
+        word = line0.strip('*').lower()
+        allowed_words = ['elastic']
+        unallowed_words = ['material', 'step', 'boundary', 'amplitude']
+        #print('  line0 =', line0)
+        iline += 1
+        line0 = lines[iline].strip('\n\r\t, ').lower()
+        #print('  wordA =', word)
+        #while word in allowed_words:
+        sections = {}
+        while word not in unallowed_words:
+            data_lines = []
+            if word.startswith('elastic'):
+                key = 'elastic'
+                sword = word.split(',')
+
+                #print('  matword =', sword)
+                if len(sword) == 1:
+                    # elastic
+                    assert len(sword) in [1, 2], sword
+                else:
+                    mat_type = sword[1]
+                    assert 'type' in mat_type, sword
+                    mat_type = mat_type.split('=')[1]
+
+                    sline = line0.split(',')
+                    if mat_type == 'traction':
+                        assert len(sline) == 3, sline
+                        print('  traction material')
+                iline += 1
+            elif word.startswith('plastic'):
+                key = 'plastic'
+                sword = word.split(',')
+                print('  matword =', sword)
+                if len(sword) == 1:
+                    # elastic
+                    assert len(sline) in [1, 2], sline
+                else:
+                    raise NotImplementedError(sline)
+                iline += 1
+            elif word == 'density':
+                key = 'density'
+                sline = line0.split(',')
+                assert len(sline) == 1, 'sline=%s line0=%r' % (sline, line0)
+                iline += 1
+            elif word.startswith('damage initiation'):
+                key = 'damage initiation'
+                #print('  damage0 ', line0)
+                sline = line0.split(',')
+                print(sline)
+                assert len(sline) == 3, sline
+                iline += 1
+            elif word.startswith('damage evolution'):
+                key = 'damage evolution'
+                #print('  damage_e ', line0)
+                sline = line0.split(',')
+                assert len(sline) == 3, sline
+                iline += 41
+                line0 = lines[iline].strip().lower()
+                print(line0)
+            elif word == 'damage stabilization':
+                key = 'damage stabilization'
+                sline = line0.split(',')
+                assert len(sline) == 1, sline
+                iline += 1
+            elif word == 'depvar':
+                key = 'depvar'
+                sline = line0.split(',')
+                assert len(sline) == 1, sline
+                ndepvars = int(sline[0])
+                iline += 1
+            elif word.startswith('user material'):
+                key = 'user material'
+                words = word.split(',')[1:]
+                for wordi in words:
+                    assert '=' in wordi, wordi
+                    mat_word, value = wordi.split('=')
+                    mat_word = mat_word.strip()
+                    if mat_word == 'constants':
+                        nconstants = int(value)
+                    elif mat_word == 'type':
+                        mat_type = value.strip()
+                        allowed_types = ['mechanical']
+                        if not mat_type in allowed_types:
+                            msg = 'mat_type=%r; allowed_types=[%s]'  % (mat_type, ', '.join(allowed_types))
+                            raise NotImplementedError(msg)
+                    else:
+                        raise NotImplementedError('mat_word=%r' % mat_word)
+
+                #nconstants = 111
+                nlines_full = nconstants // 8
+                nleftover = nconstants % 8
+                mat_data = []
+                for iiline in range(nlines_full):
+                    sline = line0.split(',')
+                    assert len(sline) == 8, 'len(sline)=%s; sline=%s' % (len(sline), sline)
+                    mat_data += sline
+                    iline += 1
+                    line0 = lines[iline].strip('\n\r\t, ').lower()
+                if nleftover:
+                    sline = line0.split(',')
+                    iline += 1
+                    line0 = lines[iline].strip('\n\r\t, ').lower()
+            else:
+                raise NotImplementedError(print_data(lines, iline, word, 'is this an unallowed word for *Material?\n'))
+            if key in sections:
+                msg = 'key=%r already defined for Material name=%r' % (key, name)
+                raise RuntimeError(msg)
+            sections[key] = data_lines
+
+            line0 = lines[iline].strip('\n\r\t, ').lower()
+            word = line0.strip('*').lower()
+
+            iline += 1
+            line0 = lines[iline].strip('\n\r\t, ').lower()
+            #print('  lineB =', line0)
+            #print('  wordB =', word)
+
+            is_broken = False
+            for unallowed_word in unallowed_words:
+                if word.startswith(unallowed_word):
+                    print('  breaking on %r' % unallowed_word)
+                    is_broken = True
+                    break
+            if is_broken:
+                iline -= 1
+                break
+        material = Material(name, sections=sections)
+        iline -= 1
+        return iline, line0, material
 
 
     def read_assembly(self, lines, iline, line0, word):
@@ -256,8 +342,16 @@ class Abaqus(object):
                     data_lines.append(line0.split(','))
                     iline += 1
                     line0 = lines[iline].strip().lower()
+            elif word.startswith('nset'):
+                # TODO: skips header parsing
+                params_map = get_param_map(word)
+                name = params_map['nset']
+                iline += 1
+                line0 = lines[iline].strip().lower()
+                assert 'instance' in params_map, params_map
+                set_ids, iline, line0 = read_set(lines, iline, line0, params_map)
             else:
-                raise NotImplementedError(line0)
+                raise NotImplementedError('\nword=%r\nline=%r' % (word, line0))
         return iline, line0
 
     def read_part(self, lines, iline, line0, word):
@@ -316,7 +410,6 @@ class Abaqus(object):
                     iline += 1
                     line0 = lines[iline].strip().lower()
                 nnodes = len(nids)
-                #print('  nnodes =', nnodes)
                 if is_failed:
                     msg = 'nids will overwrite nids0!\n'
                     #msg += 'nids0 = %s\n' % nids0
@@ -344,24 +437,20 @@ class Abaqus(object):
                     line0 = lines[iline].strip().lower()
                 element_types[etype] = elements
             elif '*nset' in line0:
-                # TODO: skips header parsing
-                #iline += 1
+                params_map = get_param_map(word)
+                name = params_map['name']
                 line0 = lines[iline].strip().lower()
-                set_ids = []
-                while not line0.startswith('*'):
-                    set_ids.append(line0.split(','))
-                    iline += 1
-                    line0 = lines[iline].strip().lower()
+                assert 'part' in params_map, params_map
+                set_ids, iline, line0 = read_set(lines, iline, line0, params_map)
 
             elif '*elset' in line0:
                 # TODO: skips header parsing
                 #iline += 1
+                params_map = get_param_map(word)
+                name = params_map['name']
+                assert 'part' in params_map, params_map
                 line0 = lines[iline].strip().lower()
-                set_ids = []
-                while not line0.startswith('*'):
-                    set_ids.append(line0.split(','))
-                    iline += 1
-                    line0 = lines[iline].strip().lower()
+                set_ids, iline, line0 = read_set(lines, iline, line0, params_map)
 
             elif '*surface' in line0:
                 # TODO: skips header parsing
@@ -413,17 +502,18 @@ class Abaqus(object):
         """reads a step object"""
         # TODO: skips header parsing
 
-        iline += 1
+        iline += 2
         line0 = lines[iline].strip().lower()
         word = line0.strip('*').lower()
         #allowed_words = ['static', 'boundary', 'dsload', 'restart', 'output', 'node',
                          #'element output']
-        print('  word =', word)
-        print('  lineA =', line0)
+        #print('  word =', word)
+        #print('  lineA =', line0)
         while word != 'end step':
             iline += 1
             line0 = lines[iline].strip().lower()
-            print('word =', word)
+            #print('word =', word)
+            #print('active_line =', line0)
             data_lines = []
             if word == 'static':
                 sline = line0.split(',')
@@ -454,6 +544,10 @@ class Abaqus(object):
                 sline = line0.split(',')
                 assert len(sline) >= 2, sline
                 iline += 1
+            elif word.startswith('visco'):
+                iline += 1
+            elif word.startswith('temperature'):
+                iline += 1
             elif word.startswith('controls'):
                 iline += 1
                 line0 = lines[iline].strip().lower()
@@ -466,22 +560,58 @@ class Abaqus(object):
                 word = line0.strip('*').lower()
                 continue
             elif word == 'node output':
-                #print('  line_sline =', line0)
-                sline = line0.split(',')
-                iline += 1
+                node_output = []
+                while '*' not in line0:
+                    sline = line0.split(',')
+                    node_output += sline
+                    iline += 1
+                    line0 = lines[iline].strip().lower()
             elif word.startswith('element output'):
-                #print('  line_sline =', line0)
-                sline = line0.split(',')
-                iline += 2
+                element_output = []
+                while '*' not in line0:
+                    sline = line0.split(',')
+                    element_output += sline
+                    iline += 1
+                    line0 = lines[iline].strip().lower()
             else:
                 raise NotImplementedError('word = %r' % word)
             line0 = lines[iline].strip().lower()
             word = line0.strip('*').lower()
-            print('  lineB =', line0)
-            print('  word2 =', word)
+            #print('  lineB =', line0)
+            #print('  word2 =', word)
         #iline += 1
         #iline -= 1
         return iline, line0
+
+def read_set(lines, iline, line0, params_map):
+    """reads a set"""
+    set_ids = []
+    while not line0.startswith('*'):
+        set_ids += line0.strip(', ').split(',')
+        iline += 1
+        line0 = lines[iline].strip().lower()
+    if 'generate' in params_map:
+        assert len(set_ids) == 3, set_ids
+        set_ids = np.arange(int(set_ids[0]), int(set_ids[1]), int(set_ids[2]))
+    else:
+        try:
+            set_ids = np.unique(np.array(set_ids, dtype='int32'))
+        except ValueError:
+            print(set_ids)
+            raise
+    return set_ids, iline, line0
+
+class Material(object):
+    """a Material object is a series of nodes & elements (of various types)"""
+    def __init__(self, name, sections):
+        self.name = name
+        self.density = sections['density']
+
+        if 'depvar' in sections:
+            self.depvar = sections['depvar']
+        if 'user_material' in sections:
+            self.user_material = sections['user_material']
+
 
 class Part(object):
     """a Part object is a series of nodes & elements (of various types)"""
@@ -715,8 +845,31 @@ class Part(object):
                     self.name, nnodes, neids,
                     n_r2d2, n_cpe3, n_cpe4, n_cpe4r, n_coh2d4,
                     n_cohax4, n_cax3, n_cax4r,
-
                     n_c3d10h))
+
+def get_param_map(word):
+    """get the optional arguments on a line"""
+    words = word.split(',')
+    param_map = {}
+    for wordi in words:
+        if '=' not in wordi:
+            key = wordi.strip()
+            value = None
+        else:
+            sword = wordi.split('=')
+            assert len(sword) == 2, sword
+            key = sword[0].strip()
+            value = sword[1].strip()
+        param_map[key] = value
+    return param_map
+
+def print_data(lines, iline, word, msg, nlines=20):
+    msg = 'word=%r\n%s\n' % (word, msg)
+    iline_start = iline - nlines
+    iline_start = max(iline_start, 0)
+    for iiline in range(iline_start, iline):
+        msg += lines[iiline]
+    raise NotImplementedError(msg)
 
 def main(): # pragma: no cover
     """tests a simple abaqus model"""

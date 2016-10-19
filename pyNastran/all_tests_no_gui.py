@@ -31,10 +31,7 @@ from pyNastran.op4.test.op4_test import TestOP4
 from pyNastran.utils.test.all_tests import *
 
 # converters
-try:
-    from pyNastran.converters.test_formats import *
-except ImportError:  # pragma: no cover
-    pass
+from pyNastran.converters.test_formats import *
 
 #gui - just tests the imports
 from pyNastran.gui.test.all_tests import *
