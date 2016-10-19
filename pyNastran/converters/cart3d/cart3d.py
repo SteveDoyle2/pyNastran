@@ -123,7 +123,7 @@ class Cart3dIO(object):
             if isinstance(float_fmt, str):
                 fmt = float_fmt
             else:
-                fmt = float_fmt.encode('latin1')
+                fmt = float_fmt.decode('latin1')
             np.savetxt(outfile, points, fmt)
 
     def _write_elements(self, outfile, elements, is_binary, int_fmt='%6i'):
@@ -143,7 +143,7 @@ class Cart3dIO(object):
             if isinstance(int_fmt, str):
                 fmt = int_fmt
             else:
-                fmt = int_fmt.encode('latin1')
+                fmt = int_fmt.decode('latin1')
             np.savetxt(outfile, elements, fmt)
 
     def _write_regions(self, outfile, regions, is_binary):

@@ -28,29 +28,31 @@ class MAT8(Material):
     def __init__(self, model):
         Material.__init__(self, model)
 
-    def allocate(self, ncards):
-        self.n = ncards
-        float_fmt = self.model.float
-        self.material_id = zeros(ncards, dtype='int32')
-        self.e11 = zeros(ncards, dtype=float_fmt)
-        self.e22 = zeros(ncards, dtype=float_fmt)
-        self.nu12 = zeros(ncards, dtype=float_fmt)
+    def allocate(self, card_count):
+        ncards = card_count[self.type]
+        if ncards:
+            self.n = ncards
+            float_fmt = self.model.float
+            self.material_id = zeros(ncards, dtype='int32')
+            self.e11 = zeros(ncards, dtype=float_fmt)
+            self.e22 = zeros(ncards, dtype=float_fmt)
+            self.nu12 = zeros(ncards, dtype=float_fmt)
 
-        self.g12 = zeros(ncards, dtype=float_fmt)
-        self.g1z = zeros(ncards, dtype=float_fmt)
-        self.g2z = zeros(ncards, dtype=float_fmt)
-        self.rho = zeros(ncards, dtype=float_fmt)
-        self.a1 = zeros(ncards, dtype=float_fmt)
-        self.a2 = zeros(ncards, dtype=float_fmt)
-        self.TRef = zeros(ncards, dtype=float_fmt)
-        self.Xt = zeros(ncards, dtype=float_fmt)
-        self.Xc = zeros(ncards, dtype=float_fmt)
-        self.Yt = zeros(ncards, dtype=float_fmt)
-        self.Yc = zeros(ncards, dtype=float_fmt)
-        self.S = zeros(ncards, dtype=float_fmt)
-        self.ge = zeros(ncards, dtype=float_fmt)
-        self.F12 = zeros(ncards, dtype=float_fmt)
-        self.strn = zeros(ncards, dtype=float_fmt)
+            self.g12 = zeros(ncards, dtype=float_fmt)
+            self.g1z = zeros(ncards, dtype=float_fmt)
+            self.g2z = zeros(ncards, dtype=float_fmt)
+            self.rho = zeros(ncards, dtype=float_fmt)
+            self.a1 = zeros(ncards, dtype=float_fmt)
+            self.a2 = zeros(ncards, dtype=float_fmt)
+            self.TRef = zeros(ncards, dtype=float_fmt)
+            self.Xt = zeros(ncards, dtype=float_fmt)
+            self.Xc = zeros(ncards, dtype=float_fmt)
+            self.Yt = zeros(ncards, dtype=float_fmt)
+            self.Yc = zeros(ncards, dtype=float_fmt)
+            self.S = zeros(ncards, dtype=float_fmt)
+            self.ge = zeros(ncards, dtype=float_fmt)
+            self.F12 = zeros(ncards, dtype=float_fmt)
+            self.strn = zeros(ncards, dtype=float_fmt)
 
     def add(self, card, comment=''):
         i = self.i

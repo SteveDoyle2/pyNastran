@@ -26,23 +26,25 @@ class PBAR(Property):
         self._cards.append(card)
         self._comments.append(comment)
 
-    def allocate(self, ncards):
-        self.n = ncards
-        float_fmt = self.model.float
-        #: Property ID
-        self.property_id = zeros(ncards, 'int32')
-        #: material ID
-        self.material_id = zeros(ncards, 'int32')
-        #: Area
-        self.area = zeros(ncards, float_fmt)
-        #: I1
-        self.I1 = zeros(ncards, float_fmt)
-        #: I2
-        self.I2 = zeros(ncards, float_fmt)
-        #: Polar Moment of Inertia J -> use J()
-        #: default=1/2(I1+I2) for SOL=600, otherwise 0.0
-        self.J = zeros(ncards, float_fmt)
-        self.nsm = zeros(ncards, float_fmt)
+    def allocate(self, card_count):
+        ncards = card_count[self.type]
+        if ncards:
+            self.n = ncards
+            float_fmt = self.model.float
+            #: Property ID
+            self.property_id = zeros(ncards, 'int32')
+            #: material ID
+            self.material_id = zeros(ncards, 'int32')
+            #: Area
+            self.area = zeros(ncards, float_fmt)
+            #: I1
+            self.I1 = zeros(ncards, float_fmt)
+            #: I2
+            self.I2 = zeros(ncards, float_fmt)
+            #: Polar Moment of Inertia J -> use J()
+            #: default=1/2(I1+I2) for SOL=600, otherwise 0.0
+            self.J = zeros(ncards, float_fmt)
+            self.nsm = zeros(ncards, float_fmt)
 
     def add(self, card, comment=''):
         i = self.i

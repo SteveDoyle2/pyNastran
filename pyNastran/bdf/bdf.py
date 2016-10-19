@@ -1045,8 +1045,8 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         self.update_solution(sol, method, isol_line)
 
         self.case_control_deck = CaseControlDeck(self.case_control_lines, self.log)
-        self.case_control_deck.solmap_toValue = self._solmap_to_value
-        self.case_control_deck.rsolmap_toStr = self.rsolmap_toStr
+        self.case_control_deck.solmap_to_value = self._solmap_to_value
+        self.case_control_deck.rsolmap_to_str = self.rsolmap_to_str
 
         if self._is_cards_dict:
             cards, card_count = self.get_bdf_cards_dict(bulk_data_lines)
@@ -1422,7 +1422,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         # the integer of the solution type (e.g. SOL 101)
         if sol is None:
             self.sol = None
-            self.solMethod = None
+            self.sol_method = None
             return
 
         try:
@@ -1435,10 +1435,10 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
 
         if self.sol == 600:
             #: solution 600 method modifier
-            self.solMethod = method.strip()
-            self.log.debug("sol=%s method=%s" % (self.sol, self.solMethod))
+            self.sol_method = method.strip()
+            self.log.debug("sol=%s method=%s" % (self.sol, self.sol_method))
         else:  # very common
-            self.solMethod = None
+            self.sol_method = None
 
     def update_card(self, card_name, icard, ifield, value):
         """
@@ -2716,7 +2716,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             'case_control_lines', 'cards_to_read', 'card_count',
             'isStructured', 'uniqueBulkDataCards',
             'nCardLinesMax', 'model_type', 'includeDir',
-            'solMethod', 'log',
+            'sol_method', 'log',
             'linesPack', 'lineNumbers', 'iSolLine',
             'reject_count', '_relpath', 'isOpened',
             #'foundEndData',

@@ -1,3 +1,4 @@
+"""defines the BDF attributes"""
 from __future__ import print_function, unicode_literals
 from collections import defaultdict
 from numpy import array
@@ -9,10 +10,13 @@ from pyNastran.bdf.cards.coordinate_systems import CORD2R
 #from pyNastran.bdf.cards.constraints import ConstraintObject
 
 class BDFAttributes(object):
+    """defines attributes of the BDF"""
 
     def __init__(self):
+        """creates the attributes for the BDF"""
         self.__init_attributes()
         self._is_cards_dict = False
+
         self.set_as_msc()
         self.units = []
 
@@ -178,7 +182,7 @@ class BDFAttributes(object):
             'SAERO': 146,
         }
 
-        self.rsolmap_toStr = {
+        self.rsolmap_to_str = {
             66: 'NONLIN',
             101: 'SESTSTATIC',  # linear static
             103: 'SEMODES',  # modal
@@ -224,7 +228,7 @@ class BDFAttributes(object):
         #: the analysis type
         self._sol = None
         #: used in solution 600, method
-        self.solMethod = None
+        self.sol_method = None
         #: the line with SOL on it, marks ???
         self.iSolLine = None
         self.case_control_deck = None

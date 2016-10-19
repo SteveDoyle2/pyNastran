@@ -15,11 +15,30 @@ class BDFCard(object):
     range.
     """
     def __init__(self, card, has_none=True):
+        """
+        Parameters
+        ----------
+        card : List[str]
+           the split values for the card
+        has_none : bool; default=True
+           helps with a special case to speed up runtime
+
+        # definitely bad
+        card = ['GRID', '1', '', '1.0', '2.0', '3.0']
+        BDFCard(card, has_none=False)
+
+        # definitely correct
+        card = ['GRID', '1', None, '1.0', '2.0', '3.0']
+        BDFCard(card, has_none=True)
+
+        # ???
+        card = ['GRID', '1', '', 1.0, 2.0, 3.0]
+        BDFCard(card, has_none=True)
+        """
         if has_none:
             card = wipe_empty_fields([print_field_16(field).strip() for field in card])
         self.card = card
         self.nfields = len(self.card)
-
 
     def deprecated(self, old_name, new_name, deprecated_version):
         """deprecates methods"""

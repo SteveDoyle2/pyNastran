@@ -69,6 +69,8 @@ setup(
             'pyNastranGUI = pyNastran.gui.gui:main',
             'bdf = pyNastran.bdf.mesh_utils.utils:cmd_line',
             'f06 = pyNastran.f06.utils:cmd_line',
+
+            'test_bdfv = pyNastran.bdf.dev_vectorized.test.test_bdf_vectorized2:main',
         ]
     },
     test_suite='pyNastran.all_tests',

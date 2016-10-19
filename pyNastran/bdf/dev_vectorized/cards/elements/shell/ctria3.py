@@ -15,21 +15,23 @@ class CTRIA3(ShellElement):
     def __init__(self, model):
         ShellElement.__init__(self, model)
 
-    def allocate(self, ncards):
-        self.n = ncards
-        float_fmt = self.model.float
-        #: Element ID
-        self.element_id = zeros(ncards, dtype='int32')
-        #: Property ID
-        self.property_id = zeros(ncards, dtype='int32')
-        #: Node IDs
-        self.node_ids = zeros((ncards, 3), dtype='int32')
-        self.zoffset = zeros(ncards, dtype='int32')
-        self.t_flag = zeros(ncards, dtype='int32')
-        self.thickness = zeros((ncards, 3), dtype=float_fmt)
-        #else:
-            #self.element_id = array([], dtype='int32')
-            #self.property_id = array([], dtype='int32')
+    def allocate(self, card_count):
+        ncards = card_count[self.type]
+        if ncards:
+            self.n = ncards
+            float_fmt = self.model.float
+            #: Element ID
+            self.element_id = zeros(ncards, dtype='int32')
+            #: Property ID
+            self.property_id = zeros(ncards, dtype='int32')
+            #: Node IDs
+            self.node_ids = zeros((ncards, 3), dtype='int32')
+            self.zoffset = zeros(ncards, dtype='int32')
+            self.t_flag = zeros(ncards, dtype='int32')
+            self.thickness = zeros((ncards, 3), dtype=float_fmt)
+            #else:
+                #self.element_id = array([], dtype='int32')
+                #self.property_id = array([], dtype='int32')
 
 
     def add(self, card, comment=''):

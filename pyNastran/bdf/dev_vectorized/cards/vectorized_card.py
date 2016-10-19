@@ -11,11 +11,12 @@ class VectorizedCard(object):
         self.n = 0
         self.i = 0
         self._comments = {}
-        if self.type in model._element_name_to_element_type_mapper:
-            self.op2_id = model._element_name_to_element_type_mapper[self.type]
-        else:
-            if self.type.startswith('C'):
-                print('there is no op2_id to apply for element=%r' % self.type)
+        if 0:
+            if self.type in model._element_name_to_element_type_mapper:
+                self.op2_id = model._element_name_to_element_type_mapper[self.type]
+            else:
+                if self.type.startswith('C'):
+                    print('there is no op2_id to apply for element=%r' % self.type)
 
     def __len__(self):
         return self.n

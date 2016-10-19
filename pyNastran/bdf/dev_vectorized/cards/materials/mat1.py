@@ -28,21 +28,23 @@ class MAT1(Material):
     def __init__(self, model):
         Material.__init__(self, model)
 
-    def allocate(self, ncards):
-        float_fmt = self.model.float
-        self.material_id = zeros(ncards, 'int32')
-        self.rho = zeros(ncards, float_fmt)
-        self.E = zeros(ncards, float_fmt)
-        self.G = zeros(ncards, float_fmt)
-        self.nu = zeros(ncards, float_fmt)
-        self.a = zeros(ncards, float_fmt)
-        self.TRef = zeros(ncards, float_fmt)
-        self.ge = zeros(ncards, float_fmt)
-        self.St = zeros(ncards, float_fmt)
-        self.Sc = zeros(ncards, float_fmt)
-        self.Ss = zeros(ncards, float_fmt)
-        self.mcsid = zeros(ncards, 'int32')
-        self.n = ncards
+    def allocate(self, card_count):
+        ncards = card_count[self.type]
+        if ncards:
+            float_fmt = self.model.float
+            self.material_id = zeros(ncards, 'int32')
+            self.rho = zeros(ncards, float_fmt)
+            self.E = zeros(ncards, float_fmt)
+            self.G = zeros(ncards, float_fmt)
+            self.nu = zeros(ncards, float_fmt)
+            self.a = zeros(ncards, float_fmt)
+            self.TRef = zeros(ncards, float_fmt)
+            self.ge = zeros(ncards, float_fmt)
+            self.St = zeros(ncards, float_fmt)
+            self.Sc = zeros(ncards, float_fmt)
+            self.Ss = zeros(ncards, float_fmt)
+            self.mcsid = zeros(ncards, 'int32')
+            self.n = ncards
 
     def add(self, card, comment=''):
         assert self.n > 0, 'self.n=%s self.i=%s' % (self.n, self.i)

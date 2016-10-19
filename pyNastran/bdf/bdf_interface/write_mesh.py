@@ -330,7 +330,7 @@ class WriteMesh(BDFAttributes):
         if self.executive_control_lines:
             msg = '$EXECUTIVE CONTROL DECK\n'
             if self.sol == 600:
-                new_sol = 'SOL 600,%s' % self.solMethod
+                new_sol = 'SOL 600,%s' % self.sol_method
             else:
                 new_sol = 'SOL %s' % self.sol
 

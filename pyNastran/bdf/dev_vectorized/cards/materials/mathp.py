@@ -27,53 +27,55 @@ class MATHP(Material):
     def __init__(self, model):
         Material.__init__(self, model)
 
-    def allocate(self, ncards):
-        float_fmt = self.model.float
-        self.material_id = zeros(ncards, 'int32')
+    def allocate(self, card_count):
+        ncards = card_count[self.type]
+        if ncards:
+            float_fmt = self.model.float
+            self.material_id = zeros(ncards, 'int32')
 
-        self.a10 = zeros(ncards, dtype=float_fmt)
-        self.a01 = zeros(ncards, dtype=float_fmt)
-        self.d1 = zeros(ncards, dtype=float_fmt)
-        self.rho = zeros(ncards, dtype=float_fmt)
-        self.av = zeros(ncards, dtype=float_fmt)
-        self.TRef = zeros(ncards, dtype=float_fmt)
-        self.ge = zeros(ncards, dtype=float_fmt)
+            self.a10 = zeros(ncards, dtype=float_fmt)
+            self.a01 = zeros(ncards, dtype=float_fmt)
+            self.d1 = zeros(ncards, dtype=float_fmt)
+            self.rho = zeros(ncards, dtype=float_fmt)
+            self.av = zeros(ncards, dtype=float_fmt)
+            self.TRef = zeros(ncards, dtype=float_fmt)
+            self.ge = zeros(ncards, dtype=float_fmt)
 
-        self.na = zeros(ncards, dtype='int32')
-        self.nd = zeros(ncards, dtype='int32')
+            self.na = zeros(ncards, dtype='int32')
+            self.nd = zeros(ncards, dtype='int32')
 
-        self.a20 = zeros(ncards, dtype=float_fmt)
-        self.a11 = zeros(ncards, dtype=float_fmt)
-        self.a02 = zeros(ncards, dtype=float_fmt)
-        self.d2 = zeros(ncards, dtype=float_fmt)
+            self.a20 = zeros(ncards, dtype=float_fmt)
+            self.a11 = zeros(ncards, dtype=float_fmt)
+            self.a02 = zeros(ncards, dtype=float_fmt)
+            self.d2 = zeros(ncards, dtype=float_fmt)
 
-        self.a30 = zeros(ncards, dtype=float_fmt)
-        self.a21 = zeros(ncards, dtype=float_fmt)
-        self.a12 = zeros(ncards, dtype=float_fmt)
-        self.a03 = zeros(ncards, dtype=float_fmt)
-        self.d3 = zeros(ncards, dtype=float_fmt)
+            self.a30 = zeros(ncards, dtype=float_fmt)
+            self.a21 = zeros(ncards, dtype=float_fmt)
+            self.a12 = zeros(ncards, dtype=float_fmt)
+            self.a03 = zeros(ncards, dtype=float_fmt)
+            self.d3 = zeros(ncards, dtype=float_fmt)
 
-        self.a40 = zeros(ncards, dtype=float_fmt)
-        self.a31 = zeros(ncards, dtype=float_fmt)
-        self.a22 = zeros(ncards, dtype=float_fmt)
-        self.a13 = zeros(ncards, dtype=float_fmt)
-        self.a04 = zeros(ncards, dtype=float_fmt)
-        self.d4 = zeros(ncards, dtype=float_fmt)
+            self.a40 = zeros(ncards, dtype=float_fmt)
+            self.a31 = zeros(ncards, dtype=float_fmt)
+            self.a22 = zeros(ncards, dtype=float_fmt)
+            self.a13 = zeros(ncards, dtype=float_fmt)
+            self.a04 = zeros(ncards, dtype=float_fmt)
+            self.d4 = zeros(ncards, dtype=float_fmt)
 
-        self.a50 = zeros(ncards, dtype=float_fmt)
-        self.a41 = zeros(ncards, dtype=float_fmt)
-        self.a32 = zeros(ncards, dtype=float_fmt)
-        self.a23 = zeros(ncards, dtype=float_fmt)
-        self.a14 = zeros(ncards, dtype=float_fmt)
-        self.a05 = zeros(ncards, dtype=float_fmt)
-        self.d5 = zeros(ncards, dtype=float_fmt)
+            self.a50 = zeros(ncards, dtype=float_fmt)
+            self.a41 = zeros(ncards, dtype=float_fmt)
+            self.a32 = zeros(ncards, dtype=float_fmt)
+            self.a23 = zeros(ncards, dtype=float_fmt)
+            self.a14 = zeros(ncards, dtype=float_fmt)
+            self.a05 = zeros(ncards, dtype=float_fmt)
+            self.d5 = zeros(ncards, dtype=float_fmt)
 
-        self.tab1 = zeros(ncards, dtype='int32')
-        self.tab2 = zeros(ncards, dtype='int32')
-        self.tab3 = zeros(ncards, dtype='int32')
-        self.tab4 = zeros(ncards, dtype='int32')
-        self.tabd = zeros(ncards, dtype='int32')
-        self.n = ncards
+            self.tab1 = zeros(ncards, dtype='int32')
+            self.tab2 = zeros(ncards, dtype='int32')
+            self.tab3 = zeros(ncards, dtype='int32')
+            self.tab4 = zeros(ncards, dtype='int32')
+            self.tabd = zeros(ncards, dtype='int32')
+            self.n = ncards
 
     def add(self, card, comment=''):
         i = self.i

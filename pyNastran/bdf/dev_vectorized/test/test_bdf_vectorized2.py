@@ -20,8 +20,7 @@ import traceback
 #import resource
 
 from pyNastran.utils import print_bad_path
-from pyNastran.bdf.dev_vectorized.bdf import BDF #, NastranMatrix
-from pyNastran.bdf.dev_vectorized.test.compare_card_content import compare_card_content
+from pyNastran.bdf.dev_vectorized.bdf import BDF, read_bdf #, NastranMatrix
 
 import pyNastran.bdf.dev_vectorized.test
 test_path = pyNastran.bdf.dev_vectorized.test.__path__[0]
@@ -101,6 +100,7 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
         is_doubles = [is_double]
     else:
         is_doubles = is_double
+
     #debug = True
     filenames2 = []
     diff_cards = []
@@ -116,29 +116,29 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
         if folder != '':
             print("filename = %s" % abs_filename)
         is_passed = False
-        try:
-            (fem1, fem2, diff_cards) = run_bdf(folder, filename, debug=debug,
-                                               xref=xref, check=check, punch=punch,
-                                               cid=cid, isFolder=True, dynamic_vars={})
-            del fem1
-            del fem2
-            diff_cards += diff_cards
-            is_passed = True
-        except KeyboardInterrupt:
-            sys.exit('KeyboardInterrupt...sys.exit()')
-        except IOError:
-            pass
+        #try:
+        (fem1, fem2, diff_cards) = run_bdf(folder, filename, debug=debug,
+                                           xref=xref, check=check, punch=punch,
+                                           cid=cid, isFolder=True, dynamic_vars={})
+        del fem1
+        del fem2
+        diff_cards += diff_cards
+        is_passed = True
+        #except KeyboardInterrupt:
+            #sys.exit('KeyboardInterrupt...sys.exit()')
+        #except IOError:
+            #pass
         #except RuntimeError:  # only temporarily uncomment this when running lots of tests
             #pass
         #except AttributeError:  # only temporarily uncomment this when running lots of tests
             #pass
         #except SyntaxError:  # only temporarily uncomment this when running lots of tests
             #pass
-        except SystemExit:
-            sys.exit('sys.exit...')
-        except:
-            traceback.print_exc(file=sys.stdout)
-            #raise
+        #except SystemExit:
+            #sys.exit('sys.exit...')
+        #except:
+            #traceback.print_exc(file=sys.stdout)
+            ##raise
         print('-' * 80)
 
         if is_passed:
@@ -156,17 +156,6 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
         print("diff_cards2 = %s" % diff_cards)
     return failed_files
 
-
-def memory_usage_psutil():
-    # return the memory usage in MB
-    try:
-
-        import psutil
-    except ImportError:
-        return '???'
-    process = psutil.Process(os.getpid())
-    mem = process.get_memory_info()[0] / float(2 ** 20)
-    return mem
 
 def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=False,
             cid=None, mesh_form='combined', is_folder=False, print_stats=False,
@@ -242,7 +231,7 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
 
     assert os.path.exists(bdf_model), '%r doesnt exist' % bdf_model
 
-    print("before read bdf, Memory usage: %s (Mb) " % memory_usage_psutil())
+    #print("before read bdf, Memory usage: %s (Mb) " % memory_usage_psutil())
     #print('before read bdf, Memory usage: %s (kb)' % resource.getrusage(resource.RUSAGE_SELF).ru_maxrss)
     fem1 = BDF(debug=debug, log=None)
     if dynamic_vars:
@@ -252,14 +241,14 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
     sys.stdout.flush()
     fem2 = None
     diff_cards = []
-    try:
-        out_model = run_fem1(fem1, bdf_model, mesh_form, xref, punch, sum_load, size, precision, cid)
-        fem2 = run_fem2(bdf_model, out_model, xref, punch, sum_load, size, precision, reject,
-                        debug=debug, log=None)
-        diff_cards = compare(fem1, fem2, xref=xref, check=check, print_stats=print_stats)
+    #try:
+    out_model = run_fem1(fem1, bdf_model, mesh_form, xref, punch, sum_load, size, precision, cid)
+    fem2 = run_fem2(bdf_model, out_model, xref, punch, sum_load, size, precision, reject,
+                    debug=debug, log=None)
+    diff_cards = compare(fem1, fem2, xref=xref, check=check, print_stats=print_stats)
 
-    except KeyboardInterrupt:
-        sys.exit('KeyboardInterrupt...sys.exit()')
+    #except KeyboardInterrupt:
+        #sys.exit('KeyboardInterrupt...sys.exit()')
     #except IOError:
         #pass
     #except AttributeError:  # only temporarily uncomment this when running lots of tests
@@ -268,15 +257,15 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
         #pass
     #except AssertionError:  # only temporarily uncomment this when running lots of tests
         #pass
-    except SystemExit:
-        sys.exit('sys.exit...')
-    except:
+    #except SystemExit:
+        #sys.exit('sys.exit...')
+    #except:
         #exc_type, exc_value, exc_traceback = sys.exc_info()
         #print "\n"
-        traceback.print_exc(file=sys.stdout)
+        #traceback.print_exc(file=sys.stdout)
         #print msg
-        print("-" * 80)
-        raise
+        #print("-" * 80)
+        #raise
 
     print("-" * 80)
     return (fem1, fem2, diff_cards)
@@ -490,15 +479,15 @@ def get_matrix_stats(fem1, fem2):
 
 def compare(fem1, fem2, xref=True, check=True, print_stats=True):
     diff_cards = compare_card_count(fem1, fem2, print_stats=print_stats)
-
+    return
     #if xref and check:
     if check:
         fem1.mass_properties()
         get_element_stats(fem1, fem2)
         get_matrix_stats(fem1, fem2)
     compare_card_content(fem1, fem2)
-    #compare_params(fem1,fem2)
-    #print_points(fem1,fem2)
+    #compare_params(fem1, fem2)
+    #print_points(fem1, fem2)
     return diffCards
 
 
@@ -574,17 +563,18 @@ def main():
         size = 8
         precision = 'single'
 
-    run_bdf('.',
-            data['BDF_FILENAME'],
-            debug=not(data['--quiet']),
-            xref=not(data['--xref']),
-            check=not(data['--check']),
-            punch=data['--punch'],
-            reject=data['--reject'],
-            size=size,
-            precision=precision,
-            sum_load=data['--loads']
-    )
+    model = read_bdf(data['BDF_FILENAME'])
+    #run_bdf('.',
+            #data['BDF_FILENAME'],
+            #debug=not(data['--quiet']),
+            #xref=not(data['--xref']),
+            #check=not(data['--check']),
+            #punch=data['--punch'],
+            #reject=data['--reject'],
+            #size=size,
+            #precision=precision,
+            #sum_load=data['--loads']
+    #)
     print("total time:  %.2f sec" % (time.time() - t0))
 
 
