@@ -337,8 +337,8 @@ class WriteMesh(BDFAttributes):
             else:
                 new_sol = 'SOL %s' % self.sol
 
-            if self.iSolLine is not None:
-                self.executive_control_lines[self.iSolLine] = new_sol
+            if self.sol_iline is not None:
+                self.executive_control_lines[self.sol_iline] = new_sol
 
             for line in self.executive_control_lines:
                 msg += line + '\n'

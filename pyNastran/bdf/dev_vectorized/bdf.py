@@ -800,8 +800,8 @@ class BDF(AddCard, CrossReference, WriteMesh):
         self.case_control_lines = case_control_lines
         self.executive_control_lines = executive_control_lines
 
-        sol, method, isol_line = parse_executive_control_deck(executive_control_lines)
-        self.update_solution(sol, method, isol_line)
+        sol, method, sol_iline = parse_executive_control_deck(executive_control_lines)
+        self.update_solution(sol, method, sol_iline)
 
         self.case_control_deck = CaseControlDeck(self.case_control_lines, self.log)
         #print(self.object_attributes())

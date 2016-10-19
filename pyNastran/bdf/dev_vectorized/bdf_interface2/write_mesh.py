@@ -2,6 +2,7 @@
 This file defines:
   - WriteMesh
 """
+from __future__ import print_function
 import io
 from codecs import open
 
@@ -41,15 +42,19 @@ class WriteMesh(BDFAttributes):
 
         if PY2:
             #if not is_file_obj(out_filename):
-            if not (hasattr(out_filename, 'read') and hasattr(out_filename, 'write')) or isinstance(out_filename, (file, StringIO)):
+            if not(hasattr(out_filename, 'read') and hasattr(out_filename, 'write')) or isinstance(out_filename, (file, StringIO)):
                 return out_filename
             elif not isinstance(out_filename, string_types):
-                raise TypeError('out_filename=%r must be a string; type=%s' % (out_filename, type(out_filename)))
+                msg = 'out_filename=%r must be a string; type=%s' % (
+                    out_filename, type(out_filename))
+                raise TypeError(msg)
         else:
-            if not (hasattr(out_filename, 'read') and hasattr(out_filename, 'write')) or isinstance(out_filename, io.IOBase):
+            if not(hasattr(out_filename, 'read') and hasattr(out_filename, 'write')) or isinstance(out_filename, io.IOBase):
                 return out_filename
             elif not isinstance(out_filename, string_types):
-                raise TypeError('out_filename=%r must be a string; type=%s' % (out_filename, type(out_filename)))
+                msg = 'out_filename=%r must be a string; type=%s' % (
+                    out_filename, type(out_filename))
+                raise TypeError(msg)
 
         if size == 8:
             assert is_double is False, 'is_double=%r' % is_double
@@ -189,17 +194,18 @@ class WriteMesh(BDFAttributes):
         eids_written = []
         #pids = sorted(self.properties.keys())
 
-        ptypes = [self.properties_shell.pshell,
-                  self.properties_shell.pcomp,
-                  self.pshear,
-                  self.prod,
-                  self.properties_solid.psolid,
+        ptypes = [
+            self.properties_shell.pshell,
+            self.properties_shell.pcomp,
+            self.pshear,
+            self.prod,
+            self.properties_solid.psolid,
 
-                  #self.properties_bar.pbar,
-                  #self.properties_bar.pbarl,
-                  #self.properties_beam.pbeam,
-                  #self.properties_beam.pbeaml,
-                  ]
+            #self.properties_bar.pbar,
+            #self.properties_bar.pbarl,
+            #self.properties_beam.pbeam,
+            #self.properties_beam.pbeaml,
+        ]
 
         n = 0
         pids_all = None  # the actual properties
@@ -272,7 +278,7 @@ class WriteMesh(BDFAttributes):
                 outfile.write('$ELEMENTS_WITH_PROPERTIES\n')
 
             for pid in pids_all:
-                i = where(pid==pids)[0]
+                i = where(pid == pids)[0]
                 eids2 = eids[i]
 
                 for t in ptypes:
@@ -332,21 +338,21 @@ class WriteMesh(BDFAttributes):
             #or self.paeros or self.trims):
             #msg = ['$AERO\n']
             #for (unused_id, caero) in sorted(iteritems(self.caeros)):
-                #msg.append(caero.write_card(size, card_writer))
+                #msg.append(caero.write_card(size, is_double))
             #for (unused_id, paero) in sorted(iteritems(self.paeros)):
-                #msg.append(paero.write_card(size, card_writer))
+                #msg.append(paero.write_card(size, is_double))
             #for (unused_id, spline) in sorted(iteritems(self.splines)):
-                #msg.append(spline.write_card(size, card_writer))
+                #msg.append(spline.write_card(size, is_double))
             #for (unused_id, trim) in sorted(iteritems(self.trims)):
-                #msg.append(trim.write_card(size, card_writer))
+                #msg.append(trim.write_card(size, is_double))
 
             #for (unused_id, aero) in sorted(iteritems(self.aero)):
-                #msg.append(aero.write_card(size, card_writer))
+                #msg.append(aero.write_card(size, is_double))
             #for (unused_id, aero) in sorted(iteritems(self.aeros)):
-                #msg.append(aero.write_card(size, card_writer))
+                #msg.append(aero.write_card(size, is_double))
 
             #for (unused_id, gust) in sorted(iteritems(self.gusts)):
-                #msg.append(gust.write_card(size, card_writer))
+                #msg.append(gust.write_card(size, is_double))
             #outfile.write(''.join(msg))
 
         #self.paero.write_card(f, size)
@@ -372,20 +378,20 @@ class WriteMesh(BDFAttributes):
             msg = ['$AERO CONTROL SURFACES\n']
             for (unused_id, aelinks) in sorted(iteritems(self.aelinks)):
                 for aelink in aelinks:
-                    msg.append(aelink.write_card(size, card_writer))
+                    msg.append(aelink.write_card(size, is_double))
             for (unused_id, aeparam) in sorted(iteritems(self.aeparams)):
-                msg.append(aeparam.write_card(size, card_writer))
+                msg.append(aeparam.write_card(size, is_double))
             for (unused_id, aestat) in sorted(iteritems(self.aestats)):
-                msg.append(aestat.write_card(size, card_writer))
+                msg.append(aestat.write_card(size, is_double))
 
             for (unused_id, aelist) in sorted(iteritems(self.aelists)):
-                msg.append(aelist.write_card(size, card_writer))
+                msg.append(aelist.write_card(size, is_double))
             for (unused_id, aesurf) in sorted(iteritems(self.aesurf)):
-                msg.append(aesurf.write_card(size, card_writer))
+                msg.append(aesurf.write_card(size, is_double))
             for (unused_id, aesurfs) in sorted(iteritems(self.aesurfs)):
-                msg.append(aesurfs.write_card(size, card_writer))
+                msg.append(aesurfs.write_card(size, is_double))
             for (unused_id, aefact) in sorted(iteritems(self.aefacts)):
-                msg.append(aefact.write_card(size, card_writer))
+                msg.append(aefact.write_card(size, is_double))
             outfile.write(''.join(msg))
 
     def _write_common(self, outfile, size, is_double):
@@ -403,22 +409,22 @@ class WriteMesh(BDFAttributes):
         self.loads.write_card(outfile, size, is_double, sort_data=False)
         self.temps.write_card(outfile, size, is_double, sort_data=False)
 
-        #self._write_dynamic(outfile, size, card_writer)
+        #self._write_dynamic(outfile, size, is_double)
         self._write_aero(outfile, size, is_double)
-        #self._write_aero_control(outfile, size, card_writer)
-        #self._write_flutter(outfile, size, card_writer)
-        #self._write_thermal(outfile, size, card_writer)
-        #self._write_thermal_materials(outfile, size, card_writer)
+        #self._write_aero_control(outfile, size, is_double)
+        #self._write_flutter(outfile, size, is_double)
+        #self._write_thermal(outfile, size, is_double)
+        #self._write_thermal_materials(outfile, size, is_double)
 
-        #self._write_constraints(outfile, size, card_writer)
-        #self._write_optimization(outfile, size, card_writer)
-        #self._write_tables(outfile, size, card_writer)
-        #self._write_sets(outfile, size, card_writer)
-        #self._write_contact(outfile, size, card_writer)
+        #self._write_constraints(outfile, size, is_double)
+        #self._write_optimization(outfile, size, is_double)
+        #self._write_tables(outfile, size, is_double)
+        #self._write_sets(outfile, size, is_double)
+        #self._write_contact(outfile, size, is_double)
         #self._write_rejects(outfile, size)
         self._write_coords(outfile, size, is_double)
 
-    def _write_constraints(self, f, size, card_writer):
+    def _write_constraints(self, f, size, is_double):
         """Writes the constraint cards sorted by ID"""
         spcs = [self.spcadd, self.spc, self.spcd, self.spc1]
         mpcs = [self.mpcadd, self.mpc]
@@ -443,31 +449,32 @@ class WriteMesh(BDFAttributes):
                             if ID == constraint_id:
                                 constraint.write_card(f, size=size)
 
-    def _write_contact(self, outfile, size, card_writer):
+    def _write_contact(self, outfile, size, is_double):
         """Writes the contact cards sorted by ID"""
-        if (self.bcrparas or self.bctadds or self.bctparas or self.bctsets
-            or self.bsurf or self.bsurfs):
+        is_contact = (self.bcrparas or self.bctadds or self.bctparas
+                      or self.bctsets or self.bsurf or self.bsurfs)
+        if is_contact:
             msg = ['$CONTACT\n']
             for (unused_id, bcrpara) in sorted(iteritems(self.bcrparas)):
-                msg.append(bcrpara.write_card(size, card_writer))
+                msg.append(bcrpara.write_card(size, is_double))
             for (unused_id, bctadds) in sorted(iteritems(self.bctadds)):
-                msg.append(bctadds.write_card(size, card_writer))
+                msg.append(bctadds.write_card(size, is_double))
             for (unused_id, bctpara) in sorted(iteritems(self.bctparas)):
-                msg.append(bctpara.write_card(size, card_writer))
+                msg.append(bctpara.write_card(size, is_double))
 
             for (unused_id, bctset) in sorted(iteritems(self.bctsets)):
-                msg.append(bctset.write_card(size, card_writer))
+                msg.append(bctset.write_card(size, is_double))
             for (unused_id, bsurfi) in sorted(iteritems(self.bsurf)):
-                msg.append(bsurfi.write_card(size, card_writer))
+                msg.append(bsurfi.write_card(size, is_double))
             for (unused_id, bsurfsi) in sorted(iteritems(self.bsurfs)):
-                msg.append(bsurfsi.write_card(size, card_writer))
+                msg.append(bsurfsi.write_card(size, is_double))
             outfile.write(''.join(msg))
 
     def _write_coords(self, outfile, size, is_double):
         """Writes the coordinate cards in a sorted order"""
         self.coords.write_card(outfile, size, is_double)
 
-    def _write_dmigs(self, outfile, size, card_writer):
+    def _write_dmigs(self, outfile, size, is_double):
         """
         Writes the DMIG cards
 
@@ -483,98 +490,100 @@ class WriteMesh(BDFAttributes):
         """
         msg = []
         for (unused_name, dmig) in sorted(iteritems(self.dmigs)):
-            msg.append(dmig.write_card(size, card_writer))
+            msg.append(dmig.write_card(size, is_double))
         for (unused_name, dmi) in sorted(iteritems(self.dmis)):
-            msg.append(dmi.write_card(size, card_writer))
+            msg.append(dmi.write_card(size, is_double))
         for (unused_name, dmij) in sorted(iteritems(self.dmijs)):
-            msg.append(dmij.write_card(size, card_writer))
+            msg.append(dmij.write_card(size, is_double))
         for (unused_name, dmiji) in sorted(iteritems(self.dmijis)):
-            msg.append(dmiji.write_card(size, card_writer))
+            msg.append(dmiji.write_card(size, is_double))
         for (unused_name, dmik) in sorted(iteritems(self.dmiks)):
-            msg.append(dmik.write_card(size, card_writer))
+            msg.append(dmik.write_card(size, is_double))
         outfile.write(''.join(msg))
 
-    def _write_dynamic(self, outfile, size, card_writer):
+    def _write_dynamic(self, outfile, size, is_double):
         """Writes the dynamic cards sorted by ID"""
-        if (self.dareas or self.nlparms or self.frequencies or self.methods or
-            self.cMethods or self.tsteps or self.tstepnls):
+        is_dynamic = (self.dareas or self.nlparms or self.frequencies or self.methods or
+                      self.cMethods or self.tsteps or self.tstepnls)
+        if is_dynamic:
             msg = ['$DYNAMIC\n']
             for (unused_id, method) in sorted(iteritems(self.methods)):
-                msg.append(method.write_card(size, card_writer))
+                msg.append(method.write_card(size, is_double))
             for (unused_id, cMethod) in sorted(iteritems(self.cMethods)):
-                msg.append(cMethod.write_card(size, card_writer))
+                msg.append(cMethod.write_card(size, is_double))
             for (unused_id, darea) in sorted(iteritems(self.dareas)):
-                msg.append(darea.write_card(size, card_writer))
+                msg.append(darea.write_card(size, is_double))
             for (unused_id, nlparm) in sorted(iteritems(self.nlparms)):
-                msg.append(nlparm.write_card(size, card_writer))
+                msg.append(nlparm.write_card(size, is_double))
             for (unused_id, nlpci) in sorted(iteritems(self.nlpcis)):
-                msg.append(nlpci.write_card(size, card_writer))
+                msg.append(nlpci.write_card(size, is_double))
             for (unused_id, tstep) in sorted(iteritems(self.tsteps)):
-                msg.append(tstep.write_card(size, card_writer))
+                msg.append(tstep.write_card(size, is_double))
             for (unused_id, tstepnl) in sorted(iteritems(self.tstepnls)):
-                msg.append(tstepnl.write_card(size, card_writer))
+                msg.append(tstepnl.write_card(size, is_double))
             for (unused_id, freq) in sorted(iteritems(self.frequencies)):
-                msg.append(freq.write_card(size, card_writer))
+                msg.append(freq.write_card(size, is_double))
             outfile.write(''.join(msg))
 
-    def _write_flutter(self, outfile, size, card_writer):
+    def _write_flutter(self, outfile, size, is_double):
         """Writes the flutter cards"""
         if self.flfacts or self.flutters or self.mkaeros:
             msg = ['$FLUTTER\n']
             for (unused_id, flfact) in sorted(iteritems(self.flfacts)):
                 #if unused_id != 0:
-                msg.append(flfact.write_card(size, card_writer))
+                msg.append(flfact.write_card(size, is_double))
             for (unused_id, flutter) in sorted(iteritems(self.flutters)):
-                msg.append(flutter.write_card(size, card_writer))
+                msg.append(flutter.write_card(size, is_double))
             for mkaero in self.mkaeros:
-                msg.append(mkaero.write_card(size, card_writer))
+                msg.append(mkaero.write_card(size, is_double))
             outfile.write(''.join(msg))
 
-    def _write_masses(self, outfile, size, card_writer):
+    def _write_masses(self, outfile, size, is_double):
         pass
 
-    def _write_nodes(self, f, size, is_double):
+    def _write_nodes(self, outfile, size, is_double):
         """
         Writes the NODE-type cards
         """
-        self.grdset.write_card(f, size=size, is_double=is_double)
-        self.grid.write_card(f, size=size, is_double=is_double)
-        self.point.write_card(f, size=size, is_double=is_double)
-        self.epoint.write_card(f, size=size, is_double=is_double)
-        self.spoint.write_card(f, size=size, is_double=is_double)
-        self.pointax.write_card(f, size=size, is_double=is_double)
+        self.grdset.write_card(outfile, size=size, is_double=is_double)
+        self.grid.write_card(outfile, size=size, is_double=is_double)
+        self.point.write_card(outfile, size=size, is_double=is_double)
+        self.epoint.write_card(outfile, size=size, is_double=is_double)
+        self.spoint.write_card(outfile, size=size, is_double=is_double)
+        self.pointax.write_card(outfile, size=size, is_double=is_double)
 
-    def _write_nonlinear(self, f, size):
+    def _write_nonlinear(self, outfile, size):
         for key, card in sorted(iteritems(self.nlparm)):
-            card.write_card(f, size)
+            card.write_card(outfile, size)
         for key, card in sorted(iteritems(self.nlpci)):
-            card.write_card(f, size)
-        #self.tables1.write_card(f, size)
+            card.write_card(outfile, size)
+        #self.tables1.write_card(outfile, size)
 
-    def _write_optimization(self, outfile, size, card_writer):
+    def _write_optimization(self, outfile, size, is_double):
         """Writes the optimization cards sorted by ID"""
-        if (self.dconstrs or self.desvars or self.ddvals or self.dresps
-            or self.dvprels or self.dvmrels or self.doptprm or self.dlinks
-            or self.ddvals):
+        is_optimization = (self.dconstrs or self.desvars or self.ddvals or self.dresps
+                           or self.dvprels or self.dvmrels or self.doptprm or self.dlinks
+                           or self.ddvals)
+        if is_optimization:
             msg = ['$OPTIMIZATION\n']
             for (unused_id, dconstr) in sorted(iteritems(self.dconstrs)):
-                msg.append(dconstr.write_card(size, card_writer))
+                msg.append(dconstr.write_card(size, is_double))
             for (unused_id, desvar) in sorted(iteritems(self.desvars)):
-                msg.append(desvar.write_card(size, card_writer))
+                msg.append(desvar.write_card(size, is_double))
             for (unused_id, ddval) in sorted(iteritems(self.ddvals)):
-                msg.append(ddval.write_card(size, card_writer))
+                msg.append(ddval.write_card(size, is_double))
             for (unused_id, dlink) in sorted(iteritems(self.dlinks)):
-                msg.append(dlink.write_card(size, card_writer))
+                msg.append(dlink.write_card(size, is_double))
             for (unused_id, dresp) in sorted(iteritems(self.dresps)):
-                msg.append(dresp.write_card(size, card_writer))
+                msg.append(dresp.write_card(size, is_double))
             for (unused_id, dvmrel) in sorted(iteritems(self.dvmrels)):
-                msg.append(dvmrel.write_card(size, card_writer))
+                msg.append(dvmrel.write_card(size, is_double))
             for (unused_id, dvprel) in sorted(iteritems(self.dvprels)):
-                msg.append(dvprel.write_card(size, card_writer))
+                msg.append(dvprel.write_card(size, is_double))
             for (unused_id, equation) in sorted(iteritems(self.dequations)):
                 msg.append(str(equation))
             if self.doptprm is not None:
-                msg.append(self.doptprm.write_card(size, card_writer))
+                msg.append(self.doptprm.write_card(size, is_double))
             outfile.write(''.join(msg))
 
     def _write_params(self, outfile, size=8, is_double=False):
@@ -628,21 +637,22 @@ class WriteMesh(BDFAttributes):
 
     def _write_sets(self, outfile, size=8, is_double=False):
         """Writes the SETx cards sorted by ID"""
-        if (self.sets or self.setsSuper or self.asets or self.bsets or
-            self.csets or self.qsets):
+        sets = (self.sets or self.setsSuper or self.asets or self.bsets or
+                self.csets or self.qsets)
+        if sets:
             msg = ['$SETS\n']
             for (unused_id, set_obj) in sorted(iteritems(self.sets)):  # dict
-                msg.append(set_obj.write_card(size, card_writer))
+                msg.append(set_obj.write_card(size, is_double))
             for set_obj in self.asets:  # list
-                msg.append(set_obj.write_card(size, card_writer))
+                msg.append(set_obj.write_card(size, is_double))
             for set_obj in self.bsets:  # list
-                msg.append(set_obj.write_card(size, card_writer))
+                msg.append(set_obj.write_card(size, is_double))
             for set_obj in self.csets:  # list
-                msg.append(set_obj.write_card(size, card_writer))
+                msg.append(set_obj.write_card(size, is_double))
             for set_obj in self.qsets:  # list
-                msg.append(set_obj.write_card(size, card_writer))
+                msg.append(set_obj.write_card(size, is_double))
             for (set_id, set_obj) in sorted(iteritems(self.setsSuper)):  # dict
-                msg.append(set_obj.write_card(size, card_writer))
+                msg.append(set_obj.write_card(size, is_double))
             outfile.write(''.join(msg))
 
     def _write_tables(self, outfile, size=8, is_double=False):
@@ -650,13 +660,13 @@ class WriteMesh(BDFAttributes):
         if self.tables:
             msg = ['$TABLES\n']
             for (unused_id, table) in sorted(iteritems(self.tables)):
-                msg.append(table.write_card(size, card_writer))
+                msg.append(table.write_card(size, is_double))
             outfile.write(''.join(msg))
 
         if self.random_tables:
             msg = ['$RANDOM TABLES\n']
             for (unused_id, table) in sorted(iteritems(self.random_tables)):
-                msg.append(table.write_card(size, card_writer))
+                msg.append(table.write_card(size, is_double))
             outfile.write(''.join(msg))
 
     def _write_thermal(self, outfile, size=8, is_double=False):
@@ -667,17 +677,17 @@ class WriteMesh(BDFAttributes):
             msg = ['$THERMAL\n']
 
             for (unused_key, phbdy) in sorted(iteritems(self.phbdys)):
-                msg.append(phbdy.write_card(size, card_writer))
+                msg.append(phbdy.write_card(size, is_double))
 
             #for unused_key, prop in sorted(iteritems(self.thermalProperties)):
             #    msg.append(str(prop))
             for (unused_key, prop) in sorted(iteritems(self.convection_properties)):
-                msg.append(prop.write_card(size, card_writer))
+                msg.append(prop.write_card(size, is_double))
 
             # BCs
             for (unused_key, bcs) in sorted(iteritems(self.bcs)):
                 for bc in bcs:  # list
-                    msg.append(bc.write_card(size, card_writer))
+                    msg.append(bc.write_card(size, is_double))
             outfile.write(''.join(msg))
 
     def _write_thermal_materials(self, outfile, size=8, is_double=False):
@@ -685,6 +695,6 @@ class WriteMesh(BDFAttributes):
         if self.thermal_materials:
             msg = ['$THERMAL MATERIALS\n']
             for (mid, material) in sorted(iteritems(self.thermal_materials)):
-                msg.append(material.write_card(size, card_writer))
+                msg.append(material.write_card(size, is_double))
             outfile.write(''.join(msg))
 

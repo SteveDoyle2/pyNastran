@@ -947,8 +947,8 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         self.case_control_lines = case_control_lines
         self.executive_control_lines = executive_control_lines
 
-        sol, method, isol_line = parse_executive_control_deck(executive_control_lines)
-        self.update_solution(sol, method, isol_line)
+        sol, method, sol_iline = parse_executive_control_deck(executive_control_lines)
+        self.update_solution(sol, method, sol_iline)
 
         self.case_control_deck = CaseControlDeck(self.case_control_lines, self.log)
         self.case_control_deck.solmap_to_value = self._solmap_to_value
