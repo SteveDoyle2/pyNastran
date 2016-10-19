@@ -230,7 +230,7 @@ class BDFAttributes(object):
         #: used in solution 600, method
         self.sol_method = None
         #: the line with SOL on it, marks ???
-        self.iSolLine = None
+        self.sol_iline = None
         self.case_control_deck = None
 
         #: store the PARAM cards
@@ -751,7 +751,7 @@ class BDFAttributes(object):
         self._sol = sol
         if len(self.executive_control_lines) == 0:
             self.executive_control_lines = ['SOL %s' % sol, 'CEND']
-            self.iSolLine = 0
+            self.sol_iline = 0
         return self._sol
 
     @property
