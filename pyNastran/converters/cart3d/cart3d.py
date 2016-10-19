@@ -5,13 +5,22 @@ from math import ceil
 from collections import defaultdict
 from codecs import open as codec_open
 
-from six import iteritems, b, PY2
+from six import iteritems, PY2
 from six.moves import zip, range
 
 import numpy as np
 
-from pyNastran.utils import is_binary_file, _filename
+from pyNastran.utils import is_binary_file, _filename, b
 from pyNastran.utils.log import get_logger
+
+if PY2:
+    string_type = unicode
+    bytes_type = str
+    write_ascii = 'wb'
+else:
+    string_type = str
+    bytes_type = bytes
+    write_ascii = 'wb'
 
 
 def comp2tri(in_filenames, out_filename,
@@ -120,11 +129,11 @@ class Cart3dIO(object):
             outfile.write(floats)
             outfile.write(four)
         else:
-            if isinstance(float_fmt, str):
-                fmt = float_fmt
+            if isinstance(float_fmt, bytes_type):
+                fmt_ascii = float_fmt
             else:
-                fmt = float_fmt.decode('latin1')
-            np.savetxt(outfile, points, fmt)
+                fmt_ascii = float_fmt.encode('latin1')
+            np.savetxt(outfile, points, fmt_ascii)
 
     def _write_elements(self, outfile, elements, is_binary, int_fmt='%6i'):
         min_e = elements.min()
@@ -140,11 +149,11 @@ class Cart3dIO(object):
             outfile.write(ints)
             outfile.write(four)
         else:
-            if isinstance(int_fmt, str):
-                fmt = int_fmt
+            if isinstance(int_fmt, bytes_type):
+                fmt_ascii = int_fmt
             else:
-                fmt = int_fmt.decode('latin1')
-            np.savetxt(outfile, elements, fmt)
+                fmt_ascii = int_fmt.encode('latin1')
+            np.savetxt(outfile, elements, fmt_ascii)
 
     def _write_regions(self, outfile, regions, is_binary):
         if is_binary:
@@ -566,7 +575,9 @@ class Cart3D(Cart3dIO):
         inodes_save.sort()
 
         inodes_map = np.arange(len(inodes_save))
-        assert 0 < len(inodes_save) < nnodes, 'len(inodes_save)=%s nnodes=%s'  % (len(inodes_save), nnodes)
+        if not(0 < len(inodes_save) < nnodes):
+            msg = 'len(inodes_save)=%s nnodes=%s'  % (len(inodes_save), nnodes)
+            raise RuntimeError(msg)
 
         nodes2 = nodes[inodes_save, :]
         nnodes2 = nodes2.shape[0]
@@ -642,11 +653,17 @@ class Cart3D(Cart3dIO):
         self.infilename = infilename
         if is_binary_file(infilename):
             with open(infilename, 'rb') as self.infile:
-                npoints, nelements, nresults = self._read_header_binary()
-                self.points = self._read_points_binary(npoints)
-                self.elements = self._read_elements_binary(nelements)
-                self.regions = self._read_regions_binary(nelements)
-                # TODO: loads
+                try:
+                    npoints, nelements, nresults = self._read_header_binary()
+                    self.points = self._read_points_binary(npoints)
+                    self.elements = self._read_elements_binary(nelements)
+                    self.regions = self._read_regions_binary(nelements)
+                    # TODO: loads
+                except:
+                    msg = 'failed reading %r' % infilename
+                    self.log.error(msg)
+                    raise
+
         else:
             with codec_open(_filename(infilename), 'r', encoding=self._encoding) as self.infile:
                 try:
@@ -680,10 +697,7 @@ class Cart3D(Cart3dIO):
         if is_binary:
             form = 'wb'
         else:
-            if PY2:
-                form = 'w'
-            else:
-                form = 'wb'
+            form = write_ascii
 
         with codec_open(outfilename, form) as outfile:
             int_fmt = self._write_header(outfile, self.points, self.elements, is_loads, is_binary)
