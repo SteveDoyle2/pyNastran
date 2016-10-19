@@ -171,7 +171,7 @@ class CTUBE(RodElement):
         assert grid_cid0 is not None
         #if positions is None:
 
-        print("i = %s" % i)
+        self.model.log.debug("i = %s" % i)
         n = len(i)
         if n == 0:
             i = i[0]
@@ -181,7 +181,7 @@ class CTUBE(RodElement):
         n2i = self.model.grid.get_node_index_by_node_id(n2)
 
         #n1, n2 = self.node_ids[i, :]
-        print('grids\n%s' % grid_cid0)
+        self.model.log.debug('grids\n%s' % grid_cid0)
         p1 = grid_cid0[n1i, :]
         p2 = grid_cid0[n2i, :]
         v1 = p1 - p2

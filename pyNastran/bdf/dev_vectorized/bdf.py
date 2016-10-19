@@ -244,7 +244,12 @@ class BDF(AddCard, CrossReference, WriteMesh):
 
         #: the list of possible cards that will be parsed
         self.cards_to_read = set([
-            'GRID',
+            'GRID', 'SPOINT', 'EPOINT', 'POINT', 'POINTAX',
+
+            # coords
+            'CORD1R', 'CORD1C', 'CORD1S',
+            'CORD2R', 'CORD2C', 'CORD2S',
+
             'PELAS', 'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
 
             'PBAR', 'PBARL', 'CBAR',
@@ -3094,21 +3099,20 @@ class BDF(AddCard, CrossReference, WriteMesh):
                         self.rejects.append([cardi[0]] + cardi[1])
                 else:
                     ncards = len(card)
-                    print('%r = %r' % (card_name, ncards))
+                    self.log.debug('%s = %r' % (card_name, ncards))
                     if card_name not in card_name_to_obj_mapper:
-                        self.log.debug('card_name=%r is not vectorized' % card_name)
-
+                        #self.log.debug('card_name=%r is not vectorized' % card_name)
                         for comment, card_lines in card:
-                            #print('card_lines', card_lines)
-                            #fields = to_fields(card_lines, card_name)
-                            #card = wipe_empty_fields(fields)
-                            #card_obj = BDFCard(card, has_none=False)
-
-                            # card_lines, card_name, comment='', is_list=True, has_none=True):
                             self.add_card(card_lines, card_name, comment=comment, is_list=False, has_none=False)
                         continue
 
                     obj = card_name_to_obj_mapper[card_name]
+                    if obj is None:
+                        self.log.debug('card_name=%r is not vectorized, but should be' % card_name)
+                        for comment, card_lines in card:
+                            self.add_card(card_lines, card_name, comment=comment, is_list=False, has_none=False)
+                        continue
+
                     self._increase_card_count(card_name, ncards)
                     obj.allocate(self.card_count)
                     for comment, card_lines in card:

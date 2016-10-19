@@ -24,7 +24,7 @@ class CPENTA15(SolidElement):
         SolidElement.__init__(self, model)
 
     def add(self, card, comment=''):
-        print('add...')
+        self.model.log.debug('add...')
         i = self.i
 
         #comment = self._comments[i]

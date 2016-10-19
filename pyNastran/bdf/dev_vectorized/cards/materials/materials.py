@@ -37,7 +37,7 @@ class Materials(object):
         self.mathp = MATHP(model)
 
     def add_mat1(self, card, comment):
-        print('adding mat1')
+        self.model.log.debug('adding mat1')
         #self.mat1.add(card, comment)
         #mid = integer(card, 1, 'material_id')
         self.mat1.add(card=card, comment=comment)

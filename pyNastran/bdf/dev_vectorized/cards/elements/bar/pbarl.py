@@ -59,7 +59,7 @@ class PBARL(Property):
         ncards = card_count[self.type]
         if ncards:
             self.n = ncards
-            print('ncards PBARL = %s' % ncards)
+            self.model.log.debug('ncards PBARL = %s' % ncards)
             float_fmt = self.model.float_fmt
 
             #: Property ID

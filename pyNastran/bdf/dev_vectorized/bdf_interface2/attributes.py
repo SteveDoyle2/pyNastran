@@ -594,6 +594,11 @@ class BDFAttributes(object):
             # mass
             'CONM1' : self.conm1,
             'CONM2' : self.conm2,
+            'PMASS' : self.pmass,
+            'CMASS1' : self.cmass1,
+            'CMASS2' : self.cmass2,
+            'CMASS3' : self.cmass3,
+            'CMASS4' : self.cmass4,
 
             'MAT1' : self.mat1,
             #'MAT2' : self.mat2,

@@ -125,7 +125,7 @@ class AddCard(BDFAttributes):
         self._type_to_id_map[gust.type].append(key)
 
     def add_TRIM(self, trim, allow_overwrites=False):
-        print('add trim...')
+        self.log.debug('add trim...')
         key = trim.sid
         if not allow_overwrites:
             assert key not in self.trims, 'TRIM=%s  old=\n%snew=\n%s' % (key, self.trims[key], trim)

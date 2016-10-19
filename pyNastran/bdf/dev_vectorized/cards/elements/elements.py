@@ -614,7 +614,7 @@ class Elements(object):
             self.cbar, self.cbeam,
             self.cshear,
 
-            #self.mass,
+            self.mass,
 
             self.elements_spring,
             #self.elements_spring.celas1,

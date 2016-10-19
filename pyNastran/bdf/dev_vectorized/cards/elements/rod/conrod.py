@@ -123,7 +123,7 @@ class CONROD(RodElement):
         assert grid_cid0 is not None
         #if positions is None:
 
-        print("i = %s" % i)
+        self.model.log.debug("i = %s" % i)
         n = len(i)
         if n == 0:
             i = i[0]

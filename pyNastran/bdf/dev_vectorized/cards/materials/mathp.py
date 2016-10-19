@@ -179,7 +179,7 @@ class MATHP(Material):
             self.tab3 = self.tab3[i]
             self.tab4 = self.tab4[i]
             self.tabd = self.tabd[i]
-            print('MATHP.material_id = %s' % self.material_id)
+            self.model.log.debug('MATHP.material_id = %s' % self.material_id)
 
     #def get_D_matrix(self):
         #"""

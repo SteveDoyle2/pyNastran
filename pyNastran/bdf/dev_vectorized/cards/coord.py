@@ -206,15 +206,15 @@ class Coord(VectorizedCard):
         #    raise RuntimeError('There are duplicate PSHELL/PCOMP IDs...')
 
     def build(self, coord_id=None):
-        print('----------building COORDx-------------')
+        self.model.log.debug('----------building COORDx-------------')
         cids_to_resolve = []
         ncoords = len(self.coords.keys())
         self.allocate(ncards=ncoords)
         #print('coord_ids = %s' % self.coords.keys())
         #print('T = \n%s' % self.T)
         for i, (cid, coord) in enumerate(sorted(iteritems(self.coords))):
-            print('i = %s' % i)
-            print('cid = %s' % cid)
+            self.model.log.debug('i = %s' % i)
+            self.model.log.debug('cid = %s' % cid)
             self.coord_id[i] = cid
             self.Type[i] = coord.Type
             if coord.isResolved:

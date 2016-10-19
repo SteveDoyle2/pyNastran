@@ -49,7 +49,7 @@ class MAT1(Material):
     def add(self, card, comment=''):
         assert self.n > 0, 'self.n=%s self.i=%s' % (self.n, self.i)
         i = self.i
-        print('i=%s' % i)
+        self.model.log.debug('i=%s' % i)
         mid = integer(card, 1, 'mid')
         if comment:
             self._comments[mid] = comment
@@ -70,7 +70,7 @@ class MAT1(Material):
 
     def build(self):
         if self.n:
-            print('MAT1.materialsA = %s' % self.material_id)
+            self.model.log.debug('MAT1.materialsA = %s' % self.material_id)
             i = self.material_id.argsort()
             self.material_id = self.material_id[i]
             self.E = self.E[i]
@@ -83,7 +83,7 @@ class MAT1(Material):
             self.Sc = self.Sc[i]
             self.Ss = self.Ss[i]
             self.mcsid = self.mcsid[i]
-            print('MAT1.materialsB = %s' % self.material_id)
+            self.model.log.debug('MAT1.materialsB = %s' % self.material_id)
             assert self.material_id.min() > 0, 'MAT1.materials = %s' % self.material_id
 
     def get_D_matrix(self):

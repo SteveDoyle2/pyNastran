@@ -67,7 +67,7 @@ class SolidElement(Element):
         #self._comments.append(comment)
 
     def build(self):
-        print('self.n =', self.n)
+        self.model.log.debug('self.n = %i' % self.n)
         if self.n:
             i = self.element_id.argsort()
             self.element_id = self.element_id[i]
