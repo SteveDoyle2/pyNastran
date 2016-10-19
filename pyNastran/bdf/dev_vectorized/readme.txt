@@ -9,9 +9,16 @@ Approach
  
  o model.element (Element object) stores elements/properties/reference to model
    o Element
-     o Element slice methods to get eids 1,2,3 (model.elements[3],
-       model.elements[[1,2,3]] and model.elements[1:10:2])
-       For missing elements/properties, it returns:
+     o Goals...
+       o Get elements by element id
+         o model.elements[3]
+         o model.elements[[1,2,3]]
+         o model.elements[1:10:2])
+       o Get elements by index
+         o ???
+       o semi sanely handle missing data
+        
+       o Handling missing data:
          o Possible Options:
            o Option A:  NaN if values don't exist
            o Option C:  Crash on Failure
