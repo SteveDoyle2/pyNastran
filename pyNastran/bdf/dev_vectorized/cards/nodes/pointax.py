@@ -6,9 +6,10 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.bdf_interface.assign_type import (integer,
     double_or_blank)
+from pyNastran.bdf.dev_vectorized.cards.vectorized_card import VectorizedCard
 
 
-class POINTAX(object):
+class POINTAX(VectorizedCard):
     type = 'POINTAX'
     def __init__(self, model):
         """
@@ -25,7 +26,7 @@ class POINTAX(object):
         | POINTAX | NID | RID | PHI |
         +---------+-----+-----+-----+
         """
-        self.model = model
+        VectorizedCard.__init__(self, model)
         self._cards = []
         self._comments = []
 

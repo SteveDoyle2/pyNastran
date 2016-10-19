@@ -159,7 +159,7 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
 
 def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=False,
             cid=None, mesh_form='combined', is_folder=False, print_stats=False,
-            sum_load=False, size=8, precision='single',
+            encoding=None, sum_load=False, size=8, is_double=False,
             quiet=False,
             reject=False, dynamic_vars=None):
     """
@@ -242,8 +242,9 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
     fem2 = None
     diff_cards = []
     #try:
-    out_model = run_fem1(fem1, bdf_model, mesh_form, xref, punch, sum_load, size, precision, cid)
-    fem2 = run_fem2(bdf_model, out_model, xref, punch, sum_load, size, precision, reject,
+    out_model = run_fem1(fem1, bdf_model, mesh_form, xref, punch, sum_load, size, is_double, cid)
+    print('hi!')
+    fem2 = run_fem2(bdf_model, out_model, xref, punch, sum_load, size, is_double, reject,
                     debug=debug, log=None)
     diff_cards = compare(fem1, fem2, xref=xref, check=check, print_stats=print_stats)
 
@@ -271,7 +272,7 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
     return (fem1, fem2, diff_cards)
 
 
-def run_fem1(fem1, bdf_model, mesh_form, xref, punch, sum_load, size, precision, cid):
+def run_fem1(fem1, bdf_model, mesh_form, xref, punch, sum_load, size, is_double, cid):
     assert os.path.exists(bdf_model), print_bad_path(bdf_model)
     try:
         if '.pch' in bdf_model:
@@ -283,13 +284,13 @@ def run_fem1(fem1, bdf_model, mesh_form, xref, punch, sum_load, size, precision,
         raise
     #fem1.sumForces()
 
-    out_model = bdf_model + '_out'
+    out_model = bdf_model + 'v_out'
     if cid is not None and xref:
         fem1.resolveGrids(cid=cid)
     if mesh_form == 'combined':
-        fem1.write_bdf(out_model, interspersed=True, size=size, precision=precision)
+        fem1.write_bdf(out_model, interspersed=True, size=size, is_double=is_double)
     elif mesh_form == 'separate':
-        fem1.write_bdf(out_model, interspersed=False, size=size, precision=precision)
+        fem1.write_bdf(out_model, interspersed=False, size=size, is_double=is_double)
     else:
         msg = "mesh_form=%r; allowedForms=['combined','separate']" % mesh_form
         raise NotImplementedError(msg)
@@ -298,8 +299,20 @@ def run_fem1(fem1, bdf_model, mesh_form, xref, punch, sum_load, size, precision,
 
 
 def run_fem2(bdf_model, out_model, xref, punch,
-             sum_load, size, precision,
+             sum_load, size, is_double,
              reject, debug=False, log=None):
+    """
+    Reads/writes the BDF to verify nothing has been lost
+
+    Parameters
+    ----------
+    bdf_model : str
+        the filename to run
+    xref : bool
+       xrefs
+    punch : bool
+       punches
+    """
     assert os.path.exists(bdf_model), bdf_model
     assert os.path.exists(out_model), out_model
     fem2 = BDF(debug=debug, log=log)
@@ -537,6 +550,8 @@ def main():
     #msg += '  -o <VAR_VAL>, --openmdao <VAR_VAL>   rejects all cards with the appropriate values applied;\n'
     #msg += '                 Uses the OpenMDAO %var syntax to replace it with value.\n'
     #msg += '                 So test_bdf -r var1=val1 var2=val2\n'
+    msg += "\n"
+    msg += "Info:\n"
 
     msg += '  -h, --help     show this help message and exit\n'
     msg += "  -v, --version  show program's version number and exit\n"
@@ -553,28 +568,27 @@ def main():
     import time
     t0 = time.time()
 
-    if data['--large']:
+    is_double = False
+    if data['--double']:
         size = 16
-        if data['--double']:
-            precision = 'double'
-        else:
-            precision = 'single'
+        is_double = True
+    elif data['--large']:
+        size = 16
     else:
         size = 8
-        precision = 'single'
-
-    model = read_bdf(data['BDF_FILENAME'])
-    #run_bdf('.',
-            #data['BDF_FILENAME'],
-            #debug=not(data['--quiet']),
-            #xref=not(data['--xref']),
-            #check=not(data['--check']),
-            #punch=data['--punch'],
-            #reject=data['--reject'],
-            #size=size,
-            #precision=precision,
-            #sum_load=data['--loads']
-    #)
+    print('is_double =', is_double)
+    #model = read_bdf(data['BDF_FILENAME'])
+    run_bdf('.',
+            data['BDF_FILENAME'],
+            debug=not(data['--quiet']),
+            xref=not(data['--xref']),
+            check=not(data['--check']),
+            punch=data['--punch'],
+            reject=data['--reject'],
+            size=size,
+            is_double=is_double,
+            #sum_load=data['--loads'],
+    )
     print("total time:  %.2f sec" % (time.time() - t0))
 
 

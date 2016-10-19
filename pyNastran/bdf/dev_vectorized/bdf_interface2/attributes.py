@@ -84,7 +84,16 @@ from pyNastran.bdf.dev_vectorized.cards.elements.properties import Properties
 from pyNastran.bdf.dev_vectorized.cards.materials.mat1 import MAT1
 #from pyNastran.bdf.dev_vectorized.cards.materials.mat2 import MAT2
 from pyNastran.bdf.dev_vectorized.cards.materials.mat8 import MAT8
+from pyNastran.bdf.dev_vectorized.cards.materials.mat1 import MAT1
+from pyNastran.bdf.dev_vectorized.cards.materials.mats1 import MATS1
 
+from pyNastran.bdf.dev_vectorized.cards.materials.mat8 import MAT8
+from pyNastran.bdf.dev_vectorized.cards.materials.mathp import MATHP
+from pyNastran.bdf.dev_vectorized.cards.materials.materials import Materials
+
+# loads
+from pyNastran.bdf.dev_vectorized.cards.loads.loads import Loads
+from pyNastran.bdf.dev_vectorized.cards.loads.temp import TEMPs
 
 #------------------------------------------
 from pyNastran.bdf.dev_vectorized.cards.elements.shell.elements_shell import ElementsShell
@@ -220,8 +229,21 @@ class BDFAttributes(object):
         #----------------------------------------
 
         self.mat1 = MAT1(self)
+        self.mats1 = MATS1(self)
         #self.mat2 = MAT2(self)
+        #self.mat2 = MAT2(self)
+        #self.mat4 = MAT4(self)
+        #self.mat5 = MAT5(self)
         self.mat8 = MAT8(self)
+        #self.mat10 = MAT10(self)
+        #self.mat11 = MAT11(self)
+        self.mathp = MATHP(self)
+
+        self.materials = Materials(self)
+
+        #: stores LOAD, FORCE, MOMENT, etc.
+        self.loads = Loads(self)
+        self.temps = TEMPs(self)
 
         # ----------------------------------------------------------------
         #: stores PARAMs

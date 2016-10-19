@@ -13,11 +13,6 @@ from pyNastran.bdf.dev_vectorized.utils import slice_to_iter
 
 #from pyNastran.bdf.cards.materials import (MAT1, MAT2, MAT4, MAT5, MAT8,
     #MAT10, MAT11) #, MATS1)
-from pyNastran.bdf.dev_vectorized.cards.materials.mat1 import MAT1
-from pyNastran.bdf.dev_vectorized.cards.materials.mats1 import MATS1
-
-from pyNastran.bdf.dev_vectorized.cards.materials.mat8 import MAT8
-from pyNastran.bdf.dev_vectorized.cards.materials.mathp import MATHP
 
 
 class Materials(object):
@@ -26,15 +21,15 @@ class Materials(object):
         self.n = 0
         self.is_built = False
 
-        self.mat1 = MAT1(model)
-        self.mats1 = MATS1(model)
-        #self.mat2 = MAT2(model)
-        #self.mat4 = MAT4(model)
-        #self.mat5 = MAT5(model)
-        self.mat8 = MAT8(model)
-        #self.mat10 = MAT10(model)
-        #self.mat11 = MAT11(model)
-        self.mathp = MATHP(model)
+        self.mat1 = model.mat1
+        self.mats1 = model.mats1
+        #self.mat2 = model.mat2
+        #self.mat4 = model.mat4
+        #self.mat5 = model.mat5
+        self.mat8 = model.mat8
+        #self.mat10 = model.mat10
+        #self.mat11 = model.mat11
+        self.mathp = model.mathp
 
     def add_mat1(self, card, comment):
         self.model.log.debug('adding mat1')

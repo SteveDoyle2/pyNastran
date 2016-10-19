@@ -27,6 +27,15 @@ class WriteMesh(BDFAttributes):
         """creates methods for writing cards"""
         BDFAttributes.__init__(self)
 
+    def get_encoding(self, encoding=None):
+        if encoding is not None:
+            pass
+        else:
+            encoding = self._encoding
+            if encoding is None:
+                encoding = sys.getdefaultencoding()
+        return encoding
+
     def _output_helper(self, out_filename, interspersed, size, is_double):
         """
         Performs type checking on the write_bdf inputs
@@ -146,7 +155,7 @@ class WriteMesh(BDFAttributes):
             outfile.write('$pyNastran: version=%s\n' % self.nastran_format)
             outfile.write('$pyNastran: punch=%s\n' % self.punch)
             outfile.write('$pyNastran: encoding=%s\n' % encoding)
-            outfile.write('$pyNastran: nnodes=%s\n' % len(self.nodes))
+            outfile.write('$pyNastran: nnodes=%s\n' % self.grid.n)
             outfile.write('$pyNastran: nelements=%s\n' % len(self.elements))
 
         if not self.punch:
@@ -359,11 +368,13 @@ class WriteMesh(BDFAttributes):
         #self.caero.write_card(f, size)
         #for key, trim in sorted(iteritems(self.trim)):
             #trim.write_card(f, size)
-        self.aero.write_card(outfile, size, is_double)
-        self.aeros.write_card(outfile, size, is_double)
-        self.caero1.write_card(outfile, size, is_double)
-        self.paero1.write_card(outfile, size, is_double)
-        self.spline1.write_card(outfile, size, is_double)
+
+        # supposed to work...
+        #self.aero.write_card(outfile, size, is_double)
+        #self.aeros.write_card(outfile, size, is_double)
+        #self.caero1.write_card(outfile, size, is_double)
+        #self.paero1.write_card(outfile, size, is_double)
+        #self.spline1.write_card(outfile, size, is_double)
 
         #self.caero2.write_card(f, size, is_double)
         #self.paero2.write_card(f, size, is_double)
@@ -632,8 +643,9 @@ class WriteMesh(BDFAttributes):
 
     def _write_rigid_elements(self, outfile, size=8, is_double=False):
         """Writes the rigid elements in a sorted order"""
-        self.rbe2.write_card(outfile, size, is_double)
-        self.rbe3.write_card(outfile, size, is_double)
+        #self.rbe2.write_card(outfile, size, is_double)
+        #self.rbe3.write_card(outfile, size, is_double)
+        pass
 
     def _write_sets(self, outfile, size=8, is_double=False):
         """Writes the SETx cards sorted by ID"""

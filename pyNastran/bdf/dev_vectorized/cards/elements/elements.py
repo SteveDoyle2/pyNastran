@@ -819,10 +819,10 @@ class Elements(object):
             self.ctube.write_card(bdf_file)
             self.ptube.write_card(bdf_file)
 
-        if self.cbush.n or self.pbush.n:
-            bdf_file.write('$ Bush-----------------------------------------------------\n')
-            self.cbush.write_card(bdf_file, size)
-            self.pbush.write_card(bdf_file, size)
+        #if self.cbush.n or self.pbush.n:
+            #bdf_file.write('$ Bush-----------------------------------------------------\n')
+            #self.cbush.write_card(bdf_file, size)
+            #self.pbush.write_card(bdf_file, size)
 
         if self.cbar.n or self.properties_bar.n:
             bdf_file.write('$ Bars-----------------------------------------------------\n')
