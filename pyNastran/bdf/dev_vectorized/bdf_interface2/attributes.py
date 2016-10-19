@@ -7,7 +7,6 @@ from pyNastran.utils import object_attributes, object_methods
 # nodes
 from pyNastran.bdf.dev_vectorized.cards.coord import Coord
 from pyNastran.bdf.dev_vectorized.cards.nodes.grid import GRID, GRDSET
-from pyNastran.bdf.dev_vectorized.cards.nodes.spoint import SPOINT
 from pyNastran.bdf.dev_vectorized.cards.nodes.point import POINT
 from pyNastran.bdf.dev_vectorized.cards.nodes.spoint import SPOINT
 from pyNastran.bdf.dev_vectorized.cards.nodes.epoint import EPOINT
@@ -101,15 +100,20 @@ from pyNastran.bdf.dev_vectorized.cards.elements.spring.elements_spring import E
 
 class BDFAttributes(object):
     """defines attributes of the BDF"""
+
     def __init__(self):
         """creates the attributes for the BDF"""
+        self._nastran_format = 'msc'
+        self.is_nx = False
         self.is_msc = True
+
+        #----------------------------------------
         self._is_cards_dict = True
+        self.punch = None
         self.reject_lines = []
 
         self.set_precision()
         #----------------------------------------
-        self.params = {}
         self.grid = GRID(self)
         self.point = POINT(self)
         self.grdset = GRDSET(self)
@@ -215,12 +219,16 @@ class BDFAttributes(object):
         self.properties = Properties(self)
         #----------------------------------------
 
-
-
         self.mat1 = MAT1(self)
         #self.mat2 = MAT2(self)
         self.mat8 = MAT8(self)
 
+        # ----------------------------------------------------------------
+        #: stores PARAMs
+        self.params = {}
+
+        #: stores PLOTELs
+        self.plotels = {}
         # ----------------------------------------------------------------
         #: direct matrix input - DMIG
         self.dmis = {}

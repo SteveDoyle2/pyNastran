@@ -110,6 +110,26 @@ class AddCard(BDFAttributes):
         self.monitor_points.append(monitor_point)
         self._type_to_id_map[monitor_point.type].append(len(self.monitor_points) - 1)
 
+    def add_cmethod(self, method, allow_overwrites=False):
+        key = method.sid
+        if key in self.cMethods and not allow_overwrites:
+            if not method._is_same_card(self.cMethods[key]):
+                assert key not in self.cMethods, 'sid=%s\nold_cmethod=\n%snew_cmethod=\n%s' % (key, self.cMethods[key], method)
+        else:
+            assert key > 0, 'sid=%s cMethod=\n%s' % (key, method)
+            self.cMethods[key] = method
+            self._type_to_id_map[method.type].append(key)
+
+    def add_method(self, method, allow_overwrites=False):
+        key = method.sid
+        if key in self.methods and not allow_overwrites:
+            if not method._is_same_card(self.methods[key]):
+                assert key not in self.methods, 'sid=%s\nold_method=\n%snew_method=\n%s' % (key, self.methods[key], method)
+        else:
+            assert key > 0, 'sid=%s method=\n%s' % (key, method)
+            self.methods[key] = method
+            self._type_to_id_map[method.type].append(key)
+
     def add_SPLINE(self, spline):
         assert spline.eid not in self.splines
         assert spline.eid > 0

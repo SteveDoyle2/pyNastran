@@ -48,6 +48,7 @@ from pyNastran.bdf.dev_vectorized.bdf_interface2.add_card import AddCard
 # old cards
 from pyNastran.bdf.cards.params import PARAM
 from pyNastran.bdf.cards.elements.elements import PLOTEL #CFAST, CGAP, CRAC2D, CRAC3D,
+from pyNastran.bdf.cards.methods import EIGB, EIGC, EIGR, EIGP, EIGRL
 from pyNastran.bdf.cards.aero import (AECOMP, AEFACT, AELINK, AELIST, AEPARM, AESTAT,
                                       AESURF, AESURFS, AERO, AEROS, CSSCHD,
                                       CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
@@ -293,6 +294,12 @@ class BDF(AddCard, CrossReference, WriteMesh):
             'DIVERG', ## divergs
 
             'PARAM', ## params
+
+            #: methods
+            'EIGB', 'EIGR', 'EIGRL',
+
+            #: cMethods
+            'EIGC', 'EIGP',
 
             # other
             'INCLUDE',  # '='
@@ -1161,7 +1168,7 @@ class BDF(AddCard, CrossReference, WriteMesh):
             card_count[old_card_name] += 1
         return cards, card_count
 
-    def update_solution(self, sol, method, isol_line):
+    def update_solution(self, sol, method, sol_iline):
         """
         Updates the overall solution type (e.g. 101,200,600)
 
@@ -1171,10 +1178,10 @@ class BDF(AddCard, CrossReference, WriteMesh):
             the solution type (101, 103, etc)
         method : str
             the solution method (only for SOL=600)
-        isol_line : int
+        sol_iline : int
             the line to put the SOL/method on
         """
-        self.iSolLine = isol_line
+        self.sol_iline = sol_iline
         # the integer of the solution type (e.g. SOL 101)
         if sol is None:
             self.sol = None
@@ -1750,11 +1757,11 @@ class BDF(AddCard, CrossReference, WriteMesh):
             #'TABRND1' : (TABRND1, self.add_random_table),
             #'TABRNDG' : (TABRNDG, self.add_random_table),
 
-            #'EIGB' : (EIGB, self.add_method),
-            #'EIGR' : (EIGR, self.add_method),
-            #'EIGRL' : (EIGRL, self.add_method),
-            #'EIGC' : (EIGC, self.add_cmethod),
-            #'EIGP' : (EIGP, self.add_cmethod),
+            'EIGB' : (EIGB, self.add_method),
+            'EIGR' : (EIGR, self.add_method),
+            'EIGRL' : (EIGRL, self.add_method),
+            'EIGC' : (EIGC, self.add_cmethod),
+            'EIGP' : (EIGP, self.add_cmethod),
 
             #'BCRPARA' : (BCRPARA, self.add_BCRPARA),
             #'BCTADD' : (BCTADD, self.add_BCTADD),
@@ -2408,7 +2415,7 @@ class BDF(AddCard, CrossReference, WriteMesh):
             'isStructured', 'uniqueBulkDataCards',
             'nCardLinesMax', 'model_type', 'includeDir',
             'sol_method', 'log',
-            'linesPack', 'lineNumbers', 'iSolLine',
+            'linesPack', 'lineNumbers', 'sol_iline',
             'reject_count', '_relpath', 'isOpened',
             #'foundEndData',
             'specialCards',])

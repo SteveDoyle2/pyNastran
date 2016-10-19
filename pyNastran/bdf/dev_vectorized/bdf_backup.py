@@ -585,7 +585,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
         #: used in solution 600, method
         self.sol_method = None
         #: the line with SOL on it, marks ???
-        self.iSolLine = None
+        self.sol_iline = None
         self.case_control_deck = None
 
         #: store the PARAM cards
@@ -1335,7 +1335,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             card_count[old_card_name] += 1
         return cards, card_count
 
-    def update_solution(self, sol, method, isol_line):
+    def update_solution(self, sol, method, sol_iline):
         """
         Updates the overall solution type (e.g. 101,200,600)
 
@@ -1345,10 +1345,10 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             the solution type (101, 103, etc)
         method : str
             the solution method (only for SOL=600)
-        isol_line : int
+        sol_iline : int
             the line to put the SOL/method on
         """
-        self.iSolLine = isol_line
+        self.sol_iline = sol_iline
         # the integer of the solution type (e.g. SOL 101)
         if sol is None:
             self.sol = None

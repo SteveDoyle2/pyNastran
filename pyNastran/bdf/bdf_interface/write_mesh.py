@@ -21,12 +21,15 @@ from pyNastran.bdf.bdf_interface.attributes import BDFAttributes
 
 class WriteMesh(BDFAttributes):
     """
+    Defines methods for writing cards
+
     Major methods:
       - model.write_bdf(...)
       - model.echo_bdf(...)
       - model.auto_reject_bdf(...)
     """
     def __init__(self):
+        """creates methods for writing cards"""
         BDFAttributes.__init__(self)
         self._auto_reject = True
         self.cards_to_read = set([])
