@@ -60,7 +60,7 @@ class PBARL(Property):
         if ncards:
             self.n = ncards
             print('ncards PBARL = %s' % ncards)
-            float_fmt = self.model.float
+            float_fmt = self.model.float_fmt
 
             #: Property ID
             self.property_id = zeros(ncards, dtype='int32')

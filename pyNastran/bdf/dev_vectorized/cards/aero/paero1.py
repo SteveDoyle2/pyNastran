@@ -21,7 +21,7 @@ class PAERO1(VectorizedCard):
     def allocate(self, ncards):
         self.n = ncards
         if self.n:
-            #float_fmt = self.model.float
+            #float_fmt = self.model.float_fmt
             self.property_id = zeros(ncards, dtype='int32')
             self.b = zeros((ncards, 6), dtype='int32')
 

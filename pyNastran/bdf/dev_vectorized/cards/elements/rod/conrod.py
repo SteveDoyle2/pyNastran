@@ -58,7 +58,7 @@ class CONROD(RodElement):
 
     def allocate(self, ncards):
         self.n = ncards
-        float_fmt = self.model.float
+        float_fmt = self.model.float_fmt
         self.element_id = zeros(ncards, 'int32')
         self.material_id = zeros(ncards, 'int32')
         self.node_ids = zeros((ncards, 2), 'int32')

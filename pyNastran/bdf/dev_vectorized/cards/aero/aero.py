@@ -36,7 +36,7 @@ class AERO(VectorizedCard):
         self.n = ncards
         self.model.log.debug('AERO.n=%s' % self.n)
         if self.n:
-            float_fmt = self.model.float
+            float_fmt = self.model.float_fmt
             self.acsid = zeros(ncards, dtype='int32')
             self.velocity = zeros(ncards, dtype=float_fmt)
             self.cRef = zeros(ncards, dtype=float_fmt)

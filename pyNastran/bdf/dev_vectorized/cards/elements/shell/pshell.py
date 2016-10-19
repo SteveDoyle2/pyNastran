@@ -37,7 +37,7 @@ class PSHELL(Property):
         if ncards:
             self.model.log.debug('allocate PSHELL')
             self.n = ncards
-            float_fmt = self.model.float
+            float_fmt = self.model.float_fmt
             self.property_id = zeros(ncards, 'int32')
             self.material_id = zeros(ncards, 'int32')
             self.thickness = zeros(ncards, float_fmt)

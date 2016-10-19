@@ -45,7 +45,7 @@ class SPCD(object):
             #assert self.constraint_id == constraint_id, ''
 
     def build(self):
-        #float_fmt = self.model.float
+        #float_fmt = self.model.float_fmt
         self.n = len(self.self.constraint_id)
 
         self.grid_id = array(self.grid_id)

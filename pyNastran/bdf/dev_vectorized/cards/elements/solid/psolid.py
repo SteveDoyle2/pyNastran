@@ -26,7 +26,7 @@ class PSOLID(Property):
 
     def allocate(self, ncards):
         self.n = ncards
-        #float_fmt = self.model.float
+        #float_fmt = self.model.float_fmt
         #: Property ID
         self.property_id = zeros(ncards, 'int32')
         #: Material ID

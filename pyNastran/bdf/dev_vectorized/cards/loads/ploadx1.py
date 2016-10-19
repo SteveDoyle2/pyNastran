@@ -62,7 +62,7 @@ class PLOADX1(object):
         ncards = len(cards)
         self.n = ncards
         if ncards:
-            float_fmt = self.model.float
+            float_fmt = self.model.float_fmt
             #: Property ID
             self.load_id = zeros(ncards, 'int32')
             #: Element ID

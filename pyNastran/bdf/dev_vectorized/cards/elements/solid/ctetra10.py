@@ -113,7 +113,7 @@ class CTETRA10(SolidElement):
         n1, n2, n3, n4 = self._node_locations(xyz_cid0, 4)
 
         n = len(element_id)
-        V = zeros(n, self.model.float)
+        V = zeros(n, self.model.float_fmt)
 
         i = 0
         for n1i, n2i, n3i, n4i in zip(n1, n2, n3, n4):
@@ -138,7 +138,7 @@ class CTETRA10(SolidElement):
 
         n1, n2, n3, n4 = self._node_locations(xyz_cid0, 4)
         n = len(element_id)
-        volume = zeros(n, self.model.float)
+        volume = zeros(n, self.model.float_fmt)
 
         i = 0
         for n1i, n2i, n3i, n4i in zip(n1, n2, n3, n4):

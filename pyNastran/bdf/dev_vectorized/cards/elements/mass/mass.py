@@ -1,14 +1,5 @@
 from __future__ import print_function
-from numpy import union1d, concatenate, argsort
-from pyNastran.bdf.dev_vectorized.cards.elements.mass.conm1 import CONM1
-from pyNastran.bdf.dev_vectorized.cards.elements.mass.conm2 import CONM2
-
-#from pyNastran.bdf.dev_vectorized.cards.elements.mass.pmass import PMASS
-#from pyNastran.bdf.dev_vectorized.cards.elements.mass.cmass1 import CMASS1
-#from pyNastran.bdf.dev_vectorized.cards.elements.mass.cmass2 import CMASS2
-#from pyNastran.bdf.dev_vectorized.cards.elements.mass.cmass3 import CMASS3
-#from pyNastran.bdf.dev_vectorized.cards.elements.mass.cmass4 import CMASS4
-#from pyNastran.bdf.dev_vectorized.cards.elements.mass.cmass5 import CMASS5
+import numpy as np
 
 class Mass(object):
     def __init__(self, model):
@@ -21,15 +12,15 @@ class Mass(object):
            the BDF object
         """
         self.model = model
-        self.conm1 = CONM1(model)
-        self.conm2 = CONM2(model)
         self.n = 0
-        #self.pmass = PMASS(model)
-        #self.cmass1 = CMASS1(model)
-        #self.cmass2 = CMASS2(model)
-        #self.cmass3 = CMASS3(model)
-        #self.cmass4 = CMASS4(model)
-        #self.cmass5 = CMASS5(model)
+        self.conm1 = model.conm1
+        self.conm2 = model.conm2
+        self.pmass = model.pmass
+        self.cmass1 = model.cmass1
+        self.cmass2 = model.cmass2
+        self.cmass3 = model.cmass3
+        self.cmass4 = model.cmass4
+        self.cmass5 = model.cmass5
 
     def allocate(self, card_count):
         etypes = self._get_types(nlimit=False)

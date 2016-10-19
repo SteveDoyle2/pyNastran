@@ -26,7 +26,7 @@ class CELAS4(SpringElement):
 
     def allocate(self, ncards):
         self.n = ncards
-        float_fmt = self.model.float
+        float_fmt = self.model.float_fmt
         #: Element ID
         self.element_id = zeros(ncards, 'int32')
         #: Property ID

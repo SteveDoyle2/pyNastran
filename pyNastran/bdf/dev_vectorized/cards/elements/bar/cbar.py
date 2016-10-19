@@ -54,7 +54,7 @@ class CBAR(Element):
         self.n = ncards
         if self.n:
             assert isinstance(ncards, int), ncards
-            float_fmt = self.model.float
+            float_fmt = self.model.float_fmt
             #: Element ID
             self.element_id = zeros(ncards, 'int32')
             #: Property ID

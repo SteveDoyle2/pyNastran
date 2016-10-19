@@ -25,16 +25,21 @@ class ElementsShell(object):
         self.model = model
         self.n = 0
 
-        self.ctria3 = CTRIA3(self.model)
-        self.ctria6 = CTRIA6(self.model)
-        #self.cquad = CQUAD(self.model)
-        #self.cquadx = CQUADX(self.model)
-        self.cquad4 = CQUAD4(self.model)
-        self.cquad8 = CQUAD8(self.model)
-        #self.cquad9 = CQUAD9(self.model)
+        self.ctria3 = model.ctria3
+        self.ctria6 = model.ctria6
+        #self.cquad = model.cquad
+        #self.cquadx = model.cquadx
+        self.cquad = None
+        self.cquadx = None
+        self.cquad4 = model.cquad4
+        self.cquad8 = model.cquad8
+        #self.cquad9 = model.cquad9
+        self.cquad9 = None
 
-        #self.ctriax = CTRIAX(self.model)
-        self.ctriax6 = CTRIAX6(self.model)
+        #self.ctriax = model.ctriax
+        #self.ctriax6 = model.ctriax6
+        self.ctriax = None
+        self.ctriax6 = None
 
     def allocate(self, card_count):
         etypes = self._get_types(nlimit=False)
@@ -199,6 +204,17 @@ class ElementsShell(object):
         return mass
 
     def write_card(self, f, size=8, element_id=None):
+        """writes the cards
+
+        Parameters
+        ----------
+        bdf_file : file-obj
+            a file object
+        size : int; default=8
+            the field width
+        element_id : (nelements, ) int ndarray; default=None -> all
+            the element_ids to write
+        """
         f.write('$ELEMENTS_SHELL\n')
         types = self._get_types(nlimit=True)
         for element in types:
@@ -207,19 +223,36 @@ class ElementsShell(object):
                 element.write_card(f, size=size, element_id=element_id)
 
     def _get_types(self, nlimit=True):
+        """
+        Gets the element objects
+
+        Parameters
+        ----------
+        nlimit : bool; default=True
+            limits the objects to only ones with data
+        """
         types = [self.ctria3, self.cquad4, self.ctria6, self.cquad8, self.ctriax6] #, cquad8
         if nlimit:
             types2 = []
             for etype in types:
+                if etype is None:
+                    continue
                 if etype.n > 0:
                     types2.append(etype)
+            types = types2
+        else:
+            types2 = []
+            for etype in types:
+                if etype is None:
+                    continue
+                types2.append(etype)
             types = types2
         self.model.log.info('types = %s' % types)
         return types
 
     def get_stats(self):
         msg = []
-        types = self._get_types()
+        types = self._get_types(nlimit=True)
         for element in types:
             nele = element.n
             if nele:

@@ -61,7 +61,7 @@ class SPC(object):
             raise RuntimeError('self.constraint_id == constraint_id; constraint_id=%r expected; found=%r' % (self.constraint_id. constraint_id))
 
     def build(self):
-        #float_fmt = self.model.float
+        #float_fmt = self.model.float_fmt
         self.n = len(self.components)
         if self.n:
             self.grid_id = array(self.grid_id)

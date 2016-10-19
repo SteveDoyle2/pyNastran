@@ -13,14 +13,16 @@ class CONM1(VectorizedCard):
     def __init__(self, model):
         VectorizedCard.__init__(self, model)
 
-    def allocate(self, ncards):
-        self.element_id = zeros(ncards, 'int32')
-        self.node_id = zeros(ncards, 'int32')
-        self.coord_id = zeros(ncards, 'int32')
+    def allocate(self, card_count):
+        ncards = card_count[self.type]
+        if ncards:
+            self.element_id = zeros(ncards, 'int32')
+            self.node_id = zeros(ncards, 'int32')
+            self.coord_id = zeros(ncards, 'int32')
 
-        float_fmt = self.model.float
-        m = zeros((ncards, 6, 6), float_fmt)
-        self.mass_matrix = m
+            float_fmt = self.model.float_fmt
+            m = zeros((ncards, 6, 6), float_fmt)
+            self.mass_matrix = m
 
     def add(self, card, comment=''):
         i = self.i

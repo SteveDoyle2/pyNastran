@@ -151,7 +151,7 @@ class Coord(VectorizedCard):
         return self.get_rid_by_coord_id(coord_id)
 
     def allocate(self, ncards=None, card_count=None):
-        float_fmt = self.model.float
+        float_fmt = self.model.float_fmt
         assert ncards is not None or card_count is not None
         if ncards is None:
             ncards = array([card_count[name]
@@ -183,7 +183,7 @@ class Coord(VectorizedCard):
            the BDF object
         """
         VectorizedCard.__init__(self, model)
-        float_fmt = self.model.float
+        float_fmt = self.model.float_fmt
 
         self.n = 1
         ncards = 1

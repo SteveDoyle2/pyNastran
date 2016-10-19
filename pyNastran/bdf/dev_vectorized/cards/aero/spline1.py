@@ -50,7 +50,7 @@ class SPLINE1(VectorizedCard):
     def allocate(self, ncards):
         self.n = ncards
         if self.n:
-            float_fmt = self.model.float
+            float_fmt = self.model.float_fmt
             self.element_id = zeros(ncards, dtype='int32')
             self.caero = zeros(ncards, dtype='int32')
             self.box1 = zeros(ncards, dtype='int32')

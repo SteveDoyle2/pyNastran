@@ -73,7 +73,7 @@ class PLOAD2(object):
         #cards = self._cards
         ncards = self.n
 
-        float_fmt = self.model.float
+        float_fmt = self.model.float_fmt
         self.load_id = zeros(ncards, 'int32')
         self.element_id = zeros(ncards, 'int32')
         self.p = zeros(ncards, float_fmt)

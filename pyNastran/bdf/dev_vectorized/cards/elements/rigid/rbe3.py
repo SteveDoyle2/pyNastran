@@ -89,7 +89,7 @@ class RBE3(object):
 
     def allocate(self, ncards):
         self.n = ncards
-        float_fmt = self.model.float
+        float_fmt = self.model.float_fmt
 
         #: Element identification number
         self.element_id = zeros(ncards, 'int32')

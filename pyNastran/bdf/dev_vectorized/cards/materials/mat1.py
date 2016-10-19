@@ -31,7 +31,7 @@ class MAT1(Material):
     def allocate(self, card_count):
         ncards = card_count[self.type]
         if ncards:
-            float_fmt = self.model.float
+            float_fmt = self.model.float_fmt
             self.material_id = zeros(ncards, 'int32')
             self.rho = zeros(ncards, float_fmt)
             self.E = zeros(ncards, float_fmt)

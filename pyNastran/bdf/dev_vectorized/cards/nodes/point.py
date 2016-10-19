@@ -38,7 +38,7 @@ class POINT(object):
 
         self.n = ncards
         if ncards:
-            float_fmt = self.model.float
+            float_fmt = self.model.float_fmt
             self.node_id = zeros(ncards, 'int32')
             self.xyz = zeros((ncards, 3), float_fmt)
             self.coord_id = zeros(ncards, 'int32')

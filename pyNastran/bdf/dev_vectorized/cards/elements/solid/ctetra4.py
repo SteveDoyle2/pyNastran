@@ -297,7 +297,7 @@ class CTETRA4(SolidElement):
         """
         n1, n2, n3, n4 = self._get_node_locations_by_element_id(element_id, xyz_cid0)
 
-        V = zeros(n1.shape[0], self.model.float)
+        V = zeros(n1.shape[0], self.model.float_fmt)
         for i, n1i, n2i, n3i, n4i in zip(count(), n1, n2, n3, n4):
             V[i] = volume4(n1i, n2i, n3i, n4i)
             i += 1
@@ -337,7 +337,7 @@ class CTETRA4(SolidElement):
         """
         n1, n2, n3, n4 = self._get_node_locations_by_element_id(element_id, xyz_cid0)
         n = len(element_id)
-        volume = zeros(n, self.model.float)
+        volume = zeros(n, self.model.float_fmt)
 
         i = 0
         for n1i, n2i, n3i, n4i in zip(n1, n2, n3, n4):

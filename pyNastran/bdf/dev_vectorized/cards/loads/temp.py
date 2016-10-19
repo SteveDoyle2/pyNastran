@@ -27,7 +27,7 @@ class TEMP(object):
     def allocate(self, model, card_count):
         self.model = model
         n = card_count['TEMP']
-        float_fmt = self.model.float
+        float_fmt = self.model.float_fmt
         self.temp_id = 0
         #self.node_id = zeros(n, dtype='int32')
         self.node_id = self.model.grid.node_id
@@ -90,7 +90,7 @@ class TEMPP1(object):
 
     def allocate(self, card_count):
         if 'TEMPP1' in card_count:
-            float_fmt = self.model.float
+            float_fmt = self.model.float_fmt
             n = card_count['TEMPP1']
             self.n = n
             #self.model.log.debug('TEMPP1 n=%s' % self.n)

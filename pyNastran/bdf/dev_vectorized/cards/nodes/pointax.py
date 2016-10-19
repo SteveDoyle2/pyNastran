@@ -39,7 +39,7 @@ class POINTAX(object):
 
         self.n = ncards
         if ncards:
-            float_fmt = self.model.float
+            float_fmt = self.model.float_fmt
             self.node_id = zeros(ncards, 'int32')
             self.phi = zeros(ncards, float_fmt)
             self.ring_id = zeros(ncards, 'int32')

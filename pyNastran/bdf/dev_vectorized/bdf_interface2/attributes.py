@@ -4,27 +4,16 @@ from collections import defaultdict
 
 from pyNastran.utils import object_attributes, object_methods
 
+# nodes
+from pyNastran.bdf.dev_vectorized.cards.coord import Coord
 from pyNastran.bdf.dev_vectorized.cards.nodes.grid import GRID, GRDSET
 from pyNastran.bdf.dev_vectorized.cards.nodes.spoint import SPOINT
+from pyNastran.bdf.dev_vectorized.cards.nodes.point import POINT
+from pyNastran.bdf.dev_vectorized.cards.nodes.spoint import SPOINT
+from pyNastran.bdf.dev_vectorized.cards.nodes.epoint import EPOINT
+from pyNastran.bdf.dev_vectorized.cards.nodes.pointax import POINTAX
 
-from pyNastran.bdf.dev_vectorized.cards.elements.shell.cquad4 import CQUAD4
-from pyNastran.bdf.dev_vectorized.cards.elements.shell.ctria3 import CTRIA3
-from pyNastran.bdf.dev_vectorized.cards.elements.shell.ctria6 import CTRIA6
-from pyNastran.bdf.dev_vectorized.cards.elements.shell.cquad8 import CQUAD8
-#from pyNastran.bdf.dev_vectorized.cards.elements.shell.cquad import CQUAD
-
-from pyNastran.bdf.dev_vectorized.cards.elements.shell.pcomp import PCOMP
-from pyNastran.bdf.dev_vectorized.cards.elements.shell.pshell import PSHELL
-
-from pyNastran.bdf.dev_vectorized.cards.elements.solid.psolid import PSOLID
-from pyNastran.bdf.dev_vectorized.cards.elements.solid.ctetra4 import CTETRA4
-from pyNastran.bdf.dev_vectorized.cards.elements.solid.ctetra10 import CTETRA10
-from pyNastran.bdf.dev_vectorized.cards.elements.solid.cpenta6 import CPENTA6
-from pyNastran.bdf.dev_vectorized.cards.elements.solid.cpenta15 import CPENTA15
-from pyNastran.bdf.dev_vectorized.cards.elements.solid.chexa8 import CHEXA8
-from pyNastran.bdf.dev_vectorized.cards.elements.solid.chexa20 import CHEXA20
-
-
+# springs
 from pyNastran.bdf.dev_vectorized.cards.elements.spring.pelas import PELAS
 from pyNastran.bdf.dev_vectorized.cards.elements.spring.celas1 import CELAS1
 from pyNastran.bdf.dev_vectorized.cards.elements.spring.celas2 import CELAS2
@@ -38,20 +27,76 @@ from pyNastran.bdf.dev_vectorized.cards.elements.rod.conrod import CONROD
 from pyNastran.bdf.dev_vectorized.cards.elements.rod.ptube import PTUBE
 from pyNastran.bdf.dev_vectorized.cards.elements.rod.ctube import CTUBE
 
+# bars
 from pyNastran.bdf.dev_vectorized.cards.elements.bar.cbar import CBAR
 #from pyNastran.bdf.dev_vectorized.cards.elements.bar.cbaror import CBAROR
 from pyNastran.bdf.dev_vectorized.cards.elements.bar.pbar import PBAR
 from pyNastran.bdf.dev_vectorized.cards.elements.bar.pbarl import PBARL
+from pyNastran.bdf.dev_vectorized.cards.elements.bar.properties_bar import PropertiesBar
 
+# beams
 from pyNastran.bdf.dev_vectorized.cards.elements.beam.cbeam import CBEAM
 from pyNastran.bdf.dev_vectorized.cards.elements.beam.pbeam import PBEAM
 from pyNastran.bdf.dev_vectorized.cards.elements.beam.pbeaml import PBEAML
+from pyNastran.bdf.dev_vectorized.cards.elements.beam.properties_beam import PropertiesBeam
+
+# shear
+from pyNastran.bdf.dev_vectorized.cards.elements.shear.cshear import CSHEAR
+from pyNastran.bdf.dev_vectorized.cards.elements.shear.pshear import PSHEAR
+
+# shells
+from pyNastran.bdf.dev_vectorized.cards.elements.shell.cquad4 import CQUAD4
+from pyNastran.bdf.dev_vectorized.cards.elements.shell.ctria3 import CTRIA3
+from pyNastran.bdf.dev_vectorized.cards.elements.shell.ctria6 import CTRIA6
+from pyNastran.bdf.dev_vectorized.cards.elements.shell.cquad8 import CQUAD8
+#from pyNastran.bdf.dev_vectorized.cards.elements.shell.cquad import CQUAD
+from pyNastran.bdf.dev_vectorized.cards.elements.shell.pshell import PSHELL
+from pyNastran.bdf.dev_vectorized.cards.elements.shell.pcomp import PCOMP
+from pyNastran.bdf.dev_vectorized.cards.elements.shell.pcompg import PCOMPG
+
+# solids
+from pyNastran.bdf.dev_vectorized.cards.elements.solid.psolid import PSOLID
+from pyNastran.bdf.dev_vectorized.cards.elements.solid.ctetra4 import CTETRA4
+from pyNastran.bdf.dev_vectorized.cards.elements.solid.ctetra10 import CTETRA10
+from pyNastran.bdf.dev_vectorized.cards.elements.solid.cpenta6 import CPENTA6
+from pyNastran.bdf.dev_vectorized.cards.elements.solid.cpenta15 import CPENTA15
+from pyNastran.bdf.dev_vectorized.cards.elements.solid.chexa8 import CHEXA8
+from pyNastran.bdf.dev_vectorized.cards.elements.solid.chexa20 import CHEXA20
+
+# mass
+from pyNastran.bdf.dev_vectorized.cards.elements.mass.mass import Mass
+from pyNastran.bdf.dev_vectorized.cards.elements.mass.conm1 import CONM1
+from pyNastran.bdf.dev_vectorized.cards.elements.mass.conm2 import CONM2
+
+#from pyNastran.bdf.dev_vectorized.cards.elements.mass.pmass import PMASS
+#from pyNastran.bdf.dev_vectorized.cards.elements.mass.cmass1 import CMASS1
+#from pyNastran.bdf.dev_vectorized.cards.elements.mass.cmass2 import CMASS2
+#from pyNastran.bdf.dev_vectorized.cards.elements.mass.cmass3 import CMASS3
+#from pyNastran.bdf.dev_vectorized.cards.elements.mass.cmass4 import CMASS4
+#from pyNastran.bdf.dev_vectorized.cards.elements.mass.cmass5 import CMASS5
 
 
+# cards
+from pyNastran.bdf.dev_vectorized.cards.elements.elements import Elements
+from pyNastran.bdf.dev_vectorized.cards.elements.properties import Properties
+
+
+# materials
 from pyNastran.bdf.dev_vectorized.cards.materials.mat1 import MAT1
 #from pyNastran.bdf.dev_vectorized.cards.materials.mat2 import MAT2
 from pyNastran.bdf.dev_vectorized.cards.materials.mat8 import MAT8
 
+
+#------------------------------------------
+from pyNastran.bdf.dev_vectorized.cards.elements.shell.elements_shell import ElementsShell
+from pyNastran.bdf.dev_vectorized.cards.elements.shell.properties_shell import PropertiesShell
+
+# solid
+from pyNastran.bdf.dev_vectorized.cards.elements.solid.elements_solid import ElementsSolid
+from pyNastran.bdf.dev_vectorized.cards.elements.solid.properties_solid import PropertiesSolid
+
+# spring
+from pyNastran.bdf.dev_vectorized.cards.elements.spring.elements_spring import ElementsSpring
 
 
 class BDFAttributes(object):
@@ -62,9 +107,17 @@ class BDFAttributes(object):
         self._is_cards_dict = True
         self.reject_lines = []
 
+        self.set_precision()
+        #----------------------------------------
+        self.params = {}
         self.grid = GRID(self)
+        self.point = POINT(self)
         self.grdset = GRDSET(self)
         self.spoint = SPOINT(self)
+        self.epoint = EPOINT(self)
+        self.pointax = POINTAX(self)
+        self.coords = Coord(self)
+        #----------------------------------------
 
         # springs
         self.pelas = PELAS(self)
@@ -72,6 +125,7 @@ class BDFAttributes(object):
         self.celas2 = CELAS2(self)
         self.celas3 = CELAS3(self)
         self.celas4 = CELAS4(self)
+        self.elements_spring = ElementsSpring(self)
 
         # rods/tubes
         self.prod = PROD(self)
@@ -85,20 +139,34 @@ class BDFAttributes(object):
         #self.cbaror = CBAROR(self)
         self.pbar = PBAR(self)
         self.pbarl = PBARL(self)
+        self.properties_bar = PropertiesBar(self)
 
         # beams
         self.cbeam = CBEAM(self)
         self.pbeam = PBEAM(self)
         self.pbeaml = PBEAML(self)
+        #: stores PBEAM, PBEAML
+        self.properties_beam = PropertiesBeam(self)
+
+        # shear
+        #: stores CSHEAR
+        self.cshear = CSHEAR(self)
+        #: stores PSHEAR
+        self.pshear = PSHEAR(self)
 
         # shells
         self.pshell = PSHELL(self)
         self.pcomp = PCOMP(self)
+        self.pcompg = PCOMPG(self)
         self.cquad4 = CQUAD4(self)
         self.ctria3 = CTRIA3(self)
         self.ctria6 = CTRIA6(self)
         self.cquad8 = CQUAD8(self)
         #self.cquad = CQUAD(self)
+        #: stores PSHELL, PCOMP, PCOMPG
+        self.properties_shell = PropertiesShell(self)
+        #: stores CTRIA3, CTRIA6, CQUAD4, CQUAD8
+        self.elements_shell = ElementsShell(self)
 
         # solids
         self.psolid = PSOLID(self)
@@ -108,6 +176,46 @@ class BDFAttributes(object):
         self.cpenta15 = CPENTA15(self)
         self.chexa8 = CHEXA8(self)
         self.chexa20 = CHEXA20(self)
+        #: stores CTETRA4, CPENTA6, CHEXA8, CTETRA10, CPENTA15, CHEXA20
+        self.elements_solid = ElementsSolid(self)
+        #: stores PSOLID, PLSOLID
+        self.properties_solid = PropertiesSolid(self)
+
+        #----------------------------------------
+        # mass
+        self.conm1 = CONM1(self)
+        self.conm2 = CONM2(self)
+        #self.pmass = PMASS(self)
+        #self.cmass1 = CMASS1(self)
+        #self.cmass2 = CMASS2(self)
+        #self.cmass3 = CMASS3(self)
+        #self.cmass4 = CMASS4(self)
+        #self.cmass5 = CMASS5(self)
+        self.pmass = None
+        self.cmass1 = None
+        self.cmass2 = None
+        self.cmass3 = None
+        self.cmass4 = None
+        self.cmass5 = None
+        self.mass = Mass(self)
+        #----------------------------------------
+        # b-list elements
+        self.rbe2 = None
+        self.rbe3 = None
+        self.cbush = None
+        self.pbush = None
+        self.cbush1d = None
+        self.pbush1d = None
+        self.cbush2d = None
+        self.pbush2d = None
+
+        #----------------------------------------
+        # control structure
+        self.elements = Elements(self)
+        self.properties = Properties(self)
+        #----------------------------------------
+
+
 
         self.mat1 = MAT1(self)
         #self.mat2 = MAT2(self)
@@ -262,8 +370,6 @@ class BDFAttributes(object):
         self.bsurfs = {}
 
         # ---------------------------------------------------------------------
-
-        self.set_precision()
 
         self._type_to_id_map = defaultdict(list)
         self._solmap_to_value = {
@@ -451,34 +557,43 @@ class BDFAttributes(object):
             'GRIDSET' : self.grdset,
             'SPOINT' : self.spoint,
 
+            # springs
             'PELAS' : self.pelas,
             'CELAS1' : self.celas1,
             'CELAS2' : self.celas2,
             'CELAS3' : self.celas3,
             'CELAS4' : self.celas4,
 
+            # rods/tube
             'PROD' : self.prod,
             'CROD' : self.crod,
             'CONROD' : self.conrod,
             'PTUBE' : self.ptube,
             'CTUBE' : self.ctube,
 
+            # bars
             'CBAR' : self.cbar,
             #'CBAROR' : self.cbaror,
             'PBAR' : self.pbar,
             'PBARL' : self.pbarl,
 
+            # beams
             'CBEAM' : self.cbeam,
             'PBEAM' : self.pbeam,
             'PBEAML' : self.pbeaml,
 
+            # shells
             'PSHELL' : self.pshell,
             'PCOMP' : self.pcomp,
-            #'PCOMPG' : self.pcompg,
+            'PCOMPG' : self.pcompg,
             'CTRIA3' : self.ctria3,
             'CQUAD4' : self.cquad4,
             'CQUAD8' : self.cquad8,
             #'CQUAD' : self.cquad,
+
+            # mass
+            'CONM1' : self.conm1,
+            'CONM2' : self.conm2,
 
             'MAT1' : self.mat1,
             #'MAT2' : self.mat2,
@@ -498,9 +613,9 @@ class BDFAttributes(object):
             that is used by all the objects
         """
         if precision in ('double', 'float64'):
-            self.float = 'float64'
+            self.float_fmt = 'float64'
         elif precision == ('single', 'float32'):
-            self.float = 'float32'
+            self.float_fmt = 'float32'
         else:
             raise NotImplementedError('precision=%r' % precision)
 

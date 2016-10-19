@@ -3,11 +3,10 @@ from six import iteritems, integer_types
 from six.moves import zip
 
 import numpy as np
-from numpy import (array, zeros, searchsorted, unique, argsort,
-                   hstack, where, vstack, ones, intersect1d, setdiff1d,
-                   nan, full, ravel, ndarray)
-from numpy.linalg import norm
-
+#from numpy import (array, zeros, searchsorted, unique, argsort,
+                   #hstack, where, vstack, ones, intersect1d, setdiff1d,
+                   #nan, full, ravel, ndarray)
+#from numpy.linalg import norm
 from pyNastran.bdf.dev_vectorized.utils import slice_to_iter, unique2d
 from pyNastran.bdf.dev_vectorized.cards.elements.solid.ctetra4 import volume4
 from pyNastran.bdf.dev_vectorized.cards.elements.solid.chexa8 import quad_area_centroid
@@ -15,17 +14,8 @@ from pyNastran.bdf.dev_vectorized.cards.elements.solid.cpenta6 import tri_area_c
 
 from pyNastran.bdf.dev_vectorized.cards.elements.shell.cquad4 import _cquad4_normal_A
 from pyNastran.bdf.dev_vectorized.cards.elements.shell.ctria3 import _ctria3_normal_A
+from pyNastran.bdf.dev_vectorized.cards.elements.utils import build_groups, asarray
 
-def asarray(ids, dtype='float32'):
-    print(type(ids))
-    if isinstance(ids, np.ndarray):
-        return ids
-    elif isinstance(ids, (list, tuple)):
-        return np.asarray(ids, dtype=dtype)
-    elif isinstance(ids, set):
-        return np.asarray(list(ids), dtype=dtype)
-    else:
-        raise NotImplementedError(type(ids))
 
 class Elements(object):
     def __init__(self, model):
@@ -120,19 +110,19 @@ class Elements(object):
             return
 
         grids = self.model.grid.node_id
-        nids = unique(ravel(elements.node_ids))
+        nids = np.unique(np.ravel(elements.node_ids))
         #nids.sort()
-        diff = setdiff1d(nids, grids)
+        diff = np.setdiff1d(nids, grids)
         if len(diff):
             eids = []
             # find the bad elements
             for i, eid in enumerate(elements.element_id):
-                j = intersect1d(diff, elements.node_ids[i, :])
+                j = np.intersect1d(diff, elements.node_ids[i, :])
                 if len(j):
                     eids.append(eid)
 
             # prevents really long arrays
-            eids = array(eids)
+            eids = np.array(eids)
             msg = "Couldn't find Node ID: %s, which is requried by %s %s" % (
                 diff, elements.type, eids)
             raise RuntimeError(msg)
@@ -143,6 +133,8 @@ class Elements(object):
         ptypes = self._get_property_types(nlimit=False)
         self.n = 0
         for elems in etypes:
+            #if elems is None:
+                #continue
             if hasattr(elems, 'type'):
                 if elems.type in self.model.card_count:
                     self.model.log.debug('building %s' % elems.__class__.__name__)
@@ -155,6 +147,8 @@ class Elements(object):
             #print(nids - grids[i])
 
         for props in ptypes:
+            #if props is None:
+                #continue
             if hasattr(props, 'type'):
                 if props.type in self.model.card_count:
                     self.model.log.debug('building %s' % props.__class__.__name__)
@@ -168,45 +162,16 @@ class Elements(object):
             eids = check_duplicate('element_id', etypes)
             self.element_ids = asarray(eids, dtype='int32')
             self.element_ids.sort()
-            self.element_groups = self.build_groups(etypes, 'element_id', is_element=True)
+            self.element_groups = build_groups(etypes, 'element_id', is_element=True)
             self.model.log.info('self.element_groups = %s' % self.element_groups)
         if self.nproperties:
             pids = check_duplicate('property_id', ptypes)
             self.property_ids = asarray(pids, dtype='int32')
             self.property_ids.sort()
-            self.property_groups = self.build_groups(ptypes, 'property_id')
+            self.property_groups = build_groups(ptypes, 'property_id')
             self.model.log.info('self.property_groups = %s' % self.property_groups)
         #print('*****self.element_ids =', self.element_ids)
         #print('*****self.property_ids =', self.property_ids)
-
-    def build_groups(self, objs, name, is_element=False):
-        groups = {}
-        Types = []
-        for obj in objs:
-            if hasattr(obj, '_get_types'):
-                #print(obj.__class__.__name__)
-                Types2 = obj._get_types(nlimit=False)
-                Types += Types2
-                #Types += [Type.type for Type in Types2]
-
-            else:
-                #Types += [obj.type]
-                Types += [obj]
-        for Type in Types:
-            group_data = getattr(Type, name)
-            if not isinstance(group_data, ndarray):
-                msg = 'Type %s does not return an ndarray when %s is requested' % (Type.type, name)
-                raise RuntimeError(msg)
-
-            msg = 'class %s has a type of %r' % (Type.__class__.__name__, Type.type)
-            assert Type.__class__.__name__ == Type.type, msg
-            #if is_element:
-                #assert hasattr(Type, 'op2_id'), 'class %s has no attribute op2_id' % Type.type
-
-            if len(group_data):
-                groups[Type.type] = group_data
-        #print("groups = %s" % groups)
-        return groups
 
     def get_elements(self, element_id):
         type_map = {
@@ -246,7 +211,7 @@ class Elements(object):
             obj = None
             for etype, eids in iteritems(self.element_groups):
                 if eid in eids:
-                    i = where(eid == eids)[0]
+                    i = np.where(eid == eids)[0]
                     obj = type_map[etype][i]
                     out.append(obj)
         return out
@@ -277,9 +242,10 @@ class Elements(object):
         # this isn't working...
         #Types = [Type if Type.type not in exclude_types for Type in Types]
         elements_without_properties = ['CELAS2', 'CELAS4', 'CONROD']
-        eids = hstack([Type.element_id for Type in Types])
-        pids = hstack([zeros(Type.n, dtype='int32') if Type.type in elements_without_properties
-                       else Type.property_id for Type in Types])
+        eids = np.hstack([Type.element_id for Type in Types])
+        pids = np.hstack([np.zeros(Type.n, dtype='int32')
+                          if Type.type in elements_without_properties
+                          else Type.property_id for Type in Types])
         return Types, eids, pids
 
     def get_element_ids_by_property_type(self, element_ids, exclude_types=None):
@@ -293,12 +259,12 @@ class Elements(object):
         #print('existing_pids = %s' % existing_pids)
 
         # make sure oids is unique
-        oids = hstack([Type.op2_id for Type in Types])
-        oids2 = unique(oids)
+        oids = np.hstack([Type.op2_id for Type in Types])
+        oids2 = np.unique(oids)
         assert len(oids) == len(oids2), oids
 
-        oids = hstack([Type.op2_id * ones(Type.n, dtype='int32') for Type in Types])
-        i = argsort(eids)
+        oids = np.hstack([Type.op2_id * np.ones(Type.n, dtype='int32') for Type in Types])
+        i = np.argsort(eids)
         #print('i = %s' % i)
         #print('eids = %s len=%s' % (eids, len(eids)))
         #print('pids = %s len=%s' % (pids, len(pids)))
@@ -309,14 +275,14 @@ class Elements(object):
         pids = pids[i]
         oids = oids[i]
 
-        data = vstack([eids, pids, oids]).T
+        data = np.vstack([eids, pids, oids]).T
 
         #print(data)
 
         # drop extra elements
         # for eids greater than the max allowable eid located at data[-1,0],
         # we drop them
-        i_less = where(data[-1, 0] >= element_ids)[0]
+        i_less = np.where(data[-1, 0] >= element_ids)[0]
         element_ids = element_ids[i_less]
 
         # drop more extra elements
@@ -324,7 +290,7 @@ class Elements(object):
         # that have a sorted location in data, but no unique value
         #print('++++++ %s' % element_ids)
         #print('++++++ %s' % data[:, 0])
-        ie = unique(searchsorted(data[:, 0], element_ids))
+        ie = np.unique(np.searchsorted(data[:, 0], element_ids))
         #print('ie = %s' % ie)
         #print('dataA \n%s' % data)
         return data[ie, :]
@@ -344,7 +310,7 @@ class Elements(object):
             #print("self.element_ids = \n%s" % str(self.element_ids))
             #print("element_ids = \n%s" % str(element_ids))
             element_ids_orig = asarray(element_ids_orig)
-            element_ids = intersect1d(element_ids_orig, self.element_ids)
+            element_ids = np.intersect1d(element_ids_orig, self.element_ids)
 
             # check for invalid IDs
             #n = len(element_ids)
@@ -366,9 +332,9 @@ class Elements(object):
         element_ids, element_ids_orig = self._get_element_ids(element_ids_orig)
         if len(element_ids) == 0:
             nelements = len(element_ids_orig)
-            mass = full(nelements, nan, 'float64')
+            mass = np.full(nelements, np.nan, 'float64')
             if sort_output:
-                i = argsort(element_ids_orig)
+                i = np.argsort(element_ids_orig)
                 #print("i =", i, i.shape)
                 #print("element_ids_orig =", element_ids_orig, element_ids_orig.shape)
                 return element_ids_orig[i], mass
@@ -416,9 +382,9 @@ class Elements(object):
         #self.model.log.debug('**data2 = %s' % data2)
         nelements = len(element_ids)
         #self.model.log.debug('nelement_ids =', nelements)
-        eids2 = zeros(nelements_orig, dtype='int32')
+        eids2 = np.zeros(nelements_orig, dtype='int32')
         #mass = full(nelements, nan, dtype='float64')
-        mass = full(nelements_orig, nan, dtype='float64')
+        mass = np.full(nelements_orig, np.nan, dtype='float64')
         #self.model.log.debug('mass.shape =', mass.shape)
 
         ni = 0
@@ -426,7 +392,7 @@ class Elements(object):
         for (pid, etype), element_ids in iteritems(data2):
             #self.model.log.debug('pid=%s eType=%s element_ids=%s' % (pid, eType, element_ids))
             elements = type_map[etype]
-            i = searchsorted(elements.element_id, element_ids)
+            i = np.searchsorted(elements.element_id, element_ids)
             n = len(i)
             eids2[ni:ni+n] = elements.element_id[i]
             if pid == 0:
@@ -448,7 +414,7 @@ class Elements(object):
                 #print('  prop = %s' % str(prop).rstrip())
 
             elements = type_map[etype]
-            i = searchsorted(elements.element_id, element_ids)
+            i = np.searchsorted(elements.element_id, element_ids)
             n = len(i)
             #print('ielements = %s' % i)
 
@@ -458,7 +424,7 @@ class Elements(object):
                 msg = 'which is required for %ss' % etype
                 n1 = self.get_nodes(elements.node_ids[i, 0], xyz_cid0, msg=msg)
                 n2 = self.get_nodes(elements.node_ids[i, 1], xyz_cid0, msg=msg)
-                length = norm(n2 - n1, axis=1)
+                length = np.linalg.norm(n2 - n1, axis=1)
                 #print('prop = %s' % prop)
                 #print('  calling get_mass_per_area for pid=%s' % (pid))
                 if etype == 'CONROD':
@@ -507,7 +473,7 @@ class Elements(object):
                     n3 = xyz_cid0[self.model.grid.get_node_index_by_node_id(n3), :]
                     n4 = xyz_cid0[self.model.grid.get_node_index_by_node_id(n4), :]
 
-                    volumei = zeros(n, self.model.float)
+                    volumei = np.zeros(n, self.model.float_fmt)
                     i = 0
                     for n1i, n2i, n3i, n4i in zip(n1, n2, n3, n4):
                         volumei[i] = volume4(n1i, n2i, n3i, n4i)
@@ -524,7 +490,7 @@ class Elements(object):
                     n6 = xyz_cid0[self.model.grid.get_node_index_by_node_id(n6), :]
                     (area1, centroid1) = tri_area_centroid(n1, n2, n3)
                     (area2, centroid2) = tri_area_centroid(n4, n5, n6)
-                    volumei = (area1 + area2) / 2. * norm(centroid1 - centroid2, axis=1)
+                    volumei = (area1 + area2) / 2. * np.linalg.norm(centroid1 - centroid2, axis=1)
                 elif etype in ['CHEXA8', 'CHEXA20']:
                     n1, n2, n3, n4, n5, n6, n7, n8 = (
                         elements.node_ids[i, 0], elements.node_ids[i, 1],
@@ -542,7 +508,7 @@ class Elements(object):
 
                     (area1, centroid1) = quad_area_centroid(n1, n2, n3, n4)
                     (area2, centroid2) = quad_area_centroid(n5, n6, n7, n8)
-                    volumei = (area1 + area2) / 2. * norm(centroid1 - centroid2, axis=1)
+                    volumei = (area1 + area2) / 2. * np.linalg.norm(centroid1 - centroid2, axis=1)
                 else:
                     msg = "Element.get_mass doesn't support %s; try %s.get_mass" % (etype, etype)
                     self.model.log.debug(msg)
@@ -557,7 +523,7 @@ class Elements(object):
             #self.model.log.debug("")
             ni += n
         #self.model.log.debug('data2 = %s' % data2)
-        diff = setdiff1d(element_ids_orig, element_ids_to_analyze)
+        diff = np.setdiff1d(element_ids_orig, element_ids_to_analyze)
         #print('A = %s' % element_ids_orig)
         #print('B = %s' % element_ids_to_analyze)
         #print('A-B = %s' % (diff))
@@ -569,7 +535,7 @@ class Elements(object):
             #print('len(diff) =', len(diff))
         eids2[ni:] = diff
         if sort_output:
-            i = argsort(eids2)
+            i = np.argsort(eids2)
             eids2 = eids2[i]
             mass = mass[i]
         return eids2, mass
@@ -588,7 +554,7 @@ class Elements(object):
                     self.model.log.debug('pid  = %s' % pid)
 
                 if pid in pids:
-                    i = where(pid == pids)[0]
+                    i = np.where(pid == pids)[0]
                     #print('i = %s, shape=%s' % (i, i.shape))
                     #print('pids_extract = %s' % pids_extract)
                     #obj = TypeMap[Type].slice_by_index(i)
@@ -648,7 +614,7 @@ class Elements(object):
             self.cbar, self.cbeam,
             self.cshear,
 
-            self.mass,
+            #self.mass,
 
             self.elements_spring,
             #self.elements_spring.celas1,
@@ -656,11 +622,11 @@ class Elements(object):
             #self.elements_spring.celas3,
             #self.elements_spring.celas4,
 
-            self.cbush,
+            #self.cbush,
 
             # rigid
-            self.rbe2,
-            self.rbe3,
+            #self.rbe2,
+            #self.rbe3,
 
             #self.elements_shell.ctria3,
             #self.elements_shell.cquad4,
@@ -680,10 +646,19 @@ class Elements(object):
         if nlimit:
             types2 = []
             for etype in types:
-                if not nlimit:
+                if etype is None:
+                    continue
+                elif not nlimit:
                     types2.append(etype)
                 elif etype.n > 0:
                     types2.append(etype)
+            types = types2
+        else:
+            types2 = []
+            for etype in types:
+                if etype is None:
+                    continue
+                types2.append(etype)
             types = types2
         return types
 
@@ -697,7 +672,7 @@ class Elements(object):
         types = [
             # 0D
             self.pelas,
-            self.pbush,
+            #self.pbush,
 
             # 1D
             self.prod, self.ptube,
@@ -823,15 +798,15 @@ class Elements(object):
 
     def _write_alternating_elements_properties_0d(self, bdf_file, size, is_double):
         #self.properties_springs.write_card(bdf_file)
-        self.elements_spring.write_card(bdf_file)
-        self.pelas.write_card(bdf_file, size)
+        self.elements_spring.write_card(bdf_file, is_double)
+        self.pelas.write_card(bdf_file, size, is_double)
 
         #self.elements_damper.write_card(bdf_file)
         #self.pdamp.write_card(bdf_file, size)
 
         if self.mass.n:
             bdf_file.write('$ Mass-----------------------------------------------------\n')
-            self.mass.write_card(bdf_file, size)
+            self.mass.write_card(bdf_file, size, is_double)
 
     def _write_alternating_elements_properties_1d(self, bdf_file, size, is_double):
         #self.properties_rods.write_card(f)
@@ -892,7 +867,7 @@ class Elements(object):
             for Type, eids in iteritems(self.element_groups):
                 if eid in eids:
                     #print('  found Type=%s' % Type)
-                    i = where(eid == eids)[0]
+                    i = np.where(eid == eids)[0]
                     #print("    i = %s" % i)
                     obj = type_map[Type].slice_by_index(i)
                     self.model.log.debug("    found eid=%s " % obj.element_id)
@@ -929,10 +904,10 @@ class Elements(object):
             if pid not in elements.property_ids:
                 self.model.log.debug('Property pid=%s does not exist' % pid)
                 #continue
-            i = where(pid_data[:, 1] == pid)[0]
+            i = np.where(pid_data[:, 1] == pid)[0]
             #self.model.log.debug("pid=%i etype=%s Step #1=> \n%s\n" % (
                 #pid, etype, pid_data[i, :]))
-            j = where(pid_data[i, 2] == etype)[0]
+            j = np.where(pid_data[i, 2] == etype)[0]
             eids = pid_data[i[j], 0]
             #self.model.log.debug("pid=%i etype=%s eids=%s Step #2=> \n%s\n" % (
                 #pid, etype, eids, pid_data[i[j], :]))

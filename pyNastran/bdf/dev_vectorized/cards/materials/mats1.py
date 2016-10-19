@@ -52,7 +52,7 @@ class MATS1(Material):
         ncards = card_count[self.type]
         if ncards:
             self.n = ncards
-            float_fmt = self.model.float
+            float_fmt = self.model.float_fmt
             #: Identification number of a MAT1, MAT2, or MAT9 entry.
             self.material_id = zeros(ncards, dtype='int32')
             #: Identification number of a TABLES1 or TABLEST entry. If H is

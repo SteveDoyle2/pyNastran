@@ -27,7 +27,7 @@ class PROD(Property):
     def allocate(self, ncards):
         self.n = ncards
         print('%s ncards=%s' % (self.type, ncards))
-        float_fmt = self.model.float
+        float_fmt = self.model.float_fmt
         #: Property ID
         self.property_id = zeros(ncards, 'int32')
         self.material_id = zeros(ncards, 'int32')

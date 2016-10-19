@@ -17,10 +17,10 @@ class ElementsSpring(object):
         self.model = model
 
         self.n = 0
-        self.celas1 = CELAS1(self.model)
-        self.celas2 = CELAS2(self.model)
-        self.celas3 = CELAS3(self.model)
-        self.celas4 = CELAS4(self.model)
+        self.celas1 = model.celas1
+        self.celas2 = model.celas2
+        self.celas3 = model.celas3
+        self.celas4 = model.celas4
 
     def allocate(self, card_count):
         etypes = self._get_types(nlimit=False)

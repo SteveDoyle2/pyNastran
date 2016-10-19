@@ -424,7 +424,7 @@ class PCOMP(Property):
         n = len(self.properties)
         self.n = n
         if self.n:
-            float_fmt = self.model.float
+            float_fmt = self.model.float_fmt
 
             #: Property ID
             self.property_id = array(sorted(self.properties.keys()), dtype='int32')

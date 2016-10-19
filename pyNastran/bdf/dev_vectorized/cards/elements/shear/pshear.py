@@ -17,7 +17,7 @@ class PSHEAR(Property):
         ncards = card_count[self.type]
         if ncards:
             self.n = ncards
-            float_fmt = self.model.float
+            float_fmt = self.model.float_fmt
             self.property_id = zeros(ncards, 'int32')
             #: Material ID
             self.material_id = zeros(ncards, 'int32')

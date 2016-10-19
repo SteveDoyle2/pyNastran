@@ -60,7 +60,7 @@ class SolidElement(Element):
     def allocate(self, ncards):
         print('%s.allocate(%s)' % (self.type, ncards))
         self.n = ncards
-        #float_fmt = self.model.float
+        #float_fmt = self.model.float_fmt
         self.element_id = zeros(ncards, 'int32')
         self.property_id = zeros(ncards, 'int32')
         self.node_ids = zeros((ncards, self.nnodes), 'int32')
@@ -137,7 +137,7 @@ class SolidElement(Element):
         http://www.thescipub.com/abstract/?doi=jmssp.2005.8.11
         """
         if p is None:
-            p = zeros(3, self.model.float)
+            p = zeros(3, self.model.float_fmt)
 
         r = centroid - p  # 2D array - 1D array
         I = mass * r**2 # column vector * 2D array

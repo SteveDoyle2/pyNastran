@@ -44,6 +44,7 @@ from pyNastran.bdf.dev_vectorized.bdf_interface2.write_mesh import WriteMesh
 from pyNastran.bdf.dev_vectorized.bdf_interface2.cross_reference import CrossReference
 from pyNastran.bdf.dev_vectorized.bdf_interface2.add_card import AddCard
 
+
 # old cards
 from pyNastran.bdf.cards.params import PARAM
 from pyNastran.bdf.cards.elements.elements import PLOTEL #CFAST, CGAP, CRAC2D, CRAC3D,
@@ -252,9 +253,12 @@ class BDF(AddCard, CrossReference, WriteMesh):
 
             'PSHEAR','CSHEAR',
 
-            'PSHELL', 'CQUAD4', 'CTRIA3', 'CQUAD8', 'CTRIA6',
+            'CQUAD4', 'CTRIA3', 'CQUAD8', 'CTRIA6',
+            'PSHELL', 'PCOMP', 'PCOMPG',
 
-            'MAT1', 'MAT8', 'CAERO1',
+            'CONM1', 'CONM2',
+
+            'MAT1', 'MAT8',
 
             # aero cards
             'AERO',  ## aero
@@ -270,6 +274,20 @@ class BDF(AddCard, CrossReference, WriteMesh):
             'AEPARM',   ## aeparams
             'AESTAT',   ## aestats
             'AESURF',  ## aesurf
+            'AESURF',  ## aesurf
+            #'AESURFS', ## aesurfs
+            'CAERO1', 'CAERO2', 'CAERO3', 'CAERO4',  ## caeros
+            # 'CAERO5',
+            'PAERO1', 'PAERO2', 'PAERO3',  ## paeros
+            'PAERO4', # 'PAERO5',
+            'MONPNT1',                                   ## monitor_points
+            'SPLINE1', 'SPLINE2', 'SPLINE4', 'SPLINE5',  ## splines
+            #'SPLINE3', 'SPLINE6', 'SPLINE7',
+            'TRIM',  ## trims
+            'CSSCHD', ## csschds
+            'DIVERG', ## divergs
+
+            'PARAM', ## params
 
             # other
             'INCLUDE',  # '='
@@ -592,7 +610,6 @@ class BDF(AddCard, CrossReference, WriteMesh):
             bsurf.validate()
         for key, bsurfs in sorted(iteritems(self.bsurfs)):
             bsurfs.validate()
-
 
         #------------------------------------------------
         for key, suport1 in sorted(iteritems(self.suport1)):
@@ -3112,30 +3129,32 @@ class BDF(AddCard, CrossReference, WriteMesh):
                         #self.add_card(card_lines, card_name, comment=comment,
                                       #is_list=False, has_none=False)
         else:
+            # list - this is the one that's used in the non-vectorized case
             raise NotImplementedError('dict...')
-            # list - this is the one that's used
-            for card in cards:
-                card_name, comment, card_lines = card
-                if card_name is None:
-                    msg = 'card_name = %r\n' % card_name
-                    msg += 'card_lines = %s' % card_lines
-                    raise RuntimeError(msg)
-                if self.is_reject(card_name):
-                    if card_name not in self.card_count:
-                        if ' ' in card_name:
-                            msg = (
-                                'No spaces allowed in card name %r.  '
-                                'Should this be a comment?\n%s%s' % (
-                                    card_name, comment, card_lines))
-                            raise RuntimeError(msg)
-                        if card_name in ['SUBCASE ', 'CEND']:
-                            raise RuntimeError('No executive/case control deck was defined.')
-                        self.log.info('    rejecting card_name = %s' % card_name)
-                    self._increase_card_count(card_name)
-                    self.rejects.append([comment] + card_lines)
-                else:
-                    self.add_card(card_lines, card_name, comment=comment,
-                                  is_list=False, has_none=False)
+            #for card in cards:
+                #card_name, comment, card_lines = card
+                #if card_name is None:
+                    #msg = 'card_name = %r\n' % card_name
+                    #msg += 'card_lines = %s' % card_lines
+                    #raise RuntimeError(msg)
+                #if self.is_reject(card_name):
+                    #if card_name not in self.card_count:
+                        #if ' ' in card_name:
+                            #msg = (
+                                #'No spaces allowed in card name %r.  '
+                                #'Should this be a comment?\n%s%s' % (
+                                    #card_name, comment, card_lines))
+                            #raise RuntimeError(msg)
+                        #if card_name in ['SUBCASE ', 'CEND']:
+                            #raise RuntimeError('No executive/case control deck was defined.')
+                        #self.log.info('    rejecting card_name = %s' % card_name)
+                    #self._increase_card_count(card_name)
+                    #self.rejects.append([comment] + card_lines)
+                #else:
+                    #self.add_card(card_lines, card_name, comment=comment,
+                                  #is_list=False, has_none=False)
+        self.elements.build()
+        self.properties.build()
 
     def _parse_dynamic_syntax(self, key):
         """

@@ -29,7 +29,7 @@ class CELAS2(SpringElement):
         #self.property_id = zeros(ncards, 'int32')
 
         self.n = ncards
-        float_fmt = self.model.float
+        float_fmt = self.model.float_fmt
         #: Element ID
         self.element_id = zeros(ncards, dtype='int32')
         # Node IDs

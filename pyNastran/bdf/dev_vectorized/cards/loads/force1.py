@@ -26,7 +26,7 @@ class FORCE1(VectorizedCard):
         VectorizedCard.__init__(self, model)
 
     def allocate(self, ncards):
-        float_fmt = self.model.float
+        float_fmt = self.model.float_fmt
         self.load_id = zeros(ncards, 'int32')
         self.node_id = zeros(ncards, 'int32')
         self.coord_id = zeros(ncards, 'int32')
@@ -70,7 +70,7 @@ class FORCE1(VectorizedCard):
         ncards = len(cards)
         self.n = ncards
         if ncards:
-            float_fmt = self.model.float
+            float_fmt = self.model.float_fmt
             #: Property ID
             self.load_id = zeros(ncards, 'int32')
             self.node_id = zeros(ncards, 'int32')

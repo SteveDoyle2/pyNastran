@@ -46,9 +46,18 @@ class MPC(object):
     Defines enforced displacement/temperature (static analysis)
     velocity/acceleration (dynamic analysis).::
 
-      MPC SID G1 C1 D1   G2 C2 D2
-      MPC 2   32 3  -2.6  5
-    """
+    +-----+-----+----+----+------+----+----+----+-----+
+    |  1  |  2  |  3 |  4 |  5   |  6 |  7 |  8 |  9  |
+    +=====+=====+====+====+======+====+====+====+=====+
+    | MPC | SID | G1 | C1 |  A1  | G2 | C2 | A2 |     |
+    +-----+-----+----+----+------+----+----+----+-----+
+    |     |  G3 | C3 | A3 | ...  |    |    |    |     |
+    +-----+-----+----+----+------+----+----+----+-----+
+
+    +-----+-----+----+----+------+----+----+----+-----+
+    | MPC | 2   | 32 | 3  | -2.6 |  5 |    |    |     |
+    +-----+-----+----+----+------+----+----+----+-----+
+     """
     type = 'MPC'
 
     def __init__(self, model):
@@ -69,7 +78,7 @@ class MPC(object):
             raise RuntimeError('self.constraint_id == constraint_id; constraint_id=%r expected; found=%r' % (self.constraint_id. constraint_id))
 
     def build(self):
-        #float_fmt = self.model.float
+        #float_fmt = self.model.float_fmt
         self.n = len(self.constraints)
 
     def write_card(self, f, size=8):

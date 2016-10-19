@@ -32,7 +32,7 @@ class MAT8(Material):
         ncards = card_count[self.type]
         if ncards:
             self.n = ncards
-            float_fmt = self.model.float
+            float_fmt = self.model.float_fmt
             self.material_id = zeros(ncards, dtype='int32')
             self.e11 = zeros(ncards, dtype=float_fmt)
             self.e22 = zeros(ncards, dtype=float_fmt)

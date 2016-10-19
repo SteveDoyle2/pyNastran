@@ -125,7 +125,7 @@ class GRID(VectorizedCard):
             ncards = card_count['GRID']
             self.n = ncards
             #print('ngrid=%s' % self.n)
-            float_fmt = self.model.float
+            float_fmt = self.model.float_fmt
             self.node_id = zeros(ncards, 'int32')
             self.xyz = zeros((ncards, 3), float_fmt)
             self.cp = zeros(ncards, 'int32')

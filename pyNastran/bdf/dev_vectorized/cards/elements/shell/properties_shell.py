@@ -2,9 +2,6 @@ from six import  iteritems
 from numpy import (concatenate, hstack, unique,
                    array, nan, full, where, isnan)
 
-from pyNastran.bdf.dev_vectorized.cards.elements.shell.pshell import PSHELL
-from pyNastran.bdf.dev_vectorized.cards.elements.shell.pcomp import PCOMP
-from pyNastran.bdf.dev_vectorized.cards.elements.shell.pcompg import PCOMPG
 
 class PropertiesShell(object):
     def __init__(self, model):
@@ -17,9 +14,9 @@ class PropertiesShell(object):
            the BDF object
         """
         self.model = model
-        self.pshell = PSHELL(self.model)
-        self.pcomp = PCOMP(self.model)
-        self.pcompg = PCOMPG(self.model)
+        self.pshell = model.pshell
+        self.pcomp = model.pcomp
+        self.pcompg = model.pcompg
         self.n = 0
 
     def allocate(self, card_count):

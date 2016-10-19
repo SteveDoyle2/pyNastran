@@ -470,9 +470,9 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             that is used by all the objects
         """
         if precision in ('double', 'float64'):
-            self.float = 'float64'
+            self.float_fmt = 'float64'
         elif precision == ('single', 'float32'):
-            self.float = 'float32'
+            self.float_fmt = 'float32'
         else:
             raise NotImplementedError('precision=%r' % precision)
 

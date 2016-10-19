@@ -53,7 +53,7 @@ class GRAV(object):
         return self.__mul__(value)
 
     def allocate(self, ncards):
-        float_fmt = self.model.float
+        float_fmt = self.model.float_fmt
         self.load_id = zeros(ncards, 'int32')
         self.coord_id = zeros(ncards, 'int32')
         self.scale = zeros(ncards, float_fmt)
@@ -72,7 +72,7 @@ class GRAV(object):
         ncards = len(cards)
         self.n = ncards
         if ncards:
-            float_fmt = self.model.float
+            float_fmt = self.model.float_fmt
             #: Set identification number
             self.load_id = zeros(ncards, 'int32')
             #: Coordinate system identification number.

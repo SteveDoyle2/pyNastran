@@ -61,7 +61,7 @@ class PLOAD4(object):
         self._comments.append(comment)
 
     def allocate(self, ncards):
-        float_fmt = self.model.float
+        float_fmt = self.model.float_fmt
         self.load_id = zeros(ncards, 'int32')
         #self.element_id = zeros(ncards, 'int32')
         self.pressures = zeros((ncards, 4), 'int32')
@@ -82,7 +82,7 @@ class PLOAD4(object):
         ncards = len(cards)
         self.n = ncards
         if ncards:
-            float_fmt = self.model.float
+            float_fmt = self.model.float_fmt
 
             self.load_id = zeros(ncards, 'int32')
             #: Element ID
@@ -168,7 +168,7 @@ class PLOAD4(object):
         # PLOAD2
         #ncards = self.n
 
-        #float_fmt = self.model.float
+        #float_fmt = self.model.float_fmt
         #self.load_id = zeros(ncards, 'int32')
         #self.element_id = zeros(ncards, 'int32')
         #self.p = zeros(ncards, float_fmt)

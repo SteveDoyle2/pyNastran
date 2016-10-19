@@ -69,7 +69,7 @@ class PLOAD(object):
         #cards = self._cards
         #ncards = len(cards)
 
-        float_fmt = self.model.float
+        float_fmt = self.model.float_fmt
         self.n = len(self.load_id)
         if self.n:
             self.load_id = zeros(self.load_id, 'int32')

@@ -24,7 +24,7 @@ class PLSOLID(Property):
 
     def allocate(self, ncards):
         self.n = ncards
-        #float_fmt = self.model.float
+        #float_fmt = self.model.float_fmt
         #: Property ID
         self.property_id = zeros(ncards, dtype='int32')
         #: Material ID

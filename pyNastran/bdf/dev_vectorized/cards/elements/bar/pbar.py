@@ -30,7 +30,7 @@ class PBAR(Property):
         ncards = card_count[self.type]
         if ncards:
             self.n = ncards
-            float_fmt = self.model.float
+            float_fmt = self.model.float_fmt
             #: Property ID
             self.property_id = zeros(ncards, 'int32')
             #: material ID
