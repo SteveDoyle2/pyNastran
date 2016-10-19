@@ -45,7 +45,7 @@ Approach
          o Why C? (Crash on Failure)
            o doesn't fail unless a bug is specifically encountered
            + allows for incomplete models
-           - requires checks in more place,
+           - requires checks in more places,
            + which probably should exist anyways
            - checks are inevitably incomplete and poor error messages will result
          o Why D? (Validate Inputs + Crash Flag)
