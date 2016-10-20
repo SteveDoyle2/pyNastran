@@ -116,13 +116,13 @@ class GRAV(object):
             msg.append('  %-8s: %i' % ('GRAV', self.n))
         return msg
 
-    def write_card(self, f, size=8, lids=None):
+    def write_card(self, bdf_file, size=8, lids=None):
         if self.n:
             for (lid, cid, scale, N, mb) in zip(
                  self.load_id, self.coord_id, self.scale, self.N, self.mb):
 
                 card = ['GRAV', lid, cid, scale, N[0], N[1], N[2], mb]
                 if size == 8:
-                    f.write(print_card_8(card))
+                    bdf_file.write(print_card_8(card))
                 else:
-                    f.write(print_card_16(card))
+                    bdf_file.write(print_card_16(card))

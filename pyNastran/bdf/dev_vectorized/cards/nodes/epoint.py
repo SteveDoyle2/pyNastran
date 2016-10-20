@@ -27,14 +27,14 @@ class EPOINT(object):
             self._cards = []
             self._comments = []
 
-    def write_card(self, f, size=8, is_double=False):
+    def write_card(self, bdf_file, size=8, is_double=False):
         #.. todo:: collapse the IDs
         if self.n:
             card = ['EPOINT'] + list(self.epoint)
             if size == 8:
-                f.write(print_card_8(card))
+                bdf_file.write(print_card_8(card))
             else:
-                f.write(print_card_16(card))
+                bdf_file.write(print_card_16(card))
 
     def get_stats(self):
         msg = []

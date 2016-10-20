@@ -164,9 +164,9 @@ class PropertiesShell(object):
                 msg.append('  %-8s: %i' % (prop.type, nprop))
         return msg
 
-    def write_card(self, f, size=8, property_id=None):
-        f.write('$PROPERTIES_SHELL\n')
+    def write_card(self, bdf_file, size=8, property_id=None):
+        bdf_file.write('$PROPERTIES_SHELL\n')
         types = self._get_types()
         for prop in types:
             #print('*SHELL', prop.type)
-            prop.write_card(f, size=size, property_id=property_id)
+            prop.write_card(bdf_file, size=size, property_id=property_id)

@@ -196,7 +196,7 @@ class PLOAD4(object):
             msg.append('  %-8s: %i' % ('PLOAD4', self.n))
         return msg
 
-    def write_card(self, f, size=8, load_ids=None):
+    def write_card(self, bdf_file, size=8, load_ids=None):
         if self.n:
             if load_ids is None:
                 i = arange(self.n)
@@ -205,5 +205,5 @@ class PLOAD4(object):
 
             for (load_id, element_id, p) in zip(self.load_id[i], self.element_id[i], self.pressures[i]):
                 card = ['PLOAD4', load_id, element_id, p]
-                f.write(print_card_8(card))
+                bdf_file.write(print_card_8(card))
 

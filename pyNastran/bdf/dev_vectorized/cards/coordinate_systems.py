@@ -167,10 +167,10 @@ class Coord(BaseCard):
         pCoord = dot(p - self.origin, transpose(beta))
         pLocal = self.xyz_to_coord(pCoord)
         if debug:
-            print("p        = %s" % p)
-            print("p-origin = %s" % (p - self.origin))
-            print("pCoord = %s" % pCoord)
-            print("pLocal = %s\n" % pLocal)
+            self.model.log.debug("p        = %s" % p)
+            self.model.log.debug("p-origin = %s" % (p - self.origin))
+            self.model.log.debug("pCoord = %s" % pCoord)
+            self.model.log.debug("pLocal = %s\n" % pLocal)
         return pLocal
 
     def transform_node_to_local(self, p, debug=False):

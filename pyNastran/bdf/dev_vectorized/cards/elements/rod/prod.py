@@ -26,7 +26,7 @@ class PROD(Property):
 
     def allocate(self, ncards):
         self.n = ncards
-        print('%s ncards=%s' % (self.type, ncards))
+        self.model.log.debug('%s ncards=%s' % (self.type, ncards))
         float_fmt = self.model.float_fmt
         #: Property ID
         self.property_id = zeros(ncards, 'int32')
@@ -37,7 +37,7 @@ class PROD(Property):
         self.nsm = zeros(ncards, float_fmt)
 
     def add(self, card, comment=''):
-        print('n=%s i=%s' % (self.n, self.i))
+        self.model.log.debug('n=%s i=%s' % (self.n, self.i))
         i = self.i
         self.property_id[i] = integer(card, 1, 'property_id')
         self.material_id[i] = integer(card, 2, 'material_id')
@@ -156,7 +156,7 @@ class PROD(Property):
 
     #=========================================================================
 
-    def write_card(self, f, size=8, property_id=None):
+    def write_card(self, bdf_file, size=8, property_id=None):
         if self.n:
             if self.n:
                 if property_id is None:
@@ -174,7 +174,7 @@ class PROD(Property):
                 #self.nsm = double_or_blank(card, 8, 'nsm', 0.0)
 
                 card = ['PROD', pid, mid, A, J, c, nsm]
-                f.write(print_card_8(card))
+                bdf_file.write(print_card_8(card))
 
     def slice_by_index(self, i):
         i = self._validate_slice(i)

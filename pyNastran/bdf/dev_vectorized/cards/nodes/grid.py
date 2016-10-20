@@ -88,13 +88,13 @@ class GRDSET(object):
         self.ps = integer_or_blank(card, 7, 'ps', -1)
         self.seid = integer_or_blank(card, 8, 'seid', 0)
 
-    def write_card(self, f, size=8, is_double=False):
+    def write_card(self, bdf_file, size=8, is_double=False):
         if self.n:
             card = ['GRDSET', None, self.cp, None, None, None, self.cd, self.seid]
             if size == 8:
-                f.write(print_card_8(card))
+                bdf_file.write(print_card_8(card))
             else:
-                f.write(print_card_16(card))
+                bdf_file.write(print_card_16(card))
 
 
 class GRID(VectorizedCard):
@@ -296,7 +296,7 @@ class GRID(VectorizedCard):
         """
         Write the BDF cards
 
-        :param f: a file object
+        :param bdf_file: a file object
         :param i: the indicies (default=None -> all)
         :param size: the field width (8/16)
         :param is_double: is this double precision (default=False)
@@ -316,22 +316,23 @@ class GRID(VectorizedCard):
             #seid0 = self.model.grdset.seid
 
             # default to the GRID defaults
-            cp0 = 0
-            cd0 = 0
+            #cp0 = 0
+            #cd0 = 0
             ps0 = -1
             seid0 = 0
             blank = ' ' * 8 if size == 8 else ' ' * 16
-            Cp = [cpi if cpi != cp0 else blank for cpi in self.cp[i]]
-            Cd = [cdi if cdi != cd0 else blank for cdi in self.cd[i]]
+            Cp = [cpi if cpi != 0 else blank for cpi in self.cp[i]]
+            Cd = [cdi if cdi != 0 else blank for cdi in self.cd[i]]
             Ps = [psi if psi != ps0 else blank for psi in self.ps[i]]
             Seid = [seidi if seidi != seid0 else blank for seidi in self.seid[i]]
             if size == 8:
                 for (nid, cp, xyz, cd, ps, seid) in zip(self.node_id, Cp, self.xyz[i, :], Cd, Ps, Seid):
-                    msg = ('%-8s%8i%8s%s%s%s%s%8s%s\n' % ('GRID', nid, cp,
+                    msg = ('GRID    %8i%8s%s%s%s%8s%8s%s\n' % (nid, cp,
                             print_float_8(xyz[0]),
                             print_float_8(xyz[1]),
                             print_float_8(xyz[2]),
-                            cd, ps, seid)).rstrip() + '\n'
+                            cd, ps, seid))#.rstrip() + '\n'
+
                     bdf_file.write(msg)
             else:
                 if is_double:

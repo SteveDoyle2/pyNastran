@@ -58,12 +58,11 @@ class CELAS1(SpringElement):
             if len(unique_eids) != len(self.element_id):
                 raise RuntimeError('There are duplicate CELAS1 IDs...')
             self._cards = []
-            self._comments = []
         else:
             self.element_id = array([], dtype='int32')
             self.property_id = array([], dtype='int32')
 
-    def write_card(self, f, size=8, eids=None):
+    def write_card(self, bdf_file, size=8, eids=None):
         if self.n:
             if eids is None:
                 i = arange(self.n)
@@ -73,9 +72,9 @@ class CELAS1(SpringElement):
             for (eid, pid, n, c) in zip(self.element_id[i], self.property_id[i], self.node_ids[i], self.components[i]):
                 card = ['CELAS1', eid, pid, n[0], n[1], c[0], c[1]]
                 if size == 8:
-                    f.write(print_card_8(card))
+                    bdf_file.write(print_card_8(card))
                 else:
-                    f.write(print_card_16(card))
+                    bdf_file.write(print_card_16(card))
 
     def get_stiffness(self, i, model, positions, index0s, fnorm=1.0):  # CELAS1/CONROD
         #print("----------------")
@@ -152,11 +151,11 @@ class CELAS1(SpringElement):
             u_axial = dot(Lambda, q_axial)
             du_axial[i] = u_axial[0] - u_axial[1]
 
-        print("len(pelas) = %s" % self.model.pelas.n)
+        self.model.log.debug("len(pelas) = %s" % self.model.pelas.n)
         i = searchsorted(self.model.pelas.property_id, self.property_id)
         k = self.model.pelas.K[i]
         s = self.model.pelas.s[i]
-        print("k=%s s=%s du_axial=%s" % (k, s, du_axial))
+        self.model.log.debug("k=%s s=%s du_axial=%s" % (k, s, du_axial))
 
         e1[ni: ni+n] = du_axial * s
         f1[ni: ni+n] = k * du_axial

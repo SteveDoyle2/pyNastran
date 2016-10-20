@@ -97,7 +97,7 @@ class VectorizedCard(object):
         elif len(i.shape) == 1:
             pass
         else:
-            print('???', i, type(i))
+            self.model.log.warning('???', i, type(i))
         return i
 
     def _get_sorted_index(self, sorted_array, unsorted_array, field_name, msg, check=True):

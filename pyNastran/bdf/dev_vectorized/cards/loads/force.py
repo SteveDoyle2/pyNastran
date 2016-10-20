@@ -123,7 +123,7 @@ class FORCE(object):
             msg.append('  %-8s: %i' % ('FORCE', self.n))
         return msg
 
-    def write_card(self, f, size=8, is_double=False, load_id=None):
+    def write_card(self, bdf_file, size=8, is_double=False, load_id=None):
         if self.n:
             if load_id is None:
                 for (lid, nid, cid, mag, xyz) in zip(
@@ -131,9 +131,9 @@ class FORCE(object):
 
                     card = ['FORCE', lid, nid, cid, mag, xyz[0], xyz[1], xyz[2]]
                     if size == 8:
-                        f.write(print_card_8(card))
+                        bdf_file.write(print_card_8(card))
                     else:
-                        f.write(print_card_16(card))
+                        bdf_file.write(print_card_16(card))
             else:
                 for lid in unique(load_id):
                     i = where(self.load_id == lid)[0]
@@ -142,9 +142,9 @@ class FORCE(object):
 
                         card = ['FORCE', lid, nid, cid, mag, xyz[0], xyz[1], xyz[2]]
                         if size == 8:
-                            f.write(print_card_8(card))
+                            bdf_file.write(print_card_8(card))
                         else:
-                            f.write(print_card_16(card))
+                            bdf_file.write(print_card_16(card))
 
     def __repr__(self):
         f = StringIO()

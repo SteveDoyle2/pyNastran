@@ -78,15 +78,15 @@ class POINTAX(VectorizedCard):
             msg.append('  %-8s: %i' % ('POINTAX', self.n))
         return msg
 
-    def write_card(self, f, size=8, is_double=False):
+    def write_card(self, bdf_file, size=8, is_double=False):
         if self.n:
-            f.write('$POINTAX\n')
+            bdf_file.write('$POINTAX\n')
             for (nid, rid, phi) in zip(self.point_id, self.ring_id, self.phi):
                 card = ['POINTAX', rid, phi]
                 if size == 8:
-                    f.write(print_card_8(card))
+                    bdf_file.write(print_card_8(card))
                 else:
-                    f.write(print_card_16(card))
+                    bdf_file.write(print_card_16(card))
 
     def __repr__(self):
         msg = "<POINTAX>\n"

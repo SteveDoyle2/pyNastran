@@ -130,7 +130,7 @@ class CAERO1(VectorizedCard):
             self.lchord = self.lchord[i]
             self.igid = self.igid[i]
 
-    def write_card(self, f, size=8, is_double=True, element_id=None):
+    def write_card(self, bdf_file, size=8, is_double=True, element_id=None):
         assert size in [8, 16], size
         assert is_double in [True, False], is_double
         if self.n:
@@ -156,9 +156,9 @@ class CAERO1(VectorizedCard):
                         p1[0], p1[1], p1[2], x12,
                         p4[0], p4[1], p4[2], x43,]
                 if size == 8:
-                    f.write(print_card_8(card))
+                    bdf_file.write(print_card_8(card))
                 else:
-                    f.write(print_card_16(card))
+                    bdf_file.write(print_card_16(card))
 
     def _verify(self, xref=True):
         self.get_area()

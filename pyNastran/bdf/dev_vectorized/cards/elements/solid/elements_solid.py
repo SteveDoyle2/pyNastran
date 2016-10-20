@@ -151,12 +151,12 @@ class ElementsSolid(object):
         return mass
 
     #=========================================================================
-    def write_card(self, f, size=8, element_id=None):
-        f.write('$ELEMENTS_SOLID\n')
+    def write_card(self, bdf_file, size=8, element_id=None):
+        bdf_file.write('$ELEMENTS_SOLID\n')
         types = self._get_types(nlimit=True)
         for elems in types:
             self.model.log.debug(elems.type)
-            elems.write_card(f, size=size, element_id=element_id)
+            elems.write_card(bdf_file, size=size, element_id=element_id)
 
     def _get_types(self, nlimit=True):
         types = [self.ctetra4, self.cpyram5, self.cpenta6, self.chexa8,

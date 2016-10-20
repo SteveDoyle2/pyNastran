@@ -60,7 +60,7 @@ class Coord(VectorizedCard):
         assert xyz.shape == xyz2.shape, "xyz.shape=%s xyz2.shape=%s" % (xyz.shape, xyz2.shape)
         return xyz2
 
-    def write_card(self, f, size, is_double, coord_id=None):
+    def write_card(self, bdf_file, size, is_double, coord_id=None):
         assert size in [8, 16], size
         assert is_double in [True, False], is_double
 
@@ -84,7 +84,7 @@ class Coord(VectorizedCard):
                         card = [coord.type, cid, coord.g1, coord.g2, coord.g3]
                     else:
                         card = [coord.type, cid, coord.rid] + list(coord.e1) + list(coord.e2) + list(coord.e3)
-                    f.write(print_card_8(card))
+                    bdf_file.write(print_cardi(card))
 
     def __repr__(self):
         return self.__str__()
@@ -551,6 +551,17 @@ class Coord(VectorizedCard):
         self.coords[coord.cid] = coord
         self.n += 1
         #print('adding cord2r; cids=%s' % self.coords.keys())
+
+    def add_cord2x(self, card_name, card, comment=''):
+        """adds a CORD2x card"""
+        if card_name == 'CORD2R':
+            self.add_cord2r(card, comment=comment)
+        elif card_name == 'CORD2C':
+            self.add_cord2c(card, comment=comment)
+        elif card_name == 'CORD2S':
+            self.add_cord2s(card, comment=comment)
+        else:
+            raise NotImplementedError(card_name)
 
     def add_cord2c(self, card, comment=''):
         """adds a CORD2C card"""

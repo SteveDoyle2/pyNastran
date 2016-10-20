@@ -70,12 +70,11 @@ class CELAS3(SpringElement):
             if len(unique_eids) != len(self.element_id):
                 raise RuntimeError('There are duplicate CELAS3 IDs...')
             self._cards = []
-            self._comments = []
         else:
             self.element_id = array([], dtype='int32')
             self.property_id = array([], dtype='int32')
 
-    def write_card(self, f, size=8, element_id=None):
+    def write_card(self, bdf_file, size=8, element_id=None):
         if self.n:
             if eids is None:
                 i = arange(self.n)
@@ -90,9 +89,9 @@ class CELAS3(SpringElement):
                     self.K[i], N0, N1, C0, C1, self.ge[i], self.s[i]):
                 card = ['CELAS3', eid, k, n0, c0, n1, c1, ge, s]
                 if size == 8:
-                    f.write(print_card_8(card))
+                    bdf_file.write(print_card_8(card))
                 else:
-                    f.write(print_card_16(card))
+                    bdf_file.write(print_card_16(card))
 
     def get_stiffness(self, i, model, positions, index0s, fnorm=1.0):  # CELAS3
         ki = self.K[i]

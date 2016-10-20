@@ -300,7 +300,7 @@ class CROD(RodElement):
         return(M, dofs, nIJV)
 
     #=========================================================================
-    def write_card(self, f, size=8, is_double=False, element_id=None):
+    def write_card(self, bdf_file, size=8, is_double=False, element_id=None):
         if self.n:
             #print('eid %s' % element_id)
             if element_id is None:
@@ -314,9 +314,9 @@ class CROD(RodElement):
             for (eid, pid, n) in zip(self.element_id[i], self.property_id[i], self.node_ids[i]):
                 card = ['CROD', eid, pid, n[0], n[1]]
                 if size == 8:
-                    f.write(print_card_8(card))
+                    bdf_file.write(print_card_8(card))
                 else:
-                    f.write(print_card_16(card))
+                    bdf_file.write(print_card_16(card))
 
     #=========================================================================
     def get_stiffness_matrix(self, i, model, positions, index0s, knorm=1.0):

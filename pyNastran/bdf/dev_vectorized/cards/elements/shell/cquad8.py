@@ -69,7 +69,6 @@ class CQUAD8(ShellElement):
             self.t_flag = self.t_flag[i]
             assert self.node_ids.min() > 0
             self._cards = []
-            self._comments = []
         else:
             self.element_id = array([], 'int32')
             self.property_id = array([], dtype='int32')
@@ -138,7 +137,7 @@ class CQUAD8(ShellElement):
         return (n1 + n2 + n3 + n4) / 4.
 
     #=========================================================================
-    def write_card(self, f, size=8, element_id=None):
+    def write_card(self, bdf_file, size=8, element_id=None):
         if self.n:
             if element_id is None:
                 i = arange(self.n)
@@ -148,7 +147,7 @@ class CQUAD8(ShellElement):
 
             for (eid, pid, n) in zip(self.element_id[i], self.property_id[i], self.node_ids[i]):
                 card = ['CQUAD8', eid, pid, n[0], n[1], n[2], n[3]]
-                f.write(print_card_8(card))
+                bdf_file.write(print_card_8(card))
 
     def _verify(self, xref=True):
         self.get_mass_by_element_id()

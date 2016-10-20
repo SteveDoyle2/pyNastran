@@ -44,13 +44,13 @@ class SPCADD(object):
     def build(self):
         self.spc_ids.sort()
 
-    def write_card(self, f, size=8):
+    def write_card(self, bdf_file, size=8):
         card = ['SPCADD', self.spc_id] + self.spc_ids
         #print "card = ", card
         if size == 8:
-            f.write(print_card_8(card))
+            bdf_file.write(print_card_8(card))
         else:
-            f.write(print_card_16(card))
+            bdf_file.write(print_card_16(card))
 
     def __repr__(self):
         f = StringIO()

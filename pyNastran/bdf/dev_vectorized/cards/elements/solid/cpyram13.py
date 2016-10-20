@@ -144,7 +144,7 @@ class CPYRAM13(SolidElement):
         nids.pop(indx)
         return nids
 
-    def write_card(self, f, size=8, element_id=None):
+    def write_card(self, bdf_file, size=8, element_id=None):
         self.model.log.debug('CPYRAM13.write_card; n=%s' % self.n)
         if self.n:
             if element_id is None:
@@ -153,11 +153,12 @@ class CPYRAM13(SolidElement):
                 i = searchsorted(self.element_id, element_id)
             for (eid, pid, n) in zip(self.element_id[i], self.property_id[i], self.node_ids[i, :]):
                 if eid in self._comments:
-                    f.write(self._comments[eid])
+                    bdf_file.write(self._comments[eid])
                 n = [ni if ni != 0 else None for ni in n]
-                card = ['CPYRAM', eid, pid, n[0], n[1], n[2], n[3], n[4], n[5], n[6], n[7], n[8], n[9],
+                card = ['CPYRAM', eid, pid,
+                        n[0], n[1], n[2], n[3], n[4], n[5], n[6], n[7], n[8], n[9],
                         n[10], n[11], n[12]]
-                f.write(print_card_8(card).rstrip() + '\n')
+                bdf_file.write(print_card_8(card).rstrip() + '\n')
 
     #def slice_by_index(self, i):
         #i = self._validate_slice(i)

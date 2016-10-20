@@ -54,27 +54,27 @@ class TEMP(object):
         if size == 8:
             temps = [print_float_8(tempi) % temp for temp in self.temperature]
             for i in range(0, self.n, 3):
-                f.write('TEMP    %8i%8i%s %8i%s%8i%s' % (self.temp_id,
-                                                         self.node_id[i], print_float_8(temps[i]),
-                                                         self.node_id[i+1], print_float_8(temps[i+1]),
-                                                         self.node_id[i+2], print_float_8(temps[i+2])))
+                bdf_file.write('TEMP    %8i%8i%s %8i%s%8i%s' % (self.temp_id,
+                                                                self.node_id[i], print_float_8(temps[i]),
+                                                                self.node_id[i+1], print_float_8(temps[i+1]),
+                                                                self.node_id[i+2], print_float_8(temps[i+2])))
             for i in range(nleftover, self.n - nleftover):
-                f.write('TEMP    %8i%s' % (self.temp_id, print_float_8(temps[i])))
+                bdf_file.write('TEMP    %8i%s' % (self.temp_id, print_float_8(temps[i])))
 
             if self.is_default:
-                f.write('TEMPD   %8i%s\n' % (self.temp_id, print_float_8(self.default)))
+                bdf_file.write('TEMPD   %8i%s\n' % (self.temp_id, print_float_8(self.default)))
         else:
             temps = [print_float_16(tempi) % temp for temp in self.temperature]
             for i in range(0, self.n, 3):
-                f.write('TEMP*   %16i%16i%s\n' % (self.temp_id,
-                                                  self.node_id[i], print_float_16(temps[i])))
-                f.write('%8s%16i%s%16i%s' % ('*       ',
-                                             self.node_id[i+1], print_float_16(temps[i+1]),
-                                             self.node_id[i+2], print_float_16(temps[i+2])))
+                bdf_file.write('TEMP*   %16i%16i%s\n' % (self.temp_id,
+                                                         self.node_id[i], print_float_16(temps[i])))
+                bdf_file.write('%8s%16i%s%16i%s' % ('*       ',
+                                                    self.node_id[i+1], print_float_16(temps[i+1]),
+                                                    self.node_id[i+2], print_float_16(temps[i+2])))
             for i in range(nleftover, self.n - nleftover):
-                f.write('TEMP*   %16i%16i%s\n*\n' % (self.temp_id, self.node_id[i], print_float_16(temps[i])))
+                bdf_file.write('TEMP*   %16i%16i%s\n*\n' % (self.temp_id, self.node_id[i], print_float_16(temps[i])))
             if self.is_default:
-                f.write('TEMPD*  %16i%s\n' % (self.temp_id, print_float_16(self.default)))
+                bdf_file.write('TEMPD*  %16i%s\n' % (self.temp_id, print_float_16(self.default)))
 
 class TEMPP1(object):
     def __init__(self, model):
@@ -135,14 +135,14 @@ class TEMPP1(object):
         #assert len(card) <= 7, len(card)
         self.eids = None
 
-    def write_card(self, f, size=8, is_double=False):
+    def write_card(self, bdf_file, size=8, is_double=False):
         if self.n:
             if size == 8:
                 for load_id, element_id, tbar, tprime in zip(self.load_id, self.element_id, self.tbar, self.tprime):
-                    f.write('TEMPP1  %8i%8i%s%s\n' % (load_id, element_id, print_float_8(tbar), print_float_8(tprime)))
+                    bdf_file.write('TEMPP1  %8i%8i%s%s\n' % (load_id, element_id, print_float_8(tbar), print_float_8(tprime)))
             else:
                 for load_id, element_id, tbar, tprime in zip(self.load_id, self.element_id, self.tbar, self.tprime):
-                    f.write('TEMPP1* %16i%16i%s%s\n*\n' % (load_id, element_id, print_float_16(tbar), print_float_16(tprime)))
+                    bdf_file.write('TEMPP1* %16i%16i%s%s\n*\n' % (load_id, element_id, print_float_16(tbar), print_float_16(tprime)))
 
 
 class TEMPs(VectorizedCardDict):

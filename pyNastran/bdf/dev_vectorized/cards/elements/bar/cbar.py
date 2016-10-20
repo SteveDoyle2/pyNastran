@@ -171,7 +171,6 @@ class CBAR(Element):
             if len(unique_eids) != len(self.element_id):
                 raise RuntimeError('There are duplicate CBAR IDs...')
             self._cards = []
-            self._comments = []
         else:
             self.element_id = array([], dtype='int32')
             self.property_id = array([], dtype='int32')
@@ -205,7 +204,7 @@ class CBAR(Element):
             return mass
 
     #=========================================================================
-    def write_card(self, f, size=8, element_ids=None):
+    def write_card(self, bdf_file, size=8, element_ids=None):
         if self.n:
             if element_ids is None:
                 i = arange(self.n)
@@ -235,9 +234,9 @@ class CBAR(Element):
                 card = ['CBAR', eid, pid, n[0], n[1], x1, x2, x3, offt,
                         pa, pb, w1a, w2a, w3a, w1b, w2b, w3b]
                 if size == 8:
-                    f.write(print_card_8(card))
+                    bdf_file.write(print_card_8(card))
                 else:
-                    f.write(print_card_16(card))
+                    bdf_file.write(print_card_16(card))
 
     def slice_by_index(self, i):
         i = self._validate_slice(i)

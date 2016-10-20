@@ -19,6 +19,10 @@ from pyNastran.bdf.dev_vectorized.cards.elements.spring.celas2 import CELAS2
 from pyNastran.bdf.dev_vectorized.cards.elements.spring.celas3 import CELAS3
 from pyNastran.bdf.dev_vectorized.cards.elements.spring.celas4 import CELAS4
 
+# bush
+from pyNastran.bdf.dev_vectorized.cards.elements.bush.cbush import CBUSH
+from pyNastran.bdf.dev_vectorized.cards.elements.bush.pbush import PBUSH
+
 # rods/tubes
 from pyNastran.bdf.dev_vectorized.cards.elements.rod.prod import PROD
 from pyNastran.bdf.dev_vectorized.cards.elements.rod.crod import CROD
@@ -261,8 +265,8 @@ class BDFAttributes(object):
         # b-list elements
         self.rbe2 = None
         self.rbe3 = None
-        self.cbush = None
-        self.pbush = None
+        self.cbush = CBUSH(self)
+        self.pbush = PBUSH(self)
         self.cbush1d = None
         self.pbush1d = None
         self.cbush2d = None
@@ -716,6 +720,15 @@ class BDFAttributes(object):
             'CMASS2' : self.cmass2,
             'CMASS3' : self.cmass3,
             'CMASS4' : self.cmass4,
+
+            'CBUSH' : self.cbush,
+            'PBUSH' : self.pbush,
+
+            'CBUSH1D' : self.cbush1d,
+            'PBUSH1D' : self.pbush1d,
+
+            'CBUSH2D' : self.cbush2d,
+            'PBUSH2D' : self.pbush2d,
 
             'MAT1' : self.mat1,
             #'MAT2' : self.mat2,

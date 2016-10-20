@@ -68,13 +68,13 @@ class SPC(object):
             for dof, nodes in iteritems(self.components):
                 self.components[dof] = array(nodes)
 
-    def write_card(self, f, size=8):
+    def write_card(self, bdf_file, size=8):
         if self.n:
             for dof, node_ids in sorted(iteritems(self.components)):
                 card = ['SPC', self.constraint_id]
                 for node_id in node_ids:
                     card += [node_id, dof, 0.0]
                 if size == 8:
-                    f.write(print_card_8(card))
+                    bdf_file.write(print_card_8(card))
                 else:
-                    f.write(print_card_16(card))
+                    bdf_file.write(print_card_16(card))

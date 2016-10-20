@@ -49,7 +49,7 @@ class MAT1(Material):
     def add(self, card, comment=''):
         assert self.n > 0, 'self.n=%s self.i=%s' % (self.n, self.i)
         i = self.i
-        self.model.log.debug('i=%s' % i)
+        #self.model.log.debug('i=%s' % i)
         mid = integer(card, 1, 'mid')
         if comment:
             self._comments[mid] = comment
@@ -134,7 +134,7 @@ class MAT1(Material):
         i = self.get_material_index_by_material_id(material_id)
         return self.G[i]
 
-    def write_card(self, f, size=8, material_id=None):
+    def write_card(self, bdf_file, size=8, material_id=None):
         if self.n:
             if material_id is None:
                 i = arange(self.n)
@@ -160,12 +160,14 @@ class MAT1(Material):
             else:
                 fmt_card = print_card_16
 
-            f.write(fmt_card(card_a))
-            f.write(fmt_card(card_b))
+            bdf_file.write(fmt_card(card_a))
+            bdf_file.write(fmt_card(card_b))
 
             for (mid, E, G, nu, rho, a, TRef, ge, st, sc, ss, mcsid) in zip(
                  self.material_id[i], self.E[i], self.G[i], self.nu[i], Rho, A,
                  TRef, ge, St, Sc, Ss, self.mcsid[i]):
+                if mid in self._comments:
+                    bdf_file.write(self._comments[mid])
 
                 #Gdefault = self.getG_default()
                 Gdefault = self._G_default(E, G, nu)
@@ -179,7 +181,7 @@ class MAT1(Material):
                 #ss = set_blank_if_default(ss, 0.)
                 mcsid = set_blank_if_default(mcsid, 0)
                 card = ['MAT1', mid, E, G, nu, rho, a, TRef, ge, st, sc, ss, mcsid]
-                f.write(fmt_card(card))
+                bdf_file.write(fmt_card(card))
 
     def repr_fields(self, material_id):
         i = where(self.material_id == material_id)[0]

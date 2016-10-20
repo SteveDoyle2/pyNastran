@@ -155,8 +155,8 @@ class RBE2(object):
         self.cm = data[2]
         self.gmi = data[3]
         self.alpha = data[4]
-        print("eid=%s gn=%s cm=%s Gmi=%s alpha=%s"
-              % (self.eid, self.gn, self.cm, self.gmi, self.alpha))
+        self.model.log.debug("eid=%s gn=%s cm=%s Gmi=%s alpha=%s"
+                             % (self.eid, self.gn, self.cm, self.gmi, self.alpha))
         raise NotImplementedError('RBE2 data...')
 
         assert self.gn is not None, 'gn=%s' % self.gn
@@ -191,7 +191,7 @@ class RBE2(object):
         #list_fields = ['RBE2', self.eid, self.gn, self.cm] + self.Gmi + [alpha]
         #return list_fields
 
-    def write_card(self, f, size, is_double):
+    def write_card(self, bdf_file, size, is_double):
         if self.n == 0:
             return
         if size == 8:
@@ -199,19 +199,19 @@ class RBE2(object):
                 gmi = self.gmi[j]
                 salpha = set_blank_if_default(alpha, 0.)
                 list_fields = ['RBE2', eid, gn, cm] + gmi + [salpha]
-                f.write(print_card_8(list_fields))
+                bdf_file.write(print_card_8(list_fields))
         elif is_double:
             for j, eid, gn, cm, alpha in zip(count(), self.element_id, self.gn, self.cm, self.alpha):
                 gmi = self.gmi[j]
                 salpha = set_blank_if_default(alpha, 0.)
                 list_fields = ['RBE2', eid, gn, cm] + gmi + [salpha]
-                f.write(print_card_16(list_fields))
+                bdf_file.write(print_card_16(list_fields))
         else:
             for j, eid, gn, cm, alpha in zip(count(), self.element_id, self.gn, self.cm, self.alpha):
                 gmi = self.gmi[j]
                 salpha = set_blank_if_default(alpha, 0.)
                 list_fields = ['RBE2', eid, gn, cm] + gmi + [salpha]
-                f.write(print_card_double(list_fields))
+                bdf_file.write(print_card_double(list_fields))
 
 
         #card = self.repr_fields()

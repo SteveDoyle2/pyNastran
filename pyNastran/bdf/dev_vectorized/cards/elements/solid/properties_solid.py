@@ -112,8 +112,8 @@ class PropertiesSolid(object):
                 msg.append('  %-8s: %i' % (prop.type, nprop))
         return msg
 
-    def write_card(self, f, size=8, property_id=None):
-        f.write('$PROPERTIES_SOLID\n')
+    def write_card(self, bdf_file, size=8, property_id=None):
+        bdf_file.write('$PROPERTIES_SOLID\n')
         types = self._get_types()
         for prop in types:
-            prop.write_card(f, size=size, property_id=property_id)
+            prop.write_card(bdf_file, size=size, property_id=property_id)

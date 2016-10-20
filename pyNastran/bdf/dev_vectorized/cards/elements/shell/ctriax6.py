@@ -66,7 +66,7 @@ class CTRIAX6(object):
             return arange(self.n)
         return searchsorted(element_id, self.element_id)
 
-    def write_card(self, f, size=8, element_id=None):
+    def write_card(self, bdf_file, size=8, element_id=None):
         if self.n:
             i = self.get_index_by_element_id(element_id)
             Theta = [theta if theta != 0.0 else '' for theta in self.theta[i]]
@@ -80,9 +80,9 @@ class CTRIAX6(object):
                     N0, N1, N2, N3, N4, N5, Theta):
                 card = ['CTRIAX6', eid, mid, n0, n1, n2, n3, n4, n5, theta]
                 if size == 8:
-                    f.write(print_card_8(card))
+                    bdf_file.write(print_card_8(card))
                 else:
-                    f.write(print_card_16(card))
+                    bdf_file.write(print_card_16(card))
 
     def _verify(self):
         self.mass()

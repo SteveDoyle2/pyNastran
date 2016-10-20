@@ -203,7 +203,7 @@ class ElementsShell(object):
             mass = massi
         return mass
 
-    def write_card(self, f, size=8, element_id=None):
+    def write_card(self, bdf_file, size=8, element_id=None):
         """writes the cards
 
         Parameters
@@ -215,12 +215,12 @@ class ElementsShell(object):
         element_id : (nelements, ) int ndarray; default=None -> all
             the element_ids to write
         """
-        f.write('$ELEMENTS_SHELL\n')
+        bdf_file.write('$ELEMENTS_SHELL\n')
         types = self._get_types(nlimit=True)
         for element in types:
             if element.n:
                 self.model.log.debug(element.type)
-                element.write_card(f, size=size, element_id=element_id)
+                element.write_card(bdf_file, size=size, element_id=element_id)
 
     def _get_types(self, nlimit=True):
         """

@@ -22,7 +22,7 @@ def _Lambda(v1, debug=True):
     #p2 = model.Node(n2).get_position()
     #v1 = p2 - p1
     if debug:
-        print("v1=%s" % v1)
+        self.model.log.debug("v1=%s" % v1)
     n = norm(v1)
     if n == 0:
         raise ZeroDivisionError(v1)
@@ -39,7 +39,7 @@ def _Lambda(v1, debug=True):
     #print("R = \n",R)
     #debug = True
     if debug:
-        print("Lambda = \n" + str(Lambda))
+        self.model.log.debug("Lambda = \n" + str(Lambda))
     return Lambda
 
 
@@ -133,7 +133,7 @@ class CONROD(RodElement):
         n2i = self.model.grid.get_node_index_by_node_id(n2)
 
         #n1, n2 = self.node_ids[i, :]
-        print('grids\n%s' % grid_cid0)
+        self.model.log.debug('grids\n%s' % grid_cid0)
         p1 = grid_cid0[n1i, :]
         p2 = grid_cid0[n2i, :]
         v1 = p1 - p2
@@ -246,12 +246,12 @@ class CONROD(RodElement):
         rho = self.model.materials.get_density_by_material_id(self.material_id[i])
         #rho = self.get_element_id_by_element_index(self.material_id)
 
-        print('*L = ', L)
-        print('*rho = ', rho)
-        print('*A = ', self.A[i])
-        print('*nsm = ', self.nsm[i])
+        self.model.log.debug('*L = %' % L)
+        self.model.log.debug('*rho = %s' % rho)
+        self.model.log.debug('*A = %s' % self.A[i])
+        self.model.log.debug('*nsm = %s' % self.nsm[i])
         mass = L * (rho * self.A[i] + self.nsm[i])
-        print('*mass =', mass)
+        self.model.log.debug('*mass = %s' % mass)
         if total:
             return mass.sum()
         else:
@@ -259,7 +259,7 @@ class CONROD(RodElement):
 
     #=========================================================================
 
-    def write_card(self, f, size=8, element_id=None):
+    def write_card(self, bdf_file, size=8, element_id=None):
         if self.n:
             if element_id is None:
                 i = arange(self.n)
@@ -269,9 +269,9 @@ class CONROD(RodElement):
 
                 card = ['CONROD', eid, n12[0], n12[1], mid, A, J, c, nsm]
                 if size == 8:
-                    f.write(print_card_8(card))
+                    bdf_file.write(print_card_8(card))
                 else:
-                    f.write(print_card_16(card))
+                    bdf_file.write(print_card_16(card))
 
     def get_mass_matrix(self, i, model, positions, index0s, knorm=1.0):  # CROD/CONROD
         """

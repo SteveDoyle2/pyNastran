@@ -33,6 +33,9 @@ class Properties(object):
         # spring
         self.pelas = model.pelas
 
+        # bush
+        self.pbush = model.pbush
+
         # rods
         #self.conrod = model.conrod
         #self.crod = model.crod
@@ -84,7 +87,7 @@ class Properties(object):
             limit the outputs to objects with data
         """
         types = [
-            self.prod, self.pelas,
+            self.prod, self.pelas, self.pbush,
             self.properties_bar.pbar, self.properties_bar.pbarl,
             self.properties_beam.pbeam, self.properties_beam.pbeaml,
             self.pshear,

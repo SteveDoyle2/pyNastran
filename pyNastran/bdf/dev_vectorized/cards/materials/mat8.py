@@ -56,9 +56,11 @@ class MAT8(Material):
 
     def add(self, card, comment=''):
         i = self.i
-        #if comment:
-        #    self._comment = comment
-        self.material_id[i] = integer(card, 1, 'material_id')
+
+        mid = integer(card, 1, 'mid')
+        if comment:
+            self._comments[mid] = comment
+        self.material_id[i] = mid
         self.e11[i] = double(card, 2, 'E11')    #: .. todo:: is this the correct default
         self.e22[i] = double(card, 3, 'E22')    #: .. todo:: is this the correct default
         self.nu12[i] = double(card, 4, 'nu12')  #: .. todo:: is this the correct default
@@ -113,7 +115,7 @@ class MAT8(Material):
         i = self.get_material_index_by_material_id(material_id)
         return self.get_density_by_index(i)
 
-    def write_card(self, f, size=8, material_id=None):
+    def write_card(self, bdf_file, size=8, material_id=None):
         if self.n:
             if material_id is None:
                 i = arange(self.n)
@@ -123,15 +125,17 @@ class MAT8(Material):
             assert material_id is None
 
             #card = ['$MAT1', 'mid', 'E', 'G', 'nu', 'rho', 'a', 'TRef', 'ge']
-            #f.write(print_card_8(card))
+            #bdf_file.write(print_card_8(card))
             #card = ['$', 'st', 'sc', 'ss', 'mcsid']
-            #f.write(print_card_8(card))
+            #bdf_file.write(print_card_8(card))
             for (mid, e11, e22, nu12, g12, g1z, g2z, rho, a1, a2, TRef,
                  Xt, Xc, Yt, Yc, S, ge, F12, strn) in zip(
                                self.material_id[i], self.e11[i], self.e22[i], self.nu12[i], self.g12[i],
                                self.g1z[i], self.g2z[i], self.rho[i], self.a1[i], self.a2[i], self.TRef[i],
                                self.Xt[i], self.Xc[i], self.Yt[i], self.Yc[i], self.S[i], self.ge[i],
                                self.F12[i], self.strn[i]):
+                if mid in self._comments:
+                    bdf_file.write(self._comments[mid])
 
                 g12 = set_blank_if_default(g12, 0.)
                 g1z = set_blank_if_default(g1z, 1e8)
@@ -156,7 +160,7 @@ class MAT8(Material):
                 card = ['MAT8', mid, e11, e22, nu12, g12, g1z, g2z,
                         rho, a1, a2, TRef,
                         Xt, Xc, Yt, Yc, S, ge, F12, strn]
-                f.write(print_card_8(card))
+                bdf_file.write(print_card_8(card))
 
     def repr_fields(self, material_id):
         i = where(self.material_id == material_id)[0]

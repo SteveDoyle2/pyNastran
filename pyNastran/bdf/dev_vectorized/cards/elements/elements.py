@@ -159,13 +159,13 @@ class Elements(object):
             self.nproperties += props.n
         self.model.log.debug('finished building %s' % self.__class__.__name__)
         if self.nelements:
-            eids = check_duplicate('element_id', etypes)
+            eids = check_duplicate('element_id', etypes, self.model.log)
             self.element_ids = asarray(eids, dtype='int32')
             self.element_ids.sort()
             self.element_groups = build_groups(etypes, 'element_id', is_element=True)
             self.model.log.info('self.element_groups = %s' % self.element_groups)
         if self.nproperties:
-            pids = check_duplicate('property_id', ptypes)
+            pids = check_duplicate('property_id', ptypes, self.model.log)
             self.property_ids = asarray(pids, dtype='int32')
             self.property_ids.sort()
             self.property_groups = build_groups(ptypes, 'property_id')
@@ -225,6 +225,7 @@ class Elements(object):
             self.cshear,
             self.crod, self.conrod, self.ctube,
             self.cbar, self.cbeam,
+            self.cbush, self.cbush1d, self.cbush2d,
             self.elements_shell.ctria3, self.elements_shell.cquad4,
             self.elements_shell.ctria6, self.elements_shell.cquad8,
             self.elements_solid.ctetra4, self.elements_solid.cpenta6, self.elements_solid.chexa8,
@@ -570,7 +571,7 @@ class Elements(object):
         return out[0] if int_flag else out
 
     def allocate(self, card_count):
-        print('elements.allocate()')
+        self.model.log.debug('elements.allocate()')
         etypes = self._get_element_types(nlimit=True)
         for etype in etypes:
             self.model.log.info('etype=%r' % etype)
@@ -819,10 +820,10 @@ class Elements(object):
             self.ctube.write_card(bdf_file)
             self.ptube.write_card(bdf_file)
 
-        #if self.cbush.n or self.pbush.n:
-            #bdf_file.write('$ Bush-----------------------------------------------------\n')
-            #self.cbush.write_card(bdf_file, size)
-            #self.pbush.write_card(bdf_file, size)
+        if self.cbush.n or self.pbush.n:
+            bdf_file.write('$ Bush-----------------------------------------------------\n')
+            self.cbush.write_card(bdf_file, size)
+            self.pbush.write_card(bdf_file, size)
 
         if self.cbar.n or self.properties_bar.n:
             bdf_file.write('$ Bars-----------------------------------------------------\n')
@@ -860,8 +861,8 @@ class Elements(object):
         element_ids2, int_flag = slice_to_iter(element_ids)
 
         out = []
-        print('element_ids = %s' % element_ids)
-        print('element_ids_getitem = %s' % element_ids2)
+        self.model.log.debug('element_ids = %s' % element_ids)
+        self.model.log.debug('element_ids_getitem = %s' % element_ids2)
         for eid in element_ids2:
             #obj = None
             for Type, eids in iteritems(self.element_groups):
@@ -919,7 +920,7 @@ class Elements(object):
         return '<%s object; n=%s>' % (self.type, self.n)
 
 
-def check_duplicate(name, objs):
+def check_duplicate(name, objs, log):
     unique_vals = set([])
     #print("nobjs = %s" % len(objs))
     for obj in objs:
@@ -927,7 +928,8 @@ def check_duplicate(name, objs):
         if hasattr(obj, name):
             vals = getattr(obj, name)
             if len(vals):
-                print("  %s vals = %s for class %s" % (name, vals, obj.__class__.__name__))
+                #log.debug("  %s vals = %s for class %s" % (
+                    #name, np.array(vals), obj.__class__.__name__))
                 unique_vals.update(list(vals))
             #else:
                 #print("  %s has no %s"  % (obj.__class__.__name__, name))

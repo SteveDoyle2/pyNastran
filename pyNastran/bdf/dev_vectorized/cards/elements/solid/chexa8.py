@@ -74,7 +74,7 @@ class CHEXA8(SolidElement):
         SolidElement.__init__(self, model)
 
     def add(self, card, comment=''):
-        self.model.log.debug('chexa8-add')
+        #self.model.log.debug('chexa8-add')
         i = self.i
         #comment = self._comments[i]
         eid = integer(card, 1, 'element_id')
@@ -319,7 +319,7 @@ class CHEXA8(SolidElement):
         nids.pop(indx)
         return nids
 
-    def write_card(self, f, size=8, element_id=None):
+    def write_card(self, bdf_file, size=8, element_id=None):
         if self.n:
             if element_id is None:
                 i = arange(self.n)
@@ -328,9 +328,9 @@ class CHEXA8(SolidElement):
 
             for (eid, pid, n) in zip(self.element_id[i], self.property_id[i], self.node_ids[i]):
                 if eid in self._comments:
-                    f.write(self._comments[eid])
+                    bdf_file.write(self._comments[eid])
                 card = ['CHEXA', eid, pid, n[0], n[1], n[2], n[3], n[4], n[5], n[6], n[7]]
-                f.write(print_card_8(card))
+                bdf_file.write(print_card_8(card))
 
 
 def volume8(n1, n2, n3, n4, n5, n6, n7, n8):

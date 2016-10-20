@@ -167,7 +167,7 @@ class CQUAD4(ShellElement):
         return normal
 
     #=========================================================================
-    def write_card(self, f, size=8, element_id=None):
+    def write_card(self, bdf_file, size=8, element_id=None):
         if self.n:
             #print('    self.n = %s' % self.n)
             if element_id is None:
@@ -183,7 +183,7 @@ class CQUAD4(ShellElement):
             for (eid, pid, n) in zip(self.element_id[i], self.property_id[i], self.node_ids[i]):
                 #print('    n = %s' % n)
                 card = ['CQUAD4', eid, pid, n[0], n[1], n[2], n[3]]
-                f.write(print_card_8(card))
+                bdf_file.write(print_card_8(card))
 
     def _verify(self, xref=True):
         self.get_mass_by_element_id()

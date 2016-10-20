@@ -112,7 +112,7 @@ class PLOAD1(object):
             msg.append('  %-8s: %i' % ('PLOAD1', self.n))
         return msg
 
-    def write_card(self, f, size=8, load_ids=None):
+    def write_card(self, bdf_file, size=8, load_ids=None):
         if self.n:
             if load_ids is None:
                 i = arange(self.n)
@@ -123,6 +123,6 @@ class PLOAD1(object):
                     self.Type[i], self.scale[i], self.x1[i], self.p1[i], self.x2[i], self.p2[i]):
                 card = ['PLOAD1', load_id, element_id, Type, scale, x1, p1, x2, p2]
                 if size == 8:
-                    f.write(print_card_8(card))
+                    bdf_file.write(print_card_8(card))
                 else:
-                    f.write(print_card_16(card))
+                    bdf_file.write(print_card_16(card))

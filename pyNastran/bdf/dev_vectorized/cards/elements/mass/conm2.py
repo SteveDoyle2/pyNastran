@@ -40,8 +40,11 @@ class CONM2(VectorizedCard):
             self.I = zeros((ncards, 6), float_fmt)
 
     def add(self, card, comment=''):
+        eid = integer(card, 1, 'element_id')
+        if comment:
+            self._comments[eid] = comment
         i = self.i
-        self.element_id[i] = integer(card, 1, 'element_id')
+        self.element_id[i] = eid
         self.node_id[i] = integer(card, 2, 'node_id')
         self.coord_id[i] = integer_or_blank(card, 3, 'coord_id', 0)
         self.mass[i] = double_or_blank(card, 4, 'mass', 0.)
@@ -72,8 +75,7 @@ class CONM2(VectorizedCard):
             unique_eids = unique(self.element_id)
             if len(unique_eids) != len(self.element_id):
                 raise RuntimeError('There are duplicate CONM2 IDs...')
-            self._cards = []
-            self._comments = []
+            #self._cards = []
         else:
             self.element_id = array([], dtype='int32')
             self.property_id = array([], dtype='int32')
@@ -99,7 +101,7 @@ class CONM2(VectorizedCard):
             msg.append('  %-8s: %i' % ('CONM2', self.n))
         return msg
 
-    def write_card(self, f, size=8, is_double=False, element_id=None):
+    def write_card(self, bdf_file, size=8, is_double=False, element_id=None):
         assert self.n > 0, self.n
         if self.n:
             if element_id is None:
@@ -126,10 +128,12 @@ class CONM2(VectorizedCard):
                 for (eid, nid, cid, mass, x0, x1, x2, i0, i1, i2, i3, i4, i5) in zip(
                     self.element_id[i], self.node_id[i], self.coord_id[i], self.mass[i],
                     X0, X1, X2, I0, I1, I2, I3, I4, I5):
+                    if eid in self._comments:
+                        bdf_file.write(self._comments[eid])
                     carda = '%-8s%8i%8i%8i%8s%s%s%s\n' % ('CONM2', eid, nid, cid, print_float_8(mass), x0, x1, x2)
                     cardb = '%8s%8s%8s%8s%8s%8s%8s' % ('', i0, i1, i2, i3, i4, i5)
                     cardi = (carda + cardb).rstrip() + '\n'
-                    f.write(cardi)
+                    bdf_file.write(cardi)
             else:
                 assert size == 16, size
                 X0 = [print_float_16(x) if x != 0.0 else blank for x in self.x[i, 0]]
@@ -145,6 +149,8 @@ class CONM2(VectorizedCard):
                 for (eid, nid, cid, mass, x0, x1, x2, i0, i1, i2, i3, i4, i5) in zip(
                     self.element_id[i], self.node_id[i], self.coord_id[i], self.mass[i],
                     X0, X1, X2, I0, I1, I2, I3, I4, I5):
+                    if eid in self._comments:
+                        bdf_file.write(self._comments[eid])
                     carda = '%-8s%16i%16i%16i%16s\n' % ('CONM2*', eid, nid, cid, print_float_8(mass), )
                     cardb = '%-8s%16s%16s%16s%16s\n' % ('*', x0, x1, x2, i0)
                     cardc = '%-8s%16s%16s%16s%16s\n' % ('*', i1, i2, i3, i4)
@@ -154,7 +160,7 @@ class CONM2(VectorizedCard):
                         cardi = carda + cardb + cardc + cardd
                     else:
                         cardi = carda + cardb
-                    f.write(cardi.rstrip() + '\n')
+                    bdf_file.write(cardi.rstrip() + '\n')
 
     #def get_stiffness(self, model, node_ids, index0s, fnorm=1.0):
         #return(K, dofs, nIJV)

@@ -52,9 +52,9 @@ class SPCD(object):
         self.components = array(self.components)
         self.enforced_motion = array(self.enforced_motion)
 
-    def write_card(self, f, size=8):
+    def write_card(self, bdf_file, size=8):
         if self.n:
             fields = ['SPCD', self.constraint_id]
             for (nid, constraint, enforced) in zip(self.gids, self.components, self.enforced_motion):
                 fields += [nid, constraint, enforced]
-            f.write(fields)
+            bdf_file.write(fields)

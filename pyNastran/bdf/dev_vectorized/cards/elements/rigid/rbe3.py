@@ -235,25 +235,25 @@ class RBE3(object):
         #list_fields = ['RBE2', self.eid, self.gn, self.cm] + self.Gmi + [alpha]
         #return list_fields
 
-    def write_card(self, f, size=True, is_double=False):
+    def write_card(self, bdf_file, size=True, is_double=False):
         if self.n:
             if size == 8:
                 for j, eid, alpha in zip(count(), self.element_id, self.alpha):
                     salpha = set_blank_if_default(alpha, 0.)
                     list_fields = ['RBE2', eid] + [salpha]
-                    f.write(print_card_8(list_fields))
+                    bdf_file.write(print_card_8(list_fields))
             elif is_double:
                 for j, eid, gn, cm, alpha in zip(count(), self.element_id, self.gn, self.cm, self.alpha):
                     gmi = self.gmi[j]
                     salpha = set_blank_if_default(alpha, 0.)
                     list_fields = ['RBE2', eid, gn, cm] + gmi + [salpha]
-                    f.write(print_card_16(list_fields))
+                    bdf_file.write(print_card_16(list_fields))
             else:
                 for j, eid, gn, cm, alpha in zip(count(), self.element_id, self.gn, self.cm, self.alpha):
                     gmi = self.gmi[j]
                     salpha = set_blank_if_default(alpha, 0.)
                     list_fields = ['RBE2', eid, gn, cm] + gmi + [salpha]
-                    f.write(print_card_double(list_fields))
+                    bdf_file.write(print_card_double(list_fields))
 
 
         #card = self.repr_fields()

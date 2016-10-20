@@ -293,7 +293,7 @@ class NastranIO(NastranIO_xref):
         ]
         for rod in rods:
             if rod.n:
-                print('n%s = %s' % (rod.type, rod.n))
+                self.model.log.debug('n%s = %s' % (rod.type, rod.n))
                 i1, i2 = rod.get_node_indicies()
                 eids = rod.element_id
                 for eid, ii1, ii2 in zip(eids, i1, i2):
@@ -311,7 +311,7 @@ class NastranIO(NastranIO_xref):
         ]
         for tria3 in tria3s:
             if tria3.n:
-                print('n%s = %s' % (tria3.type, tria3.n))
+                self.model.log.debug('n%s = %s' % (tria3.type, tria3.n))
                 i1, i2, i3 = tria3.get_node_indicies()
                 eids = tria3.element_id
                 for eid, ii1, ii2, ii3 in zip(eids, i1, i2, i3):

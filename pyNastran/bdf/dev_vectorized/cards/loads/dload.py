@@ -63,8 +63,8 @@ class DLOAD(object):
         msg.append('  %-8s: %i' % ('DLOAD[%s]' % self.load_id))
         return msg
 
-    def write_card(self, f, size=8, lids=None):
+    def write_card(self, bdf_file, size=8, lids=None):
         list_fields = ['DLOAD', self.load_id, self.scale]
         for (scale_factor, lid) in zip(self.scale_factors, self.load_ids):
             list_fields += [scale_factor, lid]
-        f.write(print_card_8(list_fields, size))
+        bdf_file.write(print_card_8(list_fields, size))

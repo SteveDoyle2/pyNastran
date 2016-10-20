@@ -82,7 +82,7 @@ class MATHP(Material):
         #if comment:
         #    self._comment = comment
         self.material_id[i] = integer(card, 1, 'material_id')
-        print('add MATHP.material_id = %s' % self.material_id)
+        self.model.log.debug('add MATHP.material_id = %s' % self.material_id)
         a10 = double_or_blank(card, 2, 'a10', 0.)
         a01 = double_or_blank(card, 3, 'a01', 0.)
         self.a10[i] = a10
@@ -134,9 +134,9 @@ class MATHP(Material):
     def build(self):
         if self.n:
             i = argsort(self.material_id)
-            print('build1 MATHP.material_id = %s' % self.material_id)
+            self.model.log.debug('build1 MATHP.material_id = %s' % self.material_id)
             self.material_id = self.material_id[i]
-            print('build2 MATHP.material_id = %s' % self.material_id)
+            self.model.log.debug('build2 MATHP.material_id = %s' % self.material_id)
             self.a10 = self.a10[i]
             self.a01 = self.a01[i]
             self.d1 = self.d1[i]
@@ -214,7 +214,7 @@ class MATHP(Material):
         i = self.get_material_index_by_material_id(material_id)
         return self.get_density_by_index(i)
 
-    def write_card(self, f, size=8, material_id=None):
+    def write_card(self, bdf_file, size=8, material_id=None):
         if self.n:
             if material_id is None:
                 i = arange(self.n)
@@ -234,9 +234,9 @@ class MATHP(Material):
             Ss = ['' if ss == 0.0 else ss for ss in self.Ss[i]]
 
             card = ['$MAT1', 'mid', 'E', 'G', 'nu', 'rho', 'a', 'TRef', 'ge']
-            f.write(print_card_8(card))
+            bdf_file.write(print_card_8(card))
             card = ['$', 'st', 'sc', 'ss', 'mcsid']
-            f.write(print_card_8(card))
+            bdf_file.write(print_card_8(card))
             for(mid, E, G, nu, rho, a, TRef, ge, st, sc, ss, mcsid) in zip(
                 self.material_id[i], self.E[i], self.G[i], self.nu[i], Rho, A,
                 TRef, ge, St, Sc, Ss, self.mcsid[i]):
@@ -253,7 +253,7 @@ class MATHP(Material):
                 #ss = set_blank_if_default(ss, 0.)
                 mcsid = set_blank_if_default(mcsid, 0)
                 card = ['MAT1', mid, E, G, nu, rho, a, TRef, ge, st, sc, ss, mcsid]
-                f.write(print_card_8(card))
+                bdf_file.write(print_card_8(card))
 
     def repr_fields(self, material_id):
         i = where(self.material_id == material_id)[0]
@@ -352,5 +352,5 @@ class MATHP(Material):
         obj.tab3 = self.tab3[i]
         obj.tab4 = self.tab4[i]
         obj.tabd = self.tabd[i]
-        print("obj = %s" % obj.material_id)
+        self.model.log.debug("obj = %s" % obj.material_id)
         return obj

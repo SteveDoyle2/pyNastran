@@ -189,7 +189,7 @@ class CBEAM(Element):
             return mass
 
     #=========================================================================
-    def write_card(self, f, size=8, element_ids=None):
+    def write_card(self, bdf_file, size=8, element_ids=None):
         if self.n:
             if element_ids is None:
                 i = arange(self.n)
@@ -223,7 +223,7 @@ class CBEAM(Element):
                 card = ['CBEAM', eid, pid, n[0], n[1], x1, x2, x3, offt_bit,
                         pa, pb, w1a, w2a, w3a, w1b, w2b, w3b,
                         sa, sb]
-                f.write(print_card_8(card))
+                bdf_file.write(print_card_8(card))
 
     def slice_by_index(self, i):
         i = self._validate_slice(i)

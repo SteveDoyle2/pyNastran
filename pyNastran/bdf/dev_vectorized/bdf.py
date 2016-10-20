@@ -265,6 +265,9 @@ class BDF(AddCard, CrossReference, WriteMesh):
             'PSOLID', 'PLSOLID',
             'CTETRA', 'CPYRAM', 'CPENTA', 'CHEXA',
 
+            'CBUSH', 'CBUSH1D', 'CBUSH2D',
+            #'PBUSH', 'PBUSH1D', 'PBUSH2D',
+
             'CONM1', 'CONM2',
 
             'MAT1', 'MAT8',
@@ -1816,6 +1819,13 @@ class BDF(AddCard, CrossReference, WriteMesh):
             ## BCTSET
         }
         self._card_parser_prepare = {
+            #'CORD2R' : (CORD2R, self.add_coord), # not vectorized
+            #'CORD2C' : (CORD2C, self.add_coord),
+            #'CORD2S' : (CORD2S, self.add_coord),
+            'CORD2R' : self._prepare_cord2, # vectorized
+            'CORD2C' : self._prepare_cord2,
+            'CORD2S' : self._prepare_cord2,
+
             #'CORD1R' : self._prepare_cord1r,
             #'CORD1C' : self._prepare_cord1c,
             #'CORD1S' : self._prepare_cord1s,
@@ -2042,6 +2052,12 @@ class BDF(AddCard, CrossReference, WriteMesh):
         if card_obj.field(5):
             class_instance = CORD1S.add_card(card_obj, icard=1, comment=comment)
             self.add_coord(class_instance)
+
+    def _prepare_cord2(self, card, card_obj, comment=''):
+        """adds a CORD2x"""
+        #print('card = %r' % card)
+        #print('card_obj =', card_obj)
+        self.coords.add_cord2x(card, card_obj)
 
     def add_card(self, card_lines, card_name, comment='', is_list=True, has_none=True):
         """
@@ -2277,7 +2293,7 @@ class BDF(AddCard, CrossReference, WriteMesh):
             try:
                 add_card_function(card, card_obj)
             except (SyntaxError, AssertionError, KeyError, ValueError) as exception:
-                #raise
+                raise
                 # WARNING: Don't catch RuntimeErrors or a massive memory leak can occur
                 #tpl/cc451.bdf
                 #raise
@@ -2860,11 +2876,11 @@ class BDF(AddCard, CrossReference, WriteMesh):
                     pass
                 else:
                     while not line.split('$')[0].endswith("'") and j < nlines:
-                        # print('j=%s nlines=%s less?=%s'  % (j, nlines, j < nlines))
+                        #print('j=%s nlines=%s less?=%s'  % (j, nlines, j < nlines))
                         try:
                             line = lines[j].split('$')[0].strip()
                         except IndexError:
-                            # print('bdf_filename=%r' % bdf_filename)
+                            #print('bdf_filename=%r' % bdf_filename)
                             crash_name = 'pyNastran_crash.bdf'
                             self._dump_file(crash_name, lines, i+1)
                             msg = 'There was an invalid filename found while parsing (index).\n'
@@ -2875,7 +2891,7 @@ class BDF(AddCard, CrossReference, WriteMesh):
                              #line.split('$')[0].strip().endswith(""), line.strip()))
                         include_lines.append(line.strip())
                         j += 1
-                    # print('j=%s nlines=%s less?=%s'  % (j, nlines, j < nlines))
+                    #print('j=%s nlines=%s less?=%s'  % (j, nlines, j < nlines))
 
                     #print('*** %s' % line)
                     #bdf_filename2 = line[7:].strip(" '")
@@ -3109,7 +3125,7 @@ class BDF(AddCard, CrossReference, WriteMesh):
             ('CTETRA10', self.ctetra10),
         )
 
-    def _parse_cpenta(self):
+    def _parse_cpenta(self, card_name, card):
         """adds cpentas"""
         self._parse_solid(
             'CPENTA', card, 9,
@@ -3117,7 +3133,7 @@ class BDF(AddCard, CrossReference, WriteMesh):
             ('CPENTA15', self.cpenta15),
         )
 
-    def _parse_cpyram(self):
+    def _parse_cpyram(self, card_name, card):
         """adds cpyrams"""
         self._parse_solid(
             'CPENTA', card, 8,
@@ -3125,7 +3141,7 @@ class BDF(AddCard, CrossReference, WriteMesh):
             ('CPENTA15', self.cpenta15),
         )
 
-    def _parse_chexa(self):
+    def _parse_chexa(self, card_name, card):
         """adds chexas"""
         self._parse_solid(
             'CHEXA', card, 11,

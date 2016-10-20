@@ -26,7 +26,7 @@ class ElementsSpring(object):
         etypes = self._get_types(nlimit=False)
         for etype in etypes:
             if etype.type in card_count:
-                print('etype.type =', etype.type, etype.n)
+                self.model.log.debug('etype.type = %r n=%s' % (etype.type, etype.n))
                 etype.allocate(card_count[etype.type])
             #else:
                 #assert hasattr(ptype, 'allocate'), '%s doesnt support allocate' % ptype.type
@@ -59,11 +59,11 @@ class ElementsSpring(object):
         self.celas4.add(card, comment)
         raise NotImplementedError()
 
-    def write_card(self, f, size=8, eids=None):
-        f.write('$ELEMENTS\n')
+    def write_card(self, bdf_file, size=8, eids=None):
+        bdf_file.write('$ELEMENTS\n')
         types = self._get_types()
         for element in types:
-            element.write_card(f, size=size, eids=eids)
+            element.write_card(bdf_file, size=size, eids=eids)
 
     def _get_types(self, nlimit=True):
         types = [self.celas1,

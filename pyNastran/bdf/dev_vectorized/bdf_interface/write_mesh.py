@@ -407,7 +407,7 @@ class WriteMesh(object):
         self._write_constraints_spc_mpc(f, size, spcs)
         self._write_constraints_spc_mpc(f, size, mpcs)
 
-    def _write_constraints_spc_mpc(self, f, size, types):
+    def _write_constraints_spc_mpc(self, bdf_file, size, types):
         interspersed = False
         if interspersed:
             raise NotImplementedError()
@@ -418,7 +418,7 @@ class WriteMesh(object):
             ids = unique(ids)
             ids.sort()
             if len(ids) > 0:
-                f.write('$CONSTRAINTS\n')
+                bdf_file.write('$CONSTRAINTS\n')
                 for ID in ids:
                     for t in types:
                         for constraint_id, constraint in sorted(iteritems(t)):

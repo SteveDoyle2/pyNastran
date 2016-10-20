@@ -49,12 +49,12 @@ class CAero(object):
         self.caero5.add(card, comment)
 
     #===========
-    def write_card(self, f, size=8, element_id=None):
-        f.write('$AERO\n')
+    def write_card(self, bdf_file, size=8, element_id=None):
+        bdf_file.write('$AERO\n')
         types = self._get_types()
         for elems in types:
             #print("AERO", elems.type)
-            elems.write_card(f, size=size, element_id=element_id)
+            elems.write_card(bdf_file, size=size, element_id=element_id)
 
     def _get_types(self):
         types = [self.caero1, # self.caero2, self.caero3, self.caero4, self.caero5,

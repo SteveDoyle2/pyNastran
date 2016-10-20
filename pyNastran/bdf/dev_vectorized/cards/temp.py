@@ -49,15 +49,15 @@ class TEMPD(object):
         self.load_id = array(self.load_id)
         self.temperature_default = array(self.temperature_default)
 
-    def write_card(self, f, size=8):
+    def write_card(self, bdf_file, size=8):
         if self.n:
             #n = 0
             for lid, t in zip(self.load_id, self.temperature_default):
                 card = ['TEMPD', lid, t]
                 if size == 8:
-                    f.write(print_card_8(card))
+                    bdf_file.write(print_card_8(card))
                 else:
-                    f.write(print_card_16(card))
+                    bdf_file.write(print_card_16(card))
 
 
 class TEMP(object):
@@ -148,7 +148,7 @@ class TEMP(object):
             msg.append('  %-8s: %i' % ('TEMP', self.n))
         return msg
 
-    def write_card(self, f, size=8):
+    def write_card(self, bdf_file, size=8):
         if self.n:
             #t0 = self.model.tempd.cp
             seid0 = self.model.grdset.seid
@@ -162,9 +162,9 @@ class TEMP(object):
             for (nid, cp, xyz, cd, ps, seid) in zip(self.nid, Cp, self.xyz, Cd, Ps, Seid):
                 card = ['TEMP', nid, cp, xyz[0], xyz[1], xyz[2], cd, ps, seid]
                 if size == 8:
-                    f.write(print_card_8(card))
+                    bdf_file.write(print_card_8(card))
                 else:
-                    f.write(print_card_16(card))
+                    bdf_file.write(print_card_16(card))
 
     def __repr__(self):
         msg = "<GRID>\n"

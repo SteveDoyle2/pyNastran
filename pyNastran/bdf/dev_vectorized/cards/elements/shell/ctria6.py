@@ -67,7 +67,7 @@ class CTRIA6(ShellElement):
             self.element_id = array([], dtype='int32')
             self.property_id = array([], dtype='int32')
 
-    def write_card(self, f, size=8, element_id=None):
+    def write_card(self, bdf_file, size=8, element_id=None):
         if self.n:
             if element_id is None:
                 i = arange(self.n)
@@ -81,7 +81,7 @@ class CTRIA6(ShellElement):
                 #TFlag = None
                 card = ['CTRIA6', eid, pid, ] + list(n) + [theta_mcid, zoffset,
                         None] + [None, TFlag] + list(t)
-                f.write(print_card_8(card))
+                bdf_file.write(print_card_8(card))
 
     def _verify(self):
         self.get_mass_by_element_id()

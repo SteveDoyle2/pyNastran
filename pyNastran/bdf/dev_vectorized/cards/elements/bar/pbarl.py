@@ -197,7 +197,7 @@ class PBARL(Property):
         #return obj
 
     #=========================================================================
-    def write_card(self, f, size=8, property_id=None):
+    def write_card(self, bdf_file, size=8, property_id=None):
         #print('PBARL.n = %s' % self.n)
         if self.n:
             if property_id is None:
@@ -214,15 +214,17 @@ class PBARL(Property):
             #self.model.log.debug('*pbarl write pids=%s' % self.property_id)
             for (j, pid, mid, group, Type, nsm) in zip(count(), self.property_id[i], self.material_id[i],
                                                        self.group[i], self.Type[i], self.nsm[i]):
+                if pid in self._comments:
+                    bdf_file.write(self._comments[pid])
                 dim = self.dim[j]
                 sgroup = set_blank_if_default(group, 'MSCBMLO')
 
                 list_fields = ['PBARL', pid, mid, group, Type, None,
                                None, None, None] + dim + [nsm]
                 if size == 8:
-                    f.write(print_card_8(list_fields))
+                    bdf_file.write(print_card_8(list_fields))
                 else:
-                    f.write(print_card_16(list_fields))
+                    bdf_file.write(print_card_16(list_fields))
 
     def slice_by_index(self, i):
         i = self._validate_slice(i)

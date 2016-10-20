@@ -130,7 +130,7 @@ class RFORCE(object):
             msg.append('  %-8s: %i' % ('RFORCE', self.n))
         return msg
 
-    def write_card(self, f, size=8, lids=None):
+    def write_card(self, bdf_file, size=8, lids=None):
         if self.n:
             for (lid, nid, cid, scale_vel, r, method, scale_acc, mb, idrf) in zip(
                  self.load_id, self.node_id, self.coord_id, self.scale_vel,
@@ -143,6 +143,6 @@ class RFORCE(object):
                 card = ['RFORCE', lid, nid, cid, scale_vel,
                         r[0], r[1], r[2], method, scale_acc, mb, idrf]
                 if size == 8:
-                    f.write(print_card_8(card))
+                    bdf_file.write(print_card_8(card))
                 else:
-                    f.write(print_card_16(card))
+                    bdf_file.write(print_card_16(card))

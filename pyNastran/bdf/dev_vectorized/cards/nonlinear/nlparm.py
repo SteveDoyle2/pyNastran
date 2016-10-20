@@ -92,9 +92,9 @@ class NLPARM(object):
                        rTolB]
         return list_fields
 
-    def write_card(self, f, size=8):
+    def write_card(self, bdf_file, size=8):
         card = self.raw_fields()
         if size == 8:
-            f.write(print_card_8(card))
+            bdf_file.write(print_card_8(card))
         else:
-            f.write(print_card_16(card))
+            bdf_file.write(print_card_16(card))

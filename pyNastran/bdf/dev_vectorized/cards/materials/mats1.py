@@ -190,7 +190,7 @@ class MATS1(Material):
                   self.h, self.yf, self.hr, self.limit1, self.limit2]
         return list_fields
 
-    def write_card(self, f, size=8, material_id=None):
+    def write_card(self, bdf_file, size=8, material_id=None):
         if size == 8:
             for mid, table_id, Type, h, hflag, yf, hr, limit1, limit2 in zip(
                 self.material_id, self.table_id, self.Type,
@@ -201,7 +201,7 @@ class MATS1(Material):
                     card = ['MATS1', mid, table_id, Type, h, yf, hr, limit1]
                 else:
                     card = ['MATS1', mid, table_id, Type, h, yf, hr, limit1, limit2]
-                f.write(print_card_8(card))
+                bdf_file.write(print_card_8(card))
         else:
             for mid, table_id, Type, h, hflag, yf, hr, limit1, limit2 in zip(
                 self.material_id, self.table_id, self.Type,
@@ -212,7 +212,7 @@ class MATS1(Material):
                     card = ['MATS1', mid, table_id, Type, h, yf, hr, limit1]
                 else:
                     card = ['MATS1', mid, table_id, Type, h, yf, hr, limit1, limit2]
-                f.write(print_card_16(card))
+                bdf_file.write(print_card_16(card))
 
     def repr_fields(self):
         return self.raw_fields()

@@ -47,21 +47,23 @@ class CBUSH(Element):
         """
         Element.__init__(self, model)
 
-    def allocate(self, ncards):
-        self.n = ncards
-        float_fmt = self.model.float_fmt
-        #: Element ID
-        self.element_id = zeros(ncards, 'int32')
-        #: Property ID
-        self.property_id = zeros(ncards, 'int32')
-        self.node_ids = zeros((ncards, 2), 'int32')
-        self.is_g0 = zeros(ncards, 'bool')
-        self.g0 = full(ncards, nan, 'int32')
-        self.x = full((ncards, 3), nan, float_fmt)
-        self.cid = full(ncards, nan, 'int32')
-        self.s = full(ncards, nan, float_fmt)
-        self.ocid = full(ncards, nan, 'int32')
-        self.si = full((ncards, 3), nan, float_fmt)
+    def allocate(self, card_count):
+        ncards = card_count[self.type]
+        if ncards:
+            self.n = ncards
+            float_fmt = self.model.float_fmt
+            #: Element ID
+            self.element_id = zeros(ncards, 'int32')
+            #: Property ID
+            self.property_id = zeros(ncards, 'int32')
+            self.node_ids = zeros((ncards, 2), 'int32')
+            self.is_g0 = zeros(ncards, 'bool')
+            self.g0 = full(ncards, nan, 'int32')
+            self.x = full((ncards, 3), nan, float_fmt)
+            self.cid = full(ncards, nan, 'int32')
+            self.s = full(ncards, nan, float_fmt)
+            self.ocid = full(ncards, nan, 'int32')
+            self.si = full((ncards, 3), nan, float_fmt)
 
     def add(self, card, comment=''):
         i = self.i
@@ -143,7 +145,7 @@ class CBUSH(Element):
 
 
     #=========================================================================
-    def write_card(self, f, size=8, element_id=None):
+    def write_card(self, bdf_file, size=8, element_id=None):
         if self.n:
             if element_id is None:
                 i = arange(self.n)
@@ -177,9 +179,9 @@ class CBUSH(Element):
                 card = ['CBUSH', eid, pid, n[0], n[1], x1, x2, x3,
                         cid, s, ocid, si1, si2, si3]
                 if size == 8:
-                    f.write(print_card_8(card))
+                    bdf_file.write(print_card_8(card))
                 else:
-                    f.write(print_card_16(card))
+                    bdf_file.write(print_card_16(card))
 
     def slice_by_index(self, i):
         i = self._validate_slice(i)

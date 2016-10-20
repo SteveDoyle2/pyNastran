@@ -43,7 +43,7 @@ class PAERO1(VectorizedCard):
     #def get_bodies(self):
         #return self.Bi
 
-    def write_card(self, f, size, is_double, property_id=None):
+    def write_card(self, bdf_file, size, is_double, property_id=None):
         if self.n:
             assert size in [8, 16], size
             assert is_double in [True, False], is_double
@@ -53,10 +53,10 @@ class PAERO1(VectorizedCard):
             else:
                 #assert len(unique(property_id))==len(property_id), unique(property_id)
                 i = searchsorted(self.property_id, property_id)
-            print(self.property_id)
+            #print(self.property_id)
             for j, pid in enumerate(self.property_id[i]):
                 b = self.b[j, :]
                 b2 = [bi for bi in b if bi > 0]
                 list_fields = ['PAERO1', pid] + b2
-                f.write(print_card_8(list_fields))
+                bdf_file.write(print_card_8(list_fields))
         #return self.comment + print_card_8(card)

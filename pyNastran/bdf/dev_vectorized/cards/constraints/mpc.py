@@ -81,16 +81,16 @@ class MPC(object):
         #float_fmt = self.model.float_fmt
         self.n = len(self.constraints)
 
-    def write_card(self, f, size=8):
+    def write_card(self, bdf_file, size=8):
         if self.n:
             for constraint in self.constraints:
                 card = ['MPC', self.constraint_id]
                 for (G, C, A) in constraint:
                     card += [G, C, A]
                 if size == 8:
-                    f.write(print_card_8(card))
+                    bdf_file.write(print_card_8(card))
                 else:
-                    f.write(print_card_16(card))
+                    bdf_file.write(print_card_16(card))
 
     def __repr__(self):
         f = StringIO()

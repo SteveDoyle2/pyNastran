@@ -210,7 +210,7 @@ class CPYRAM5(SolidElement):
         nids.pop(indx)
         return nids
 
-    def write_card(self, f, size=8, element_id=None):
+    def write_card(self, bdf_file, size=8, element_id=None):
         if self.n:
             if element_id is None:
                 i = arange(self.n)
@@ -219,7 +219,7 @@ class CPYRAM5(SolidElement):
 
             for (eid, pid, n) in zip(self.element_id[i], self.property_id[i], self.node_ids[i, :]):
                 if eid in self._comments:
-                    f.write(self._comments[eid])
+                    bdf_file.write(self._comments[eid])
                 card = ['CPYRAM5', eid, pid, n[0], n[1], n[2], n[3], n[4]]
-                f.write(print_card_8(card))
+                bdf_file.write(print_card_8(card))
 

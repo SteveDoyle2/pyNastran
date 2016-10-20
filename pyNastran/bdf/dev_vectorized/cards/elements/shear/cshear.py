@@ -51,7 +51,7 @@ class CSHEAR(Element):
             self.element_id = array([], dtype='int32')
             self.property_id = array([], dtype='int32')
 
-    def write_card(self, f, size=8, element_id=None):
+    def write_card(self, bdf_file, size=8, element_id=None):
         if self.n:
             if element_id is None:
                 i = arange(self.n)
@@ -62,9 +62,9 @@ class CSHEAR(Element):
             for (eid, pid, n) in zip(self.element_id[i], self.property_id[i], self.node_ids[i]):
                 card = ['CSHEAR', eid, pid, n[0], n[1], n[2], n[3]]
                 if size == 8:
-                    f.write(print_card_8(card))
+                    bdf_file.write(print_card_8(card))
                 else:
-                    f.write(print_card_16(card))
+                    bdf_file.write(print_card_16(card))
 
 
     def _verify(self, xref=True):

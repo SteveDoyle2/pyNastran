@@ -243,7 +243,6 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
     diff_cards = []
     #try:
     out_model = run_fem1(fem1, bdf_model, mesh_form, xref, punch, sum_load, size, is_double, cid)
-    print('hi!')
     fem2 = run_fem2(bdf_model, out_model, xref, punch, sum_load, size, is_double, reject,
                     debug=debug, log=None)
     diff_cards = compare(fem1, fem2, xref=xref, check=check, print_stats=print_stats)

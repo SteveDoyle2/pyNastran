@@ -72,10 +72,10 @@ class PBEAML(object):
         self.property_id = array(sorted(self.properties.keys()), dtype='int32')
 
     #=========================================================================
-    def write_card(self, f, size=8, property_id=None):
+    def write_card(self, bdf_file, size=8, property_id=None):
         if size == 8:
             for pid, prop in sorted(iteritems(self.properties)):
-                f.write(prop.write_card(size, print_card_8))
+                bdf_file.write(prop.write_card(size, print_card_8))
         else:
             for pid, prop in sorted(iteritems(self.properties)):
-                f.write(prop.write_card(size, print_card_16))
+                bdf_file.write(prop.write_card(size, print_card_16))

@@ -95,16 +95,16 @@ class PLSOLID(Property):
         #self.model.log.debug('rho = %s' % rho)
         #return rho
 
-    def write_card(self, f, size=8, property_id=None):
+    def write_card(self, bdf_file, size=8, property_id=None):
         if self.n:
             #print "PSOLID.property_id =", self.property_id
             for (pid, mid, stress) in zip(
                  self.property_id, self.material_id, self.stress_strain):
                 if eid in self._comments:
-                    f.write(self._comments[eid])
+                    bdf_file.write(self._comments[eid])
                 stress_strain = set_blank_if_default(stress_strain, 'GRID')
                 card = ['PLSOLID', pid, mid, stress_strain]
-                f.write(print_card_8(card))
+                bdf_file.write(print_card_8(card))
 
     def __getitem__(self, property_id):
         i = searchsorted(self.property_id, property_id)

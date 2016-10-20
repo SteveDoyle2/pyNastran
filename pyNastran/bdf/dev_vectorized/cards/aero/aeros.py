@@ -85,7 +85,7 @@ class AEROS(VectorizedCard):
             self.symXY = self.symXY[i]
 
 
-    def write_card(self, f, size, is_double):
+    def write_card(self, bdf_file, size, is_double):
         if self.n == 0:
             return
         for acsid, rcsid, c, b, S, symXZ, symXY in zip(self.acsid,
@@ -94,5 +94,5 @@ class AEROS(VectorizedCard):
             #symXZ = set_blank_if_default(self.symXZ, 0)
             #symXY = set_blank_if_default(self.symXY, 0)
             list_fields = ['AEROS', acsid, rcsid, c,
-                  b, S, symXZ, symXY]
-            f.write(print_card_8(list_fields))
+                           b, S, symXZ, symXY]
+            bdf_file.write(print_card_8(list_fields))

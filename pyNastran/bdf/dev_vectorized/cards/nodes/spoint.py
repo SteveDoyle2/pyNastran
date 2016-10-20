@@ -50,13 +50,13 @@ class SPOINT(object):
         if self.n:
             self._comments = []
 
-    def write_card(self, f, size=8, is_double=False):
+    def write_card(self, bdf_file, size=8, is_double=False):
         #.. todo:: collapse the IDs
         if self.n:
             spoint = list(self.spoint)
             spoint.sort()
             card = ['SPOINT'] + collapse_thru(spoint)
-            f.write(print_card_8(card))
+            bdf_file.write(print_card_8(card))
 
     def get_stats(self):
         msg = []

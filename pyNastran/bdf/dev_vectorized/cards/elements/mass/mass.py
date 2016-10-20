@@ -108,13 +108,13 @@ class Mass(object):
         return mass
 
     #=========================================================================
-    def write_card(self, f, size=8, is_double=False, element_id=None):
+    def write_card(self, bdf_file, size=8, is_double=False, element_id=None):
         types = self._get_types(nlimit=True)
         if types:
-            f.write('$ELEMENTS_MASS\n')
+            bdf_file.write('$ELEMENTS_MASS\n')
         for elems in types:
             #print("MASS", elems.type)
-            elems.write_card(f, size=size, element_id=element_id)
+            elems.write_card(bdf_file, size=size, element_id=element_id)
 
     def _get_types(self, nlimit=True):
         mtypes = [

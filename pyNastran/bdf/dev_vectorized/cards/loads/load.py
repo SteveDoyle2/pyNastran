@@ -81,7 +81,7 @@ class LOAD(object):
         msg.append('  %-8s: %i' % ('LOAD[%s]' % self.load_id))
         return msg
 
-    def write_card(self, f, size=8, is_double=False, load_id=None):
+    def write_card(self, bdf_file, size=8, is_double=False, load_id=None):
         if load_id is None:
             load_id = self.load_id
         load_id = asarray(load_id)
@@ -89,6 +89,6 @@ class LOAD(object):
         for (scale_factor, lid) in zip(self.scale_factors, self.load_ids):
             list_fields += [scale_factor, lid]
             if size == 8:
-                f.write(print_card_8(list_fields))
+                bdf_file.write(print_card_8(list_fields))
             else:
-                f.write(print_card_16(list_fields))
+                bdf_file.write(print_card_16(list_fields))

@@ -42,7 +42,21 @@ def build_groups(objs, name, is_element=False):
         if len(group_data):
             groups[class_obj.type] = group_data
     #print("groups = %s" % groups)
-    return groups
+    return NdarrayDict(groups)
+
+class NdarrayDict(dict):
+    """
+    Dictionary subclass to print it in a nicer format.  It puts a return
+    line after each key, because the values are ndarrays.
+    """
+    def __repr__(self):
+        """writes the dictionary"""
+        msg = 'NdarrayDict(\n'
+        for key in sorted(self.iterkeys()):
+            value = self[key]
+            msg += '%r : %r,\n' % (key, value)
+        msg += ')'
+        return msg
 
 def asarray(ids, dtype='float32', order=None):
     """

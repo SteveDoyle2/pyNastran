@@ -65,7 +65,7 @@ class PSHEAR(Property):
             n = len(property_id)
             i = arange(n)
         else:
-            print('property_id =', property_id)
+            self.model.log.debug('property_id = %r' % property_id)
             n = len(property_id)
             i = searchsorted(self.property_id, property_id)
         mpa = zeros(n, dtype='float64')
@@ -73,7 +73,7 @@ class PSHEAR(Property):
         mpa = rho * self.thickness[i] + self.nsm[i]
         return mpa
 
-    def write_card(self, f, size=8, pids=None):
+    def write_card(self, bdf_file, size=8, pids=None):
         if self.n:
             if pids is None:
                 i = arange(self.n)
@@ -91,9 +91,9 @@ class PSHEAR(Property):
             for (pid, mid, t, nsm, f1, f2) in zip(self.property_id[i], self.material_id[i], self.thickness[i], self.nsm[i], self.f1[i], self.f2[i]):
                 card = ['PSHEAR', pid, mid, t, nsm, f1, f2]
                 if size == 8:
-                    f.write(print_card_8(card))
+                    bdf_file.write(print_card_8(card))
                 else:
-                    f.write(print_card_16(card))
+                    bdf_file.write(print_card_16(card))
 
     def __getitem__(self, property_ids):
         """

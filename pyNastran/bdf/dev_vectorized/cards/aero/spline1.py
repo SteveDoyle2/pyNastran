@@ -108,7 +108,7 @@ class SPLINE1(VectorizedCard):
             self.nelements = self.nelements[i]
             self.melements = self.melements[i]
 
-    def write_card(self, f, size=8, is_double=True, element_id=None):
+    def write_card(self, bdf_file, size=8, is_double=True, element_id=None):
         assert size in [8, 16], size
         assert is_double in [True, False], is_double
         if self.n:
@@ -131,4 +131,4 @@ class SPLINE1(VectorizedCard):
                 list_fields = ['SPLINE1', eid, caero, box1, box2,
                   setg, sdz, smethod, susage, snelements, smelements]
                 list_fields = wipe_empty_fields(list_fields)
-                f.write(print_card_8(list_fields))
+                bdf_file.write(print_card_8(list_fields))
