@@ -57,14 +57,16 @@ class SolidElement(Element):
             xyz_cid0 = self.model.grid.get_position_by_node_index()
         return self._get_node_locations_by_index(i, xyz_cid0)
 
-    def allocate(self, ncards):
+    def allocate(self, card_count):
+        ncards = card_count[self.type]
         print('%s.allocate(%s)' % (self.type, ncards))
-        self.n = ncards
-        #float_fmt = self.model.float_fmt
-        self.element_id = zeros(ncards, 'int32')
-        self.property_id = zeros(ncards, 'int32')
-        self.node_ids = zeros((ncards, self.nnodes), 'int32')
-        #self._comments.append(comment)
+        if ncards:
+            self.n = ncards
+            #float_fmt = self.model.float_fmt
+            self.element_id = zeros(ncards, 'int32')
+            self.property_id = zeros(ncards, 'int32')
+            self.node_ids = zeros((ncards, self.nnodes), 'int32')
+            #self._comments.append(comment)
 
     def build(self):
         self.model.log.debug('self.n = %i' % self.n)

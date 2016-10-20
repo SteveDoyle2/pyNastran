@@ -31,35 +31,33 @@ class Materials(object):
         #self.mat11 = model.mat11
         self.mathp = model.mathp
 
-    def add_mat1(self, card, comment):
-        self.model.log.debug('adding mat1')
-        #self.mat1.add(card, comment)
-        #mid = integer(card, 1, 'material_id')
-        self.mat1.add(card=card, comment=comment)
+    #def add_mat1(self, card, comment):
+        #self.model.log.debug('adding mat1')
+        #self.mat1.add(card=card, comment=comment)
 
-    def add_mats1(self, card, comment):
-        self.mats1.add(card, comment)
+    #def add_mats1(self, card, comment):
+        #self.mats1.add(card, comment)
 
-    def add_mat2(self, card, comment):
-        self.mat2.add(card, comment)
+    #def add_mat2(self, card, comment):
+        #self.mat2.add(card, comment)
 
-    def add_mat4(self, card, comment):
-        self.mat4.add(card, comment)
+    #def add_mat4(self, card, comment):
+        #self.mat4.add(card, comment)
 
-    def add_mat5(self, card, comment):
-        self.mat5.add(card, comment)
+    #def add_mat5(self, card, comment):
+        #self.mat5.add(card, comment)
 
-    def add_mat8(self, card, comment):
-        self.mat8.add(card, comment)
+    #def add_mat8(self, card, comment):
+        #self.mat8.add(card, comment)
 
-    def add_mat10(self, card, comment):
-        self.mat10.add(card, comment)
+    #def add_mat10(self, card, comment):
+        #self.mat10.add(card, comment)
 
-    def add_mat11(self, card, comment):
-        self.mat11.add(card, comment)
+    #def add_mat11(self, card, comment):
+        #self.mat11.add(card, comment)
 
-    def add_mathp(self, card, comment):
-        self.mathp.add(card, comment)
+    #def add_mathp(self, card, comment):
+        #self.mathp.add(card, comment)
 
     def allocate(self, card_count):
         self.model.log.info('allocate Materials')

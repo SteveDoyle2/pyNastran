@@ -2,44 +2,8 @@ from six import  iteritems
 from six.moves import StringIO
 from collections import defaultdict
 from numpy import array, union1d
+from pyNastran.bdf.dev_vectorized.cards.loads.load import LOAD
 
-from .load import LOAD
-from .dload import DLOAD
-from .dload import DLOAD as LSEQ
-from .dload import DLOAD as SLOAD
-from .grav import GRAV
-from .force import FORCE
-from .moment import MOMENT
-
-from .force1 import FORCE1
-from .force2 import FORCE2
-#from .moment1 import MOMENT1
-#from .moment2 import MOMENT2
-
-# ACCEL1
-# PLOAD3
-# DAREA
-# TLOAD1
-# TLOAD2
-# RLOAD1
-# RLOAD2
-# RANDPS
-
-# loads
-from .pload  import PLOAD
-from .pload1 import PLOAD1
-from .pload2 import PLOAD2
-#from .pload3 import PLOAD3
-from .pload4 import PLOAD4
-
-from .ploadx1 import PLOADX1
-#from .grav import GRAV
-
-from .rforce import RFORCE
-#from .sload import SLOAD
-
-#from .loadcase import LoadCase
-#from .loadset import LOADSET
 
 #class LOAD(object):
     #def __init__(self, model):
@@ -145,27 +109,27 @@ class Loads(object):
         self.model = model
 
         #: stores LOAD, FORCE, MOMENT, etc.
-        self.load = LOADs(model)
-        self.dload = LOADs(model)
+        self.load = model.load
+        self.dload = model.dload
         #self.dload = defaultdict(list)
         #self.loadset = LOADSET(model)
 
-        self.force = FORCE(model)
-        self.force1 = FORCE1(model)
-        self.force2 = FORCE2(model)
-        self.moment = MOMENT(model)
-        #self.moment1 = MOMENT1(model)
-        #self.moment2 = MOMENT2(model)
-        self.grav = GRAV(model)
-        self.rforce = RFORCE(model)
+        self.force = model.force
+        self.force1 = model.force1
+        self.force2 = model.force2
+        self.moment = model.moment
+        #self.moment1 = model.moment1
+        #self.moment2 = model.moment2
+        self.grav = model.grav
+        self.rforce = model.rforce
 
-        self.pload = PLOAD(model)
-        self.pload1 = PLOAD1(model)
-        self.pload2 = PLOAD2(model)
-        #self.pload3 = PLOAD3(model)
-        self.pload4 = PLOAD4(model)
+        self.pload = model.pload
+        self.pload1 = model.pload1
+        self.pload2 = model.pload2
+        #self.pload3 = model.pload3
+        self.pload4 = model.pload4
 
-        self.ploadx1 = PLOADX1(model)
+        self.ploadx1 = model.ploadx1
 
     def _get_load_types(self, nlimit):
         types = [

@@ -107,6 +107,48 @@ from pyNastran.bdf.dev_vectorized.cards.elements.solid.properties_solid import P
 # spring
 from pyNastran.bdf.dev_vectorized.cards.elements.spring.elements_spring import ElementsSpring
 
+#-------------------------------------------------------------------------------
+from pyNastran.bdf.dev_vectorized.cards.loads.loads import Loads, LOADs
+
+from pyNastran.bdf.dev_vectorized.cards.loads.load import LOAD
+from pyNastran.bdf.dev_vectorized.cards.loads.dload import DLOAD
+from pyNastran.bdf.dev_vectorized.cards.loads.dload import DLOAD as LSEQ
+from pyNastran.bdf.dev_vectorized.cards.loads.dload import DLOAD as SLOAD
+from pyNastran.bdf.dev_vectorized.cards.loads.grav import GRAV
+from pyNastran.bdf.dev_vectorized.cards.loads.force import FORCE
+from pyNastran.bdf.dev_vectorized.cards.loads.moment import MOMENT
+
+from pyNastran.bdf.dev_vectorized.cards.loads.force1 import FORCE1
+from pyNastran.bdf.dev_vectorized.cards.loads.force2 import FORCE2
+#from pyNastran.bdf.dev_vectorized.cards.loads.moment1 import MOMENT1
+#from pyNastran.bdf.dev_vectorized.cards.loads.moment2 import MOMENT2
+
+# ACCEL1
+# PLOAD3
+# DAREA
+# TLOAD1
+# TLOAD2
+# RLOAD1
+# RLOAD2
+# RANDPS
+
+# loads
+from pyNastran.bdf.dev_vectorized.cards.loads.pload  import PLOAD
+from pyNastran.bdf.dev_vectorized.cards.loads.pload1 import PLOAD1
+from pyNastran.bdf.dev_vectorized.cards.loads.pload2 import PLOAD2
+#from pyNastran.bdf.dev_vectorized.cards.loads.pload3 import PLOAD3
+from pyNastran.bdf.dev_vectorized.cards.loads.pload4 import PLOAD4
+
+from pyNastran.bdf.dev_vectorized.cards.loads.ploadx1 import PLOADX1
+#from pyNastran.bdf.dev_vectorized.cards.loads.grav import GRAV
+
+from pyNastran.bdf.dev_vectorized.cards.loads.rforce import RFORCE
+#from pyNastran.bdf.dev_vectorized.cards.loads.sload import SLOAD
+
+#from pyNastran.bdf.dev_vectorized.cards.loads.loadcase import LoadCase
+#from pyNastran.bdf.dev_vectorized.cards.loads.loadset import LOADSET
+#-------------------------------------------------------------------------------
+
 
 class BDFAttributes(object):
     """defines attributes of the BDF"""
@@ -245,8 +287,32 @@ class BDFAttributes(object):
 
         self.materials = Materials(self)
 
+        # ----------------------------------------------------------------
+
+        self.load = LOADs(self)
+        self.dload = LOADs(self)
+        #self.dload = defaultdict(list)
+        #self.loadset = LOADSET(model)
+
+        self.force = FORCE(self)
+        self.force1 = FORCE1(self)
+        self.force2 = FORCE2(self)
+        self.moment = MOMENT(self)
+        #self.moment1 = MOMENT1(self)
+        #self.moment2 = MOMENT2(self)
+        self.grav = GRAV(self)
+        self.rforce = RFORCE(self)
+
+        self.pload = PLOAD(self)
+        self.pload1 = PLOAD1(self)
+        self.pload2 = PLOAD2(self)
+        #self.pload3 = PLOAD3(self)
+        self.pload4 = PLOAD4(self)
+        self.ploadx1 = PLOADX1(self)
+
         #: stores LOAD, FORCE, MOMENT, etc.
         self.loads = Loads(self)
+        # ----------------------------------------------------------------
         self.temps = TEMPs(self)
 
         # ----------------------------------------------------------------
@@ -255,6 +321,19 @@ class BDFAttributes(object):
 
         #: stores PLOTELs
         self.plotels = {}
+
+        # --------------------------- dynamic ----------------------------
+        #: stores DAREA
+        self.dareas = {}
+        self.dphases = {}
+
+        self.pbusht = {}
+        self.pdampt = {}
+        self.pelast = {}
+
+        #: frequencies
+        self.frequencies = {}
+
         # ----------------------------------------------------------------
         #: direct matrix input - DMIG
         self.dmis = {}
@@ -641,6 +720,23 @@ class BDFAttributes(object):
             'MAT1' : self.mat1,
             #'MAT2' : self.mat2,
             'MAT8' : self.mat8,
+
+            # loads
+            #'LOAD' : self.load,
+            'GRAV' : self.grav,
+
+            'FORCE' : self.force,
+            'FORCE1' : self.force1,
+            'FORCE2' : self.force2,
+
+            'MOMENT' : self.moment,
+            #'MOMENT1' : self.moment1,
+            #'MOMENT2' : self.moment2,
+
+            'PLOAD' : self.pload,
+            'PLOAD2' : self.pload2,
+            'PLOAD4' : self.pload4,
+            'PLOADX1' : self.ploadx1,
         }
         return mapper
 

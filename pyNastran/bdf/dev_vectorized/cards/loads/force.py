@@ -67,17 +67,23 @@ class FORCE(object):
         self._cards.append(card)
         self._comments.append(comment)
 
-    def allocate(self, ncards):
-        float_fmt = self.model.float_fmt
-        self.load_id = zeros(ncards, 'int32')
-        self.node_id = zeros(ncards, 'int32')
-        self.coord_id = zeros(ncards, 'int32')
-        self.mag = zeros(ncards, float_fmt)
-        self.xyz = zeros((ncards, 3), float_fmt)
+    def allocate(self, card_count):
+        ncards = card_count[self.type]
+        if ncards:
+            self.n = ncards
+            float_fmt = self.model.float_fmt
+            self.load_id = zeros(ncards, 'int32')
+            self.node_id = zeros(ncards, 'int32')
+            self.coord_id = zeros(ncards, 'int32')
+            self.mag = zeros(ncards, float_fmt)
+            self.xyz = zeros((ncards, 3), float_fmt)
 
     def build(self):
         """
-        :param cards: the list of FORCE cards
+        Parameters
+        ----------
+        cards : the list of FORCE cards
+           cards
         """
         cards = self._cards
         ncards = len(cards)

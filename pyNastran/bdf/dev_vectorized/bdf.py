@@ -49,14 +49,15 @@ from pyNastran.bdf.dev_vectorized.bdf_interface2.add_card import AddCard
 from pyNastran.bdf.cards.params import PARAM
 from pyNastran.bdf.cards.elements.elements import PLOTEL #CFAST, CGAP, CRAC2D, CRAC3D,
 from pyNastran.bdf.cards.methods import EIGB, EIGC, EIGR, EIGP, EIGRL
-from pyNastran.bdf.cards.aero import (AECOMP, AEFACT, AELINK, AELIST, AEPARM, AESTAT,
-                                      AESURF, AESURFS, AERO, AEROS, CSSCHD,
-                                      CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
-                                      PAERO1, PAERO2, PAERO3, PAERO4, PAERO5,
-                                      MONPNT1,
-                                      FLFACT, FLUTTER, GUST, MKAERO1,
-                                      MKAERO2, SPLINE1, SPLINE2, SPLINE3, SPLINE4,
-                                      SPLINE5, TRIM, DIVERG)
+from pyNastran.bdf.dev_vectorized.cards.aero.aero_cards import (
+    AECOMP, AEFACT, AELINK, AELIST, AEPARM, AESTAT,
+    AESURF, AESURFS, AERO, AEROS, CSSCHD,
+    CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
+    PAERO1, PAERO2, PAERO3, PAERO4, PAERO5,
+    MONPNT1,
+    FLFACT, FLUTTER, GUST, MKAERO1,
+    MKAERO2, SPLINE1, SPLINE2, SPLINE3, SPLINE4,
+    SPLINE5, TRIM, DIVERG)
 
 
 def read_bdf(bdf_filename=None, validate=True, xref=True, punch=False,
@@ -193,7 +194,7 @@ class BDF(AddCard, CrossReference, WriteMesh):
         """
         AddCard.__init__(self)
         CrossReference.__init__(self)
-        WriteMesh.__init___(self)
+        WriteMesh.__init__(self)
         assert debug in [True, False, None], 'debug=%r' % debug
         self.echo = False
         self.read_includes = True
@@ -203,7 +204,6 @@ class BDF(AddCard, CrossReference, WriteMesh):
         self.active_filename = None
         self.include_dir = ''
         self.dumplines = False
-
 
 
         # this flag will be flipped to True someday (and then removed), but
@@ -268,6 +268,12 @@ class BDF(AddCard, CrossReference, WriteMesh):
             'CONM1', 'CONM2',
 
             'MAT1', 'MAT8',
+
+            # loads
+            'LOAD', 'GRAV',
+            'FORCE', 'FORCE1', 'FORCE2',
+            'MOMENT', 'MOMENT1', 'MOMENT2',
+            'PLOAD', 'PLOAD2', 'PLOAD4', 'PLOADX1',
 
             # aero cards
             'AERO',  ## aero
@@ -3095,52 +3101,91 @@ class BDF(AddCard, CrossReference, WriteMesh):
         #self.mat1.allocate(card_count)
         #self.mat8.allocate(card_count)
 
-    def _parse_ctetra(self, card):
+    def _parse_ctetra(self, card_name, card):
         """adds ctetras"""
-        ctetra4s = []
-        ctetra10s = []
-        print(card)
-        for comment, card_lines in card:
-            fields = to_fields(card_lines, card_name)
-            card = wipe_empty_fields(fields)
-            card_obj = BDFCard(card, has_none=False)
-            if card_obj.nfields == 7:
-                nctetra4 += 1
-                ctetra4s.append((comment, card_obj))
-            else:
-                nctetra10s += 1
-                ctetra10s.append((comment, card_obj))
-        #if nctetra4:
-        self.increase_card_count('CTETRA4', nctetra4)
-        self.increase_card_count('CTETRA10', nctetra10)
-        self._parse_solid(self.ctetra4, self.ctetra10, ctetra4s, ctetra10s)
+        self._parse_solid(
+            'CTETRA', card, 7,
+            ('CTETRA4', self.ctetra4),
+            ('CTETRA10', self.ctetra10),
+        )
 
-    def _parse_solid(self, obj1, obj2, cards1, cards2):
+    def _parse_cpenta(self):
+        """adds cpentas"""
+        self._parse_solid(
+            'CPENTA', card, 9,
+            ('CPENTA6', self.cpenta6),
+            ('CPENTA15', self.cpenta15),
+        )
+
+    def _parse_cpyram(self):
+        """adds cpyrams"""
+        self._parse_solid(
+            'CPENTA', card, 8,
+            ('CPENTA6', self.cpenta6),
+            ('CPENTA15', self.cpenta15),
+        )
+
+    def _parse_chexa(self):
+        """adds chexas"""
+        self._parse_solid(
+            'CHEXA', card, 11,
+            ('CHEXA8', self.chexa8),
+            ('CHEXA20', self.chexa20),
+        )
+
+    def _parse_solid(self, card_name, cards, nsplit, pair1, pair2):
         """
         adds the cards to the object
 
         Parameters
         ----------
-        obj1 : CTETRA4()
-            an object
-        obj2 : CTETRA10()
-            an object
-        cards1 : List[(comment, card_obj), ...]
-            an series of comments and cards for obj1
-        cards1 : List[(comment, card_obj), ...]
-            an series of comments and cards for obj2
+        card_name : str
+            the card name
+        cards : List[(comment, card_obj), ...]
+            an series of comments and cards
+        nsplit : int >= 0
+            the location to identify for a card split (7 for CTETRA4/CTETRA10)
+        pair1 : (card_name, slot)
+            card_name : str
+               the card_name; (e.g., CTETRA4)
+            slot : obj
+               the place to put the data (e.g., self.ctetra4)
+        pair2 : (card_name, slot)
+            card_name : str
+               the card_name; (e.g., CTETRA10)
+            slot : obj
+               the place to put the data (e.g., self.ctetra10)
         """
-        obj1.build()
-        obj2.build()
-        for comment, card_obj in cards1:
-            obj1.add(card_obj, comment)
-        for comment, card_obj in cards2:
-            obj2.add(card_obj, comment)
+        cards1 = []
+        cards2 = []
+        ncards1 = 0
+        ncards2 = 0
+        for comment, card_lines in cards:
+            fields = to_fields(card_lines, card_name)
+            card = wipe_empty_fields(fields)
+            card_obj = BDFCard(card, has_none=False)
+            if card_obj.nfields == nsplit:
+                ncards1 += 1
+                cards1.append((comment, card_obj))
+            else:
+                ncards2 += 1
+                cards2.append((comment, card_obj))
 
-    def _parse_cpenta(self):
-        asdf
-    def _parse_chexa(self):
-        asdf
+        if ncards1:
+            name1, obj1 = pair1
+            self._increase_card_count(name1, ncards1)
+            obj1.allocate(self.card_count)
+            for comment, card_obj in cards1:
+                obj1.add(card_obj, comment)
+            obj1.build()
+
+        if ncards2:
+            name2, obj2 = pair2
+            self._increase_card_count(name2, ncards2)
+            obj2.allocate(self.card_count)
+            for comment, card_obj in cards2:
+                obj2.add(card_obj, comment)
+            obj2.build()
 
     def _parse_cards(self, cards, card_count):
         """creates card objects and adds the parsed cards to the deck"""
@@ -3152,6 +3197,7 @@ class BDF(AddCard, CrossReference, WriteMesh):
             cards_to_get_lengths_of = {
                 'CTETRA' : self._parse_ctetra,
                 'CPENTA' : self._parse_cpenta,
+                'CPYRAM' : self._parse_cpyram,
                 'CHEXA' : self._parse_chexa,
             }
             # self._is_cards_dict = True
@@ -3161,9 +3207,8 @@ class BDF(AddCard, CrossReference, WriteMesh):
                     card = cards[card_name]
                     ncards = len(card)
                     method = cards_to_get_lengths_of[card_name]
-                    method(card)
+                    method(card_name, card)
                     self.log.info('    parsed card_name = %s' % card_name)
-                    ## TODO: do something with a CTETRA4 vs. CTETRA10
                     continue
 
             card_name_to_obj_mapper = self.card_name_to_obj
@@ -3236,6 +3281,7 @@ class BDF(AddCard, CrossReference, WriteMesh):
                                   #is_list=False, has_none=False)
         self.elements.build()
         self.properties.build()
+        self.materials.build()
 
     def _parse_dynamic_syntax(self, key):
         """

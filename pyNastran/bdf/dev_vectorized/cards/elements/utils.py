@@ -2,6 +2,14 @@ import numpy as np
 
 
 def build_groups(objs, name, is_element=False):
+    """
+    objs : List[CTETRA4, CPENTA6, CHEXA8, ...]
+        the objects that are being considered
+    name : str
+        element_id, etc.
+    is_element : bool; default=False
+        is this an element
+    """
     groups = {}
     Types = []
     for obj in objs:
@@ -15,21 +23,24 @@ def build_groups(objs, name, is_element=False):
         else:
             #Types += [obj.type]
             Types += [obj]
-    for Type in Types:
-        #if Type is None:
+
+    for class_obj in Types:
+        #if element_obj is None:
             #continue
-        group_data = getattr(Type, name)
+        if class_obj.n == 0:
+            continue
+        group_data = getattr(class_obj, name)
         if not isinstance(group_data, np.ndarray):
-            msg = 'Type %s does not return an ndarray when %s is requested' % (Type.type, name)
+            msg = 'Type %s does not return an ndarray when %s is requested' % (class_obj.type, name)
             raise RuntimeError(msg)
 
-        msg = 'class %s has a type of %r' % (Type.__class__.__name__, Type.type)
-        assert Type.__class__.__name__ == Type.type, msg
+        msg = 'class %s has a type of %r' % (class_obj.__class__.__name__, class_obj.type)
+        assert class_obj.__class__.__name__ == class_obj.type, msg
         #if is_element:
-            #assert hasattr(Type, 'op2_id'), 'class %s has no attribute op2_id' % Type.type
+            #assert hasattr(class_obj, 'op2_id'), 'class %s has no attribute op2_id' % class_obj.type
 
         if len(group_data):
-            groups[Type.type] = group_data
+            groups[class_obj.type] = group_data
     #print("groups = %s" % groups)
     return groups
 

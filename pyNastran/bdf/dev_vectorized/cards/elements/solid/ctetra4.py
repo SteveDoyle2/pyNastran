@@ -374,16 +374,27 @@ class CTETRA4(SolidElement):
         #nids.pop(indx)
         #return nids
 
-    def write_card(self, f, size=8, element_id=None):
+    def write_card(self, bdf_file, size=8, element_id=None):
         if self.n:
             if element_id is None:
                 i = arange(self.n)
             else:
                 i = searchsorted(self.element_id, element_id)
 
-            for (eid, pid, n) in zip(self.element_id[i], self.property_id[i], self.node_ids[i, :]):
-                if eid in self._comments:
-                    f.write(self._comments[eid])
-                card = ['CTETRA', eid, pid, n[0], n[1], n[2], n[3]]
-                f.write(print_card_8(card))
+            if size == 16 or max(self.element_id[i].max(), self.property_id[i].max(),
+                                 self.node_ids[i, :].max()) > 1000000000:
+                msg = ('CTETRA  %16i%16i%16i%16i\n'
+                       '        %16i%16i\n')
+                for (eid, pid, n) in zip(self.element_id[i], self.property_id[i], self.node_ids[i, :]):
+                    if eid in self._comments:
+                        bdf_file.write(self._comments[eid])
+                    data = [eid, pid] + list(n)
+                    bdf_file.write(msg)
+            else:
+                msg = 'CTETRA  %8i%8i%8i%8i%8i%8i\n'
+                for (eid, pid, n) in zip(self.element_id[i], self.property_id[i], self.node_ids[i, :]):
+                    if eid in self._comments:
+                        bdf_file.write(self._comments[eid])
+                    data = [eid, pid] + list(n)
+                    bdf_file.write(msg % tuple(data))
 

@@ -39,20 +39,13 @@ class ElementsSolid(object):
         types = self._get_types(nlimit=False)
         for elems in types:
             if elems.n:
-                self.model.log.debug('    building ES - %s' % elems.__class__.__name__)
-            elems.build()
+                self.model.log.debug('    building ElementSolid - %s' % elems.__class__.__name__)
+            #elems.build()
             self.n += elems.n
 
-        self.element_id = hstack([
-            self.ctetra4.element_id,
-            #self.cpyram5.element_id,
-            self.cpenta6.element_id,
-            self.chexa8.element_id,
-            self.ctetra10.element_id,
-            #self.cpyram13.element_id,
-            self.cpenta15.element_id,
-            self.chexa20.element_id,
-        ])
+        etypes = self._get_types(nlimit=True)
+        self.element_id = hstack([elem.element_id for elem in etypes
+                                  if elem.n > 0])
         #eid = concatenate(pshell.pid, pcomp.pid)
         #unique_eids = unique(eid)
         #if unique_eids != len(eid):
