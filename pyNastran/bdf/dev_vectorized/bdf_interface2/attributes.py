@@ -55,6 +55,7 @@ from pyNastran.bdf.dev_vectorized.cards.elements.shell.pcompg import PCOMPG
 
 # solids
 from pyNastran.bdf.dev_vectorized.cards.elements.solid.psolid import PSOLID
+from pyNastran.bdf.dev_vectorized.cards.elements.solid.plsolid import PLSOLID
 from pyNastran.bdf.dev_vectorized.cards.elements.solid.ctetra4 import CTETRA4
 from pyNastran.bdf.dev_vectorized.cards.elements.solid.ctetra10 import CTETRA10
 from pyNastran.bdf.dev_vectorized.cards.elements.solid.cpenta6 import CPENTA6
@@ -174,8 +175,11 @@ class BDFAttributes(object):
 
         # solids
         self.psolid = PSOLID(self)
+        self.plsolid = PLSOLID(self)
         self.ctetra4 = CTETRA4(self)
         self.ctetra10 = CTETRA10(self)
+        self.cpyram5 = None
+        self.cpyram13 = None
         self.cpenta6 = CPENTA6(self)
         self.cpenta15 = CPENTA15(self)
         self.chexa8 = CHEXA8(self)
@@ -599,6 +603,10 @@ class BDFAttributes(object):
             'CQUAD8' : self.cquad8,
             #'CQUAD' : self.cquad,
 
+            # solid
+            'PSOLID' : self.psolid,
+            'PLSOLID' : self.plsolid,
+
             # mass
             'CONM1' : self.conm1,
             'CONM2' : self.conm2,
@@ -611,7 +619,6 @@ class BDFAttributes(object):
             'MAT1' : self.mat1,
             #'MAT2' : self.mat2,
             'MAT8' : self.mat8,
-            'PSOLID' : self.psolid,
         }
         return mapper
 

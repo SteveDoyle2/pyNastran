@@ -1,7 +1,5 @@
 from numpy import searchsorted, hstack, full, nan, unique, where
 
-from pyNastran.bdf.dev_vectorized.cards.elements.solid.psolid import PSOLID
-from pyNastran.bdf.dev_vectorized.cards.elements.solid.plsolid import PLSOLID
 
 class PropertiesSolid(object):
     def __init__(self, model):
@@ -15,8 +13,8 @@ class PropertiesSolid(object):
         """
         self.model = model
 
-        self.psolid = PSOLID(self.model)
-        self.plsolid = PLSOLID(self.model)
+        self.psolid = model.psolid
+        self.plsolid = model.plsolid
         self.n = 0
 
     def allocate(self, card_count):
