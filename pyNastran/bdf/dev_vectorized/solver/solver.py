@@ -516,7 +516,7 @@ class Solver(OP2):
     def run_case(self, model, case):
         sols = {
             101: self.run_sol_101,
-            103: self.run_sol_103,
+            #103: self.run_sol_103,
         }
 
         isubcase = case.id
@@ -596,7 +596,10 @@ class Solver(OP2):
             if not(self.is_displacement or self.is_stress or self.is_strain or self.is_force):
                 msg = 'No results selected...'
                 raise RuntimeError(msg)
-            sols[model.sol](model, case)
+            if model.isol not in sols:
+                raise NotImplementedError('sol=%r is not supported' % model.isol)
+            sol = sols[model.sol]
+            sol(model, case)
         else:
             raise NotImplementedError('model.sol=%s not in %s' % (model.sol, sols.keys()))
 
@@ -620,7 +623,7 @@ class Solver(OP2):
 
     def build_nid_component_to_id(self, model):
         i = 0
-        nidComponentToID = {}
+        nid_component_to_id_map = {}
         if model.grid.n:
             cd = set(model.grid.cd)
             if cd == 0:
@@ -645,26 +648,26 @@ class Solver(OP2):
                 self.iUsg += iUsg
                 self.Usg += Usg
 
-            nidComponentToID[(nid, 1)] = i
-            nidComponentToID[(nid, 2)] = i + 1
-            nidComponentToID[(nid, 3)] = i + 2
-            nidComponentToID[(nid, 4)] = i + 3
-            nidComponentToID[(nid, 5)] = i + 4
-            nidComponentToID[(nid, 6)] = i + 5
+            nid_component_to_id_map[(nid, 1)] = i
+            nid_component_to_id_map[(nid, 2)] = i + 1
+            nid_component_to_id_map[(nid, 3)] = i + 2
+            nid_component_to_id_map[(nid, 4)] = i + 3
+            nid_component_to_id_map[(nid, 5)] = i + 4
+            nid_component_to_id_map[(nid, 6)] = i + 5
             i += 6
         self.log.info('iUsg = %s' % (self.iUsg))
 
         spoint = model.spoint
         if spoint.n:
             for nid in sorted(model.spoint.spoint):  # SPOINTS
-                nidComponentToID[(nid, 1)] = i
+                nid_component_to_id_map[(nid, 1)] = i
                 i += 1
         assert i > 0, 'no DOFs'
 
         #: starting index for MPC cards
         self.mp_index = model.grid.n + spoint.n
 
-        return(nidComponentToID, i)
+        return(nid_component_to_id_map, i)
 
     def get_Mgg(self, model, ndofs, force_calcs=False):
         Mgg = None
@@ -1030,7 +1033,7 @@ class Solver(OP2):
         self.write_op2(self.op2_pack_file, packing=False)
         self.log.info('finished SOL 101')
 
-    def _op2_header(self, f, packing=True):
+    def _op2_header(self, op2_file, packing=True):
         data = [
             4, 3, 4,
             1, 28, 12,
@@ -1043,23 +1046,23 @@ class Solver(OP2):
             4, 0, 4,
             4, 2, 4]
         if packing:
-            f.write(pack('9i28s18i', *data))
+            op2_file.write(pack('9i28s18i', *data))
         if not packing:
-            f.write(str(data)+'\n')
+            op2_file.write(str(data) + '\n')
 
-    def write_op2(self, f, packing=False):
+    def write_op2(self, op2_file, packing=False):
         return
         results = [self.displacements]
         header = None
-        pageStamp = None
+        page_stamp = None
 
-        self._op2_header(f, packing=packing)
+        self._op2_header(op2_file, packing=packing)
 
         for result in results:
             for subcase, case in sorted(iteritems(result)):
-                case.write_op2(header, pageStamp, f, is_mag_phase=False, packing=packing)
+                case.write_op2(header, page_stamp, op2_file, is_mag_phase=False, packing=packing)
                 if not packing:
-                    f.write('\n')
+                    op2_file.write('\n')
         marker1 = [4, 0, 4]
         marker2 = [4, 0, 4]
         marker3 = [4, 0, 4]
@@ -1067,10 +1070,10 @@ class Solver(OP2):
         if packing:
             nmarker = len(marker)
             p = pack('%ii' % nmarker, *marker)
-            f.write(p)
+            op2_file.write(p)
         else:
-            f.write(str(marker)+'\n')
-        f.close()
+            op2_file.write(str(marker)+'\n')
+        op2_file.close()
 
     def _store_beam_oes(self, model, eids, axial, case, element_type='CBEAM', Type='strain'):
         #print('eids =', eids)
@@ -1219,6 +1222,18 @@ class Solver(OP2):
         else:
             raise NotImplementedError(element_type)
         #stress.dt = None
+
+    def _store_bar_oes(self, model, cbars, e1, case, Type='strain'):
+        raise NotImplementedError()
+
+    def _store_bar_oef(self, model, cbars, f1, case):
+        raise NotImplementedError()
+
+    def _store_plate_oes(self, model, cbeams, stress, case, Type='strain'):
+        raise NotImplementedError()
+
+    def _store_plate_oef(self, model, cbeams, force, case):
+        raise NotImplementedError()
 
     def _store_cshear_oes(self, model, eids, results, case, element_type, Type='strain'):
         """

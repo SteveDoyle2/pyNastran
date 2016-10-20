@@ -24,18 +24,20 @@ class PSOLID(Property):
         """
         Property.__init__(self, model)
 
-    def allocate(self, ncards):
-        self.n = ncards
-        #float_fmt = self.model.float_fmt
-        #: Property ID
-        self.property_id = zeros(ncards, 'int32')
-        #: Material ID
-        self.material_id = zeros(ncards, 'int32')
-        self.cordm = zeros(ncards, 'int32')
-        self.integ = zeros(ncards, dtype='|S8')
-        self.stress = zeros(ncards, dtype='|S8')
-        self.isop = zeros(ncards, dtype='|S8')
-        self.fctn = zeros(ncards, dtype='|S8')
+    def allocate(self, card_count):
+        ncards = card_count[self.type]
+        if ncards:
+            self.n = ncards
+            #float_fmt = self.model.float_fmt
+            #: Property ID
+            self.property_id = zeros(ncards, 'int32')
+            #: Material ID
+            self.material_id = zeros(ncards, 'int32')
+            self.cordm = zeros(ncards, 'int32')
+            self.integ = zeros(ncards, dtype='|S8')
+            self.stress = zeros(ncards, dtype='|S8')
+            self.isop = zeros(ncards, dtype='|S8')
+            self.fctn = zeros(ncards, dtype='|S8')
 
     def add(self, card, comment=''):
         i = self.i

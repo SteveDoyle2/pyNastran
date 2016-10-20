@@ -262,6 +262,9 @@ class BDF(AddCard, CrossReference, WriteMesh):
             'CQUAD4', 'CTRIA3', 'CQUAD8', 'CTRIA6',
             'PSHELL', 'PCOMP', 'PCOMPG',
 
+            'PSOLID', 'PLSOLID',
+            'CTETRA', 'CPYRAM', 'CPENTA', 'CHEXA',
+
             'CONM1', 'CONM2',
 
             'MAT1', 'MAT8',
@@ -3092,24 +3095,90 @@ class BDF(AddCard, CrossReference, WriteMesh):
         #self.mat1.allocate(card_count)
         #self.mat8.allocate(card_count)
 
+    def _parse_ctetra(self, card):
+        """adds ctetras"""
+        ctetra4s = []
+        ctetra10s = []
+        print(card)
+        for comment, card_lines in card:
+            fields = to_fields(card_lines, card_name)
+            card = wipe_empty_fields(fields)
+            card_obj = BDFCard(card, has_none=False)
+            if card_obj.nfields == 7:
+                nctetra4 += 1
+                ctetra4s.append((comment, card_obj))
+            else:
+                nctetra10s += 1
+                ctetra10s.append((comment, card_obj))
+        #if nctetra4:
+        self.increase_card_count('CTETRA4', nctetra4)
+        self.increase_card_count('CTETRA10', nctetra10)
+        self._parse_solid(self.ctetra4, self.ctetra10, ctetra4s, ctetra10s)
+
+    def _parse_solid(self, obj1, obj2, cards1, cards2):
+        """
+        adds the cards to the object
+
+        Parameters
+        ----------
+        obj1 : CTETRA4()
+            an object
+        obj2 : CTETRA10()
+            an object
+        cards1 : List[(comment, card_obj), ...]
+            an series of comments and cards for obj1
+        cards1 : List[(comment, card_obj), ...]
+            an series of comments and cards for obj2
+        """
+        obj1.build()
+        obj2.build()
+        for comment, card_obj in cards1:
+            obj1.add(card_obj, comment)
+        for comment, card_obj in cards2:
+            obj2.add(card_obj, comment)
+
+    def _parse_cpenta(self):
+        asdf
+    def _parse_chexa(self):
+        asdf
+
     def _parse_cards(self, cards, card_count):
         """creates card objects and adds the parsed cards to the deck"""
         #print('card_count = %s' % card_count)
 
+
         if isinstance(cards, dict):
+            # TODO: many others...
+            cards_to_get_lengths_of = {
+                'CTETRA' : self._parse_ctetra,
+                'CPENTA' : self._parse_cpenta,
+                'CHEXA' : self._parse_chexa,
+            }
             # self._is_cards_dict = True
             # this is the loop that hits...
+            for card_name in iterkeys(cards):
+                if card_name in cards_to_get_lengths_of:
+                    card = cards[card_name]
+                    ncards = len(card)
+                    method = cards_to_get_lengths_of[card_name]
+                    method(card)
+                    self.log.info('    parsed card_name = %s' % card_name)
+                    ## TODO: do something with a CTETRA4 vs. CTETRA10
+                    continue
+
             card_name_to_obj_mapper = self.card_name_to_obj
             for card_name, card in sorted(iteritems(cards)):
                 if self.is_reject(card_name):
                     self.log.info('    rejecting card_name = %s' % card_name)
                     for cardi in card:
                         self.rejects.append([cardi[0]] + cardi[1])
+                elif card_name in cards_to_get_lengths_of:
+                    continue
                 else:
                     ncards = len(card)
                     self.log.debug('%s = %r' % (card_name, ncards))
                     if card_name not in card_name_to_obj_mapper:
-                        #self.log.debug('card_name=%r is not vectorized' % card_name)
+                        self.log.debug('card_name=%r is not vectorized' % card_name)
                         for comment, card_lines in card:
                             self.add_card(card_lines, card_name, comment=comment, is_list=False, has_none=False)
                         continue
