@@ -2344,6 +2344,7 @@ class BDF(AddCard, CrossReference, WriteMesh):
         .. note:: if a card is not supported and not added to the proper
                   lists, this method will fail
         """
+        return ''
         card_stats = [
             'params', 'nodes', 'points', 'elements', 'rigid_elements',
             'properties', 'materials', 'creep_materials',

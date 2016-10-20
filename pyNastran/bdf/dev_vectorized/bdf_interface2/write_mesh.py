@@ -564,9 +564,9 @@ class WriteMesh(BDFAttributes):
         self.pointax.write_card(outfile, size=size, is_double=is_double)
 
     def _write_nonlinear(self, outfile, size):
-        for key, card in sorted(iteritems(self.nlparm)):
+        for key, card in sorted(iteritems(self.nlparms)):
             card.write_card(outfile, size)
-        for key, card in sorted(iteritems(self.nlpci)):
+        for key, card in sorted(iteritems(self.nlpcis)):
             card.write_card(outfile, size)
         #self.tables1.write_card(outfile, size)
 
@@ -631,14 +631,18 @@ class WriteMesh(BDFAttributes):
 
         if self.rejects:
             msg.append('$REJECT_LINES\n')
-        for reject_lines in self.rejects:
-            if reject_lines[0][0] == ' ':
-                continue
-            else:
+        for reject_lines in self.reject_lines:
+            if isinstance(reject_lines, (list, tuple)):
                 for reject in reject_lines:
                     reject2 = reject.rstrip()
                     if reject2:
-                        msg.append(str(reject2) + '\n')
+                        msg.append('%s\n' % reject2)
+            elif isinstance(reject_lines, string_types):
+                reject2 = reject_lines.rstrip()
+                if reject2:
+                    msg.append('%s\n' % reject2)
+            else:
+                raise TypeError(reject_lines)
         outfile.write(''.join(msg))
 
     def _write_rigid_elements(self, outfile, size=8, is_double=False):

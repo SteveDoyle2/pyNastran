@@ -13,8 +13,8 @@ class PropertiesBeam(object):
         """
         self.model = model
 
-        self.pbeam = PBEAM(self.model)
-        self.pbeaml = PBEAML(self.model)
+        self.pbeam = model.pbeam
+        self.pbeaml = model.pbeaml
         self.n = 0
 
     def allocate(self, card_count):

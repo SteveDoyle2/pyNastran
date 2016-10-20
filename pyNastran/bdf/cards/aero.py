@@ -38,7 +38,7 @@ from pyNastran.bdf.cards.base_card import BaseCard, expand_thru
 from pyNastran.bdf.bdf_interface.assign_type import (
     fields, integer, integer_or_blank, double, double_or_blank, string,
     string_or_blank, integer_or_string, double_string_or_blank, blank,
-    interpret_value, components)
+    interpret_value, components as parse_components)
 from pyNastran.bdf.cards.utils import wipe_empty_fields
 
 
@@ -1132,10 +1132,10 @@ class CSSCHD(Aero):
     @classmethod
     def add_op2_data(cls, data, comment=''):
         sid = data[0]
-        aesid = data[1]  # AESURF
+        aesid = data[1]   # AESURF
         lalpha = data[2]  # AEFACT
-        lmach = data[3]  # AEFACT
-        lschd = data[4]  # AEFACT
+        lmach = data[3]   # AEFACT
+        lschd = data[4]   # AEFACT
         return CSSCHD(sid, aesid, lalpha, lmach, lschd, comment=comment)
 
     def cross_reference(self, model):
@@ -1147,7 +1147,7 @@ class CSSCHD(Aero):
         model : BDF()
             the BDF object
         """
-        msg = ' which is required by ASSCHD sid=%s' % self.sid
+        msg = ' which is required by CSSCHD sid=%s' % self.sid
         self.aesid = model.AESurf(self.aesid, msg=msg)
         self.aesid_ref = self.aesid
         self.lalpha = model.AEFact(self.lalpha, msg=msg)
@@ -3429,7 +3429,7 @@ class MONPNT1(BaseCard):
         label = ''.join(label_fields).strip()
         assert len(label) <= 56, label
 
-        axes = components(card, 9, 'axes')
+        axes = parse_components(card, 9, 'axes')
         comp = string(card, 10, 'comp')
         cid = integer_or_blank(card, 11, 'cid', 0)
         xyz = [

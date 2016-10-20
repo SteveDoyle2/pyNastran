@@ -13,8 +13,8 @@ class PropertiesBar(object):
         """
         self.model = model
 
-        self.pbar = PBAR(self.model)
-        self.pbarl = PBARL(self.model)
+        self.pbar = model.pbar
+        self.pbarl = model.pbarl
         self.n = 0
 
     def allocate(self, card_count):
