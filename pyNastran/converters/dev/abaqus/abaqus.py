@@ -105,16 +105,7 @@ class Abaqus(object):
                         self.log.debug('-------------------------------------')
                 elif 'section controls' in word:
                     # TODO: skips header parsing
-                    iline += 1
-                    line0 = lines[iline].strip().lower()
-                    data_lines = []
-                    while not line0.startswith('*'):
-                        data_lines.append(line0.split(','))
-                        iline += 1
-                        line0 = lines[iline].strip().lower()
-                        self.log.debug('line = %r' % line0)
-                    iline -= 1
-                    line0 = lines[iline].strip().lower()
+                    data_lines, iline, line0 = self._read_star_block(lines, iline, line0)
 
                 elif word.startswith('amplitude'):
                     param_map = get_param_map(word)
@@ -221,6 +212,26 @@ class Abaqus(object):
 
         for part_name, part in sorted(self.parts.items()):
             self.log.info(part)
+
+    def _read_star_block(self, lines, iline, line0):
+        """
+        because this uses file streaming, there are 30,000 places where a try except
+        block is needed, so this should probably be used all over.
+        """
+        data_lines = []
+        try:
+            iline += 1
+            line0 = lines[iline].strip().lower()
+            while not line0.startswith('*'):
+                data_lines.append(line0.split(','))
+                iline += 1
+                line0 = lines[iline].strip().lower()
+                self.log.debug('line = %r' % line0)
+            iline -= 1
+            line0 = lines[iline].strip().lower()
+        except IndexError:
+            pass
+        return data_lines, iline, line0
 
     def read_material(self, lines, iline, word):
         """reads a Material card"""
