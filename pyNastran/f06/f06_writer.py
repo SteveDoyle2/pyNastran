@@ -48,7 +48,7 @@ def make_f06_header():
         spaces + '/*                                                                      */\n',
         spaces + '/*              A Python reader/editor/writer for the various           */\n',
         spaces + '/*                        NASTRAN file formats.                         */\n',
-        spaces + '/*                       Copyright (C) 2011-2013                        */\n',
+        spaces + '/*                       Copyright (C) 2011-2016                        */\n',
         spaces + '/*               Steven Doyle, Al Danial, Marcin Garrozik               */\n',
         spaces + '/*                                                                      */\n',
         spaces + '/*    This program is free software; you can redistribute it and/or     */\n',
@@ -455,7 +455,9 @@ class F06Writer(OP2_F06_Common):
 
         # TODO: superelement version...need the nominal...
         res_keys_subcase = self.subcase_key
-
+        if len(res_keys_subcase) == 0:
+            self.log.warning('no cases to write...self.subcase_key=%r' % self.subcase_key)
+            return
         for isubcase, res_keys in sorted(iteritems(res_keys_subcase)):
             for res_key in res_keys:
                 if isinstance(res_key, tuple):
@@ -733,7 +735,7 @@ class F06Writer(OP2_F06_Common):
 
             self.grid_point_stresses, self.grid_point_volume_stresses, self.grid_point_forces,
         ]
-
+        print(res_keys_subcase)
         for isubcase, res_keys in sorted(iteritems(res_keys_subcase)):
             # print(res_keys)
             for res_key in res_keys:

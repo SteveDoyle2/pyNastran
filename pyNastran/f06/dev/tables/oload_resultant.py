@@ -47,6 +47,6 @@ class OLOAD_Resultant(object):
         msg += '  %8s     TOTALS  2.300000E+04  0.000000E+00  0.000000E+00  0.000000E+00  3.320987E+04 -2.280395E+04\n' % ('')
 
         msg += page_stamp % page_num
-        f.write('\n'.join(msg))
+        f.write(''.join(msg))
         return page_num + 1
 
