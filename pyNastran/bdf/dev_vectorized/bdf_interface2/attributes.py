@@ -171,6 +171,7 @@ class BDFAttributes(object):
         self.set_precision()
         #----------------------------------------
         self.grid = GRID(self)
+        self.grdset = GRDSET(self)
         self.point = POINT(self)
         self.grdset = GRDSET(self)
         self.spoint = SPOINT(self)

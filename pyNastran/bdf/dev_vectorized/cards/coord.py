@@ -17,16 +17,16 @@ from pyNastran.bdf.field_writer_double import print_card_double
 from pyNastran.bdf.dev_vectorized.cards.vectorized_card import VectorizedCard
 
 
-def normalize(v):
+def normalize(vector):
     #print('-----------')
     #print('normalize(v); v=%s ' % v)
-    ni = norm(v, axis=0)
+    ni = norm(vector, axis=0)
     #print('isnan', isnan(ni))
     if ni.min() == 0.0:
-        msg = 'v=%s\n' % v
+        msg = 'vector=%s\n' % vector
         msg = 'ni=%s\n' % ni
         raise RuntimeError(msg)
-    return v / ni
+    return vector / ni
 
 # .. todo:: incomplete
 class Coord(VectorizedCard):
@@ -43,7 +43,7 @@ class Coord(VectorizedCard):
         coord = self.coords[cp]
 
         T = coord.beta()
-        assert coord.isResolved == True
+        assert coord.is_resolved, coord
         origin = coord.origin
         assert origin is not None, 'origin is None...\n%s' % str(coord)
         #self.model.log.info('originA = %s' % origin)
@@ -71,24 +71,25 @@ class Coord(VectorizedCard):
                 #assert len(unique(coord_id))==len(coord_id), unique(coord_id)
                 #i = searchsorted(self.coord_id, coord_id)
 
-            if size == 8:
-                print_cardi = print_card_8
-            elif is_double:
-                print_cardi = print_card_double
-            else:
-                print_cardi = print_card_16
+            #if size == 8:
+                #print_cardi = print_card_8
+            #elif is_double:
+                #print_cardi = print_card_double
+            #else:
+                #print_cardi = print_card_16
 
             if len(self.coords) > 1:
                 bdf_file.write('$COORDs\n')
             for cid, coord in iteritems(self.coords):
                 if cid > 0:
-                    if cid in self._comments:
-                        bdf_file.write(self._comments[cid])
-                    if coord.type in ['CORD1R', 'CORD1C', 'CORD1S']:
-                        card = [coord.type, cid, coord.g1, coord.g2, coord.g3]
-                    else:
-                        card = [coord.type, cid, coord.rid] + list(coord.e1) + list(coord.e2) + list(coord.e3)
-                    bdf_file.write(print_cardi(card))
+                    #if cid in self._comments:
+                        #bdf_file.write(self._comments[cid])
+                    #if coord.type in ['CORD1R', 'CORD1C', 'CORD1S']:
+                        #card = [coord.type, cid, coord.g1, coord.g2, coord.g3]
+                    #else:
+                        #card = [coord.type, cid, coord.rid] + list(coord.e1) + list(coord.e2) + list(coord.e3)
+                    #bdf_file.write(print_cardi(card))
+                    bdf_file.write(coord.write_card(size=size))
 
     def __repr__(self):
         return self.__str__()
@@ -159,9 +160,9 @@ class Coord(VectorizedCard):
         assert ncards is not None or card_count is not None
         if ncards is None:
             ncards = array([card_count[name]
-                      for name in ['CORD1R', 'CORD1C', 'CORD1S',
-                                   'CORD2R', 'CORD2C', 'CORD2S']
-                      if name in card_count], dtype='int32').sum() + 1
+                            for name in ['CORD1R', 'CORD1C', 'CORD1S',
+                                         'CORD2R', 'CORD2C', 'CORD2S']
+                            if name in card_count], dtype='int32').sum() + 1
         #ncards += 1
         self.model.log.debug('nCOORDcards = %s' % ncards)
         #print('ncards coord = %s' % ncards)
@@ -221,7 +222,7 @@ class Coord(VectorizedCard):
             self.model.log.debug('cid = %s' % cid)
             self.coord_id[i] = cid
             self.Type[i] = coord.Type
-            if coord.isResolved:
+            if coord.is_resolved:
                 self.is_resolved[i] = True
                 self.origin[i, :] = coord.origin
                 self.T[i, :, :] = vstack([
@@ -283,7 +284,9 @@ class Coord(VectorizedCard):
                 else:
                     #print('rid=%s is not resolved' % rid)
                     cids_to_resolve2.append(cid)
-            assert len(cids_to_resolve) < cids_to_resolve2, 'circular reference...\ncoord_ids=%s\n' % (cids_to_resolve2)
+            if len(cids_to_resolve) >= cids_to_resolve2:
+                msg = 'circular reference...\ncoord_ids=%s\n' % (cids_to_resolve2)
+                raise RuntimeError(msg)
             cids_to_resolve = cids_to_resolve2
             #break
         #print('is_resolved = %s' % self.is_resolved)
@@ -328,7 +331,7 @@ class Coord(VectorizedCard):
         #print("  coord.i = %s" % coord.i)
         #print("  coord.j = %s" % coord.j)
         #print("  coord.k = %s" % coord.k)
-        coord.isResolved = True
+        coord.is_resolved = True
         self.is_resolved[i] = True
         self.origin[i] = e[0]
         #print('i** = %s' % i)
@@ -445,7 +448,7 @@ class Coord(VectorizedCard):
         #print("  coord.i = %s" % coord.i)
         #print("  coord.j = %s" % coord.j)
         #print("  coord.k = %s" % coord.k)
-        coord.isResolved = True
+        coord.is_resolved = True
         self.is_resolved[i] = True
         self.origin[i] = e1
         self.T[i, :, :] = vstack([coord.i, coord.j, coord.k])

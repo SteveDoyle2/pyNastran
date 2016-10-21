@@ -5,19 +5,19 @@ class AddCard(BDFAttributes):
     def __init__(self):
         pass
 
-    def add_AERO(self, aero):
+    def add_aero(self, aero):
         # only one AERRO card allowed
         assert self.aero is None, '\naero=\n%s old=\n%s' % (aero, self.aero)
         self.aero = aero
         #self._type_to_id_map[aero.type].append(key)
 
-    def add_AEROS(self, aeros):
+    def add_aeros(self, aeros):
         # only one AERROS card allowed
         assert self.aeros is None, '\naeros=\n%s old=\n%s' % (aeros, self.aeros)
         self.aeros = aeros
         #self._type_to_id_map[aeros.type].append(key)
 
-    def add_AEFACT(self, aefact, allow_overwrites=False):
+    def add_aefact(self, aefact, allow_overwrites=False):
         key = aefact.sid
         if key in self.aefacts and not allow_overwrites:
             if not aefact._is_same_card(self.aefacts[key]):
@@ -27,14 +27,14 @@ class AddCard(BDFAttributes):
             self.aefacts[key] = aefact
             self._type_to_id_map[aefact.type].append(key)
 
-    def add_AELIST(self, aelist):
+    def add_aelist(self, aelist):
         key = aelist.sid
         assert key not in self.aelists, 'AELIST.sid=%s\nold=\n%snew=\n%s' % (key, self.aelists[key], aelist)
         assert key >= 0
         self.aelists[key] = aelist
         self._type_to_id_map[aelist.type].append(key)
 
-    def add_AELINK(self, aelink):
+    def add_aelink(self, aelink):
         key = aelink.id
         assert key >= 0
         if key not in self.aelinks:
@@ -43,20 +43,20 @@ class AddCard(BDFAttributes):
         self._type_to_id_map[aelink.type].append(key)
         #assert key not in self.aestats,'\naestat=%s oldAESTAT=\n%s' %(aestat,self.aestats[key])
 
-    def add_AECOMP(self, aecomp):
+    def add_aecomp(self, aecomp):
         key = aecomp.name
         assert key not in self.aecomps, '\naecomp=\n%s oldAECOMP=\n%s' % (aecomp, self.aecomps[key])
         self.aecomps[key] = aecomp
         self._type_to_id_map[aecomp.type].append(key)
 
-    def add_AEPARM(self, aeparam):
+    def add_aeparm(self, aeparam):
         key = aeparam.id
         assert key not in self.aeparams, '\naeparam=\n%s oldAEPARM=\n%s' % (aeparam, self.aeparams[key])
         assert key >= 0
         self.aeparams[key] = aeparam
         self._type_to_id_map[aeparam.type].append(key)
 
-    def add_AESTAT(self, aestat):
+    def add_aestat(self, aestat):
         key = aestat.id
         assert key not in self.aestats, '\naestat=\n%s old=\n%s' % (
             aestat, self.aestats[key])
@@ -64,7 +64,7 @@ class AddCard(BDFAttributes):
         self.aestats[key] = aestat
         self._type_to_id_map[aestat.type].append(key)
 
-    def add_AESURF(self, aesurf):
+    def add_aesurf(self, aesurf):
         key = aesurf.aesid
         assert key not in self.aesurf, '\naesurf=\n%s old=\n%s' % (
             aesurf, self.aesurf[key])
@@ -72,7 +72,7 @@ class AddCard(BDFAttributes):
         self.aesurf[key] = aesurf
         self._type_to_id_map[aesurf.type].append(key)
 
-    def add_AESURFS(self, aesurfs):
+    def add_aesurfs(self, aesurfs):
         key = aesurfs.aesid
         assert key not in self.aesurf, '\naesurfs=\n%s old=\n%s' % (
             aesurfs, self.aesurfs[key])
@@ -80,30 +80,30 @@ class AddCard(BDFAttributes):
         self.aesurfs[key] = aesurfs
         self._type_to_id_map[aesurfs.type].append(key)
 
-    def add_CSSCHD(self, csschd):
+    def add_csschd(self, csschd):
         key = csschd.sid
         assert key not in self.csschds, '\nCSSCHD=\n%s old=\n%s' % (csschd, self.csschds[key])
         assert key >= 0
         self.csschds[key] = csschd
         self._type_to_id_map[csschd.type].append(key)
 
-    def add_CAERO(self, caero):
+    def add_caero(self, caero):
         key = caero.eid
-        assert key not in self.caeros, '\ncaero=\n|%s| oldCAERO=\n|%s|' % (
+        assert key not in self.caeros, '\ncaero=\n|%s| old_caero=\n|%s|' % (
             caero, self.caeros[key])
         assert key > 0
         self.caeros[key] = caero
         self._type_to_id_map[caero.type].append(key)
 
-    def add_PAERO(self, paero):
+    def add_paero(self, paero):
         key = paero.pid
-        assert key not in self.paeros, '\npaero=\n|%s| oldPAERO=\n|%s|' % (
+        assert key not in self.paeros, '\npaero=\n|%s| old_paero=\n|%s|' % (
             paero, self.paeros[key])
         assert key > 0, 'paero.pid = %r' % (key)
         self.paeros[key] = paero
         self._type_to_id_map[paero.type].append(key)
 
-    def add_MONPNT(self, monitor_point):
+    def add_monpnt(self, monitor_point):
         key = monitor_point.name
         assert key not in self.monitor_points, '\nmonitor_point=\n%soldMNTPNT=\n%s' % (
             monitor_point, self.monitor_points[key])
@@ -130,7 +130,7 @@ class AddCard(BDFAttributes):
             self.methods[key] = method
             self._type_to_id_map[method.type].append(key)
 
-    def add_SPLINE(self, spline):
+    def add_spline(self, spline):
         assert spline.eid not in self.splines
         assert spline.eid > 0
         key = spline.eid
@@ -144,7 +144,7 @@ class AddCard(BDFAttributes):
         self.gusts[key] = gust
         self._type_to_id_map[gust.type].append(key)
 
-    def add_TRIM(self, trim, allow_overwrites=False):
+    def add_trim(self, trim, allow_overwrites=False):
         self.log.debug('add trim...')
         key = trim.sid
         if not allow_overwrites:
@@ -153,7 +153,7 @@ class AddCard(BDFAttributes):
         self.trims[key] = trim
         self._type_to_id_map[trim.type].append(key)
 
-    def add_DIVERG(self, diverg, allow_overwrites=False):
+    def add_diverg(self, diverg, allow_overwrites=False):
         key = diverg.sid
         if not allow_overwrites:
             assert key not in self.divergs, 'DIVERG=%s  old=\n%snew=\n%s' % (key, self.divergs[key], diverg)
@@ -161,27 +161,29 @@ class AddCard(BDFAttributes):
         self.divergs[key] = diverg
         self._type_to_id_map[diverg.type].append(key)
 
-    def add_FLUTTER(self, flutter):
+    def add_flutter(self, flutter):
         key = flutter.sid
         assert key not in self.flutters, 'FLUTTER=%s old=\n%snew=\n%s' % (key, self.flutters[key], flutter)
         assert key > 0
         self.flutters[key] = flutter
         self._type_to_id_map[flutter.type].append(key)
 
-    def add_FLFACT(self, flfact):
+    def add_flfact(self, flfact):
         key = flfact.sid
         #assert key not in self.flfacts
         assert key > 0
         self.flfacts[key] = flfact  # set id...
         self._type_to_id_map[flfact.type].append(key)
 
-    def add_PARAM(self, param, allow_overwrites=False):
+    def add_param(self, param, allow_overwrites=False):
         key = param.key
         if key in self.params and not allow_overwrites:
             if not param._is_same_card(self.params[key]):
-                #assert param.key not in self.params,'key=%s param=%s oldPARAM=%s' %(key,param,self.params[key])
-                self.log.warning('key=%s param=%s oldPARAM=%s'
-                                 % (key, param, self.params[key]))
+                #if param.key in self.params:
+                    #msg = 'key=%s param=%s old_param=%s' % (key, param, self.params[key])
+                    #raise KeyError(msg)
+                self.log.warning('key=%s param=%s old_param=%s' %
+                                 (key, param, self.params[key]))
                 self.params[key] = param
         else:
             self.params[key] = param
@@ -202,5 +204,5 @@ class AddCard(BDFAttributes):
         self.plotels[key] = elem
         self._type_to_id_map[elem.type].append(key)
 
-    def add_MKAERO(self, mkaero):
+    def add_mkaero(self, mkaero):
         self.mkaeros.append(mkaero)

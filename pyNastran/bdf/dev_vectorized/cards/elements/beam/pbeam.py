@@ -60,8 +60,10 @@ class PBEAM(Property):
         self.model = model
         self.n = 0
 
-    def allocate(self, ncards):
-        pass
+    def allocate(self, card_count):
+        ncards = card_count[self.type]
+        if ncards:
+            pass
 
     def add(self, card, comment=''):
         prop = vPBEAM(card, comment=comment)

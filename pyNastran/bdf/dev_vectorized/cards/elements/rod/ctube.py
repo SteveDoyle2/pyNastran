@@ -26,15 +26,17 @@ class CTUBE(RodElement):
         """
         RodElement.__init__(self, model)
 
-    def allocate(self, ncards):
-        self.model.log.debug('  nCTUBE=%s' % ncards)
-        self.n = ncards
-        #: Element ID
-        self.element_id = zeros(ncards, 'int32')
-        #: Property ID
-        self.property_id = zeros(ncards, 'int32')
-        #: Node IDs
-        self.node_ids = zeros((ncards, 2), 'int32')
+    def allocate(self, card_count):
+        ncards = card_count[self.type]
+        if ncards:
+            self.model.log.debug('  nCTUBE=%s' % ncards)
+            self.n = ncards
+            #: Element ID
+            self.element_id = zeros(ncards, 'int32')
+            #: Property ID
+            self.property_id = zeros(ncards, 'int32')
+            #: Node IDs
+            self.node_ids = zeros((ncards, 2), 'int32')
 
     def add(self, card, comment=''):
         self.model.log.debug('  adding CTUBE')

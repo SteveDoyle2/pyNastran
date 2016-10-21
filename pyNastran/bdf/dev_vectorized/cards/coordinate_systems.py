@@ -11,8 +11,8 @@ All coordinate cards are defined in this file.  This includes:
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six.moves import zip, range
 from math import sqrt, degrees, radians, atan2, acos, sin, cos
+from six.moves import zip, range
 
 from numpy import array, cross, dot, transpose, zeros, vstack
 from numpy.linalg import norm
@@ -20,8 +20,8 @@ from numpy.linalg import norm
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.utils.dev import list_print
-from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_blank,
-    double_or_blank, string_or_blank)
+from pyNastran.bdf.bdf_interface.assign_type import (
+    integer, integer_or_blank, double_or_blank, string_or_blank)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
@@ -61,7 +61,7 @@ class Coord(BaseCard):
             self._comment = comment
 
         #: have all the transformation matricies been determined
-        self.isResolved = False
+        self.is_resolved = False
         self.cid = None
         self.e1 = None
         self.e2 = None
@@ -103,7 +103,7 @@ class Coord(BaseCard):
         if self.cid == 0:
             return p
 
-        if not self.isResolved:
+        if not self.is_resolved:
             if isinstance(self.rid, int) and self.rid != 0:
                 raise RuntimeError("BDF has not been cross referenced.")
             if self.type in ['CORD2R', 'CORD2C', 'CORD2S']:
@@ -248,7 +248,7 @@ class Cord2x(Coord):
         :param card: a BDFCard object
         :param data: a list analogous to the card
         """
-        self.isResolved = False
+        self.is_resolved = False
         Coord.__init__(self, card, data, comment)
 
         if card:
@@ -290,7 +290,7 @@ class Cord2x(Coord):
         self.k = None
 
         if self.rid == 0:
-            self.isResolved = True
+            self.is_resolved = True
             self.setup()
 
     def _verify(self):
@@ -348,7 +348,7 @@ class Cord1x(Coord):
 
     def __init__(self, card, nCoord, data, comment):
         Coord.__init__(self, card, data, comment)
-        self.isResolved = False
+        self.is_resolved = False
         if nCoord is not None:
             assert nCoord in (0, 1), 'nCoord=%r' % (nCoord)
             nCoord *= 4  # 0 if the 1st coord, 4 if the 2nd

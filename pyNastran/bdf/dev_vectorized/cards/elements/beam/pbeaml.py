@@ -41,8 +41,10 @@ class PBEAML(object):
         #obj.comments = obj.comments[index]
         return obj
 
-    def allocate(self, ncards):
-        pass
+    def allocate(self, card_count):
+        ncards = card_count[self.type]
+        if ncards:
+            pass
 
     def slice_by_index(self, i):
         i = asarray(i)

@@ -2,9 +2,10 @@
 This file defines:
   - WriteMesh
 """
+from __future__ import print_function
 from six import string_types, iteritems, StringIO
-from pyNastran.bdf.utils import print_filename
 from numpy import array, unique, concatenate, intersect1d, where
+from pyNastran.bdf.utils import print_filename
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 
@@ -485,8 +486,8 @@ class WriteMesh(object):
             msg = ['$DYNAMIC\n']
             for (unused_id, method) in sorted(iteritems(self.methods)):
                 msg.append(method.write_card(size, is_double))
-            for (unused_id, cMethod) in sorted(iteritems(self.cMethods)):
-                msg.append(cMethod.write_card(size, is_double))
+            for (unused_id, cmethod) in sorted(iteritems(self.cMethods)):
+                msg.append(cmethod.write_card(size, is_double))
             for (unused_id, darea) in sorted(iteritems(self.dareas)):
                 msg.append(darea.write_card(size, is_double))
             for (unused_id, nlparm) in sorted(iteritems(self.nlparms)):

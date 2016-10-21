@@ -1198,17 +1198,20 @@ class CAERO1(BaseCard):
         msg = ''
         is_failed = False
         if self.nspan == 0 and self.lspan == 0:
-            msg += 'NSPAN or LSPAN must be greater than 0; nspan=%r nlspan=%s\n' % (self.nspan, self.lspan)
+            msg += 'NSPAN or LSPAN must be greater than 0; nspan=%r nlspan=%s\n' % (
+                self.nspan, self.lspan)
             is_failed = True
         if self.nspan != 0 and self.lspan != 0:
             msg += 'Either NSPAN or LSPAN must 0; nspan=%r nlspan=%s\n' % (self.nspan, self.lspan)
             is_failed = True
 
         if self.nchord == 0 and self.lchord == 0:
-            msg += 'NCHORD or LCHORD must be greater than 0; nchord=%r lchord=%s\n' % (self.nchord, self.lchord)
+            msg += 'NCHORD or LCHORD must be greater than 0; nchord=%r lchord=%s\n' % (
+                self.nchord, self.lchord)
             is_failed = True
         if self.nchord != 0 and self.lchord != 0:
-            msg += 'Either NCHORD or LCHORD must 0; nchord=%r lchord=%s\n' % (self.nchord, self.lchord)
+            msg += 'Either NCHORD or LCHORD must 0; nchord=%r lchord=%s\n' % (
+                self.nchord, self.lchord)
             is_failed = True
         if is_failed:
             msg += str(self)

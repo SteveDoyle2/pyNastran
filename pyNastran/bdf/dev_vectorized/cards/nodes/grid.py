@@ -145,8 +145,12 @@ class GRID(VectorizedCard):
         seid0 = self.model.grdset.seid
 
         i = self.i
+        nid = integer(card, 1, 'nid')
+        if comment:
+            self._comments[nid]
+
         #: Node ID
-        self.node_id[i] = integer(card, 1, 'nid')
+        self.node_id[i] = nid
 
         #: Grid point coordinate system
         self.cp[i] = integer_or_blank(card, 2, 'cp', cp0)
@@ -296,11 +300,18 @@ class GRID(VectorizedCard):
         """
         Write the BDF cards
 
-        :param bdf_file: a file object
-        :param i: the indicies (default=None -> all)
-        :param size: the field width (8/16)
-        :param is_double: is this double precision (default=False)
-        :param write_header: should the card marker be written
+        Parameters
+        ----------
+        bdf_file : file
+            a file object
+        i : List[int] (default=None -> all)
+            the indicies
+        size : int; default=8
+            the field width (8/16)
+        is_double: bool; default=False
+            is this double precision
+        write_header : bool; default=True
+            should the card marker be written
         """
         if i is None:
             i = slice(None, None)
@@ -337,23 +348,21 @@ class GRID(VectorizedCard):
             else:
                 if is_double:
                     for (nid, cp, xyz, cd, ps, seid) in zip(self.node_id, Cp, self.xyz[i, :], Cd, Ps, Seid):
-                        msg = (('%-8s%16i%16s%16s%16s\n'
-                               '%-8s%16s%16s%16s%16s\n' % ('GRID*', nid,
-                                cp,
+                        msg = (('GRID*   %16i%16s%16s%16s\n'
+                                '*       %16s%16s%16s%16s\n' % (
+                                nid, cp,
                                 print_scientific_double(xyz[0]),
                                 print_scientific_double(xyz[1]),
-                                '*',
                                 print_scientific_double(xyz[2]),
                                 cd, ps, seid))).rstrip() + '\n'
                         bdf_file.write(msg)
                 else:
                     for (nid, cp, xyz, cd, ps, seid) in zip(self.node_id, Cp, self.xyz[i, :], Cd, Ps, Seid):
-                        msg = (('%-8s%16i%16s%16s%16s\n'
-                               '%-8s%16s%16s%16s%16s\n' % ('GRID*', nid,
-                                cp,
+                        msg = (('GRID*   %16i%16s%16s%16s\n'
+                                '*       %-8s%16s%16s%16s%16s\n' % (
+                                nid, cp,
                                 print_float_16(xyz[0]),
                                 print_float_16(xyz[1]),
-                                '*',
                                 print_float_16(xyz[2]),
                                 cd, ps, seid))).rstrip() + '\n'
                         bdf_file.write(msg)

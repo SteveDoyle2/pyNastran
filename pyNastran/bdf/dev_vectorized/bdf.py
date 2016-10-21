@@ -43,7 +43,7 @@ from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 from pyNastran.bdf.dev_vectorized.bdf_interface2.write_mesh import WriteMesh
 from pyNastran.bdf.dev_vectorized.bdf_interface2.cross_reference import CrossReference
 from pyNastran.bdf.dev_vectorized.bdf_interface2.add_card import AddCard
-
+from pyNastran.bdf.field_writer_16 import print_field_16
 
 # old cards
 from pyNastran.bdf.cards.params import PARAM
@@ -253,11 +253,13 @@ class BDF(AddCard, CrossReference, WriteMesh):
 
             'PELAS', 'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
 
+            'CROD', 'PROD', 'CONROD',
+            'CTUBE', 'PTUBE',
+
             'PBAR', 'PBARL', 'CBAR',
+            'CBEAM',
 
-            'PTUBE', 'CTUBE',
-
-            'PSHEAR','CSHEAR',
+            'PSHEAR', 'CSHEAR',
 
             'CQUAD4', 'CTRIA3', 'CQUAD8', 'CTRIA6',
             'PSHELL', 'PCOMP', 'PCOMPG',
@@ -907,9 +909,9 @@ class BDF(AddCard, CrossReference, WriteMesh):
 
         self._dmig_temp = defaultdict(list)
 
-    def pop_parse_errors(self):
-        """raises an error if there are parsing errors"""
-        return
+    #def pop_parse_errors(self):
+        #"""raises an error if there are parsing errors"""
+        #return
         #if self._stop_on_parsing_error:
             #if self._iparse_errors == 1 and self._nparse_errors == 0:
                 #raise
@@ -1009,9 +1011,9 @@ class BDF(AddCard, CrossReference, WriteMesh):
                 #print('%s' % msg)
                 #raise DuplicateIDsError(msg.rstrip())
 
-    def pop_xref_errors(self):
-        """raises an error if there are cross-reference errors"""
-        return
+    #def pop_xref_errors(self):
+        #"""raises an error if there are cross-reference errors"""
+        #return
         #is_error = False
         #if self._stop_on_xref_error:
             #if self._ixref_errors == 1 and self._nxref_errors == 0:
@@ -1468,7 +1470,7 @@ class BDF(AddCard, CrossReference, WriteMesh):
             #'EPOINT' : (EPOINTs, self.add_epoint),
             #'POINT' : (POINT, self.add_point),
 
-            'PARAM' : (PARAM, self.add_PARAM),
+            'PARAM' : (PARAM, self.add_param),
 
             #'CORD2R' : (CORD2R, self.add_coord),
             #'CORD2C' : (CORD2C, self.add_coord),
@@ -1685,48 +1687,48 @@ class BDF(AddCard, CrossReference, WriteMesh):
             #'PCONVM' : (PCONVM, self.add_convection_property),
 
             # aero
-            'AECOMP' : (AECOMP, self.add_AECOMP),
-            'AEFACT' : (AEFACT, self.add_AEFACT),
-            'AELINK' : (AELINK, self.add_AELINK),
-            'AELIST' : (AELIST, self.add_AELIST),
-            'AEPARM' : (AEPARM, self.add_AEPARM),
-            'AESTAT' : (AESTAT, self.add_AESTAT),
-            'AESURF' : (AESURF, self.add_AESURF),
-            'AESURFS' : (AESURFS, self.add_AESURFS),
+            'AECOMP' : (AECOMP, self.add_aecomp),
+            'AEFACT' : (AEFACT, self.add_aefact),
+            'AELINK' : (AELINK, self.add_aelink),
+            'AELIST' : (AELIST, self.add_aelist),
+            'AEPARM' : (AEPARM, self.add_aeparm),
+            'AESTAT' : (AESTAT, self.add_aestat),
+            'AESURF' : (AESURF, self.add_aesurf),
+            'AESURFS' : (AESURFS, self.add_aesurfs),
 
-            'CAERO1' : (CAERO1, self.add_CAERO),
-            'CAERO2' : (CAERO2, self.add_CAERO),
-            'CAERO3' : (CAERO3, self.add_CAERO),
-            'CAERO4' : (CAERO4, self.add_CAERO),
-            'CAERO5' : (CAERO5, self.add_CAERO),
+            'CAERO1' : (CAERO1, self.add_caero),
+            'CAERO2' : (CAERO2, self.add_caero),
+            'CAERO3' : (CAERO3, self.add_caero),
+            'CAERO4' : (CAERO4, self.add_caero),
+            'CAERO5' : (CAERO5, self.add_caero),
 
-            'PAERO1' : (PAERO1, self.add_PAERO),
-            'PAERO2' : (PAERO2, self.add_PAERO),
-            'PAERO3' : (PAERO3, self.add_PAERO),
-            'PAERO4' : (PAERO4, self.add_PAERO),
-            'PAERO5' : (PAERO5, self.add_PAERO),
+            'PAERO1' : (PAERO1, self.add_paero),
+            'PAERO2' : (PAERO2, self.add_paero),
+            'PAERO3' : (PAERO3, self.add_paero),
+            'PAERO4' : (PAERO4, self.add_paero),
+            'PAERO5' : (PAERO5, self.add_paero),
 
-            'SPLINE1' : (SPLINE1, self.add_SPLINE),
-            'SPLINE2' : (SPLINE2, self.add_SPLINE),
-            'SPLINE3' : (SPLINE3, self.add_SPLINE),
-            'SPLINE4' : (SPLINE4, self.add_SPLINE),
-            'SPLINE5' : (SPLINE5, self.add_SPLINE),
+            'SPLINE1' : (SPLINE1, self.add_spline),
+            'SPLINE2' : (SPLINE2, self.add_spline),
+            'SPLINE3' : (SPLINE3, self.add_spline),
+            'SPLINE4' : (SPLINE4, self.add_spline),
+            'SPLINE5' : (SPLINE5, self.add_spline),
 
             # SOL 144
-            'AEROS' : (AEROS, self.add_AEROS),
-            'TRIM' : (TRIM, self.add_TRIM),
-            'DIVERG' : (DIVERG, self.add_DIVERG),
+            'AEROS' : (AEROS, self.add_aeros),
+            'TRIM' : (TRIM, self.add_trim),
+            'DIVERG' : (DIVERG, self.add_diverg),
 
             # SOL 145
-            'AERO' : (AERO, self.add_AERO),
-            'FLUTTER' : (FLUTTER, self.add_FLUTTER),
-            'FLFACT' : (FLFACT, self.add_FLFACT),
-            'MKAERO1' : (MKAERO1, self.add_MKAERO),
-            'MKAERO2' : (MKAERO2, self.add_MKAERO),
+            'AERO' : (AERO, self.add_aero),
+            'FLUTTER' : (FLUTTER, self.add_flutter),
+            'FLFACT' : (FLFACT, self.add_flfact),
+            'MKAERO1' : (MKAERO1, self.add_mkaero),
+            'MKAERO2' : (MKAERO2, self.add_mkaero),
 
             'GUST' : (GUST, self.add_gust),
-            'CSSCHD' : (CSSCHD, self.add_CSSCHD),
-            'MONPNT1' : (MONPNT1, self.add_MONPNT),
+            'CSSCHD' : (CSSCHD, self.add_csschd),
+            'MONPNT1' : (MONPNT1, self.add_monpnt),
 
             #'NLPARM' : (NLPARM, self.add_NLPARM),
             #'NLPCI' : (NLPCI, self.add_NLPCI),
@@ -1863,11 +1865,11 @@ class BDF(AddCard, CrossReference, WriteMesh):
     def _prepare_bctset(self, card, card_obj, comment=''):
         """adds a GRDSET"""
         card = BCTSET.add_card(card_obj, comment=comment, sol=self.sol)
-        self.add_BCTSET(card)
+        self.add_bctset(card)
 
     def _prepare_grdset(self, card, card_obj, comment=''):
         """adds a GRDSET"""
-        self.gridSet = GRDSET.add_card(card_obj, comment=comment)
+        self.grdset = GRDSET.add_card(card_obj, comment=comment)
 
     def _prepare_cdamp4(self, card, card_obj, comment=''):
         """adds a CDAMP4"""
@@ -1879,32 +1881,32 @@ class BDF(AddCard, CrossReference, WriteMesh):
     def _prepare_convm(self, card, card_obj, comment=''):
         """adds a CONVM"""
         boundary_condition = CONVM.add_card(card_obj, comment=comment)
-        self.add_thermal_BC(boundary_condition, boundary_condition.eid)
+        self.add_thermal_bc(boundary_condition, boundary_condition.eid)
 
     def _prepare_conv(self, card, card_obj, comment=''):
         """adds a CONV"""
         boundary_condition = CONV.add_card(card_obj, comment=comment)
-        self.add_thermal_BC(boundary_condition, boundary_condition.eid)
+        self.add_thermal_bc(boundary_condition, boundary_condition.eid)
 
     def _prepare_radm(self, card, card_obj, comment=''):
         """adds a RADM"""
         boundary_condition = RADM.add_card(card, comment=comment)
-        self.add_thermal_BC(boundary_condition, boundary_condition.radmid)
+        self.add_thermal_bc(boundary_condition, boundary_condition.radmid)
 
     def _prepare_radbc(self, card, card_obj, comment=''):
         """adds a RADBC"""
         boundary_condition = RADBC(card_obj, comment=comment)
-        self.add_thermal_BC(boundary_condition, boundary_condition.nodamb)
+        self.add_thermal_bc(boundary_condition, boundary_condition.nodamb)
 
     def _prepare_tempd(self, card, card_obj, comment=''):
         """adds a TEMPD"""
-        self.add_TEMPD(TEMPD.add_card(card_obj, 0, comment=comment))
+        self.add_tempd(TEMPD.add_card(card_obj, 0, comment=comment))
         if card_obj.field(3):
-            self.add_TEMPD(TEMPD.add_card(card_obj, 1, comment=''))
+            self.add_tempd(TEMPD.add_card(card_obj, 1, comment=''))
             if card_obj.field(5):
-                self.add_TEMPD(TEMPD.add_card(card_obj, 2, comment=''))
+                self.add_tempd(TEMPD.add_card(card_obj, 2, comment=''))
                 if card_obj.field(7):
-                    self.add_TEMPD(TEMPD.add_card(card_obj, 3, comment=''))
+                    self.add_tempd(TEMPD.add_card(card_obj, 3, comment=''))
 
     def _add_doptprm(self, doptprm, comment=''):
         """adds a DOPTPRM"""
@@ -1913,7 +1915,7 @@ class BDF(AddCard, CrossReference, WriteMesh):
     def _prepare_dequatn(self, card, card_obj, comment=''):
         """adds a DEQATN"""
         if hasattr(self, 'test_deqatn') or 1:
-            self.add_DEQATN(DEQATN.add_card(card_obj, comment=comment))
+            self.add_deqatn(DEQATN.add_card(card_obj, comment=comment))
         else:
             if comment:
                 self.rejects.append([comment])
@@ -1928,14 +1930,14 @@ class BDF(AddCard, CrossReference, WriteMesh):
         if name == 'UACCEL':  # special DMIG card
             if field2 == 0:
                 card = DMIG_UACCEL.add_card(card_obj, comment=comment)
-                self.add_DMIG(card)
+                self.add_dmig(card)
             else:
                 self._dmig_temp[name].append((card_obj, comment))
         else:
             field2 = integer_or_string(card_obj, 2, 'flag')
             if field2 == 0:
                 card = DMIG(card_obj, comment=comment)
-                self.add_DMIG(card)
+                self.add_dmig(card)
             else:
                 self._dmig_temp[name].append((card_obj, comment))
 
@@ -2015,15 +2017,15 @@ class BDF(AddCard, CrossReference, WriteMesh):
     def _prepare_darea(self, card, card_obj, comment=''):
         """adds a DAREA"""
         class_instance = DAREA.add_card(card_obj, comment=comment)
-        self.add_DAREA(class_instance)
+        self.add_darea(class_instance)
         if card_obj.field(5):
             class_instance = DAREA.add_card(card_obj, icard=1, comment=comment)
-            self.add_DAREA(class_instance)
+            self.add_darea(class_instance)
 
     def _prepare_dphase(self, card, card_obj, comment=''):
         """adds a DPHASE"""
         class_instance = DPHASE.add_card(card_obj, comment=comment)
-        self.add_DPHASE(class_instance)
+        self.add_dphase(class_instance)
         #if card_obj.field(5):
             #print('card_obj = ', card_obj)
             #class_instance = DPHASE(card_obj, icard=1, comment=comment)
@@ -2057,7 +2059,7 @@ class BDF(AddCard, CrossReference, WriteMesh):
         """adds a CORD2x"""
         #print('card = %r' % card)
         #print('card_obj =', card_obj)
-        self.coords.add_cord2x(card, card_obj)
+        self.coords.add_cord2x(card, card_obj, comment)
 
     def add_card(self, card_lines, card_name, comment='', is_list=True, has_none=True):
         """
@@ -2278,12 +2280,12 @@ class BDF(AddCard, CrossReference, WriteMesh):
                 #tpl/cc451.bdf
                 #raise
                 # NameErrors should be caught
-                self._iparse_errors += 1
+                #self._iparse_errors += 1
                 #self.log.error(card_obj)
-                var = traceback.format_exception_only(type(exception), exception)
-                self._stored_parse_errors.append((card, var))
-                if self._iparse_errors > self._nparse_errors:
-                    self.pop_parse_errors()
+                #var = traceback.format_exception_only(type(exception), exception)
+                #self._stored_parse_errors.append((card, var))
+                #if self._iparse_errors > self._nparse_errors:
+                    #self.pop_parse_errors()
                 #raise
             #except AssertionError as exception:
                 #self.log.error(card_obj)
@@ -2291,19 +2293,19 @@ class BDF(AddCard, CrossReference, WriteMesh):
         elif card_name in self._card_parser_prepare:
             add_card_function = self._card_parser_prepare[card_name]
             try:
-                add_card_function(card, card_obj)
+                add_card_function(card, card_obj, comment)
             except (SyntaxError, AssertionError, KeyError, ValueError) as exception:
                 raise
                 # WARNING: Don't catch RuntimeErrors or a massive memory leak can occur
                 #tpl/cc451.bdf
                 #raise
                 # NameErrors should be caught
-                self._iparse_errors += 1
-                self.log.error(card_obj)
-                var = traceback.format_exception_only(type(exception), exception)
-                self._stored_parse_errors.append((card, var))
-                if self._iparse_errors > self._nparse_errors:
-                    self.pop_parse_errors()
+                #self._iparse_errors += 1
+                #self.log.error(card_obj)
+                #var = traceback.format_exception_only(type(exception), exception)
+                #self._stored_parse_errors.append((card, var))
+                #if self._iparse_errors > self._nparse_errors:
+                    #self.pop_parse_errors()
             #except AssertionError as exception:
                 #self.log.error(card_obj)
                 #raise
@@ -3241,14 +3243,16 @@ class BDF(AddCard, CrossReference, WriteMesh):
                     if card_name not in card_name_to_obj_mapper:
                         self.log.debug('card_name=%r is not vectorized' % card_name)
                         for comment, card_lines in card:
-                            self.add_card(card_lines, card_name, comment=comment, is_list=False, has_none=False)
+                            self.add_card(card_lines, card_name, comment=comment,
+                                          is_list=False, has_none=False)
                         continue
 
                     obj = card_name_to_obj_mapper[card_name]
                     if obj is None:
                         self.log.debug('card_name=%r is not vectorized, but should be' % card_name)
                         for comment, card_lines in card:
-                            self.add_card(card_lines, card_name, comment=comment, is_list=False, has_none=False)
+                            self.add_card(card_lines, card_name, comment=comment,
+                                          is_list=False, has_none=False)
                         continue
 
                     self._increase_card_count(card_name, ncards)

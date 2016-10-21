@@ -1,4 +1,4 @@
-# pylint: disable=W0212,C0103,W0633,W0611,W0201,C0301,R0915,R0912
+## pylint: disable=W0212,C0103,W0633,W0611,W0201,C0301,R0915,R0912
 """
 Main BDF class.  Defines:
   - BDF
@@ -141,7 +141,7 @@ from pyNastran.bdf.cards.params import PARAM
 from pyNastran.bdf.case_control_deck import CaseControlDeck
 from .bdf_methods import BDFMethods
 from .bdf_interface.get_methods import GetMethods
-from .bdf_interface.add_card import AddCard
+from .bdf_interface2.add_card import AddCard
 from .bdf_interface.utils import wipe_empty_fields
 from .bdf_interface.assign_type import interpret_value
 from .bdf_interface.write_mesh import WriteMesh
@@ -379,7 +379,7 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
             'AERO', 'AEROS', 'GUST', 'FLUTTER', 'FLFACT', 'MKAERO1', 'MKAERO2',
             'AEFACT', 'AELINK', 'AELIST', 'AEPARAM', 'AESTAT', 'AESURF', 'AESURFS',
             'CAERO1', 'CAERO2', 'CAERO3', 'CAERO4', # 'CAERO5',
-            'PAERO1', 'PAERO2',  'PAERO3', # 'PAERO4', 'PAERO5',
+            'PAERO1', 'PAERO2', 'PAERO3', # 'PAERO4', 'PAERO5',
             'SPLINE1', 'SPLINE2', 'SPLINE4', 'SPLINE5',
             #'SPLINE3', 'SPLINE6', 'SPLINE7',
             'TRIM',
@@ -2804,29 +2804,29 @@ class BDF(BDFMethods, GetMethods, AddCard, WriteMesh, XRefMesh):
                                       is_list=False, has_none=False)
                         #self._add_card_object(card_name, card_lines, comment=comment)
         else:
-            asf
-            for card in cards:
-                card_name, comment, card_lines = card
-                if card_name is None:
-                    msg = 'card_name = %r\n' % card_name
-                    msg += 'card_lines = %s' % card_lines
-                    raise RuntimeError(msg)
-                if self.is_reject(card_name):
-                    if card_name not in self.card_count:
-                        if ' ' in card_name:
-                            msg = (
-                                'No spaces allowed in card name %r.  '
-                                'Should this be a comment?\n%s%s' % (
-                                    card_name, comment, card_lines))
-                            raise RuntimeError(msg)
-                        if card_name in ['SUBCASE ', 'CEND']:
-                            raise RuntimeError('No executive/case control deck was defined.')
-                        self.log.info('    rejecting card_name = %s' % card_name)
-                    self._increase_card_count(card_name)
-                    self.rejects.append([comment] + card_lines)
-                else:
-                    self.add_card(card_lines, card_name, comment=comment,
-                                  is_list=False, has_none=False)
+            raise NotImplementedError()
+            #for card in cards:
+                #card_name, comment, card_lines = card
+                #if card_name is None:
+                    #msg = 'card_name = %r\n' % card_name
+                    #msg += 'card_lines = %s' % card_lines
+                    #raise RuntimeError(msg)
+                #if self.is_reject(card_name):
+                    #if card_name not in self.card_count:
+                        #if ' ' in card_name:
+                            #msg = (
+                                #'No spaces allowed in card name %r.  '
+                                #'Should this be a comment?\n%s%s' % (
+                                    #card_name, comment, card_lines))
+                            #raise RuntimeError(msg)
+                        #if card_name in ['SUBCASE ', 'CEND']:
+                            #raise RuntimeError('No executive/case control deck was defined.')
+                        #self.log.info('    rejecting card_name = %s' % card_name)
+                    #self._increase_card_count(card_name)
+                    #self.rejects.append([comment] + card_lines)
+                #else:
+                    #self.add_card(card_lines, card_name, comment=comment,
+                                  #is_list=False, has_none=False)
 
     def _parse_dynamic_syntax(self, key):
         """

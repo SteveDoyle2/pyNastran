@@ -1,5 +1,6 @@
 # pylint: disable=C0103,C0111,E1101
 from __future__ import print_function
+import os
 from six import iteritems
 from six.moves import zip
 
@@ -18,7 +19,6 @@ from six.moves import zip
 #VTK_HEXAHEDRON = 12
 #VTK_QUADRATIC_HEXAHEDRON = 25
 
-import os
 from numpy import zeros, abs, mean, where, nan_to_num, amax, amin, array
 from numpy import nan as NaN
 from numpy.linalg import norm
@@ -188,8 +188,8 @@ class NastranIO(NastranIO_xref):
             for (eid, element) in sorted(iteritems(model.elements)):
                 if (isinstance(element, (LineElement, SpringElement)) or
                     element.type in elements_no_mass):
-                        nodeIDs = element.node_ids
-                        if None in nodeIDs:
+                        node_ids = element.node_ids
+                        if None in node_ids:
                             nsprings += 1
 
         points2.SetNumberOfPoints(nCAerosPoints * 4 + nCONM2 + nsprings)
@@ -237,7 +237,7 @@ class NastranIO(NastranIO_xref):
 
                     #print("element", element)
                     #print("element.nid", element.nid)
-                    #print('nodeIDs', model.nodes.keys())
+                    #print('node_ids', model.nodes.keys())
                     xyz = element.nid.get_position()
                     c = element.Centroid()
                     d = norm(xyz-c)
@@ -856,7 +856,7 @@ class NastranIO(NastranIO_xref):
         for subcase_id in sucaseIDs:
             if subcase_id == 0:
                 continue
-            load_case_id, options = model.case_control_deck.get_subcase_parameter(subcase_id, 'LOAD')
+            load_case_id = model.case_control_deck.get_subcase_parameter(subcase_id, 'LOAD')[0]
             loadCase = model.loads[load_case_id]
 
             # account for scale factors
@@ -890,7 +890,8 @@ class NastranIO(NastranIO_xref):
                         for el in load.eids:
                             pressures[eids.index(el.eid)] += p
                     #elif elem.type in ['CTETRA', 'CHEXA', 'CPENTA']:
-                        #A, centroid, normal = elem.getFaceAreaCentroidNormal(load.g34.nid, load.g1.nid)
+                        #A, centroid, normal = elem.getFaceAreaCentroidNormal(
+                            #load.g34.nid, load.g1.nid)
                         #r = centroid - p
 
             # if there is no applied pressure, don't make a plot
@@ -969,8 +970,10 @@ class NastranIO(NastranIO_xref):
                     'constraint_forces', 'spcForces', 'mpcForces',
 
                     #'gridPointForces',
-                    'stress', 'solidStress', 'plateStress', 'compositePlateStress', 'barStress', 'rodStress',
-                    #'strain','solidStrain', 'plateStrain', 'compositePlateStrain', 'barStrain', 'rodStrain',
+                    'stress', 'solidStress', 'plateStress', 'compositePlateStress',
+                    'barStress', 'rodStress',
+                    #'strain','solidStrain', 'plateStrain', 'compositePlateStrain',
+                    #'barStrain', 'rodStrain',
 
                     # untested
                     'loadVectors',
@@ -979,8 +982,10 @@ class NastranIO(NastranIO_xref):
                 ]
             else:
                 desired_results = [
-                    'stress', 'solidStress', 'plateStress', 'compositePlateStress', 'barStress', 'rodStress',
-                    #'strain','solidStrain', 'plateStrain', 'compositePlateStrain', 'barStrain', 'rodStrain',
+                    'stress', 'solidStress', 'plateStress', 'compositePlateStress',
+                    'barStress', 'rodStress',
+                    #'strain','solidStrain', 'plateStrain', 'compositePlateStrain',
+                    #'barStrain', 'rodStrain',
                 ]
             for result in desired_results:
                 if result in all_results:
