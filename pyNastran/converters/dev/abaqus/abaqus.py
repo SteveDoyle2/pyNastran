@@ -4,6 +4,7 @@ Defines the Abaqus class
 from __future__ import print_function
 import copy
 import numpy as np
+from pyNastran.utils.log import get_logger2
 
 def read_abaqus(abaqus_inp_filename, log=None, debug=False):
     """reads an abaqus model"""
@@ -41,7 +42,7 @@ def _clean_lines(lines):
 
 class Abaqus(object):
     """defines the abaqus reader"""
-    def __init__(self, log=None, debug=False):
+    def __init__(self, log=None, debug=True):
         self.debug = debug
         self.parts = {}
         self.boundaries = {}
@@ -52,6 +53,7 @@ class Abaqus(object):
         self.steps = {}
         self.heading = None
         self.preprint = None
+        self.log = get_logger2(log, debug)
 
     def read_abaqus_inp(self, abaqus_inp_filename):
         """reads an abaqus model"""
@@ -67,7 +69,7 @@ class Abaqus(object):
         while iline < nlines:
             # not handling comments right now
             line0 = lines[iline].strip().lower()
-            print(iline, line0)
+            self.log.debug('%s, %s' % (iline, line0))
             #sline = line.split('**', 1)
             #if len(sline) == 1:
                 #line0 = sline[0]
@@ -100,7 +102,7 @@ class Abaqus(object):
                     iline, line0, part_name, part = self.read_part(lines, iline, line0, word)
                     self.parts[part_name] = part
                     if self.debug:
-                        print('-------------------------------------')
+                        self.log.debug('-------------------------------------')
                 elif 'section controls' in word:
                     # TODO: skips header parsing
                     iline += 1
@@ -109,10 +111,10 @@ class Abaqus(object):
                     while not line0.startswith('*'):
                         data_lines.append(line0.split(','))
                         iline += 1
-                        try:
-                            line0 = lines[iline].strip().lower()
-                        except IndexError:
-                            return
+                        line0 = lines[iline].strip().lower()
+                        self.log.debug('line = %r' % line0)
+                    iline -= 1
+                    line0 = lines[iline].strip().lower()
 
                 elif word.startswith('amplitude'):
                     param_map = get_param_map(word)
@@ -141,12 +143,13 @@ class Abaqus(object):
                 #elif 'include' in word:
                     #pass
                 elif word.startswith('material'):
+                    self.log.debug('start of material...')
                     iline, line0, material = self.read_material(lines, iline, word)
                     self.materials[material.name] = material
-                    print('end of material')
+                    self.log.debug('end of material')
 
                 elif word.startswith('step'):
-                    print('---------step-----------')
+                    self.log.debug('---------step-----------')
                     iline, line0 = self.read_step(lines, iline, line0)
                 elif word.startswith('initial conditions'):
                     # TODO: skips header parsing
@@ -157,6 +160,54 @@ class Abaqus(object):
                         data_lines.append(line0.split(','))
                         iline += 1
                         line0 = lines[iline].strip().lower()
+                elif word.startswith('surface interaction'):
+                    key = 'surface interaction'
+                    data = []
+                    while '*' not in line0:
+                        sline = line0.split(',')
+                        iline += 1
+                        line0 = lines[iline].strip().lower()
+                    self.log.debug(line0)
+                elif word.startswith('friction'):
+                    key = 'friction'
+                    data = []
+                    while '*' not in line0:
+                        sline = line0.split(',')
+                        iline += 1
+                        line0 = lines[iline].strip().lower()
+                    self.log.debug(line0)
+                elif word.startswith('surface behavior'):
+                    key = 'surface behavior'
+                    data = []
+                    while '*' not in line0:
+                        sline = line0.split(',')
+                        iline += 1
+                        line0 = lines[iline].strip().lower()
+                    self.log.debug(line0)
+                elif word.startswith('contact damping'):
+                    key = 'contact damping'
+                    data = []
+                    while '*' not in line0:
+                        sline = line0.split(',')
+                        iline += 1
+                        line0 = lines[iline].strip().lower()
+                    self.log.debug(line0)
+                elif word.startswith('contact pair'):
+                    key = 'contact pair'
+                    data = []
+                    while '*' not in line0:
+                        sline = line0.split(',')
+                        iline += 1
+                        line0 = lines[iline].strip().lower()
+                    self.log.debug(line0)
+                #elif word.startswith('contact output'):
+                    #key = 'contact output'
+                    #data = []
+                    #while '*' not in line0:
+                        #sline = line0.split(',')
+                        #iline += 1
+                        #line0 = lines[iline].strip().lower()
+                    #self.log.debug(line0)
 
                 else:
                     raise NotImplementedError(word)
@@ -166,10 +217,10 @@ class Abaqus(object):
             iline += 1
 
             if self.debug:
-                print('')
+                self.log.debug('')
 
         for part_name, part in sorted(self.parts.items()):
-            print(part)
+            self.log.info(part)
 
     def read_material(self, lines, iline, word):
         """reads a Material card"""
@@ -181,7 +232,7 @@ class Abaqus(object):
         line0 = lines[iline].strip().lower()
         word = line0.strip('*').lower()
         allowed_words = ['elastic']
-        unallowed_words = ['material', 'step', 'boundary', 'amplitude']
+        unallowed_words = ['material', 'step', 'boundary', 'amplitude', 'surface interaction']
         #print('  line0 =', line0)
         iline += 1
         line0 = lines[iline].strip('\n\r\t, ').lower()
@@ -190,11 +241,12 @@ class Abaqus(object):
         sections = {}
         while word not in unallowed_words:
             data_lines = []
+            self.log.debug('mat_word = %r' % word)
             if word.startswith('elastic'):
                 key = 'elastic'
                 sword = word.split(',')
 
-                #print('  matword =', sword)
+                self.log.debug('  matword = %s' % sword)
                 if len(sword) == 1:
                     # elastic
                     assert len(sword) in [1, 2], sword
@@ -206,12 +258,14 @@ class Abaqus(object):
                     sline = line0.split(',')
                     if mat_type == 'traction':
                         assert len(sline) == 3, sline
-                        print('  traction material')
+                        self.log.debug('  traction material')
+                    else:
+                        raise NotImplementedError(mat_type)
                 iline += 1
             elif word.startswith('plastic'):
                 key = 'plastic'
                 sword = word.split(',')
-                print('  matword =', sword)
+                self.log.debug('  matword = %s' % sword)
                 if len(sword) == 1:
                     # elastic
                     assert len(sline) in [1, 2], sline
@@ -225,24 +279,60 @@ class Abaqus(object):
                 iline += 1
             elif word.startswith('damage initiation'):
                 key = 'damage initiation'
-                #print('  damage0 ', line0)
+                #self.log.debug('  damage0 %s' % line0)
                 sline = line0.split(',')
-                print(sline)
+                self.log.debug(sline)
                 assert len(sline) == 3, sline
                 iline += 1
             elif word.startswith('damage evolution'):
                 key = 'damage evolution'
-                #print('  damage_e ', line0)
-                sline = line0.split(',')
-                assert len(sline) == 3, sline
-                iline += 41
-                line0 = lines[iline].strip().lower()
-                print(line0)
+                #self.log.debug('  damage_e %s' % line0)
+                data = []
+                while '*' not in line0:
+                    sline = line0.split(',')
+                    assert len(sline) == 3, sline
+                    iline += 1
+                    line0 = lines[iline].strip().lower()
+                self.log.debug(line0)
             elif word == 'damage stabilization':
                 key = 'damage stabilization'
                 sline = line0.split(',')
                 assert len(sline) == 1, sline
                 iline += 1
+
+            #elif word.startswith('surface interaction'):
+                #key = 'surface interaction'
+                #data = []
+                #while '*' not in line0:
+                    #sline = line0.split(',')
+                    #iline += 1
+                    #line0 = lines[iline].strip().lower()
+                #self.log.debug(line0)
+            #elif word.startswith('friction'):
+                #key = 'friction'
+                #data = []
+                #while '*' not in line0:
+                    #sline = line0.split(',')
+                    #iline += 1
+                    #line0 = lines[iline].strip().lower()
+                #self.log.debug(line0)
+            #elif word.startswith('surface behavior'):
+                #key = 'surface behavior'
+                #data = []
+                #while '*' not in line0:
+                    #sline = line0.split(',')
+                    #iline += 1
+                    #line0 = lines[iline].strip().lower()
+                #self.log.debug(line0)
+            #elif word.startswith('contact damping'):
+                #key = 'contact damping'
+                #data = []
+                #while '*' not in line0:
+                    #sline = line0.split(',')
+                    #iline += 1
+                    #line0 = lines[iline].strip().lower()
+                #self.log.debug(line0)
+
             elif word == 'depvar':
                 key = 'depvar'
                 sline = line0.split(',')
@@ -285,7 +375,8 @@ class Abaqus(object):
                 raise NotImplementedError(print_data(lines, iline, word, 'is this an unallowed word for *Material?\n'))
             if key in sections:
                 msg = 'key=%r already defined for Material name=%r' % (key, name)
-                raise RuntimeError(msg)
+                self.log.warning(msg)
+                #raise RuntimeError(msg)
             sections[key] = data_lines
 
             line0 = lines[iline].strip('\n\r\t, ').lower()
@@ -293,13 +384,13 @@ class Abaqus(object):
 
             iline += 1
             line0 = lines[iline].strip('\n\r\t, ').lower()
-            #print('  lineB =', line0)
-            #print('  wordB =', word)
+            #self.log.debug('  lineB = %r' % line0)
+            #self.log.debug('  wordB = %r' % word)
 
             is_broken = False
             for unallowed_word in unallowed_words:
                 if word.startswith(unallowed_word):
-                    print('  breaking on %r' % unallowed_word)
+                    self.log.debug('  breaking on %r' % unallowed_word)
                     is_broken = True
                     break
             if is_broken:
@@ -362,7 +453,7 @@ class Abaqus(object):
         name_slot = sline2[0]
         assert 'name' in name_slot, name_slot
         part_name = name_slot.split('=', 1)[1]
-        print('part_name = %r' % part_name)
+        self.log.info('part_name = %r' % part_name)
         #asdf
 
         iline += 1
@@ -425,7 +516,7 @@ class Abaqus(object):
                 assert etype in ['r2d2', 'cpe3', 'cpe4', 'cpe4r', 'coh2d4', 'c3d10h', 'cohax4',
                                  'cax3', 'cax4r'], etype
                 if self.debug:
-                    print('etype = %r' % etype)
+                    self.log.debug('etype = %r' % etype)
 
                 #iline += 1
                 line0 = lines[iline].strip().lower()
@@ -493,12 +584,11 @@ class Abaqus(object):
         element_sets = []
 
         if self.debug:
-            print('part_name = %r' % part_name)
-        part = Part(part_name, nids, nodes, element_types, node_sets, element_sets)
+            self.log.debug('part_name = %r' % part_name)
+        part = Part(part_name, nids, nodes, element_types, node_sets, element_sets, self.log)
         return iline, line0, part_name, part
 
-    @staticmethod
-    def read_step(lines, iline, line0):
+    def read_step(self, lines, iline, line0):
         """reads a step object"""
         # TODO: skips header parsing
 
@@ -538,7 +628,7 @@ class Abaqus(object):
                 assert len(sline) == 3, sline
                 iline += 1
             elif word.startswith('dynamic'):
-                print('  line_sline =', line0)
+                self.log.debug('  line_sline = %r' % line0)
                 #iline += 1
                 #line0 = lines[iline].strip().lower()
                 sline = line0.split(',')
@@ -573,6 +663,20 @@ class Abaqus(object):
                     element_output += sline
                     iline += 1
                     line0 = lines[iline].strip().lower()
+            elif word.startswith('contact output'):
+                contact_output = []
+                while '*' not in line0:
+                    sline = line0.split(',')
+                    element_output += sline
+                    iline += 1
+                    line0 = lines[iline].strip().lower()
+            elif word.startswith('boundary'):
+                node_output = []
+                while '*' not in line0:
+                    sline = line0.split(',')
+                    node_output += sline
+                    iline += 1
+                    line0 = lines[iline].strip().lower()
             else:
                 raise NotImplementedError('word = %r' % word)
             line0 = lines[iline].strip().lower()
@@ -605,8 +709,8 @@ class Material(object):
     """a Material object is a series of nodes & elements (of various types)"""
     def __init__(self, name, sections):
         self.name = name
-        self.density = sections['density']
-
+        if 'density' in sections:
+            self.density = sections['density']
         if 'depvar' in sections:
             self.depvar = sections['depvar']
         if 'user_material' in sections:
@@ -615,9 +719,10 @@ class Material(object):
 
 class Part(object):
     """a Part object is a series of nodes & elements (of various types)"""
-    def __init__(self, name, nids, nodes, element_types, node_sets, element_sets):
+    def __init__(self, name, nids, nodes, element_types, node_sets, element_sets, log):
         """creates a Part object"""
         self.name = name
+        self.log = log
 
         self.nids = np.array(nids, dtype='int32')
         nnodes = len(self.nids)
@@ -729,7 +834,7 @@ class Part(object):
         if self.r2d2_eids is not None:
             ieid = np.where(eid == self.r2d2_eids)[0]
             #print('self.cpe3_eids =', self.cpe3_eids)
-            print('ieid_r2d2 = %s' % ieid, len(ieid))
+            self.log.info('ieid_r2d2 = %s, %s' % (ieid, len(ieid)))
             if len(ieid):
                 ieid = ieid[0]
                 etype = 'r2d2'
@@ -740,7 +845,7 @@ class Part(object):
         if self.cpe3_eids is not None:
             ieid = np.where(eid == self.cpe3_eids)[0]
             #print('self.cpe3_eids =', self.cpe3_eids)
-            print('ieid_cpe3 = %s' % ieid, len(ieid))
+            self.log.debug('ieid_cpe3 = %s, %s' % (ieid, len(ieid)))
             if len(ieid):
                 ieid = ieid[0]
                 etype = 'cpe3'
@@ -770,38 +875,38 @@ class Part(object):
         if self.coh2d4_eids is not None:
             ieid = np.where(eid == self.coh2d4_eids)[0]
             #print('self.coh2d4_eids =', self.coh2d4_eids)
-            print('ieid_coh2d4 = %s' % ieid, len(ieid))
+            self.log.debug('ieid_coh2d4 = %s, %s' % (ieid, len(ieid)))
             if len(ieid):
                 ieid = ieid[0]
                 etype = 'coh2d4'
                 elem = self.coh2d4[ieid, :]
                 return etype, ieid, elem
             else:
-                print('ieid = %s' % ieid)
+                self.log.debug('ieid = %s' % ieid)
 
         if self.coh2d4_eids is not None:
             ieid = np.where(eid == self.coh2d4_eids)[0]
             #print('self.coh2d4_eids =', self.coh2d4_eids)
-            print('ieid_coh2d4 = %s' % ieid, len(ieid))
+            print('ieid_coh2d4 = %s, %s' % (ieid, len(ieid)))
             if len(ieid):
                 ieid = ieid[0]
                 etype = 'coh2d4'
                 elem = self.coh2d4[ieid, :]
                 return etype, ieid, elem
             else:
-                print('ieid = %s' % ieid)
+                self.log.debug('ieid = %s' % ieid)
 
         if self.cohax4_eids is not None:
             ieid = np.where(eid == self.cohax4_eids)[0]
             #print('self.cohax4_eids =', self.cohax4_eids)
-            print('ieid_cohax4 = %s' % ieid, len(ieid))
+            print('ieid_cohax4 = %s, %s' % (ieid, len(ieid)))
             if len(ieid):
                 ieid = ieid[0]
                 etype = 'cohax4'
                 elem = self.cohax4[ieid, :]
                 return etype, ieid, elem
             else:
-                print('ieid = %s' % ieid)
+                self.log.debug('ieid = %s' % ieid)
         return None, None, None
 
     def __repr__(self):

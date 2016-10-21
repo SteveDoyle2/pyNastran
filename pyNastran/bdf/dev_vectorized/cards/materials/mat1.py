@@ -1,12 +1,13 @@
 from __future__ import print_function
 from six.moves import zip
-from numpy import zeros, where, arange, searchsorted
+import numpy as np
+#from numpy import zeros, where, arange, searchsorted
 
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.field_writer_16 import print_card_16
-from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_blank,
-    double_or_blank)
+from pyNastran.bdf.bdf_interface.assign_type import (
+    integer, integer_or_blank, double_or_blank)
 
 #from pyNastran.bdf.dev_vectorized.cards.vectorized_card import VectorizedCard
 from pyNastran.bdf.dev_vectorized.cards.materials.material import Material
@@ -27,23 +28,35 @@ class MAT1(Material):
     type = 'MAT1'
     def __init__(self, model):
         Material.__init__(self, model)
+        self.material_id = []
+        self.rho = []
+        self.E = []
+        self.G = []
+        self.nu = []
+        self.a = []
+        self.TRef = []
+        self.ge = []
+        self.St = []
+        self.Sc = []
+        self.Ss = []
+        self.mcsid = []
 
     def allocate(self, card_count):
         ncards = card_count[self.type]
         if ncards:
             float_fmt = self.model.float_fmt
-            self.material_id = zeros(ncards, 'int32')
-            self.rho = zeros(ncards, float_fmt)
-            self.E = zeros(ncards, float_fmt)
-            self.G = zeros(ncards, float_fmt)
-            self.nu = zeros(ncards, float_fmt)
-            self.a = zeros(ncards, float_fmt)
-            self.TRef = zeros(ncards, float_fmt)
-            self.ge = zeros(ncards, float_fmt)
-            self.St = zeros(ncards, float_fmt)
-            self.Sc = zeros(ncards, float_fmt)
-            self.Ss = zeros(ncards, float_fmt)
-            self.mcsid = zeros(ncards, 'int32')
+            self.material_id = np.zeros(ncards, 'int32')
+            self.rho = np.zeros(ncards, float_fmt)
+            self.E = np.zeros(ncards, float_fmt)
+            self.G = np.zeros(ncards, float_fmt)
+            self.nu = np.zeros(ncards, float_fmt)
+            self.a = np.zeros(ncards, float_fmt)
+            self.TRef = np.zeros(ncards, float_fmt)
+            self.ge = np.zeros(ncards, float_fmt)
+            self.St = np.zeros(ncards, float_fmt)
+            self.Sc = np.zeros(ncards, float_fmt)
+            self.Ss = np.zeros(ncards, float_fmt)
+            self.mcsid = np.zeros(ncards, 'int32')
             self.n = ncards
 
     def add(self, card, comment=''):
@@ -63,6 +76,11 @@ class MAT1(Material):
         self.Sc[i] = double_or_blank(card, 10, 'Sc', 0.0)
         self.Ss[i] = double_or_blank(card, 11, 'Ss', 0.0)
         self.mcsid[i] = integer_or_blank(card, 12, 'Mcsid', 0)
+        #if mid == 5:
+        print(card)
+        print('i=%-2s; E=%s; G=%s; nu=%s\n' % (self.i, self.E[self.i], self.G[self.i], self.nu[self.i]))
+        #print(self.print_card(self.i) + '\n')
+        #aaa
         assert len(card) <= 13, 'len(MAT1 card) = %i\ncard=%s' % (len(card), card)
         assert self.material_id[i] > 0, self.material_id
         self.i += 1
@@ -71,20 +89,25 @@ class MAT1(Material):
     def build(self):
         if self.n:
             self.model.log.debug('MAT1.materialsA = %s' % self.material_id)
+            print('G =', self.G)
+            print('nu =', self.nu)
             i = self.material_id.argsort()
-            self.material_id = self.material_id[i]
-            self.E = self.E[i]
-            self.G = self.G[i]
-            self.rho = self.rho[i]
-            self.a = self.a[i]
-            self.TRef = self.TRef[i]
-            self.ge = self.ge[i]
-            self.St = self.St[i]
-            self.Sc = self.Sc[i]
-            self.Ss = self.Ss[i]
-            self.mcsid = self.mcsid[i]
-            self.model.log.debug('MAT1.materialsB = %s' % self.material_id)
-            assert self.material_id.min() > 0, 'MAT1.materials = %s' % self.material_id
+            if not np.array_equal(np.arange(i.size), i):
+                self.material_id = self.material_id[i]
+                self.E = self.E[i]
+                self.G = self.G[i]
+                self.rho = self.rho[i]
+                self.a = self.a[i]
+                self.TRef = self.TRef[i]
+                self.ge = self.ge[i]
+                self.St = self.St[i]
+                self.Sc = self.Sc[i]
+                self.Ss = self.Ss[i]
+                self.mcsid = self.mcsid[i]
+                self.model.log.debug('MAT1.materialsB = %s' % self.material_id)
+                assert self.material_id.min() > 0, 'MAT1.materials = %s' % self.material_id
+                print('G =', self.G)
+                print('nu =', self.nu)
 
     def get_D_matrix(self):
         """
@@ -134,14 +157,17 @@ class MAT1(Material):
         i = self.get_material_index_by_material_id(material_id)
         return self.G[i]
 
-    def write_card(self, bdf_file, size=8, material_id=None):
+    def write_card(self, bdf_file, material_id=None, size=8):
         if self.n:
             if material_id is None:
-                i = arange(self.n)
+                i = np.arange(self.n)
+            elif isinstance(material_id, int):
+                i = [material_id]
             else:
-                i = searchsorted(self.material_id, material_id)
+                i = np.searchsorted(self.material_id, material_id)
 
-            assert material_id is None
+            print('imat1 = ', i)
+            #assert material_id is None, 'i=%i' % i
             #self.model.log.debug"n = %s" % self.n)
             #self.model.log.debug"mids MAT1 %s" % self.material_id)
 
@@ -164,8 +190,8 @@ class MAT1(Material):
             bdf_file.write(fmt_card(card_b))
 
             for (mid, E, G, nu, rho, a, TRef, ge, st, sc, ss, mcsid) in zip(
-                 self.material_id[i], self.E[i], self.G[i], self.nu[i], Rho, A,
-                 TRef, ge, St, Sc, Ss, self.mcsid[i]):
+                    self.material_id[i], self.E[i], self.G[i], self.nu[i], Rho, A,
+                    TRef, ge, St, Sc, Ss, self.mcsid[i]):
                 if mid in self._comments:
                     bdf_file.write(self._comments[mid])
 
@@ -184,11 +210,11 @@ class MAT1(Material):
                 bdf_file.write(fmt_card(card))
 
     def repr_fields(self, material_id):
-        i = where(self.material_id == material_id)[0]
+        i = np.where(self.material_id == material_id)[0]
         i = i[0]
         card = ['MAT1', self.material_id[i], self.E[i], self.G[i], self.nu[i],
-                        self.rho[i], self.a[i], self.TRef[i], self.ge[i],
-                        self.St[i], self.Sc[i], self.Ss[i], self.mcsid[i]]
+                self.rho[i], self.a[i], self.TRef[i], self.ge[i],
+                self.St[i], self.Sc[i], self.Ss[i], self.mcsid[i]]
         return card
 
     def _verify(self, xref=True):

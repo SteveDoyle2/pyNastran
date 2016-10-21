@@ -78,8 +78,12 @@ class Coord(VectorizedCard):
             else:
                 print_cardi = print_card_16
 
+            if len(self.coords) > 1:
+                bdf_file.write('$COORDs\n')
             for cid, coord in iteritems(self.coords):
                 if cid > 0:
+                    if cid in self._comments:
+                        bdf_file.write(self._comments[cid])
                     if coord.type in ['CORD1R', 'CORD1C', 'CORD1S']:
                         card = [coord.type, cid, coord.g1, coord.g2, coord.g3]
                     else:

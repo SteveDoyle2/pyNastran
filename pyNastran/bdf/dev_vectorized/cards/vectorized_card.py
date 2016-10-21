@@ -64,6 +64,12 @@ class VectorizedCard(object):
         self.write_card(f)
         return f.getvalue().rstrip()
 
+    def print_card(self, i, size=8):
+        #i = self._validate_slice(i)
+        f = StringIO()
+        self.write_card(f, i, size=size)
+        return f.getvalue().rstrip()
+
     def write_card(self, bdf_file, size=8, is_double=False):
         raise NotImplementedError(self.type)
 
