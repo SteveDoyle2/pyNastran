@@ -2,10 +2,10 @@ from __future__ import print_function
 import unittest
 
 import os
-from numpy import array, allclose, vstack
+from numpy import array, allclose
 import pyNastran
 from pyNastran.bdf.dev_vectorized.bdf import BDF
-from pyNastran.utils import object_methods
+#from pyNastran.utils import object_methods
 
 rootpath = pyNastran.__path__[0]
 testpath = os.path.join(rootpath, 'bdf', 'test', 'unit')

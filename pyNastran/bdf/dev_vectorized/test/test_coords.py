@@ -1,6 +1,6 @@
 from __future__ import print_function
 from six.moves import StringIO
-from numpy import array, allclose, array_equal
+from numpy import array, allclose
 import unittest
 
 from pyNastran.bdf.dev_vectorized.bdf import BDF

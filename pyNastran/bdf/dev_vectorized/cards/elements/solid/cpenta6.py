@@ -209,10 +209,10 @@ class CPENTA6(SolidElement):
 
     def get_face_nodes(self, nid, nid_opposite):
         raise NotImplementedError()
-        nids = self.node_ids[:4]
-        indx = nids.index(nid_opposite)
-        nids.pop(indx)
-        return nids
+        #nids = self.node_ids[:4]
+        #indx = nids.index(nid_opposite)
+        #nids.pop(indx)
+        #return nids
 
     def write_card(self, bdf_file, size=8, element_id=None):
         if self.n:

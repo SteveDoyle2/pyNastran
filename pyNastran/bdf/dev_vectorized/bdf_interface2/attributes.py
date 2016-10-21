@@ -53,6 +53,9 @@ from pyNastran.bdf.dev_vectorized.cards.elements.shell.ctria3 import CTRIA3
 from pyNastran.bdf.dev_vectorized.cards.elements.shell.ctria6 import CTRIA6
 from pyNastran.bdf.dev_vectorized.cards.elements.shell.cquad8 import CQUAD8
 #from pyNastran.bdf.dev_vectorized.cards.elements.shell.cquad import CQUAD
+#from pyNastran.bdf.dev_vectorized.cards.elements.shell.cquadx import CQUADX
+#from pyNastran.bdf.dev_vectorized.cards.elements.shell.cquad9 import CQUAD9
+#from pyNastran.bdf.dev_vectorized.cards.elements.shell.ctriax import CTRIAX
 from pyNastran.bdf.dev_vectorized.cards.elements.shell.pshell import PSHELL
 from pyNastran.bdf.dev_vectorized.cards.elements.shell.pcomp import PCOMP
 from pyNastran.bdf.dev_vectorized.cards.elements.shell.pcompg import PCOMPG
@@ -71,7 +74,6 @@ from pyNastran.bdf.dev_vectorized.cards.elements.solid.chexa20 import CHEXA20
 from pyNastran.bdf.dev_vectorized.cards.elements.mass.mass import Mass
 from pyNastran.bdf.dev_vectorized.cards.elements.mass.conm1 import CONM1
 from pyNastran.bdf.dev_vectorized.cards.elements.mass.conm2 import CONM2
-
 #from pyNastran.bdf.dev_vectorized.cards.elements.mass.pmass import PMASS
 #from pyNastran.bdf.dev_vectorized.cards.elements.mass.cmass1 import CMASS1
 #from pyNastran.bdf.dev_vectorized.cards.elements.mass.cmass2 import CMASS2

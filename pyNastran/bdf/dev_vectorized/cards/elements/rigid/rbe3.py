@@ -1,7 +1,7 @@
 from six import iteritems, string_types
 from six.moves import zip, range
 from itertools import count
-from numpy import argsort, array, zeros, unique, searchsorted, asarray, int64, where
+from numpy import array, zeros, unique, searchsorted, asarray, int64, where
 
 from pyNastran.bdf.bdf_interface.assign_type import (double_or_blank,
     components, components_or_blank, integer_double_or_blank, blank, integer)
@@ -89,7 +89,7 @@ class RBE3(object):
 
     def allocate(self, ncards):
         self.n = ncards
-        float_fmt = self.model.float_fmt
+        #float_fmt = self.model.float_fmt
 
         #: Element identification number
         self.element_id = zeros(ncards, 'int32')

@@ -42,12 +42,12 @@ class PLOAD2(object):
 
     def __mul__(self, value):
         raise NotImplementedError()
-        f = PLOAD2(self.model)
-        f.load_id = self.load_id
-        f.element_id = self.element_id
-        f.p = self.p[i]
-        f.n = self.n
-        return f
+        #f = PLOAD2(self.model)
+        #f.load_id = self.load_id
+        #f.element_id = self.element_id
+        #f.p = self.p[i]
+        #f.n = self.n
+        #return f
 
     def __rmul__(self, value):
         return self.__mul__(value)

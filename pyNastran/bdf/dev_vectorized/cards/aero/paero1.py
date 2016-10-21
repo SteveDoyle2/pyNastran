@@ -1,6 +1,6 @@
 from __future__ import print_function
 from six.moves import range, zip
-from numpy import array, where, searchsorted, arange, zeros
+from numpy import searchsorted, arange, zeros
 from pyNastran.bdf.dev_vectorized.cards.vectorized_card import VectorizedCard
 from pyNastran.bdf.field_writer_8 import print_card_8
 #from pyNastran.bdf.field_writer_16 import print_card_16

@@ -1,4 +1,4 @@
-from six import iteritems
+#from six import iteritems
 from numpy import hstack, zeros, where, searchsorted, argsort, full, nan, unique
 
 

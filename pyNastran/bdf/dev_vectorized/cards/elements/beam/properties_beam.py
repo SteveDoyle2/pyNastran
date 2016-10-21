@@ -1,5 +1,4 @@
-from pyNastran.bdf.dev_vectorized.cards.elements.beam.pbeam import PBEAM
-from pyNastran.bdf.dev_vectorized.cards.elements.beam.pbeaml import PBEAML
+from __future__ import print_function
 
 class PropertiesBeam(object):
     def __init__(self, model):

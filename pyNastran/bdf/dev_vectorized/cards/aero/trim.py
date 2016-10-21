@@ -1,6 +1,5 @@
 from six.moves import zip
 from itertools import count
-from numpy import array, pi, linspace
 
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16

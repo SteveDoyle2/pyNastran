@@ -1,6 +1,6 @@
 from six import iteritems
 from six.moves import StringIO
-from numpy import array, zeros, arange, unique, concatenate
+from numpy import array, zeros, unique
 
 from pyNastran.bdf.dev_vectorized.utils import slice_to_iter
 

@@ -368,45 +368,45 @@ class BDF(AddCard, CrossReference, WriteMesh):
         with open(obj_filename, 'w') as obj_file:
             dump(self, obj_file)
 
-    def load(self, obj_filename='model.obj'):
-        """
-        ..warning:: doesn't work right
-        """
-        #del self.log
-        #del self.spcObject
-        #del self.mpcObject
-        #lines = print(self.case_control_deck)
-        #self.case_control_lines = lines.split('\n')
-        #del self.case_control_deck
-        #self.uncross_reference()
-        #import types
-        with open(obj_filename, "r") as obj_file:
-            obj = load(obj_file)
+    #def load(self, obj_filename='model.obj'):
+        #"""
+        #..warning:: doesn't work right
+        #"""
+        ##del self.log
+        ##del self.spcObject
+        ##del self.mpcObject
+        ##lines = print(self.case_control_deck)
+        ##self.case_control_lines = lines.split('\n')
+        ##del self.case_control_deck
+        ##self.uncross_reference()
+        ##import types
+        #with open(obj_filename, "r") as obj_file:
+            #obj = load(obj_file)
 
-        keys_to_skip = [
-            'case_control_deck',
-            'log', #'mpcObject', 'spcObject',
-            'node_ids', 'coord_ids', 'element_ids', 'property_ids',
-            'material_ids', 'caero_ids', 'is_long_ids',
-            'nnodes', 'ncoords', 'nelements', 'nproperties',
-            'nmaterials', 'ncaeros',
+        #keys_to_skip = [
+            #'case_control_deck',
+            #'log', #'mpcObject', 'spcObject',
+            #'node_ids', 'coord_ids', 'element_ids', 'property_ids',
+            #'material_ids', 'caero_ids', 'is_long_ids',
+            #'nnodes', 'ncoords', 'nelements', 'nproperties',
+            #'nmaterials', 'ncaeros',
 
-            'point_ids', 'subcases',
-            '_card_parser', '_card_parser_b',
-        ]
-        for key in object_attributes(self, mode="all", keys_to_skip=keys_to_skip):
-            if key.startswith('__') and key.endswith('__'):
-                continue
-
-            #print('key =', key)
-            val = getattr(obj, key)
-            #print(key)
-            #if isinstance(val, types.FunctionType):
+            #'point_ids', 'subcases',
+            #'_card_parser', '_card_parser_b',
+        #]
+        #for key in object_attributes(self, mode="all", keys_to_skip=keys_to_skip):
+            #if key.startswith('__') and key.endswith('__'):
                 #continue
-            setattr(self, key, val)
 
-        self.case_control_deck = CaseControlDeck(self.case_control_lines, log=self.log)
-        self.log.debug('done loading!')
+            ##print('key =', key)
+            #val = getattr(obj, key)
+            ##print(key)
+            ##if isinstance(val, types.FunctionType):
+                ##continue
+            #setattr(self, key, val)
+
+        #self.case_control_deck = CaseControlDeck(self.case_control_lines, log=self.log)
+        #self.log.debug('done loading!')
 
     def replace_cards(self, replace_model):
         """
@@ -543,8 +543,8 @@ class BDF(AddCard, CrossReference, WriteMesh):
 
         #------------------------------------------------
         for key, loads in sorted(iteritems(self.loads)):
-            for load in loads:
-                load.validate()
+            for loadi in loads:
+                loadi.validate()
         for key, tic in sorted(iteritems(self.tics)):
             tic.validate()
         for key, dloads in sorted(iteritems(self.dloads)):
@@ -2459,8 +2459,8 @@ class BDF(AddCard, CrossReference, WriteMesh):
         for (lid, loads) in sorted(iteritems(self.loads)):
             msg.append('bdf.loads[%s]' % lid)
             groups_dict = {}
-            for load in loads:
-                groups_dict[load.type] = groups_dict.get(load.type, 0) + 1
+            for loadi in loads:
+                groups_dict[loadi.type] = groups_dict.get(loadi.type, 0) + 1
             for name, count_name in sorted(iteritems(groups_dict)):
                 msg.append('  %-8s %s' % (name + ':', count_name))
             msg.append('')
@@ -2469,8 +2469,8 @@ class BDF(AddCard, CrossReference, WriteMesh):
         for (lid, loads) in sorted(iteritems(self.dloads)):
             msg.append('bdf.dloads[%s]' % lid)
             groups_dict = {}
-            for load in loads:
-                groups_dict[load.type] = groups_dict.get(load.type, 0) + 1
+            for loadi in loads:
+                groups_dict[loadi.type] = groups_dict.get(loadi.type, 0) + 1
             for name, count_name in sorted(iteritems(groups_dict)):
                 msg.append('  %-8s %s' % (name + ':', count_name))
             msg.append('')
@@ -2913,7 +2913,7 @@ class BDF(AddCard, CrossReference, WriteMesh):
                         #msg += 'len(bdf_filename2) = %s' % len(bdf_filename2)
                         print(msg)
                         raise
-                        raise IOError(msg)
+                        #raise IOError(msg)
 
                     with self._open_file(bdf_filename2, basename=False) as bdf_file:
                         #print('bdf_file.name = %s' % bdf_file.name)
@@ -3570,4 +3570,4 @@ def _lines_to_decks(lines, i, punch):
 
 if __name__ == '__main__':  # pragma: no cover
     from pyNastran.bdf.test.test_bdf import main
-    #main()
+    main()

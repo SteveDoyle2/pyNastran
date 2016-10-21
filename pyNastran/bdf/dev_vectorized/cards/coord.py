@@ -1,7 +1,7 @@
 from __future__ import print_function, unicode_literals
 from six import iteritems, itervalues
 from six.moves import zip
-from numpy import (array, searchsorted, zeros, array, full,
+from numpy import (array, searchsorted, zeros, full,
                    nan, where, vstack, dot, cross, degrees, radians, arctan2,
                    cos, sin, arccos, hstack, eye, ndarray, arange, sqrt, unique,
                    transpose, asarray, isnan, array_equal)
@@ -11,9 +11,9 @@ from pyNastran.bdf.cards.coordinate_systems import (
     CORD1R, CORD1C, CORD1S,
     CORD2R, CORD2C, CORD2S)
 
-from pyNastran.bdf.field_writer_8 import print_card_8
-from pyNastran.bdf.field_writer_16 import print_card_16
-from pyNastran.bdf.field_writer_double import print_card_double
+#from pyNastran.bdf.field_writer_8 import print_card_8
+#from pyNastran.bdf.field_writer_16 import print_card_16
+#from pyNastran.bdf.field_writer_double import print_card_double
 from pyNastran.bdf.dev_vectorized.cards.vectorized_card import VectorizedCard
 
 

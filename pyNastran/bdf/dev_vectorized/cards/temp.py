@@ -82,7 +82,6 @@ class TEMP(object):
 
     def add(self, card, comment=''):
         self.load_id = integer(card, 1, 'load_id')
-
         self._comments.append(comment)
 
     def build(self):
@@ -93,16 +92,8 @@ class TEMP(object):
         if ncards:
             float_fmt = self.model.float_fmt
             self.nid = zeros(ncards, 'int32')
-            self.xyz = zeros((ncards, 3), float_fmt)
-            self.cp = zeros(ncards, 'int32')
-            self.cd = zeros(ncards, 'int32')
-            self.seid = zeros(ncards, 'int32')
-            self.ps = zeros(ncards, 'int32')
+            self.temp = zeros(ncards, float_fmt)
 
-            cp0 = self.model.grdset.cp
-            cd0 = self.model.grdset.cd
-            ps0 = self.model.grdset.ps
-            seid0 = self.model.grdset.seid
             for i, card in enumerate(cards):
                 #: Node ID
                 self.nid[i] = integer(card, 1, 'nid')
