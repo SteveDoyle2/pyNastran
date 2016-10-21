@@ -17,17 +17,17 @@ class PropertiesSolid(object):
         self.plsolid = model.plsolid
         self.n = 0
 
-    def allocate(self, card_count):
-        ptypes = self._get_types(nlimit=False)
-        for ptype in ptypes:
-            if ptype.type in card_count:
-                ptype.allocate(card_count[ptype.type])
-                del card_count[ptype.type]
+    #def allocate(self, card_count):
+        #ptypes = self._get_types(nlimit=False)
+        #for ptype in ptypes:
+            #if ptype.type in card_count:
+                #ptype.allocate(card_count[ptype.type])
+                #del card_count[ptype.type]
             #else:
                 #assert hasattr(etype, 'allocate'), '%s doesnt support allocate' % ptype.type
 
     def build(self):
-        #print "building solid properties"
+        self.model.log.debug("building solid properties")
         types = self._get_types(nlimit=False)
         for prop in types:
             if prop.n:

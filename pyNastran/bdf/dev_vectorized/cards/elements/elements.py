@@ -129,35 +129,56 @@ class Elements(object):
 
     def build(self):
         #print('elements')
-        etypes = self._get_element_types(nlimit=False)
-        ptypes = self._get_property_types(nlimit=False)
         self.n = 0
-        for elems in etypes:
-            #if elems is None:
-                #continue
-            if hasattr(elems, 'type'):
-                if elems.type in self.model.card_count:
-                    self.model.log.debug('building %s' % elems.__class__.__name__)
-            else:
-                #if elems.n:
-                self.model.log.debug('building %s' % elems.__class__.__name__)
-            elems.build()
-            self.nelements += elems.n
-            self.validate_nodes(elems)
-            #print(nids - grids[i])
+        self._build_elements()
+        self._build_properties()
 
-        for props in ptypes:
-            #if props is None:
-                #continue
-            if hasattr(props, 'type'):
-                if props.type in self.model.card_count:
+
+        old_build = False
+        if old_build:
+            etypes = self._get_element_types(nlimit=False)
+            ptypes = self._get_property_types(nlimit=False)
+
+            for elems in etypes:
+                #if elems is None:
+                    #continue
+                if hasattr(elems, 'type'):
+                    if elems.type in self.model.card_count:
+                        self.model.log.debug('building %s' % elems.__class__.__name__)
+                else:
+                    #if elems.n:
+                    self.model.log.debug('building %s' % elems.__class__.__name__)
+                elems.build()
+                self.nelements += elems.n
+                self.validate_nodes(elems)
+                #print(nids - grids[i])
+
+            for props in ptypes:
+                #if props is None:
+                    #continue
+                if hasattr(props, 'type'):
+                    if props.type in self.model.card_count:
+                        self.model.log.debug('building %s' % props.__class__.__name__)
+                else:
+                    #if props.n:
                     self.model.log.debug('building %s' % props.__class__.__name__)
-            else:
-                #if props.n:
-                self.model.log.debug('building %s' % props.__class__.__name__)
-            props.build()
-            self.nproperties += props.n
+                props.build()
+                self.nproperties += props.n
+        else:
+            etypes = self._get_element_types(nlimit=True)
+            ptypes = self._get_property_types(nlimit=True)
+            self.model.log.debug('etypes = %s' % etypes)
+            self.model.log.debug('ptypes = %s' % ptypes)
+            for elems in etypes:
+                #if elems.type in ['CONROD']:
+                    #self.nproperties += elems.n
+                self.nelements += elems.n
+                self.validate_nodes(elems)
+            for props in ptypes:
+                self.nproperties += props.n
+
         self.model.log.debug('finished building %s' % self.__class__.__name__)
+
         if self.nelements:
             eids = check_duplicate('element_id', etypes, self.model.log)
             self.element_ids = asarray(eids, dtype='int32')
@@ -602,6 +623,31 @@ class Elements(object):
                 self.model.log.debug('allocate %s' % ptype.__class__.__name__)
                 ptype.allocate(card_count)
                 #del card_count[ptype.type]
+
+    def _build_elements(self):
+        """builds the macro objects"""
+        etypes = [
+            #self.crod, self.conrod, self.ctube,
+            #self.cbar, self.cbeam,
+            #self.cshear,
+            self.mass,
+            self.elements_spring,
+            self.elements_shell,
+            self.elements_solid,
+        ]
+        for etype in etypes:
+            etype.build()
+
+    def _build_properties(self):
+        """builds the macro objects"""
+        ptypes = [
+            #self.prod, self.ptube,
+            self.properties_bar, self.properties_beam,
+            self.properties_shell,
+            self.properties_solid,
+        ]
+        for ptype in ptypes:
+            ptype.build()
 
     def _get_element_types(self, nlimit=True):
         """

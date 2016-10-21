@@ -22,7 +22,7 @@ def _Lambda(v1, debug=True):
     #p2 = model.Node(n2).get_position()
     #v1 = p2 - p1
     if debug:
-        self.model.log.debug("v1=%s" % v1)
+        print("v1=%s" % v1)
     n = norm(v1)
     if n == 0:
         raise ZeroDivisionError(v1)
@@ -39,7 +39,7 @@ def _Lambda(v1, debug=True):
     #print("R = \n",R)
     #debug = True
     if debug:
-        self.model.log.debug("Lambda = \n" + str(Lambda))
+        print("Lambda = \n" + str(Lambda))
     return Lambda
 
 
@@ -86,8 +86,12 @@ class CONROD(RodElement):
 
     def build(self):
         """
-        :param cards: the list of CONROD cards
+        Parameters
+        ----------
+        cards : List[BDFCard(), ...]
+            the list of CONROD cards
         """
+        assert self.n != 0, self.n
         if self.n:
             i = self.element_id.argsort()
             self.element_id = self.element_id[i]
@@ -336,9 +340,13 @@ class CONROD(RodElement):
         #mat = self.get_material_from_index(i)
         #print(mat)
         #print(mat.material_id[se])
-        mat = self.model.materials.mat1[self.material_id[i]]
-        E = mat.E()
-        G = mat.G()
+        mid = self.material_id[i]
+        #self.model.log.info('mid = %s' % mid)
+        #print(self.model.materials.mat1.print_card())
+        imid = self.model.materials.mat1.get_material_index_by_material_id(mid)
+        mat = self.model.materials.mat1[imid]
+        E = mat.E[0]
+        G = mat.G[0]
         #G = self.G()
         J = self.J[i]
         #J = self.J()
@@ -440,7 +448,7 @@ class CONROD(RodElement):
         #print("K[%s] = \n%s\n" % (self.eid, list_print(K/knorm)))
 
         self.model.log.info('dofs = %s' % dofs)
-        #print('K =\n', list_print(K / knorm))
+        self.model.log.debug('K =\n\n%s' % (K / knorm))
 
         return(K2, dofs, nIJV)
 
@@ -469,9 +477,13 @@ class CONROD(RodElement):
             #========================
             A = self.get_area_from_index(i)
 
-            mat = self.model.materials.mat1[self.material_id[i]]
-            E = mat.E()
-            G = mat.G()
+            mid = self.material_id[i]
+            #mat = self.model.materials.mat1[mid]
+            imid = self.model.materials.mat1.get_material_index_by_material_id(mid)
+            mat = self.model.materials.mat1[imid]
+
+            E = mat.E
+            G = mat.G
             #mat = self.get_material_from_index(i)
             #jmat = searchsorted(mat.material_id, self.material_id[i])
 

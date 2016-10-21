@@ -147,7 +147,7 @@ class GRID(VectorizedCard):
         i = self.i
         nid = integer(card, 1, 'nid')
         if comment:
-            self._comments[nid]
+            self._comments[nid] = comment
 
         #: Node ID
         self.node_id[i] = nid
@@ -375,19 +375,20 @@ class GRID(VectorizedCard):
         return msg
 
     def __getitem__(self, node_id):
-        raise NotImplmementedError('Grid getitem')
-        return self.slice_by_index(i)
+        #raise NotImplementedError('Grid getitem')
+        #return self.slice_by_index(i)
+        return self.slice_by_node_id(node_id)
 
     def slice_by_node_id(self, node_id=None):
-        self.model.log.debug('self.node_id = %s' % self.node_id)
-        self.model.log.debug('node_id = %s' % node_id)
+        #self.model.log.debug('self.node_id = %s' % self.node_id)
+        #self.model.log.debug('node_id = %s' % node_id)
         #node_id = slice_to_iter(node_id)
         i = where(self.node_id == node_id)[0]
         return self.slice_by_index(i)
 
     def slice_by_index(self, i):
         i = self._validate_slice(i)
-        self.model.log.debug('i = %s; type=%s' % (i, type(i)))
+        #self.model.log.debug('i = %s; type=%s' % (i, type(i)))
         obj = GRID(self.model)
         obj.n = len(i)
         #obj._cards = self._cards[i]

@@ -838,7 +838,7 @@ class BDF(AddCard, CrossReference, WriteMesh):
                     del dict_values[value]
             # TODO: redo get_card_ids_by_card_types & card_count
 
-        self.pop_parse_errors()
+        #self.pop_parse_errors()
         self.fill_dmigs()
 
         if validate:
@@ -848,7 +848,7 @@ class BDF(AddCard, CrossReference, WriteMesh):
         self._xref = xref
 
         self.log.debug('---finished BDF.read_bdf of %s---' % self.bdf_filename)
-        self.pop_xref_errors()
+        #self.pop_xref_errors()
 
     def _read_bdf_helper(self, bdf_filename, encoding, punch, read_includes):
         """creates the file loading if bdf_filename is None"""
@@ -3257,6 +3257,7 @@ class BDF(AddCard, CrossReference, WriteMesh):
 
                     self._increase_card_count(card_name, ncards)
                     obj.allocate(self.card_count)
+                    self.log.info('allocating %r' % card_name)
                     for comment, card_lines in card:
                         #print('card_lines', card_lines)
                         fields = to_fields(card_lines, card_name)
@@ -3264,6 +3265,7 @@ class BDF(AddCard, CrossReference, WriteMesh):
                         card_obj = BDFCard(card, has_none=False)
                         obj.add(card_obj, comment=comment)
                     obj.build()
+                    self.log.debug('building %r; n=%s' % (obj.type, obj.n))
                 #if self.is_reject(card_name):
                     #self.log.info('    rejecting card_name = %s' % card_name)
                     #for cardi in card:

@@ -65,10 +65,10 @@ class VectorizedCard(object):
         self.write_card(f)
         return f.getvalue().rstrip()
 
-    def print_card(self, i, size=8):
+    def print_card(self, i=None, size=8):
         #i = self._validate_slice(i)
         string_io = StringIO()
-        self.write_card(f, i, size=size)
+        self.write_card(string_io, i, size=size)
         return string_io.getvalue().rstrip()
 
     def write_card(self, bdf_file, size=8, is_double=False):

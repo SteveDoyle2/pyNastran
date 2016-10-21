@@ -28,7 +28,7 @@ from pyNastran.utils.mathematics import print_matrix, print_annotated_matrix
 from pyNastran.bdf.dev_vectorized.bdf import BDF #, SPC, SPC1
 #from pyNastran.f06.f06_writer import F06Writer
 from pyNastran.op2.op2 import OP2
-from pyNastran.utils.log import get_logger
+from pyNastran.utils.log import get_logger2
 
 # Tables
 from pyNastran.op2.tables.oug.oug_displacements import RealDisplacementArray
@@ -174,8 +174,10 @@ class Solver(OP2):
         """
         #F06Writer.__init_data__(self)
         OP2.__init__(self, debug=False, log=None, debug_file=None) # make_geom=False,
-        debug = True
-        self.log = get_logger(log, 'debug' if debug else 'info')
+        debug = fargs['--debug']
+        print('debug =', debug)
+        #self.log = get_logger(log, 'debug' if debug else 'info')
+        self.log = get_logger2(log, debug)
 
         self.page_num = 1
         self.fargs = fargs
@@ -382,6 +384,9 @@ class Solver(OP2):
         self.Uv = None
         self.iUv = None
 
+    def write_summary(self, f06_file, card_count):
+        """dummy function"""
+        pass
 
     def _solve(self, K, F, dofs):  # can be overwritten
         r"""solves \f$ [K]{x} = {F}\f$ for \f${x}\f$"""
@@ -463,7 +468,7 @@ class Solver(OP2):
         #------------------------------------------
         # start of analysis
 
-        self.model = BDF(debug=False)
+        self.model = BDF(log=self.log, debug=False)
         self.model.cards_to_read = get_cards()
         self.model.f06 = self.f06_file
 
@@ -484,6 +489,7 @@ class Solver(OP2):
         #print(cc.subcases)
         analysis_cases = []
         for (isub, subcase) in sorted(iteritems(cc.subcases)):
+            self.subcase_key[isub] = [isub]
             self.log.info(subcase)
             if 'LOAD' in subcase:
                 analysis_cases.append(subcase)
@@ -507,6 +513,7 @@ class Solver(OP2):
                 raise NotImplementedError('TEMPERATURE(INITIAL) not supported')
                 #integrate(B.T*E*alpha*dt*Ads)
             #sys.exit('starting case')
+            self.log.info('starting case')
             self.run_case(self.model, case)
         self.f06_file.close()
         if self.op2_file is not None:
@@ -596,9 +603,10 @@ class Solver(OP2):
             if not(self.is_displacement or self.is_stress or self.is_strain or self.is_force):
                 msg = 'No results selected...'
                 raise RuntimeError(msg)
-            if model.isol not in sols:
-                raise NotImplementedError('sol=%r is not supported' % model.isol)
+            if model.sol not in sols:
+                raise NotImplementedError('sol=%r is not supported' % model.sol)
             sol = sols[model.sol]
+            self.log.info('starting SOL %s' % model.sol)
             sol(model, case)
         else:
             raise NotImplementedError('model.sol=%s not in %s' % (model.sol, sols.keys()))
@@ -754,6 +762,7 @@ class Solver(OP2):
     def run_sol_101(self, model, case):
         #print("case = ", case)
         assert model.sol == 101, 'model.sol=%s is not 101' % model.sol
+        self.log.info('case = %s' % case)
 
         #if 'WTMASS' in model.params:
             #wtmass = model.params['WTMASS'].value1
@@ -779,8 +788,11 @@ class Solver(OP2):
         if "GRDPNT" in model.params and model.params["GRDPNT"] >= 0:
             g0 = model.params["GRDPNT"]
             reference_point = None
-            if g0 in model.nodes:
-                reference_point = model.nodes[g0].get_position()
+
+            if g0 in model.grid.node_id:
+                reference_point = model.grid.get_position_by_node_id(g0)
+                #i = model.grid.get_node_index_by_node_id(g0)
+                #reference_point = model.grid[g0].get_position()
             #(mass, cg, I) = model.mass_properties(reference_point, sym_axis=None, num_cpus=1)
             #mass *= wtmass
             #I *= wtmass
@@ -789,6 +801,7 @@ class Solver(OP2):
         ## define IDs of grid point components in matrices
         if 1:
             # analysis
+            self.log.info('setup_sol_101')
             (Kgg, Fg, n) = self.setup_sol_101(model, case)
             self.build_dof_sets()
             self.log.info("------------------------\n")
@@ -828,7 +841,12 @@ class Solver(OP2):
         #mpc_forces = Kma*Ua + Kms*Us + Kmm*Um
 
         if case.has_parameter('OLOAD'):
-            val, options = case.get_parameter('OLOAD')
+            try:
+                val, options = case.get_parameter('OLOAD')
+            except KeyError:
+                self.log.warning('No OLOAD...')
+                self.log.warning(case)
+                #raise
         del Fg, Kgg
 
         # =====================================================================
@@ -1028,6 +1046,11 @@ class Solver(OP2):
 
             # SOLIDS
         #=========================
+        print(self.displacements[1].data)
+        #print(self.displacements[1])
+        print(self.conrod_force)
+        print(self.conrod_stress)
+        print(self.conrod_strain)
         self.write_f06(self.f06_file, end_flag=True)
         self.write_op2(self.op2_file, packing=True)
         self.write_op2(self.op2_pack_file, packing=False)
@@ -1403,15 +1426,21 @@ class Solver(OP2):
 
         forces = RealRodForceArray(data_code, is_sort1, isubcase, dt=False)
 
-        data = []
-        i = 0
+        #data = []
+        #i = 0
         #(elementID, axial, torsion) = line
-        for (eid, axiali, torsioni) in zip(eids, axial, torsion):
-            line = [eid, axiali, torsioni]
-            data.append(line)
+        #for (eid, axiali, torsioni) in zip(eids, axial, torsion):
+            #line = [eid, axiali, torsioni]
+            #data.append(line)
 
-        dt = None
-        forces.add_f06_data(data, dt)
+        #dt = None
+        #forces.add_f06_data(data, dt)
+        ntimes = 1
+        nelements = eids.size
+        forces.build_data(ntimes, nelements, float_fmt='float32')
+        forces.data[0, :, 0] = axial
+        forces.data[0, :, 1] = torsion
+        forces.elements = eids
 
         if element_type == 'CROD':
             self.crod_force[isubcase] = forces
@@ -1434,13 +1463,19 @@ class Solver(OP2):
         format_code = 1  # ???
         s_code = None
 
+        stress_code = 0
+        if Type == 'strain':
+            stress_code = 1
+
         data_code = {
             'log': self.log, 'analysis_code': analysis_code,
             'device_code': 1, 'table_code': 1, 'sort_code': 0,
             'sort_bits': [0, 0, 0], 'num_wide': 8, 'table_name': 'OES',
             'element_name': element_type, 'format_code':format_code,
             's_code': s_code,
-            'nonlinear_factor': None, 'data_names':['lsdvmn']}
+            'nonlinear_factor': None, 'data_names':['lsdvmn'],
+            'stress_bits' : [None, stress_code, None, stress_code, None],
+        }
         #if Type == 'stress':
             #stress = RealRodStressArray(data_code, is_sort1, isubcase, dt=False)
         #elif Type == 'strain':
@@ -1455,10 +1490,14 @@ class Solver(OP2):
         data[:, 0] = axial
         data[:, 2] = torsion
 
+        ntimes = 1
+        nelements = eids.size
+        dtype = 'float32'
         if Type == 'stress':
             stress = RealRodStressArray(data_code, is_sort1, isubcase, dt=False)
-            stress.data = data
-            stress.elements = eids
+            stress.build_data(ntimes, nelements, dtype)
+            stress.data[0, :, :] = data
+            stress.element = eids
             if element_type == 'CROD':
                 self.crod_stress[isubcase] = stress
             elif element_type == 'CONROD':
@@ -1469,8 +1508,9 @@ class Solver(OP2):
                 raise NotImplementedError('element_type=%r Type=%r' % (element_type, Type))
         elif Type == 'strain':
             strain = RealRodStrainArray(data_code, is_sort1, isubcase, dt=False)
-            strain.data = data
-            strain.elements = eids
+            strain.build_data(ntimes, nelements, dtype)
+            strain.data[0, :, :] = data
+            strain.element = eids
             if element_type == 'CROD':
                 self.crod_strain[isubcase] = strain
             elif element_type == 'CONROD':
@@ -1483,7 +1523,7 @@ class Solver(OP2):
             raise NotImplementedError('element_type=%r Type=%r' % (element_type, Type))
 
         #stress.write_f06(self.header, pageStamp)
-        stress.dt = None
+        #stress.dt = None
 
     def _store_displacements(self, model, U, case):
         """
@@ -1501,8 +1541,12 @@ class Solver(OP2):
             'sort_bits': [0, 0, 0], 'num_wide': 8, 'table_name': 'OUG',
             'nonlinear_factor': None, 'data_names':['lsdvmn']
         }
+        ntimes = 1
+        nnodes = model.grid.n
         disp = RealDisplacementArray(data_code, is_sort1, isubcase, dt=None)
 
+        disp.build_data(ntimes, nnodes,
+                        ntimes, nnodes, float_fmt='float32')
         #data = []
 
         i = 0
@@ -1512,10 +1556,9 @@ class Solver(OP2):
         #grid_type = 1  # GRID; G
         #grid_type = 2  # SPOINT; S
         #grid_type = 7  # RIGID POINT (e.g. RBE3); L
-        nnodes = model.grid.n
         disp.node_gridtype[:, 0] = model.grid.node_id
         disp.node_gridtype[:, 1] = 1 # GRID (TODO: no SPOINTs)
-        disp.data = U.reshape(1, nnodes, 6)
+        disp.data[0, :, :] = U.reshape(1, nnodes, 6)
         #for ni in range(model.grid.n):
             #nid = model.grid.node_id[ni]
             #line = [nid, 'G']
@@ -1531,16 +1574,22 @@ class Solver(OP2):
     def setup_sol_101(self, model, case):
         # the (GridID,componentID) -> internalID
         (self.nidComponentToID, ndofs) = self.build_nid_component_to_id(model)
-        self.apply_SPCs(model, case, self.nidComponentToID)
-        self.apply_MPCs(model, case, self.nidComponentToID)
+        #self.log.info('apply SPCs')
+        #self.apply_SPCs(model, case, self.nidComponentToID)
+        #self.log.info('apply MPCs')
+        #self.apply_MPCs(model, case, self.nidComponentToID)
 
         #spcDOFs = self.iUs
         #mpcDOFs = self.iUm
 
-        Mgg = self.get_Mgg(model, ndofs, force_calcs=True)
+        #self.log.info('building Mgg')
+        #Mgg = self.get_Mgg(model, ndofs, force_calcs=True)
+        self.log.info('building Kgg')
         Kgg, Kgg_sparse = self.assemble_global_stiffness_matrix(model, ndofs, self.nidComponentToID)
 
+        self.log.info('building Fg')
         Fg = self.assemble_forces(model, ndofs, case, self.nidComponentToID)
+        self.log.info('ready to run...')
         return Kgg, Fg, ndofs
 
     def make_gpwg(self, grid_point, Mgg):
@@ -2037,10 +2086,10 @@ class Solver(OP2):
         if case.has_parameter('SPC') or has_spcs:
             for spc_id in spc_ids:
                 self.log.debug('applying SPC=%i' % spc_id)
-                SpcSet = model.SPC(spc_id)
+                spc_set = model.SPC(spc_id)
 
-                #print("spc_set =", SpcSet)
-                for spc in SpcSet:
+                #print("spc_set =", spc_set)
+                for spc in spc_set:
                     if spc.type == 'SPC1':
                         for dof, node_ids in iteritems(spc.components):
                             #print("dof =", dof)
