@@ -34,7 +34,7 @@ from pyNastran.utils.log import get_logger2
 from pyNastran.op2.tables.oug.oug_displacements import RealDisplacementArray
 #from pyNastran.op2.tables.oqg_constraintForces.oqg_spcForces import SPCForcesObject
 #from pyNastran.op2.tables.oqg_constraintForces.oqg_mpcForces import MPCForcesObject
-from pyNastran.f06.dev.tables.oload_resultant import OLOAD_Resultant
+from pyNastran.f06.dev.tables.oload_resultant import Resultant
 
 # springs
 from pyNastran.op2.tables.oes_stressStrain.real.oes_springs import (
@@ -436,7 +436,8 @@ class Solver(OP2):
             else:
                 self.f06_file.close()
                 raise
-
+        self.f06_file.write('-' * 80 + '\n')
+        self.f06_file.flush()
         return U
 
     def run_solver(self):
@@ -464,7 +465,7 @@ class Solver(OP2):
         self.date = (d.month, d.day, d.year)
 
         page_stamp = self.make_stamp(self.title, self.date)
-
+        self.page_stamp = page_stamp
         #------------------------------------------
         # start of analysis
 
@@ -605,6 +606,8 @@ class Solver(OP2):
                 raise RuntimeError(msg)
             if model.sol not in sols:
                 raise NotImplementedError('sol=%r is not supported' % model.sol)
+
+            self.subcase_id = case.id
             sol = sols[model.sol]
             self.log.info('starting SOL %s' % model.sol)
             sol(model, case)
@@ -763,6 +766,7 @@ class Solver(OP2):
         #print("case = ", case)
         assert model.sol == 101, 'model.sol=%s is not 101' % model.sol
         self.log.info('case = %s' % case)
+        self.log.info('subcase_id = %s' % self.subcase_id)
 
         #if 'WTMASS' in model.params:
             #wtmass = model.params['WTMASS'].value1
@@ -866,15 +870,16 @@ class Solver(OP2):
             # SPRINGS
             nsprings = 0
             element_types = [
-                model.elements_spring.celas1,
-                model.elements_spring.celas2,
-                model.elements_spring.celas3,
-                model.elements_spring.celas4,
+                model.celas1,
+                model.celas2,
+                model.celas3,
+                model.celas4,
             ]
             for element_type in element_types:
-                nsprings += element_type.n
+                nsprings = element_type.n
 
-            if nsprings:
+                if nsprings == 0:
+                    continue
                 o1 = zeros(nsprings, 'float64')
                 e1 = zeros(nsprings, 'float64')
                 f1 = zeros(nsprings, 'float64')
@@ -889,21 +894,25 @@ class Solver(OP2):
                             ispring, o1, e1, f1)
                         eids = element_type.element_id
                         self.log.info("eids = %s" % eids)
+
+                        self._store_spring_oes(model, eids, e1, case, element_type.type, Type='strain')
+                        #if self.is_stress:
+                        self._store_spring_oes(model, eids, o1, case, element_type.type, Type='stress')
+                        #if self.is_force:
+                        self._store_spring_oef(model, eids, f1, case, element_type.type)
+                        del e1
+                        del o1
+                        del f1
                     ispring += n
-                #if self.is_strain:
-                self._store_spring_oes(model, eids, e1, case, element_type.type, Type='strain')
-                #if self.is_stress:
-                self._store_spring_oes(model, eids, o1, case, element_type.type, Type='stress')
-                #if self.is_force:
-                self._store_spring_oef(model, eids, f1, case, element_type.type)
-                del e1
-                del o1
-                del f1
+                    #if self.is_strain:
             #del element_type model.elements_springs
 
             # RODS
             element_types = [model.crod, model.conrod]  # model.ctube
 
+            self.is_stress = True
+            self.is_strain = True
+            self.is_force = True
             for element_type in element_types:
                 n = element_type.n
                 self.log.info('Type=%s n=%s displacement_stress' % (element_type.type, n))
@@ -1199,7 +1208,7 @@ class Solver(OP2):
             raise NotImplementedError(element_type)
         #stress.dt = None
 
-    def _OEF_f06_header(self, case, element_type):
+    def _OEF_f06_header(self, case, element_name):
         analysis_code = 1
         #transient = False
         is_sort1 = False
@@ -1207,26 +1216,40 @@ class Solver(OP2):
         format_code = 1  # ???
         s_code = None
 
+        if element_name == 'CELAS1':
+            element_type = 11
+        elif element_name == 'CELAS2':
+            element_type = 12
+        elif element_name == 'CELAS3':
+            element_type = 13
+        elif element_name == 'CELAS4':
+            element_type = 14
+        elif element_name == 'CONROD':
+            element_type = None
+        else:
+            raise NotImplementedError(element_name)
+
         data_code = {
             'log': self.log, 'analysis_code': analysis_code,
             'device_code': 1, 'table_code': 1, 'sort_code': 0,
             'sort_bits': [0, 0, 0], 'num_wide': 8, 'table_name': 'OEF',
-            'element_name': element_type, 'format_code':format_code,
+            'element_name': element_name, 'element_type': element_type,
+            'format_code':format_code,
             #'s_code': s_code,
             'nonlinear_factor': None, 'data_names':['lsdvmn']}
         return data_code
 
-    def _store_cshear_oef(self, model, eids, force, case, element_type):
+    def _store_cshear_oef(self, model, eids, force, case, element_name):
         if len(eids) == 0:
             return
-        data_code = self._OEF_f06_header(case, element_type)
+        data_code = self._OEF_f06_header(case, element_name)
         is_sort1 = True
         isubcase = case.id
 
-        if element_type == 'CSHEAR':
+        if element_name == 'CSHEAR':
             forces = RealCShearForceArray(data_code, is_sort1, isubcase, dt=False)
         else:
-            raise NotImplementedError(element_type)
+            raise NotImplementedError(element_name)
 
         data = []
         i = 0
@@ -1240,10 +1263,10 @@ class Solver(OP2):
         dt = None
         forces.add_f06_data(data, dt)
 
-        if element_type == 'CSHEAR':
+        if element_name == 'CSHEAR':
             self.cshear_force[isubcase] = forces
         else:
-            raise NotImplementedError(element_type)
+            raise NotImplementedError(element_name)
         #stress.dt = None
 
     def _store_bar_oes(self, model, cbars, e1, case, Type='strain'):
@@ -1317,7 +1340,7 @@ class Solver(OP2):
             raise NotImplementedError('element_type=%r Type=%r' % (element_type, Type))
         #stress.dt = None
 
-    def _store_spring_oes(self, model, eids, axial, case, element_type, Type='stress'):
+    def _store_spring_oes(self, model, eids, axial, case, element_name, Type='stress'):
         if len(eids) == 0:
             return
         analysis_code = 1
@@ -1328,93 +1351,104 @@ class Solver(OP2):
         format_code = 1  # ???
         s_code = None
 
+        stress_code = 0
+        if Type == 'strain':
+            stress_code = 1
+
+        if element_name == 'CELAS1':
+            element_type = 11
+        elif element_name == 'CELAS2':
+            element_type = 12
+        elif element_name == 'CELAS3':
+            element_type = 13
+        elif element_name == 'CELAS4':
+            element_type = 14
+        else:
+            raise NotImplementedError(element_name)
+
         data_code = {
             'log': self.log, 'analysis_code': analysis_code,
             'device_code': 1, 'table_code': 1, 'sort_code': 0,
-            'sort_bits': [0, 0, 0], 'num_wide': 8, 'table_name': 'OES',
-            'element_name': element_type, 'format_code':format_code,
+            'sort_bits': [0, 0, 0],
+            'num_wide': 8, 'table_name': 'OES',
+            'element_name': element_name, 'element_type': element_type,
+            'format_code':format_code,
             's_code': s_code,
-            'nonlinear_factor': None, 'data_names':['lsdvmn']
+            'nonlinear_factor': None, 'data_names':['lsdvmn'],
+            'stress_bits' : [None, stress_code, None, stress_code, None],
         }
 
         if Type == 'stress':
-            #if element_type == 'CELAS2':
-            stress = RealSpringStressArray(data_code, is_sort1, isubcase, dt=None)
-            #else:
-                #raise NotImplementedError(element_type)
+            result = RealSpringStressArray(data_code, is_sort1, isubcase, dt=None)
         elif Type == 'strain':
-            #if element_type == 'CELAS2':
-            stress = RealSpringStrainArray(data_code, is_sort1, isubcase, dt=None)
-            #else:
-                #raise NotImplementedError(element_type)
+            result = RealSpringStrainArray(data_code, is_sort1, isubcase, dt=None)
         else:
             raise NotImplementedError(Type)
+        #result.element_type = element_type
 
-        data = []
-        i = 0
-        #(elementID, stress) = line
-        for (eid, axiali) in zip(eids, axial):
-            line = [eid, axiali]
-            data.append(line)
-        stress.add_f06_data(data, dt)
+        #print('axial =', axial)
+        ntimes = 1
+        nelements = eids.size
+        dtype = 'float32'
+        result.build_data(ntimes, nelements, dtype)
+        result.data[0, :, 0] = axial
+        result.element = eids
 
+        #print('axial %s = %s' % (Type, axial))
         if Type == 'stress':
-            if element_type == 'CELAS1':
-                self.celas1_stress[isubcase] = stress
-            elif element_type == 'CELAS2':
-                self.celas2_stress[isubcase] = stress
-            elif element_type == 'CELAS3':
-                self.celas3_stress[isubcase] = stress
-            elif element_type == 'CELAS4':
-                self.celas4_stress[isubcase] = stress
+            if element_name == 'CELAS1':
+                self.celas1_stress[isubcase] = result
+            elif element_name == 'CELAS2':
+                self.celas2_stress[isubcase] = result
+            elif element_name == 'CELAS3':
+                self.celas3_stress[isubcase] = result
+            elif element_name == 'CELAS4':
+                self.celas4_stress[isubcase] = result
             else:
-                raise NotImplementedError('element_type=%r Type=%r' % (element_type, Type))
+                raise NotImplementedError('element_name=%r Type=%r' % (element_name, Type))
         elif Type == 'strain':
-            if element_type == 'CELAS1':
-                self.celas1_strain[isubcase] = stress
-            elif element_type == 'CELAS2':
-                self.celas2_stress[isubcase] = stress
-            elif element_type == 'CELAS3':
-                self.celas3_stress[isubcase] = stress
-            elif element_type == 'CELAS4':
-                self.celas4_stress[isubcase] = stress
+            if element_name == 'CELAS1':
+                self.celas1_strain[isubcase] = result
+            elif element_name == 'CELAS2':
+                self.celas2_strain[isubcase] = result
+            elif element_name == 'CELAS3':
+                self.celas3_strain[isubcase] = result
+            elif element_name == 'CELAS4':
+                self.celas4_strain[isubcase] = result
             else:
-                raise NotImplementedError('element_type=%r Type=%r' % (element_type, Type))
+                raise NotImplementedError('element_name=%r Type=%r' % (element_name, Type))
         else:
-            raise NotImplementedError('element_type=%r Type=%r' % (element_type, Type))
+            raise NotImplementedError('element_name=%r Type=%r' % (element_name, Type))
         #stress.dt = None
 
-    def _store_spring_oef(self, model, eids, axial, case, element_type):
+    def _store_spring_oef(self, model, eids, axial, case, element_name):
         if len(eids) == 0:
             return
-        data_code = self._OEF_f06_header(case, element_type)
+        print('storing spring force...')
+        data_code = self._OEF_f06_header(case, element_name)
 
         is_sort1 = True
         isubcase = case.id
         dt = None
-        #if element_type == 'CELAS2':
         forces = RealSpringForceArray(data_code, is_sort1, isubcase, dt=None)
-        #else:
-            #raise NotImplementedError(element_type)
 
-        data = []
-        i = 0
-        #(elementID, axial) = line
-        for (eid, axiali) in zip(eids, axial):
-            line = [eid, axiali]
-            data.append(line)
-        forces.add_f06_data(data, dt)
+        ntimes = 1
+        nelements = eids.size
+        dtype = 'float32'
+        forces.build_data(ntimes, nelements, dtype)
+        forces.data[0, :, 0] = axial
+        forces.element = eids
 
-        if element_type == 'CELAS2':
+        if element_name == 'CELAS1':
             self.celas1_force[isubcase] = forces
-        elif element_type == 'CELAS2':
+        elif element_name == 'CELAS2':
             self.celas2_force[isubcase] = forces
-        elif element_type == 'CELAS3':
+        elif element_name == 'CELAS3':
             self.celas3_force[isubcase] = forces
-        elif element_type == 'CELAS4':
+        elif element_name == 'CELAS4':
             self.celas4_force[isubcase] = forces
         else:
-            raise NotImplementedError(element_type)
+            raise NotImplementedError(element_name)
         #stress.dt = None
 
     def _store_rod_oef(self, model, eids, axial, torsion, case, element_type):
@@ -1440,7 +1474,7 @@ class Solver(OP2):
         forces.build_data(ntimes, nelements, float_fmt='float32')
         forces.data[0, :, 0] = axial
         forces.data[0, :, 1] = torsion
-        forces.elements = eids
+        forces.element = eids
 
         if element_type == 'CROD':
             self.crod_force[isubcase] = forces
@@ -1476,12 +1510,6 @@ class Solver(OP2):
             'nonlinear_factor': None, 'data_names':['lsdvmn'],
             'stress_bits' : [None, stress_code, None, stress_code, None],
         }
-        #if Type == 'stress':
-            #stress = RealRodStressArray(data_code, is_sort1, isubcase, dt=False)
-        #elif Type == 'strain':
-            #stress = RealRodStrainArray(data_code, is_sort1, isubcase, dt=False)
-        #else:
-            #raise NotImplementedError(Type)
 
         nelements = len(eids)
         data = np.zeros((nelements, 4), dtype='float32')
@@ -1494,33 +1522,30 @@ class Solver(OP2):
         nelements = eids.size
         dtype = 'float32'
         if Type == 'stress':
-            stress = RealRodStressArray(data_code, is_sort1, isubcase, dt=False)
-            stress.build_data(ntimes, nelements, dtype)
-            stress.data[0, :, :] = data
-            stress.element = eids
+            result = RealRodStressArray(data_code, is_sort1, isubcase, dt=False)
             if element_type == 'CROD':
-                self.crod_stress[isubcase] = stress
+                self.crod_stress[isubcase] = result
             elif element_type == 'CONROD':
-                self.conrod_stress[isubcase] = stress
+                self.conrod_stress[isubcase] = result
             elif element_type == 'CTUBE':
-                self.ctube_stress[isubcase] = stress
+                self.ctube_stress[isubcase] = result
             else:
                 raise NotImplementedError('element_type=%r Type=%r' % (element_type, Type))
         elif Type == 'strain':
-            strain = RealRodStrainArray(data_code, is_sort1, isubcase, dt=False)
-            strain.build_data(ntimes, nelements, dtype)
-            strain.data[0, :, :] = data
-            strain.element = eids
+            result = RealRodStrainArray(data_code, is_sort1, isubcase, dt=False)
             if element_type == 'CROD':
-                self.crod_strain[isubcase] = strain
+                self.crod_strain[isubcase] = result
             elif element_type == 'CONROD':
-                self.conrod_strain[isubcase] = strain
+                self.conrod_strain[isubcase] = result
             elif element_type == 'CTUBE':
-                self.ctube_strain[isubcase] = strain
+                self.ctube_strain[isubcase] = result
             else:
                 raise NotImplementedError('element_type=%r Type=%r' % (element_type, Type))
         else:
             raise NotImplementedError('element_type=%r Type=%r' % (element_type, Type))
+        result.build_data(ntimes, nelements, dtype)
+        result.data[0, :, :] = data
+        result.element = eids
 
         #stress.write_f06(self.header, pageStamp)
         #stress.dt = None
@@ -1559,15 +1584,6 @@ class Solver(OP2):
         disp.node_gridtype[:, 0] = model.grid.node_id
         disp.node_gridtype[:, 1] = 1 # GRID (TODO: no SPOINTs)
         disp.data[0, :, :] = U.reshape(1, nnodes, 6)
-        #for ni in range(model.grid.n):
-            #nid = model.grid.node_id[ni]
-            #line = [nid, 'G']
-            #xyz = U[i:i + 6]  # 1,2,3,4,5,6
-            #self.log.info("nid=%s txyz,rxyz=%s" % (nid, xyz))
-            #line += xyz
-            #i += 6
-            #data.append(line)
-        #disp.add_f06_data(data, dt)
         self.displacements[isubcase] = disp
         self.iSubcases.append(isubcase)
 
@@ -1579,16 +1595,18 @@ class Solver(OP2):
         #self.log.info('apply MPCs')
         #self.apply_MPCs(model, case, self.nidComponentToID)
 
-        #spcDOFs = self.iUs
-        #mpcDOFs = self.iUm
+        #spc_dofs = self.iUs
+        #mpc_dofs = self.iUm
 
         #self.log.info('building Mgg')
         #Mgg = self.get_Mgg(model, ndofs, force_calcs=True)
-        self.log.info('building Kgg')
-        Kgg, Kgg_sparse = self.assemble_global_stiffness_matrix(model, ndofs, self.nidComponentToID)
 
         self.log.info('building Fg')
         Fg = self.assemble_forces(model, ndofs, case, self.nidComponentToID)
+
+        self.log.info('building Kgg')
+        Kgg, Kgg_sparse = self.assemble_global_stiffness_matrix(model, ndofs, self.nidComponentToID)
+
         self.log.info('ready to run...')
         return Kgg, Fg, ndofs
 
@@ -1846,30 +1864,49 @@ class Solver(OP2):
         return node_ids, index0s
 
     def add_stiffness(self, K, dofs, nijv):
+        #print('self.IDtoNidComponents = %s' % self.IDtoNidComponents) # None
+        self.log.debug('self.nidComponentToID')
+        for k, value in sorted(self.nidComponentToID.items()):
+            self.log.debug('%s : %s' % (k, value))
+        #nidComponentToID
+
         Kgg = self.Kgg
+        kabs = np.abs(K)
         #print(type(Kgg))
+        self.log.debug('Ki =\n\n%s' % K)
+
         for i, dof1 in enumerate(dofs):
-            #dof1i = self.nidComponentToID[dof1]
+            if isinstance(dof1, tuple):
+                dof1i = self.nidComponentToID[dof1]
+            else:
+                dof1i = dof1
+
             for j, dof2 in enumerate(dofs):
-                if abs(K[i, j]) > 0.0:
-                    self.log.info('i=%s j=%s dof1=%s dof2=%s Ke[i,j]=%s' % (
+                if kabs[i, j] > 0.0:
+                    self.log.debug('  i=%s j=%s dof1=%s dof2=%s Ke[i,j]=%s' % (
                         i, j, dof1, dof2, K[i, j] / self.knorm))
-                    #dof2i = self.nidComponentToID[dof2]
+
+                    if isinstance(dof2, tuple):
+                        dof2i = self.nidComponentToID[dof2]
+                    else:
+                        dof2i = dof2
                     #assert isinstance(dof1i, int), dof1i
                     #assert isinstance(dof2i, int), dof2i
-                    Kgg[dof1, dof2] += K[i, j]
+                    Kgg[dof1i, dof2i] += K[i, j]
                     #Kgg[dof1i, dof2i] += K[i, j]
-                    #print('Kgg[%i,%i]=%d' % (dof1i, dof2i, Kgg[dof1i, dof2i]) )
+                    #print('Kgg[%s,%s]=%s' % (dof1, dof2, str(Kgg[dof1i, dof2i])) )
         self.log.info('Kggi =\n%s' % Kgg)
 
     def add_mass(self, M, dofs, nijv):
         Mgg = self.Mgg
         Mgg_sparse = self.Mgg_sparse
         for i, dof1 in enumerate(dofs):
+            dof1i = self.nidComponentToID[dof1]
             for j, dof2 in enumerate(dofs):
                 if abs(M[i, j]) > 0.0:
-                    Mgg[dof1, dof2] += M[i, j]
-                    Mgg_sparse[dof1, dof2] += M[i, j]
+                    dof2i = self.nidComponentToID[dof2]
+                    Mgg[dof1i, dof2i] += M[i, j]
+                    Mgg_sparse[dof1i, dof2i] += M[i, j]
 
     def assemble_global_stiffness_matrix(self, model, i, Dofs):
         self.Kgg = zeros((i, i), 'float64')
@@ -1904,32 +1941,32 @@ class Solver(OP2):
         self.log.info('end calculating xyz_cid0')
 
         # spring
-        if model.elements_spring.celas1.n:
+        if model.celas1.n:
             self.log.info('start calculating Kcelas1')
-            for i in range(model.elements_spring.celas1.n):
-                K, dofs, nijv = model.elements_spring.celas1.get_stiffness_matrix(
+            for i in range(model.celas1.n):
+                K, dofs, nijv = model.celas1.get_stiffness_matrix(
                     i, model, self.positions, index0s)
                 self.log.info("Kcelas1 =\n%s" % K)
                 self.add_stiffness(K, dofs, nijv)
 
-        if model.elements_spring.celas2.n:
+        if model.celas2.n:
             self.log.info('start calculating Kcelas2')
-            for i in range(model.elements_spring.celas2.n):
-                K, dofs, nijv = model.elements_spring.celas2.get_stiffness_matrix(
+            for i in range(model.celas2.n):
+                K, dofs, nijv = model.celas2.get_stiffness_matrix(
                     i, model, self.positions, index0s)
                 self.add_stiffness(K, dofs, nijv)
 
-        if model.elements_spring.celas3.n:
+        if model.celas3.n:
             self.log.info('start calculating Kcelas3')
-            for i in range(model.elements_spring.celas3.n):
-                K, dofs, nijv = model.elements_spring.celas3.get_stiffness_matrix(
+            for i in range(model.celas3.n):
+                K, dofs, nijv = model.celas3.get_stiffness_matrix(
                     i, model, self.positions, index0s)
                 self.add_stiffness(K, dofs, nijv)
 
-        if model.elements_spring.celas4.n:
+        if model.celas4.n:
             self.log.info('start calculating Kcelas4')
-            for i in range(model.elements_spring.celas4.n):
-                K, dofs, nijv = model.elements_spring.celas4.get_stiffness_matrix(
+            for i in range(model.celas4.n):
+                K, dofs, nijv = model.celas4.get_stiffness_matrix(
                     i, model, self.positions, index0s)
                 self.add_stiffness(K, dofs, nijv)
 
@@ -1949,21 +1986,32 @@ class Solver(OP2):
                 self.add_stiffness(K, dofs, nijv)
 
         # ctube
-        #if model.ctube.n:
-            #self.log.info('start calculating Kctube')
+        if model.ctube.n:
+            self.log.info('start calculating Kctube')
+            for i in range(model.crod.n):
+                K, dofs, nijv = model.ctube.get_stiffness_matrix(i, model, self.positions, index0s)
+                self.add_stiffness(K, dofs, nijv)
 
         # shells
-        if model.elements_shell.ctria3.n:
-            for i in range(model.elements_shell.ctria3.n):
-                K, dofs, nijv = model.elements_shell.ctria3.get_stiffness_matrix(
+        if model.ctria3.n:
+            for i in range(model.ctria3.n):
+                K, dofs, nijv = model.ctria3.get_stiffness_matrix(
                     i, model, self.positions, index0s)
                 self.add_stiffness(K, dofs, nijv)
 
-        if model.elements_shell.cquad4.n:
-            for i in range(model.elements_shell.cquad4.n):
-                K, dofs, nijv = model.elements_shell.cquad4.get_stiffness_matrix(
+        if model.cquad4.n:
+            for i in range(model.cquad4.n):
+                K, dofs, nijv = model.cquad4.get_stiffness_matrix(
                     i, model, self.positions, index0s)
                 self.add_stiffness(K, dofs, nijv)
+
+        # solids
+        if model.ctetra4.n:
+            for i in range(model.ctetra4.n):
+                K, dofs, nijv = model.ctetra4.get_stiffness_matrix(
+                    i, model, self.positions, index0s)
+                self.add_stiffness(K, dofs, nijv)
+
 
         #Kgg_sparse = coo_matrix((entries, (rows, cols)), shape=(i, i))
         Kgg_sparse = None
@@ -2208,8 +2256,18 @@ class Solver(OP2):
         return
 
     def write_oload_resultant(self, Fg):
-        self.oload_resultant = OLOAD_Resultant()
+        nrows = Fg.size // 6
+        Fg2 = Fg.reshape(nrows, 6)
+        Fxyz = Fg2.sum(axis=0)
+        self.oload_resultant = Resultant('OLOAD', Fxyz, self.subcase_id)
+        print(Fxyz)
         self.log.debug(Fg)
+        page_stamp = self.page_stamp
+        page_num = self.page_num
+        self.oload_resultant.write_f06(self.f06_file, page_stamp, page_num)
+        #print(self.oload_resultant)
+        #self.f06_file.flush()
+
 
     def assemble_forces(self, model, ndofs, case, Dofs):
         """very similar to write_code_aster loads"""

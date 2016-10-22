@@ -39,12 +39,14 @@ class PELAS(object):
             self._ge.append(double_or_blank(card, 3 + nOffset, 'ge', 0.))
             self._s.append(double_or_blank(card, 4 + nOffset, 's', 0.))
 
-    def allocate(self, ncards):
-        float_fmt = self.model.float_fmt
-        self.property_id = zeros(ncards, dtype='int32')
-        self.K = zeros(ncards, dtype=float_fmt)
-        self.ge = zeros(ncards, dtype=float_fmt)
-        self.s = zeros(ncards, dtype=float_fmt)
+    def allocate(self, card_count):
+        ncards = card_count[self.type]
+        if ncards:
+            float_fmt = self.model.float_fmt
+            self.property_id = zeros(ncards, dtype='int32')
+            self.K = zeros(ncards, dtype=float_fmt)
+            self.ge = zeros(ncards, dtype=float_fmt)
+            self.s = zeros(ncards, dtype=float_fmt)
 
     def build(self):
         if self.n:

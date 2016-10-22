@@ -24,16 +24,18 @@ class CELAS1(SpringElement):
         """
         SpringElement.__init__(self, model)
 
-    def allocate(self, ncards):
-        self.n = ncards
-        #: Element ID
-        self.element_id = zeros(ncards, 'int32')
-        #: Property ID
-        self.property_id = zeros(ncards, 'int32')
-        #: Node IDs
-        self.node_ids = zeros((ncards, 2), 'int32')
-        #: component number
-        self.components = zeros((ncards, 2), 'int32')
+    def allocate(self, card_count):
+        ncards = card_count[self.type]
+        if ncards:
+            self.n = ncards
+            #: Element ID
+            self.element_id = zeros(ncards, 'int32')
+            #: Property ID
+            self.property_id = zeros(ncards, 'int32')
+            #: Node IDs
+            self.node_ids = zeros((ncards, 2), 'int32')
+            #: component number
+            self.components = zeros((ncards, 2), 'int32')
 
     def add(self, card, comment=''):
         i = self.i
@@ -76,79 +78,55 @@ class CELAS1(SpringElement):
                 else:
                     bdf_file.write(print_card_16(card))
 
-    def get_stiffness(self, i, model, positions, index0s, fnorm=1.0):  # CELAS1/CONROD
+    def get_stiffness_matrix(self, i, model, positions, index0s, fnorm=1.0):
+        """gets the stiffness matrix for CELAS1"""
         #print("----------------")
         ipid = where(self.model.pelas.property_id==self.property_id[i])[0][0]
         prop = self.model.pelas
         ki = prop.K[ipid]
+        k = ki * array([[1, -1,],
+                        [-1, 1]])
 
         #========================
         n0, n1 = self.node_ids[i, :]
-
-        i0, i1 = index0s
-        p0 = positions[n0]
-        p1 = positions[n1]
-
-        v1 = p0 - p1
-        L = norm(v1)
-        if L == 0.0:
-            msg = 'invalid CELAS1 length=0.0\n%s' % (self.__repr__())
-            raise ZeroDivisionError(msg)
-
-        try:
-            Lambda = _Lambda(v1, debug=True)
-        except ZeroDivisionError:
-            raise ZeroDivisionError("CELAS2 xyz[%i]=%s; xyz[%i]=%s" % (n0, p0, n1, p1))
-
-        #========================
-        k = ki * array([[1, -1,],
-                        [-1, 1]])
-        K = dot(dot(transpose(Lambda), k), Lambda)
-
         c1, c2 = self.components[i, :]
-        delta1 = 0 if c1 in [1, 2, 3] else 3
-        delta2 = 0 if c2 in [1, 2, 3] else 3
+        #i0, i1 = index0s
+
+        delta1 = 0 if c1 in [0, 1, 2, 3] else 3
+        delta2 = 0 if c2 in [0, 1, 2, 3] else 3
+
+        c1b = c1-1 if c1 > 0 else c1
+        c2b = c2-1 if c2 > 0 else c2
+
+        i1 = index0s[n1]
+        i2 = index0s[n2]
+        dofs = [
+            i1 + c1b,
+            i2 + c1b,
+        ]
 
         nIJV = [
-            (n0, 1 + delta1), (n0, 2 + delta1), (n0, 3 + delta1),
-            (n1, 1 + delta2), (n1, 2 + delta2), (n1, 3 + delta2),
+            (n0, 1 + delta1),
+            (n1, 1 + delta2),
         ]
-        dofs = nIJV
-        return (K, dofs, nIJV)
+        return (k, dofs, nIJV)
 
     def displacement_stress(self, model, positions, q, dofs,
-            ni, e1, f1, o1):
+                            ni, o1, e1, f1):
         n = self.n
 
         du_axial = zeros(n, 'float64')
         for i in range(self.n):
             (n0, n1) = self.node_ids[i, :]
-            if n0 == n1:
-                raise RuntimeError('CELAS2 eid=%s n1=%s n2=%s' % (self.element_id[i], n0, n1))
-            p0 = positions[n0]
-            p1 = positions[n1]
-
-            v1 = p0 - p1
-            L = norm(v1)
-            try:
-                Lambda = _Lambda(v1, debug=True)
-            except ZeroDivisionError:
-                raise ZeroDivisionError("CELAS2 xyz[%i]=%s; xyz[%i]=%s" % (n0, p0, n1, p1))
 
             n01 = dofs[(n0, 1)]
             n11 = dofs[(n1, 1)]
 
-            n02 = dofs[(n0, 2)]
-            n12 = dofs[(n1, 2)]
-
-            n03 = dofs[(n0, 3)]
-            n13 = dofs[(n1, 3)]
-
             q_axial = array([
-                q[n01], q[n02], q[n03],
-                q[n11], q[n12], q[n13]
+                q[n01],
+                q[n11],
             ])
-            u_axial = dot(Lambda, q_axial)
+            u_axial = q_axial
             du_axial[i] = u_axial[0] - u_axial[1]
 
         self.model.log.debug("len(pelas) = %s" % self.model.pelas.n)
@@ -160,5 +138,4 @@ class CELAS1(SpringElement):
         e1[ni: ni+n] = du_axial * s
         f1[ni: ni+n] = k * du_axial
         o1[ni: ni+n] = f1[ni: ni+n] * s
-
         #return (axial_strain, axial_stress, axial_force)

@@ -44,8 +44,8 @@ class CROD(RodElement):
         #if comment:
             #self._comments[eid] = comment
 
-        self.element_id[i] = integer(card, 1, 'element_id')
-        self.property_id[i] = integer_or_blank(card, 2, 'property_id', self.element_id[i])
+        self.element_id[i] = eid
+        self.property_id[i] = integer_or_blank(card, 2, 'property_id', eid)
         self.node_ids[i] = [integer(card, 3, 'n1'),
                             integer(card, 4, 'n2')]
         assert len(card) == 5, 'len(CROD card) = %i\ncard=%s' % (len(card), card)
@@ -333,20 +333,19 @@ class CROD(RodElement):
 
         #========================
         #(n1, n2) = self.node_ids()
-        n1 = self.node_ids[i, 0]
-        n2 = self.node_ids[i, 1]
+        n1, n2 = self.node_ids[i, :]
 
         i1 = index0s[n1]
         i2 = index0s[n2]
 
         #print("n0", n0)
         #print("n1", n1)
-        n1 = positions[n1]
-        n2 = positions[n2]
+        xyz1 = positions[n1]
+        xyz2 = positions[n2]
         #p1 = model.Node(n1).xyz
 
-        v1 = n1 - n2
-        L = norm(v1)
+        dxyz12 = xyz1 - xyz2
+        L = norm(dxyz12)
         if L == 0.0:
             msg = 'invalid CROD length=0.0\n%s' % (self.__repr__())
             raise ZeroDivisionError(msg)
@@ -360,7 +359,7 @@ class CROD(RodElement):
         k = array([[1., -1.],
                    [-1., 1.]])  # 1D rod
 
-        Lambda = _Lambda(v1, debug=True)
+        Lambda = _Lambda(dxyz12, debug=True)
         K = dot(dot(transpose(Lambda), k), Lambda)
         Ki, Kj = K.shape
 
@@ -391,8 +390,8 @@ class CROD(RodElement):
             ], 'int32')
             nIJV = [
                 # torsion
-                (n1, 4), (n1, 5), (n2, 6),
-                (n2, 4), (n2, 5), (n1, 6),
+                (n1, 4), (n1, 5), (n1, 6),
+                (n2, 4), (n2, 5), (n2, 6),
             ]
 
         else:  # axial + torsion; assume 3D
@@ -483,7 +482,8 @@ class CROD(RodElement):
             #k_axial = 1.0
             #k_torsion = 2.0
 
-            #k = array([[1., -1.], [-1., 1.]])  # 1D rod
+            #k = array([[1., -1.],
+                       #[-1., 1.]])  # 1D rod
 
             Lambda = _Lambda(v1, debug=False)
 
