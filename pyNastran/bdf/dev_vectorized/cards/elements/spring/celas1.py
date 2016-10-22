@@ -88,7 +88,7 @@ class CELAS1(SpringElement):
                         [-1, 1]])
 
         #========================
-        n0, n1 = self.node_ids[i, :]
+        n1, n2 = self.node_ids[i, :]
         c1, c2 = self.components[i, :]
         #i0, i1 = index0s
 
@@ -106,8 +106,8 @@ class CELAS1(SpringElement):
         ]
 
         nIJV = [
-            (n0, 1 + delta1),
-            (n1, 1 + delta2),
+            (n1, 1 + delta1),
+            (n2, 1 + delta2),
         ]
         return (k, dofs, nIJV)
 
@@ -117,14 +117,14 @@ class CELAS1(SpringElement):
 
         du_axial = zeros(n, 'float64')
         for i in range(self.n):
-            (n0, n1) = self.node_ids[i, :]
+            (n1, n2) = self.node_ids[i, :]
 
-            n01 = dofs[(n0, 1)]
             n11 = dofs[(n1, 1)]
+            n21 = dofs[(n2, 1)]
 
             q_axial = array([
-                q[n01],
                 q[n11],
+                q[n21],
             ])
             u_axial = q_axial
             du_axial[i] = u_axial[0] - u_axial[1]

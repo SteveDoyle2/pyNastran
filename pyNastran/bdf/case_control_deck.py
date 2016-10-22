@@ -363,7 +363,7 @@ class CaseControlDeck(object):
             msg += '  param = %r' % param
             raise SyntaxError(msg)
         #self.read([param])
-        lines = _clean_lines(self, [param])
+        lines = _clean_lines([param])
         (j, key, value, options, param_type) = self._parse_entry(lines)
         return (j, key, value, options, param_type)
 
@@ -376,7 +376,7 @@ class CaseControlDeck(object):
                      follow that when it's written out
         """
         isubcase = 0
-        lines = _clean_lines(self, lines)
+        lines = _clean_lines(lines)
         self.output_lines = []
         i = 0
         is_output_lines = False
@@ -416,8 +416,8 @@ class CaseControlDeck(object):
                                                           param_type, isubcase)
                 self.output_lines.append(line)
                 continue
-            #print("key=%-12r icase=%i value=%r options=%r param_type=%r" %(key,
-            #    isubcase, value, options, param_type))
+            #print("key=%-12r icase=%i value=%r options=%r param_type=%r" %(
+            #    key, isubcase, value, options, param_type))
             isubcase = self._add_parameter_to_subcase(key, value, options,
                                                       param_type, isubcase)
 
@@ -972,12 +972,14 @@ def verify_card2(key, value, options, line):
         raise NotImplementedError('key=%r line=%r' % (key, line))
 
 
-def _clean_lines(case_control, lines):
+def _clean_lines(lines):
     """
     Removes comment characters defined by a *$*.
 
-    :param case_control:  the CaseControlDeck object
-    :param lines: the lines to clean.
+    Parameters
+    ----------
+    lines : List[str, ...]
+        the lines to clean.
     """
     lines2 = []
     for line in lines:

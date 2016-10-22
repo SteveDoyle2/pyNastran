@@ -464,11 +464,10 @@ class Solver(OP2):
         d = date.today()
         self.date = (d.month, d.day, d.year)
 
-        page_stamp = self.make_stamp(self.title, self.date)
-        self.page_stamp = page_stamp
+        self.title = 'pyNastran Job'
+
         #------------------------------------------
         # start of analysis
-
         self.model = BDF(log=self.log, debug=False)
         self.model.cards_to_read = get_cards()
         self.model.f06 = self.f06_file
@@ -486,6 +485,24 @@ class Solver(OP2):
             }
             self.model.set_dynamic_syntax(data)
         self.model.read_bdf(bdf_filename)
+
+        print(self.model.case_control_deck)
+        print('--------------------')
+        for subcase_id, subcase in sorted(self.model.subcases.items()):
+            print(subcase)
+            if 'TITLE' in subcase:
+                self.title = subcase.get_parameter('TITLE')[0]
+                break
+
+        # TODO: there is a bug with the Case Control Deck reading
+        #       the TITLE doesn't get into SUBCASE 0 because the line
+        #       is missing from case_control_lines
+        #
+        #assert self.title != 'pyNastran Job'
+
+        page_stamp = self.make_stamp(self.title, self.date)
+        self.page_stamp = page_stamp
+
         cc = self.model.case_control_deck
         #print(cc.subcases)
         analysis_cases = []
@@ -529,10 +546,6 @@ class Solver(OP2):
 
         isubcase = case.id
         if model.sol in sols:
-            if 'TITLE' in case:
-                (self.title, options) = case.get_parameter('TITLE')
-            else:
-                self.title = 'pyNastran Job'
             if 'SUBTITLE' in case:
                 (self.Subtitle, options) = case.get_parameter('SUBTITLE')
             else:
@@ -1424,7 +1437,7 @@ class Solver(OP2):
     def _store_spring_oef(self, model, eids, axial, case, element_name):
         if len(eids) == 0:
             return
-        print('storing spring force...')
+        #print('storing spring force...')
         data_code = self._OEF_f06_header(case, element_name)
 
         is_sort1 = True
@@ -1867,7 +1880,7 @@ class Solver(OP2):
         #print('self.IDtoNidComponents = %s' % self.IDtoNidComponents) # None
         self.log.debug('self.nidComponentToID')
         for k, value in sorted(self.nidComponentToID.items()):
-            self.log.debug('%s : %s' % (k, value))
+            self.log.debug('  %s : %s' % (k, value))
         #nidComponentToID
 
         Kgg = self.Kgg

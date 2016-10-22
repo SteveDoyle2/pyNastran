@@ -101,17 +101,17 @@ class CELAS2(SpringElement):
         k = ki * array([[1, -1,],
                         [-1, 1]])
 
-        c0, c1 = self.components[i, :]
-        n0, n1 = self.node_ids[i, :]
+        c1, c2 = self.components[i, :]
+        n1, n2 = self.node_ids[i, :]
 
-        print('c0, c1 = %s %s' % (c0, c1))
-        delta0 = 0 if c0 in [0, 1, 2, 3] else 3
+        #print('c1, c2 = %s %s' % (c1, c2))
         delta1 = 0 if c1 in [0, 1, 2, 3] else 3
-        print('delta0, delta1 = %s %s' % (delta0, delta1))
+        delta2 = 0 if c2 in [0, 1, 2, 3] else 3
+        #print('delta1, delta2 = %s %s' % (delta1, delta2))
 
         nIJV = [
-            (n0, 1 + delta0),
             (n1, 1 + delta1),
+            (n2, 1 + delta2),
         ]
         dofs = nIJV
         return (k, dofs, nIJV)
@@ -134,19 +134,19 @@ class CELAS2(SpringElement):
         n = self.n
         du_axial = zeros(n, 'float32')
         for i in range(self.n):
-            c0, c1 = self.components[i, :]
-            n0, n1 = self.node_ids[i, :]
-            #if n0 == n1:
+            c1, c2 = self.components[i, :]
+            n1, n2 = self.node_ids[i, :]
+            #if n1 == n2:
                 #raise RuntimeError('CELAS2 eid=%s n1=%s n2=%s' % (self.element_id[i], n0, n1))
 
-            delta0 = 0 if c0 in [0, 1, 2, 3] else 3
             delta1 = 0 if c1 in [0, 1, 2, 3] else 3
-            n01 = dofs[(n0, 1 + delta0)]
+            delta2 = 0 if c2 in [0, 1, 2, 3] else 3
             n11 = dofs[(n1, 1 + delta1)]
+            n21 = dofs[(n2, 1 + delta2)]
 
             q_axial = array([
-                q[n01],
                 q[n11],
+                q[n21],
             ])
             u_axial = q_axial
             du_axial[i] = u_axial[0] - u_axial[1]

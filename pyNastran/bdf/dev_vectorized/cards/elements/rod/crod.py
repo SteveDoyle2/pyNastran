@@ -1,5 +1,6 @@
 from __future__ import print_function
 from six.moves import zip, range
+
 from numpy import array, dot, arange, zeros, unique, searchsorted, transpose, int64
 from numpy.linalg import norm
 
@@ -241,6 +242,24 @@ class CROD(RodElement):
         else:
             return mass
 
+    def write_card(self, bdf_file, size=8, is_double=False, element_id=None):
+        if self.n:
+            if element_id is None:
+                i = arange(self.n)
+            else:
+                i = searchsorted(self.element_id, element_id)
+            if isinstance(i, (int, int64)):
+                i = array([i])
+
+            for (eid, pid, n) in zip(self.element_id[i], self.property_id[i], self.node_ids[i]):
+                card = ['CROD', eid, pid, n[0], n[1]]
+                if size == 8:
+                    bdf_file.write(print_card_8(card))
+                else:
+                    bdf_file.write(print_card_16(card))
+
+    #=========================================================================
+
     def get_mass_matrix(self, i, model, positions, index0s, knorm=1.0):  # CROD/CONROD
         """
         Lumped:
@@ -259,7 +278,7 @@ class CROD(RodElement):
         A = self.model.prod.A[i]
         mid = self.model.prod.material_id[i]
         rho = self.model.materials.get_density_by_material_id(mid)
-        #========================
+
         xyz_cid0 = None
         #xyz1, xyz2 = self._node_locations(xyz_cid0)
         if self.n == 1:
@@ -270,9 +289,9 @@ class CROD(RodElement):
         i1 = index0s[n1]
         i2 = index0s[n2]
 
-        p1 = positions[n1]
-        p2 = positions[n2]
-        v1 = p1 - p2
+        xyz1 = positions[n1]
+        xyz2 = positions[n2]
+        v1 = xyz1 - xyz2
         L = norm(v1)
         if L == 0.0:
             msg = 'invalid CROD length=0.0\n%s' % self.__repr__()
@@ -301,24 +320,6 @@ class CROD(RodElement):
         self.model.log.info('dofs = %s' % dofs)
         return(M, dofs, nIJV)
 
-    #=========================================================================
-    def write_card(self, bdf_file, size=8, is_double=False, element_id=None):
-        if self.n:
-            #print('eid %s' % element_id)
-            if element_id is None:
-                i = arange(self.n)
-            else:
-                i = searchsorted(self.element_id, element_id)
-            if isinstance(i, (int, int64)):
-                i = array([i])
-
-            #print('i =', i, type(i))
-            for (eid, pid, n) in zip(self.element_id[i], self.property_id[i], self.node_ids[i]):
-                card = ['CROD', eid, pid, n[0], n[1]]
-                if size == 8:
-                    bdf_file.write(print_card_8(card))
-                else:
-                    bdf_file.write(print_card_16(card))
 
     #=========================================================================
     def get_stiffness_matrix(self, i, model, positions, index0s, knorm=1.0):
@@ -338,8 +339,6 @@ class CROD(RodElement):
         i1 = index0s[n1]
         i2 = index0s[n2]
 
-        #print("n0", n0)
-        #print("n1", n1)
         xyz1 = positions[n1]
         xyz2 = positions[n2]
         #p1 = model.Node(n1).xyz
@@ -359,12 +358,9 @@ class CROD(RodElement):
         k = array([[1., -1.],
                    [-1., 1.]])  # 1D rod
 
-        Lambda = _Lambda(dxyz12, debug=True)
+        Lambda = _Lambda(dxyz12, debug=False)
         K = dot(dot(transpose(Lambda), k), Lambda)
         Ki, Kj = K.shape
-
-        # for testing
-        #K = ones((Ki, Ki), 'float64')
 
         K2 = zeros((Ki*2, Kj*2), 'float64')
         if k_axial == 0.0 and k_torsion == 0.0:
@@ -459,11 +455,11 @@ class CROD(RodElement):
             n1, n2 = self.node_ids[i, :]
 
 
-            p1 = positions[n1]
-            p2 = positions[n2]
+            xyz1 = positions[n1]
+            xyz2 = positions[n2]
 
-            v1 = p1 - p2
-            L = norm(p1 - p2)
+            v1 = xyz1 - xyz2
+            L = norm(xyz1 - xyz2)
             if L == 0.0:
                 msg = 'invalid CROD length=0.0\n%s' % (self.__repr__())
                 raise ZeroDivisionError(msg)

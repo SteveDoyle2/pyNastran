@@ -18,9 +18,9 @@ def _Lambda(v1, debug=True):
     """
     #R = self.Rmatrix(model,is3D)
 
-    #p1 = model.Node(n1).get_position()
-    #p2 = model.Node(n2).get_position()
-    #v1 = p2 - p1
+    #xyz1 = model.Node(n1).get_position()
+    #xyz2 = model.Node(n2).get_position()
+    #v1 = xyz2 - xyz1
     if debug:
         print("v1=%s" % v1)
     n = norm(v1)
@@ -264,12 +264,15 @@ class CONROD(RodElement):
         else:
             return mass
 
-    #=========================================================================
-
     def write_card(self, bdf_file, size=8, element_id=None):
         if self.n:
             if element_id is None:
                 i = arange(self.n)
+            else:
+                i = searchsorted(self.element_id, element_id)
+            if isinstance(i, (int, int64)):
+                i = array([i])
+
             for (eid, n12, mid, A, J, c, nsm) in zip(
                  self.element_id, self.node_ids, self.material_id, self.A, self.J,
                  self.c, self.nsm):
@@ -279,6 +282,8 @@ class CONROD(RodElement):
                     bdf_file.write(print_card_8(card))
                 else:
                     bdf_file.write(print_card_16(card))
+
+    #=========================================================================
 
     def get_mass_matrix(self, i, model, positions, index0s, knorm=1.0):  # CROD/CONROD
         """
@@ -298,15 +303,15 @@ class CONROD(RodElement):
         mat = self.model.materials.mat1[self.material_id[i]]
         mid = self.material_id[i]
         rho = mat.get_density_by_material_id()
-        #========================
-        n0, n1 = self.node_ids[i, :]
 
-        i0 = index0s[n0]
+        n1, n2 = self.node_ids[i, :]
+
         i1 = index0s[n1]
+        i2 = index0s[n2]
 
-        p0 = positions[n0]
-        p1 = positions[n1]
-        v1 = p0 - p1
+        xyz1 = positions[n1]
+        xyz2 = positions[n2]
+        v1 = xyz1 - xyz2
         L = norm(v1)
         if L == 0.0:
             msg = 'invalid CONROD length=0.0\n%s' % self.__repr__()
@@ -321,17 +326,16 @@ class CONROD(RodElement):
 
         Mi, Mj = M.shape
         dofs = array([
-            i0, i0+1, i0+2,
             i1, i1+1, i1+2,
+            i2, i2+1, i2+2,
         ], 'int32')
         nIJV = [
             # axial
-            (n0, 1), (n0, 2), (n0, 3),
             (n1, 1), (n1, 2), (n1, 3),
+            (n2, 1), (n2, 2), (n2, 3),
 
             # torsion -> NA
         ]
-
         self.model.log.info('dofs = %s' % dofs)
         return(M, dofs, nIJV)
 
@@ -358,9 +362,6 @@ class CONROD(RodElement):
 
         i1 = index0s[n1]
         i2 = index0s[n2]
-        #node0 = self.nodes[0]
-        #node1 = self.nodes[1]
-
 
         xyz1 = positions[n1]
         xyz2 = positions[n2]
@@ -384,9 +385,6 @@ class CONROD(RodElement):
         Lambda = _Lambda(dxyz12, debug=False)
         K = dot(dot(transpose(Lambda), k), Lambda)
         Ki, Kj = K.shape
-
-        # for testing
-        #K = ones((Ki, Ki), 'float64')
 
         K2 = zeros((Ki*2, Kj*2), 'float64')
         if k_axial == 0.0 and k_torsion == 0.0:
@@ -470,11 +468,11 @@ class CONROD(RodElement):
             n1, n2 = self.node_ids[i, :]
 
 
-            p1 = positions[n1]
-            p2 = positions[n2]
+            xyz1 = positions[n1]
+            xyz2 = positions[n2]
 
-            v1 = p1 - p2
-            L = norm(p1 - p2)
+            v1 = xyz1 - xyz2
+            L = norm(xyz1 - xyz2)
             if L == 0.0:
                 msg = 'invalid CONROD length=0.0\n%s' % (self.__repr__())
                 raise ZeroDivisionError(msg)
@@ -502,7 +500,7 @@ class CONROD(RodElement):
             #k = array([[1., -1.],
                        #[-1., 1.]])  # 1D rod
 
-            Lambda = _Lambda(v1, debug=True)
+            Lambda = _Lambda(v1, debug=False)
 
             #print("**dofs =", dofs)
             n11 = dofs[(n1, 1)]

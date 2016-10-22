@@ -863,7 +863,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
         for key, bsurfs in sorted(iteritems(self.bsurfs)):
             bsurfs.validate()
 
-
         #------------------------------------------------
         for key, suport1 in sorted(iteritems(self.suport1)):
             suport1.validate()
@@ -2217,7 +2216,6 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             else:
                 self._dmig_temp[name].append((card_obj, comment))
 
-
     def _prepare_dmix(self, class_obj, add_method, card_obj, comment=''):
         """adds a DMIx"""
         #elif card_name in ['DMI', 'DMIJ', 'DMIJI', 'DMIK']:
@@ -2866,7 +2864,10 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
             nepoints = len(epoints)
             #raise NotImplementedError('EPOINTs')
 
-        assert nnodes + nspoints + nepoints > 0, 'nnodes=%s nspoints=%s nepoints=%s' % (nnodes, nspoints, nepoints)
+        if nnodes + nspoints + nepoints == 0:
+            msg = 'nnodes=%s nspoints=%s nepoints=%s' % (nnodes, nspoints, nepoints)
+            raise ValueError(msg)
+
         #xyz_cid0 = np.zeros((nnodes + nspoints, 3), dtype=dtype)
         xyz_cp = np.zeros((nnodes + nspoints, 3), dtype=dtype)
         nid_cp_cd = np.zeros((nnodes + nspoints, 3), dtype='int32')
@@ -3184,7 +3185,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                         #msg += 'len(bdf_filename2) = %s' % len(bdf_filename2)
                         print(msg)
                         raise
-                        raise IOError(msg)
+                        #raise IOError(msg)
 
                     with self._open_file(bdf_filename2, basename=False) as bdf_file:
                         #print('bdf_file.name = %s' % bdf_file.name)
@@ -3365,6 +3366,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
     def _parse_cards(self, cards, card_count):
         """creates card objects and adds the parsed cards to the deck"""
         #print('card_count = %s' % card_count)
+
         if isinstance(cards, dict): # self._is_cards_dict = True
             for card_name, card in sorted(iteritems(cards)):
                 if self.is_reject(card_name):
@@ -3598,6 +3600,7 @@ IGNORE_COMMENTS = (
     'COORDS', 'THERMAL', 'TABLES', 'RANDOM TABLES',
     'SETS', 'CONTACT', 'REJECTS', 'REJECT_LINES',
     'PROPERTIES_MASS', 'MASSES')
+
 
 def _clean_comment(comment):
     """

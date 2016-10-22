@@ -1460,7 +1460,6 @@ class BDF(AddCard, CrossReference, WriteMesh):
             def add_card(cls, card, comment=''):
                 raise NotImplementedError(card)
 
-        #return
         self._card_parser = {
             #'=' : (Crash, None),
             '/' : (Crash, None),
@@ -2057,8 +2056,6 @@ class BDF(AddCard, CrossReference, WriteMesh):
 
     def _prepare_cord2(self, card, card_obj, comment=''):
         """adds a CORD2x"""
-        #print('card = %r' % card)
-        #print('card_obj =', card_obj)
         self.coords.add_cord2x(card, card_obj, comment)
 
     def add_card(self, card_lines, card_name, comment='', is_list=True, has_none=True):
@@ -3209,7 +3206,6 @@ class BDF(AddCard, CrossReference, WriteMesh):
         """creates card objects and adds the parsed cards to the deck"""
         #print('card_count = %s' % card_count)
 
-
         if isinstance(cards, dict):
             # TODO: many others...
             cards_to_get_lengths_of = {
@@ -3504,6 +3500,7 @@ IGNORE_COMMENTS = (
     'SETS', 'CONTACT', 'REJECTS', 'REJECT_LINES',
     'PROPERTIES_MASS', 'MASSES')
 
+
 def _clean_comment(comment):
     """
     Removes specific pyNastran comment lines so duplicate lines aren't
@@ -3529,7 +3526,6 @@ def _clean_comment(comment):
     #if comment:
         #print(comment)
     return comment
-
 
 def _lines_to_decks(lines, i, punch):
     """
@@ -3572,4 +3568,4 @@ def _lines_to_decks(lines, i, punch):
 
 if __name__ == '__main__':  # pragma: no cover
     from pyNastran.bdf.test.test_bdf import main
-    main()
+    #main()

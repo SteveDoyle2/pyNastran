@@ -657,6 +657,12 @@ class BDFAttributes(object):
         ]
         return object_methods(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
 
+    @property
+    def subcases(self):
+        """gets the subcases"""
+        if self.case_control_deck is None:
+            return {}
+        return self.case_control_deck.subcases
 
     @property
     def rejects(self):
