@@ -230,7 +230,7 @@ class CAERO1(VectorizedCard):
         element basis.
 
         Parameters
-        -----------
+        ----------
         element_id : (N, ) int ndarray; (default=None -> all)
             the elements to consider
         node_ids : (nnodes, ) int ndarray; (None -> computes)

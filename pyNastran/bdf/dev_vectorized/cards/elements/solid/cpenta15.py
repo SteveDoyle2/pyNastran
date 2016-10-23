@@ -82,9 +82,13 @@ class CPENTA15(SolidElement):
         """
         Gets the volume for one or more CPENTA15 elements.
 
-        :param element_id: the elements to consider (default=None -> all)
+        Parameters
+        ----------
+        element_id : (nelements, ) int ndarray; default=None -> all
+            the elements to consider
         :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
-        :param total: should the volume be summed (default=False)
+        total : bool; default=False
+            should the volume be summed
 
         .. note:: Volume for a CPENTA is the average area of two opposing faces
                   times the length between the centroids of those points
@@ -100,9 +104,13 @@ class CPENTA15(SolidElement):
         """
         Gets the centroid and volume for one or more CPENTA15 elements.
 
-        :param element_id: the elements to consider (default=None -> all)
+        Parameters
+        ----------
+        element_id : (N, ) int ndarray; (default=None -> all)
+            the elements to consider
         :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
-        :param total: should the volume be summed (default=False)
+        total : bool; default=False
+            should the volume be summed
 
         ..see:: CPENTA15.get_volume_by_element_id() and CPENTA15.get_centroid_by_element_id() for more information.
         """
@@ -126,7 +134,10 @@ class CPENTA15(SolidElement):
         """
         Gets the centroid for one or more CPENTA15 elements.
 
-        :param element_id: the elements to consider (default=None -> all)
+        Parameters
+        ----------
+        element_id : (N, ) int ndarray; (default=None -> all)
+            the elements to consider
         :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
         :param total: should the centroid be summed (default=False)
         """

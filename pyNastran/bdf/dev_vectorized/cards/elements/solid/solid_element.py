@@ -85,7 +85,10 @@ class SolidElement(Element):
         """
         Gets the mass for one or more SolidElement elements.
 
-        :param element_id: the elements to consider (default=None -> all)
+        Parameters
+        ----------
+        element_id : (N, ) int ndarray; (default=None -> all)
+            the elements to consider
         :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
         :param total: should the centroid be summed (default=False)
         """

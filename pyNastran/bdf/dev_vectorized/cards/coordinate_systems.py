@@ -148,6 +148,9 @@ class Coord(BaseCard):
 
         :param p:       the point to be transformed in the local frame.  Type=1x3 NUMPY.NDARRAY
         :param debug:   developer debug (default=False)
+
+        Returns
+        -------
         :returns p2:  the point in the global frame.  Type=1x3 NUMPY.NDARRAY
         :returns beta:  the rotation matrix.  Type=6x6 NUMPY.NDARRAY
 
@@ -576,6 +579,8 @@ class CORD1R(Cord1x):
 
     def coord_to_xyz(self, p):
         """
+        Returns
+        -------
         :returns xyz: the point in the local coordinate system
         """
         return p
@@ -639,6 +644,8 @@ class CORD1C(Cord1x):
         .. math:: x = R \cos(\theta)
         .. math:: y = R \sin(\theta)
 
+        Returns
+        -------
         :returns xyz: the point in the local coordinate system
         """
         R = p[0]
@@ -649,6 +656,8 @@ class CORD1C(Cord1x):
 
     def xyz_to_coord(self, p):
         """
+        Returns
+        -------
         :returns xyz: the delta xyz point in the local coordinate system
         """
         (x, y, z) = p
@@ -703,6 +712,8 @@ class CORD1S(Cord1x):
 
     def xyz_to_coord(self, p):
         r"""
+        Returns
+        -------
         :returns xyz: the loca XYZ point in the R, \theta, \phi coordinate system
         """
         (x, y, z) = p
@@ -716,6 +727,8 @@ class CORD1S(Cord1x):
 
     def coord_to_xyz(self, p):
         r"""
+        Returns
+        -------
         :returns xyz: the R, \theta, \phi point in the local XYZ coordinate system
         """
         R = p[0]
@@ -768,12 +781,16 @@ class CORD2R(Cord2x):
 
     def coord_to_xyz(self, p):
         """
+        Returns
+        -------
         :returns xyz: the point in the local coordinate system
         """
         return p
 
     def xyz_to_coord(self, p):
         """
+        Returns
+        -------
         :returns xyz: the delta xyz point in the local coordinate system
         """
         return p
@@ -836,6 +853,8 @@ class CORD2C(Cord2x):
         .. math:: x = R \cos(\theta)
         .. math:: y = R \sin(\theta)
 
+        Returns
+        -------
         :returns xyz: the point in the local coordinate system
         """
         R = p[0]
@@ -846,6 +865,8 @@ class CORD2C(Cord2x):
 
     def xyz_to_coord(self, p):
         """
+        Returns
+        -------
         :returns xyz: the delta xyz point in the local coordinate system
         """
         (x, y, z) = p
@@ -901,6 +922,8 @@ class CORD2S(Cord2x):
 
     def xyz_to_coord(self, p):
         r"""
+        Returns
+        -------
         :returns xyz: the loca XYZ point in the R, \theta, \phi coordinate system
         """
         (x, y, z) = p
@@ -914,6 +937,8 @@ class CORD2S(Cord2x):
 
     def coord_to_xyz(self, p):
         r"""
+        Returns
+        -------
         :returns xyz: the R, \theta, \phi point in the local XYZ coordinate system
         """
         R = p[0]

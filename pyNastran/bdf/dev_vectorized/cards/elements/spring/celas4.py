@@ -101,14 +101,14 @@ class CELAS4(SpringElement):
         k = ki * array([[1, -1,],
                         [-1, 1]])
 
-        n0, n1 = self.node_ids[i, :]
+        n1, n2 = self.node_ids[i, :]
 
-        nIJV = [
-            (n0, 1),
+        n_ijv = [
             (n1, 1),
+            (n2, 1),
         ]
-        dofs = nIJV
-        return (k, dofs, nIJV)
+        dofs = n_ijv
+        return (k, dofs, n_ijv)
 
     def displacement_stress(self, model, positions, q, dofs,
                             ni, o1, e1, f1):
@@ -118,12 +118,12 @@ class CELAS4(SpringElement):
         for i in range(self.n):
             n0, n1 = self.node_ids[i, :]
 
-            n01 = dofs[(n0, 1)]
-            n11 = dofs[(n1, 1)]
+            n11 = dofs[(n0, 1)]
+            n21 = dofs[(n1, 1)]
 
             q_axial = array([
-                q[n01],
                 q[n11],
+                q[n21],
             ])
             u_axial = q_axial
             du_axial[i] = u_axial[0] - u_axial[1]

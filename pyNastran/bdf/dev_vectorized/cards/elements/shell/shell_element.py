@@ -51,8 +51,12 @@ class ShellElement(Element):
         """
         Gets the mass of the CQUAD4s on a total or per element basis.
 
-        :param element_id: the elements to consider (default=None -> all)
-        :param total: should the mass be summed (default=False)
+        Parameters
+        ----------
+        element_id : (N, ) int ndarray; (default=None -> all)
+            the elements to consider
+        total : bool; default=False
+            should the mass be summed
 
         :param xyz_cid0: the GRIDs as an (N, 3) NDARRAY in CORD2R=0 (or None)
 
@@ -74,8 +78,12 @@ class ShellElement(Element):
         """
         Gets the mass per area of the CQUAD4s on a total or per element basis.
 
-        :param element_id: the elements to consider (default=None -> all)
-        :param total: should the mass be summed (default=False)
+        Parameters
+        ----------
+        element_id : (N, ) int ndarray; (default=None -> all)
+            the elements to consider
+        total : bool; default=False
+            should the mass be summed
 
         :param xyz_cid0: the GRIDs as an (N, 3) NDARRAY in CORD2R=0 (or None)
 
@@ -93,7 +101,10 @@ class ShellElement(Element):
         """
         Gets the normals of the CQUAD4s on per element basis.
 
-        :param element_id: the elements to consider (default=None -> all)
+        Parameters
+        ----------
+        element_id : (N, ) int ndarray; (default=None -> all)
+            the elements to consider
 
         :param xyz_cid0: the GRIDs as an (N, 3) NDARRAY in CORD2R=0 (or None)
 
@@ -110,7 +121,10 @@ class ShellElement(Element):
         """
         Gets the area of the CQUAD4s on a total or per element basis.
 
-        :param element_id: the elements to consider (default=None -> all)
+        Parameters
+        ----------
+        element_id : (N, ) int ndarray; (default=None -> all)
+            the elements to consider
         :param total: should the area be summed (default=False)
 
         :param node_ids:   the GRIDs as an (N, )  NDARRAY (or None)

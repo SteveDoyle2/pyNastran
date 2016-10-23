@@ -709,7 +709,9 @@ class Solver(OP2):
                 #sys.exit('check the mass...')
         return Mgg
 
-    #def run_sol_103(self, model, case):
+    def run_sol_103(self, model, case):
+        self.end_options['SEMR'] = True
+        raise NotImplementedError()
         #"""
         #ug = un+um All structural DOF including scalar DOF
         #um DOF eliminated by multipoint constraints and rigid elements

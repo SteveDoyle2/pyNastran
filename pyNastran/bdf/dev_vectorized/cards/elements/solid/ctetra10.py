@@ -104,9 +104,13 @@ class CTETRA10(SolidElement):
         """
         Gets the volume for one or more CTETRA10 elements.
 
-        :param element_id: the elements to consider (default=None -> all)
+        Parameters
+        ----------
+        element_id : (N, ) int ndarray; (default=None -> all)
+            the elements to consider
         :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
-        :param total: should the volume be summed (default=False)
+        total : bool; default=False
+            should the volume be summed
         """
         if element_id is None:
             element_id = self.element_id
@@ -127,9 +131,13 @@ class CTETRA10(SolidElement):
         """
         Gets the centroid and volume for one or more CTETRA10 elements.
 
-        :param element_id: the elements to consider (default=None -> all)
+        Parameters
+        ----------
+        element_id : (N, ) int ndarray; (default=None -> all)
+            the elements to consider
         :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
-        :param total: should the volume be summed (default=False)
+        total : bool; default=False
+            should the volume be summed
 
         ..see:: CTETRA10.volume() and CTETRA10.centroid() for more information.
         """
@@ -155,7 +163,10 @@ class CTETRA10(SolidElement):
         """
         Gets the centroid for one or more CTETRA elements.
 
-        :param element_id: the elements to consider (default=None -> all)
+        Parameters
+        ----------
+        element_id : (N, ) int ndarray; (default=None -> all)
+            the elements to consider
         :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
         :param total: should the centroid be summed (default=False)
         """
@@ -172,7 +183,10 @@ class CTETRA10(SolidElement):
         """
         Gets the mass for one or more CTETRA10 elements.
 
-        :param element_id: the elements to consider (default=None -> all)
+        Parameters
+        ----------
+        element_id : (N, ) int ndarray; (default=None -> all)
+            the elements to consider
         :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
         :param total: should the centroid be summed (default=False)
         """

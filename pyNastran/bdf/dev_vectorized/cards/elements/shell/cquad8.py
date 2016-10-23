@@ -96,13 +96,19 @@ class CQUAD8(ShellElement):
         Gets the mass, area, and normals of the CQUAD4s on a per
         element basis.
 
-        :param element_id: the elements to consider (default=None -> all)
+        Parameters
+        ----------
+        element_id : (nelements, ) int ndarray; (default=None -> all)
+            the elements to consider
 
-        :param xyz_cid0: the GRIDs as an (N, 3) NDARRAY in CORD2R=0 (or None)
+        :param xyz_cid0: the GRIDs as an (nnodes, 3) NDARRAY in CORD2R=0 (or None)
 
-        :param calculate_mass: should the mass be calculated (default=True)
-        :param calculate_area: should the area be calculated (default=True)
-        :param calculate_normal: should the normals be calculated (default=True)
+        calculate_mass : bool; default=True
+            should the mass be calculated
+        calculate_area : bool; default=True
+            should the area be calculated
+        calculate_normal : bool; default=True
+            should the normals be calculated
 
         .. note:: If node_ids is None, the positions of all the GRID cards
                   must be calculated
@@ -161,13 +167,17 @@ class CQUAD8(ShellElement):
         """
         Gets the positions of a list of nodes
 
+        Parameters
+        ----------
         :param nids_to_get:  the node IDs to get as an NDARRAY
         :param node_ids:     the node IDs that contains all the nids_to_get
                              as an NDARRAY
         :param grids_cid_0:  the GRIDs as an (N, )  NDARRAY
 
-        :returns grids2_cid_0 : the corresponding positins of the requested
-                                GRIDs
+        Returns
+        -------
+        grids2_cid_0 : (nnodes, 3) float ndarray
+            the corresponding positions of the requested GRIDs
         """
         positions = self.model.grid.get_position_by_node_id(nids_to_get)
         #grids2_cid_0 = grids_cid0[searchsorted(node_ids, nids_to_get), :]

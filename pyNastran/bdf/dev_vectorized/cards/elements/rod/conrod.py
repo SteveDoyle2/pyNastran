@@ -389,7 +389,7 @@ class CONROD(RodElement):
         K2 = zeros((Ki*2, Kj*2), 'float64')
         if k_axial == 0.0 and k_torsion == 0.0:
             dofs = []
-            nIJV = []
+            n_ijv = []
             K2 = []
         elif k_torsion == 0.0: # axial; 2D or 3D
             K2 = K * k_axial
@@ -397,7 +397,7 @@ class CONROD(RodElement):
                 i1, i1+1, i1+2,
                 i2, i2+1, i2+2,
             ], 'int32')
-            nIJV = [
+            n_ijv = [
                 # axial
                 (n1, 1), (n1, 2), (n1, 3),
                 (n2, 1), (n2, 2), (n2, 3),
@@ -408,7 +408,7 @@ class CONROD(RodElement):
                 i1+3, i1+4, i1+5,
                 i2+3, i2+4, i2+5,
             ], 'int32')
-            nIJV = [
+            n_ijv = [
                 # torsion
                 (n1, 4), (n1, 5), (n1, 6),
                 (n2, 4), (n2, 5), (n2, 6),
@@ -428,7 +428,7 @@ class CONROD(RodElement):
                 i1+3, i1+4, i1+5,
                 i2+3, i2+4, i2+5,
             ], 'int32')
-            nIJV = [
+            n_ijv = [
                 # axial
                 (n1, 1), (n1, 2), (n1, 3),
                 (n2, 1), (n2, 2), (n2, 3),
@@ -450,7 +450,7 @@ class CONROD(RodElement):
         self.model.log.info('dofs = %s' % dofs)
         self.model.log.debug('K =\n\n%s' % (K / knorm))
 
-        return(K2, dofs, nIJV)
+        return(K2, dofs, n_ijv)
 
     def displacement_stress(self, model, positions, q, dofs):
         n = self.n

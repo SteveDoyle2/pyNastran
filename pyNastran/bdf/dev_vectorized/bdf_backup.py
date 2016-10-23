@@ -3042,7 +3042,11 @@ def _clean_comment(comment, end=-1):
     #relative paths.  If it's on another drive, the path is not modified.
 
     #:param filename: a filename string
-    #:returns filename_string: a shortened representation of the filename
+
+    #Returns
+    #-------
+    #filename_string : str
+        #a shortened representation of the filename
     #"""
     #driveLetter = os.path.splitdrive(os.path.abspath(filename))[0]
     #if driveLetter == os.path.splitdrive(os.curdir)[0] and self._relpath:

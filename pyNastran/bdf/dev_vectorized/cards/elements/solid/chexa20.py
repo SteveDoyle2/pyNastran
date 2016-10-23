@@ -174,8 +174,12 @@ class CHEXA20(SolidElement):
 
     def _get_node_locations_by_index(self, i, xyz_cid0):
         """
-        :param i:        None or an array of node IDs
-        :param xyz_cid0: the node positions as a dictionary
+        Parameters
+        ----------
+        i : (nnodes, ) int ndarray; None -> all
+            node IDs
+        xyz_cid0 : (nnodes, 3) float ndarray; default=None -> calculate
+            the GRIDs in CORD2R=0
         """
         grid = self.model.grid
         get_node_index_by_node_id = self.model.grid.get_node_index_by_node_id
@@ -197,9 +201,14 @@ class CHEXA20(SolidElement):
         """
         Gets the volume for one or more elements.
 
-        :param element_id: the elements to consider (default=None -> all)
-        :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
-        :param total: should the volume be summed (default=False)
+        Parameters
+        ----------
+        element_id : (nelements, ) int ndarray; default=None
+            the elements to consider
+        xyz_cid0 : (nnodes, 3) float ndarray; default=None -> calculate
+            the GRIDs in CORD2R=0
+        total : bool; default=False
+            should the volume be summed
 
         .. note:: Volume for a CHEXA is the average area of two opposing faces
                   times the length between the centroids of those points
@@ -217,9 +226,14 @@ class CHEXA20(SolidElement):
         """
         Gets the centroid and volume for one or more elements.
 
-        :param element_id: the elements to consider (default=None -> all)
-        :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
-        :param total: should the volume be summed; centroid be averaged (default=False)
+        Parameters
+        ----------
+        element_id : (nelements, ) int ndarray; default=None
+            the elements to consider
+        xyz_cid0 : (nnodes, 3) float ndarray; default=None -> calculate
+            the GRIDs in CORD2R=0
+        total : bool; default=False
+            should the volume be summed; centroid be averaged
 
         ..see:: CHEXA20.get_volume_by_element_id() and CHEXA20.get_centroid_by_element_id() for more information.
         """
@@ -241,9 +255,14 @@ class CHEXA20(SolidElement):
         """
         Gets the centroid for one or more elements.
 
-        :param element_id: the elements to consider (default=None -> all)
-        :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
-        :param total: should the centroid be averaged (default=False)
+        Parameters
+        ----------
+        element_id : (nelements, ) int ndarray; default=None
+            the elements to consider
+        xyz_cid0 : (nnodes, 3) float ndarray; default=None -> calculate
+            the GRIDs in CORD2R=0
+        total : bool; default=False
+            should the centroid be averaged
         """
         nodes = self._get_node_locations_by_element_id(element_id, xyz_cid0)
         n1, n2, n3, n4, n5, n6, n7, n8 = nodes

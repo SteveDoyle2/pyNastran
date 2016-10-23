@@ -99,7 +99,9 @@ class PSHELL(Property):
             i = self.property_id.argsort()
             self.property_id = self.property_id[i]
             self.material_id = self.material_id[i]
+            print('self.t1', self.thickness)
             self.thickness = self.thickness[i]
+            print('self.t2', self.thickness)
             self.material_id2 = self.material_id2[i]
             self.twelveIt3 = self.twelveIt3[i]
             self.material_id3 = self.material_id3[i]

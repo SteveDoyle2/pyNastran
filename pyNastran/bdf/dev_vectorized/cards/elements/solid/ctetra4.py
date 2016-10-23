@@ -291,9 +291,13 @@ class CTETRA4(SolidElement):
         """
         Gets the volume for one or more elements.
 
-        :param element_id: the elements to consider (default=None -> all)
+        Parameters
+        ----------
+        element_id : (nelements, ) int ndarray; default=None -> all
+            the elements to consider
         :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
-        :param total: should the volume be summed (default=False)
+        total : bool; default=False
+            should the volume be summed
         """
         n1, n2, n3, n4 = self._get_node_locations_by_element_id(element_id, xyz_cid0)
 
@@ -307,7 +311,10 @@ class CTETRA4(SolidElement):
         """
         Gets the mass for one or more CTETRA elements.
 
-        :param element_ids: the elements to consider (default=None -> all)
+        Parameters
+        ----------
+        element_id : (nelements, ) int ndarray; default=None -> all
+            the elements to consider
         :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
         :param total: should the centroid be summed (default=False)
         """
@@ -329,7 +336,10 @@ class CTETRA4(SolidElement):
         """
         Gets the centroid and volume for one or more elements.
 
-        :param element_id: the elements to consider (default=None -> all)
+        Parameters
+        ----------
+        element_id : (nelements, ) int ndarray; default=None -> all
+            the elements to consider
         :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
         :param total: should the volume be summed; centroid be averaged (default=False)
 
@@ -357,9 +367,13 @@ class CTETRA4(SolidElement):
         """
         Gets the centroid for one or more elements.
 
-        :param element_id: the elements to consider (default=None -> all)
+        Parameters
+        ----------
+        element_id : (nelements, ) int ndarray; default=None -> all
+            the elements to consider
         :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
-        :param total: should the centroid be averaged (default=False)
+        total : bool; default=False
+            should the centroid be averaged
         """
         n1, n2, n3, n4 = self._get_node_locations_by_element_id(element_id, xyz_cid0)
         centroid = (n1 + n2 + n3 + n4) / 4.0

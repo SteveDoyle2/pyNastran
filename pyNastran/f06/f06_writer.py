@@ -103,9 +103,11 @@ def sorted_bulk_data_header():
     return msg
 
 
-def make_end(end_flag=False):
+def make_end(end_flag=False, options=None):
     lines = []
     lines2 = []
+    if options is None:
+        options = {}
     if end_flag:
         lines = [
             '', '',
@@ -118,24 +120,28 @@ def make_end(end_flag=False):
         peid = 0
         proj = 1
         vers = 1
-        approach = '        '
+        approach = "'        '"
 
         SELG = 'T'
         SEMG = 'T'
-        SEMR = 'T'
+        SEMR = 'F'
+        if options.has_key('SEMR'):
+            SEMR = 'T' # modal
         SEKR = 'T'
         SELR = 'T'
         MODES = 'F'
         DYNRED = 'F'
 
-        SOLLIN = 'T'
+        SOLLIN = 'F'
+        if options.has_key('SEMR'):
+            SOLLIN = 'T' # p-elements
         PVALID = 0
         SOLNL = 'F'
         LOOPID = -1
         CYCLE = 0
         SENSITIVITY = 'F'
 
-        msg = '     %s     %s    %s    %s %8r    %s    %s    %s    %s    %s     %s      %s      %s      %s     %s     %s            %s           %s' % (
+        msg = '     %s     %s    %s    %s %8s    %s    %s    %s    %s    %s     %s      %s      %s      %s     %s     %s            %s           %s' % (
             seid, peid, proj, vers, approach, SEMG, SEMR, SEKR, SELG, SELR, MODES, DYNRED, SOLLIN, PVALID, SOLNL,
             LOOPID, CYCLE, SENSITIVITY)
         lines.append(msg)
@@ -179,6 +185,7 @@ class F06Writer(OP2_F06_Common):
         self.additional_matrices = {}
         self.matrices = {}
         self.subcase_key = defaultdict(list)
+        self.end_options = {}
 
         self._results = ResultSet(self.get_all_results())
 
@@ -401,7 +408,7 @@ class F06Writer(OP2_F06_Common):
                                       is_mag_phase=is_mag_phase, is_sort1=is_sort1,
                                       quiet=quiet, repr_check=repr_check)
         #self._write_f06_time_based(f06, page_stamp)
-        f06.write(make_end(end_flag))
+        f06.write(make_end(end_flag, self.end_options))
         f06.close()
 
     def _write_f06_subcase_based(self, f06, page_stamp, delete_objects=True,

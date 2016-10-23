@@ -83,13 +83,13 @@ class CELAS3(SpringElement):
             else:
                 i = searchsorted(self.element_id, self.eid)
 
-            N0 = self.node_ids[i, 0]
-            N1 = self.node_ids[i, 1]
-            C0 = self.components[i, 0]
-            C1 = self.components[i, 1]
-            for (eid, k, n0, n1, c0, c1, ge, s) in zip(self.element_id[i],
-                    self.K[i], N0, N1, C0, C1, self.ge[i], self.s[i]):
-                card = ['CELAS3', eid, k, n0, c0, n1, c1, ge, s]
+            N1 = self.node_ids[i, 0]
+            N2 = self.node_ids[i, 1]
+            C1 = self.components[i, 0]
+            C2 = self.components[i, 1]
+            for (eid, k, n1, n2, c1, c2, ge, s) in zip(self.element_id[i],
+                    self.K[i], N1, N2, C1, C2, self.ge[i], self.s[i]):
+                card = ['CELAS3', eid, k, n1, c1, n2, c2, ge, s]
                 if size == 8:
                     bdf_file.write(print_card_8(card))
                 else:
@@ -101,27 +101,27 @@ class CELAS3(SpringElement):
         k = ki * array([[1, -1,],
                         [-1, 1]])
 
-        n0, n1 = self.node_ids[i, :]
+        n1, n2 = self.node_ids[i, :]
 
-        nIJV = [
-            (n0, 1),
+        n_ijv = [
             (n1, 1),
+            (n2, 1),
         ]
-        dofs = nIJV
-        return (k, dofs, nIJV)
+        dofs = n_ijv
+        return (k, dofs, n_ijv)
 
     def displacement_stress(self, model, positions, q, dofs,
                             ni, o1, e1, f1):
         n = self.n
         du_axial = zeros(n, 'float64')
         for i in range(self.n):
-            n0, n1 = self.node_ids[i, :]
-            n01 = dofs[(n0, 1)]
+            n1, n2 = self.node_ids[i, :]
             n11 = dofs[(n1, 1)]
+            n21 = dofs[(n2, 1)]
 
             q_axial = array([
-                q[n01],
                 q[n11],
+                q[n21],
             ])
             u_axial = q_axial
             du_axial[i] = u_axial[0] - u_axial[1]

@@ -105,11 +105,11 @@ class CELAS1(SpringElement):
             i2 + c1b,
         ]
 
-        nIJV = [
+        n_ijv = [
             (n1, 1 + delta1),
             (n2, 1 + delta2),
         ]
-        return (k, dofs, nIJV)
+        return (k, dofs, n_ijv)
 
     def displacement_stress(self, model, positions, q, dofs,
                             ni, o1, e1, f1):
