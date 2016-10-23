@@ -839,7 +839,8 @@ class OP2_F06_Common(object):
                   if isinstance(getattr(self, table), dict)
                   and table not in [
                       'card_count', 'data_code', 'element_mapper', 'iSubcaseNameMap',
-                      'labels', 'subtitles', 'additional_matrices', 'matrices', 'subcase_key']]
+                      'labels', 'subtitles', 'additional_matrices', 'matrices', 'subcase_key',
+                      'end_options']]
         for table in tables:
             if self.make_geom:
                 break
@@ -959,11 +960,11 @@ class OP2_F06_Common(object):
             return ''.join(msg)
         except TypeError:
             for msgi in msg:
-                print(msgi.rstrip())
+                print('TypeError...%r' % msgi.rstrip())
                 assert isinstance(msgi, string_types), msgi
         except UnicodeDecodeError:
             for msgi in msg:
-                print(msgi.rstrip())
+                print('UnicodeDecodeError...%r' % msgi.rstrip())
                 assert isinstance(msgi, string_types), msgi
             raise
 

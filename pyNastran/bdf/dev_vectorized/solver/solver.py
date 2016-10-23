@@ -2402,7 +2402,7 @@ class Solver(OP2):
                 #Ug_separate = [[Ua, iUa], [Us, iUs], [Um, iUm]]
                 #Ug = departition_dense_vector(Ug_separate)
 
-                #result = RealDisplacement(data_code, transient)
+                #result = RealDisplacementArray(data_code, transient)
                 #result.add_f06_data()
 
                 #if 'PRINT' in options:

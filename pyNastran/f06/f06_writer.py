@@ -742,7 +742,6 @@ class F06Writer(OP2_F06_Common):
 
             self.grid_point_stresses, self.grid_point_volume_stresses, self.grid_point_forces,
         ]
-        print(res_keys_subcase)
         for isubcase, res_keys in sorted(iteritems(res_keys_subcase)):
             # print(res_keys)
             for res_key in res_keys:

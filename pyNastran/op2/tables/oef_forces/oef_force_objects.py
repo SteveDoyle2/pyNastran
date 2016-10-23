@@ -464,7 +464,7 @@ class RealRodForceArray(RealForceObject):
         """actually performs the build step"""
         self.ntimes = ntimes
         self.nelements = nelements
-        self.ntotal = ntimes * nelements
+        #self.ntotal = ntimes * nelements
         dtype = 'float32'
         if isinstance(self.nonlinear_factor, int):
             dtype = 'int32'
