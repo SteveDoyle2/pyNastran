@@ -989,8 +989,11 @@ class Part(object):
         """validates the materials"""
         for section in self.solid_sections:
             key = section.material
-            assert key in materials, 'key=%r is an invalid material' % key
-            self.log.debug('material=%r for part=%r exists' % (key, self.name))
+            if key in materials:
+                self.log.debug('material=%r for part=%r exists' % (key, self.name))
+            else:
+                self.log.warning('key=%r is an invalid material' % key)
+
 
     def __repr__(self):
         """prints a summary for the part"""
