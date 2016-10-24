@@ -70,6 +70,7 @@ setup(
             'bdf = pyNastran.bdf.mesh_utils.utils:cmd_line',
             'f06 = pyNastran.f06.utils:cmd_line',
 
+            'pyNastran = pyNastran.bdf.dev_vectorized.solver.solver:main',
             'test_bdfv = pyNastran.bdf.dev_vectorized.test.test_bdf_vectorized2:main',
         ]
     },

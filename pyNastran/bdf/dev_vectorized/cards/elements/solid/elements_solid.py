@@ -1,5 +1,6 @@
 #from six import iteritems
-from numpy import hstack, zeros, where, searchsorted, argsort, full, nan, unique
+import numpy as np
+from numpy import hstack, zeros, where, searchsorted, argsort, full, nan, unique, array
 
 
 class ElementsSolid(object):
@@ -24,13 +25,15 @@ class ElementsSolid(object):
         self.cpyram13 = model.cpyram13
         self.cpenta15 = model.cpenta15
         self.chexa20 = model.chexa20
+        self.element_id = array([], dtype='int32')
 
-    def allocate(self, card_count):
-        etypes = self._get_types(nlimit=False)
-        for etype in etypes:
-            if etype.type in card_count:
-                self.model.log.debug('    allocate %s' % etype.type)
-                etype.allocate(card_count[etype.type])
+
+    #def allocate(self, card_count):
+        #etypes = self._get_types(nlimit=False)
+        #for etype in etypes:
+            #if etype.type in card_count:
+                #self.model.log.debug('    allocate %s' % etype.type)
+                #etype.allocate(card_count[etype.type])
             #else:
                 #assert hasattr(ptype, 'allocate'), '%s doesnt support allocate' % ptype.type
 
@@ -44,8 +47,9 @@ class ElementsSolid(object):
             self.n += elems.n
 
         etypes = self._get_types(nlimit=True)
-        self.element_id = hstack([elem.element_id for elem in etypes
-                                  if elem.n > 0])
+        if etypes:
+            self.element_id = np.hstack([elem.element_id for elem in etypes
+                                         if elem.n > 0])
         #eid = concatenate(pshell.pid, pcomp.pid)
         #unique_eids = unique(eid)
         #if unique_eids != len(eid):

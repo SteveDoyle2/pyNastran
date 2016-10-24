@@ -242,6 +242,8 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
         """
         Gets the material IDs of all the plies
 
+        Returns
+        -------
         :returns mids: the material IDs
         """
         mids = []

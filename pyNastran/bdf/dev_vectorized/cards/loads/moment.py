@@ -8,9 +8,10 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_blank,
     double, double_or_blank)
+from pyNastran.bdf.dev_vectorized.cards.vectorized_card import VectorizedCard
 
 
-class MOMENT(object):
+class MOMENT(VectorizedCard):
     type = 'MOMENT'
     def __init__(self, model):
         """
@@ -21,10 +22,7 @@ class MOMENT(object):
         model : BDF
            the BDF object
         """
-        self.model = model
-        self.n = 0
-        self._cards = []
-        self._comments = []
+        VectorizedCard.__init__(self, model)
 
     def __getitem__(self, i):
         unique_lid = unique(self.load_id)
@@ -54,43 +52,37 @@ class MOMENT(object):
         return self.__mul__(value)
 
     def add(self, card, comment=''):
-        self._cards.append(card)
-        self._comments.append(comment)
+        i = self.i
+        self.load_id[i] = integer(card, 1, 'sid')
+        self.node_id[i] = integer(card, 2, 'node')
+        self.coord_id[i] = integer_or_blank(card, 3, 'cid', 0)
+        self.mag[i] = double(card, 4, 'mag')
+        xyz = [double_or_blank(card, 5, 'X1', 0.0),
+               double_or_blank(card, 6, 'X2', 0.0),
+               double_or_blank(card, 7, 'X3', 0.0)]
+        self.xyz[i] = xyz
+        assert len(card) <= 8, 'len(MOMENT card) = %i\ncard=%s' % (len(card), card)
+        self.i += 1
 
-    def build(self):
-        """
-        :param cards: the list of MOMENT cards
-        """
-        cards = self._cards
-        ncards = len(cards)
-        self.n = ncards
+    def allocate(self, card_count):
+        ncards = card_count[self.type]
         if ncards:
+            self.n = ncards
             float_fmt = self.model.float_fmt
-            #: Property ID
             self.load_id = zeros(ncards, 'int32')
             self.node_id = zeros(ncards, 'int32')
             self.coord_id = zeros(ncards, 'int32')
             self.mag = zeros(ncards, float_fmt)
             self.xyz = zeros((ncards, 3), float_fmt)
 
-            for i, card in enumerate(cards):
-                self.load_id[i] = integer(card, 1, 'sid')
-                self.node_id[i] = integer(card, 2, 'node')
-                self.coord_id[i] = integer_or_blank(card, 3, 'cid', 0)
-                self.mag[i] = double(card, 4, 'mag')
-                xyz = [double_or_blank(card, 5, 'X1', 0.0),
-                       double_or_blank(card, 6, 'X2', 0.0),
-                       double_or_blank(card, 7, 'X3', 0.0)]
-                self.xyz[i] = xyz
-                assert len(card) <= 8, 'len(MOMENT card) = %i\ncard=%s' % (len(card), card)
-
+    def build(self):
+        if self.n:
             i = self.load_id.argsort()
             self.load_id = self.load_id[i]
             self.node_id = self.node_id[i]
             self.coord_id = self.coord_id[i]
             self.mag = self.mag[i]
             self.xyz = self.xyz[i]
-            self._cards = []
             self._comments = []
 
     def get_stats(self):
@@ -111,6 +103,6 @@ class MOMENT(object):
                     bdf_file.write(print_card_16(card))
 
     def __repr__(self):
-        f = StringIO()
-        self.write_card(f)
-        return f.getvalue().rstrip()
+        string_io = StringIO()
+        self.write_card(string_io)
+        return string_io.getvalue().rstrip()

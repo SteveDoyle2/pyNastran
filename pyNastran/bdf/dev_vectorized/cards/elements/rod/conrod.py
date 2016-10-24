@@ -18,11 +18,11 @@ def _Lambda(v1, debug=True):
     """
     #R = self.Rmatrix(model,is3D)
 
-    #p1 = model.Node(n1).get_position()
-    #p2 = model.Node(n2).get_position()
-    #v1 = p2 - p1
+    #xyz1 = model.Node(n1).get_position()
+    #xyz2 = model.Node(n2).get_position()
+    #v1 = xyz2 - xyz1
     if debug:
-        self.model.log.debug("v1=%s" % v1)
+        print("v1=%s" % v1)
     n = norm(v1)
     if n == 0:
         raise ZeroDivisionError(v1)
@@ -39,7 +39,7 @@ def _Lambda(v1, debug=True):
     #print("R = \n",R)
     #debug = True
     if debug:
-        self.model.log.debug("Lambda = \n" + str(Lambda))
+        print("Lambda = \n" + str(Lambda))
     return Lambda
 
 
@@ -70,9 +70,10 @@ class CONROD(RodElement):
             self.nsm = zeros(ncards, float_fmt)
 
     def add(self, card, comment=''):
-        i = self.i
         self.model.log.debug('  adding CONROD')
-        self.element_id[i] = integer(card, 1, 'element_id')
+        i = self.i
+        eid = integer(card, 1, 'element_id')
+        self.element_id[i] = eid
         self.node_ids[i] = [integer(card, 2, 'node_1'),
                             integer(card, 3, 'node_2')]
 
@@ -86,8 +87,12 @@ class CONROD(RodElement):
 
     def build(self):
         """
-        :param cards: the list of CONROD cards
+        Parameters
+        ----------
+        cards : List[BDFCard(), ...]
+            the list of CONROD cards
         """
+        assert self.n != 0, self.n
         if self.n:
             i = self.element_id.argsort()
             self.element_id = self.element_id[i]
@@ -259,12 +264,15 @@ class CONROD(RodElement):
         else:
             return mass
 
-    #=========================================================================
-
     def write_card(self, bdf_file, size=8, element_id=None):
         if self.n:
             if element_id is None:
                 i = arange(self.n)
+            else:
+                i = searchsorted(self.element_id, element_id)
+            if isinstance(i, (int, int64)):
+                i = array([i])
+
             for (eid, n12, mid, A, J, c, nsm) in zip(
                  self.element_id, self.node_ids, self.material_id, self.A, self.J,
                  self.c, self.nsm):
@@ -274,6 +282,8 @@ class CONROD(RodElement):
                     bdf_file.write(print_card_8(card))
                 else:
                     bdf_file.write(print_card_16(card))
+
+    #=========================================================================
 
     def get_mass_matrix(self, i, model, positions, index0s, knorm=1.0):  # CROD/CONROD
         """
@@ -293,15 +303,15 @@ class CONROD(RodElement):
         mat = self.model.materials.mat1[self.material_id[i]]
         mid = self.material_id[i]
         rho = mat.get_density_by_material_id()
-        #========================
-        n0, n1 = self.node_ids[i, :]
 
-        i0 = index0s[n0]
+        n1, n2 = self.node_ids[i, :]
+
         i1 = index0s[n1]
+        i2 = index0s[n2]
 
-        p0 = positions[n0]
-        p1 = positions[n1]
-        v1 = p0 - p1
+        xyz1 = positions[n1]
+        xyz2 = positions[n2]
+        v1 = xyz1 - xyz2
         L = norm(v1)
         if L == 0.0:
             msg = 'invalid CONROD length=0.0\n%s' % self.__repr__()
@@ -316,17 +326,16 @@ class CONROD(RodElement):
 
         Mi, Mj = M.shape
         dofs = array([
-            i0, i0+1, i0+2,
             i1, i1+1, i1+2,
+            i2, i2+1, i2+2,
         ], 'int32')
         nIJV = [
             # axial
-            (n0, 1), (n0, 2), (n0, 3),
             (n1, 1), (n1, 2), (n1, 3),
+            (n2, 1), (n2, 2), (n2, 3),
 
             # torsion -> NA
         ]
-
         self.model.log.info('dofs = %s' % dofs)
         return(M, dofs, nIJV)
 
@@ -336,28 +345,30 @@ class CONROD(RodElement):
         #mat = self.get_material_from_index(i)
         #print(mat)
         #print(mat.material_id[se])
-        mat = self.model.materials.mat1[self.material_id[i]]
-        E = mat.E()
-        G = mat.G()
+        mid = self.material_id[i]
+        #self.model.log.info('mid = %s' % mid)
+        #print(self.model.materials.mat1.print_card())
+        imid = self.model.materials.mat1.get_material_index_by_material_id(mid)
+        mat = self.model.materials.mat1[imid]
+        E = mat.E[0]
+        G = mat.G[0]
         #G = self.G()
         J = self.J[i]
         #J = self.J()
 
         #========================
         #(n1, n2) = self.node_ids
-        n0, n1 = self.node_ids[i, :]
+        n1, n2 = self.node_ids[i, :]
 
-        i0 = index0s[n0]
         i1 = index0s[n1]
-        #node0 = self.nodes[0]
-        #node1 = self.nodes[1]
+        i2 = index0s[n2]
 
+        xyz1 = positions[n1]
+        xyz2 = positions[n2]
+        #p1 = model.Node(n1).xyz
 
-        p0 = positions[n0]
-        p1 = positions[n1]
-
-        v1 = p0 - p1
-        L = norm(v1)
+        dxyz12 = xyz1 - xyz2
+        L = norm(dxyz12)
         if L == 0.0:
             msg = 'invalid CONROD length=0.0\n%s' % (self.__repr__())
             raise ZeroDivisionError(msg)
@@ -371,39 +382,36 @@ class CONROD(RodElement):
         k = array([[1., -1.],
                    [-1., 1.]])  # 1D rod
 
-        Lambda = _Lambda(v1, debug=False)
+        Lambda = _Lambda(dxyz12, debug=False)
         K = dot(dot(transpose(Lambda), k), Lambda)
         Ki, Kj = K.shape
-
-        # for testing
-        #K = ones((Ki, Ki), 'float64')
 
         K2 = zeros((Ki*2, Kj*2), 'float64')
         if k_axial == 0.0 and k_torsion == 0.0:
             dofs = []
-            nIJV = []
+            n_ijv = []
             K2 = []
         elif k_torsion == 0.0: # axial; 2D or 3D
             K2 = K * k_axial
             dofs = array([
-                i0, i0+1, i0+2,
                 i1, i1+1, i1+2,
+                i2, i2+1, i2+2,
             ], 'int32')
-            nIJV = [
+            n_ijv = [
                 # axial
-                (n0, 1), (n0, 2), (n0, 3),
                 (n1, 1), (n1, 2), (n1, 3),
+                (n2, 1), (n2, 2), (n2, 3),
             ]
         elif k_axial == 0.0: # torsion; assume 3D
             K2 = K * k_torsion
             dofs = array([
-                i0+3, i0+4, i0+5,
                 i1+3, i1+4, i1+5,
+                i2+3, i2+4, i2+5,
             ], 'int32')
-            nIJV = [
+            n_ijv = [
                 # torsion
-                (n0, 4), (n0, 5), (n0, 6),
                 (n1, 4), (n1, 5), (n1, 6),
+                (n2, 4), (n2, 5), (n2, 6),
             ]
 
         else:  # axial + torsion; assume 3D
@@ -414,20 +422,20 @@ class CONROD(RodElement):
             K2[Ki:, Ki:] = K * k_torsion
 
             dofs = array([
-                i0, i0+1, i0+2,
                 i1, i1+1, i1+2,
+                i2, i2+1, i2+2,
 
-                i0+3, i0+4, i0+5,
                 i1+3, i1+4, i1+5,
+                i2+3, i2+4, i2+5,
             ], 'int32')
-            nIJV = [
+            n_ijv = [
                 # axial
-                (n0, 1), (n0, 2), (n0, 3),
                 (n1, 1), (n1, 2), (n1, 3),
+                (n2, 1), (n2, 2), (n2, 3),
 
                 # torsion
-                (n0, 4), (n0, 5), (n0, 6),
                 (n1, 4), (n1, 5), (n1, 6),
+                (n2, 4), (n2, 5), (n2, 6),
             ]
 
         #Fg = dot(dot(transpose(Lambda), grav), Lambda)
@@ -440,9 +448,9 @@ class CONROD(RodElement):
         #print("K[%s] = \n%s\n" % (self.eid, list_print(K/knorm)))
 
         self.model.log.info('dofs = %s' % dofs)
-        #print('K =\n', list_print(K / knorm))
+        self.model.log.debug('K =\n\n%s' % (K / knorm))
 
-        return(K2, dofs, nIJV)
+        return(K2, dofs, n_ijv)
 
     def displacement_stress(self, model, positions, q, dofs):
         n = self.n
@@ -455,40 +463,44 @@ class CONROD(RodElement):
         f4 = zeros(n, 'float64')
 
         for i in range(n):
+            J = self.J[i]
+            C = self.c[i]
             n1, n2 = self.node_ids[i, :]
 
 
-            p1 = positions[n1]
-            p2 = positions[n2]
+            xyz1 = positions[n1]
+            xyz2 = positions[n2]
 
-            v1 = p1 - p2
-            L = norm(p1 - p2)
+            v1 = xyz1 - xyz2
+            L = norm(xyz1 - xyz2)
             if L == 0.0:
                 msg = 'invalid CONROD length=0.0\n%s' % (self.__repr__())
                 raise ZeroDivisionError(msg)
-            #========================
-            A = self.get_area_from_index(i)
 
-            mat = self.model.materials.mat1[self.material_id[i]]
-            E = mat.E()
-            G = mat.G()
+            A = self.get_area_from_index(i)
+            mid = self.material_id[i]
+            #mat = self.model.materials.mat1[mid]
+            imid = self.model.materials.mat1.get_material_index_by_material_id(mid)
+            mat = self.model.materials.mat1[imid]
+
+            E = mat.E
+            G = mat.G
+            #========================
             #mat = self.get_material_from_index(i)
             #jmat = searchsorted(mat.material_id, self.material_id[i])
 
             #E = mat.E[jmat]
             #G = mat.G[jmat]
             #G = self.G()
-            J = self.J[i]
-            C = self.c[i]
 
-            print("A=%g E=%g G=%g J=%g L=%g" % (A, E, G, J, L))
+            #print("A=%g E=%g G=%g J=%g L=%g" % (A, E, G, J, L))
             k_axial = A * E / L
             k_torsion = G * J / L
 
             #k = array([[1., -1.],
                        #[-1., 1.]])  # 1D rod
 
-            Lambda = _Lambda(v1, debug=True)
+            Lambda = _Lambda(v1, debug=False)
 
             #print("**dofs =", dofs)
             n11 = dofs[(n1, 1)]
@@ -527,9 +539,9 @@ class CONROD(RodElement):
             #print("Lsize = ",Lambda.shape)
             #print("qsize = ",q.shape)
             u_axial = dot(array(Lambda), q_axial)
-            du_axial = -u_axial[0] + u_axial[1]
+            du_axial = u_axial[0] - u_axial[1]
             u_torsion = dot(array(Lambda), q_torsion)
-            du_torsion = -u_torsion[0] + u_torsion[1]
+            du_torsion = u_torsion[0] - u_torsion[1]
 
             #L = self.Length()
             #E = self.E()

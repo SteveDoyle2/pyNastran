@@ -154,7 +154,12 @@ class MATS1(Material):
         """
         Gets E (Young's Modulus) for a given stress.
 
+        Parameters
+        ----------
         :param stress: the stress (None -> linear E value)
+
+        Returns
+        -------
         :returns E:    Young's Modulus
         """
         msg = "E (Young's Modulus) not implemented for MATS1"

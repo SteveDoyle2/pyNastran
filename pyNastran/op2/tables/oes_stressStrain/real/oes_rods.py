@@ -65,11 +65,17 @@ class RealRodArray(OES_Object):
         dtype = 'float32'
         if isinstance(self.nonlinear_factor, int):
             dtype = 'int32'
-        self._times = zeros(self.ntimes, dtype=dtype)
-        self.element = zeros(self.nelements, dtype='int32')
+        self.build_data(self.ntimes, self.nelements, dtype)
+
+    def build_data(self, ntimes, nelements, dtype):
+        """actually performs the build step"""
+        self.ntimes = ntimes
+        self.nelements = nelements
+        self._times = zeros(ntimes, dtype=dtype)
+        self.element = zeros(nelements, dtype='int32')
 
         #[axial, torsion, SMa, SMt]
-        self.data = zeros((self.ntimes, self.nelements, 4), dtype='float32')
+        self.data = zeros((ntimes, nelements, 4), dtype='float32')
 
     def build_dataframe(self):
         headers = self.get_headers()
@@ -182,7 +188,6 @@ class RealRodArray(OES_Object):
         if header is None:
             header = []
         (elem_name, msg_temp) = self.get_f06_header(is_mag_phase)
-
         if self.is_sort1():
             page_num = self._write_sort1_as_sort1(header, page_stamp, page_num, f, msg_temp)
         return page_num

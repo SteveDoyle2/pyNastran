@@ -166,7 +166,8 @@ def check_duplicate(name, objs):
             pass
     #print "unique %s = %s\n" %(name, unique_vals)
     if len(unique_vals) == 0:
-        raise RuntimeError("unique %s = %s" %(name, unique_vals))
+        print("unique %s = %s" %(name, unique_vals)) # fails for CONRODs
+        #raise RuntimeError
     #print('unique %s = %s' % (name, unique_vals))
     return unique_vals
 

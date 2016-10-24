@@ -120,9 +120,13 @@ class CPYRAM5(SolidElement):
         """
         Gets the volume for one or more elements.
 
-        :param element_id: the elements to consider (default=None -> all)
+        Parameters
+        ----------
+        element_id : (nelements, ) int ndarray; default=None -> all
+            the elements to consider
         :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
-        :param total: should the volume be summed (default=False)
+        total : bool; default=False
+            should the volume be summed
 
         .. note:: Volume for a CPENTA is the average area of two opposing faces
                   times the length between the centroids of those points
@@ -141,7 +145,10 @@ class CPYRAM5(SolidElement):
         """
         Gets the mass for one or more CTETRA elements.
 
-        :param element_ids: the elements to consider (default=None -> all)
+        Parameters
+        ----------
+        element_id : (nelements, ) int ndarray; default=None -> all
+            the elements to consider
         :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
         :param total: should the centroid be summed (default=False)
         """
@@ -163,7 +170,10 @@ class CPYRAM5(SolidElement):
         """
         Gets the centroid and volume for one or more elements.
 
-        :param element_id: the elements to consider (default=None -> all)
+        Parameters
+        ----------
+        element_id : (nelements, ) int ndarray; default=None -> all
+            the elements to consider
         :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
         :param total: should the volume be summed; centroid be averaged (default=False)
 
@@ -189,9 +199,13 @@ class CPYRAM5(SolidElement):
         """
         Gets the centroid for one or more elements.
 
-        :param element_id: the elements to consider (default=None -> all)
+        Parameters
+        ----------
+        element_id : (nelements, ) int ndarray; default=None -> all
+            the elements to consider
         :param xyz_cid0: the positions of the GRIDs in CID=0 (default=None)
-        :param total: should the centroid be averaged (default=False)
+        total : bool; default=False
+            should the centroid be averaged
         """
         if element_id is None:
             element_id = self.element_id

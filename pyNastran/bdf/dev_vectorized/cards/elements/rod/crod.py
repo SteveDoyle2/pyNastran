@@ -1,5 +1,6 @@
 from __future__ import print_function
 from six.moves import zip, range
+
 from numpy import array, dot, arange, zeros, unique, searchsorted, transpose, int64
 from numpy.linalg import norm
 
@@ -44,8 +45,8 @@ class CROD(RodElement):
         #if comment:
             #self._comments[eid] = comment
 
-        self.element_id[i] = integer(card, 1, 'element_id')
-        self.property_id[i] = integer_or_blank(card, 2, 'property_id', self.element_id[i])
+        self.element_id[i] = eid
+        self.property_id[i] = integer_or_blank(card, 2, 'property_id', eid)
         self.node_ids[i] = [integer(card, 3, 'n1'),
                             integer(card, 4, 'n2')]
         assert len(card) == 5, 'len(CROD card) = %i\ncard=%s' % (len(card), card)
@@ -241,6 +242,24 @@ class CROD(RodElement):
         else:
             return mass
 
+    def write_card(self, bdf_file, size=8, is_double=False, element_id=None):
+        if self.n:
+            if element_id is None:
+                i = arange(self.n)
+            else:
+                i = searchsorted(self.element_id, element_id)
+            if isinstance(i, (int, int64)):
+                i = array([i])
+
+            for (eid, pid, n) in zip(self.element_id[i], self.property_id[i], self.node_ids[i]):
+                card = ['CROD', eid, pid, n[0], n[1]]
+                if size == 8:
+                    bdf_file.write(print_card_8(card))
+                else:
+                    bdf_file.write(print_card_16(card))
+
+    #=========================================================================
+
     def get_mass_matrix(self, i, model, positions, index0s, knorm=1.0):  # CROD/CONROD
         """
         Lumped:
@@ -259,7 +278,7 @@ class CROD(RodElement):
         A = self.model.prod.A[i]
         mid = self.model.prod.material_id[i]
         rho = self.model.materials.get_density_by_material_id(mid)
-        #========================
+
         xyz_cid0 = None
         #xyz1, xyz2 = self._node_locations(xyz_cid0)
         if self.n == 1:
@@ -270,9 +289,9 @@ class CROD(RodElement):
         i1 = index0s[n1]
         i2 = index0s[n2]
 
-        p1 = positions[n1]
-        p2 = positions[n2]
-        v1 = p1 - p2
+        xyz1 = positions[n1]
+        xyz2 = positions[n2]
+        v1 = xyz1 - xyz2
         L = norm(v1)
         if L == 0.0:
             msg = 'invalid CROD length=0.0\n%s' % self.__repr__()
@@ -291,7 +310,7 @@ class CROD(RodElement):
             i1, i1+1, i1+2,
             i2, i2+1, i2+2,
         ], 'int32')
-        nIJV = [
+        n_ijv = [
             # axial
             (n1, 1), (n1, 2), (n1, 3),
             (n2, 1), (n2, 2), (n2, 3),
@@ -299,26 +318,8 @@ class CROD(RodElement):
             # torsion -> NA
         ]
         self.model.log.info('dofs = %s' % dofs)
-        return(M, dofs, nIJV)
+        return(M, dofs, n_ijv)
 
-    #=========================================================================
-    def write_card(self, bdf_file, size=8, is_double=False, element_id=None):
-        if self.n:
-            #print('eid %s' % element_id)
-            if element_id is None:
-                i = arange(self.n)
-            else:
-                i = searchsorted(self.element_id, element_id)
-            if isinstance(i, (int, int64)):
-                i = array([i])
-
-            #print('i =', i, type(i))
-            for (eid, pid, n) in zip(self.element_id[i], self.property_id[i], self.node_ids[i]):
-                card = ['CROD', eid, pid, n[0], n[1]]
-                if size == 8:
-                    bdf_file.write(print_card_8(card))
-                else:
-                    bdf_file.write(print_card_16(card))
 
     #=========================================================================
     def get_stiffness_matrix(self, i, model, positions, index0s, knorm=1.0):
@@ -333,20 +334,17 @@ class CROD(RodElement):
 
         #========================
         #(n1, n2) = self.node_ids()
-        n1 = self.node_ids[i, 0]
-        n2 = self.node_ids[i, 1]
+        n1, n2 = self.node_ids[i, :]
 
         i1 = index0s[n1]
         i2 = index0s[n2]
 
-        #print("n0", n0)
-        #print("n1", n1)
-        n1 = positions[n1]
-        n2 = positions[n2]
+        xyz1 = positions[n1]
+        xyz2 = positions[n2]
         #p1 = model.Node(n1).xyz
 
-        v1 = n1 - n2
-        L = norm(v1)
+        dxyz12 = xyz1 - xyz2
+        L = norm(dxyz12)
         if L == 0.0:
             msg = 'invalid CROD length=0.0\n%s' % (self.__repr__())
             raise ZeroDivisionError(msg)
@@ -360,17 +358,14 @@ class CROD(RodElement):
         k = array([[1., -1.],
                    [-1., 1.]])  # 1D rod
 
-        Lambda = _Lambda(v1, debug=True)
+        Lambda = _Lambda(dxyz12, debug=False)
         K = dot(dot(transpose(Lambda), k), Lambda)
         Ki, Kj = K.shape
-
-        # for testing
-        #K = ones((Ki, Ki), 'float64')
 
         K2 = zeros((Ki*2, Kj*2), 'float64')
         if k_axial == 0.0 and k_torsion == 0.0:
             dofs = []
-            nIJV = []
+            n_ijv = []
             K2 = []
         elif k_torsion == 0.0: # axial; 2D or 3D
             K2 = K * k_axial
@@ -378,7 +373,7 @@ class CROD(RodElement):
                 i1, i1+1, i1+2,
                 i2, i2+1, i2+2,
             ], 'int32')
-            nIJV = [
+            n_ijv = [
                 # axial
                 (n1, 1), (n1, 2), (n1, 3),
                 (n2, 1), (n2, 2), (n2, 3),
@@ -389,10 +384,10 @@ class CROD(RodElement):
                 i1+3, i1+4, i1+5,
                 i2+3, i2+4, i2+5,
             ], 'int32')
-            nIJV = [
+            n_ijv = [
                 # torsion
-                (n1, 4), (n1, 5), (n2, 6),
-                (n2, 4), (n2, 5), (n1, 6),
+                (n1, 4), (n1, 5), (n1, 6),
+                (n2, 4), (n2, 5), (n2, 6),
             ]
 
         else:  # axial + torsion; assume 3D
@@ -409,7 +404,7 @@ class CROD(RodElement):
                 i1+3, i1+4, i1+5,
                 i2+3, i2+4, i2+5,
             ], 'int32')
-            nIJV = [
+            n_ijv = [
                 # axial
                 (n1, 1), (n1, 2), (n1, 3),
                 (n2, 1), (n2, 2), (n2, 3),
@@ -431,7 +426,7 @@ class CROD(RodElement):
         self.model.log.info('dofs = %s' % dofs)
         self.model.log.info('K =\n%s' % list_print(K / knorm))
 
-        return(K2, dofs, nIJV)
+        return(K2, dofs, n_ijv)
 
     def displacement_stress(self, model, positions, q, dofs):
         n = self.n
@@ -460,11 +455,11 @@ class CROD(RodElement):
             n1, n2 = self.node_ids[i, :]
 
 
-            p1 = positions[n1]
-            p2 = positions[n2]
+            xyz1 = positions[n1]
+            xyz2 = positions[n2]
 
-            v1 = p1 - p2
-            L = norm(p1 - p2)
+            v1 = xyz1 - xyz2
+            L = norm(xyz1 - xyz2)
             if L == 0.0:
                 msg = 'invalid CROD length=0.0\n%s' % (self.__repr__())
                 raise ZeroDivisionError(msg)
@@ -483,7 +478,8 @@ class CROD(RodElement):
             #k_axial = 1.0
             #k_torsion = 2.0
 
-            #k = array([[1., -1.], [-1., 1.]])  # 1D rod
+            #k = array([[1., -1.],
+                       #[-1., 1.]])  # 1D rod
 
             Lambda = _Lambda(v1, debug=False)
 
