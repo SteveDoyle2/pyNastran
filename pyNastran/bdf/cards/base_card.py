@@ -80,6 +80,7 @@ class BaseCard(object):
 
     @property
     def comment(self):
+        """accesses the comment"""
         # just for testing
         #self.deprecated('comment()', 'comment2()', '0.7')
         if hasattr(self, '_comment'):
@@ -88,8 +89,8 @@ class BaseCard(object):
 
     @comment.setter
     def comment(self, new_comment):
-        comment = new_comment.rstrip()
-        self._comment = comment + '\n' if comment else ''
+        """sets a comment"""
+        self._comment = _format_comment(new_comment)
 
     def _test_update_fields(self):
         n = 1
@@ -536,6 +537,32 @@ class Element(BaseCard):
                 face = i
         return face
 
+def _format_comment(comment):
+    r"""Format a card comment to precede the card using
+    nastran-compatible comment character $. The comment
+    string can have multiple lines specified as linebreaks.
+
+    Empty comments or just spaces are returned as an empty string.
+
+    Examples:
+
+    >>> _format_comment('a comment\ntaking two lines')
+    $ a comment
+    $ taking two lines
+
+    >>> _format_comment('')
+    <empty string>
+
+    >>> _format_comment('       ')
+    <empty string>
+
+    >>> _format_comment('$ a comment within a comment looks weird')
+    $ $ a comment within a comment looks weird
+    """
+    if comment.strip() == '':  # deals with a bunch of spaces
+        return ''
+    else:
+        return ''.join([u'$ {}\n'.format(_) for _ in comment.split('\n')])
 
 def _node_ids(card, nodes=None, allow_empty_nodes=False, msg=''):
     try:

@@ -64,7 +64,15 @@ BDF:
     - fixed PFAST bug (bad xref)
     - fixed bug in SET3 card (multiple THRUs on single card)
     - write_path function works (Windows)
-
+ - minor changes
+    - simplified comment writing per Jeff Lyon
+      >>> card.comment = 'this is a comment'
+      '$ this is a comment\n'
+      >>> card.comment = 'this is a multi lined\n  - comment'
+      card._comment = 
+      '$ this is a multi lined\n'
+      '$  - comment\n'
+    
  - bdf_renumber
    - removed execs from bdf_renumber, so Python 3 will work
    - fixed bug with handling Nones (caused by exec change)
