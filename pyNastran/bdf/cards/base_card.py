@@ -90,7 +90,9 @@ class BaseCard(object):
     @comment.setter
     def comment(self, new_comment):
         """sets a comment"""
-        self._comment = _format_comment(new_comment)
+        comment = new_comment.rstrip()
+        self._comment = comment + '\n' if comment else ''
+        #self._comment = _format_comment(new_comment)  # totally breaks tests
 
     def _test_update_fields(self):
         n = 1

@@ -3379,6 +3379,7 @@ class BDF(BDFMethods, GetMethods, AddMethods, WriteMesh, XrefMesh):
                         self.add_card(card_lines, card_name, comment=comment,
                                       is_list=False, has_none=False)
         else:
+            # this is the block that actually runs
             for card in cards:
                 card_name, comment, card_lines = card
                 if card_name is None:
